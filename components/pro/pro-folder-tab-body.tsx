@@ -8,6 +8,7 @@ import { emailDisplayDate } from "@/lib/email-date";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import { EmailViewer } from "@/components/email/email-viewer";
 import { ProEmailView } from "@/components/pro/pro-email-tab-body";
+import { RetentionNotice } from "@/components/email/retention-notice";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { getMessageListOrderFor, useSettingsStore } from "@/stores/settings-store";
@@ -208,6 +209,7 @@ export function ProFolderTabBody({ tabId, data }: ProFolderTabBodyProps) {
           <RefreshCw className={cn("h-3.5 w-3.5", isLoading && "animate-spin [animation-direction:reverse]")} />
         </button>
       </div>
+      <RetentionNotice role={mailboxRole} accountId={clientLogin ?? null} />
 
       <div className="flex-1 overflow-y-auto" onScroll={handleScroll}>
         {isLoading && emails.length === 0 ? (

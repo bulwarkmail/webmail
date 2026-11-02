@@ -1,5 +1,5 @@
 {
-  "meta_description": "Minimalist webmail client using JMAP protocol",
+  "meta_description": "Self-hosted webmail for mail, calendar, contacts and files, built on JMAP",
   "login": {
     "title": "Webmail",
     "username_label": "Email",
@@ -461,7 +461,6 @@
     "view_in_light_mode": "View in light mode",
     "export_email": "Export as .eml",
     "forward_as_attachment": "Forward as attachment",
-    "import_email": "Import .eml or .zip…",
     "keyboard_shortcuts": "Keyboard shortcuts",
     "email_source": "Email source",
     "draft_banner": "This message is a draft",
@@ -473,6 +472,9 @@
     "source_truncated": "Showing the first {size}. Export the message for the rest.",
     "source_copied": "Source copied to clipboard",
     "attachments": "Attachments",
+    "attachments_count": "{count, plural, one {# attachment} other {# attachments}}",
+    "attachments_show_more": "Show {count} more",
+    "attachments_show_fewer": "Show fewer",
     "important": "Important",
     "download": "Download",
     "download_all": "Download all",
@@ -880,6 +882,35 @@
     "send_anyway": "Send anyway",
     "back": "Back"
   },
+  "phishing_report": {
+    "action": "Report phishing…",
+    "confirm_title": "Report phishing?",
+    "confirm_message": "{count, plural, one {The message goes to {address} and moves to Junk.} other {Each of the # messages goes to {address} as its own report and moves to Junk.}}",
+    "confirm": "Report",
+    "cancel": "Cancel",
+    "sending": "Reporting…",
+    "done": "{count, plural, one {Reported to {address} and moved to Junk.} other {# messages reported to {address} and moved to Junk.}}",
+    "not_moved": "{count, plural, one {Reported to {address}, but the message couldn't be moved to Junk.} other {Reported to {address}, but # messages couldn't be moved to Junk.}}",
+    "failed": "{count, plural, one {The message couldn't be reported.} other {# messages couldn't be reported.}}",
+    "undo": "Undo",
+    "undone": "{count, plural, one {Moved back. The report was already sent.} other {Moved back. The reports were already sent.}}",
+    "undo_failed": "Couldn't move it back.",
+    "banner": "You reported this message as phishing. Its links are turned off.",
+    "link_off": "link turned off",
+    "link_off_note": "(link turned off)",
+    "no_subject": "(no subject)"
+  },
+  "classification": {
+    "picker_label": "Classification",
+    "chip_label": "Classification: {name}",
+    "none": "No label",
+    "pick_required": "Pick a label",
+    "required_hint": "Your organisation requires a label.",
+    "required_toast": "Pick a classification label before sending.",
+    "quick_reply_needs_label": "This reply needs a classification label. Pick one here, then send.",
+    "forward_needs_label": "A classification label is required. Forward the message from the composer.",
+    "received_hint": "Set by the sender's mail program. Anyone can set a label, so it proves nothing."
+  },
   "email_composer": {
     "select_from_directory": "Select from directory",
     "minimize": "Minimize",
@@ -1248,8 +1279,6 @@
     "templates_import_errors": "Some templates could not be imported",
     "templates_import_empty": "No templates found in the file",
     "export_email_error": "Failed to export email",
-    "import_email_success": "Email imported successfully",
-    "import_email_error": "Failed to import email",
     "rule_created": "Rule created",
     "rule_merged": "Added to rule “{name}”",
     "rule_already_covered": "Already covered by rule “{name}”",
@@ -1272,12 +1301,46 @@
     "tag_removed_count": "{count, plural, one {Tag removed from # email} other {Tag removed from # emails}}",
     "new_mail_count": "{count, plural, one {# new message} other {# new messages}}"
   },
+  "org_notice": {
+    "label": "Announcement",
+    "dismiss": "Close announcement",
+    "severity_info": "Information",
+    "severity_warning": "Warning",
+    "severity_critical": "Important"
+  },
+  "vacation_templates": {
+    "title": "Organisation templates",
+    "description": "Start from a reply your organisation wrote. You can change the text afterwards.",
+    "pick_label": "Use a template",
+    "pick_placeholder": "Choose a template",
+    "deputy_label": "Deputy's address",
+    "deputy_placeholder": "colleague@example.com",
+    "deputy_hint": "The reply names this colleague for urgent matters.",
+    "deputy_missing": "Enter your deputy's address first.",
+    "deputy_name_label": "Deputy's name",
+    "deputy_name_missing": "Enter your deputy's name first.",
+    "apply": "Use this text",
+    "apply_hint": "Replaces the subject and text below."
+  },
+  "retention_notice": {
+    "line": "Messages here are deleted {count, plural, one {# day} other {# days}} after they were moved here."
+  },
+  "device_policy": {
+    "downloads_off": "Downloads are turned off by your organisation.",
+    "download_off_named": "{name}: downloads are turned off by your organisation",
+    "download_blocked": "Your organisation turned off downloads.",
+    "export_blocked": "Your organisation turned off exporting mail.",
+    "print_blocked": "Printing is turned off by your organisation."
+  },
   "third_party": {
     "push_needs_relay": "Push notifications need a push relay run by your organisation, and none is set up. New mail still shows while the app is open.",
     "relay_desc": "Only your organisation's own relays are offered, because this server doesn't contact outside services.",
     "relay_none": "None set up",
     "plugin_refused": "Not started: this plugin connects to outside services, which your organisation has turned off.",
     "remote_content_blocked": "Your organisation blocks content from other servers, so remote pictures in this message aren't shown."
+  },
+  "remote_content_lock": {
+    "trusted_senders_note": "Your organisation blocks remote content in all mail, so trusted senders don't load it."
   },
   "date": {
     "today": "Today",
@@ -1542,6 +1605,10 @@
         "label": "Show shared mail accounts",
         "description": "List the folders of mailboxes shared with you under Shared in the sidebar. Turn off to hide them all, or hide single accounts below. Their calendars and contacts stay."
       },
+      "compact_shared_mailboxes": {
+        "label": "Compact shared mailboxes",
+        "description": "Show each shared mailbox as one row that opens its inbox, with its folders below it. Empty ones such as Drafts or Trash are left out."
+      },
       "pro_interface": {
         "label": "Pro interface (experimental)",
         "description": "Desktop-only power-user layout with multi-tab message browsing and cross-account workflows. The standard interface is unaffected; you can switch back at any time.",
@@ -1772,6 +1839,12 @@
         "label": "Clear search when switching folders",
         "description": "Clicking a folder (Inbox, Sent, …) clears the active search and browses that folder. When off, the search stays applied and re-runs in the folder you switch to."
       },
+      "search_default_scope": {
+        "label": "Search in",
+        "description": "Where a new search looks. You can still pick another folder in the search filters.",
+        "all": "All folders except Spam and Trash",
+        "folder": "The open folder"
+      },
       "request_read_receipt": {
         "label": "Request read receipts by default",
         "description": "Pre-enable the read-receipt request when composing a new message."
@@ -1879,6 +1952,14 @@
         "above_quote": "Before quoted text",
         "below_quote": "After quoted text"
       },
+      "signature_new_mail": {
+        "label": "Signature on new mail",
+        "description": "Automatically insert your signature when composing a new message. Turn off to start every new message without one."
+      },
+      "signature_reply_forward": {
+        "label": "Signature on replies & forwards",
+        "description": "Automatically append your signature when replying to or forwarding a message. Turn off to send them without one."
+      },
       "signature_separator": {
         "label": "Signature delimiter",
         "description": "Prefix the signature with the standard \"-- \" delimiter line (RFC 3676). Turn off if you'd rather flow straight from your message into the signature."
@@ -1898,9 +1979,9 @@
       },
       "attachment_position": {
         "label": "Attachment position",
-        "description": "Where to display attachments in the email header",
-        "beside-sender": "Next to sender",
-        "below-header": "Below header"
+        "description": "Where to display the attachments of an open email",
+        "below-header": "Bar below the header",
+        "below-message": "Cards below the message"
       },
       "emails_per_page": {
         "10": "10 emails",
@@ -3546,7 +3627,6 @@
     "new_folder": "New folder…",
     "rename": "Rename…",
     "share": "Share…",
-    "import_email": "Import .eml or .zip…",
     "empty_folder": "Empty folder",
     "empty_folder_generic": "Empty folder",
     "delete_folder": "Delete folder",
@@ -4835,6 +4915,51 @@
     "cancelled": "{name} cancelled \"{title}\"",
     "untitled": "Untitled event"
   },
+  "company_calendars": {
+    "section": "Organisation"
+  },
+  "vacation_calendar": {
+    "label": "Block my calendar",
+    "description": "Adds a busy event for the time you’re away, so nobody books meetings with you then.",
+    "no_access_managed": "The calendar of this account can’t be blocked: you don’t have write access to it.",
+    "no_calendar": "Your calendar can’t be blocked: Bulwark found no calendar to add the event to.",
+    "filter_warning": "Turning this on switches off your own filter script while the reply is active."
+  },
+  "calendar_delegate": {
+    "answer_for": "Answer for {name}",
+    "no_write": "You can see {name}’s invitations but can’t answer for them. Ask them for edit access.",
+    "also_invited": "You’re invited too, and this server can’t tell your answer from {name}’s. {name} has to answer this one.",
+    "answered_by": "Answered by {who}"
+  },
+  "free_busy_share": {
+    "button": "Share my free/busy with {group}",
+    "already": "Your free/busy is shared with {group}",
+    "done": "Your free/busy is now shared with {group}.",
+    "error": "Couldn’t share your free/busy. Try again.",
+    "group_label": "Group",
+    "title": "Free/busy",
+    "description": "Colleagues in the group see when you’re busy, not what your events are. Suggest times uses it."
+  },
+  "find_time": {
+    "suggest": "Suggest times",
+    "searching": "Looking for free times",
+    "slots_title": "Free for everyone Bulwark could check",
+    "slot": "{day}, {start} to {end}",
+    "none": "No free time in the next 10 working days.",
+    "picked": "Event moved to {slot}",
+    "rate_limited": "Too many lookups in the last minute. Try again in a minute.",
+    "unavailable": "Free/busy isn’t available on this server, so Bulwark can’t suggest times.",
+    "not_checked": "Not checked:",
+    "not_checked_item": "{who}: {reason}",
+    "reason_external": "outside your organisation",
+    "reason_unknown": "busy times unknown",
+    "reason_not_found": "not found on this server",
+    "reason_error": "couldn’t be checked",
+    "unknown_note": "Bulwark only sees busy times in calendars shared with you. For these people it can’t tell free from not shared.",
+    "directory_off": "Bulwark can’t look up people on this server. Your administrator can turn on directory queries in Stalwart.",
+    "not_looked_up": "Couldn’t look up this address",
+    "found": "Free times found: {count}"
+  },
   "share_notifications": {
     "someone": "Someone",
     "shared": "{name} shared the {kind} \"{object}\" with you",
@@ -5184,7 +5309,6 @@
     "settings_ascending": "Ascending",
     "settings_descending": "Descending",
     "disabled_title": "Files feature is disabled by your administrator",
-    "disabled_description": "Large file uploads via WebDAV can cause Stalwart/RocksDB instability, including out-of-memory crashes and unrecoverable disk usage. Deleted files may not be immediately purged from blob storage. This feature is not recommended for production environments.",
     "migration_title": "Updating your files…",
     "migration_description": "Organising folders and files into their proper structure. This happens only once.",
     "new": "New",
@@ -5371,6 +5495,117 @@
   "unified_mailbox": {
     "search_unavailable": "Search is not available in the unified view"
   },
+  "mail_import": {
+    "menu_import": "Import mail…",
+    "settings_label": "Import mail",
+    "settings_description": "Bring in mail from .eml, ZIP, mbox or Outlook .pst and .ost files.",
+    "settings_button": "Import…",
+    "title": "Import mail",
+    "description": "Choose .eml, .zip, .mbox or Outlook .pst and .ost files.",
+    "choose_files": "Choose files…",
+    "chosen_files": "Chosen files",
+    "remove_file": "Remove {name}",
+    "format_eml": "Message",
+    "format_zip": "ZIP archive",
+    "format_mbox": "mbox file",
+    "format_pst": "Outlook data file",
+    "target_label": "Import into",
+    "target_top": "Top level",
+    "keep_folders": "Recreate the folders from the file",
+    "keep_folders_hint": "Folders with the same name are used again.",
+    "resume": "Continue where the last import of these files stopped (messages already done: {count})",
+    "quota_note": "Many servers take only about 1000 messages or 50 MB an hour from one user. A larger import pauses and then goes on by itself.",
+    "start": "Import",
+    "cancel": "Cancel",
+    "running_title": "Importing mail",
+    "progress_label": "Import progress",
+    "status_imported": "Messages imported: {count}",
+    "reading_file": "Reading {name}",
+    "paused": "Paused until {time}. The server takes at most {files} uploads or {size} an hour. The import goes on by itself.",
+    "paused_generic": "Paused until {time}. The server's upload limit was reached. The import goes on by itself.",
+    "background": "Run in background",
+    "cancel_import": "Cancel import",
+    "chip": "Importing mail: {percent}%",
+    "chip_paused": "Import paused until {time}",
+    "done_title": "Import finished",
+    "cancelled_title": "Import cancelled",
+    "failed_title": "Import stopped",
+    "summary_imported": "Messages imported: {count}",
+    "summary_folders": "Folders created: {count}",
+    "summary_skipped": "Not imported:",
+    "skip_too_large": "Larger than the server accepts: {count}",
+    "skip_deleted": "Deleted in Thunderbird: {count}",
+    "skip_embedded": "Messages attached to other messages: {count}",
+    "skip_contact": "Contacts: {count}",
+    "skip_calendar": "Calendar items: {count}",
+    "skip_other": "Other items: {count}",
+    "summary_failed": "Couldn't be imported: {count}",
+    "failure_invalid": "not a valid message",
+    "untitled": "(no subject)",
+    "cancelled_hint": "To go on later, import the same files into the same folder again.",
+    "close": "Close",
+    "pst_note": "Only mail comes in from Outlook files. Contacts, calendar items and tasks are counted and left out.",
+    "pst_error_encrypted": "This Outlook file uses high encryption, which Bulwark can't read. In Outlook, export the mail to a new .pst file without encryption.",
+    "pst_error_not_pst": "This file isn't an Outlook data file Bulwark can read.",
+    "pst_error_unreadable": "Bulwark couldn't read this Outlook file.",
+    "pst_error_worker": "The Outlook file reader didn't load. Reload the page and try again.",
+    "error_over_quota": "The mailbox is full, so the import stopped. Make room and import the same files into the same folder again to go on.",
+    "error_forbidden": "You may not add mail to this folder, so the import stopped.",
+    "error_failures": "Too many messages failed in a row, so the import stopped. Import the same files into the same folder again later to go on.",
+    "error_network": "The connection to the server kept failing, so the import stopped. Import the same files into the same folder again to go on.",
+    "error_busy": "These files are being imported in another tab already.",
+    "retry_hint": "Import the same files into the same folder again to try the ones that failed once more.",
+    "skip_unreadable": "Unreadable in the Outlook file: {count}",
+    "keep_folders_top_hint": "At the top level, Inbox, Sent Items, Deleted Items and the like go into your own.",
+    "toast_done": "Import finished. Imported: {imported}, failed: {failed}.",
+    "toast_stopped": "The import stopped.",
+    "toast_show": "Show",
+    "section_title": "Mail files",
+    "section_description": "Bring mail in from files, or save your mail as files."
+  },
+  "mail_export": {
+    "menu_export": "Export folder…",
+    "settings_label": "Export all mail",
+    "settings_description": "Save every folder of this account in one ZIP file, as mbox or .eml files.",
+    "settings_button": "Export…",
+    "title_folder": "Export “{name}”",
+    "title_account": "Export all mail",
+    "description_folder": "Save the messages in this folder as a file.",
+    "description_account": "Save every folder of this account in one ZIP file.",
+    "format_label": "Format",
+    "format_mbox_folder": "mbox file",
+    "format_eml_folder": "ZIP of .eml files",
+    "format_mbox_account": "ZIP with one mbox file per folder",
+    "format_eml_account": "ZIP of .eml files, one folder per mail folder",
+    "hint_mbox": "Thunderbird, Apple Mail and most mail programs open mbox files.",
+    "hint_eml": "One file per message, which any mail program can open.",
+    "save_picker": "You choose where to save the file.",
+    "save_download": "The file downloads when the export is done.",
+    "save_memory": "This browser keeps the whole export in memory, so it can save at most 200 MB. For more, use Chrome or Edge, or export folder by folder.",
+    "start": "Export",
+    "cancel": "Cancel",
+    "running_title": "Exporting mail",
+    "progress_label": "Export progress",
+    "status_exported": "Messages exported: {count} of {total}",
+    "paused": "Paused until {time}: the server asked for a break. The export goes on by itself.",
+    "background": "Run in background",
+    "cancel_export": "Cancel export",
+    "chip": "Exporting mail: {percent}%",
+    "chip_paused": "Export paused until {time}",
+    "done_title": "Export finished",
+    "cancelled_title": "Export cancelled",
+    "failed_title": "Export stopped",
+    "summary_exported": "Messages exported: {count}",
+    "summary_file": "Saved as {name} ({size}).",
+    "summary_failed": "Couldn't be exported: {count}",
+    "download_again": "Download again",
+    "too_large": "The export is larger than this browser can keep in memory. Use Chrome or Edge, or export folder by folder.",
+    "close": "Close",
+    "untitled": "(no subject)",
+    "toast_done": "Export finished: {name}",
+    "toast_stopped": "The export stopped.",
+    "toast_show": "Show"
+  },
   "recover_deleted": {
     "tab": "Recover deleted items",
     "title": "Recover deleted items",
@@ -5411,6 +5646,76 @@
     "install": "Install",
     "dont_remind": "Don't remind me again",
     "dismiss_aria": "Dismiss install prompt"
+  },
+  "app_update": {
+    "ready": "A new version of {appName} is ready.",
+    "reload": "Reload"
+  },
+  "offline": {
+    "settings": {
+      "title": "Offline",
+      "description": "Read and write mail on this device without a connection.",
+      "keep_label": "Keep mail on this device",
+      "keep_description": "Keeps the last 30 days of your Inbox and of the folders you open, up to 250 MB, encrypted in this browser. Offline you can read, flag and move mail, and what you write waits in the outbox. Signing out removes all of it.",
+      "warning": "Anyone who can use this browser profile can read this mail. Turn this on only on your own device and use disk encryption.",
+      "forbidden": "Your organisation doesn't allow keeping mail on devices.",
+      "unsupported": "This browser can't keep mail for offline use.",
+      "syncing": "Saving your mail on this device…",
+      "usage": "{size} on this device",
+      "usage_updated": "{size} on this device, updated {time}",
+      "off_confirm_title": "Turn off offline mode?",
+      "off_confirm_message": "{count, plural, one {# message in the outbox hasn't been sent.} other {# messages in the outbox haven't been sent.}} Turning this off deletes them and the mail kept on this device.",
+      "off_confirm": "Turn off"
+    },
+    "outbox": {
+      "title": "Outbox",
+      "description": "Messages you wrote offline. They're sent when this device is online again.",
+      "empty": "Nothing is waiting to be sent.",
+      "no_subject": "(no subject)",
+      "to": "To: {recipients}",
+      "status_waiting": "Waiting for a connection",
+      "status_sending": "Being sent",
+      "status_failed": "Couldn't be sent: {error}",
+      "status_uncertain": "The connection broke while sending. Check Sent before you send it again.",
+      "retry": "Send again",
+      "delete": "Delete",
+      "delete_confirm_title": "Delete this message?",
+      "delete_confirm_message": "It hasn't been sent, and it can't be brought back.",
+      "changes": "{count, plural, one {# change} other {# changes}} to read state, flags or folders will be sent when you're online again.",
+      "status_held": "Your organisation's rules changed while this waited. Write it again to send it.",
+      "retry_label": "Send again: {subject}",
+      "delete_label": "Delete: {subject}"
+    },
+    "banner": {
+      "offline": "You're offline. You see the mail kept on this device. What you change or write is sent when you're online again.",
+      "outbox": "{count, plural, one {# message} other {# messages}} in the outbox",
+      "server_down": "The mail server can't be reached. You see the mail kept on this device. What you change or write is sent when it answers again."
+    },
+    "toast": {
+      "queued": "Saved in the outbox. It's sent when you're online again.",
+      "sent": "Sent from the outbox: {subject}",
+      "send_failed": "A message in the outbox couldn't be sent: {subject}",
+      "refused_delete": "Deleting for good needs a connection. Try again when you're online.",
+      "refused_other": "This needs a connection. Try again when you're online.",
+      "forbidden": "Your organisation turned off offline mode. The mail kept on this device was removed.",
+      "back_online": "You're online again. Reload to sign in and send what's waiting.",
+      "reload": "Reload",
+      "held": "A message in the outbox needs you: {subject}",
+      "lost": "These messages weren't sent and were deleted: {subjects}"
+    },
+    "signout": {
+      "title": "Sign out with unsent mail?",
+      "message": "{count, plural, one {# message hasn't been sent.} other {# messages haven't been sent.}} Signing out deletes them.",
+      "confirm": "Sign out",
+      "lost": "These messages weren't sent and were deleted when you were signed out: {subjects}"
+    },
+    "errors": {
+      "unavailable": "This needs a connection. Try again when you're online.",
+      "plugins_down": "Your signing or encryption plugin isn't running offline. Send this when you're back online.",
+      "file_missing": "A file attached offline is no longer on this device. Attach it again.",
+      "no_sent_mailbox": "Your Sent folder couldn't be found.",
+      "no_drafts_mailbox": "Your Drafts folder couldn't be found."
+    }
   },
   "deep_link": {
     "message_not_found": "This message is no longer available.",
@@ -5738,7 +6043,7 @@
       },
       "ui_tasks": {
         "title": "Add to tasks",
-        "body": "Show its own sections in a task's details and buttons in the task list."
+        "body": "Show its own sections in a task's details, buttons in the task list, and its own task list in place of Bulwark's."
       },
       "ui_files": {
         "title": "Add to files",
@@ -5762,11 +6067,15 @@
       },
       "compose_read": {
         "title": "Read the message you are writing",
-        "body": "Read the text of a message while you write it, when you use the plugin in the composer. Not the signature or the quoted message."
+        "body": "Read a message while you write it, when you use the plugin in the composer: its text, subject, recipients including Bcc, and the names and sizes of attachments. Not the signature or the quoted message."
       },
       "compose_write": {
         "title": "Change the message you are writing",
         "body": "Replace or add text in a message while you write it, when you use the plugin in the composer. You can undo each change, and you still decide whether to send."
+      },
+      "compose_check": {
+        "title": "Check what you write",
+        "body": "Reads what you write in the composer while you type and may send it to the service it uses. Only where proofreading is on, and nothing while a message is set to be signed or encrypted. Text you wrote before you turned that on may already have been checked."
       },
       "email_forward": {
         "title": "Forward your mail",
@@ -5810,6 +6119,10 @@
       "error_server": "Enter the server's address, for example https://cloud.example.com",
       "error_save": "Could not save: {error}"
     }
+  },
+  "send_guards": {
+    "not_running": "Not sent. A check your organisation requires isn't running. Try again in a moment.",
+    "stopped_working": "Not sent. A check your organisation requires has stopped working. Reload the page. If that doesn't help, tell your administrator."
   },
   "plugin_list": {
     "filters": "Filters",
@@ -6053,6 +6366,77 @@
       "party_size": "Party size: {count}",
       "added_from": "Added from a mail from {domain}",
       "added_from_subject": "Added from the mail “{subject}” from {domain}"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Spelling",
+      "grammar": "Grammar",
+      "style": "Style",
+      "other": "Suggestion"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "No suggestions",
+      "suggestions": "Suggestions",
+      "replace_with": "Replace with {text}",
+      "also": "Also from {checker}",
+      "ignore": "Ignore",
+      "add_to_dictionary": "Add to dictionary",
+      "disable_rule": "Turn off this rule",
+      "changed": "The text changed. Wait for the next check."
+    },
+    "list_item": "{word}: {message} Suggestion: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {No spelling or grammar issues} one {# spelling or grammar issue} other {# spelling or grammar issues}}",
+    "status": {
+      "title": "Proofreading",
+      "off": "Proofreading off",
+      "paused": "Proofreading paused",
+      "rate_limited": "Checking paused",
+      "unavailable": "Checking unavailable",
+      "checking": "Checking…",
+      "issues": "{count, plural, =0 {No issues} one {# issue} other {# issues}}"
+    },
+    "panel": {
+      "title": "Proofreading",
+      "required": "Required by your organisation",
+      "check_message": "Check this message",
+      "notice": "While you type, the text you write goes to {checkers} to be checked. Your signature and the quoted message are left out. Nothing is sent while a message is set to be signed or encrypted; what you wrote before turning that on may already have been checked.",
+      "turn_on": "Turn on proofreading",
+      "paused_protected": "Nothing is checked while this message is set to be signed or encrypted.",
+      "paused_unknown": "{plugin} can sign or encrypt messages without showing it here, so nothing is checked while it is on.",
+      "rate_limited": "{checker} asked to wait. Checking starts again in a minute.",
+      "unavailable": "{checker} can't check right now. It tries again when you keep typing.",
+      "no_issues": "No issues found.",
+      "list_label": "Issues in this message",
+      "shortcuts": "Next issue: {next}. Previous: {previous}."
+    },
+    "notice": {
+      "on": "Proofreading is on. While you type, the text you write goes to {checkers} to be checked, without your signature or the quoted message. Nothing is sent while a message is set to be signed or encrypted; what you wrote before that may already have been checked.",
+      "forced": "Your organisation turned on proofreading. While you type, the text you write goes to {checkers} to be checked, without your signature or the quoted message. Nothing is sent while a message is set to be signed or encrypted; what you wrote before that may already have been checked.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Send with open issues?",
+      "body": "{count, plural, one {# spelling or grammar issue is} other {# spelling or grammar issues are}} still open in this message.",
+      "review": "Review",
+      "send": "Send anyway"
+    },
+    "settings": {
+      "title": "Proofreading",
+      "description": "Underline spelling and grammar mistakes while you write, with suggestions to fix them.",
+      "enable": "Check spelling and grammar while I type",
+      "enable_description": "The text you write goes to the proofreading add-on and the service it uses, without your signature or quoted messages. Nothing is sent while a message is set to be signed or encrypted.",
+      "no_checker": "No proofreading add-on is installed. Ask your administrator to add one.",
+      "plugin_description": "Sends what you write to {plugin}.",
+      "writing_language": "Writing language",
+      "writing_language_description": "The language you usually write in. Proofreading and your browser's spell check use it.",
+      "auto": "Detect automatically"
+    },
+    "shortcuts": {
+      "next_issue": "Next spelling or grammar issue",
+      "previous_issue": "Previous spelling or grammar issue"
     }
   }
 }

@@ -21,6 +21,7 @@ import { AlertTriangle, FolderSync, Loader2, RefreshCw } from '@/components/icon
 import { usePolicyStore } from '@/stores/policy-store';
 import { allowEmailMove, createMailboxWithHooks, emitEmailMove } from '@/lib/plugin-mail-hooks';
 import type { Mailbox } from '@/lib/jmap/types';
+import type { SearchDefaultScope } from '@/lib/search-default-scope';
 
 /**
  * The Message list page: what the list shows, who the senders look like,
@@ -60,6 +61,7 @@ export function MessageListSettings() {
     swipeRightAction,
     swipeLeftAction,
     clearSearchOnFolderChange,
+    searchDefaultScope,
     showPreview,
     showVerificationCodes,
     disableThreading,
@@ -415,6 +417,19 @@ export function MessageListSettings() {
               { value: '25', label: t('emails_per_page.25') },
               { value: '50', label: t('emails_per_page.50') },
               { value: '100', label: t('emails_per_page.100') },
+            ]}
+          />
+        </SettingItem>
+        )}
+
+        {!isSettingHidden('searchDefaultScope') && (
+        <SettingItem label={t('search_default_scope.label')} description={t('search_default_scope.description')} locked={isSettingLocked('searchDefaultScope')} advanced>
+          <Select
+            value={searchDefaultScope}
+            onChange={(value) => updateSetting('searchDefaultScope', value as SearchDefaultScope)}
+            options={[
+              { value: 'all', label: t('search_default_scope.all') },
+              { value: 'folder', label: t('search_default_scope.folder') },
             ]}
           />
         </SettingItem>

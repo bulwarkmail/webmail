@@ -169,6 +169,28 @@ describe('Pro email view - editing a draft', () => {
     expect(initialData.selectedIdentityId).toBe('userb@v10::d');
   });
 
+  // A text-only draft went to the rich editor (newlines collapsed, "<you>"
+  // gone) and an HTML draft to the textarea with its tags, whichever the
+  // plain-text setting said.
+  it('re-opens a plain-text draft as plain text', async () => {
+    const initialData = await openAndEdit(undefined, undefined, {
+      ...DRAFT,
+      bodyValues: { '1': { value: 'Hi <you>,\n\nsee below' } },
+    });
+
+    expect(initialData).toMatchObject({ body: 'Hi <you>,\n\nsee below', plainTextMode: true });
+  });
+
+  it('re-opens an HTML draft in the rich editor', async () => {
+    const initialData = await openAndEdit(undefined, undefined, {
+      ...DRAFT,
+      bodyValues: { '1': { value: 'Hi' }, '2': { value: '<p>Hi <b>there</b></p>' } },
+      htmlBody: [{ partId: '2', type: 'text/html' }],
+    });
+
+    expect(initialData).toMatchObject({ body: '<p>Hi <b>there</b></p>', plainTextMode: false });
+  });
+
   it('reads a message of the login it names through that login\'s client, not through the main list', async () => {
     const client = { getEmail: vi.fn().mockResolvedValue(DRAFT), getUsername: () => 'userb@example.org', getAccountId: () => 'e' };
 

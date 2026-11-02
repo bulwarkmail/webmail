@@ -181,6 +181,17 @@ describe('frame-ancestors of the mail UI', () => {
     else process.env.ALLOWED_FRAME_ANCESTORS = original;
   });
 
+  // Send checks run the admin's patterns in a worker they can stop; only
+  // plugin frames get it, the app keeps its script-src fallback.
+  it('lets plugin frames, and only them, start workers from blobs', async () => {
+    vi.mocked(configManager.getPolicy).mockReturnValueOnce({ features: { pluginsEnabled: true } } as never);
+    const frame = await proxy(new NextRequest('http://localhost:3000/plugin-sandbox', {
+      headers: { 'sec-fetch-dest': 'iframe', 'sec-fetch-mode': 'navigate', 'sec-fetch-site': 'same-origin' },
+    }));
+    expect(frame.headers.get('content-security-policy')).toContain("worker-src 'self' blob:");
+    expect((await load('/en/mail/folder/inbox')).headers.get('content-security-policy')).not.toContain('worker-src');
+  });
+
   it('allows only the app itself by default', async () => {
     delete process.env.ALLOWED_FRAME_ANCESTORS;
     const res = await load('/en/mail/folder/inbox');

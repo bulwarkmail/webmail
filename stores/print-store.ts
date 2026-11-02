@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { flushSync } from "react-dom";
 import type { CalendarEvent, ContactCard } from "@/lib/jmap/types";
 import type { DirectoryEntry } from "@/stores/contact-store";
+import { canPrintAnywhere } from "@/lib/device-policy";
 
 /**
  * What a Print action asked for. Ctrl+P asks for nothing in particular: the
@@ -93,6 +94,8 @@ async function waitForPrintImages(): Promise<void> {
  */
 export async function requestPrint(target: PrintTarget): Promise<void> {
   if (usePrintStore.getState().printing) return;
+  // Organisation > Devices > No printing (the buttons are hidden then).
+  if (!canPrintAnywhere()) return;
   startPrinting(target);
   await waitForPrintImages();
   if (!usePrintStore.getState().printing) return;

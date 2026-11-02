@@ -3,6 +3,7 @@ import { logger } from '@/lib/logger';
 import { decodeFileNodeName } from '@/lib/jmap/filenode-name';
 import { getWopiFileNode } from '@/lib/wopi/files';
 import { wopiContext } from '@/lib/wopi/request';
+import { ALL_DEVICE_LIMITS, serverDevicePolicy, wopiDeviceInfo } from '@/lib/admin/server-device-policy';
 
 /**
  * WOPI CheckFileInfo + file-level operations (#425).
@@ -33,6 +34,14 @@ export async function GET(
     }
 
     const { payload } = auth;
+    // Organisation > Devices, enforced by the editor itself: no print, no
+    // export or save-a-copy, the watermark. Resolved for this login on the server.
+    const devices = await serverDevicePolicy({
+      serverUrl: payload.serverUrl,
+      authHeader: payload.authHeader,
+      username: payload.username,
+      trusted: auth.ctx.trusted,
+    }).then((policy) => wopiDeviceInfo(policy, payload.username), () => wopiDeviceInfo(ALL_DEVICE_LIMITS, payload.username));
     if (payload.kind === 'attachment') {
       // Mail attachments open read-only (#1047): the blob is immutable, so
       // its id doubles as the version and there is nothing to save back to.
@@ -50,6 +59,7 @@ export async function GET(
         ...VIEW_ONLY_INFO,
         Version: payload.fileId,
         PostMessageOrigin: payload.postMessageOrigin || payload.origin,
+        ...devices,
       });
     }
 
@@ -72,6 +82,7 @@ export async function GET(
       LastModifiedTime: node.modified,
       Version: node.blobId,
       PostMessageOrigin: auth.payload.postMessageOrigin || auth.payload.origin,
+      ...devices,
     });
   } catch (error) {
     logger.error('WOPI CheckFileInfo failed', {

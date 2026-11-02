@@ -5,7 +5,7 @@ import { createPairingCode, isGrantAvailable, stashGrant } from '@/lib/auth/pair
 import { pairingOwner, readPairReauthFromStore, setPairReauthInStore } from '@/lib/auth/pair-reauth';
 import { mintGrantWithPassword } from '@/lib/auth/pair-grant';
 import { appAcceptsServerUrl } from '@/lib/auth/pair-bundle';
-import { beginPairStepUp, pairAttemptKey, settlePairStepUp } from '@/lib/auth/pair-attempts';
+import { pairAttemptKey, reservePairStepUp, settlePairStepUp } from '@/lib/auth/pair-attempts';
 import { hasSessionSecret } from '@/lib/auth/session-secret';
 import { readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
 import { isTrustedJmapServerUrl } from '@/lib/stalwart/server-fetch';
@@ -14,6 +14,7 @@ import { findServerByUrl, parseJmapServers } from '@/lib/admin/jmap-servers';
 import { IMPERSONATION_GRANT_COOKIE, openImpersonationGrant } from '@/lib/impersonation/grant-cookie';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
+import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
 
 // Desktop side of "Link mobile app". Returns a one-time pairing code for the
 // QR; the phone redeems it at /api/auth/pair/redeem.
@@ -80,6 +81,11 @@ const STEP_UP_ERRORS = {
   pairing_unavailable: 502,
 } as const;
 
+// The answer stands; a count that couldn't be settled stays a failure (the safe side).
+function settleFailed(error: unknown): void {
+  logger.warn('Pair step-up attempt not settled', { error: error instanceof Error ? error.message : 'Unknown error' });
+}
+
 export async function POST(request: NextRequest) {
   // CSRF gate (GHSA-qvr9-m8cq-7wvg): cookies written here are SameSite=Lax,
   // so a cross-site top-level POST would otherwise reach this handler.
@@ -128,7 +134,8 @@ export async function POST(request: NextRequest) {
       // was written under an identity address.
       const accountName = context.accountName ?? context.username;
       const attemptKey = pairAttemptKey(serverUrl, accountName);
-      if (!beginPairStepUp(attemptKey)) {
+      const attempt = await reservePairStepUp(attemptKey);
+      if (!attempt) {
         return NextResponse.json({ error: 'too_many_attempts' }, { status: 429 });
       }
       const totp = typeof body?.totp === 'string' && body.totp.trim() ? body.totp.trim() : undefined;
@@ -146,22 +153,22 @@ export async function POST(request: NextRequest) {
       });
       if (!result.ok) {
         const wrong = result.error === 'invalid_credentials' || (result.error === 'totp_required' && !!totp);
-        settlePairStepUp(attemptKey, wrong ? 'wrong_credential' : 'other');
+        await settlePairStepUp(attemptKey, wrong ? 'wrong_credential' : 'other', Date.now(), attempt).catch(settleFailed);
         return NextResponse.json({ error: result.error }, { status: STEP_UP_ERRORS[result.error] });
       }
-      settlePairStepUp(attemptKey, 'success');
-      grantId = stashGrant(result.grant, owner);
-      setPairReauthInStore(cookieStore, { grantId, owner });
+      await settlePairStepUp(attemptKey, 'success').catch(settleFailed);
+      grantId = await stashGrant(result.grant, owner);
+      await setPairReauthInStore(cookieStore, { grantId, owner });
       logger.info('Pair step-up succeeded', { flow: result.grant.flow, method: 'password' });
     } else {
       const proof = readPairReauthFromStore(cookieStore);
-      if (!proof || proof.owner !== owner || !isGrantAvailable(proof.grantId, owner)) {
+      if (!proof || proof.owner !== owner || !(await isGrantAvailable(proof.grantId, owner))) {
         return NextResponse.json({ error: 'reauth_required' }, { status: 401 });
       }
       grantId = proof.grantId;
     }
 
-    const pairing = createPairingCode(grantId, owner, webmailBase);
+    const pairing = await createPairingCode(grantId, owner, webmailBase);
     if (!pairing) {
       return NextResponse.json({ error: 'reauth_required' }, { status: 401 });
     }
@@ -171,6 +178,8 @@ export async function POST(request: NextRequest) {
       { headers: { 'Cache-Control': 'no-store' } },
     );
   } catch (error) {
+    // Attempts can't be counted, nor grants kept, without the shared store.
+    if (isStoreUnavailable(error)) return storeUnavailableResponse({ 'Cache-Control': 'no-store' });
     logger.error('Pair create error', { error: error instanceof Error ? error.message : 'Unknown error' });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

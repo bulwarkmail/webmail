@@ -17,11 +17,13 @@ interface Attendee {
 
 /**
  * `unknown`: the address is not a user in a complete directory listing.
+ * `not_looked_up`: the server refused to list its users (directory queries
+ * off), so the address could not be matched to anyone.
  * `no_busy_times`: the server returned no busy time for the attendee's day.
  * It says the same when the user may not see that person's free/busy.
  * `error`: the lookup failed or was rate-limited, so nothing is known.
  */
-export type AvailabilityStatus = "free" | "busy" | "tentative" | "no_busy_times" | "unknown" | "error" | "checking";
+export type AvailabilityStatus = "free" | "busy" | "tentative" | "no_busy_times" | "unknown" | "not_looked_up" | "error" | "checking";
 
 interface ParticipantAvailabilityProps {
   attendees: Attendee[];
@@ -50,10 +52,38 @@ export function availabilityFor(periods: BusyPeriod[], start: Date, end: Date): 
   return status;
 }
 
+/** Who the attendees are on this server, as far as the directory tells. */
+export interface AttendeeDirectory {
+  byEmail: Map<string, Principal>;
+  /** The listing names every user, so an address that isn't in it is not one. */
+  complete: boolean;
+  /** The server refused the listing because directory queries are off (Stalwart 1.0's default). */
+  directoryQueriesOff: boolean;
+}
+
+/**
+ * The principal directory by address. A refused listing still holds the
+ * principals the user shares an account with (Principal/get answers for
+ * those). Stalwart 1.0.1 looks up their free/busy with directory queries
+ * off, so they are checked; the 1.0 builds that refuse the lookups as well
+ * say so with `forbidden` on the lookup.
+ */
+export async function loadAttendeeDirectory(client: IJMAPClient): Promise<AttendeeDirectory> {
+  const directory = await loadPrincipalDirectory(client);
+  const byEmail = new Map<string, Principal>();
+  for (const p of directory.principals) {
+    if (p.email) byEmail.set(p.email.toLowerCase(), p);
+  }
+  return {
+    byEmail,
+    complete: directory.status === "ok",
+    directoryQueriesOff: directory.status === "restricted" && !!directory.directoryQueriesOff,
+  };
+}
+
 /**
  * The status of every address for the window, or null when the server won't
- * answer free/busy for this user: Stalwart 1.0 with directory queries off,
- * or a lookup refused with `forbidden`.
+ * answer free/busy for this user: a lookup refused with `forbidden`.
  */
 async function lookUpStatuses(
   client: IJMAPClient,
@@ -61,17 +91,7 @@ async function lookUpStatuses(
   start: Date,
   end: Date,
 ): Promise<Record<string, AvailabilityStatus> | null> {
-  const directory = await loadPrincipalDirectory(client);
-  // With directory queries off, Stalwart 1.0 refuses availability lookups as
-  // well. Any other refused listing is a role without the permission to list
-  // principals, which is not the one for free/busy (0.16 and 1.0 check them
-  // one by one): the principals Principal/get still returned are looked up,
-  // and a lookup refused in turn says it.
-  if (directory.status === "restricted" && directory.directoryQueriesOff) return null;
-  const byEmail = new Map<string, Principal>();
-  for (const p of directory.principals) {
-    if (p.email) byEmail.set(p.email.toLowerCase(), p);
-  }
+  const { byEmail, complete, directoryQueriesOff } = await loadAttendeeDirectory(client);
   const principalIds = emails.flatMap((email) => byEmail.get(email)?.id ?? []);
   const answers = await lookUpAvailability(client, principalIds, start, end);
   const statuses: Record<string, AvailabilityStatus> = {};
@@ -79,7 +99,7 @@ async function lookUpStatuses(
     const principal = byEmail.get(email);
     if (!principal) {
       // Only a complete listing shows that an address is not a user here.
-      statuses[email] = directory.status === "ok" ? "unknown" : "error";
+      statuses[email] = complete ? "unknown" : directoryQueriesOff ? "not_looked_up" : "error";
       continue;
     }
     const answer = answers[principal.id];
@@ -104,6 +124,7 @@ async function lookUpStatuses(
  */
 export function ParticipantAvailability({ attendees, start, end }: ParticipantAvailabilityProps) {
   const t = useTranslations("calendar.participants.availability");
+  const tFind = useTranslations("find_time");
   const client = useAuthStore((s) => s.client);
   const supported = !!client?.supportsAvailability?.() && !!client.getPrincipalsAvailability;
   const [statuses, setStatuses] = useState<Record<string, AvailabilityStatus>>({});
@@ -172,30 +193,38 @@ export function ParticipantAvailability({ attendees, start, end }: ParticipantAv
   }
   if (allowed !== true) return null;
 
+  const notLookedUp = Object.values(statuses).includes("not_looked_up");
   return (
-    <ul className="mt-1.5 space-y-0.5" aria-label={t("title")} data-testid="participant-availability">
-      {attendees.map((a) => {
-        const status = statuses[a.email.trim().toLowerCase()] ?? "checking";
-        return (
-          <li key={a.email} className="flex items-center gap-2 text-xs">
-            <span
-              className={cn(
-                "inline-block h-2 w-2 shrink-0 rounded-full",
-                status === "free" && "bg-success",
-                status === "busy" && "bg-destructive",
-                status === "tentative" && "bg-warning",
-                (status === "no_busy_times" || status === "unknown" || status === "error" || status === "checking") && "bg-muted-foreground/40",
-              )}
-              aria-hidden="true"
-            />
-            <span className="min-w-0 truncate text-foreground/90" title={a.email}>{a.name || a.email}</span>
-            <span className="ms-auto flex shrink-0 items-center gap-1 text-muted-foreground">
-              {status === "checking" && <Loader2 className="h-3 w-3 animate-spin" />}
-              {t(status)}
-            </span>
-          </li>
-        );
-      })}
-    </ul>
+    <>
+      <ul className="mt-1.5 space-y-0.5" aria-label={t("title")} data-testid="participant-availability">
+        {attendees.map((a) => {
+          const status = statuses[a.email.trim().toLowerCase()] ?? "checking";
+          return (
+            <li key={a.email} className="flex items-center gap-2 text-xs">
+              <span
+                className={cn(
+                  "inline-block h-2 w-2 shrink-0 rounded-full",
+                  status === "free" && "bg-success",
+                  status === "busy" && "bg-destructive",
+                  status === "tentative" && "bg-warning",
+                  (status === "no_busy_times" || status === "unknown" || status === "not_looked_up" || status === "error" || status === "checking") && "bg-muted-foreground/40",
+                )}
+                aria-hidden="true"
+              />
+              <span className="min-w-0 truncate text-foreground/90" title={a.email}>{a.name || a.email}</span>
+              <span className="ms-auto flex shrink-0 items-center gap-1 text-muted-foreground">
+                {status === "checking" && <Loader2 className="h-3 w-3 animate-spin" />}
+                {status === "not_looked_up" ? tFind("not_looked_up") : t(status)}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+      {notLookedUp && (
+        <p className="mt-1 text-xs text-muted-foreground" data-testid="participant-availability-directory-off">
+          {tFind("directory_off")}
+        </p>
+      )}
+    </>
   );
 }

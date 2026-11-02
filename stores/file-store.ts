@@ -14,6 +14,7 @@ import {
   trashSubtreeIds, trashedItems,
 } from '@/lib/files-trash';
 import { buildZip, planZip, saveBlob, type ZipProgress } from '@/lib/files-zip';
+import { downloadAllowed } from '@/lib/download-guard';
 
 export interface FileResource {
   id: string;
@@ -1340,7 +1341,7 @@ export const useFileStore = create<FileState>((set, get) => ({
     const resource = resources.find(r => r.name === name);
     if (!resource?.blobId) return;
 
-    await client.downloadBlob(resource.blobId, resource.name, resource.contentType);
+    await client.downloadBlob(resource.blobId, resource.name, resource.contentType, undefined, { kind: 'file' });
     void fileHooks.onFileDownload.emit(resourceToView(resource, currentPath));
   },
 
@@ -1354,13 +1355,15 @@ export const useFileStore = create<FileState>((set, get) => ({
   downloadZip: async (ids, zipName, options = {}) => {
     const { client } = get();
     if (!client) return;
+    // Before fetching every file: the device policy may have turned downloads off.
+    if (!downloadAllowed('file', { client })) return;
     const nodes = ids.some(isCrossAccountId)
       ? await client.listAllFileNodesAcrossAccounts()
       : await client.listAllFileNodes();
     const plan = planZip(nodes, ids);
     // A node of a drive shared with the user is fetched from its owner's account.
     const blob = await buildZip(plan, (node) => client.fetchBlob(node.blobId!, node.name, node.type, node.accountId), options);
-    saveBlob(blob, zipName);
+    saveBlob(blob, zipName, { subject: { client } });
   },
 
   getImageUrl: async (name: string) => {
@@ -1970,7 +1973,7 @@ export const useFileStore = create<FileState>((set, get) => ({
       : await client.listAllFileNodes();
     const node = nodes.find(n => n.id === id);
     if (!node?.blobId) throw new Error('File not found');
-    await client.downloadBlob(node.blobId, node.name, node.type);
+    await client.downloadBlob(node.blobId, node.name, node.type, undefined, { kind: 'file' });
     const folders = nodes.filter(isFolder).map(nodeToResource);
     void fileHooks.onFileDownload.emit(fileToView(node, parentPath(folders, node.parentId)));
   },

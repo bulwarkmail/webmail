@@ -20,19 +20,23 @@ import { verifyBundle } from './bundle-integrity';
 import { downloadManagedBundle } from './bundle-fetch';
 import { createBackgroundInstance, forEachInstance, snapshotRegionalSettings, type InitDoneInfo, type RegionalSnapshot } from './host-bridge';
 import { resolvePluginTier } from './tier';
-import { register as registerActive, deregister as deregisterActive, all as allActiveEntries, get as getActive, type SlotOffer } from './registry';
+import { register as registerActive, deregister as deregisterActive, all as allActiveEntries, get as getActive, subscribe as subscribeActive, type SlotOffer } from './registry';
 import { cancelPluginDialogs } from './host-api';
 import { hasDialogFor, whenNoDialogFor } from './host-dialog';
 import { registerShortcuts } from './shortcuts';
-import { mayOfferSlot, mayRegisterHook, pluginHasPermission, slotPropsFor } from './permissions';
+import { mayOfferSlot, mayReceiveHookCall, mayRegisterHook, pluginHasPermission, slotPropsFor } from './permissions';
 import { clearPluginActions, setActionDispatcher } from './actions';
+import { clearPluginCheckers, setCheckerDispatcher } from './checkers';
 import { clearDayLabels } from './day-labels';
 import { clearPluginListFilters } from './list-filters';
 import { clearPluginPages } from './pages';
 import { clearSectionTitle } from './section-titles';
+import { clearSidePanel } from './side-panels';
 import { cancelPluginProxyRequests } from './proxy-client';
 import { cancelConnectFor } from './connect-dialog';
 import { isHookHandedOver } from './host-features';
+import { hookArgsFor } from './hook-payload';
+import { rememberDeclaredHooks } from '../plugin-send-guards';
 import type { SlotName } from '../plugin-types';
 import { PLUGIN_REFUSED_ERROR, pluginAllowed } from '../outgoing-hosts';
 
@@ -294,8 +298,16 @@ async function startSandboxedPlugin(plugin: InstalledPlugin): Promise<void> {
       // hook is skipped: copies older than the release that steps back on
       // its own would ask twice (host-features.ts). Asked per call, so
       // turning the core switch off gives the plugin its hook back.
+      // Parts of the arguments that need another permission are cut per
+      // plugin (hook-payload.ts). A hook whose calls carry data of two kinds
+      // (a reminder of an event or of a task) hands each call only to a
+      // plugin with its permission.
       const pluginId = plugin.id;
-      const proxy = (...args: unknown[]) => (isHookHandedOver(pluginId, hookName) ? undefined : bg.invokeHook(hookName, args));
+      const proxy = (...args: unknown[]) => (
+        isHookHandedOver(pluginId, hookName) || !mayReceiveHookCall(plugin, hookName, args)
+          ? undefined
+          : bg.invokeHook(hookName, hookArgsFor(plugin, hookName, args))
+      );
       hookDisposables.push(bus.register(plugin.id, proxy as (...a: unknown[]) => unknown));
       if (hookName === 'onEmailOpen') openHandler = proxy;
     }
@@ -313,6 +325,8 @@ async function startSandboxedPlugin(plugin: InstalledPlugin): Promise<void> {
 
     const slotOffers = permittedOffers(plugin, info.slots, true);
     writeSlotOffers(plugin.id, hash, info.slots);
+    // Whether it checks mail before sending, for the next start (plugin-send-guards.ts).
+    rememberDeclaredHooks(plugin, hash, info.hooks);
 
     registerActive({
       plugin,
@@ -365,6 +379,38 @@ setActionDispatcher(async (pluginId, surface, actionId, context) => {
   }
 });
 
+// ─── Text checkers ────────────────────────────────────────────
+
+// Requests for a checker go to the `checker:<id>` handler the plugin put in
+// its background frame when it registered (api.composer.registerChecker).
+// A slow or failing checker is not a broken plugin: its server may be down.
+// Its errors stay with the composer that asked (shown as "checking
+// unavailable") and don't count towards turning the plugin off.
+// A plugin registers its checker in activate(), a moment before the loader
+// counts it as running: wait for that rather than fail the first check.
+async function backgroundOf(pluginId: string) {
+  let entry = getActive(pluginId);
+  if (!entry) {
+    entry = await new Promise<ReturnType<typeof getActive>>((resolve) => {
+      const timer = setTimeout(() => { unsubscribe(); resolve(getActive(pluginId)); }, 10_000);
+      const unsubscribe = subscribeActive(() => {
+        const found = getActive(pluginId);
+        if (!found) return;
+        clearTimeout(timer);
+        unsubscribe();
+        resolve(found);
+      });
+    });
+  }
+  if (!entry) throw new Error('plugin is not running');
+  return entry.background;
+}
+
+setCheckerDispatcher({
+  check: async (pluginId, checkerId, request) => (await backgroundOf(pluginId)).invokeHook(`checker:${checkerId}`, [request]),
+  action: async (pluginId, checkerId, payload) => (await backgroundOf(pluginId)).invokeHook(`checker-action:${checkerId}`, [payload]),
+});
+
 // ─── Unload ───────────────────────────────────────────────────
 
 export function unloadSandboxedPlugin(pluginId: string): void {
@@ -380,10 +426,12 @@ export function unloadSandboxedPlugin(pluginId: string): void {
   // Same for the buttons, list filters, day labels and pages it declared,
   // and anything still running through the proxy for it.
   clearPluginActions(pluginId);
+  clearPluginCheckers(pluginId);
   clearPluginListFilters(pluginId);
   clearDayLabels(pluginId);
   clearPluginPages(pluginId);
   clearSectionTitle(pluginId);
+  clearSidePanel(pluginId);
   cancelPluginProxyRequests(pluginId);
   cancelConnectFor(pluginId);
   try { entry.background.destroy(); } catch { /* ignore */ }

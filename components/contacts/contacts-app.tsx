@@ -23,6 +23,7 @@ import { DirectoryEntryDetail } from "@/components/contacts/directory-entry-deta
 import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { exportContacts } from "@/components/contacts/contact-export";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
+import { useStrictestDevices } from "@/hooks/use-device-policy";
 import { useContactStore, getContactDisplayName, getContactPrimaryEmail, type DirectoryEntry } from "@/stores/contact-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { inlineContactMedia, type ContactSaveOptions } from "@/lib/contact-media";
@@ -52,6 +53,8 @@ import { useDeepLinkUrl } from "@/hooks/use-deep-link-url";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import { useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { ContactsSkeleton, ContactsSkeletonBody } from "@/components/boot-skeleton/contacts-skeleton";
+import { useSkeletonLabels } from "@/components/boot-skeleton/use-skeleton-labels";
 import { useRegisterCommands } from "@/lib/command-registry";
 import { useCloseOnBack } from "@/hooks/use-close-on-back";
 import { useLeaveGuard } from "@/lib/leave-guard";
@@ -89,6 +92,9 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   // Static Lite build: the route params are empty, read the link from the URL.
   const linkSegments = useLiteLinkSegments('contacts', routeSegments);
   const t = useTranslations("contacts");
+  const skeleton = useSkeletonLabels();
+  // Organisation > Devices > No printing: no Print buttons (Ctrl+P prints a note).
+  const printOff = useStrictestDevices().noPrint;
   const tSidebar = useTranslations("sidebar");
   const tCommon = useTranslations("common");
   const tShell = useTranslations("shell");
@@ -953,7 +959,12 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
     }
   };
 
-  if (!isAuthenticated) return null;
+  // Until the session is restored: the page skeleton the server drew.
+  if (!isAuthenticated) {
+    return isEmbedded
+      ? <ContactsSkeletonBody embedded />
+      : <ContactsSkeleton label={skeleton.label} labels={skeleton.labels} />;
+  }
 
   const renderRightPanel = () => {
     // The directory is read-only: its panel shows the open entry whatever the view.
@@ -961,7 +972,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
       return (
         <DirectoryEntryDetail
           entry={directoryPrincipals.find((e) => directoryKey(e) === openDirectoryKey) ?? null}
-          onPrint={(entry) => { void requestPrint({ kind: "directory-entry", entry }); }}
+          onPrint={printOff ? undefined : (entry) => { void requestPrint({ kind: "directory-entry", entry }); }}
           onCompose={(entry) => handleComposeDirectory([entry])}
           onAddToContacts={guard(handleAddDirectoryEntryToContacts)}
         />
@@ -995,7 +1006,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
             onDelete={handleDeleteGroup}
             onRemoveMember={handleRemoveGroupMember}
             onComposeGroup={(field) => handleComposeGroupFromSidebar(selectedGroup.id, field)}
-            onPrint={() => { void requestPrint({ kind: "contact-group", group: selectedGroup }); }}
+            onPrint={printOff ? undefined : () => { void requestPrint({ kind: "contact-group", group: selectedGroup }); }}
             isMobile={isMobile}
             onSelectMember={guard((id: string) => {
               setSelectedContact(id);
@@ -1102,7 +1113,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
                 : undefined
             }
             onMoveTo={selectedContact && canMoveContacts ? () => handleMoveContacts([selectedContact.id]) : undefined}
-            onPrint={selectedContact ? () => { void printContact(selectedContact); } : undefined}
+            onPrint={selectedContact && !printOff ? () => { void printContact(selectedContact); } : undefined}
             isMobile={isMobile}
           />
         );
@@ -1333,7 +1344,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
                       onSelectedChange={setDirectorySelection}
                       onOpen={(entry) => { setOpenDirectoryKey(directoryKey(entry)); setView("directory-detail"); }}
                       activeKey={openDirectoryKey}
-                      onPrint={() => { void requestPrint({ kind: "directory-list" }); }}
+                      onPrint={printOff ? undefined : () => { void requestPrint({ kind: "directory-list" }); }}
                       printing={printContent?.kind === "directory-list"}
                       onMenuClick={isNarrow ? () => setNarrowSidebarOpen(true) : undefined}
                       className="flex-1"
@@ -1386,11 +1397,13 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
                     <>
                       <ContextMenuItem icon={UsersRound} label={t("groups.create")} onClick={() => { close(); guard(handleCreateGroup)(); }} />
                       <ContextMenuItem icon={Upload} label={t("import.title")} onClick={() => { close(); setShowImportDialog(true); }} />
-                      <ContextMenuItem icon={Printer} label={tCommon("print")} onClick={() => { close(); void requestPrint({ kind: "contact-list" }); }} />
+                      {!printOff && <ContextMenuItem icon={Printer} label={tCommon("print")} onClick={() => { close(); void requestPrint({ kind: "contact-list" }); }} />}
                     </>
                   )}
-                  isLoading={supportsSync && !contactsLoaded}
-                  onPrint={() => { void requestPrint({ kind: "contact-list" }); }}
+                  // Until the session is back, nobody knows yet whether the server
+                  // keeps contacts: show the rows loading, not an empty book.
+                  isLoading={!contactsLoaded && (supportsSync || !client)}
+                  onPrint={printOff ? undefined : () => { void requestPrint({ kind: "contact-list" }); }}
                   printTitle={printContent?.kind === "list" ? listTitle : null}
                 />
                 )}
@@ -1563,8 +1576,14 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
 // prerender (static Lite build); at runtime it never suspends.
 export function ContactsApp(props: ContactsAppProps = {}) {
   return (
-    <Suspense fallback={null}>
+    // The static Lite export writes this fallback into the page's HTML.
+    <Suspense fallback={<ContactsFallback />}>
       <ContactsAppContent {...props} />
     </Suspense>
   );
+}
+
+function ContactsFallback() {
+  const { label, labels } = useSkeletonLabels();
+  return <ContactsSkeleton label={label} labels={labels} />;
 }

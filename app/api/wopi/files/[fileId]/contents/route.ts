@@ -3,6 +3,7 @@ import { logger } from '@/lib/logger';
 import { downloadFileBlob, getWopiFileNode, updateFileNodeBlob, uploadFileBlob } from '@/lib/wopi/files';
 import { wopiContext } from '@/lib/wopi/request';
 import { readBodyCapped } from '@/lib/security/capped-body';
+import { bootGateResponse } from '@/lib/shared-store/boot-gate';
 
 /**
  * Largest document PutFile takes. proxy.ts doesn't run for this route, so
@@ -39,6 +40,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ fileId: string }> },
 ) {
+  // The proxy doesn't run for this route, so it applies the boot gate itself.
+  const notReady = bootGateResponse();
+  if (notReady) return notReady;
   // The editor fetches this server-to-server and sends no Sec-Fetch headers.
   // A browser navigating to it, or loading it as a script or style, is not
   // the editor.
@@ -89,6 +93,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ fileId: string }> },
 ) {
+  // The proxy doesn't run for this route, so it applies the boot gate itself.
+  const notReady = bootGateResponse();
+  if (notReady) return notReady;
   try {
     const { fileId: documentId } = await params;
     const auth = await wopiContext(request, documentId);

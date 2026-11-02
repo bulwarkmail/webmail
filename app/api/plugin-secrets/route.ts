@@ -12,6 +12,7 @@ import {
   putUserCredential,
   type VaultUser,
 } from '@/lib/plugin-secrets/vault';
+import { storedDataUnavailableResponse } from '@/lib/stored-data-errors';
 
 const PLUGIN_ID_RE = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
 const MAX_SECRET_LENGTH = 4096;
@@ -35,7 +36,14 @@ export async function GET(request: NextRequest) {
   if (pluginId !== undefined && !PLUGIN_ID_RE.test(pluginId)) {
     return NextResponse.json({ error: 'Invalid plugin id' }, { status: 400 });
   }
-  const credentials = await listUserCredentials(user, pluginId);
+  let credentials;
+  try {
+    credentials = await listUserCredentials(user, pluginId);
+  } catch (error) {
+    const unavailable = storedDataUnavailableResponse(error, NO_STORE);
+    if (unavailable) return unavailable;
+    throw error;
+  }
   // For one plugin, also say which of its admin credentials are set up, and
   // on which servers: the host page checks the links a plugin shows against
   // them (the plugin itself only gets yes/no, see proxyAccounts).
@@ -93,6 +101,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     if (error instanceof VaultFullError) return NextResponse.json({ error: error.message }, { status: 409 });
+    const unavailable = storedDataUnavailableResponse(error, NO_STORE);
+    if (unavailable) return unavailable;
     throw error;
   }
   return NextResponse.json({ ok: true }, { headers: NO_STORE });
@@ -108,7 +118,13 @@ export async function DELETE(request: NextRequest) {
   const credentialId = request.nextUrl.searchParams.get('credential') ?? undefined;
   if (!PLUGIN_ID_RE.test(pluginId)) return bad('Invalid plugin id');
   if (credentialId !== undefined && !CREDENTIAL_ID_RE.test(credentialId)) return bad('Invalid credential id');
-  await deleteUserCredentials(user, pluginId, credentialId);
+  try {
+    await deleteUserCredentials(user, pluginId, credentialId);
+  } catch (error) {
+    const unavailable = storedDataUnavailableResponse(error, NO_STORE);
+    if (unavailable) return unavailable;
+    throw error;
+  }
   return NextResponse.json({ ok: true }, { headers: NO_STORE });
 }
 

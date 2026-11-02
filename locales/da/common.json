@@ -1,5 +1,5 @@
 {
-  "meta_description": "Minimalistisk webmail-klient, der bruger JMAP-protokollen",
+  "meta_description": "Selvhostet webmail til mail, kalender, kontakter og filer, bygget på JMAP",
   "login": {
     "title": "Webmail",
     "username_label": "Email",
@@ -461,7 +461,6 @@
     "view_in_light_mode": "Vis i lys tilstand",
     "export_email": "Eksportér som .eml",
     "forward_as_attachment": "Videresend som vedhæftet fil",
-    "import_email": "Importér .eml eller .zip…",
     "keyboard_shortcuts": "Tastaturgenveje",
     "email_source": "E-mail-kilde",
     "draft_banner": "Denne besked er en kladde",
@@ -473,6 +472,9 @@
     "source_truncated": "Viser de første {size}. Eksporter meddelelsen for at se resten.",
     "source_copied": "Kilde kopieret til udklipsholder",
     "attachments": "Vedhæftninger",
+    "attachments_count": "{count, plural, one {# vedhæftet fil} other {# vedhæftede filer}}",
+    "attachments_show_more": "Vis {count} mere",
+    "attachments_show_fewer": "Vis færre",
     "important": "Vigtig",
     "download": "Download",
     "download_all": "Download alle",
@@ -880,6 +882,35 @@
     "send_anyway": "Send alligevel",
     "back": "Tilbage"
   },
+  "phishing_report": {
+    "action": "Rapportér phishing…",
+    "confirm_title": "Rapportér phishing?",
+    "confirm_message": "{count, plural, one {Beskeden sendes til {address} og flyttes til Spam.} other {Hver af de # beskeder sendes til {address} som en separat rapport og flyttes til Spam.}}",
+    "confirm": "Rapportér",
+    "cancel": "Annuller",
+    "sending": "Rapporterer…",
+    "done": "{count, plural, one {Rapporteret til {address} og flyttet til Spam.} other {# beskeder rapporteret til {address} og flyttet til Spam.}}",
+    "not_moved": "{count, plural, one {Rapporteret til {address}, men beskeden kunne ikke flyttes til Spam.} other {Rapporteret til {address}, men # beskeder kunne ikke flyttes til Spam.}}",
+    "failed": "{count, plural, one {Beskeden kunne ikke rapporteres.} other {# beskeder kunne ikke rapporteres.}}",
+    "undo": "Fortryd",
+    "undone": "{count, plural, one {Flyttet tilbage. Rapporten var allerede sendt.} other {Flyttet tilbage. Rapporterne var allerede sendt.}}",
+    "undo_failed": "Kunne ikke flyttes tilbage.",
+    "banner": "Du har rapporteret denne besked som phishing. Links i den er slået fra.",
+    "link_off": "link slået fra",
+    "link_off_note": "(link slået fra)",
+    "no_subject": "(intet emne)"
+  },
+  "classification": {
+    "picker_label": "Klassificering",
+    "chip_label": "Klassificering: {name}",
+    "none": "Ingen klassificering",
+    "pick_required": "Vælg en klassificering",
+    "required_hint": "Din organisation kræver en klassificering.",
+    "required_toast": "Vælg en klassificering, før du sender.",
+    "quick_reply_needs_label": "Dette svar skal have en klassificering. Vælg en her, og send derefter.",
+    "forward_needs_label": "En klassificering er påkrævet. Videresend beskeden fra skrivevinduet.",
+    "received_hint": "Sat af afsenderens mailprogram. Alle kan sætte en klassificering, så den beviser intet."
+  },
   "email_composer": {
     "select_from_directory": "Vælg fra adressefortegnelse",
     "minimize": "Minimer",
@@ -1248,8 +1279,6 @@
     "templates_import_errors": "Nogle skabeloner kunne ikke importeres",
     "templates_import_empty": "Ingen skabeloner fundet i filen",
     "export_email_error": "Kunne ikke eksportere e-mail",
-    "import_email_success": "E-mail importeret succesfuldt",
-    "import_email_error": "Kunne ikke importere e-mail",
     "rule_created": "Regel oprettet",
     "rule_merged": "Føjet til reglen “{name}”",
     "rule_already_covered": "Er allerede dækket af reglen “{name}”",
@@ -1272,12 +1301,46 @@
     "tag_removed_count": "{count, plural, one {Tag fjernet fra # e-mail} other {Tag fjernet fra # e-mails}}",
     "new_mail_count": "{count, plural, one {# ny besked} other {# nye beskeder}}"
   },
+  "org_notice": {
+    "label": "Meddelelse",
+    "dismiss": "Luk meddelelse",
+    "severity_info": "Information",
+    "severity_warning": "Advarsel",
+    "severity_critical": "Vigtigt"
+  },
+  "vacation_templates": {
+    "title": "Organisationens skabeloner",
+    "description": "Start med et svar, din organisation har skrevet. Du kan ændre teksten bagefter.",
+    "pick_label": "Brug en skabelon",
+    "pick_placeholder": "Vælg en skabelon",
+    "deputy_label": "Stedfortræderens adresse",
+    "deputy_placeholder": "kollega@example.com",
+    "deputy_hint": "Svaret nævner denne kollega ved hastesager.",
+    "deputy_missing": "Indtast først din stedfortræders adresse.",
+    "deputy_name_label": "Stedfortræderens navn",
+    "deputy_name_missing": "Indtast først din stedfortræders navn.",
+    "apply": "Brug denne tekst",
+    "apply_hint": "Erstatter emnet og teksten nedenfor."
+  },
+  "retention_notice": {
+    "line": "Beskeder her slettes {count, plural, one {# dag} other {# dage}} efter, at de blev flyttet hertil."
+  },
+  "device_policy": {
+    "downloads_off": "Din organisation har slået download fra.",
+    "download_off_named": "{name}: din organisation har slået download fra",
+    "download_blocked": "Din organisation har slået download fra.",
+    "export_blocked": "Din organisation har slået eksport af mail fra.",
+    "print_blocked": "Din organisation har slået udskrivning fra."
+  },
   "third_party": {
     "push_needs_relay": "Push-notifikationer kræver et push-relæ, som din organisation driver, og der er ikke sat noget op. Ny mail vises stadig, mens appen er åben.",
     "relay_desc": "Kun din organisations egne relæer tilbydes, fordi denne server ikke kontakter eksterne tjenester.",
     "relay_none": "Intet sat op",
     "plugin_refused": "Ikke startet: dette plugin forbinder til eksterne tjenester, som din organisation har slået fra.",
     "remote_content_blocked": "Din organisation blokerer indhold fra andre servere, så eksterne billeder i denne besked vises ikke."
+  },
+  "remote_content_lock": {
+    "trusted_senders_note": "Din organisation blokerer fjernindhold i al mail, så det indlæses heller ikke fra betroede afsendere."
   },
   "date": {
     "today": "I dag",
@@ -1542,6 +1605,10 @@
         "label": "Vis delte mailkonti",
         "description": "Vis mapperne fra postkasser, der er delt med dig, under Delt i sidepanelet. Slå fra for at skjule dem alle, eller skjul enkelte konti nedenfor. Deres kalendere og kontakter bliver."
       },
+      "compact_shared_mailboxes": {
+        "label": "Kompakte delte postkasser",
+        "description": "Vis hver delt postkasse som én række, der åbner dens indbakke, med dens mapper nedenunder. Tomme mapper som Kladder eller Papirkurv udelades."
+      },
       "pro_interface": {
         "label": "Pro-grænseflade (eksperimentel)",
         "description": "Power user-layout kun til skrivebordet med beskedvisning på flere faner og arbejdsforløb på tværs af konti. Standardgrænsefladen påvirkes ikke; du kan skifte tilbage når som helst.",
@@ -1772,6 +1839,12 @@
         "label": "Ryd søgningen ved skift af mappe",
         "description": "Klik på en mappe (Indbakke, Sendt …) rydder den aktive søgning og viser mappen. Når det er slået fra, bevares søgningen og køres igen i den valgte mappe."
       },
+      "search_default_scope": {
+        "label": "Søg i",
+        "description": "Hvor en ny søgning leder. Du kan stadig vælge en anden mappe i søgefiltrene.",
+        "all": "Alle mapper undtagen spam og papirkurv",
+        "folder": "Den åbne mappe"
+      },
       "request_read_receipt": {
         "label": "Anmod om læsekvittering som standard",
         "description": "Aktivér anmodningen om læsekvittering på forhånd, når du skriver en ny besked."
@@ -1879,6 +1952,14 @@
         "above_quote": "Før citeret tekst",
         "below_quote": "Efter citeret tekst"
       },
+      "signature_new_mail": {
+        "label": "Signatur på nye e-mails",
+        "description": "Indsætter automatisk din signatur, når du skriver en ny besked. Slå fra for at starte hver ny besked uden."
+      },
+      "signature_reply_forward": {
+        "label": "Signatur på svar og videresendelser",
+        "description": "Tilføjer automatisk din signatur, når du svarer eller videresender. Slå fra for at sende dem uden."
+      },
       "signature_separator": {
         "label": "Signatur-afgrænser",
         "description": "Præfiksér signaturen med standard \"-- \"-afgrænserlinjen (RFC 3676). Slå fra, hvis du hellere vil gå direkte fra din besked til signaturen."
@@ -1899,8 +1980,8 @@
       "attachment_position": {
         "label": "Placering af vedhæftninger",
         "description": "Hvor vedhæftninger skal vises i e-mail-headeren",
-        "beside-sender": "Ved siden af afsender",
-        "below-header": "Under header"
+        "below-header": "Under header",
+        "below-message": "Kort under beskeden"
       },
       "emails_per_page": {
         "10": "10 e-mails",
@@ -3546,7 +3627,6 @@
     "new_folder": "Ny mappe…",
     "rename": "Omdøb…",
     "share": "Del…",
-    "import_email": "Importér .eml eller .zip…",
     "empty_folder": "Tøm mappe",
     "empty_folder_generic": "Tøm mappe",
     "delete_folder": "Slet mappe",
@@ -4835,6 +4915,51 @@
     "cancelled": "{name} har aflyst \"{title}\"",
     "untitled": "Unavngivet begivenhed"
   },
+  "company_calendars": {
+    "section": "Organisation"
+  },
+  "vacation_calendar": {
+    "label": "Bloker min kalender",
+    "description": "Tilføjer en optaget begivenhed, mens du er væk, så ingen booker møder med dig imens.",
+    "no_access_managed": "Kalenderen for denne konto kan ikke blokeres: du har ikke skriveadgang til den.",
+    "no_calendar": "Din kalender kan ikke blokeres: Bulwark fandt ingen kalender at tilføje begivenheden til.",
+    "filter_warning": "Slår du dette til, slås dit eget filterscript fra, mens svaret er aktivt."
+  },
+  "calendar_delegate": {
+    "answer_for": "Svar for {name}",
+    "no_write": "Du kan se invitationerne til {name}, men kan ikke svare for dem. Bed om redigeringsadgang.",
+    "also_invited": "Du er også inviteret, og denne server kan ikke skelne dit svar fra svaret fra {name}. {name} skal selv svare på denne.",
+    "answered_by": "Besvaret af {who}"
+  },
+  "free_busy_share": {
+    "button": "Del min ledig/optaget med {group}",
+    "already": "Din ledig/optaget er delt med {group}",
+    "done": "Din ledig/optaget er nu delt med {group}.",
+    "error": "Din ledig/optaget kunne ikke deles. Prøv igen.",
+    "group_label": "Gruppe",
+    "title": "Ledig/optaget",
+    "description": "Kolleger i gruppen ser, hvornår du er optaget, ikke hvad dine begivenheder er. Foreslå tidspunkter bruger det."
+  },
+  "find_time": {
+    "suggest": "Foreslå tidspunkter",
+    "searching": "Leder efter ledige tidspunkter",
+    "slots_title": "Ledigt for alle, Bulwark kunne tjekke",
+    "slot": "{day}, {start} til {end}",
+    "none": "Ingen ledig tid i de næste 10 arbejdsdage.",
+    "picked": "Begivenhed flyttet til {slot}",
+    "rate_limited": "For mange opslag i det sidste minut. Prøv igen om et minut.",
+    "unavailable": "Ledig/optaget er ikke tilgængelig på denne server, så Bulwark kan ikke foreslå tidspunkter.",
+    "not_checked": "Ikke tjekket:",
+    "not_checked_item": "{who}: {reason}",
+    "reason_external": "uden for din organisation",
+    "reason_unknown": "optagede tider ukendte",
+    "reason_not_found": "ikke fundet på denne server",
+    "reason_error": "kunne ikke tjekkes",
+    "unknown_note": "Bulwark ser kun optagede tider i kalendere, der er delt med dig. For disse personer kan den ikke skelne ledig fra ikke delt.",
+    "directory_off": "Bulwark kan ikke slå personer op på denne server. Din administrator kan slå katalogforespørgsler til i Stalwart.",
+    "not_looked_up": "Adressen kunne ikke slås op",
+    "found": "Ledige tidspunkter fundet: {count}"
+  },
   "share_notifications": {
     "someone": "Nogen",
     "shared": "{name} har delt {kind} \"{object}\" med dig",
@@ -5182,7 +5307,6 @@
     "settings_ascending": "Stigende",
     "settings_descending": "Faldende",
     "disabled_title": "Filer-funktionen er deaktiveret af din administrator",
-    "disabled_description": "Store filuploads via WebDAV kan forårsage Stalwart/RocksDB-ustabilitet, herunder hukommelsessvigt og uopretteligt diskforbrug. Slettede filer fjernes muligvis ikke straks fra blob-lageret. Denne funktion anbefales ikke til produktionsmiljøer.",
     "no_accounts": "Ingen tilknyttede konti.",
     "open_folder_tree": "Åbn mappetræ",
     "migration_title": "Opdaterer dine filer…",
@@ -5371,6 +5495,117 @@
   "unified_mailbox": {
     "search_unavailable": "Søgning er ikke tilgængelig i den samlede visning"
   },
+  "mail_import": {
+    "menu_import": "Importér mail…",
+    "settings_label": "Importér mail",
+    "settings_description": "Hent mail ind fra .eml-, ZIP-, mbox- eller Outlook-.pst- og -.ost-filer.",
+    "settings_button": "Importér…",
+    "title": "Importér mail",
+    "description": "Vælg .eml-, .zip-, .mbox- eller Outlook-.pst- og -.ost-filer.",
+    "choose_files": "Vælg filer…",
+    "chosen_files": "Valgte filer",
+    "remove_file": "Fjern {name}",
+    "format_eml": "Besked",
+    "format_zip": "ZIP-arkiv",
+    "format_mbox": "mbox-fil",
+    "format_pst": "Outlook-datafil",
+    "target_label": "Importér til",
+    "target_top": "Øverste niveau",
+    "keep_folders": "Genskab mapperne fra filen",
+    "keep_folders_hint": "Mapper med samme navn bruges igen.",
+    "resume": "Fortsæt, hvor den sidste import af disse filer stoppede (beskeder allerede klaret: {count})",
+    "quota_note": "Mange servere tager kun imod omkring 1000 beskeder eller 50 MB i timen fra én bruger. En større import holder pause og fortsætter derefter af sig selv.",
+    "start": "Importér",
+    "cancel": "Annullér",
+    "running_title": "Importerer mail",
+    "progress_label": "Importens forløb",
+    "status_imported": "Importerede beskeder: {count}",
+    "reading_file": "Læser {name}",
+    "paused": "Sat på pause til {time}. Serveren tager højst imod {files} uploads eller {size} i timen. Importen fortsætter af sig selv.",
+    "paused_generic": "Sat på pause til {time}. Serverens uploadgrænse er nået. Importen fortsætter af sig selv.",
+    "background": "Kør i baggrunden",
+    "cancel_import": "Annullér import",
+    "chip": "Importerer mail: {percent} %",
+    "chip_paused": "Import sat på pause til {time}",
+    "done_title": "Import færdig",
+    "cancelled_title": "Import annulleret",
+    "failed_title": "Import stoppet",
+    "summary_imported": "Importerede beskeder: {count}",
+    "summary_folders": "Oprettede mapper: {count}",
+    "summary_skipped": "Ikke importeret:",
+    "skip_too_large": "Større end serveren tillader: {count}",
+    "skip_deleted": "Slettet i Thunderbird: {count}",
+    "skip_embedded": "Beskeder vedhæftet andre beskeder: {count}",
+    "skip_contact": "Kontakter: {count}",
+    "skip_calendar": "Kalenderelementer: {count}",
+    "skip_other": "Andre elementer: {count}",
+    "summary_failed": "Kunne ikke importeres: {count}",
+    "failure_invalid": "ikke en gyldig besked",
+    "untitled": "(intet emne)",
+    "cancelled_hint": "Importér de samme filer til samme mappe igen for at fortsætte senere.",
+    "close": "Luk",
+    "pst_note": "Fra Outlook-filer kommer kun mail med. Kontakter, kalenderelementer og opgaver tælles og springes over.",
+    "pst_error_encrypted": "Denne Outlook-fil bruger høj kryptering, som Bulwark ikke kan læse. Eksportér mailen i Outlook til en ny .pst-fil uden kryptering.",
+    "pst_error_not_pst": "Denne fil er ikke en Outlook-datafil, som Bulwark kan læse.",
+    "pst_error_unreadable": "Bulwark kunne ikke læse denne Outlook-fil.",
+    "pst_error_worker": "Læseren til Outlook-filer blev ikke indlæst. Genindlæs siden, og prøv igen.",
+    "error_over_quota": "Postkassen er fuld, så importen stoppede. Skaf plads, og importér de samme filer til samme mappe igen for at fortsætte.",
+    "error_forbidden": "Du må ikke tilføje mail til denne mappe, så importen stoppede.",
+    "error_failures": "For mange beskeder i træk mislykkedes, så importen stoppede. Importér de samme filer til samme mappe igen senere for at fortsætte.",
+    "error_network": "Forbindelsen til serveren svigtede gentagne gange, så importen stoppede. Importér de samme filer til samme mappe igen for at fortsætte.",
+    "error_busy": "Disse filer importeres allerede i en anden fane.",
+    "retry_hint": "Importér de samme filer til samme mappe igen for at prøve dem, der mislykkedes, en gang til.",
+    "skip_unreadable": "Ulæselige i Outlook-filen: {count}",
+    "keep_folders_top_hint": "På øverste niveau havner Indbakke, Sendt post, Slettet post og lignende i dine egne.",
+    "toast_done": "Import færdig. Importeret: {imported}, mislykkedes: {failed}.",
+    "toast_stopped": "Importen stoppede.",
+    "toast_show": "Vis",
+    "section_title": "Mailfiler",
+    "section_description": "Hent mail ind fra filer, eller gem din mail som filer."
+  },
+  "mail_export": {
+    "menu_export": "Eksportér mappe…",
+    "settings_label": "Eksportér al mail",
+    "settings_description": "Gem alle mapper i denne konto i én ZIP-fil som mbox- eller .eml-filer.",
+    "settings_button": "Eksportér…",
+    "title_folder": "Eksportér “{name}”",
+    "title_account": "Eksportér al mail",
+    "description_folder": "Gem beskederne i denne mappe som en fil.",
+    "description_account": "Gem alle mapper i denne konto i én ZIP-fil.",
+    "format_label": "Format",
+    "format_mbox_folder": "mbox-fil",
+    "format_eml_folder": "ZIP med .eml-filer",
+    "format_mbox_account": "ZIP med én mbox-fil pr. mappe",
+    "format_eml_account": "ZIP med .eml-filer, én mappe pr. mailmappe",
+    "hint_mbox": "Thunderbird, Apple Mail og de fleste mailprogrammer kan åbne mbox-filer.",
+    "hint_eml": "Én fil pr. besked, som alle mailprogrammer kan åbne.",
+    "save_picker": "Du vælger, hvor filen gemmes.",
+    "save_download": "Filen downloades, når eksporten er færdig.",
+    "save_memory": "Denne browser holder hele eksporten i hukommelsen og kan derfor højst gemme 200 MB. Brug Chrome eller Edge til mere, eller eksportér mappe for mappe.",
+    "start": "Eksportér",
+    "cancel": "Annullér",
+    "running_title": "Eksporterer mail",
+    "progress_label": "Eksportens forløb",
+    "status_exported": "Eksporterede beskeder: {count} af {total}",
+    "paused": "Sat på pause til {time}: serveren bad om en pause. Eksporten fortsætter af sig selv.",
+    "background": "Kør i baggrunden",
+    "cancel_export": "Annullér eksport",
+    "chip": "Eksporterer mail: {percent} %",
+    "chip_paused": "Eksport sat på pause til {time}",
+    "done_title": "Eksport færdig",
+    "cancelled_title": "Eksport annulleret",
+    "failed_title": "Eksport stoppet",
+    "summary_exported": "Eksporterede beskeder: {count}",
+    "summary_file": "Gemt som {name} ({size}).",
+    "summary_failed": "Kunne ikke eksporteres: {count}",
+    "download_again": "Download igen",
+    "too_large": "Eksporten er større, end denne browser kan holde i hukommelsen. Brug Chrome eller Edge, eller eksportér mappe for mappe.",
+    "close": "Luk",
+    "untitled": "(intet emne)",
+    "toast_done": "Eksport færdig: {name}",
+    "toast_stopped": "Eksporten stoppede.",
+    "toast_show": "Vis"
+  },
   "recover_deleted": {
     "tab": "Gendan slettede elementer",
     "title": "Gendan slettede elementer",
@@ -5411,6 +5646,76 @@
     "install": "Installer",
     "dont_remind": "Påmind mig ikke igen",
     "dismiss_aria": "Afvis installationsprompt"
+  },
+  "app_update": {
+    "ready": "En ny version af {appName} er klar.",
+    "reload": "Genindlæs"
+  },
+  "offline": {
+    "settings": {
+      "title": "Offline",
+      "description": "Læs og skriv mail på denne enhed uden forbindelse.",
+      "keep_label": "Behold mail på denne enhed",
+      "keep_description": "Beholder de seneste 30 dage af din indbakke og af de mapper, du åbner, op til 250 MB, krypteret i denne browser. Offline kan du læse, markere og flytte mail, og det, du skriver, venter i udbakken. Når du logger ud, fjernes det hele.",
+      "warning": "Alle, der kan bruge denne browserprofil, kan læse disse mails. Slå det kun til på din egen enhed, og brug diskkryptering.",
+      "forbidden": "Din organisation tillader ikke, at mail gemmes på enheder.",
+      "unsupported": "Denne browser kan ikke gemme mail til brug offline.",
+      "syncing": "Gemmer din mail på denne enhed…",
+      "usage": "{size} på denne enhed",
+      "usage_updated": "{size} på denne enhed, opdateret {time}",
+      "off_confirm_title": "Slå offlinetilstand fra?",
+      "off_confirm_message": "{count, plural, one {# besked i udbakken er ikke sendt.} other {# beskeder i udbakken er ikke sendt.}} Hvis du slår det fra, slettes de sammen med den mail, der er gemt på denne enhed.",
+      "off_confirm": "Slå fra"
+    },
+    "outbox": {
+      "title": "Udbakke",
+      "description": "Beskeder, du skrev offline. De sendes, når enheden er online igen.",
+      "empty": "Intet venter på at blive sendt.",
+      "no_subject": "(intet emne)",
+      "to": "Til: {recipients}",
+      "status_waiting": "Venter på forbindelse",
+      "status_sending": "Sendes",
+      "status_failed": "Kunne ikke sendes: {error}",
+      "status_uncertain": "Forbindelsen blev afbrudt under afsendelsen. Se i Sendt, før du sender den igen.",
+      "retry": "Send igen",
+      "delete": "Slet",
+      "delete_confirm_title": "Slet denne besked?",
+      "delete_confirm_message": "Den er ikke sendt og kan ikke hentes tilbage.",
+      "changes": "{count, plural, one {# ændring} other {# ændringer}} af læst, markeringer eller mapper sendes, når du er online igen.",
+      "status_held": "Din organisations regler blev ændret, mens beskeden ventede. Skriv den igen for at sende den.",
+      "retry_label": "Send igen: {subject}",
+      "delete_label": "Slet: {subject}"
+    },
+    "banner": {
+      "offline": "Du er offline. Du ser den mail, der er gemt på denne enhed. Det, du ændrer eller skriver, sendes, når du er online igen.",
+      "outbox": "{count, plural, one {# besked} other {# beskeder}} i udbakken",
+      "server_down": "Mailserveren kan ikke nås. Du ser den mail, der er gemt på denne enhed. Det, du ændrer eller skriver, sendes, når den svarer igen."
+    },
+    "toast": {
+      "queued": "Gemt i udbakken. Den sendes, når du er online igen.",
+      "sent": "Sendt fra udbakken: {subject}",
+      "send_failed": "En besked i udbakken kunne ikke sendes: {subject}",
+      "refused_delete": "Endelig sletning kræver forbindelse. Prøv igen, når du er online.",
+      "refused_other": "Det kræver forbindelse. Prøv igen, når du er online.",
+      "forbidden": "Din organisation har slået offlinetilstand fra. Den mail, der var gemt på denne enhed, er fjernet.",
+      "back_online": "Du er online igen. Genindlæs for at logge ind og sende det, der venter.",
+      "reload": "Genindlæs",
+      "held": "En besked i udbakken venter på dig: {subject}",
+      "lost": "Disse beskeder blev ikke sendt og er slettet: {subjects}"
+    },
+    "signout": {
+      "title": "Log ud med usendte beskeder?",
+      "message": "{count, plural, one {# besked er ikke sendt.} other {# beskeder er ikke sendt.}} Når du logger ud, slettes de.",
+      "confirm": "Log ud",
+      "lost": "Disse beskeder blev ikke sendt og blev slettet, da du blev logget ud: {subjects}"
+    },
+    "errors": {
+      "unavailable": "Det kræver forbindelse. Prøv igen, når du er online.",
+      "plugins_down": "Dit plugin til signering eller kryptering kører ikke offline. Send dette, når du er online igen.",
+      "file_missing": "En fil, der blev vedhæftet offline, er ikke længere på denne enhed. Vedhæft den igen.",
+      "no_sent_mailbox": "Mappen Sendt blev ikke fundet.",
+      "no_drafts_mailbox": "Mappen Kladder blev ikke fundet."
+    }
   },
   "deep_link": {
     "message_not_found": "Denne besked er ikke længere tilgængelig.",
@@ -5734,11 +6039,15 @@
       },
       "compose_read": {
         "title": "Læse den besked, du skriver",
-        "body": "Læse teksten i en besked, mens du skriver den, når du bruger pluginet i editoren. Ikke signaturen eller den citerede besked."
+        "body": "Læse en besked, mens du skriver den, når du bruger pluginet i editoren: tekst, emne, modtagere inklusive Bcc og vedhæftningernes navne og størrelser. Ikke signaturen eller den citerede besked."
       },
       "compose_write": {
         "title": "Ændre den besked, du skriver",
         "body": "Erstatte eller tilføje tekst i en besked, mens du skriver den, når du bruger pluginet i editoren. Du kan fortryde hver ændring, og du bestemmer stadig, om den sendes."
+      },
+      "compose_check": {
+        "title": "Tjekke det, du skriver",
+        "body": "Læser det, du skriver i editoren, mens du skriver, og kan sende det til den tjeneste, den bruger. Kun når korrekturen er slået til, og intet, så længe en besked er sat til at blive signeret eller krypteret. Tekst, du skrev, før du slog det til, kan allerede være tjekket."
       },
       "email_forward": {
         "title": "Videresende din post",
@@ -5758,7 +6067,7 @@
       },
       "ui_tasks": {
         "title": "Tilføje til opgavevisningen",
-        "body": "Vise sine egne sektioner i en opgaves detaljer og knapper i opgavelisten."
+        "body": "Vise sine egne sektioner i en opgaves detaljer, knapper i opgavelisten og sin egen opgaveliste i stedet for Bulwarks."
       },
       "ui_files": {
         "title": "Tilføje til filvisningen",
@@ -5810,6 +6119,10 @@
       "error_server": "Angiv serverens adresse, for eksempel https://cloud.example.com",
       "error_save": "Kunne ikke gemme: {error}"
     }
+  },
+  "send_guards": {
+    "not_running": "Ikke sendt. En kontrol, som din organisation kræver, kører ikke. Prøv igen om et øjeblik.",
+    "stopped_working": "Ikke sendt. En kontrol, som din organisation kræver, virker ikke længere. Genindlæs siden. Hvis det ikke hjælper, så kontakt din administrator."
   },
   "plugin_list": {
     "filters": "Filtre",
@@ -6053,6 +6366,77 @@
       "party_size": "Antal personer: {count}",
       "added_from": "Tilføjet fra en mail fra {domain}",
       "added_from_subject": "Tilføjet fra mailen »{subject}« fra {domain}"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Stavning",
+      "grammar": "Grammatik",
+      "style": "Stil",
+      "other": "Forslag"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Ingen forslag",
+      "suggestions": "Forslag",
+      "replace_with": "Erstat med {text}",
+      "also": "Også fra {checker}",
+      "ignore": "Ignorér",
+      "add_to_dictionary": "Føj til ordbog",
+      "disable_rule": "Slå denne regel fra",
+      "changed": "Teksten er ændret. Vent på næste tjek."
+    },
+    "list_item": "{word}: {message} Forslag: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Ingen stave- eller grammatikfejl} one {# stave- eller grammatikfejl} other {# stave- eller grammatikfejl}}",
+    "status": {
+      "title": "Korrektur",
+      "off": "Korrektur slået fra",
+      "paused": "Korrektur sat på pause",
+      "rate_limited": "Tjek sat på pause",
+      "unavailable": "Tjek ikke tilgængeligt",
+      "checking": "Tjekker…",
+      "issues": "{count, plural, =0 {Ingen problemer} one {# problem} other {# problemer}}"
+    },
+    "panel": {
+      "title": "Korrektur",
+      "required": "Krævet af din organisation",
+      "check_message": "Tjek denne besked",
+      "notice": "Mens du skriver, sendes teksten til {checkers} for at blive tjekket. Din signatur og den citerede besked udelades. Der sendes intet, så længe en besked er sat til at blive signeret eller krypteret; det, du skrev, før du slog det til, kan allerede være tjekket.",
+      "turn_on": "Slå korrektur til",
+      "paused_protected": "Intet bliver tjekket, så længe denne besked er sat til at blive signeret eller krypteret.",
+      "paused_unknown": "{plugin} kan signere eller kryptere beskeder uden at vise det her, så intet bliver tjekket, mens den er slået til.",
+      "rate_limited": "{checker} bad om at vente. Tjekket starter igen om et minut.",
+      "unavailable": "{checker} kan ikke tjekke lige nu. Den prøver igen, når du skriver videre.",
+      "no_issues": "Ingen problemer fundet.",
+      "list_label": "Problemer i denne besked",
+      "shortcuts": "Næste problem: {next}. Forrige: {previous}."
+    },
+    "notice": {
+      "on": "Korrektur er slået til. Mens du skriver, sendes teksten til {checkers} for at blive tjekket, uden din signatur og den citerede besked. Der sendes intet, så længe en besked er sat til at blive signeret eller krypteret; det, du skrev før, kan allerede være tjekket.",
+      "forced": "Din organisation har slået korrektur til. Mens du skriver, sendes teksten til {checkers} for at blive tjekket, uden din signatur og den citerede besked. Der sendes intet, så længe en besked er sat til at blive signeret eller krypteret; det, du skrev før, kan allerede være tjekket.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Send med åbne problemer?",
+      "body": "{count, plural, one {# stave- eller grammatikfejl er stadig åben} other {# stave- eller grammatikfejl er stadig åbne}} i denne besked.",
+      "review": "Gennemgå",
+      "send": "Send alligevel"
+    },
+    "settings": {
+      "title": "Korrektur",
+      "description": "Understreg stave- og grammatikfejl, mens du skriver, med forslag til at rette dem.",
+      "enable": "Tjek stavning og grammatik, mens jeg skriver",
+      "enable_description": "Teksten, du skriver, sendes til korrekturtilføjelsen og den tjeneste, den bruger, uden din signatur og citerede beskeder. Der sendes intet, så længe en besked er sat til at blive signeret eller krypteret.",
+      "no_checker": "Der er ingen korrekturtilføjelse installeret. Bed din administrator om at tilføje en.",
+      "plugin_description": "Sender det, du skriver, til {plugin}.",
+      "writing_language": "Skrivesprog",
+      "writing_language_description": "Det sprog, du oftest skriver på. Korrekturen og din browsers stavekontrol bruger det.",
+      "auto": "Registrér automatisk"
+    },
+    "shortcuts": {
+      "next_issue": "Næste stave- eller grammatikfejl",
+      "previous_issue": "Forrige stave- eller grammatikfejl"
     }
   }
 }

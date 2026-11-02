@@ -135,6 +135,10 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/push/active",
   "/api/push/verify",
   "/api/push/jmap",
+  // Offline mode (#523) - OfflineHost isn't mounted in Lite, and the update
+  // check (lib/app-update.ts) asks lite-build.json there instead.
+  "/api/offline/shell",
+  "/api/version",
   // Dev-only JMAP mock.
   "/api/jmap",
   "/api/dev-jmap",

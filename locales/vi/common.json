@@ -1,5 +1,5 @@
 {
-  "meta_description": "Ứng dụng thư điện tử trên web tối giản sử dụng giao thức JMAP",
+  "meta_description": "Webmail tự lưu trữ cho thư, lịch, danh bạ và tệp, xây dựng trên JMAP",
   "login": {
     "title": "Thư điện tử trên web",
     "username_label": "Email",
@@ -461,7 +461,6 @@
     "view_in_light_mode": "Xem ở chế độ sáng",
     "export_email": "Xuất dưới dạng .eml",
     "forward_as_attachment": "Chuyển tiếp dưới dạng tệp đính kèm",
-    "import_email": "Nhập .eml hoặc .zip…",
     "keyboard_shortcuts": "Phím tắt",
     "email_source": "Nguồn email",
     "draft_banner": "Thư này là một bản nháp",
@@ -473,6 +472,9 @@
     "source_truncated": "Đang hiển thị {size} đầu tiên. Xuất thư cho phần còn lại.",
     "source_copied": "Đã sao chép nguồn vào bảng nhớ tạm",
     "attachments": "Tệp đính kèm",
+    "attachments_count": "{count, plural, other {# tệp đính kèm}}",
+    "attachments_show_more": "Hiện thêm {count}",
+    "attachments_show_fewer": "Ẩn bớt",
     "important": "Quan trọng",
     "download": "Tải xuống",
     "download_all": "Tải xuống tất cả",
@@ -880,6 +882,35 @@
     "send_anyway": "Vẫn gửi",
     "back": "Quay lại"
   },
+  "phishing_report": {
+    "action": "Báo cáo lừa đảo…",
+    "confirm_title": "Báo cáo lừa đảo?",
+    "confirm_message": "{count, plural, =1 {Thư sẽ được gửi đến {address} và chuyển vào Thư rác.} other {Mỗi thư trong số # thư sẽ được gửi đến {address} thành một báo cáo riêng và chuyển vào Thư rác.}}",
+    "confirm": "Báo cáo",
+    "cancel": "Hủy",
+    "sending": "Đang báo cáo…",
+    "done": "{count, plural, =1 {Đã báo cáo đến {address} và chuyển vào Thư rác.} other {Đã báo cáo # thư đến {address} và chuyển vào Thư rác.}}",
+    "not_moved": "{count, plural, =1 {Đã báo cáo đến {address}, nhưng không thể chuyển thư vào Thư rác.} other {Đã báo cáo đến {address}, nhưng không thể chuyển # thư vào Thư rác.}}",
+    "failed": "{count, plural, =1 {Không thể báo cáo thư.} other {Không thể báo cáo # thư.}}",
+    "undo": "Hoàn tác",
+    "undone": "{count, plural, =1 {Đã chuyển về. Báo cáo đã được gửi trước đó.} other {Đã chuyển về. Các báo cáo đã được gửi trước đó.}}",
+    "undo_failed": "Không thể chuyển về.",
+    "banner": "Bạn đã báo cáo thư này là lừa đảo. Các liên kết trong thư đã bị tắt.",
+    "link_off": "đã tắt liên kết",
+    "link_off_note": "(đã tắt liên kết)",
+    "no_subject": "(không có tiêu đề)"
+  },
+  "classification": {
+    "picker_label": "Phân loại bảo mật",
+    "chip_label": "Phân loại bảo mật: {name}",
+    "none": "Chưa chọn phân loại",
+    "pick_required": "Chọn phân loại",
+    "required_hint": "Tổ chức của bạn yêu cầu chọn phân loại bảo mật.",
+    "required_toast": "Hãy chọn phân loại bảo mật trước khi gửi.",
+    "quick_reply_needs_label": "Thư trả lời này cần phân loại bảo mật. Hãy chọn ở đây rồi gửi.",
+    "forward_needs_label": "Cần có phân loại bảo mật. Hãy chuyển tiếp thư từ khung soạn thư.",
+    "received_hint": "Do chương trình thư của người gửi đặt. Ai cũng có thể đặt phân loại, nên nó không chứng minh được gì."
+  },
   "email_composer": {
     "select_from_directory": "Chọn từ danh bạ",
     "minimize": "Thu nhỏ",
@@ -1260,8 +1291,6 @@
     "templates_import_errors": "Không thể nhập một số mẫu",
     "templates_import_empty": "Không tìm thấy mẫu nào trong tệp",
     "export_email_error": "Không xuất được email",
-    "import_email_success": "Email được nhập thành công",
-    "import_email_error": "Không thể nhập email",
     "rule_created": "Đã tạo quy tắc",
     "rule_merged": "Đã thêm vào quy tắc “{name}”",
     "rule_already_covered": "Đã được áp dụng theo quy tắc “{name}”",
@@ -1284,12 +1313,46 @@
     "tag_removed_count": "{count, plural, one {Đã xóa thẻ khỏi # email} other {Đã xóa thẻ khỏi # email}}",
     "new_mail_count": "{count, plural, one {# thư mới} other {# thư mới}}"
   },
+  "org_notice": {
+    "label": "Thông báo",
+    "dismiss": "Đóng thông báo",
+    "severity_info": "Thông tin",
+    "severity_warning": "Cảnh báo",
+    "severity_critical": "Quan trọng"
+  },
+  "vacation_templates": {
+    "title": "Mẫu của tổ chức",
+    "description": "Bắt đầu từ một thư trả lời do tổ chức của bạn soạn. Bạn có thể sửa nội dung sau đó.",
+    "pick_label": "Dùng mẫu",
+    "pick_placeholder": "Chọn mẫu",
+    "deputy_label": "Địa chỉ người thay thế",
+    "deputy_placeholder": "colleague@example.com",
+    "deputy_hint": "Thư trả lời sẽ nêu người này cho các việc khẩn.",
+    "deputy_missing": "Hãy nhập địa chỉ người thay thế trước.",
+    "deputy_name_label": "Tên người thay thế",
+    "deputy_name_missing": "Hãy nhập tên người thay thế trước.",
+    "apply": "Dùng nội dung này",
+    "apply_hint": "Thay thế tiêu đề và nội dung bên dưới."
+  },
+  "retention_notice": {
+    "line": "Thư ở đây sẽ bị xóa {count, plural, other {# ngày}} sau khi được chuyển vào đây."
+  },
+  "device_policy": {
+    "downloads_off": "Tổ chức của bạn đã tắt tải xuống.",
+    "download_off_named": "{name}: tổ chức của bạn đã tắt tải xuống",
+    "download_blocked": "Tổ chức của bạn đã tắt tải xuống.",
+    "export_blocked": "Tổ chức của bạn đã tắt xuất thư.",
+    "print_blocked": "Tổ chức của bạn đã tắt in."
+  },
   "third_party": {
     "push_needs_relay": "Thông báo đẩy cần có một chuyển tiếp đẩy do tổ chức của bạn điều hành và chưa có cài đặt nào. Thư mới vẫn hiển thị khi ứng dụng đang mở.",
     "relay_desc": "Chỉ các rơle riêng của tổ chức bạn mới được cung cấp vì máy chủ này không liên hệ với các dịch vụ bên ngoài.",
     "relay_none": "Không có gì được thiết lập",
     "plugin_refused": "Chưa bắt đầu: plugin này kết nối với các dịch vụ bên ngoài mà tổ chức của bạn đã tắt.",
     "remote_content_blocked": "Tổ chức của bạn chặn nội dung từ các máy chủ khác nên hình ảnh từ xa trong thông báo này không được hiển thị."
+  },
+  "remote_content_lock": {
+    "trusted_senders_note": "Tổ chức của bạn chặn nội dung từ xa trong mọi thư, nên nội dung đó cũng không tải từ người gửi tin cậy."
   },
   "date": {
     "today": "Hôm nay",
@@ -1554,6 +1617,10 @@
         "label": "Hiển thị tài khoản thư được chia sẻ",
         "description": "Liệt kê thư mục của các hộp thư được chia sẻ với bạn trong mục Được chia sẻ ở thanh bên. Tắt để ẩn tất cả hoặc ẩn riêng từng tài khoản bên dưới. Lịch và danh bạ của chúng vẫn được giữ lại."
       },
+      "compact_shared_mailboxes": {
+        "label": "Thu gọn hộp thư được chia sẻ",
+        "description": "Hiển thị mỗi hộp thư được chia sẻ thành một dòng mở hộp thư đến, các thư mục của nó nằm bên dưới. Các thư mục trống như Thư nháp hoặc Thùng rác được ẩn đi."
+      },
       "pro_interface": {
         "label": "Giao diện Pro (thử nghiệm)",
         "description": "Bố cục chỉ dành cho máy tính, dành cho người dùng nâng cao, hỗ trợ duyệt thư bằng nhiều tab và thao tác giữa các tài khoản. Giao diện tiêu chuẩn không bị ảnh hưởng; bạn có thể chuyển lại bất cứ lúc nào.",
@@ -1784,6 +1851,12 @@
         "label": "Xóa tìm kiếm khi chuyển thư mục",
         "description": "Khi nhấn vào thư mục (Hộp thư đến, Đã gửi, …), nội dung tìm kiếm hiện tại sẽ bị xóa và thư mục đó được mở. Nếu tắt, nội dung tìm kiếm vẫn được giữ và áp dụng lại trong thư mục bạn chuyển đến."
       },
+      "search_default_scope": {
+        "label": "Tìm kiếm trong",
+        "description": "Nơi một lượt tìm kiếm mới sẽ tìm. Bạn vẫn có thể chọn thư mục khác trong bộ lọc tìm kiếm.",
+        "all": "Tất cả các thư mục ngoại trừ Thư rác và Thùng rác",
+        "folder": "Thư mục đang mở"
+      },
       "request_read_receipt": {
         "label": "Mặc định yêu cầu xác nhận đã đọc",
         "description": "Bật sẵn yêu cầu xác nhận đã đọc khi soạn thư mới."
@@ -1891,6 +1964,14 @@
         "above_quote": "Trước phần trích dẫn",
         "below_quote": "Sau phần trích dẫn"
       },
+      "signature_new_mail": {
+        "label": "Chữ ký trong thư mới",
+        "description": "Tự động chèn chữ ký của bạn khi soạn thư mới. Tắt nếu bạn muốn mỗi thư mới bắt đầu không có chữ ký."
+      },
+      "signature_reply_forward": {
+        "label": "Chữ ký khi trả lời và chuyển tiếp",
+        "description": "Tự động thêm chữ ký của bạn khi trả lời hoặc chuyển tiếp thư. Tắt nếu muốn gửi chúng không kèm chữ ký."
+      },
       "signature_separator": {
         "label": "Dấu phân cách chữ ký",
         "description": "Thêm dòng phân cách chuẩn \"-- \" trước chữ ký (RFC 3676). Tắt nếu bạn muốn nối thẳng nội dung thư với chữ ký."
@@ -1911,8 +1992,8 @@
       "attachment_position": {
         "label": "Vị trí tệp đính kèm",
         "description": "Vị trí hiển thị tệp đính kèm trong phần đầu thư",
-        "beside-sender": "Bên cạnh người gửi",
-        "below-header": "Bên dưới phần đầu thư"
+        "below-header": "Bên dưới phần đầu thư",
+        "below-message": "Thẻ bên dưới thư"
       },
       "emails_per_page": {
         "10": "10 thư",
@@ -3558,7 +3639,6 @@
     "new_folder": "Thư mục mới…",
     "rename": "Đổi tên…",
     "share": "Chia sẻ…",
-    "import_email": "Nhập .eml hoặc .zip…",
     "empty_folder": "Làm trống thư mục",
     "empty_folder_generic": "Làm trống thư mục",
     "delete_folder": "Xóa thư mục",
@@ -4847,6 +4927,51 @@
     "cancelled": "{name} đã hủy \"{title}\"",
     "untitled": "Sự kiện không có tiêu đề"
   },
+  "company_calendars": {
+    "section": "Tổ chức"
+  },
+  "vacation_calendar": {
+    "label": "Chặn lịch của tôi",
+    "description": "Thêm một sự kiện bận trong thời gian bạn vắng mặt để không ai đặt cuộc họp với bạn lúc đó.",
+    "no_access_managed": "Không thể chặn lịch của tài khoản này: bạn không có quyền ghi.",
+    "no_calendar": "Không thể chặn lịch: Bulwark không tìm thấy lịch để thêm sự kiện.",
+    "filter_warning": "Bật tính năng này sẽ tắt tập lệnh lọc của riêng bạn trong thời gian trả lời tự động bật."
+  },
+  "calendar_delegate": {
+    "answer_for": "Trả lời thay {name}",
+    "no_write": "Bạn xem được lời mời của {name} nhưng không thể trả lời thay. Hãy xin quyền chỉnh sửa.",
+    "also_invited": "Bạn cũng được mời, và máy chủ này không phân biệt được câu trả lời của bạn với của {name}. {name} phải tự trả lời lời mời này.",
+    "answered_by": "Đã được {who} trả lời"
+  },
+  "free_busy_share": {
+    "button": "Chia sẻ lịch rảnh/bận của tôi với {group}",
+    "already": "Lịch rảnh/bận của bạn đã được chia sẻ với {group}",
+    "done": "Đã chia sẻ lịch rảnh/bận của bạn với {group}.",
+    "error": "Không chia sẻ được lịch rảnh/bận. Hãy thử lại.",
+    "group_label": "Nhóm",
+    "title": "Rảnh/bận",
+    "description": "Đồng nghiệp trong nhóm thấy khi nào bạn bận, không thấy nội dung sự kiện. Tính năng gợi ý thời gian dùng thông tin này."
+  },
+  "find_time": {
+    "suggest": "Gợi ý thời gian",
+    "searching": "Đang tìm thời gian trống",
+    "slots_title": "Trống với mọi người mà Bulwark kiểm tra được",
+    "slot": "{day}, {start} đến {end}",
+    "none": "Không có thời gian trống trong 10 ngày làm việc tới.",
+    "picked": "Đã dời sự kiện sang {slot}",
+    "rate_limited": "Quá nhiều lượt tra cứu trong phút vừa qua. Hãy thử lại sau một phút.",
+    "unavailable": "Máy chủ này không có thông tin rảnh/bận, nên Bulwark không thể gợi ý thời gian.",
+    "not_checked": "Chưa kiểm tra:",
+    "not_checked_item": "{who}: {reason}",
+    "reason_external": "ngoài tổ chức của bạn",
+    "reason_unknown": "không rõ giờ bận",
+    "reason_not_found": "không tìm thấy trên máy chủ này",
+    "reason_error": "không kiểm tra được",
+    "unknown_note": "Bulwark chỉ thấy giờ bận trong các lịch được chia sẻ với bạn. Với những người này, nó không phân biệt được rảnh hay chưa chia sẻ.",
+    "directory_off": "Bulwark không thể tra cứu người trên máy chủ này. Quản trị viên có thể bật truy vấn thư mục trong Stalwart.",
+    "not_looked_up": "Không tra cứu được địa chỉ này",
+    "found": "Số khung giờ trống tìm thấy: {count}"
+  },
   "share_notifications": {
     "someone": "Ai đó",
     "shared": "{name} đã chia sẻ {kind} \"{object}\" với bạn",
@@ -5196,7 +5321,6 @@
     "settings_ascending": "Tăng dần",
     "settings_descending": "Giảm dần",
     "disabled_title": "Tính năng tệp bị quản trị viên của bạn tắt",
-    "disabled_description": "Việc tải tệp lớn lên qua WebDAV có thể gây ra sự mất ổn định của Stalwart/RocksDB, bao gồm cả sự cố hết bộ nhớ và mức sử dụng đĩa không thể phục hồi. Các tệp đã xóa có thể không bị xóa ngay lập tức khỏi bộ nhớ blob. Tính năng này không được khuyến nghị cho môi trường sản xuất.",
     "migration_title": "Đang cập nhật tệp của bạn…",
     "migration_description": "Sắp xếp các thư mục và tệp vào cấu trúc thích hợp của chúng. Điều này chỉ xảy ra một lần.",
     "new": "Mới",
@@ -5383,6 +5507,117 @@
   "unified_mailbox": {
     "search_unavailable": "Tìm kiếm không có sẵn trong chế độ xem hợp nhất"
   },
+  "mail_import": {
+    "menu_import": "Nhập thư…",
+    "settings_label": "Nhập thư",
+    "settings_description": "Đưa thư vào từ tệp .eml, ZIP, mbox hoặc .pst và .ost của Outlook.",
+    "settings_button": "Nhập…",
+    "title": "Nhập thư",
+    "description": "Chọn tệp .eml, .zip, .mbox hoặc .pst và .ost của Outlook.",
+    "choose_files": "Chọn tệp…",
+    "chosen_files": "Tệp đã chọn",
+    "remove_file": "Bỏ {name}",
+    "format_eml": "Thư",
+    "format_zip": "Tệp nén ZIP",
+    "format_mbox": "Tệp mbox",
+    "format_pst": "Tệp dữ liệu Outlook",
+    "target_label": "Nhập vào",
+    "target_top": "Cấp cao nhất",
+    "keep_folders": "Tạo lại các thư mục từ tệp",
+    "keep_folders_hint": "Thư mục cùng tên sẽ được dùng lại.",
+    "resume": "Tiếp tục từ chỗ lần nhập trước của các tệp này dừng lại (thư đã xử lý: {count})",
+    "quota_note": "Nhiều máy chủ chỉ nhận khoảng 1000 thư hoặc 50 MB mỗi giờ từ một người dùng. Lần nhập lớn hơn sẽ tạm dừng rồi tự tiếp tục.",
+    "start": "Nhập",
+    "cancel": "Hủy",
+    "running_title": "Đang nhập thư",
+    "progress_label": "Tiến độ nhập",
+    "status_imported": "Thư đã nhập: {count}",
+    "reading_file": "Đang đọc {name}",
+    "paused": "Tạm dừng đến {time}. Máy chủ nhận tối đa {files} lượt tải lên hoặc {size} mỗi giờ. Việc nhập sẽ tự tiếp tục.",
+    "paused_generic": "Tạm dừng đến {time}. Đã chạm giới hạn tải lên của máy chủ. Việc nhập sẽ tự tiếp tục.",
+    "background": "Chạy trong nền",
+    "cancel_import": "Hủy nhập",
+    "chip": "Đang nhập thư: {percent}%",
+    "chip_paused": "Việc nhập tạm dừng đến {time}",
+    "done_title": "Đã nhập xong",
+    "cancelled_title": "Đã hủy nhập",
+    "failed_title": "Việc nhập đã dừng",
+    "summary_imported": "Thư đã nhập: {count}",
+    "summary_folders": "Thư mục đã tạo: {count}",
+    "summary_skipped": "Không nhập:",
+    "skip_too_large": "Lớn hơn mức máy chủ nhận: {count}",
+    "skip_deleted": "Đã xóa trong Thunderbird: {count}",
+    "skip_embedded": "Thư đính kèm trong thư khác: {count}",
+    "skip_contact": "Danh bạ: {count}",
+    "skip_calendar": "Mục lịch: {count}",
+    "skip_other": "Mục khác: {count}",
+    "summary_failed": "Không nhập được: {count}",
+    "failure_invalid": "không phải thư hợp lệ",
+    "untitled": "(không có tiêu đề)",
+    "cancelled_hint": "Để tiếp tục sau, hãy nhập lại cùng các tệp vào cùng thư mục.",
+    "close": "Đóng",
+    "pst_note": "Từ tệp Outlook chỉ nhập thư. Danh bạ, mục lịch và công việc được đếm rồi bỏ qua.",
+    "pst_error_encrypted": "Tệp Outlook này dùng mã hóa mạnh mà Bulwark không đọc được. Trong Outlook, hãy xuất thư sang một tệp .pst mới không mã hóa.",
+    "pst_error_not_pst": "Tệp này không phải tệp dữ liệu Outlook mà Bulwark đọc được.",
+    "pst_error_unreadable": "Bulwark không đọc được tệp Outlook này.",
+    "pst_error_worker": "Không tải được trình đọc tệp Outlook. Hãy tải lại trang rồi thử lại.",
+    "error_over_quota": "Hộp thư đã đầy nên việc nhập đã dừng. Hãy giải phóng dung lượng rồi nhập lại cùng các tệp vào cùng thư mục để tiếp tục.",
+    "error_forbidden": "Bạn không được thêm thư vào thư mục này nên việc nhập đã dừng.",
+    "error_failures": "Quá nhiều thư liên tiếp không nhập được nên việc nhập đã dừng. Hãy nhập lại cùng các tệp vào cùng thư mục sau để tiếp tục.",
+    "error_network": "Kết nối tới máy chủ liên tục thất bại nên việc nhập đã dừng. Hãy nhập lại cùng các tệp vào cùng thư mục để tiếp tục.",
+    "error_busy": "Các tệp này đang được nhập ở một thẻ khác.",
+    "retry_hint": "Nhập lại cùng các tệp vào cùng thư mục để thử lại những thư không nhập được.",
+    "skip_unreadable": "Không đọc được trong tệp Outlook: {count}",
+    "keep_folders_top_hint": "Ở cấp cao nhất, Hộp thư đến, Thư đã gửi, Thư đã xóa và các thư mục tương tự sẽ vào thư mục của bạn.",
+    "toast_done": "Đã nhập xong. Đã nhập: {imported}, thất bại: {failed}.",
+    "toast_stopped": "Việc nhập đã dừng.",
+    "toast_show": "Hiện",
+    "section_title": "Tệp thư",
+    "section_description": "Đưa thư vào từ tệp, hoặc lưu thư của bạn thành tệp."
+  },
+  "mail_export": {
+    "menu_export": "Xuất thư mục…",
+    "settings_label": "Xuất toàn bộ thư",
+    "settings_description": "Lưu mọi thư mục của tài khoản này vào một tệp ZIP, dưới dạng tệp mbox hoặc .eml.",
+    "settings_button": "Xuất…",
+    "title_folder": "Xuất “{name}”",
+    "title_account": "Xuất toàn bộ thư",
+    "description_folder": "Lưu các thư trong thư mục này thành một tệp.",
+    "description_account": "Lưu mọi thư mục của tài khoản này vào một tệp ZIP.",
+    "format_label": "Định dạng",
+    "format_mbox_folder": "Tệp mbox",
+    "format_eml_folder": "ZIP gồm các tệp .eml",
+    "format_mbox_account": "ZIP với một tệp mbox cho mỗi thư mục",
+    "format_eml_account": "ZIP gồm các tệp .eml, mỗi thư mục thư một thư mục",
+    "hint_mbox": "Thunderbird, Apple Mail và hầu hết các chương trình thư đều mở được tệp mbox.",
+    "hint_eml": "Mỗi thư một tệp, chương trình thư nào cũng mở được.",
+    "save_picker": "Bạn chọn nơi lưu tệp.",
+    "save_download": "Tệp sẽ được tải xuống khi xuất xong.",
+    "save_memory": "Trình duyệt này giữ toàn bộ bản xuất trong bộ nhớ nên chỉ lưu được tối đa 200 MB. Với dung lượng lớn hơn, hãy dùng Chrome hoặc Edge, hoặc xuất từng thư mục.",
+    "start": "Xuất",
+    "cancel": "Hủy",
+    "running_title": "Đang xuất thư",
+    "progress_label": "Tiến độ xuất",
+    "status_exported": "Thư đã xuất: {count} / {total}",
+    "paused": "Tạm dừng đến {time}: máy chủ yêu cầu nghỉ. Việc xuất sẽ tự tiếp tục.",
+    "background": "Chạy trong nền",
+    "cancel_export": "Hủy xuất",
+    "chip": "Đang xuất thư: {percent}%",
+    "chip_paused": "Việc xuất tạm dừng đến {time}",
+    "done_title": "Đã xuất xong",
+    "cancelled_title": "Đã hủy xuất",
+    "failed_title": "Việc xuất đã dừng",
+    "summary_exported": "Thư đã xuất: {count}",
+    "summary_file": "Đã lưu thành {name} ({size}).",
+    "summary_failed": "Không xuất được: {count}",
+    "download_again": "Tải xuống lại",
+    "too_large": "Bản xuất lớn hơn mức trình duyệt này giữ được trong bộ nhớ. Hãy dùng Chrome hoặc Edge, hoặc xuất từng thư mục.",
+    "close": "Đóng",
+    "untitled": "(không có tiêu đề)",
+    "toast_done": "Đã xuất xong: {name}",
+    "toast_stopped": "Việc xuất đã dừng.",
+    "toast_show": "Hiện"
+  },
   "recover_deleted": {
     "tab": "Khôi phục các mục đã xóa",
     "title": "Khôi phục các mục đã xóa",
@@ -5423,6 +5658,76 @@
     "install": "Cài đặt",
     "dont_remind": "Đừng nhắc tôi nữa",
     "dismiss_aria": "Loại bỏ lời nhắc cài đặt"
+  },
+  "app_update": {
+    "ready": "Đã có phiên bản mới của {appName}.",
+    "reload": "Tải lại"
+  },
+  "offline": {
+    "settings": {
+      "title": "Ngoại tuyến",
+      "description": "Đọc và viết thư trên thiết bị này khi không có kết nối.",
+      "keep_label": "Giữ thư trên thiết bị này",
+      "keep_description": "Giữ 30 ngày gần nhất của Hộp thư đến và các thư mục bạn mở, tối đa 250 MB, được mã hóa trong trình duyệt này. Khi ngoại tuyến bạn có thể đọc, gắn cờ và di chuyển thư, còn thư bạn viết sẽ chờ trong Hộp thư đi. Khi đăng xuất, tất cả sẽ bị xóa.",
+      "warning": "Bất kỳ ai dùng được hồ sơ trình duyệt này đều đọc được các thư này. Chỉ bật trên thiết bị của riêng bạn và dùng mã hóa ổ đĩa.",
+      "forbidden": "Tổ chức của bạn không cho phép giữ thư trên thiết bị.",
+      "unsupported": "Trình duyệt này không thể giữ thư để dùng ngoại tuyến.",
+      "syncing": "Đang lưu thư của bạn vào thiết bị này…",
+      "usage": "{size} trên thiết bị này",
+      "usage_updated": "{size} trên thiết bị này, cập nhật {time}",
+      "off_confirm_title": "Tắt chế độ ngoại tuyến?",
+      "off_confirm_message": "{count, plural, other {Có # thư trong Hộp thư đi chưa được gửi.}} Tắt sẽ xóa chúng cùng với thư được giữ trên thiết bị này.",
+      "off_confirm": "Tắt"
+    },
+    "outbox": {
+      "title": "Hộp thư đi",
+      "description": "Thư bạn viết khi ngoại tuyến. Chúng sẽ được gửi khi thiết bị này trực tuyến trở lại.",
+      "empty": "Không có gì đang chờ gửi.",
+      "no_subject": "(không có tiêu đề)",
+      "to": "Đến: {recipients}",
+      "status_waiting": "Đang chờ kết nối",
+      "status_sending": "Đang gửi",
+      "status_failed": "Không gửi được: {error}",
+      "status_uncertain": "Kết nối bị ngắt khi đang gửi. Hãy kiểm tra Thư đã gửi trước khi gửi lại.",
+      "retry": "Gửi lại",
+      "delete": "Xóa",
+      "delete_confirm_title": "Xóa thư này?",
+      "delete_confirm_message": "Thư chưa được gửi và không thể khôi phục.",
+      "changes": "{count, plural, other {# thay đổi}} về trạng thái đọc, cờ hoặc thư mục sẽ được gửi khi bạn trực tuyến trở lại.",
+      "status_held": "Quy tắc của tổ chức đã thay đổi trong lúc thư chờ. Hãy viết lại để gửi.",
+      "retry_label": "Gửi lại: {subject}",
+      "delete_label": "Xóa: {subject}"
+    },
+    "banner": {
+      "offline": "Bạn đang ngoại tuyến. Bạn đang xem thư được giữ trên thiết bị này. Những gì bạn thay đổi hoặc viết sẽ được gửi khi bạn trực tuyến trở lại.",
+      "outbox": "{count, plural, other {# thư}} trong Hộp thư đi",
+      "server_down": "Không thể kết nối máy chủ thư. Bạn đang xem thư được giữ trên thiết bị này. Những gì bạn thay đổi hoặc viết sẽ được gửi khi máy chủ phản hồi trở lại."
+    },
+    "toast": {
+      "queued": "Đã lưu vào Hộp thư đi. Thư sẽ được gửi khi bạn trực tuyến trở lại.",
+      "sent": "Đã gửi từ Hộp thư đi: {subject}",
+      "send_failed": "Không gửi được một thư trong Hộp thư đi: {subject}",
+      "refused_delete": "Xóa vĩnh viễn cần có kết nối. Hãy thử lại khi bạn trực tuyến.",
+      "refused_other": "Việc này cần có kết nối. Hãy thử lại khi bạn trực tuyến.",
+      "forbidden": "Tổ chức của bạn đã tắt chế độ ngoại tuyến. Thư được giữ trên thiết bị này đã bị xóa.",
+      "back_online": "Bạn đã trực tuyến trở lại. Hãy tải lại để đăng nhập và gửi những gì đang chờ.",
+      "reload": "Tải lại",
+      "held": "Một thư trong Hộp thư đi cần bạn xem: {subject}",
+      "lost": "Các thư này chưa được gửi và đã bị xóa: {subjects}"
+    },
+    "signout": {
+      "title": "Đăng xuất khi còn thư chưa gửi?",
+      "message": "{count, plural, other {Có # thư chưa được gửi.}} Đăng xuất sẽ xóa chúng.",
+      "confirm": "Đăng xuất",
+      "lost": "Các thư này chưa được gửi và đã bị xóa khi bạn bị đăng xuất: {subjects}"
+    },
+    "errors": {
+      "unavailable": "Việc này cần có kết nối. Hãy thử lại khi bạn trực tuyến.",
+      "plugins_down": "Plugin ký hoặc mã hóa của bạn không chạy khi ngoại tuyến. Hãy gửi thư này khi bạn trực tuyến trở lại.",
+      "file_missing": "Tệp đính kèm khi ngoại tuyến không còn trên thiết bị này. Hãy đính kèm lại.",
+      "no_sent_mailbox": "Không tìm thấy thư mục Thư đã gửi.",
+      "no_drafts_mailbox": "Không tìm thấy thư mục Thư nháp."
+    }
   },
   "deep_link": {
     "message_not_found": "Thư này không còn nữa.",
@@ -5750,7 +6055,7 @@
       },
       "ui_tasks": {
         "title": "Thêm vào công việc",
-        "body": "Hiển thị các phần riêng của nó trong chi tiết công việc và các nút trong danh sách công việc."
+        "body": "Hiển thị các phần riêng của nó trong chi tiết công việc, các nút trong danh sách công việc và danh sách công việc riêng thay cho danh sách của Bulwark."
       },
       "ui_files": {
         "title": "Thêm vào tệp",
@@ -5774,11 +6079,15 @@
       },
       "compose_read": {
         "title": "Đọc thư bạn đang soạn",
-        "body": "Đọc nội dung thư khi bạn đang soạn và sử dụng plugin trong khung soạn thư. Không bao gồm chữ ký hoặc phần thư được trích dẫn."
+        "body": "Đọc thư khi bạn đang soạn và sử dụng plugin trong khung soạn thư: nội dung, tiêu đề, người nhận (kể cả Bcc), tên và kích thước tệp đính kèm. Không bao gồm chữ ký hoặc phần thư được trích dẫn."
       },
       "compose_write": {
         "title": "Thay đổi thư bạn đang soạn",
         "body": "Thay thế hoặc thêm văn bản vào thư khi bạn đang soạn và sử dụng plugin trong khung soạn thư. Bạn có thể hoàn tác từng thay đổi và vẫn là người quyết định có gửi thư hay không."
+      },
+      "compose_check": {
+        "title": "Kiểm tra những gì bạn viết",
+        "body": "Đọc những gì bạn viết trong trình soạn thảo khi bạn gõ và có thể gửi đến dịch vụ mà nó dùng. Chỉ khi bật soát lỗi, và không gửi gì khi thư được đặt để ký hoặc mã hóa. Văn bản bạn viết trước khi bật tùy chọn đó có thể đã được kiểm tra."
       },
       "email_forward": {
         "title": "Chuyển tiếp thư của bạn",
@@ -5822,6 +6131,10 @@
       "error_server": "Nhập địa chỉ của máy chủ, ví dụ https://cloud.example.com",
       "error_save": "Không thể lưu: {error}"
     }
+  },
+  "send_guards": {
+    "not_running": "Chưa gửi. Một bước kiểm tra mà tổ chức của bạn yêu cầu hiện không chạy. Hãy thử lại sau giây lát.",
+    "stopped_working": "Chưa gửi. Một bước kiểm tra mà tổ chức của bạn yêu cầu đã ngừng hoạt động. Hãy tải lại trang. Nếu vẫn không được, hãy báo cho quản trị viên."
   },
   "plugin_list": {
     "filters": "Bộ lọc",
@@ -6065,6 +6378,77 @@
       "party_size": "Số người: {count}",
       "added_from": "Được thêm từ một thư của {domain}",
       "added_from_subject": "Được thêm từ thư “{subject}” của {domain}"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Chính tả",
+      "grammar": "Ngữ pháp",
+      "style": "Văn phong",
+      "other": "Gợi ý"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Không có gợi ý",
+      "suggestions": "Gợi ý",
+      "replace_with": "Thay bằng {text}",
+      "also": "{checker} cũng phát hiện",
+      "ignore": "Bỏ qua",
+      "add_to_dictionary": "Thêm vào từ điển",
+      "disable_rule": "Tắt quy tắc này",
+      "changed": "Văn bản đã thay đổi. Hãy chờ lần kiểm tra tiếp theo."
+    },
+    "list_item": "{word}: {message} Gợi ý: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Không có lỗi chính tả hay ngữ pháp} other {# lỗi chính tả hoặc ngữ pháp}}",
+    "status": {
+      "title": "Soát lỗi",
+      "off": "Đã tắt soát lỗi",
+      "paused": "Đã tạm dừng soát lỗi",
+      "rate_limited": "Đã tạm dừng kiểm tra",
+      "unavailable": "Không thể kiểm tra",
+      "checking": "Đang kiểm tra…",
+      "issues": "{count, plural, =0 {Không có vấn đề} other {# vấn đề}}"
+    },
+    "panel": {
+      "title": "Soát lỗi",
+      "required": "Tổ chức của bạn yêu cầu bật",
+      "check_message": "Kiểm tra thư này",
+      "notice": "Khi bạn gõ, văn bản bạn viết được gửi đến {checkers} để kiểm tra. Chữ ký của bạn và thư được trích dẫn không được gửi. Không có gì được gửi đi khi thư được đặt để ký hoặc mã hóa; những gì bạn viết trước khi bật tùy chọn đó có thể đã được kiểm tra.",
+      "turn_on": "Bật soát lỗi",
+      "paused_protected": "Không kiểm tra gì trong khi thư này được đặt để ký hoặc mã hóa.",
+      "paused_unknown": "{plugin} có thể ký hoặc mã hóa thư mà không hiển thị ở đây, nên không kiểm tra gì khi nó đang bật.",
+      "rate_limited": "{checker} yêu cầu chờ. Việc kiểm tra sẽ tiếp tục sau một phút.",
+      "unavailable": "{checker} hiện không thể kiểm tra. Nó sẽ thử lại khi bạn tiếp tục gõ.",
+      "no_issues": "Không tìm thấy vấn đề nào.",
+      "list_label": "Các vấn đề trong thư này",
+      "shortcuts": "Vấn đề tiếp theo: {next}. Trước đó: {previous}."
+    },
+    "notice": {
+      "on": "Soát lỗi đang bật. Khi bạn gõ, văn bản bạn viết được gửi đến {checkers} để kiểm tra, không kèm chữ ký của bạn và thư được trích dẫn. Không có gì được gửi đi khi thư được đặt để ký hoặc mã hóa; những gì bạn viết trước đó có thể đã được kiểm tra.",
+      "forced": "Tổ chức của bạn đã bật soát lỗi. Khi bạn gõ, văn bản bạn viết được gửi đến {checkers} để kiểm tra, không kèm chữ ký của bạn và thư được trích dẫn. Không có gì được gửi đi khi thư được đặt để ký hoặc mã hóa; những gì bạn viết trước đó có thể đã được kiểm tra.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Gửi khi vẫn còn vấn đề?",
+      "body": "Thư này vẫn còn {count, plural, other {# lỗi chính tả hoặc ngữ pháp}} chưa xử lý.",
+      "review": "Xem lại",
+      "send": "Vẫn gửi"
+    },
+    "settings": {
+      "title": "Soát lỗi",
+      "description": "Gạch dưới lỗi chính tả và ngữ pháp khi bạn viết, kèm gợi ý để sửa.",
+      "enable": "Kiểm tra chính tả và ngữ pháp khi tôi gõ",
+      "enable_description": "Văn bản bạn viết được gửi đến tiện ích bổ sung soát lỗi và dịch vụ mà nó dùng, không kèm chữ ký của bạn và thư được trích dẫn. Không có gì được gửi đi khi thư được đặt để ký hoặc mã hóa.",
+      "no_checker": "Chưa cài tiện ích bổ sung soát lỗi nào. Hãy nhờ quản trị viên thêm một tiện ích.",
+      "plugin_description": "Gửi những gì bạn viết đến {plugin}.",
+      "writing_language": "Ngôn ngữ viết",
+      "writing_language_description": "Ngôn ngữ bạn thường dùng để viết. Soát lỗi và trình kiểm tra chính tả của trình duyệt sẽ dùng ngôn ngữ này.",
+      "auto": "Tự động phát hiện"
+    },
+    "shortcuts": {
+      "next_issue": "Lỗi chính tả hoặc ngữ pháp tiếp theo",
+      "previous_issue": "Lỗi chính tả hoặc ngữ pháp trước đó"
     }
   }
 }

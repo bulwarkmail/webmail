@@ -22,13 +22,19 @@
  * current enabled/forced flags are kept. The snapshot's hash is checked
  * before it is restored: a history file edited on disk is refused rather
  * than installed for every user.
+ *
+ * The files are documents of the `plugins` and `themes` collections
+ * (extension-store.ts) under `history/<id>/<version>/`: the paths above in
+ * local mode, the shared store in shared mode (#1066).
  */
 
-import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { readdir, rm } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { logger } from '@/lib/logger';
-import { getConfigDir } from './paths';
+import { isSharedMode, type DocCollection } from '@/lib/shared-store';
+import { isStoreUnavailable } from './admin-store';
+import { pluginDocs, pluginsOptions, themeDocs, themesOptions } from './extension-store';
 import type { ServerPlugin, ServerTheme } from './plugin-registry';
 
 export type ExtensionKind = 'plugin' | 'theme';
@@ -49,9 +55,39 @@ export interface HistoryEntry {
 
 const SAFE_ID_RE = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
 
-function historyRoot(kind: ExtensionKind, id: string): string {
+/** The extension's history folder: a document id prefix, without the trailing slash. */
+function historyRoot(id: string): string {
   if (!SAFE_ID_RE.test(id)) throw new Error('Invalid extension id');
-  return path.join(getConfigDir(), kind === 'plugin' ? 'plugins' : 'themes', 'history', id);
+  return `history/${id}`;
+}
+
+const docsOf = (kind: ExtensionKind): DocCollection => (kind === 'plugin' ? pluginDocs() : themeDocs());
+const localDir = (kind: ExtensionKind): string => (kind === 'plugin' ? pluginsOptions : themesOptions).local.dir();
+
+async function readText(kind: ExtensionKind, id: string): Promise<string | null> {
+  try {
+    const doc = await docsOf(kind).get(id);
+    return doc ? doc.data.toString('utf-8') : null;
+  } catch (error) {
+    if (isStoreUnavailable(error)) throw error;
+    return null;
+  }
+}
+
+/**
+ * Remove a history folder. Local mode: `rm -r` of the folder, as before.
+ * Shared mode: entry.json first, so no reader sees a kept version without
+ * its files, then the rest.
+ */
+async function removeFolder(kind: ExtensionKind, folder: string): Promise<void> {
+  if (!isSharedMode()) {
+    await rm(path.join(localDir(kind), ...folder.split('/')), { recursive: true, force: true });
+    return;
+  }
+  const docs = docsOf(kind);
+  const ids = await docs.list(`${folder}/`);
+  const entry = `${folder}/entry.json`;
+  for (const id of [...ids.filter((i) => i === entry), ...ids.filter((i) => i !== entry)]) await docs.delete(id);
 }
 
 /**
@@ -78,9 +114,11 @@ interface StoredEntry extends HistoryEntry {
   entry: ServerPlugin | ServerTheme;
 }
 
-async function readEntry(dir: string): Promise<StoredEntry | null> {
+async function readEntry(kind: ExtensionKind, dir: string): Promise<StoredEntry | null> {
+  const text = await readText(kind, `${dir}/entry.json`);
+  if (text === null) return null;
   try {
-    const raw = JSON.parse(await readFile(path.join(dir, 'entry.json'), 'utf-8')) as StoredEntry;
+    const raw = JSON.parse(text) as StoredEntry;
     if (!raw || typeof raw.version !== 'string' || typeof raw.savedAt !== 'string' || !raw.entry) return null;
     return raw;
   } catch {
@@ -88,18 +126,36 @@ async function readEntry(dir: string): Promise<StoredEntry | null> {
   }
 }
 
+/**
+ * The version folders under an extension's history. Local mode reads the
+ * one directory, as before (listing the collection would walk every file
+ * under C/plugins on each install).
+ */
+async function versionFolders(kind: ExtensionKind, root: string): Promise<string[]> {
+  if (!isSharedMode()) {
+    return readdir(path.join(localDir(kind), ...root.split('/')));
+  }
+  const names = new Set<string>();
+  for (const docId of await docsOf(kind).list(`${root}/`)) {
+    const name = docId.slice(root.length + 1).split('/')[0];
+    if (name) names.add(name);
+  }
+  return [...names];
+}
+
 async function readAll(kind: ExtensionKind, id: string): Promise<Array<StoredEntry & { dir: string }>> {
-  const root = historyRoot(kind, id);
+  const root = historyRoot(id);
   let names: string[];
   try {
-    names = await readdir(root);
-  } catch {
+    names = await versionFolders(kind, root);
+  } catch (error) {
+    if (isStoreUnavailable(error)) throw error;
     return [];
   }
   const out: Array<StoredEntry & { dir: string }> = [];
   for (const name of names) {
-    const dir = path.join(root, name);
-    const entry = await readEntry(dir);
+    const dir = `${root}/${name}`;
+    const entry = await readEntry(kind, dir);
     if (entry) out.push({ ...entry, dir });
   }
   // Newest replacement first.
@@ -110,7 +166,14 @@ async function readAll(kind: ExtensionKind, id: string): Promise<Array<StoredEnt
 async function prune(kind: ExtensionKind, id: string): Promise<void> {
   const all = await readAll(kind, id);
   for (const stale of all.slice(KEEP)) {
-    await rm(stale.dir, { recursive: true, force: true });
+    await removeFolder(kind, stale.dir);
+  }
+  // Folders without a readable entry.json (a copy that was cut short) are
+  // never listed or restored; sweep them so they don't pile up.
+  const root = historyRoot(id);
+  const listed = new Set(all.map((e) => e.dir));
+  for (const name of await versionFolders(kind, root).catch(() => [] as string[])) {
+    if (!listed.has(`${root}/${name}`)) await removeFolder(kind, `${root}/${name}`);
   }
 }
 
@@ -142,8 +205,7 @@ export async function listHistory(kind: ExtensionKind, id: string): Promise<Hist
  * inside its write lock, with the entry and code currently installed.
  */
 export async function snapshotPlugin(current: ServerPlugin, code: string): Promise<void> {
-  const dir = path.join(historyRoot('plugin', current.id), dirNameFor(current.version));
-  await mkdir(dir, { recursive: true });
+  const dir = `${historyRoot(current.id)}/${dirNameFor(current.version)}`;
   const stored: StoredEntry = {
     kind: 'plugin',
     version: current.version,
@@ -152,15 +214,15 @@ export async function snapshotPlugin(current: ServerPlugin, code: string): Promi
     ...(current.source ? { source: current.source } : {}),
     entry: current,
   };
-  await writeFile(path.join(dir, 'bundle.js'), code, 'utf-8');
-  await writeFile(path.join(dir, 'entry.json'), JSON.stringify(stored, null, 2), 'utf-8');
+  const docs = docsOf('plugin');
+  await docs.put(`${dir}/bundle.js`, code);
+  await docs.put(`${dir}/entry.json`, JSON.stringify(stored, null, 2));
   await prune('plugin', current.id);
 }
 
 /** Same for a theme: its registry entry, CSS and skin. */
 export async function snapshotTheme(current: ServerTheme, css: string, skin: string | null): Promise<void> {
-  const dir = path.join(historyRoot('theme', current.id), dirNameFor(current.version));
-  await mkdir(dir, { recursive: true });
+  const dir = `${historyRoot(current.id)}/${dirNameFor(current.version)}`;
   const stored: StoredEntry = {
     kind: 'theme',
     version: current.version,
@@ -169,10 +231,11 @@ export async function snapshotTheme(current: ServerTheme, css: string, skin: str
     ...(current.source ? { source: current.source } : {}),
     entry: current,
   };
-  await writeFile(path.join(dir, 'theme.css'), css, 'utf-8');
-  if (skin !== null) await writeFile(path.join(dir, 'skin.css'), skin, 'utf-8');
-  else await rm(path.join(dir, 'skin.css'), { force: true });
-  await writeFile(path.join(dir, 'entry.json'), JSON.stringify(stored, null, 2), 'utf-8');
+  const docs = docsOf('theme');
+  await docs.put(`${dir}/theme.css`, css);
+  if (skin !== null) await docs.put(`${dir}/skin.css`, skin);
+  else await docs.delete(`${dir}/skin.css`);
+  await docs.put(`${dir}/entry.json`, JSON.stringify(stored, null, 2));
   await prune('theme', current.id);
 }
 
@@ -186,7 +249,7 @@ export async function snapshotTheme(current: ServerTheme, css: string, skin: str
 export async function forgetVersion(kind: ExtensionKind, id: string, version: string): Promise<void> {
   if (!SAFE_ID_RE.test(id)) return;
   for (const kept of await readAll(kind, id)) {
-    if (kept.version === version) await rm(kept.dir, { recursive: true, force: true });
+    if (kept.version === version) await removeFolder(kind, kept.dir);
   }
 }
 
@@ -194,7 +257,7 @@ export async function forgetVersion(kind: ExtensionKind, id: string, version: st
 export async function purgeHistory(kind: ExtensionKind, id: string): Promise<void> {
   if (!SAFE_ID_RE.test(id)) return;
   try {
-    await rm(historyRoot(kind, id), { recursive: true, force: true });
+    await removeFolder(kind, historyRoot(id));
   } catch (err) {
     logger.warn('[extension-history] could not remove history', { kind, id, error: err instanceof Error ? err.message : String(err) });
   }
@@ -228,13 +291,13 @@ export async function readHistoryEntry<K extends ExtensionKind>(kind: K, id: str
   const stored = await find(kind, id, version);
   const damaged = () => new HistoryError(`The kept copy of ${id} ${version} does not match what was saved; it was not restored`, 409);
   if (kind === 'plugin') {
-    const code = await readFile(path.join(stored.dir, 'bundle.js'), 'utf-8').catch(() => null);
+    const code = await readText(kind, `${stored.dir}/bundle.js`);
     if (code === null || hashOf([code]) !== stored.contentHash) throw damaged();
     const restored: RestoredPlugin = { kind: 'plugin', entry: stored.entry as ServerPlugin, code };
     return restored as Restored<K>;
   }
-  const css = await readFile(path.join(stored.dir, 'theme.css'), 'utf-8').catch(() => null);
-  const skin = await readFile(path.join(stored.dir, 'skin.css'), 'utf-8').catch(() => null);
+  const css = await readText(kind, `${stored.dir}/theme.css`);
+  const skin = await readText(kind, `${stored.dir}/skin.css`);
   if (css === null || hashOf([css, skin]) !== stored.contentHash) throw damaged();
   const restored: RestoredTheme = { kind: 'theme', entry: stored.entry as ServerTheme, css, skin };
   return restored as Restored<K>;

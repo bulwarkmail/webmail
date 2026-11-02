@@ -5,6 +5,7 @@ import { createCipheriv, createDecipheriv, randomBytes, createHash } from 'node:
 import { getSessionSecret } from '@/lib/auth/session-secret';
 import { isSameOriginRequest } from '@/lib/security/same-origin';
 import { logger } from '@/lib/logger';
+import { isStoreUnavailable } from './admin-store';
 import { ADMIN_SESSION_COOKIE, DEFAULT_ADMIN_SESSION_TTL } from './types';
 import type { AdminSessionPayload } from './types';
 import { getAdminSessionGeneration, isAdminSessionRevoked, revokeAdminSession } from './password';
@@ -112,12 +113,17 @@ export function verifyAdminSession(token: string): AdminSessionPayload | null {
 /**
  * verifyAdminSession, and not signed out since it was issued: by a logout
  * of this token, or by a new admin password (which moves the generation on).
+ * With a shared store both are checked against the store on every call, so
+ * a sign-out on one replica counts on all of them at once; an unreachable
+ * store throws StoreUnavailableError.
  */
 export async function verifyCurrentAdminSession(token: string): Promise<AdminSessionPayload | null> {
   const payload = verifyAdminSession(token);
   if (!payload) return null;
-  if (payload.gen !== await getAdminSessionGeneration()) return null;
-  if (await isAdminSessionRevoked(payload.sid)) return null;
+  // Together, so a shared store is read once.
+  const [generation, revoked] = await Promise.all([getAdminSessionGeneration(), isAdminSessionRevoked(payload.sid)]);
+  if (payload.gen !== generation) return null;
+  if (revoked) return null;
   return payload;
 }
 
@@ -144,7 +150,21 @@ export async function requireAdminAuth(request: Request): Promise<{ payload: Adm
     return { error: NextResponse.json({ error: 'Not authenticated' }, { status: 401 }) };
   }
 
-  const payload = await verifyCurrentAdminSession(token);
+  let payload: AdminSessionPayload | null;
+  try {
+    payload = await verifyCurrentAdminSession(token);
+  } catch (error) {
+    // Sign-outs can't be checked: no admin request goes through.
+    if (isStoreUnavailable(error)) {
+      return {
+        error: NextResponse.json(
+          { error: 'The admin dashboard is temporarily unavailable' },
+          { status: 503, headers: { 'Retry-After': '10' } },
+        ),
+      };
+    }
+    throw error;
+  }
   if (!payload) {
     cookieStore.delete(ADMIN_SESSION_COOKIE);
     return { error: NextResponse.json({ error: 'Session expired' }, { status: 401 }) };
@@ -246,10 +266,13 @@ export async function clearAdminSessionCookie(): Promise<void> {
   try {
     await revokeAdminSession(payload.sid, payload.exp);
   } catch (error) {
-    // Kept in memory regardless; only a restart forgets it.
     logger.warn('Failed to save the admin session sign-out', {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
+    // Local mode keeps it in memory regardless; only a restart forgets it.
+    // With a shared store nothing kept it: once the store is back a copy of
+    // the cookie would work again until it expires, so the caller is told.
+    if (isStoreUnavailable(error)) throw error;
   }
 }
 

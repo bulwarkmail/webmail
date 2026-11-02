@@ -48,6 +48,7 @@ import {
 import { registerCalendarSubscriptionSyncBridge } from './settings-store';
 import { currentStoreEpoch } from '@/lib/store-epoch';
 import { isCalendarEventArray, isPartialCalendarEvent } from '@/lib/plugin-calendar-hooks';
+import { sentByPatchValue } from '@/lib/calendar-delegate';
 
 /**
  * When the Pro shell aggregates calendars/events from every connected
@@ -314,6 +315,14 @@ async function destroyOccurrence(
   await client.updateCalendarEvent(instance.baseEventId, fallback, sendSchedulingMessages, targetAccountId);
 }
 
+/** A participant after an answer, with its sentBy set, dropped or kept (see sentByPatchValue). */
+function withAnswer(participant: CalendarParticipant, status: CalendarParticipant['participationStatus'], sentBy: string | null | undefined): CalendarParticipant {
+  const next: CalendarParticipant = { ...participant, participationStatus: status };
+  if (sentBy) next.sentBy = sentBy;
+  else if (sentBy === null) delete next.sentBy;
+  return next;
+}
+
 /**
  * Answer one occurrence of a series as `participantId`. The server stores it
  * as a recurrence override and sends the organizer an iTIP REPLY carrying
@@ -325,8 +334,9 @@ async function rsvpOccurrence(
   occurrence: CalendarEvent,
   participantId: string,
   status: CalendarParticipant['participationStatus'],
+  sentBy?: string | null,
 ): Promise<void> {
-  const patchFor = (options: OverridePatchOptions) => buildOccurrenceRsvpPatch(occurrence, participantId, status, options);
+  const patchFor = (options: OverridePatchOptions) => buildOccurrenceRsvpPatch(occurrence, participantId, status, options, sentBy);
   const patch = patchFor({ seriesKeys: true });
   if (!patch) throw new Error('Participant not found on this occurrence');
   if (target.isOccurrence) {
@@ -842,7 +852,13 @@ interface CalendarStore {
     options?: EventUpdateOptions,
   ) => Promise<boolean>;
   deleteEvent: (client: IJMAPClient, id: string, sendSchedulingMessages?: boolean) => Promise<boolean>;
-  rsvpEvent: (client: IJMAPClient, eventId: string, participantId: string, status: string, replyTo?: Record<string, string> | null, scope?: 'occurrence' | 'series') => Promise<boolean>;
+  /**
+   * `options.sentBy`: answering for the calendar's owner as their delegate
+   * (`mailto:<user>`, lib/calendar-delegate.ts). Without it an old sentBy
+   * on the participant is cleared, so the owner's own answer isn't sent
+   * as the delegate's.
+   */
+  rsvpEvent: (client: IJMAPClient, eventId: string, participantId: string, status: string, replyTo?: Record<string, string> | null, scope?: 'occurrence' | 'series', options?: { sentBy?: string }) => Promise<boolean>;
   /**
    * Create `events` in the calendar, linking those whose UID the account
    * already has; resolves to how many were created or linked, or null when a
@@ -1386,7 +1402,7 @@ export const useCalendarStore = create<CalendarStore>()(
         return true;
       },
 
-      rsvpEvent: async (client, eventId, participantId, status, replyTo, scope = 'series'): Promise<boolean> => {
+      rsvpEvent: async (client, eventId, participantId, status, replyTo, scope = 'series', options): Promise<boolean> => {
         set({ error: null });
         // JMAP participant IDs are opaque strings - they can contain @, ., :,
         // / etc. The id is RFC 6901-escaped below before being embedded in the
@@ -1405,16 +1421,18 @@ export const useCalendarStore = create<CalendarStore>()(
           const { storeEvent, realId, targetAccountId, localAccountId } = target;
           client = resolveAccountClient(client, localAccountId);
           const occurrence = target.isOccurrence || target.isBrowserOccurrence ? storeEvent ?? null : null;
+          const sentBy = sentByPatchValue(storeEvent?.participants?.[participantId], options?.sentBy);
           if (occurrence) {
             await rsvpOccurrence(
               client, target, occurrence, participantId,
-              status as CalendarParticipant['participationStatus'],
+              status as CalendarParticipant['participationStatus'], sentBy,
             );
           } else {
             // Escape per RFC 6901 (JSON Pointer): ~ → ~0, / → ~1
             const escapedId = participantId.replace(/~/g, '~0').replace(/\//g, '~1');
             const patchKey = `participants/${escapedId}/participationStatus`;
             const patch: Record<string, unknown> = { [patchKey]: status };
+            if (sentBy !== undefined) patch[`participants/${escapedId}/sentBy`] = sentBy;
             // Stalwart routes the iTIP REPLY to the stored ORGANIZER
             // (organizerCalendarAddress); the RFC 8984 replyTo property is retired
             // in jscalendarbis and ignored. Repair events that are missing the
@@ -1437,7 +1455,7 @@ export const useCalendarStore = create<CalendarStore>()(
                 ...e,
                 participants: {
                   ...e.participants,
-                  [participantId]: { ...e.participants[participantId], participationStatus: status as CalendarParticipant['participationStatus'] },
+                  [participantId]: withAnswer(e.participants[participantId], status as CalendarParticipant['participationStatus'], sentBy),
                 },
               };
             }),

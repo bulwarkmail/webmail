@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Node, mergeAttributes } from "@tiptap/core";
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/react";
+import { useRemoteContentHeldBackAnywhere } from "@/hooks/use-third-party-mode";
+import { TRANSPARENT_BLOCKED_PIXEL } from "@/lib/email-sanitization";
 
 export interface ResizableImageOptions {
   /** Open the alt text dialog for the image at this position. */
@@ -16,6 +18,12 @@ function ResizableImageView({ node, updateAttributes, selected, extension, getPo
   const { onEditAlt, editAltLabel } = extension.options as ResizableImageOptions;
   const imgRef = useRef<HTMLImageElement>(null);
   const [resizing, setResizing] = useState(false);
+  // A remote image (a draft from another client, pasted web content) stays
+  // parked while the organisation blocks remote content or its policy isn't
+  // known yet; the address stays in the message.
+  const heldBack = useRemoteContentHeldBackAnywhere();
+  const src = typeof node.attrs.src === "string" ? node.attrs.src : "";
+  const parked = heldBack && /^(https?:)?\/\//i.test(src.trim());
   const startState = useRef<{ x: number; y: number; width: number; height: number; handle: string }>({
     x: 0, y: 0, width: 0, height: 0, handle: "",
   });
@@ -78,7 +86,8 @@ function ResizableImageView({ node, updateAttributes, selected, extension, getPo
       >
         <img
           ref={imgRef}
-          src={node.attrs.src}
+          src={parked ? TRANSPARENT_BLOCKED_PIXEL : node.attrs.src}
+          data-remote-parked={parked ? "" : undefined}
           alt={node.attrs.alt || ""}
           title={node.attrs.title || undefined}
           style={{ width: "100%", height: "auto", display: "block" }}

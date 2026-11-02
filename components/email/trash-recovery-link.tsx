@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { RotateCcw } from "@/components/icons";
+import { Clock, RotateCcw } from "@/components/icons";
 import { buildSettingsPath } from "@/lib/deep-links";
 import { RECOVERY_SETTINGS_TAB } from "@/lib/recovery/archived-items";
 import { useDeletedItemsRecovery } from "@/hooks/use-deleted-items-recovery";
@@ -17,8 +17,12 @@ import type { Mailbox } from "@/lib/jmap/types";
  * archive holds at least one message inside the admin's days window, so it
  * never leads to an empty page. Only in the account's own Trash: a shared or
  * group Trash has an archive of its own that the page doesn't show.
+ *
+ * `notice` is the retention line (components/email/retention-notice.tsx):
+ * it takes the hint's place when the link shows, and shows alone when it
+ * doesn't, so Trash never stacks two header lines.
  */
-export function TrashRecoveryLink({ mailbox }: { mailbox: Mailbox | undefined }) {
+export function TrashRecoveryLink({ mailbox, notice }: { mailbox: Mailbox | undefined; notice?: string }) {
   const t = useTranslations("recover_deleted");
   const router = useRouter();
   const { available, client, key } = useDeletedItemsRecovery();
@@ -33,10 +37,23 @@ export function TrashRecoveryLink({ mailbox }: { mailbox: Mailbox | undefined })
     void checkRecent(client, key, days);
   }, [available, ownTrash, client, key, days, checkRecent]);
 
-  if (!available || !ownTrash || !recent?.has || recent.days !== days) return null;
+  const showLink = available && ownTrash && !!recent?.has && recent.days === days;
+  if (!showLink) {
+    if (!notice) return null;
+    return (
+      <div className="flex items-center gap-2 border-b border-border px-4 py-1.5 text-xs text-muted-foreground" data-testid="retention-notice">
+        <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        <span className="min-w-0">{notice}</span>
+      </div>
+    );
+  }
   return (
     <div className="flex items-center gap-2 border-b border-border px-4 py-1.5 text-xs text-muted-foreground" data-testid="trash-recovery-link">
-      <span className="min-w-0 truncate">{t("trash_hint")}</span>
+      {notice ? (
+        <span className="min-w-0" data-testid="retention-notice">{notice}</span>
+      ) : (
+        <span className="min-w-0 truncate">{t("trash_hint")}</span>
+      )}
       <button
         type="button"
         onClick={() => router.push(buildSettingsPath(RECOVERY_SETTINGS_TAB))}

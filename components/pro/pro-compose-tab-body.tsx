@@ -14,6 +14,7 @@ import { debug } from "@/lib/debug";
 import { threadKeyFor } from "@/lib/thread-utils";
 import { formatRejectedRecipients } from "@/lib/jmap/client";
 import { announceSent } from "@/lib/plugin-after-send";
+import { composerSendOptions } from "@/lib/outgoing/composer-send-options";
 
 interface ProComposeTabBodyProps {
   tabId: string;
@@ -89,7 +90,10 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
         sendData.references,
         sendData.delayedUntil,
         sendData.envelopeMailFrom,
-        { localAccountId: sendData.localAccountId, draftAccountId: sendData.draftAccountId },
+        // The composer's whole options, as the mail page passes them: the
+        // tab used to send without priority, read receipt, DSN, REQUIRETLS,
+        // plugin headers and the classification label.
+        composerSendOptions(sendData),
       );
       submitted = true;
       if (result.rejectedRecipients?.length) {

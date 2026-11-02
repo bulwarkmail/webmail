@@ -42,7 +42,7 @@ interface CacheEntry {
 }
 
 const cache = new Map<string, CacheEntry>();
-const refusedBudget = createFailureBudget({ clientMax: 10, globalMax: Infinity });
+const refusedBudget = createFailureBudget({ name: 'bearer-refused', clientMax: 10, globalMax: Infinity });
 
 function bearerToken(request: Request): string | null {
   const header = request.headers.get('authorization');
@@ -81,21 +81,22 @@ function prune(now: number): void {
 }
 
 async function verify(serverUrl: string, token: string, client: string): Promise<BearerIdentity | null> {
-  const refund = refusedBudget.reserve(client);
+  // Store down: StoreUnavailableError reaches the caller, nothing is checked.
+  const refund = await refusedBudget.reserve(client);
   if (!refund) return null;
   try {
     const identity = await fetchJmapSessionIdentity(serverUrl, `Bearer ${token}`, {
       trusted: true,
       clientIp: client,
     });
-    refund();
+    await refund();
     return { addresses: identity.addresses };
   } catch (error) {
     const refused = error instanceof JmapAuthVerificationError && error.upstreamStatus !== undefined
       && (error.upstreamStatus === 401 || error.upstreamStatus === 403);
     // Only a token the server refused counts against the client.
     if (!refused) {
-      refund();
+      await refund();
       logger.warn('Bearer identity check failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
@@ -107,6 +108,8 @@ async function verify(serverUrl: string, token: string, client: string): Promise
 /**
  * The identity behind the request's Bearer token, or null when there is no
  * token, no configured server to check it against, or the server refused it.
+ * Rejects with StoreUnavailableError when the refused-token budget can't be
+ * counted (shared store down).
  */
 export async function bearerIdentity(request: Request, now = Date.now()): Promise<BearerIdentity | null> {
   const token = bearerToken(request);
@@ -125,6 +128,9 @@ export async function bearerIdentity(request: Request, now = Date.now()): Promis
   // A refused token is checked again sooner than a good one.
   void result.then((identity) => {
     if (!identity) entry.expiresAt = Math.min(entry.expiresAt, now + INVALID_TTL_MS);
+  }, () => {
+    // Not checked at all (the shared store is down): ask again next time.
+    if (cache.get(key) === entry) cache.delete(key);
   });
   return result;
 }

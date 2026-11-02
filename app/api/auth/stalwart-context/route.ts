@@ -14,6 +14,7 @@ import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { insecureCookieHint, verificationFailureBody } from '@/lib/auth/verification-failure';
 import { loginClientAddress } from '@/lib/auth/client-address';
 import { LOGIN_BUDGET_RETRY_AFTER_SECONDS, reserveLoginAttempt } from '@/lib/auth/verify-budget';
+import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
 import { recordStoredCredentialStatus } from '@/lib/stalwart/stored-credential-budget';
 
 function getSlot(request: NextRequest, bodySlot: unknown): number {
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
     // Wrong credentials tried from here count against this server's address
     // upstream, so each client gets a failure budget (lib/auth/verify-budget.ts).
     const clientIp = loginClientAddress(request);
-    const refund = reserveLoginAttempt(clientIp);
+    const refund = await reserveLoginAttempt(clientIp);
     if (!refund) {
       return NextResponse.json(
         { error: 'too_many_attempts', hint: 'Too many failed sign-in attempts. Try again later.' },
@@ -97,12 +98,12 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       // Only a credential the server rejected spends the budget; an outage
       // or a mismatched claim says nothing about the password.
-      if (!(error instanceof JmapAuthVerificationError && error.status === 401)) refund();
+      if (!(error instanceof JmapAuthVerificationError && error.status === 401)) await refund();
       throw error;
     }
-    refund();
+    await refund();
     // Just signed in: an older refusal of this credential no longer applies.
-    recordStoredCredentialStatus(authHeader, 200);
+    await recordStoredCredentialStatus(authHeader, 200);
 
     // A token sign-in's stamp (lib/auth/session-age.ts) knows no account:
     // the token routes never see one. The first verified account names it,
@@ -127,6 +128,8 @@ export async function POST(request: NextRequest) {
     if (warning) logger.warn(`stalwart-context: ${warning}`);
     return NextResponse.json(warning ? { ok: true, warning } : { ok: true });
   } catch (error) {
+    // The sign-in limit can't be counted without the shared store: refused.
+    if (isStoreUnavailable(error)) return storeUnavailableResponse();
     if (error instanceof JmapAuthVerificationError) {
       return NextResponse.json(
         verificationFailureBody('stalwart-context', error, upstreamUrl, upstreamTrusted),

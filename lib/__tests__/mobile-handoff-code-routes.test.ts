@@ -179,7 +179,7 @@ describe('SSO hand-off', () => {
   it('redeems only after the user confirmed, for 60 seconds from then', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     const start = Date.now();
-    const code = stashHandoff(bundle, { challenge: CHALLENGE, state: 'm-2', awaitConfirm: true });
+    const code = await stashHandoff(bundle, { challenge: CHALLENGE, state: 'm-2', awaitConfirm: true });
 
     // The user reads the confirmation for a few minutes.
     vi.setSystemTime(start + HANDOFF_CONFIRM_TTL_MS - 1000);
@@ -194,7 +194,7 @@ describe('SSO hand-off', () => {
   });
 
   it('refuses and spends a code the user has not confirmed', async () => {
-    const code = stashHandoff(bundle, { challenge: CHALLENGE, state: 'm-2', awaitConfirm: true });
+    const code = await stashHandoff(bundle, { challenge: CHALLENGE, state: 'm-2', awaitConfirm: true });
     const early = await redeem({ code, code_verifier: VERIFIER });
     expect(early.status).toBe(400);
     expect(early.body).toEqual({ error: 'invalid_code' });
@@ -203,7 +203,7 @@ describe('SSO hand-off', () => {
 
   it('expires 60 seconds after the confirmation', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
-    const code = stashHandoff(bundle, { challenge: CHALLENGE, state: 'm-2', awaitConfirm: true });
+    const code = await stashHandoff(bundle, { challenge: CHALLENGE, state: 'm-2', awaitConfirm: true });
     expect((await confirm({ code })).status).toBe(200);
     vi.setSystemTime(Date.now() + HANDOFF_TTL_MS + 1);
     const late = await redeem({ code, code_verifier: VERIFIER });
@@ -213,13 +213,13 @@ describe('SSO hand-off', () => {
 
   it('cannot be confirmed once the five minutes to confirm are over', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
-    const code = stashHandoff(bundle, { challenge: CHALLENGE, state: 'm-2', awaitConfirm: true });
+    const code = await stashHandoff(bundle, { challenge: CHALLENGE, state: 'm-2', awaitConfirm: true });
     vi.setSystemTime(Date.now() + HANDOFF_CONFIRM_TTL_MS + 1);
     expect((await confirm({ code })).status).toBe(400);
   });
 
   it('confirms a code once', async () => {
-    const code = stashHandoff(bundle, { challenge: CHALLENGE, state: 'm-2', awaitConfirm: true });
+    const code = await stashHandoff(bundle, { challenge: CHALLENGE, state: 'm-2', awaitConfirm: true });
     expect((await confirm({ code })).status).toBe(200);
     expect((await confirm({ code })).status).toBe(400);
     expect((await confirm({ code: 'nope' })).status).toBe(400);

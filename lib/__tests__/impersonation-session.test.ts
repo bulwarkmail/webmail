@@ -5,6 +5,9 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
+import { setStoreForTests } from '@/lib/shared-store';
+import { resetLocalStoreForTests } from '@/lib/shared-store/local';
+import { switchableSharedStore } from './helpers/shared-store-down';
 
 vi.mock('@/lib/auth/session-secret', () => ({
   getSessionSecret: () => 's'.repeat(64),
@@ -232,5 +235,30 @@ describe('impersonation handoff', () => {
     expect(put.status).toBe(401);
     expect(JSON.stringify(await put.json())).not.toContain(MASTER_PASSWORD);
     expect(jar.has('jmap_session')).toBe(false);
+  });
+});
+
+describe('impersonation handoff while the shared store is down (#1066)', () => {
+  beforeAll(() => {
+    process.env.BULWARK_JWT_AUTH_SECRET = SECRET;
+    process.env.BULWARK_STALWART_MASTER_USER = 'master@example.org';
+    process.env.BULWARK_STALWART_MASTER_PASSWORD = MASTER_PASSWORD;
+  });
+  afterEach(() => {
+    setStoreForTests(null);
+    resetLocalStoreForTests();
+    vi.unstubAllGlobals();
+  });
+
+  it('answers 503, not "already used", and opens no session', async () => {
+    const store = switchableSharedStore();
+    store.down = true;
+    setStoreForTests(store);
+    jar.clear();
+    calls = [];
+    vi.stubGlobal('fetch', vi.fn(stalwartFetch));
+    const res = await impersonate();
+    expect(res.status).toBe(503);
+    expect(calls).toHaveLength(0);
   });
 });

@@ -5,6 +5,7 @@ import {
   type PublicFetchResponse,
 } from '@/lib/security/url-guard';
 import { forwardedClientHeaders } from '@/lib/auth/client-address';
+import { observeUpstream } from '@/lib/metrics/upstream';
 
 const VERIFY_TIMEOUT_MS = 10000;
 const MAX_REDIRECTS = 3;
@@ -150,7 +151,7 @@ export function assertBasicAuthMatchesUsername(authHeader: string, claimedUserna
 
 export interface VerifiedJmapSession {
   apiUrl: string;
-  /** Canonical login name the server reports for the credential (RFC 8620 §2). */
+  /** Canonical login name the server reports for the credential (RFC 8620 Â§2). */
   username?: string;
   primaryAccounts?: Record<string, string>;
   accounts: Record<string, unknown>;
@@ -361,9 +362,13 @@ async function fetchIdentityEmails(
     };
     // No redirect handling here: a redirect on the POST would downgrade it to
     // a GET and can only come from a misconfigured proxy - treat as failure.
-    const response = options.trusted
-      ? await fetch(apiUrl, { ...requestInit, redirect: 'manual' })
-      : await fetchPublicUrl(apiUrl, requestInit);
+    // Measured and traced like every call to Stalwart (lib/metrics/upstream.ts).
+    const response = await observeUpstream('stalwart', async (trace) => {
+      const init = { ...requestInit, headers: { ...requestInit.headers, ...trace } };
+      return options.trusted
+        ? await fetch(apiUrl, { ...init, redirect: 'manual' })
+        : await fetchPublicUrl(apiUrl, init);
+    });
     if (!response.ok) {
       throw new JmapAuthVerificationError(
         response.status === 401 || response.status === 403
@@ -435,9 +440,13 @@ async function fetchVerifiedSession(
       // Untrusted (user-supplied) endpoints connect through the rebinding-safe
       // fetch so the address validated above is the one the socket uses.
       // Admin-configured servers may legitimately live on private addresses.
-      response = options.trusted
-        ? await fetch(currentUrl, { ...requestInit, redirect: 'manual' })
-        : await fetchPublicUrl(currentUrl, requestInit);
+      const target = currentUrl;
+      response = await observeUpstream('stalwart', async (trace) => {
+        const init = { ...requestInit, headers: { ...requestInit.headers, ...trace } };
+        return options.trusted
+          ? await fetch(target, { ...init, redirect: 'manual' })
+          : await fetchPublicUrl(target, init);
+      });
 
       if (response.status >= 300 && response.status < 400) {
         const location = response.headers.get('location');

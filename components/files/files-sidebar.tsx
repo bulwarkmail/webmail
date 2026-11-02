@@ -83,7 +83,8 @@ export interface FilesSidebarProps {
   onDeleteFolder: (folder: FileResource) => void;
   /** Open the folder holding a recent file, with the file selected. */
   onRevealRecent: (id: string) => void;
-  onDownloadRecent: (id: string) => void;
+  /** Left out when a device policy turned downloads off. */
+  onDownloadRecent?: (id: string) => void;
   onRemoveRecent: (id: string) => void;
   /** Items in the trash; the entry shows their number. */
   trashCount?: number;
@@ -520,7 +521,9 @@ export function FilesSidebar({
           <>
             <ContextMenuItem icon={Eye} label={t("open")} onClick={() => run(() => onOpenRecent(menuTarget.id))} />
             <ContextMenuItem icon={FolderSearch} label={t("show_in_folder")} onClick={() => run(() => onRevealRecent(menuTarget.id))} />
-            <ContextMenuItem icon={Download} label={t("download")} onClick={() => run(() => onDownloadRecent(menuTarget.id))} />
+            {onDownloadRecent && (
+              <ContextMenuItem icon={Download} label={t("download")} onClick={() => run(() => onDownloadRecent(menuTarget.id))} />
+            )}
             <ContextMenuSeparator />
             <ContextMenuItem icon={X} label={t("remove_from_recent")} onClick={() => run(() => onRemoveRecent(menuTarget.id))} />
           </>

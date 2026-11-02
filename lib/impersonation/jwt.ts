@@ -158,6 +158,12 @@ const REPLAY_CACHE_MAX = 4096;
 class ReplayCache {
   private entries = new Map<string, number>(); // jti -> exp epoch seconds
 
+  /** Whether jti was recorded and could still verify. */
+  has(jti: string, now: number = Math.floor(Date.now() / 1000)): boolean {
+    this.prune(now);
+    return this.entries.has(jti);
+  }
+
   /** Returns true if jti was not previously seen and has been recorded. */
   consume(jti: string, exp: number, now: number = Math.floor(Date.now() / 1000)): boolean {
     this.prune(now);
@@ -191,4 +197,6 @@ class ReplayCache {
   }
 }
 
-export const impersonationReplayCache = new ReplayCache();
+// One per process, not one per bundle: the route bundles each evaluate this module.
+const REPLAY_CACHE_KEY = Symbol.for('bulwark.impersonationReplayCache');
+export const impersonationReplayCache: ReplayCache = ((globalThis as typeof globalThis & { [REPLAY_CACHE_KEY]?: ReplayCache })[REPLAY_CACHE_KEY] ??= new ReplayCache());

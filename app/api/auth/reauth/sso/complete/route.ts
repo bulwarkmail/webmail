@@ -5,6 +5,7 @@ import { decryptPayload } from '@/lib/auth/crypto';
 import { exchangeCodeForTokens, getRequiredConfig, getTokenEndpoint, hasClientSecret } from '@/lib/oauth/token-exchange';
 import { pairingOwner, setPairReauthInStore } from '@/lib/auth/pair-reauth';
 import { stashGrant } from '@/lib/auth/pairing-store';
+import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
 import { readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
 import { isTrustedJmapServerUrl } from '@/lib/stalwart/server-fetch';
 import { JmapAuthVerificationError, verifyJmapIdentity } from '@/lib/auth/verify-jmap-auth';
@@ -125,7 +126,7 @@ export async function POST(request: NextRequest) {
     }
 
     const owner = pairingOwner(slot, context.username);
-    const grantId = stashGrant({
+    const grantId = await stashGrant({
       flow: 'oauth',
       serverUrl,
       serverId: pendingServerId,
@@ -138,11 +139,13 @@ export async function POST(request: NextRequest) {
       confidential: hasClientSecret(pendingServerId),
       trusted: true,
     }, owner);
-    setPairReauthInStore(cookieStore, { grantId, owner });
+    await setPairReauthInStore(cookieStore, { grantId, owner });
     logger.info('Pair step-up succeeded', { flow: 'oauth', method: 'sso' });
     return NextResponse.json({ ok: true });
   } catch (error) {
     cookieStore.delete(SSO_PENDING_COOKIE);
+    // The grant can't be kept without the shared store; the user tries again.
+    if (isStoreUnavailable(error)) return storeUnavailableResponse();
     logger.error('Reauth complete error', { error: error instanceof Error ? error.message : 'Unknown error' });
     return NextResponse.json({ error: 'Re-authentication failed' }, { status: 401 });
   }

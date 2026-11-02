@@ -7,6 +7,7 @@ import { sessionCookieName } from '@/lib/auth/session-cookie';
 import { readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { logger } from '@/lib/logger';
+import { storeUnavailableResponse } from '@/lib/admin/store-unavailable-response';
 import {
   ApprovalLimitError,
   getApprovalStatus,
@@ -68,6 +69,8 @@ export async function GET(request: NextRequest) {
     const status = await getApprovalStatus(pluginId, bundleHash);
     return NextResponse.json(status, { headers: { 'Cache-Control': 'no-store' } });
   } catch (err) {
+    const unavailable = storeUnavailableResponse(err);
+    if (unavailable) return unavailable;
     logger.error('plugin-approval-status GET', { error: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
@@ -147,6 +150,8 @@ export async function POST(request: NextRequest) {
       decidedAt: entry.decidedAt,
     });
   } catch (err) {
+    const unavailable = storeUnavailableResponse(err);
+    if (unavailable) return unavailable;
     logger.error('plugin-approval-status POST', { error: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

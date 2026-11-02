@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getThemeCSS, getThemeRegistry, getThemeSkin } from './plugin-registry';
 import { logger } from '@/lib/logger';
+import { storeUnavailableResponse } from './store-unavailable-response';
 
 /**
  * Serve an enabled theme's CSS or skin. Clients put the theme's content hash
@@ -33,6 +34,8 @@ export async function serveThemeAsset(id: string, kind: 'css' | 'skin'): Promise
       },
     });
   } catch (error) {
+    const unavailable = storeUnavailableResponse(error);
+    if (unavailable) return unavailable;
     logger.error('Theme asset serve error', { kind, error: error instanceof Error ? error.message : 'Unknown error' });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

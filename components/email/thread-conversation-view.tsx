@@ -4,7 +4,7 @@ import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallba
 import DOMPurify from "dompurify";
 import { Email, ThreadGroup } from "@/lib/jmap/types";
 import { EMAIL_SANITIZE_CONFIG, TRANSPARENT_BLOCKED_PIXEL, blockExternalResourcesOnNode, collapseBlockedImageContainers, emailIframeCsp, isOpenableLinkHref, plainTextToSafeHtml, restrictDataUriResourcesOnNode, sanitizeEmailBodyForIframe, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
-import { resolveExternalLink } from "@/lib/plugin-hook-result";
+import { gateLinkClick, linkCheckActive, linkText, resolveExternalLink } from "@/lib/plugin-hook-result";
 import { stripBidiControls } from "@/lib/bidi";
 import { requestInternalMailto } from "@/lib/protocol-handlers/mailto";
 import { emailDisplayDate } from "@/lib/email-date";
@@ -16,6 +16,7 @@ import { BookingCalendarActions } from "./structured-mail/booking-calendar-actio
 import { useStructuredMail } from "./structured-mail/use-structured-mail";
 import { attachmentIcon } from "./attachment-chips";
 import { ExternalSenderChip } from "./external-sender-chip";
+import { ReceivedLabelChip } from "./received-label-chip";
 import { collectReferencedCids, isEmbeddedInBody, isReportPart, normalizeCid, rewriteCidReferences } from "@/lib/attachment-visibility";
 import { collapsePlainTextQuotes, setupQuoteCollapse } from "@/lib/quote-collapse";
 import { measureEmailFrameHeight } from "@/lib/email-frame-height";
@@ -34,7 +35,7 @@ import { brandIndicatorDomain } from "@/lib/email-headers";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatFileSize, cn, cleanPreview } from "@/lib/utils";
 import { IconButton } from "@/components/ui/icon-button";
-import { PaneSpinner } from "@/components/ui/spinner";
+import { MailConversationSkeleton } from "@/components/boot-skeleton/mail-skeleton";
 import {
   ArrowLeft,
   ChevronDown,
@@ -66,8 +67,14 @@ import { useDeviceDetection } from "@/hooks/use-media-query";
 import { usePluginRenderedBody } from "@/hooks/use-plugin-rendered-body";
 import { emailToReadView } from "@/lib/plugin-projection";
 import { AttachmentPluginMenu, ReaderAboveQuoteSlot } from "./reader-plugin-surfaces";
-import { useRemoteContentBlockedByOrg } from "@/hooks/use-third-party-mode";
+import { useRemoteContentBlockedByOrg, useRemoteContentChecks } from "@/hooks/use-third-party-mode";
 import { ConversationHeaderActions, type ConversationActions } from "./conversation-header-actions";
+import { PhishingMarkBanner } from "./phishing-mark-banner";
+import { turnOffLinks } from "@/lib/phishing-links";
+import { usePhishingMarked } from "@/hooks/use-phishing-report";
+import { useDevicePolicy } from "@/hooks/use-device-policy";
+import { Watermark, useWatermarkText } from "@/components/device/watermark";
+import { NO_SAVE_MEDIA_CSS, blockMediaSaving } from "@/lib/device-frame";
 
 export type ConversationAttachmentHandler = (
   blobId: string, name: string, type: string | undefined, source: EmailBlobContext,
@@ -107,9 +114,10 @@ export function useConversationExternalContent() {
   const addToTrustedSendersBook = useContactStore((state) => state.addToTrustedSendersBook);
   const { client } = useAuthStore(useShallow((state) => ({ client: state.client })));
   const [allowedIds, setAllowedIds] = useState<Set<string>>(new Set());
-  // No third-party traffic (#903), or the organisation locked "block":
-  // nothing remote loads and nothing offers to.
-  const remoteBlockedByOrg = useRemoteContentBlockedByOrg();
+  // No third-party traffic (#903), or the organisation locked "block" for
+  // the message's own account: nothing remote loads and nothing offers to.
+  // Also held back until that account's policy is known.
+  const remoteContent = useRemoteContentChecks();
 
   const allow = useCallback((emailId: string) => {
     setAllowedIds(prev => new Set(prev).add(emailId));
@@ -120,13 +128,13 @@ export function useConversationExternalContent() {
     const senderIsTrusted = senderEmail
       ? isSenderTrusted(senderEmail) || (trustedSendersAddressBook && isTrustedAddressBookSender(senderEmail))
       : false;
-    if (remoteBlockedByOrg) return false;
+    if (remoteContent.heldBack(email.sourceClientAccountId)) return false;
     return externalContentPolicy === 'allow' || !!senderIsTrusted || allowedIds.has(email.id);
   };
 
   const trustSender = (email: Email) => {
     const senderEmail = email.from?.[0]?.email?.toLowerCase();
-    if (!senderEmail || remoteBlockedByOrg) return undefined;
+    if (!senderEmail || remoteContent.blockedByOrg(email.sourceClientAccountId)) return undefined;
     return () => {
       if (trustedSendersAddressBook && client) {
         addToTrustedSendersBook(client, senderEmail).catch(console.error);
@@ -237,8 +245,13 @@ export function ThreadConversationView({
   };
 
   if (isLoading) {
-    // One centred spinner for a whole pane (R9).
-    return <PaneSpinner label={t("threads.loading")} className="bg-background" />;
+    // The conversation's shape (the page skeleton's), with one status message.
+    return (
+      <div className="flex flex-col h-full bg-background" aria-busy="true">
+        <span role="status" className="sr-only">{t("threads.loading")}</span>
+        <MailConversationSkeleton />
+      </div>
+    );
   }
 
   return (
@@ -393,6 +406,7 @@ function EmailCard({
               {sender?.name || (sender?.email && formatAddress(sender.email)) || t('email_viewer.unknown_sender')}
             </span>
             <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} interactive={false} />
+            <ReceivedLabelChip email={email} />
             {email.isScheduled && (
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary shrink-0">
                 <CalendarClock className="w-3.5 h-3.5" />
@@ -543,10 +557,15 @@ export function ConversationEmailBody({
   bodyStyle,
   className,
 }: ConversationEmailBodyProps) {
-  const remoteBlockedByOrg = useRemoteContentBlockedByOrg();
+  const remoteBlockedByOrg = useRemoteContentBlockedByOrg(email.sourceClientAccountId);
   const t = useTranslations();
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
   const mailAttachmentAction = useSettingsStore((state) => state.mailAttachmentAction);
+  // The device policies of the message's own account (Organisation > Devices).
+  const devices = useDevicePolicy(email);
+  const downloadsOffRef = useRef(devices.noDownloads);
+  downloadsOffRef.current = devices.noDownloads;
+  const watermark = useWatermarkText(email);
   const wopiStatus = useWopiStatus(true);
   const hideInlineImageAttachments = useSettingsStore((state) => state.hideInlineImageAttachments);
   const emailAlwaysLightMode = useSettingsStore((state) => state.emailAlwaysLightMode);
@@ -570,8 +589,11 @@ export function ConversationEmailBody({
   const fallbackSource = useEmailStore(useShallow(() => resolveEmailBlobContext(email, client)));
   const source = blobSource ?? fallbackSource;
   const { client: blobClient, accountId } = source;
+  // Reported as phishing: a banner, links off, no cards (as in the reader).
+  const phishingMarked = usePhishingMarked(email);
+  const tPhishing = useTranslations('phishing_report');
   // Booking, parcel and order cards; only an expanded message mounts this body.
-  const structuredCards = useStructuredMail(email, source);
+  const structuredCards = useStructuredMail(phishingMarked ? null : email, source);
   // Local CID URLs belong to a particular client/owner/message/part list.
   // Hide the previous set during render, before the new fetch's effect runs.
   const cidRequest = useMemo(() => ({ blobClient, accountId, emailId: email.id, attachments: email.attachments }),
@@ -738,7 +760,7 @@ export function ConversationEmailBody({
   // "Show mail as plain text" (Settings > Accessibility): the message's own
   // text/plain part, or a readable conversion of the HTML.
   const mailViewMode = useSettingsStore((state) => state.mailViewMode);
-  const emailContent = useMemo(() => {
+  const shownContent = useMemo(() => {
     if (mailViewMode !== 'plain' || !formattedContent.isHtml) return formattedContent;
     const textPart = !pluginBody.html ? email.textBody?.[0] : undefined;
     let text = textPart?.partId && textPart.partId !== email.htmlBody?.[0]?.partId && (textPart.type || 'text/plain').toLowerCase() === 'text/plain'
@@ -753,6 +775,10 @@ export function ConversationEmailBody({
       isHtml: false,
     };
   }, [mailViewMode, formattedContent, pluginBody.html, email, t]);
+  const emailContent = useMemo(
+    () => (phishingMarked ? { ...shownContent, html: turnOffLinks(shownContent.html, { title: tPhishing('link_off'), note: tPhishing('link_off_note') }) } : shownContent),
+    [shownContent, phishingMarked, tPhishing],
+  );
 
   // Parts the body embeds via cid: stay out of the attachment row while the
   // user hides inline images - the desktop viewer's rule, shared through
@@ -814,8 +840,8 @@ export function ConversationEmailBody({
   td, th { word-break: break-word; padding: 0.5rem; }
   pre { white-space: pre-wrap; word-wrap: break-word; }
   ${isDark ? emailDarkModeCss() : ''}
-</style></head><body dir="auto">${emailContent.html}${reading.frameCss ? `<style>${reading.frameCss}</style>` : ''}</body></html>`;
-  }, [emailContent.isHtml, emailContent.html, allowExternal, isDark, bodyLanguage, reading.frameKey, reading.frameCss, appFontSources]);
+</style>${devices.noPrint ? '<style>@media print{html,body{display:none!important}}</style>' : ''}${devices.noDownloads ? `<style>${NO_SAVE_MEDIA_CSS}</style>` : ''}</head><body dir="auto">${emailContent.html}${reading.frameCss ? `<style>${reading.frameCss}</style>` : ''}</body></html>`;
+  }, [emailContent.isHtml, emailContent.html, allowExternal, isDark, bodyLanguage, reading.frameKey, reading.frameCss, appFontSources, devices.noPrint, devices.noDownloads]);
   useLayoutEffect(() => { setHtmlBodyEl(null); }, [emailIframeSrcDoc]);
   // One object per body: React writes innerHTML again whenever this object
   // changes, dropping whatever was mounted in the body.
@@ -866,7 +892,10 @@ export function ConversationEmailBody({
       // through onBeforeExternalLink, and nothing resolving inside our own
       // origin (a relative path, data:) is opened. mailto: is written here
       // when the mail page takes it; the blob: URLs of cid: parts are inert.
-      doc.addEventListener('click', (ev) => {
+      const onLinkClick = (ev: MouseEvent) => {
+        // A middle-click opens a link too, through the link check while one
+        // listens; other buttons are left alone.
+        if (ev.type === 'auxclick' && (ev.button !== 1 || !linkCheckActive())) return;
         const link = (ev.target as Element | null)?.closest?.('a[href], area[href]');
         if (!link) return;
         const href = link.getAttribute('href') || '';
@@ -878,9 +907,13 @@ export function ConversationEmailBody({
         ev.preventDefault();
         ev.stopPropagation();
         if (!isOpenableLinkHref(href)) return;
-        void resolveExternalLink({ href, target: link.getAttribute('target') ?? undefined, emailId: email.id })
+        void resolveExternalLink({ href, target: link.getAttribute('target') ?? undefined, emailId: email.id, text: linkText(link) })
           .then((target) => { if (target) window.open(target, '_blank', 'noopener,noreferrer'); });
-      }, true);
+      };
+      doc.addEventListener('click', onLinkClick, true);
+      doc.addEventListener('auxclick', onLinkClick, true);
+      // "No downloads": the message's own pictures can't be saved or dragged out either.
+      blockMediaSaving(doc, () => downloadsOffRef.current);
       // Selected text: the onTextSelectionChange hook and the right-click
       // menu plugins may add entries to.
       watchBodySelection(doc, iframe, {
@@ -895,6 +928,7 @@ export function ConversationEmailBody({
 
   return (
     <div className={className}>
+      {phishingMarked && <PhishingMarkBanner className="px-4" />}
       {/* External content warning */}
       {hasBlockedContent && !allowExternal && emailContent.isHtml && (
         <div className="px-4 py-2 bg-muted/50 flex items-center justify-between text-sm" data-testid="external-content-notice">
@@ -952,6 +986,7 @@ export function ConversationEmailBody({
 
       {/* Email Body */}
       <div className="relative" style={bodyStyle ?? { padding: 'var(--density-card-p)' }}>
+        <Watermark text={watermark} />
         {emailContent.isHtml ? (
           <iframe
             ref={iframeRef}
@@ -982,6 +1017,10 @@ export function ConversationEmailBody({
             data-plugin-source="email-body"
             data-email-id={email.id}
             onContextMenu={(e) => selectionMenu.onElementContextMenu(e, email.id)}
+            // A plain-text body renders in the page, not the iframe: its
+            // links go through the link check here.
+            onClick={(e) => gateLinkClick(e, { emailId: email.id })}
+            onAuxClick={(e) => gateLinkClick(e, { emailId: email.id })}
             dangerouslySetInnerHTML={plainBodyHtml}
           />
         )}
@@ -1002,15 +1041,19 @@ export function ConversationEmailBody({
               const { icon: Icon, className: iconClass } = attachmentIcon(attachment.type, attachment.name);
               const isPreviewable = isFilePreviewable(attachment.name, attachment.type)
                 || (!!attachment.blobId && canWopiOpen(wopiStatus, attachment.name));
-              const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
+              // Without downloads, whatever can be previewed is, and nothing else opens.
+              const opensPreview = isPreviewable && (mailAttachmentAction === 'preview' || devices.noDownloads);
+              const locked = devices.noDownloads && !opensPreview;
               return (
                 <React.Fragment key={idx}>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (locked) return;
                     onDownloadAttachment?.(attachment.blobId, attachment.name || 'attachment', attachment.type, source);
                   }}
-                  title={opensPreview ? t('files.preview') : t('email_viewer.download')}
+                  aria-disabled={locked || undefined}
+                  title={locked ? t('device_policy.downloads_off') : opensPreview ? t('files.preview') : t('email_viewer.download')}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-sm"
                 >
                   <Icon className={cn("w-4 h-4", iconClass)} />
@@ -1023,7 +1066,7 @@ export function ConversationEmailBody({
                   </span>
                   {opensPreview ? (
                     <Eye className="w-4 h-4 text-muted-foreground" />
-                  ) : (
+                  ) : locked ? null : (
                     <Download className="w-4 h-4 text-muted-foreground" />
                   )}
                 </button>

@@ -1,5 +1,5 @@
 {
-  "meta_description": "Minimalista webmail kliens JMAP protokollal",
+  "meta_description": "Saját üzemeltetésű webmail levelezéshez, naptárhoz, névjegyekhez és fájlokhoz, JMAP alapokon",
   "login": {
     "title": "Webmail",
     "username_label": "E-mail",
@@ -461,7 +461,6 @@
     "view_in_light_mode": "Megjelenítés világos módban",
     "export_email": "Exportálás .eml-ként",
     "forward_as_attachment": "Továbbítás mellékletként",
-    "import_email": "Importálás .eml vagy .zip fájlból…",
     "keyboard_shortcuts": "Billentyűparancsok",
     "email_source": "E-mail forrás",
     "draft_banner": "Ez az üzenet egy piszkozat",
@@ -473,6 +472,9 @@
     "source_truncated": "Az első {size} látható. A többihez exportálja az üzenetet.",
     "source_copied": "Forrás a vágólapra másolva",
     "attachments": "Csatolmányok",
+    "attachments_count": "{count, plural, one {# melléklet} other {# melléklet}}",
+    "attachments_show_more": "{count} további megjelenítése",
+    "attachments_show_fewer": "Kevesebb megjelenítése",
     "important": "Fontos",
     "download": "Letöltés",
     "download_all": "Összes letöltése",
@@ -880,6 +882,35 @@
     "send_anyway": "Küldés így is",
     "back": "Vissza"
   },
+  "phishing_report": {
+    "action": "Adathalászat jelentése…",
+    "confirm_title": "Jelented adathalászatként?",
+    "confirm_message": "{count, plural, one {Az üzenet a(z) {address} címre megy, és a Spam mappába kerül.} other {Mind a(z) # üzenet külön jelentésként megy a(z) {address} címre, és a Spam mappába kerül.}}",
+    "confirm": "Jelentés",
+    "cancel": "Mégse",
+    "sending": "Jelentés folyamatban…",
+    "done": "{count, plural, one {Jelentve a(z) {address} címre, és áthelyezve a Spam mappába.} other {# üzenet jelentve a(z) {address} címre, és áthelyezve a Spam mappába.}}",
+    "not_moved": "{count, plural, one {Jelentve a(z) {address} címre, de az üzenetet nem sikerült áthelyezni a Spam mappába.} other {Jelentve a(z) {address} címre, de # üzenetet nem sikerült áthelyezni a Spam mappába.}}",
+    "failed": "{count, plural, one {Az üzenetet nem sikerült jelenteni.} other {# üzenetet nem sikerült jelenteni.}}",
+    "undo": "Visszavonás",
+    "undone": "{count, plural, one {Visszahelyezve. A jelentés már elment.} other {Visszahelyezve. A jelentések már elmentek.}}",
+    "undo_failed": "Nem sikerült visszahelyezni.",
+    "banner": "Ezt az üzenetet adathalászatként jelentetted. A benne lévő linkek ki vannak kapcsolva.",
+    "link_off": "link kikapcsolva",
+    "link_off_note": "(link kikapcsolva)",
+    "no_subject": "(nincs tárgy)"
+  },
+  "classification": {
+    "picker_label": "Besorolás",
+    "chip_label": "Besorolás: {name}",
+    "none": "Nincs besorolás",
+    "pick_required": "Válassz besorolást",
+    "required_hint": "A szervezeted besorolást ír elő.",
+    "required_toast": "Küldés előtt válassz besorolást.",
+    "quick_reply_needs_label": "Ehhez a válaszhoz besorolás kell. Itt válassz egyet, aztán küldd el.",
+    "forward_needs_label": "A besorolás kötelező. Az üzenetet a szerkesztőből továbbítsd.",
+    "received_hint": "A feladó levelezőprogramja állította be. Bárki megadhat besorolást, így semmit sem bizonyít."
+  },
   "email_composer": {
     "select_from_directory": "Kiválasztás a címtárból",
     "minimize": "Kis méret",
@@ -1248,8 +1279,6 @@
     "templates_import_errors": "Néhány sablon importálása sikertelen",
     "templates_import_empty": "Nem található sablon a fájlban",
     "export_email_error": "Nem sikerült exportálni az e-mailt",
-    "import_email_success": "E-mail sikeresen importálva",
-    "import_email_error": "Nem sikerült importálni az e-mailt",
     "rule_created": "Szabály létrehozva",
     "rule_merged": "Hozzáadva a(z) „{name}” szabályhoz",
     "rule_already_covered": "Ezt már lefedi a(z) „{name}” szabály",
@@ -1272,12 +1301,46 @@
     "tag_removed_count": "{count, plural, other {Címke eltávolítva # e-mailről}}",
     "new_mail_count": "{count, plural, other {# új üzenet}}"
   },
+  "org_notice": {
+    "label": "Közlemény",
+    "dismiss": "Közlemény bezárása",
+    "severity_info": "Információ",
+    "severity_warning": "Figyelmeztetés",
+    "severity_critical": "Fontos"
+  },
+  "vacation_templates": {
+    "title": "A szervezet sablonjai",
+    "description": "Kezdjen a szervezete által megírt válasszal. A szöveget utána módosíthatja.",
+    "pick_label": "Sablon használata",
+    "pick_placeholder": "Válasszon sablont",
+    "deputy_label": "A helyettes címe",
+    "deputy_placeholder": "kollega@example.com",
+    "deputy_hint": "A válasz sürgős ügyekben ezt a kollégát nevezi meg.",
+    "deputy_missing": "Előbb adja meg a helyettese címét.",
+    "deputy_name_label": "A helyettes neve",
+    "deputy_name_missing": "Előbb adja meg a helyettese nevét.",
+    "apply": "Ennek a szövegnek a használata",
+    "apply_hint": "Lecseréli a lenti tárgyat és szöveget."
+  },
+  "retention_notice": {
+    "line": "Az itt lévő üzenetek az ide helyezésük után {count, plural, one {# nappal} other {# nappal}} törlődnek."
+  },
+  "device_policy": {
+    "downloads_off": "A szervezete kikapcsolta a letöltést.",
+    "download_off_named": "{name}: a szervezete kikapcsolta a letöltést",
+    "download_blocked": "A szervezete kikapcsolta a letöltést.",
+    "export_blocked": "A szervezete kikapcsolta a levelek exportálását.",
+    "print_blocked": "A szervezete kikapcsolta a nyomtatást."
+  },
   "third_party": {
     "push_needs_relay": "A push-értesítésekhez a szervezeted által üzemeltetett push relé kell, és nincs beállítva egy sem. Az új levelek továbbra is megjelennek, amíg az alkalmazás nyitva van.",
     "relay_desc": "Csak a szervezeted saját reléi választhatók, mert ez a szerver nem kapcsolódik külső szolgáltatásokhoz.",
     "relay_none": "Nincs beállítva",
     "plugin_refused": "Nem indult el: ez a bővítmény külső szolgáltatásokhoz kapcsolódik, amelyeket a szervezeted kikapcsolt.",
     "remote_content_blocked": "A szervezeted letiltja a más szerverekről származó tartalmat, ezért az üzenet távoli képei nem jelennek meg."
+  },
+  "remote_content_lock": {
+    "trusted_senders_note": "A szervezete minden levélben letiltja a távoli tartalmat, ezért a megbízható feladóktól sem töltődik be."
   },
   "date": {
     "today": "Ma",
@@ -1542,6 +1605,10 @@
         "label": "Megosztott levelezőfiókok megjelenítése",
         "description": "A veled megosztott postafiókok mappáinak megjelenítése az oldalsávon, a Megosztott alatt. Kapcsold ki az összes elrejtéséhez, vagy rejts el egyes fiókokat lent. A naptárak és névjegyek megmaradnak."
       },
+      "compact_shared_mailboxes": {
+        "label": "Tömör megosztott postafiókok",
+        "description": "Minden megosztott postafiók egyetlen sorként jelenik meg, amely a beérkező leveleit nyitja meg, alatta a mappáival. Az üres mappák, például a Piszkozatok vagy a Kuka, rejtve maradnak."
+      },
       "pro_interface": {
         "label": "Pro felület (Kísérleti)",
         "description": "Asztali számítógépes erőfelhasználói elrendezés több lapos üzenetböngészéssel és fiókok közötti munkafolyamatokkal. A szabványos felületet nem érinti; bármikor visszaválthatsz.",
@@ -1772,6 +1839,12 @@
         "label": "Keresés törlése mappaváltáskor",
         "description": "Egy mappára kattintva (Beérkezett, Elküldött…) törlődik az aktív keresés, és a mappa jelenik meg. Kikapcsolva a keresés megmarad, és újra lefut a választott mappában."
       },
+      "search_default_scope": {
+        "label": "Keresés itt",
+        "description": "Hol keres egy új keresés. A keresési szűrőkben továbbra is választhatsz másik mappát.",
+        "all": "Minden mappa, kivéve a Spam és a Kuka",
+        "folder": "A megnyitott mappa"
+      },
       "request_read_receipt": {
         "label": "Olvasási visszaigazolás kérése alapértelmezés szerint",
         "description": "Az olvasási visszaigazolás kérésének előre bekapcsolása új üzenet írásakor."
@@ -1879,6 +1952,14 @@
         "above_quote": "Idézett szöveg előtt",
         "below_quote": "Idézett szöveg után"
       },
+      "signature_new_mail": {
+        "label": "Aláírás új leveleknél",
+        "description": "Új levél írása esetén automatikusan beszúrja az aláírásodat. Kapcsold ki, ha minden új levél aláírás nélkül induljon."
+      },
+      "signature_reply_forward": {
+        "label": "Aláírás válaszoknál és továbbításnál",
+        "description": "Válasz vagy továbbítás esetén automatikusan hozzáfűzi az aláírásodat. Kapcsold ki, ha ezek aláírás nélkül mennek ki."
+      },
       "signature_separator": {
         "label": "Aláírás elválasztó",
         "description": "Aláírás előtagjaként a szabványos \"-- \" elválasztó sor (RFC 3676). Kapcsold ki, ha közvetlenül az üzenetből szeretnél az aláírásba folyni."
@@ -1899,8 +1980,8 @@
       "attachment_position": {
         "label": "Csatolmány pozíciója",
         "description": "Hol jelenjenek meg a csatolmányok az e-mail fejlécben",
-        "beside-sender": "Feladó mellett",
-        "below-header": "Fejléc alatt"
+        "below-header": "Fejléc alatt",
+        "below-message": "Kártyák az üzenet alatt"
       },
       "emails_per_page": {
         "10": "10 e-mail",
@@ -3546,7 +3627,6 @@
     "new_folder": "Új mappa…",
     "rename": "Átnevezés…",
     "share": "Megosztás…",
-    "import_email": "Importálás .eml vagy .zip fájlból…",
     "empty_folder": "Mappa ürítése",
     "empty_folder_generic": "Mappa ürítése",
     "delete_folder": "Mappa törlése",
@@ -4835,6 +4915,51 @@
     "cancelled": "{name} lemondta a(z) „{title}” eseményt",
     "untitled": "Névtelen esemény"
   },
+  "company_calendars": {
+    "section": "Szervezet"
+  },
+  "vacation_calendar": {
+    "label": "Naptáram foglalása",
+    "description": "Foglalt eseményt tesz a távollét idejére, hogy addig senki ne szervezzen Önnel megbeszélést.",
+    "no_access_managed": "Ennek a fióknak a naptára nem foglalható: nincs hozzá írási joga.",
+    "no_calendar": "A naptár nem foglalható: a Bulwark nem talált naptárt az eseményhez.",
+    "filter_warning": "Ha bekapcsolja, a saját szűrőszkriptje kikapcsol, amíg a válasz aktív."
+  },
+  "calendar_delegate": {
+    "answer_for": "Válasz {name} nevében",
+    "no_write": "Látja {name} meghívóit, de nem válaszolhat a nevében. Kérjen szerkesztési jogot.",
+    "also_invited": "Ön is meghívott, és ez a szerver nem tudja megkülönböztetni az Ön válaszát {name} válaszától. Erre {name} válaszoljon.",
+    "answered_by": "Válaszolt: {who}"
+  },
+  "free_busy_share": {
+    "button": "Szabad/foglalt időim megosztása ezzel: {group}",
+    "already": "Szabad/foglalt idői meg vannak osztva ezzel: {group}",
+    "done": "Szabad/foglalt idői mostantól meg vannak osztva ezzel: {group}.",
+    "error": "Nem sikerült megosztani a szabad/foglalt időket. Próbálja újra.",
+    "group_label": "Csoport",
+    "title": "Szabad/foglalt",
+    "description": "A csoport tagjai látják, mikor foglalt, de az eseményeit nem. Az Időpontok javaslata ezt használja."
+  },
+  "find_time": {
+    "suggest": "Időpontok javaslata",
+    "searching": "Szabad időpontok keresése",
+    "slots_title": "Szabad mindenkinek, akit a Bulwark ellenőrizni tudott",
+    "slot": "{day}, {start}–{end}",
+    "none": "A következő 10 munkanapon nincs szabad idő.",
+    "picked": "Az esemény áthelyezve: {slot}",
+    "rate_limited": "Túl sok lekérdezés az elmúlt percben. Próbálja újra egy perc múlva.",
+    "unavailable": "A szabad/foglalt adatok ezen a szerveren nem érhetők el, ezért a Bulwark nem tud időpontot javasolni.",
+    "not_checked": "Nem ellenőrzött:",
+    "not_checked_item": "{who}: {reason}",
+    "reason_external": "a szervezetén kívül",
+    "reason_unknown": "foglalt idők ismeretlenek",
+    "reason_not_found": "nem található ezen a szerveren",
+    "reason_error": "nem sikerült ellenőrizni",
+    "unknown_note": "A Bulwark csak az Önnel megosztott naptárakban látja a foglalt időket. Ezeknél a személyeknél nem tudja megkülönböztetni a szabadot a nem megosztottól.",
+    "directory_off": "A Bulwark ezen a szerveren nem tud személyeket keresni. A rendszergazda a Stalwartban bekapcsolhatja a címtár-lekérdezéseket.",
+    "not_looked_up": "A cím nem kereshető",
+    "found": "Talált szabad időpontok: {count}"
+  },
   "share_notifications": {
     "someone": "Valaki",
     "shared": "{name} megosztotta veled a(z) {kind} „{object}” elemet",
@@ -5184,7 +5309,6 @@
     "settings_ascending": "Növekvő",
     "settings_descending": "Csökkenő",
     "disabled_title": "A fájlok funkciót a rendszergazda letiltotta",
-    "disabled_description": "Nagyméretű fájlok WebDAV-on keresztüli feltöltése Stalwart/RocksDB instabilitást okozhat, beleértve a memóriahiányos összeomlásokat és a helyreállíthatatlan lemezhasználatot. A törölt fájlok nem feltétlenül kerülnek azonnal eltávolításra a blob tárolóból. Ez a funkció nem ajánlott éles környezetben.",
     "migration_title": "Fájlok frissítése…",
     "migration_description": "A mappák és fájlok a megfelelő struktúrába rendeződnek. Ez csak egyszer történik meg.",
     "new": "Új",
@@ -5371,6 +5495,117 @@
   "unified_mailbox": {
     "search_unavailable": "A keresés nem érhető el az egységes nézetben"
   },
+  "mail_import": {
+    "menu_import": "Levelek importálása…",
+    "settings_label": "Levelek importálása",
+    "settings_description": "Levelek behozása .eml, ZIP, mbox vagy Outlook .pst és .ost fájlokból.",
+    "settings_button": "Importálás…",
+    "title": "Levelek importálása",
+    "description": "Válasszon .eml, .zip, .mbox vagy Outlook .pst és .ost fájlokat.",
+    "choose_files": "Fájlok kiválasztása…",
+    "chosen_files": "Kiválasztott fájlok",
+    "remove_file": "{name} eltávolítása",
+    "format_eml": "Üzenet",
+    "format_zip": "ZIP-archívum",
+    "format_mbox": "mbox-fájl",
+    "format_pst": "Outlook-adatfájl",
+    "target_label": "Importálás ide",
+    "target_top": "Legfelső szint",
+    "keep_folders": "A fájl mappáinak újbóli létrehozása",
+    "keep_folders_hint": "Az azonos nevű mappák újra felhasználódnak.",
+    "resume": "Folytatás ott, ahol e fájlok legutóbbi importálása megállt (már kész üzenetek: {count})",
+    "quota_note": "Sok szerver felhasználónként óránként csak körülbelül 1000 üzenetet vagy 50 MB-ot fogad. A nagyobb importálás szünetel, majd magától folytatódik.",
+    "start": "Importálás",
+    "cancel": "Mégse",
+    "running_title": "Levelek importálása folyamatban",
+    "progress_label": "Az importálás állapota",
+    "status_imported": "Importált üzenetek: {count}",
+    "reading_file": "{name} olvasása",
+    "paused": "Szüneteltetve eddig: {time}. A szerver óránként legfeljebb {files} feltöltést vagy {size} adatot fogad. Az importálás magától folytatódik.",
+    "paused_generic": "Szüneteltetve eddig: {time}. Elérte a szerver feltöltési korlátját. Az importálás magától folytatódik.",
+    "background": "Futtatás a háttérben",
+    "cancel_import": "Importálás megszakítása",
+    "chip": "Levelek importálása: {percent}%",
+    "chip_paused": "Az importálás szünetel eddig: {time}",
+    "done_title": "Az importálás befejeződött",
+    "cancelled_title": "Az importálás megszakítva",
+    "failed_title": "Az importálás leállt",
+    "summary_imported": "Importált üzenetek: {count}",
+    "summary_folders": "Létrehozott mappák: {count}",
+    "summary_skipped": "Nem importált:",
+    "skip_too_large": "Nagyobb, mint amit a szerver elfogad: {count}",
+    "skip_deleted": "Thunderbirdben törölve: {count}",
+    "skip_embedded": "Más üzenetekhez csatolt üzenetek: {count}",
+    "skip_contact": "Névjegyek: {count}",
+    "skip_calendar": "Naptárelemek: {count}",
+    "skip_other": "Egyéb elemek: {count}",
+    "summary_failed": "Nem importálható: {count}",
+    "failure_invalid": "nem érvényes üzenet",
+    "untitled": "(nincs tárgy)",
+    "cancelled_hint": "A későbbi folytatáshoz importálja újra ugyanazokat a fájlokat ugyanabba a mappába.",
+    "close": "Bezárás",
+    "pst_note": "Az Outlook-fájlokból csak a levelek kerülnek át. A névjegyeket, naptárelemeket és feladatokat megszámolja és kihagyja.",
+    "pst_error_encrypted": "Ez az Outlook-fájl erős titkosítást használ, amelyet a Bulwark nem tud olvasni. Az Outlookban exportálja a leveleket egy új, titkosítás nélküli .pst fájlba.",
+    "pst_error_not_pst": "Ez a fájl nem olyan Outlook-adatfájl, amelyet a Bulwark olvasni tud.",
+    "pst_error_unreadable": "A Bulwark nem tudta beolvasni ezt az Outlook-fájlt.",
+    "pst_error_worker": "Az Outlook-fájlok olvasója nem töltődött be. Töltse újra az oldalt, és próbálja meg ismét.",
+    "error_over_quota": "A postafiók megtelt, ezért az importálás leállt. Szabadítson fel helyet, és importálja újra ugyanazokat a fájlokat ugyanabba a mappába a folytatáshoz.",
+    "error_forbidden": "Ebbe a mappába nem adhat hozzá leveleket, ezért az importálás leállt.",
+    "error_failures": "Túl sok üzenet hiúsult meg egymás után, ezért az importálás leállt. Később importálja újra ugyanazokat a fájlokat ugyanabba a mappába a folytatáshoz.",
+    "error_network": "A kapcsolat a szerverrel többször megszakadt, ezért az importálás leállt. Importálja újra ugyanazokat a fájlokat ugyanabba a mappába a folytatáshoz.",
+    "error_busy": "Ezeket a fájlokat már importálja egy másik lap.",
+    "retry_hint": "Importálja újra ugyanazokat a fájlokat ugyanabba a mappába, hogy a sikertelenekkel újra próbálkozzon.",
+    "skip_unreadable": "Olvashatatlan az Outlook-fájlban: {count}",
+    "keep_folders_top_hint": "A legfelső szinten a Beérkezett üzenetek, az Elküldött elemek, a Törölt elemek és a hasonlók a saját mappáiba kerülnek.",
+    "toast_done": "Az importálás befejeződött. Importált: {imported}, sikertelen: {failed}.",
+    "toast_stopped": "Az importálás leállt.",
+    "toast_show": "Megjelenítés",
+    "section_title": "Levélfájlok",
+    "section_description": "Hozzon be leveleket fájlokból, vagy mentse a leveleit fájlokba."
+  },
+  "mail_export": {
+    "menu_export": "Mappa exportálása…",
+    "settings_label": "Az összes levél exportálása",
+    "settings_description": "A fiók összes mappájának mentése egy ZIP-fájlba, mbox vagy .eml fájlokként.",
+    "settings_button": "Exportálás…",
+    "title_folder": "„{name}” exportálása",
+    "title_account": "Az összes levél exportálása",
+    "description_folder": "A mappa üzeneteinek mentése fájlba.",
+    "description_account": "A fiók összes mappájának mentése egy ZIP-fájlba.",
+    "format_label": "Formátum",
+    "format_mbox_folder": "mbox-fájl",
+    "format_eml_folder": "ZIP .eml fájlokkal",
+    "format_mbox_account": "ZIP mappánként egy mbox-fájllal",
+    "format_eml_account": "ZIP .eml fájlokkal, levélmappánként egy mappával",
+    "hint_mbox": "A Thunderbird, az Apple Mail és a legtöbb levelezőprogram megnyitja az mbox-fájlokat.",
+    "hint_eml": "Üzenetenként egy fájl, amelyet bármely levelezőprogram megnyit.",
+    "save_picker": "Ön választja ki, hová kerüljön a fájl.",
+    "save_download": "A fájl az exportálás végén letöltődik.",
+    "save_memory": "Ez a böngésző a teljes exportot a memóriában tartja, ezért legfeljebb 200 MB-ot tud menteni. Nagyobbhoz használja a Chrome-ot vagy az Edge-et, vagy exportáljon mappánként.",
+    "start": "Exportálás",
+    "cancel": "Mégse",
+    "running_title": "Levelek exportálása folyamatban",
+    "progress_label": "Az exportálás állapota",
+    "status_exported": "Exportált üzenetek: {count} / {total}",
+    "paused": "Szüneteltetve eddig: {time}: a szerver szünetet kért. Az exportálás magától folytatódik.",
+    "background": "Futtatás a háttérben",
+    "cancel_export": "Exportálás megszakítása",
+    "chip": "Levelek exportálása: {percent}%",
+    "chip_paused": "Az exportálás szünetel eddig: {time}",
+    "done_title": "Az exportálás befejeződött",
+    "cancelled_title": "Az exportálás megszakítva",
+    "failed_title": "Az exportálás leállt",
+    "summary_exported": "Exportált üzenetek: {count}",
+    "summary_file": "Mentve: {name} ({size}).",
+    "summary_failed": "Nem exportálható: {count}",
+    "download_again": "Letöltés újra",
+    "too_large": "Az export nagyobb, mint amit ez a böngésző a memóriában tarthat. Használja a Chrome-ot vagy az Edge-et, vagy exportáljon mappánként.",
+    "close": "Bezárás",
+    "untitled": "(nincs tárgy)",
+    "toast_done": "Az exportálás befejeződött: {name}",
+    "toast_stopped": "Az exportálás leállt.",
+    "toast_show": "Megjelenítés"
+  },
   "recover_deleted": {
     "tab": "Törölt elemek visszaállítása",
     "title": "Törölt elemek visszaállítása",
@@ -5411,6 +5646,76 @@
     "install": "Telepítés",
     "dont_remind": "Ne emlékeztess többet",
     "dismiss_aria": "Telepítési ablak elutasítása"
+  },
+  "app_update": {
+    "ready": "Elkészült a(z) {appName} új verziója.",
+    "reload": "Újratöltés"
+  },
+  "offline": {
+    "settings": {
+      "title": "Offline",
+      "description": "Levelek olvasása és írása ezen az eszközön kapcsolat nélkül.",
+      "keep_label": "Levelek megtartása ezen az eszközön",
+      "keep_description": "Megtartja a beérkezett levelek és a megnyitott mappák utolsó 30 napját, legfeljebb 250 MB-ot, titkosítva ebben a böngészőben. Offline olvashat, megjelölhet és áthelyezhet leveleket, a megírt levelek pedig a postázandók között várnak. Kijelentkezéskor minden törlődik.",
+      "warning": "Bárki, aki használhatja ezt a böngészőprofilt, elolvashatja ezeket a leveleket. Csak a saját eszközén kapcsolja be, és használjon lemeztitkosítást.",
+      "forbidden": "A szervezete nem engedi, hogy leveleket tároljon az eszközökön.",
+      "unsupported": "Ez a böngésző nem tud leveleket tárolni offline használatra.",
+      "syncing": "A levelek mentése erre az eszközre…",
+      "usage": "{size} ezen az eszközön",
+      "usage_updated": "{size} ezen az eszközön, frissítve: {time}",
+      "off_confirm_title": "Kikapcsolja az offline módot?",
+      "off_confirm_message": "{count, plural, one {# levél a postázandók között még nincs elküldve.} other {# levél a postázandók között még nincs elküldve.}} Kikapcsoláskor ezek és az eszközön tárolt levelek törlődnek.",
+      "off_confirm": "Kikapcsolás"
+    },
+    "outbox": {
+      "title": "Postázandó",
+      "description": "Az offline írt levelek. Akkor mennek el, amikor az eszköz újra online lesz.",
+      "empty": "Nincs elküldésre váró levél.",
+      "no_subject": "(nincs tárgy)",
+      "to": "Címzett: {recipients}",
+      "status_waiting": "Kapcsolatra vár",
+      "status_sending": "Küldés folyamatban",
+      "status_failed": "Nem sikerült elküldeni: {error}",
+      "status_uncertain": "A kapcsolat megszakadt küldés közben. Nézze meg az Elküldött mappát, mielőtt újra elküldi.",
+      "retry": "Újraküldés",
+      "delete": "Törlés",
+      "delete_confirm_title": "Törli ezt a levelet?",
+      "delete_confirm_message": "Nem lett elküldve, és nem állítható vissza.",
+      "changes": "{count, plural, one {# módosítás} other {# módosítás}} (olvasottság, jelölők, mappák) elmegy, amikor újra online lesz.",
+      "status_held": "A szervezete szabályai megváltoztak, amíg a levél várt. Írja meg újra az elküldéshez.",
+      "retry_label": "Újraküldés: {subject}",
+      "delete_label": "Törlés: {subject}"
+    },
+    "banner": {
+      "offline": "Offline állapotban van. Az ezen az eszközön tárolt leveleket látja. Amit módosít vagy ír, elmegy, amikor újra online lesz.",
+      "outbox": "{count, plural, one {# levél} other {# levél}} a postázandók között",
+      "server_down": "A levelezőkiszolgáló nem érhető el. Az ezen az eszközön tárolt leveleket látja. Amit módosít vagy ír, elmegy, amikor újra válaszol."
+    },
+    "toast": {
+      "queued": "Mentve a postázandók közé. Akkor megy el, amikor újra online lesz.",
+      "sent": "Elküldve a postázandók közül: {subject}",
+      "send_failed": "Egy postázandó levelet nem sikerült elküldeni: {subject}",
+      "refused_delete": "A végleges törléshez kapcsolat kell. Próbálja újra, amikor online lesz.",
+      "refused_other": "Ehhez kapcsolat kell. Próbálja újra, amikor online lesz.",
+      "forbidden": "A szervezete kikapcsolta az offline módot. Az eszközön tárolt leveleket eltávolítottuk.",
+      "back_online": "Újra online van. Töltse újra az oldalt a bejelentkezéshez és a váró levelek elküldéséhez.",
+      "reload": "Újratöltés",
+      "held": "Egy postázandó levél figyelmet igényel: {subject}",
+      "lost": "Ezek a levelek nem mentek el, és törlődtek: {subjects}"
+    },
+    "signout": {
+      "title": "Kijelentkezik elküldetlen levelekkel?",
+      "message": "{count, plural, one {# levél nincs elküldve.} other {# levél nincs elküldve.}} A kijelentkezés törli őket.",
+      "confirm": "Kijelentkezés",
+      "lost": "Ezek a levelek nem mentek el, és a kijelentkezéskor törlődtek: {subjects}"
+    },
+    "errors": {
+      "unavailable": "Ehhez kapcsolat kell. Próbálja újra, amikor online lesz.",
+      "plugins_down": "Az aláíró vagy titkosító bővítménye offline nem fut. Küldje el, amikor újra online lesz.",
+      "file_missing": "Egy offline csatolt fájl már nincs ezen az eszközön. Csatolja újra.",
+      "no_sent_mailbox": "Az Elküldött mappa nem található.",
+      "no_drafts_mailbox": "A Piszkozatok mappa nem található."
+    }
   },
   "deep_link": {
     "message_not_found": "Ez az üzenet már nem érhető el.",
@@ -5734,11 +6039,15 @@
       },
       "compose_read": {
         "title": "Az éppen írt üzeneted olvasása",
-        "body": "Az üzenet szövegének olvasása írás közben, amikor a bővítményt a szerkesztőben használod. Az aláírást és az idézett üzenetet nem."
+        "body": "Az üzenet olvasása írás közben, amikor a bővítményt a szerkesztőben használod: a szöveg, a tárgy, a címzettek a titkos másolattal együtt, valamint a mellékletek neve és mérete. Az aláírást és az idézett üzenetet nem."
       },
       "compose_write": {
         "title": "Az éppen írt üzeneted módosítása",
         "body": "Szöveg cseréje vagy hozzáadása az üzenetben írás közben, amikor a bővítményt a szerkesztőben használod. Minden módosítás visszavonható, és továbbra is te döntöd el, elküldöd-e."
+      },
+      "compose_check": {
+        "title": "Ellenőrizni, amit ír",
+        "body": "Gépelés közben olvassa, amit a szerkesztőben ír, és elküldheti az általa használt szolgáltatásnak. Csak ha a helyesírás-ellenőrzés be van kapcsolva, és semmit, amíg egy üzenet aláírásra vagy titkosításra van beállítva. Amit a bekapcsolása előtt írt, azt már ellenőrizhették."
       },
       "email_forward": {
         "title": "Leveleid továbbítása",
@@ -5758,7 +6067,7 @@
       },
       "ui_tasks": {
         "title": "Tartalom a feladatok nézetében",
-        "body": "Saját szakaszokat jelenít meg egy feladat részleteiben és gombokat a feladatlistában."
+        "body": "Saját szakaszokat jelenít meg egy feladat részleteiben, gombokat a feladatlistában, és saját feladatlistát a Bulwark listája helyett."
       },
       "ui_files": {
         "title": "Tartalom a fájlok nézetében",
@@ -5810,6 +6119,10 @@
       "error_server": "Add meg a szerver címét, például https://cloud.example.com",
       "error_save": "Nem sikerült menteni: {error}"
     }
+  },
+  "send_guards": {
+    "not_running": "Nincs elküldve. Egy, a szervezete által előírt ellenőrzés most nem fut. Próbálja újra egy pillanat múlva.",
+    "stopped_working": "Nincs elküldve. Egy, a szervezete által előírt ellenőrzés leállt. Töltse be újra az oldalt. Ha ez nem segít, szóljon a rendszergazdának."
   },
   "plugin_list": {
     "filters": "Szűrők",
@@ -6053,6 +6366,77 @@
       "party_size": "Létszám: {count}",
       "added_from": "Hozzáadva egy {domain} által küldött levélből",
       "added_from_subject": "Hozzáadva a(z) {domain} által küldött „{subject}” levélből"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Helyesírás",
+      "grammar": "Nyelvtan",
+      "style": "Stílus",
+      "other": "Javaslat"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Nincs javaslat",
+      "suggestions": "Javaslatok",
+      "replace_with": "Csere erre: {text}",
+      "also": "Ezt is jelezte: {checker}",
+      "ignore": "Figyelmen kívül hagyás",
+      "add_to_dictionary": "Hozzáadás a szótárhoz",
+      "disable_rule": "Szabály kikapcsolása",
+      "changed": "A szöveg megváltozott. Várd meg a következő ellenőrzést."
+    },
+    "list_item": "{word}: {message} Javaslat: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Nincs helyesírási vagy nyelvtani hiba} one {# helyesírási vagy nyelvtani hiba} other {# helyesírási vagy nyelvtani hiba}}",
+    "status": {
+      "title": "Helyesírás-ellenőrzés",
+      "off": "Helyesírás-ellenőrzés kikapcsolva",
+      "paused": "Helyesírás-ellenőrzés szüneteltetve",
+      "rate_limited": "Ellenőrzés szüneteltetve",
+      "unavailable": "Az ellenőrzés nem érhető el",
+      "checking": "Ellenőrzés…",
+      "issues": "{count, plural, =0 {Nincs probléma} one {# probléma} other {# probléma}}"
+    },
+    "panel": {
+      "title": "Helyesírás-ellenőrzés",
+      "required": "A szervezeted előírja",
+      "check_message": "Üzenet ellenőrzése",
+      "notice": "Gépelés közben a beírt szöveg ellenőrzésre kerül ide: {checkers}. Az aláírásod és az idézett üzenet kimarad. Amíg egy üzenet aláírásra vagy titkosításra van beállítva, semmi nem megy el; amit a bekapcsolása előtt írtál, azt már ellenőrizhették.",
+      "turn_on": "Helyesírás-ellenőrzés bekapcsolása",
+      "paused_protected": "Amíg ez az üzenet aláírásra vagy titkosításra van beállítva, semmi nem kerül ellenőrzésre.",
+      "paused_unknown": "{plugin} úgy is aláírhat vagy titkosíthat üzeneteket, hogy az itt nem látszik, ezért amíg be van kapcsolva, semmi nem kerül ellenőrzésre.",
+      "rate_limited": "{checker} várakozást kért. Az ellenőrzés egy perc múlva folytatódik.",
+      "unavailable": "{checker} most nem tud ellenőrizni. Újra próbálkozik, amikor tovább gépelsz.",
+      "no_issues": "Nem található probléma.",
+      "list_label": "Problémák ebben az üzenetben",
+      "shortcuts": "Következő probléma: {next}. Előző: {previous}."
+    },
+    "notice": {
+      "on": "A helyesírás-ellenőrzés be van kapcsolva. Gépelés közben a beírt szöveg ellenőrzésre kerül ide: {checkers}, az aláírásod és az idézett üzenet nélkül. Amíg egy üzenet aláírásra vagy titkosításra van beállítva, semmi nem megy el; amit előtte írtál, azt már ellenőrizhették.",
+      "forced": "A szervezeted bekapcsolta a helyesírás-ellenőrzést. Gépelés közben a beírt szöveg ellenőrzésre kerül ide: {checkers}, az aláírásod és az idézett üzenet nélkül. Amíg egy üzenet aláírásra vagy titkosításra van beállítva, semmi nem megy el; amit előtte írtál, azt már ellenőrizhették.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Elküldöd megoldatlan problémákkal?",
+      "body": "{count, plural, one {# helyesírási vagy nyelvtani hiba} other {# helyesírási vagy nyelvtani hiba}} még megoldatlan ebben az üzenetben.",
+      "review": "Átnézés",
+      "send": "Küldés így is"
+    },
+    "settings": {
+      "title": "Helyesírás-ellenőrzés",
+      "description": "Írás közben aláhúzza a helyesírási és nyelvtani hibákat, és javaslatot ad a javításukra.",
+      "enable": "Helyesírás és nyelvtan ellenőrzése gépelés közben",
+      "enable_description": "A beírt szöveg a helyesírás-ellenőrző bővítményhez és az általa használt szolgáltatáshoz kerül, az aláírásod és az idézett üzenetek nélkül. Amíg egy üzenet aláírásra vagy titkosításra van beállítva, semmi nem megy el.",
+      "no_checker": "Nincs telepítve helyesírás-ellenőrző bővítmény. Kérd meg a rendszergazdát, hogy adjon hozzá egyet.",
+      "plugin_description": "Elküldi, amit írsz, ide: {plugin}.",
+      "writing_language": "Írás nyelve",
+      "writing_language_description": "Az a nyelv, amelyen általában írsz. A helyesírás-ellenőrzés és a böngésző helyesírás-ellenőrzője is ezt használja.",
+      "auto": "Automatikus felismerés"
+    },
+    "shortcuts": {
+      "next_issue": "Következő helyesírási vagy nyelvtani hiba",
+      "previous_issue": "Előző helyesírási vagy nyelvtani hiba"
     }
   }
 }

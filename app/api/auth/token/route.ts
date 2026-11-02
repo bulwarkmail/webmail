@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { observeUpstream } from '@/lib/metrics/upstream';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
 import {
@@ -57,7 +58,8 @@ function getSlot(request: NextRequest): number {
 const REVOCATION_TIMEOUT_MS = 3000;
 
 async function revokeRefreshToken(token: string, serverId: string | null, metadata: OAuthMetadata | null): Promise<void> {
-  if (!metadata?.revocation_endpoint) return;
+  const revocationEndpoint = metadata?.revocation_endpoint;
+  if (!revocationEndpoint) return;
   const params = buildOAuthParams({
     token,
     token_type_hint: 'refresh_token',
@@ -66,13 +68,13 @@ async function revokeRefreshToken(token: string, serverId: string | null, metada
   try {
     // Never follow a redirect with the refresh token and client secret in
     // the body: the endpoint was validated, its redirect target was not.
-    const revocationResponse = await fetch(metadata.revocation_endpoint, {
+    const revocationResponse = await observeUpstream('oauth', () => fetch(revocationEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: params.toString(),
       signal: AbortSignal.timeout(REVOCATION_TIMEOUT_MS),
       redirect: 'error',
-    });
+    }));
     if (!revocationResponse.ok) {
       logger.warn('Token revocation returned error', { status: revocationResponse.status });
     }
@@ -262,13 +264,13 @@ export async function PUT(request: NextRequest) {
       refresh_token: refreshToken,
     }, serverId, await defaultClientOptions(serverId));
 
-    const tokenResponse = await fetch(tokenEndpoint, {
+    const tokenResponse = await observeUpstream('oauth', () => fetch(tokenEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: params.toString(),
       // See revokeRefreshToken: the body holds the refresh token.
       redirect: 'error',
-    });
+    }));
 
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();

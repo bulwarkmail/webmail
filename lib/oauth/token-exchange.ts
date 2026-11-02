@@ -1,4 +1,5 @@
 import { logger } from '@/lib/logger';
+import { observeUpstream } from '@/lib/metrics/upstream';
 import { discoverOAuth } from '@/lib/oauth/discovery';
 import type { EndpointValidator, OAuthMetadata } from '@/lib/oauth/discovery';
 import { isPublicHttpUrl } from '@/lib/security/url-guard';
@@ -209,12 +210,12 @@ export async function exchangeCodeForTokens(
   // The body carries the code, the PKCE verifier and the client secret. The
   // endpoint was validated; a redirect would re-send all of it to a host
   // that was not, so none is followed.
-  const tokenResponse = await fetch(tokenEndpoint, {
+  const tokenResponse = await observeUpstream('oauth', () => fetch(tokenEndpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: params.toString(),
     redirect: 'error',
-  });
+  }));
 
   if (!tokenResponse.ok) {
     const errorText = await tokenResponse.text();

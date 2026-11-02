@@ -1,5 +1,5 @@
 {
-  "meta_description": "JMAP protokolünü kullanan minimalist web posta istemcisi",
+  "meta_description": "E-posta, takvim, kişiler ve dosyalar için JMAP tabanlı, kendi sunucunuzda barındırılan web posta",
   "login": {
     "title": "Webmail",
     "username_label": "E-posta",
@@ -461,7 +461,6 @@
     "view_in_light_mode": "Açık modda görüntüle",
     "export_email": ".eml olarak dışa aktar",
     "forward_as_attachment": "Ek olarak ilet",
-    "import_email": ".eml veya .zip içe aktar…",
     "keyboard_shortcuts": "Klavye kısayolları",
     "email_source": "E-posta Kaynağı",
     "draft_banner": "Bu ileti bir taslaktır",
@@ -473,6 +472,9 @@
     "source_truncated": "İlk {size} gösteriliyor. Gerisi için iletiyi dışa aktarın.",
     "source_copied": "Kaynak panoya kopyalandı",
     "attachments": "Ekler",
+    "attachments_count": "{count, plural, one {# ek} other {# ek}}",
+    "attachments_show_more": "{count} tane daha göster",
+    "attachments_show_fewer": "Daha az göster",
     "important": "Önemli",
     "download": "İndir",
     "download_all": "Tümünü indir",
@@ -880,6 +882,35 @@
     "send_anyway": "Yine de gönder",
     "back": "Geri"
   },
+  "phishing_report": {
+    "action": "Kimlik avı bildir…",
+    "confirm_title": "Kimlik avı olarak bildirilsin mi?",
+    "confirm_message": "{count, plural, one {İleti {address} adresine gönderilir ve Spam klasörüne taşınır.} other {# iletinin her biri ayrı bir bildirim olarak {address} adresine gönderilir ve Spam klasörüne taşınır.}}",
+    "confirm": "Bildir",
+    "cancel": "İptal",
+    "sending": "Bildiriliyor…",
+    "done": "{count, plural, one {{address} adresine bildirildi ve Spam klasörüne taşındı.} other {# ileti {address} adresine bildirildi ve Spam klasörüne taşındı.}}",
+    "not_moved": "{count, plural, one {{address} adresine bildirildi ancak ileti Spam klasörüne taşınamadı.} other {{address} adresine bildirildi ancak # ileti Spam klasörüne taşınamadı.}}",
+    "failed": "{count, plural, one {İleti bildirilemedi.} other {# ileti bildirilemedi.}}",
+    "undo": "Geri al",
+    "undone": "{count, plural, one {Geri taşındı. Bildirim zaten gönderilmişti.} other {Geri taşındı. Bildirimler zaten gönderilmişti.}}",
+    "undo_failed": "Geri taşınamadı.",
+    "banner": "Bu iletiyi kimlik avı olarak bildirdiniz. İçindeki bağlantılar devre dışı.",
+    "link_off": "bağlantı devre dışı",
+    "link_off_note": "(bağlantı devre dışı)",
+    "no_subject": "(konu yok)"
+  },
+  "classification": {
+    "picker_label": "Sınıflandırma",
+    "chip_label": "Sınıflandırma: {name}",
+    "none": "Sınıflandırma yok",
+    "pick_required": "Sınıflandırma seçin",
+    "required_hint": "Kuruluşunuz bir sınıflandırma gerektiriyor.",
+    "required_toast": "Göndermeden önce bir sınıflandırma seçin.",
+    "quick_reply_needs_label": "Bu yanıt için sınıflandırma gerekiyor. Burada bir tane seçin, sonra gönderin.",
+    "forward_needs_label": "Sınıflandırma zorunlu. İletiyi ileti düzenleyiciden iletin.",
+    "received_hint": "Gönderenin posta programı tarafından ayarlandı. Herkes sınıflandırma ayarlayabilir, bu yüzden hiçbir şeyi kanıtlamaz."
+  },
   "email_composer": {
     "select_from_directory": "Dizinden seç",
     "minimize": "Simge durumuna küçült",
@@ -1248,8 +1279,6 @@
     "templates_import_errors": "Bazı şablonlar içe aktarılamadı",
     "templates_import_empty": "Dosyada şablon bulunamadı",
     "export_email_error": "E-posta dışa aktarılamadı",
-    "import_email_success": "E-posta başarıyla içe aktarıldı",
-    "import_email_error": "E-posta içe aktarılamadı",
     "rule_created": "Kural oluşturuldu",
     "rule_merged": "“{name}” kuralına eklendi",
     "rule_already_covered": "Zaten “{name}” kuralı kapsıyor",
@@ -1272,12 +1301,46 @@
     "tag_removed_count": "{count, plural, other {# e-postadan etiket kaldırıldı}}",
     "new_mail_count": "{count, plural, other {# yeni ileti}}"
   },
+  "org_notice": {
+    "label": "Duyuru",
+    "dismiss": "Duyuruyu kapat",
+    "severity_info": "Bilgi",
+    "severity_warning": "Uyarı",
+    "severity_critical": "Önemli"
+  },
+  "vacation_templates": {
+    "title": "Kuruluş şablonları",
+    "description": "Kuruluşunuzun yazdığı bir yanıtla başlayın. Metni sonra değiştirebilirsiniz.",
+    "pick_label": "Şablon kullan",
+    "pick_placeholder": "Bir şablon seçin",
+    "deputy_label": "Vekilin adresi",
+    "deputy_placeholder": "meslektas@example.com",
+    "deputy_hint": "Yanıt, acil işler için bu kişiyi belirtir.",
+    "deputy_missing": "Önce vekilinizin adresini girin.",
+    "deputy_name_label": "Vekilin adı",
+    "deputy_name_missing": "Önce vekilinizin adını girin.",
+    "apply": "Bu metni kullan",
+    "apply_hint": "Aşağıdaki konu ve metnin yerine geçer."
+  },
+  "retention_notice": {
+    "line": "Buradaki iletiler buraya taşındıktan {count, plural, one {# gün} other {# gün}} sonra silinir."
+  },
+  "device_policy": {
+    "downloads_off": "Kuruluşunuz indirmeyi kapattı.",
+    "download_off_named": "{name}: kuruluşunuz indirmeyi kapattı",
+    "download_blocked": "Kuruluşunuz indirmeyi kapattı.",
+    "export_blocked": "Kuruluşunuz e-postaları dışa aktarmayı kapattı.",
+    "print_blocked": "Kuruluşunuz yazdırmayı kapattı."
+  },
   "third_party": {
     "push_needs_relay": "Anlık bildirimler için kuruluşunuzun işlettiği bir push rölesi gerekir ve hiçbiri ayarlanmamış. Uygulama açıkken yeni postalar yine de görünür.",
     "relay_desc": "Bu sunucu dış hizmetlerle bağlantı kurmadığı için yalnızca kuruluşunuzun kendi röleleri sunulur.",
     "relay_none": "Hiçbiri ayarlanmamış",
     "plugin_refused": "Başlatılmadı: bu eklenti, kuruluşunuzun kapattığı dış hizmetlere bağlanıyor.",
     "remote_content_blocked": "Kuruluşunuz diğer sunuculardan gelen içeriği engelliyor, bu yüzden bu iletideki uzak resimler gösterilmiyor."
+  },
+  "remote_content_lock": {
+    "trusted_senders_note": "Kuruluşunuz tüm e-postalarda uzak içeriği engelliyor, bu yüzden güvenilir gönderenlerde de yüklenmez."
   },
   "date": {
     "today": "Bugün",
@@ -1539,6 +1602,10 @@
         "label": "Paylaşılan posta hesaplarını göster",
         "description": "Sizinle paylaşılan posta kutularının klasörlerini kenar çubuğunda Paylaşılan altında göster. Hepsini gizlemek için kapatın veya aşağıdan tek tek hesapları gizleyin. Takvimleri ve kişileri görünür kalır."
       },
+      "compact_shared_mailboxes": {
+        "label": "Kompakt paylaşılan posta kutuları",
+        "description": "Her paylaşılan posta kutusunu, gelen kutusunu açan tek bir satır olarak ve klasörleri altında olacak şekilde göster. Taslaklar veya Çöp Kutusu gibi boş klasörler gösterilmez."
+      },
       "pro_interface": {
         "label": "Pro Arayüz (Deneysel)",
         "description": "Yalnızca masaüstü için güçlü kullanıcı düzeni: çoklu sekmede ileti gezme ve hesaplar arası iş akışları. Standart arayüz etkilenmez; istediğiniz zaman geri dönebilirsiniz.",
@@ -1769,6 +1836,12 @@
         "label": "Klasör değiştirirken aramayı temizle",
         "description": "Bir klasöre tıklamak (Gelen Kutusu, Gönderilenler…) etkin aramayı temizler ve o klasörü gösterir. Kapalıyken arama korunur ve geçtiğiniz klasörde yeniden çalıştırılır."
       },
+      "search_default_scope": {
+        "label": "Şurada ara",
+        "description": "Yeni bir aramanın nerede arayacağı. Arama filtrelerinden yine başka bir klasör seçebilirsiniz.",
+        "all": "Spam ve Çöp Kutusu dışındaki tüm klasörler",
+        "folder": "Açık klasör"
+      },
       "request_read_receipt": {
         "label": "Varsayılan olarak okundu bilgisi iste",
         "description": "Yeni bir ileti yazarken okundu bilgisi isteğini önceden etkinleştir."
@@ -1876,6 +1949,14 @@
         "above_quote": "Alıntılanan metinden önce",
         "below_quote": "Alıntılanan metinden sonra"
       },
+      "signature_new_mail": {
+        "label": "Yeni e-postalarda imza",
+        "description": "Yeni bir ileti yazarken imzanızı otomatik olarak ekler. Her yeni iletiye imzasız başlamak için kapatın."
+      },
+      "signature_reply_forward": {
+        "label": "Yanıtlarda ve iletmelerde imza",
+        "description": "Bir iletiyi yanıtlarken veya iletirken imzanızı otomatik olarak ekler. İmzasız göndermek için kapatın."
+      },
       "signature_separator": {
         "label": "İmza ayırıcı",
         "description": "İmzayı standart \"-- \" ayırıcı satırıyla başlat (RFC 3676). Mesajdan doğrudan imzaya geçmek istiyorsanız kapatın."
@@ -1896,8 +1977,8 @@
       "attachment_position": {
         "label": "Ek Konumu",
         "description": "E-posta başlığında eklerin nerede görüntüleneceği",
-        "beside-sender": "Göndericinin yanı",
-        "below-header": "Başlığın altı"
+        "below-header": "Başlığın altı",
+        "below-message": "Mesajın altında kartlar"
       },
       "emails_per_page": {
         "10": "10 e-posta",
@@ -3546,7 +3627,6 @@
     "new_folder": "Yeni klasör…",
     "rename": "Yeniden adlandır…",
     "share": "Paylaş…",
-    "import_email": ".eml veya .zip içe aktar…",
     "empty_folder": "Klasörü boşalt",
     "empty_folder_generic": "Klasörü boşalt",
     "delete_folder": "Klasörü sil",
@@ -4835,6 +4915,51 @@
     "cancelled": "{name} \"{title}\" etkinliğini iptal etti",
     "untitled": "Başlıksız etkinlik"
   },
+  "company_calendars": {
+    "section": "Kuruluş"
+  },
+  "vacation_calendar": {
+    "label": "Takvimimi kapat",
+    "description": "Uzakta olduğunuz süre için meşgul bir etkinlik ekler, böylece o sırada kimse sizinle toplantı ayarlamaz.",
+    "no_access_managed": "Bu hesabın takvimi kapatılamaz: yazma erişiminiz yok.",
+    "no_calendar": "Takviminiz kapatılamıyor: Bulwark etkinliği ekleyecek bir takvim bulamadı.",
+    "filter_warning": "Bunu açmak, yanıt etkin olduğu sürece kendi filtre betiğinizi kapatır."
+  },
+  "calendar_delegate": {
+    "answer_for": "{name} adına yanıtla",
+    "no_write": "{name} kişisinin davetlerini görebilirsiniz ama onun adına yanıtlayamazsınız. Düzenleme erişimi isteyin.",
+    "also_invited": "Siz de davetlisiniz ve bu sunucu yanıtınızı {name} kişisinin yanıtından ayıramıyor. Bunu {name} yanıtlamalı.",
+    "answered_by": "Yanıtlayan: {who}"
+  },
+  "free_busy_share": {
+    "button": "Müsaitlik durumumu {group} ile paylaş",
+    "already": "Müsaitlik durumunuz {group} ile paylaşılıyor",
+    "done": "Müsaitlik durumunuz artık {group} ile paylaşılıyor.",
+    "error": "Müsaitlik durumunuz paylaşılamadı. Yeniden deneyin.",
+    "group_label": "Grup",
+    "title": "Müsaitlik",
+    "description": "Gruptaki iş arkadaşlarınız ne zaman meşgul olduğunuzu görür, etkinliklerinizi görmez. Saat öner bunu kullanır."
+  },
+  "find_time": {
+    "suggest": "Saat öner",
+    "searching": "Boş saatler aranıyor",
+    "slots_title": "Bulwark’ın kontrol edebildiği herkes için boş",
+    "slot": "{day}, {start} - {end}",
+    "none": "Önümüzdeki 10 iş gününde boş zaman yok.",
+    "picked": "Etkinlik {slot} zamanına taşındı",
+    "rate_limited": "Son bir dakikada çok fazla sorgu yapıldı. Bir dakika sonra yeniden deneyin.",
+    "unavailable": "Bu sunucuda müsaitlik bilgisi yok, bu yüzden Bulwark saat öneremiyor.",
+    "not_checked": "Kontrol edilmedi:",
+    "not_checked_item": "{who}: {reason}",
+    "reason_external": "kuruluşunuzun dışında",
+    "reason_unknown": "meşgul saatler bilinmiyor",
+    "reason_not_found": "bu sunucuda bulunamadı",
+    "reason_error": "kontrol edilemedi",
+    "unknown_note": "Bulwark meşgul saatleri yalnızca sizinle paylaşılan takvimlerde görür. Bu kişiler için boş olmayı paylaşılmamaktan ayıramaz.",
+    "directory_off": "Bulwark bu sunucuda kişi arayamıyor. Yöneticiniz Stalwart’ta dizin sorgularını açabilir.",
+    "not_looked_up": "Bu adres aranamadı",
+    "found": "Bulunan boş saatler: {count}"
+  },
   "share_notifications": {
     "someone": "Birisi",
     "shared": "{name}, \"{object}\" {kind} sizinle paylaştı",
@@ -5182,7 +5307,6 @@
     "settings_ascending": "Artan",
     "settings_descending": "Azalan",
     "disabled_title": "Dosyalar özelliği yöneticiniz tarafından devre dışı bırakıldı",
-    "disabled_description": "WebDAV üzerinden büyük dosya yüklemeleri Stalwart/RocksDB kararsızlığına yol açabilir; bellek yetersizliği çöküşleri ve kurtarılamaz disk kullanımı dahil. Silinen dosyalar blob depolamadan hemen temizlenmeyebilir. Bu özellik üretim ortamları için önerilmez.",
     "no_accounts": "Bağlı hesap yok.",
     "open_folder_tree": "Klasör ağacını aç",
     "migration_title": "Dosyalarınız güncelleniyor…",
@@ -5371,6 +5495,117 @@
   "unified_mailbox": {
     "search_unavailable": "Birleşik görünümde arama kullanılamaz"
   },
+  "mail_import": {
+    "menu_import": "E-posta içe aktar…",
+    "settings_label": "E-posta içe aktar",
+    "settings_description": ".eml, ZIP, mbox veya Outlook .pst ve .ost dosyalarından e-posta alın.",
+    "settings_button": "İçe aktar…",
+    "title": "E-posta içe aktar",
+    "description": ".eml, .zip, .mbox veya Outlook .pst ve .ost dosyalarını seçin.",
+    "choose_files": "Dosya seç…",
+    "chosen_files": "Seçilen dosyalar",
+    "remove_file": "{name} öğesini kaldır",
+    "format_eml": "İleti",
+    "format_zip": "ZIP arşivi",
+    "format_mbox": "mbox dosyası",
+    "format_pst": "Outlook veri dosyası",
+    "target_label": "Şuraya aktar",
+    "target_top": "En üst düzey",
+    "keep_folders": "Dosyadaki klasörleri yeniden oluştur",
+    "keep_folders_hint": "Aynı adlı klasörler yeniden kullanılır.",
+    "resume": "Bu dosyaların son içe aktarımının durduğu yerden devam et (zaten işlenen iletiler: {count})",
+    "quota_note": "Birçok sunucu bir kullanıcıdan saatte yalnızca yaklaşık 1000 ileti veya 50 MB kabul eder. Daha büyük bir içe aktarım duraklar ve sonra kendiliğinden devam eder.",
+    "start": "İçe aktar",
+    "cancel": "İptal",
+    "running_title": "E-posta içe aktarılıyor",
+    "progress_label": "İçe aktarma ilerlemesi",
+    "status_imported": "İçe aktarılan iletiler: {count}",
+    "reading_file": "{name} okunuyor",
+    "paused": "{time} saatine kadar duraklatıldı. Sunucu saatte en fazla {files} yükleme veya {size} kabul ediyor. İçe aktarım kendiliğinden devam eder.",
+    "paused_generic": "{time} saatine kadar duraklatıldı. Sunucunun yükleme sınırına ulaşıldı. İçe aktarım kendiliğinden devam eder.",
+    "background": "Arka planda çalıştır",
+    "cancel_import": "İçe aktarımı iptal et",
+    "chip": "E-posta içe aktarılıyor: %{percent}",
+    "chip_paused": "İçe aktarım {time} saatine kadar duraklatıldı",
+    "done_title": "İçe aktarım tamamlandı",
+    "cancelled_title": "İçe aktarım iptal edildi",
+    "failed_title": "İçe aktarım durdu",
+    "summary_imported": "İçe aktarılan iletiler: {count}",
+    "summary_folders": "Oluşturulan klasörler: {count}",
+    "summary_skipped": "İçe aktarılmayanlar:",
+    "skip_too_large": "Sunucunun kabul ettiğinden büyük: {count}",
+    "skip_deleted": "Thunderbird'de silinmiş: {count}",
+    "skip_embedded": "Başka iletilere ekli iletiler: {count}",
+    "skip_contact": "Kişiler: {count}",
+    "skip_calendar": "Takvim öğeleri: {count}",
+    "skip_other": "Diğer öğeler: {count}",
+    "summary_failed": "İçe aktarılamadı: {count}",
+    "failure_invalid": "geçerli bir ileti değil",
+    "untitled": "(konu yok)",
+    "cancelled_hint": "Daha sonra devam etmek için aynı dosyaları aynı klasöre yeniden içe aktarın.",
+    "close": "Kapat",
+    "pst_note": "Outlook dosyalarından yalnızca e-postalar alınır. Kişiler, takvim öğeleri ve görevler sayılır ve atlanır.",
+    "pst_error_encrypted": "Bu Outlook dosyası Bulwark'ın okuyamadığı yüksek şifreleme kullanıyor. Outlook'ta e-postaları şifrelemesiz yeni bir .pst dosyasına aktarın.",
+    "pst_error_not_pst": "Bu dosya Bulwark'ın okuyabildiği bir Outlook veri dosyası değil.",
+    "pst_error_unreadable": "Bulwark bu Outlook dosyasını okuyamadı.",
+    "pst_error_worker": "Outlook dosya okuyucusu yüklenmedi. Sayfayı yeniden yükleyip tekrar deneyin.",
+    "error_over_quota": "Posta kutusu dolu olduğundan içe aktarım durdu. Yer açın ve devam etmek için aynı dosyaları aynı klasöre yeniden içe aktarın.",
+    "error_forbidden": "Bu klasöre e-posta ekleyemezsiniz, bu yüzden içe aktarım durdu.",
+    "error_failures": "Arka arkaya çok fazla ileti başarısız olduğundan içe aktarım durdu. Devam etmek için aynı dosyaları daha sonra aynı klasöre yeniden içe aktarın.",
+    "error_network": "Sunucuya bağlantı tekrar tekrar başarısız olduğundan içe aktarım durdu. Devam etmek için aynı dosyaları aynı klasöre yeniden içe aktarın.",
+    "error_busy": "Bu dosyalar zaten başka bir sekmede içe aktarılıyor.",
+    "retry_hint": "Başarısız olanları bir kez daha denemek için aynı dosyaları aynı klasöre yeniden içe aktarın.",
+    "skip_unreadable": "Outlook dosyasında okunamayan: {count}",
+    "keep_folders_top_hint": "En üst düzeyde Gelen Kutusu, Gönderilmiş Öğeler, Silinmiş Öğeler ve benzerleri sizinkilere gider.",
+    "toast_done": "İçe aktarım tamamlandı. İçe aktarılan: {imported}, başarısız: {failed}.",
+    "toast_stopped": "İçe aktarım durdu.",
+    "toast_show": "Göster",
+    "section_title": "E-posta dosyaları",
+    "section_description": "Dosyalardan e-posta alın veya e-postalarınızı dosya olarak kaydedin."
+  },
+  "mail_export": {
+    "menu_export": "Klasörü dışa aktar…",
+    "settings_label": "Tüm e-postaları dışa aktar",
+    "settings_description": "Bu hesabın tüm klasörlerini mbox veya .eml dosyaları olarak tek bir ZIP dosyasına kaydedin.",
+    "settings_button": "Dışa aktar…",
+    "title_folder": "“{name}” klasörünü dışa aktar",
+    "title_account": "Tüm e-postaları dışa aktar",
+    "description_folder": "Bu klasördeki iletileri bir dosyaya kaydedin.",
+    "description_account": "Bu hesabın tüm klasörlerini tek bir ZIP dosyasına kaydedin.",
+    "format_label": "Biçim",
+    "format_mbox_folder": "mbox dosyası",
+    "format_eml_folder": ".eml dosyalarından ZIP",
+    "format_mbox_account": "Her klasör için bir mbox dosyalı ZIP",
+    "format_eml_account": "Her e-posta klasörü için bir klasörle .eml dosyalarından ZIP",
+    "hint_mbox": "Thunderbird, Apple Mail ve çoğu e-posta programı mbox dosyalarını açar.",
+    "hint_eml": "Her ileti için bir dosya; her e-posta programı açabilir.",
+    "save_picker": "Dosyanın nereye kaydedileceğini siz seçersiniz.",
+    "save_download": "Dışa aktarım bitince dosya indirilir.",
+    "save_memory": "Bu tarayıcı tüm dışa aktarımı bellekte tutar, bu yüzden en fazla 200 MB kaydedebilir. Daha fazlası için Chrome veya Edge kullanın ya da klasör klasör dışa aktarın.",
+    "start": "Dışa aktar",
+    "cancel": "İptal",
+    "running_title": "E-posta dışa aktarılıyor",
+    "progress_label": "Dışa aktarma ilerlemesi",
+    "status_exported": "Dışa aktarılan iletiler: {count} / {total}",
+    "paused": "{time} saatine kadar duraklatıldı: sunucu ara istedi. Dışa aktarım kendiliğinden devam eder.",
+    "background": "Arka planda çalıştır",
+    "cancel_export": "Dışa aktarımı iptal et",
+    "chip": "E-posta dışa aktarılıyor: %{percent}",
+    "chip_paused": "Dışa aktarım {time} saatine kadar duraklatıldı",
+    "done_title": "Dışa aktarım tamamlandı",
+    "cancelled_title": "Dışa aktarım iptal edildi",
+    "failed_title": "Dışa aktarım durdu",
+    "summary_exported": "Dışa aktarılan iletiler: {count}",
+    "summary_file": "{name} olarak kaydedildi ({size}).",
+    "summary_failed": "Dışa aktarılamadı: {count}",
+    "download_again": "Yeniden indir",
+    "too_large": "Dışa aktarım, bu tarayıcının bellekte tutabileceğinden büyük. Chrome veya Edge kullanın ya da klasör klasör dışa aktarın.",
+    "close": "Kapat",
+    "untitled": "(konu yok)",
+    "toast_done": "Dışa aktarım tamamlandı: {name}",
+    "toast_stopped": "Dışa aktarım durdu.",
+    "toast_show": "Göster"
+  },
   "recover_deleted": {
     "tab": "Silinen öğeleri kurtar",
     "title": "Silinen öğeleri kurtar",
@@ -5411,6 +5646,76 @@
     "install": "Yükle",
     "dont_remind": "Bir daha hatırlatma",
     "dismiss_aria": "Yükleme istemini kapat"
+  },
+  "app_update": {
+    "ready": "{appName} uygulamasının yeni sürümü hazır.",
+    "reload": "Yeniden yükle"
+  },
+  "offline": {
+    "settings": {
+      "title": "Çevrimdışı",
+      "description": "Bu cihazda bağlantı olmadan e-posta okuyun ve yazın.",
+      "keep_label": "E-postayı bu cihazda tut",
+      "keep_description": "Gelen kutunuzun ve açtığınız klasörlerin son 30 gününü, en fazla 250 MB, bu tarayıcıda şifreli olarak tutar. Çevrimdışıyken e-postaları okuyabilir, işaretleyebilir ve taşıyabilirsiniz; yazdıklarınız giden kutusunda bekler. Oturumu kapatınca hepsi silinir.",
+      "warning": "Bu tarayıcı profilini kullanabilen herkes bu e-postaları okuyabilir. Bunu yalnızca kendi cihazınızda açın ve disk şifrelemesi kullanın.",
+      "forbidden": "Kuruluşunuz e-postaların cihazlarda tutulmasına izin vermiyor.",
+      "unsupported": "Bu tarayıcı çevrimdışı kullanım için e-posta tutamıyor.",
+      "syncing": "E-postalarınız bu cihaza kaydediliyor…",
+      "usage": "Bu cihazda {size}",
+      "usage_updated": "Bu cihazda {size}, {time} güncellendi",
+      "off_confirm_title": "Çevrimdışı mod kapatılsın mı?",
+      "off_confirm_message": "{count, plural, one {Giden kutusundaki # ileti gönderilmedi.} other {Giden kutusundaki # ileti gönderilmedi.}} Kapatmak bunları ve bu cihazda tutulan e-postaları siler.",
+      "off_confirm": "Kapat"
+    },
+    "outbox": {
+      "title": "Giden kutusu",
+      "description": "Çevrimdışıyken yazdığınız iletiler. Bu cihaz yeniden çevrimiçi olunca gönderilir.",
+      "empty": "Gönderilmeyi bekleyen bir şey yok.",
+      "no_subject": "(konu yok)",
+      "to": "Kime: {recipients}",
+      "status_waiting": "Bağlantı bekleniyor",
+      "status_sending": "Gönderiliyor",
+      "status_failed": "Gönderilemedi: {error}",
+      "status_uncertain": "Gönderirken bağlantı koptu. Yeniden göndermeden önce Gönderilenler'e bakın.",
+      "retry": "Yeniden gönder",
+      "delete": "Sil",
+      "delete_confirm_title": "Bu ileti silinsin mi?",
+      "delete_confirm_message": "Gönderilmedi ve geri getirilemez.",
+      "changes": "Okundu, bayrak veya klasörlerdeki {count, plural, one {# değişiklik} other {# değişiklik}} yeniden çevrimiçi olduğunuzda gönderilecek.",
+      "status_held": "İleti beklerken kuruluşunuzun kuralları değişti. Göndermek için yeniden yazın.",
+      "retry_label": "Yeniden gönder: {subject}",
+      "delete_label": "Sil: {subject}"
+    },
+    "banner": {
+      "offline": "Çevrimdışısınız. Bu cihazda tutulan e-postaları görüyorsunuz. Değiştirdikleriniz veya yazdıklarınız yeniden çevrimiçi olunca gönderilir.",
+      "outbox": "Giden kutusunda {count, plural, one {# ileti} other {# ileti}}",
+      "server_down": "Posta sunucusuna ulaşılamıyor. Bu cihazda tutulan e-postaları görüyorsunuz. Değiştirdikleriniz veya yazdıklarınız sunucu yeniden yanıt verince gönderilir."
+    },
+    "toast": {
+      "queued": "Giden kutusuna kaydedildi. Yeniden çevrimiçi olduğunuzda gönderilir.",
+      "sent": "Giden kutusundan gönderildi: {subject}",
+      "send_failed": "Giden kutusundaki bir ileti gönderilemedi: {subject}",
+      "refused_delete": "Kalıcı silme için bağlantı gerekir. Çevrimiçi olunca yeniden deneyin.",
+      "refused_other": "Bunun için bağlantı gerekir. Çevrimiçi olunca yeniden deneyin.",
+      "forbidden": "Kuruluşunuz çevrimdışı modu kapattı. Bu cihazda tutulan e-postalar kaldırıldı.",
+      "back_online": "Yeniden çevrimiçisiniz. Oturum açmak ve bekleyenleri göndermek için yeniden yükleyin.",
+      "reload": "Yeniden yükle",
+      "held": "Giden kutusundaki bir ileti ilginizi bekliyor: {subject}",
+      "lost": "Bu iletiler gönderilmedi ve silindi: {subjects}"
+    },
+    "signout": {
+      "title": "Gönderilmemiş iletilerle oturum kapatılsın mı?",
+      "message": "{count, plural, one {# ileti gönderilmedi.} other {# ileti gönderilmedi.}} Oturumu kapatmak bunları siler.",
+      "confirm": "Oturumu kapat",
+      "lost": "Bu iletiler gönderilmedi ve oturumunuz kapatılırken silindi: {subjects}"
+    },
+    "errors": {
+      "unavailable": "Bunun için bağlantı gerekir. Çevrimiçi olunca yeniden deneyin.",
+      "plugins_down": "İmzalama veya şifreleme eklentiniz çevrimdışı çalışmıyor. Yeniden çevrimiçi olunca bunu gönderin.",
+      "file_missing": "Çevrimdışıyken eklenen bir dosya artık bu cihazda değil. Yeniden ekleyin.",
+      "no_sent_mailbox": "Gönderilenler klasörü bulunamadı.",
+      "no_drafts_mailbox": "Taslaklar klasörü bulunamadı."
+    }
   },
   "deep_link": {
     "message_not_found": "Bu ileti artık kullanılamıyor.",
@@ -5734,11 +6039,15 @@
       },
       "compose_read": {
         "title": "Yazdığınız iletiyi okuma",
-        "body": "Eklentiyi düzenleyicide kullandığınızda, yazarken iletinin metnini okur. İmzayı ve alıntılanan iletiyi okumaz."
+        "body": "Eklentiyi düzenleyicide kullandığınızda, yazarken iletiyi okur: metni, konuyu, gizli alıcılar (Bcc) dahil alıcıları ve eklerin adlarını ve boyutlarını. İmzayı ve alıntılanan iletiyi okumaz."
       },
       "compose_write": {
         "title": "Yazdığınız iletiyi değiştirme",
         "body": "Eklentiyi düzenleyicide kullandığınızda, yazarken iletide metni değiştirir veya ekler. Her değişikliği geri alabilirsiniz ve göndermeye yine siz karar verirsiniz."
+      },
+      "compose_check": {
+        "title": "Yazdıklarınızı denetleme",
+        "body": "Düzenleyicide yazdıklarınızı siz yazarken okur ve kullandığı hizmete gönderebilir. Yalnızca yazım denetimi açıkken; bir ileti imzalanacak veya şifrelenecek şekilde ayarlıyken hiçbir şey gönderilmez. Bunu açmadan önce yazdıklarınız zaten denetlenmiş olabilir."
       },
       "email_forward": {
         "title": "Postanızı iletme",
@@ -5758,7 +6067,7 @@
       },
       "ui_tasks": {
         "title": "Görevler görünümüne öğe ekleme",
-        "body": "Bir görevin ayrıntılarında kendi bölümlerini, görev listesinde düğmeler gösterme."
+        "body": "Bir görevin ayrıntılarında kendi bölümlerini, görev listesinde düğmeleri ve Bulwark'ın listesi yerine kendi görev listesini gösterme."
       },
       "ui_files": {
         "title": "Dosyalar görünümüne öğe ekleme",
@@ -5810,6 +6119,10 @@
       "error_server": "Sunucunun adresini girin, örneğin https://cloud.example.com",
       "error_save": "Kaydedilemedi: {error}"
     }
+  },
+  "send_guards": {
+    "not_running": "Gönderilmedi. Kuruluşunuzun zorunlu tuttuğu bir denetim şu anda çalışmıyor. Biraz sonra yeniden deneyin.",
+    "stopped_working": "Gönderilmedi. Kuruluşunuzun zorunlu tuttuğu bir denetim çalışmayı durdurdu. Sayfayı yeniden yükleyin. İşe yaramazsa yöneticinize bildirin."
   },
   "plugin_list": {
     "filters": "Filtreler",
@@ -6053,6 +6366,77 @@
       "party_size": "Kişi sayısı: {count}",
       "added_from": "{domain} adresinden gelen bir e-postadan eklendi",
       "added_from_subject": "{domain} adresinden gelen “{subject}” e-postasından eklendi"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Yazım",
+      "grammar": "Dil bilgisi",
+      "style": "Üslup",
+      "other": "Öneri"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Öneri yok",
+      "suggestions": "Öneriler",
+      "replace_with": "{text} ile değiştir",
+      "also": "Ayrıca {checker} tarafından",
+      "ignore": "Yoksay",
+      "add_to_dictionary": "Sözlüğe ekle",
+      "disable_rule": "Bu kuralı kapat",
+      "changed": "Metin değişti. Bir sonraki denetimi bekleyin."
+    },
+    "list_item": "{word}: {message} Öneri: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Yazım veya dil bilgisi hatası yok} one {# yazım veya dil bilgisi hatası} other {# yazım veya dil bilgisi hatası}}",
+    "status": {
+      "title": "Yazım denetimi",
+      "off": "Yazım denetimi kapalı",
+      "paused": "Yazım denetimi duraklatıldı",
+      "rate_limited": "Denetim duraklatıldı",
+      "unavailable": "Denetim kullanılamıyor",
+      "checking": "Denetleniyor…",
+      "issues": "{count, plural, =0 {Sorun yok} one {# sorun} other {# sorun}}"
+    },
+    "panel": {
+      "title": "Yazım denetimi",
+      "required": "Kuruluşunuz tarafından zorunlu tutuluyor",
+      "check_message": "Bu iletiyi denetle",
+      "notice": "Siz yazarken, yazdığınız metin denetlenmek üzere {checkers} hizmetine gider. İmzanız ve alıntılanan ileti dışarıda bırakılır. Bir ileti imzalanacak veya şifrelenecek şekilde ayarlıyken hiçbir şey gönderilmez; bunu açmadan önce yazdıklarınız zaten denetlenmiş olabilir.",
+      "turn_on": "Yazım denetimini aç",
+      "paused_protected": "Bu ileti imzalanacak veya şifrelenecek şekilde ayarlıyken hiçbir şey denetlenmez.",
+      "paused_unknown": "{plugin} iletileri burada göstermeden imzalayabilir veya şifreleyebilir, bu yüzden açıkken hiçbir şey denetlenmez.",
+      "rate_limited": "{checker} beklemenizi istedi. Denetim bir dakika içinde yeniden başlar.",
+      "unavailable": "{checker} şu anda denetleyemiyor. Yazmaya devam ettiğinizde yeniden dener.",
+      "no_issues": "Sorun bulunamadı.",
+      "list_label": "Bu iletideki sorunlar",
+      "shortcuts": "Sonraki sorun: {next}. Önceki: {previous}."
+    },
+    "notice": {
+      "on": "Yazım denetimi açık. Siz yazarken, yazdığınız metin imzanız ve alıntılanan ileti olmadan denetlenmek üzere {checkers} hizmetine gider. Bir ileti imzalanacak veya şifrelenecek şekilde ayarlıyken hiçbir şey gönderilmez; bundan önce yazdıklarınız zaten denetlenmiş olabilir.",
+      "forced": "Kuruluşunuz yazım denetimini açtı. Siz yazarken, yazdığınız metin imzanız ve alıntılanan ileti olmadan denetlenmek üzere {checkers} hizmetine gider. Bir ileti imzalanacak veya şifrelenecek şekilde ayarlıyken hiçbir şey gönderilmez; bundan önce yazdıklarınız zaten denetlenmiş olabilir.",
+      "ok": "Tamam"
+    },
+    "send_warning": {
+      "title": "Açık sorunlarla gönderilsin mi?",
+      "body": "Bu iletide hâlâ {count, plural, one {# yazım veya dil bilgisi hatası} other {# yazım veya dil bilgisi hatası}} var.",
+      "review": "Gözden geçir",
+      "send": "Yine de gönder"
+    },
+    "settings": {
+      "title": "Yazım denetimi",
+      "description": "Siz yazarken yazım ve dil bilgisi hatalarının altını çizer ve düzeltme önerileri sunar.",
+      "enable": "Yazarken yazım ve dil bilgisini denetle",
+      "enable_description": "Yazdığınız metin, imzanız ve alıntılanan iletiler olmadan yazım denetimi eklentisine ve onun kullandığı hizmete gider. Bir ileti imzalanacak veya şifrelenecek şekilde ayarlıyken hiçbir şey gönderilmez.",
+      "no_checker": "Yüklü bir yazım denetimi eklentisi yok. Yöneticinizden bir tane eklemesini isteyin.",
+      "plugin_description": "Yazdıklarınızı {plugin} eklentisine gönderir.",
+      "writing_language": "Yazma dili",
+      "writing_language_description": "Genellikle yazdığınız dil. Yazım denetimi ve tarayıcınızın yazım denetleyicisi bunu kullanır.",
+      "auto": "Otomatik algıla"
+    },
+    "shortcuts": {
+      "next_issue": "Sonraki yazım veya dil bilgisi hatası",
+      "previous_issue": "Önceki yazım veya dil bilgisi hatası"
     }
   }
 }

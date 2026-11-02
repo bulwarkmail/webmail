@@ -18,7 +18,9 @@ import {
   Tag,
   Trash2,
   RefreshCw,
+  Fish,
 } from "@/components/icons";
+import { usePhishingReport } from "@/hooks/use-phishing-report";
 import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/stores/auth-store";
 import { useShallow } from "zustand/react/shallow";
@@ -202,6 +204,10 @@ export function MvListToolbar({
   const isInTrash = currentRole === "trash";
   // Marking your own drafts or sent mail as spam is meaningless.
   const spamApplicable = !["sent", "drafts", "scheduled"].includes(currentRole ?? "");
+  // Report phishing for the selection, one report per message (enterprise pack).
+  const selectionForPhishing = useEmailStore(useShallow((state) => resolveSelectedEmails(state)));
+  const phishing = usePhishingReport(selectionForPhishing, currentRole);
+  const tPhishing = useTranslations("phishing_report");
 
   // Every action reports its outcome the way the default toolbar does: a
   // rejected promise or a store error turns into an error toast instead of
@@ -513,6 +519,14 @@ export function MvListToolbar({
               icon={isInJunk ? ShieldCheck : ShieldAlert}
               label={isInJunk ? tMenu("not_spam") : tMenu("mark_as_spam")}
               onClick={handleSpam}
+              disabled={isProcessing}
+            />
+          )}
+          {phishing.available && (
+            <ToolbarButton
+              icon={Fish}
+              label={tPhishing("action")}
+              onClick={phishing.report}
               disabled={isProcessing}
             />
           )}

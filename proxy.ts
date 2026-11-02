@@ -15,6 +15,7 @@ import { listReachableHosts, noThirdPartyCspSources } from "./lib/admin/reachabl
 import { getWopiEditorOrigins } from "./lib/wopi/discovery";
 import { detectSetupState } from "./lib/setup/state";
 import { isServedOverHttps } from "./lib/security/request-protocol";
+import { bootGateResponse } from "./lib/shared-store/boot-gate";
 
 const intlMiddleware = createIntlMiddleware(routing);
 
@@ -178,6 +179,8 @@ export function mailFrameAncestors(allowed: string | undefined): string {
   return sources.join(" ");
 }
 
+const PROBE_PATHS = new Set(["/api/health", "/api/health/live", "/api/health/ready", "/api/ready", "/api/metrics"]);
+
 function isSetupPath(pathname: string): boolean {
   return (
     pathname === "/setup" ||
@@ -186,7 +189,32 @@ function isSetupPath(pathname: string): boolean {
   );
 }
 
+/**
+ * A redirect to `pathname` (without the base path) on the origin of
+ * request.url. Not request.nextUrl: Next renames a 127.x or [::1] host there
+ * to "localhost", and with skipProxyUrlNormalize (next.config.ts) Next no
+ * longer turns that back into a relative Location. On HOSTNAME=127.0.0.1 the
+ * browser would be sent to https://localhost:3000/... (#1487).
+ */
+function redirectTo(request: NextRequest, pathname: string, search: string): NextResponse {
+  return NextResponse.redirect(new URL(`${request.nextUrl.basePath}${pathname}${search}`, request.url));
+}
+
 export async function proxy(request: NextRequest) {
+  // The probes answer without config or store, so a replica that is still
+  // starting (or lost its shared store) can say so (#1066). The metrics
+  // endpoint, too: a scrape shouldn't fail while a replica boots.
+  const probePath = routePathOf(request.nextUrl.pathname);
+  if (PROBE_PATHS.has(probePath)) {
+    const probe = NextResponse.next();
+    probe.headers.set("X-Content-Type-Options", "nosniff");
+    probe.headers.set("X-Frame-Options", "DENY");
+    return probe;
+  }
+  // With a shared store, nothing else is served until boot finished.
+  const notReady = bootGateResponse(probePath);
+  if (notReady) return notReady;
+
   // Resolve setup state before deciding what to skip. The first call after
   // boot triggers the config load; subsequent calls are in-memory.
   await configManager.ensureLoaded();
@@ -217,10 +245,7 @@ export async function proxy(request: NextRequest) {
           { status: 503, headers: { "content-type": "application/json" } },
         );
       }
-      const url = request.nextUrl.clone();
-      url.pathname = "/setup";
-      url.search = request.nextUrl.search;
-      return NextResponse.redirect(url);
+      return redirectTo(request, "/setup", request.nextUrl.search);
     }
   } else if (isSetupPath(pathname)) {
     // Configured / env-managed: wizard is no longer reachable.
@@ -230,10 +255,7 @@ export async function proxy(request: NextRequest) {
     if (pathname.startsWith("/api/setup")) {
       return new NextResponse("Not Found", { status: 404 });
     }
-    const url = request.nextUrl.clone();
-    url.pathname = "/admin/login";
-    url.search = "";
-    return NextResponse.redirect(url);
+    return redirectTo(request, "/admin/login", "");
   }
 
   // Outer CSRF gate for every API route (GHSA-qvr9-m8cq-7wvg,
@@ -401,6 +423,10 @@ export async function proxy(request: NextRequest) {
     isSandboxPath ? `form-action 'none'` : `form-action ${["'self'", ...wopiOrigins].join(" ")}`,
     `frame-ancestors ${frameAncestors}`,
     `media-src ${mediaSrc}`,
+    // A plugin frame may run work it has to stop at a deadline (send checks'
+    // admin patterns) in a worker made from a blob; it gets the frame's own
+    // connect-src, so it reaches nothing the frame can't.
+    ...(isSandboxPath ? [`worker-src 'self' blob:`] : []),
   ].join("; ");
 
   // Skip intl middleware for routes outside the localized app tree.

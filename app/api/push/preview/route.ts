@@ -13,6 +13,7 @@ import { rebaseApiUrl } from '@/lib/stalwart/jmap-api';
 import { forwardedClientHeaders, loginClientAddress } from '@/lib/auth/client-address';
 import { DisallowedUrlError } from '@/lib/security/url-guard';
 import { UPSTREAM_JSON_MAX_BYTES, UpstreamBodyTooLargeError, readJsonCapped } from '@/lib/security/capped-body';
+import { serverDevicePolicy } from '@/lib/admin/server-device-policy';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -23,6 +24,10 @@ interface ResolvedTarget {
   accountId: string;
   /** See StalwartCredentials.trusted - false routes through the guarded fetch. */
   trusted: boolean;
+  /** The login, for its device policy. */
+  serverUrl: string;
+  username: string;
+  accountName?: string;
   /**
    * Cookie slot of the login that owns the account. Handed back so a click
    * on the notification opens the message in that login: the worker knows
@@ -75,7 +80,7 @@ async function resolveTargetForAccount(accountId: string, forwarded: Record<stri
             Object.prototype.hasOwnProperty.call(session.accounts ?? {}, accountId);
           if (mailAccountId !== accountId && !isSharedAccount) return null;
           return {
-            target: { authHeader: ctx.authHeader, apiUrl, accountId, trusted, slot },
+            target: { authHeader: ctx.authHeader, apiUrl, accountId, trusted, slot, serverUrl, username: ctx.username, accountName: ctx.accountName },
             own: mailAccountId === accountId,
           };
         } catch {
@@ -103,7 +108,7 @@ async function resolveDefaultTarget(creds: StalwartCredentials, forwarded: Recor
   const apiUrl = rebaseApiUrl(session, creds.serverUrl);
   const accountId = session.primaryAccounts?.['urn:ietf:params:jmap:mail'];
   if (!apiUrl || !accountId) return null;
-  return { authHeader: creds.authHeader, apiUrl, accountId, trusted: creds.trusted };
+  return { authHeader: creds.authHeader, apiUrl, accountId, trusted: creds.trusted, serverUrl: creds.serverUrl, username: creds.username, accountName: creds.accountName };
 }
 
 /**
@@ -198,7 +203,20 @@ export async function GET(request: NextRequest) {
     }
 
     const inboxId = inboxBody.ids[0];
-    const emailProperties = ['id', 'threadId', 'from', 'subject', 'preview', 'receivedAt'];
+    // Organisation > Devices > Push without sender and subject, for this
+    // login's scopes (worked out from its own session): the message's
+    // sender, subject and text are never read, so they can't reach the
+    // notification, the push service or the lock screen. Unknown counts as on.
+    const redacted = await serverDevicePolicy({
+      serverUrl: target.serverUrl,
+      authHeader,
+      username: target.username,
+      accountName: target.accountName,
+      trusted,
+    }).then((devices) => devices.pushWithoutContent, () => true);
+    const emailProperties = redacted
+      ? ['id', 'threadId', 'receivedAt']
+      : ['id', 'threadId', 'from', 'subject', 'preview', 'receivedAt'];
 
     if (!inboxId && !requestedEmailId) {
       return NextResponse.json({
@@ -333,10 +351,13 @@ export async function GET(request: NextRequest) {
     // Some servers build the preview from HTML without skipping <style>; a
     // notification that opens on a style sheet says nothing.
     if (email?.preview) email = { ...email, preview: cleanPreview(email.preview) };
+    // Whatever the server sent anyway, only what a click needs goes back.
+    if (redacted && email) email = { id: email.id, threadId: email.threadId, receivedAt: email.receivedAt ?? null };
 
     return NextResponse.json({
       email,
       unreadTotal,
+      ...(redacted ? { redacted: true } : {}),
       ...(target.slot !== undefined ? { slot: target.slot } : {}),
     }, {
       headers: {

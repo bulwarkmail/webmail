@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import sharp from 'sharp';
 import { configManager } from '@/lib/admin/config-manager';
 import { fetchBrandingAsset } from '@/lib/admin/branding-asset';
+import { renderCache } from '@/lib/admin/render-cache';
 import {
   matchDomainBranding,
   parseDomainBranding,
@@ -63,7 +64,9 @@ function isDarkColor({ r, g, b }: Rgb): boolean {
 
 // Cache rendered cards keyed by (source logo, background) so a branding change
 // invalidates the previous render instead of serving stale bytes forever.
-const cache = new Map<string, Blob>();
+// An uploaded logo's URL carries its version. Capped, and dropped on a
+// branding change.
+const cache = renderCache('og-image');
 
 export async function GET(req: NextRequest) {
   await configManager.ensureLoaded();

@@ -5,13 +5,14 @@ import { logger } from '@/lib/logger';
 import { decryptSession } from '@/lib/auth/crypto';
 import { sessionCookieName } from '@/lib/auth/session-cookie';
 import { readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
-import { saveUserSettings, loadUserSettings, deleteUserSettings } from '@/lib/settings-sync';
+import { updateUserSettings, loadUserSettings, deleteUserSettings } from '@/lib/settings-sync';
 import { configManager } from '@/lib/admin/config-manager';
 import { resolvePolicy } from '@/lib/admin/policy-scopes';
 import { hasSessionSecret } from '@/lib/auth/session-secret';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { mergeStoredTemplates } from '@/lib/template-merge';
 import { mergeStoredSubscriptions } from '@/lib/calendar-subscription-sync';
+import { storedDataUnavailableResponse } from '@/lib/stored-data-errors';
 
 /** Largest settings blob a client may store (templates and signatures included). */
 const SETTINGS_MAX_BYTES = 2 * 1024 * 1024;
@@ -141,6 +142,8 @@ export async function GET(request: NextRequest) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     const code = (error as NodeJS.ErrnoException).code;
     logger.error('Settings load error', { error: message, code });
+    const unavailable = storedDataUnavailableResponse(error);
+    if (unavailable) return unavailable;
     const classified = classifyError(error);
     return NextResponse.json({ error: classified.message }, { status: classified.status });
   }
@@ -210,17 +213,22 @@ export async function POST(request: NextRequest) {
 
     // Templates and iCal subscriptions are merged into the stored blob rather
     // than replaced, so a stale tab or device cannot drop ones another added.
-    const stored = await loadUserSettings(accountName, storageServerUrl(serverUrl));
-    await saveUserSettings(
+    // In one step against what is stored now: two saves at once (two tabs,
+    // two replicas) each keep the other's additions.
+    await updateUserSettings(
       accountName,
       storageServerUrl(serverUrl),
-      mergeStoredSubscriptions(stored, mergeStoredTemplates(stored, filteredSettings)),
+      (stored) => mergeStoredSubscriptions(stored, mergeStoredTemplates(stored, filteredSettings)),
     );
     return NextResponse.json({ ok: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     const code = (error as NodeJS.ErrnoException).code;
     logger.error('Settings save error', { error: message, code });
+    // Stored settings that don't decrypt, or no store: write nothing, so
+    // the user's real settings survive and the client keeps its copy.
+    const unavailable = storedDataUnavailableResponse(error);
+    if (unavailable) return unavailable;
     const classified = classifyError(error);
     return NextResponse.json({ error: classified.message }, { status: classified.status });
   }
@@ -252,6 +260,8 @@ export async function DELETE(request: NextRequest) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     const code = (error as NodeJS.ErrnoException).code;
     logger.error('Settings delete error', { error: message, code });
+    const unavailable = storedDataUnavailableResponse(error);
+    if (unavailable) return unavailable;
     const classified = classifyError(error);
     return NextResponse.json({ error: classified.message }, { status: classified.status });
   }

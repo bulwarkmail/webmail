@@ -17,6 +17,7 @@ vi.mock('@/lib/admin/config-manager', () => ({
     get: vi.fn(),
     getPolicy: vi.fn(() => policy),
     setPolicy: vi.fn(async (p: Record<string, unknown>) => { policy = p; }),
+    updatePolicy: vi.fn(async (change: (p: Record<string, unknown>) => Record<string, unknown> | undefined) => { policy = change(policy) ?? policy; }),
   },
 }));
 const saved: Array<{ theme: Record<string, unknown>; css: string; skin: string | null }> = [];

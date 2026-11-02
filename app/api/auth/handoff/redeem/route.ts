@@ -6,8 +6,10 @@ import {
   redeemHandoff,
   reserveHandoffRedeem,
 } from '@/lib/auth/handoff-store';
+import type { BudgetRefund } from '@/lib/auth/verify-budget';
 import { loginClientAddress } from '@/lib/auth/client-address';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
+import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
 
 // The mobile app's side of the browser sign-in hand-off. It POSTs the code
 // from its callback link with the PKCE verifier behind the challenge it sent
@@ -25,8 +27,9 @@ const NO_STORE = { 'Cache-Control': 'no-store' };
 export async function POST(request: NextRequest) {
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
+  let refund: BudgetRefund | null = null;
   try {
-    const refund = reserveHandoffRedeem(loginClientAddress(request));
+    refund = await reserveHandoffRedeem(loginClientAddress(request));
     if (!refund) {
       return NextResponse.json({ error: 'too_many_requests' }, { status: 429, headers: NO_STORE });
     }
@@ -39,21 +42,26 @@ export async function POST(request: NextRequest) {
     }
     if (!isHandoffCodeVerifier(verifier)) {
       // Still spend the code: a malformed verifier is a wrong one.
-      redeemHandoff(code, '');
+      await redeemHandoff(code, '');
       return NextResponse.json({ error: 'invalid_verifier' }, { status: 400, headers: NO_STORE });
     }
 
-    const result = redeemHandoff(code, verifier);
+    const result = await redeemHandoff(code, verifier);
     if (!result.ok) {
       const error = result.reason === 'verifier_mismatch' ? 'invalid_verifier' : `${result.reason}_code`;
       logger.warn('Mobile hand-off redeem refused', { reason: result.reason });
       return NextResponse.json({ error }, { status: 400, headers: NO_STORE });
     }
 
-    refund();
+    await refund();
     logger.info('Mobile hand-off redeemed', { flow: result.bundle.flow });
     return NextResponse.json({ ...result.bundle, state: result.state }, { headers: NO_STORE });
   } catch (error) {
+    if (isStoreUnavailable(error)) {
+      // Nothing was redeemed: the attempt doesn't count.
+      if (refund) await refund();
+      return storeUnavailableResponse(NO_STORE);
+    }
     logger.error('Mobile hand-off redeem error', { error: error instanceof Error ? error.message : 'Unknown error' });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500, headers: NO_STORE });
   }

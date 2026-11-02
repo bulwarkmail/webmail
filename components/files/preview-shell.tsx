@@ -16,7 +16,8 @@ export interface PreviewNeighbours {
 interface PreviewShellProps {
   name: string;
   onClose: () => void;
-  onDownload: () => void;
+  /** Left out: no download button (a device policy turned downloads off). */
+  onDownload?: () => void;
   /** Extra header buttons before Download (e.g. "Open in new tab"). */
   actions?: ReactNode;
   neighbours?: PreviewNeighbours;
@@ -97,9 +98,11 @@ export function PreviewShell({ name, onClose, onDownload, actions, neighbours, c
             </>
           )}
           {actions}
-          <IconButton label={t("download")} onClick={onDownload}>
-            <Download />
-          </IconButton>
+          {onDownload && (
+            <IconButton label={t("download")} onClick={onDownload}>
+              <Download />
+            </IconButton>
+          )}
           <IconButton label={t("close_preview")} onClick={onClose}>
             <X />
           </IconButton>

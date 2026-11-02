@@ -44,6 +44,7 @@ export const LITE_BUNDLE_NON_REQUEST = [
   { files: PAGES, why: "XML namespaces of inline SVG", hosts: ["www.w3.org"] },
   { files: /^_next\/static\/chunks\/[^/]+\.css$/, why: "XML namespace of the SVG pointers in app/accessibility.css (large mouse pointer)", hosts: ["www.w3.org"] },
   { files: /^_next\/static\/media\/pdf\.worker[^/]*\.m?js$/, why: "XML namespaces and the licence link inside pdf.js", hosts: ["www.apache.org", "www.w3.org", "www.xfa.org", "ns.adobe.com"] },
+  { files: /^pst-worker\.js$/, why: "licence links in the bundled licence comments of buffer, ieee754 and long (scripts/build-pst-worker.mjs)", hosts: ["feross.org", "www.apache.org"] },
 ];
 
 const RESERVED_TLDS = new Set(["example", "test", "invalid", "localhost", "local", "internal", "lan"]);

@@ -117,7 +117,11 @@ export type PayloadPurpose =
   /** A user's plugin credentials (lib/plugin-secrets/vault.ts). */
   | 'plugin-secrets'
   /** When a token sign-in happened, for the maximum session length (lib/auth/session-age.ts). */
-  | 'session-age';
+  | 'session-age'
+  /** A pairing grant or code record in the shared store (lib/auth/pairing-store.ts). */
+  | 'pairing-store'
+  /** A parked mobile hand-off sign-in in the shared store (lib/auth/handoff-store.ts). */
+  | 'handoff-store';
 
 /**
  * Whether a blob minted before purposes were bound may be re-admitted for
@@ -139,6 +143,8 @@ const LEGACY_PAYLOAD_MARKERS: Record<PayloadPurpose, (payload: Record<string, un
   'impersonation-grant': () => false,
   'plugin-secrets': () => false,
   'session-age': () => false,
+  'pairing-store': () => false,
+  'handoff-store': () => false,
 };
 
 export function encryptPayload(payload: Record<string, unknown>, purpose: PayloadPurpose): string {

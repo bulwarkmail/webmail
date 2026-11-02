@@ -3,12 +3,18 @@
 // Bulwark service worker.
 //
 // This SW does two jobs:
-//   1. Satisfy the PWA installability requirement (network-only fetch handler,
-//      no caching - so we never serve stale chunks after a deployment).
+//   1. Satisfy the PWA installability requirement (a fetch handler that
+//      leaves every request to the network).
 //   2. Receive Web Push wake-up pings from the relay and turn them into
 //      enriched system notifications. Mirrors the React Native FCM headless
 //      task: relay sends only a state-change ping, the client fetches the
 //      newest unread email itself so the relay never sees mail content.
+//
+// Builds (#523): the page registers sw.js?v=<build id>, so every deploy
+// installs a new worker that knows its build. Anything it caches goes into
+// caches named after that build (bulwark-shell-<build id>), never into one
+// cache that outlives a deploy, so a tab is never handed chunks of another
+// build. A build's cache is deleted once no open tab runs that build.
 
 // When the app is mounted at a subpath (Next.js basePath, e.g. /webmail), the
 // SW is served at /webmail/sw.js and registered with scope /webmail/. Derive
@@ -25,15 +31,298 @@ function getBasePath() {
 const BASE_PATH = getBasePath();
 const MAILTO_CLIENTS = new Map();
 
-self.addEventListener("install", () => {
-  self.skipWaiting();
+// The build this worker came with (the ?v= the page registered it with).
+const BUILD_ID = new URL(self.location.href).searchParams.get("v") || "unversioned";
+const SHELL_CACHE_PREFIX = "bulwark-shell-";
+const SHELL_CACHE = SHELL_CACHE_PREFIX + BUILD_ID;
+// What the worker has to remember across restarts and across builds: which
+// build each open tab runs. In the Cache API like the push state, under its
+// own name.
+const SW_STATE_CACHE = "bulwark-sw-state-v1";
+const CLIENT_BUILDS_KEY = "/__bulwark/client-builds";
+
+const OFFLINE_SHELL_KEY = "/__bulwark/offline-shell";
+
+self.addEventListener("install", (event) => {
+  // With offline mode on, a tab may load a chunk of its build at any time,
+  // from this worker's caches. A new build's worker waits until those tabs
+  // are gone or a tab asks it to take over: its "Reload", or a tab that
+  // runs the new build already (lib/app-update.ts adoptWaitingWorker). The
+  // old build's tabs keep their files then too: its cache stays while they
+  // are open, and chunks are answered from every build's cache. Without
+  // offline mode nothing is cached and it takes over at once, as it always
+  // did.
+  event.waitUntil(readOfflineShell().then((on) => {
+    if (!on) return self.skipWaiting();
+    return self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((open) => {
+      if (open.length === 0) return self.skipWaiting();
+      return undefined;
+    });
+  }));
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(Promise.all([self.clients.claim(), deleteStaleShellCaches()]));
 });
 
-self.addEventListener("fetch", () => {});
+// ---- Offline mode (#523): the app shell ----
+//
+// Only while a tab turned offline mode on (Settings > Offline). Then:
+// - pages of the app: network first; the answer is kept in this build's
+//   cache, and used when the network fails;
+// - /_next/static/: content-hashed files, from any build's cache first
+//   (an open tab of an older build still finds its chunks), else the
+//   network, kept in this build's cache;
+// - /api/config: network first, the last answer when offline.
+// Everything else, and everything while offline mode is off, goes to the
+// network untouched.
+
+// null until read from the state cache; true or false after.
+let offlineShellOn = null;
+
+async function readOfflineShell() {
+  if (offlineShellOn !== null) return offlineShellOn;
+  try {
+    const cache = await caches.open(SW_STATE_CACHE);
+    const response = await cache.match(OFFLINE_SHELL_KEY);
+    const data = response ? await response.json() : null;
+    offlineShellOn = !!(data && data.on === true);
+  } catch (_) {
+    offlineShellOn = false;
+  }
+  return offlineShellOn;
+}
+
+async function writeOfflineShell(on) {
+  offlineShellOn = on;
+  try {
+    const cache = await caches.open(SW_STATE_CACHE);
+    await cache.put(OFFLINE_SHELL_KEY, new Response(JSON.stringify({ on }), { headers: { "Content-Type": "application/json" } }));
+  } catch (_) {
+    // No Cache API: nothing is cached either.
+  }
+}
+
+// Read at start, so the fetch handler mostly knows synchronously.
+if (typeof caches !== "undefined" && caches && typeof caches.open === "function") {
+  readOfflineShell();
+}
+
+const APP_SECTIONS = new Set(["", "mail", "settings", "calendar", "contacts", "files", "pro", "apps"]);
+
+/** The page path inside the app ("/mail/inbox"), or null for anything that isn't a page of the app. */
+function appPagePath(url) {
+  if (url.origin !== self.location.origin) return null;
+  let path = url.pathname;
+  if (BASE_PATH) {
+    if (path !== BASE_PATH && !path.startsWith(BASE_PATH + "/")) return null;
+    path = path.slice(BASE_PATH.length) || "/";
+  }
+  const parts = path.split("/").filter(Boolean);
+  // An optional locale segment (/de/mail, /zh-TW/settings).
+  if (parts.length > 0 && /^[a-z]{2}(-[A-Za-z]{2,4})?$/.test(parts[0]) && !APP_SECTIONS.has(parts[0])) parts.shift();
+  return APP_SECTIONS.has(parts[0] || "") ? "/" + parts.join("/") : null;
+}
+
+function staticPath(url) {
+  if (url.origin !== self.location.origin) return false;
+  return url.pathname.startsWith(BASE_PATH + "/_next/static/");
+}
+
+/** Where a page of the app is kept: its address without the query. */
+function documentKey(url) {
+  return url.origin + url.pathname.replace(/\/+$/, "");
+}
+
+/** A page the cache has for this address: the page itself, its section, the app's start page. */
+async function cachedDocument(url) {
+  const path = appPagePath(url) || "/";
+  const section = "/" + (path.split("/").filter(Boolean)[0] || "");
+  const candidates = [documentKey(url), self.location.origin + BASE_PATH + (section === "/" ? "" : section), self.location.origin + BASE_PATH];
+  // Only looked into when it exists: opening it would create it again
+  // after the next build's worker deleted it.
+  if (await caches.has(SHELL_CACHE)) {
+    const own = await caches.open(SHELL_CACHE);
+    for (const key of candidates) {
+      const hit = await own.match(key);
+      if (hit) return hit;
+    }
+  }
+  for (const key of candidates) {
+    const hit = await caches.match(key);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+/**
+ * The cache of the build that answered (the X-Bulwark-Build header): after a
+ * deploy the old worker still fetches the new build's pages and chunks, which
+ * belong in the new build's cache, not in its own.
+ */
+function shellCacheFor(response) {
+  const build = response.headers.get("x-bulwark-build") || "";
+  return /^[\w.-]{1,80}$/.test(build) ? SHELL_CACHE_PREFIX + build : SHELL_CACHE;
+}
+
+async function respondWithDocument(request) {
+  const url = new URL(request.url);
+  try {
+    const response = await fetch(request);
+    const type = response.headers.get("content-type") || "";
+    if (response.ok && response.type === "basic" && !response.redirected && type.includes("text/html")) {
+      const copy = response.clone();
+      caches.open(shellCacheFor(response)).then((cache) => cache.put(documentKey(url), copy)).catch(() => {});
+    }
+    return response;
+  } catch (error) {
+    const hit = await cachedDocument(url);
+    if (hit) return hit;
+    throw error;
+  }
+}
+
+async function respondWithStatic(request) {
+  const hit = await caches.match(request.url);
+  if (hit) return hit;
+  const response = await fetch(request);
+  if (response.ok && response.type === "basic") {
+    const copy = response.clone();
+    caches.open(shellCacheFor(response)).then((cache) => cache.put(request.url, copy)).catch(() => {});
+  }
+  return response;
+}
+
+async function respondWithConfig(request) {
+  const key = self.location.origin + BASE_PATH + "/api/config";
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const copy = response.clone();
+      // Like pages and chunks, under the build that answered: right after a
+      // deploy this worker still fetches for the new build's tab.
+      caches.open(shellCacheFor(response)).then((cache) => cache.put(key, copy)).catch(() => {});
+    }
+    return response;
+  } catch (error) {
+    const hit = await caches.match(key);
+    if (hit) return hit;
+    throw error;
+  }
+}
+
+function offlineRoute(request) {
+  if (request.method !== "GET") return null;
+  const url = new URL(request.url);
+  if (request.mode === "navigate" && appPagePath(url) !== null) return respondWithDocument;
+  if (staticPath(url)) return respondWithStatic;
+  if (url.origin === self.location.origin && url.pathname === BASE_PATH + "/api/config") return respondWithConfig;
+  return null;
+}
+
+/**
+ * Keeps the files a tab names (its build's shell) in that build's cache. The
+ * tab may run a newer build than this worker (right after a deploy).
+ */
+async function precacheShell(urls, buildId) {
+  if (!Array.isArray(urls) || urls.length === 0) return;
+  const name = typeof buildId === "string" && /^[\w.-]{1,80}$/.test(buildId) ? SHELL_CACHE_PREFIX + buildId : SHELL_CACHE;
+  const cache = await caches.open(name);
+  const wanted = urls.filter((u) => typeof u === "string");
+  for (let i = 0; i < wanted.length; i += 8) {
+    await Promise.all(wanted.slice(i, i + 8).map(async (u) => {
+      try {
+        const url = new URL(u, self.location.origin);
+        if (url.origin !== self.location.origin) return;
+        const key = appPagePath(url) !== null && !staticPath(url) ? documentKey(url) : url.href;
+        if (await cache.match(key)) return;
+        const response = await fetch(url.href, { credentials: "same-origin" });
+        if (response.ok && response.type === "basic" && !response.redirected) await cache.put(key, response);
+      } catch (_) {
+        // Fetched again when the page asks next time.
+      }
+    }));
+  }
+}
+
+async function setOfflineShell(on, urls, buildId) {
+  await writeOfflineShell(on);
+  if (on) {
+    await precacheShell(urls, buildId);
+    return;
+  }
+  // Off: nothing of the shell stays.
+  const keys = await caches.keys();
+  await Promise.all(keys.filter((key) => key.startsWith(SHELL_CACHE_PREFIX)).map((key) => caches.delete(key)));
+}
+
+async function readClientBuilds() {
+  try {
+    const cache = await caches.open(SW_STATE_CACHE);
+    const response = await cache.match(CLIENT_BUILDS_KEY);
+    const data = response ? await response.json() : null;
+    return data && typeof data === "object" ? data : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+async function writeClientBuilds(map) {
+  try {
+    const cache = await caches.open(SW_STATE_CACHE);
+    await cache.put(CLIENT_BUILDS_KEY, new Response(JSON.stringify(map), { headers: { "Content-Type": "application/json" } }));
+  } catch (_) {
+    // Without the Cache API nothing was cached either.
+  }
+}
+
+/** Notes which build an open tab runs, and forgets tabs that are gone. */
+async function recordClientBuild(clientId, buildId) {
+  if (!clientId || typeof buildId !== "string" || !buildId) return;
+  const open = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+  const openIds = new Set(open.map((c) => c.id));
+  const map = await readClientBuilds();
+  const next = {};
+  for (const [id, build] of Object.entries(map)) if (openIds.has(id)) next[id] = build;
+  next[clientId] = buildId;
+  await writeClientBuilds(next);
+}
+
+/**
+ * Deletes the shell caches of builds no open tab runs any more. This
+ * worker's own build is kept, and so is every build a tab still runs: such a
+ * tab may still load a chunk of its build after a deploy, and the new build
+ * no longer has it.
+ */
+async function deleteStaleShellCaches() {
+  if (typeof caches === "undefined" || typeof caches.keys !== "function") return;
+  try {
+    const open = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    const openIds = new Set(open.map((c) => c.id));
+    const map = await readClientBuilds();
+    const inUse = new Set([BUILD_ID]);
+    for (const [id, build] of Object.entries(map)) if (openIds.has(id)) inUse.add(build);
+    const keys = await caches.keys();
+    await Promise.all(keys
+      .filter((key) => key.startsWith(SHELL_CACHE_PREFIX) && !inUse.has(key.slice(SHELL_CACHE_PREFIX.length)))
+      .map((key) => caches.delete(key)));
+  } catch (_) {
+    // Tried again at the next activation.
+  }
+}
+
+self.addEventListener("fetch", (event) => {
+  // Offline mode off (known): the network, untouched, as without a worker.
+  if (offlineShellOn === false) return;
+  const route = offlineRoute(event.request);
+  if (!route) return;
+  if (offlineShellOn === true) {
+    event.respondWith(route(event.request));
+    return;
+  }
+  // Not read yet (the worker just started): decide once it is.
+  event.respondWith(readOfflineShell().then((on) => (on ? route(event.request) : fetch(event.request))));
+});
 
 self.addEventListener("push", (event) => {
   event.waitUntil(handlePush(event));
@@ -50,6 +339,29 @@ self.addEventListener("pushsubscriptionchange", (event) => {
 
 self.addEventListener("message", (event) => {
   const data = event.data || {};
+  if (data.type === "client-build") {
+    event.waitUntil(recordClientBuild(event.source && event.source.id, data.buildId).then(deleteStaleShellCaches));
+    return;
+  }
+  if (data.type === "offline-shell") {
+    // The switch is kept before the event ends. The shell's files are
+    // fetched without holding the event open: a worker busy with an event
+    // can't hand over to a new build's worker, and the fetch is tried again
+    // whenever a tab asks.
+    if (data.on !== true) {
+      event.waitUntil(setOfflineShell(false));
+      return;
+    }
+    event.waitUntil(writeOfflineShell(true));
+    setOfflineShell(true, data.urls, data.buildId).catch(() => {});
+    return;
+  }
+  if (data.type === "skip-waiting") {
+    // The tab's "Reload" for a new build: take over now instead of waiting
+    // for every tab of the old build to close.
+    self.skipWaiting();
+    return;
+  }
   if (data.type === "mailto-client-ready") {
     if (event.source && event.source.id) {
       MAILTO_CLIENTS.set(event.source.id, {
@@ -204,7 +516,13 @@ async function handlePush(event) {
   let body;
   let data = { kind: "mail-list", accountId, slot };
 
-  if (email) {
+  if (email && preview && preview.redacted) {
+    // The organisation keeps sender and subject off notifications
+    // (Organisation > Devices): the route sent neither.
+    title = accountLabel ? `New mail (${accountLabel})` : "New mail";
+    body = unreadTotal > 1 ? `${unreadTotal} unread messages` : "You have new mail";
+    if (unreadTotal <= 1) data = { kind: "email", emailId: email.id, threadId: email.threadId, accountId, slot };
+  } else if (email) {
     const sender = email.from && email.from[0];
     const senderName = (sender && sender.name) || (sender && sender.email) || "New mail";
     title = senderName + (accountLabel ? ` (${accountLabel})` : "");
@@ -216,7 +534,7 @@ async function handlePush(event) {
       body += "\n" + (more === 1 ? "+1 more message" : `+${more} more messages`);
     } else {
       // Exactly one unread: deep-link straight to that message on click.
-      data = { kind: "email", emailId: email.id, threadId: email.threadId, slot };
+      data = { kind: "email", emailId: email.id, threadId: email.threadId, accountId, slot };
     }
   } else {
     title = accountLabel ? `New mail (${accountLabel})` : "New mail";
@@ -604,16 +922,19 @@ function getReusableClientScore(state) {
 
 function buildClickUrl(data) {
   if (!data) return `${BASE_PATH}/`;
-  // `?slot=` names the login the message belongs to (see the preview API).
-  const slotQuery = Number.isInteger(data.slot) ? `?slot=${data.slot}` : "";
+  const params = new URLSearchParams();
+  if (Number.isInteger(data.slot)) params.set("slot", String(data.slot));
+  if (typeof data.accountId === "string" && data.accountId) params.set("owner", data.accountId);
+  // Not params.size: Safari before 17 (iOS 16.4+ web push) lacks it.
+  const qs = params.toString();
+  const targetQuery = qs ? `?${qs}` : "";
   if (data.kind === "email" && data.emailId) {
     // Permalink (#733). Under NEXT_PUBLIC_LOCALE_PREFIX=always the proxy
     // redirects this to the localised path; the worker has no locale to add.
-    return `${BASE_PATH}/mail/message/${encodeURIComponent(data.emailId)}${slotQuery}`;
+    return `${BASE_PATH}/mail/message/${encodeURIComponent(data.emailId)}${targetQuery}`;
   }
-  // A group of new mail in a known login: that login's Inbox.
-  if (data.kind === "mail-list" && slotQuery) {
-    return `${BASE_PATH}/mail/folder/inbox${slotQuery}`;
+  if (data.kind === "mail-list" && Number.isInteger(data.slot)) {
+    return `${BASE_PATH}/mail/folder/inbox${targetQuery}`;
   }
   // Generic "New mail" toast (preview API failed or returned no email): land
   // the user on the latest unread message in their Inbox rather than just the

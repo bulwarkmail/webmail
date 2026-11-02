@@ -209,6 +209,10 @@ const RESTRICTION_KEY_OPTIONS: Record<string, PolicySettingOption[]> = {
     { value: 5000, label: 'After 5 seconds' },
     { value: -1, label: 'Never' },
   ],
+  searchDefaultScope: [
+    { value: 'all', label: 'All folders except Spam and Trash' },
+    { value: 'folder', label: 'The open folder' },
+  ],
 };
 
 const accessibilityKeys = new Set(ACCESSIBILITY_POLICY_SETTINGS.map((s) => s.key));

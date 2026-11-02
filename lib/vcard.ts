@@ -1178,7 +1178,7 @@ function buildContact(raw: Record<string, string[]>): ContactCard | null {
 
 // PRODID names the product that wrote the file, not the one that first made
 // the card, so the card's own prodId is not written back.
-const VCARD_PRODID = "-//JMAP-Webmail//EN";
+const VCARD_PRODID = "-//Bulwark Mail//Bulwark Webmail//EN";
 
 function hasUriScheme(value: string): boolean {
   return /^[a-z][a-z0-9+.-]*:/i.test(value);

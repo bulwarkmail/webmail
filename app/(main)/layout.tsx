@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { getLocale, getTranslations } from "next-intl/server";
 import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
 import { FaviconBadge } from "@/components/favicon-badge";
+import { ErrorReportingRoot } from "@/components/error/error-reporting-root";
 import { ThemeColorSync } from "@/components/theme-color-sync";
 import { IosViewportHeal } from "@/components/ios-viewport-heal";
 import { configManager } from "@/lib/admin/config-manager";
@@ -18,6 +19,7 @@ import { withBasePath } from "@/lib/browser-navigation";
 import { locales, defaultLocale } from "@/i18n/routing";
 import { IS_LITE, LITE_MOUNT_GLOBAL } from "@/lib/lite";
 import { accessibilityBootScript } from "@/lib/accessibility-settings";
+import { bootSkeletonScript } from "@/lib/boot-skeleton/boot-script";
 import "../globals.css";
 import "../print.css";
 
@@ -313,10 +315,12 @@ export default async function RootLayout({
                   const resolved = theme === 'system' ? systemTheme : theme;
                   document.documentElement.classList.remove('light', 'dark');
                   document.documentElement.classList.add(resolved);
+                  document.documentElement.style.colorScheme = resolved;
                 } catch (e) {
                   document.documentElement.classList.add('light');
                 }
                 ${accessibilityBootScript()}
+                ${bootSkeletonScript()}
               })();
             `,
           }}
@@ -328,6 +332,7 @@ export default async function RootLayout({
         <ServiceWorkerRegistration />
         {!themeColorConfigured && <ThemeColorSync />}
         <FaviconBadge />
+        <ErrorReportingRoot />
         <IosViewportHeal />
         {children}
       </body>

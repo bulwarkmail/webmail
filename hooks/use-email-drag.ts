@@ -9,6 +9,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useDragDropContext } from "@/contexts/drag-drop-context";
 import { useUIStore } from "@/stores/ui-store";
 import { isDragOutSupported } from "@/hooks/use-attachment-drag";
+import { canExport } from "@/lib/device-policy";
 import { appUrl, buildMailPath } from "@/lib/deep-links";
 import {
   bundleExportFilename,
@@ -214,7 +215,8 @@ export function useEmailDrag({ email, sourceMailboxId, threadEmails }: UseEmailD
   }, [email.id, email.blobId, email.sourceClientAccountId, email.sourceAccountId, client, filenameOptions]);
 
   const prefetchSingle = useCallback((target: Email) => {
-    if (!dragOutEnabled || !target.blobId) return;
+    // Dragging a message out is an export: not under the account's "No export".
+    if (!dragOutEnabled || !target.blobId || !canExport(target)) return;
     const route = routeEmail(target, filenameOptions);
     if (!route.client) return;
     const previous = singleRef.current;
@@ -241,6 +243,7 @@ export function useEmailDrag({ email, sourceMailboxId, threadEmails }: UseEmailD
     const selected = state.selectedEmailKeys.has(emailKeyFor(email))
       ? resolveSelectedEmails(state)
       : threadEmails || [email];
+    if (!selected.every((em) => canExport(em))) return;
     if (selected.length > 1) {
       if (selected.some((em) => em.blobId)) {
         prefetchEmailBundle(selected.map((em) => routeEmail(em, filenameOptions)), bundleOptions);
@@ -284,8 +287,9 @@ export function useEmailDrag({ email, sourceMailboxId, threadEmails }: UseEmailD
         .join("\r\n")
     );
 
-    // Drag-out to file explorer.
-    if (dragOutEnabled && client) {
+    // Drag-out to file explorer, unless a device policy turned export off
+    // for one of the messages' accounts. Moving to a folder still works.
+    if (dragOutEnabled && client && emailsToDrag.every((em) => canExport(em))) {
       if (emailsToDrag.length === 1 && emailsToDrag[0].blobId) {
         const route = routeEmail(emailsToDrag[0], filenameOptions);
         const url = singleRef.current?.key === route.key ? singleRef.current.url : null;

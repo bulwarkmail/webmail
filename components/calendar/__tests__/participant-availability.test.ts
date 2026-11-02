@@ -344,17 +344,38 @@ describe('ParticipantAvailability', () => {
     expect(screen.queryByText('unavailable_on_server')).toBeNull();
   });
 
-  it('says free/busy is not available when Stalwart 1.0 lists no directory because directory queries are off', async () => {
-    // The own principal could not be read, so the listing's refusal is what tells.
-    const { client, requests } = makeClient({
-      ownPrincipal: http500,
+  // Stalwart 1.0.1 refuses Principal/query with directory queries off but
+  // still answers getAvailability for the principals the user shares an
+  // account with (local-data/enterprise-pack-facts.md part 6 §1), so the
+  // list stays and says who could not be looked up.
+  it('keeps checking the known principals and says the rest cannot be looked up when Stalwart 1.0.1 has directory queries off', async () => {
+    const { client } = makeClient({
+      ownPrincipal: OWN_PRINCIPAL_1_0,
       directory: () => [DIRECTORY_QUERIES_OFF, UNRESOLVED_REFERENCE],
+      known: ['Principal/get', { accountId: 'me', state: 'n', list: [DIRECTORY[0], DIRECTORY[1]], notFound: [] }, '0'],
+      availability: (id, callId) => ['Principal/getAvailability', {
+        list: id === 'anna' ? [{ utcStart: '2026-09-01T10:30:00Z', utcEnd: '2026-09-01T11:30:00Z', busyStatus: 'confirmed' }] : [],
+      }, callId],
+    });
+    renderFor(client);
+
+    await waitFor(() => expect(screen.getByText('busy')).toBeInTheDocument(), { timeout: 2000 });
+    expect(screen.getByText('not_looked_up')).toBeInTheDocument();
+    expect(screen.getByTestId('participant-availability-directory-off')).toHaveTextContent('directory_off');
+    expect(screen.queryByText('unavailable_on_server')).toBeNull();
+  });
+
+  it('says free/busy is not available when a 1.0 build refuses the lookups as well with directory queries off', async () => {
+    // The 1.0 test build (4fb4420b5) refuses every lookup with the same text.
+    const { client } = makeClient({
+      ownPrincipal: OWN_PRINCIPAL_1_0,
+      directory: () => [DIRECTORY_QUERIES_OFF, UNRESOLVED_REFERENCE],
+      known: ['Principal/get', { accountId: 'me', state: 'n', list: [DIRECTORY[0], DIRECTORY[1]], notFound: [] }, '0'],
       availability: () => DIRECTORY_QUERIES_OFF,
     });
     renderFor(client);
 
     await waitFor(() => expect(screen.getByText('unavailable_on_server')).toBeInTheDocument(), { timeout: 2000 });
     expect(screen.queryByTestId('participant-availability')).toBeNull();
-    expect(methodsOf(requests)).not.toContain('Principal/getAvailability');
   });
 });

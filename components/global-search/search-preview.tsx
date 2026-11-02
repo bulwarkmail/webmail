@@ -8,6 +8,7 @@ import type { CalendarHit, ContactHit, FileHit, GlobalSearchHit } from "@/lib/gl
 import { getContactDisplayName, getContactPhotoRef, getContactPrimaryEmail } from "@/stores/contact-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { cn, formatFileSize } from "@/lib/utils";
+import { descriptionAsText } from "@/lib/calendar-description";
 
 function formatDateTime(iso: string | null): string {
   if (!iso) return '';
@@ -98,6 +99,7 @@ function ContactPreview({ hit, onOpen, openLabel }: { hit: ContactHit; onOpen: (
 
 function CalendarPreview({ hit, onOpen, openLabel, recurringLabel }: { hit: CalendarHit; onOpen: (hit: GlobalSearchHit) => void; openLabel: string; recurringLabel: string }) {
   const event = hit.event;
+  const description = descriptionAsText(event);
   const locations = Object.values(event.locations ?? {}).map((l) => l?.name).filter(Boolean);
   const participants = Object.values(event.participants ?? {})
     .map((p) => (p as { name?: string | null; email?: string | null }))
@@ -121,7 +123,7 @@ function CalendarPreview({ hit, onOpen, openLabel, recurringLabel }: { hit: Cale
       <dl className="flex flex-col gap-2.5">
         <DetailRow icon={Clock}>{formatDateTime(event.start)}</DetailRow>
         {locations.map((location) => <DetailRow key={location} icon={MapPin}>{location}</DetailRow>)}
-        {event.description && <DetailRow icon={AlignLeft} pre>{event.description}</DetailRow>}
+        {description && <DetailRow icon={AlignLeft} pre>{description}</DetailRow>}
         {participants.length > 0 && <DetailRow icon={Users}>{participants.join(', ')}</DetailRow>}
       </dl>
     </div>

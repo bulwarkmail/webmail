@@ -21,7 +21,9 @@ import { toast } from "@/stores/toast-store";
 import { useIsDesktop, useIsMobile } from "@/hooks/use-media-query";
 import { useAccountPrincipalEmails } from "@/hooks/use-account-principal-emails";
 import { Button } from "@/components/ui/button";
-import { PaneSpinner, Spinner } from "@/components/ui/spinner";
+import { CalendarSkeleton, CalendarSkeletonBody, CalendarViewSkeleton, calendarSkeletonText } from "@/components/boot-skeleton/calendar-skeleton";
+import { SkeletonRegion } from "@/components/boot-skeleton/kit";
+import { useSkeletonLabels } from "@/components/boot-skeleton/use-skeleton-labels";
 import { CalendarToolbar } from "@/components/calendar/calendar-toolbar";
 import { CalendarMonthView } from "@/components/calendar/calendar-month-view";
 import { CalendarWeekView } from "@/components/calendar/calendar-week-view";
@@ -30,6 +32,8 @@ import { CalendarAgendaView } from "@/components/calendar/calendar-agenda-view";
 import { TaskListView, filterTasksForList } from "@/components/calendar/task-list-view";
 import { CalendarLoadErrorNotice } from "@/components/calendar/calendar-load-error-notice";
 import { TaskToolbar } from "@/components/calendar/task-toolbar";
+import { PluginTaskView, usePluginTaskView } from "@/components/plugins/plugin-task-view";
+import { onOpenTask } from "@/lib/plugin-sandbox/open-task";
 import { TaskModal } from "@/components/calendar/task-modal";
 import { MiniCalendar } from "@/components/calendar/mini-calendar";
 import { CalendarSidebarPanel } from "@/components/calendar/calendar-sidebar-panel";
@@ -37,6 +41,7 @@ import { EventModal, type PendingEventPreview } from "@/components/calendar/even
 import { EventDetailPopover } from "@/components/calendar/event-detail-popover";
 import { EventContextMenu } from "@/components/calendar/event-context-menu";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
+import { useStrictestDevices } from "@/hooks/use-device-policy";
 import { EmptySpaceContextMenu } from "@/components/calendar/empty-space-context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useRefreshGesture } from "@/hooks/use-refresh-gesture";
@@ -55,6 +60,7 @@ import { useIsFocusedProTab, useIsPaneScoped } from "@/hooks/use-pane-context";
 import { useProMultiAccountCalendars } from "@/hooks/use-pro-multi-account-calendars";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { buildDuplicateEventData } from "@/lib/calendar-duplicate";
+import { descriptionWithNote } from "@/lib/calendar-description";
 import { filterTasksByCalendars } from "@/lib/calendar-tasks";
 import { baseEventStoreId, isServerRecurrenceInstance } from "@/lib/recurrence-instances";
 import { deleteOccurrence, saveOccurrenceEdit, type EventEditorState } from "@/lib/recurrence-scope-edit";
@@ -77,9 +83,13 @@ import { SchedulingDeniedError } from "@/lib/jmap/scheduling-error";
 import { CreateCalendarModal } from "@/components/calendar/create-calendar-modal";
 import { CalendarSidebarHeader } from "@/components/calendar/calendar-sidebar-header";
 import { getUserParticipantId, collectUserCalendarAddresses, userOrganizes, getParticipantList } from "@/lib/calendar-participants";
+import type { AnswerTarget } from "@/lib/calendar-delegate";
 import type { MoveEventHandler } from "@/hooks/use-time-grid-interactions";
 import type { RevealTime } from "@/hooks/use-display-hours";
 import { generateBirthdayEvents, createBirthdayCalendar, BIRTHDAY_CALENDAR_ID } from "@/lib/birthday-calendar";
+import { feedIdOf, isCompanyCalendarId } from "@/lib/company-calendars";
+import { expandRecurringEvents } from "@/lib/recurrence-expansion";
+import { useCompanyCalendars } from "./use-company-calendars";
 import { sharedCalendarColorKey, autoAssignSharedCalendarColors } from "@/lib/shared-calendar-colors";
 import { debug } from "@/lib/debug";
 import { consumePendingWebcal, hasPendingWebcal, subscribeToPendingWebcal } from "@/lib/protocol-handlers/session";
@@ -123,7 +133,7 @@ import { requestPrint, usePrintStore } from "@/stores/print-store";
 type PendingScopeAction =
   | { type: "edit"; event: CalendarEvent; updates: Partial<CalendarEvent>; editor?: EventEditorState; sendScheduling?: boolean; fromEditor?: boolean }
   | { type: "delete"; event: CalendarEvent; sendScheduling?: boolean; fromEditor?: boolean }
-  | { type: "rsvp"; event: CalendarEvent; participantId: string; status: CalendarParticipant["participationStatus"] };
+  | { type: "rsvp"; event: CalendarEvent; participantId: string; status: CalendarParticipant["participationStatus"]; sentBy?: string };
 
 function isRecurringEvent(event: CalendarEvent): boolean {
   return (event.recurrenceRules?.length ?? 0) > 0 || event.recurrenceId != null;
@@ -139,10 +149,13 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const linkSegments = useLiteLinkSegments('calendar', routeSegments);
   const router = useRouter();
   const t = useTranslations("calendar");
+  // Organisation > Devices > No printing: no Print buttons (Ctrl+P prints a note).
+  const printOff = useStrictestDevices().noPrint;
   // The server's reason for a refused change, where the user can act on it.
   const describeError = useCalendarErrorMessage();
   const tSidebar = useTranslations("sidebar");
   useDocumentTitle(tSidebar("calendar"));
+  const skeletonLabels = useSkeletonLabels();
   const tWebcalAction = useTranslations("calendar.webcal_action");
   const { demoMode } = useConfig();
   // Subscriptions fetch the feed through /api/fetch-ical, which the demo has no
@@ -751,6 +764,15 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     setShowTaskModal(true);
   }), [closeEventPanelForTask, whenEditorsDiscarded]);
 
+  // A plugin drawing the task view opens a task in the editor
+  // (api.ui.openTask), as a click in Bulwark's list does.
+  useEffect(() => onOpenTask((taskId) => {
+    const task = useTaskStore.getState().tasks.find((t) => t.id === taskId);
+    if (!task) return false;
+    openEditTaskModal(task);
+    return true;
+  }), [openEditTaskModal]);
+
   const handleToggleTaskComplete = useCallback((task: CalendarTask) => {
     if (!client) return;
     // The checkbox shows the result; only a failure needs saying.
@@ -1353,10 +1375,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     participantId: string,
     status: CalendarParticipant['participationStatus'],
     scope: 'occurrence' | 'series' = 'series',
+    sentBy?: string,
   ) => {
     if (!client) return;
     try {
-      if (await rsvpEvent(client, eventId, participantId, status, undefined, scope)) toast.success(t("notifications.rsvp_updated"));
+      if (await rsvpEvent(client, eventId, participantId, status, undefined, scope, sentBy ? { sentBy } : undefined)) toast.success(t("notifications.rsvp_updated"));
     } catch (error) {
       toast.error(describeError(error, t("notifications.rsvp_error")));
     }
@@ -1365,9 +1388,9 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const handleScopeSelect = useCallback(async (scope: RecurrenceEditScope) => {
     if (!client || !pendingScopeAction) { toast.error(t("notifications.event_error")); return; }
     if (pendingScopeAction.type === "rsvp") {
-      const { event, participantId, status } = pendingScopeAction;
+      const { event, participantId, status, sentBy } = pendingScopeAction;
       setPendingScopeAction(null);
-      await submitRsvp(event.id, participantId, status, scope === "this" ? "occurrence" : "series");
+      await submitRsvp(event.id, participantId, status, scope === "this" ? "occurrence" : "series", sentBy);
       return;
     }
     const { type, event, sendScheduling, fromEditor } = pendingScopeAction;
@@ -1473,16 +1496,16 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     });
   }, [client, updateEvent, resolveContactName, describeError, t]);
 
-  const handleRsvp = useCallback(async (eventId: string, participantId: string, status: CalendarParticipant['participationStatus']) => {
+  const handleRsvp = useCallback(async (eventId: string, participantId: string, status: CalendarParticipant['participationStatus'], sentBy?: string) => {
     if (!client) return;
     // An answer on one occurrence of a series asks whether it covers just
     // that occurrence or the whole series (#1086).
     const occurrence = events.find(e => e.id === eventId && e.recurrenceId != null);
     if (occurrence) {
-      setPendingScopeAction({ type: "rsvp", event: occurrence, participantId, status });
+      setPendingScopeAction({ type: "rsvp", event: occurrence, participantId, status, sentBy });
       return;
     }
-    await submitRsvp(eventId, participantId, status);
+    await submitRsvp(eventId, participantId, status, "series", sentBy);
   }, [client, events, submitRsvp]);
 
   const handleDeleteFromDetail = useCallback(() => {
@@ -1510,13 +1533,10 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const handleSaveNoteFromDetail = useCallback(async (note: string) => {
     if (!detailEvent || !client) return;
     const timestamp = format(displayNow(), "yyyy-MM-dd HH:mm");
-    const separator = `\n\n--- ${timestamp} ---\n`;
-    const newDescription = detailEvent.description
-      ? `${detailEvent.description}${separator}${note}`
-      : `--- ${timestamp} ---\n${note}`;
+    const fields = descriptionWithNote(detailEvent, `--- ${timestamp} ---`, note);
     try {
-      if (!(await updateEvent(client, detailEvent.id, { description: newDescription }))) return;
-      setDetailEvent({ ...detailEvent, description: newDescription });
+      if (!(await updateEvent(client, detailEvent.id, fields))) return;
+      setDetailEvent({ ...detailEvent, ...fields });
       toast.success(t("detail.note_saved"));
     } catch (error) {
       toast.error(describeError(error, t("notifications.event_error")));
@@ -1571,12 +1591,14 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     handleDeleteEvent(event.id, hasParticipants || undefined);
   }, [handleDeleteEvent]);
 
-  const handleRsvpFromDetail = useCallback(async (status: CalendarParticipant['participationStatus']) => {
+  const handleRsvpFromDetail = useCallback(async (status: CalendarParticipant['participationStatus'], target?: AnswerTarget) => {
     if (!detailEvent || !client) return;
-    const participantId = getUserParticipantId(detailEvent, currentUserEmails);
+    // A target names the event and participant: the owner's in a calendar
+    // shared with the user, or the user's own copy (lib/calendar-delegate.ts).
+    const participantId = target?.participantId ?? getUserParticipantId(detailEvent, currentUserEmails);
     if (!participantId) return;
     closeDetail();
-    await handleRsvp(detailEvent.id, participantId, status);
+    await handleRsvp(target?.eventId ?? detailEvent.id, participantId, status, target?.sentBy);
   }, [detailEvent, client, currentUserEmails, closeDetail, handleRsvp]);
 
   // `/` and the palette's "Search events" go to the search box.
@@ -1688,10 +1710,42 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     }
   }, [calendars, sharedCalendarColors, setSharedCalendarColor]);
 
+  // Company calendars the admin set (lib/company-calendars.ts): read-only,
+  // shown under "Organisation"; hiding one is a synced setting of its own.
+  const company = useCompanyCalendars(client);
+  const hiddenCompanyCalendars = useSettingsStore((s) => s.hiddenCompanyCalendars);
+  const shownCalendarIds = useMemo(() => {
+    if (company.calendars.length === 0) return selectedCalendarIds;
+    const hidden = new Set(company.hiddenIds);
+    return [...selectedCalendarIds, ...company.calendars.map((c) => c.id).filter((id) => !hidden.has(id))];
+  }, [selectedCalendarIds, company.calendars, company.hiddenIds]);
+  const toggleShownCalendar = useCallback((calendarId: string) => {
+    if (!isCompanyCalendarId(calendarId)) {
+      toggleCalendarVisibility(calendarId);
+      return;
+    }
+    const feedId = feedIdOf(calendarId);
+    const hidden = Array.isArray(hiddenCompanyCalendars) ? hiddenCompanyCalendars : [];
+    updateSetting('hiddenCompanyCalendars', hidden.includes(feedId) ? hidden.filter((id) => id !== feedId) : [...hidden, feedId]);
+  }, [toggleCalendarVisibility, hiddenCompanyCalendars, updateSetting]);
+  const companyEvents = useMemo(() => {
+    if (!dateRange || company.events.length === 0) return [];
+    const hidden = new Set(company.hiddenIds);
+    return expandRecurringEvents(company.events.filter((e) => !Object.keys(e.calendarIds).some((id) => hidden.has(id))), dateRange.start, dateRange.end);
+  }, [company.events, company.hiddenIds, dateRange]);
+
+  // The phone toolbar's calendar list: the user's own and the company calendars.
+  const toolbarCalendars = useMemo(
+    () => (company.calendars.length > 0 ? [...displayCalendars, ...company.calendars] : displayCalendars),
+    [displayCalendars, company.calendars],
+  );
+
   const allCalendars = useMemo(() => {
-    if (!showBirthdayCalendar) return displayCalendars;
-    return [...displayCalendars, createBirthdayCalendar(birthdayCalendarName, birthdayCalendarColor)];
-  }, [displayCalendars, showBirthdayCalendar, birthdayCalendarName, birthdayCalendarColor]);
+    const withBirthdays = showBirthdayCalendar
+      ? [...displayCalendars, createBirthdayCalendar(birthdayCalendarName, birthdayCalendarColor)]
+      : displayCalendars;
+    return company.calendars.length > 0 ? [...withBirthdays, ...company.calendars] : withBirthdays;
+  }, [displayCalendars, showBirthdayCalendar, birthdayCalendarName, birthdayCalendarColor, company.calendars]);
 
   // What the user may change, by the rights of each event's calendar
   // (birthdays, subscriptions and read-only shares can't be changed).
@@ -1715,12 +1769,15 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       const calIds = Object.keys(e.calendarIds);
       return calIds.some((id) => selectedCalendarIds.includes(id));
     });
+    const withCompany = companyEvents.length > 0 ? [...filtered, ...companyEvents] : filtered;
     if (showBirthdayCalendar && selectedCalendarIds.includes(BIRTHDAY_CALENDAR_ID)) {
-      return [...filtered, ...birthdayEvents];
+      return [...withCompany, ...birthdayEvents];
     }
-    return filtered;
-  }, [events, selectedCalendarIds, showBirthdayCalendar, birthdayEvents]);
+    return withCompany;
+  }, [events, selectedCalendarIds, showBirthdayCalendar, birthdayEvents, companyEvents]);
 
+  // The plugin drawing the task view's list, if one offers it.
+  const pluginTaskView = usePluginTaskView();
   // The tasks the task list shows; plugin buttons in its toolbar act on them.
   const listedTaskIds = useMemo(
     () => filterTasksForList(taskStore.tasks, selectedCalendarIds, taskStore.filter).map((task) => task.id),
@@ -1802,13 +1859,27 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     </Dialog>
   ) : null;
 
-  if (!isAuthenticated) return null;
+  // Until the session says what the account has, the page is drawn as the
+  // skeleton the server sent (components/boot-skeleton): the same markup, so
+  // nothing moves while the sign-in is restored or the redirects decide.
+  const skeletonText = calendarSkeletonText(t);
+  const skeleton = isEmbedded ? (
+    <SkeletonRegion surface="calendar" label={skeletonLabels.label} className="flex flex-col h-full">
+      <CalendarSkeletonBody embedded text={skeletonText} />
+    </SkeletonRegion>
+  ) : (
+    <CalendarSkeleton label={skeletonLabels.label} labels={skeletonLabels.labels} text={skeletonText} />
+  );
+  if (!isAuthenticated) return skeleton;
+  // Turned off by policy: nothing, while the effect above leaves for mail.
   if (!calendarEnabled) return null;
-  if (!supportsCalendar) return renderWebcalAccountPicker();
+  if (!supportsCalendar) return renderWebcalAccountPicker() ?? skeleton;
 
   const renderView = () => {
+    // The calendars are loading: the view's grid in the skeleton's shapes,
+    // where the real one is about to be drawn.
     if (isLoading && calendars.length === 0) {
-      return <PaneSpinner label={t("status.loading_calendars")} className="flex-1" />;
+      return <CalendarViewSkeleton view={normalizedViewMode} label={t("status.loading_calendars")} text={skeletonText} />;
     }
 
     const viewContent = (() => {
@@ -1925,7 +1996,30 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               onCreateEvent={() => openCreateModal()}
             />
           );
-        case "tasks":
+        case "tasks": {
+          const taskList = (
+            <TaskListView
+              tasks={taskStore.tasks}
+              calendars={displayCalendars}
+              selectedCalendarIds={selectedCalendarIds}
+              filter={taskStore.filter}
+              onSelectTask={openEditTaskModal}
+              onToggleComplete={handleToggleTaskComplete}
+              selectedTaskId={taskStore.selectedTaskId}
+              onQuickCreate={(title) => {
+                // Into a calendar that takes it: the default one, else the
+                // first the user may write to.
+                const target = writableTaskCalendars.find((c) => c.isDefault) ?? writableTaskCalendars[0];
+                if (!client || !target) {
+                  toast.error(t("notifications.task_save_error"));
+                  return;
+                }
+                taskStore.createTask(client, { "@type": "Task", title, progress: "needs-action", calendarIds: { [target.id]: true } })
+                  .then((created) => { if (created) toast.success(t("notifications.task_created")); })
+                  .catch((error: unknown) => toast.error(describeError(error, t("notifications.task_save_error"))));
+              }}
+            />
+          );
           return (
             <div className="flex flex-col h-full">
               {taskStore.error === TASKS_LOAD_ERROR && (
@@ -1938,29 +2032,21 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
                 taskIds={listedTaskIds}
                 compact={isMobile}
               />
-              <TaskListView
-                tasks={taskStore.tasks}
-                calendars={displayCalendars}
-                selectedCalendarIds={selectedCalendarIds}
-                filter={taskStore.filter}
-                onSelectTask={openEditTaskModal}
-                onToggleComplete={handleToggleTaskComplete}
-                selectedTaskId={taskStore.selectedTaskId}
-                onQuickCreate={(title) => {
-                  // Into a calendar that takes it: the default one, else the
-                  // first the user may write to.
-                  const target = writableTaskCalendars.find((c) => c.isDefault) ?? writableTaskCalendars[0];
-                  if (!client || !target) {
-                    toast.error(t("notifications.task_save_error"));
-                    return;
-                  }
-                  taskStore.createTask(client, { "@type": "Task", title, progress: "needs-action", calendarIds: { [target.id]: true } })
-                    .then((created) => { if (created) toast.success(t("notifications.task_created")); })
-                    .catch((error: unknown) => toast.error(describeError(error, t("notifications.task_save_error"))));
-                }}
-              />
+              {/* A plugin may draw the list itself (the calendar-task-view
+                  slot), with Bulwark's list back while its frame is not
+                  drawn; the toolbar above stays Bulwark's. */}
+              {pluginTaskView ? (
+                <PluginTaskView
+                  pluginId={pluginTaskView.pluginId}
+                  fill={pluginTaskView.fill}
+                  filter={taskStore.filter}
+                  calendarIds={selectedCalendarIds}
+                  fallback={taskList}
+                />
+              ) : taskList}
             </div>
           );
+        }
       }
     })();
 
@@ -1970,10 +2056,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           <CalendarLoadErrorNotice onRetry={retryEventsLoad} />
         )}
         {viewContent}
+        {/* The first events: the grid is drawn already and they fill in on
+            it, so this is said rather than shown (a dimmed grid with a
+            spinner flashed between the skeleton and the events). */}
         {isLoadingEvents && calendars.length > 0 && events.length === 0 && (
-          <div className="absolute inset-0 bg-background/50 flex items-center justify-center pointer-events-none">
-            <Spinner label={t("status.loading_events")} />
-          </div>
+          <span role="status" className="sr-only">{t("status.loading_events")}</span>
         )}
       </div>
     );
@@ -1996,7 +2083,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       rangeEnd={scrollWindow?.end ?? selectedDate}
       events={visibleEvents}
       calendars={allCalendars}
-      shownCalendars={allCalendars.filter((c) => selectedCalendarIds.includes(c.id))}
+      shownCalendars={allCalendars.filter((c) => shownCalendarIds.includes(c.id))}
       gridTasks={calendarTasks}
       tasks={taskStore.tasks}
       taskFilter={taskStore.filter}
@@ -2024,12 +2111,12 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       onImport={demoMode ? undefined : () => setShowImportModal(true)}
       onSubscribe={canSubscribe ? () => setShowSubscriptionModal(true) : undefined}
       onRefresh={() => { void refreshCalendar(); }}
-      onPrint={() => { void requestPrint({ kind: "calendar-view" }); }}
+      onPrint={printOff ? undefined : () => { void requestPrint({ kind: "calendar-view" }); }}
       isMobile={isMobile}
       onNavigateBack={isMobile && mobileReturnToMonth && normalizedViewMode === "day" ? navigateBackToMonth : undefined}
-      calendars={displayCalendars}
-      selectedCalendarIds={selectedCalendarIds}
-      onToggleVisibility={toggleCalendarVisibility}
+      calendars={toolbarCalendars}
+      selectedCalendarIds={shownCalendarIds}
+      onToggleVisibility={toggleShownCalendar}
       enableCalendarTasks={enableCalendarTasks}
       onMenuClick={isNarrow ? () => setNarrowSidebarOpen(true) : isMobile ? undefined : toggleSidebarCollapsed}
       sidebarOpen={isNarrow ? narrowSidebarOpen : !sidebarCollapsed}
@@ -2143,8 +2230,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
             </div>
             <CalendarSidebarPanel
               calendars={allCalendars}
-              selectedCalendarIds={selectedCalendarIds}
-              onToggleVisibility={toggleCalendarVisibility}
+              selectedCalendarIds={shownCalendarIds}
+              onToggleVisibility={toggleShownCalendar}
               onColorChange={client ? (calendarId, color) => {
                 if (calendarId === BIRTHDAY_CALENDAR_ID) {
                   updateSetting('birthdayCalendarColor', color);
@@ -2343,7 +2430,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           onCopyTitle={() => handleCopyTitle(eventContextMenu.data!)}
           onCopyMeetingLink={() => handleCopyMeetingLink(eventContextMenu.data!)}
           onDelete={() => handleDeleteContextMenu(eventContextMenu.data!)}
-          onPrint={() => { void requestPrint({ kind: "calendar-event", event: eventContextMenu.data! }); }}
+          onPrint={printOff ? undefined : () => { void requestPrint({ kind: "calendar-event", event: eventContextMenu.data! }); }}
           editable={canEditEvent(eventContextMenu.data)}
         />
       )}
@@ -2403,7 +2490,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           onDelete={handleDeleteFromDetail}
           onDuplicate={handleDuplicateFromDetail}
           onMore={(e) => handleContextMenuEvent(e, detailEvent)}
-          onPrint={() => { void requestPrint({ kind: "calendar-event", event: detailEvent }); }}
+          onPrint={printOff ? undefined : () => { void requestPrint({ kind: "calendar-event", event: detailEvent }); }}
           onClose={closeDetail}
           onSaveNote={handleSaveNoteFromDetail}
           onRsvp={handleRsvpFromDetail}

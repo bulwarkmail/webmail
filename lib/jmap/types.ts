@@ -113,6 +113,13 @@ export interface Email {
 
 export interface SendEmailResult {
   scheduled: boolean;
+  /**
+   * Kept in the offline outbox (#523), not sent yet: it goes out once the
+   * server can be reached again. Nothing else is set then.
+   */
+  queued?: boolean;
+  /** The outbox entry, when queued (see lib/offline/offline-mode.ts afterOutboxSend). */
+  outboxId?: number;
   emailId?: string;
   emailSubmissionId?: string;
   sendAt?: string;
@@ -676,6 +683,9 @@ export interface Calendar {
   // hidden from the event calendar UI while remaining available to the tasks
   // view (#761). Undefined means "not determined" (treated as not tasks-only).
   isTasksOnly?: boolean;
+  // A company calendar the admin set (lib/company-calendars.ts): a read-only
+  // calendar that exists only in the browser.
+  isCompany?: boolean;
 }
 
 /**
@@ -778,6 +788,11 @@ export interface CalendarParticipant {
   scheduleStatus: string[] | null;
   scheduleUpdated: string | null;
   invitedBy: string | null;
+  /**
+   * Who answered for this participant (RFC 5545 SENT-BY), as a
+   * `mailto:` address. Set when a delegate answers for the calendar's owner.
+   */
+  sentBy?: string | null;
   delegatedTo: Record<string, boolean> | null;
   delegatedFrom: Record<string, boolean> | null;
   memberOf: Record<string, boolean> | null;
@@ -894,6 +909,7 @@ export interface CalendarTask {
   useDefaultAlerts?: boolean;
   alerts: Record<string, CalendarEventAlert> | null;
   relatedTo: Record<string, CalendarRelation> | null;
+  links?: Record<string, CalendarLink> | null;
   // Client-only, set on tasks from a shared calendar account. Their `id` and
   // `calendarIds` are namespaced `accountId:id` like shared events.
   originalId?: string;

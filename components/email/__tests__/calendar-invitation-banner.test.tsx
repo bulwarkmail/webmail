@@ -12,6 +12,10 @@ const mocks = vi.hoisted(() => {
     getCalendarsAccountId: vi.fn(() => 'calendar-account'),
     getCalendarEvent: vi.fn(),
     queryCalendarEvents: vi.fn(async (): Promise<unknown[]> => []),
+    // Who owns a shared or group account (Principal/get).
+    getAccountOwners: vi.fn(async (ids: string[]) => Object.fromEntries(ids.map((id) => [id, id === 'team'
+      ? { id, type: 'group', name: 'team@example.com', email: 'team@example.com' }
+      : { id, type: 'individual', name: id + '@example.com', email: id + '@example.com' }]))),
   };
 
   const sourceClientMock = {
@@ -586,6 +590,132 @@ describe('CalendarInvitationBanner', () => {
       );
     });
     expect(await screen.findByText('Response sent')).toBeInTheDocument();
+  });
+
+  it("answers on the user's own copy, not on a copy in a calendar shared with them (#634)", async () => {
+    const participants = {
+      user: { '@type': 'Participant', email: 'user@example.com', name: 'User', roles: { attendee: true }, participationStatus: 'needs-action' },
+      boss: { '@type': 'Participant', email: 'boss@example.com', name: 'Boss', roles: { attendee: true }, participationStatus: 'needs-action' },
+    };
+    // The boss shared their calendar with the user, and both are invited:
+    // the copy in the boss's calendar is in the store first.
+    mocks.calendarState.events = [
+      { id: 'boss:event-9', uid: 'uid-9', start: '2026-03-30T09:00:00Z', participants, isShared: true, accountId: 'boss' },
+      { id: 'event-9', uid: 'uid-9', start: '2026-03-30T09:00:00Z', participants },
+    ];
+    mocks.clientMock.parseCalendarEvents.mockResolvedValue([
+      { uid: 'uid-9', title: 'Both invited', start: '2026-03-30T09:00:00Z', participants },
+    ]);
+    mocks.calendarState.rsvpEvent.mockResolvedValue(true);
+
+    render(<CalendarInvitationBanner email={makeEmail({ id: 'email-9' })} />);
+
+    fireEvent.click(await screen.findByText('Accept'));
+
+    await waitFor(() => {
+      expect(mocks.calendarState.rsvpEvent).toHaveBeenCalledWith(mocks.clientMock, 'event-9', 'user', 'accepted', null);
+    });
+  });
+
+  describe('an invitation in a shared or group mailbox (#634)', () => {
+    const calendarsBefore = mocks.calendarState.calendars;
+    const withAccountCalendar = (accountId: string) => {
+      mocks.calendarState.calendars = [
+        ...calendarsBefore,
+        { id: accountId + ':b', name: accountId, color: '#16a34a', isDefault: true, isShared: true, accountId, accountName: accountId + '@example.com', myRights: { mayWriteAll: true } } as never,
+      ];
+    };
+    const invited = (address: string) => ({
+      [address.split('@')[0]]: { '@type': 'Participant', email: address, name: address, roles: { attendee: true }, participationStatus: 'needs-action' },
+    });
+
+    it("answers in the group's calendar as the group, without SENT-BY", async () => {
+      withAccountCalendar('team');
+      try {
+        const participants = invited('team@example.com');
+        mocks.calendarState.events = [{ id: 'team:event-10', uid: 'uid-10', start: '2026-03-30T09:00:00Z', participants, isShared: true, accountId: 'team' }];
+        mocks.clientMock.parseCalendarEvents.mockResolvedValue([{ uid: 'uid-10', title: 'Team meeting', start: '2026-03-30T09:00:00Z', participants }]);
+        mocks.calendarState.rsvpEvent.mockResolvedValue(true);
+
+        render(<CalendarInvitationBanner email={makeEmail({ id: 'email-10', sourceAccountId: 'team' } as Partial<Email>)} />);
+        await waitFor(() => expect(mocks.clientMock.getAccountOwners).toHaveBeenCalledWith(['team']));
+        fireEvent.click(await screen.findByText('Accept'));
+
+        await waitFor(() => {
+          expect(mocks.calendarState.rsvpEvent).toHaveBeenCalledWith(mocks.clientMock, 'team:event-10', 'team', 'accepted', null);
+        });
+        expect(mocks.calendarState.importEvents).not.toHaveBeenCalled();
+      } finally {
+        mocks.calendarState.calendars = calendarsBefore;
+      }
+    });
+
+    it("answers in the boss's calendar for the boss, naming the delegate with SENT-BY", async () => {
+      withAccountCalendar('boss');
+      try {
+        const participants = invited('boss@example.com');
+        mocks.calendarState.events = [{ id: 'boss:event-11', uid: 'uid-11', start: '2026-03-30T09:00:00Z', participants, isShared: true, accountId: 'boss' }];
+        mocks.clientMock.parseCalendarEvents.mockResolvedValue([{ uid: 'uid-11', title: 'Board', start: '2026-03-30T09:00:00Z', participants }]);
+        mocks.calendarState.rsvpEvent.mockResolvedValue(true);
+
+        render(<CalendarInvitationBanner email={makeEmail({ id: 'email-11', sourceAccountId: 'boss' } as Partial<Email>)} />);
+        await waitFor(() => expect(mocks.clientMock.getAccountOwners).toHaveBeenCalledWith(['boss']));
+        fireEvent.click(await screen.findByText('Accept'));
+
+        await waitFor(() => {
+          expect(mocks.calendarState.rsvpEvent).toHaveBeenCalledWith(
+            mocks.clientMock, 'boss:event-11', 'boss', 'accepted', null, undefined, { sentBy: 'mailto:user@example.com' },
+          );
+        });
+      } finally {
+        mocks.calendarState.calendars = calendarsBefore;
+      }
+    });
+
+    it("finds the group's copy on the server when the calendar wasn't loaded, and answers there", async () => {
+      withAccountCalendar('team');
+      try {
+        const participants = invited('team@example.com');
+        mocks.calendarState.events = [];
+        mocks.clientMock.parseCalendarEvents.mockResolvedValue([{ uid: 'uid-13', title: 'Team call', start: '2026-03-30T09:00:00Z', participants }]);
+        mocks.clientMock.queryCalendarEvents.mockImplementation(async (...args: unknown[]) => (args[3] === 'team'
+          ? [{ id: 'event-13', uid: 'uid-13', start: '2026-03-30T09:00:00Z', participants, calendarIds: { b: true } }]
+          : []));
+        mocks.calendarState.rsvpEvent.mockResolvedValue(true);
+
+        render(<CalendarInvitationBanner email={makeEmail({ id: 'email-13', sourceAccountId: 'team' } as Partial<Email>)} />);
+        fireEvent.click(await screen.findByText('Accept'));
+
+        await waitFor(() => expect(mocks.calendarState.rsvpEvent).toHaveBeenCalledWith(mocks.clientMock, 'team:event-13', 'team', 'accepted', null));
+        expect(mocks.clientMock.queryCalendarEvents).toHaveBeenCalledWith({ uid: 'uid-13' }, undefined, undefined, 'team');
+        expect(mocks.calendarState.importEvents).not.toHaveBeenCalled();
+      } finally {
+        mocks.calendarState.calendars = calendarsBefore;
+      }
+    });
+
+    it("adds an invitation not yet in the group's calendar there, not to the user's own", async () => {
+      withAccountCalendar('team');
+      try {
+        const participants = invited('team@example.com');
+        mocks.calendarState.events = [];
+        mocks.clientMock.parseCalendarEvents.mockResolvedValue([{ uid: 'uid-12', title: 'Team offsite', start: '2026-03-30T09:00:00Z', participants }]);
+        mocks.calendarState.importEvents.mockImplementation(async () => {
+          mocks.calendarState.events = [{ id: 'team:event-12', uid: 'uid-12', start: '2026-03-30T09:00:00Z', participants, isShared: true, accountId: 'team' }];
+          return 1;
+        });
+        mocks.calendarState.rsvpEvent.mockResolvedValue(true);
+
+        render(<CalendarInvitationBanner email={makeEmail({ id: 'email-12', sourceAccountId: 'team' } as Partial<Email>)} />);
+        // The Accept button shows once the group is known as the attendee.
+        fireEvent.click(await screen.findByText('Accept'));
+
+        await waitFor(() => expect(mocks.calendarState.rsvpEvent).toHaveBeenCalledWith(mocks.clientMock, 'team:event-12', 'team', 'accepted', null));
+        expect(mocks.calendarState.importEvents.mock.calls[0][2]).toBe('team:b');
+      } finally {
+        mocks.calendarState.calendars = calendarsBefore;
+      }
+    });
   });
 
   it('says nothing was sent when a plugin stops the answer', async () => {

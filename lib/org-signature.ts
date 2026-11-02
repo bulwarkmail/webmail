@@ -57,12 +57,20 @@ export function sanitizeSignatureDetails(raw: unknown): SignatureDetails {
   return out;
 }
 
-const PLACEHOLDER_RE = /\{(name|email|identity|company|domain|title|department|phone|mobile)\}/g;
+/** Values for a template's placeholders, by key; missing and empty are the same. */
+export type PlaceholderValues = Readonly<Partial<Record<string, string>>>;
+
+/** A regex that finds `{key}` for the given keys (word characters only). */
+export function placeholderPattern(keys: readonly string[]): RegExp {
+  return new RegExp(`\\{(${keys.map((k) => k.replace(/[^\w]/g, '')).filter(Boolean).join('|')})\\}`, 'g');
+}
+
+const PLACEHOLDER_RE = placeholderPattern(SIGNATURE_PLACEHOLDERS);
 
 /** The placeholders a template uses, each once, in the order they appear. */
-export function placeholdersIn(template: string): SignaturePlaceholder[] {
-  const found = new Set<SignaturePlaceholder>();
-  for (const match of template.matchAll(PLACEHOLDER_RE)) found.add(match[1] as SignaturePlaceholder);
+export function placeholdersIn<K extends string = SignaturePlaceholder>(template: string, re: RegExp = PLACEHOLDER_RE): K[] {
+  const found = new Set<K>();
+  for (const match of template.matchAll(re)) found.add(match[1] as K);
   return [...found];
 }
 
@@ -81,24 +89,29 @@ export function signatureFieldsToAsk(signature: OrganisationPolicy['signature'])
   return SIGNATURE_FIELDS.filter((field) => used.has(field));
 }
 
-const valueOf = (values: SignatureValues, key: string) => (values[key as SignaturePlaceholder] ?? '').trim();
+const valueOf = (values: PlaceholderValues, key: string) => (values[key] ?? '').trim();
 
-function fillString(template: string, values: SignatureValues): string {
-  return template.replace(PLACEHOLDER_RE, (_, key: string) => valueOf(values, key));
+function fillString(template: string, values: PlaceholderValues, re: RegExp): string {
+  return template.replace(re, (_, key: string) => valueOf(values, key));
 }
 
 /** True when the text has placeholders and every one of them is empty. */
-function allPlaceholdersEmpty(keys: string[], values: SignatureValues): boolean {
+function allPlaceholdersEmpty(keys: string[], values: PlaceholderValues): boolean {
   return keys.length > 0 && keys.every((key) => !valueOf(values, key));
 }
 
-/** Fills a plain-text template; lines whose placeholders are all empty are dropped. */
-export function fillTextTemplate(template: string, values: SignatureValues): string {
+/**
+ * Fills a plain-text template; lines whose placeholders are all empty are
+ * dropped. `keys` are the placeholders it knows (the signature's by
+ * default); any other `{word}` stays as written.
+ */
+export function fillTextTemplate(template: string, values: PlaceholderValues, keys: readonly string[] = SIGNATURE_PLACEHOLDERS): string {
+  const re = keys === SIGNATURE_PLACEHOLDERS ? PLACEHOLDER_RE : placeholderPattern(keys);
   return template
     .replace(/\r\n?/g, '\n')
     .split('\n')
-    .filter((line) => !allPlaceholdersEmpty(placeholdersIn(line), values))
-    .map((line) => fillString(line, values))
+    .filter((line) => !allPlaceholdersEmpty(placeholdersIn(line, re), values))
+    .map((line) => fillString(line, values, re))
     .join('\n')
     .trim();
 }
@@ -115,15 +128,15 @@ const isElement = (node: Node): node is Element => node.nodeType === 1;
 const isBlock = (node: Node) => isElement(node) && BLOCK_TAGS.has(node.tagName);
 
 /** Placeholders in the text and the attributes of `nodes`. */
-function placeholdersOfNodes(nodes: Node[]): string[] {
+function placeholdersOfNodes(nodes: Node[], re: RegExp): string[] {
   const keys: string[] = [];
   const visit = (node: Node) => {
     if (node.nodeType === 3) {
-      keys.push(...placeholdersIn(node.textContent ?? ''));
+      keys.push(...placeholdersIn(node.textContent ?? '', re));
       return;
     }
     if (!isElement(node)) return;
-    for (const attr of Array.from(node.attributes)) keys.push(...placeholdersIn(attr.value));
+    for (const attr of Array.from(node.attributes)) keys.push(...placeholdersIn(attr.value, re));
     node.childNodes.forEach(visit);
   };
   nodes.forEach(visit);
@@ -171,14 +184,14 @@ function linesOf(block: Element): Line[] {
 }
 
 /** The placeholders of a line: in its text, its media, and the attributes of the inline wrappers around it. */
-function placeholdersOfLine(line: Line, block: Element): string[] {
-  const keys = placeholdersOfNodes(line.leaves);
+function placeholdersOfLine(line: Line, block: Element, re: RegExp): string[] {
+  const keys = placeholdersOfNodes(line.leaves, re);
   const wrappers = new Set<Element>();
   for (const leaf of line.leaves) {
     for (let parent = leaf.parentElement; parent && parent !== block; parent = parent.parentElement) wrappers.add(parent);
   }
   for (const wrapper of wrappers) {
-    for (const attr of Array.from(wrapper.attributes)) keys.push(...placeholdersIn(attr.value));
+    for (const attr of Array.from(wrapper.attributes)) keys.push(...placeholdersIn(attr.value, re));
   }
   return keys;
 }
@@ -201,10 +214,10 @@ function removeWithEmptyWrappers(node: Node, block: Element): void {
  * placeholders and is empty afterwards goes too, so "<p>{mobile}</p>"
  * leaves no empty paragraph.
  */
-function dropEmptyLines(el: Element, values: SignatureValues, isRoot: boolean): void {
-  if (placeholdersOfNodes([el]).length === 0) return;
+function dropEmptyLines(el: Element, values: PlaceholderValues, isRoot: boolean, re: RegExp): void {
+  if (placeholdersOfNodes([el], re).length === 0) return;
   // A table row is one line: "Phone: | {phone}" goes as a whole.
-  if (el.tagName === 'TR' && allPlaceholdersEmpty(placeholdersOfNodes([el]), values)) {
+  if (el.tagName === 'TR' && allPlaceholdersEmpty(placeholdersOfNodes([el], re), values)) {
     el.remove();
     return;
   }
@@ -217,15 +230,15 @@ function dropEmptyLines(el: Element, values: SignatureValues, isRoot: boolean): 
     }
   };
   collect(el);
-  nested.forEach((child) => dropEmptyLines(child, values, false));
+  nested.forEach((child) => dropEmptyLines(child, values, false, re));
 
   const lines = linesOf(el);
   lines.forEach((line, index) => {
-    if (!allPlaceholdersEmpty(placeholdersOfLine(line, el), values)) return;
+    if (!allPlaceholdersEmpty(placeholdersOfLine(line, el, re), values)) return;
     let kept = false;
     for (const leaf of line.leaves) {
       const media = isElement(leaf) && MEDIA_TAGS.has(leaf.tagName);
-      if (media && placeholdersOfNodes([leaf]).length === 0) kept = true;
+      if (media && placeholdersOfNodes([leaf], re).length === 0) kept = true;
       else removeWithEmptyWrappers(leaf, el);
     }
     // An image left on the line keeps its line break.
@@ -248,16 +261,16 @@ function dropEmptyLines(el: Element, values: SignatureValues, isRoot: boolean): 
   if (!isRoot && !hasVisibleContent(el)) el.remove();
 }
 
-function fillNodes(root: Element, values: SignatureValues): void {
+function fillNodes(root: Element, values: PlaceholderValues, re: RegExp): void {
   const walk = (node: Node) => {
     if (node.nodeType === 3) {
       const text = node.textContent ?? '';
-      if (placeholdersIn(text).length > 0) node.textContent = fillString(text, values);
+      if (placeholdersIn(text, re).length > 0) node.textContent = fillString(text, values, re);
       return;
     }
     if (!isElement(node)) return;
     for (const attr of Array.from(node.attributes)) {
-      if (placeholdersIn(attr.value).length > 0) node.setAttribute(attr.name, fillString(attr.value, values));
+      if (placeholdersIn(attr.value, re).length > 0) node.setAttribute(attr.name, fillString(attr.value, values, re));
     }
     node.childNodes.forEach(walk);
   };
@@ -269,14 +282,15 @@ function fillNodes(root: Element, values: SignatureValues): void {
  * lines whose placeholders are all empty are dropped. The result still goes
  * through the signature sanitizer wherever it is inserted.
  */
-export function fillHtmlTemplate(template: string, values: SignatureValues): string {
+export function fillHtmlTemplate(template: string, values: PlaceholderValues, keys: readonly string[] = SIGNATURE_PLACEHOLDERS): string {
+  const re = keys === SIGNATURE_PLACEHOLDERS ? PLACEHOLDER_RE : placeholderPattern(keys);
   if (typeof DOMParser === 'undefined') {
     // Server render: no DOM. Nothing calls this there for real; escape at least.
-    return template.replace(PLACEHOLDER_RE, (_, key: string) => escapeHtml(valueOf(values, key))).trim();
+    return template.replace(re, (_, key: string) => escapeHtml(valueOf(values, key))).trim();
   }
   const doc = new DOMParser().parseFromString(`<!doctype html><html><body>${template}</body></html>`, 'text/html');
-  dropEmptyLines(doc.body, values, true);
-  fillNodes(doc.body, values);
+  dropEmptyLines(doc.body, values, true, re);
+  fillNodes(doc.body, values, re);
   return doc.body.innerHTML.trim();
 }
 

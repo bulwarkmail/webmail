@@ -1,0 +1,32 @@
+# The base the top-level kustomization.yaml and the overlays use. Change the
+# namespace, the image tag (pin a release, never latest in production) and
+# the replica count here or, better, in an overlay. secrets.env must exist
+# next to this file (copy secrets.env.example).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: bulwark
+
+resources:
+  - namespace.yaml
+  - valkey.yaml
+  - bulwark.yaml
+
+configMapGenerator:
+  - name: bulwark-env
+    envs:
+      - bulwark.env
+
+secretGenerator:
+  - name: bulwark-secrets
+    envs:
+      - secrets.env
+
+images:
+  - name: ghcr.io/bulwarkmail/webmail
+    newTag: latest
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: bulwark
+    includeSelectors: false

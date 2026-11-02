@@ -3,7 +3,7 @@
 import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback, useId } from "react";
 import { Email, ContactCard, Mailbox } from "@/lib/jmap/types";
 import { attachmentDownloadFilename, attachmentsBundleFilename, DEFAULT_ATTACHMENT_TEMPLATE } from "@/lib/download-filename";
-import { EML_IMPORT_ACCEPT, expandImportableEmails } from "@/lib/eml-import";
+import { openMailImport } from "@/stores/mail-transfer-store";
 import { TRANSPARENT_BLOCKED_PIXEL, applyNewTabToAnchor, emailIframeCsp, escapeHtml, isExternalResourceUrl, isOpenableLinkHref, plainTextToSafeHtml, sanitizeEmailBodyForIframe, sanitizeEmailHtml, sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
 import { getRenderableHtmlBody } from "@/lib/email-body-selection";
 import { mailLanguage } from "@/lib/mail-language";
@@ -13,7 +13,7 @@ import { applyMailTextSize, mailFitOptions } from "@/lib/mail-reading";
 import { useMailReading } from "@/hooks/use-mail-reading";
 import { useReadAloud } from "@/hooks/use-read-aloud";
 import { ReadAloudBar } from "./read-aloud-bar";
-import { attachmentIcon } from "./attachment-chips";
+import { ReaderAttachments, type AttachmentDragProps } from "./reader-attachments";
 import { ReaderViewDialog } from "./reader-view-dialog";
 import { ReadingMask } from "./reading-mask";
 import { collectReferencedCids, isEmbeddedInBody, isReportPart, normalizeCid, rewriteCidReferences } from "@/lib/attachment-visibility";
@@ -32,11 +32,17 @@ import { ContextMenu } from "@/components/ui/context-menu";
 import { useContextMenu, type UseContextMenuReturn } from "@/hooks/use-context-menu";
 import { EmailContextMenu } from "./email-context-menu";
 import { useMessageActionList, type MessageActionEntry, type MessageActionKey, type MessageActionOptions, type MessageSubmenuKey } from "./message-actions";
+import { PhishingMarkBanner } from "./phishing-mark-banner";
+import { turnOffLinks } from "@/lib/phishing-links";
+import { usePhishingMarked } from "@/hooks/use-phishing-report";
 import { useCopyToAccount, useEmailExport, usePrintRequestStore } from "@/hooks/use-message-file-actions";
 import { useBottomControls } from "@/hooks/use-bottom-controls";
 import { useComposingSurface } from "@/hooks/use-composing-surface";
 import { ReaderSelectionMenu, useReaderSelectionMenu, watchBodySelection, watchElementSelection } from "./reader-selection-menu";
 import { onPanelRequest } from "@/lib/plugin-sandbox/panel-requests";
+import type { ComposerMetadata } from "@/lib/plugin-sandbox/composer-registry";
+import { QuickReplyPluginActions } from "./quick-reply-plugin-actions";
+import { quickReplyEnvelope } from "@/lib/outgoing/quick-reply-envelope";
 import { formatFileSize, cn, formatDate, formatDateTime, formatRelativeAgo, generateUUID, cleanPreview, type MailboxNode } from "@/lib/utils";
 import { getEffectiveTimeZone, getWallClock } from "@/lib/timezone";
 import { itemsToHide } from "@/lib/toolbar-overflow";
@@ -69,15 +75,12 @@ import {
   ChevronUp,
   ChevronLeft,
   ChevronRight,
-  Download,
   Mail,
   MailOpen,
   Loader2,
   Printer,
   FileText,
-  FileArchive,
   File,
-  Eye,
   Shield,
   Image,
   Tag,
@@ -112,7 +115,9 @@ import {
   BookOpen,
   ArrowLeft,
   Pencil,
+  Paperclip,
 } from "@/components/icons";
+import { MailMessageSkeleton, MailMessageToolbarSkeleton } from "@/components/boot-skeleton/mail-skeleton";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import type { Attachment as PostalMimeAttachment } from 'postal-mime';
@@ -134,6 +139,7 @@ import { useEmailStore, resolveEmailBlobContext, emailWriteSource, type EmailBlo
 import { useThemeStore } from "@/stores/theme-store";
 import { EmailIdentityBadge } from "./email-identity-badge";
 import { ExternalSenderChip } from "./external-sender-chip";
+import { ReceivedLabelChip } from "./received-label-chip";
 import { UnsubscribeBanner } from "./unsubscribe-banner";
 import { CalendarInvitationBanner } from "./calendar-invitation-banner";
 import { ReadReceiptBanner } from "./read-receipt-banner";
@@ -147,6 +153,11 @@ import { MailtoLink } from "@/components/ui/mailto-link";
 import { requestInternalMailto } from "@/lib/protocol-handlers/mailto";
 import { imageBlobUrl, inertBlobType, isFilePreviewable, isMimeTypeSafeForInlinePreview, toInertBlob } from "@/lib/file-preview";
 import { openPreviewInNewWindow } from "@/lib/standalone-display";
+import { downloadAllowed, saveBlobAs } from "@/lib/download-guard";
+import { useDevicePolicy } from "@/hooks/use-device-policy";
+import { Watermark, useWatermarkText } from "@/components/device/watermark";
+import { watermarkForPrint } from "@/lib/watermark";
+import { NO_SAVE_MEDIA_CSS, blockMediaSaving } from "@/lib/device-frame";
 import { FilePreviewModal } from "@/components/files/file-preview-modal";
 import { useWopiStatus, canWopiOpen } from "@/hooks/use-wopi-status";
 import { parseTnef, isTnefAttachment } from "@/lib/tnef";
@@ -167,12 +178,12 @@ import { usePluginSlotOffers } from "@/hooks/use-plugin-slot-offers";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { emailHooks, renderHooks } from "@/lib/plugin-hooks";
 import { emitThreadExpand } from "@/lib/plugin-thread-expand";
-import { resolveExternalLink } from "@/lib/plugin-hook-result";
+import { gateLinkClick, linkCheckActive, linkText, resolveExternalLink } from "@/lib/plugin-hook-result";
 import type { AttachmentInfo, AttachmentPreview } from "@/lib/plugin-types";
 import { useAttachmentDrag, isDragOutSupported, type AttachmentDragSource } from "@/hooks/use-attachment-drag";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { useArchiveActionEnabled } from "@/lib/archive-gate";
-import { useRemoteContentBlockedByOrg } from "@/hooks/use-third-party-mode";
+import { useRemoteContentBlockedByOrg, useRemoteContentHeldBack } from "@/hooks/use-third-party-mode";
 import { useSenderWarning } from "@/hooks/use-sender-warning";
 import { BrandVerifiedBadge } from "@/components/email/brand-verified-badge";
 
@@ -860,6 +871,7 @@ export function MvExpandedConversationCard({
             )}
             <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
             <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} className="self-center" />
+            <ReceivedLabelChip email={email} className="self-center" />
             <span className="ms-auto ps-2 text-xs text-muted-foreground whitespace-nowrap">
               {compact ? formatDate(emailDisplayDate(email)) : mvSenderDate(emailDisplayDate(email), timeFormat)}
             </span>
@@ -1306,6 +1318,7 @@ export function EmailViewer({
   const archiveActionEnabled = useArchiveActionEnabled();
   const tComposer = useTranslations('email_composer');
   const tNotifications = useTranslations('notifications');
+  const tImport = useTranslations('mail_import');
   const tCommon = useTranslations('common');
   const tFiles = useTranslations('files');
   const tDemoWelcome = useTranslations('demo_welcome');
@@ -1315,11 +1328,26 @@ export function EmailViewer({
   const externalContentPolicy = useSettingsStore((state) => state.externalContentPolicy);
   // No third-party traffic (#903), or the organisation locked "block": remote
   // content never loads, whatever trust says, and nothing offers to load it.
-  const remoteBlockedByOrg = useRemoteContentBlockedByOrg();
+  // The policy of the message's own account: in the unified inbox or a Pro
+  // tab that may be another signed-in account than the active one.
+  const remoteBlockedByOrg = useRemoteContentBlockedByOrg(email?.sourceClientAccountId);
+  // Also true while the policy is still loading: trust can't unblock yet.
+  const remoteHeldBack = useRemoteContentHeldBack(email?.sourceClientAccountId);
   const tThirdParty = useTranslations('third_party');
   const messageSpacing = useSettingsStore((state) => state.messageSpacing);
   const plainTextFont = useSettingsStore((state) => state.plainTextFont);
   const mailAttachmentAction = useSettingsStore((state) => state.mailAttachmentAction);
+  // The device policies of the message's own account (Organisation >
+  // Devices): no downloads keeps previews and drops every way to save a
+  // copy; no export and no print drop those actions; the watermark lies over
+  // the body and the printout.
+  const devices = useDevicePolicy(email ?? undefined);
+  const downloadsOff = devices.noDownloads;
+  const downloadsOffRef = useRef(downloadsOff);
+  downloadsOffRef.current = downloadsOff;
+  const guardEmailRef = useRef(email);
+  guardEmailRef.current = email;
+  const watermark = useWatermarkText(email ?? undefined);
   // Office documents the built-in preview can't render still open in the
   // configured WOPI editor (#1047) - only blob-backed ones, the editor
   // fetches the content server-side.
@@ -1543,13 +1571,7 @@ export function EmailViewer({
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
   const { startTour } = useTour();
   const [showFullHeaders, setShowFullHeaders] = useState(false);
-  const [showAllBesideAttachments, setShowAllBesideAttachments] = useState(false);
-  const [showAllMobileAttachments, setShowAllMobileAttachments] = useState(false);
-  const [showAllBelowHeaderAttachments, setShowAllBelowHeaderAttachments] = useState(false);
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
-  const [visibleBelowHeaderCount, setVisibleBelowHeaderCount] = useState<number | null>(null);
-  const belowHeaderRowRef = useRef<HTMLDivElement>(null);
-  const belowHeaderGhostRef = useRef<HTMLDivElement>(null);
   const [imageThumbUrls, setImageThumbUrls] = useState<Record<string, string>>({});
   const [allowExternalContent, setAllowExternalContent] = useState(false);
   const [hasBlockedContent, setHasBlockedContent] = useState(false);
@@ -1569,18 +1591,23 @@ export function EmailViewer({
   }, [inAppPreview]);
   const downloadInAppPreview = useCallback(() => {
     if (!inAppPreview) return;
-    const url = URL.createObjectURL(inAppPreview.blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = inAppPreview.downloadName;
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    saveBlobAs(inAppPreview.blob, inAppPreview.downloadName, { kind: 'attachment', subject: guardEmailRef.current });
   }, [inAppPreview]);
   const [quickReplyText, setQuickReplyText] = useState("");
+  const quickReplyRef = useRef<HTMLTextAreaElement>(null);
   const [isQuickReplyFocused, setIsQuickReplyFocused] = useState(false);
   const [isSendingQuickReply, setIsSendingQuickReply] = useState(false);
+  /** The recipients and identity the quick reply would be sent with. */
+  const quickMetadata = (): ComposerMetadata => {
+    if (!email) return { subject: '', to: [], attachments: [] };
+    const envelope = quickReplyEnvelope(email, identities);
+    return {
+      subject: email.subject ?? '', to: envelope.recipients, attachments: [],
+      identityId: envelope.sendingIdentity?.id,
+      accountKey: JSON.stringify([activeAccountId, email.sourceClientAccountId, email.sourceAccountId]),
+      pending: isSendingQuickReply,
+    };
+  };
   // The quick reply's Send button shows once it is focused or has text.
   useComposingSurface(quickReplyEnabled && (isQuickReplyFocused || quickReplyText.length > 0));
   // An automatic sign-out keeps typed quick-reply text as a draft; text on
@@ -2630,43 +2657,6 @@ export function EmailViewer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email?.attachments, email?.htmlBody, email?.textBody, email?.bodyValues, pluginRenderedAttachments, pluginRenderedHtml, tnefHtml, tnefText, tnefAttachments, embeddedEmailAttachments, calendarInvitationParsingEnabled, hideInlineImageAttachments]);
 
-  // Measure attachment chips in the below-header row to determine how many fit
-  // on a single line; the rest collapse into a "+N attachments" overflow pill.
-  useLayoutEffect(() => {
-    if (attachmentPosition !== 'below-header' || effectiveAttachments.length === 0) {
-      setVisibleBelowHeaderCount(null);
-      return;
-    }
-    const container = belowHeaderRowRef.current;
-    const ghost = belowHeaderGhostRef.current;
-    if (!container || !ghost) return;
-
-    const measure = () => {
-      const containerWidth = container.clientWidth;
-      const chips = Array.from(ghost.children) as HTMLElement[];
-      if (chips.length === 0) return;
-      const ghostLeft = ghost.getBoundingClientRect().left;
-      // Reserve space for the "+N attachments" overflow pill
-      const RESERVED = 140;
-      let count = chips.length;
-      for (let i = 0; i < chips.length; i++) {
-        const right = chips[i].getBoundingClientRect().right - ghostLeft;
-        const isLast = i === chips.length - 1;
-        const limit = isLast ? containerWidth : containerWidth - RESERVED;
-        if (right > limit) {
-          count = i;
-          break;
-        }
-      }
-      setVisibleBelowHeaderCount(count >= chips.length ? null : Math.max(1, count));
-    };
-
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(container);
-    return () => ro.disconnect();
-  }, [effectiveAttachments, attachmentPosition, imageThumbUrls]);
-
   // Whether external resources must be blocked for the message on screen.
   // Shared by every body path - the message's own HTML, TNEF, unwrapped
   // message/rfc822, and plugin-rendered (decrypted) bodies - so the user's
@@ -2675,7 +2665,7 @@ export function EmailViewer({
   //   'ask'   = block until the user allows this message or trusts the sender.
   const shouldBlockExternal = useMemo(() => {
     if (!email) return false;
-    if (remoteBlockedByOrg) return true;
+    if (remoteHeldBack) return true;
     const senderEmail = email.from?.[0]?.email?.toLowerCase();
     const senderIsTrusted = senderEmail
       ? isSenderTrusted(senderEmail) || (trustedSendersAddressBook && isTrustedAddressBookSender(senderEmail))
@@ -2688,12 +2678,17 @@ export function EmailViewer({
     // permission changes, so they're deliberately omitted from deps (matches
     // the srcDoc rebuild contract described on `emailContent`).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [email, externalContentPolicy, allowExternalContent, remoteBlockedByOrg]);
+  }, [email, externalContentPolicy, allowExternalContent, remoteHeldBack]);
+
+  // Reported as phishing ($phishing): a banner, its links turned off and
+  // no cards (a phishing mail's "booking" is the lure).
+  const phishingMarked = usePhishingMarked(email);
+  const tPhishing = useTranslations('phishing_report');
 
   // Booking, parcel and order cards of the message itself (never of an
   // unwrapped attached .eml); empty unless the sender is verified and the
   // admin gate is on.
-  const structuredCards = useStructuredMail(email, blobSource);
+  const structuredCards = useStructuredMail(phishingMarked ? null : email, blobSource);
 
   // Sanitize and prepare email HTML content
   const emailContent = useMemo(() => {
@@ -2850,14 +2845,14 @@ export function EmailViewer({
     return text?.trim() ? text : htmlToReadableText(decodedEmailContent.html);
   }, [decodedEmailContent, emailContent, email]);
   const effectiveEmailContent = useMemo(() => {
-    if (!plainView || !decodedEmailContent.isHtml) return decodedEmailContent;
-    return {
+    const shown = !plainView || !decodedEmailContent.isHtml ? decodedEmailContent : {
       html: collapsePlainTextQuotes(plainTextToSafeHtml(readableText()), { show: t('show_quoted_text'), hide: t('hide_quoted_text') }),
       isHtml: false,
       hasStyleTag: false,
       externalBlocked: false,
     };
-  }, [plainView, decodedEmailContent, readableText, t]);
+    return phishingMarked ? { ...shown, html: turnOffLinks(shown.html, { title: tPhishing('link_off'), note: tPhishing('link_off_note') }) } : shown;
+  }, [plainView, decodedEmailContent, readableText, t, phishingMarked, tPhishing]);
   // Reader view: the message full screen in the app's own look.
   const [readerViewOpen, setReaderViewOpen] = useState(false);
   // Reading mask: dims the body except a band that follows pointer and caret.
@@ -2865,8 +2860,9 @@ export function EmailViewer({
   const bodyWrapRef = useRef<HTMLDivElement>(null);
   const readerViewHtml = useMemo(() => {
     if (!readerViewOpen) return '';
-    return decodedEmailContent.isHtml ? plainTextToSafeHtml(readableText()) : decodedEmailContent.html;
-  }, [readerViewOpen, decodedEmailContent, readableText]);
+    const html = decodedEmailContent.isHtml ? plainTextToSafeHtml(readableText()) : decodedEmailContent.html;
+    return phishingMarked ? turnOffLinks(html, { title: tPhishing('link_off'), note: tPhishing('link_off_note') }) : html;
+  }, [readerViewOpen, decodedEmailContent, readableText, phishingMarked, tPhishing]);
 
   const resolveAttachmentName = useCallback(
     (attachment: EffectiveAttachment) => {
@@ -2882,8 +2878,9 @@ export function EmailViewer({
     // Blob URLs inherit our origin; script-bearing MIME types (text/html,
     // image/svg+xml, etc.) would execute as the webmail origin if opened
     // top-level. Force the download path for anything not on the inert allowlist.
+    // With downloads turned off, a click previews whatever can be previewed.
     const opensPreview = isPreviewable
-      && mailAttachmentAction === 'preview'
+      && (mailAttachmentAction === 'preview' || downloadsOff)
       && isMimeTypeSafeForInlinePreview(attachment.type);
 
     const downloadName = resolveAttachmentName(attachment);
@@ -2913,17 +2910,12 @@ export function EmailViewer({
 
       if (opensPreview) {
         const transformed = await emailHooks.onAttachmentPreview.transform({ previewUrl: objectUrl } as AttachmentPreview, info);
-        if (!openPreviewInNewWindow(transformed.previewUrl || objectUrl)) {
+        if (!openPreviewInNewWindow(transformed.previewUrl || objectUrl, email)) {
           setInAppPreview({ name: attachment.name || downloadName, downloadName, blob, contentType: blob.type });
         }
-      } else {
+      } else if (downloadAllowed('attachment', email)) {
         emailHooks.onAttachmentDownload.emit(info);
-        const anchor = document.createElement('a');
-        anchor.href = objectUrl;
-        anchor.download = downloadName;
-        document.body.appendChild(anchor);
-        anchor.click();
-        anchor.remove();
+        saveBlobAs(objectUrl, downloadName, { kind: 'attachment', subject: email });
       }
 
       setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
@@ -2945,23 +2937,19 @@ export function EmailViewer({
 
     if (opensPreview) {
       const transformed = await emailHooks.onAttachmentPreview.transform({ previewUrl: objectUrl } as AttachmentPreview, info);
-      if (!openPreviewInNewWindow(transformed.previewUrl || objectUrl)) {
+      if (!openPreviewInNewWindow(transformed.previewUrl || objectUrl, email)) {
         setInAppPreview({ name: attachment.name || downloadName, downloadName, blob, contentType: blob.type });
       }
-    } else {
+    } else if (downloadAllowed('attachment', email)) {
       emailHooks.onAttachmentDownload.emit(info);
-      const anchor = document.createElement('a');
-      anchor.href = objectUrl;
-      anchor.download = downloadName;
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
+      saveBlobAs(objectUrl, downloadName, { kind: 'attachment', subject: email });
     }
 
     setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
-  }, [mailAttachmentAction, onDownloadAttachment, email, resolveAttachmentName]);
+  }, [mailAttachmentAction, downloadsOff, onDownloadAttachment, email, resolveAttachmentName]);
 
   const handleEffectiveAttachmentDownload = useCallback((attachment: EffectiveAttachment) => {
+    if (!downloadAllowed('attachment', email)) return;
     const downloadName = resolveAttachmentName(attachment);
     const info: AttachmentInfo = {
       name: attachment.name || '',
@@ -2982,14 +2970,7 @@ export function EmailViewer({
         attachment.tnefData.byteOffset + attachment.tnefData.byteLength,
       ) as ArrayBuffer;
       const blob = new Blob([buffer], { type: attachment.type || 'application/octet-stream' });
-      const objectUrl = URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-      anchor.href = objectUrl;
-      anchor.download = downloadName;
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
+      saveBlobAs(blob, downloadName, { kind: 'attachment', subject: email });
       return;
     }
 
@@ -2998,15 +2979,8 @@ export function EmailViewer({
     if (!bytes || bytes.byteLength === 0) return;
     const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
     const blob = new Blob([buffer], { type: attachment.type || 'application/octet-stream' });
-    const objectUrl = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = objectUrl;
-    anchor.download = downloadName;
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
-  }, [onDownloadAttachment, email?.id, resolveAttachmentName]);
+    saveBlobAs(blob, downloadName, { kind: 'attachment', subject: email });
+  }, [onDownloadAttachment, email, resolveAttachmentName]);
 
   // Bundle every attachment of this email into a single .zip and download it.
   // Fetches blob-backed attachments through the JMAP client and reuses already
@@ -3014,6 +2988,7 @@ export function EmailViewer({
   // failures are skipped so a single bad blob doesn't sink the whole archive.
   const handleDownloadAllAttachments = useCallback(async () => {
     if (isDownloadingAll || effectiveAttachments.length === 0) return;
+    if (!downloadAllowed('attachment', email)) return;
     setIsDownloadingAll(true);
     try {
       const { default: JSZip } = await import('jszip');
@@ -3063,14 +3038,8 @@ export function EmailViewer({
       }
 
       const zipBlob = await zip.generateAsync({ type: 'blob', mimeType: 'application/zip' });
-      const objectUrl = URL.createObjectURL(zipBlob);
-      const anchor = document.createElement('a');
-      anchor.href = objectUrl;
-      anchor.download = attachmentsBundleFilename(email);
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+      // The policy may have changed while the attachments were fetched.
+      if (!saveBlobAs(zipBlob, attachmentsBundleFilename(email), { kind: 'attachment', subject: email })) return;
       const omitted = effectiveAttachments.length - added;
       if (omitted > 0) toast.warning(t('download_all_partial', { count: omitted }));
     } catch (error) {
@@ -3081,20 +3050,29 @@ export function EmailViewer({
     }
   }, [isDownloadingAll, effectiveAttachments, blobClient, blobAccountId, email, t, tFiles]);
 
-  // Shared "Download all" chip, shown only when bundling is worthwhile (2+).
-  const downloadAllButton = effectiveAttachments.length > 1 ? (
-    <button
-      onClick={(e) => { e.stopPropagation(); handleDownloadAllAttachments(); }}
-      disabled={isDownloadingAll}
-      title={t('download_all')}
-      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md border border-border/50 transition-colors flex-shrink-0 disabled:opacity-60 disabled:cursor-wait"
-    >
-      {isDownloadingAll
-        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-        : <FileArchive className="w-3.5 h-3.5" />}
-      {t('download_all')}
-    </button>
-  ) : null;
+  // What the attachment bar and the attachment cards share.
+  const attachmentCardsRef = useRef<HTMLDivElement>(null);
+  const readerAttachmentProps = {
+    attachments: effectiveAttachments,
+    thumbUrls: imageThumbUrls,
+    opensPreview: (attachment: EffectiveAttachment) => isAttachmentPreviewable(attachment) && (mailAttachmentAction === 'preview' || downloadsOff),
+    onOpen: handleEffectiveAttachmentOpen,
+    onDownload: handleEffectiveAttachmentDownload,
+    onDownloadAll: handleDownloadAllAttachments,
+    downloadingAll: isDownloadingAll,
+    downloadsOff,
+    // Save to Files would get around the policy: Files downloads are off too, but the copy would stay.
+    onSaveToFiles: canSaveToFiles && !downloadsOff ? setSaveToFilesTarget : undefined,
+    pluginMenu: (attachment: EffectiveAttachment) => <AttachmentPluginMenu emailId={email?.id} attachment={attachment} className="p-2 rounded-md" />,
+    renderItem: (attachment: EffectiveAttachment, tile: (drag: AttachmentDragProps) => React.ReactNode) => (
+      <DraggableAttachmentChip attachment={attachment} client={blobClient} accountId={blobAccountId} enabled={dragOutActive && !downloadsOff} downloadName={resolveAttachmentName(attachment)}>
+        {(dragProps) => (<>
+          {tile(dragProps)}
+          <AttachmentPluginFrames emailId={email?.id} attachment={attachment} />
+        </>)}
+      </DraggableAttachmentChip>
+    ),
+  };
 
   // Pre-fetch URLs for image attachments so their actual contents can be
   // rendered as thumbnails inside the chip. Skips images larger than 10 MB.
@@ -3295,8 +3273,8 @@ export function EmailViewer({
   pre { white-space: pre-wrap; word-wrap: break-word; }
   ${wordHtmlCSS}
   ${darkModeCSS}
-</style></head><body dir="auto">${resolveColorSchemeMedia(effectiveEmailContent.html, recolorDark)}<style>html,body{height:auto!important;min-height:0!important;max-height:none!important}body{overflow-y:hidden!important}</style>${reading.frameCss ? `<style>${reading.frameCss}</style>` : ''}</body></html>`;
-  }, [effectiveEmailContent.html, effectiveEmailContent.isHtml, effectiveEmailContent.hasStyleTag, effectiveEmailContent.externalBlocked, recolorDark, emailHasNativeDarkMode, messageSpacing, bodyLanguage, reading.frameKey, reading.frameCss, appFontSources]);
+</style>${devices.noPrint ? '<style>@media print{html,body{display:none!important}}</style>' : ''}${devices.noDownloads ? `<style>${NO_SAVE_MEDIA_CSS}</style>` : ''}</head><body dir="auto">${resolveColorSchemeMedia(effectiveEmailContent.html, recolorDark)}<style>html,body{height:auto!important;min-height:0!important;max-height:none!important}body{overflow-y:hidden!important}</style>${reading.frameCss ? `<style>${reading.frameCss}</style>` : ''}</body></html>`;
+  }, [effectiveEmailContent.html, effectiveEmailContent.isHtml, effectiveEmailContent.hasStyleTag, effectiveEmailContent.externalBlocked, recolorDark, emailHasNativeDarkMode, messageSpacing, bodyLanguage, reading.frameKey, reading.frameCss, appFontSources, devices.noPrint, devices.noDownloads]);
 
   // Unblocking external content is handled by rebuilding the iframe srcDoc:
   // toggling allowExternalContent (both "Load images" and "Trust sender" set
@@ -3326,6 +3304,8 @@ export function EmailViewer({
   const [iframeReadyFor, setIframeReadyFor] = useState<string | null>(null);
   const latestSrcDocRef = useRef<string | null>(null);
   const iframeReady = iframeReadyFor !== null && iframeReadyFor === emailIframeSrcDoc;
+  const showQuickReply = !!email && quickReplyEnabled && !mvReplyRow && !isDraft && !isScheduled && !isBodyLoading
+    && (!effectiveEmailContent.isHtml || iframeReady);
   // The plain-text body, where reader-above-quote mounts between text and quote.
   const [plainBodyEl, setPlainBodyEl] = useState<HTMLDivElement | null>(null);
   // Read aloud (browser speech): the body as shown, HTML frame or plain text.
@@ -3401,18 +3381,13 @@ export function EmailViewer({
       && mailAttachmentActionRef.current === 'preview'
       && isFilePreviewable(part.name, part.type)
       && isMimeTypeSafeForInlinePreview(part.type);
-    if (opensPreview) {
-      if (!openPreviewInNewWindow(href)) {
+    if (opensPreview || (part && downloadsOffRef.current && isFilePreviewable(part.name, part.type) && isMimeTypeSafeForInlinePreview(part.type))) {
+      if (!openPreviewInNewWindow(href, guardEmailRef.current)) {
         setInAppPreview({ name: part.name, downloadName: part.name, blob: part.blob, contentType: part.type || part.blob.type });
       }
       return;
     }
-    const anchor = document.createElement('a');
-    anchor.href = href;
-    anchor.download = part?.name || 'download';
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
+    saveBlobAs(href, part?.name || 'download', { kind: 'attachment', subject: guardEmailRef.current });
   }, []);
 
   const handleIframeLoad = useCallback(() => {
@@ -3543,7 +3518,10 @@ export function EmailViewer({
         // Plugin intercept: let plugins cancel or rewrite external links inside
         // the email body before navigation happens. Bound on the iframe doc so
         // it survives later DOM mutations.
-        const onLinkClick = async (ev: Event) => {
+        const onLinkClick = async (ev: MouseEvent) => {
+          // A middle-click opens a link too, through the link check while one
+          // listens; other buttons are left alone.
+          if (ev.type === 'auxclick' && (ev.button !== 1 || !linkCheckActive())) return;
           const targetEl = (ev.target as Element | null)?.closest?.('a[href], area[href]') as HTMLAnchorElement | HTMLAreaElement | null;
           if (!targetEl) return;
           const href = targetEl.getAttribute('href') || '';
@@ -3589,6 +3567,7 @@ export function EmailViewer({
             href,
             target: targetEl.getAttribute('target') ?? undefined,
             emailId: email?.id,
+            text: linkText(targetEl),
           };
           // A plugin returns false to stop the link or { href } to send it
           // somewhere else (a web address only).
@@ -3597,9 +3576,12 @@ export function EmailViewer({
           window.open(target, '_blank', 'noopener,noreferrer');
         };
         doc.addEventListener('click', onLinkClick, true);
+        doc.addEventListener('auxclick', onLinkClick, true);
         // A press in the body closes a mention's card. The page never sees
         // it: the focus is already inside the iframe, so there is no blur.
         doc.addEventListener('mousedown', () => setBodyMention(null), true);
+        // "No downloads": the message's own pictures can't be saved or dragged out either.
+        blockMediaSaving(doc, () => downloadsOffRef.current);
         // Selected text, for the side panel, the onTextSelectionChange hook
         // and the right-click menu plugins may add entries to.
         watchBodySelection(doc, iframe, {
@@ -3637,63 +3619,25 @@ export function EmailViewer({
   // Export email as .eml file; the row's menu exports the same way.
   const exportEmail = useEmailExport();
   const handleExportEmail = async () => {
-    if (!email) return;
+    if (!email || devices.noExport) return;
     // With the Archive action off a stored 'archive' keeps the message.
     await exportEmail(email, { onArchive, onDelete, archiveEnabled: archiveActionEnabled }, blobSource ?? { client, accountId: undefined });
   };
 
-  // Import email from .eml file or .zip archive containing .eml files
+  // Import mail into the open folder: the import dialog (lib/mail-import) does the rest.
   const handleImportEmail = () => {
-    if (!client) return;
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = EML_IMPORT_ACCEPT;
-    input.multiple = true;
-    input.onchange = async (e) => {
-      const files = Array.from((e.target as HTMLInputElement).files ?? []);
-      if (files.length === 0) return;
-      const { selectedMailbox, mailboxes, fetchEmails } = useEmailStore.getState();
-      const mailbox = mailboxes.find(mb => mb.id === selectedMailbox);
-      const mailboxId = mailbox?.originalId || selectedMailbox;
-      if (!mailboxId) {
-        toast.error(tNotifications('import_email_error'));
-        return;
-      }
-
-      let emails;
-      try {
-        emails = await expandImportableEmails(files);
-      } catch {
-        toast.error(tNotifications('import_email_error'));
-        return;
-      }
-
-      let imported = 0;
-      let failed = 0;
-      for (const { blob, receivedAt } of emails) {
-        try {
-          await client.importRawEmail(blob, { [mailboxId]: true }, { '$seen': true }, undefined, receivedAt);
-          imported++;
-        } catch {
-          failed++;
-        }
-      }
-
-      if (imported > 0) {
-        toast.success(tNotifications('import_email_success'));
-        await fetchEmails(client);
-      }
-      if (failed > 0 || emails.length === 0) {
-        toast.error(tNotifications('import_email_error'));
-      }
-    };
-    input.click();
+    openMailImport({ mailboxId: useEmailStore.getState().selectedMailbox || undefined });
   };
 
   // Print only the email content in a new window. A print asked for from
   // the list's row menu brings its own window, opened in that click.
   const handlePrint = (openedWindow?: Window) => {
     if (!email) return;
+    if (devices.noPrint) {
+      openedWindow?.close();
+      return;
+    }
+    const printWatermark = watermark ? watermarkForPrint(watermark) : null;
     const printSender = email.from?.[0];
     const date = formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
     const formatRecipient = (r: { name?: string | null; email: string }) =>
@@ -3707,9 +3651,12 @@ export function EmailViewer({
     // The body was sanitized with EMAIL_IFRAME_SANITIZE_CONFIG which permits
     // <style>. The print window has no iframe isolation, so re-sanitize with
     // the stricter config that forbids <style> before injecting into the DOM.
-    const printableBody = effectiveEmailContent.isHtml
-      ? sanitizeEmailHtml(effectiveEmailContent.html)
-      : effectiveEmailContent.html;
+    // A plain-text body is escaped text with its own newlines: it prints its
+    // trailing quote opened instead of behind the collapsed toggle.
+    const plainBody = !effectiveEmailContent.isHtml;
+    const printableBody = plainBody
+      ? effectiveEmailContent.html.replace(/<details>/g, '<details open>')
+      : sanitizeEmailHtml(effectiveEmailContent.html);
 
     const printWindow = openedWindow ?? window.open('', '_blank');
     if (!printWindow) return;
@@ -3734,6 +3681,9 @@ export function EmailViewer({
   .meta { font-size: 13px; color: #555; line-height: 1.6; }
   .meta strong { color: #000; }
   .body { font-size: 14px; line-height: 1.6; }
+  /* Plain text keeps its line breaks, as in the reader. */
+  .body.plain { white-space: pre-wrap; word-break: break-word; }
+  .body.plain summary { display: none !important; }
   /* Only force the cap on images that set no width of their own: an
      !important 100% also overrides a sender's inline max-width, and an
      image sized by max-width + max-height + width:100% then grows to
@@ -3744,7 +3694,8 @@ export function EmailViewer({
   .body img[style*="max-width"] { max-width: 100%; }
   .body img { height: auto !important; }
   @media print { body { margin: 20px; } }
-</style></head><body dir="auto">
+</style>${printWatermark ? printWatermark.style : ''}</head><body dir="auto">
+${printWatermark ? printWatermark.html : ''}
 <div class="header">
   <div class="subject">${escapeHtml(subjectText)}</div>
   <div class="meta">
@@ -3754,7 +3705,7 @@ export function EmailViewer({
     ${date ? `<div><strong>${escapeHtml(t('date'))}:</strong> ${escapeHtml(date)}</div>` : ''}
   </div>
 </div>
-<div class="body">${printableBody}</div>
+<div class="body${plainBody ? ' plain' : ''}">${printableBody}</div>
 </body></html>`);
     printWindow.document.close();
     printWindow.focus();
@@ -3778,7 +3729,8 @@ export function EmailViewer({
     return extractListHeaders(email.headers);
   }, [email?.headers]);
 
-  const shouldShowUnsubBanner =
+  // Not for a reported message: its unsubscribe link is the phisher's.
+  const shouldShowUnsubBanner = !phishingMarked &&
     listHeaders?.listUnsubscribe?.preferred &&
     !dismissedUnsubBanners.has(email?.messageId || '');
 
@@ -3984,12 +3936,12 @@ export function EmailViewer({
     )}
   </>
   );
-  const shell = (content: React.ReactNode) => (
+  const shell = (content: React.ReactNode, top: React.ReactNode = null) => (
     <div
       ref={setViewerRootEl}
       className={cn("flex-1 flex flex-col h-full bg-background overflow-hidden relative", className)}
     >
-      {null}
+      {top}
       <div className="flex-1 min-h-0 flex flex-row overflow-hidden relative">
         {content}
         {sidePanel}
@@ -3998,54 +3950,14 @@ export function EmailViewer({
     </div>
   );
 
-  // Show loading skeleton while email is being fetched
+  // Show loading skeleton while email is being fetched: the page skeleton's
+  // message pane, so a linked message keeps the shape it had before the app
+  // started.
+  // Its toolbar sits where the loaded reader puts its own: above the message
+  // row when lifted, so the row doesn't move when the message arrives.
   if (isLoading && !email) {
-    return shell(
-      <div className="flex-1 min-w-0 flex flex-col h-full bg-background overflow-hidden animate-in fade-in duration-200">
-        {/* Loading Header Skeleton - gentler animation */}
-        <div className="bg-background border-b border-border">
-          <div className="px-4 lg:px-6 py-3 lg:py-4">
-            <div className="flex items-start justify-between gap-2 lg:gap-4">
-              <div className="flex-1 min-w-0 space-y-2 lg:space-y-3">
-                <div className="h-6 lg:h-8 bg-muted/60 rounded-md w-3/4"></div>
-                <div className="flex items-center gap-2 lg:gap-3">
-                  <div className="h-3 lg:h-4 bg-muted/60 rounded w-24 lg:w-32"></div>
-                  <div className="h-3 lg:h-4 bg-muted/60 rounded w-16 lg:w-24"></div>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 lg:gap-2">
-                <div className="h-8 w-8 lg:w-20 bg-muted/60 rounded"></div>
-                <div className="h-8 w-8 bg-muted/60 rounded hidden lg:block"></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Loading Sender Info Skeleton */}
-          <div className="px-4 lg:px-6 pb-3 lg:pb-4">
-            <div className="flex items-start gap-3 lg:gap-4">
-              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-muted/60 rounded-full"></div>
-              <div className="flex-1 space-y-2">
-                <div className="h-4 bg-muted/60 rounded w-48"></div>
-                <div className="h-3 bg-muted/60 rounded w-64"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Loading Content Skeleton */}
-        <div className="flex-1 overflow-auto bg-muted/20">
-          <div className="px-6 pt-4 pb-6">
-            <div className="space-y-3">
-              <div className="h-4 bg-muted/60 rounded w-full"></div>
-              <div className="h-4 bg-muted/60 rounded w-5/6"></div>
-              <div className="h-4 bg-muted/60 rounded w-4/6"></div>
-              <div className="h-4 bg-muted/60 rounded w-full"></div>
-              <div className="h-4 bg-muted/60 rounded w-3/4"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    const lifted = toolbarPosition === 'top' && liftToolbar;
+    return shell(<MailMessageSkeleton toolbar={!lifted} />, lifted ? <MailMessageToolbarSkeleton /> : null);
   }
 
   if (!email) {
@@ -4167,7 +4079,7 @@ export function EmailViewer({
     ...(effectiveEmailContent.isHtml
       ? [{ kind: 'item' as const, key: 'extra:view_mode' as const, icon: isDark ? Sun : Moon, label: isDark ? t('view_in_light_mode') : t('view_in_dark_mode'), run: toggleViewMode }]
       : []),
-    { kind: 'item', key: 'extra:import', icon: Upload, label: t('import_email'), run: handleImportEmail },
+    { kind: 'item', key: 'extra:import', icon: Upload, label: tImport('menu_import'), run: handleImportEmail },
     ...(onShowShortcuts && !isMobile
       ? [{ kind: 'item' as const, key: 'extra:shortcuts' as const, icon: Keyboard, label: t('keyboard_shortcuts'), run: onShowShortcuts }]
       : []),
@@ -4190,9 +4102,10 @@ export function EmailViewer({
     onRemoveFromFolder,
     onMarkAsSpam,
     onUndoSpam,
-    onExport: () => void handleExportEmail(),
-    onPrint: () => handlePrint(),
-    onViewSource: () => setShowSourceModal(true),
+    // Hidden by the device policies of the message's account.
+    onExport: devices.noExport ? undefined : () => void handleExportEmail(),
+    onPrint: devices.noPrint ? undefined : () => handlePrint(),
+    onViewSource: devices.noExport ? undefined : () => setShowSourceModal(true),
     omit: readerMenuOmit,
     extras: readerExtras.filter((entry) => entry.kind !== 'item' || !readerMenuOmit.has(entry.key)),
   };
@@ -4484,7 +4397,7 @@ export function EmailViewer({
 
         {/* Print - hidden on mobile, overflows to More menu. Mountain View
             has it on the subject line. */}
-        {!mvViewer && (
+        {!mvViewer && !devices.noPrint && (
         <Button
           variant="ghost"
           size="sm"
@@ -4818,6 +4731,7 @@ export function EmailViewer({
             {/* Mountain View: print and full screen at the end of the subject line. */}
             {mvViewer && (
               <div className="hidden lg:flex items-center flex-shrink-0 -me-2" data-mv-subject-actions="">
+                {!devices.noPrint && (
                 <button
                   type="button"
                   onClick={() => handlePrint()}
@@ -4827,6 +4741,7 @@ export function EmailViewer({
                 >
                   <Printer className="w-5 h-5" />
                 </button>
+                )}
                 {onToggleFullscreen && (
                   <button
                     type="button"
@@ -4950,6 +4865,7 @@ export function EmailViewer({
                     )}
                     <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
                     <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} />
+                    <ReceivedLabelChip email={email} />
                     <EmailIdentityBadge email={email} identities={identities} />
                     {shouldShowUnsubBanner && listHeaders?.listUnsubscribe && (
                       <UnsubscribeBanner
@@ -5072,153 +4988,19 @@ export function EmailViewer({
 
 
               </div>
-              {/* Attachments on the right (beside-sender mode) */}
-              {attachmentPosition === 'beside-sender' && effectiveAttachments.length > 0 && (
-                <div className="relative flex flex-col items-end justify-start gap-1 flex-shrink-0 max-w-[50%]">
-                  {effectiveAttachments.slice(0, 2).map((attachment) => {
-                    const { icon: FileIcon, className: fileIconClass } = attachmentIcon(attachment.type, attachment.name);
-                    const isPreviewable = isAttachmentPreviewable(attachment);
-                    const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
-                    const thumbUrl = imageThumbUrls[attachment.id];
-                    return (
-                      <DraggableAttachmentChip key={attachment.id} attachment={attachment} client={blobClient} accountId={blobAccountId} enabled={dragOutActive} downloadName={resolveAttachmentName(attachment)}>
-                        {(dragProps) => (<>
-                      <div
-                        className={cn(
-                          "bg-muted/60 hover:bg-muted rounded-md border border-border/50 group relative cursor-pointer overflow-hidden",
-                          thumbUrl
-                            ? "inline-flex flex-col w-40"
-                            : "inline-flex items-center gap-1.5 px-2 py-1",
-                        )}
-                        title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
-                        onClick={() => handleEffectiveAttachmentOpen(attachment)}
-                        data-testid="attachment"
-                        data-attachment-name={attachment.name}
-                        draggable={dragProps.draggable}
-                        onPointerEnter={dragProps.onPointerEnter}
-                        onDragStart={dragProps.onDragStart}
-                        onDragEnd={dragProps.onDragEnd}
-                      >
-                        {thumbUrl && (
-                          <div className="w-full h-16 bg-background/40 flex items-center justify-center overflow-hidden">
-                            <img src={thumbUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
-                          </div>
-                        )}
-                        <div className={cn(
-                          "flex items-center gap-1.5",
-                          thumbUrl && "px-2 py-1 border-t border-border/50 w-full",
-                        )}>
-                          <FileIcon className={cn("w-3.5 h-3.5 flex-shrink-0", fileIconClass)} />
-                          <span className={cn(
-                            "text-xs text-foreground truncate",
-                            thumbUrl ? "flex-1 min-w-0" : "max-w-[140px]",
-                          )}>
-                            {getAttachmentDisplayName(attachment.name, attachment.type)}
-                          </span>
-                          <span className="text-[0.625rem] text-muted-foreground flex-shrink-0">
-                            <bdi>{formatFileSize(attachment.size)}</bdi>
-                          </span>
-                        </div>
-                        <div className={cn(
-                          "absolute bg-background/95 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto transition-opacity flex items-center justify-center gap-1 px-1.5 rounded-md",
-                          thumbUrl ? "top-1 end-1" : "inset-y-0 end-0 rounded-s-none rounded-e-md",
-                        )}>
-                          <IconButton
-                            label={t('download')}
-                            onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); }}
-                          >
-                            <Download />
-                          </IconButton>
-                          {opensPreview && (
-                            <IconButton
-                              label={tFiles('preview')}
-                              onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); }}
-                            >
-                              <Eye />
-                            </IconButton>
-                          )}
-                          {canSaveToFiles && attachment.blobId && (
-                            <IconButton label={t("save_to_files.title")} onClick={(e) => { e.stopPropagation(); setSaveToFilesTarget(attachment); }}>
-                              <FolderInput className="w-4 h-4" />
-                            </IconButton>
-                          )}
-                          <AttachmentPluginMenu emailId={email?.id} attachment={attachment} />
-                        </div>
-                      </div>
-                        <AttachmentPluginFrames emailId={email?.id} attachment={attachment} />
-                        </>)}
-                      </DraggableAttachmentChip>
-                    );
-                  })}
-                  {effectiveAttachments.length > 2 && (
-                    <button
-                      onClick={() => setShowAllBesideAttachments(!showAllBesideAttachments)}
-                      className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-0.5"
-                    >
-                      +{effectiveAttachments.length - 2} {t('more')}
-                    </button>
-                  )}
-                  {downloadAllButton}
-                  {/* Floating popup for remaining attachments */}
-                  {showAllBesideAttachments && effectiveAttachments.length > 2 && (
-                    <>
-                      <div className="fixed inset-0 z-40" onClick={() => setShowAllBesideAttachments(false)} />
-                      <div className="absolute top-full end-0 mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-2 flex flex-col gap-1 min-w-[220px]">
-                        {effectiveAttachments.slice(2).map((attachment) => {
-                          const { icon: FileIcon, className: fileIconClass } = attachmentIcon(attachment.type, attachment.name);
-                          const isPreviewable = isAttachmentPreviewable(attachment);
-                          const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
-                          return (
-                            <DraggableAttachmentChip key={attachment.id} attachment={attachment} client={blobClient} accountId={blobAccountId} enabled={dragOutActive} downloadName={resolveAttachmentName(attachment)}>
-                              {(dragProps) => (<>
-                            <div
-                              className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted/60 group relative cursor-pointer w-full"
-                              title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
-                              onClick={() => { handleEffectiveAttachmentOpen(attachment); setShowAllBesideAttachments(false); }}
-                              draggable={dragProps.draggable}
-                              onPointerEnter={dragProps.onPointerEnter}
-                              onDragStart={dragProps.onDragStart}
-                              onDragEnd={dragProps.onDragEnd}
-                            >
-                              <FileIcon className={cn("w-3.5 h-3.5 flex-shrink-0", fileIconClass)} />
-                              <span className="text-xs text-foreground truncate max-w-[180px]">
-                                {getAttachmentDisplayName(attachment.name, attachment.type)}
-                              </span>
-                              <span className="text-[0.625rem] text-muted-foreground ms-auto flex-shrink-0">
-                                <bdi>{formatFileSize(attachment.size)}</bdi>
-                              </span>
-                              <div className="absolute inset-y-0 end-0 rounded-e-md bg-background/95 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto transition-opacity flex items-center justify-center gap-1 px-1.5">
-                                <IconButton
-                                  label={t('download')}
-                                  onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); setShowAllBesideAttachments(false); }}
-                                >
-                                  <Download />
-                                </IconButton>
-                                {opensPreview && (
-                                  <IconButton
-                                    label={tFiles('preview')}
-                                    onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); setShowAllBesideAttachments(false); }}
-                                  >
-                                    <Eye />
-                                  </IconButton>
-                                )}
-                                {canSaveToFiles && attachment.blobId && (
-                                  <IconButton label={t("save_to_files.title")} onClick={(e) => { e.stopPropagation(); setSaveToFilesTarget(attachment); }}>
-                                    <FolderInput className="w-4 h-4" />
-                                  </IconButton>
-                                )}
-                                <AttachmentPluginMenu emailId={email?.id} attachment={attachment} />
-                              </div>
-                            </div>
-                              <AttachmentPluginFrames emailId={email?.id} attachment={attachment} />
-                              </>)}
-                            </DraggableAttachmentChip>
-                          );
-                        })}
-                      </div>
-                    </>
-                  )}
-                </div>
+              {/* Cards mode: a paperclip with the count jumps down to the cards. */}
+              {attachmentPosition === 'below-message' && effectiveAttachments.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => attachmentCardsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                  title={t('attachments')}
+                  aria-label={t('attachments_count', { count: effectiveAttachments.length })}
+                  className="self-start flex-shrink-0 inline-flex items-center gap-1.5 h-8 px-2 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                  data-testid="attachments-jump"
+                >
+                  <Paperclip className="w-4 h-4" />
+                  <bdi>{effectiveAttachments.length}</bdi>
+                </button>
               )}
             </div>
           </div>
@@ -5265,6 +5047,7 @@ export function EmailViewer({
                 )}
                 <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
                 <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} />
+                <ReceivedLabelChip email={email} />
                 <EmailIdentityBadge email={email} identities={identities} />
                 {shouldShowUnsubBanner && listHeaders?.listUnsubscribe && (
                   <UnsubscribeBanner
@@ -5485,6 +5268,7 @@ export function EmailViewer({
                         />
                         <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
                         <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} />
+                        <ReceivedLabelChip email={email} />
                         {senderVerification && (
                           <span
                             className={cn(
@@ -5774,6 +5558,8 @@ export function EmailViewer({
           </div>
         )}
 
+        {phishingMarked && <PhishingMarkBanner />}
+
         {/* Draft Banner: a scheduled message has its own. */}
         {isDraft && !isScheduled && (
           <div className="border-b border-border bg-warning/10">
@@ -5819,7 +5605,9 @@ export function EmailViewer({
                 )}
 
                 {/* External Content Controls */}
-                {!plainView && hasBlockedContent && (remoteBlockedByOrg || (!allowExternalContent && externalContentPolicy !== 'allow')) && (
+                {/* shouldBlockExternal: gone once trust applies (e.g. the
+                    policy finished loading after the first paint). */}
+                {!plainView && hasBlockedContent && shouldBlockExternal && (remoteBlockedByOrg || (!allowExternalContent && externalContentPolicy !== 'allow')) && (
                   <div className="flex items-start gap-3 py-1" data-testid="external-content-notice">
                     <div className="w-10 h-10 rounded-full bg-info/15 text-info flex items-center justify-center flex-shrink-0 shadow-sm">
                       <Image className="w-5 h-5" />
@@ -5910,363 +5698,13 @@ export function EmailViewer({
 
         <PluginSlot name="email-banner" extraProps={pluginEmailProps} />
 
-      {/* === ATTACHMENTS below header (below-header mode, desktop only) === */}
-      {attachmentPosition === 'below-header' && effectiveAttachments.length > 0 && (
-        <div className="hidden lg:block bg-background border-b border-border px-4 lg:px-6 py-2">
-          <div className="relative flex items-center gap-2">
-          <div ref={belowHeaderRowRef} className="relative flex items-center gap-2 overflow-hidden flex-1 min-w-0">
-            {/* Hidden ghost row used purely for measuring chip widths */}
-            <div
-              ref={belowHeaderGhostRef}
-              aria-hidden="true"
-              className="absolute inset-0 flex items-center gap-2 invisible pointer-events-none whitespace-nowrap"
-            >
-              {effectiveAttachments.map((attachment) => {
-                const { icon: FileIcon } = attachmentIcon(attachment.type, attachment.name);
-                const hasThumb = !!imageThumbUrls[attachment.id];
-                if (hasThumb) {
-                  // Image chip is a fixed-width vertical card; only its width
-                  // matters for the row-fit measurement.
-                  return (
-                    <div
-                      key={`ghost-${attachment.id}`}
-                      className="inline-block w-44 rounded-md border border-border/50 flex-shrink-0"
-                      style={{ height: 1 }}
-                    />
-                  );
-                }
-                return (
-                  <div
-                    key={`ghost-${attachment.id}`}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-border/50 flex-shrink-0"
-                  >
-                    <FileIcon className="w-4 h-4" />
-                    <span className="text-sm truncate max-w-[200px]">
-                      {getAttachmentDisplayName(attachment.name, attachment.type)}
-                    </span>
-                    <span className="text-xs">
-                      <bdi>{formatFileSize(attachment.size)}</bdi>
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-            {effectiveAttachments
-              .slice(0, visibleBelowHeaderCount ?? effectiveAttachments.length)
-              .map((attachment) => {
-              const { icon: FileIcon, className: fileIconClass } = attachmentIcon(attachment.type, attachment.name);
-              const isPreviewable = isAttachmentPreviewable(attachment);
-              const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
-              const thumbUrl = imageThumbUrls[attachment.id];
-              return (
-                <DraggableAttachmentChip key={attachment.id} attachment={attachment} client={blobClient} accountId={blobAccountId} enabled={dragOutActive} downloadName={resolveAttachmentName(attachment)}>
-                  {(dragProps) => (<>
-                <div
-                  className={cn(
-                    "bg-muted/60 hover:bg-muted rounded-md border border-border/50 group relative cursor-pointer flex-shrink-0 overflow-hidden",
-                    thumbUrl
-                      ? "inline-flex flex-col w-44"
-                      : "inline-flex items-center gap-1.5 px-2.5 py-1.5",
-                  )}
-                  title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
-                  onClick={() => handleEffectiveAttachmentOpen(attachment)}
-                  data-testid="attachment"
-                  data-attachment-name={attachment.name}
-                  draggable={dragProps.draggable}
-                  onPointerEnter={dragProps.onPointerEnter}
-                  onDragStart={dragProps.onDragStart}
-                  onDragEnd={dragProps.onDragEnd}
-                >
-                  {thumbUrl && (
-                    <div className="w-full h-20 bg-background/40 flex items-center justify-center overflow-hidden">
-                      <img
-                        src={thumbUrl}
-                        alt=""
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    </div>
-                  )}
-                  <div className={cn(
-                    "flex items-center gap-1.5",
-                    thumbUrl && "px-2 py-1.5 border-t border-border/50 w-full",
-                  )}>
-                    <FileIcon className={cn("w-4 h-4 flex-shrink-0", fileIconClass)} />
-                    <span className={cn(
-                      "text-sm text-foreground truncate",
-                      thumbUrl ? "flex-1 min-w-0" : "max-w-[200px]",
-                    )}>
-                      {getAttachmentDisplayName(attachment.name, attachment.type)}
-                    </span>
-                    <span className="text-xs text-muted-foreground flex-shrink-0">
-                      <bdi>{formatFileSize(attachment.size)}</bdi>
-                    </span>
-                  </div>
-                  <div className={cn(
-                    "absolute rounded-md bg-background/95 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto transition-opacity flex items-center justify-center gap-1 px-1.5",
-                    thumbUrl ? "top-1 end-1" : "inset-y-0 end-0 rounded-e-md rounded-s-none",
-                  )}>
-                    <button
-                      className="p-1 hover:bg-accent rounded transition-colors"
-                      title={t('download')}
-                      aria-label={t('download_named', { name: getAttachmentDisplayName(attachment.name, attachment.type) })}
-                      onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); }}
-                    >
-                      <Download className="w-4 h-4 text-foreground" />
-                    </button>
-                    {opensPreview && (
-                      <button
-                        className="p-1 hover:bg-accent rounded transition-colors"
-                        title={tFiles('preview')}
-                        aria-label={t('preview_named', { name: getAttachmentDisplayName(attachment.name, attachment.type) })}
-                        onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); }}
-                      >
-                        <Eye className="w-4 h-4 text-foreground" />
-                      </button>
-                    )}
-                    {canSaveToFiles && attachment.blobId && (
-                      <IconButton label={t("save_to_files.title")} onClick={(e) => { e.stopPropagation(); setSaveToFilesTarget(attachment); }}>
-                        <FolderInput className="w-4 h-4" />
-                      </IconButton>
-                    )}
-                    <AttachmentPluginMenu emailId={email?.id} attachment={attachment} />
-                  </div>
-                </div>
-                  <AttachmentPluginFrames emailId={email?.id} attachment={attachment} />
-                  </>)}
-                </DraggableAttachmentChip>
-              );
-            })}
-            {visibleBelowHeaderCount !== null && effectiveAttachments.length > visibleBelowHeaderCount && (
-              <button
-                onClick={() => setShowAllBelowHeaderAttachments(!showAllBelowHeaderAttachments)}
-                className="inline-flex items-center px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md border border-border/50 transition-colors flex-shrink-0"
-              >
-                +{effectiveAttachments.length - visibleBelowHeaderCount} {t('attachments').toLowerCase()}
-              </button>
-            )}
-          </div>
-            {downloadAllButton}
-            {showAllBelowHeaderAttachments && visibleBelowHeaderCount !== null && effectiveAttachments.length > visibleBelowHeaderCount && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowAllBelowHeaderAttachments(false)} />
-                <div className="absolute top-full end-0 mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-2 flex flex-col gap-1 min-w-[260px] max-h-[60vh] overflow-y-auto">
-                  {effectiveAttachments.slice(visibleBelowHeaderCount).map((attachment) => {
-                    const { icon: FileIcon, className: fileIconClass } = attachmentIcon(attachment.type, attachment.name);
-                    const isPreviewable = isAttachmentPreviewable(attachment);
-                    const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
-                    return (
-                      <DraggableAttachmentChip key={attachment.id} attachment={attachment} client={blobClient} accountId={blobAccountId} enabled={dragOutActive} downloadName={resolveAttachmentName(attachment)}>
-                        {(dragProps) => (<>
-                      <div
-                        className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted/60 group relative cursor-pointer w-full"
-                        title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
-                        onClick={() => { handleEffectiveAttachmentOpen(attachment); setShowAllBelowHeaderAttachments(false); }}
-                        draggable={dragProps.draggable}
-                        onPointerEnter={dragProps.onPointerEnter}
-                        onDragStart={dragProps.onDragStart}
-                        onDragEnd={dragProps.onDragEnd}
-                      >
-                        <FileIcon className={cn("w-4 h-4 flex-shrink-0", fileIconClass)} />
-                        <span className="text-sm text-foreground truncate max-w-[220px]">
-                          {getAttachmentDisplayName(attachment.name, attachment.type)}
-                        </span>
-                        <span className="text-xs text-muted-foreground ms-auto flex-shrink-0">
-                          <bdi>{formatFileSize(attachment.size)}</bdi>
-                        </span>
-                        <div className="absolute inset-y-0 end-0 rounded-e-md bg-background/95 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto transition-opacity flex items-center justify-center gap-1 px-1.5">
-                          <button
-                            className="p-1 hover:bg-accent rounded transition-colors"
-                            title={t('download')}
-                            aria-label={t('download_named', { name: getAttachmentDisplayName(attachment.name, attachment.type) })}
-                            onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); setShowAllBelowHeaderAttachments(false); }}
-                          >
-                            <Download className="w-4 h-4 text-foreground" />
-                          </button>
-                          {opensPreview && (
-                            <button
-                              className="p-1 hover:bg-accent rounded transition-colors"
-                              title={tFiles('preview')}
-                              aria-label={t('preview_named', { name: getAttachmentDisplayName(attachment.name, attachment.type) })}
-                              onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); setShowAllBelowHeaderAttachments(false); }}
-                            >
-                              <Eye className="w-4 h-4 text-foreground" />
-                            </button>
-                          )}
-                          {canSaveToFiles && attachment.blobId && (
-                            <IconButton label={t("save_to_files.title")} onClick={(e) => { e.stopPropagation(); setSaveToFilesTarget(attachment); }}>
-                              <FolderInput className="w-4 h-4" />
-                            </IconButton>
-                          )}
-                          <AttachmentPluginMenu emailId={email?.id} attachment={attachment} />
-                        </div>
-                      </div>
-                        <AttachmentPluginFrames emailId={email?.id} attachment={attachment} />
-                        </>)}
-                      </DraggableAttachmentChip>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-          </div>
+      {/* === ATTACHMENTS: a bar of tiles under the header, unless cards
+          mode draws them after the body. === */}
+      {attachmentPosition !== 'below-message' && effectiveAttachments.length > 0 && (
+        <div className="bg-background border-b border-border px-4 lg:px-6 py-3">
+          <ReaderAttachments {...readerAttachmentProps} layout="bar" />
         </div>
       )}
-
-        {/* Mobile/Tablet Attachments */}
-        {effectiveAttachments.length > 0 && (
-          <div className="lg:hidden bg-background border-b border-border px-4 py-2">
-            <div className="relative flex items-center gap-1.5 flex-wrap">
-              {effectiveAttachments.slice(0, 2).map((attachment) => {
-                const { icon: FileIcon, className: fileIconClass } = attachmentIcon(attachment.type, attachment.name);
-                const isPreviewable = isAttachmentPreviewable(attachment);
-                const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
-                const thumbUrl = imageThumbUrls[attachment.id];
-                return (
-                  <DraggableAttachmentChip key={attachment.id} attachment={attachment} client={blobClient} accountId={blobAccountId} enabled={dragOutActive} downloadName={resolveAttachmentName(attachment)}>
-                    {(dragProps) => (<>
-                  <div
-                    className={cn(
-                      "bg-muted/60 hover:bg-muted rounded-md border border-border/50 group relative cursor-pointer overflow-hidden",
-                      thumbUrl
-                        ? "inline-flex flex-col w-44"
-                        : "inline-flex items-center gap-1.5 px-2.5 py-1.5",
-                    )}
-                    title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
-                    onClick={() => handleEffectiveAttachmentOpen(attachment)}
-                    data-testid="attachment"
-                    data-attachment-name={attachment.name}
-                    draggable={dragProps.draggable}
-                    onPointerEnter={dragProps.onPointerEnter}
-                    onDragStart={dragProps.onDragStart}
-                    onDragEnd={dragProps.onDragEnd}
-                  >
-                    {thumbUrl && (
-                      <div className="w-full h-20 bg-background/40 flex items-center justify-center overflow-hidden">
-                        <img src={thumbUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
-                      </div>
-                    )}
-                    <div className={cn(
-                      "flex items-center gap-1.5",
-                      thumbUrl && "px-2 py-1.5 border-t border-border/50 w-full",
-                    )}>
-                      <FileIcon className={cn("w-4 h-4 flex-shrink-0", fileIconClass)} />
-                      <span className={cn(
-                        "text-sm text-foreground truncate",
-                        thumbUrl ? "flex-1 min-w-0" : "max-w-[200px]",
-                      )}>
-                        {getAttachmentDisplayName(attachment.name, attachment.type)}
-                      </span>
-                      <span className="text-xs text-muted-foreground flex-shrink-0">
-                        <bdi>{formatFileSize(attachment.size)}</bdi>
-                      </span>
-                      {/* Phones have no hover: the plugin menu stays visible. */}
-                      {canSaveToFiles && attachment.blobId && (
-                        <IconButton label={t("save_to_files.title")} onClick={(e) => { e.stopPropagation(); setSaveToFilesTarget(attachment); }}>
-                          <FolderInput className="w-4 h-4" />
-                        </IconButton>
-                      )}
-                      <AttachmentPluginMenu emailId={email?.id} attachment={attachment} className="-me-1 flex-shrink-0" iconClassName="w-3.5 h-3.5" />
-                    </div>
-                    <div className={cn(
-                      "absolute bg-background/95 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto transition-opacity flex items-center justify-center gap-1 px-1.5 rounded-md",
-                      thumbUrl ? "top-1 end-1" : "inset-y-0 end-0 rounded-s-none rounded-e-md",
-                    )}>
-                      <button
-                        className="p-1 hover:bg-accent rounded transition-colors"
-                        title={t('download')}
-                        aria-label={t('download_named', { name: getAttachmentDisplayName(attachment.name, attachment.type) })}
-                        onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); }}
-                      >
-                        <Download className="w-4 h-4 text-foreground" />
-                      </button>
-                      {opensPreview && (
-                        <button
-                          className="p-1 hover:bg-accent rounded transition-colors"
-                          title={tFiles('preview')}
-                          aria-label={t('preview_named', { name: getAttachmentDisplayName(attachment.name, attachment.type) })}
-                          onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); }}
-                        >
-                          <Eye className="w-4 h-4 text-foreground" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                    <AttachmentPluginFrames emailId={email?.id} attachment={attachment} />
-                    </>)}
-                  </DraggableAttachmentChip>
-                );
-              })}
-              {effectiveAttachments.length > 2 && (
-                <button
-                  onClick={() => setShowAllMobileAttachments(!showAllMobileAttachments)}
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-0.5"
-                >
-                  +{effectiveAttachments.length - 2} {t('more')}
-                </button>
-              )}
-              {downloadAllButton}
-              {showAllMobileAttachments && effectiveAttachments.length > 2 && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setShowAllMobileAttachments(false)} />
-                  <div className="absolute top-full start-0 mt-1 z-50 bg-background border border-border rounded-lg shadow-lg p-2 flex flex-col gap-1 min-w-[220px]">
-                    {effectiveAttachments.slice(2).map((attachment) => {
-                      const { icon: FileIcon, className: fileIconClass } = attachmentIcon(attachment.type, attachment.name);
-                      const isPreviewable = isAttachmentPreviewable(attachment);
-                      const opensPreview = isPreviewable && mailAttachmentAction === 'preview';
-                      return (
-                        <DraggableAttachmentChip key={attachment.id} attachment={attachment} client={blobClient} accountId={blobAccountId} enabled={dragOutActive} downloadName={resolveAttachmentName(attachment)}>
-                          {(dragProps) => (<>
-                        <div
-                          className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted/60 group relative cursor-pointer w-full"
-                          title={`${opensPreview ? tFiles('preview') : t('download')} ${getAttachmentDisplayName(attachment.name, attachment.type)}`}
-                          onClick={() => { handleEffectiveAttachmentOpen(attachment); setShowAllMobileAttachments(false); }}
-                          draggable={dragProps.draggable}
-                          onPointerEnter={dragProps.onPointerEnter}
-                          onDragStart={dragProps.onDragStart}
-                          onDragEnd={dragProps.onDragEnd}
-                        >
-                          <FileIcon className={cn("w-3.5 h-3.5 flex-shrink-0", fileIconClass)} />
-                          <span className="text-xs text-foreground truncate max-w-[180px]">
-                            {getAttachmentDisplayName(attachment.name, attachment.type)}
-                          </span>
-                          <span className="text-[0.625rem] text-muted-foreground ms-auto flex-shrink-0">
-                            <bdi>{formatFileSize(attachment.size)}</bdi>
-                          </span>
-                          {canSaveToFiles && attachment.blobId && (
-                            <IconButton label={t("save_to_files.title")} onClick={(e) => { e.stopPropagation(); setSaveToFilesTarget(attachment); }}>
-                              <FolderInput className="w-4 h-4" />
-                            </IconButton>
-                          )}
-                          <AttachmentPluginMenu emailId={email?.id} attachment={attachment} className="flex-shrink-0" iconClassName="w-3.5 h-3.5" />
-                          <div className="absolute inset-y-0 end-0 rounded-e-md bg-background/95 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto transition-opacity flex items-center justify-center gap-1 px-1.5">
-                            <IconButton
-                              label={t('download')}
-                              onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentDownload(attachment); setShowAllMobileAttachments(false); }}
-                            >
-                              <Download />
-                            </IconButton>
-                            {opensPreview && (
-                              <IconButton
-                                label={tFiles('preview')}
-                                onClick={(e) => { e.stopPropagation(); handleEffectiveAttachmentOpen(attachment); setShowAllMobileAttachments(false); }}
-                              >
-                                <Eye />
-                              </IconButton>
-                            )}
-                          </div>
-                        </div>
-                          <AttachmentPluginFrames emailId={email?.id} attachment={attachment} />
-                          </>)}
-                        </DraggableAttachmentChip>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        )}
 
       </>)}
 
@@ -6283,6 +5721,7 @@ export function EmailViewer({
           )}
           style={isDark ? { backgroundColor: '#121212' } : undefined}>
             <ReadAloudBar state={readAloud.state} onPause={readAloud.pause} onResume={readAloud.resume} onStop={readAloud.stop} />
+            <Watermark text={watermark} />
             {readingMaskOn && !isBodyLoading && (
               <ReadingMask
                 containerRef={bodyWrapRef}
@@ -6339,6 +5778,10 @@ export function EmailViewer({
                 data-plugin-source="email-body"
                 data-email-id={email?.id}
                 onContextMenu={(e) => selectionMenu.onElementContextMenu(e, email?.id)}
+                // A plain-text body renders in the page, not the iframe: its
+                // links go through the link check here.
+                onClick={(e) => gateLinkClick(e, { emailId: email?.id })}
+                onAuxClick={(e) => gateLinkClick(e, { emailId: email?.id })}
                 dangerouslySetInnerHTML={plainBodyHtml}
                 style={{
                   ...(plainTextFont === 'mono' && { fontFamily: 'ui-monospace, "SF Mono", Consolas, monospace' }),
@@ -6359,6 +5802,13 @@ export function EmailViewer({
               />
             )}
           </div>
+
+          {/* === ATTACHMENTS as cards after the body (below-message mode) === */}
+          {attachmentPosition === 'below-message' && effectiveAttachments.length > 0 && !mvOpenFolded && !mvAwaitingConversation && (
+            <div ref={attachmentCardsRef} className={cn("bg-background border-t border-border px-4 lg:px-6 py-4 scroll-mt-4", mvViewer && "lg:ps-[60px]")}>
+              <ReaderAttachments {...readerAttachmentProps} layout="cards" />
+            </div>
+          )}
 
           <PluginSlot name="email-footer" extraProps={pluginFooterProps} />
 
@@ -6398,7 +5848,7 @@ export function EmailViewer({
           )}
 
           {/* Quick Reply Section - hidden for drafts and while loading a new email */}
-          {quickReplyEnabled && !mvReplyRow && !isDraft && !isScheduled && !isBodyLoading && (effectiveEmailContent.isHtml ? iframeReady : true) && (<div className="bg-background border-t border-border px-6 mt-auto" style={{ paddingBlock: 'var(--density-header-py)' }}>
+          {showQuickReply && (<div className="bg-background border-t border-border px-6 mt-auto" style={{ paddingBlock: 'var(--density-header-py)' }}>
             <div className="flex items-start" style={{ gap: 'var(--density-item-gap)' }}>
               <div className="flex-shrink-0">
                 <Avatar
@@ -6412,6 +5862,7 @@ export function EmailViewer({
               </div>
               <div className="flex-1 min-w-0 space-y-3">
                   <textarea
+                    ref={quickReplyRef}
                     value={quickReplyText}
                     onChange={(e) => setQuickReplyText(e.target.value)}
                     onFocus={() => setIsQuickReplyFocused(true)}
@@ -6433,11 +5884,11 @@ export function EmailViewer({
 
                   {/* Action buttons - show when focused or has text */}
                   {(isQuickReplyFocused || quickReplyText) && (
-                    <div className="flex items-center justify-between gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <div className="flex flex-wrap items-center justify-between gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
                       <div className="text-xs text-muted-foreground">
                         {t('characters_count', { count: quickReplyText.length })}
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2 min-w-0">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -6463,6 +5914,12 @@ export function EmailViewer({
                           <MoreVertical className="w-4 h-4 me-1" />
                           {t('more_options')}
                         </Button>
+                        <QuickReplyPluginActions
+                          key={JSON.stringify([email.id, activeAccountId, email.sourceClientAccountId, email.sourceAccountId])}
+                          inputRef={quickReplyRef}
+                          readMetadata={quickMetadata}
+                          onChange={setQuickReplyText}
+                        />
                         <Button
                           size="sm"
                           onClick={handleSendQuickReply}
@@ -6649,6 +6106,8 @@ export function EmailViewer({
         onClose={() => setInAppPreview(null)}
         onDownload={downloadInAppPreview}
         getFileContent={getInAppPreviewContent}
+        linksOff={phishingMarked}
+        policyAccount={email ?? undefined}
       />
     )}
     </>

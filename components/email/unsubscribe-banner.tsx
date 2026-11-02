@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { isValidUnsubscribeUrl, parseUnsubscribeMailto } from '@/lib/validation';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useIsDesktop } from '@/hooks/use-media-query';
+import { openExternalLink } from '@/lib/plugin-hook-result';
 
 interface UnsubscribeBannerProps {
   listUnsubscribe: {
@@ -83,7 +84,13 @@ export function UnsubscribeBanner({
 
     try {
       if (unsubMethod === 'http') {
-        window.open(unsubUrl, '_blank', 'noopener,noreferrer');
+        // Through the plugins' link check like any other link in the mail;
+        // a check that stops it leaves the banner as it was.
+        if (!(await openExternalLink({ href: unsubUrl, target: '_blank' }))) {
+          setProcessing(false);
+          setShowConfirm(false);
+          return;
+        }
         setSuccess(true);
         setProcessing(false);
         setShowConfirm(false);

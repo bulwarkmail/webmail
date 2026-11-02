@@ -62,8 +62,10 @@ vi.mock("@/stores/settings-store", () => ({
   useSettingsStore: Object.assign(
     (selector: (state: typeof mocks.settingsState) => unknown) =>
       selector(mocks.settingsState),
-    { getState: () => mocks.settingsState },
+    { getState: () => mocks.settingsState, subscribe: () => () => {} },
   ),
+  // calendar-store (pulled in via email-store) registers its sync bridge at load.
+  registerCalendarSubscriptionSyncBridge: () => {},
 }));
 
 vi.mock("@/stores/policy-store", () => ({

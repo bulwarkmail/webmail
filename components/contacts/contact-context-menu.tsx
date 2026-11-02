@@ -25,6 +25,7 @@ import type { ContactCard } from "@/lib/jmap/types";
 import { getContactPrimaryEmail } from "@/stores/contact-store";
 import { exportContact, useContactExportBusy } from "./contact-export";
 import { printContact } from "./contact-print";
+import { useStrictestDevices } from "@/hooks/use-device-policy";
 import { toast } from "@/stores/toast-store";
 
 function getContactPrimaryPhone(contact: ContactCard): string {
@@ -89,6 +90,7 @@ export function ContactContextMenu({
   onBatchDelete,
 }: ContactContextMenuProps) {
   const t = useTranslations("contacts");
+  const printOff = useStrictestDevices().noPrint;
   const email = getContactPrimaryEmail(contact);
   const phone = getContactPrimaryPhone(contact);
   const showBatchActions = isMultiSelect && selectedCount > 1;
@@ -216,11 +218,13 @@ export function ContactContextMenu({
         onClick={handle(handleExport)}
         disabled={exporting}
       />
-      <ContextMenuItem
-        icon={Printer}
-        label={t("context_menu.print")}
-        onClick={handle(handlePrint)}
-      />
+      {!printOff && (
+        <ContextMenuItem
+          icon={Printer}
+          label={t("context_menu.print")}
+          onClick={handle(handlePrint)}
+        />
+      )}
       <ContextMenuSeparator />
       <ContextMenuItem
         icon={Trash2}

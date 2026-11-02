@@ -3,8 +3,12 @@ import { configManager } from '@/lib/admin/config-manager';
 import { isNoThirdPartyTrafficOn, thirdPartyRefusal } from '@/lib/admin/third-party-mode';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { getStalwartCredentials } from '@/lib/stalwart/credentials';
-import { CREDENTIAL_ID_RE } from '@/lib/plugin-secrets/credentials';
-import { ProxyError, proxyRequest, type CaptureSpec } from '@/lib/plugin-secrets/proxy';
+import { CREDENTIAL_ID_RE, type CredentialSpec } from '@/lib/plugin-secrets/credentials';
+import { credentialAllowedInMode } from '@/lib/outgoing-hosts';
+import { getPlugin } from '@/lib/admin/plugin-registry';
+import { ProxyError, adminEnteredOrigin, proxyRequest, type CaptureSpec } from '@/lib/plugin-secrets/proxy';
+import { getPluginConfig } from '@/lib/admin/plugin-config';
+import { bootGateResponse } from '@/lib/shared-store/boot-gate';
 
 const PLUGIN_ID_RE = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
 const FIELD_RE = /^[A-Za-z_][A-Za-z0-9_]{0,63}$/;
@@ -35,6 +39,9 @@ function parseCapture(raw: string | null): CaptureSpec | null | undefined {
  * plugin itself (its iframe has an opaque origin and is refused here).
  */
 export async function POST(request: NextRequest) {
+  // The proxy doesn't run for this route, so it applies the boot gate itself.
+  const notReady = bootGateResponse();
+  if (notReady) return notReady;
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
 
@@ -42,8 +49,7 @@ export async function POST(request: NextRequest) {
   if (!configManager.getPolicy().features.pluginsEnabled) {
     return NextResponse.json({ error: 'Plugins are turned off', code: 'disabled' }, { status: 403 });
   }
-  // Every proxied request goes to a host outside this deployment (#903).
-  if (await isNoThirdPartyTrafficOn()) return thirdPartyRefusal('The plugin proxy');
+  const thirdPartyOff = await isNoThirdPartyTrafficOn();
 
   const creds = await getStalwartCredentials(request);
   if (!creds) return NextResponse.json({ error: 'Not authenticated', code: 'unauthenticated' }, { status: 401 });
@@ -54,6 +60,21 @@ export async function POST(request: NextRequest) {
   const url = params.get('url') ?? '';
   if (!PLUGIN_ID_RE.test(pluginId) || !CREDENTIAL_ID_RE.test(credentialId) || !url) {
     return NextResponse.json({ error: 'plugin, credential and url are required', code: 'bad_request' }, { status: 400 });
+  }
+  // With third-party traffic off only a server the admin typed on the
+  // plugin's admin page stays reachable (a company link check); servers
+  // fixed in a manifest or brought as a field's default, and accounts users
+  // connect, are outside hosts (#903).
+  if (thirdPartyOff) {
+    const plugin = await getPlugin(pluginId);
+    const spec = (plugin as { credentials?: Record<string, CredentialSpec> } | null)?.credentials?.[credentialId];
+    if (!credentialAllowedInMode(spec) || !adminEnteredOrigin(spec, await getPluginConfig(pluginId), plugin?.configSchema)) {
+      // Marked as the proxy's own refusal, like its other errors, so a
+      // plugin can tell it from the service answering 403.
+      const refused = thirdPartyRefusal('The plugin proxy');
+      refused.headers.set('x-bulwark-proxy-error', 'no-third-party-traffic');
+      return refused;
+    }
   }
   const capture = parseCapture(request.headers.get('x-bulwark-capture'));
   if (capture === null) {

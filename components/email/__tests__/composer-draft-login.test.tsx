@@ -155,7 +155,10 @@ vi.mock('@/lib/plugin-hooks', () => ({
     onRecipientChipsChange: { transform: async (chips: unknown) => chips },
     onDraftChange: { emit: () => {} },
     onBeforeDraftAutoSave: { transform: async (draft: unknown) => draft },
-    onBeforeEmailSend: { intercept: async () => true, interceptOutcome: async () => 'allowed' },
+    // No plugin checks sends here (size 0, as the real bus without one): the
+    // message for a send check would be built otherwise, reading the other
+    // login's identities from a client this test only half mocks.
+    onBeforeEmailSend: { size: 0, intercept: async () => true, interceptOutcome: async () => 'allowed' },
     onComposeSend: { intercept: async () => true, takeOver: async () => 'default' },
     onTransformOutgoingEmail: { transform: async (email: unknown) => email },
   },

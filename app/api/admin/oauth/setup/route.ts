@@ -7,6 +7,7 @@ import { configManager } from '@/lib/admin/config-manager';
 import { isConfigReadOnly, ConfigReadOnlyError } from '@/lib/admin/paths';
 import { auditLog } from '@/lib/admin/audit';
 import { logger } from '@/lib/logger';
+import { configWriteErrorResponse } from '@/lib/admin/config-read-only-response';
 import { locales as ALL_LOCALES } from '@/i18n/routing';
 
 const CLIENT_ID = 'bulwark-webmail';
@@ -384,6 +385,8 @@ export async function POST(request: NextRequest) {
       mobileRedirectUri: MOBILE_REDIRECT_URI,
     });
   } catch (error) {
+    const refused = configWriteErrorResponse(error);
+    if (refused) return refused;
     logger.error('Admin OAuth setup error', { error: error instanceof Error ? error.message : 'Unknown error' });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Internal server error' },

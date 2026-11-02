@@ -28,6 +28,12 @@ describe('buildDuplicateEventData', () => {
     expect(data.virtualLocations).not.toBe(virtualLocations);
   });
 
+  // Without the type the copy's HTML would be stored, and shown, as text.
+  it('keeps the format of an HTML description', () => {
+    const data = buildDuplicateEventData(makeEvent({ description: '<p>Daily</p>', descriptionContentType: 'text/html' }));
+    expect(data).toMatchObject({ description: '<p>Daily</p>', descriptionContentType: 'text/html' });
+  });
+
   it('moves a timed event one day later in its own time zone with a fresh uid', () => {
     const data = buildDuplicateEventData(makeEvent());
     expect(data).toMatchObject({

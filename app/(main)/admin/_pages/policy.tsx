@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Loader2, Plus, Trash2, ArrowUp, ArrowDown } from '@/components/icons';
+import { useEffect, useRef, useState } from 'react';
+import { Plus, Trash2, ArrowUp, ArrowDown } from '@/components/icons';
 import { iconForName } from '@/components/icons';
 import type { SettingsPolicy, FeatureGates, PushRelayOption, AdminSidebarApp } from '@/lib/admin/types';
 import { DEFAULT_FEATURE_GATES, DEFAULT_POLICY } from '@/lib/admin/types';
@@ -20,6 +20,7 @@ import { SettingsSection, SettingItem, ToggleSwitch, SectionNav } from '@/compon
 import type { GlossaryId } from '@/components/ui/term';
 import { Button } from '@/components/ui/button';
 import { AdminPageHeader } from '@/components/admin/page-header';
+import { AdminBodySkeleton } from '@/components/boot-skeleton/admin-skeleton';
 import { AdminSaveBar } from '@/components/admin/save-bar';
 import { Badge } from '@/components/admin/badge';
 import { useAdminFeedback } from '@/components/admin/feedback';
@@ -44,7 +45,7 @@ const FEATURE_GATE_LABELS: Partial<Record<keyof FeatureGates, { label: string; d
   folderIconsEnabled: { label: 'Folder Icons', description: 'Allow custom folder icon picker' },
   hoverActionsConfigEnabled: { label: 'Hover Actions Config', description: 'Allow users to customize email hover actions' },
   tabTitleSubjectEnabled: { label: 'Subject in Tab Title', description: 'Show the open message\'s subject in the browser tab title. Browsers also keep the title in history and screen shares show it; turn this off when mailboxes hold confidential correspondence, and the tab shows the folder instead.' },
-  filesEnabled: { label: 'Files (WebDAV)', description: 'Enable file storage via WebDAV. WARNING: Large uploads can cause Stalwart/RocksDB instability. Not recommended for production.', term: 'webdav' },
+  filesEnabled: { label: 'Files (WebDAV)', description: 'Enable file storage via WebDAV', term: 'webdav' },
   crossUnreadViewEnabled: { label: 'Unified Mailbox: Unread', description: 'Allow an "Unread" entry in the Unified Mailbox section that lists unread mail across the account and its shared folders (or every account when the cross-account sub-option is on). Honors the user\'s folder selection. Requires the matching per-user toggle in Settings → Appearance.' },
   crossStarredViewEnabled: { label: 'Unified Mailbox: Starred', description: 'Allow a "Starred" entry in the Unified Mailbox section that lists flagged/starred mail across the account and its shared folders (or every account when the cross-account sub-option is on). Honors the user\'s folder selection. Requires the matching per-user toggle in Settings → Appearance.' },
   crossAllViewEnabled: { label: 'Unified Mailbox: All Mail', description: 'Allow an "All mail" entry in the Unified Mailbox section that lists all mail across the account and its shared folders (or every account when the cross-account sub-option is on). Honors the user\'s folder selection. Requires the matching per-user toggle in Settings → Appearance.' },
@@ -79,6 +80,9 @@ export function PolicyPage() {
   const [saving, setSaving] = useState(false);
   const setMessage = useAdminFeedback();
   const [dirty, setDirty] = useState(false);
+  // The version of the policy this page loaded: a save based on an older
+  // one is refused instead of undoing someone else's change.
+  const policyETag = useRef<string | null>(null);
 
   useEffect(() => { fetchPolicy(); }, []);
 
@@ -88,6 +92,7 @@ export function PolicyPage() {
       const res = await apiFetch('/api/admin/policy');
       if (res.ok) {
         const data = await res.json();
+        policyETag.current = res.headers.get('ETag');
         setPolicy(data);
         setSavedPolicy(data);
       }
@@ -219,12 +224,20 @@ export function PolicyPage() {
     try {
       const res = await apiFetch('/api/admin/policy', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(policyETag.current ? { 'If-Match': policyETag.current } : {}) },
         body: JSON.stringify(policy),
       });
 
       if (res.ok) {
-        setSavedPolicy(policy);
+        policyETag.current = res.headers.get('ETag');
+        // The server sanitises; continue from what it stored.
+        const stored = ((await res.json().catch(() => null)) as { policy?: SettingsPolicy } | null)?.policy;
+        if (stored) {
+          setPolicy(stored);
+          setSavedPolicy(stored);
+        } else {
+          setSavedPolicy(policy);
+        }
         setMessage({ type: 'success', text: 'Policy saved. Users see the change on their next login.' });
         setDirty(false);
       } else {
@@ -249,9 +262,7 @@ export function PolicyPage() {
 
 
       {loading ? (
-        <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
-          <Loader2 className="me-2 h-4 w-4 animate-spin" /> Loading
-        </div>
+        <AdminBodySkeleton status="Loading" />
       ) : (
         <div className="space-y-10">
           <SectionNav />

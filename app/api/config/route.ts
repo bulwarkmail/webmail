@@ -12,6 +12,7 @@ import {
   type BrandingOverrideKey,
 } from '@/lib/admin/domain-branding';
 import { isNoThirdPartyTrafficOn } from '@/lib/admin/third-party-mode';
+import { browserErrorSettings } from '@/lib/error-reporting/settings';
 
 /**
  * Runtime configuration endpoint
@@ -109,6 +110,9 @@ export async function GET(request: NextRequest) {
       signLanguageUrl: httpUrlOrEmpty(branded<string>('signLanguageUrl', '')),
       // Browser-side switches of lib/outgoing-hosts.ts read this (#903).
       noThirdPartyTraffic: await isNoThirdPartyTrafficOn(),
+      // Error reporting (lib/error-reporting/client.ts): off unless a DSN is
+      // set or this server counts errors. The DSN is public by design.
+      errorReporting: await browserErrorSettings(),
     },
     {
       // Runtime settings can change without new asset URLs. Prevent stale

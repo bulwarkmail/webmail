@@ -28,6 +28,7 @@ vi.mock('@/lib/admin/config-manager', () => ({
       organisation: { disclaimer: { html: '<p>Acme GmbH</p>', text: 'Acme GmbH' } },
       scopes: SCOPES,
     }),
+    getPolicyWithVersion() { return { policy: this.getPolicy(), version: 'v1' }; },
   },
 }));
 const logs = vi.hoisted(() => ({ calls: [] as unknown[][] }));
@@ -43,6 +44,9 @@ vi.mock('@/lib/admin/audit', () => ({ auditLog: vi.fn() }));
 
 import { GET } from '@/app/api/admin/policy/route';
 import { resetBearerIdentityCacheForTests } from '@/lib/auth/bearer-identity';
+import { setStoreForTests } from '@/lib/shared-store';
+import { resetLocalStoreForTests } from '@/lib/shared-store/local';
+import { switchableSharedStore } from '@/lib/__tests__/helpers/shared-store-down';
 
 const SERVER = 'https://mail.example.org';
 const GOOD_TOKEN = 'good-token-abc';
@@ -192,5 +196,23 @@ describe('GET /api/admin/policy with a Bearer token', () => {
     expect(res.body.organisation).toBeUndefined();
     expect(logs.calls.length).toBeGreaterThan(0);
     expect(JSON.stringify(logs.calls)).not.toContain(GOOD_TOKEN);
+  });
+});
+
+describe('GET /api/admin/policy with a Bearer token while the shared store is down (#1066)', () => {
+  afterEach(() => {
+    setStoreForTests(null);
+    resetLocalStoreForTests();
+  });
+
+  it('answers 503: the refused-token budget can not be counted, so the token is not checked', async () => {
+    const store = switchableSharedStore();
+    store.down = true;
+    setStoreForTests(store);
+    const res = await get({ authorization: `Bearer ${GOOD_TOKEN}` });
+    expect(res.status).toBe(503);
+    expect(fetchMock).not.toHaveBeenCalled();
+    // Without a token the public subset needs no store.
+    expect((await get()).status).toBe(200);
   });
 });

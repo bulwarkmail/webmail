@@ -303,6 +303,8 @@ export class SandboxInstance {
   private ready = false;
   /** The runtime's activity reports (see ReadyMsg). */
   private activityPort: MessagePort | null = null;
+  /** Own notification cleanup for exactly this sandbox frame. */
+  private readonly toastLifetime = new AbortController();
   /** The frame has answered init-done: its hooks and slots are in place. */
   private initialized = false;
 
@@ -381,12 +383,16 @@ export class SandboxInstance {
     }
     this.iframe.style.display = 'block';
     if (initPayload.mode === 'background') {
-      this.iframe.style.position = 'absolute';
+      // In the corner, 1px, invisible: far off to one side it widened a
+      // right-to-left page by as much, with blank space to scroll into.
+      this.iframe.style.position = 'fixed';
       this.iframe.style.width = '1px';
       this.iframe.style.height = '1px';
       this.iframe.style.opacity = '0';
       this.iframe.style.pointerEvents = 'none';
-      this.iframe.style.left = '-9999px';
+      this.iframe.style.left = '0px';
+      this.iframe.style.top = '0px';
+      this.iframe.tabIndex = -1;
       this.iframe.setAttribute('aria-hidden', 'true');
     } else if (this.inline) {
       // Starts at the widest it may get; the first resize shrinks it.
@@ -497,7 +503,7 @@ export class SandboxInstance {
         const { id, method, args } = msg;
         void (async () => {
           try {
-            const result = await dispatchApiCall(this.plugin, method, args ?? [], { privileged: this.privileged, sink: this });
+            const result = await dispatchApiCall(this.plugin, method, args ?? [], { privileged: this.privileged, sink: this, toastSignal: this.toastLifetime.signal, frame: this.mode });
             this.send({ type: 'api-response', id, ok: true, result });
           } catch (err) {
             this.send({ type: 'api-response', id, ok: false, error: (err as Error).message ?? String(err) });
@@ -717,6 +723,7 @@ export class SandboxInstance {
   destroy(): void {
     if (this.destroyed) return;
     this.destroyed = true;
+    this.toastLifetime.abort();
     // Whoever waits for init (the loader, calls held back below) stops waiting.
     this.rejectInit(new Error('sandbox destroyed'));
     liveInstances.delete(this);

@@ -61,3 +61,33 @@ describe('emailToReadView attachments', () => {
     ]);
   });
 });
+
+describe('emailToReadView text', () => {
+  // RFC 8621 lists the text/html part under textBody when there is no
+  // text/plain alternative.
+  const htmlOnly = (html: string) => ({
+    id: 'e1', threadId: 't1', mailboxIds: {}, keywords: {}, receivedAt: '2026-10-14T00:00:00Z',
+    textBody: [{ partId: '1', type: 'text/html' }],
+    htmlBody: [{ partId: '1', type: 'text/html' }],
+    bodyValues: { 1: { value: html } },
+  }) as unknown as Email;
+
+  it('gives plugins the words of an HTML-only mail, not its source', () => {
+    const view = emailToReadView(htmlOnly(
+      '<table style="width:100%"><tr><td><style>.x{color:red}</style><p>Hello Ana,</p><p>Tom &amp; Jerry say &amp;lt;hi&amp;gt;</p></td></tr></table>',
+    ));
+
+    expect(view.text).toBe('Hello Ana,\n\nTom & Jerry say &lt;hi&gt;');
+  });
+
+  it('keeps a text/plain body as it is', () => {
+    const view = emailToReadView({
+      ...htmlOnly('<p>ignored</p>'),
+      textBody: [{ partId: '2', type: 'text/plain' }],
+      htmlBody: [{ partId: '1', type: 'text/html' }],
+      bodyValues: { 1: { value: '<p>ignored</p>' }, 2: { value: 'a <b> is literal\nline two' } },
+    } as unknown as Email);
+
+    expect(view.text).toBe('a <b> is literal\nline two');
+  });
+});

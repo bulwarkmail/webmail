@@ -70,10 +70,23 @@ export const RESTRICTION_KEYS: readonly RestrictionKeyDef[] = [
   { key: 'mailLayout', label: 'Mail Layout', category: 'Email', type: 'enum', allowedValues: ['split', 'focus', 'horizontal'], page: 'policy', defaultValue: 'split' },
   { key: 'emailsPerPage', label: 'Emails Per Page', category: 'Email', type: 'number', page: 'policy', defaultValue: 50 },
   { key: 'externalContentPolicy', label: 'External Content Policy', category: 'Email', type: 'enum', allowedValues: ['allow', 'block', 'ask'], page: 'policy', defaultValue: 'ask' },
+  {
+    key: 'searchDefaultScope',
+    label: 'Search in',
+    description: 'Where a new search looks: in all folders, or only in the folder that is open. Users can still pick another folder in the search filters.',
+    category: 'Email',
+    type: 'enum',
+    allowedValues: ['all', 'folder'],
+    page: 'policy',
+    defaultValue: 'all',
+  },
   { key: 'defaultReplyMode', label: 'Default Reply Mode', category: 'Composer', type: 'enum', allowedValues: ['reply', 'replyAll'], page: 'policy', defaultValue: 'reply' },
   { key: 'autoSelectReplyIdentity', label: 'Auto-select Reply Identity', category: 'Composer', type: 'boolean', page: 'policy', defaultValue: false },
   { key: 'replyIdentityMatch', label: 'Reply Identity Matching', category: 'Composer', type: 'enum', allowedValues: ['exact', 'domain'], page: 'policy', defaultValue: 'domain' },
   { key: 'plainTextMode', label: 'Plain Text Only', category: 'Composer', type: 'boolean', page: 'policy', defaultValue: false },
+  // Set on Organisation > Proofreading, with per-plugin keys `proofreading.<pluginId>` (lib/proofreading/gate.ts).
+  { key: 'proofreading', label: 'Proofreading', description: 'Locked off, no proofreading plugin gets any text; locked on, it checks in every composer.', category: 'Composer', type: 'boolean', page: 'org-proofreading' },
+  { key: 'writingLanguage', label: 'Writing language', category: 'Composer', type: 'enum', page: 'org-proofreading' },
   { key: 'emailNotificationsEnabled', label: 'Email Notifications', category: 'Notifications', type: 'boolean', page: 'policy', defaultValue: true },
   { key: 'calendarNotificationsEnabled', label: 'Calendar Notifications', category: 'Notifications', type: 'boolean', page: 'policy', defaultValue: true },
   { key: 'pushNotifyInboxOnly', label: 'Inbox-only Push Notifications', category: 'Notifications', type: 'boolean', page: 'policy', defaultValue: false },
@@ -126,6 +139,16 @@ export const RESTRICTION_KEYS: readonly RestrictionKeyDef[] = [
   { key: 'delegation', label: 'Delegates', description: 'Hide removes Settings > Sharing > Delegates, so users can no longer give someone access to mail, calendars and contacts in one step.', category: 'Sharing', type: 'boolean', page: 'org-sharing', modes: ['hidden'] },
   { key: 'sharingRights', label: 'Rights users can give', description: 'Untick "write" and every share dialog in Bulwark (folders, calendars, address books, files, Delegates) offers read access only.', category: 'Sharing', type: 'enum', allowedValues: ['read', 'write'], page: 'org-sharing', modes: ['allowedValues'] },
   { key: 'deletedItemsRecovery', label: 'Recover deleted items', description: 'Hide removes Settings > Recover deleted items and its link in Trash, so users can no longer restore mail they deleted for good.', category: 'Sharing', type: 'boolean', page: 'org-sharing', modes: ['hidden'] },
+  {
+    key: 'vacationBlockCalendar',
+    label: 'Out-of-office blocks the calendar',
+    description: 'Lock: an out-of-office reply with dates puts a busy event in the user\'s calendar, or never does, as set here. Users see the choice as set by the organisation.',
+    category: 'Calendar',
+    type: 'boolean',
+    page: 'org-calendars',
+    modes: ['locked'],
+    defaultValue: true,
+  },
 ];
 
 export function restrictionKeysForPage(page: AdminPageId): RestrictionKeyDef[] {

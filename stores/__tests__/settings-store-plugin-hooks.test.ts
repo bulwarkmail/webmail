@@ -55,6 +55,19 @@ describe('settings plugin hooks', () => {
     expect(after).not.toHaveBeenCalled();
   });
 
+  it('lets no plugin hold up turning proofreading off, overall or for one plugin (#1397)', async () => {
+    useSettingsStore.setState({ proofreading: true, proofreadingPlugins: {} });
+    settingsHooks.onBeforeSettingChange.register('test', () => false);
+    useSettingsStore.getState().updateSetting('proofreading', false);
+    useSettingsStore.getState().updateSetting('proofreadingPlugins', { lt: false });
+    expect(useSettingsStore.getState().proofreading).toBe(false);
+    expect(useSettingsStore.getState().proofreadingPlugins).toEqual({ lt: false });
+    // Turning it on still asks.
+    useSettingsStore.getState().updateSetting('proofreading', true);
+    await flush();
+    expect(useSettingsStore.getState().proofreading).toBe(false);
+  });
+
   it('applies synchronously when no plugin intercepts', () => {
     const after = vi.fn();
     settingsHooks.onSettingChange.register('test', after);

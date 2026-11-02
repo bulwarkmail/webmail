@@ -1,15 +1,15 @@
 // Plugins opening and closing the panel their slot sits in
-// (api.ui.openPanel / closePanel / togglePanel): the composer's side panels
-// and the reader's detail panel. A toolbar button, a shortcut or a
-// right-click entry can then bring the plugin's panel up instead of a
-// dialog. The panels subscribe here while they are on screen; a request
+// (api.ui.openPanel / closePanel / togglePanel): the composer's side panels,
+// the reader's detail panel and the panel beside the mail (side-panel). A
+// toolbar button, a shortcut or a right-click entry can then bring the
+// plugin's panel up instead of a dialog. The panels subscribe here while they are on screen; a request
 // nobody answers (no composer open, no message open, a phone) resolves to
 // null, so the plugin can fall back to a dialog.
 //
 // When a panel opens on request, its slot gets a new `focusRequest` number
 // in its props, so the plugin can put the focus where it belongs.
 
-export const PANEL_SLOTS = ['composer-sidebar', 'composer-sidebar-right', 'email-detail-sidebar'] as const;
+export const PANEL_SLOTS = ['composer-sidebar', 'composer-sidebar-right', 'email-detail-sidebar', 'side-panel'] as const;
 export type PanelSlot = typeof PANEL_SLOTS[number];
 export type PanelMode = 'open' | 'close' | 'toggle';
 

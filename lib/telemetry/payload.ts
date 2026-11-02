@@ -1,14 +1,20 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { configManager } from '@/lib/admin/config-manager';
-import { getInstanceId } from './state';
+import { effectiveErrorsConsent, getInstanceId } from './state';
 import { getLoginCounts } from './login-tracker';
-import type {
-  TelemetryPayload,
-  TelemetryFeatures,
-  Platform,
-  OsFamily,
-  CountBucket,
+import { isErrorCode } from '@/lib/error-reporting/envelope';
+import { readErrors, utcDay, type Aggregate } from '@/lib/error-reporting/aggregate';
+import {
+  MAX_TELEMETRY_ERRORS,
+  MAX_TELEMETRY_FRAMES,
+  type AnyTelemetryPayload,
+  type TelemetryError,
+  type TelemetryPayload,
+  type TelemetryFeatures,
+  type Platform,
+  type OsFamily,
+  type CountBucket,
 } from './types';
 
 let processStartedAt = Date.now();
@@ -99,7 +105,61 @@ async function countExtensions(): Promise<{ extensions: number; themes: number }
   }
 }
 
-export async function buildPayload(): Promise<TelemetryPayload> {
+const BUNDLE_PATH = /^\/(?:_next\/static|\.next\/server)\/[\w./()[\]@+~-]{1,200}$/;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+/**
+ * The error counts of the last complete UTC day (the day before `now`), for
+ * schema v2: at most MAX_TELEMETRY_ERRORS, the most frequent first. Only
+ * frames in Bulwark's own bundles go (no extension, plugin or Node paths),
+ * and a message only when it is one of Bulwark's fixed error codes.
+ */
+export function errorsForPayload(agg: Aggregate, now = Date.now()): TelemetryError[] {
+  return errorsForDay(agg, utcDay(now - 86_400_000));
+}
+
+/**
+ * The error counts of one UTC day, shaped as in errorsForPayload. `days`
+ * counts the days of the week ending on `day` the error occurred on.
+ * Instant mode sends the current day's this way.
+ */
+export function errorsForDay(agg: Aggregate, day: string): TelemetryError[] {
+  const end = Date.parse(`${day}T00:00:00Z`);
+  const recentDays = Array.from({ length: 7 }, (_, i) => utcDay(end - i * 86_400_000));
+  return Object.entries(agg[day] ?? {})
+    .sort(([, a], [, b]) => b.count - a.count)
+    .slice(0, MAX_TELEMETRY_ERRORS)
+    .map(([fingerprint, entry]) => ({
+      name: entry.name,
+      fingerprint,
+      frames: entry.frames
+        .filter((frame) => BUNDLE_PATH.test(frame.path))
+        .slice(0, MAX_TELEMETRY_FRAMES)
+        .map((frame) => ({
+          path: frame.path,
+          line: frame.line ?? null,
+          col: frame.column ?? null,
+          debug_id: frame.debugId && UUID.test(frame.debugId) ? frame.debugId : null,
+        })),
+      version: entry.version,
+      count: bucketCount(entry.count),
+      days: recentDays.filter((d) => agg[d]?.[fingerprint]).length,
+      ...(isErrorCode(entry.code) ? { message: entry.code } : {}),
+    }));
+}
+
+/**
+ * The heartbeat. Schema 1, exactly as before, unless the admin also agreed
+ * to send error counts; then schema 2 with `errors` added.
+ */
+export async function buildPayload(): Promise<AnyTelemetryPayload> {
+  const base = await buildPayloadV1();
+  // Daily and instant mode both send the last complete day with the heartbeat.
+  if ((await effectiveErrorsConsent()).consent === 'off') return base;
+  return { ...base, schema: '2', errors: errorsForPayload(await readErrors()) };
+}
+
+async function buildPayloadV1(): Promise<TelemetryPayload> {
   const instance_id = await getInstanceId();
   const { version, build } = readPackage();
   const features = await readFeatures();

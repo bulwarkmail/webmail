@@ -38,6 +38,9 @@ vi.mock('@/lib/settings-sync', () => ({
   saveUserSettings: async (username: string, serverUrl: string, settings: Record<string, unknown>) => {
     store.set(`${username}|${serverUrl}`, settings);
   },
+  updateUserSettings: async (username: string, serverUrl: string, change: (stored: Record<string, unknown> | null) => Record<string, unknown>) => {
+    store.set(`${username}|${serverUrl}`, change(store.get(`${username}|${serverUrl}`) ?? null));
+  },
   deleteUserSettings: async () => {},
 }));
 

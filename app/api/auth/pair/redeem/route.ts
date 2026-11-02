@@ -3,6 +3,7 @@ import { logger } from '@/lib/logger';
 import { redeemPairingCode } from '@/lib/auth/pairing-store';
 import { PAIR_TOKEN_PROXY_PATH, buildRedeemBundle } from '@/lib/auth/pair-bundle';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
+import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
 
 // Phone side of "Link mobile app". The app POSTs the code it scanned and gets
 // the sign-in the desktop's step-up minted for it (see /api/auth/pair/create):
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'invalid_code' }, { status: 400, headers: NO_STORE });
     }
 
-    const result = redeemPairingCode(pairingCode);
+    const result = await redeemPairingCode(pairingCode);
     if (!result.ok) {
       const status = result.reason === 'invalid' ? 400 : 410;
       return NextResponse.json({ error: `${result.reason}_code` }, { status, headers: NO_STORE });
@@ -41,6 +42,8 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json(bundle, { headers: NO_STORE });
   } catch (error) {
+    // Nothing is redeemed without the shared store; the code stays valid.
+    if (isStoreUnavailable(error)) return storeUnavailableResponse(NO_STORE);
     logger.error('Pair redeem error', { error: error instanceof Error ? error.message : 'Unknown error' });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500, headers: NO_STORE });
   }

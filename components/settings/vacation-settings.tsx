@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { SettingsSection, SettingItem, ToggleSwitch, Select } from './settings-section';
 import { Button } from '@/components/ui/button';
 import { RichTextEditor } from '@/components/email/rich-text-editor';
@@ -18,6 +18,13 @@ import { isValidEmail } from '@/lib/validation';
 import { Loader2, AlertTriangle, Eye, EyeOff, Check } from '@/components/icons';
 import { toast } from '@/stores/toast-store';
 import { cn } from '@/lib/utils';
+import { VacationCalendarBlock, VacationFilterWarning } from './vacation-calendar-block';
+import { VacationTemplatePicker } from './vacation-template-picker';
+import type { FilledVacationTemplate } from '@/lib/vacation-templates';
+import { usePolicyStore } from '@/stores/policy-store';
+import { useSettingsStore } from '@/stores/settings-store';
+import { companyName } from '@/lib/org/signature-state';
+import { fromWallClock, getWallClock, parseLocalDateTime, resolveTimeZone } from '@/lib/timezone';
 
 const STALWART_VACATION_LIMITS = { subject: 511, body: 2047 };
 
@@ -25,6 +32,11 @@ const STALWART_VACATION_LIMITS = { subject: 511, body: 2047 };
 // once, typing once it pauses.
 const SAVE_AT_ONCE = 0;
 const SAVE_AFTER_TYPING = 800;
+
+/** The plain-text part a save derives from the sanitized HTML. */
+function textFromHtml(sanitizedHtml: string): string {
+  return htmlToPlainText(sanitizedHtml, { paragraphSpacing: true });
+}
 
 function byteLength(value: string): number {
   return new TextEncoder().encode(value).length;
@@ -51,10 +63,11 @@ function StatusSwitch({ checked, onChange, activeLabel, inactiveLabel }: {
   );
 }
 
-function utcToLocalDatetime(utcIso: string): string {
-  const d = new Date(utcIso);
+/** A stored moment as the date field shows it: the wall clock in the user's time zone (Settings > Language and region). */
+function utcToLocalDatetime(utcIso: string, timeZone: string): string {
+  const w = getWallClock(new Date(utcIso), timeZone);
   const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `${w.year}-${pad(w.month)}-${pad(w.day)}T${pad(w.hour)}:${pad(w.minute)}`;
 }
 
 const DATE_FIELD =
@@ -69,10 +82,12 @@ const DATE_INPUT_MAX = '9999-12-31T23:59';
  * that can be stored (a five-digit year). A field left as it was loaded keeps
  * the stored value exactly.
  */
-function fieldMoment(input: string, stored: string | null): string | null {
+function fieldMoment(input: string, stored: string | null, timeZone: string): string | null {
   if (!input) return '';
-  if (stored && input === utcToLocalDatetime(stored)) return stored;
-  const moment = new Date(input);
+  if (stored && input === utcToLocalDatetime(stored, timeZone)) return stored;
+  const wall = parseLocalDateTime(input);
+  if (!wall) return null;
+  const moment = fromWallClock(wall, timeZone);
   if (Number.isNaN(moment.getTime())) return null;
   const iso = moment.toISOString();
   return isPeriodBoundary(iso) ? iso : null;
@@ -87,6 +102,10 @@ export function VacationSettings() {
   const t = useTranslations('settings.vacation');
   const tFilters = useTranslations('settings.filters');
   const tNotifications = useTranslations('notifications');
+  const locale = useLocale();
+  // The dates are typed and shown in the user's time zone, which may differ from the browser's.
+  const timeZoneSetting = useSettingsStore((s) => s.timeZone);
+  const timeZone = useMemo(() => resolveTimeZone(timeZoneSetting), [timeZoneSetting]);
   const { client } = useAuthStore();
   const activeAccountId = useAuthStore((s) => s.activeAccountId);
   const managedAccountId = useManagedAccountStore((s) => s.managedAccountId);
@@ -116,16 +135,28 @@ export function VacationSettings() {
 
   const [localEnabled, setLocalEnabled] = useState(isEnabled);
   // The date fields as typed ("yyyy-mm-ddThh:mm" on the browser's clock).
-  const [fromInput, setFromInput] = useState(() => (fromDate ? utcToLocalDatetime(fromDate) : ''));
-  const [toInput, setToInput] = useState(() => (toDate ? utcToLocalDatetime(toDate) : ''));
+  const [fromInput, setFromInput] = useState(() => (fromDate ? utcToLocalDatetime(fromDate, timeZone) : ''));
+  const [toInput, setToInput] = useState(() => (toDate ? utcToLocalDatetime(toDate, timeZone) : ''));
+  // The zone the fields' wall-clock text is in. The time zone setting can
+  // arrive or change after the fields were filled (settings sync): the text
+  // is read in the zone it was written in, then rewritten for the new zone.
+  const [inputZone, setInputZone] = useState(timeZone);
   // A field the browser holds half filled in (a date without its time) reads
   // as empty, without an event when it was empty before: told apart here, so
   // it does not pass for "no date", which leaves that end of the period open.
   const [halfFilled, setHalfFilled] = useState({ from: false, to: false });
   const fromRef = useRef<HTMLInputElement>(null);
   const toRef = useRef<HTMLInputElement>(null);
-  const localFromDate = fieldMoment(fromInput, fromDate);
-  const localToDate = fieldMoment(toInput, toDate);
+  const localFromDate = fieldMoment(fromInput, fromDate, inputZone);
+  const localToDate = fieldMoment(toInput, toDate, inputZone);
+  useEffect(() => {
+    if (timeZone === inputZone) return;
+    // The same moments, shown on the new zone's clock; nothing is saved for it.
+    if (localFromDate) setFromInput(utcToLocalDatetime(localFromDate, timeZone));
+    if (localToDate) setToInput(utcToLocalDatetime(localToDate, timeZone));
+    setInputZone(timeZone);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeZone]);
   const datesUnusable = localFromDate === null || localToDate === null || halfFilled.from || halfFilled.to;
   const [localSubject, setLocalSubject] = useState(subject);
   const [localTextBody, setLocalTextBody] = useState(textBody);
@@ -139,6 +170,21 @@ export function VacationSettings() {
   // "Internal" are the account's own domains, as its identities give them.
   const identities = useIdentityStore((s) => s.identities);
   const domains = useMemo(() => ownDomains(identities.map((i) => i.email)), [identities]);
+
+  // The organisation's reply texts (Organisation > Templates), filled in for
+  // the account this page is for: a managed account's own address, never the
+  // signed-in user's name.
+  const vacationLibrary = usePolicyStore((s) => s.policy.organisation?.vacationTemplates?.library);
+  const managedAccount = useManagedAccountStore((s) => s.managedAccount);
+  const username = useAuthStore((s) => s.username);
+  const templateSender = useMemo(() => {
+    if (managedAccountId) {
+      const address = managedAccount?.name?.includes('@') ? managedAccount.name : '';
+      return { name: '', email: address };
+    }
+    const own = identities.find((i) => i.email?.toLowerCase() === username?.toLowerCase()) ?? identities[0];
+    return { name: own?.name ?? '', email: own?.email ?? username ?? '' };
+  }, [managedAccountId, managedAccount, identities, username]);
 
   useEffect(() => {
     if (client && isSupported) {
@@ -164,11 +210,16 @@ export function VacationSettings() {
     if (!sent || sent.reply !== storedReply) {
       touched.current = false;
       setLocalEnabled(stored.isEnabled);
-      setFromInput(stored.fromDate ? utcToLocalDatetime(stored.fromDate) : '');
-      setToInput(stored.toDate ? utcToLocalDatetime(stored.toDate) : '');
+      setFromInput(stored.fromDate ? utcToLocalDatetime(stored.fromDate, timeZone) : '');
+      setToInput(stored.toDate ? utcToLocalDatetime(stored.toDate, timeZone) : '');
+      setInputZone(timeZone);
       setHalfFilled({ from: false, to: false });
       setLocalSubject(stored.subject);
-      setLocalTextBody(stored.textBody);
+      // Text a save derived from the HTML leaves the Body blank, so the next
+      // HTML edit derives it again instead of keeping the old wording.
+      setLocalTextBody(stored.htmlBody && stored.textBody.trim() === textFromHtml(sanitizeEmailHtml(stored.htmlBody)).trim()
+        ? ''
+        : stored.textBody);
       setHtmlEnabled(!!stored.htmlBody);
       setLocalHtmlBody(stored.htmlBody || '');
     }
@@ -181,6 +232,8 @@ export function VacationSettings() {
       setForwardKeep(stored.forward?.keepCopy ?? false);
     }
     setAudienceOnly(stored.audience?.only ?? 'all');
+    // The time zone is read when the fields load, not followed while typing.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accountKey, isLoading, storedReply, forward, audience]);
 
   // How long the next save waits, set by the control that changed.
@@ -194,6 +247,15 @@ export function VacationSettings() {
     touched.current = true;
     saveDelay.current = SAVE_AFTER_TYPING;
     set(value);
+  };
+
+  const applyTemplate = (filled: FilledVacationTemplate) => {
+    touched.current = true;
+    saveDelay.current = SAVE_AFTER_TYPING;
+    if (filled.subject) setLocalSubject(filled.subject);
+    setLocalTextBody(filled.text);
+    setHtmlEnabled(!!filled.html);
+    setLocalHtmlBody(filled.html);
   };
 
   // Reads a date field as the browser holds it, half filled in or not.
@@ -243,10 +305,7 @@ export function VacationSettings() {
       htmlEnabled && htmlToPlainText(localHtmlBody).trim()
         ? sanitizeEmailHtml(localHtmlBody)
         : null;
-    const text =
-      localTextBody.trim() || !sanitizedHtml
-        ? localTextBody
-        : htmlToPlainText(sanitizedHtml, { paragraphSpacing: true });
+    const text = localTextBody.trim() || !sanitizedHtml ? localTextBody : textFromHtml(sanitizedHtml);
     return { sanitizedHtml, textBody: text };
   }, [htmlEnabled, localHtmlBody, localTextBody]);
 
@@ -279,13 +338,15 @@ export function VacationSettings() {
     ? t('warnings.body_too_long', { max: sizeLimits.body })
     : localEnabled && !localTextBody.trim() && !hasHtmlContent ? t('warnings.empty_body') : null;
 
+  // The bodies are compared as a save sends them: the server keeps the
+  // sanitized HTML and the text derived from it, never what was typed.
   const userChanges =
     localEnabled !== isEnabled ||
     (localFromDate || null) !== (fromDate || null) ||
     (localToDate || null) !== (toDate || null) ||
     localSubject !== subject ||
-    localTextBody !== textBody ||
-    (htmlEnabled ? localHtmlBody : '') !== (htmlBody || '') ||
+    payload.textBody !== textBody ||
+    (payload.sanitizedHtml ?? '') !== (htmlBody || '') ||
     forwardChanged ||
     audienceChanged;
 
@@ -455,7 +516,22 @@ export function VacationSettings() {
           />
         </SettingItem>
         <FieldMessage id="vacation-to-error" text={toError} />
+        <VacationCalendarBlock hasDates={!!fromInput && !!toInput} accountId={managedAccountId ?? undefined} />
       </SettingsSection>
+
+      <VacationTemplatePicker
+        library={vacationLibrary ?? []}
+        base={{
+          name: templateSender.name,
+          email: templateSender.email,
+          company: companyName(),
+          fromDate: localFromDate || null,
+          toDate: localToDate || null,
+          locale,
+          timeZone,
+        }}
+        onApply={applyTemplate}
+      />
 
       <SettingsSection id="reply" title={t('auto_reply.title')} description={t('status.description')}>
         <SettingItem label={t('status.label')}>
@@ -466,6 +542,7 @@ export function VacationSettings() {
             inactiveLabel={t('status.inactive')}
           />
         </SettingItem>
+        {!localEnabled && <VacationFilterWarning accountId={managedAccountId ?? undefined} />}
         {canNarrow && (
           <SettingItem
             label={t('audience.label')}
@@ -517,7 +594,14 @@ export function VacationSettings() {
           label={t('message.html_label')}
           description={t('message.html_description')}
         >
-          <ToggleSwitch checked={htmlEnabled} onChange={changeNow(setHtmlEnabled)} />
+          <ToggleSwitch
+            checked={htmlEnabled}
+            onChange={changeNow((on: boolean) => {
+              // Switched off, a blank Body keeps the text derived from the HTML.
+              if (!on && !localTextBody.trim()) setLocalTextBody(payload.textBody);
+              setHtmlEnabled(on);
+            })}
+          />
         </SettingItem>
         {htmlEnabled && (
           <div className="pb-3">

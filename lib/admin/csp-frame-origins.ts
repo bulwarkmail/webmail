@@ -12,6 +12,7 @@
 import { getPluginRegistry } from './plugin-registry';
 import { sanitizeFrameOrigins } from '../extension-origins';
 import { isNoThirdPartyTrafficOn } from './third-party-mode';
+import { onSharedChange } from '@/lib/shared-store/changes';
 
 export {
   isValidFrameOrigin,
@@ -25,9 +26,26 @@ export {
 // registry JSON every time is fine but cheap to skip when nothing has
 // changed. Five seconds is short enough to make plugin install/uninstall
 // feel snappy without measurable overhead.
-let cachedAt = 0;
-let cachedOrigins: string[] = [];
+//
+// On globalThis: the proxy has its own copy of this module, and an install
+// handled by a route must clear the proxy's cache too, not only the route's.
+// Dropped at once when the plugins (or the config and policy that gate
+// them) change, on this replica or another one (#1066).
+interface FrameOriginsCache {
+  at: number;
+  origins: string[];
+  /** Bumped on every invalidation, so a read that started before can't store stale origins. */
+  generation: number;
+}
+const CACHE_KEY = Symbol.for('bulwark.admin.cspFrameOrigins');
 const CACHE_TTL_MS = 5_000;
+
+function cache(): FrameOriginsCache {
+  const g = globalThis as typeof globalThis & { [CACHE_KEY]?: FrameOriginsCache };
+  return (g[CACHE_KEY] ??= { at: 0, origins: [], generation: 0 });
+}
+
+for (const area of ['plugins', 'config', 'policy']) onSharedChange(area, () => invalidateFrameOriginsCache());
 
 /**
  * Returns the union of frame origins declared by every enabled plugin in
@@ -37,14 +55,20 @@ const CACHE_TTL_MS = 5_000;
  * a broken registry only ever shrinks the CSP - never widens it.
  */
 export async function getEnabledPluginFrameOrigins(): Promise<string[]> {
+  const c = cache();
   const now = Date.now();
-  if (now - cachedAt < CACHE_TTL_MS) return cachedOrigins;
+  if (now - c.at < CACHE_TTL_MS) return c.origins;
+  const generation = c.generation;
+  const remember = (origins: string[]) => {
+    if (c.generation !== generation) return;
+    c.origins = origins;
+    c.at = now;
+  };
 
   try {
     // No outside frames at all while the server stays off outside hosts (#903).
     if (await isNoThirdPartyTrafficOn()) {
-      cachedOrigins = [];
-      cachedAt = now;
+      remember([]);
       return [];
     }
     const registry = await getPluginRegistry();
@@ -64,18 +88,18 @@ export async function getEnabledPluginFrameOrigins(): Promise<string[]> {
         out.push(o);
       }
     }
-    cachedOrigins = out;
-    cachedAt = now;
+    remember(out);
     return out;
   } catch {
-    cachedOrigins = [];
-    cachedAt = now;
+    remember([]);
     return [];
   }
 }
 
-/** Force the next call to re-read the registry. Used by install/uninstall. */
+/** Force the next call (in every module copy) to re-read the registry. Used by install/uninstall. */
 export function invalidateFrameOriginsCache(): void {
-  cachedAt = 0;
-  cachedOrigins = [];
+  const c = cache();
+  c.at = 0;
+  c.origins = [];
+  c.generation++;
 }

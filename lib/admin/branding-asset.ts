@@ -8,10 +8,10 @@
 
 import path from 'node:path';
 import { readFile } from 'node:fs/promises';
-import { getConfigDir } from '@/lib/admin/paths';
+import { brandingDocs } from '@/lib/admin/extension-store';
 import { fetchPublicUrl, type PublicFetchResponse } from '@/lib/security/url-guard';
 
-/** Admin-uploaded assets are served from here but stored under getConfigDir()/branding/. */
+/** Admin-uploaded assets are served from here but stored in C/branding (or the shared store, #1066). */
 const ADMIN_BRANDING_PREFIX = '/api/admin/branding/';
 
 const REMOTE_TIMEOUT_MS = 10_000;
@@ -57,8 +57,11 @@ export async function fetchBrandingAsset(url: string, label = 'branding asset'):
   }
 
   if (url.startsWith(ADMIN_BRANDING_PREFIX)) {
-    const filename = path.basename(url.slice(ADMIN_BRANDING_PREFIX.length));
-    return readFile(path.join(getConfigDir(), 'branding', filename));
+    // The URL carries the upload's version (?v=…) for caches; the file is the path.
+    const filename = path.basename(url.slice(ADMIN_BRANDING_PREFIX.length).split(/[?#]/)[0]);
+    const doc = await brandingDocs().get(filename);
+    if (!doc) throw new Error(`Branding file ${filename} not found`);
+    return doc.data;
   }
 
   // Path relative to public/ directory

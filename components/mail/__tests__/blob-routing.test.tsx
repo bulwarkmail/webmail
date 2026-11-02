@@ -154,6 +154,14 @@ async function downloadAttachment() {
   const buttons = await screen.findAllByTitle('download', {}, { timeout: 5000 });
   fireEvent.click(buttons[0]);
 }
+/** The button that covers an attachment's tile and opens it like a click on the tile. */
+async function findAttachmentOpener(name: string): Promise<HTMLElement> {
+  return waitFor(() => {
+    const tile = document.querySelector<HTMLElement>(`[data-attachment-name="${name}"]`);
+    if (!tile) throw new Error(`No attachment named ${name}`);
+    return within(tile).getAllByRole('button')[0];
+  }, { timeout: 5000 });
+}
 async function exportEmail() {
   fireEvent.click((await screen.findAllByRole('button', { name: 'more_actions' }))[0]);
   fireEvent.click((await screen.findAllByText('export_email'))[0]);
@@ -210,8 +218,8 @@ describe('standard mail attachment download feedback', () => {
     });
     render(<><MailApp /><DownloadToasts /></>);
     const button = (await screen.findAllByTitle('download', {}, { timeout: 5000 }))[0];
-    const chip = button.closest('[data-testid="attachment"]')!;
-    const click = () => fireEvent.click(action === 'Download button' ? button : chip);
+    const opener = await findAttachmentOpener('report.txt');
+    const click = () => fireEvent.click(action === 'Download button' ? button : opener);
 
     function expectRequests(count: number) {
       expect(fetchMock).toHaveBeenCalledTimes(count);
@@ -283,7 +291,7 @@ describe('standard mail attachment download feedback', () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     const next = message({ id: 'next', subject: 'Next', sourceAccountId: 'different-owner', attachments: [] });
     act(() => useEmailStore.setState({ selectedEmail: next }));
-    expect(screen.queryByText('report.txt')).not.toBeInTheDocument();
+    expect(document.querySelector('[data-attachment-name="report.txt"]')).toBeNull();
     expect(downloads).toEqual([]);
     await act(async () => finish(response()));
     await expectDownload(1);
@@ -388,7 +396,7 @@ describe('standard mail UI blob routing', () => {
   it('exports the raw shared message through its owner', async () => {
     render(<MailApp />);
     await exportEmail();
-    expect(primary.downloadBlob).toHaveBeenCalledWith('raw-blob', expect.stringMatching(/\.eml$/), 'message/rfc822', 'nrichmond');
+    expect(primary.downloadBlob).toHaveBeenCalledWith('raw-blob', expect.stringMatching(/\.eml$/), 'message/rfc822', 'nrichmond', { kind: 'export' });
   });
 
   it.each([false, true])('routes Unified selection (automatic=%s) after Email/get replaces the stub', async (automatic) => {
@@ -401,7 +409,7 @@ describe('standard mail UI blob routing', () => {
     await downloadAttachment();
     await exportEmail();
     expect(other.downloadBlob).toHaveBeenCalledWith('same-blob', expect.any(String), 'message/rfc822', 'nrichmond');
-    expect(other.downloadBlob).toHaveBeenCalledWith('raw-blob', expect.any(String), 'message/rfc822', 'nrichmond');
+    expect(other.downloadBlob).toHaveBeenCalledWith('raw-blob', expect.any(String), 'message/rfc822', 'nrichmond', { kind: 'export' });
     expect(primary.downloadBlob).not.toHaveBeenCalled();
     expect(useEmailStore.getState().selectedEmail).toMatchObject({ sourceClientAccountId: 'login-other', sourceAccountId: 'nrichmond', accountLabel: 'Richmond' });
   });
@@ -411,7 +419,7 @@ describe('standard mail UI blob routing', () => {
     const email = message({ attachments: [{ partId: '3', blobId: 'same-blob', name: 'photo.png', type: 'image/png', size: 50 }] });
     useEmailStore.setState({ selectedEmail: email });
     render(<MailApp />);
-    fireEvent.click((await screen.findAllByText('photo.png'))[0]);
+    fireEvent.click(await findAttachmentOpener('photo.png'));
     await screen.findByText('Preview download');
     act(() => {
       useEmailStore.setState({ selectedMailbox: 'inbox', selectedEmail: message() });
@@ -772,14 +780,14 @@ async function openProMessage(route: typeof proRoutes[number], action: ProBlobAc
     fireEvent.click(await screen.findByText('Pro message'));
   }
   if (action === 'CID') await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-  else await screen.findAllByText('photo.png');
+  else await findAttachmentOpener('photo.png');
   return { a, b, origin, fetchMock, full };
 }
 
 async function actOnProBlob(action: ProBlobAction) {
   if (action === 'download') await downloadAttachment();
   if (action === 'preview click') {
-    fireEvent.click((await screen.findAllByText('photo.png'))[0]);
+    fireEvent.click(await findAttachmentOpener('photo.png'));
     // Preserve Pro's existing action: Preview clicks download, with no modal.
     expect(screen.queryByText('Preview fetch')).not.toBeInTheDocument();
   }

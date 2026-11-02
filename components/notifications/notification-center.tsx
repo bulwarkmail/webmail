@@ -8,6 +8,7 @@ import { useConfig } from "@/hooks/use-config";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { isDocumentRTL } from "@/i18n/direction";
 import { toastHooks } from "@/lib/plugin-hooks";
+import { gateLinkClick } from "@/lib/plugin-hook-result";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
@@ -125,7 +126,8 @@ export function NotificationPanel({ onClose, className, sheet = false }: { onClo
                     href={entry.action.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={() => markRead(entry.id)}
+                    onClick={(event) => { markRead(entry.id); gateLinkClick(event); }}
+                    onAuxClick={(event) => { markRead(entry.id); gateLinkClick(event); }}
                     className="-mt-1 mb-1 ms-[38px] inline-flex items-center gap-1 rounded text-xs font-medium text-primary hover:underline focus-visible:outline-hidden"
                   >
                     {entry.action.label}

@@ -586,6 +586,60 @@ export interface TaskInput {
   priority?: number;
   /** Defaults to the tasks calendar, else the default calendar. */
   calendarId?: string;
+  /**
+   * The task's reminders by id (1-64 of `A-Z a-z 0-9 . _ -`); a task holds
+   * at most 5. On update only the ids named change: an alert given is set
+   * (one kept with the same trigger and action stays acknowledged; a new
+   * trigger, a snooze, makes it fire again), an id given null is removed,
+   * and alerts not named are left as they are. null for the whole map
+   * removes every alert. While the task uses its calendar's default alerts
+   * (TaskView.useDefaultAlerts), any change makes the defaults the task's
+   * own under new ids; `{}` does only that.
+   */
+  alerts?: Record<string, TaskAlertInput | null> | null;
+  /**
+   * Links by id (1-64 of `A-Z a-z 0-9 . _ -`), at most 10: an http(s) URL,
+   * a `mailto:` address or a path of this Bulwark (`/mail/...`), stored as
+   * its full URL. Merged by id on update as `alerts` is; links another app
+   * wrote stay unless named with null.
+   */
+  links?: Record<string, TaskLinkInput | null> | null;
+  /**
+   * What the task relates to, by a mail's Message-ID (with its angle
+   * brackets) or another calendar object's UID; at most 10. Merged by key on
+   * update as `alerts` is.
+   */
+  relatedTo?: Record<string, TaskRelationInput | null> | null;
+}
+
+/**
+ * When a task's alert fires: an ISO 8601 duration from the task's due
+ * (`-PT15M` before, `PT0S` at it; `relativeTo: 'start'` counts from its
+ * start, else from its due), at most a year either way; or an instant in
+ * UTC (`2026-05-01T07:30:00Z`).
+ */
+export type TaskAlertTrigger =
+  | { offset: string; relativeTo?: 'due' | 'start' }
+  | { at: string };
+
+export interface TaskAlertInput {
+  trigger: TaskAlertTrigger;
+  /** `display` (the default) shows a reminder; `email` has the server send one. */
+  action?: 'display' | 'email';
+}
+
+export interface TaskLinkInput {
+  /** Up to 2048 characters. */
+  href: string;
+  /** A link relation such as `describedby` or `author` (RFC 8288), lower case. */
+  rel?: string;
+  /** Up to 500 characters. */
+  title?: string;
+}
+
+export interface TaskRelationInput {
+  /** How it relates, as in JSCalendar: `parent`, `child`, `first`, `next` or another lower-case type; at most 4. */
+  relation?: string[];
 }
 
 export interface ContactView {
@@ -651,6 +705,37 @@ export interface TaskView {
   priority: number;
   calendarId: string;
   keywords: string[];
+  /** By id; as written by any app, not only by plugins. */
+  alerts: Record<string, TaskAlertView>;
+  /**
+   * True while the task uses its calendar's default alerts: `alerts` then
+   * shows those defaults, which can't be acknowledged until an update of
+   * `alerts` makes them the task's own (under new ids).
+   */
+  useDefaultAlerts: boolean;
+  /** By id; as written by any app (an attachment's link too). */
+  links: Record<string, TaskLinkView>;
+  /** By Message-ID or UID. */
+  relatedTo: Record<string, TaskRelationView>;
+}
+
+export interface TaskAlertView {
+  /** As in TaskAlertInput; `relativeTo` is always given for an offset. */
+  trigger: { offset: string; relativeTo: 'due' | 'start' } | { at: string };
+  action: 'display' | 'email';
+  /** When the alert was dismissed (UTC), or null while it is not. */
+  acknowledged: string | null;
+}
+
+export interface TaskLinkView {
+  href: string;
+  rel: string | null;
+  title: string | null;
+  contentType: string | null;
+}
+
+export interface TaskRelationView {
+  relation: string[];
 }
 
 export interface TemplateView {
@@ -807,12 +892,20 @@ export interface QuotaView {
   percentUsed: number;
 }
 
-export interface CalendarAlertView {
-  id: string;
-  eventId: string;
-  eventTitle: string;
-  triggerTime: string;
-}
+/**
+ * A reminder that is due: an event's display alert or a task's. `id` is the
+ * alert's id within its event or task; `triggerTime` when it fired (UTC).
+ * A task's reaches only plugins with `tasks:read`, an event's only plugins
+ * with `calendar:read`.
+ */
+export type CalendarAlertView =
+  | { id: string; eventId: string; eventTitle: string; triggerTime: string }
+  | { id: string; taskId: string; taskTitle: string; triggerTime: string };
+
+/** A reminder's toast closed by the user (onCalendarAlertAcknowledge). */
+export type CalendarAlertAcknowledgeView =
+  | { alertId: string; eventId: string }
+  | { alertId: string; taskId: string };
 
 export interface SearchFilters {
   from?: string;
@@ -876,6 +969,14 @@ export interface HostFeaturesView {
   externalSenderLabel: boolean;
   /** The admin turned on the confirm before sending outside the organisation (organisation.externalMail.recipientWarning). */
   externalRecipientWarning: boolean;
+  /**
+   * Bulwark 1.20 and later: "no third-party traffic" is on (or not known
+   * yet). Outside services are off: the proxy refuses servers fixed in a
+   * manifest and only reaches those the admin entered on the plugin's admin
+   * page. A plugin switches such a service off instead of treating it as
+   * down.
+   */
+  noThirdPartyTraffic: boolean;
 }
 
 /** One setting `api.app.searchSettings` found, in the user's language. */
@@ -1076,6 +1177,35 @@ export interface MailtoContext {
  * copy. Use to inject signatures, rewrite links, strip tracking pixels from
  * forwards, encrypt the body, etc. Return undefined to pass through unchanged.
  */
+/** An attachment of an OutgoingEmail. */
+export interface OutgoingAttachment {
+  name: string;
+  /** The type the file was attached with (often the browser's guess from the extension). */
+  type: string;
+  size: number;
+  /** onBeforeEmailSend, 1.20 and later: the uploaded blob. */
+  blobId?: string;
+  /** onBeforeEmailSend, 1.20 and later: an image shown in the body (pasted or quoted). */
+  inline?: boolean;
+  /**
+   * onBeforeEmailSend, 1.20 and later: the type the file's first bytes say
+   * it is (application/x-msdownload for a program, application/zip, ...);
+   * absent when Bulwark knows no signature for them or couldn't read them.
+   */
+  sniffedType?: string;
+  /**
+   * onBeforeEmailSend, 1.20 and later, plugins with `email:blob-read` only:
+   * up to the first megabyte of a text attachment (text/*, CSV, JSON, XML,
+   * calendar and contact files) as text.
+   */
+  textExcerpt?: string;
+  /**
+   * onBeforeEmailSend, 1.20 and later: Bulwark couldn't read the file, so
+   * there is no sniffedType or textExcerpt. Treat it as not checked.
+   */
+  unreadable?: boolean;
+}
+
 export interface OutgoingEmail {
   to: string[];
   cc: string[];
@@ -1086,11 +1216,33 @@ export interface OutgoingEmail {
   identityId: string;
   /** Sender email derived from the active identity (incl. sub-address tag, when set) */
   fromEmail?: string;
-  attachments: { name: string; type: string; size: number }[];
+  attachments: OutgoingAttachment[];
   /** Original message id when this is a reply or forward */
   inReplyTo?: string;
   /** Free-form custom headers added by the composer or earlier handlers */
   headers?: Record<string, string>;
+  /**
+   * Where the send comes from (onBeforeEmailSend, Bulwark 1.20 and later):
+   * the composer, a quick reply under a message, or a plugin's forward.
+   */
+  surface?: 'composer' | 'quick-reply' | 'plugin-forward';
+  /** compose, reply, replyAll or forward (onBeforeEmailSend, 1.20 and later). */
+  mode?: 'compose' | 'reply' | 'replyAll' | 'forward';
+  /**
+   * onBeforeEmailSend, 1.20 and later: what the user wrote, as plain text,
+   * without the quoted original of a reply or forward and without the
+   * signature. Check this rather than the bodies, or a number in the quoted
+   * mail warns on every reply.
+   */
+  authoredText?: string;
+  /**
+   * onBeforeEmailSend, 1.20 and later: the recipients (To, Cc and Bcc)
+   * outside the organisation of the account the mail goes out from, as bare
+   * lowercase addresses. The host works it out from the account's identity
+   * domains and the admin's organisation domains, also when the admin's
+   * recipient warning is off. Empty when every recipient is internal.
+   */
+  externalRecipients?: string[];
 }
 /**
  * Passed to onBeforeDraftAutoSave handlers as a transform value.
@@ -1177,6 +1329,13 @@ export interface AttachmentInfo {
   blobId?: string;
   /** The email this attachment belongs to (download / preview) */
   emailId?: string;
+  /**
+   * onBeforeAttachmentUpload, 1.20 and later, for a file from this device:
+   * the type its first bytes say it is (see OutgoingAttachment.sniffedType).
+   */
+  sniffedType?: string;
+  /** onBeforeAttachmentUpload, 1.20 and later: the file's bytes couldn't be read. */
+  unreadable?: boolean;
 }
 
 /**
@@ -1192,6 +1351,26 @@ export interface PluginAttachmentUpload {
   type: string;
   size: number;
 }
+
+/** Own text and metadata of one open composer, with an opaque edit revision. */
+export type ComposerSnapshot = {
+  revision: string;
+  subject: string;
+  text: string;
+  to: string[];
+  cc: string[];
+  bcc: string[];
+  attachments: { id: string; name: string; type: string; size: number }[];
+  pending: boolean;
+};
+
+/** Bytes of a file still attached to the selected composer. */
+export type ComposerAttachmentData = {
+  name: string;
+  type: string;
+  size: number;
+  data: ArrayBuffer;
+};
 
 /**
  * Initial value passed to the onAttachmentPreview transform hook. A handler
@@ -1211,11 +1390,21 @@ export interface AttachmentPreview {
  * Return false to cancel the navigation. Mutate `href` to rewrite it.
  */
 export interface ExternalLinkContext {
+  /**
+   * The address as the browser parses it (`new URL(href).href`, Bulwark
+   * 1.20 and later); exactly this string opens.
+   */
   href: string;
   /** Anchor target ('_blank', '_self', etc.) when set */
   target?: string;
   /** Email currently in view, when the click came from an email body */
   emailId?: string;
+  /**
+   * What the link says (its text, else an image's alt text), trimmed to 200
+   * characters, when the host knows it (Bulwark 1.20 and later). A link
+   * whose text names another address than its target is a phishing sign.
+   */
+  text?: string;
 }
 
 /**
@@ -1368,11 +1557,18 @@ export const ALL_PERMISSIONS = [
   // Open the composer filled in (api.compose.open). Low risk: the user still
   // has to press Send.
   'compose:open',
-  // Read the message being written (api.composer.getBody/getSelection), in
+  // Read the message being written (api.composer.getBody/getSelection/getSnapshot), in
   // a composer that handed the plugin its id.
   'compose:read',
   // Change the message being written (api.composer.replaceSelection/replaceBody).
   'compose:write',
+  // Check the text of every open composer while the user types
+  // (api.composer.registerChecker): the host sends the plugin what the user
+  // writes, without the user pointing it at a composer, and draws its
+  // results as underlines. Only where the user (or the admin) turned
+  // proofreading on, and never for a message that will be signed or encrypted.
+  // A checker that checks only when asked needs compose:read instead.
+  'compose:check',
   // Forward a message of the account with its attachments, without the
   // composer (api.email.forward). The host asks the user once per address.
   'email:forward',

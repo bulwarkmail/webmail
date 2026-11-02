@@ -169,7 +169,9 @@ describe('Pro compose tab - a draft that lives in a group account', () => {
 
     // (client, to, subject, body, cc, bcc, identityId, fromEmail, draftId, ..., options)
     expect(sendEmail.mock.calls[0][8]).toBe('eaaaaab');
-    expect(sendEmail.mock.calls[0][16]).toEqual({ localAccountId: undefined, draftAccountId: 'c' });
+    // The options are composerSendOptions, the same object the mail page sends
+    // (read receipt, DSN, priority, headers, outbox for offline mode #523).
+    expect(sendEmail.mock.calls[0][16]).toMatchObject({ localAccountId: undefined, draftAccountId: 'c', outbox: true });
   });
 });
 

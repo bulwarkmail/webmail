@@ -1,5 +1,5 @@
 {
-  "meta_description": "Cliente de webmail minimalista que usa o protocolo JMAP",
+  "meta_description": "Webmail auto-hospedado para e-mail, calendário, contatos e arquivos, baseado em JMAP",
   "login": {
     "title": "Webmail",
     "username_label": "E-mail",
@@ -461,7 +461,6 @@
     "view_in_light_mode": "Ver em modo claro",
     "export_email": "Exportar como .eml",
     "forward_as_attachment": "Encaminhar como anexo",
-    "import_email": "Importar .eml ou .zip…",
     "keyboard_shortcuts": "Atalhos de teclado",
     "email_source": "Código-fonte do E-mail",
     "draft_banner": "Esta mensagem é um rascunho",
@@ -473,6 +472,9 @@
     "source_truncated": "A mostrar os primeiros {size}. Exporte a mensagem para ver o resto.",
     "source_copied": "Código-fonte copiado para a área de transferência",
     "attachments": "Anexos",
+    "attachments_count": "{count, plural, one {# anexo} other {# anexos}}",
+    "attachments_show_more": "Mostrar mais {count}",
+    "attachments_show_fewer": "Mostrar menos",
     "important": "Importante",
     "download": "Baixar",
     "download_all": "Baixar tudo",
@@ -880,6 +882,35 @@
     "send_anyway": "Enviar mesmo assim",
     "back": "Voltar"
   },
+  "phishing_report": {
+    "action": "Reportar phishing…",
+    "confirm_title": "Reportar phishing?",
+    "confirm_message": "{count, plural, one {A mensagem vai para {address} e é movida para Spam.} other {Cada uma das # mensagens vai para {address} como uma denúncia separada e é movida para Spam.}}",
+    "confirm": "Reportar",
+    "cancel": "Cancelar",
+    "sending": "Reportando…",
+    "done": "{count, plural, one {Reportada para {address} e movida para Spam.} other {# mensagens reportadas para {address} e movidas para Spam.}}",
+    "not_moved": "{count, plural, one {Reportada para {address}, mas não foi possível mover a mensagem para Spam.} other {Reportadas para {address}, mas não foi possível mover # mensagens para Spam.}}",
+    "failed": "{count, plural, one {Não foi possível reportar a mensagem.} other {Não foi possível reportar # mensagens.}}",
+    "undo": "Desfazer",
+    "undone": "{count, plural, one {Devolvida ao lugar. A denúncia já foi enviada.} other {Devolvidas ao lugar. As denúncias já foram enviadas.}}",
+    "undo_failed": "Não foi possível devolver ao lugar.",
+    "banner": "Você reportou esta mensagem como phishing. Os links dela estão desativados.",
+    "link_off": "link desativado",
+    "link_off_note": "(link desativado)",
+    "no_subject": "(sem assunto)"
+  },
+  "classification": {
+    "picker_label": "Classificação",
+    "chip_label": "Classificação: {name}",
+    "none": "Sem classificação",
+    "pick_required": "Escolha uma classificação",
+    "required_hint": "Sua organização exige uma classificação.",
+    "required_toast": "Escolha uma classificação antes de enviar.",
+    "quick_reply_needs_label": "Esta resposta precisa de uma classificação. Escolha uma aqui e depois envie.",
+    "forward_needs_label": "É obrigatória uma classificação. Encaminhe a mensagem pelo editor.",
+    "received_hint": "Definida pelo programa de e-mail do remetente. Qualquer pessoa pode definir uma classificação, então ela não prova nada."
+  },
   "email_composer": {
     "select_from_directory": "Selecionar do diretório",
     "minimize": "Minimizar",
@@ -1248,8 +1279,6 @@
     "templates_import_errors": "Alguns modelos não puderam ser importados",
     "templates_import_empty": "Nenhum modelo encontrado no arquivo",
     "export_email_error": "Falha ao exportar o e-mail",
-    "import_email_success": "E-mail importado com sucesso",
-    "import_email_error": "Falha ao importar o e-mail",
     "rule_created": "Regra criada",
     "rule_merged": "Adicionado à regra “{name}”",
     "rule_already_covered": "Já coberto pela regra “{name}”",
@@ -1272,12 +1301,46 @@
     "tag_removed_count": "{count, plural, one {Etiqueta removida de # e-mail} other {Etiqueta removida de # e-mails}}",
     "new_mail_count": "{count, plural, one {# mensagem nova} other {# mensagens novas}}"
   },
+  "org_notice": {
+    "label": "Aviso",
+    "dismiss": "Fechar aviso",
+    "severity_info": "Informação",
+    "severity_warning": "Atenção",
+    "severity_critical": "Importante"
+  },
+  "vacation_templates": {
+    "title": "Modelos da organização",
+    "description": "Comece por uma resposta escrita pela sua organização. Pode alterar o texto depois.",
+    "pick_label": "Usar um modelo",
+    "pick_placeholder": "Escolha um modelo",
+    "deputy_label": "Endereço do substituto",
+    "deputy_placeholder": "colega@example.com",
+    "deputy_hint": "A resposta indica este colega para assuntos urgentes.",
+    "deputy_missing": "Introduza primeiro o endereço do seu substituto.",
+    "deputy_name_label": "Nome do substituto",
+    "deputy_name_missing": "Introduza primeiro o nome do seu substituto.",
+    "apply": "Usar este texto",
+    "apply_hint": "Substitui o assunto e o texto abaixo."
+  },
+  "retention_notice": {
+    "line": "As mensagens aqui são eliminadas {count, plural, one {# dia} other {# dias}} depois de serem movidas para cá."
+  },
+  "device_policy": {
+    "downloads_off": "A sua organização desativou as transferências.",
+    "download_off_named": "{name}: a sua organização desativou as transferências",
+    "download_blocked": "A sua organização desativou as transferências.",
+    "export_blocked": "A sua organização desativou a exportação de mensagens.",
+    "print_blocked": "A sua organização desativou a impressão."
+  },
   "third_party": {
     "push_needs_relay": "As notificações push precisam de um relay push mantido pela sua organização, e nenhum está configurado. Os novos e-mails continuam aparecendo enquanto o app estiver aberto.",
     "relay_desc": "Só são oferecidos os relays da própria organização, porque este servidor não entra em contato com serviços externos.",
     "relay_none": "Nenhum configurado",
     "plugin_refused": "Não iniciado: este plugin se conecta a serviços externos, que a sua organização desativou.",
     "remote_content_blocked": "Sua organização bloqueia conteúdo de outros servidores, então as imagens remotas desta mensagem não são exibidas."
+  },
+  "remote_content_lock": {
+    "trusted_senders_note": "A sua organização bloqueia conteúdo remoto em todos os e-mails, por isso também não é carregado de remetentes de confiança."
   },
   "date": {
     "today": "Hoje",
@@ -1539,6 +1602,10 @@
         "label": "Mostrar contas de e-mail compartilhadas",
         "description": "Mostra as pastas das caixas compartilhadas com você em Compartilhado, na barra lateral. Desative para ocultar todas, ou oculte contas individuais abaixo. Os calendários e contatos continuam visíveis."
       },
+      "compact_shared_mailboxes": {
+        "label": "Caixas compartilhadas compactas",
+        "description": "Mostra cada caixa de correio compartilhada como uma única linha que abre sua caixa de entrada, com suas pastas abaixo. As vazias, como Rascunhos ou Lixeira, são omitidas."
+      },
       "pro_interface": {
         "label": "Interface Pro (experimental)",
         "description": "Layout para utilizadores avançados apenas em desktop com navegação de mensagens em múltiplos separadores e fluxos entre contas. A interface padrão não é afetada; pode voltar a qualquer momento.",
@@ -1769,6 +1836,12 @@
         "label": "Limpar a pesquisa ao mudar de pasta",
         "description": "Clicar numa pasta (Caixa de entrada, Enviados…) limpa a pesquisa ativa e mostra essa pasta. Se desativado, a pesquisa mantém-se e volta a ser executada na pasta para a qual mudar."
       },
+      "search_default_scope": {
+        "label": "Pesquisar em",
+        "description": "Onde uma nova pesquisa procura. Pode escolher outra pasta nos filtros de pesquisa.",
+        "all": "Todas as pastas exceto Spam e Lixeira",
+        "folder": "A pasta aberta"
+      },
       "request_read_receipt": {
         "label": "Solicitar confirmações de leitura por padrão",
         "description": "Ativar previamente a solicitação de confirmação de leitura ao redigir uma nova mensagem."
@@ -1867,6 +1940,14 @@
         "above_quote": "Antes do texto citado",
         "below_quote": "Depois do texto citado"
       },
+      "signature_new_mail": {
+        "label": "Assinatura em novas mensagens",
+        "description": "Insere automaticamente a sua assinatura ao escrever uma nova mensagem. Desative para começar cada nova mensagem sem ela."
+      },
+      "signature_reply_forward": {
+        "label": "Assinatura em respostas e encaminhamentos",
+        "description": "Acrescenta automaticamente a sua assinatura ao responder ou encaminhar uma mensagem. Desative para as enviar sem ela."
+      },
       "signature_separator": {
         "label": "Delimitador de assinatura",
         "description": "Anteceder a assinatura com a linha delimitadora padrão \"-- \" (RFC 3676). Desative se preferir passar direto da mensagem para a assinatura."
@@ -1896,8 +1977,8 @@
       "attachment_position": {
         "label": "Posição dos anexos",
         "description": "Onde exibir os anexos no cabeçalho do e-mail",
-        "beside-sender": "Ao lado do remetente",
-        "below-header": "Abaixo do cabeçalho"
+        "below-header": "Abaixo do cabeçalho",
+        "below-message": "Cartões abaixo da mensagem"
       },
       "emails_per_page": {
         "10": "10 e-mails",
@@ -3546,7 +3627,6 @@
     "new_folder": "Nova pasta…",
     "rename": "Renomear…",
     "share": "Partilhar…",
-    "import_email": "Importar .eml ou .zip…",
     "empty_folder": "Esvaziar pasta",
     "empty_folder_generic": "Esvaziar pasta",
     "delete_folder": "Excluir pasta",
@@ -5052,7 +5132,6 @@
     "settings_ascending": "Crescente",
     "settings_descending": "Decrescente",
     "disabled_title": "O recurso de arquivos foi desativado pelo seu administrador",
-    "disabled_description": "Uploads de arquivos grandes via WebDAV podem causar instabilidade no Stalwart/RocksDB, incluindo falhas de memória e uso irrecuperável de disco. Arquivos excluídos podem não ser removidos imediatamente do armazenamento. Este recurso não é recomendado para ambientes de produção.",
     "no_accounts": "Nenhuma conta conectada.",
     "open_folder_tree": "Abrir árvore de pastas",
     "migration_title": "Atualizando seus arquivos…",
@@ -5241,6 +5320,117 @@
   "unified_mailbox": {
     "search_unavailable": "A pesquisa não está disponível na vista unificada"
   },
+  "mail_import": {
+    "menu_import": "Importar e-mails…",
+    "settings_label": "Importar e-mails",
+    "settings_description": "Trazer e-mails de arquivos .eml, ZIP, mbox ou Outlook .pst e .ost.",
+    "settings_button": "Importar…",
+    "title": "Importar e-mails",
+    "description": "Escolha arquivos .eml, .zip, .mbox ou Outlook .pst e .ost.",
+    "choose_files": "Escolher arquivos…",
+    "chosen_files": "Arquivos escolhidos",
+    "remove_file": "Remover {name}",
+    "format_eml": "Mensagem",
+    "format_zip": "Arquivo ZIP",
+    "format_mbox": "Arquivo mbox",
+    "format_pst": "Arquivo de dados do Outlook",
+    "target_label": "Importar para",
+    "target_top": "Nível superior",
+    "keep_folders": "Recriar as pastas do arquivo",
+    "keep_folders_hint": "Pastas com o mesmo nome são reutilizadas.",
+    "resume": "Continuar de onde a última importação destes arquivos parou (mensagens já processadas: {count})",
+    "quota_note": "Muitos servidores aceitam só cerca de 1000 mensagens ou 50 MB por hora de cada usuário. Uma importação maior faz uma pausa e depois continua sozinha.",
+    "start": "Importar",
+    "cancel": "Cancelar",
+    "running_title": "Importando e-mails",
+    "progress_label": "Progresso da importação",
+    "status_imported": "Mensagens importadas: {count}",
+    "reading_file": "Lendo {name}",
+    "paused": "Pausado até {time}. O servidor aceita no máximo {files} envios ou {size} por hora. A importação continua sozinha.",
+    "paused_generic": "Pausado até {time}. O limite de envio do servidor foi atingido. A importação continua sozinha.",
+    "background": "Continuar em segundo plano",
+    "cancel_import": "Cancelar importação",
+    "chip": "Importando e-mails: {percent}%",
+    "chip_paused": "Importação pausada até {time}",
+    "done_title": "Importação concluída",
+    "cancelled_title": "Importação cancelada",
+    "failed_title": "Importação interrompida",
+    "summary_imported": "Mensagens importadas: {count}",
+    "summary_folders": "Pastas criadas: {count}",
+    "summary_skipped": "Não importados:",
+    "skip_too_large": "Maiores do que o servidor aceita: {count}",
+    "skip_deleted": "Excluídos no Thunderbird: {count}",
+    "skip_embedded": "Mensagens anexadas a outras mensagens: {count}",
+    "skip_contact": "Contatos: {count}",
+    "skip_calendar": "Itens de calendário: {count}",
+    "skip_other": "Outros itens: {count}",
+    "summary_failed": "Não foi possível importar: {count}",
+    "failure_invalid": "não é uma mensagem válida",
+    "untitled": "(sem assunto)",
+    "cancelled_hint": "Para continuar mais tarde, importe os mesmos arquivos na mesma pasta outra vez.",
+    "close": "Fechar",
+    "pst_note": "Dos arquivos do Outlook só vêm os e-mails. Contatos, itens de calendário e tarefas são contados e deixados de fora.",
+    "pst_error_encrypted": "Este arquivo do Outlook usa criptografia alta, que o Bulwark não consegue ler. No Outlook, exporte os e-mails para um novo arquivo .pst sem criptografia.",
+    "pst_error_not_pst": "Este arquivo não é um arquivo de dados do Outlook que o Bulwark consiga ler.",
+    "pst_error_unreadable": "O Bulwark não conseguiu ler este arquivo do Outlook.",
+    "pst_error_worker": "O leitor de arquivos do Outlook não carregou. Recarregue a página e tente de novo.",
+    "error_over_quota": "A caixa de correio está cheia, por isso a importação parou. Libere espaço e importe os mesmos arquivos na mesma pasta outra vez para continuar.",
+    "error_forbidden": "Você não pode adicionar e-mails a esta pasta, por isso a importação parou.",
+    "error_failures": "Muitas mensagens falharam seguidas, por isso a importação parou. Importe os mesmos arquivos na mesma pasta mais tarde para continuar.",
+    "error_network": "A conexão com o servidor falhou várias vezes, por isso a importação parou. Importe os mesmos arquivos na mesma pasta outra vez para continuar.",
+    "error_busy": "Estes arquivos já estão sendo importados em outra aba.",
+    "retry_hint": "Importe os mesmos arquivos na mesma pasta outra vez para tentar de novo os que falharam.",
+    "skip_unreadable": "Ilegíveis no arquivo do Outlook: {count}",
+    "keep_folders_top_hint": "No nível superior, Caixa de entrada, Itens enviados, Itens excluídos e similares vão para as suas.",
+    "toast_done": "Importação concluída. Importados: {imported}, com falha: {failed}.",
+    "toast_stopped": "A importação parou.",
+    "toast_show": "Mostrar",
+    "section_title": "Arquivos de e-mail",
+    "section_description": "Traga e-mails de arquivos ou salve seus e-mails como arquivos."
+  },
+  "mail_export": {
+    "menu_export": "Exportar pasta…",
+    "settings_label": "Exportar todos os e-mails",
+    "settings_description": "Salvar todas as pastas desta conta em um arquivo ZIP, como arquivos mbox ou .eml.",
+    "settings_button": "Exportar…",
+    "title_folder": "Exportar “{name}”",
+    "title_account": "Exportar todos os e-mails",
+    "description_folder": "Salvar as mensagens desta pasta em um arquivo.",
+    "description_account": "Salvar todas as pastas desta conta em um arquivo ZIP.",
+    "format_label": "Formato",
+    "format_mbox_folder": "Arquivo mbox",
+    "format_eml_folder": "ZIP de arquivos .eml",
+    "format_mbox_account": "ZIP com um arquivo mbox por pasta",
+    "format_eml_account": "ZIP de arquivos .eml, uma pasta por pasta de e-mail",
+    "hint_mbox": "Thunderbird, Apple Mail e a maioria dos programas de e-mail abrem arquivos mbox.",
+    "hint_eml": "Um arquivo por mensagem, que qualquer programa de e-mail abre.",
+    "save_picker": "Você escolhe onde salvar o arquivo.",
+    "save_download": "O arquivo é baixado quando a exportação termina.",
+    "save_memory": "Este navegador guarda toda a exportação na memória e por isso só salva até 200 MB. Para mais, use o Chrome ou o Edge, ou exporte pasta por pasta.",
+    "start": "Exportar",
+    "cancel": "Cancelar",
+    "running_title": "Exportando e-mails",
+    "progress_label": "Progresso da exportação",
+    "status_exported": "Mensagens exportadas: {count} de {total}",
+    "paused": "Pausado até {time}: o servidor pediu uma pausa. A exportação continua sozinha.",
+    "background": "Continuar em segundo plano",
+    "cancel_export": "Cancelar exportação",
+    "chip": "Exportando e-mails: {percent}%",
+    "chip_paused": "Exportação pausada até {time}",
+    "done_title": "Exportação concluída",
+    "cancelled_title": "Exportação cancelada",
+    "failed_title": "Exportação interrompida",
+    "summary_exported": "Mensagens exportadas: {count}",
+    "summary_file": "Salvo como {name} ({size}).",
+    "summary_failed": "Não foi possível exportar: {count}",
+    "download_again": "Baixar de novo",
+    "too_large": "A exportação é maior do que este navegador consegue guardar na memória. Use o Chrome ou o Edge, ou exporte pasta por pasta.",
+    "close": "Fechar",
+    "untitled": "(sem assunto)",
+    "toast_done": "Exportação concluída: {name}",
+    "toast_stopped": "A exportação parou.",
+    "toast_show": "Mostrar"
+  },
   "recover_deleted": {
     "tab": "Recuperar itens excluídos",
     "title": "Recuperar itens excluídos",
@@ -5273,6 +5463,51 @@
     "updated": "{name} atualizou \"{title}\"",
     "cancelled": "{name} cancelou \"{title}\"",
     "untitled": "Evento sem título"
+  },
+  "company_calendars": {
+    "section": "Organização"
+  },
+  "vacation_calendar": {
+    "label": "Bloquear o meu calendário",
+    "description": "Adiciona um evento ocupado durante a sua ausência, para que ninguém marque reuniões consigo nessa altura.",
+    "no_access_managed": "Não é possível bloquear o calendário desta conta: não tem acesso de escrita.",
+    "no_calendar": "Não é possível bloquear o calendário: o Bulwark não encontrou um calendário para adicionar o evento.",
+    "filter_warning": "Ativar isto desliga o seu próprio script de filtros enquanto a resposta estiver ativa."
+  },
+  "calendar_delegate": {
+    "answer_for": "Responder por {name}",
+    "no_write": "Pode ver os convites de {name}, mas não responder por essa pessoa. Peça acesso de edição.",
+    "also_invited": "Também foi convidado e este servidor não distingue a sua resposta da de {name}. {name} tem de responder a esta.",
+    "answered_by": "Respondido por {who}"
+  },
+  "free_busy_share": {
+    "button": "Partilhar a minha disponibilidade com {group}",
+    "already": "A sua disponibilidade está partilhada com {group}",
+    "done": "A sua disponibilidade está agora partilhada com {group}.",
+    "error": "Não foi possível partilhar a sua disponibilidade. Tente novamente.",
+    "group_label": "Grupo",
+    "title": "Disponibilidade",
+    "description": "Os colegas do grupo veem quando está ocupado, não quais são os seus eventos. «Sugerir horários» usa isto."
+  },
+  "find_time": {
+    "suggest": "Sugerir horários",
+    "searching": "A procurar horários livres",
+    "slots_title": "Livre para todos os que o Bulwark conseguiu verificar",
+    "slot": "{day}, das {start} às {end}",
+    "none": "Não há tempo livre nos próximos 10 dias úteis.",
+    "picked": "Evento movido para {slot}",
+    "rate_limited": "Demasiadas consultas no último minuto. Tente novamente daqui a um minuto.",
+    "unavailable": "A disponibilidade não está acessível neste servidor, por isso o Bulwark não pode sugerir horários.",
+    "not_checked": "Não verificados:",
+    "not_checked_item": "{who}: {reason}",
+    "reason_external": "fora da sua organização",
+    "reason_unknown": "horas ocupadas desconhecidas",
+    "reason_not_found": "não encontrado neste servidor",
+    "reason_error": "não foi possível verificar",
+    "unknown_note": "O Bulwark só vê horas ocupadas nos calendários partilhados consigo. Para estas pessoas não consegue distinguir livre de não partilhado.",
+    "directory_off": "O Bulwark não consegue procurar pessoas neste servidor. O administrador pode ativar as consultas ao diretório no Stalwart.",
+    "not_looked_up": "Não foi possível procurar este endereço",
+    "found": "Horários livres encontrados: {count}"
   },
   "share_notifications": {
     "someone": "Alguém",
@@ -5411,6 +5646,76 @@
     "install": "Instalar",
     "dont_remind": "Não lembrar novamente",
     "dismiss_aria": "Dispensar aviso de instalação"
+  },
+  "app_update": {
+    "ready": "Uma nova versão do {appName} está pronta.",
+    "reload": "Recarregar"
+  },
+  "offline": {
+    "settings": {
+      "title": "Offline",
+      "description": "Leia e escreva e-mails neste dispositivo sem ligação.",
+      "keep_label": "Manter o e-mail neste dispositivo",
+      "keep_description": "Mantém os últimos 30 dias da caixa de entrada e das pastas que abrir, até 250 MB, cifrados neste navegador. Offline pode ler, sinalizar e mover e-mails, e o que escrever espera na caixa de saída. Terminar a sessão remove tudo.",
+      "warning": "Qualquer pessoa que possa usar este perfil do navegador pode ler estes e-mails. Ative isto apenas no seu próprio dispositivo e use cifragem de disco.",
+      "forbidden": "A sua organização não permite manter e-mails nos dispositivos.",
+      "unsupported": "Este navegador não consegue manter e-mails para uso offline.",
+      "syncing": "A guardar o seu e-mail neste dispositivo…",
+      "usage": "{size} neste dispositivo",
+      "usage_updated": "{size} neste dispositivo, atualizado {time}",
+      "off_confirm_title": "Desativar o modo offline?",
+      "off_confirm_message": "{count, plural, one {# mensagem na caixa de saída não foi enviada.} other {# mensagens na caixa de saída não foram enviadas.}} Desativar elimina-as, juntamente com o e-mail mantido neste dispositivo.",
+      "off_confirm": "Desativar"
+    },
+    "outbox": {
+      "title": "Caixa de saída",
+      "description": "Mensagens que escreveu offline. São enviadas quando este dispositivo voltar a estar online.",
+      "empty": "Nada à espera de ser enviado.",
+      "no_subject": "(sem assunto)",
+      "to": "Para: {recipients}",
+      "status_waiting": "À espera de ligação",
+      "status_sending": "A ser enviada",
+      "status_failed": "Não foi possível enviar: {error}",
+      "status_uncertain": "A ligação caiu durante o envio. Veja os Enviados antes de a enviar outra vez.",
+      "retry": "Enviar outra vez",
+      "delete": "Eliminar",
+      "delete_confirm_title": "Eliminar esta mensagem?",
+      "delete_confirm_message": "Não foi enviada e não pode ser recuperada.",
+      "changes": "{count, plural, one {# alteração} other {# alterações}} de lido, sinalizações ou pastas serão enviadas quando voltar a estar online.",
+      "status_held": "As regras da sua organização mudaram enquanto a mensagem esperava. Escreva-a novamente para a enviar.",
+      "retry_label": "Enviar outra vez: {subject}",
+      "delete_label": "Eliminar: {subject}"
+    },
+    "banner": {
+      "offline": "Está offline. Vê o e-mail mantido neste dispositivo. O que alterar ou escrever é enviado quando voltar a estar online.",
+      "outbox": "{count, plural, one {# mensagem} other {# mensagens}} na caixa de saída",
+      "server_down": "Não é possível contactar o servidor de e-mail. Vê o e-mail mantido neste dispositivo. O que alterar ou escrever é enviado quando ele voltar a responder."
+    },
+    "toast": {
+      "queued": "Guardada na caixa de saída. É enviada quando voltar a estar online.",
+      "sent": "Enviada da caixa de saída: {subject}",
+      "send_failed": "Não foi possível enviar uma mensagem da caixa de saída: {subject}",
+      "refused_delete": "Eliminar definitivamente requer ligação. Tente novamente quando estiver online.",
+      "refused_other": "Isto requer ligação. Tente novamente quando estiver online.",
+      "forbidden": "A sua organização desativou o modo offline. O e-mail mantido neste dispositivo foi removido.",
+      "back_online": "Está novamente online. Recarregue para iniciar sessão e enviar o que está à espera.",
+      "reload": "Recarregar",
+      "held": "Uma mensagem na caixa de saída precisa de si: {subject}",
+      "lost": "Estas mensagens não foram enviadas e foram eliminadas: {subjects}"
+    },
+    "signout": {
+      "title": "Terminar sessão com mensagens por enviar?",
+      "message": "{count, plural, one {# mensagem não foi enviada.} other {# mensagens não foram enviadas.}} Terminar a sessão elimina-as.",
+      "confirm": "Terminar sessão",
+      "lost": "Estas mensagens não foram enviadas e foram eliminadas quando a sessão terminou: {subjects}"
+    },
+    "errors": {
+      "unavailable": "Isto requer ligação. Tente novamente quando estiver online.",
+      "plugins_down": "O seu plugin de assinatura ou cifragem não funciona offline. Envie isto quando voltar a estar online.",
+      "file_missing": "Um ficheiro anexado offline já não está neste dispositivo. Anexe-o novamente.",
+      "no_sent_mailbox": "Não foi possível encontrar a pasta Enviados.",
+      "no_drafts_mailbox": "Não foi possível encontrar a pasta Rascunhos."
+    }
   },
   "deep_link": {
     "message_not_found": "Esta mensagem não está mais disponível.",
@@ -5734,11 +6039,15 @@
       },
       "compose_read": {
         "title": "Ler a mensagem que você está escrevendo",
-        "body": "Ler o texto de uma mensagem enquanto você a escreve, quando usa o plugin no editor. Não a assinatura nem a mensagem citada."
+        "body": "Ler uma mensagem enquanto você a escreve, quando usa o plugin no editor: o texto, o assunto, os destinatários (inclusive em Cco) e o nome e o tamanho dos anexos. Não a assinatura nem a mensagem citada."
       },
       "compose_write": {
         "title": "Alterar a mensagem que você está escrevendo",
         "body": "Substituir ou adicionar texto em uma mensagem enquanto você a escreve, quando usa o plugin no editor. Você pode desfazer cada alteração e continua decidindo se envia."
+      },
+      "compose_check": {
+        "title": "Verificar o que escreve",
+        "body": "Lê o que escreve no editor enquanto digita e pode enviá-lo ao serviço que usa. Só quando a revisão está ativada, e nada enquanto uma mensagem estiver configurada para ser assinada ou criptografada. O texto que escreveu antes de ativar isso pode já ter sido verificado."
       },
       "email_forward": {
         "title": "Encaminhar seus e-mails",
@@ -5758,7 +6067,7 @@
       },
       "ui_tasks": {
         "title": "Adicionar à visualização de tarefas",
-        "body": "Mostrar as próprias seções nos detalhes de uma tarefa e botões na lista de tarefas."
+        "body": "Mostrar as próprias seções nos detalhes de uma tarefa, botões na lista de tarefas e a própria lista de tarefas no lugar da do Bulwark."
       },
       "ui_files": {
         "title": "Adicionar à visualização de arquivos",
@@ -5810,6 +6119,10 @@
       "error_server": "Informe o endereço do servidor, por exemplo https://cloud.example.com",
       "error_save": "Não foi possível salvar: {error}"
     }
+  },
+  "send_guards": {
+    "not_running": "Não enviado. Uma verificação exigida pela sua organização não está em execução. Tente novamente daqui a pouco.",
+    "stopped_working": "Não enviado. Uma verificação exigida pela sua organização deixou de funcionar. Recarregue a página. Se não resolver, avise o administrador."
   },
   "plugin_list": {
     "filters": "Filtros",
@@ -6053,6 +6366,77 @@
       "party_size": "Pessoas: {count}",
       "added_from": "Adicionado a partir de um e-mail de {domain}",
       "added_from_subject": "Adicionado a partir do e-mail “{subject}” de {domain}"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Ortografia",
+      "grammar": "Gramática",
+      "style": "Estilo",
+      "other": "Sugestão"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Nenhuma sugestão",
+      "suggestions": "Sugestões",
+      "replace_with": "Substituir por {text}",
+      "also": "Também de {checker}",
+      "ignore": "Ignorar",
+      "add_to_dictionary": "Adicionar ao dicionário",
+      "disable_rule": "Desativar esta regra",
+      "changed": "O texto mudou. Aguarde a próxima verificação."
+    },
+    "list_item": "{word}: {message} Sugestão: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Nenhum erro de ortografia ou gramática} one {# erro de ortografia ou gramática} other {# erros de ortografia ou gramática}}",
+    "status": {
+      "title": "Revisão",
+      "off": "Revisão desativada",
+      "paused": "Revisão em pausa",
+      "rate_limited": "Verificação em pausa",
+      "unavailable": "Verificação indisponível",
+      "checking": "Verificando…",
+      "issues": "{count, plural, =0 {Nenhum problema} one {# problema} other {# problemas}}"
+    },
+    "panel": {
+      "title": "Revisão",
+      "required": "Exigido pela sua organização",
+      "check_message": "Verificar esta mensagem",
+      "notice": "Enquanto digita, o texto que escreve é enviado para {checkers} para ser verificado. Sua assinatura e a mensagem citada ficam de fora. Nada é enviado enquanto uma mensagem estiver configurada para ser assinada ou criptografada; o que você escreveu antes de ativar isso pode já ter sido verificado.",
+      "turn_on": "Ativar a revisão",
+      "paused_protected": "Nada é verificado enquanto esta mensagem estiver configurada para ser assinada ou criptografada.",
+      "paused_unknown": "{plugin} pode assinar ou criptografar mensagens sem mostrar isso aqui, por isso nada é verificado enquanto ele estiver ativo.",
+      "rate_limited": "{checker} pediu para aguardar. A verificação recomeça em um minuto.",
+      "unavailable": "{checker} não consegue verificar agora. Ele tenta de novo quando você continuar digitando.",
+      "no_issues": "Nenhum problema encontrado.",
+      "list_label": "Problemas nesta mensagem",
+      "shortcuts": "Próximo problema: {next}. Anterior: {previous}."
+    },
+    "notice": {
+      "on": "A revisão está ativada. Enquanto digita, o texto que escreve é enviado para {checkers} para ser verificado, sem sua assinatura nem a mensagem citada. Nada é enviado enquanto uma mensagem estiver configurada para ser assinada ou criptografada; o que você escreveu antes pode já ter sido verificado.",
+      "forced": "Sua organização ativou a revisão. Enquanto digita, o texto que escreve é enviado para {checkers} para ser verificado, sem sua assinatura nem a mensagem citada. Nada é enviado enquanto uma mensagem estiver configurada para ser assinada ou criptografada; o que você escreveu antes pode já ter sido verificado.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Enviar com problemas pendentes?",
+      "body": "{count, plural, one {# erro de ortografia ou gramática continua} other {# erros de ortografia ou gramática continuam}} pendentes nesta mensagem.",
+      "review": "Revisar",
+      "send": "Enviar mesmo assim"
+    },
+    "settings": {
+      "title": "Revisão",
+      "description": "Sublinha erros de ortografia e gramática enquanto você escreve, com sugestões para corrigi-los.",
+      "enable": "Verificar ortografia e gramática enquanto digito",
+      "enable_description": "O texto que você escreve é enviado para o extra de revisão e para o serviço que ele usa, sem sua assinatura nem as mensagens citadas. Nada é enviado enquanto uma mensagem estiver configurada para ser assinada ou criptografada.",
+      "no_checker": "Nenhum extra de revisão está instalado. Peça ao administrador para adicionar um.",
+      "plugin_description": "Envia o que você escreve para {plugin}.",
+      "writing_language": "Idioma de escrita",
+      "writing_language_description": "O idioma em que você costuma escrever. A revisão e o corretor ortográfico do navegador o usam.",
+      "auto": "Detectar automaticamente"
+    },
+    "shortcuts": {
+      "next_issue": "Próximo erro de ortografia ou gramática",
+      "previous_issue": "Erro de ortografia ou gramática anterior"
     }
   }
 }

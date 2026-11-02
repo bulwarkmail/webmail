@@ -9,9 +9,12 @@ import { getPlugin } from '@/lib/admin/plugin-registry';
 import { getPluginConfig } from '@/lib/admin/plugin-config';
 import { logger } from '@/lib/logger';
 import { DisallowedUrlError, fetchPublicUrl } from '@/lib/security/url-guard';
+import { observeUpstream } from '@/lib/metrics/upstream';
 import { authHeaderFor, credentialOrigin, privateProxyOrigins, type CredentialInject, type CredentialSpec } from './credentials';
 import { getUserCredential, setUserCredentialSecret, userKey, type VaultUser } from './vault';
 import { declaredUserCredential } from './known-plugins';
+import { isStoredDataUnavailable } from '@/lib/stored-data-errors';
+import { credentialAllowedInMode } from '@/lib/outgoing-hosts';
 
 /** Largest request body the proxy forwards (one upload chunk). */
 export const MAX_PROXY_REQUEST_BYTES = 100 * 1024 * 1024;
@@ -68,7 +71,12 @@ export interface ResolvedCredential {
  * admin configured for an installed plugin that declares it.
  */
 export async function resolveCredential(user: VaultUser, pluginId: string, credentialId: string): Promise<ResolvedCredential | null> {
-  const stored = await getUserCredential(user, pluginId, credentialId);
+  const plugin = await getPlugin(pluginId);
+  const spec = (plugin as { credentials?: Record<string, CredentialSpec> } | null)?.credentials?.[credentialId];
+  // A credential the admin set up never depends on the user's own vault: a
+  // user can only store credentials a plugin declares for users, so there
+  // is nothing of theirs to find under this id.
+  const stored = spec?.scope === 'admin' ? null : await getUserCredential(user, pluginId, credentialId);
   if (stored) {
     // Only for a plugin this server knows declares it, on the server the
     // manifest fixes (see declaredUserCredential).
@@ -80,8 +88,6 @@ export async function resolveCredential(user: VaultUser, pluginId: string, crede
       trusted: privateProxyOrigins().includes(stored.origin), scope: 'user',
     };
   }
-  const plugin = await getPlugin(pluginId);
-  const spec = (plugin as { credentials?: Record<string, CredentialSpec> } | null)?.credentials?.[credentialId];
   if (!plugin || !plugin.enabled || !spec || spec.scope !== 'admin') return null;
   const config = await getPluginConfig(pluginId);
   const secret = config[spec.secretKey];
@@ -113,6 +119,44 @@ export async function adminCredentialStatus(pluginId: string): Promise<{ credent
  */
 export async function adminCredentialOrigins(pluginId: string): Promise<string[]> {
   return (await adminCredentials(pluginId)).flatMap(({ origin }) => (origin ? [origin] : []));
+}
+
+/**
+ * The servers the admin entered for a plugin's credentials (originKey), set
+ * or not yet set up with a secret: what stays reachable for it with
+ * third-party traffic off (Organisation > Security).
+ */
+export async function adminEnteredOrigins(pluginId: string): Promise<string[]> {
+  const plugin = await getPlugin(pluginId);
+  const specs = (plugin as { credentials?: Record<string, CredentialSpec> } | null)?.credentials;
+  if (!plugin || !plugin.enabled || !specs) return [];
+  const config = await getPluginConfig(pluginId);
+  const out = new Set<string>();
+  for (const spec of Object.values(specs)) {
+    const origin = adminEnteredOrigin(spec, config, plugin.configSchema);
+    if (origin) out.add(origin);
+  }
+  return [...out];
+}
+
+/**
+ * The server an admin typed for a credential (`originKey`), or null: not
+ * an originKey credential, nothing set, or the value the plugin's manifest
+ * brings as the field's default. That one the plugin chose, not the admin
+ * (the admin page saves defaults with the first Save), so with no
+ * third-party traffic it stays off like any server fixed in a manifest.
+ */
+export function adminEnteredOrigin(
+  spec: CredentialSpec | undefined,
+  config: Record<string, unknown>,
+  schema: Record<string, { default?: unknown }> | undefined,
+): string | null {
+  if (!spec || spec.scope !== 'admin' || !credentialAllowedInMode(spec) || !spec.originKey) return null;
+  const value = config[spec.originKey];
+  const origin = credentialOrigin(value);
+  if (!origin) return null;
+  const fallback = credentialOrigin(schema?.[spec.originKey]?.default);
+  return fallback && fallback === origin ? null : origin;
 }
 
 async function adminCredentials(pluginId: string): Promise<{ credentialId: string; origin: string | null }[]> {
@@ -235,8 +279,10 @@ async function send(
     signal: init.signal,
     ...(init.body ? { body: init.body } : {}),
   };
-  if (trusted) return fetch(url, { ...request, redirect: 'manual' } as RequestInit);
-  return (await fetchPublicUrl(url, request as never)) as unknown as Response;
+  return observeUpstream('plugin_proxy', async () => {
+    if (trusted) return fetch(url, { ...request, redirect: 'manual' } as RequestInit);
+    return (await fetchPublicUrl(url, request as never)) as unknown as Response;
+  });
 }
 
 function responseHeaders(upstream: Response): Headers {
@@ -269,7 +315,15 @@ export async function proxyRequest(input: ProxyInput): Promise<Response> {
   const method = input.method.toUpperCase();
   if (!PROXY_METHODS.has(method)) throw new ProxyError(`Method ${method} is not allowed`, 405, 'bad_method');
 
-  const credential = await resolveCredential(input.user, input.pluginId, input.credentialId);
+  let credential: ResolvedCredential | null;
+  try {
+    credential = await resolveCredential(input.user, input.pluginId, input.credentialId);
+  } catch (error) {
+    if (isStoredDataUnavailable(error)) {
+      throw Object.assign(new ProxyError('The connected accounts could not be read right now', 503, 'store_unavailable'), { retryAfter: 10 });
+    }
+    throw error;
+  }
   if (!credential) throw new ProxyError('No such credential', 404, 'no_credential');
 
   let target: URL;
@@ -380,6 +434,12 @@ export async function proxyRequest(input: ProxyInput): Promise<Response> {
     if (error instanceof ProxyError) {
       audit(error.status, 0, error.code);
       throw error;
+    }
+    // A captured secret that couldn't be stored: the vault doesn't read,
+    // or the shared store is down. Nothing was written.
+    if (isStoredDataUnavailable(error)) {
+      audit(503, 0, 'store unavailable');
+      throw Object.assign(new ProxyError('The connected accounts could not be read or saved right now', 503, 'store_unavailable'), { retryAfter: 10 });
     }
     if (error instanceof DisallowedUrlError) {
       audit(403, 0, 'blocked address');

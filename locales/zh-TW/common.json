@@ -1,5 +1,5 @@
 {
-  "meta_description": "使用 JMAP 通訊協定的極簡網頁郵件用戶端",
+  "meta_description": "以 JMAP 為基礎的自架網頁郵件，整合郵件、行事曆、聯絡人與檔案",
   "login": {
     "title": "網頁郵件",
     "username_label": "電子郵件地址",
@@ -461,7 +461,6 @@
     "view_in_light_mode": "淺色模式檢視",
     "export_email": "匯出為 .eml",
     "forward_as_attachment": "以附件形式轉寄",
-    "import_email": "匯入 .eml 或 .zip…",
     "keyboard_shortcuts": "鍵盤快速鍵",
     "email_source": "郵件原始碼",
     "draft_banner": "這是一封草稿郵件",
@@ -473,6 +472,9 @@
     "source_truncated": "僅顯示前 {size}。匯出郵件可查看其餘部分。",
     "source_copied": "原始碼已複製到剪貼簿",
     "attachments": "附件",
+    "attachments_count": "{count, plural, other {# 個附件}}",
+    "attachments_show_more": "再顯示 {count} 個",
+    "attachments_show_fewer": "顯示較少",
     "important": "重要",
     "download": "下載",
     "download_all": "全部下載",
@@ -880,6 +882,35 @@
     "send_anyway": "仍然傳送",
     "back": "返回"
   },
+  "phishing_report": {
+    "action": "回報網路釣魚…",
+    "confirm_title": "要回報為網路釣魚嗎？",
+    "confirm_message": "{count, plural, =1 {這封郵件會傳送至 {address}，並移至垃圾郵件。} other {# 封郵件會各自作為單獨的回報傳送至 {address}，並移至垃圾郵件。}}",
+    "confirm": "回報",
+    "cancel": "取消",
+    "sending": "正在回報…",
+    "done": "{count, plural, =1 {已回報至 {address}，並移至垃圾郵件。} other {已將 # 封郵件回報至 {address}，並移至垃圾郵件。}}",
+    "not_moved": "{count, plural, =1 {已回報至 {address}，但無法將郵件移至垃圾郵件。} other {已回報至 {address}，但有 # 封郵件無法移至垃圾郵件。}}",
+    "failed": "{count, plural, =1 {無法回報這封郵件。} other {有 # 封郵件無法回報。}}",
+    "undo": "復原",
+    "undone": "{count, plural, =1 {已移回。回報已送出。} other {已移回。回報已送出。}}",
+    "undo_failed": "無法移回。",
+    "banner": "您已將這封郵件回報為網路釣魚。其中的連結已停用。",
+    "link_off": "連結已停用",
+    "link_off_note": "（連結已停用）",
+    "no_subject": "（無主題）"
+  },
+  "classification": {
+    "picker_label": "機密等級",
+    "chip_label": "機密等級：{name}",
+    "none": "未設定機密等級",
+    "pick_required": "選擇機密等級",
+    "required_hint": "您的組織要求設定機密等級。",
+    "required_toast": "傳送前請選擇機密等級。",
+    "quick_reply_needs_label": "此回覆需要設定機密等級。請在這裡選擇，然後傳送。",
+    "forward_needs_label": "必須設定機密等級。請從撰寫視窗轉寄此郵件。",
+    "received_hint": "由寄件者的郵件程式設定。任何人都能設定機密等級，因此無法證明任何事。"
+  },
   "email_composer": {
     "select_from_directory": "從目錄中選取",
     "minimize": "最小化",
@@ -1248,8 +1279,6 @@
     "templates_import_errors": "部分範本無法匯入",
     "templates_import_empty": "檔案中找不到範本",
     "export_email_error": "無法匯出郵件",
-    "import_email_success": "郵件已成功匯入",
-    "import_email_error": "無法匯入郵件",
     "rule_created": "已建立規則",
     "rule_merged": "已加入規則「{name}」",
     "rule_already_covered": "規則「{name}」已涵蓋此項",
@@ -1272,12 +1301,46 @@
     "tag_removed_count": "{count, plural, other {已從 # 封郵件移除標籤}}",
     "new_mail_count": "{count, plural, other {# 封新郵件}}"
   },
+  "org_notice": {
+    "label": "公告",
+    "dismiss": "關閉公告",
+    "severity_info": "資訊",
+    "severity_warning": "警告",
+    "severity_critical": "重要"
+  },
+  "vacation_templates": {
+    "title": "組織範本",
+    "description": "從組織撰寫的回覆開始。之後可以修改文字。",
+    "pick_label": "使用範本",
+    "pick_placeholder": "選擇範本",
+    "deputy_label": "代理人地址",
+    "deputy_placeholder": "colleague@example.com",
+    "deputy_hint": "回覆會寫明緊急事務請聯絡這位同事。",
+    "deputy_missing": "請先輸入代理人的地址。",
+    "deputy_name_label": "代理人姓名",
+    "deputy_name_missing": "請先輸入代理人的姓名。",
+    "apply": "使用此文字",
+    "apply_hint": "取代下方的主旨和內文。"
+  },
+  "retention_notice": {
+    "line": "此處的郵件會在移入 {count, plural, other {# 天}} 後刪除。"
+  },
+  "device_policy": {
+    "downloads_off": "你的組織已關閉下載。",
+    "download_off_named": "{name}：你的組織已關閉下載",
+    "download_blocked": "你的組織已關閉下載。",
+    "export_blocked": "你的組織已關閉郵件匯出。",
+    "print_blocked": "你的組織已關閉列印。"
+  },
   "third_party": {
     "push_needs_relay": "推送通知需要由您的組織執行的推送中繼，但尚未設定。應用程式開啟時，新郵件仍會顯示。",
     "relay_desc": "由於此伺服器不會連線至外部服務，因此只提供您組織自己的中繼。",
     "relay_none": "未設定",
     "plugin_refused": "未啟動：此外掛程式會連線至外部服務，而您的組織已將其關閉。",
     "remote_content_blocked": "您的組織會封鎖來自其他伺服器的內容，因此此郵件中的遠端圖片不會顯示。"
+  },
+  "remote_content_lock": {
+    "trusted_senders_note": "你的組織在所有郵件中封鎖遠端內容，因此受信任寄件者的遠端內容也不會載入。"
   },
   "date": {
     "today": "今天",
@@ -1542,6 +1605,10 @@
         "label": "顯示共用郵件帳號",
         "description": "在側邊欄的「共用」下顯示與你共用的信箱資料夾。關閉可全部隱藏，也可以在下方逐一隱藏帳號。它們的行事曆和聯絡人仍會顯示。"
       },
+      "compact_shared_mailboxes": {
+        "label": "精簡顯示共用信箱",
+        "description": "將每個共用信箱顯示為一列，點選即開啟其收件匣，資料夾列在下方。草稿、垃圾桶等空資料夾不會顯示。"
+      },
       "pro_interface": {
         "label": "Pro 介面（實驗性）",
         "description": "適合進階使用者的桌面版配置，支援多分頁郵件瀏覽與跨帳號工作流程。標準介面不受影響，您可隨時切換回來。",
@@ -1772,6 +1839,12 @@
         "label": "切換資料夾時清除搜尋",
         "description": "點擊資料夾（收件匣、寄件備份等）會清除目前的搜尋並瀏覽該資料夾。關閉時，搜尋會保留並在切換到的資料夾中重新執行。"
       },
+      "search_default_scope": {
+        "label": "搜尋範圍",
+        "description": "新搜尋的查找範圍。你仍可在搜尋篩選中選擇其他資料夾。",
+        "all": "除垃圾郵件和垃圾桶外的所有信件匣",
+        "folder": "目前開啟的資料夾"
+      },
       "request_read_receipt": {
         "label": "預設請求已讀回執",
         "description": "撰寫新郵件時預先啟用已讀回執請求。"
@@ -1879,6 +1952,14 @@
         "above_quote": "引用文字之前",
         "below_quote": "引用文字之後"
       },
+      "signature_new_mail": {
+        "label": "新郵件簽名",
+        "description": "撰寫新郵件時自動插入簽名。關閉後每封新郵件都不帶簽名。"
+      },
+      "signature_reply_forward": {
+        "label": "回覆轉寄簽名",
+        "description": "回覆或轉寄時自動附加簽名。關閉後回覆和轉寄不帶簽名。"
+      },
       "signature_separator": {
         "label": "簽名檔分隔線",
         "description": "在簽名檔前加入標準的「-- 」分隔線（RFC 3676）。若希望內文直接接續簽名檔，請停用此選項。"
@@ -1899,8 +1980,8 @@
       "attachment_position": {
         "label": "附件位置",
         "description": "選擇在郵件標頭的哪個位置顯示附件",
-        "beside-sender": "寄件者旁",
-        "below-header": "標頭下方"
+        "below-header": "標頭下方",
+        "below-message": "訊息下方的卡片"
       },
       "emails_per_page": {
         "10": "10 封郵件",
@@ -3546,7 +3627,6 @@
     "new_folder": "新增信件匣…",
     "rename": "重新命名…",
     "share": "共用…",
-    "import_email": "匯入 .eml 或 .zip…",
     "empty_folder": "清空信件匣",
     "empty_folder_generic": "清空信件匣",
     "delete_folder": "刪除信件匣",
@@ -4835,6 +4915,51 @@
     "cancelled": "{name} 取消了「{title}」",
     "untitled": "未命名活動"
   },
+  "company_calendars": {
+    "section": "組織"
+  },
+  "vacation_calendar": {
+    "label": "佔用我的行事曆",
+    "description": "在你外出期間新增一個忙碌活動，這樣別人不會在這段時間約你開會。",
+    "no_access_managed": "無法佔用此帳號的行事曆：你沒有寫入權限。",
+    "no_calendar": "無法佔用你的行事曆：Bulwark 找不到可以新增活動的行事曆。",
+    "filter_warning": "開啟後，在自動回覆生效期間你自己的過濾指令碼會被關閉。"
+  },
+  "calendar_delegate": {
+    "answer_for": "代表 {name} 回覆",
+    "no_write": "你能看到 {name} 的邀請，但不能代為回覆。請向對方申請編輯權限。",
+    "also_invited": "你也被邀請了，此伺服器無法區分你和 {name} 的回覆。這一項需要 {name} 自己回覆。",
+    "answered_by": "由 {who} 回覆"
+  },
+  "free_busy_share": {
+    "button": "與 {group} 共用我的忙碌/空閒時間",
+    "already": "你的忙碌/空閒時間已與 {group} 共用",
+    "done": "你的忙碌/空閒時間現已與 {group} 共用。",
+    "error": "無法共用你的忙碌/空閒時間，請再試一次。",
+    "group_label": "群組",
+    "title": "忙碌/空閒",
+    "description": "群組中的同事能看到你何時忙碌，看不到活動內容。「建議時間」會用到它。"
+  },
+  "find_time": {
+    "suggest": "建議時間",
+    "searching": "正在尋找空閒時間",
+    "slots_title": "Bulwark 能查到的所有人都有空",
+    "slot": "{day} {start} 至 {end}",
+    "none": "未來 10 個工作天內沒有空閒時間。",
+    "picked": "活動已移到 {slot}",
+    "rate_limited": "過去一分鐘內查詢過多，請一分鐘後再試。",
+    "unavailable": "此伺服器不提供忙碌/空閒資訊，Bulwark 無法建議時間。",
+    "not_checked": "未檢查：",
+    "not_checked_item": "{who}：{reason}",
+    "reason_external": "組織外部",
+    "reason_unknown": "忙碌時間未知",
+    "reason_not_found": "在此伺服器上找不到",
+    "reason_error": "無法檢查",
+    "unknown_note": "Bulwark 只能看到與你共用的行事曆中的忙碌時間。對這些人，它無法區分有空和未共用。",
+    "directory_off": "Bulwark 無法在此伺服器上查詢使用者。管理員可以在 Stalwart 中開啟目錄查詢。",
+    "not_looked_up": "無法查詢此地址",
+    "found": "找到的空閒時間：{count}"
+  },
   "share_notifications": {
     "someone": "有人",
     "shared": "{name} 與您共用了{kind}「{object}」",
@@ -5184,7 +5309,6 @@
     "settings_ascending": "遞增",
     "settings_descending": "遞減",
     "disabled_title": "檔案功能已被您的管理員停用",
-    "disabled_description": "透過 WebDAV 上傳大檔案可能導致 Stalwart/RocksDB 不穩定，包括記憶體不足當機及無法回收的磁碟空間。刪除檔案後，blob 儲存空間可能不會立即清除。本功能不建議用於正式環境。",
     "migration_title": "正在更新您的檔案…",
     "migration_description": "正在將資料夾與檔案整理成正確結構。這只會執行一次。",
     "new": "新增",
@@ -5371,6 +5495,117 @@
   "unified_mailbox": {
     "search_unavailable": "整合檢視中無法使用搜尋"
   },
+  "mail_import": {
+    "menu_import": "匯入郵件…",
+    "settings_label": "匯入郵件",
+    "settings_description": "從 .eml、ZIP、mbox 或 Outlook .pst 和 .ost 檔案匯入郵件。",
+    "settings_button": "匯入…",
+    "title": "匯入郵件",
+    "description": "請選擇 .eml、.zip、.mbox 或 Outlook .pst 和 .ost 檔案。",
+    "choose_files": "選擇檔案…",
+    "chosen_files": "已選檔案",
+    "remove_file": "移除 {name}",
+    "format_eml": "郵件",
+    "format_zip": "ZIP 壓縮檔",
+    "format_mbox": "mbox 檔案",
+    "format_pst": "Outlook 資料檔",
+    "target_label": "匯入到",
+    "target_top": "最上層",
+    "keep_folders": "依檔案重建資料夾",
+    "keep_folders_hint": "同名資料夾會重複使用。",
+    "resume": "從這些檔案上次匯入停止的地方繼續（已處理的郵件：{count}）",
+    "quota_note": "許多伺服器每小時只接受單一使用者約 1000 封郵件或 50 MB。較大的匯入會暫停，然後自動繼續。",
+    "start": "匯入",
+    "cancel": "取消",
+    "running_title": "正在匯入郵件",
+    "progress_label": "匯入進度",
+    "status_imported": "已匯入郵件：{count}",
+    "reading_file": "正在讀取 {name}",
+    "paused": "已暫停至 {time}。伺服器每小時最多接受 {files} 次上傳或 {size}。匯入會自動繼續。",
+    "paused_generic": "已暫停至 {time}。已達伺服器的上傳上限。匯入會自動繼續。",
+    "background": "在背景執行",
+    "cancel_import": "取消匯入",
+    "chip": "正在匯入郵件：{percent}%",
+    "chip_paused": "匯入已暫停至 {time}",
+    "done_title": "匯入完成",
+    "cancelled_title": "匯入已取消",
+    "failed_title": "匯入已停止",
+    "summary_imported": "已匯入郵件：{count}",
+    "summary_folders": "已建立資料夾：{count}",
+    "summary_skipped": "未匯入：",
+    "skip_too_large": "超過伺服器允許的大小：{count}",
+    "skip_deleted": "已在 Thunderbird 中刪除：{count}",
+    "skip_embedded": "附在其他郵件中的郵件：{count}",
+    "skip_contact": "聯絡人：{count}",
+    "skip_calendar": "行事曆項目：{count}",
+    "skip_other": "其他項目：{count}",
+    "summary_failed": "無法匯入：{count}",
+    "failure_invalid": "不是有效的郵件",
+    "untitled": "（無主旨）",
+    "cancelled_hint": "如需稍後繼續，請再次把相同的檔案匯入到同一個資料夾。",
+    "close": "關閉",
+    "pst_note": "Outlook 檔案中只匯入郵件。聯絡人、行事曆項目和工作會被計數並略過。",
+    "pst_error_encrypted": "此 Outlook 檔案使用了 Bulwark 無法讀取的高強度加密。請在 Outlook 中把郵件匯出到一個不加密的新 .pst 檔案。",
+    "pst_error_not_pst": "此檔案不是 Bulwark 能讀取的 Outlook 資料檔。",
+    "pst_error_unreadable": "Bulwark 無法讀取此 Outlook 檔案。",
+    "pst_error_worker": "Outlook 檔案讀取元件未能載入。請重新載入頁面後再試。",
+    "error_over_quota": "信箱已滿，匯入已停止。請騰出空間，然後把相同的檔案再次匯入同一個資料夾即可繼續。",
+    "error_forbidden": "您無權在此資料夾新增郵件，匯入已停止。",
+    "error_failures": "連續失敗的郵件太多，匯入已停止。請稍後把相同的檔案再次匯入同一個資料夾以繼續。",
+    "error_network": "與伺服器的連線多次失敗，匯入已停止。請把相同的檔案再次匯入同一個資料夾以繼續。",
+    "error_busy": "這些檔案已在另一個分頁中匯入。",
+    "retry_hint": "把相同的檔案再次匯入同一個資料夾，即可重試失敗的郵件。",
+    "skip_unreadable": "Outlook 檔案中無法讀取：{count}",
+    "keep_folders_top_hint": "在最上層，收件匣、寄件備份、刪除的郵件等會進入您自己的資料夾。",
+    "toast_done": "匯入完成。已匯入：{imported}，失敗：{failed}。",
+    "toast_stopped": "匯入已停止。",
+    "toast_show": "顯示",
+    "section_title": "郵件檔案",
+    "section_description": "從檔案匯入郵件，或把郵件儲存為檔案。"
+  },
+  "mail_export": {
+    "menu_export": "匯出資料夾…",
+    "settings_label": "匯出所有郵件",
+    "settings_description": "把此帳戶的所有資料夾以 mbox 或 .eml 檔案儲存到一個 ZIP 檔案中。",
+    "settings_button": "匯出…",
+    "title_folder": "匯出「{name}」",
+    "title_account": "匯出所有郵件",
+    "description_folder": "把此資料夾中的郵件儲存為檔案。",
+    "description_account": "把此帳戶的所有資料夾儲存到一個 ZIP 檔案中。",
+    "format_label": "格式",
+    "format_mbox_folder": "mbox 檔案",
+    "format_eml_folder": ".eml 檔案的 ZIP",
+    "format_mbox_account": "每個資料夾一個 mbox 檔案的 ZIP",
+    "format_eml_account": ".eml 檔案的 ZIP，每個郵件資料夾一個資料夾",
+    "hint_mbox": "Thunderbird、Apple Mail 和大多數郵件程式都能開啟 mbox 檔案。",
+    "hint_eml": "每封郵件一個檔案，任何郵件程式都能開啟。",
+    "save_picker": "由您選擇檔案儲存位置。",
+    "save_download": "匯出完成後會下載檔案。",
+    "save_memory": "此瀏覽器會把整個匯出保存在記憶體中，因此最多只能儲存 200 MB。更大的匯出請使用 Chrome 或 Edge，或逐一匯出資料夾。",
+    "start": "匯出",
+    "cancel": "取消",
+    "running_title": "正在匯出郵件",
+    "progress_label": "匯出進度",
+    "status_exported": "已匯出郵件：{count} / {total}",
+    "paused": "已暫停至 {time}：伺服器要求暫停。匯出會自動繼續。",
+    "background": "在背景執行",
+    "cancel_export": "取消匯出",
+    "chip": "正在匯出郵件：{percent}%",
+    "chip_paused": "匯出已暫停至 {time}",
+    "done_title": "匯出完成",
+    "cancelled_title": "匯出已取消",
+    "failed_title": "匯出已停止",
+    "summary_exported": "已匯出郵件：{count}",
+    "summary_file": "已儲存為 {name}（{size}）。",
+    "summary_failed": "無法匯出：{count}",
+    "download_again": "重新下載",
+    "too_large": "匯出內容超過此瀏覽器能放在記憶體中的大小。請使用 Chrome 或 Edge，或逐一匯出資料夾。",
+    "close": "關閉",
+    "untitled": "（無主旨）",
+    "toast_done": "匯出完成：{name}",
+    "toast_stopped": "匯出已停止。",
+    "toast_show": "顯示"
+  },
   "recover_deleted": {
     "tab": "復原已刪除的項目",
     "title": "復原已刪除的項目",
@@ -5411,6 +5646,76 @@
     "install": "安裝",
     "dont_remind": "不再提醒",
     "dismiss_aria": "關閉安裝提示"
+  },
+  "app_update": {
+    "ready": "{appName} 新版本已準備就緒。",
+    "reload": "重新載入"
+  },
+  "offline": {
+    "settings": {
+      "title": "離線",
+      "description": "在此裝置上不需連線即可讀寫郵件。",
+      "keep_label": "在此裝置上保留郵件",
+      "keep_description": "在此瀏覽器中加密保留收件匣和你開啟過的資料夾最近 30 天的郵件，最多 250 MB。離線時可以閱讀、標記和移動郵件，寫好的郵件會在寄件匣中等待。登出時會全部刪除。",
+      "warning": "任何能使用此瀏覽器設定檔的人都能讀取這些郵件。請只在自己的裝置上開啟，並使用磁碟加密。",
+      "forbidden": "你的組織不允許在裝置上保留郵件。",
+      "unsupported": "此瀏覽器無法保留郵件供離線使用。",
+      "syncing": "正在將郵件儲存到此裝置…",
+      "usage": "此裝置上 {size}",
+      "usage_updated": "此裝置上 {size}，更新於 {time}",
+      "off_confirm_title": "關閉離線模式？",
+      "off_confirm_message": "{count, plural, other {寄件匣中有 # 封郵件尚未寄出。}}關閉後，這些郵件和此裝置上保留的郵件都會被刪除。",
+      "off_confirm": "關閉"
+    },
+    "outbox": {
+      "title": "寄件匣",
+      "description": "你離線時寫的郵件。此裝置恢復連線後會寄出。",
+      "empty": "沒有等待寄出的郵件。",
+      "no_subject": "（無主旨）",
+      "to": "收件者：{recipients}",
+      "status_waiting": "等待連線",
+      "status_sending": "正在寄出",
+      "status_failed": "無法寄出：{error}",
+      "status_uncertain": "寄出時連線中斷。再次寄出前請先查看「寄件備份」。",
+      "retry": "再次寄出",
+      "delete": "刪除",
+      "delete_confirm_title": "刪除這封郵件？",
+      "delete_confirm_message": "它尚未寄出，刪除後無法復原。",
+      "changes": "{count, plural, other {# 項}}已讀、標記或資料夾的變更將在恢復連線後送出。",
+      "status_held": "等待期間你的組織規則有所變更。請重新撰寫後再寄出。",
+      "retry_label": "再次寄出：{subject}",
+      "delete_label": "刪除：{subject}"
+    },
+    "banner": {
+      "offline": "你已離線。顯示的是此裝置上保留的郵件。你所做的變更或寫的郵件會在恢復連線後送出。",
+      "outbox": "寄件匣中有 {count, plural, other {# 封}}",
+      "server_down": "無法連線到郵件伺服器。顯示的是此裝置上保留的郵件。你所做的變更或寫的郵件會在伺服器恢復回應後寄出。"
+    },
+    "toast": {
+      "queued": "已儲存到寄件匣。恢復連線後會寄出。",
+      "sent": "已從寄件匣寄出：{subject}",
+      "send_failed": "寄件匣中的一封郵件無法寄出：{subject}",
+      "refused_delete": "永久刪除需要網路連線。請在連線後重試。",
+      "refused_other": "此操作需要網路連線。請在連線後重試。",
+      "forbidden": "你的組織關閉了離線模式。此裝置上保留的郵件已被刪除。",
+      "back_online": "已恢復連線。請重新載入以登入並寄出等待中的內容。",
+      "reload": "重新載入",
+      "held": "寄件匣中有一封郵件需要你處理：{subject}",
+      "lost": "這些郵件未寄出，已被刪除：{subjects}"
+    },
+    "signout": {
+      "title": "有未寄出的郵件，仍要登出？",
+      "message": "{count, plural, other {# 封郵件尚未寄出。}}登出會刪除它們。",
+      "confirm": "登出",
+      "lost": "這些郵件未寄出，並在你登出時被刪除：{subjects}"
+    },
+    "errors": {
+      "unavailable": "此操作需要網路連線。請在連線後重試。",
+      "plugins_down": "你的簽署或加密外掛程式在離線時無法執行。請在恢復連線後再寄出。",
+      "file_missing": "離線時附加的檔案已不在此裝置上。請重新附加。",
+      "no_sent_mailbox": "找不到「寄件備份」資料夾。",
+      "no_drafts_mailbox": "找不到「草稿」資料夾。"
+    }
   },
   "deep_link": {
     "message_not_found": "已無法使用此郵件。",
@@ -5734,11 +6039,15 @@
       },
       "compose_read": {
         "title": "讀取您正在撰寫的郵件",
-        "body": "在編輯器中使用外掛程式時，讀取您正在撰寫的郵件內文。不包括簽名和引用的郵件。"
+        "body": "在編輯器中使用外掛程式時，讀取您正在撰寫的郵件：內文、主旨、收件者（包括密件副本）以及附件的名稱和大小。不包括簽名和引用的郵件。"
       },
       "compose_write": {
         "title": "修改您正在撰寫的郵件",
         "body": "在編輯器中使用外掛程式時，取代或新增您正在撰寫的郵件中的文字。每次修改都可以復原，是否寄出仍由您決定。"
+      },
+      "compose_check": {
+        "title": "檢查您寫的內容",
+        "body": "在您輸入時讀取您在編輯器中寫的內容，並可能傳送到它使用的服務。僅在校對開啟時進行，且郵件設定為簽署或加密期間不會傳送任何內容。在開啟該設定之前寫的文字可能已經被檢查過。"
       },
       "email_forward": {
         "title": "轉寄您的郵件",
@@ -5758,7 +6067,7 @@
       },
       "ui_tasks": {
         "title": "新增到工作畫面",
-        "body": "在工作詳細資料中顯示它自己的區塊，並在工作清單中顯示按鈕。"
+        "body": "在工作詳細資料中顯示它自己的區塊，在工作清單中顯示按鈕，並可用它自己的工作清單取代 Bulwark 的工作清單。"
       },
       "ui_files": {
         "title": "新增到檔案畫面",
@@ -5810,6 +6119,10 @@
       "error_server": "請輸入伺服器位址，例如 https://cloud.example.com",
       "error_save": "無法儲存：{error}"
     }
+  },
+  "send_guards": {
+    "not_running": "未傳送。貴組織要求的一項檢查目前未執行。請稍後再試。",
+    "stopped_working": "未傳送。貴組織要求的一項檢查已停止運作。請重新載入頁面。如果仍無法解決，請告知管理員。"
   },
   "plugin_list": {
     "filters": "篩選",
@@ -6053,6 +6366,77 @@
       "party_size": "人數：{count}",
       "added_from": "新增自 {domain} 寄來的郵件",
       "added_from_subject": "新增自 {domain} 寄來的郵件「{subject}」"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "拼字",
+      "grammar": "文法",
+      "style": "文風",
+      "other": "建議"
+    },
+    "popup": {
+      "label": "{kind}：{word}",
+      "no_suggestions": "沒有建議",
+      "suggestions": "建議",
+      "replace_with": "取代為 {text}",
+      "also": "{checker} 也指出了此問題",
+      "ignore": "忽略",
+      "add_to_dictionary": "加入字典",
+      "disable_rule": "關閉此規則",
+      "changed": "文字已變更。請等候下一次檢查。"
+    },
+    "list_item": "{word}：{message} 建議：{suggestion}",
+    "list_item_no_suggestion": "{word}：{message}",
+    "announce_count": "{count, plural, =0 {沒有拼字或文法問題} other {# 個拼字或文法問題}}",
+    "status": {
+      "title": "校對",
+      "off": "校對已關閉",
+      "paused": "校對已暫停",
+      "rate_limited": "檢查已暫停",
+      "unavailable": "無法使用檢查",
+      "checking": "正在檢查…",
+      "issues": "{count, plural, =0 {沒有問題} other {# 個問題}}"
+    },
+    "panel": {
+      "title": "校對",
+      "required": "您的組織要求開啟",
+      "check_message": "檢查此郵件",
+      "notice": "在您輸入時，您寫的文字會傳送到 {checkers} 進行檢查。您的簽名和引用的郵件不會傳送。郵件設定為簽署或加密期間不會傳送任何內容；但在開啟該設定之前寫的內容可能已經被檢查過。",
+      "turn_on": "開啟校對",
+      "paused_protected": "此郵件設定為簽署或加密期間，不會檢查任何內容。",
+      "paused_unknown": "{plugin} 可以在此處不顯示的情況下簽署或加密郵件，因此在它開啟期間不會檢查任何內容。",
+      "rate_limited": "{checker} 要求稍候。檢查將在一分鐘後恢復。",
+      "unavailable": "{checker} 目前無法檢查。您繼續輸入時它會重試。",
+      "no_issues": "未發現問題。",
+      "list_label": "此郵件中的問題",
+      "shortcuts": "下一個問題：{next}。上一個：{previous}。"
+    },
+    "notice": {
+      "on": "校對已開啟。在您輸入時，您寫的文字會傳送到 {checkers} 進行檢查，不包括您的簽名和引用的郵件。郵件設定為簽署或加密期間不會傳送任何內容；但在此之前寫的內容可能已經被檢查過。",
+      "forced": "您的組織已開啟校對。在您輸入時，您寫的文字會傳送到 {checkers} 進行檢查，不包括您的簽名和引用的郵件。郵件設定為簽署或加密期間不會傳送任何內容；但在此之前寫的內容可能已經被檢查過。",
+      "ok": "確定"
+    },
+    "send_warning": {
+      "title": "仍有未解決的問題，確定傳送嗎？",
+      "body": "此郵件中還有 {count, plural, other {# 個拼字或文法問題}}未解決。",
+      "review": "查看",
+      "send": "仍然傳送"
+    },
+    "settings": {
+      "title": "校對",
+      "description": "在您書寫時為拼字和文法錯誤加上底線，並提供修改建議。",
+      "enable": "輸入時檢查拼字和文法",
+      "enable_description": "您寫的文字會傳送到校對附加元件及其使用的服務，不包括您的簽名和引用的郵件。郵件設定為簽署或加密期間不會傳送任何內容。",
+      "no_checker": "未安裝校對附加元件。請聯絡管理員新增。",
+      "plugin_description": "將您寫的內容傳送到 {plugin}。",
+      "writing_language": "書寫語言",
+      "writing_language_description": "您通常使用的書寫語言。校對和瀏覽器的拼字檢查會使用它。",
+      "auto": "自動偵測"
+    },
+    "shortcuts": {
+      "next_issue": "下一個拼字或文法問題",
+      "previous_issue": "上一個拼字或文法問題"
     }
   }
 }

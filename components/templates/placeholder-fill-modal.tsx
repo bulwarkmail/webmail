@@ -42,8 +42,8 @@ export function PlaceholderFillModal({
   const dirty = placeholders.some((p) => values[p] !== initialValues[p]);
 
   const preview = useMemo(() => {
-    return substitutePlaceholders(template.body, values);
-  }, [template.body, values]);
+    return substitutePlaceholders(template.body, values, { html: !!template.isHTML });
+  }, [template.body, template.isHTML, values]);
 
   const requestClose = async () => {
     if (await confirmDiscard(dirty)) onClose();

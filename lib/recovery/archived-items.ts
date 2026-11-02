@@ -12,7 +12,8 @@
  *   refused an `accountId` filter (`unsupportedFilter`). An admin's query
  *   covers every account unless it names one in the filter. So the query
  *   sends the filter, falls back to none on `unsupportedFilter`, and the
- *   client keeps only items whose `accountId` is the account it asked for.
+ *   client drops items whose `accountId` names another account. For such a
+ *   user /get leaves `accountId` out of every item (#1480).
  * - Query order and paging: the default sort is by id, descending (newest
  *   first; registry ids grow). Without `calculateTotal` Stalwart scans the
  *   ids ascending, cut at `limit` or query_max_results (default 5000), and
@@ -133,8 +134,10 @@ function asRecord(raw: unknown): Record<string, unknown> | null {
 /**
  * The deleted messages of `accountId` in an x:ArchivedItem/get list. Other
  * kinds (files, events, contacts, scripts) are left out: the server can't
- * restore them. So is every item of another account, and every item that
- * doesn't say whose it is.
+ * restore them. So is every item that names another account. An item
+ * without `accountId` is kept: Stalwart drops that property for a user
+ * without Impersonate, and only after it has limited the list to the
+ * account the call names (crates/jmap/src/registry/get.rs `insert`).
  */
 export function parseArchivedItems(list: unknown, accountId: string): ArchivedEmail[] {
   if (!Array.isArray(list)) return [];
@@ -145,7 +148,7 @@ export function parseArchivedItems(list: unknown, accountId: string): ArchivedEm
     const id = str(item.id);
     const archivedAt = isoOrNull(item.archivedAt);
     if (!id || !archivedAt) continue;
-    if (str(item.accountId) !== accountId) continue;
+    if (item.accountId !== undefined && str(item.accountId) !== accountId) continue;
     const from = parseArchivedFrom(str(item.from));
     out.push({
       id,

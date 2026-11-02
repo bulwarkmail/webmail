@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { detectSetupState } from '@/lib/setup/state';
-import { authenticateWizardRequest } from '@/lib/setup/session';
+import { wizardSessionRefusal } from '@/lib/setup/session';
+import { configWriteErrorResponse } from '@/lib/admin/config-read-only-response';
 import { configManager } from '@/lib/admin/config-manager';
 import { CONFIG_ENV_MAP } from '@/lib/admin/types';
 import { parseJmapServers } from '@/lib/admin/jmap-servers';
-import { effectiveConsent, loadState, saveState, reschedule } from '@/lib/telemetry';
+import { effectiveConsent, updateState, reschedule } from '@/lib/telemetry';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -58,9 +59,8 @@ export async function POST(request: NextRequest) {
   if (detectSetupState() !== 'bootstrap') {
     return NextResponse.json({ error: 'Setup is not active' }, { status: 404 });
   }
-  if (!(await authenticateWizardRequest())) {
-    return NextResponse.json({ error: 'Wizard session required' }, { status: 401 });
-  }
+  const wizardRefused = await wizardSessionRefusal();
+  if (wizardRefused) return wizardRefused;
 
   let body: { step?: unknown; values?: unknown };
   try {
@@ -93,12 +93,12 @@ export async function POST(request: NextRequest) {
     // A BULWARK_TELEMETRY env var hard-locks the choice; don't fight it.
     const { source } = await effectiveConsent();
     if (source !== 'env') {
-      const tstate = await loadState();
-      tstate.consent = consent;
-      if (consent === 'on' && !tstate.consentedAt) {
-        tstate.consentedAt = new Date().toISOString();
-      }
-      await saveState(tstate);
+      const now = new Date().toISOString();
+      // Against the stored state, so a schedule written meanwhile stays.
+      await updateState((tstate) => {
+        tstate.consent = consent;
+        if (consent === 'on' && !tstate.consentedAt) tstate.consentedAt = now;
+      });
       await reschedule();
     }
   }
@@ -144,6 +144,8 @@ export async function POST(request: NextRequest) {
     await configManager.setAdminConfig(updates);
     return NextResponse.json({ ok: true });
   } catch (error) {
+    const refused = configWriteErrorResponse(error);
+    if (refused) return refused;
     logger.error('Wizard step save failed', {
       step,
       error: error instanceof Error ? error.message : 'Unknown error',

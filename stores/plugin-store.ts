@@ -1,6 +1,7 @@
 // Plugin store - manages installed plugins and lifecycle. Slot registrations
 // are owned by `lib/plugin-sandbox/registry` (per-iframe), not by the store.
 
+import { setKnownPlugins } from '@/lib/plugin-sandbox/known-plugins';
 import { cancelConnectFor, forgetCredentials } from '@/lib/plugin-sandbox/connect-dialog';
 import { create } from 'zustand';
 import { persist, type PersistStorage, type StorageValue } from 'zustand/middleware';
@@ -27,6 +28,7 @@ import { IMPLICIT_PERMISSIONS } from '@/lib/plugin-types';
 import type { Permission } from '@/lib/plugin-types';
 import { IS_LITE } from '@/lib/lite';
 import { onFullSignOut } from '@/lib/sign-out-cleanup';
+import { forgetDeclaredHooks, setSendGuardSource } from '@/lib/plugin-send-guards';
 
 let pluginInitializationPromise: Promise<void> | null = null;
 // One-time guard so we attach the locale and regional subscriptions only once.
@@ -49,6 +51,12 @@ export interface InstallResult {
 interface PluginStoreState {
   plugins: InstalledPlugin[];
   initialized: boolean;
+  /**
+   * The admin's plugin list arrived in full this session (every bundle
+   * fetched). Until then a plugin the admin forces on may be missing here
+   * only because it hasn't reached this browser (plugin-send-guards.ts).
+   */
+  serverPluginsSynced: boolean;
 
   // Management
   installPlugin: (file: File) => Promise<InstallResult>;
@@ -131,6 +139,7 @@ export const usePluginStore = create<PluginStoreState>()(
     (set, get) => ({
       plugins: [],
       initialized: false,
+      serverPluginsSynced: false,
 
       installPlugin: async (file: File) => {
         const policy = usePolicyStore.getState();
@@ -427,6 +436,7 @@ function removePluginData(id: string): void {
   deactivatePlugin(id);
   removeAllPluginHooks(id);
   forgetSlotOffers(id);
+  forgetDeclaredHooks(id);
   void pluginStorage.deleteCode(id).catch(() => {});
   void pluginStorage.deletePreview(id).catch(() => {});
   // Accounts the user connected for it live on the server (this mail account's).
@@ -578,7 +588,10 @@ async function syncServerPlugins(
   try {
     const res = await fetchServerPluginList();
     if (res.status === 401) return 'signed-out';
-    if (!res.ok) return;
+    if (!res.ok) {
+      set({ serverPluginsSynced: false });
+      return;
+    }
 
     const data = res.data as { plugins: ServerPluginInfo[] };
     if (!data?.plugins || !Array.isArray(data.plugins)) return;
@@ -692,9 +705,12 @@ async function syncServerPlugins(
 
     // Persist current server plugin IDs for future cleanup
     setServerManagedPluginIds(serverPluginIds);
+    // A bundle that couldn't be fetched leaves its plugin out: not in full.
+    set({ serverPluginsSynced: outcomes.every((outcome) => outcome !== null) });
   } catch {
     // Sync failure is non-fatal - client continues with local plugins
     console.warn('[plugin-store] Server plugin sync failed, using local plugins only');
+    set({ serverPluginsSynced: false });
   }
 }
 
@@ -838,3 +854,30 @@ onFullSignOut(() => {
     }),
   });
 });
+
+// Send guards the admin requires hold sends while they aren't running
+// (lib/plugin-send-guards.ts). No plugins run in Lite.
+if (!IS_LITE) {
+  setSendGuardSource({
+    snapshot: () => {
+      const state = usePluginStore.getState();
+      const policy = usePolicyStore.getState();
+      return {
+        plugins: state.plugins,
+        forced: (plugin) => !!plugin.forceEnabled || policy.isPluginForceEnabled(plugin.id),
+        pluginsOff: !policy.isFeatureEnabled('pluginsEnabled'),
+        complete: state.initialized && state.serverPluginsSynced,
+        forcedIds: policy.policy.forceEnabledPlugins ?? [],
+      };
+    },
+    subscribe: (listener) => {
+      const offPlugins = usePluginStore.subscribe(listener);
+      const offPolicy = usePolicyStore.subscribe(listener);
+      return () => { offPlugins(); offPolicy(); };
+    },
+  });
+}
+
+// The list for code that shouldn't import this store (lib/plugin-sandbox/known-plugins.ts).
+setKnownPlugins(usePluginStore.getState().plugins);
+usePluginStore.subscribe((state) => setKnownPlugins(state.plugins));

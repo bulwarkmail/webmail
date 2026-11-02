@@ -107,4 +107,12 @@ describe('Sidebar shared tags', () => {
     expect(own.getByText('Team urgent').closest('[data-testid="folder-row"]')).not.toHaveAttribute('data-selected');
     expect(screen.getByText('My urgent').closest('[data-testid="folder-row"]')).toHaveAttribute('data-selected', 'true');
   });
+
+  it('lists the shared tags under a compact shared mailbox too (#1342)', async () => {
+    useSettingsStore.setState({ compactSharedMailboxes: true } as never);
+    render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" selectedKeyword={null} onTagSelect={vi.fn()} />);
+
+    const row = screen.getByTestId('compact-shared-mailbox');
+    expect(await within(row).findByText('Team urgent')).toBeInTheDocument();
+  });
 });

@@ -4,8 +4,8 @@ import { auditLog } from '@/lib/admin/audit';
 import { logger } from '@/lib/logger';
 import {
   effectiveConsent,
-  loadState,
-  saveState,
+  effectiveErrorsConsent,
+  updateState,
   buildPayload,
   sendOnce,
   reschedule,
@@ -13,6 +13,9 @@ import {
   getLoginCounts,
   resolveEndpointAllowed,
 } from '@/lib/telemetry';
+import { storedDataUnavailableResponse } from '@/lib/stored-data-errors';
+import { errorsForDay, errorsForPayload } from '@/lib/telemetry/payload';
+import { readErrors, utcDay } from '@/lib/error-reporting/aggregate';
 
 /**
  * GET /api/admin/telemetry
@@ -25,21 +28,31 @@ export async function GET(request: NextRequest) {
     if ('error' in auth) return auth.error;
 
     const { consent, source, state } = await effectiveConsent();
-    const [payload, accountCounts] = await Promise.all([
+    const [payload, accountCounts, errors, counted] = await Promise.all([
       buildPayload(),
       getLoginCounts(),
+      effectiveErrorsConsent(),
+      readErrors(),
     ]);
 
     return NextResponse.json(
       {
         consent,
         consentSource: source,
+        // The separate consent to add error counts (schema v2).
+        errorsConsent: errors.consent,
+        errorsConsentSource: errors.source,
         endpoint: state.endpoint ?? DEFAULT_ENDPOINT,
         consentedAt: state.consentedAt,
         lastSentAt: state.lastSentAt,
         nextScheduledAt: state.nextScheduledAt,
         defaultEndpoint: DEFAULT_ENDPOINT,
         payloadPreview: payload,
+        // What `errors` would hold, so the page can show the v2 payload as soon
+        // as the switch is flipped, before anything is saved or sent.
+        errorsPreview: errorsForPayload(counted),
+        // What instant mode would send now: today's counts so far.
+        instantErrorsPreview: errorsForDay(counted, utcDay()),
         accountCounts,
       },
       { headers: { 'Cache-Control': 'no-store' } },
@@ -48,6 +61,8 @@ export async function GET(request: NextRequest) {
     logger.error('telemetry GET error', {
       error: err instanceof Error ? err.message : 'unknown',
     });
+    const unavailable = storedDataUnavailableResponse(err);
+    if (unavailable) return unavailable;
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -55,7 +70,8 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/admin/telemetry
  * Body: { action: 'set-consent' | 'set-endpoint' | 'send-now', ... }
- *   set-consent  : { action, consent: 'on' | 'off' }
+ *   set-consent  : { action, consent: 'on' | 'off' } (off also switches error counts off)
+ *   set-errors-consent : { action, consent: 'on' | 'instant' | 'off' } ('on' is daily)
  *   set-endpoint : { action, endpoint: string }
  *   send-now     : { action }
  */
@@ -90,15 +106,44 @@ export async function POST(request: NextRequest) {
       if (body.consent !== 'on' && body.consent !== 'off') {
         return NextResponse.json({ error: 'consent must be "on" or "off"' }, { status: 400 });
       }
-      const state = await loadState();
-      const before = state.consent;
-      state.consent = body.consent;
-      if (body.consent === 'on' && !state.consentedAt) {
-        state.consentedAt = new Date().toISOString();
-      }
-      await saveState(state);
+      const consent = body.consent;
+      const now = new Date().toISOString();
+      let before: string | undefined;
+      // Against the stored state, so a schedule written meanwhile stays.
+      await updateState((state) => {
+        before = state.consent;
+        state.consent = consent;
+        if (consent === 'on' && !state.consentedAt) state.consentedAt = now;
+        // Error counts ride on the heartbeat: no heartbeats, no error counts,
+        // and turning heartbeats on again doesn't bring them back by itself.
+        if (consent === 'off') state.errorsConsent = 'off';
+      });
       await reschedule();
       await auditLog('telemetry.set-consent', { from: before, to: body.consent }, ip);
+      return NextResponse.json({ ok: true });
+    }
+
+    if (body.action === 'set-errors-consent') {
+      const errors = await effectiveErrorsConsent();
+      if (errors.source === 'env') {
+        return NextResponse.json({ error: 'error counts are set by the BULWARK_TELEMETRY_ERRORS env var' }, { status: 409 });
+      }
+      if (errors.source === 'no-third-party') {
+        return NextResponse.json({ error: 'telemetry is off while NO_THIRD_PARTY_TRAFFIC is on' }, { status: 409 });
+      }
+      if (body.consent !== 'on' && body.consent !== 'off' && body.consent !== 'instant') {
+        return NextResponse.json({ error: 'consent must be "on", "instant" or "off"' }, { status: 400 });
+      }
+      if (body.consent !== 'off' && errors.source === 'telemetry') {
+        return NextResponse.json({ error: 'turn on the heartbeat first' }, { status: 409 });
+      }
+      const consent = body.consent;
+      let before: string | undefined;
+      await updateState((state) => {
+        before = state.errorsConsent ?? 'off';
+        state.errorsConsent = consent;
+      });
+      await auditLog('telemetry.set-errors-consent', { from: before, to: consent }, ip);
       return NextResponse.json({ ok: true });
     }
 
@@ -113,11 +158,12 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: check.reason }, { status: 400 });
         }
       }
-      const state = await loadState();
-      const before = state.endpoint;
+      let before: string | undefined;
       // Empty means no collector: heartbeats stop until a URL is set again.
-      state.endpoint = trimmed;
-      await saveState(state);
+      const state = await updateState((current) => {
+        before = current.endpoint;
+        current.endpoint = trimmed;
+      });
       await reschedule();
       await auditLog('telemetry.set-endpoint', { from: before, to: state.endpoint }, ip);
       return NextResponse.json({ ok: true, endpoint: state.endpoint });
@@ -138,6 +184,8 @@ export async function POST(request: NextRequest) {
     logger.error('telemetry POST error', {
       error: err instanceof Error ? err.message : 'unknown',
     });
+    const unavailable = storedDataUnavailableResponse(err);
+    if (unavailable) return unavailable;
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { completePolicy, configManager } from '@/lib/admin/config-manager';
+import { completePolicy, configManager, isPolicyConflict } from '@/lib/admin/config-manager';
 import { requireAdminAuth, getClientIP } from '@/lib/admin/session';
 import { auditLog } from '@/lib/admin/audit';
 import { logger } from '@/lib/logger';
@@ -57,12 +57,24 @@ export async function POST(request: NextRequest) {
 
     await configManager.ensureLoaded();
     const next = completePolicy(raw as Partial<SettingsPolicy>);
-    const summary = summarizePolicyChange(configManager.getPolicy(), next);
     if (request.nextUrl.searchParams.get('preview') === '1') {
-      return NextResponse.json({ summary });
+      return NextResponse.json({ summary: summarizePolicyChange(configManager.getPolicy(), next) });
     }
 
-    await configManager.setPolicy(next);
+    // The import replaces the policy it was compared with: a save that lands
+    // in between is compared again, so the summary says what was replaced.
+    let summary: ReturnType<typeof summarizePolicyChange>;
+    for (let attempt = 1; ; attempt++) {
+      const version = configManager.getPolicyVersion();
+      summary = summarizePolicyChange(configManager.getPolicy(), next);
+      try {
+        await configManager.setPolicy(next, { ifVersion: version });
+        break;
+      } catch (error) {
+        if (!isPolicyConflict(error)) throw error;
+        if (attempt >= 3) return NextResponse.json({ error: error.message }, { status: 409 });
+      }
+    }
     await auditLog('policy.import', {
       scopeCount: next.scopes?.length ?? 0,
       scopesAdded: summary.scopes.added.length,

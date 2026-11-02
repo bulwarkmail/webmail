@@ -39,7 +39,7 @@ export const OUTGOING_HOSTS: readonly OutgoingHost[] = [
     host: 'telemetry.bulwarkmail.org',
     files: ['lib/telemetry/types.ts'],
     side: 'server',
-    usedBy: 'Anonymous daily heartbeat, sent only after an admin turned telemetry on.',
+    usedBy: 'Anonymous daily heartbeat, sent only after an admin turned telemetry on; with instant error counts on, also the current day\'s error counts as they change.',
     off: 'Off by default. BULWARK_TELEMETRY=off, or System > Usage stats (switch it off or clear the collector URL).',
     inMode: 'Never sent, whatever the telemetry setting says.',
     lite: false,
@@ -157,8 +157,10 @@ export const OUTGOING_HOSTS: readonly OutgoingHost[] = [
  * has to be looked at again.
  */
 export const NON_REQUEST_HOSTS: readonly { host: string; files: readonly string[]; why: string }[] = [
-  { host: 'bulwarkmail.org', why: 'docs links and comments', files: ['app/(main)/admin/_pages/telemetry.tsx', 'components/admin/org/sections/recovery-section.tsx', 'instrumentation.node.ts', 'lib/telemetry/state.ts', 'lib/telemetry/types.ts'] },
+  { host: 'bulwarkmail.org', why: 'docs links, comments and the contact URL in User-Agent headers', files: ['app/(main)/admin/_pages/telemetry.tsx', 'app/api/fetch-ical/route.ts', 'app/api/translate/route.ts', 'components/admin/org/sections/recovery-section.tsx', 'components/admin/org/sections/company-calendars-section.tsx', 'components/admin/org/sections/free-busy-section.tsx', 'components/admin/org/sections/labels-section.tsx', 'components/admin/org/sections/out-of-office-calendar-section.tsx', 'components/admin/org/sections/phishing-report-section.tsx', 'instrumentation.node.ts', 'lib/telemetry/state.ts', 'lib/telemetry/types.ts', 'app/(main)/admin/_pages/monitoring.tsx', 'lib/admin/types.ts', 'lib/error-reporting/client.ts', 'lib/error-reporting/lite.ts', 'lib/error-reporting/scrub.ts', 'instrumentation.ts', 'app/api/health/live/route.ts', 'app/api/health/ready/route.ts', 'app/api/metrics/route.ts', 'lib/metrics/index.ts', 'lib/tracing/config.ts', 'lib/tracing/scrub.ts', 'lib/tracing/start.ts'] },
+  { host: 'bulwarkmail.org', why: 'docs links of the Notices, Devices (offline mode too) and out-of-office template pages', files: ['components/admin/org/sections/announcement-section.tsx', 'components/admin/org/sections/devices-section.tsx', 'components/admin/org/sections/offline-section.tsx', 'components/admin/org/sections/retention-section.tsx', 'components/admin/org/sections/vacation-templates-section.tsx'] },
   { host: 'bulwarkmail.com', why: 'JMAP capability URI', files: ['lib/jmap/client.ts'] },
+  { host: 'develop.sentry.dev', why: 'link to the envelope format in a comment', files: ['lib/error-reporting/envelope.ts'] },
   { host: 'extensions.bulwarkmail.org', why: 'signed statement type URIs', files: ['lib/admin/directory-keys.ts'] },
   { host: 'www.w3.org', why: 'XML namespaces', files: ['components/ui/flag-icons.tsx', 'lib/favicon-badge.ts'] },
   { host: 'creativecommons.org', why: 'licence metadata inside an SVG', files: ['components/ui/flag-icons.tsx'] },
@@ -183,6 +185,8 @@ export const BUILT_URL_FILES: readonly { file: string; why: string }[] = [
   { file: 'app/(main)/admin/_pages/marketplace-detail.tsx', why: "link to an extension's source host, from the directory's answer" },
   { file: 'app/(main)/setup/page.tsx', why: "the instance's own origin, and scheme checks of the admin-entered server URL" },
   { file: 'app/api/plugin-secrets/route.ts', why: "scheme check of a credential's server URL" },
+  { file: 'lib/admin/organisation-policy.ts', why: 'parses and normalises the company calendar feed URLs an admin entered (webcal to https)' },
+  { file: 'components/admin/org/sections/company-calendars-section.tsx', why: 'checks the company calendar feed URL the admin is typing' },
   { file: 'components/calendar/ical-subscription-modal.tsx', why: "webcal:// rewritten to https:// for a feed the user enters" },
   { file: 'components/email/rich-text-editor.tsx', why: "adds the scheme to a link address the user types in the editor" },
   { file: 'lib/admin/branding-asset.ts', why: "scheme checks of admin-configured branding URLs" },

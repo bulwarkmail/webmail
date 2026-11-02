@@ -19,6 +19,7 @@ import { usePluginSlotOffers } from "@/hooks/use-plugin-slot-offers";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { contactHooks } from "@/lib/plugin-hooks";
 import { contactToView } from "@/lib/plugin-projection";
+import { gateLinkClick } from "@/lib/plugin-hook-result";
 
 interface ContactDetailProps {
   contact: ContactCard | null;
@@ -283,7 +284,7 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
                 >
                   <div className="flex items-center gap-2 group">
                     {typeof svc.uri === 'string' && svc.uri.startsWith("http") ? (
-                      <a href={svc.uri} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline break-all">
+                      <a href={svc.uri} target="_blank" rel="noopener noreferrer" onClick={gateLinkClick} onAuxClick={gateLinkClick} className="text-sm text-primary hover:underline break-all">
                         {svc.user || svc.uri}
                       </a>
                     ) : (
@@ -419,7 +420,7 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
                   <div className="flex items-start gap-2 text-sm break-all">
                     <KeyRound className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                     {typeof key.uri === 'string' && key.uri.startsWith("http") ? (
-                      <a href={key.uri} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                      <a href={key.uri} target="_blank" rel="noopener noreferrer" onClick={gateLinkClick} onAuxClick={gateLinkClick} className="text-primary hover:underline">
                         {key.uri}
                       </a>
                     ) : (
@@ -437,21 +438,21 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
             <div className="space-y-3">
               {contact.calendarUri && (
                 <FieldRow icon={Calendar} label={t("detail.calendar_uri")}>
-                  <a href={contact.calendarUri} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline break-all">
+                  <a href={contact.calendarUri} target="_blank" rel="noopener noreferrer" onClick={gateLinkClick} onAuxClick={gateLinkClick} className="text-sm text-primary hover:underline break-all">
                     {contact.calendarUri}
                   </a>
                 </FieldRow>
               )}
               {contact.schedulingUri && (
                 <FieldRow icon={Calendar} label={t("detail.scheduling_uri")}>
-                  <a href={contact.schedulingUri} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline break-all">
+                  <a href={contact.schedulingUri} target="_blank" rel="noopener noreferrer" onClick={gateLinkClick} onAuxClick={gateLinkClick} className="text-sm text-primary hover:underline break-all">
                     {contact.schedulingUri}
                   </a>
                 </FieldRow>
               )}
               {contact.freeBusyUri && (
                 <FieldRow icon={Calendar} label={t("detail.freebusy_uri")}>
-                  <a href={contact.freeBusyUri} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline break-all">
+                  <a href={contact.freeBusyUri} target="_blank" rel="noopener noreferrer" onClick={gateLinkClick} onAuxClick={gateLinkClick} className="text-sm text-primary hover:underline break-all">
                     {contact.freeBusyUri}
                   </a>
                 </FieldRow>

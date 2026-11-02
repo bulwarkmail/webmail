@@ -92,8 +92,12 @@ const MAIL_PARAGRAPH_MARGIN = "margin:1em 0;";
 
 export function keepLoadedParagraphSpacing(html: string): string {
   if (!html.includes("<p")) return html;
-  const root = document.createElement("div");
-  root.innerHTML = html;
+  // A template is inert: parsed into a live element, the quoted original's
+  // remote images (trackers) would load in the app document right here,
+  // whatever the remote-content setting or the organisation's lock says.
+  const template = document.createElement("template");
+  template.innerHTML = html;
+  const root = template.content;
   let stamped = false;
   root.querySelectorAll("p").forEach((p) => {
     if (p.hasAttribute(SIGNATURE_RANGE_MARKER)) return;
@@ -110,7 +114,7 @@ export function keepLoadedParagraphSpacing(html: string): string {
     p.setAttribute("style", MAIL_PARAGRAPH_MARGIN + style);
     stamped = true;
   });
-  return stamped ? root.innerHTML : html;
+  return stamped ? template.innerHTML : html;
 }
 
 /** A paragraph's `style` without the margin addParagraphSpacing put in front. */

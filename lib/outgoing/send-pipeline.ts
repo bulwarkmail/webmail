@@ -17,9 +17,14 @@
  */
 
 import { debug } from '@/lib/debug';
+import { whenPolicySettled } from '@/stores/policy-store';
 
 // 'plugin-forward': a plugin forwarding a message (api.email.forward).
-export type SendSurface = 'composer' | 'quick-reply' | 'calendar-invitation' | 'plugin-forward';
+// 'report-phishing': a phishing report (lib/phishing-report.ts). It goes to
+// the admin's address and is not the user's mail, so it never runs the
+// checks, the finalisers, the classification label or plugins'
+// onBeforeEmailSend; the surface names it for code that has to tell.
+export type SendSurface = 'composer' | 'quick-reply' | 'calendar-invitation' | 'plugin-forward' | 'report-phishing';
 
 export interface OutgoingContext {
   surface: SendSurface;
@@ -130,6 +135,9 @@ export function finalizeOutgoing(
  * one must not make sending impossible.
  */
 export async function runPreSendChecks(context: OutgoingContext): Promise<boolean> {
+  // The checks and what the composer adds after them (labels, signatures)
+  // follow the organisation policy: wait for its first fetch.
+  await whenPolicySettled();
   for (const entry of [...checks]) {
     try {
       if (!(await entry.run(context))) {

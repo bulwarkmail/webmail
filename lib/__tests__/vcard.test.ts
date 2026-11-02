@@ -575,7 +575,7 @@ describe("vCard 4.0 export (issue #1407)", () => {
     expect(vcf).toBe([
       "BEGIN:VCARD",
       "VERSION:4.0",
-      "PRODID:-//JMAP-Webmail//EN",
+      "PRODID:-//Bulwark Mail//Bulwark Webmail//EN",
       "UID;VALUE=text:sabre-vobject-5e64d0ac-69da-4393-bfe4-87844b9a7db6",
       "REV:20250728T121700Z",
       "N:Doe;Jane;;;",

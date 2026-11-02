@@ -11,6 +11,8 @@
 import type { InstalledPlugin } from '../plugin-types';
 import { emailIframeCsp, escapeHtml, sanitizeEmailHtmlForIframe } from '../email-sanitization';
 import { readObject, readString, withinRate } from './host-api-input';
+import { canPrintAnywhere, getStrictestDevices, watermarkAddress, watermarkText } from '../device-policy';
+import { watermarkForPrint } from '../watermark';
 
 const MAX_TITLE = 200;
 const MAX_HTML = 2 * 1024 * 1024;
@@ -20,7 +22,8 @@ export const MAX_PRINTS_PER_MINUTE = 3;
 const CLEANUP_MS = 60_000;
 
 /** The document the frame prints. Exported for tests. */
-export function printDocument(title: string, html: string, dir: string): string {
+export function printDocument(title: string, html: string, dir: string, watermark?: string | null): string {
+  const mark = watermark ? watermarkForPrint(watermark) : null;
   return `<!DOCTYPE html>
 <html dir="${dir === 'rtl' ? 'rtl' : 'ltr'}"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="${emailIframeCsp(true)}">
@@ -30,7 +33,7 @@ export function printDocument(title: string, html: string, dir: string): string 
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #000; background: #fff; margin: 0; }
   img { max-width: 100%; height: auto; }
   @page { margin: 15mm; }
-</style></head><body>${sanitizeEmailHtmlForIframe(html)}</body></html>`;
+</style>${mark ? mark.style : ''}</head><body>${mark ? mark.html : ''}${sanitizeEmailHtmlForIframe(html)}</body></html>`;
 }
 
 /**
@@ -44,6 +47,8 @@ export async function doUiPrint(plugin: InstalledPlugin, input: unknown): Promis
   // eslint-disable-next-line no-control-regex -- a title is one line
   if (/[\u0000-\u001f\u007f]/.test(title)) throw new Error(`${method}: title must be one line`);
   const html = readString(page.html, method, 'html', MAX_HTML);
+  // Organisation > Devices > No printing, in any signed-in account.
+  if (!canPrintAnywhere()) throw new Error(`${method}: printing is turned off by the organisation`);
   if (!withinRate(method, plugin.id, MAX_PRINTS_PER_MINUTE)) {
     throw new Error(`${method}: at most ${MAX_PRINTS_PER_MINUTE} times a minute`);
   }
@@ -57,7 +62,8 @@ export async function doUiPrint(plugin: InstalledPlugin, input: unknown): Promis
   // Off screen but laid out: some browsers print an empty page from a
   // frame with display: none.
   frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:800px;height:600px;border:0;visibility:hidden;';
-  frame.srcdoc = printDocument(title, html, document.documentElement.dir);
+  const watermark = getStrictestDevices().watermark ? watermarkText(watermarkAddress(null)) : null;
+  frame.srcdoc = printDocument(title, html, document.documentElement.dir, watermark);
 
   await new Promise<void>((resolve, reject) => {
     frame.addEventListener('load', () => resolve(), { once: true });

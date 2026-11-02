@@ -63,6 +63,20 @@ describe('Lite bundle host scan', () => {
     ]);
   });
 
+  it('accepts the licence links of the PST worker only in that file', () => {
+    const licences = '/*! Bundled license information:\n * @author Feross Aboukhadijeh <https://feross.org>\n *     http://www.apache.org/licenses/LICENSE-2.0\n */';
+    const out = fakeOut({
+      'config.json': '{}',
+      'pst-worker.js': `(()=>{fetch("https://beacon.fakecdn.io/x")})();\n${licences}`,
+      '_next/static/chunks/c3.js': licences,
+    });
+    expect(scanBundleHosts(out).sort()).toEqual([
+      '_next/static/chunks/c3.js: feross.org',
+      '_next/static/chunks/c3.js: www.apache.org',
+      'pst-worker.js: beacon.fakecdn.io',
+    ]);
+  });
+
   it.skipIf(!process.env.LITE_OUT_DIR)('finds nothing unaccounted in the build at LITE_OUT_DIR', () => {
     expect(scanBundleHosts(process.env.LITE_OUT_DIR)).toEqual([]);
   });

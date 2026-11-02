@@ -95,6 +95,8 @@ vi.mock('@/stores/settings-store', () => {
     // The default position: replies/forwards get the signature appended at
     // send time rather than embedded above the quote.
     signaturePosition: 'below_quote',
+    signatureNewMailEnabled: true,
+    signatureReplyForwardEnabled: true,
     signatureSeparatorEnabled: true,
     requestReadReceiptDefault: false,
     addTrustedSender: () => {},
@@ -255,5 +257,42 @@ describe('composer signature follows the picked identity', () => {
     await waitFor(() => expect(textarea().value).toBe('Plain draft'));
     const sent = await send(onSend);
     expect(sent.body).toBe('Plain draft');
+  });
+});
+
+describe('signature auto-insert toggles', () => {
+  afterEach(() => {
+    useSettingsStore.setState({
+      plainTextMode: false,
+      signatureNewMailEnabled: true,
+      signatureReplyForwardEnabled: true,
+    });
+    vi.clearAllMocks();
+  });
+
+  it('keeps a new message free of the signature when the new-mail toggle is off', async () => {
+    useSettingsStore.setState({ plainTextMode: true, signatureNewMailEnabled: false });
+    const onSend = vi.fn();
+    render(<EmailComposer initialData={{ ...DRAFT, body: 'Draft text' }} onSend={onSend} />);
+
+    // Not embedded into the editable body…
+    await waitFor(() => expect(textarea().value).toBe('Draft text'));
+    // …and not appended at send time either.
+    const sent = await send(onSend);
+    expect(sent.body).toBe('Draft text');
+  });
+
+  it('sends a reply without appending the signature when the reply toggle is off', async () => {
+    useSettingsStore.setState({ signatureReplyForwardEnabled: false });
+    const onSend = vi.fn();
+    render(<EmailComposer mode="reply" initialData={{ ...DRAFT, mode: 'reply' }} onSend={onSend} />);
+
+    // No read-only signature preview under the editor: it would promise a
+    // signature that never goes out.
+    expect(document.body.textContent).not.toContain('Alice');
+
+    const sent = await send(onSend);
+    expect(sent.htmlBody).not.toContain('Alice');
+    expect(sent.body).not.toContain('Alice');
   });
 });

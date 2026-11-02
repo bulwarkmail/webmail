@@ -11,6 +11,7 @@ import { ProInterfaceRedirect } from "@/components/pro/pro-interface-redirect";
 import { ImpersonationReconciler } from "@/components/impersonation/impersonation-reconciler";
 import { PluginDialogHost } from "@/components/plugins/plugin-dialog-host";
 import { ExternalRecipientConfirmHost } from "@/components/email/external-recipient-confirm";
+import { PhishingReportHost } from "@/components/email/phishing-report-host";
 import { PluginPageNavigator } from "@/components/plugins/plugin-page-navigator";
 import { PaneCycleHost } from "@/components/layout/pane-cycle";
 import { FocusRescueHost } from "@/components/layout/focus-rescue";
@@ -19,14 +20,19 @@ import { AccessibilityQuickPanelHost } from "@/components/accessibility/accessib
 import { TotpReauthDialog } from "@/components/totp-reauth-dialog";
 import { PluginConnectDialog } from "@/components/plugins/plugin-connect-dialog";
 import { QuickRuleHost } from "@/components/filters/quick-rule-host";
+import { MailTransferHost } from "@/components/mail-transfer/mail-transfer-host";
 import { PluginConsentDialog } from "@/components/plugins/plugin-consent-dialog";
 import { PluginAppEvents } from "@/components/providers/plugin-app-events";
 import { PluginOAuthCallbackListener } from "@/components/providers/plugin-oauth-callback-listener";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
+import { AppUpdatePrompt } from "@/components/app-update-prompt";
+import { OfflineHost } from "@/components/offline/offline-host";
+import { DevicePolicyHost } from "@/components/device/device-policy-host";
 import { PushNotificationPrompt } from "@/components/push-notification-prompt";
 import { AccountArchiveRestorePrompt } from "@/components/account-archive-prompt";
 import { SessionTimeoutGuard } from "@/components/session/session-timeout-guard";
 import { AccountTemplateSync } from "@/components/templates/account-template-sync";
+import { FreeBusyAutoShare } from "@/components/calendar/free-busy-auto-share";
 import { IS_LITE } from "@/lib/lite";
 import { setRequestLocale } from "next-intl/server";
 import { locales } from "@/i18n/routing";
@@ -76,9 +82,11 @@ export default async function LocaleLayout({
                   <PushBindingsHost />
                   <SessionTimeoutGuard />
                   <AccountTemplateSync />
+                  <FreeBusyAutoShare />
                   {children}
                   <PluginDialogHost />
                   <ExternalRecipientConfirmHost />
+                  <PhishingReportHost />
                   <CommandPaletteHost />
                   <AccessibilityQuickPanelHost />
                   <PaneCycleHost />
@@ -86,11 +94,16 @@ export default async function LocaleLayout({
                   <TotpReauthDialog />
                   <PluginConnectDialog />
                   <QuickRuleHost />
+                  <MailTransferHost />
                   <PluginConsentDialog />
                   <PluginOAuthCallbackListener />
                   <PluginAppEvents />
                   <PluginPageNavigator />
                   <PWAInstallPrompt />
+                  <AppUpdatePrompt />
+                  {/* Offline mode isn't in Lite (no service worker there). */}
+                  {!IS_LITE && <OfflineHost />}
+                  <DevicePolicyHost />
                   <PushNotificationPrompt />
                   {/* Lite is a static bundle: no server keeps an archive there. */}
                   {!IS_LITE && <AccountArchiveRestorePrompt />}

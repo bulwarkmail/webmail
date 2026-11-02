@@ -7,6 +7,7 @@ import { currentStoreEpoch } from '@/lib/store-epoch';
 import { debug } from '@/lib/debug';
 import { vacationHooks } from '@/lib/plugin-hooks';
 import { vacationToView } from '@/lib/plugin-projection';
+import { vacationReplyLoaded, vacationReplySaved } from '@/lib/vacation-calendar';
 
 /** What the vacation card sets for forwarding; the period comes from the vacation. */
 export type VacationForwardSettings = Pick<VacationForward, 'enabled' | 'to' | 'keepCopy'>;
@@ -148,6 +149,9 @@ export const useVacationStore = create<VacationStore>()((set, get) => ({
         ...(filters ? fromFilters(filters) : {}),
         isLoading: false,
       });
+      // Out-of-office blocks the calendar (lib/vacation-calendar.ts): the
+      // reply may have been set in another client.
+      vacationReplyLoaded(client, accountId, { isEnabled, fromDate: vacation.fromDate, toDate: vacation.toDate, subject: vacation.subject || '' });
     } catch (error) {
       if (stale()) return;
       set({
@@ -232,6 +236,7 @@ export const useVacationStore = create<VacationStore>()((set, get) => ({
       : { ...current, ...vacationUpdates, ...filtersState, isSaving: false }));
     // The reply itself is saved even when its filters part failed.
     void vacationHooks.onVacationUpdate.emit(next);
+    vacationReplySaved(client, accountId, before, { isEnabled: next.isEnabled, fromDate: next.fromDate, toDate: next.toDate, subject: next.subject });
     if (filtersError) throw filtersError;
     return true;
   },

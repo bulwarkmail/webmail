@@ -22,7 +22,8 @@ vi.mock('next/server', () => ({
 }));
 
 vi.mock('@/lib/logger', () => ({
-  logger: { debug: vi.fn() },
+  configureLogger: vi.fn(),
+  logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
 // Env vars these tests drive. Stubbed to undefined before each test so the

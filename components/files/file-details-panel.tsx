@@ -30,7 +30,8 @@ interface FileDetailsPanelProps {
   onClose: () => void;
   onOpen: () => void;
   onEdit: () => void;
-  onDownload: () => void;
+  /** Left out when a device policy turned downloads off. */
+  onDownload?: () => void;
   onShare: () => void;
   onToggleStar: () => void;
   className?: string;
@@ -138,7 +139,7 @@ export function FileDetailsPanel({
             <Eye className="w-4 h-4" />{t("preview")}
           </Button>
         ) : null}
-        {!resource.isDirectory && !resource.isSymlink && (
+        {!resource.isDirectory && !resource.isSymlink && onDownload && (
           <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={onDownload}>
             <Download className="w-4 h-4" />{t("download")}
           </Button>

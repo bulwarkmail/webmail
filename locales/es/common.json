@@ -1,5 +1,5 @@
 {
-  "meta_description": "Cliente de correo web minimalista que usa el protocolo JMAP",
+  "meta_description": "Webmail autoalojado para correo, calendario, contactos y archivos, basado en JMAP",
   "login": {
     "title": "Correo Web",
     "username_label": "Correo electrónico",
@@ -461,7 +461,6 @@
     "view_in_light_mode": "Ver en modo claro",
     "export_email": "Exportar como .eml",
     "forward_as_attachment": "Reenviar como archivo adjunto",
-    "import_email": "Importar .eml o .zip…",
     "keyboard_shortcuts": "Atajos de teclado",
     "email_source": "Código Fuente del Correo",
     "draft_banner": "Este mensaje es un borrador",
@@ -473,6 +472,9 @@
     "source_truncated": "Se muestran los primeros {size}. Exporta el mensaje para ver el resto.",
     "source_copied": "Código fuente copiado al portapapeles",
     "attachments": "Archivos adjuntos",
+    "attachments_count": "{count, plural, one {# adjunto} other {# adjuntos}}",
+    "attachments_show_more": "Mostrar {count} más",
+    "attachments_show_fewer": "Mostrar menos",
     "important": "Importante",
     "download": "Descargar",
     "download_all": "Descargar todo",
@@ -880,6 +882,35 @@
     "send_anyway": "Enviar de todos modos",
     "back": "Atrás"
   },
+  "phishing_report": {
+    "action": "Reportar phishing…",
+    "confirm_title": "¿Reportar phishing?",
+    "confirm_message": "{count, plural, one {El mensaje se enviará a {address} y se moverá a Spam.} other {Cada uno de los # mensajes se enviará a {address} como un reporte aparte y se moverá a Spam.}}",
+    "confirm": "Reportar",
+    "cancel": "Cancelar",
+    "sending": "Reportando…",
+    "done": "{count, plural, one {Reportado a {address} y movido a Spam.} other {# mensajes reportados a {address} y movidos a Spam.}}",
+    "not_moved": "{count, plural, one {Reportado a {address}, pero el mensaje no se pudo mover a Spam.} other {Reportados a {address}, pero # mensajes no se pudieron mover a Spam.}}",
+    "failed": "{count, plural, one {No se pudo reportar el mensaje.} other {No se pudieron reportar # mensajes.}}",
+    "undo": "Deshacer",
+    "undone": "{count, plural, one {Devuelto a su sitio. El reporte ya se había enviado.} other {Devueltos a su sitio. Los reportes ya se habían enviado.}}",
+    "undo_failed": "No se pudo devolver a su sitio.",
+    "banner": "Has reportado este mensaje como phishing. Sus enlaces están desactivados.",
+    "link_off": "enlace desactivado",
+    "link_off_note": "(enlace desactivado)",
+    "no_subject": "(sin asunto)"
+  },
+  "classification": {
+    "picker_label": "Clasificación",
+    "chip_label": "Clasificación: {name}",
+    "none": "Sin clasificación",
+    "pick_required": "Elige una clasificación",
+    "required_hint": "Tu organización exige una clasificación.",
+    "required_toast": "Elige una clasificación antes de enviar.",
+    "quick_reply_needs_label": "Esta respuesta necesita una clasificación. Elige una aquí y luego envía.",
+    "forward_needs_label": "Se requiere una clasificación. Reenvía el mensaje desde el redactor.",
+    "received_hint": "La pone el programa de correo del remitente. Cualquiera puede poner una clasificación, así que no demuestra nada."
+  },
   "email_composer": {
     "select_from_directory": "Seleccionar del directorio",
     "minimize": "Minimizar",
@@ -1248,8 +1279,6 @@
     "templates_import_errors": "Algunas plantillas no se pudieron importar",
     "templates_import_empty": "No se encontraron plantillas en el archivo",
     "export_email_error": "Error al exportar el correo electrónico",
-    "import_email_success": "Correo electrónico importado correctamente",
-    "import_email_error": "Error al importar el correo electrónico",
     "rule_created": "Regla creada",
     "rule_merged": "Añadido a la regla «{name}»",
     "rule_already_covered": "Ya lo cubre la regla «{name}»",
@@ -1272,12 +1301,46 @@
     "tag_removed_count": "{count, plural, one {Etiqueta quitada de # correo} other {Etiqueta quitada de # correos}}",
     "new_mail_count": "{count, plural, one {# mensaje nuevo} other {# mensajes nuevos}}"
   },
+  "org_notice": {
+    "label": "Aviso",
+    "dismiss": "Cerrar aviso",
+    "severity_info": "Información",
+    "severity_warning": "Advertencia",
+    "severity_critical": "Importante"
+  },
+  "vacation_templates": {
+    "title": "Plantillas de la organización",
+    "description": "Empiece con una respuesta que escribió su organización. Después puede cambiar el texto.",
+    "pick_label": "Usar una plantilla",
+    "pick_placeholder": "Elija una plantilla",
+    "deputy_label": "Dirección del suplente",
+    "deputy_placeholder": "colega@example.com",
+    "deputy_hint": "La respuesta indica a esta persona para asuntos urgentes.",
+    "deputy_missing": "Escriba primero la dirección de su suplente.",
+    "deputy_name_label": "Nombre del suplente",
+    "deputy_name_missing": "Escriba primero el nombre de su suplente.",
+    "apply": "Usar este texto",
+    "apply_hint": "Sustituye el asunto y el texto de abajo."
+  },
+  "retention_notice": {
+    "line": "Los mensajes de aquí se eliminan {count, plural, one {# día} other {# días}} después de moverlos aquí."
+  },
+  "device_policy": {
+    "downloads_off": "Su organización ha desactivado las descargas.",
+    "download_off_named": "{name}: su organización ha desactivado las descargas",
+    "download_blocked": "Su organización ha desactivado las descargas.",
+    "export_blocked": "Su organización ha desactivado la exportación del correo.",
+    "print_blocked": "Su organización ha desactivado la impresión."
+  },
   "third_party": {
     "push_needs_relay": "Las notificaciones push necesitan un relay push gestionado por tu organización, y no hay ninguno configurado. El correo nuevo se sigue mostrando mientras la aplicación está abierta.",
     "relay_desc": "Solo se ofrecen los relays propios de tu organización, porque este servidor no contacta con servicios externos.",
     "relay_none": "Ninguno configurado",
     "plugin_refused": "No iniciado: este complemento se conecta a servicios externos, que tu organización ha desactivado.",
     "remote_content_blocked": "Tu organización bloquea el contenido de otros servidores, así que las imágenes remotas de este mensaje no se muestran."
+  },
+  "remote_content_lock": {
+    "trusted_senders_note": "Tu organización bloquea el contenido remoto en todos los correos, así que tampoco se carga de los remitentes de confianza."
   },
   "date": {
     "today": "Hoy",
@@ -1539,6 +1602,10 @@
         "label": "Mostrar cuentas de correo compartidas",
         "description": "Muestra las carpetas de los buzones compartidos contigo en Compartido, en la barra lateral. Desactívalo para ocultarlas todas, u oculta cuentas concretas abajo. Sus calendarios y contactos se mantienen."
       },
+      "compact_shared_mailboxes": {
+        "label": "Buzones compartidos compactos",
+        "description": "Muestra cada buzón compartido como una sola fila que abre su bandeja de entrada, con sus carpetas debajo. Las vacías, como Borradores o Papelera, se omiten."
+      },
       "pro_interface": {
         "label": "Interfaz Pro (experimental)",
         "description": "Diseño de escritorio para usuarios avanzados con exploración de mensajes en varias pestañas y flujos de trabajo entre cuentas. La interfaz estándar no se ve afectada; puedes volver en cualquier momento.",
@@ -1769,6 +1836,12 @@
         "label": "Borrar la búsqueda al cambiar de carpeta",
         "description": "Al hacer clic en una carpeta (Bandeja de entrada, Enviados…) se borra la búsqueda activa y se muestra esa carpeta. Si está desactivado, la búsqueda se mantiene y se vuelve a ejecutar en la carpeta a la que cambies."
       },
+      "search_default_scope": {
+        "label": "Buscar en",
+        "description": "Dónde busca una búsqueda nueva. Puedes elegir otra carpeta en los filtros de búsqueda.",
+        "all": "Todas las carpetas excepto Spam y Papelera",
+        "folder": "La carpeta abierta"
+      },
       "request_read_receipt": {
         "label": "Solicitar confirmaciones de lectura de forma predeterminada",
         "description": "Activar previamente la solicitud de confirmación de lectura al redactar un mensaje nuevo."
@@ -1867,6 +1940,14 @@
         "above_quote": "Antes del texto citado",
         "below_quote": "Después del texto citado"
       },
+      "signature_new_mail": {
+        "label": "Firma en correos nuevos",
+        "description": "Inserta automáticamente tu firma al redactar un mensaje nuevo. Desactívalo para empezar cada mensaje nuevo sin ella."
+      },
+      "signature_reply_forward": {
+        "label": "Firma en respuestas y reenvíos",
+        "description": "Añade automáticamente tu firma al responder o reenviar un mensaje. Desactívalo para enviarlos sin ella."
+      },
       "signature_separator": {
         "label": "Delimitador de firma",
         "description": "Anteponer a la firma la línea delimitadora estándar \"-- \" (RFC 3676). Desactiva si prefieres pasar directamente del mensaje a la firma."
@@ -1896,8 +1977,8 @@
       "attachment_position": {
         "label": "Posición del adjunto",
         "description": "Dónde mostrar los adjuntos en el encabezado del correo",
-        "beside-sender": "Junto al remitente",
-        "below-header": "Debajo del encabezado"
+        "below-header": "Debajo del encabezado",
+        "below-message": "Tarjetas debajo del mensaje"
       },
       "emails_per_page": {
         "10": "10 correos",
@@ -3546,7 +3627,6 @@
     "new_folder": "Nueva carpeta…",
     "rename": "Renombrar…",
     "share": "Compartir…",
-    "import_email": "Importar .eml o .zip…",
     "empty_folder": "Vaciar carpeta",
     "empty_folder_generic": "Vaciar carpeta",
     "delete_folder": "Eliminar carpeta",
@@ -5052,7 +5132,6 @@
     "settings_ascending": "Ascendente",
     "settings_descending": "Descendente",
     "disabled_title": "La función de archivos ha sido desactivada por su administrador",
-    "disabled_description": "Las cargas de archivos grandes a través de WebDAV pueden causar inestabilidad en Stalwart/RocksDB, incluyendo errores de memoria y uso irrecuperable del disco. Los archivos eliminados pueden no eliminarse inmediatamente del almacenamiento. Esta función no se recomienda para entornos de producción.",
     "no_accounts": "No hay cuentas conectadas.",
     "open_folder_tree": "Abrir árbol de carpetas",
     "migration_title": "Actualizando tus archivos…",
@@ -5241,6 +5320,117 @@
   "unified_mailbox": {
     "search_unavailable": "La búsqueda no está disponible en la vista unificada"
   },
+  "mail_import": {
+    "menu_import": "Importar correo…",
+    "settings_label": "Importar correo",
+    "settings_description": "Traer correo desde archivos .eml, ZIP, mbox u Outlook .pst y .ost.",
+    "settings_button": "Importar…",
+    "title": "Importar correo",
+    "description": "Elija archivos .eml, .zip, .mbox u Outlook .pst y .ost.",
+    "choose_files": "Elegir archivos…",
+    "chosen_files": "Archivos elegidos",
+    "remove_file": "Quitar {name}",
+    "format_eml": "Mensaje",
+    "format_zip": "Archivo ZIP",
+    "format_mbox": "Archivo mbox",
+    "format_pst": "Archivo de datos de Outlook",
+    "target_label": "Importar en",
+    "target_top": "Nivel superior",
+    "keep_folders": "Recrear las carpetas del archivo",
+    "keep_folders_hint": "Las carpetas con el mismo nombre se reutilizan.",
+    "resume": "Seguir donde se detuvo la última importación de estos archivos (mensajes ya procesados: {count})",
+    "quota_note": "Muchos servidores solo aceptan unos 1000 mensajes o 50 MB por hora de cada usuario. Una importación mayor se pausa y luego sigue sola.",
+    "start": "Importar",
+    "cancel": "Cancelar",
+    "running_title": "Importando correo",
+    "progress_label": "Progreso de la importación",
+    "status_imported": "Mensajes importados: {count}",
+    "reading_file": "Leyendo {name}",
+    "paused": "En pausa hasta las {time}. El servidor acepta como máximo {files} subidas o {size} por hora. La importación sigue sola.",
+    "paused_generic": "En pausa hasta las {time}. Se alcanzó el límite de subida del servidor. La importación sigue sola.",
+    "background": "Seguir en segundo plano",
+    "cancel_import": "Cancelar importación",
+    "chip": "Importando correo: {percent} %",
+    "chip_paused": "Importación en pausa hasta las {time}",
+    "done_title": "Importación terminada",
+    "cancelled_title": "Importación cancelada",
+    "failed_title": "Importación detenida",
+    "summary_imported": "Mensajes importados: {count}",
+    "summary_folders": "Carpetas creadas: {count}",
+    "summary_skipped": "No importados:",
+    "skip_too_large": "Más grandes de lo que acepta el servidor: {count}",
+    "skip_deleted": "Eliminados en Thunderbird: {count}",
+    "skip_embedded": "Mensajes adjuntos a otros mensajes: {count}",
+    "skip_contact": "Contactos: {count}",
+    "skip_calendar": "Elementos de calendario: {count}",
+    "skip_other": "Otros elementos: {count}",
+    "summary_failed": "No se pudieron importar: {count}",
+    "failure_invalid": "no es un mensaje válido",
+    "untitled": "(sin asunto)",
+    "cancelled_hint": "Para seguir más tarde, importe los mismos archivos en la misma carpeta otra vez.",
+    "close": "Cerrar",
+    "pst_note": "De los archivos de Outlook solo se importa el correo. Los contactos, elementos de calendario y tareas se cuentan y se dejan fuera.",
+    "pst_error_encrypted": "Este archivo de Outlook usa cifrado alto, que Bulwark no puede leer. En Outlook, exporte el correo a un archivo .pst nuevo sin cifrado.",
+    "pst_error_not_pst": "Este archivo no es un archivo de datos de Outlook que Bulwark pueda leer.",
+    "pst_error_unreadable": "Bulwark no pudo leer este archivo de Outlook.",
+    "pst_error_worker": "El lector de archivos de Outlook no se cargó. Vuelva a cargar la página e inténtelo de nuevo.",
+    "error_over_quota": "El buzón está lleno, así que la importación se detuvo. Libere espacio e importe los mismos archivos en la misma carpeta otra vez para seguir.",
+    "error_forbidden": "No puede añadir correo a esta carpeta, así que la importación se detuvo.",
+    "error_failures": "Fallaron demasiados mensajes seguidos, así que la importación se detuvo. Importe los mismos archivos en la misma carpeta más tarde para seguir.",
+    "error_network": "La conexión con el servidor falló varias veces, así que la importación se detuvo. Importe los mismos archivos en la misma carpeta otra vez para seguir.",
+    "error_busy": "Estos archivos ya se están importando en otra pestaña.",
+    "retry_hint": "Importe los mismos archivos en la misma carpeta otra vez para reintentar los que fallaron.",
+    "skip_unreadable": "Ilegibles en el archivo de Outlook: {count}",
+    "keep_folders_top_hint": "En el nivel superior, Bandeja de entrada, Elementos enviados, Elementos eliminados y similares van a las suyas.",
+    "toast_done": "Importación terminada. Importados: {imported}, fallidos: {failed}.",
+    "toast_stopped": "La importación se detuvo.",
+    "toast_show": "Mostrar",
+    "section_title": "Archivos de correo",
+    "section_description": "Traiga correo desde archivos o guarde su correo como archivos."
+  },
+  "mail_export": {
+    "menu_export": "Exportar carpeta…",
+    "settings_label": "Exportar todo el correo",
+    "settings_description": "Guardar todas las carpetas de esta cuenta en un archivo ZIP, como archivos mbox o .eml.",
+    "settings_button": "Exportar…",
+    "title_folder": "Exportar «{name}»",
+    "title_account": "Exportar todo el correo",
+    "description_folder": "Guardar los mensajes de esta carpeta en un archivo.",
+    "description_account": "Guardar todas las carpetas de esta cuenta en un archivo ZIP.",
+    "format_label": "Formato",
+    "format_mbox_folder": "Archivo mbox",
+    "format_eml_folder": "ZIP de archivos .eml",
+    "format_mbox_account": "ZIP con un archivo mbox por carpeta",
+    "format_eml_account": "ZIP de archivos .eml, una carpeta por carpeta de correo",
+    "hint_mbox": "Thunderbird, Apple Mail y la mayoría de los programas de correo abren archivos mbox.",
+    "hint_eml": "Un archivo por mensaje, que cualquier programa de correo puede abrir.",
+    "save_picker": "Usted elige dónde guardar el archivo.",
+    "save_download": "El archivo se descarga cuando termina la exportación.",
+    "save_memory": "Este navegador guarda toda la exportación en memoria, así que solo puede guardar hasta 200 MB. Para más, use Chrome o Edge, o exporte carpeta por carpeta.",
+    "start": "Exportar",
+    "cancel": "Cancelar",
+    "running_title": "Exportando correo",
+    "progress_label": "Progreso de la exportación",
+    "status_exported": "Mensajes exportados: {count} de {total}",
+    "paused": "En pausa hasta las {time}: el servidor pidió una pausa. La exportación sigue sola.",
+    "background": "Seguir en segundo plano",
+    "cancel_export": "Cancelar exportación",
+    "chip": "Exportando correo: {percent} %",
+    "chip_paused": "Exportación en pausa hasta las {time}",
+    "done_title": "Exportación terminada",
+    "cancelled_title": "Exportación cancelada",
+    "failed_title": "Exportación detenida",
+    "summary_exported": "Mensajes exportados: {count}",
+    "summary_file": "Guardado como {name} ({size}).",
+    "summary_failed": "No se pudieron exportar: {count}",
+    "download_again": "Descargar de nuevo",
+    "too_large": "La exportación es mayor de lo que este navegador puede guardar en memoria. Use Chrome o Edge, o exporte carpeta por carpeta.",
+    "close": "Cerrar",
+    "untitled": "(sin asunto)",
+    "toast_done": "Exportación terminada: {name}",
+    "toast_stopped": "La exportación se detuvo.",
+    "toast_show": "Mostrar"
+  },
   "recover_deleted": {
     "tab": "Recuperar elementos eliminados",
     "title": "Recuperar elementos eliminados",
@@ -5273,6 +5463,51 @@
     "updated": "{name} ha actualizado \"{title}\"",
     "cancelled": "{name} ha cancelado \"{title}\"",
     "untitled": "Evento sin título"
+  },
+  "company_calendars": {
+    "section": "Organización"
+  },
+  "vacation_calendar": {
+    "label": "Bloquear mi calendario",
+    "description": "Añade un evento ocupado mientras estás fuera, para que nadie te convoque a reuniones entonces.",
+    "no_access_managed": "No se puede bloquear el calendario de esta cuenta: no tienes acceso de escritura.",
+    "no_calendar": "No se puede bloquear tu calendario: Bulwark no encontró ningún calendario donde añadir el evento.",
+    "filter_warning": "Si lo activas, tu propio script de filtros se desactiva mientras la respuesta esté activa."
+  },
+  "calendar_delegate": {
+    "answer_for": "Responder por {name}",
+    "no_write": "Puedes ver las invitaciones de {name}, pero no responder por esa persona. Pídele acceso de edición.",
+    "also_invited": "Tú también estás invitado y este servidor no distingue tu respuesta de la de {name}. {name} tiene que responder esta.",
+    "answered_by": "Respondido por {who}"
+  },
+  "free_busy_share": {
+    "button": "Compartir mi disponibilidad con {group}",
+    "already": "Tu disponibilidad está compartida con {group}",
+    "done": "Ahora tu disponibilidad está compartida con {group}.",
+    "error": "No se pudo compartir tu disponibilidad. Inténtalo de nuevo.",
+    "group_label": "Grupo",
+    "title": "Disponibilidad",
+    "description": "Tus compañeros del grupo ven cuándo estás ocupado, no qué eventos tienes. «Sugerir horarios» lo usa."
+  },
+  "find_time": {
+    "suggest": "Sugerir horarios",
+    "searching": "Buscando horarios libres",
+    "slots_title": "Libre para todos los que Bulwark pudo comprobar",
+    "slot": "{day}, de {start} a {end}",
+    "none": "No hay tiempo libre en los próximos 10 días laborables.",
+    "picked": "Evento movido a {slot}",
+    "rate_limited": "Demasiadas consultas en el último minuto. Inténtalo de nuevo en un minuto.",
+    "unavailable": "La disponibilidad no está disponible en este servidor, así que Bulwark no puede sugerir horarios.",
+    "not_checked": "Sin comprobar:",
+    "not_checked_item": "{who}: {reason}",
+    "reason_external": "fuera de tu organización",
+    "reason_unknown": "horas ocupadas desconocidas",
+    "reason_not_found": "no encontrado en este servidor",
+    "reason_error": "no se pudo comprobar",
+    "unknown_note": "Bulwark solo ve las horas ocupadas de los calendarios compartidos contigo. Para estas personas no puede distinguir libre de no compartido.",
+    "directory_off": "Bulwark no puede buscar personas en este servidor. Tu administrador puede activar las consultas de directorio en Stalwart.",
+    "not_looked_up": "No se pudo buscar esta dirección",
+    "found": "Horarios libres encontrados: {count}"
   },
   "share_notifications": {
     "someone": "Alguien",
@@ -5411,6 +5646,76 @@
     "install": "Instalar",
     "dont_remind": "No volver a recordármelo",
     "dismiss_aria": "Cerrar aviso de instalación"
+  },
+  "app_update": {
+    "ready": "Hay una nueva versión de {appName} lista.",
+    "reload": "Recargar"
+  },
+  "offline": {
+    "settings": {
+      "title": "Sin conexión",
+      "description": "Lee y escribe correo en este dispositivo sin conexión.",
+      "keep_label": "Guardar el correo en este dispositivo",
+      "keep_description": "Guarda los últimos 30 días de tu bandeja de entrada y de las carpetas que abras, hasta 250 MB, cifrados en este navegador. Sin conexión puedes leer, marcar y mover correo, y lo que escribas espera en la bandeja de salida. Al cerrar sesión se borra todo.",
+      "warning": "Cualquiera que pueda usar este perfil del navegador puede leer este correo. Actívalo solo en tu propio dispositivo y usa cifrado de disco.",
+      "forbidden": "Tu organización no permite guardar correo en los dispositivos.",
+      "unsupported": "Este navegador no puede guardar correo para usarlo sin conexión.",
+      "syncing": "Guardando tu correo en este dispositivo…",
+      "usage": "{size} en este dispositivo",
+      "usage_updated": "{size} en este dispositivo, actualizado {time}",
+      "off_confirm_title": "¿Desactivar el modo sin conexión?",
+      "off_confirm_message": "{count, plural, one {# mensaje de la bandeja de salida no se ha enviado.} other {# mensajes de la bandeja de salida no se han enviado.}} Al desactivarlo se borran, junto con el correo guardado en este dispositivo.",
+      "off_confirm": "Desactivar"
+    },
+    "outbox": {
+      "title": "Bandeja de salida",
+      "description": "Mensajes que escribiste sin conexión. Se envían cuando este dispositivo vuelva a tener conexión.",
+      "empty": "No hay nada pendiente de envío.",
+      "no_subject": "(sin asunto)",
+      "to": "Para: {recipients}",
+      "status_waiting": "Esperando conexión",
+      "status_sending": "Enviándose",
+      "status_failed": "No se pudo enviar: {error}",
+      "status_uncertain": "La conexión se cortó durante el envío. Revisa Enviados antes de enviarlo otra vez.",
+      "retry": "Enviar otra vez",
+      "delete": "Eliminar",
+      "delete_confirm_title": "¿Eliminar este mensaje?",
+      "delete_confirm_message": "No se ha enviado y no se puede recuperar.",
+      "changes": "{count, plural, one {# cambio} other {# cambios}} de leído, marcas o carpetas se enviarán cuando vuelvas a tener conexión.",
+      "status_held": "Las reglas de tu organización cambiaron mientras esperaba. Escríbelo de nuevo para enviarlo.",
+      "retry_label": "Enviar otra vez: {subject}",
+      "delete_label": "Eliminar: {subject}"
+    },
+    "banner": {
+      "offline": "No tienes conexión. Ves el correo guardado en este dispositivo. Lo que cambies o escribas se envía cuando vuelvas a tener conexión.",
+      "outbox": "{count, plural, one {# mensaje} other {# mensajes}} en la bandeja de salida",
+      "server_down": "No se puede conectar con el servidor de correo. Ves el correo guardado en este dispositivo. Lo que cambies o escribas se envía cuando vuelva a responder."
+    },
+    "toast": {
+      "queued": "Guardado en la bandeja de salida. Se envía cuando vuelvas a tener conexión.",
+      "sent": "Enviado desde la bandeja de salida: {subject}",
+      "send_failed": "No se pudo enviar un mensaje de la bandeja de salida: {subject}",
+      "refused_delete": "Eliminar definitivamente necesita conexión. Inténtalo de nuevo cuando tengas conexión.",
+      "refused_other": "Esto necesita conexión. Inténtalo de nuevo cuando tengas conexión.",
+      "forbidden": "Tu organización desactivó el modo sin conexión. Se borró el correo guardado en este dispositivo.",
+      "back_online": "Vuelves a tener conexión. Recarga para iniciar sesión y enviar lo pendiente.",
+      "reload": "Recargar",
+      "held": "Un mensaje de la bandeja de salida te necesita: {subject}",
+      "lost": "Estos mensajes no se enviaron y se borraron: {subjects}"
+    },
+    "signout": {
+      "title": "¿Cerrar sesión con mensajes sin enviar?",
+      "message": "{count, plural, one {# mensaje no se ha enviado.} other {# mensajes no se han enviado.}} Al cerrar sesión se borran.",
+      "confirm": "Cerrar sesión",
+      "lost": "Estos mensajes no se enviaron y se borraron al cerrar la sesión: {subjects}"
+    },
+    "errors": {
+      "unavailable": "Esto necesita conexión. Inténtalo de nuevo cuando tengas conexión.",
+      "plugins_down": "Tu plugin de firma o cifrado no funciona sin conexión. Envía esto cuando vuelvas a tener conexión.",
+      "file_missing": "Un archivo adjuntado sin conexión ya no está en este dispositivo. Adjúntalo de nuevo.",
+      "no_sent_mailbox": "No se encontró tu carpeta Enviados.",
+      "no_drafts_mailbox": "No se encontró tu carpeta Borradores."
+    }
   },
   "deep_link": {
     "message_not_found": "Este mensaje ya no está disponible.",
@@ -5734,11 +6039,15 @@
       },
       "compose_read": {
         "title": "Leer el mensaje que escribes",
-        "body": "Leer el texto de un mensaje mientras lo escribes, cuando usas el complemento en el editor. No la firma ni el mensaje citado."
+        "body": "Leer un mensaje mientras lo escribes, cuando usas el complemento en el editor: el texto, el asunto, los destinatarios (también en CCO) y el nombre y tamaño de los adjuntos. No la firma ni el mensaje citado."
       },
       "compose_write": {
         "title": "Cambiar el mensaje que escribes",
         "body": "Sustituir o añadir texto en un mensaje mientras lo escribes, cuando usas el complemento en el editor. Puedes deshacer cada cambio y sigues decidiendo si lo envías."
+      },
+      "compose_check": {
+        "title": "Revisar lo que escribe",
+        "body": "Lee lo que escribe en el editor mientras teclea y puede enviarlo al servicio que usa. Solo cuando la revisión está activada, y nada mientras un mensaje esté configurado para firmarse o cifrarse. El texto que escribió antes de activarlo puede que ya se haya revisado."
       },
       "email_forward": {
         "title": "Reenviar tu correo",
@@ -5758,7 +6067,7 @@
       },
       "ui_tasks": {
         "title": "Añadir a la vista de tareas",
-        "body": "Mostrar sus propias secciones en los detalles de una tarea y botones en la lista de tareas."
+        "body": "Mostrar sus propias secciones en los detalles de una tarea, botones en la lista de tareas y su propia lista de tareas en lugar de la de Bulwark."
       },
       "ui_files": {
         "title": "Añadir a la vista de archivos",
@@ -5810,6 +6119,10 @@
       "error_server": "Indica la dirección del servidor, por ejemplo https://cloud.example.com",
       "error_save": "No se pudo guardar: {error}"
     }
+  },
+  "send_guards": {
+    "not_running": "No enviado. Una comprobación que exige tu organización no está en marcha. Vuelve a intentarlo en un momento.",
+    "stopped_working": "No enviado. Una comprobación que exige tu organización ha dejado de funcionar. Vuelve a cargar la página. Si no se soluciona, avisa al administrador."
   },
   "plugin_list": {
     "filters": "Filtros",
@@ -6053,6 +6366,77 @@
       "party_size": "Personas: {count}",
       "added_from": "Añadido desde un correo de {domain}",
       "added_from_subject": "Añadido desde el correo «{subject}» de {domain}"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Ortografía",
+      "grammar": "Gramática",
+      "style": "Estilo",
+      "other": "Sugerencia"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "No hay sugerencias",
+      "suggestions": "Sugerencias",
+      "replace_with": "Reemplazar por {text}",
+      "also": "También de {checker}",
+      "ignore": "Ignorar",
+      "add_to_dictionary": "Añadir al diccionario",
+      "disable_rule": "Desactivar esta regla",
+      "changed": "El texto ha cambiado. Espera a la siguiente revisión."
+    },
+    "list_item": "{word}: {message} Sugerencia: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {No hay errores de ortografía ni de gramática} one {# error de ortografía o gramática} other {# errores de ortografía o gramática}}",
+    "status": {
+      "title": "Revisión",
+      "off": "Revisión desactivada",
+      "paused": "Revisión en pausa",
+      "rate_limited": "Comprobación en pausa",
+      "unavailable": "Comprobación no disponible",
+      "checking": "Comprobando…",
+      "issues": "{count, plural, =0 {Sin problemas} one {# problema} other {# problemas}}"
+    },
+    "panel": {
+      "title": "Revisión",
+      "required": "Exigido por tu organización",
+      "check_message": "Revisar este mensaje",
+      "notice": "Mientras escribes, el texto se envía a {checkers} para revisarlo. Tu firma y el mensaje citado quedan fuera. No se envía nada mientras un mensaje esté configurado para firmarse o cifrarse; lo que escribiste antes de activarlo puede que ya se haya revisado.",
+      "turn_on": "Activar la revisión",
+      "paused_protected": "No se revisa nada mientras este mensaje esté configurado para firmarse o cifrarse.",
+      "paused_unknown": "{plugin} puede firmar o cifrar mensajes sin mostrarlo aquí, así que no se revisa nada mientras esté activo.",
+      "rate_limited": "{checker} ha pedido esperar. La revisión se reanuda en un minuto.",
+      "unavailable": "{checker} no puede revisar ahora mismo. Lo vuelve a intentar cuando sigas escribiendo.",
+      "no_issues": "No se han encontrado problemas.",
+      "list_label": "Problemas en este mensaje",
+      "shortcuts": "Siguiente problema: {next}. Anterior: {previous}."
+    },
+    "notice": {
+      "on": "La revisión está activada. Mientras escribes, el texto se envía a {checkers} para revisarlo, sin tu firma ni el mensaje citado. No se envía nada mientras un mensaje esté configurado para firmarse o cifrarse; lo que escribiste antes puede que ya se haya revisado.",
+      "forced": "Tu organización ha activado la revisión. Mientras escribes, el texto se envía a {checkers} para revisarlo, sin tu firma ni el mensaje citado. No se envía nada mientras un mensaje esté configurado para firmarse o cifrarse; lo que escribiste antes puede que ya se haya revisado.",
+      "ok": "Aceptar"
+    },
+    "send_warning": {
+      "title": "¿Enviar con problemas pendientes?",
+      "body": "{count, plural, one {Queda # error de ortografía o gramática} other {Quedan # errores de ortografía o gramática}} sin resolver en este mensaje.",
+      "review": "Revisar",
+      "send": "Enviar de todos modos"
+    },
+    "settings": {
+      "title": "Revisión",
+      "description": "Subraya los errores de ortografía y gramática mientras escribes, con sugerencias para corregirlos.",
+      "enable": "Revisar la ortografía y la gramática mientras escribo",
+      "enable_description": "El texto que escribes se envía al complemento de revisión y al servicio que usa, sin tu firma ni los mensajes citados. No se envía nada mientras un mensaje esté configurado para firmarse o cifrarse.",
+      "no_checker": "No hay ningún complemento de revisión instalado. Pide a tu administrador que añada uno.",
+      "plugin_description": "Envía lo que escribes a {plugin}.",
+      "writing_language": "Idioma de escritura",
+      "writing_language_description": "El idioma en el que sueles escribir. Lo usan la revisión y el corrector ortográfico de tu navegador.",
+      "auto": "Detectar automáticamente"
+    },
+    "shortcuts": {
+      "next_issue": "Siguiente error de ortografía o gramática",
+      "previous_issue": "Anterior error de ortografía o gramática"
     }
   }
 }

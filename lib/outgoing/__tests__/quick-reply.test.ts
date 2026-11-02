@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { prepareQuickReply, type QuickReplyQuestion, type QuickReplyQuestions } from '@/lib/outgoing/quick-reply';
 import { registerOutgoingFinalizer, registerPreSendCheck, resetSendPipeline } from '@/lib/outgoing/send-pipeline';
 import type { Identity } from '@/lib/jmap/types';
+import { emailHooks, pluginErrorTracker } from '@/lib/plugin-hooks';
+import type { OutgoingEmail } from '@/lib/plugin-types';
 
 vi.mock('@/lib/debug', () => ({ debug: { log: () => {}, warn: () => {}, error: () => {} } }));
 
@@ -14,7 +16,11 @@ const input = (signatureIdentity: Identity) => ({
   body: 'Thanks <3', signatureIdentity, separator: true, to: ['bob@example.com'], fromEmail: 'me@example.com', identityId: 'i',
 });
 
-afterEach(() => resetSendPipeline());
+afterEach(() => {
+  resetSendPipeline();
+  emailHooks.onBeforeEmailSend.clear();
+  pluginErrorTracker.resetAll();
+});
 
 describe('prepareQuickReply', () => {
   it('builds the text and, for an HTML signature, an escaped HTML body', async () => {
@@ -25,6 +31,14 @@ describe('prepareQuickReply', () => {
     const plain = await prepareQuickReply(input(text));
     expect(plain?.html).toBeUndefined();
     expect(plain?.text).toMatch(/Thanks <3[\s\S]*-- \nMe$/);
+  });
+
+  it('sends the bare text when the reply signature toggle is off', async () => {
+    const withHtml = await prepareQuickReply({ ...input(html), insertSignature: false });
+    expect(withHtml?.html).toBeUndefined();
+    expect(withHtml?.text).toBe('Thanks <3');
+    const plain = await prepareQuickReply({ ...input(text), insertSignature: false });
+    expect(plain?.text).toBe('Thanks <3');
   });
 
   it('runs the finalisers with a reply context', async () => {
@@ -105,5 +119,49 @@ describe('prepareQuickReply warnings', () => {
     const { asked, questions: q } = questions(false);
     expect(await prepareQuickReply({ ...input(signed), body: 'Thanks!', questions: q })).not.toBeNull();
     expect(asked).toEqual([]);
+  });
+});
+
+// Plugins' send checks (onBeforeEmailSend) ran for the composer and a
+// plugin's forward, never for a quick reply: a way around a send guard.
+describe('prepareQuickReply and plugin send checks', () => {
+  it('asks the plugins with the reply and stops when one says no', async () => {
+    const seen: OutgoingEmail[] = [];
+    emailHooks.onBeforeEmailSend.register('guard', (email: OutgoingEmail) => { seen.push(email); return false; });
+    const stopped: string[] = [];
+    const out = await prepareQuickReply({
+      ...input(text), body: 'IBAN DE89370400440532013000', subject: 'Re: Invoice', inReplyTo: '<m1@example.com>',
+      onSendCheckStopped: (outcome) => stopped.push(outcome),
+    });
+    expect(out).toBeNull();
+    expect(stopped).toEqual(['vetoed']);
+    expect(seen).toEqual([expect.objectContaining({
+      surface: 'quick-reply', mode: 'reply', to: ['bob@example.com'], subject: 'Re: Invoice',
+      inReplyTo: '<m1@example.com>', identityId: 'i', fromEmail: 'me@example.com',
+    })]);
+    expect(seen[0].textBody).toContain('IBAN DE89370400440532013000');
+  });
+
+  it('hands over the typed text and the recipients outside the organisation', async () => {
+    const seen: OutgoingEmail[] = [];
+    emailHooks.onBeforeEmailSend.register('guard', (email: OutgoingEmail) => { seen.push(email); return undefined; });
+    expect(await prepareQuickReply({ ...input(text), body: 'Card 4242 4242 4242 4242', to: ['bob@example.com', 'Eve@Other.test'] })).not.toBeNull();
+    expect(seen[0].authoredText).toBe('Card 4242 4242 4242 4242');
+    expect(seen[0].externalRecipients).toEqual(['eve@other.test']);
+  });
+
+  it('fails closed when a check crashes', async () => {
+    emailHooks.onBeforeEmailSend.register('guard', () => { throw new Error('boom'); });
+    const stopped: string[] = [];
+    expect(await prepareQuickReply({ ...input(text), onSendCheckStopped: (o) => stopped.push(o) })).toBeNull();
+    expect(stopped).toEqual(['failed']);
+  });
+
+  it('sends when the plugins allow it, with the disclaimer stage after them', async () => {
+    const order: string[] = [];
+    emailHooks.onBeforeEmailSend.register('guard', () => { order.push('plugin'); return undefined; });
+    registerOutgoingFinalizer('disclaimer', 10, (bodies) => { order.push('last'); return bodies; }, 'last');
+    expect(await prepareQuickReply(input(text))).not.toBeNull();
+    expect(order).toEqual(['plugin', 'last']);
   });
 });

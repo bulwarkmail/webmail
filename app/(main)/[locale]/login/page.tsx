@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { useAuthStore, consumeSignedOut, SESSION_EXPIRED_DRAFTS_UNSAVED_KEY } from "@/stores/auth-store";
+import { consumeLost } from "@/lib/offline/lost";
 import { useAccountStore } from "@/stores/account-store";
 import { useThemeStore } from "@/stores/theme-store";
 import { usePolicyStore } from "@/stores/policy-store";
@@ -38,6 +39,8 @@ import { buildMobileHandoffUrl, mobileCodeChallenge, mobileHandoffTarget, signed
 import { requestMobileHandoffCodeUrl } from "@/lib/auth/mobile-handoff-client";
 import { MobileHandoffConsent } from "@/components/auth/mobile-handoff-consent";
 import { HelpLinks } from "@/components/layout/help-links";
+import { LoginSkeleton } from "@/components/boot-skeleton/login-skeleton";
+import { Block } from "@/components/boot-skeleton/kit";
 import { consumeSessionEnd, type SessionEndReason } from "@/lib/session-policy/sign-out-reason";
 
 /** The domain of a complete address (`user@example.com`), or '' while it is still being typed. */
@@ -183,6 +186,7 @@ function LoginPageContent() {
   const router = useRouter();
   const t = useTranslations("login");
   const tSessionLimits = useTranslations("session_limits");
+  const tOffline = useTranslations("offline");
   const tTheme = useTranslations("settings.appearance.theme");
   const params = useParams();
   const searchParams = useSearchParams();
@@ -269,6 +273,11 @@ function LoginPageContent() {
   const [sessionExpired, setSessionExpired] = useState(false);
   // Signed out by the organisation's idle timeout or maximum session length.
   const [sessionEnd, setSessionEnd] = useState<SessionEndReason | null>(null);
+  // Offline outbox messages a sign-out deleted unsent (#523), named once.
+  const [outboxLost, setOutboxLost] = useState<string[]>([]);
+  useEffect(() => {
+    setOutboxLost(consumeLost());
+  }, []);
   const [expiredDraftsUnsaved, setExpiredDraftsUnsaved] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [shakeError, setShakeError] = useState(false);
@@ -691,15 +700,10 @@ function LoginPageContent() {
     setShowThemeMenu(false);
   }, [setTheme]);
 
+  // The server HTML, and every visit until /api/config answers: the card's
+  // shape, the same one signed-out visitors of the app pages get first.
   if (configLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/30">
-        <div className="w-full max-w-sm mx-auto px-4 text-center" role="status">
-          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
-          <span className="sr-only">{t("loading")}</span>
-        </div>
-      </div>
-    );
+    return <LoginSkeleton label={t("loading")} />;
   }
 
   if (configError) {
@@ -1398,6 +1402,12 @@ function LoginPageContent() {
 
           {/* Form section */}
           <div className="px-8 pb-8">
+            {outboxLost.length > 0 && (
+              <div className="mb-5 p-3 rounded-xl border border-warning/30 bg-warning/5 text-sm text-foreground [overflow-wrap:anywhere]" role="status" data-testid="session-outbox-lost">
+                {tOffline("signout.lost", { subjects: outboxLost.map((s) => s || tOffline("outbox.no_subject")).join(", ") })}
+              </div>
+            )}
+
             {/* Session Expired Banner */}
             {sessionExpired && (
               <div
@@ -1520,9 +1530,8 @@ function LoginPageContent() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex justify-center py-4">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                  </div>
+                  // Where the sign-in button goes once the provider answers.
+                  <Block className="w-full h-11 rounded-xl" />
                 )}
               </div>
             ) : (
@@ -1915,8 +1924,9 @@ function LoginPageContent() {
 // useSearchParams() above must sit under a Suspense boundary for the route to
 // prerender (the static Lite build); at runtime the boundary never suspends.
 export default function LoginPage() {
+  const t = useTranslations("login");
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<LoginSkeleton label={t("loading")} />}>
       <LoginPageContent />
     </Suspense>
   );

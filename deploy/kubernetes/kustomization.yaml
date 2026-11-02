@@ -1,0 +1,14 @@
+# Bulwark Webmail on Kubernetes: three replicas sharing one Valkey store.
+# https://bulwarkmail.org/docs/deployment/kubernetes
+#
+#   cp base/secrets.env.example base/secrets.env   # fill in the three secrets
+#   $EDITOR base/bulwark.env                       # at least JMAP_SERVER_URL
+#   kubectl apply -k .                             # or: -k overlays/config-in-git
+#
+# For your own changes (namespace, image tag, replicas, resources) add an
+# overlay next to overlays/config-in-git that uses ../../base.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - base

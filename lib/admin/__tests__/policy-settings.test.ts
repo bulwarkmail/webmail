@@ -108,6 +108,7 @@ describe('the lock list (lib/admin/restriction-keys.ts)', () => {
       deleteAction: ['trash', 'trash-and-read', 'permanent'],
       mailLayout: ['split', 'focus', 'horizontal'],
       externalContentPolicy: ['ask', 'block', 'allow'],
+      searchDefaultScope: ['all', 'folder'],
       defaultReplyMode: ['reply', 'replyAll'],
       replyIdentityMatch: ['exact', 'domain'],
     };

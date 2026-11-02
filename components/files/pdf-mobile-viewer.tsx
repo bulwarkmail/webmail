@@ -33,7 +33,7 @@ const DOUBLE_TAP_SLOP = 30; // px
 // used for the open-in-new-tab fallback. pdf.js must be fed the bytes, not the
 // URL: fetching a blob: URL is governed by CSP connect-src, which doesn't (and
 // shouldn't need to) allow blob:, so getDocument({ url }) is blocked (#871).
-export function PdfMobileViewer({ url, blob }: { url: string; blob: Blob }) {
+export function PdfMobileViewer({ url, blob, allowNewTab = true }: { url: string; blob: Blob; /** False under a device policy without downloads. */ allowNewTab?: boolean }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const pagesRef = useRef<HTMLDivElement>(null);
   const zoom = useRef({ step: 0, scale: 1 });
@@ -220,7 +220,7 @@ export function PdfMobileViewer({ url, blob }: { url: string; blob: Blob }) {
         // An installed app cannot open the blob: URL in a new window (#865),
         // so it only says so; the header's download button still works.
         <div className="flex justify-center py-10">
-          {canOpenUrlInNewWindow(url) ? (
+          {allowNewTab && canOpenUrlInNewWindow(url) ? (
             <Button
               variant="outline"
               size="sm"

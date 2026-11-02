@@ -1,5 +1,5 @@
 {
-  "meta_description": "使用 JMAP 协议的极简网页邮件客户端",
+  "meta_description": "基于 JMAP 的自托管网页邮件，集邮件、日历、联系人和文件于一体",
   "login": {
     "title": "网页邮箱",
     "username_label": "邮箱地址",
@@ -461,7 +461,6 @@
     "view_in_light_mode": "浅色模式查看",
     "export_email": "导出为 .eml",
     "forward_as_attachment": "作为附件转发",
-    "import_email": "导入 .eml 或 .zip…",
     "keyboard_shortcuts": "键盘快捷键",
     "email_source": "邮件源码",
     "draft_banner": "这是一封草稿邮件",
@@ -473,6 +472,9 @@
     "source_truncated": "仅显示前 {size}。导出邮件可查看其余部分。",
     "source_copied": "源码已复制到剪贴板",
     "attachments": "附件",
+    "attachments_count": "{count, plural, other {# 个附件}}",
+    "attachments_show_more": "再显示 {count} 个",
+    "attachments_show_fewer": "收起",
     "important": "重要",
     "download": "下载",
     "download_all": "全部下载",
@@ -880,6 +882,35 @@
     "send_anyway": "仍然发送",
     "back": "返回"
   },
+  "phishing_report": {
+    "action": "举报网络钓鱼…",
+    "confirm_title": "举报为网络钓鱼？",
+    "confirm_message": "{count, plural, =1 {该邮件将发送至 {address}，并移至垃圾邮件。} other {# 封邮件将分别作为单独的举报发送至 {address}，并移至垃圾邮件。}}",
+    "confirm": "举报",
+    "cancel": "取消",
+    "sending": "正在举报…",
+    "done": "{count, plural, =1 {已举报至 {address}，并移至垃圾邮件。} other {已将 # 封邮件举报至 {address}，并移至垃圾邮件。}}",
+    "not_moved": "{count, plural, =1 {已举报至 {address}，但无法将邮件移至垃圾邮件。} other {已举报至 {address}，但有 # 封邮件无法移至垃圾邮件。}}",
+    "failed": "{count, plural, =1 {无法举报该邮件。} other {有 # 封邮件无法举报。}}",
+    "undo": "撤销",
+    "undone": "{count, plural, =1 {已移回。举报已发出。} other {已移回。举报已发出。}}",
+    "undo_failed": "无法移回。",
+    "banner": "您已将此邮件举报为网络钓鱼。其中的链接已停用。",
+    "link_off": "链接已停用",
+    "link_off_note": "（链接已停用）",
+    "no_subject": "（无主题）"
+  },
+  "classification": {
+    "picker_label": "密级",
+    "chip_label": "密级：{name}",
+    "none": "未设置密级",
+    "pick_required": "选择密级",
+    "required_hint": "您的组织要求设置密级。",
+    "required_toast": "发送前请选择密级。",
+    "quick_reply_needs_label": "此回复需要设置密级。请在这里选择，然后发送。",
+    "forward_needs_label": "必须设置密级。请从撰写窗口转发此邮件。",
+    "received_hint": "由发件人的邮件程序设置。任何人都可以设置密级，因此它不能证明任何事情。"
+  },
   "email_composer": {
     "select_from_directory": "从目录中选择",
     "minimize": "最小化",
@@ -1248,8 +1279,6 @@
     "templates_import_errors": "部分模板无法导入",
     "templates_import_empty": "文件中未找到模板",
     "export_email_error": "导出邮件失败",
-    "import_email_success": "邮件导入成功",
-    "import_email_error": "导入邮件失败",
     "rule_created": "规则已创建",
     "rule_merged": "已添加到规则“{name}”",
     "rule_already_covered": "规则“{name}”已涵盖此项",
@@ -1272,12 +1301,46 @@
     "tag_removed_count": "{count, plural, other {已从 # 封邮件移除标签}}",
     "new_mail_count": "{count, plural, other {# 封新邮件}}"
   },
+  "org_notice": {
+    "label": "公告",
+    "dismiss": "关闭公告",
+    "severity_info": "信息",
+    "severity_warning": "警告",
+    "severity_critical": "重要"
+  },
+  "vacation_templates": {
+    "title": "组织模板",
+    "description": "从组织编写的回复开始。之后可以修改文字。",
+    "pick_label": "使用模板",
+    "pick_placeholder": "选择模板",
+    "deputy_label": "代理人地址",
+    "deputy_placeholder": "colleague@example.com",
+    "deputy_hint": "回复会写明紧急事务请联系这位同事。",
+    "deputy_missing": "请先输入代理人的地址。",
+    "deputy_name_label": "代理人姓名",
+    "deputy_name_missing": "请先输入代理人的姓名。",
+    "apply": "使用此文字",
+    "apply_hint": "替换下方的主题和正文。"
+  },
+  "retention_notice": {
+    "line": "此处的邮件会在移入 {count, plural, other {# 天}} 后删除。"
+  },
+  "device_policy": {
+    "downloads_off": "你的组织已关闭下载。",
+    "download_off_named": "{name}：你的组织已关闭下载",
+    "download_blocked": "你的组织已关闭下载。",
+    "export_blocked": "你的组织已关闭邮件导出。",
+    "print_blocked": "你的组织已关闭打印。"
+  },
   "third_party": {
     "push_needs_relay": "推送通知需要由您的组织运行的推送中继，但尚未设置。应用打开时，新邮件仍会显示。",
     "relay_desc": "由于此服务器不连接外部服务，因此只提供您组织自己的中继。",
     "relay_none": "未设置",
     "plugin_refused": "未启动：此插件会连接外部服务，而您的组织已将其关闭。",
     "remote_content_blocked": "您的组织会阻止来自其他服务器的内容，因此此邮件中的远程图片不会显示。"
+  },
+  "remote_content_lock": {
+    "trusted_senders_note": "你的组织在所有邮件中屏蔽远程内容，因此受信任发件人的远程内容也不会加载。"
   },
   "date": {
     "today": "今天",
@@ -1539,6 +1602,10 @@
         "label": "显示共享邮件账户",
         "description": "在侧边栏的“共享”下显示与你共享的邮箱的文件夹。关闭可全部隐藏，也可以在下方逐个隐藏账户。它们的日历和联系人仍会显示。"
       },
+      "compact_shared_mailboxes": {
+        "label": "紧凑显示共享邮箱",
+        "description": "将每个共享邮箱显示为一行，点击即打开其收件箱，文件夹列在下方。草稿、已删除等空文件夹不显示。"
+      },
       "pro_interface": {
         "label": "Pro 界面（实验性）",
         "description": "仅限桌面的高级用户布局，支持多标签消息浏览和跨账户工作流。标准界面不受影响，您可以随时切换回来。",
@@ -1769,6 +1836,12 @@
         "label": "切换文件夹时清除搜索",
         "description": "点击文件夹（收件箱、已发送等）会清除当前搜索并浏览该文件夹。关闭时，搜索会保留并在切换到的文件夹中重新运行。"
       },
+      "search_default_scope": {
+        "label": "搜索范围",
+        "description": "新搜索的查找范围。你仍可以在搜索筛选中选择其他文件夹。",
+        "all": "除垃圾邮件和已删除外的所有文件夹",
+        "folder": "当前打开的文件夹"
+      },
       "request_read_receipt": {
         "label": "默认请求已读回执",
         "description": "撰写新邮件时预先启用已读回执请求。"
@@ -1876,6 +1949,14 @@
         "above_quote": "引用文本之前",
         "below_quote": "引用文本之后"
       },
+      "signature_new_mail": {
+        "label": "新邮件签名",
+        "description": "写新邮件时自动插入签名。关闭后每封新邮件都不带签名。"
+      },
+      "signature_reply_forward": {
+        "label": "回复转发签名",
+        "description": "回复或转发时自动附加签名。关闭后回复和转发不带签名。"
+      },
       "signature_separator": {
         "label": "签名分隔符",
         "description": "在签名前加入标准的 “-- ” 分隔行（RFC 3676）。如果希望正文直接连到签名，请关闭。"
@@ -1896,8 +1977,8 @@
       "attachment_position": {
         "label": "附件位置",
         "description": "在邮件标题中的何处显示附件",
-        "beside-sender": "发件人旁",
-        "below-header": "标题下方"
+        "below-header": "标题下方",
+        "below-message": "邮件下方的卡片"
       },
       "emails_per_page": {
         "10": "10 封邮件",
@@ -3546,7 +3627,6 @@
     "new_folder": "新建文件夹…",
     "rename": "重命名…",
     "share": "共享…",
-    "import_email": "导入 .eml 或 .zip…",
     "empty_folder": "清空文件夹",
     "empty_folder_generic": "清空文件夹",
     "delete_folder": "删除文件夹",
@@ -5052,7 +5132,6 @@
     "settings_ascending": "升序",
     "settings_descending": "降序",
     "disabled_title": "文件功能已被您的管理员禁用",
-    "disabled_description": "通过 WebDAV 上传大文件可能导致 Stalwart/RocksDB 不稳定，包括内存溢出、崩溃以及难以回收的磁盘占用。已删除文件也可能不会立即从 blob 存储中清除。不建议在生产环境中启用此功能。",
     "no_accounts": "没有已连接的账户。",
     "open_folder_tree": "打开文件夹树",
     "migration_title": "正在更新您的文件…",
@@ -5241,6 +5320,117 @@
   "unified_mailbox": {
     "search_unavailable": "统一视图中无法使用搜索"
   },
+  "mail_import": {
+    "menu_import": "导入邮件…",
+    "settings_label": "导入邮件",
+    "settings_description": "从 .eml、ZIP、mbox 或 Outlook .pst 和 .ost 文件导入邮件。",
+    "settings_button": "导入…",
+    "title": "导入邮件",
+    "description": "请选择 .eml、.zip、.mbox 或 Outlook .pst 和 .ost 文件。",
+    "choose_files": "选择文件…",
+    "chosen_files": "已选文件",
+    "remove_file": "移除 {name}",
+    "format_eml": "邮件",
+    "format_zip": "ZIP 压缩包",
+    "format_mbox": "mbox 文件",
+    "format_pst": "Outlook 数据文件",
+    "target_label": "导入到",
+    "target_top": "顶层",
+    "keep_folders": "按文件重建文件夹",
+    "keep_folders_hint": "同名文件夹会被重复使用。",
+    "resume": "从这些文件上次导入停止的地方继续（已处理的邮件：{count}）",
+    "quota_note": "很多服务器每小时只接受单个用户约 1000 封邮件或 50 MB。更大的导入会暂停，然后自动继续。",
+    "start": "导入",
+    "cancel": "取消",
+    "running_title": "正在导入邮件",
+    "progress_label": "导入进度",
+    "status_imported": "已导入邮件：{count}",
+    "reading_file": "正在读取 {name}",
+    "paused": "已暂停至 {time}。服务器每小时最多接受 {files} 次上传或 {size}。导入会自动继续。",
+    "paused_generic": "已暂停至 {time}。已达到服务器的上传限制。导入会自动继续。",
+    "background": "在后台运行",
+    "cancel_import": "取消导入",
+    "chip": "正在导入邮件：{percent}%",
+    "chip_paused": "导入已暂停至 {time}",
+    "done_title": "导入完成",
+    "cancelled_title": "导入已取消",
+    "failed_title": "导入已停止",
+    "summary_imported": "已导入邮件：{count}",
+    "summary_folders": "已创建文件夹：{count}",
+    "summary_skipped": "未导入：",
+    "skip_too_large": "超过服务器允许的大小：{count}",
+    "skip_deleted": "已在 Thunderbird 中删除：{count}",
+    "skip_embedded": "附在其他邮件中的邮件：{count}",
+    "skip_contact": "联系人：{count}",
+    "skip_calendar": "日历项目：{count}",
+    "skip_other": "其他项目：{count}",
+    "summary_failed": "无法导入：{count}",
+    "failure_invalid": "不是有效的邮件",
+    "untitled": "（无主题）",
+    "cancelled_hint": "如需稍后继续，请再次把相同的文件导入到同一个文件夹。",
+    "close": "关闭",
+    "pst_note": "Outlook 文件中只导入邮件。联系人、日历项目和任务会被计数并跳过。",
+    "pst_error_encrypted": "此 Outlook 文件使用了 Bulwark 无法读取的高强度加密。请在 Outlook 中把邮件导出到一个不加密的新 .pst 文件。",
+    "pst_error_not_pst": "此文件不是 Bulwark 能读取的 Outlook 数据文件。",
+    "pst_error_unreadable": "Bulwark 无法读取此 Outlook 文件。",
+    "pst_error_worker": "Outlook 文件读取组件未能加载。请重新加载页面后再试。",
+    "error_over_quota": "邮箱已满，导入已停止。请腾出空间，然后把相同的文件再次导入同一个文件夹即可继续。",
+    "error_forbidden": "您无权向此文件夹添加邮件，导入已停止。",
+    "error_failures": "连续失败的邮件太多，导入已停止。请稍后把相同的文件再次导入同一个文件夹以继续。",
+    "error_network": "与服务器的连接多次失败，导入已停止。请把相同的文件再次导入同一个文件夹以继续。",
+    "error_busy": "这些文件已在另一个标签页中导入。",
+    "retry_hint": "把相同的文件再次导入同一个文件夹，即可重试失败的邮件。",
+    "skip_unreadable": "Outlook 文件中无法读取：{count}",
+    "keep_folders_top_hint": "在顶层，收件箱、已发送邮件、已删除邮件等会进入您自己的文件夹。",
+    "toast_done": "导入完成。已导入：{imported}，失败：{failed}。",
+    "toast_stopped": "导入已停止。",
+    "toast_show": "显示",
+    "section_title": "邮件文件",
+    "section_description": "从文件导入邮件，或把邮件保存为文件。"
+  },
+  "mail_export": {
+    "menu_export": "导出文件夹…",
+    "settings_label": "导出所有邮件",
+    "settings_description": "把此账户的所有文件夹以 mbox 或 .eml 文件保存到一个 ZIP 文件中。",
+    "settings_button": "导出…",
+    "title_folder": "导出“{name}”",
+    "title_account": "导出所有邮件",
+    "description_folder": "把此文件夹中的邮件保存为文件。",
+    "description_account": "把此账户的所有文件夹保存到一个 ZIP 文件中。",
+    "format_label": "格式",
+    "format_mbox_folder": "mbox 文件",
+    "format_eml_folder": ".eml 文件的 ZIP",
+    "format_mbox_account": "每个文件夹一个 mbox 文件的 ZIP",
+    "format_eml_account": ".eml 文件的 ZIP，每个邮件文件夹一个文件夹",
+    "hint_mbox": "Thunderbird、Apple Mail 和大多数邮件程序都能打开 mbox 文件。",
+    "hint_eml": "每封邮件一个文件，任何邮件程序都能打开。",
+    "save_picker": "由您选择文件保存位置。",
+    "save_download": "导出完成后会下载文件。",
+    "save_memory": "此浏览器会把整个导出保存在内存中，因此最多只能保存 200 MB。更大的导出请使用 Chrome 或 Edge，或逐个文件夹导出。",
+    "start": "导出",
+    "cancel": "取消",
+    "running_title": "正在导出邮件",
+    "progress_label": "导出进度",
+    "status_exported": "已导出邮件：{count} / {total}",
+    "paused": "已暂停至 {time}：服务器要求暂停。导出会自动继续。",
+    "background": "在后台运行",
+    "cancel_export": "取消导出",
+    "chip": "正在导出邮件：{percent}%",
+    "chip_paused": "导出已暂停至 {time}",
+    "done_title": "导出完成",
+    "cancelled_title": "导出已取消",
+    "failed_title": "导出已停止",
+    "summary_exported": "已导出邮件：{count}",
+    "summary_file": "已保存为 {name}（{size}）。",
+    "summary_failed": "无法导出：{count}",
+    "download_again": "重新下载",
+    "too_large": "导出内容超过了此浏览器能放在内存中的大小。请使用 Chrome 或 Edge，或逐个文件夹导出。",
+    "close": "关闭",
+    "untitled": "（无主题）",
+    "toast_done": "导出完成：{name}",
+    "toast_stopped": "导出已停止。",
+    "toast_show": "显示"
+  },
   "recover_deleted": {
     "tab": "恢复已删除项目",
     "title": "恢复已删除项目",
@@ -5273,6 +5463,51 @@
     "updated": "{name} 更新了“{title}”",
     "cancelled": "{name} 取消了“{title}”",
     "untitled": "无标题活动"
+  },
+  "company_calendars": {
+    "section": "组织"
+  },
+  "vacation_calendar": {
+    "label": "占用我的日历",
+    "description": "在你外出期间添加一个忙碌活动，这样别人不会在这段时间约你开会。",
+    "no_access_managed": "无法占用此账户的日历：你没有写入权限。",
+    "no_calendar": "无法占用你的日历：Bulwark 找不到可以添加活动的日历。",
+    "filter_warning": "开启后，在自动回复生效期间你自己的过滤脚本会被关闭。"
+  },
+  "calendar_delegate": {
+    "answer_for": "代表 {name} 回复",
+    "no_write": "你能看到 {name} 的邀请，但不能代为回复。请向对方申请编辑权限。",
+    "also_invited": "你也被邀请了，此服务器无法区分你和 {name} 的回复。这一项需要 {name} 自己回复。",
+    "answered_by": "由 {who} 回复"
+  },
+  "free_busy_share": {
+    "button": "与 {group} 共享我的忙闲时间",
+    "already": "你的忙闲时间已与 {group} 共享",
+    "done": "你的忙闲时间现已与 {group} 共享。",
+    "error": "无法共享你的忙闲时间，请重试。",
+    "group_label": "群组",
+    "title": "忙闲",
+    "description": "群组中的同事能看到你何时忙碌，看不到活动内容。“建议时间”会用到它。"
+  },
+  "find_time": {
+    "suggest": "建议时间",
+    "searching": "正在查找空闲时间",
+    "slots_title": "Bulwark 能查到的所有人都有空",
+    "slot": "{day} {start} 至 {end}",
+    "none": "未来 10 个工作日内没有空闲时间。",
+    "picked": "活动已移到 {slot}",
+    "rate_limited": "过去一分钟内查询过多，请一分钟后再试。",
+    "unavailable": "此服务器不提供忙闲信息，Bulwark 无法建议时间。",
+    "not_checked": "未检查：",
+    "not_checked_item": "{who}：{reason}",
+    "reason_external": "组织外部",
+    "reason_unknown": "忙碌时间未知",
+    "reason_not_found": "在此服务器上找不到",
+    "reason_error": "无法检查",
+    "unknown_note": "Bulwark 只能看到与你共享的日历中的忙碌时间。对这些人，它无法区分有空和未共享。",
+    "directory_off": "Bulwark 无法在此服务器上查找用户。管理员可以在 Stalwart 中开启目录查询。",
+    "not_looked_up": "无法查找此地址",
+    "found": "找到的空闲时间：{count}"
   },
   "share_notifications": {
     "someone": "有人",
@@ -5411,6 +5646,76 @@
     "install": "安装",
     "dont_remind": "不再提醒",
     "dismiss_aria": "关闭安装提示"
+  },
+  "app_update": {
+    "ready": "{appName} 新版本已就绪。",
+    "reload": "重新加载"
+  },
+  "offline": {
+    "settings": {
+      "title": "离线",
+      "description": "在此设备上无需连接即可读写邮件。",
+      "keep_label": "在此设备上保留邮件",
+      "keep_description": "在此浏览器中加密保留收件箱和你打开过的文件夹最近 30 天的邮件，最多 250 MB。离线时可以阅读、标记和移动邮件，写好的邮件会在发件箱中等待。退出登录时会全部删除。",
+      "warning": "任何能使用此浏览器配置文件的人都能读取这些邮件。请只在自己的设备上开启，并使用磁盘加密。",
+      "forbidden": "你的组织不允许在设备上保留邮件。",
+      "unsupported": "此浏览器无法保留邮件供离线使用。",
+      "syncing": "正在将邮件保存到此设备…",
+      "usage": "此设备上 {size}",
+      "usage_updated": "此设备上 {size}，更新于 {time}",
+      "off_confirm_title": "关闭离线模式？",
+      "off_confirm_message": "{count, plural, other {发件箱中有 # 封邮件尚未发送。}}关闭后，这些邮件和此设备上保留的邮件都会被删除。",
+      "off_confirm": "关闭"
+    },
+    "outbox": {
+      "title": "发件箱",
+      "description": "你离线时写的邮件。此设备恢复联网后会发送。",
+      "empty": "没有等待发送的邮件。",
+      "no_subject": "（无主题）",
+      "to": "收件人：{recipients}",
+      "status_waiting": "等待连接",
+      "status_sending": "正在发送",
+      "status_failed": "无法发送：{error}",
+      "status_uncertain": "发送时连接中断。再次发送前请先查看“已发送”。",
+      "retry": "再次发送",
+      "delete": "删除",
+      "delete_confirm_title": "删除这封邮件？",
+      "delete_confirm_message": "它尚未发送，删除后无法恢复。",
+      "changes": "{count, plural, other {# 项}}已读、标记或文件夹的更改将在恢复联网后发送。",
+      "status_held": "等待期间你的组织规则发生了变化。请重新撰写后再发送。",
+      "retry_label": "再次发送：{subject}",
+      "delete_label": "删除：{subject}"
+    },
+    "banner": {
+      "offline": "你已离线。显示的是此设备上保留的邮件。你所做的更改或写的邮件会在恢复联网后发送。",
+      "outbox": "发件箱中有 {count, plural, other {# 封}}",
+      "server_down": "无法连接邮件服务器。显示的是此设备上保留的邮件。你所做的更改或写的邮件会在服务器恢复响应后发送。"
+    },
+    "toast": {
+      "queued": "已保存到发件箱。恢复联网后会发送。",
+      "sent": "已从发件箱发送：{subject}",
+      "send_failed": "发件箱中的一封邮件无法发送：{subject}",
+      "refused_delete": "永久删除需要网络连接。请在联网后重试。",
+      "refused_other": "此操作需要网络连接。请在联网后重试。",
+      "forbidden": "你的组织关闭了离线模式。此设备上保留的邮件已被删除。",
+      "back_online": "已恢复联网。请重新加载以登录并发送等待中的内容。",
+      "reload": "重新加载",
+      "held": "发件箱中有一封邮件需要你处理：{subject}",
+      "lost": "这些邮件未发送，已被删除：{subjects}"
+    },
+    "signout": {
+      "title": "有未发送的邮件，仍要退出登录？",
+      "message": "{count, plural, other {# 封邮件尚未发送。}}退出登录会删除它们。",
+      "confirm": "退出登录",
+      "lost": "这些邮件未发送，并在你退出登录时被删除：{subjects}"
+    },
+    "errors": {
+      "unavailable": "此操作需要网络连接。请在联网后重试。",
+      "plugins_down": "你的签名或加密插件在离线时无法运行。请在恢复联网后再发送。",
+      "file_missing": "离线时附加的文件已不在此设备上。请重新附加。",
+      "no_sent_mailbox": "找不到“已发送”文件夹。",
+      "no_drafts_mailbox": "找不到“草稿”文件夹。"
+    }
   },
   "deep_link": {
     "message_not_found": "此邮件已不可用。",
@@ -5734,11 +6039,15 @@
       },
       "compose_read": {
         "title": "读取您正在写的邮件",
-        "body": "在编辑器中使用插件时，读取您正在写的邮件正文。不包括签名和引用的邮件。"
+        "body": "在编辑器中使用插件时，读取您正在写的邮件：正文、主题、收件人（包括密送）以及附件的名称和大小。不包括签名和引用的邮件。"
       },
       "compose_write": {
         "title": "修改您正在写的邮件",
         "body": "在编辑器中使用插件时，替换或添加您正在写的邮件中的文字。每次修改都可以撤销，是否发送仍由您决定。"
+      },
+      "compose_check": {
+        "title": "检查您写的内容",
+        "body": "在您输入时读取您在编辑器中写的内容，并可能将其发送到它使用的服务。仅在校对开启时进行，且邮件设置为签名或加密期间不会发送任何内容。在开启该设置之前写的文字可能已经被检查过。"
       },
       "email_forward": {
         "title": "转发您的邮件",
@@ -5758,7 +6067,7 @@
       },
       "ui_tasks": {
         "title": "添加到任务界面",
-        "body": "在任务详情中显示它自己的区块，并在任务列表中显示按钮。"
+        "body": "在任务详情中显示它自己的区块，在任务列表中显示按钮，并可用它自己的任务列表代替 Bulwark 的任务列表。"
       },
       "ui_files": {
         "title": "添加到文件界面",
@@ -5810,6 +6119,10 @@
       "error_server": "请输入服务器地址，例如 https://cloud.example.com",
       "error_save": "无法保存：{error}"
     }
+  },
+  "send_guards": {
+    "not_running": "未发送。你的组织要求的一项检查当前未运行。请稍后再试。",
+    "stopped_working": "未发送。你的组织要求的一项检查已停止工作。请重新加载页面。如果仍不行，请告诉管理员。"
   },
   "plugin_list": {
     "filters": "筛选",
@@ -6053,6 +6366,77 @@
       "party_size": "人数：{count}",
       "added_from": "添加自 {domain} 发来的邮件",
       "added_from_subject": "添加自 {domain} 发来的邮件“{subject}”"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "拼写",
+      "grammar": "语法",
+      "style": "文风",
+      "other": "建议"
+    },
+    "popup": {
+      "label": "{kind}：{word}",
+      "no_suggestions": "没有建议",
+      "suggestions": "建议",
+      "replace_with": "替换为 {text}",
+      "also": "{checker} 也指出了此问题",
+      "ignore": "忽略",
+      "add_to_dictionary": "添加到词典",
+      "disable_rule": "关闭此规则",
+      "changed": "文本已更改。请等待下一次检查。"
+    },
+    "list_item": "{word}：{message} 建议：{suggestion}",
+    "list_item_no_suggestion": "{word}：{message}",
+    "announce_count": "{count, plural, =0 {没有拼写或语法问题} other {# 个拼写或语法问题}}",
+    "status": {
+      "title": "校对",
+      "off": "校对已关闭",
+      "paused": "校对已暂停",
+      "rate_limited": "检查已暂停",
+      "unavailable": "检查不可用",
+      "checking": "正在检查…",
+      "issues": "{count, plural, =0 {没有问题} other {# 个问题}}"
+    },
+    "panel": {
+      "title": "校对",
+      "required": "您的组织要求开启",
+      "check_message": "检查此邮件",
+      "notice": "在您输入时，您写的文字会发送到 {checkers} 进行检查。您的签名和引用的邮件不会发送。邮件设置为签名或加密期间不会发送任何内容；但在开启该设置之前写的内容可能已经被检查过。",
+      "turn_on": "开启校对",
+      "paused_protected": "此邮件设置为签名或加密期间，不会检查任何内容。",
+      "paused_unknown": "{plugin} 可以在此处不显示的情况下签名或加密邮件，因此在它开启期间不会检查任何内容。",
+      "rate_limited": "{checker} 要求稍候。检查将在一分钟后恢复。",
+      "unavailable": "{checker} 当前无法检查。您继续输入时它会重试。",
+      "no_issues": "未发现问题。",
+      "list_label": "此邮件中的问题",
+      "shortcuts": "下一个问题：{next}。上一个：{previous}。"
+    },
+    "notice": {
+      "on": "校对已开启。在您输入时，您写的文字会发送到 {checkers} 进行检查，不包括您的签名和引用的邮件。邮件设置为签名或加密期间不会发送任何内容；但在此之前写的内容可能已经被检查过。",
+      "forced": "您的组织已开启校对。在您输入时，您写的文字会发送到 {checkers} 进行检查，不包括您的签名和引用的邮件。邮件设置为签名或加密期间不会发送任何内容；但在此之前写的内容可能已经被检查过。",
+      "ok": "确定"
+    },
+    "send_warning": {
+      "title": "仍有未解决的问题，确定发送吗？",
+      "body": "此邮件中还有 {count, plural, other {# 个拼写或语法问题}}未解决。",
+      "review": "查看",
+      "send": "仍然发送"
+    },
+    "settings": {
+      "title": "校对",
+      "description": "在您书写时为拼写和语法错误添加下划线，并提供修改建议。",
+      "enable": "输入时检查拼写和语法",
+      "enable_description": "您写的文字会发送到校对附加组件及其使用的服务，不包括您的签名和引用的邮件。邮件设置为签名或加密期间不会发送任何内容。",
+      "no_checker": "未安装校对附加组件。请联系管理员添加。",
+      "plugin_description": "将您写的内容发送到 {plugin}。",
+      "writing_language": "书写语言",
+      "writing_language_description": "您通常使用的书写语言。校对和浏览器的拼写检查会使用它。",
+      "auto": "自动检测"
+    },
+    "shortcuts": {
+      "next_issue": "下一个拼写或语法问题",
+      "previous_issue": "上一个拼写或语法问题"
     }
   }
 }

@@ -1,5 +1,5 @@
 {
-  "meta_description": "JMAP 프로토콜을 사용하는 미니멀한 웹메일 클라이언트",
+  "meta_description": "메일, 캘린더, 연락처, 파일을 한곳에서 다루는 JMAP 기반 셀프 호스팅 웹메일",
   "login": {
     "title": "웹메일",
     "username_label": "이메일",
@@ -461,7 +461,6 @@
     "view_in_light_mode": "라이트 모드로 보기",
     "export_email": ".eml 파일로 내보내기",
     "forward_as_attachment": "첨부 파일로 전달",
-    "import_email": ".eml 또는 .zip 가져오기…",
     "keyboard_shortcuts": "단축키",
     "email_source": "메일 원본",
     "draft_banner": "작성 중인 임시보관 메일이에요",
@@ -473,6 +472,9 @@
     "source_truncated": "처음 {size}만 표시해요. 나머지는 메시지를 내보내세요.",
     "source_copied": "원본이 클립보드에 복사되었어요",
     "attachments": "첨부파일",
+    "attachments_count": "{count, plural, other {첨부파일 #개}}",
+    "attachments_show_more": "{count}개 더 보기",
+    "attachments_show_fewer": "간략히 보기",
     "important": "중요",
     "download": "다운로드",
     "download_all": "모두 다운로드",
@@ -880,6 +882,35 @@
     "send_anyway": "그래도 보내기",
     "back": "뒤로"
   },
+  "phishing_report": {
+    "action": "피싱 신고…",
+    "confirm_title": "피싱으로 신고할까요?",
+    "confirm_message": "{count, plural, =1 {메시지를 {address} 주소로 보내고 스팸함으로 옮겨요.} other {메시지 #개를 각각 별도의 신고로 {address} 주소로 보내고 스팸함으로 옮겨요.}}",
+    "confirm": "신고",
+    "cancel": "취소",
+    "sending": "신고하는 중…",
+    "done": "{count, plural, =1 {{address} 주소로 신고하고 스팸함으로 옮겼어요.} other {메시지 #개를 {address} 주소로 신고하고 스팸함으로 옮겼어요.}}",
+    "not_moved": "{count, plural, =1 {{address} 주소로 신고했지만 메시지를 스팸함으로 옮기지 못했어요.} other {{address} 주소로 신고했지만 메시지 #개를 스팸함으로 옮기지 못했어요.}}",
+    "failed": "{count, plural, =1 {메시지를 신고하지 못했어요.} other {메시지 #개를 신고하지 못했어요.}}",
+    "undo": "실행 취소",
+    "undone": "{count, plural, =1 {원래 위치로 되돌렸어요. 신고는 이미 보내졌어요.} other {원래 위치로 되돌렸어요. 신고는 이미 보내졌어요.}}",
+    "undo_failed": "되돌리지 못했어요.",
+    "banner": "이 메시지를 피싱으로 신고했어요. 메시지의 링크는 꺼져 있어요.",
+    "link_off": "링크 꺼짐",
+    "link_off_note": "(링크 꺼짐)",
+    "no_subject": "(제목 없음)"
+  },
+  "classification": {
+    "picker_label": "보안 등급",
+    "chip_label": "보안 등급: {name}",
+    "none": "보안 등급 없음",
+    "pick_required": "보안 등급 선택",
+    "required_hint": "조직에서 보안 등급을 지정하도록 요구해요.",
+    "required_toast": "보내기 전에 보안 등급을 선택하세요.",
+    "quick_reply_needs_label": "이 답장에는 보안 등급이 필요해요. 여기서 선택한 다음 보내세요.",
+    "forward_needs_label": "보안 등급이 필요해요. 메일 쓰기 창에서 메시지를 전달하세요.",
+    "received_hint": "보낸 사람의 메일 프로그램이 지정한 값이에요. 누구나 보안 등급을 지정할 수 있어서 아무것도 증명하지 않아요."
+  },
   "email_composer": {
     "select_from_directory": "디렉터리에서 선택",
     "minimize": "최소화",
@@ -1248,8 +1279,6 @@
     "templates_import_errors": "일부 템플릿을 가져오지 못했어요",
     "templates_import_empty": "파일에서 템플릿을 찾을 수 없어요",
     "export_email_error": "메일 내보내기에 실패했어요",
-    "import_email_success": "메일을 성공적으로 가져왔어요",
-    "import_email_error": "메일 가져오기에 실패했어요",
     "rule_created": "규칙을 만들었어요",
     "rule_merged": "“{name}” 규칙에 추가했어요",
     "rule_already_covered": "이미 “{name}” 규칙에 포함되어 있어요",
@@ -1272,12 +1301,46 @@
     "tag_removed_count": "{count, plural, other {메일 #개에서 태그를 뺐어요}}",
     "new_mail_count": "{count, plural, other {새 메시지 #개}}"
   },
+  "org_notice": {
+    "label": "공지",
+    "dismiss": "공지 닫기",
+    "severity_info": "정보",
+    "severity_warning": "경고",
+    "severity_critical": "중요"
+  },
+  "vacation_templates": {
+    "title": "조직 템플릿",
+    "description": "조직에서 작성한 답장으로 시작하세요. 나중에 내용을 바꿀 수 있습니다.",
+    "pick_label": "템플릿 사용",
+    "pick_placeholder": "템플릿 선택",
+    "deputy_label": "대리인 주소",
+    "deputy_placeholder": "colleague@example.com",
+    "deputy_hint": "답장에서 급한 용건은 이 동료에게 연락하도록 안내합니다.",
+    "deputy_missing": "먼저 대리인의 주소를 입력하세요.",
+    "deputy_name_label": "대리인 이름",
+    "deputy_name_missing": "먼저 대리인의 이름을 입력하세요.",
+    "apply": "이 내용 사용",
+    "apply_hint": "아래 제목과 본문을 바꿉니다."
+  },
+  "retention_notice": {
+    "line": "여기 있는 메일은 이곳으로 옮겨진 지 {count, plural, other {#일}} 후에 삭제됩니다."
+  },
+  "device_policy": {
+    "downloads_off": "조직에서 다운로드를 사용하지 않도록 설정했습니다.",
+    "download_off_named": "{name}: 조직에서 다운로드를 사용하지 않도록 설정했습니다",
+    "download_blocked": "조직에서 다운로드를 사용하지 않도록 설정했습니다.",
+    "export_blocked": "조직에서 메일 내보내기를 사용하지 않도록 설정했습니다.",
+    "print_blocked": "조직에서 인쇄를 사용하지 않도록 설정했습니다."
+  },
   "third_party": {
     "push_needs_relay": "푸시 알림을 받으려면 조직에서 운영하는 푸시 릴레이가 필요한데, 설정된 릴레이가 없어요. 앱이 열려 있는 동안에는 새 메일이 계속 표시돼요.",
     "relay_desc": "이 서버는 외부 서비스에 연결하지 않으므로 조직 자체 릴레이만 표시돼요.",
     "relay_none": "설정된 릴레이 없음",
     "plugin_refused": "시작되지 않음: 이 플러그인은 외부 서비스에 연결하는데, 조직에서 이를 꺼 두었어요.",
     "remote_content_blocked": "조직에서 다른 서버의 콘텐츠를 차단하므로 이 메시지의 외부 이미지가 표시되지 않아요."
+  },
+  "remote_content_lock": {
+    "trusted_senders_note": "조직에서 모든 메일의 원격 콘텐츠를 차단하므로 신뢰할 수 있는 발신자의 메일에서도 불러오지 않습니다."
   },
   "date": {
     "today": "오늘",
@@ -1539,6 +1602,10 @@
         "label": "공유 메일 계정 표시",
         "description": "나와 공유된 메일함의 폴더를 사이드바의 '공유됨' 아래에 표시합니다. 끄면 모두 숨겨지며, 아래에서 계정별로 숨길 수도 있습니다. 캘린더와 연락처는 그대로 유지됩니다."
       },
+      "compact_shared_mailboxes": {
+        "label": "공유 메일함 간단히 보기",
+        "description": "각 공유 메일함을 받은편지함을 여는 한 줄로 표시하고, 그 아래에 폴더를 표시합니다. 임시보관함이나 휴지통 같은 빈 폴더는 숨깁니다."
+      },
       "pro_interface": {
         "label": "Pro 인터페이스 (실험적)",
         "description": "데스크톱 전용 파워 유저 레이아웃으로, 다중 탭 메시지 탐색과 계정 간 워크플로우를 지원합니다. 표준 인터페이스에는 영향이 없으며 언제든지 되돌릴 수 있습니다.",
@@ -1769,6 +1836,12 @@
         "label": "폴더 전환 시 검색 지우기",
         "description": "폴더(받은편지함, 보낸편지함 등)를 클릭하면 활성 검색을 지우고 해당 폴더를 표시합니다. 꺼져 있으면 검색이 유지되고 이동한 폴더에서 다시 실행됩니다."
       },
+      "search_default_scope": {
+        "label": "검색 위치",
+        "description": "새 검색이 찾는 위치입니다. 검색 필터에서 다른 폴더를 선택할 수도 있습니다.",
+        "all": "스팸함과 휴지통을 제외한 모든 폴더",
+        "folder": "열려 있는 폴더"
+      },
       "request_read_receipt": {
         "label": "기본적으로 읽음 확인 요청",
         "description": "새 메시지를 작성할 때 읽음 확인 요청을 미리 켭니다."
@@ -1876,6 +1949,14 @@
         "above_quote": "인용 텍스트 앞",
         "below_quote": "인용 텍스트 뒤"
       },
+      "signature_new_mail": {
+        "label": "새 메일 서명",
+        "description": "새 메일을 작성할 때 서명을 자동으로 삽입합니다. 끄면 서명 없이 새 메일을 시작합니다."
+      },
+      "signature_reply_forward": {
+        "label": "답장·전달 서명",
+        "description": "답장이나 전달할 때 서명을 자동으로 추가합니다. 끄면 서명 없이 보냅니다."
+      },
       "signature_separator": {
         "label": "서명 구분선",
         "description": "서명 앞에 표준 구분선 \"-- \" (RFC 3676)을 추가합니다. 본문에서 바로 서명으로 이어지길 원하면 해제하세요."
@@ -1896,8 +1977,8 @@
       "attachment_position": {
         "label": "첨부파일 위치",
         "description": "메일 상단에서 첨부파일을 어디에 표시할지 설정해요",
-        "beside-sender": "보낸 사람 옆",
-        "below-header": "제목 아래"
+        "below-header": "제목 아래",
+        "below-message": "메시지 아래 카드"
       },
       "emails_per_page": {
         "10": "10개",
@@ -3546,7 +3627,6 @@
     "new_folder": "새 폴더…",
     "rename": "이름 바꾸기…",
     "share": "공유…",
-    "import_email": ".eml 또는 .zip 가져오기…",
     "empty_folder": "폴더 비우기",
     "empty_folder_generic": "폴더 비우기",
     "delete_folder": "폴더 삭제",
@@ -5052,7 +5132,6 @@
     "settings_ascending": "오름차순",
     "settings_descending": "내림차순",
     "disabled_title": "관리자가 파일 기능을 비활성화했어요",
-    "disabled_description": "WebDAV를 통한 대용량 파일 업로드는 Stalwart/RocksDB의 불안정을 일으킬 수 있어요. 메모리 부족 크래시나 복구 불가능한 디스크 사용 문제가 발생할 수 있으며, 삭제된 파일이 즉시 삭제되지 않을 수 있습니다. 운영 환경에서는 이 기능을 권장하지 않아요.",
     "no_accounts": "연결된 계정이 없습니다.",
     "open_folder_tree": "폴더 트리 열기",
     "migration_title": "파일 업데이트 중…",
@@ -5241,6 +5320,117 @@
   "unified_mailbox": {
     "search_unavailable": "통합 보기에서는 검색을 사용할 수 없습니다"
   },
+  "mail_import": {
+    "menu_import": "메일 가져오기…",
+    "settings_label": "메일 가져오기",
+    "settings_description": ".eml, ZIP, mbox 또는 Outlook .pst 및 .ost 파일에서 메일을 가져옵니다.",
+    "settings_button": "가져오기…",
+    "title": "메일 가져오기",
+    "description": ".eml, .zip, .mbox 또는 Outlook .pst 및 .ost 파일을 선택하세요.",
+    "choose_files": "파일 선택…",
+    "chosen_files": "선택한 파일",
+    "remove_file": "{name} 제거",
+    "format_eml": "메시지",
+    "format_zip": "ZIP 압축 파일",
+    "format_mbox": "mbox 파일",
+    "format_pst": "Outlook 데이터 파일",
+    "target_label": "가져올 위치",
+    "target_top": "최상위",
+    "keep_folders": "파일의 폴더를 다시 만들기",
+    "keep_folders_hint": "이름이 같은 폴더는 다시 사용합니다.",
+    "resume": "이 파일들의 마지막 가져오기가 멈춘 곳부터 계속 (이미 처리한 메시지: {count})",
+    "quota_note": "많은 서버는 사용자 한 명에게서 시간당 약 1000개의 메시지 또는 50MB만 받습니다. 더 큰 가져오기는 잠시 멈췄다가 저절로 계속됩니다.",
+    "start": "가져오기",
+    "cancel": "취소",
+    "running_title": "메일을 가져오는 중",
+    "progress_label": "가져오기 진행 상황",
+    "status_imported": "가져온 메시지: {count}",
+    "reading_file": "{name} 읽는 중",
+    "paused": "{time}까지 일시 중지됨. 서버는 시간당 최대 {files}건의 업로드 또는 {size}를 받습니다. 가져오기는 저절로 계속됩니다.",
+    "paused_generic": "{time}까지 일시 중지됨. 서버의 업로드 한도에 도달했습니다. 가져오기는 저절로 계속됩니다.",
+    "background": "백그라운드에서 실행",
+    "cancel_import": "가져오기 취소",
+    "chip": "메일을 가져오는 중: {percent}%",
+    "chip_paused": "가져오기가 {time}까지 일시 중지됨",
+    "done_title": "가져오기 완료",
+    "cancelled_title": "가져오기 취소됨",
+    "failed_title": "가져오기 중단됨",
+    "summary_imported": "가져온 메시지: {count}",
+    "summary_folders": "만든 폴더: {count}",
+    "summary_skipped": "가져오지 않음:",
+    "skip_too_large": "서버가 받는 크기보다 큼: {count}",
+    "skip_deleted": "Thunderbird에서 삭제됨: {count}",
+    "skip_embedded": "다른 메시지에 첨부된 메시지: {count}",
+    "skip_contact": "연락처: {count}",
+    "skip_calendar": "캘린더 항목: {count}",
+    "skip_other": "기타 항목: {count}",
+    "summary_failed": "가져올 수 없음: {count}",
+    "failure_invalid": "올바른 메시지가 아님",
+    "untitled": "(제목 없음)",
+    "cancelled_hint": "나중에 계속하려면 같은 파일을 같은 폴더로 다시 가져오세요.",
+    "close": "닫기",
+    "pst_note": "Outlook 파일에서는 메일만 가져옵니다. 연락처, 캘린더 항목, 작업은 개수만 세고 건너뜁니다.",
+    "pst_error_encrypted": "이 Outlook 파일은 Bulwark가 읽을 수 없는 강력한 암호화를 사용합니다. Outlook에서 메일을 암호화하지 않은 새 .pst 파일로 내보내세요.",
+    "pst_error_not_pst": "이 파일은 Bulwark가 읽을 수 있는 Outlook 데이터 파일이 아닙니다.",
+    "pst_error_unreadable": "Bulwark가 이 Outlook 파일을 읽지 못했습니다.",
+    "pst_error_worker": "Outlook 파일 읽기 도구를 불러오지 못했습니다. 페이지를 새로 고친 뒤 다시 시도하세요.",
+    "error_over_quota": "사서함이 가득 차서 가져오기를 멈췄습니다. 공간을 확보한 뒤 같은 파일을 같은 폴더로 다시 가져오면 이어서 진행합니다.",
+    "error_forbidden": "이 폴더에는 메일을 추가할 수 없어서 가져오기를 멈췄습니다.",
+    "error_failures": "연속으로 실패한 메시지가 너무 많아 가져오기를 멈췄습니다. 나중에 같은 파일을 같은 폴더로 다시 가져오면 이어서 진행합니다.",
+    "error_network": "서버 연결이 계속 실패해 가져오기를 멈췄습니다. 같은 파일을 같은 폴더로 다시 가져오면 이어서 진행합니다.",
+    "error_busy": "이 파일은 이미 다른 탭에서 가져오는 중입니다.",
+    "retry_hint": "실패한 메시지를 다시 시도하려면 같은 파일을 같은 폴더로 다시 가져오세요.",
+    "skip_unreadable": "Outlook 파일에서 읽을 수 없음: {count}",
+    "keep_folders_top_hint": "최상위에서는 받은 편지함, 보낸 편지함, 지운 편지함 등이 사용자의 폴더로 들어갑니다.",
+    "toast_done": "가져오기 완료. 가져옴: {imported}, 실패: {failed}.",
+    "toast_stopped": "가져오기가 멈췄습니다.",
+    "toast_show": "보기",
+    "section_title": "메일 파일",
+    "section_description": "파일에서 메일을 가져오거나 메일을 파일로 저장합니다."
+  },
+  "mail_export": {
+    "menu_export": "폴더 내보내기…",
+    "settings_label": "모든 메일 내보내기",
+    "settings_description": "이 계정의 모든 폴더를 mbox 또는 .eml 파일로 하나의 ZIP 파일에 저장합니다.",
+    "settings_button": "내보내기…",
+    "title_folder": "‘{name}’ 내보내기",
+    "title_account": "모든 메일 내보내기",
+    "description_folder": "이 폴더의 메시지를 파일로 저장합니다.",
+    "description_account": "이 계정의 모든 폴더를 하나의 ZIP 파일에 저장합니다.",
+    "format_label": "형식",
+    "format_mbox_folder": "mbox 파일",
+    "format_eml_folder": ".eml 파일 ZIP",
+    "format_mbox_account": "폴더마다 mbox 파일 하나가 든 ZIP",
+    "format_eml_account": "메일 폴더마다 폴더 하나로 정리한 .eml 파일 ZIP",
+    "hint_mbox": "Thunderbird, Apple Mail 등 대부분의 메일 프로그램이 mbox 파일을 엽니다.",
+    "hint_eml": "메시지마다 파일 하나. 어떤 메일 프로그램으로도 열 수 있습니다.",
+    "save_picker": "파일을 저장할 위치를 직접 고릅니다.",
+    "save_download": "내보내기가 끝나면 파일이 다운로드됩니다.",
+    "save_memory": "이 브라우저는 내보내기 전체를 메모리에 두므로 최대 200MB까지만 저장할 수 있습니다. 더 크면 Chrome이나 Edge를 쓰거나 폴더별로 내보내세요.",
+    "start": "내보내기",
+    "cancel": "취소",
+    "running_title": "메일을 내보내는 중",
+    "progress_label": "내보내기 진행 상황",
+    "status_exported": "내보낸 메시지: {count}/{total}",
+    "paused": "{time}까지 일시 중지됨: 서버가 잠시 쉬기를 요청했습니다. 내보내기는 저절로 계속됩니다.",
+    "background": "백그라운드에서 실행",
+    "cancel_export": "내보내기 취소",
+    "chip": "메일을 내보내는 중: {percent}%",
+    "chip_paused": "내보내기가 {time}까지 일시 중지됨",
+    "done_title": "내보내기 완료",
+    "cancelled_title": "내보내기 취소됨",
+    "failed_title": "내보내기 중단됨",
+    "summary_exported": "내보낸 메시지: {count}",
+    "summary_file": "{name}(으)로 저장했습니다({size}).",
+    "summary_failed": "내보낼 수 없음: {count}",
+    "download_again": "다시 다운로드",
+    "too_large": "내보내기가 이 브라우저가 메모리에 담을 수 있는 크기보다 큽니다. Chrome이나 Edge를 쓰거나 폴더별로 내보내세요.",
+    "close": "닫기",
+    "untitled": "(제목 없음)",
+    "toast_done": "내보내기 완료: {name}",
+    "toast_stopped": "내보내기가 멈췄습니다.",
+    "toast_show": "보기"
+  },
   "recover_deleted": {
     "tab": "삭제된 항목 복구",
     "title": "삭제된 항목 복구",
@@ -5273,6 +5463,51 @@
     "updated": "{name}님이 \"{title}\"을(를) 업데이트했습니다",
     "cancelled": "{name}님이 \"{title}\"을(를) 취소했습니다",
     "untitled": "제목 없는 일정"
+  },
+  "company_calendars": {
+    "section": "조직"
+  },
+  "vacation_calendar": {
+    "label": "내 캘린더 차단",
+    "description": "부재 기간에 바쁨 일정을 추가해 그동안 회의가 잡히지 않게 합니다.",
+    "no_access_managed": "이 계정의 캘린더는 차단할 수 없습니다. 쓰기 권한이 없습니다.",
+    "no_calendar": "캘린더를 차단할 수 없습니다. 일정을 추가할 캘린더를 찾지 못했습니다.",
+    "filter_warning": "이 기능을 켜면 응답이 활성화된 동안 내 필터 스크립트가 꺼집니다."
+  },
+  "calendar_delegate": {
+    "answer_for": "{name} 대신 응답",
+    "no_write": "{name}의 초대는 볼 수 있지만 대신 응답할 수는 없습니다. 편집 권한을 요청하세요.",
+    "also_invited": "나도 초대되어 있어 이 서버는 내 응답과 {name}의 응답을 구분하지 못합니다. 이 초대는 {name}이(가) 직접 응답해야 합니다.",
+    "answered_by": "{who}이(가) 응답함"
+  },
+  "free_busy_share": {
+    "button": "내 일정 가능 여부를 {group}과(와) 공유",
+    "already": "일정 가능 여부가 {group}과(와) 공유되어 있습니다",
+    "done": "이제 일정 가능 여부가 {group}과(와) 공유됩니다.",
+    "error": "일정 가능 여부를 공유하지 못했습니다. 다시 시도하세요.",
+    "group_label": "그룹",
+    "title": "일정 가능 여부",
+    "description": "그룹의 동료는 내가 바쁜 시간만 보고 일정 내용은 보지 못합니다. 시간 제안에 사용됩니다."
+  },
+  "find_time": {
+    "suggest": "시간 제안",
+    "searching": "빈 시간을 찾는 중",
+    "slots_title": "Bulwark가 확인할 수 있었던 모든 사람이 비어 있는 시간",
+    "slot": "{day} {start}~{end}",
+    "none": "다음 10 영업일 동안 빈 시간이 없습니다.",
+    "picked": "일정을 {slot}(으)로 옮겼습니다",
+    "rate_limited": "지난 1분 동안 조회가 너무 많았습니다. 1분 후에 다시 시도하세요.",
+    "unavailable": "이 서버에서는 일정 가능 여부를 사용할 수 없어 Bulwark가 시간을 제안할 수 없습니다.",
+    "not_checked": "확인하지 못함:",
+    "not_checked_item": "{who}: {reason}",
+    "reason_external": "조직 외부",
+    "reason_unknown": "바쁜 시간 알 수 없음",
+    "reason_not_found": "이 서버에서 찾을 수 없음",
+    "reason_error": "확인할 수 없음",
+    "unknown_note": "Bulwark는 나와 공유된 캘린더의 바쁜 시간만 볼 수 있습니다. 이 사람들은 비어 있는지 공유하지 않은 것인지 구분할 수 없습니다.",
+    "directory_off": "Bulwark가 이 서버에서 사람을 찾을 수 없습니다. 관리자가 Stalwart에서 디렉터리 조회를 켤 수 있습니다.",
+    "not_looked_up": "이 주소를 찾을 수 없음",
+    "found": "찾은 빈 시간: {count}"
   },
   "share_notifications": {
     "someone": "누군가",
@@ -5411,6 +5646,76 @@
     "install": "설치",
     "dont_remind": "다시 알리지 않음",
     "dismiss_aria": "설치 프롬프트 닫기"
+  },
+  "app_update": {
+    "ready": "{appName}의 새 버전이 준비되었습니다.",
+    "reload": "새로고침"
+  },
+  "offline": {
+    "settings": {
+      "title": "오프라인",
+      "description": "연결 없이도 이 기기에서 메일을 읽고 쓸 수 있습니다.",
+      "keep_label": "이 기기에 메일 보관",
+      "keep_description": "받은편지함과 연 폴더의 최근 30일 메일을 최대 250MB까지 이 브라우저에 암호화해 보관합니다. 오프라인에서도 메일을 읽고, 플래그를 지정하고, 이동할 수 있으며, 작성한 메일은 보낼편지함에서 대기합니다. 로그아웃하면 모두 삭제됩니다.",
+      "warning": "이 브라우저 프로필을 사용할 수 있는 사람은 누구나 이 메일을 읽을 수 있습니다. 본인 기기에서만 켜고 디스크 암호화를 사용하세요.",
+      "forbidden": "조직에서 기기에 메일을 보관하는 것을 허용하지 않습니다.",
+      "unsupported": "이 브라우저는 오프라인용으로 메일을 보관할 수 없습니다.",
+      "syncing": "이 기기에 메일을 저장하는 중…",
+      "usage": "이 기기에서 {size}",
+      "usage_updated": "이 기기에서 {size}, {time} 업데이트됨",
+      "off_confirm_title": "오프라인 모드를 끄시겠습니까?",
+      "off_confirm_message": "{count, plural, other {보낼편지함에 보내지 않은 메시지가 #개 있습니다.}} 끄면 이 메시지와 이 기기에 보관한 메일이 삭제됩니다.",
+      "off_confirm": "끄기"
+    },
+    "outbox": {
+      "title": "보낼편지함",
+      "description": "오프라인에서 작성한 메시지입니다. 이 기기가 다시 온라인이 되면 전송됩니다.",
+      "empty": "전송을 기다리는 메시지가 없습니다.",
+      "no_subject": "(제목 없음)",
+      "to": "받는 사람: {recipients}",
+      "status_waiting": "연결 대기 중",
+      "status_sending": "전송 중",
+      "status_failed": "보낼 수 없음: {error}",
+      "status_uncertain": "전송 중에 연결이 끊어졌습니다. 다시 보내기 전에 보낸편지함을 확인하세요.",
+      "retry": "다시 보내기",
+      "delete": "삭제",
+      "delete_confirm_title": "이 메시지를 삭제하시겠습니까?",
+      "delete_confirm_message": "전송되지 않았으며 되돌릴 수 없습니다.",
+      "changes": "읽음, 플래그, 폴더 {count, plural, other {변경 #건}}은 다시 온라인이 되면 전송됩니다.",
+      "status_held": "메시지가 대기하는 동안 조직 규칙이 바뀌었습니다. 보내려면 다시 작성하세요.",
+      "retry_label": "다시 보내기: {subject}",
+      "delete_label": "삭제: {subject}"
+    },
+    "banner": {
+      "offline": "오프라인 상태입니다. 이 기기에 보관한 메일이 표시됩니다. 변경하거나 작성한 내용은 다시 온라인이 되면 전송됩니다.",
+      "outbox": "보낼편지함에 {count, plural, other {#개}}",
+      "server_down": "메일 서버에 연결할 수 없습니다. 이 기기에 보관한 메일이 표시됩니다. 변경하거나 작성한 내용은 서버가 다시 응답하면 전송됩니다."
+    },
+    "toast": {
+      "queued": "보낼편지함에 저장했습니다. 다시 온라인이 되면 전송됩니다.",
+      "sent": "보낼편지함에서 보냄: {subject}",
+      "send_failed": "보낼편지함의 메시지를 보낼 수 없습니다: {subject}",
+      "refused_delete": "영구 삭제하려면 연결이 필요합니다. 온라인이 되면 다시 시도하세요.",
+      "refused_other": "이 작업에는 연결이 필요합니다. 온라인이 되면 다시 시도하세요.",
+      "forbidden": "조직에서 오프라인 모드를 껐습니다. 이 기기에 보관한 메일이 삭제되었습니다.",
+      "back_online": "다시 온라인입니다. 새로고침해서 로그인하고 대기 중인 항목을 보내세요.",
+      "reload": "새로고침",
+      "held": "보낼편지함의 메시지에 확인이 필요합니다: {subject}",
+      "lost": "다음 메시지는 전송되지 않고 삭제되었습니다: {subjects}"
+    },
+    "signout": {
+      "title": "보내지 않은 메시지가 있는데 로그아웃하시겠습니까?",
+      "message": "{count, plural, other {메시지 #개가 전송되지 않았습니다.}} 로그아웃하면 삭제됩니다.",
+      "confirm": "로그아웃",
+      "lost": "다음 메시지는 전송되지 않았으며 로그아웃 시 삭제되었습니다: {subjects}"
+    },
+    "errors": {
+      "unavailable": "이 작업에는 연결이 필요합니다. 온라인이 되면 다시 시도하세요.",
+      "plugins_down": "서명 또는 암호화 플러그인이 오프라인에서 실행되지 않습니다. 다시 온라인이 되면 보내세요.",
+      "file_missing": "오프라인에서 첨부한 파일이 이 기기에 더 이상 없습니다. 다시 첨부하세요.",
+      "no_sent_mailbox": "보낸편지함 폴더를 찾을 수 없습니다.",
+      "no_drafts_mailbox": "임시보관함 폴더를 찾을 수 없습니다."
+    }
   },
   "deep_link": {
     "message_not_found": "이 메시지를 더 이상 사용할 수 없습니다.",
@@ -5734,11 +6039,15 @@
       },
       "compose_read": {
         "title": "작성 중인 메시지 읽기",
-        "body": "편집기에서 플러그인을 사용할 때 작성 중인 메시지의 본문을 읽어요. 서명과 인용된 메시지는 읽지 않아요."
+        "body": "편집기에서 플러그인을 사용할 때 작성 중인 메시지를 읽어요. 본문, 제목, 숨은 참조를 포함한 받는 사람, 첨부 파일의 이름과 크기가 포함돼요. 서명과 인용된 메시지는 읽지 않아요."
       },
       "compose_write": {
         "title": "작성 중인 메시지 변경",
         "body": "편집기에서 플러그인을 사용할 때 작성 중인 메시지의 텍스트를 바꾸거나 추가해요. 각 변경은 되돌릴 수 있고, 보낼지는 여전히 직접 결정해요."
+      },
+      "compose_check": {
+        "title": "작성 내용 검사",
+        "body": "작성 창에서 입력하는 내용을 읽고, 사용하는 서비스로 보낼 수 있습니다. 교정이 켜져 있을 때만 보내며, 메시지가 서명 또는 암호화되도록 설정되어 있는 동안에는 아무것도 보내지 않습니다. 이 설정을 켜기 전에 작성한 텍스트는 이미 검사되었을 수 있습니다."
       },
       "email_forward": {
         "title": "메일 전달",
@@ -5758,7 +6067,7 @@
       },
       "ui_tasks": {
         "title": "할 일 화면에 추가",
-        "body": "할 일 세부 정보에 자체 섹션을, 할 일 목록에 버튼을 표시해요."
+        "body": "할 일 세부 정보에 자체 섹션을, 할 일 목록에 버튼을 표시하고, Bulwark의 할 일 목록 대신 자체 목록을 표시해요."
       },
       "ui_files": {
         "title": "파일 화면에 추가",
@@ -5810,6 +6119,10 @@
       "error_server": "서버 주소를 입력하세요. 예: https://cloud.example.com",
       "error_save": "저장하지 못했어요: {error}"
     }
+  },
+  "send_guards": {
+    "not_running": "보내지 않았습니다. 조직에서 요구하는 검사가 실행되고 있지 않습니다. 잠시 후 다시 시도하세요.",
+    "stopped_working": "보내지 않았습니다. 조직에서 요구하는 검사가 작동을 멈췄습니다. 페이지를 새로 고치세요. 그래도 안 되면 관리자에게 알리세요."
   },
   "plugin_list": {
     "filters": "필터",
@@ -6053,6 +6366,77 @@
       "party_size": "인원: {count}",
       "added_from": "{domain}에서 보낸 메일에서 추가함",
       "added_from_subject": "{domain}에서 보낸 메일 “{subject}”에서 추가함"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "맞춤법",
+      "grammar": "문법",
+      "style": "문체",
+      "other": "제안"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "제안 없음",
+      "suggestions": "제안",
+      "replace_with": "{text}(으)로 바꾸기",
+      "also": "{checker}도 지적함",
+      "ignore": "무시",
+      "add_to_dictionary": "사전에 추가",
+      "disable_rule": "이 규칙 끄기",
+      "changed": "텍스트가 바뀌었습니다. 다음 검사를 기다리세요."
+    },
+    "list_item": "{word}: {message} 제안: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {맞춤법 또는 문법 문제 없음} other {맞춤법 또는 문법 문제 #개}}",
+    "status": {
+      "title": "교정",
+      "off": "교정 꺼짐",
+      "paused": "교정 일시 중지됨",
+      "rate_limited": "검사 일시 중지됨",
+      "unavailable": "검사 사용 불가",
+      "checking": "검사 중…",
+      "issues": "{count, plural, =0 {문제 없음} other {문제 #개}}"
+    },
+    "panel": {
+      "title": "교정",
+      "required": "조직에서 필수로 지정함",
+      "check_message": "이 메시지 검사",
+      "notice": "입력하는 동안 작성한 텍스트가 검사를 위해 {checkers}(으)로 전송됩니다. 서명과 인용된 메시지는 제외됩니다. 메시지가 서명 또는 암호화되도록 설정되어 있는 동안에는 아무것도 전송되지 않지만, 이 설정을 켜기 전에 작성한 내용은 이미 검사되었을 수 있습니다.",
+      "turn_on": "교정 켜기",
+      "paused_protected": "이 메시지가 서명 또는 암호화되도록 설정되어 있는 동안에는 아무것도 검사하지 않습니다.",
+      "paused_unknown": "{plugin}은(는) 여기에 표시하지 않고 메시지에 서명하거나 메시지를 암호화할 수 있으므로, 켜져 있는 동안에는 아무것도 검사하지 않습니다.",
+      "rate_limited": "{checker}에서 잠시 기다려 달라고 요청했습니다. 1분 후에 검사를 다시 시작합니다.",
+      "unavailable": "{checker}에서 지금 검사할 수 없습니다. 계속 입력하면 다시 시도합니다.",
+      "no_issues": "문제가 없습니다.",
+      "list_label": "이 메시지의 문제",
+      "shortcuts": "다음 문제: {next}. 이전: {previous}."
+    },
+    "notice": {
+      "on": "교정이 켜져 있습니다. 입력하는 동안 작성한 텍스트가 서명과 인용된 메시지를 제외하고 검사를 위해 {checkers}(으)로 전송됩니다. 메시지가 서명 또는 암호화되도록 설정되어 있는 동안에는 아무것도 전송되지 않지만, 그 전에 작성한 내용은 이미 검사되었을 수 있습니다.",
+      "forced": "조직에서 교정을 켰습니다. 입력하는 동안 작성한 텍스트가 서명과 인용된 메시지를 제외하고 검사를 위해 {checkers}(으)로 전송됩니다. 메시지가 서명 또는 암호화되도록 설정되어 있는 동안에는 아무것도 전송되지 않지만, 그 전에 작성한 내용은 이미 검사되었을 수 있습니다.",
+      "ok": "확인"
+    },
+    "send_warning": {
+      "title": "해결되지 않은 문제가 있는데 보낼까요?",
+      "body": "이 메시지에 해결되지 않은 {count, plural, other {맞춤법 또는 문법 문제가 #개}} 남아 있습니다.",
+      "review": "검토",
+      "send": "그래도 보내기"
+    },
+    "settings": {
+      "title": "교정",
+      "description": "작성하는 동안 맞춤법과 문법 오류에 밑줄을 긋고 수정 제안을 보여줍니다.",
+      "enable": "입력하는 동안 맞춤법과 문법 검사",
+      "enable_description": "작성한 텍스트는 서명과 인용된 메시지를 제외하고 교정 추가 기능과 그 기능이 사용하는 서비스로 전송됩니다. 메시지가 서명 또는 암호화되도록 설정되어 있는 동안에는 아무것도 전송되지 않습니다.",
+      "no_checker": "설치된 교정 추가 기능이 없습니다. 관리자에게 추가를 요청하세요.",
+      "plugin_description": "작성한 내용을 {plugin}(으)로 보냅니다.",
+      "writing_language": "작성 언어",
+      "writing_language_description": "평소에 글을 쓰는 언어입니다. 교정과 브라우저의 맞춤법 검사에서 사용합니다.",
+      "auto": "자동 감지"
+    },
+    "shortcuts": {
+      "next_issue": "다음 맞춤법 또는 문법 문제",
+      "previous_issue": "이전 맞춤법 또는 문법 문제"
     }
   }
 }

@@ -62,14 +62,19 @@ describe('parseArchivedItems', () => {
     expect(parseArchivedItems(undefined, ACCOUNT)).toEqual([]);
   });
 
-  it("keeps only the account's own items from a mixed answer, never one without an account", () => {
+  it("drops items that name another account from a mixed answer", () => {
     const items = parseArchivedItems([
       archivedEmail('a'),
       archivedEmail('z', { accountId: 'cz' }),
-      archivedEmail('n', { accountId: undefined }),
       archivedEmail('e', { accountId: '' }),
     ], ACCOUNT);
     expect(items.map((i) => i.id)).toEqual(['a']);
+  });
+
+  it('keeps items without accountId, as the server sends them to a regular user (#1480)', () => {
+    const { accountId: _owner, ...stripped } = archivedEmail('n');
+    const items = parseArchivedItems([stripped], ACCOUNT);
+    expect(items).toEqual([expect.objectContaining({ id: 'n', subject: 'Message n', accountId: ACCOUNT })]);
   });
 });
 

@@ -9,6 +9,7 @@ import { useMailReading } from "@/hooks/use-mail-reading";
 import { useReadAloud } from "@/hooks/use-read-aloud";
 import { sanitizePlainTextRenderedHtml } from "@/lib/email-sanitization";
 import { ReadAloudBar } from "./read-aloud-bar";
+import { gateLinkClick } from "@/lib/plugin-hook-result";
 
 interface ReaderViewDialogProps {
   isOpen: boolean;
@@ -85,6 +86,9 @@ export function ReaderViewDialog({ isOpen, onClose, title, description, html, la
             ...(reading.comfortableWidth && { maxWidth: '80ch' }),
           }}
           data-testid="reader-view-body"
+          // Links open through the plugins' link check, as in the message.
+          onClick={gateLinkClick}
+          onAuxClick={gateLinkClick}
           dangerouslySetInnerHTML={body}
         />
       </div>

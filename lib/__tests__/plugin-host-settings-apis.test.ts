@@ -47,6 +47,10 @@ beforeEach(() => {
       subject: 'Away', textBody: 'Back in June', htmlBody: null,
     })),
     setVacationResponse: vi.fn(async () => undefined),
+    // The out-of-office calendar sync (lib/vacation-calendar.ts) reads the
+    // account and skips servers without calendars.
+    getAccountId: vi.fn(() => 'acc1'),
+    supportsCalendars: vi.fn(() => false),
   };
   useAuthStore.setState({ client: client as unknown as IJMAPClient });
   useTemplateStore.setState({ templates: [greeting], recentTemplateIds: [], deletedTemplateIds: {} });

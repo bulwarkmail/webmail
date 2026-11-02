@@ -118,7 +118,6 @@
     "vacation_save_failed": "Your automatic reply could not be saved. Try again.",
     "filters_save_failed": "Your filter rules could not be saved. Try again.",
     "export_email_error": "The message could not be saved as a file. Try again.",
-    "import_email_error": "The message could not be added from the file. Check the file and try again.",
     "rule_apply_failed": "The rule could not be used for the messages that are already here",
     "rule_folder_failed": "The folder could not be created. Try again.",
     "vacation_filters_save_failed": "Your automatic reply is saved. But the forwarding and the reply list could not be saved. Try again."

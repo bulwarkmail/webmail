@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 // POST /api/auth/sso/complete. A pairing step-up (purpose `reauth`)
@@ -39,6 +39,9 @@ import { openPhoneRefreshToken } from '@/lib/auth/pair-bundle';
 import { POST } from '@/app/api/auth/sso/complete/route';
 import { createHash } from 'crypto';
 import { confirmHandoff, redeemHandoff, resetHandoffStoreForTests } from '@/lib/auth/handoff-store';
+import { setStoreForTests } from '@/lib/shared-store';
+import { resetLocalStoreForTests } from '@/lib/shared-store/local';
+import { switchableSharedStore } from './helpers/shared-store-down';
 
 function pending(extra: Record<string, unknown> = {}) {
   jar.set('sso_pending', encryptPayload({
@@ -174,8 +177,8 @@ describe('/api/auth/sso/complete for an app that sent a PKCE challenge', () => {
     expect(JSON.stringify(res.body)).not.toMatch(/"at"|"rt"/);
     expect(jar.has('jmap_rt')).toBe(false);
 
-    expect(confirmHandoff(res.body.mobile_handoff_code)).toBe(true);
-    const redeemed = redeemHandoff(res.body.mobile_handoff_code, VERIFIER);
+    expect(await confirmHandoff(res.body.mobile_handoff_code)).toBe(true);
+    const redeemed = await redeemHandoff(res.body.mobile_handoff_code, VERIFIER);
     expect(redeemed).toMatchObject({
       ok: true,
       state: 'm-1',
@@ -196,5 +199,28 @@ describe('/api/auth/sso/complete for an app that sent a PKCE challenge', () => {
     const res = await complete();
     expect(res.body.access_token).toBe('at');
     expect(res.body.mobile_handoff_code).toBeUndefined();
+  });
+});
+
+describe('sso/complete mobile hand-off while the shared store is down (#1066)', () => {
+  afterEach(() => {
+    setStoreForTests(null);
+    resetLocalStoreForTests();
+  });
+
+  it('answers 503 instead of a hand-off code that could never be redeemed', async () => {
+    const store = switchableSharedStore();
+    store.down = true;
+    setStoreForTests(store);
+    tokenEndpoint = 'https://mail.example.org/auth/token';
+    pending({
+      redirect_uri: 'https://webmail.example/mail/en/auth/callback',
+      mobile_redirect_uri: 'bulwarkmobile://auth/callback',
+      mobile_state: 'm-1',
+      mobile_code_challenge: createHash('sha256').update('x'.repeat(50)).digest('base64url'),
+    });
+    const res = await complete();
+    expect(res.status).toBe(503);
+    expect(JSON.stringify(res.body)).not.toMatch(/"at"|"rt"|mobile_handoff_code/);
   });
 });

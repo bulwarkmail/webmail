@@ -3,7 +3,7 @@
 // hands plugins the same shape declared in plugin-types.ts.
 
 import type {
-  CalendarEvent, CalendarTask, ContactCard, Email, FileNode, Identity, VacationResponse,
+  CalendarEvent, CalendarTask, ContactCard, Email, EmailBodyPart, FileNode, Identity, VacationResponse,
 } from '@/lib/jmap/types';
 import type {
   CalendarEventView, ContactView, EmailReadView, EmailSummary, FileResourceView, IdentityView,
@@ -12,39 +12,32 @@ import type {
 import type { EmailTemplate } from '@/lib/template-types';
 import { generateEmailSource } from '@/lib/email-source';
 import { isServerSetKeyword } from '@/lib/jmap/server-keywords';
+import { htmlToPlainText } from '@/lib/html-to-text';
 
 // Resolve a message's plain-text body from its JMAP body parts. Plugins that
 // translate or scan content need the real body, not just the short `preview`
-// snippet. Prefers text/plain parts; falls back to stripped HTML, then preview.
+// snippet. Per RFC 8621 textBody lists the text/html part when a message has
+// no text/plain alternative, so each part is read by its own type: HTML is
+// converted to text, never handed on as source. Falls back to preview.
 export function plainTextFromEmail(email: Email): string {
   const values = email.bodyValues || {};
-  const collect = (parts?: { partId: string }[]) =>
+  // A part without a type counts as the kind of list it is in.
+  const collect = (parts: EmailBodyPart[] | undefined, untyped: string) =>
     (parts || [])
-      .map((p) => values[p.partId]?.value)
-      .filter((v): v is string => typeof v === 'string' && v.length > 0)
+      .map((p) => {
+        const value = values[p.partId]?.value;
+        if (typeof value !== 'string' || !value) return '';
+        return (p.type || untyped).toLowerCase() === 'text/html'
+          ? htmlToPlainText(value, { paragraphSpacing: true, mailMarkup: true })
+          : value;
+      })
+      .filter((v) => v.trim().length > 0)
       .join('\n')
       .trim();
 
-  const text = collect(email.textBody);
-  if (text) return text;
-
-  const html = collect(email.htmlBody);
-  if (html) {
-    return html
-      .replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/&nbsp;/gi, ' ')
-      .replace(/&amp;/gi, '&')
-      .replace(/&lt;/gi, '<')
-      .replace(/&gt;/gi, '>')
-      .replace(/&#39;|&apos;/gi, "'")
-      .replace(/&quot;/gi, '"')
-      .replace(/[ \t]{2,}/g, ' ')
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
-  }
-
-  return (email.preview || '').trim();
+  return collect(email.textBody, 'text/plain')
+    || collect(email.htmlBody, 'text/html')
+    || (email.preview || '').trim();
 }
 
 /**
@@ -175,6 +168,23 @@ export function taskToView(task: CalendarTask): TaskView {
     priority: task.priority ?? 0,
     calendarId: trueKeys(task.calendarIds)[0] || '',
     keywords: trueKeys(task.keywords),
+    alerts: Object.fromEntries(Object.entries(task.alerts || {}).filter(([, alert]) => alert?.trigger).map(([id, alert]) => [id, {
+      trigger: alert.trigger['@type'] === 'AbsoluteTrigger'
+        ? { at: alert.trigger.when }
+        : { offset: alert.trigger.offset, relativeTo: alert.trigger.relativeTo === 'end' ? 'due' as const : 'start' as const },
+      action: alert.action === 'email' ? 'email' as const : 'display' as const,
+      acknowledged: alert.acknowledged || null,
+    }])),
+    useDefaultAlerts: !!task.useDefaultAlerts,
+    links: Object.fromEntries(Object.entries(task.links || {}).map(([id, link]) => [id, {
+      href: link.href,
+      rel: link.rel || null,
+      title: link.title || null,
+      contentType: link.contentType || null,
+    }])),
+    relatedTo: Object.fromEntries(Object.entries(task.relatedTo || {}).map(([uid, relation]) => [uid, {
+      relation: trueKeys(relation?.relation),
+    }])),
   };
 }
 

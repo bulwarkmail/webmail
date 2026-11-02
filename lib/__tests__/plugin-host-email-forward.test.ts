@@ -19,6 +19,7 @@ vi.mock('@/stores/toast-store', () => ({
 }));
 
 import { dispatchApiCall } from '../plugin-sandbox/host-api';
+import type { OutgoingEmail } from '../plugin-types';
 
 function plugin(perms: string[], id = 'e-invoice'): InstalledPlugin {
   return {
@@ -122,6 +123,22 @@ describe('api.email.forward', () => {
     expect(sendEmail).toHaveBeenCalledTimes(2);
   });
 
+  it('forwards the words of an HTML-only mail, not its markup', async () => {
+    // RFC 8621 lists the text/html part under textBody when there is no text/plain one.
+    const htmlPart = { partId: '1', blobId: 'hb', size: 90, type: 'text/html' };
+    client.getEmail.mockResolvedValue({
+      ...invoice, textBody: [htmlPart], htmlBody: [htmlPart],
+      bodyValues: { 1: { value: '<div style="font:14px Arial">Please pay &amp; book.</div><div>Thanks</div>' } },
+    });
+    const pending = call(FORWARDER, 'email.forward', 'E1', { to: ['buchhaltung@firma.example'] });
+    await answerDialog(true);
+    await pending;
+
+    const body = sendEmail.mock.calls[0][3] as string;
+    expect(body).not.toContain('<div');
+    expect(body).toMatch(/\n\nPlease pay & book\.\nThanks$/);
+  });
+
   it('sends nothing and remembers nothing when the user says no', async () => {
     const pending = call(FORWARDER, 'email.forward', 'E1', { to: ['eve@evil.example'] });
     await answerDialog(false);
@@ -183,6 +200,43 @@ describe('api.email.forward', () => {
       expect(sendEmail).not.toHaveBeenCalled();
     } finally {
       off.dispose();
+    }
+  });
+
+  it("gives send checks the note, the recipients outside and what the attachments really are", async () => {
+    const seen: OutgoingEmail[] = [];
+    client.fetchBlobArrayBuffer = vi.fn(async (blobId: string) => (blobId === 'pdf-1' ? new Uint8Array([0x4d, 0x5a, 0x90, 0, 3]) : new TextEncoder().encode('<Invoice/>')).buffer);
+    const off = emailHooks.onBeforeEmailSend.register('send-checks', (outgoing: OutgoingEmail) => { seen.push(outgoing); return false; });
+    try {
+      const pending = call(FORWARDER, 'email.forward', 'E1', { to: ['books@outside.test', 'ann2@example.com'], text: 'Please book this.' });
+      await answerDialog(true);
+      expect(await pending).toEqual({ sent: false, reason: 'stopped' });
+      expect(seen[0]).toMatchObject({
+        surface: 'plugin-forward',
+        mode: 'forward',
+        authoredText: 'Please book this.',
+        externalRecipients: ['books@outside.test'],
+      });
+      expect(seen[0].attachments).toEqual([
+        { name: 'invoice.pdf', type: 'application/pdf', size: 5000, blobId: 'pdf-1', sniffedType: 'application/x-msdownload' },
+        { name: 'xrechnung.xml', type: 'application/xml', size: 3000, blobId: 'xml-1', sniffedType: 'text/plain', textExcerpt: '<Invoice/>' },
+      ]);
+    } finally {
+      off.dispose();
+    }
+  });
+
+  it('is held while a send check the admin requires is down, also with no plugin listening', async () => {
+    const { setSendGuardSource } = await import('../plugin-send-guards');
+    const down = { id: 'send-checks', name: 'Send checks', version: '1', permissions: ['email:send'], status: 'error', error: 'auto-disabled', enabled: false, forceEnabled: true } as unknown as InstalledPlugin;
+    setSendGuardSource({ snapshot: () => ({ plugins: [down], forced: () => true }), subscribe: () => () => {} });
+    try {
+      const pending = call(FORWARDER, 'email.forward', 'E1', { to: ['books@example.com'] });
+      await answerDialog(true);
+      expect(await pending).toEqual({ sent: false, reason: 'stopped' });
+      expect(sendEmail).not.toHaveBeenCalled();
+    } finally {
+      setSendGuardSource(null);
     }
   });
 

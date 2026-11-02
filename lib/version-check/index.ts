@@ -1,6 +1,6 @@
 export { startScheduler, stopScheduler, checkOnce } from './sender';
 export {
-  loadState, saveState, effectiveEndpoint, disabledByEnv,
+  loadState, saveState, updateState, effectiveEndpoint, disabledByEnv,
   getCurrentVersion, isStatusStale, freshStatus,
 } from './state';
 export { fetchStatus, parseStatus } from './fetcher';

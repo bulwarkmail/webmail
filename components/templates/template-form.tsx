@@ -13,6 +13,10 @@ import { BUILT_IN_PLACEHOLDERS } from '@/lib/template-types';
 import type { EmailTemplate } from '@/lib/template-types';
 import { useTemplateStore } from '@/stores/template-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { RichTextEditor } from '@/components/email/rich-text-editor';
+import { plainTextToComposerBody } from '@/lib/email-composer-utils';
+import { htmlToPlainText } from '@/lib/html-to-text';
+import type { Editor } from '@tiptap/react';
 
 
 interface TemplateFormProps {
@@ -20,6 +24,8 @@ interface TemplateFormProps {
   initialData?: {
     subject?: string;
     body?: string;
+    /** The body is the composer's HTML, not plain text (#1506). */
+    isHTML?: boolean;
     to?: string[];
     cc?: string[];
     bcc?: string[];
@@ -55,7 +61,9 @@ export function TemplateForm({ template, initialData, onSave, onCancel, shared =
   const [category, setCategory] = useState(template?.category || '');
   const [subject, setSubject] = useState(template?.subject || initialData?.subject || '');
   const [body, setBody] = useState(template?.body || initialData?.body || '');
-  const [isHTML, setIsHTML] = useState(template?.isHTML || false);
+  const [isHTML, setIsHTML] = useState(template ? !!template.isHTML : !!initialData?.isHTML);
+  // The rich editor, while the body is HTML: placeholders go in at its caret.
+  const editorRef = useRef<Editor | null>(null);
   const [toRecipients, setToRecipients] = useState(
     template?.defaultRecipients?.to?.join(', ') || initialData?.to?.join(', ') || ''
   );
@@ -120,9 +128,26 @@ export function TemplateForm({ template, initialData, onSave, onCancel, shared =
     const tag = `{{${placeholder}}}`;
     if (field === 'subject') {
       setSubject((prev) => prev + tag);
-    } else {
-      setBody((prev) => prev + tag);
+      return;
     }
+    const editor = editorRef.current;
+    if (isHTML && editor && !editor.isDestroyed) {
+      editor.chain().focus().insertContent(tag).run();
+      return;
+    }
+    setBody((prev) => prev + tag);
+  };
+
+  // Switching the body between plain text and HTML converts what is there,
+  // so neither editor ever shows the other format's source (#1506).
+  const toggleHTML = () => {
+    if (isHTML) {
+      editorRef.current = null;
+      setBody((prev) => htmlToPlainText(prev, { paragraphSpacing: true }));
+    } else {
+      setBody((prev) => plainTextToComposerBody(prev));
+    }
+    setIsHTML(!isHTML);
   };
 
   const placeholderButton = (field: 'subject' | 'body') => (
@@ -195,20 +220,33 @@ export function TemplateForm({ template, initialData, onSave, onCancel, shared =
 
       <div>
         <div className="flex items-center justify-between">
-          <label htmlFor={labelFor("body")} className="text-sm font-medium text-foreground">{tSettings('body')}</label>
+          <label htmlFor={isHTML ? undefined : labelFor("body")} className="text-sm font-medium text-foreground">{tSettings('body')}</label>
           {placeholderButton('body')}
         </div>
-        <textarea
-          id={labelFor("body")}
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          placeholder={tSettings('body_placeholder')}
-          rows={6}
-          className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-hidden resize-y"
-        />
+        {isHTML ? (
+          <div className="mt-1 rounded-md border border-border overflow-hidden" data-testid="template-body-editor">
+            <RichTextEditor
+              content={body}
+              onChange={setBody}
+              placeholder={tSettings('body_placeholder')}
+              ariaLabel={tSettings('body')}
+              onEditorReady={(editor) => { editorRef.current = editor; }}
+            />
+          </div>
+        ) : (
+          <textarea
+            id={labelFor("body")}
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder={tSettings('body_placeholder')}
+            rows={6}
+            className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-hidden resize-y"
+          />
+        )}
         <button
           type="button"
-          onClick={() => setIsHTML(!isHTML)}
+          onClick={toggleHTML}
+          aria-pressed={isHTML}
           className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           {isHTML ? <CheckSquare className={cn('w-4 h-4')}></CheckSquare> : <Square className={cn('w-4 h-4')}></Square>}

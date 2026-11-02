@@ -10,6 +10,7 @@ import {
 } from '@/lib/oauth/token-exchange';
 import { buildRedeemBundle } from '@/lib/auth/pair-bundle';
 import { isHandoffCodeChallenge, stashHandoff } from '@/lib/auth/handoff-store';
+import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
 import { refreshTokenCookieName, refreshTokenServerCookieName } from '@/lib/oauth/tokens';
 import { getCookieOptions, getSignInCookieOptions } from '@/lib/oauth/cookie-config';
 import { storeIdToken } from '@/lib/oauth/end-session';
@@ -167,7 +168,7 @@ export async function POST(request: NextRequest) {
         // only a one-time code for the link (lib/auth/handoff-store.ts). The
         // tokens never reach the page. The code starts working when the user
         // confirms the hand-off (/api/auth/handoff/confirm).
-        const handoffCode = stashHandoff(bundle, {
+        const handoffCode = await stashHandoff(bundle, {
           challenge: mobileCodeChallenge,
           state: mobileState ?? '',
           awaitConfirm: true,
@@ -201,6 +202,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     // Clean up pending cookie on any error
     cookieStore.delete(SSO_PENDING_COOKIE);
+    // The mobile hand-off can't be parked without the shared store.
+    if (isStoreUnavailable(error)) return storeUnavailableResponse();
     logger.error('SSO complete error', { error: error instanceof Error ? error.message : 'Unknown error' });
     return NextResponse.json({ error: 'Token exchange failed' }, { status: 401 });
   }

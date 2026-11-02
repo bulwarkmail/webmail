@@ -1,4 +1,5 @@
 import { configManager } from '@/lib/admin/config-manager';
+import { observeUpstream } from '@/lib/metrics/upstream';
 import { logger } from '@/lib/logger';
 
 /**
@@ -123,10 +124,10 @@ export async function getWopiActions(): Promise<WopiActions | null> {
 
 async function fetchWopiActions(discoveryUrl: string): Promise<WopiActions | null> {
   try {
-    const res = await fetch(discoveryUrl, {
+    const res = await observeUpstream('wopi', () => fetch(discoveryUrl, {
       headers: { Accept: 'text/xml' },
       signal: AbortSignal.timeout(DISCOVERY_TIMEOUT_MS),
-    });
+    }));
     if (!res.ok) {
       logger.warn('WOPI discovery fetch failed', { discoveryUrl, status: res.status });
       return null;

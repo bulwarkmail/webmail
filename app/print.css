@@ -39,6 +39,28 @@
   }
 }
 
+/*
+ * The device policy "No printing" (components/device/device-policy-host.tsx):
+ * Ctrl+P and the browser's menu can't be stopped, so the page prints only a
+ * note. Stronger than the print copy's rules above, which it replaces.
+ */
+[data-print-blocked] {
+  display: none;
+}
+
+@media print {
+  html[data-no-print] body > :not([data-print-blocked]):not([data-print-blocked]) {
+    display: none !important;
+  }
+
+  html[data-no-print] body > [data-print-blocked][data-print-blocked] {
+    display: block !important;
+    margin: 30mm 20mm;
+    color: #111;
+    font: 14pt/1.4 var(--font-sans, system-ui, sans-serif);
+  }
+}
+
 .pr-root {
   /* Landscape page area of the smaller of A4 and Letter, 12 mm margins. */
   --pr-page-h: 184mm;

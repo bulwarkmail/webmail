@@ -59,7 +59,8 @@ describe('docker data volumes', () => {
   });
 
   it('creates every default state folder in the image', () => {
-    const dockerfile = readFileSync(path.join(ROOT, 'Dockerfile'), 'utf8');
+    // Join backslash-continued lines so a wrapped mkdir is read whole.
+    const dockerfile = readFileSync(path.join(ROOT, 'Dockerfile'), 'utf8').replace(/\\\r?\n\s*/g, ' ');
     const created = dockerfile.match(/RUN mkdir -p ([^&\n]+)/)?.[1].trim().split(/\s+/) ?? [];
     for (const dir of defaultStateDirs()) expect(created).toContain(dir);
   });

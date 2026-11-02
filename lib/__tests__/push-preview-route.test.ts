@@ -39,6 +39,12 @@ vi.mock('@/lib/security/url-guard', () => ({
   DisallowedUrlError: class DisallowedUrlError extends Error {},
 }));
 
+// The route reads the device policy (Organisation > Devices); none is set here.
+vi.mock('@/lib/admin/config-manager', async () => {
+  const { DEFAULT_POLICY } = await import('@/lib/admin/types');
+  return { configManager: { ensureLoaded: async () => {}, getPolicy: () => DEFAULT_POLICY } };
+});
+
 function jsonResponse(data: unknown) {
   return { ok: true, json: async () => data };
 }

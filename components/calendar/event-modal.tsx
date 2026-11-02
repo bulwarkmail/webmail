@@ -9,7 +9,8 @@ import { LinkifiedText } from "@/components/ui/linkified-text";
 import { X, Trash2, Users, CalendarDays, CopyPlus, Pencil, Clock, MapPin, Video, Repeat, Bell, AlignLeft, AlertTriangle, MoreVertical } from "@/components/icons";
 import { IconButton } from "@/components/ui/icon-button";
 import { findMeetingLink, locationAction, mapsUrl, primaryLocationName } from "@/lib/event-links";
-import { ParticipantStatusBadge, RsvpButtons } from "./rsvp-buttons";
+import { descriptionAsText, isHtmlDescription, plainDescriptionFields } from "@/lib/calendar-description";
+import { ParticipantStatusBadge } from "./rsvp-buttons";
 import { format, parseISO, addHours, isSameDay } from "date-fns";
 import type { CalendarEvent, Calendar, CalendarParticipant, CalendarEventAlert, CalendarRecurrenceRule } from "@/lib/jmap/types";
 import { AlertListEditor, AlertSummary, formatEventAlertsLabel } from "./alert-list-editor";
@@ -17,14 +18,16 @@ import { alertRowToOffset, describeAlert, getCalendarDefaultAlerts, newAlertRow,
 import { RecurrenceEditor, buildRecurrenceSummary, isSimpleRecurrenceRule } from "./recurrence-editor";
 import { parseDuration, getEventColor } from "./event-card";
 import { buildAllDayDuration, getEventDisplayEndDate, getEventEndDate, getEventStartDate, getPrimaryCalendarId } from "@/lib/calendar-utils";
-import { displayNow, getEffectiveTimeZone } from "@/lib/timezone";
+import { displayNow, fromDisplayDate, fromWallClock, getEffectiveTimeZone, parseLocalDateTime, toZonedDisplayDate } from "@/lib/timezone";
 import { createRecurrenceRule, sameRecurrenceRules } from "@/lib/recurrence-rule";
 import { ParticipantInput, type ParticipantInputHandle } from "./participant-input";
 import { ParticipantAvailability } from "./participant-availability";
+import { FindATime } from "./find-a-time";
+import { AnswerBars, useAnswerView } from "./answer-bars";
+import type { AnswerTarget } from "@/lib/calendar-delegate";
 import {
   eventOrganizer,
   getUserParticipantId,
-  getUserStatus,
   getParticipantList,
   getStatusCounts,
   participantFieldsToSave,
@@ -51,6 +54,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useCvdColor } from "@/hooks/use-cvd-color";
+import { gateLinkClick } from "@/lib/plugin-hook-result";
 
 export interface PendingEventPreview {
   start: Date;
@@ -78,7 +82,8 @@ interface EventModalProps {
   onSave: (data: Partial<CalendarEvent>, sendSchedulingMessages?: boolean, editor?: EventEditorState) => void | Promise<void>;
   onDelete?: (id: string, sendSchedulingMessages?: boolean) => void;
   onDuplicate?: (data: Partial<CalendarEvent>) => void;
-  onRsvp?: (eventId: string, participantId: string, status: CalendarParticipant['participationStatus']) => void;
+  /** `sentBy`: answering for the calendar's owner (lib/calendar-delegate.ts). */
+  onRsvp?: (eventId: string, participantId: string, status: CalendarParticipant['participationStatus'], sentBy?: string) => void;
   onClose: () => void;
   onPreviewChange?: (preview: PendingEventPreview | null) => void;
   /** Opens the event's action menu (export, copy, ...) under the ⋮ of the event view. */
@@ -330,11 +335,6 @@ export function EventModal({
     return getUserParticipantId(event, currentUserEmails);
   }, [event, currentUserEmails]);
 
-  const userCurrentStatus = useMemo(() => {
-    if (!event) return null;
-    return getUserStatus(event, currentUserEmails);
-  }, [event, currentUserEmails]);
-
   const existingParticipants = useMemo(() => {
     if (!event) return [];
     return getParticipantList(event, { resolveName: resolveContactName });
@@ -372,7 +372,9 @@ export function EventModal({
   };
 
   const [title, setTitle] = useState(event?.title || defaultTitle || "");
-  const [description, setDescription] = useState(event?.description || "");
+  // An HTML description is shown and edited as its text.
+  const eventDescription = useMemo(() => (event ? descriptionAsText(event) : ""), [event]);
+  const [description, setDescription] = useState(eventDescription);
   const [location, setLocation] = useState(
     event?.locations ? Object.values(event.locations)[0]?.name || "" : ""
   );
@@ -562,18 +564,42 @@ export function EventModal({
   // Leaving the form of an existing event goes back to its summary.
   const backToView = useCallback(() => whenDiscarded(() => { resetForm(); setMode("view"); }), [whenDiscarded, resetForm]);
 
-  // The event window the attendees' free/busy is checked against. Parsed in
-  // local time like the save path; an all-day event spans its whole days.
+  // The event window the attendees' free/busy is checked against. The
+  // fields are a wall clock in the effective zone, as the save path labels
+  // them, not in the browser's; an all-day event spans its whole days.
   const availabilityWindow = useMemo(() => {
+    const zone = getEffectiveTimeZone();
+    const instant = (value: string) => {
+      const wall = parseLocalDateTime(value);
+      if (!wall) return null;
+      const date = fromWallClock(wall, zone);
+      return Number.isNaN(date.getTime()) ? null : date;
+    };
     const startStr = allDay ? `${startDate}T00:00:00` : `${startDate}T${startTime || "00:00"}:00`;
     const endStr = allDay ? `${endDate}T23:59:59` : `${endDate}T${endTime || "00:00"}:00`;
-    const start = startDate ? new Date(startStr) : null;
-    const end = endDate ? new Date(endStr) : null;
     return {
-      start: start && !Number.isNaN(start.getTime()) ? start : null,
-      end: end && !Number.isNaN(end.getTime()) ? end : null,
+      start: startDate ? instant(startStr) : null,
+      end: endDate ? instant(endStr) : null,
     };
   }, [startDate, startTime, endDate, endTime, allDay]);
+
+  // An existing event's own time, as saved: Suggest times doesn't count it
+  // as busy (the attendees who have it in their calendar show it so).
+  const savedWindow = useMemo(() => (event?.start && !event.showWithoutTime
+    ? { start: fromDisplayDate(getEventStartDate(event)), end: fromDisplayDate(getEventEndDate(event)) }
+    : null), [event]);
+
+  // A suggested slot moves the event there; the fields are a wall clock in
+  // the effective zone, so the instants are turned back into one.
+  const handlePickSlot = useCallback((slot: { start: Date; end: Date }) => {
+    const zone = getEffectiveTimeZone();
+    const from = toZonedDisplayDate(slot.start, zone);
+    const to = toZonedDisplayDate(slot.end, zone);
+    setStartDate(formatDateInput(from));
+    setStartTime(formatTimeInput(from));
+    setEndDate(formatDateInput(to));
+    setEndTime(formatTimeInput(to));
+  }, []);
 
   // Plugin transform: collect conflict warnings for the current event form.
   // Re-runs (debounced) whenever fields that affect scheduling change.
@@ -765,8 +791,11 @@ export function EventModal({
     // On an existing event the empty string is how a description gets cleared, but
     // sending it on creation writes a `DESCRIPTION:` with nothing after it — which
     // invitation e-mails then render as a "Description" heading over blank space.
-    if (trimmedDescription || event) {
-      data.description = trimmedDescription;
+    // An HTML description the user did not touch stays as it was; one they
+    // edited is saved as the plain text it now is.
+    const keepsHtml = !!event && isHtmlDescription(event) && trimmedDescription === eventDescription.trim();
+    if ((trimmedDescription || event) && !keepsHtml) {
+      Object.assign(data, plainDescriptionFields(event, trimmedDescription));
     }
 
     if (!event) {
@@ -915,13 +944,20 @@ export function EventModal({
       savingRef.current = false;
       setIsSaving(false);
     }
-  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, calendarId, calendars, recurrence, customRule, useDefaultAlerts, defaultAlerts, alertRows, preservedAlerts, attendees, initialAttendees, sendInvitations, currentUserEmails, userIsOrganizer, resolveContactName, event, onSave, isSaving, t]);
+  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, calendarId, calendars, recurrence, customRule, useDefaultAlerts, defaultAlerts, alertRows, preservedAlerts, attendees, initialAttendees, sendInvitations, currentUserEmails, userIsOrganizer, resolveContactName, event, eventDescription, onSave, isSaving, t]);
 
-  const handleRsvp = useCallback((status: CalendarParticipant['participationStatus']) => {
-    if (!event || !userParticipantId || !onRsvp) return;
-    onRsvp(event.id, userParticipantId, status);
+  // The user's own answer, and the owner's in a calendar shared with them
+  // (lib/calendar-delegate.ts).
+  const eventCalendar = useMemo(
+    () => (event ? calendars.find((c) => event.calendarIds?.[c.id]) ?? null : null),
+    [event, calendars],
+  );
+  const answerView = useAnswerView(event ?? null, eventCalendar, currentUserEmails, canRsvp && !!userParticipantId);
+  const handleAnswer = useCallback((target: AnswerTarget, status: CalendarParticipant['participationStatus']) => {
+    if (!onRsvp) return;
+    onRsvp(target.eventId, target.participantId, status, target.sentBy);
     onClose();
-  }, [event, userParticipantId, onRsvp, onClose]);
+  }, [onRsvp, onClose]);
 
   const handleDuplicate = useCallback(() => {
     if (!event || !onDuplicate) return;
@@ -1099,7 +1135,7 @@ export function EventModal({
               <div className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                 {/* A URL opens as a link, a postal address in the maps, as on the card. */}
-                <a href={locationHref ?? undefined} target="_blank" rel="noreferrer" className="text-sm text-primary hover:underline min-w-0 break-words" title={locationName}>
+                <a href={locationHref ?? undefined} target="_blank" rel="noreferrer" onClick={gateLinkClick} onAuxClick={gateLinkClick} className="text-sm text-primary hover:underline min-w-0 break-words" title={locationName}>
                   {/^https?:\/\//i.test(locationName)
                     ? (() => { try { return new URL(locationName).hostname; } catch { return locationName; } })()
                     : locationName}
@@ -1111,7 +1147,7 @@ export function EventModal({
             {virtualLoc && (
               <div className="flex items-start gap-2.5">
                 <Video className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                <a href={virtualLoc} target="_blank" rel="noreferrer" className="text-sm text-primary hover:underline truncate" title={virtualLoc}>
+                <a href={virtualLoc} target="_blank" rel="noreferrer" onClick={gateLinkClick} onAuxClick={gateLinkClick} className="text-sm text-primary hover:underline truncate" title={virtualLoc}>
                   {(() => { try { return new URL(virtualLoc).hostname; } catch { return virtualLoc; } })()}
                 </a>
               </div>
@@ -1159,11 +1195,11 @@ export function EventModal({
             )}
 
             {/* Description */}
-            {event.description && (
+            {eventDescription && (
               <div className="flex items-start gap-2.5">
                 <AlignLeft className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                 <p className="text-sm text-muted-foreground whitespace-pre-line break-words">
-                  <LinkifiedText text={event.description} />
+                  <LinkifiedText text={eventDescription} />
                 </p>
               </div>
             )}
@@ -1176,10 +1212,12 @@ export function EventModal({
           The viewer owes a reply but may also edit their own copy,
           so the rsvp-only branch above does not apply to this event.
         */}
-        {canRsvp && onRsvp && userParticipantId && (
-          <div className="px-6 py-3 border-t border-border flex-shrink-0">
-          <RsvpBar status={userCurrentStatus} onRespond={handleRsvp} t={t} />
-          </div>
+        {onRsvp && (
+          <AnswerBars
+            view={answerView}
+            className="px-6 py-3 border-t border-border flex-shrink-0 empty:hidden"
+            onRespond={handleAnswer}
+          />
         )}
 
         {/* Action Bar */}
@@ -1323,6 +1361,15 @@ export function EventModal({
               start={availabilityWindow.start}
               end={availabilityWindow.end}
             />
+            {userIsOrganizer && !allDay && (
+              <FindATime
+                attendees={attendees}
+                start={availabilityWindow.start}
+                end={availabilityWindow.end}
+                onPick={handlePickSlot}
+                savedWindow={savedWindow}
+              />
+            )}
             {isEdit && statusCounts && (existingParticipants.length > 0) && (
               <p className="text-xs text-muted-foreground mt-1.5">
                 {t("participants.status_summary", {
@@ -1564,24 +1611,6 @@ export function EventModal({
         </div>
       </div>
       <ConfirmDialog {...discardDialogProps} />
-    </div>
-  );
-}
-
-/**
- * The accept / tentative / decline row. Shared by the rsvp-only view and by the
- * read-only view that an *editable* received invite lands in - the latter is the
- * case that had no way to answer an invite at all (#937).
- */
-function RsvpBar({ status, onRespond, t }: {
-  status: CalendarParticipant['participationStatus'] | null;
-  onRespond: (status: CalendarParticipant['participationStatus']) => void;
-  t: ReturnType<typeof useTranslations>;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-2 flex-wrap">
-      <span className="text-sm font-medium">{t("participants.rsvp_label")}</span>
-      <RsvpButtons status={status} onRespond={onRespond} />
     </div>
   );
 }

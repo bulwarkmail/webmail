@@ -1,7 +1,7 @@
 export { startScheduler, stopScheduler, reschedule, sendOnce } from './sender';
-export { buildPayload, markProcessStart } from './payload';
+export { buildPayload, errorsForDay, errorsForPayload, markProcessStart } from './payload';
 export {
-  loadState, saveState, getInstanceId, effectiveConsent,
+  loadState, saveState, updateState, getInstanceId, effectiveConsent, effectiveErrorsConsent,
 } from './state';
 export { recordLogin, getLoginCounts } from './login-tracker';
 export {
@@ -9,7 +9,8 @@ export {
 } from './endpoint-guard';
 export type { EndpointCheck } from './endpoint-guard';
 export type {
-  TelemetryPayload, TelemetryStateFile, ConsentState,
+  TelemetryPayload, TelemetryPayloadV2, AnyTelemetryPayload, TelemetryError, TelemetryStateFile, ConsentState,
+  ErrorsConsent, TelemetryErrorBatch,
   Platform, OsFamily, CountBucket, TelemetryFeatures,
 } from './types';
 export { DEFAULT_ENDPOINT } from './types';

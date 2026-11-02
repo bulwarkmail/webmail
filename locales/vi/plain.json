@@ -118,7 +118,6 @@
     "vacation_save_failed": "Không thể lưu thư trả lời tự động của bạn. Hãy thử lại.",
     "filters_save_failed": "Không thể lưu các quy tắc lọc của bạn. Hãy thử lại.",
     "export_email_error": "Không thể lưu thư thành tệp. Hãy thử lại.",
-    "import_email_error": "Không thể thêm thư từ tệp. Hãy kiểm tra tệp rồi thử lại.",
     "rule_apply_failed": "Không thể áp dụng quy tắc cho các thư hiện có",
     "rule_folder_failed": "Không thể tạo thư mục. Hãy thử lại.",
     "vacation_filters_save_failed": "Đã lưu thư trả lời tự động. Tuy nhiên, không thể lưu cài đặt chuyển tiếp và danh sách người nhận trả lời. Hãy thử lại."

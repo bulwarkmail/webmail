@@ -1,5 +1,5 @@
 {
-  "meta_description": "Client de webmail minimalist care utilizează protocolul JMAP",
+  "meta_description": "Webmail auto-găzduit pentru e-mail, calendar, contacte și fișiere, construit pe JMAP",
   "login": {
     "title": "Webmail",
     "username_label": "E-mail",
@@ -461,7 +461,6 @@
     "view_in_light_mode": "Vizualizare în modul luminos",
     "export_email": "Exportați ca fișier .eml",
     "forward_as_attachment": "Redirecționează ca atașament",
-    "import_email": "Importați fișiere .eml sau .zip…",
     "keyboard_shortcuts": "Comenzi rapide de la tastatură",
     "email_source": "Sursa e-mailului",
     "draft_banner": "Acest mesaj este o schiță",
@@ -473,6 +472,9 @@
     "source_truncated": "Se afișează primii {size}. Exportă mesajul pentru rest.",
     "source_copied": "Sursă copiată în clipboard",
     "attachments": "Anexe",
+    "attachments_count": "{count, plural, one {# atașament} few {# atașamente} other {# de atașamente}}",
+    "attachments_show_more": "Afișează încă {count}",
+    "attachments_show_fewer": "Afișează mai puține",
     "important": "Important",
     "download": "Descărcați",
     "download_all": "Descărcați tot",
@@ -880,6 +882,35 @@
     "send_anyway": "Trimite oricum",
     "back": "Înapoi"
   },
+  "phishing_report": {
+    "action": "Raportează ca phishing…",
+    "confirm_title": "Raportați ca phishing?",
+    "confirm_message": "{count, plural, one {Mesajul ajunge la {address} și este mutat în Spam.} few {Fiecare dintre cele # mesaje ajunge la {address} ca raport separat și este mutat în Spam.} other {Fiecare dintre cele # de mesaje ajunge la {address} ca raport separat și este mutat în Spam.}}",
+    "confirm": "Raportează",
+    "cancel": "Anulează",
+    "sending": "Se raportează…",
+    "done": "{count, plural, one {Raportat la {address} și mutat în Spam.} few {# mesaje raportate la {address} și mutate în Spam.} other {# de mesaje raportate la {address} și mutate în Spam.}}",
+    "not_moved": "{count, plural, one {Raportat la {address}, dar mesajul nu a putut fi mutat în Spam.} few {Raportate la {address}, dar # mesaje nu au putut fi mutate în Spam.} other {Raportate la {address}, dar # de mesaje nu au putut fi mutate în Spam.}}",
+    "failed": "{count, plural, one {Mesajul nu a putut fi raportat.} few {# mesaje nu au putut fi raportate.} other {# de mesaje nu au putut fi raportate.}}",
+    "undo": "Anulează",
+    "undone": "{count, plural, one {Mutat înapoi. Raportul a fost deja trimis.} few {Mutate înapoi. Rapoartele au fost deja trimise.} other {Mutate înapoi. Rapoartele au fost deja trimise.}}",
+    "undo_failed": "Nu a putut fi mutat înapoi.",
+    "banner": "Ați raportat acest mesaj ca phishing. Linkurile din el sunt dezactivate.",
+    "link_off": "link dezactivat",
+    "link_off_note": "(link dezactivat)",
+    "no_subject": "(fără subiect)"
+  },
+  "classification": {
+    "picker_label": "Clasificare",
+    "chip_label": "Clasificare: {name}",
+    "none": "Fără clasificare",
+    "pick_required": "Alegeți o clasificare",
+    "required_hint": "Organizația dvs. cere o clasificare.",
+    "required_toast": "Alegeți o clasificare înainte de trimitere.",
+    "quick_reply_needs_label": "Acest răspuns are nevoie de o clasificare. Alegeți una aici, apoi trimiteți.",
+    "forward_needs_label": "Este necesară o clasificare. Redirecționați mesajul din fereastra de redactare.",
+    "received_hint": "Setată de programul de e-mail al expeditorului. Oricine poate seta o clasificare, deci nu dovedește nimic."
+  },
   "email_composer": {
     "select_from_directory": "Selectează din director",
     "minimize": "Minimizează",
@@ -1248,8 +1279,6 @@
     "templates_import_errors": "Unele șabloane nu au putut fi importate",
     "templates_import_empty": "Nu s-au găsit șabloane în fișier",
     "export_email_error": "Nu s-a putut exporta e-mailul",
-    "import_email_success": "E-mailul a fost importat cu succes",
-    "import_email_error": "Importul e-mailului a eșuat",
     "rule_created": "Regula a fost creată",
     "rule_merged": "Adăugat la regula „{name}”",
     "rule_already_covered": "Deja acoperit de regula „{name}”",
@@ -1272,12 +1301,46 @@
     "tag_removed_count": "{count, plural, one {Eticheta a fost eliminată de pe # e-mail} few {Eticheta a fost eliminată de pe # e-mailuri} other {Eticheta a fost eliminată de pe # de e-mailuri}}",
     "new_mail_count": "{count, plural, one {# mesaj nou} few {# mesaje noi} other {# de mesaje noi}}"
   },
+  "org_notice": {
+    "label": "Anunț",
+    "dismiss": "Închide anunțul",
+    "severity_info": "Informație",
+    "severity_warning": "Avertisment",
+    "severity_critical": "Important"
+  },
+  "vacation_templates": {
+    "title": "Șabloanele organizației",
+    "description": "Porniți de la un răspuns scris de organizația dvs. Puteți schimba textul după aceea.",
+    "pick_label": "Folosiți un șablon",
+    "pick_placeholder": "Alegeți un șablon",
+    "deputy_label": "Adresa înlocuitorului",
+    "deputy_placeholder": "coleg@example.com",
+    "deputy_hint": "Răspunsul îl indică pe acest coleg pentru probleme urgente.",
+    "deputy_missing": "Introduceți mai întâi adresa înlocuitorului.",
+    "deputy_name_label": "Numele înlocuitorului",
+    "deputy_name_missing": "Introduceți mai întâi numele înlocuitorului.",
+    "apply": "Folosiți acest text",
+    "apply_hint": "Înlocuiește subiectul și textul de mai jos."
+  },
+  "retention_notice": {
+    "line": "Mesajele de aici sunt șterse la {count, plural, one {# zi} few {# zile} other {# de zile}} după ce au fost mutate aici."
+  },
+  "device_policy": {
+    "downloads_off": "Organizația dvs. a dezactivat descărcările.",
+    "download_off_named": "{name}: organizația dvs. a dezactivat descărcările",
+    "download_blocked": "Organizația dvs. a dezactivat descărcările.",
+    "export_blocked": "Organizația dvs. a dezactivat exportul e-mailurilor.",
+    "print_blocked": "Organizația dvs. a dezactivat imprimarea."
+  },
   "third_party": {
     "push_needs_relay": "Notificările push au nevoie de un releu push administrat de organizația dvs., iar niciunul nu este configurat. E-mailurile noi apar în continuare cât timp aplicația este deschisă.",
     "relay_desc": "Sunt oferite doar releele proprii ale organizației dvs., deoarece acest server nu contactează servicii externe.",
     "relay_none": "Niciunul configurat",
     "plugin_refused": "Nu a pornit: acest plugin se conectează la servicii externe, pe care organizația dvs. le-a dezactivat.",
     "remote_content_blocked": "Organizația dvs. blochează conținutul de pe alte servere, așa că imaginile externe din acest mesaj nu sunt afișate."
+  },
+  "remote_content_lock": {
+    "trusted_senders_note": "Organizația dvs. blochează conținutul la distanță în toate mesajele, așa că nu se încarcă nici de la expeditorii de încredere."
   },
   "date": {
     "today": "Astăzi",
@@ -1542,6 +1605,10 @@
         "label": "Afișează conturile de e-mail partajate",
         "description": "Afișează folderele cutiilor poștale partajate cu tine la Partajat, în bara laterală. Dezactivează pentru a le ascunde pe toate sau ascunde conturi individuale mai jos. Calendarele și contactele lor rămân."
       },
+      "compact_shared_mailboxes": {
+        "label": "Căsuțe partajate compacte",
+        "description": "Afișează fiecare căsuță poștală partajată ca un singur rând care îi deschide mesajele primite, cu dosarele dedesubt. Dosarele goale, precum Ciorne sau Coș de gunoi, sunt omise."
+      },
       "pro_interface": {
         "label": "Interfață Pro (experimentală)",
         "description": "Aspect destinat utilizatorilor avansați, disponibil doar pe desktop, cu navigare prin mesaje în mai multe file și fluxuri de lucru între conturi. Interfața standard nu este afectată; puteți reveni la aceasta în orice moment.",
@@ -1772,6 +1839,12 @@
         "label": "Șterge căutarea la schimbarea folderului",
         "description": "Un clic pe un folder (Inbox, Trimise…) șterge căutarea activă și afișează acel folder. Dezactivat, căutarea rămâne și se reia în folderul ales."
       },
+      "search_default_scope": {
+        "label": "Caută în",
+        "description": "Unde caută o căutare nouă. Poți alege în continuare alt folder în filtrele de căutare.",
+        "all": "Toate folderele, cu excepția Spam și Coș de gunoi",
+        "folder": "Folderul deschis"
+      },
       "request_read_receipt": {
         "label": "Solicitați confirmări de citire în mod implicit",
         "description": "Activați în prealabil solicitarea de confirmare de citire atunci când redactați un mesaj nou."
@@ -1879,6 +1952,14 @@
         "above_quote": "Înaintea textului citat",
         "below_quote": "După textul între ghilimele"
       },
+      "signature_new_mail": {
+        "label": "Semnătură la mesajele noi",
+        "description": "Inserează automat semnătura când compui un mesaj nou. Dezactivează pentru a începe fiecare mesaj nou fără ea."
+      },
+      "signature_reply_forward": {
+        "label": "Semnătură la răspunsuri și redirecționări",
+        "description": "Adaugă automat semnătura când răspunzi sau redirecționezi un mesaj. Dezactivează pentru a le trimite fără ea."
+      },
       "signature_separator": {
         "label": "Delimitator de semnătură",
         "description": "Prefațați semnătura cu linia standard de delimitare „-- ” (RFC 3676). Dezactivați această opțiune dacă preferați ca mesajul să treacă direct în semnătură."
@@ -1899,8 +1980,8 @@
       "attachment_position": {
         "label": "Poziția atașamentului",
         "description": "Unde să afișați atașamentele în antetul e-mailului",
-        "beside-sender": "Lângă expeditor",
-        "below-header": "Sub antet"
+        "below-header": "Sub antet",
+        "below-message": "Carduri sub mesaj"
       },
       "emails_per_page": {
         "10": "10 e-mailuri",
@@ -3546,7 +3627,6 @@
     "new_folder": "Dosar nou…",
     "rename": "Redenumire…",
     "share": "Partajează…",
-    "import_email": "Importați fișiere .eml sau .zip…",
     "empty_folder": "Folder gol",
     "empty_folder_generic": "Folder gol",
     "delete_folder": "Șterge dosarul",
@@ -4835,6 +4915,51 @@
     "cancelled": "{name} a anulat „{title}”",
     "untitled": "Eveniment fără titlu"
   },
+  "company_calendars": {
+    "section": "Organizație"
+  },
+  "vacation_calendar": {
+    "label": "Blochează-mi calendarul",
+    "description": "Adaugă un eveniment ocupat pe durata absenței, ca nimeni să nu vă programeze ședințe atunci.",
+    "no_access_managed": "Calendarul acestui cont nu poate fi blocat: nu aveți acces de scriere la el.",
+    "no_calendar": "Calendarul nu poate fi blocat: Bulwark nu a găsit un calendar în care să adauge evenimentul.",
+    "filter_warning": "Activarea oprește scriptul dvs. de filtre cât timp răspunsul este activ."
+  },
+  "calendar_delegate": {
+    "answer_for": "Răspunde în numele {name}",
+    "no_write": "Vedeți invitațiile lui {name}, dar nu puteți răspunde în numele său. Cereți acces de editare.",
+    "also_invited": "Sunteți și dvs. invitat, iar acest server nu poate deosebi răspunsul dvs. de cel al lui {name}. {name} trebuie să răspundă la aceasta.",
+    "answered_by": "Răspuns de {who}"
+  },
+  "free_busy_share": {
+    "button": "Partajează disponibilitatea mea cu {group}",
+    "already": "Disponibilitatea dvs. este partajată cu {group}",
+    "done": "Disponibilitatea dvs. este acum partajată cu {group}.",
+    "error": "Disponibilitatea nu a putut fi partajată. Încercați din nou.",
+    "group_label": "Grup",
+    "title": "Disponibilitate",
+    "description": "Colegii din grup văd când sunteți ocupat, nu ce evenimente aveți. „Sugerează ore” folosește asta."
+  },
+  "find_time": {
+    "suggest": "Sugerează ore",
+    "searching": "Se caută ore libere",
+    "slots_title": "Liber pentru toți cei pe care Bulwark i-a putut verifica",
+    "slot": "{day}, de la {start} la {end}",
+    "none": "Nu există timp liber în următoarele 10 zile lucrătoare.",
+    "picked": "Eveniment mutat la {slot}",
+    "rate_limited": "Prea multe interogări în ultimul minut. Încercați din nou peste un minut.",
+    "unavailable": "Disponibilitatea nu este accesibilă pe acest server, așa că Bulwark nu poate sugera ore.",
+    "not_checked": "Neverificați:",
+    "not_checked_item": "{who}: {reason}",
+    "reason_external": "din afara organizației dvs.",
+    "reason_unknown": "ore ocupate necunoscute",
+    "reason_not_found": "negăsit pe acest server",
+    "reason_error": "nu a putut fi verificat",
+    "unknown_note": "Bulwark vede orele ocupate doar în calendarele partajate cu dvs. Pentru aceste persoane nu poate deosebi liber de nepartajat.",
+    "directory_off": "Bulwark nu poate căuta persoane pe acest server. Administratorul poate activa interogările de director în Stalwart.",
+    "not_looked_up": "Adresa nu a putut fi căutată",
+    "found": "Ore libere găsite: {count}"
+  },
   "share_notifications": {
     "someone": "Cineva",
     "shared": "{name} a partajat cu tine {kind} „{object}”",
@@ -5184,7 +5309,6 @@
     "settings_ascending": "În ordine crescătoare",
     "settings_descending": "Descendent",
     "disabled_title": "Funcția de fișiere este dezactivată de administratorul dvs.",
-    "disabled_description": "Încărcarea fișierelor de dimensiuni mari prin intermediul WebDAV poate provoca instabilitate în Stalwart /RocksDB, inclusiv blocări din cauza epuizării memoriei și utilizare irecuperabilă a spațiului pe disc. Este posibil ca fișierele șterse să nu fie eliminate imediat din spațiul de stocare blob. Această funcție nu este recomandată pentru mediile de producție.",
     "migration_title": "Se actualizează fișierele...",
     "migration_description": "Organizarea dosarelor și a fișierelor în structura corespunzătoare. Această operațiune se efectuează o singură dată.",
     "new": "Nou",
@@ -5371,6 +5495,117 @@
   "unified_mailbox": {
     "search_unavailable": "Funcția de căutare nu este disponibilă în vizualizarea unificată"
   },
+  "mail_import": {
+    "menu_import": "Importă e-mailuri…",
+    "settings_label": "Importă e-mailuri",
+    "settings_description": "Aduceți e-mailuri din fișiere .eml, ZIP, mbox sau Outlook .pst și .ost.",
+    "settings_button": "Importă…",
+    "title": "Importă e-mailuri",
+    "description": "Alegeți fișiere .eml, .zip, .mbox sau Outlook .pst și .ost.",
+    "choose_files": "Alege fișiere…",
+    "chosen_files": "Fișiere alese",
+    "remove_file": "Elimină {name}",
+    "format_eml": "Mesaj",
+    "format_zip": "Arhivă ZIP",
+    "format_mbox": "Fișier mbox",
+    "format_pst": "Fișier de date Outlook",
+    "target_label": "Importă în",
+    "target_top": "Nivelul de sus",
+    "keep_folders": "Recreează dosarele din fișier",
+    "keep_folders_hint": "Dosarele cu același nume sunt refolosite.",
+    "resume": "Continuă de unde s-a oprit ultimul import al acestor fișiere (mesaje deja procesate: {count})",
+    "quota_note": "Multe servere acceptă de la un utilizator doar circa 1000 de mesaje sau 50 MB pe oră. Un import mai mare face o pauză și apoi continuă singur.",
+    "start": "Importă",
+    "cancel": "Anulează",
+    "running_title": "Se importă e-mailurile",
+    "progress_label": "Progresul importului",
+    "status_imported": "Mesaje importate: {count}",
+    "reading_file": "Se citește {name}",
+    "paused": "În pauză până la {time}. Serverul acceptă cel mult {files} încărcări sau {size} pe oră. Importul continuă singur.",
+    "paused_generic": "În pauză până la {time}. S-a atins limita de încărcare a serverului. Importul continuă singur.",
+    "background": "Rulează în fundal",
+    "cancel_import": "Anulează importul",
+    "chip": "Se importă e-mailurile: {percent}%",
+    "chip_paused": "Import în pauză până la {time}",
+    "done_title": "Import încheiat",
+    "cancelled_title": "Import anulat",
+    "failed_title": "Import oprit",
+    "summary_imported": "Mesaje importate: {count}",
+    "summary_folders": "Dosare create: {count}",
+    "summary_skipped": "Neimportate:",
+    "skip_too_large": "Mai mari decât acceptă serverul: {count}",
+    "skip_deleted": "Șterse în Thunderbird: {count}",
+    "skip_embedded": "Mesaje atașate la alte mesaje: {count}",
+    "skip_contact": "Contacte: {count}",
+    "skip_calendar": "Elemente de calendar: {count}",
+    "skip_other": "Alte elemente: {count}",
+    "summary_failed": "Nu s-au putut importa: {count}",
+    "failure_invalid": "nu este un mesaj valid",
+    "untitled": "(fără subiect)",
+    "cancelled_hint": "Pentru a continua mai târziu, importați din nou aceleași fișiere în același dosar.",
+    "close": "Închide",
+    "pst_note": "Din fișierele Outlook vin doar e-mailurile. Contactele, elementele de calendar și sarcinile sunt numărate și lăsate deoparte.",
+    "pst_error_encrypted": "Acest fișier Outlook folosește criptare puternică, pe care Bulwark nu o poate citi. În Outlook, exportați e-mailurile într-un fișier .pst nou, fără criptare.",
+    "pst_error_not_pst": "Acest fișier nu este un fișier de date Outlook pe care Bulwark îl poate citi.",
+    "pst_error_unreadable": "Bulwark nu a putut citi acest fișier Outlook.",
+    "pst_error_worker": "Cititorul de fișiere Outlook nu s-a încărcat. Reîncărcați pagina și încercați din nou.",
+    "error_over_quota": "Căsuța poștală este plină, așa că importul s-a oprit. Faceți loc și importați din nou aceleași fișiere în același dosar pentru a continua.",
+    "error_forbidden": "Nu puteți adăuga e-mailuri în acest dosar, așa că importul s-a oprit.",
+    "error_failures": "Prea multe mesaje la rând au eșuat, așa că importul s-a oprit. Importați mai târziu aceleași fișiere în același dosar pentru a continua.",
+    "error_network": "Conexiunea la server a eșuat de mai multe ori, așa că importul s-a oprit. Importați din nou aceleași fișiere în același dosar pentru a continua.",
+    "error_busy": "Aceste fișiere se importă deja în altă filă.",
+    "retry_hint": "Importați din nou aceleași fișiere în același dosar pentru a reîncerca mesajele care au eșuat.",
+    "skip_unreadable": "Ilizibile în fișierul Outlook: {count}",
+    "keep_folders_top_hint": "La nivelul de sus, Inbox, Elemente trimise, Elemente șterse și altele asemenea ajung în ale dumneavoastră.",
+    "toast_done": "Import încheiat. Importate: {imported}, eșuate: {failed}.",
+    "toast_stopped": "Importul s-a oprit.",
+    "toast_show": "Afișează",
+    "section_title": "Fișiere de e-mail",
+    "section_description": "Aduceți e-mailuri din fișiere sau salvați e-mailurile ca fișiere."
+  },
+  "mail_export": {
+    "menu_export": "Exportă dosarul…",
+    "settings_label": "Exportă toate e-mailurile",
+    "settings_description": "Salvați toate dosarele acestui cont într-un fișier ZIP, ca fișiere mbox sau .eml.",
+    "settings_button": "Exportă…",
+    "title_folder": "Exportă „{name}”",
+    "title_account": "Exportă toate e-mailurile",
+    "description_folder": "Salvați mesajele din acest dosar într-un fișier.",
+    "description_account": "Salvați toate dosarele acestui cont într-un fișier ZIP.",
+    "format_label": "Format",
+    "format_mbox_folder": "Fișier mbox",
+    "format_eml_folder": "ZIP cu fișiere .eml",
+    "format_mbox_account": "ZIP cu un fișier mbox pentru fiecare dosar",
+    "format_eml_account": "ZIP cu fișiere .eml, câte un dosar pentru fiecare dosar de e-mail",
+    "hint_mbox": "Thunderbird, Apple Mail și majoritatea programelor de e-mail deschid fișiere mbox.",
+    "hint_eml": "Câte un fișier pentru fiecare mesaj, pe care îl deschide orice program de e-mail.",
+    "save_picker": "Alegeți unde se salvează fișierul.",
+    "save_download": "Fișierul se descarcă la sfârșitul exportului.",
+    "save_memory": "Acest browser ține tot exportul în memorie, deci poate salva cel mult 200 MB. Pentru mai mult, folosiți Chrome sau Edge sau exportați dosar cu dosar.",
+    "start": "Exportă",
+    "cancel": "Anulează",
+    "running_title": "Se exportă e-mailurile",
+    "progress_label": "Progresul exportului",
+    "status_exported": "Mesaje exportate: {count} din {total}",
+    "paused": "În pauză până la {time}: serverul a cerut o pauză. Exportul continuă singur.",
+    "background": "Rulează în fundal",
+    "cancel_export": "Anulează exportul",
+    "chip": "Se exportă e-mailurile: {percent}%",
+    "chip_paused": "Export în pauză până la {time}",
+    "done_title": "Export încheiat",
+    "cancelled_title": "Export anulat",
+    "failed_title": "Export oprit",
+    "summary_exported": "Mesaje exportate: {count}",
+    "summary_file": "Salvat ca {name} ({size}).",
+    "summary_failed": "Nu s-au putut exporta: {count}",
+    "download_again": "Descarcă din nou",
+    "too_large": "Exportul este mai mare decât poate ține acest browser în memorie. Folosiți Chrome sau Edge sau exportați dosar cu dosar.",
+    "close": "Închide",
+    "untitled": "(fără subiect)",
+    "toast_done": "Export încheiat: {name}",
+    "toast_stopped": "Exportul s-a oprit.",
+    "toast_show": "Afișează"
+  },
   "recover_deleted": {
     "tab": "Recuperați elementele șterse",
     "title": "Recuperați elementele șterse",
@@ -5411,6 +5646,76 @@
     "install": "Instalați",
     "dont_remind": "Nu-mi mai reaminti",
     "dismiss_aria": "Ignorați solicitarea de instalare"
+  },
+  "app_update": {
+    "ready": "O versiune nouă de {appName} este gata.",
+    "reload": "Reîncarcă"
+  },
+  "offline": {
+    "settings": {
+      "title": "Offline",
+      "description": "Citiți și scrieți e-mailuri pe acest dispozitiv fără conexiune.",
+      "keep_label": "Păstrează e-mailurile pe acest dispozitiv",
+      "keep_description": "Păstrează ultimele 30 de zile din Inbox și din dosarele pe care le deschideți, până la 250 MB, criptate în acest browser. Offline puteți citi, marca și muta e-mailuri, iar ce scrieți așteaptă în Mesaje de trimis. La deconectare se șterge totul.",
+      "warning": "Oricine poate folosi acest profil de browser poate citi aceste e-mailuri. Activați opțiunea doar pe propriul dispozitiv și folosiți criptarea discului.",
+      "forbidden": "Organizația dvs. nu permite păstrarea e-mailurilor pe dispozitive.",
+      "unsupported": "Acest browser nu poate păstra e-mailuri pentru folosire offline.",
+      "syncing": "Se salvează e-mailurile pe acest dispozitiv…",
+      "usage": "{size} pe acest dispozitiv",
+      "usage_updated": "{size} pe acest dispozitiv, actualizat {time}",
+      "off_confirm_title": "Dezactivați modul offline?",
+      "off_confirm_message": "{count, plural, one {# mesaj din Mesaje de trimis nu a fost trimis.} few {# mesaje din Mesaje de trimis nu au fost trimise.} other {# de mesaje din Mesaje de trimis nu au fost trimise.}} Dezactivarea le șterge, împreună cu e-mailurile păstrate pe acest dispozitiv.",
+      "off_confirm": "Dezactivează"
+    },
+    "outbox": {
+      "title": "Mesaje de trimis",
+      "description": "Mesajele scrise offline. Sunt trimise când dispozitivul este din nou online.",
+      "empty": "Nimic nu așteaptă să fie trimis.",
+      "no_subject": "(fără subiect)",
+      "to": "Către: {recipients}",
+      "status_waiting": "Așteaptă o conexiune",
+      "status_sending": "Se trimite",
+      "status_failed": "Nu a putut fi trimis: {error}",
+      "status_uncertain": "Conexiunea s-a întrerupt în timpul trimiterii. Verificați Trimise înainte să îl trimiteți din nou.",
+      "retry": "Trimite din nou",
+      "delete": "Șterge",
+      "delete_confirm_title": "Ștergeți acest mesaj?",
+      "delete_confirm_message": "Nu a fost trimis și nu poate fi recuperat.",
+      "changes": "{count, plural, one {# modificare} few {# modificări} other {# de modificări}} la citit, marcaje sau dosare vor fi trimise când sunteți din nou online.",
+      "status_held": "Regulile organizației s-au schimbat cât timp mesajul a așteptat. Scrieți-l din nou pentru a-l trimite.",
+      "retry_label": "Trimite din nou: {subject}",
+      "delete_label": "Șterge: {subject}"
+    },
+    "banner": {
+      "offline": "Sunteți offline. Vedeți e-mailurile păstrate pe acest dispozitiv. Ce modificați sau scrieți este trimis când sunteți din nou online.",
+      "outbox": "{count, plural, one {# mesaj} few {# mesaje} other {# de mesaje}} în Mesaje de trimis",
+      "server_down": "Serverul de e-mail nu poate fi contactat. Vedeți e-mailurile păstrate pe acest dispozitiv. Ce modificați sau scrieți este trimis când răspunde din nou."
+    },
+    "toast": {
+      "queued": "Salvat în Mesaje de trimis. Va fi trimis când sunteți din nou online.",
+      "sent": "Trimis din Mesaje de trimis: {subject}",
+      "send_failed": "Un mesaj din Mesaje de trimis nu a putut fi trimis: {subject}",
+      "refused_delete": "Ștergerea definitivă necesită o conexiune. Încercați din nou când sunteți online.",
+      "refused_other": "Pentru asta este nevoie de conexiune. Încercați din nou când sunteți online.",
+      "forbidden": "Organizația dvs. a dezactivat modul offline. E-mailurile păstrate pe acest dispozitiv au fost eliminate.",
+      "back_online": "Sunteți din nou online. Reîncărcați pentru a vă conecta și a trimite ce așteaptă.",
+      "reload": "Reîncarcă",
+      "held": "Un mesaj din Mesaje de trimis are nevoie de dvs.: {subject}",
+      "lost": "Aceste mesaje nu au fost trimise și au fost șterse: {subjects}"
+    },
+    "signout": {
+      "title": "Vă deconectați cu mesaje netrimise?",
+      "message": "{count, plural, one {# mesaj nu a fost trimis.} few {# mesaje nu au fost trimise.} other {# de mesaje nu au fost trimise.}} Deconectarea le șterge.",
+      "confirm": "Deconectare",
+      "lost": "Aceste mesaje nu au fost trimise și au fost șterse la deconectare: {subjects}"
+    },
+    "errors": {
+      "unavailable": "Pentru asta este nevoie de conexiune. Încercați din nou când sunteți online.",
+      "plugins_down": "Pluginul de semnare sau criptare nu funcționează offline. Trimiteți mesajul când sunteți din nou online.",
+      "file_missing": "Un fișier atașat offline nu mai este pe acest dispozitiv. Atașați-l din nou.",
+      "no_sent_mailbox": "Dosarul Trimise nu a fost găsit.",
+      "no_drafts_mailbox": "Dosarul Ciorne nu a fost găsit."
+    }
   },
   "deep_link": {
     "message_not_found": "Acest mesaj nu mai este disponibil.",
@@ -5734,11 +6039,15 @@
       },
       "compose_read": {
         "title": "Citirea mesajului pe care îl scrieți",
-        "body": "Citirea textului unui mesaj în timp ce îl scrieți, când folosiți pluginul în editor. Nu și semnătura sau mesajul citat."
+        "body": "Citirea unui mesaj în timp ce îl scrieți, când folosiți pluginul în editor: textul, subiectul, destinatarii, inclusiv cei din Bcc, și numele și dimensiunea atașamentelor. Nu și semnătura sau mesajul citat."
       },
       "compose_write": {
         "title": "Modificarea mesajului pe care îl scrieți",
         "body": "Înlocuirea sau adăugarea de text într-un mesaj în timp ce îl scrieți, când folosiți pluginul în editor. Puteți anula fiecare modificare și decideți în continuare dacă îl trimiteți."
+      },
+      "compose_check": {
+        "title": "Verificarea a ceea ce scrieți",
+        "body": "Citește ce scrieți în editor în timp ce tastați și poate trimite textul serviciului pe care îl folosește. Doar când verificarea este pornită și nimic cât timp un mesaj este setat să fie semnat sau criptat. Textul scris înainte de a activa asta poate fi deja verificat."
       },
       "email_forward": {
         "title": "Redirecționarea mesajelor dvs.",
@@ -5758,7 +6067,7 @@
       },
       "ui_tasks": {
         "title": "Adăugarea în vizualizarea sarcinilor",
-        "body": "Afișează secțiuni proprii în detaliile unei sarcini și butoane în lista de sarcini."
+        "body": "Afișează secțiuni proprii în detaliile unei sarcini, butoane în lista de sarcini și o listă de sarcini proprie în locul celei din Bulwark."
       },
       "ui_files": {
         "title": "Adăugarea în vizualizarea fișierelor",
@@ -5810,6 +6119,10 @@
       "error_server": "Introduceți adresa serverului, de exemplu https://cloud.example.com",
       "error_save": "Nu s-a putut salva: {error}"
     }
+  },
+  "send_guards": {
+    "not_running": "Nu a fost trimis. O verificare cerută de organizația ta nu rulează. Încearcă din nou peste o clipă.",
+    "stopped_working": "Nu a fost trimis. O verificare cerută de organizația ta nu mai funcționează. Reîncarcă pagina. Dacă nu ajută, anunță administratorul."
   },
   "plugin_list": {
     "filters": "Filtre",
@@ -6053,6 +6366,77 @@
       "party_size": "Număr de persoane: {count}",
       "added_from": "Adăugat dintr-un e-mail de la {domain}",
       "added_from_subject": "Adăugat din e-mailul „{subject}” de la {domain}"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Ortografie",
+      "grammar": "Gramatică",
+      "style": "Stil",
+      "other": "Sugestie"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Nicio sugestie",
+      "suggestions": "Sugestii",
+      "replace_with": "Înlocuiește cu {text}",
+      "also": "Și de la {checker}",
+      "ignore": "Ignoră",
+      "add_to_dictionary": "Adaugă în dicționar",
+      "disable_rule": "Dezactivează această regulă",
+      "changed": "Textul s-a schimbat. Așteptați următoarea verificare."
+    },
+    "list_item": "{word}: {message} Sugestie: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Nicio greșeală de ortografie sau gramatică} one {# greșeală de ortografie sau gramatică} few {# greșeli de ortografie sau gramatică} other {# de greșeli de ortografie sau gramatică}}",
+    "status": {
+      "title": "Verificare text",
+      "off": "Verificarea textului este oprită",
+      "paused": "Verificarea textului este întreruptă",
+      "rate_limited": "Verificare întreruptă",
+      "unavailable": "Verificare indisponibilă",
+      "checking": "Se verifică…",
+      "issues": "{count, plural, =0 {Nicio problemă} one {# problemă} few {# probleme} other {# de probleme}}"
+    },
+    "panel": {
+      "title": "Verificare text",
+      "required": "Cerută de organizația dvs.",
+      "check_message": "Verifică acest mesaj",
+      "notice": "În timp ce tastați, textul scris ajunge la {checkers} pentru verificare. Semnătura și mesajul citat sunt lăsate deoparte. Nu se trimite nimic cât timp un mesaj este setat să fie semnat sau criptat; ce ați scris înainte de a activa asta poate fi deja verificat.",
+      "turn_on": "Pornește verificarea textului",
+      "paused_protected": "Nu se verifică nimic cât timp acest mesaj este setat să fie semnat sau criptat.",
+      "paused_unknown": "{plugin} poate semna sau cripta mesaje fără să arate asta aici, așa că nu se verifică nimic cât timp este pornit.",
+      "rate_limited": "{checker} a cerut o pauză. Verificarea reîncepe peste un minut.",
+      "unavailable": "{checker} nu poate verifica acum. Încearcă din nou când continuați să scrieți.",
+      "no_issues": "Nu s-au găsit probleme.",
+      "list_label": "Probleme în acest mesaj",
+      "shortcuts": "Problema următoare: {next}. Anterioara: {previous}."
+    },
+    "notice": {
+      "on": "Verificarea textului este pornită. În timp ce tastați, textul scris ajunge la {checkers} pentru verificare, fără semnătură și fără mesajul citat. Nu se trimite nimic cât timp un mesaj este setat să fie semnat sau criptat; ce ați scris înainte poate fi deja verificat.",
+      "forced": "Organizația dvs. a pornit verificarea textului. În timp ce tastați, textul scris ajunge la {checkers} pentru verificare, fără semnătură și fără mesajul citat. Nu se trimite nimic cât timp un mesaj este setat să fie semnat sau criptat; ce ați scris înainte poate fi deja verificat.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Trimiteți cu probleme nerezolvate?",
+      "body": "{count, plural, one {În acest mesaj a rămas # greșeală de ortografie sau gramatică.} few {În acest mesaj au rămas # greșeli de ortografie sau gramatică.} other {În acest mesaj au rămas # de greșeli de ortografie sau gramatică.}}",
+      "review": "Revizuiți",
+      "send": "Trimite oricum"
+    },
+    "settings": {
+      "title": "Verificare text",
+      "description": "Subliniază greșelile de ortografie și gramatică în timp ce scrieți, cu sugestii de corectare.",
+      "enable": "Verifică ortografia și gramatica în timp ce tastez",
+      "enable_description": "Textul pe care îl scrieți ajunge la suplimentul de verificare și la serviciul pe care îl folosește, fără semnătură și fără mesajele citate. Nu se trimite nimic cât timp un mesaj este setat să fie semnat sau criptat.",
+      "no_checker": "Nu este instalat niciun supliment de verificare a textului. Cereți administratorului să adauge unul.",
+      "plugin_description": "Trimite ce scrieți către {plugin}.",
+      "writing_language": "Limba de scriere",
+      "writing_language_description": "Limba în care scrieți de obicei. O folosesc verificarea textului și corectorul ortografic al browserului.",
+      "auto": "Detectează automat"
+    },
+    "shortcuts": {
+      "next_issue": "Următoarea greșeală de ortografie sau gramatică",
+      "previous_issue": "Greșeala de ortografie sau gramatică anterioară"
     }
   }
 }

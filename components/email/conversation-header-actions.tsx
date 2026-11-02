@@ -15,6 +15,7 @@ import { Archive, FolderInput, MoreVertical, Trash2 } from "@/components/icons";
 import { EmailContextMenu } from "./email-context-menu";
 import { MoveTargetList } from "./move-target-list";
 import { ViewSourceDialog } from "./view-source-dialog";
+import { canExport } from "@/lib/device-policy";
 import type { MessageActionKey } from "./message-actions";
 
 /**
@@ -135,8 +136,9 @@ export function ConversationHeaderActions({ email, actions }: { email: Email; ac
           onUndoSpam={actions.onUndoSpam}
           copyTargets={copyTargets}
           onCopyToAccount={(accountId, mailboxId) => void copyToAccount([email], accountId, mailboxId)}
-          onExport={() => void exportEmail(email, exportFollowUp, source)}
-          onViewSource={() => setShowSource(true)}
+          // Not under the device policy "No export" of the message's account.
+          onExport={canExport(email) ? () => void exportEmail(email, exportFollowUp, source) : undefined}
+          onViewSource={canExport(email) ? () => setShowSource(true) : undefined}
           omit={OMIT}
           rowPlugins={false}
         />

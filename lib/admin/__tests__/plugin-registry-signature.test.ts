@@ -10,6 +10,8 @@ beforeEach(async () => {
   dir = await mkdtemp(path.join(tmpdir(), 'bw-plugin-registry-'));
   vi.stubEnv('ADMIN_CONFIG_DIR', dir);
   vi.resetModules();
+  // The signing key is cached on globalThis (one per process, not per module copy).
+  (await import('../plugin-signing')).invalidatePluginSigningCache();
 });
 
 afterEach(async () => {

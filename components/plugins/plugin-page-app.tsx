@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Loader2, Puzzle } from "@/components/icons";
+import { Puzzle } from "@/components/icons";
 import { useAuthStore, redirectToLogin, saveRedirectAfterLogin } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { usePluginStore } from "@/stores/plugin-store";
@@ -22,6 +22,8 @@ import { useDocumentTitle } from "@/hooks/use-document-title";
 import { findPage, subscribePages } from "@/lib/plugin-sandbox/pages";
 import { offersForSlot, subscribe as subscribeSlots } from "@/lib/plugin-sandbox/registry";
 import { cn } from "@/lib/utils";
+import { PluginPageSkeleton, PluginPageSkeletonBody } from "@/components/boot-skeleton/plugin-page-skeleton";
+import { useSkeletonLabels } from "@/components/boot-skeleton/use-skeleton-labels";
 
 export interface PluginPageAppProps {
   /** Path segments after `/apps`: `[pluginId, pageId, ...subPath]`. */
@@ -36,6 +38,7 @@ export interface PluginPageAppProps {
  */
 export function PluginPageApp({ linkSegments = [] }: PluginPageAppProps) {
   const t = useTranslations("plugin_pages");
+  const skeleton = useSkeletonLabels();
   const [pluginId = "", pageId = "", ...rest] = linkSegments;
   const subPath = rest.join("/");
 
@@ -91,7 +94,12 @@ export function PluginPageApp({ linkSegments = [] }: PluginPageAppProps) {
 
   const extraProps = useMemo(() => ({ pageId, path: subPath }), [pageId, subPath]);
 
-  if (!isAuthenticated) return null;
+  // Until the session is restored: the page skeleton the server drew.
+  if (!isAuthenticated) {
+    return isEmbedded
+      ? <PluginPageSkeletonBody embedded />
+      : <PluginPageSkeleton label={skeleton.label} labels={skeleton.labels} />;
+  }
 
   const available = !!page && offersPage;
   let content: React.ReactNode;
@@ -102,9 +110,11 @@ export function PluginPageApp({ linkSegments = [] }: PluginPageAppProps) {
       </div>
     );
   } else if (!pluginsReady) {
+    // The plugins are starting: the same empty area the page skeleton drew,
+    // so nothing moves before the page (or the "not available" note) arrives.
     content = (
-      <div className="flex flex-1 items-center justify-center">
-        <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" aria-label={t("loading")} />
+      <div className="flex flex-1 min-h-0" role="status" data-plugin-page-loading="">
+        <span className="sr-only">{t("loading")}</span>
       </div>
     );
   } else {

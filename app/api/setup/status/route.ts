@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { detectSetupState } from '@/lib/setup/state';
-import { authenticateWizardRequest } from '@/lib/setup/session';
+import { authenticateWizardRequest, setupStoreUnavailableResponse } from '@/lib/setup/session';
+import { isStoreUnavailableError } from '@/lib/shared-store';
 import { configManager } from '@/lib/admin/config-manager';
 import { isConfigReadOnly } from '@/lib/admin/paths';
 import { SENSITIVE_CONFIG_KEYS } from '@/lib/admin/types';
@@ -19,7 +20,13 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   await configManager.ensureLoaded();
   const state = detectSetupState();
-  const authenticated = state === 'bootstrap' ? await authenticateWizardRequest() : false;
+  let authenticated = false;
+  try {
+    authenticated = state === 'bootstrap' ? await authenticateWizardRequest() : false;
+  } catch (error) {
+    if (isStoreUnavailableError(error)) return setupStoreUnavailableResponse();
+    throw error;
+  }
 
   let partialConfig: Record<string, unknown> | null = null;
   if (state === 'bootstrap' && authenticated) {

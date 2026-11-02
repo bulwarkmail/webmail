@@ -180,3 +180,35 @@ describe('Pro compose tab - cross-account send routing (#461)', () => {
     }
   });
 });
+
+describe('Pro compose tab - what the composer chose', () => {
+  beforeEach(() => {
+    sendEmail.mockClear();
+  });
+
+  it('sends with the priority, read receipt, DSN, REQUIRETLS, plugin headers and label the composer chose', async () => {
+    payloadRef.current = {
+      ...basePayload,
+      requestReadReceipt: true,
+      requestDsn: true,
+      requireTls: true,
+      priority: 'high',
+      headers: { 'X-Plugin': '1' },
+      labelHeaders: { 'header:SIO-Label:asRaw': ' marking="CONFIDENTIAL"' },
+    };
+    render(<ProComposeTabBody tabId="tab-1" data={TAB_DATA} />);
+
+    fireEvent.click(screen.getByText('send'));
+
+    await waitFor(() => expect(sendEmail).toHaveBeenCalled());
+    const args = sendEmail.mock.calls[0] as unknown[];
+    expect(args[args.length - 1]).toMatchObject({
+      requestReadReceipt: true,
+      requestDsn: true,
+      requireTls: true,
+      priority: 'high',
+      headers: { 'X-Plugin': '1' },
+      labelHeaders: { 'header:SIO-Label:asRaw': ' marking="CONFIDENTIAL"' },
+    });
+  });
+});

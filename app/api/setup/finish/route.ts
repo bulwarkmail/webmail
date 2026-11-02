@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { writeFile } from 'node:fs/promises';
 import { detectSetupState } from '@/lib/setup/state';
-import { authenticateWizardRequest, SETUP_COOKIE } from '@/lib/setup/session';
+import { wizardSessionRefusal, SETUP_COOKIE } from '@/lib/setup/session';
+import { configWriteErrorResponse } from '@/lib/admin/config-read-only-response';
 import { configManager } from '@/lib/admin/config-manager';
 import { setInitialAdminPassword } from '@/lib/admin/password';
 import { clearSetupToken } from '@/lib/setup/token';
 import { ensureConfigDir, getConfigPath } from '@/lib/admin/paths';
 import { auditLog } from '@/lib/admin/audit';
 import { logger } from '@/lib/logger';
+import { isSharedMode } from '@/lib/shared-store';
+import { adminConfigDocs } from '@/lib/admin/admin-store';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,9 +28,8 @@ export async function POST(request: NextRequest) {
   if (detectSetupState() !== 'bootstrap') {
     return NextResponse.json({ error: 'Setup is not active' }, { status: 404 });
   }
-  if (!(await authenticateWizardRequest())) {
-    return NextResponse.json({ error: 'Wizard session required' }, { status: 401 });
-  }
+  const wizardRefused = await wizardSessionRefusal();
+  if (wizardRefused) return wizardRefused;
 
   let body: { adminPassword?: unknown; lockConfig?: unknown };
   try {
@@ -77,12 +79,16 @@ export async function POST(request: NextRequest) {
 
     // 3. Optional advisory lock marker.
     if (lockConfig) {
-      await ensureConfigDir();
-      await writeFile(
-        getConfigPath('.config-locked'),
-        new Date().toISOString(),
-        'utf-8',
-      );
+      if (isSharedMode()) {
+        await adminConfigDocs().put('.config-locked', new Date().toISOString());
+      } else {
+        await ensureConfigDir();
+        await writeFile(
+          getConfigPath('.config-locked'),
+          new Date().toISOString(),
+          'utf-8',
+        );
+      }
     }
 
     // 4. Destroy the setup token. Any other browser holding the cookie is
@@ -99,6 +105,8 @@ export async function POST(request: NextRequest) {
     response.cookies.delete(SETUP_COOKIE);
     return response;
   } catch (error) {
+    const refused = configWriteErrorResponse(error);
+    if (refused) return refused;
     logger.error('Wizard finish failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
     });

@@ -7,6 +7,7 @@ import { getActiveAccountSlotHeaders } from "@/lib/auth/active-account-slot";
 import { apiFetch } from "@/lib/browser-navigation";
 import { useCloseOnBack } from "@/hooks/use-close-on-back";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
+import { useStrictestDevices } from "@/hooks/use-device-policy";
 
 /** What the overlay opens: a Files node, or a mail attachment (read-only, #1047). */
 export type WopiDocument =
@@ -41,6 +42,9 @@ interface LaunchData {
  * Mail attachments open in the same overlay as a read-only viewer (#1047).
  */
 export function WopiEditor({ target, accountId, slot, onClose, closeOnBack = false }: WopiEditorProps) {
+  // The editor turns print and export off itself (CheckFileInfo); without
+  // downloads the frame may not start one either.
+  const downloadsOff = useStrictestDevices().noDownloads;
   const t = useTranslations("files");
   // A full-screen modal: Tab stays in it, the focus starts on Close and goes
   // back to the file when the editor closes. Escape is the listener below.
@@ -152,7 +156,7 @@ export function WopiEditor({ target, accountId, slot, onClose, closeOnBack = fal
               title={target.name}
               className="w-full h-full border-0"
               onLoad={() => setFrameLoaded(true)}
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads allow-modals"
+              sandbox={`allow-scripts allow-same-origin allow-forms allow-popups${downloadsOff ? "" : " allow-downloads"} allow-modals`}
               referrerPolicy="no-referrer"
               allow="clipboard-read; clipboard-write"
             />

@@ -40,7 +40,7 @@ const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 /** RFC 5322 date in UTC, e.g. "Thu, 28 May 2026 14:23:00 +0000". */
-function rfc5322Date(d: Date = new Date()): string {
+export function rfc5322Date(d: Date = new Date()): string {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${DAYS[d.getUTCDay()]}, ${pad(d.getUTCDate())} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()} ` +
     `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} +0000`;
@@ -55,7 +55,7 @@ function utf8ToBase64(value: string): string {
 }
 
 /** UTF-8 base64 body, wrapped at 76 chars per RFC 2045. */
-function base64Body(text: string): string {
+export function base64Body(text: string): string {
   return (utf8ToBase64(text).match(/.{1,76}/g) || []).join("\r\n");
 }
 
@@ -71,13 +71,13 @@ function base64Body(text: string): string {
  * append headers and a body of their choosing to a message the victim's own
  * account submits (GHSA-w38p-hpqv-g89c).
  */
-function stripHeaderControls(value: string): string {
+export function stripHeaderControls(value: string): string {
   // eslint-disable-next-line no-control-regex
   return value.replace(/[\x00-\x1F\x7F]+/g, " ").trim();
 }
 
 /** Address-like atoms (mailboxes, message-ids) may contain no whitespace at all. */
-function headerAtom(value: string): string {
+export function headerAtom(value: string): string {
   // eslint-disable-next-line no-control-regex
   return value.replace(/[\x00-\x20\x7F]+/g, "");
 }
@@ -86,14 +86,14 @@ function headerAtom(value: string): string {
  * Header value safe to place after "Name: ". Control characters are stripped
  * first; the result is RFC 2047-encoded when it contains non-ASCII.
  */
-function encodeHeaderWord(value: string): string {
+export function encodeHeaderWord(value: string): string {
   const clean = stripHeaderControls(value);
   if (!/[^\x20-\x7E]/.test(clean)) return clean;
   return `=?UTF-8?B?${utf8ToBase64(clean)}?=`;
 }
 
 /** Display-name for a mailbox: encoded-word if non-ASCII, quoted if it uses specials. */
-function displayName(value: string): string {
+export function displayName(value: string): string {
   const encoded = encodeHeaderWord(value);
   if (encoded.startsWith("=?") || !/[()<>[\]:;@\\,."]/.test(encoded)) return encoded;
   return `"${encoded.replace(/["\\]/g, "\\$&")}"`;
@@ -109,7 +109,7 @@ function ensureAngles(messageId: string | string[] | undefined): string {
   return trimmed.startsWith("<") ? trimmed : `<${trimmed}>`;
 }
 
-function randomToken(): string {
+export function randomToken(): string {
   const rnd = Math.random().toString(36).slice(2);
   return `${Date.now().toString(36)}.${rnd}`;
 }

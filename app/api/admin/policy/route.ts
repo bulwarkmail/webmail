@@ -1,13 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { configManager } from '@/lib/admin/config-manager';
-import { requireAdminAuth, getClientIP } from '@/lib/admin/session';
+import { completePolicy, configManager, isPolicyConflict } from '@/lib/admin/config-manager';
+import { cookies } from 'next/headers';
+import { requireAdminAuth, getClientIP, verifyCurrentAdminSession } from '@/lib/admin/session';
 import { auditLog } from '@/lib/admin/audit';
 import { logger } from '@/lib/logger';
-import { POLICY_DOMAINS_HEADER, POLICY_SCOPE_HEADER, type SettingsPolicy } from '@/lib/admin/types';
+import { ADMIN_SESSION_COOKIE, POLICY_DOMAINS_HEADER, POLICY_SCOPE_HEADER, type SettingsPolicy } from '@/lib/admin/types';
 import { canSeeInstanceDetails, signedInIdentity } from '@/lib/auth/instance-details';
 import { bearerIdentity } from '@/lib/auth/bearer-identity';
+import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
 import { scopesVisibleTo } from '@/lib/admin/policy-scopes';
 import { configReadOnlyResponse } from '@/lib/admin/config-read-only-response';
+import { stripFeedUrls } from '@/lib/admin/company-feeds';
+
+/** The policy version as an HTTP entity tag. */
+function policyETag(version: string): string {
+  return `"${version}"`;
+}
+
+/**
+ * The version an If-Match header names, or undefined for none (or `*`).
+ * The admin pages send the ETag of the policy they loaded.
+ */
+function ifMatchVersion(request: NextRequest): string | undefined {
+  const raw = request.headers.get('if-match')?.trim();
+  if (!raw || raw === '*') return undefined;
+  return raw.split(',')[0].trim().replace(/^W\//, '').replace(/^"(.*)"$/, '$1');
+}
 
 /**
  * GET /api/admin/policy - Get settings policy (NOT admin-protected - users read this;
@@ -22,7 +40,9 @@ import { configReadOnlyResponse } from '@/lib/admin/config-read-only-response';
 export async function GET(request: NextRequest) {
   try {
     await configManager.ensureLoaded();
-    const policy = configManager.getPolicy();
+    // Together: the identity checks below wait on the store, and a change
+    // applied meanwhile must not pair this policy with a newer version.
+    const { policy, version } = configManager.getPolicyWithVersion();
     if (!(await canSeeInstanceDetails(request))) {
       const tokenIdentity = await bearerIdentity(request);
       if (tokenIdentity) return userPolicyResponse(policy, tokenIdentity.addresses);
@@ -52,17 +72,43 @@ export async function GET(request: NextRequest) {
     // answers with all of them (documented).
     const identity = await signedInIdentity();
     if (identity !== null && !identity.admin) return userPolicyResponse(policy, identity.addresses);
+    // Without a session secret only the admin dashboard's own session tells
+    // the admin apart; everyone else gets the feeds without their addresses,
+    // which may hold tokens.
+    if (identity === null && !(await hasAdminSession())) {
+      return NextResponse.json({ ...stripFeedUrls(policy), scopes: stripFeedUrls(policy).scopes ?? [] }, {
+        headers: { 'Cache-Control': 'no-store' },
+      });
+    }
+    // The whole policy, as the admin pages edit it: with its version, which
+    // they send back as If-Match when they save.
     return NextResponse.json({ ...policy, scopes: policy.scopes ?? [] }, {
-      headers: { 'Cache-Control': 'no-store' },
+      headers: { 'Cache-Control': 'no-store', ETag: policyETag(version) },
     });
   } catch (error) {
+    // A Bearer token can't be checked without the shared store (its budget).
+    if (isStoreUnavailable(error)) return storeUnavailableResponse();
     logger.error('Policy read error', { error: error instanceof Error ? error.message : 'Unknown error' });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-/** The policy for a signed-in user who is not the admin, with the addresses they sign in with. */
-function userPolicyResponse(policy: SettingsPolicy, addresses: string[]): NextResponse {
+async function hasAdminSession(): Promise<boolean> {
+  try {
+    const token = (await cookies()).get(ADMIN_SESSION_COOKIE)?.value;
+    return !!token && (await verifyCurrentAdminSession(token)) !== null;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The policy for a signed-in user who is not the admin, with the addresses
+ * they sign in with. Company calendar addresses stay here: the browser
+ * fetches a feed by id through /api/fetch-ical (lib/admin/company-feeds.ts).
+ */
+function userPolicyResponse(raw: SettingsPolicy, addresses: string[]): NextResponse {
+  const policy = stripFeedUrls(raw);
   const scopes = scopesVisibleTo(policy.scopes ?? [], addresses);
   // Which domains the scopes were picked for, so a browser that signs in
   // to an account of another domain knows to fetch again.
@@ -74,6 +120,10 @@ function userPolicyResponse(policy: SettingsPolicy, addresses: string[]): NextRe
 
 /**
  * PUT /api/admin/policy - Update settings policy (admin-protected)
+ *
+ * With `If-Match: <ETag from GET>` the save is refused with 409 when the
+ * policy changed since it was read, so a page opened earlier can't undo
+ * someone else's save. Without it the policy is replaced, as it always was.
  */
 export async function PUT(request: NextRequest) {
   try {
@@ -110,14 +160,25 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'organisation must be an object' }, { status: 400 });
     }
 
-    await configManager.setPolicy(policy);
+    let version: string;
+    try {
+      version = await configManager.setPolicy(policy, { ifVersion: ifMatchVersion(request) });
+    } catch (error) {
+      if (isPolicyConflict(error)) {
+        return NextResponse.json({ error: error.message }, { status: 409 });
+      }
+      throw error;
+    }
     await auditLog('policy.update', {
       restrictionCount: Object.keys(policy.restrictions || {}).length,
       // Entries the sanitizer dropped never reach users, so log what stuck.
       defaultSidebarAppCount: configManager.getPolicy().defaultSidebarApps?.length ?? 0,
     }, ip);
 
-    return NextResponse.json({ ok: true });
+    // What was stored, with its version: the page continues from this
+    // instead of reading it back from a replica that may not have it yet.
+    const saved = completePolicy(policy);
+    return NextResponse.json({ ok: true, policy: { ...saved, scopes: saved.scopes ?? [] } }, { headers: { ETag: policyETag(version) } });
   } catch (error) {
     const readOnly = configReadOnlyResponse(error);
     if (readOnly) return readOnly;

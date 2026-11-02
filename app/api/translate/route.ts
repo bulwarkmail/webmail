@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { observeUpstream } from '@/lib/metrics/upstream';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { readFileEnv } from "@/lib/read-file-env";
 import { getStalwartCredentials } from '@/lib/stalwart/credentials';
@@ -174,10 +175,10 @@ async function mymemoryRequest(
   url.searchParams.set('q', q);
   url.searchParams.set('langpair', langpair);
 
-  const res = await fetch(url.toString(), {
+  const res = await observeUpstream('translate', () => fetch(url.toString(), {
     signal,
-    headers: { 'User-Agent': 'JMAP-Webmail/1.0 Translate-Plugin' },
-  });
+    headers: { 'User-Agent': 'Bulwark-Webmail-Translate (+https://bulwarkmail.org)' },
+  }));
   const data = (await res.json().catch(() => null)) as
     | { responseStatus?: number | string; responseData?: { translatedText?: string }; responseDetails?: string }
     | null;
@@ -232,7 +233,7 @@ async function translateLibre(
     process.env.LIBRETRANSLATE_API_KEY ||
     readFileEnv(process.env.LIBRETRANSLATE_API_KEY_FILE);
   const url = endpoint.replace(/\/+$/, '') + '/translate';
-  const res = await fetch(url, {
+  const res = await observeUpstream('translate', () => fetch(url, {
     method: 'POST',
     signal,
     headers: { 'Content-Type': 'application/json' },
@@ -243,7 +244,7 @@ async function translateLibre(
       format: 'text',
       ...(apiKey ? { api_key: apiKey } : {}),
     }),
-  });
+  }));
   const data = (await res.json().catch(() => null)) as
     | { translatedText?: string; detectedLanguage?: { language?: string }; error?: string }
     | null;

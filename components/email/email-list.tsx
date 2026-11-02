@@ -14,7 +14,8 @@ import { ViewSourceDialog } from "./view-source-dialog";
 import { useCopyToAccount, useEmailExport, requestPrint } from "@/hooks/use-message-file-actions";
 import { BatchTagButton } from "./batch-tag-button";
 import { cn, cleanPreview } from "@/lib/utils";
-import { Trash2, Mail, MailX, MailOpen, Loader2, SearchX, AlertTriangle, CalendarClock, ShieldCheck, ShieldAlert, Archive, MoreVertical, X, FolderX } from "@/components/icons";
+import { Trash2, Mail, MailX, MailOpen, Loader2, SearchX, AlertTriangle, CalendarClock, ShieldCheck, ShieldAlert, Archive, MoreVertical, X, FolderX, Fish } from "@/components/icons";
+import { usePhishingReport } from "@/hooks/use-phishing-report";
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
@@ -28,6 +29,8 @@ import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "@/stores/auth-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useListRowShape } from "@/hooks/use-list-row-shape";
+import { MailListRowsSkeleton, type MailRowShape } from "@/components/boot-skeleton/mail-skeleton";
+import type { Density } from "@/lib/density";
 import { useUIStore } from "@/stores/ui-store";
 import { useMessageListTabsStore } from "@/stores/message-list-tabs-store";
 import { emailKeyFor, groupEmailsByThread, sortThreadGroups, threadKeyFor, getEmailTagIds } from "@/lib/thread-utils";
@@ -54,7 +57,8 @@ import type { OpenableEmail } from "@/lib/plugin-sandbox/open-email";
 import { MvListSectionHeader } from "./mv-list-section-header";
 import { PluginSearchResults } from "./plugin-search-results";
 import { commonTagScope } from "@/hooks/use-account-tags";
-import { TrashRecoveryLink } from "./trash-recovery-link";
+import { FolderRetentionLine } from "./retention-notice";
+import { canExport, canPrint } from "@/lib/device-policy";
 
 interface EmailListProps {
   emails: Email[];
@@ -122,27 +126,11 @@ const BATCH_TOOLBAR_WIDE = 480;
 
 // Declared out here so re-renders of the list keep the same element. Inside
 // EmailList every render made a new component, which remounted the skeleton
-// and replayed its fade-in each time the store changed while a list loaded.
-function LoadingSkeleton() {
-  return (
-    <div className="animate-in fade-in duration-200" data-testid="email-list-skeleton">
-      {[...Array(8)].map((_, i) => (
-        <div key={i} className="border-b border-border px-4 py-4">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-muted/50 rounded-full" />
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-2">
-                <div className="h-4 bg-muted/50 rounded w-32" />
-                <div className="h-3 bg-muted/50 rounded w-16" />
-              </div>
-              <div className="h-4 bg-muted/50 rounded w-3/4 mb-2" />
-              <div className="h-3 bg-muted/50 rounded w-full" />
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+// each time the store changed while a list loaded.
+function LoadingSkeleton({ shape, density, preview }: { shape: MailRowShape; density: Density; preview: boolean }) {
+  // The page skeleton's rows (components/boot-skeleton), so the list the app
+  // draws while it loads is the one the server painted before it started.
+  return <MailListRowsSkeleton shape={shape} density={density} preview={preview} className="contents" />;
 }
 
 /** Rows per page in simple mode's paged list. */
@@ -552,6 +540,9 @@ export function EmailList({
     () => (hasSelection ? resolveSelectedEmails({ emails, threadEmailsCache, selectedEmailKeys }) : []),
     [hasSelection, emails, threadEmailsCache, selectedEmailKeys],
   );
+  // Report phishing for the selection, one report per message (enterprise pack).
+  const selectionPhishing = usePhishingReport(selectedEmailsForRemoval, effectiveMailboxRole);
+  const tPhishing = useTranslations('phishing_report');
   const selectionCanLeaveFolder = selectedEmailsForRemoval.length > 0
     && selectedEmailsForRemoval.every((email) => canRemoveFromFolder(email, folderToLeave));
   const handleBatchRemoveFromFolder = async () => {
@@ -1058,6 +1049,16 @@ export function EmailList({
                 {effectiveMailboxRole === 'junk' ? <ShieldCheck /> : <ShieldAlert />}
               </IconButton>
             )}
+            {selectionPhishing.available && !batchNarrow && (
+              <IconButton
+                label={tPhishing('action')}
+                onClick={selectionPhishing.report}
+                disabled={isProcessing}
+                data-testid="batch-report-phishing"
+              >
+                <Fish />
+              </IconButton>
+            )}
             {!batchNarrow && (
               <>
                 <IconButton label={t('batch_actions.mark_read')} onClick={() => handleBatchMarkAsRead(true)} disabled={isProcessing}>
@@ -1135,8 +1136,8 @@ export function EmailList({
         />
       )}
 
-      {/* Recover deleted items, from the account's own Trash (mounted only there) */}
-      {currentMailbox?.role === 'trash' && <TrashRecoveryLink mailbox={currentMailbox} />}
+      {/* How long Trash and Junk keep mail, and Recover deleted items from the account's own Trash, on one line */}
+      {(currentMailbox?.role === 'trash' || currentMailbox?.role === 'junk') && <FolderRetentionLine mailbox={currentMailbox} />}
 
       {/* Empty Folder Banner for Junk/Trash */}
       {isEmptyableFolder && emails.length > 0 && !hasSelection && (
@@ -1207,7 +1208,13 @@ export function EmailList({
         )}
 
         {isLoading && emails.length === 0 ? (
-          <LoadingSkeleton />
+          <div data-testid="email-list-skeleton">
+            <LoadingSkeleton
+              shape={isFocusedMailLayout ? (mountainViewList ? 'mv' : 'one-line') : 'stacked'}
+              density={density}
+              preview={showPreview}
+            />
+          </div>
         ) : emails.length === 0 && !isLoading ? (
           <div className="flex flex-col items-center justify-center h-full">
             {/* R9: an empty search offers Clear search; Drafts, which the
@@ -1353,7 +1360,8 @@ export function EmailList({
               : [contextMenuEmail!];
             await copyToAccount(emails, accountId, mailboxId);
           }}
-          onExport={() => {
+          // Export, print and View source follow the device policy of the row's own account.
+          onExport={contextMenuEmail && !canExport(contextMenuEmail) ? undefined : () => {
             const target = contextMenuEmail!;
             void exportEmail(target, {
               onArchive: onArchive ? () => onArchive(target) : undefined,
@@ -1361,13 +1369,13 @@ export function EmailList({
               archiveEnabled: archiveActionEnabled,
             });
           }}
-          onPrint={onEmailSelect ? () => {
+          onPrint={onEmailSelect && !(contextMenuEmail && !canPrint(contextMenuEmail)) ? () => {
             // The print window opens in the click; the reader fills it once
             // the message is open.
             const target = contextMenuEmail!;
-            if (requestPrint(emailKeyFor(target))) onEmailSelect(target);
+            if (requestPrint(emailKeyFor(target), target)) onEmailSelect(target);
           } : undefined}
-          onViewSource={() => setSourceEmail(contextMenuEmail)}
+          onViewSource={contextMenuEmail && !canExport(contextMenuEmail) ? undefined : () => setSourceEmail(contextMenuEmail)}
           onBatchMarkAsRead={(read) => markSelectionRead(read)}
           batchTagIds={selectionTags.all}
           batchPartialTagIds={selectionTags.some}

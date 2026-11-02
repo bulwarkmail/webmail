@@ -1,8 +1,17 @@
+import { createHash } from 'node:crypto';
+import { getStore } from '@/lib/shared-store';
+
 /**
- * In-memory rate limiter for admin login.
+ * Rate limiter for admin login.
  * Max 5 attempts per IP per 15 minutes, and 50 across all clients. A browser
  * with the admin device cookie (lib/admin/session.ts) gets 5 per device
  * instead and stays out of the shared ceiling, which anyone can use up.
+ *
+ * The counters live in the store (#1066): memory in this process by
+ * default, shared by every replica with a shared store, so the limits hold
+ * for the whole deployment. Refused attempts aren't counted. With a shared
+ * store that can't be reached the checks throw StoreUnavailableError and
+ * the login is refused.
  */
 
 const MAX_ATTEMPTS = 5;
@@ -18,56 +27,30 @@ const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
  */
 const GLOBAL_MAX_ATTEMPTS = 50;
 
-interface RateLimitEntry {
-  count: number;
-  resetAt: number;
+const GLOBAL_KEY = 'admin-login:all';
+
+export interface RateLimitResult {
+  allowed: boolean;
+  remaining: number;
+  retryAfterMs: number;
 }
 
-const attempts = new Map<string, RateLimitEntry>();
-const deviceAttempts = new Map<string, RateLimitEntry>();
-let globalAttempts: RateLimitEntry | null = null;
-
-// Clean up expired entries periodically
-setInterval(() => {
-  const now = Date.now();
-  for (const map of [attempts, deviceAttempts]) {
-    for (const [key, entry] of map) {
-      if (entry.resetAt <= now) {
-        map.delete(key);
-      }
-    }
-  }
-}, 60_000).unref();
+/** A counter key for a client-supplied value: as is when it is short and plain, hashed otherwise. */
+function keyPart(value: string): string {
+  return /^[\x21-\x7e]{1,128}$/.test(value) ? value : `h:${createHash('sha256').update(value).digest('base64url')}`;
+}
 
 /**
- * Check if the IP is rate limited. Returns remaining attempts, or 0 if blocked.
+ * Check if the IP is rate limited, and count the attempt when it isn't.
+ * Returns remaining attempts, or 0 if blocked.
  */
-export function checkRateLimit(ip: string): { allowed: boolean; remaining: number; retryAfterMs: number } {
-  const now = Date.now();
-
-  if (!globalAttempts || globalAttempts.resetAt <= now) {
-    globalAttempts = { count: 0, resetAt: now + WINDOW_MS };
-  }
-  if (globalAttempts.count >= GLOBAL_MAX_ATTEMPTS) {
-    return { allowed: false, remaining: 0, retryAfterMs: globalAttempts.resetAt - now };
-  }
-
-  const entry = attempts.get(ip);
-
-  if (!entry || entry.resetAt <= now) {
-    // New window
-    attempts.set(ip, { count: 1, resetAt: now + WINDOW_MS });
-    globalAttempts.count++;
-    return { allowed: true, remaining: MAX_ATTEMPTS - 1, retryAfterMs: 0 };
-  }
-
-  if (entry.count >= MAX_ATTEMPTS) {
-    return { allowed: false, remaining: 0, retryAfterMs: entry.resetAt - now };
-  }
-
-  entry.count++;
-  globalAttempts.count++;
-  return { allowed: true, remaining: MAX_ATTEMPTS - entry.count, retryAfterMs: 0 };
+export async function checkRateLimit(ip: string): Promise<RateLimitResult> {
+  const result = await getStore().counters.reserve([
+    { key: `admin-login:ip:${keyPart(ip)}`, max: MAX_ATTEMPTS, windowMs: WINDOW_MS },
+    { key: GLOBAL_KEY, max: GLOBAL_MAX_ATTEMPTS, windowMs: WINDOW_MS },
+  ], Date.now());
+  if (!result.ok) return { allowed: false, remaining: 0, retryAfterMs: result.retryAfterMs };
+  return { allowed: true, remaining: MAX_ATTEMPTS - result.counts[0], retryAfterMs: 0 };
 }
 
 /**
@@ -75,19 +58,10 @@ export function checkRateLimit(ip: string): { allowed: boolean; remaining: numbe
  * attempts per 15 minutes, not counted against or stopped by the shared
  * ceiling.
  */
-export function checkDeviceRateLimit(deviceId: string): { allowed: boolean; remaining: number; retryAfterMs: number } {
-  const now = Date.now();
-  const entry = deviceAttempts.get(deviceId);
-
-  if (!entry || entry.resetAt <= now) {
-    deviceAttempts.set(deviceId, { count: 1, resetAt: now + WINDOW_MS });
-    return { allowed: true, remaining: MAX_ATTEMPTS - 1, retryAfterMs: 0 };
-  }
-
-  if (entry.count >= MAX_ATTEMPTS) {
-    return { allowed: false, remaining: 0, retryAfterMs: entry.resetAt - now };
-  }
-
-  entry.count++;
-  return { allowed: true, remaining: MAX_ATTEMPTS - entry.count, retryAfterMs: 0 };
+export async function checkDeviceRateLimit(deviceId: string): Promise<RateLimitResult> {
+  const result = await getStore().counters.reserve([
+    { key: `admin-login:device:${keyPart(deviceId)}`, max: MAX_ATTEMPTS, windowMs: WINDOW_MS },
+  ], Date.now());
+  if (!result.ok) return { allowed: false, remaining: 0, retryAfterMs: result.retryAfterMs };
+  return { allowed: true, remaining: MAX_ATTEMPTS - result.counts[0], retryAfterMs: 0 };
 }

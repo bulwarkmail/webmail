@@ -44,6 +44,7 @@ import {
   MoreVertical,
 } from "@/components/icons";
 import { cn, buildMailboxTree, MailboxNode } from "@/lib/utils";
+import { FOLDER_CHEVRON_SLOT, FOLDER_ROW_PX_BASE, FolderRowsSkeleton } from "@/components/boot-skeleton/mail-skeleton";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import {
   buildKeywordTree,
@@ -87,6 +88,7 @@ import { buildSettingsPath, SCHEDULED_MAILBOX_ID, scopedScheduledMailboxId } fro
 import { useTour } from "@/components/tour/tour-provider";
 import { toUnicodeEmail } from "@/lib/idn";
 import { hiddenSharedMailIds, isSharedMailAccountVisible, setSharedMailAccountHidden } from "@/lib/shared-mail-visibility";
+import { compactSharedMailbox } from "@/lib/compact-shared-mailbox";
 import {
   isAccountMuted,
   isMailboxMuted,
@@ -159,10 +161,16 @@ interface SidebarProps {
   accountMailboxes?: Record<string, Mailbox[]>;
   viewingAccountId?: string | null;
   onAccountMailboxSelect?: (accountId: string | null, mailboxId: string) => void;
+  /** Shared mailboxes of each non-active login, keyed by login (#1486). */
+  accountSharedMailboxes?: Record<string, Mailbox[]>;
+  /** A shared mailbox of a non-active login was picked: the caller switches
+   *  to that login and opens it, since shared mail is reached through the
+   *  active login. */
+  onLoginSharedMailboxSelect?: (loginId: string, mailboxId: string) => void;
 }
 
-const ROW_PX_BASE = 8;
-const CHEVRON_SLOT = 20;
+const ROW_PX_BASE = FOLDER_ROW_PX_BASE;
+const CHEVRON_SLOT = FOLDER_CHEVRON_SLOT;
 const INDENT_STEP = 12;
 
 // Icons and colours follow the JMAP role only.
@@ -423,11 +431,20 @@ function SidebarRow({
   const longPress = useLongPress((point) => {
     if (rowRef.current && onContextMenu) onContextMenu(menuEventAt(rowRef.current, point));
   }, hasMenu);
+  // The whole row opens the folder, not just its button: the row's padding,
+  // the chevron slot and the space around the count were dead (#1501). The
+  // button stays the keyboard target; controls of their own keep their click.
+  const openFromRow = !isVirtual && onClick
+    ? (e: React.MouseEvent) => {
+        if (!(e.target as Element).closest('button, a, input, [role="button"]')) onClick();
+      }
+    : undefined;
 
   return (
     <div
       ref={rowRef}
       {...(dropHandlers || {})}
+      onClick={openFromRow}
       onContextMenu={onContextMenu}
       onTouchStart={hasMenu ? longPress.onTouchStart : undefined}
       onTouchMove={hasMenu ? longPress.onTouchMove : undefined}
@@ -445,6 +462,7 @@ function SidebarRow({
       className={cn(
         "group w-full flex items-center max-lg:min-h-[44px] text-sm transition-colors duration-150",
         isCollapsed ? "justify-center px-1" : "pe-2",
+        openFromRow && "cursor-pointer select-none",
         isVirtual
           ? "text-muted-foreground"
           : isSelected
@@ -556,6 +574,8 @@ function SidebarRow({
 const isSystemFolder = (node: MailboxNode) => !!node.role;
 /** Key of the single-account "Your folders" section in the collapsed set. */
 const OWN_FOLDERS_KEY = '__own__';
+/** Prefix of a Pro account group's "Shared" section in the same set. */
+const SHARED_KEY_PREFIX = '__shared__:';
 
 function SidebarSectionHeader({
   label,
@@ -676,6 +696,9 @@ function MailboxTreeItem({
   colorful,
   onContextMenu,
   dragAccountId = null,
+  pickOnly = false,
+  sharedAccountName,
+  renderAfterChild,
 }: {
   node: MailboxNode;
   selectedMailbox: string;
@@ -690,25 +713,35 @@ function MailboxTreeItem({
    *  Travels in the folder-drag payload so a folder tab fetches through the
    *  right client, and tells a message drop which login the folder is in. */
   dragAccountId?: string | null;
+  /** Listed for opening only: no drag, no message drop, no mute state. For
+   *  another login's shared mailboxes, which the active login can't reach. */
+  pickOnly?: boolean;
+  /** Set when this node is a shared account's inbox standing for the whole
+   *  account (compact shared mailboxes, #1342): the row is named after the
+   *  account and carries its icon. */
+  sharedAccountName?: string;
+  /** Rendered after each direct child's subtree, e.g. the Scheduled row after
+   *  Drafts. Not passed further down. */
+  renderAfterChild?: (child: MailboxNode) => React.ReactNode;
 }) {
   const tNotifications = useTranslations('notifications');
   const tSidebar = useTranslations('sidebar');
   const hasChildren = node.children.length > 0;
   const isExpanded = expandedFolders.has(node.id);
-  const Icon = getIconForMailbox(node.role, hasChildren, isExpanded, node.id);
+  const Icon = sharedAccountName ? User : getIconForMailbox(node.role, hasChildren, isExpanded, node.id);
   const isVirtualNode = node.id.startsWith('shared-');
   const isSelected = selectedMailbox === node.id;
-  const label = localizeMailboxName(node.role, node.name, (k) => tSidebar(`mailboxes.${k}`));
+  const label = sharedAccountName ?? localizeMailboxName(node.role, node.name, (k) => tSidebar(`mailboxes.${k}`));
   // Only for the active login's folders: its client tells a missing
   // accountId (own mailbox) apart.
-  const muted = useMutedMailbox(isVirtualNode || dragAccountId ? null : node);
+  const muted = useMutedMailbox(isVirtualNode || dragAccountId || pickOnly ? null : node);
 
   const isEmbedded = useIsEmbedded();
   // Pro shell only: folder rows are drag sources so a folder can be dropped
   // onto a tab strip / pane and open as its own tab. Native HTML5 DnD - the
   // Pro shell's drop targets live outside any dnd-kit context.
   const folderDragHandlers: Record<string, unknown> | undefined =
-    isEmbedded && !isVirtualNode
+    isEmbedded && !isVirtualNode && !pickOnly
       ? {
           draggable: true,
           onDragStart: (e: React.DragEvent) => {
@@ -740,7 +773,7 @@ function MailboxTreeItem({
   return (
     <>
       <SidebarRow
-        icon={<Icon className={getIconClass(isSelected, isVirtualNode, colorful, node.role)} />}
+        icon={<Icon className={getIconClass(isSelected, isVirtualNode, colorful, sharedAccountName ? undefined : node.role)} />}
         label={label}
         testRole={node.role}
         testName={node.name}
@@ -758,33 +791,36 @@ function MailboxTreeItem({
         onUnreadClick={() => onUnreadFilterClick?.(node.id)}
         isCollapsed={isCollapsed}
         dropHandlers={
-          folderDragHandlers || globalDragging
+          folderDragHandlers || (globalDragging && !pickOnly)
             ? {
                 ...(folderDragHandlers ?? {}),
-                ...(globalDragging ? (dropHandlers as Record<string, unknown>) : {}),
+                ...(globalDragging && !pickOnly ? (dropHandlers as Record<string, unknown>) : {}),
               }
             : undefined
         }
-        isValidDropTarget={isValidDropTarget}
-        isInvalidDropTarget={isInvalidDropTarget}
+        isValidDropTarget={isValidDropTarget && !pickOnly}
+        isInvalidDropTarget={isInvalidDropTarget && !pickOnly}
         onContextMenu={onContextMenu && !isVirtualNode ? (e) => onContextMenu(e, node) : undefined}
         muted={muted}
       />
 
       {hasChildren && isExpanded && !isCollapsed && node.children.map((child) => (
-        <MailboxTreeItem
-          key={child.id}
-          node={child}
-          selectedMailbox={selectedMailbox}
-          expandedFolders={expandedFolders}
-          onMailboxSelect={onMailboxSelect}
-          onToggleExpand={onToggleExpand}
-          isCollapsed={isCollapsed}
-          onUnreadFilterClick={onUnreadFilterClick}
-          colorful={colorful}
-          onContextMenu={onContextMenu}
-          dragAccountId={dragAccountId}
-        />
+        <Fragment key={child.id}>
+          <MailboxTreeItem
+            node={child}
+            selectedMailbox={selectedMailbox}
+            expandedFolders={expandedFolders}
+            onMailboxSelect={onMailboxSelect}
+            onToggleExpand={onToggleExpand}
+            isCollapsed={isCollapsed}
+            onUnreadFilterClick={onUnreadFilterClick}
+            colorful={colorful}
+            onContextMenu={onContextMenu}
+            dragAccountId={dragAccountId}
+            pickOnly={pickOnly}
+          />
+          {renderAfterChild?.(child)}
+        </Fragment>
       ))}
     </>
   );
@@ -1117,6 +1153,8 @@ function SidebarImpl({
   accountMailboxes,
   viewingAccountId = null,
   onAccountMailboxSelect,
+  accountSharedMailboxes,
+  onLoginSharedMailboxSelect,
   mvShell = false,
 }: SidebarProps) {
   const router = useRouter();
@@ -1198,6 +1236,7 @@ function SidebarImpl({
   const enableUnifiedMailbox = useSettingsStore(s => s.enableUnifiedMailbox);
   const includeGroupInUnified = useSettingsStore(s => s.includeGroupInUnified);
   const showSharedMailAccounts = useSettingsStore(s => s.showSharedMailAccounts);
+  const compactSharedMailboxes = useSettingsStore(s => s.compactSharedMailboxes);
   const hiddenSharedMailAccounts = useSettingsStore(s => s.hiddenSharedMailAccounts);
   // Mountain View draws its navigation icons in the text colour.
   const colorfulSidebarIcons = useSettingsStore(s => s.colorfulSidebarIcons) && !mvShell;
@@ -1382,7 +1421,15 @@ function SidebarImpl({
         const tree = buildMailboxTree(accountMailboxList).filter(
           (n) => !n.id.startsWith('shared-account-') && !(isActive && isServerScheduledNode(n))
         );
-        return { account, isActive, tree };
+        // The active login's shared mailboxes are in `mailboxes`; the others'
+        // are kept beside their own folders (#1486).
+        const hiddenIds = hiddenSharedMailIds(hiddenSharedMailAccounts, account.id);
+        const shared = isActive
+          ? sharedAccounts
+          : buildMailboxTree(accountSharedMailboxes?.[account.id] ?? []).filter((n) =>
+            n.id.startsWith('shared-account-')
+            && isSharedMailAccountVisible(n.accountId, showSharedMailAccounts, hiddenIds));
+        return { account, isActive, tree, shared };
       })
     : [];
 
@@ -1466,6 +1513,148 @@ function SidebarImpl({
             dragAccountId={dragAccountId}
           />
         ))}
+      </div>
+    );
+  };
+
+  // The Shared section: the group and delegated mailboxes a login can reach.
+  // With several logins in the Pro sidebar each one gets its own, inside its
+  // group (#1486). Only the active login's has menus, its Scheduled rows
+  // and its shared tags, as with the folders of the other logins.
+  const renderSharedSection = (
+    accounts: MailboxNode[],
+    {
+      sub = false,
+      expanded,
+      onToggle,
+      selected,
+      onSelect,
+      active = true,
+    }: {
+      sub?: boolean;
+      expanded: boolean;
+      onToggle: () => void;
+      selected: string;
+      onSelect?: (mailboxId: string) => void;
+      active?: boolean;
+    },
+  ) => {
+    if (accounts.length === 0) return null;
+    return (
+      <div data-testid={sub ? "section-shared-in-account" : undefined}>
+        <SidebarSectionHeader
+          label={t("shared")}
+          expanded={expanded}
+          onToggle={onToggle}
+          isCollapsed={isCollapsed}
+          sub={sub}
+          testId="section-shared"
+        />
+        {((expanded && !isCollapsed) || isCollapsed) && (
+          <>
+            {accounts.map((account) => {
+              const accountExpanded = expandedSharedAccounts.has(account.id);
+              const menuAccountId = sharedAccountMenuId(account.accountId);
+              const compact = compactSharedMailboxes ? compactSharedMailbox(account) : null;
+              if (compact) {
+                // A row without folders below it has no chevron, so what
+                // else hangs below it (Scheduled, tags) stays shown.
+                const compactExpanded = !isCollapsed
+                  && (expandedFolders.has(compact.id) || compact.children.length === 0);
+                const scheduledCount = active && menuAccountId ? (scheduledTotalByAccount?.[menuAccountId] ?? 0) : 0;
+                const scheduledRow = () => scheduledCount > 0
+                  && renderScheduledRow(`${account.id}-scheduled`, { accountId: menuAccountId, depth: 1 });
+                // Scheduled goes after Drafts, as under a header row; with
+                // Drafts left out (empty), after the other folders.
+                const hasDrafts = compact.children.some((child) => child.role === 'drafts');
+                // "Mark subfolders read" covers the inbox's own subfolders
+                // only, not the account's folders listed below the row.
+                const inboxHasSubfolders = (account.children.find((child) => child.id === compact.id)?.children.length ?? 0) > 0;
+                return (
+                  <div key={account.id} data-testid="compact-shared-mailbox">
+                    <MailboxTreeItem
+                      node={compact}
+                      sharedAccountName={account.name}
+                      selectedMailbox={selected}
+                      expandedFolders={expandedFolders}
+                      onMailboxSelect={onSelect}
+                      onToggleExpand={handleToggleExpand}
+                      isCollapsed={isCollapsed}
+                      onUnreadFilterClick={active ? onUnreadFilterClick : undefined}
+                      colorful={colorfulSidebarIcons}
+                      onContextMenu={active ? (e, node) => handleCompactSharedContextMenu(e, node, compact.id, menuAccountId, inboxHasSubfolders) : undefined}
+                      pickOnly={!active}
+                      renderAfterChild={(child) => child.role === 'drafts' && scheduledRow()}
+                    />
+                    {compactExpanded && !hasDrafts && scheduledRow()}
+                    {active && compactExpanded && menuAccountId && activeAccountId && (
+                      <SharedAccountTags
+                        loginId={activeAccountId}
+                        accountId={menuAccountId}
+                        selectedKeyword={selectedKeywordAccountId === menuAccountId ? selectedKeyword : null}
+                        expandedTags={expandedTags}
+                        onTagSelect={onTagSelect}
+                        onToggleExpand={handleToggleTagExpand}
+                        colorful={colorfulSidebarIcons}
+                      />
+                    )}
+                  </div>
+                );
+              }
+              return (
+                <div key={account.id}>
+                  <SidebarSectionHeader
+                    label={account.name}
+                    expanded={accountExpanded}
+                    onToggle={() => toggleSharedAccount(account.id)}
+                    isCollapsed={isCollapsed}
+                    sub
+                    icon={<User className="w-3.5 h-3.5 text-muted-foreground" />}
+                    testId="section-shared-account"
+                    onContextMenu={active && menuAccountId
+                      ? (e) => handleSharedAccountContextMenu(e, menuAccountId)
+                      : undefined}
+                  />
+                  {accountExpanded && !isCollapsed && (
+                    <>
+                      {account.children.map((child) => (
+                        <Fragment key={child.id}>
+                          <MailboxTreeItem
+                            node={child}
+                            selectedMailbox={selected}
+                            expandedFolders={expandedFolders}
+                            onMailboxSelect={onSelect}
+                            onToggleExpand={handleToggleExpand}
+                            isCollapsed={isCollapsed}
+                            onUnreadFilterClick={active ? onUnreadFilterClick : undefined}
+                            colorful={colorfulSidebarIcons}
+                            onContextMenu={active ? handleMailboxContextMenu : undefined}
+                            pickOnly={!active}
+                          />
+                          {active && child.role === 'drafts' && menuAccountId
+                            && renderScheduledRow(`${account.id}-scheduled`, { accountId: menuAccountId })}
+                        </Fragment>
+                      ))}
+                      {active && menuAccountId && !account.children.some((child) => child.role === 'drafts')
+                        && renderScheduledRow(`${account.id}-scheduled`, { accountId: menuAccountId })}
+                      {active && menuAccountId && activeAccountId && (
+                        <SharedAccountTags
+                          loginId={activeAccountId}
+                          accountId={menuAccountId}
+                          selectedKeyword={selectedKeywordAccountId === menuAccountId ? selectedKeyword : null}
+                          expandedTags={expandedTags}
+                          onTagSelect={onTagSelect}
+                          onToggleExpand={handleToggleTagExpand}
+                          colorful={colorfulSidebarIcons}
+                        />
+                      )}
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </>
+        )}
       </div>
     );
   };
@@ -1656,6 +1845,26 @@ function SidebarImpl({
     openMailboxContextMenu(e, { kind: "folders-section", accountId });
   };
 
+  // A compact shared mailbox's row is its inbox and stands for the account, so
+  // its menu is the inbox's plus what the account's header row offered.
+  const handleCompactSharedContextMenu = (
+    e: React.MouseEvent,
+    node: MailboxNode,
+    inboxId: string,
+    accountId: string | undefined,
+    inboxHasSubfolders: boolean,
+  ) => {
+    const mailbox = mailboxes.find(mb => mb.id === node.id);
+    if (!mailbox) return;
+    const isRow = node.id === inboxId;
+    openMailboxContextMenu(e, {
+      kind: "mailbox",
+      mailbox,
+      hasChildren: isRow ? inboxHasSubfolders : node.children.length > 0,
+      sharedAccountId: isRow ? accountId : undefined,
+    });
+  };
+
   const hideSharedAccount = activeAccountId
     ? (accountId: string) => {
         const { hiddenSharedMailAccounts: hidden, updateSetting } = useSettingsStore.getState();
@@ -1838,7 +2047,7 @@ function SidebarImpl({
         )}
 
         {useMultiAccount ? (
-          accountGroups.map(({ account, isActive, tree }) => {
+          accountGroups.map(({ account, isActive, tree, shared }) => {
             const expanded = !collapsedAccountGroups.has(account.id);
             const isViewing = isActive ? viewingAccountId === null : viewingAccountId === account.id;
             return (
@@ -1856,8 +2065,11 @@ function SidebarImpl({
                 {((expanded && !isCollapsed) || isCollapsed) && (
                   <>
                     {tree.length === 0 ? (
-                      <div className="px-4 py-2 text-sm text-muted-foreground">
-                        {!isCollapsed && t("loading_mailboxes")}
+                      // The page skeleton's folder rows, so nothing moves when the
+                      // folders arrive (components/boot-skeleton).
+                      <div data-testid="folders-loading">
+                        <span className="sr-only">{t("loading_mailboxes")}</span>
+                        {!isCollapsed && <FolderRowsSkeleton />}
                       </div>
                     ) : (
                       <>
@@ -1888,6 +2100,17 @@ function SidebarImpl({
                           active: isActive,
                           dragAccountId: isActive ? null : account.id,
                         })}
+                        {renderSharedSection(shared, {
+                          sub: true,
+                          expanded: !collapsedCustomFolders.has(`${SHARED_KEY_PREFIX}${account.id}`),
+                          onToggle: () => toggleCustomFolders(`${SHARED_KEY_PREFIX}${account.id}`),
+                          // Another login's shared mailbox is opened by switching to that login.
+                          selected: selectedKeyword || !isViewing || !isActive ? "" : selectedMailbox,
+                          onSelect: isActive
+                            ? (mailboxId) => onAccountMailboxSelect?.(null, mailboxId)
+                            : (mailboxId) => onLoginSharedMailboxSelect?.(account.id, mailboxId),
+                          active: isActive,
+                        })}
                       </>
                     )}
                   </>
@@ -1911,8 +2134,11 @@ function SidebarImpl({
             {(mvFoldersHeadless || (foldersExpanded && !isCollapsed) || isCollapsed) && (
               <>
                 {mailboxes.length === 0 ? (
-                  <div className="px-4 py-2 text-sm text-muted-foreground">
-                    {!isCollapsed && t("loading_mailboxes")}
+                  // The page skeleton's folder rows, so nothing moves when the
+                  // folders arrive (components/boot-skeleton).
+                  <div data-testid="folders-loading">
+                    <span className="sr-only">{t("loading_mailboxes")}</span>
+                    {!isCollapsed && <FolderRowsSkeleton />}
                   </div>
                 ) : (
                   <>
@@ -2020,75 +2246,12 @@ function SidebarImpl({
 
         {tagsAboveShared && renderTags()}
 
-        {!useMultiAccount && showSecondary && sharedAccounts.length > 0 && (
-          <div>
-            <SidebarSectionHeader
-              label={t("shared")}
-              expanded={sharedExpanded}
-              onToggle={toggleShared}
-              isCollapsed={isCollapsed}
-              testId="section-shared"
-            />
-            {((sharedExpanded && !isCollapsed) || isCollapsed) && (
-              <>
-                {sharedAccounts.map((account) => {
-                  const accountExpanded = expandedSharedAccounts.has(account.id);
-                  const menuAccountId = sharedAccountMenuId(account.accountId);
-                  return (
-                    <div key={account.id}>
-                      <SidebarSectionHeader
-                        label={account.name}
-                        expanded={accountExpanded}
-                        onToggle={() => toggleSharedAccount(account.id)}
-                        isCollapsed={isCollapsed}
-                        sub
-                        icon={<User className="w-3.5 h-3.5 text-muted-foreground" />}
-                        testId="section-shared-account"
-                        onContextMenu={menuAccountId
-                          ? (e) => handleSharedAccountContextMenu(e, menuAccountId)
-                          : undefined}
-                      />
-                      {accountExpanded && !isCollapsed && (
-                        <>
-                          {account.children.map((child) => (
-                            <Fragment key={child.id}>
-                              <MailboxTreeItem
-                                node={child}
-                                selectedMailbox={selectedKeyword ? "" : selectedMailbox}
-                                expandedFolders={expandedFolders}
-                                onMailboxSelect={onMailboxSelect}
-                                onToggleExpand={handleToggleExpand}
-                                isCollapsed={isCollapsed}
-                                onUnreadFilterClick={onUnreadFilterClick}
-                                colorful={colorfulSidebarIcons}
-                                onContextMenu={handleMailboxContextMenu}
-                              />
-                              {child.role === 'drafts' && menuAccountId
-                                && renderScheduledRow(`${account.id}-scheduled`, { accountId: menuAccountId })}
-                            </Fragment>
-                          ))}
-                          {menuAccountId && !account.children.some((child) => child.role === 'drafts')
-                            && renderScheduledRow(`${account.id}-scheduled`, { accountId: menuAccountId })}
-                          {menuAccountId && activeAccountId && (
-                            <SharedAccountTags
-                              loginId={activeAccountId}
-                              accountId={menuAccountId}
-                              selectedKeyword={selectedKeywordAccountId === menuAccountId ? selectedKeyword : null}
-                              expandedTags={expandedTags}
-                              onTagSelect={onTagSelect}
-                              onToggleExpand={handleToggleTagExpand}
-                              colorful={colorfulSidebarIcons}
-                            />
-                          )}
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
-              </>
-            )}
-          </div>
-        )}
+        {!useMultiAccount && showSecondary && renderSharedSection(sharedAccounts, {
+          expanded: sharedExpanded,
+          onToggle: toggleShared,
+          selected: selectedKeyword ? "" : selectedMailbox,
+          onSelect: onMailboxSelect,
+        })}
 
         {!tagsAboveShared && renderTags()}
 

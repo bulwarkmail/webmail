@@ -21,6 +21,10 @@ ENV NEXT_PUBLIC_DEFAULT_LOCALE=$NEXT_PUBLIC_DEFAULT_LOCALE
 # `git rev-parse` inside the build can't find it - CI must pass it in.
 ARG GIT_COMMIT=unknown
 ENV GIT_COMMIT=$GIT_COMMIT
+# Browser source maps for the error tracker: CI passes 1, a plain build makes
+# none (next.config.ts reads it). They never reach the image, see below.
+ARG BULWARK_SOURCE_MAPS=0
+ENV BULWARK_SOURCE_MAPS=$BULWARK_SOURCE_MAPS
 # The mock JMAP server (DEV_MOCK_JMAP) accepts any password and is for
 # `npm run dev` only; images ship without it.
 # `next build` type-checks every .ts file, and some unit tests import the
@@ -30,8 +34,24 @@ RUN rm -rf "app/api/dev-jmap" && \
     find . -path ./node_modules -prune -o \
       \( -name __tests__ -o -name "*.test.ts" -o -name "*.test.tsx" \) \
       -prune -exec rm -rf {} \; && \
+    node scripts/build-pst-worker.mjs && \
     node scripts/build-plugin-sandbox.mjs && \
     npx next build --webpack
+
+# webpack has no debug IDs of its own, so sentry-cli adds them to the
+# chunks; then every map moves to /sourcemaps (exported with
+# `--target sourcemaps`) and the check fails the build if one would ship.
+# https://bulwarkmail.org/docs/deployment/monitoring
+ARG SENTRY_CLI_VERSION=3.8.2
+RUN if [ "$BULWARK_SOURCE_MAPS" = "1" ]; then \
+      npx --yes "@sentry/cli@${SENTRY_CLI_VERSION}" sourcemaps inject .next/static; \
+    fi && \
+    node scripts/sourcemaps.mjs collect --out /sourcemaps .next/static .next/standalone && \
+    node scripts/sourcemaps.mjs check .next/static .next/standalone public
+
+# Only the maps, for CI to upload: never part of the image.
+FROM scratch AS sourcemaps
+COPY --from=builder /sourcemaps /
 
 FROM node:24-alpine AS runner
 
@@ -56,6 +76,7 @@ RUN apk upgrade --no-cache && \
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/scripts/healthcheck.mjs ./healthcheck.mjs
 # Every data dir exists up front and belongs to the runtime user, so a fresh
 # volume on /app/data (Docker copies these into it) or on any one of them is
 # writable. plugin-secrets holds users' plugin credentials, version-check the
@@ -68,4 +89,9 @@ USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+# The health check needs the base path the bundle was built with.
+ARG NEXT_PUBLIC_BASE_PATH=
+ENV BULWARK_BASE_PATH=$NEXT_PUBLIC_BASE_PATH
+# Liveness only (/api/health/live); readiness is /api/health/ready.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 CMD ["node", "healthcheck.mjs"]
 CMD ["node", "server.js"]

@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
-import type { NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import { verifySetupToken } from './token';
+import { isStoreUnavailableError } from '@/lib/shared-store';
 import { secureCookieFlag } from '@/lib/security/request-protocol';
 
 export const SETUP_COOKIE = 'bulwark_setup_token';
@@ -21,6 +22,28 @@ export async function authenticateWizardRequest(): Promise<boolean> {
   const token = jar.get(SETUP_COOKIE)?.value;
   if (!token) return false;
   return verifySetupToken(token);
+}
+
+/** 503 for a setup request while the shared store, which holds the token, can't be reached (#1066). */
+export function setupStoreUnavailableResponse(): NextResponse {
+  return NextResponse.json(
+    { error: 'Setup is temporarily unavailable: the shared store can\'t be reached. Try again in a moment.' },
+    { status: 503, headers: { 'Retry-After': '10' } },
+  );
+}
+
+/**
+ * The answer for a wizard request without a valid wizard session (401), or
+ * while the token can't be checked (503); null when it may go on.
+ */
+export async function wizardSessionRefusal(): Promise<NextResponse | null> {
+  try {
+    if (await authenticateWizardRequest()) return null;
+  } catch (error) {
+    if (isStoreUnavailableError(error)) return setupStoreUnavailableResponse();
+    throw error;
+  }
+  return NextResponse.json({ error: 'Wizard session required' }, { status: 401 });
 }
 
 export function buildSessionCookieAttributes(request?: NextRequest) {

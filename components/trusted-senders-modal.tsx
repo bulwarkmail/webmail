@@ -15,14 +15,21 @@ import { useAuthStore } from "@/stores/auth-store";
 import { toast } from "@/stores/toast-store";
 import { UNDO_TOAST_DURATION } from "@/lib/email-action-toast";
 import { cn } from "@/lib/utils";
+import { OrgLockedNote } from "@/components/settings/org-locked-note";
 
 interface TrustedSendersModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /**
+   * The organisation blocks remote content: the list can be read and
+   * cleaned up, but adding senders is pointless and offered nowhere.
+   */
+  readOnly?: boolean;
 }
 
-export function TrustedSendersModal({ isOpen, onClose }: TrustedSendersModalProps) {
+export function TrustedSendersModal({ isOpen, onClose, readOnly = false }: TrustedSendersModalProps) {
   const t = useTranslations("settings.email_behavior.trusted_senders");
+  const tLock = useTranslations("remote_content_lock");
   const tNotifications = useTranslations("notifications");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -200,7 +207,9 @@ export function TrustedSendersModal({ isOpen, onClose }: TrustedSendersModalProp
       dirty={isAdding && newEmail.trim() !== ""}
       className="max-h-[60vh]"
       bodyClassName="px-0 pb-0 mt-4 border-y border-border"
-      footer={!isLoading && (!isEmpty || isAdding) ? <div className="w-full pt-4">{addRow}</div> : undefined}
+      footer={readOnly
+        ? <div className="w-full pt-4"><OrgLockedNote /><p className="mt-1 text-xs text-muted-foreground">{tLock("trusted_senders_note")}</p></div>
+        : !isLoading && (!isEmpty || isAdding) ? <div className="w-full pt-4">{addRow}</div> : undefined}
     >
       {/* Search (only when 5+ senders) */}
       {showSearch && (
@@ -229,7 +238,7 @@ export function TrustedSendersModal({ isOpen, onClose }: TrustedSendersModalProp
           icon={ShieldCheck}
           title={t("empty_title")}
           description={t("empty_description")}
-          actions={!isAdding ? (
+          actions={!isAdding && !readOnly ? (
             <Button size="sm" onClick={() => setIsAdding(true)}>
               <Plus className="w-4 h-4" />
               {t("add_manually")}

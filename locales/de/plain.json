@@ -117,7 +117,6 @@
     "vacation_save_failed": "Ihre automatische Antwort konnte nicht gespeichert werden. Versuchen Sie es noch einmal.",
     "filters_save_failed": "Ihre Filterregeln konnten nicht gespeichert werden. Versuchen Sie es noch einmal.",
     "export_email_error": "Die E-Mail konnte nicht als Datei gespeichert werden. Versuchen Sie es noch einmal.",
-    "import_email_error": "Die E-Mail konnte nicht aus der Datei hinzugefügt werden. Prüfen Sie die Datei und versuchen Sie es noch einmal.",
     "rule_apply_failed": "Die Regel konnte nicht auf die E-Mails angewendet werden, die schon da sind",
     "rule_folder_failed": "Der Ordner konnte nicht erstellt werden. Versuchen Sie es noch einmal.",
     "vacation_filters_save_failed": "Ihre automatische Antwort ist gespeichert. Die Weiterleitung und die Antwortliste konnten aber nicht gespeichert werden. Versuchen Sie es noch einmal."

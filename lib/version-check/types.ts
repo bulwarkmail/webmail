@@ -20,6 +20,11 @@ export interface VersionCheckStateFile {
   lastSuccessAt: string | null;
   nextScheduledAt: string | null;
   status: UpdateStatus | null;
+  /**
+   * With a shared store only: the last status per running version, so
+   * replicas on two versions during a rolling update each keep their own.
+   */
+  statuses?: Record<string, UpdateStatus>;
 }
 
 export const DEFAULT_VERSION_ENDPOINT = 'https://version.telemetry.bulwarkmail.org/';

@@ -12,6 +12,7 @@ import {
 } from "@/components/files/file-item-parts";
 import type { SortDir, SortKey } from "@/components/files/files-header";
 import { TOUCH_HIT_AREA } from "@/components/ui/button";
+import { FILE_LIST_COLUMNS } from "./file-list-layout";
 
 export interface FileItemHandlers {
   /** Selection click (plain, Ctrl/Cmd, Shift) on the item body. */
@@ -19,7 +20,8 @@ export interface FileItemHandlers {
   onToggleSelect: (resource: FileResource) => void;
   onOpen: (resource: FileResource) => void;
   onContextMenu: (e: React.MouseEvent, resource: FileResource) => void;
-  onDownload: (resource: FileResource) => void;
+  /** Left out when a device policy turned downloads off. */
+  onDownload?: (resource: FileResource) => void;
   onShare: (resource: FileResource) => void;
   canShare: (resource: FileResource) => boolean;
   dragProps: (resource: FileResource) => React.HTMLAttributes<HTMLElement> & { draggable?: boolean };
@@ -146,7 +148,7 @@ function SortHeader({ label, column, sortKey, sortDir, onSort, className }: {
   );
 }
 
-const LIST_COLUMNS = "grid grid-cols-[auto_minmax(0,1fr)_auto] sm:grid-cols-[auto_minmax(0,1fr)_5.5rem_auto] md:grid-cols-[auto_minmax(0,1fr)_9rem_5.5rem_auto] items-center gap-x-3";
+const LIST_COLUMNS = FILE_LIST_COLUMNS;
 
 export function FileListView({
   resources, selected, focusedName, tabStopName, dropTarget, cutNames, starredPaths, pathOf, touch, iconOptions, getImageUrl, handlers,
@@ -293,8 +295,8 @@ function FileListRow({ resource, isSelected, isFocused, isTabStop, isDropTarget,
         {!touch && (resource.isDirectory || resource.isSymlink ? "—" : <FileSize bytes={resource.contentLength} />)}
       </div>
       <div role="gridcell" className="flex items-center justify-end gap-0.5 w-[4.75rem]">
-        {!touch && !resource.isDirectory && !resource.isSymlink && (
-          <RowAction icon={Download} label={t("download")} onClick={() => handlers.onDownload(resource)} />
+        {!touch && !resource.isDirectory && !resource.isSymlink && handlers.onDownload && (
+          <RowAction icon={Download} label={t("download")} onClick={() => handlers.onDownload?.(resource)} />
         )}
         {!touch && handlers.canShare(resource) && (
           <RowAction icon={Share2} label={t("share")} onClick={() => handlers.onShare(resource)} />

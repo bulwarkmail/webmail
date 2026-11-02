@@ -6,6 +6,8 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useToastStore } from '@/stores/toast-store';
 import { useTaskStore } from '@/stores/task-store';
+import { usePolicyStore } from '@/stores/policy-store';
+import { DEFAULT_ORGANISATION_POLICY } from '@/lib/admin/organisation-policy';
 
 // The whole calendar page, with the shell around it stubbed out and the
 // stores holding a fixed set of calendars and events.
@@ -839,6 +841,26 @@ describe('CalendarApp day view tasks', () => {
       expect(screen.getByRole('heading', { name: 'tasks.edit' })).toBeInTheDocument();
     } finally {
       useSettingsStore.setState({ showTasksOnCalendar: false } as never);
+    }
+  });
+});
+
+describe('CalendarApp company calendars on a phone', () => {
+  it('lists them in the toolbar\'s calendar list, where hiding one is the synced choice', async () => {
+    media.mobile = true;
+    media.desktop = false;
+    const policy = usePolicyStore.getState().policy;
+    usePolicyStore.setState({ policy: { ...policy, organisation: { ...DEFAULT_ORGANISATION_POLICY, calendars: { feeds: [{ id: 'hol', name: 'Holidays', url: '', urlHeld: true, color: '#16a34a', refreshMinutes: 60 }], freeBusyGroup: '' } } } });
+    useSettingsStore.setState({ hiddenCompanyCalendars: [] } as never);
+    try {
+      renderApp();
+      // The toolbar's list (the sidebar heading has the same words).
+      fireEvent.click(document.querySelector<HTMLElement>('button[aria-label="my_calendars"]')!);
+      const list = (await screen.findByRole('heading', { name: 'my_calendars' })).parentElement!;
+      fireEvent.click(within(list).getByRole('button', { name: 'Holidays' }));
+      expect(useSettingsStore.getState().hiddenCompanyCalendars).toEqual(['hol']);
+    } finally {
+      usePolicyStore.setState({ policy });
     }
   });
 });

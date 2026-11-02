@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useSettingsStore } from '@/stores/settings-store';
+import { useSettingsStore, type AttachmentPosition } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
 import { DownloadsSettings } from './downloads-settings';
 import { TrustedSendersModal } from '@/components/trusted-senders-modal';
@@ -10,7 +10,7 @@ import { ChevronRight } from '@/components/icons';
 import { usePolicyStore } from '@/stores/policy-store';
 import { useContactStore } from '@/stores/contact-store';
 import { useAuthStore } from '@/stores/auth-store';
-import { useNoThirdPartyTraffic } from '@/hooks/use-third-party-mode';
+import { useRemoteContentBlockedByOrg } from '@/hooks/use-third-party-mode';
 
 /**
  * The Reading page: the open message. Opening it, how its body is drawn,
@@ -19,9 +19,11 @@ import { useNoThirdPartyTraffic } from '@/hooks/use-third-party-mode';
  * tab. List, delete and swipe rows live on the Message list page.
  */
 export function ReadingSettings() {
-  // No third-party traffic (#903) blocks remote content outright: the
-  // setting shows as the organisation's, set to block.
-  const remoteBlockedByOrg = useNoThirdPartyTraffic();
+  // No third-party traffic (#903), or the organisation locked "block":
+  // remote content never loads, so the setting shows as the organisation's,
+  // set to block, and trusting senders has no effect.
+  const remoteBlockedByOrg = useRemoteContentBlockedByOrg();
+  const tLock = useTranslations('remote_content_lock');
   const t = useTranslations('settings.email_behavior');
   const tPage = useTranslations('settings.reading_page');
   const [showTrustedModal, setShowTrustedModal] = useState(false);
@@ -136,7 +138,10 @@ export function ReadingSettings() {
         </SettingItem>
         )}
 
-        <SettingItem label={t('trusted_senders.label')} description={t('trusted_senders.description')}>
+        <SettingItem
+          label={t('trusted_senders.label')}
+          description={remoteBlockedByOrg ? tLock('trusted_senders_note') : t('trusted_senders.description')}
+        >
           <button
             onClick={() => setShowTrustedModal(true)}
             className="flex items-center gap-2 px-3 py-1.5 bg-muted hover:bg-accent rounded-md transition-colors"
@@ -146,7 +151,7 @@ export function ReadingSettings() {
           </button>
         </SettingItem>
 
-        <SettingItem nested label={t('trusted_senders.use_address_book_label')} description={t('trusted_senders.use_address_book_description')}>
+        <SettingItem nested label={t('trusted_senders.use_address_book_label')} description={t('trusted_senders.use_address_book_description')} locked={remoteBlockedByOrg}>
           <ToggleSwitch
             checked={!!trustedSendersAddressBook}
             onChange={(checked) => updateSetting('trustedSendersAddressBook', checked)}
@@ -156,17 +161,18 @@ export function ReadingSettings() {
         <TrustedSendersModal
           isOpen={showTrustedModal}
           onClose={() => setShowTrustedModal(false)}
+          readOnly={remoteBlockedByOrg}
         />
       </SettingsSection>
 
       <SettingsSection id="attachments" title={tPage('sections.attachments')}>
         <SettingItem label={t('attachment_position.label')} description={t('attachment_position.description')}>
           <Select
-            value={attachmentPosition}
-            onChange={(value) => updateSetting('attachmentPosition', value as 'beside-sender' | 'below-header')}
+            value={attachmentPosition === 'below-message' ? 'below-message' : 'below-header'}
+            onChange={(value) => updateSetting('attachmentPosition', value as AttachmentPosition)}
             options={[
-              { value: 'beside-sender', label: t('attachment_position.beside-sender') },
               { value: 'below-header', label: t('attachment_position.below-header') },
+              { value: 'below-message', label: t('attachment_position.below-message') },
             ]}
           />
         </SettingItem>

@@ -7,6 +7,7 @@ import { emailLinkSource } from "@/stores/email-store";
 import { useArchiveActionEnabled } from "@/lib/archive-gate";
 import { buildMailPath } from "@/lib/deep-links";
 import { useCopyLink } from "@/hooks/use-copy-link";
+import { usePhishingReport } from "@/hooks/use-phishing-report";
 import type { Email } from "@/lib/jmap/types";
 import {
   Reply,
@@ -36,6 +37,7 @@ import {
   Download,
   Printer,
   Code,
+  Fish,
 } from "@/components/icons";
 
 type Icon = ComponentType<{ className?: string }>;
@@ -61,6 +63,7 @@ export type MessageActionKey =
   | "star"
   | "pin"
   | "spam"
+  | "report_phishing"
   | "find_from_sender"
   | "export"
   | "print"
@@ -145,10 +148,14 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
   const t = useTranslations("context_menu");
   const tViewer = useTranslations("email_viewer");
   const tDeepLink = useTranslations("deep_link");
+  const tPhishing = useTranslations("phishing_report");
   const copyLink = useCopyLink();
   const archiveEnabled = useArchiveActionEnabled();
   const mountainView = useSettingsStore((state) => state.interfaceLayout === "mountain-view");
   const { email } = o;
+  // Report phishing (enterprise pack): while the admin set an address for
+  // the message's account. It sends mail, so it opens a confirm first.
+  const phishing = usePhishingReport([email], o.currentMailboxRole);
 
   const isUnread = !email.keywords?.$seen;
   const isStarred = !!email.keywords?.$flagged;
@@ -248,6 +255,9 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
           testId: inJunk ? "ctx-not-spam" : "ctx-spam",
         })]
       : [];
+    const reportPhishing = phishing.available
+      ? [item("report_phishing", Fish, tPhishing("action"), phishing.report, { testId: "ctx-report-phishing" })]
+      : [];
     const sender = email.from?.[0];
     const find = o.onFindFromSender && sender?.email
       ? [SEPARATOR, item("find_from_sender", Search, t("find_emails_from", { name: sender.name || sender.email }), o.onFindFromSender, { testId: "ctx-find-from" })]
@@ -263,12 +273,12 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
       ? [
           ...draft, ...replies, ...archive, del, read, SEPARATOR,
           ...move, tag, ...rules, ...copy, SEPARATOR,
-          star, ...pin, ...spam, ...find, SEPARATOR,
+          star, ...pin, ...spam, ...reportPhishing, ...find, SEPARATOR,
           ...links, ...file,
         ]
       : [
           ...draft, ...replies, ...links, ...archive, del, SEPARATOR,
-          ...move, ...copy, ...rules, star, ...pin, tag, ...spam, SEPARATOR,
+          ...move, ...copy, ...rules, star, ...pin, tag, ...spam, ...reportPhishing, SEPARATOR,
           read, SEPARATOR, ...file,
         ];
   }

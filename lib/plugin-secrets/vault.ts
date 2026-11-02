@@ -1,12 +1,14 @@
 // Per-user store of the credentials users connected for plugins. One
-// encrypted file per mail account; the secrets never leave the server again
-// except as an auth header on a request the proxy forwards to the
+// encrypted document per mail account; the secrets never leave the server
+// again except as an auth header on a request the proxy forwards to the
 // credential's own origin.
 
 import { createHash } from 'node:crypto';
-import { readFile, writeFile, mkdir, rename, unlink } from 'node:fs/promises';
 import path from 'node:path';
 import { decryptPayload, encryptPayload } from '@/lib/auth/crypto';
+import { getStore, type CollectionOptions } from '@/lib/shared-store';
+import { isStoreUnavailable, isStoredDataUnreadable, StoredDataUnreadableError } from '@/lib/stored-data-errors';
+import { moveUnreadableAside } from '@/lib/stored-data-quarantine';
 import type { CredentialInject } from './credentials';
 
 export interface VaultUser {
@@ -49,51 +51,89 @@ export function userKey(user: VaultUser): string {
   return createHash('sha256').update(`${user.username}:${user.serverUrl}`).digest('hex');
 }
 
-function vaultPath(user: VaultUser): string {
-  const dir = path.resolve(vaultDir());
-  const file = path.resolve(dir, `${userKey(user)}.enc`);
-  if (!file.startsWith(dir + path.sep)) throw new Error('Invalid vault path');
-  return file;
+const VAULT_FILE = /^[0-9a-f]{64}\.enc$/;
+
+/**
+ * One document per account, keyed by userKey (#1066). Local mode: today's
+ * `<vault dir>/<key>.enc`, base64 `encryptPayload` text, mode 0600.
+ */
+export const VAULT_COLLECTION: CollectionOptions = {
+  local: {
+    dir: () => vaultDir(),
+    file: (id) => `${id}.enc`,
+    idOf: (relative) => (VAULT_FILE.test(relative) ? relative.slice(0, -'.enc'.length) : null),
+    mode: 0o600,
+  },
+};
+
+function collection() {
+  return getStore().collection('plugin-secrets', VAULT_COLLECTION);
 }
 
-async function load(user: VaultUser): Promise<VaultData> {
-  let raw: string;
-  try {
-    raw = await readFile(vaultPath(user), 'utf8');
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return {};
-    throw error;
-  }
-  const payload = decryptPayload(raw, 'plugin-secrets');
+/**
+ * The user's credentials from a stored document; {} for none. One that
+ * doesn't decrypt (another session secret) throws StoredDataUnreadableError,
+ * so no write lands on top of it before it is moved aside (see modify).
+ */
+function decode(user: VaultUser, raw: Buffer | null): VaultData {
+  if (!raw) return {};
+  const payload = decryptPayload(raw.toString('utf8'), 'plugin-secrets');
+  if (!payload) throw new StoredDataUnreadableError('plugin credentials');
   // Bound to this user: a file copied over from another account's name
   // decrypts, but carries the other account's key and is ignored.
-  if (!payload || payload.u !== userKey(user)) return {};
+  if (payload.u !== userKey(user)) return {};
   const data = payload.d;
   return data && typeof data === 'object' ? (data as VaultData) : {};
 }
 
-async function save(user: VaultUser, data: VaultData): Promise<void> {
-  const file = vaultPath(user);
-  if (Object.keys(data).length === 0) {
-    try { await unlink(file); } catch { /* nothing stored */ }
-    return;
+async function load(user: VaultUser): Promise<VaultData> {
+  let stored;
+  try {
+    stored = await collection().get(userKey(user));
+  } catch (error) {
+    if (isStoreUnavailable(error)) throw error;
+    throw new StoredDataUnreadableError('plugin credentials', { cause: error });
   }
-  await mkdir(path.dirname(file), { recursive: true });
-  const tmp = `${file}.${process.pid}.tmp`;
-  await writeFile(tmp, encryptPayload({ u: userKey(user), d: data }, 'plugin-secrets'), { encoding: 'utf8', mode: 0o600 });
-  await rename(tmp, file);
+  try {
+    return decode(user, stored?.data ?? null);
+  } catch (error) {
+    // Reads as no credentials; the next write moves it aside.
+    if (isStoredDataUnreadable(error)) return {};
+    throw error;
+  }
 }
 
-// Writes for one user run one after another, so two saves can't drop each
-// other's changes.
-const queues = new Map<string, Promise<unknown>>();
-function serialize<T>(user: VaultUser, task: () => Promise<T>): Promise<T> {
-  const key = userKey(user);
-  const run = (queues.get(key) ?? Promise.resolve()).then(task, task);
-  const tail = run.catch(() => {});
-  queues.set(key, tail);
-  void tail.then(() => { if (queues.get(key) === tail) queues.delete(key); });
-  return run;
+/**
+ * Change the user's credentials in one step against what is stored now, so
+ * two writes at once (two tabs, two replicas) both land. `change` edits the
+ * data it gets and says whether it changed anything; it may run more than
+ * once. An empty vault is deleted.
+ *
+ * A vault that doesn't decrypt is moved aside first (kept next to the
+ * original as `.unreadable-<time>`, never overwritten), and the write goes
+ * on as if nothing was stored.
+ */
+async function modify<T>(user: VaultUser, change: (data: VaultData) => { result: T; changed: boolean }): Promise<T> {
+  const docs = collection();
+  const id = userKey(user);
+  for (let attempt = 0; ; attempt++) {
+    try {
+      let result!: T;
+      await docs.update(id, (current) => {
+        const data = decode(user, current);
+        const out = change(data);
+        result = out.result;
+        if (!out.changed) return undefined;
+        if (Object.keys(data).length === 0) return current ? null : undefined;
+        return encryptPayload({ u: userKey(user), d: data }, 'plugin-secrets');
+      });
+      return result;
+    } catch (error) {
+      if (!isStoredDataUnreadable(error) || attempt >= 2) throw error;
+      const current = await docs.get(id);
+      if (current) await moveUnreadableAside(docs, id, current, path.join(vaultDir(), `${id}.enc`), 'plugin credentials');
+    }
+  }
 }
 
 export async function getUserCredential(user: VaultUser, pluginId: string, credentialId: string): Promise<StoredCredential | null> {
@@ -134,8 +174,7 @@ export function putUserCredential(
   credentialId: string,
   input: { origin: string; inject: CredentialInject; label: string; username?: string; secret?: string },
 ): Promise<void> {
-  return serialize(user, async () => {
-    const data = await load(user);
+  return modify(user, (data) => {
     const existing = data[pluginId]?.[credentialId];
     const count = Object.values(data).reduce((n, c) => n + Object.keys(c).length, 0);
     if (!existing && count >= MAX_USER_CREDENTIALS) throw new VaultFullError();
@@ -153,7 +192,7 @@ export function putUserCredential(
         updatedAt: now,
       },
     };
-    await save(user, data);
+    return { result: undefined, changed: true };
   });
 }
 
@@ -165,32 +204,29 @@ export function setUserCredentialSecret(
   secret: string,
   username?: string,
 ): Promise<boolean> {
-  return serialize(user, async () => {
-    const data = await load(user);
+  return modify(user, (data) => {
     const existing = data[pluginId]?.[credentialId];
-    if (!existing) return false;
+    if (!existing) return { result: false, changed: false };
     data[pluginId][credentialId] = {
       ...existing,
       secret,
       ...(username ? { username } : {}),
       updatedAt: new Date().toISOString(),
     };
-    await save(user, data);
-    return true;
+    return { result: true, changed: true };
   });
 }
 
 /** Remove one credential, or all of a plugin's when credentialId is omitted. */
 export function deleteUserCredentials(user: VaultUser, pluginId: string, credentialId?: string): Promise<void> {
-  return serialize(user, async () => {
-    const data = await load(user);
-    if (!data[pluginId]) return;
+  return modify(user, (data) => {
+    if (!data[pluginId]) return { result: undefined, changed: false };
     if (credentialId) {
       delete data[pluginId][credentialId];
       if (Object.keys(data[pluginId]).length === 0) delete data[pluginId];
     } else {
       delete data[pluginId];
     }
-    await save(user, data);
+    return { result: undefined, changed: true };
   });
 }

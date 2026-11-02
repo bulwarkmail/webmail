@@ -8,6 +8,18 @@ import { logger } from '@/lib/logger';
 import { getStalwartCredentials } from '@/lib/stalwart/credentials';
 import { configManager } from '@/lib/admin/config-manager';
 import { getStalwartAdminAccessMode, type StalwartAdminAccessMode } from '@/lib/admin/stalwart-admin-access';
+import { isStoreUnavailable } from '@/lib/admin/admin-store';
+
+/**
+ * The shared store (#1066) can't be reached: the login limits can't be
+ * checked, so no password is tried.
+ */
+function signInUnavailable(): NextResponse {
+  return NextResponse.json(
+    { error: 'Sign-in is temporarily unavailable' },
+    { status: 503, headers: { 'Retry-After': '10' } },
+  );
+}
 
 /**
  * Check if the current user is a Stalwart admin by attempting an
@@ -26,10 +38,25 @@ import { getStalwartAdminAccessMode, type StalwartAdminAccessMode } from '@/lib/
  * Results are cached briefly per (server, user) — the admin panel's
  * layout and dashboard page between them trigger this three times on
  * every navigation, and admin status does not change on that timescale.
+ * Per instance (#1066): a demoted Stalwart admin keeps auto-login for up to
+ * 60 s on each. At most ADMIN_CHECK_CACHE_MAX entries, so one entry per
+ * credential that ever asked can't grow it without bound.
  */
 const ADMIN_CHECK_CACHE_MS = 60_000;
+const ADMIN_CHECK_CACHE_MAX = 1000;
 const ADMIN_CHECK_TIMEOUT_MS = 10_000;
 const adminCheckCache = new Map<string, { value: boolean; expires: number }>();
+
+function rememberAdminCheck(key: string, value: boolean): void {
+  const now = Date.now();
+  adminCheckCache.delete(key);
+  if (adminCheckCache.size >= ADMIN_CHECK_CACHE_MAX) {
+    for (const [k, entry] of adminCheckCache) if (entry.expires <= now) adminCheckCache.delete(k);
+  }
+  // Still full: the oldest entries go first.
+  while (adminCheckCache.size >= ADMIN_CHECK_CACHE_MAX) adminCheckCache.delete(adminCheckCache.keys().next().value!);
+  adminCheckCache.set(key, { value, expires: now + ADMIN_CHECK_CACHE_MS });
+}
 
 async function fetchWithTimeout(url: string, init: Parameters<typeof fetch>[1]): Promise<Response> {
   const controller = new AbortController();
@@ -72,7 +99,7 @@ async function checkStalwartAdmin(request: NextRequest, mode: StalwartAdminAcces
   if (cached && cached.expires > Date.now()) return cached.value;
 
   const isAdmin = await runStalwartAdminCheck(creds);
-  adminCheckCache.set(cacheKey, { value: isAdmin, expires: Date.now() + ADMIN_CHECK_CACHE_MS });
+  rememberAdminCheck(cacheKey, isAdmin);
   return isAdmin;
 }
 
@@ -174,7 +201,7 @@ export async function POST(request: NextRequest) {
     // Rate limit check. A browser an admin signed in from before is limited
     // on its own, so others using up the shared budget can't lock it out.
     const deviceId = await getAdminDeviceId();
-    const limit = deviceId ? checkDeviceRateLimit(deviceId) : checkRateLimit(ip);
+    const limit = deviceId ? await checkDeviceRateLimit(deviceId) : await checkRateLimit(ip);
     if (!limit.allowed) {
       const retryAfter = Math.ceil(limit.retryAfterMs / 1000);
       await auditLog('admin.login_blocked', { reason: 'rate_limit' }, ip);
@@ -204,6 +231,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
+    if (isStoreUnavailable(error)) return signInUnavailable();
     logger.error('Admin login error', { error: error instanceof Error ? error.message : 'Unknown error' });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
@@ -270,7 +298,18 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Cross-origin request rejected' }, { status: 403 });
     }
     const ip = getClientIP(request);
-    await clearAdminSessionCookie();
+    try {
+      await clearAdminSessionCookie();
+    } catch (error) {
+      if (!isStoreUnavailable(error)) throw error;
+      // The cookie is gone from this browser, but the sign-out couldn't be
+      // stored, so a copy of the cookie isn't refused yet.
+      await auditLog('admin.logout', { stored: false }, ip);
+      return NextResponse.json(
+        { error: 'Signed out in this browser, but the sign-out could not be saved, so a copy of the session still works until it expires. Try signing out again in a moment.' },
+        { status: 503, headers: { 'Retry-After': '10' } },
+      );
+    }
     await auditLog('admin.logout', {}, ip);
     return NextResponse.json({ ok: true });
   } catch (error) {

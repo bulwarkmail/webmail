@@ -3,7 +3,7 @@
 import type { ComponentType, ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ExternalLink } from "@/components/icons";
-import { resolveExternalLink } from "@/lib/plugin-hook-result";
+import { openExternalLink } from "@/lib/plugin-hook-result";
 import { formatMoment, formatMomentTime, isOtherZone, isWebLink, type FormatOptions } from "@/lib/structured-mail/format";
 import type { Link, Moment, ReservationStatus } from "@/lib/structured-mail/types";
 import { resolveTimeZone } from "@/lib/timezone";
@@ -89,12 +89,16 @@ export function CardLink({ link, label, icon: Icon = ExternalLink, emailId }: { 
       rel="noopener noreferrer"
       className={cn(ACTION_CLASS, "flex-wrap gap-y-0")}
       data-testid="structured-mail-link"
-      onClick={async (e) => {
+      onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        const target = await resolveExternalLink({ href: link.url, target: "_blank", emailId });
-        if (!target) return;
-        window.open(target, "_blank", "noopener,noreferrer");
+        void openExternalLink({ href: link.url, target: "_blank", emailId, text: label });
+      }}
+      onAuxClick={(e) => {
+        if (e.button !== 1) return;
+        e.preventDefault();
+        e.stopPropagation();
+        void openExternalLink({ href: link.url, target: "_blank", emailId, text: label });
       }}
     >
       <Icon aria-hidden="true" className="w-3.5 h-3.5 flex-shrink-0" />

@@ -1,5 +1,5 @@
 {
-  "meta_description": "Minimalistische webmailclient die het JMAP-protocol gebruikt",
+  "meta_description": "Zelf gehoste webmail voor e-mail, agenda, contacten en bestanden, gebouwd op JMAP",
   "login": {
     "title": "Webmail",
     "username_label": "E-mail",
@@ -461,7 +461,6 @@
     "view_in_light_mode": "Weergeven in lichte modus",
     "export_email": "Exporteren als .eml",
     "forward_as_attachment": "Doorsturen als bijlage",
-    "import_email": ".eml of .zip importeren…",
     "keyboard_shortcuts": "Sneltoetsen",
     "email_source": "E-mailbron",
     "draft_banner": "Dit bericht is een concept",
@@ -473,6 +472,9 @@
     "source_truncated": "De eerste {size} worden getoond. Exporteer het bericht voor de rest.",
     "source_copied": "Bron gekopieerd naar klembord",
     "attachments": "Bijlagen",
+    "attachments_count": "{count, plural, one {# bijlage} other {# bijlagen}}",
+    "attachments_show_more": "Nog {count} tonen",
+    "attachments_show_fewer": "Minder tonen",
     "important": "Belangrijk",
     "download": "Downloaden",
     "download_all": "Alles downloaden",
@@ -880,6 +882,35 @@
     "send_anyway": "Toch verzenden",
     "back": "Terug"
   },
+  "phishing_report": {
+    "action": "Phishing melden…",
+    "confirm_title": "Phishing melden?",
+    "confirm_message": "{count, plural, one {Het bericht gaat naar {address} en wordt naar Spam verplaatst.} other {Elk van de # berichten gaat als aparte melding naar {address} en wordt naar Spam verplaatst.}}",
+    "confirm": "Melden",
+    "cancel": "Annuleren",
+    "sending": "Bezig met melden…",
+    "done": "{count, plural, one {Gemeld bij {address} en naar Spam verplaatst.} other {# berichten gemeld bij {address} en naar Spam verplaatst.}}",
+    "not_moved": "{count, plural, one {Gemeld bij {address}, maar het bericht kon niet naar Spam worden verplaatst.} other {Gemeld bij {address}, maar # berichten konden niet naar Spam worden verplaatst.}}",
+    "failed": "{count, plural, one {Het bericht kon niet worden gemeld.} other {# berichten konden niet worden gemeld.}}",
+    "undo": "Ongedaan maken",
+    "undone": "{count, plural, one {Teruggezet. De melding was al verstuurd.} other {Teruggezet. De meldingen waren al verstuurd.}}",
+    "undo_failed": "Kon niet worden teruggezet.",
+    "banner": "Je hebt dit bericht als phishing gemeld. De links erin zijn uitgeschakeld.",
+    "link_off": "link uitgeschakeld",
+    "link_off_note": "(link uitgeschakeld)",
+    "no_subject": "(geen onderwerp)"
+  },
+  "classification": {
+    "picker_label": "Classificatie",
+    "chip_label": "Classificatie: {name}",
+    "none": "Geen classificatie",
+    "pick_required": "Kies een classificatie",
+    "required_hint": "Je organisatie vereist een classificatie.",
+    "required_toast": "Kies een classificatie voordat je verzendt.",
+    "quick_reply_needs_label": "Dit antwoord heeft een classificatie nodig. Kies er hier een en verzend het dan.",
+    "forward_needs_label": "Een classificatie is verplicht. Stuur het bericht door vanuit de opsteller.",
+    "received_hint": "Ingesteld door het e-mailprogramma van de afzender. Iedereen kan een classificatie instellen, dus het bewijst niets."
+  },
   "email_composer": {
     "select_from_directory": "Kiezen uit adresboek van de organisatie",
     "minimize": "Minimaliseren",
@@ -1248,8 +1279,6 @@
     "templates_import_errors": "Sommige sjablonen konden niet worden geïmporteerd",
     "templates_import_empty": "Geen sjablonen gevonden in het bestand",
     "export_email_error": "Kan e-mail niet exporteren",
-    "import_email_success": "E-mail succesvol geïmporteerd",
-    "import_email_error": "Kan e-mail niet importeren",
     "rule_created": "Regel gemaakt",
     "rule_merged": "Toegevoegd aan regel ‘{name}’",
     "rule_already_covered": "Valt al onder regel ‘{name}’",
@@ -1272,12 +1301,46 @@
     "tag_removed_count": "{count, plural, one {Label verwijderd van # e-mail} other {Label verwijderd van # e-mails}}",
     "new_mail_count": "{count, plural, one {# nieuw bericht} other {# nieuwe berichten}}"
   },
+  "org_notice": {
+    "label": "Mededeling",
+    "dismiss": "Mededeling sluiten",
+    "severity_info": "Informatie",
+    "severity_warning": "Waarschuwing",
+    "severity_critical": "Belangrijk"
+  },
+  "vacation_templates": {
+    "title": "Sjablonen van de organisatie",
+    "description": "Begin met een antwoord dat uw organisatie heeft geschreven. U kunt de tekst daarna aanpassen.",
+    "pick_label": "Sjabloon gebruiken",
+    "pick_placeholder": "Kies een sjabloon",
+    "deputy_label": "Adres van de vervanger",
+    "deputy_placeholder": "collega@example.com",
+    "deputy_hint": "Het antwoord noemt deze collega voor dringende zaken.",
+    "deputy_missing": "Vul eerst het adres van uw vervanger in.",
+    "deputy_name_label": "Naam van de vervanger",
+    "deputy_name_missing": "Vul eerst de naam van uw vervanger in.",
+    "apply": "Deze tekst gebruiken",
+    "apply_hint": "Vervangt het onderwerp en de tekst hieronder."
+  },
+  "retention_notice": {
+    "line": "Berichten hier worden {count, plural, one {# dag} other {# dagen}} nadat ze hierheen zijn verplaatst verwijderd."
+  },
+  "device_policy": {
+    "downloads_off": "Uw organisatie heeft downloaden uitgezet.",
+    "download_off_named": "{name}: uw organisatie heeft downloaden uitgezet",
+    "download_blocked": "Uw organisatie heeft downloaden uitgezet.",
+    "export_blocked": "Uw organisatie heeft het exporteren van e-mail uitgezet.",
+    "print_blocked": "Uw organisatie heeft afdrukken uitgezet."
+  },
   "third_party": {
     "push_needs_relay": "Pushmeldingen hebben een pushrelay van je organisatie nodig, en er is er geen ingesteld. Nieuwe e-mail wordt nog steeds getoond zolang de app open is.",
     "relay_desc": "Alleen de eigen relays van je organisatie worden aangeboden, omdat deze server geen externe diensten benadert.",
     "relay_none": "Geen ingesteld",
     "plugin_refused": "Niet gestart: deze plug-in maakt verbinding met externe diensten, en die heeft je organisatie uitgeschakeld.",
     "remote_content_blocked": "Je organisatie blokkeert inhoud van andere servers, daarom worden externe afbeeldingen in dit bericht niet getoond."
+  },
+  "remote_content_lock": {
+    "trusted_senders_note": "Je organisatie blokkeert externe inhoud in alle mail, dus die wordt ook bij vertrouwde afzenders niet geladen."
   },
   "date": {
     "today": "Vandaag",
@@ -1539,6 +1602,10 @@
         "label": "Gedeelde mailaccounts tonen",
         "description": "Toon de mappen van postvakken die met je zijn gedeeld onder Gedeeld in de zijbalk. Zet uit om ze allemaal te verbergen, of verberg hieronder losse accounts. Hun agenda's en contacten blijven zichtbaar."
       },
+      "compact_shared_mailboxes": {
+        "label": "Compacte gedeelde postvakken",
+        "description": "Toon elk gedeeld postvak als één regel die het Postvak IN opent, met de mappen eronder. Lege mappen zoals Concepten of Prullenbak worden weggelaten."
+      },
       "pro_interface": {
         "label": "Pro-interface (experimenteel)",
         "description": "Power user-indeling alleen voor desktop met meertabs berichtweergave en accountoverschrijdende workflows. De standaardinterface blijft onveranderd; u kunt op elk moment terugkeren.",
@@ -1769,6 +1836,12 @@
         "label": "Zoekopdracht wissen bij wisselen van map",
         "description": "Op een map klikken (Postvak IN, Verzonden…) wist de actieve zoekopdracht en toont die map. Uitgeschakeld blijft de zoekopdracht staan en wordt opnieuw uitgevoerd in de gekozen map."
       },
+      "search_default_scope": {
+        "label": "Zoeken in",
+        "description": "Waar een nieuwe zoekopdracht zoekt. Je kunt in de zoekfilters nog steeds een andere map kiezen.",
+        "all": "Alle mappen behalve Spam en Prullenbak",
+        "folder": "De geopende map"
+      },
       "request_read_receipt": {
         "label": "Standaard om leesbevestiging vragen",
         "description": "De aanvraag voor een leesbevestiging vooraf inschakelen bij het opstellen van een nieuw bericht."
@@ -1867,6 +1940,14 @@
         "above_quote": "Voor geciteerde tekst",
         "below_quote": "Na geciteerde tekst"
       },
+      "signature_new_mail": {
+        "label": "Handtekening bij nieuwe berichten",
+        "description": "Voegt je handtekening automatisch toe bij het opstellen van een nieuw bericht. Zet uit om elk nieuw bericht zonder te beginnen."
+      },
+      "signature_reply_forward": {
+        "label": "Handtekening bij antwoorden en doorsturen",
+        "description": "Voegt je handtekening automatisch toe bij antwoorden of doorsturen. Zet uit om ze zonder te versturen."
+      },
       "signature_separator": {
         "label": "Handtekening-scheider",
         "description": "De handtekening voorafgaan met de standaard scheidingsregel \"-- \" (RFC 3676). Zet uit als je liever direct van het bericht in de handtekening overgaat."
@@ -1896,8 +1977,8 @@
       "attachment_position": {
         "label": "Positie van bijlagen",
         "description": "Waar bijlagen in de e-mailkop worden weergegeven",
-        "beside-sender": "Naast de afzender",
-        "below-header": "Onder de kop"
+        "below-header": "Onder de kop",
+        "below-message": "Kaarten onder het bericht"
       },
       "emails_per_page": {
         "10": "10 e-mails",
@@ -3546,7 +3627,6 @@
     "new_folder": "Nieuwe map…",
     "rename": "Hernoemen…",
     "share": "Delen…",
-    "import_email": ".eml of .zip importeren…",
     "empty_folder": "Map leegmaken",
     "empty_folder_generic": "Map leegmaken",
     "delete_folder": "Map verwijderen",
@@ -5052,7 +5132,6 @@
     "settings_ascending": "Oplopend",
     "settings_descending": "Aflopend",
     "disabled_title": "De bestandsfunctie is uitgeschakeld door uw beheerder",
-    "disabled_description": "Grote bestandsuploads via WebDAV kunnen Stalwart/RocksDB-instabiliteit veroorzaken, waaronder geheugenfouten en onherstelbaar schijfgebruik. Verwijderde bestanden worden mogelijk niet onmiddellijk uit de opslag verwijderd. Deze functie wordt niet aanbevolen voor productieomgevingen.",
     "no_accounts": "Geen gekoppelde accounts.",
     "open_folder_tree": "Mappenstructuur openen",
     "migration_title": "Je bestanden worden bijgewerkt…",
@@ -5241,6 +5320,117 @@
   "unified_mailbox": {
     "search_unavailable": "Zoeken is niet beschikbaar in de gecombineerde weergave"
   },
+  "mail_import": {
+    "menu_import": "E-mail importeren…",
+    "settings_label": "E-mail importeren",
+    "settings_description": "Haal e-mail binnen uit .eml-, ZIP-, mbox- of Outlook-.pst- en -.ost-bestanden.",
+    "settings_button": "Importeren…",
+    "title": "E-mail importeren",
+    "description": "Kies .eml-, .zip-, .mbox- of Outlook-.pst- en -.ost-bestanden.",
+    "choose_files": "Bestanden kiezen…",
+    "chosen_files": "Gekozen bestanden",
+    "remove_file": "{name} verwijderen",
+    "format_eml": "Bericht",
+    "format_zip": "ZIP-archief",
+    "format_mbox": "mbox-bestand",
+    "format_pst": "Outlook-gegevensbestand",
+    "target_label": "Importeren in",
+    "target_top": "Hoogste niveau",
+    "keep_folders": "De mappen uit het bestand overnemen",
+    "keep_folders_hint": "Mappen met dezelfde naam worden opnieuw gebruikt.",
+    "resume": "Doorgaan waar de laatste import van deze bestanden stopte (al verwerkte berichten: {count})",
+    "quota_note": "Veel servers nemen per gebruiker maar ongeveer 1000 berichten of 50 MB per uur aan. Een grotere import pauzeert en gaat daarna vanzelf verder.",
+    "start": "Importeren",
+    "cancel": "Annuleren",
+    "running_title": "E-mail wordt geïmporteerd",
+    "progress_label": "Voortgang van de import",
+    "status_imported": "Geïmporteerde berichten: {count}",
+    "reading_file": "{name} wordt gelezen",
+    "paused": "Gepauzeerd tot {time}. De server neemt hoogstens {files} uploads of {size} per uur aan. De import gaat vanzelf verder.",
+    "paused_generic": "Gepauzeerd tot {time}. De uploadlimiet van de server is bereikt. De import gaat vanzelf verder.",
+    "background": "Op de achtergrond verder",
+    "cancel_import": "Import annuleren",
+    "chip": "E-mail wordt geïmporteerd: {percent}%",
+    "chip_paused": "Import gepauzeerd tot {time}",
+    "done_title": "Import voltooid",
+    "cancelled_title": "Import geannuleerd",
+    "failed_title": "Import gestopt",
+    "summary_imported": "Geïmporteerde berichten: {count}",
+    "summary_folders": "Aangemaakte mappen: {count}",
+    "summary_skipped": "Niet geïmporteerd:",
+    "skip_too_large": "Groter dan de server toestaat: {count}",
+    "skip_deleted": "Verwijderd in Thunderbird: {count}",
+    "skip_embedded": "Berichten die aan andere berichten hangen: {count}",
+    "skip_contact": "Contacten: {count}",
+    "skip_calendar": "Agenda-items: {count}",
+    "skip_other": "Andere items: {count}",
+    "summary_failed": "Kon niet worden geïmporteerd: {count}",
+    "failure_invalid": "geen geldig bericht",
+    "untitled": "(geen onderwerp)",
+    "cancelled_hint": "Importeer later dezelfde bestanden opnieuw in dezelfde map om verder te gaan.",
+    "close": "Sluiten",
+    "pst_note": "Uit Outlook-bestanden komt alleen e-mail mee. Contacten, agenda-items en taken worden geteld en overgeslagen.",
+    "pst_error_encrypted": "Dit Outlook-bestand gebruikt sterke versleuteling, die Bulwark niet kan lezen. Exporteer de e-mail in Outlook naar een nieuw .pst-bestand zonder versleuteling.",
+    "pst_error_not_pst": "Dit bestand is geen Outlook-gegevensbestand dat Bulwark kan lezen.",
+    "pst_error_unreadable": "Bulwark kon dit Outlook-bestand niet lezen.",
+    "pst_error_worker": "De lezer voor Outlook-bestanden is niet geladen. Laad de pagina opnieuw en probeer het nog eens.",
+    "error_over_quota": "De mailbox is vol, dus de import is gestopt. Maak ruimte en importeer dezelfde bestanden opnieuw in dezelfde map om verder te gaan.",
+    "error_forbidden": "U mag geen e-mail aan deze map toevoegen, dus de import is gestopt.",
+    "error_failures": "Te veel berichten na elkaar zijn mislukt, dus de import is gestopt. Importeer dezelfde bestanden later opnieuw in dezelfde map om verder te gaan.",
+    "error_network": "De verbinding met de server mislukte steeds, dus de import is gestopt. Importeer dezelfde bestanden opnieuw in dezelfde map om verder te gaan.",
+    "error_busy": "Deze bestanden worden al in een ander tabblad geïmporteerd.",
+    "retry_hint": "Importeer dezelfde bestanden opnieuw in dezelfde map om de mislukte nog eens te proberen.",
+    "skip_unreadable": "Onleesbaar in het Outlook-bestand: {count}",
+    "keep_folders_top_hint": "Op het hoogste niveau gaan Postvak IN, Verzonden items, Verwijderde items en dergelijke naar die van u.",
+    "toast_done": "Import voltooid. Geïmporteerd: {imported}, mislukt: {failed}.",
+    "toast_stopped": "De import is gestopt.",
+    "toast_show": "Tonen",
+    "section_title": "E-mailbestanden",
+    "section_description": "Haal e-mail binnen uit bestanden, of bewaar uw e-mail als bestanden."
+  },
+  "mail_export": {
+    "menu_export": "Map exporteren…",
+    "settings_label": "Alle e-mail exporteren",
+    "settings_description": "Bewaar alle mappen van dit account in één ZIP-bestand, als mbox- of .eml-bestanden.",
+    "settings_button": "Exporteren…",
+    "title_folder": "‘{name}’ exporteren",
+    "title_account": "Alle e-mail exporteren",
+    "description_folder": "Bewaar de berichten in deze map als bestand.",
+    "description_account": "Bewaar alle mappen van dit account in één ZIP-bestand.",
+    "format_label": "Indeling",
+    "format_mbox_folder": "mbox-bestand",
+    "format_eml_folder": "ZIP met .eml-bestanden",
+    "format_mbox_account": "ZIP met één mbox-bestand per map",
+    "format_eml_account": "ZIP met .eml-bestanden, één map per e-mailmap",
+    "hint_mbox": "Thunderbird, Apple Mail en de meeste e-mailprogramma's openen mbox-bestanden.",
+    "hint_eml": "Eén bestand per bericht, dat elk e-mailprogramma kan openen.",
+    "save_picker": "U kiest waar het bestand wordt opgeslagen.",
+    "save_download": "Het bestand wordt gedownload als de export klaar is.",
+    "save_memory": "Deze browser houdt de hele export in het geheugen en kan dus hoogstens 200 MB opslaan. Gebruik voor meer Chrome of Edge, of exporteer map voor map.",
+    "start": "Exporteren",
+    "cancel": "Annuleren",
+    "running_title": "E-mail wordt geëxporteerd",
+    "progress_label": "Voortgang van de export",
+    "status_exported": "Geëxporteerde berichten: {count} van {total}",
+    "paused": "Gepauzeerd tot {time}: de server vroeg om een pauze. De export gaat vanzelf verder.",
+    "background": "Op de achtergrond verder",
+    "cancel_export": "Export annuleren",
+    "chip": "E-mail wordt geëxporteerd: {percent}%",
+    "chip_paused": "Export gepauzeerd tot {time}",
+    "done_title": "Export voltooid",
+    "cancelled_title": "Export geannuleerd",
+    "failed_title": "Export gestopt",
+    "summary_exported": "Geëxporteerde berichten: {count}",
+    "summary_file": "Opgeslagen als {name} ({size}).",
+    "summary_failed": "Kon niet worden geëxporteerd: {count}",
+    "download_again": "Opnieuw downloaden",
+    "too_large": "De export is groter dan deze browser in het geheugen kan houden. Gebruik Chrome of Edge, of exporteer map voor map.",
+    "close": "Sluiten",
+    "untitled": "(geen onderwerp)",
+    "toast_done": "Export voltooid: {name}",
+    "toast_stopped": "De export is gestopt.",
+    "toast_show": "Tonen"
+  },
   "recover_deleted": {
     "tab": "Verwijderde items herstellen",
     "title": "Verwijderde items herstellen",
@@ -5273,6 +5463,51 @@
     "updated": "{name} heeft \"{title}\" bijgewerkt",
     "cancelled": "{name} heeft \"{title}\" geannuleerd",
     "untitled": "Afspraak zonder titel"
+  },
+  "company_calendars": {
+    "section": "Organisatie"
+  },
+  "vacation_calendar": {
+    "label": "Mijn agenda blokkeren",
+    "description": "Zet een bezette afspraak in je agenda voor de tijd dat je weg bent, zodat niemand dan vergaderingen met je plant.",
+    "no_access_managed": "De agenda van dit account kan niet worden geblokkeerd: je hebt er geen schrijfrechten voor.",
+    "no_calendar": "Je agenda kan niet worden geblokkeerd: Bulwark vond geen agenda om de afspraak in te zetten.",
+    "filter_warning": "Als je dit aanzet, staat je eigen filterscript uit zolang het antwoord actief is."
+  },
+  "calendar_delegate": {
+    "answer_for": "Antwoorden namens {name}",
+    "no_write": "Je ziet de uitnodigingen van {name}, maar kunt er niet namens hen op antwoorden. Vraag om bewerkrechten.",
+    "also_invited": "Je bent zelf ook uitgenodigd en deze server kan jouw antwoord niet onderscheiden van dat van {name}. {name} moet deze zelf beantwoorden.",
+    "answered_by": "Beantwoord door {who}"
+  },
+  "free_busy_share": {
+    "button": "Mijn vrij/bezet delen met {group}",
+    "already": "Je vrij/bezet is gedeeld met {group}",
+    "done": "Je vrij/bezet is nu gedeeld met {group}.",
+    "error": "Kon je vrij/bezet niet delen. Probeer het opnieuw.",
+    "group_label": "Groep",
+    "title": "Vrij/bezet",
+    "description": "Collega’s in de groep zien wanneer je bezet bent, niet wat je afspraken zijn. ‘Tijden voorstellen’ gebruikt dit."
+  },
+  "find_time": {
+    "suggest": "Tijden voorstellen",
+    "searching": "Vrije tijden zoeken",
+    "slots_title": "Vrij voor iedereen die Bulwark kon controleren",
+    "slot": "{day}, {start} tot {end}",
+    "none": "Geen vrije tijd in de komende 10 werkdagen.",
+    "picked": "Afspraak verplaatst naar {slot}",
+    "rate_limited": "Te veel opvragingen in de afgelopen minuut. Probeer het over een minuut opnieuw.",
+    "unavailable": "Vrij/bezet is niet beschikbaar op deze server, dus Bulwark kan geen tijden voorstellen.",
+    "not_checked": "Niet gecontroleerd:",
+    "not_checked_item": "{who}: {reason}",
+    "reason_external": "buiten je organisatie",
+    "reason_unknown": "bezette tijden onbekend",
+    "reason_not_found": "niet gevonden op deze server",
+    "reason_error": "kon niet worden gecontroleerd",
+    "unknown_note": "Bulwark ziet bezette tijden alleen in agenda’s die met je zijn gedeeld. Bij deze mensen kan het vrij niet onderscheiden van niet gedeeld.",
+    "directory_off": "Bulwark kan op deze server geen mensen opzoeken. Je beheerder kan directoryquery’s aanzetten in Stalwart.",
+    "not_looked_up": "Dit adres kon niet worden opgezocht",
+    "found": "Vrije tijden gevonden: {count}"
   },
   "share_notifications": {
     "someone": "Iemand",
@@ -5411,6 +5646,76 @@
     "install": "Installeren",
     "dont_remind": "Niet meer herinneren",
     "dismiss_aria": "Installatiemelding sluiten"
+  },
+  "app_update": {
+    "ready": "Er is een nieuwe versie van {appName} klaar.",
+    "reload": "Opnieuw laden"
+  },
+  "offline": {
+    "settings": {
+      "title": "Offline",
+      "description": "E-mail op dit apparaat lezen en schrijven zonder verbinding.",
+      "keep_label": "E-mail op dit apparaat bewaren",
+      "keep_description": "Bewaart de laatste 30 dagen van je inbox en van de mappen die je opent, tot 250 MB, versleuteld in deze browser. Offline kun je e-mail lezen, markeren en verplaatsen, en wat je schrijft wacht in Postvak UIT. Afmelden verwijdert alles.",
+      "warning": "Iedereen die dit browserprofiel kan gebruiken, kan deze e-mail lezen. Zet dit alleen aan op je eigen apparaat en gebruik schijfversleuteling.",
+      "forbidden": "Je organisatie staat niet toe dat e-mail op apparaten wordt bewaard.",
+      "unsupported": "Deze browser kan geen e-mail bewaren voor offline gebruik.",
+      "syncing": "Je e-mail wordt op dit apparaat opgeslagen…",
+      "usage": "{size} op dit apparaat",
+      "usage_updated": "{size} op dit apparaat, bijgewerkt {time}",
+      "off_confirm_title": "Offlinemodus uitzetten?",
+      "off_confirm_message": "{count, plural, one {# bericht in Postvak UIT is nog niet verzonden.} other {# berichten in Postvak UIT zijn nog niet verzonden.}} Uitzetten verwijdert ze, samen met de e-mail die op dit apparaat is bewaard.",
+      "off_confirm": "Uitzetten"
+    },
+    "outbox": {
+      "title": "Postvak UIT",
+      "description": "Berichten die je offline hebt geschreven. Ze worden verzonden zodra dit apparaat weer online is.",
+      "empty": "Er wacht niets op verzending.",
+      "no_subject": "(geen onderwerp)",
+      "to": "Aan: {recipients}",
+      "status_waiting": "Wacht op verbinding",
+      "status_sending": "Wordt verzonden",
+      "status_failed": "Kon niet worden verzonden: {error}",
+      "status_uncertain": "De verbinding viel weg tijdens het verzenden. Kijk in Verzonden voordat je het opnieuw verzendt.",
+      "retry": "Opnieuw verzenden",
+      "delete": "Verwijderen",
+      "delete_confirm_title": "Dit bericht verwijderen?",
+      "delete_confirm_message": "Het is niet verzonden en kan niet worden teruggehaald.",
+      "changes": "{count, plural, one {# wijziging} other {# wijzigingen}} aan gelezen, markeringen of mappen worden verzonden zodra je weer online bent.",
+      "status_held": "De regels van je organisatie zijn veranderd terwijl dit bericht wachtte. Schrijf het opnieuw om het te verzenden.",
+      "retry_label": "Opnieuw verzenden: {subject}",
+      "delete_label": "Verwijderen: {subject}"
+    },
+    "banner": {
+      "offline": "Je bent offline. Je ziet de e-mail die op dit apparaat is bewaard. Wat je wijzigt of schrijft, wordt verzonden zodra je weer online bent.",
+      "outbox": "{count, plural, one {# bericht} other {# berichten}} in Postvak UIT",
+      "server_down": "De mailserver is niet bereikbaar. Je ziet de e-mail die op dit apparaat is bewaard. Wat je wijzigt of schrijft, wordt verzonden zodra hij weer antwoordt."
+    },
+    "toast": {
+      "queued": "Opgeslagen in Postvak UIT. Het wordt verzonden zodra je weer online bent.",
+      "sent": "Verzonden uit Postvak UIT: {subject}",
+      "send_failed": "Een bericht in Postvak UIT kon niet worden verzonden: {subject}",
+      "refused_delete": "Definitief verwijderen kan alleen met een verbinding. Probeer het opnieuw als je online bent.",
+      "refused_other": "Hiervoor is een verbinding nodig. Probeer het opnieuw als je online bent.",
+      "forbidden": "Je organisatie heeft de offlinemodus uitgezet. De e-mail op dit apparaat is verwijderd.",
+      "back_online": "Je bent weer online. Laad opnieuw om je aan te melden en te verzenden wat wacht.",
+      "reload": "Opnieuw laden",
+      "held": "Een bericht in Postvak UIT heeft je nodig: {subject}",
+      "lost": "Deze berichten zijn niet verzonden en zijn verwijderd: {subjects}"
+    },
+    "signout": {
+      "title": "Afmelden met onverzonden berichten?",
+      "message": "{count, plural, one {# bericht is nog niet verzonden.} other {# berichten zijn nog niet verzonden.}} Afmelden verwijdert ze.",
+      "confirm": "Afmelden",
+      "lost": "Deze berichten zijn niet verzonden en zijn bij het afmelden verwijderd: {subjects}"
+    },
+    "errors": {
+      "unavailable": "Hiervoor is een verbinding nodig. Probeer het opnieuw als je online bent.",
+      "plugins_down": "Je plug-in voor ondertekenen of versleutelen werkt niet offline. Verzend dit als je weer online bent.",
+      "file_missing": "Een bestand dat je offline hebt bijgevoegd, staat niet meer op dit apparaat. Voeg het opnieuw toe.",
+      "no_sent_mailbox": "Je map Verzonden is niet gevonden.",
+      "no_drafts_mailbox": "Je map Concepten is niet gevonden."
+    }
   },
   "deep_link": {
     "message_not_found": "Dit bericht is niet meer beschikbaar.",
@@ -5734,11 +6039,15 @@
       },
       "compose_read": {
         "title": "Het bericht lezen dat je schrijft",
-        "body": "De tekst van een bericht lezen terwijl je het schrijft, als je de plug-in in de editor gebruikt. Niet de handtekening of het geciteerde bericht."
+        "body": "Een bericht lezen terwijl je het schrijft, als je de plug-in in de editor gebruikt: de tekst, het onderwerp, de ontvangers inclusief Bcc, en de namen en groottes van bijlagen. Niet de handtekening of het geciteerde bericht."
       },
       "compose_write": {
         "title": "Het bericht wijzigen dat je schrijft",
         "body": "Tekst in een bericht vervangen of toevoegen terwijl je het schrijft, als je de plug-in in de editor gebruikt. Je kunt elke wijziging ongedaan maken en je beslist nog steeds zelf of je het verstuurt."
+      },
+      "compose_check": {
+        "title": "Controleren wat u schrijft",
+        "body": "Leest wat u in de editor schrijft terwijl u typt en kan het naar de dienst sturen die het gebruikt. Alleen als de controle aan staat, en niets zolang een bericht is ingesteld om te worden ondertekend of versleuteld. Tekst die u schreef voordat u dat aanzette, is mogelijk al gecontroleerd."
       },
       "email_forward": {
         "title": "Je e-mail doorsturen",
@@ -5758,7 +6067,7 @@
       },
       "ui_tasks": {
         "title": "Toevoegen aan de takenweergave",
-        "body": "Eigen secties tonen in de details van een taak en knoppen in de takenlijst."
+        "body": "Eigen secties tonen in de details van een taak, knoppen in de takenlijst en een eigen takenlijst in plaats van die van Bulwark."
       },
       "ui_files": {
         "title": "Toevoegen aan de bestandenweergave",
@@ -5810,6 +6119,10 @@
       "error_server": "Vul het adres van de server in, bijvoorbeeld https://cloud.example.com",
       "error_save": "Opslaan mislukt: {error}"
     }
+  },
+  "send_guards": {
+    "not_running": "Niet verzonden. Een controle die je organisatie verplicht stelt, draait niet. Probeer het zo meteen opnieuw.",
+    "stopped_working": "Niet verzonden. Een controle die je organisatie verplicht stelt, werkt niet meer. Laad de pagina opnieuw. Helpt dat niet, meld het dan bij je beheerder."
   },
   "plugin_list": {
     "filters": "Filters",
@@ -6053,6 +6366,77 @@
       "party_size": "Aantal personen: {count}",
       "added_from": "Toegevoegd vanuit een e-mail van {domain}",
       "added_from_subject": "Toegevoegd vanuit de e-mail ‘{subject}’ van {domain}"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Spelling",
+      "grammar": "Grammatica",
+      "style": "Stijl",
+      "other": "Suggestie"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Geen suggesties",
+      "suggestions": "Suggesties",
+      "replace_with": "Vervangen door {text}",
+      "also": "Ook van {checker}",
+      "ignore": "Negeren",
+      "add_to_dictionary": "Toevoegen aan woordenboek",
+      "disable_rule": "Deze regel uitzetten",
+      "changed": "De tekst is gewijzigd. Wacht op de volgende controle."
+    },
+    "list_item": "{word}: {message} Suggestie: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Geen spel- of grammaticafouten} one {# spel- of grammaticafout} other {# spel- of grammaticafouten}}",
+    "status": {
+      "title": "Tekstcontrole",
+      "off": "Tekstcontrole uit",
+      "paused": "Tekstcontrole gepauzeerd",
+      "rate_limited": "Controle gepauzeerd",
+      "unavailable": "Controle niet beschikbaar",
+      "checking": "Controleren…",
+      "issues": "{count, plural, =0 {Geen problemen} one {# probleem} other {# problemen}}"
+    },
+    "panel": {
+      "title": "Tekstcontrole",
+      "required": "Verplicht gesteld door je organisatie",
+      "check_message": "Dit bericht controleren",
+      "notice": "Terwijl je typt, gaat de tekst die je schrijft naar {checkers} om te worden gecontroleerd. Je handtekening en het geciteerde bericht worden overgeslagen. Er wordt niets verstuurd zolang een bericht is ingesteld om te worden ondertekend of versleuteld; wat je schreef voordat je dat aanzette, is mogelijk al gecontroleerd.",
+      "turn_on": "Tekstcontrole aanzetten",
+      "paused_protected": "Er wordt niets gecontroleerd zolang dit bericht wordt ondertekend of versleuteld.",
+      "paused_unknown": "{plugin} kan berichten ondertekenen of versleutelen zonder dat hier te tonen, dus er wordt niets gecontroleerd zolang het aan staat.",
+      "rate_limited": "{checker} vroeg om te wachten. De controle start over een minuut opnieuw.",
+      "unavailable": "{checker} kan nu niet controleren. Het probeert het opnieuw als je verder typt.",
+      "no_issues": "Geen problemen gevonden.",
+      "list_label": "Problemen in dit bericht",
+      "shortcuts": "Volgend probleem: {next}. Vorige: {previous}."
+    },
+    "notice": {
+      "on": "Tekstcontrole staat aan. Terwijl je typt, gaat de tekst die je schrijft naar {checkers} om te worden gecontroleerd, zonder je handtekening of het geciteerde bericht. Er wordt niets verstuurd zolang een bericht is ingesteld om te worden ondertekend of versleuteld; wat je daarvoor schreef, is mogelijk al gecontroleerd.",
+      "forced": "Je organisatie heeft tekstcontrole aangezet. Terwijl je typt, gaat de tekst die je schrijft naar {checkers} om te worden gecontroleerd, zonder je handtekening of het geciteerde bericht. Er wordt niets verstuurd zolang een bericht is ingesteld om te worden ondertekend of versleuteld; wat je daarvoor schreef, is mogelijk al gecontroleerd.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Versturen met openstaande problemen?",
+      "body": "{count, plural, one {Er staat nog # spel- of grammaticafout} other {Er staan nog # spel- of grammaticafouten}} open in dit bericht.",
+      "review": "Bekijken",
+      "send": "Toch versturen"
+    },
+    "settings": {
+      "title": "Tekstcontrole",
+      "description": "Spel- en grammaticafouten onderstrepen terwijl je schrijft, met suggesties om ze te verbeteren.",
+      "enable": "Spelling en grammatica controleren terwijl ik typ",
+      "enable_description": "De tekst die je schrijft gaat naar de add-on voor tekstcontrole en de dienst die die gebruikt, zonder je handtekening of geciteerde berichten. Er wordt niets verstuurd zolang een bericht is ingesteld om te worden ondertekend of versleuteld.",
+      "no_checker": "Er is geen add-on voor tekstcontrole geïnstalleerd. Vraag je beheerder er een toe te voegen.",
+      "plugin_description": "Stuurt wat je schrijft naar {plugin}.",
+      "writing_language": "Schrijftaal",
+      "writing_language_description": "De taal waarin je meestal schrijft. De tekstcontrole en de spellingcontrole van je browser gebruiken die.",
+      "auto": "Automatisch herkennen"
+    },
+    "shortcuts": {
+      "next_issue": "Volgende spel- of grammaticafout",
+      "previous_issue": "Vorige spel- of grammaticafout"
     }
   }
 }

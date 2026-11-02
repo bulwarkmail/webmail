@@ -28,6 +28,8 @@ vi.mock('@/lib/admin/config-manager', () => ({
       organisation: { disclaimer: { html: '<p>Acme GmbH</p>', text: 'Acme GmbH' } },
       scopes: SCOPES,
     }),
+    getPolicyVersion: () => 'v1',
+    getPolicyWithVersion() { return { policy: this.getPolicy(), version: 'v1' }; },
   },
 }));
 vi.mock('@/lib/logger', () => ({ logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() } }));

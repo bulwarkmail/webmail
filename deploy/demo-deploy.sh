@@ -30,6 +30,9 @@ DATA=/opt/bulwark-demo-data
 # exists only so pruning cannot collect the image we may need to go back to.
 PREVIOUS=bulwark-demo:previous
 STATE=/opt/bulwark-demo-deploy
+# Optional extra environment for the container (e.g. ERROR_REPORTING_DSN),
+# one VAR=value per line. Not in a bind-mounted dir: the app never sees it.
+ENV_FILE=/opt/bulwark-demo-data/demo.env
 
 log() { echo "[demo-deploy] $*"; }
 
@@ -45,11 +48,14 @@ version_of() { docker_ image inspect -f '{{index .Config.Labels "org.opencontain
 # host port 3002, and the three bind mounts that keep the demo past the setup
 # wizard (admin/config.json holds setupComplete).
 run_container() {
+  local env_args=()
+  if [ -f "$ENV_FILE" ]; then env_args=(--env-file "$ENV_FILE"); fi
   docker_ rm -f "$NAME" >/dev/null 2>&1 || true
   docker_ run -d \
     --name "$NAME" \
     --restart unless-stopped \
     -p "${PORT}:3000" \
+    ${env_args[@]+"${env_args[@]}"} \
     -e DEMO_MODE=true \
     -v "$DATA/admin:/app/data/admin" \
     -v "$DATA/settings:/app/data/settings" \

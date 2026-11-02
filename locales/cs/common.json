@@ -1,5 +1,5 @@
 {
-  "meta_description": "Minimalistický webmailový klient využívající protokol JMAP",
+  "meta_description": "Webmail pro vlastní hosting s poštou, kalendářem, kontakty a soubory, postavený na JMAP",
   "login": {
     "title": "Webmail",
     "username_label": "E-mail",
@@ -461,7 +461,6 @@
     "view_in_light_mode": "Zobrazit v světlém režimu",
     "export_email": "Exportovat jako .eml",
     "forward_as_attachment": "Přeposlat jako přílohu",
-    "import_email": "Importovat .eml nebo .zip…",
     "keyboard_shortcuts": "Klávesové zkratky",
     "email_source": "Zdrojový kód zprávy",
     "draft_banner": "Tato zpráva je koncept",
@@ -473,6 +472,9 @@
     "source_truncated": "Zobrazeno prvních {size}. Zbytek uvidíte po exportu zprávy.",
     "source_copied": "Zdrojový kód byl zkopírován do schránky",
     "attachments": "Přílohy",
+    "attachments_count": "{count, plural, one {# příloha} few {# přílohy} many {# přílohy} other {# příloh}}",
+    "attachments_show_more": "Zobrazit dalších {count}",
+    "attachments_show_fewer": "Zobrazit méně",
     "important": "Důležité",
     "download": "Stáhnout",
     "download_all": "Stáhnout vše",
@@ -880,6 +882,35 @@
     "send_anyway": "Přesto odeslat",
     "back": "Zpět"
   },
+  "phishing_report": {
+    "action": "Nahlásit phishing…",
+    "confirm_title": "Nahlásit phishing?",
+    "confirm_message": "{count, plural, one {Zpráva bude odeslána na {address} a přesunuta do složky Spam.} few {# zprávy budou odeslány na {address}, každá jako samostatné hlášení, a přesunuty do složky Spam.} many {# zprávy bude odesláno na {address}, každá jako samostatné hlášení, a přesunuto do složky Spam.} other {# zpráv bude odesláno na {address}, každá jako samostatné hlášení, a přesunuto do složky Spam.}}",
+    "confirm": "Nahlásit",
+    "cancel": "Zrušit",
+    "sending": "Nahlašování…",
+    "done": "{count, plural, one {Nahlášeno na {address} a přesunuto do složky Spam.} few {# zprávy nahlášeny na {address} a přesunuty do složky Spam.} many {# zprávy nahlášeno na {address} a přesunuto do složky Spam.} other {# zpráv nahlášeno na {address} a přesunuto do složky Spam.}}",
+    "not_moved": "{count, plural, one {Nahlášeno na {address}, ale zprávu se nepodařilo přesunout do složky Spam.} few {Nahlášeno na {address}, ale # zprávy se nepodařilo přesunout do složky Spam.} many {Nahlášeno na {address}, ale # zprávy se nepodařilo přesunout do složky Spam.} other {Nahlášeno na {address}, ale # zpráv se nepodařilo přesunout do složky Spam.}}",
+    "failed": "{count, plural, one {Zprávu se nepodařilo nahlásit.} few {# zprávy se nepodařilo nahlásit.} many {# zprávy se nepodařilo nahlásit.} other {# zpráv se nepodařilo nahlásit.}}",
+    "undo": "Zpět",
+    "undone": "{count, plural, one {Vráceno zpět. Hlášení už bylo odesláno.} few {Vráceno zpět. Hlášení už byla odeslána.} many {Vráceno zpět. Hlášení už byla odeslána.} other {Vráceno zpět. Hlášení už byla odeslána.}}",
+    "undo_failed": "Nepodařilo se vrátit zpět.",
+    "banner": "Tuto zprávu jste nahlásili jako phishing. Odkazy v ní jsou vypnuté.",
+    "link_off": "odkaz vypnut",
+    "link_off_note": "(odkaz vypnut)",
+    "no_subject": "(bez předmětu)"
+  },
+  "classification": {
+    "picker_label": "Klasifikace",
+    "chip_label": "Klasifikace: {name}",
+    "none": "Bez klasifikace",
+    "pick_required": "Vyberte klasifikaci",
+    "required_hint": "Vaše organizace vyžaduje klasifikaci.",
+    "required_toast": "Před odesláním vyberte klasifikaci.",
+    "quick_reply_needs_label": "Tato odpověď potřebuje klasifikaci. Vyberte ji zde a pak odešlete.",
+    "forward_needs_label": "Klasifikace je povinná. Přepošlete zprávu z editoru zpráv.",
+    "received_hint": "Nastavil ji poštovní program odesílatele. Klasifikaci může nastavit kdokoli, takže nic nedokazuje."
+  },
   "email_composer": {
     "select_from_directory": "Vybrat z adresáře",
     "minimize": "Minimalizovat",
@@ -1248,8 +1279,6 @@
     "templates_import_errors": "Některé šablony se nepodařilo importovat",
     "templates_import_empty": "V souboru nebyly nalezeny žádné šablony",
     "export_email_error": "Export zprávy selhal",
-    "import_email_success": "Zpráva byla úspěšně importována",
-    "import_email_error": "Import zprávy selhal",
     "rule_created": "Pravidlo vytvořeno",
     "rule_merged": "Přidáno do pravidla „{name}“",
     "rule_already_covered": "Už to pokrývá pravidlo „{name}“",
@@ -1272,12 +1301,46 @@
     "tag_removed_count": "{count, plural, one {Štítek odebrán z # zprávy} few {Štítek odebrán ze # zpráv} other {Štítek odebrán z # zpráv}}",
     "new_mail_count": "{count, plural, one {# nová zpráva} few {# nové zprávy} other {# nových zpráv}}"
   },
+  "org_notice": {
+    "label": "Oznámení",
+    "dismiss": "Zavřít oznámení",
+    "severity_info": "Informace",
+    "severity_warning": "Upozornění",
+    "severity_critical": "Důležité"
+  },
+  "vacation_templates": {
+    "title": "Šablony organizace",
+    "description": "Začněte odpovědí, kterou připravila vaše organizace. Text pak můžete upravit.",
+    "pick_label": "Použít šablonu",
+    "pick_placeholder": "Vyberte šablonu",
+    "deputy_label": "Adresa zástupce",
+    "deputy_placeholder": "kolega@example.com",
+    "deputy_hint": "Odpověď uvede tohoto kolegu pro naléhavé záležitosti.",
+    "deputy_missing": "Nejdřív zadejte adresu svého zástupce.",
+    "deputy_name_label": "Jméno zástupce",
+    "deputy_name_missing": "Nejdřív zadejte jméno svého zástupce.",
+    "apply": "Použít tento text",
+    "apply_hint": "Nahradí předmět a text níže."
+  },
+  "retention_notice": {
+    "line": "Zprávy zde se smažou {count, plural, one {# den} few {# dny} many {# dne} other {# dní}} poté, co sem byly přesunuty."
+  },
+  "device_policy": {
+    "downloads_off": "Stahování vypnula vaše organizace.",
+    "download_off_named": "{name}: stahování vypnula vaše organizace",
+    "download_blocked": "Vaše organizace vypnula stahování.",
+    "export_blocked": "Vaše organizace vypnula export pošty.",
+    "print_blocked": "Tisk vypnula vaše organizace."
+  },
   "third_party": {
     "push_needs_relay": "Push oznámení potřebují push relay provozovaný vaší organizací a žádný není nastaven. Nová pošta se dál zobrazuje, dokud je aplikace otevřená.",
     "relay_desc": "Nabízejí se jen vlastní relaye vaší organizace, protože tento server nekontaktuje externí služby.",
     "relay_none": "Žádný nenastaven",
     "plugin_refused": "Nespuštěno: tento plugin se připojuje k externím službám, které vaše organizace vypnula.",
     "remote_content_blocked": "Vaše organizace blokuje obsah z jiných serverů, proto se vzdálené obrázky v této zprávě nezobrazují."
+  },
+  "remote_content_lock": {
+    "trusted_senders_note": "Vaše organizace blokuje vzdálený obsah ve všech zprávách, takže se nenačítá ani od důvěryhodných odesílatelů."
   },
   "date": {
     "today": "Dnes",
@@ -1539,6 +1602,10 @@
         "label": "Zobrazit sdílené poštovní účty",
         "description": "Zobrazit složky schránek sdílených s vámi v postranním panelu pod Sdílené. Vypnutím skryjete všechny, nebo níže skryjte jednotlivé účty. Jejich kalendáře a kontakty zůstanou."
       },
+      "compact_shared_mailboxes": {
+        "label": "Kompaktní sdílené schránky",
+        "description": "Zobrazit každou sdílenou schránku jako jeden řádek, který otevře její Doručené, se složkami pod ním. Prázdné složky jako Koncepty nebo Koš se vynechají."
+      },
       "pro_interface": {
         "label": "Pro rozhraní (experimentální)",
         "description": "Rozložení pro pokročilé uživatele pouze pro stolní počítače s prohlížením zpráv na více kartách a pracovními postupy napříč účty. Standardní rozhraní zůstává nedotčeno; kdykoli se můžete vrátit.",
@@ -1769,6 +1836,12 @@
         "label": "Vymazat hledání při přepnutí složky",
         "description": "Kliknutí na složku (Doručená pošta, Odeslaná…) vymaže aktivní hledání a zobrazí složku. Když je vypnuto, hledání zůstává a spustí se znovu ve zvolené složce."
       },
+      "search_default_scope": {
+        "label": "Hledat v",
+        "description": "Kde hledá nové hledání. Jinou složku můžete stále vybrat ve filtrech hledání.",
+        "all": "Všechny složky kromě spamu a koše",
+        "folder": "Otevřená složka"
+      },
       "request_read_receipt": {
         "label": "Standardně vyžadovat potvrzení o přečtení",
         "description": "Při psaní nové zprávy předem zapnout žádost o potvrzení o přečtení."
@@ -1876,6 +1949,14 @@
         "above_quote": "Před citovaným textem",
         "below_quote": "Za citovaným textem"
       },
+      "signature_new_mail": {
+        "label": "Podpis u nových zpráv",
+        "description": "Při psaní nové zprávy automaticky vloží váš podpis. Vypněte, pokud chcete každou novou zprávu začínat bez podpisu."
+      },
+      "signature_reply_forward": {
+        "label": "Podpis u odpovědí a přeposílání",
+        "description": "Při odpovídání nebo přeposílání automaticky připojí váš podpis. Vypněte, pokud je chcete odesílat bez podpisu."
+      },
       "signature_separator": {
         "label": "Oddělovač podpisu",
         "description": "Před podpis přidat standardní oddělovací řádek \"-- \" (RFC 3676). Vypněte, pokud chcete plynule přejít z textu zprávy do podpisu."
@@ -1896,8 +1977,8 @@
       "attachment_position": {
         "label": "Pozice příloh",
         "description": "Kde zobrazovat přílohy v hlavičce e-mailu",
-        "beside-sender": "Vedle odesílatele",
-        "below-header": "Pod hlavičkou"
+        "below-header": "Pod hlavičkou",
+        "below-message": "Karty pod zprávou"
       },
       "emails_per_page": {
         "10": "10 zpráv",
@@ -3546,7 +3627,6 @@
     "new_folder": "Nová složka…",
     "rename": "Přejmenovat…",
     "share": "Sdílet…",
-    "import_email": "Importovat .eml nebo .zip…",
     "empty_folder": "Vyprázdnit složku",
     "empty_folder_generic": "Vyprázdnit složku",
     "delete_folder": "Smazat složku",
@@ -5052,7 +5132,6 @@
     "settings_ascending": "Vzestupně",
     "settings_descending": "Sestupně",
     "disabled_title": "Funkce Soubory je zakázána správcem",
-    "disabled_description": "Nahrávání velkých souborů přes WebDAV může způsobit nestabilitu Stalwart/RocksDB, včetně pádů z důvodu nedostatku paměti a nevratného zaplnění disku. Odstraněné soubory nemusí být okamžitě odstraněny z úložiště. Tato funkce se nedoporučuje v produkčním prostředí.",
     "no_accounts": "Žádné připojené účty.",
     "open_folder_tree": "Otevřít strom složek",
     "migration_title": "Aktualizace vašich souborů…",
@@ -5241,6 +5320,117 @@
   "unified_mailbox": {
     "search_unavailable": "Vyhledávání není ve sjednoceném zobrazení k dispozici"
   },
+  "mail_import": {
+    "menu_import": "Importovat poštu…",
+    "settings_label": "Importovat poštu",
+    "settings_description": "Přeneste poštu ze souborů .eml, ZIP, mbox nebo Outlook .pst a .ost.",
+    "settings_button": "Importovat…",
+    "title": "Importovat poštu",
+    "description": "Vyberte soubory .eml, .zip, .mbox nebo Outlook .pst a .ost.",
+    "choose_files": "Vybrat soubory…",
+    "chosen_files": "Vybrané soubory",
+    "remove_file": "Odebrat {name}",
+    "format_eml": "Zpráva",
+    "format_zip": "Archiv ZIP",
+    "format_mbox": "Soubor mbox",
+    "format_pst": "Datový soubor Outlooku",
+    "target_label": "Importovat do",
+    "target_top": "Nejvyšší úroveň",
+    "keep_folders": "Znovu vytvořit složky ze souboru",
+    "keep_folders_hint": "Složky se stejným názvem se použijí znovu.",
+    "resume": "Pokračovat tam, kde se poslední import těchto souborů zastavil (již hotové zprávy: {count})",
+    "quota_note": "Mnoho serverů přijímá od jednoho uživatele jen asi 1000 zpráv nebo 50 MB za hodinu. Větší import se pozastaví a pak pokračuje sám.",
+    "start": "Importovat",
+    "cancel": "Zrušit",
+    "running_title": "Importuje se pošta",
+    "progress_label": "Průběh importu",
+    "status_imported": "Importované zprávy: {count}",
+    "reading_file": "Čte se {name}",
+    "paused": "Pozastaveno do {time}. Server přijímá nejvýše {files} nahrání nebo {size} za hodinu. Import pokračuje sám.",
+    "paused_generic": "Pozastaveno do {time}. Byl dosažen limit nahrávání serveru. Import pokračuje sám.",
+    "background": "Běžet na pozadí",
+    "cancel_import": "Zrušit import",
+    "chip": "Importuje se pošta: {percent} %",
+    "chip_paused": "Import pozastaven do {time}",
+    "done_title": "Import dokončen",
+    "cancelled_title": "Import zrušen",
+    "failed_title": "Import zastaven",
+    "summary_imported": "Importované zprávy: {count}",
+    "summary_folders": "Vytvořené složky: {count}",
+    "summary_skipped": "Neimportováno:",
+    "skip_too_large": "Větší, než server přijme: {count}",
+    "skip_deleted": "Smazané v Thunderbirdu: {count}",
+    "skip_embedded": "Zprávy připojené k jiným zprávám: {count}",
+    "skip_contact": "Kontakty: {count}",
+    "skip_calendar": "Položky kalendáře: {count}",
+    "skip_other": "Jiné položky: {count}",
+    "summary_failed": "Nelze importovat: {count}",
+    "failure_invalid": "není platná zpráva",
+    "untitled": "(bez předmětu)",
+    "cancelled_hint": "Chcete-li pokračovat později, importujte stejné soubory znovu do stejné složky.",
+    "close": "Zavřít",
+    "pst_note": "Z outlookových souborů se přenáší jen pošta. Kontakty, položky kalendáře a úkoly se spočítají a vynechají.",
+    "pst_error_encrypted": "Tento soubor Outlooku používá vysoké šifrování, které Bulwark neumí přečíst. V Outlooku exportujte poštu do nového souboru .pst bez šifrování.",
+    "pst_error_not_pst": "Tento soubor není datový soubor Outlooku, který by Bulwark uměl přečíst.",
+    "pst_error_unreadable": "Bulwark tento soubor Outlooku nedokázal přečíst.",
+    "pst_error_worker": "Čtečka souborů Outlooku se nenačetla. Načtěte stránku znovu a zkuste to ještě jednou.",
+    "error_over_quota": "Schránka je plná, proto se import zastavil. Uvolněte místo a importujte stejné soubory znovu do stejné složky, abyste pokračovali.",
+    "error_forbidden": "Do této složky nesmíte přidávat poštu, proto se import zastavil.",
+    "error_failures": "Příliš mnoho zpráv za sebou selhalo, proto se import zastavil. Importujte stejné soubory později znovu do stejné složky, abyste pokračovali.",
+    "error_network": "Spojení se serverem opakovaně selhalo, proto se import zastavil. Importujte stejné soubory znovu do stejné složky, abyste pokračovali.",
+    "error_busy": "Tyto soubory se už importují v jiné kartě.",
+    "retry_hint": "Importujte stejné soubory znovu do stejné složky, abyste zkusili neúspěšné ještě jednou.",
+    "skip_unreadable": "V souboru Outlooku nečitelné: {count}",
+    "keep_folders_top_hint": "Na nejvyšší úrovni skončí Doručená pošta, Odeslaná pošta, Odstraněná pošta a podobné ve vašich vlastních.",
+    "toast_done": "Import dokončen. Importováno: {imported}, selhalo: {failed}.",
+    "toast_stopped": "Import se zastavil.",
+    "toast_show": "Zobrazit",
+    "section_title": "Soubory s poštou",
+    "section_description": "Přeneste poštu ze souborů, nebo uložte svou poštu jako soubory."
+  },
+  "mail_export": {
+    "menu_export": "Exportovat složku…",
+    "settings_label": "Exportovat všechnu poštu",
+    "settings_description": "Uložit všechny složky tohoto účtu do jednoho souboru ZIP jako soubory mbox nebo .eml.",
+    "settings_button": "Exportovat…",
+    "title_folder": "Exportovat „{name}“",
+    "title_account": "Exportovat všechnu poštu",
+    "description_folder": "Uložit zprávy v této složce jako soubor.",
+    "description_account": "Uložit všechny složky tohoto účtu do jednoho souboru ZIP.",
+    "format_label": "Formát",
+    "format_mbox_folder": "Soubor mbox",
+    "format_eml_folder": "ZIP se soubory .eml",
+    "format_mbox_account": "ZIP s jedním souborem mbox na složku",
+    "format_eml_account": "ZIP se soubory .eml, jedna složka na poštovní složku",
+    "hint_mbox": "Thunderbird, Apple Mail a většina poštovních programů otevře soubory mbox.",
+    "hint_eml": "Jeden soubor na zprávu, který otevře každý poštovní program.",
+    "save_picker": "Sami vyberete, kam se soubor uloží.",
+    "save_download": "Soubor se stáhne, až bude export hotový.",
+    "save_memory": "Tento prohlížeč drží celý export v paměti, takže uloží nejvýše 200 MB. Pro větší export použijte Chrome nebo Edge, nebo exportujte složku po složce.",
+    "start": "Exportovat",
+    "cancel": "Zrušit",
+    "running_title": "Exportuje se pošta",
+    "progress_label": "Průběh exportu",
+    "status_exported": "Exportované zprávy: {count} z {total}",
+    "paused": "Pozastaveno do {time}: server požádal o přestávku. Export pokračuje sám.",
+    "background": "Běžet na pozadí",
+    "cancel_export": "Zrušit export",
+    "chip": "Exportuje se pošta: {percent} %",
+    "chip_paused": "Export pozastaven do {time}",
+    "done_title": "Export dokončen",
+    "cancelled_title": "Export zrušen",
+    "failed_title": "Export zastaven",
+    "summary_exported": "Exportované zprávy: {count}",
+    "summary_file": "Uloženo jako {name} ({size}).",
+    "summary_failed": "Nelze exportovat: {count}",
+    "download_again": "Stáhnout znovu",
+    "too_large": "Export je větší, než tento prohlížeč udrží v paměti. Použijte Chrome nebo Edge, nebo exportujte složku po složce.",
+    "close": "Zavřít",
+    "untitled": "(bez předmětu)",
+    "toast_done": "Export dokončen: {name}",
+    "toast_stopped": "Export se zastavil.",
+    "toast_show": "Zobrazit"
+  },
   "recover_deleted": {
     "tab": "Obnovit smazané položky",
     "title": "Obnovit smazané položky",
@@ -5273,6 +5463,51 @@
     "updated": "{name} aktualizoval(a) „{title}“",
     "cancelled": "{name} zrušil(a) „{title}“",
     "untitled": "Událost bez názvu"
+  },
+  "company_calendars": {
+    "section": "Organizace"
+  },
+  "vacation_calendar": {
+    "label": "Zablokovat můj kalendář",
+    "description": "Přidá obsazenou událost na dobu vaší nepřítomnosti, aby vám tehdy nikdo neplánoval schůzky.",
+    "no_access_managed": "Kalendář tohoto účtu nelze zablokovat: nemáte do něj přístup pro zápis.",
+    "no_calendar": "Kalendář nelze zablokovat: Bulwark nenašel kalendář, kam událost přidat.",
+    "filter_warning": "Zapnutím se vypne váš vlastní skript filtrů, dokud je odpověď aktivní."
+  },
+  "calendar_delegate": {
+    "answer_for": "Odpovědět za: {name}",
+    "no_write": "Vidíte pozvánky uživatele {name}, ale nemůžete za něj odpovídat. Požádejte o přístup k úpravám.",
+    "also_invited": "Jste pozváni také a tento server nerozliší vaši odpověď od odpovědi uživatele {name}. Na tuto musí odpovědět {name}.",
+    "answered_by": "Odpověděl(a): {who}"
+  },
+  "free_busy_share": {
+    "button": "Sdílet můj volný čas se skupinou {group}",
+    "already": "Váš volný čas je sdílen se skupinou {group}",
+    "done": "Váš volný čas je nyní sdílen se skupinou {group}.",
+    "error": "Volný čas se nepodařilo sdílet. Zkuste to znovu.",
+    "group_label": "Skupina",
+    "title": "Volno/obsazeno",
+    "description": "Kolegové ve skupině vidí, kdy jste obsazeni, ne jaké máte události. Používá to funkce Navrhnout časy."
+  },
+  "find_time": {
+    "suggest": "Navrhnout časy",
+    "searching": "Hledají se volné časy",
+    "slots_title": "Volno pro všechny, které Bulwark mohl ověřit",
+    "slot": "{day}, {start} až {end}",
+    "none": "V příštích 10 pracovních dnech není volný čas.",
+    "picked": "Událost přesunuta na {slot}",
+    "rate_limited": "V poslední minutě bylo příliš mnoho dotazů. Zkuste to za minutu znovu.",
+    "unavailable": "Informace o volnu nejsou na tomto serveru k dispozici, takže Bulwark nemůže navrhnout časy.",
+    "not_checked": "Neověřeno:",
+    "not_checked_item": "{who}: {reason}",
+    "reason_external": "mimo vaši organizaci",
+    "reason_unknown": "obsazené časy neznámé",
+    "reason_not_found": "na tomto serveru nenalezen",
+    "reason_error": "nelze ověřit",
+    "unknown_note": "Bulwark vidí obsazené časy jen v kalendářích, které s vámi někdo sdílí. U těchto lidí nerozliší volno od nesdíleného kalendáře.",
+    "directory_off": "Bulwark na tomto serveru nemůže vyhledávat lidi. Správce může ve Stalwartu zapnout dotazy do adresáře.",
+    "not_looked_up": "Adresu nelze vyhledat",
+    "found": "Nalezené volné časy: {count}"
   },
   "share_notifications": {
     "someone": "Někdo",
@@ -5411,6 +5646,76 @@
     "install": "Nainstalovat",
     "dont_remind": "Už mi to nepřipomínat",
     "dismiss_aria": "Zavřít výzvu k instalaci"
+  },
+  "app_update": {
+    "ready": "Je připravena nová verze aplikace {appName}.",
+    "reload": "Načíst znovu"
+  },
+  "offline": {
+    "settings": {
+      "title": "Offline",
+      "description": "Čtěte a pište poštu na tomto zařízení bez připojení.",
+      "keep_label": "Uchovávat poštu na tomto zařízení",
+      "keep_description": "Uchovává posledních 30 dní doručené pošty a složek, které otevřete, až 250 MB, zašifrované v tomto prohlížeči. Offline můžete poštu číst, označovat a přesouvat a to, co napíšete, čeká v k odeslání. Odhlášení vše odstraní.",
+      "warning": "Kdokoli, kdo může používat tento profil prohlížeče, si tuto poštu může přečíst. Zapněte to jen na svém zařízení a používejte šifrování disku.",
+      "forbidden": "Vaše organizace nepovoluje uchovávat poštu na zařízeních.",
+      "unsupported": "Tento prohlížeč nemůže uchovávat poštu pro práci offline.",
+      "syncing": "Ukládání pošty do tohoto zařízení…",
+      "usage": "{size} na tomto zařízení",
+      "usage_updated": "{size} na tomto zařízení, aktualizováno {time}",
+      "off_confirm_title": "Vypnout režim offline?",
+      "off_confirm_message": "{count, plural, one {# zpráva k odeslání nebyla odeslána.} few {# zprávy k odeslání nebyly odeslány.} many {# zprávy k odeslání nebylo odesláno.} other {# zpráv k odeslání nebylo odesláno.}} Vypnutím se smažou spolu s poštou uchovanou na tomto zařízení.",
+      "off_confirm": "Vypnout"
+    },
+    "outbox": {
+      "title": "K odeslání",
+      "description": "Zprávy napsané offline. Odešlou se, až bude zařízení znovu online.",
+      "empty": "Nic nečeká na odeslání.",
+      "no_subject": "(bez předmětu)",
+      "to": "Komu: {recipients}",
+      "status_waiting": "Čeká na připojení",
+      "status_sending": "Odesílá se",
+      "status_failed": "Nelze odeslat: {error}",
+      "status_uncertain": "Připojení se při odesílání přerušilo. Než ji odešlete znovu, podívejte se do Odeslaných.",
+      "retry": "Odeslat znovu",
+      "delete": "Smazat",
+      "delete_confirm_title": "Smazat tuto zprávu?",
+      "delete_confirm_message": "Nebyla odeslána a nelze ji obnovit.",
+      "changes": "{count, plural, one {# změna} few {# změny} many {# změny} other {# změn}} přečtení, příznaků nebo složek se odešle, až budete znovu online.",
+      "status_held": "Pravidla vaší organizace se změnila, zatímco zpráva čekala. Napište ji znovu, abyste ji odeslali.",
+      "retry_label": "Odeslat znovu: {subject}",
+      "delete_label": "Smazat: {subject}"
+    },
+    "banner": {
+      "offline": "Jste offline. Vidíte poštu uchovanou na tomto zařízení. Co změníte nebo napíšete, se odešle, až budete znovu online.",
+      "outbox": "{count, plural, one {# zpráva} few {# zprávy} many {# zprávy} other {# zpráv}} k odeslání",
+      "server_down": "Poštovní server není dostupný. Vidíte poštu uchovanou na tomto zařízení. Co změníte nebo napíšete, se odešle, až znovu odpoví."
+    },
+    "toast": {
+      "queued": "Uloženo k odeslání. Odešle se, až budete znovu online.",
+      "sent": "Odesláno z fronty k odeslání: {subject}",
+      "send_failed": "Zprávu k odeslání se nepodařilo odeslat: {subject}",
+      "refused_delete": "Trvalé smazání vyžaduje připojení. Zkuste to znovu, až budete online.",
+      "refused_other": "Na to je potřeba připojení. Zkuste to znovu, až budete online.",
+      "forbidden": "Vaše organizace vypnula režim offline. Pošta uchovaná na tomto zařízení byla odstraněna.",
+      "back_online": "Jste znovu online. Načtěte stránku znovu, abyste se přihlásili a odeslali, co čeká.",
+      "reload": "Načíst znovu",
+      "held": "Zpráva k odeslání potřebuje vaši pozornost: {subject}",
+      "lost": "Tyto zprávy nebyly odeslány a byly smazány: {subjects}"
+    },
+    "signout": {
+      "title": "Odhlásit se s neodeslanými zprávami?",
+      "message": "{count, plural, one {# zpráva nebyla odeslána.} few {# zprávy nebyly odeslány.} many {# zprávy nebylo odesláno.} other {# zpráv nebylo odesláno.}} Odhlášením se smažou.",
+      "confirm": "Odhlásit se",
+      "lost": "Tyto zprávy nebyly odeslány a při odhlášení byly smazány: {subjects}"
+    },
+    "errors": {
+      "unavailable": "Na to je potřeba připojení. Zkuste to znovu, až budete online.",
+      "plugins_down": "Váš plugin pro podepisování nebo šifrování offline neběží. Odešlete to, až budete znovu online.",
+      "file_missing": "Soubor přiložený offline už na tomto zařízení není. Přiložte ho znovu.",
+      "no_sent_mailbox": "Složka Odeslané nebyla nalezena.",
+      "no_drafts_mailbox": "Složka Koncepty nebyla nalezena."
+    }
   },
   "deep_link": {
     "message_not_found": "Tato zpráva už není dostupná.",
@@ -5734,11 +6039,15 @@
       },
       "compose_read": {
         "title": "Číst zprávu, kterou píšete",
-        "body": "Číst text zprávy během psaní, když plugin použijete v editoru. Ne podpis ani citovanou zprávu."
+        "body": "Číst zprávu během psaní, když plugin použijete v editoru: text, předmět, příjemce včetně skryté kopie a názvy a velikosti příloh. Ne podpis ani citovanou zprávu."
       },
       "compose_write": {
         "title": "Měnit zprávu, kterou píšete",
         "body": "Nahrazovat nebo přidávat text ve zprávě během psaní, když plugin použijete v editoru. Každou změnu můžete vrátit a o odeslání stále rozhodujete vy."
+      },
+      "compose_check": {
+        "title": "Kontrolovat, co píšete",
+        "body": "Čte, co píšete v editoru, během psaní a může to posílat službě, kterou používá. Jen když je kontrola zapnutá, a nic, dokud je zpráva nastavená k podepsání nebo zašifrování. Text, který jste napsali, než jste to zapnuli, už mohl být zkontrolován."
       },
       "email_forward": {
         "title": "Přeposílat vaši poštu",
@@ -5758,7 +6067,7 @@
       },
       "ui_tasks": {
         "title": "Přidávat obsah do sekce Úkoly",
-        "body": "Zobrazuje vlastní sekce v podrobnostech úkolu a tlačítka v seznamu úkolů."
+        "body": "Zobrazuje vlastní sekce v podrobnostech úkolu, tlačítka v seznamu úkolů a vlastní seznam úkolů místo seznamu Bulwarku."
       },
       "ui_files": {
         "title": "Přidávat obsah do sekce Soubory",
@@ -5810,6 +6119,10 @@
       "error_server": "Zadejte adresu serveru, například https://cloud.example.com",
       "error_save": "Uložení se nezdařilo: {error}"
     }
+  },
+  "send_guards": {
+    "not_running": "Neodesláno. Kontrola, kterou vaše organizace vyžaduje, právě neběží. Zkuste to za chvíli znovu.",
+    "stopped_working": "Neodesláno. Kontrola, kterou vaše organizace vyžaduje, přestala fungovat. Načtěte stránku znovu. Pokud to nepomůže, obraťte se na správce."
   },
   "plugin_list": {
     "filters": "Filtry",
@@ -6053,6 +6366,77 @@
       "party_size": "Počet osob: {count}",
       "added_from": "Přidáno z e-mailu od {domain}",
       "added_from_subject": "Přidáno z e-mailu „{subject}“ od {domain}"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Pravopis",
+      "grammar": "Gramatika",
+      "style": "Styl",
+      "other": "Návrh"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Žádné návrhy",
+      "suggestions": "Návrhy",
+      "replace_with": "Nahradit za {text}",
+      "also": "Také od {checker}",
+      "ignore": "Ignorovat",
+      "add_to_dictionary": "Přidat do slovníku",
+      "disable_rule": "Vypnout toto pravidlo",
+      "changed": "Text se změnil. Počkejte na další kontrolu."
+    },
+    "list_item": "{word}: {message} Návrh: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Žádné pravopisné ani gramatické chyby} one {# pravopisná nebo gramatická chyba} few {# pravopisné nebo gramatické chyby} many {# pravopisné nebo gramatické chyby} other {# pravopisných nebo gramatických chyb}}",
+    "status": {
+      "title": "Kontrola textu",
+      "off": "Kontrola textu vypnuta",
+      "paused": "Kontrola textu pozastavena",
+      "rate_limited": "Kontrola pozastavena",
+      "unavailable": "Kontrola není k dispozici",
+      "checking": "Kontroluje se…",
+      "issues": "{count, plural, =0 {Žádné problémy} one {# problém} few {# problémy} many {# problému} other {# problémů}}"
+    },
+    "panel": {
+      "title": "Kontrola textu",
+      "required": "Vyžaduje vaše organizace",
+      "check_message": "Zkontrolovat tuto zprávu",
+      "notice": "Během psaní se váš text posílá ke kontrole službě {checkers}. Váš podpis a citovaná zpráva se vynechávají. Dokud je zpráva nastavená k podepsání nebo zašifrování, neposílá se nic; co jste napsali předtím, než jste to zapnuli, už mohlo být zkontrolováno.",
+      "turn_on": "Zapnout kontrolu textu",
+      "paused_protected": "Dokud je tato zpráva nastavená k podepsání nebo zašifrování, nic se nekontroluje.",
+      "paused_unknown": "{plugin} může podepisovat nebo šifrovat zprávy, aniž by se to zde zobrazilo, proto se nic nekontroluje, dokud je zapnutý.",
+      "rate_limited": "{checker} požádal o počkání. Kontrola se znovu spustí za minutu.",
+      "unavailable": "{checker} teď nemůže kontrolovat. Zkusí to znovu, až budete pokračovat v psaní.",
+      "no_issues": "Nebyly nalezeny žádné problémy.",
+      "list_label": "Problémy v této zprávě",
+      "shortcuts": "Další problém: {next}. Předchozí: {previous}."
+    },
+    "notice": {
+      "on": "Kontrola textu je zapnutá. Během psaní se váš text posílá ke kontrole službě {checkers}, bez vašeho podpisu a citované zprávy. Dokud je zpráva nastavená k podepsání nebo zašifrování, neposílá se nic; co jste napsali předtím, už mohlo být zkontrolováno.",
+      "forced": "Vaše organizace zapnula kontrolu textu. Během psaní se váš text posílá ke kontrole službě {checkers}, bez vašeho podpisu a citované zprávy. Dokud je zpráva nastavená k podepsání nebo zašifrování, neposílá se nic; co jste napsali předtím, už mohlo být zkontrolováno.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Odeslat s nevyřešenými problémy?",
+      "body": "{count, plural, one {V této zprávě zůstává # nevyřešená pravopisná nebo gramatická chyba.} few {V této zprávě zůstávají # nevyřešené pravopisné nebo gramatické chyby.} many {V této zprávě zůstává # nevyřešené pravopisné nebo gramatické chyby.} other {V této zprávě zůstává # nevyřešených pravopisných nebo gramatických chyb.}}",
+      "review": "Zkontrolovat",
+      "send": "Přesto odeslat"
+    },
+    "settings": {
+      "title": "Kontrola textu",
+      "description": "Podtrhává pravopisné a gramatické chyby během psaní a nabízí návrhy na opravu.",
+      "enable": "Kontrolovat pravopis a gramatiku během psaní",
+      "enable_description": "Text, který píšete, se posílá doplňku pro kontrolu textu a službě, kterou používá, bez vašeho podpisu a citovaných zpráv. Dokud je zpráva nastavená k podepsání nebo zašifrování, neposílá se nic.",
+      "no_checker": "Není nainstalovaný žádný doplněk pro kontrolu textu. Požádejte správce, aby nějaký přidal.",
+      "plugin_description": "Posílá, co píšete, do {plugin}.",
+      "writing_language": "Jazyk psaní",
+      "writing_language_description": "Jazyk, ve kterém obvykle píšete. Používá ho kontrola textu i kontrola pravopisu ve vašem prohlížeči.",
+      "auto": "Rozpoznat automaticky"
+    },
+    "shortcuts": {
+      "next_issue": "Další pravopisná nebo gramatická chyba",
+      "previous_issue": "Předchozí pravopisná nebo gramatická chyba"
     }
   }
 }

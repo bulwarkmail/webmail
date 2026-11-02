@@ -1,5 +1,6 @@
 import type { ShareChange, ShareChangeResult, ShareTarget } from "./share-batch";
 import type { ShareKind } from "./share-rights";
+import type { DownloadKind } from "@/lib/download-guard";
 import type { ArchiveListResult, ArchiveQueryPage, RestoreResult } from "@/lib/recovery/archived-items";
 import type { Attachment, Email, Mailbox, MailboxRights, StateChange, AccountStates, CollectionChanges, ShareNotification, BusyPeriod, CalendarParticipantIdentity, CalendarEventNotification, Thread, Identity, EmailAddress, ContactCard, AddressBook, AddressBookRights, VacationResponse, Calendar, CreateCalendarOptions, CalendarRights, CalendarEvent, CalendarEventFilter, CalendarTask, FileNode, FileNodeRights, Principal, PrincipalAvailability, PrincipalListing, PushSubscription, EmailPushConfig, ScheduledEmail, SendEmailResult, SharedAccount } from "./types";
 import type { SieveScript, SieveCapabilities } from "./sieve-types";
@@ -38,6 +39,16 @@ export interface KeywordDiscoveryResult {
   total: number;
   complete: boolean;
 }
+
+/** One message for `importUploadedEmails`. */
+export interface UploadedEmailImport {
+  blobId: string;
+  mailboxIds: Record<string, boolean>;
+  keywords: Record<string, boolean>;
+  receivedAt?: string;
+}
+
+export type UploadedEmailImportResult = { id: string } | { error: string; type?: string };
 
 /** What `getBlobsAsBase64` brought back. */
 export interface BlobBatch {
@@ -336,6 +347,8 @@ export interface IJMAPClient {
     properties: string[],
     accountId?: string,
     limit?: number,
+    /** `transfer`: a mail export's own request (a 429 doesn't pause the rest of the client). */
+    opts?: { transfer?: boolean },
   ): Promise<Array<Record<string, unknown>>>;
 
   // ── Email mutations ───────────────────────────────────────────
@@ -383,8 +396,10 @@ export interface IJMAPClient {
   moveMailboxContents(fromMailboxId: string, toMailboxId: string, accountId?: string, markAsRead?: boolean): Promise<number>;
   markMailboxAsRead(mailboxId: string, accountId?: string): Promise<number>;
   markAllAsRead(excludeMailboxIds?: string[], accountId?: string): Promise<number>;
-  markAsSpam(emailId: string, accountId?: string, markAsRead?: boolean): Promise<void>;
-  undoSpam(emailId: string, originalMailboxId: string, accountId?: string): Promise<void>;
+  /** `keywords`: more keywords set with the move ($phishing). */
+  markAsSpam(emailId: string, accountId?: string, markAsRead?: boolean, keywords?: string[]): Promise<void>;
+  /** `clearKeywords`: more keywords removed with the move back ($phishing). */
+  undoSpam(emailId: string, originalMailboxId: string, accountId?: string, clearKeywords?: string[]): Promise<void>;
 
   // ── Threads ───────────────────────────────────────────────────
   getThread(threadId: string, accountId?: string): Promise<Thread | null>;
@@ -413,8 +428,10 @@ export interface IJMAPClient {
      * resolveSendAccountId). `previousDraftAccountId`: where `draftId` lives,
      * so the replaced version is destroyed there (default: the primary
      * account). Draft ids are only unique within one account.
+     * `classification`: the label choice (an id, null for none) kept in
+     * X-Bulwark-Label.
      */
-    options?: { priority?: MessagePriority; accountId?: string; previousDraftAccountId?: string },
+    options?: { priority?: MessagePriority; accountId?: string; previousDraftAccountId?: string; classification?: string | null },
   ): Promise<string>;
 
   /**
@@ -448,8 +465,9 @@ export interface IJMAPClient {
     // and need the matching `submissionExtensions` entry (see
     // supportsSubmissionExtension).
     // `draftAccountId`: the account `draftId` lives in, so the sent draft is
-    // destroyed there (default: the primary account).
-    options?: { requestReadReceipt?: boolean; requestDsn?: boolean; requireTls?: boolean; priority?: MessagePriority; headers?: Record<string, string>; draftAccountId?: string },
+    // destroyed there (default: the primary account). `noSentCopy`: no copy
+    // stays in Sent (a phishing report).
+    options?: { requestReadReceipt?: boolean; requestDsn?: boolean; requireTls?: boolean; priority?: MessagePriority; headers?: Record<string, string>; draftAccountId?: string; noSentCopy?: boolean; labelHeaders?: Record<string, string> },
   ): Promise<SendEmailResult>;
   /** Whether the submission account advertises an SMTP extension ("DSN", "REQUIRETLS", …). */
   supportsSubmissionExtension?(extension: string, accountId?: string): boolean;
@@ -539,8 +557,15 @@ export interface IJMAPClient {
    * Many blobs at once through Blob/get (RFC 9404), for exports; null when
    * the session doesn't advertise the blob capability.
    */
-  getBlobsAsBase64?(blobIds: string[], accountId?: string): Promise<BlobBatch | null>;
-  downloadBlob(blobId: string, name?: string, type?: string, accountId?: string): Promise<void>;
+  getBlobsAsBase64?(blobIds: string[], accountId?: string, options?: { sized?: boolean }): Promise<BlobBatch | null>;
+  /**
+   * One blob for a mail export, outside the client-wide rate limit: a 429
+   * throws RateLimitError for the export to wait on, instead of pausing
+   * every other request.
+   */
+  fetchBlobForTransfer?(blobId: string, accountId: string | undefined, signal?: AbortSignal): Promise<Uint8Array>;
+  /** Saves a blob as a download, unless the account's device policy forbids `kind` (default `attachment`). */
+  downloadBlob(blobId: string, name?: string, type?: string, accountId?: string, options?: { kind?: DownloadKind }): Promise<void>;
 
   // ── Identities ────────────────────────────────────────────────
   getIdentities(): Promise<Identity[]>;
@@ -629,6 +654,8 @@ export interface IJMAPClient {
   listPrincipals?(targetAccountId?: string, options?: { throwOnError?: boolean }): Promise<PrincipalListing>;
   /** Principal type by id ("individual", "group"); null when unknown. Optional (demo client). */
   getPrincipalTypes?(ids: string[]): Promise<Record<string, string> | null>;
+  /** The principals behind accounts (who owns a shared calendar); missing ids are left out. Optional (demo client). */
+  getAccountOwners?(ids: string[]): Promise<Record<string, Principal>>;
   // Bulwark data in Inbox metadata (lib/jmap/bulwark-metadata.ts). Optional (demo client).
   supportsBulwarkMetadata?(accountId?: string): boolean;
   getBulwarkMetadata?(accountId?: string, options?: { private?: boolean }): Promise<Record<string, unknown> | null>;
@@ -683,6 +710,11 @@ export interface IJMAPClient {
    * without it the server stamps the import time.
    */
   importRawEmail(blob: Blob, mailboxIds: Record<string, boolean>, keywords?: Record<string, boolean>, accountId?: string, receivedAt?: string): Promise<string>;
+  /**
+   * Email/import of several uploaded messages in one request (the mail
+   * import). One result per entry, in order: the new id or the server's error.
+   */
+  importUploadedEmails?(entries: UploadedEmailImport[], accountId?: string): Promise<UploadedEmailImportResult[]>;
   submitEmail(emailId: string, identityId: string): Promise<void>;
   /**
    * Server-side move of one email across accounts reachable through THIS client

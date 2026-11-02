@@ -135,4 +135,12 @@ describe('login form accessibility', () => {
     expect(screen.getByText('drafts_not_saved')).toBeInTheDocument();
     expect(sessionStorage.getItem('session_expired_drafts_unsaved')).toBeNull();
   }, 30_000);
+
+  // Offline mode (#523): an automatic sign-out deleted unsent messages.
+  it('names the offline outbox messages a sign-out deleted, once', async () => {
+    sessionStorage.setItem('bulwark-offline-lost', JSON.stringify(['Quarterly numbers']));
+    await renderForm();
+    expect((await screen.findByTestId('session-outbox-lost')).textContent).toContain('signout.lost');
+    expect(sessionStorage.getItem('bulwark-offline-lost')).toBeNull();
+  }, 30_000);
 });

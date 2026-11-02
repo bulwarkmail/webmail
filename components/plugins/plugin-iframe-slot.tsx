@@ -25,6 +25,13 @@ interface Props {
   extraProps?: Record<string, unknown>;
   /** The frame fills its panel and scrolls inside, instead of growing with its content. */
   fill?: boolean;
+  /**
+   * Told whether the frame is up: false when the plugin's shouldShow says no
+   * or its frame fails to start, true once it has started. For a slot that
+   * stands in for a part of Bulwark (calendar-task-view), so the caller can
+   * draw its own part again.
+   */
+  onShownChange?: (shown: boolean) => void;
 }
 
 interface FloatingDropdownState {
@@ -38,9 +45,11 @@ interface FloatingDropdownState {
   ariaLabel?: string;
 }
 
-export function PluginIframeSlot({ pluginId, slot, extraProps, fill = false }: Props) {
+export function PluginIframeSlot({ pluginId, slot, extraProps, fill = false, onShownChange }: Props) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<SandboxInstance | null>(null);
+  const onShownChangeRef = useRef(onShownChange);
+  useEffect(() => { onShownChangeRef.current = onShownChange; }, [onShownChange]);
   const [height, setHeight] = useState<number>(0);
   const [width, setWidth] = useState<number | undefined>(undefined);
   const [floatingDropdown, setFloatingDropdown] = useState<FloatingDropdownState | null>(null);
@@ -79,6 +88,10 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill = false }: P
       .catch(() => { if (!cancelled) setShow(false); });
     return () => { cancelled = true; };
   }, [pluginId, slot, props]);
+
+  useEffect(() => {
+    if (show === false) onShownChangeRef.current?.(false);
+  }, [show]);
 
   // Spawn / tear down the slot iframe.
   useEffect(() => {
@@ -130,7 +143,17 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill = false }: P
       },
     });
     instanceRef.current = inst;
+    // A frame that fails to start stays blank; say so to a caller that can
+    // draw something in its place.
+    let live = true;
+    if (onShownChangeRef.current) {
+      inst.initPromise.then(
+        () => { if (live) onShownChangeRef.current?.(true); },
+        () => { if (live) onShownChangeRef.current?.(false); },
+      );
+    }
     return () => {
+      live = false;
       try { inst.destroy(); } catch { /* ignore */ }
       instanceRef.current = null;
       setFloatingDropdown(null);

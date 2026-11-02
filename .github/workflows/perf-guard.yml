@@ -41,7 +41,7 @@ jobs:
           DEV_MOCK_JMAP: "true"
           NEXT_TELEMETRY_DISABLED: "1"
           GIT_COMMIT: ${{ github.sha }}
-        run: node scripts/build-plugin-sandbox.mjs && npx next build --webpack
+        run: node scripts/build-pst-worker.mjs && node scripts/build-plugin-sandbox.mjs && npx next build --webpack
 
       - name: Run perf guard
         env:
@@ -56,3 +56,12 @@ jobs:
         env:
           CI: "true"
         run: npm run test:a11y-guard
+
+      # Same build: every route's server HTML shows its page skeleton with
+      # scripts blocked, and the hand-off to the loaded page shifts nothing
+      # (scripts/boot-skeleton-guard).
+      - name: Run boot skeleton guard
+        if: success() || failure()
+        env:
+          CI: "true"
+        run: npm run test:boot-skeleton-guard

@@ -20,6 +20,64 @@ export type SignatureField = (typeof SIGNATURE_FIELDS)[number];
 /** A template of the admin library: read-only for users. */
 export type OrgTemplate = Pick<EmailTemplate, 'id' | 'name' | 'subject' | 'body' | 'isHTML' | 'category'>;
 
+/** RFC 2156 Sensitivity values (what Outlook shows); '' writes none. */
+export const LABEL_SENSITIVITIES = ['', 'Personal', 'Private', 'Company-Confidential'] as const;
+export type LabelSensitivity = (typeof LABEL_SENSITIVITIES)[number];
+
+/** A classification label the admin defines (item 3 of the enterprise pack). */
+export interface ClassificationLabel {
+  id: string;
+  name: string;
+  /** #rrggbb */
+  color: string;
+  description: string;
+  /** The SIO-Label `marking` (RFC 7444); the name when empty. */
+  marking: string;
+  sensitivity: LabelSensitivity;
+  /** Added in front of the subject, e.g. "[Confidential]"; '' for none. */
+  subjectPrefix: string;
+  /** Value of the admin's extra header for this label; '' writes none. */
+  extraHeaderValue: string;
+}
+
+/** An out-of-office reply text of the admin library. */
+export interface VacationTemplate {
+  id: string;
+  name: string;
+  category: string;
+  subject: string;
+  /** Plain text with placeholders like {name}, {end}, {deputy}. */
+  text: string;
+  /** Optional HTML version; '' for none. */
+  html: string;
+}
+
+/** An ICS feed every user in scope sees read-only. */
+export interface CompanyFeed {
+  id: string;
+  name: string;
+  /** The ICS address; '' when `urlHeld`. */
+  url: string;
+  /**
+   * Set in the policy full Bulwark hands to users: the server keeps the
+   * address back (it may hold a token) and fetches the feed by id
+   * (app/api/fetch-ical, lib/admin/company-feeds.ts).
+   */
+  urlHeld?: boolean;
+  /** #rrggbb */
+  color: string;
+  refreshMinutes: number;
+}
+
+export const ANNOUNCEMENT_SEVERITIES = ['info', 'warning', 'critical'] as const;
+export type AnnouncementSeverity = (typeof ANNOUNCEMENT_SEVERITIES)[number];
+
+export const PHISHING_REPORT_FORMATS = ['forward', 'arf'] as const;
+export type PhishingReportFormat = (typeof PHISHING_REPORT_FORMATS)[number];
+
+/** The shortest refresh interval for company calendars (each refresh may cost an upload). */
+export const MIN_FEED_REFRESH_MINUTES = 60;
+
 export interface OrganisationPolicy {
   externalMail: {
     /** "External" chip on mail from senders outside the organisation domains. */
@@ -62,6 +120,61 @@ export interface OrganisationPolicy {
     /** How far back "Recover deleted items" lists; 0 is everything the server keeps. */
     days: number;
   };
+  phishingReport: {
+    /** Where "Report phishing" sends; '' turns the action off. */
+    address: string;
+    /** Forward the message as an attachment, or an ARF report (RFC 5965). */
+    format: PhishingReportFormat;
+  };
+  /** A scope that sets this section replaces it as a whole. */
+  labels: {
+    /** [] turns classification labels off. */
+    list: ClassificationLabel[];
+    /** The label new messages start with; '' for none. */
+    defaultId: string;
+    /** Sending needs a label. Dropped when the list is empty. */
+    required: boolean;
+    /** Name of an extra header each label may set (e.g. X-Classification); '' for none. */
+    extraHeader: string;
+  };
+  /** A scope that sets this section replaces it as a whole. */
+  announcement: {
+    /** Changes when the admin saves a new announcement, so dismissals reset. */
+    id: string;
+    severity: AnnouncementSeverity;
+    /** Locale (en, de, pt-BR) to plain text with links; {} shows nothing. */
+    text: Record<string, string>;
+    /** The locale shown when the user's isn't in `text`. */
+    fallbackLocale: string;
+    /** ISO times; '' for no limit. */
+    startsAt: string;
+    endsAt: string;
+    dismissible: boolean;
+  };
+  vacationTemplates: {
+    /** Adds up across scopes by id, like templates.library. */
+    library: VacationTemplate[];
+  };
+  retention: {
+    /** Days the server keeps mail in Trash and Junk, as the admin set it in the mail server; 0 shows no line. */
+    trashDays: number;
+    junkDays: number;
+  };
+  devices: {
+    noDownloads: boolean;
+    noExport: boolean;
+    noPrint: boolean;
+    noInstallPrompt: boolean;
+    pushWithoutContent: boolean;
+    watermark: boolean;
+    noOffline: boolean;
+  };
+  calendars: {
+    /** Adds up across scopes by id. */
+    feeds: CompanyFeed[];
+    /** A group address that gets free/busy access to every user's default calendar; '' is off. */
+    freeBusyGroup: string;
+  };
 }
 
 export const DEFAULT_ORGANISATION_POLICY: OrganisationPolicy = {
@@ -71,7 +184,20 @@ export const DEFAULT_ORGANISATION_POLICY: OrganisationPolicy = {
   templates: { library: [] },
   session: { idleMinutes: 0, maxHours: 0, warnSeconds: 60 },
   recovery: { days: 0 },
+  phishingReport: { address: '', format: 'forward' },
+  labels: { list: [], defaultId: '', required: false, extraHeader: '' },
+  announcement: { id: '', severity: 'info', text: {}, fallbackLocale: 'en', startsAt: '', endsAt: '', dismissible: true },
+  vacationTemplates: { library: [] },
+  retention: { trashDays: 0, junkDays: 0 },
+  devices: {
+    noDownloads: false, noExport: false, noPrint: false, noInstallPrompt: false,
+    pushWithoutContent: false, watermark: false, noOffline: false,
+  },
+  calendars: { feeds: [], freeBusyGroup: '' },
 };
+
+/** Sections a scope replaces as a whole instead of per leaf. */
+const WHOLE_SECTIONS = new Set<OrganisationSection>(['labels', 'announcement']);
 
 export type OrganisationSection = keyof OrganisationPolicy;
 
@@ -157,6 +283,166 @@ function sanitizeLibrary(value: unknown): OrgTemplate[] | undefined {
   return out;
 }
 
+const EMAIL_RE = /^[^\s@<>"(),;:]+@[^\s@<>"(),;:]+\.[^\s@<>"(),;:]+$/;
+const COLOR_RE = /^#[0-9a-f]{6}$/i;
+const ID_RE = /^[A-Za-z0-9._-]{1,64}$/;
+const LOCALE_RE = /^[a-z]{2,3}(-[A-Za-z]{2,4})?$/;
+// RFC 5322 field-name: printable ASCII but the colon (msip_labels has an underscore).
+const HEADER_NAME_RE = /^[\x21-\x39\x3b-\x7e]{1,76}$/;
+// Prefixes JMAP refuses at the top level or that say how mail travelled.
+const RESERVED_HEADER_PREFIXES = ['content-', 'list-', 'resent-', 'arc-'];
+// Headers the extra classification header may not be: they carry the
+// message itself, or the labels Bulwark writes anyway.
+const RESERVED_HEADERS = new Set([
+  'from', 'to', 'cc', 'bcc', 'subject', 'date', 'message-id', 'sender', 'reply-to', 'in-reply-to',
+  'references', 'mime-version', 'content-type', 'content-transfer-encoding', 'content-disposition',
+  'received', 'return-path', 'dkim-signature', 'arc-seal', 'arc-message-signature', 'authentication-results',
+  'sio-label', 'sio-label-history', 'sensitivity', 'x-bulwark-label', 'auto-submitted', 'precedence', 'importance', 'x-priority', 'disposition-notification-to',
+]);
+const MAX_LABELS = 50;
+const MAX_FEEDS = 50;
+
+/** Text for a header value or a one-line field: no line breaks or control characters. */
+function line(value: unknown, max: number): string | undefined {
+  const t = text(value);
+  // eslint-disable-next-line no-control-regex
+  return t === undefined ? undefined : t.replace(/[\u0000-\u001f\u007f]+/g, ' ').trim().slice(0, max);
+}
+
+function email(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const v = value.trim().toLowerCase();
+  return v === '' || EMAIL_RE.test(v) ? v.slice(0, 320) : undefined;
+}
+
+/** Whether the admin page may store this as `phishingReport.address` (the sanitiser's rule). */
+export function isPhishingReportAddress(value: string): boolean {
+  const v = value.trim().toLowerCase();
+  return v.length <= 320 && EMAIL_RE.test(v);
+}
+
+function color(value: unknown, fallback: string): string {
+  return typeof value === 'string' && COLOR_RE.test(value.trim()) ? value.trim().toLowerCase() : fallback;
+}
+
+function oneOf<T extends string>(value: unknown, allowed: readonly T[]): T | undefined {
+  return typeof value === 'string' && (allowed as readonly string[]).includes(value) ? (value as T) : undefined;
+}
+
+function isoTime(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const v = value.trim();
+  if (v === '') return '';
+  const t = Date.parse(v);
+  return Number.isFinite(t) ? new Date(t).toISOString() : undefined;
+}
+
+function itemId(value: unknown): string | null {
+  return typeof value === 'string' && ID_RE.test(value.trim()) ? value.trim() : null;
+}
+
+/** Keeps the items with a valid, unique id, capped at `max`. */
+function byIdList<T>(value: unknown, max: number, build: (item: Record<string, unknown>, id: string) => T | null): T[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const item of value) {
+    if (!isRecord(item)) continue;
+    const id = itemId(item.id);
+    if (!id || seen.has(id)) continue;
+    const built = build(item, id);
+    if (!built) continue;
+    seen.add(id);
+    out.push(built);
+    if (out.length >= max) break;
+  }
+  return out;
+}
+
+function sanitizeLabels(value: unknown): ClassificationLabel[] | undefined {
+  return byIdList(value, MAX_LABELS, (item, id) => {
+    const name = line(item.name, 100);
+    if (!name) return null;
+    return {
+      id,
+      name,
+      color: color(item.color, '#6b7280'),
+      description: (text(item.description) ?? '').slice(0, 1000),
+      // A quoted header parameter: no double quotes or backslashes.
+      marking: (line(item.marking, 200) ?? '').replace(/["\\]/g, ''),
+      sensitivity: oneOf(item.sensitivity, LABEL_SENSITIVITIES) ?? '',
+      subjectPrefix: line(item.subjectPrefix, 60) ?? '',
+      extraHeaderValue: line(item.extraHeaderValue, 500) ?? '',
+    };
+  });
+}
+
+function reservedHeader(name: string): boolean {
+  const lower = name.toLowerCase();
+  return RESERVED_HEADERS.has(lower) || RESERVED_HEADER_PREFIXES.some((prefix) => lower.startsWith(prefix));
+}
+
+/** Whether the admin page may store this as `labels.extraHeader` (the sanitiser's rule). */
+export function isLabelExtraHeaderName(value: string): boolean {
+  const v = value.trim();
+  return HEADER_NAME_RE.test(v) && !reservedHeader(v);
+}
+
+function headerName(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const v = value.trim();
+  if (v === '') return '';
+  return HEADER_NAME_RE.test(v) && !reservedHeader(v) ? v : undefined;
+}
+
+function sanitizeLocaleText(value: unknown): Record<string, string> | undefined {
+  if (!isRecord(value)) return undefined;
+  const out: Record<string, string> = {};
+  for (const [locale, body] of Object.entries(value)) {
+    const t = text(body)?.trim();
+    if (LOCALE_RE.test(locale) && t) out[locale] = t.slice(0, 4000);
+  }
+  return out;
+}
+
+function sanitizeVacationLibrary(value: unknown): VacationTemplate[] | undefined {
+  return byIdList(value, MAX_LIBRARY, (item, id) => {
+    const name = line(item.name, 200);
+    if (!name) return null;
+    return {
+      id,
+      name,
+      category: line(item.category, 100) ?? '',
+      subject: line(item.subject, 511) ?? '',
+      text: text(item.text) ?? '',
+      html: text(item.html) ?? '',
+    };
+  });
+}
+
+function feedUrl(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const v = value.trim().replace(/^webcals?:\/\//i, 'https://');
+  try {
+    const u = new URL(v);
+    return (u.protocol === 'https:' || u.protocol === 'http:') && u.hostname ? u.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+function sanitizeFeeds(value: unknown): CompanyFeed[] | undefined {
+  return byIdList(value, MAX_FEEDS, (item, id) => {
+    const name = line(item.name, 100);
+    // An empty address only for a feed whose address the server held back.
+    const held = item.urlHeld === true && item.url === '';
+    const url = held ? '' : feedUrl(item.url);
+    if (!name || url === null) return null;
+    const minutes = count(item.refreshMinutes, 7 * 24 * 60) ?? MIN_FEED_REFRESH_MINUTES;
+    return { id, name, url, color: color(item.color, '#2563eb'), refreshMinutes: Math.max(MIN_FEED_REFRESH_MINUTES, minutes), ...(held ? { urlHeld: true } : {}) };
+  });
+}
+
 /**
  * The parts of `raw` that are valid organisation settings, without
  * defaults filled in. Used for scope overrides, where a missing key means
@@ -204,33 +490,100 @@ export function sanitizeOrganisationPartial(raw: unknown): DeepPartial<Organisat
   const rec = section('recovery');
   if (rec) assign('recovery', { days: count(rec.days, 3650) });
 
+  const phish = section('phishingReport');
+  if (phish) assign('phishingReport', {
+    address: email(phish.address),
+    format: oneOf(phish.format, PHISHING_REPORT_FORMATS),
+  });
+
+  const lab = section('labels');
+  if (lab) assign('labels', {
+    list: sanitizeLabels(lab.list),
+    defaultId: typeof lab.defaultId === 'string' ? (itemId(lab.defaultId) ?? '') : undefined,
+    required: bool(lab.required),
+    extraHeader: headerName(lab.extraHeader),
+  });
+
+  const ann = section('announcement');
+  if (ann) assign('announcement', {
+    id: typeof ann.id === 'string' ? (itemId(ann.id) ?? '') : undefined,
+    severity: oneOf(ann.severity, ANNOUNCEMENT_SEVERITIES),
+    text: sanitizeLocaleText(ann.text),
+    fallbackLocale: typeof ann.fallbackLocale === 'string' && LOCALE_RE.test(ann.fallbackLocale) ? ann.fallbackLocale : undefined,
+    startsAt: isoTime(ann.startsAt),
+    endsAt: isoTime(ann.endsAt),
+    dismissible: bool(ann.dismissible),
+  });
+
+  const vac = section('vacationTemplates');
+  if (vac) assign('vacationTemplates', { library: sanitizeVacationLibrary(vac.library) });
+
+  const ret = section('retention');
+  if (ret) assign('retention', { trashDays: count(ret.trashDays, 3650), junkDays: count(ret.junkDays, 3650) });
+
+  const dev = section('devices');
+  if (dev) assign('devices', {
+    noDownloads: bool(dev.noDownloads),
+    noExport: bool(dev.noExport),
+    noPrint: bool(dev.noPrint),
+    noInstallPrompt: bool(dev.noInstallPrompt),
+    pushWithoutContent: bool(dev.pushWithoutContent),
+    watermark: bool(dev.watermark),
+    noOffline: bool(dev.noOffline),
+  });
+
+  const cal = section('calendars');
+  if (cal) assign('calendars', { feeds: sanitizeFeeds(cal.feeds), freeBusyGroup: email(cal.freeBusyGroup) });
+
   return out;
 }
 
-/** Merges `override` into `base` per leaf of plain objects; arrays and values replace. */
+/** Arrays that add up across scopes by id instead of replacing. */
+const ADDITIVE_LISTS: Record<string, string> = { templates: 'library', vacationTemplates: 'library', calendars: 'feeds' };
+
+/** Settings that can't hold together after a merge: a default label that isn't in the list, a required label with none to pick. */
+function normaliseMerged(policy: OrganisationPolicy): OrganisationPolicy {
+  const labels = policy.labels;
+  if (!labels) return policy;
+  const hasDefault = labels.list.some((label) => label.id === labels.defaultId);
+  const required = labels.required && labels.list.length > 0;
+  if (hasDefault === (labels.defaultId !== '') && required === labels.required) return policy;
+  return { ...policy, labels: { ...labels, defaultId: hasDefault ? labels.defaultId : '', required } };
+}
+
+/**
+ * Merges `override` into `base` per leaf of plain objects; arrays and values
+ * replace. Exceptions: the lists in ADDITIVE_LISTS add up by id, and the
+ * sections in WHOLE_SECTIONS are replaced as a whole (a scope's own label
+ * scheme or announcement never mixes with the inherited one), with the
+ * built-in defaults for keys the override leaves out.
+ */
 export function mergeOrganisation(
   base: OrganisationPolicy,
   override: DeepPartial<OrganisationPolicy>,
 ): OrganisationPolicy {
   const out = { ...base } as Record<string, Record<string, unknown>>;
+  const defaults = DEFAULT_ORGANISATION_POLICY as unknown as Record<string, Record<string, unknown>>;
   for (const [sectionKey, values] of Object.entries(override)) {
     if (!isRecord(values) || !isRecord(out[sectionKey])) continue;
-    const merged = { ...out[sectionKey] };
+    const merged = WHOLE_SECTIONS.has(sectionKey as OrganisationSection)
+      ? { ...defaults[sectionKey] }
+      : { ...out[sectionKey] };
     for (const [key, value] of Object.entries(values)) {
       if (value === undefined) continue;
-      if (sectionKey === 'templates' && key === 'library' && Array.isArray(value)) {
-        // The one array that adds up: a scope's templates join the ones it
-        // inherits; the same id replaces the inherited template.
-        const byId = new Map((merged.library as OrgTemplate[]).map((t) => [t.id, t]));
-        for (const template of value as OrgTemplate[]) byId.set(template.id, template);
-        merged.library = [...byId.values()];
+      if (ADDITIVE_LISTS[sectionKey] === key && Array.isArray(value)) {
+        // A scope's items join the ones it inherits; the same id replaces
+        // the inherited item.
+        const byId = new Map((merged[key] as Array<{ id: string }>).map((t) => [t.id, t]));
+        for (const item of value as Array<{ id: string }>) byId.set(item.id, item);
+        merged[key] = [...byId.values()];
       } else {
         merged[key] = value;
       }
     }
     out[sectionKey] = merged;
   }
-  return out as unknown as OrganisationPolicy;
+  return normaliseMerged(out as unknown as OrganisationPolicy);
 }
 
 /** A complete organisation policy from anything: defaults for whatever is missing or invalid. */

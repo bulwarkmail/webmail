@@ -135,6 +135,7 @@ export async function PATCH(request: NextRequest) {
 
     // Normalize jmapServers: pass through the parser so invalid entries are
     // rejected (bad ids, duplicate ids, non-HTTP URLs) before they're persisted.
+    let jmapServers: unknown[] | null = null;
     if ('jmapServers' in updates) {
       const incoming = updates.jmapServers;
       if (incoming != null && !Array.isArray(incoming)) {
@@ -151,6 +152,8 @@ export async function PATCH(request: NextRequest) {
           error: 'One or more jmapServers entries are invalid (each needs a unique id, label, and HTTP(S) url).',
         }, { status: 400 });
       }
+      // Saved on its own below, with the secrets of the stored list.
+      jmapServers = Array.isArray(incoming) ? incoming : [];
       updates.jmapServers = sanitized;
     }
 
@@ -179,7 +182,18 @@ export async function PATCH(request: NextRequest) {
       oldValues[key] = configManager.get(key);
     }
 
-    await configManager.setAdminConfig(updates);
+    if (jmapServers) {
+      // The secrets the dashboard didn't send come from the stored list, not
+      // this instance's copy: a secret saved elsewhere a moment ago stays.
+      const { jmapServers: _servers, ...rest } = updates;
+      void _servers;
+      if (Object.keys(rest).length > 0) await configManager.setAdminConfig(rest);
+      const incoming = jmapServers;
+      updates.jmapServers = await configManager.updateAdminConfig<unknown>('jmapServers', (current) =>
+        parseJmapServers(withStoredClientSecrets(incoming, parseJmapServers(current))), []);
+    } else {
+      await configManager.setAdminConfig(updates);
+    }
     await auditLog('config.update', { changes: Object.keys(updates).map(k => ({ key: k, old: oldValues[k], new: updates[k] })) }, ip);
 
     return NextResponse.json({ ok: true });

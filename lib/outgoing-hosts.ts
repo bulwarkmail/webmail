@@ -80,10 +80,43 @@ export function avatarUrlAllowed(url: string | null | undefined, origin?: string
   }
 }
 
+/** The parts of a manifest credential (lib/plugin-secrets/credentials.ts) the mode looks at. */
+export interface ModeCredential {
+  scope?: string;
+  origin?: string;
+  originKey?: string;
+}
+
 export interface NetworkDeclaringPlugin {
   permissions?: readonly string[];
   httpOrigins?: readonly string[];
   frameOrigins?: readonly string[];
+  credentials?: Readonly<Record<string, ModeCredential>>;
+}
+
+/**
+ * A proxied credential stays usable in the no-third-party mode when the
+ * admin entered its server on the plugin's admin page (`originKey`): a host
+ * the deployment configured itself, like the JMAP server. A server fixed in
+ * the manifest (Google Safe Browsing) and the accounts users connect are
+ * outside hosts and stay off.
+ */
+export function credentialAllowedInMode(spec: ModeCredential | undefined): boolean {
+  return !!spec && spec.scope === 'admin' && typeof spec.originKey === 'string' && !spec.origin;
+}
+
+/**
+ * A plugin whose only network access is the credential proxy with admin
+ * credentials, at least one of them on a server the admin entered. It runs
+ * in the mode; the proxy refuses its other credentials there.
+ */
+export function pluginReachesOnlyAdminHosts(plugin: NetworkDeclaringPlugin): boolean {
+  const permissions = plugin.permissions ?? [];
+  if (permissions.includes('http:fetch') || (plugin.httpOrigins?.length ?? 0) > 0 || (plugin.frameOrigins?.length ?? 0) > 0) return false;
+  const specs = Object.values(plugin.credentials ?? {});
+  return specs.length > 0
+    && specs.every((spec) => spec?.scope === 'admin')
+    && specs.some(credentialAllowedInMode);
 }
 
 /**
@@ -102,7 +135,12 @@ export function pluginDeclaresNetwork(plugin: NetworkDeclaringPlugin): boolean {
 /** Error code a refused plugin carries (shown translated in Settings > Plugins). */
 export const PLUGIN_REFUSED_ERROR = 'third-party-off';
 
+/** Whether a plugin may run while the mode is on (see pluginReachesOnlyAdminHosts). */
+export function pluginAllowedInMode(plugin: NetworkDeclaringPlugin): boolean {
+  return !pluginDeclaresNetwork(plugin) || pluginReachesOnlyAdminHosts(plugin);
+}
+
 /** Whether a plugin may run in this browser. */
 export function pluginAllowed(plugin: NetworkDeclaringPlugin): boolean {
-  return !(noThirdPartyTraffic() && pluginDeclaresNetwork(plugin));
+  return !noThirdPartyTraffic() || pluginAllowedInMode(plugin);
 }

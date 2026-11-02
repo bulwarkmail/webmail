@@ -45,6 +45,9 @@ export function useProMultiAccountMailboxes(): void {
     const connected = connectedSignature ? connectedSignature.split("\n") : [];
     if (!proInterface && !isEmbedded && !(mountainView && connected.length > 1)) return;
     if (connected.length === 0) return;
+    // The Pro sidebar lists each login's shared mailboxes under it (#1486);
+    // Mountain View's account popover only counts the login's own unread.
+    const withShared = proInterface || isEmbedded;
 
     if (lastActive.current !== null && lastActive.current !== activeAccountId) {
       invalidateUnifiedMailboxes();
@@ -60,7 +63,7 @@ export function useProMultiAccountMailboxes(): void {
       const client = getClientForAccount(id);
       if (!client || loaded.current.get(id) === client) continue;
       loaded.current.set(id, client);
-      void loadAccountMailboxes(client, id).then((ok) => {
+      void loadAccountMailboxes(client, id, { withShared }).then((ok) => {
         // Try a failed login again on the next run, as the identities hook does.
         if (!ok && loaded.current.get(id) === client) loaded.current.delete(id);
       });

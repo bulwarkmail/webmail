@@ -8,11 +8,14 @@ import { deletePluginConfig } from './plugin-config';
  */
 export async function forgetExtensionInPolicy(kind: 'plugin' | 'theme', id: string): Promise<void> {
   await configManager.ensureLoaded();
-  const policy = configManager.getPolicy();
   const key = kind === 'plugin' ? 'forceEnabledPlugins' : 'forceEnabledThemes';
-  const list = policy[key] ?? [];
-  if (!list.includes(id)) return;
-  await configManager.setPolicy({ ...policy, [key]: list.filter((x) => x !== id) });
+  // Against the stored policy, so a policy save landing at the same time
+  // keeps its changes.
+  await configManager.updatePolicy((policy) => {
+    const list = policy[key] ?? [];
+    if (!list.includes(id)) return undefined;
+    return { ...policy, [key]: list.filter((x) => x !== id) };
+  });
 }
 
 /**

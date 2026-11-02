@@ -11,7 +11,9 @@
 //   quick reply (external recipients, the organisation's disclaimer) and
 //   other plugins' onBeforeEmailSend, and is held for the user's undo delay;
 // - the copy lands in Sent and the original is marked $forwarded, as after
-//   a forward from the composer.
+//   a forward from the composer;
+// - it carries the original's classification label, else the default; when
+//   the organisation requires one and there is neither, nothing is sent.
 
 import type { EmailForwardResult, InstalledPlugin, OutgoingEmail } from '../plugin-types';
 import type { Attachment, Email } from '../jmap/types';
@@ -20,10 +22,14 @@ import { useEmailStore } from '@/stores/email-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useLocaleStore } from '@/stores/locale-store';
 import { detectBrowserLocale } from '@/i18n/detect-locale';
-import { emailHooks } from '../plugin-hooks';
 import { announceSent } from '../plugin-after-send';
 import { buildForwardSubject } from '../subject-prefix';
 import { finalizeOutgoing, runPreSendChecks } from '../outgoing/send-pipeline';
+import { runPluginSendCheck, sendGuardMessageKey } from '../outgoing/plugin-send-check';
+import { externalRecipientsFor, inspectAttachments } from '../outgoing/send-check-payload';
+import { automaticLabel, classifyOutgoing } from '../outgoing/classification';
+import { whenPolicySettled } from '@/stores/policy-store';
+import { toast } from '@/stores/toast-store';
 // Registers the organisation signature check and the disclaimer.
 import '@/lib/org/outgoing';
 import { plainTextFromEmail } from '../plugin-projection';
@@ -139,6 +145,15 @@ export async function doEmailForward(
   const messages = await hostMessages();
   const subject = buildForwardSubject(email.subject || text(messages, 'email_viewer.no_subject'), text(messages, 'email_composer.prefix.forward'));
 
+  // The classification label: a required one that isn't there stops the
+  // forward before anything is asked.
+  await whenPolicySettled();
+  const label = automaticLabel({ email: identity.email }, { headers: email.headers, from: email.from });
+  if (label.missing) {
+    toast.error(text(messages, 'classification.forward_needs_label'));
+    return { sent: false, reason: 'stopped' };
+  }
+
   // Ask before the first forward to an address.
   const addresses = to.map((entry) => addressOf(entry).toLowerCase());
   const account = approvalAccount();
@@ -172,16 +187,32 @@ export async function doEmailForward(
   // No plugin step in between, as for a quick reply: both stages at once.
   const body = finalizeOutgoing(finalizeOutgoing({ text: forwardBody(email, note, messages, locale) }, context), context, 'last').text;
 
-  if (emailHooks.onBeforeEmailSend.size > 0) {
-    const outgoing: OutgoingEmail = {
+  // Always: a required send check that isn't running holds the forward too,
+  // also when no plugin listens right now.
+  {
+    const outcome = await runPluginSendCheck(async (): Promise<OutgoingEmail> => ({
       to, cc: [], bcc: [], subject,
       htmlBody: '',
       textBody: body,
       identityId: identity.id,
       fromEmail: identity.email,
-      attachments: attachments.map((a) => ({ name: a.name || 'attachment', type: a.type || 'application/octet-stream', size: a.size })),
-    };
-    if ((await emailHooks.onBeforeEmailSend.interceptOutcome(outgoing)) !== 'allowed') return { sent: false, reason: 'stopped' };
+      // The original's parts, read where they are (the message's own account).
+      attachments: await inspectAttachments(attachments.map((a) => ({
+        name: a.name || 'attachment',
+        type: a.type || 'application/octet-stream',
+        size: a.size,
+        blobId: a.blobId,
+        load: (bytes: number) => client.fetchBlobArrayBuffer(a.blobId, a.name || undefined, a.type || undefined, sourceAccountId, bytes),
+      }))),
+      surface: 'plugin-forward',
+      mode: 'forward',
+      // The plugin's note is the only text written for this forward.
+      authoredText: note,
+      externalRecipients: await externalRecipientsFor(context),
+    }));
+    const guardKey = sendGuardMessageKey(outcome);
+    if (guardKey) toast.error(text(messages, `send_guards.${guardKey}`));
+    if (outcome !== 'allowed') return { sent: false, reason: 'stopped' };
   }
 
   // The attachments are blobs of the account the original is in; a message
@@ -198,12 +229,15 @@ export async function doEmailForward(
     });
   }
 
+  // Last, after the plugins' checks: the label's prefix and headers.
+  const labelled = classifyOutgoing(label.policy, label.label, { subject });
+
   const delaySeconds = useSettingsStore.getState().sendDelaySeconds;
   const delayedUntil = delaySeconds > 0 && client.hasDelayedSend()
     ? new Date(Date.now() + delaySeconds * 1000).toISOString()
     : undefined;
   const result = await useEmailStore.getState().sendEmail(
-    client, to, subject, body, undefined, undefined, identity.id, identity.email, undefined,
+    client, to, labelled.subject, body, undefined, undefined, identity.id, identity.email, undefined,
     identity.name || undefined, undefined,
     attachments.map((a, i) => ({
       blobId: blobIds[i],
@@ -212,9 +246,10 @@ export async function doEmailForward(
       size: a.size,
       disposition: 'attachment' as const,
     })),
-    undefined, undefined, delayedUntil,
+    undefined, undefined, delayedUntil, undefined,
+    labelled.labelHeaders ? { labelHeaders: labelled.labelHeaders } : undefined,
   );
-  announceSent(result, { to: addresses, cc: [], bcc: [], subject });
+  announceSent(result, { to: addresses, cc: [], bcc: [], subject: labelled.subject });
 
   try {
     await deps.markForwarded(emailId, sourceAccountId);

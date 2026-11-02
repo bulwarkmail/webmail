@@ -8,7 +8,7 @@ import { normalizeJmapServerUrl } from '@/lib/auth/verify-jmap-auth';
 import { setStalwartAuthContextInStore } from '@/lib/stalwart/auth-context';
 import { recordLogin } from '@/lib/telemetry/login-tracker';
 import { ImpersonationJwtError, verifyImpersonationJwt } from '@/lib/impersonation/jwt';
-import { consumeImpersonationJti } from '@/lib/impersonation/replay-store';
+import { consumeImpersonationJti, isImpersonationReplayUnavailable } from '@/lib/impersonation/replay-store';
 import {
   readImpersonationConfig,
   resolveImpersonationServerUrl,
@@ -79,7 +79,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 
-  if (!(await consumeImpersonationJti(claims.jti, claims.exp))) {
+  let firstUse: boolean;
+  try {
+    firstUse = await consumeImpersonationJti(claims.jti, claims.exp);
+  } catch (err) {
+    if (!isImpersonationReplayUnavailable(err)) throw err;
+    // Not "already used": the use couldn't be recorded, and the link may work in a moment.
+    return NextResponse.json({ error: 'Impersonation is temporarily unavailable' }, { status: 503, headers: { 'Retry-After': '10' } });
+  }
+  if (!firstUse) {
     logger.warn('Impersonation JWT replay rejected', { jti: claims.jti });
     return NextResponse.json({ error: 'Token already used' }, { status: 401 });
   }

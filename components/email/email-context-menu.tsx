@@ -27,6 +27,7 @@ import {
   ShieldCheck,
   Paperclip,
   Copy,
+  Fish,
 } from "@/components/icons";
 import { useMessageActionList, type MessageActionEntry, type MessageActionKey } from "./message-actions";
 import { buildMailboxTree, MailboxNode } from "@/lib/utils";
@@ -37,6 +38,7 @@ import { getEmailTagIds } from "@/lib/thread-utils";
 import { TagPicker } from "./tag-picker";
 import { RulesContextSubMenu } from "./rules-menu";
 import { useArchiveActionEnabled } from "@/lib/archive-gate";
+import { usePhishingReport } from "@/hooks/use-phishing-report";
 
 interface Position {
   x: number;
@@ -203,6 +205,9 @@ export function EmailContextMenu({
   // in Sent, Drafts and Scheduled.
   const spamApplicable = !['sent', 'drafts', 'scheduled'].includes(currentMailboxRole || '');
   const isScheduled = email.isScheduled === true;
+  // One report per selected message, behind one confirm (enterprise pack).
+  const batchPhishing = usePhishingReport(showBatchActions ? (batchEmails ?? []) : [], currentMailboxRole);
+  const tPhishing = useTranslations("phishing_report");
   // "Remove from this folder" needs one open folder and messages that are
   // also in another one; for a selection, every selected message must be.
   const folderToLeave = useEmailStore(removalFolder);
@@ -449,6 +454,14 @@ export function EmailContextMenu({
               disabled={isInJunkFolder ? !onBatchUndoSpam : !onBatchMarkAsSpam}
               destructive={!isInJunkFolder && !mountainView}
             />
+            {batchPhishing.available && (
+              <ContextMenuItem
+                icon={Fish}
+                label={tPhishing("action")}
+                testId="ctx-batch-report-phishing"
+                onClick={() => handleAction(batchPhishing.report)}
+              />
+            )}
           </>
         )}
     </>

@@ -363,6 +363,12 @@ export const CONFIG_ENV_MAP: Record<string, { envVar: string; fileEnvVar?: strin
   settingsSyncEnabled: { envVar: 'SETTINGS_SYNC_ENABLED', type: 'boolean', defaultValue: false },
   logFormat: { envVar: 'LOG_FORMAT', type: 'enum', defaultValue: 'text', enumValues: ['text', 'json'] },
   logLevel: { envVar: 'LOG_LEVEL', type: 'enum', defaultValue: 'info', enumValues: ['error', 'warn', 'info', 'debug'] },
+  // Error reporting to a Sentry-protocol tracker (Bugsink, GlitchTip,
+  // Sentry), off while empty. The DSN is public by design: browsers get it.
+  // https://bulwarkmail.org/docs/deployment/monitoring
+  errorReportingDsn: { envVar: 'ERROR_REPORTING_DSN', fileEnvVar: 'ERROR_REPORTING_DSN_FILE', fileKey: 'errorReportingDsnFile', type: 'string', defaultValue: '' },
+  errorReportingSampleRate: { envVar: 'ERROR_REPORTING_SAMPLE_RATE', type: 'string', defaultValue: '1' },
+  errorReportingEnvironment: { envVar: 'ERROR_REPORTING_ENVIRONMENT', type: 'string', defaultValue: 'production' },
   sessionSecret: { envVar: 'SESSION_SECRET', fileEnvVar: 'SESSION_SECRET_FILE', fileKey: "sessionSecretFile", type: 'string', defaultValue: '' },
   extensionDirectoryUrl: { envVar: 'EXTENSION_DIRECTORY_URL', type: 'url', defaultValue: 'https://extensions.bulwarkmail.org' },
   // Root keys (base64 raw Ed25519, comma-separated) a self-hosted extension

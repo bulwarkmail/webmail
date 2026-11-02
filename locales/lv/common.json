@@ -1,5 +1,5 @@
 {
-  "meta_description": "Minimālistisks tīmekļa pasta klients, kas izmanto JMAP protokolu",
+  "meta_description": "Pašmitināms tīmekļa pasts e-pastam, kalendāram, kontaktiem un failiem, balstīts uz JMAP",
   "login": {
     "title": "Tīmekļa pasts",
     "username_label": "E-pasta adrese",
@@ -461,7 +461,6 @@
     "view_in_light_mode": "Skatīt gaišajā režīmā",
     "export_email": "Eksportēt kā .eml",
     "forward_as_attachment": "Pārsūtīt kā pielikumu",
-    "import_email": "Importēt .eml vai .zip…",
     "keyboard_shortcuts": "Īsinājumtaustiņi",
     "email_source": "Vēstules avota kods",
     "draft_banner": "Šī vēstule ir melnraksts",
@@ -473,6 +472,9 @@
     "source_truncated": "Rāda pirmos {size}. Lai redzētu pārējo, eksportējiet vēstuli.",
     "source_copied": "Avota kods nokopēts starpliktuvē",
     "attachments": "Pielikumi",
+    "attachments_count": "{count, plural, zero {# pielikumu} one {# pielikums} other {# pielikumi}}",
+    "attachments_show_more": "Rādīt vēl {count}",
+    "attachments_show_fewer": "Rādīt mazāk",
     "important": "Svarīgi",
     "download": "Lejupielādēt",
     "download_all": "Lejupielādēt visu",
@@ -880,6 +882,35 @@
     "send_anyway": "Sūtīt tik un tā",
     "back": "Atpakaļ"
   },
+  "phishing_report": {
+    "action": "Ziņot par pikšķerēšanu…",
+    "confirm_title": "Ziņot par pikšķerēšanu?",
+    "confirm_message": "{count, plural, =1 {Ziņojums tiks nosūtīts uz {address} un pārvietots uz mapi Mēstules.} zero {# ziņojumi tiks nosūtīti uz {address}, katrs atsevišķi, un pārvietoti uz mapi Mēstules.} one {# ziņojums tiks nosūtīts uz {address}, katrs atsevišķi, un pārvietots uz mapi Mēstules.} other {# ziņojumi tiks nosūtīti uz {address}, katrs atsevišķi, un pārvietoti uz mapi Mēstules.}}",
+    "confirm": "Ziņot",
+    "cancel": "Atcelt",
+    "sending": "Notiek ziņošana…",
+    "done": "{count, plural, =1 {Nosūtīts uz {address} un pārvietots uz mapi Mēstules.} zero {# ziņojumi nosūtīti uz {address} un pārvietoti uz mapi Mēstules.} one {# ziņojums nosūtīts uz {address} un pārvietots uz mapi Mēstules.} other {# ziņojumi nosūtīti uz {address} un pārvietoti uz mapi Mēstules.}}",
+    "not_moved": "{count, plural, =1 {Nosūtīts uz {address}, bet ziņojumu neizdevās pārvietot uz mapi Mēstules.} zero {Nosūtīti uz {address}, bet # ziņojumus neizdevās pārvietot uz mapi Mēstules.} one {Nosūtīti uz {address}, bet # ziņojumu neizdevās pārvietot uz mapi Mēstules.} other {Nosūtīti uz {address}, bet # ziņojumus neizdevās pārvietot uz mapi Mēstules.}}",
+    "failed": "{count, plural, =1 {Neizdevās ziņot par ziņojumu.} zero {Neizdevās ziņot par # ziņojumiem.} one {Neizdevās ziņot par # ziņojumu.} other {Neizdevās ziņot par # ziņojumiem.}}",
+    "undo": "Atsaukt",
+    "undone": "{count, plural, =1 {Pārvietots atpakaļ. Ziņa par pikšķerēšanu jau ir nosūtīta.} zero {Pārvietoti atpakaļ. Ziņas par pikšķerēšanu jau ir nosūtītas.} one {Pārvietoti atpakaļ. Ziņas par pikšķerēšanu jau ir nosūtītas.} other {Pārvietoti atpakaļ. Ziņas par pikšķerēšanu jau ir nosūtītas.}}",
+    "undo_failed": "Neizdevās pārvietot atpakaļ.",
+    "banner": "Jūs ziņojāt par šo ziņojumu kā par pikšķerēšanu. Tā saites ir izslēgtas.",
+    "link_off": "saite izslēgta",
+    "link_off_note": "(saite izslēgta)",
+    "no_subject": "(bez temata)"
+  },
+  "classification": {
+    "picker_label": "Klasifikācija",
+    "chip_label": "Klasifikācija: {name}",
+    "none": "Bez klasifikācijas",
+    "pick_required": "Izvēlieties klasifikāciju",
+    "required_hint": "Jūsu organizācija pieprasa klasifikāciju.",
+    "required_toast": "Pirms sūtīšanas izvēlieties klasifikāciju.",
+    "quick_reply_needs_label": "Šai atbildei vajadzīga klasifikācija. Izvēlieties to šeit un tad sūtiet.",
+    "forward_needs_label": "Klasifikācija ir obligāta. Pārsūtiet vēstuli no redaktora.",
+    "received_hint": "To iestatīja sūtītāja pasta programma. Klasifikāciju var iestatīt ikviens, tāpēc tā neko nepierāda."
+  },
   "email_composer": {
     "select_from_directory": "Izvēlēties no kataloga",
     "minimize": "Minimizēt",
@@ -1248,8 +1279,6 @@
     "templates_import_errors": "Dažas veidnes neizdevās importēt",
     "templates_import_empty": "Failā netika atrastas veidnes",
     "export_email_error": "Neizdevās eksportēt vēstuli",
-    "import_email_success": "Vēstule veiksmīgi importēta",
-    "import_email_error": "Neizdevās importēt vēstuli",
     "rule_created": "Noteikums izveidots",
     "rule_merged": "Pievienots noteikumam “{name}”",
     "rule_already_covered": "To jau aptver noteikums “{name}”",
@@ -1272,12 +1301,46 @@
     "tag_removed_count": "{count, plural, zero {Tags noņemts # vēstulēm} one {Tags noņemts # vēstulei} other {Tags noņemts # vēstulēm}}",
     "new_mail_count": "{count, plural, zero {# jaunas vēstules} one {# jauna vēstule} other {# jaunas vēstules}}"
   },
+  "org_notice": {
+    "label": "Paziņojums",
+    "dismiss": "Aizvērt paziņojumu",
+    "severity_info": "Informācija",
+    "severity_warning": "Brīdinājums",
+    "severity_critical": "Svarīgi"
+  },
+  "vacation_templates": {
+    "title": "Organizācijas veidnes",
+    "description": "Sāciet ar atbildi, ko uzrakstījusi jūsu organizācija. Tekstu pēc tam varat mainīt.",
+    "pick_label": "Izmantot veidni",
+    "pick_placeholder": "Izvēlieties veidni",
+    "deputy_label": "Aizvietotāja adrese",
+    "deputy_placeholder": "kolegis@example.com",
+    "deputy_hint": "Atbildē šis kolēģis būs norādīts steidzamiem jautājumiem.",
+    "deputy_missing": "Vispirms ievadiet sava aizvietotāja adresi.",
+    "deputy_name_label": "Aizvietotāja vārds",
+    "deputy_name_missing": "Vispirms ievadiet sava aizvietotāja vārdu.",
+    "apply": "Izmantot šo tekstu",
+    "apply_hint": "Aizstāj tālāk esošo tēmu un tekstu."
+  },
+  "retention_notice": {
+    "line": "Šeit esošie ziņojumi tiek dzēsti {count, plural, zero {# dienas} one {# dienu} other {# dienas}} pēc to pārvietošanas šeit."
+  },
+  "device_policy": {
+    "downloads_off": "Jūsu organizācija ir izslēgusi lejupielādes.",
+    "download_off_named": "{name}: jūsu organizācija ir izslēgusi lejupielādes",
+    "download_blocked": "Jūsu organizācija izslēdza lejupielādes.",
+    "export_blocked": "Jūsu organizācija izslēdza pasta eksportēšanu.",
+    "print_blocked": "Jūsu organizācija ir izslēgusi drukāšanu."
+  },
   "third_party": {
     "push_needs_relay": "Push paziņojumiem vajadzīgs jūsu organizācijas uzturēts push relejs, un neviens nav iestatīts. Jauns pasts joprojām tiek rādīts, kamēr lietotne ir atvērta.",
     "relay_desc": "Tiek piedāvāti tikai jūsu organizācijas pašas releji, jo šis serveris nesazinās ar ārējiem pakalpojumiem.",
     "relay_none": "Neviens nav iestatīts",
     "plugin_refused": "Nav palaists: šis spraudnis savienojas ar ārējiem pakalpojumiem, kurus jūsu organizācija ir izslēgusi.",
     "remote_content_blocked": "Jūsu organizācija bloķē saturu no citiem serveriem, tāpēc attālie attēli šajā vēstulē netiek rādīti."
+  },
+  "remote_content_lock": {
+    "trusted_senders_note": "Jūsu organizācija bloķē attālo saturu visās vēstulēs, tāpēc tas netiek ielādēts arī no uzticamiem sūtītājiem."
   },
   "date": {
     "today": "Šodien",
@@ -1539,6 +1602,10 @@
         "label": "Rādīt koplietotos pasta kontus",
         "description": "Rādīt ar jums koplietoto pastkastīšu mapes sānjoslā sadaļā Koplietots. Izslēdziet, lai paslēptu visas, vai paslēpiet atsevišķus kontus zemāk. To kalendāri un kontakti paliek redzami."
       },
+      "compact_shared_mailboxes": {
+        "label": "Kompaktas koplietotās pastkastes",
+        "description": "Rādīt katru koplietoto pastkasti kā vienu rindu, kas atver tās iesūtni, ar tās mapēm zem tās. Tukšas mapes, piemēram, Melnraksti, netiek rādītas."
+      },
       "pro_interface": {
         "label": "Pro saskarne (eksperimentāla)",
         "description": "Tikai darbvirsmas pieredzējušu lietotāju izkārtojums ar ziņojumu pārlūkošanu vairākās cilnēs un kontu pārvaldību. Standarta saskarne netiek ietekmēta; varat jebkurā brīdī pārslēgties atpakaļ.",
@@ -1769,6 +1836,12 @@
         "label": "Notīrīt meklēšanu, mainot mapi",
         "description": "Noklikšķinot uz mapes (Iesūtne, Nosūtītie…), aktīvā meklēšana tiek notīrīta un tiek atvērta šī mape. Kad izslēgts, meklēšana paliek un tiek atkārtota izvēlētajā mapē."
       },
+      "search_default_scope": {
+        "label": "Meklēt",
+        "description": "Kur meklē jauna meklēšana. Meklēšanas filtros joprojām var izvēlēties citu mapi.",
+        "all": "Visas mapes, izņemot mēstules un atkritnes",
+        "folder": "Atvērtā mape"
+      },
       "request_read_receipt": {
         "label": "Pēc noklusējuma pieprasīt lasīšanas apstiprinājumus",
         "description": "Sastādot jaunu ziņojumu, iepriekš ieslēgt lasīšanas apstiprinājuma pieprasījumu."
@@ -1867,6 +1940,14 @@
         "above_quote": "Pirms citētā teksta",
         "below_quote": "Pēc citētā teksta"
       },
+      "signature_new_mail": {
+        "label": "Paraksts jaunajos e-pastos",
+        "description": "Rakstot jaunu vēstuli, automātiski ievieto jūsu parakstu. Izslēdziet, lai katra jauna vēstule sāktos bez tā."
+      },
+      "signature_reply_forward": {
+        "label": "Paraksts atbildēs un pārsūtījumos",
+        "description": "Atbildot vai pārsūtot vēstuli, automātiski pievieno jūsu parakstu. Izslēdziet, lai tās tiktu nosūtītas bez tā."
+      },
       "signature_separator": {
         "label": "Paraksta atdalītājs",
         "description": "Pirms paraksta pievienot standarta atdalītāju \"-- \" (RFC 3676). Izslēdziet, ja vēlaties pāriet no ziņojuma tieši uz parakstu."
@@ -1896,8 +1977,8 @@
       "attachment_position": {
         "label": "Pielikumu novietojums",
         "description": "Kur rādīt pielikumus vēstules galvenē",
-        "beside-sender": "Blakus sūtītājam",
-        "below-header": "Zem galvenes"
+        "below-header": "Zem galvenes",
+        "below-message": "Kartītes zem ziņojuma"
       },
       "emails_per_page": {
         "10": "10 vēstules",
@@ -3546,7 +3627,6 @@
     "new_folder": "Jauna mape…",
     "rename": "Pārsaukt…",
     "share": "Kopīgot…",
-    "import_email": "Importēt .eml vai .zip…",
     "empty_folder": "Iztukšot mapi",
     "empty_folder_generic": "Iztukšot mapi",
     "delete_folder": "Dzēst mapi",
@@ -5052,7 +5132,6 @@
     "settings_ascending": "Augošā",
     "settings_descending": "Dilstošā",
     "disabled_title": "Failu funkciju ir atspējojis administrators",
-    "disabled_description": "Lielu failu augšupielāde, izmantojot WebDAV, var radīt Stalwart/RocksDB nestabilitāti, tostarp atmiņas izsīkumu un neatkopjamu diska izmantojumu. Dzēstie faili var netikt nekavējoties izņemti no blob glabātuves. Šī funkcija nav ieteicama produkcijas vidēm.",
     "no_accounts": "Nav pievienotu kontu.",
     "open_folder_tree": "Atvērt mapju koku",
     "migration_title": "Notiek jūsu failu atjaunināšana…",
@@ -5241,6 +5320,117 @@
   "unified_mailbox": {
     "search_unavailable": "Meklēšana nav pieejama apvienotajā skatā"
   },
+  "mail_import": {
+    "menu_import": "Importēt pastu…",
+    "settings_label": "Importēt pastu",
+    "settings_description": "Ienesiet pastu no .eml, ZIP, mbox vai Outlook .pst un .ost failiem.",
+    "settings_button": "Importēt…",
+    "title": "Importēt pastu",
+    "description": "Izvēlieties .eml, .zip, .mbox vai Outlook .pst un .ost failus.",
+    "choose_files": "Izvēlēties failus…",
+    "chosen_files": "Izvēlētie faili",
+    "remove_file": "Noņemt {name}",
+    "format_eml": "Ziņojums",
+    "format_zip": "ZIP arhīvs",
+    "format_mbox": "mbox fails",
+    "format_pst": "Outlook datu fails",
+    "target_label": "Importēt mapē",
+    "target_top": "Augšējais līmenis",
+    "keep_folders": "Atjaunot mapes no faila",
+    "keep_folders_hint": "Mapes ar tādu pašu nosaukumu tiek izmantotas atkārtoti.",
+    "resume": "Turpināt no vietas, kur šo failu pēdējā importēšana apstājās (jau apstrādāti ziņojumi: {count})",
+    "quota_note": "Daudzi serveri no viena lietotāja pieņem tikai aptuveni 1000 ziņojumu vai 50 MB stundā. Lielāka importēšana apstājas un pēc tam turpinās pati.",
+    "start": "Importēt",
+    "cancel": "Atcelt",
+    "running_title": "Notiek pasta importēšana",
+    "progress_label": "Importēšanas gaita",
+    "status_imported": "Importētie ziņojumi: {count}",
+    "reading_file": "Lasa {name}",
+    "paused": "Apturēts līdz {time}. Serveris stundā pieņem ne vairāk kā {files} augšupielādes vai {size}. Importēšana turpināsies pati.",
+    "paused_generic": "Apturēts līdz {time}. Sasniegts servera augšupielādes ierobežojums. Importēšana turpināsies pati.",
+    "background": "Turpināt fonā",
+    "cancel_import": "Atcelt importēšanu",
+    "chip": "Notiek pasta importēšana: {percent}%",
+    "chip_paused": "Importēšana apturēta līdz {time}",
+    "done_title": "Importēšana pabeigta",
+    "cancelled_title": "Importēšana atcelta",
+    "failed_title": "Importēšana apturēta",
+    "summary_imported": "Importētie ziņojumi: {count}",
+    "summary_folders": "Izveidotās mapes: {count}",
+    "summary_skipped": "Nav importēti:",
+    "skip_too_large": "Lielāki, nekā serveris pieņem: {count}",
+    "skip_deleted": "Dzēsti programmā Thunderbird: {count}",
+    "skip_embedded": "Ziņojumi, kas pievienoti citiem ziņojumiem: {count}",
+    "skip_contact": "Kontakti: {count}",
+    "skip_calendar": "Kalendāra vienumi: {count}",
+    "skip_other": "Citi vienumi: {count}",
+    "summary_failed": "Neizdevās importēt: {count}",
+    "failure_invalid": "nav derīgs ziņojums",
+    "untitled": "(bez temata)",
+    "cancelled_hint": "Lai turpinātu vēlāk, vēlreiz importējiet tos pašus failus tajā pašā mapē.",
+    "close": "Aizvērt",
+    "pst_note": "No Outlook failiem tiek pārnests tikai pasts. Kontakti, kalendāra vienumi un uzdevumi tiek saskaitīti un izlaisti.",
+    "pst_error_encrypted": "Šis Outlook fails izmanto augstu šifrēšanu, ko Bulwark nevar nolasīt. Programmā Outlook eksportējiet pastu jaunā .pst failā bez šifrēšanas.",
+    "pst_error_not_pst": "Šis fails nav Outlook datu fails, ko Bulwark var nolasīt.",
+    "pst_error_unreadable": "Bulwark nevarēja nolasīt šo Outlook failu.",
+    "pst_error_worker": "Outlook failu lasītājs netika ielādēts. Pārlādējiet lapu un mēģiniet vēlreiz.",
+    "error_over_quota": "Pastkaste ir pilna, tāpēc importēšana apstājās. Atbrīvojiet vietu un vēlreiz importējiet tos pašus failus tajā pašā mapē, lai turpinātu.",
+    "error_forbidden": "Šajā mapē nedrīkstat pievienot pastu, tāpēc importēšana apstājās.",
+    "error_failures": "Pārāk daudz ziņojumu pēc kārtas neizdevās, tāpēc importēšana apstājās. Vēlāk vēlreiz importējiet tos pašus failus tajā pašā mapē, lai turpinātu.",
+    "error_network": "Savienojums ar serveri atkārtoti neizdevās, tāpēc importēšana apstājās. Vēlreiz importējiet tos pašus failus tajā pašā mapē, lai turpinātu.",
+    "error_busy": "Šie faili jau tiek importēti citā cilnē.",
+    "retry_hint": "Vēlreiz importējiet tos pašus failus tajā pašā mapē, lai vēlreiz mēģinātu neizdevušos.",
+    "skip_unreadable": "Outlook failā nenolasāmi: {count}",
+    "keep_folders_top_hint": "Augšējā līmenī Iesūtne, Nosūtītie, Dzēstie un līdzīgi nonāk jūsu pašu mapēs.",
+    "toast_done": "Importēšana pabeigta. Importēti: {imported}, neizdevās: {failed}.",
+    "toast_stopped": "Importēšana apstājās.",
+    "toast_show": "Rādīt",
+    "section_title": "Pasta faili",
+    "section_description": "Ienesiet pastu no failiem vai saglabājiet savu pastu kā failus."
+  },
+  "mail_export": {
+    "menu_export": "Eksportēt mapi…",
+    "settings_label": "Eksportēt visu pastu",
+    "settings_description": "Saglabāt visas šī konta mapes vienā ZIP failā kā mbox vai .eml failus.",
+    "settings_button": "Eksportēt…",
+    "title_folder": "Eksportēt “{name}”",
+    "title_account": "Eksportēt visu pastu",
+    "description_folder": "Saglabāt šīs mapes ziņojumus failā.",
+    "description_account": "Saglabāt visas šī konta mapes vienā ZIP failā.",
+    "format_label": "Formāts",
+    "format_mbox_folder": "mbox fails",
+    "format_eml_folder": "ZIP ar .eml failiem",
+    "format_mbox_account": "ZIP ar vienu mbox failu katrai mapei",
+    "format_eml_account": "ZIP ar .eml failiem, viena mape katrai pasta mapei",
+    "hint_mbox": "Thunderbird, Apple Mail un lielākā daļa pasta programmu atver mbox failus.",
+    "hint_eml": "Viens fails katram ziņojumam, ko atver jebkura pasta programma.",
+    "save_picker": "Jūs izvēlaties, kur saglabāt failu.",
+    "save_download": "Fails tiks lejupielādēts, kad eksportēšana būs pabeigta.",
+    "save_memory": "Šī pārlūkprogramma tur visu eksportu atmiņā, tāpēc var saglabāt ne vairāk kā 200 MB. Lielākam eksportam izmantojiet Chrome vai Edge vai eksportējiet pa mapei.",
+    "start": "Eksportēt",
+    "cancel": "Atcelt",
+    "running_title": "Notiek pasta eksportēšana",
+    "progress_label": "Eksportēšanas gaita",
+    "status_exported": "Eksportētie ziņojumi: {count} no {total}",
+    "paused": "Apturēts līdz {time}: serveris lūdza pauzi. Eksportēšana turpināsies pati.",
+    "background": "Turpināt fonā",
+    "cancel_export": "Atcelt eksportēšanu",
+    "chip": "Notiek pasta eksportēšana: {percent}%",
+    "chip_paused": "Eksportēšana apturēta līdz {time}",
+    "done_title": "Eksportēšana pabeigta",
+    "cancelled_title": "Eksportēšana atcelta",
+    "failed_title": "Eksportēšana apturēta",
+    "summary_exported": "Eksportētie ziņojumi: {count}",
+    "summary_file": "Saglabāts kā {name} ({size}).",
+    "summary_failed": "Neizdevās eksportēt: {count}",
+    "download_again": "Lejupielādēt vēlreiz",
+    "too_large": "Eksports ir lielāks, nekā šī pārlūkprogramma var noturēt atmiņā. Izmantojiet Chrome vai Edge vai eksportējiet pa mapei.",
+    "close": "Aizvērt",
+    "untitled": "(bez temata)",
+    "toast_done": "Eksportēšana pabeigta: {name}",
+    "toast_stopped": "Eksportēšana apstājās.",
+    "toast_show": "Rādīt"
+  },
   "recover_deleted": {
     "tab": "Atjaunot dzēstos vienumus",
     "title": "Atjaunot dzēstos vienumus",
@@ -5273,6 +5463,51 @@
     "updated": "{name} atjaunināja “{title}”",
     "cancelled": "{name} atcēla “{title}”",
     "untitled": "Notikums bez nosaukuma"
+  },
+  "company_calendars": {
+    "section": "Organizācija"
+  },
+  "vacation_calendar": {
+    "label": "Bloķēt manu kalendāru",
+    "description": "Pievieno aizņemtu notikumu prombūtnes laikam, lai tad neviens neplānotu ar jums sapulces.",
+    "no_access_managed": "Šī konta kalendāru nevar bloķēt: jums nav rakstīšanas piekļuves.",
+    "no_calendar": "Kalendāru nevar bloķēt: Bulwark neatrada kalendāru, kur pievienot notikumu.",
+    "filter_warning": "To ieslēdzot, jūsu filtru skripts ir izslēgts, kamēr atbilde ir aktīva."
+  },
+  "calendar_delegate": {
+    "answer_for": "Atbildēt {name} vārdā",
+    "no_write": "Jūs redzat {name} ielūgumus, bet nevarat atbildēt viņa vārdā. Palūdziet rediģēšanas piekļuvi.",
+    "also_invited": "Arī jūs esat uzaicināts, un šis serveris nevar atšķirt jūsu atbildi no {name} atbildes. Uz šo jāatbild {name}.",
+    "answered_by": "Atbildēja {who}"
+  },
+  "free_busy_share": {
+    "button": "Kopīgot manu brīvs/aizņemts ar {group}",
+    "already": "Jūsu brīvs/aizņemts ir kopīgots ar {group}",
+    "done": "Jūsu brīvs/aizņemts tagad ir kopīgots ar {group}.",
+    "error": "Neizdevās kopīgot brīvs/aizņemts. Mēģiniet vēlreiz.",
+    "group_label": "Grupa",
+    "title": "Brīvs/aizņemts",
+    "description": "Grupas kolēģi redz, kad esat aizņemts, bet ne jūsu notikumus. To izmanto “Ieteikt laikus”."
+  },
+  "find_time": {
+    "suggest": "Ieteikt laikus",
+    "searching": "Meklē brīvus laikus",
+    "slots_title": "Brīvs visiem, kurus Bulwark varēja pārbaudīt",
+    "slot": "{day}, {start} līdz {end}",
+    "none": "Nākamajās 10 darba dienās nav brīva laika.",
+    "picked": "Notikums pārcelts uz {slot}",
+    "rate_limited": "Pēdējā minūtē bija pārāk daudz vaicājumu. Mēģiniet vēlreiz pēc minūtes.",
+    "unavailable": "Šajā serverī nav pieejama brīvs/aizņemts informācija, tāpēc Bulwark nevar ieteikt laikus.",
+    "not_checked": "Nav pārbaudīti:",
+    "not_checked_item": "{who}: {reason}",
+    "reason_external": "ārpus jūsu organizācijas",
+    "reason_unknown": "aizņemtie laiki nav zināmi",
+    "reason_not_found": "šajā serverī nav atrasts",
+    "reason_error": "neizdevās pārbaudīt",
+    "unknown_note": "Bulwark redz aizņemtos laikus tikai kalendāros, kas kopīgoti ar jums. Šiem cilvēkiem tas nevar atšķirt brīvu laiku no nekopīgota kalendāra.",
+    "directory_off": "Bulwark šajā serverī nevar meklēt cilvēkus. Administrators var ieslēgt direktorija vaicājumus Stalwart.",
+    "not_looked_up": "Šo adresi neizdevās atrast",
+    "found": "Atrasti brīvi laiki: {count}"
   },
   "share_notifications": {
     "someone": "Kāds",
@@ -5411,6 +5646,76 @@
     "install": "Instalēt",
     "dont_remind": "Vairs man neatgādināt",
     "dismiss_aria": "Aizvērt instalēšanas paziņojumu"
+  },
+  "app_update": {
+    "ready": "Ir gatava jauna {appName} versija.",
+    "reload": "Pārlādēt"
+  },
+  "offline": {
+    "settings": {
+      "title": "Bezsaistē",
+      "description": "Lasiet un rakstiet e-pastu šajā ierīcē bez savienojuma.",
+      "keep_label": "Glabāt e-pastu šajā ierīcē",
+      "keep_description": "Glabā iesūtnes un jūsu atvērto mapju pēdējās 30 dienas, līdz 250 MB, šifrētas šajā pārlūkā. Bezsaistē varat lasīt, atzīmēt un pārvietot vēstules, un tas, ko rakstāt, gaida izsūtnē. Izrakstoties viss tiek noņemts.",
+      "warning": "Ikviens, kas var izmantot šo pārlūka profilu, var lasīt šīs vēstules. Ieslēdziet to tikai savā ierīcē un izmantojiet diska šifrēšanu.",
+      "forbidden": "Jūsu organizācija neļauj glabāt e-pastu ierīcēs.",
+      "unsupported": "Šis pārlūks nevar glabāt e-pastu lietošanai bezsaistē.",
+      "syncing": "Jūsu e-pasts tiek saglabāts šajā ierīcē…",
+      "usage": "{size} šajā ierīcē",
+      "usage_updated": "{size} šajā ierīcē, atjaunināts {time}",
+      "off_confirm_title": "Izslēgt bezsaistes režīmu?",
+      "off_confirm_message": "{count, plural, zero {# vēstules izsūtnē nav nosūtītas.} one {# vēstule izsūtnē nav nosūtīta.} other {# vēstules izsūtnē nav nosūtītas.}} Izslēdzot tās tiek izdzēstas kopā ar šajā ierīcē glabāto e-pastu.",
+      "off_confirm": "Izslēgt"
+    },
+    "outbox": {
+      "title": "Izsūtne",
+      "description": "Vēstules, ko rakstījāt bezsaistē. Tās tiek nosūtītas, kad ierīce atkal ir tiešsaistē.",
+      "empty": "Nekas negaida nosūtīšanu.",
+      "no_subject": "(bez temata)",
+      "to": "Kam: {recipients}",
+      "status_waiting": "Gaida savienojumu",
+      "status_sending": "Tiek sūtīta",
+      "status_failed": "Neizdevās nosūtīt: {error}",
+      "status_uncertain": "Savienojums pārtrūka sūtīšanas laikā. Pirms sūtāt vēlreiz, pārbaudiet mapi Nosūtītās.",
+      "retry": "Sūtīt vēlreiz",
+      "delete": "Dzēst",
+      "delete_confirm_title": "Dzēst šo vēstuli?",
+      "delete_confirm_message": "Tā nav nosūtīta, un to nevar atgūt.",
+      "changes": "{count, plural, zero {# izmaiņas} one {# izmaiņa} other {# izmaiņas}} lasīšanas statusā, atzīmēs vai mapēs tiks nosūtītas, kad atkal būsiet tiešsaistē.",
+      "status_held": "Jūsu organizācijas noteikumi mainījās, kamēr vēstule gaidīja. Uzrakstiet to vēlreiz, lai nosūtītu.",
+      "retry_label": "Sūtīt vēlreiz: {subject}",
+      "delete_label": "Dzēst: {subject}"
+    },
+    "banner": {
+      "offline": "Jūs esat bezsaistē. Redzat šajā ierīcē glabāto e-pastu. Ko maināt vai rakstāt, tiek nosūtīts, kad atkal būsiet tiešsaistē.",
+      "outbox": "{count, plural, zero {# vēstules} one {# vēstule} other {# vēstules}} izsūtnē",
+      "server_down": "E-pasta serveris nav sasniedzams. Redzat šajā ierīcē glabāto e-pastu. Ko maināt vai rakstāt, tiek nosūtīts, kad tas atkal atbild."
+    },
+    "toast": {
+      "queued": "Saglabāta izsūtnē. Tā tiks nosūtīta, kad atkal būsiet tiešsaistē.",
+      "sent": "Nosūtīta no izsūtnes: {subject}",
+      "send_failed": "Neizdevās nosūtīt vēstuli no izsūtnes: {subject}",
+      "refused_delete": "Neatgriezeniskai dzēšanai vajag savienojumu. Mēģiniet vēlreiz, kad būsiet tiešsaistē.",
+      "refused_other": "Tam vajag savienojumu. Mēģiniet vēlreiz, kad būsiet tiešsaistē.",
+      "forbidden": "Jūsu organizācija izslēdza bezsaistes režīmu. Šajā ierīcē glabātais e-pasts tika noņemts.",
+      "back_online": "Jūs atkal esat tiešsaistē. Pārlādējiet, lai pierakstītos un nosūtītu gaidošo.",
+      "reload": "Pārlādēt",
+      "held": "Vēstulei izsūtnē nepieciešama jūsu uzmanība: {subject}",
+      "lost": "Šīs vēstules netika nosūtītas un tika izdzēstas: {subjects}"
+    },
+    "signout": {
+      "title": "Izrakstīties ar nenosūtītām vēstulēm?",
+      "message": "{count, plural, zero {# vēstules nav nosūtītas.} one {# vēstule nav nosūtīta.} other {# vēstules nav nosūtītas.}} Izrakstoties tās tiek izdzēstas.",
+      "confirm": "Izrakstīties",
+      "lost": "Šīs vēstules netika nosūtītas un tika izdzēstas, kad jūs izrakstījāt: {subjects}"
+    },
+    "errors": {
+      "unavailable": "Tam vajag savienojumu. Mēģiniet vēlreiz, kad būsiet tiešsaistē.",
+      "plugins_down": "Jūsu parakstīšanas vai šifrēšanas spraudnis bezsaistē nedarbojas. Nosūtiet to, kad atkal būsiet tiešsaistē.",
+      "file_missing": "Bezsaistē pievienotā datne vairs nav šajā ierīcē. Pievienojiet to vēlreiz.",
+      "no_sent_mailbox": "Mape Nosūtītās netika atrasta.",
+      "no_drafts_mailbox": "Mape Melnraksti netika atrasta."
+    }
   },
   "deep_link": {
     "message_not_found": "Šī ziņa vairs nav pieejama.",
@@ -5734,11 +6039,15 @@
       },
       "compose_read": {
         "title": "Lasīt ziņojumu, ko rakstāt",
-        "body": "Lasīt ziņojuma tekstu rakstīšanas laikā, kad izmantojat spraudni redaktorā. Ne parakstu, ne citēto ziņojumu."
+        "body": "Lasīt ziņojumu rakstīšanas laikā, kad izmantojat spraudni redaktorā: tekstu, tēmu, adresātus, arī diskrētās kopijas (Bcc) adresātus, un pielikumu nosaukumus un izmērus. Ne parakstu, ne citēto ziņojumu."
       },
       "compose_write": {
         "title": "Mainīt ziņojumu, ko rakstāt",
         "body": "Aizstāt vai pievienot tekstu ziņojumā rakstīšanas laikā, kad izmantojat spraudni redaktorā. Katru izmaiņu var atsaukt, un jūs joprojām izlemjat, vai sūtīt."
+      },
+      "compose_check": {
+        "title": "Pārbaudīt, ko rakstāt",
+        "body": "Rakstīšanas laikā lasa to, ko rakstāt redaktorā, un var to nosūtīt pakalpojumam, ko izmanto. Tikai tad, ja pārbaude ir ieslēgta, un nekas, kamēr ziņojums ir iestatīts parakstīšanai vai šifrēšanai. Teksts, ko uzrakstījāt pirms šī iestatījuma ieslēgšanas, jau var būt pārbaudīts."
       },
       "email_forward": {
         "title": "Pārsūtīt jūsu pastu",
@@ -5758,7 +6067,7 @@
       },
       "ui_tasks": {
         "title": "Papildināt uzdevumu skatu",
-        "body": "Rādīt savas sadaļas uzdevuma informācijā un pogas uzdevumu sarakstā."
+        "body": "Rādīt savas sadaļas uzdevuma informācijā, pogas uzdevumu sarakstā un savu uzdevumu sarakstu Bulwark saraksta vietā."
       },
       "ui_files": {
         "title": "Papildināt failu skatu",
@@ -5810,6 +6119,10 @@
       "error_server": "Ievadiet servera adresi, piemēram, https://cloud.example.com",
       "error_save": "Neizdevās saglabāt: {error}"
     }
+  },
+  "send_guards": {
+    "not_running": "Nav nosūtīts. Jūsu organizācijas pieprasītā pārbaude pašlaik nedarbojas. Mēģiniet vēlreiz pēc brīža.",
+    "stopped_working": "Nav nosūtīts. Jūsu organizācijas pieprasītā pārbaude vairs nedarbojas. Pārlādējiet lapu. Ja tas nepalīdz, sazinieties ar administratoru."
   },
   "plugin_list": {
     "filters": "Filtri",
@@ -6053,6 +6366,77 @@
       "party_size": "Personu skaits: {count}",
       "added_from": "Pievienots no {domain} e-pasta",
       "added_from_subject": "Pievienots no {domain} e-pasta “{subject}”"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Pareizrakstība",
+      "grammar": "Gramatika",
+      "style": "Stils",
+      "other": "Ieteikums"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Nav ieteikumu",
+      "suggestions": "Ieteikumi",
+      "replace_with": "Aizstāt ar {text}",
+      "also": "Arī no {checker}",
+      "ignore": "Ignorēt",
+      "add_to_dictionary": "Pievienot vārdnīcai",
+      "disable_rule": "Izslēgt šo noteikumu",
+      "changed": "Teksts ir mainījies. Pagaidiet nākamo pārbaudi."
+    },
+    "list_item": "{word}: {message} Ieteikums: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Nav pareizrakstības vai gramatikas kļūdu} zero {# pareizrakstības vai gramatikas kļūdu} one {# pareizrakstības vai gramatikas kļūda} other {# pareizrakstības vai gramatikas kļūdas}}",
+    "status": {
+      "title": "Teksta pārbaude",
+      "off": "Teksta pārbaude izslēgta",
+      "paused": "Teksta pārbaude apturēta",
+      "rate_limited": "Pārbaude apturēta",
+      "unavailable": "Pārbaude nav pieejama",
+      "checking": "Pārbauda…",
+      "issues": "{count, plural, =0 {Nav problēmu} zero {# problēmu} one {# problēma} other {# problēmas}}"
+    },
+    "panel": {
+      "title": "Teksta pārbaude",
+      "required": "Pieprasa jūsu organizācija",
+      "check_message": "Pārbaudīt šo ziņojumu",
+      "notice": "Kamēr rakstāt, jūsu teksts tiek nosūtīts pārbaudei uz {checkers}. Jūsu paraksts un citētais ziņojums netiek sūtīti. Kamēr ziņojums ir iestatīts parakstīšanai vai šifrēšanai, nekas netiek sūtīts; tas, ko uzrakstījāt pirms šī iestatījuma ieslēgšanas, jau var būt pārbaudīts.",
+      "turn_on": "Ieslēgt teksta pārbaudi",
+      "paused_protected": "Kamēr šis ziņojums ir iestatīts parakstīšanai vai šifrēšanai, nekas netiek pārbaudīts.",
+      "paused_unknown": "{plugin} var parakstīt vai šifrēt ziņojumus, to šeit nerādot, tāpēc, kamēr tas ir ieslēgts, nekas netiek pārbaudīts.",
+      "rate_limited": "{checker} lūdza pagaidīt. Pārbaude atsāksies pēc minūtes.",
+      "unavailable": "{checker} pašlaik nevar pārbaudīt. Tas mēģinās vēlreiz, kad turpināsiet rakstīt.",
+      "no_issues": "Problēmas nav atrastas.",
+      "list_label": "Problēmas šajā ziņojumā",
+      "shortcuts": "Nākamā problēma: {next}. Iepriekšējā: {previous}."
+    },
+    "notice": {
+      "on": "Teksta pārbaude ir ieslēgta. Kamēr rakstāt, jūsu teksts tiek nosūtīts pārbaudei uz {checkers}, bez jūsu paraksta un citētā ziņojuma. Kamēr ziņojums ir iestatīts parakstīšanai vai šifrēšanai, nekas netiek sūtīts; tas, ko uzrakstījāt pirms tam, jau var būt pārbaudīts.",
+      "forced": "Jūsu organizācija ieslēdza teksta pārbaudi. Kamēr rakstāt, jūsu teksts tiek nosūtīts pārbaudei uz {checkers}, bez jūsu paraksta un citētā ziņojuma. Kamēr ziņojums ir iestatīts parakstīšanai vai šifrēšanai, nekas netiek sūtīts; tas, ko uzrakstījāt pirms tam, jau var būt pārbaudīts.",
+      "ok": "Labi"
+    },
+    "send_warning": {
+      "title": "Sūtīt ar neatrisinātām problēmām?",
+      "body": "{count, plural, zero {Šajā ziņojumā joprojām ir # neatrisinātu pareizrakstības vai gramatikas kļūdu.} one {Šajā ziņojumā joprojām ir # neatrisināta pareizrakstības vai gramatikas kļūda.} other {Šajā ziņojumā joprojām ir # neatrisinātas pareizrakstības vai gramatikas kļūdas.}}",
+      "review": "Pārskatīt",
+      "send": "Sūtīt tik un tā"
+    },
+    "settings": {
+      "title": "Teksta pārbaude",
+      "description": "Rakstīšanas laikā pasvītro pareizrakstības un gramatikas kļūdas un iesaka labojumus.",
+      "enable": "Pārbaudīt pareizrakstību un gramatiku rakstīšanas laikā",
+      "enable_description": "Jūsu rakstītais teksts tiek nosūtīts teksta pārbaudes papildinājumam un pakalpojumam, ko tas izmanto, bez jūsu paraksta un citēto ziņojumu. Kamēr ziņojums ir iestatīts parakstīšanai vai šifrēšanai, nekas netiek sūtīts.",
+      "no_checker": "Nav instalēts neviens teksta pārbaudes papildinājums. Lūdziet administratoram to pievienot.",
+      "plugin_description": "Nosūta jūsu rakstīto uz {plugin}.",
+      "writing_language": "Rakstīšanas valoda",
+      "writing_language_description": "Valoda, kurā parasti rakstāt. To izmanto teksta pārbaude un pārlūka pareizrakstības pārbaude.",
+      "auto": "Noteikt automātiski"
+    },
+    "shortcuts": {
+      "next_issue": "Nākamā pareizrakstības vai gramatikas kļūda",
+      "previous_issue": "Iepriekšējā pareizrakstības vai gramatikas kļūda"
     }
   }
 }

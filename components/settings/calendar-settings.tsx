@@ -10,6 +10,7 @@ import { toast } from '@/stores/toast-store';
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
 import { cn } from '@/lib/utils';
 import { formatDisplayHour } from '@/lib/calendar-display-range';
+import { FreeBusyShareSetting } from './free-busy-share-setting';
 
 // Indexed by Date.getDay(), which is how calendarWorkingDays stores days.
 const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const;
@@ -276,6 +277,8 @@ export function CalendarSettings() {
           onChange={(checked) => updateSetting('showBirthdayCalendar', checked)}
         />
       </SettingItem>
+
+      <FreeBusyShareSetting />
 
       {isFeatureEnabled('calendarTasksEnabled') && (
       <>

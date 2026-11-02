@@ -47,8 +47,10 @@ type Route = typeof import('@/app/api/admin/auth/route');
 let POST: Route['POST'];
 
 beforeEach(async () => {
-  // Fresh rate limiter state for every test.
+  // Fresh rate limiter state for every test. The counters live in the
+  // store on globalThis now, not in the module.
   vi.resetModules();
+  (await import('@/lib/shared-store/local')).resetLocalStoreForTests();
   ({ POST } = await import('@/app/api/admin/auth/route'));
 });
 

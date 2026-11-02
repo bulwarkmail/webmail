@@ -23,6 +23,7 @@ import { revokeWopiTokens } from '@/lib/wopi/revocation';
 import { clearPairReauthInStore } from '@/lib/auth/pair-reauth';
 import { loginClientAddress } from '@/lib/auth/client-address';
 import { LOGIN_BUDGET_RETRY_AFTER_SECONDS, reserveLoginAttempt } from '@/lib/auth/verify-budget';
+import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
 import { isPastMaxAge, limitsEnforcedSince, maxSessionHoursFor, SESSION_TOO_OLD } from '@/lib/auth/session-age';
 
 function sessionCookieOptions() {
@@ -184,7 +185,7 @@ export async function POST(request: NextRequest) {
     // Wrong credentials tried from here count against this server's address
     // upstream, so each client gets a failure budget (lib/auth/verify-budget.ts).
     const clientIp = loginClientAddress(request);
-    const refund = reserveLoginAttempt(clientIp);
+    const refund = await reserveLoginAttempt(clientIp);
     if (!refund) {
       return NextResponse.json(
         { error: 'too_many_attempts', hint: 'Too many failed sign-in attempts. Try again later.' },
@@ -205,10 +206,10 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       // Only a credential the server rejected spends the budget; an outage
       // or a mismatched claim says nothing about the password.
-      if (!(error instanceof JmapAuthVerificationError && error.status === 401)) refund();
+      if (!(error instanceof JmapAuthVerificationError && error.status === 401)) await refund();
       throw error;
     }
-    refund();
+    await refund();
     // A remembered sign-in starts the maximum session length.
     const signedInAt = Date.now();
     const token = encryptSession(normalizedServerUrl, username, accessToken ? { token: accessToken } : password, signedInAt);
@@ -228,6 +229,8 @@ export async function POST(request: NextRequest) {
     // The browser counts the maximum session length from the server's time.
     return NextResponse.json(warning ? { ok: true, warning, signedInAt } : { ok: true, signedInAt });
   } catch (error) {
+    // The sign-in limit can't be counted without the shared store: refused.
+    if (isStoreUnavailable(error)) return storeUnavailableResponse();
     if (error instanceof JmapAuthVerificationError) {
       return NextResponse.json(
         verificationFailureBody('session', error, upstreamUrl, upstreamTrusted),
@@ -352,13 +355,13 @@ export async function DELETE(request: NextRequest) {
       await revokeImpersonationGrant(cookieStore);
       // A phone that already paired keeps its own sign-in; a QR still on
       // screen stops working.
-      clearPairReauthInStore(cookieStore);
+      await clearPairReauthInStore(cookieStore);
     } else {
       const slot = getSlot(request);
       cookieStore.delete(sessionCookieName(slot));
       clearStalwartAuthContextInStore(cookieStore, slot);
       if (slot === 0) await revokeImpersonationGrant(cookieStore);
-      clearPairReauthInStore(cookieStore, slot);
+      await clearPairReauthInStore(cookieStore, slot);
     }
 
     return NextResponse.json({ ok: true });

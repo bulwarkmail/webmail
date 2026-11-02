@@ -32,6 +32,8 @@ vi.mock('@/lib/admin/config-manager', () => ({
     ensureLoaded: async () => {},
     get: (key: string, fallback: unknown) => (key in config.values ? config.values[key] : fallback),
     getPolicy: () => POLICY,
+    getPolicyVersion: () => 'v1',
+    getPolicyWithVersion() { return { policy: this.getPolicy(), version: 'v1' }; },
   },
 }));
 vi.mock('@/lib/logger', () => ({ logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() } }));

@@ -49,6 +49,8 @@ function emit(payload: AfterSendPayload): void {
 
 /** Report a send the server accepted (see the rules above). */
 export function announceSent(result: SendEmailResult, message: SentMessage): void {
+  // Waiting in the offline outbox (#523): nothing left yet.
+  if (result.queued) return;
   const payload: AfterSendPayload = {
     emailId: result.emailId ?? null,
     accountId: result.emailAccountId ?? null,

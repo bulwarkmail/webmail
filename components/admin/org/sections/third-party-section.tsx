@@ -18,6 +18,8 @@ interface OutgoingHostsState {
   builtIn: OutgoingHost[];
   reachable: ReachableHost[];
   networkPlugins: { id: string; name: string }[];
+  /** Running in the mode with the servers entered on their admin page; these manifest servers stay off. */
+  partlyOffPlugins?: { id: string; name: string; hosts: string[] }[];
 }
 
 const SIDE_LABEL: Record<ReachableHost['side'], string> = {
@@ -144,6 +146,11 @@ export function ThirdPartySection({ draft }: { draft: OrgPolicyDraft }) {
           {on && state.networkPlugins.length > 0 && (
             <ConfigNote>
               Not running because they declare network access: {state.networkPlugins.map((p) => p.name).join(', ')}.
+            </ConfigNote>
+          )}
+          {on && (state.partlyOffPlugins?.length ?? 0) > 0 && (
+            <ConfigNote>
+              Running with only the servers entered on their admin page: {state.partlyOffPlugins!.map((p) => `${p.name} (${p.hosts.join(', ')} stays off)`).join('; ')}.
             </ConfigNote>
           )}
 

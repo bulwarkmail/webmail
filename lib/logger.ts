@@ -40,7 +40,38 @@ function isJson(): boolean {
   return configured === 'json';
 }
 
+/** Whether log lines go out as JSON (LOG_FORMAT=json or the admin setting). */
+export function isJsonLogFormat(): boolean {
+  return isJson();
+}
+
+/**
+ * Gets every logger.error call, with the stack of the call. The server's
+ * error reporting sets it (lib/error-reporting/server.ts); without it errors
+ * are only logged.
+ */
+export type ErrorSink = (message: string, extra: Record<string, unknown> | undefined, stack: string | undefined) => void;
+const SINK_KEY = Symbol.for('bulwark.logger.errorSink');
+type GlobalWithSink = typeof globalThis & { [SINK_KEY]?: ErrorSink };
+
+export function setErrorSink(sink: ErrorSink | null): void {
+  const target = globalThis as GlobalWithSink;
+  if (sink) target[SINK_KEY] = sink;
+  else delete target[SINK_KEY];
+}
+
 function log(level: LogLevel, message: string, extra?: Record<string, unknown>): void {
+  if (level === 'error') {
+    const sink = (globalThis as GlobalWithSink)[SINK_KEY];
+    if (sink) {
+      try {
+        // Frames: log, logger.error, then the caller.
+        sink(message, extra, new Error().stack);
+      } catch {
+        // reporting must not break logging
+      }
+    }
+  }
   if (LEVELS[level] > getLevel()) return;
 
   if (isJson()) {

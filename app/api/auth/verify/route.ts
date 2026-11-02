@@ -6,7 +6,8 @@ import { isPublicHttpUrl } from '@/lib/security/url-guard';
 import { parseJmapServers, resolveTrustedJmapUrl } from '@/lib/admin/jmap-servers';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { getClientIP } from '@/lib/admin/session';
-import { reserveVerifyProbe } from '@/lib/auth/verify-budget';
+import { reserveVerifyProbe, type BudgetRefund } from '@/lib/auth/verify-budget';
+import { isStoreUnavailable } from '@/lib/auth/store-unavailable';
 
 /**
  * Server-side credential pre-check for the login form (#969): a password
@@ -83,7 +84,15 @@ export async function POST(request: NextRequest) {
     // Wrong passwords tried from here count against this server's address
     // upstream; over budget the browser probes the JMAP server itself.
     const clientIp = getClientIP(request);
-    const refund = reserveVerifyProbe(clientIp);
+    let refund: BudgetRefund | null;
+    try {
+      refund = await reserveVerifyProbe(clientIp);
+    } catch (error) {
+      // The shared store is down: the budget can't be counted, so nothing
+      // is sent upstream and the browser probes for itself.
+      if (isStoreUnavailable(error)) return respond('inconclusive');
+      throw error;
+    }
     if (!refund) return respond('inconclusive');
 
     const authHeader = hasToken
@@ -91,13 +100,13 @@ export async function POST(request: NextRequest) {
       : 'Basic ' + Buffer.from(username + ':' + password).toString('base64');
     try {
       await verifyJmapAuth(upstreamUrl, authHeader, { trusted: upstreamTrusted, clientIp });
-      refund();
+      await refund();
       return respond('ok');
     } catch (error) {
       if (error instanceof JmapAuthVerificationError && error.upstreamStatus === 401) {
         return respond('unauthorized');
       }
-      refund();
+      await refund();
       logger.debug('Login pre-check inconclusive', {
         error: error instanceof Error ? error.message : 'Unknown error',
       });

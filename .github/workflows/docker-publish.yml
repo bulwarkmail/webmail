@@ -18,6 +18,9 @@ on:
       - "public/**"
       - "package.json"
       - "package-lock.json"
+      - "scripts/healthcheck.mjs"
+      - "scripts/sourcemaps.mjs"
+      - "scripts/upload-sourcemaps.sh"
       - ".github/workflows/docker-publish.yml"
   workflow_dispatch:
 
@@ -89,9 +92,33 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             GIT_COMMIT=${{ github.sha }}
+            BULWARK_SOURCE_MAPS=1
           outputs: type=image,name=${{ needs.prepare.outputs.image_name }},push-by-digest=true,name-canonical=true,push=true
           cache-from: type=gha,scope=${{ matrix.platform }}
           cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
+
+      # The same build again, a cache hit on this builder, for the stage that
+      # holds only the source maps (Dockerfile, "sourcemaps"); the image never
+      # has them. Both platforms build identical chunks, so amd64 uploads.
+      # https://bulwarkmail.org/docs/deployment/monitoring
+      - name: Export source maps
+        if: matrix.platform == 'linux/amd64'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          target: sourcemaps
+          build-args: |
+            GIT_COMMIT=${{ github.sha }}
+            BULWARK_SOURCE_MAPS=1
+          outputs: type=local,dest=sourcemaps
+          cache-from: type=gha,scope=${{ matrix.platform }}
+
+      - name: Upload source maps to Bugsink
+        if: matrix.platform == 'linux/amd64'
+        env:
+          BUGSINK_AUTH_TOKEN: ${{ secrets.BUGSINK_AUTH_TOKEN }}
+        run: bash scripts/upload-sourcemaps.sh sourcemaps
 
       - name: Export digest
         run: |

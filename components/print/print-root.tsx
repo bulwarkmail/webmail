@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { listenForPrinting, usePrintStore } from "@/stores/print-store";
+import { Watermark, useWatermarkText } from "@/components/device/watermark";
 
 export type PrintOrientation = "portrait" | "landscape";
 
@@ -30,6 +31,8 @@ interface PrintRootProps {
  * reaches the paper. On screen it is never shown.
  */
 export function PrintRoot({ orientation, title, children }: PrintRootProps) {
+  // Organisation > Devices > Watermark: on every printed page.
+  const watermark = useWatermarkText(undefined, { strictest: true });
   useLayoutEffect(() => {
     if (!title) return;
     const previous = document.title;
@@ -40,6 +43,7 @@ export function PrintRoot({ orientation, title, children }: PrintRootProps) {
   return createPortal(
     <div data-print-root="" data-orientation={orientation} className="pr-root">
       <style>{`@page { size: ${orientation}; margin: 12mm; }`}</style>
+      <Watermark text={watermark} fixed />
       {children}
     </div>,
     document.body,

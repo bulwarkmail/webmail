@@ -687,9 +687,15 @@ export function buildOccurrenceRsvpPatch(
   participantId: string,
   status: CalendarParticipant['participationStatus'],
   options: OverridePatchOptions = {},
+  sentBy?: string | null,
 ): Partial<CalendarEvent> | null {
   const participant = occurrence.participants?.[participantId];
   if (!participant) return null;
+  // sentBy: who answers for the participant (lib/calendar-delegate.ts); null
+  // drops an old one, left out keeps what is there.
+  const answered: CalendarParticipant = { ...participant, participationStatus: status };
+  if (sentBy) answered.sentBy = sentBy;
+  else if (sentBy === null) delete answered.sentBy;
   const patch: Record<string, unknown> = {};
   if (occurrence.sequence != null) patch.sequence = occurrence.sequence;
   if (options.seriesKeys && occurrence.organizerCalendarAddress) {
@@ -697,7 +703,7 @@ export function buildOccurrenceRsvpPatch(
   }
   patch.participants = {
     ...occurrence.participants,
-    [participantId]: { ...participant, participationStatus: status },
+    [participantId]: answered,
   };
   return withNewOverrideDetails(occurrence, patch as Partial<CalendarEvent>, options);
 }

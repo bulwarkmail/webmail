@@ -65,3 +65,53 @@ export function customHeaderProperties(headers: unknown): Record<string, string>
   }
   return out;
 }
+
+/**
+ * The headers a classification label writes (lib/classification/labels.ts).
+ * While the organisation uses labels, plugins can't set them: the label
+ * stage drops them from the plugins' headers (withoutLabelHeaders), along
+ * with the admin's extra header, and withLabelHeaders below lets the
+ * label's own win over anything left.
+ */
+export const LABEL_HEADER_NAMES = ['sio-label', 'sio-label-history', 'sensitivity', 'x-bulwark-label'] as const;
+
+/** `headers` (OutgoingEmail.headers) without the label headers and `extra` names. */
+export function withoutLabelHeaders(
+  headers: Record<string, string> | undefined,
+  extra: readonly string[] = [],
+): Record<string, string> | undefined {
+  if (!headers) return headers;
+  const reserved = new Set<string>([...LABEL_HEADER_NAMES, ...extra.map((name) => name.toLowerCase())]);
+  const out: Record<string, string> = {};
+  for (const [name, value] of Object.entries(headers)) {
+    if (reserved.has(name.toLowerCase())) {
+      debug.warn(`Outgoing header "${name}" from a plugin was not sent: the classification label sets it`);
+      continue;
+    }
+    out[name] = value;
+  }
+  return out;
+}
+
+/** The name in a JMAP header property (`header:SIO-Label:asRaw` → `sio-label`). */
+function propertyHeaderName(property: string): string {
+  return property.split(':')[1]?.toLowerCase() ?? '';
+}
+
+/**
+ * Plugin header properties with the label's added on top: a plugin header
+ * of a name the label writes is dropped, since JMAP refuses a create that
+ * sets one header twice and the label must win.
+ */
+export function withLabelHeaders(
+  custom: Record<string, string>,
+  label: Record<string, string> | undefined,
+): Record<string, string> {
+  if (!label || Object.keys(label).length === 0) return custom;
+  const taken = new Set(Object.keys(label).map(propertyHeaderName));
+  const out: Record<string, string> = {};
+  for (const [property, value] of Object.entries(custom)) {
+    if (!taken.has(propertyHeaderName(property))) out[property] = value;
+  }
+  return { ...out, ...label };
+}
