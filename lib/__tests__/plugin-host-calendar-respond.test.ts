@@ -79,6 +79,10 @@ describe('api.calendar.respond', () => {
     vi.mocked(client.getEmail).mockResolvedValueOnce({ ...invitation, from: [{ email: 'bob@example.org', name: 'Bob' }] } as never);
     parsed.participants = { p1: { ...alice, email: 'bob@example.org' } } as never;
     await expect(call(ASSISTANT, 'calendar.respond', 'inv', 'accepted')).rejects.toThrow(/organises/);
+    // From forged as the user's own address, for someone else's event, not verified.
+    vi.mocked(client.getEmail).mockResolvedValueOnce({ ...invitation, from: [{ email: 'bob@example.org', name: 'Bob' }] } as never);
+    parsed.participants = { p1: alice, p2: bob } as never;
+    await expect(call(ASSISTANT, 'calendar.respond', 'inv', 'accepted')).rejects.toThrow(/may not come from/);
     // Someone else's event whose sender doesn't match its organiser.
     vi.mocked(client.getEmail).mockResolvedValueOnce({ ...invitation, from: [{ email: 'mallory@evil.example', name: 'Alice' }] } as never);
     parsed.participants = { p1: alice, p2: bob } as never;

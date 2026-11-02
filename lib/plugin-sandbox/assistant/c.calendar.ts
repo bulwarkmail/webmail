@@ -76,11 +76,10 @@ export async function doCalendarRespond(emailIdArg: unknown, statusArg: unknown)
   if (itip !== 'request') throw new Error(`${method}: the message is not an invitation that asks for an answer`);
 
   const emails = identityEmails();
-  const sender = email.from?.[0]?.email?.toLowerCase();
-  if (!(sender && emails.includes(sender))) {
-    const trust = getInvitationTrustAssessment(parsedEvent, email, itip, emails);
-    if (trust?.level === 'warning') throw new Error(`${method}: the invitation may not come from who it names; answer it in the reader`);
-  }
+  // Always checked, also when From is one of the user's own addresses (it
+  // can be forged): only a sender the server verified passes a mismatch.
+  const trust = getInvitationTrustAssessment(parsedEvent, email, itip, emails);
+  if (trust?.level === 'warning') throw new Error(`${method}: the invitation may not come from who it names; answer it in the reader`);
 
   const existing = await ownCopy(client, parsedEvent.uid);
   const { participant: myParticipant, isOrganizer } = attendeeOf(
