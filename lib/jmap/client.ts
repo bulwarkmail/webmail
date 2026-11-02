@@ -2286,22 +2286,36 @@ export class JMAPClient implements IJMAPClient {
 
     let hasMorePages = true;
     while (hasMorePages) {
-      const response = await this.request([
-        ["Mailbox/query", {
-          accountId,
-          position,
-          limit: this.getMaxObjectsInGet(),
-          calculateTotal: position === 0,
-        }, "query"],
+      const queryCall: JMAPMethodCall = ["Mailbox/query", {
+        accountId,
+        position,
+        limit: this.getMaxObjectsInGet(),
+        calculateTotal: position === 0,
+      }, "query"];
+      const combined = this.getMaxCallsInRequest() > 1;
+      const response = await this.request(combined ? [queryCall,
         ["Mailbox/get", {
           accountId,
           properties: MAILBOX_PROPERTIES,
           "#ids": { resultOf: "query", name: "Mailbox/query", path: "/ids" },
         }, "get"],
-      ], undefined, { skipOfflineRecord: true });
+      ] : [queryCall], undefined, { skipOfflineRecord: true });
 
       const queryResponse = response.methodResponses?.[0];
-      const getResponse = response.methodResponses?.[1];
+      let getResponse = response.methodResponses?.[1];
+      if (!combined) {
+        const queriedIds = queryResponse?.[1]?.ids;
+        if (queryResponse?.[0] !== "Mailbox/query" || !Array.isArray(queriedIds) ||
+            !queriedIds.every((id: unknown) => typeof id === "string")) {
+          throw new Error("Failed to load the complete mailbox list");
+        }
+        // Result references cannot cross requests. Respect single-call servers
+        // by passing this page's IDs explicitly, still deferring cache writes.
+        const fetched = await this.request([["Mailbox/get", {
+          accountId, properties: MAILBOX_PROPERTIES, ids: queriedIds,
+        }, "get"]], undefined, { skipOfflineRecord: true });
+        getResponse = fetched.methodResponses?.[0];
+      }
       const ids = queryResponse?.[1]?.ids;
       const pageQueryState = queryResponse?.[1]?.queryState;
       const page = getResponse?.[1]?.list;
@@ -2417,6 +2431,7 @@ export class JMAPClient implements IJMAPClient {
       }
 
       let fetchFailed = false;
+      let paginationFailed = false;
 
       // One Mailbox/get per account, packed maxCallsInRequest to a request and
       // a few requests in flight at once. One request per account, one after
@@ -2446,6 +2461,7 @@ export class JMAPClient implements IJMAPClient {
                 match = complete.methodResponses[0];
               } catch (error) {
                 fetchFailed = true;
+                paginationFailed = true;
                 console.error(`Failed to fetch all mailboxes for account ${accountId}:`, error);
                 continue;
               }
@@ -2485,6 +2501,10 @@ export class JMAPClient implements IJMAPClient {
         },
       );
       await Promise.all(workers);
+
+      // The store replaces the whole folder list on a successful refresh.
+      // Never publish sibling accounts as a complete list after paging fails.
+      if (paginationFailed) throw new Error('Failed to load the complete mailbox list');
 
       // Accounts keep the session's order, whichever batch answered first.
       for (const mailboxes of perAccount) allMailboxes.push(...mailboxes);

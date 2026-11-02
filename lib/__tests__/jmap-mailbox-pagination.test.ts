@@ -131,7 +131,7 @@ describe('JMAP mailbox pagination', () => {
     expect(vi.mocked(client['request']).mock.calls[0][0].map(([name]) => name)).toEqual(['Mailbox/get', 'Mailbox/get']);
   });
 
-  it('does not drop later accounts in a packed batch when one paginated account fails', async () => {
+  it('rejects a partial refresh when one paginated account fails', async () => {
     const client = createClient(2, { primary: { name: 'Self' }, shared: { name: 'Shared' } });
     vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(client as unknown as RequestTarget, 'request')
@@ -140,9 +140,7 @@ describe('JMAP mailbox pagination', () => {
         ['Mailbox/get', { state: 'shared-state', list: [{ id: 'inbox', name: 'Shared Inbox' }] }, '1'],
       ] })
       .mockRejectedValueOnce(new Error('page failed'));
-    const result = await client.getAllMailboxesWithState();
-    expect(result.mailboxes.map(({ id }) => id)).toEqual(['shared:inbox']);
-    expect(result.states).toEqual({ shared: 'shared-state' });
+    await expect(client.getAllMailboxesWithState()).rejects.toThrow('complete mailbox list');
   });
 
   it('pages when an unbounded get is rejected as tooManyObjects', async () => {
@@ -153,5 +151,30 @@ describe('JMAP mailbox pagination', () => {
       ['error', { type: 'tooManyObjects' }, '0'],
     ] });
     expect((await client.getMailboxes()).map(({ id }) => id)).toEqual(['a', 'b', 'c']);
+  });
+
+  it.each([false, true])('respects maxCallsInRequest=1 (shared: %s)', async (shared) => {
+    const client = createClient(2, shared ? { primary: { name: 'Self' }, shared: { name: 'Shared' } } : undefined);
+    Object.assign(client, { capabilities: { 'urn:ietf:params:jmap:core': { maxObjectsInGet: 2, maxCallsInRequest: 1 } } });
+    const boxes = [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }, { id: 'c', name: 'C' }];
+    const spy = vi.spyOn(client as unknown as RequestTarget, 'request').mockImplementation(async (calls) => {
+      expect(calls).toHaveLength(1);
+      const [name, args, tag] = calls[0];
+      if (name === 'Mailbox/query') {
+        const ids = boxes.slice(args.position as number, (args.position as number) + 2).map(box => box.id);
+        return { methodResponses: [[name, { ids, queryState: 'q', total: 3 }, tag]] };
+      }
+      const ids = args.ids as string[] | undefined;
+      expect(args['#ids']).toBeUndefined();
+      const list = ids ? boxes.filter(box => ids.includes(box.id)) : boxes.slice(0, 2);
+      return { methodResponses: [[name, { list, state: 'm', notFound: [] }, tag]] };
+    });
+    const result = shared ? await client.getAllMailboxes() : await client.getMailboxes();
+    expect(result).toHaveLength(shared ? 6 : 3);
+    const gets = spy.mock.calls.flatMap(([calls]) => calls).filter(([name, args]) => name === 'Mailbox/get' && args.ids);
+    for (const accountId of shared ? ['primary', 'shared'] : ['primary']) {
+      expect(gets.filter(([, args]) => args.accountId === accountId).map(([, args]) => args.ids))
+        .toEqual([['a', 'b'], ['c']]);
+    }
   });
 });
