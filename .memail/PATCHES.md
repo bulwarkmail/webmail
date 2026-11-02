@@ -155,3 +155,10 @@ Add each customization here. Include the relevant upstream files, the reason it 
 - Typing while a menu item has focus now finds command prefixes at the current menu level. Repeated letters cycle matches; disabled entries are skipped; diacritics are normalized. The prefix resets after 650ms or navigation/level changes. It moves focus only and does not invoke actions. Search fields, composition and modified shortcuts retain their existing handling.
 - Menu focus now scrolls its item into view inside long menus. Focus restoration outside menus retains preventScroll behavior.
 - Composer toolbar menus expose their existing label as the menu name and open from Down as well as normal button activation. They reuse the existing placement and close/focus logic.
+
+
+## Files navigation and pane-responsive header
+
+- Files separates account context from the folder path and wraps tools below it when the pane is at most 40rem wide. The root remains readable, long folder names retain full titles, and compact paths show root/current with every intermediate parent in the existing path menu.
+- List/grid uses a single radio Tab stop with arrow, Home/End and RTL navigation through the native view callback. Sort and path menus expose localized names and path disclosure state.
+- Clearing or escaping compact search restores focus after its trigger remounts; desktop search retains focus. Native file actions, selection tools, plugin actions and account navigation callbacks remain in place. No file storage or mail API changes.

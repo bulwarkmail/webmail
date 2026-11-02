@@ -1655,3 +1655,29 @@ optgroup {
 @media (pointer: coarse) {
   [data-memail-settings-nav] [data-memail-settings-result] { min-height: 2.75rem; }
 }
+
+/* Files navigation keeps its path and tools readable by the pane's width. */
+[data-memail-files-header] { container: memail-files-header / inline-size; }
+@container memail-files-header (max-width: 40rem) {
+  [data-memail-files-toolbar] {
+    height: auto;
+    min-height: 3.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-block: 0.5rem;
+  }
+  [data-memail-files-toolbar] > nav { flex: 1 1 calc(100% - 3rem); }
+  [data-memail-files-toolbar] nav li { flex-shrink: 1; }
+  [data-memail-files-toolbar] nav li:first-child { flex-shrink: 0; }
+  [data-memail-files-tools] {
+    flex: 1 1 100%;
+    min-width: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  [data-memail-files-tools] .memail-files-search {
+    flex: 1 1 12rem;
+    width: auto;
+    max-width: 100%;
+  }
+}

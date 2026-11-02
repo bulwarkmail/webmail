@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useLayoutEffect } from "react";
 import { useTranslations } from "next-intl";
 import {
   Menu, ChevronRight, Search, X, ArrowUpDown, Check, LayoutGrid, LayoutList,
@@ -119,6 +119,23 @@ export function FilesHeader({
   const sortMenu = useContextMenu<null>();
   const overflowMenu = useContextMenu<Crumb[]>();
   const [searchOpen, setSearchOpen] = useState(false);
+  const searchTrigger = useRef<HTMLButtonElement>(null);
+  const restoreSearchFocus = useRef(false);
+  useLayoutEffect(() => {
+    if (!searchOpen && restoreSearchFocus.current) {
+      restoreSearchFocus.current = false;
+      searchTrigger.current?.focus();
+    }
+  }, [searchOpen]);
+  const clearSearch = () => {
+    onSearchChange("");
+    if (compact) {
+      restoreSearchFocus.current = true;
+      setSearchOpen(false);
+    } else {
+      searchInputRef.current?.focus();
+    }
+  };
   const [dropCrumb, setDropCrumb] = useState<string | null>(null);
 
   const headerClass = "flex items-center gap-1 px-3 h-14 box-content border-b border-border min-w-0 flex-shrink-0";
@@ -174,8 +191,16 @@ export function FilesHeader({
   }
 
   // Deep paths keep the root and the last folders; the rest go in a menu.
-  const hidden = crumbs.length > MAX_VISIBLE_CRUMBS + 1 ? crumbs.slice(1, crumbs.length - MAX_VISIBLE_CRUMBS + 1) : [];
-  const visible = hidden.length > 0 ? [crumbs[0], ...crumbs.slice(crumbs.length - MAX_VISIBLE_CRUMBS + 1)] : crumbs;
+  const hidden = compact
+    ? crumbs.slice(1, -1)
+    : crumbs.length > MAX_VISIBLE_CRUMBS + 1
+      ? crumbs.slice(1, crumbs.length - MAX_VISIBLE_CRUMBS + 1)
+      : [];
+  const visible = compact
+    ? (crumbs.length > 1 ? [crumbs[0], crumbs[crumbs.length - 1]] : crumbs)
+    : hidden.length > 0
+      ? [crumbs[0], ...crumbs.slice(crumbs.length - MAX_VISIBLE_CRUMBS + 1)]
+      : crumbs;
 
   const crumbDropProps = (crumb: Crumb, isLast: boolean) => isLast ? {} : {
     onDragOver: (e: React.DragEvent) => {
@@ -201,6 +226,7 @@ export function FilesHeader({
         <button
           type="button"
           onClick={() => onNavigateCrumb(crumb)}
+          title={crumb.name}
           aria-current={isLast ? "page" : undefined}
           className={cn(
             "px-1.5 py-1 rounded-md transition-colors truncate max-w-[16rem]",
@@ -218,7 +244,7 @@ export function FilesHeader({
   const searchField = (
     <ToolbarSearch
       ref={searchInputRef}
-      className={compact ? "flex-1" : "w-56"}
+      className={cn("memail-files-search", compact ? "flex-1" : "w-56")}
       role="searchbox"
       aria-label={t("search_placeholder")}
       placeholder={t("search_placeholder")}
@@ -228,13 +254,12 @@ export function FilesHeader({
       onChange={(e) => onSearchChange(e.target.value)}
       onKeyDown={(e) => {
         if (e.key === "Escape") {
-          onSearchChange("");
-          if (compact) setSearchOpen(false);
-          (e.target as HTMLInputElement).blur();
+          e.preventDefault(); e.stopPropagation();
+          clearSearch();
         }
       }}
       autoFocus={compact}
-      onClear={() => { onSearchChange(""); if (compact) setSearchOpen(false); }}
+      onClear={clearSearch}
       clearLabel={t("clear_search")}
       alwaysShowClear={compact}
     />
@@ -250,7 +275,16 @@ export function FilesHeader({
   }
 
   return (
-    <div role="toolbar" aria-label={t("toolbar")} className={headerClass}>
+    <div data-memail-files-header="" className="min-w-0 shrink-0">
+      {accountLabel && (
+        <div className="px-3 pt-2 text-xs text-muted-foreground">
+          <button type="button" onClick={onNavigateAccountRoot} title={accountLabel}
+            className="max-w-full truncate rounded-md px-1.5 py-1 hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring">
+            {accountLabel}
+          </button>
+        </div>
+      )}
+    <div data-memail-files-toolbar="" role="toolbar" aria-label={t("toolbar")} className={headerClass}>
       {onMenuClick && (
         <ToolbarButton
           label={t("open_folder_tree")}
@@ -264,18 +298,6 @@ export function FilesHeader({
       <nav aria-label={t("breadcrumbs")} className="flex-1 min-w-0">
         <ol className="flex items-center text-sm min-w-0">
           {visible.slice(0, 1).map((c) => renderCrumb(c, 0))}
-          {accountLabel && (
-            <li className="flex items-center min-w-0 shrink-0">
-              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />
-              <button
-                type="button"
-                onClick={onNavigateAccountRoot}
-                className="px-1.5 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted truncate max-w-[12rem]"
-              >
-                {accountLabel}
-              </button>
-            </li>
-          )}
           {hidden.length > 0 && (
             <li className="flex items-center shrink-0">
               <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />
@@ -284,6 +306,7 @@ export function FilesHeader({
                 className="px-1.5 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
                 aria-label={t("show_path")}
                 aria-haspopup="menu"
+                aria-expanded={overflowMenu.contextMenu.isOpen}
                 onClick={(e) => overflowMenu.openContextMenu(anchorEvent(e.currentTarget), hidden)}
               >
                 <MoreHorizontal className="w-4 h-4" />
@@ -295,7 +318,7 @@ export function FilesHeader({
       </nav>
 
       {!toolsHidden && (
-        <div className="flex items-center gap-1 shrink-0">
+        <div data-memail-files-tools="" className="flex items-center gap-1 shrink-0">
           {emptyTrash && (
             <Button
               variant="outline"
@@ -316,7 +339,7 @@ export function FilesHeader({
             </Button>
           )}
           {compact ? (
-            <ToolbarButton label={t("search_placeholder")} onClick={() => setSearchOpen(true)}>
+            <ToolbarButton ref={searchTrigger} label={t("search_placeholder")} onClick={() => setSearchOpen(true)}>
               <Search />
             </ToolbarButton>
           ) : searchField}
@@ -333,13 +356,30 @@ export function FilesHeader({
           >
             <ArrowUpDown />
           </ToolbarButton>
-          <div className="flex items-center h-8 rounded-md border border-input p-0.5 shrink-0" role="radiogroup" aria-label={t("view_mode")}>
+          <div className="flex items-center h-8 rounded-md border border-input p-0.5 shrink-0" role="radiogroup" aria-label={t("view_mode")} onKeyDown={(event) => {
+            if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+            const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]'));
+            const current = buttons.indexOf(event.target as HTMLButtonElement);
+            if (current < 0) return;
+            const rtl = getComputedStyle(event.currentTarget).direction === 'rtl';
+            let next = -1;
+            if (event.key === 'Home') next = 0;
+            else if (event.key === 'End') next = buttons.length - 1;
+            else if (event.key === 'ArrowDown' || event.key === (rtl ? 'ArrowLeft' : 'ArrowRight')) next = (current + 1) % buttons.length;
+            else if (event.key === 'ArrowUp' || event.key === (rtl ? 'ArrowRight' : 'ArrowLeft')) next = (current - 1 + buttons.length) % buttons.length;
+            if (next < 0) return;
+            event.preventDefault();
+            event.stopPropagation();
+            onViewModeChange(next === 0 ? 'list' : 'grid');
+            buttons[next].focus();
+          }}>
             {([["list", LayoutList, t("list_view")], ["grid", LayoutGrid, t("grid_view")]] as const).map(([mode, Icon, label]) => (
               <button
                 key={mode}
                 type="button"
                 role="radio"
                 aria-checked={viewMode === mode}
+                tabIndex={viewMode === mode ? 0 : -1}
                 aria-label={label}
                 title={label}
                 onClick={() => onViewModeChange(mode)}
@@ -370,7 +410,7 @@ export function FilesHeader({
         </div>
       )}
 
-      <ContextMenu ref={sortMenu.menuRef} isOpen={sortMenu.contextMenu.isOpen} position={sortMenu.contextMenu.position} onClose={sortMenu.closeContextMenu}>
+      <ContextMenu label={t("sort_by")} ref={sortMenu.menuRef} isOpen={sortMenu.contextMenu.isOpen} position={sortMenu.contextMenu.position} onClose={sortMenu.closeContextMenu}>
         {([["name", t("name")], ["modified", t("modified")], ["size", t("size")]] as const).map(([key, label]) => (
           <SortItem
             key={key}
@@ -394,7 +434,7 @@ export function FilesHeader({
         />
       </ContextMenu>
 
-      <ContextMenu ref={overflowMenu.menuRef} isOpen={overflowMenu.contextMenu.isOpen} position={overflowMenu.contextMenu.position} onClose={overflowMenu.closeContextMenu}>
+      <ContextMenu label={t("show_path")} ref={overflowMenu.menuRef} isOpen={overflowMenu.contextMenu.isOpen} position={overflowMenu.contextMenu.position} onClose={overflowMenu.closeContextMenu}>
         {(overflowMenu.contextMenu.data ?? []).map((crumb) => (
           <ContextMenuItem
             key={crumb.path}
@@ -404,6 +444,7 @@ export function FilesHeader({
           />
         ))}
       </ContextMenu>
+    </div>
     </div>
   );
 }
