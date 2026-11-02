@@ -19,8 +19,8 @@ import {
 } from '@/lib/plugin-sandbox/host-features';
 import { assistantFeatures } from '@/lib/plugin-sandbox/assistant';
 
-/** The AI assistant's flags (lib/plugin-sandbox/assistant) come on top; their own tests check them. */
-const withAssistant = (core: Record<string, boolean>) => ({ ...core, ...assistantFeatures() });
+/** The AI assistant's flags (lib/plugin-sandbox/assistant) come on top, as `plugin` sees them; their own tests check them. */
+const withAssistant = (core: Record<string, boolean>, plugin?: never) => ({ ...core, ...assistantFeatures(plugin) });
 
 function setExternalMail(patch: Partial<typeof DEFAULT_ORGANISATION_POLICY.externalMail>) {
   usePolicyStore.setState({
@@ -85,21 +85,21 @@ describe('host bridge', () => {
     const plugin = { id: 'p', name: 'P', version: '1.0.0', permissions: [], settings: {}, settingsSchema: {} } as never;
     const instance = createBackgroundInstance({ plugin, tier: 'privileged', code: '', locale: 'en' });
     const pending = (instance as unknown as { pendingInit: { hostFeatures?: unknown } | null }).pendingInit;
-    expect(pending?.hostFeatures).toEqual(withAssistant({ externalSenderLabel: true, externalRecipientWarning: false, noThirdPartyTraffic: false }));
+    expect(pending?.hostFeatures).toEqual(withAssistant({ externalSenderLabel: true, externalRecipientWarning: false, noThirdPartyTraffic: false }, plugin));
 
     // Before init has gone out a change lands in the payload ...
     setExternalMail({});
-    expect(pending?.hostFeatures).toEqual(withAssistant({ externalSenderLabel: false, externalRecipientWarning: false, noThirdPartyTraffic: false }));
+    expect(pending?.hostFeatures).toEqual(withAssistant({ externalSenderLabel: false, externalRecipientWarning: false, noThirdPartyTraffic: false }, plugin));
 
     // ... after it, as a host-change message.
     const sent: unknown[] = [];
     (instance as unknown as { pendingInit: unknown }).pendingInit = null;
     (instance as unknown as { send: (m: unknown) => void }).send = (m) => sent.push(m);
     setExternalMail({ recipientWarning: true });
-    expect(sent).toEqual([{ type: 'host-change', features: withAssistant({ externalSenderLabel: false, externalRecipientWarning: true, noThirdPartyTraffic: false }) }]);
+    expect(sent).toEqual([{ type: 'host-change', features: withAssistant({ externalSenderLabel: false, externalRecipientWarning: true, noThirdPartyTraffic: false }, plugin) }]);
     // The admin turns third-party traffic off: running plugins hear it.
     setNoThirdPartyTraffic(true);
-    expect(sent[1]).toEqual({ type: 'host-change', features: withAssistant({ externalSenderLabel: false, externalRecipientWarning: true, noThirdPartyTraffic: true }) });
+    expect(sent[1]).toEqual({ type: 'host-change', features: withAssistant({ externalSenderLabel: false, externalRecipientWarning: true, noThirdPartyTraffic: true }, plugin) });
     setNoThirdPartyTraffic(false);
     instance.destroy();
   }, 30_000);

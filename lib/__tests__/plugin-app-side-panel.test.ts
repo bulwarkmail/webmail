@@ -5,6 +5,8 @@ import { isFillableSlot } from '@/lib/plugin-sandbox/slot-layout';
 import { ALL_PERMISSIONS, type InstalledPlugin, type Permission } from '@/lib/plugin-types';
 import { slotSpec } from '@/lib/plugin-slot-catalog';
 import { assistantFeatures } from '@/lib/plugin-sandbox/assistant';
+import { runPluginAction } from '@/lib/plugin-sandbox/actions';
+import { deregister, register, type ActivePlugin } from '@/lib/plugin-sandbox/registry';
 import { APP_SIDE_PANEL_CONTEXT_FIELDS } from '@/lib/plugin-sandbox/assistant/f.types';
 
 // The app-side-panel slot (area f of the assistant's host APIs): a side
@@ -62,11 +64,28 @@ describe('app-side-panel', () => {
     expect(Object.keys(all.context as object).sort()).toEqual(Object.keys(APP_SIDE_PANEL_CONTEXT_FIELDS).sort());
   });
 
-  it('cuts the context the same way in an action click (the dialog on a phone)', () => {
-    const visible = slotPropsFor(plugin(['ui:side-panel', 'calendar:read']), 'app-side-panel', { view: 'contacts', context: { contact: context.contact, page: context.page } });
-    expect(visible).toEqual({ view: 'contacts', context: { page: context.page } });
+  it("cuts the context the same way in the click that asks the plugin for its dialog (the loader's dispatcher)", async () => {
+    // Importing the loader installs its action dispatcher, as in the app.
+    await import('@/lib/plugin-sandbox/loader');
+    const invokeHook = vi.fn(async () => undefined);
+    register({ plugin: plugin(['ui:side-panel', 'calendar:read']), code: '', tier: 'untrusted', background: { invokeHook }, slotOffers: [], hookDisposables: [] } as unknown as ActivePlugin);
+    try {
+      await runPluginAction('p', 'app-side-panel', 'open', { view: 'contacts', context: { contact: context.contact, page: context.page, secret: 'x' } });
+      expect(invokeHook).toHaveBeenCalledWith('onAction', [{ surface: 'app-side-panel', actionId: 'open', context: { view: 'contacts', context: { page: context.page } } }]);
+    } finally {
+      deregister('p');
+    }
     // Garbage in the context is dropped, not passed on.
     expect(slotPropsFor(plugin(['ui:side-panel']), 'app-side-panel', { context: 'x' }).context).toEqual({});
+    // The loader's import is slow under load.
+  }, 30_000);
+
+  it('tells each plugin whether it may show the panel (sidePanel follows its grant)', () => {
+    expect(assistantFeatures(plugin(['ui:side-panel'])).sidePanel).toBe(true);
+    // Enabled before an update added the permission: not granted yet.
+    const notGranted = { ...plugin(['ui:side-panel']), grantedPermissions: [] };
+    expect(assistantFeatures(notGranted).sidePanel).toBe(false);
+    expect(assistantFeatures(plugin([])).sidePanel).toBe(false);
   });
 
   it('routes api.ui.openPanel for it to the view that shows it, and nowhere else', () => {
