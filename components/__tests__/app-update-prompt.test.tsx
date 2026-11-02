@@ -59,6 +59,24 @@ describe("AppUpdatePrompt", () => {
     expect(toasts()).toHaveLength(1);
   });
 
+  it("keeps one toast when several builds go out while the tab is open", async () => {
+    render(<AppUpdatePrompt />);
+    for (const id of ["build-b", "build-c", "build-d"]) {
+      update.newerBuildId.mockResolvedValue(id);
+      await act(async () => { vi.advanceTimersByTime(UPDATE_CHECK_MS); });
+      await flush();
+    }
+    expect(update.newerBuildId).toHaveBeenCalledTimes(3);
+    expect(toasts()).toHaveLength(1);
+
+    // Dismissed, the next build is offered again.
+    act(() => { useToastStore.getState().removeToast(toasts()[0].id); });
+    update.newerBuildId.mockResolvedValue("build-e");
+    await act(async () => { vi.advanceTimersByTime(UPDATE_CHECK_MS); });
+    await flush();
+    expect(toasts()).toHaveLength(1);
+  });
+
   it("checks when a chunk of this build fails to load", async () => {
     update.newerBuildId.mockResolvedValue("build-b");
     render(<AppUpdatePrompt />);
