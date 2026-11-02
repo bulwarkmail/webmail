@@ -9,6 +9,7 @@ Base: Bulwark Webmail, https://github.com/bulwarkmail/webmail.
 | Optional Memail color theme | `.memail/theme/`, `.memail/package-theme.mjs` | Upstream Theme API v2; no theme-loader or layout patch | Package validator and light/dark contrast tests in `.memail/theme.test.ts` |
 | Read-only focus inbox plugin | `.memail/plugins/focus-inbox/`, `.memail/package-focus-plugin.mjs` | Native tabs/commands plugin APIs; no core application patch | Built ZIP validation, membership/lifecycle tests, native tab/store regressions |
 | Focus presets and account targeting | `.memail/plugins/focus-inbox/` | Plugin settings/lifecycle hooks and account identity lookup only | Preset membership, account switch races, stale-state cleanup and package tests |
+| Demo header and size query compatibility | `lib/demo/demo-client.ts` | Small isolated fix: mock queries previously ignored newsletter header/size conditions | Header/value/size boundary tests, pagination/counts, and real demo Focus queries |
 | Fork discovery banner | `README.md` | Three additive lines above the upstream README | Diff review |
 
 No authentication, mail rendering, synchronization, dependencies or license text has been changed. Memail identity is supplied through upstream configuration; its demo launcher uses synthetic mail.

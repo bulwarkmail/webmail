@@ -18,3 +18,9 @@ The preview is in draft PR #3. Phase 0 and full phase 1 acceptance are not compl
 - 56 targeted tests passed across the plugin, host tab/refresh contracts and theme. Typecheck and downstream lint passed.
 - The updated package adds account:read permission for optional identity matching; it adds no mail-body, send, mutation or network access.
 - Real Stalwart and browser installation acceptance remain outstanding; the Docker engine is not running in this environment.
+
+## Demo filter compatibility
+
+- The demo client now evaluates header presence/value and minimum/maximum size query conditions instead of ignoring them. This fixes misleading newsletter/focus membership in synthetic demos.
+- This is an isolated demo-only core patch, documented for future upstream merges.
+- Live Stalwart remains unverified because Docker's engine is unavailable; synthetic integration checks are reported separately.
