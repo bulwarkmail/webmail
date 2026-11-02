@@ -85,21 +85,21 @@ describe('host bridge', () => {
     const plugin = { id: 'p', name: 'P', version: '1.0.0', permissions: [], settings: {}, settingsSchema: {} } as never;
     const instance = createBackgroundInstance({ plugin, tier: 'privileged', code: '', locale: 'en' });
     const pending = (instance as unknown as { pendingInit: { hostFeatures?: unknown } | null }).pendingInit;
-    expect(pending?.hostFeatures).toEqual({ externalSenderLabel: true, externalRecipientWarning: false, noThirdPartyTraffic: false });
+    expect(pending?.hostFeatures).toEqual(withAssistant({ externalSenderLabel: true, externalRecipientWarning: false, noThirdPartyTraffic: false }));
 
     // Before init has gone out a change lands in the payload ...
     setExternalMail({});
-    expect(pending?.hostFeatures).toEqual({ externalSenderLabel: false, externalRecipientWarning: false, noThirdPartyTraffic: false });
+    expect(pending?.hostFeatures).toEqual(withAssistant({ externalSenderLabel: false, externalRecipientWarning: false, noThirdPartyTraffic: false }));
 
     // ... after it, as a host-change message.
     const sent: unknown[] = [];
     (instance as unknown as { pendingInit: unknown }).pendingInit = null;
     (instance as unknown as { send: (m: unknown) => void }).send = (m) => sent.push(m);
     setExternalMail({ recipientWarning: true });
-    expect(sent).toEqual([{ type: 'host-change', features: { externalSenderLabel: false, externalRecipientWarning: true, noThirdPartyTraffic: false } }]);
+    expect(sent).toEqual([{ type: 'host-change', features: withAssistant({ externalSenderLabel: false, externalRecipientWarning: true, noThirdPartyTraffic: false }) }]);
     // The admin turns third-party traffic off: running plugins hear it.
     setNoThirdPartyTraffic(true);
-    expect(sent[1]).toEqual({ type: 'host-change', features: { externalSenderLabel: false, externalRecipientWarning: true, noThirdPartyTraffic: true } });
+    expect(sent[1]).toEqual({ type: 'host-change', features: withAssistant({ externalSenderLabel: false, externalRecipientWarning: true, noThirdPartyTraffic: true }) });
     setNoThirdPartyTraffic(false);
     instance.destroy();
   }, 30_000);
