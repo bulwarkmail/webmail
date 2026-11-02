@@ -44,6 +44,11 @@ export interface RsvpRequest {
   answerOptions?: { sentBy: string };
   /** The stored copy with its participants loaded (or the shared account's copy). */
   resolveExisting: () => Promise<CalendarEvent | null | undefined>;
+  /**
+   * The copy an import just made, from the server, when the store doesn't
+   * hold it (an event outside the range the calendar has loaded).
+   */
+  findImported?: (uid: string) => Promise<CalendarEvent | null>;
 }
 
 /**
@@ -113,7 +118,7 @@ export async function answerInvitation(req: RsvpRequest, status: RsvpStatus): Pr
   if (imported <= 0) return 'failed';
   const newEvent = store.events().find(
     (e) => e.uid === parsedEvent.uid && (sharedMailAccount ? e.accountId === sharedMailAccount : !e.isShared),
-  );
+  ) ?? (parsedEvent.uid && req.findImported ? await req.findImported(parsedEvent.uid) : null);
   const participant = myParticipant || (newEvent ? findParticipantByEmails(newEvent, actingEmails) : null);
   if (!newEvent || !participant) return 'added';
   return (await rsvp(newEvent.id, participant.id)) ? 'answered' : 'stopped';

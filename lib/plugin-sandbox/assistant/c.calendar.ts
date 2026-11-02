@@ -100,6 +100,7 @@ export async function doCalendarRespond(emailIdArg: unknown, statusArg: unknown)
     actingEmails: emails,
     calendarId,
     sharedMailAccount: null,
+    findImported: (uid) => ownCopy(client, uid),
     resolveExisting: async () => {
       if (!existing) return null;
       if (existing.participants && Object.keys(existing.participants).length > 0) return existing;

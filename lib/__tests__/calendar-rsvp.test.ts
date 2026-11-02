@@ -60,6 +60,13 @@ describe('answerInvitation', () => {
     expect(req.store.rsvpEvent).toHaveBeenCalledWith(req.client, 'new', 'p2', 'declined', { imip: 'mailto:alice@example.org' });
   });
 
+  it('finds the new copy on the server when the store doesn’t hold it', async () => {
+    const base = request();
+    const req = request({ store: { ...base.store, events: () => [] }, findImported: async () => ({ id: 'srv', uid: 'u1', participants: { p2: me } } as never) } as never);
+    expect(await answerInvitation(req, 'accepted')).toBe('answered');
+    expect(req.store.rsvpEvent).toHaveBeenCalledWith(req.client, 'srv', 'p2', 'accepted', { imip: 'mailto:alice@example.org' });
+  });
+
   it('says when a plugin stopped it, when it only added the event, and when it can\'t', async () => {
     expect(await answerInvitation(request({ store: { ...request().store, importEvents: vi.fn(async () => null) } } as never), 'accepted')).toBe('stopped');
     expect(await answerInvitation(request({ myParticipant: null, store: { ...request().store, events: () => [{ id: 'new', uid: 'u1', participants: {} } as never] } } as never), 'accepted')).toBe('added');
