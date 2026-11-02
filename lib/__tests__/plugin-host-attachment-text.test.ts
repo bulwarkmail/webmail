@@ -52,7 +52,8 @@ let client: Record<string, ReturnType<typeof vi.fn>>;
 beforeEach(() => {
   resetPluginRateLimits();
   client = {
-    getEmail: vi.fn(async (id: string, accountId?: string) => (id === 'm1' && (!accountId || accountId === 'shared-acc') ? message : null)),
+    // Every account has an m1: only the host's routing keeps a plugin out of the ones it may not read.
+    getEmail: vi.fn(async (id: string) => (id === 'm1' ? message : null)),
     fetchBlobArrayBuffer: vi.fn(async (blobId: string) => {
       const bytes = BLOBS[blobId];
       return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
@@ -110,7 +111,15 @@ describe('api.email.getAttachmentText', () => {
     await expect(call(ASSISTANT, 'missing', 'blob-notes')).rejects.toThrow(/no message with id "missing"/);
     // An account this login doesn't show is not asked.
     await expect(call(ASSISTANT, 'm1', 'blob-notes', { accountId: 'stranger' })).rejects.toThrow(/no message with id/);
+    expect(client.getEmail).not.toHaveBeenCalledWith('m1', 'stranger');
     expect(client.fetchBlobArrayBuffer).not.toHaveBeenCalled();
+  });
+
+  it('reads an attachment of a shared folder from that account', async () => {
+    useEmailStore.setState({ mailboxes: [{ id: 'shared-acc:inbox', originalId: 'inbox', name: 'Team', isShared: true, accountId: 'shared-acc' } as never] });
+    expect(await call(ASSISTANT, 'm1', 'blob-notes', { accountId: 'shared-acc' })).toMatchObject({ status: 'ok' });
+    expect(client.getEmail).toHaveBeenCalledWith('m1', 'shared-acc');
+    expect(client.fetchBlobArrayBuffer).toHaveBeenCalledWith('blob-notes', 'workshop-notes.txt', 'text/plain', 'shared-acc');
   });
 
   it('checks its options', async () => {
