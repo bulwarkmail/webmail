@@ -5831,8 +5831,8 @@
         "body": "Teljes üzeneteket küld a fiókodból, például aláírt vagy titkosított üzeneteket."
       },
       "email_blob_read": {
-        "title": "Üzenetek nyers tartalmának olvasása",
-        "body": "Olvassa az üzeneteid és mellékleteid eredeti adatait, valamint minden fájlét, amelyet küldés előtt csatolsz."
+        "title": "Mellékletek és üzenetforrások olvasása",
+        "body": "Olvassa a mellékleteket (a szövegüket és a képeiket is) és azoknak az üzeneteknek a teljes forrását, amelyekkel dolgozol, valamint minden fájlt, amelyet küldés előtt csatolsz."
       },
       "email_blob_write": {
         "title": "Mellékletek cseréje küldés előtt",

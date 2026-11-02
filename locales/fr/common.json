@@ -5831,8 +5831,8 @@
         "body": "Envoyer des messages complets, par exemple signés ou chiffrés, depuis votre compte."
       },
       "email_blob_read": {
-        "title": "Lire le contenu brut des messages",
-        "body": "Lire les données d'origine de vos messages et pièces jointes, ainsi que de chaque fichier que vous joignez avant l'envoi."
+        "title": "Lire les pièces jointes et la source des messages",
+        "body": "Lire les pièces jointes (y compris leur texte et leurs images) et la source complète des messages que vous traitez, ainsi que chaque fichier que vous joignez avant l'envoi."
       },
       "email_blob_write": {
         "title": "Remplacer les pièces jointes avant l'envoi",

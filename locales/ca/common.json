@@ -5831,8 +5831,8 @@
         "body": "Enviar missatges complets, per exemple signats o xifrats, des del vostre compte."
       },
       "email_blob_read": {
-        "title": "Llegir el contingut original dels missatges",
-        "body": "Llegir les dades originals dels vostres missatges i adjunts, i de cada fitxer que adjunteu abans d'enviar-lo."
+        "title": "Llegir els adjunts i el codi font dels missatges",
+        "body": "Llegir els adjunts (també el seu text i les seves imatges) i el codi font complet dels missatges amb què treballeu, i cada fitxer que adjunteu abans d'enviar-lo."
       },
       "email_blob_write": {
         "title": "Substituir adjunts abans d'enviar",

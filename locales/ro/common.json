@@ -5831,8 +5831,8 @@
         "body": "Trimite mesaje complete, de exemplu semnate sau criptate, din contul dvs."
       },
       "email_blob_read": {
-        "title": "Citirea conținutului brut al mesajelor",
-        "body": "Citește datele originale ale mesajelor și atașamentelor dvs. și ale fiecărui fișier pe care îl atașați înainte de trimitere."
+        "title": "Citirea atașamentelor și a sursei mesajelor",
+        "body": "Citește atașamentele (inclusiv textul și imaginile lor) și sursa completă a mesajelor cu care lucrați, precum și fiecare fișier pe care îl atașați înainte de trimitere."
       },
       "email_blob_write": {
         "title": "Înlocuirea atașamentelor înainte de trimitere",

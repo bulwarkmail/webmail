@@ -5843,8 +5843,8 @@
         "body": "Gửi thư hoàn chỉnh, ví dụ như thư đã ký hoặc mã hóa, từ tài khoản của bạn."
       },
       "email_blob_read": {
-        "title": "Đọc nội dung thô của thư",
-        "body": "Đọc các tệp đính kèm và toàn bộ nguồn thư bạn thao tác cũng như mọi tệp bạn đính kèm trước khi nó được gửi."
+        "title": "Đọc tệp đính kèm và nguồn thư",
+        "body": "Đọc tệp đính kèm (cả văn bản và hình ảnh trong đó) và toàn bộ nguồn của thư bạn thao tác, cũng như mọi tệp bạn đính kèm trước khi gửi."
       },
       "email_blob_write": {
         "title": "Thay thế tệp đính kèm trước khi gửi",

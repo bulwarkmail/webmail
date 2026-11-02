@@ -5831,8 +5831,8 @@
         "body": "Volledige berichten, bijvoorbeeld ondertekende of versleutelde, vanaf je account verzenden."
       },
       "email_blob_read": {
-        "title": "De ruwe inhoud van berichten lezen",
-        "body": "De oorspronkelijke gegevens van je berichten en bijlagen lezen, en van elk bestand dat je bijvoegt voordat het wordt verzonden."
+        "title": "Bijlagen en de bron van berichten lezen",
+        "body": "Bijlagen lezen (ook hun tekst en afbeeldingen) en de volledige bron van de berichten waarmee je werkt, en elk bestand dat je bijvoegt voordat het wordt verzonden."
       },
       "email_blob_write": {
         "title": "Bijlagen vervangen vóór het verzenden",

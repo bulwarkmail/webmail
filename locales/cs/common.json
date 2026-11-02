@@ -5831,8 +5831,8 @@
         "body": "Odesílá z vašeho účtu kompletní zprávy, například podepsané nebo šifrované."
       },
       "email_blob_read": {
-        "title": "Číst nezpracovaný obsah zpráv",
-        "body": "Čte původní data vašich zpráv a příloh i každého souboru, který připojíte před odesláním."
+        "title": "Číst přílohy a zdroj zpráv",
+        "body": "Čte přílohy (i jejich text a obrázky) a celý zdroj zpráv, se kterými pracujete, i každý soubor, který připojíte před odesláním."
       },
       "email_blob_write": {
         "title": "Nahrazovat přílohy před odesláním",

@@ -12,6 +12,7 @@ import type {
 import type { EmailTemplate } from '@/lib/template-types';
 import { generateEmailSource } from '@/lib/email-source';
 import { isServerSetKeyword } from '@/lib/jmap/server-keywords';
+import { attachmentExtras, cidAltTexts } from '@/lib/plugin-sandbox/assistant/b.projection';
 
 // Resolve a message's plain-text body from its JMAP body parts. Plugins that
 // translate or scan content need the real body, not just the short `preview`
@@ -52,6 +53,7 @@ export function plainTextFromEmail(email: Email): string {
  * carry it, others only the caller knows (see EmailReadView.accountId).
  */
 export function emailToReadView(email: Email, accountId = email.sourceAccountId): EmailReadView {
+  const alts = cidAltTexts(email);
   return {
     id: email.id,
     ...(accountId ? { accountId } : {}),
@@ -73,6 +75,7 @@ export function emailToReadView(email: Email, accountId = email.sourceAccountId)
         type: part.type || 'application/octet-stream',
         size: part.size || 0,
         inline: part.disposition === 'inline' || !!part.cid,
+        ...attachmentExtras(part, alts),
       })),
     preview: email.preview || '',
     text: plainTextFromEmail(email),

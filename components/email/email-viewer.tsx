@@ -135,6 +135,8 @@ import { useIsPaneScoped } from "@/hooks/use-pane-context";
 import { useAuthStore } from "@/stores/auth-store";
 import { useAccountStore } from "@/stores/account-store";
 import { useEmailStore, resolveEmailBlobContext, emailWriteSource, type EmailBlobContext } from "@/stores/email-store";
+import { useListSelection } from "@/lib/plugin-sandbox/assistant/b.list-selection";
+import { readability } from "@/lib/plugin-sandbox/assistant/b.projection";
 import { useThemeStore } from "@/stores/theme-store";
 import { EmailIdentityBadge } from "./email-identity-badge";
 import { ExternalSenderChip } from "./external-sender-chip";
@@ -287,6 +289,8 @@ interface EmailViewerProps {
   mailboxes?: Mailbox[];
   selectedMailbox?: string;
   className?: string;
+  /** The side panel hears of the messages ticked in the main list (false: a Pro tab, whose message isn't from that list). */
+  withListSelection?: boolean;
 }
 
 // Helper function to format recipients with contextual display
@@ -1312,6 +1316,7 @@ export function EmailViewer({
   mailboxes = [],
   selectedMailbox = "",
   className,
+  withListSelection = true,
 }: EmailViewerProps) {
   const t = useTranslations('email_viewer');
   const archiveActionEnabled = useArchiveActionEnabled();
@@ -1800,9 +1805,11 @@ export function EmailViewer({
   // each slot post its props to the plugin again and re-run shouldShow.
   const wantsPluginEmailView = hasDetailSidebar || hasDetailsSlotOffers || hasBannerOffers
     || hasHeaderOffers || hasBelowSubjectOffers || hasAboveQuoteOffers;
+  // A message of another connected login (unified view, Pro tab): the host
+  // reads parts only through the signed-in login, so plugins hear they can't.
   const pluginEmailView = useMemo(
-    () => (email && wantsPluginEmailView ? emailToReadView(email) : null),
-    [email, wantsPluginEmailView],
+    () => (email && wantsPluginEmailView ? { ...emailToReadView(email), ...readability(blobClient === client) } : null),
+    [email, wantsPluginEmailView, blobClient, client],
   );
   // Reader frames learn the layout: the bar a plugin shows on phones has no
   // place next to a side panel on a desktop.
@@ -1817,9 +1824,11 @@ export function EmailViewer({
     setBodySelection((prev) => (prev.text === text ? prev : (text ? { text } : NO_BODY_SELECTION)));
   }, []);
   const [detailFocusRequest, setDetailFocusRequest] = useState(0);
+  // The messages ticked in the list, for the AI assistant (lib/plugin-sandbox/assistant).
+  const listSelection = useListSelection(withListSelection);
   const pluginDetailProps = useMemo(
-    () => ({ email: pluginEmailView, selection: bodySelection, focusRequest: detailFocusRequest }),
-    [pluginEmailView, bodySelection, detailFocusRequest],
+    () => ({ email: pluginEmailView, selection: bodySelection, listSelection, focusRequest: detailFocusRequest }),
+    [pluginEmailView, bodySelection, listSelection, detailFocusRequest],
   );
   const selectionMenu = useReaderSelectionMenu();
   const emailIdRef = useRef(email?.id);

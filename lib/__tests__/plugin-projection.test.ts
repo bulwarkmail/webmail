@@ -57,7 +57,7 @@ describe('emailToReadView attachments', () => {
 
     expect(view.attachments).toEqual([
       { blobId: 'b-pdf', name: 'invoice.pdf', type: 'application/pdf', size: 1234, inline: false },
-      { blobId: 'b-img', name: 'logo.png', type: 'image/png', size: 99, inline: true },
+      { blobId: 'b-img', name: 'logo.png', type: 'image/png', size: 99, inline: true, cid: 'logo@x' },
     ]);
   });
 });

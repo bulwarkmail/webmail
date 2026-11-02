@@ -5831,8 +5831,8 @@
         "body": "Wysyła z Twojego konta kompletne wiadomości, na przykład podpisane lub zaszyfrowane."
       },
       "email_blob_read": {
-        "title": "Odczyt surowej treści wiadomości",
-        "body": "Odczytuje oryginalne dane Twoich wiadomości i załączników oraz każdego pliku, który załączysz przed wysłaniem."
+        "title": "Odczyt załączników i źródła wiadomości",
+        "body": "Odczytuje załączniki (także ich tekst i obrazy) oraz pełne źródło wiadomości, na których pracujesz, a także każdy plik, który załączysz przed wysłaniem."
       },
       "email_blob_write": {
         "title": "Zastępowanie załączników przed wysłaniem",

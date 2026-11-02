@@ -5831,8 +5831,8 @@
         "body": "Sūtīt no jūsu konta pilnīgas vēstules, piemēram, parakstītas vai šifrētas."
       },
       "email_blob_read": {
-        "title": "Lasīt vēstuļu neapstrādātos datus",
-        "body": "Lasīt jūsu vēstuļu un pielikumu sākotnējos datus, kā arī katru failu, ko pievienojat, pirms tas tiek nosūtīts."
+        "title": "Lasīt pielikumus un vēstuļu avotu",
+        "body": "Lasīt pielikumus (arī to tekstu un attēlus) un to vēstuļu pilno avotu, ar kurām strādājat, kā arī katru failu, ko pievienojat, pirms tas tiek nosūtīts."
       },
       "email_blob_write": {
         "title": "Aizstāt pielikumus pirms nosūtīšanas",

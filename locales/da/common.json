@@ -5831,8 +5831,8 @@
         "body": "Sende færdige beskeder, f.eks. signerede eller krypterede, fra din konto."
       },
       "email_blob_read": {
-        "title": "Læse beskeders rå indhold",
-        "body": "Læse de originale data i dine beskeder og vedhæftninger og i alle filer, du vedhæfter, før de sendes."
+        "title": "Læse vedhæftninger og beskeders kilde",
+        "body": "Læse vedhæftninger (også deres tekst og billeder) og hele kilden til de beskeder, du arbejder med, og alle filer, du vedhæfter, før de sendes."
       },
       "email_blob_write": {
         "title": "Erstatte vedhæftninger før afsendelse",

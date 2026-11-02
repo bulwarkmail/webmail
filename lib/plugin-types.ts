@@ -1,6 +1,7 @@
 import type { CredentialSpec } from './plugin-secrets/credentials';
 import type { CatalogSlotName } from './plugin-slot-catalog';
 import { ASSISTANT_PERMISSIONS, type AssistantHostFeatures } from './plugin-sandbox/assistant/types';
+import type { AttachmentExtrasB, EmailReadViewExtrasB } from './plugin-sandbox/assistant/b.types';
 
 // Plugin & Theme system types
 
@@ -396,7 +397,7 @@ export interface KeyboardShortcut {
 // ─── Read-Only View Types ────────────────────────────────────
 // Projected views exposed to plugins - no direct store references
 
-export interface EmailReadView {
+export interface EmailReadView extends EmailReadViewExtrasB {
   id: string;
   /**
    * The JMAP account the message is in. Message ids repeat across accounts
@@ -419,9 +420,10 @@ export interface EmailReadView {
   /**
    * The message's attachments. `blobId` is what `email.getAttachment`
    * takes. Inline images are included and marked. Empty until the host has
-   * loaded the message's body structure.
+   * loaded the message's body structure. An image the HTML shows inline
+   * also has its `cid` and, when the sender wrote one, its `alt` text.
    */
-  attachments: { blobId: string; name: string; type: string; size: number; inline: boolean }[];
+  attachments: ({ blobId: string; name: string; type: string; size: number; inline: boolean } & AttachmentExtrasB)[];
   preview: string;
   keywords: string[];
   /** Full plain-text body of the message (HTML-only bodies are stripped to

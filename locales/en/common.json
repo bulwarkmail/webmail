@@ -5831,8 +5831,8 @@
         "body": "Send complete messages, for example signed or encrypted ones, from your account."
       },
       "email_blob_read": {
-        "title": "Read the raw content of messages",
-        "body": "Read attachments and the full source of messages you act on, and every file you attach before it is sent."
+        "title": "Read attachments and message sources",
+        "body": "Read attachments (their text and pictures too) and the full source of messages you act on, and every file you attach before it is sent."
       },
       "email_blob_write": {
         "title": "Replace attachments before sending",
