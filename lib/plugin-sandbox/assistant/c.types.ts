@@ -5,5 +5,4 @@
 export const PERMISSIONS = [] as const;
 
 /** Flags this area adds to api.host.features. */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface AreaHostFeaturesC {}
