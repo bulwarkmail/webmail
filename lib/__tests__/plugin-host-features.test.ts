@@ -17,6 +17,10 @@ import {
   isSlotHandedOver,
   snapshotHostFeatures,
 } from '@/lib/plugin-sandbox/host-features';
+import { assistantFeatures } from '@/lib/plugin-sandbox/assistant';
+
+/** The AI assistant's flags (lib/plugin-sandbox/assistant) come on top; their own tests check them. */
+const withAssistant = (core: Record<string, boolean>) => ({ ...core, ...assistantFeatures() });
 
 function setExternalMail(patch: Partial<typeof DEFAULT_ORGANISATION_POLICY.externalMail>) {
   usePolicyStore.setState({
@@ -31,11 +35,11 @@ beforeEach(() => setExternalMail({}));
 
 describe('snapshotHostFeatures', () => {
   it('has one flag per switch', () => {
-    expect(snapshotHostFeatures()).toEqual({ externalSenderLabel: false, externalRecipientWarning: false, noThirdPartyTraffic: false });
+    expect(snapshotHostFeatures()).toEqual(withAssistant({ externalSenderLabel: false, externalRecipientWarning: false, noThirdPartyTraffic: false }));
     setExternalMail({ senderLabel: true });
-    expect(snapshotHostFeatures()).toEqual({ externalSenderLabel: true, externalRecipientWarning: false, noThirdPartyTraffic: false });
+    expect(snapshotHostFeatures()).toEqual(withAssistant({ externalSenderLabel: true, externalRecipientWarning: false, noThirdPartyTraffic: false }));
     setExternalMail({ recipientWarning: true });
-    expect(snapshotHostFeatures()).toEqual({ externalSenderLabel: false, externalRecipientWarning: true, noThirdPartyTraffic: false });
+    expect(snapshotHostFeatures()).toEqual(withAssistant({ externalSenderLabel: false, externalRecipientWarning: true, noThirdPartyTraffic: false }));
   });
 
   // A link check switches Google Safe Browsing off in the mode instead of

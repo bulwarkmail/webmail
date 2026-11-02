@@ -1,5 +1,6 @@
 import type { CredentialSpec } from './plugin-secrets/credentials';
 import type { CatalogSlotName } from './plugin-slot-catalog';
+import { ASSISTANT_PERMISSIONS, type AssistantHostFeatures } from './plugin-sandbox/assistant/types';
 
 // Plugin & Theme system types
 
@@ -956,7 +957,7 @@ export interface AppInfoView {
  * that does the same job steps back while one is true. Missing on hosts
  * older than 1.19.0, so read it as `api.host?.features?.x === true`.
  */
-export interface HostFeaturesView {
+export interface HostFeaturesView extends AssistantHostFeatures {
   /** The admin turned on the "External" label on mail from outside the organisation (organisation.externalMail.senderLabel). */
   externalSenderLabel: boolean;
   /** The admin turned on the confirm before sending outside the organisation (organisation.externalMail.recipientWarning). */
@@ -1591,6 +1592,8 @@ export const ALL_PERMISSIONS = [
   'http:proxy',
   'admin:config',
   'app:lifecycle',
+  // The AI assistant's host APIs, one list per area (lib/plugin-sandbox/assistant).
+  ...ASSISTANT_PERMISSIONS,
 ] as const;
 
 export type Permission = (typeof ALL_PERMISSIONS)[number];

@@ -74,6 +74,7 @@ import { doComposerAttach, doComposerGetBody, doComposerGetSelection, doComposer
 import { wkdAllowed } from '../outgoing-hosts';
 import { noThirdPartyTraffic } from '../third-party-mode';
 import { openExternalLink } from '../plugin-hook-result';
+import { ASSISTANT_PERMS, NOT_MINE, dispatchAssistant } from './assistant';
 
 /**
  * Methods only callable from the privileged (same-origin) tier. These expose
@@ -112,6 +113,8 @@ const PRIVILEGED_ONLY_METHODS = new Set<string>([
 ]);
 
 export const PERM_PER_METHOD: Readonly<Record<string, Permission | null>> = {
+  // The AI assistant's host APIs, one table per area (lib/plugin-sandbox/assistant).
+  ...ASSISTANT_PERMS,
   // storage is unscoped by the manifest - implicit.
   'storage.get': null,
   'storage.set': null,
@@ -2015,6 +2018,9 @@ export async function dispatchApiCall(
   } else if (!(method in PERM_PER_METHOD)) {
     throw new Error(`Unknown API method "${method}"`);
   }
+
+  const assistant = await dispatchAssistant(plugin, method, args);
+  if (assistant !== NOT_MINE) return assistant;
 
   switch (method) {
     case 'proxy.fetch': return proxyFetch(plugin, args, opts?.sink ?? null);

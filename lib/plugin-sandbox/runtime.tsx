@@ -38,6 +38,7 @@ import type {
   TaskView, TemplateInput, TemplateView, VacationInput, VacationView, ComposerSnapshot, ComposerAttachmentData,
 } from '../plugin-types';
 import { AddressBook, ContactCard } from '../jmap/types';
+import { withAssistantRuntime } from './assistant/runtime';
 import { EncryptionAtRestConfig, PublicKeyInput } from '@/stores/account-security-store';
 
 // ─── Module-scope state ──────────────────────────────────────
@@ -424,7 +425,12 @@ interface PluginKeywordCounts {
   unread: number;
 }
 
+/** The plugin's api, with the AI assistant's host APIs (lib/plugin-sandbox/assistant) added. */
 function buildPluginApi(manifest: PluginManifest) {
+  return withAssistantRuntime(buildCoreApi(manifest), callApi);
+}
+
+function buildCoreApi(manifest: PluginManifest) {
   applySettings({ ...manifest.settings });
   localeTables = JSON.parse(JSON.stringify(manifest.locales ?? {}));
   return {
