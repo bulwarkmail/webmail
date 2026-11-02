@@ -430,11 +430,20 @@ function SidebarRow({
   const longPress = useLongPress((point) => {
     if (rowRef.current && onContextMenu) onContextMenu(menuEventAt(rowRef.current, point));
   }, hasMenu);
+  // The whole row opens the folder, not just its button: the row's padding,
+  // the chevron slot and the space around the count were dead (#1501). The
+  // button stays the keyboard target; controls of their own keep their click.
+  const openFromRow = !isVirtual && onClick
+    ? (e: React.MouseEvent) => {
+        if (!(e.target as Element).closest('button, a, input, [role="button"]')) onClick();
+      }
+    : undefined;
 
   return (
     <div
       ref={rowRef}
       {...(dropHandlers || {})}
+      onClick={openFromRow}
       onContextMenu={onContextMenu}
       onTouchStart={hasMenu ? longPress.onTouchStart : undefined}
       onTouchMove={hasMenu ? longPress.onTouchMove : undefined}
@@ -452,6 +461,7 @@ function SidebarRow({
       className={cn(
         "group w-full flex items-center max-lg:min-h-[44px] text-sm transition-colors duration-150",
         isCollapsed ? "justify-center px-1" : "pe-2",
+        openFromRow && "cursor-pointer select-none",
         isVirtual
           ? "text-muted-foreground"
           : isSelected
