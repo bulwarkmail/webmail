@@ -1952,6 +1952,14 @@
         "above_quote": "Før citeret tekst",
         "below_quote": "Efter citeret tekst"
       },
+      "signature_new_mail": {
+        "label": "Signatur på nye e-mails",
+        "description": "Indsætter automatisk din signatur, når du skriver en ny besked. Slå fra for at starte hver ny besked uden."
+      },
+      "signature_reply_forward": {
+        "label": "Signatur på svar og videresendelser",
+        "description": "Tilføjer automatisk din signatur, når du svarer eller videresender. Slå fra for at sende dem uden."
+      },
       "signature_separator": {
         "label": "Signatur-afgrænser",
         "description": "Præfiksér signaturen med standard \"-- \"-afgrænserlinjen (RFC 3676). Slå fra, hvis du hellere vil gå direkte fra din besked til signaturen."

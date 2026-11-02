@@ -107,6 +107,8 @@ vi.mock('@/stores/settings-store', () => {
     recipientMentionsEnabled: false,
     sendDelaySeconds: 0,
     signaturePosition: 'above_quote',
+    signatureNewMailEnabled: true,
+    signatureReplyForwardEnabled: true,
     signatureSeparatorEnabled: false,
     requestReadReceiptDefault: false,
     externalContentPolicy: 'block',

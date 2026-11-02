@@ -4140,6 +4140,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       signatureIdentity,
       sendingIdentity,
       separator: settings.signatureSeparatorEnabled,
+      // The user's reply/forward signature toggle: off sends the bare text.
+      insertSignature: settings.signatureReplyForwardEnabled,
       to: recipients,
       fromEmail: headerFromEmail,
       identityId: sendingIdentity?.id,

@@ -1952,6 +1952,14 @@
         "above_quote": "Before quoted text",
         "below_quote": "After quoted text"
       },
+      "signature_new_mail": {
+        "label": "Signature on new mail",
+        "description": "Automatically insert your signature when composing a new message. Turn off to start every new message without one."
+      },
+      "signature_reply_forward": {
+        "label": "Signature on replies & forwards",
+        "description": "Automatically append your signature when replying to or forwarding a message. Turn off to send them without one."
+      },
       "signature_separator": {
         "label": "Signature delimiter",
         "description": "Prefix the signature with the standard \"-- \" delimiter line (RFC 3676). Turn off if you'd rather flow straight from your message into the signature."

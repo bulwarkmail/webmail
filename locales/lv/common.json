@@ -1940,6 +1940,14 @@
         "above_quote": "Pirms citētā teksta",
         "below_quote": "Pēc citētā teksta"
       },
+      "signature_new_mail": {
+        "label": "Paraksts jaunajos e-pastos",
+        "description": "Rakstot jaunu vēstuli, automātiski ievieto jūsu parakstu. Izslēdziet, lai katra jauna vēstule sāktos bez tā."
+      },
+      "signature_reply_forward": {
+        "label": "Paraksts atbildēs un pārsūtījumos",
+        "description": "Atbildot vai pārsūtot vēstuli, automātiski pievieno jūsu parakstu. Izslēdziet, lai tās tiktu nosūtītas bez tā."
+      },
       "signature_separator": {
         "label": "Paraksta atdalītājs",
         "description": "Pirms paraksta pievienot standarta atdalītāju \"-- \" (RFC 3676). Izslēdziet, ja vēlaties pāriet no ziņojuma tieši uz parakstu."

@@ -1949,6 +1949,14 @@
         "above_quote": "인용 텍스트 앞",
         "below_quote": "인용 텍스트 뒤"
       },
+      "signature_new_mail": {
+        "label": "새 메일 서명",
+        "description": "새 메일을 작성할 때 서명을 자동으로 삽입합니다. 끄면 서명 없이 새 메일을 시작합니다."
+      },
+      "signature_reply_forward": {
+        "label": "답장·전달 서명",
+        "description": "답장이나 전달할 때 서명을 자동으로 추가합니다. 끄면 서명 없이 보냅니다."
+      },
       "signature_separator": {
         "label": "서명 구분선",
         "description": "서명 앞에 표준 구분선 \"-- \" (RFC 3676)을 추가합니다. 본문에서 바로 서명으로 이어지길 원하면 해제하세요."

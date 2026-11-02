@@ -1952,6 +1952,14 @@
         "above_quote": "Abans del text citat",
         "below_quote": "Després del text citat"
       },
+      "signature_new_mail": {
+        "label": "Signatura als correus nous",
+        "description": "Insereix automàticament la teva signatura en redactar un missatge nou. Desactiva-ho per començar cada missatge nou sense ella."
+      },
+      "signature_reply_forward": {
+        "label": "Signatura en respostes i reenviaments",
+        "description": "Afegeix automàticament la teva signatura en respondre o reenviar un missatge. Desactiva-ho per enviar-los sense ella."
+      },
       "signature_separator": {
         "label": "Delimitador de la signatura",
         "description": "Prefixa la signatura amb la línia delimitadora estàndard «-- » (RFC 3676). Desactiveu-ho si preferiu passar directament del missatge a la signatura."

@@ -547,6 +547,13 @@ export function EmailComposer({
   const updateSetting = useSettingsStore((state) => state.updateSetting);
   const sendDelaySeconds = useSettingsStore((state) => state.sendDelaySeconds);
   const signaturePosition = useSettingsStore((state) => state.signaturePosition);
+  const signatureNewMailEnabled = useSettingsStore((state) => state.signatureNewMailEnabled);
+  const signatureReplyForwardEnabled = useSettingsStore((state) => state.signatureReplyForwardEnabled);
+  // Whether automatic signature insertion is on for this composer mode: new
+  // mail (and re-opened drafts, which open in compose mode) follow the
+  // new-mail toggle, replies and forwards the reply/forward one. What the
+  // body already carries is never stripped - only the insert/append is gated.
+  const autoSignatureEnabled = mode === 'compose' ? signatureNewMailEnabled : signatureReplyForwardEnabled;
   const signatureSeparatorEnabled = useSettingsStore((state) => state.signatureSeparatorEnabled);
   const requestReadReceiptDefault = useSettingsStore((state) => state.requestReadReceiptDefault);
   // A draft belongs to the account the composer was opened in. Switching
@@ -622,12 +629,13 @@ export function EmailComposer({
   const shouldEmbedSignatureAboveQuote =
     (mode === 'reply' || mode === 'replyAll' || mode === 'forward') &&
     signaturePosition === 'above_quote' &&
+    signatureReplyForwardEnabled &&
     hasInitialSignature;
   // New-mail composes always embed the signature into the editor body so it's
   // editable/removable (the previous read-only preview below the editor was
   // never spec-correct - see #329). Compose mode also ignores any leftover
   // `replyTo` from a still-selected email; getInitialBody short-circuits below.
-  const shouldEmbedSignatureInNewMail = mode === 'compose' && hasInitialSignature;
+  const shouldEmbedSignatureInNewMail = mode === 'compose' && signatureNewMailEnabled && hasInitialSignature;
 
   // Format a single EmailAddress for display in the composer input
   const toRecipient = (r: { name?: string; email?: string }): Recipient =>
@@ -1320,6 +1328,9 @@ export function EmailComposer({
     const isReplyLike = mode === 'reply' || mode === 'replyAll' || mode === 'forward';
     if (!isReplyLike && mode !== 'compose') return;
     if (isReplyLike && signaturePosition !== 'above_quote') return;
+    // With automatic insertion off the body never got a signature spliced
+    // in, so there is nothing to swap.
+    if (!autoSignatureEnabled) return;
 
     if (plainTextMode) {
       // A new plain-text message carries the signature at the end of the
@@ -1361,7 +1372,7 @@ export function EmailComposer({
     // would re-run on unrelated identity-field changes and re-splice the
     // signature into the live editor.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signatureIdentity?.id, signatureContent, signatureSeparatorEnabled, signaturePosition, mode, plainTextMode, pluginSignatureRevision]);
+  }, [signatureIdentity?.id, signatureContent, signatureSeparatorEnabled, signaturePosition, mode, plainTextMode, pluginSignatureRevision, autoSignatureEnabled]);
 
   const openScheduleDialog = useCallback(() => {
     setShowScheduleDialog(true);
@@ -2663,7 +2674,7 @@ export function EmailComposer({
     // below the editor - was saved without it (#823). Embed the *marked-up*
     // form so re-opening the draft round-trips the signature as one block and
     // signatureAlreadyInBody sees it instead of appending a second copy.
-    const draftSignatureHtml = signatureAlreadyInBody
+    const draftSignatureHtml = signatureAlreadyInBody || !autoSignatureEnabled
       ? ''
       : buildEmbeddedSignatureHtml(signatureIdentity, {
           embed: true,
@@ -2671,7 +2682,7 @@ export function EmailComposer({
         });
     const draftHtmlBody = plainTextMode ? undefined : `${body}${draftSignatureHtml}`;
     const draftTextBody = plainTextMode
-      ? (signatureAlreadyInBody
+      ? (signatureAlreadyInBody || !autoSignatureEnabled
           ? body
           : appendPlainTextSignature(body, signatureIdentity, { separator: signatureSeparatorEnabled }))
       : htmlToPlainText(draftHtmlBody!, imageAltText);
@@ -3608,9 +3619,14 @@ export function EmailComposer({
     // above-quote replies, a re-opened draft) `signatureAlreadyInBody` is set
     // and the trailing append below is skipped so we don't duplicate it.
 
+    // Whether automatic signature insertion is on for this composer mode
+    // (component-level `autoSignatureEnabled` - see signatureAlreadyInBody).
+    // What the body already carries is never stripped - only the append is
+    // gated.
+
     // Build HTML signature block (used only in rich text mode)
     const buildSignatureHtml = (): string => {
-      if (signatureAlreadyInBody) return '';
+      if (signatureAlreadyInBody || !autoSignatureEnabled) return '';
       const sep = wantsSignatureSeparator(signatureSeparatorEnabled, signatureIdentity) ? `<br><br>-- <br>` : `<br><br>`;
       if (signatureIdentity?.htmlSignature) {
         return `${sep}${sanitizeSignatureHtml(signatureIdentity.htmlSignature)}`;
@@ -3627,8 +3643,8 @@ export function EmailComposer({
     // In plain text mode, send text/plain only (no HTML body)
     const signatureOpts = { separator: signatureSeparatorEnabled };
     const builtTextBody = plainTextMode
-      ? (signatureAlreadyInBody ? body : appendPlainTextSignature(body, signatureIdentity, signatureOpts))
-      : (signatureAlreadyInBody ? htmlToPlainText(body, imageAltText) : appendPlainTextSignature(htmlToPlainText(body, imageAltText), signatureIdentity, signatureOpts));
+      ? (signatureAlreadyInBody || !autoSignatureEnabled ? body : appendPlainTextSignature(body, signatureIdentity, signatureOpts))
+      : (signatureAlreadyInBody || !autoSignatureEnabled ? htmlToPlainText(body, imageAltText) : appendPlainTextSignature(htmlToPlainText(body, imageAltText), signatureIdentity, signatureOpts));
 
     // Before any blobId is read: forwarded parts may still sit on the account
     // that holds the original message.
@@ -4780,8 +4796,10 @@ export function EmailComposer({
 
         {/* Hide the visual signature preview when the signature has already been
             embedded into the body (compose, above-quote replies, re-opened
-            drafts) - it would otherwise read as a second signature. */}
-        {signatureAlreadyInBody ? null
+            drafts) - it would otherwise read as a second signature. Also when
+            automatic insertion is off: nothing will be appended at send time,
+            so a preview would promise a signature that never goes out. */}
+        {signatureAlreadyInBody || !autoSignatureEnabled ? null
           : plainTextMode ? (
           getPlainTextSignature(signatureIdentity) ? (
             <div className="px-4 pb-3 text-sm leading-6 text-muted-foreground break-words whitespace-pre-wrap font-mono">

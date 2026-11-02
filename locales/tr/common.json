@@ -1949,6 +1949,14 @@
         "above_quote": "Alıntılanan metinden önce",
         "below_quote": "Alıntılanan metinden sonra"
       },
+      "signature_new_mail": {
+        "label": "Yeni e-postalarda imza",
+        "description": "Yeni bir ileti yazarken imzanızı otomatik olarak ekler. Her yeni iletiye imzasız başlamak için kapatın."
+      },
+      "signature_reply_forward": {
+        "label": "Yanıtlarda ve iletmelerde imza",
+        "description": "Bir iletiyi yanıtlarken veya iletirken imzanızı otomatik olarak ekler. İmzasız göndermek için kapatın."
+      },
       "signature_separator": {
         "label": "İmza ayırıcı",
         "description": "İmzayı standart \"-- \" ayırıcı satırıyla başlat (RFC 3676). Mesajdan doğrudan imzaya geçmek istiyorsanız kapatın."

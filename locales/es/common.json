@@ -1940,6 +1940,14 @@
         "above_quote": "Antes del texto citado",
         "below_quote": "Después del texto citado"
       },
+      "signature_new_mail": {
+        "label": "Firma en correos nuevos",
+        "description": "Inserta automáticamente tu firma al redactar un mensaje nuevo. Desactívalo para empezar cada mensaje nuevo sin ella."
+      },
+      "signature_reply_forward": {
+        "label": "Firma en respuestas y reenvíos",
+        "description": "Añade automáticamente tu firma al responder o reenviar un mensaje. Desactívalo para enviarlos sin ella."
+      },
       "signature_separator": {
         "label": "Delimitador de firma",
         "description": "Anteponer a la firma la línea delimitadora estándar \"-- \" (RFC 3676). Desactiva si prefieres pasar directamente del mensaje a la firma."

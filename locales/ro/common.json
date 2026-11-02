@@ -1952,6 +1952,14 @@
         "above_quote": "Înaintea textului citat",
         "below_quote": "După textul între ghilimele"
       },
+      "signature_new_mail": {
+        "label": "Semnătură la mesajele noi",
+        "description": "Inserează automat semnătura când compui un mesaj nou. Dezactivează pentru a începe fiecare mesaj nou fără ea."
+      },
+      "signature_reply_forward": {
+        "label": "Semnătură la răspunsuri și redirecționări",
+        "description": "Adaugă automat semnătura când răspunzi sau redirecționezi un mesaj. Dezactivează pentru a le trimite fără ea."
+      },
       "signature_separator": {
         "label": "Delimitator de semnătură",
         "description": "Prefațați semnătura cu linia standard de delimitare „-- ” (RFC 3676). Dezactivați această opțiune dacă preferați ca mesajul să treacă direct în semnătură."

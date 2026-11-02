@@ -1949,6 +1949,14 @@
         "above_quote": "Przed cytowanym tekstem",
         "below_quote": "Po cytowanym tekście"
       },
+      "signature_new_mail": {
+        "label": "Podpis w nowych wiadomościach",
+        "description": "Automatycznie wstawia podpis podczas pisania nowej wiadomości. Wyłącz, aby zaczynać każdą nową wiadomość bez niego."
+      },
+      "signature_reply_forward": {
+        "label": "Podpis w odpowiedziach i przesyłanych",
+        "description": "Automatycznie dołącza podpis przy odpowiadaniu lub przesyłaniu dalej. Wyłącz, aby wysyłać je bez niego."
+      },
       "signature_separator": {
         "label": "Separator podpisu",
         "description": "Poprzedź podpis standardową linią separatora \"-- \" (RFC 3676). Wyłącz, jeśli chcesz przejść bezpośrednio z treści wiadomości do podpisu."

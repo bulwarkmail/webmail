@@ -1964,6 +1964,14 @@
         "above_quote": "Trước phần trích dẫn",
         "below_quote": "Sau phần trích dẫn"
       },
+      "signature_new_mail": {
+        "label": "Chữ ký trong thư mới",
+        "description": "Tự động chèn chữ ký của bạn khi soạn thư mới. Tắt nếu bạn muốn mỗi thư mới bắt đầu không có chữ ký."
+      },
+      "signature_reply_forward": {
+        "label": "Chữ ký khi trả lời và chuyển tiếp",
+        "description": "Tự động thêm chữ ký của bạn khi trả lời hoặc chuyển tiếp thư. Tắt nếu muốn gửi chúng không kèm chữ ký."
+      },
       "signature_separator": {
         "label": "Dấu phân cách chữ ký",
         "description": "Thêm dòng phân cách chuẩn \"-- \" trước chữ ký (RFC 3676). Tắt nếu bạn muốn nối thẳng nội dung thư với chữ ký."

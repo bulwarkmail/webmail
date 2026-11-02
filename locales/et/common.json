@@ -1952,6 +1952,14 @@
         "above_quote": "Enne tsiteeritud teksti",
         "below_quote": "Pärast tsiteeritud teksti"
       },
+      "signature_new_mail": {
+        "label": "Allkirja uutes kirjades",
+        "description": "Sisestab allkirja automaatselt uue kirja koostamisel. Lülita välja, et iga uus kiri algaks ilma allkirjata."
+      },
+      "signature_reply_forward": {
+        "label": "Allkirja vastamisel ja edastamisel",
+        "description": "Lisab allkirja automaatselt vastamisel või kirja edastamisel. Lülita välja, et saata need ilma allkirjata."
+      },
       "signature_separator": {
         "label": "Allkirja eraldaja",
         "description": "Lisa allkirja ette standardne „-- “ eraldusrida (RFC 3676). Lülita välja, kui eelistad, et kiri sulandub otse allkirjaga."

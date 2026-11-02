@@ -36,6 +36,8 @@ export function ComposingSettings() {
     mentionAddsRecipientTo,
     sendDelaySeconds,
     signaturePosition,
+    signatureNewMailEnabled,
+    signatureReplyForwardEnabled,
     signatureSeparatorEnabled,
     requestReadReceiptDefault,
     readReceiptResponse,
@@ -121,6 +123,20 @@ export function ComposingSettings() {
               { value: 'above_quote', label: t('signature_position.above_quote') },
               { value: 'below_quote', label: t('signature_position.below_quote') },
             ]}
+          />
+        </SettingItem>
+
+        <SettingItem label={t('signature_new_mail.label')} description={t('signature_new_mail.description')}>
+          <ToggleSwitch
+            checked={signatureNewMailEnabled}
+            onChange={(checked) => updateSetting('signatureNewMailEnabled', checked)}
+          />
+        </SettingItem>
+
+        <SettingItem label={t('signature_reply_forward.label')} description={t('signature_reply_forward.description')}>
+          <ToggleSwitch
+            checked={signatureReplyForwardEnabled}
+            onChange={(checked) => updateSetting('signatureReplyForwardEnabled', checked)}
           />
         </SettingItem>
 

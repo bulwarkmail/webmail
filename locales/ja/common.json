@@ -1940,6 +1940,14 @@
         "above_quote": "引用テキストの前",
         "below_quote": "引用テキストの後"
       },
+      "signature_new_mail": {
+        "label": "新規メールの署名",
+        "description": "新しいメールを作成するときに署名を自動的に挿入します。オフにすると署名なしで作成を始められます。"
+      },
+      "signature_reply_forward": {
+        "label": "返信・転送の署名",
+        "description": "返信や転送のときに署名を自動的に追加します。オフにすると署名なしで送信されます。"
+      },
       "signature_separator": {
         "label": "署名区切り",
         "description": "署名の前に標準の区切り行「-- 」（RFC 3676）を付けます。本文から署名へ直接続けたい場合はオフにしてください。"

@@ -1940,6 +1940,14 @@
         "above_quote": "Antes do texto citado",
         "below_quote": "Depois do texto citado"
       },
+      "signature_new_mail": {
+        "label": "Assinatura em novas mensagens",
+        "description": "Insere automaticamente a sua assinatura ao escrever uma nova mensagem. Desative para começar cada nova mensagem sem ela."
+      },
+      "signature_reply_forward": {
+        "label": "Assinatura em respostas e encaminhamentos",
+        "description": "Acrescenta automaticamente a sua assinatura ao responder ou encaminhar uma mensagem. Desative para as enviar sem ela."
+      },
       "signature_separator": {
         "label": "Delimitador de assinatura",
         "description": "Anteceder a assinatura com a linha delimitadora padrão \"-- \" (RFC 3676). Desative se preferir passar direto da mensagem para a assinatura."

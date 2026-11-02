@@ -1949,6 +1949,14 @@
         "above_quote": "Před citovaným textem",
         "below_quote": "Za citovaným textem"
       },
+      "signature_new_mail": {
+        "label": "Podpis u nových zpráv",
+        "description": "Při psaní nové zprávy automaticky vloží váš podpis. Vypněte, pokud chcete každou novou zprávu začínat bez podpisu."
+      },
+      "signature_reply_forward": {
+        "label": "Podpis u odpovědí a přeposílání",
+        "description": "Při odpovídání nebo přeposílání automaticky připojí váš podpis. Vypněte, pokud je chcete odesílat bez podpisu."
+      },
       "signature_separator": {
         "label": "Oddělovač podpisu",
         "description": "Před podpis přidat standardní oddělovací řádek \"-- \" (RFC 3676). Vypněte, pokud chcete plynule přejít z textu zprávy do podpisu."

@@ -1952,6 +1952,14 @@
         "above_quote": "Idézett szöveg előtt",
         "below_quote": "Idézett szöveg után"
       },
+      "signature_new_mail": {
+        "label": "Aláírás új leveleknél",
+        "description": "Új levél írása esetén automatikusan beszúrja az aláírásodat. Kapcsold ki, ha minden új levél aláírás nélkül induljon."
+      },
+      "signature_reply_forward": {
+        "label": "Aláírás válaszoknál és továbbításnál",
+        "description": "Válasz vagy továbbítás esetén automatikusan hozzáfűzi az aláírásodat. Kapcsold ki, ha ezek aláírás nélkül mennek ki."
+      },
       "signature_separator": {
         "label": "Aláírás elválasztó",
         "description": "Aláírás előtagjaként a szabványos \"-- \" elválasztó sor (RFC 3676). Kapcsold ki, ha közvetlenül az üzenetből szeretnél az aláírásba folyni."

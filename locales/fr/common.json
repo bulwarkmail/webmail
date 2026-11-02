@@ -1940,6 +1940,14 @@
         "above_quote": "Avant le texte cité",
         "below_quote": "Après le texte cité"
       },
+      "signature_new_mail": {
+        "label": "Signature sur les nouveaux messages",
+        "description": "Insère automatiquement votre signature lors de la rédaction d'un nouveau message. Désactivez pour rédiger sans signature."
+      },
+      "signature_reply_forward": {
+        "label": "Signature sur les réponses et transferts",
+        "description": "Ajoute automatiquement votre signature lors d'une réponse ou d'un transfert. Désactivez pour les envoyer sans signature."
+      },
       "signature_separator": {
         "label": "Délimiteur de signature",
         "description": "Préfixer la signature par la ligne de délimitation standard \"-- \" (RFC 3676). Désactivez si vous préférez enchaîner directement du message à la signature."

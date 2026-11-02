@@ -1949,6 +1949,14 @@
         "above_quote": "引用文本之前",
         "below_quote": "引用文本之后"
       },
+      "signature_new_mail": {
+        "label": "新邮件签名",
+        "description": "写新邮件时自动插入签名。关闭后每封新邮件都不带签名。"
+      },
+      "signature_reply_forward": {
+        "label": "回复转发签名",
+        "description": "回复或转发时自动附加签名。关闭后回复和转发不带签名。"
+      },
       "signature_separator": {
         "label": "签名分隔符",
         "description": "在签名前加入标准的 “-- ” 分隔行（RFC 3676）。如果希望正文直接连到签名，请关闭。"

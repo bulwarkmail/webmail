@@ -1949,6 +1949,14 @@
         "above_quote": "Vor zitiertem Text",
         "below_quote": "Nach zitiertem Text"
       },
+      "signature_new_mail": {
+        "label": "Signatur bei neuen E-Mails",
+        "description": "Fügt die Signatur beim Verfassen einer neuen Nachricht automatisch ein. Ausschalten, um jede neue Nachricht ohne Signatur zu beginnen."
+      },
+      "signature_reply_forward": {
+        "label": "Signatur bei Antworten und Weiterleitungen",
+        "description": "Hängt die Signatur beim Antworten oder Weiterleiten automatisch an. Ausschalten, um sie ohne Signatur zu senden."
+      },
       "signature_separator": {
         "label": "Signatur-Trenner",
         "description": "Der Signatur die Standard-Trennerzeile \"-- \" voranstellen (RFC 3676). Deaktivieren, wenn der Nachrichtentext direkt in die Signatur übergehen soll."

@@ -1952,6 +1952,14 @@
         "above_quote": "Pred citovaným textom",
         "below_quote": "Za citovaným textom"
       },
+      "signature_new_mail": {
+        "label": "Podpis pri nových správach",
+        "description": "Pri písaní novej správy automaticky vloží váš podpis. Vypnite, ak chcete každú novú správu začať bez podpisu."
+      },
+      "signature_reply_forward": {
+        "label": "Podpis pri odpovediach a preposielaní",
+        "description": "Pri odpovedaní alebo preposielaní automaticky priloží váš podpis. Vypnite, ak ich chcete odosielať bez podpisu."
+      },
       "signature_separator": {
         "label": "Oddeľovač podpisu",
         "description": "Pred podpis pridať štandardný oddeľovací riadok \"-- \" (RFC 3676)."

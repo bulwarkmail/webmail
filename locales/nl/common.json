@@ -1940,6 +1940,14 @@
         "above_quote": "Voor geciteerde tekst",
         "below_quote": "Na geciteerde tekst"
       },
+      "signature_new_mail": {
+        "label": "Handtekening bij nieuwe berichten",
+        "description": "Voegt je handtekening automatisch toe bij het opstellen van een nieuw bericht. Zet uit om elk nieuw bericht zonder te beginnen."
+      },
+      "signature_reply_forward": {
+        "label": "Handtekening bij antwoorden en doorsturen",
+        "description": "Voegt je handtekening automatisch toe bij antwoorden of doorsturen. Zet uit om ze zonder te versturen."
+      },
       "signature_separator": {
         "label": "Handtekening-scheider",
         "description": "De handtekening voorafgaan met de standaard scheidingsregel \"-- \" (RFC 3676). Zet uit als je liever direct van het bericht in de handtekening overgaat."

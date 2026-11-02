@@ -49,6 +49,8 @@ const settings = vi.hoisted(() => ({
   emptySubjectWarningEnabled: false,
   sendDelaySeconds: 0,
   signaturePosition: 'below_quote',
+  signatureNewMailEnabled: true,
+  signatureReplyForwardEnabled: true,
   signatureSeparatorEnabled: false,
   requestReadReceiptDefault: false,
   sendConfirmation: false,
