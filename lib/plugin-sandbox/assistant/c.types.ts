@@ -129,8 +129,12 @@ export interface MailBatchResult {
 
 /** What vacation.get adds to VacationView. */
 export interface VacationForwardField {
-  /** The out-of-office forwards mail to another address while it is on (set in Settings > Out of office). */
-  forwardActive: boolean;
+  /**
+   * The out-of-office forwards mail to another address while it is on (set
+   * in Settings > Out of office); null when the filters couldn't be read.
+   * vacation.set refuses to switch the reply on unless this is false.
+   */
+  forwardActive: boolean | null;
 }
 
 // ─── Settings ─────────────────────────────────────────────────

@@ -2,15 +2,17 @@
 // invitations, deleting events with undo, filter rules, batches of
 // messages, the out-of-office's forward and changing settings.
 //
-// Two existing calls are taken over here and keep their permission and
-// their behaviour for every plugin: calendar.deleteEvent now also returns
-// an undo token, and vacation.get also says whether the out-of-office
-// forwards mail.
+// Three existing calls are taken over here and keep their permission:
+// calendar.deleteEvent now also returns an undo token, vacation.get also
+// says whether the out-of-office forwards mail, and vacation.set refuses,
+// for every plugin, to switch the reply on while it forwards mail or while
+// that can't be read.
 
 import type { InstalledPlugin, Permission, VacationView } from '../../plugin-types';
 import { useAuthStore } from '@/stores/auth-store';
 import { useVacationStore } from '@/stores/vacation-store';
-import { doVacationGet } from '../host-api-settings';
+import { doVacationGet, doVacationSet } from '../host-api-settings';
+import { isPlainRecord, sessionClient } from '../host-api-input';
 import { NOT_MINE } from './not-mine';
 import { doCalendarDeleteWithUndo, doCalendarRespond, doCalendarUndoDelete } from './c.calendar';
 import { doFiltersCreate, doFiltersList, doFiltersUndo } from './c.filters';
@@ -29,15 +31,47 @@ export const PERMS: Readonly<Record<string, Permission | null>> = {
   'email.batch': 'email:write',
   'email.undoBatch': 'email:write',
   'vacation.get': 'vacation:read',
+  'vacation.set': 'vacation:write',
   'app.describeSettings': 'settings:read',
   'app.setSettings': 'settings:change',
   'app.undoSettings': 'settings:change',
 };
 
+/**
+ * Whether the out-of-office forwards mail while it is on: true, false, or
+ * null when the account has filters but they couldn't be read.
+ */
+function forwardActive(): boolean | null {
+  const state = useVacationStore.getState();
+  if (state.forwardUnknown) return null;
+  return state.forward?.enabled === true;
+}
+
 /** vacation.get, plus whether the out-of-office forwards mail while it is on. */
 async function doVacationGetWithForward(): Promise<VacationView & VacationForwardField> {
   const view = await doVacationGet();
-  return { ...view, forwardActive: useVacationStore.getState().forward?.enabled === true };
+  return { ...view, forwardActive: forwardActive() };
+}
+
+/**
+ * vacation.set as before, but no plugin may switch the reply on while the
+ * out-of-office forwards mail to another address (set in Settings > Out of
+ * office) or while that can't be read: switching it on would start sending
+ * the user's mail elsewhere.
+ */
+async function doVacationSetGuarded(input: unknown): Promise<VacationView | null> {
+  const method = 'vacation.set';
+  if (isPlainRecord(input) && input.isEnabled === true) {
+    const client = sessionClient(method);
+    await useVacationStore.getState().fetchVacationResponse(client);
+    const forward = forwardActive();
+    if (forward !== false) {
+      throw new Error(forward === null
+        ? `${method}: whether the out-of-office forwards mail can't be read right now, so it can't be switched on here; use Settings > Out of office`
+        : `${method}: the out-of-office forwards mail to another address, so a plugin can't switch it on; use Settings > Out of office`);
+    }
+  }
+  return doVacationSet(input);
 }
 
 /** Runs a method of this area; NOT_MINE for any other. */
@@ -52,6 +86,7 @@ export async function dispatch(plugin: InstalledPlugin, method: string, args: un
     case 'email.batch': return doEmailBatch(plugin.id, args[0]);
     case 'email.undoBatch': return doEmailUndoBatch(plugin.id, args[0]);
     case 'vacation.get': return doVacationGetWithForward();
+    case 'vacation.set': return doVacationSetGuarded(args[0]);
     case 'app.describeSettings': return doDescribeSettings(args[0]);
     case 'app.setSettings': return doSetSettings(plugin.id, args[0]);
     case 'app.undoSettings': return doUndoSettings(plugin.id, args[0]);
