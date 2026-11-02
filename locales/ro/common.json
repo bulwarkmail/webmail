@@ -6063,7 +6063,7 @@
       },
       "ui_tasks": {
         "title": "Adăugarea în vizualizarea sarcinilor",
-        "body": "Afișează secțiuni proprii în detaliile unei sarcini și butoane în lista de sarcini."
+        "body": "Afișează secțiuni proprii în detaliile unei sarcini, butoane în lista de sarcini și o listă de sarcini proprie în locul celei din Bulwark."
       },
       "ui_files": {
         "title": "Adăugarea în vizualizarea fișierelor",

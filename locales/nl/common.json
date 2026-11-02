@@ -6063,7 +6063,7 @@
       },
       "ui_tasks": {
         "title": "Toevoegen aan de takenweergave",
-        "body": "Eigen secties tonen in de details van een taak en knoppen in de takenlijst."
+        "body": "Eigen secties tonen in de details van een taak, knoppen in de takenlijst en een eigen takenlijst in plaats van die van Bulwark."
       },
       "ui_files": {
         "title": "Toevoegen aan de bestandenweergave",

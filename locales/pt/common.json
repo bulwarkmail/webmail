@@ -6063,7 +6063,7 @@
       },
       "ui_tasks": {
         "title": "Adicionar à visualização de tarefas",
-        "body": "Mostrar as próprias seções nos detalhes de uma tarefa e botões na lista de tarefas."
+        "body": "Mostrar as próprias seções nos detalhes de uma tarefa, botões na lista de tarefas e a própria lista de tarefas no lugar da do Bulwark."
       },
       "ui_files": {
         "title": "Adicionar à visualização de arquivos",

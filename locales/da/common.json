@@ -6063,7 +6063,7 @@
       },
       "ui_tasks": {
         "title": "Tilføje til opgavevisningen",
-        "body": "Vise sine egne sektioner i en opgaves detaljer og knapper i opgavelisten."
+        "body": "Vise sine egne sektioner i en opgaves detaljer, knapper i opgavelisten og sin egen opgaveliste i stedet for Bulwarks."
       },
       "ui_files": {
         "title": "Tilføje til filvisningen",

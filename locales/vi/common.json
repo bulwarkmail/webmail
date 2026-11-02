@@ -6055,7 +6055,7 @@
       },
       "ui_tasks": {
         "title": "Thêm vào công việc",
-        "body": "Hiển thị các phần riêng của nó trong chi tiết công việc và các nút trong danh sách công việc."
+        "body": "Hiển thị các phần riêng của nó trong chi tiết công việc, các nút trong danh sách công việc và danh sách công việc riêng thay cho danh sách của Bulwark."
       },
       "ui_files": {
         "title": "Thêm vào tệp",

@@ -6063,7 +6063,7 @@
       },
       "ui_tasks": {
         "title": "Přidávat obsah do sekce Úkoly",
-        "body": "Zobrazuje vlastní sekce v podrobnostech úkolu a tlačítka v seznamu úkolů."
+        "body": "Zobrazuje vlastní sekce v podrobnostech úkolu, tlačítka v seznamu úkolů a vlastní seznam úkolů místo seznamu Bulwarku."
       },
       "ui_files": {
         "title": "Přidávat obsah do sekce Soubory",
