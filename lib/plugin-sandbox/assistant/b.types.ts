@@ -10,6 +10,14 @@ export interface AreaHostFeaturesB {
   attachmentText?: boolean;
 }
 
+/** What EmailReadView.attachments adds for an image the message shows inline. */
+export interface AttachmentExtrasB {
+  /** The Content-ID the message's HTML refers to (`<img src="cid:…">`), without angle brackets. */
+  cid?: string;
+  /** The alt text of that image in the HTML, when the sender wrote one. */
+  alt?: string;
+}
+
 /**
  * What api.email.getAttachmentText answers. `status`: ok (`text` holds the
  * text), too_big (over 20 MB, or an Office file that unpacks to more than
