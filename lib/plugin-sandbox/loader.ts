@@ -24,7 +24,7 @@ import { register as registerActive, deregister as deregisterActive, all as allA
 import { cancelPluginDialogs } from './host-api';
 import { hasDialogFor, whenNoDialogFor } from './host-dialog';
 import { registerShortcuts } from './shortcuts';
-import { mayOfferSlot, mayRegisterHook, pluginHasPermission, slotPropsFor } from './permissions';
+import { mayOfferSlot, mayReceiveHookCall, mayRegisterHook, pluginHasPermission, slotPropsFor } from './permissions';
 import { clearPluginActions, setActionDispatcher } from './actions';
 import { clearDayLabels } from './day-labels';
 import { clearPluginListFilters } from './list-filters';
@@ -297,9 +297,15 @@ async function startSandboxedPlugin(plugin: InstalledPlugin): Promise<void> {
       // its own would ask twice (host-features.ts). Asked per call, so
       // turning the core switch off gives the plugin its hook back.
       // Parts of the arguments that need another permission are cut per
-      // plugin (hook-payload.ts).
+      // plugin (hook-payload.ts). A hook whose calls carry data of two kinds
+      // (a reminder of an event or of a task) hands each call only to a
+      // plugin with its permission.
       const pluginId = plugin.id;
-      const proxy = (...args: unknown[]) => (isHookHandedOver(pluginId, hookName) ? undefined : bg.invokeHook(hookName, hookArgsFor(plugin, hookName, args)));
+      const proxy = (...args: unknown[]) => (
+        isHookHandedOver(pluginId, hookName) || !mayReceiveHookCall(plugin, hookName, args)
+          ? undefined
+          : bg.invokeHook(hookName, hookArgsFor(plugin, hookName, args))
+      );
       hookDisposables.push(bus.register(plugin.id, proxy as (...a: unknown[]) => unknown));
       if (hookName === 'onEmailOpen') openHandler = proxy;
     }

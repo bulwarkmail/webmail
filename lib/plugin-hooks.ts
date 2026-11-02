@@ -171,10 +171,13 @@ export class HookBus<T extends (...args: any[]) => any> {
    *   cancels the action instead of letting it through.
    * @param opts.onChange Called when handlers come or go, for UI that asked
    *   the bus before a plugin started (row badges).
+   * @param opts.interceptTimeoutMs For intercepts nobody waits on a user for
+   *   (a reminder about to be shown): the per-handler budget of `intercept`
+   *   instead of the long one for confirmation dialogs.
    */
   constructor(
     private readonly timeoutMs: number = DEFAULT_TIMEOUT_MS,
-    private readonly opts: { failClosed?: boolean; onChange?: () => void } = {},
+    private readonly opts: { failClosed?: boolean; onChange?: () => void; interceptTimeoutMs?: number } = {},
   ) {}
 
   private setHandlers(next: HookEntry<T>[]): void {
@@ -262,7 +265,8 @@ export class HookBus<T extends (...args: any[]) => any> {
     for (const { pluginId, handler } of this.handlers) {
       if (pluginErrorTracker.isDisabled(pluginId)) continue;
       try {
-        const result = await withTimeout(pluginId, handler(...args), Math.max(this.timeoutMs, INTERCEPT_TIMEOUT_MS));
+        const budget = this.opts.interceptTimeoutMs ?? Math.max(this.timeoutMs, INTERCEPT_TIMEOUT_MS);
+        const result = await withTimeout(pluginId, handler(...args), budget);
         if (result === false) return 'vetoed';
       } catch (err) {
         pluginErrorTracker.record(pluginId, err);
@@ -574,6 +578,12 @@ export const calendarHooks = {
   onCalendarChange: new HookBus(),
   onCalendarVisibilityToggle: new HookBus(),
   onICalSubscriptionChange: new HookBus(),
+  // Intercept hook - fires before Bulwark shows a reminder (an event's or a
+  // task's display alert), in every open tab. Return false to show it
+  // yourself: no toast, no sound and no title alert for that reminder.
+  // Fails open within the default budget, so a hung plugin delays a
+  // reminder by seconds, never drops it.
+  onBeforeCalendarAlert: new HookBus(DEFAULT_TIMEOUT_MS, { interceptTimeoutMs: DEFAULT_TIMEOUT_MS }),
   onCalendarAlert: new HookBus(),
   onCalendarAlertAcknowledge: new HookBus(),
   // Transform hook - fires when the event form is open and start/end change.
