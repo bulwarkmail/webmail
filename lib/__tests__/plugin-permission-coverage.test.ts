@@ -82,6 +82,13 @@ describe('plugin permissions', () => {
       'drafts.create': 'email:write',
       'email.forward': 'email:forward',
       'notifications.show': 'ui:notifications',
+      'files.find': 'files:read',
+      'files.getText': 'files:read',
+      'files.attach': 'files:read',
+      'files.create': 'files:write',
+      'files.saveAttachments': 'files:write',
+      'files.move': 'files:write',
+      'files.rename': 'files:write',
     });
   });
 });

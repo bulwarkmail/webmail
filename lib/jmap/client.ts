@@ -10470,6 +10470,29 @@ export class JMAPClient implements IJMAPClient {
     }
   }
 
+  async replaceFileNodeBlob(id: string, blobId: string): Promise<void> {
+    const node = this.resolveFileNodeId(id);
+    const response = await this.request(
+      [["FileNode/set", {
+        accountId: node.accountId,
+        // `modified: null` has the server stamp the change: Stalwart 1.0
+        // leaves a client-set `modified` alone on a content change (see
+        // updateFileNodeBlob in lib/wopi/files.ts); 0.16 bumps it anyway.
+        update: { [node.id as string]: { blobId, modified: null } },
+      }, "fns0"]],
+      this.fileUsing(),
+    );
+
+    const result = response.methodResponses?.[0];
+    if (!result || result[0] === "error") {
+      throw jmapError(result?.[1]?.description || "FileNode/set update failed", result?.[1]);
+    }
+    const refused = result[1].notUpdated?.[node.id as string];
+    if (refused) {
+      throw jmapError(refused.description || "Failed to replace the file's content", refused);
+    }
+  }
+
   /** Group FileNode ids by the account that owns them. */
   private groupFileNodeIds<T>(entries: Array<[string, T]>): Map<string, Array<{ id: string; rawId: string; value: T }>> {
     const groups = new Map<string, Array<{ id: string; rawId: string; value: T }>>();

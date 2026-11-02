@@ -5859,11 +5859,11 @@
       },
       "files_read": {
         "title": "Čítať vaše súbory",
-        "body": "Prechádza a otvára súbory uložené vo vašom účte."
+        "body": "Vyhľadávať, otvárať a čítať súbory vo vašom účte."
       },
       "files_write": {
         "title": "Meniť vaše súbory",
-        "body": "Nahráva, premenúva, presúva a odstraňuje súbory vo vašom účte."
+        "body": "Ukladať, vytvárať, premenovávať a presúvať súbory vo vašom účte a zabrániť odstráneniu súboru."
       },
       "identity_read": {
         "title": "Vidieť vaše identity odosielateľa",

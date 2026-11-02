@@ -5859,11 +5859,11 @@
       },
       "files_read": {
         "title": "Loe sinu faile",
-        "body": "Sirvida ja avada sinu kontol hoitavaid faile."
+        "body": "Leida, avada ja lugeda sinu konto faile."
       },
       "files_write": {
         "title": "Muuda sinu faile",
-        "body": "Laadida üles, ümber nimetada, liigutada ja kustutada faile sinu kontol."
+        "body": "Salvestada, luua, ümber nimetada ja liigutada faile sinu kontol ning takistada faili kustutamist."
       },
       "identity_read": {
         "title": "Vaata sinu saatjaaadresse",

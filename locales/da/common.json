@@ -5859,11 +5859,11 @@
       },
       "files_read": {
         "title": "Læse dine filer",
-        "body": "Gennemse og åbne de filer, der er gemt på din konto."
+        "body": "Finde, åbne og læse filerne på din konto."
       },
       "files_write": {
         "title": "Ændre dine filer",
-        "body": "Uploade, omdøbe, flytte og slette filer på din konto."
+        "body": "Gemme, oprette, omdøbe og flytte filer på din konto og forhindre, at en fil bliver slettet."
       },
       "identity_read": {
         "title": "Se dine afsenderidentiteter",

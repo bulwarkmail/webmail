@@ -5859,11 +5859,11 @@
       },
       "files_read": {
         "title": "Ihre Dateien lesen",
-        "body": "Die in Ihrem Konto gespeicherten Dateien durchsuchen und öffnen."
+        "body": "Die Dateien in Ihrem Konto finden, öffnen und lesen."
       },
       "files_write": {
         "title": "Ihre Dateien ändern",
-        "body": "Dateien in Ihrem Konto hochladen, umbenennen, verschieben und löschen."
+        "body": "Dateien in Ihrem Konto speichern, erstellen, umbenennen und verschieben und das Löschen einer Datei verhindern."
       },
       "identity_read": {
         "title": "Ihre Absenderadressen sehen",

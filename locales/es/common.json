@@ -5859,11 +5859,11 @@
       },
       "files_read": {
         "title": "Leer tus archivos",
-        "body": "Explorar y abrir los archivos guardados en tu cuenta."
+        "body": "Buscar, abrir y leer los archivos de tu cuenta."
       },
       "files_write": {
         "title": "Cambiar tus archivos",
-        "body": "Subir, renombrar, mover y eliminar archivos de tu cuenta."
+        "body": "Guardar, crear, renombrar y mover archivos de tu cuenta, e impedir que se elimine un archivo."
       },
       "identity_read": {
         "title": "Ver tus direcciones de remitente",

@@ -5859,11 +5859,11 @@
       },
       "files_read": {
         "title": "Llegir els vostres fitxers",
-        "body": "Navegar pels fitxers desats al vostre compte i obrir-los."
+        "body": "Cercar, obrir i llegir els fitxers del vostre compte."
       },
       "files_write": {
         "title": "Canviar els vostres fitxers",
-        "body": "Pujar, canviar el nom, moure i suprimir fitxers del vostre compte."
+        "body": "Desar, crear, canviar el nom i moure fitxers del vostre compte, i impedir que se suprimeixi un fitxer."
       },
       "identity_read": {
         "title": "Veure les vostres identitats d'enviament",

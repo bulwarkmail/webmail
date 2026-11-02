@@ -5859,11 +5859,11 @@
       },
       "files_read": {
         "title": "Read your files",
-        "body": "Browse and open the files stored in your account."
+        "body": "Find, open and read the files in your account."
       },
       "files_write": {
         "title": "Change your files",
-        "body": "Upload, rename, move and delete files in your account."
+        "body": "Save, create, rename and move files in your account, and stop a file from being deleted."
       },
       "identity_read": {
         "title": "See your sender addresses",

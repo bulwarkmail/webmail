@@ -5859,11 +5859,11 @@
       },
       "files_read": {
         "title": "Je bestanden lezen",
-        "body": "De bestanden in je account bekijken en openen."
+        "body": "De bestanden in je account zoeken, openen en lezen."
       },
       "files_write": {
         "title": "Je bestanden wijzigen",
-        "body": "Bestanden in je account uploaden, hernoemen, verplaatsen en verwijderen."
+        "body": "Bestanden in je account opslaan, maken, hernoemen en verplaatsen, en voorkomen dat een bestand wordt verwijderd."
       },
       "identity_read": {
         "title": "Je afzenderadressen zien",
