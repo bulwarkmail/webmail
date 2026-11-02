@@ -1951,12 +1951,12 @@ export function EmailComposer({
     const editor = editorRef.current;
     const html = editor && !editor.isDestroyed ? serializeEditorContent(editor) : body;
     editorRef.current = null;
-    setBody(htmlComposeBodyToPlainText(html, signatureIdentity, { separator }));
+    setBody(htmlComposeBodyToPlainText(html, signatureIdentity, { separator, imageAlt: imageAltText }));
     setPlainTextMode(true);
     // Keyed on the signature fields, not the identity object (see the
     // signature effects above for the same rationale).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plainTextMode, body, signatureIdentity?.htmlSignature, signatureIdentity?.textSignature, signatureSeparatorEnabled]);
+  }, [plainTextMode, body, signatureIdentity?.htmlSignature, signatureIdentity?.textSignature, signatureSeparatorEnabled, imageAltText]);
 
   // Move a chip from one recipient field to another. `toIndex`, when given,
   // inserts at that position in the destination (drag-and-drop reordering,

@@ -202,14 +202,17 @@ export function replacePlainTextSignatureAboveQuote(
  * Convert the rich-text editor's body to a plain-text body. Formatting is
  * dropped (that is the point of plain text); an embedded signature comes back
  * as the identity's plain-text signature so the body still "carries" it.
+ * The quote keeps its "> " lines and lists their markers, as in the text part
+ * the send path builds: the attachment reminder and plugin edits find the
+ * quote by them.
  */
 export function htmlComposeBodyToPlainText(
   html: string,
   identity: SignatureIdentityLike,
-  options: { separator: boolean },
+  options: { separator: boolean; imageAlt?: (alt: string) => string },
 ): string {
   const stripped = stripEmbeddedSignature(html);
-  const text = htmlToPlainText(stripped.html, { paragraphSpacing: true });
+  const text = htmlToPlainText(stripped.html, { paragraphSpacing: true, mailMarkup: true, imageAlt: options.imageAlt });
   if (!stripped.hadSignature) return text;
   return appendPlainTextSignature(text, identity, { separator: options.separator });
 }
