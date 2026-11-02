@@ -201,6 +201,12 @@ export interface BatchActionTarget {
   client: IJMAPClient;
   /** JMAP account the messages belong to. */
   accountId?: string;
+  /**
+   * The messages themselves, when the caller has them: archiving files them
+   * by date (archiveMode), and a tag change skips those already in the
+   * wanted state. batchArchive and batchSetTag act on these only.
+   */
+  emails?: Email[];
 }
 
 interface EmailStore {
@@ -570,7 +576,8 @@ interface EmailStore {
    * and keywords stay as they are, and so does the selection, so several
    * tags can be applied in a row. Rejects when a write fails. (#1077)
    */
-  batchSetTag: (client: IJMAPClient, tagId: string, add: boolean) => Promise<boolean>;
+  /** `target`: these messages (target.emails) instead of the selection. */
+  batchSetTag: (client: IJMAPClient, tagId: string, add: boolean, target?: BatchActionTarget) => Promise<boolean>;
   batchDelete:(client: IJMAPClient, permanent?: boolean) => Promise<boolean>;
   /**
    * Acts on the selection, or on `target`'s messages when given; with a
@@ -578,7 +585,8 @@ interface EmailStore {
    */
   /** `receipts` collects what went to another account, for Undo. */
   batchMoveToMailbox: (client: IJMAPClient, mailboxId: string, target?: BatchActionTarget, receipts?: CrossAccountMoveReceipt[]) => Promise<boolean>;
-  batchArchive: (client: IJMAPClient) => Promise<boolean>;
+  /** `target`: these messages (target.emails) of one account instead of the selection. */
+  batchArchive: (client: IJMAPClient, target?: BatchActionTarget) => Promise<boolean>;
 
   // Spam operations
   // For unified-view emails the undo must hit the same account: `accountId` is the
@@ -1374,6 +1382,39 @@ export async function ensureArchiveMailbox(opts: {
   const created = findArchiveMailbox(await opts.refresh(), opts.selectedMailboxId, opts.accountId);
   if (!created) throw new ArchiveMailboxNotFoundError();
   return created;
+}
+
+/**
+ * batchArchive for messages a caller names (a plugin's batch over search
+ * results): one login and account, its folders read from the server, the
+ * Archive found or made like for the selection, archiveMode honoured, the
+ * move hooks asked and told. The moved rows leave the open list.
+ */
+async function archiveTarget(client: IJMAPClient, target: BatchActionTarget): Promise<boolean> {
+  const emails = target.emails ?? [];
+  if (emails.length === 0) return true;
+  const own = async () => (await target.client.getMailboxes(target.accountId)).filter(m => !m.isShared);
+  let mailboxes = await own();
+  const archive = await ensureArchiveMailbox({
+    client: target.client, mailboxes, selectedMailboxId: null, accountId: target.accountId,
+    refresh: async () => (mailboxes = await own()),
+  });
+  if (!archive) return false;
+  const hookMailboxes = [...mailboxes.filter(m => m.id !== archive.id), archive];
+  const move = { emailIds: [...new Set(emails.map(e => e.id))], fromMailboxId: moveSourceMailboxId(emails, mailboxes), toMailboxId: archive.id };
+  if (!(await allowEmailMove(move, hookMailboxes))) return false;
+  await target.client.batchArchiveEmails(
+    emails.map(e => ({ id: e.id, receivedAt: e.receivedAt })),
+    archive.originalId || archive.id, useSettingsStore.getState().archiveMode, mailboxes, target.accountId,
+  );
+  emitEmailMove(move, hookMailboxes);
+  const moved = new Set(move.emailIds);
+  useEmailStore.setState(state => ({
+    emails: state.emails.filter(e => !moved.has(e.id)),
+    selectedEmailKeys: dropFromSelection(state, e => moved.has(e.id)),
+  }));
+  if (!useEmailStore.getState().isUnifiedView) await useEmailStore.getState().refreshCurrentMailbox(client);
+  return true;
 }
 
 /**
@@ -5855,9 +5896,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     return true;
   },
 
-  batchSetTag: async (client, tagId, add): Promise<boolean> => {
+  batchSetTag: async (client, tagId, add, target): Promise<boolean> => {
     const { selectedEmailKeys } = get();
-    if (selectedEmailKeys.size === 0) return true;
+    if (!target && selectedEmailKeys.size === 0) return true;
 
     // Both prefixes name the same tag when read, so taking one off clears
     // either spelling; putting one on writes the current spelling only.
@@ -5870,10 +5911,13 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     // folder's owner in a shared folder. (#281) The selection is keyed by
     // owning account, so a namesake in another account is never written.
     const groups = new Map<IJMAPClient, Map<string | undefined, Email[]>>();
-    for (const email of resolveSelectedEmails(get())) {
+    for (const email of target ? target.emails ?? [] : resolveSelectedEmails(get())) {
       // A message already in the wanted state needs no write.
       if (tagKeys.some(key => email.keywords?.[key] === true) === add) continue;
-      const { client: actionClient, accountId } = resolveEmailActionContext(email, client);
+      // A targeted call names the login and account of its messages itself.
+      const { client: actionClient, accountId } = target
+        ? { client: target.client, accountId: target.accountId }
+        : resolveEmailActionContext(email, client);
       const byAccount = groups.get(actionClient) ?? new Map<string | undefined, Email[]>();
       groups.set(actionClient, byAccount);
       byAccount.set(accountId, [...(byAccount.get(accountId) ?? []), email]);
@@ -6130,8 +6174,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     return true;
   },
 
-  batchArchive: async (client): Promise<boolean> => {
+  batchArchive: async (client, target): Promise<boolean> => {
     if (!isArchiveActionEnabled()) return false;
+    if (target) return archiveTarget(client, target);
     if (get().selectedEmailKeys.size === 0) return true;
     if (isAggregateListView()) {
       // The listed rows and the members of expanded threads the selection
