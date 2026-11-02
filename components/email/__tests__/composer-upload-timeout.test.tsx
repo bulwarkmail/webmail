@@ -236,7 +236,7 @@ async function select(input: HTMLInputElement, files: File[]) {
 function chip(name: string) {
   const progress = screen.queryByRole('progressbar', { name });
   // Each attachment chip contains its label and cancel/remove button.
-  return progress?.parentElement ?? screen.getByText(name).parentElement!.parentElement!.parentElement!;
+  return progress?.parentElement ?? screen.getByText((_, element) => element?.getAttribute('title') === name && element.tagName === 'SPAN').parentElement!.parentElement!.parentElement!;
 }
 
 beforeEach(() => {
@@ -307,7 +307,7 @@ describe('composer XHR inactivity recovery', () => {
     expect(input.value).toBe('');
     expect(progressCleanup).toHaveBeenCalledTimes(2);
     fireEvent.click(within(chip('A.txt')).getByRole('button', { name: 'recipient_remove A.txt' }));
-    expect(screen.queryByText('A.txt')).toBeNull();
+    expect(screen.queryByText((_, element) => element?.getAttribute('title') === 'A.txt' && element.tagName === 'SPAN')).toBeNull();
 
     await select(input, [a]);
     expect(upload).toHaveBeenCalledTimes(3);

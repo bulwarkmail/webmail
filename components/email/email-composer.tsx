@@ -153,6 +153,7 @@ import { buildMentionCandidates, type MentionCandidate } from "@/lib/recipient-m
 import { describeRecipientChanges, recipientDisplayName, type RecipientChange, type RecipientFields } from "@/lib/recipient-announcements";
 import { announce as announceStatus } from "@/lib/announce";
 import { isReportPart, normalizeCid } from "@/lib/attachment-visibility";
+import { AttachmentFilename } from "./attachment-filename";
 import { unnamedAttachmentName } from "@/lib/attachment-name";
 import { RichTextEditor } from "@/components/email/rich-text-editor";
 import { isRecipientMentionActive } from "@/components/email/recipient-mention";
@@ -4210,6 +4211,7 @@ export function EmailComposer({
       {/* Right-side composer sidebar slot is rendered after the main content div below. */}
     <div
       className="flex flex-col h-full bg-background relative flex-1 min-w-0"
+      data-memail-composer={!mvWindow ? "" : undefined}
       data-tour="composer"
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
@@ -4393,7 +4395,7 @@ export function EmailComposer({
         ref={composerMainRef}
         className={cn("flex-1 min-h-0 flex flex-col", !pinFields && "overflow-y-auto")}
       >
-      <div ref={composerFieldsRef} className="shrink-0 space-y-0 border-b">
+      <div data-memail-compose-fields="" ref={composerFieldsRef} className="shrink-0 space-y-0 border-b">
           {/* From field */}
           <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50">
             <span className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('from')}:</span>
@@ -4812,7 +4814,7 @@ export function EmailComposer({
         )}
         {/* Attachments */}
         {attachments.length > 0 && (
-          <div className="px-4 py-2 border-t shrink-0">
+          <div data-memail-compose-attachments="" className="px-4 py-2 border-t shrink-0">
             <div
               className={cn(
                 "flex flex-wrap gap-2",
@@ -4835,7 +4837,7 @@ export function EmailComposer({
                   && isFilePreviewable(att.name, att.type);
                 const label = (
                   <>
-                    <span className="max-w-[150px] md:max-w-[200px] truncate">{att.name}</span>
+                    <AttachmentFilename name={att.name} />
                     <span className="text-xs text-muted-foreground whitespace-nowrap">
                       ({formatFileSize(att.size)})
                     </span>
@@ -4852,6 +4854,7 @@ export function EmailComposer({
                 return (
                 <div
                   key={index}
+                  data-memail-compose-file=""
                   className={cn(
                     "relative flex items-center gap-2 px-3 py-1.5 rounded-md text-sm overflow-hidden",
                     att.error ? "bg-red-500/10 text-red-600 dark:text-red-400" : "bg-muted text-foreground"
@@ -4882,7 +4885,7 @@ export function EmailComposer({
                       )}
                     </div>
                   )}
-                  <div className="relative flex items-center gap-2">
+                  <div className="relative flex min-w-0 items-center gap-2">
                     {att.uploading ? (
                       <Loader2 className="w-3 h-3 animate-spin flex-shrink-0" />
                     ) : att.error ? (

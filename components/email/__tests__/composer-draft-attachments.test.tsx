@@ -243,7 +243,7 @@ describe('re-opened draft attachments (#849)', () => {
     mockClient();
     render(<EmailComposer initialData={REOPENED_DRAFT} onClose={vi.fn()} />);
 
-    expect(screen.getByText('report.pdf')).toBeInTheDocument();
+    expect(screen.getByText((_, element) => element?.getAttribute('title') === 'report.pdf' && element.tagName === 'SPAN')).toBeInTheDocument();
   });
 
   it('carries the attachments through saves and re-resolves their blobIds each time', async () => {
@@ -293,7 +293,7 @@ describe('re-opened draft attachments (#849)', () => {
     // Removing the only attachment used to not count as dirty (`>` compare),
     // so the removal never reached the server. The remove control is the
     // chip's last button (the X, which carries no stable label).
-    const chip = screen.getByText('report.pdf').closest('.rounded-md') as HTMLElement;
+    const chip = screen.getByText((_, element) => element?.getAttribute('title') === 'report.pdf' && element.tagName === 'SPAN').closest('.rounded-md') as HTMLElement;
     const chipButtons = within(chip).getAllByRole('button');
     fireEvent.click(chipButtons[chipButtons.length - 1]);
     await act(async () => { await vi.advanceTimersByTimeAsync(2500); });

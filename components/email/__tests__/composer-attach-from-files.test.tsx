@@ -252,7 +252,7 @@ describe('attach from Files', () => {
     render(<EmailComposer onClose={vi.fn()} />);
 
     pickFromFiles([fileNode('n1', 'report.pdf', 1200)]);
-    expect(await screen.findByText('report.pdf')).toBeInTheDocument();
+    expect(await screen.findByText((_, element) => element?.getAttribute('title') === 'report.pdf' && element.tagName === 'SPAN')).toBeInTheDocument();
     expect(screen.queryByTestId('fake-file-picker')).toBeNull();
 
     vi.useFakeTimers();
@@ -272,7 +272,7 @@ describe('attach from Files', () => {
     render(<EmailComposer onClose={vi.fn()} />);
 
     pickFromFiles([fileNode('n1', 'setup.exe', 10), fileNode('n2', 'notes.pdf', 10)]);
-    expect(await screen.findByText('notes.pdf')).toBeInTheDocument();
+    expect(await screen.findByText((_, element) => element?.getAttribute('title') === 'notes.pdf' && element.tagName === 'SPAN')).toBeInTheDocument();
     expect(screen.queryByText('setup.exe')).toBeNull();
   });
 
@@ -281,8 +281,8 @@ describe('attach from Files', () => {
     render(<EmailComposer onClose={vi.fn()} />);
 
     pickFromFiles([fileNode('n1', 'small.pdf', 1000), fileNode('n2', 'big.pdf', 1000)]);
-    expect(await screen.findByText('small.pdf')).toBeInTheDocument();
-    expect(screen.queryByText('big.pdf')).toBeNull();
+    expect(await screen.findByText((_, element) => element?.getAttribute('title') === 'small.pdf' && element.tagName === 'SPAN')).toBeInTheDocument();
+    expect(screen.queryByText((_, element) => element?.getAttribute('title') === 'big.pdf' && element.tagName === 'SPAN')).toBeNull();
     expect(hoisted.toastError).toHaveBeenCalledWith('attachments_total_too_large');
   });
 });

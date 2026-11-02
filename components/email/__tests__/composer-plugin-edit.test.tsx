@@ -401,7 +401,7 @@ describe('plugins editing the message being written', () => {
     let ok = false;
     await act(async () => { ok = await handle.attach({ blobId: 'B1', name: 'report.pdf', type: 'application/pdf', size: 2048 }); });
     expect(ok).toBe(true);
-    expect(await screen.findByText('report.pdf')).toBeTruthy();
+    expect(await screen.findByText((_, element) => element?.getAttribute('title') === 'report.pdf' && element.tagName === 'SPAN')).toBeTruthy();
     cleanup();
     expect(composerHandle(id)).toBeNull();
   });

@@ -4691,7 +4691,7 @@ ${printWatermark ? printWatermark.html : ''}
       <PluginSlot name="reader-header" className="w-full bg-background" extraProps={pluginEmailProps} />
 
       {/* === SUBJECT BLOCK === */}
-      <div className={cn(
+      <div data-memail-reader-subject={!mvViewer ? "" : undefined} className={cn(
         "bg-background",
         !mvViewer && "border-b border-border",
         toolbarPosition === 'below-subject' && "max-lg:sticky max-lg:top-0 max-lg:z-10"
@@ -4857,7 +4857,7 @@ ${printWatermark ? printWatermark.html : ''}
         </div>
       ) : (<>
       {/* === SENDER INFO (Desktop) === */}
-      <div
+      <div data-memail-reader-sender={!mvViewer ? "" : undefined}
         className={cn("hidden lg:block bg-background px-6", !mvViewer && "border-b border-border", mvViewer && mvBefore.length > 0 && "border-t border-border", mvOpenIndex >= 0 && "cursor-pointer")}
         style={mvViewer ? { paddingBlock: '0.75rem 0.5rem' } : { paddingBlock: 'var(--density-header-py)' }}
         data-mv-open-header={mvOpenIndex >= 0 ? "" : undefined}
@@ -5743,7 +5743,7 @@ ${printWatermark ? printWatermark.html : ''}
           mode draws them after the body. === */}
       {attachmentPosition !== 'below-message' && effectiveAttachments.length > 0 && (
         <div className="bg-background border-b border-border px-4 lg:px-6 py-3">
-          <ReaderAttachments {...readerAttachmentProps} layout="bar" />
+          <ReaderAttachments key={emailKeyFor(email)} {...readerAttachmentProps} layout="bar" />
         </div>
       )}
 
@@ -5847,7 +5847,7 @@ ${printWatermark ? printWatermark.html : ''}
           {/* === ATTACHMENTS as cards after the body (below-message mode) === */}
           {attachmentPosition === 'below-message' && effectiveAttachments.length > 0 && !mvOpenFolded && !mvAwaitingConversation && (
             <div ref={attachmentCardsRef} className={cn("bg-background border-t border-border px-4 lg:px-6 py-4 scroll-mt-4", mvViewer && "lg:ps-[60px]")}>
-              <ReaderAttachments {...readerAttachmentProps} layout="cards" />
+              <ReaderAttachments key={emailKeyFor(email)} {...readerAttachmentProps} layout="cards" />
             </div>
           )}
 

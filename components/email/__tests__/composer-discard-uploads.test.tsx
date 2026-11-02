@@ -144,9 +144,9 @@ async function openComposer(strict = false) {
 function expectNewComposer() {
   expect(screen.getByTestId('composer-subject')).toHaveValue('B subject');
   expect(screen.getByLabelText('Message')).toHaveValue('B new text');
-  expect(screen.getByText('B.txt')).toBeVisible();
+  expect(screen.getByText((_, element) => element?.getAttribute('title') === 'B.txt' && element.tagName === 'SPAN')).toBeVisible();
   expect(screen.queryByRole('progressbar')).toBeNull();
-  expect(screen.queryByText('A.txt')).toBeNull(); expect(screen.queryByText('C.txt')).toBeNull();
+  expect(screen.queryByText((_, element) => element?.getAttribute('title') === 'A.txt' && element.tagName === 'SPAN')).toBeNull(); expect(screen.queryByText((_, element) => element?.getAttribute('title') === 'C.txt' && element.tagName === 'SPAN')).toBeNull();
 }
 const modes = (['close', 'toolbar'] as const).flatMap(control => [false, true].map(strict => ({ control, strict })));
 

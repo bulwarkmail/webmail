@@ -220,7 +220,7 @@ const DRAFT = {
 
 /** The wrapping flex row that holds every chip and the expand button. */
 function chipRow() {
-  return screen.getByText('invoice-0.pdf').closest('[class*="flex-wrap"]') as HTMLElement;
+  return screen.getByText((_, element) => element?.getAttribute('title') === 'invoice-0.pdf' && element.tagName === 'SPAN').closest('[class*="flex-wrap"]') as HTMLElement;
 }
 
 /**
@@ -251,8 +251,8 @@ describe('expanded attachment list', () => {
   it('shows only the first three attachments and a counter for the rest', () => {
     render(<EmailComposer initialData={DRAFT} />);
 
-    expect(screen.getByText('invoice-2.pdf')).toBeInTheDocument();
-    expect(screen.queryByText('invoice-3.pdf')).not.toBeInTheDocument();
+    expect(screen.getByText((_, element) => element?.getAttribute('title') === 'invoice-2.pdf' && element.tagName === 'SPAN')).toBeInTheDocument();
+    expect(screen.queryByText((_, element) => element?.getAttribute('title') === 'invoice-3.pdf' && element.tagName === 'SPAN')).not.toBeInTheDocument();
     expect(screen.getByText(`+${ATTACHMENTS.length - 3}`)).toBeInTheDocument();
   });
 
@@ -262,7 +262,7 @@ describe('expanded attachment list', () => {
     fireEvent.click(screen.getByText(`+${ATTACHMENTS.length - 3}`));
 
     const row = chipRow();
-    expect(screen.getByText('invoice-11.pdf')).toBeInTheDocument();
+    expect(screen.getByText((_, element) => element?.getAttribute('title') === 'invoice-11.pdf' && element.tagName === 'SPAN')).toBeInTheDocument();
     expect(row.className).toContain('overflow-y-auto');
     // Bounded, or the row grows with the attachment count again and takes
     // the send toolbar off the bottom of the composer with it.

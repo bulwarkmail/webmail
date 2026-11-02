@@ -20,8 +20,8 @@ function renderBar(attachments: ReaderAttachmentItem[], overrides: Partial<Param
     downloadingAll: false,
     ...overrides,
   };
-  render(<ReaderAttachments {...props} />);
-  return props;
+  const view = render(<ReaderAttachments {...props} />);
+  return { ...props, ...view };
 }
 
 describe('splitFileName', () => {
@@ -121,4 +121,56 @@ describe('ReaderAttachments bar', () => {
     );
     expect(container.querySelector('img')?.getAttribute('src')).toBe('blob:thumb');
   });
+});
+
+describe('reader attachment finder', () => {
+  const files = Array.from({length:8}, (_,i)=>file(String(i), i===7 ? 'Budget-Final.xlsx' : `report-${i}.pdf`, i===7 ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'application/pdf'));
+  it('finds attachments beyond the collapsed tiles without opening or downloading them', () => {
+    const props=renderBar(files);
+    fireEvent.change(screen.getByRole('searchbox',{name:'Find an attachment'}),{target:{value:'BUDGET'}});
+    expect(screen.getAllByTestId('attachment')).toHaveLength(1);
+    expect(screen.getByText('Budget-Final')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('1 of 8 files');
+    expect(props.onOpen).not.toHaveBeenCalled();
+    expect(props.onDownload).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByTitle('download_all'));
+    expect(props.onDownloadAll).toHaveBeenCalledOnce();
+  });
+  it('recovers from no matches with clear and returns focus to the finder', () => {
+    renderBar(files);
+    const input=screen.getByRole('searchbox',{name:'Find an attachment'});
+    fireEvent.change(input,{target:{value:'missing-file'}});
+    expect(screen.queryByTestId('attachment')).toBeNull();
+    expect(screen.getByText(/No matching attachments/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button',{name:'Clear attachment filter'}));
+    expect(input).toHaveFocus();
+    expect(screen.getAllByTestId('attachment')).toHaveLength(5);
+  });
+  it('filters card layouts by MIME type and clears with Escape', () => {
+    renderBar(files,{layout:'cards'});
+    const input=screen.getByRole('searchbox',{name:'Find an attachment'});
+    fireEvent.change(input,{target:{value:'spreadsheetml'}});
+    expect(screen.getAllByTestId('attachment')).toHaveLength(1);
+    fireEvent.keyDown(input,{key:'Escape'});
+    expect(input).toHaveValue('');
+    expect(screen.getAllByTestId('attachment')).toHaveLength(8);
+  });
+  it('retains download restrictions when matching a file', () => {
+    const props=renderBar(files,{downloadsOff:true});
+    fireEvent.change(screen.getByRole('searchbox'),{target:{value:'Budget'}});
+    const buttons=within(screen.getByTestId('attachment')).getAllByRole('button');
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0]).toHaveAttribute('aria-disabled','true');
+    fireEvent.click(buttons[0]);
+    expect(props.onOpen).not.toHaveBeenCalled();
+    expect(screen.queryByTitle('download_all')).toBeNull();
+  });
+  it('does not keep an invisible filter when a collection shrinks below the finder threshold', () => {
+    const props=renderBar(files);
+    fireEvent.change(screen.getByRole('searchbox'),{target:{value:'Budget'}});
+    props.rerender(<ReaderAttachments {...props} attachments={files.slice(0,2)} />);
+    expect(screen.queryByRole('searchbox')).toBeNull();
+    expect(screen.getAllByTestId('attachment')).toHaveLength(2);
+  });
+
 });

@@ -174,7 +174,7 @@ async function openComposer() {
   };
 }
 async function complete(index: number) { await act(async () => Upload.requests[index].succeed()); await flush(); }
-function chip(name: string) { return screen.getByText(name).closest('.rounded-md') as HTMLElement; }
+function chip(name: string) { return screen.getByText((_, element) => element?.getAttribute('title') === name && element.tagName === 'SPAN').closest('.rounded-md') as HTMLElement; }
 async function expectSaved(names: string[]) {
   await waitFor(() => expect(creations).toHaveLength(1));
   expect(creations[0].attachments?.map(part => [part.name, part.blobId]) ?? []).toEqual(names.map(name => [name, `blob-${name}`]));
@@ -189,7 +189,7 @@ describe('Save and close with attachment uploads', () => {
     fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'Draft text edited while waiting' } });
     await complete(0); await expectSaved(['A.txt']);
     await waitFor(() => expect(c.closed).toHaveBeenCalledOnce());
-    await c.reopen(); expect(screen.getByText('A.txt')).toBeVisible();
+    await c.reopen(); expect(screen.getByText((_, element) => element?.getAttribute('title') === 'A.txt' && element.tagName === 'SPAN')).toBeVisible();
     expect(screen.getByLabelText('Message')).toHaveValue('Draft text edited while waiting');
   });
   it('waits for queued attachments and prevents autosaves during that wait', async () => {

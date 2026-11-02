@@ -115,3 +115,12 @@ Add each customization here. Include the relevant upstream files, the reason it 
 - Native regular stacked rows use one preview line; Relaxed retains two. `email-list.tsx` estimates the new regular height while continuing to measure real rows, attachments and expanded conversations. Dense rows have a 28px floor matching the wide-list estimate.
 - `email-hover-actions.tsx`: interface quick actions have a bordered tray and consistent targets, reduced for Dense rows. Existing callbacks, archive gate, spam semantics, plugin actions and lazy mounting remain native.
 - `.memail/message-timestamp.tsx`: compact date text retains the upstream display-date selection, with a semantic machine-readable time and an explicit full UTC tooltip respecting 12/24-hour clock preference. Scheduled labels are unchanged.
+
+
+## Reader/composer attachment workflow
+
+- Reader attachment collections over six files expose a local filename/MIME finder. It searches beyond collapsed tiles, announces matches, offers no-results recovery and clears with Escape. Download all continues to bundle the complete collection; device download restrictions remain in force. State resets when the reader changes messages, and a collection below the finder threshold cannot retain an invisible filter.
+- Attachment grids use container-safe minimums, with wrapped summary actions and explicit expand/collapse state. Existing preview, download, save-to-Files, drag-out and plugin callbacks are retained.
+- `attachment-filename.tsx` shares short-extension splitting with the reader (its old helper export is retained). Composer chips truncate the stem while preserving the extension, bound their width and keep native progress/error/cancel behavior. Tests now locate complete filenames by their labeled span rather than assuming a single text node.
+- Reader subjects wrap long text; composer fields have consistent targets and quieter labels. Attachment surfaces and borders use native semantic tokens. These styles do not reach received HTML or rich-editor content.
+- Corrected color references in the preceding inbox polish from undefined shorthand variables to the native `--color-*` tokens, including quick-action borders and keyboard focus.

@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, type DragEvent, type ReactNode } from "react";
+import { useId, useRef, useState, type DragEvent, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronDown, ChevronUp, Download, FolderInput, Loader2, Paperclip } from "@/components/icons";
+import { ChevronDown, ChevronUp, Download, FolderInput, Loader2, Paperclip, Search, X } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { getAttachmentDisplayName } from "@/lib/attachment-name";
 import { cn, formatFileSize } from "@/lib/utils";
 import { noMediaSavingProps } from "@/lib/device-frame";
+import { splitFileName } from './attachment-filename';
 import { attachmentIcon } from "./attachment-chips";
 
 export interface ReaderAttachmentItem {
@@ -36,11 +37,7 @@ export const BAR_COLLAPSE_AT = 6;
  * cut short: "prototype-v3.png" → ["prototype-v3", ".png"]. Names without a
  * short extension come back whole.
  */
-export function splitFileName(name: string): [stem: string, ext: string] {
-  const dot = name.lastIndexOf(".");
-  if (dot <= 0 || name.length - dot > 8) return [name, ""];
-  return [name.slice(0, dot), name.slice(dot)];
-}
+export { splitFileName } from './attachment-filename';
 
 interface ReaderAttachmentsProps<T extends ReaderAttachmentItem> {
   attachments: T[];
@@ -106,12 +103,18 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
   const openLabel = (attachment: T, name: string) =>
     opensPreview(attachment) ? t("preview_named", { name }) : locked(attachment) ? tDevice("download_off_named", { name }) : t("download_named", { name });
   const [expanded, setExpanded] = useState(false);
+  const [query, setQuery] = useState('');
+  const searchRef = useRef<HTMLInputElement>(null);
+  const gridId = useId();
 
   if (attachments.length === 0) return null;
 
   const totalSize = attachments.reduce((sum, a) => sum + (a.size || 0), 0);
-  const collapses = layout === "bar" && attachments.length > BAR_COLLAPSE_AT;
-  const shown = collapses && !expanded ? attachments.slice(0, BAR_COLLAPSE_AT - 1) : attachments;
+  const normalizedQuery = attachments.length > BAR_COLLAPSE_AT ? query.trim().normalize('NFKC').toLocaleLowerCase() : '';
+  const matches = normalizedQuery ? attachments.filter(attachment =>
+    `${getAttachmentDisplayName(attachment.name, attachment.type)} ${attachment.type}`.normalize('NFKC').toLocaleLowerCase().includes(normalizedQuery)) : attachments;
+  const collapses = !normalizedQuery && layout === "bar" && attachments.length > BAR_COLLAPSE_AT;
+  const shown = collapses && !expanded ? matches.slice(0, BAR_COLLAPSE_AT - 1) : matches;
   const hidden = collapses && !expanded ? attachments.slice(BAR_COLLAPSE_AT - 1) : [];
 
   const tile = (attachment: T, drag: AttachmentDragProps) => {
@@ -121,6 +124,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
     const preview = opensPreview(attachment);
     return (
       <div
+        data-memail-attachment-tile=""
         data-testid="attachment"
         data-attachment-name={attachment.name ?? undefined}
         title={locked(attachment) ? tDevice("downloads_off") : `${preview ? tFiles("preview") : t("download")} ${name}`}
@@ -180,6 +184,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
     const { icon: Icon, className: iconClass } = attachmentIcon(attachment.type, attachment.name);
     return (
       <div
+        data-memail-attachment-tile=""
         data-testid="attachment"
         data-attachment-name={attachment.name ?? undefined}
         title={locked(attachment) ? tDevice("downloads_off") : `${preview ? tFiles("preview") : t("download")} ${name}`}
@@ -238,8 +243,8 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
   const draw = layout === "cards" ? card : tile;
 
   return (
-    <section aria-label={t("attachments")} className={cn("flex flex-col gap-3", className)} data-testid="reader-attachments" data-layout={layout} {...noMediaSavingProps(downloadsOff)}>
-      <div className="flex items-center justify-between gap-3">
+    <section data-memail-reader-attachments="" aria-label={t("attachments")} className={cn("flex flex-col gap-3", className)} data-testid="reader-attachments" data-layout={layout} {...noMediaSavingProps(downloadsOff)}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
           <Paperclip className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span className="truncate">
@@ -266,9 +271,20 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
         )}
       </div>
 
-      <div className={cn(
+      {attachments.length > BAR_COLLAPSE_AT && <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-h-10 min-w-0 flex-1 items-center gap-2 rounded-lg border border-input bg-background ps-3 pe-1 focus-within:ring-2 focus-within:ring-ring">
+          <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <input ref={searchRef} type="search" value={query} onChange={event=>setQuery(event.target.value)} aria-label="Find an attachment" placeholder="Find by filename or file type" aria-controls={gridId}
+            onKeyDown={event=>{if(event.key==='Escape' && query){event.preventDefault();event.stopPropagation();setQuery('');}}}
+            className="min-w-0 flex-1 bg-transparent py-2 text-sm outline-none [&::-webkit-search-cancel-button]:hidden" />
+          {query && <IconButton label="Clear attachment filter" onClick={()=>{setQuery('');searchRef.current?.focus();}}><X className="size-4" /></IconButton>}
+        </div>
+        <span role="status" className="text-xs tabular-nums text-muted-foreground">{normalizedQuery ? `${matches.length} of ${attachments.length} files` : ''}</span>
+      </div>}
+      {normalizedQuery && !matches.length && <p className="rounded-lg border border-dashed border-border px-4 py-5 text-sm text-muted-foreground">No matching attachments. Try a filename or file type.</p>}
+      <div id={gridId} className={cn(
         "grid",
-        layout === "cards" ? "grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-3" : "grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-2",
+        layout === "cards" ? "grid-cols-[repeat(auto-fill,minmax(min(100%,10rem),1fr))] gap-3" : "grid-cols-[repeat(auto-fill,minmax(min(100%,15rem),1fr))] gap-2",
       )}>
         {shown.map((attachment) => (
           <div key={attachment.id} className="flex min-w-0 flex-col gap-1">
@@ -280,6 +296,8 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
         {hidden.length > 0 && (
           <button
             type="button"
+            aria-expanded={false}
+            aria-controls={gridId}
             onClick={() => setExpanded(true)}
             className="flex h-16 min-w-0 items-center justify-between gap-3 rounded-lg border border-border px-4 text-start transition-colors hover:bg-muted/50"
           >
@@ -295,6 +313,8 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
         {collapses && expanded && (
           <button
             type="button"
+            aria-expanded={true}
+            aria-controls={gridId}
             onClick={() => setExpanded(false)}
             className="flex h-16 min-w-0 items-center justify-between gap-3 rounded-lg border border-border px-4 text-start text-sm text-foreground transition-colors hover:bg-muted/50"
           >

@@ -266,7 +266,7 @@ describe('reply/forward inline image cid normalization', () => {
 
     // The forward attachment-list filter must have recognized blob-1 as
     // embedded and kept it out of the regular attachment chips.
-    expect(screen.queryByText('logo.png')).not.toBeInTheDocument();
+    expect(screen.queryByText((_, element) => element?.getAttribute('title') === 'logo.png' && element.tagName === 'SPAN')).not.toBeInTheDocument();
 
     // Forward doesn't auto-fill "to" - add a recipient so Send is reachable.
     // A trailing delimiter is needed: a bare single-address paste is left as

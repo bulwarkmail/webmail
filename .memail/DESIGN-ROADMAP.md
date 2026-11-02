@@ -26,6 +26,8 @@ Acceptance: keyboard/mouse/touch triage, large-mailbox pagination and virtualiza
 
 ## 3. Reader and composer
 
+Progress: attachment finder and responsive grids, extension-preserving composer chips, reader subject wrapping and composer field polish are implemented for review. Draft/upload/content regressions pass targeted checks; full phase acceptance remains open.
+
 Unify conversation metadata, attachments, action hierarchy, reply transitions and compose layout. Preserve and improve rich paste, Markdown/HTML import, fonts, spacing, undo and draft recovery using real Word, Docs and LLM samples. Preserve identities, signatures, quoted originals, inline images and scheduling.
 
 Acceptance: save/reopen/reload/account-switch recovery; reply/forward correctness; attachment and formatted-text round trips; sanitized received HTML; documented document-layout limits.
