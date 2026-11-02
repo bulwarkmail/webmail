@@ -12,6 +12,7 @@ import type {
 import type { EmailTemplate } from '@/lib/template-types';
 import { generateEmailSource } from '@/lib/email-source';
 import { isServerSetKeyword } from '@/lib/jmap/server-keywords';
+import { fileNodeKind } from '@/lib/jmap/filenode-kind';
 import { attachmentExtras, cidAltTexts } from '@/lib/plugin-sandbox/assistant/b.projection';
 
 // Resolve a message's plain-text body from its JMAP body parts. Plugins that
@@ -198,8 +199,12 @@ export function taskToView(task: CalendarTask): TaskView {
   };
 }
 
+/**
+ * A FileNode as plugins see it. Folder or file by fileNodeKind (Stalwart
+ * 1.0's symlinks have no blob either, but hold nothing: they count as files).
+ */
 export function fileToView(node: FileNode, path = ''): FileResourceView {
-  const isDir = node.type === 'd' || node.blobId === null;
+  const isDir = fileNodeKind(node) === 'directory';
   return {
     id: node.id,
     name: node.name,

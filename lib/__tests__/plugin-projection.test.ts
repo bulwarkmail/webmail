@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { contactToView, emailSummary, emailToReadView, eventToView, taskToView } from '../plugin-projection';
-import type { CalendarEvent, CalendarTask, ContactCard, Email } from '../jmap/types';
+import { contactToView, emailSummary, emailToReadView, eventToView, fileToView, taskToView } from '../plugin-projection';
+import type { CalendarEvent, CalendarTask, ContactCard, Email, FileNode } from '../jmap/types';
+import { resourceToView, type FileResource } from '@/stores/file-store';
 
 describe('plugin projections', () => {
   it('writes contact dates without a year as --MM-DD', () => {
@@ -59,5 +60,30 @@ describe('emailToReadView attachments', () => {
       { blobId: 'b-pdf', name: 'invoice.pdf', type: 'application/pdf', size: 1234, inline: false },
       { blobId: 'b-img', name: 'logo.png', type: 'image/png', size: 99, inline: true, cid: 'logo@x' },
     ]);
+  });
+});
+
+describe('fileToView', () => {
+  // Folder or file by fileNodeKind: Stalwart 1.0's symlinks have no blob
+  // but are no folders, and an old blob-backed file marked "d" (#379) is a file.
+  it('tells folders from files by the node kind', () => {
+    const base = { parentId: null, size: 3, created: '', modified: '2026-01-01T00:00:00Z' };
+    const view = (n: Partial<FileNode>) => fileToView({ ...base, id: 'n', name: 'x', type: 'text/plain', blobId: 'b', ...n } as FileNode, '/');
+    expect(view({ nodeType: 'symlink', blobId: null, type: '' }).type).toBe('file');
+    expect(view({ type: 'd', blobId: 'b-marker' }).type).toBe('file');
+    expect(view({ nodeType: 'directory', blobId: null, type: '' })).toMatchObject({ type: 'directory', mimeType: '' });
+    // 0.16 before 0.16.6: no nodeType, no blob, a folder.
+    expect(view({ blobId: null, type: 'd' }).type).toBe('directory');
+    expect(view({}).type).toBe('file');
+  });
+});
+
+// The Files view's items reach plugins through the same projection: a 1.0
+// symlink there has no blob, and was handed to plugins as a folder.
+describe('resourceToView', () => {
+  it('hands a symlink over as a file, a folder as a folder', () => {
+    const base = { id: 'x', parentId: null, name: 'x', contentLength: 0, contentType: '', lastModified: '', blobId: null } as unknown as FileResource;
+    expect(resourceToView({ ...base, isDirectory: false, isSymlink: true }, '/').type).toBe('file');
+    expect(resourceToView({ ...base, isDirectory: true }, '/').type).toBe('directory');
   });
 });
