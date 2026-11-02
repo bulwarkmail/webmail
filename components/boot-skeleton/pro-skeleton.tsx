@@ -96,13 +96,15 @@ export function ProFrameSkeleton({
 }: ProSkeletonProps & {
   className?: string;
   /**
-   * The page Pro is taking over. Its tab is the one the redirect focuses, so
-   * only its body is drawn (a pane whose stored tab shows another page stays
-   * empty), which keeps every standard page's HTML from carrying all five.
+   * Set when this frame stands in for a standard page Pro is about to take
+   * over. Its panes are then drawn empty (tab strips only): the frame doesn't
+   * move on the hop to /pro, and the page's body, which would otherwise be in
+   * every standard page's HTML a second and third time for the few who use
+   * Pro, fills in once /pro has loaded. /pro's own HTML draws the bodies.
    */
   surface?: BootSurface;
 }) {
-  const bodies = surface && BODIES.includes(surface) ? [surface] : BODIES;
+  const bodies = surface ? [] : BODIES;
   return (
     <SkeletonRegion
       surface="pro"

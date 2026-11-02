@@ -55,9 +55,9 @@ describe('AppShellSkeleton under the Pro interface', () => {
       const [strip, body] = [...pane.children];
       expect(strip.querySelectorAll('[data-sk-pro-tab]')).toHaveLength(8);
       expect(classes(strip)).toEqual(expect.arrayContaining(['h-9', 'bg-secondary']));
-      // A page Pro takes over only draws its own body: the redirect focuses
-      // its tab. (The /pro page draws all of them, see ProSkeleton below.)
-      expect([...body.children].map((b) => b.getAttribute('data-sk-pro-body'))).toEqual(['calendar', 'other']);
+      // A page Pro takes over draws its panes empty, to keep its HTML small.
+      // (The /pro page draws every body, see ProSkeleton below.)
+      expect([...body.children].map((b) => b.getAttribute('data-sk-pro-body'))).toEqual(['other']);
     }
     // The split pane only shows with a split.
     expect(classes(panes[1])).toEqual(expect.arrayContaining(['hidden', 'boot-pro-split:flex']));
