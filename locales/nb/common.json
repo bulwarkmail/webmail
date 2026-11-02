@@ -843,6 +843,7 @@
     "mv_position": "{index} av {total}",
     "plugin_panel_show": "Vis tilleggspanel",
     "plugin_panel_hide": "Skjul tilleggspanel",
+    "plugin_panel": "Tilleggspanel",
     "copy": "Kopier",
     "contact_added": "Kontakt lagt til",
     "save_to_files": {
@@ -5976,6 +5977,10 @@
       "ui_email_details": {
         "title": "Legge til paneler i meldingsdetaljene",
         "body": "Vise et eget panel ved siden av eller under en åpen melding."
+      },
+      "ui_side_panel": {
+        "title": "Legg til et panel i andre visninger",
+        "body": "Vis sitt eget panel ved siden av Kalender, Kontakter, Filer og Innstillinger."
       },
       "ui_download_file": {
         "title": "Lagre filer på enheten din",

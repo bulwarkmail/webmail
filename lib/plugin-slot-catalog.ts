@@ -14,6 +14,7 @@
 // Badges on list rows are data too (the onEmailListItemRender hook).
 
 import type { Permission } from './plugin-types';
+import { APP_SIDE_PANEL_CONTEXT_FIELDS } from './plugin-sandbox/assistant/f.types';
 
 export type SlotArea =
   | 'app' | 'mail-list' | 'reader' | 'composer' | 'navigation'
@@ -26,6 +27,11 @@ export interface SlotSpec {
   permissions: readonly Permission[];
   /** Props (frame) or click context (action) and the permission each needs; null = none. */
   props: Record<string, Permission | null> | '*';
+  /**
+   * Props that are objects whose fields need their own permission: prop →
+   * field → permission (null = none). Fields not named are dropped.
+   */
+  fields?: Record<string, Record<string, Permission | null>>;
   /** Sits in a row of buttons and sizes to its content. */
   inline?: boolean;
   /** Where it appears. */
@@ -46,6 +52,7 @@ export const SLOT_CATALOG = {
   'app-top-banner': S('app', 'frame', ['ui:app-top-banner'], { username: 'account:read', serverUrl: 'account:read', impersonated: 'account:read' }, 'a banner across the top of every page; `impersonated` is true when an admin opened the mailbox through an impersonation handoff'),
   'plugin-dialog': S('dialog', 'frame', ['ui:observe'], '*', 'inside a dialog the plugin opened with api.ui.openDialog'),
   'command-palette': S('app', 'action', ['ui:commands'], {}, 'entries in the command palette (Ctrl+K)'),
+  'app-side-panel': { ...S('app', 'frame', ['ui:side-panel'], { view: null, context: null, focusRequest: null }, 'a side panel next to Calendar, Contacts, Files and Settings (desktop and tablet; phones and Settings below 1024 px have none: the toggle there asks the plugin for a dialog through onAction, surface `app-side-panel`, actionId `open`, context { view, context }); `view` names the view ("calendar" | "contacts" | "files" | "settings"); `context` is what it shows: { event } (calendar:read), { contact, selectedCount } (contacts:read), { files, fileCount, folder } (files:read), { page: { id, label } }; `focusRequest` counts up when the panel opens on request'), fields: { context: APP_SIDE_PANEL_CONTEXT_FIELDS } },
 
   // ─── Navigation ────────────────────────────────────────────
   'navigation-rail-bottom': S('navigation', 'frame', ['ui:navigation-rail'], {}, 'the bottom of the navigation rail'),

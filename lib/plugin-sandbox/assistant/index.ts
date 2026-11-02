@@ -23,7 +23,10 @@ export async function dispatchAssistant(plugin: InstalledPlugin, method: string,
   return NOT_MINE;
 }
 
-/** Every area's api.host.features flags, right now. */
-export function assistantFeatures(): AssistantHostFeatures {
-  return Object.assign({}, ...AREAS.map((a) => a.features()));
+/**
+ * Every area's api.host.features flags, right now; with `plugin`, as that
+ * plugin's frames see them (a flag may depend on what it was granted).
+ */
+export function assistantFeatures(plugin?: InstalledPlugin): AssistantHostFeatures {
+  return Object.assign({}, ...AREAS.map((a) => (a.features as (p?: InstalledPlugin) => object)(plugin)));
 }

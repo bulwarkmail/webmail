@@ -75,6 +75,7 @@ import { useManagedAccountStore } from '@/stores/managed-account-store';
 import { useIsDesktop } from '@/hooks/use-media-query';
 import { NavigationRail } from '@/components/layout/navigation-rail';
 import { PhoneHeaderActions } from '@/components/layout/phone-header-actions';
+import { useAppSidePanel } from '@/components/plugins/app-side-panel';
 import { SidebarAppsModal } from '@/components/layout/sidebar-apps-modal';
 import { InlineAppView } from '@/components/layout/inline-app-view';
 import { useSidebarApps } from '@/hooks/use-sidebar-apps';
@@ -803,6 +804,15 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   // "<Page> - Settings - <account> - <app>" (WCAG 2.4.2). On a phone the
   // page list alone, with no page open, is just Settings.
   const activeTabLabel = visibleTabs.find((tab) => tab.id === effectiveActiveTab)?.label ?? '';
+
+  // The plugin side panel (app-side-panel), with the open page. Docked on
+  // desktop under a row with the page's name and its button; below 1024 px
+  // Settings is phone-shaped and the panel opens as a dialog.
+  const sidePanelContext = useMemo(
+    () => ({ page: { id: String(effectiveActiveTab), label: activeTabLabel } }),
+    [effectiveActiveTab, activeTabLabel],
+  );
+  const sidePanel = useAppSidePanel({ view: 'settings', context: sidePanelContext, dock: isDesktop });
   useDocumentTitle(
     activeTabLabel && (isDesktop || mobileShowContent)
       ? `${activeTabLabel} - ${tSidebar('settings')}`
@@ -1064,6 +1074,16 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   }
 
   // Desktop layout
+  const settingsMain = (
+      <AppMain ref={attachContentScroll as (el: HTMLElement | null) => void} embedded={isEmbedded} label={activeTabLabel} className="flex-1 overflow-y-auto">
+        <div className={effectiveActiveTab.startsWith(PLUGIN_PAGE_PREFIX) ? "px-6 py-6" : "max-w-3xl mx-auto px-6 py-6"}>
+          {/* The page's heading for screen readers; the sidebar shows which
+              page is open (the phone header has a visible one). */}
+          <h1 className="sr-only">{activeTabLabel}</h1>
+          {renderTabContent()}
+        </div>
+      </AppMain>
+  );
   return (
     <div className={cn("flex flex-col pt-[env(safe-area-inset-top)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
       {!isEmbedded && <SkipLink>{tShell("skip_to_content")}</SkipLink>}
@@ -1211,14 +1231,23 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
         onDoubleClick={() => { setSettingsSidebarWidth(256); localStorage.setItem('settings-sidebar-width', '256'); }}
       />
 
-      <AppMain ref={attachContentScroll as (el: HTMLElement | null) => void} embedded={isEmbedded} label={activeTabLabel} className="flex-1 overflow-y-auto">
-        <div className={effectiveActiveTab.startsWith(PLUGIN_PAGE_PREFIX) ? "px-6 py-6" : "max-w-3xl mx-auto px-6 py-6"}>
-          {/* The page's heading for screen readers; the sidebar shows which
-              page is open (the phone header has a visible one). */}
-          <h1 className="sr-only">{activeTabLabel}</h1>
-          {renderTabContent()}
+      {/* The page under a row with its name and the plugin side panel's
+          button, like the reader's toolbar, lined up with the sidebar's h-14
+          row. The same element with or without the panel, so a page keeps
+          what was typed when the panel starts or stops docking. */}
+      <div className="flex-1 min-w-0 flex flex-col" data-settings-side-panel-column="">
+        {sidePanel.docks && (
+          <div className="flex items-center gap-2 h-14 box-content border-b border-border px-2 sm:px-4 lg:px-6 shrink-0" data-settings-panel-row="">
+            {/* The page's h1 below names it for screen readers. */}
+            <div className="flex-1 min-w-0 truncate text-sm font-semibold" aria-hidden="true">{activeTabLabel}</div>
+            {sidePanel.toggle}
+          </div>
+        )}
+        <div ref={sidePanel.rowRef} className="relative flex flex-1 min-h-0">
+          {settingsMain}
+          {sidePanel.panel}
         </div>
-      </AppMain>
+      </div>
       </>
       )}
       <SidebarAppsModal isOpen={showAppsModal} onClose={closeAppsModal} />

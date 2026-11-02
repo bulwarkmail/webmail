@@ -61,6 +61,8 @@ interface CalendarToolbarProps {
   mobileSearchField?: ReactNode;
   /** Phones: closes the search row. */
   onCloseSearch?: () => void;
+  /** The plugin side panel's button, at the very end of the row (desktop and tablet). */
+  panelToggle?: ReactNode;
 }
 
 // Shortcut keys handled by the calendar app (see its keydown handler).
@@ -101,6 +103,7 @@ export function CalendarToolbar({
   onOpenSearch,
   mobileSearchField,
   onCloseSearch,
+  panelToggle,
 }: CalendarToolbarProps) {
   const t = useTranslations("calendar");
   const paint = useCvdColor();
@@ -484,6 +487,9 @@ export function CalendarToolbar({
           ))}
         </ContextMenu>
       </div>
+
+      {/* The row is px-3; the margin puts the button where the reader has it (px-4, lg:px-6). */}
+      {panelToggle && <div className="flex items-center ms-1 me-1 lg:me-3" data-panel-toggle-slot="">{panelToggle}</div>}
     </div>
   );
 }

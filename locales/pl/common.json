@@ -843,6 +843,7 @@
     "mv_position": "{index} z {total}",
     "plugin_panel_show": "Pokaż panel wtyczki",
     "plugin_panel_hide": "Ukryj panel wtyczki",
+    "plugin_panel": "Panel wtyczki",
     "copy": "Kopiuj",
     "contact_added": "Dodano kontakt",
     "save_to_files": {
@@ -5976,6 +5977,10 @@
       "ui_email_details": {
         "title": "Panele w szczegółach wiadomości",
         "body": "Pokazuje własny panel obok lub pod otwartą wiadomością."
+      },
+      "ui_side_panel": {
+        "title": "Dodawanie panelu do innych widoków",
+        "body": "Wyświetlanie własnego panelu obok Kalendarza, Kontaktów, Plików i Ustawień."
       },
       "ui_download_file": {
         "title": "Zapisywanie plików na urządzeniu",

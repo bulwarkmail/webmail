@@ -49,7 +49,8 @@ export function slotPropsFor(
   slot: SlotName,
   props: Record<string, unknown>,
 ): Record<string, unknown> {
-  const allowed = slotSpec(slot)?.props;
+  const spec = slotSpec(slot);
+  const allowed = spec?.props;
   if (allowed === '*') return props;
   if (!allowed) return {};
   const out: Record<string, unknown> = {};
@@ -57,7 +58,23 @@ export function slotPropsFor(
     if (!Object.prototype.hasOwnProperty.call(allowed, key)) continue;
     const perm = allowed[key];
     if (perm && !pluginHasPermission(plugin, perm)) continue;
-    out[key] = value;
+    const fields = spec?.fields?.[key];
+    out[key] = fields ? fieldsFor(plugin, fields, value) : value;
+  }
+  return out;
+}
+
+// A prop made of parts with their own permissions (the app-side-panel's
+// context: an event, a contact, files): only the parts the plugin may see,
+// and none the catalogue doesn't name.
+function fieldsFor(plugin: InstalledPlugin, fields: Record<string, Permission | null>, value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  const out: Record<string, unknown> = {};
+  for (const [field, part] of Object.entries(value as Record<string, unknown>)) {
+    if (!Object.prototype.hasOwnProperty.call(fields, field)) continue;
+    const perm = fields[field];
+    if (perm && !pluginHasPermission(plugin, perm)) continue;
+    out[field] = part;
   }
   return out;
 }

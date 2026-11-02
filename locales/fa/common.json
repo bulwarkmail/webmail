@@ -843,6 +843,7 @@
     "mv_position": "{index} از {total}",
     "plugin_panel_show": "نمایش پنل افزونه",
     "plugin_panel_hide": "پنهان کردن پنل افزونه",
+    "plugin_panel": "پنل افزونه",
     "copy": "کپی",
     "contact_added": "مخاطب افزوده شد",
     "save_to_files": {
@@ -5976,6 +5977,10 @@
       "ui_email_details": {
         "title": "افزودن پنل به جزئیات پیام",
         "body": "نمایش پنل خودش کنار یا زیر پیام باز."
+      },
+      "ui_side_panel": {
+        "title": "افزودن پنل به نماهای دیگر",
+        "body": "نمایش پنل خودش در کنار تقویم، مخاطبان، فایل‌ها و تنظیمات."
       },
       "ui_download_file": {
         "title": "ذخیره فایل در دستگاه شما",

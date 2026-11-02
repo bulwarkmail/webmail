@@ -843,6 +843,7 @@
     "mv_position": "{index} sur {total}",
     "plugin_panel_show": "Afficher le panneau du plugin",
     "plugin_panel_hide": "Masquer le panneau du plugin",
+    "plugin_panel": "Panneau du plugin",
     "copy": "Copier",
     "contact_added": "Contact ajouté",
     "save_to_files": {
@@ -5976,6 +5977,10 @@
       "ui_email_details": {
         "title": "Ajouter des panneaux aux détails des messages",
         "body": "Afficher son propre panneau à côté ou en dessous d'un message ouvert."
+      },
+      "ui_side_panel": {
+        "title": "Ajouter un panneau aux autres vues",
+        "body": "Afficher son propre panneau à côté de l’Agenda, des Contacts, des Fichiers et des Paramètres."
       },
       "ui_download_file": {
         "title": "Enregistrer des fichiers sur votre appareil",

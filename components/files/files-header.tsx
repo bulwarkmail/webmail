@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import {
   Menu, ChevronRight, Search, X, ArrowUpDown, Check, LayoutGrid, LayoutList,
@@ -84,6 +84,8 @@ interface FilesHeaderProps {
   selection: SelectionActions | null;
   /** In the trash: the Empty trash button. */
   emptyTrash?: { onEmpty: () => void; disabled: boolean };
+  /** The plugin side panel's button, after the details button (desktop and tablet). */
+  panelToggle?: ReactNode;
 }
 
 const MAX_VISIBLE_CRUMBS = 3;
@@ -114,6 +116,7 @@ export function FilesHeader({
   toolsHidden,
   selection,
   emptyTrash,
+  panelToggle,
 }: FilesHeaderProps) {
   const t = useTranslations("files");
   const sortMenu = useContextMenu<null>();
@@ -122,6 +125,8 @@ export function FilesHeader({
   const [dropCrumb, setDropCrumb] = useState<string | null>(null);
 
   const headerClass = "flex items-center gap-1 px-3 h-14 box-content border-b border-border min-w-0 flex-shrink-0";
+  // The row is px-3; the margin puts the button where the reader has it (px-4, lg:px-6).
+  const toggleSlot = panelToggle ? <div className="flex items-center shrink-0 me-1 lg:me-3" data-panel-toggle-slot="">{panelToggle}</div> : null;
 
   if (selection) {
     return (
@@ -169,6 +174,7 @@ export function FilesHeader({
         {compact && !selection.trash && <SelectionPluginActions files={selection.pluginFiles} mimeType={selection.pluginMimeType} overflow />}
         <div className="flex-1" />
         <DetailsToggle showDetails={showDetails} onToggle={onToggleDetails} label={t("details")} />
+        {toggleSlot}
       </div>
     );
   }
@@ -360,6 +366,7 @@ export function FilesHeader({
             </ToolbarButton>
           )}
           <DetailsToggle showDetails={showDetails} onToggle={onToggleDetails} label={t("details")} />
+          {toggleSlot}
           <PhoneHeaderActions
             below="md"
             menuItems={(close) => (

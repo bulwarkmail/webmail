@@ -843,6 +843,7 @@
     "mv_position": "{index} von {total}",
     "plugin_panel_show": "Plugin-Bereich einblenden",
     "plugin_panel_hide": "Plugin-Bereich ausblenden",
+    "plugin_panel": "Plugin-Bereich",
     "copy": "Kopieren",
     "contact_added": "Kontakt hinzugefügt",
     "save_to_files": {
@@ -5976,6 +5977,10 @@
       "ui_email_details": {
         "title": "Bereiche zu Nachrichtendetails hinzufügen",
         "body": "Einen eigenen Bereich neben oder unter einer geöffneten Nachricht anzeigen."
+      },
+      "ui_side_panel": {
+        "title": "Bereiche in anderen Ansichten hinzufügen",
+        "body": "Einen eigenen Bereich neben Kalender, Kontakten, Dateien und Einstellungen anzeigen."
       },
       "ui_download_file": {
         "title": "Dateien auf Ihrem Gerät speichern",

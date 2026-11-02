@@ -843,6 +843,7 @@
     "mv_position": "{index} / {total}",
     "plugin_panel_show": "플러그인 패널 표시",
     "plugin_panel_hide": "플러그인 패널 숨기기",
+    "plugin_panel": "플러그인 패널",
     "copy": "복사",
     "contact_added": "연락처를 추가했어요",
     "save_to_files": {
@@ -5976,6 +5977,10 @@
       "ui_email_details": {
         "title": "메시지 세부 정보에 패널 추가",
         "body": "열어 본 메시지 옆이나 아래에 자체 패널을 표시해요."
+      },
+      "ui_side_panel": {
+        "title": "다른 보기에 패널 추가",
+        "body": "캘린더, 연락처, 파일, 설정 옆에 자체 패널을 표시합니다."
       },
       "ui_download_file": {
         "title": "기기에 파일 저장",
