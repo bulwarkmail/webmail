@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import process from 'node:process';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { buildFocusViews } from './plugins/focus-inbox/views';
+import { accountScope, buildFocusViews, type FocusSettings } from './plugins/focus-inbox/views';
 import { activate, hooks } from './plugins/focus-inbox';
 import { resolveTabFilter, useMessageListTabsStore, validateTabsConfig } from '../stores/message-list-tabs-store';
 import { readPluginPackage } from '../lib/extension-package';
@@ -12,17 +12,18 @@ const manifest = JSON.parse(readFileSync(resolve('.memail/plugins/focus-inbox/ma
 const t = (key:string) => manifest.locales.en[key];
 const config = () => buildFocusViews({},t)!;
 function mockApi() {
-  let settingChanged: (s:Record<string,boolean>)=>void = ()=>{};
+  let settingChanged: (s:FocusSettings)=>void = ()=>{};
   let localeChanged = ()=>{};
   const api = {
     tabs:{getState:vi.fn().mockResolvedValue({tabs:[]}),set:vi.fn().mockResolvedValue(undefined),clear:vi.fn().mockResolvedValue(undefined)},
     ui:{setActions:vi.fn().mockResolvedValue(undefined)},
-    plugin:{settings:{},onSettingsChange:(cb:typeof settingChanged)=>{settingChanged=cb;}},
+    user:{getSelf:vi.fn().mockResolvedValue({email:'alice@example.com'})},
+    plugin:{settings:{} as FocusSettings,onSettingsChange:(cb:typeof settingChanged)=>{settingChanged=cb;}},
     i18n:{t,onLocaleChange:(cb:()=>void)=>{localeChanged=cb;}},
     toast:{warning:vi.fn()},
     log:{error:vi.fn()},
   };
-  return {api,settings:(s:Record<string,boolean>)=>settingChanged(s),locale:()=>localeChanged()};
+  return {api,settings:(s:FocusSettings)=>settingChanged(s),locale:()=>localeChanged()};
 }
 afterEach(()=>{useMessageListTabsStore.getState().clearTabs(manifest.id);});
 describe('native focus view compatibility',()=>{
@@ -86,7 +87,7 @@ describe('sandbox lifecycle',()=>{
     expect(api.ui.setActions).toHaveBeenLastCalledWith('command-palette',[expect.objectContaining({label:t('action.show')})]);
     await hooks.onAction({actionId:'toggle-focus-tabs'});
     expect(api.tabs.set).toHaveBeenCalledTimes(2);
-    expect(manifest.permissions).toEqual(['ui:message-list-tabs','ui:commands']);
+    expect(manifest.permissions).toEqual(['ui:message-list-tabs','ui:commands','account:read']);
   });
   it('updates settings and locale without reviving disabled views',async()=>{
     const control=mockApi(); await activate(control.api);
@@ -120,4 +121,70 @@ it('installs the actual built ZIP through the upstream package validator',async(
   expect(result.manifest.id).toBe(manifest.id);
   expect(result.warnings).toEqual([]);
   expect(result.code).toContain('activate');
+});
+
+describe('configurable focus rules',()=>{
+  it.each(['Unread correspondence and starred','All unread and starred','Starred only'] as const)('%s follows its documented membership',mode=>{
+    const view=buildFocusViews({focusMode:mode},t)!;
+    for(const read of [false,true]) for(const star of [false,true]) for(const newsletter of [false,true]) {
+      const expected=star || (mode!=='Starred only' && !read && (mode==='All unread and starred' || !newsletter));
+      expect(matches(view.tabs[1].query!,{read,star,newsletter,size:100})).toBe(expected);
+      expect(matches(view.tabs[0].query!,{read,star,newsletter,size:100})).toBe(true);
+    }
+    expect(validateTabsConfig(view).tabs).toHaveLength(3);
+  });
+  it('normalizes literal account names and rejects unsupported input',()=>{
+    expect(accountScope(' Alice@Example.com, work-alice ; ALICE@example.com ')).toEqual(['alice@example.com','work-alice']);
+    expect(accountScope('')).toEqual([]);
+    expect(accountScope(undefined)).toEqual([]);
+    for(const invalid of [',,;','*@example.com','Alice <alice@example.com>','alice bob',123,'a'.repeat(255),Array.from({length:21},(_,i)=>`user${i}`).join(',')]) {
+      expect(()=>accountScope(invalid)).toThrow('error.accountScope');
+    }
+    expect(()=>buildFocusViews({focusMode:'unknown' as never},t)).toThrow('error.focusMode');
+  });
+  it('applies only to the selected sign-in names and reevaluates account switches',async()=>{
+    const control=mockApi(); control.api.plugin.settings={accountNames:'Alice@Example.com'};
+    await activate(control.api);
+    expect(control.api.tabs.set).toHaveBeenCalledOnce();
+    control.api.user.getSelf.mockResolvedValue({email:'bob@example.com'});
+    await hooks.onAccountSwitch();
+    expect(control.api.tabs.set).toHaveBeenCalledOnce();
+    expect(control.api.ui.setActions).toHaveBeenLastCalledWith('command-palette',[]);
+    control.api.user.getSelf.mockResolvedValue({email:'ALICE@EXAMPLE.COM'});
+    await hooks.onAccountSwitch();
+    expect(control.api.tabs.set).toHaveBeenCalledTimes(2);
+  });
+  it('does not look up account identity when the scope is empty',async()=>{
+    const {api}=mockApi(); await activate(api);
+    expect(api.user.getSelf).not.toHaveBeenCalled();
+  });
+  it('drops an outdated identity lookup instead of registering the previous account rules',async()=>{
+    const control=mockApi(); await activate(control.api);
+    let finish:(value:{email:string})=>void = ()=>{};
+    control.api.user.getSelf.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));
+    control.settings({accountNames:'alice@example.com'});
+    await vi.waitFor(()=>expect(control.api.user.getSelf).toHaveBeenCalledOnce());
+    control.api.user.getSelf.mockResolvedValue({email:'bob@example.com'});
+    const switched=hooks.onAccountSwitch();
+    finish({email:'alice@example.com'});
+    await switched;
+    expect(control.api.tabs.set).toHaveBeenCalledTimes(1);
+    expect(control.api.ui.setActions).toHaveBeenLastCalledWith('command-palette',[]);
+  });
+  it('clears old filters and presents a useful error on invalid settings, then recovers',async()=>{
+    const control=mockApi(); await activate(control.api);
+    control.settings({accountNames:'*@example.com'});
+    await vi.waitFor(()=>expect(control.api.toast.warning).toHaveBeenCalledWith(t('error.accountScope')));
+    expect(control.api.tabs.clear).toHaveBeenCalled();
+    expect(control.api.ui.setActions).toHaveBeenLastCalledWith('command-palette',[]);
+    control.settings({focusMode:'Starred only'});
+    await vi.waitFor(()=>expect(control.api.tabs.set).toHaveBeenLastCalledWith(buildFocusViews({focusMode:'Starred only'},t)));
+  });
+  it('clears old views if the account lookup fails',async()=>{
+    const control=mockApi(); control.api.plugin.settings={accountNames:'alice@example.com'};
+    control.api.user.getSelf.mockRejectedValueOnce(new Error('Session unavailable'));
+    await expect(activate(control.api)).rejects.toThrow('Session unavailable');
+    expect(control.api.tabs.set).not.toHaveBeenCalled();
+    expect(control.api.ui.setActions).toHaveBeenLastCalledWith('command-palette',[]);
+  });
 });

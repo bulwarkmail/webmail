@@ -5,12 +5,12 @@ A sandboxed Bulwark plugin contributing native Inbox tabs. It does not replace t
 ## Views
 
 - **All inbox** includes every message in the current Inbox, including read mail and newsletters. It is not All mail across every folder.
-- **Focus** includes starred messages and unread messages without a List-Unsubscribe header.
+- **Focus** defaults to starred messages and unread messages without a List-Unsubscribe header. In settings, choose All unread and starred or Starred only instead; the tab label updates to describe that choice.
 - **Newsletters** includes messages with a List-Unsubscribe header. This is a header-based heuristic, not a guarantee that a message is a newsletter. A starred newsletter appears in both Focus and Newsletters.
 
 Tab badges are unread counts, not message totals. Reading an unstarred message can remove it from Focus; this view is not a persistent task list. Use Star if it should remain there. The host scopes queries to the current mailbox and evaluates them server-side, including subsequent pages. The tabs are hidden in search, tag and unified views, as required by Bulwark's current native tab contract.
 
-No message is moved, relabeled, marked read or sent by this plugin. It requests only `ui:message-list-tabs` and `ui:commands`, with no mail-body, email-write, send, HTTP or credential permissions.
+No message is moved, relabeled, marked read or sent by this plugin. It requests `ui:message-list-tabs`, `ui:commands` and `account:read`. Account metadata is used only to match the optional account list. It has no mail-body, email-write, send, HTTP or credential permissions. Updating from 0.1.0 adds account metadata permission; review/approve the updated package in the host.
 
 ## Package and install
 
@@ -22,9 +22,13 @@ node .memail/package-focus-plugin.mjs
 
 Upload `out/memail-focus-inbox.zip` using Bulwark's existing plugin upload UI. The full edition, Bulwark 1.19.1 or later, and an administrator's plugin policy/approval are required. Lite does not run plugins. Enable the plugin, then open a normal Inbox folder. No production policy is changed by packaging.
 
-The host settings UI exposes Show focus tabs, Show Newsletters view and Show unread counts. Settings and labels use the host UI; English is the initial locale, with fallback for other languages. Custom translations and account-specific rules are subsequent work.
+The host settings UI exposes Show focus tabs, Show Newsletters view and Show unread counts. Settings and labels use the host UI; English is the initial locale, with fallback for other languages. Focus includes selects the rule preset. Apply to accounts accepts up to 20 literal sign-in names separated by commas (or semicolons); leave empty to apply everywhere. Invalid settings pause the views and show a warning; fixing the settings restores them. Custom translations and per-account rule profiles are subsequent work.
 
 The command palette includes Hide Memail focus tabs / Show Memail focus tabs. Hiding pauses this plugin for its current activation; reloading or changing its settings restores the configured default. Standard native tab keyboard and phone behavior comes from Bulwark.
+
+## Account scope
+
+Scope matches the active login name returned by the host, case-insensitively. Use the username you sign in with, which may be an email address or a short username; aliases and display names are not inferred. This scopes one configuration to a chosen list, not a separate profile for every account. Shared Inbox folders follow their signed-in login, and identical login names on different servers both match. This is a display preference, not an authorization boundary. Switching accounts rechecks the scope and drops outdated asynchronous results.
 
 ## Other category plugins
 
@@ -52,4 +56,4 @@ The package test rebuilds the ZIP automatically, so a clean checkout does not ne
 
 ## Next slice
 
-Validate installation in a disposable full-edition Stalwart deployment. Then add user-defined, account-scoped rules and saved-view export/import through plugin settings, keeping the query semantics explicit. Durable reminders remain a separate server-side phase.
+Validate installation in a disposable full-edition Stalwart deployment. Then add per-account rule profiles and saved-view export/import through plugin settings, keeping the query semantics explicit. Durable reminders remain a separate server-side phase.

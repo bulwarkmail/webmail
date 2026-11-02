@@ -11,3 +11,10 @@
 - Browser plugin installation, live Stalwart integration, cross-device preferences, accessibility acceptance and performance budgets remain unverified.
 
 The preview is in draft PR #3. Phase 0 and full phase 1 acceptance are not complete. The next milestone is an installed-plugin smoke on a disposable full-edition Stalwart deployment, followed by account-scoped custom rules.
+
+## Focus rules polish (0.2.0)
+
+- Focus mode presets, optional sign-in-name account targeting, dynamic labels, stale-account protection and visible settings errors are implemented.
+- 56 targeted tests passed across the plugin, host tab/refresh contracts and theme. Typecheck and downstream lint passed.
+- The updated package adds account:read permission for optional identity matching; it adds no mail-body, send, mutation or network access.
+- Real Stalwart and browser installation acceptance remain outstanding; the Docker engine is not running in this environment.
