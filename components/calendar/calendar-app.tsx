@@ -1868,7 +1868,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     // The calendars are loading: the view's grid in the skeleton's shapes,
     // where the real one is about to be drawn.
     if (isLoading && calendars.length === 0) {
-      return <CalendarViewSkeleton view={normalizedViewMode} label={t("status.loading_calendars")} />;
+      return <CalendarViewSkeleton view={normalizedViewMode} label={t("status.loading_calendars")} text={skeletonText} />;
     }
 
     const viewContent = (() => {

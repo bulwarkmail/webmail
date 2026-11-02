@@ -53,6 +53,12 @@ export interface CalendarSkeletonText {
   views?: Record<CalendarViewMode, string>;
   /** calendar.tasks.label: the sidebar's tasks entry. */
   tasks?: string;
+  /** calendar.tasks.filter_all, _pending, _completed, _overdue */
+  taskFilters?: [string, string, string, string];
+  /** calendar.tasks.create */
+  newTask?: string;
+  /** calendar.tasks.quick_add_placeholder */
+  quickAdd?: string;
 }
 
 const MODES: CalendarViewMode[] = ["month", "week", "day", "agenda", "tasks"];
@@ -71,6 +77,9 @@ export function calendarSkeletonText(t: (key: string) => string): CalendarSkelet
       tasks: t("views.tasks"),
     },
     tasks: t("tasks.label"),
+    taskFilters: [t("tasks.filter_all"), t("tasks.filter_pending"), t("tasks.filter_completed"), t("tasks.filter_overdue")],
+    newTask: t("tasks.create"),
+    quickAdd: t("tasks.quick_add_placeholder"),
   };
 }
 
@@ -152,6 +161,16 @@ function Line({ className, bar, w }: { className: string; bar: string; w: string
   );
 }
 
+/** The toolbar's title: a date range (a placeholder), or "Tasks" in the tasks view. */
+function Title({ tasks, w }: { tasks?: string; w: string }) {
+  return (
+    <>
+      <Bar className={cn("h-3", tasks && "boot-cal-tasks:hidden")} w={w} />
+      {tasks ? <span className="hidden boot-cal-tasks:inline truncate">{tasks}</span> : null}
+    </>
+  );
+}
+
 /** CalendarToolbar: the 57px desktop and tablet row, the two-row phone header. */
 function ToolbarSkeleton({ text }: { text?: CalendarSkeletonText }) {
   const views = text?.views;
@@ -174,7 +193,9 @@ function ToolbarSkeleton({ text }: { text?: CalendarSkeletonText }) {
         <ToolbarIcon className={NOT_TASKS}>
           <ChevronRight />
         </ToolbarIcon>
-        <Line className="ms-2 h-6 min-w-0" bar="h-3.5" w="9rem" />
+        <span className="flex items-center ms-2 h-6 min-w-0 text-base font-semibold">
+          <Title tasks={views?.tasks} w="9rem" />
+        </span>
         <div className="flex-1" />
         <span
           className={cn(
@@ -211,11 +232,9 @@ function ToolbarSkeleton({ text }: { text?: CalendarSkeletonText }) {
               <ChevronLeft />
             </PhoneIcon>
             {/* Below 400px the title takes a line of its own. */}
-            <Line
-              className="flex-1 justify-center h-5 min-w-0 max-[25rem]:order-first max-[25rem]:basis-full max-[25rem]:ps-1 max-[25rem]:justify-start"
-              bar="h-3"
-              w="5rem"
-            />
+            <span className="flex flex-1 items-center justify-center h-5 min-w-0 text-sm font-semibold max-[25rem]:order-first max-[25rem]:basis-full max-[25rem]:ps-1 max-[25rem]:justify-start">
+              <Title tasks={views?.tasks} w="5rem" />
+            </span>
             <PhoneIcon className={NOT_TASKS}>
               <ChevronRight />
             </PhoneIcon>
@@ -476,22 +495,42 @@ function AgendaSkeleton({ className }: { className: string }) {
 }
 
 /** The tasks view: TaskToolbar and TaskListView. */
-function TasksSkeleton({ className }: { className: string }) {
+function TasksSkeleton({ className, text }: ViewProps) {
+  const filters = text?.taskFilters;
   return (
     <div aria-hidden="true" className={cn("flex-col flex-1 min-h-0 overflow-hidden", className)}>
       <div className="flex items-center gap-2 px-4 min-h-14 box-content border-b border-border flex-wrap">
+        {/* The filter starts at "all" on every load (stores/task-store.ts). */}
         <div className="flex border border-border rounded-md overflow-hidden">
-          {repeat(4, () => (
-            <Line className="h-7 px-3" bar="h-2" w="2.5rem" />
+          {repeat(4, (i) => (
+            <span
+              className={cn(
+                "flex items-center h-7 px-3 text-xs font-medium",
+                i === 0 ? "bg-primary text-primary-foreground" : "text-muted-foreground",
+              )}
+            >
+              {filters ? filters[i] : <Bar className="h-2" w="2.5rem" />}
+            </span>
           ))}
         </div>
         <div className="flex-1" />
-        <Block className="h-9" w="6.5rem" />
+        {text?.newTask ? (
+          <span className="flex items-center h-9 px-3 rounded-md bg-primary text-primary-foreground text-sm font-medium shadow-sm">
+            <Plus className="w-4 h-4 me-1" />
+            {text.newTask}
+          </span>
+        ) : (
+          <Block className="h-9" w="6.5rem" />
+        )}
       </div>
       <div className="px-4 py-2 border-b border-border">
         <div className="flex items-center gap-2 h-5">
           <Plus className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-          <Bar className="h-2.5" w="10rem" />
+          {text?.quickAdd ? (
+            <span className="text-sm text-muted-foreground truncate">{text.quickAdd}</span>
+          ) : (
+            <Bar className="h-2.5" w="10rem" />
+          )}
         </div>
       </div>
       <div className="divide-y divide-border">
@@ -509,7 +548,12 @@ function TasksSkeleton({ className }: { className: string }) {
   );
 }
 
-const VIEWS: Record<CalendarViewMode, (props: { className: string }) => ReactNode> = {
+interface ViewProps {
+  className: string;
+  text?: CalendarSkeletonText;
+}
+
+const VIEWS: Record<CalendarViewMode, (props: ViewProps) => ReactNode> = {
   month: MonthSkeleton,
   week: WeekSkeleton,
   day: DaySkeleton,
@@ -523,15 +567,23 @@ const VIEWS: Record<CalendarViewMode, (props: { className: string }) => ReactNod
  * with `label` as its status); without, the one `data-boot-calendar-view`
  * names.
  */
-export function CalendarViewSkeleton({ view, label }: { view?: CalendarViewMode; label?: string }) {
+export function CalendarViewSkeleton({
+  view,
+  label,
+  text,
+}: {
+  view?: CalendarViewMode;
+  label?: string;
+  text?: CalendarSkeletonText;
+}) {
   return (
     <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden" data-calendar-view-skeleton={view ?? ""} aria-busy="true">
       {label ? <span role="status" className="sr-only">{label}</span> : null}
       {view
-        ? VIEWS[view]({ className: "flex" })
+        ? VIEWS[view]({ className: "flex", text })
         : (Object.keys(VIEWS) as CalendarViewMode[]).map((v) => {
             const View = VIEWS[v];
-            return <View key={v} className={VIEW_SHOWN[v]} />;
+            return <View key={v} className={VIEW_SHOWN[v]} text={text} />;
           })}
     </div>
   );
@@ -552,7 +604,7 @@ export function CalendarSkeletonBody({ embedded = false, text }: { embedded?: bo
           <ToolbarSkeleton text={text} />
           <div className="relative flex flex-1 overflow-hidden isolate">
             <div className="flex flex-1 min-w-0">
-              <CalendarViewSkeleton />
+              <CalendarViewSkeleton text={text} />
             </div>
             {/* The floating create button of a phone. */}
             <span className="md:hidden absolute bottom-4 end-4 z-40 flex items-center justify-center h-14 w-14 rounded-full shadow-lg bg-primary text-primary-foreground">

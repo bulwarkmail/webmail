@@ -138,17 +138,19 @@
 @supports (height: round(down, 1.5px, 1px)) and (height: 1cqh) {
   .sk-cal-week,
   .sk-cal-day {
-    --sk-fit: round(down, (100cqh - var(--sk-head)) / var(--boot-cal-hours, 12), 1px);
+    /* clientHeight, a whole number of pixels */
+    --sk-pane: round(nearest, 100cqh, 1px);
+    --sk-fit: round(down, (var(--sk-pane) - var(--sk-head)) / var(--boot-cal-hours, 12), 1px);
     --sk-hour: max(var(--sk-fit), clamp(0px, (var(--sk-hour-floor) - var(--sk-fit)) * 1000, var(--sk-hour-min)));
     /* The scroll the grid opens at: an hour before now, at most to the end. */
     --sk-shift: clamp(
       0px,
       var(--boot-cal-scroll, -1) * var(--sk-hour-min) - 8px,
-      var(--boot-cal-hours, 12) * var(--sk-hour) - (100cqh - var(--sk-head))
+      var(--boot-cal-hours, 12) * var(--sk-hour) - (var(--sk-pane) - var(--sk-head))
     );
   }
   .sk-cal-month {
-    --sk-week: max(var(--sk-week-min), round(down, (100cqh - var(--sk-head)) / 6, 1px));
+    --sk-week: max(var(--sk-week-min), round(down, (round(nearest, 100cqh, 1px) - var(--sk-head)) / 6, 1px));
   }
 }
 .sk-cal-hours {
