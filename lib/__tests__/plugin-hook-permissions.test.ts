@@ -43,7 +43,7 @@ vi.mock('../plugin-sandbox/shortcuts', () => ({ registerShortcuts: () => () => {
 
 import { loadSandboxedPlugin, unloadSandboxedPlugin, setSandboxStoreAccessor } from '../plugin-sandbox/loader';
 import { get as getActive } from '../plugin-sandbox/registry';
-import { emailHooks, renderHooks, appLifecycleHooks } from '../plugin-hooks';
+import { emailHooks, renderHooks, appLifecycleHooks, calendarHooks } from '../plugin-hooks';
 import { hookPermission, mayOfferSlot, mayRegisterHook, pluginHasPermission } from '../plugin-sandbox/permissions';
 import { useEmailStore } from '@/stores/email-store';
 import type { Email } from '../jmap/types';
@@ -140,6 +140,74 @@ describe('a message that is already open', () => {
     useEmailStore.setState({ selectedEmail: null });
     await loadSandboxedPlugin(plugin({ permissions: ['email:read'] }));
     expect((mocks.invokeHook as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(0);
+  });
+});
+
+describe('reminders', () => {
+  const eventAlert = { id: 'a1', eventId: 'e1', eventTitle: 'Dentist', triggerTime: '2026-10-31T08:00:00.000Z' };
+  const taskAlert = { id: 'follow-up', taskId: 't1', taskTitle: 'Call back Anna', triggerTime: '2026-10-31T08:00:00.000Z' };
+  const reminderHooks = ['onBeforeCalendarAlert', 'onCalendarAlert', 'onCalendarAlertAcknowledge'];
+
+  function calls(): unknown[][] {
+    return (mocks.invokeHook as ReturnType<typeof vi.fn>).mock.calls;
+  }
+
+  it.each(['onCalendarAlert', 'onCalendarAlertAcknowledge'])('%s may be registered with calendar:read or tasks:read', (hook) => {
+    expect(mayRegisterHook(plugin({ permissions: ['calendar:read'] }), hook)).toBe(true);
+    expect(mayRegisterHook(plugin({ permissions: ['tasks:read'] }), hook)).toBe(true);
+    expect(mayRegisterHook(plugin({ permissions: ['email:read'] }), hook)).toBe(false);
+  });
+
+  it('lets only a plugin that may change the calendar or the tasks take a reminder over', () => {
+    expect(mayRegisterHook(plugin({ permissions: ['calendar:read', 'tasks:read'] }), 'onBeforeCalendarAlert')).toBe(false);
+    expect(mayRegisterHook(plugin({ permissions: ['calendar:write'] }), 'onBeforeCalendarAlert')).toBe(true);
+    expect(mayRegisterHook(plugin({ permissions: ['tasks:write'] }), 'onBeforeCalendarAlert')).toBe(true);
+  });
+
+  it("hands a plugin with tasks:read a task's reminder only", async () => {
+    mocks.background.hooks = reminderHooks;
+    await loadSandboxedPlugin(plugin({ permissions: ['tasks:read'] }));
+
+    await calendarHooks.onCalendarAlert.emit(eventAlert);
+    await calendarHooks.onCalendarAlertAcknowledge.emit({ alertId: 'a1', eventId: 'e1' });
+    expect(calls()).toHaveLength(0);
+
+    await calendarHooks.onCalendarAlert.emit(taskAlert);
+    await calendarHooks.onCalendarAlertAcknowledge.emit({ alertId: 'follow-up', taskId: 't1' });
+    expect(calls().map((c) => c[0])).toEqual(['onCalendarAlert', 'onCalendarAlertAcknowledge']);
+  });
+
+  it("lets a plugin with tasks:write silence a task's reminder, never an event's", async () => {
+    mocks.background.hooks = ['onBeforeCalendarAlert'];
+    await loadSandboxedPlugin(plugin({ permissions: ['tasks:read', 'tasks:write', 'calendar:read'] }));
+    (mocks.invokeHook as ReturnType<typeof vi.fn>).mockResolvedValue(false);
+
+    expect(await calendarHooks.onBeforeCalendarAlert.intercept(eventAlert)).toBe(true);
+    expect(calls()).toHaveLength(0);
+    expect(await calendarHooks.onBeforeCalendarAlert.intercept(taskAlert)).toBe(false);
+    expect(calls().map((c) => c[0])).toEqual(['onBeforeCalendarAlert']);
+  });
+
+  it('does not let a plugin that only reads silence a reminder', async () => {
+    mocks.background.hooks = ['onBeforeCalendarAlert'];
+    await loadSandboxedPlugin(plugin({ permissions: ['calendar:read', 'tasks:read'] }));
+    (mocks.invokeHook as ReturnType<typeof vi.fn>).mockResolvedValue(false);
+
+    expect(await calendarHooks.onBeforeCalendarAlert.intercept(eventAlert)).toBe(true);
+    expect(await calendarHooks.onBeforeCalendarAlert.intercept(taskAlert)).toBe(true);
+    expect(calls()).toHaveLength(0);
+  });
+
+  it("hands a plugin with calendar:read an event's reminder only", async () => {
+    mocks.background.hooks = reminderHooks;
+    await loadSandboxedPlugin(plugin({ permissions: ['calendar:read'] }));
+
+    await calendarHooks.onCalendarAlert.emit(taskAlert);
+    await calendarHooks.onCalendarAlertAcknowledge.emit({ alertId: 'follow-up', taskId: 't1' });
+    expect(calls()).toHaveLength(0);
+
+    await calendarHooks.onCalendarAlert.emit(eventAlert);
+    expect(calls().map((c) => c[0])).toEqual(['onCalendarAlert']);
   });
 });
 

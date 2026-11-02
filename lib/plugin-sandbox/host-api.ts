@@ -45,6 +45,7 @@ import { MAX_KEYWORD_LENGTH } from '../keyword-nesting';
 import { emailKeyFor, KEYWORD_PREFIX } from '../thread-utils';
 import { DEFAULT_SEARCH_FILTERS, normalizePluginFilter } from '../jmap/search-utils';
 import { awaitDialog, awaitPrompt, awaitCustomDialog, type PromptField } from './host-dialog';
+import { triggerAnchor } from './dialog-anchor';
 import { fileStorage } from '../plugin-storage';
 import { generateUUID } from '../utils';
 import { AddressBook, ContactCard, Email, Identity } from '../jmap/types';
@@ -68,8 +69,11 @@ import { doUiPrint } from './host-api-print';
 import { doNotificationsShow } from './host-api-notify';
 import { doAccountDataGet, doAccountDataSet, doUserFindPeople, doUserGetMailAccounts, doUserGetSelf } from './host-api-account';
 import { setSectionTitle } from './section-titles';
+import { setSidePanel } from './side-panels';
 import { requestPanel } from './panel-requests';
 import { requestPageNavigation } from './page-navigation';
+import { requestCalendarView } from './calendar-navigation';
+import { requestOpenTask } from './open-task';
 import { requestOpenEmail } from './open-email';
 import { doComposerAttach, doComposerGetBody, doComposerGetSelection, doComposerGetSnapshot, doComposerReadAttachment, doComposerReplaceBody, doComposerReplaceSelection } from './host-api-composer';
 import { wkdAllowed } from '../outgoing-hosts';
@@ -255,9 +259,17 @@ export const PERM_PER_METHOD: Readonly<Record<string, Permission | null>> = {
   'ui.setPages': 'ui:app-page',
   // Move the tab to one of the plugin's own pages (never anywhere else).
   'ui.openPage': 'ui:app-page',
+  // A view of the calendar; the view's own permission is checked per call
+  // (the task view: ui:tasks or tasks:read; the others: ui:calendar-action
+  // or calendar:read).
+  'ui.openCalendar': null,
+  // A task in Bulwark's task editor; ui:tasks or tasks:read, checked per call.
+  'ui.openTask': null,
   // Opening a message shows its content, as reading it does.
   'ui.openEmail': 'email:read',
   'ui.setSectionTitle': 'ui:sidebar-widget',
+  // The button and header of the plugin's side-panel slot beside the mail.
+  'ui.setSidePanel': 'ui:sidebar-widget',
   // Open, close or toggle the panel the plugin's slot sits in; the panel's
   // own permission is checked per call (see the slot catalogue).
   'ui.setPanel': null,
@@ -2051,8 +2063,11 @@ export async function dispatchApiCall(
     case 'ui.setDayLabels': setDayLabels(plugin.id, plugin.name, checkDayLabels(args[0])); return undefined;
     case 'ui.setPages': setPluginPages(plugin.id, plugin.name, checkPages(args[0])); return undefined;
     case 'ui.openPage': return requestPageNavigation(plugin.id, args[0], args[1]);
+    case 'ui.openCalendar': return requestCalendarView(plugin, args[0]);
+    case 'ui.openTask': return requestOpenTask(plugin, args[0]);
     case 'ui.openEmail': return requestOpenEmail(plugin, args[0]);
     case 'ui.setSectionTitle': setSectionTitle(plugin.id, args[0]); return undefined;
+    case 'ui.setSidePanel': setSidePanel(plugin.id, args[0]); return undefined;
     case 'ui.setPanel': {
       const slot = args[0];
       if (typeof slot !== 'string' || !mayOfferSlot(plugin, slot)) throw new Error(`Plugin "${plugin.id}" may not open the panel "${String(slot)}"`);
@@ -2208,7 +2223,7 @@ export async function dispatchApiCall(
       // real app-root overlay, instead of a fixed confirm/prompt form - see
       // the 'plugin-dialog' SlotName / host-dialog.ts comments for why this
       // exists (a small toolbar/row slot can't show a large custom UI).
-      const opts = (args[0] ?? {}) as { title?: string; slot?: string; extraProps?: Record<string, unknown>; width?: number };
+      const opts = (args[0] ?? {}) as { title?: string; slot?: string; extraProps?: Record<string, unknown>; width?: number; anchor?: unknown };
       if (!opts.slot || typeof opts.slot !== 'string') {
         throw new Error('ui.openDialog requires a "slot" name');
       }
@@ -2219,6 +2234,9 @@ export async function dispatchApiCall(
         slot: opts.slot,
         extraProps: (opts.extraProps && typeof opts.extraProps === 'object') ? opts.extraProps : {},
         width: typeof opts.width === 'number' ? opts.width : undefined,
+        // Next to what the user just clicked, when the plugin asks and there
+        // was such a click; the place is the host's, never the plugin's.
+        anchor: opts.anchor === 'trigger' ? triggerAnchor() ?? undefined : undefined,
       });
     }
     case 'ui.rerenderEmail': {
@@ -2323,9 +2341,9 @@ export async function dispatchApiCall(
       return undefined;
     }
 
-    case 'calendar.listCalendars': return doCalendarListCalendars();
-    case 'calendar.getEvents': return doCalendarGetEvents(args[0]);
-    case 'calendar.getEvent': return doCalendarGetEvent(args[0]);
+    case 'calendar.listCalendars': return doCalendarListCalendars(plugin);
+    case 'calendar.getEvents': return doCalendarGetEvents(args[0], plugin);
+    case 'calendar.getEvent': return doCalendarGetEvent(args[0], plugin);
     case 'calendar.createEvent': return doCalendarCreateEvent(args[0], plugin.id);
     case 'calendar.updateEvent': return doCalendarUpdateEvent(args[0], args[1]);
     case 'calendar.deleteEvent': return doCalendarDeleteEvent(args[0]);

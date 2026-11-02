@@ -44,13 +44,14 @@ const S = (
 export const SLOT_CATALOG = {
   // ─── App ───────────────────────────────────────────────────
   'app-top-banner': S('app', 'frame', ['ui:app-top-banner'], { username: 'account:read', serverUrl: 'account:read', impersonated: 'account:read' }, 'a banner across the top of every page; `impersonated` is true when an admin opened the mailbox through an impersonation handoff'),
-  'plugin-dialog': S('dialog', 'frame', ['ui:observe'], '*', 'inside a dialog the plugin opened with api.ui.openDialog'),
+  'plugin-dialog': S('dialog', 'frame', ['ui:observe'], '*', 'inside a dialog the plugin opened with api.ui.openDialog (with `anchor: \'trigger\'` a popover beside what the user clicked)'),
   'command-palette': S('app', 'action', ['ui:commands'], {}, 'entries in the command palette (Ctrl+K)'),
 
   // ─── Navigation ────────────────────────────────────────────
   'navigation-rail-bottom': S('navigation', 'frame', ['ui:navigation-rail'], {}, 'the bottom of the navigation rail'),
   'sidebar-widget': S('navigation', 'frame', ['ui:sidebar-widget'], {}, 'a widget at the bottom of the mail sidebar'),
   'sidebar-section': S('navigation', 'frame', ['ui:sidebar-widget'], { mailboxId: null }, 'a collapsible section in the mail sidebar, below the folders'),
+  'side-panel': S('navigation', 'frame', ['ui:sidebar-widget'], { focusRequest: null }, 'a panel beside the mail (list and reader), opened from its button in the rail at the right edge (Mountain View\'s side panel; in the default layout a rail of its own, desktop only); the button\'s title and icon from api.ui.setSidePanel, else the plugin\'s name, no button with its `rail: false` (then opened by api.ui.openPanel / togglePanel only); the open panel is remembered in this browser; `slots[\'side-panel\'].fill = true` makes the frame as tall as the panel; `focusRequest` counts up when the plugin opened it with api.ui.openPanel(\'side-panel\')'),
   'sidebar-section-actions': S('navigation', 'frame', ['ui:sidebar-widget'], {}, 'compact controls beside a collapsible plugin sidebar-section heading', true),
   'top-bar-actions': S('navigation', 'action', ['ui:toolbar'], {}, 'buttons in the top bar, next to search', true),
   'app-page': S('navigation', 'frame', ['ui:app-page'], { pageId: null, path: null }, 'a full page of its own, with an entry in the navigation rail (api.ui.setPages); api.ui.openPage moves the tab there'),
@@ -106,6 +107,7 @@ export const SLOT_CATALOG = {
   // ─── Tasks ─────────────────────────────────────────────────
   'task-detail-section': S('tasks', 'frame', ['ui:tasks'], { task: 'tasks:read' }, 'a section in a task\'s details'),
   'task-list-actions': S('tasks', 'action', ['ui:tasks'], { taskIds: 'tasks:read' }, 'buttons in the task list toolbar', true),
+  'calendar-task-view': S('tasks', 'frame', ['ui:tasks'], { filter: null, calendarIds: 'tasks:read' }, 'the calendar\'s task view (Calendar › Tasks) below its toolbar, in place of Bulwark\'s task list; the toolbar (filter, new task, task-list-actions) stays; one plugin at a time, the first offering it; `filter` is the toolbar\'s filter ("all" | "pending" | "completed" | "overdue"), `calendarIds` the calendars ticked in the sidebar; `slots[\'calendar-task-view\'].fill = true` makes the frame as tall as the area below the toolbar, so the plugin scrolls inside it; api.ui.openCalendar({ view: \'tasks\' }) opens the view'),
 
   // ─── Files ─────────────────────────────────────────────────
   'file-actions': S('files', 'action', ['ui:files'], { files: 'files:read' }, 'entries in a file\'s menu and the selection toolbar'),

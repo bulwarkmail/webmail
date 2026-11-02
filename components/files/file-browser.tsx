@@ -42,6 +42,7 @@ import type { FileNodeRights } from "@/lib/jmap/types";
 import type { FileResourceView } from "@/lib/plugin-types";
 import { isAppShortcutBlocked, isArrowKeyWidgetTarget } from "@/lib/keyboard";
 import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
+import { FilesListingSkeleton } from "@/components/boot-skeleton/files-skeleton";
 
 const NO_FORMATS: string[] = [];
 
@@ -1079,7 +1080,7 @@ export function FileBrowser({
       );
     }
     // Until the first listing is in, an empty list means "not loaded yet".
-    if ((isLoading || !hasListed) && resources.length === 0) return <ListSkeleton />;
+    if ((isLoading || !hasListed) && resources.length === 0) return <FilesListingSkeleton view={viewMode} />;
     if (showEmpty && searchQuery) return <NoSearchResults query={searchQuery} onClear={() => setSearchQuery("")} />;
     if (showEmpty && inTrash) {
       return <EmptyState icon={Trash2} title={t("trash_empty_title")} description={t("trash_empty_hint")} />;
@@ -1519,21 +1520,6 @@ function SharedWithMe({ folders, pages, onOpen, iconOptions }: {
         ))}
       </div>
     </section>
-  );
-}
-
-function ListSkeleton() {
-  return (
-    <div className="px-4" aria-hidden>
-      <div className="h-9 border-b border-border" />
-      {Array.from({ length: 7 }, (_, i) => (
-        <div key={i} className="h-10 flex items-center gap-3 border-b border-border/60">
-          <div className="w-4 h-4 rounded bg-muted animate-pulse" />
-          <div className="w-5 h-5 rounded bg-muted animate-pulse" />
-          <div className="h-3.5 rounded bg-muted animate-pulse" style={{ width: `${30 + ((i * 37) % 35)}%` }} />
-        </div>
-      ))}
-    </div>
   );
 }
 

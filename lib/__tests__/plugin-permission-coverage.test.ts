@@ -37,7 +37,10 @@ function gatedPermissions(): Map<string, string[]> {
     where.set(perm, [...(where.get(perm) ?? []), by]);
   };
   for (const [method, perm] of Object.entries(PERM_PER_METHOD)) add(perm, `method ${method}`);
-  for (const [hook, spec] of Object.entries(HOOK_CATALOG)) add(spec.permission, `hook ${hook}`);
+  for (const [hook, spec] of Object.entries(HOOK_CATALOG)) {
+    add(spec.permission, `hook ${hook}`);
+    if ('alsoPermission' in spec) add(spec.alsoPermission, `hook ${hook}`);
+  }
   for (const [slot, spec] of Object.entries(SLOT_CATALOG)) {
     for (const perm of spec.permissions) add(perm, `slot ${slot}`);
     if (spec.props === '*') continue;

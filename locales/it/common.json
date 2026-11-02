@@ -1940,6 +1940,14 @@
         "above_quote": "Prima del testo citato",
         "below_quote": "Dopo il testo citato"
       },
+      "signature_new_mail": {
+        "label": "Firma sui nuovi messaggi",
+        "description": "Inserisce automaticamente la firma quando componi un nuovo messaggio. Disattiva per iniziare ogni nuovo messaggio senza."
+      },
+      "signature_reply_forward": {
+        "label": "Firma su risposte e inoltri",
+        "description": "Aggiunge automaticamente la firma quando rispondi o inoltri un messaggio. Disattiva per inviarli senza."
+      },
       "signature_separator": {
         "label": "Delimitatore firma",
         "description": "Anteporre alla firma la riga di delimitazione standard \"-- \" (RFC 3676). Disattiva se preferisci passare direttamente dal messaggio alla firma."
@@ -6059,7 +6067,7 @@
       },
       "ui_tasks": {
         "title": "Aggiungere elementi alla vista attività",
-        "body": "Mostrare le proprie sezioni nei dettagli di un'attività e pulsanti nell'elenco delle attività."
+        "body": "Mostrare le proprie sezioni nei dettagli di un'attività, pulsanti nell'elenco delle attività e un proprio elenco delle attività al posto di quello di Bulwark."
       },
       "ui_files": {
         "title": "Aggiungere elementi alla vista file",

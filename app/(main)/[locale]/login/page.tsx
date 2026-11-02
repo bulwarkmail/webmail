@@ -39,6 +39,8 @@ import { buildMobileHandoffUrl, mobileCodeChallenge, mobileHandoffTarget, signed
 import { requestMobileHandoffCodeUrl } from "@/lib/auth/mobile-handoff-client";
 import { MobileHandoffConsent } from "@/components/auth/mobile-handoff-consent";
 import { HelpLinks } from "@/components/layout/help-links";
+import { LoginSkeleton } from "@/components/boot-skeleton/login-skeleton";
+import { Block } from "@/components/boot-skeleton/kit";
 import { consumeSessionEnd, type SessionEndReason } from "@/lib/session-policy/sign-out-reason";
 
 /** The domain of a complete address (`user@example.com`), or '' while it is still being typed. */
@@ -698,15 +700,10 @@ function LoginPageContent() {
     setShowThemeMenu(false);
   }, [setTheme]);
 
+  // The server HTML, and every visit until /api/config answers: the card's
+  // shape, the same one signed-out visitors of the app pages get first.
   if (configLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/30">
-        <div className="w-full max-w-sm mx-auto px-4 text-center" role="status">
-          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
-          <span className="sr-only">{t("loading")}</span>
-        </div>
-      </div>
-    );
+    return <LoginSkeleton label={t("loading")} />;
   }
 
   if (configError) {
@@ -1533,9 +1530,8 @@ function LoginPageContent() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex justify-center py-4">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                  </div>
+                  // Where the sign-in button goes once the provider answers.
+                  <Block className="w-full h-11 rounded-xl" />
                 )}
               </div>
             ) : (
@@ -1928,8 +1924,9 @@ function LoginPageContent() {
 // useSearchParams() above must sit under a Suspense boundary for the route to
 // prerender (the static Lite build); at runtime the boundary never suspends.
 export default function LoginPage() {
+  const t = useTranslations("login");
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<LoginSkeleton label={t("loading")} />}>
       <LoginPageContent />
     </Suspense>
   );

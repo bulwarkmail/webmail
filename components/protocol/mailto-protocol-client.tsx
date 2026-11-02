@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
+import { MailSkeleton } from "@/components/boot-skeleton/mail-skeleton";
+import type { RailLabels } from "@/components/boot-skeleton/shell";
 import { parseMailto } from "@/lib/protocol-handlers/mailto";
 import { requestOpenMailtoInExistingClient, savePendingMailto } from "@/lib/protocol-handlers/session";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -51,9 +53,11 @@ async function focusExistingClient() {
 
 interface MailtoProtocolClientProps {
   openingText: string;
+  /** The phone bottom bar's labels for the skeleton. */
+  labels?: RailLabels;
 }
 
-export function MailtoProtocolClient({ openingText }: MailtoProtocolClientProps) {
+export function MailtoProtocolClient({ openingText, labels }: MailtoProtocolClientProps) {
   useEffect(() => {
     let cancelled = false;
 
@@ -99,9 +103,7 @@ export function MailtoProtocolClient({ openingText }: MailtoProtocolClientProps)
     };
   }, []);
 
-  return (
-    <main className="flex min-h-screen items-center justify-center">
-      <p>{openingText}</p>
-    </main>
-  );
+  // The mail page this hands over to, where the composer opens: its skeleton,
+  // with the opening text as the status message.
+  return <MailSkeleton label={openingText} labels={labels} />;
 }

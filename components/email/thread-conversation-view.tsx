@@ -35,7 +35,7 @@ import { brandIndicatorDomain } from "@/lib/email-headers";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatFileSize, cn, cleanPreview } from "@/lib/utils";
 import { IconButton } from "@/components/ui/icon-button";
-import { PaneSpinner } from "@/components/ui/spinner";
+import { MailConversationSkeleton } from "@/components/boot-skeleton/mail-skeleton";
 import {
   ArrowLeft,
   ChevronDown,
@@ -245,8 +245,13 @@ export function ThreadConversationView({
   };
 
   if (isLoading) {
-    // One centred spinner for a whole pane (R9).
-    return <PaneSpinner label={t("threads.loading")} className="bg-background" />;
+    // The conversation's shape (the page skeleton's), with one status message.
+    return (
+      <div className="flex flex-col h-full bg-background" aria-busy="true">
+        <span role="status" className="sr-only">{t("threads.loading")}</span>
+        <MailConversationSkeleton />
+      </div>
+    );
   }
 
   return (

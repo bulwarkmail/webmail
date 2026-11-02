@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Loader2, Plus, Trash2, ArrowUp, ArrowDown } from '@/components/icons';
+import { Plus, Trash2, ArrowUp, ArrowDown } from '@/components/icons';
 import { iconForName } from '@/components/icons';
 import type { SettingsPolicy, FeatureGates, PushRelayOption, AdminSidebarApp } from '@/lib/admin/types';
 import { DEFAULT_FEATURE_GATES, DEFAULT_POLICY } from '@/lib/admin/types';
@@ -20,6 +20,7 @@ import { SettingsSection, SettingItem, ToggleSwitch, SectionNav } from '@/compon
 import type { GlossaryId } from '@/components/ui/term';
 import { Button } from '@/components/ui/button';
 import { AdminPageHeader } from '@/components/admin/page-header';
+import { AdminBodySkeleton } from '@/components/boot-skeleton/admin-skeleton';
 import { AdminSaveBar } from '@/components/admin/save-bar';
 import { Badge } from '@/components/admin/badge';
 import { useAdminFeedback } from '@/components/admin/feedback';
@@ -261,9 +262,7 @@ export function PolicyPage() {
 
 
       {loading ? (
-        <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
-          <Loader2 className="me-2 h-4 w-4 animate-spin" /> Loading
-        </div>
+        <AdminBodySkeleton status="Loading" />
       ) : (
         <div className="space-y-10">
           <SectionNav />

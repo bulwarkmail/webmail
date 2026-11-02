@@ -21,7 +21,9 @@ import { toast } from "@/stores/toast-store";
 import { useIsDesktop, useIsMobile } from "@/hooks/use-media-query";
 import { useAccountPrincipalEmails } from "@/hooks/use-account-principal-emails";
 import { Button } from "@/components/ui/button";
-import { PaneSpinner, Spinner } from "@/components/ui/spinner";
+import { CalendarSkeleton, CalendarSkeletonBody, CalendarViewSkeleton, calendarSkeletonText } from "@/components/boot-skeleton/calendar-skeleton";
+import { SkeletonRegion } from "@/components/boot-skeleton/kit";
+import { useSkeletonLabels } from "@/components/boot-skeleton/use-skeleton-labels";
 import { CalendarToolbar } from "@/components/calendar/calendar-toolbar";
 import { CalendarMonthView } from "@/components/calendar/calendar-month-view";
 import { CalendarWeekView } from "@/components/calendar/calendar-week-view";
@@ -30,6 +32,8 @@ import { CalendarAgendaView } from "@/components/calendar/calendar-agenda-view";
 import { TaskListView, filterTasksForList } from "@/components/calendar/task-list-view";
 import { CalendarLoadErrorNotice } from "@/components/calendar/calendar-load-error-notice";
 import { TaskToolbar } from "@/components/calendar/task-toolbar";
+import { PluginTaskView, usePluginTaskView } from "@/components/plugins/plugin-task-view";
+import { onOpenTask } from "@/lib/plugin-sandbox/open-task";
 import { TaskModal } from "@/components/calendar/task-modal";
 import { MiniCalendar } from "@/components/calendar/mini-calendar";
 import { CalendarSidebarPanel } from "@/components/calendar/calendar-sidebar-panel";
@@ -150,6 +154,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const describeError = useCalendarErrorMessage();
   const tSidebar = useTranslations("sidebar");
   useDocumentTitle(tSidebar("calendar"));
+  const skeletonLabels = useSkeletonLabels();
   const tWebcalAction = useTranslations("calendar.webcal_action");
   const { demoMode } = useConfig();
   // Subscriptions fetch the feed through /api/fetch-ical, which the demo has no
@@ -757,6 +762,15 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     setEditTask(task);
     setShowTaskModal(true);
   }), [closeEventPanelForTask, whenEditorsDiscarded]);
+
+  // A plugin drawing the task view opens a task in the editor
+  // (api.ui.openTask), as a click in Bulwark's list does.
+  useEffect(() => onOpenTask((taskId) => {
+    const task = useTaskStore.getState().tasks.find((t) => t.id === taskId);
+    if (!task) return false;
+    openEditTaskModal(task);
+    return true;
+  }), [openEditTaskModal]);
 
   const handleToggleTaskComplete = useCallback((task: CalendarTask) => {
     if (!client) return;
@@ -1764,6 +1778,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     return withCompany;
   }, [events, selectedCalendarIds, showBirthdayCalendar, birthdayEvents, companyEvents]);
 
+  // The plugin drawing the task view's list, if one offers it.
+  const pluginTaskView = usePluginTaskView();
   // The tasks the task list shows; plugin buttons in its toolbar act on them.
   const listedTaskIds = useMemo(
     () => filterTasksForList(taskStore.tasks, selectedCalendarIds, taskStore.filter).map((task) => task.id),
@@ -1845,13 +1861,27 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     </Dialog>
   ) : null;
 
-  if (!isAuthenticated) return null;
+  // Until the session says what the account has, the page is drawn as the
+  // skeleton the server sent (components/boot-skeleton): the same markup, so
+  // nothing moves while the sign-in is restored or the redirects decide.
+  const skeletonText = calendarSkeletonText(t);
+  const skeleton = isEmbedded ? (
+    <SkeletonRegion surface="calendar" label={skeletonLabels.label} className="flex flex-col h-full">
+      <CalendarSkeletonBody embedded text={skeletonText} />
+    </SkeletonRegion>
+  ) : (
+    <CalendarSkeleton label={skeletonLabels.label} labels={skeletonLabels.labels} text={skeletonText} />
+  );
+  if (!isAuthenticated) return skeleton;
+  // Turned off by policy: nothing, while the effect above leaves for mail.
   if (!calendarEnabled) return null;
-  if (!supportsCalendar) return renderWebcalAccountPicker();
+  if (!supportsCalendar) return renderWebcalAccountPicker() ?? skeleton;
 
   const renderView = () => {
+    // The calendars are loading: the view's grid in the skeleton's shapes,
+    // where the real one is about to be drawn.
     if (isLoading && calendars.length === 0) {
-      return <PaneSpinner label={t("status.loading_calendars")} className="flex-1" />;
+      return <CalendarViewSkeleton view={normalizedViewMode} label={t("status.loading_calendars")} text={skeletonText} />;
     }
 
     const viewContent = (() => {
@@ -1968,7 +1998,30 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               onCreateEvent={() => openCreateModal()}
             />
           );
-        case "tasks":
+        case "tasks": {
+          const taskList = (
+            <TaskListView
+              tasks={taskStore.tasks}
+              calendars={displayCalendars}
+              selectedCalendarIds={selectedCalendarIds}
+              filter={taskStore.filter}
+              onSelectTask={openEditTaskModal}
+              onToggleComplete={handleToggleTaskComplete}
+              selectedTaskId={taskStore.selectedTaskId}
+              onQuickCreate={(title) => {
+                // Into a calendar that takes it: the default one, else the
+                // first the user may write to.
+                const target = writableTaskCalendars.find((c) => c.isDefault) ?? writableTaskCalendars[0];
+                if (!client || !target) {
+                  toast.error(t("notifications.task_save_error"));
+                  return;
+                }
+                taskStore.createTask(client, { "@type": "Task", title, progress: "needs-action", calendarIds: { [target.id]: true } })
+                  .then((created) => { if (created) toast.success(t("notifications.task_created")); })
+                  .catch((error: unknown) => toast.error(describeError(error, t("notifications.task_save_error"))));
+              }}
+            />
+          );
           return (
             <div className="flex flex-col h-full">
               {taskStore.error === TASKS_LOAD_ERROR && (
@@ -1981,29 +2034,21 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
                 taskIds={listedTaskIds}
                 compact={isMobile}
               />
-              <TaskListView
-                tasks={taskStore.tasks}
-                calendars={displayCalendars}
-                selectedCalendarIds={selectedCalendarIds}
-                filter={taskStore.filter}
-                onSelectTask={openEditTaskModal}
-                onToggleComplete={handleToggleTaskComplete}
-                selectedTaskId={taskStore.selectedTaskId}
-                onQuickCreate={(title) => {
-                  // Into a calendar that takes it: the default one, else the
-                  // first the user may write to.
-                  const target = writableTaskCalendars.find((c) => c.isDefault) ?? writableTaskCalendars[0];
-                  if (!client || !target) {
-                    toast.error(t("notifications.task_save_error"));
-                    return;
-                  }
-                  taskStore.createTask(client, { "@type": "Task", title, progress: "needs-action", calendarIds: { [target.id]: true } })
-                    .then((created) => { if (created) toast.success(t("notifications.task_created")); })
-                    .catch((error: unknown) => toast.error(describeError(error, t("notifications.task_save_error"))));
-                }}
-              />
+              {/* A plugin may draw the list itself (the calendar-task-view
+                  slot), with Bulwark's list back while its frame is not
+                  drawn; the toolbar above stays Bulwark's. */}
+              {pluginTaskView ? (
+                <PluginTaskView
+                  pluginId={pluginTaskView.pluginId}
+                  fill={pluginTaskView.fill}
+                  filter={taskStore.filter}
+                  calendarIds={selectedCalendarIds}
+                  fallback={taskList}
+                />
+              ) : taskList}
             </div>
           );
+        }
       }
     })();
 
@@ -2013,10 +2058,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           <CalendarLoadErrorNotice onRetry={retryEventsLoad} />
         )}
         {viewContent}
+        {/* The first events: the grid is drawn already and they fill in on
+            it, so this is said rather than shown (a dimmed grid with a
+            spinner flashed between the skeleton and the events). */}
         {isLoadingEvents && calendars.length > 0 && events.length === 0 && (
-          <div className="absolute inset-0 bg-background/50 flex items-center justify-center pointer-events-none">
-            <Spinner label={t("status.loading_events")} />
-          </div>
+          <span role="status" className="sr-only">{t("status.loading_events")}</span>
         )}
       </div>
     );

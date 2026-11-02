@@ -2,6 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
+import { usePathname } from 'next/navigation';
+import { RouteSkeleton } from '@/components/boot-skeleton/route-skeleton';
+import { surfaceFromPath } from '@/lib/boot-skeleton/surfaces';
+import { locales } from '@/i18n/routing';
 import { useLocaleStore } from '@/stores/locale-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { getBrowserTimeZone, resolveTimeZone } from '@/lib/timezone';
@@ -67,6 +71,7 @@ export function IntlProvider({ locale: initialLocale, messages: initialMessages,
   const timeZoneSetting = useSettingsStore((state) => state.timeZone);
   const timeZone = resolveTimeZone(timeZoneSetting, browserTimeZone);
   const plainLanguage = useSettingsStore((state) => state.plainLanguage);
+  const pathname = usePathname();
 
   // The catalog currently in use. Seeded with the server-provided messages for
   // the SSR-resolved locale, so the first render needs no async work and
@@ -159,7 +164,13 @@ export function IntlProvider({ locale: initialLocale, messages: initialMessages,
     [baseMessages, plainMessages]
   );
 
-  if (!catalog) return null;
+  if (!catalog) {
+    // Lite without this locale's catalog yet: no text can be drawn, but the
+    // page's skeleton can (it takes no translations), so the prerendered HTML
+    // still shows the page's shape instead of a blank screen.
+    const surface = pathname ? surfaceFromPath(pathname, locales) : null;
+    return surface ? <RouteSkeleton surface={surface} /> : null;
+  }
 
   return (
     <NextIntlClientProvider

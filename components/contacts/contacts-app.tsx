@@ -53,6 +53,8 @@ import { useDeepLinkUrl } from "@/hooks/use-deep-link-url";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import { useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { ContactsSkeleton, ContactsSkeletonBody } from "@/components/boot-skeleton/contacts-skeleton";
+import { useSkeletonLabels } from "@/components/boot-skeleton/use-skeleton-labels";
 import { useRegisterCommands } from "@/lib/command-registry";
 import { useCloseOnBack } from "@/hooks/use-close-on-back";
 import { useLeaveGuard } from "@/lib/leave-guard";
@@ -90,6 +92,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   // Static Lite build: the route params are empty, read the link from the URL.
   const linkSegments = useLiteLinkSegments('contacts', routeSegments);
   const t = useTranslations("contacts");
+  const skeleton = useSkeletonLabels();
   // Organisation > Devices > No printing: no Print buttons (Ctrl+P prints a note).
   const printOff = useStrictestDevices().noPrint;
   const tSidebar = useTranslations("sidebar");
@@ -956,7 +959,12 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
     }
   };
 
-  if (!isAuthenticated) return null;
+  // Until the session is restored: the page skeleton the server drew.
+  if (!isAuthenticated) {
+    return isEmbedded
+      ? <ContactsSkeletonBody embedded />
+      : <ContactsSkeleton label={skeleton.label} labels={skeleton.labels} />;
+  }
 
   const renderRightPanel = () => {
     // The directory is read-only: its panel shows the open entry whatever the view.
@@ -1392,7 +1400,9 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
                       {!printOff && <ContextMenuItem icon={Printer} label={tCommon("print")} onClick={() => { close(); void requestPrint({ kind: "contact-list" }); }} />}
                     </>
                   )}
-                  isLoading={supportsSync && !contactsLoaded}
+                  // Until the session is back, nobody knows yet whether the server
+                  // keeps contacts: show the rows loading, not an empty book.
+                  isLoading={!contactsLoaded && (supportsSync || !client)}
                   onPrint={printOff ? undefined : () => { void requestPrint({ kind: "contact-list" }); }}
                   printTitle={printContent?.kind === "list" ? listTitle : null}
                 />
@@ -1566,8 +1576,14 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
 // prerender (static Lite build); at runtime it never suspends.
 export function ContactsApp(props: ContactsAppProps = {}) {
   return (
-    <Suspense fallback={null}>
+    // The static Lite export writes this fallback into the page's HTML.
+    <Suspense fallback={<ContactsFallback />}>
       <ContactsAppContent {...props} />
     </Suspense>
   );
+}
+
+function ContactsFallback() {
+  const { label, labels } = useSkeletonLabels();
+  return <ContactsSkeleton label={label} labels={labels} />;
 }

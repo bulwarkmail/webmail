@@ -19,6 +19,7 @@ import { withBasePath } from "@/lib/browser-navigation";
 import { locales, defaultLocale } from "@/i18n/routing";
 import { IS_LITE, LITE_MOUNT_GLOBAL } from "@/lib/lite";
 import { accessibilityBootScript } from "@/lib/accessibility-settings";
+import { bootSkeletonScript } from "@/lib/boot-skeleton/boot-script";
 import "../globals.css";
 import "../print.css";
 
@@ -314,10 +315,12 @@ export default async function RootLayout({
                   const resolved = theme === 'system' ? systemTheme : theme;
                   document.documentElement.classList.remove('light', 'dark');
                   document.documentElement.classList.add(resolved);
+                  document.documentElement.style.colorScheme = resolved;
                 } catch (e) {
                   document.documentElement.classList.add('light');
                 }
                 ${accessibilityBootScript()}
+                ${bootSkeletonScript()}
               })();
             `,
           }}

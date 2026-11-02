@@ -769,8 +769,18 @@ function buildPluginApi(manifest: PluginManifest) {
        *  a multi-step form, etc.) rather than a toolbar/row-sized control.
        *  Resolves to whatever value the slot component passes to its
        *  `onResult` prop, or null if the user closes the dialog without
-       *  calling it. No timeout - it waits for the user. */
-      openDialog: (opts: { title?: string; slot: string; extraProps?: Record<string, unknown>; width?: number }) =>
+       *  calling it. No timeout - it waits for the user.
+       *
+       *  `anchor: 'trigger'` draws it as a popover next to what the user
+       *  activated last - an action button (message row, reader), the
+       *  place a menu was opened at for a menu entry, the flag whose toggle
+       *  a hook intercepted - when that was at most 2 s ago and no other
+       *  key was pressed since; else centred as without it. Meant for a
+       *  small menu of choices. The popover has a one-line header naming
+       *  the plugin, takes `width` as the dialog does and the content's
+       *  height, and closes on Escape or a click outside (null). Hosts
+       *  without it ignore the option. */
+      openDialog: (opts: { title?: string; slot: string; extraProps?: Record<string, unknown>; width?: number; anchor?: 'trigger' }) =>
         callApi('ui.openDialog', [opts], 0) as Promise<unknown>,
       /** Re-runs the onRenderEmailBody hook for the open message (e.g. after a
        *  crypto plugin unlocks a key) so its body re-renders without a reload. */
@@ -832,6 +842,24 @@ function buildPluginApi(manifest: PluginManifest) {
       openPage: (pageId: string, path?: string) =>
         callApi('ui.openPage', [pageId, path]) as Promise<boolean>,
       /**
+       * Moves this tab to a view of the calendar: 'month', 'week', 'day',
+       * 'agenda' (needs ui:calendar-action or calendar:read) or 'tasks', the
+       * task view (needs ui:tasks or tasks:read), which a plugin offering the
+       * calendar-task-view slot draws. Resolves to false when the app could
+       * not take it (not ready yet, or the user has tasks turned off). At
+       * most 10 a minute.
+       */
+      openCalendar: (options: { view: 'month' | 'week' | 'day' | 'agenda' | 'tasks' }) =>
+        callApi('ui.openCalendar', [options]) as Promise<boolean>,
+      /**
+       * Opens one of the user's tasks (an id from tasks.list) in Bulwark's
+       * task editor, as a click on it in the calendar's task list does: for
+       * a plugin drawing the task view (calendar-task-view). Resolves to
+       * false when the calendar is not on screen or has not loaded the task.
+       * Needs ui:tasks or tasks:read; at most 20 a minute.
+       */
+      openTask: (taskId: string) => callApi('ui.openTask', [taskId]) as Promise<boolean>,
+      /**
        * Opens a message in the reader of this tab, as a click on it in the
        * list does: in place on the mail page, in an email tab in the Pro
        * shell, else the tab loads the message's link (at most 5 times a
@@ -849,11 +877,22 @@ function buildPluginApi(manifest: PluginManifest) {
        */
       setSectionTitle: (title: string | null) => callApi('ui.setSectionTitle', [title]) as Promise<void>,
       /**
+       * The button and header of this plugin's `side-panel` slot, the panel
+       * beside the mail: a title (at most 40 characters, e.g. a translated
+       * "Upcoming for me") and a host icon by name (as for setPages). null
+       * goes back to the plugin's name and a puzzle piece. `rail: false`
+       * draws no button in the rail: the plugin opens the panel itself
+       * with openPanel / togglePanel('side-panel'), e.g. from a top bar
+       * action.
+       */
+      setSidePanel: (look: { title?: string; icon?: string; rail?: boolean } | null) => callApi('ui.setSidePanel', [look]) as Promise<void>,
+      /**
        * Open, close or toggle the panel this plugin's slot sits in:
        * 'composer-sidebar', 'composer-sidebar-right' (pass the composerId
-       * from the click context or the slot's props) or 'email-detail-sidebar'.
-       * Resolve to whether the panel is open afterwards, or null when no such
-       * panel is on screen (no composer or message open, or a phone), so the
+       * from the click context or the slot's props), 'email-detail-sidebar'
+       * or 'side-panel' (this plugin's panel beside the mail). Resolve to
+       * whether the panel is open afterwards, or null when no such panel is
+       * on screen (no composer or message open, or a phone), so the
        * plugin can fall back to a dialog. A panel opened this way gets a new
        * `focusRequest` prop, so the slot can focus its input.
        */

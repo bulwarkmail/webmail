@@ -5,10 +5,16 @@ import { useTranslations } from 'next-intl';
 import { IntlProvider } from '../intl-provider';
 import { useLocaleStore } from '@/stores/locale-store';
 
+const nav = vi.hoisted(() => ({ pathname: null as string | null }));
+vi.mock('next/navigation', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('next/navigation')>()),
+  usePathname: () => nav.pathname,
+}));
+
 // The Lite export leaves the catalog out of the [locale] layout, because the
 // prop was baked into every exported page and pushed the Stalwart zip past its
 // size limit. The provider then loads the catalog itself and must render
-// nothing until it has it: English text would flash on a German page, and the
+// no text until it has it (only the page's skeleton, which has none): English text would flash on a German page, and the
 // prerendered HTML has to match the client's first render.
 
 vi.unmock('next-intl');
@@ -20,10 +26,20 @@ function Cancel() {
 describe('IntlProvider without server messages (Lite)', () => {
   afterEach(() => {
     useLocaleStore.setState({ locale: '' });
+    nav.pathname = null;
   });
 
   it('prerenders nothing for a non-English locale', () => {
     expect(renderToString(<IntlProvider locale="de"><Cancel /></IntlProvider>)).toBe('');
+  });
+
+  it('prerenders the page skeleton, without any text, while the catalog is missing', () => {
+    nav.pathname = '/de/calendar';
+    const html = renderToString(<IntlProvider locale="de"><Cancel /></IntlProvider>);
+    expect(html).toContain('data-boot-skeleton="calendar"');
+    expect(html).toContain('aria-busy="true"');
+    expect(html).not.toContain('Cancel');
+    expect(html).not.toContain('role="status"');
   });
 
   it('prerenders English straight away from the bundled catalog', () => {

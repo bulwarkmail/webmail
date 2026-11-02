@@ -1949,6 +1949,14 @@
         "above_quote": "引用文本之前",
         "below_quote": "引用文本之后"
       },
+      "signature_new_mail": {
+        "label": "新邮件签名",
+        "description": "写新邮件时自动插入签名。关闭后每封新邮件都不带签名。"
+      },
+      "signature_reply_forward": {
+        "label": "回复转发签名",
+        "description": "回复或转发时自动附加签名。关闭后回复和转发不带签名。"
+      },
       "signature_separator": {
         "label": "签名分隔符",
         "description": "在签名前加入标准的 “-- ” 分隔行（RFC 3676）。如果希望正文直接连到签名，请关闭。"
@@ -6059,7 +6067,7 @@
       },
       "ui_tasks": {
         "title": "添加到任务界面",
-        "body": "在任务详情中显示它自己的区块，并在任务列表中显示按钮。"
+        "body": "在任务详情中显示它自己的区块，在任务列表中显示按钮，并可用它自己的任务列表代替 Bulwark 的任务列表。"
       },
       "ui_files": {
         "title": "添加到文件界面",

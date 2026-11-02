@@ -43,6 +43,8 @@ import { useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { MvTopBar } from "@/components/layout/mv-top-bar";
 import { useMountainViewShell } from "@/hooks/use-mountain-view-shell";
+import { FilesSkeleton, FilesSkeletonBody } from "@/components/boot-skeleton/files-skeleton";
+import { useSkeletonLabels } from "@/components/boot-skeleton/use-skeleton-labels";
 
 export interface FilesAppProps {
   /** Path segments after `/files` - the folder path, one segment per level. */
@@ -53,6 +55,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   // Static Lite build: the route params are empty, read the link from the URL.
   const linkSegments = useLiteLinkSegments('files', routeSegments);
   const t = useTranslations("files");
+  const skeleton = useSkeletonLabels();
   const tSidebar = useTranslations("sidebar");
   const tShell = useTranslations("shell");
   useDocumentTitle(tSidebar("files"));
@@ -802,7 +805,12 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     useFileStore.setState({ supportsFiles: null });
   }, [getClientForAccount]);
 
-  if (!isAuthenticated) return null;
+  // Until the session is restored: the page skeleton the server drew.
+  if (!isAuthenticated) {
+    return isEmbedded
+      ? <FilesSkeletonBody embedded />
+      : <FilesSkeleton label={skeleton.label} labels={skeleton.labels} />;
+  }
 
   return (
     <div className={cn("flex flex-col overflow-hidden pt-[env(safe-area-inset-top)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>

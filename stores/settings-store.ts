@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { densityVarsFor } from '@/lib/density';
 import { persist } from 'zustand/middleware';
 import { useThemeStore } from './theme-store';
 import { useLocaleStore } from './locale-store';
@@ -9,7 +10,8 @@ import type { NotificationSoundChoice } from '@/lib/notification-sound';
 import { EMPTY_NOTIFICATION_MUTES, normalizeNotificationMutes, type NotificationMutes } from '@/lib/notification-mutes';
 import { apiFetch } from '@/lib/browser-navigation';
 import { writePushPreferences } from '@/lib/push-preferences';
-import { settingsHooks } from '@/lib/plugin-hooks';
+import { calendarHooks, settingsHooks } from '@/lib/plugin-hooks';
+import { BIRTHDAY_CALENDAR_ID } from '@/lib/birthday-calendar';
 import { generateAccountId } from '@/lib/account-utils';
 import { subscriptionOwnerFor } from '@/lib/calendar-subscription-sync';
 import type { FolderCountMode } from '@/lib/folder-counts';
@@ -627,6 +629,8 @@ interface SettingsState extends AccessibilitySettings {
   subAddressDelimiter: string; // Character separating user from tag (e.g. "user+tag@")
   sendDelaySeconds: SendDelaySeconds;
   signaturePosition: SignaturePosition; // Position of the signature relative to quoted text in replies/forwards
+  signatureNewMailEnabled: boolean; // Insert the signature automatically in new messages
+  signatureReplyForwardEnabled: boolean; // Insert the signature automatically in replies and forwards
   signatureSeparatorEnabled: boolean; // Prefix the signature with the RFC 3676 "-- " delimiter
   signatureDetails: SignatureDetails; // Title, department, phone, mobile for the organisation signature (lib/org-signature.ts)
   requestReadReceiptDefault: boolean; // Pre-check "request read receipt" in the composer
@@ -971,6 +975,10 @@ const DEFAULT_SETTINGS = {
   subAddressDelimiter: DEFAULT_SUB_ADDRESS_DELIMITER,
   sendDelaySeconds: 0 as SendDelaySeconds,
   signaturePosition: 'below_quote' as SignaturePosition,
+  // On, as before the toggles existed: saved settings and server copies
+  // from older builds lack these keys and fall back to this default.
+  signatureNewMailEnabled: true,
+  signatureReplyForwardEnabled: true,
   signatureSeparatorEnabled: true,
   signatureDetails: EMPTY_SIGNATURE_DETAILS,
   requestReadReceiptDefault: false,
@@ -1351,6 +1359,13 @@ export const useSettingsStore = create<SettingsState>()(
           applyInterfaceLayout(value as InterfaceLayout, get().density);
         }
 
+        // Notify calendar plugins (e.g. calendar-agenda) when the virtual birthday calendar is toggled or recolored
+        if (key === 'showBirthdayCalendar' || key === 'birthdayCalendarColor') {
+          void calendarHooks.onCalendarChange.emit({
+            calendarId: BIRTHDAY_CALENDAR_ID,
+            change: key === 'showBirthdayCalendar' && !value ? 'removed' : 'updated',
+          });
+        }
       };
 
       const buildExport = (opts?: { forSync?: boolean; subscriptionOwner?: string }): string => {
@@ -1409,6 +1424,8 @@ export const useSettingsStore = create<SettingsState>()(
           subAddressDelimiter: state.subAddressDelimiter,
           sendDelaySeconds: state.sendDelaySeconds,
           signaturePosition: state.signaturePosition,
+          signatureNewMailEnabled: state.signatureNewMailEnabled,
+          signatureReplyForwardEnabled: state.signatureReplyForwardEnabled,
           signatureSeparatorEnabled: state.signatureSeparatorEnabled,
           signatureDetails: state.signatureDetails,
           requestReadReceiptDefault: state.requestReadReceiptDefault,
@@ -2210,63 +2227,9 @@ function applyAccessibility(state: { fontSize: FontSize } & AccessibilitySetting
   applyAccessibilityTo(document.documentElement, state);
 }
 
-type DensityVars = Record<string, string>;
-
-const DEFAULT_DENSITY: Record<Density, DensityVars> = {
-  'extra-compact': {
-    '--list-item-height': 'auto',
-    '--density-item-py': '2px',
-    '--density-item-gap': '6px',
-    '--density-header-py': '4px',
-    '--density-card-p': '8px',
-    '--density-sidebar-py': '0px',
-  },
-  compact: {
-    '--list-item-height': 'auto',
-    '--density-item-py': '4px',
-    '--density-item-gap': '8px',
-    '--density-header-py': '6px',
-    '--density-card-p': '10px',
-    '--density-sidebar-py': '1px',
-  },
-  regular: {
-    '--list-item-height': '48px',
-    '--density-item-py': '12px',
-    '--density-item-gap': '12px',
-    '--density-header-py': '12px',
-    '--density-card-p': '16px',
-    '--density-sidebar-py': '4px',
-  },
-  comfortable: {
-    '--list-item-height': '64px',
-    '--density-item-py': '16px',
-    '--density-item-gap': '16px',
-    '--density-header-py': '16px',
-    '--density-card-p': '20px',
-    '--density-sidebar-py': '6px',
-  },
-};
-
-/**
- * Mountain View's rows come in three rhythms - 32, 40 and 48 pixels - and the
- * app offers four densities. The four are laid over that scale: `compact`,
- * `regular` and `comfortable` land on the three exactly, and `extra-compact`
- * continues the series a step below, so every density still does something.
- *
- * Only the vertical rhythm is restated. Everything else a density touches -
- * gaps, card padding, the sidebar's own row padding - keeps its default value;
- * a navigation row is already pinned to 32px by the layout's own token.
- */
-const MOUNTAIN_VIEW_DENSITY: Record<Density, DensityVars> = {
-  'extra-compact': { ...DEFAULT_DENSITY['extra-compact'], '--list-item-height': '28px', '--density-item-py': '4px' },
-  compact: { ...DEFAULT_DENSITY.compact, '--list-item-height': '32px', '--density-item-py': '6px' },
-  regular: { ...DEFAULT_DENSITY.regular, '--list-item-height': '40px', '--density-item-py': '10px' },
-  comfortable: { ...DEFAULT_DENSITY.comfortable, '--list-item-height': '48px', '--density-item-py': '14px' },
-};
-
-export function densityVarsFor(density: Density, layout: InterfaceLayout): DensityVars {
-  return (layout === 'mountain-view' ? MOUNTAIN_VIEW_DENSITY : DEFAULT_DENSITY)[density];
-}
+// The tables live in lib/density.ts so the pre-paint boot script can use
+// the same values (app/(main)/layout.tsx).
+export { densityVarsFor };
 
 function applyDensity(density: Density, layout: InterfaceLayout) {
   if (typeof document === 'undefined') return;
