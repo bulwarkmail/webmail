@@ -51,9 +51,12 @@
 
 /* A placeholder shape. A slow opacity pulse rather than a moving shimmer:
    opacity runs on the compositor, so the skeleton costs the main thread
-   nothing while the app's JS is still starting up. */
+   nothing while the app's JS is still starting up. The colour is a tint of
+   the text colour rather than --color-muted, which equals the sidebar
+   colour in dark mode (and nearly so in light mode), so shapes show on every
+   panel and follow a theme's palette. */
 .sk-shape {
-  background-color: var(--color-muted);
+  background-color: color-mix(in oklab, var(--color-foreground) 9%, transparent);
   animation: sk-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
