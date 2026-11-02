@@ -1,0 +1,38 @@
+{
+  "id": "saivra-memail",
+  "name": "Memail",
+  "version": "0.1.0",
+  "author": "Saivra",
+  "description": "Quiet neutral surfaces and a forest accent for focused mail.",
+  "type": "theme",
+  "apiVersion": 2,
+  "variants": ["light", "dark"],
+  "tokens": {
+    "light": {
+      "background": "#ffffff", "foreground": "#202820",
+      "card": "#ffffff", "card-foreground": "#202820",
+      "popover": "#ffffff", "popover-foreground": "#202820",
+      "sidebar": "#f4f6f1", "sidebar-foreground": "#202820", "sidebar-border": "#dce2d8",
+      "sidebar-accent": "#e4eddc", "sidebar-accent-foreground": "#263b32",
+      "primary": "#304f3c", "primary-foreground": "#ffffff",
+      "secondary": "#edf1e9", "secondary-foreground": "#293b2d",
+      "muted": "#f4f6f1", "muted-foreground": "#58634f",
+      "accent": "#e4eddc", "accent-foreground": "#263b32",
+      "selection": "#dce8d3", "selection-foreground": "#263b32",
+      "border": "#dce2d8", "input": "#b4beae", "ring": "#496b3c"
+    },
+    "dark": {
+      "background": "#171d18", "foreground": "#e7eee2",
+      "card": "#1c241d", "card-foreground": "#e7eee2",
+      "popover": "#202920", "popover-foreground": "#e7eee2",
+      "sidebar": "#131a15", "sidebar-foreground": "#e7eee2", "sidebar-border": "#354232",
+      "sidebar-accent": "#2c3d2b", "sidebar-accent-foreground": "#e7eee2",
+      "primary": "#b8d5a4", "primary-foreground": "#172316",
+      "secondary": "#273225", "secondary-foreground": "#e7eee2",
+      "muted": "#222c22", "muted-foreground": "#b3bfa9",
+      "accent": "#2c3d2b", "accent-foreground": "#e7eee2",
+      "selection": "#3c5133", "selection-foreground": "#f4f8f0",
+      "border": "#354232", "input": "#64765c", "ring": "#b8d5a4"
+    }
+  }
+}
