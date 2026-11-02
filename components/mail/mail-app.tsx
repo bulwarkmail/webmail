@@ -4143,6 +4143,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     });
     if (!prepared) return false;
     const { html: finalHtmlBody, text: finalBody } = prepared;
+
     const originalEmailId = selectedEmail.id;
     const originalSource = emailWriteSource(selectedEmail, client);
     const sendDelaySeconds = useSettingsStore.getState().sendDelaySeconds;

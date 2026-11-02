@@ -360,7 +360,8 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.advanced.refresh_cache.label' },
     { label: 'settings.advanced.reset_settings.label' },
     { label: 'settings.advanced.debug_mode.label', advanced: true },
-  ],};
+  ],
+};
 
 // Extra English keywords per tab so common search terms hit even when the
 // translation doesn't contain the literal word.
