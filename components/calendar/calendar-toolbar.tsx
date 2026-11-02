@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { ToolbarButton } from "@/components/ui/toolbar";
-import { ChevronLeft, ChevronRight, Plus, Upload, CalendarDays, Globe, ChevronDown, ArrowLeft, Menu, MoreVertical, RefreshCw, Search, Printer } from "@/components/icons";
+import { Check, ChevronLeft, ChevronRight, Plus, Upload, CalendarDays, Globe, ChevronDown, ArrowLeft, Menu, MoreVertical, RefreshCw, Search, Printer } from "@/components/icons";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { startOfWeek } from "date-fns";
@@ -87,7 +87,6 @@ export function CalendarToolbar({
   onRefresh,
   onPrint,
   isMobile,
-  firstDayOfWeek = 1,
   onNavigateBack,
   calendars,
   selectedCalendarIds,
@@ -127,19 +126,21 @@ export function CalendarToolbar({
     closeContextMenu: closeViewMenu,
     menuRef: viewMenuRef,
   } = useContextMenu<true>();
-  const [showCalendarDropdown, setShowCalendarDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!showCalendarDropdown) return;
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setShowCalendarDropdown(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showCalendarDropdown]);
+  const calendarMenu = useContextMenu<true>();
+  const renderCalendarToggle = (cal: Calendar) => {
+    const isVisible = selectedCalendarIds?.includes(cal.id) ?? false;
+    return (
+      <button key={cal.id} type="button" role="menuitemcheckbox" aria-checked={isVisible}
+        data-menu-label={cal.name} title={cal.name}
+        onClick={() => onToggleVisibility?.(cal.id)}
+        className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-sm hover:bg-muted focus-visible:bg-muted focus-visible:outline-none">
+        <span aria-hidden className={cn("h-3.5 w-3.5 shrink-0 rounded-sm border-2", !isVisible && "border-muted-foreground/40")}
+          style={isVisible ? {backgroundColor: paint(cal.color || "#3b82f6"), borderColor: paint(cal.color || "#3b82f6")} : undefined}/>
+        <span className={cn("min-w-0 flex-1 truncate", !isVisible && "text-muted-foreground")}>{cal.name}</span>
+        {isVisible && <Check className="h-4 w-4 shrink-0" aria-hidden/>}
+      </button>
+    );
+  };
 
   // The views scroll freely (#759): while the user has scrolled away from
   // the selected day, the title describes what is on screen instead.
@@ -195,7 +196,7 @@ export function CalendarToolbar({
       >
         <MoreVertical />
       </ToolbarButton>
-      <ContextMenu ref={moreMenuRef} isOpen={moreMenu.isOpen} position={moreMenu.position} onClose={closeMoreMenu}>
+      <ContextMenu label={t("toolbar.more")} ref={moreMenuRef} isOpen={moreMenu.isOpen} position={moreMenu.position} onClose={closeMoreMenu}>
         {onImport && <ContextMenuItem icon={Upload} label={t("toolbar.import")} onClick={pick(onImport)} />}
         {onSubscribe && <ContextMenuItem icon={Globe} label={t("toolbar.subscribe")} onClick={pick(onSubscribe)} />}
         {onRefresh && (onImport || onSubscribe) && <ContextMenuSeparator />}
@@ -219,73 +220,100 @@ export function CalendarToolbar({
 
   if (isMobile) {
     return (
-      <div className="border-b border-border">
-        {/* ── MOBILE TOOLBAR ── */}
-        {isMobile && (
-          <div className="flex flex-col gap-1 px-2 py-2">
-            {/* Row 1 while searching: the search box with a way back. */}
-            {mobileSearchField ? (
-              <div className="flex items-center gap-1">
-                <IconButton size="icon-lg" label={t("search.close")} onClick={onCloseSearch} className="-ms-1 touch-manipulation">
-                  <ArrowLeft />
-                </IconButton>
-                <div className="flex-1 min-w-0">{mobileSearchField}</div>
-              </div>
-            ) : (
-            /* Row 1: Back / Date nav / Today. Below 400px (25rem, so a larger
-               text size counts too) the period title takes a line of its own
-               above the buttons: beside them it was cut to one letter. */
-            <div className="flex flex-wrap items-center gap-1">
-              {/* The way back to the month takes the menu's place: both left the date no room. */}
+      <div data-memail-calendar-toolbar="" className="min-w-0 shrink-0 border-b border-border">
+        <div className="flex flex-col gap-1.5 px-2 py-2">
+          {mobileSearchField ? (
+            <div className="flex items-center gap-1">
+              <IconButton size="icon-lg" label={t("search.close")} onClick={onCloseSearch} className="-ms-1 touch-manipulation"><ArrowLeft/></IconButton>
+              <div className="min-w-0 flex-1">{mobileSearchField}</div>
+            </div>
+          ) : (
+            <div className="flex min-w-0 items-center gap-1">
               {onMenuClick && !onNavigateBack && (
-                <IconButton size="icon-lg" label={t("nav_open_menu")} onClick={onMenuClick} className="-ms-1 touch-manipulation">
-                  <Menu />
-                </IconButton>
+                <IconButton size="icon-lg" label={t("nav_open_menu")} onClick={onMenuClick} className="-ms-1 touch-manipulation"><Menu/></IconButton>
               )}
               {onNavigateBack && (
-                <IconButton size="icon-lg" label={t("back_to_month")} onClick={onNavigateBack} className="-ms-1 touch-manipulation">
-                  <ArrowLeft />
+                <IconButton size="icon-lg" label={t("back_to_month")} onClick={onNavigateBack} className="-ms-1 touch-manipulation"><ArrowLeft/></IconButton>
+              )}
+              <h2 className="min-w-0 flex-1 truncate px-1 text-sm font-semibold"
+                title={viewMode === "day" ? formatFullDate(titleDate) : getDateLabel()}>{getDateLabel()}</h2>
+              <PhoneHeaderActions below="md" menuItems={phoneMenuItems}/>
+            </div>
+          )}
+          <div className="flex min-w-0 items-center gap-1">
+            {hasDateNav && !mobileSearchField && <>
+              <IconButton size="icon-lg" label={t("nav_prev")} onClick={onPrev} className="touch-manipulation"><ChevronLeft/></IconButton>
+              <Button variant="outline" size="xs" onClick={onToday} className="min-h-11 touch-manipulation" title={formatFullDate(displayNow())}>{t("views.today")}</Button>
+              <IconButton size="icon-lg" label={t("nav_next")} onClick={onNext} className="touch-manipulation"><ChevronRight/></IconButton>
+            </>}
+            <div className="flex-1"/>
+              {onOpenSearch && (
+                <IconButton size="icon-lg" variant="outline" label={t("search.title")} onClick={onOpenSearch} className="touch-manipulation">
+                  <Search />
                 </IconButton>
               )}
-              {hasDateNav && (
-                <IconButton size="icon-lg" label={t("nav_prev")} onClick={onPrev} className="touch-manipulation">
-                  <ChevronLeft />
-                </IconButton>
-              )}
-              <span
-                className="text-sm font-semibold text-center flex-1 select-none truncate max-[25rem]:order-first max-[25rem]:basis-full max-[25rem]:ps-1 max-[25rem]:text-start"
-                title={viewMode === "day" ? formatFullDate(titleDate) : getDateLabel()}
-              >
-                {getDateLabel()}
-              </span>
-              {hasDateNav && (
+              {calendars && selectedCalendarIds && onToggleVisibility && (
                 <>
-                  <IconButton size="icon-lg" label={t("nav_next")} onClick={onNext} className="touch-manipulation">
-                    <ChevronRight />
+                  <IconButton size="icon-lg" variant="outline" label={t("my_calendars")}
+                    aria-haspopup="menu" aria-expanded={calendarMenu.contextMenu.isOpen}
+                    onClick={(event) => calendarMenu.openContextMenuFrom(event.currentTarget, true, "end")}
+                    className={cn("touch-manipulation", calendarMenu.contextMenu.isOpen && "bg-muted")}>
+                    <CalendarDays />
                   </IconButton>
-                  <Button variant="ghost" size="xs" onClick={onToday} className="touch-manipulation ms-0.5">
-                    {t("views.today")}
-                  </Button>
+                  <ContextMenu label={t("my_calendars")} ref={calendarMenu.menuRef}
+                    isOpen={calendarMenu.contextMenu.isOpen} position={calendarMenu.contextMenu.position}
+                    onClose={calendarMenu.closeContextMenu}>
+                    {calendars.filter(cal => !cal.isShared).map(renderCalendarToggle)}
+                    {(() => {
+                      const groups = new Map<string, {label: string; calendars: Calendar[]}>();
+                      for (const cal of calendars.filter(cal => cal.isShared)) {
+                        const key = cal.accountId || cal.accountName || cal.id;
+                        if (!groups.has(key)) groups.set(key, {label: cal.accountName || key, calendars: []});
+                        groups.get(key)!.calendars.push(cal);
+                      }
+                      return Array.from(groups, ([key, group]) => (
+                        <div key={key}>
+                          <div className="px-3 pb-1 pt-2 text-xs font-medium text-muted-foreground" title={group.label}>{group.label}</div>
+                          {group.calendars.map(renderCalendarToggle)}
+                        </div>
+                      ));
+                    })()}
+                  </ContextMenu>
                 </>
               )}
-              {/* The shell's phone ⋮ (notifications, palette, account) with the calendar's own entries on top. */}
-              <PhoneHeaderActions below="md" menuItems={phoneMenuItems} />
-            </div>
-            )}
-
-            {/* Row 2: View switcher pills + calendar toggle */}
-            {/* Each pill is as wide as its label plus an even share of the rest, so a
-                long label ("جدول الأعمال", "Aufgaben") neither wraps nor touches the edge. */}
-            <div className="flex items-center gap-1.5">
-              <div className="flex flex-1 border border-border rounded-md overflow-hidden">
+          </div>
+              <div role="radiogroup" aria-label={t("toolbar.select_view", { view: t(`views.${viewMode}`) })}
+                className="flex min-w-0 flex-1 gap-0.5 overflow-x-auto rounded-lg border border-border bg-muted/30 p-0.5"
+                onKeyDown={(event) => {
+                  if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.nativeEvent.isComposing) return;
+                  const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]'));
+                  const current = buttons.indexOf(event.target as HTMLButtonElement);
+                  if (current < 0) return;
+                  const rtl = getComputedStyle(event.currentTarget).direction === "rtl";
+                  let next = -1;
+                  if (event.key === "Home") next = 0;
+                  else if (event.key === "End") next = buttons.length - 1;
+                  else if (event.key === "ArrowDown" || event.key === (rtl ? "ArrowLeft" : "ArrowRight")) next = (current + 1) % buttons.length;
+                  else if (event.key === "ArrowUp" || event.key === (rtl ? "ArrowRight" : "ArrowLeft")) next = (current - 1 + buttons.length) % buttons.length;
+                  if (next < 0) return;
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onViewModeChange(views[next]);
+                  buttons[next].focus();
+                  buttons[next].scrollIntoView?.({block: "nearest", inline: "nearest"});
+                }}>
                 {views.map((v) => (
                   <button
                     key={v}
+                    type="button"
+                    role="radio"
+                    aria-checked={v === viewMode}
+                    tabIndex={v === viewMode ? 0 : -1}
                     onClick={() => onViewModeChange(v)}
                     className={cn(
-                      "flex-auto min-h-11 px-1.5 text-[0.6875rem] font-medium transition-colors touch-manipulation",
+                      "flex-auto shrink-0 min-h-11 rounded-md px-2 text-[0.6875rem] font-medium transition-colors touch-manipulation",
                       v === viewMode
-                        ? "bg-primary text-primary-foreground"
+                        ? "bg-background text-foreground shadow-sm"
                         : "text-muted-foreground active:bg-muted"
                     )}
                   >
@@ -293,107 +321,7 @@ export function CalendarToolbar({
                   </button>
                 ))}
               </div>
-
-              {/* Beside the calendar filter: the date row has no room left. */}
-              {onOpenSearch && (
-                <IconButton size="icon-lg" variant="outline" label={t("search.title")} onClick={onOpenSearch} className="touch-manipulation">
-                  <Search />
-                </IconButton>
-              )}
-              {calendars && selectedCalendarIds && onToggleVisibility && (
-                <div className="relative" ref={dropdownRef}>
-                  <IconButton
-                    size="icon-lg"
-                    variant="outline"
-                    label={t("my_calendars")}
-                    aria-expanded={showCalendarDropdown}
-                    onClick={() => setShowCalendarDropdown((v) => !v)}
-                    className={cn("touch-manipulation", showCalendarDropdown && "bg-muted")}
-                  >
-                    <CalendarDays />
-                  </IconButton>
-                  {showCalendarDropdown && (
-                    <div className="absolute top-full end-0 mt-1 z-50 bg-popover border border-border rounded-lg shadow-lg p-2 min-w-[180px]">
-                      <h3 className="text-xs font-medium text-muted-foreground mb-2 px-1">
-                        {t("my_calendars")}
-                      </h3>
-                      <div className="space-y-0.5">
-                        {calendars.filter(c => !c.isShared).map((cal) => {
-                          const isVisible = selectedCalendarIds.includes(cal.id);
-                          const color = paint(cal.color || "#3b82f6");
-                          return (
-                            <button
-                              key={cal.id}
-                              onClick={() => onToggleVisibility(cal.id)}
-                              className={cn(
-                                "flex items-center gap-2 w-full px-2 min-h-11 rounded-md text-sm transition-colors duration-150 touch-manipulation",
-                                "hover:bg-muted"
-                              )}
-                            >
-                              <span
-                                className={cn(
-                                  "w-3.5 h-3.5 rounded-sm border-2 flex-shrink-0 transition-colors",
-                                  isVisible ? "border-transparent" : "border-muted-foreground/40 bg-transparent"
-                                )}
-                                style={isVisible ? { backgroundColor: color, borderColor: color } : undefined}
-                              />
-                              <span className={cn("truncate", !isVisible && "text-muted-foreground")} title={cal.name}>
-                                {cal.name}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {(() => {
-                        const shared = calendars.filter(c => c.isShared);
-                        const groups = new Map<string, { accountName: string; cals: typeof shared }>();
-                        for (const c of shared) {
-                          const key = c.accountId || c.accountName || c.id;
-                          if (!groups.has(key)) groups.set(key, { accountName: c.accountName || key, cals: [] });
-                          groups.get(key)!.cals.push(c);
-                        }
-                        return Array.from(groups.values()).map((group) => (
-                          <div key={group.accountName} className="mt-2">
-                            <h3 className="text-xs font-medium text-muted-foreground mb-1 px-1">
-                              {group.accountName}
-                            </h3>
-                            <div className="space-y-0.5">
-                              {group.cals.map((cal) => {
-                                const isVisible = selectedCalendarIds.includes(cal.id);
-                                const color = paint(cal.color || "#3b82f6");
-                                return (
-                                  <button
-                                    key={cal.id}
-                                    onClick={() => onToggleVisibility(cal.id)}
-                                    className={cn(
-                                      "flex items-center gap-2 w-full px-2 min-h-11 rounded-md text-sm transition-colors duration-150 touch-manipulation",
-                                      "hover:bg-muted"
-                                    )}
-                                  >
-                                    <span
-                                      className={cn(
-                                        "w-3.5 h-3.5 rounded-sm border-2 flex-shrink-0 transition-colors",
-                                        isVisible ? "border-transparent" : "border-muted-foreground/40 bg-transparent"
-                                      )}
-                                      style={isVisible ? { backgroundColor: color, borderColor: color } : undefined}
-                                    />
-                                    <span className={cn("truncate", !isVisible && "text-muted-foreground")} title={cal.name}>
-                                      {cal.name}
-                                    </span>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        ));
-                      })()}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     );
   }
@@ -401,7 +329,8 @@ export function CalendarToolbar({
   const currentViewLabel = t(`views.${viewMode}`);
 
   return (
-    <div className="flex items-center gap-1 px-3 h-14 box-content border-b border-border flex-shrink-0">
+    <div data-memail-calendar-header="" className="min-w-0 shrink-0">
+    <div data-memail-calendar-toolbar="" className="flex min-w-0 items-center gap-1 px-3 h-14 box-content border-b border-border">
       {onMenuClick && (
         <ToolbarButton
           label={menuTogglesSidebar ? t(sidebarOpen ? "nav_hide_sidebar" : "nav_show_sidebar") : t("nav_open_menu")}
@@ -446,7 +375,7 @@ export function CalendarToolbar({
 
       <div className="flex-1" />
 
-      {searchField}
+      {searchField && <div data-memail-calendar-search="" className="min-w-0">{searchField}</div>}
 
       {moreButton}
 
@@ -464,7 +393,7 @@ export function CalendarToolbar({
           {currentViewLabel}
           <ChevronDown className="w-3 h-3" />
         </Button>
-        <ContextMenu ref={viewMenuRef} isOpen={viewMenu.isOpen} position={viewMenu.position} onClose={closeViewMenu}>
+        <ContextMenu label={t("toolbar.select_view", { view: currentViewLabel })} ref={viewMenuRef} isOpen={viewMenu.isOpen} position={viewMenu.position} onClose={closeViewMenu}>
           {menuViews.map((v) => (
             <button
               key={v}
@@ -484,6 +413,7 @@ export function CalendarToolbar({
           ))}
         </ContextMenu>
       </div>
+    </div>
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { fillHourHeight } from '@/hooks/use-display-hours';
 import type { CalendarEvent, Calendar } from '@/lib/jmap/types';
 
 /** The empty hour slots of the time grid (buttons inside the day cells). */
-const slots = () => Array.from(document.querySelectorAll<HTMLElement>('[data-slot]'));
+const slots = () => Array.from(document.querySelectorAll<HTMLElement>('[role="button"][data-slot]'));
 
 const calendars = [{ id: 'cal-1', name: 'Work', color: '#123456' }] as unknown as Calendar[];
 

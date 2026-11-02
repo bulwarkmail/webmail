@@ -41,7 +41,7 @@ import { useRegisteredCommandGroups } from '@/lib/command-registry';
 import { interceptLeave } from '@/lib/leave-guard';
 
 /** The empty hour slots of the time grid (buttons inside the day cells). */
-const slots = () => Array.from(document.querySelectorAll<HTMLElement>('[data-slot]'));
+const slots = () => Array.from(document.querySelectorAll<HTMLElement>('[role="button"][data-slot]'));
 
 /** A month view day cell, found by its date button (the cell itself has no name). */
 function monthCell(day: RegExp): HTMLElement | undefined {
@@ -856,8 +856,8 @@ describe('CalendarApp company calendars on a phone', () => {
       renderApp();
       // The toolbar's list (the sidebar heading has the same words).
       fireEvent.click(document.querySelector<HTMLElement>('button[aria-label="my_calendars"]')!);
-      const list = (await screen.findByRole('heading', { name: 'my_calendars' })).parentElement!;
-      fireEvent.click(within(list).getByRole('button', { name: 'Holidays' }));
+      const list = await screen.findByRole('menu', { name: 'my_calendars' });
+      fireEvent.click(within(list).getByRole('menuitemcheckbox', { name: 'Holidays' }));
       expect(useSettingsStore.getState().hiddenCompanyCalendars).toEqual(['hol']);
     } finally {
       usePolicyStore.setState({ policy });

@@ -1694,3 +1694,12 @@ optgroup {
 @container memail-contacts-list (max-width: 23rem) {
   .memail-contact-filter-fields { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Calendar tools wrap inside narrow desktop panes without squeezing the date. */
+[data-memail-calendar-header] { container: memail-calendar-header / inline-size; }
+@container memail-calendar-header (max-width: 48rem) {
+  [data-memail-calendar-toolbar] { height: auto; min-height: 3.5rem; flex-wrap: wrap; padding-block: 0.5rem; row-gap: 0.5rem; }
+  [data-memail-calendar-toolbar] h1 { flex: 1 1 10rem; min-width: 0; }
+  [data-memail-calendar-search] { order: 1; flex: 1 1 100%; }
+  [data-memail-calendar-search] > * { width: 100%; }
+}

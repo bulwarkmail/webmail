@@ -12,7 +12,7 @@ Base: Bulwark Webmail, https://github.com/bulwarkmail/webmail.
 | Demo header and size query compatibility | `lib/demo/demo-client.ts` | Small isolated fix: mock queries previously ignored newsletter header/size conditions | Header/value/size boundary tests, pagination/counts, and real demo Focus queries |
 | Fork discovery banner | `README.md` | Three additive lines above the upstream README | Diff review |
 
-No production authentication, sanitized message rendering, synchronization protocol or license text has been changed. The workspace adds Lucide as its interface icon dependency. Memail identity is supplied through upstream configuration; its demo launcher uses synthetic mail and an absolute configured loopback endpoint for server-side session verification.
+No production authentication, sanitized message rendering, synchronization protocol or license text has been changed. Built-in application icons now use Heroicons; earlier icon migrations below are retained as patch history. Memail identity is supplied through upstream configuration; its demo launcher uses synthetic mail and an absolute configured loopback endpoint for server-side session verification.
 
 Add each customization here. Include the relevant upstream files, the reason it cannot use configuration/theme/plugin hooks, and the checks required after upstream updates. Remove entries when upstream absorbs the change.
 
@@ -170,3 +170,12 @@ Add each customization here. Include the relevant upstream files, the reason it 
 - Presence filters use native All/Yes/No selects instead of implicit three-state cycling. Existing matching semantics, including false/exclusion and combinations, are retained. Labels reuse the existing locale catalogs. Sort chips now expose pressed state.
 - Advanced filters are a named, linked disclosure region with a scrollable pane, sticky Clear/Close controls and pane-width field grids. Height caps preserve results space (58% generally, 50% in narrow panes). Close/Escape returns to the filter trigger without resetting criteria; composition Escape is ignored. Empty filtered-result recovery clears criteria and focuses search.
 - Contact rows have quieter hover/separator treatment and full-name/email/organization titles for truncated values. Native density, selection, sorting, drag, context-menu and plugin callbacks remain in place. No contact storage, import/export or account APIs changed.
+
+
+## Calendar navigation and application-wide Heroicons
+
+- All 261 existing application icon exports now resolve to Heroicons through `components/icons/heroicons.tsx`. Direct per-icon imports preserve tree shaking; the central, sidebar and older Memail glyph entry points share the same components. Size, refs, numeric/string strokes, fill, SVG props and decorative/named behavior remain supported. Explicit filled stars and the solid shield remain distinct. Symbols without exact Heroicons equivalents use related official glyphs; action labels remain authoritative. MIT notice remains in `.memail/licenses/HEROICONS-MIT.txt`.
+- Workspace named defaults (including Focus, News and alerts) use Heroicons. Stored custom/plugin names, brand choices and the lazy Tabler picker remain compatible. Default application surfaces no longer use the previous Phosphor/Lucide glyph adapters.
+- Calendar's phone header separates date/account context, navigation/actions and full-width view choices. The view group uses one Tab stop and supports arrows, Home/End and RTL. The Tasks gate and native date/view callbacks remain unchanged.
+- Phone calendar visibility now uses the shared viewport-fitted menu with named checkbox items, checked state, shared-account headings, keyboard navigation and Escape focus return. Toggling retains the open menu for additional choices. Desktop search/tools wrap by pane width below 48rem, preserving date space. Desktop view/action menus expose localized names.
+- Calendar time-slot tests now select `[role="button"][data-slot]`, excluding Heroicons' vendor `data-slot="icon"` attribute. No production event editor or time-slot behavior changed.

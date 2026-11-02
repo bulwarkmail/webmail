@@ -5,7 +5,7 @@ import { CalendarDayView } from '../calendar-day-view';
 import type { Calendar, CalendarEvent } from '@/lib/jmap/types';
 
 /** The empty hour slots of the time grid (buttons inside the day cells). */
-const slots = () => Array.from(document.querySelectorAll<HTMLElement>('[data-slot]'));
+const slots = () => Array.from(document.querySelectorAll<HTMLElement>('[role="button"][data-slot]'));
 
 // Tab in the week view walked into the events of the weeks loaded on
 // either side and scrolled the grid off its week.

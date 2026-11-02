@@ -9,9 +9,7 @@
 // Tabler set once, lazily, the first time it is rendered or the picker's
 // "show all" list opens.
 
-import { adaptIcon } from './adapt';
-import { Focus, Newspaper, CircleAlert } from 'lucide-react';
-import * as MemailGlyphs from './memail-glyphs';
+import * as MemailGlyphs from './heroicons';
 import { forwardRef, useEffect, useState } from 'react';
 import type { TablerIcon } from '@tabler/icons-react';
 import {
@@ -438,9 +436,9 @@ function lazyIcon(name: string): TablerIcon {
  * name. Unknown names render the world icon once the full set has loaded.
  */
 const WORKSPACE_ICONS: Record<string, TablerIcon> = {
-  inbox: MemailGlyphs.Inbox, focus: adaptIcon(Focus), news: adaptIcon(Newspaper), mail: MemailGlyphs.Mail, calendar: MemailGlyphs.CalendarDays,
+  inbox: MemailGlyphs.Inbox, focus: MemailGlyphs.Focus, news: MemailGlyphs.News, mail: MemailGlyphs.Mail, calendar: MemailGlyphs.CalendarDays,
   users: MemailGlyphs.Users, folder: MemailGlyphs.Folder, settings: MemailGlyphs.Settings, search: MemailGlyphs.Search, archive: MemailGlyphs.Archive,
-  send: MemailGlyphs.Send, 'file-text': MemailGlyphs.FileText, trash: MemailGlyphs.Trash2, 'alert-circle': adaptIcon(CircleAlert),
+  send: MemailGlyphs.Send, 'file-text': MemailGlyphs.FileText, trash: MemailGlyphs.Trash2, 'alert-circle': MemailGlyphs.AlertCircle,
 };
 
 export function iconForName(stored: string | null | undefined): TablerIcon | undefined {
