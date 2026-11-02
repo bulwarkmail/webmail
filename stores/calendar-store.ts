@@ -31,7 +31,7 @@ import {
 } from '@/lib/recurrence-instances';
 import type { EventUpdateOptions } from '@/lib/recurrence-scope-edit';
 import { addDays, format, parseISO } from 'date-fns';
-import { generateUUID } from '@/lib/utils';
+import { generateUUID, isCalendarEventArray, isPartialCalendarEvent } from '@/lib/utils';
 import { apiFetch } from '@/lib/browser-navigation';
 import { explainServerAuthError } from '@/lib/server-auth-status';
 import { BIRTHDAY_CALENDAR_ID } from '@/lib/birthday-calendar';
@@ -991,15 +991,18 @@ export const useCalendarStore = create<CalendarStore>()(
         const seq = ++rangeLoadSeq;
         set(options?.silent ? { error: null } : { isLoadingEvents: true, error: null });
 
-        const data = await calendarHooks.onBeforeFetchEvents.transform({ start: start, end: end });
-        start = data.start;
-        end = data.end;
-
         try {
+          const serverRange = await calendarHooks.onBeforeFetchEvents.transform({ start: start, end: end });
           const rawEvents = await calendarHooks.onFetchingEvents.transform(await client.queryAllCalendarEvents({
-            after: start,
-            before: end,
+            after: serverRange.start,
+            before: serverRange.end,
           }));
+          if(calendarHooks.onFetchingEvents.size > 0){
+            if(!isCalendarEventArray(rawEvents)){
+              debug.error('returned events by a plugin are not a valid CalendarEvent array', rawEvents);
+              throw new Error('returned events by a plugin are not a valid CalendarEvent array');
+            }
+          }
           if (seq !== rangeLoadSeq || currentStoreEpoch() !== epoch) return;
           // Filter out malformed events missing required 'start' field, or
           // whose start string fails to parse (would otherwise crash format()
@@ -1086,19 +1089,17 @@ export const useCalendarStore = create<CalendarStore>()(
       },
 
       fetchAllAccountsEvents: async (accounts, start, end, options) => {
-        const data = await calendarHooks.onBeforeFetchEvents.transform({ start: start, end: end });
-        start = data.start;
-        end = data.end;
         const epoch = currentStoreEpoch();
         refetchVisibleRange = () => get().fetchAllAccountsEvents(accounts, start, end, { silent: true });
         const seq = ++rangeLoadSeq;
         set(options?.silent ? { error: null } : { isLoadingEvents: true, error: null });
         try {
+          const serverRange = await calendarHooks.onBeforeFetchEvents.transform({ start: start, end: end });
           let failed = false;
           const results = await Promise.all(
             accounts.map(async ({ client, localAccountId }) => {
               try {
-                const raw = await calendarHooks.onFetchingEvents.transform(await client.queryAllCalendarEvents({ after: start, before: end }));
+                const raw = await calendarHooks.onFetchingEvents.transform(await client.queryAllCalendarEvents({ after: serverRange.start, before: serverRange.end }));
                 const valid = raw.filter(e =>
                   typeof e.start === 'string' && e.start && !isNaN(parseISO(e.start).getTime())
                 );
@@ -1174,8 +1175,18 @@ export const useCalendarStore = create<CalendarStore>()(
           // we add the id to the local event to get a complete event.
 
           const { localEvent, serverEvent } = await calendarHooks.onCreatingEvent.transform({localEvent: cleanEvent, serverEvent: cleanEvent});
-          const created = { ...await client.createCalendarEvent(serverEvent, sendSchedulingMessages, targetAccountId), ...localEvent };
+          if (calendarHooks.onCreatingEvent.size > 0){
+            if(!isPartialCalendarEvent(localEvent) || !isPartialCalendarEvent(serverEvent)){
+              debug.error('returned events by a plugin are not a valid event', {localEvent, serverEvent});
+              throw new Error('returned events by a plugin are not a valid CalendarEvent partial');
+            }
+          }
 
+          let created = await client.createCalendarEvent(serverEvent, sendSchedulingMessages, targetAccountId);
+          if (calendarHooks.onCreatingEvent.size > 0){
+            created = { ...created, ...localEvent };
+          }
+          
           const mappedCreated = mapServerEventToStoreEvent(created, get().calendars, targetAccountId);
           const selectedCalendarIds = get().selectedCalendarIds;
           const createdCalendarIds = Object.keys(mappedCreated.calendarIds || {});
@@ -1275,6 +1286,12 @@ export const useCalendarStore = create<CalendarStore>()(
             && reachesOnlyUnanswered(storeEvent, cleanUpdates, sendSchedulingMessages, options);
 
           const {localUpdates, serverUpdates} = await calendarHooks.onUpdatingEvent.transform({localUpdates : cleanUpdates, serverUpdates: cleanUpdates, eventId: id})
+          if(calendarHooks.onUpdatingEvent.size > 0){
+            if(!isPartialCalendarEvent(localUpdates) || !isPartialCalendarEvent(serverUpdates)){
+              debug.error('returned updates by a plugin are not a valid CalendarEvent partial', {localUpdates, serverUpdates});
+              throw new Error('returned updates by a plugin are not a valid CalendarEvent partial');
+            }
+          }
           
           if (target.isOccurrence && storeEvent) {
             if (stopsDefaultAlerts && storeEvent.baseEventId) {
