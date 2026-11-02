@@ -8,6 +8,8 @@ export const PERMISSIONS = [] as const;
 export interface AreaHostFeaturesB {
   /** api.email.getAttachmentText: the text of an attachment (PDF, Office, text, calendar and address files). */
   attachmentText?: boolean;
+  /** api.email.getAttachmentImage: an image attachment, shrunk for a model. */
+  attachmentImages?: boolean;
 }
 
 /** What EmailReadView.attachments adds for an image the message shows inline. */
@@ -44,6 +46,38 @@ export interface AttachmentTextView {
 export interface AttachmentTextOptions {
   /** Longest text returned, 1 to 100,000 characters (default 20,000). */
   maxChars?: number;
+  /** The account the message is in (EmailSummary.accountId), for shared and group mail. */
+  accountId?: string;
+}
+
+/**
+ * What api.email.getAttachmentImage answers. `status`: ok (`data` holds the
+ * image), tracker (1-2 px), tiny (a side under 64 px or under 128x128 in
+ * area), too_big (over 20 MB, or still over 1.5 MB at 64 px), unsupported
+ * (not a picture the browser can show: HEIC, TIFF, SVG, not an image),
+ * failed.
+ */
+export interface AttachmentImageView {
+  name: string;
+  /** The type of `data`: image/jpeg, or image/png for a picture with see-through parts. Unless ok, the attachment's own type. */
+  type: string;
+  /** Size of `data` in pixels when ok; of the picture as it is (when it could be read) otherwise; else 0. */
+  width: number;
+  height: number;
+  /** The image, base64 without a data: prefix; '' unless status is ok. */
+  data: string;
+  status: 'ok' | 'tiny' | 'tracker' | 'too_big' | 'unsupported' | 'failed';
+  /** The alt text the message's HTML gives this inline image. */
+  alt?: string;
+  /** With `exif: true`: when and where a photo was taken, when the file says. */
+  exif?: { taken?: string; lat?: number; lon?: number };
+}
+
+export interface AttachmentImageOptions {
+  /** Longest edge in pixels, 64 to 2,576 (default 1,568). */
+  maxSide?: number;
+  /** Also read the photo's date and place (EXIF). Off unless the user asked for them. */
+  exif?: boolean;
   /** The account the message is in (EmailSummary.accountId), for shared and group mail. */
   accountId?: string;
 }

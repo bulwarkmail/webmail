@@ -1,7 +1,7 @@
 // Area b of the assistant's host APIs, inside the plugin sandbox (see README.md).
 
 import type { CallApi, RuntimeAdditions } from './runtime';
-import type { AttachmentTextOptions, AttachmentTextView } from './b.types';
+import type { AttachmentImageOptions, AttachmentImageView, AttachmentTextOptions, AttachmentTextView } from './b.types';
 
 /** Reads that download and unpack a file get the network timeout. */
 const READ_TIMEOUT_MS = 120_000;
@@ -17,6 +17,14 @@ export function runtime(callApi: CallApi): RuntimeAdditions {
        */
       getAttachmentText: (emailId: string, blobId: string, options?: AttachmentTextOptions) =>
         callApi('email.getAttachmentText', [emailId, blobId, options], READ_TIMEOUT_MS) as Promise<AttachmentTextView>,
+      /**
+       * An image attachment or inline image of a message, shrunk to maxSide
+       * (default 1568 px) and at most 1.5 MB, as base64 (email:blob-read, 30
+       * a minute). Tracking pixels and tiny images answer a status instead.
+       * The photo's date and place only with exif: true.
+       */
+      getAttachmentImage: (emailId: string, blobId: string, options?: AttachmentImageOptions) =>
+        callApi('email.getAttachmentImage', [emailId, blobId, options], READ_TIMEOUT_MS) as Promise<AttachmentImageView>,
     },
   };
 }
