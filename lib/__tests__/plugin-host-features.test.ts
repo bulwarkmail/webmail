@@ -165,5 +165,12 @@ describe('api.host in the sandbox runtime', () => {
     expect(kept.externalSenderLabel).toBe(true);
     expect((kept as { noThirdPartyTraffic?: boolean }).noThirdPartyTraffic).toBe(true);
     expect(changes).toEqual([{ externalSenderLabel: true, externalRecipientWarning: false, noThirdPartyTraffic: true }]);
+
+    // The assistant's flags (lib/plugin-sandbox/assistant) reach the plugin too.
+    expect((kept as { sidePanel?: boolean }).sidePanel).toBeUndefined();
+    post(hostWindow, HOST_ORIGIN, { type: 'host-change', features: { externalSenderLabel: true, externalRecipientWarning: false, noThirdPartyTraffic: true, sidePanel: true } });
+    expect((kept as { sidePanel?: boolean }).sidePanel).toBe(true);
+    post(hostWindow, HOST_ORIGIN, { type: 'host-change', features: { externalSenderLabel: true, externalRecipientWarning: false, noThirdPartyTraffic: true, sidePanel: 'yes' } });
+    expect((kept as { sidePanel?: boolean }).sidePanel).toBe(false);
   }, 30_000);
 });
