@@ -140,7 +140,7 @@ export const HOOK_CATALOG = {
   onAfterEventCreate: H('calendar', 'observer', 'calendar:read', 'CalendarEventView', 'after an event was created'),
   onBeforeEventUpdate: H('calendar', 'intercept', 'calendar:write', '{ eventId, patch }', 'before an event is changed'),
   onUpdatingEvent: H('calendar', 'transform', 'calendar:write', '{localUpdates : Partial<CalendarEvent>, serverUpdates: Partial<CalendarEvent>, eventId: string}', 'when an event is updated'),
-  onBeforeFetchEvents: H('calendar', 'transform', 'calendar:read', '{ start, end }', 'before events are fetched from the server; may change the range'),
+  onBeforeFetchEvents: H('calendar', 'transform', 'calendar:write', '{ start, end }', 'before events are fetched from the server; may change the range'),
   onFetchingEvents: H('calendar', 'transform', 'calendar:write', 'CalendarEvent[]', 'after events are fetched from the server; may add or remove events'),
   onAfterEventUpdate: H('calendar', 'observer', 'calendar:read', 'CalendarEventView', 'after an event was changed'),
   onBeforeEventDelete: H('calendar', 'intercept', 'calendar:write', '{ eventId, title }', 'before an event is deleted'),

@@ -31,7 +31,7 @@ import {
 } from '@/lib/recurrence-instances';
 import type { EventUpdateOptions } from '@/lib/recurrence-scope-edit';
 import { addDays, format, parseISO } from 'date-fns';
-import { generateUUID, isCalendarEventArray, isPartialCalendarEvent } from '@/lib/utils';
+import { generateUUID } from '@/lib/utils';
 import { apiFetch } from '@/lib/browser-navigation';
 import { explainServerAuthError } from '@/lib/server-auth-status';
 import { BIRTHDAY_CALENDAR_ID } from '@/lib/birthday-calendar';
@@ -47,6 +47,7 @@ import {
 } from '@/lib/calendar-subscription-sync';
 import { registerCalendarSubscriptionSyncBridge } from './settings-store';
 import { currentStoreEpoch } from '@/lib/store-epoch';
+import { isCalendarEventArray, isPartialCalendarEvent } from '@/lib/plugin-calendar-hooks';
 
 /**
  * When the Pro shell aggregates calendars/events from every connected
@@ -993,14 +994,16 @@ export const useCalendarStore = create<CalendarStore>()(
 
         try {
           const serverRange = await calendarHooks.onBeforeFetchEvents.transform({ start: start, end: end });
-          const rawEvents = await calendarHooks.onFetchingEvents.transform(await client.queryAllCalendarEvents({
+          let rawEvents = await client.queryAllCalendarEvents({
             after: serverRange.start,
             before: serverRange.end,
-          }));
+          })
+          const editedEvents = await calendarHooks.onFetchingEvents.transform(rawEvents);
           if(calendarHooks.onFetchingEvents.size > 0){
-            if(!isCalendarEventArray(rawEvents)){
+            if(!isCalendarEventArray(editedEvents)){
               debug.error('returned events by a plugin are not a valid CalendarEvent array', rawEvents);
-              throw new Error('returned events by a plugin are not a valid CalendarEvent array');
+            }else{
+              rawEvents = editedEvents;
             }
           }
           if (seq !== rangeLoadSeq || currentStoreEpoch() !== epoch) return;
@@ -1099,7 +1102,15 @@ export const useCalendarStore = create<CalendarStore>()(
           const results = await Promise.all(
             accounts.map(async ({ client, localAccountId }) => {
               try {
-                const raw = await calendarHooks.onFetchingEvents.transform(await client.queryAllCalendarEvents({ after: serverRange.start, before: serverRange.end }));
+                let raw = await client.queryAllCalendarEvents({ after: serverRange.start, before: serverRange.end })
+                const edited = await calendarHooks.onFetchingEvents.transform(raw);
+                if(calendarHooks.onFetchingEvents.size > 0){
+                  if(!isCalendarEventArray(edited)){
+                    debug.error('returned events by a plugin are not a valid CalendarEvent array', raw);
+                  }else{
+                    raw = edited;
+                  }
+                }
                 const valid = raw.filter(e =>
                   typeof e.start === 'string' && e.start && !isNaN(parseISO(e.start).getTime())
                 );
@@ -1174,11 +1185,12 @@ export const useCalendarStore = create<CalendarStore>()(
           // so plugins can transform either or both.
           // we add the id to the local event to get a complete event.
 
-          const { localEvent, serverEvent } = await calendarHooks.onCreatingEvent.transform({localEvent: cleanEvent, serverEvent: cleanEvent});
+          let { localEvent, serverEvent } = await calendarHooks.onCreatingEvent.transform({localEvent: cleanEvent, serverEvent: cleanEvent});
           if (calendarHooks.onCreatingEvent.size > 0){
             if(!isPartialCalendarEvent(localEvent) || !isPartialCalendarEvent(serverEvent)){
               debug.error('returned events by a plugin are not a valid event', {localEvent, serverEvent});
-              throw new Error('returned events by a plugin are not a valid CalendarEvent partial');
+              localEvent = cleanEvent;
+              serverEvent = cleanEvent;
             }
           }
 
@@ -1285,11 +1297,12 @@ export const useCalendarStore = create<CalendarStore>()(
           const inTwoSteps = !!storeEvent && (target.isOccurrence || !!target.isBrowserOccurrence)
             && reachesOnlyUnanswered(storeEvent, cleanUpdates, sendSchedulingMessages, options);
 
-          const {localUpdates, serverUpdates} = await calendarHooks.onUpdatingEvent.transform({localUpdates : cleanUpdates, serverUpdates: cleanUpdates, eventId: id})
+          let {localUpdates, serverUpdates} = await calendarHooks.onUpdatingEvent.transform({localUpdates : cleanUpdates, serverUpdates: cleanUpdates, eventId: id})
           if(calendarHooks.onUpdatingEvent.size > 0){
             if(!isPartialCalendarEvent(localUpdates) || !isPartialCalendarEvent(serverUpdates)){
               debug.error('returned updates by a plugin are not a valid CalendarEvent partial', {localUpdates, serverUpdates});
-              throw new Error('returned updates by a plugin are not a valid CalendarEvent partial');
+              localUpdates = cleanUpdates;
+              serverUpdates = cleanUpdates;
             }
           }
           
