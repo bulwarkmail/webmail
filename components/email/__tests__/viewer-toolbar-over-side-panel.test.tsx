@@ -131,6 +131,33 @@ describe('the reader toolbar and the plugin side panel', () => {
     expect(document.querySelector('[data-plugin-detail-panel]')).toBeTruthy();
   });
 
+  it('loads a message with its toolbar where the loaded reader puts it', () => {
+    // The loading state lifts the toolbar above the message row too, so the
+    // row stays put when the message arrives: the same element at the same
+    // place (a moved row counts as a layout shift).
+    const view = (props: { email: Email | null; isLoading: boolean }) => (
+      <EmailViewer mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onDelete={() => {}} {...props} />
+    );
+    const { container, rerender } = render(view({ email: null, isLoading: true }));
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.children).toHaveLength(2);
+    const row = root.children[1];
+    expect(row.className).toContain('flex-row');
+    expect(root.children[0].querySelector('.sk-shape')).toBeTruthy();
+    rerender(view({ email, isLoading: false }));
+    expect(root.querySelector('[data-viewer-top-toolbar="full-width"]')).toBe(root.children[0]);
+    expect(root.children[1]).toBe(row);
+  });
+
+  it('loads a message on a phone with the toolbar in the message column', () => {
+    device.isMobile = true;
+    const { container } = render(
+      <EmailViewer email={null} isLoading mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onDelete={() => {}} />,
+    );
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.children).toHaveLength(1);
+  });
+
   it('keeps the toolbar in the message column on a phone', () => {
     device.isMobile = true;
     show();
