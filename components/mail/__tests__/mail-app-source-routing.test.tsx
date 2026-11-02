@@ -281,4 +281,16 @@ describe('shared message deep link from the personal Inbox (#1491)', () => {
       window.history.replaceState(null, '', '/');
     }
   });
+
+  it('opens the shared Inbox for a grouped notification of the shared account', async () => {
+    window.history.replaceState(null, '', '/mail/folder/inbox?owner=ce');
+    useEmailStore.setState({ emails: [], selectedEmail: null, selectedMailbox: 'a', selectedKeyword: null } as never);
+    const mounted = render(<MailApp linkSegments={['folder', 'inbox']} />);
+    try {
+      await waitFor(() => expect(useEmailStore.getState().selectedMailbox).toBe('ce:a'));
+    } finally {
+      mounted.unmount();
+      window.history.replaceState(null, '', '/');
+    }
+  });
 });
