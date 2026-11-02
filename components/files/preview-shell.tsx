@@ -48,9 +48,9 @@ export function PreviewShell({ name, onClose, onDownload, actions, neighbours, c
     // The arrows after the content's own keys: a zoomed image pans with them
     // and takes the key (preventDefault), the frame goes to the next file.
     const onArrow = (e: KeyboardEvent) => {
-      if (e.defaultPrevented || !neighbours || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.defaultPrevented || e.isComposing || !neighbours || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
       const target = e.target instanceof HTMLElement ? e.target : null;
-      if (target?.closest("input, textarea, [contenteditable=true]")) return;
+      if (target?.closest('input, textarea, select, [contenteditable=true], [contenteditable=""]')) return;
       const rtl = document.dir === "rtl";
       const forward = rtl ? "ArrowLeft" : "ArrowRight";
       const back = rtl ? "ArrowRight" : "ArrowLeft";
@@ -73,6 +73,7 @@ export function PreviewShell({ name, onClose, onDownload, actions, neighbours, c
   return (
     <div
       ref={shellRef}
+      data-memail-file-preview=""
       role="dialog"
       aria-modal="true"
       aria-label={name}
@@ -82,11 +83,12 @@ export function PreviewShell({ name, onClose, onDownload, actions, neighbours, c
       {/* Full-screen under `viewport-fit=cover`: the bar pads itself out of
           the iOS status bar (#936). The insets are physical, so pl/pr. */}
       <div
-        className="flex items-center justify-between gap-2 pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))] pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3 bg-background/90 backdrop-blur border-b border-border"
+        data-memail-preview-header=""
+        className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))] pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3 bg-background/90 backdrop-blur border-b border-border"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-sm font-medium truncate" title={name}>{name}</h3>
-        <div className="flex items-center gap-1 shrink-0">
+        <h3 className="min-w-0 text-sm font-medium truncate" title={name}>{name}</h3>
+        <div data-memail-preview-actions="" className="flex min-w-0 flex-wrap items-center gap-1">
           {neighbours && (
             <>
               <IconButton label={t("previous_file")} disabled={!neighbours.previous} onClick={() => neighbours.previous && neighbours.onGo(neighbours.previous)}>

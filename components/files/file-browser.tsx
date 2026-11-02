@@ -1142,6 +1142,7 @@ export function FileBrowser({
 
   const detailsPanel = showDetails && !accountPickerMode && (
     <FileDetailsPanel
+      overlay={isNarrow}
       resource={singleSelected}
       selection={selectedList}
       folderName={folderName}

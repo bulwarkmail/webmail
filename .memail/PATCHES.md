@@ -187,3 +187,10 @@ Add each customization here. Include the relevant upstream files, the reason it 
 - Search clear keeps field focus; empty desktop Escape keeps focus when there is no dismissal handler. Phone dismissal restores the remounted Search trigger without stealing focus from another active control. While phone search is open, the redundant date/actions row is omitted and returns on close.
 - Result rows use pane-responsive grids, two-line titles, wrapped calendar/location/recurrence metadata and semantic timestamps. Upcoming/Past headings stay visible while scrolling and use per-instance IDs. Refreshing results exposes busy state while retaining loaded rows.
 - Empty-result Clear returns focus to the same pane. Native event selection, context actions, search matching, account routing and result loading remain in use. Existing Heroicons are reused throughout.
+
+
+## Files details actions and narrow preview headers
+
+- FileDetailsPanel supports an explicit narrow-overlay mode, wired from FileBrowser. It uses the native focus trap, named modal semantics and Escape/focus return. Desktop details remains complementary and does not take focus on open; Escape within it closes and returns focus to the opener when available. Selection is retained.
+- Details has a compact preview area, clearer filename/metadata spacing and values that wrap long paths. The metadata scroll region is keyboard-focusable. Native Open/Edit/Preview, Download, Share and folder favorite actions move to a persistent, bounded footer, retaining capability/device/symlink checks and callbacks. Favorite exposes pressed state. Plugin preview content remains in the scroll body.
+- Shared PreviewShell reserves a filename row below 40rem and wraps its actions. Native arrows, download, extra actions and Close remain available. File-switch arrows ignore select/editable controls, composition and modified keys. Existing Heroicons are reused throughout.

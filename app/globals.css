@@ -1712,3 +1712,10 @@ optgroup {
   .memail-calendar-result-date { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem; align-items: baseline; }
   .memail-calendar-result-dot { margin-top: 0.375rem; }
 }
+
+/* Full-screen previews reserve a filename row in narrow viewports. */
+[data-memail-file-preview] { container: memail-file-preview / inline-size; }
+@container memail-file-preview (max-width: 40rem) {
+  [data-memail-preview-header] { grid-template-columns: minmax(0, 1fr); }
+  [data-memail-preview-actions] { justify-content: flex-end; }
+}

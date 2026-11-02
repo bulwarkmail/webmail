@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useId, useLayoutEffect, useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { X, Download, Share2, Star, StarOff, FolderOpen, Eye, SquarePen, Files } from "@/components/icons";
+import { useFocusTrap } from '@/hooks/use-focus-trap';
+import { IconButton } from '@/components/ui/icon-button';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { FileResource } from "@/stores/file-store";
@@ -15,6 +17,8 @@ import {
 interface FileDetailsPanelProps {
   /** The one selected item, or null. */
   resource: FileResource | null;
+  /** A narrow-pane overlay: contains focus and returns it to the opener. */
+  overlay?: boolean;
   /** Everything selected, when more than one item is. */
   selection: FileResource[];
   /** The folder on screen, summarised when nothing is selected. */
@@ -52,26 +56,49 @@ function totalSize(items: FileResource[]): number {
 }
 
 export function FileDetailsPanel({
-  resource, selection, folderName, folderItems, path, isStarred, canShare, canPreview, canEdit,
+  resource, overlay = false, selection, folderName, folderItems, path, isStarred, canShare, canPreview, canEdit,
   iconOptions, getImageUrl, onClose, onOpen, onEdit, onDownload, onShare, onToggleStar, className, pluginFile,
 }: FileDetailsPanelProps) {
   const t = useTranslations("files");
+  const headingId = useId();
+  const panelRef = useFocusTrap({isActive: overlay, onEscape: onClose, restoreFocus: true});
+  useLayoutEffect(() => {
+    const opener = document.activeElement;
+    const panel = panelRef.current;
+    return () => {
+      if (opener instanceof HTMLElement && opener.isConnected &&
+        (document.activeElement === document.body || panel?.contains(document.activeElement))) {
+        opener.focus({preventScroll: true});
+      }
+    };
+  }, [panelRef]);
   const pluginProps = useMemo(() => (pluginFile ? { file: pluginFile } : null), [pluginFile]);
 
   const header = (
-    <div className="flex items-center justify-between px-4 h-11 border-b border-border flex-shrink-0">
-      <h2 className="text-sm font-semibold">{t("details")}</h2>
-      <Button variant="ghost" size="icon" className="h-7 w-7 -me-1.5" onClick={onClose} aria-label={t("close_details")}>
-        <X className="w-4 h-4" />
-      </Button>
+    <div className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-border px-4">
+      <h2 id={headingId} className="text-sm font-semibold">{t("details")}</h2>
+      <IconButton label={t("close_details")} onClick={onClose}><X/></IconButton>
     </div>
   );
 
-  const shell = (body: React.ReactNode) => (
-    <aside aria-label={t("details")} className={cn("flex flex-col bg-background border-s border-border", className)}>
+  const shell = (body: ReactNode, actions?: ReactNode) => (
+    <div ref={panelRef} role={overlay ? "dialog" : "complementary"}
+      aria-modal={overlay || undefined} aria-labelledby={headingId} data-memail-file-details=""
+      onKeyDown={(event) => {
+        if (overlay || event.key !== "Escape" || event.defaultPrevented || event.nativeEvent.isComposing) return;
+        const target = event.target as HTMLElement;
+        if (target.closest('[role="dialog"], [role="menu"]')) return;
+        event.preventDefault();
+        event.stopPropagation();
+        onClose();
+      }}
+      className={cn("flex min-h-0 min-w-0 flex-col border-s border-border bg-background", className)}>
       {header}
-      <div className="flex-1 overflow-y-auto">{body}</div>
-    </aside>
+      <div data-memail-file-detail-content="" role="region" aria-label={t("details")} tabIndex={0}
+        className="min-h-0 flex-1 overflow-y-auto outline-none focus-inset">{body}</div>
+      {actions && <div data-memail-file-detail-actions="" role="group" aria-label={t("toolbar")}
+        className="max-h-[45%] shrink-0 overflow-y-auto border-t border-border bg-background p-3">{actions}</div>}
+    </div>
   );
 
   if (!resource) {
@@ -79,8 +106,8 @@ export function FileDetailsPanel({
     const folders = items.filter((r) => r.isDirectory).length;
     const files = items.length - folders;
     return shell(
-      <div className="p-4 space-y-5">
-        <div className="aspect-[4/3] rounded-lg bg-muted/50 flex items-center justify-center">
+      <div className="p-4 space-y-4">
+        <div className="aspect-video max-h-40 rounded-xl bg-muted/40 flex items-center justify-center">
           {selection.length > 1
             ? <Files className="w-14 h-14 text-muted-foreground" />
             : <FolderOpen className="w-14 h-14 text-primary" />}
@@ -108,9 +135,43 @@ export function FileDetailsPanel({
     : sharedWith > 0 ? t("shared_with_count", { count: sharedWith }) : t("only_you");
   const bigIcon = <ResourceIcon resource={resource} size="xl" options={{ showIcons: true, coloredIcons: iconOptions.coloredIcons }} />;
 
+  const actions = (
+    <div className="grid grid-cols-2 gap-2">
+        {resource.isDirectory ? (
+          <Button size="sm" className="h-auto min-h-9 min-w-0 gap-1.5 whitespace-normal py-2" onClick={onOpen}>
+            <FolderOpen className="w-4 h-4" />{t("open")}
+          </Button>
+        ) : canEdit ? (
+          <Button size="sm" className="h-auto min-h-9 min-w-0 gap-1.5 whitespace-normal py-2" onClick={onEdit}>
+            <SquarePen className="w-4 h-4" />{t("office_edit")}
+          </Button>
+        ) : canPreview ? (
+          <Button size="sm" className="h-auto min-h-9 min-w-0 gap-1.5 whitespace-normal py-2" onClick={onOpen}>
+            <Eye className="w-4 h-4" />{t("preview")}
+          </Button>
+        ) : null}
+        {!resource.isDirectory && !resource.isSymlink && onDownload && (
+          <Button size="sm" variant="outline" className="h-auto min-h-9 min-w-0 gap-1.5 whitespace-normal py-2" onClick={onDownload}>
+            <Download className="w-4 h-4" />{t("download")}
+          </Button>
+        )}
+        {canShare && (
+          <Button size="sm" variant="outline" className="h-auto min-h-9 min-w-0 gap-1.5 whitespace-normal py-2" onClick={onShare}>
+            <Share2 className="w-4 h-4" />{t("share")}
+          </Button>
+        )}
+        {resource.isDirectory && !resource.isShared && (
+          <Button size="sm" variant="outline" className="h-auto min-h-9 min-w-0 gap-1.5 whitespace-normal py-2" onClick={onToggleStar} aria-pressed={isStarred}>
+            {isStarred ? <StarOff className="w-4 h-4" /> : <Star className="w-4 h-4" />}
+            {isStarred ? t("unstar") : t("star")}
+          </Button>
+        )}
+      </div>
+  );
+
   return shell(
-    <div className="p-4 space-y-5">
-      <div className="aspect-[4/3] rounded-lg bg-muted/50 flex items-center justify-center overflow-hidden">
+    <div className="p-4 space-y-4">
+      <div className="aspect-video max-h-40 rounded-xl bg-muted/40 flex items-center justify-center overflow-hidden">
         {canShowThumbnail(resource, iconOptions) ? (
           <Thumbnail
             resource={resource}
@@ -125,37 +186,6 @@ export function FileDetailsPanel({
         <p className="font-medium break-words">{resource.name}</p>
         <p className="text-sm text-muted-foreground">{kindOf(resource, t)}</p>
       </div>
-      <div className="flex flex-wrap gap-2">
-        {resource.isDirectory ? (
-          <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={onOpen}>
-            <FolderOpen className="w-4 h-4" />{t("open")}
-          </Button>
-        ) : canEdit ? (
-          <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={onEdit}>
-            <SquarePen className="w-4 h-4" />{t("office_edit")}
-          </Button>
-        ) : canPreview ? (
-          <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={onOpen}>
-            <Eye className="w-4 h-4" />{t("preview")}
-          </Button>
-        ) : null}
-        {!resource.isDirectory && !resource.isSymlink && onDownload && (
-          <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={onDownload}>
-            <Download className="w-4 h-4" />{t("download")}
-          </Button>
-        )}
-        {canShare && (
-          <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={onShare}>
-            <Share2 className="w-4 h-4" />{t("share")}
-          </Button>
-        )}
-        {resource.isDirectory && !resource.isShared && (
-          <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={onToggleStar}>
-            {isStarred ? <StarOff className="w-4 h-4" /> : <Star className="w-4 h-4" />}
-            {isStarred ? t("unstar") : t("star")}
-          </Button>
-        )}
-      </div>
       <dl className="space-y-3 text-sm">
         <Row
           label={t("type")}
@@ -167,7 +197,7 @@ export function FileDetailsPanel({
         <Row label={t("path")} value={path} mono />
       </dl>
       {pluginProps && <PluginSlot name="file-preview-section" className="w-full" extraProps={pluginProps} />}
-    </div>,
+    </div>, actions,
   );
 }
 
@@ -175,7 +205,7 @@ function Row({ label, value, mono }: { label: string; value: React.ReactNode; mo
   return (
     <div>
       <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className={cn("break-all", mono && "font-mono text-xs mt-0.5")}>{value}</dd>
+      <dd className={cn("mt-0.5 break-words leading-5 [overflow-wrap:anywhere]", mono && "font-mono text-xs")}>{value}</dd>
     </div>
   );
 }

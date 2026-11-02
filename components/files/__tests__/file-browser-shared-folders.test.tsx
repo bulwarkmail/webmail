@@ -463,12 +463,17 @@ describe('FileBrowser', () => {
     expect(shared).toEqual(expect.arrayContaining(['open', 'star', 'rename', 'move_to', 'download_zip', 'delete']));
   });
 
-  it("closes the details panel over a narrow list with Escape", async () => {
-    renderBrowser({ props: { selectedResources: new Set(['notes.txt']) } });
-    fireEvent.click(screen.getByRole('button', { name: 'details' }));
-    expect(screen.getByRole('button', { name: 'details' })).toHaveAttribute('aria-pressed', 'true');
-    fireEvent.keyDown(window, { key: 'Escape' });
+  it("closes the modal details panel without clearing the selection", async () => {
+    const onClearSelection = vi.fn();
+    renderBrowser({ props: { selectedResources: new Set(['notes.txt']), onClearSelection } });
+    const trigger = screen.getByRole('button', {name:'details'});
+    trigger.focus();
+    fireEvent.click(trigger);
+    expect(screen.getByRole('dialog', {name:'details'})).toHaveAttribute('aria-modal','true');
+    fireEvent.keyDown(screen.getByRole('button', {name:'close_details'}), { key: 'Escape' });
     expect(screen.getByRole('button', { name: 'details' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'details' })).toHaveFocus();
+    expect(onClearSelection).not.toHaveBeenCalled();
   });
 });
 
