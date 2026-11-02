@@ -261,6 +261,19 @@ describe('api.calendar', () => {
     }) as { calendarId: string }[];
     expect(afterBirthday.some((e) => e.calendarId === BIRTHDAY_CALENDAR_ID)).toBe(false);
 
+    // The end is exclusive, as for regular events: a week ending at the
+    // birthday's midnight does not contain it.
+    const weekEndingOnBirthday = await call(READ_WITH_CONTACTS, 'calendar.getEvents', {
+      from: '2026-05-08', to: '2026-05-15',
+    }) as { calendarId: string }[];
+    expect(weekEndingOnBirthday.some((e) => e.calendarId === BIRTHDAY_CALENDAR_ID)).toBe(false);
+
+    // A birthday covers its whole day, so a range inside that day finds it.
+    const middayOnBirthday = await call(READ_WITH_CONTACTS, 'calendar.getEvents', {
+      from: '2026-05-15T10:00', to: '2026-05-15T12:00',
+    }) as { id: string }[];
+    expect(middayOnBirthday.map((e) => e.id)).toContain('birthday-c1-b1-2026');
+
     // Respects calendarIds filtering
     const onlyWork = await call(READ_WITH_CONTACTS, 'calendar.getEvents', {
       from: '2026-05-01', to: '2026-06-01', calendarIds: ['cal-work'],

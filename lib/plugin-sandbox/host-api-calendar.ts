@@ -6,6 +6,7 @@
 // Plugins describe events in a small shape of their own (CalendarEventInput
 // in plugin-types.ts); arbitrary JSCalendar objects are not accepted.
 
+import { addDays, parseISO, subDays } from 'date-fns';
 import { createRecurrenceRule } from '@/lib/recurrence-rule';
 import type {
   CalendarEventInput, CalendarEventView, CalendarView, InstalledPlugin, TaskInput, TaskView,
@@ -305,7 +306,16 @@ export async function doCalendarGetEvents(options: unknown, plugin?: InstalledPl
   const { showBirthdayCalendar } = useSettingsStore.getState();
   if (showBirthdayCalendar && canReadContacts && (!calendarIds || calendarIds.has(BIRTHDAY_CALENDAR_ID))) {
     const contacts = await ensureContacts(client);
-    const birthdays = generateBirthdayEvents(contacts, start, end);
+    // A birthday lasts its whole day. Keep the ones whose day overlaps the
+    // range the way the server does for regular events: the day ends after
+    // `from` and starts before `to`, so `to` itself is excluded.
+    const rangeStart = parseISO(start);
+    const rangeEnd = parseISO(end);
+    const birthdays = generateBirthdayEvents(contacts, subDays(rangeStart, 1).toISOString(), end)
+      .filter((b) => {
+        const dayStart = parseISO(b.start);
+        return dayStart < rangeEnd && addDays(dayStart, 1) > rangeStart;
+      });
     events.push(...birthdays);
   }
 
