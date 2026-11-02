@@ -2198,7 +2198,7 @@ export async function dispatchApiCall(
       // real app-root overlay, instead of a fixed confirm/prompt form - see
       // the 'plugin-dialog' SlotName / host-dialog.ts comments for why this
       // exists (a small toolbar/row slot can't show a large custom UI).
-      const opts = (args[0] ?? {}) as { title?: string; slot?: string; extraProps?: Record<string, unknown>; width?: number };
+      const opts = (args[0] ?? {}) as { title?: string; slot?: string; extraProps?: Record<string, unknown>; width?: number; fill?: boolean };
       if (!opts.slot || typeof opts.slot !== 'string') {
         throw new Error('ui.openDialog requires a "slot" name');
       }
@@ -2209,6 +2209,7 @@ export async function dispatchApiCall(
         slot: opts.slot,
         extraProps: (opts.extraProps && typeof opts.extraProps === 'object') ? opts.extraProps : {},
         width: typeof opts.width === 'number' ? opts.width : undefined,
+        ...(opts.fill === true ? { fill: true } : {}),
       });
     }
     case 'ui.rerenderEmail': {
