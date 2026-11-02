@@ -30,6 +30,9 @@ import { PRO_SURFACES, type BootSurface } from "@/lib/boot-skeleton/surfaces";
 
 export type RailApp = "mail" | "calendar" | "contacts" | "files" | "settings";
 
+/** A rail item drawn as current: an app, or the admin panel (NavigationRail adminActive). */
+export type RailActive = RailApp | "admin";
+
 /** Translated rail labels for the phone bottom bar; bars are drawn where one is missing. */
 export type RailLabels = Partial<Record<RailApp | "admin", string>>;
 
@@ -61,7 +64,7 @@ export function RailSkeleton({
   search = false,
   className,
 }: {
-  active?: RailApp;
+  active?: RailActive;
   search?: boolean;
   className?: string;
 }) {
@@ -90,7 +93,7 @@ export function RailSkeleton({
           </span>
         </div>
         <div className="mt-auto flex flex-col items-center gap-2 pb-3 px-1 text-muted-foreground">
-          <span className={cn(footerItem, "hidden boot-rail-admin:flex")}>
+          <span className={cn(footerItem, active === "admin" ? "bg-primary/10 text-primary" : "hidden boot-rail-admin:flex")}>
             <Shield className="w-[18px] h-[18px]" />
           </span>
           <span className={footerItem}>
@@ -106,10 +109,15 @@ export function RailSkeleton({
           <span className={footerItem}>
             <Keyboard className="w-[18px] h-[18px]" />
           </span>
-          <Circle className="hidden boot-rail-quota:block w-8 h-8" />
-          <span className="flex items-center justify-center w-10 h-10 pointer-coarse:w-11 pointer-coarse:h-11">
-            <Circle className="w-8 h-8" />
-          </span>
+          {/* The admin panel's rail has no mailbox: no quota, no account. */}
+          {active === "admin" ? null : (
+            <>
+              <Circle className="hidden boot-rail-quota:block w-8 h-8" />
+              <span className="flex items-center justify-center w-10 h-10 pointer-coarse:w-11 pointer-coarse:h-11">
+                <Circle className="w-8 h-8" />
+              </span>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -125,11 +133,16 @@ export function BottomBarSkeleton({
   labels,
   className,
 }: {
-  active?: RailApp;
+  active?: RailActive;
   labels?: RailLabels;
   className?: string;
 }) {
-  const items: { id: RailApp; icon: typeof Mail }[] = [...APPS, { id: "settings", icon: Settings }];
+  // The admin panel's own bar has its entry before Settings.
+  const items: { id: RailActive; icon: typeof Mail }[] = [
+    ...APPS,
+    ...(active === "admin" ? [{ id: "admin" as const, icon: Shield }] : []),
+    { id: "settings", icon: Settings },
+  ];
   return (
     <div
       aria-hidden="true"
@@ -145,7 +158,7 @@ export function BottomBarSkeleton({
           className={cn(
             "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
             active === id ? "text-primary" : "text-muted-foreground",
-            id !== "mail" && id !== "settings" && APP_HIDE[id],
+            (id === "calendar" || id === "contacts" || id === "files") && APP_HIDE[id],
           )}
         >
           <span className={cn("relative", active === id && "mv:min-w-14 mv:rounded-full mv:bg-primary/15 mv:px-4 mv:py-[3px]")}>
@@ -268,7 +281,7 @@ export function AppShellSkeleton({
   return (
     <>
       <div className="hidden boot-out:block">
-        <LoginSkeleton label={label} />
+        <LoginSkeleton label={label} accessibilityButton />
       </div>
       {(PRO_SURFACES as readonly string[]).includes(surface) ? (
         <div className="hidden boot-pro-frame:block">

@@ -8,7 +8,7 @@ import { PluginPageSkeleton } from "./plugin-page-skeleton";
 import { SettingsSkeleton } from "./settings-skeleton";
 import { AdminSkeleton } from "./admin-skeleton";
 import { ProSkeleton } from "./pro-skeleton";
-import { LoginSkeleton } from "./login-skeleton";
+import { AdminLoginSkeleton, LoginSkeleton } from "./login-skeleton";
 import { SetupSkeleton } from "./setup-skeleton";
 
 interface RouteSkeletonProps {
@@ -39,8 +39,9 @@ export function RouteSkeleton({ surface, label, labels }: RouteSkeletonProps) {
     case "pro":
       return <ProSkeleton label={label} />;
     case "admin":
-      return <AdminSkeleton label={label} />;
+      return <AdminSkeleton label={label} labels={labels} />;
     case "admin-login":
+      return <AdminLoginSkeleton label={label} />;
     case "login":
       return <LoginSkeleton label={label} />;
     case "setup":
