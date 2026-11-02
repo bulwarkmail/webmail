@@ -139,7 +139,19 @@ export function replaceEmbeddedSignature(
       ? children.find((node) => node.textContent?.includes(options.quoteHeader!))
       : undefined;
     const quote = header ?? children.find(isQuoteBoundary) ?? null;
-    removed = { parent: doc.body, insertBefore: quote };
+    // With no line above it, the signature would open the body and leave no
+    // place to type (#1503). Put an empty one first, as getInitialBody does,
+    // and keep the bare line breaks for the gap down to the quote.
+    const above = quote ? children.slice(0, children.indexOf(quote)) : children;
+    const hasLineAbove = above.some((node) => node.nodeType === 1
+      ? (node as Element).tagName !== 'BR'
+      : !!node.textContent?.trim());
+    if (!hasLineAbove) {
+      removed = { parent: doc.body, insertBefore: above[0] ?? quote };
+      signatureHtml = `<p></p>${signatureHtml}`;
+    } else {
+      removed = { parent: doc.body, insertBefore: quote };
+    }
   }
   const host = doc.createElement('div');
   host.innerHTML = signatureHtml;
