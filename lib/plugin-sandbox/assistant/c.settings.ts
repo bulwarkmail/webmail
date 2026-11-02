@@ -26,7 +26,7 @@ import {
 } from '../../settings-schema';
 import { isPlainRecord, sessionClient } from '../host-api-input';
 import { messagesFor } from '../host-api-app';
-import { issueUndoToken, redeemUndoToken } from './c.undo';
+import { issueUndoToken, redeemUndoToken, undoAccount } from './c.undo';
 import type {
   SettingDescription, SettingRefusal, SettingValue, SettingsChangeResult, SettingsUndoResult,
 } from './c.types';
@@ -239,7 +239,7 @@ export async function doSetSettings(pluginId: string, arg: unknown): Promise<Set
     previous[key] = old;
   }
   const undoToken = Object.keys(previous).length > 0
-    ? issueUndoToken(pluginId, client.getAccountId(), 'settings', previous)
+    ? issueUndoToken(pluginId, undoAccount(client), 'settings', previous)
     : null;
   return { applied, refused, undoToken };
 }
@@ -252,7 +252,7 @@ export async function doSetSettings(pluginId: string, arg: unknown): Promise<Set
 export async function doUndoSettings(pluginId: string, token: unknown): Promise<SettingsUndoResult> {
   const method = 'app.undoSettings';
   const client = sessionClient(method);
-  const previous = redeemUndoToken<Record<string, SettingValue | null>>(method, pluginId, client.getAccountId(), 'settings', token);
+  const previous = redeemUndoToken<Record<string, SettingValue | null>>(method, pluginId, undoAccount(client), 'settings', token);
   const restored: string[] = [];
   const refused: SettingsUndoResult['refused'] = {};
   const policy = usePolicyStore.getState();

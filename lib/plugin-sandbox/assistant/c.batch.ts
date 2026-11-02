@@ -13,7 +13,7 @@ import { recordUndo, runUndo } from '../../undo-history';
 import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY } from '../../thread-utils';
 import { readId, readObject, readString, sessionClient, withinRate } from '../host-api-input';
 import { MAX_PLUGIN_MOVES_PER_MINUTE } from '../host-api-mail';
-import { issueUndoToken, redeemUndoToken } from './c.undo';
+import { issueUndoToken, redeemUndoToken, undoAccount } from './c.undo';
 import type { MailBatchAction, MailBatchResult } from './c.types';
 
 /** Most messages one email.batch call changes. */
@@ -134,7 +134,7 @@ export async function doEmailBatch(pluginId: string, input: unknown): Promise<Ma
   const run = once(undo);
   // One entry in the app's undo history: Ctrl+Z reaches it too.
   const entry = recordUndo(`Plugin ${pluginId}: ${label} messages`, () => { void run().catch(() => { /* the plugin's undo reports it */ }); });
-  const token = issueUndoToken(pluginId, client.getAccountId(), 'batch', { entryId: entry.id, run } satisfies BatchUndo);
+  const token = issueUndoToken(pluginId, undoAccount(client), 'batch', { entryId: entry.id, run } satisfies BatchUndo);
   return { done, failed: missing, undoToken: token };
 }
 
@@ -142,7 +142,7 @@ export async function doEmailBatch(pluginId: string, input: unknown): Promise<Ma
 export async function doEmailUndoBatch(pluginId: string, token: unknown): Promise<void> {
   const method = 'email.undoBatch';
   const client: IJMAPClient = sessionClient(method);
-  const { entryId, run } = redeemUndoToken<BatchUndo>(method, pluginId, client.getAccountId(), 'batch', token);
+  const { entryId, run } = redeemUndoToken<BatchUndo>(method, pluginId, undoAccount(client), 'batch', token);
   // Off the history first, so Ctrl+Z can't run it again; an entry already
   // taken by Ctrl+Z has run (or is running) the same undo.
   runUndo(entryId);

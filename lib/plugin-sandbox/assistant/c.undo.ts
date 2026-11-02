@@ -5,6 +5,8 @@
 // host a copy of something to re-create.
 
 import { generateUUID } from '../../utils';
+import type { IJMAPClient } from '../../jmap/client-interface';
+import { useAuthStore } from '@/stores/auth-store';
 
 /** How long an undo token can be used. */
 export const UNDO_TOKEN_TTL_MS = 30 * 60_000;
@@ -49,6 +51,11 @@ export function redeemUndoToken<T>(method: string, pluginId: string, accountId: 
   }
   tokens.delete(token);
   return entry.data as T;
+}
+
+/** The account an undo token is bound to: the client's JMAP account, else the signed-in login. */
+export function undoAccount(client: IJMAPClient): string {
+  return client.getAccountId?.() || useAuthStore.getState().activeAccountId || '';
 }
 
 /** For tests. */

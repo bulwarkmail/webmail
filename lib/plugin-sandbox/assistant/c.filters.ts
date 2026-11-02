@@ -20,7 +20,7 @@ import { isValidSieveHeaderName } from '../../sieve/generator';
 import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY } from '../../thread-utils';
 import { generateUUID } from '../../utils';
 import { isPlainRecord, readId, readObject, readString, sessionClient } from '../host-api-input';
-import { issueUndoToken, redeemUndoToken } from './c.undo';
+import { issueUndoToken, redeemUndoToken, undoAccount } from './c.undo';
 import type {
   FilterCreateResult, FilterRuleActionType, FilterRuleField, FilterRuleInfo, FilterRuleOp, FiltersListView,
 } from './c.types';
@@ -214,14 +214,14 @@ export async function doFiltersCreate(pluginId: string, input: unknown): Promise
   }
   if (!change) throw new Error(`${method}: nothing was written`);
   refreshFilterStore(client, accountId);
-  return { id: rule.id, undoToken: issueUndoToken(pluginId, client.getAccountId(), 'filters', change) };
+  return { id: rule.id, undoToken: issueUndoToken(pluginId, undoAccount(client), 'filters', change) };
 }
 
 /** Take back a rule filters.create added: the script gets its earlier bytes back. */
 export async function doFiltersUndo(pluginId: string, token: unknown): Promise<void> {
   const method = 'filters.undo';
   const client = sieveClient(method);
-  const change = redeemUndoToken<FiltersChange>(method, pluginId, client.getAccountId(), 'filters', token);
+  const change = redeemUndoToken<FiltersChange>(method, pluginId, undoAccount(client), 'filters', token);
   try {
     await restoreAccountFilters(client, change);
   } catch (err) {
