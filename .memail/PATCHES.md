@@ -132,3 +132,11 @@ Add each customization here. Include the relevant upstream files, the reason it 
 - Full details is a named region with an explicit close control, connected disclosure state and Escape handling inside the panel. Closing returns focus to the opening control, or the corresponding visible disclosure after a breakpoint change.
 - Native detail cards use a named container query instead of desktop viewport breakpoints: one column in a narrow reader, two above 44rem of pane width. Full-width mailing-list/plugin slots remain full-width when appropriate; definition-list column rules only target host-owned lists.
 - Phone dates now use compact labels with semantic timestamps and precise UTC tooltips; complete local dates remain in details. Truncated sender addresses expose their full text in a title. Native actions, message bodies and quick reply are unchanged.
+
+
+## Composer formatting hierarchy and pasted-font feedback
+
+- Native composers opt into a streamlined formatting toolbar: common actions stay in the first strip; fonts, paragraph/line spacing, source import, clear formatting, heading styles, colors, tables, code and alignment remain in an expandable More row. The existing commands are moved, not replaced. The standalone editor defaults to the full toolbar, and Mountain View compose windows retain the full variant.
+- The disclosure participates in the existing single-Tab-stop toolbar. Expansion mounts the secondary actions into arrow navigation. Escape closes a nested menu first, then the secondary row, returning focus to More. Closing resets open secondary menus. Uniform native button alignment removes unnecessary text line-box height.
+- Font-family feedback now reads inline marks and inherited styles on pasted paragraphs/headings/table cells, with default compose-style fallback. It updates on caret changes without rewriting content and shows fonts outside the built-in palette by name.
+- Existing paste/import, font commands, paragraph spacing, undo, images and table commands remain in place. The native Formatting on/off control is unchanged; its older outside-window test now checks the explicit toggle instead of assuming an initially visible strip.

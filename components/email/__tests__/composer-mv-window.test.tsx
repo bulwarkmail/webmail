@@ -245,9 +245,11 @@ describe('composer in the Mountain View compose window', () => {
     expect(onPopOut).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps its own header and a top toolbar outside the window', () => {
+  it('keeps its own header and expands its top formatting toolbar on request outside the window', () => {
     render(<EmailComposer initialData={DATA} />);
     expect(document.querySelector('[data-mv-compose-titlebar]')).toBeNull();
+    expect(screen.getByTestId('rich-text-editor')).toHaveAttribute('data-placement', 'hidden');
+    fireEvent.click(screen.getByRole('button', { name: 'formatting' }));
     expect(screen.getByTestId('rich-text-editor')).toHaveAttribute('data-placement', 'top');
   });
 });

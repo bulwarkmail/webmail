@@ -13,7 +13,7 @@ import Link from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
 import { TextDirection } from "@/components/email/text-direction";
 import { normalizeComposeHtml, markdownToComposeHtml, looksLikeMarkdown, COMPOSE_FONTS } from '@/.memail/compose-content';
-import { clearComposeFormatting, setComposeLineHeight, composeLineHeightValue } from '@/.memail/compose-formatting';
+import { clearComposeFormatting, setComposeLineHeight, composeLineHeightValue, composeFontFamilyValue } from '@/.memail/compose-formatting';
 import { paragraphSpacingValue, setParagraphSpacing } from '@/.memail/paragraph-spacing';
 import { ComposeImportDialog } from '@/.memail/compose-import-dialog';
 import { PlainTextPaste } from "@/components/email/plain-text-paste";
@@ -71,6 +71,8 @@ import {
   Rows3,
   Columns3,
   ImageIcon,
+  ChevronDown,
+  ChevronUp,
 } from "@/components/icons";
 
 export interface InlineImageUpload {
@@ -166,6 +168,8 @@ interface RichTextEditorProps {
    * away entirely.
    */
   toolbarPlacement?: 'top' | 'bottom' | 'hidden';
+  /** Keep typography/import controls in an optional second formatting row. */
+  streamlinedToolbar?: boolean;
   /** The editing area's accessible name ("Message"). */
   ariaLabel?: string;
   /** The body failed validation: exposed as aria-invalid on the editing area. */
@@ -201,11 +205,12 @@ const ToolbarButton = React.forwardRef<HTMLButtonElement, {
   pressed?: boolean;
   popup?: "menu" | "dialog";
   expanded?: boolean;
+  controls?: string;
   onClick: () => void;
   children: React.ReactNode;
   title: string;
   disabled?: boolean;
-}>(function ToolbarButton({ item, active, pressed, popup, expanded, onClick, children, title, disabled }, ref) {
+}>(function ToolbarButton({ item, active, pressed, popup, expanded, controls, onClick, children, title, disabled }, ref) {
   return (
     <button
       ref={ref}
@@ -218,7 +223,8 @@ const ToolbarButton = React.forwardRef<HTMLButtonElement, {
       aria-pressed={pressed === undefined ? undefined : pressed}
       data-active={active || undefined}
       aria-haspopup={popup}
-      aria-expanded={popup ? !!expanded : undefined}
+      aria-expanded={expanded ?? (popup ? false : undefined)}
+      aria-controls={controls}
       className={cn(
         // Bigger on a phone, where 28px was hard to hit with a finger.
         "p-1.5 max-md:p-2 rounded hover:bg-accent transition-colors",
@@ -425,6 +431,7 @@ export function RichTextEditor({
   onMentionAdd,
   collapseToolbarOnMobile = false,
   toolbarPlacement = 'top',
+  streamlinedToolbar = false,
   ariaLabel,
   ariaInvalid,
   ariaDescribedBy,
@@ -684,7 +691,7 @@ export function RichTextEditor({
       ].map((name) => ed.isActive(name)).concat(
         ed.isActive("heading", { level: 1 }), ed.isActive("heading", { level: 2 }),
         ed.isActive({ textAlign: "left" }), ed.isActive({ textAlign: "center" }), ed.isActive({ textAlign: "right" }),
-      ).join() + `|${ed.getAttributes("heading").style ?? ""}|${ed.getAttributes("heading").level ?? ""}|${style.fontFamily ?? ""}|${style.fontSize ?? ""}|${style.color ?? ""}|${style.backgroundColor ?? ""}|${ed.getAttributes("paragraph").style ?? ""}|${ed.getAttributes("paragraph").dir ?? ""}`;
+      ).join() + `|${ed.getAttributes("heading").style ?? ""}|${ed.getAttributes("heading").level ?? ""}|${composeFontFamilyValue(ed)}|${style.fontFamily ?? ""}|${style.fontSize ?? ""}|${style.color ?? ""}|${style.backgroundColor ?? ""}|${ed.getAttributes("paragraph").style ?? ""}|${ed.getAttributes("paragraph").dir ?? ""}`;
     },
   });
 
@@ -746,6 +753,17 @@ export function RichTextEditor({
   const [bgColorMenuOpen, setBgColorMenuOpen] = useState(false);
   const bgColorWrapperRef = useRef<HTMLDivElement>(null);
   const [fontFamilyOpen, setFontFamilyOpen] = useState(false);
+  const [advancedFormattingOpen, setAdvancedFormattingOpen] = useState(false);
+  const advancedFormattingId = React.useId();
+  const advancedFormattingTrigger = useRef<HTMLButtonElement>(null);
+  const closeAdvancedFormatting = () => {
+    setFontFamilyOpen(false);
+    setColorMenuOpen(false);
+    setBgColorMenuOpen(false);
+    setTableMenuOpen(false);
+    setAdvancedFormattingOpen(false);
+    advancedFormattingTrigger.current?.focus();
+  };
   const fontFamilyButtonRef = useRef<HTMLButtonElement>(null);
   const fontFamilyWrapperRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -839,6 +857,9 @@ export function RichTextEditor({
     );
   }
 
+  const currentFontFamily: string = composeFontFamilyValue(editor) || defaultTextStyle?.fontFamily || '';
+  const fontFamilyLabel = COMPOSE_FONTS.find(([,value]) => value === currentFontFamily)?.[0]
+    ?? (currentFontFamily.split(',')[0].replace(/^['"]|['"]$/g, '').trim() || 'Font');
   const currentFontSize: string | null = editor.getAttributes("textStyle").fontSize ?? null;
   const currentColor: string | null = editor.getAttributes("textStyle").color ?? null;
   const currentBgColor: string | null = editor.getAttributes("textStyle").backgroundColor ?? null;
@@ -921,6 +942,227 @@ export function RichTextEditor({
     </button>
   );
 
+  const colorFormatting = <>
+        <div ref={colorWrapperRef} className="relative">
+          <ToolbarButton
+            ref={colorButtonRef}
+            item="text-color"
+            active={!!currentColor}
+            popup="menu"
+            expanded={colorMenuOpen}
+            onClick={() => setColorMenuOpen((v) => !v)}
+            title={tToolbar("text_color")}
+          >
+            {/* The icon itself previews the active colour - no layout shift. */}
+            <Baseline className="w-4 h-4" style={{ color: currentColor || undefined }} />
+          </ToolbarButton>
+          {colorMenuOpen && (
+            <ToolbarPopover
+              label={tToolbar("text_color")}
+              role="menu"
+              columns={8}
+              triggerRef={colorButtonRef}
+              onClose={() => setColorMenuOpen(false)}
+              className="p-2"
+            >
+              {renderPalette(
+                currentColor,
+                (color) => {
+                  editor.chain().focus().setColor(color).run();
+                  setColorMenuOpen(false);
+                },
+                tToolbar("remove_color"),
+                () => {
+                  editor.chain().focus().unsetColor().run();
+                  setColorMenuOpen(false);
+                }
+              )}
+            </ToolbarPopover>
+          )}
+        </div>
+        {/* Background color - same palette, same grid and same swatch
+            styling as the text-colour picker above, so the two controls
+            read as siblings. The highlighter glyph previews the active
+            tint on its little bar. Inline style="background-color: …"
+            survives email round-trips like `color` does. */}
+        <div ref={bgColorWrapperRef} className="relative">
+          <ToolbarButton
+            ref={bgColorButtonRef}
+            item="background-color"
+            active={!!currentBgColor}
+            popup="menu"
+            expanded={bgColorMenuOpen}
+            onClick={() => setBgColorMenuOpen((v) => !v)}
+            title={tToolbar("background_color")}
+          >
+            <span className="relative inline-flex items-center justify-center">
+              <Highlighter className="w-4 h-4" />
+              <span
+                aria-hidden
+                className="absolute -bottom-[3px] left-1/2 h-[3px] w-3 -translate-x-1/2 rounded-[1px] border border-border/40"
+                style={{ backgroundColor: currentBgColor || undefined }}
+              />
+            </span>
+          </ToolbarButton>
+          {bgColorMenuOpen && (
+            <ToolbarPopover
+              label={tToolbar("background_color")}
+              role="menu"
+              columns={8}
+              triggerRef={bgColorButtonRef}
+              onClose={() => setBgColorMenuOpen(false)}
+              className="p-2"
+            >
+              {renderPalette(
+                currentBgColor,
+                (color) => {
+                  editor.chain().focus().setBackgroundColor(color).run();
+                  setBgColorMenuOpen(false);
+                },
+                tToolbar("remove_background_color"),
+                () => {
+                  editor.chain().focus().unsetBackgroundColor().run();
+                  setBgColorMenuOpen(false);
+                }
+              )}
+            </ToolbarPopover>
+          )}
+        </div>
+
+        <ToolbarSeparator />
+  </>;
+
+  const headingFormatting = <>
+        <ToolbarChoice
+          item="text-style" label="Text style"
+          value={String(editor.getAttributes('heading').level ?? 0)}
+          choices={[
+            {value:'0',label:'Normal text'},
+            ...([1,2,3,4,5,6] as const).map(level => ({value:String(level),label:`Heading ${level}`})),
+          ]}
+          onSelect={value => {
+            if (value === '0') editor.chain().focus().setParagraph().run();
+            else editor.chain().focus().setHeading({level:Number(value) as 1|2|3|4|5|6}).run();
+          }}
+        />
+
+        <ToolbarSeparator />
+  </>;
+
+  const tableFormatting = <>
+        <div ref={tableWrapperRef} className="relative">
+          <ToolbarButton
+            ref={tableButtonRef}
+            item="table"
+            active={editor.isActive("table")}
+            popup={editor.isActive("table") ? "menu" : "dialog"}
+            expanded={tableMenuOpen}
+            onClick={() => setTableMenuOpen((v) => !v)}
+            title={tToolbar("table")}
+          >
+            <TableIcon className="w-4 h-4" />
+          </ToolbarButton>
+          {tableMenuOpen && (
+            editor.isActive("table") ? (
+              <ToolbarPopover
+                label={tToolbar("table")}
+                role="menu"
+                triggerRef={tableButtonRef}
+                onClose={() => setTableMenuOpen(false)}
+                className="p-2 min-w-[200px]"
+              >
+                <div className="flex flex-col gap-0.5">
+                  {tableMenuItem(<Rows3 className="w-4 h-4" aria-hidden />, tToolbar("add_row_above"), () => editor.chain().focus().addRowBefore().run())}
+                  {tableMenuItem(<Rows3 className="w-4 h-4" aria-hidden />, tToolbar("add_row_below"), () => editor.chain().focus().addRowAfter().run())}
+                  {tableMenuItem(<Columns3 className="w-4 h-4" aria-hidden />, tToolbar("add_column_before"), () => editor.chain().focus().addColumnBefore().run())}
+                  {tableMenuItem(<Columns3 className="w-4 h-4" aria-hidden />, tToolbar("add_column_after"), () => editor.chain().focus().addColumnAfter().run())}
+                  <div className="h-px bg-border my-1" role="separator" />
+                  {tableMenuItem(<Trash2 className="w-4 h-4" aria-hidden />, tToolbar("delete_row"), () => editor.chain().focus().deleteRow().run())}
+                  {tableMenuItem(<Trash2 className="w-4 h-4" aria-hidden />, tToolbar("delete_column"), () => editor.chain().focus().deleteColumn().run())}
+                  {tableMenuItem(<Rows3 className="w-4 h-4" aria-hidden />, tToolbar("toggle_header_row"), () => editor.chain().focus().toggleHeaderRow().run())}
+                  <div className="h-px bg-border my-1" role="separator" />
+                  {tableMenuItem(<Trash2 className="w-4 h-4" aria-hidden />, tToolbar("delete_table"), () => editor.chain().focus().deleteTable().run(), true)}
+                </div>
+              </ToolbarPopover>
+            ) : (
+              <ToolbarPopover
+                label={tToolbar("table")}
+                role="dialog"
+                columns={TABLE_PICKER_COLS}
+                triggerRef={tableButtonRef}
+                onClose={() => setTableMenuOpen(false)}
+                className="p-2 min-w-[200px]"
+              >
+                <TableSizePicker
+                  onPick={(rows, cols) => {
+                    editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
+                    setTableMenuOpen(false);
+                  }}
+                />
+              </ToolbarPopover>
+            )
+          )}
+        </div>
+
+        <ToolbarSeparator />
+  </>;
+
+  const additionalFormatting = <>
+        <ToolbarButton
+          item="code-block"
+          pressed={editor.isActive("codeBlock")}
+          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+          title={tToolbar("code_block")}
+        >
+          <Code className="w-4 h-4" />
+        </ToolbarButton>
+
+        <ToolbarSeparator />
+
+        <ToolbarButton
+          item="align-left"
+          pressed={editor.isActive({ textAlign: "left" })}
+          onClick={() => editor.chain().focus().setTextAlign("left").run()}
+          title={tToolbar("align_left")}
+        >
+          <AlignLeft className="w-4 h-4" />
+        </ToolbarButton>
+        <ToolbarButton
+          item="align-center"
+          pressed={editor.isActive({ textAlign: "center" })}
+          onClick={() => editor.chain().focus().setTextAlign("center").run()}
+          title={tToolbar("align_center")}
+        >
+          <AlignCenter className="w-4 h-4" />
+        </ToolbarButton>
+        <ToolbarButton
+          item="align-right"
+          pressed={editor.isActive({ textAlign: "right" })}
+          onClick={() => editor.chain().focus().setTextAlign("right").run()}
+          title={tToolbar("align_right")}
+        >
+          <AlignRight className="w-4 h-4" />
+        </ToolbarButton>
+
+        {rtlEditingSupport && (
+          <ToolbarButton
+            item="text-direction"
+            pressed={
+              (editor.getAttributes("paragraph").dir || editor.getAttributes("heading").dir) === "rtl"
+            }
+            onClick={() => {
+              const cur =
+                editor.getAttributes("paragraph").dir || editor.getAttributes("heading").dir;
+              editor.chain().focus().setTextDirection(cur === "rtl" ? "ltr" : "rtl").run();
+            }}
+            title={tToolbar("text_direction")}
+          >
+            <ArrowLeftRight className="w-4 h-4" />
+          </ToolbarButton>
+        )}
+
+  </>;
+
   return (
     <div className={cn("flex flex-col", hasError && "ring-2 ring-red-500 dark:ring-red-400 rounded", className)}>
       {/* Toolbar - sticky within the composer's scroll container so it stays
@@ -932,6 +1174,7 @@ export function RichTextEditor({
       <div
         ref={toolbarRef}
         data-testid="rich-text-toolbar"
+        data-memail-streamlined-toolbar={streamlinedToolbar ? "" : undefined}
         role="toolbar"
         aria-label={tComposer("formatting")}
         onKeyDown={onToolbarKeyDown}
@@ -1045,108 +1288,9 @@ export function RichTextEditor({
         >
           <Strikethrough className="w-4 h-4" />
         </ToolbarButton>
-        <div ref={colorWrapperRef} className="relative">
-          <ToolbarButton
-            ref={colorButtonRef}
-            item="text-color"
-            active={!!currentColor}
-            popup="menu"
-            expanded={colorMenuOpen}
-            onClick={() => setColorMenuOpen((v) => !v)}
-            title={tToolbar("text_color")}
-          >
-            {/* The icon itself previews the active colour - no layout shift. */}
-            <Baseline className="w-4 h-4" style={{ color: currentColor || undefined }} />
-          </ToolbarButton>
-          {colorMenuOpen && (
-            <ToolbarPopover
-              label={tToolbar("text_color")}
-              role="menu"
-              columns={8}
-              triggerRef={colorButtonRef}
-              onClose={() => setColorMenuOpen(false)}
-              className="p-2"
-            >
-              {renderPalette(
-                currentColor,
-                (color) => {
-                  editor.chain().focus().setColor(color).run();
-                  setColorMenuOpen(false);
-                },
-                tToolbar("remove_color"),
-                () => {
-                  editor.chain().focus().unsetColor().run();
-                  setColorMenuOpen(false);
-                }
-              )}
-            </ToolbarPopover>
-          )}
-        </div>
-        {/* Background color - same palette, same grid and same swatch
-            styling as the text-colour picker above, so the two controls
-            read as siblings. The highlighter glyph previews the active
-            tint on its little bar. Inline style="background-color: …"
-            survives email round-trips like `color` does. */}
-        <div ref={bgColorWrapperRef} className="relative">
-          <ToolbarButton
-            ref={bgColorButtonRef}
-            item="background-color"
-            active={!!currentBgColor}
-            popup="menu"
-            expanded={bgColorMenuOpen}
-            onClick={() => setBgColorMenuOpen((v) => !v)}
-            title={tToolbar("background_color")}
-          >
-            <span className="relative inline-flex items-center justify-center">
-              <Highlighter className="w-4 h-4" />
-              <span
-                aria-hidden
-                className="absolute -bottom-[3px] left-1/2 h-[3px] w-3 -translate-x-1/2 rounded-[1px] border border-border/40"
-                style={{ backgroundColor: currentBgColor || undefined }}
-              />
-            </span>
-          </ToolbarButton>
-          {bgColorMenuOpen && (
-            <ToolbarPopover
-              label={tToolbar("background_color")}
-              role="menu"
-              columns={8}
-              triggerRef={bgColorButtonRef}
-              onClose={() => setBgColorMenuOpen(false)}
-              className="p-2"
-            >
-              {renderPalette(
-                currentBgColor,
-                (color) => {
-                  editor.chain().focus().setBackgroundColor(color).run();
-                  setBgColorMenuOpen(false);
-                },
-                tToolbar("remove_background_color"),
-                () => {
-                  editor.chain().focus().unsetBackgroundColor().run();
-                  setBgColorMenuOpen(false);
-                }
-              )}
-            </ToolbarPopover>
-          )}
-        </div>
+        {!streamlinedToolbar && colorFormatting}
 
-        <ToolbarSeparator />
-
-        <ToolbarChoice
-          item="text-style" label="Text style"
-          value={String(editor.getAttributes('heading').level ?? 0)}
-          choices={[
-            {value:'0',label:'Normal text'},
-            ...([1,2,3,4,5,6] as const).map(level => ({value:String(level),label:`Heading ${level}`})),
-          ]}
-          onSelect={value => {
-            if (value === '0') editor.chain().focus().setParagraph().run();
-            else editor.chain().focus().setHeading({level:Number(value) as 1|2|3|4|5|6}).run();
-          }}
-        />
-
-        <ToolbarSeparator />
+        {!streamlinedToolbar && headingFormatting}
 
         <ToolbarButton
           item="bullet-list"
@@ -1172,58 +1316,7 @@ export function RichTextEditor({
         >
           <Quote className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton
-          item="code-block"
-          pressed={editor.isActive("codeBlock")}
-          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-          title={tToolbar("code_block")}
-        >
-          <Code className="w-4 h-4" />
-        </ToolbarButton>
-
-        <ToolbarSeparator />
-
-        <ToolbarButton
-          item="align-left"
-          pressed={editor.isActive({ textAlign: "left" })}
-          onClick={() => editor.chain().focus().setTextAlign("left").run()}
-          title={tToolbar("align_left")}
-        >
-          <AlignLeft className="w-4 h-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          item="align-center"
-          pressed={editor.isActive({ textAlign: "center" })}
-          onClick={() => editor.chain().focus().setTextAlign("center").run()}
-          title={tToolbar("align_center")}
-        >
-          <AlignCenter className="w-4 h-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          item="align-right"
-          pressed={editor.isActive({ textAlign: "right" })}
-          onClick={() => editor.chain().focus().setTextAlign("right").run()}
-          title={tToolbar("align_right")}
-        >
-          <AlignRight className="w-4 h-4" />
-        </ToolbarButton>
-
-        {rtlEditingSupport && (
-          <ToolbarButton
-            item="text-direction"
-            pressed={
-              (editor.getAttributes("paragraph").dir || editor.getAttributes("heading").dir) === "rtl"
-            }
-            onClick={() => {
-              const cur =
-                editor.getAttributes("paragraph").dir || editor.getAttributes("heading").dir;
-              editor.chain().focus().setTextDirection(cur === "rtl" ? "ltr" : "rtl").run();
-            }}
-            title={tToolbar("text_direction")}
-          >
-            <ArrowLeftRight className="w-4 h-4" />
-          </ToolbarButton>
-        )}
+        {!streamlinedToolbar && additionalFormatting}
 
         <ToolbarSeparator />
 
@@ -1250,66 +1343,35 @@ export function RichTextEditor({
           </ToolbarButton>
         )}
 
-        <div ref={tableWrapperRef} className="relative">
-          <ToolbarButton
-            ref={tableButtonRef}
-            item="table"
-            active={editor.isActive("table")}
-            popup={editor.isActive("table") ? "menu" : "dialog"}
-            expanded={tableMenuOpen}
-            onClick={() => setTableMenuOpen((v) => !v)}
-            title={tToolbar("table")}
-          >
-            <TableIcon className="w-4 h-4" />
-          </ToolbarButton>
-          {tableMenuOpen && (
-            editor.isActive("table") ? (
-              <ToolbarPopover
-                label={tToolbar("table")}
-                role="menu"
-                triggerRef={tableButtonRef}
-                onClose={() => setTableMenuOpen(false)}
-                className="p-2 min-w-[200px]"
-              >
-                <div className="flex flex-col gap-0.5">
-                  {tableMenuItem(<Rows3 className="w-4 h-4" aria-hidden />, tToolbar("add_row_above"), () => editor.chain().focus().addRowBefore().run())}
-                  {tableMenuItem(<Rows3 className="w-4 h-4" aria-hidden />, tToolbar("add_row_below"), () => editor.chain().focus().addRowAfter().run())}
-                  {tableMenuItem(<Columns3 className="w-4 h-4" aria-hidden />, tToolbar("add_column_before"), () => editor.chain().focus().addColumnBefore().run())}
-                  {tableMenuItem(<Columns3 className="w-4 h-4" aria-hidden />, tToolbar("add_column_after"), () => editor.chain().focus().addColumnAfter().run())}
-                  <div className="h-px bg-border my-1" role="separator" />
-                  {tableMenuItem(<Trash2 className="w-4 h-4" aria-hidden />, tToolbar("delete_row"), () => editor.chain().focus().deleteRow().run())}
-                  {tableMenuItem(<Trash2 className="w-4 h-4" aria-hidden />, tToolbar("delete_column"), () => editor.chain().focus().deleteColumn().run())}
-                  {tableMenuItem(<Rows3 className="w-4 h-4" aria-hidden />, tToolbar("toggle_header_row"), () => editor.chain().focus().toggleHeaderRow().run())}
-                  <div className="h-px bg-border my-1" role="separator" />
-                  {tableMenuItem(<Trash2 className="w-4 h-4" aria-hidden />, tToolbar("delete_table"), () => editor.chain().focus().deleteTable().run(), true)}
-                </div>
-              </ToolbarPopover>
-            ) : (
-              <ToolbarPopover
-                label={tToolbar("table")}
-                role="dialog"
-                columns={TABLE_PICKER_COLS}
-                triggerRef={tableButtonRef}
-                onClose={() => setTableMenuOpen(false)}
-                className="p-2 min-w-[200px]"
-              >
-                <TableSizePicker
-                  onPick={(rows, cols) => {
-                    editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
-                    setTableMenuOpen(false);
-                  }}
-                />
-              </ToolbarPopover>
-            )
-          )}
-        </div>
+        {!streamlinedToolbar && tableFormatting}
 
-        <ToolbarSeparator />
-
+        <ToolbarButton
+          item="undo"
+          onClick={() => editor.chain().focus().undo().run()}
+          disabled={!editor.can().undo()}
+          title={tToolbar("undo")}
+        >
+          <Undo className="w-4 h-4" />
+        </ToolbarButton>
+        <ToolbarButton
+          item="redo"
+          onClick={() => editor.chain().focus().redo().run()}
+          disabled={!editor.can().redo()}
+          title={tToolbar("redo")}
+        >
+          <Redo className="w-4 h-4" />
+        </ToolbarButton>
+        {streamlinedToolbar && <ToolbarButton ref={advancedFormattingTrigger} item="more-formatting" title="More formatting" active={advancedFormattingOpen} expanded={advancedFormattingOpen} controls={advancedFormattingOpen ? advancedFormattingId : undefined}
+          onClick={()=>{if(advancedFormattingOpen) closeAdvancedFormatting(); else setAdvancedFormattingOpen(true);}}>
+          <span className="inline-flex items-center gap-1 px-1 text-xs">More {advancedFormattingOpen ? <ChevronUp className="size-3" aria-hidden="true"/> : <ChevronDown className="size-3" aria-hidden="true"/>}</span>
+        </ToolbarButton>}
+        {(!streamlinedToolbar || advancedFormattingOpen) && <div id={advancedFormattingId} role="group" aria-label="Typography and spacing"
+          className={streamlinedToolbar ? "flex basis-full flex-wrap items-center gap-1 border-t border-border/60 pt-2 mt-1" : "contents"}
+          onKeyDown={event=>{if(streamlinedToolbar && event.key==='Escape' && !event.defaultPrevented){event.preventDefault();event.stopPropagation();closeAdvancedFormatting();}}}>
         <div ref={fontFamilyWrapperRef} className="relative">
-          <ToolbarButton ref={fontFamilyButtonRef} item="font-family" title="Font family" popup="menu" expanded={fontFamilyOpen} active={fontFamilyOpen} onClick={()=>setFontFamilyOpen(v=>!v)}><span className="px-1 text-xs">Font</span></ToolbarButton>
+          <ToolbarButton ref={fontFamilyButtonRef} item="font-family" title="Font family" popup="menu" expanded={fontFamilyOpen} active={fontFamilyOpen || !!currentFontFamily} onClick={()=>setFontFamilyOpen(v=>!v)}><span className="max-w-28 truncate px-1 text-xs">{fontFamilyLabel}</span></ToolbarButton>
           {fontFamilyOpen && <ToolbarPopover label="Font family" role="menu" triggerRef={fontFamilyButtonRef} onClose={()=>setFontFamilyOpen(false)} className="min-w-48 p-1">
-            {([['Default font',''],...COMPOSE_FONTS] as const).map(([name,value])=><button key={name} type="button" role="menuitemradio" aria-checked={(editor.getAttributes('textStyle').fontFamily ?? '')===value} className="block w-full rounded px-3 py-2 text-start text-sm hover:bg-accent focus-visible:bg-accent" style={{fontFamily:value || undefined}} onClick={()=>{if(value) editor.chain().focus().setFontFamily(value).run(); else editor.chain().focus().unsetFontFamily().run(); setFontFamilyOpen(false);}}>{name}</button>)}
+            {([['Default font',''],...COMPOSE_FONTS] as const).map(([name,value])=><button key={name} type="button" role="menuitemradio" aria-checked={currentFontFamily===value} className="block w-full rounded px-3 py-2 text-start text-sm hover:bg-accent focus-visible:bg-accent" style={{fontFamily:value || undefined}} onClick={()=>{if(value) editor.chain().focus().setFontFamily(value).run(); else editor.chain().focus().unsetFontFamily().run(); setFontFamilyOpen(false);}}>{name}</button>)}
           </ToolbarPopover>}
         </div>
         <ToolbarChoice item="paragraph-spacing" label="Paragraph spacing" buttonLabel="Spacing"
@@ -1329,24 +1391,8 @@ export function RichTextEditor({
           <RemoveFormatting className="w-4 h-4" />
         </ToolbarButton>
 
-        <ToolbarSeparator />
-
-        <ToolbarButton
-          item="undo"
-          onClick={() => editor.chain().focus().undo().run()}
-          disabled={!editor.can().undo()}
-          title={tToolbar("undo")}
-        >
-          <Undo className="w-4 h-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          item="redo"
-          onClick={() => editor.chain().focus().redo().run()}
-          disabled={!editor.can().redo()}
-          title={tToolbar("redo")}
-        >
-          <Redo className="w-4 h-4" />
-        </ToolbarButton>
+        {streamlinedToolbar && <><ToolbarSeparator />{headingFormatting}{colorFormatting}{tableFormatting}{additionalFormatting}</>}
+        </div>}
       </div>
 
       {/* Editor */}

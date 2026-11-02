@@ -4762,6 +4762,7 @@ export function EmailComposer({
               ariaInvalid={validationErrors.body}
               ariaDescribedBy={`${fieldIdBase}-body-error`}
               defaultTextStyle={composeStyle}
+              streamlinedToolbar={!mvWindow}
               collapseToolbarOnMobile={!showFormatting}
               toolbarPlacement={mvWindow ? (mvShowFormatting ? 'bottom' : 'hidden') : (showFormatting ? 'top' : 'hidden')}
               onEditorReady={handleEditorReady}

@@ -3,6 +3,19 @@ import { closeHistory } from '@tiptap/pm/history';
 
 const TYPOGRAPHY = ['font-family','font-size','font-weight','font-style','font-variant','color','background','background-color','text-align','text-decoration','text-decoration-line','letter-spacing','line-height'];
 
+/** The caret can inherit a pasted font from its paragraph or table cell. */
+export function composeFontFamilyValue(editor: Editor): string {
+  const inline = editor.getAttributes('textStyle').fontFamily;
+  if (inline) return inline;
+  const position = editor.state.selection.$from;
+  const style = document.createElement('span').style;
+  for (let depth = position.depth; depth >= 0; depth--) {
+    style.cssText = position.node(depth).attrs.style ?? '';
+    if (style.fontFamily) return style.fontFamily;
+  }
+  return '';
+}
+
 /** Clear pasted block styles as well as inline marks, retaining spacing and content. */
 export function clearComposeFormatting(editor:Editor): boolean {
   const originalStyles = new Map<number,string>();

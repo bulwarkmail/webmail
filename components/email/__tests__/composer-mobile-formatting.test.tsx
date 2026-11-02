@@ -9,8 +9,8 @@ const toastError = vi.hoisted(() => vi.fn());
 
 // Shows whether the composer asked for the toolbar to be folded away.
 vi.mock('@/components/email/rich-text-editor', () => ({
-  RichTextEditor: ({ collapseToolbarOnMobile, toolbarPlacement }: { collapseToolbarOnMobile?: boolean; toolbarPlacement?: string }) =>
-    React.createElement('div', { 'data-testid': 'rich-text-editor', 'data-collapsed': String(!!collapseToolbarOnMobile), 'data-placement': toolbarPlacement }),
+  RichTextEditor: ({ collapseToolbarOnMobile, toolbarPlacement, streamlinedToolbar }: { collapseToolbarOnMobile?: boolean; toolbarPlacement?: string; streamlinedToolbar?: boolean }) =>
+    React.createElement('div', { 'data-testid': 'rich-text-editor', 'data-collapsed': String(!!collapseToolbarOnMobile), 'data-placement': toolbarPlacement, 'data-streamlined': String(!!streamlinedToolbar) }),
 }));
 
 vi.mock('@/components/plugins/plugin-slot', () => ({ PluginSlot: () => null }));
@@ -211,6 +211,7 @@ describe('formatting toolbar on a phone', () => {
   it('is folded away until the Formatting button is pressed', () => {
     render(<EmailComposer initialData={DATA} />);
     const editor = screen.getByTestId('rich-text-editor');
+    expect(editor).toHaveAttribute('data-streamlined','true');
     expect(editor).toHaveAttribute('data-collapsed', 'true');
     expect(editor).toHaveAttribute('data-placement', 'hidden');
 

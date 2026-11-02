@@ -26,7 +26,7 @@ Acceptance: keyboard/mouse/touch triage, large-mailbox pagination and virtualiza
 
 ## 3. Reader and composer
 
-Progress: attachment finder and responsive grids, extension-preserving composer chips, reader subject wrapping and composer field polish are implemented for review. Reader metadata now has pane-responsive cards, recipient overflow disclosure, close/Escape focus return and compact phone dates. Draft/upload/content regressions pass targeted checks; full phase acceptance remains open.
+Progress: attachment finder and responsive grids, extension-preserving composer chips, reader subject wrapping and composer field polish are implemented for review. Reader metadata now has pane-responsive cards, recipient overflow disclosure, close/Escape focus return and compact phone dates. Native composers have a compact expandable formatting strip and inherited pasted-font feedback, with action parity and keyboard coverage. Draft/upload/content regressions pass targeted checks; full phase acceptance remains open.
 
 Unify conversation metadata, attachments, action hierarchy, reply transitions and compose layout. Preserve and improve rich paste, Markdown/HTML import, fonts, spacing, undo and draft recovery using real Word, Docs and LLM samples. Preserve identities, signatures, quoted originals, inline images and scheduling.
 

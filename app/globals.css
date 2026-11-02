@@ -1618,3 +1618,13 @@ optgroup {
 }
 
 .memail-reader-details-grid { align-items: start; }
+
+/* Keep text-based formatting buttons on the same baseline and target height
+   as icon buttons, so an inline span does not add an extra line box. */
+[data-memail-streamlined-toolbar] [data-toolbar-item] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  line-height: 1rem;
+}

@@ -207,3 +207,72 @@ describe('RichTextEditor image descriptions (MA-02)', () => {
     await waitFor(() => expect(html(editor)).toContain('alt="Sales by month, rising from March"'));
   });
 });
+
+describe('streamlined composer formatting', () => {
+  it('reveals all typography controls and applies a font to the retained text selection', async () => {
+    const {editor}=await setup({streamlinedToolbar:true});
+    expect(screen.queryByRole('button',{name:'Font family'})).toBeNull();
+    const more=screen.getByRole('button',{name:'More formatting'});
+    expect(more).toHaveAttribute('aria-expanded','false');
+    act(()=>{editor.commands.selectAll();});
+    fireEvent.click(more);
+    const group=screen.getByRole('group',{name:'Typography and spacing'});
+    expect(more).toHaveAttribute('aria-controls',group.id);
+    fireEvent.click(within(group).getByRole('button',{name:'Font family'}));
+    fireEvent.click(screen.getByRole('menuitemradio',{name:'Georgia'}));
+    expect(editor.getText()).toBe('Hello');
+    expect(editor.getAttributes('textStyle').fontFamily).toContain('Georgia');
+    expect(within(group).getByRole('button',{name:'Font family'})).toHaveTextContent('Georgia');
+    act(()=>{editor.chain().focus().setFontFamily('Aptos, sans-serif').run();});
+    expect(within(group).getByRole('button',{name:'Font family'})).toHaveTextContent('Aptos');
+    expect(within(group).getByRole('button',{name:'Paragraph spacing'})).toBeInTheDocument();
+    expect(within(group).getByRole('button',{name:'Line height'})).toBeInTheDocument();
+    expect(within(group).getByRole('button',{name:'Insert Markdown or HTML'})).toBeInTheDocument();
+  });
+  it('lets a nested menu consume Escape before closing the expanded row and returning focus', async () => {
+    await setup({streamlinedToolbar:true});
+    const more=screen.getByRole('button',{name:'More formatting'});
+    fireEvent.click(more);
+    const font=screen.getByRole('button',{name:'Font family'});
+    fireEvent.click(font);
+    fireEvent.keyDown(screen.getByRole('menu',{name:'Font family'}),{key:'Escape'});
+    expect(screen.getByRole('group',{name:'Typography and spacing'})).toBeInTheDocument();
+    expect(font).toHaveFocus();
+    fireEvent.keyDown(font,{key:'Escape'});
+    expect(screen.queryByRole('group',{name:'Typography and spacing'})).toBeNull();
+    expect(more).toHaveFocus();
+    expect(more).toHaveAttribute('aria-expanded','false');
+    const stops=screen.getByRole('toolbar',{name:'formatting'}).querySelectorAll('[data-toolbar-item][tabindex="0"]');
+    expect([...stops]).toEqual([more]);
+  });
+  it('keeps arrow navigation within the mounted formatting controls', async () => {
+    await setup({streamlinedToolbar:true});
+    const more=screen.getByRole('button',{name:'More formatting'});
+    more.focus();
+    fireEvent.keyDown(more,{key:'ArrowRight'});
+    expect(document.activeElement).toHaveAttribute('data-toolbar-item','font-size');
+    fireEvent.click(more);
+    fireEvent.keyDown(more,{key:'ArrowRight'});
+    expect(document.activeElement).toHaveAttribute('data-toolbar-item','font-family');
+  });
+  it('tracks fonts inherited from pasted paragraphs when the caret moves without editing', async () => {
+    const {editor}=await setup({streamlinedToolbar:true,content:'<p style="font-family:Georgia,serif">Hello</p><p style="font-family:Arial,sans-serif">World</p>'});
+    const before=editor.getHTML();
+    fireEvent.click(screen.getByRole('button',{name:'More formatting'}));
+    act(()=>{editor.commands.setTextSelection(2);});
+    expect(screen.getByRole('button',{name:'Font family'})).toHaveTextContent('Georgia');
+    act(()=>{editor.commands.setTextSelection(9);});
+    expect(screen.getByRole('button',{name:'Font family'})).toHaveTextContent('Arial');
+    expect(editor.getHTML()).toBe(before);
+  });
+
+  it('retains the complete default action set when the compact toolbar expands', async () => {
+    const {rerender}=await setup();
+    const actions=()=>Array.from(screen.getByRole('toolbar',{name:'formatting'}).querySelectorAll('[data-toolbar-item]')).map(button=>button.getAttribute('data-toolbar-item')).filter(item=>item!=='more-formatting').sort();
+    const full=actions();
+    rerender({streamlinedToolbar:true});
+    fireEvent.click(screen.getByRole('button',{name:'More formatting'}));
+    expect(actions()).toEqual(full);
+  });
+
+});
