@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import {
   Menu, ChevronRight, Search, X, ArrowUpDown, Check, LayoutGrid, LayoutList,
   PanelRight, Download, Trash2, Scissors, Copy, Pencil, Share2, Clipboard,
-  MoreHorizontal, FolderOpen, Folder, ArrowUp, ArrowDown, RefreshCw,
+  MoreHorizontal, FolderOpen, Folder, ArrowUp, ArrowDown, RefreshCw, Plus,
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from "@/components/ui/context-menu";
@@ -74,6 +74,8 @@ interface FilesHeaderProps {
   /** Hide the tools that only apply to a folder listing (Pro account picker). */
   toolsHidden?: boolean;
   selection: SelectionActions | null;
+  /** Xenaxio step 115: "+ Neu" opens the create menu (on a phone the round "+" does). */
+  onNew?: (anchor: HTMLElement) => void;
 }
 
 const MAX_VISIBLE_CRUMBS = 3;
@@ -103,6 +105,7 @@ export function FilesHeader({
   compact,
   toolsHidden,
   selection,
+  onNew,
 }: FilesHeaderProps) {
   const t = useTranslations("files");
   const sortMenu = useContextMenu<null>();
@@ -282,6 +285,12 @@ export function FilesHeader({
 
       {!toolsHidden && (
         <div className="flex items-center gap-1 shrink-0">
+          {onNew && !compact && (
+            <Button size="sm" className="h-8 gap-1.5 me-1" aria-haspopup="menu" onClick={(e) => onNew(e.currentTarget)}>
+              <Plus className="w-4 h-4" />
+              {t("new")}
+            </Button>
+          )}
           {clipboardCount > 0 && (
             <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={onPaste} title={t("paste_here")}>
               <Clipboard className="w-4 h-4" />

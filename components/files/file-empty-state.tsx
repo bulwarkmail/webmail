@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Upload, FolderPlus, FolderOpen, SearchX } from "@/components/icons";
+import { Upload, FolderPlus, FolderOpen, SearchX, NotebookPen } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 
 interface EmptyFolderProps {
@@ -9,14 +9,17 @@ interface EmptyFolderProps {
   canCreate: boolean;
   onUpload: () => void;
   onCreateFolder: () => void;
+  /** Xenaxio step 115: "Neue Notiz" with its label (the app's own strings). */
+  onNewNote?: () => void;
+  newNoteLabel?: string;
 }
 
 /** What an empty folder shows: what to do next, and that dropping files works. */
-export function EmptyFolder({ isRoot, canCreate, onUpload, onCreateFolder }: EmptyFolderProps) {
+export function EmptyFolder({ isRoot, canCreate, onUpload, onCreateFolder, onNewNote, newNoteLabel }: EmptyFolderProps) {
   const t = useTranslations("files");
   return (
     <div className="flex items-center justify-center h-full min-h-[18rem] p-8">
-      <div className="flex flex-col items-center text-center max-w-sm">
+      <div className="flex flex-col items-center text-center max-w-lg">
         <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4">
           {isRoot ? <Upload className="w-7 h-7 text-muted-foreground" /> : <FolderOpen className="w-7 h-7 text-muted-foreground" />}
         </div>
@@ -34,6 +37,13 @@ export function EmptyFolder({ isRoot, canCreate, onUpload, onCreateFolder }: Emp
               <FolderPlus className="w-4 h-4" />
               {t("new_folder")}
             </Button>
+            {/* Xenaxio step 115: a note can be started right here. */}
+            {onNewNote && (
+              <Button variant="outline" size="sm" onClick={onNewNote} className="gap-1.5">
+                <NotebookPen className="w-4 h-4" />
+                {newNoteLabel}
+              </Button>
+            )}
           </div>
         )}
       </div>

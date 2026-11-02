@@ -983,6 +983,8 @@ export function FileBrowser({
           canCreate={canCreate}
           onUpload={() => fileInputRef.current?.click()}
           onCreateFolder={() => setShowNewFolder(true)}
+          onNewNote={newNote}
+          newNoteLabel={xt("notes.new_note")}
         />
       );
     }
@@ -1140,6 +1142,7 @@ export function FileBrowser({
           compact={isMobile}
           toolsHidden={accountPickerMode}
           selection={selectionActions}
+          onNew={canCreate && !isNarrow ? (el) => menu.openContextMenu(anchorEvent(el, "start"), { kind: "new" }) : undefined}
         />
 
         {error && (
