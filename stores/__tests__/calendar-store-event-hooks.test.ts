@@ -291,3 +291,71 @@ describe('importEvents zero-duration events (#837)', () => {
     expect(batch.map((e) => e.duration)).toEqual(['PT0S', 'PT8H']);
   });
 });
+
+describe('fetchEvents hooks (onBeforeFetchEvents & onFetchingEvents)', () => {
+  it('does not change behavior when no plugin is registered', async () => {
+    const client = fakeClient({
+      queryAllCalendarEvents: vi.fn().mockResolvedValue([event({ id: 'f1', start: '2026-09-08T10:00:00' })]),
+    });
+
+    const events = await useCalendarStore.getState().fetchEvents(client, '2026-09-01', '2026-09-30');
+
+    expect(events).toHaveLength(1);
+    expect(client.queryAllCalendarEvents).toHaveBeenCalledWith('2026-09-01', '2026-09-30');
+  });
+
+  it('allows onBeforeFetchEvents to edit the range and onFetchingEvents to edit fetched events', async () => {
+    const client = fakeClient({
+      queryAllCalendarEvents: vi.fn().mockResolvedValue([event({ id: 'f1', title: 'Original' })]),
+    });
+
+    calendarHooks.onBeforeFetchEvents.register('t', () => ({
+      start: '2026-10-01',
+      end: '2026-10-31',
+    }));
+
+    calendarHooks.onFetchingEvents.register('t', (events: CalendarEvent[]) =>
+      events.map((e) => ({ ...e, title: 'Edited by fetch plugin' }))
+    );
+
+    await useCalendarStore.getState().fetchEvents(client, '2026-09-01', '2026-09-30');
+
+    expect(client.queryAllCalendarEvents).toHaveBeenCalledWith('2026-10-01', '2026-10-31');
+    expect(useCalendarStore.getState().events[0].title).toBe('Edited by fetch plugin');
+  });
+});
+
+describe('onCreatingEvent and onUpdatingEvent hooks', () => {
+  it('allows onCreatingEvent to edit the event before sending to the network', async () => {
+    const client = fakeClient();
+
+    calendarHooks.onCreatingEvent.register('t', (newEvt) => ({
+      ...newEvt,
+      title: 'Modified by creation plugin',
+    }));
+
+    await useCalendarStore.getState().createEvent(client, { title: 'Initial Title', start: '2026-09-08T10:00:00' });
+
+    expect(client.createCalendarEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Modified by creation plugin' })
+    );
+  });
+
+  it('allows onUpdatingEvent to edit the update payload before sending to the network', async () => {
+    const client = fakeClient();
+    useCalendarStore.setState({ events: [event()] });
+
+    calendarHooks.onUpdatingEvent.register('t', (updateData) => ({
+      ...updateData,
+      patch: { ...updateData.patch, title: 'Modified by update plugin' },
+    }));
+
+    await useCalendarStore.getState().updateEvent(client, 'e1', { title: 'Initial Patch' });
+
+    expect(client.updateCalendarEvent).toHaveBeenCalledWith(
+      expect.any(Object),
+      'e1',
+      expect.objectContaining({ title: 'Modified by update plugin' })
+    );
+  });
+});
