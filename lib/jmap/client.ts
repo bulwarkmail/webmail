@@ -4609,17 +4609,19 @@ export class JMAPClient implements IJMAPClient {
     }
   }
 
-  async getThreadEmails(threadId: string, accountId?: string): Promise<Email[]> {
+  async getThreadEmails(threadId: string, accountId?: string, options?: { newest?: number }): Promise<Email[]> {
     try {
       const targetAccountId = accountId || this.accountId;
       const thread = await this.getThread(threadId, accountId);
       if (!thread?.emailIds?.length) {
         return [];
       }
+      // Thread/get lists a thread's messages oldest first (RFC 8621 3.1).
+      const ids = options?.newest !== undefined && options.newest > 0 ? thread.emailIds.slice(-options.newest) : thread.emailIds;
 
       const emails: Email[] = [];
 
-      for (const batchIds of batched(thread.emailIds, this.getMaxObjectsInGet())) {
+      for (const batchIds of batched(ids, this.getMaxObjectsInGet())) {
         const response = await this.request([
           ["Email/get", {
             accountId: targetAccountId,

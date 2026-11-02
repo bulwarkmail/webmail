@@ -10,7 +10,7 @@ export interface AreaHostFeaturesB {
   attachmentText?: boolean;
   /** api.email.getAttachmentImage: an image attachment, shrunk for a model. */
   attachmentImages?: boolean;
-  /** api.email.getThread: every message of a conversation. */
+  /** api.email.getThread: every message of a conversation; api.email.getThreadCount: how many there are. */
   threads?: boolean;
   /** The reader panel (email-detail-sidebar) gets the messages ticked in the list as `listSelection`. */
   listSelection?: boolean;

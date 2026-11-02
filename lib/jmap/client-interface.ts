@@ -404,7 +404,8 @@ export interface IJMAPClient {
   // ── Threads ───────────────────────────────────────────────────
   getThread(threadId: string, accountId?: string): Promise<Thread | null>;
   getThreads(threadIds: string[], accountId?: string): Promise<Thread[]>;
-  getThreadEmails(threadId: string, accountId?: string): Promise<Email[]>;
+  /** `newest`: only that many of the thread's newest messages are fetched (Thread/get lists them oldest first). */
+  getThreadEmails(threadId: string, accountId?: string, options?: { newest?: number }): Promise<Email[]>;
 
   // ── Compose / Send ────────────────────────────────────────────
   createDraft(

@@ -30,6 +30,12 @@ export function runtime(callApi: CallApi): RuntimeAdditions {
        */
       getThread: (emailId: string, options?: { accountId?: string }) =>
         callApi('email.getThread', [emailId, options], NETWORK_API_TIMEOUT_MS) as Promise<EmailReadView[]>,
+      /**
+       * How many messages the conversation of a message has, without
+       * reading them (email:read, 120 a minute, apart from getThread's).
+       */
+      getThreadCount: (emailId: string, options?: { accountId?: string }) =>
+        callApi('email.getThreadCount', [emailId, options]) as Promise<number>,
     },
   };
 }
