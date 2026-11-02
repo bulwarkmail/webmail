@@ -1889,6 +1889,7 @@ function SidebarImpl({
       // The peek of the collapsed rail; not with hover opening turned off.
       onMouseEnter={mvShell && sidebarCollapsed ? () => { if (hoverOpens()) setRailHovered(true); } : undefined}
       onMouseLeave={mvShell && sidebarCollapsed ? () => setRailHovered(false) : undefined}
+      data-memail-sidebar=""
       data-mv-rail-peek={hoverExpanded ? "" : undefined}
       className={cn(
         "relative flex flex-col h-full border-e transition-all duration-300 overflow-hidden",

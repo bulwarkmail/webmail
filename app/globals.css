@@ -4,6 +4,9 @@
 @import "./theme-inline.css";
 @import "./accessibility.css";
 
+/* Tailwind skips dot-directories during automatic source discovery. */
+@source "../.memail";
+
 /* The app's font stack replaces Tailwind's default --font-sans, so the
    font-sans utility and body use the same stack, and a theme's
    typography.fontSans (compiled to --font-sans on :root) restyles both. */

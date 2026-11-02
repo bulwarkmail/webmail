@@ -80,3 +80,11 @@ Add each customization here. Include the relevant upstream files, the reason it 
 
 - `.memail/compose-formatting.ts`, `components/email/rich-text-editor.tsx`: paragraph/heading line-height choices with removal of conflicting imported span line heights. Existing font, color and paragraph spacing are retained.
 - Clear formatting now strips pasted typography on selected blocks as well as marks, maps preserved spacing through heading/list normalization, and starts a separate undo group. Quoted/signature atom content is not traversed.
+
+
+## Navigation and workspace controls
+
+- `app/globals.css`: explicitly include `.memail` in Tailwind source discovery; dot-directories are skipped by automatic discovery. This generates custom spacing, sizing and container-query utilities used by downstream controls.
+- `.memail/workspace-toolbar.tsx`, `saved-search-menu.tsx`: pane-width-responsive labels, quieter heading, and grouped native reading-layout and density controls. Focus/Side/Below map to existing settings without replacing native readers or resize behavior. Customize header stays visible during panel scrolling.
+- `.memail/rail-navigation.ts`, `components/layout/navigation-rail.tsx`: arrow/Home/End focus navigation, horizontal RTL support and disabled/hidden-item skipping. Normal Tab and link activation retain upstream semantics and leave guards. Collapsed custom-app buttons expose names and pressed state.
+- `components/layout/sidebar.tsx`, `.memail/theme/skin.mjs`: stable chrome selectors and scoped navigation insets/active treatment, preserving folder row density and virtual message geometry. No ReUI source or dependency added.

@@ -1,7 +1,22 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { expect, it, vi } from 'vitest';
 import { WorkspaceToolbar } from './workspace-toolbar';
+import { useSettingsStore } from '../stores/settings-store';
 vi.mock('./workspace-views',()=>({acquireWorkspaceViews:()=>()=>{}}));
+
+it('offers every reading layout in Customize and updates native preferences',()=>{
+  render(<WorkspaceToolbar title="Inbox" onShortcuts={()=>{}} />);
+  const trigger=screen.getByLabelText('Inbox view rules',{selector:'summary'});
+  fireEvent.click(trigger);
+  // jsdom does not implement the summary's default disclosure action.
+  trigger.closest('details')!.setAttribute('open','');
+  fireEvent.click(screen.getByRole('button',{name:'Below reading layout'}));
+  expect(useSettingsStore.getState().mailLayout).toBe('horizontal');
+  fireEvent.click(screen.getByRole('button',{name:'Side reading layout'}));
+  expect(useSettingsStore.getState().mailLayout).toBe('split');
+  fireEvent.click(screen.getByRole('button',{name:'Focus reading layout'}));
+  expect(useSettingsStore.getState().mailLayout).toBe('focus');
+});
 
 it('identifies search scope and exposes a clear action without changing layout',()=>{
   const clear = vi.fn();

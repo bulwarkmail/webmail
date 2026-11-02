@@ -130,4 +130,27 @@ body[data-theme-skin="builtin-memail"] [data-testid="composer-save-status"] {
   font-size: 1rem;
   letter-spacing: -0.02em;
 }
+
+/* Navigation chrome: keep native row heights and user density settings. */
+body[data-theme-skin="builtin-memail"] [data-memail-sidebar] {
+  background-color: var(--color-sidebar);
+}
+body[data-theme-skin="builtin-memail"] [data-memail-sidebar] [data-folder-nav] {
+  padding-inline: 0.5rem;
+  padding-block-end: 1rem;
+  scrollbar-width: thin;
+}
+body[data-theme-skin="builtin-memail"] [data-testid="folder-row"] {
+  border-radius: var(--radius-md);
+}
+body[data-theme-skin="builtin-memail"] [data-memail-rail] nav {
+  gap: 0.375rem;
+  scrollbar-width: thin;
+}
+body[data-theme-skin="builtin-memail"] [data-memail-rail] [data-tour^="nav-"] {
+  border-radius: var(--radius-lg);
+}
+body[data-theme-skin="builtin-memail"] [data-memail-rail] [aria-current="page"] {
+  box-shadow: inset 0 0 0 1px var(--color-border);
+}
 `;

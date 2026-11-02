@@ -1,5 +1,6 @@
 "use client";
 
+import { navigateRail } from "../../.memail/rail-navigation";
 import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Mail, CalendarEvent, Users, Folder, Settings, Keyboard, Plus, Shield, LogOut, Check, Search, Puzzle, Accessibility } from "@/components/icons";
@@ -377,7 +378,7 @@ export function NavigationRail({
 
   if (orientation === "horizontal") {
     return (
-      <nav
+      <nav onKeyDown={event => navigateRail(event, true)}
         ref={tabBarRef}
         data-mobile-navigation=""
         className={cn(
@@ -558,6 +559,7 @@ export function NavigationRail({
 
   return (
     <div
+      data-memail-rail=""
       className={cn(
         "flex flex-col h-full",
         collapsed ? "items-center" : "",
@@ -577,7 +579,7 @@ export function NavigationRail({
         ) : null;
       })()}
 
-      <nav
+      <nav onKeyDown={event => navigateRail(event)}
         className={cn(
           "flex flex-col flex-1 min-h-0 overflow-y-auto scroll-hidden",
           collapsed ? "items-center gap-1 py-3 px-1" : "gap-0.5 py-2 px-2",
@@ -712,6 +714,8 @@ export function NavigationRail({
                   ? "bg-primary/10 text-primary font-medium"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
+              aria-label={collapsed ? app.name : undefined}
+              aria-pressed={isActive}
               title={collapsed ? app.name : undefined}
               style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
             >
