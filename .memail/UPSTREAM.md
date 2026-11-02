@@ -72,4 +72,4 @@ When a fix is broadly useful, prepare it as a separate upstream-friendly commit.
 
 Preserve LICENSE, NOTICE and existing attribution. Bulwark is AGPL-3.0-only with additional app-store permission terms; Memail does not relicense it as MIT. Review any future upstream license changes.
 
-ReUI free primitives remain MIT, with the notice in .memail/licenses/REUI-MIT.txt. On 2026-11-02 the repository owner explicitly confirmed an OEM agreement authorizing premium block source in this public AGPL repository. The app-shell-20 integration relies on that confirmation. The private agreement was not independently reviewed; retain its product/distribution scope and vendor notices. Standard Pro alone does not grant these rights. Do not import unrelated old experiments.
+Use free MIT ReUI components for public source with required notices. The standard ReUI Pro license does not permit publishing premium block source. Do not copy the old local Vite/ReUI Pro experiment into this fork unless a separately negotiated, compatible redistribution agreement covers it.

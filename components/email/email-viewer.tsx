@@ -1,6 +1,5 @@
 "use client";
 
-import { MailEmptyState } from "@/components/blocks/app-shell-20/components/mail-empty-state";
 import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback, useId } from "react";
 import { Email, ContactCard, Mailbox } from "@/lib/jmap/types";
 import { attachmentDownloadFilename, attachmentsBundleFilename, DEFAULT_ATTACHMENT_TEMPLATE } from "@/lib/download-filename";
@@ -4044,10 +4043,6 @@ ${printWatermark ? printWatermark.html : ''}
         </div>
       );
     }
-    if (!mvViewer && !mvMobileViewer) return shell(<MailEmptyState
-      title={t('no_conversation_selected')} description={t('no_conversation_description')}
-      composeLabel={t('compose')} onCompose={onCompose}
-    />);
     // Rendered in Pro (embedded) too: a silent void here read as "broken"
     // in a split pane - the empty reading pane should always say what it is
     // and offer a way forward.

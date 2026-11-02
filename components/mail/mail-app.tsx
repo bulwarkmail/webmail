@@ -9,8 +9,6 @@ import { usePinnedPerSession } from "@/hooks/use-pinned-per-session";
 import { useConfig } from "@/hooks/use-config";
 import { productName } from "@/lib/product-name";
 import { SavedSearchMenu } from '@/.memail/saved-search-menu';
-import { MailPane } from "@/components/blocks/app-shell-20/components/mail-pane";
-import { WorkspaceShell, WorkspaceQueue } from "../../.memail/workspace-frame";
 import { WorkspaceToolbar } from "../../.memail/workspace-toolbar";
 import { MessageListTabs, useMessageListPanelProps } from "@/components/email/message-list-tabs";
 import dynamic from "next/dynamic";
@@ -5078,24 +5076,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           pane={false}
           heading={t('shell.heading', { place: currentMailboxName, app: t('sidebar.mail') })}
           data-mv-card={mvShell ? "" : undefined}
-          className={cn("flex flex-col flex-1 min-w-0", mvShell ? "mb-4 me-4" : "h-full md:bg-secondary md:p-3 md:ps-0", inlineApp && "hidden")}
+          className={cn("flex flex-col flex-1 min-w-0", mvShell ? "mb-4 me-4" : "h-full", inlineApp && "hidden")}
         >
-          <WorkspaceShell enabled={!mvShell && !isEmbedded}>
-            {!mvShell && (!isMobile || activeView === "list") && <WorkspaceToolbar
-              title={!isScheduledView && (searchQuery || !isFilterEmpty(searchFilters)) ? 'Search results' : currentMailboxName}
-              context={!isScheduledView && (searchQuery || !isFilterEmpty(searchFilters)) ? (isUnifiedView ? 'Unified search' : searchMailboxId ? viewMailboxes.find(mailbox=>mailbox.id===searchMailboxId)?.name ?? 'Selected folder' : 'All folders') : undefined}
-              onClearSearch={!isScheduledView && (searchQuery || !isFilterEmpty(searchFilters)) ? ()=>void handleClearSearch() : undefined}
-              onShortcuts={() => setShowShortcutsModal(true)} searchActions={!isUnifiedView && !isScheduledView && activeAccountId ? <SavedSearchMenu
-              key={`${activeAccountId}:${viewingAccountId ?? ''}`}
-              scope={`${activeAccountId}:${viewingAccountId ?? ''}`}
-              query={searchQuery} filters={searchFilters} mailboxId={searchMailboxId} mailboxes={viewMailboxes}
-              onApply={entry => {
-                clearSearchFilters(); setSearchFilters(entry.filters); setSearchQuery(entry.query); setSearchMailboxId(entry.mailboxId);
-                void runAdvancedSearchNow();
-              }} /> : undefined} />}
-          <div className={cn("relative flex flex-1 min-h-0", isHorizontalMailLayout && "md:flex-col", !mvShell && !isEmbedded && "md:gap-1")} >
+          <div className={cn("relative flex flex-1 min-h-0", isHorizontalMailLayout && "md:flex-col")}>
           {/* Email List - full width on mobile, fixed width/height on tablet/desktop */}
-          <MailPane enhanced={!mvShell && !isEmbedded}
+          <section
             aria-labelledby={listHeadingId}
             className={cn(
               "relative flex flex-col bg-background min-w-0",
@@ -5335,6 +5320,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             <div className="flex-1 min-h-0 flex flex-col">
             {/* Plugin-registered category tabs (Gmail-style). Renders nothing
                 unless an enabled plugin registered tabs via api.tabs.set. */}
+            {!mvShell && <WorkspaceToolbar
+              title={!isScheduledView && (searchQuery || !isFilterEmpty(searchFilters)) ? 'Search results' : currentMailboxName}
+              context={!isScheduledView && (searchQuery || !isFilterEmpty(searchFilters)) ? (isUnifiedView ? 'Unified search' : searchMailboxId ? viewMailboxes.find(mailbox=>mailbox.id===searchMailboxId)?.name ?? 'Selected folder' : 'All folders') : undefined}
+              onClearSearch={!isScheduledView && (searchQuery || !isFilterEmpty(searchFilters)) ? ()=>void handleClearSearch() : undefined}
+              onShortcuts={() => setShowShortcutsModal(true)} searchActions={!isUnifiedView && !isScheduledView && activeAccountId ? <SavedSearchMenu
+              key={`${activeAccountId}:${viewingAccountId ?? ''}`}
+              scope={`${activeAccountId}:${viewingAccountId ?? ''}`}
+              query={searchQuery} filters={searchFilters} mailboxId={searchMailboxId} mailboxes={viewMailboxes}
+              onApply={entry => {
+                clearSearchFilters(); setSearchFilters(entry.filters); setSearchQuery(entry.query); setSearchMailboxId(entry.mailboxId);
+                void runAdvancedSearchNow();
+              }} /> : undefined} />}
             {!isScheduledView && <MessageListTabs panelId={messageListPanelId} />}
             <WelcomeBanner />
 
@@ -5496,7 +5493,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               <PenSquare className={isMobile ? "h-6 w-6" : "h-5 w-5"} />
               {mvMobile && <span className="text-sm font-medium">{t('sidebar.compose')}</span>}
             </Button>}
-          </MailPane>
+          </section>
 
           {/* Email list resize handle (desktop only) */}
           {!isMobile && !isTablet && !isFocusedMailLayout && !isHorizontalMailLayout && !shouldHideViewerPane && !fullscreenReading && (
@@ -5526,7 +5523,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           )}
 
           {/* Email Viewer / Composer - full screen on mobile, flex on tablet/desktop */}
-          <MailPane enhanced={!mvShell && !isEmbedded}
+          <section
             aria-label={t('shell.reading_pane')}
             data-pane="reader"
             className={cn(
@@ -5763,14 +5760,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             )}
             </>
             )}
-          </MailPane>
+          </section>
           </div>
-
-          {!mvShell && <WorkspaceQueue onOpenUnread={!isScheduledView && activeEmails.some(email => !email.keywords?.$seen) ? () => {
-            const unread = activeEmails.find(email => !email.keywords?.$seen);
-            if (unread) void handleEmailSelect(unread);
-          } : undefined} count={activeEmails.length} unread={activeEmails.filter(email => !email.keywords?.$seen).length} hasMore={activeHasMore} loading={activeIsLoading} onShortcuts={() => setShowShortcutsModal(true)} />}
-          </WorkspaceShell>
 
           {/* Bottom Navigation - mobile and tablet (hidden when embedded) */}
           {(isMobile || isTablet) && activeView !== "viewer" && !isEmbedded && (
