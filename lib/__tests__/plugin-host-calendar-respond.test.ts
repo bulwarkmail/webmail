@@ -92,6 +92,13 @@ describe('api.calendar.respond', () => {
     expect(store.rsvpEvent).not.toHaveBeenCalled();
   });
 
+  it('answers a message the list names with the account of the user', async () => {
+    // Search results carry their account, the user's own one included.
+    useEmailStore.setState({ emails: [{ id: 'inv', sourceClientAccountId: 'login1', sourceAccountId: 'acc1' }] } as never);
+    useAuthStore.setState({ getClientForAccount: () => client } as never);
+    await expect(call(ASSISTANT, 'calendar.respond', 'inv', 'accepted')).resolves.toMatchObject({ status: 'accepted' });
+  });
+
   it('refuses mail of another account, a bad status and plugins without calendar:respond', async () => {
     useEmailStore.setState({ emails: [{ id: 'inv', sourceClientAccountId: 'login1', sourceAccountId: 'acc2' }] } as never);
     useAuthStore.setState({ getClientForAccount: () => client } as never);

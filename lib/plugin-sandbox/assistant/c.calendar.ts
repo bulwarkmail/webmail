@@ -65,8 +65,9 @@ export async function doCalendarRespond(emailIdArg: unknown, statusArg: unknown)
 
   const named = await readNamedEmail(client, emailId, method);
   if (!named) throw new Error(`${method}: no message with id "${emailId}"`);
-  // Mail of a shared or group mailbox is answered as that account: only in the reader.
-  if (named.accountId !== undefined) throw new Error(`${method}: answer invitations of other accounts in the reader`);
+  // Mail of a shared or group mailbox is answered as that account: only in
+  // the reader. Search results name the user's own account too.
+  if (named.accountId !== undefined && named.accountId !== client.getAccountId()) throw new Error(`${method}: answer invitations of other accounts in the reader`);
   const { email } = named;
 
   const invitation = await readOwnInvitation(client, email);
