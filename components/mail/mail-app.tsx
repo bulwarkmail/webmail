@@ -1796,7 +1796,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         ? await freshMailboxes(switchedFrom)
         : useEmailStore.getState().mailboxes;
       const state = useEmailStore.getState();
-      const mailboxId = resolveFolderRef(link.ref, mailboxes);
+      const mailboxId = resolveFolderRef(
+        link.ref,
+        mailboxes,
+        link.ownerAccountId === activeClient.getAccountId() ? undefined : link.ownerAccountId,
+      );
       if (!mailboxId) {
         toast.error(t('deep_link.folder_not_found'));
         return;

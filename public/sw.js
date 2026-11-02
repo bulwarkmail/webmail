@@ -521,7 +521,7 @@ async function handlePush(event) {
     // (Organisation > Devices): the route sent neither.
     title = accountLabel ? `New mail (${accountLabel})` : "New mail";
     body = unreadTotal > 1 ? `${unreadTotal} unread messages` : "You have new mail";
-    if (unreadTotal <= 1) data = { kind: "email", emailId: email.id, threadId: email.threadId, slot };
+    if (unreadTotal <= 1) data = { kind: "email", emailId: email.id, threadId: email.threadId, accountId, slot };
   } else if (email) {
     const sender = email.from && email.from[0];
     const senderName = (sender && sender.name) || (sender && sender.email) || "New mail";
@@ -534,7 +534,7 @@ async function handlePush(event) {
       body += "\n" + (more === 1 ? "+1 more message" : `+${more} more messages`);
     } else {
       // Exactly one unread: deep-link straight to that message on click.
-      data = { kind: "email", emailId: email.id, threadId: email.threadId, slot };
+      data = { kind: "email", emailId: email.id, threadId: email.threadId, accountId, slot };
     }
   } else {
     title = accountLabel ? `New mail (${accountLabel})` : "New mail";
@@ -922,16 +922,17 @@ function getReusableClientScore(state) {
 
 function buildClickUrl(data) {
   if (!data) return `${BASE_PATH}/`;
-  // `?slot=` names the login the message belongs to (see the preview API).
-  const slotQuery = Number.isInteger(data.slot) ? `?slot=${data.slot}` : "";
+  const params = new URLSearchParams();
+  if (Number.isInteger(data.slot)) params.set("slot", String(data.slot));
+  if (typeof data.accountId === "string" && data.accountId) params.set("owner", data.accountId);
+  const targetQuery = params.size ? `?${params}` : "";
   if (data.kind === "email" && data.emailId) {
     // Permalink (#733). Under NEXT_PUBLIC_LOCALE_PREFIX=always the proxy
     // redirects this to the localised path; the worker has no locale to add.
-    return `${BASE_PATH}/mail/message/${encodeURIComponent(data.emailId)}${slotQuery}`;
+    return `${BASE_PATH}/mail/message/${encodeURIComponent(data.emailId)}${targetQuery}`;
   }
-  // A group of new mail in a known login: that login's Inbox.
-  if (data.kind === "mail-list" && slotQuery) {
-    return `${BASE_PATH}/mail/folder/inbox${slotQuery}`;
+  if (data.kind === "mail-list" && Number.isInteger(data.slot)) {
+    return `${BASE_PATH}/mail/folder/inbox${targetQuery}`;
   }
   // Generic "New mail" toast (preview API failed or returned no email): land
   // the user on the latest unread message in their Inbox rather than just the
