@@ -5849,6 +5849,10 @@
         "title": "Meniť váš kalendár",
         "body": "Vytvára, mení a odstraňuje udalosti."
       },
+      "calendar_respond": {
+        "title": "Odpovedať na pozvánky",
+        "body": "Prijíma alebo odmieta pozvánky v kalendári. Vaša odpoveď sa odošle organizátorovi e-mailom."
+      },
       "contacts_read": {
         "title": "Čítať vaše kontakty",
         "body": "Prehľadáva a číta vaše adresáre."
@@ -5914,8 +5918,12 @@
         "body": "Vidí vaše predvoľby a definície štítkov."
       },
       "settings_write": {
+        "title": "Meniť vaše štítky",
+        "body": "Pridáva a premenúva vaše štítky, mení ich poradie a bráni zmenám vašich nastavení."
+      },
+      "settings_change": {
         "title": "Meniť vaše nastavenia",
-        "body": "Pridáva štítky, mení ich poradie a mení vaše predvoľby."
+        "body": "Mení vzhľad a správanie aplikácie, napríklad tému, formát času alebo panel čítania. Nastavenia určené vašou organizáciou zostanú bez zmeny."
       },
       "security_read": {
         "title": "Vidieť zabezpečenie účtu",

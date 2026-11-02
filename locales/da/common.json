@@ -5849,6 +5849,10 @@
         "title": "Ændre din kalender",
         "body": "Oprette, ændre og slette begivenheder."
       },
+      "calendar_respond": {
+        "title": "Svare på invitationer",
+        "body": "Acceptere eller afvise kalenderinvitationer. Dit svar sendes til arrangøren via e-mail."
+      },
       "contacts_read": {
         "title": "Læse dine kontakter",
         "body": "Søge i og læse dine adressebøger."
@@ -5914,8 +5918,12 @@
         "body": "Se dine præferencer og tagdefinitioner."
       },
       "settings_write": {
+        "title": "Ændre dine tags",
+        "body": "Tilføje, omdøbe og omarrangere dine tags og forhindre ændringer i dine indstillinger."
+      },
+      "settings_change": {
         "title": "Ændre dine indstillinger",
-        "body": "Tilføje og omarrangere tags og ændre dine præferencer."
+        "body": "Ændre, hvordan appen ser ud og fungerer, for eksempel tema, tidsformat eller læserude. Indstillinger, som din organisation har fastsat, forbliver uændrede."
       },
       "security_read": {
         "title": "Se din kontos sikkerhed",

@@ -5849,6 +5849,10 @@
         "title": "Modificarea calendarului",
         "body": "Creează, modifică și șterge evenimente."
       },
+      "calendar_respond": {
+        "title": "Răspunsul la invitații",
+        "body": "Acceptă sau refuză invitații din calendar. Răspunsul dvs. ajunge la organizator prin e-mail."
+      },
       "contacts_read": {
         "title": "Citirea contactelor",
         "body": "Caută în agendele dvs. și le citește."
@@ -5914,8 +5918,12 @@
         "body": "Vede preferințele dvs. și definițiile etichetelor."
       },
       "settings_write": {
+        "title": "Modificarea etichetelor",
+        "body": "Adaugă, redenumește și reordonează etichetele dvs. și blochează modificările setărilor dvs."
+      },
+      "settings_change": {
         "title": "Modificarea setărilor",
-        "body": "Adaugă și reordonează etichete și modifică preferințele dvs."
+        "body": "Modifică aspectul și funcționarea aplicației, de exemplu tema, formatul orei sau panoul de citire. Setările stabilite de organizația dvs. rămân neschimbate."
       },
       "security_read": {
         "title": "Vizualizarea securității contului",

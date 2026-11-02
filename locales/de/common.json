@@ -5849,6 +5849,10 @@
         "title": "Ihren Kalender ändern",
         "body": "Termine erstellen, ändern und löschen."
       },
+      "calendar_respond": {
+        "title": "Auf Einladungen antworten",
+        "body": "Kalendereinladungen annehmen oder ablehnen. Ihre Antwort geht per E-Mail an den Organisator."
+      },
       "contacts_read": {
         "title": "Ihre Kontakte lesen",
         "body": "Ihre Adressbücher durchsuchen und lesen."
@@ -5914,8 +5918,12 @@
         "body": "Ihre Einstellungen und Label-Definitionen sehen."
       },
       "settings_write": {
+        "title": "Ihre Labels ändern",
+        "body": "Ihre Labels hinzufügen, umbenennen und neu anordnen und Änderungen an Ihren Einstellungen verhindern."
+      },
+      "settings_change": {
         "title": "Ihre Einstellungen ändern",
-        "body": "Labels hinzufügen und neu anordnen und Ihre Einstellungen ändern."
+        "body": "Ändern, wie die App aussieht und funktioniert, etwa das Design, das Zeitformat oder den Lesebereich. Einstellungen, die Ihre Organisation festgelegt hat, bleiben unverändert."
       },
       "security_read": {
         "title": "Ihre Kontosicherheit sehen",

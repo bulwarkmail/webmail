@@ -5849,6 +5849,10 @@
         "title": "Modificare il tuo calendario",
         "body": "Creare, modificare ed eliminare eventi."
       },
+      "calendar_respond": {
+        "title": "Rispondere agli inviti",
+        "body": "Accettare o rifiutare inviti del calendario. La tua risposta arriva all'organizzatore via email."
+      },
       "contacts_read": {
         "title": "Leggere i tuoi contatti",
         "body": "Cercare e leggere nelle tue rubriche."
@@ -5914,8 +5918,12 @@
         "body": "Vedere le tue preferenze e le definizioni delle etichette."
       },
       "settings_write": {
+        "title": "Modificare le tue etichette",
+        "body": "Aggiungere, rinominare e riordinare le tue etichette e bloccare le modifiche alle tue impostazioni."
+      },
+      "settings_change": {
         "title": "Modificare le tue impostazioni",
-        "body": "Aggiungere e riordinare etichette e modificare le tue preferenze."
+        "body": "Modificare l'aspetto e il funzionamento dell'app, come il tema, il formato dell'ora o il pannello di lettura. Le impostazioni definite dalla tua organizzazione restano invariate."
       },
       "security_read": {
         "title": "Vedere la sicurezza del tuo account",

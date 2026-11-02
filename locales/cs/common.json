@@ -5849,6 +5849,10 @@
         "title": "Měnit váš kalendář",
         "body": "Vytváří, mění a maže události."
       },
+      "calendar_respond": {
+        "title": "Odpovídat na pozvánky",
+        "body": "Přijímá nebo odmítá pozvánky v kalendáři. Vaše odpověď se odešle organizátorovi e-mailem."
+      },
       "contacts_read": {
         "title": "Číst vaše kontakty",
         "body": "Prohledává a čte vaše adresáře."
@@ -5914,8 +5918,12 @@
         "body": "Vidí vaše předvolby a definice štítků."
       },
       "settings_write": {
+        "title": "Měnit vaše štítky",
+        "body": "Přidává a přejmenovává vaše štítky, mění jejich pořadí a brání změnám vašeho nastavení."
+      },
+      "settings_change": {
         "title": "Měnit vaše nastavení",
-        "body": "Přidává štítky, mění jejich pořadí a mění vaše předvolby."
+        "body": "Mění vzhled a chování aplikace, například motiv, formát času nebo panel čtení. Nastavení určená vaší organizací zůstanou beze změny."
       },
       "security_read": {
         "title": "Vidět zabezpečení účtu",

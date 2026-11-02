@@ -5849,6 +5849,10 @@
         "title": "Zmiana kalendarza",
         "body": "Tworzy, zmienia i usuwa wydarzenia."
       },
+      "calendar_respond": {
+        "title": "Odpowiadanie na zaproszenia",
+        "body": "Akceptuje lub odrzuca zaproszenia z kalendarza. Twoja odpowiedź trafia do organizatora e-mailem."
+      },
       "contacts_read": {
         "title": "Odczyt kontaktów",
         "body": "Przeszukuje i odczytuje Twoje książki adresowe."
@@ -5914,8 +5918,12 @@
         "body": "Widzi Twoje preferencje i definicje etykiet."
       },
       "settings_write": {
+        "title": "Zmiana etykiet",
+        "body": "Dodaje etykiety, zmienia ich nazwy i kolejność oraz blokuje zmiany Twoich ustawień."
+      },
+      "settings_change": {
         "title": "Zmiana ustawień",
-        "body": "Dodaje etykiety, zmienia ich kolejność i zmienia Twoje preferencje."
+        "body": "Zmienia wygląd i działanie aplikacji, na przykład motyw, format czasu lub panel czytania. Ustawienia określone przez Twoją organizację pozostają bez zmian."
       },
       "security_read": {
         "title": "Podgląd zabezpieczeń konta",

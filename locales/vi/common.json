@@ -5861,6 +5861,10 @@
         "title": "Thay đổi lịch của bạn",
         "body": "Tạo, thay đổi và xóa các sự kiện."
       },
+      "calendar_respond": {
+        "title": "Trả lời lời mời",
+        "body": "Chấp nhận hoặc từ chối lời mời trên lịch. Câu trả lời của bạn được gửi đến người tổ chức qua email."
+      },
       "contacts_read": {
         "title": "Đọc danh bạ của bạn",
         "body": "Tìm kiếm và đọc sổ địa chỉ của bạn."
@@ -5926,8 +5930,12 @@
         "body": "Xem tùy chọn và định nghĩa thẻ của bạn."
       },
       "settings_write": {
+        "title": "Thay đổi thẻ của bạn",
+        "body": "Thêm, đổi tên và sắp xếp lại các thẻ của bạn, đồng thời chặn các thay đổi đối với cài đặt của bạn."
+      },
+      "settings_change": {
         "title": "Thay đổi cài đặt của bạn",
-        "body": "Thêm và sắp xếp lại các thẻ và thay đổi tùy chọn của bạn."
+        "body": "Thay đổi giao diện và cách hoạt động của ứng dụng, chẳng hạn như chủ đề, định dạng giờ hoặc ngăn đọc. Các cài đặt do tổ chức của bạn đặt vẫn giữ nguyên."
       },
       "security_read": {
         "title": "Xem bảo mật tài khoản của bạn",

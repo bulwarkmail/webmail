@@ -5849,6 +5849,10 @@
         "title": "Change your calendar",
         "body": "Create, change and delete events."
       },
+      "calendar_respond": {
+        "title": "Answer invitations",
+        "body": "Accept or decline calendar invitations. Your answer goes to the organiser by email."
+      },
       "contacts_read": {
         "title": "Read your contacts",
         "body": "Search and read your address books."
@@ -5914,8 +5918,12 @@
         "body": "See your preferences and tag definitions."
       },
       "settings_write": {
+        "title": "Change your tags",
+        "body": "Add, rename and reorder your tags, and stop changes to your settings."
+      },
+      "settings_change": {
         "title": "Change your settings",
-        "body": "Add and reorder tags and change your preferences."
+        "body": "Change how the app looks and works, such as the theme, the time format or the reading pane. Settings your organisation set stay as they are."
       },
       "security_read": {
         "title": "See your account security",

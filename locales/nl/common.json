@@ -5849,6 +5849,10 @@
         "title": "Je agenda wijzigen",
         "body": "Afspraken aanmaken, wijzigen en verwijderen."
       },
+      "calendar_respond": {
+        "title": "Op uitnodigingen antwoorden",
+        "body": "Agenda-uitnodigingen accepteren of weigeren. Je antwoord gaat per e-mail naar de organisator."
+      },
       "contacts_read": {
         "title": "Je contacten lezen",
         "body": "Je adresboeken doorzoeken en lezen."
@@ -5914,8 +5918,12 @@
         "body": "Je voorkeuren en labeldefinities zien."
       },
       "settings_write": {
+        "title": "Je labels wijzigen",
+        "body": "Je labels toevoegen, hernoemen en herschikken, en wijzigingen in je instellingen tegenhouden."
+      },
+      "settings_change": {
         "title": "Je instellingen wijzigen",
-        "body": "Labels toevoegen en herschikken en je voorkeuren wijzigen."
+        "body": "Wijzigen hoe de app eruitziet en werkt, zoals het thema, de tijdnotatie of het leesvenster. Instellingen die je organisatie heeft vastgelegd, blijven zoals ze zijn."
       },
       "security_read": {
         "title": "De beveiliging van je account zien",
