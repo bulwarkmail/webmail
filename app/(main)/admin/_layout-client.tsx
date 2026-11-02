@@ -6,6 +6,8 @@ import { getActiveAccountSlotHeaders } from '@/lib/auth/active-account-slot';
 import { apiFetch } from '@/lib/browser-navigation';
 import { useAdminUnsavedStore } from '@/stores/admin-unsaved-store';
 import { AdminShell } from '@/components/admin/admin-shell';
+import { AdminContentSkeleton } from '@/components/boot-skeleton/admin-skeleton';
+import { useAdminLocation } from '@/hooks/use-admin-navigation';
 import { UnsavedChangesGuard } from './_unsaved-changes-guard';
 import { ToastContainer } from '@/components/ui/toast';
 import { useToastStore } from '@/stores/toast-store';
@@ -25,6 +27,7 @@ function AdminToasts() {
 export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const location = useAdminLocation();
   const requestLeave = useAdminUnsavedStore((s) => s.requestLeave);
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -135,9 +138,9 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
             <p className="mt-1 text-destructive/80">{authError}</p>
           </div>
         ) : authenticated === null ? (
-          <div className="py-12 text-center text-sm text-muted-foreground animate-pulse">
-            Loading admin panel…
-          </div>
+          // The page's header and section placeholders, where the boot
+          // skeleton drew them.
+          <AdminContentSkeleton page={location.page} status="Loading admin panel…" />
         ) : authenticated ? children : null}
       </AdminShell>
     </>
