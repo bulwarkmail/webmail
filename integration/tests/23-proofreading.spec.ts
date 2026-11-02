@@ -2,7 +2,7 @@ import { test, expect, type Browser, type BrowserContext, type Page } from '@pla
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import JSZip from 'jszip';
-import { ENT, adminContext, getPolicy, putPolicy, requireEntEnv, shot, userPage } from './helpers/ent';
+import { ENT, ENT_PASSWORD, adminContext, contextOptions, getPolicy, putPolicy, requireEntEnv, shot, userPage } from './helpers/ent';
 
 /**
  * Proofreading (#1397) through the real UI, with a checker plugin that
@@ -56,6 +56,8 @@ const underline = (page: Page, word: string) => page.locator('[data-text-issue]'
 async function openComposer(page: Page, text: string): Promise<void> {
   await page.keyboard.press('c');
   await page.locator('[data-testid="email-composer"]').waitFor({ state: 'visible', timeout: 15_000 });
+  // A new message puts the focus in To a moment after it opens.
+  await expect(page.locator('[data-testid="composer-to"] input').first()).toBeFocused({ timeout: 10_000 }).catch(() => {});
   await page.locator('[data-testid="composer-subject"]').first().fill(`Proofreading ${Date.now().toString(36)}`);
   await editor(page).click();
   await page.keyboard.type(text);
@@ -220,4 +222,52 @@ test('required by the organisation: no switch, a notice in its words, and still 
   await closeComposer(page);
   await setPolicy(browser, {});
   await page.context().close();
+});
+
+test('works at phone width', async ({ browser }) => {
+  const page = await userPage(browser, ENT.alice, true);
+  await page.getByRole('button', { name: /compose|new message/i }).first().click();
+  await page.locator('[data-testid="email-composer"]').waitFor({ state: 'visible', timeout: 15_000 });
+  await expect(page.locator('[data-testid="composer-to"] input').first()).toBeFocused({ timeout: 10_000 }).catch(() => {});
+  await editor(page).click();
+  await page.keyboard.type(GERMAN);
+  await turnOn(page);
+  await expect(underline(page, 'dem')).toBeVisible({ timeout: 15_000 });
+  await underline(page, 'dem').tap();
+  await expect(popup(page)).toBeVisible();
+  // The popup fits the screen.
+  const box = (await popup(page).boundingBox())!;
+  expect(box.x).toBeGreaterThanOrEqual(0);
+  expect(box.x + box.width).toBeLessThanOrEqual(390);
+  await shot(page, 'proofreading-phone-popup-light');
+  await page.keyboard.press('Escape');
+  await status(page).click();
+  const panel = (await page.getByTestId('proofreading-panel').boundingBox())!;
+  expect(panel.x).toBeGreaterThanOrEqual(0);
+  expect(panel.x + panel.width).toBeLessThanOrEqual(390);
+  await shot(page, 'proofreading-phone-panel-light');
+  await closeComposer(page);
+  await page.context().close();
+});
+
+test('works right to left (Arabic)', async ({ browser }) => {
+  const context = await browser.newContext({ ...contextOptions(), locale: 'ar' });
+  const page = await context.newPage();
+  await page.goto('/');
+  await page.fill('#username', ENT.alice);
+  await page.fill('#password', ENT_PASSWORD);
+  await page.click('button[type="submit"]');
+  await page.waitForFunction(() => document.documentElement.dir === 'rtl', null, { timeout: 60_000 });
+  await page.locator('[data-testid="email-list-item"], [data-testid="empty-state"], main').first().waitFor({ timeout: 60_000 });
+  await openComposer(page, GERMAN);
+  await turnOn(page);
+  await expect(underline(page, 'dem')).toBeVisible({ timeout: 15_000 });
+  await underline(page, 'dem').click();
+  await expect(popup(page)).toBeVisible();
+  await page.waitForTimeout(800);
+  await shot(page, 'proofreading-rtl-popup-light');
+  await popup(page).getByTestId('proofreading-replacement').first().click();
+  await expect(editor(page)).toContainText('den Brief');
+  await closeComposer(page);
+  await context.close();
 });
