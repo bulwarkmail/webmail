@@ -515,6 +515,10 @@ export function EmailComposer({
   const [plainTextMode, setPlainTextMode] = useState<boolean>(
     () => initialDataProp?.plainTextMode ?? plainTextModeDefault
   );
+  // The format right now, for async work that writes into the body after an
+  // await: the user may have switched it meanwhile.
+  const plainTextModeRef = useRef(plainTextMode);
+  plainTextModeRef.current = plainTextMode;
   // A plugin's onBeforeCompose prefill (plain text body) folded into what the
   // composer starts from: over `initialData` when the host hands one in (a
   // mailto:, a re-opened draft), otherwise over the fields built below.
@@ -2382,7 +2386,9 @@ export function EmailComposer({
             // offloading it - don't drop a link for a file they cancelled.
             if (controller?.signal.aborted) continue;
             setAttachments(prev => prev.filter(att => att.file !== file));
-            if (plainTextMode) {
+            // The ref, not the closure: the user may have switched format
+            // while the handler was offloading the file.
+            if (plainTextModeRef.current) {
               setBody(previous =>
                 previous && !previous.endsWith('\n') ? `${previous}\n${transformed.text}` : previous + transformed.text
               );
@@ -2453,7 +2459,7 @@ export function EmailComposer({
         );
       }
     }
-  }, [client, t, plainTextMode]);
+  }, [client, t]);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files) return;
@@ -2957,8 +2963,6 @@ export function EmailComposer({
   // catalogue): plain text at the caret, replacing the selection, so a
   // rewrite of a selected paragraph is one call and Ctrl+Z takes it back in
   // the rich editor. Stable, so the slot iframes don't get new props.
-  const plainTextModeRef = useRef(plainTextMode);
-  plainTextModeRef.current = plainTextMode;
   const pluginInsertText = useCallback((value: unknown) => {
     if (typeof value !== 'string' || value.length === 0 || value.length > MAX_PLUGIN_INSERT_LENGTH) return false;
     if (plainTextModeRef.current) {
