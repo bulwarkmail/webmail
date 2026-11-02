@@ -258,6 +258,7 @@ export function EmailHoverActions({
       <button
         key={actionId}
         type="button"
+        data-memail-quick-action={!mountainView ? "" : undefined}
         data-testid={`hover-action-${actionId}`}
         onClick={(e) => handleAction(e, actionId)}
         onDoubleClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
@@ -345,6 +346,7 @@ export function EmailHoverActions({
 
   return (
     <div
+      data-memail-quick-actions={!mountainView ? "" : undefined}
       className={cn("absolute end-0 top-0 z-10 items-center", pinToFirstLine ? "h-10" : "bottom-0", visibilityClass)}
     >
       <div
@@ -358,7 +360,7 @@ export function EmailHoverActions({
       </div>
       <div className="relative flex items-center h-full bg-background">
         <div className={cn("absolute inset-0", hoverBackgroundClassName)} />
-        <div className="relative flex items-center gap-0.5 h-full pe-3 ps-0.5">
+        <div data-memail-quick-action-tray={!mountainView ? "" : undefined} className="relative flex items-center gap-0.5 h-full pe-3 ps-0.5">
           {actionButtons}
         </div>
       </div>

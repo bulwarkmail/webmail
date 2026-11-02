@@ -18,7 +18,7 @@ Acceptance: named app destinations, visible active app, usable short-height rail
 
 ## 2. Inbox and navigation
 
-Progress: native sidebar hierarchy, expanded primary glyph coverage, desktop/keyboard folder options and account-scoped saved views are implemented for review. Remaining phase acceptance below is still open.
+Progress: native sidebar hierarchy, expanded primary glyph coverage, desktop/keyboard folder options and account-scoped saved views are implemented for review. Inbox row hierarchy, responsive preview depth, precise date tooltips and all four native spacing controls are also implemented for review. Remaining phase acceptance below is still open.
 
 Make saved views first-class navigation; clarify folders, labels and account hierarchy; unify selection, hover and batch actions. Add custom views and sender-focused triage using native JMAP filters. Preserve missing-folder recovery and shared-account boundaries. Loaded-page counts must not be presented as mailbox-wide totals; unread must not be treated as unfinished work.
 

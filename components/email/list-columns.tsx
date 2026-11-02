@@ -40,6 +40,7 @@ export function ListColumnsHeader({ density, selecting, showRecipient }: {
   const lead = listLeadClass(density, selecting);
   return (
     <div
+      data-memail-list-columns=""
       data-testid="list-columns-header"
       className="flex items-center border-b border-border bg-muted/40 px-3 py-1 text-xs font-medium text-muted-foreground"
       // The rows sit in a scroller; keep the scrollbar's width free here too.

@@ -106,3 +106,12 @@ Add each customization here. Include the relevant upstream files, the reason it 
 - Folder options are available on desktop hover/focus as well as touch. Enter, Space and ArrowDown open the existing menu without selecting a folder; the menu slot stays reserved to avoid row shifts.
 - `.memail/saved-search-sidebar.tsx` adds account-scoped saved views using the existing search model. Missing-folder views are disabled with a reason; longer collections can expand beyond five entries. The header and sidebar share native filter application.
 - `Sidebar.workspaceNavigation` is a memoized React node slot. Stable event callbacks preserve the existing sidebar optimization. No ReUI or AI integration is introduced.
+
+
+## Inbox row hierarchy and display controls
+
+- `.memail/workspace-toolbar.tsx`: all four native densities (Dense, Compact, Regular, Relaxed) and a separate native preview preference are available in Customize. Reading-layout and triage controls retain their behavior.
+- `components/email/thread-list-item.tsx`, `app/globals.css`: scoped native row markers, deliberate sender/subject/preview typography, inline preview separators, restrained conversation counts, inset current-message marker and visible keyboard focus. User/plugin account tints are excluded from background overrides. Rows and the column header share 16px insets; explicit row action buttons retain their reserved end gutter.
+- Native regular stacked rows use one preview line; Relaxed retains two. `email-list.tsx` estimates the new regular height while continuing to measure real rows, attachments and expanded conversations. Dense rows have a 28px floor matching the wide-list estimate.
+- `email-hover-actions.tsx`: interface quick actions have a bordered tray and consistent targets, reduced for Dense rows. Existing callbacks, archive gate, spam semantics, plugin actions and lazy mounting remain native.
+- `.memail/message-timestamp.tsx`: compact date text retains the upstream display-date selection, with a semantic machine-readable time and an explicit full UTC tooltip respecting 12/24-hour clock preference. Scheduled labels are unchanged.

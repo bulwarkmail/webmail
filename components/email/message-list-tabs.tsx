@@ -124,6 +124,7 @@ export function MessageListTabs({ panelId }: { panelId: string }) {
     <div
       className="flex items-stretch gap-1 px-2 border-b border-border overflow-x-auto shrink-0"
       style={{ scrollbarWidth: 'none' }}
+      data-memail-inbox-tabs=""
       role="tablist"
       aria-label={t('category_tabs')}
       onKeyDown={handleKeyDown}

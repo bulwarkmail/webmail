@@ -133,3 +133,12 @@ The preview is in draft PR #3. Phase 0 and full phase 1 acceptance are not compl
 - Full RTL/zoom/dark and real-account search acceptance remain open. Production is unchanged.
 
 - Final production build including TypeScript passed after fixture removal; existing Turbopack filesystem-tracing warnings remain. Scoped lint has no errors; the existing mail-app effect-ref warning remains.
+
+
+## Inbox row hierarchy and display controls
+
+- 148 tests passed across 14 files: row rendering, column alignment contracts, pagination, range rows, batch actions, treegrid keyboard behavior, tabs, quick-action labels/placement, memoization/store rendering and scroll resets. Added coverage checks all four native densities, independent preview toggling, semantic dates, clock preference and invalid timestamp handling. An existing batch-test act warning remains.
+- Scoped ESLint passed with no warnings or errors. Production build and TypeScript passed; existing Turbopack filesystem-tracing warnings remain.
+- Browser reviewed the current local demo inbox without opening messages or invoking mail actions. Regular wide rows measured about 57px; native regular stacked rows decreased from about 121px to 97px with one preview line. Keyboard focus inside a row exposes its 36px quick-action tray. Precise timestamp tooltip confirmed.
+- Document width equalled viewport at 390px and 320px. At 320x568, Customize fits x12..308/y24..496, scrolls internally, and retains its close control. Original Regular density and preview setting were restored; temporary viewport override reset. Screenshots: research workspace `memail-inbox-polish.jpg` and `memail-inbox-phone.jpg`.
+- No email or draft content was changed and no mail was sent. Real-account large-mailbox, dark/RTL/zoom and recipient-client acceptance remain open. AI remains deferred; production unchanged.

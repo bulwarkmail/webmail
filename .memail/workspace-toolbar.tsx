@@ -12,6 +12,7 @@ const control = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-
 export function WorkspaceToolbar({ title, onShortcuts, searchActions, context, onClearSearch }: { title: string; onShortcuts: () => void; searchActions?: ReactNode; context?:string; onClearSearch?:()=>void }) {
   useEffect(acquireWorkspaceViews, []);
   const density = useSettingsStore(s => s.density);
+  const showPreview = useSettingsStore(s => s.showPreview);
   const readingWidth = useSettingsStore(s => s.readingWidth);
   const layout = useSettingsStore(s => s.mailLayout);
   const update = useSettingsStore(s => s.updateSetting);
@@ -26,7 +27,7 @@ export function WorkspaceToolbar({ title, onShortcuts, searchActions, context, o
     document.addEventListener('pointerdown', dismiss);
     return () => document.removeEventListener('pointerdown', dismiss);
   }, []);
-  return <header className="@container relative flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-border bg-background px-4 py-3 sm:px-5">
+  return <header data-memail-workspace-header="" className="@container relative flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-border bg-background px-4 py-3 sm:px-5">
     <div className="min-w-0 flex-1"><p title={context} className={context ? "mb-0.5 truncate text-xs text-muted-foreground" : "sr-only"}>{context ?? 'Your workspace'}</p><div className="flex flex-wrap items-center gap-2"><h2 className="truncate text-xl font-semibold tracking-tight">{title}</h2>{onClearSearch && <button type="button" onClick={onClearSearch} aria-label="Clear search and filters" className="inline-flex min-h-11 items-center gap-1 rounded-md px-2 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"><X className="size-3.5" aria-hidden="true" />Clear</button>}</div></div>
     <div className="flex shrink-0 items-center gap-1" role="group" aria-label="Mail workspace layout">
       {searchActions}
@@ -44,7 +45,13 @@ export function WorkspaceToolbar({ title, onShortcuts, searchActions, context, o
               {([{value:'focus',label:'Focus',icon:List},{value:'split',label:'Side',icon:PanelRight},{value:'horizontal',label:'Below',icon:Rows3}] as const).map(option => <button key={option.value} type="button" aria-label={`${option.label} reading layout`} aria-pressed={layout === option.value} onClick={()=>update('mailLayout',option.value)} className={`${control} flex-col gap-1 px-2 py-2`}><option.icon className="size-4" aria-hidden="true" />{option.label}</button>)}
             </div>
           </fieldset>
-          <label className="mt-3 flex min-h-11 items-center justify-between gap-3 text-sm">Compact conversations<input type="checkbox" checked={density === 'compact'} onChange={e=>update('density',e.target.checked ? 'compact' : 'regular')} className="size-4 accent-primary" /></label>
+          <fieldset className="mt-4"><legend className="mb-2 text-xs font-semibold text-muted-foreground">Message spacing</legend>
+            <div className="grid grid-cols-2 gap-1 rounded-lg border border-border p-1" role="group" aria-label="Message spacing">
+              {([{value:'extra-compact',label:'Dense'},{value:'compact',label:'Compact'},{value:'regular',label:'Regular'},{value:'comfortable',label:'Relaxed'}] as const).map(option => <button key={option.value} type="button" aria-label={`${option.label} message spacing`} aria-pressed={density === option.value} onClick={()=>update('density',option.value)} className={control}>{option.label}</button>)}
+            </div>
+          </fieldset>
+          <label className="mt-3 flex min-h-11 items-center justify-between gap-3 text-sm">Message previews<input type="checkbox" checked={showPreview} onChange={e=>update('showPreview',e.target.checked)} className="size-4 accent-primary" /></label>
+          <p className="text-xs leading-relaxed text-muted-foreground">Regular rows show one preview line; Relaxed allows two. Wide layouts keep previews inline.</p>
           <label className="mt-3 flex min-h-11 items-center justify-between gap-3 text-sm">Comfortable reading width<input type="checkbox" checked={readingWidth === 'comfortable'} onChange={e => update('readingWidth', e.target.checked ? 'comfortable' : 'full')} className="size-4 accent-primary" /></label>
           <label className="mt-2 flex min-h-11 items-center justify-between gap-3 text-sm">Sender avatars in wide lists<input type="checkbox" checked={preferences.showSenderAvatars} onChange={e => preferences.configure({showSenderAvatars:e.target.checked})} className="size-4 accent-primary" /></label>
           <div className="my-3 border-t border-border" />

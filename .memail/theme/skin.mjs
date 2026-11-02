@@ -158,4 +158,8 @@ body[data-theme-skin="builtin-memail"] [data-memail-sidebar="workspace"] [data-t
   border-inline-start-color: transparent;
 }
 body[data-theme-skin="builtin-memail"] [data-memail-sidebar="workspace"][data-memail-collapsed="true"] [data-folder-nav] { padding-inline: 0.25rem; }
+body[data-theme-skin="builtin-memail"] [data-tour="email-list"] [data-memail-message-row][aria-current="true"]::before {
+  inset-block: 0.625rem;
+  border-radius: 999px;
+}
 `;

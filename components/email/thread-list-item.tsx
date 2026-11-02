@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback } from "react";
+import { MessageTimestamp } from "@/.memail/message-timestamp";
 import { cleanPreview, formatDate } from "@/lib/utils";
 import { rowA11yProps, rowLabel } from "./list-a11y";
 import { emailDisplayDate } from "@/lib/email-date";
@@ -345,6 +346,7 @@ function useShowSourceFolder(sourceFolder: string | undefined): boolean {
 function ThreadCountPill({ count, hasUnread, title }: { count: number; hasUnread: boolean; title: string }) {
   return (
     <span
+      data-memail-thread-count=""
       className={cn(
         TAG_LOZENGE_CLASS,
         "gap-0.5",
@@ -634,6 +636,9 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
         onPointerDown={(e) => { if (onPrefetch && isMousePressOnRow(e)) onPrefetch(); }}
         data-email-id={email.id}
         data-subject={email.subject || ''}
+        data-memail-message-row={!mvRow && !mvMobileRow ? (oneLineRow ? "wide" : "stacked") : undefined}
+        data-memail-row-density={density}
+        data-memail-row-tinted={resolvedRowTint ? "" : undefined}
         data-unread={isUnread ? 'true' : 'false'}
         data-starred={email.keywords?.$flagged ? 'true' : 'false'}
         data-mv-mobile-row={mvMobileRow ? "" : undefined}
@@ -710,6 +715,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
         )}
         <div
           role="gridcell"
+          data-memail-row-content=""
           className={cn('px-3', minimalLead && density === 'compact' && 'min-h-10', showRowActionButton && onContextMenu && 'pe-12', oneLineRow ? 'flex items-center' : 'flex items-start', mvRow && 'min-h-10', swipeEnabled && 'relative z-10 bg-inherit')}
           style={{ gap: 'var(--density-item-gap)', paddingBlock: mvRow ? undefined : 'var(--density-item-py)', transform: swipeEnabled && offsetX ? `translateX(${offsetX}px)` : undefined, transition: swipeEnabled && offsetX === 0 ? 'transform 200ms ease-out' : undefined }}
         >
@@ -789,7 +795,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                       <span className="sr-only">{accountDescription}</span>
                     </span>
                   )}
-                  <span dir={columns ? undefined : "auto"} className={cn(
+                  <span data-memail-sender="" dir={columns ? undefined : "auto"} className={cn(
                     columns ? cn(LIST_COLUMN_CLASS.from, 'flex items-center gap-2') : 'w-32 shrink-0 truncate lg:w-40',
                     'text-sm',
                     isUnread ? (mvRow ? 'font-bold text-foreground' : 'font-semibold text-foreground') : 'font-medium text-foreground/80'
@@ -821,7 +827,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                         ))}
                       </span>
                     )}
-                    <span dir="auto" className={cn(
+                    <span data-memail-subject="" dir="auto" className={cn(
                       'min-w-0 truncate',
                       isUnread ? (mvRow ? 'font-bold text-foreground' : 'font-semibold text-foreground') : 'text-foreground/90'
                     )}>
@@ -829,9 +835,9 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     </span>
                     <PluginRowBadges email={email} className={mvRow ? "ms-2" : undefined} />
                     {(previewSnippet || inlinePreview) && (
-                      <span dir="auto" className="min-w-0 shrink-[9999] truncate text-muted-foreground">
+                      <span data-memail-inline-preview="" dir="auto" className="min-w-0 shrink-[9999] truncate text-muted-foreground">
                         {/* Gmail runs the snippet on from the subject after a dash. */}
-                        {mvRow && '\u00a0-\u00a0'}
+                        {mvRow ? '\u00a0-\u00a0' : <span aria-hidden="true" className="me-2 opacity-50">–</span>}
                         {previewSnippet ? <> <SearchSnippetText snippet={previewSnippet} /></> : (mvRow ? trimmedPreview : inlinePreview)}
                       </span>
                     )}
@@ -859,13 +865,13 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                       <span className="truncate">{scheduledSendLabel}</span>
                     </span>
                   ) : (
-                    <span className={cn(
+                    <MessageTimestamp value={emailDisplayDate(email)} timeFormat={timeFormat} className={cn(
                       'text-xs tabular-nums',
                       columns && LIST_COLUMN_CLASS.date,
                       isUnread ? (mvRow ? 'text-foreground font-bold' : 'text-foreground font-semibold') : 'text-muted-foreground'
                     )}>
                       {formatDate(emailDisplayDate(email), mvRow ? { listStyle: 'mountain-view' } : undefined)}
-                    </span>
+                    </MessageTimestamp>
                   )}
                   {columns && <SizeCell bytes={email.size} />}
                 </div>
@@ -887,7 +893,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                         <span className="sr-only">{accountDescription}</span>
                       </span>
                     )}
-                    <span dir="auto" className={cn(
+                    <span data-memail-sender="" dir="auto" className={cn(
                       "truncate text-sm",
                       isUnread
                         ? "font-bold text-foreground"
@@ -937,14 +943,14 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                         <span className="truncate">{scheduledSendLabel}</span>
                       </span>
                     ) : (
-                      <span className={cn(
+                      <MessageTimestamp value={emailDisplayDate(email)} timeFormat={timeFormat} className={cn(
                         "text-xs tabular-nums",
                         isUnread
                           ? "text-foreground font-semibold"
                           : "text-muted-foreground"
                       )}>
-                        {formatDate(emailDisplayDate(email))}
-                      </span>
+                      {formatDate(emailDisplayDate(email))}
+                    </MessageTimestamp>
                     )}
                     {mvMobileRow && !(showPreview && density !== 'extra-compact' && density !== 'compact') && (
                       <MvMobileStar
@@ -964,7 +970,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                         ))}
                       </span>
                   )}
-                  <span dir="auto" className={cn(
+                  <span data-memail-subject="" dir="auto" className={cn(
                     "min-w-0 flex-1 truncate text-sm",
                     isUnread
                       ? "font-semibold text-foreground"
@@ -977,7 +983,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
 
                 {showPreview && density !== 'extra-compact' && density !== 'compact' && (
                   <div className={cn("flex min-w-0 items-center gap-1", !mvMobileRow && "contents")}>
-                    <p dir="auto" className={cn(
+                    <p data-memail-preview="" dir="auto" className={cn(
                       "text-sm leading-relaxed",
                       mvMobileRow ? "line-clamp-1 min-w-0 flex-1" : "line-clamp-2",
                       isUnread
@@ -1355,6 +1361,9 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
           })}
           // Every message in the conversation: the open one may be any of them.
           data-thread-keys={thread.emails.map((e) => emailKeyFor(e)).join(' ')}
+          data-memail-message-row={!mvRow && !mvMobileRow ? (oneLineRow ? "wide" : "stacked") : undefined}
+          data-memail-row-density={density}
+          data-memail-row-tinted={rowTint ? "" : undefined}
           data-unread={hasUnread ? 'true' : 'false'}
           data-mv-mobile-row={mvMobileRow ? "" : undefined}
           data-mv-row={mvRow && !rowTint ? "" : undefined}
@@ -1417,7 +1426,8 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
           )}
           <div
             role="gridcell"
-            className={cn('px-3', minimalLead && density === 'compact' && 'min-h-10', showRowActionButton && onContextMenu && 'pe-12', oneLineRow ? 'flex items-center' : 'flex items-start', mvRow && 'min-h-10', threadSwipeEnabled && 'relative z-10 bg-inherit')}
+            data-memail-row-content=""
+          className={cn('px-3', minimalLead && density === 'compact' && 'min-h-10', showRowActionButton && onContextMenu && 'pe-12', oneLineRow ? 'flex items-center' : 'flex items-start', mvRow && 'min-h-10', threadSwipeEnabled && 'relative z-10 bg-inherit')}
             style={{ gap: 'var(--density-item-gap)', paddingBlock: mvRow ? undefined : 'var(--density-item-py)', transform: threadSwipeEnabled && threadOffsetX ? `translateX(${threadOffsetX}px)` : undefined, transition: threadSwipeEnabled && threadOffsetX === 0 ? 'transform 200ms ease-out' : undefined }}
           >
             {/* Checkbox for thread selection - only for extra-compact density (no avatar) while in selection mode */}
@@ -1578,7 +1588,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                         </span>
                       </span>
                     ) : (
-                    <span dir="auto" className={cn(
+                    <span data-memail-sender="" dir="auto" className={cn(
                       // Matches SingleEmailItem: the sender column sets where
                       // every row's tags and subject begin, so the two have to
                       // agree or thread rows sit 1rem further right.
@@ -1603,7 +1613,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                         ))}
                       </span>
                       )}
-                      <span dir="auto" className={cn(
+                      <span data-memail-subject="" dir="auto" className={cn(
                         'min-w-0 truncate',
                         hasUnread ? (mvRow ? 'font-bold text-foreground' : 'font-semibold text-foreground') : 'text-foreground/90'
                       )}>
@@ -1611,8 +1621,8 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       </span>
                       <PluginRowBadges email={latestEmail} className={mvRow ? "ms-2" : undefined} />
                       {(previewSnippet || inlinePreview) && (
-                        <span dir="auto" className="min-w-0 shrink-[9999] truncate text-muted-foreground">
-                          {mvRow && '\u00a0-\u00a0'}
+                        <span data-memail-inline-preview="" dir="auto" className="min-w-0 shrink-[9999] truncate text-muted-foreground">
+                          {mvRow ? '\u00a0-\u00a0' : <span aria-hidden="true" className="me-2 opacity-50">–</span>}
                           {previewSnippet ? <> <SearchSnippetText snippet={previewSnippet} /></> : (mvRow ? trimmedPreview : inlinePreview)}
                         </span>
                       )}
@@ -1640,13 +1650,13 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                         <span className="truncate">{scheduledSendLabel}</span>
                       </span>
                     ) : (
-                      <span className={cn(
+                      <MessageTimestamp value={emailDisplayDate(latestEmail)} timeFormat={timeFormat} className={cn(
                         'text-xs tabular-nums',
                         columns && LIST_COLUMN_CLASS.date,
                         hasUnread ? (mvRow ? 'text-foreground font-bold' : 'text-foreground font-semibold') : 'text-muted-foreground'
                       )}>
-                        {formatDate(emailDisplayDate(latestEmail), mvRow ? { listStyle: 'mountain-view' } : undefined)}
-                      </span>
+                      {formatDate(emailDisplayDate(latestEmail), mvRow ? { listStyle: 'mountain-view' } : undefined)}
+                    </MessageTimestamp>
                     )}
                     {columns && <SizeCell bytes={thread.emails.reduce((sum, e) => sum + (e.size ?? 0), 0)} />}
                   </div>
@@ -1673,7 +1683,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                           <span className="sr-only">{threadAccountDescription}</span>
                         </span>
                       )}
-                      <span dir="auto" className={cn(
+                      <span data-memail-sender="" dir="auto" className={cn(
                         "truncate text-sm",
                         hasUnread
                           ? "font-bold text-foreground"
@@ -1726,14 +1736,14 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                           <span className="truncate">{scheduledSendLabel}</span>
                         </span>
                       ) : (
-                        <span className={cn(
+                        <MessageTimestamp value={emailDisplayDate(latestEmail)} timeFormat={timeFormat} className={cn(
                           "text-xs tabular-nums",
                           hasUnread
                             ? "text-foreground font-semibold"
                             : "text-muted-foreground"
                         )}>
-                          {formatDate(emailDisplayDate(latestEmail))}
-                        </span>
+                      {formatDate(emailDisplayDate(latestEmail))}
+                    </MessageTimestamp>
                       )}
                       {mvMobileRow && !(showPreview && density !== 'extra-compact' && density !== 'compact') && (
                         <MvMobileStar
@@ -1753,7 +1763,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                           ))}
                         </span>
                     )}
-                    <span dir="auto" className={cn(
+                    <span data-memail-subject="" dir="auto" className={cn(
                       "min-w-0 flex-1 truncate text-sm",
                       hasUnread
                         ? "font-semibold text-foreground"
@@ -1766,7 +1776,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
 
                   {showPreview && density !== 'extra-compact' && density !== 'compact' && (
                     <div className={cn("flex min-w-0 items-center gap-1", !mvMobileRow && "contents")}>
-                      <p dir="auto" className={cn(
+                      <p data-memail-preview="" dir="auto" className={cn(
                         "text-sm leading-relaxed",
                         mvMobileRow ? "line-clamp-1 min-w-0 flex-1" : "line-clamp-2",
                         hasUnread
