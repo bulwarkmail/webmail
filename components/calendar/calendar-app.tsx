@@ -1981,7 +1981,30 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               onCreateEvent={() => openCreateModal()}
             />
           );
-        case "tasks":
+        case "tasks": {
+          const taskList = (
+            <TaskListView
+              tasks={taskStore.tasks}
+              calendars={displayCalendars}
+              selectedCalendarIds={selectedCalendarIds}
+              filter={taskStore.filter}
+              onSelectTask={openEditTaskModal}
+              onToggleComplete={handleToggleTaskComplete}
+              selectedTaskId={taskStore.selectedTaskId}
+              onQuickCreate={(title) => {
+                // Into a calendar that takes it: the default one, else the
+                // first the user may write to.
+                const target = writableTaskCalendars.find((c) => c.isDefault) ?? writableTaskCalendars[0];
+                if (!client || !target) {
+                  toast.error(t("notifications.task_save_error"));
+                  return;
+                }
+                taskStore.createTask(client, { "@type": "Task", title, progress: "needs-action", calendarIds: { [target.id]: true } })
+                  .then((created) => { if (created) toast.success(t("notifications.task_created")); })
+                  .catch((error: unknown) => toast.error(describeError(error, t("notifications.task_save_error"))));
+              }}
+            />
+          );
           return (
             <div className="flex flex-col h-full">
               {taskStore.error === TASKS_LOAD_ERROR && (
@@ -1995,39 +2018,20 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
                 compact={isMobile}
               />
               {/* A plugin may draw the list itself (the calendar-task-view
-                  slot); the toolbar above stays Bulwark's. */}
+                  slot), with Bulwark's list back while its frame is not
+                  drawn; the toolbar above stays Bulwark's. */}
               {pluginTaskView ? (
                 <PluginTaskView
                   pluginId={pluginTaskView.pluginId}
                   fill={pluginTaskView.fill}
                   filter={taskStore.filter}
                   calendarIds={selectedCalendarIds}
+                  fallback={taskList}
                 />
-              ) : (
-                <TaskListView
-                  tasks={taskStore.tasks}
-                  calendars={displayCalendars}
-                  selectedCalendarIds={selectedCalendarIds}
-                  filter={taskStore.filter}
-                  onSelectTask={openEditTaskModal}
-                  onToggleComplete={handleToggleTaskComplete}
-                  selectedTaskId={taskStore.selectedTaskId}
-                  onQuickCreate={(title) => {
-                    // Into a calendar that takes it: the default one, else the
-                    // first the user may write to.
-                    const target = writableTaskCalendars.find((c) => c.isDefault) ?? writableTaskCalendars[0];
-                    if (!client || !target) {
-                      toast.error(t("notifications.task_save_error"));
-                      return;
-                    }
-                    taskStore.createTask(client, { "@type": "Task", title, progress: "needs-action", calendarIds: { [target.id]: true } })
-                      .then((created) => { if (created) toast.success(t("notifications.task_created")); })
-                      .catch((error: unknown) => toast.error(describeError(error, t("notifications.task_save_error"))));
-                  }}
-                />
-              )}
+              ) : taskList}
             </div>
           );
+        }
       }
     })();
 
