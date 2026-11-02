@@ -843,6 +843,7 @@
     "mv_position": "{index} no {total}",
     "plugin_panel_show": "Rādīt spraudņa paneli",
     "plugin_panel_hide": "Slēpt spraudņa paneli",
+    "plugin_panel": "Spraudņa panelis",
     "copy": "Kopēt",
     "contact_added": "Kontakts pievienots",
     "save_to_files": {

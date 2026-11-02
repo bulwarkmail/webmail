@@ -843,6 +843,7 @@
     "mv_position": "{index} / {total}",
     "plugin_panel_show": "플러그인 패널 표시",
     "plugin_panel_hide": "플러그인 패널 숨기기",
+    "plugin_panel": "플러그인 패널",
     "copy": "복사",
     "contact_added": "연락처를 추가했어요",
     "save_to_files": {

@@ -843,6 +843,7 @@
     "mv_position": "{index} / {total}",
     "plugin_panel_show": "Bővítménypanel megjelenítése",
     "plugin_panel_hide": "Bővítménypanel elrejtése",
+    "plugin_panel": "Bővítménypanel",
     "copy": "Másolás",
     "contact_added": "Névjegy hozzáadva",
     "save_to_files": {

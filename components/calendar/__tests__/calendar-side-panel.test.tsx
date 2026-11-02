@@ -124,7 +124,8 @@ describe('Calendar side panel', () => {
     // The last control of the row: after the view menu.
     const buttons = Array.from(row.querySelectorAll('button'));
     expect(buttons[buttons.length - 1]).toBe(toggle);
-    expect(toggle).toHaveAccessibleName('plugin_panel_hide');
+    expect(toggle).toHaveAccessibleName('plugin_panel');
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
 
     // Open by default; the last thing in the row below the toolbar.
     const panel = document.querySelector<HTMLElement>('[data-app-side-panel]')!;

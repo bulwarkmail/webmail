@@ -843,6 +843,7 @@
     "mv_position": "{index} من {total}",
     "plugin_panel_show": "إظهار لوحة الإضافة",
     "plugin_panel_hide": "إخفاء لوحة الإضافة",
+    "plugin_panel": "لوحة الإضافة",
     "copy": "نسخ",
     "contact_added": "أُضيفت جهة الاتصال",
     "save_to_files": {

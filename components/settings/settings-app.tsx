@@ -1231,22 +1231,23 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
         onDoubleClick={() => { setSettingsSidebarWidth(256); localStorage.setItem('settings-sidebar-width', '256'); }}
       />
 
-      {sidePanel.docks ? (
-        // With a plugin side panel: a row with the page's name and the
-        // panel's button over the page and the panel, like the reader's
-        // toolbar, lined up with the sidebar's h-14 row.
-        <div className="flex-1 min-w-0 flex flex-col" data-settings-side-panel-column="">
+      {/* The page under a row with its name and the plugin side panel's
+          button, like the reader's toolbar, lined up with the sidebar's h-14
+          row. The same element with or without the panel, so a page keeps
+          what was typed when the panel starts or stops docking. */}
+      <div className="flex-1 min-w-0 flex flex-col" data-settings-side-panel-column="">
+        {sidePanel.docks && (
           <div className="flex items-center gap-2 h-14 box-content border-b border-border px-2 sm:px-4 lg:px-6 shrink-0" data-settings-panel-row="">
             {/* The page's h1 below names it for screen readers. */}
             <div className="flex-1 min-w-0 truncate text-sm font-semibold" aria-hidden="true">{activeTabLabel}</div>
             {sidePanel.toggle}
           </div>
-          <div ref={sidePanel.rowRef} className="relative flex flex-1 min-h-0">
-            {settingsMain}
-            {sidePanel.panel}
-          </div>
+        )}
+        <div ref={sidePanel.rowRef} className="relative flex flex-1 min-h-0">
+          {settingsMain}
+          {sidePanel.panel}
         </div>
-      ) : settingsMain}
+      </div>
       </>
       )}
       <SidebarAppsModal isOpen={showAppsModal} onClose={closeAppsModal} />

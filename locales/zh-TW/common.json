@@ -843,6 +843,7 @@
     "mv_position": "第 {index} 封，共 {total} 封",
     "plugin_panel_show": "顯示外掛程式面板",
     "plugin_panel_hide": "隱藏外掛程式面板",
+    "plugin_panel": "外掛程式面板",
     "copy": "複製",
     "contact_added": "已新增聯絡人",
     "save_to_files": {

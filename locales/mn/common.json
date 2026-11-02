@@ -843,6 +843,7 @@
     "mv_position": "{total}-с {index}",
     "plugin_panel_show": "Залгаасын самбарыг харуулах",
     "plugin_panel_hide": "Залгаасын самбарыг нуух",
+    "plugin_panel": "Залгаасын самбар",
     "copy": "Хуулах",
     "contact_added": "Харилцагч нэмэгдлээ",
     "save_to_files": {

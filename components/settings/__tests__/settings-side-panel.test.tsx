@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { InstalledPlugin } from '@/lib/plugin-types';
 import { framePropsOf } from '@/components/plugins/__tests__/fake-slot-offer';
@@ -114,5 +114,13 @@ describe('Settings side panel', () => {
     fireEvent.click(buttons[0]);
     expect(dispatch).toHaveBeenCalledWith('assistant', 'app-side-panel', 'open', expect.objectContaining({ view: 'settings' }));
     setActionDispatcher(null);
+  });
+
+  it('keeps the page (and what was typed on it) when the panel starts docking', () => {
+    render(<SettingsApp linkSegments={[]} />);
+    const pane = screen.getByText('appearance pane');
+    act(() => activate('assistant', 'Assistant', ['app-side-panel']));
+    expect(document.querySelector('[data-settings-panel-row]')).not.toBeNull();
+    expect(pane.isConnected).toBe(true);
   });
 });

@@ -843,6 +843,7 @@
     "mv_position": "{index} з {total}",
     "plugin_panel_show": "Показати панель плагіна",
     "plugin_panel_hide": "Сховати панель плагіна",
+    "plugin_panel": "Панель плагіна",
     "copy": "Копіювати",
     "contact_added": "Контакт додано",
     "save_to_files": {

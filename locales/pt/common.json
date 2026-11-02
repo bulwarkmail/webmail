@@ -843,6 +843,7 @@
     "mv_position": "{index} de {total}",
     "plugin_panel_show": "Mostrar o painel do plugin",
     "plugin_panel_hide": "Ocultar o painel do plugin",
+    "plugin_panel": "Painel do plugin",
     "copy": "Copiar",
     "contact_added": "Contacto adicionado",
     "save_to_files": {

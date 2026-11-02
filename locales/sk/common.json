@@ -843,6 +843,7 @@
     "mv_position": "{index} z {total}",
     "plugin_panel_show": "Zobraziť panel doplnku",
     "plugin_panel_hide": "Skryť panel doplnku",
+    "plugin_panel": "Panel doplnku",
     "copy": "Kopírovať",
     "contact_added": "Kontakt pridaný",
     "save_to_files": {

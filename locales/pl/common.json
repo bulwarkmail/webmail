@@ -843,6 +843,7 @@
     "mv_position": "{index} z {total}",
     "plugin_panel_show": "Pokaż panel wtyczki",
     "plugin_panel_hide": "Ukryj panel wtyczki",
+    "plugin_panel": "Panel wtyczki",
     "copy": "Kopiuj",
     "contact_added": "Dodano kontakt",
     "save_to_files": {

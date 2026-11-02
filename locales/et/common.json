@@ -843,6 +843,7 @@
     "mv_position": "{index} / {total}",
     "plugin_panel_show": "Näita pistikprogrammi paneeli",
     "plugin_panel_hide": "Peida pistikprogrammi paneel",
+    "plugin_panel": "Pistikprogrammi paneel",
     "copy": "Kopeeri",
     "contact_added": "Kontakt lisatud",
     "save_to_files": {

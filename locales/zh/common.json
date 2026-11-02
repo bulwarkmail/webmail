@@ -843,6 +843,7 @@
     "mv_position": "第 {index} 封，共 {total} 封",
     "plugin_panel_show": "显示插件面板",
     "plugin_panel_hide": "隐藏插件面板",
+    "plugin_panel": "插件面板",
     "copy": "复制",
     "contact_added": "已添加联系人",
     "save_to_files": {

@@ -843,6 +843,7 @@
     "mv_position": "{index} av {total}",
     "plugin_panel_show": "Vis tilleggspanel",
     "plugin_panel_hide": "Skjul tilleggspanel",
+    "plugin_panel": "Tilleggspanel",
     "copy": "Kopier",
     "contact_added": "Kontakt lagt til",
     "save_to_files": {

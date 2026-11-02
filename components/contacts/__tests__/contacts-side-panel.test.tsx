@@ -3,12 +3,18 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ContactCard } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { clearSlotOffers, framePropsOf, offerSlots } from '@/components/plugins/__tests__/fake-slot-offer';
+import { setActionDispatcher } from '@/lib/plugin-sandbox/actions';
 
 // The plugin side panel (app-side-panel) in Contacts: a row of its own over
 // the contact and the panel, with the open contact's name and the button at
 // its end, and the contact in the panel's context.
 
 vi.mock('@/components/plugins/plugin-iframe-slot', () => import('@/components/plugins/__tests__/fake-slot-offer'));
+const media = vi.hoisted(() => ({ mobile: false }));
+vi.mock('@/hooks/use-media-query', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/hooks/use-media-query')>()),
+  useIsMobile: () => media.mobile,
+}));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), back: vi.fn() }),
   useParams: () => ({ locale: 'en' }),
@@ -56,6 +62,8 @@ function renderContacts() {
 }
 
 afterEach(() => {
+  media.mobile = false;
+  setActionDispatcher(null);
   clearSlotOffers();
   localStorage.clear();
 });
@@ -76,7 +84,8 @@ describe('Contacts side panel', () => {
     expect(row.className).toContain('h-14');
     const toggle = row.querySelector<HTMLElement>('[data-plugin-panel-toggle]')!;
     expect(row.lastElementChild).toBe(toggle);
-    expect(toggle).toHaveAccessibleName('plugin_panel_hide');
+    expect(toggle).toHaveAccessibleName('plugin_panel');
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
     expect(framePropsOf(frame()!)).toEqual({ view: 'contacts', context: { selectedCount: 0 }, focusRequest: 0 });
     // The panel is the last thing in the row under it.
     const panel = document.querySelector<HTMLElement>('[data-app-side-panel]')!;
@@ -90,6 +99,34 @@ describe('Contacts side panel', () => {
     fireEvent.click(toggle);
     expect(frame()).toBeNull();
     // The row and its button stay, so the panel can come back.
-    expect(row.querySelector('[data-plugin-panel-toggle]')).toHaveAccessibleName('plugin_panel_show');
+    expect(row.querySelector('[data-plugin-panel-toggle]')).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('keeps what was typed in a contact form when the panel starts docking', () => {
+    renderContacts();
+    fireEvent.click(screen.getByText('Alice Smith'));
+    fireEvent.click(screen.getByRole('button', { name: /detail.edit|edit/ }));
+    fireEvent.change(screen.getByPlaceholderText('middle_name'), { target: { value: 'Marie' } });
+    const field = screen.getByPlaceholderText('middle_name');
+    act(() => offerSlots('p1', ['app-side-panel']));
+    expect(document.querySelector('[data-contacts-panel-row]')).not.toBeNull();
+    // The same field, with what the user typed.
+    expect(field.isConnected).toBe(true);
+    expect(screen.getByPlaceholderText('middle_name')).toHaveValue('Marie');
+  });
+
+  it('puts the phone button over an open contact, where the list and its header are gone', () => {
+    media.mobile = true;
+    const dispatch = vi.fn().mockResolvedValue(undefined);
+    setActionDispatcher(dispatch);
+    offerSlots('p1', ['app-side-panel']);
+    renderContacts();
+    fireEvent.click(screen.getByText('Alice Smith'));
+    const buttons = document.querySelectorAll<HTMLElement>('[data-app-side-panel-phone]');
+    expect(buttons).toHaveLength(1);
+    fireEvent.click(buttons[0]);
+    const [, surface, action, ctx] = dispatch.mock.calls[0];
+    expect([surface, action]).toEqual(['app-side-panel', 'open']);
+    expect((ctx as { context: { contact?: { fullName: string } } }).context.contact?.fullName).toBe('Alice Smith');
   });
 });

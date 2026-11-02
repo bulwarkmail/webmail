@@ -31,6 +31,11 @@ interface NormalisedCombo {
 const bindings = new Map<string, Binding>();   // key: `${pluginId}:${shortcutId}`
 let listenerInstalled = false;
 
+/** The keys a plugin's shortcut is bound to ("Alt+A"), or null when it has none by that id. */
+export function shortcutKeysFor(pluginId: string, shortcutId: string): string | null {
+  return bindings.get(`${pluginId}:${shortcutId}`)?.keys ?? null;
+}
+
 function normaliseCombo(combo: string): NormalisedCombo | null {
   if (typeof combo !== 'string') return null;
   const parts = combo.split('+').map(p => p.trim()).filter(Boolean);

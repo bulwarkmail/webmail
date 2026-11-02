@@ -146,6 +146,21 @@ describe('Files side panel', () => {
     expect(details()).toHaveAttribute('aria-pressed', 'true');
     expect(frame()).toBeNull();
     expect(toggle()).toHaveAttribute('aria-pressed', 'false');
+    // Only here: the other views keep the panel open as the user left it.
+    expect(localStorage.getItem('appSidePanelCollapsed')).toBe('0');
+    // The details go, the panel is back.
+    fireEvent.click(details());
+    expect(frame()).not.toBeNull();
+  });
+
+  it('never shows both: with both stored open the details fold when the page loads', () => {
+    offerSlots('p1', ['app-side-panel']);
+    localStorage.setItem('appSidePanelCollapsed', '0');
+    localStorage.setItem('files-show-details', '1');
+    renderBrowser();
+    expect(frame()).not.toBeNull();
+    expect(details()).toHaveAttribute('aria-pressed', 'false');
+    expect(document.querySelector('[data-app-side-panel]')).toBeTruthy();
   });
 
   it('has no button in the header on a phone', () => {

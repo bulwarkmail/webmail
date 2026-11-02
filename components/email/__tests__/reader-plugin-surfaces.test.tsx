@@ -113,7 +113,7 @@ describe('email-detail-sidebar', () => {
     rerender(<EmailViewer email={textMail('Hi')} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" />);
 
     expect(screen.queryByTestId('slot-email-detail-sidebar')).toBeNull();
-    expect(screen.getByRole('button', { name: 'plugin_panel_show' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'plugin_panel', pressed: false })).toBeInTheDocument();
   });
 
   it('lays the panel over the message when opened anyway, instead of squeezing it', () => {
@@ -121,7 +121,7 @@ describe('email-detail-sidebar', () => {
     offerSlots('p1', ['email-detail-sidebar']);
     viewer(textMail('Hi'));
 
-    fireEvent.click(screen.getByRole('button', { name: 'plugin_panel_show' }));
+    fireEvent.click(screen.getByRole('button', { name: 'plugin_panel', pressed: false }));
     const panel = screen.getByTestId('slot-email-detail-sidebar').closest('[data-plugin-detail-panel]')!;
     expect(panel.getAttribute('data-plugin-detail-panel')).toBe('overlay');
     expect(panel.className).toContain('absolute');
@@ -168,7 +168,7 @@ describe('email-detail-sidebar', () => {
     offerSlots('p1', ['email-detail-sidebar'], { startFolded: ['email-detail-sidebar'] });
     const { unmount } = viewer(textMail('Hi'));
     expect(screen.queryByTestId('slot-email-detail-sidebar')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'plugin_panel_show' }));
+    fireEvent.click(screen.getByRole('button', { name: 'plugin_panel', pressed: false }));
     expect(screen.getByTestId('slot-email-detail-sidebar').closest('[data-plugin-detail-panel]')!.getAttribute('data-plugin-detail-panel')).toBe('docked');
     unmount();
     viewer(textMail('Hi'));

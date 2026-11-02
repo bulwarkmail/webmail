@@ -853,6 +853,7 @@
     },
     "plugin_panel_show": "Show plugin panel",
     "plugin_panel_hide": "Hide plugin panel",
+    "plugin_panel": "Plugin panel",
     "frame_title": "Message: {subject}",
     "frame_title_from": "Message from {sender}",
     "download_named": "Download {name}",

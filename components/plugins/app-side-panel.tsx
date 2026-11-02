@@ -7,18 +7,19 @@
 // squeezing it when the view would get too narrow. Its width and whether it
 // is folded are kept in localStorage for all four views. Until the user
 // folds or opens it, a plugin that asked to start folded starts folded.
+// Only a plugin whose shouldShow says yes gets the button and the panel.
 //
 // Each view mounts its own panel, so the frame starts over when the user
 // switches views; the plugin keeps what it needs in its storage. In the Pro
 // shell's panes there is none (only a Mail pane's reader panel).
 //
 // Phones, and Settings below 1024 px (phone-shaped there), have no room for
-// a panel: a button in the phone header (PhoneHeaderActions) asks the plugin
-// for its dialog instead, through its onAction hook (surface
-// `app-side-panel`, actionId `open`, context { view, context }), and so does
-// api.ui.openPanel there.
+// a panel: a button in the phone header (PhoneHeaderActions, and Contacts'
+// row over an open contact) asks the plugin for its dialog instead, through
+// its onAction hook (surface `app-side-panel`, actionId `open`, context
+// { view, context }), and so does api.ui.openPanel there.
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import { PanelRightClose, PanelRightOpen } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,9 @@ import { useIsEmbedded } from '@/hooks/use-is-embedded';
 import { useIsMobile } from '@/hooks/use-media-query';
 import { onPanelRequest } from '@/lib/plugin-sandbox/panel-requests';
 import { runPluginAction } from '@/lib/plugin-sandbox/actions';
+import { get as getActivePlugin } from '@/lib/plugin-sandbox/registry';
+import { slotPropsFor } from '@/lib/plugin-sandbox/permissions';
+import { shortcutKeysFor } from '@/lib/plugin-sandbox/shortcuts';
 import type { AppSidePanelContext, AppSidePanelViewName } from '@/lib/plugin-sandbox/assistant/f.types';
 import { cn } from '@/lib/utils';
 
@@ -41,22 +45,26 @@ export const APP_SIDE_PANEL_DEFAULT_WIDTH = 280;
 export const APP_SIDE_PANEL_MIN_CONTENT = 480;
 export const APP_SIDE_PANEL_COLLAPSED_KEY = 'appSidePanelCollapsed';
 export const APP_SIDE_PANEL_WIDTH_KEY = 'appSidePanelWidth';
+/** The id of a plugin shortcut that opens and closes its panel; its keys go into the button's title. */
+export const PANEL_SHORTCUT_ID = 'toggle-panel';
 
 const clampWidth = (n: number) => Math.max(APP_SIDE_PANEL_MIN_WIDTH, Math.min(APP_SIDE_PANEL_MAX_WIDTH, n));
 
 /**
  * The button that shows and hides a plugin side panel, the same in the
  * reader and in every other view: at the end of the toolbar row above the
- * panel.
+ * panel. One name ("Plugin panel"); aria-pressed says whether it is open.
+ * `shortcut`: the keys of the plugin's own shortcut for its panel.
  */
-export function PluginPanelToggle({ open, onClick, className, buttonRef }: {
+export function PluginPanelToggle({ open, onClick, className, buttonRef, shortcut }: {
   open: boolean;
   onClick: () => void;
   className?: string;
   buttonRef?: React.Ref<HTMLButtonElement>;
+  shortcut?: string | null;
 }) {
   const t = useTranslations('email_viewer');
-  const label = t(open ? 'plugin_panel_hide' : 'plugin_panel_show');
+  const label = t('plugin_panel');
   return (
     <Button
       ref={buttonRef}
@@ -64,14 +72,30 @@ export function PluginPanelToggle({ open, onClick, className, buttonRef }: {
       size="icon"
       onClick={onClick}
       className={cn('h-8 w-8 shrink-0', className)}
-      title={label}
+      title={shortcut ? `${label} (${shortcut})` : label}
       aria-label={label}
       aria-pressed={open}
+      aria-keyshortcuts={shortcut ?? undefined}
       data-plugin-panel-toggle=""
     >
       {open ? <PanelRightClose className="w-4 h-4 text-muted-foreground" /> : <PanelRightOpen className="w-4 h-4 text-muted-foreground" />}
     </Button>
   );
+}
+
+/** The keys of the panel shortcut of the first of these plugins that has one ("Alt+A"), or null. */
+export function panelShortcutOf(pluginIds: string[]): string | null {
+  for (const id of pluginIds) {
+    const keys = shortcutKeysFor(id, PANEL_SHORTCUT_ID);
+    if (keys) return keys;
+  }
+  return null;
+}
+
+/** The panel's name for screen readers: its plugins' names, else "Plugin panel". */
+export function panelLabelOf(pluginIds: string[], fallback: string): string {
+  const names = pluginIds.map((id) => getActivePlugin(id)?.plugin.name).filter((n): n is string => !!n);
+  return names.length ? names.join(', ') : fallback;
 }
 
 // ─── Where the panel can't dock: the plugin's dialog ───────────────
@@ -105,8 +129,8 @@ export function openAppSidePanelDialog(entry: AppSidePanelDialogEntry, pluginId 
   void runPluginAction(pluginId, APP_SIDE_PANEL_SLOT, 'open', { view: entry.view, context: entry.context }).catch(() => {});
 }
 
-/** The phone header's button for the view's plugin panel, which opens as a dialog there. */
-export function AppSidePanelPhoneButton() {
+/** The phone's button for the view's plugin panel, which opens as a dialog there. */
+export function AppSidePanelPhoneButton({ className }: { className?: string } = {}) {
   const t = useTranslations('email_viewer');
   const entry = useAppSidePanelDialogEntry();
   if (!entry) return null;
@@ -115,11 +139,43 @@ export function AppSidePanelPhoneButton() {
       size="icon-lg"
       label={t('plugin_panel_show')}
       onClick={() => openAppSidePanelDialog(entry)}
+      className={className}
       data-app-side-panel-phone=""
     >
       <PanelRightOpen />
     </IconButton>
   );
+}
+
+// ─── Which plugins show it ─────────────────────────────────────────
+
+/**
+ * The plugins whose offer of the panel shows here: each one's shouldShow
+ * (asked in its background frame with the props it may see) said yes, or it
+ * has none. Until a plugin answers its offer doesn't count, so a plugin that
+ * is switched off for these views never gets a button that opens nothing.
+ */
+function useShownPluginIds(pluginOffers: readonly { pluginId: string; hasShouldShow: boolean }[], view: AppSidePanelViewName, context: AppSidePanelContext): string[] {
+  const [answers, setAnswers] = useState<Record<string, boolean>>({});
+  const key = pluginOffers.map((o) => `${o.pluginId}:${o.hasShouldShow ? 1 : 0}`).join(',');
+  useEffect(() => {
+    let live = true;
+    for (const offer of pluginOffers) {
+      const active = getActivePlugin(offer.pluginId);
+      if (!offer.hasShouldShow || !active?.background?.evaluateShouldShow) {
+        setAnswers((prev) => (prev[offer.pluginId] === true ? prev : { ...prev, [offer.pluginId]: true }));
+        continue;
+      }
+      const props = slotPropsFor(active.plugin, APP_SIDE_PANEL_SLOT, { view, context });
+      active.background.evaluateShouldShow(APP_SIDE_PANEL_SLOT, props)
+        .then((show) => { if (live) setAnswers((prev) => (prev[offer.pluginId] === show ? prev : { ...prev, [offer.pluginId]: show })); })
+        .catch(() => { if (live) setAnswers((prev) => ({ ...prev, [offer.pluginId]: false })); });
+    }
+    return () => { live = false; };
+    // The offers by their key; a new context asks again (the plugin may decide by it).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, view, context]);
+  return useMemo(() => pluginOffers.filter((o) => answers[o.pluginId] === true).map((o) => o.pluginId), [pluginOffers, answers]);
 }
 
 // ─── The panel ─────────────────────────────────────────────────────
@@ -130,24 +186,31 @@ export interface UseAppSidePanelOptions {
   context: AppSidePanelContext;
   /** False where the view has no room for a panel at any width it is in now (Settings below 1024 px): the dialog then. */
   dock?: boolean;
+  /**
+   * Folded here for now without changing the stored choice (Files while its
+   * details panel is open), so the other views keep the panel as the user left it.
+   */
+  hidden?: boolean;
   /** Called when the panel opens, so the view can fold a panel it shares the place with (Files' details). */
   onOpen?: () => void;
 }
 
 export interface AppSidePanel {
-  /** A plugin offers the panel here (outside the Pro shell's panes). */
+  /** A plugin shows the panel here (outside the Pro shell's panes). */
   offered: boolean;
   /** The panel docks in this view now (else it is a dialog, or nothing). */
   docks: boolean;
   /** Whether the docked panel is open. */
   open: boolean;
+  /** Whether the user's choice is to have it open (also while `hidden` folds it here). */
+  wantsOpen: boolean;
   /** The button for the end of the toolbar row, or null. */
   toggle: ReactNode;
   /** The resize handle and the panel, as the last children of the row it sits in; null while folded. */
   panel: ReactNode;
   /** Put on the row the panel sits in: its width decides docked or over the view. */
   rowRef: (el: HTMLElement | null) => void;
-  /** Folds the panel (Files folds it when its details open). */
+  /** Folds the panel and keeps it folded. */
   close: () => void;
 }
 
@@ -167,11 +230,13 @@ function readWidth(): number {
   } catch { return APP_SIDE_PANEL_DEFAULT_WIDTH; }
 }
 
-export function useAppSidePanel({ view, context, dock = true, onOpen }: UseAppSidePanelOptions): AppSidePanel {
+export function useAppSidePanel({ view, context, dock = true, hidden = false, onOpen }: UseAppSidePanelOptions): AppSidePanel {
+  const t = useTranslations('email_viewer');
   const isEmbedded = useIsEmbedded();
   const isMobile = useIsMobile();
   const offers = usePluginSlotOffers(APP_SIDE_PANEL_SLOT);
-  const offered = offers.length > 0 && !isEmbedded;
+  const shownIds = useShownPluginIds(isEmbedded ? [] : offers, view, context);
+  const offered = shownIds.length > 0 && !isEmbedded;
   const docks = offered && dock && !isMobile;
   const asDialog = offered && !docks;
 
@@ -192,10 +257,13 @@ export function useAppSidePanel({ view, context, dock = true, onOpen }: UseAppSi
     return () => ro.disconnect();
   }, [docks, rowEl]);
 
-  const collapsed = choice ?? offers.some((o) => o.startFolded);
+  const collapsed = choice ?? offers.some((o) => o.startFolded && shownIds.includes(o.pluginId));
   const tooNarrow = rowWidth > 0 && rowWidth - width < APP_SIDE_PANEL_MIN_CONTENT;
-  const folded = collapsed || (tooNarrow && !forcedOpen);
+  const folded = collapsed || hidden || (tooNarrow && !forcedOpen);
   const overlay = !folded && tooNarrow;
+  // Docked, the panel grows only as far as the view keeps its room: a drag
+  // or the arrow keys stop there instead of folding the panel away.
+  const dockedMax = rowWidth > 0 ? Math.max(APP_SIDE_PANEL_MIN_WIDTH, rowWidth - APP_SIDE_PANEL_MIN_CONTENT) : APP_SIDE_PANEL_MAX_WIDTH;
 
   useEffect(() => {
     if (choice === null) return;
@@ -207,8 +275,8 @@ export function useAppSidePanel({ view, context, dock = true, onOpen }: UseAppSi
 
   const onOpenRef = useRef(onOpen);
   onOpenRef.current = onOpen;
-  const state = useRef({ offered, docks, folded, tooNarrow, view, context, pluginId: offers[0]?.pluginId ?? null });
-  state.current = { offered, docks, folded, tooNarrow, view, context, pluginId: offers[0]?.pluginId ?? null };
+  const state = useRef({ offered, docks, folded, tooNarrow, view, context, pluginId: shownIds[0] ?? null });
+  state.current = { offered, docks, folded, tooNarrow, view, context, pluginId: shownIds[0] ?? null };
 
   const setOpen = useCallback((want: boolean) => {
     const now = state.current;
@@ -247,8 +315,8 @@ export function useAppSidePanel({ view, context, dock = true, onOpen }: UseAppSi
     return want;
   }), [setOpen]);
 
-  // The phone header's button, while this view's panel is a dialog.
-  const firstPluginId = offers[0]?.pluginId ?? null;
+  // The phone button, while this view's panel is a dialog.
+  const firstPluginId = shownIds[0] ?? null;
   useEffect(() => {
     if (!asDialog || !firstPluginId) return;
     setDialogEntry({ pluginId: firstPluginId, view, context });
@@ -256,7 +324,7 @@ export function useAppSidePanel({ view, context, dock = true, onOpen }: UseAppSi
   }, [asDialog, firstPluginId, view, context]);
 
   const toggle = docks ? (
-    <PluginPanelToggle open={!folded} onClick={() => setOpen(folded)} buttonRef={toggleRef} />
+    <PluginPanelToggle open={!folded} onClick={() => setOpen(folded)} buttonRef={toggleRef} shortcut={panelShortcutOf(shownIds)} />
   ) : null;
 
   const panel = docks && !folded ? (
@@ -266,16 +334,18 @@ export function useAppSidePanel({ view, context, dock = true, onOpen }: UseAppSi
           pane="sidePanel"
           value={width}
           min={APP_SIDE_PANEL_MIN_WIDTH}
-          max={APP_SIDE_PANEL_MAX_WIDTH}
+          max={Math.min(APP_SIDE_PANEL_MAX_WIDTH, dockedMax)}
           onResizeStart={() => { widthAtStart.current = width; }}
           // The panel is on the right: dragging left makes it wider.
-          onResize={(delta) => setWidth(clampWidth(widthAtStart.current - delta))}
+          onResize={(delta) => setWidth(clampWidth(Math.min(dockedMax, widthAtStart.current - delta)))}
           onResizeEnd={() => { widthAtStart.current = width; }}
-          onDoubleClick={() => setWidth(APP_SIDE_PANEL_DEFAULT_WIDTH)}
+          onDoubleClick={() => setWidth(Math.min(dockedMax, APP_SIDE_PANEL_DEFAULT_WIDTH))}
         />
       )}
       <div
         ref={panelRef}
+        role="complementary"
+        aria-label={panelLabelOf(shownIds, t('plugin_panel'))}
         data-app-side-panel={overlay ? 'overlay' : 'docked'}
         data-app-side-panel-view={view}
         className={cn(
@@ -293,5 +363,5 @@ export function useAppSidePanel({ view, context, dock = true, onOpen }: UseAppSi
     </>
   ) : null;
 
-  return { offered, docks, open: docks && !folded, toggle, panel, rowRef: setRowEl, close };
+  return { offered, docks, open: docks && !folded, wantsOpen: docks && !collapsed, toggle, panel, rowRef: setRowEl, close };
 }

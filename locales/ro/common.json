@@ -843,6 +843,7 @@
     "mv_position": "{index} din {total}",
     "plugin_panel_show": "Afișează panoul pluginului",
     "plugin_panel_hide": "Ascunde panoul pluginului",
+    "plugin_panel": "Panoul pluginului",
     "copy": "Copiază",
     "contact_added": "Contact adăugat",
     "save_to_files": {

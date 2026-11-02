@@ -843,6 +843,7 @@
     "mv_position": "{index} af {total}",
     "plugin_panel_show": "Vis pluginpanel",
     "plugin_panel_hide": "Skjul pluginpanel",
+    "plugin_panel": "Pluginpanel",
     "copy": "Kopiér",
     "contact_added": "Kontakt tilføjet",
     "save_to_files": {

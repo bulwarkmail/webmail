@@ -808,6 +808,7 @@
     "mv_position": "{index} מתוך {total}",
     "plugin_panel_show": "הצגת חלונית התוסף",
     "plugin_panel_hide": "הסתרת חלונית התוסף",
+    "plugin_panel": "חלונית התוסף",
     "copy": "העתק",
     "contact_added": "איש הקשר נוסף",
     "save_to_files": {

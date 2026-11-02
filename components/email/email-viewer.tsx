@@ -40,7 +40,7 @@ import { useBottomControls } from "@/hooks/use-bottom-controls";
 import { useComposingSurface } from "@/hooks/use-composing-surface";
 import { ReaderSelectionMenu, useReaderSelectionMenu, watchBodySelection, watchElementSelection } from "./reader-selection-menu";
 import { onPanelRequest } from "@/lib/plugin-sandbox/panel-requests";
-import { PluginPanelToggle } from "@/components/plugins/app-side-panel";
+import { PluginPanelToggle, panelLabelOf, panelShortcutOf } from "@/components/plugins/app-side-panel";
 import type { ComposerMetadata } from "@/lib/plugin-sandbox/composer-registry";
 import { QuickReplyPluginActions } from "./quick-reply-plugin-actions";
 import { quickReplyEnvelope } from "@/lib/outgoing/quick-reply-envelope";
@@ -1887,7 +1887,7 @@ export function EmailViewer({
   // the toolbar row in every state of the reader (message, loading, none, scheduled).
   // The same button as in the other views' side panels (app-side-panel.tsx).
   const panelToggle = hasDetailSidebar && !isMobile ? (
-    <PluginPanelToggle open={!sidebarCollapsed} onClick={toggleDetailSidebar} className={cn(mvViewer && "order-10")} />
+    <PluginPanelToggle open={!sidebarCollapsed} onClick={toggleDetailSidebar} className={cn(mvViewer && "order-10")} shortcut={panelShortcutOf(detailSlots.map((o) => o.pluginId))} />
   ) : null;
   useEffect(() => onPanelRequest((request) => {
     if (request.slot !== 'email-detail-sidebar') return null;
@@ -3898,6 +3898,8 @@ ${printWatermark ? printWatermark.html : ''}
               />
             )}
             <div
+              role="complementary"
+              aria-label={panelLabelOf(detailSlots.map((o) => o.pluginId), t('plugin_panel'))}
               data-plugin-detail-panel={sidebarOverlay ? 'overlay' : 'docked'}
               className={cn(
                 "flex flex-col h-full border-s border-border bg-background overflow-hidden",

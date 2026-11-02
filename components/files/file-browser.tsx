@@ -441,19 +441,24 @@ export function FileBrowser({
   const selectedViews = useMemo(() => selectedList.map((r) => resourceToView(r, currentPath)), [selectedList, currentPath]);
 
   // The plugin side panel (app-side-panel), with the selected files and the
-  // open folder. It shares its place with the details panel: opening one
-  // folds the other.
+  // open folder. It shares its place with the details panel: opening it
+  // folds the details, and while the details are open it steps aside here
+  // only (the other views keep it as the user left it).
   const sidePanelContext = useMemo(() => ({
     ...(selectedViews.length > 0 ? { files: selectedViews.slice(0, MAX_SIDE_PANEL_FILES), fileCount: selectedViews.length } : {}),
     folder: { id: currentParentId ?? null, path: currentPath },
   }), [selectedViews, currentParentId, currentPath]);
-  const sidePanel = useAppSidePanel({ view: "files", context: sidePanelContext, onOpen: () => toggleDetails(false) });
-  const closeSidePanel = sidePanel.close;
-  const detailsWereShown = useRef(showDetails);
+  const sidePanel = useAppSidePanel({ view: "files", context: sidePanelContext, hidden: showDetails, onOpen: () => toggleDetails(false) });
+  // Both stored open (the details here, the panel in any view): once the
+  // panel shows here the details fold, so the two never sit side by side.
+  const sidePanelDocks = sidePanel.docks;
+  const sidePanelWanted = sidePanel.wantsOpen;
+  const sidePanelSettled = useRef(false);
   useEffect(() => {
-    if (showDetails && !detailsWereShown.current) closeSidePanel();
-    detailsWereShown.current = showDetails;
-  }, [showDetails, closeSidePanel]);
+    if (sidePanelSettled.current || !sidePanelDocks) return;
+    sidePanelSettled.current = true;
+    if (showDetails && sidePanelWanted) toggleDetails(false);
+  }, [sidePanelDocks, sidePanelWanted, showDetails, toggleDetails]);
 
   // ---- Breadcrumbs -----------------------------------------------------------
   const crumbs: Crumb[] = useMemo(() => {

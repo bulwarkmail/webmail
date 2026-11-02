@@ -843,6 +843,7 @@
     "mv_position": "{index} van {total}",
     "plugin_panel_show": "Plug-inpaneel tonen",
     "plugin_panel_hide": "Plug-inpaneel verbergen",
+    "plugin_panel": "Plug-inpaneel",
     "copy": "Kopiëren",
     "contact_added": "Contact toegevoegd",
     "save_to_files": {

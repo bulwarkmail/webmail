@@ -853,6 +853,7 @@
     },
     "plugin_panel_show": "Hiện bảng plugin",
     "plugin_panel_hide": "Ẩn bảng plugin",
+    "plugin_panel": "Bảng plugin",
     "frame_title": "Thư: {subject}",
     "frame_title_from": "Thư từ {sender}",
     "download_named": "Tải xuống {name}",

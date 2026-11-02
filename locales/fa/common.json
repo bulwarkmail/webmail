@@ -843,6 +843,7 @@
     "mv_position": "{index} از {total}",
     "plugin_panel_show": "نمایش پنل افزونه",
     "plugin_panel_hide": "پنهان کردن پنل افزونه",
+    "plugin_panel": "پنل افزونه",
     "copy": "کپی",
     "contact_added": "مخاطب افزوده شد",
     "save_to_files": {

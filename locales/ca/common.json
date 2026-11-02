@@ -843,6 +843,7 @@
     "mv_position": "{index} de {total}",
     "plugin_panel_show": "Mostra el tauler del connector",
     "plugin_panel_hide": "Amaga el tauler del connector",
+    "plugin_panel": "Tauler del connector",
     "copy": "Copia",
     "contact_added": "S'ha afegit el contacte",
     "save_to_files": {
