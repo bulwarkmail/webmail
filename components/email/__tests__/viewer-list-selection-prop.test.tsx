@@ -63,4 +63,24 @@ describe('the reader panel prop listSelection', () => {
     act(() => { useEmailStore.setState({ emails: [row('new'), row('a'), row('b'), row('c')] }); });
     expect(seen.at(-1)?.listSelection).toBe(before);
   });
+
+  it('does not render the reader again when the list changes but the ticks do not', () => {
+    useAuthStore.setState({ client });
+    useEmailStore.setState({ emails: [row('a'), row('b')], selectedEmailKeys: new Set(['a', 'b']), selectedMailbox: 'inbox', mailboxes });
+    render(<EmailViewer email={null} isLoading={false} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onDelete={() => {}} />);
+    const renders = seen.length;
+    act(() => { useEmailStore.setState({ emails: [row('new'), row('a'), row('b')] }); });
+    act(() => { useEmailStore.setState({ emails: [row('newer'), row('new'), row('a'), row('b')], threadEmailsCache: new Map() }); });
+    expect(seen.length).toBe(renders);
+    // A new tick does.
+    act(() => { useEmailStore.setState({ selectedEmailKeys: new Set(['a', 'b', 'new']) }); });
+    expect(seen.length).toBeGreaterThan(renders);
+  });
+
+  it('gives a panel outside the main list (a Pro tab) no ticks', () => {
+    useAuthStore.setState({ client });
+    useEmailStore.setState({ emails: [row('a'), row('b')], selectedEmailKeys: new Set(['a', 'b']), selectedMailbox: 'inbox', mailboxes });
+    render(<EmailViewer email={null} isLoading={false} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onDelete={() => {}} withListSelection={false} />);
+    expect(seen.at(-1)).toMatchObject({ listSelection: null });
+  });
 });

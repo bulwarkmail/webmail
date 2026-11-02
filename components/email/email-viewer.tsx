@@ -288,6 +288,8 @@ interface EmailViewerProps {
   mailboxes?: Mailbox[];
   selectedMailbox?: string;
   className?: string;
+  /** The side panel hears of the messages ticked in the main list (false: a Pro tab, whose message isn't from that list). */
+  withListSelection?: boolean;
 }
 
 // Helper function to format recipients with contextual display
@@ -1313,6 +1315,7 @@ export function EmailViewer({
   mailboxes = [],
   selectedMailbox = "",
   className,
+  withListSelection = true,
 }: EmailViewerProps) {
   const t = useTranslations('email_viewer');
   const archiveActionEnabled = useArchiveActionEnabled();
@@ -1819,7 +1822,7 @@ export function EmailViewer({
   }, []);
   const [detailFocusRequest, setDetailFocusRequest] = useState(0);
   // The messages ticked in the list, for the AI assistant (lib/plugin-sandbox/assistant).
-  const listSelection = useListSelection();
+  const listSelection = useListSelection(withListSelection);
   const pluginDetailProps = useMemo(
     () => ({ email: pluginEmailView, selection: bodySelection, listSelection, focusRequest: detailFocusRequest }),
     [pluginEmailView, bodySelection, listSelection, detailFocusRequest],

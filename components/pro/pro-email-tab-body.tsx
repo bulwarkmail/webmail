@@ -541,6 +541,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
           currentMailboxRole={currentMailboxRole}
           mailboxes={mailboxes}
           className="flex-1"
+          withListSelection={false}
         />
       </ErrorBoundary>
       <ConfirmDialog {...confirmDialogProps} />
