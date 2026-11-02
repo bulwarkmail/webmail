@@ -51,3 +51,11 @@ The preview is in draft PR #3. Phase 0 and full phase 1 acceptance are not compl
 - HTTP smoke assertions pass for case-insensitive headers, NOT partitioning, size boundaries and query totals.
 - Mobile reader checked at 390px: document width equals viewport width. Temporary viewport override reset. Desktop screenshot: research workspace `memail-workspace-redesign.jpg`.
 - Real Stalwart, full suite, localization of downstream labels, cross-device workspace preferences and comprehensive keyboard/mobile acceptance remain outstanding. Custom Tabler picker icons intentionally remain supported.
+
+## Reader queue and focused composition
+
+- 16 targeted composer/reader tests pass (14 initial plus two new desktop/phone navigation regressions). TypeScript passes. Scoped lint has zero errors and the previously recorded mail-app effect-ref warning.
+- Browser verified 1-of-23 to 2-of-23 navigation and return, with previous disabled on the first message. Formatting toggles without losing typed text. A synthetic reply was saved, found in Drafts, reopened and its recipient/subject/body retained; nothing was sent.
+- This validation uses the HTTP demo, not a real Stalwart server. Durable reminders/follow-up remain a separate unimplemented backend phase.
+- Browser draft editing exposed discarded body parts in the HTTP mock. Fixed the create/get round trip; new HTTP checks pass for plain text, HTML, UTF-8 byte lengths, Bcc and reply headers. Previously created malformed demo drafts cannot recover text the mock discarded.
+- Repeated browser check after the fix: saved the synthetic recovery draft, reloaded Drafts, opened it and selected Edit; the exact typed text remained in the editor. Screenshot: `memail-focused-compose.jpg` in the research workspace. No outgoing send was attempted.

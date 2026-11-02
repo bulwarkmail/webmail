@@ -1068,8 +1068,8 @@ export function EmailComposer({
   const [showDirectoryPicker, setShowDirectoryPicker] = useState(false);
   const [showSaveAsTemplate, setShowSaveAsTemplate] = useState(false);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
-  // The formatting toolbar is folded away on a phone until asked for.
-  const [showFormattingOnMobile, setShowFormattingOnMobile] = useState(false);
+  // Formatting stays folded until requested, without unmounting the editor.
+  const [showFormatting, setShowFormatting] = useState(false);
   // Inside Mountain View's compose window the composer draws Gmail's chrome:
   // the window's title bar, and a bottom bar led by Send with the formatting
   // bar folded away behind "Aa" until asked for.
@@ -4756,8 +4756,8 @@ export function EmailComposer({
               ariaInvalid={validationErrors.body}
               ariaDescribedBy={`${fieldIdBase}-body-error`}
               defaultTextStyle={composeStyle}
-              collapseToolbarOnMobile={!showFormattingOnMobile}
-              toolbarPlacement={mvWindow ? (mvShowFormatting ? 'bottom' : 'hidden') : 'top'}
+              collapseToolbarOnMobile={!showFormatting}
+              toolbarPlacement={mvWindow ? (mvShowFormatting ? 'bottom' : 'hidden') : (showFormatting ? 'top' : 'hidden')}
               onEditorReady={handleEditorReady}
               mentionCandidates={recipientMentionsEnabled ? mentionCandidates : undefined}
               findMentionContacts={recipientMentionsEnabled && mentionAddsRecipientTo !== 'off' ? findMentionContacts : undefined}
@@ -4997,16 +4997,15 @@ export function EmailComposer({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => mvWindow ? setMvShowFormatting((v) => !v) : setShowFormattingOnMobile((v) => !v)}
+                onClick={() => mvWindow ? setMvShowFormatting((v) => !v) : setShowFormatting((v) => !v)}
                 className={cn(
                   "h-9 w-9 max-md:h-11 max-md:w-11",
-                  !mvWindow && "md:hidden",
-                  (mvWindow ? mvShowFormatting : showFormattingOnMobile) && "bg-accent text-accent-foreground",
+                  (mvWindow ? mvShowFormatting : showFormatting) && "bg-accent text-accent-foreground",
                 )}
                 data-mv-formatting-toggle={mvWindow ? "" : undefined}
                 title={t('formatting')}
                 aria-label={t('formatting')}
-                aria-pressed={mvWindow ? mvShowFormatting : showFormattingOnMobile}
+                aria-pressed={mvWindow ? mvShowFormatting : showFormatting}
               >
                 <Type className="w-4 h-4" />
               </Button>

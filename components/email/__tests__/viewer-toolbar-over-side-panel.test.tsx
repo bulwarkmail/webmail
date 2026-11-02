@@ -138,3 +138,21 @@ describe('the reader toolbar and the plugin side panel', () => {
     expect(document.querySelector('[data-viewer-top-toolbar="column"]')).toBeTruthy();
   });
 });
+
+
+it('navigates the loaded desktop queue and disables unavailable directions', () => {
+  const next = vi.fn();
+  render(<EmailViewer email={email} mailboxes={mailboxes} selectedMailbox="inbox" listPosition={{index:1,total:3}} onNavigateNext={next} />);
+  const navigation = document.querySelector('[data-memail-reader-navigation]')!;
+  const buttons = navigation.querySelectorAll('button');
+  expect(buttons[0]).toBeDisabled();
+  expect(buttons[1]).toBeEnabled();
+  fireEvent.click(buttons[1]);
+  expect(next).toHaveBeenCalledTimes(1);
+});
+
+it('retains the native phone navigation without duplicating the desktop pager', () => {
+  device.isMobile = true;
+  render(<EmailViewer email={email} mailboxes={mailboxes} selectedMailbox="inbox" listPosition={{index:1,total:3}} onNavigateNext={() => {}} />);
+  expect(document.querySelector('[data-memail-reader-navigation]')).toBeNull();
+});

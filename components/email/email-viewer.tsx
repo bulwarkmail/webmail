@@ -245,6 +245,8 @@ interface EmailViewerProps {
   onNavigatePrev?: () => void;
   /** Mountain View: where the open message sits in the list, for the "1 of N" pager. */
   mvPosition?: { index: number; total: number };
+  /** Position within the loaded navigation queue, never the entire mailbox count. */
+  listPosition?: { index: number; total: number };
   /** Mountain View: the folder the message is in, shown as a chip by the subject. */
   mvFolderName?: string;
   /**
@@ -1290,6 +1292,7 @@ export function EmailViewer({
   onNavigateNext,
   onNavigatePrev,
   mvPosition,
+  listPosition,
   mvFolderName,
   mvConversation,
   mvConversationPending,
@@ -4569,6 +4572,11 @@ ${printWatermark ? printWatermark.html : ''}
             <MvPager position={mvPosition} onPrev={onNavigatePrev} onNext={onNavigateNext} />
           )}
         </div>
+        {!mvViewer && !isMobile && listPosition && (
+          <div className="ms-3 shrink-0 border-s border-border ps-3" data-memail-reader-navigation="">
+            <MvPager position={listPosition} onPrev={onNavigatePrev} onNext={onNavigateNext} />
+          </div>
+        )}
       </div>
     </div>
   );

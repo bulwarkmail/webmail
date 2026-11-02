@@ -32,3 +32,9 @@ Add each customization here. Include the relevant upstream files, the reason it 
 - `.memail/workspace-toolbar.tsx`: Triage preset, comfortable reading width, avatar preference and native keyboard shortcut help.
 - `.memail/theme/`: graphite/iris light and dark tokens, capsule split tabs, rounded folder navigation and bounded compose canvas.
 - `app/api/dev-jmap/[...path]/route.ts`: HTTP mock header/NOT/size filters and newsletter fixtures; verify separately from the in-memory DemoJMAPClient using `.memail/demo-http-smoke.mjs`.
+
+## Reader queue and focused composition
+
+- `components/email/email-viewer.tsx`, `components/mail/mail-app.tsx`: standard desktop reader now exposes native previous/next handlers with loaded-queue position. It does not claim pagination totals are navigable; unavailable directions are disabled. Pager sits outside measured action overflow, and phones retain their existing bottom navigation.
+- `components/email/email-composer.tsx`: rich-text formatting starts folded on desktop as well as phone, with a visible Formatting toggle in the action bar. The editor stays mounted so draft content, undo history and keyboard formatting remain intact. Mountain View retains its existing bottom toolbar behavior.
+- `app/api/dev-jmap/[...path]/route.ts`: HTTP demo now retains created draft body parts/values, Bcc and reply headers. `.memail/demo-draft-smoke.mjs` creates and removes its own disposable drafts to check round trips. Multipart bodyStructure/inline-image round trips remain outside this smoke test.

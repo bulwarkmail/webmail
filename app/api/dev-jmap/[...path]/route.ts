@@ -45,6 +45,9 @@ interface MockMailbox {
 }
 
 interface MockEmail {
+  bcc?: { name: string; email: string }[];
+  inReplyTo?: string[];
+  references?: string[];
   headers?: Record<string, string>;
   id: string;
   threadId: string;
@@ -1866,6 +1869,16 @@ function handleEmailSet(args: MethodArgs, callId: string): MethodResult {
         previewText = data.textBody;
       }
 
+      // Return the body parts as well as the preview: the composer reopens
+      // only parts explicitly listed by Email/get, never the preview string.
+      const values = bodyVals ?? {};
+      const normalizeParts = (parts: unknown, fallbackType: string): MockEmail['textBody'] =>
+        Array.isArray(parts) ? parts.filter(part => part && typeof part.partId === 'string').map(part => ({
+          ...part,
+          type: part.type ?? fallbackType,
+          blobId: part.blobId ?? `blob-${newId}-${part.partId}`,
+          size: part.size ?? Buffer.byteLength(values[part.partId]?.value ?? '', 'utf8'),
+        })) : [];
       const newEmail: MockEmail = {
         id: newId,
         threadId: `thread-new-${Date.now()}-${key}`,
@@ -1879,10 +1892,15 @@ function handleEmailSet(args: MethodArgs, callId: string): MethodResult {
         subject: typeof data.subject === 'string' ? data.subject : '',
         preview: (previewText || (data.subject as string) || '').slice(0, 120),
         hasAttachment: false,
-        textBody: [],
-        htmlBody: [],
-        bodyValues: {},
+        textBody: normalizeParts(data.textBody, 'text/plain'),
+        htmlBody: normalizeParts(data.htmlBody, 'text/html'),
+        bodyValues: values,
+        bcc: (data.bcc as MockEmail['bcc']) ?? [],
+        inReplyTo: data.inReplyTo as string[] | undefined,
+        references: data.references as string[] | undefined,
+        attachments: data.attachments as MockEmail['attachments'],
       };
+      newEmail.hasAttachment = !!newEmail.attachments?.length;
       emails.unshift(newEmail);
       emailCreationIds.set(key, newId);
       created[key] = { id: newId };

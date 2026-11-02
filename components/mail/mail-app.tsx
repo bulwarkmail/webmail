@@ -5676,6 +5676,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     onBack={handleMobileBack}
                     onNavigateNext={handleNavigateNext}
                     onNavigatePrev={handleNavigatePrev}
+                    listPosition={!mvShell && selectedEmailIndex >= 0 ? {index:selectedEmailIndex + 1, total:activeEmails.length} : undefined}
                     mvPosition={mvShell && selectedEmailIndex >= 0 ? {
                       index: selectedEmailIndex + 1,
                       // A unified view has no folder count; its accounts' query totals stand in (#1471).
