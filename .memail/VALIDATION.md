@@ -34,3 +34,10 @@ The preview is in draft PR #3. Phase 0 and full phase 1 acceptance are not compl
 - The upstream synthetic server does not implement CalendarEventNotification/query; calendar notification integration remains unverified.
 - Browser smoke also confirmed dark mode at 1440px and 390px, with no horizontal page overflow; the viewport override was reset after review. This is a smoke check, not full device/accessibility acceptance.
 - Real Stalwart, broad accessibility acceptance and cross-device persistence remain open.
+
+## Integrated workspace checkpoint
+
+- Persistent sidebar Compose, workspace layout controls, and native configurable inbox splits implemented.
+- 20 targeted tests passed for registration lifecycle/provider precedence, live preference updates, demo filter membership, host tab keyboard behavior and sidebar regressions. TypeScript and scoped ESLint passed.
+- Browser verification blocked by the connected browser reporting that its user surface is unavailable. No new screenshots or full visual/triage acceptance claimed. No production build was run for this checkpoint.
+- English labels and device-local preferences are explicit limitations. Remaining design gates are in PRODUCT-STRATEGY.md.

@@ -15,3 +15,10 @@ Base: Bulwark Webmail, https://github.com/bulwarkmail/webmail.
 No authentication, mail rendering, synchronization, dependencies or license text has been changed. Memail identity is supplied through upstream configuration; its demo launcher uses synthetic mail and an absolute configured loopback endpoint for server-side session verification.
 
 Add each customization here. Include the relevant upstream files, the reason it cannot use configuration/theme/plugin hooks, and the checks required after upstream updates. Remove entries when upstream absorbs the change.
+
+## Workspace redesign in progress
+
+- `components/layout/sidebar.tsx`: persistent Compose using the existing guarded compose callback.
+- `components/mail/mail-app.tsx`: native workspace header with compact/focused/split controls; existing Mountain View keeps its own layout controls.
+- `.memail/workspace-*`: native All/Focus/Newsletters registration shared across mounted panes and yielding to explicitly installed category providers. Filters reuse the tested Focus query definitions and existing host counts/pagination.
+- New workspace labels currently use English. Visual acceptance, localization and the complete triage walkthrough remain outstanding; this checkpoint is not the accepted redesign.

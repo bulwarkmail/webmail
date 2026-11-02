@@ -8,6 +8,7 @@ import { MvComposeInline, MvComposeWindow } from "@/components/email/mv-compose-
 import { usePinnedPerSession } from "@/hooks/use-pinned-per-session";
 import { useConfig } from "@/hooks/use-config";
 import { productName } from "@/lib/product-name";
+import { WorkspaceToolbar } from "../../.memail/workspace-toolbar";
 import { MessageListTabs, useMessageListPanelProps } from "@/components/email/message-list-tabs";
 import dynamic from "next/dynamic";
 import type { ComposerDraftData } from "@/components/email/email-composer";
@@ -5318,6 +5319,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             <div className="flex-1 min-h-0 flex flex-col">
             {/* Plugin-registered category tabs (Gmail-style). Renders nothing
                 unless an enabled plugin registered tabs via api.tabs.set. */}
+            {!mvShell && <WorkspaceToolbar title={currentMailboxName} />}
             {!isScheduledView && <MessageListTabs panelId={messageListPanelId} />}
             <WelcomeBanner />
 

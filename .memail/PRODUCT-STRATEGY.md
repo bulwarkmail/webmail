@@ -164,4 +164,20 @@ Gmail/Graph/IMAP gateways, Rust rewrites, a new framework, a full CRM, omnichann
 
 Branding/theme work is in [draft PR 1](https://github.com/Saivra/memail/pull/1), not merged. Production build and typecheck passed; lint had zero errors with existing upstream warnings; 66 targeted tests and the Git merge regression test passed. The broad upstream suite was still running when this research was prepared; no complete baseline pass or live Stalwart integration result is claimed.
 
-This plan supersedes the earlier assumption that we needed to build category tabs, command infrastructure or AI writing from scratch. The next step is a focused plugin spike and baseline validation, not a shell replacement.
+This plan supersedes the earlier assumption that we needed to build category tabs, command infrastructure or AI writing from scratch. The focus plugin spike is complete. The user rejected theme-only customization and selected a Superhuman-led workspace redesign on 2 November 2026. The next milestone is an integrated shell and triage experience.
+
+## Accepted workspace redesign
+
+The user selected a Superhuman-led workspace after reviewing and rejecting the theme-only result. Theme 0.2 is groundwork, not design acceptance.
+
+Deliver one coherent daily-mail flow: persistent Compose and compact navigation; prominent All/Focus/Newsletters splits connected to server queries; dense conversation rows with clear sender, subject, unread and selection hierarchy; a focused reading surface with primary reply/archive actions; keyboard navigation, command discovery and undo. Existing split-pane and mobile behavior must remain usable.
+
+Acceptance requires an actual inbox-to-reply-to-archive browser walkthrough and screenshots of the new layout, with working split counts and empty/loading/error states. Optional plugin ZIPs, CSS-only changes, settings-only presets and decorative controls do not satisfy this milestone. Durable snooze/follow-up and contextual AI follow with their own backend acceptance, not simulated timers or fabricated responses.
+
+### Delivery gates for the accepted design
+
+1. Inbox workspace: persistent Compose, integrated configurable splits, a clear folder heading, compact full-width conversation hierarchy, and visible view controls. Demonstrate All/Focus/Newsletters membership, keyboard selection and archive/undo with server-backed counts.
+2. Reading and composition: message-centered reading width, deliberate primary reply/archive actions, quiet secondary actions, recipient/identity clarity, attachment states and draft recovery. Demonstrate reply/save/reopen without losing edits.
+3. Follow-through: durable waiting/read-later/reminder state with account-scoped persistence and restart recovery, then contextual AI behind explicit provider configuration.
+
+The integrated view controls are implemented. Conversation hierarchy refinement, reader/composer redesign and browser acceptance remain open. Current workspace preferences are local to the device; they are not advertised as cross-device settings.
