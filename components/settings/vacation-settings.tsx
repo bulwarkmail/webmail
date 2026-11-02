@@ -33,6 +33,11 @@ const STALWART_VACATION_LIMITS = { subject: 511, body: 2047 };
 const SAVE_AT_ONCE = 0;
 const SAVE_AFTER_TYPING = 800;
 
+/** The plain-text part a save derives from the sanitized HTML. */
+function textFromHtml(sanitizedHtml: string): string {
+  return htmlToPlainText(sanitizedHtml, { paragraphSpacing: true });
+}
+
 function byteLength(value: string): number {
   return new TextEncoder().encode(value).length;
 }
@@ -210,7 +215,11 @@ export function VacationSettings() {
       setInputZone(timeZone);
       setHalfFilled({ from: false, to: false });
       setLocalSubject(stored.subject);
-      setLocalTextBody(stored.textBody);
+      // Text a save derived from the HTML leaves the Body blank, so the next
+      // HTML edit derives it again instead of keeping the old wording.
+      setLocalTextBody(stored.htmlBody && stored.textBody.trim() === textFromHtml(sanitizeEmailHtml(stored.htmlBody)).trim()
+        ? ''
+        : stored.textBody);
       setHtmlEnabled(!!stored.htmlBody);
       setLocalHtmlBody(stored.htmlBody || '');
     }
@@ -296,10 +305,7 @@ export function VacationSettings() {
       htmlEnabled && htmlToPlainText(localHtmlBody).trim()
         ? sanitizeEmailHtml(localHtmlBody)
         : null;
-    const text =
-      localTextBody.trim() || !sanitizedHtml
-        ? localTextBody
-        : htmlToPlainText(sanitizedHtml, { paragraphSpacing: true });
+    const text = localTextBody.trim() || !sanitizedHtml ? localTextBody : textFromHtml(sanitizedHtml);
     return { sanitizedHtml, textBody: text };
   }, [htmlEnabled, localHtmlBody, localTextBody]);
 
@@ -588,7 +594,14 @@ export function VacationSettings() {
           label={t('message.html_label')}
           description={t('message.html_description')}
         >
-          <ToggleSwitch checked={htmlEnabled} onChange={changeNow(setHtmlEnabled)} />
+          <ToggleSwitch
+            checked={htmlEnabled}
+            onChange={changeNow((on: boolean) => {
+              // Switched off, a blank Body keeps the text derived from the HTML.
+              if (!on && !localTextBody.trim()) setLocalTextBody(payload.textBody);
+              setHtmlEnabled(on);
+            })}
+          />
         </SettingItem>
         {htmlEnabled && (
           <div className="pb-3">

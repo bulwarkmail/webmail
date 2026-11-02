@@ -78,4 +78,31 @@ describe('HTML auto-reply and its plain-text part', () => {
     await settle();
     expect(sends(server)).toBe(1);
   }, 15_000);
+
+  it('derives the text again after a reload, and keeps it when HTML is switched off', async () => {
+    const server = mockStalwartAccount('b', [], ['vacation'], {
+      vacation: { htmlBody: '<p>Back on 5 May.</p>', textBody: 'Back on 5 May.' },
+    });
+    await openCard(server);
+    expect(body().value).toBe('');
+    fireEvent.change(editor(), { target: { value: '<p>Back on 12 May.</p>' } });
+    await saved(server, 1);
+    expect(lastSent(server)).toMatchObject({ htmlBody: '<p>Back on 12 May.</p>', textBody: 'Back on 12 May.' });
+
+    fireEvent.click(htmlSwitch());
+    expect(body().value).toBe('Back on 12 May.');
+    await saved(server, 2);
+    expect(lastSent(server)).toMatchObject({ htmlBody: null, textBody: 'Back on 12 May.' });
+  }, 15_000);
+
+  it('keeps a plain-text part the user wrote', async () => {
+    const server = mockStalwartAccount('b', [], ['vacation'], {
+      vacation: { htmlBody: '<p>Back on 5 May.</p>', textBody: 'Back soon.' },
+    });
+    await openCard(server);
+    expect(body().value).toBe('Back soon.');
+    fireEvent.change(editor(), { target: { value: '<p>Back on 12 May.</p>' } });
+    await saved(server, 1);
+    expect(lastSent(server)).toMatchObject({ htmlBody: '<p>Back on 12 May.</p>', textBody: 'Back soon.' });
+  }, 15_000);
 });
