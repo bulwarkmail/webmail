@@ -5,7 +5,7 @@ import vm from 'node:vm';
 export async function pushClick(
   accountId: string,
   preview: (url: string) => Promise<unknown>,
-  options: { warm?: boolean; basePath?: string; legacy?: boolean; emailId?: string } = {},
+  options: { warm?: boolean; basePath?: string; legacy?: boolean; emailId?: string; noParamsSize?: boolean } = {},
 ): Promise<string> {
   const source = readFileSync(resolve('public/sw.js'), 'utf8');
   let notification: { data: unknown } | undefined;
@@ -18,8 +18,12 @@ export async function pushClick(
     async focus() { return this; },
     async navigate(url: string) { target = url; return this; },
   };
+  // Safari before 17 has no URLSearchParams.size.
+  const SearchParams = options.noParamsSize
+    ? class extends URLSearchParams { get size(): number { return undefined as unknown as number; } }
+    : URLSearchParams;
   const context = vm.createContext({
-    URL, URLSearchParams, Response, AbortController, setTimeout, clearTimeout, console,
+    URL, URLSearchParams: SearchParams, Response, AbortController, setTimeout, clearTimeout, console,
     self: {
       location: { href: `https://mail.example.test${options.basePath ?? ''}/sw.js`, origin: 'https://mail.example.test' },
       addEventListener: (type: string, fn: (event: unknown) => void) => listeners.set(type, fn),

@@ -47,6 +47,11 @@ describe('push click keeps the owning mailbox (#1491)', () => {
     expect(parseTarget(target)).toMatchObject({ kind: 'folder', ownerAccountId: 'team', slot: 2 });
   });
 
+  it('keeps the slot and owner where URLSearchParams has no size', async () => {
+    const target = await pushClick('team', async () => ({ slot: 1, unreadTotal: 1, email: { id: 'same-id' } }), { noParamsSize: true });
+    expect(parseTarget(target)).toMatchObject({ kind: 'message', ownerAccountId: 'team', slot: 1 });
+  });
+
   it('does not fall back to a personal folder for an unavailable owner', () => {
     expect(resolveFolderRef('inbox', folders, 'unavailable')).toBeNull();
   });

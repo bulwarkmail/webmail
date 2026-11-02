@@ -925,7 +925,9 @@ function buildClickUrl(data) {
   const params = new URLSearchParams();
   if (Number.isInteger(data.slot)) params.set("slot", String(data.slot));
   if (typeof data.accountId === "string" && data.accountId) params.set("owner", data.accountId);
-  const targetQuery = params.size ? `?${params}` : "";
+  // Not params.size: Safari before 17 (iOS 16.4+ web push) lacks it.
+  const qs = params.toString();
+  const targetQuery = qs ? `?${qs}` : "";
   if (data.kind === "email" && data.emailId) {
     // Permalink (#733). Under NEXT_PUBLIC_LOCALE_PREFIX=always the proxy
     // redirects this to the localised path; the worker has no locale to add.
