@@ -80,3 +80,12 @@ Add each customization here. Include the relevant upstream files, the reason it 
 
 - `.memail/compose-formatting.ts`, `components/email/rich-text-editor.tsx`: paragraph/heading line-height choices with removal of conflicting imported span line heights. Existing font, color and paragraph spacing are retained.
 - Clear formatting now strips pasted typography on selected blocks as well as marks, maps preserved spacing through heading/list normalization, and starts a separate undo group. Quoted/signature atom content is not traversed.
+
+
+## ReUI workspace structure
+
+- `components.json`: radix-nova registry, separate `components/reui` primitive namespace, license read from environment only. Generated `cn` imports resolve to the host helper; generated destructive-token overrides were removed to preserve native semantics.
+- `components/blocks/app-shell-20`: vendor block plus `mail-pane.tsx` and `mail-empty-state.tsx` host adapters. Native list/reader/composer behavior remains in Bulwark; the sample block page is not mounted. OEM distribution authorization is recorded in UPSTREAM.md. Free primitives retain `.memail/licenses/REUI-MIT.txt`.
+- `components/mail/mail-app.tsx`: moves workspace controls above both panes; uses the block's Card pane composition outside Mountain View/embedded shells, with native widths, mobile overlays and resize handles. Queue footer reports loaded counts and opens first unread through handleEmailSelect.
+- `.memail/workspace-toolbar.tsx`: coherent Triage / Read & reply presets; compact rows and native column persistence; density control in Customize; one-row phone header.
+- `components/email/email-viewer.tsx`: translated ReUI reader empty state with native compose callback outside Mountain View, retaining demo welcome behavior.

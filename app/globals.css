@@ -93,6 +93,22 @@
    * folder rows use max-lg:min-h-[44px]. Plugin frames get it as a variable
    * because their own viewport is the frame, not the page. */
   --touch-row-min-h: 0px;
+  --success:
+    var(--color-emerald-500);
+  --success-foreground:
+    var(--color-emerald-900);
+  --info:
+    var(--color-violet-500);
+  --info-foreground:
+    var(--color-violet-900);
+  --warning:
+    var(--color-yellow-500);
+  --warning-foreground:
+    var(--color-yellow-900);
+  --invert:
+    var(--color-zinc-900);
+  --invert-foreground:
+    var(--color-zinc-50);
 }
 
 @media (width < 64rem) {
@@ -152,6 +168,22 @@
   --color-chart-3: #fbbf24;
   --color-chart-4: #f87171;
   --color-chart-5: #a78bfa;
+  --success:
+    var(--color-emerald-500);
+  --success-foreground:
+    var(--color-emerald-600);
+  --info:
+    var(--color-violet-500);
+  --info-foreground:
+    var(--color-violet-600);
+  --warning:
+    var(--color-yellow-500);
+  --warning-foreground:
+    var(--color-yellow-600);
+  --invert:
+    var(--color-zinc-700);
+  --invert-foreground:
+    var(--color-zinc-50);
 }
 
 /* A colour bar along an element's start edge: --start-bar is its colour,
@@ -181,7 +213,6 @@
   background-color: var(--color-background);
   background-image: linear-gradient(var(--tag-fill), var(--tag-fill));
 }
-
 
 /* The default border colour. In the base layer, so a border colour utility
    (border-primary, border-transparent, border-destructive, border-input)
@@ -1297,4 +1328,23 @@ optgroup {
   [data-interface-layout="mountain-view"] [data-mv-rail-peek] {
     width: var(--mv-rail-peek-w);
   }
+}
+
+@theme inline {
+  --color-success:
+    var(--success);
+  --color-success-foreground:
+    var(--success-foreground);
+  --color-info:
+    var(--info);
+  --color-info-foreground:
+    var(--info-foreground);
+  --color-warning:
+    var(--warning);
+  --color-warning-foreground:
+    var(--warning-foreground);
+  --color-invert:
+    var(--invert);
+  --color-invert-foreground:
+    var(--invert-foreground);
 }

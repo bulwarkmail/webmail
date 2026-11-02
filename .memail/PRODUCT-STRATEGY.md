@@ -115,7 +115,7 @@ A durable reminder/follow-up service is a server capability, not plugin-local br
 
 Keep mail in Stalwart. Use JMAP state and existing client caches for synchronization. Store only necessary view/preferences/workflow metadata separately. Offline caches need account isolation, sign-out cleanup and organization policy controls; self-hosting is not equivalent to end-to-end encryption.
 
-Use free MIT ReUI components where they fit an actual new surface. Standard ReUI Pro source cannot be published in this public fork. Preserve Bulwark's AGPL/license notices; any premium redistribution needs explicitly compatible written rights. No blanket visual rewrite of upstream components is proposed.
+Use ReUI components and the app-shell-20 Pro block under the owner-confirmed OEM redistribution agreement. Preserve Bulwark's AGPL/license notices and the MIT notice for free ReUI primitives. Standard Pro alone does not grant public redistribution rights. The user has authorized an overall UI/UX redesign. Deliver it as coordinated workspace, navigation, reader/composer, and settings phases; preserve protocol behavior and isolate downstream seams rather than limiting the work to theme overrides.
 
 ## Phased delivery with exit gates
 
@@ -198,3 +198,16 @@ Added six-level text styles, paragraph-spacing repair for existing drafts, local
 ### Search management checkpoint
 
 Saved searches now expose their criteria and folder scope, indicate a matching current search, support rename and explicit criteria replacement, and offer undo for the last removal. Quick unread/starred/attachment searches use the existing native search pipeline. Account isolation and missing-folder guards remain enforced. Cross-device synchronization and localization remain future work.
+
+
+## Whole-workspace redesign execution
+
+The latest direction supersedes the earlier incremental visual scope. Superhuman-led operation remains the design target.
+
+1. **Workspace structure (started):** one header spans inbox and reader; ReUI Pro app-shell-20 supplies the separate pane composition; native search, category tabs and virtualized results remain inside the list pane. Triage and Read & reply presets set native layout, density and widths. A loaded-queue footer opens the first unread result through the native selection handler.
+2. **Navigation and discovery (next):** integrate saved views into navigation, simplify folder/tag hierarchy, and unify search results, selection and batch actions. Preserve shared-account identity, keyboard access and plugin entries.
+3. **Reader and composition:** unify metadata and action placement; improve reply/forward transitions and draft recovery; verify rich paste and received HTML in real clients. Retain the production editor instead of replacing it with a demo block.
+4. **Settings and responsive completion:** consistent settings navigation, touch-first controls, dark/RTL/zoom verification and downstream translations.
+5. **Acceptance:** real Stalwart account, failure/reconnect/draft recovery, keyboard and accessibility checks, then upstream merge rehearsal. No complete-overhaul or feature-parity claim until these pass.
+
+ReUI registry supports licensed installs via REUI_LICENSE_KEY, never a committed key. The owner confirmed an OEM agreement permitting premium source in the public AGPL repository on 2026-11-02. Installed app-shell-20, adapted its pane and reader-empty-state composition, and retained native search, virtualization, reader and rich composition. The unmounted block preview remains under components/blocks; it is not an application route. Terms: https://reui.io/legal/license.
