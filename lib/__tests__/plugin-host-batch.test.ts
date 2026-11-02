@@ -28,7 +28,12 @@ const call = (p: InstalledPlugin, method: string, ...args: unknown[]) => dispatc
 const inbox = { id: 'inbox', name: 'Inbox', role: 'inbox' } as Mailbox;
 const news = { id: 'news', name: 'Newsletters', role: null } as unknown as Mailbox;
 const trash = { id: 'trash', name: 'Trash', role: 'trash' } as Mailbox;
-const sharedOut = { id: 'team', name: 'Team', role: null, shareWith: { 'u2': { mayReadItems: true } } } as unknown as Mailbox;
+// As the client lists folders: without their share maps (only Mailbox/get
+// with shareWith, getMailboxShareWith, says who else reads a folder).
+const sharedOut = { id: 'team', name: 'Team', role: null } as unknown as Mailbox;
+const underShared = { id: 'team-sub', name: 'Projects', role: null, parentId: 'team' } as unknown as Mailbox;
+const unknownShare = { id: 'flaky', name: 'Flaky', role: null } as unknown as Mailbox;
+const SHARES: Record<string, unknown> = { team: { u2: { mayReadItems: true } } };
 const otherAccount = { id: 'acc2:box', name: 'Theirs', isShared: true, accountId: 'acc2' } as unknown as Mailbox;
 
 const rows = [
@@ -51,9 +56,16 @@ beforeEach(() => {
   clearUndoTokens();
   for (const fn of Object.values(store)) fn.mockClear();
   getEmailFields = vi.fn(async (ids: string[]) => rows.filter((r) => ids.includes(r.id)));
-  client = { getAccountId: () => 'acc1', getEmailFields } as unknown as IJMAPClient;
+  client = {
+    getAccountId: () => 'acc1', getEmailFields,
+    supportsMailboxSharing: () => true,
+    getMailboxShareWith: vi.fn(async (id: string) => {
+      if (id === 'flaky') throw new Error('Mailbox/get failed');
+      return SHARES[id] ?? null;
+    }),
+  } as unknown as IJMAPClient;
   useAuthStore.setState({ client });
-  useEmailStore.setState({ mailboxes: [inbox, news, trash, sharedOut, otherAccount], ...store } as never);
+  useEmailStore.setState({ mailboxes: [inbox, news, trash, sharedOut, underShared, unknownShare, otherAccount], ...store } as never);
   useSettingsStore.setState({ emailKeywords: [{ id: 'work', label: 'Work', color: 'blue' }] } as never);
 });
 afterEach(() => {
@@ -107,6 +119,9 @@ describe('api.email.batch', () => {
 
   it('refuses shared folders, other accounts, the trash and more than 200 messages', async () => {
     await expect(call(WRITER, 'email.batch', { emailIds: ['m1'], action: 'move', mailboxId: 'team' })).rejects.toThrow(/only the user reads/);
+    // A folder inside a shared one, and one whose share map the server didn't give.
+    await expect(call(WRITER, 'email.batch', { emailIds: ['m1'], action: 'move', mailboxId: 'team-sub' })).rejects.toThrow(/only the user reads/);
+    await expect(call(WRITER, 'email.batch', { emailIds: ['m1'], action: 'move', mailboxId: 'flaky' })).rejects.toThrow(/only the user reads/);
     await expect(call(WRITER, 'email.batch', { emailIds: ['m1'], action: 'move', mailboxId: 'acc2:box' })).rejects.toThrow(/only the user reads/);
     await expect(call(WRITER, 'email.batch', { emailIds: ['m1'], action: 'move', mailboxId: 'trash' })).rejects.toThrow(/trash/);
     await expect(call(WRITER, 'email.batch', { emailIds: Array.from({ length: 201 }, (_, i) => `m${i}`), action: 'read' })).rejects.toThrow(/at most 200/);

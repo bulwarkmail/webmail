@@ -29,7 +29,10 @@ const mailboxes = [
   { id: 'inbox', name: 'Inbox', role: 'inbox' },
   { id: 'news', name: 'Newsletters', role: null },
   { id: 'trash', name: 'Trash', role: 'trash' },
-  { id: 'team', name: 'Team', role: null, shareWith: { u2: { mayReadItems: true } } },
+  // As the client lists folders: without their share maps.
+  { id: 'team', name: 'Team', role: null },
+  { id: 'team-sub', name: 'Projects', role: null, parentId: 'team' },
+  { id: 'flaky', name: 'Flaky', role: null },
   { id: 'acc2:box', name: 'Theirs', role: null, isShared: true, accountId: 'acc2' },
 ] as unknown as Mailbox[];
 
@@ -49,6 +52,11 @@ function server(initial: string) {
     deactivateSieveScript: vi.fn(),
     deleteSieveScript: vi.fn(),
     getMailboxes: vi.fn(async () => mailboxes),
+    supportsMailboxSharing: () => true,
+    getMailboxShareWith: vi.fn(async (id: string) => {
+      if (id === 'flaky') throw new Error('Mailbox/get failed');
+      return id === 'team' ? { u2: { mayReadItems: true } } : null;
+    }),
   } as unknown as IJMAPClient;
   return { client, state };
 }
@@ -98,8 +106,12 @@ describe('api.filters', () => {
   });
 
   it('files mail only into folders of the account that nobody else reads, never the trash', async () => {
-    for (const mailboxId of ['team', 'acc2:box', 'nope']) {
+    for (const mailboxId of ['acc2:box', 'nope']) {
       await expect(call(ASSISTANT, 'filters.create', { ...RULE, actions: [{ type: 'copy', mailboxId }] })).rejects.toThrow(/only the user reads/);
+    }
+    // Shared with someone, inside a shared folder, or the server didn't say.
+    for (const mailboxId of ['team', 'team-sub', 'flaky']) {
+      await expect(call(ASSISTANT, 'filters.create', { ...RULE, actions: [{ type: 'copy', mailboxId }] })).rejects.toThrow(/shared with other people/);
     }
     await expect(call(ASSISTANT, 'filters.create', { ...RULE, actions: [{ type: 'move', mailboxId: 'trash' }] })).rejects.toThrow(/trash/);
     expect(srv.client.updateSieveScript).not.toHaveBeenCalled();

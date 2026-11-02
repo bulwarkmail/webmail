@@ -20,6 +20,7 @@ import { isValidSieveHeaderName } from '../../sieve/generator';
 import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY } from '../../thread-utils';
 import { generateUUID } from '../../utils';
 import { isPlainRecord, readId, readObject, readString, sessionClient } from '../host-api-input';
+import { isSharedOut } from '../../mailbox-shared-out';
 import { issueUndoToken, redeemUndoToken, undoAccount } from './c.undo';
 import type {
   FilterCreateResult, FilterRuleActionType, FilterRuleField, FilterRuleInfo, FilterRuleOp, FiltersListView,
@@ -146,7 +147,7 @@ function readAction(entry: unknown, method: string, i: number, mailboxes: Mailbo
     const box = mailboxes.find((m) => m.id === id);
     // Only the account's own folders, and none that is shared with others:
     // a rule must not file mail where other people read it.
-    if (!box || box.isShared || (box.shareWith && Object.keys(box.shareWith).length > 0)) {
+    if (!box || box.isShared) {
       throw new Error(`${method}: ${at}.mailboxId is not a folder of this account that only the user reads`);
     }
     if (box.role === 'trash') throw new Error(`${method}: ${at} may not move mail to the trash`);
@@ -203,7 +204,16 @@ export async function doFiltersCreate(pluginId: string, input: unknown): Promise
   const method = 'filters.create';
   const client = sieveClient(method);
   const accountId = client.getSieveAccountId();
-  const rule = readFilterRule(input, method, await sieveMailboxes(client, accountId));
+  const mailboxes = await sieveMailboxes(client, accountId);
+  const rule = readFilterRule(input, method, mailboxes);
+  // The share map isn't in the folder list: ask the server for each target
+  // and the folders above it, and refuse a folder someone else reads.
+  for (const action of rule.actions) {
+    if ((action.type === 'move' || action.type === 'copy') && action.mailboxId
+      && (await isSharedOut(client, mailboxes, action.mailboxId, accountId === client.getAccountId() ? undefined : accountId))) {
+      throw new Error(`${method}: the folder "${action.value}" is shared with other people; a rule may not file mail there`);
+    }
+  }
   let change: FiltersChange | null;
   try {
     change = await updateAccountFilters(client, accountId, (rules) => insertRuleAtTop(rules, rule));

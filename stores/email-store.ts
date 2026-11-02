@@ -1,3 +1,4 @@
+import { isSharedOut } from '@/lib/mailbox-shared-out';
 import { IncompleteDeleteError } from "@/lib/jmap/delete-error";
 import { ArchiveEmailsError } from "@/lib/jmap/archive-error";
 import { RescheduleRestoredError } from "@/lib/jmap/reschedule-error";
@@ -1400,6 +1401,11 @@ async function archiveTarget(client: IJMAPClient, target: BatchActionTarget): Pr
     refresh: async () => (mailboxes = await own()),
   });
   if (!archive) return false;
+  // Never into an Archive someone else reads (or a year or month folder of
+  // it): the share map isn't in the folder list, so the server is asked.
+  if (await isSharedOut(target.client, [...mailboxes, archive], archive.originalId || archive.id, target.accountId, { descendants: true })) {
+    throw new Error('The Archive folder is shared with other people');
+  }
   const hookMailboxes = [...mailboxes.filter(m => m.id !== archive.id), archive];
   const move = { emailIds: [...new Set(emails.map(e => e.id))], fromMailboxId: moveSourceMailboxId(emails, mailboxes), toMailboxId: archive.id };
   if (!(await allowEmailMove(move, hookMailboxes))) return false;

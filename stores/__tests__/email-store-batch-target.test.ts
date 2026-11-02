@@ -48,6 +48,15 @@ describe('batch functions with an explicit target', () => {
     expect([...useEmailStore.getState().selectedEmailKeys]).toEqual(['keep']);
   });
 
+  it('refuses an Archive someone else reads, asking the server for its share map', async () => {
+    Object.assign(client, {
+      supportsMailboxSharing: () => true,
+      getMailboxShareWith: vi.fn(async (id: string) => (id === 'arch' ? { u2: { mayReadItems: true } } : null)),
+    });
+    await expect(useEmailStore.getState().batchArchive(other, { emailIds: ['m1'], client, emails: [email('m1')] })).rejects.toThrow(/shared/);
+    expect(client.batchArchiveEmails).not.toHaveBeenCalled();
+  });
+
   it('tags the named messages through the target\'s client and skips those already tagged', async () => {
     const ok = await useEmailStore.getState().batchSetTag(other, 'work', true, {
       emailIds: ['m1', 'm2'], client, emails: [email('m1'), email('m2', { '$label:work': true })],

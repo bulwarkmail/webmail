@@ -13,6 +13,7 @@ import { recordUndo, runUndo } from '../../undo-history';
 import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY } from '../../thread-utils';
 import { readId, readObject, readString, sessionClient, withinRate } from '../host-api-input';
 import { MAX_PLUGIN_MOVES_PER_MINUTE } from '../host-api-mail';
+import { isSharedOut } from '../../mailbox-shared-out';
 import { issueUndoToken, redeemUndoToken, undoAccount } from './c.undo';
 import type { MailBatchAction, MailBatchResult } from './c.types';
 
@@ -68,7 +69,9 @@ export async function doEmailBatch(pluginId: string, input: unknown): Promise<Ma
     mailboxId = readId(data.mailboxId, method, 'mailboxId');
     // Only the account's own folders, never one shared with other people.
     const box = store.mailboxes.find((m) => m.id === mailboxId && !m.isShared);
-    if (!box || (box.shareWith && Object.keys(box.shareWith).length > 0)) {
+    // The share map isn't in the folder list: ask the server, for the folder
+    // and the folders above it (a shared parent shares its children).
+    if (!box || (await isSharedOut(client, store.mailboxes, mailboxId))) {
       throw new Error(`${method}: mailboxId is not a folder of this account that only the user reads`);
     }
     if (box.role === 'trash') throw new Error(`${method}: messages can't be moved to the trash this way`);
