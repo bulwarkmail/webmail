@@ -3651,9 +3651,12 @@ export function EmailViewer({
     // The body was sanitized with EMAIL_IFRAME_SANITIZE_CONFIG which permits
     // <style>. The print window has no iframe isolation, so re-sanitize with
     // the stricter config that forbids <style> before injecting into the DOM.
-    const printableBody = effectiveEmailContent.isHtml
-      ? sanitizeEmailHtml(effectiveEmailContent.html)
-      : effectiveEmailContent.html;
+    // A plain-text body is escaped text with its own newlines: it prints its
+    // trailing quote opened instead of behind the collapsed toggle.
+    const plainBody = !effectiveEmailContent.isHtml;
+    const printableBody = plainBody
+      ? effectiveEmailContent.html.replace(/<details>/g, '<details open>')
+      : sanitizeEmailHtml(effectiveEmailContent.html);
 
     const printWindow = openedWindow ?? window.open('', '_blank');
     if (!printWindow) return;
@@ -3678,6 +3681,9 @@ export function EmailViewer({
   .meta { font-size: 13px; color: #555; line-height: 1.6; }
   .meta strong { color: #000; }
   .body { font-size: 14px; line-height: 1.6; }
+  /* Plain text keeps its line breaks, as in the reader. */
+  .body.plain { white-space: pre-wrap; word-break: break-word; }
+  .body.plain summary { display: none !important; }
   /* Only force the cap on images that set no width of their own: an
      !important 100% also overrides a sender's inline max-width, and an
      image sized by max-width + max-height + width:100% then grows to
@@ -3699,7 +3705,7 @@ ${printWatermark ? printWatermark.html : ''}
     ${date ? `<div><strong>${escapeHtml(t('date'))}:</strong> ${escapeHtml(date)}</div>` : ''}
   </div>
 </div>
-<div class="body">${printableBody}</div>
+<div class="body${plainBody ? ' plain' : ''}">${printableBody}</div>
 </body></html>`);
     printWindow.document.close();
     printWindow.focus();
