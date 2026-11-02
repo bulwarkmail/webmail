@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import en from '@/locales/en/common.json';
 
@@ -65,5 +65,54 @@ describe('settings search and the Advanced switch', () => {
   it('turns Advanced on for an advanced row it has to reveal', async () => {
     await openResult('emails per page', 'Emails per page');
     expect(useSettingsStore.getState().showAdvancedSettings).toBe(true);
+  });
+});
+
+describe('settings finder navigation', () => {
+  it('moves from the search field through results without activating a page, and returns with Escape', () => {
+    render(<SettingsApp linkSegments={[]} />);
+    const search=screen.getByRole('searchbox');
+    fireEvent.change(search,{target:{value:'font'}});
+    const buttons=Array.from(document.querySelectorAll<HTMLButtonElement>('[data-memail-settings-result]'));
+    expect(buttons.length).toBeGreaterThan(1);
+    fireEvent.keyDown(search,{key:'ArrowDown'});
+    expect(buttons[0]).toHaveFocus();
+    fireEvent.keyDown(buttons[0],{key:'ArrowDown'});
+    expect(buttons[1]).toHaveFocus();
+    fireEvent.keyDown(buttons[1],{key:'End'});
+    expect(buttons[buttons.length-1]).toHaveFocus();
+    fireEvent.keyDown(buttons[buttons.length-1],{key:'Home'});
+    expect(buttons[0]).toHaveFocus();
+    fireEvent.keyDown(buttons[0],{key:'Escape'});
+    expect(search).toHaveFocus();
+    expect(search).toHaveValue('font');
+    fireEvent.keyDown(search,{key:'Escape'});
+    expect(search).toHaveValue('');
+    expect(useSettingsStore.getState().showAdvancedSettings).toBe(false);
+  });
+  it('recovers from no matches and returns focus to settings search', () => {
+    render(<SettingsApp linkSegments={[]} />);
+    const search=screen.getByRole('searchbox');
+    fireEvent.change(search,{target:{value:'zzzz-no-matching-setting'}});
+    expect(screen.getByRole('status')).toHaveTextContent('settings.search_no_results');
+    fireEvent.click(within(screen.getByRole('status').parentElement!).getByRole('button',{name:'settings.search_clear'}));
+    expect(search).toHaveValue('');
+    expect(search).toHaveFocus();
+  });
+  it('reveals matches beyond six without changing settings and resets expansion for a new query', () => {
+    render(<SettingsApp linkSegments={[]} />);
+    const search=screen.getByRole('searchbox');
+    fireEvent.change(search,{target:{value:'message'}});
+    const more=screen.getAllByRole('button',{name:/Show all .* matches/})[0];
+    expect(more).toHaveAttribute('aria-expanded','false');
+    const matches=document.getElementById(more.getAttribute('aria-controls')!)!;
+    expect(matches.querySelectorAll('button')).toHaveLength(6);
+    const total=Number(more.textContent?.match(/\d+/)?.[0]);
+    fireEvent.click(more);
+    expect(matches.querySelectorAll('button')).toHaveLength(total);
+    expect(screen.getByRole('button',{name:'Show fewer matches'})).toHaveAttribute('aria-expanded','true');
+    expect(useSettingsStore.getState().showAdvancedSettings).toBe(false);
+    fireEvent.change(search,{target:{value:'message text'}});
+    expect(screen.queryByRole('button',{name:'Show fewer matches'})).toBeNull();
   });
 });

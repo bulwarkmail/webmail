@@ -1137,7 +1137,6 @@ export function EmailList({
       </div>
 
       {/* Advanced Search Filter Chips */}
-      {!isFilterEmpty(searchFilters) && (
         <SearchChips
           filters={searchFilters}
           onRemoveFilter={(key) => {
@@ -1149,8 +1148,8 @@ export function EmailList({
             clearSearchFilters();
             if (client) advancedSearch(client);
           }}
+          onEmptyFocus={() => parentRef.current?.focus()}
         />
-      )}
 
       {/* How long Trash and Junk keep mail, and Recover deleted items from the account's own Trash, on one line */}
       {(currentMailbox?.role === 'trash' || currentMailbox?.role === 'junk') && <FolderRetentionLine mailbox={currentMailbox} />}

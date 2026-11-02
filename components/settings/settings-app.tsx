@@ -1,11 +1,10 @@
 "use client";
 
 import { AppMain, SkipLink } from "@/components/layout/app-landmarks";
-import { useState, useEffect, useCallback, useRef, useMemo, useSyncExternalStore } from 'react';
+import { useState, useEffect, useCallback, useRef, useId, useMemo, useSyncExternalStore } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations, useMessages } from 'next-intl';
 import {
-  Accessibility,
   ArrowLeft,
   ChevronRight,
   LogOut,
@@ -13,7 +12,7 @@ import {
   Palette,
   User,
   Shield,
-  PalmtreeIcon,
+  Palmtree as PalmtreeIcon,
   Calendar,
   Filter,
   FolderOpen,
@@ -27,8 +26,8 @@ import {
   Database,
   Users,
   RotateCcw,
-  type AppIcon,
-} from '@/components/icons';
+} from '@/components/icons/sidebar-icons';
+import {Accessibility, type AppIcon} from '@/components/icons';
 import { useRegisterCommands } from '@/lib/command-registry';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
@@ -355,6 +354,36 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
     });
   }, [isEmbedded, goTo]);
   const [searchQuery, setSearchQuery] = useState('');
+  const settingsSearchRef = useRef<HTMLInputElement>(null);
+  const settingsMatchesId = useId();
+  const [expandedSearchTabs, setExpandedSearchTabs] = useState<Set<SettingsTabId>>(new Set());
+  const updateSettingsSearch = (value: string) => {
+    setSearchQuery(value);
+    setExpandedSearchTabs(new Set());
+  };
+  const clearSettingsSearch = () => { updateSettingsSearch(''); settingsSearchRef.current?.focus(); };
+  const handleSettingsSearchInput = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    if (event.key === 'Escape' && searchQuery) { event.preventDefault(); event.stopPropagation(); clearSettingsSearch(); }
+    if (event.key === 'ArrowDown' && searchQuery.trim()) {
+      const first = settingsSearchRef.current?.closest('[data-tour="settings-tabs"]')?.querySelector<HTMLButtonElement>('[data-memail-settings-result]');
+      if (first) { event.preventDefault(); event.stopPropagation(); first.focus(); }
+    }
+  };
+  const handleSettingsSearchResults = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (!searchQuery.trim() || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[data-memail-settings-result]'));
+    const index = buttons.indexOf(event.target as HTMLButtonElement);
+    if (index < 0) return;
+    if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); settingsSearchRef.current?.focus(); return; }
+    let next = -1;
+    if (event.key === 'ArrowDown') next = (index + 1) % buttons.length;
+    else if (event.key === 'ArrowUp') next = (index - 1 + buttons.length) % buttons.length;
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = buttons.length - 1;
+    if (next >= 0) { event.preventDefault(); event.stopPropagation(); buttons[next].focus(); }
+  };
+
   const [pendingHighlight, setPendingHighlight] = useState<{ tab: SettingsTabId; label: string; pluginId?: string; advanced?: boolean } | null>(null);
   const isDesktop = useIsDesktop();
 
@@ -776,8 +805,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
     const byName = (r: SubResult) => (matchesAllWords(r.label, trimmedQuery) ? 0 : 1);
     return list
       .filter((r) => matchesAllWords(`${r.label} ${r.description ?? ''}`, trimmedQuery))
-      .sort((a, b) => byName(a) - byName(b))
-      .slice(0, 6);
+      .sort((a, b) => byName(a) - byName(b));
   };
 
   const filteredGroupedTabs = trimmedQuery
@@ -970,22 +998,25 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
           <PhoneHeaderActions />
         </div>
 
-        <AppMain embedded={isEmbedded} label={t('title')} className="flex-1 overflow-y-auto" data-tour="settings-tabs">
-          <div className="px-4 pt-3 pb-1">
+        <AppMain embedded={isEmbedded} label={t('title')} className="flex-1 overflow-y-auto" data-tour="settings-tabs" data-memail-settings-nav={!mvShell ? "" : undefined}>
+          <div data-memail-settings-search="" className="px-4 pt-3 pb-1">
             <ToolbarSearch
+              ref={settingsSearchRef}
+              onKeyDown={handleSettingsSearchInput}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onClear={() => setSearchQuery('')}
+              onChange={(e) => updateSettingsSearch(e.target.value)}
+              onClear={clearSettingsSearch}
               clearLabel={t('search_clear')}
               placeholder={t('search_placeholder')}
               aria-label={t('search_placeholder')}
               autoComplete="off"
             />
           </div>
-          <div className="py-2">
+          <div onKeyDown={handleSettingsSearchResults} className="py-2">
             {filteredGroupedTabs.length === 0 && (
               <div className="px-5 py-6 text-sm text-muted-foreground text-center">
-                {t('search_no_results')}
+                <p role="status">{t('search_no_results')}</p>
+                <button type="button" onClick={clearSettingsSearch} className="mt-3 min-h-9 rounded-lg border border-border px-3 text-sm font-medium hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring">{t('search_clear')}</button>
               </div>
             )}
             {filteredGroupedTabs.map((group, groupIndex) => (
@@ -1000,10 +1031,14 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
                 )}
                 {group.items.map((tab) => {
                   const Icon = tab.icon;
-                  const subs = subResultsForTab(tab.id);
+                  const matchingSubs = subResultsForTab(tab.id);
+                  const expanded = expandedSearchTabs.has(tab.id);
+                  const subs = expanded ? matchingSubs : matchingSubs.slice(0,6);
+                  const matchesId = `${settingsMatchesId}-${encodeURIComponent(tab.id)}`;
                   return (
                     <div key={tab.id}>
                       <button
+                        data-memail-settings-result=""
                         data-testid={`settings-tab-${tab.id}`}
                         onClick={() => handleTabSelect(tab.id)}
                         className={cn(
@@ -1017,15 +1052,21 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
                         </span>
                         <ChevronRight className="w-4 h-4 text-muted-foreground" />
                       </button>
-                      {subs.map((sub) => (
+                      <div id={matchesId}>{subs.map((sub) => (
                         <button
                           key={`${tab.id}:${sub.label}`}
+                          data-memail-settings-result=""
                           onClick={() => handleSubResultSelect(tab.id, sub)}
                           className="w-full flex items-center ps-12 pe-5 py-2 pointer-coarse:min-h-11 text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150 text-start"
                         >
                           <span className="truncate" title={sub.label}>{sub.label}</span>
                         </button>
-                      ))}
+                      ))}</div>
+                      {matchingSubs.length > 6 && <button type="button" data-memail-settings-result="" aria-expanded={expanded} aria-controls={matchesId}
+                        onClick={()=>setExpandedSearchTabs(previous=>{const next=new Set(previous);if(next.has(tab.id)) next.delete(tab.id);else next.add(tab.id);return next;})}
+                        className="ms-9 me-2 my-1 max-w-[calc(100%_-_2.75rem)] min-h-9 rounded-md px-2 text-start text-xs font-medium text-primary hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring">
+                        {expanded ? 'Show fewer matches' : `Show all ${matchingSubs.length} matches`}
+                      </button>}
                     </div>
                   );
                 })}
@@ -1123,22 +1164,25 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
           </div>
         )}
 
-        <nav aria-label={t('title')} className="flex-1 overflow-y-auto py-2" data-tour="settings-tabs">
-          <div className="px-3 pt-1 pb-1">
+        <nav aria-label={t('title')} className="flex-1 overflow-y-auto py-2" data-tour="settings-tabs" data-memail-settings-nav={!mvShell ? "" : undefined}>
+          <div data-memail-settings-search="" className="px-3 pt-1 pb-1">
             <ToolbarSearch
+              ref={settingsSearchRef}
+              onKeyDown={handleSettingsSearchInput}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onClear={() => setSearchQuery('')}
+              onChange={(e) => updateSettingsSearch(e.target.value)}
+              onClear={clearSettingsSearch}
               clearLabel={t('search_clear')}
               placeholder={t('search_placeholder')}
               aria-label={t('search_placeholder')}
               autoComplete="off"
             />
           </div>
-          <div className="px-3 space-y-0.5">
+          <div onKeyDown={handleSettingsSearchResults} className="px-3 space-y-0.5">
             {filteredGroupedTabs.length === 0 && (
               <div className="px-3 py-6 text-sm text-muted-foreground text-center">
-                {t('search_no_results')}
+                <p role="status">{t('search_no_results')}</p>
+                <button type="button" onClick={clearSettingsSearch} className="mt-3 min-h-9 rounded-lg border border-border px-3 text-sm font-medium hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring">{t('search_clear')}</button>
               </div>
             )}
             {filteredGroupedTabs.map((group, groupIndex) => (
@@ -1153,10 +1197,14 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
                 )}
                 {group.items.map((tab) => {
                   const Icon = tab.icon;
-                  const subs = subResultsForTab(tab.id);
+                  const matchingSubs = subResultsForTab(tab.id);
+                  const expanded = expandedSearchTabs.has(tab.id);
+                  const subs = expanded ? matchingSubs : matchingSubs.slice(0,6);
+                  const matchesId = `${settingsMatchesId}-${encodeURIComponent(tab.id)}`;
                   return (
                     <div key={tab.id}>
                       <button
+                        data-memail-settings-result=""
                         data-testid={`settings-tab-${tab.id}`}
                         aria-current={effectiveActiveTab === tab.id ? 'page' : undefined}
                         onClick={() => handleTabSelect(tab.id)}
@@ -1174,15 +1222,21 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
                         )} />
                         <span className="truncate" title={tab.label}>{tab.label}</span>
                       </button>
-                      {subs.map((sub) => (
+                      <div id={matchesId}>{subs.map((sub) => (
                         <button
                           key={`${tab.id}:${sub.label}`}
+                          data-memail-settings-result=""
                           onClick={() => handleSubResultSelect(tab.id, sub)}
                           className="w-full text-start ps-9 pe-3 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150"
                         >
                           <span className="truncate block" title={sub.label}>{sub.label}</span>
                         </button>
-                      ))}
+                      ))}</div>
+                      {matchingSubs.length > 6 && <button type="button" data-memail-settings-result="" aria-expanded={expanded} aria-controls={matchesId}
+                        onClick={()=>setExpandedSearchTabs(previous=>{const next=new Set(previous);if(next.has(tab.id)) next.delete(tab.id);else next.add(tab.id);return next;})}
+                        className="ms-9 me-2 my-1 max-w-[calc(100%_-_2.75rem)] min-h-9 rounded-md px-2 text-start text-xs font-medium text-primary hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring">
+                        {expanded ? 'Show fewer matches' : `Show all ${matchingSubs.length} matches`}
+                      </button>}
                     </div>
                   );
                 })}

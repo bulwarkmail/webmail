@@ -42,7 +42,7 @@ import {
   MailOpen,
   MoreHorizontal,
   MoreVertical,
-} from "@/components/icons";
+} from "@/components/icons/sidebar-icons";
 import { cn, buildMailboxTree, MailboxNode } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import {

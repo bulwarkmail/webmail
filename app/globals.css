@@ -1628,3 +1628,30 @@ optgroup {
   min-height: 2rem;
   line-height: 1rem;
 }
+
+[data-memail-sidebar="workspace"] .memail-folder-glyph:has([data-memail-icon-set="heroicons"]) {
+  background: transparent;
+}
+[data-memail-sidebar="workspace"] .memail-folder-glyph > [data-memail-icon-set="heroicons"] {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+[data-memail-settings-nav] [data-memail-settings-search] {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding-block-end: 0.625rem;
+  background: var(--color-background);
+}
+[data-memail-settings-nav] [data-memail-settings-result] {
+  min-height: 2.25rem;
+  border-radius: 0.625rem;
+}
+[data-memail-settings-nav] [data-memail-settings-result]:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: -2px;
+}
+@media (pointer: coarse) {
+  [data-memail-settings-nav] [data-memail-settings-result] { min-height: 2.75rem; }
+}

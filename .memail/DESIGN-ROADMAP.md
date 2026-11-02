@@ -34,6 +34,8 @@ Acceptance: save/reopen/reload/account-switch recovery; reply/forward correctnes
 
 ## 4. Search, settings and connected apps
 
+Progress: settings all-match expansion, keyboard/focus recovery, active-filter controls and Heroicons folder/app/settings navigation are implemented for review. Connected-app consistency and full phase acceptance remain open.
+
 Unify saved and advanced search, organize settings by task, and bring Calendar/Contacts/Files into the same navigation and menu system. Improve shortcut discovery and focus return. Translate downstream strings and verify RTL, zoom, reduced motion, mobile safe areas and touch targets.
 
 Acceptance: complete desktop/phone task walkthroughs with reachable actions and explicit recovery from errors.

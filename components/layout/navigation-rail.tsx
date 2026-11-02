@@ -3,7 +3,8 @@
 import { navigateRail } from "../../.memail/rail-navigation";
 import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { Mail, CalendarEvent, Users, Folder, Settings, Keyboard, Plus, Shield, LogOut, Check, Search, Puzzle, Accessibility } from "@/components/icons";
+import { Mail, CalendarEvent, Users, Folder, Settings, Plus, Shield, LogOut, Check, Search, Puzzle } from "@/components/icons/sidebar-icons";
+import { Keyboard, Accessibility } from "@/components/icons";
 import { openAccessibilityPanel } from "@/components/accessibility/accessibility-quick-panel";
 import { AccountSwitcher } from "./account-switcher";
 import { iconForName } from "@/components/icons";

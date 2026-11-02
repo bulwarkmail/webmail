@@ -1,7 +1,7 @@
 'use client';
 
 import { useId, useState } from 'react';
-import { Bookmark, ChevronDown, ChevronRight, Search } from '../components/icons';
+import { Bookmark, ChevronDown, ChevronRight, Search } from '../components/icons/sidebar-icons';
 import type { SearchFilters } from '../lib/jmap/search-utils';
 import { matchesSavedSearch, savedSearchDescription, useSavedSearches, type SavedSearch } from './saved-searches';
 
