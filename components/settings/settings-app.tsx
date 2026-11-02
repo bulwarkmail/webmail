@@ -83,7 +83,7 @@ import {
   settingsSubResults,
   tabKeywords,
   tabSearchEntries,
-  archiveActionSearchPaths,
+  ARCHIVE_ACTION_SEARCH_PATHS,
 } from '@/lib/settings-search';
 import { useAccountStore } from '@/stores/account-store';
 import { useMediaQuery, atLeast } from '@/hooks/use-media-query';
@@ -336,7 +336,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
     const subs: Partial<Record<Tab, SubResult[]>> = {};
     // Only rows the page draws right now, so every result lands on one.
     const shown = (entry: SettingsSearchEntry) => {
-      if (!archiveActionEnabled && archiveActionSearchPaths.has(entry.label)) return false;
+      if (!archiveActionEnabled && ARCHIVE_ACTION_SEARCH_PATHS.has(entry.label)) return false;
       if (entry.when === 'touch') return touchScreen;
       if (entry.when === 'mountainView') return mountainViewLayout;
       if (entry.when === 'multiAccount') return multiAccount;

@@ -369,7 +369,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
 // Extra English keywords per tab so common search terms hit even when the
 // translation doesn't contain the literal word.
 /** Settings shown only while the admin has the Archive action on (#1257). */
-export const archiveActionSearchPaths: ReadonlySet<string> = new Set(['settings.email_behavior.archive_mode.label']);
+export const ARCHIVE_ACTION_SEARCH_PATHS: ReadonlySet<string> = new Set(['settings.email_behavior.archive_mode.label']);
 
 export const tabKeywords: Record<Tab, string> = {
   account: 'profile email user signin signout reorder rearrange drag dropdown switcher multi-account identities from address signature plus addressing unified mailbox shared group',
