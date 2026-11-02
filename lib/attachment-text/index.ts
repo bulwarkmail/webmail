@@ -9,7 +9,7 @@ import { decodeText, htmlText, icsToText, looksLikeText, vcfText } from './plain
 import { pdfText } from './pdf';
 import { officeText } from './office';
 import {
-  DEFAULT_TEXT_CHARS, MAX_TEXT_CHARS, MAX_TEXT_SOURCE_BYTES,
+  DEFAULT_TEXT_CHARS, MAX_TEXT_CHARS, MAX_TEXT_SOURCE_BYTES, TEXT_BUDGET_SLACK,
   type ExtractOptions, type ExtractedText, type TextFormat,
 } from './types';
 
@@ -18,7 +18,7 @@ export { setPdfLoader, type PdfLib } from './pdf';
 
 const BY_EXTENSION: Record<string, TextFormat> = {
   txt: 'text', text: 'text', md: 'text', markdown: 'text', log: 'text', json: 'text', xml: 'text',
-  yaml: 'text', yml: 'text', ini: 'text', eml: 'text', tsv: 'csv', csv: 'csv',
+  yaml: 'text', yml: 'text', ini: 'text', tsv: 'csv', csv: 'csv',
   htm: 'html', html: 'html', xhtml: 'html', ics: 'ics', ical: 'ics', ifb: 'ics', vcf: 'vcf', vcard: 'vcf',
   pdf: 'pdf', docx: 'docx', docm: 'docx', dotx: 'docx', xlsx: 'xlsx', xlsm: 'xlsx', xltx: 'xlsx',
   pptx: 'pptx', pptm: 'pptx', potx: 'pptx', odt: 'odt', ott: 'odt', ods: 'ods', ots: 'ods', odp: 'odp', otp: 'odp',
@@ -44,6 +44,7 @@ export function textFormatOf(name = '', type = ''): TextFormat {
   const mediaType = type.split(';')[0].trim().toLowerCase();
   if (BY_TYPE[mediaType]) return BY_TYPE[mediaType];
   // Other text types (text/x-python, text/rfc822-headers, ...); not text/html, handled above.
+  // A forwarded message (.eml, message/rfc822) is MIME, not text: 'other' until it has a reader.
   if (mediaType.startsWith('text/')) return 'text';
   return 'other';
 }
@@ -51,14 +52,16 @@ export function textFormatOf(name = '', type = ''): TextFormat {
 /** Cut `text` at `maxChars`, at a line or word end when one is near. */
 export function clipText(text: string, maxChars: number): { text: string; truncated: boolean } {
   if (text.length <= maxChars) return { text, truncated: false };
-  const cut = text.slice(0, maxChars);
+  // Never half of a character outside the Basic Multilingual Plane (an emoji).
+  const end = /[\uD800-\uDBFF]/.test(text[maxChars - 1] ?? '') ? maxChars - 1 : maxChars;
+  const cut = text.slice(0, end);
   const at = Math.max(cut.lastIndexOf('\n'), cut.lastIndexOf(' '));
   return { text: (at > maxChars * 0.9 ? cut.slice(0, at) : cut).trimEnd(), truncated: true };
 }
 
 const empty = (format: TextFormat, status: ExtractedText['status']): ExtractedText => ({ format, status, text: '', truncated: false });
 
-async function read(bytes: Uint8Array, format: TextFormat): Promise<Omit<ExtractedText, 'format'>> {
+async function read(bytes: Uint8Array, format: TextFormat, budget: number): Promise<Omit<ExtractedText, 'format'>> {
   switch (format) {
     case 'text':
     case 'csv':
@@ -73,7 +76,7 @@ async function read(bytes: Uint8Array, format: TextFormat): Promise<Omit<Extract
     case 'pdf':
       return pdfText(bytes);
     case 'docx': case 'xlsx': case 'pptx': case 'odt': case 'ods': case 'odp':
-      return officeText(bytes, format);
+      return officeText(bytes, format, { budget });
     default:
       return { status: 'unsupported', text: '', truncated: false };
   }
@@ -89,12 +92,14 @@ export async function extractText(data: ArrayBuffer | Uint8Array, options: Extra
   const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
   const format = textFormatOf(options.name, options.type);
   if (bytes.byteLength > MAX_TEXT_SOURCE_BYTES) return empty(format, 'too_big');
-  const maxChars = Math.max(1, Math.min(MAX_TEXT_CHARS, Math.floor(options.maxChars ?? DEFAULT_TEXT_CHARS)));
+  // Files calls this directly: anything but a positive number means the default.
+  const asked = Number(options.maxChars);
+  const maxChars = Number.isFinite(asked) && asked >= 1 ? Math.min(MAX_TEXT_CHARS, Math.floor(asked)) : DEFAULT_TEXT_CHARS;
   // A legacy Office file (and anything else) without a reader.
   if (format === 'other') return empty(format, 'unsupported');
   let result: Omit<ExtractedText, 'format'>;
   try {
-    result = await read(bytes, format);
+    result = await read(bytes, format, maxChars + TEXT_BUDGET_SLACK);
   } catch {
     return empty(format, 'failed');
   }

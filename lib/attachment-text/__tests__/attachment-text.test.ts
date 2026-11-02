@@ -168,7 +168,7 @@ describe('Office files', () => {
   it('refuses a ZIP bomb: stops unpacking past the cap', async () => {
     const bomb = zip({ 'word/document.xml': `<w:document ${W}><w:body><w:p><w:r><w:t>${'A'.repeat(3 * 1024 * 1024)}</w:t></w:r></w:p></w:body></w:document>` });
     expect(bomb.byteLength).toBeLessThan(64 * 1024);
-    expect(await officeText(bomb, 'docx', 1024 * 1024)).toMatchObject({ status: 'too_big', text: '' });
+    expect(await officeText(bomb, 'docx', { inflateCap: 1024 * 1024 })).toMatchObject({ status: 'too_big', text: '' });
     // The same file under the real cap is read.
     expect((await officeText(bomb, 'docx')).status).toBe('ok');
   });
@@ -177,7 +177,8 @@ describe('Office files', () => {
     const cfb = new Uint8Array([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1, 0, 0, 0, 0]);
     expect((await extractText(cfb, { name: 'old.doc', type: 'application/msword' })).status).toBe('unsupported');
     expect((await extractText(cfb, { name: 'old.xls' })).status).toBe('unsupported');
-    expect((await extractText(cfb, { name: 'secret.docx' })).status).toBe('encrypted');
+    // A compound file without an EncryptedPackage stream is a legacy file under a new name (limits.test.ts has the protected one).
+    expect((await extractText(cfb, { name: 'secret.docx' })).status).toBe('unsupported');
     const odfLocked = odf('<office:text/>', { 'META-INF/manifest.xml': '<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0"><manifest:file-entry><manifest:encryption-data/></manifest:file-entry></manifest:manifest>' });
     expect((await extractText(odfLocked, { name: 'secret.odt' })).status).toBe('encrypted');
   });

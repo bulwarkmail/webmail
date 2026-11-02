@@ -4,28 +4,52 @@
 // reader) and read with DOMParser. No layout, no styles: the reader of the
 // text is a language model.
 //
-// The sizes in a ZIP's headers are whatever the sender wrote, so the bytes
-// actually unpacked are counted, and reading stops past MAX_INFLATED_BYTES
-// for the whole file (a ZIP bomb answers too_big).
+// Nothing in the file is trusted. The sizes in a ZIP's headers are whatever
+// the sender wrote, so the bytes actually unpacked are counted: reading
+// stops past MAX_INFLATED_BYTES for the whole file and MAX_XML_PART_BYTES
+// for one part (too_big). A few bytes of XML can stand for millions of
+// characters (a cell repeated across a sheet), so every reader writes into
+// a TextSink and stops when the read's budget is used up. Parts with a DTD
+// are refused.
 
 import { listZipEntries, streamZipEntry, ZipFormatError, type ZipEntry } from '@/lib/mail-import/zip-reader';
-import { MAX_INFLATED_BYTES, MAX_SHEET_ROWS, MAX_SHEETS, type ExtractedText, type TextFormat } from './types';
+import {
+  MAX_CELL_CHARS, MAX_INFLATED_BYTES, MAX_SHEET_ROWS, MAX_SHEETS, MAX_TEXT_CHARS, MAX_XML_PART_BYTES, TEXT_BUDGET_SLACK,
+  type ExtractedText, type TextFormat,
+} from './types';
+import { TextSink } from './sink';
 
 export type OfficeFormat = Extract<TextFormat, 'docx' | 'xlsx' | 'pptx' | 'odt' | 'ods' | 'odp'>;
 type Result = Omit<ExtractedText, 'format'>;
 
-/** The file unpacks to more than the cap. */
+export interface OfficeOptions {
+  /** Characters to write at most (default MAX_TEXT_CHARS plus slack). */
+  budget?: number;
+  /** Bytes the whole file may unpack to (default MAX_INFLATED_BYTES). */
+  inflateCap?: number;
+  /** Bytes one XML part may unpack to (default MAX_XML_PART_BYTES). */
+  partCap?: number;
+}
+
+/** The file unpacks to more than a cap. */
 class TooBig extends Error {}
 /** The file is protected by a password. */
 class Encrypted extends Error {}
+/** The file asks for something a reader never does (a DTD). */
+class Refused extends Error {}
 
 /** Inflated chunks at most this big per step (a deflate block expands about 1000 times). */
 const INPUT_CHUNK = 16 * 1024;
 
-/** Reads entries of one archive, counting every byte unpacked against one cap. */
+/** Reads entries of one archive, counting every byte unpacked against the caps. */
 class Unpacker {
   private used = 0;
-  constructor(private readonly file: Blob, readonly entries: ZipEntry[], private readonly cap: number) {}
+  constructor(
+    private readonly file: Blob,
+    readonly entries: ZipEntry[],
+    private readonly cap: number,
+    private readonly partCap: number,
+  ) {}
 
   has(name: string): boolean {
     return this.entries.some((e) => e.name === name);
@@ -40,7 +64,7 @@ class Unpacker {
     for await (const chunk of streamZipEntry(this.file, entry, INPUT_CHUNK)) {
       total += chunk.byteLength;
       this.used += chunk.byteLength;
-      if (this.used > this.cap) throw new TooBig();
+      if (this.used > this.cap || total > this.partCap) throw new TooBig();
       chunks.push(chunk);
     }
     const out = new Uint8Array(total);
@@ -55,7 +79,10 @@ class Unpacker {
   async xml(name: string): Promise<Document | null> {
     const data = await this.bytes(name);
     if (!data) return null;
-    const doc = new DOMParser().parseFromString(new TextDecoder('utf-8').decode(data), 'application/xml');
+    const source = new TextDecoder('utf-8').decode(data);
+    // Office parts never need a DTD; entities from one only blow text up.
+    if (/<!DOCTYPE/i.test(source)) throw new Refused();
+    const doc = new DOMParser().parseFromString(source, 'application/xml');
     if (doc.getElementsByTagName('parsererror').length > 0) throw new ZipFormatError(`${name} is not XML`);
     return doc;
   }
@@ -76,7 +103,7 @@ function attr(el: Element, local: string): string | null {
   return null;
 }
 
-const tidy = (lines: string[]) => lines.map((l) => l.replace(/[ \t]+$/g, '')).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+const cell = (text: string) => (text.length > MAX_CELL_CHARS ? text.slice(0, MAX_CELL_CHARS) : text);
 
 /** A cell for CSV-like rows: quoted when it holds a comma, a quote or a line break. */
 function csvCell(value: string): string {
@@ -106,25 +133,24 @@ function wordRuns(el: Element): string {
   return out;
 }
 
-function wordBlocks(el: Element, out: string[]): void {
+function wordBlocks(el: Element, out: TextSink): void {
   for (const c of Array.from(el.children)) {
-    if (c.localName === 'p') out.push(wordRuns(c));
+    if (out.full) return;
+    if (c.localName === 'p') out.line(wordRuns(c));
     else if (c.localName === 'tbl') {
       for (const row of kids(c, 'tr')) {
-        out.push(kids(row, 'tc').map((cell) => all(cell, 'p').map(wordRuns).join(' ').trim()).join(' | '));
+        if (!out.line(kids(row, 'tc').map((td) => cell(all(td, 'p').map(wordRuns).join(' ').trim())).join(' | '))) return;
       }
-      out.push('');
+      out.line('');
     } else if (c.localName !== 'sectPr') wordBlocks(c, out);
   }
 }
 
-async function docx(zip: Unpacker): Promise<Result> {
+async function docx(zip: Unpacker, sink: TextSink): Promise<Result> {
   const doc = await zip.xml('word/document.xml');
   if (!doc) return { status: 'failed', text: '', truncated: false };
-  const body = all(doc, 'body')[0] ?? doc.documentElement;
-  const lines: string[] = [];
-  wordBlocks(body, lines);
-  return { status: 'ok', text: tidy(lines), truncated: false };
+  wordBlocks(all(doc, 'body')[0] ?? doc.documentElement, sink);
+  return { status: 'ok', text: sink.text(), truncated: sink.full };
 }
 
 // ─── Excel (xlsx) ────────────────────────────────────────────
@@ -161,7 +187,7 @@ function normalisePath(path: string): string {
   return parts.join('/');
 }
 
-async function xlsx(zip: Unpacker): Promise<Result> {
+async function xlsx(zip: Unpacker, sink: TextSink): Promise<Result> {
   const book = await zip.xml('xl/workbook.xml');
   if (!book) return { status: 'failed', text: '', truncated: false };
   const rels = await relations(zip, 'xl/_rels/workbook.xml.rels', 'xl');
@@ -170,63 +196,66 @@ async function xlsx(zip: Unpacker): Promise<Result> {
   if (strings) {
     for (const si of all(strings, 'si')) {
       // Phonetic runs (rPh) are reading aids, not the cell's text.
-      shared.push(all(si, 't').filter((t) => t.parentElement?.localName !== 'rPh').map((t) => t.textContent ?? '').join(''));
+      shared.push(cell(all(si, 't').filter((t) => t.parentElement?.localName !== 'rPh').map((t) => t.textContent ?? '').join('')));
     }
   }
   const sheets = all(book, 'sheet');
   const names: string[] = [];
-  const blocks: string[] = [];
   let truncated = sheets.length > MAX_SHEETS;
   for (const sheet of sheets.slice(0, MAX_SHEETS)) {
+    if (sink.full) break;
     const name = sheet.getAttribute('name') ?? `Sheet ${names.length + 1}`;
     const rid = attr(sheet, 'id');
     const path = rid ? rels.get(rid) : undefined;
     const doc = path ? await zip.xml(path) : null;
     names.push(name);
-    const rows: string[] = [];
-    if (doc) {
-      const rowEls = all(doc, 'row');
-      if (rowEls.length > MAX_SHEET_ROWS) truncated = true;
-      for (const row of rowEls.slice(0, MAX_SHEET_ROWS)) {
-        const cells: string[] = [];
-        for (const c of kids(row, 'c')) {
-          const col = columnOf(c.getAttribute('r')) ?? cells.length;
-          if (col > 1000) continue;
-          const type = c.getAttribute('t');
-          const v = kids(c, 'v')[0]?.textContent ?? '';
-          let value: string;
-          if (type === 's') value = shared[Number(v)] ?? '';
-          else if (type === 'inlineStr') value = all(c, 't').map((t) => t.textContent ?? '').join('');
-          else if (type === 'b') value = v === '1' ? 'TRUE' : v === '0' ? 'FALSE' : v;
-          else value = v;
-          while (cells.length < col) cells.push('');
-          cells[col] = value;
-        }
-        const line = csvRow(cells);
-        if (line) rows.push(line);
+    if (names.length > 1) sink.line('');
+    sink.line(`Sheet: ${name}`);
+    if (!doc) continue;
+    const rowEls = all(doc, 'row');
+    if (rowEls.length > MAX_SHEET_ROWS) truncated = true;
+    for (const row of rowEls.slice(0, MAX_SHEET_ROWS)) {
+      const cells: string[] = [];
+      for (const c of kids(row, 'c')) {
+        const col = columnOf(c.getAttribute('r')) ?? cells.length;
+        if (col > 1000) continue;
+        const type = c.getAttribute('t');
+        const v = kids(c, 'v')[0]?.textContent ?? '';
+        let value: string;
+        if (type === 's') value = shared[Number(v)] ?? '';
+        else if (type === 'inlineStr') value = cell(all(c, 't').map((t) => t.textContent ?? '').join(''));
+        else if (type === 'b') value = v === '1' ? 'TRUE' : v === '0' ? 'FALSE' : v;
+        else value = cell(v);
+        while (cells.length < col) cells.push('');
+        cells[col] = value;
       }
+      const line = csvRow(cells);
+      if (line && !sink.line(line)) break;
     }
-    blocks.push(`Sheet: ${name}\n${rows.join('\n')}`.trim());
   }
-  return { status: 'ok', text: blocks.join('\n\n'), truncated, sheets: names };
+  return { status: 'ok', text: sink.text(), truncated: truncated || sink.full, sheets: names };
 }
 
 // ─── PowerPoint (pptx) ───────────────────────────────────────
 
-async function pptx(zip: Unpacker): Promise<Result> {
+async function pptx(zip: Unpacker, sink: TextSink): Promise<Result> {
   const slides = zip.entries
     .map((e) => ({ name: e.name, n: Number(/^ppt\/slides\/slide(\d+)\.xml$/.exec(e.name)?.[1]) }))
     .filter((s) => Number.isFinite(s.n))
     .sort((a, b) => a.n - b.n);
   if (!slides.length && !zip.has('ppt/presentation.xml')) return { status: 'failed', text: '', truncated: false };
-  const blocks: string[] = [];
   for (const [i, slide] of slides.entries()) {
+    if (sink.full) break;
     const doc = await zip.xml(slide.name);
     if (!doc) continue;
-    const paras = all(doc, 'p').map((p) => all(p, 't').map((t) => t.textContent ?? '').join('').trim()).filter(Boolean);
-    blocks.push([`Slide ${i + 1}`, ...paras].join('\n'));
+    if (i > 0) sink.line('');
+    sink.line(`Slide ${i + 1}`);
+    for (const p of all(doc, 'p')) {
+      const text = all(p, 't').map((t) => t.textContent ?? '').join('').trim();
+      if (text && !sink.line(text)) break;
+    }
   }
-  return { status: 'ok', text: blocks.join('\n\n'), truncated: false };
+  return { status: 'ok', text: sink.text(), truncated: sink.full };
 }
 
 // ─── OpenDocument (odt, ods, odp) ────────────────────────────
@@ -249,81 +278,99 @@ function odfRuns(el: Element): string {
   return out;
 }
 
-/** Rows of a table:table as cell texts; repeated rows and cells expanded, but only up to the caps. */
-function odfTableRows(table: Element, maxRows: number): { rows: string[][]; more: boolean } {
-  const rows: string[][] = [];
-  let more = false;
+/** Most columns of one row read. */
+const MAX_COLUMNS = 1000;
+
+/**
+ * The rows of a table:table, repeated rows and cells expanded, handed to
+ * `onRow` one by one until it answers false or MAX_SHEET_ROWS are done.
+ * A row's cells stop once their text passes `rowChars`, so one row never
+ * holds more than the read can use. True when rows were left over.
+ */
+function odfTableRows(table: Element, rowChars: number, onRow: (cells: string[]) => boolean): boolean {
+  let rows = 0;
   for (const row of all(table, 'table-row')) {
     // Only rows of this table, not of a table nested in a cell.
     let owner: Element | null = row.parentElement;
     while (owner && owner.localName !== 'table') owner = owner.parentElement;
     if (owner !== table) continue;
     const cells: string[] = [];
-    for (const cell of kids(row).filter((c) => c.localName === 'table-cell' || c.localName === 'covered-table-cell')) {
-      const text = all(cell, 'p').map(odfRuns).join('\n').trim();
-      const repeat = Math.max(1, Number(attr(cell, 'number-columns-repeated')) || 1);
+    let chars = 0;
+    for (const td of kids(row).filter((c) => c.localName === 'table-cell' || c.localName === 'covered-table-cell')) {
+      if (chars > rowChars || cells.length >= MAX_COLUMNS) break;
+      const text = cell(all(td, 'p').map(odfRuns).join('\n').trim());
+      const repeat = Math.max(1, Number(attr(td, 'number-columns-repeated')) || 1);
       // A run of empty cells to the sheet's edge says "repeated 16384 times".
-      const times = text ? Math.min(repeat, 100) : Math.min(repeat, 1000 - cells.length);
-      for (let i = 0; i < times && cells.length < 1000; i++) cells.push(text);
+      for (let i = 0; i < repeat && cells.length < MAX_COLUMNS && chars <= rowChars; i++) {
+        cells.push(text);
+        chars += text.length + 1;
+      }
     }
     const repeatRows = Math.max(1, Number(attr(row, 'number-rows-repeated')) || 1);
     const empty = cells.every((c) => !c);
-    for (let i = 0; i < (empty ? 1 : Math.min(repeatRows, maxRows)); i++) {
-      if (rows.length >= maxRows) { more = true; break; }
-      rows.push(cells);
+    for (let i = 0; i < (empty ? 1 : repeatRows); i++) {
+      if (rows >= MAX_SHEET_ROWS) return true;
+      rows++;
+      if (!onRow(cells)) return true;
     }
-    if (more) break;
   }
-  return { rows, more };
+  return false;
 }
 
-function odfBlocks(el: Element, out: string[]): void {
+function odfBlocks(el: Element, out: TextSink): void {
   for (const c of Array.from(el.children)) {
-    if (c.localName === 'p' || c.localName === 'h') out.push(odfRuns(c));
+    if (out.full) return;
+    if (c.localName === 'p' || c.localName === 'h') out.line(odfRuns(c));
     else if (c.localName === 'table') {
-      for (const row of odfTableRows(c, MAX_SHEET_ROWS).rows) {
+      odfTableRows(c, out.budget, (row) => {
         const line = row.filter(Boolean).join(' | ');
-        if (line) out.push(line);
-      }
-      out.push('');
+        return line ? out.line(line) : true;
+      });
+      out.line('');
     } else if (c.localName !== 'tracked-changes' && c.localName !== 'sequence-decls') odfBlocks(c, out);
   }
 }
 
-async function odf(zip: Unpacker, format: 'odt' | 'ods' | 'odp'): Promise<Result> {
+async function odf(zip: Unpacker, format: 'odt' | 'ods' | 'odp', sink: TextSink): Promise<Result> {
   const manifest = await zip.bytes('META-INF/manifest.xml');
   if (manifest && /encryption-data/.test(new TextDecoder('utf-8').decode(manifest))) throw new Encrypted();
   const doc = await zip.xml('content.xml');
   if (!doc) return { status: 'failed', text: '', truncated: false };
   if (format === 'odt') {
     const body = all(doc, 'text')[0];
-    const lines: string[] = [];
-    if (body) odfBlocks(body, lines);
-    return { status: 'ok', text: tidy(lines), truncated: false };
+    if (body) odfBlocks(body, sink);
+    return { status: 'ok', text: sink.text(), truncated: sink.full };
   }
   if (format === 'ods') {
     const sheet = all(doc, 'spreadsheet')[0];
     const tables = sheet ? kids(sheet, 'table') : [];
     const names: string[] = [];
-    const blocks: string[] = [];
     let truncated = tables.length > MAX_SHEETS;
     for (const table of tables.slice(0, MAX_SHEETS)) {
+      if (sink.full) break;
       const name = attr(table, 'name') ?? `Sheet ${names.length + 1}`;
       names.push(name);
-      const { rows, more } = odfTableRows(table, MAX_SHEET_ROWS);
+      if (names.length > 1) sink.line('');
+      sink.line(`Sheet: ${name}`);
+      const more = odfTableRows(table, sink.budget, (row) => {
+        const line = csvRow(row);
+        return line ? sink.line(line) : true;
+      });
       if (more) truncated = true;
-      const lines = rows.map(csvRow).filter(Boolean);
-      blocks.push(`Sheet: ${name}\n${lines.join('\n')}`.trim());
     }
-    return { status: 'ok', text: blocks.join('\n\n'), truncated, sheets: names };
+    return { status: 'ok', text: sink.text(), truncated: truncated || sink.full, sheets: names };
   }
   const pres = all(doc, 'presentation')[0];
-  const blocks: string[] = [];
   for (const [i, page] of (pres ? kids(pres, 'page') : []).entries()) {
-    const paras = all(page, 'p').map((p) => odfRuns(p).trim()).filter(Boolean);
-    blocks.push([`Slide ${i + 1}`, ...paras].join('\n'));
+    if (sink.full) break;
+    if (i > 0) sink.line('');
+    sink.line(`Slide ${i + 1}`);
+    for (const p of all(page, 'p')) {
+      const text = odfRuns(p).trim();
+      if (text && !sink.line(text)) break;
+    }
   }
-  return { status: 'ok', text: blocks.join('\n\n'), truncated: false };
+  return { status: 'ok', text: sink.text(), truncated: sink.full };
 }
 
 // ─── Entry point ─────────────────────────────────────────────
@@ -335,20 +382,44 @@ export function isCompoundFile(bytes: Uint8Array): boolean {
   return CFB_MAGIC.every((b, i) => bytes[i] === b);
 }
 
+/** The UTF-16LE bytes of `name`, as a compound file's directory stores stream names. */
+function utf16(name: string): number[] {
+  return [...name].flatMap((c) => [c.charCodeAt(0), 0]);
+}
+const ENCRYPTED_STREAMS = [utf16('EncryptedPackage'), utf16('EncryptionInfo')];
+
+function includesBytes(haystack: Uint8Array, needle: number[]): boolean {
+  const first = needle[0];
+  for (let i = haystack.indexOf(first); i !== -1 && i <= haystack.length - needle.length; i = haystack.indexOf(first, i + 1)) {
+    let j = 1;
+    while (j < needle.length && haystack[i + j] === needle[j]) j++;
+    if (j === needle.length) return true;
+  }
+  return false;
+}
+
+/** A compound file holding an encrypted Office package (a docx, xlsx or pptx with a password). */
+export function isEncryptedPackage(bytes: Uint8Array): boolean {
+  return ENCRYPTED_STREAMS.some((name) => includesBytes(bytes, name));
+}
+
 /**
  * The text of an Office file. A password-protected docx, xlsx or pptx is a
- * compound file, not a ZIP: encrypted. `cap` (tests) replaces MAX_INFLATED_BYTES.
+ * compound file holding an EncryptedPackage stream: encrypted; any other
+ * compound file is a legacy .doc/.xls/.ppt under a new name: unsupported.
  */
-export async function officeText(bytes: Uint8Array, format: OfficeFormat, cap = MAX_INFLATED_BYTES): Promise<Result> {
-  if (isCompoundFile(bytes)) return { status: 'encrypted', text: '', truncated: false };
+export async function officeText(bytes: Uint8Array, format: OfficeFormat, options: OfficeOptions = {}): Promise<Result> {
+  const { budget = MAX_TEXT_CHARS + TEXT_BUDGET_SLACK, inflateCap = MAX_INFLATED_BYTES, partCap = MAX_XML_PART_BYTES } = options;
+  if (isCompoundFile(bytes)) return { status: isEncryptedPackage(bytes) ? 'encrypted' : 'unsupported', text: '', truncated: false };
   try {
     const file = new Blob([bytes as BlobPart]);
-    const zip = new Unpacker(file, await listZipEntries(file), cap);
+    const zip = new Unpacker(file, await listZipEntries(file), inflateCap, partCap);
+    const sink = new TextSink(budget);
     switch (format) {
-      case 'docx': return await docx(zip);
-      case 'xlsx': return await xlsx(zip);
-      case 'pptx': return await pptx(zip);
-      default: return await odf(zip, format);
+      case 'docx': return await docx(zip, sink);
+      case 'xlsx': return await xlsx(zip, sink);
+      case 'pptx': return await pptx(zip, sink);
+      default: return await odf(zip, format, sink);
     }
   } catch (err) {
     if (err instanceof TooBig) return { status: 'too_big', text: '', truncated: false };

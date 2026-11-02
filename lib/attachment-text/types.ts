@@ -52,3 +52,9 @@ export const MAX_SHEETS = 5;
 export const MAX_SHEET_ROWS = 2_000;
 /** Bytes an Office file may unpack to, all entries read together (zip bombs). */
 export const MAX_INFLATED_BYTES = 50 * 1024 * 1024;
+/** Bytes one XML part of an Office file may unpack to: DOMParser holds it all in memory. */
+export const MAX_XML_PART_BYTES = 12 * 1024 * 1024;
+/** Characters of one spreadsheet cell, after which it is cut. */
+export const MAX_CELL_CHARS = 4_000;
+/** Readers stop this many characters past maxChars, so the final cut can end at a word. */
+export const TEXT_BUDGET_SLACK = 2_000;
