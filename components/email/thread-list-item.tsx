@@ -216,7 +216,7 @@ function MvRowLead({
         onDoubleClick={(e) => e.stopPropagation()}
         className="group/check -ms-3 flex items-start self-stretch ps-3 pe-0.5"
       >
-        <span className="flex h-10 items-center">
+        <span className="flex h-[var(--list-item-height)] items-center">
           <span
             className={cn(
               "p-1 rounded-full transition-colors group-hover/check:bg-foreground/10",
@@ -232,7 +232,7 @@ function MvRowLead({
         </span>
       </button>
       {onToggleStar && (
-        <span className="flex h-10 items-center">
+        <span className="flex h-[var(--list-item-height)] items-center">
           <button
             type="button"
             aria-label={starLabel}
@@ -707,7 +707,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
         )}
         <div
           role="gridcell"
-          className={cn('px-3', showRowActionButton && onContextMenu && 'pe-12', oneLineRow ? 'flex items-center' : 'flex items-start', mvRow && 'min-h-10', swipeEnabled && 'relative z-10 bg-inherit')}
+          className={cn('px-3', showRowActionButton && onContextMenu && 'pe-12', oneLineRow ? 'flex items-center' : 'flex items-start', mvRow && 'min-h-[var(--list-item-height)]', swipeEnabled && 'relative z-10 bg-inherit')}
           style={{ gap: 'var(--density-item-gap)', paddingBlock: mvRow ? undefined : 'var(--density-item-py)', transform: swipeEnabled && offsetX ? `translateX(${offsetX}px)` : undefined, transition: swipeEnabled && offsetX === 0 ? 'transform 200ms ease-out' : undefined }}
         >
           {/* Checkbox - only for extra-compact density (no avatar) while in selection mode */}
@@ -772,7 +772,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
           <div className="flex-1 min-w-0">
             {oneLineRow ? (
               <>
-              <div className={cn("flex items-center justify-between gap-3", mvRow && "min-h-10")}>
+              <div className={cn("flex items-center justify-between gap-3", mvRow && "min-h-[var(--list-item-height)]")}>
                 <div className="flex min-w-0 flex-1 items-center gap-3">
                   {/* In columns the dot sits inside the From cell, so a row
                       with it starts its columns where the header does. */}
@@ -1411,7 +1411,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
           )}
           <div
             role="gridcell"
-            className={cn('px-3', showRowActionButton && onContextMenu && 'pe-12', oneLineRow ? 'flex items-center' : 'flex items-start', mvRow && 'min-h-10', threadSwipeEnabled && 'relative z-10 bg-inherit')}
+            className={cn('px-3', showRowActionButton && onContextMenu && 'pe-12', oneLineRow ? 'flex items-center' : 'flex items-start', mvRow && 'min-h-[var(--list-item-height)]', threadSwipeEnabled && 'relative z-10 bg-inherit')}
             style={{ gap: 'var(--density-item-gap)', paddingBlock: mvRow ? undefined : 'var(--density-item-py)', transform: threadSwipeEnabled && threadOffsetX ? `translateX(${threadOffsetX}px)` : undefined, transition: threadSwipeEnabled && threadOffsetX === 0 ? 'transform 200ms ease-out' : undefined }}
           >
             {/* Checkbox for thread selection - only for extra-compact density (no avatar) while in selection mode */}
@@ -1503,7 +1503,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
             <div className="flex-1 min-w-0">
               {oneLineRow ? (
                 <>
-                <div className={cn("flex items-center justify-between gap-3", mvRow && "min-h-10")}>
+                <div className={cn("flex items-center justify-between gap-3", mvRow && "min-h-[var(--list-item-height)]")}>
                   <div className="flex min-w-0 flex-1 items-center gap-3">
                     {!columns && isUnifiedView && latestEmail.accountId && threadAccountColor && showAccountDot && (
                       <span
