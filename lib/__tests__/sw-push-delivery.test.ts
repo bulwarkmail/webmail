@@ -1,0 +1,88 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import vm from 'node:vm';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+// What one new message, several at once and several accounts turn into on screen.
+const SW_SOURCE = readFileSync(join(process.cwd(), 'public', 'sw.js'), 'utf8');
+
+type Preview = Record<string, unknown> | null;
+type Shown = { title: string; body?: unknown; data?: Record<string, unknown>; tag: string; options: Record<string, unknown>; close: () => void };
+
+function loadWorker(preview: (url: URL) => Preview, extra: { clients?: unknown[]; globals?: Record<string, unknown>; prefs?: unknown; openWindow?: (url: string) => Promise<unknown> } = {}) {
+  const listeners = new Map<string, (event: unknown) => void>();
+  const shade = new Map<string, Shown>();
+  const previews: URL[] = [];
+  const cacheStore = new Map<string, string>();
+  if (extra.prefs) cacheStore.set('https://mail.example.com/__push-state/prefs', JSON.stringify(extra.prefs));
+  const self = {
+    location: { href: 'https://mail.example.com/sw.js', origin: 'https://mail.example.com' },
+    addEventListener: (type: string, fn: (event: unknown) => void) => listeners.set(type, fn),
+    skipWaiting: () => {},
+    clients: { claim: () => {}, matchAll: async () => extra.clients ?? [], openWindow: extra.openWindow },
+    registration: {
+      showNotification: async (title: string, options: Record<string, unknown>) => {
+        const tag = String(options.tag ?? '');
+        shade.set(tag, { title, body: options.body, data: options.data as Record<string, unknown>, tag, options, close: () => shade.delete(tag) });
+      },
+      getNotifications: async (filter?: { tag?: string }) => [...shade.values()].filter((n) => !filter?.tag || n.tag === filter.tag),
+    },
+  };
+  const caches = {
+    open: async () => ({
+      match: async (key: string) => {
+        const value = cacheStore.get(key);
+        return value === undefined ? undefined : { json: async () => JSON.parse(value) };
+      },
+      put: async (key: string, res: { text: () => Promise<string> }) => { cacheStore.set(key, await res.text()); },
+    }),
+  };
+  const fetchMock = vi.fn(async (input: string) => {
+    const url = new URL(input, 'https://mail.example.com');
+    previews.push(url);
+    const body = preview(url);
+    return body ? { ok: true, json: async () => body } : { ok: false, status: 401, json: async () => ({}) };
+  });
+  const context = vm.createContext({ self, caches, fetch: fetchMock, URL, URLSearchParams, Response, Date, console, AbortController, setTimeout, clearTimeout, ...extra.globals });
+  vm.runInContext(SW_SOURCE, context);
+  async function dispatch(type: string, event: Record<string, unknown>) {
+    const waits: Promise<unknown>[] = [];
+    listeners.get(type)?.({ ...event, waitUntil: (p: Promise<unknown>) => waits.push(p) });
+    await Promise.all(waits);
+  }
+  const push = (payload: unknown) => dispatch('push', { data: { json: () => payload } });
+  return { push, dispatch, shade, previews };
+}
+
+const mail = (id: string, subject = 'Hello') => ({ id, threadId: `t-${id}`, from: [{ name: 'Alice' }], subject, preview: '' });
+const delivery = (accountId: string, ...emailIds: string[]) => ({ kind: 'jmap-email-push', accountLabel: 'me@example.org', accountId, emailIds });
+
+afterEach(() => vi.useRealTimers());
+
+describe('a state-change push naming several accounts', () => {
+  const stateChange = (changed: Record<string, Record<string, string>>, accountId = Object.keys(changed)[0]) => ({
+    kind: 'jmap-state-change', accountLabel: 'me@example.org', accountId, emailIds: [], changed,
+  });
+
+  it('notifies for each account with new mail', async () => {
+    const { push, shade, previews } = loadWorker((url) => ({ unreadTotal: 1, slot: 0, email: mail(`m-${url.searchParams.get('accountId')}`) }));
+    await push(stateChange({ me: { EmailDelivery: 's1', Email: 's1' }, team: { EmailDelivery: 's2' } }));
+    expect(previews.map((url) => url.searchParams.get('accountId'))).toEqual(['me', 'team']);
+    expect([...shade.keys()].sort()).toEqual(['bulwark-mail:me', 'bulwark-mail:team']);
+    expect(shade.get('bulwark-mail:team')?.data).toMatchObject({ accountId: 'team', emailId: 'm-team' });
+  });
+
+  it('leaves out an account that only changed some other way', async () => {
+    const { push, previews } = loadWorker(() => ({ unreadTotal: 1, slot: 0, email: mail('e1') }));
+    await push(stateChange({ quiet: { Mailbox: 's1' }, me: { EmailDelivery: 's2' } }));
+    expect(previews.map((url) => url.searchParams.get('accountId'))).toEqual(['me']);
+  });
+
+  it('still shows something for a ping without new mail in it', async () => {
+    const { push, previews } = loadWorker(() => ({ unreadTotal: 1, slot: 0, email: mail('e1') }));
+    await push(stateChange({ me: { Mailbox: 's1' } }));
+    expect(previews.map((url) => url.searchParams.get('accountId'))).toEqual(['me']);
+  });
+});
+
+// -- end of cases --

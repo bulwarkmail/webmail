@@ -589,17 +589,26 @@ async function handlePush(event) {
   //     message ids that passed it - spam filed into Junk never gets here.
   //   - "jmap-state-change" (older servers): a bare EmailDelivery ping wrapped
   //     as { changed: { [accountId]: {...} } }, fired for every ingested
-  //     message including junk. The relay forwards a single account per push,
-  //     so the first key is the one this notification is for.
+  //     message including junk. Stalwart batches what changes between two
+  //     pushes, so it can name the user's own account and a group's at once.
   const changed = payload && payload.changed && typeof payload.changed === "object"
     ? payload.changed
     : null;
-  const accountId = (payload && typeof payload.accountId === "string" && payload.accountId)
+  const named = (payload && typeof payload.accountId === "string" && payload.accountId)
     || (changed ? Object.keys(changed)[0] || "" : "");
   const emailIds = payload && Array.isArray(payload.emailIds)
     ? payload.emailIds.filter((id) => typeof id === "string" && id)
     : [];
 
+  const withNewMail = emailIds.length > 0 || !changed
+    ? []
+    : Object.keys(changed).filter((id) => changed[id] && typeof changed[id] === "object" && "EmailDelivery" in changed[id]);
+  for (const accountId of withNewMail.length > 0 ? withNewMail : [named]) {
+    await notifyAccount(accountId, emailIds, accountLabel);
+  }
+}
+
+async function notifyAccount(accountId, emailIds, accountLabel) {
   // Never notify twice for the same message. A push can be redelivered (relay
   // retry, browser replay after coming back online) and, on the older
   // state-change path, a junk delivery wakes us while an unread message we
