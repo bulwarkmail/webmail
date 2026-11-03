@@ -18,7 +18,7 @@ import type { PendingEventPreview } from "./event-modal";
 import { toast } from "@/stores/toast-store";
 import { useCalendarLocale } from "@/hooks/use-calendar-locale";
 import { useScrollWindow } from "@/hooks/use-scroll-window";
-import { dayKey, parseDayKey, type ScrollWindowViewProps } from "@/lib/calendar-scroll-window";
+import { dayKey, mostVisibleMonthDay, parseDayKey, type ScrollWindowViewProps } from "@/lib/calendar-scroll-window";
 import { useCalendarErrorMessage } from "@/hooks/use-calendar-error-message";
 import { PluginDayLabel } from "./plugin-day-label";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
@@ -60,9 +60,6 @@ interface CalendarMonthViewProps extends ScrollWindowViewProps {
    */
   onMoveEvent?: MoveEventHandler;
 }
-
-/** Fraction of the viewport height at which the "current month" is sampled. */
-const VISIBLE_MONTH_SAMPLE = 0.4;
 
 export function CalendarMonthView({
   selectedDate,
@@ -220,8 +217,10 @@ export function CalendarMonthView({
   const rowCapacity = Math.max(1, Math.floor((rowMinHeight - overlayTop - 4 - 8) / rowHeight));
   const capRows = showChips && !isMobile;
 
-  // The month the user is looking at: sampled a little above the middle of
-  // the viewport. It dims the other months' days and drives the title.
+  // The month the user is looking at: the one with the most days in view. It
+  // dims the other months' days and drives the title. One point on the screen
+  // won't do: in a short pane it hit the week holding the 1st, and today's
+  // month was called by the name of the one before.
   const [visibleMonthDate, setVisibleMonthDate] = useState<Date>(() => focus.date);
   const visibleMonthRef = useRef(visibleMonthDate);
   const scrollFrameRef = useRef<number | null>(null);
@@ -230,20 +229,18 @@ export function CalendarMonthView({
     const el = scrollRef.current;
     if (!el) return;
     const hHeight = headerRef.current?.offsetHeight ?? 0;
-    const sampleY = el.getBoundingClientRect().top + hHeight + (el.clientHeight - hHeight) * VISIBLE_MONTH_SAMPLE;
-    const rows = el.querySelectorAll<HTMLElement>("[data-week]");
-    let hit: HTMLElement | null = null;
-    for (const row of rows) {
-      if (row.getBoundingClientRect().bottom >= sampleY) { hit = row; break; }
-    }
-    const weekKey = hit?.dataset.week;
-    if (!weekKey) return;
-    const midWeek = addDays(parseDayKey(weekKey), 3);
+    const box = el.getBoundingClientRect();
+    const rows = Array.from(el.querySelectorAll<HTMLElement>("[data-week]"), (row) => {
+      const rect = row.getBoundingClientRect();
+      return { weekStart: parseDayKey(row.dataset.week ?? ""), top: rect.top, bottom: rect.bottom };
+    });
+    const day = mostVisibleMonthDay(rows, box.top + hHeight, box.top + el.clientHeight, (d) => `${getYear(d)}-${getMonth(d)}`);
+    if (!day) return;
     const current = visibleMonthRef.current;
-    if (getMonth(midWeek) === getMonth(current) && getYear(midWeek) === getYear(current)) return;
-    visibleMonthRef.current = midWeek;
-    setVisibleMonthDate(midWeek);
-    onVisibleDateChange?.(midWeek);
+    if (getMonth(day) === getMonth(current) && getYear(day) === getYear(current)) return;
+    visibleMonthRef.current = day;
+    setVisibleMonthDate(day);
+    onVisibleDateChange?.(day);
   }, [getMonth, getYear, onVisibleDateChange]);
 
   const handleScroll = useCallback(() => {
