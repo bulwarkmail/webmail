@@ -5763,6 +5763,23 @@
     "store_private": "Les fenêtres privées ne peuvent pas conserver le courrier pour une utilisation hors ligne.",
     "server_not_answering": "Le serveur de messagerie ne répond pas. Réessayez dans un instant."
   },
+  "offlineWipe": {
+    "note": "Votre organisation a supprimé les données de ce compte de cet appareil. Connectez-vous pour recommencer.",
+    "note_unsent": "Votre organisation a supprimé les données de ce compte de cet appareil. Messages non envoyés supprimés : {count}.",
+    "settings_title": "Tout supprimer de cet appareil",
+    "settings_description": "Si vous donnez cet ordinateur ou cessez de l'utiliser. Vos messages sur le serveur restent en place.",
+    "settings_button": "Tout supprimer…",
+    "settings_wiping": "Suppression…",
+    "confirm_title": "Tout supprimer de cet appareil ?",
+    "confirm_message": "Cela supprime ce que cette application garde sur cet appareil, pour tous les comptes présents. Vos messages sur le serveur ne sont pas touchés.",
+    "confirm_mail": "Messages, agendas, contacts et fichiers gardés ici",
+    "confirm_unsent": "Messages non envoyés en attente ici : {count}. Ils seront perdus.",
+    "confirm_keys": "Clés S/MIME et OpenPGP. Il vous faudra votre propre sauvegarde pour les réutiliser.",
+    "confirm_plugins": "Données enregistrées ici par les plugins",
+    "confirm_files": "Pièces jointes ouvertes pour modification et fichiers en attente d'être joints",
+    "confirm_accounts": "Tous les comptes sont déconnectés",
+    "confirm_button": "Tout supprimer"
+  },
   "offlineDrafts": {
     "title": "Brouillons sur cet appareil",
     "description": "Ces brouillons sont enregistrés sur cet appareil. Ils partent seuls vers le serveur dès qu'il est joignable.",

@@ -5763,6 +5763,23 @@
     "store_private": "私密視窗無法保留供離線使用的郵件。",
     "server_not_answering": "郵件伺服器沒有回應。請稍後再試。"
   },
+  "offlineWipe": {
+    "note": "您的組織已從此裝置移除此帳號的資料。請登入以重新開始。",
+    "note_unsent": "您的組織已從此裝置移除此帳號的資料。已刪除的未傳送郵件:{count} 封。",
+    "settings_title": "從此裝置移除所有內容",
+    "settings_description": "用於將這台電腦送人或不再使用時。伺服器上的郵件會保留。",
+    "settings_button": "移除所有內容…",
+    "settings_wiping": "正在移除…",
+    "confirm_title": "要從此裝置移除所有內容嗎?",
+    "confirm_message": "這會刪除此應用程式為這裡所有帳號儲存在此裝置上的內容。伺服器上的郵件不受影響。",
+    "confirm_mail": "儲存在這裡的郵件、行事曆、聯絡人和檔案",
+    "confirm_unsent": "在這裡等待的未傳送郵件:{count} 封。它們將遺失。",
+    "confirm_keys": "S/MIME 和 OpenPGP 金鑰。要再次使用,需要您自己的備份。",
+    "confirm_plugins": "外掛程式儲存在這裡的資料",
+    "confirm_files": "為編輯而開啟的附件和等待附加的檔案",
+    "confirm_accounts": "所有帳號都將登出",
+    "confirm_button": "移除所有內容"
+  },
   "offlineDrafts": {
     "title": "此裝置上的草稿",
     "description": "這些草稿儲存在此裝置上。一旦能連線到伺服器，就會自動上傳。",

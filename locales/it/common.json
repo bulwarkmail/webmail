@@ -5763,6 +5763,23 @@
     "store_private": "Le finestre private non possono conservare la posta per l'uso offline.",
     "server_not_answering": "Il server di posta non risponde. Riprova tra un momento."
   },
+  "offlineWipe": {
+    "note": "La tua organizzazione ha rimosso i dati di questo account da questo dispositivo. Accedi per ricominciare.",
+    "note_unsent": "La tua organizzazione ha rimosso i dati di questo account da questo dispositivo. Messaggi non inviati eliminati: {count}.",
+    "settings_title": "Rimuovi tutto da questo dispositivo",
+    "settings_description": "Per quando cedi questo computer o smetti di usarlo. La tua posta sul server resta.",
+    "settings_button": "Rimuovi tutto…",
+    "settings_wiping": "Rimozione…",
+    "confirm_title": "Rimuovere tutto da questo dispositivo?",
+    "confirm_message": "Questo elimina ciò che questa app conserva su questo dispositivo, per tutti gli account presenti. La tua posta sul server non viene toccata.",
+    "confirm_mail": "Posta, calendari, contatti e file conservati qui",
+    "confirm_unsent": "Messaggi non inviati in attesa qui: {count}. Andranno persi.",
+    "confirm_keys": "Chiavi S/MIME e OpenPGP. Per riusarle ti serve un tuo backup.",
+    "confirm_plugins": "Dati salvati qui dai plugin",
+    "confirm_files": "Allegati aperti per la modifica e file in attesa di essere allegati",
+    "confirm_accounts": "Tutti gli account vengono disconnessi",
+    "confirm_button": "Rimuovi tutto"
+  },
   "offlineDrafts": {
     "title": "Bozze su questo dispositivo",
     "description": "Queste bozze sono salvate su questo dispositivo. Passano da sole al server appena è raggiungibile.",

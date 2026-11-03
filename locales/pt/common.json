@@ -5763,6 +5763,23 @@
     "store_private": "As janelas privadas não podem guardar correio para uso offline.",
     "server_not_answering": "O servidor de correio não está a responder. Tente novamente daqui a pouco."
   },
+  "offlineWipe": {
+    "note": "A sua organização removeu os dados desta conta deste dispositivo. Inicie sessão para começar de novo.",
+    "note_unsent": "A sua organização removeu os dados desta conta deste dispositivo. Mensagens não enviadas eliminadas: {count}.",
+    "settings_title": "Remover tudo deste dispositivo",
+    "settings_description": "Para quando oferecer este computador ou deixar de o usar. O seu correio no servidor mantém-se.",
+    "settings_button": "Remover tudo…",
+    "settings_wiping": "A remover…",
+    "confirm_title": "Remover tudo deste dispositivo?",
+    "confirm_message": "Isto elimina o que esta aplicação guarda neste dispositivo, para todas as contas aqui. O seu correio no servidor não é tocado.",
+    "confirm_mail": "Correio, calendários, contactos e ficheiros guardados aqui",
+    "confirm_unsent": "Mensagens não enviadas em espera aqui: {count}. Serão perdidas.",
+    "confirm_keys": "Chaves S/MIME e OpenPGP. Precisa da sua própria cópia de segurança para as voltar a usar.",
+    "confirm_plugins": "Dados que os plugins guardaram aqui",
+    "confirm_files": "Anexos abertos para edição e ficheiros à espera de serem anexados",
+    "confirm_accounts": "Todas as contas terminam sessão",
+    "confirm_button": "Remover tudo"
+  },
   "offlineDrafts": {
     "title": "Rascunhos neste dispositivo",
     "description": "Estes rascunhos estão guardados neste dispositivo. Vão para o servidor por si assim que for possível contactá-lo.",

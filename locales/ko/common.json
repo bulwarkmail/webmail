@@ -5763,6 +5763,23 @@
     "store_private": "개인 정보 보호 창에서는 오프라인용 메일을 보관할 수 없습니다.",
     "server_not_answering": "메일 서버가 응답하지 않습니다. 잠시 후 다시 시도하세요."
   },
+  "offlineWipe": {
+    "note": "조직에서 이 기기의 이 계정 데이터를 제거했습니다. 다시 시작하려면 로그인하세요.",
+    "note_unsent": "조직에서 이 기기의 이 계정 데이터를 제거했습니다. 삭제된 보내지 않은 메시지: {count}개.",
+    "settings_title": "이 기기에서 모두 제거",
+    "settings_description": "이 컴퓨터를 다른 사람에게 주거나 더 이상 사용하지 않을 때 사용합니다. 서버의 메일은 그대로 남습니다.",
+    "settings_button": "모두 제거…",
+    "settings_wiping": "제거하는 중…",
+    "confirm_title": "이 기기에서 모두 제거할까요?",
+    "confirm_message": "이 앱이 이 기기에 보관하는 내용을 여기 있는 모든 계정에 대해 삭제합니다. 서버의 메일은 건드리지 않습니다.",
+    "confirm_mail": "여기에 보관된 메일, 캘린더, 연락처, 파일",
+    "confirm_unsent": "여기에서 대기 중인 보내지 않은 메시지: {count}개. 사라집니다.",
+    "confirm_keys": "S/MIME 및 OpenPGP 키. 다시 사용하려면 직접 만든 백업이 필요합니다.",
+    "confirm_plugins": "플러그인이 여기에 저장한 데이터",
+    "confirm_files": "편집하려고 연 첨부 파일과 첨부를 기다리는 파일",
+    "confirm_accounts": "모든 계정이 로그아웃됩니다",
+    "confirm_button": "모두 제거"
+  },
   "offlineDrafts": {
     "title": "이 기기의 임시 보관함",
     "description": "이 임시 보관 메일은 이 기기에 저장되어 있습니다. 서버에 연결되면 자동으로 올라갑니다.",

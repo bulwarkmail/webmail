@@ -5763,6 +5763,23 @@
     "store_private": "Soukromá okna nemohou uchovávat poštu pro použití offline.",
     "server_not_answering": "Poštovní server neodpovídá. Zkuste to za chvíli znovu."
   },
+  "offlineWipe": {
+    "note": "Vaše organizace odebrala data tohoto účtu z tohoto zařízení. Přihlaste se a začněte znovu.",
+    "note_unsent": "Vaše organizace odebrala data tohoto účtu z tohoto zařízení. Smazané neodeslané zprávy: {count}.",
+    "settings_title": "Odebrat vše z tohoto zařízení",
+    "settings_description": "Pro případ, že tento počítač předáte dál nebo ho přestanete používat. Vaše pošta na serveru zůstane.",
+    "settings_button": "Odebrat vše…",
+    "settings_wiping": "Odebírání…",
+    "confirm_title": "Odebrat vše z tohoto zařízení?",
+    "confirm_message": "Tím se smaže to, co tato aplikace uchovává na tomto zařízení, pro všechny zdejší účty. Vaší pošty na serveru se to nedotkne.",
+    "confirm_mail": "Pošta, kalendáře, kontakty a soubory uložené zde",
+    "confirm_unsent": "Neodeslané zprávy čekající zde: {count}. Budou ztraceny.",
+    "confirm_keys": "Klíče S/MIME a OpenPGP. Abyste je mohli znovu použít, budete potřebovat vlastní zálohu.",
+    "confirm_plugins": "Data, která sem uložily zásuvné moduly",
+    "confirm_files": "Přílohy otevřené k úpravám a soubory čekající na připojení",
+    "confirm_accounts": "Všechny účty budou odhlášeny",
+    "confirm_button": "Odebrat vše"
+  },
   "offlineDrafts": {
     "title": "Koncepty v tomto zařízení",
     "description": "Tyto koncepty jsou uložené v tomto zařízení. Na server se odešlou samy, jakmile bude dostupný.",

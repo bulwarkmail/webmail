@@ -5763,6 +5763,23 @@
     "store_private": "Okna prywatne nie mogą przechowywać poczty do użytku offline.",
     "server_not_answering": "Serwer poczty nie odpowiada. Spróbuj ponownie za chwilę."
   },
+  "offlineWipe": {
+    "note": "Twoja organizacja usunęła dane tego konta z tego urządzenia. Zaloguj się, aby zacząć od nowa.",
+    "note_unsent": "Twoja organizacja usunęła dane tego konta z tego urządzenia. Usunięte niewysłane wiadomości: {count}.",
+    "settings_title": "Usuń wszystko z tego urządzenia",
+    "settings_description": "Na wypadek, gdy oddajesz ten komputer lub przestajesz go używać. Twoja poczta na serwerze zostaje.",
+    "settings_button": "Usuń wszystko…",
+    "settings_wiping": "Usuwanie…",
+    "confirm_title": "Usunąć wszystko z tego urządzenia?",
+    "confirm_message": "Spowoduje to usunięcie tego, co ta aplikacja przechowuje na tym urządzeniu, dla wszystkich kont. Twoja poczta na serwerze pozostanie nietknięta.",
+    "confirm_mail": "Poczta, kalendarze, kontakty i pliki przechowywane tutaj",
+    "confirm_unsent": "Niewysłane wiadomości czekające tutaj: {count}. Zostaną utracone.",
+    "confirm_keys": "Klucze S/MIME i OpenPGP. Aby znów ich używać, potrzebujesz własnej kopii zapasowej.",
+    "confirm_plugins": "Dane zapisane tutaj przez wtyczki",
+    "confirm_files": "Załączniki otwarte do edycji i pliki czekające na dołączenie",
+    "confirm_accounts": "Wszystkie konta zostaną wylogowane",
+    "confirm_button": "Usuń wszystko"
+  },
   "offlineDrafts": {
     "title": "Wersje robocze na tym urządzeniu",
     "description": "Te wersje robocze są zapisane na tym urządzeniu. Trafią na serwer same, gdy tylko będzie dostępny.",

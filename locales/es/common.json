@@ -5763,6 +5763,23 @@
     "store_private": "Las ventanas privadas no pueden guardar correo para usarlo sin conexión.",
     "server_not_answering": "El servidor de correo no responde. Inténtalo de nuevo en un momento."
   },
+  "offlineWipe": {
+    "note": "Tu organización ha quitado los datos de esta cuenta de este dispositivo. Inicia sesión para empezar de nuevo.",
+    "note_unsent": "Tu organización ha quitado los datos de esta cuenta de este dispositivo. Mensajes sin enviar eliminados: {count}.",
+    "settings_title": "Quitar todo de este dispositivo",
+    "settings_description": "Para cuando regales este ordenador o dejes de usarlo. Tu correo en el servidor se mantiene.",
+    "settings_button": "Quitar todo…",
+    "settings_wiping": "Quitando…",
+    "confirm_title": "¿Quitar todo de este dispositivo?",
+    "confirm_message": "Esto elimina lo que esta aplicación guarda en este dispositivo, para todas las cuentas de aquí. Tu correo en el servidor no se toca.",
+    "confirm_mail": "Correo, calendarios, contactos y archivos guardados aquí",
+    "confirm_unsent": "Mensajes sin enviar en espera aquí: {count}. Se perderán.",
+    "confirm_keys": "Claves S/MIME y OpenPGP. Necesitarás tu propia copia de seguridad para volver a usarlas.",
+    "confirm_plugins": "Datos que los plugins guardaron aquí",
+    "confirm_files": "Adjuntos abiertos para editar y archivos a la espera de adjuntarse",
+    "confirm_accounts": "Se cierra la sesión de todas las cuentas",
+    "confirm_button": "Quitar todo"
+  },
   "offlineDrafts": {
     "title": "Borradores en este dispositivo",
     "description": "Estos borradores están guardados en este dispositivo. Irán al servidor por sí solos en cuanto se pueda conectar con él.",

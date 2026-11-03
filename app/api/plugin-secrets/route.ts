@@ -7,12 +7,14 @@ import { adminCredentialOrigins, adminCredentialStatus } from '@/lib/plugin-secr
 import { declaredUserCredential } from '@/lib/plugin-secrets/known-plugins';
 import {
   VaultFullError,
+  deleteAllUserCredentials,
   deleteUserCredentials,
   listUserCredentials,
   putUserCredential,
   type VaultUser,
 } from '@/lib/plugin-secrets/vault';
 import { storedDataUnavailableResponse } from '@/lib/stored-data-errors';
+import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 
 const PLUGIN_ID_RE = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
 const MAX_SECRET_LENGTH = 4096;
@@ -114,6 +116,18 @@ export async function DELETE(request: NextRequest) {
   if (crossOrigin) return crossOrigin;
   const user = await currentUser(request);
   if (user instanceof NextResponse) return user;
+  // A wipe in the desktop app, where this server and its files are on the device.
+  // On an instance they aren't the device's to remove.
+  if (IS_DESKTOP_BUILD && request.nextUrl.searchParams.get('all') === 'true') {
+    try {
+      await deleteAllUserCredentials(user);
+      return NextResponse.json({ ok: true }, { headers: NO_STORE });
+    } catch (error) {
+      const unavailable = storedDataUnavailableResponse(error, NO_STORE);
+      if (unavailable) return unavailable;
+      throw error;
+    }
+  }
   const pluginId = request.nextUrl.searchParams.get('plugin') ?? '';
   const credentialId = request.nextUrl.searchParams.get('credential') ?? undefined;
   if (!PLUGIN_ID_RE.test(pluginId)) return bad('Invalid plugin id');

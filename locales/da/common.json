@@ -5763,6 +5763,23 @@
     "store_private": "Private vinduer kan ikke gemme mail til brug offline.",
     "server_not_answering": "Mailserveren svarer ikke. Prøv igen om lidt."
   },
+  "offlineWipe": {
+    "note": "Din organisation har fjernet denne kontos data fra denne enhed. Log ind for at starte forfra.",
+    "note_unsent": "Din organisation har fjernet denne kontos data fra denne enhed. Slettede ikke-sendte beskeder: {count}.",
+    "settings_title": "Fjern alt fra denne enhed",
+    "settings_description": "Til når du giver computeren væk eller holder op med at bruge den. Din post på serveren bliver.",
+    "settings_button": "Fjern alt…",
+    "settings_wiping": "Fjerner…",
+    "confirm_title": "Fjern alt fra denne enhed?",
+    "confirm_message": "Det sletter det, denne app gemmer på denne enhed, for alle konti her. Din post på serveren røres ikke.",
+    "confirm_mail": "Post, kalendere, kontakter og filer gemt her",
+    "confirm_unsent": "Ikke-sendte beskeder, der venter her: {count}. De går tabt.",
+    "confirm_keys": "S/MIME- og OpenPGP-nøgler. Du skal bruge din egen sikkerhedskopi for at bruge dem igen.",
+    "confirm_plugins": "Data, som plugins har gemt her",
+    "confirm_files": "Vedhæftede filer åbnet til redigering og filer, der venter på at blive vedhæftet",
+    "confirm_accounts": "Alle konti logges ud",
+    "confirm_button": "Fjern alt"
+  },
   "offlineDrafts": {
     "title": "Kladder på denne enhed",
     "description": "Disse kladder er gemt på denne enhed. De sendes selv til serveren, så snart den kan nås.",

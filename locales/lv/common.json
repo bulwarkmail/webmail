@@ -5763,6 +5763,23 @@
     "store_private": "Privātie logi nevar glabāt pastu lietošanai bezsaistē.",
     "server_not_answering": "Pasta serveris neatbild. Mēģiniet vēlreiz pēc brīža."
   },
+  "offlineWipe": {
+    "note": "Jūsu organizācija ir noņēmusi šī konta datus no šīs ierīces. Piesakieties, lai sāktu no jauna.",
+    "note_unsent": "Jūsu organizācija ir noņēmusi šī konta datus no šīs ierīces. Dzēstie nenosūtītie ziņojumi: {count}.",
+    "settings_title": "Noņemt visu no šīs ierīces",
+    "settings_description": "Gadījumam, ja atdodat šo datoru vai vairs to neizmantojat. Jūsu pasts serverī paliek.",
+    "settings_button": "Noņemt visu…",
+    "settings_wiping": "Notiek noņemšana…",
+    "confirm_title": "Vai noņemt visu no šīs ierīces?",
+    "confirm_message": "Tiek izdzēsts tas, ko šī lietotne glabā šajā ierīcē, visiem šeit esošajiem kontiem. Jūsu pasts serverī netiek skarts.",
+    "confirm_mail": "Šeit glabātais pasts, kalendāri, kontakti un faili",
+    "confirm_unsent": "Šeit gaidošie nenosūtītie ziņojumi: {count}. Tie tiks zaudēti.",
+    "confirm_keys": "S/MIME un OpenPGP atslēgas. Lai tās izmantotu atkal, būs vajadzīga jūsu pašu dublējumkopija.",
+    "confirm_plugins": "Dati, ko šeit saglabājuši spraudņi",
+    "confirm_files": "Rediģēšanai atvērti pielikumi un faili, kas gaida pievienošanu",
+    "confirm_accounts": "Visi konti tiek izrakstīti",
+    "confirm_button": "Noņemt visu"
+  },
   "offlineDrafts": {
     "title": "Melnraksti šajā ierīcē",
     "description": "Šie melnraksti ir saglabāti šajā ierīcē. Tie paši nonāks serverī, tiklīdz tas būs sasniedzams.",

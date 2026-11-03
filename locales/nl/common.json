@@ -5763,6 +5763,23 @@
     "store_private": "Privévensters kunnen geen mail bewaren voor offline gebruik.",
     "server_not_answering": "De mailserver antwoordt niet. Probeer het zo meteen opnieuw."
   },
+  "offlineWipe": {
+    "note": "Je organisatie heeft de gegevens van dit account van dit apparaat verwijderd. Meld je aan om opnieuw te beginnen.",
+    "note_unsent": "Je organisatie heeft de gegevens van dit account van dit apparaat verwijderd. Verwijderde onverzonden berichten: {count}.",
+    "settings_title": "Alles van dit apparaat verwijderen",
+    "settings_description": "Voor als je deze computer weggeeft of niet meer gebruikt. Je e-mail op de server blijft staan.",
+    "settings_button": "Alles verwijderen…",
+    "settings_wiping": "Verwijderen…",
+    "confirm_title": "Alles van dit apparaat verwijderen?",
+    "confirm_message": "Dit verwijdert wat deze app op dit apparaat bewaart, voor alle accounts hier. Je e-mail op de server blijft ongemoeid.",
+    "confirm_mail": "E-mail, agenda's, contacten en bestanden die hier bewaard zijn",
+    "confirm_unsent": "Onverzonden berichten die hier wachten: {count}. Die gaan verloren.",
+    "confirm_keys": "S/MIME- en OpenPGP-sleutels. Om ze weer te gebruiken heb je je eigen back-up nodig.",
+    "confirm_plugins": "Gegevens die plug-ins hier hebben opgeslagen",
+    "confirm_files": "Bijlagen die zijn geopend om te bewerken en bestanden die nog worden bijgevoegd",
+    "confirm_accounts": "Alle accounts worden afgemeld",
+    "confirm_button": "Alles verwijderen"
+  },
   "offlineDrafts": {
     "title": "Concepten op dit apparaat",
     "description": "Deze concepten zijn op dit apparaat opgeslagen. Ze gaan vanzelf naar de server zodra die bereikbaar is.",

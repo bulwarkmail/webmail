@@ -5763,6 +5763,23 @@
     "store_private": "Gizli pencereler e-postaları çevrimdışı kullanım için saklayamaz.",
     "server_not_answering": "E-posta sunucusu yanıt vermiyor. Birazdan yeniden deneyin."
   },
+  "offlineWipe": {
+    "note": "Kuruluşunuz bu hesabın verilerini bu cihazdan kaldırdı. Yeniden başlamak için oturum açın.",
+    "note_unsent": "Kuruluşunuz bu hesabın verilerini bu cihazdan kaldırdı. Silinen gönderilmemiş iletiler: {count}.",
+    "settings_title": "Bu cihazdan her şeyi kaldır",
+    "settings_description": "Bu bilgisayarı başkasına verdiğinizde veya kullanmayı bıraktığınızda. Sunucudaki postalarınız kalır.",
+    "settings_button": "Her şeyi kaldır…",
+    "settings_wiping": "Kaldırılıyor…",
+    "confirm_title": "Bu cihazdan her şey kaldırılsın mı?",
+    "confirm_message": "Bu işlem, bu uygulamanın buradaki tüm hesaplar için bu cihazda tuttuklarını siler. Sunucudaki postalarınıza dokunulmaz.",
+    "confirm_mail": "Burada tutulan postalar, takvimler, kişiler ve dosyalar",
+    "confirm_unsent": "Burada bekleyen gönderilmemiş iletiler: {count}. Kaybolacaklar.",
+    "confirm_keys": "S/MIME ve OpenPGP anahtarları. Yeniden kullanmak için kendi yedeğiniz gerekir.",
+    "confirm_plugins": "Eklentilerin burada sakladığı veriler",
+    "confirm_files": "Düzenlemek için açılan ekler ve eklenmeyi bekleyen dosyalar",
+    "confirm_accounts": "Tüm hesapların oturumu kapatılır",
+    "confirm_button": "Her şeyi kaldır"
+  },
   "offlineDrafts": {
     "title": "Bu cihazdaki taslaklar",
     "description": "Bu taslaklar bu cihaza kaydedildi. Sunucuya ulaşılır ulaşılmaz kendiliğinden gönderilir.",

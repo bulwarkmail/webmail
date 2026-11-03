@@ -5763,6 +5763,23 @@
     "store_private": "A privát ablakok nem tudnak leveleket megőrizni offline használatra.",
     "server_not_answering": "A levelezőszerver nem válaszol. Próbálja újra egy pillanat múlva."
   },
+  "offlineWipe": {
+    "note": "A szervezete eltávolította a fiók adatait erről az eszközről. Jelentkezzen be az újrakezdéshez.",
+    "note_unsent": "A szervezete eltávolította a fiók adatait erről az eszközről. Törölt, el nem küldött üzenetek: {count}.",
+    "settings_title": "Minden eltávolítása erről az eszközről",
+    "settings_description": "Arra az esetre, ha továbbadja ezt a számítógépet, vagy már nem használja. A levelei a kiszolgálón megmaradnak.",
+    "settings_button": "Minden eltávolítása…",
+    "settings_wiping": "Eltávolítás…",
+    "confirm_title": "Eltávolít mindent erről az eszközről?",
+    "confirm_message": "Ez törli mindazt, amit ez az alkalmazás ezen az eszközön tárol, az itteni összes fiókhoz. A kiszolgálón lévő leveleit nem érinti.",
+    "confirm_mail": "Az itt tárolt levelek, naptárak, névjegyek és fájlok",
+    "confirm_unsent": "Itt várakozó, el nem küldött üzenetek: {count}. Elvesznek.",
+    "confirm_keys": "S/MIME- és OpenPGP-kulcsok. Az újbóli használatukhoz saját biztonsági másolatra lesz szüksége.",
+    "confirm_plugins": "A bővítmények által itt tárolt adatok",
+    "confirm_files": "Szerkesztésre megnyitott mellékletek és csatolásra váró fájlok",
+    "confirm_accounts": "Minden fiók kijelentkezik",
+    "confirm_button": "Minden eltávolítása"
+  },
   "offlineDrafts": {
     "title": "Piszkozatok ezen az eszközön",
     "description": "Ezek a piszkozatok ezen az eszközön vannak mentve. Maguktól a szerverre kerülnek, amint az elérhető.",

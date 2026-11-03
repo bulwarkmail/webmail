@@ -13,6 +13,7 @@ import { useOfflineStore } from '@/lib/offline/state';
 import { useDevicePolicy } from '@/hooks/use-device-policy';
 import { useAuthStore } from '@/stores/auth-store';
 import { OutboxList } from './outbox-list';
+import { WipeDeviceSection } from './wipe-device-section';
 
 /**
  * Settings > Backup & reset > Offline (#523): "Keep mail on this device"
@@ -84,6 +85,7 @@ export function OfflineSettings() {
         </>
       )}
       <OutboxList />
+      <WipeDeviceSection />
       <ConfirmDialog
         isOpen={confirmOff}
         onClose={() => setConfirmOff(false)}

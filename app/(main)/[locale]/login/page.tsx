@@ -12,6 +12,7 @@ import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { useAuthStore, consumeSignedOut, SESSION_EXPIRED_DRAFTS_UNSAVED_KEY } from "@/stores/auth-store";
 import { consumeLost } from "@/lib/offline/lost";
+import { consumeWipeNote } from "@/lib/devices/wipe-state";
 import { useAccountStore } from "@/stores/account-store";
 import { useThemeStore } from "@/stores/theme-store";
 import { usePolicyStore } from "@/stores/policy-store";
@@ -194,6 +195,7 @@ function LoginPageContent() {
   const [desktopWaiting, setDesktopWaiting] = useState(false);
   const tSessionLimits = useTranslations("session_limits");
   const tOffline = useTranslations("offline");
+  const tOfflineWipe = useTranslations("offlineWipe");
   const tTheme = useTranslations("settings.appearance.theme");
   const params = useParams();
   const searchParams = useSearchParams();
@@ -282,8 +284,11 @@ function LoginPageContent() {
   const [sessionEnd, setSessionEnd] = useState<SessionEndReason | null>(null);
   // Offline outbox messages a sign-out deleted unsent (#523), named once.
   const [outboxLost, setOutboxLost] = useState<string[]>([]);
+  // Unsent mail a wipe took with it: how many, never which.
+  const [wipeLost, setWipeLost] = useState<number | null>(null);
   useEffect(() => {
     setOutboxLost(consumeLost());
+    setWipeLost(consumeWipeNote()?.unsent ?? null);
   }, []);
   const [expiredDraftsUnsaved, setExpiredDraftsUnsaved] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -1455,6 +1460,11 @@ function LoginPageContent() {
 
           {/* Form section */}
           <div className="px-8 pb-8">
+            {wipeLost !== null && (
+              <div className="mb-5 p-3 rounded-xl border border-warning/30 bg-warning/5 text-sm text-foreground" role="status" data-testid="device-wipe-note">
+                {wipeLost > 0 ? tOfflineWipe("note_unsent", { count: wipeLost }) : tOfflineWipe("note")}
+              </div>
+            )}
             {outboxLost.length > 0 && (
               <div className="mb-5 p-3 rounded-xl border border-warning/30 bg-warning/5 text-sm text-foreground [overflow-wrap:anywhere]" role="status" data-testid="session-outbox-lost">
                 {tOffline("signout.lost", { subjects: outboxLost.map((s) => s || tOffline("outbox.no_subject")).join(", ") })}

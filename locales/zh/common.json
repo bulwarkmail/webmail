@@ -5763,6 +5763,23 @@
     "store_private": "隐私窗口无法保留供离线使用的邮件。",
     "server_not_answering": "邮件服务器没有响应。请稍后再试。"
   },
+  "offlineWipe": {
+    "note": "您的组织已从此设备移除此帐户的数据。请登录以重新开始。",
+    "note_unsent": "您的组织已从此设备移除此帐户的数据。已删除的未发送邮件:{count} 封。",
+    "settings_title": "从此设备移除所有内容",
+    "settings_description": "用于将这台电脑送人或不再使用时。服务器上的邮件会保留。",
+    "settings_button": "移除所有内容…",
+    "settings_wiping": "正在移除…",
+    "confirm_title": "要从此设备移除所有内容吗?",
+    "confirm_message": "这会删除此应用为这里所有帐户保存在此设备上的内容。服务器上的邮件不受影响。",
+    "confirm_mail": "保存在这里的邮件、日历、联系人和文件",
+    "confirm_unsent": "在这里等待的未发送邮件:{count} 封。它们将丢失。",
+    "confirm_keys": "S/MIME 和 OpenPGP 密钥。要再次使用,需要您自己的备份。",
+    "confirm_plugins": "插件保存在这里的数据",
+    "confirm_files": "为编辑而打开的附件和等待添加的文件",
+    "confirm_accounts": "所有帐户都将退出登录",
+    "confirm_button": "移除所有内容"
+  },
   "offlineDrafts": {
     "title": "此设备上的草稿",
     "description": "这些草稿保存在此设备上。一旦能连接服务器，就会自动上传。",

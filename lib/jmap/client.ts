@@ -1620,6 +1620,9 @@ export class JMAPClient implements IJMAPClient {
   private lastStates: AccountStates = {};
   private reconnecting = false;
   private connectionChangeCallback: ((connected: boolean) => void) | null = null;
+  private credentialsRefusedCallback: ((refusedForMs: number) => void) | null = null;
+  /** When the server first refused us with no good answer since; 0 when it hasn't. */
+  private refusedSince = 0;
   private rateLimitedUntil: number = 0;
   private rateLimitCallback: ((rateLimited: boolean, retryAfterMs: number) => void) | null = null;
   private rateLimitTimeout: NodeJS.Timeout | null = null;
@@ -1907,6 +1910,7 @@ export class JMAPClient implements IJMAPClient {
       throw new RateLimitError(retryAfterMs);
     }
 
+    let reauthRefused = false;
     if (response.status === 401) {
       if (this.authMode === 'bearer' && this.onTokenRefresh) {
         const newToken = await this.onTokenRefresh();
@@ -1914,7 +1918,13 @@ export class JMAPClient implements IJMAPClient {
           this.updateAccessToken(newToken);
           const retryHeaders = { ...init?.headers as Record<string, string>, 'Authorization': this.authHeader };
           response = await this.timedFetch(url, init, retryHeaders, timeoutMs);
+          // A token issued just now was refused. No new token says nothing:
+          // the renewal has its own rules for that.
+          reauthRefused = true;
         }
+      } else if (this.authMode === 'bearer') {
+        // A pasted token: there's nothing to renew it with.
+        reauthRefused = true;
       } else if (this.authMode === 'basic' && !this.reconnecting && url !== this.discoveryUrl()) {
         // JMAP session may have expired - re-establish and retry once
         this.reconnecting = true;
@@ -1923,7 +1933,11 @@ export class JMAPClient implements IJMAPClient {
           this.connectionChangeCallback?.(true);
           const retryHeaders = { ...init?.headers as Record<string, string>, 'Authorization': this.authHeader };
           response = await this.timedFetch(url, init, retryHeaders, timeoutMs);
-        } catch {
+          reauthRefused = true;
+        } catch (refreshError) {
+          // A 500 or a broken connection on the way says nothing against the
+          // password. Only the session URL's own 401 does.
+          reauthRefused = refreshError instanceof Error && refreshError.message === 'Session refresh failed: 401';
           // Session refresh failed - if TOTP was used, try re-auth with fresh TOTP
           if (this.onTotpRequired && this.basePassword) {
             try {
@@ -1945,8 +1959,32 @@ export class JMAPClient implements IJMAPClient {
       }
     }
 
-    if (response.status !== 401) this.authAcceptedAt = Date.now();
+    if (response.status !== 401) {
+      this.authAcceptedAt = Date.now();
+      this.refusedSince = 0;
+    } else if (reauthRefused && !response.redirected) {
+      await this.noteCredentialsRefused(response);
+    }
     return response;
+  }
+
+  onCredentialsRefused(callback: (refusedForMs: number) => void): void {
+    this.credentialsRefusedCallback = callback;
+  }
+
+  /**
+   * Only the mail server's own refusal counts: JMAP errors are problem documents
+   * (RFC 8620 section 3.6.1). A proxy or a login page in front of the server
+   * answers with something else, and says nothing about these credentials.
+   * A password with a one-time code goes stale by itself, so it never counts.
+   */
+  private async noteCredentialsRefused(response: Response): Promise<void> {
+    if (this.onTotpRequired || this.basePassword) return;
+    const body = await response.clone().json().catch(() => null) as { status?: unknown } | null;
+    if (body?.status !== 401) return;
+    const now = Date.now();
+    if (!this.refusedSince) this.refusedSince = now;
+    this.credentialsRefusedCallback?.(now - this.refusedSince);
   }
 
   /**
@@ -2015,6 +2053,8 @@ export class JMAPClient implements IJMAPClient {
 
       if (!sessionResponse.ok) {
         if (sessionResponse.status === 401) {
+          // A token's refusal was counted on the way here, if it counts at all.
+          if (this.authMode === 'basic' && !sessionResponse.redirected) await this.noteCredentialsRefused(sessionResponse);
           throw new Error(this.authMode === 'bearer'
             ? 'Authentication failed - token may be expired'
             : 'Invalid username or password');

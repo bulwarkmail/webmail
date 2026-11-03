@@ -5763,6 +5763,23 @@
     "store_private": "Súkromné okná nemôžu uchovávať poštu na používanie offline.",
     "server_not_answering": "Poštový server neodpovedá. Skúste to o chvíľu znova."
   },
+  "offlineWipe": {
+    "note": "Vaša organizácia odstránila údaje tohto účtu z tohto zariadenia. Prihláste sa a začnite znova.",
+    "note_unsent": "Vaša organizácia odstránila údaje tohto účtu z tohto zariadenia. Odstránené neodoslané správy: {count}.",
+    "settings_title": "Odstrániť všetko z tohto zariadenia",
+    "settings_description": "Pre prípad, že tento počítač odovzdáte ďalej alebo ho prestanete používať. Vaša pošta na serveri zostane.",
+    "settings_button": "Odstrániť všetko…",
+    "settings_wiping": "Odstraňuje sa…",
+    "confirm_title": "Odstrániť všetko z tohto zariadenia?",
+    "confirm_message": "Tým sa odstráni to, čo táto aplikácia uchováva v tomto zariadení, pre všetky tunajšie účty. Vašej pošty na serveri sa to nedotkne.",
+    "confirm_mail": "Pošta, kalendáre, kontakty a súbory uložené tu",
+    "confirm_unsent": "Neodoslané správy čakajúce tu: {count}. Stratia sa.",
+    "confirm_keys": "Kľúče S/MIME a OpenPGP. Na ich ďalšie použitie budete potrebovať vlastnú zálohu.",
+    "confirm_plugins": "Údaje, ktoré sem uložili doplnky",
+    "confirm_files": "Prílohy otvorené na úpravy a súbory čakajúce na priloženie",
+    "confirm_accounts": "Všetky účty sa odhlásia",
+    "confirm_button": "Odstrániť všetko"
+  },
   "offlineDrafts": {
     "title": "Koncepty v tomto zariadení",
     "description": "Tieto koncepty sú uložené v tomto zariadení. Na server sa odošlú samy, hneď ako bude dostupný.",

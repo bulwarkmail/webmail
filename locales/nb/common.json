@@ -5763,6 +5763,23 @@
     "store_private": "Private vinduer kan ikke beholde e-post for bruk uten nett.",
     "server_not_answering": "E-postserveren svarer ikke. Prøv igjen om litt."
   },
+  "offlineWipe": {
+    "note": "Organisasjonen din har fjernet dataene for denne kontoen fra denne enheten. Logg på for å begynne på nytt.",
+    "note_unsent": "Organisasjonen din har fjernet dataene for denne kontoen fra denne enheten. Slettede usendte meldinger: {count}.",
+    "settings_title": "Fjern alt fra denne enheten",
+    "settings_description": "For når du gir bort denne datamaskinen eller slutter å bruke den. E-posten din på serveren blir værende.",
+    "settings_button": "Fjern alt…",
+    "settings_wiping": "Fjerner…",
+    "confirm_title": "Vil du fjerne alt fra denne enheten?",
+    "confirm_message": "Dette sletter det denne appen lagrer på denne enheten, for alle kontoer her. E-posten din på serveren blir ikke rørt.",
+    "confirm_mail": "E-post, kalendere, kontakter og filer som er lagret her",
+    "confirm_unsent": "Usendte meldinger som venter her: {count}. De går tapt.",
+    "confirm_keys": "S/MIME- og OpenPGP-nøkler. Du trenger din egen sikkerhetskopi for å bruke dem igjen.",
+    "confirm_plugins": "Data som programtillegg har lagret her",
+    "confirm_files": "Vedlegg som er åpnet for redigering, og filer som venter på å bli lagt ved",
+    "confirm_accounts": "Alle kontoer logges av",
+    "confirm_button": "Fjern alt"
+  },
   "offlineDrafts": {
     "title": "Utkast på denne enheten",
     "description": "Disse utkastene er lagret på denne enheten. De går til serveren av seg selv så snart den kan nås.",
