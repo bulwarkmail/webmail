@@ -594,6 +594,7 @@ function InstalledView({
               href={fromMarketplace ? detailHref(entry.id) : undefined}
               icon={entry.kind === 'plugin' ? <Puzzle /> : <SwatchBook />}
               title={entry.name}
+              wideControl
               titleExtra={(
                 <>
                   <span className="text-xs text-muted-foreground">v{entry.version}</span>
