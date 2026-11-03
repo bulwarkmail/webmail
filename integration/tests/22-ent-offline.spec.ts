@@ -863,6 +863,42 @@ test('nothing of a kept message is readable on the device', async ({ browser }) 
   await page.context().close();
 });
 
+test('Keep offline in the Files app keeps the file, and the settings list it', async ({ browser }) => {
+  const name = `kept-${RUN}.txt`;
+  const client = await jmapAs(ENT.alice);
+  const auth = 'Basic ' + Buffer.from(`${ENT.alice}:${process.env.IT_ENT_PASSWORD}`).toString('base64');
+  const upload = await fetch(`${JMAP_URL}/jmap/upload/${client.accountId}/`, { method: 'POST', headers: { Authorization: auth, 'Content-Type': 'text/plain' }, body: `Kept file ${RUN}` });
+  expect(upload.ok).toBe(true);
+  const { blobId } = await upload.json() as { blobId: string };
+  const made = await client.request([['FileNode/set', { accountId: client.accountId, create: { f: { name, blobId, parentId: null, type: 'text/plain' } } }, '0']], ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:filenode']);
+  const created = made.methodResponses[0][1].created?.f as { id: string } | undefined;
+  expect(created, JSON.stringify(made.methodResponses[0][1])).toBeTruthy();
+  try {
+    const page = await userPage(browser, ENT.alice);
+    await enableOffline(page);
+    await page.goto('/files');
+    const row = page.getByText(name, { exact: true }).first();
+    await expect(row).toBeVisible({ timeout: 60_000 });
+    await row.click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Keep offline' }).click();
+    await page.goto('/settings/backup/offline');
+    await expect(page.getByTestId('offline-kept-file').filter({ hasText: name })).toHaveAttribute('data-kept', 'true', { timeout: 120_000 });
+    await page.getByTestId('offline-kept-files').scrollIntoViewIfNeeded();
+    await shot(page, 'do-storage-page-kept-files');
+
+    await page.goto('/files');
+    await expect(row).toBeVisible({ timeout: 60_000 });
+    await row.click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Stop keeping offline' }).click();
+    await page.goto('/settings/backup/offline');
+    await expect(page.getByTestId('offline-account')).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByTestId('offline-kept-file').filter({ hasText: name })).toHaveCount(0, { timeout: 30_000 });
+    await page.context().close();
+  } finally {
+    await client.request([['FileNode/set', { accountId: client.accountId, destroy: [created!.id] }, '0']], ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:filenode']).catch(() => {});
+  }
+});
+
 test('the admin page saves the caps and no longer promises 30 days or 250 MB', async ({ browser }) => {
   const admin = await adminContext(browser);
   const page = await admin.newPage();
