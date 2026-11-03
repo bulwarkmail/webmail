@@ -4206,8 +4206,10 @@ export function EmailComposer({
     // through React's tree although the dialog portals to the body: they
     // belong to that dialog, and Escape must close only it.
     if (!(e.target instanceof Node) || !e.currentTarget.contains(e.target)) return;
-    // Same for a dialog drawn inside the composer (the directory picker).
-    const targetDialog = e.target instanceof Element ? e.target.closest('[role="dialog"],[role="alertdialog"]') : null;
+    // Same for what is drawn inside the composer: the directory picker and the
+    // formatting toolbar's menus, which close on Escape themselves. This
+    // handler runs in the capture phase, so they would never see it.
+    const targetDialog = e.target instanceof Element ? e.target.closest('[role="dialog"],[role="alertdialog"],[role="menu"]') : null;
     if (targetDialog && e.currentTarget.contains(targetDialog)) return;
 
     const isPlainEscape = e.key === 'Escape' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey;

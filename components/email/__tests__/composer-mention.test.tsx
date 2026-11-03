@@ -528,6 +528,16 @@ describe('composer with the @ recipient list', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
+  it('lets Escape in a formatting menu close only the menu', async () => {
+    const { onClose } = await renderComposer();
+    fireEvent.click(screen.getByTitle('text_color'));
+    const menu = await screen.findByRole('menu', { name: 'text_color' });
+    fireEvent.keyDown(menu.querySelector('button')!, { key: 'Escape' });
+    expect(screen.queryByRole('menu', { name: 'text_color' })).toBeNull();
+    expect(screen.queryByRole('alertdialog')).toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
   // The directory picker is drawn inside the composer itself, not portaled.
   it('lets Escape in the directory picker leave the composer alone', async () => {
     // Every other capability answers nothing.
