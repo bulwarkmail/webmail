@@ -53,6 +53,21 @@ describe.each(['vertical', 'horizontal'] as const)('navigation rail (%s)', (orie
   });
 });
 
+describe('phone tab bar with plugin pages', () => {
+  it('keeps Settings out of the part that scrolls and scrolls to the open page', () => {
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    register();
+    const { container } = render(<NavigationRail orientation="horizontal" />);
+
+    const scroller = container.querySelector('[data-mobile-navigation-scroll]')!;
+    expect(scroller.querySelector('a[href="/apps/kanban/board"]')).not.toBeNull();
+    const settings = container.querySelector('a[href="/settings"]')!;
+    expect(scroller.contains(settings)).toBe(false);
+    expect(scrollIntoView.mock.instances[0]).toBe(scroller.querySelector('[aria-current="page"]'));
+  });
+});
+
 describe('Mountain View app grid', () => {
   it('offers plugin pages next to the built-in apps', () => {
     register();

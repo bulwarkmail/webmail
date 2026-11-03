@@ -230,6 +230,12 @@ export function NavigationRail({
   // The phone tab bar: toasts sit above it.
   const tabBarRef = useBottomControls(orientation === "horizontal");
   const pathname = usePathname();
+  // Each app draws its own tab bar, so its scroll position starts over: bring
+  // the current entry back into view when it lies past the edge of a full bar.
+  const tabBarScrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    tabBarScrollRef.current?.querySelector('[aria-current="page"]')?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+  }, [pathname]);
   const router = useRouter();
   const { appLogoLightUrl, appLogoDarkUrl } = useConfig();
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
@@ -394,18 +400,30 @@ export function NavigationRail({
     };
 
   if (orientation === "horizontal") {
+    // Settings stays outside the part that scrolls: plugin pages and apps fill
+    // the bar, and the last entry must not end up off screen with nothing to
+    // say there is more. Sized by item count so all entries are equally wide.
+    const scrollingCount = visibleItems.length + pluginPages.length
+      + visibleSidebarApps.filter((app) => app.showOnMobile).length
+      + (isStalwartAdmin || adminActive ? 1 : 0);
     return (
       <nav
         ref={tabBarRef}
         data-mobile-navigation=""
         className={cn(
-          "flex items-center bg-background border-t border-border shrink-0 overflow-x-auto mobile-scroll-hidden pb-[calc(env(safe-area-inset-bottom)/2)]",
+          "flex items-center bg-background border-t border-border shrink-0 pb-[calc(env(safe-area-inset-bottom)/2)]",
           mountainView && "min-h-16 border-t-0 bg-secondary shadow-[0_-1px_3px_rgb(0_0_0/0.08)]",
           className
         )}
         role="navigation"
         aria-label={t("nav_label")}
       >
+        <div
+          ref={tabBarScrollRef}
+          data-mobile-navigation-scroll=""
+          className="flex items-center min-w-0 overflow-x-auto mobile-scroll-hidden"
+          style={{ flex: `${scrollingCount} 1 ${scrollingCount * 55}px` }}
+        >
         {visibleItems.map((item) => {
           const isActive = getIsActive(item.href, item.id);
           const Icon = item.icon;
@@ -416,7 +434,7 @@ export function NavigationRail({
               onClick={handleNavClick(item.id as 'mail' | 'calendar' | 'contacts' | 'files' | 'settings')}
               data-tour={`nav-${item.id}`}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
+                "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[55px]",
                 "transition-colors duration-150",
                 isActive
                   ? "text-primary"
@@ -458,7 +476,7 @@ export function NavigationRail({
               data-plugin-page-link={`${page.pluginId}/${page.id}`}
               title={page.pluginName}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
+                "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[55px]",
                 "transition-colors duration-150",
                 isActive
                   ? "text-primary"
@@ -497,7 +515,7 @@ export function NavigationRail({
                 }
               }}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
+                "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[55px]",
                 "transition-colors duration-150",
                 isActive
                   ? "text-primary"
@@ -520,7 +538,7 @@ export function NavigationRail({
           <a
             href={`${getPathPrefix()}/admin`}
             className={cn(
-              "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
+              "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[55px]",
               "transition-colors duration-150",
               adminActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
             )}
@@ -546,13 +564,15 @@ export function NavigationRail({
           </a>
         )}
 
+        </div>
+
         {/* Settings */}
         <Link
           href="/settings"
           onClick={handleNavClick('settings')}
           data-tour="nav-settings"
           className={cn(
-            "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
+            "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[55px]",
             "transition-colors duration-150",
             isSettingsActive
               ? "text-primary"
