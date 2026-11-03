@@ -24,7 +24,19 @@ fi
 
 url="${BUGSINK_URL:-https://bugsink.internal.bulwarkmail.org/}"
 cli="@sentry/cli@${SENTRY_CLI_VERSION:-3.8.2}"
+# Release builds upload in parallel and Bugsink sometimes answers one with a
+# 500, so each project gets three tries before the build fails.
 for project in ${BUGSINK_PROJECTS:-bulwark-instances bulwark-telemetry}; do
-  SENTRY_AUTH_TOKEN="$BUGSINK_AUTH_TOKEN" npx --yes "$cli" --url "$url" \
-    sourcemaps --org bugsinkhasnoorgs --project "$project" upload "$dir"
+  for attempt in 1 2 3; do
+    if SENTRY_AUTH_TOKEN="$BUGSINK_AUTH_TOKEN" npx --yes "$cli" --url "$url" \
+      sourcemaps --org bugsinkhasnoorgs --project "$project" upload "$dir"; then
+      break
+    fi
+    if [ "$attempt" = 3 ]; then
+      echo "::error::uploading source maps to ${project} failed 3 times"
+      exit 1
+    fi
+    echo "::warning::uploading source maps to ${project} failed, trying again in $((attempt * 15)) s"
+    sleep $((attempt * 15))
+  done
 done
