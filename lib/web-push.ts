@@ -1031,6 +1031,23 @@ async function disableWebPushForThisTab(params: DisableWebPushParams): Promise<v
   }
 }
 
+/**
+ * A login is signing out or being removed: nothing for it should wake this
+ * browser any more, and it won't be there to refresh anything. Takes no relay
+ * from the settings: what counts is the one it registered with.
+ */
+export async function endWebPushForSignOut(client: IJMAPClient): Promise<void> {
+  let accountId: string;
+  try {
+    accountId = client.getAccountId();
+  } catch {
+    return;
+  }
+  if (!accountId || typeof localStorage === 'undefined' || !localStorage.getItem(subscriptionIdKey(accountId))) return;
+  const relayBaseUrl = localStorage.getItem(relayBaseKey(accountId)) ?? undefined;
+  await disableWebPush({ client, relayBaseUrl }).catch(() => undefined);
+}
+
 export interface PushDevice {
   // The JMAP PushSubscription id - what you destroy to revoke it.
   id: string;

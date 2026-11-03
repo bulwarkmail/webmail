@@ -1625,6 +1625,17 @@ function notifySignedIn(state: { activeAccountId: string | null; username: strin
   void authHooks.onLogin.emit({ accountId: state.activeAccountId, username: state.username ?? '' });
 }
 
+/** Within the sign-out's budget: an unreachable server doesn't hold it up. */
+function endPushForSignOut(signingOut: Iterable<IJMAPClient>): Promise<void> {
+  return Promise.race([
+    (async () => {
+      const { endWebPushForSignOut } = await import('@/lib/web-push');
+      for (const client of signingOut) await endWebPushForSignOut(client);
+    })(),
+    new Promise<void>((resolve) => setTimeout(resolve, LOGOUT_HOOK_BUDGET_MS)),
+  ]);
+}
+
 function beforeLogoutHooks(accountId: string, options: SignOutCleanupOptions = {}): Promise<void> {
   return Promise.race([
     Promise.all([authHooks.onBeforeLogout.emit({ accountId }), runBeforeSignOut(accountId, options)]).then(() => {}),
@@ -2541,6 +2552,8 @@ export const useAuthStore = create<AuthState>()(
         if (userInitiated && !(await passSignOutGates(accountId ?? 'all'))) return;
 
         await beforeLogoutHooks(accountId ?? 'all', { keepLocalStore: keepLocalData });
+        // A session that only ran out comes back with the next sign-in, push included.
+        if (state.client && !wasDemoMode && !keepLocalData) await endPushForSignOut([state.client]);
 
         // From here on nothing may renew this slot's session; the cleanup
         // below reopens it once the credentials are gone.
@@ -2690,12 +2703,14 @@ export const useAuthStore = create<AuthState>()(
         if (!account) return;
         const slot = account.cookieSlot ?? 0;
         const wasOAuth = account.authMode === 'oauth';
-
-        // Started first: the cleanup marks the slot closing right away, so a
-        // renewal in flight cannot bring the session back.
-        void clearSlotCredentials(slot, wasOAuth);
-        clearRefreshTimer(accountId);
         const client = clients.get(accountId);
+        // The login's push goes first, while its session still works.
+        const pushEnded = client && reason === 'explicit' ? endPushForSignOut([client]) : Promise.resolve();
+
+        // The cleanup marks the slot closing right away, so a renewal in flight
+        // cannot bring the session back.
+        void pushEnded.finally(() => clearSlotCredentials(slot, wasOAuth));
+        clearRefreshTimer(accountId);
         if (client) {
           forgetCalendarSubscriptions(client);
           try { client.disconnect(); } catch { /* noop */ }
@@ -2717,6 +2732,7 @@ export const useAuthStore = create<AuthState>()(
           for (const account of useAccountStore.getState().accounts) noteRefusedLogin(account.id, true, 'session');
         }
         await beforeLogoutHooks('all', { keepLocalStore: keepLocalData });
+        if (!get().isDemoMode && !keepLocalData) await endPushForSignOut(clients.values());
 
         const accountStore = useAccountStore.getState();
         const allAccounts = [...accountStore.accounts];
