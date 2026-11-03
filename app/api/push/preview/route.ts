@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { cleanPreview } from '@/lib/utils';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
-import { readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
+import { readPushAuthContext } from '@/lib/stalwart/push-auth-context';
 import {
   getStalwartCredentials,
   type StalwartCredentials,
@@ -54,7 +54,7 @@ async function resolveTargetForAccount(accountId: string, login: string | null, 
   const cookieStore = await cookies();
   const probes: Promise<{ target: ResolvedTarget; own: boolean } | null>[] = [];
   for (let slot = 0; slot < MAX_ACCOUNT_SLOTS; slot++) {
-    const ctx = readStalwartAuthContextFromStore(cookieStore, slot);
+    const ctx = await readPushAuthContext(cookieStore, slot);
     if (!ctx) continue;
     const serverUrl = ctx.serverUrl.replace(/\/+$/, '');
     probes.push(

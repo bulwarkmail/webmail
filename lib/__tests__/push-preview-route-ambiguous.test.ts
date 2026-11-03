@@ -30,8 +30,13 @@ const LOGINS = [
   { serverUrl: 'https://two.example', authHeader: 'Basic bob', username: 'bob@two.example' },
   { serverUrl: 'https://one.example', authHeader: 'Basic carol', username: 'carol@one.example' },
 ];
+const ORIGINAL_LOGINS = [...LOGINS];
 vi.mock('@/lib/stalwart/auth-context', () => ({
   readStalwartAuthContextFromStore: (_store: unknown, slot: number) => LOGINS[slot] ?? null,
+}));
+const remembered = vi.hoisted(() => ({ value: null as null | { serverUrl: string; authHeader: string; username: string } }));
+vi.mock('@/lib/stalwart/push-auth-context', () => ({
+  readPushAuthContext: async (_store: unknown, slot: number) => LOGINS[slot] ?? (slot === 0 ? remembered.value : null),
 }));
 
 vi.mock('@/lib/stalwart/credentials', () => ({
@@ -87,6 +92,22 @@ async function callRoute(accountId: string, login?: string) {
 }
 
 const mailCalls = () => fetchJmapServer.mock.calls.filter(([url]) => !url.endsWith('/.well-known/jmap'));
+
+describe('push preview after the browser was closed', () => {
+  it('reads the login from the remembered session when the context cookie is gone', async () => {
+    remembered.value = { serverUrl: 'https://one.example', authHeader: 'Basic remembered', username: 'alice@one.example' };
+    LOGINS.length = 0;
+    try {
+      SESSIONS = { 'Basic remembered': session('https://one.example', 'a') };
+      const { status, body } = await callRoute('a');
+      expect(status).toBe(200);
+      expect((body.email as { subject: string }).subject).toBe('mail of Basic remembered');
+    } finally {
+      remembered.value = null;
+      LOGINS.push(...ORIGINAL_LOGINS);
+    }
+  });
+});
 
 describe('push preview when the account id is in more than one login', () => {
   beforeEach(() => {

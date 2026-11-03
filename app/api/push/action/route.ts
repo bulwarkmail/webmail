@@ -10,7 +10,8 @@ import { loginFingerprint } from '@/lib/pwa-notify/login-fingerprint';
 import { UPSTREAM_JSON_MAX_BYTES, UpstreamBodyTooLargeError, readBodyCapped, readJsonCapped } from '@/lib/security/capped-body';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { DisallowedUrlError } from '@/lib/security/url-guard';
-import { readStalwartAuthContextFromStore, type StalwartAuthContext } from '@/lib/stalwart/auth-context';
+import type { StalwartAuthContext } from '@/lib/stalwart/auth-context';
+import { readPushAuthContext } from '@/lib/stalwart/push-auth-context';
 import { rebaseApiUrl } from '@/lib/stalwart/jmap-api';
 import type { SettingsPolicy } from '@/lib/admin/types';
 import { fetchJmapServer, isTrustedJmapServerUrl } from '@/lib/stalwart/server-fetch';
@@ -98,7 +99,7 @@ async function loginsNamed(login: string): Promise<StalwartAuthContext[]> {
   const cookieStore = await cookies();
   const found: StalwartAuthContext[] = [];
   for (let slot = 0; slot < MAX_ACCOUNT_SLOTS; slot++) {
-    const ctx = readStalwartAuthContextFromStore(cookieStore, slot);
+    const ctx = await readPushAuthContext(cookieStore, slot);
     if (ctx && (await loginFingerprint(ctx.serverUrl, ctx.username)) === login) found.push(ctx);
   }
   return found;
