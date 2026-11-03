@@ -559,8 +559,9 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
           title="Versions"
           description="Every published version. Versions this server still has a copy of can be put back without the directory."
         >
-          <div className="overflow-x-auto rounded-lg border border-border">
-            <table className="w-full text-sm">
+          {/* relative: the header's sr-only text is absolute, and only a positioned scroller clips it. Left free, it widens a phone's layout viewport and every dialog goes with it. */}
+          <div className="relative overflow-x-auto rounded-lg border border-border">
+            <table className="w-full min-w-[40rem] text-sm">
               <thead>
                 <tr className="border-b border-border">
                   <th className={thClass}>Version</th>
