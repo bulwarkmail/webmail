@@ -6509,5 +6509,14 @@
     "server_needed": "Digite primeiro o endereço do servidor.",
     "server_declined": "Você não permitiu este servidor, então nada foi enviado a ele.",
     "server_invalid": "Este endereço de servidor não é válido."
+  },
+  "desktop_policy": {
+    "server_refused": "A sua organização não permite este servidor neste dispositivo.",
+    "plugin_refused": "A sua organização não permite este plugin neste dispositivo, por isso não é executado. As suas definições e dados são mantidos.",
+    "install_refused": "A sua organização não permite este plugin neste dispositivo.",
+    "plugins_label": "Plugins",
+    "plugins_off": "A sua organização desativou os plugins neste dispositivo.",
+    "plugins_allowlist": "A sua organização só permite determinados plugins neste dispositivo.",
+    "off": "Desativado"
   }
 }

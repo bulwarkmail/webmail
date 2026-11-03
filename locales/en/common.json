@@ -6509,5 +6509,14 @@
     "server_needed": "Enter your server's address first.",
     "server_declined": "You didn't allow this server, so nothing was sent to it.",
     "server_invalid": "This server address isn't valid."
+  },
+  "desktop_policy": {
+    "server_refused": "Your organisation doesn't allow this server on this device.",
+    "plugin_refused": "Your organisation doesn't allow this plugin on this device, so it doesn't run. Its settings and data are kept.",
+    "install_refused": "Your organisation doesn't allow this plugin on this device.",
+    "plugins_label": "Plugins",
+    "plugins_off": "Your organisation turned off plugins on this device.",
+    "plugins_allowlist": "Your organisation only allows certain plugins on this device.",
+    "off": "Off"
   }
 }

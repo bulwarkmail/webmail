@@ -25,6 +25,7 @@ import { loginClientAddress } from '@/lib/auth/client-address';
 import { LOGIN_BUDGET_RETRY_AFTER_SECONDS, reserveLoginAttempt } from '@/lib/auth/verify-budget';
 import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
 import { isPastMaxAge, limitsEnforcedSince, maxSessionHoursFor, SESSION_TOO_OLD } from '@/lib/auth/session-age';
+import { devicePolicyServerRefusal } from '@/lib/desktop/server-policy';
 
 function sessionCookieOptions() {
   return {
@@ -141,6 +142,9 @@ export async function POST(request: NextRequest) {
     if (!serverUrl || !username || typeof (password || accessToken) !== 'string' || !!password === !!accessToken) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+
+    const refusedByDevice = devicePolicyServerRefusal(serverUrl);
+    if (refusedByDevice) return refusedByDevice;
 
     // Pin the upstream URL to a configured JMAP server so an unauthenticated
     // caller cannot point this route at internal hosts. We accept the global

@@ -6509,5 +6509,14 @@
     "server_needed": "Sisesta kõigepealt serveri aadress.",
     "server_declined": "Sa ei lubanud seda serverit, nii et sellele ei saadetud midagi.",
     "server_invalid": "See serveri aadress ei kehti."
+  },
+  "desktop_policy": {
+    "server_refused": "Sinu organisatsioon ei luba seda serverit selles seadmes.",
+    "plugin_refused": "Sinu organisatsioon ei luba seda pistikprogrammi selles seadmes, seega see ei tööta. Selle seaded ja andmed säilivad.",
+    "install_refused": "Sinu organisatsioon ei luba seda pistikprogrammi selles seadmes.",
+    "plugins_label": "Pistikprogrammid",
+    "plugins_off": "Sinu organisatsioon on selles seadmes pistikprogrammid välja lülitanud.",
+    "plugins_allowlist": "Sinu organisatsioon lubab selles seadmes ainult teatud pistikprogramme.",
+    "off": "Väljas"
   }
 }

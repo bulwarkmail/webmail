@@ -6509,5 +6509,14 @@
     "server_needed": "Angiv først serverens adresse.",
     "server_declined": "Du tillod ikke denne server, så der blev ikke sendt noget til den.",
     "server_invalid": "Denne serveradresse er ikke gyldig."
+  },
+  "desktop_policy": {
+    "server_refused": "Din organisation tillader ikke denne server på denne enhed.",
+    "plugin_refused": "Din organisation tillader ikke dette plugin på denne enhed, så det kører ikke. Dets indstillinger og data bevares.",
+    "install_refused": "Din organisation tillader ikke dette plugin på denne enhed.",
+    "plugins_label": "Plugins",
+    "plugins_off": "Din organisation har slået plugins fra på denne enhed.",
+    "plugins_allowlist": "Din organisation tillader kun bestemte plugins på denne enhed.",
+    "off": "Fra"
   }
 }

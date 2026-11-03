@@ -15,6 +15,8 @@ import { PluginPermissionList } from '@/components/plugins/plugin-permission-lis
 import type { InstalledPlugin, PluginStatus, SettingFieldSchema } from '@/lib/plugin-types';
 import { effectiveSettings } from '@/lib/plugin-settings';
 import { PLUGIN_REFUSED_ERROR } from '@/lib/outgoing-hosts';
+import { PLUGIN_POLICY_REFUSED_ERROR, useDesktopPolicy } from '@/lib/desktop/policy';
+import { OrgLockedNote } from './org-locked-note';
 import { lookup } from '@/lib/plugin-sandbox/plugin-i18n';
 import { forgetCredentials, listConnectedAccounts, type ConnectedAccount } from '@/lib/plugin-sandbox/connect-dialog';
 import { forwardApprovals, revokeForwardApproval } from '@/lib/plugin-sandbox/forward-approvals';
@@ -35,6 +37,8 @@ export function PluginsSettings() {
   const { plugins, installPlugin, uninstallPlugin, enablePlugin, disablePlugin, updatePluginSettings, initializePlugins, initialized } = usePluginStore();
   const { isFeatureEnabled, isPluginForceEnabled, fetchPolicy, loaded } = usePolicyStore();
   const { demoMode } = useConfig();
+  const tDevicePolicyPage = useTranslations('desktop_policy');
+  const devicePolicy = useDesktopPolicy();
   const [expandedPlugin, setExpandedPlugin] = useState<string | null>(null);
   const [installing, setInstalling] = useState(false);
   const [installError, setInstallError] = useState<string | null>(null);
@@ -64,7 +68,7 @@ export function PluginsSettings() {
     return null;
   }
 
-  const uploadsAllowed = isFeatureEnabled('pluginsUploadEnabled') && !demoMode;
+  const uploadsAllowed = isFeatureEnabled('pluginsUploadEnabled') && !demoMode && devicePolicy.PluginsMode.value !== 'off';
   const requireApproval = isFeatureEnabled('requirePluginApproval');
 
   const handleToggle = async (plugin: InstalledPlugin) => {
@@ -97,7 +101,8 @@ export function PluginsSettings() {
       const result = await installPlugin(file);
       if (!result.success) {
         setInstallError(
-          result.reason === 'uploads-disabled' ? t('install_uploads_off')
+          result.reason === 'device-policy' ? tDevicePolicyPage('install_refused')
+            : result.reason === 'uploads-disabled' ? t('install_uploads_off')
             : result.reason === 'managed-id' ? t('install_managed_id')
             : t('install_invalid', { details: result.error ?? '' }),
         );
@@ -118,6 +123,14 @@ export function PluginsSettings() {
       title={t('title')}
       description={demoMode ? t('description_demo') : uploadsAllowed ? t('description_uploads') : t('description')}
     >
+      {devicePolicy.PluginsMode.locked && devicePolicy.PluginsMode.value !== 'allowed' && (
+        <div className="py-2" data-testid="plugins-device-policy">
+          <p className="text-sm text-muted-foreground">
+            {tDevicePolicyPage(devicePolicy.PluginsMode.value === 'off' ? 'plugins_off' : 'plugins_allowlist')}
+          </p>
+          <OrgLockedNote className="mt-1" />
+        </div>
+      )}
       {uploadsAllowed && (
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -216,12 +229,14 @@ interface PluginCardProps {
 function PluginCard({ plugin, isExpanded, isForceEnabled, controlsDisabled, onToggleExpand, onToggle, onRemove, onUpdateSettings }: PluginCardProps) {
   const t = useTranslations('plugins.settings');
   const tThirdParty = useTranslations('third_party');
+  const tDevicePolicy = useTranslations('desktop_policy');
   const locale = useLocale();
   const isManaged = Boolean(plugin.managed);
   const awaiting = !isManaged && plugin.approvalStatus === 'pending';
   const denied = !isManaged && plugin.approvalStatus === 'denied';
   const errorText = plugin.error
-    ? plugin.error === PLUGIN_REFUSED_ERROR ? tThirdParty('plugin_refused')
+    ? plugin.error === PLUGIN_POLICY_REFUSED_ERROR ? tDevicePolicy('plugin_refused')
+      : plugin.error === PLUGIN_REFUSED_ERROR ? tThirdParty('plugin_refused')
       : ERROR_CODES.has(plugin.error) ? t(`error_${plugin.error.replace(/-/g, '_')}`) : plugin.error
     : null;
 

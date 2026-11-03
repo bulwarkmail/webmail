@@ -16,6 +16,7 @@ import { loginClientAddress } from '@/lib/auth/client-address';
 import { LOGIN_BUDGET_RETRY_AFTER_SECONDS, reserveLoginAttempt } from '@/lib/auth/verify-budget';
 import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
 import { recordStoredCredentialStatus } from '@/lib/stalwart/stored-credential-budget';
+import { devicePolicyServerRefusal } from '@/lib/desktop/server-policy';
 
 function getSlot(request: NextRequest, bodySlot: unknown): number {
   if (typeof bodySlot === 'number' && bodySlot >= 0 && bodySlot < MAX_ACCOUNT_SLOTS) {
@@ -42,6 +43,9 @@ export async function POST(request: NextRequest) {
     if (!serverUrl || !username || !authHeader) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+
+    const refusedByDevice = devicePolicyServerRefusal(serverUrl);
+    if (refusedByDevice) return refusedByDevice;
 
     // Pin the upstream URL to a configured JMAP server (single `jmapServerUrl`
     // or any entry in `jmapServers`). Falls back to the request URL only when

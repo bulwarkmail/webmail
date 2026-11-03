@@ -6509,5 +6509,14 @@
     "server_needed": "請先輸入伺服器位址。",
     "server_declined": "你沒有允許此伺服器,因此沒有傳送任何內容給它。",
     "server_invalid": "此伺服器位址無效。"
+  },
+  "desktop_policy": {
+    "server_refused": "您的組織不允許在此裝置上使用此伺服器。",
+    "plugin_refused": "您的組織不允許在此裝置上使用此外掛程式，因此不會執行。其設定和資料會保留。",
+    "install_refused": "您的組織不允許在此裝置上使用此外掛程式。",
+    "plugins_label": "外掛程式",
+    "plugins_off": "您的組織已在此裝置上關閉外掛程式。",
+    "plugins_allowlist": "您的組織在此裝置上只允許使用部分外掛程式。",
+    "off": "關閉"
   }
 }

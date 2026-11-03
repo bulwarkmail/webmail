@@ -28,6 +28,7 @@
 
 import { DEFAULT_ORGANISATION_POLICY, type OrganisationPolicy } from '@/lib/admin/organisation-policy';
 import { setDownloadGuard } from '@/lib/download-guard';
+import { desktopOfflinePolicy } from '@/lib/desktop/policy';
 import { subjectForAccount } from '@/lib/org/account-subjects';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
@@ -83,7 +84,9 @@ export function devicesForAccount(subject: DeviceSubject): DevicePolicy {
   const store = usePolicyStore.getState();
   const accountSubject = subjectForAccount(accountId);
   const policy = accountSubject === store.subject ? store.policy : store.resolveFor(accountSubject);
-  return devicesOf(policy);
+  const devices = devicesOf(policy);
+  // The desktop app's OS policy says the same thing as the organisation's switch.
+  return desktopOfflinePolicy().forced === false ? { ...devices, noOffline: true } : devices;
 }
 
 /** Local ids of every account signed in here, the active one included. */

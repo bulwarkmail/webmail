@@ -6509,5 +6509,14 @@
     "server_needed": "Önce sunucu adresini girin.",
     "server_declined": "Bu sunucuya izin vermediniz, bu yüzden ona hiçbir şey gönderilmedi.",
     "server_invalid": "Bu sunucu adresi geçerli değil."
+  },
+  "desktop_policy": {
+    "server_refused": "Kuruluşunuz bu cihazda bu sunucuya izin vermiyor.",
+    "plugin_refused": "Kuruluşunuz bu cihazda bu eklentiye izin vermiyor, bu yüzden çalışmıyor. Ayarları ve verileri korunur.",
+    "install_refused": "Kuruluşunuz bu cihazda bu eklentiye izin vermiyor.",
+    "plugins_label": "Eklentiler",
+    "plugins_off": "Kuruluşunuz bu cihazda eklentileri kapattı.",
+    "plugins_allowlist": "Kuruluşunuz bu cihazda yalnızca belirli eklentilere izin veriyor.",
+    "off": "Kapalı"
   }
 }

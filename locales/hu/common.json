@@ -6509,5 +6509,14 @@
     "server_needed": "Először adja meg a szerver címét.",
     "server_declined": "Nem engedélyezte ezt a szervert, ezért semmit sem küldtünk neki.",
     "server_invalid": "Ez a szervercím nem érvényes."
+  },
+  "desktop_policy": {
+    "server_refused": "A szervezete ezen az eszközön nem engedélyezi ezt a kiszolgálót.",
+    "plugin_refused": "A szervezete ezen az eszközön nem engedélyezi ezt a bővítményt, ezért nem fut. A beállításai és adatai megmaradnak.",
+    "install_refused": "A szervezete ezen az eszközön nem engedélyezi ezt a bővítményt.",
+    "plugins_label": "Bővítmények",
+    "plugins_off": "A szervezete ezen az eszközön kikapcsolta a bővítményeket.",
+    "plugins_allowlist": "A szervezete ezen az eszközön csak bizonyos bővítményeket engedélyez.",
+    "off": "Ki"
   }
 }

@@ -6509,5 +6509,14 @@
     "server_needed": "Inserisci prima l'indirizzo del server.",
     "server_declined": "Non hai autorizzato questo server, quindi non gli è stato inviato nulla.",
     "server_invalid": "Questo indirizzo del server non è valido."
+  },
+  "desktop_policy": {
+    "server_refused": "La tua organizzazione non consente questo server su questo dispositivo.",
+    "plugin_refused": "La tua organizzazione non consente questo plugin su questo dispositivo, quindi non viene eseguito. Le sue impostazioni e i suoi dati restano conservati.",
+    "install_refused": "La tua organizzazione non consente questo plugin su questo dispositivo.",
+    "plugins_label": "Plugin",
+    "plugins_off": "La tua organizzazione ha disattivato i plugin su questo dispositivo.",
+    "plugins_allowlist": "La tua organizzazione consente solo alcuni plugin su questo dispositivo.",
+    "off": "Disattivato"
   }
 }

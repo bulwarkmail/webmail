@@ -6509,5 +6509,14 @@
     "server_needed": "Nejdřív zadejte adresu serveru.",
     "server_declined": "Tento server jste nepovolili, proto se na něj nic neodeslalo.",
     "server_invalid": "Tato adresa serveru není platná."
+  },
+  "desktop_policy": {
+    "server_refused": "Vaše organizace tento server na tomto zařízení nepovoluje.",
+    "plugin_refused": "Vaše organizace tento plugin na tomto zařízení nepovoluje, proto neběží. Jeho nastavení a data zůstávají zachována.",
+    "install_refused": "Vaše organizace tento plugin na tomto zařízení nepovoluje.",
+    "plugins_label": "Pluginy",
+    "plugins_off": "Vaše organizace na tomto zařízení vypnula pluginy.",
+    "plugins_allowlist": "Vaše organizace na tomto zařízení povoluje jen některé pluginy.",
+    "off": "Vypnuto"
   }
 }

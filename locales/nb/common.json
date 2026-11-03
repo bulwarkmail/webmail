@@ -6509,5 +6509,14 @@
     "server_needed": "Skriv inn serveradressen først.",
     "server_declined": "Du tillot ikke denne serveren, så ingenting ble sendt til den.",
     "server_invalid": "Denne serveradressen er ikke gyldig."
+  },
+  "desktop_policy": {
+    "server_refused": "Organisasjonen din tillater ikke denne serveren på denne enheten.",
+    "plugin_refused": "Organisasjonen din tillater ikke dette programtillegget på denne enheten, så det kjører ikke. Innstillingene og dataene beholdes.",
+    "install_refused": "Organisasjonen din tillater ikke dette programtillegget på denne enheten.",
+    "plugins_label": "Programtillegg",
+    "plugins_off": "Organisasjonen din har slått av programtillegg på denne enheten.",
+    "plugins_allowlist": "Organisasjonen din tillater bare bestemte programtillegg på denne enheten.",
+    "off": "Av"
   }
 }

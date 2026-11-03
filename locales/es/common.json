@@ -6509,5 +6509,14 @@
     "server_needed": "Primero escribe la dirección del servidor.",
     "server_declined": "No permitiste este servidor, así que no se le envió nada.",
     "server_invalid": "Esta dirección de servidor no es válida."
+  },
+  "desktop_policy": {
+    "server_refused": "Tu organización no permite este servidor en este dispositivo.",
+    "plugin_refused": "Tu organización no permite este complemento en este dispositivo, por lo que no se ejecuta. Se conservan sus ajustes y datos.",
+    "install_refused": "Tu organización no permite este complemento en este dispositivo.",
+    "plugins_label": "Complementos",
+    "plugins_off": "Tu organización ha desactivado los complementos en este dispositivo.",
+    "plugins_allowlist": "Tu organización solo permite determinados complementos en este dispositivo.",
+    "off": "Desactivado"
   }
 }

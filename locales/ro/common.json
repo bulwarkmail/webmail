@@ -6509,5 +6509,14 @@
     "server_needed": "Introdu mai întâi adresa serverului.",
     "server_declined": "Nu ai permis acest server, așa că nu i s-a trimis nimic.",
     "server_invalid": "Această adresă de server nu este validă."
+  },
+  "desktop_policy": {
+    "server_refused": "Organizația ta nu permite acest server pe acest dispozitiv.",
+    "plugin_refused": "Organizația ta nu permite acest plugin pe acest dispozitiv, așa că nu rulează. Setările și datele sale sunt păstrate.",
+    "install_refused": "Organizația ta nu permite acest plugin pe acest dispozitiv.",
+    "plugins_label": "Pluginuri",
+    "plugins_off": "Organizația ta a dezactivat pluginurile pe acest dispozitiv.",
+    "plugins_allowlist": "Organizația ta permite doar anumite pluginuri pe acest dispozitiv.",
+    "off": "Dezactivat"
   }
 }

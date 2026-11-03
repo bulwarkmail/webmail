@@ -7,6 +7,8 @@
  * `version`; adding a member doesn't.
  */
 
+import type { PolicySnapshot } from './policy-schema';
+
 export const DESKTOP_BRIDGE_VERSION = 1;
 
 export type DesktopWindowType = 'main' | 'message' | 'composer' | 'settings';
@@ -58,7 +60,7 @@ export interface DesktopShellBridge {
 
 export type DesktopServerPrepareResult =
   | { ok: true; approved: boolean }
-  | { ok: false; reason: 'declined' | 'invalid' };
+  | { ok: false; reason: 'declined' | 'invalid' | 'policy' };
 
 export interface DesktopServersBridge {
   /**
@@ -111,6 +113,18 @@ export interface DesktopPluginsBridge {
   install: (slug: string, version?: string) => Promise<DesktopPluginInstallResult>;
 }
 
+export interface DesktopPolicyBridge {
+  /** What's in force now. Synchronous: a page can read it in its first render. */
+  get: () => PolicySnapshot;
+  onChange: (listener: (snapshot: PolicySnapshot) => void) => () => void;
+  /**
+   * A forced WipeOfflineData value the app hasn't acted on. Delete local mail in the
+   * handler: when its promise resolves the value counts as done and never comes back,
+   * also after a restart. If it rejects, the next launch asks again.
+   */
+  onWipeOfflineData: (handler: (nonce: string) => Promise<unknown>) => () => void;
+}
+
 export interface BulwarkDesktopBridge {
   version: number;
   platform: 'win32' | 'darwin' | 'linux';
@@ -120,6 +134,7 @@ export interface BulwarkDesktopBridge {
   menu?: DesktopMenuBridge;
   shell?: DesktopShellBridge;
   lifecycle?: DesktopLifecycleBridge;
+  policy?: DesktopPolicyBridge;
   servers?: DesktopServersBridge;
   auth?: DesktopAuthBridge;
   plugins?: DesktopPluginsBridge;

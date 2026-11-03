@@ -1,8 +1,9 @@
 "use client";
 
-import { Suspense, useState, useEffect, useRef, useCallback, useId } from "react";
+import { Suspense, useState, useEffect, useRef, useCallback, useId, useMemo } from "react";
 import { IS_DESKTOP_BUILD } from "@/lib/desktop/flag";
 import { forgetDesktopServer, getDesktopBridge } from "@/lib/desktop/bridge";
+import { customServerAllowedByDesktopPolicy, jmapServerAllowedByDesktopPolicy, useDesktopPolicy } from "@/lib/desktop/policy";
 import { browserSignInAvailable, runDesktopBrowserSignIn } from "@/lib/desktop/browser-sign-in";
 import { useRouter } from "@/i18n/navigation";
 import { useParams, useSearchParams } from "next/navigation";
@@ -189,9 +190,12 @@ function LoginPageContent() {
   const router = useRouter();
   const t = useTranslations("login");
   const tDesktop = useTranslations("desktop_sign_in");
+  const tDesktopPolicy = useTranslations("desktop_policy");
+  const desktopPolicy = useDesktopPolicy();
   // Only the desktop build sets these; a browser never shows them.
   const [desktopNotice, setDesktopNotice] = useState<string | null>(null);
   const [desktopWaiting, setDesktopWaiting] = useState(false);
+  const [desktopPolicyNotice, setDesktopPolicyNotice] = useState<string | null>(null);
   const tSessionLimits = useTranslations("session_limits");
   const tOffline = useTranslations("offline");
   const tTheme = useTranslations("settings.appearance.theme");
@@ -228,7 +232,14 @@ function LoginPageContent() {
   usePrefetchMailView(!isMobileHandoff);
   const { login, loginWithToken, loginDemo, isLoading, error, clearError, isAuthenticated } = useAuthStore();
   const { theme, setTheme, initializeTheme } = useThemeStore(useShallow((s) => ({ theme: s.theme, setTheme: s.setTheme, initializeTheme: s.initializeTheme })));
-  const { appName, jmapServerUrl: configuredServerUrl, oauthEnabled, oauthOnly, oauthClientId: globalOauthClientId, oauthIssuerUrl: globalOauthIssuerUrl, oauthScopes, oauthResource, rememberMeEnabled, devMode, demoMode, loginLogoLightUrl, loginLogoDarkUrl, loginCompanyName, loginImprintUrl, loginPrivacyPolicyUrl, loginWebsiteUrl, loginUsernamePlaceholder, loginLogoMaxHeight, loginLogoMaxWidth, loginShowHeading, loginShowSubtitle, loginShowTotp, loginShowTokenLogin, loginShowRememberMe, loginShowVersion, isLoading: configLoading, error: configError, autoSsoEnabled, embeddedMode: _embeddedMode, allowCustomJmapEndpoint, jmapServers, jmapServerAutoPickByDomain } = useConfig();
+  const { appName, jmapServerUrl: configuredServerUrl, oauthEnabled, oauthOnly, oauthClientId: globalOauthClientId, oauthIssuerUrl: globalOauthIssuerUrl, oauthScopes, oauthResource, rememberMeEnabled, devMode, demoMode, loginLogoLightUrl, loginLogoDarkUrl, loginCompanyName, loginImprintUrl, loginPrivacyPolicyUrl, loginWebsiteUrl, loginUsernamePlaceholder, loginLogoMaxHeight, loginLogoMaxWidth, loginShowHeading, loginShowSubtitle, loginShowTotp, loginShowTokenLogin, loginShowRememberMe, loginShowVersion, isLoading: configLoading, error: configError, autoSsoEnabled, embeddedMode: _embeddedMode, allowCustomJmapEndpoint: configAllowsCustomEndpoint, jmapServers: configuredServers, jmapServerAutoPickByDomain } = useConfig();
+  // The device's OS policy narrows what the server offers. A forced Bulwark server hides
+  // the field for a server of one's own, unless that field is the only way to sign in there.
+  const allowCustomJmapEndpoint = configAllowsCustomEndpoint && (customServerAllowedByDesktopPolicy(desktopPolicy) || !configuredServerUrl);
+  const jmapServers = useMemo(
+    () => (desktopPolicy.AllowedJmapServers.value ? configuredServers.filter((s) => jmapServerAllowedByDesktopPolicy(s.url, desktopPolicy)) : configuredServers),
+    [configuredServers, desktopPolicy],
+  );
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
   const colorModeLocked = usePolicyStore((s) => s.getColorModePolicy().locked);
 
@@ -1031,13 +1042,20 @@ function LoginPageContent() {
     // when the admin hasn't configured a server list.
     const effectiveServerUrl = selectedServer?.url
       || (allowCustomJmapEndpoint ? jmapEndpoint : serverUrl);
+    // The device's OS policy, also on an instance: nothing is sent to a server it refuses.
+    setDesktopPolicyNotice(null);
+    if (!jmapServerAllowedByDesktopPolicy(effectiveServerUrl, desktopPolicy)) {
+      setDesktopPolicyNotice(tDesktopPolicy("server_refused"));
+      return;
+    }
     // A LAN or plain http server gets a native prompt first, and the app can
     // reach it from then on. Without a yes, nothing is sent there.
     if (IS_DESKTOP_BUILD) {
       setDesktopNotice(null);
       const prepared = await getDesktopBridge()?.servers?.prepare(effectiveServerUrl);
       if (prepared && !prepared.ok) {
-        setDesktopNotice(prepared.reason === "invalid" ? tDesktop("server_invalid") : tDesktop("server_declined"));
+        if (prepared.reason === "policy") setDesktopPolicyNotice(tDesktopPolicy("server_refused"));
+        else setDesktopNotice(prepared.reason === "invalid" ? tDesktop("server_invalid") : tDesktop("server_declined"));
         return;
       }
     }
@@ -1879,6 +1897,11 @@ function LoginPageContent() {
                     {desktopWaiting ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : <LogIn className="w-4 h-4 me-2" />}
                     {desktopWaiting ? tDesktop("browser_waiting") : tDesktop("browser_button")}
                   </Button>
+                )}
+                {desktopPolicyNotice && (
+                  <p role="alert" data-testid="desktop-policy-notice" className="mt-2 text-sm text-warning leading-relaxed">
+                    {desktopPolicyNotice}
+                  </p>
                 )}
                 {IS_DESKTOP_BUILD && desktopNotice && (
                   <p role="alert" data-testid="desktop-notice" className="mt-2 text-sm text-warning leading-relaxed">

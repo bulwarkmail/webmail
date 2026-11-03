@@ -6509,5 +6509,14 @@
     "server_needed": "먼저 서버 주소를 입력하세요.",
     "server_declined": "이 서버를 허용하지 않아 아무것도 보내지 않았습니다.",
     "server_invalid": "이 서버 주소는 올바르지 않습니다."
+  },
+  "desktop_policy": {
+    "server_refused": "조직에서 이 기기의 이 서버 사용을 허용하지 않습니다.",
+    "plugin_refused": "조직에서 이 기기의 이 플러그인 사용을 허용하지 않아 실행되지 않습니다. 설정과 데이터는 유지됩니다.",
+    "install_refused": "조직에서 이 기기의 이 플러그인 사용을 허용하지 않습니다.",
+    "plugins_label": "플러그인",
+    "plugins_off": "조직에서 이 기기의 플러그인을 껐습니다.",
+    "plugins_allowlist": "조직에서 이 기기에 특정 플러그인만 허용합니다.",
+    "off": "끔"
   }
 }

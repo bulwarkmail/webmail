@@ -27,6 +27,7 @@ import { fetchServerPluginList } from '@/lib/server-plugin-list';
 import { IMPLICIT_PERMISSIONS } from '@/lib/plugin-types';
 import type { Permission } from '@/lib/plugin-types';
 import { IS_LITE } from '@/lib/lite';
+import { PLUGIN_POLICY_REFUSED_ERROR, onDesktopPolicyChange, pluginAllowedByDesktopPolicy } from '@/lib/desktop/policy';
 import { onFullSignOut } from '@/lib/sign-out-cleanup';
 import { forgetDeclaredHooks, setSendGuardSource } from '@/lib/plugin-send-guards';
 
@@ -42,7 +43,7 @@ let regionalSubscribed = false;
  */
 export interface InstallResult {
   success: boolean;
-  reason?: 'invalid' | 'uploads-disabled' | 'managed-id';
+  reason?: 'invalid' | 'uploads-disabled' | 'managed-id' | 'device-policy';
   error?: string;
   warnings?: string[];
   approvalStatus?: InstalledPlugin['approvalStatus'];
@@ -152,6 +153,9 @@ export const usePluginStore = create<PluginStoreState>()(
         }
 
         const { manifest, code } = result;
+        if (!pluginAllowedByDesktopPolicy(manifest.id)) {
+          return { success: false, reason: 'device-policy' };
+        }
         const { plugins } = get();
 
         // Check for duplicate
@@ -233,6 +237,11 @@ export const usePluginStore = create<PluginStoreState>()(
         const { plugins } = get();
         const plugin = plugins.find(p => p.id === id);
         if (!plugin) return;
+
+        if (!pluginAllowedByDesktopPolicy(id)) {
+          set(state => ({ plugins: state.plugins.map(p => (p.id === id ? { ...p, status: 'error', error: PLUGIN_POLICY_REFUSED_ERROR } : p)) }));
+          return;
+        }
 
         // Admin approval gate for plugins the user installed. The server
         // holds the decision, pinned to the package hash (code + manifest).
@@ -489,6 +498,8 @@ interface ServerPluginInfo {
   updatedAt?: string;
   /** True when the plugin was loaded from the server's PLUGIN_DEV_DIR */
   dev?: boolean;
+  /** The device's OS policy refuses it. Its data stays, and it doesn't run. */
+  refused?: boolean;
   /** Allowlist of origins this plugin may target via api.http.fetch(). */
   httpOrigins?: string[];
   /** Allowlist of same-origin /api/* paths this plugin may target via api.http.post(). */
@@ -614,6 +625,10 @@ async function syncServerPlugins(
     const outcomes = await Promise.all(serverPlugins.map(async (sp) => {
       const local = get().plugins.find(p => p.id === sp.id);
 
+      // Refused by the device's policy: fetch nothing and change nothing. It stays in
+      // serverPluginIds below, so it isn't taken for removed and its data stays.
+      if (sp.refused || !pluginAllowedByDesktopPolicy(sp.id)) return { sp, isNew: false, needsBundle: false, refused: true };
+
       if (!local) {
         // New server plugin - download bundle and install.
         const code = await downloadPluginBundle(sp.id, sp.bundleHash, sp.tier);
@@ -651,7 +666,7 @@ async function syncServerPlugins(
     }));
 
     for (const outcome of outcomes) {
-      if (!outcome) continue;
+      if (!outcome || outcome.refused) continue;
       const { sp, isNew, needsBundle } = outcome;
       const local = get().plugins.find(p => p.id === sp.id);
 
@@ -821,6 +836,23 @@ async function userPluginMayRun(
   void get;
   return false;
 }
+
+// The device's OS policy changed while the app runs: what it now refuses stops, with
+// its record and data left alone, and what it allows again starts as the user left it.
+function applyDesktopPluginPolicy(): void {
+  const { plugins, setPluginStatus } = usePluginStore.getState();
+  for (const plugin of plugins) {
+    const allowed = pluginAllowedByDesktopPolicy(plugin.id);
+    if (!allowed && getActivePlugin(plugin.id)) {
+      deactivatePlugin(plugin.id);
+      setPluginStatus(plugin.id, 'error', PLUGIN_POLICY_REFUSED_ERROR);
+    } else if (allowed && plugin.error === PLUGIN_POLICY_REFUSED_ERROR) {
+      setPluginStatus(plugin.id, plugin.enabled ? 'enabled' : 'installed');
+      if (plugin.enabled) void loadPlugin(plugin);
+    }
+  }
+}
+onDesktopPolicyChange(applyDesktopPluginPolicy);
 
 // Whatever changed a plugin's settings (Settings, a server sync, an
 // import), the running plugin hears it right away, and slots it opens later

@@ -6509,5 +6509,14 @@
     "server_needed": "Vispirms ievadiet servera adresi.",
     "server_declined": "Jūs neatļāvāt šo serveri, tāpēc tam nekas netika nosūtīts.",
     "server_invalid": "Šī servera adrese nav derīga."
+  },
+  "desktop_policy": {
+    "server_refused": "Jūsu organizācija šajā ierīcē neatļauj šo serveri.",
+    "plugin_refused": "Jūsu organizācija šajā ierīcē neatļauj šo spraudni, tāpēc tas nedarbojas. Tā iestatījumi un dati tiek saglabāti.",
+    "install_refused": "Jūsu organizācija šajā ierīcē neatļauj šo spraudni.",
+    "plugins_label": "Spraudņi",
+    "plugins_off": "Jūsu organizācija šajā ierīcē ir izslēgusi spraudņus.",
+    "plugins_allowlist": "Jūsu organizācija šajā ierīcē atļauj tikai noteiktus spraudņus.",
+    "off": "Izslēgts"
   }
 }

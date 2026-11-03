@@ -39,6 +39,7 @@ import { hookArgsFor } from './hook-payload';
 import { rememberDeclaredHooks } from '../plugin-send-guards';
 import type { SlotName } from '../plugin-types';
 import { PLUGIN_REFUSED_ERROR, pluginAllowed } from '../outgoing-hosts';
+import { PLUGIN_POLICY_REFUSED_ERROR, pluginAllowedByDesktopPolicy } from '../desktop/policy';
 
 // ─── Hook-bus lookup (one flat map for name → bus) ────────────
 
@@ -229,6 +230,12 @@ export function loadSandboxedPlugin(plugin: InstalledPlugin): Promise<void> {
 }
 
 async function startSandboxedPlugin(plugin: InstalledPlugin): Promise<void> {
+  // The device's OS policy. On an instance this is the only gate there is: the
+  // instance's server knows nothing of this device's policy.
+  if (!pluginAllowedByDesktopPolicy(plugin.id)) {
+    storeAccessor?.setPluginStatus(plugin.id, 'error', PLUGIN_POLICY_REFUSED_ERROR);
+    return;
+  }
   // A plugin that declares network access doesn't start while third-party
   // traffic is off; the rest run (#903).
   if (!pluginAllowed(plugin)) {

@@ -6509,5 +6509,14 @@
     "server_needed": "Najpierw wpisz adres serwera.",
     "server_declined": "Ten serwer nie został dozwolony, więc nic do niego nie wysłano.",
     "server_invalid": "Ten adres serwera jest nieprawidłowy."
+  },
+  "desktop_policy": {
+    "server_refused": "Twoja organizacja nie zezwala na ten serwer na tym urządzeniu.",
+    "plugin_refused": "Twoja organizacja nie zezwala na tę wtyczkę na tym urządzeniu, więc nie działa. Jej ustawienia i dane zostają zachowane.",
+    "install_refused": "Twoja organizacja nie zezwala na tę wtyczkę na tym urządzeniu.",
+    "plugins_label": "Wtyczki",
+    "plugins_off": "Twoja organizacja wyłączyła wtyczki na tym urządzeniu.",
+    "plugins_allowlist": "Twoja organizacja zezwala na tym urządzeniu tylko na wybrane wtyczki.",
+    "off": "Wyłączone"
   }
 }

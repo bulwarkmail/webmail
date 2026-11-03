@@ -6509,5 +6509,14 @@
     "server_needed": "Vul eerst het adres van de server in.",
     "server_declined": "Je hebt deze server niet toegestaan, dus er is niets naartoe gestuurd.",
     "server_invalid": "Dit serveradres is niet geldig."
+  },
+  "desktop_policy": {
+    "server_refused": "Je organisatie staat deze server niet toe op dit apparaat.",
+    "plugin_refused": "Je organisatie staat deze plug-in niet toe op dit apparaat, dus hij draait niet. De instellingen en gegevens blijven bewaard.",
+    "install_refused": "Je organisatie staat deze plug-in niet toe op dit apparaat.",
+    "plugins_label": "Plug-ins",
+    "plugins_off": "Je organisatie heeft plug-ins op dit apparaat uitgeschakeld.",
+    "plugins_allowlist": "Je organisatie staat op dit apparaat alleen bepaalde plug-ins toe.",
+    "off": "Uit"
   }
 }
