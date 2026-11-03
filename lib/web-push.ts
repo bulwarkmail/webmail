@@ -658,12 +658,16 @@ async function pollVerificationCode(
       askedAgain = true;
       await askAgain().catch(() => undefined);
     }
-    const res = await fetch(
-      buildRelayUrl(relayBaseUrl, `/api/push/verify/${encodeURIComponent(subscriptionId)}`),
-    );
-    if (res.ok) {
-      const body = (await res.json()) as { verificationCode?: string | null };
-      if (body.verificationCode) return body.verificationCode;
+    try {
+      const res = await fetch(
+        buildRelayUrl(relayBaseUrl, `/api/push/verify/${encodeURIComponent(subscriptionId)}`),
+      );
+      if (res.ok) {
+        const body = (await res.json()) as { verificationCode?: string | null };
+        if (body.verificationCode) return body.verificationCode;
+      }
+    } catch {
+      // A blip on the way to the relay; the code is still coming.
     }
     await new Promise((r) => setTimeout(r, delay));
     delay = Math.min(delay * 1.5, 2000);
@@ -881,10 +885,17 @@ export async function enableWebPush(
   const serverAssignedId = created.result;
   rememberRefusedEmailPushAccounts(accountId, refusedBefore, emailPush, created.emailPush);
 
-  const verificationCode = await pollVerificationCode(relayBaseUrl, deviceClientId, () =>
-    params.client.updatePushSubscription(serverAssignedId, { expires: expiresFromNow(SUBSCRIPTION_EXPIRES_DAYS) }),
-  );
-  await params.client.verifyPushSubscription(serverAssignedId, verificationCode);
+  try {
+    const verificationCode = await pollVerificationCode(relayBaseUrl, deviceClientId, () =>
+      params.client.updatePushSubscription(serverAssignedId, { expires: expiresFromNow(SUBSCRIPTION_EXPIRES_DAYS) }),
+    );
+    await params.client.verifyPushSubscription(serverAssignedId, verificationCode);
+  } catch (err) {
+    // Unverified, it never delivers anything, takes up one of the account's
+    // places and stands in the way of the next verification.
+    await params.client.destroyPushSubscription(serverAssignedId).catch(() => undefined);
+    throw err;
+  }
   localStorage.setItem(subIdKey, serverAssignedId);
   localStorage.setItem(relayBaseKey(accountId), relayBaseUrl);
   if (replacedServerId) {
