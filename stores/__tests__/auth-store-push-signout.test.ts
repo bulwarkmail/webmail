@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const endWebPushForSignOut = vi.hoisted(() => vi.fn(async () => {}));
+const endWebPushForSignOut = vi.hoisted(() => vi.fn(async (_client: unknown) => {}));
 const dropAllWebPushRegistrations = vi.hoisted(() => vi.fn(async () => {}));
 vi.mock('@/lib/web-push', async (original) => ({ ...(await original<typeof import('@/lib/web-push')>()), endWebPushForSignOut, dropAllWebPushRegistrations }));
 
@@ -45,9 +45,9 @@ describe('signing out ends the login\'s push registration', () => {
       disconnect: vi.fn(() => { order.push('disconnect'); accountId = ''; }),
       getAccountId: () => accountId,
     } as unknown as Parameters<typeof setClientForTests>[1];
-    endWebPushForSignOut.mockImplementationOnce(async (seen: { getAccountId: () => string }) => {
+    endWebPushForSignOut.mockImplementationOnce(async (seen: unknown) => {
       await Promise.resolve();
-      order.push(`push ended for ${seen.getAccountId()}`);
+      order.push(`push ended for ${(seen as { getAccountId: () => string }).getAccountId()}`);
     });
     setClientForTests('login-b', client);
     useAccountStore.setState({ accounts: [{ id: 'login-b', cookieSlot: 1, username: 'b', serverUrl: 'https://x' }] as never });
@@ -61,7 +61,7 @@ describe('signing out ends the login\'s push registration', () => {
 
   it('a login the session threw out keeps its push for the next sign-in', async () => {
     const client = fakeClient();
-    setClientForTests('login-c', client);
+    setClientForTests('login-c', client as unknown as Parameters<typeof setClientForTests>[1]);
     useAccountStore.setState({ accounts: [{ id: 'login-c', cookieSlot: 1, username: 'c', serverUrl: 'https://x' }] as never });
     useAuthStore.setState({ activeAccountId: 'login-a', isDemoMode: false });
 
