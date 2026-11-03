@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { listenForPrinting, usePrintStore } from "@/stores/print-store";
 import { Watermark, useWatermarkText } from "@/components/device/watermark";
+import { useIsFocusedProTab, useIsPaneScoped } from "@/hooks/use-pane-context";
 
 export type PrintOrientation = "portrait" | "landscape";
 
@@ -33,12 +34,19 @@ interface PrintRootProps {
 export function PrintRoot({ orientation, title, children }: PrintRootProps) {
   // Organisation > Devices > Watermark: on every printed page.
   const watermark = useWatermarkText(undefined, { strictest: true });
+  // Pro keeps every open tab mounted, and each would add its copy: only the
+  // tab in front goes on paper.
+  const isPaneScoped = useIsPaneScoped();
+  const isFocusedTab = useIsFocusedProTab();
+  const shown = !isPaneScoped || isFocusedTab;
   useLayoutEffect(() => {
-    if (!title) return;
+    if (!title || !shown) return;
     const previous = document.title;
     document.title = title;
     return () => { document.title = previous; };
-  }, [title]);
+  }, [title, shown]);
+
+  if (!shown) return null;
 
   return createPortal(
     <div data-print-root="" data-orientation={orientation} className="pr-root">

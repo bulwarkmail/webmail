@@ -142,10 +142,11 @@ describe('actions for team mailboxes', () => {
 });
 
 describe('PluginActions overflow button', () => {
-  it('uses the vertical "more" icon, as every other overflow menu does (R2)', () => {
+  it('uses the puzzle icon, not a second vertical "more" next to the toolbar\'s own', () => {
     act(() => setPluginActions('tasks', 'Email to task', 'message-bulk-actions', [{ id: 'make', label: 'Make tasks' }]));
     render(<PluginActions surface="message-bulk-actions" context={{ emailIds: ['e1'] }} overflow />);
     const more = screen.getByRole('button', { name: 'more_actions' });
-    expect(more.querySelector('.tabler-icon-dots-vertical')).not.toBeNull();
+    expect(more.querySelector('.tabler-icon-puzzle')).not.toBeNull();
+    expect(more.querySelector('.tabler-icon-dots-vertical')).toBeNull();
   });
 });

@@ -35,6 +35,8 @@ vi.mock('@/lib/launch-handoff', async (importOriginal) => ({
 vi.mock('@/stores/settings-store', () => ({
   useSettingsStore: Object.assign(() => undefined, { getState: () => ({ protocolOpenMode: hoisted.protocolOpenMode }) }),
 }));
+// The desktop's commands have their own tests, and pull in every store.
+vi.mock('@/lib/desktop/os-commands', () => ({ startOsCommands: () => () => {} }));
 vi.mock('@/lib/protocol-handlers/session', () => ({
   listenForMailtoRequests: () => () => {},
   notifyPendingMailto: vi.fn(),

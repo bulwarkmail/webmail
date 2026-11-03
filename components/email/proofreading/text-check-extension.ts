@@ -141,10 +141,12 @@ export function createTextCheckExtension(options: () => TextCheckOptions) {
                   const k = (d.spec as IssueSpec).key;
                   return k === active || k === value.active;
                 });
-                decos = decos.remove(redraw).add(state.doc, redraw.map((d) => {
+                // Before remove(), which empties the array it is given.
+                const redrawn = redraw.map((d) => {
                   const spec = d.spec as IssueSpec;
                   return decorationFor({ key: spec.key, kind: spec.kind, text: spec.text, from: d.from, to: d.to }, spec.key === active);
-                }));
+                });
+                decos = decos.remove(redraw).add(state.doc, redrawn);
               }
               return { decos, active };
             },

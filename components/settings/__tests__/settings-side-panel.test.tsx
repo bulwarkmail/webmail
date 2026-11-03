@@ -77,7 +77,14 @@ const { setActionDispatcher } = await import('@/lib/plugin-sandbox/actions');
 describe('Settings side panel', () => {
   it('adds no row without a plugin', () => {
     render(<SettingsApp linkSegments={[]} />);
-    expect(document.querySelector('[data-settings-panel-row]')).toBeNull();
+    // The element stays for the desktop app, which shows it to hold the window
+    // controls. Everywhere else `hidden` and data-window-only keep it out of
+    // the page, and there is no panel button in it.
+    const row = document.querySelector<HTMLElement>('[data-settings-panel-row]')!;
+    expect(row.hasAttribute('data-window-only')).toBe(true);
+    expect(row.classList.contains('hidden')).toBe(true);
+    expect(row.classList.contains('flex')).toBe(false);
+    expect(row.querySelector('[data-plugin-panel-toggle]')).toBeNull();
   });
 
   it('puts the page name and the button in an h-14 row over the page and the panel', () => {
@@ -85,6 +92,8 @@ describe('Settings side panel', () => {
     render(<SettingsApp linkSegments={[]} />);
     const row = document.querySelector<HTMLElement>('[data-settings-panel-row]')!;
     expect(row.className).toContain('h-14');
+    expect(row.hasAttribute('data-window-only')).toBe(false);
+    expect(row.classList.contains('flex')).toBe(true);
     const toggle = row.querySelector<HTMLElement>('[data-plugin-panel-toggle]')!;
     expect(row.lastElementChild).toBe(toggle);
     const frame = screen.getByTestId('plugin-frame-app-side-panel');

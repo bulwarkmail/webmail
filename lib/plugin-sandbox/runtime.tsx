@@ -32,6 +32,7 @@ import { backgroundReactDom, backgroundUiKit } from './ui-kit/background-kit';
 import { initFloatingDropdownBridge, dispatchFloatingDropdownEvent } from './ui-kit/floating-dropdown-bridge';
 import { interpolate, lookup, textDirection, type LocaleTables } from './plugin-i18n';
 import { isFillableSlot, isInlineSlot, MAX_INLINE_SLOT_WIDTH } from './slot-layout';
+import { frameEscapeListener } from './frame-escape';
 import type {
   AppInfoView, AppSettingsView, HostFeaturesView, SettingsSearchResult, CalendarEventInput, CalendarEventView, CalendarView, ComposeInput, DraftInput, EmailForwardInput, EmailForwardResult, EmailReadView,
   EmailSummary, IdentityPatch, IdentityView, MailboxView, NotificationInput, SlotName, TaskInput,
@@ -1534,6 +1535,7 @@ async function bootSlot(payload: SlotInit): Promise<void> {
 
   const reactRoot = renderer.ReactDOM.createRoot(rootEl);
   reactRoot.render(React.createElement(SlotShell));
+  window.addEventListener('keydown', frameEscapeListener(() => sendToHost({ type: 'frame-escape' })));
   sendToHost({ type: 'init-done', hooks: [], slots: [], shortcuts: [] });
 }
 

@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { render, screen, cleanup } from '@testing-library/react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { Mailbox } from '@/lib/jmap/types';
 
@@ -50,6 +50,24 @@ describe('Mountain View rail peek', () => {
   });
 
   const peek = (container: HTMLElement) => container.querySelector('[data-mv-rail-peek]');
+
+  it('shows folder names in the drawer of a narrow window, even when collapsed on a wider one', () => {
+    const matchMedia = window.matchMedia;
+    window.matchMedia = ((query: string) => ({
+      matches: query.includes('64rem'), media: query, addEventListener() {}, removeEventListener() {},
+    })) as never;
+    try {
+      render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" />);
+      expect(screen.getByText('News')).toBeTruthy();
+    } finally {
+      window.matchMedia = matchMedia;
+    }
+  });
+
+  it('keeps the icon rail on a wide window', () => {
+    render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" />);
+    expect(screen.queryByText('News')).toBeNull();
+  });
 
   it('peeks on hover by default', () => {
     const { container } = render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" mvShell />);

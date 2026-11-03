@@ -282,15 +282,18 @@ export function EmailHoverActions({
   });
   if (pluginActionCount > 0) {
     actionButtons.push(
-      <PluginActions
-        key="plugin-actions"
-        surface="message-row-actions"
-        context={pluginContext}
-        target={pluginTarget}
-        mailboxRole={mailboxRole}
-        compact
-        className="flex-nowrap gap-0.5"
-      />,
+      // In a narrow list the row's menu has these: all of them in a row would
+      // lie over the avatar, where a click meant to select hits Delete.
+      <div key="plugin-actions" className="hidden @[20rem]/mail-row:flex">
+        <PluginActions
+          surface="message-row-actions"
+          context={pluginContext}
+          target={pluginTarget}
+          mailboxRole={mailboxRole}
+          compact
+          className="flex-nowrap gap-0.5"
+        />
+      </div>,
     );
   }
 

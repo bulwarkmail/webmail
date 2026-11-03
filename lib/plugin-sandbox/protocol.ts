@@ -179,6 +179,12 @@ export interface SlotResizeMsg {
   width?: number;
 }
 
+/**
+ * Escape pressed inside a slot frame and left alone by the plugin. Keys in a
+ * frame never reach the host, so a plugin dialog would not close on it.
+ */
+export interface FrameEscapeMsg { type: 'frame-escape'; }
+
 export interface SlotShouldShowResultMsg {
   type: 'slot-should-show-result';
   id: string;
@@ -235,6 +241,7 @@ export type SandboxToHost =
   | CallbackInvokeMsg
   | HookResultMsg
   | SlotResizeMsg
+  | FrameEscapeMsg
   | ThemeAppliedMsg
   | SlotShouldShowResultMsg
   | FloatingDropdownOpenMsg

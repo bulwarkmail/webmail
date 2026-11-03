@@ -60,16 +60,18 @@ export function NotificationPanel({ onClose, className, sheet = false }: { onClo
 
   return (
     <div className={cn("flex flex-col bg-background text-foreground", className)} data-notification-panel="">
-      <div className="flex items-center gap-1 px-3 h-12 border-b border-border shrink-0">
+      <div className="flex flex-wrap items-center justify-end gap-1 px-3 py-1 min-h-12 border-b border-border shrink-0">
         {/* Full screen on a phone it is a dialog of its own, titled like one. */}
-        <h2 className={cn("flex-1 min-w-0 truncate font-semibold", sheet ? "text-lg" : "text-sm")}>{t("title")}</h2>
-        <Button variant="ghost" size="xs" onClick={markAllRead} disabled={unread === 0} className="gap-1 px-2 text-xs text-muted-foreground">
+        <h2 className={cn("flex-[1_0_auto] max-w-full truncate font-semibold", sheet ? "text-lg" : "text-sm")}>{t("title")}</h2>
+        {/* On a phone the title keeps the room and the actions are icons: their
+            labels pushed the title out, and "Mark all as read" wrapped. */}
+        <Button variant="ghost" size="xs" onClick={markAllRead} disabled={unread === 0} className="gap-1 px-2 text-xs text-muted-foreground shrink-0" title={t("mark_all_read")}>
           <CheckCheck className="w-4 h-4" />
-          <span>{t("mark_all_read")}</span>
+          <span className={cn(sheet && "max-sm:sr-only")}>{t("mark_all_read")}</span>
         </Button>
-        <Button variant="ghost" size="xs" onClick={clear} disabled={entries.length === 0} className="gap-1 px-2 text-xs text-muted-foreground">
+        <Button variant="ghost" size="xs" onClick={clear} disabled={entries.length === 0} className="gap-1 px-2 text-xs text-muted-foreground shrink-0" title={t("clear")}>
           <Trash2 className="w-4 h-4" />
-          <span>{t("clear")}</span>
+          <span className={cn(sheet && "max-sm:sr-only")}>{t("clear")}</span>
         </Button>
         {sheet && (
           <IconButton size="icon-lg" label={t("close")} title="" onClick={onClose} className="text-muted-foreground">

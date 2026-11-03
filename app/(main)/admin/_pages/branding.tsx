@@ -117,8 +117,13 @@ export function BrandingPage() {
 
   async function fetchConfig() {
     setLoading(true);
-    const res = await apiFetch('/api/admin/config');
-    if (res.ok) setConfig(await res.json());
+    try {
+      const res = await apiFetch('/api/admin/config');
+      if (!res.ok) throw new Error();
+      setConfig(await res.json());
+    } catch {
+      setMessage({ type: 'error', text: 'Could not load the settings' });
+    }
     setLoading(false);
   }
 
@@ -407,6 +412,7 @@ export function BrandingPage() {
     <ImageItem
       key={field.key}
       label={field.label}
+      previewOn={field.key.endsWith('DarkUrl') ? 'dark' : field.key.endsWith('LightUrl') ? 'light' : undefined}
       accept={field.accept}
       value={currentValue(field.key)}
       badge={overrideBadge(field.key)}
@@ -590,6 +596,8 @@ export function BrandingPage() {
 
 interface ImageItemProps {
   label: string;
+  /** Shows the preview on the surface the logo is meant for, whatever the panel's own mode. */
+  previewOn?: 'light' | 'dark';
   accept: string;
   value: string;
   badge: ReactNode;
@@ -605,7 +613,7 @@ interface ImageItemProps {
 }
 
 /** One image slot: a URL field, an upload button, and a preview of what is set. */
-function ImageItem({ label, accept, value, badge, placeholder, uploading, uploadDisabled, uploaded, overridden, onChange, onUpload, onDeleteUpload, onRevert }: ImageItemProps) {
+function ImageItem({ label, previewOn, accept, value, badge, placeholder, uploading, uploadDisabled, uploaded, overridden, onChange, onUpload, onDeleteUpload, onRevert }: ImageItemProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   return (
     <SettingItem label={label}>
@@ -662,8 +670,13 @@ function ImageItem({ label, accept, value, badge, placeholder, uploading, upload
         {value && (
           <div className="flex items-center gap-2">
             <ImageIcon className="w-3.5 h-3.5 text-muted-foreground" />
-            <div className="h-8 w-auto bg-muted rounded flex items-center justify-center px-2">
+            <div className={cn(
+              'h-8 w-auto rounded flex items-center justify-center px-2',
+              previewOn === 'dark' ? 'bg-neutral-900' : previewOn === 'light' ? 'border border-border bg-white' : 'bg-muted',
+            )}>
+              {/* The key: a URL that failed while it was being typed hides the image, and the next one must show again. */}
               <img
+                key={value}
                 src={withBasePath(value)}
                 alt={label}
                 className="max-h-6 max-w-[200px] object-contain"

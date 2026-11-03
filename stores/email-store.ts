@@ -71,6 +71,12 @@ type PendingUndoSend = {
   submissionAccountId?: string;
 };
 
+// Nothing ticked stays the same object: a new empty set re-renders all that reads the selection.
+const NO_SELECTION = (state: { selectedEmailKeys: Set<string> }) => ({
+  selectedEmailKeys: state.selectedEmailKeys.size === 0 ? state.selectedEmailKeys : new Set<string>(),
+  lastSelectedEmailKey: null,
+});
+
 /** Drop the matching emails from a key-based selection. */
 function dropFromSelection(
   state: { emails: Email[]; selectedEmailKeys: Set<string> },
@@ -3614,7 +3620,12 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   setLoading: (loading) => set({ isLoading: loading }),
   setLoadingEmail: (loading) => set({ isLoadingEmail: loading }),
   setError: (error) => set({ error }),
-  setSearchQuery: (query) => set({ searchQuery: query }),
+  // Another search lists other mail: ticks kept from the last list would stay
+  // counted in the selection bar, with Delete acting on rows nobody can see.
+  setSearchQuery: (query) => set((state) => ({
+    searchQuery: query,
+    ...(query === state.searchQuery ? {} : NO_SELECTION(state)),
+  })),
   setQuota: (quota) => set({ quota }),
 
   toggleEmailSelection: (email) => {
@@ -3708,7 +3719,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   clearSelection: () => {
-    set({ selectedEmailKeys: new Set(), lastSelectedEmailKey: null });
+    set(NO_SELECTION(get()));
   },
 
   // JMAP operations
@@ -5371,7 +5382,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     // trip later. What the mail view renders from is written only once the
     // request is on its way (see afterRequestDispatch); the controller is
     // recorded at once so a superseding search can still cancel this one.
-    set({ searchAbortController: controller });
+    set({ searchAbortController: controller, ...(typedQuery === get().searchQuery ? {} : NO_SELECTION(get())) });
     afterRequestDispatch(() => {
       if (get().searchAbortController === controller) set({ isLoading: true, error: null, searchQuery: typedQuery });
     });
@@ -5609,11 +5620,17 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   setSearchFilters: (filters) => {
     set((state) => ({
       searchFilters: { ...state.searchFilters, ...filters },
+      ...NO_SELECTION(state),
     }));
   },
 
   setSearchMailboxId: (mailboxId) => {
-    set({ searchMailboxId: mailboxId, searchScopeFollowsFolder: false });
+    // Another scope lists other mail once a search is running (see setSearchQuery).
+    set((state) => ({
+      searchMailboxId: mailboxId,
+      searchScopeFollowsFolder: false,
+      ...(mailboxId !== state.searchMailboxId && (state.searchQuery.trim() || !isFilterEmpty(state.searchFilters)) ? NO_SELECTION(state) : {}),
+    }));
   },
 
   // The unread badge filters its own folder. The default scope searches
@@ -5628,6 +5645,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       searchFilters: { ...DEFAULT_SEARCH_FILTERS },
       searchMailboxId: currentSearchScopeDefault(mailboxesInView(state), state.selectedMailbox),
       searchScopeFollowsFolder: false,
+      ...(isFilterEmpty(state.searchFilters) ? {} : NO_SELECTION(state)),
     }));
   },
 

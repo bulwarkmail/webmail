@@ -197,22 +197,15 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
 
   const handleSaveState = useCallback((state: ComposerDraftData) => {
     updateComposeDraft(tabIdRef.current, state);
-    // Keep the tab title in sync with the working subject.
-    const subject = state.subject?.trim() || t('email_composer.new_message');
-    updateTabTitle(tabIdRef.current, subject);
-  }, [updateComposeDraft, updateTabTitle, t]);
+  }, [updateComposeDraft]);
 
-  // On first mount, ensure the tab title matches whatever subject we were
-  // initialised with (replies start with "Re: …", forwards with "Fwd: …").
-  useEffect(() => {
-    const initialSubject = data.initialData?.subject?.trim()
-      ?? data.replyTo?.subject
-      ?? '';
-    const title = initialSubject || t('email_composer.new_message');
-    updateTabTitle(tabIdRef.current, title);
-    // Run once on mount only.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // The tab's title is the subject as it is typed, so several open compose
+  // tabs can be told apart. replyTo is no source for it: the mail tab fills
+  // that in from the selected message for a new message too.
+  const newMessageTitle = t('email_composer.new_message');
+  const handleSubjectChange = useCallback((subject: string) => {
+    updateTabTitle(tabIdRef.current, subject.trim() || newMessageTitle);
+  }, [updateTabTitle, newMessageTitle]);
 
   const popoutsOn = usePopoutsAvailable();
 
@@ -275,6 +268,7 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
           onDiscardDraft={handleDiscardDraft}
           onSaveState={handleSaveState}
           popOut={popoutsOn ? popOut : undefined}
+          onSubjectChange={handleSubjectChange}
           className="flex-1"
         />
       </ErrorBoundary>

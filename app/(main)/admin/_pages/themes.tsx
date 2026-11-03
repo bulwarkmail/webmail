@@ -43,6 +43,7 @@ export function ThemesPage() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const setMessage = useAdminFeedback();
+  const [loadFailed, setLoadFailed] = useState(false);
   // On/off per theme waits for Save, like the policy switches below.
   const [enabledDraft, setEnabledDraft] = useState<Record<string, boolean>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -55,11 +56,15 @@ export function ThemesPage() {
   const fetchThemes = useCallback(async () => {
     try {
       const res = await apiFetch('/api/admin/themes');
-      if (res.ok) setThemes(await res.json());
+      if (!res.ok) throw new Error();
+      setThemes(await res.json());
+    } catch {
+      setLoadFailed(true);
+      setMessage({ type: 'error', text: 'Could not load the themes' });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setMessage]);
 
   const fetchPolicy = useCallback(async () => {
     try {
@@ -288,8 +293,8 @@ export function ThemesPage() {
           ) : themes.length === 0 ? (
             <EmptyState
               icon={SwatchBook}
-              title="No themes installed"
-              hint="Install one from the marketplace or upload a theme ZIP."
+              title={loadFailed ? 'Could not load the themes' : 'No themes installed'}
+              hint={loadFailed ? undefined : 'Install one from the marketplace or upload a theme ZIP.'}
               action={<AdminButtonLink href={adminPath('marketplace')}><Store className="h-4 w-4" /> Browse the marketplace</AdminButtonLink>}
             />
           ) : (

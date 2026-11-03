@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
-import { ProTabBar } from '@/components/pro/pro-tab-bar';
+import { createEvent, fireEvent, render, screen } from '@testing-library/react';
+import { ProTabBar, revealInStrip } from '@/components/pro/pro-tab-bar';
 import { PRO_TAB_DRAG_MIME, EMAIL_IDS_DRAG_MIME } from '@/components/pro/pro-shell-drop';
 import { useProTabStore, type ProTab } from '@/stores/pro-tab-store';
 
@@ -208,5 +208,81 @@ describe('ProTabBar keyboard', () => {
     fireEvent.keyDown(screen.getAllByRole('tab')[0], { key: 'ArrowRight' });
     expect(onActivate).toHaveBeenCalledWith('cal');
     expect(useProTabStore.getState().tabs.map((t) => t.id)).toEqual(['home-mail', 'cal', 'em']);
+  });
+});
+
+describe('ProTabBar overflow', () => {
+  const rect = (left: number, right: number) => ({ left, right, top: 0, bottom: 36, width: right - left, height: 36, x: left, y: 0, toJSON: () => ({}) });
+
+  beforeEach(() => {
+    seedStore([HOME, CAL, EM]);
+  });
+
+  it('scrolls the strip to a tab past its end, and back to one before its start', () => {
+    const strip = document.createElement('div');
+    const tab = document.createElement('div');
+    strip.getBoundingClientRect = () => rect(100, 500) as DOMRect;
+    strip.scrollLeft = 50;
+
+    tab.getBoundingClientRect = () => rect(480, 576) as DOMRect;
+    revealInStrip(strip, tab);
+    expect(strip.scrollLeft).toBe(126);
+
+    tab.getBoundingClientRect = () => rect(60, 156) as DOMRect;
+    revealInStrip(strip, tab);
+    expect(strip.scrollLeft).toBe(86);
+
+    tab.getBoundingClientRect = () => rect(200, 296) as DOMRect;
+    revealInStrip(strip, tab);
+    expect(strip.scrollLeft).toBe(86);
+  });
+
+  it('brings the tab that becomes active into view', () => {
+    const spy = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute('role') === 'tablist') return rect(0, 300) as DOMRect;
+      return (this.dataset.tabId === 'cal' ? rect(290, 386) : rect(0, 96)) as DOMRect;
+    });
+    const bar = (activeTabId: string) => (
+      <ProTabBar paneId="main" tabs={[HOME, CAL]} activeTabId={activeTabId} isFocused onActivate={() => {}} onClose={() => {}} />
+    );
+    const { rerender } = render(bar(HOME.id));
+    const strip = screen.getByRole('tablist');
+    expect(strip.scrollLeft).toBe(0);
+    rerender(bar(CAL.id));
+    expect(strip.scrollLeft).toBe(86);
+    spy.mockRestore();
+  });
+
+  it('moves along the strip with a vertical mouse wheel, the other way in RTL', () => {
+    const { container } = render(
+      <div style={{ direction: 'rtl' }}>
+        <ProTabBar paneId="main" tabs={[HOME, CAL]} activeTabId={HOME.id} isFocused onActivate={() => {}} onClose={() => {}} />
+      </div>,
+    );
+    const strip = container.querySelector<HTMLElement>('[role=tablist]')!;
+    strip.style.direction = 'rtl';
+    fireEvent.wheel(strip, { deltaY: 40 });
+    expect(strip.scrollLeft).toBe(-40);
+    strip.style.direction = 'ltr';
+    fireEvent.wheel(strip, { deltaY: 40 });
+    expect(strip.scrollLeft).toBe(0);
+  });
+
+  it('inserts on the side of the tab the pointer is on in RTL', () => {
+    const { container } = render(
+      <ProTabBar paneId="main" tabs={[HOME, CAL]} activeTabId={HOME.id} isFocused onActivate={() => {}} onClose={() => {}} />,
+    );
+    const cal = container.querySelector<HTMLElement>('[data-tab-id=cal]')!;
+    cal.style.direction = 'rtl';
+    cal.getBoundingClientRect = () => rect(0, 100) as DOMRect;
+    const dataTransfer = new MockDataTransfer();
+    dataTransfer.setData(PRO_TAB_DRAG_MIME, 'home-mail');
+    // The left half of a tab is its far end in RTL.
+    const over = createEvent.dragOver(cal, { dataTransfer });
+    Object.defineProperty(over, 'clientX', { value: 10 });
+    fireEvent(cal, over);
+    fireEvent.drop(cal, { dataTransfer });
+    const order = useProTabStore.getState().tabs.filter((t) => t.paneId === 'main').map((t) => t.id);
+    expect(order).toEqual(['cal', 'home-mail']);
   });
 });

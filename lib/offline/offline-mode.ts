@@ -1004,12 +1004,21 @@ async function unsentSubjects(scope: string): Promise<string[]> {
   let rows: Array<{ account: string; subject: string }> = [...known.outbox, ...known.localDrafts];
   // Reading an account's store would create it if it never had one.
   if (scope !== 'all' && !known.enabled.includes(scope)) return rows.filter((row) => row.account === scope).map((row) => row.subject);
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     const wanted = scope === 'all' ? undefined : scope;
-    const [{ outbox: entries }, drafts] = await Promise.all([readQueue(wanted), readLocalDrafts(wanted)]);
-    rows = [...entries.map((entry) => ({ account: entry.account, subject: entry.summary.subject })), ...drafts];
+    const read = Promise.all([readQueue(wanted), readLocalDrafts(wanted)]);
+    // A wipe and a sign-out wait for this before they delete anything, and a store
+    // with no owner or a silent one takes up to a minute to say so.
+    const answer = await Promise.race([read, new Promise<null>((resolve) => { timer = setTimeout(() => resolve(null), UNSENT_READ_MS); })]);
+    if (answer) {
+      const [{ outbox: entries }, drafts] = answer;
+      rows = [...entries.map((entry) => ({ account: entry.account, subject: entry.summary.subject })), ...drafts];
+    }
   } catch {
     // No store: what the state last saw.
+  } finally {
+    clearTimeout(timer);
   }
   return rows.filter((row) => scope === 'all' || row.account === scope).map((row) => row.subject);
 }

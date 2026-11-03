@@ -59,8 +59,13 @@ export function AuthPage() {
 
   async function fetchConfig() {
     setLoading(true);
-    const res = await apiFetch('/api/admin/config');
-    if (res.ok) setConfig(await res.json());
+    try {
+      const res = await apiFetch('/api/admin/config');
+      if (!res.ok) throw new Error();
+      setConfig(await res.json());
+    } catch {
+      setMessage({ type: 'error', text: 'Could not load the settings' });
+    }
     setLoading(false);
   }
 
@@ -209,7 +214,7 @@ export function AuthPage() {
           </>
         }
       >
-        <div className="space-y-4">
+        <div className="mt-4 space-y-4 [overflow-wrap:anywhere]">
           <div>
             <label htmlFor="setup-origin" className="block text-xs font-medium text-foreground mb-1">
               Webmail origin

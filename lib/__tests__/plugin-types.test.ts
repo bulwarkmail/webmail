@@ -20,9 +20,13 @@ describe('plugin-types constants', () => {
     });
 
     it('all permissions follow domain:action format', () => {
+      // `keystore` is the one bare name: a single capability with no actions to
+      // split, and the S/MIME plugin's manifest declares it by this name.
+      const bareNames = ['keystore'];
       for (const perm of ALL_PERMISSIONS) {
-        expect(perm).toMatch(/^[a-z]+:[a-z-]+$/);
+        if (!bareNames.includes(perm)) expect(perm).toMatch(/^[a-z]+:[a-z-]+$/);
       }
+      for (const name of bareNames) expect(ALL_PERMISSIONS).toContain(name);
     });
 
     it('includes core email/calendar/contacts permissions', () => {
