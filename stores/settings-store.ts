@@ -2276,19 +2276,16 @@ if (typeof window !== 'undefined') {
   applyInterfaceLayout(store.interfaceLayout, store.density);
 
   // The service worker shows push notifications without this store, so it
-  // reads these from its own Cache store (#1289).
-  const pushShow = (s: SettingsState) => s.emailNotificationsEnabled && !s.doNotDisturb;
-  const pushSound = (s: SettingsState) => pushShow(s) && s.emailNotificationSound;
+  // reads the sound preference from its own Cache store (#1289). Whether they
+  // show at all goes per login (NotificationActionsHost).
+  const pushSound = (s: SettingsState) => s.emailNotificationsEnabled && s.emailNotificationSound && !s.doNotDisturb;
   let lastPushSound = pushSound(store);
-  let lastPushShow = pushShow(store);
-  void writePushPreferences({ sound: lastPushSound, show: lastPushShow });
+  void writePushPreferences({ sound: lastPushSound });
   useSettingsStore.subscribe((state) => {
     const sound = pushSound(state);
-    const show = pushShow(state);
-    if (sound === lastPushSound && show === lastPushShow) return;
+    if (sound === lastPushSound) return;
     lastPushSound = sound;
-    lastPushShow = show;
-    void writePushPreferences({ sound, show });
+    void writePushPreferences({ sound });
   });
 
   // The policy arrives after this store has rehydrated (and again with the

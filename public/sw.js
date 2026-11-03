@@ -636,7 +636,7 @@ async function notifyAccount(accountId, emailIds, accountLabel) {
 
   // Email notifications off, or do not disturb on: a browser still wants a
   // notification for the push, so one comes and goes with nothing on it.
-  if (!(await showPreference())) {
+  if (!(await showPreference(accountLabel))) {
     if (freshIds.length > 0) await writeNotifiedIds(accountId, notified.concat(freshIds));
     await showWithoutAlert(groupTag);
     return;
@@ -903,13 +903,18 @@ async function soundPreference() {
   }
 }
 
-/** The "Email notifications" switch and do not disturb, mirrored the same way. Nothing stored: show. */
-async function showPreference() {
+/**
+ * The "Email notifications" switch and do not disturb. Each login has its own
+ * settings, so the page leaves one answer per login (the push's label names it).
+ * Nothing stored for it: show.
+ */
+async function showPreference(accountLabel) {
+  if (!accountLabel) return true;
   try {
     const cache = await caches.open(PUSH_STATE_CACHE);
-    const res = await cache.match(pushPreferencesKey());
-    const prefs = res ? await res.json() : null;
-    return !prefs || prefs.show !== false;
+    const res = await cache.match(`${self.location.origin}${BASE_PATH}/__push-state/quiet-logins`);
+    const quiet = res ? await res.json() : null;
+    return !quiet || quiet[accountLabel] !== true;
   } catch (_) {
     return true;
   }

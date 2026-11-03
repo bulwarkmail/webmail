@@ -9,12 +9,13 @@ const SW_SOURCE = readFileSync(join(process.cwd(), 'public', 'sw.js'), 'utf8');
 type Preview = Record<string, unknown> | null;
 type Shown = { title: string; body?: unknown; data?: Record<string, unknown>; tag: string; options: Record<string, unknown>; close: () => void };
 
-function loadWorker(preview: (url: URL) => Preview, extra: { clients?: unknown[]; globals?: Record<string, unknown>; prefs?: unknown; openWindow?: (url: string) => Promise<unknown> } = {}) {
+function loadWorker(preview: (url: URL) => Preview, extra: { clients?: unknown[]; globals?: Record<string, unknown>; prefs?: unknown; quiet?: Record<string, boolean>; openWindow?: (url: string) => Promise<unknown> } = {}) {
   const listeners = new Map<string, (event: unknown) => void>();
   const shade = new Map<string, Shown>();
   const previews: URL[] = [];
   const cacheStore = new Map<string, string>();
   if (extra.prefs) cacheStore.set('https://mail.example.com/__push-state/prefs', JSON.stringify(extra.prefs));
+  if (extra.quiet) cacheStore.set('https://mail.example.com/__push-state/quiet-logins', JSON.stringify(extra.quiet));
   const self = {
     location: { href: 'https://mail.example.com/sw.js', origin: 'https://mail.example.com' },
     addEventListener: (type: string, fn: (event: unknown) => void) => listeners.set(type, fn),
@@ -144,31 +145,37 @@ describe('what a notification counts', () => {
 });
 
 describe('with notifications off or do not disturb on', () => {
-  it('announces nothing: shows and removes at once, without asking for the message', async () => {
-    const { push, shade, previews } = loadWorker(() => ({ unreadTotal: 1, slot: 0, email: mail('e1', 'Secret subject') }), { prefs: { sound: false, show: false } });
+  const quiet = { 'me@example.org': true };
+
+  it('announces nothing for that login: shows and removes at once, without asking for the message', async () => {
+    const { push, shade, previews } = loadWorker(() => ({ unreadTotal: 1, slot: 0, email: mail('e1', 'Secret subject') }), { quiet });
     await push(delivery('a', 'e1'));
     expect(shade.size).toBe(0);
     expect(previews).toHaveLength(0);
   });
 
-  it('does not bring the message up later when turned on again', async () => {
-    const off = loadWorker(() => ({ unreadTotal: 1, slot: 0, email: mail('e1') }), { prefs: { sound: false, show: false } });
-    await off.push(delivery('a', 'e1'));
-    const { push, shade } = off;
-    // Same store, now switched on: a redelivery stays quiet.
+  it('still announces mail for another login', async () => {
+    const { push, shade } = loadWorker(() => ({ unreadTotal: 1, slot: 0, email: mail('e1') }), { quiet: { 'someone-else@example.org': true } });
     await push(delivery('a', 'e1'));
-    expect(shade.size).toBe(0);
+    expect(shade.size).toBe(1);
+  });
+
+  it('does not bring the message up later', async () => {
+    const off = loadWorker(() => ({ unreadTotal: 1, slot: 0, email: mail('e1') }), { quiet });
+    await off.push(delivery('a', 'e1'));
+    await off.push(delivery('a', 'e1'));
+    expect(off.shade.size).toBe(0);
   });
 
   it('keeps showing with only the sound off', async () => {
-    const { push, shade } = loadWorker(() => ({ unreadTotal: 1, slot: 0, email: mail('e1') }), { prefs: { sound: false, show: true } });
+    const { push, shade } = loadWorker(() => ({ unreadTotal: 1, slot: 0, email: mail('e1') }), { prefs: { sound: false } });
     await push(delivery('a', 'e1'));
     expect(shade.get('bulwark-mail:a')!.options).toMatchObject({ silent: true, renotify: false });
   });
 
-  it('shows as before for prefs written by an older page', async () => {
-    const { push, shade } = loadWorker(() => ({ unreadTotal: 1, slot: 0, email: mail('e1') }), { prefs: { sound: true } });
-    await push(delivery('a', 'e1'));
+  it('shows for a push without a label, or with nothing stored', async () => {
+    const { push, shade } = loadWorker(() => ({ unreadTotal: 1, slot: 0, email: mail('e1') }), { quiet });
+    await push({ kind: 'jmap-email-push', accountId: 'a', emailIds: ['e1'] });
     expect(shade.size).toBe(1);
   });
 });
