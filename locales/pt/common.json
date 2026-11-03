@@ -6651,7 +6651,8 @@
     "action_delete": "Eliminar",
     "copy_as_file": "Copiar como ficheiro",
     "copied": "Ficheiro copiado. Pode colá-lo numa pasta.",
-    "copy_failed": "Não foi possível copiar o ficheiro."
+    "copy_failed": "Não foi possível copiar o ficheiro.",
+    "reply_lost": "Não foi possível guardar a resposta escrita. Abra a mensagem e responda a partir dela."
   },
   "desktopReminders": {
     "generic_title": "Lembrete",

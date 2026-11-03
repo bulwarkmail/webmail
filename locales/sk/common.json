@@ -6651,7 +6651,8 @@
     "action_delete": "Odstrániť",
     "copy_as_file": "Kopírovať ako súbor",
     "copied": "Súbor skopírovaný. Môžete ho vložiť do priečinka.",
-    "copy_failed": "Súbor sa nepodarilo skopírovať."
+    "copy_failed": "Súbor sa nepodarilo skopírovať.",
+    "reply_lost": "Napísanú odpoveď sa nepodarilo zachovať. Otvorte správu a odpovedzte v nej."
   },
   "desktopReminders": {
     "generic_title": "Pripomienka",

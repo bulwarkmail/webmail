@@ -6651,7 +6651,8 @@
     "action_delete": "Smazat",
     "copy_as_file": "Kopírovat jako soubor",
     "copied": "Soubor zkopírován. Můžete ho vložit do složky.",
-    "copy_failed": "Soubor se nepodařilo zkopírovat."
+    "copy_failed": "Soubor se nepodařilo zkopírovat.",
+    "reply_lost": "Napsanou odpověď se nepodařilo zachovat. Otevřete zprávu a odpovězte v ní."
   },
   "desktopReminders": {
     "generic_title": "Připomenutí",

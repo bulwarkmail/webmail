@@ -93,6 +93,7 @@ import { flushQueue, LOOKUP_WAIT_MS, SENDING_STALE_MS, settleStaleSends } from '
 import { LEGACY_DB_NAME, moveLegacyOutbox, strandedLegacyMessages } from './migrate-legacy';
 import { deleteShellCaches, tellServiceWorker } from './shell';
 import { rememberLost } from './lost';
+import { clearDesktopSurfaces } from '@/lib/desktop/bridge';
 import { addSleepHandler, reportStoreCreatedMail } from '@/lib/desktop/system-events';
 
 export type OfflineNotice =
@@ -1054,6 +1055,7 @@ async function nameLost(scope: string, stillSignedIn: boolean): Promise<void> {
 }
 
 export async function wipeAccount(account: string): Promise<void> {
+  clearDesktopSurfaces();
   const timer = syncTimers.get(account);
   if (timer) clearTimeout(timer);
   syncTimers.delete(account);
@@ -1086,6 +1088,7 @@ export async function wipeAccount(account: string): Promise<void> {
 
 /** Nothing of offline mode stays on this device. */
 export async function wipeEverything(): Promise<void> {
+  clearDesktopSurfaces();
   for (const timer of syncTimers.values()) clearTimeout(timer);
   syncTimers.clear();
   writeEnabled([]);

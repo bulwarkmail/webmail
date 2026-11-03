@@ -6651,7 +6651,8 @@
     "action_delete": "Delete",
     "copy_as_file": "Copy as file",
     "copied": "File copied. You can paste it into a folder.",
-    "copy_failed": "The file could not be copied."
+    "copy_failed": "The file could not be copied.",
+    "reply_lost": "Your typed reply could not be kept. Open the message and reply there."
   },
   "desktopReminders": {
     "generic_title": "Reminder",

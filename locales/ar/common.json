@@ -6651,7 +6651,8 @@
     "action_delete": "حذف",
     "copy_as_file": "نسخ كملف",
     "copied": "تم نسخ الملف. يمكنك لصقه في مجلد.",
-    "copy_failed": "تعذّر نسخ الملف."
+    "copy_failed": "تعذّر نسخ الملف.",
+    "reply_lost": "تعذّر الاحتفاظ بالرد الذي كتبته. افتح الرسالة وأجب من هناك."
   },
   "desktopReminders": {
     "generic_title": "تذكير",

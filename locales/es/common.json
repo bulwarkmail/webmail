@@ -6651,7 +6651,8 @@
     "action_delete": "Eliminar",
     "copy_as_file": "Copiar como archivo",
     "copied": "Archivo copiado. Puedes pegarlo en una carpeta.",
-    "copy_failed": "No se pudo copiar el archivo."
+    "copy_failed": "No se pudo copiar el archivo.",
+    "reply_lost": "No se pudo conservar la respuesta que escribiste. Abre el mensaje y responde desde allí."
   },
   "desktopReminders": {
     "generic_title": "Recordatorio",

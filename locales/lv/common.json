@@ -6651,7 +6651,8 @@
     "action_delete": "Dzēst",
     "copy_as_file": "Kopēt kā failu",
     "copied": "Fails nokopēts. Varat to ielīmēt mapē.",
-    "copy_failed": "Failu neizdevās nokopēt."
+    "copy_failed": "Failu neizdevās nokopēt.",
+    "reply_lost": "Ievadīto atbildi neizdevās saglabāt. Atveriet ziņojumu un atbildiet tur."
   },
   "desktopReminders": {
     "generic_title": "Atgādinājums",

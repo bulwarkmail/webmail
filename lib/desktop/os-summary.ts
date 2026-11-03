@@ -6,9 +6,8 @@
  */
 
 import { getDesktopBridge } from '@/lib/desktop/bridge';
-import { isAppLocked } from '@/lib/desktop/app-lock-state';
+import { contentHiddenFor } from '@/lib/desktop/mail-notifications';
 import type { DesktopOsSummary, DesktopOsTrayMessage } from '@/lib/desktop/types';
-import { devicesForAccount } from '@/lib/device-policy';
 import type { CalendarEvent, Email } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { loginFingerprint } from '@/lib/pwa-notify/login-fingerprint';
@@ -16,6 +15,7 @@ import { useAccountStore } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCalendarStore } from '@/stores/calendar-store';
 import { useEmailStore } from '@/stores/email-store';
+import { usePolicyStore } from '@/stores/policy-store';
 
 const ROWS = 5;
 const REFRESH_DELAY_MS = 2000;
@@ -46,12 +46,10 @@ export function formatEventTime(start: number, now: number, locale: string | und
 }
 
 export async function readSummary(locale: string | undefined, now = Date.now()): Promise<DesktopOsSummary> {
-  if (isAppLocked()) return EMPTY_SUMMARY;
   const auth = useAuthStore.getState();
   const client: IJMAPClient | null = auth.client;
   const entry = useAccountStore.getState().accounts.find((account) => account.id === auth.activeAccountId);
-  if (!auth.isAuthenticated || !client || !entry) return EMPTY_SUMMARY;
-  if (devicesForAccount(entry.id).pushWithoutContent) return EMPTY_SUMMARY;
+  if (!auth.isAuthenticated || !client || !entry || contentHiddenFor(entry.id)) return EMPTY_SUMMARY;
 
   const inbox = useEmailStore.getState().mailboxes.find((mailbox) => mailbox.role === 'inbox' && !mailbox.isShared);
   let unread: DesktopOsTrayMessage[] = [];
@@ -91,12 +89,14 @@ export function startOsSummary(locale: () => string | undefined): { refresh: () 
   const os = getDesktopBridge()?.os;
   if (!os) return { refresh: () => {}, stop: () => {} };
   let timer: ReturnType<typeof setTimeout> | null = null;
-  let stale = false;
+  /** A read under way when the account changed answers for the old one, and is dropped. */
+  let generation = 0;
 
   const run = () => {
     timer = null;
+    const mine = ++generation;
     void readSummary(locale()).then((summary) => {
-      if (!stale) os.setSummary(summary);
+      if (mine === generation) os.setSummary(summary);
     }, (error) => {
       console.warn('Could not read the tray summary:', error);
     });
@@ -113,16 +113,24 @@ export function startOsSummary(locale: () => string | undefined): { refresh: () 
     refresh();
   });
   const stopAuth = useAuthStore.subscribe((state, previous) => {
-    if (state.activeAccountId !== previous.activeAccountId || state.isAuthenticated !== previous.isAuthenticated) refresh();
+    if (state.activeAccountId === previous.activeAccountId && state.isAuthenticated === previous.isAuthenticated) return;
+    generation += 1;
+    if (!state.isAuthenticated) os.setSummary(EMPTY_SUMMARY);
+    refresh();
+  });
+  // An organisation turning sender and subject off goes for what's already showing, too.
+  const stopPolicy = usePolicyStore.subscribe((state, previous) => {
+    if (state.loaded !== previous.loaded || state.policy !== previous.policy) refresh();
   });
   const interval = setInterval(refresh, REFRESH_EVERY_MS);
   refresh();
   return {
     refresh,
     stop() {
-      stale = true;
+      generation += 1;
       stopEmail();
       stopAuth();
+      stopPolicy();
       clearInterval(interval);
       if (timer) clearTimeout(timer);
     },

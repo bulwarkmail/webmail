@@ -6651,7 +6651,8 @@
     "action_delete": "Kustuta",
     "copy_as_file": "Kopeeri failina",
     "copied": "Fail on kopeeritud. Saad selle kausta kleepida.",
-    "copy_failed": "Faili ei saanud kopeerida."
+    "copy_failed": "Faili ei saanud kopeerida.",
+    "reply_lost": "Kirjutatud vastust ei saanud säilitada. Ava kiri ja vasta seal."
   },
   "desktopReminders": {
     "generic_title": "Meeldetuletus",

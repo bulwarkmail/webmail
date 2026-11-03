@@ -6651,7 +6651,8 @@
     "action_delete": "Suprimeix",
     "copy_as_file": "Copia com a fitxer",
     "copied": "Fitxer copiat. El podeu enganxar en una carpeta.",
-    "copy_failed": "No s'ha pogut copiar el fitxer."
+    "copy_failed": "No s'ha pogut copiar el fitxer.",
+    "reply_lost": "No s'ha pogut conservar la resposta que heu escrit. Obriu el missatge i responeu des d'allà."
   },
   "desktopReminders": {
     "generic_title": "Recordatori",

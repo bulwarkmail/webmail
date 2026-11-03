@@ -87,6 +87,8 @@ beforeEach(async () => {
   });
   const { setAppLockCheck } = await import('../app-lock-state');
   setAppLockCheck(null);
+  const { usePolicyStore } = await import('@/stores/policy-store');
+  usePolicyStore.setState({ loaded: true });
 });
 
 afterEach(() => {
@@ -261,6 +263,15 @@ describe('what the notification says', () => {
   it('where the organisation keeps content off notifications: the same', async () => {
     const { buildMailNotification } = await import('../mail-notifications');
     pushWithoutContent = true;
+    const notification = await buildMailNotification([one()], labels);
+    expect(JSON.stringify(notification)).not.toContain('Secret');
+    expect(JSON.stringify(notification)).not.toContain('Alice Sender');
+  });
+
+  it('before the policy is known: the same', async () => {
+    const { buildMailNotification } = await import('../mail-notifications');
+    const { usePolicyStore } = await import('@/stores/policy-store');
+    usePolicyStore.setState({ loaded: false });
     const notification = await buildMailNotification([one()], labels);
     expect(JSON.stringify(notification)).not.toContain('Secret');
     expect(JSON.stringify(notification)).not.toContain('Alice Sender');

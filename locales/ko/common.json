@@ -6651,7 +6651,8 @@
     "action_delete": "삭제",
     "copy_as_file": "파일로 복사",
     "copied": "파일을 복사했습니다. 폴더에 붙여넣을 수 있습니다.",
-    "copy_failed": "파일을 복사할 수 없습니다."
+    "copy_failed": "파일을 복사할 수 없습니다.",
+    "reply_lost": "입력한 답장을 유지할 수 없습니다. 메시지를 열어 답장하세요."
   },
   "desktopReminders": {
     "generic_title": "알림",

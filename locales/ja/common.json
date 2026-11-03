@@ -6651,7 +6651,8 @@
     "action_delete": "削除",
     "copy_as_file": "ファイルとしてコピー",
     "copied": "ファイルをコピーしました。フォルダーに貼り付けられます。",
-    "copy_failed": "ファイルをコピーできませんでした。"
+    "copy_failed": "ファイルをコピーできませんでした。",
+    "reply_lost": "入力した返信を保持できませんでした。メッセージを開いて返信してください。"
   },
   "desktopReminders": {
     "generic_title": "リマインダー",

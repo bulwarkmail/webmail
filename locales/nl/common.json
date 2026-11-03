@@ -6651,7 +6651,8 @@
     "action_delete": "Verwijderen",
     "copy_as_file": "Kopiëren als bestand",
     "copied": "Bestand gekopieerd. Je kunt het in een map plakken.",
-    "copy_failed": "Het bestand kon niet worden gekopieerd."
+    "copy_failed": "Het bestand kon niet worden gekopieerd.",
+    "reply_lost": "Je getypte antwoord kon niet worden bewaard. Open het bericht en antwoord daar."
   },
   "desktopReminders": {
     "generic_title": "Herinnering",

@@ -6651,7 +6651,8 @@
     "action_delete": "Slet",
     "copy_as_file": "Kopiér som fil",
     "copied": "Filen er kopieret. Du kan indsætte den i en mappe.",
-    "copy_failed": "Filen kunne ikke kopieres."
+    "copy_failed": "Filen kunne ikke kopieres.",
+    "reply_lost": "Dit skrevne svar kunne ikke gemmes. Åbn beskeden, og svar der."
   },
   "desktopReminders": {
     "generic_title": "Påmindelse",

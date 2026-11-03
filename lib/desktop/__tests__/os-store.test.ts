@@ -49,6 +49,21 @@ describe('the store and the OS integration', () => {
     expect(listener).toHaveBeenCalledWith(client, 'acc', ['e1', 'e2']);
   });
 
+  it('a wipe clears what the OS shows, and a browser has nothing to clear', async () => {
+    const { clearDesktopSurfaces } = await import('../bridge');
+    expect(() => clearDesktopSurfaces()).not.toThrow();
+    const clearSurfaces = vi.fn();
+    window.bulwarkDesktop = { version: 1, platform: 'win32', os: { clearSurfaces } } as never;
+    const { wipeAccount } = await import('@/lib/offline/offline-mode');
+    const { useOfflineStore } = await import('@/lib/offline/state');
+    // Not the last account, so this isn't the wipe of everything, which clears as well.
+    useOfflineStore.setState({ enabled: ['alice@one', 'bob@two'] });
+    await wipeAccount('alice@one').catch(() => {});
+    expect(clearSurfaces).toHaveBeenCalled();
+    useOfflineStore.setState({ enabled: [] });
+    window.bulwarkDesktop = undefined;
+  });
+
   it('other collections are not mail', async () => {
     const { setStoreCreatedListener } = await import('../system-events');
     const listener = vi.fn();

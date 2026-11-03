@@ -6651,7 +6651,8 @@
     "action_delete": "Törlés",
     "copy_as_file": "Másolás fájlként",
     "copied": "Fájl másolva. Beillesztheti egy mappába.",
-    "copy_failed": "A fájlt nem sikerült másolni."
+    "copy_failed": "A fájlt nem sikerült másolni.",
+    "reply_lost": "A beírt válasz nem maradt meg. Nyissa meg az üzenetet, és válaszoljon ott."
   },
   "desktopReminders": {
     "generic_title": "Emlékeztető",

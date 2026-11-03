@@ -159,10 +159,24 @@ describe('files on the window', () => {
     setBridge({});
     const stop = startWindowFiles();
     const target = vi.fn();
-    const clear = setComposerFileTarget(target);
+    const clear = setComposerFileTarget(target, () => true);
     window.dispatchEvent(dropEvent('drop', [file]));
     expect(target).toHaveBeenCalledWith([file]);
     expect(takeHandoff('compose')).toBeNull();
+    clear();
+    stop();
+  });
+
+  it('a composer out of sight on a hidden tab takes nothing', async () => {
+    const { setComposerFileTarget, startWindowFiles } = await import('../window-files');
+    const { takeHandoff } = await import('@/lib/launch-handoff');
+    setBridge({});
+    const stop = startWindowFiles();
+    const hidden = vi.fn();
+    const clear = setComposerFileTarget(hidden, () => false);
+    window.dispatchEvent(dropEvent('drop', [file]));
+    expect(hidden).not.toHaveBeenCalled();
+    expect(takeHandoff('compose')?.files).toEqual([file]);
     clear();
     stop();
   });
@@ -174,7 +188,7 @@ describe('files on the window', () => {
     const stop = startWindowFiles();
     const paste = (files: File[]) => {
       const event = new Event('paste', { bubbles: true, cancelable: true });
-      Object.defineProperty(event, 'clipboardData', { value: { files } });
+      Object.defineProperty(event, 'clipboardData', { value: { files, types: files.length ? ['Files'] : ['text/plain'] } });
       window.dispatchEvent(event);
       return event;
     };
@@ -183,6 +197,54 @@ describe('files on the window', () => {
     expect(paste([file]).defaultPrevented).toBe(true);
     expect(takeHandoff('compose')?.files).toEqual([file]);
     stop();
+  });
+
+  describe('a paste that is not for us', () => {
+    const pasteOn = (target: EventTarget, types: string[]) => {
+      const event = new Event('paste', { bubbles: true, cancelable: true });
+      Object.defineProperty(event, 'clipboardData', { value: { files: [file], types } });
+      target.dispatchEvent(event);
+      return event;
+    };
+
+    it('text with a file, as a spreadsheet copies, stays text', async () => {
+      const { startWindowFiles } = await import('../window-files');
+      const { takeHandoff } = await import('@/lib/launch-handoff');
+      setBridge({});
+      const stop = startWindowFiles();
+      expect(pasteOn(document.body, ['text/plain', 'Files']).defaultPrevented).toBe(false);
+      expect(takeHandoff('compose')).toBeNull();
+      stop();
+    });
+
+    it('in a search field or any other input, a file is not an attachment', async () => {
+      const { startWindowFiles } = await import('../window-files');
+      const { takeHandoff } = await import('@/lib/launch-handoff');
+      setBridge({});
+      const stop = startWindowFiles();
+      const input = document.body.appendChild(document.createElement('input'));
+      expect(pasteOn(input, ['Files']).defaultPrevented).toBe(false);
+      expect(takeHandoff('compose')).toBeNull();
+      input.remove();
+      stop();
+    });
+
+    it('in the body of a composer on screen, a bare file attaches', async () => {
+      const { setComposerFileTarget, startWindowFiles } = await import('../window-files');
+      setBridge({});
+      const stop = startWindowFiles();
+      const target = vi.fn();
+      const clear = setComposerFileTarget(target, () => true);
+      const composer = document.body.appendChild(document.createElement('div'));
+      composer.setAttribute('data-testid', 'email-composer');
+      const body = composer.appendChild(document.createElement('div'));
+      body.setAttribute('contenteditable', 'true');
+      pasteOn(body, ['Files']);
+      expect(target).toHaveBeenCalledWith([file]);
+      composer.remove();
+      clear();
+      stop();
+    });
   });
 
   it('our own native drag over our own window is not a new file', async () => {
@@ -245,6 +307,23 @@ describe('dragging an attachment out', () => {
     });
     hook.result.current.onDragStart(event as never);
     await waitFor(() => expect(startDrag).toHaveBeenCalled());
+  });
+
+  it('in the app, without getBlob (a decrypted attachment): the browser drag, and no copy button', async () => {
+    const startDrag = vi.fn(async () => true);
+    setBridge({ startDrag, copyFiles: vi.fn() as never });
+    const { useAttachmentDrag } = await import('@/hooks/use-attachment-drag');
+    const { name, type, getBlobUrl } = source;
+    const hook = renderHook(() => useAttachmentDrag({ name, type, getBlobUrl }, true));
+    act(() => hook.result.current.onPointerEnter());
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    const event = { preventDefault: vi.fn(), dataTransfer: { setData: vi.fn(), effectAllowed: '' } };
+    hook.result.current.onDragStart(event as never);
+    expect(startDrag).not.toHaveBeenCalled();
+    expect(event.dataTransfer.setData).toHaveBeenCalledWith('DownloadURL', expect.stringContaining(blobUrl));
+    expect(hook.result.current.onCopyAsFile).toBeUndefined();
   });
 
   it('in a browser: still DownloadURL, and no copy button', async () => {
@@ -313,15 +392,52 @@ describe('waking up', () => {
     stop();
   });
 
-  it('a network change counts as waking', async () => {
-    const connection = new EventTarget();
-    vi.stubGlobal('navigator', Object.assign(Object.create(navigator), { connection }));
+  it('a new kind of network counts as waking; a change in its speed estimate does not', async () => {
+    const connection = Object.assign(new EventTarget(), { type: 'wifi' });
+    vi.stubGlobal('navigator', Object.create(navigator, { connection: { value: connection }, onLine: { value: true } }));
     const { power, stop } = await started();
     const wake = vi.fn();
     const stopWake = power.addWakeHandler(wake);
-    await new Promise((resolve) => setTimeout(resolve, 0));
     connection.dispatchEvent(new Event('change'));
-    expect(wake).toHaveBeenCalled();
+    expect(wake).not.toHaveBeenCalled();
+    connection.type = 'ethernet';
+    connection.dispatchEvent(new Event('change'));
+    expect(wake).toHaveBeenCalledTimes(1);
+    stopWake();
+    stop();
+  });
+
+  it('where Chromium gives no type, a change is nothing to go on', async () => {
+    const connection = new EventTarget();
+    vi.stubGlobal('navigator', Object.create(navigator, { connection: { value: connection }, onLine: { value: true } }));
+    const { power, stop } = await started();
+    const wake = vi.fn();
+    const stopWake = power.addWakeHandler(wake);
+    connection.dispatchEvent(new Event('change'));
+    expect(wake).not.toHaveBeenCalled();
+    stopWake();
+    stop();
+  });
+
+  it('woken up with no network, it does not say the network is back, and a wake within 30 s is the same wake', async () => {
+    const online = vi.fn();
+    window.addEventListener('online', online);
+    vi.stubGlobal('navigator', Object.create(navigator, { onLine: { value: false } }));
+    const { fire, power, stop } = await started();
+    const wake = vi.fn();
+    const stopWake = power.addWakeHandler(wake);
+    fire('resume');
+    expect(wake).toHaveBeenCalledTimes(1);
+    expect(online).not.toHaveBeenCalled();
+    const now = Date.now();
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(now + 29_000);
+    fire('unlock-screen');
+    expect(wake).toHaveBeenCalledTimes(1);
+    clock.mockReturnValue(now + 31_000);
+    fire('unlock-screen');
+    expect(wake).toHaveBeenCalledTimes(2);
+    clock.mockRestore();
+    window.removeEventListener('online', online);
     stopWake();
     stop();
   });
@@ -357,6 +473,8 @@ describe('the summary', () => {
       useAuthStore.setState({ isAuthenticated: true, client: fake as never, activeAccountId: 'alice@one' });
       useAccountStore.setState({ accounts: [{ id: 'alice@one', cookieSlot: 3, serverUrl: 'https://one.example', username: 'alice@example.org' }] as never });
       useEmailStore.setState({ mailboxes: [{ id: 'in', role: 'inbox', name: 'Inbox' }] as never });
+      const { usePolicyStore } = await import('@/stores/policy-store');
+      usePolicyStore.setState({ loaded: true });
     });
 
     afterEach(async () => {
@@ -372,6 +490,42 @@ describe('the summary', () => {
       expect(summary.unread).toEqual([expect.objectContaining({ emailId: 'e1', accountId: 'acc', sender: 'Alice', subject: 'Lunch?' })]);
       expect(JSON.parse(summary.unread[0].context!)).toMatchObject({ emailId: 'e1', slot: 3 });
       expect(getEmails).toHaveBeenCalledWith('in', undefined, 5, 0, undefined, false, { notKeyword: '$seen' });
+    });
+
+    it('before the policy is known it is empty', async () => {
+      const { usePolicyStore } = await import('@/stores/policy-store');
+      const { readSummary, EMPTY_SUMMARY } = await import('../os-summary');
+      usePolicyStore.setState({ loaded: false });
+      await expect(readSummary('en')).resolves.toEqual(EMPTY_SUMMARY);
+      expect(getEmails).not.toHaveBeenCalled();
+    });
+
+    it('a read under way when the login goes doesn\'t bring it back; a policy change reads again', async () => {
+      const setSummary = vi.fn();
+      setBridge({ setSummary });
+      const { startOsSummary, EMPTY_SUMMARY } = await import('../os-summary');
+      const { useAuthStore } = await import('@/stores/auth-store');
+      const { usePolicyStore } = await import('@/stores/policy-store');
+      let answer: (value: unknown) => void = () => {};
+      getEmails.mockImplementationOnce(() => new Promise((resolve) => { answer = resolve as never; }) as never);
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] });
+      const summary = startOsSummary(() => 'en');
+      await vi.advanceTimersByTimeAsync(2100);
+      useAuthStore.setState({ isAuthenticated: false, client: null, activeAccountId: null });
+      expect(setSummary).toHaveBeenLastCalledWith(EMPTY_SUMMARY);
+      answer({ emails: [row], hasMore: false, total: 1 });
+      await vi.advanceTimersByTimeAsync(10);
+      await new Promise((resolve) => setImmediate(resolve));
+      await vi.advanceTimersByTimeAsync(2100);
+      expect(setSummary).toHaveBeenLastCalledWith(EMPTY_SUMMARY);
+      expect(JSON.stringify(setSummary.mock.calls)).not.toContain('Lunch');
+
+      setSummary.mockClear();
+      usePolicyStore.setState({ policy: { ...usePolicyStore.getState().policy } });
+      await vi.advanceTimersByTimeAsync(2100);
+      expect(setSummary).toHaveBeenCalled();
+      summary.stop();
+      vi.useRealTimers();
     });
 
     it('while locked it is empty, without asking anyone anything', async () => {

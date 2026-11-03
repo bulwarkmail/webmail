@@ -6663,7 +6663,8 @@
     "action_delete": "Xóa",
     "copy_as_file": "Sao chép dưới dạng tệp",
     "copied": "Đã sao chép tệp. Bạn có thể dán vào một thư mục.",
-    "copy_failed": "Không thể sao chép tệp."
+    "copy_failed": "Không thể sao chép tệp.",
+    "reply_lost": "Không thể giữ câu trả lời bạn đã nhập. Hãy mở thư và trả lời ở đó."
   },
   "desktopReminders": {
     "generic_title": "Lời nhắc",

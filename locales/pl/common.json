@@ -6651,7 +6651,8 @@
     "action_delete": "Usuń",
     "copy_as_file": "Kopiuj jako plik",
     "copied": "Plik skopiowany. Możesz wkleić go do folderu.",
-    "copy_failed": "Nie udało się skopiować pliku."
+    "copy_failed": "Nie udało się skopiować pliku.",
+    "reply_lost": "Nie udało się zachować wpisanej odpowiedzi. Otwórz wiadomość i odpowiedz w niej."
   },
   "desktopReminders": {
     "generic_title": "Przypomnienie",

@@ -21,6 +21,7 @@ import { isPopoutWindow } from '@/lib/popout/window-role';
 import { loginFingerprint } from '@/lib/pwa-notify/login-fingerprint';
 import { useAccountStore } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { usePolicyStore } from '@/stores/policy-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 
@@ -72,15 +73,20 @@ async function senderInfo(client: IJMAPClient): Promise<Sender> {
   };
 }
 
-function withoutContent(sender: Sender): boolean {
+/** Sender and subject stay off everything outside the app. Not knowing yet counts as yes. */
+export function contentHiddenFor(accountEntryId: string | null | undefined): boolean {
   if (isAppLocked()) return true;
   // Unknown counts as on, as on the server's route.
-  if (!sender.entryId) return true;
+  if (!accountEntryId || !usePolicyStore.getState().loaded) return true;
   try {
-    return devicesForAccount(sender.entryId).pushWithoutContent;
+    return devicesForAccount(accountEntryId).pushWithoutContent;
   } catch {
     return true;
   }
+}
+
+function withoutContent(sender: Sender): boolean {
+  return contentHiddenFor(sender.entryId);
 }
 
 function senderName(mail: NewMail): string {

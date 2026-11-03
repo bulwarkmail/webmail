@@ -6651,7 +6651,8 @@
     "action_delete": "Sil",
     "copy_as_file": "Dosya olarak kopyala",
     "copied": "Dosya kopyalandı. Bir klasöre yapıştırabilirsiniz.",
-    "copy_failed": "Dosya kopyalanamadı."
+    "copy_failed": "Dosya kopyalanamadı.",
+    "reply_lost": "Yazdığınız yanıt korunamadı. İletiyi açıp oradan yanıtlayın."
   },
   "desktopReminders": {
     "generic_title": "Anımsatıcı",

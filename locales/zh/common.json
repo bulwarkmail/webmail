@@ -6651,7 +6651,8 @@
     "action_delete": "删除",
     "copy_as_file": "复制为文件",
     "copied": "文件已复制。你可以将其粘贴到文件夹中。",
-    "copy_failed": "无法复制文件。"
+    "copy_failed": "无法复制文件。",
+    "reply_lost": "无法保留你输入的回复。请打开邮件并在其中回复。"
   },
   "desktopReminders": {
     "generic_title": "提醒",

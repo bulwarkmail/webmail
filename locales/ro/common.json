@@ -6651,7 +6651,8 @@
     "action_delete": "Șterge",
     "copy_as_file": "Copiază ca fișier",
     "copied": "Fișier copiat. Îl poți lipi într-un dosar.",
-    "copy_failed": "Fișierul nu a putut fi copiat."
+    "copy_failed": "Fișierul nu a putut fi copiat.",
+    "reply_lost": "Răspunsul scris nu a putut fi păstrat. Deschide mesajul și răspunde de acolo."
   },
   "desktopReminders": {
     "generic_title": "Memento",

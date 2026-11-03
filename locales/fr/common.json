@@ -6651,7 +6651,8 @@
     "action_delete": "Supprimer",
     "copy_as_file": "Copier en tant que fichier",
     "copied": "Fichier copié. Vous pouvez le coller dans un dossier.",
-    "copy_failed": "Le fichier n'a pas pu être copié."
+    "copy_failed": "Le fichier n'a pas pu être copié.",
+    "reply_lost": "Votre réponse saisie n'a pas pu être conservée. Ouvrez le message et répondez depuis celui-ci."
   },
   "desktopReminders": {
     "generic_title": "Rappel",

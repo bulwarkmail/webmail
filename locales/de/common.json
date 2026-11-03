@@ -6651,7 +6651,8 @@
     "action_delete": "Löschen",
     "copy_as_file": "Als Datei kopieren",
     "copied": "Datei kopiert. Sie können sie in einen Ordner einfügen.",
-    "copy_failed": "Die Datei konnte nicht kopiert werden."
+    "copy_failed": "Die Datei konnte nicht kopiert werden.",
+    "reply_lost": "Ihre eingegebene Antwort konnte nicht übernommen werden. Öffnen Sie die Nachricht und antworten Sie dort."
   },
   "desktopReminders": {
     "generic_title": "Erinnerung",

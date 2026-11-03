@@ -6651,7 +6651,8 @@
     "action_delete": "Elimina",
     "copy_as_file": "Copia come file",
     "copied": "File copiato. Puoi incollarlo in una cartella.",
-    "copy_failed": "Impossibile copiare il file."
+    "copy_failed": "Impossibile copiare il file.",
+    "reply_lost": "Non è stato possibile conservare la risposta digitata. Apri il messaggio e rispondi da lì."
   },
   "desktopReminders": {
     "generic_title": "Promemoria",
