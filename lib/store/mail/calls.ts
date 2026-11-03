@@ -1,7 +1,7 @@
 /** What the page asks the mail part of the store outside JMAP. */
 
 import type { AreaCall, StoreContext } from '../area';
-import { keptBlob, rawBlob, rawStatus, recordKeptBlob } from './attachments';
+import { keptBlob, rawBlob, rawKept, rawSize, rawStatus, recordKeptBlob } from './attachments';
 import { storeBody, upsertEmail, type EmailObject } from './records';
 
 /**
@@ -55,8 +55,12 @@ export const MAIL_CALLS: Readonly<Record<string, AreaCall>> = {
   'mail.getBlob': getBlob,
   /** A whole message for an offline export, or why not. */
   'mail.rawBlob': (ctx, params: { jmap: string; blobId: string }) => rawBlob(ctx, params.jmap, params.blobId),
+  /** Which of a batch are here: an online export fetches the others in one request. */
+  'mail.rawKept': (ctx, params: { jmap: string; blobIds: string[] }) => rawKept(ctx, params.jmap, params.blobIds),
   /** How many messages an export could write now, so it can say how many it can't. */
   'mail.rawStatus': (ctx, params: { jmap: string; mailboxId?: string }) => rawStatus(ctx, params.jmap, params.mailboxId),
+  /** How much room an export of them takes. */
+  'mail.rawSize': (ctx, params: { jmap: string; mailboxId?: string }) => rawSize(ctx, params.jmap, params.mailboxId),
   'mail.usage': usage,
   /** The session kept with the account, for a start from the local copy. */
   'mail.session': (ctx) => ctx.session,

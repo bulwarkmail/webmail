@@ -9,7 +9,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { isJobActive, useMailTransferStore, type ExportRequest } from "@/stores/mail-transfer-store";
 import type { ExportFormat, ExportProgress } from "@/lib/mail-export/engine";
 import { safeName } from "@/lib/mail-export/engine";
-import { canPickSaveFile, canWritePrivateFile, memorySink, pickSaveFile, privateFileSink, sweepPrivateExports, type ExportSink } from "@/lib/mail-export/sinks";
+import { canPickSaveFile, canWritePrivateFile, openExportSink } from "@/lib/mail-export/sinks";
 import { formatFileSize } from "@/lib/utils";
 import { formatClock, TransferBar, useFocusOnStage } from "./transfer-progress";
 import { startExport } from "./start-export";
@@ -19,7 +19,7 @@ function today(): string {
 }
 
 /** Where the file will go in this browser, said before the export starts. */
-function saveMode(): "picker" | "download" | "memory" {
+export function saveMode(): "picker" | "download" | "memory" {
   if (canPickSaveFile()) return "picker";
   return canWritePrivateFile() ? "download" : "memory";
 }
@@ -57,21 +57,10 @@ export function MailExportDialog({ request }: { request: ExportRequest }) {
     const name = `${base}.${zip ? "zip" : "mbox"}`;
     const mime = zip ? "application/zip" : "application/mbox";
     setStarting(true);
-    let sink: ExportSink | null = null;
     try {
       // The save picker must open straight from the click.
-      if (mode === "picker") {
-        try {
-          sink = await pickSaveFile(name, mime, zip ? ".zip" : ".mbox");
-        } catch (error) {
-          if ((error as { name?: string } | null)?.name === "AbortError") return;
-          sink = null;
-        }
-      }
-      if (!sink) {
-        await sweepPrivateExports();
-        sink = (await privateFileSink(name, mime)) ?? memorySink(name, mime);
-      }
+      const sink = await openExportSink(name, mime, zip ? ".zip" : ".mbox");
+      if (!sink) return;
       startExport({
         format,
         accountId: mailbox?.accountId || client.getAccountId(),
@@ -165,7 +154,7 @@ export function MailExportDialog({ request }: { request: ExportRequest }) {
 
 type T = ReturnType<typeof useTranslations>;
 
-function ExportProgressBody({ progress: p, t, locale, statusId }: { progress: ExportProgress; t: T; locale: string; statusId: string }) {
+export function ExportProgressBody({ progress: p, t, locale, statusId }: { progress: ExportProgress; t: T; locale: string; statusId: string }) {
   const running = p.phase === "running" || p.phase === "paused";
   // The live region says only what changes the user's plans (paused, done);
   // the count beside it would otherwise be read out several times a second.

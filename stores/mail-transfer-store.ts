@@ -22,7 +22,13 @@ export interface ExportRequest {
   mailboxId?: string;
 }
 
-export type TransferRequest = ImportRequest | ExportRequest;
+/** Mail kept on this device, of a signed-in account, not only the active one. */
+export interface LocalExportRequest {
+  kind: "local-export";
+  account: string;
+}
+
+export type TransferRequest = ImportRequest | ExportRequest | LocalExportRequest;
 
 interface JobBase {
   controller: AbortController;
@@ -72,6 +78,7 @@ export const useMailTransferStore = create<MailTransferState>()((set, get) => ({
     // The device policy "No export" of the active account (Organisation >
     // Devices): the dialog doesn't open and the app says why. Import stays.
     if (request.kind === "export" && !downloadAllowed("export", null)) return false;
+    if (request.kind === "local-export" && !downloadAllowed("export", request.account)) return false;
     if (isJobActive(get().job)) {
       set({ visible: true });
       return false;
@@ -101,6 +108,11 @@ export const useMailTransferStore = create<MailTransferState>()((set, get) => ({
 /** Opens the import dialog, for a folder or (from Settings) for none. */
 export function openMailImport(request: Omit<ImportRequest, "kind"> = {}): void {
   useMailTransferStore.getState().open({ kind: "import", ...request });
+}
+
+/** Opens the export of what an account keeps on this device. */
+export function openLocalExport(account: string): void {
+  useMailTransferStore.getState().open({ kind: "local-export", account });
 }
 
 /** Opens the export dialog for a folder, or for the whole account. */
