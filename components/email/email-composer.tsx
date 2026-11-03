@@ -1779,6 +1779,11 @@ export function EmailComposer({
   if (priority !== initialPriorityRef.current) isDirtyRef.current = true;
   const initialLabelChoiceRef = useRef(classification.choice);
   if (classification.choice !== initialLabelChoiceRef.current) isDirtyRef.current = true;
+  // Text the host handed in is no edit to hand back, but the server may not have
+  // it: it still needs the autosave and the question on close, so it counts as dirty.
+  const hasEditsRef = useRef(false);
+  hasEditsRef.current = isDirtyRef.current;
+  if (initialData?.unsaved) isDirtyRef.current = true;
   const firstLabelRunRef = useRef(true);
   useEffect(() => {
     if (firstLabelRunRef.current) {
@@ -1839,7 +1844,8 @@ export function EmailComposer({
   useEffect(() => {
     return () => {
       if (explicitCloseRef.current) return;
-      if (onSaveState && isDirtyRef.current) {
+      // Only what the host has no copy of: an edit, or a draft saved under a new id.
+      if (onSaveState && (hasEditsRef.current || draftIdRef.current !== (initialData?.draftId ?? null))) {
         const s = stateRef.current;
         onSaveState({
           ...s,

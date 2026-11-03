@@ -268,8 +268,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const composerSessionRef = useRef(composerSessionId);
   composerSessionRef.current = composerSessionId;
   const composerHostRef = useRef('pane');
-  const composerRemountHostRef = useRef('pane');
-  const composerRemountSessionRef = useRef(composerSessionId);
   const showComposerRef = useRef(showComposer);
   showComposerRef.current = showComposer;
   // Fields a plugin filled in through onBeforeCompose for the composer about
@@ -4576,10 +4574,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const floatingComposer = mvShell && showComposer && !isEmbedded && !mvInlineReply;
   const composerHost = floatingComposer ? 'window' : mvInlineReply ? 'inline' : 'pane';
   composerHostRef.current = composerHost;
-  if (!showComposer || composerRemountSessionRef.current !== composerSessionId) {
-    composerRemountSessionRef.current = composerSessionId;
-    composerRemountHostRef.current = composerHost;
-  }
   const hasViewerContent = (showComposer && !floatingComposer) || Boolean(conversationThread)
     || Boolean(selectedEmail && !(mvShell && cursorOnly)) || deepLinkPane !== null;
   // A linked message on a phone opens over the list, as one picked there does.
@@ -4945,11 +4939,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             });
             return;
           }
-          if (showComposerRef.current && composerSessionRef.current === composerSessionId) {
-            // Still open: it moved to another host, or is the stand-in mounted
-            // there before the edits arrived. The stand-in's state is out of date.
-            if (composerHostRef.current === composerRemountHostRef.current) return;
-            composerRemountHostRef.current = composerHostRef.current;
+          // Still open in another host: the one mounted there started before
+          // these edits arrived. The composer calls the handler of its first
+          // render, so composerHost is the host this instance lived in.
+          if (showComposerRef.current && composerSessionRef.current === composerSessionId && composerHostRef.current !== composerHost) {
             setComposerRemount((n) => n + 1);
           }
           setPendingDraft(data);

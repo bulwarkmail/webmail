@@ -21,7 +21,8 @@ vi.mock('@/components/layout/sidebar', () => ({
   Sidebar: ({ onCompose }: { onCompose: () => void }) => <button onClick={onCompose}>stub compose</button>,
 }));
 // The real composer's contract: its state starts from initialData, and it hands
-// its edits to onSaveState as it unmounts.
+// its edits to onSaveState as it unmounts, only if it has any, through the
+// handler of its first render. Text it started with is no edit.
 vi.mock('@/components/email/email-composer', async () => {
   const { useEffect, useRef, useState } = await import('react');
   return {
@@ -30,10 +31,11 @@ vi.mock('@/components/email/email-composer', async () => {
       onSaveState: (data: { subject: string }) => void;
     }) => {
       const [subject, setSubject] = useState(initialData?.subject ?? '');
+      const initial = useRef(subject);
       const latest = useRef(subject);
       latest.current = subject;
       useEffect(() => () => {
-        if (latest.current) onSaveState({ subject: latest.current });
+        if (latest.current !== initial.current) onSaveState({ subject: latest.current });
         // eslint-disable-next-line react-hooks/exhaustive-deps
       }, []);
       return <input aria-label="stub subject" value={subject} onChange={(e) => setSubject(e.target.value)} />;
@@ -118,6 +120,43 @@ describe('moving the Mountain View composer between layouts', () => {
     device.current = { isMobile: false, isTablet: false, isDesktop: true };
     rerender(<MailApp />);
     await waitFor(() => expect(screen.getByLabelText<HTMLInputElement>('stub subject').value).toBe('Still here'));
+  });
+
+  const setWidth = (rerender: (ui: React.ReactElement) => void, width: 'desktop' | 'tablet') => {
+    device.current = { isMobile: false, isTablet: width === 'tablet', isDesktop: width === 'desktop' };
+    rerender(<MailApp />);
+  };
+  const subject = () => screen.getByLabelText<HTMLInputElement>('stub subject');
+
+  it('keeps text typed after the composer moved with nothing in it yet', async () => {
+    const { rerender } = render(<MailApp />);
+    fireEvent.click(screen.getByText('stub compose'));
+    await screen.findByLabelText('stub subject');
+
+    // Clean, so this move hands nothing over.
+    setWidth(rerender, 'tablet');
+    fireEvent.change(await screen.findByLabelText('stub subject'), { target: { value: 'Typed in the pane' } });
+
+    setWidth(rerender, 'desktop');
+    await waitFor(() => expect(subject().value).toBe('Typed in the pane'));
+
+    setWidth(rerender, 'tablet');
+    await waitFor(() => expect(subject().value).toBe('Typed in the pane'));
+  });
+
+  it('keeps text typed after moving back and forth untouched', async () => {
+    const { rerender } = render(<MailApp />);
+    fireEvent.click(screen.getByText('stub compose'));
+    fireEvent.change(await screen.findByLabelText('stub subject'), { target: { value: 'First' } });
+
+    setWidth(rerender, 'tablet');
+    await waitFor(() => expect(subject().value).toBe('First'));
+    setWidth(rerender, 'desktop');
+    await waitFor(() => expect(subject().value).toBe('First'));
+    fireEvent.change(subject(), { target: { value: 'First and more' } });
+
+    setWidth(rerender, 'tablet');
+    await waitFor(() => expect(subject().value).toBe('First and more'));
   });
 });
 

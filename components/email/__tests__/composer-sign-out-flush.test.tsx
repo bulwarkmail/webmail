@@ -246,6 +246,52 @@ describe('composer flush before an automatic sign-out', () => {
     expect(createDraft.mock.calls[0][1]).toBe('Half-written');
   });
 
+  it('asks before closing a composer opened with stashed edits', async () => {
+    const onClose = vi.fn();
+    const requestCloseRef: { current: ((afterClose?: () => void) => void) | null } = { current: null };
+    render(<EmailComposer initialData={{ ...DRAFT, unsaved: true }} onClose={onClose} requestCloseRef={requestCloseRef} />);
+
+    act(() => requestCloseRef.current?.());
+
+    expect(await screen.findByRole('alertdialog')).toBeTruthy();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('closes a composer opened with text the server already has without asking', () => {
+    const onClose = vi.fn();
+    const requestCloseRef: { current: ((afterClose?: () => void) => void) | null } = { current: null };
+    render(<EmailComposer initialData={{ ...DRAFT, draftId: 'draft-0', unsaved: false }} onClose={onClose} requestCloseRef={requestCloseRef} />);
+
+    act(() => requestCloseRef.current?.());
+
+    expect(screen.queryByRole('alertdialog')).toBeNull();
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('autosaves a composer opened with stashed edits', async () => {
+    render(<EmailComposer initialData={{ ...DRAFT, unsaved: true }} onClose={vi.fn()} />);
+
+    await waitFor(() => expect(createDraft).toHaveBeenCalledTimes(1), { timeout: 4000 });
+    expect(createDraft.mock.calls[0][1]).toBe('Half-written');
+  });
+
+  it('hands nothing back for stashed edits it did not change: the host has them', () => {
+    const onSaveState = vi.fn();
+    const view = render(<EmailComposer initialData={{ ...DRAFT, unsaved: true }} onClose={vi.fn()} onSaveState={onSaveState} />);
+    view.unmount();
+
+    expect(onSaveState).not.toHaveBeenCalled();
+  });
+
+  it('hands back the draft id an autosave of stashed edits got', async () => {
+    const onSaveState = vi.fn();
+    const view = render(<EmailComposer initialData={{ ...DRAFT, unsaved: true }} onClose={vi.fn()} onSaveState={onSaveState} />);
+    await act(async () => { await flushComposers(5000); });
+    view.unmount();
+
+    expect(onSaveState).toHaveBeenCalledWith(expect.objectContaining({ draftId: 'draft-1', unsaved: false }));
+  });
+
   it('waits for a send in flight and saves no draft of the sent message', async () => {
     let finishSend!: () => void;
     const onSend = vi.fn(() => new Promise<void>((resolve) => { finishSend = resolve; }));
