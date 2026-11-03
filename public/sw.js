@@ -975,20 +975,61 @@ async function writeNotifiedIds(accountId, ids) {
   }
 }
 
+/** What the page left here: lib/pwa-notify/worker-state.ts. */
+async function readRelayRegistrations() {
+  try {
+    const cache = await caches.open(PUSH_STATE_CACHE);
+    const res = await cache.match(`${self.location.origin}${BASE_PATH}/__push-state/relay-registrations`);
+    const stored = res ? await res.json() : null;
+    return stored && stored.entries && typeof stored.entries === "object" ? stored : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function applicationServerKeyOf(base64Url) {
+  const padded = base64Url + "=".repeat((4 - (base64Url.length % 4)) % 4);
+  const raw = atob(padded.replace(/-/g, "+").replace(/_/g, "/"));
+  return Uint8Array.from(raw, (character) => character.charCodeAt(0));
+}
+
 // The push service dropped or replaced the browser's subscription (expiry,
 // a key rotation, revoked permission). Re-subscribe with the same relay key
-// unless the browser already did, then tell the open tabs: only a page has
-// the login needed to register the new endpoint with the relay and the mail
-// server (resyncWebPush in lib/web-push.ts). With no tab open, the next page
-// load's re-sync picks the new subscription up.
+// unless the browser already did. The mail server's subscription points at the
+// relay record, not at the endpoint, so telling the relay is all it takes, and
+// that needs no login: push is back with no tab open. Open tabs hear of it too,
+// for what only a page can do (resyncWebPush in lib/web-push.ts).
 async function handlePushSubscriptionChange(event) {
   const old = event.oldSubscription;
-  if (!event.newSubscription && old && old.options) {
-    try {
-      await self.registration.pushManager.subscribe(old.options);
-    } catch (_) {
-      // Permission revoked or push service unreachable: the page's re-sync
-      // subscribes again itself when it can.
+  const registrations = await readRelayRegistrations();
+  let subscription = event.newSubscription || null;
+  if (!subscription) {
+    const options = old && old.options
+      ? old.options
+      : registrations && registrations.applicationServerKey
+        ? { userVisibleOnly: true, applicationServerKey: applicationServerKeyOf(registrations.applicationServerKey) }
+        : null;
+    if (options) {
+      try {
+        subscription = await self.registration.pushManager.subscribe(options);
+      } catch (_) {
+        // Permission revoked or push service unreachable: the page's re-sync
+        // subscribes again itself when it can.
+      }
+    }
+  }
+  if (subscription && registrations && typeof subscription.toJSON === "function") {
+    const json = subscription.toJSON();
+    for (const entry of Object.values(registrations.entries)) {
+      try {
+        await fetch(`${entry.relay}/api/push/register/web`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subscriptionId: entry.subscriptionId, subscription: json, accountLabel: entry.accountLabel }),
+        });
+      } catch (_) {
+        // The page's re-sync registers it when it next runs.
+      }
     }
   }
   const allClients = await self.clients.matchAll({

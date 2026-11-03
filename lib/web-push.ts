@@ -13,6 +13,7 @@ import { isBuiltInHost, relayAllowed } from '@/lib/outgoing-hosts';
 import { noThirdPartyTraffic } from '@/lib/third-party-mode';
 import { IS_LITE } from '@/lib/lite';
 import { serviceWorkerUrl, SW_SCOPE } from '@/lib/app-update';
+import { forgetRelayRegistration, keepRelayRegistration } from '@/lib/pwa-notify/worker-state';
 import {
   EMPTY_NOTIFICATION_MUTES,
   isAccountMuted,
@@ -801,6 +802,11 @@ async function enableWebPushForThisTab(
     },
     accountLabel: params.accountLabel,
   });
+  await keepRelayRegistration(accountId, {
+    relay: relayBaseUrl,
+    subscriptionId: deviceClientId,
+    ...(params.accountLabel ? { accountLabel: params.accountLabel } : {}),
+  }, vapidPublicKey);
 
   // Reuse the JMAP-side PushSubscription if the server still has it, just
   // refreshing the expiry so it doesn't time out between sessions. With
@@ -983,6 +989,7 @@ async function disableWebPushForThisTab(params: DisableWebPushParams): Promise<v
   }
   localStorage.removeItem(subIdKey);
   localStorage.removeItem(relayBaseKey(accountId));
+  await forgetRelayRegistration(accountId);
   // Enabling again starts from the full emailPush map.
   localStorage.removeItem(emailPushRefusedKey(accountId));
 
