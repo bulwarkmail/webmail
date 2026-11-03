@@ -4,7 +4,7 @@
  * the UI. Nothing here touches the DOM, so tests run it on node:sqlite.
  */
 
-import { MethodError, type AreaCall, type MethodHandler, type StoreArea, type StoreContext, type StoreEvent, type StoreScope, type SyncContext, type SyncStateRow, type Syncer } from '../area';
+import { MethodError, type AreaCall, type MethodHandler, type RecordOverlay, type StoreArea, type StoreContext, type StoreEvent, type StoreScope, type SyncContext, type SyncStateRow, type Syncer } from '../area';
 import { migrate, type StorageAdapter } from '../storage';
 import { answerRequest, buildMethodTable } from './responder';
 import { TransportError, type JmapResponse, type JmapTransport, type MethodCall, type StoreSession } from './transport';
@@ -36,6 +36,7 @@ export class AccountEngine {
   private readonly syncers: readonly Syncer[];
   private readonly methods: ReadonlyMap<string, MethodHandler>;
   private readonly calls = new Map<string, AreaCall>();
+  private readonly overlays: readonly RecordOverlay[];
   private readonly emitter: (event: StoreEvent) => void;
   private readonly now: () => number;
   private readonly sleep: (ms: number) => Promise<void>;
@@ -53,6 +54,7 @@ export class AccountEngine {
     this.transport = options.transport;
     this.syncers = options.areas.flatMap((area) => area.syncers);
     this.methods = buildMethodTable(options.areas);
+    this.overlays = options.areas.flatMap((area) => (area.overlay ? [area.overlay] : []));
     for (const area of options.areas) {
       for (const [name, call] of Object.entries(area.calls ?? {})) {
         if (this.calls.has(name)) throw new Error(`Two store areas define ${name}`);
@@ -62,9 +64,11 @@ export class AccountEngine {
     this.emitter = options.emit ?? (() => {});
     this.now = options.now ?? Date.now;
     this.sleep = options.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
-    this.invertedKeywordSort = options.invertedKeywordSort ?? false;
     migrate(this.db, [...CORE_MIGRATIONS, ...options.areas.flatMap((area) => area.migrations)]);
     metaSet(this.db, 'session', JSON.stringify(options.session));
+    // An offline start has no way to probe the server, so the last answer stays.
+    this.invertedKeywordSort = options.invertedKeywordSort ?? metaGet(this.db, 'inverted_keyword_sort') === '1';
+    if (options.invertedKeywordSort !== undefined) metaSet(this.db, 'inverted_keyword_sort', options.invertedKeywordSort ? '1' : '0');
   }
 
   /** The session kept from the last time, for a start without a network. */
@@ -86,6 +90,13 @@ export class AccountEngine {
 
   setInvertedKeywordSort(inverted: boolean): void {
     this.invertedKeywordSort = inverted;
+    metaSet(this.db, 'inverted_keyword_sort', inverted ? '1' : '0');
+  }
+
+  private overlay<T extends { id: string }>(jmap: string, type: string, records: T[]): T[] {
+    let out: Array<{ id: string }> = records;
+    for (const overlay of this.overlays) out = overlay({ db: this.db, now: this.now }, jmap, type, out);
+    return out as T[];
   }
 
   setOnline(online: boolean): void {
@@ -199,6 +210,7 @@ export class AccountEngine {
       stopped: () => this.closed || !this.online,
       syncState: (jmap, type) => this.syncState(jmap, type),
       setSyncState: (jmap, type, row) => this.setSyncState(jmap, type, row),
+      overlay: (jmap, type, records) => this.overlay(jmap, type, records),
     };
   }
 
@@ -210,6 +222,7 @@ export class AccountEngine {
       scope: this.scope,
       now: this.now,
       emit: this.emitter,
+      overlay: (jmap, type, records) => this.overlay(jmap, type, records),
     };
   }
 

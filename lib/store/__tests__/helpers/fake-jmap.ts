@@ -169,7 +169,7 @@ export class FakeJmap implements JmapTransport {
     return list.map((e) => e.id);
   }
 
-  private handle(name: string, args: Record<string, unknown>): Record<string, unknown> {
+  protected handle(name: string, args: Record<string, unknown>): Record<string, unknown> {
     switch (name) {
       case 'Mailbox/get': {
         const ids = args.ids as string[] | null;

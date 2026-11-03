@@ -10,13 +10,14 @@
 import type { SyncContext, Syncer } from '../area';
 import { deleteObject, putObject } from '../engine/core-schema';
 import { runChangesLoop } from '../engine/changes';
-import { responseFor, type MethodCall } from '../engine/transport';
+import { responseFor, TransportError, type MethodCall } from '../engine/transport';
 import {
   deleteEmail,
   deleteEmailRow,
   EMAIL_BODY_PROPERTIES,
   EMAIL_LIST_PROPERTIES,
   MAIL_USING,
+  putBlob,
   storeBody,
   upsertEmail,
   type EmailObject,
@@ -130,7 +131,7 @@ async function runFullList(ctx: SyncContext, jmap: string, start: ListCursor): P
     }
     cursor.position += got;
     ctx.db.transaction(() => {
-      for (const list of lists) for (const email of list) upsertEmail(ctx.db, jmap, email, cursor.gen);
+      for (const list of lists) for (const email of ctx.overlay(jmap, 'Email', list)) upsertEmail(ctx.db, jmap, email, cursor.gen);
       if (done) {
         // Whatever this pass didn't see is gone from the server or the window.
         const stale = ctx.db.all<{ rowid: number }>('SELECT rowid FROM email WHERE jmap = ? AND gen < ?', [jmap, cursor.gen]);
@@ -171,7 +172,7 @@ async function syncEmailDelta(ctx: SyncContext, jmap: string, since: string, tar
       const created = new Set(page.created);
       const newIds: string[] = [];
       ctx.db.transaction(() => {
-        for (const email of fetched) {
+        for (const email of ctx.overlay(jmap, 'Email', fetched)) {
           const known = ctx.db.get('SELECT 1 AS x FROM email WHERE jmap = ? AND id = ?', [jmap, email.id]);
           // An old message changing doesn't pull it into the window.
           if (!known && !inWindow(ctx, email)) continue;
@@ -291,6 +292,106 @@ async function backfillBodies(ctx: SyncContext, jmap: string): Promise<void> {
   }
 }
 
+// ---- Attachments ----
+
+/**
+ * The files of kept messages, newest first, within what the user chose: one
+ * at a time, each in its own transaction, so a reload loses at most one.
+ */
+async function fetchAttachments(ctx: SyncContext, jmap: string): Promise<void> {
+  if (!ctx.scope.attachments) return;
+  let used = Number(ctx.db.get<{ n: number | null }>('SELECT SUM(size) AS n FROM blob')?.n ?? 0);
+  for (;;) {
+    if (ctx.stopped()) return;
+    const parts = ctx.db.all<{ blob_id: string; size: number; type: string | null; name: string | null; received_at: number }>(
+      `SELECT p.blob_id, p.size, p.type, p.name, p.received_at FROM email_part p
+       WHERE p.jmap = ? AND p.refused = 0 AND p.size <= ?
+         AND NOT EXISTS (SELECT 1 FROM blob b WHERE b.jmap = p.jmap AND b.blob_id = p.blob_id)
+       ORDER BY p.received_at DESC LIMIT 20`,
+      [jmap, ctx.scope.maxAttachmentBytes],
+    );
+    if (parts.length === 0) return;
+    for (const part of parts) {
+      if (ctx.stopped()) return;
+      const blobId = String(part.blob_id);
+      if (used + Number(part.size) > ctx.scope.maxTotalBytes) return;
+      let data: Uint8Array;
+      try {
+        data = await ctx.transport.download(jmap, blobId, part.type ?? 'application/octet-stream', part.name ?? 'attachment');
+      } catch (error) {
+        if (error instanceof TransportError && error.kind === 'http') {
+          ctx.db.run('UPDATE email_part SET refused = 1 WHERE jmap = ? AND blob_id = ?', [jmap, blobId]);
+          continue;
+        }
+        throw error;
+      }
+      putBlob(ctx.db, jmap, blobId, part.type, data, Number(part.received_at));
+      used += data.byteLength;
+    }
+  }
+}
+
+// ---- Identities and quotas ----
+
+const IDENTITY_USING = ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:mail', 'urn:ietf:params:jmap:submission'];
+const QUOTA_USING = ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:quota'];
+
+async function fullIdentities(ctx: SyncContext, jmap: string): Promise<void> {
+  const response = await ctx.transport.request([['Identity/get', { accountId: jmap, ids: null }, 'i']], IDENTITY_USING);
+  const [, result] = responseFor(response, 'i');
+  ctx.db.transaction(() => {
+    ctx.db.run("DELETE FROM object WHERE jmap = ? AND type = 'Identity'", [jmap]);
+    for (const identity of result.list as Array<{ id: string }>) putObject(ctx.db, jmap, 'Identity', identity.id, identity);
+    ctx.setSyncState(jmap, 'Identity', { state: String(result.state), phase: null, cursor: null });
+  });
+}
+
+export const identitySyncer: Syncer = {
+  name: 'identities',
+  capability: 'urn:ietf:params:jmap:submission',
+  async run(ctx, jmap) {
+    const { state, target } = ctx.syncState(jmap, 'Identity');
+    if (!state) return fullIdentities(ctx, jmap);
+    const outcome = await runChangesLoop({
+      transport: ctx.transport,
+      type: 'Identity',
+      jmap,
+      using: IDENTITY_USING,
+      since: state,
+      target,
+      stopped: ctx.stopped,
+      apply: async (page) => {
+        const ids = [...page.created, ...page.updated];
+        const response = ids.length > 0
+          ? await ctx.transport.request([['Identity/get', { accountId: jmap, ids }, 'i']], IDENTITY_USING)
+          : null;
+        const list = response ? responseFor(response, 'i')[1].list as Array<{ id: string }> : [];
+        ctx.db.transaction(() => {
+          for (const identity of list) putObject(ctx.db, jmap, 'Identity', identity.id, identity);
+          for (const id of page.destroyed) deleteObject(ctx.db, jmap, 'Identity', id);
+          ctx.setSyncState(jmap, 'Identity', { state: page.newState });
+        });
+      },
+    });
+    if (outcome.outcome === 'resync') await fullIdentities(ctx, jmap);
+  },
+};
+
+/** Only the last value: Quota/changes always refuses on Stalwart 1.0. */
+export const quotaSyncer: Syncer = {
+  name: 'quota',
+  capability: 'urn:ietf:params:jmap:quota',
+  async run(ctx, jmap) {
+    const response = await ctx.transport.request([['Quota/get', { accountId: jmap, ids: null }, 'q']], QUOTA_USING);
+    const [, result] = responseFor(response, 'q');
+    ctx.db.transaction(() => {
+      ctx.db.run("DELETE FROM object WHERE jmap = ? AND type = 'Quota'", [jmap]);
+      for (const quota of result.list as Array<{ id: string }>) putObject(ctx.db, jmap, 'Quota', quota.id, quota);
+      ctx.setSyncState(jmap, 'Quota', { state: typeof result.state === 'string' ? result.state : null, phase: null, cursor: null });
+    });
+  },
+};
+
 // ---- The whole pass ----
 
 export const mailSyncer: Syncer = {
@@ -319,5 +420,7 @@ export const mailSyncer: Syncer = {
     await syncThreads(ctx, jmap);
     if (ctx.stopped()) return;
     await backfillBodies(ctx, jmap);
+    if (ctx.stopped()) return;
+    await fetchAttachments(ctx, jmap);
   },
 };

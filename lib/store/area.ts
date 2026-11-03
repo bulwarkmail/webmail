@@ -52,7 +52,17 @@ export interface StoreContext {
   scope: StoreScope;
   now(): number;
   emit(event: StoreEvent): void;
+  /** Records of one type as this device shows them: see RecordOverlay. */
+  overlay<T extends { id: string }>(jmap: string, type: string, records: T[]): T[];
 }
+
+/**
+ * What an area changes about records another area stores: the outbox lays
+ * changes that wait for the server over what the server sent. Runs inside the
+ * caller's transaction. Returns the records to use; a record left out is one
+ * this device already treats as gone.
+ */
+export type RecordOverlay = (ctx: Pick<StoreContext, 'db' | 'now'>, jmap: string, type: string, records: Array<{ id: string }>) => Array<{ id: string }>;
 
 export interface SyncContext extends StoreContext {
   transport: JmapTransport;
@@ -106,4 +116,5 @@ export interface StoreArea {
   methods: Readonly<Record<string, MethodHandler>>;
   syncers: readonly Syncer[];
   calls?: Readonly<Record<string, AreaCall>>;
+  overlay?: RecordOverlay;
 }

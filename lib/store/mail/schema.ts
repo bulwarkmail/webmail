@@ -62,4 +62,34 @@ export const MAIL_MIGRATIONS: readonly Migration[] = [
       );
     `,
   },
+  {
+    id: 101,
+    name: 'mail attachments',
+    sql: `
+      -- The attachments and inline images of kept messages.
+      CREATE TABLE email_part (
+        jmap TEXT NOT NULL,
+        blob_id TEXT NOT NULL,
+        email_rowid INTEGER NOT NULL,
+        received_at INTEGER NOT NULL,
+        size INTEGER NOT NULL DEFAULT 0,
+        type TEXT,
+        name TEXT,
+        -- 1 when the server wouldn't give it: not asked for again
+        refused INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (jmap, blob_id, email_rowid)
+      ) WITHOUT ROWID;
+      CREATE INDEX email_part_message ON email_part (email_rowid);
+      CREATE INDEX email_part_newest ON email_part (jmap, received_at DESC);
+      CREATE TABLE blob (
+        jmap TEXT NOT NULL,
+        blob_id TEXT NOT NULL,
+        type TEXT,
+        size INTEGER NOT NULL,
+        at INTEGER NOT NULL,
+        data BLOB NOT NULL,
+        PRIMARY KEY (jmap, blob_id)
+      ) WITHOUT ROWID;
+    `,
+  },
 ];
