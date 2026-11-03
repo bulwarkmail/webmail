@@ -82,6 +82,7 @@ import {
   MailOpen,
   Loader2,
   Printer,
+  ExternalLink,
   FileText,
   File,
   Shield,
@@ -126,6 +127,7 @@ import type { Attachment as PostalMimeAttachment } from 'postal-mime';
 import { useSettingsStore } from "@/stores/settings-store";
 import { useShallow } from "zustand/react/shallow";
 import { useEffectiveMailLayout } from "@/hooks/use-effective-mail-layout";
+import { pluginRenderKey } from "@/hooks/use-plugin-rendered-body";
 import { registerComposeFlush } from "@/lib/compose-flush-registry";
 import { useExternalRecipientConfirmStore } from "@/stores/external-recipient-confirm-store";
 import { useUIStore } from "@/stores/ui-store";
@@ -158,6 +160,7 @@ import { requestInternalMailto } from "@/lib/protocol-handlers/mailto";
 import { imageBlobUrl, inertBlobType, isFilePreviewable, isMimeTypeSafeForInlinePreview, toInertBlob } from "@/lib/file-preview";
 import { openPreviewInNewWindow } from "@/lib/standalone-display";
 import { downloadAllowed, saveBlobAs } from "@/lib/download-guard";
+import { canPickFolder, createUniqueNamer, isPickerCancelled, pickFolder, saveFilesToFolder, type FolderHandle } from "@/lib/attachments/save-to-folder";
 import { useDevicePolicy } from "@/hooks/use-device-policy";
 import { Watermark, useWatermarkText } from "@/components/device/watermark";
 import { watermarkForPrint } from "@/lib/watermark";
@@ -285,6 +288,8 @@ interface EmailViewerProps {
    * minimize button; `isFullscreen` reflects the host's current state.
    */
   onToggleFullscreen?: () => void;
+  /** Opens this message in its own window; left out where that isn't on offer. */
+  onOpenInWindow?: () => void;
   isFullscreen?: boolean;
   currentUserEmail?: string;
   currentUserName?: string;
@@ -1318,6 +1323,7 @@ export function EmailViewer({
   onRescheduleScheduled,
   onCompose,
   onToggleFullscreen,
+  onOpenInWindow,
   isFullscreen = false,
   currentUserEmail,
   currentUserName,
@@ -1329,6 +1335,7 @@ export function EmailViewer({
 }: EmailViewerProps) {
   const t = useTranslations('email_viewer');
   const archiveActionEnabled = useArchiveActionEnabled();
+  const tWindows = useTranslations('pwaWindows');
   const tComposer = useTranslations('email_composer');
   const tNotifications = useTranslations('notifications');
   const tImport = useTranslations('mail_import');
@@ -1778,6 +1785,9 @@ export function EmailViewer({
   const [pluginRenderedHtml, setPluginRenderedHtml] = useState<string | null>(null);
   const [pluginRenderedText, setPluginRenderedText] = useState<string | null>(null);
   const [pluginRenderedAttachments, setPluginRenderedAttachments] = useState<PostalMimeAttachment[]>(NO_POSTAL_ATTACHMENTS);
+  // The plugin can't vouch for its body (mail with no integrity protection): external
+  // content stays off, whatever the settings or a trusted sender allow.
+  const [pluginBlocksExternal, setPluginBlocksExternal] = useState(false);
   // Bumped when a plugin calls `api.ui.rerenderEmail` (e.g. the S/MIME plugin
   // after the user unlocks a key from the banner) to force the onRenderEmailBody
   // hook to run again for the open message so the body re-decrypts.
@@ -2250,6 +2260,7 @@ export function EmailViewer({
     setPluginRenderedHtml(null);
     setPluginRenderedText(null);
     setPluginRenderedAttachments(NO_POSTAL_ATTACHMENTS);
+    setPluginBlocksExternal(false);
     setTnefHtml(null);
     setTnefText(null);
     setTnefAttachments(NO_TNEF_ATTACHMENTS);
@@ -2271,6 +2282,7 @@ export function EmailViewer({
       setPluginRenderedHtml(null);
       setPluginRenderedText(null);
       setPluginRenderedAttachments(NO_POSTAL_ATTACHMENTS);
+      setPluginBlocksExternal(false);
       return;
     }
     let cancelled = false;
@@ -2312,14 +2324,17 @@ export function EmailViewer({
           text?: string;
           attachments?: Array<{ name?: string; type?: string; size?: number; dataUrl?: string; cid?: string }>;
           handledBy?: string;
+          blockExternalContent?: boolean;
         };
         if (cancelled) return;
         if (!result || !result.handledBy) {
           setPluginRenderedHtml(null);
           setPluginRenderedText(null);
           setPluginRenderedAttachments(NO_POSTAL_ATTACHMENTS);
+          setPluginBlocksExternal(false);
           return;
         }
+        setPluginBlocksExternal(result.blockExternalContent === true);
         setPluginRenderedHtml(typeof result.html === 'string' && result.html ? result.html : null);
         setPluginRenderedText(typeof result.text === 'string' && result.text ? result.text : null);
         // Normalise the plugin's attachment shape into the PostalMime-like shape
@@ -2338,11 +2353,15 @@ export function EmailViewer({
         setPluginRenderedHtml(null);
         setPluginRenderedText(null);
         setPluginRenderedAttachments(NO_POSTAL_ATTACHMENTS);
+        setPluginBlocksExternal(false);
       }
     })();
 
     return () => { cancelled = true; };
-  }, [email, pluginRenderNonce]);
+    // Once per message, not per object: a render can be a key operation, and mark-read
+    // replaces the object. pluginRenderKey says what should run this again.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pluginRenderKey(email), pluginRenderNonce]);
 
   // TNEF (winmail.dat) detection and processing
   useEffect(() => {
@@ -2688,7 +2707,7 @@ export function EmailViewer({
   //   'ask'   = block until the user allows this message or trusts the sender.
   const shouldBlockExternal = useMemo(() => {
     if (!email) return false;
-    if (remoteHeldBack) return true;
+    if (remoteHeldBack || pluginBlocksExternal) return true;
     const senderEmail = email.from?.[0]?.email?.toLowerCase();
     const senderIsTrusted = senderEmail
       ? isSenderTrusted(senderEmail) || (trustedSendersAddressBook && isTrustedAddressBookSender(senderEmail))
@@ -2701,7 +2720,7 @@ export function EmailViewer({
     // permission changes, so they're deliberately omitted from deps (matches
     // the srcDoc rebuild contract described on `emailContent`).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [email, externalContentPolicy, allowExternalContent, remoteHeldBack]);
+  }, [email, externalContentPolicy, allowExternalContent, remoteHeldBack, pluginBlocksExternal]);
 
   // Reported as phishing ($phishing): a banner, its links turned off and
   // no cards (a phishing mail's "booking" is the lure).
@@ -3005,10 +3024,24 @@ export function EmailViewer({
     saveBlobAs(blob, downloadName, { kind: 'attachment', subject: email });
   }, [onDownloadAttachment, email, resolveAttachmentName]);
 
+  // An attachment's content for "download all" and "save all": fetched
+  // through the JMAP client when it is blob-backed, the already decoded bytes
+  // for S/MIME-decrypted and TNEF-extracted ones. Null when it has none.
+  const readAttachmentContent = useCallback(async (attachment: EffectiveAttachment, name: string): Promise<Blob | Uint8Array<ArrayBuffer> | null> => {
+    if (attachment.blobId && blobClient) {
+      return blobClient.fetchBlob(attachment.blobId, attachment.name || name, attachment.type, blobAccountId);
+    }
+    if (attachment.tnefData) return attachment.tnefData as Uint8Array<ArrayBuffer>;
+    if (attachment.decryptedAttachment) {
+      const bytes = getAttachmentContentBytes(attachment.decryptedAttachment);
+      if (bytes && bytes.byteLength > 0) return bytes as Uint8Array<ArrayBuffer>;
+    }
+    return null;
+  }, [blobClient, blobAccountId]);
+
   // Bundle every attachment of this email into a single .zip and download it.
-  // Fetches blob-backed attachments through the JMAP client and reuses already
-  // decoded bytes for S/MIME-decrypted and TNEF-extracted ones. Individual
-  // failures are skipped so a single bad blob doesn't sink the whole archive.
+  // Individual failures are skipped so a single bad blob doesn't sink the
+  // whole archive.
   const handleDownloadAllAttachments = useCallback(async () => {
     if (isDownloadingAll || effectiveAttachments.length === 0) return;
     if (!downloadAllowed('attachment', email)) return;
@@ -3016,39 +3049,17 @@ export function EmailViewer({
     try {
       const { default: JSZip } = await import('jszip');
       const zip = new JSZip();
-      const used = new Set<string>();
-      // Zip entries must be unique; suffix collisions with " (n)" before the
-      // extension so duplicates stay recognisable.
-      const uniqueName = (raw: string): string => {
-        const base = raw || 'attachment';
-        if (!used.has(base)) { used.add(base); return base; }
-        const dot = base.lastIndexOf('.');
-        const stem = dot > 0 ? base.slice(0, dot) : base;
-        const ext = dot > 0 ? base.slice(dot) : '';
-        let i = 1;
-        let candidate = `${stem} (${i})${ext}`;
-        while (used.has(candidate)) { i++; candidate = `${stem} (${i})${ext}`; }
-        used.add(candidate);
-        return candidate;
-      };
+      // Zip entries must be unique.
+      const uniqueName = createUniqueNamer();
 
       let added = 0;
       for (const attachment of effectiveAttachments) {
         const entryName = uniqueName(getAttachmentDisplayName(attachment.name, attachment.type));
         try {
-          if (attachment.blobId && blobClient) {
-            const blob = await blobClient.fetchBlob(attachment.blobId, attachment.name || entryName, attachment.type, blobAccountId);
-            zip.file(entryName, blob);
+          const content = await readAttachmentContent(attachment, entryName);
+          if (content) {
+            zip.file(entryName, content);
             added++;
-          } else if (attachment.tnefData) {
-            zip.file(entryName, attachment.tnefData);
-            added++;
-          } else if (attachment.decryptedAttachment) {
-            const bytes = getAttachmentContentBytes(attachment.decryptedAttachment);
-            if (bytes && bytes.byteLength > 0) {
-              zip.file(entryName, bytes);
-              added++;
-            }
           }
         } catch {
           // Skip individual failures; remaining attachments still bundle.
@@ -3071,7 +3082,43 @@ export function EmailViewer({
     } finally {
       setIsDownloadingAll(false);
     }
-  }, [isDownloadingAll, effectiveAttachments, blobClient, blobAccountId, email, t, tFiles]);
+  }, [isDownloadingAll, effectiveAttachments, readAttachmentContent, email, t, tFiles]);
+
+  // Save every attachment into a folder the user picks. These writes don't
+  // pass saveBlobAs, so the device policy is asked here: before the picker,
+  // and before each file. A browser that refuses the picker gets the zip.
+  const handleSaveAllToFolder = useCallback(async () => {
+    if (isDownloadingAll || effectiveAttachments.length === 0) return;
+    if (!downloadAllowed('attachment', email)) return;
+    let folder: FolderHandle;
+    try {
+      folder = await pickFolder();
+    } catch (error) {
+      if (!isPickerCancelled(error)) void handleDownloadAllAttachments();
+      return;
+    }
+    setIsDownloadingAll(true);
+    try {
+      const result = await saveFilesToFolder(
+        folder,
+        effectiveAttachments.map((attachment) => {
+          const name = getAttachmentDisplayName(attachment.name, attachment.type);
+          return { name, read: () => readAttachmentContent(attachment, name) };
+        }),
+        () => downloadAllowed('attachment', email),
+      );
+      if (result.saved === result.total) {
+        toast.success(tWindows('saved_all', { count: result.saved, folder: result.folder }));
+      } else if (result.saved > 0) {
+        toast.warning(tWindows('saved_partial', { saved: result.saved, total: result.total, folder: result.folder }));
+      } else if (result.stopped !== 'policy') {
+        // The policy said why itself.
+        toast.error(tWindows('save_failed', { folder: result.folder }));
+      }
+    } finally {
+      setIsDownloadingAll(false);
+    }
+  }, [isDownloadingAll, effectiveAttachments, readAttachmentContent, handleDownloadAllAttachments, email, tWindows]);
 
   // What the attachment bar and the attachment cards share.
   const attachmentCardsRef = useRef<HTMLDivElement>(null);
@@ -3082,6 +3129,7 @@ export function EmailViewer({
     onOpen: handleEffectiveAttachmentOpen,
     onDownload: handleEffectiveAttachmentDownload,
     onDownloadAll: handleDownloadAllAttachments,
+    onSaveAllToFolder: canPickFolder() ? () => void handleSaveAllToFolder() : undefined,
     downloadingAll: isDownloadingAll,
     downloadsOff,
     // Save to Files would get around the policy: Files downloads are off too, but the copy would stay.
@@ -4479,6 +4527,20 @@ ${printWatermark ? printWatermark.html : ''}
           {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
         </Button>
 
+        {onOpenInWindow && !mvViewer && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onOpenInWindow}
+          className="hidden sm:inline-flex h-8 gap-1.5"
+          title={tWindows('open_in_window')}
+          aria-label={tWindows('open_in_window')}
+          data-testid="viewer-open-in-window"
+        >
+          <ExternalLink className="w-4 h-4" />
+        </Button>
+        )}
+
         {/* Fullscreen toggle - hidden on mobile (already fullscreen there).
             Never overflows into the More menu: in fullscreen this button is
             the way back out, so it must stay visible. */}
@@ -4630,7 +4692,7 @@ ${printWatermark ? printWatermark.html : ''}
             inset (same treatment as the preview modals). (#936) */}
         <div className={cn(
           "flex items-center justify-between px-4 border-b border-border",
-          isPaneScoped ? "py-3" : "pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))]"
+          isPaneScoped ? "py-3" : "pb-3 pt-[calc(0.75rem+var(--app-top-inset))]"
         )}>
           {moreMenuSub ? (
             <button
@@ -4780,6 +4842,18 @@ ${printWatermark ? printWatermark.html : ''}
                 >
                   <Printer className="w-5 h-5" />
                 </button>
+                )}
+                {onOpenInWindow && (
+                  <button
+                    type="button"
+                    onClick={onOpenInWindow}
+                    className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    title={tWindows('open_in_window')}
+                    aria-label={tWindows('open_in_window')}
+                    data-testid="viewer-open-in-window"
+                  >
+                    <ExternalLink className="w-5 h-5" />
+                  </button>
                 )}
                 {onToggleFullscreen && (
                   <button
@@ -5613,7 +5687,7 @@ ${printWatermark ? printWatermark.html : ''}
 
         {/* Unified Notification Banner - External Content + Calendar Invitation + Read Receipt */}
         {(senderVerification ||
-          (!plainView && hasBlockedContent && (remoteBlockedByOrg || (!allowExternalContent && externalContentPolicy !== 'allow'))) ||
+          (!plainView && !pluginBlocksExternal && hasBlockedContent && (remoteBlockedByOrg || (!allowExternalContent && externalContentPolicy !== 'allow'))) ||
           hasCalendarInvitation ||
           (readReceiptResponse === 'ask' && shouldOfferReadReceipt) ||
           structuredCards.length > 0) && (
@@ -5646,7 +5720,8 @@ ${printWatermark ? printWatermark.html : ''}
                 {/* External Content Controls */}
                 {/* shouldBlockExternal: gone once trust applies (e.g. the
                     policy finished loading after the first paint). */}
-                {!plainView && hasBlockedContent && shouldBlockExternal && (remoteBlockedByOrg || (!allowExternalContent && externalContentPolicy !== 'allow')) && (
+                {/* A plugin's own banner says why it keeps external content off, and there's nothing to load. */}
+                {!plainView && !pluginBlocksExternal && hasBlockedContent && shouldBlockExternal && (remoteBlockedByOrg || (!allowExternalContent && externalContentPolicy !== 'allow')) && (
                   <div className="flex items-start gap-3 py-1" data-testid="external-content-notice">
                     <div className="w-10 h-10 rounded-full bg-info/15 text-info flex items-center justify-center flex-shrink-0 shadow-sm">
                       <Image className="w-5 h-5" />

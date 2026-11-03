@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
     // password. `trusted` only relaxes the public-address requirement.
     // Wrong credentials tried from here count against this server's address
     // upstream, so each client gets a failure budget (lib/auth/verify-budget.ts).
-    const clientIp = loginClientAddress(request);
+    const clientIp = loginClientAddress(request, upstreamUrl);
     const refund = await reserveLoginAttempt(clientIp);
     if (!refund) {
       return NextResponse.json(

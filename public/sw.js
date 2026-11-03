@@ -62,7 +62,7 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(Promise.all([self.clients.claim(), deleteStaleShellCaches()]));
+  event.waitUntil(Promise.all([self.clients.claim(), deleteStaleShellCaches(), sweepHandoffsOnActivate()]));
 });
 
 // ---- Offline mode (#523): the app shell ----
@@ -108,7 +108,7 @@ if (typeof caches !== "undefined" && caches && typeof caches.open === "function"
   readOfflineShell();
 }
 
-const APP_SECTIONS = new Set(["", "mail", "settings", "calendar", "contacts", "files", "pro", "apps"]);
+const APP_SECTIONS = new Set(["", "mail", "settings", "calendar", "contacts", "files", "pro", "apps", "protocol", "popout"]);
 
 /** The page path inside the app ("/mail/inbox"), or null for anything that isn't a page of the app. */
 function appPagePath(url) {
@@ -126,7 +126,10 @@ function appPagePath(url) {
 
 function staticPath(url) {
   if (url.origin !== self.location.origin) return false;
-  return url.pathname.startsWith(BASE_PATH + "/_next/static/");
+  if (url.pathname.startsWith(BASE_PATH + "/_next/static/")) return true;
+  // The local store's engine: named by build (?v=) and by version, so it can be
+  // kept like a hashed file, and an offline start needs it.
+  return url.pathname === BASE_PATH + "/store-worker.js" || url.pathname.startsWith(BASE_PATH + "/sqlite3mc/");
 }
 
 /** Where a page of the app is kept: its address without the query. */
@@ -138,7 +141,12 @@ function documentKey(url) {
 async function cachedDocument(url) {
   const path = appPagePath(url) || "/";
   const section = "/" + (path.split("/").filter(Boolean)[0] || "");
-  const candidates = [documentKey(url), self.location.origin + BASE_PATH + (section === "/" ? "" : section), self.location.origin + BASE_PATH];
+  const appRoot = self.location.origin + BASE_PATH;
+  // A pop-out has no section page, and the start page would put the whole app
+  // into its window. Its own kind of page reads the id from the address bar.
+  const candidates = section === "/popout"
+    ? [documentKey(url), appRoot + (path.startsWith("/popout/message/") ? "/popout/message/_" : "/popout/compose")]
+    : [documentKey(url), appRoot + (section === "/" ? "" : section), appRoot];
   // Only looked into when it exists: opening it would create it again
   // after the next build's worker deleted it.
   if (await caches.has(SHELL_CACHE)) {
@@ -311,7 +319,150 @@ async function deleteStaleShellCaches() {
   }
 }
 
+// ---- Share target: what the OS shares goes into a new draft ----
+//
+// The manifest's share_target POSTs here. Files can't travel through a
+// redirect, so they wait in the Cache API until the page takes them (same
+// layout and limits as lib/launch-handoff.ts, which also removes them). Any
+// site can POST here, signed in or not, and the worker can't tell who did: the
+// page asks the user. So what is kept is limited, and sealed with a key that
+// only the landing address's fragment knows. A browser without share_target
+// gets the same question. Without a worker the POST reaches
+// app/(main)/protocol/share/route.ts.
+const HANDOFF_CACHE = "bulwark-launch-handoff-v1";
+const HANDOFF_TTL_MS = 15 * 60 * 1000;
+const HANDOFF_MAX_ENTRIES = 5;
+const HANDOFF_MAX_BYTES = 100 * 1024 * 1024;
+
+function isShareTarget(request) {
+  // A document only: a hidden frame doesn't get to store anything.
+  if (request.method !== "POST" || request.mode !== "navigate" || request.destination !== "document") return false;
+  const url = new URL(request.url);
+  return url.origin === self.location.origin && url.pathname.replace(/\/+$/, "") === BASE_PATH + "/protocol/share";
+}
+
+/** Drops what is too old and, when `incomingBytes` wants in, the oldest entries in the way. */
+async function sweepHandoffs(cache, incomingBytes) {
+  const keys = await cache.keys();
+  const pathOf = (key) => new URL(key.url, self.location.origin).pathname;
+  const entries = [];
+  for (const key of keys) {
+    const path = pathOf(key);
+    if (!path.endsWith("/meta")) continue;
+    const response = await cache.match(key);
+    const meta = response ? await response.json().catch(() => null) : null;
+    entries.push({ prefix: path.slice(0, -"meta".length), createdAt: (meta && meta.createdAt) || 0, bytes: (meta && meta.bytes) || 0 });
+  }
+  entries.sort((a, b) => a.createdAt - b.createdAt);
+  let total = entries.reduce((sum, entry) => sum + entry.bytes, 0);
+  while (entries.length > 0) {
+    const tooOld = Date.now() - entries[0].createdAt > HANDOFF_TTL_MS;
+    const inTheWay = incomingBytes !== null && (entries.length >= HANDOFF_MAX_ENTRIES || total + incomingBytes > HANDOFF_MAX_BYTES);
+    if (!tooOld && !inTheWay) break;
+    const oldest = entries.shift();
+    total -= oldest.bytes;
+    const own = keys.filter((key) => pathOf(key).startsWith(oldest.prefix));
+    // The list last: this sweep goes by it.
+    await Promise.all(own.filter((key) => !pathOf(key).endsWith("/meta")).map((key) => cache.delete(key)));
+    await cache.delete(oldest.prefix + "meta");
+  }
+}
+
+async function sweepHandoffsOnActivate() {
+  try {
+    if (typeof caches === "undefined" || !(await caches.has(HANDOFF_CACHE))) return;
+    await sweepHandoffs(await caches.open(HANDOFF_CACHE), null);
+  } catch (_) {
+    // Tried again at the next share.
+  }
+}
+
+/** A 12-byte IV, then the AES-GCM ciphertext. */
+async function sealHandoff(key, data) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const body = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, data));
+  const sealed = new Uint8Array(iv.length + body.length);
+  sealed.set(iv);
+  sealed.set(body, iv.length);
+  return sealed;
+}
+
+/** As much of `value` as takes up to `budget` bytes once encoded, as in the server's fallback. */
+function fitEncoded(value, budget, flags) {
+  let used = 0;
+  let out = "";
+  for (const character of value) {
+    try {
+      used += encodeURIComponent(character).length;
+    } catch (_) {
+      continue;
+    }
+    if (used > budget) {
+      flags.cut = true;
+      return out;
+    }
+    out += character;
+  }
+  return out;
+}
+
+async function receiveShare(request) {
+  // In the fragment: it stays out of access logs, and the key out of the server's sight.
+  const land = (params) => Response.redirect(self.location.origin + BASE_PATH + "/#" + new URLSearchParams(params), 303);
+  let form;
+  try {
+    form = await request.formData();
+  } catch (_) {
+    return land({ share: "unavailable", share_files: "1" });
+  }
+  const field = (name) => {
+    const value = form.get(name);
+    return typeof value === "string" ? value : "";
+  };
+  const shared = { title: field("title"), text: field("text"), url: field("url") };
+  const files = form.getAll("files").filter((file) => typeof file !== "string" && file.size > 0);
+  const id = crypto.randomUUID();
+  const prefix = "/__bulwark/handoff/" + id + "/";
+  const bytes = files.reduce((sum, file) => sum + file.size, 0);
+  let cache = null;
+  try {
+    if (bytes > HANDOFF_MAX_BYTES) throw new Error("too large");
+    cache = await caches.open(HANDOFF_CACHE);
+    await sweepHandoffs(cache, bytes);
+    const key = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt"]);
+    const rawKey = new Uint8Array(await crypto.subtle.exportKey("raw", key));
+    const contents = JSON.stringify({ ...shared, files: files.map((file) => ({ name: file.name, type: file.type })) });
+    // The list first: the sweep goes by it.
+    await cache.put(prefix + "meta", new Response(JSON.stringify({ kind: "compose", createdAt: Date.now(), bytes })));
+    await cache.put(prefix + "sealed", new Response(await sealHandoff(key, new TextEncoder().encode(contents))));
+    for (let index = 0; index < files.length; index += 1) {
+      await cache.put(prefix + index, new Response(await sealHandoff(key, await files[index].arrayBuffer())));
+    }
+    const encodedKey = btoa(String.fromCharCode(...rawKey)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    return land({ share: id, key: encodedKey });
+  } catch (_) {
+    // No room for the files. The text can still come along in the address.
+    if (cache) await Promise.all([...files.map((_file, index) => cache.delete(prefix + index)), cache.delete(prefix + "sealed"), cache.delete(prefix + "meta")]).catch(() => {});
+    const flags = { cut: false };
+    const title = fitEncoded(shared.title, 400, flags);
+    const text = fitEncoded(shared.text, 1800, flags);
+    const link = fitEncoded(shared.url, 1000, flags);
+    return land({
+      share: "unavailable",
+      share_title: title,
+      share_text: text,
+      share_url: link,
+      ...(files.length > 0 ? { share_files: "1" } : {}),
+      ...(flags.cut ? { share_cut: "1" } : {}),
+    });
+  }
+}
+
 self.addEventListener("fetch", (event) => {
+  if (isShareTarget(event.request)) {
+    event.respondWith(receiveShare(event.request));
+    return;
+  }
   // Offline mode off (known): the network, untouched, as without a worker.
   if (offlineShellOn === false) return;
   const route = offlineRoute(event.request);
@@ -337,10 +488,22 @@ self.addEventListener("pushsubscriptionchange", (event) => {
   event.waitUntil(handlePushSubscriptionChange(event));
 });
 
+// Background Sync, thin: this worker has no login and can't reach the outbox,
+// so it tells the open tabs to flush theirs. With no tab open, the next one
+// flushes when it starts.
+self.addEventListener("sync", (event) => {
+  if (event.tag !== OUTBOX_SYNC_TAG) return;
+  event.waitUntil(tellClientsToFlushOutbox());
+});
+
 self.addEventListener("message", (event) => {
   const data = event.data || {};
   if (data.type === "client-build") {
     event.waitUntil(recordClientBuild(event.source && event.source.id, data.buildId).then(deleteStaleShellCaches));
+    return;
+  }
+  if (data.type === "client-logins") {
+    event.waitUntil(recordClientLogins(event.source && event.source.id, data.logins));
     return;
   }
   if (data.type === "offline-shell") {
@@ -486,6 +649,9 @@ async function handlePush(event) {
   // The login (cookie slot) that owns this account, so the click opens the
   // message there and not in whichever account happens to be active.
   const slot = preview && Number.isInteger(preview.slot) ? preview.slot : undefined;
+  // Which login that slot held when the message came: an action on this
+  // notification must not land on whoever signed into the slot since.
+  const login = preview && typeof preview.login === "string" ? preview.login : undefined;
 
   // Push subscription is scoped to EmailDelivery, but stragglers from the
   // older broader-types subscription, marking-as-read races and verification
@@ -521,7 +687,7 @@ async function handlePush(event) {
     // (Organisation > Devices): the route sent neither.
     title = accountLabel ? `New mail (${accountLabel})` : "New mail";
     body = unreadTotal > 1 ? `${unreadTotal} unread messages` : "You have new mail";
-    if (unreadTotal <= 1) data = { kind: "email", emailId: email.id, threadId: email.threadId, accountId, slot };
+    if (unreadTotal <= 1) data = { kind: "email", emailId: email.id, threadId: email.threadId, accountId, slot, login };
   } else if (email) {
     const sender = email.from && email.from[0];
     const senderName = (sender && sender.name) || (sender && sender.email) || "New mail";
@@ -534,7 +700,7 @@ async function handlePush(event) {
       body += "\n" + (more === 1 ? "+1 more message" : `+${more} more messages`);
     } else {
       // Exactly one unread: deep-link straight to that message on click.
-      data = { kind: "email", emailId: email.id, threadId: email.threadId, accountId, slot };
+      data = { kind: "email", emailId: email.id, threadId: email.threadId, accountId, slot, login };
     }
   } else {
     title = accountLabel ? `New mail (${accountLabel})` : "New mail";
@@ -543,7 +709,7 @@ async function handlePush(event) {
 
   // With the sound setting off, nothing rings and no quiet window starts.
   const audible = (await soundPreference()) && !(await withinQuietWindow(accountId));
-  await self.registration.showNotification(title, {
+  await showWithActions(title, {
     body,
     // Shared per-account tag: each new push replaces the account's single
     // notification rather than adding another.
@@ -587,7 +753,7 @@ async function showWithoutAlert(groupTag) {
   try {
     const existing = (await self.registration.getNotifications({ tag: groupTag }))[0];
     if (existing) {
-      await self.registration.showNotification(existing.title, {
+      await showWithActions(existing.title, {
         ...options,
         body: existing.body,
         data: existing.data,
@@ -732,7 +898,7 @@ async function handleNotificationClick(event) {
     return handleMailtoFocusNotificationClick();
   }
 
-  const targetUrl = buildClickUrl(data);
+  let targetUrl = buildClickUrl(data);
 
   const allClients = await self.clients.matchAll({
     type: "window",
@@ -746,6 +912,14 @@ async function handleNotificationClick(event) {
     } catch (_) {
       // Closed or detached client - ignore.
     }
+  }
+
+  // A button on the notification. When it can't be done from here, the click
+  // carries on below and opens the message, like a click on the body.
+  const action = notificationActionOf(event, data);
+  if (action) {
+    if (await runNotificationAction(action, data, event.reply, allClients)) return;
+    if (action === "reply") targetUrl = buildClickUrl(data, true);
   }
 
   for (const client of allClients) {
@@ -920,11 +1094,12 @@ function getReusableClientScore(state) {
   return 3;
 }
 
-function buildClickUrl(data) {
+function buildClickUrl(data, reply) {
   if (!data) return `${BASE_PATH}/`;
   const params = new URLSearchParams();
   if (Number.isInteger(data.slot)) params.set("slot", String(data.slot));
   if (typeof data.accountId === "string" && data.accountId) params.set("owner", data.accountId);
+  if (reply) params.set("reply", "1");
   // Not params.size: Safari before 17 (iOS 16.4+ web push) lacks it.
   const qs = params.toString();
   const targetQuery = qs ? `?${qs}` : "";
@@ -940,4 +1115,293 @@ function buildClickUrl(data) {
   // the user on the latest unread message in their Inbox rather than just the
   // app shell, so the click still feels purposeful.
   return `${BASE_PATH}/?openLatestUnread=1`;
+}
+
+// ---- Notification actions: Archive, Mark read, Reply ----
+//
+// A worker has no login. An open tab has one, so it goes first. With none, a
+// same-origin route acts with the login's context cookie (app/api/push/action).
+// That cookie goes with the browser session and holds a token only a page
+// refreshes, so the route can fail; the message then opens in the app.
+
+const NOTIFICATION_ACTIONS = ["archive", "mark-read", "reply"];
+// How long a tab has to take an action. A frozen tab doesn't answer. A tab that
+// holds the notification's login gets longer, since a busy page may still run
+// the action with its plugins; if it stays silent, the message opens and the
+// route isn't tried, which would go round them.
+const CLIENT_TAKE_MS = 1_000;
+const LOGIN_HOLDER_TAKE_MS = 3_000;
+const CLIENTS_TAKE_TOTAL_MS = 4_000;
+// How long a tab that took it has before this worker stops waiting for the outcome.
+const CLIENT_RESULT_MS = 5_000;
+const ACTION_ROUTE_DEADLINE_MS = 4_500;
+// All of the above stay inside the 10 s a browser allows openWindow and focus
+// after a notification click, so the fallback can still open the message.
+
+const OUTBOX_SYNC_TAG = "bulwark-outbox";
+
+function notificationActionPrefsKey() {
+  return `${self.location.origin}${BASE_PATH}/__push-state/actions`;
+}
+
+function pendingReplyKey() {
+  return `${self.location.origin}${BASE_PATH}/__push-state/pending-reply`;
+}
+
+function clientLoginsKey() {
+  return `${self.location.origin}${BASE_PATH}/__push-state/client-logins`;
+}
+
+async function readClientLogins() {
+  try {
+    const cache = await caches.open(PUSH_STATE_CACHE);
+    const res = await cache.match(clientLoginsKey());
+    const map = res ? await res.json() : null;
+    return map && typeof map === "object" ? map : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+/** Notes which logins an open tab holds, and forgets tabs that are gone. Kept across worker restarts. */
+async function recordClientLogins(clientId, logins) {
+  if (!clientId || !Array.isArray(logins)) return;
+  try {
+    const open = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    const openIds = new Set(open.map((c) => c.id));
+    const known = await readClientLogins();
+    const next = {};
+    for (const [id, held] of Object.entries(known)) if (openIds.has(id)) next[id] = held;
+    next[clientId] = logins.filter((login) => typeof login === "string");
+    const cache = await caches.open(PUSH_STATE_CACHE);
+    await cache.put(clientLoginsKey(), new Response(JSON.stringify(next), { headers: { "Content-Type": "application/json" } }));
+  } catch (_) {
+    // Such a tab counts as not holding the login.
+  }
+}
+
+/**
+ * What the page mirrors into this store (lib/pwa-notify/worker-state.ts): the
+ * labels in the user's language, Archive on or off, how Archive files mail,
+ * and whether an enabled plugin may veto these actions. Nothing stored: no
+ * Archive button, since the admin may have turned it off, and no route, since
+ * a plugin may be there.
+ */
+async function readNotificationActionPrefs() {
+  let stored = null;
+  try {
+    const cache = await caches.open(PUSH_STATE_CACHE);
+    const res = await cache.match(notificationActionPrefsKey());
+    stored = res ? await res.json() : null;
+  } catch (_) {
+    stored = null;
+  }
+  const labels = (stored && stored.labels) || {};
+  return {
+    archiveEnabled: !!stored && stored.archiveEnabled === true,
+    archiveMode: stored && typeof stored.archiveMode === "string" ? stored.archiveMode : "single",
+    pluginsMayVeto: !stored || stored.pluginsMayVeto !== false,
+    labels: {
+      archive: labels.archive || "Archive",
+      markRead: labels.markRead || "Mark as read",
+      reply: labels.reply || "Reply",
+      replyPlaceholder: labels.replyPlaceholder || "Write a reply",
+    },
+  };
+}
+
+function maxNotificationActions() {
+  if (typeof Notification === "undefined") return 0;
+  return Number.isInteger(Notification.maxActions) ? Notification.maxActions : 0;
+}
+
+function inlineReplySupported() {
+  return typeof NotificationEvent !== "undefined" && "reply" in NotificationEvent.prototype;
+}
+
+/** The buttons for a notification. Only one message, with its login known, gets any. */
+async function notificationActions(data) {
+  if (!data || data.kind !== "email" || !data.emailId || !data.accountId || !data.login) return [];
+  const max = maxNotificationActions();
+  if (max < 1) return [];
+  const prefs = await readNotificationActionPrefs();
+  const offered = {
+    "mark-read": { action: "mark-read", title: prefs.labels.markRead },
+    reply: inlineReplySupported()
+      ? { action: "reply", title: prefs.labels.reply, type: "text", placeholder: prefs.labels.replyPlaceholder }
+      : { action: "reply", title: prefs.labels.reply },
+  };
+  if (prefs.archiveEnabled) offered.archive = { action: "archive", title: prefs.labels.archive };
+  // Chromium allows two. Mark read goes first then: opening the message does
+  // that too, and nothing else on the toast archives or starts a reply.
+  const kept = ["archive", "reply", "mark-read"].filter((name) => offered[name]).slice(0, max);
+  return NOTIFICATION_ACTIONS.filter((name) => kept.includes(name)).map((name) => offered[name]);
+}
+
+/** A notification must show, whatever a browser thinks of its buttons. */
+async function showWithActions(title, options) {
+  const actions = await notificationActions(options.data);
+  if (actions.length > 0) {
+    try {
+      await self.registration.showNotification(title, { ...options, actions });
+      return;
+    } catch (_) {
+      // Shown without buttons below.
+    }
+  }
+  await self.registration.showNotification(title, options);
+}
+
+function notificationActionOf(event, data) {
+  if (!NOTIFICATION_ACTIONS.includes(event.action)) return null;
+  return data.kind === "email" && data.emailId && data.accountId ? event.action : null;
+}
+
+/** Asks one tab. Resolves "done", "failed" (it tried), "declined" (it didn't take it) or "silent" (no answer). */
+function askClient(client, message, takeMs) {
+  return new Promise((resolve) => {
+    if (typeof MessageChannel !== "function") {
+      resolve("declined");
+      return;
+    }
+    const channel = new MessageChannel();
+    let timer = null;
+    const finish = (result) => {
+      clearTimeout(timer);
+      channel.port1.onmessage = null;
+      resolve(result);
+    };
+    timer = setTimeout(() => finish("silent"), takeMs);
+    channel.port1.onmessage = (answer) => {
+      const status = answer.data && answer.data.status;
+      if (status === "accepted") {
+        // It's on it. A slow server shouldn't send the action round twice.
+        clearTimeout(timer);
+        timer = setTimeout(() => finish("done"), CLIENT_RESULT_MS);
+        return;
+      }
+      finish(status === "done" || status === "failed" ? status : "declined");
+    };
+    try {
+      client.postMessage(message, [channel.port2]);
+    } catch (_) {
+      finish("declined");
+    }
+  });
+}
+
+/** The first open tab that takes the action, the one in front first. */
+async function askOpenClients(message, allClients) {
+  const score = (client) => (client.focused ? 0 : client.visibilityState === "visible" ? 1 : 2);
+  const ordered = allClients
+    .filter((client) => !client.frameType || client.frameType === "top-level")
+    .sort((a, b) => score(a) - score(b));
+  const held = await readClientLogins();
+  const holdsLogin = (client) => Array.isArray(held[client.id]) && held[client.id].includes(message.login);
+  const giveUpAt = Date.now() + CLIENTS_TAKE_TOTAL_MS;
+  let silentHolder = false;
+  for (const client of ordered) {
+    if (Date.now() >= giveUpAt) {
+      silentHolder = silentHolder || holdsLogin(client);
+      continue;
+    }
+    const holder = holdsLogin(client);
+    const result = await askClient(client, message, holder ? LOGIN_HOLDER_TAKE_MS : CLIENT_TAKE_MS);
+    if (result === "silent") silentHolder = silentHolder || holder;
+    else if (result !== "declined") return { result, client };
+  }
+  // A silent tab with this login may have plugins that would stop the action.
+  return { result: silentHolder ? "failed" : "declined", client: null };
+}
+
+/** Keeps a typed reply for the page the click is about to open; it's not for a URL. */
+async function keepPendingReply(emailId, text) {
+  try {
+    const cache = await caches.open(PUSH_STATE_CACHE);
+    await cache.put(
+      pendingReplyKey(),
+      new Response(JSON.stringify({ emailId, text, at: Date.now() }), {
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+  } catch (_) {
+    // The composer opens empty.
+  }
+}
+
+async function postNotificationAction(action, data) {
+  const prefs = await readNotificationActionPrefs();
+  if (action === "archive" && !prefs.archiveEnabled) return false;
+  // Plugins run in pages. One that may stop or watch this action can't from
+  // the route, so the app opens instead.
+  if (prefs.pluginsMayVeto) return false;
+  const body = { action, accountId: data.accountId, emailId: data.emailId, login: data.login };
+  if (action === "archive") {
+    body.archiveMode = prefs.archiveMode;
+    // Year and month folders go by the date the user sees.
+    if (typeof Intl !== "undefined") body.timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  }
+  const controller = typeof AbortController === "function" ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), ACTION_ROUTE_DEADLINE_MS) : null;
+  try {
+    const res = await fetch(`${BASE_PATH}/api/push/action`, {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      ...(controller ? { signal: controller.signal } : {}),
+    });
+    return res.ok;
+  } catch (_) {
+    return false;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+/** True when the action is done and nothing has to open. */
+async function runNotificationAction(action, data, reply, allClients) {
+  const text = action === "reply" && typeof reply === "string" ? reply.trim() : "";
+  const { result, client } = await askOpenClients({
+    kind: "notification-action",
+    action,
+    emailId: data.emailId,
+    threadId: data.threadId,
+    accountId: data.accountId,
+    slot: data.slot,
+    login: data.login,
+    // A frozen tab that thaws later must not act on a click long since handled.
+    at: Date.now(),
+    ...(text ? { text } : {}),
+  }, allClients);
+  if (result === "done") {
+    if (action === "reply" && "focus" in client) {
+      try {
+        await client.focus();
+      } catch (_) {
+        // The composer is open in that tab; focusing can be blocked by the browser.
+      }
+    }
+    return true;
+  }
+  if (action === "reply") {
+    if (text) await keepPendingReply(data.emailId, text);
+    return false;
+  }
+  // A tab with this login tried and failed, or stayed silent: the route won't
+  // do better and would go round its plugins.
+  if (result === "failed") return false;
+  return postNotificationAction(action, data);
+}
+
+async function tellClientsToFlushOutbox() {
+  const allClients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+  for (const client of allClients) {
+    try {
+      client.postMessage({ kind: "outbox-flush" });
+    } catch (_) {
+      // Closed or detached client - ignore.
+    }
+  }
 }

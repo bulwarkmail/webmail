@@ -14,16 +14,19 @@ import { useOfflineStore } from '@/lib/offline/state';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { DEFAULT_ORGANISATION_POLICY } from '@/lib/admin/organisation-policy';
+import { setStoreBackend, type StoreBackend } from '@/lib/store/client/api';
 
 function setNoOffline(noOffline: boolean) {
   usePolicyStore.setState({
     loaded: true,
-    subject: null,
+    subject: { email: 'alice@example.org', groups: [] },
     policy: { ...usePolicyStore.getState().policy, organisation: { ...DEFAULT_ORGANISATION_POLICY, devices: { ...DEFAULT_ORGANISATION_POLICY.devices, noOffline } } },
   });
 }
 
 beforeEach(() => {
+  // jsdom has no OPFS: the store's page side says it's there, as a browser would.
+  setStoreBackend({ supported: () => true } as unknown as StoreBackend);
   offline.enableOffline.mockClear();
   offline.disableOffline.mockClear();
   useAuthStore.setState({ activeAccountId: 'acc' });
@@ -32,6 +35,17 @@ beforeEach(() => {
 });
 
 describe('Settings > Offline', () => {
+  it('says so in a private window, with no switch to turn on', () => {
+    useOfflineStore.setState({ storageBlocked: true });
+    try {
+      render(<OfflineSettings />);
+      expect(screen.getByTestId('offline-private')).toBeTruthy();
+      expect(screen.queryByTestId('offline-switch')).toBeNull();
+    } finally {
+      useOfflineStore.setState({ storageBlocked: false });
+    }
+  });
+
   it('is off until the user turns it on in this browser', () => {
     render(<OfflineSettings />);
     const toggle = screen.getByTestId('offline-switch');
@@ -40,12 +54,12 @@ describe('Settings > Offline', () => {
     expect(offline.enableOffline).toHaveBeenCalledWith('acc');
   });
 
-  it('asks before turning off with unsent messages', () => {
+  it('asks before turning off with unsent messages', async () => {
     useOfflineStore.setState({ enabled: ['acc'], outbox: [{ id: 1, account: 'acc', createdAt: Date.now(), subject: 'Hi', to: ['b@example.org'], status: 'waiting' }] });
     render(<OfflineSettings />);
     fireEvent.click(screen.getByTestId('offline-switch'));
+    expect(await screen.findByText('off_confirm_title')).toBeInTheDocument();
     expect(offline.disableOffline).not.toHaveBeenCalled();
-    expect(screen.getByText('off_confirm_title')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'off_confirm' }));
     expect(offline.disableOffline).toHaveBeenCalledWith('acc');
   });
@@ -62,6 +76,30 @@ describe('Settings > Offline', () => {
     expect(screen.getByTestId('offline-switch')).toBeInTheDocument();
     act(() => setNoOffline(true));
     expect(screen.queryByTestId('offline-switch')).toBeNull();
+  });
+
+  it('asks before turning off when a draft is only on this device, and counts both lists', async () => {
+    useOfflineStore.setState({
+      enabled: ['acc'],
+      localDrafts: [{ account: 'acc', localId: 'local-1', jmap: 'j', subject: 'Only here', status: 'waiting', createdAt: 0 }],
+      outbox: [{ id: 1, account: 'acc', createdAt: 0, subject: 'Queued', to: [], status: 'waiting' }],
+    });
+    render(<OfflineSettings />);
+    fireEvent.click(screen.getByTestId('offline-switch'));
+    expect(await screen.findByText('off_confirm_title')).toBeInTheDocument();
+    expect(offline.disableOffline).not.toHaveBeenCalled();
+    useOfflineStore.setState({ localDrafts: [], outbox: [] });
+  });
+
+  it('asks for one draft alone', () => {
+    useOfflineStore.setState({
+      enabled: ['acc'],
+      localDrafts: [{ account: 'acc', localId: 'local-1', jmap: 'j', subject: 'Only here', status: 'waiting', createdAt: 0 }],
+    });
+    render(<OfflineSettings />);
+    fireEvent.click(screen.getByTestId('offline-switch'));
+    expect(offline.disableOffline).not.toHaveBeenCalled();
+    useOfflineStore.setState({ localDrafts: [] });
   });
 
   it('lists the outbox', () => {

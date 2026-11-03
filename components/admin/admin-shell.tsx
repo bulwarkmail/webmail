@@ -263,7 +263,7 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
     const backHref = location.detail ? adminPath(location.page) : '/admin';
     return (
       <AdminShellContext.Provider value={contextValue}>
-        <div className="flex h-dvh flex-col bg-background pt-[env(safe-area-inset-top)]">
+        <div className="flex h-dvh flex-col bg-background pt-[var(--app-top-inset)]">
           <div className="flex h-14 shrink-0 items-center gap-1 border-b border-border bg-background px-2">
             {showIndex ? (
               <a
@@ -361,7 +361,7 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
 
   return (
     <AdminShellContext.Provider value={contextValue}>
-      <div className="flex h-dvh bg-background pt-[env(safe-area-inset-top)]">
+      <div className="flex h-dvh bg-background pt-[var(--app-top-inset)]">
         {/* The same rail as mail and settings, with Admin as the current app. */}
         <div className="flex w-14 shrink-0 flex-col bg-secondary" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
           <NavigationRail collapsed adminActive />

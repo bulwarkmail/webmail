@@ -249,6 +249,28 @@
     "active_account": "Aktīvs",
     "switching_account": "Notiek konta pārslēgšana..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Jauna ziņa",
+    "shortcut_calendar": "Kalendārs",
+    "shortcut_contacts": "Kontakti",
+    "unsupported_file": "Failu {name} šeit nevar atvērt.",
+    "open_failed": "Failu neizdevās atvērt. Mēģiniet to atvērt vēlreiz.",
+    "share_gone": "Tas, ko kopīgojāt, šeit vairs nav. Lūdzu, kopīgojiet to vēlreiz.",
+    "share_files_lost": "Kopīgotos failus neizdevās saglabāt. Pievienojiet tos ziņai vēlreiz.",
+    "ics_needs_server": "Kalendāra faila importēšanai vajadzīgs savienojums ar serveri. Importēšana sāksies, kad atkal būsiet tiešsaistē.",
+    "contacts_need_server": "Kontaktu importēšanai vajadzīgs savienojums ar serveri. Mēģiniet vēlreiz, kad atkal būsiet tiešsaistē.",
+    "share_confirm_title": "Vai sākt jaunu ziņu?",
+    "share_confirm_message": "Cita vietne vai lietotne vēlas sākt ziņu. Bez jūsu piekrišanas nekas netiek augšupielādēts vai saglabāts.",
+    "share_confirm_subject": "Tēma:",
+    "share_confirm_text": "Teksts:",
+    "share_confirm_files": "{count, plural, zero {Faili:} one {Fails:} other {Faili:}}",
+    "share_confirm_accept": "Sākt ziņu",
+    "share_confirm_decline": "Nesākt",
+    "share_cut": "Kopīgotais teksts bija pārāk garš un tika saīsināts.",
+    "handoff_expired": "Tas, ko atvērāt vai kopīgojāt, gaidīja pārāk ilgi un vairs nav pieejams. Atveriet vai kopīgojiet to vēlreiz.",
+    "compose_waiting": "Aizveriet šo ziņu, lai sāktu nākamo.",
+    "save_first_failed": "Ziņu neizdevās saglabāt, tāpēc fails netika atvērts. Saglabājiet ziņu un pēc tam atveriet kalendāru vai kontaktus."
+  },
   "sidebar_apps": {
     "modal_title": "Sānu joslas lietotnes",
     "add_new": "Pievienot lietotni",
@@ -4909,6 +4931,9 @@
     "mini_has_events": "ir notikumi",
     "mini_week_number": "{week}. nedēļa"
   },
+  "calendar_offline": {
+    "split_needs_server": "Šīm izmaiņām nepieciešams savienojums ar serveri. Pagaidām mainiet tikai šo notikumu vai mēģiniet vēlreiz, kad būsiet tiešsaistē."
+  },
   "advanced_search": {
     "title": "Izvērstā meklēšana",
     "from": "No",
@@ -5718,6 +5743,107 @@
       "no_drafts_mailbox": "Mape Melnraksti netika atrasta."
     }
   },
+  "offlineConflicts": {
+    "title": "Nepiemērotās izmaiņas",
+    "description": "Šīs izmaiņas veicāt bezsaistē. Tās netika piemērotas, un ziņojums paliek tāds, kāds tas ir serverī.",
+    "changed": "Mainīts citā ierīcē, jūsu izmaiņas netika piemērotas",
+    "changed_delete": "Mainīts citā ierīcē, tas netika izdzēsts",
+    "gone": "Vairs nav serverī, jūsu izmaiņas netika piemērotas",
+    "refused": "Serveris noraidīja šīs izmaiņas: {reason}",
+    "dismiss": "Aizvērt",
+    "dismiss_label": "Aizvērt piezīmi par {subject}",
+    "banner": "Nepiemērotās izmaiņas: {count}",
+    "toast": "Bezsaistē veiktās nepiemērotās izmaiņas: {count}. Izsūtne parāda, kuras.",
+    "storage_failed": "Šajā ierīcē vairs nav vietas bezsaistes pastam. Atbrīvojiet vietu vai iestatījumos glabājiet mazāk.",
+    "signout_changes_title": "Vai izrakstīties ar nesaglabātām izmaiņām?",
+    "signout_changes": "Izmaiņas, kas vēl nav serverī: {count}. Izrakstoties tās tiks izdzēstas.",
+    "store_unavailable": "Bezsaistes pastu šajā ierīcē pašlaik nevar atvērt. Nenosūtītais pasts paliek šeit, un lietotne turpina mēģināt.",
+    "store_reset": "Bezsaistes pastu šajā ierīcē neizdevās nolasīt, tāpēc tas tiek lejupielādēts vēlreiz. Tas, kas nebija nosūtīts, ir zudis.",
+    "legacy_stranded": "Šī pārlūkprogramma nevar atvērt iepriekšējās versijas saglabāto nenosūtīto pastu. Pārlūkprogrammas atjaunināšana var to atgūt.",
+    "store_private": "Privātie logi nevar glabāt pastu lietošanai bezsaistē.",
+    "server_not_answering": "Pasta serveris neatbild. Mēģiniet vēlreiz pēc brīža."
+  },
+  "offlineStorage": {
+    "keep_description": "Glabā jūsu e-pastu, kalendāru, kontaktpersonas un izvēlētos failus šifrētus šajā ierīcē. Bezsaistē varat lasīt, atzīmēt un pārvietot vēstules, un tas, ko rakstāt, gaida izsūtnē. Izrakstoties viss tiek noņemts.",
+    "window_label": "Cik tālu atpakaļ glabāt",
+    "window_description": "Vecākās vēstules un kalendāra notikumi pazūd no šīs ierīces. Tās joprojām varat atvērt, kad ir savienojums.",
+    "window_days": "{days, plural, zero {# dienu} one {# diena} other {# dienas}}",
+    "window_year": "1 gads",
+    "window_everything": "Viss",
+    "attachments_label": "Glabāt pielikumus",
+    "attachments_description": "Glabāto vēstuļu pielikumi un faili, ko glabājat bezsaistē, kopā līdz {total}. Vecākie tiek noņemti pirmie.",
+    "total_locked": "Jūsu organizācija atļauj ne vairāk kā {size} pielikumu un failu.",
+    "attachment_cap_label": "Lielākais glabājamais pielikums",
+    "usage_mail": "Vēstules un meklēšanas indekss",
+    "usage_attachments": "Pielikumi",
+    "usage_calendar": "Kalendārs",
+    "usage_contacts": "Kontaktpersonas",
+    "usage_files": "Bezsaistē glabātie faili",
+    "usage_row": "{size} ({count, plural, zero {# vienumu} one {# vienums} other {# vienumi}})",
+    "progress_list": "Vēstuļu saraksta veidošana",
+    "progress_bodies": "Vēstuļu lejupielāde",
+    "progress_threads": "Sarunu kārtošana",
+    "progress_files": "Failu lejupielāde",
+    "progress_other": "Datu pārnešana uz šo ierīci",
+    "progress_count": "{done} no {total}",
+    "progress_count_open": "līdz šim {done}",
+    "progress_left": "atlikušas apmēram {minutes, plural, zero {# minūšu} one {# minūte} other {# minūtes}}",
+    "clear_label": "Notīrīt šo kontu",
+    "clear_description": "Izdzēš visu, ko šī ierīce glabā šim kontam, un lejupielādē to no jauna.",
+    "clear_button": "Notīrīt…",
+    "clear_confirm_title": "Vai notīrīt šo kontu šajā ierīcē?",
+    "clear_confirm_message": "Viss, ko šī ierīce glabā kontam {account}, tiek izdzēsts un lejupielādēts no jauna. Jūsu e-pasts serverī paliek.",
+    "clear_confirm_unsent": "{count, plural, zero {# neizsūtītu vēstuļu tiks zaudēts.} one {Tiks zaudēta # neizsūtīta vēstule.} other {Tiks zaudētas # neizsūtītas vēstules.}}",
+    "clear_confirm": "Notīrīt",
+    "persist_refused": "Šis pārlūks var izdzēst glabāto e-pastu, kad pietrūkst vietas. Lietotnes instalēšana to parasti novērš.",
+    "persist_retry": "Pajautāt vēlreiz",
+    "safari_hint": "Safari izdzēš vietnes datus pēc 7 dienām bez apmeklējuma. Pievienojiet Bulwark sākuma ekrānam vai Dock, lai e-pasts paliktu šajā ierīcē.",
+    "evicted": "Pārlūks izdzēsa šajā ierīcē glabāto e-pastu. Tas tiek lejupielādēts no jauna.",
+    "evicted_lost": "{count, plural, zero {Tika zaudētas # neizsūtītu vēstuļu vai izmaiņu.} one {Tika zaudēta # neizsūtīta vēstule vai izmaiņa.} other {Tika zaudētas # neizsūtītas vēstules vai izmaiņas.}}",
+    "evicted_dismiss": "Labi",
+    "storage_full_title": "Ierīces krātuve ir pilna.",
+    "storage_full_text": "Bulwark vairs šeit nesaglabā e-pastu. Glabājiet mazāk e-pasta vai notīriet šo kontu, lai atbrīvotu vietu.",
+    "open_settings": "Atvērt iestatījumus",
+    "default_on": "Bulwark glabā jūsu e-pastu šajā ierīcē, lai tas darbotos bez savienojuma. To varat mainīt iestatījumos.",
+    "conflict_calendar": "Kalendāra notikums",
+    "conflict_contacts": "Kontaktpersona",
+    "kept_files_title": "Bezsaistē glabātie faili",
+    "kept_state_kept": "Šajā ierīcē",
+    "kept_state_waiting": "Gaida lejupielādi",
+    "kept_error_tooLarge": "Pārāk liels, lai glabātu",
+    "kept_error_overLimit": "Pārsniedz šīs ierīces ierobežojumu",
+    "kept_error_notAllowed": "Jūsu organizācija neatļauj glabāt failus",
+    "kept_error_download": "Nevarēja lejupielādēt",
+    "keep_offline": "Glabāt bezsaistē",
+    "unpin": "Pārtraukt glabāt bezsaistē",
+    "unpin_label": "Pārtraukt glabāt {name} bezsaistē",
+    "warning_desktop": "Ikviens, kas var izmantot šī datora lietotāja kontu, var lasīt šo e-pastu. Izmantojiet diska šifrēšanu.",
+    "off_confirm_text": "Tas izdzēš visu, ko šī ierīce glabā kontam {account}. Jūsu e-pasts serverī paliek.",
+    "unsent_changes": "{count, plural, zero {# izmaiņu, kas nesasniedza serveri, tiks zaudēts.} one {Tiks zaudēta # izmaiņa, kas nesasniedza serveri.} other {Tiks zaudētas # izmaiņas, kas nesasniedza serveri.}}",
+    "clear_needs_connection": "Nepieciešams savienojums, jo viss tiek lejupielādēts no jauna.",
+    "usage_label": "Ko glabā šī ierīce",
+    "pin_not_ready": "Šī faila vēl nav šīs ierīces sarakstā. Mēģiniet vēlreiz pēc brīža."
+  },
+  "offlineDrafts": {
+    "title": "Melnraksti šajā ierīcē",
+    "description": "Šie melnraksti ir saglabāti šajā ierīcē. Tie paši nonāks serverī, tiklīdz tas būs sasniedzams.",
+    "saved_on_device": "Saglabāts šajā ierīcē",
+    "status_waiting": "Gaida serveri",
+    "status_sending": "Saglabā serverī",
+    "status_uncertain": "Pārbauda, vai tas sasniedza serveri",
+    "status_refused": "Serveris noraidīja šo melnrakstu: {error}",
+    "file_missing": "Pievienotais fails vairs nav šajā ierīcē",
+    "open": "Atvērt",
+    "open_label": "Atvērt {subject}",
+    "retry": "Mēģināt vēlreiz",
+    "retry_label": "Mēģināt vēlreiz: {subject}",
+    "toast_refused": "Melnrakstu {subject} neizdevās saglabāt serverī. Tas paliek šajā ierīcē.",
+    "toast_conflict": "Melnraksts {subject} tika mainīts citā ierīcē. Abas versijas tiek saglabātas.",
+    "conflict_changed": "Mainīts citā ierīcē. Abas versijas ir mapē Melnraksti.",
+    "conflict_gone": "Mainīts vai noņemts citā ierīcē. Jūsu versija ir mapē Melnraksti.",
+    "banner_refused": "Servera noraidītie melnraksti: {count}",
+    "banner_waiting": "Melnraksti, kas gaida serveri: {count}"
+  },
   "deep_link": {
     "message_not_found": "Šī ziņa vairs nav pieejama.",
     "thread_not_found": "Šī sarakste vairs nav pieejama.",
@@ -5833,6 +5959,10 @@
       "crypto_full": {
         "title": "Pilna piekļuve lietotnei",
         "body": "Darbojas ar tādām pašām tiesībām kā pats webmail. Var lasīt visu jūsu pastu un saglabātās atslēgas un rīkoties jūsu vārdā. Atļaujiet to tikai spraudņiem, kuriem pilnībā uzticaties."
+      },
+      "keystore": {
+        "title": "Izmantot šī datora sertifikātus",
+        "body": "Lūdz parakstīt un atšifrēt ziņojumus ar šī datora vai viedkartes sertifikātiem. Lietotne vispirms jautā jums. Spraudnis nekad nesaņem privāto atslēgu, taču, kamēr to atļaujat, tas var parakstīt jūsu vārdā un lasīt to, ko atšifrē."
       },
       "email_raw_send": {
         "title": "Sūtīt paša izveidotas vēstules",
@@ -6350,6 +6480,12 @@
     "sign_language": "Zīmju valoda",
     "new_tab": "atveras jaunā cilnē"
   },
+  "pwaNotify": {
+    "action_archive": "Arhivēt",
+    "action_mark_read": "Atzīmēt kā izlasītu",
+    "action_reply": "Atbildēt",
+    "reply_placeholder": "Rakstiet atbildi"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Pievienot kalendāram",
     "update_in_calendar": "Atjaunināt kalendārā",
@@ -6451,5 +6587,40 @@
       "next_issue": "Nākamā pareizrakstības vai gramatikas kļūda",
       "previous_issue": "Iepriekšējā pareizrakstības vai gramatikas kļūda"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Atvērt jaunā logā",
+    "save_all_to_folder": "Saglabāt visu mapē…",
+    "saved_all": "{count, plural, zero {# pielikumi saglabāti mapē {folder}.} one {# pielikums saglabāts mapē {folder}.} other {# pielikumi saglabāti mapē {folder}.}}",
+    "saved_partial": "Saglabāti {saved} no {total} pielikumiem mapē {folder}.",
+    "save_failed": "Pielikumus neizdevās saglabāt mapē {folder}.",
+    "popup_blocked": "Pārlūks bloķēja jauno logu. Atļaujiet uznirstošos logus šai vietnei un mēģiniet vēlreiz.",
+    "opening": "Notiek atvēršana…",
+    "session_ended_title": "Šajā logā esat izrakstījies",
+    "session_ended_body": "Atveriet lietotni un pierakstieties, pēc tam atveriet šo logu vēlreiz.",
+    "open_app": "Atvērt lietotni",
+    "close_window": "Aizvērt logu",
+    "message_gone_title": "Šī ziņojuma vairs nav",
+    "message_gone_body": "Tas tika dzēsts vai pārvietots uz citu kontu.",
+    "message_moved": "Šis ziņojums tika pārvietots uz citu mapi.",
+    "message_moved_to": "Šis ziņojums tika pārvietots uz {folder}.",
+    "window_not_ready": "Jaunais logs neatvērās laikus. Melnraksts paliek šeit."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Pierakstīties ar pārlūku",
+    "browser_waiting": "Pabeidziet pierakstīšanos pārlūkā",
+    "browser_unavailable": "Šis serveris nepiedāvā pierakstīšanos ar pārlūku. Izmantojiet paroli.",
+    "browser_failed": "Pierakstīšanās ar pārlūku neizdevās. Mēģiniet vēlreiz.",
+    "server_needed": "Vispirms ievadiet servera adresi.",
+    "server_declined": "Jūs neatļāvāt šo serveri, tāpēc tam nekas netika nosūtīts.",
+    "server_invalid": "Šī servera adrese nav derīga."
+  },
+  "desktop_keystore": {
+    "title": "Šī datora sertifikāti",
+    "description": "Šis serveris var lūgt izmantot jūsu sertifikātus un viedkartes. Pirms katra sertifikāta izmantošanas jums tomēr tiks jautāts.",
+    "label": "Šī servera piekļuve",
+    "label_description": "Atsauciet savu atļauju. Serverim būs jālūdz vēlreiz.",
+    "revoke": "Atsaukt",
+    "revoked": "Atļauja atsaukta"
   }
 }

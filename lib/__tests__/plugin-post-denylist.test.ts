@@ -29,6 +29,7 @@ describe('routes no plugin may POST to', () => {
     '/api/%70lugin-proxy',
     '/api//plugin-secrets',
     '/api/account/stalwart/jmap',
+    '/api/push/action',
   ])('%s is denied', (path) => {
     expect(isPluginPostDenied(path)).toBe(true);
   });

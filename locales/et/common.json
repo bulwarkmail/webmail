@@ -249,6 +249,28 @@
     "active_account": "Aktiivne",
     "switching_account": "Konto vahetamine..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Uus kiri",
+    "shortcut_calendar": "Kalender",
+    "shortcut_contacts": "Kontaktid",
+    "unsupported_file": "Faili {name} ei saa siin avada.",
+    "open_failed": "Faili ei saanud avada. Proovi see uuesti avada.",
+    "share_gone": "See, mida jagasid, pole enam siin. Jaga seda palun uuesti.",
+    "share_files_lost": "Jagatud faile ei saanud alles hoida. Lisa need kirjale uuesti.",
+    "ics_needs_server": "Kalendrifaili importimiseks on vaja ühendust serveriga. Import algab, kui oled jälle võrgus.",
+    "contacts_need_server": "Kontaktide importimiseks on vaja ühendust serveriga. Proovi uuesti, kui oled jälle võrgus.",
+    "share_confirm_title": "Kas alustada uut kirja?",
+    "share_confirm_message": "Teine sait või rakendus soovib kirja alustada. Ilma sinu nõusolekuta ei laadita ega salvestata midagi.",
+    "share_confirm_subject": "Teema:",
+    "share_confirm_text": "Tekst:",
+    "share_confirm_files": "{count, plural, one {Fail:} other {Failid:}}",
+    "share_confirm_accept": "Alusta kirja",
+    "share_confirm_decline": "Ära alusta",
+    "share_cut": "Jagatud tekst oli liiga pikk ja seda lühendati.",
+    "handoff_expired": "Midagi, mille avasid või jagasid, ootas liiga kaua ja seda pole enam. Ava või jaga see uuesti.",
+    "compose_waiting": "Järgmise alustamiseks sulge see kiri.",
+    "save_first_failed": "Kirja ei saanud salvestada, seega faili ei avatud. Salvesta kiri ja ava siis kalender või kontaktid."
+  },
   "sidebar_apps": {
     "modal_title": "Külgriba rakendused",
     "add_new": "Lisa rakendus",
@@ -4909,6 +4931,9 @@
     "mini_has_events": "on sündmusi",
     "mini_week_number": "Nädal {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "See muudatus vajab ühendust serveriga. Muuda praegu ainult seda sündmust või proovi uuesti, kui oled taas võrgus."
+  },
   "calendar_event_notifications": {
     "someone": "Keegi",
     "invited": "{name} kutsus sind sündmusele \"{title}\"",
@@ -5718,6 +5743,107 @@
       "no_drafts_mailbox": "Kausta Mustandid ei leitud."
     }
   },
+  "offlineConflicts": {
+    "title": "Rakendamata muudatused",
+    "description": "Tegite need muudatused võrguühenduseta. Neid ei rakendatud ja kiri jääb selliseks, nagu see on serveris.",
+    "changed": "Muudetud teises seadmes, teie muudatust ei rakendatud",
+    "changed_delete": "Muudetud teises seadmes, seda ei kustutatud",
+    "gone": "Pole enam serveris, teie muudatust ei rakendatud",
+    "refused": "Server keeldus sellest muudatusest: {reason}",
+    "dismiss": "Sulge",
+    "dismiss_label": "Sulge märkus teemal {subject}",
+    "banner": "Rakendamata muudatused: {count}",
+    "toast": "Võrguühenduseta tehtud rakendamata muudatused: {count}. Väljundkaust näitab, millised.",
+    "storage_failed": "Selles seadmes pole enam ruumi võrguühenduseta kirjade jaoks. Vabastage ruumi või hoidke seadetes vähem.",
+    "signout_changes_title": "Kas logida välja salvestamata muudatustega?",
+    "signout_changes": "Muudatused, mida serveris veel pole: {count}. Väljalogimine kustutab need.",
+    "store_unavailable": "Selle seadme võrguühenduseta kirju ei saa praegu avada. Saatmata kirjad jäävad siia ja rakendus proovib edasi.",
+    "store_reset": "Selle seadme võrguühenduseta kirju ei õnnestunud lugeda, seega laaditakse need uuesti alla. Mis oli saatmata, on kadunud.",
+    "legacy_stranded": "See brauser ei saa avada varasema versiooni hoitud saatmata kirju. Brauseri uuendamine võib need tagasi tuua.",
+    "store_private": "Privaatsed aknad ei saa kirju võrguühenduseta kasutamiseks hoida.",
+    "server_not_answering": "Meiliserver ei vasta. Proovige kohe uuesti."
+  },
+  "offlineStorage": {
+    "keep_description": "Hoiab sinu kirju, kalendrit, kontakte ja valitud faile krüptitult selles seadmes. Võrguta saad kirju lugeda, märgistada ja teisaldada ning see, mida kirjutad, ootab väljuvate kirjade kastis. Välja logides eemaldatakse kõik.",
+    "window_label": "Kui kaugele minevikku hoida",
+    "window_description": "Vanemad kirjad ja kalendrisündmused kaovad sellest seadmest. Saad neid endiselt avada, kui oled võrgus.",
+    "window_days": "{days, plural, one {# päev} other {# päeva}}",
+    "window_year": "1 aasta",
+    "window_everything": "Kõik",
+    "attachments_label": "Hoia manuseid",
+    "attachments_description": "Hoitud kirjade manused ja failid, mida hoiad võrguta, kokku kuni {total}. Vanimad eemaldatakse esimesena.",
+    "total_locked": "Sinu organisatsioon lubab manuseid ja faile kokku kuni {size}.",
+    "attachment_cap_label": "Suurim hoitav manus",
+    "usage_mail": "Kirjad ja otsinguindeks",
+    "usage_attachments": "Manused",
+    "usage_calendar": "Kalender",
+    "usage_contacts": "Kontaktid",
+    "usage_files": "Võrguta hoitud failid",
+    "usage_row": "{size} ({count, plural, one {# kirje} other {# kirjet}})",
+    "progress_list": "Kirjade loendamine",
+    "progress_bodies": "Kirjade allalaadimine",
+    "progress_threads": "Vestluste sortimine",
+    "progress_files": "Failide allalaadimine",
+    "progress_other": "Andmete toomine sellesse seadmesse",
+    "progress_count": "{done} / {total}",
+    "progress_count_open": "seni {done}",
+    "progress_left": "jäänud umbes {minutes, plural, one {# minut} other {# minutit}}",
+    "clear_label": "Tühjenda see konto",
+    "clear_description": "Kustutab kõik, mida see seade selle konto jaoks hoiab, ja laadib selle uuesti alla.",
+    "clear_button": "Tühjenda…",
+    "clear_confirm_title": "Kas tühjendada see konto selles seadmes?",
+    "clear_confirm_message": "Kõik, mida see seade kontoga {account} seoses hoiab, kustutatakse ja laaditakse uuesti alla. Sinu kirjad serveris jäävad alles.",
+    "clear_confirm_unsent": "{count, plural, one {# saatmata kiri läheb kaotsi.} other {# saatmata kirja lähevad kaotsi.}}",
+    "clear_confirm": "Tühjenda",
+    "persist_refused": "See brauser võib hoitud kirjad kustutada, kui ruumi napib. Rakenduse paigaldamine hoiab selle tavaliselt ära.",
+    "persist_retry": "Küsi uuesti",
+    "safari_hint": "Safari kustutab saidi andmed, kui seda pole 7 päeva külastatud. Lisa Bulwark avaekraanile või Dockile, et su kirjad sellesse seadmesse alles jääksid.",
+    "evicted": "Brauser kustutas selles seadmes hoitud kirjad. Need laaditakse uuesti alla.",
+    "evicted_lost": "{count, plural, one {# saatmata kiri või muudatus läks kaotsi.} other {# saatmata kirja või muudatust läks kaotsi.}}",
+    "evicted_dismiss": "OK",
+    "storage_full_title": "Seadme salvestusruum on täis.",
+    "storage_full_text": "Bulwark ei salvesta siin enam kirju. Hoia vähem kirju või tühjenda see konto, et ruumi vabastada.",
+    "open_settings": "Ava seaded",
+    "default_on": "Bulwark hoiab su kirju selles seadmes, et see töötaks ka ilma ühenduseta. Saad seda seadetes muuta.",
+    "conflict_calendar": "Kalendrisündmus",
+    "conflict_contacts": "Kontakt",
+    "kept_files_title": "Võrguta hoitud failid",
+    "kept_state_kept": "Selles seadmes",
+    "kept_state_waiting": "Ootab allalaadimist",
+    "kept_error_tooLarge": "Liiga suur hoidmiseks",
+    "kept_error_overLimit": "Ületab selle seadme piiri",
+    "kept_error_notAllowed": "Sinu organisatsioon ei luba faile hoida",
+    "kept_error_download": "Allalaadimine ebaõnnestus",
+    "keep_offline": "Hoia võrguta",
+    "unpin": "Ära hoia enam võrguta",
+    "unpin_label": "Ära hoia faili {name} enam võrguta",
+    "warning_desktop": "Igaüks, kes saab selle arvuti kasutajakontot kasutada, saab neid kirju lugeda. Kasuta kettakrüptimist.",
+    "off_confirm_text": "See kustutab kõik, mida see seade kontoga {account} seoses hoiab. Sinu kirjad serveris jäävad alles.",
+    "unsent_changes": "{count, plural, one {# muudatus, mis ei jõudnud serverisse, läheb kaotsi.} other {# muudatust, mis ei jõudnud serverisse, lähevad kaotsi.}}",
+    "clear_needs_connection": "See vajab ühendust, sest kõik laaditakse uuesti alla.",
+    "usage_label": "Mida see seade hoiab",
+    "pin_not_ready": "Seda faili ei ole selle seadme loendis veel. Proovi hetke pärast uuesti."
+  },
+  "offlineDrafts": {
+    "title": "Mustandid selles seadmes",
+    "description": "Need mustandid on salvestatud selles seadmes. Need lähevad serverisse ise, kui server on kättesaadav.",
+    "saved_on_device": "Salvestatud selles seadmes",
+    "status_waiting": "Ootab serverit",
+    "status_sending": "Salvestamine serverisse",
+    "status_uncertain": "Kontrollimine, kas see jõudis serverisse",
+    "status_refused": "Server keeldus sellest mustandist: {error}",
+    "file_missing": "Manustatud faili pole enam selles seadmes",
+    "open": "Ava",
+    "open_label": "Ava {subject}",
+    "retry": "Proovi uuesti",
+    "retry_label": "Proovi uuesti: {subject}",
+    "toast_refused": "Mustandit {subject} ei saanud serverisse salvestada. See jääb sellesse seadmesse.",
+    "toast_conflict": "Mustandit {subject} muudeti teises seadmes. Mõlemad versioonid jäävad alles.",
+    "conflict_changed": "Muudetud teises seadmes. Mõlemad versioonid on kaustas Mustandid.",
+    "conflict_gone": "Muudetud või eemaldatud teises seadmes. Teie versioon on kaustas Mustandid.",
+    "banner_refused": "Serveri tagasi lükatud mustandid: {count}",
+    "banner_waiting": "Serverit ootavad mustandid: {count}"
+  },
   "deep_link": {
     "message_not_found": "See sõnum ei ole enam saadaval.",
     "thread_not_found": "See vestlus ei ole enam saadaval.",
@@ -5833,6 +5959,10 @@
       "crypto_full": {
         "title": "Täielik juurdepääs sellele rakendusele",
         "body": "Töötab samade õigustega kui veebimeil ise. See saab lugeda kogu sinu posti ja salvestatud võtmeid ning tegutseda sinu nimel. Luba see ainult pistikprogrammidele, mida täielikult usaldad."
+      },
+      "keystore": {
+        "title": "Kasuta selle arvuti sertifikaate",
+        "body": "Palub sõnumeid allkirjastada ja dekrüpteerida selle arvuti või kiipkaardi sertifikaatidega. Rakendus küsib teilt enne. Pistikprogramm ei saa kunagi privaatvõtit, kuid seni, kuni seda lubate, saab see teie nimel allkirjastada ja lugeda seda, mida dekrüpteerib."
       },
       "email_raw_send": {
         "title": "Saada ise koostatud kirju",
@@ -6350,6 +6480,12 @@
     "sign_language": "Viipekeel",
     "new_tab": "avaneb uuel vahekaardil"
   },
+  "pwaNotify": {
+    "action_archive": "Arhiveeri",
+    "action_mark_read": "Märgi loetuks",
+    "action_reply": "Vasta",
+    "reply_placeholder": "Kirjuta vastus"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Lisa kalendrisse",
     "update_in_calendar": "Uuenda kalendris",
@@ -6451,5 +6587,40 @@
       "next_issue": "Järgmine õigekirja- või grammatikaviga",
       "previous_issue": "Eelmine õigekirja- või grammatikaviga"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Ava uues aknas",
+    "save_all_to_folder": "Salvesta kõik kausta…",
+    "saved_all": "{count, plural, one {# manus salvestati kausta {folder}.} other {# manust salvestati kausta {folder}.}}",
+    "saved_partial": "{total} manusest {saved} salvestati kausta {folder}.",
+    "save_failed": "Manuseid ei saanud kausta {folder} salvestada.",
+    "popup_blocked": "Brauser blokeeris uue akna. Luba selle saidi hüpikaknad ja proovi uuesti.",
+    "opening": "Avamine…",
+    "session_ended_title": "Oled selles aknas välja logitud",
+    "session_ended_body": "Ava rakendus ja logi sisse, seejärel ava see aken uuesti.",
+    "open_app": "Ava rakendus",
+    "close_window": "Sulge aken",
+    "message_gone_title": "Seda kirja enam ei ole",
+    "message_gone_body": "See kustutati või teisaldati teisele kontole.",
+    "message_moved": "See kiri teisaldati teise kausta.",
+    "message_moved_to": "See kiri teisaldati kausta {folder}.",
+    "window_not_ready": "Uus aken ei avanenud õigeks ajaks. Mustand jääb siia."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Logi sisse brauseriga",
+    "browser_waiting": "Lõpeta sisselogimine brauseris",
+    "browser_unavailable": "See server ei paku brauseri kaudu sisselogimist. Kasuta parooli.",
+    "browser_failed": "Brauseri kaudu sisselogimine ei õnnestunud. Proovi uuesti.",
+    "server_needed": "Sisesta kõigepealt serveri aadress.",
+    "server_declined": "Sa ei lubanud seda serverit, nii et sellele ei saadetud midagi.",
+    "server_invalid": "See serveri aadress ei kehti."
+  },
+  "desktop_keystore": {
+    "title": "Selle arvuti sertifikaadid",
+    "description": "See server võib paluda teie sertifikaate ja kiipkaarte kasutada. Enne iga sertifikaadi kasutamist küsitakse teilt siiski luba.",
+    "label": "Selle serveri juurdepääs",
+    "label_description": "Võtke oma luba tagasi. Server peab siis uuesti küsima.",
+    "revoke": "Võta tagasi",
+    "revoked": "Luba võeti tagasi"
   }
 }

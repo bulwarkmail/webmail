@@ -249,6 +249,28 @@
     "active_account": "Actief",
     "switching_account": "Account wisselen..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Nieuw bericht",
+    "shortcut_calendar": "Agenda",
+    "shortcut_contacts": "Contacten",
+    "unsupported_file": "{name} kan hier niet worden geopend.",
+    "open_failed": "Het bestand kon niet worden geopend. Probeer het opnieuw te openen.",
+    "share_gone": "Wat je hebt gedeeld, is er niet meer. Deel het opnieuw.",
+    "share_files_lost": "De gedeelde bestanden konden niet worden bewaard. Voeg ze opnieuw aan het bericht toe.",
+    "ics_needs_server": "Voor het importeren van een agendabestand is een verbinding met de server nodig. Het importeren begint zodra je weer online bent.",
+    "contacts_need_server": "Voor het importeren van contacten is een verbinding met de server nodig. Probeer het opnieuw als je weer online bent.",
+    "share_confirm_title": "Een nieuw bericht beginnen?",
+    "share_confirm_message": "Een andere site of app wil een bericht beginnen. Er wordt niets geüpload of opgeslagen zonder je toestemming.",
+    "share_confirm_subject": "Onderwerp:",
+    "share_confirm_text": "Tekst:",
+    "share_confirm_files": "{count, plural, one {Bestand:} other {Bestanden:}}",
+    "share_confirm_accept": "Bericht beginnen",
+    "share_confirm_decline": "Niet beginnen",
+    "share_cut": "De gedeelde tekst was te lang en is ingekort.",
+    "handoff_expired": "Iets wat je hebt geopend of gedeeld, heeft te lang gewacht en is weg. Open of deel het opnieuw.",
+    "compose_waiting": "Sluit dit bericht om het volgende te beginnen.",
+    "save_first_failed": "Je bericht kon niet worden opgeslagen, dus het bestand is niet geopend. Sla het bericht op en open daarna de agenda of de contacten."
+  },
   "sidebar_apps": {
     "modal_title": "Zijbalk-apps",
     "add_new": "App toevoegen",
@@ -4909,6 +4931,9 @@
     "mini_has_events": "heeft afspraken",
     "mini_week_number": "Week {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "Voor deze wijziging is een verbinding met de server nodig. Wijzig voorlopig alleen deze afspraak, of probeer het opnieuw zodra je weer online bent."
+  },
   "advanced_search": {
     "title": "Geavanceerd zoeken",
     "from": "Van",
@@ -5718,6 +5743,107 @@
       "no_drafts_mailbox": "Je map Concepten is niet gevonden."
     }
   },
+  "offlineConflicts": {
+    "title": "Niet doorgevoerde wijzigingen",
+    "description": "Je hebt deze wijzigingen offline gemaakt. Ze zijn niet doorgevoerd en het bericht blijft zoals het op de server staat.",
+    "changed": "Gewijzigd op een ander apparaat, je wijziging is niet doorgevoerd",
+    "changed_delete": "Gewijzigd op een ander apparaat, niet verwijderd",
+    "gone": "Staat niet meer op de server, je wijziging is niet doorgevoerd",
+    "refused": "De server heeft deze wijziging geweigerd: {reason}",
+    "dismiss": "Sluiten",
+    "dismiss_label": "Melding over {subject} sluiten",
+    "banner": "Niet doorgevoerde wijzigingen: {count}",
+    "toast": "Offline gemaakte wijzigingen niet doorgevoerd: {count}. Het Postvak UIT laat zien welke.",
+    "storage_failed": "Dit apparaat heeft geen ruimte meer voor offline mail. Maak ruimte vrij of bewaar minder via Instellingen.",
+    "signout_changes_title": "Afmelden met niet-opgeslagen wijzigingen?",
+    "signout_changes": "Wijzigingen die nog niet op de server staan: {count}. Afmelden verwijdert ze.",
+    "store_unavailable": "De offline mail op dit apparaat kan nu niet worden geopend. Niet-verzonden mail blijft hier en de app blijft het proberen.",
+    "store_reset": "De offline mail op dit apparaat kon niet worden gelezen en wordt opnieuw gedownload. Wat hier nog niet verzonden was, is weg.",
+    "legacy_stranded": "Deze browser kan niet-verzonden mail van een eerdere versie niet openen. De browser bijwerken kan die terughalen.",
+    "store_private": "Privévensters kunnen geen mail bewaren voor offline gebruik.",
+    "server_not_answering": "De mailserver antwoordt niet. Probeer het zo meteen opnieuw."
+  },
+  "offlineStorage": {
+    "keep_description": "Bewaart je e-mail, agenda, contacten en gekozen bestanden versleuteld op dit apparaat. Offline kun je e-mail lezen, markeren en verplaatsen, en wat je schrijft wacht in Postvak UIT. Afmelden verwijdert alles.",
+    "window_label": "Hoe ver terug bewaren",
+    "window_description": "Oudere e-mail en agenda-items verdwijnen van dit apparaat. Je kunt ze nog openen als je online bent.",
+    "window_days": "{days, plural, one {# dag} other {# dagen}}",
+    "window_year": "1 jaar",
+    "window_everything": "Alles",
+    "attachments_label": "Bijlagen bewaren",
+    "attachments_description": "Bijlagen van bewaarde berichten en de bestanden die je offline bewaart, samen maximaal {total}. De oudste gaan eerst weg.",
+    "total_locked": "Je organisatie staat maximaal {size} aan bijlagen en bestanden toe.",
+    "attachment_cap_label": "Grootste bijlage om te bewaren",
+    "usage_mail": "Berichten en zoekindex",
+    "usage_attachments": "Bijlagen",
+    "usage_calendar": "Agenda",
+    "usage_contacts": "Contacten",
+    "usage_files": "Offline bewaarde bestanden",
+    "usage_row": "{size} ({count, plural, one {# item} other {# items}})",
+    "progress_list": "Berichten worden opgesomd",
+    "progress_bodies": "Berichten worden gedownload",
+    "progress_threads": "Gesprekken worden gesorteerd",
+    "progress_files": "Bestanden worden gedownload",
+    "progress_other": "Gegevens worden naar dit apparaat gehaald",
+    "progress_count": "{done} van {total}",
+    "progress_count_open": "{done} tot nu toe",
+    "progress_left": "nog ongeveer {minutes, plural, one {# minuut} other {# minuten}}",
+    "clear_label": "Dit account wissen",
+    "clear_description": "Verwijdert alles wat dit apparaat voor dit account bewaart en downloadt het daarna opnieuw.",
+    "clear_button": "Wissen…",
+    "clear_confirm_title": "Dit account op dit apparaat wissen?",
+    "clear_confirm_message": "Alles wat dit apparaat voor {account} bewaart, wordt verwijderd en opnieuw gedownload. Je e-mail op de server blijft staan.",
+    "clear_confirm_unsent": "{count, plural, one {# niet-verzonden bericht gaat verloren.} other {# niet-verzonden berichten gaan verloren.}}",
+    "clear_confirm": "Wissen",
+    "persist_refused": "Deze browser kan de bewaarde e-mail verwijderen als de ruimte opraakt. De app installeren voorkomt dat meestal.",
+    "persist_retry": "Opnieuw vragen",
+    "safari_hint": "Safari verwijdert de gegevens van een site na 7 dagen zonder bezoek. Zet Bulwark op je beginscherm of in het Dock om je e-mail op dit apparaat te houden.",
+    "evicted": "De browser heeft de e-mail verwijderd die op dit apparaat was bewaard. Ze wordt opnieuw gedownload.",
+    "evicted_lost": "{count, plural, one {# niet-verzonden bericht of wijziging is verloren gegaan.} other {# niet-verzonden berichten of wijzigingen zijn verloren gegaan.}}",
+    "evicted_dismiss": "OK",
+    "storage_full_title": "De opslag van het apparaat is vol.",
+    "storage_full_text": "Bulwark slaat hier geen e-mail meer op. Bewaar minder e-mail of wis dit account om ruimte te maken.",
+    "open_settings": "Instellingen openen",
+    "default_on": "Bulwark bewaart je e-mail op dit apparaat, zodat het ook zonder verbinding werkt. Je kunt dit wijzigen in de instellingen.",
+    "conflict_calendar": "Agenda-item",
+    "conflict_contacts": "Contact",
+    "kept_files_title": "Offline bewaarde bestanden",
+    "kept_state_kept": "Op dit apparaat",
+    "kept_state_waiting": "Wacht op download",
+    "kept_error_tooLarge": "Te groot om te bewaren",
+    "kept_error_overLimit": "Boven de limiet voor dit apparaat",
+    "kept_error_notAllowed": "Je organisatie staat het bewaren van bestanden niet toe",
+    "kept_error_download": "Kon niet worden gedownload",
+    "keep_offline": "Offline bewaren",
+    "unpin": "Niet meer offline bewaren",
+    "unpin_label": "{name} niet meer offline bewaren",
+    "warning_desktop": "Iedereen die dit gebruikersaccount op deze computer kan gebruiken, kan deze e-mail lezen. Gebruik schijfversleuteling.",
+    "off_confirm_text": "Hiermee wordt alles verwijderd wat dit apparaat voor {account} bewaart. Je e-mail op de server blijft staan.",
+    "unsent_changes": "{count, plural, one {# wijziging die de server niet heeft bereikt, gaat verloren.} other {# wijzigingen die de server niet hebben bereikt, gaan verloren.}}",
+    "clear_needs_connection": "Hiervoor is een verbinding nodig, omdat alles opnieuw wordt gedownload.",
+    "usage_label": "Wat dit apparaat bewaart",
+    "pin_not_ready": "Dit bestand staat nog niet op de lijst van dit apparaat. Probeer het zo meteen opnieuw."
+  },
+  "offlineDrafts": {
+    "title": "Concepten op dit apparaat",
+    "description": "Deze concepten zijn op dit apparaat opgeslagen. Ze gaan vanzelf naar de server zodra die bereikbaar is.",
+    "saved_on_device": "Opgeslagen op dit apparaat",
+    "status_waiting": "Wacht op de server",
+    "status_sending": "Wordt op de server opgeslagen",
+    "status_uncertain": "Controleren of het de server heeft bereikt",
+    "status_refused": "De server heeft dit concept geweigerd: {error}",
+    "file_missing": "Een bijgevoegd bestand staat niet meer op dit apparaat",
+    "open": "Openen",
+    "open_label": "{subject} openen",
+    "retry": "Opnieuw proberen",
+    "retry_label": "{subject} opnieuw proberen",
+    "toast_refused": "Het concept {subject} kon niet op de server worden opgeslagen. Het blijft op dit apparaat.",
+    "toast_conflict": "Het concept {subject} is op een ander apparaat gewijzigd. Beide versies blijven bewaard.",
+    "conflict_changed": "Gewijzigd op een ander apparaat. Beide versies staan in Concepten.",
+    "conflict_gone": "Gewijzigd of verwijderd op een ander apparaat. Uw versie staat in Concepten.",
+    "banner_refused": "Door de server geweigerde concepten: {count}",
+    "banner_waiting": "Concepten die op de server wachten: {count}"
+  },
   "deep_link": {
     "message_not_found": "Dit bericht is niet meer beschikbaar.",
     "thread_not_found": "Dit gesprek is niet meer beschikbaar.",
@@ -5833,6 +5959,10 @@
       "crypto_full": {
         "title": "Volledige toegang tot deze app",
         "body": "Draait met dezelfde rechten als de webmail zelf. Hij kan al je e-mail en opgeslagen sleutels lezen en namens jou handelen. Sta dit alleen toe voor plug-ins die je volledig vertrouwt."
+      },
+      "keystore": {
+        "title": "Certificaten op deze computer gebruiken",
+        "body": "Vraagt om berichten te ondertekenen en te ontsleutelen met certificaten op deze computer of een smartcard. De app vraagt het u eerst. De plug-in krijgt nooit de privésleutel, maar zolang u het toestaat, kan hij in uw naam ondertekenen en lezen wat hij ontsleutelt."
       },
       "email_raw_send": {
         "title": "Zelf samengestelde berichten verzenden",
@@ -6350,6 +6480,12 @@
     "sign_language": "Gebarentaal",
     "new_tab": "opent in een nieuw tabblad"
   },
+  "pwaNotify": {
+    "action_archive": "Archiveren",
+    "action_mark_read": "Markeren als gelezen",
+    "action_reply": "Beantwoorden",
+    "reply_placeholder": "Schrijf een antwoord"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Toevoegen aan agenda",
     "update_in_calendar": "Bijwerken in agenda",
@@ -6451,5 +6587,40 @@
       "next_issue": "Volgende spel- of grammaticafout",
       "previous_issue": "Vorige spel- of grammaticafout"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Openen in nieuw venster",
+    "save_all_to_folder": "Alles in een map opslaan…",
+    "saved_all": "{count, plural, one {# bijlage opgeslagen in {folder}.} other {# bijlagen opgeslagen in {folder}.}}",
+    "saved_partial": "{saved} van {total} bijlagen opgeslagen in {folder}.",
+    "save_failed": "De bijlagen konden niet in {folder} worden opgeslagen.",
+    "popup_blocked": "De browser heeft het nieuwe venster geblokkeerd. Sta pop-ups toe voor deze site en probeer het opnieuw.",
+    "opening": "Openen…",
+    "session_ended_title": "Je bent afgemeld in dit venster",
+    "session_ended_body": "Open de app en meld je aan, en open dit venster daarna opnieuw.",
+    "open_app": "App openen",
+    "close_window": "Venster sluiten",
+    "message_gone_title": "Dit bericht is er niet meer",
+    "message_gone_body": "Het is verwijderd of naar een ander account verplaatst.",
+    "message_moved": "Dit bericht is naar een andere map verplaatst.",
+    "message_moved_to": "Dit bericht is verplaatst naar {folder}.",
+    "window_not_ready": "Het nieuwe venster is niet op tijd geopend. Je concept blijft hier."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Inloggen met je browser",
+    "browser_waiting": "Rond het inloggen af in je browser",
+    "browser_unavailable": "Deze server biedt geen inloggen via een browser. Gebruik je wachtwoord.",
+    "browser_failed": "Inloggen via de browser is niet gelukt. Probeer het opnieuw.",
+    "server_needed": "Vul eerst het adres van de server in.",
+    "server_declined": "Je hebt deze server niet toegestaan, dus er is niets naartoe gestuurd.",
+    "server_invalid": "Dit serveradres is niet geldig."
+  },
+  "desktop_keystore": {
+    "title": "Certificaten op deze computer",
+    "description": "Deze server kan vragen om uw certificaten en smartcards te gebruiken. U krijgt nog steeds een vraag voordat een certificaat wordt gebruikt.",
+    "label": "Toegang voor deze server",
+    "label_description": "Trek uw toestemming in. De server moet dan opnieuw vragen.",
+    "revoke": "Intrekken",
+    "revoked": "Toestemming ingetrokken"
   }
 }

@@ -42,6 +42,7 @@ import {
   inlineScriptHashes,
   installStalwartFetchShim,
   isReservedStalwartSegment,
+  LITE_REMOVED_PATHS,
   listZipEntries,
   makeBuildId,
   normalizeBasePath,
@@ -58,6 +59,7 @@ import {
   stalwartPrefixProblems,
   stalwartRewriteIndex,
   stalwartZipEntryProblems,
+  unexpectedEngineFiles,
   unexpectedApiStrings,
   withScriptHashCsp,
 } from '../../scripts/lite/lib.mjs';
@@ -342,6 +344,33 @@ describe('lite build helpers', () => {
   });
 });
 
+describe('the local store in an export', () => {
+  it('finds every engine file, and nothing else', () => {
+    expect(unexpectedEngineFiles([
+      'store-worker.js',
+      'sqlite3mc/2.6.1-3.54.0/sqlite3.mjs',
+      'sqlite3mc\\2.6.1-3.54.0\\sqlite3.wasm',
+      '_next/static/media/sqlite3.wasm',
+      'pst-worker.js',
+      'en/mail/index.html',
+      '_next/static/chunks/app.js',
+    ])).toEqual([
+      'store-worker.js',
+      'sqlite3mc/2.6.1-3.54.0/sqlite3.mjs',
+      'sqlite3mc/2.6.1-3.54.0/sqlite3.wasm',
+      '_next/static/media/sqlite3.wasm',
+    ]);
+  });
+
+  it('removes what a dev checkout holds before a build, and offline mode never starts in Lite', () => {
+    expect(LITE_REMOVED_PATHS).toEqual(expect.arrayContaining(['public/store-worker.js', 'public/sqlite3mc']));
+    const offlineMode = readFileSync(join(process.cwd(), 'lib/offline/offline-mode.ts'), 'utf8');
+    expect(offlineMode).toMatch(/if \(IS_LITE \|\| !hasIndexedDb\(\)\) return false;/);
+    const build = readFileSync(join(process.cwd(), 'scripts/lite/build.mjs'), 'utf8');
+    expect(build).not.toMatch(/build-store-worker/);
+  });
+});
+
 describe('prepare / postbuild / verify against a fake checkout', () => {
   it('plans the server-only trees and every test file, skipping node_modules, repos and scripts', () => {
     const root = makeRepo();
@@ -352,6 +381,8 @@ describe('prepare / postbuild / verify against a fake checkout', () => {
       expect(plan).toContain('proxy.ts');
       expect(plan).toContain('app/api');
       expect(plan).toContain('app/(main)/admin');
+      // A static export can't list every message id; Lite doesn't offer pop-outs.
+      expect(LITE_REMOVED_PATHS).toContain('app/(main)/[locale]/popout');
       expect(plan).not.toContain('app/(main)/[locale]/mail/[[...segments]]/page.tsx');
       expect(plan).not.toContain('scripts/lite/smoke/lite.spec.ts');
     } finally {

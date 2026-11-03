@@ -38,6 +38,7 @@ import { SendCancelledCleanupError } from "@/lib/send-failure-message";
 import type { StorageQuota } from "@/lib/quota";
 import { isArchiveActionEnabled } from "@/lib/archive-gate";
 import { getOutboxHooks } from "@/lib/offline/outbox-hooks";
+import { useOfflineStore } from "@/lib/offline/state";
 import {
   READ_FILTER, UNREAD_FILTER, UNREAD_SECTION_SIZE, andFilters, isUnreadFirstView, mergeUnreadSection,
   openSectionRows, sectionFromUnreadRows, unreadSectionRowCount, withoutReached, type UnreadSection,
@@ -208,6 +209,12 @@ export interface BatchActionTarget {
    * wanted state. batchArchive and batchSetTag act on these only.
    */
   emails?: Email[];
+  /**
+   * The user pressed Archive for these, as on the app's own button, which
+   * files into an Archive shared with others too. Rules and plugins acting
+   * on their own are refused one.
+   */
+  userArchive?: boolean;
 }
 
 interface EmailStore {
@@ -1403,7 +1410,7 @@ async function archiveTarget(client: IJMAPClient, target: BatchActionTarget): Pr
   if (!archive) return false;
   // Never into an Archive someone else reads (or a year or month folder of
   // it): the share map isn't in the folder list, so the server is asked.
-  if (await isSharedOut(target.client, [...mailboxes, archive], archive.originalId || archive.id, target.accountId, { descendants: true })) {
+  if (!target.userArchive && await isSharedOut(target.client, [...mailboxes, archive], archive.originalId || archive.id, target.accountId, { descendants: true })) {
     throw new Error('The Archive folder is shared with other people');
   }
   const hookMailboxes = [...mailboxes.filter(m => m.id !== archive.id), archive];
@@ -1620,10 +1627,13 @@ function threadCountsPatch(
 function captureEmailListView(): () => boolean {
   const view = useEmailStore.getState();
   const activeAccountId = useAuthStore.getState().activeAccountId;
+  // A local copy's late answer must not overwrite what the real client loaded.
+  const authClient = useAuthStore.getState().client;
   const epoch = currentStoreEpoch();
   return () => {
     const current = useEmailStore.getState();
     return currentStoreEpoch() === epoch
+      && useAuthStore.getState().client === authClient
       && current.selectedMailbox === view.selectedMailbox
       && current.selectedKeyword === view.selectedKeyword
       && current.viewingAccountId === view.viewingAccountId
@@ -7054,6 +7064,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         !selectedKeyword &&
         mailbox?.role === 'inbox' &&
         !currentEmails.some(e => e.id === newFirst.id) &&
+        !newFirst.foundLocally &&
         (!keepOpenThread || insertedCount > 0)
       ) {
         notifyNewInboxMail(client, mailbox, newFirst, get);
@@ -8721,6 +8732,8 @@ if (typeof window !== 'undefined') {
       if (s.searchQuery || s.selectedKeyword || s.isScheduledView || s.viewingAccountId || s.isUnifiedView) return;
       const account = persistedAuthState()?.activeAccountId;
       if (typeof account !== 'string' || !account) return;
+      // Its mail lives encrypted in the store, and not in plain localStorage too.
+      if (useOfflineStore.getState().enabled.includes(account)) return;
       try {
         window.localStorage.setItem(EMAIL_SNAPSHOT_KEY, JSON.stringify({
           v: EMAIL_SNAPSHOT_VERSION,

@@ -288,7 +288,7 @@ export function EventModal({
   const isPaneScoped = useIsPaneScoped();
   const mobileRootClass = isPaneScoped
     ? "absolute inset-0 z-40 flex flex-col bg-background"
-    : "fixed inset-0 z-50 flex flex-col bg-background";
+    : "fixed inset-0 z-50 flex flex-col bg-background pt-[var(--titlebar-inset)]";
   const isEdit = !!event;
   const formatEventDate = useFormatEventDate();
   const [mode, setMode] = useState<"view" | "edit">(isEdit && !startInEditMode ? "view" : "edit");

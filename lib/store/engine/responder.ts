@@ -56,12 +56,12 @@ export function buildMethodTable(areas: readonly StoreArea[]): Map<string, Metho
 
 /** Answers are copied by structured clone on the way to the page, so callers can't mutate stored objects. */
 export async function answerRequest(
-  ctx: Omit<MethodContext, 'createdIds'>,
+  ctx: Omit<MethodContext, 'createdIds' | 'calls'>,
   methods: ReadonlyMap<string, MethodHandler>,
   calls: readonly MethodCall[],
 ): Promise<JmapResponse | null> {
   const done: MethodResponse[] = [];
-  const full: MethodContext = { ...ctx, createdIds: new Map() };
+  const full: MethodContext = { ...ctx, createdIds: new Map(), calls };
   let answered = 0;
   for (const call of calls) {
     const [name, rawArgs, callId] = call;

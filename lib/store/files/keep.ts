@@ -4,9 +4,10 @@
  *
  * What gets kept:
  * - A pinned file stays until it's unpinned or removed on the server. The cap
- *   doesn't push it out and the size limit for one file doesn't apply. The
- *   account's total limit (scope.maxTotalBytes, which a policy can lower) does:
- *   past it, the newest pins lose their content and say `overLimit`.
+ *   doesn't push it out and the user's own size limit doesn't apply. The
+ *   organisation's limit on one file (scope.orgMaxFileBytes) and the account's
+ *   total (scope.maxTotalBytes, which a policy can lower) do: past the total, the
+ *   newest pins lose their content and say `overLimit`.
  * - A recently opened file is kept if it's within scope.maxAttachmentBytes, and
  *   pushed out oldest first when the cap is reached. Its opened_at goes with
  *   it, so it isn't fetched straight back.
@@ -20,7 +21,7 @@
  */
 
 import { TransportError } from '../engine/transport';
-import { MethodError, type StoreContext, type SyncContext } from '../area';
+import { MethodError, type StoreContext, type StoreUsagePart, type SyncContext } from '../area';
 import type { StorageAdapter } from '../storage';
 import { nodeMediaType, type WireNode } from './records';
 
@@ -150,6 +151,12 @@ function makeRoom(ctx: StoreContext, size: number, incoming: { pinned: boolean; 
   return true;
 }
 
+/** The organisation's limit on one file, which a pin obeys. The user's own doesn't bind a pin. */
+function overOrgLimit(ctx: Pick<StoreContext, 'scope'>, size: number): boolean {
+  const cap = ctx.scope.orgMaxFileBytes;
+  return typeof cap === 'number' && size > cap;
+}
+
 /** What pinned contents take. Leaves out the old version a new one will replace. */
 function pinnedBytes(db: StorageAdapter, except: string | null = null): number {
   return keptBlobs(db).filter((blob) => blob.pinned && blob.blob_id !== except).reduce((sum, blob) => sum + Number(blob.size), 0);
@@ -159,9 +166,14 @@ function setError(db: StorageAdapter, jmap: string, blobId: string, error: strin
   db.run('UPDATE file_node SET keep_error = ? WHERE jmap = ? AND (blob_id = ? OR stale_blob_id = ?)', [error, jmap, blobId, blobId]);
 }
 
-/** Makes the store fit the scope as it is now. Runs at start, when the scope changes and before fetching. */
-export function applyScope(ctx: StoreContext): void {
+/**
+ * Makes the store fit the scope as it is now, without the network. Runs at
+ * start, when the scope changes and before fetching. The pins stay, so a loosened
+ * scope fetches them back at the next pass.
+ */
+export function applyFilesScope(ctx: StoreContext): void {
   const { db } = ctx;
+  const before = keptBlobs(db).length;
   db.transaction(() => {
     if (!ctx.scope.attachments) {
       for (const row of db.all<{ jmap: string; blob_id: string }>('SELECT jmap, blob_id FROM file_blob')) dropBlob(db, row.jmap, row.blob_id);
@@ -169,6 +181,15 @@ export function applyScope(ctx: StoreContext): void {
       return;
     }
     db.run("UPDATE file_node SET keep_error = NULL WHERE keep_error = 'notAllowed'");
+    for (const blob of keptBlobs(db)) {
+      if (blob.pinned ? !overOrgLimit(ctx, Number(blob.size)) : Number(blob.size) <= openedLimit(ctx)) continue;
+      if (blob.pinned) {
+        setError(db, blob.jmap, blob.blob_id, 'tooLarge');
+        dropBlob(db, blob.jmap, blob.blob_id);
+      } else {
+        pushOut(db, blob);
+      }
+    }
     // Oldest pins first, so the newest are the ones to lose out. One that still
     // fits stays: dropping it would only have the next pass fetch it back.
     const pins = keptBlobs(db).filter((blob) => blob.pinned).sort((a, b) => Number(a.pinned_at ?? 0) - Number(b.pinned_at ?? 0));
@@ -183,6 +204,12 @@ export function applyScope(ctx: StoreContext): void {
     }
     makeRoom(ctx, 0, { pinned: true, openedAt: 0 });
   });
+  if (keptBlobs(db).length !== before) ctx.emit({ type: 'changed', account: ctx.account, collections: ['FileContent'] });
+}
+
+export function filesUsage(ctx: Pick<StoreContext, 'db'>): StoreUsagePart[] {
+  const row = ctx.db.get<{ bytes: number | null; items: number }>('SELECT SUM(size) AS bytes, COUNT(*) AS items FROM file_blob WHERE complete = 1');
+  return [{ part: 'files', bytes: Number(row?.bytes ?? 0), items: Number(row?.items ?? 0) }];
 }
 
 /** Contents no node points at any more: the file was removed or has a new version in place. */
@@ -281,9 +308,9 @@ function completeBlob(ctx: SyncContext, jmap: string, blobId: string, size: numb
       dropBlob(db, jmap, blobId);
       return;
     }
-    if (now.pinned && pinnedBytes(db, now.stale_blob_id) + size > ctx.scope.maxTotalBytes) {
+    if (now.pinned && (overOrgLimit(ctx, size) || pinnedBytes(db, now.stale_blob_id) + size > ctx.scope.maxTotalBytes)) {
       dropBlob(db, jmap, blobId);
-      setError(db, jmap, blobId, 'overLimit');
+      setError(db, jmap, blobId, overOrgLimit(ctx, size) ? 'tooLarge' : 'overLimit');
       return;
     }
     if (!makeRoom(ctx, size, { pinned: Boolean(now.pinned), openedAt: Number(now.opened_at ?? 0) })) {
@@ -305,7 +332,9 @@ async function fetchOne(ctx: SyncContext, jmap: string, want: Wanted): Promise<b
   const { db } = ctx;
   const blobId = want.blob_id;
   const type = nodeMediaType(JSON.parse(want.json) as WireNode);
-  const limit = want.pinned ? ctx.scope.maxTotalBytes - pinnedBytes(db, want.stale_blob_id) : openedLimit(ctx);
+  const limit = want.pinned
+    ? Math.min(ctx.scope.maxTotalBytes - pinnedBytes(db, want.stale_blob_id), ctx.scope.orgMaxFileBytes ?? Infinity)
+    : openedLimit(ctx);
   db.transaction(() => {
     db.run('DELETE FROM file_blob_chunk WHERE jmap = ? AND blob_id = ?', [jmap, blobId]);
     db.run('DELETE FROM file_blob WHERE jmap = ? AND blob_id = ?', [jmap, blobId]);
@@ -317,7 +346,8 @@ async function fetchOne(ctx: SyncContext, jmap: string, want: Wanted): Promise<b
     db.run('DELETE FROM file_blob WHERE jmap = ? AND blob_id = ?', [jmap, blobId]);
   });
   try {
-    await ctx.transport.downloadStream(jmap, blobId, type, want.name, (part) => writer.push(part));
+    if (ctx.transport.downloadStream) await ctx.transport.downloadStream(jmap, blobId, type, want.name, (part) => writer.push(part));
+    else writer.push(await ctx.transport.download(jmap, blobId, type, want.name));
     completeBlob(ctx, jmap, blobId, writer.finish());
     return true;
   } catch (error) {
@@ -326,7 +356,7 @@ async function fetchOne(ctx: SyncContext, jmap: string, want: Wanted): Promise<b
     if (error instanceof DownloadTooLarge) {
       // With the size it now knows, the next pass sees this without starting the download.
       db.run('UPDATE file_node SET size = ? WHERE jmap = ? AND blob_id = ?', [error.seen, jmap, blobId]);
-      setError(db, jmap, blobId, want.pinned ? 'overLimit' : 'tooLarge');
+      setError(db, jmap, blobId, want.pinned && !overOrgLimit(ctx, error.seen) ? 'overLimit' : 'tooLarge');
       return false;
     }
     // This file broke, or the server won't give it: the next one may be fine. No
@@ -349,7 +379,7 @@ export async function fetchKeptFiles(ctx: SyncContext, jmap: string): Promise<vo
       db.run('DELETE FROM file_blob WHERE jmap = ? AND blob_id = ?', [jmap, row.blob_id]);
     }
   });
-  applyScope(ctx);
+  applyFilesScope(ctx);
   if (!ctx.scope.attachments) return;
   const todo = db.all<{ blob_id: string }>(
     `SELECT n.blob_id FROM file_node n
@@ -365,6 +395,10 @@ export async function fetchKeptFiles(ctx: SyncContext, jmap: string): Promise<vo
     const want = wantedRow(db, jmap, blobId);
     if (!want || stillWaiting(ctx, want)) continue;
     const known = Number(want.size ?? 0);
+    if (want.pinned && overOrgLimit(ctx, known)) {
+      setError(db, jmap, blobId, 'tooLarge');
+      continue;
+    }
     if (!want.pinned && known > openedLimit(ctx)) {
       setError(db, jmap, blobId, 'tooLarge');
       continue;

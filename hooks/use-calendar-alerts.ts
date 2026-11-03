@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { parseISO } from 'date-fns';
+import { isPopoutWindow } from '@/lib/popout/window-role';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCalendarStore } from '@/stores/calendar-store';
 import { useSettingsStore } from '@/stores/settings-store';
@@ -72,7 +73,9 @@ function remind(view: CalendarAlertView, show: () => void): void {
 }
 
 export function useCalendarAlerts() {
-  const { isAuthenticated, client } = useAuthStore();
+  const { isAuthenticated: signedIn, client } = useAuthStore();
+  // The main window rings; a pop-out would ring the same alert again.
+  const isAuthenticated = signedIn && !isPopoutWindow();
   const { events, calendars, supportsCalendar } = useCalendarStore();
   const { calendarNotificationsEnabled, calendarNotificationSound, enableCalendarTasks, notificationSoundChoice } = useSettingsStore();
   const { tasks: storeTasks } = useTaskStore();

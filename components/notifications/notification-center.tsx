@@ -158,7 +158,7 @@ export function NotificationSheet({ onClose }: { onClose: () => void }) {
       role="dialog"
       aria-modal="true"
       aria-label={t("title")}
-      className="fixed inset-0 z-50 flex flex-col bg-background pt-[env(safe-area-inset-top)]"
+      className="fixed inset-0 z-50 flex flex-col bg-background pt-[var(--app-top-inset)]"
     >
       <NotificationPanel onClose={onClose} sheet className="flex-1 min-h-0" />
     </div>,

@@ -4,6 +4,7 @@ import type { ComposerDraftData } from '@/components/email/email-composer';
 import type { ComposePrefill } from '@/lib/plugin-compose-gate';
 import type { EmailWriteSource } from '@/stores/email-store';
 import type { SearchScope } from '@/lib/global-search/query-parser';
+import { useOfflineStore } from '@/lib/offline/state';
 
 export type ProTabKind =
   | 'mail' | 'calendar' | 'contacts' | 'files' | 'settings'
@@ -65,6 +66,8 @@ export interface ProComposeTabData {
   initialData?: ComposerDraftData | null;
   /** Fields a plugin filled in through onBeforeCompose; dropped on the first state save. */
   prefill?: ComposePrefill | null;
+  /** Files from a share or a launch, attached when the composer opens. */
+  initialFiles?: File[] | null;
   sourceEmailId?: string | null;
   /** The login and account of that message, for its $answered / $forwarded flag. */
   sourceEmailSource?: EmailWriteSource | null;
@@ -118,6 +121,20 @@ export interface ProTab {
   searchData?: ProSearchTabData;
   /** Which pane this tab lives in. Defaults to 'main' for the single-pane case. */
   paneId: ProPaneId;
+}
+
+/**
+ * With the local store on, mail is encrypted on this device, and a subject in
+ * localStorage would give it away. The tab's body puts the title back when it
+ * has read the message.
+ */
+export const TITLE_UNTIL_LOADED = '…';
+
+function withoutSubjects(tabs: ProTab[]): ProTab[] {
+  if (useOfflineStore.getState().enabled.length === 0) return tabs;
+  return tabs.map((tab) => (tab.kind === 'email' && tab.emailData
+    ? { ...tab, title: TITLE_UNTIL_LOADED, emailData: { ...tab.emailData, title: TITLE_UNTIL_LOADED } }
+    : tab));
 }
 
 export interface OpenEmailTabOptions {
@@ -670,7 +687,9 @@ export const useProTabStore = create<ProTabState>()(
 
         updateTabTitle: (id, title) => {
           set({
-            tabs: get().tabs.map((tab) => (tab.id === id ? { ...tab, title } : tab)),
+            tabs: get().tabs.map((tab) => (tab.id === id
+              ? { ...tab, title, ...(tab.emailData ? { emailData: { ...tab.emailData, title } } : {}) }
+              : tab)),
           });
         },
 
@@ -693,7 +712,7 @@ export const useProTabStore = create<ProTabState>()(
       // own draft-store already handles that. Persisted email tabs are fine to
       // restore (the tab body refetches the email by id).
       partialize: (state) => ({
-        tabs: state.tabs.filter((tab) => tab.kind !== 'compose'),
+        tabs: withoutSubjects(state.tabs.filter((tab) => tab.kind !== 'compose')),
         activeTabId: state.activeTabId,
         activeSplitTabId: state.activeSplitTabId,
         focusedPaneId: state.focusedPaneId,
@@ -740,3 +759,8 @@ export const useProTabStore = create<ProTabState>()(
     },
   ),
 );
+
+// Turned on just now: the stored copy loses its subjects at once, not at the next tab change.
+useOfflineStore.subscribe((state, prev) => {
+  if (state.enabled !== prev.enabled && state.enabled.length > 0) useProTabStore.setState({});
+});

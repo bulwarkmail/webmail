@@ -12,11 +12,11 @@
  */
 
 import { runTransaction, type SqlRow, type SqlValue, type StorageAdapter } from '../storage';
+import { POOL_DIRECTORY } from '../worker/protocol';
 
 const VFS = 'multipleciphers-opfs-sahpool';
 const INIT_TIMEOUT_MS = 30_000;
 const REQUIRED_PAGE_SIZE = 8192;
-const POOL_DIRECTORY = '.bulwark-store';
 const INITIAL_CAPACITY = 16;
 /** A database and its journal, plus room for one more. */
 const SLOTS_PER_DATABASE = 3;
@@ -117,6 +117,10 @@ class WasmAdapter implements StorageAdapter {
   }
 }
 
+export function installMayPass(error: unknown): boolean {
+  return (error as Error)?.name !== 'SecurityError';
+}
+
 /** The module and the pool, once. Only the owner gets here. */
 export class WasmStorage {
   private constructor(private readonly sqlite3: any, private readonly pool: Pool) {}
@@ -141,6 +145,8 @@ export class WasmStorage {
         }) as Pool;
         return new WasmStorage(sqlite3, pool);
       } catch (error) {
+        // The browser won't allow it here at all, a private window: waiting won't help.
+        if (!installMayPass(error)) throw error;
         lastError = error;
         await new Promise((resolve) => setTimeout(resolve, 100 + attempt * 50));
       }
@@ -159,12 +165,16 @@ export class WasmStorage {
       db.exec(`PRAGMA key = "raw:${keyHex}"`);
       try {
         db.selectValue('SELECT count(*) FROM sqlite_master');
-      } catch {
-        throw new StoreKeyError();
+      } catch (error) {
+        // Only "this isn't a database": a passing read error must not read as a lost file.
+        if (error instanceof Error && /NOTADB|not a database/i.test(error.message)) throw new StoreKeyError();
+        throw error;
       }
       const pageSize = Number(db.selectValue('PRAGMA page_size'));
       if (pageSize !== REQUIRED_PAGE_SIZE) throw new Error(`Refusing an unsafe page size: ${pageSize}`);
       db.exec('PRAGMA temp_store = MEMORY');
+      // Every page read is a decryption, so a miss costs more than usual.
+      db.exec('PRAGMA cache_size = -65536');
       db.exec('PRAGMA foreign_keys = OFF');
       db.exec('PRAGMA synchronous = NORMAL');
     } catch (error) {

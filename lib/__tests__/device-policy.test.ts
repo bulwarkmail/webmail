@@ -89,6 +89,57 @@ describe('which account decides', () => {
   });
 });
 
+describe('offline caps', () => {
+  const scoped = (id: string, match: object, devices: Record<string, unknown>) => ({ id, label: id, match, policy: { organisation: { devices } } });
+
+  function withPolicy(organisationDevices: Record<string, unknown>, scopes: unknown[]) {
+    usePolicyStore.setState({ rawPolicy: { ...DEFAULT_POLICY, organisation: { devices: organisationDevices }, scopes } as never, loaded: true });
+    usePolicyStore.getState().setPolicySubject(null);
+    usePolicyStore.getState().setPolicySubject(ALICE);
+  }
+
+  it('stay numbers across signed-in accounts, the lowest one winning', () => {
+    withPolicy({}, [
+      scoped('a', { groups: ['team@example.org'] }, { offlineMaxDays: 90, offlineMaxTotalMb: 500 }),
+    ]);
+    const strictest = getStrictestDevices();
+    expect(strictest.offlineMaxDays).toBe(90);
+    expect(strictest.offlineMaxTotalMb).toBe(500);
+    // Carol has no cap: 0 means none, and must not read as the lowest.
+    expect(devicesForAccount('acc-c').offlineMaxDays).toBe(0);
+  });
+
+  it('a scope can lower a cap but not raise it', () => {
+    withPolicy({ offlineMaxDays: 60, offlineMaxAttachmentMb: 10 }, [
+      scoped('up', { groups: ['team@example.org'] }, { offlineMaxDays: 365, offlineMaxAttachmentMb: 0 }),
+    ]);
+    expect(devicesForAccount('acc-a')).toMatchObject({ offlineMaxDays: 60, offlineMaxAttachmentMb: 10 });
+    withPolicy({ offlineMaxDays: 60 }, [
+      scoped('down', { groups: ['team@example.org'] }, { offlineMaxDays: 7 }),
+    ]);
+    expect(devicesForAccount('acc-a').offlineMaxDays).toBe(7);
+  });
+
+  it('a scope cannot allow attachments that another one forbids', () => {
+    withPolicy({ noOfflineAttachments: true }, [
+      scoped('up', { groups: ['team@example.org'] }, { noOfflineAttachments: false }),
+    ]);
+    expect(devicesForAccount('acc-a').noOfflineAttachments).toBe(true);
+  });
+
+  it('noOffline stays last value wins, as before', () => {
+    withPolicy({ noOffline: true }, [
+      scoped('allow', { groups: ['team@example.org'] }, { noOffline: false }),
+    ]);
+    expect(devicesForAccount('acc-a').noOffline).toBe(false);
+  });
+
+  it('drops what is not a number, and negative caps mean none', () => {
+    withPolicy({ offlineMaxDays: 'lots', offlineMaxTotalMb: -5 }, []);
+    expect(devicesForAccount('acc-a')).toMatchObject({ offlineMaxDays: 0, offlineMaxTotalMb: 0 });
+  });
+});
+
 describe('the backstop', () => {
   it('refuses a download, says so, and never builds the anchor', () => {
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});

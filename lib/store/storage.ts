@@ -39,11 +39,27 @@ export function runTransaction<T>(
     exec('COMMIT');
     return result;
   } catch (error) {
-    exec('ROLLBACK');
+    // SQLite has already rolled back after some errors (a full disk, a failed
+    // write). A second failure here must not hide the real one.
+    try {
+      exec('ROLLBACK');
+    } catch {
+      // Nothing left to roll back.
+    }
     throw error;
   } finally {
     state.depth -= 1;
   }
+}
+
+/**
+ * The disk is full, the browser's quota ran out, the file can't be written.
+ * Trying again right away can't help, and each try costs network and power.
+ */
+export function isStorageFailure(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  if (error.name === 'QuotaExceededError') return true;
+  return /SQLITE_FULL|SQLITE_IOERR|SQLITE_CANTOPEN|disk is full|disk I\/O error|QuotaExceeded|No space left/i.test(error.message);
 }
 
 export interface Migration {

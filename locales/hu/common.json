@@ -249,6 +249,28 @@
     "active_account": "Aktív",
     "switching_account": "Fiók váltása..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Új üzenet",
+    "shortcut_calendar": "Naptár",
+    "shortcut_contacts": "Névjegyek",
+    "unsupported_file": "A(z) {name} itt nem nyitható meg.",
+    "open_failed": "A fájlt nem sikerült megnyitni. Próbálja meg újra megnyitni.",
+    "share_gone": "Amit megosztott, már nincs itt. Kérjük, ossza meg újra.",
+    "share_files_lost": "A megosztott fájlokat nem sikerült megőrizni. Adja hozzá őket újra az üzenethez.",
+    "ics_needs_server": "A naptárfájl importálásához kapcsolat kell a szerverrel. Az importálás akkor indul el, amikor újra online lesz.",
+    "contacts_need_server": "A névjegyek importálásához kapcsolat kell a szerverrel. Próbálja újra, amikor ismét online lesz.",
+    "share_confirm_title": "Új üzenetet kezd?",
+    "share_confirm_message": "Egy másik webhely vagy alkalmazás üzenetet szeretne kezdeni. Az Ön beleegyezése nélkül semmi sem kerül feltöltésre vagy mentésre.",
+    "share_confirm_subject": "Tárgy:",
+    "share_confirm_text": "Szöveg:",
+    "share_confirm_files": "{count, plural, one {Fájl:} other {Fájlok:}}",
+    "share_confirm_accept": "Üzenet kezdése",
+    "share_confirm_decline": "Ne kezdje el",
+    "share_cut": "A megosztott szöveg túl hosszú volt, ezért rövidítettük.",
+    "handoff_expired": "Valami, amit megnyitott vagy megosztott, túl sokáig várakozott, és már nincs meg. Kérjük, nyissa meg vagy ossza meg újra.",
+    "compose_waiting": "Zárja be ezt az üzenetet a következő kezdéséhez.",
+    "save_first_failed": "Az üzenetet nem sikerült menteni, ezért a fájl nem nyílt meg. Mentse az üzenetet, majd nyissa meg a naptárat vagy a névjegyeket."
+  },
   "sidebar_apps": {
     "modal_title": "Oldalsáv alkalmazások",
     "add_new": "Alkalmazás hozzáadása",
@@ -4909,6 +4931,9 @@
     "mini_has_events": "vannak események",
     "mini_week_number": "{week}. hét"
   },
+  "calendar_offline": {
+    "split_needs_server": "Ehhez a módosításhoz kapcsolat kell a kiszolgálóval. Egyelőre csak ezt az eseményt módosítsa, vagy próbálja újra, ha ismét online lesz."
+  },
   "calendar_event_notifications": {
     "someone": "Valaki",
     "invited": "{name} meghívott a(z) „{title}” eseményre",
@@ -5718,6 +5743,107 @@
       "no_drafts_mailbox": "A Piszkozatok mappa nem található."
     }
   },
+  "offlineConflicts": {
+    "title": "Nem alkalmazott módosítások",
+    "description": "Ezeket a módosításokat offline végezte. Nem lettek alkalmazva, és az üzenet úgy marad, ahogy a szerveren van.",
+    "changed": "Másik eszközön módosult, az Ön módosítása nem lett alkalmazva",
+    "changed_delete": "Másik eszközön módosult, nem lett törölve",
+    "gone": "Már nincs a szerveren, az Ön módosítása nem lett alkalmazva",
+    "refused": "A szerver elutasította ezt a módosítást: {reason}",
+    "dismiss": "Bezárás",
+    "dismiss_label": "A(z) {subject} megjegyzésének bezárása",
+    "banner": "Nem alkalmazott módosítások: {count}",
+    "toast": "Offline végzett, nem alkalmazott módosítások: {count}. A postázandók mappa mutatja, melyek.",
+    "storage_failed": "Ezen az eszközön nincs több hely az offline leveleknek. Szabadítson fel helyet, vagy tartson meg kevesebbet a beállításokban.",
+    "signout_changes_title": "Kijelentkezik a nem mentett módosításokkal?",
+    "signout_changes": "Még nem a szerveren lévő módosítások: {count}. A kijelentkezés törli őket.",
+    "store_unavailable": "Az eszközön lévő offline levelek most nem nyithatók meg. Az el nem küldött levelek itt maradnak, az alkalmazás pedig tovább próbálkozik.",
+    "store_reset": "Az eszközön lévő offline leveleket nem sikerült beolvasni, ezért újra letöltődnek. Ami nem lett elküldve, elveszett.",
+    "legacy_stranded": "Ez a böngésző nem tudja megnyitni egy korábbi verzió által megőrzött, el nem küldött leveleket. A böngésző frissítése visszahozhatja őket.",
+    "store_private": "A privát ablakok nem tudnak leveleket megőrizni offline használatra.",
+    "server_not_answering": "A levelezőszerver nem válaszol. Próbálja újra egy pillanat múlva."
+  },
+  "offlineStorage": {
+    "keep_description": "Megtartja a leveleit, a naptárát, a névjegyeit és a kiválasztott fájlokat, titkosítva ezen az eszközön. Offline olvashat, megjelölhet és áthelyezhet leveleket, a megírt levelek pedig a postázandók között várnak. Kijelentkezéskor minden törlődik.",
+    "window_label": "Mennyi időre visszamenőleg maradjon meg",
+    "window_description": "A régebbi levelek és naptáresemények lekerülnek erről az eszközről. Online állapotban továbbra is megnyithatja őket.",
+    "window_days": "{days, plural, one {# nap} other {# nap}}",
+    "window_year": "1 év",
+    "window_everything": "Minden",
+    "attachments_label": "Mellékletek megtartása",
+    "attachments_description": "A megtartott levelek mellékletei és az offline megtartott fájlok, összesen legfeljebb {total}. A legrégebbiek törlődnek először.",
+    "total_locked": "A szervezete legfeljebb {size} mellékletet és fájlt engedélyez.",
+    "attachment_cap_label": "A megtartott legnagyobb melléklet",
+    "usage_mail": "Levelek és keresési index",
+    "usage_attachments": "Mellékletek",
+    "usage_calendar": "Naptár",
+    "usage_contacts": "Névjegyek",
+    "usage_files": "Offline megtartott fájlok",
+    "usage_row": "{size} ({count, plural, one {# elem} other {# elem}})",
+    "progress_list": "Levelek listázása",
+    "progress_bodies": "Levelek letöltése",
+    "progress_threads": "Beszélgetések rendezése",
+    "progress_files": "Fájlok letöltése",
+    "progress_other": "Adatok áthozása erre az eszközre",
+    "progress_count": "{done} / {total}",
+    "progress_count_open": "eddig {done}",
+    "progress_left": "körülbelül {minutes, plural, one {# perc} other {# perc}} van hátra",
+    "clear_label": "Fiók kiürítése",
+    "clear_description": "Törli mindazt, amit ez az eszköz ehhez a fiókhoz megtart, majd újra letölti.",
+    "clear_button": "Kiürítés…",
+    "clear_confirm_title": "Kiüríti a fiókot ezen az eszközön?",
+    "clear_confirm_message": "Minden, amit ez az eszköz a(z) {account} fiókhoz megtart, törlődik és újra letöltődik. A szerveren lévő levelei megmaradnak.",
+    "clear_confirm_unsent": "{count, plural, one {# el nem küldött levél elvész.} other {# el nem küldött levél elvész.}}",
+    "clear_confirm": "Kiürítés",
+    "persist_refused": "Ez a böngésző törölheti a megtartott leveleket, ha fogy a hely. Az alkalmazás telepítése ezt általában megakadályozza.",
+    "persist_retry": "Újra rákérdez",
+    "safari_hint": "A Safari 7 nap látogatás nélkül törli egy webhely adatait. Adja hozzá a Bulwarkot a Főképernyőhöz vagy a Dockhoz, hogy a levelei az eszközön maradjanak.",
+    "evicted": "A böngésző törölte az ezen az eszközön megtartott leveleket. Újra letöltődnek.",
+    "evicted_lost": "{count, plural, one {# el nem küldött levél vagy módosítás elveszett.} other {# el nem küldött levél vagy módosítás elveszett.}}",
+    "evicted_dismiss": "OK",
+    "storage_full_title": "Az eszköz tárhelye megtelt.",
+    "storage_full_text": "A Bulwark nem ment több levelet ide. Tartson meg kevesebb levelet, vagy ürítse ki ezt a fiókot, hogy legyen hely.",
+    "open_settings": "Beállítások megnyitása",
+    "default_on": "A Bulwark ezen az eszközön tartja meg a leveleit, hogy kapcsolat nélkül is működjön. Ezt a Beállításokban módosíthatja.",
+    "conflict_calendar": "Naptáresemény",
+    "conflict_contacts": "Névjegy",
+    "kept_files_title": "Offline megtartott fájlok",
+    "kept_state_kept": "Ezen az eszközön",
+    "kept_state_waiting": "Letöltésre vár",
+    "kept_error_tooLarge": "Túl nagy a megtartáshoz",
+    "kept_error_overLimit": "Meghaladja az eszköz korlátját",
+    "kept_error_notAllowed": "A szervezete nem engedi a fájlok megtartását",
+    "kept_error_download": "Nem sikerült letölteni",
+    "keep_offline": "Megtartás offline",
+    "unpin": "Megtartás offline megszüntetése",
+    "unpin_label": "{name} offline megtartásának megszüntetése",
+    "warning_desktop": "Aki használhatja ennek a számítógépnek a felhasználói fiókját, elolvashatja ezeket a leveleket. Használjon lemeztitkosítást.",
+    "off_confirm_text": "Ez törli mindazt, amit ez az eszköz a(z) {account} fiókhoz megtart. A szerveren lévő levelei megmaradnak.",
+    "unsent_changes": "{count, plural, one {# módosítás, amely nem jutott el a szerverre, elvész.} other {# módosítás, amely nem jutott el a szerverre, elvész.}}",
+    "clear_needs_connection": "Ehhez kapcsolat kell, mert minden újra letöltődik.",
+    "usage_label": "Mit tart meg ez az eszköz",
+    "pin_not_ready": "Ez a fájl még nincs rajta az eszköz listáján. Próbálja újra egy pillanat múlva."
+  },
+  "offlineDrafts": {
+    "title": "Piszkozatok ezen az eszközön",
+    "description": "Ezek a piszkozatok ezen az eszközön vannak mentve. Maguktól a szerverre kerülnek, amint az elérhető.",
+    "saved_on_device": "Mentve ezen az eszközön",
+    "status_waiting": "Várakozás a szerverre",
+    "status_sending": "Mentés a szerverre",
+    "status_uncertain": "Annak ellenőrzése, hogy elérte-e a szervert",
+    "status_refused": "A szerver elutasította ezt a piszkozatot: {error}",
+    "file_missing": "Egy csatolt fájl már nincs ezen az eszközön",
+    "open": "Megnyitás",
+    "open_label": "{subject} megnyitása",
+    "retry": "Újra",
+    "retry_label": "{subject} újrapróbálása",
+    "toast_refused": "A(z) {subject} piszkozatot nem sikerült a szerverre menteni. Ezen az eszközön marad.",
+    "toast_conflict": "A(z) {subject} piszkozat egy másik eszközön módosult. Mindkét változat megmarad.",
+    "conflict_changed": "Másik eszközön módosult. Mindkét változat a Piszkozatok között van.",
+    "conflict_gone": "Másik eszközön módosult vagy törlődött. Az Ön változata a Piszkozatok között van.",
+    "banner_refused": "A szerver által elutasított piszkozatok: {count}",
+    "banner_waiting": "A szerverre váró piszkozatok: {count}"
+  },
   "deep_link": {
     "message_not_found": "Ez az üzenet már nem érhető el.",
     "thread_not_found": "Ez a beszélgetés már nem érhető el.",
@@ -5833,6 +5959,10 @@
       "crypto_full": {
         "title": "Teljes hozzáférés az alkalmazáshoz",
         "body": "Ugyanazokkal a jogokkal fut, mint maga a webmail. Olvashatja az összes leveledet és tárolt kulcsodat, és a nevedben járhat el. Csak olyan bővítménynek engedélyezd, amelyben teljesen megbízol."
+      },
+      "keystore": {
+        "title": "A számítógépen lévő tanúsítványok használata",
+        "body": "Kéri, hogy üzeneteket írhasson alá és fejthessen vissza a számítógépen vagy intelligens kártyán lévő tanúsítványokkal. Az alkalmazás előbb megkérdezi Önt. A bővítmény soha nem kapja meg a titkos kulcsot, de amíg engedélyezi, az Ön nevében írhat alá, és elolvashatja, amit visszafejt."
       },
       "email_raw_send": {
         "title": "Saját maga által összeállított üzenetek küldése",
@@ -6350,6 +6480,12 @@
     "sign_language": "Jelnyelv",
     "new_tab": "új lapon nyílik meg"
   },
+  "pwaNotify": {
+    "action_archive": "Archiválás",
+    "action_mark_read": "Megjelölés olvasottként",
+    "action_reply": "Válasz",
+    "reply_placeholder": "Válasz írása"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Hozzáadás a naptárhoz",
     "update_in_calendar": "Frissítés a naptárban",
@@ -6451,5 +6587,40 @@
       "next_issue": "Következő helyesírási vagy nyelvtani hiba",
       "previous_issue": "Előző helyesírási vagy nyelvtani hiba"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Megnyitás új ablakban",
+    "save_all_to_folder": "Összes mentése mappába…",
+    "saved_all": "{count, plural, one {# melléklet mentve ide: {folder}.} other {# melléklet mentve ide: {folder}.}}",
+    "saved_partial": "{total} mellékletből {saved} mentve ide: {folder}.",
+    "save_failed": "A mellékleteket nem sikerült ide menteni: {folder}.",
+    "popup_blocked": "A böngésző letiltotta az új ablakot. Engedélyezze az előugró ablakokat ennél a webhelynél, majd próbálja újra.",
+    "opening": "Megnyitás…",
+    "session_ended_title": "Ebben az ablakban ki van jelentkezve",
+    "session_ended_body": "Nyissa meg az alkalmazást, jelentkezzen be, majd nyissa meg újra ezt az ablakot.",
+    "open_app": "Alkalmazás megnyitása",
+    "close_window": "Ablak bezárása",
+    "message_gone_title": "Ez az üzenet már nincs meg",
+    "message_gone_body": "Törölték, vagy másik fiókba helyezték át.",
+    "message_moved": "Ezt az üzenetet másik mappába helyezték át.",
+    "message_moved_to": "Ezt az üzenetet ide helyezték át: {folder}.",
+    "window_not_ready": "Az új ablak nem nyílt meg időben. A piszkozat itt marad."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Bejelentkezés böngészővel",
+    "browser_waiting": "Fejezze be a bejelentkezést a böngészőben",
+    "browser_unavailable": "Ez a szerver nem kínál böngészős bejelentkezést. Használja a jelszavát.",
+    "browser_failed": "A böngészős bejelentkezés nem sikerült. Próbálja újra.",
+    "server_needed": "Először adja meg a szerver címét.",
+    "server_declined": "Nem engedélyezte ezt a szervert, ezért semmit sem küldtünk neki.",
+    "server_invalid": "Ez a szervercím nem érvényes."
+  },
+  "desktop_keystore": {
+    "title": "A számítógépen lévő tanúsítványok",
+    "description": "Ez a kiszolgáló kérheti a tanúsítványai és intelligens kártyái használatát. Minden tanúsítvány használata előtt így is megkérdezzük.",
+    "label": "A kiszolgáló hozzáférése",
+    "label_description": "Vonja vissza az engedélyét. A kiszolgálónak újra kérnie kell.",
+    "revoke": "Visszavonás",
+    "revoked": "Engedély visszavonva"
   }
 }

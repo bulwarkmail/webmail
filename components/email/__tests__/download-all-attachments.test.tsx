@@ -10,6 +10,7 @@ import { useSettingsStore } from '@/stores/settings-store';
 import { useToastStore } from '@/stores/toast-store';
 import { ToastContainer } from '@/components/ui/toast';
 import en from '@/locales/en/common.json';
+import { setDownloadGuard } from '@/lib/download-guard';
 
 // Keep the actual viewer handler, translations, JMAP routing/auth/retries and
 // JSZip. Stub unrelated viewer hosts, as in the other viewer component tests.
@@ -310,5 +311,149 @@ describe('Download all attachments', () => {
     await p.finish();
     p.assertRequests(['blob-a', 'blob-b']);
     await p.assertZip(['report.txt', 'data.bin'], [alpha, beta]);
+  });
+});
+
+describe('Save all attachments to a folder', () => {
+  /** A folder as the picker hands it out; `failOn` makes that file's write fail. */
+  function fakeFolder(failOn?: string) {
+    const files = new Map<string, Blob | Uint8Array>();
+    return {
+      files,
+      name: 'Downloads',
+      async getFileHandle(name: string, options?: { create?: boolean }) {
+        if (!files.has(name) && !options?.create) throw Object.assign(new Error('missing'), { name: 'NotFoundError' });
+        return {
+          createWritable: async () => ({
+            write: async (data: Blob | Uint8Array) => {
+              if (name === failOn) throw new Error('Disk full');
+              files.set(name, data);
+            },
+            close: async () => {},
+            abort: async () => {},
+          }),
+        };
+      },
+      async removeEntry(name: string) { files.delete(name); },
+    };
+  }
+
+  function stubPicker(result: () => Promise<unknown>) {
+    const picker = vi.fn(result);
+    (window as unknown as { showDirectoryPicker?: unknown }).showDirectoryPicker = picker;
+    return picker;
+  }
+
+  const saveButton = () => screen.getByTestId('attachments-save-to-folder');
+
+  afterEach(() => {
+    delete (window as unknown as { showDirectoryPicker?: unknown }).showDirectoryPicker;
+    setDownloadGuard(null);
+  });
+
+  it('is not offered where the browser cannot ask for a folder, and the zip stays', async () => {
+    await openViewer();
+    expect(screen.queryByTestId('attachments-save-to-folder')).toBeNull();
+    expect(screen.getAllByTitle('Download all')[0]).toBeVisible();
+  });
+
+  it('keeps one row in a narrow pane: with two buttons, just the icons there, and always a name', async () => {
+    stubPicker(async () => fakeFolder());
+    await openViewer();
+    const save = saveButton();
+    expect(save.getAttribute('aria-label')).toBe(en.pwaWindows.save_all_to_folder);
+    expect(save.querySelector('span')?.className).toContain('hidden @xl:inline');
+    const download = screen.getAllByTitle('Download all')[0];
+    expect(download.getAttribute('aria-label')).toBe('Download all');
+    expect(download.querySelector('span')?.className).toContain('hidden @xl:inline');
+    expect(screen.getAllByTestId('reader-attachments')[0].className).toContain('@container');
+  });
+
+  it('shows the zip button as it was where there is only that one', async () => {
+    await openViewer();
+    const download = screen.getAllByTitle('Download all')[0];
+    expect(download.querySelector('span')?.className ?? '').not.toContain('hidden');
+    expect(download.textContent).toContain('Download all');
+  });
+
+  it('writes each attachment to the folder, names the folder, and starts no zip', async () => {
+    const folder = fakeFolder();
+    const picker = stubPicker(async () => folder);
+    const p = await openViewer();
+    p.success();
+    fireEvent.click(saveButton());
+    expect(picker).toHaveBeenCalledWith(expect.objectContaining({ mode: 'readwrite' }));
+    await waitFor(() => expect(useToastStore.getState().toasts).toEqual([
+      expect.objectContaining({ type: 'success', title: 'Saved 2 attachments to Downloads.' }),
+    ]));
+    expect([...folder.files.keys()]).toEqual(['report.txt', 'data.bin']);
+    p.noDownload();
+  });
+
+  it('asks the device policy before the picker: no save-all when downloads are blocked', async () => {
+    const picker = stubPicker(async () => fakeFolder());
+    const p = await openViewer();
+    setDownloadGuard(() => false);
+    fireEvent.click(saveButton());
+    await act(async () => {});
+    expect(picker).not.toHaveBeenCalled();
+    expect(p.fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('asks again before each file: a policy turning on stops the rest and says how many went', async () => {
+    const folder = fakeFolder();
+    stubPicker(async () => folder);
+    const p = await openViewer();
+    p.success();
+    let asked = 0;
+    // The click, then the first file's two checks. Off from the second file on.
+    setDownloadGuard(() => ++asked <= 3);
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(useToastStore.getState().toasts).toEqual([
+      expect.objectContaining({ type: 'warning', title: 'Saved 1 of 2 attachments to Downloads.' }),
+    ]));
+    expect([...folder.files.keys()]).toEqual(['report.txt']);
+  });
+
+  it('does nothing when the picker is closed', async () => {
+    stubPicker(async () => { throw Object.assign(new Error('closed'), { name: 'AbortError' }); });
+    const p = await openViewer();
+    fireEvent.click(saveButton());
+    await act(async () => {});
+    expect(p.fetchMock).not.toHaveBeenCalled();
+    expect(useToastStore.getState().toasts).toEqual([]);
+    p.noDownload();
+  });
+
+  it('falls back to the zip when the browser refuses the picker', async () => {
+    stubPicker(async () => { throw Object.assign(new Error('refused'), { name: 'SecurityError' }); });
+    const p = await openViewer();
+    p.success();
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(p.downloads).toHaveLength(1), { timeout: 5000 });
+    await p.assertZip(['report.txt', 'data.bin'], [alpha, beta]);
+  });
+
+  it('says how many were saved when a write fails midway', async () => {
+    const folder = fakeFolder('data.bin');
+    stubPicker(async () => folder);
+    const p = await openViewer();
+    p.success();
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(useToastStore.getState().toasts).toEqual([
+      expect.objectContaining({ type: 'warning', title: 'Saved 1 of 2 attachments to Downloads.' }),
+    ]));
+    expect([...folder.files.keys()]).toEqual(['report.txt']);
+  });
+
+  it('says so when nothing could be written', async () => {
+    const folder = fakeFolder('report.txt');
+    stubPicker(async () => folder);
+    const p = await openViewer();
+    p.success();
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(useToastStore.getState().toasts).toEqual([
+      expect.objectContaining({ type: 'error', title: 'Could not save the attachments to Downloads.' }),
+    ]));
   });
 });

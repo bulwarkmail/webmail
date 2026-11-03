@@ -910,7 +910,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   if (!isDesktop) {
     if (mobileShowContent) {
       return (
-        <div className={cn("flex flex-col bg-background pt-[env(safe-area-inset-top)]", isEmbedded ? "h-full" : "h-dvh")}>
+        <div className={cn("flex flex-col bg-background pt-[var(--app-top-inset)]", isEmbedded ? "h-full" : "h-dvh")}>
           <AppTopBannerSlot />
           <div className="flex items-center gap-2 px-4 h-14 border-b border-border bg-background shrink-0">
             <IconButton label={t('back_to_settings')} size="icon-lg" onClick={() => window.history.back()}>
@@ -939,7 +939,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
     }
 
     return (
-      <div className={cn("flex flex-col bg-background pt-[env(safe-area-inset-top)]", isEmbedded ? "h-full" : "h-dvh")}>
+      <div className={cn("flex flex-col bg-background pt-[var(--app-top-inset)]", isEmbedded ? "h-full" : "h-dvh")}>
         <AppTopBannerSlot />
         <div className="flex items-center gap-2 px-4 h-14 border-b border-border bg-background shrink-0">
           <IconButton label={t('back_to_mail')} size="icon-lg" onClick={() => router.push('/')}>
@@ -1057,7 +1057,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       </AppMain>
   );
   return (
-    <div className={cn("flex flex-col pt-[env(safe-area-inset-top)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
+    <div className={cn("flex flex-col pt-[var(--app-top-inset)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
       {!isEmbedded && <SkipLink>{tShell("skip_to_content")}</SkipLink>}
       <AppTopBannerSlot />
       {mvShell && (

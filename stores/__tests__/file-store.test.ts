@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useFileStore, linkedPreviewResource, resourceServerRef, sharedFilesLocation } from '../file-store';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { FileNode } from '@/lib/jmap/types';
@@ -104,6 +104,24 @@ const marker = (id: string, name: string, parentId: string | null): FileNode => 
 });
 const file = (id: string, name: string, parentId: string | null): FileNode => ({
   id, parentId, name, type: 'text/plain', blobId: `b-${id}`, size: 10, created: '', modified: '',
+});
+
+describe('after a start from the local copy', () => {
+  it('lists again when the real client takes over, and the error of asking the device goes', async () => {
+    const local = makeMockClient([]);
+    (local as unknown as { isOfflineOnly: () => boolean }).isOfflineOnly = () => true;
+    local.listAllFileNodes = async () => { throw new Error('Not available offline'); };
+    useFileStore.setState({ client: null, supportsFiles: null, resources: [], error: null, currentParentId: null, pathStack: [{ id: null, name: '' }] } as never);
+    useFileStore.getState().initClient(local as unknown as IJMAPClient, 'acc');
+    useFileStore.setState({ supportsFiles: true });
+    await useFileStore.getState().navigate(null);
+    expect(useFileStore.getState().error).toBeTruthy();
+
+    const real = makeMockClient([{ id: 'f1', parentId: null, name: 'kept.txt', type: 'text/plain', blobId: 'b', size: 1, created: '', modified: '' }]);
+    useFileStore.getState().initClient(real as unknown as IJMAPClient, 'acc');
+    await vi.waitFor(() => expect(useFileStore.getState().resources.map((r) => r.name)).toEqual(['kept.txt']));
+    expect(useFileStore.getState().error).toBeFalsy();
+  });
 });
 
 describe('file-store hierarchy (issue #379)', () => {

@@ -249,6 +249,28 @@
     "active_account": "활성",
     "switching_account": "계정 전환 중..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "새 메시지",
+    "shortcut_calendar": "캘린더",
+    "shortcut_contacts": "연락처",
+    "unsupported_file": "{name}은(는) 여기에서 열 수 없습니다.",
+    "open_failed": "파일을 열 수 없습니다. 다시 열어 보세요.",
+    "share_gone": "공유한 내용이 더 이상 없습니다. 다시 공유해 주세요.",
+    "share_files_lost": "공유한 파일을 보관할 수 없습니다. 메시지에 다시 추가해 주세요.",
+    "ics_needs_server": "캘린더 파일을 가져오려면 서버에 연결되어 있어야 합니다. 다시 온라인 상태가 되면 가져오기가 시작됩니다.",
+    "contacts_need_server": "연락처를 가져오려면 서버에 연결되어 있어야 합니다. 다시 온라인 상태가 되면 다시 시도해 주세요.",
+    "share_confirm_title": "새 메시지를 시작할까요?",
+    "share_confirm_message": "다른 사이트나 앱에서 메시지를 시작하려고 합니다. 동의하지 않으면 아무것도 업로드하거나 저장하지 않습니다.",
+    "share_confirm_subject": "제목:",
+    "share_confirm_text": "내용:",
+    "share_confirm_files": "{count, plural, other {파일:}}",
+    "share_confirm_accept": "메시지 시작",
+    "share_confirm_decline": "시작 안 함",
+    "share_cut": "공유한 텍스트가 너무 길어서 줄였습니다.",
+    "handoff_expired": "열었거나 공유한 항목이 너무 오래 대기하여 사라졌습니다. 다시 열거나 공유해 주세요.",
+    "compose_waiting": "다음 메시지를 시작하려면 이 메시지를 닫으세요.",
+    "save_first_failed": "메시지를 저장할 수 없어 파일을 열지 않았습니다. 메시지를 저장한 다음 캘린더나 연락처를 여세요."
+  },
   "sidebar_apps": {
     "modal_title": "사이드바 앱",
     "add_new": "앱 추가",
@@ -4909,6 +4931,9 @@
     "mini_has_events": "일정 있음",
     "mini_week_number": "{week}주차"
   },
+  "calendar_offline": {
+    "split_needs_server": "이 변경에는 서버 연결이 필요합니다. 지금은 이 일정만 변경하거나 다시 온라인이 되면 다시 시도하세요."
+  },
   "advanced_search": {
     "title": "상세 검색",
     "from": "보낸 사람",
@@ -5718,6 +5743,107 @@
       "no_drafts_mailbox": "임시보관함 폴더를 찾을 수 없습니다."
     }
   },
+  "offlineConflicts": {
+    "title": "적용되지 않은 변경 사항",
+    "description": "오프라인 상태에서 변경한 내용입니다. 적용되지 않았으며 메시지는 서버에 있는 그대로 유지됩니다.",
+    "changed": "다른 기기에서 변경되어 변경 사항이 적용되지 않았습니다",
+    "changed_delete": "다른 기기에서 변경되어 삭제되지 않았습니다",
+    "gone": "서버에 더 이상 없어 변경 사항이 적용되지 않았습니다",
+    "refused": "서버가 이 변경을 거부했습니다: {reason}",
+    "dismiss": "닫기",
+    "dismiss_label": "{subject} 관련 메모 닫기",
+    "banner": "적용되지 않은 변경 사항: {count}",
+    "toast": "오프라인에서 변경했지만 적용되지 않은 항목: {count}개. 보낼 편지함에서 확인할 수 있습니다.",
+    "storage_failed": "이 기기에 오프라인 메일을 저장할 공간이 없습니다. 공간을 확보하거나 설정에서 보관량을 줄이세요.",
+    "signout_changes_title": "저장하지 않은 변경 사항이 있는 채로 로그아웃할까요?",
+    "signout_changes": "아직 서버에 없는 변경 사항: {count}개. 로그아웃하면 삭제됩니다.",
+    "store_unavailable": "지금은 이 기기의 오프라인 메일을 열 수 없습니다. 보내지 않은 메일은 여기에 남아 있고 앱이 계속 시도합니다.",
+    "store_reset": "이 기기의 오프라인 메일을 읽을 수 없어 다시 내려받는 중입니다. 보내지 않은 내용은 사라졌습니다.",
+    "legacy_stranded": "이 브라우저에서는 이전 버전이 보관한 보내지 않은 메일을 열 수 없습니다. 브라우저를 업데이트하면 되찾을 수 있습니다.",
+    "store_private": "개인 정보 보호 창에서는 오프라인용 메일을 보관할 수 없습니다.",
+    "server_not_answering": "메일 서버가 응답하지 않습니다. 잠시 후 다시 시도하세요."
+  },
+  "offlineStorage": {
+    "keep_description": "메일, 캘린더, 연락처, 선택한 파일을 이 기기에 암호화해 보관합니다. 오프라인에서도 메일을 읽고, 플래그를 지정하고, 이동할 수 있으며, 작성한 메일은 보낼편지함에서 대기합니다. 로그아웃하면 모두 삭제됩니다.",
+    "window_label": "보관할 기간",
+    "window_description": "이보다 오래된 메일과 캘린더 일정은 이 기기에서 삭제됩니다. 온라인일 때는 계속 열어볼 수 있습니다.",
+    "window_days": "{days, plural, other {#일}}",
+    "window_year": "1년",
+    "window_everything": "전체",
+    "attachments_label": "첨부 파일 보관",
+    "attachments_description": "보관한 메시지의 첨부 파일과 오프라인용으로 보관한 파일을 합쳐 최대 {total}까지 보관합니다. 오래된 것부터 삭제됩니다.",
+    "total_locked": "조직 설정에 따라 첨부 파일과 파일은 최대 {size}까지만 허용됩니다.",
+    "attachment_cap_label": "보관할 첨부 파일의 최대 크기",
+    "usage_mail": "메시지 및 검색 색인",
+    "usage_attachments": "첨부 파일",
+    "usage_calendar": "캘린더",
+    "usage_contacts": "연락처",
+    "usage_files": "오프라인용으로 보관한 파일",
+    "usage_row": "{size} ({count, plural, other {#개}})",
+    "progress_list": "메시지 목록을 만드는 중",
+    "progress_bodies": "메시지를 다운로드하는 중",
+    "progress_threads": "대화를 정렬하는 중",
+    "progress_files": "파일을 다운로드하는 중",
+    "progress_other": "데이터를 이 기기로 가져오는 중",
+    "progress_count": "{total} 중 {done}",
+    "progress_count_open": "지금까지 {done}",
+    "progress_left": "약 {minutes, plural, other {#분}} 남음",
+    "clear_label": "이 계정 비우기",
+    "clear_description": "이 기기에 보관된 이 계정의 데이터를 모두 삭제한 뒤 다시 다운로드합니다.",
+    "clear_button": "비우기…",
+    "clear_confirm_title": "이 기기에서 이 계정을 비울까요?",
+    "clear_confirm_message": "이 기기에 보관된 {account}의 데이터가 모두 삭제되고 다시 다운로드됩니다. 서버에 있는 메일은 그대로 남습니다.",
+    "clear_confirm_unsent": "{count, plural, other {보내지 않은 메시지 #개가 사라집니다.}}",
+    "clear_confirm": "비우기",
+    "persist_refused": "저장 공간이 부족해지면 이 브라우저가 보관한 메일을 삭제할 수 있습니다. 앱을 설치하면 대개 막을 수 있습니다.",
+    "persist_retry": "다시 요청",
+    "safari_hint": "Safari는 7일 동안 방문하지 않은 사이트의 데이터를 삭제합니다. 이 기기에 메일을 계속 보관하려면 Bulwark를 홈 화면이나 Dock에 추가하세요.",
+    "evicted": "브라우저가 이 기기에 보관한 메일을 삭제했습니다. 다시 다운로드하는 중입니다.",
+    "evicted_lost": "{count, plural, other {보내지 않은 메시지 또는 변경 사항 #개가 사라졌습니다.}}",
+    "evicted_dismiss": "확인",
+    "storage_full_title": "기기 저장 공간이 가득 찼습니다.",
+    "storage_full_text": "Bulwark가 이곳에 메일 저장을 중단했습니다. 보관하는 메일을 줄이거나 이 계정을 비워 공간을 확보하세요.",
+    "open_settings": "설정 열기",
+    "default_on": "Bulwark는 연결이 없어도 쓸 수 있도록 메일을 이 기기에 보관합니다. 설정에서 변경할 수 있습니다.",
+    "conflict_calendar": "캘린더 일정",
+    "conflict_contacts": "연락처",
+    "kept_files_title": "오프라인용으로 보관한 파일",
+    "kept_state_kept": "이 기기에 있음",
+    "kept_state_waiting": "다운로드 대기 중",
+    "kept_error_tooLarge": "너무 커서 보관할 수 없음",
+    "kept_error_overLimit": "이 기기의 한도를 초과함",
+    "kept_error_notAllowed": "조직에서 파일 보관을 허용하지 않음",
+    "kept_error_download": "다운로드하지 못함",
+    "keep_offline": "오프라인용으로 보관",
+    "unpin": "오프라인 보관 중지",
+    "unpin_label": "{name} 오프라인 보관 중지",
+    "warning_desktop": "이 컴퓨터의 사용자 계정을 쓸 수 있는 사람은 누구나 이 메일을 읽을 수 있습니다. 디스크 암호화를 사용하세요.",
+    "off_confirm_text": "이 기기에 보관된 {account}의 데이터가 모두 삭제됩니다. 서버에 있는 메일은 그대로 남습니다.",
+    "unsent_changes": "{count, plural, other {서버에 도달하지 못한 변경 사항 #개가 사라집니다.}}",
+    "clear_needs_connection": "모든 것을 다시 다운로드하므로 연결이 필요합니다.",
+    "usage_label": "이 기기에 보관된 항목",
+    "pin_not_ready": "이 파일은 아직 이 기기의 목록에 없습니다. 잠시 후 다시 시도하세요."
+  },
+  "offlineDrafts": {
+    "title": "이 기기의 임시 보관함",
+    "description": "이 임시 보관 메일은 이 기기에 저장되어 있습니다. 서버에 연결되면 자동으로 올라갑니다.",
+    "saved_on_device": "이 기기에 저장됨",
+    "status_waiting": "서버 기다리는 중",
+    "status_sending": "서버에 저장하는 중",
+    "status_uncertain": "서버에 도착했는지 확인하는 중",
+    "status_refused": "서버가 이 임시 보관 메일을 거부했습니다: {error}",
+    "file_missing": "첨부 파일이 더 이상 이 기기에 없습니다",
+    "open": "열기",
+    "open_label": "{subject} 열기",
+    "retry": "다시 시도",
+    "retry_label": "{subject} 다시 시도",
+    "toast_refused": "임시 보관 메일 {subject}을(를) 서버에 저장하지 못했습니다. 이 기기에 남아 있습니다.",
+    "toast_conflict": "임시 보관 메일 {subject}이(가) 다른 기기에서 변경되었습니다. 두 버전을 모두 보관합니다.",
+    "conflict_changed": "다른 기기에서 변경되었습니다. 두 버전 모두 임시 보관함에 있습니다.",
+    "conflict_gone": "다른 기기에서 변경되었거나 삭제되었습니다. 내 버전은 임시 보관함에 있습니다.",
+    "banner_refused": "서버가 거부한 임시 보관 메일: {count}",
+    "banner_waiting": "서버를 기다리는 임시 보관 메일: {count}"
+  },
   "deep_link": {
     "message_not_found": "이 메시지를 더 이상 사용할 수 없습니다.",
     "thread_not_found": "이 대화를 더 이상 사용할 수 없습니다.",
@@ -5833,6 +5959,10 @@
       "crypto_full": {
         "title": "이 앱에 대한 전체 접근 권한",
         "body": "웹메일과 같은 권한으로 실행돼요. 모든 메일과 저장된 키를 읽고 사용자를 대신해 작업할 수 있어요. 완전히 신뢰하는 플러그인에만 허용하세요."
+      },
+      "keystore": {
+        "title": "이 컴퓨터의 인증서 사용",
+        "body": "이 컴퓨터나 스마트 카드의 인증서로 메시지 서명과 복호화를 요청합니다. 앱이 먼저 사용자에게 묻습니다. 플러그인은 개인 키를 받지 않지만, 허용하는 동안에는 사용자 이름으로 서명하고 복호화한 내용을 읽을 수 있습니다."
       },
       "email_raw_send": {
         "title": "직접 만든 메시지 보내기",
@@ -6350,6 +6480,12 @@
     "sign_language": "수어",
     "new_tab": "새 탭에서 열림"
   },
+  "pwaNotify": {
+    "action_archive": "보관",
+    "action_mark_read": "읽은 상태로 표시",
+    "action_reply": "답장",
+    "reply_placeholder": "답장 쓰기"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "캘린더에 추가",
     "update_in_calendar": "캘린더에서 업데이트",
@@ -6451,5 +6587,40 @@
       "next_issue": "다음 맞춤법 또는 문법 문제",
       "previous_issue": "이전 맞춤법 또는 문법 문제"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "새 창에서 열기",
+    "save_all_to_folder": "모두 폴더에 저장…",
+    "saved_all": "{count, plural, other {첨부 파일 #개를 {folder}에 저장했습니다.}}",
+    "saved_partial": "첨부 파일 {total}개 중 {saved}개를 {folder}에 저장했습니다.",
+    "save_failed": "첨부 파일을 {folder}에 저장할 수 없습니다.",
+    "popup_blocked": "브라우저가 새 창을 차단했습니다. 이 사이트의 팝업을 허용한 후 다시 시도하세요.",
+    "opening": "여는 중…",
+    "session_ended_title": "이 창에서 로그아웃되었습니다",
+    "session_ended_body": "앱을 열어 로그인한 다음 이 창을 다시 여세요.",
+    "open_app": "앱 열기",
+    "close_window": "창 닫기",
+    "message_gone_title": "이 메시지는 더 이상 없습니다",
+    "message_gone_body": "삭제되었거나 다른 계정으로 이동되었습니다.",
+    "message_moved": "이 메시지는 다른 폴더로 이동되었습니다.",
+    "message_moved_to": "이 메시지는 {folder}(으)로 이동되었습니다.",
+    "window_not_ready": "새 창이 제때 열리지 않았습니다. 임시 보관 메일은 여기에 남아 있습니다."
+  },
+  "desktop_sign_in": {
+    "browser_button": "브라우저로 로그인",
+    "browser_waiting": "브라우저에서 로그인을 마치세요",
+    "browser_unavailable": "이 서버는 브라우저 로그인을 지원하지 않습니다. 비밀번호를 사용하세요.",
+    "browser_failed": "브라우저 로그인에 실패했습니다. 다시 시도하세요.",
+    "server_needed": "먼저 서버 주소를 입력하세요.",
+    "server_declined": "이 서버를 허용하지 않아 아무것도 보내지 않았습니다.",
+    "server_invalid": "이 서버 주소는 올바르지 않습니다."
+  },
+  "desktop_keystore": {
+    "title": "이 컴퓨터의 인증서",
+    "description": "이 서버는 인증서와 스마트 카드 사용을 요청할 수 있습니다. 각 인증서를 사용하기 전에는 여전히 사용자에게 묻습니다.",
+    "label": "이 서버의 액세스",
+    "label_description": "허용을 취소합니다. 서버는 다시 요청해야 합니다.",
+    "revoke": "취소",
+    "revoked": "허용을 취소했습니다"
   }
 }

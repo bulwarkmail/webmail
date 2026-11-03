@@ -51,6 +51,7 @@ import type { ContactCard, AddressBook, AddressBookRights } from "@/lib/jmap/typ
 import { ShareCollectionDialog } from "@/components/settings/share-collection-dialog";
 import { appPath, buildContactsPath, parseContactsPath, type ContactDeepLink } from "@/lib/deep-links";
 import { consumePendingDeepLinkEntry, subscribePendingDeepLink } from "@/lib/deep-link-handoff";
+import { useHandoffFiles } from "@/hooks/use-handoff-files";
 import { useDeepLinkUrl } from "@/hooks/use-deep-link-url";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import { useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
@@ -356,6 +357,14 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   // focused tab writes the address bar; the standard instance that renders
   // while Pro takes over a route stays silent.
   const proInterfaceActive = useProInterfaceActive();
+  // A .vcf opened from the OS (lib/launch-handoff.ts). It waits for the
+  // contacts, or everything would look new to the duplicate check. The
+  // standard page that renders while the Pro shell takes over leaves it for
+  // the Pro one.
+  const launchedFile = useHandoffFiles(
+    "contacts",
+    isAuthenticated && !!client && (contactsLoaded || !supportsSync) && (isEmbedded || !proInterfaceActive),
+  );
   const isFocusedProTab = useIsFocusedProTab();
   const contactsLinkPath = appPath(buildContactsPath({
     contactId: view === 'detail' || view === 'edit' ? selectedContactId : null,
@@ -1200,7 +1209,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   };
 
   return (
-    <div className={cn("flex flex-col overflow-hidden pt-[env(safe-area-inset-top)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
+    <div className={cn("flex flex-col overflow-hidden pt-[var(--app-top-inset)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
       {!isEmbedded && <SkipLink>{tShell("skip_to_content")}</SkipLink>}
       <AppTopBannerSlot />
       {refreshIndicator}
@@ -1256,7 +1265,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
                       "border-e border-border flex flex-col flex-shrink-0 bg-background",
                       !isSidebarResizing && "transition-[width] duration-300",
                       isNarrow && cn(
-                        "absolute inset-y-0 start-0 z-50 w-72 pt-[env(safe-area-inset-top)]",
+                        "absolute inset-y-0 start-0 z-50 w-72 pt-[var(--app-top-inset)]",
                         "transform transition-[transform,visibility] duration-300 ease-in-out",
                         !narrowSidebarOpen && "invisible -translate-x-full rtl:translate-x-full"
                       )
@@ -1572,6 +1581,15 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
           if (movingContactIds) void handleDropContacts(movingContactIds, book);
         }}
       />
+      {launchedFile.file && (
+        <ContactImportDialog
+          key={`${launchedFile.file.name}:${launchedFile.file.lastModified}`}
+          existingContacts={contacts}
+          onImport={handleImportContacts}
+          initialFile={launchedFile.file}
+          onClose={launchedFile.done}
+        />
+      )}
       {showImportDialog && (
         <ContactImportDialog
           existingContacts={contacts}

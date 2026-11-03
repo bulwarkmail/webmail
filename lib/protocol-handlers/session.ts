@@ -1,3 +1,4 @@
+import { isStandaloneDisplayMode } from "@/lib/standalone-display";
 import type { ParsedMailto } from "./mailto";
 import type { ParsedWebcal } from "./webcal";
 import { matchSurface } from "@/lib/deep-links";
@@ -136,9 +137,7 @@ function getMailtoClientPriority(info: ProtocolClientInfo): number {
 }
 
 function getDefaultProtocolClientInfo(): ProtocolClientInfo {
-  const nav = navigator as Navigator & { standalone?: boolean };
-  const standalone = window.matchMedia?.("(display-mode: standalone)").matches || nav.standalone === true;
-  return { path: window.location.pathname, standalone, clientId: BROWSER_CLIENT_ID };
+  return { path: window.location.pathname, standalone: isStandaloneDisplayMode(), clientId: BROWSER_CLIENT_ID };
 }
 
 async function requestMailtoViaServiceWorker(value: ParsedMailto, timeoutMs: number): Promise<boolean> {

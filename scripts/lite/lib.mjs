@@ -41,12 +41,20 @@ export const LITE_REMOVED_PATHS = [
   "app/(main)/[...rest]",
   "app/(main)/[locale]/[...rest]",
   "app/(main)/protocol",
+  "app/(main)/[locale]/popout",
   "e2e",
   "integration",
   // The local store: Lite has no offline mode. A dev checkout may hold these.
   "public/store-worker.js",
   "public/sqlite3mc",
 ];
+
+/** The local store's engine in an export: Lite has no offline mode, and must not ship or load it. */
+export function unexpectedEngineFiles(files) {
+  return files
+    .map((file) => file.replace(/\\/g, "/"))
+    .filter((file) => /(^|\/)store-worker\.js$/.test(file) || /(^|\/)sqlite3mc\//.test(file) || /(^|\/)sqlite3\.(wasm|mjs)$/.test(file));
+}
 
 /** Test trees are pruned too: they import the routes removed above. */
 export const LITE_TEST_DIR_NAME = "__tests__";

@@ -249,6 +249,28 @@
     "active_account": "Ativa",
     "switching_account": "Alternando conta..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Nova mensagem",
+    "shortcut_calendar": "Calendário",
+    "shortcut_contacts": "Contactos",
+    "unsupported_file": "Não é possível abrir {name} aqui.",
+    "open_failed": "Não foi possível abrir o ficheiro. Tente abri-lo novamente.",
+    "share_gone": "O que partilhou já não está aqui. Partilhe novamente.",
+    "share_files_lost": "Não foi possível guardar os ficheiros partilhados. Adicione-os novamente à mensagem.",
+    "ics_needs_server": "Importar um ficheiro de calendário precisa de uma ligação ao servidor. A importação começa quando voltar a estar online.",
+    "contacts_need_server": "Importar contactos precisa de uma ligação ao servidor. Tente novamente quando voltar a estar online.",
+    "share_confirm_title": "Começar uma nova mensagem?",
+    "share_confirm_message": "Outro site ou aplicação quer começar uma mensagem. Nada é carregado ou guardado sem o seu acordo.",
+    "share_confirm_subject": "Assunto:",
+    "share_confirm_text": "Texto:",
+    "share_confirm_files": "{count, plural, one {Ficheiro:} other {Ficheiros:}}",
+    "share_confirm_accept": "Começar mensagem",
+    "share_confirm_decline": "Não começar",
+    "share_cut": "O texto partilhado era demasiado longo e foi encurtado.",
+    "handoff_expired": "Algo que abriu ou partilhou esperou demasiado tempo e já não está disponível. Abra ou partilhe novamente.",
+    "compose_waiting": "Feche esta mensagem para começar a seguinte.",
+    "save_first_failed": "Não foi possível guardar a mensagem, por isso o ficheiro não foi aberto. Guarde a mensagem e depois abra o calendário ou os contactos."
+  },
   "sidebar_apps": {
     "modal_title": "Apps da barra lateral",
     "add_new": "Adicionar app",
@@ -4909,6 +4931,9 @@
     "mini_has_events": "tem eventos",
     "mini_week_number": "Semana {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "Esta alteração precisa de ligação ao servidor. Altere apenas este evento por agora, ou tente de novo quando voltar a estar online."
+  },
   "advanced_search": {
     "title": "Pesquisa avançada",
     "from": "De",
@@ -5718,6 +5743,107 @@
       "no_drafts_mailbox": "Não foi possível encontrar a pasta Rascunhos."
     }
   },
+  "offlineConflicts": {
+    "title": "Alterações não aplicadas",
+    "description": "Fez estas alterações offline. Não foram aplicadas e a mensagem fica como está no servidor.",
+    "changed": "Alterada noutro dispositivo, a sua alteração não foi aplicada",
+    "changed_delete": "Alterada noutro dispositivo, não foi eliminada",
+    "gone": "Já não está no servidor, a sua alteração não foi aplicada",
+    "refused": "O servidor recusou esta alteração: {reason}",
+    "dismiss": "Dispensar",
+    "dismiss_label": "Dispensar a nota sobre {subject}",
+    "banner": "Alterações não aplicadas: {count}",
+    "toast": "Alterações feitas offline não aplicadas: {count}. A caixa de saída mostra quais.",
+    "storage_failed": "Este dispositivo não tem espaço para o correio offline. Liberte espaço ou guarde menos nas definições.",
+    "signout_changes_title": "Terminar sessão com alterações não guardadas?",
+    "signout_changes": "Alterações ainda não enviadas para o servidor: {count}. Terminar sessão elimina-as.",
+    "store_unavailable": "O correio offline deste dispositivo não pode ser aberto agora. O correio por enviar fica aqui e a aplicação continua a tentar.",
+    "store_reset": "Não foi possível ler o correio offline deste dispositivo, por isso está a ser transferido de novo. O que estava por enviar perdeu-se.",
+    "legacy_stranded": "Este navegador não consegue abrir o correio por enviar guardado por uma versão anterior. Atualizar o navegador pode recuperá-lo.",
+    "store_private": "As janelas privadas não podem guardar correio para uso offline.",
+    "server_not_answering": "O servidor de correio não está a responder. Tente novamente daqui a pouco."
+  },
+  "offlineStorage": {
+    "keep_description": "Mantém o seu correio, calendário, contactos e os ficheiros que escolher, cifrados neste dispositivo. Offline pode ler, sinalizar e mover e-mails, e o que escrever espera na caixa de saída. Terminar a sessão remove tudo.",
+    "window_label": "Quanto tempo atrás manter",
+    "window_description": "Os e-mails e eventos mais antigos saem deste dispositivo. Pode continuar a abri-los quando tiver ligação.",
+    "window_days": "{days, plural, one {# dia} other {# dias}}",
+    "window_year": "1 ano",
+    "window_everything": "Tudo",
+    "attachments_label": "Manter anexos",
+    "attachments_description": "Anexos das mensagens mantidas e ficheiros que mantém offline, até {total} no total. Os mais antigos saem primeiro.",
+    "total_locked": "A sua organização permite no máximo {size} de anexos e ficheiros.",
+    "attachment_cap_label": "Maior anexo a manter",
+    "usage_mail": "Mensagens e índice de pesquisa",
+    "usage_attachments": "Anexos",
+    "usage_calendar": "Calendário",
+    "usage_contacts": "Contactos",
+    "usage_files": "Ficheiros mantidos offline",
+    "usage_row": "{size} ({count, plural, one {# item} other {# itens}})",
+    "progress_list": "A listar mensagens",
+    "progress_bodies": "A transferir mensagens",
+    "progress_threads": "A ordenar conversas",
+    "progress_files": "A transferir ficheiros",
+    "progress_other": "A trazer dados para este dispositivo",
+    "progress_count": "{done} de {total}",
+    "progress_count_open": "{done} até agora",
+    "progress_left": "faltam cerca de {minutes, plural, one {# minuto} other {# minutos}}",
+    "clear_label": "Limpar esta conta",
+    "clear_description": "Elimina tudo o que este dispositivo mantém para esta conta e volta a transferi-lo.",
+    "clear_button": "Limpar…",
+    "clear_confirm_title": "Limpar esta conta neste dispositivo?",
+    "clear_confirm_message": "Tudo o que este dispositivo mantém para {account} é eliminado e transferido novamente. O seu correio no servidor mantém-se.",
+    "clear_confirm_unsent": "{count, plural, one {# mensagem por enviar será perdida.} other {# mensagens por enviar serão perdidas.}}",
+    "clear_confirm": "Limpar",
+    "persist_refused": "Este navegador pode eliminar o correio mantido quando o espaço escasseia. Instalar a aplicação costuma evitá-lo.",
+    "persist_retry": "Perguntar novamente",
+    "safari_hint": "O Safari elimina os dados de um site após 7 dias sem visitas. Adicione o Bulwark ao Ecrã Principal ou ao Dock para manter o seu correio neste dispositivo.",
+    "evicted": "O navegador eliminou o correio mantido neste dispositivo. Está a ser transferido novamente.",
+    "evicted_lost": "{count, plural, one {# mensagem ou alteração por enviar foi perdida.} other {# mensagens ou alterações por enviar foram perdidas.}}",
+    "evicted_dismiss": "OK",
+    "storage_full_title": "O armazenamento do dispositivo está cheio.",
+    "storage_full_text": "O Bulwark deixou de guardar correio aqui. Mantenha menos correio ou limpe esta conta para libertar espaço.",
+    "open_settings": "Abrir definições",
+    "default_on": "O Bulwark mantém o seu correio neste dispositivo, para funcionar sem ligação. Pode alterar isto nas Definições.",
+    "conflict_calendar": "Evento do calendário",
+    "conflict_contacts": "Contacto",
+    "kept_files_title": "Ficheiros mantidos offline",
+    "kept_state_kept": "Neste dispositivo",
+    "kept_state_waiting": "A aguardar transferência",
+    "kept_error_tooLarge": "Demasiado grande para manter",
+    "kept_error_overLimit": "Acima do limite deste dispositivo",
+    "kept_error_notAllowed": "A sua organização não permite manter ficheiros",
+    "kept_error_download": "Não foi possível transferir",
+    "keep_offline": "Manter offline",
+    "unpin": "Deixar de manter offline",
+    "unpin_label": "Deixar de manter {name} offline",
+    "warning_desktop": "Qualquer pessoa que possa usar a conta de utilizador deste computador pode ler este correio. Use a cifragem do disco.",
+    "off_confirm_text": "Isto elimina tudo o que este dispositivo mantém para {account}. O seu correio no servidor mantém-se.",
+    "unsent_changes": "{count, plural, one {# alteração que não chegou ao servidor será perdida.} other {# alterações que não chegaram ao servidor serão perdidas.}}",
+    "clear_needs_connection": "É preciso ter ligação, porque tudo é transferido novamente.",
+    "usage_label": "O que este dispositivo mantém",
+    "pin_not_ready": "Este ficheiro ainda não está na lista deste dispositivo. Tente novamente dentro de instantes."
+  },
+  "offlineDrafts": {
+    "title": "Rascunhos neste dispositivo",
+    "description": "Estes rascunhos estão guardados neste dispositivo. Vão para o servidor por si assim que for possível contactá-lo.",
+    "saved_on_device": "Guardado neste dispositivo",
+    "status_waiting": "A aguardar o servidor",
+    "status_sending": "A guardar no servidor",
+    "status_uncertain": "A verificar se chegou ao servidor",
+    "status_refused": "O servidor recusou este rascunho: {error}",
+    "file_missing": "Um ficheiro anexado já não está neste dispositivo",
+    "open": "Abrir",
+    "open_label": "Abrir {subject}",
+    "retry": "Tentar novamente",
+    "retry_label": "Tentar {subject} novamente",
+    "toast_refused": "Não foi possível guardar o rascunho {subject} no servidor. Fica neste dispositivo.",
+    "toast_conflict": "O rascunho {subject} foi alterado noutro dispositivo. As duas versões são mantidas.",
+    "conflict_changed": "Alterado noutro dispositivo. As duas versões estão em Rascunhos.",
+    "conflict_gone": "Alterado ou removido noutro dispositivo. A sua versão está em Rascunhos.",
+    "banner_refused": "Rascunhos recusados pelo servidor: {count}",
+    "banner_waiting": "Rascunhos a aguardar o servidor: {count}"
+  },
   "deep_link": {
     "message_not_found": "Esta mensagem não está mais disponível.",
     "thread_not_found": "Esta conversa não está mais disponível.",
@@ -5833,6 +5959,10 @@
       "crypto_full": {
         "title": "Acesso total a este aplicativo",
         "body": "É executado com os mesmos direitos do próprio webmail. Pode ler todos os seus e-mails e chaves armazenadas e agir em seu nome. Só permita isto para plugins em que você confia totalmente."
+      },
+      "keystore": {
+        "title": "Usar certificados deste computador",
+        "body": "Pede para assinar e desencriptar mensagens com certificados deste computador ou de um cartão inteligente. A aplicação pergunta-lhe primeiro. O plugin nunca recebe a chave privada, mas enquanto o permitir pode assinar em seu nome e ler o que desencripta."
       },
       "email_raw_send": {
         "title": "Enviar mensagens criadas por ele mesmo",
@@ -6350,6 +6480,12 @@
     "sign_language": "Língua de sinais",
     "new_tab": "abre em uma nova aba"
   },
+  "pwaNotify": {
+    "action_archive": "Arquivar",
+    "action_mark_read": "Marcar como lido",
+    "action_reply": "Responder",
+    "reply_placeholder": "Escreva uma resposta"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Adicionar ao calendário",
     "update_in_calendar": "Atualizar no calendário",
@@ -6451,5 +6587,40 @@
       "next_issue": "Próximo erro de ortografia ou gramática",
       "previous_issue": "Erro de ortografia ou gramática anterior"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Abrir em nova janela",
+    "save_all_to_folder": "Guardar tudo numa pasta…",
+    "saved_all": "{count, plural, one {# anexo guardado em {folder}.} other {# anexos guardados em {folder}.}}",
+    "saved_partial": "{saved} de {total} anexos guardados em {folder}.",
+    "save_failed": "Não foi possível guardar os anexos em {folder}.",
+    "popup_blocked": "O navegador bloqueou a nova janela. Permita pop-ups para este site e tente novamente.",
+    "opening": "A abrir…",
+    "session_ended_title": "Terminou a sessão nesta janela",
+    "session_ended_body": "Abra a aplicação e inicie sessão, depois abra esta janela novamente.",
+    "open_app": "Abrir a aplicação",
+    "close_window": "Fechar janela",
+    "message_gone_title": "Esta mensagem já não existe",
+    "message_gone_body": "Foi eliminada ou movida para outra conta.",
+    "message_moved": "Esta mensagem foi movida para outra pasta.",
+    "message_moved_to": "Esta mensagem foi movida para {folder}.",
+    "window_not_ready": "A nova janela não abriu a tempo. O seu rascunho fica aqui."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Entrar com o navegador",
+    "browser_waiting": "Termine de entrar no navegador",
+    "browser_unavailable": "Este servidor não oferece entrada pelo navegador. Use sua senha.",
+    "browser_failed": "Não foi possível entrar pelo navegador. Tente novamente.",
+    "server_needed": "Digite primeiro o endereço do servidor.",
+    "server_declined": "Você não permitiu este servidor, então nada foi enviado a ele.",
+    "server_invalid": "Este endereço de servidor não é válido."
+  },
+  "desktop_keystore": {
+    "title": "Certificados deste computador",
+    "description": "Este servidor pode pedir para usar os seus certificados e cartões inteligentes. Mesmo assim, ser-lhe-á perguntado antes de cada certificado ser usado.",
+    "label": "Acesso deste servidor",
+    "label_description": "Retire a sua permissão. O servidor terá de pedir novamente.",
+    "revoke": "Retirar",
+    "revoked": "Permissão retirada"
   }
 }

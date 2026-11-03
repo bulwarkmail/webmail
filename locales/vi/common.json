@@ -249,6 +249,28 @@
     "active_account": "Đang hoạt động",
     "switching_account": "Đang chuyển đổi tài khoản..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Thư mới",
+    "shortcut_calendar": "Lịch",
+    "shortcut_contacts": "Danh bạ",
+    "unsupported_file": "Không thể mở {name} tại đây.",
+    "open_failed": "Không thể mở tệp. Hãy thử mở lại.",
+    "share_gone": "Nội dung bạn đã chia sẻ không còn ở đây. Vui lòng chia sẻ lại.",
+    "share_files_lost": "Không thể giữ các tệp đã chia sẻ. Hãy thêm lại chúng vào thư.",
+    "ics_needs_server": "Nhập tệp lịch cần kết nối với máy chủ. Quá trình nhập sẽ bắt đầu khi bạn trực tuyến trở lại.",
+    "contacts_need_server": "Nhập danh bạ cần kết nối với máy chủ. Hãy thử lại khi bạn trực tuyến trở lại.",
+    "share_confirm_title": "Bắt đầu thư mới?",
+    "share_confirm_message": "Một trang web hoặc ứng dụng khác muốn bắt đầu một thư. Sẽ không có gì được tải lên hoặc lưu nếu bạn không đồng ý.",
+    "share_confirm_subject": "Chủ đề:",
+    "share_confirm_text": "Nội dung:",
+    "share_confirm_files": "{count, plural, other {Tệp:}}",
+    "share_confirm_accept": "Bắt đầu thư",
+    "share_confirm_decline": "Không bắt đầu",
+    "share_cut": "Văn bản được chia sẻ quá dài và đã được rút ngắn.",
+    "handoff_expired": "Nội dung bạn đã mở hoặc chia sẻ đã chờ quá lâu và không còn nữa. Vui lòng mở hoặc chia sẻ lại.",
+    "compose_waiting": "Đóng thư này để bắt đầu thư tiếp theo.",
+    "save_first_failed": "Không thể lưu thư của bạn nên tệp chưa được mở. Hãy lưu thư, rồi mở lịch hoặc danh bạ."
+  },
   "sidebar_apps": {
     "modal_title": "Ứng dụng thanh bên",
     "add_new": "Thêm ứng dụng",
@@ -4921,6 +4943,9 @@
     "mini_has_events": "Có sự kiện",
     "mini_week_number": "Tuần {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "Thay đổi này cần kết nối với máy chủ. Hiện chỉ thay đổi sự kiện này, hoặc thử lại khi bạn trực tuyến trở lại."
+  },
   "calendar_event_notifications": {
     "someone": "Ai đó",
     "invited": "{name} đã mời bạn tham gia \"{title}\"",
@@ -5730,6 +5755,107 @@
       "no_drafts_mailbox": "Không tìm thấy thư mục Thư nháp."
     }
   },
+  "offlineConflicts": {
+    "title": "Các thay đổi chưa được áp dụng",
+    "description": "Bạn đã thực hiện các thay đổi này khi ngoại tuyến. Chúng chưa được áp dụng và thư vẫn giữ nguyên như trên máy chủ.",
+    "changed": "Đã thay đổi trên thiết bị khác nên thay đổi của bạn chưa được áp dụng",
+    "changed_delete": "Đã thay đổi trên thiết bị khác nên chưa bị xóa",
+    "gone": "Không còn trên máy chủ nên thay đổi của bạn chưa được áp dụng",
+    "refused": "Máy chủ đã từ chối thay đổi này: {reason}",
+    "dismiss": "Đóng",
+    "dismiss_label": "Đóng ghi chú về {subject}",
+    "banner": "Các thay đổi chưa được áp dụng: {count}",
+    "toast": "Thay đổi khi ngoại tuyến chưa được áp dụng: {count}. Hộp thư đi cho biết là những thay đổi nào.",
+    "storage_failed": "Thiết bị này không còn chỗ cho thư ngoại tuyến. Hãy giải phóng dung lượng hoặc giữ ít hơn trong Cài đặt.",
+    "signout_changes_title": "Đăng xuất khi còn thay đổi chưa lưu?",
+    "signout_changes": "Thay đổi chưa có trên máy chủ: {count}. Đăng xuất sẽ xóa chúng.",
+    "store_unavailable": "Hiện không mở được thư ngoại tuyến trên thiết bị này. Thư chưa gửi vẫn ở đây và ứng dụng tiếp tục thử.",
+    "store_reset": "Không đọc được thư ngoại tuyến trên thiết bị này nên đang tải lại. Những gì chưa gửi đã mất.",
+    "legacy_stranded": "Trình duyệt này không mở được thư chưa gửi do phiên bản trước lưu. Cập nhật trình duyệt có thể lấy lại chúng.",
+    "store_private": "Cửa sổ riêng tư không thể giữ thư để dùng ngoại tuyến.",
+    "server_not_answering": "Máy chủ thư không phản hồi. Hãy thử lại sau giây lát."
+  },
+  "offlineStorage": {
+    "keep_description": "Giữ thư, lịch, danh bạ và các tệp bạn chọn, được mã hóa trên thiết bị này. Khi ngoại tuyến bạn có thể đọc, gắn cờ và di chuyển thư, còn thư bạn viết sẽ chờ trong Hộp thư đi. Khi đăng xuất, tất cả sẽ bị xóa.",
+    "window_label": "Giữ lại bao lâu",
+    "window_description": "Thư và sự kiện lịch cũ hơn sẽ bị xóa khỏi thiết bị này. Bạn vẫn có thể mở chúng khi có kết nối.",
+    "window_days": "{days, plural, other {# ngày}}",
+    "window_year": "1 năm",
+    "window_everything": "Tất cả",
+    "attachments_label": "Giữ tệp đính kèm",
+    "attachments_description": "Tệp đính kèm của các thư được giữ và các tệp bạn giữ ngoại tuyến, tối đa {total} tổng cộng. Tệp cũ nhất sẽ bị xóa trước.",
+    "total_locked": "Tổ chức của bạn chỉ cho phép tối đa {size} tệp đính kèm và tệp.",
+    "attachment_cap_label": "Tệp đính kèm lớn nhất được giữ",
+    "usage_mail": "Thư và chỉ mục tìm kiếm",
+    "usage_attachments": "Tệp đính kèm",
+    "usage_calendar": "Lịch",
+    "usage_contacts": "Danh bạ",
+    "usage_files": "Tệp giữ ngoại tuyến",
+    "usage_row": "{size} ({count, plural, other {# mục}})",
+    "progress_list": "Đang liệt kê thư",
+    "progress_bodies": "Đang tải thư xuống",
+    "progress_threads": "Đang sắp xếp cuộc trò chuyện",
+    "progress_files": "Đang tải tệp xuống",
+    "progress_other": "Đang đưa dữ liệu về thiết bị này",
+    "progress_count": "{done} trên {total}",
+    "progress_count_open": "đến nay {done}",
+    "progress_left": "còn khoảng {minutes, plural, other {# phút}}",
+    "clear_label": "Xóa tài khoản này",
+    "clear_description": "Xóa mọi thứ thiết bị này giữ cho tài khoản này, rồi tải lại.",
+    "clear_button": "Xóa…",
+    "clear_confirm_title": "Xóa tài khoản này trên thiết bị này?",
+    "clear_confirm_message": "Mọi thứ thiết bị này giữ cho {account} sẽ bị xóa và tải lại. Thư của bạn trên máy chủ vẫn còn.",
+    "clear_confirm_unsent": "{count, plural, other {# thư chưa gửi sẽ bị mất.}}",
+    "clear_confirm": "Xóa",
+    "persist_refused": "Trình duyệt này có thể xóa thư đã giữ khi sắp hết dung lượng. Cài đặt ứng dụng thường giúp tránh điều này.",
+    "persist_retry": "Hỏi lại",
+    "safari_hint": "Safari xóa dữ liệu của một trang web sau 7 ngày không truy cập. Hãy thêm Bulwark vào Màn hình chính hoặc Dock để giữ thư trên thiết bị này.",
+    "evicted": "Trình duyệt đã xóa thư được giữ trên thiết bị này. Đang tải lại.",
+    "evicted_lost": "{count, plural, other {# thư hoặc thay đổi chưa gửi đã bị mất.}}",
+    "evicted_dismiss": "OK",
+    "storage_full_title": "Bộ nhớ thiết bị đã đầy.",
+    "storage_full_text": "Bulwark đã ngừng lưu thư ở đây. Hãy giữ ít thư hơn hoặc xóa tài khoản này để có thêm chỗ.",
+    "open_settings": "Mở cài đặt",
+    "default_on": "Bulwark giữ thư của bạn trên thiết bị này để dùng được khi không có kết nối. Bạn có thể đổi điều này trong Cài đặt.",
+    "conflict_calendar": "Sự kiện lịch",
+    "conflict_contacts": "Liên hệ",
+    "kept_files_title": "Tệp giữ ngoại tuyến",
+    "kept_state_kept": "Trên thiết bị này",
+    "kept_state_waiting": "Đang chờ tải xuống",
+    "kept_error_tooLarge": "Quá lớn để giữ",
+    "kept_error_overLimit": "Vượt giới hạn của thiết bị này",
+    "kept_error_notAllowed": "Tổ chức của bạn không cho phép giữ tệp",
+    "kept_error_download": "Không tải xuống được",
+    "keep_offline": "Giữ ngoại tuyến",
+    "unpin": "Ngừng giữ ngoại tuyến",
+    "unpin_label": "Ngừng giữ {name} ngoại tuyến",
+    "warning_desktop": "Bất kỳ ai dùng được tài khoản người dùng trên máy tính này đều có thể đọc thư này. Hãy dùng mã hóa ổ đĩa.",
+    "off_confirm_text": "Thao tác này xóa mọi thứ thiết bị này giữ cho {account}. Thư của bạn trên máy chủ vẫn còn.",
+    "unsent_changes": "{count, plural, other {# thay đổi chưa đến được máy chủ sẽ bị mất.}}",
+    "clear_needs_connection": "Cần có kết nối, vì mọi thứ sẽ được tải lại.",
+    "usage_label": "Những gì thiết bị này giữ",
+    "pin_not_ready": "Tệp này chưa có trong danh sách của thiết bị này. Hãy thử lại sau giây lát."
+  },
+  "offlineDrafts": {
+    "title": "Bản nháp trên thiết bị này",
+    "description": "Các bản nháp này được lưu trên thiết bị này. Chúng sẽ tự chuyển lên máy chủ ngay khi kết nối được.",
+    "saved_on_device": "Đã lưu trên thiết bị này",
+    "status_waiting": "Đang chờ máy chủ",
+    "status_sending": "Đang lưu lên máy chủ",
+    "status_uncertain": "Đang kiểm tra xem đã đến máy chủ chưa",
+    "status_refused": "Máy chủ đã từ chối bản nháp này: {error}",
+    "file_missing": "Một tệp đính kèm không còn trên thiết bị này",
+    "open": "Mở",
+    "open_label": "Mở {subject}",
+    "retry": "Thử lại",
+    "retry_label": "Thử lại {subject}",
+    "toast_refused": "Không thể lưu bản nháp {subject} lên máy chủ. Bản nháp vẫn ở trên thiết bị này.",
+    "toast_conflict": "Bản nháp {subject} đã được thay đổi trên thiết bị khác. Cả hai phiên bản đều được giữ lại.",
+    "conflict_changed": "Đã thay đổi trên thiết bị khác. Cả hai phiên bản đều ở trong Bản nháp.",
+    "conflict_gone": "Đã thay đổi hoặc xóa trên thiết bị khác. Phiên bản của bạn ở trong Bản nháp.",
+    "banner_refused": "Bản nháp bị máy chủ từ chối: {count}",
+    "banner_waiting": "Bản nháp đang chờ máy chủ: {count}"
+  },
   "deep_link": {
     "message_not_found": "Thư này không còn nữa.",
     "thread_not_found": "Cuộc trò chuyện này không còn tồn tại nữa.",
@@ -5845,6 +5971,10 @@
       "crypto_full": {
         "title": "Toàn quyền truy cập vào ứng dụng này",
         "body": "Chạy với các quyền tương tự như chính webmail. Nó có thể đọc tất cả thư và các khóa được lưu trữ của bạn và hành động thay bạn. Chỉ cho phép điều này đối với các plugin mà bạn hoàn toàn tin tưởng."
+      },
+      "keystore": {
+        "title": "Dùng chứng chỉ trên máy tính này",
+        "body": "Yêu cầu ký và giải mã thư bằng chứng chỉ trên máy tính này hoặc thẻ thông minh. Ứng dụng sẽ hỏi bạn trước. Tiện ích không bao giờ nhận được khóa riêng, nhưng khi bạn cho phép, tiện ích có thể ký dưới tên bạn và đọc nội dung đã giải mã."
       },
       "email_raw_send": {
         "title": "Gửi thư nó tự tạo",
@@ -6362,6 +6492,12 @@
     "sign_language": "Ngôn ngữ ký hiệu",
     "new_tab": "Mở trong một tab mới"
   },
+  "pwaNotify": {
+    "action_archive": "Lưu trữ",
+    "action_mark_read": "Đánh dấu là đã đọc",
+    "action_reply": "Trả lời",
+    "reply_placeholder": "Viết trả lời"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Thêm vào lịch",
     "update_in_calendar": "Cập nhật trong lịch",
@@ -6463,5 +6599,40 @@
       "next_issue": "Lỗi chính tả hoặc ngữ pháp tiếp theo",
       "previous_issue": "Lỗi chính tả hoặc ngữ pháp trước đó"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Mở trong cửa sổ mới",
+    "save_all_to_folder": "Lưu tất cả vào thư mục…",
+    "saved_all": "{count, plural, other {Đã lưu # tệp đính kèm vào {folder}.}}",
+    "saved_partial": "Đã lưu {saved} trong {total} tệp đính kèm vào {folder}.",
+    "save_failed": "Không thể lưu tệp đính kèm vào {folder}.",
+    "popup_blocked": "Trình duyệt đã chặn cửa sổ mới. Hãy cho phép cửa sổ bật lên với trang này rồi thử lại.",
+    "opening": "Đang mở…",
+    "session_ended_title": "Bạn đã đăng xuất trong cửa sổ này",
+    "session_ended_body": "Hãy mở ứng dụng và đăng nhập, rồi mở lại cửa sổ này.",
+    "open_app": "Mở ứng dụng",
+    "close_window": "Đóng cửa sổ",
+    "message_gone_title": "Thư này không còn nữa",
+    "message_gone_body": "Thư đã bị xóa hoặc chuyển sang tài khoản khác.",
+    "message_moved": "Thư này đã được chuyển sang thư mục khác.",
+    "message_moved_to": "Thư này đã được chuyển đến {folder}.",
+    "window_not_ready": "Cửa sổ mới không mở kịp. Bản nháp của bạn vẫn ở đây."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Đăng nhập bằng trình duyệt",
+    "browser_waiting": "Hoàn tất đăng nhập trong trình duyệt",
+    "browser_unavailable": "Máy chủ này không hỗ trợ đăng nhập qua trình duyệt. Hãy dùng mật khẩu.",
+    "browser_failed": "Không thể đăng nhập qua trình duyệt. Hãy thử lại.",
+    "server_needed": "Trước tiên hãy nhập địa chỉ máy chủ.",
+    "server_declined": "Bạn không cho phép máy chủ này nên không có gì được gửi đến đó.",
+    "server_invalid": "Địa chỉ máy chủ này không hợp lệ."
+  },
+  "desktop_keystore": {
+    "title": "Chứng chỉ trên máy tính này",
+    "description": "Máy chủ này có thể yêu cầu dùng chứng chỉ và thẻ thông minh của bạn. Bạn vẫn được hỏi trước khi mỗi chứng chỉ được dùng.",
+    "label": "Quyền truy cập của máy chủ này",
+    "label_description": "Thu hồi quyền của bạn. Máy chủ sẽ phải hỏi lại.",
+    "revoke": "Thu hồi",
+    "revoked": "Đã thu hồi quyền"
   }
 }

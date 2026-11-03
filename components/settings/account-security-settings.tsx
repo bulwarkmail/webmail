@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useId, useRef } from 'react';
+import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import QRCode from 'qrcode';
@@ -1569,8 +1570,12 @@ export function AccountSecuritySettings() {
       <SettingsSection id="devices" title={t('title')} description={t('description')}>
         {!IS_LITE ? (
           <div className="space-y-6">
-            <LinkDeviceSection />
-            <div className="border-t border-border" />
+            {!IS_DESKTOP_BUILD && (
+              <>
+                <LinkDeviceSection />
+                <div className="border-t border-border" />
+              </>
+            )}
             <div className="text-sm text-muted-foreground" dangerouslySetInnerHTML={{ __html: sanitizeI18nHtml(t.raw('not_available')) }} />
           </div>
         ) : (
@@ -1610,7 +1615,7 @@ export function AccountSecuritySettings() {
         description={withoutPassword ? t('description') : t('sections.devices_description')}
       >
         <div className="space-y-6">
-          {!IS_LITE && (
+          {!IS_LITE && !IS_DESKTOP_BUILD && (
             <>
               <LinkDeviceSection />
               <div className="border-t border-border" />

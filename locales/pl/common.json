@@ -249,6 +249,28 @@
     "active_account": "Aktywne",
     "switching_account": "Przełączanie konta..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Nowa wiadomość",
+    "shortcut_calendar": "Kalendarz",
+    "shortcut_contacts": "Kontakty",
+    "unsupported_file": "Nie można tu otworzyć pliku {name}.",
+    "open_failed": "Nie udało się otworzyć pliku. Spróbuj otworzyć go ponownie.",
+    "share_gone": "To, co udostępniono, już tu nie istnieje. Udostępnij to ponownie.",
+    "share_files_lost": "Nie udało się zachować udostępnionych plików. Dodaj je ponownie do wiadomości.",
+    "ics_needs_server": "Import pliku kalendarza wymaga połączenia z serwerem. Import zacznie się, gdy znów będziesz online.",
+    "contacts_need_server": "Import kontaktów wymaga połączenia z serwerem. Spróbuj ponownie, gdy znów będziesz online.",
+    "share_confirm_title": "Rozpocząć nową wiadomość?",
+    "share_confirm_message": "Inna witryna lub aplikacja chce rozpocząć wiadomość. Bez Twojej zgody nic nie zostanie wysłane ani zapisane.",
+    "share_confirm_subject": "Temat:",
+    "share_confirm_text": "Tekst:",
+    "share_confirm_files": "{count, plural, one {Plik:} few {Pliki:} many {Pliki:} other {Pliki:}}",
+    "share_confirm_accept": "Rozpocznij wiadomość",
+    "share_confirm_decline": "Nie rozpoczynaj",
+    "share_cut": "Udostępniony tekst był za długi i został skrócony.",
+    "handoff_expired": "To, co otwarto lub udostępniono, czekało zbyt długo i już go nie ma. Otwórz lub udostępnij to ponownie.",
+    "compose_waiting": "Zamknij tę wiadomość, aby rozpocząć następną.",
+    "save_first_failed": "Nie udało się zapisać wiadomości, więc plik nie został otwarty. Zapisz wiadomość, a potem otwórz kalendarz lub kontakty."
+  },
   "sidebar_apps": {
     "modal_title": "Aplikacje paska bocznego",
     "add_new": "Dodaj aplikację",
@@ -4909,6 +4931,9 @@
     "mini_has_events": "ma wydarzenia",
     "mini_week_number": "Tydzień {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "Ta zmiana wymaga połączenia z serwerem. Na razie zmień tylko to wydarzenie albo spróbuj ponownie, gdy wrócisz do trybu online."
+  },
   "advanced_search": {
     "title": "Wyszukiwanie zaawansowane",
     "from": "Od",
@@ -5718,6 +5743,107 @@
       "no_drafts_mailbox": "Nie znaleziono folderu Wersje robocze."
     }
   },
+  "offlineConflicts": {
+    "title": "Niezastosowane zmiany",
+    "description": "Te zmiany wprowadzono w trybie offline. Nie zostały zastosowane, a wiadomość pozostaje taka jak na serwerze.",
+    "changed": "Zmieniono na innym urządzeniu, Twoja zmiana nie została zastosowana",
+    "changed_delete": "Zmieniono na innym urządzeniu, wiadomość nie została usunięta",
+    "gone": "Nie ma już na serwerze, Twoja zmiana nie została zastosowana",
+    "refused": "Serwer odrzucił tę zmianę: {reason}",
+    "dismiss": "Odrzuć",
+    "dismiss_label": "Odrzuć uwagę o {subject}",
+    "banner": "Niezastosowane zmiany: {count}",
+    "toast": "Niezastosowane zmiany wprowadzone offline: {count}. Skrzynka nadawcza pokazuje które.",
+    "storage_failed": "Na tym urządzeniu nie ma już miejsca na pocztę offline. Zwolnij miejsce lub zachowuj mniej w ustawieniach.",
+    "signout_changes_title": "Wylogować z niezapisanymi zmianami?",
+    "signout_changes": "Zmiany, których jeszcze nie ma na serwerze: {count}. Wylogowanie je usunie.",
+    "store_unavailable": "Nie można teraz otworzyć poczty offline na tym urządzeniu. Niewysłane wiadomości zostają tutaj, a aplikacja próbuje dalej.",
+    "store_reset": "Nie udało się odczytać poczty offline na tym urządzeniu, więc jest pobierana ponownie. To, co nie zostało wysłane, przepadło.",
+    "legacy_stranded": "Ta przeglądarka nie może otworzyć niewysłanych wiadomości z wcześniejszej wersji. Aktualizacja przeglądarki może je przywrócić.",
+    "store_private": "Okna prywatne nie mogą przechowywać poczty do użytku offline.",
+    "server_not_answering": "Serwer poczty nie odpowiada. Spróbuj ponownie za chwilę."
+  },
+  "offlineStorage": {
+    "keep_description": "Przechowuje Twoją pocztę, kalendarz, kontakty i wybrane pliki zaszyfrowane na tym urządzeniu. Offline możesz czytać, oznaczać i przenosić wiadomości, a to, co napiszesz, czeka w skrzynce nadawczej. Wylogowanie usuwa wszystko.",
+    "window_label": "Jak daleko wstecz przechowywać",
+    "window_description": "Starsza poczta i wydarzenia z kalendarza znikają z tego urządzenia. Nadal możesz je otworzyć, gdy masz połączenie.",
+    "window_days": "{days, plural, one {# dzień} few {# dni} many {# dni} other {# dnia}}",
+    "window_year": "1 rok",
+    "window_everything": "Wszystko",
+    "attachments_label": "Przechowuj załączniki",
+    "attachments_description": "Załączniki przechowywanych wiadomości i pliki przechowywane offline, razem do {total}. Najstarsze są usuwane najpierw.",
+    "total_locked": "Twoja organizacja zezwala na najwyżej {size} załączników i plików.",
+    "attachment_cap_label": "Największy przechowywany załącznik",
+    "usage_mail": "Wiadomości i indeks wyszukiwania",
+    "usage_attachments": "Załączniki",
+    "usage_calendar": "Kalendarz",
+    "usage_contacts": "Kontakty",
+    "usage_files": "Pliki przechowywane offline",
+    "usage_row": "{size} ({count, plural, one {# element} few {# elementy} many {# elementów} other {# elementu}})",
+    "progress_list": "Wyszukiwanie wiadomości",
+    "progress_bodies": "Pobieranie wiadomości",
+    "progress_threads": "Sortowanie konwersacji",
+    "progress_files": "Pobieranie plików",
+    "progress_other": "Przenoszenie danych na to urządzenie",
+    "progress_count": "{done} z {total}",
+    "progress_count_open": "dotąd {done}",
+    "progress_left": "zostało około {minutes, plural, one {# minuty} few {# minut} many {# minut} other {# minuty}}",
+    "clear_label": "Wyczyść to konto",
+    "clear_description": "Usuwa wszystko, co to urządzenie przechowuje dla tego konta, a potem pobiera to ponownie.",
+    "clear_button": "Wyczyść…",
+    "clear_confirm_title": "Wyczyścić to konto na tym urządzeniu?",
+    "clear_confirm_message": "Wszystko, co to urządzenie przechowuje dla konta {account}, zostanie usunięte i pobrane ponownie. Twoja poczta na serwerze zostaje.",
+    "clear_confirm_unsent": "{count, plural, one {# niewysłana wiadomość zostanie utracona.} few {# niewysłane wiadomości zostaną utracone.} many {# niewysłanych wiadomości zostanie utraconych.} other {# niewysłanej wiadomości zostanie utraconej.}}",
+    "clear_confirm": "Wyczyść",
+    "persist_refused": "Ta przeglądarka może usunąć przechowywaną pocztę, gdy zabraknie miejsca. Zainstalowanie aplikacji zwykle temu zapobiega.",
+    "persist_retry": "Zapytaj ponownie",
+    "safari_hint": "Safari usuwa dane witryny po 7 dniach bez odwiedzin. Dodaj Bulwark do ekranu początkowego lub do Docka, aby zachować pocztę na tym urządzeniu.",
+    "evicted": "Przeglądarka usunęła pocztę przechowywaną na tym urządzeniu. Jest pobierana ponownie.",
+    "evicted_lost": "{count, plural, one {Utracono # niewysłaną wiadomość lub zmianę.} few {Utracono # niewysłane wiadomości lub zmiany.} many {Utracono # niewysłanych wiadomości lub zmian.} other {Utracono # niewysłanej wiadomości lub zmiany.}}",
+    "evicted_dismiss": "OK",
+    "storage_full_title": "Pamięć urządzenia jest pełna.",
+    "storage_full_text": "Bulwark przestał tu zapisywać pocztę. Przechowuj mniej poczty albo wyczyść to konto, aby zwolnić miejsce.",
+    "open_settings": "Otwórz ustawienia",
+    "default_on": "Bulwark przechowuje Twoją pocztę na tym urządzeniu, żeby działała bez połączenia. Możesz to zmienić w Ustawieniach.",
+    "conflict_calendar": "Wydarzenie w kalendarzu",
+    "conflict_contacts": "Kontakt",
+    "kept_files_title": "Pliki przechowywane offline",
+    "kept_state_kept": "Na tym urządzeniu",
+    "kept_state_waiting": "Czeka na pobranie",
+    "kept_error_tooLarge": "Za duży, aby go przechowywać",
+    "kept_error_overLimit": "Przekracza limit tego urządzenia",
+    "kept_error_notAllowed": "Twoja organizacja nie zezwala na przechowywanie plików",
+    "kept_error_download": "Nie udało się pobrać",
+    "keep_offline": "Przechowuj offline",
+    "unpin": "Nie przechowuj już offline",
+    "unpin_label": "Nie przechowuj już {name} offline",
+    "warning_desktop": "Każdy, kto może korzystać z konta użytkownika na tym komputerze, może czytać tę pocztę. Użyj szyfrowania dysku.",
+    "off_confirm_text": "To usuwa wszystko, co to urządzenie przechowuje dla konta {account}. Twoja poczta na serwerze zostaje.",
+    "unsent_changes": "{count, plural, one {# zmiana, która nie dotarła do serwera, zostanie utracona.} few {# zmiany, które nie dotarły do serwera, zostaną utracone.} many {# zmian, które nie dotarły do serwera, zostanie utraconych.} other {# zmiany, która nie dotarła do serwera, zostanie utraconej.}}",
+    "clear_needs_connection": "Potrzebne jest połączenie, bo wszystko zostanie pobrane ponownie.",
+    "usage_label": "Co przechowuje to urządzenie",
+    "pin_not_ready": "Tego pliku nie ma jeszcze na liście tego urządzenia. Spróbuj ponownie za chwilę."
+  },
+  "offlineDrafts": {
+    "title": "Wersje robocze na tym urządzeniu",
+    "description": "Te wersje robocze są zapisane na tym urządzeniu. Trafią na serwer same, gdy tylko będzie dostępny.",
+    "saved_on_device": "Zapisano na tym urządzeniu",
+    "status_waiting": "Czeka na serwer",
+    "status_sending": "Zapisywanie na serwerze",
+    "status_uncertain": "Sprawdzanie, czy dotarła na serwer",
+    "status_refused": "Serwer odrzucił tę wersję roboczą: {error}",
+    "file_missing": "Załączonego pliku nie ma już na tym urządzeniu",
+    "open": "Otwórz",
+    "open_label": "Otwórz {subject}",
+    "retry": "Spróbuj ponownie",
+    "retry_label": "Spróbuj ponownie: {subject}",
+    "toast_refused": "Nie udało się zapisać wersji roboczej {subject} na serwerze. Zostaje na tym urządzeniu.",
+    "toast_conflict": "Wersja robocza {subject} została zmieniona na innym urządzeniu. Obie wersje zostają zachowane.",
+    "conflict_changed": "Zmieniono na innym urządzeniu. Obie wersje są w Wersjach roboczych.",
+    "conflict_gone": "Zmieniono lub usunięto na innym urządzeniu. Twoja wersja jest w Wersjach roboczych.",
+    "banner_refused": "Wersje robocze odrzucone przez serwer: {count}",
+    "banner_waiting": "Wersje robocze czekające na serwer: {count}"
+  },
   "deep_link": {
     "message_not_found": "Ta wiadomość nie jest już dostępna.",
     "thread_not_found": "Ta rozmowa nie jest już dostępna.",
@@ -5833,6 +5959,10 @@
       "crypto_full": {
         "title": "Pełny dostęp do aplikacji",
         "body": "Działa z tymi samymi uprawnieniami co sam webmail. Może czytać całą Twoją pocztę i zapisane klucze oraz działać w Twoim imieniu. Zezwalaj na to tylko wtyczkom, którym w pełni ufasz."
+      },
+      "keystore": {
+        "title": "Używanie certyfikatów z tego komputera",
+        "body": "Prosi o podpisywanie i odszyfrowywanie wiadomości certyfikatami z tego komputera lub karty inteligentnej. Aplikacja najpierw zapyta. Wtyczka nigdy nie dostaje klucza prywatnego, ale dopóki na to pozwalasz, może podpisywać w Twoim imieniu i czytać to, co odszyfruje."
       },
       "email_raw_send": {
         "title": "Wysyłanie wiadomości utworzonych przez wtyczkę",
@@ -6350,6 +6480,12 @@
     "sign_language": "Język migowy",
     "new_tab": "otwiera się w nowej karcie"
   },
+  "pwaNotify": {
+    "action_archive": "Archiwizuj",
+    "action_mark_read": "Oznacz jako przeczytane",
+    "action_reply": "Odpowiedz",
+    "reply_placeholder": "Napisz odpowiedź"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Dodaj do kalendarza",
     "update_in_calendar": "Zaktualizuj w kalendarzu",
@@ -6451,5 +6587,40 @@
       "next_issue": "Następny błąd pisowni lub gramatyki",
       "previous_issue": "Poprzedni błąd pisowni lub gramatyki"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Otwórz w nowym oknie",
+    "save_all_to_folder": "Zapisz wszystko w folderze…",
+    "saved_all": "{count, plural, one {Zapisano # załącznik w {folder}.} few {Zapisano # załączniki w {folder}.} other {Zapisano # załączników w {folder}.}}",
+    "saved_partial": "Zapisano {saved} z {total} załączników w {folder}.",
+    "save_failed": "Nie udało się zapisać załączników w {folder}.",
+    "popup_blocked": "Przeglądarka zablokowała nowe okno. Zezwól na wyskakujące okna dla tej strony i spróbuj ponownie.",
+    "opening": "Otwieranie…",
+    "session_ended_title": "Wylogowano w tym oknie",
+    "session_ended_body": "Otwórz aplikację i zaloguj się, a potem otwórz to okno ponownie.",
+    "open_app": "Otwórz aplikację",
+    "close_window": "Zamknij okno",
+    "message_gone_title": "Tej wiadomości już nie ma",
+    "message_gone_body": "Została usunięta lub przeniesiona na inne konto.",
+    "message_moved": "Ta wiadomość została przeniesiona do innego folderu.",
+    "message_moved_to": "Ta wiadomość została przeniesiona do {folder}.",
+    "window_not_ready": "Nowe okno nie otworzyło się na czas. Twój szkic zostaje tutaj."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Zaloguj się w przeglądarce",
+    "browser_waiting": "Dokończ logowanie w przeglądarce",
+    "browser_unavailable": "Ten serwer nie oferuje logowania przez przeglądarkę. Użyj hasła.",
+    "browser_failed": "Logowanie przez przeglądarkę nie powiodło się. Spróbuj ponownie.",
+    "server_needed": "Najpierw wpisz adres serwera.",
+    "server_declined": "Ten serwer nie został dozwolony, więc nic do niego nie wysłano.",
+    "server_invalid": "Ten adres serwera jest nieprawidłowy."
+  },
+  "desktop_keystore": {
+    "title": "Certyfikaty na tym komputerze",
+    "description": "Ten serwer może prosić o użycie Twoich certyfikatów i kart inteligentnych. Przed użyciem każdego certyfikatu nadal zostaniesz zapytany.",
+    "label": "Dostęp tego serwera",
+    "label_description": "Cofnij swoją zgodę. Serwer będzie musiał zapytać ponownie.",
+    "revoke": "Cofnij",
+    "revoked": "Zgoda została cofnięta"
   }
 }

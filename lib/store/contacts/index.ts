@@ -9,6 +9,10 @@ export const contactsArea: StoreArea = {
   migrations: CONTACT_MIGRATIONS,
   methods: CONTACT_METHODS,
   syncers: [contactsSyncer],
+  usage: (ctx) => {
+    const row = ctx.db.get<{ bytes: number | null; items: number }>('SELECT SUM(LENGTH(json)) AS bytes, COUNT(*) AS items FROM contact_card');
+    return [{ part: 'contacts', bytes: Number(row?.bytes ?? 0), items: Number(row?.items ?? 0) }];
+  },
   calls: {
     /** Sends what's queued, in the next sync pass, and says what's left. */
     'contacts.flush': async (ctx) => {

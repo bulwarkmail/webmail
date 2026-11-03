@@ -249,6 +249,28 @@
     "active_account": "使用中",
     "switching_account": "正在切換帳號…"
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "新郵件",
+    "shortcut_calendar": "行事曆",
+    "shortcut_contacts": "聯絡人",
+    "unsupported_file": "無法在此處開啟 {name}。",
+    "open_failed": "無法開啟檔案。請再次嘗試開啟。",
+    "share_gone": "您分享的內容已不在此處。請重新分享。",
+    "share_files_lost": "無法保留分享的檔案。請將它們重新加入郵件。",
+    "ics_needs_server": "匯入行事曆檔案需要連線到伺服器。您恢復連線後將開始匯入。",
+    "contacts_need_server": "匯入聯絡人需要連線到伺服器。請在恢復連線後再試一次。",
+    "share_confirm_title": "要開始撰寫新郵件嗎?",
+    "share_confirm_message": "另一個網站或應用程式想要開始撰寫郵件。除非您同意,否則不會上傳或儲存任何內容。",
+    "share_confirm_subject": "主旨:",
+    "share_confirm_text": "內文:",
+    "share_confirm_files": "{count, plural, other {檔案:}}",
+    "share_confirm_accept": "開始撰寫郵件",
+    "share_confirm_decline": "不要開始",
+    "share_cut": "分享的文字太長,已被縮短。",
+    "handoff_expired": "您開啟或分享的內容等待太久,已不存在。請重新開啟或分享。",
+    "compose_waiting": "請關閉此郵件以開始下一封。",
+    "save_first_failed": "無法儲存您的郵件,因此未開啟檔案。請儲存郵件,然後開啟行事曆或聯絡人。"
+  },
   "sidebar_apps": {
     "modal_title": "側邊欄應用程式",
     "add_new": "新增應用程式",
@@ -4909,6 +4931,9 @@
     "mini_has_events": "有活動",
     "mini_week_number": "第 {week} 週"
   },
+  "calendar_offline": {
+    "split_needs_server": "此變更需要連線到伺服器。請暫時只變更此活動，或在恢復連線後再試一次。"
+  },
   "calendar_event_notifications": {
     "someone": "有人",
     "invited": "{name} 邀請您參加「{title}」",
@@ -5718,6 +5743,107 @@
       "no_drafts_mailbox": "找不到「草稿」資料夾。"
     }
   },
+  "offlineConflicts": {
+    "title": "未套用的變更",
+    "description": "這些變更是您離線時做的。它們沒有被套用，郵件維持伺服器上的狀態。",
+    "changed": "已在其他裝置上變更，您的變更未被套用",
+    "changed_delete": "已在其他裝置上變更，未被刪除",
+    "gone": "伺服器上已沒有此郵件，您的變更未被套用",
+    "refused": "伺服器拒絕了此變更：{reason}",
+    "dismiss": "關閉",
+    "dismiss_label": "關閉關於 {subject} 的提示",
+    "banner": "未套用的變更：{count}",
+    "toast": "離線時的變更未被套用：{count} 項。可在寄件匣中查看。",
+    "storage_failed": "此裝置已沒有空間存放離線郵件。請釋出空間，或在設定中減少保留的內容。",
+    "signout_changes_title": "要在有未儲存變更時登出嗎？",
+    "signout_changes": "尚未到達伺服器的變更：{count} 項。登出會刪除它們。",
+    "store_unavailable": "目前無法開啟此裝置上的離線郵件。未傳送的郵件仍保留在這裡，應用程式會繼續嘗試。",
+    "store_reset": "無法讀取此裝置上的離線郵件，正在重新下載。未傳送的內容已遺失。",
+    "legacy_stranded": "此瀏覽器無法開啟舊版本保存的未傳送郵件。更新瀏覽器可能會找回它們。",
+    "store_private": "私密視窗無法保留供離線使用的郵件。",
+    "server_not_answering": "郵件伺服器沒有回應。請稍後再試。"
+  },
+  "offlineStorage": {
+    "keep_description": "在此裝置上加密保留你的郵件、行事曆、聯絡人和你選擇的檔案。離線時可以閱讀、標記和移動郵件，寫好的郵件會在寄件匣中等待。登出時會全部刪除。",
+    "window_label": "保留多久以內的內容",
+    "window_description": "更早的郵件和行事曆活動會從此裝置移除。連線時你仍可以開啟它們。",
+    "window_days": "{days, plural, other {# 天}}",
+    "window_year": "1 年",
+    "window_everything": "全部",
+    "attachments_label": "保留附件",
+    "attachments_description": "已保留郵件的附件和你離線保留的檔案，總共最多 {total}。最舊的先刪除。",
+    "total_locked": "你的組織最多允許 {size} 的附件和檔案。",
+    "attachment_cap_label": "保留的最大附件",
+    "usage_mail": "郵件和搜尋索引",
+    "usage_attachments": "附件",
+    "usage_calendar": "行事曆",
+    "usage_contacts": "聯絡人",
+    "usage_files": "離線保留的檔案",
+    "usage_row": "{size}（{count, plural, other {# 項}}）",
+    "progress_list": "正在列出郵件",
+    "progress_bodies": "正在下載郵件",
+    "progress_threads": "正在整理對話",
+    "progress_files": "正在下載檔案",
+    "progress_other": "正在把資料帶到此裝置",
+    "progress_count": "{done} / {total}",
+    "progress_count_open": "已完成 {done}",
+    "progress_left": "還剩約 {minutes, plural, other {# 分鐘}}",
+    "clear_label": "清除此帳號",
+    "clear_description": "刪除此裝置為該帳號保留的全部內容，然後重新下載。",
+    "clear_button": "清除…",
+    "clear_confirm_title": "在此裝置上清除該帳號？",
+    "clear_confirm_message": "此裝置為 {account} 保留的全部內容會被刪除並重新下載。伺服器上的郵件不受影響。",
+    "clear_confirm_unsent": "{count, plural, other {# 封未寄出的郵件將會遺失。}}",
+    "clear_confirm": "清除",
+    "persist_refused": "儲存空間不足時，此瀏覽器可能會刪除保留的郵件。安裝應用程式通常可以避免這種情況。",
+    "persist_retry": "再次請求",
+    "safari_hint": "Safari 會在網站 7 天未造訪後刪除其資料。把 Bulwark 加入主畫面或 Dock，郵件就能保留在此裝置上。",
+    "evicted": "瀏覽器刪除了此裝置上保留的郵件。正在重新下載。",
+    "evicted_lost": "{count, plural, other {# 封未寄出的郵件或變更已遺失。}}",
+    "evicted_dismiss": "好",
+    "storage_full_title": "裝置儲存空間已滿。",
+    "storage_full_text": "Bulwark 已停止在此儲存郵件。請少保留一些郵件，或清除此帳號來騰出空間。",
+    "open_settings": "開啟設定",
+    "default_on": "Bulwark 會把你的郵件保留在此裝置上，這樣沒有網路也能使用。你可以在設定中變更。",
+    "conflict_calendar": "行事曆活動",
+    "conflict_contacts": "聯絡人",
+    "kept_files_title": "離線保留的檔案",
+    "kept_state_kept": "在此裝置上",
+    "kept_state_waiting": "等待下載",
+    "kept_error_tooLarge": "太大，無法保留",
+    "kept_error_overLimit": "超出此裝置的限制",
+    "kept_error_notAllowed": "你的組織不允許保留檔案",
+    "kept_error_download": "無法下載",
+    "keep_offline": "離線保留",
+    "unpin": "不再離線保留",
+    "unpin_label": "不再離線保留 {name}",
+    "warning_desktop": "任何能使用這台電腦使用者帳號的人都可以閱讀這些郵件。請使用磁碟加密。",
+    "off_confirm_text": "這會刪除此裝置為 {account} 保留的全部內容。伺服器上的郵件不受影響。",
+    "unsent_changes": "{count, plural, other {# 項尚未送達伺服器的變更將會遺失。}}",
+    "clear_needs_connection": "需要連線，因為所有內容都會重新下載。",
+    "usage_label": "此裝置保留的內容",
+    "pin_not_ready": "此檔案還不在此裝置的清單中。請稍後再試。"
+  },
+  "offlineDrafts": {
+    "title": "此裝置上的草稿",
+    "description": "這些草稿儲存在此裝置上。一旦能連線到伺服器，就會自動上傳。",
+    "saved_on_device": "已儲存在此裝置上",
+    "status_waiting": "正在等待伺服器",
+    "status_sending": "正在儲存到伺服器",
+    "status_uncertain": "正在檢查是否已到達伺服器",
+    "status_refused": "伺服器拒絕了此草稿：{error}",
+    "file_missing": "附件已不在此裝置上",
+    "open": "開啟",
+    "open_label": "開啟 {subject}",
+    "retry": "重試",
+    "retry_label": "重試 {subject}",
+    "toast_refused": "草稿 {subject} 無法儲存到伺服器。它仍保留在此裝置上。",
+    "toast_conflict": "草稿 {subject} 已在其他裝置上變更。兩個版本都會保留。",
+    "conflict_changed": "已在其他裝置上變更。兩個版本都在草稿中。",
+    "conflict_gone": "已在其他裝置上變更或刪除。您的版本在草稿中。",
+    "banner_refused": "伺服器拒絕的草稿：{count}",
+    "banner_waiting": "等待伺服器的草稿：{count}"
+  },
   "deep_link": {
     "message_not_found": "已無法使用此郵件。",
     "thread_not_found": "已無法使用此對話串。",
@@ -5833,6 +5959,10 @@
       "crypto_full": {
         "title": "完整存取此應用程式",
         "body": "以與網頁郵件本身相同的權限執行。它可以讀取您所有的郵件和已儲存的金鑰，並代表您執行動作。請只對您完全信任的外掛程式允許。"
+      },
+      "keystore": {
+        "title": "使用這台電腦上的憑證",
+        "body": "要求使用這台電腦或智慧卡上的憑證為郵件簽署及解密。應用程式會先詢問你。外掛程式絕不會取得私密金鑰，但在你允許期間，它可以用你的名義簽署，並讀取它解密的內容。"
       },
       "email_raw_send": {
         "title": "傳送它自行建立的郵件",
@@ -6350,6 +6480,12 @@
     "sign_language": "手語",
     "new_tab": "在新分頁中開啟"
   },
+  "pwaNotify": {
+    "action_archive": "封存",
+    "action_mark_read": "標示為已讀",
+    "action_reply": "回覆",
+    "reply_placeholder": "撰寫回覆"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "新增到行事曆",
     "update_in_calendar": "在行事曆中更新",
@@ -6451,5 +6587,40 @@
       "next_issue": "下一個拼字或文法問題",
       "previous_issue": "上一個拼字或文法問題"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "在新視窗中開啟",
+    "save_all_to_folder": "全部儲存到資料夾…",
+    "saved_all": "{count, plural, other {已將 # 個附件儲存到 {folder}。}}",
+    "saved_partial": "已將 {total} 個附件中的 {saved} 個儲存到 {folder}。",
+    "save_failed": "無法將附件儲存到 {folder}。",
+    "popup_blocked": "瀏覽器封鎖了新視窗。請允許此網站顯示彈出式視窗，然後再試一次。",
+    "opening": "正在開啟…",
+    "session_ended_title": "你已在此視窗中登出",
+    "session_ended_body": "請開啟應用程式並登入，然後重新開啟此視窗。",
+    "open_app": "開啟應用程式",
+    "close_window": "關閉視窗",
+    "message_gone_title": "這封郵件已不存在",
+    "message_gone_body": "它已被刪除或移到其他帳戶。",
+    "message_moved": "這封郵件已移到其他資料夾。",
+    "message_moved_to": "這封郵件已移到 {folder}。",
+    "window_not_ready": "新視窗未能及時開啟。你的草稿仍保留在這裡。"
+  },
+  "desktop_sign_in": {
+    "browser_button": "使用瀏覽器登入",
+    "browser_waiting": "請在瀏覽器中完成登入",
+    "browser_unavailable": "此伺服器不支援透過瀏覽器登入。請使用密碼。",
+    "browser_failed": "無法透過瀏覽器登入。請再試一次。",
+    "server_needed": "請先輸入伺服器位址。",
+    "server_declined": "你沒有允許此伺服器,因此沒有傳送任何內容給它。",
+    "server_invalid": "此伺服器位址無效。"
+  },
+  "desktop_keystore": {
+    "title": "這台電腦上的憑證",
+    "description": "此伺服器可以要求使用你的憑證和智慧卡。每次使用憑證前仍會詢問你。",
+    "label": "此伺服器的存取權",
+    "label_description": "收回你的許可。伺服器需要重新詢問。",
+    "revoke": "收回",
+    "revoked": "已收回許可"
   }
 }

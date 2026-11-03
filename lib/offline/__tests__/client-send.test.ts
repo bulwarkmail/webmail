@@ -34,10 +34,10 @@ beforeEach(() => {
     if (names.includes('EmailSubmission/set')) {
       submissions.push(request);
       if (mode.submissionFails) throw new TypeError('Failed to fetch');
-      const create = request.methodCalls.find(([name]) => name === 'Email/set')?.[1].create as Record<string, unknown>;
-      const key = Object.keys(create)[0];
+      const create = request.methodCalls.find(([name]) => name === 'Email/set')?.[1].create as Record<string, unknown> | undefined;
+      const key = Object.keys(create ?? {})[0];
       return answer({ methodResponses: [
-        ['Email/set', { accountId: 'j1', created: { [key]: { id: 'e1' } } }, '0'],
+        ...(key ? [['Email/set', { accountId: 'j1', created: { [key]: { id: 'e1' } } }, '0']] : []),
         ['EmailSubmission/set', { accountId: 'j1', created: { 1: { id: 'sub1' } } }, '1'],
       ] });
     }
@@ -83,6 +83,27 @@ describe('telling a send that never started from one that may have gone', () => 
     expect(error).toBeInstanceOf(Error);
     expect((error as Error).name).not.toBe('SendNotStartedError');
     expect(submissions).toHaveLength(1);
+  });
+
+  it('sends with a Message-ID fixed by the outbox, and makes one up otherwise', async () => {
+    const c = await client();
+    await c.sendEmail(['bob@example.org'], 'Hi', 'Body', undefined, undefined, 'i1', 'alice@example.org', undefined, 'Alice', undefined, undefined, undefined, undefined, undefined, undefined, { messageId: 'fixed@example.org' });
+    await send(c);
+    const created = (submissions as Array<{ methodCalls: Array<[string, { create?: Record<string, { messageId?: string[] }> }, string]> }>)
+      .map((request) => Object.values(request.methodCalls.find(([name]) => name === 'Email/set')?.[1].create ?? {})[0]?.messageId?.[0]);
+    expect(created[0]).toBe('fixed@example.org');
+    expect(created[1]).toMatch(/@example\.org$/);
+    expect(created[1]).not.toBe('fixed@example.org');
+  });
+
+  it('submits a copy the lookup found, without creating another', async () => {
+    const c = await client();
+    const result = await c.sendEmail(['bob@example.org'], 'Hi', 'Body', undefined, undefined, 'i1', 'alice@example.org', undefined, 'Alice', undefined, undefined, undefined, undefined, undefined, undefined, { existingCopyId: 'copy-1' });
+    expect(result.emailSubmissionId).toBe('sub1');
+    const [request] = submissions as Array<{ methodCalls: Array<[string, Record<string, unknown>, string]> }>;
+    expect(request.methodCalls.map(([name]) => name)).not.toContain('Email/set');
+    const set = request.methodCalls.find(([name]) => name === 'EmailSubmission/set')?.[1] as { create: Record<string, { emailId: string }> };
+    expect(set.create['1'].emailId).toBe('copy-1');
   });
 
   it('a held send whose hold can’t be read back afterwards still counts as sent', async () => {

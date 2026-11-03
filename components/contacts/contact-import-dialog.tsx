@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Upload, FileText, AlertTriangle, Check } from "@/components/icons";
 import { Button } from "@/components/ui/button";
@@ -9,19 +9,24 @@ import { cn } from "@/lib/utils";
 import { parseVCard, detectDuplicates } from "@/lib/vcard";
 import type { ContactCard } from "@/lib/jmap/types";
 import { getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
+import { isOfflineNow } from "@/lib/offline/state";
 
 interface ContactImportDialogProps {
   existingContacts: ContactCard[];
   onImport: (contacts: ContactCard[]) => Promise<number>;
   onClose: () => void;
+  /** A file opened from the OS: read at once, as if picked here. */
+  initialFile?: File | null;
 }
 
 export function ContactImportDialog({
   existingContacts,
   onImport,
   onClose,
+  initialFile,
 }: ContactImportDialogProps) {
   const t = useTranslations("contacts");
+  const tLaunch = useTranslations("pwaLaunch");
   const fileRef = useRef<HTMLInputElement>(null);
   const [parsed, setParsed] = useState<ContactCard[]>([]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -30,10 +35,7 @@ export function ContactImportDialog({
   const [result, setResult] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const readFile = useCallback(async (file: File) => {
     setError(null);
     setResult(null);
 
@@ -66,6 +68,18 @@ export function ContactImportDialog({
     }
   }, [existingContacts, t]);
 
+  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) await readFile(file);
+  }, [readFile]);
+
+  const initialFileRead = useRef(false);
+  useEffect(() => {
+    if (!initialFile || initialFileRead.current) return;
+    initialFileRead.current = true;
+    void readFile(initialFile);
+  }, [initialFile, readFile]);
+
   const toggleSelect = (idx: number) => {
     const next = new Set(selected);
     if (next.has(idx)) {
@@ -94,7 +108,7 @@ export function ContactImportDialog({
       setResult(count);
     } catch (error) {
       console.error('Failed to import contacts:', error);
-      setError(t("import.failed"));
+      setError(isOfflineNow() ? tLaunch("contacts_need_server") : t("import.failed"));
     } finally {
       setIsImporting(false);
     }

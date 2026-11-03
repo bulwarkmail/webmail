@@ -94,6 +94,11 @@ export interface SearchRequestOptions {
    * where the list must not wait for the highlighting.
    */
   deferSnippets?: boolean;
+  /**
+   * For the search palette. It searches on every few keystrokes, so it keeps its
+   * paging apart from the mail list's, and waits less for the local store.
+   */
+  palette?: boolean;
 }
 
 export interface SearchEmailsResult {
@@ -494,8 +499,8 @@ export interface IJMAPClient {
     humanText?: string;
   }): Promise<void>;
 
-  sendRawEmail(blob: Blob, identityId: string, sentMailboxId: string, draftMailboxId?: string, delayedUntil?: string, envelopeRecipients?: string[]): Promise<SendEmailResult>;
-  submitRawEmail(blob: Blob, identityId: string, delayedUntil?: string, envelopeRecipients?: string[]): Promise<SendEmailResult>;
+  sendRawEmail(blob: Blob, identityId: string, sentMailboxId: string, draftMailboxId?: string, delayedUntil?: string, envelopeRecipients?: string[], existingCopyId?: string): Promise<SendEmailResult>;
+  submitRawEmail(blob: Blob, identityId: string, delayedUntil?: string, envelopeRecipients?: string[], existingCopyId?: string): Promise<SendEmailResult>;
   getScheduledEmails(limit?: number, position?: number): Promise<{ emails: ScheduledEmail[]; hasMore: boolean; total: number; totalByAccount?: Record<string, number>; nextPosition: number }>;
   /** Cancels a pending submission, then destroys its record. */
   cancelEmailSubmission(submissionId: string, accountId?: string): Promise<void>;
@@ -548,6 +553,7 @@ export interface IJMAPClient {
           accountId?: string;
           onProgress?: (loaded: number, total: number) => void;
           signal?: AbortSignal;
+          noHold?: boolean;
         },
   ): Promise<{ blobId: string; size: number; type: string }>;
   getBlobDownloadUrl(blobId: string, name?: string, type?: string, accountId?: string): string;
@@ -635,6 +641,8 @@ export interface IJMAPClient {
     options?: CalendarEventUpdateOptions,
   ): Promise<void>;
   deleteCalendarEvent(eventId: string, sendSchedulingMessages?: boolean, targetAccountId?: string): Promise<void>;
+  /** Whether the last request was answered from this device instead of the server. */
+  answeredFromDevice?(): boolean;
   batchDeleteCalendarEvents(eventIds: string[], targetAccountId?: string): Promise<{ destroyed: string[]; notDestroyed: Record<string, { type?: string; description?: string }> }>;
   queryCalendarEvents(filter: CalendarEventFilter, sort?: Array<{ property: string; isAscending: boolean }>, limit?: number, targetAccountId?: string, options?: CalendarQueryOptions): Promise<CalendarEvent[]>;
   queryAllCalendarEvents(filter: CalendarEventFilter, sort?: Array<{ property: string; isAscending: boolean }>, limit?: number, options?: CalendarQueryOptions): Promise<CalendarEvent[]>;

@@ -1,3 +1,4 @@
+import { getOfflineHooks, type OfflineClientRef } from '@/lib/jmap/offline-hooks';
 import { create } from 'zustand';
 import type { FileNodeListings, IJMAPClient } from '@/lib/jmap/client-interface';
 import type { FileNode, FileNodeRights } from '@/lib/jmap/types';
@@ -648,9 +649,15 @@ export const useFileStore = create<FileState>((set, get) => ({
   })(),
 
   initClient: (client: IJMAPClient, accountId?: string | null) => {
+    const before = get().client as (IJMAPClient & { isOfflineOnly?: () => boolean }) | null;
     const patch: Partial<FileState> = { client };
     if (accountId !== undefined) patch.currentAccountId = accountId;
     set(patch);
+    // A start from the local copy: the real client just took over, and what's
+    // listed is what the device had, or the error of asking it.
+    const offlineBefore = before !== client && before?.isOfflineOnly?.();
+    const offlineNow = (client as IJMAPClient & { isOfflineOnly?: () => boolean }).isOfflineOnly?.();
+    if (offlineBefore && !offlineNow && get().supportsFiles) void get().refresh();
   },
 
   clearClient: () => {
@@ -1690,7 +1697,8 @@ export const useFileStore = create<FileState>((set, get) => ({
   },
 
   addRecentFile: (name: string, id: string) => {
-    const { recentFiles } = get();
+    const { recentFiles, client } = get();
+    if (client && id) getOfflineHooks()?.fileOpened?.(client as OfflineClientRef, client.getFilesAccountId(), id);
     const entry = { name, id, timestamp: Date.now() };
     const filtered = recentFiles.filter(r => r.id !== id);
     const next = [entry, ...filtered].slice(0, 20);
