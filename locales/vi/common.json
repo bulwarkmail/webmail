@@ -1752,6 +1752,7 @@
         "status_inactive": "Chưa bật trên thiết bị này",
         "status_unsupported": "Trình duyệt này không hỗ trợ Web Push",
         "status_lite": "Bulwark Lite không hỗ trợ Web Push; tính năng này cần máy chủ Bulwark.",
+        "status_demo": "Thông báo nền không khả dụng trong bản demo.",
         "status_busy": "Đang xử lý…",
         "enable": "Bật",
         "reenable": "Đăng ký lại",

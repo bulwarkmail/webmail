@@ -1780,6 +1780,7 @@
         "status_inactive": "Není povoleno na tomto zařízení",
         "status_unsupported": "Tento prohlížeč nepodporuje Web Push",
         "status_lite": "Web Push není v Bulwark Lite k dispozici; vyžaduje server Bulwark.",
+        "status_demo": "Oznámení na pozadí nejsou v ukázce k dispozici.",
         "title": "Oznámení na pozadí",
         "devices_title": "Registrovaná zařízení",
         "devices_desc": "Všechna zařízení registrovaná pro příjem oznamení na pozadí u tohoto účtu. Odvolání okamžitě zastaví jejich příjem.",

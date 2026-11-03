@@ -1740,6 +1740,7 @@
         "status_inactive": "在此裝置上未啟用",
         "status_unsupported": "此瀏覽器不支援 Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "展示版不提供背景通知。",
         "status_busy": "工作中…",
         "enable": "啟用",
         "reenable": "重新註冊",

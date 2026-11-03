@@ -1740,6 +1740,7 @@
         "status_inactive": "Selles seadmes pole lubatud",
         "status_unsupported": "See brauser ei toeta Web Pushi",
         "status_lite": "Veebi-tõukemärguanded pole Bulwark Lite'is saadaval; need vajavad Bulwarki serverit.",
+        "status_demo": "Taustateavitused pole demos saadaval.",
         "status_busy": "Töötleb…",
         "enable": "Luba",
         "reenable": "Registreeri uuesti",

@@ -1740,6 +1740,7 @@
         "status_inactive": "No activat en aquest dispositiu",
         "status_unsupported": "Aquest navegador no admet Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "Les notificacions en segon pla no estan disponibles a la demo.",
         "status_busy": "Treballant…",
         "enable": "Activa",
         "reenable": "Torna a registrar",

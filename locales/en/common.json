@@ -1740,6 +1740,7 @@
         "status_inactive": "Not enabled on this device",
         "status_unsupported": "This browser does not support Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "Background notifications aren't available in the demo.",
         "status_busy": "Working…",
         "enable": "Enable",
         "reenable": "Re-register",

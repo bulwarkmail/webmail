@@ -1740,6 +1740,7 @@
         "status_inactive": "غير مفعّل على هذا الجهاز",
         "status_unsupported": "هذا المتصفح لا يدعم Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "الإشعارات في الخلفية غير متاحة في النسخة التجريبية.",
         "status_busy": "جارٍ العمل…",
         "enable": "تفعيل",
         "reenable": "إعادة التسجيل",

@@ -1780,6 +1780,7 @@
         "status_inactive": "Не ввімкнено на цьому пристрої",
         "status_unsupported": "Цей браузер не підтримує Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "Фонові сповіщення недоступні в демоверсії.",
         "title": "Фонові сповіщення",
         "devices_title": "Зареєстровані пристрої",
         "devices_desc": "Усі пристрої, зареєстровані для отримання фонових сповіщень цього облікового запису. Після відкликання пристрій одразу перестає їх отримувати.",

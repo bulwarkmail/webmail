@@ -1740,6 +1740,7 @@
         "status_inactive": "Ikke aktiveret på denne enhed",
         "status_unsupported": "Denne browser understøtter ikke Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "Baggrundsnotifikationer er ikke tilgængelige i demoen.",
         "status_busy": "Arbejder…",
         "enable": "Aktivér",
         "reenable": "Genregistrér",
