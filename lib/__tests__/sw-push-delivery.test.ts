@@ -209,4 +209,49 @@ describe('when building the notification goes wrong', () => {
   });
 });
 
+describe('which window a click uses', () => {
+  const win = (id: string, url: string, extra: Record<string, unknown> = {}) => {
+    const client = {
+      id, url: `https://mail.example.com${url}`, frameType: 'top-level', visibilityState: 'hidden', focused: false,
+      postMessage: vi.fn(),
+      focus: vi.fn(async () => client),
+      navigate: vi.fn(async () => client),
+      ...extra,
+    };
+    return client;
+  };
+  const clickOn = (w: ReturnType<typeof loadWorker>) => w.dispatch('notificationclick', {
+    notification: { tag: 'bulwark-mail:a', close() {}, data: { kind: 'email', emailId: 'e1', accountId: 'a', slot: 0 } },
+  });
+
+  it('leaves a pop-out and a frame alone and takes the app window', async () => {
+    const popout = win('p', '/popout/message/x');
+    const frame = win('f', '/mail/folder/inbox', { frameType: 'nested' });
+    const main = win('m', '/mail/folder/inbox');
+    const w = loadWorker(() => null, { clients: [popout, frame, main] });
+    await clickOn(w);
+    expect(popout.navigate).not.toHaveBeenCalled();
+    expect(frame.navigate).not.toHaveBeenCalled();
+    expect(main.navigate).toHaveBeenCalledWith('/mail/message/e1?slot=0&owner=a');
+  });
+
+  it('takes the window in front when there are several', async () => {
+    const back = win('b', '/mail/folder/inbox');
+    const front = win('f', '/mail/folder/inbox', { focused: true, visibilityState: 'visible' });
+    const w = loadWorker(() => null, { clients: [back, front] });
+    await clickOn(w);
+    expect(front.navigate).toHaveBeenCalled();
+    expect(back.navigate).not.toHaveBeenCalled();
+  });
+
+  it('opens a new window when only a pop-out is open', async () => {
+    const popout = win('p', '/popout/compose');
+    const openWindow = vi.fn(async () => null);
+    const w = loadWorker(() => null, { clients: [popout], openWindow });
+    await clickOn(w);
+    expect(popout.navigate).not.toHaveBeenCalled();
+    expect(openWindow).toHaveBeenCalledWith('/mail/message/e1?slot=0&owner=a');
+  });
+});
+
 // -- end of cases --

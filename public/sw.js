@@ -1036,7 +1036,7 @@ async function handleNotificationClick(event) {
     if (action === "reply") targetUrl = buildClickUrl(data, true);
   }
 
-  for (const client of allClients) {
+  for (const client of windowsForClick(allClients)) {
     // Reuse an existing tab whenever possible - users on desktop browsers
     // get annoyed when each notification opens a fresh window.
     if ("focus" in client) {
@@ -1075,6 +1075,25 @@ async function handleNotificationClick(event) {
   if (self.clients.openWindow) {
     return self.clients.openWindow(targetUrl || `${BASE_PATH}/`);
   }
+}
+
+/**
+ * The windows a click may take over, the one in front first. Not a frame inside
+ * a page, and not a pop-out or a protocol page: navigating one of those would
+ * lose what it shows and leave the message in a window without the app around it.
+ */
+function windowsForClick(allClients) {
+  const score = (client) => (client.focused ? 0 : client.visibilityState === "visible" ? 1 : 2);
+  return allClients
+    .filter((client) => {
+      if (client.frameType && client.frameType !== "top-level") return false;
+      try {
+        return !/\/(popout|protocol)(\/|$)/.test(new URL(client.url).pathname);
+      } catch (_) {
+        return true;
+      }
+    })
+    .sort((a, b) => score(a) - score(b));
 }
 
 async function focusExistingWindowClient(sourceClientId, requireMailtoReady) {
