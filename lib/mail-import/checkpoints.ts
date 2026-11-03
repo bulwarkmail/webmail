@@ -22,6 +22,10 @@ export interface ImportCheckpoint {
 
 const DB_NAME = "bulwark-mail-import";
 const STORE = "checkpoints";
+/** What lib/mail-import/dedupe.ts remembers. Same database, so a sign-out takes it along. */
+export const SEEN_STORE = "seen";
+/** What an import from this computer needs to go on after a restart (the desktop app). One record. */
+const JOB_STORE = "jobs";
 /** Older checkpoints are dropped: the file has likely changed or been forgotten. */
 const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -37,7 +41,15 @@ export function checkpointKey(parts: {
 
 const memory = new Map<string, ImportCheckpoint>();
 
-function hasIdb(): boolean {
+/** The fallback where IndexedDB isn't available, by key, with the scope as the value. */
+export const seenInMemory = new Map<string, string>();
+let jobInMemory: unknown = null;
+
+function forgetSeenInMemory(scope?: string): void {
+  for (const [key, value] of seenInMemory) if (!scope || value === scope) seenInMemory.delete(key);
+}
+
+export function hasIdb(): boolean {
   try {
     return typeof indexedDB !== "undefined" && indexedDB !== null;
   } catch {
@@ -47,15 +59,19 @@ function hasIdb(): boolean {
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
-function openDb(): Promise<IDBDatabase> {
+export function openDb(): Promise<IDBDatabase> {
   if (dbPromise) return dbPromise;
   dbPromise = new Promise<IDBDatabase>((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 1);
+    const request = indexedDB.open(DB_NAME, 2);
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains(STORE)) {
         db.createObjectStore(STORE, { keyPath: "key" }).createIndex("scope", "scope");
       }
+      if (!db.objectStoreNames.contains(SEEN_STORE)) {
+        db.createObjectStore(SEEN_STORE, { keyPath: "key" }).createIndex("scope", "scope");
+      }
+      if (!db.objectStoreNames.contains(JOB_STORE)) db.createObjectStore(JOB_STORE, { keyPath: "key" });
     };
     request.onsuccess = () => {
       const db = request.result;
@@ -69,7 +85,7 @@ function openDb(): Promise<IDBDatabase> {
   return dbPromise;
 }
 
-function done<T>(request: IDBRequest<T>): Promise<T> {
+export function done<T>(request: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
@@ -79,6 +95,34 @@ function done<T>(request: IDBRequest<T>): Promise<T> {
 async function withStore<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
   const db = await openDb();
   return done(run(db.transaction(STORE, mode).objectStore(STORE)));
+}
+
+/**
+ * In IndexedDB rather than localStorage, which Chromium writes to disk late: an import
+ * killed in its first minute would come back as if it had never started.
+ */
+export async function readStoredJob<T>(): Promise<T | null> {
+  if (!hasIdb()) return (jobInMemory as T | null);
+  try {
+    const db = await openDb();
+    const found = (await done(db.transaction(JOB_STORE, "readonly").objectStore(JOB_STORE).get("job"))) as { value: T } | undefined;
+    return found?.value ?? null;
+  } catch {
+    return (jobInMemory as T | null);
+  }
+}
+
+export async function writeStoredJob(value: unknown): Promise<void> {
+  jobInMemory = value;
+  if (!hasIdb()) return;
+  try {
+    const db = await openDb();
+    const store = db.transaction(JOB_STORE, "readwrite").objectStore(JOB_STORE);
+    if (value === null) await done(store.delete("job"));
+    else await done(store.put({ key: "job", value }));
+  } catch {
+    /* kept in memory for this window */
+  }
 }
 
 export async function readCheckpoint(key: string, now = Date.now()): Promise<ImportCheckpoint | null> {
@@ -123,13 +167,16 @@ export async function deleteCheckpoint(key: string): Promise<void> {
 /** Removes the checkpoints of one Bulwark account (it signs out). */
 export async function clearCheckpointsFor(scope: string): Promise<void> {
   for (const [key, value] of memory) if (value.scope === scope) memory.delete(key);
+  forgetSeenInMemory(scope);
   if (!hasIdb()) return;
   try {
     const db = await openDb();
-    const tx = db.transaction(STORE, "readwrite");
-    const keys = await done(tx.objectStore(STORE).index("scope").getAllKeys(scope));
-    const store = db.transaction(STORE, "readwrite").objectStore(STORE);
-    await Promise.all(keys.map((k) => done(store.delete(k))));
+    for (const name of [STORE, SEEN_STORE]) {
+      const tx = db.transaction(name, "readwrite");
+      const keys = await done(tx.objectStore(name).index("scope").getAllKeys(scope));
+      const store = db.transaction(name, "readwrite").objectStore(name);
+      await Promise.all(keys.map((k) => done(store.delete(k))));
+    }
   } catch {
     /* nothing stored */
   }
@@ -138,6 +185,8 @@ export async function clearCheckpointsFor(scope: string): Promise<void> {
 /** Removes every checkpoint (everyone signed out). */
 export async function clearAllCheckpoints(): Promise<void> {
   memory.clear();
+  jobInMemory = null;
+  forgetSeenInMemory();
   if (!hasIdb()) return;
   const db = dbPromise ? await dbPromise.catch(() => null) : null;
   db?.close();

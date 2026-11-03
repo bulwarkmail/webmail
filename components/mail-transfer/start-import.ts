@@ -1,4 +1,5 @@
-import { runImport, type ImportFile } from "@/lib/mail-import/engine";
+import { localDedupe } from "@/lib/mail-import/dedupe";
+import { runImport, type ImportFile, type ImportProgress } from "@/lib/mail-import/engine";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
@@ -12,6 +13,10 @@ export interface StartImportInput {
   targetMailboxId: string | null;
   keepFolders: boolean;
   resume: boolean;
+  /** Skip what an earlier import put in the same folder (lib/mail-import/dedupe.ts). */
+  dedupe?: boolean;
+  /** Called with how the job ended. */
+  onEnd?: (result: ImportProgress) => void;
 }
 
 /** Runs an import as the dialog's job and refreshes the mail lists when it ends. */
@@ -53,8 +58,10 @@ export function startImport(input: StartImportInput): void {
       signal: controller.signal,
       onProgress: (progress) => useMailTransferStore.getState().updateProgress(progress),
       openPst,
+      dedupe: input.dedupe ? localDedupe(scope, input.accountId) : undefined,
     });
     useMailTransferStore.getState().updateProgress(result);
+    input.onEnd?.(result);
     // Show what arrived, if the same account is still the one on screen.
     if (useAuthStore.getState().client !== client || result.imported === 0) return;
     const email = useEmailStore.getState();

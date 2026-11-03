@@ -12,6 +12,7 @@ import { toast } from "@/stores/toast-store";
 import { MailImportDialog } from "./mail-import-dialog";
 import { MailExportDialog } from "./mail-export-dialog";
 import { formatClock } from "./transfer-progress";
+import { forgetLocalImportFor, isDeviceOnlyClient, resumeLocalImport, setImportTaskbarProgress } from "./local-import-job";
 
 /** How long sign-out waits for a cancelled job to stop (its budget is 2 s). */
 const SIGN_OUT_WAIT_MS = 1500;
@@ -40,6 +41,7 @@ export function MailTransferHost() {
       }
       useMailTransferStore.getState().close({ now: true });
     }
+    await forgetLocalImportFor(accountId);
     if (accountId !== "all") await clearCheckpointsFor(accountId);
   }), []);
 
@@ -53,6 +55,36 @@ export function MailTransferHost() {
   // A job that ends while its dialog is hidden says so, with a way back to its summary.
   const tImport = useTranslations("mail_import");
   const tExport = useTranslations("mail_export");
+  const tLocal = useTranslations("desktopImport");
+
+  // The desktop app: an import from this computer that a quit, a crash or a restart cut off
+  // goes on, after the shell asked. Once per account per run: "Not now" means not now.
+  const client = useAuthStore((s) => s.client);
+  const asked = useRef<string | null>(null);
+  useEffect(() => {
+    // The real client replaces a device-only one after a start, and this runs again then.
+    if (!client || isDeviceOnlyClient(client)) return;
+    const scope = activeAccountId ?? "default";
+    if (asked.current === scope) return;
+    asked.current = scope;
+    void resumeLocalImport().then((outcome) => {
+      if (outcome === "resumed-thunderbird-running") toast.warning(tLocal("thunderbird_running"));
+      else if (outcome === "gone") toast.warning(tLocal("resume_gone"));
+    }).catch(() => {});
+    // The translator is a new function on every render in tests; the account is what matters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client, activeAccountId]);
+
+  // The bar on the taskbar follows an import, where the app has one.
+  const importProgress = job?.kind === "import" ? job.progress : null;
+  const barShown = useRef(false);
+  useEffect(() => {
+    // Not when it was never ours: the bar may be showing an export.
+    if (!importProgress && !barShown.current) return;
+    barShown.current = !!importProgress;
+    setImportTaskbarProgress(importProgress);
+  }, [importProgress]);
+
   const lastPhase = useRef<string | undefined>(undefined);
   useEffect(() => {
     const phase = job?.progress.phase;

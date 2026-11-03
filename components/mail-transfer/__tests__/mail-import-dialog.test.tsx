@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { MailTransferHost } from '@/components/mail-transfer/mail-transfer-host';
 import { useMailTransferStore, openMailImport } from '@/stores/mail-transfer-store';
@@ -39,6 +39,69 @@ function pick(files: File[]) {
 }
 
 describe('MailImportDialog', () => {
+  it('in a browser an .ost is still taken, as before', async () => {
+    render(<MailTransferHost />);
+    act(() => openMailImport());
+    expect((screen.getByTestId('mail-import-file') as HTMLInputElement).accept).toContain('.ost');
+    pick([new File(['!BDN'], 'mine.ost')]);
+    await screen.findByText('mine.ost');
+    expect(screen.queryByTestId('local-import-ost-chosen')).toBeNull();
+    expect(screen.queryByTestId('local-import-panel')).toBeNull();
+  });
+
+  describe('in the desktop app', () => {
+    const appBridge = (localImport: Record<string, unknown>) => {
+      (window as unknown as { bulwarkDesktop: unknown }).bulwarkDesktop = { version: 1, platform: 'win32', localImport };
+    };
+    afterEach(() => {
+      delete (window as unknown as { bulwarkDesktop?: unknown }).bulwarkDesktop;
+    });
+
+    it('turns an .ost down with the reason, by its name or its header, and keeps the others', async () => {
+      appBridge({ scan: vi.fn() });
+      render(<MailTransferHost />);
+      act(() => openMailImport());
+      expect((screen.getByTestId('mail-import-file') as HTMLInputElement).accept).not.toContain('.ost');
+      pick([
+        new File(['!BDN'], 'mine.ost'),
+        new File(['!BDN\u0000\u0000\u0000\u0000SOrest'], 'renamed.pst'),
+        new File(['From a Tue May  5 10:11:12 2020\nSubject: x\n\nb\n'], 'keep.mbox'),
+      ]);
+      await screen.findByText('keep.mbox');
+      // The mock gives the key: the names themselves show in the screenshot and the e2e run.
+      expect(screen.getByTestId('local-import-ost-chosen').textContent).toBe('ost_refused');
+      expect(screen.queryByText('mine.ost')).toBeNull();
+      expect(screen.queryByText('renamed.pst')).toBeNull();
+    });
+
+    it('holds the rest of the dialog back while the list is open, and hands the confirmed files to the import', async () => {
+      const files = [{ url: 'bulwark-import://f/t', name: 'p/Inbox', kind: 'mbox', folder: ['Inbox'], size: 10, lastModified: 1 }];
+      appBridge({
+        scan: vi.fn(async () => ({ ok: true, candidates: [{ handle: 'h', app: 'thunderbird', kind: 'mbox', group: 'default', account: 'Local Folders', folder: ['Inbox'], name: 'p/Inbox', size: 10, lastModified: 1 }], books: [], refused: [], calendars: 0, thunderbirdRunning: false })),
+        grant: vi.fn(async () => ({ ok: true, jobId: 'job', files, contacts: [], refused: [], thunderbirdRunning: false })),
+        release: vi.fn(async () => {}),
+      });
+      render(<MailTransferHost />);
+      act(() => openMailImport());
+      fireEvent.click(screen.getByTestId('local-import-find'));
+      await screen.findByTestId('local-import-list');
+      expect(screen.getByTestId('mail-import-target').closest('.hidden')).not.toBeNull();
+      expect((screen.getByTestId('mail-import-start') as HTMLButtonElement).disabled).toBe(true);
+      fireEvent.click(screen.getByTestId('local-import-confirm'));
+      await screen.findByTestId('local-import-picked');
+      expect(screen.getByTestId('mail-import-target').closest('.hidden')).toBeNull();
+      // Thunderbird's own folders keep their place: the top level, recreating them.
+      expect((screen.getByTestId('mail-import-target') as HTMLSelectElement).value).toBe('\u0000top');
+      await waitFor(() => expect((screen.getByTestId('mail-import-start') as HTMLButtonElement).disabled).toBe(false));
+      fireEvent.click(screen.getByTestId('mail-import-start'));
+      await waitFor(() => expect(startImport).toHaveBeenCalled());
+      expect(startImport).toHaveBeenCalledWith(expect.objectContaining({
+        accountId: 'acc1', targetMailboxId: null, keepFolders: true, dedupe: true,
+        files: [expect.objectContaining({ format: 'mbox', folder: ['Inbox'] })],
+      }));
+    });
+  });
+
   it('imports into a shared folder in that folder\'s own account', async () => {
     render(<MailTransferHost />);
     act(() => openMailImport({ mailboxId: 'acc2:shared' }));

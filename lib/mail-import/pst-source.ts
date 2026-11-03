@@ -76,7 +76,10 @@ export async function* openPstSource(file: File, options: SourceOptions, tuning:
   };
 
   try {
-    worker.postMessage({ type: "open", file, skipBefore: options.skipBefore, skipAlso: [...(options.skipAlso ?? [])], maxMessageBytes: options.maxMessageBytes });
+    // A file the desktop app reads from disk has no Blob: the worker reads it by range.
+    const rangeUrl = (file as File & { rangeUrl?: string }).rangeUrl;
+    const source = rangeUrl ? { range: { url: rangeUrl, size: file.size } } : { file };
+    worker.postMessage({ type: "open", ...source, skipBefore: options.skipBefore, skipAlso: [...(options.skipAlso ?? [])], maxMessageBytes: options.maxMessageBytes });
     const opened = await next();
     if (opened.type === "abort") throw new DOMException("Import cancelled", "AbortError");
     if (opened.type === "error") throw new PstReadError(opened.code, opened.message);
