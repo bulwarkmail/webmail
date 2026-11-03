@@ -85,6 +85,19 @@ describe('in the app', () => {
     expect(devicesForAccount('some-account').noOffline).toBe(false);
   }, 60_000);
 
+  it('the hook settles on a bridge that copies what it returns, as contextBridge does', async () => {
+    setBridgePolicy(snapshotOf({ PluginsMode: 'off' }));
+    window.bulwarkDesktop!.policy!.get = () => JSON.parse(JSON.stringify(current));
+    let renders = 0;
+    function Probe() {
+      renders += 1;
+      return <span>{useDesktopPolicy().PluginsMode.value}</span>;
+    }
+    render(<Probe />);
+    expect(screen.getByText('off')).toBeInTheDocument();
+    expect(renders).toBeLessThan(4);
+  });
+
   it('the hook shows a change at once', async () => {
     setBridgePolicy(snapshotOf({}));
     function Probe() {

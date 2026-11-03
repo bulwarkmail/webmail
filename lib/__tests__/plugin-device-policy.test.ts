@@ -97,7 +97,7 @@ function serve(plugins: unknown[]) {
 beforeEach(() => {
   vi.clearAllMocks();
   usePluginStore.setState({ plugins: [], initialized: false });
-  harness.current = snapshotOf({});
+  setPolicy({});
   localStorage.clear();
   usePluginStore.setState({ plugins: [], initialized: false });
 });

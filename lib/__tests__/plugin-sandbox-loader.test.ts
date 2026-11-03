@@ -106,8 +106,8 @@ describe('loadSandboxedPlugin under the OS policy of the device', () => {
   it('starts nothing the policy refuses: no frame, no download', async () => {
     const { EMPTY_POLICY_LAYERS, resolvePolicies } = await import('../desktop/policy-schema');
     const snapshot = (forcedMachine: Record<string, unknown>) => resolvePolicies({ ...EMPTY_POLICY_LAYERS, forcedMachine });
-    let current = snapshot({ PluginsMode: 'allowlist', PluginAllowlist: ['other-plugin'] });
-    window.bulwarkDesktop = { version: 1, platform: 'win32', policy: { get: () => current, onChange: () => () => {}, onWipeOfflineData: () => () => {} } };
+    const bridgeWith = (current: ReturnType<typeof snapshot>) => ({ version: 1, platform: 'win32' as const, policy: { get: () => current, onChange: () => () => {}, onWipeOfflineData: () => () => {} } });
+    window.bulwarkDesktop = bridgeWith(snapshot({ PluginsMode: 'allowlist', PluginAllowlist: ['other-plugin'] }));
     mocks.getCode.mockResolvedValue(CODE);
     try {
       await loadSandboxedPlugin(plugin());
@@ -116,7 +116,7 @@ describe('loadSandboxedPlugin under the OS policy of the device', () => {
       expect(mocks.downloadManagedBundle).not.toHaveBeenCalled();
       expect(mocks.getCode).not.toHaveBeenCalled();
 
-      current = snapshot({ PluginsMode: 'allowlist', PluginAllowlist: ['managed-plugin'] });
+      window.bulwarkDesktop = bridgeWith(snapshot({ PluginsMode: 'allowlist', PluginAllowlist: ['managed-plugin'] }));
       await loadSandboxedPlugin(plugin());
       expect(lastStatus()).toMatchObject({ id: 'managed-plugin', status: 'running' });
     } finally {

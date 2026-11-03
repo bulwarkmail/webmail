@@ -8,6 +8,7 @@
 
 import { useSyncExternalStore } from 'react';
 import { getDesktopBridge } from './bridge';
+import type { DesktopPolicyBridge } from './types';
 import {
   DEFAULT_POLICY_SNAPSHOT,
   effectivePolicyValue,
@@ -21,11 +22,29 @@ import {
 /** A plugin the device's policy refuses, on a plugin's record and in the settings page. */
 export const PLUGIN_POLICY_REFUSED_ERROR = 'device-policy';
 
+let cached: { bridge: DesktopPolicyBridge; snapshot: PolicySnapshot } | null = null;
+
+/**
+ * The same object until the policy changes. The bridge can't give that: contextBridge
+ * copies what it returns, so each `get()` is a new object, and useSyncExternalStore takes
+ * a new object for a change and renders forever.
+ */
 export function getDesktopPolicy(): PolicySnapshot {
-  return getDesktopBridge()?.policy?.get?.() ?? DEFAULT_POLICY_SNAPSHOT;
+  const bridge = getDesktopBridge()?.policy;
+  if (!bridge?.get) return DEFAULT_POLICY_SNAPSHOT;
+  if (cached?.bridge !== bridge) {
+    const entry = { bridge, snapshot: bridge.get() };
+    cached = entry;
+    bridge.onChange?.((snapshot) => {
+      entry.snapshot = snapshot;
+    });
+  }
+  return cached.snapshot;
 }
 
 export function onDesktopPolicyChange(listener: (snapshot: PolicySnapshot) => void): () => void {
+  // First, so what the listener reads is already the new value.
+  getDesktopPolicy();
   return getDesktopBridge()?.policy?.onChange?.(listener) ?? (() => {});
 }
 
