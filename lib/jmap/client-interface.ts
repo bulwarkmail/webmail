@@ -635,6 +635,8 @@ export interface IJMAPClient {
     options?: CalendarEventUpdateOptions,
   ): Promise<void>;
   deleteCalendarEvent(eventId: string, sendSchedulingMessages?: boolean, targetAccountId?: string): Promise<void>;
+  /** Whether the last request was answered from this device instead of the server. */
+  answeredFromDevice?(): boolean;
   batchDeleteCalendarEvents(eventIds: string[], targetAccountId?: string): Promise<{ destroyed: string[]; notDestroyed: Record<string, { type?: string; description?: string }> }>;
   queryCalendarEvents(filter: CalendarEventFilter, sort?: Array<{ property: string; isAscending: boolean }>, limit?: number, targetAccountId?: string, options?: CalendarQueryOptions): Promise<CalendarEvent[]>;
   queryAllCalendarEvents(filter: CalendarEventFilter, sort?: Array<{ property: string; isAscending: boolean }>, limit?: number, options?: CalendarQueryOptions): Promise<CalendarEvent[]>;

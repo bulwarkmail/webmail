@@ -26,7 +26,7 @@ import {
   isSeries,
   type CalendarObject,
 } from './records';
-import { applyServerDestroy, applyServerEvent, isStandIn, pendingFor } from './writes';
+import { applyServerDestroy, applyServerEvent, isStandIn, pendingChain, recordConflict, type PendingRow } from './writes';
 
 const PAGE = 500;
 /** How far back single events are kept. A series stays whatever its start, a task whatever its date. */
@@ -106,7 +106,8 @@ async function startFullList(ctx: SyncContext, jmap: string): Promise<ListCursor
 
 function storeEvent(ctx: SyncContext, jmap: string, event: CalendarObject, gen: number): void {
   // An old event changing doesn't pull it back into the window.
-  if (!inWindow(ctx, event) && !eventRow(ctx.db, jmap, event.id) && !pendingFor(ctx.db, jmap, event.id)) return;
+  if (!inWindow(ctx, event) && !eventRow(ctx.db, jmap, event.id) && pendingChain(ctx.db, jmap, event.id).length === 0
+    && !ctx.db.get('SELECT 1 AS x FROM calendar_pending WHERE jmap = ? AND uid = ?', [jmap, typeof event.uid === 'string' ? event.uid : ''])) return;
   applyServerEvent(ctx, jmap, event, gen);
 }
 
@@ -129,21 +130,45 @@ async function runFullList(ctx: SyncContext, jmap: string, start: ListCursor): P
     cursor.position += ids.length;
     ctx.db.transaction(() => {
       for (const event of list) storeEvent(ctx, jmap, event, cursor.gen);
-      if (done) {
-        // Whatever this pass didn't see is gone from the server.
-        const stale = ctx.db.all<{ id: string }>('SELECT id FROM calendar_event WHERE jmap = ? AND gen < ?', [jmap, cursor.gen]);
-        for (const { id } of stale) if (!isStandIn(id)) applyServerDestroy(ctx, jmap, id);
-        ctx.setSyncState(jmap, 'CalendarEvent', { state: cursor.captured, phase: null, cursor: null });
-      } else {
-        ctx.setSyncState(jmap, 'CalendarEvent', { cursor: { ...cursor } });
-      }
+      if (!done) ctx.setSyncState(jmap, 'CalendarEvent', { cursor: { ...cursor } });
     });
+    if (done && !(await finishFullList(ctx, jmap, cursor))) return false;
     ctx.emit({ type: 'progress', account: ctx.account, area: 'calendar', phase: 'list', done: cursor.position, total: null });
     if (done) {
       ctx.emit({ type: 'changed', account: ctx.account, collections: ['CalendarEvent'] });
       return true;
     }
   }
+}
+
+/**
+ * A delete during paging moves later objects across a page boundary, so what this
+ * pass didn't see may still be there. Asks for it by id, and only what the server
+ * says it doesn't have goes. False when stopped.
+ */
+async function finishFullList(ctx: SyncContext, jmap: string, cursor: ListCursor): Promise<boolean> {
+  const unseen = ctx.db.all<{ id: string }>('SELECT id FROM calendar_event WHERE jmap = ? AND gen < ?', [jmap, cursor.gen])
+    .map((row) => row.id)
+    .filter((id) => !isStandIn(id));
+  const found: CalendarObject[] = [];
+  const gone: string[] = [];
+  for (let i = 0; i < unseen.length; i += PAGE) {
+    if (ctx.stopped()) return false;
+    const response = await ctx.transport.request([['CalendarEvent/get', {
+      accountId: jmap,
+      ids: unseen.slice(i, i + PAGE),
+      properties: EVENT_PROPERTIES,
+    }, 'g']], calendarUsing(ctx.session));
+    const [, result] = responseFor(response, 'g');
+    found.push(...result.list as CalendarObject[]);
+    gone.push(...result.notFound as string[]);
+  }
+  ctx.db.transaction(() => {
+    for (const event of found) storeEvent(ctx, jmap, event, cursor.gen);
+    for (const id of gone) applyServerDestroy(ctx, jmap, id);
+    ctx.setSyncState(jmap, 'CalendarEvent', { state: cursor.captured, phase: null, cursor: null });
+  });
+  return true;
 }
 
 async function syncDelta(ctx: SyncContext, jmap: string, since: string, target: string | null): Promise<'done' | 'resync' | 'stopped'> {
@@ -181,6 +206,7 @@ async function syncDelta(ctx: SyncContext, jmap: string, since: string, target: 
 
 /** False when stopped before catching up. */
 async function syncEvents(ctx: SyncContext, jmap: string): Promise<boolean> {
+  if (ctx.stopped()) return false;
   const sync = ctx.syncState(jmap, 'CalendarEvent');
   let cursor = sync.phase === 'list' ? sync.cursor as unknown as ListCursor : null;
   if (!cursor && !sync.state) cursor = await startFullList(ctx, jmap);
@@ -207,6 +233,35 @@ function pruneOld(ctx: SyncContext, jmap: string): void {
   );
 }
 
+/**
+ * A share taken away: the session stops listing the account, and nothing of it
+ * stays on the device, reminders included. Its waiting writes can't go anywhere.
+ */
+function forgetUnlistedAccounts(ctx: SyncContext): void {
+  const listed = new Set(Object.keys(ctx.session.accounts));
+  if (listed.size === 0) return;
+  const kept = ctx.db.all<{ jmap: string }>(
+    `SELECT jmap FROM calendar_event UNION SELECT jmap FROM calendar_pending
+     UNION SELECT jmap FROM object WHERE type IN ('Calendar', 'ParticipantIdentity')`,
+  ).map((row) => row.jmap);
+  for (const jmap of kept) {
+    if (listed.has(jmap)) continue;
+    ctx.db.transaction(() => {
+      for (;;) {
+        const row = ctx.db.get<PendingRow>('SELECT * FROM calendar_pending WHERE jmap = ? ORDER BY seq LIMIT 1', [jmap]);
+        if (!row) break;
+        recordConflict(ctx, row, 'destroyedOnServer', { type: 'accountNotFound' });
+      }
+      ctx.db.run('DELETE FROM calendar_event WHERE jmap = ?', [jmap]);
+      ctx.db.run('DELETE FROM calendar_id_map WHERE jmap = ?', [jmap]);
+      ctx.db.run("DELETE FROM object WHERE jmap = ? AND type IN ('Calendar', 'ParticipantIdentity')", [jmap]);
+      ctx.db.run("DELETE FROM sync_state WHERE jmap = ? AND type IN ('Calendar', 'CalendarEvent')", [jmap]);
+      metaSet(ctx.db, syntheticIdsKey(jmap), null);
+    });
+    ctx.emit({ type: 'changed', account: ctx.account, collections: ['Calendar', 'CalendarEvent'] });
+  }
+}
+
 // A sync and a flush must not interleave. Our own write coming back through
 // /changes while it's still pending would read as someone else's change.
 const queues = new WeakMap<StorageAdapter, Promise<unknown>>();
@@ -229,6 +284,7 @@ export const calendarSyncer: Syncer = {
   name: 'calendar',
   capability: CALENDARS_CAPABILITY,
   async run(ctx, jmap) {
+    forgetUnlistedAccounts(ctx);
     if (!(await syncCalendars(ctx, jmap)) || ctx.stopped()) return;
     await oneAtATime(ctx.db, () => syncAndSend(ctx, jmap));
     pruneOld(ctx, jmap);
@@ -247,16 +303,20 @@ export interface FlushResult extends FlushTally {
  */
 export function flushCalendar(ctx: SyncContext): Promise<FlushResult> {
   return oneAtATime(ctx.db, async () => {
+    forgetUnlistedAccounts(ctx);
     const accounts = ctx.db.all<{ jmap: string }>('SELECT DISTINCT jmap FROM calendar_pending').map((row) => row.jmap);
     const total: FlushTally = { sent: 0, conflicts: 0 };
-    try {
-      for (const jmap of accounts) {
+    for (const jmap of accounts) {
+      try {
         const tally = await syncAndSend(ctx, jmap);
         total.sent += tally.sent;
         total.conflicts += tally.conflicts;
+      } catch (error) {
+        // No network, no credentials: no point in trying the other accounts.
+        if (error instanceof TransportError && (error.kind === 'network' || error.kind === 'auth')) break;
+        // Anything else is about this account, whose writes stay pending.
+        if (!(error instanceof TransportError) && !(error instanceof JmapMethodError) && !isPassingError(error)) throw error;
       }
-    } catch (error) {
-      if (!(error instanceof TransportError) && !isPassingError(error)) throw error;
     }
     const pending = Number(ctx.db.get<{ n: number }>('SELECT COUNT(*) AS n FROM calendar_pending')?.n ?? 0);
     return { ...total, pending };

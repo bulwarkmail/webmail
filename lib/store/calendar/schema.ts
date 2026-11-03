@@ -29,7 +29,7 @@ export const CALENDAR_MIGRATIONS: readonly Migration[] = [
       CREATE INDEX calendar_event_start ON calendar_event (jmap, start_ms);
       CREATE INDEX calendar_event_end ON calendar_event (jmap, end_ms);
 
-      -- One row per event: a later write merges into it (see writes.ts).
+      -- An event's writes in order. A later one merges when the flags match (see writes.ts).
       CREATE TABLE calendar_pending (
         seq INTEGER PRIMARY KEY AUTOINCREMENT,
         jmap TEXT NOT NULL,
@@ -43,13 +43,17 @@ export const CALENDAR_MIGRATIONS: readonly Migration[] = [
         uid TEXT,
         -- sendSchedulingMessages: NULL when no write named it.
         send_scheduling INTEGER,
-        -- 1 once a create went out, so the server may hold it already.
+        -- 1 once it went out, or when the server may hold it for another reason.
         attempted INTEGER NOT NULL DEFAULT 0,
+        -- What went out last, or for a later row what its earlier rows wrote:
+        -- values of ours the server may hold.
+        sent TEXT,
         -- Moves on every merge, to see a write that came in during a send.
         rev INTEGER NOT NULL DEFAULT 0,
-        queued_at INTEGER NOT NULL,
-        UNIQUE (jmap, record_id)
+        queued_at INTEGER NOT NULL
       );
+      CREATE INDEX calendar_pending_record ON calendar_pending (jmap, record_id, seq);
+      CREATE INDEX calendar_pending_uid ON calendar_pending (jmap, uid);
 
       -- What a stand-in id became, for a page still holding the stand-in.
       CREATE TABLE calendar_id_map (

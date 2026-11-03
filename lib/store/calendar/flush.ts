@@ -1,22 +1,26 @@
 /**
- * Sends pending calendar writes, one event per request, so a lost response
- * leaves one event's outcome open and not a batch's.
+ * Sends pending calendar writes, one write per request, so a lost response leaves
+ * one write's outcome open and not a batch's. An event's writes go in order.
  *
- * Only a create can go wrong by being repeated. It's marked `attempted` in its
- * own transaction before it goes out, and carries a uid the device chose. A
- * create with that mark first looks for its uid on the server. An edit sent
- * twice writes the same values twice, and a delete sent twice finds nothing the
- * second time.
+ * A row is marked before it goes out. A create so marked first looks for its uid
+ * on the server, because repeating it could duplicate the event. A marked edit
+ * whose values read back from the server is done, and one that's repeated writes
+ * the same values. A delete sent twice finds nothing the second time.
+ *
+ * A write that can't work goes to the conflict list and the others still go out.
+ * Anything that may pass stays pending: an answer with no verdict for it, a set
+ * error such as serverFail or rateLimit, and for the whole run a network failure,
+ * 401, 429 or 5xx.
  */
 
 import { jmapError } from '@/lib/jmap/jmap-error';
-import { isOverrideSeriesKeyRejection, stableJson, withoutOverrideSeriesKeys } from '@/lib/recurrence-instances';
 import type { CalendarEvent } from '@/lib/jmap/types';
-import { applyPatchObject } from '@/lib/jmap/patch-object';
+import { isOverrideSeriesKeyRejection, withoutOverrideSeriesKeys } from '@/lib/recurrence-instances';
 import type { SyncContext } from '../area';
-import { JmapMethodError, responseFor } from '../engine/transport';
-import { calendarUsing, currentGen, deleteEventRow, EVENT_PROPERTIES, eventRow, valueAtPointer, writeEvent, type CalendarObject } from './records';
-import { recordConflict, type PendingRow } from './writes';
+import { JmapMethodError, responseFor, TransportError } from '../engine/transport';
+import { holdsPatch, patchForServer } from './patches';
+import { calendarUsing, EVENT_PROPERTIES, eventRow, type CalendarObject } from './records';
+import { adoptStandIn, finishWrite, markSent, pendingBySeq, recordConflict, type PendingRow } from './writes';
 
 export interface FlushTally {
   sent: number;
@@ -45,7 +49,16 @@ export function isPassingError(error: unknown): boolean {
   return error instanceof JmapMethodError && PASSING_ERRORS.has(error.type);
 }
 
-type Outcome = 'sent' | 'conflict' | 'again';
+function passes(refusal: SetError | undefined): boolean {
+  return !refusal || PASSING_ERRORS.has(refusal.type ?? '');
+}
+
+/** A 4xx other than 401 and 429, which the transport reports as their own kinds: this request won't work. */
+function isRefusedRequest(error: unknown): boolean {
+  return error instanceof TransportError && error.kind === 'http' && (error.status ?? 0) >= 400 && (error.status ?? 0) < 500;
+}
+
+type Outcome = 'sent' | 'conflict' | 'again' | 'retry';
 
 async function sendSet(ctx: SyncContext, row: PendingRow, args: Record<string, unknown>): Promise<SetResult> {
   const response = await ctx.transport.request([['CalendarEvent/set', {
@@ -73,157 +86,116 @@ async function fetchEvent(ctx: SyncContext, jmap: string, id: string): Promise<C
   return (responseFor(response, 'g')[1].list as CalendarObject[])[0] ?? null;
 }
 
-/** The stand-in becomes the real event. What came in while the create was on its way goes on as a write of its own. */
-function finishCreate(ctx: SyncContext, row: PendingRow, sent: Record<string, unknown>, realId: string, event: CalendarObject): Outcome {
-  const { db } = ctx;
-  return db.transaction(() => {
-    const current = db.get<PendingRow>('SELECT * FROM calendar_pending WHERE seq = ?', [row.seq]);
-    const gen = currentGen(db, row.jmap);
-    deleteEventRow(db, row.jmap, row.record_id);
-    db.run(
-      'INSERT OR REPLACE INTO calendar_id_map (jmap, local_id, server_id) VALUES (?, ?, ?)',
-      [row.jmap, row.record_id, realId],
-    );
-    ctx.emit({ type: 'changed', account: ctx.account, collections: ['CalendarEvent'] });
-    if (current?.kind === 'destroy') {
-      writeEvent(db, row.jmap, { shown: event, server: event, hidden: true, gen });
-      db.run('UPDATE calendar_pending SET record_id = ?, uid = NULL, attempted = 0 WHERE seq = ?', [realId, row.seq]);
-      return 'again';
-    }
-    if (current && current.rev !== row.rev) {
-      const now = JSON.parse(current.patch) as Record<string, unknown>;
-      const patch: Record<string, unknown> = {};
-      for (const key of new Set([...Object.keys(sent), ...Object.keys(now)])) {
-        if (stableJson(sent[key]) !== stableJson(now[key])) patch[key] = now[key] ?? null;
-      }
-      const base = Object.fromEntries(Object.keys(patch).map((key) => [key, valueAtPointer(event, key) ?? null]));
-      db.run(
-        `UPDATE calendar_pending SET kind = 'update', record_id = ?, patch = ?, base = ?, uid = NULL, attempted = 0 WHERE seq = ?`,
-        [realId, JSON.stringify(patch), JSON.stringify(base), row.seq],
-      );
-      writeEvent(db, row.jmap, { shown: applyPatchObject(event, patch), server: event, gen });
-      return 'again';
-    }
-    db.run('DELETE FROM calendar_pending WHERE seq = ?', [row.seq]);
-    writeEvent(db, row.jmap, { shown: event, gen });
-    return 'sent';
-  });
+function conflict(ctx: SyncContext, row: PendingRow, reason: 'refused' | 'destroyedOnServer', error: SetError): Outcome {
+  ctx.db.transaction(() => recordConflict(ctx, row, reason, error));
+  return 'conflict';
 }
 
 async function sendCreate(ctx: SyncContext, row: PendingRow): Promise<Outcome> {
   const payload = JSON.parse(row.patch) as Record<string, unknown>;
   let realId = row.attempted ? await findByUid(ctx, row.jmap, row.uid) : null;
   if (!realId) {
-    ctx.db.transaction(() => ctx.db.run('UPDATE calendar_pending SET attempted = 1 WHERE seq = ?', [row.seq]));
+    markSent(ctx, row, payload);
     let result = await sendSet(ctx, row, { create: { c: payload } });
     if (isSeriesKeyRefusal(result.notCreated?.c)) {
-      const without = withoutOverrideSeriesKeys(payload as Partial<CalendarEvent>);
-      result = await sendSet(ctx, row, { create: { c: without } });
+      result = await sendSet(ctx, row, { create: { c: withoutOverrideSeriesKeys(payload as Partial<CalendarEvent>) } });
     }
     realId = result.created?.c?.id ?? null;
     const refusal = result.notCreated?.c;
-    // Both Stalwarts refuse a second event with one uid, which also covers a
-    // create that got through when the device didn't know it had tried.
-    if (!realId && refusal?.type === 'invalidProperties' && refusal.properties?.includes('uid')) {
-      realId = await findByUid(ctx, row.jmap, row.uid);
-    }
     if (!realId) {
-      ctx.db.transaction(() => recordConflict(ctx, row, 'refused', refusal ?? { type: 'serverFail' }));
-      return 'conflict';
+      // Both Stalwarts refuse a second event with one uid. Nothing of ours went
+      // in then, so what the server holds is compared as a whole.
+      if (refusal?.type === 'invalidProperties' && refusal.properties?.includes('uid')) {
+        ctx.db.transaction(() => ctx.db.run('UPDATE calendar_pending SET sent = NULL WHERE seq = ?', [row.seq]));
+        realId = await findByUid(ctx, row.jmap, row.uid);
+      }
+      if (!realId) return passes(refusal) ? 'retry' : conflict(ctx, row, 'refused', refusal as SetError);
     }
   }
   const event = await fetchEvent(ctx, row.jmap, realId) ?? ({ ...payload, id: realId } as CalendarObject);
-  return finishCreate(ctx, row, payload, realId, event);
-}
-
-function finishUpdate(ctx: SyncContext, row: PendingRow, sent: Record<string, unknown>): Outcome {
-  const { db } = ctx;
-  return db.transaction(() => {
-    const current = db.get<PendingRow>('SELECT * FROM calendar_pending WHERE seq = ?', [row.seq]);
-    const event = eventRow(db, row.jmap, row.record_id);
-    ctx.emit({ type: 'changed', account: ctx.account, collections: ['CalendarEvent'] });
-    if (!current || !event) return 'sent';
-    if (current.rev === row.rev) {
-      db.run('DELETE FROM calendar_pending WHERE seq = ?', [row.seq]);
-      writeEvent(db, row.jmap, { shown: JSON.parse(event.json) as CalendarObject, gen: event.gen });
-      return 'sent';
-    }
-    // A newer write came in during the send. What went out is the server's now,
-    // so the next sync must not take it for someone else's change.
-    const server = applyPatchObject(JSON.parse(event.server_json ?? event.json) as CalendarObject, sent);
-    const base = JSON.parse(current.base) as Record<string, unknown>;
-    for (const key of Object.keys(sent)) if (key in base) base[key] = sent[key];
-    db.run('UPDATE calendar_pending SET base = ? WHERE seq = ?', [JSON.stringify(base), row.seq]);
-    writeEvent(db, row.jmap, { shown: JSON.parse(event.json) as CalendarObject, server, hidden: Boolean(event.hidden), gen: event.gen });
-    return 'again';
-  });
+  const left = ctx.db.transaction(() => adoptStandIn(ctx, row, event));
+  return left ? 'again' : 'sent';
 }
 
 async function sendUpdate(ctx: SyncContext, row: PendingRow): Promise<Outcome> {
-  let patch = JSON.parse(row.patch) as Record<string, unknown>;
   const id = row.record_id;
+  const stored = eventRow(ctx.db, row.jmap, id);
+  const server = JSON.parse(stored?.server_json ?? stored?.json ?? '{}') as Record<string, unknown>;
+  const queued = JSON.parse(row.patch) as Record<string, unknown>;
+  let patch = patchForServer(queued, server);
+  // Nothing to change, and an answer sent twice would mail the organizer twice.
+  if (holdsPatch(server, queued) || Object.keys(patch).length === 0) {
+    return ctx.db.transaction(() => finishWrite(ctx, row, {})) ? 'again' : 'sent';
+  }
+  markSent(ctx, row, patch);
   let result = await sendSet(ctx, row, { update: { [id]: patch } });
   if (isSeriesKeyRefusal(result.notUpdated?.[id])) {
     patch = withoutOverrideSeriesKeys(patch as Partial<CalendarEvent>) as Record<string, unknown>;
     result = await sendSet(ctx, row, { update: { [id]: patch } });
   }
   const refusal = result.notUpdated?.[id];
-  if (refusal) {
-    ctx.db.transaction(() => recordConflict(ctx, row, refusal.type === 'notFound' ? 'destroyedOnServer' : 'refused', refusal));
-    return 'conflict';
-  }
-  return finishUpdate(ctx, row, patch);
+  if (refusal && !passes(refusal)) return conflict(ctx, row, refusal.type === 'notFound' ? 'destroyedOnServer' : 'refused', refusal);
+  if (refusal || !result.updated || !(id in result.updated)) return 'retry';
+  return ctx.db.transaction(() => finishWrite(ctx, row, patch)) ? 'again' : 'sent';
 }
 
 async function sendDestroy(ctx: SyncContext, row: PendingRow): Promise<Outcome> {
-  // A create turned delete while its create was out: find out what the server has.
+  // A create turned delete: only the server knows whether the create got there.
   const id = row.uid ? await findByUid(ctx, row.jmap, row.uid) : row.record_id;
-  const finish = () => ctx.db.transaction(() => {
+  const finish = (): Outcome => ctx.db.transaction(() => {
     ctx.db.run('DELETE FROM calendar_pending WHERE seq = ?', [row.seq]);
-    deleteEventRow(ctx.db, row.jmap, row.record_id);
+    ctx.db.run('DELETE FROM calendar_event WHERE jmap = ? AND id = ?', [row.jmap, row.record_id]);
     ctx.emit({ type: 'changed', account: ctx.account, collections: ['CalendarEvent'] });
+    return 'sent' as const;
   });
-  if (!id) {
-    finish();
-    return 'sent';
-  }
+  if (!id) return finish();
   const result = await sendSet(ctx, row, { destroy: [id] });
   const refusal = result.notDestroyed?.[id];
-  if (refusal && refusal.type !== 'notFound') {
-    ctx.db.transaction(() => recordConflict(ctx, row, 'refused', refusal));
-    return 'conflict';
-  }
-  finish();
-  return 'sent';
+  if (refusal?.type === 'notFound' || result.destroyed?.includes(id)) return finish();
+  return passes(refusal) ? 'retry' : conflict(ctx, row, 'refused', refusal as SetError);
+}
+
+function conflictCount(ctx: SyncContext): number {
+  return Number(ctx.db.get<{ n: number }>('SELECT COUNT(*) AS n FROM calendar_conflict')?.n ?? 0);
 }
 
 /**
- * Sends what's pending for one JMAP account. Network failures and a server's
- * bad moment are thrown, with the rest still pending. Any other method error
- * means this write won't work as it is, so it goes to the conflict list and the
- * others still go out.
+ * Sends what's pending for one JMAP account. Network failures and a server's bad
+ * moment are thrown, with the rest still pending.
  */
 export async function sendPending(ctx: SyncContext, jmap: string): Promise<FlushTally> {
   const tally: FlushTally = { sent: 0, conflicts: 0 };
   const finished = new Set<number>();
+  // An event whose write has to wait: its later writes wait with it.
+  const waiting = new Set<string>();
   for (;;) {
     if (ctx.stopped()) return tally;
     const row = ctx.db.all<PendingRow>('SELECT * FROM calendar_pending WHERE jmap = ? ORDER BY seq', [jmap])
-      .find((candidate) => !finished.has(Number(candidate.seq)));
+      .find((candidate) => !finished.has(Number(candidate.seq)) && !waiting.has(candidate.record_id));
     if (!row) return tally;
+    const conflictsBefore = conflictCount(ctx);
     let outcome: Outcome;
     try {
       if (row.kind === 'create') outcome = await sendCreate(ctx, row);
       else if (row.kind === 'update') outcome = await sendUpdate(ctx, row);
       else outcome = await sendDestroy(ctx, row);
     } catch (error) {
-      if (!(error instanceof JmapMethodError) || isPassingError(error)) throw error;
-      ctx.db.transaction(() => recordConflict(ctx, row, 'refused', { type: error.type, description: error.message }));
-      outcome = 'conflict';
+      const current = pendingBySeq(ctx.db, row.seq) ?? row;
+      if (isRefusedRequest(error)) {
+        outcome = conflict(ctx, current, 'refused', { type: 'http', description: (error as Error).message });
+      } else if (error instanceof JmapMethodError && !isPassingError(error)) {
+        outcome = conflict(ctx, current, 'refused', { type: error.type, description: error.message });
+      } else {
+        throw error;
+      }
     }
     if (outcome === 'again') continue;
+    if (outcome === 'retry') {
+      waiting.add(row.record_id);
+      continue;
+    }
     finished.add(Number(row.seq));
     if (outcome === 'sent') tally.sent += 1;
-    else tally.conflicts += 1;
+    else tally.conflicts += conflictCount(ctx) - conflictsBefore;
   }
 }

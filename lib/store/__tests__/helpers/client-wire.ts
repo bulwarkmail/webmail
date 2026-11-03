@@ -5,9 +5,10 @@
 
 import { vi } from 'vitest';
 import { JMAPClient } from '@/lib/jmap/client';
+import { setOfflineHooks, type OfflineMethodCall, type OfflineResponse } from '@/lib/jmap/offline-hooks';
 import { DEFAULT_SCOPE, type StoreArea } from '../../area';
 import { AccountEngine } from '../../engine/account-engine';
-import type { MethodCall } from '../../engine/transport';
+import { TransportError, type MethodCall } from '../../engine/transport';
 import { CALENDAR_SESSION, FakeCalendarJmap } from './fake-calendar';
 import { JMAP_ACCOUNT } from './fake-jmap';
 import { openMemoryStore } from './node-adapter';
@@ -65,15 +66,36 @@ export function wire(server: FakeCalendarJmap, areas: readonly StoreArea[], now:
       await client.connect();
       return client;
     },
-    restore: () => spy.mockRestore(),
+    restore: () => {
+      spy.mockRestore();
+      setOfflineHooks(null);
+    },
   };
   spy.mockImplementation(async (_url: RequestInfo | URL, init?: RequestInit) => {
     if (!init?.body) return json(CLIENT_SESSION);
     const calls = (JSON.parse(String(init.body)) as { methodCalls: MethodCall[] }).methodCalls;
     state.sent.push(...calls);
-    const answer = state.online ? await server.request(calls) : await engine.answer(calls);
-    if (!answer) throw new TypeError('Failed to fetch');
-    return json(answer);
+    if (!state.online) throw new TypeError('Failed to fetch');
+    try {
+      return json(await server.request(calls));
+    } catch (error) {
+      if (error instanceof TransportError && error.kind === 'network') throw new TypeError('Failed to fetch');
+      throw error;
+    }
+  });
+  setOfflineHooks({
+    skipNetwork: () => !state.online,
+    answer: async (_client, calls: OfflineMethodCall[]) => {
+      state.sent.push(...calls);
+      return engine.answer(calls) as Promise<OfflineResponse | null>;
+    },
+    record: () => {},
+    noteNetwork: () => {},
+    serverGone: async () => true,
+    blob: async () => null,
+    recordBlob: () => {},
+    holdUpload: async () => null,
+    resolveStandIns: (_client, ids) => engine.areaCall('calendar.resolveStandIns', { ids }) as Promise<Record<string, string | null>>,
   });
   return state;
 }

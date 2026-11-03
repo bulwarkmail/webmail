@@ -4909,6 +4909,9 @@
     "mini_has_events": "heeft afspraken",
     "mini_week_number": "Week {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "Voor deze wijziging is een verbinding met de server nodig. Wijzig voorlopig alleen deze afspraak, of probeer het opnieuw zodra je weer online bent."
+  },
   "advanced_search": {
     "title": "Geavanceerd zoeken",
     "from": "Van",

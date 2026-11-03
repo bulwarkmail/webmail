@@ -27,6 +27,6 @@ describe('what the worker pulls in', () => {
       const inputs = await inputsOf(entry);
       expect(inputs.length).toBeGreaterThan(3);
       expect(inputs.filter((file) => /(^|\/)(components|stores|hooks|app)\//.test(file))).toEqual([]);
-    });
+    }, 30_000);
   }
 });

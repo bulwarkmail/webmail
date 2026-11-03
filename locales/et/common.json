@@ -4909,6 +4909,9 @@
     "mini_has_events": "on sündmusi",
     "mini_week_number": "Nädal {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "See muudatus vajab ühendust serveriga. Muuda praegu ainult seda sündmust või proovi uuesti, kui oled taas võrgus."
+  },
   "calendar_event_notifications": {
     "someone": "Keegi",
     "invited": "{name} kutsus sind sündmusele \"{title}\"",

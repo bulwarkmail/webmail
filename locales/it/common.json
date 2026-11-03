@@ -4909,6 +4909,9 @@
     "mini_has_events": "ha eventi",
     "mini_week_number": "Settimana {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "Questa modifica richiede una connessione al server. Per ora modifica solo questo evento, oppure riprova quando sei di nuovo online."
+  },
   "advanced_search": {
     "title": "Ricerca avanzata",
     "from": "Da",

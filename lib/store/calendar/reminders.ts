@@ -2,9 +2,10 @@
  * Which alerts fire in a time window, from what's stored. No DOM, no stores, no
  * React: desktop reminders call this while the window is hidden.
  *
- * Keys use the master's id and the fire time, never an occurrence id. Synthetic
- * ids can change, and browser occurrences don't exist on the server. A moved
- * occurrence gets a new key, as it should: it's a new time to remind.
+ * Keys use the series' uid and the fire time, never an id. Synthetic ids can
+ * change, browser occurrences don't exist on the server, and a stand-in id becomes
+ * a real one. A moved occurrence gets a new key, as it should: it's a new time to
+ * remind.
  */
 
 import { format, parseISO } from 'date-fns';
@@ -99,6 +100,8 @@ export function listUpcomingAlerts(db: StorageAdapter, options: UpcomingAlertsOp
     const calendars = calendarsOf.get(row.jmap)!;
     const object = JSON.parse(row.json) as CalendarObject;
     const calendar = firstCalendar(object.calendarIds, calendars);
+    // With the account: Stalwart's ids repeat across accounts, and one meeting can be in two.
+    const stableId = `${row.jmap}:${typeof object.uid === 'string' && object.uid ? object.uid : object.id}`;
 
     if (isTaskLikeObject(object)) {
       const task = object as unknown as CalendarTask;
@@ -108,7 +111,7 @@ export function listUpcomingAlerts(db: StorageAdapter, options: UpcomingAlertsOp
         const fireTimeMs = computeTaskFireTime(task, alert.trigger);
         if (fireTimeMs === null) continue;
         add({
-          key: buildAlertKey(object.id, alertId, fireTimeMs),
+          key: buildAlertKey(stableId, alertId, fireTimeMs),
           jmap: row.jmap,
           kind: 'task',
           baseEventId: object.id,
@@ -140,7 +143,7 @@ export function listUpcomingAlerts(db: StorageAdapter, options: UpcomingAlertsOp
         const fireTimeMs = computeFireTime(occurrence, alert.trigger);
         if (fireTimeMs === null) continue;
         add({
-          key: buildAlertKey(object.id, alertId, fireTimeMs),
+          key: buildAlertKey(stableId, alertId, fireTimeMs),
           jmap: row.jmap,
           kind: 'event',
           baseEventId: object.id,

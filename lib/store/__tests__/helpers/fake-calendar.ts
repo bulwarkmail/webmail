@@ -12,6 +12,10 @@
  *   inside an override. `recurrenceRules` is an invalid property on both.
  * - A pointer into overrides fails while a series has none.
  * - A second event with one uid is refused, uid filters match exactly.
+ * - Overrides read back differently from what was written. 1.0 keeps only
+ *   what differs from the series, a participant as a pointer key. 0.16 keeps
+ *   the entry, adds `updated` to every entry on any change of the series, and
+ *   drops an attendee-only `roles` from participants.
  */
 
 import { normalizeCalendarEventLike } from '@/lib/calendar-event-normalization';
@@ -37,6 +41,39 @@ export const CALENDAR_SESSION: StoreSession = {
 
 export type FakeEvent = Record<string, unknown> & { id: string };
 export type StalwartVersion = '1.0' | '0.16' | '0.16.19';
+
+/** One override as the server hands it back (measured on both, 2026-11-03). */
+function readBack(version: StalwartVersion, master: FakeEvent, key: string, entry: Record<string, unknown>, tick: number): Record<string, unknown> {
+  if (entry.excluded) return entry;
+  if (version === '1.0') {
+    const out: Record<string, unknown> = {};
+    for (const [name, value] of Object.entries(entry)) {
+      if (name === 'updated') continue;
+      if (name === 'start' && value === key) continue;
+      if (name === 'participants') {
+        const series = (master.participants ?? {}) as Record<string, Record<string, unknown>>;
+        for (const [id, person] of Object.entries(value as Record<string, Record<string, unknown>>)) {
+          for (const [field, fieldValue] of Object.entries(person)) {
+            if (JSON.stringify(series[id]?.[field]) !== JSON.stringify(fieldValue)) out[`participants/${id}/${field}`] = fieldValue;
+          }
+        }
+        continue;
+      }
+      if (name !== 'sequence' && JSON.stringify(master[name]) === JSON.stringify(value)) continue;
+      out[name] = value;
+    }
+    return out;
+  }
+  const out: Record<string, unknown> = { ...entry, updated: `2026-11-03T00:00:${String(tick % 60).padStart(2, '0')}Z` };
+  if (out.participants) {
+    out.participants = Object.fromEntries(Object.entries(out.participants as Record<string, Record<string, unknown>>).map(([id, person]) => {
+      const { roles, ...rest } = person;
+      const attendeeOnly = roles && Object.keys(roles).length === 1 && (roles as Record<string, boolean>).attendee;
+      return [id, attendeeOnly ? rest : person];
+    }));
+  }
+  return out;
+}
 
 function jmapError(type: string, description?: string): Error {
   return Object.assign(new Error(type), { jmapError: type, description });
@@ -93,7 +130,13 @@ export class FakeCalendarJmap extends FakeJmap {
 
   /** Someone else changes an event. */
   patchEvent(id: string, patch: Record<string, unknown>): void {
-    this.events.set(id, applyPatchObject(this.events.get(id) as FakeEvent, patch));
+    const next = applyPatchObject(this.events.get(id) as FakeEvent, patch);
+    if (next.recurrenceOverrides) {
+      const tick = this.eventLog.log.length;
+      next.recurrenceOverrides = Object.fromEntries(Object.entries(next.recurrenceOverrides as Record<string, Record<string, unknown>>)
+        .map(([key, entry]) => [key, readBack(this.version, next, key, entry, tick)]));
+    }
+    this.events.set(id, next);
     this.eventLog.push('updated', id);
   }
 

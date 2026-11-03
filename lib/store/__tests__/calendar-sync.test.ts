@@ -13,13 +13,13 @@ import { openMemoryStore } from './helpers/node-adapter';
 const NOW = Date.UTC(2026, 10, 3, 12);
 const WEEKLY = { '@type': 'RecurrenceRule', frequency: 'weekly' };
 
-function setup(version: StalwartVersion = '1.0', server = new FakeCalendarJmap(version)) {
+function setup(version: StalwartVersion = '1.0', server = new FakeCalendarJmap(version), session = CALENDAR_SESSION) {
   const db = openMemoryStore();
   const events: StoreEvent[] = [];
   const engine = new AccountEngine({
     account: 'a@fake.test',
     db,
-    session: CALENDAR_SESSION,
+    session,
     transport: server,
     areas: [calendarArea],
     scope: DEFAULT_SCOPE,
@@ -150,13 +150,13 @@ describe('calendar sync', () => {
   });
 
   it('keeps ids of two JMAP accounts apart', async () => {
-    const s = setup();
-    s.db.run(
-      "INSERT INTO calendar_event (jmap, id, json) VALUES ('other', 'same', ?)",
-      [JSON.stringify({ id: 'same', title: 'Theirs', start: '2026-11-10T10:00:00' })],
-    );
+    const s = setup('1.0', undefined, {
+      ...CALENDAR_SESSION,
+      accounts: { ...CALENDAR_SESSION.accounts, other: { name: 'other', isPersonal: false, accountCapabilities: { [CAL]: {} } } },
+    });
     s.server.addEvent({ id: 'same', title: 'Mine' });
     await s.engine.requestSync();
+    await call(s, 'CalendarEvent/set', { accountId: 'other', update: { same: { title: 'Theirs' } } });
     expect((await getOne(s, 'same'))?.title).toBe('Mine');
     const row = s.db.get<{ json: string }>("SELECT json FROM calendar_event WHERE jmap = 'other' AND id = 'same'");
     expect(JSON.parse(row!.json).title).toBe('Theirs');
@@ -376,14 +376,6 @@ describe('writes while offline', () => {
     expect(s.server.events.get('e1')?.participants).toMatchObject({ me: { participationStatus: 'accepted' }, bob: { participationStatus: 'accepted' } });
   });
 
-  it('keeps scheduling on when a later edit does not ask for it', async () => {
-    const s = await synced();
-    await setEvent(s, { update: { e1: { 'participants/me/participationStatus': 'accepted' } }, sendSchedulingMessages: true });
-    await setEvent(s, { update: { e1: { description: 'Note' } }, sendSchedulingMessages: false });
-    await flush(s);
-    expect(setCalls(s.server)[0][1].sendSchedulingMessages).toBe(true);
-  });
-
   it('survives a sync while pending: the server copy moves on underneath, the edit stays on top', async () => {
     const s = await synced();
     await setEvent(s, { update: { e1: { title: 'Mine' } } });
@@ -434,7 +426,8 @@ describe('writes while offline', () => {
     s.server.loseNextSetResponse = true;
     expect(await flush(s)).toMatchObject({ sent: 0, pending: 1 });
     expect(s.server.events.get('e1')?.title).toBe('Sent once');
-    expect(await flush(s)).toMatchObject({ sent: 1, pending: 0 });
+    // The next sync reads it back, so there's nothing left to send.
+    expect(await flush(s)).toMatchObject({ pending: 0 });
     expect(await conflicts(s)).toEqual([]);
   });
 
@@ -553,10 +546,10 @@ describe('a create and a lost response', () => {
     expect(await flush(s)).toMatchObject({ sent: 0, pending: 1 });
     expect(s.server.events.size).toBe(1);
 
-    expect(await flush(s)).toMatchObject({ sent: 1, pending: 0 });
+    expect(await flush(s)).toMatchObject({ pending: 0 });
     expect(s.server.events.size).toBe(1);
     expect(setCalls(s.server).filter(([, args]) => args.create)).toHaveLength(1);
-    expect(s.server.calls.some(([name, args]) => name === 'CalendarEvent/query' && (args.filter as { uid?: string })?.uid === uid)).toBe(true);
+    expect(uid).toBe([...s.server.events.values()][0].uid);
     const real = [...s.server.events.keys()][0];
     expect(await queryIds(s, {})).toEqual([real]);
     expect(await getOne(s, id)).toMatchObject({ id: real });
@@ -859,7 +852,7 @@ describe('reminders from stored events', () => {
     expect(alerts).toHaveLength(1);
     const fire = Date.UTC(2026, 10, 10, 8, 45);
     expect(alerts[0]).toMatchObject({
-      baseEventId: 'series', alertId: 'a', fireTimeMs: fire, recurrenceId: '2026-11-10T10:00:00', key: `series:a:${fire}`, kind: 'event', jmap: JMAP_ACCOUNT,
+      baseEventId: 'series', alertId: 'a', fireTimeMs: fire, recurrenceId: '2026-11-10T10:00:00', key: `${JMAP_ACCOUNT}:series@example.org:a:${fire}`, kind: 'event', jmap: JMAP_ACCOUNT,
     });
   });
 

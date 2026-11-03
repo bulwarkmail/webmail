@@ -4909,6 +4909,9 @@
     "mini_has_events": "有活動",
     "mini_week_number": "第 {week} 週"
   },
+  "calendar_offline": {
+    "split_needs_server": "此變更需要連線到伺服器。請暫時只變更此活動，或在恢復連線後再試一次。"
+  },
   "calendar_event_notifications": {
     "someone": "有人",
     "invited": "{name} 邀請您參加「{title}」",

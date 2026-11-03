@@ -4909,6 +4909,9 @@
     "mini_has_events": "ir notikumi",
     "mini_week_number": "{week}. nedēļa"
   },
+  "calendar_offline": {
+    "split_needs_server": "Šīm izmaiņām nepieciešams savienojums ar serveri. Pagaidām mainiet tikai šo notikumu vai mēģiniet vēlreiz, kad būsiet tiešsaistē."
+  },
   "advanced_search": {
     "title": "Izvērstā meklēšana",
     "from": "No",

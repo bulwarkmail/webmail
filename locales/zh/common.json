@@ -4909,6 +4909,9 @@
     "mini_has_events": "有事件",
     "mini_week_number": "第 {week} 周"
   },
+  "calendar_offline": {
+    "split_needs_server": "此更改需要连接到服务器。请暂时只更改此日程，或在恢复联网后重试。"
+  },
   "advanced_search": {
     "title": "高级搜索",
     "from": "发件人",
