@@ -6604,7 +6604,8 @@
       "settings": "설정…",
       "about": "Bulwark 정보",
       "from_plugins": "플러그인 더 보기…",
-      "pick_gone": "이 메뉴는 오래된 것입니다. 다시 열어 한 번 더 시도해 주세요."
+      "pick_gone": "이 메뉴는 오래된 것입니다. 다시 열어 한 번 더 시도해 주세요.",
+      "bar_label": "메뉴"
     },
     "context": {
       "add_to_dictionary": "“{word}”을(를) 사전에 추가",

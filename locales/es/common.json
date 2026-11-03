@@ -6604,7 +6604,8 @@
       "settings": "Configuración…",
       "about": "Acerca de Bulwark",
       "from_plugins": "Más de los complementos…",
-      "pick_gone": "Ese menú estaba desactualizado. Ábralo de nuevo e inténtelo otra vez."
+      "pick_gone": "Ese menú estaba desactualizado. Ábralo de nuevo e inténtelo otra vez.",
+      "bar_label": "Menú"
     },
     "context": {
       "add_to_dictionary": "Añadir «{word}» al diccionario",

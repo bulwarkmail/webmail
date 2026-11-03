@@ -4783,6 +4783,7 @@ export function EmailComposer({
           className="-me-2 max-md:order-first max-md:me-0 max-md:-ms-2 max-md:h-11 max-md:w-11"
           label={tCommon('close')}
           data-testid="composer-close"
+          data-own-window-close={ownWindow ? "" : undefined}
         >
           <X className="w-5 h-5 md:w-4 md:h-4" />
         </IconButton>

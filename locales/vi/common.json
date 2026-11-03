@@ -6616,7 +6616,8 @@
       "settings": "Cài đặt…",
       "about": "Giới thiệu về Bulwark",
       "from_plugins": "Thêm từ các plugin…",
-      "pick_gone": "Menu này đã cũ. Hãy mở lại và thử một lần nữa."
+      "pick_gone": "Menu này đã cũ. Hãy mở lại và thử một lần nữa.",
+      "bar_label": "Trình đơn"
     },
     "context": {
       "add_to_dictionary": "Thêm “{word}” vào từ điển",

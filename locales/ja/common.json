@@ -6604,7 +6604,8 @@
       "settings": "設定…",
       "about": "Bulwarkについて",
       "from_plugins": "プラグインのその他の項目…",
-      "pick_gone": "このメニューは古くなっています。もう一度開いて、やり直してください。"
+      "pick_gone": "このメニューは古くなっています。もう一度開いて、やり直してください。",
+      "bar_label": "メニュー"
     },
     "context": {
       "add_to_dictionary": "「{word}」を辞書に追加",

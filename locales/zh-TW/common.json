@@ -6604,7 +6604,8 @@
       "settings": "設定…",
       "about": "關於 Bulwark",
       "from_plugins": "更多外掛程式選項…",
-      "pick_gone": "此選單已過期。請重新開啟後再試一次。"
+      "pick_gone": "此選單已過期。請重新開啟後再試一次。",
+      "bar_label": "選單"
     },
     "context": {
       "add_to_dictionary": "將「{word}」加入字典",

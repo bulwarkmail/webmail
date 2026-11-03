@@ -6604,7 +6604,8 @@
       "settings": "Instellingen…",
       "about": "Over Bulwark",
       "from_plugins": "Meer van plug-ins…",
-      "pick_gone": "Dat menu was verouderd. Open het opnieuw en probeer het nog eens."
+      "pick_gone": "Dat menu was verouderd. Open het opnieuw en probeer het nog eens.",
+      "bar_label": "Menu"
     },
     "context": {
       "add_to_dictionary": "Voeg ‘{word}’ toe aan woordenboek",

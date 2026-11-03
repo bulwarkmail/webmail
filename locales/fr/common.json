@@ -6604,7 +6604,8 @@
       "settings": "Paramètres…",
       "about": "À propos de Bulwark",
       "from_plugins": "Plus d’options des modules…",
-      "pick_gone": "Ce menu n’était plus à jour. Rouvrez-le et réessayez."
+      "pick_gone": "Ce menu n’était plus à jour. Rouvrez-le et réessayez.",
+      "bar_label": "Menu"
     },
     "context": {
       "add_to_dictionary": "Ajouter « {word} » au dictionnaire",

@@ -6604,7 +6604,8 @@
       "settings": "Setări…",
       "about": "Despre Bulwark",
       "from_plugins": "Mai multe de la pluginuri…",
-      "pick_gone": "Meniul era depășit. Deschideți-l din nou și încercați încă o dată."
+      "pick_gone": "Meniul era depășit. Deschideți-l din nou și încercați încă o dată.",
+      "bar_label": "Meniu"
     },
     "context": {
       "add_to_dictionary": "Adăugare „{word}” în dicționar",

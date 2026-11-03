@@ -6604,7 +6604,8 @@
       "settings": "Nastavení…",
       "about": "O aplikaci Bulwark",
       "from_plugins": "Více z doplňků…",
-      "pick_gone": "Tato nabídka byla zastaralá. Otevřete ji znovu a zkuste to ještě jednou."
+      "pick_gone": "Tato nabídka byla zastaralá. Otevřete ji znovu a zkuste to ještě jednou.",
+      "bar_label": "Nabídka"
     },
     "context": {
       "add_to_dictionary": "Přidat „{word}“ do slovníku",

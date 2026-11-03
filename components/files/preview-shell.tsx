@@ -82,6 +82,7 @@ export function PreviewShell({ name, onClose, onDownload, actions, neighbours, c
       {/* Full-screen under `viewport-fit=cover`: the bar pads itself out of
           the iOS status bar (#936). The insets are physical, so pl/pr. */}
       <div
+        data-window-top-row=""
         className="flex items-center justify-between gap-2 pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))] pt-[calc(0.75rem+var(--app-top-inset))] pb-3 bg-background/90 backdrop-blur border-b border-border"
         onClick={(e) => e.stopPropagation()}
       >

@@ -6604,7 +6604,8 @@
       "settings": "Indstillinger…",
       "about": "Om Bulwark",
       "from_plugins": "Mere fra plugins…",
-      "pick_gone": "Den menu var forældet. Åbn den igen, og prøv en gang til."
+      "pick_gone": "Den menu var forældet. Åbn den igen, og prøv en gang til.",
+      "bar_label": "Menu"
     },
     "context": {
       "add_to_dictionary": "Føj “{word}” til ordbogen",

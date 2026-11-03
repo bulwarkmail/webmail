@@ -6604,7 +6604,8 @@
       "settings": "Settings…",
       "about": "About Bulwark",
       "from_plugins": "More from plugins…",
-      "pick_gone": "That menu was out of date. Open it again and try once more."
+      "pick_gone": "That menu was out of date. Open it again and try once more.",
+      "bar_label": "Menu"
     },
     "context": {
       "add_to_dictionary": "Add \"{word}\" to dictionary",

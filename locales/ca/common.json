@@ -6604,7 +6604,8 @@
       "settings": "Configuració…",
       "about": "Quant a Bulwark",
       "from_plugins": "Més dels connectors…",
-      "pick_gone": "Aquest menú estava desfasat. Torneu-lo a obrir i proveu-ho una altra vegada."
+      "pick_gone": "Aquest menú estava desfasat. Torneu-lo a obrir i proveu-ho una altra vegada.",
+      "bar_label": "Menú"
     },
     "context": {
       "add_to_dictionary": "Afegeix «{word}» al diccionari",

@@ -6604,7 +6604,8 @@
       "settings": "Seaded…",
       "about": "Teave Bulwarki kohta",
       "from_plugins": "Veel pistikprogrammidelt…",
-      "pick_gone": "See menüü oli aegunud. Avage see uuesti ja proovige veel kord."
+      "pick_gone": "See menüü oli aegunud. Avage see uuesti ja proovige veel kord.",
+      "bar_label": "Menüü"
     },
     "context": {
       "add_to_dictionary": "Lisa „{word}” sõnastikku",

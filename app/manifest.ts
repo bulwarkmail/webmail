@@ -126,7 +126,7 @@ export default async function manifest(): Promise<ExtendedManifest> {
     scope: withBase("/"),
     display: "standalone",
     // The page draws up to the top of the window, next to the native controls
-    // (components/layout/window-title-bar.tsx). `display` is the fallback.
+    // (components/layout/window-controls-host.tsx). `display` is the fallback.
     display_override: ["window-controls-overlay", "standalone"],
     orientation: "portrait-primary",
     theme_color: themeColor,

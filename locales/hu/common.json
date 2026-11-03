@@ -6604,7 +6604,8 @@
       "settings": "Beállítások…",
       "about": "A Bulwark névjegye",
       "from_plugins": "Továbbiak a bővítményektől…",
-      "pick_gone": "Ez a menü elavult volt. Nyissa meg újra, és próbálja meg még egyszer."
+      "pick_gone": "Ez a menü elavult volt. Nyissa meg újra, és próbálja meg még egyszer.",
+      "bar_label": "Menü"
     },
     "context": {
       "add_to_dictionary": "„{word}” hozzáadása a szótárhoz",

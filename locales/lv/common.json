@@ -6604,7 +6604,8 @@
       "settings": "Iestatījumi…",
       "about": "Par Bulwark",
       "from_plugins": "Vairāk no spraudņiem…",
-      "pick_gone": "Šī izvēlne bija novecojusi. Atveriet to vēlreiz un mēģiniet vēlreiz."
+      "pick_gone": "Šī izvēlne bija novecojusi. Atveriet to vēlreiz un mēģiniet vēlreiz.",
+      "bar_label": "Izvēlne"
     },
     "context": {
       "add_to_dictionary": "Pievienot “{word}” vārdnīcai",

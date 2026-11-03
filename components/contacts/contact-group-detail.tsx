@@ -48,7 +48,7 @@ export function ContactGroupDetail({
 
   return (
     <div className={cn("flex flex-col h-full overflow-y-auto", className)}>
-      <div className={cn("border-b border-border", isMobile ? "px-4 py-4" : "px-6 py-6")}>
+      <div data-window-top-row="" className={cn("border-b border-border", isMobile ? "px-4 py-4" : "px-6 py-6")}>
         <div className={cn("flex gap-4", isMobile ? "flex-col" : "items-start justify-between")}>
           <div className="flex items-center gap-4">
             <div className={cn("rounded-full bg-primary/10 flex items-center justify-center", isMobile ? "w-12 h-12" : "w-14 h-14")}>

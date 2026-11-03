@@ -38,6 +38,7 @@ import { MainWindowOnly } from "@/components/popout/main-window-only";
 import { PopoutHost } from "@/components/popout/popout-host";
 import { WindowSyncHost } from "@/components/popout/window-sync-host";
 import { DesktopHost } from "@/components/desktop/desktop-host";
+import { WindowMenuBar } from "@/components/layout/window-menu-bar";
 import { IS_LITE } from "@/lib/lite";
 import { setRequestLocale } from "next-intl/server";
 import { locales } from "@/i18n/routing";
@@ -90,6 +91,7 @@ export default async function LocaleLayout({
                     {!IS_LITE && <PopoutHost />}
                   </MainWindowOnly>
                   {!IS_LITE && <WindowSyncHost />}
+                  {!IS_LITE && <WindowMenuBar />}
                   {!IS_LITE && <DesktopHost />}
                   <SessionTimeoutGuard />
                   <AccountTemplateSync />

@@ -6604,7 +6604,8 @@
       "settings": "Nastavenia…",
       "about": "O aplikácii Bulwark",
       "from_plugins": "Viac z doplnkov…",
-      "pick_gone": "Táto ponuka bola zastaraná. Otvorte ju znova a skúste to ešte raz."
+      "pick_gone": "Táto ponuka bola zastaraná. Otvorte ju znova a skúste to ešte raz.",
+      "bar_label": "Ponuka"
     },
     "context": {
       "add_to_dictionary": "Pridať „{word}“ do slovníka",

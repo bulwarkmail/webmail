@@ -4111,7 +4111,9 @@ ${printWatermark ? printWatermark.html : ''}
     // in a split pane - the empty reading pane should always say what it is
     // and offer a way forward.
     return shell(
-      <div className="flex-1 min-w-0 flex flex-col items-center justify-center bg-gradient-to-br from-muted/30 to-muted/50">
+      <div className="relative flex-1 min-w-0 flex flex-col items-center justify-center bg-gradient-to-br from-muted/30 to-muted/50">
+        {/* An empty reading pane's top is still the window's top, to drag by. */}
+        <div aria-hidden="true" data-window-top-row="" className="absolute inset-x-0 top-0 h-14" />
         <div className="text-center p-8">
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-background shadow-lg flex items-center justify-center">
             <Mail className="w-10 h-10 text-muted-foreground" />

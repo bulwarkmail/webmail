@@ -20,7 +20,7 @@ import { locales, defaultLocale } from "@/i18n/routing";
 import { IS_LITE, LITE_MOUNT_GLOBAL } from "@/lib/lite";
 import { accessibilityBootScript } from "@/lib/accessibility-settings";
 import { bootSkeletonScript } from "@/lib/boot-skeleton/boot-script";
-import { WindowTitleBar } from "@/components/layout/window-title-bar";
+import { WindowControlsHost } from "@/components/layout/window-controls-host";
 import "../globals.css";
 import "../print.css";
 import "../desktop.css";
@@ -334,7 +334,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${hankenGrotesk.variable} antialiased`}
       >
         <ServiceWorkerRegistration />
-        <WindowTitleBar />
+        <WindowControlsHost />
         {!themeColorConfigured && <ThemeColorSync />}
         <FaviconBadge />
         <ErrorReportingRoot />

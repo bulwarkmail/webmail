@@ -6604,7 +6604,8 @@
       "settings": "Einstellungen…",
       "about": "Über Bulwark",
       "from_plugins": "Mehr von Plugins…",
-      "pick_gone": "Dieses Menü war veraltet. Öffnen Sie es erneut und versuchen Sie es noch einmal."
+      "pick_gone": "Dieses Menü war veraltet. Öffnen Sie es erneut und versuchen Sie es noch einmal.",
+      "bar_label": "Menü"
     },
     "context": {
       "add_to_dictionary": "„{word}“ zum Wörterbuch hinzufügen",

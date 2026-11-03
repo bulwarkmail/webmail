@@ -6604,7 +6604,8 @@
       "settings": "Innstillinger…",
       "about": "Om Bulwark",
       "from_plugins": "Mer fra utvidelser…",
-      "pick_gone": "Den menyen var utdatert. Åpne den på nytt og prøv igjen."
+      "pick_gone": "Den menyen var utdatert. Åpne den på nytt og prøv igjen.",
+      "bar_label": "Meny"
     },
     "context": {
       "add_to_dictionary": "Legg til «{word}» i ordboken",

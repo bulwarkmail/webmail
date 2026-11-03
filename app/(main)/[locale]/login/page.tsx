@@ -1208,7 +1208,7 @@ function LoginPageContent() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-muted/10 to-muted/30 relative px-4">
         {/* Theme toggle, hidden while the theme policy locks the mode (#1280) */}
-        <div className="absolute top-5 end-5" ref={themeMenuRef} hidden={colorModeLocked} suppressHydrationWarning>
+        <div data-window-beside-controls="" className="absolute top-5 end-5" ref={themeMenuRef} hidden={colorModeLocked} suppressHydrationWarning>
           <button
             type="button"
             ref={themeButtonRef}
@@ -1374,7 +1374,7 @@ function LoginPageContent() {
         }}
       />
       {/* Theme toggle - top right, dropdown style; hidden while the theme policy locks the mode (#1280) */}
-      <div className="absolute top-5 end-5" ref={themeMenuRef} hidden={colorModeLocked} suppressHydrationWarning>
+      <div data-window-beside-controls="" className="absolute top-5 end-5" ref={themeMenuRef} hidden={colorModeLocked} suppressHydrationWarning>
         <button
           type="button"
           ref={themeButtonRef}

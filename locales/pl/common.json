@@ -6604,7 +6604,8 @@
       "settings": "Ustawienia…",
       "about": "O programie Bulwark",
       "from_plugins": "Więcej z wtyczek…",
-      "pick_gone": "To menu było nieaktualne. Otwórz je ponownie i spróbuj jeszcze raz."
+      "pick_gone": "To menu było nieaktualne. Otwórz je ponownie i spróbuj jeszcze raz.",
+      "bar_label": "Menu"
     },
     "context": {
       "add_to_dictionary": "Dodaj „{word}” do słownika",

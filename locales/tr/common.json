@@ -6604,7 +6604,8 @@
       "settings": "Ayarlar…",
       "about": "Bulwark Hakkında",
       "from_plugins": "Eklentilerden Daha Fazlası…",
-      "pick_gone": "Bu menü eskimişti. Yeniden açın ve bir kez daha deneyin."
+      "pick_gone": "Bu menü eskimişti. Yeniden açın ve bir kez daha deneyin.",
+      "bar_label": "Menü"
     },
     "context": {
       "add_to_dictionary": "“{word}” sözcüğünü sözlüğe ekle",

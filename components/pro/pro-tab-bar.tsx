@@ -226,6 +226,7 @@ export function ProTabBar({
       style={{ borderBottom: '1px solid rgba(128, 128, 128, 0.3)' }}
       role="tablist"
       data-pane-strip={paneId}
+      data-window-top-row
       onDragLeave={handleStripDragLeave}
     >
       {tabs.map((tab, index) => {
