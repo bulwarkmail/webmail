@@ -46,10 +46,12 @@ interface ResolvedTarget {
 // Inbox, nor the message that just arrived there.
 //
 // Ids repeat across servers (and a group account is listed by each member), so
-// the account id alone can leave several logins. The push's label names the login
-// that registered it, which settles it among those that have the account. Without
-// one that fits, answer 'ambiguous' rather than guess: a wrong guess previews
-// another login's mail and opens it there.
+// the account id alone can leave several logins. On one server, the push's label
+// names the login that registered it and settles it. Not across servers: logins
+// with the same account id share one relay record in this browser (lib/web-push.ts
+// keys it by account id), so the label is only whoever registered last. Whatever
+// doesn't fit answers 'ambiguous' rather than guess: a wrong guess previews another
+// login's mail and opens it there.
 async function resolveTargetForAccount(accountId: string, login: string | null, forwarded: Record<string, string>): Promise<ResolvedTarget | 'ambiguous' | null> {
   const cookieStore = await cookies();
   const probes: Promise<{ target: ResolvedTarget; own: boolean } | null>[] = [];
@@ -92,8 +94,13 @@ async function resolveTargetForAccount(accountId: string, login: string | null, 
     );
   }
   const results = (await Promise.all(probes)).filter((r) => r !== null);
-  const named = login ? results.filter((r) => r.target.username.toLowerCase() === login.toLowerCase()) : [];
-  if (named.length === 1) return named[0].target;
+  if (login && results.length > 0) {
+    const name = login.toLowerCase();
+    const named = results.filter((r) => r.target.username.toLowerCase() === name || r.target.accountName?.toLowerCase() === name);
+    const servers = new Set(results.map((r) => r.target.serverUrl));
+    if (named.length !== 1 || servers.size > 1) return 'ambiguous';
+    return named[0].target;
+  }
   const owners = results.filter((r) => r.own);
   if (owners.length === 1) return owners[0].target;
   if (results.length === 1) return results[0].target;

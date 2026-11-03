@@ -114,16 +114,36 @@ describe('push preview when the account id is in more than one login', () => {
     fetchJmapServer.mockClear();
   });
 
-  it('takes the login the push names when two servers use the same id', async () => {
+  it('does not go by the name when two servers use the same id: those logins share one relay record', async () => {
     SESSIONS = {
       'Basic alice': session('https://one.example', 'a'),
       'Basic bob': session('https://two.example', 'z'),
       'Basic carol': session('https://one.example', 'z'),
     };
     const { status, body } = await callRoute('z', 'BOB@two.example');
+    expect(status).toBe(409);
+    expect(body.slot).toBeUndefined();
+  });
+
+  it('does not answer for another login when the one the push names is gone', async () => {
+    SESSIONS = {
+      'Basic alice': session('https://one.example', 'a'),
+      'Basic bob': session('https://two.example', 'z'),
+      'Basic carol': session('https://one.example', 'c'),
+    };
+    const { status } = await callRoute('z', 'somebody-gone@two.example');
+    expect(status).toBe(409);
+  });
+
+  it('takes the one login with the account when the push names it', async () => {
+    SESSIONS = {
+      'Basic alice': session('https://one.example', 'a'),
+      'Basic bob': session('https://two.example', 'z'),
+      'Basic carol': session('https://one.example', 'c'),
+    };
+    const { status, body } = await callRoute('z', 'bob@two.example');
     expect(status).toBe(200);
     expect(body.slot).toBe(1);
-    expect((body.email as { subject: string }).subject).toBe('mail of Basic bob');
   });
 
   it('takes the login the push names for a group two logins belong to', async () => {
