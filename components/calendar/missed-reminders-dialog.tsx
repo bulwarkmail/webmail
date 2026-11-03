@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { getPathPrefix } from "@/lib/browser-navigation";
 import { reminderTimeZone, useMissedReminders } from "@/lib/calendar-reminders/state";
-import { dismissReminders, joinMeeting } from "@/lib/desktop/reminder-notifications";
+import { dismissReminders, joinLabel, joinMeeting } from "@/lib/desktop/reminder-notifications";
 import { useSettingsStore } from "@/stores/settings-store";
 
 /** What came due while the app was closed, the machine slept or notifications were paused. */
@@ -17,6 +17,7 @@ export function MissedRemindersDialog() {
   const account = useMissedReminders((s) => s.account);
   const alerts = useMissedReminders((s) => s.alerts);
   const close = useMissedReminders((s) => s.close);
+  const joinLabels = { join: t("join"), joinHost: (host: string) => t("join_host", { host }) };
 
   if (!account || alerts.length === 0) return null;
 
@@ -58,8 +59,13 @@ export function MissedRemindersDialog() {
               </p>
             </div>
             {alert.joinUrl && (
-              <Button variant="outline" size="sm" onClick={() => joinMeeting(alert.joinUrl!)}>
-                {t("join")}
+              <Button
+                variant="outline"
+                size="sm"
+                aria-label={t("join_named", { title: alert.title || tAlert("alert_title") })}
+                onClick={() => void joinMeeting(alert.joinUrl!)}
+              >
+                {joinLabel(alert, joinLabels)}
               </Button>
             )}
           </li>

@@ -6666,7 +6666,9 @@
     "missed_dialog_title": "Gemiste herinneringen",
     "missed_dialog_description": "Deze kwamen op terwijl de app gesloten was, de computer sliep of meldingen gepauzeerd waren.",
     "open_calendar": "Agenda openen",
-    "done": "Klaar"
+    "done": "Klaar",
+    "join_host": "Deelnemen ({host})",
+    "join_named": "Deelnemen: {title}"
   },
   "desktop_policy": {
     "server_refused": "Je organisatie staat deze server niet toe op dit apparaat.",

@@ -6666,7 +6666,9 @@
     "missed_dialog_title": "Nokavētie atgādinājumi",
     "missed_dialog_description": "Tie pienāca, kamēr lietotne bija aizvērta, dators bija miega režīmā vai paziņojumi bija apturēti.",
     "open_calendar": "Atvērt kalendāru",
-    "done": "Gatavs"
+    "done": "Gatavs",
+    "join_host": "Pievienoties ({host})",
+    "join_named": "Pievienoties: {title}"
   },
   "desktop_policy": {
     "server_refused": "Jūsu organizācija šajā ierīcē neatļauj šo serveri.",

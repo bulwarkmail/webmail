@@ -12,8 +12,10 @@ import { announceAcknowledged } from '@/lib/calendar-reminders/channel';
 import { pokeReminders, useMissedReminders } from '@/lib/calendar-reminders/state';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { isAppLocked } from '@/lib/desktop/app-lock-state';
-import type { DesktopOsNotification } from '@/lib/desktop/types';
-import { devicesForAccount } from '@/lib/device-policy';
+import type { DesktopOsNotification, DesktopOsNotifyResult } from '@/lib/desktop/types';
+import { contentHiddenFor } from '@/lib/desktop/mail-notifications';
+import { joinLinkFrom } from '@/lib/event-links';
+import { openExternalLink, resolveExternalLink } from '@/lib/plugin-hook-result';
 import { loginFingerprint } from '@/lib/pwa-notify/login-fingerprint';
 import { getStore } from '@/lib/store/client/api';
 import type { MissedBatch, ReminderAlert } from '@/lib/store/reminders/ledger';
@@ -38,6 +40,8 @@ export interface ReminderLabels {
   snoozeShort: (minutes: number) => string;
   open: string;
   join: string;
+  /** Join a link to no service this app knows: says where it goes. */
+  joinHost: (host: string) => string;
   missedTitle: (count: number) => string;
   missedMore: (count: number) => string;
 }
@@ -59,13 +63,8 @@ async function loginOf(account: string): Promise<Pick<ReminderToastContext, 'slo
   return { slot: entry.cookieSlot, login: await loginFingerprint(entry.serverUrl, entry.username) };
 }
 
-function hideContent(account: string): boolean {
-  if (isAppLocked()) return true;
-  try {
-    return devicesForAccount(account).pushWithoutContent;
-  } catch {
-    return true;
-  }
+export function joinLabel(alert: Pick<ReminderAlert, 'joinHost'>, labels: Pick<ReminderLabels, 'join' | 'joinHost'>): string {
+  return alert.joinHost ? labels.joinHost(alert.joinHost) : labels.join;
 }
 
 function reminderId(alert: ReminderAlert): string {
@@ -80,11 +79,11 @@ export async function buildReminderNotification(account: string, alert: Reminder
   const context: ReminderToastContext = { r: alert.key, ...(await loginOf(account)) };
   const short = getDesktopBridge()?.platform === 'win32';
   const actions = [
-    ...(alert.joinUrl ? [{ id: JOIN, label: labels.join }] : []),
+    ...(alert.joinUrl ? [{ id: JOIN, label: joinLabel(alert, labels) }] : []),
     { id: OPEN, label: labels.open },
     ...SNOOZE_MINUTES.map((minutes) => ({ id: `${SNOOZE_PREFIX}${minutes}`, label: short ? labels.snoozeShort(minutes) : labels.snooze(minutes) })),
   ];
-  const hidden = hideContent(account);
+  const hidden = contentHiddenFor(account);
   return {
     ...base,
     id: reminderId(alert),
@@ -109,22 +108,36 @@ export async function buildMissedNotification(account: string, batch: MissedBatc
     group: 'reminders',
     kind: 'reminder',
     title: labels.missedTitle(batch.alerts.length),
-    body: hideContent(account) ? '' : missedBody(batch.alerts, labels),
+    body: contentHiddenFor(account) ? '' : missedBody(batch.alerts, labels),
     context: JSON.stringify(context),
   };
 }
 
-/** Without a store: says so, with nothing to snooze. A click goes to the calendar. */
-export function notifyWithoutStore(id: string, title: string, body: string, labels: { generic: string }, account: string | null): void {
-  const hidden = isAppLocked() || !account || hideContent(account);
-  void getDesktopBridge()?.os?.notify({
-    id,
+export interface PlainReminder {
+  key: string;
+  fireTimeMs: number;
+  title: string;
+  body: string;
+  sound: boolean;
+}
+
+/**
+ * Without a store: says so, with nothing to snooze. A click goes to the calendar.
+ * Resolves to main's answer, which also says whether a sound is in order.
+ */
+export function notifyWithoutStore(reminder: PlainReminder, labels: { generic: string }, account: string | null): Promise<DesktopOsNotifyResult | undefined> {
+  const hidden = contentHiddenFor(account);
+  const request = getDesktopBridge()?.os?.notify({
+    // The key holds the event's id, and nothing about the event should get out now.
+    id: hidden ? `reminder-hidden:${reminder.fireTimeMs}` : `reminder:${reminder.key}`,
     group: 'reminders',
     kind: 'reminder',
-    title: hidden ? labels.generic : title,
-    body: hidden ? '' : body,
+    title: hidden ? labels.generic : reminder.title,
+    body: hidden ? '' : reminder.body,
     context: JSON.stringify({ cal: true } satisfies ReminderToastContext),
+    sound: reminder.sound,
   });
+  return (request ?? Promise.resolve(undefined)).catch(() => undefined);
 }
 
 async function accountOf(context: ReminderToastContext): Promise<string | null> {
@@ -141,10 +154,19 @@ export function calendarPathFor(account: string, alert: ReminderAlert | null): s
   return `/calendar/event/${encodeURIComponent(alert.baseEventId)}${query}`;
 }
 
-export function joinMeeting(url: string): void {
+/**
+ * Opens a meeting the way every link in the app opens, past any link check a plugin has.
+ * Resolves true when it opened. Only web links get this far, whatever the store holds.
+ */
+export async function joinMeeting(url: string): Promise<boolean> {
+  const link = joinLinkFrom(url);
+  if (!link) return false;
   const shell = getDesktopBridge()?.shell;
-  if (shell) shell.openExternal(url);
-  else window.open(url, '_blank', 'noopener,noreferrer');
+  if (!shell) return openExternalLink({ href: link.url });
+  const target = await resolveExternalLink({ href: link.url });
+  if (!target || !joinLinkFrom(target)) return false;
+  shell.openExternal(target);
+  return true;
 }
 
 export function dismissReminders(account: string, keys: string[]): void {
@@ -203,8 +225,11 @@ export async function handleReminderCommand(action: string, rawContext: string, 
 
   const alert = account && key ? await getStore().area<ReminderAlert | null>(account, 'reminders.get', { key }).catch(() => null) : null;
   if (action === JOIN && alert?.joinUrl) {
-    joinMeeting(alert.joinUrl);
-    dismissReminders(account!, [alert.key]);
+    if (await joinMeeting(alert.joinUrl)) {
+      dismissReminders(account!, [alert.key]);
+    } else {
+      show();
+    }
     return true;
   }
 

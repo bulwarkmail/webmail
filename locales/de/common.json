@@ -6666,7 +6666,9 @@
     "missed_dialog_title": "Verpasste Erinnerungen",
     "missed_dialog_description": "Diese wurden fällig, während die App geschlossen war, der Computer im Ruhezustand war oder Benachrichtigungen pausiert waren.",
     "open_calendar": "Kalender öffnen",
-    "done": "Fertig"
+    "done": "Fertig",
+    "join_host": "Teilnehmen ({host})",
+    "join_named": "Teilnehmen: {title}"
   },
   "desktop_policy": {
     "server_refused": "Ihre Organisation erlaubt diesen Server auf diesem Gerät nicht.",

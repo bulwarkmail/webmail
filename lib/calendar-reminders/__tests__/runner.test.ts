@@ -37,6 +37,7 @@ function tab(options: Partial<Pick<Tab, 'hidden' | 'offline'>> = {}): Tab {
     accounts: () => [ACCOUNT],
     store: () => store,
     params: () => ({ timeZone: 'Europe/Berlin', tasks: true, muted: made.muted }),
+    needsPolling: () => false,
     hidden: () => made.hidden,
     offline: () => made.offline,
     onDue: (_account, alerts) => {
@@ -45,7 +46,9 @@ function tab(options: Partial<Pick<Tab, 'hidden' | 'offline'>> = {}): Tab {
     },
     onMissed: async (account) => {
       const batch = await store.area<MissedBatch | null>(account, 'reminders.takeMissed', { timeZone: 'Europe/Berlin' });
-      if (batch) made.missed.push(batch);
+      if (!batch) return;
+      made.missed.push(batch);
+      await store.area(account, 'reminders.settleMissed', { batch: batch.batch });
     },
     onSource: (_account, driven) => {
       made.source.push(driven);
@@ -172,6 +175,91 @@ describe('firing from the store', () => {
     one.runner.start();
     await vi.advanceTimersByTimeAsync(FIRE - Date.now() + MIN);
     expect(one.due).toEqual([]);
+  });
+});
+
+describe('a tab out of view', () => {
+  it('waits before any check, also after a wake, so the tab in view gets the alert', async () => {
+    await syncedStore(event());
+    const hidden = tab({ hidden: true });
+    const visible = tab();
+    hidden.runner.start();
+    await vi.advanceTimersByTimeAsync(HIDDEN_GRACE_MS);
+    visible.runner.start();
+    await vi.advanceTimersByTimeAsync(0);
+    vi.setSystemTime(FIRE + MIN);
+    hidden.runner.wake();
+    visible.runner.wake();
+    await vi.advanceTimersByTimeAsync(HIDDEN_GRACE_MS);
+    expect(hidden.due).toEqual([]);
+    expect(visible.due).toHaveLength(1);
+  });
+
+  it('waits on a poke and on a sync too', async () => {
+    await syncedStore(event());
+    const hidden = tab({ hidden: true });
+    hidden.runner.start();
+    await vi.advanceTimersByTimeAsync(HIDDEN_GRACE_MS);
+    const area = vi.spyOn(store, 'area');
+    hidden.runner.poke();
+    hidden.runner.synced(ACCOUNT);
+    await vi.advanceTimersByTimeAsync(HIDDEN_GRACE_MS - 1);
+    expect(area).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(area).toHaveBeenCalledTimes(1);
+  });
+
+  it('a stream of pokes cannot put it off for ever', async () => {
+    await syncedStore(event());
+    const hidden = tab({ hidden: true });
+    hidden.runner.start();
+    await vi.advanceTimersByTimeAsync(HIDDEN_GRACE_MS);
+    const area = vi.spyOn(store, 'area');
+    for (let i = 0; i < 5; i += 1) {
+      hidden.runner.poke();
+      await vi.advanceTimersByTimeAsync(HIDDEN_GRACE_MS / 2);
+    }
+    expect(area).toHaveBeenCalled();
+  });
+});
+
+describe('going down in the middle', () => {
+  it('keeps what the store just handed over when the page stopped meanwhile', async () => {
+    await syncedStore(event());
+    const one = tab();
+    one.runner.start();
+    await vi.advanceTimersByTimeAsync(FIRE - Date.now() - 1);
+    const area = store.area.bind(store);
+    vi.spyOn(store, 'area').mockImplementationOnce(async (account: string, name: string, params?: unknown) => {
+      const result = await area(account, name, params);
+      one.runner.stop();
+      return result as never;
+    });
+    await vi.advanceTimersByTimeAsync(1);
+    expect(one.due).toEqual([]);
+    // Not lost: it waits for the summary.
+    await vi.advanceTimersByTimeAsync(0);
+    const next = tab({ offline: true });
+    next.runner.start();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(next.missed.flatMap((batch) => batch.alerts.map((alert) => alert.title))).toEqual(['Standup']);
+  });
+
+  it('checks again after showing one threw', async () => {
+    await syncedStore(event(), event({ id: 'e2', uid: 'uid-2', title: 'Review', start: '2026-11-10T10:05:00' }));
+    const one = tab();
+    const plain = one.env.onDue;
+    let first = true;
+    one.env.onDue = (account, alerts) => {
+      if (first) {
+        first = false;
+        throw new Error('A plugin threw');
+      }
+      plain(account, alerts);
+    };
+    one.runner.start();
+    await vi.advanceTimersByTimeAsync(FIRE - Date.now() + 5 * MIN);
+    expect(one.due.map((alert) => alert.title)).toEqual(['Review']);
   });
 });
 

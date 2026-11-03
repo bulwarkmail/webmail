@@ -2,7 +2,8 @@
  * Asks the local store what's due, at the moment it's due. Runs in the page: in the
  * desktop app that's the main window, which keeps its timers while hidden in the tray,
  * and the store's worker answers with no network. Every tab or window may run one: the
- * store hands each alert to whichever asks first.
+ * store hands each alert to whichever asks first, so a tab out of view waits a moment
+ * before every check, whatever set it off.
  *
  * Between checks it sleeps until the store's next fire time, and looks in every few
  * minutes in case something changed with nobody saying so.
@@ -25,11 +26,13 @@ export const SUMMARY_WAIT_MS = 20_000;
 export interface ReminderRunnerEnv {
   /** The local accounts with a store right now. */
   accounts(): string[];
-  store(): Pick<StoreBackend, 'area'>;
+  store(): Pick<StoreBackend, 'area' | 'sync'>;
   params(): TickParams;
   /** Out of view: another tab in view should get to go first. */
   hidden(): boolean;
   offline(): boolean;
+  /** No push channel to say the calendar changed, so the store has to go and look. */
+  needsPolling(account: string): boolean;
   /** Runs in the one tab that got these. */
   onDue(account: string, alerts: ReminderAlert[]): void;
   /** There's a summary to give. Resolves when that's been tried. */
@@ -51,6 +54,7 @@ export interface ReminderRunner {
 
 export function createReminderRunner(env: ReminderRunnerEnv): ReminderRunner {
   let timer: ReturnType<typeof setTimeout> | null = null;
+  let timerAt = 0;
   let clockWatch: ReturnType<typeof setInterval> | null = null;
   let lastWatch = 0;
   let running = false;
@@ -59,11 +63,31 @@ export function createReminderRunner(env: ReminderRunnerEnv): ReminderRunner {
   let summaryAt = 0;
   const presenting = new Set<string>();
   const known = new Set<string>();
+  const lastPoll = new Map<string, number>();
 
   const schedule = (at: number) => {
     if (timer) clearTimeout(timer);
-    const wait = Math.max(at - Date.now(), 0) + (env.hidden() ? HIDDEN_GRACE_MS : 0);
-    timer = setTimeout(() => void run(), wait);
+    timerAt = at + (env.hidden() ? HIDDEN_GRACE_MS : 0);
+    timer = setTimeout(() => void run(), Math.max(timerAt - Date.now(), 0));
+  };
+
+  /** At once in a tab in view. Out of view, after the grace, however often it's asked. */
+  const request = () => {
+    if (stopped) return;
+    if (!env.hidden()) {
+      void run();
+      return;
+    }
+    if (timer && timerAt <= Date.now() + HIDDEN_GRACE_MS) return;
+    schedule(Date.now());
+  };
+
+  const poll = (account: string) => {
+    const now = Date.now();
+    if (!lastPoll.has(account)) lastPoll.set(account, now);
+    if (now - lastPoll.get(account)! < REFRESH_MS || env.offline() || !env.needsPolling(account)) return;
+    lastPoll.set(account, now);
+    void env.store().sync(account).catch(() => {});
   };
 
   const check = async (account: string): Promise<number | null> => {
@@ -72,7 +96,14 @@ export function createReminderRunner(env: ReminderRunnerEnv): ReminderRunner {
       result = await env.store().area<TickResult>(account, 'reminders.tick', env.params());
     } catch {
       // The store is out of reach: the old path takes these over until it's back.
-      env.onSource(account, false);
+      if (!stopped) env.onSource(account, false);
+      return null;
+    }
+    // Stopped while asking: the store has given these to this page and nobody will show them.
+    if (stopped) {
+      if (result.due.length > 0) {
+        await env.store().area(account, 'reminders.hold', { keys: result.due.map((alert) => alert.key) }).catch(() => {});
+      }
       return null;
     }
     env.onSource(account, result.ready);
@@ -97,23 +128,30 @@ export function createReminderRunner(env: ReminderRunnerEnv): ReminderRunner {
     }
     running = true;
     let next = Date.now() + REFRESH_MS;
-    const accounts = env.accounts();
-    for (const gone of [...known]) {
-      if (!accounts.includes(gone)) {
-        known.delete(gone);
-        env.onSource(gone, false);
+    try {
+      const accounts = env.accounts();
+      for (const gone of [...known]) {
+        if (!accounts.includes(gone)) {
+          known.delete(gone);
+          env.onSource(gone, false);
+        }
       }
+      for (const account of accounts) {
+        known.add(account);
+        poll(account);
+        const at = await check(account);
+        if (at !== null) next = Math.min(next, at);
+      }
+    } catch (error) {
+      // A plugin or a toast threw on the way out. The store has the rest for the next check.
+      console.error('A reminder check failed:', error);
+    } finally {
+      running = false;
     }
-    for (const account of accounts) {
-      known.add(account);
-      const at = await check(account);
-      if (at !== null) next = Math.min(next, at);
-    }
-    running = false;
     if (stopped) return;
     if (again) {
       again = false;
-      void run();
+      request();
       return;
     }
     schedule(next);
@@ -130,7 +168,7 @@ export function createReminderRunner(env: ReminderRunnerEnv): ReminderRunner {
         lastWatch = now;
         if (jumped) this.wake();
       }, CLOCK_WATCH_MS);
-      void run();
+      request();
     },
     stop() {
       stopped = true;
@@ -142,15 +180,15 @@ export function createReminderRunner(env: ReminderRunnerEnv): ReminderRunner {
       known.clear();
     },
     poke() {
-      void run();
+      request();
     },
     wake() {
       summaryAt = Date.now() + SUMMARY_WAIT_MS;
-      void run();
+      request();
     },
     synced() {
       summaryAt = 0;
-      void run();
+      request();
     },
   };
 }

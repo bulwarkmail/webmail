@@ -6666,7 +6666,9 @@
     "missed_dialog_title": "Zmeškaná připomenutí",
     "missed_dialog_description": "Nastala, když byla aplikace zavřená, počítač v režimu spánku nebo oznámení pozastavená.",
     "open_calendar": "Otevřít kalendář",
-    "done": "Hotovo"
+    "done": "Hotovo",
+    "join_host": "Připojit se ({host})",
+    "join_named": "Připojit se: {title}"
   },
   "desktop_policy": {
     "server_refused": "Vaše organizace tento server na tomto zařízení nepovoluje.",

@@ -6,6 +6,7 @@ import { format, parseISO } from 'date-fns';
 import { isPopoutWindow } from '@/lib/popout/window-role';
 import { useAuthStore } from '@/stores/auth-store';
 import { useCalendarStore } from '@/stores/calendar-store';
+import { usePolicyStore } from '@/stores/policy-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useTaskStore } from '@/stores/task-store';
 import { useCalendarNotificationStore } from '@/stores/calendar-notification-store';
@@ -20,7 +21,9 @@ import { playNotificationSound } from '@/lib/notification-sound';
 import { lastingToastDuration } from '@/lib/toast-duration';
 import { startTitleAlert } from '@/lib/title-alert';
 import { getPathPrefix } from '@/lib/browser-navigation';
+import { isAppLocked } from '@/lib/desktop/app-lock-state';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
+import { contentHiddenFor } from '@/lib/desktop/mail-notifications';
 import type { CalendarEvent } from '@/lib/jmap/types';
 import type { CalendarAlertView } from '@/lib/plugin-types';
 import { calendarHooks } from '@/lib/plugin-hooks';
@@ -84,10 +87,11 @@ export function useCalendarAlerts() {
   const { isAuthenticated: signedIn, client, activeAccountId } = useAuthStore();
   // Reminders of an account with a local store come from there: useStoreReminders.
   const fromStore = useReminderSource((s) => !!activeAccountId && !!s.driven[activeAccountId]);
+  const calendarAllowed = usePolicyStore((s) => s.isFeatureEnabled('calendarEnabled'));
   // The main window rings; a pop-out would ring the same alert again.
-  const isAuthenticated = signedIn && !isPopoutWindow() && !fromStore;
+  const isAuthenticated = signedIn && !isPopoutWindow() && !fromStore && calendarAllowed;
   const { events, calendars, supportsCalendar } = useCalendarStore();
-  const { calendarNotificationsEnabled, calendarNotificationSound, enableCalendarTasks, notificationSoundChoice } = useSettingsStore();
+  const { calendarNotificationsEnabled, calendarNotificationSound, enableCalendarTasks } = useSettingsStore();
   const { tasks: storeTasks } = useTaskStore();
   const { acknowledgedAlerts, acknowledgeAlert, cleanupStaleAlerts } = useCalendarNotificationStore();
   const addToast = useToastStore((s) => s.addToast);
@@ -102,12 +106,24 @@ export function useCalendarAlerts() {
   const checkAlertsRef = useRef<() => void>(() => {});
 
   // Beside the toast: the desktop app's native notification, a browser's system one.
-  const tellOutsideTheWindow = useCallback((key: string, title: string, body: string, silent: boolean) => {
+  const tellOutsideTheWindow = useCallback((key: string, fireTimeMs: number, title: string, body: string, wantsSound: boolean) => {
+    const sound = reminderSoundOn(wantsSound);
+    const { notificationSoundChoice: choice } = useSettingsStore.getState();
     if (getDesktopBridge()?.os) {
-      notifyWithoutStore(`reminder:${key}`, title, body, { generic: t('alert_title') }, activeAccountId);
+      // Main knows about pauses and quiet hours, and says whether a sound is in order.
+      void notifyWithoutStore({ key, fireTimeMs, title, body, sound }, { generic: t('alert_title') }, activeAccountId).then((result) => {
+        if (result?.playSound) playNotificationSound(choice);
+      });
       return;
     }
-    void showSystemReminder({ key, title, body, silent }, `${getPathPrefix(locale)}/${locale}/calendar`);
+    if (sound) playNotificationSound(choice);
+    void showSystemReminder({
+      key,
+      title,
+      body,
+      silent: !sound,
+      hidden: contentHiddenFor(activeAccountId) ? { title: t('alert_title') } : undefined,
+    }, `${getPathPrefix(locale)}/${locale}/calendar`);
   }, [t, locale, activeAccountId]);
 
   const checkAlerts = useCallback(() => {
@@ -116,6 +132,8 @@ export function useCalendarAlerts() {
       wakeTimerRef.current = null;
     }
     if (!calendarNotificationsEnabled || !isAuthenticated) return;
+    // Nothing may show now, so nothing is used up: the periodic check comes back to it.
+    if (isAppLocked()) return;
 
     try {
       const now = Date.now();
@@ -154,10 +172,6 @@ export function useCalendarAlerts() {
             eventTitle: alert.event.title || '',
             triggerTime: new Date(alert.fireTimeMs).toISOString(),
           }, () => {
-            const sound = reminderSoundOn(calendarNotificationSound);
-            if (sound) {
-              playNotificationSound(notificationSoundChoice);
-            }
             const title = alert.event.title || t('alert_title');
             reminderTitleAlert(t('title_alert', { title }));
             addToast({
@@ -172,7 +186,7 @@ export function useCalendarAlerts() {
                 void calendarHooks.onCalendarAlertAcknowledge.emit({ alertId: alert.alertId, eventId: alert.eventId });
               },
             });
-            tellOutsideTheWindow(key, title, message, !sound);
+            tellOutsideTheWindow(key, alert.fireTimeMs, title, message, calendarNotificationSound);
           });
         });
       }
@@ -199,10 +213,6 @@ export function useCalendarAlerts() {
               taskTitle: taskAlert.task.title || '',
               triggerTime: new Date(taskAlert.fireTimeMs).toISOString(),
             }, () => {
-              const sound = reminderSoundOn(calendarNotificationSound);
-              if (sound) {
-                playNotificationSound(notificationSoundChoice);
-              }
               const title = taskAlert.task.title || t('alert_title');
               reminderTitleAlert(t('title_alert', { title }));
               addToast({
@@ -217,7 +227,7 @@ export function useCalendarAlerts() {
                   void calendarHooks.onCalendarAlertAcknowledge.emit({ alertId: taskAlert.alertId, taskId: taskAlert.taskId });
                 },
               });
-              tellOutsideTheWindow(key, title, taskMsg, !sound);
+              tellOutsideTheWindow(key, taskAlert.fireTimeMs, title, taskMsg, calendarNotificationSound);
             });
           });
         }
@@ -226,7 +236,7 @@ export function useCalendarAlerts() {
       // Silently ignore alert evaluation errors
     }
   }, [
-    calendarNotificationsEnabled, calendarNotificationSound, notificationSoundChoice,
+    calendarNotificationsEnabled, calendarNotificationSound,
     isAuthenticated, activeAccountId, events, calendars, acknowledgedAlerts,
     acknowledgeAlert, addToast, t, locale, enableCalendarTasks, storeTasks, tellOutsideTheWindow,
   ]);

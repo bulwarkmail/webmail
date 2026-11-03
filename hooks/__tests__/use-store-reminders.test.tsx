@@ -22,6 +22,8 @@ import { useToastStore } from '@/stores/toast-store';
 const sounds = vi.hoisted(() => ({ play: vi.fn() }));
 vi.mock('@/lib/notification-sound', () => ({ playNotificationSound: sounds.play }));
 vi.mock('@/lib/title-alert', () => ({ startTitleAlert: vi.fn() }));
+// Real crypto takes real time, and fake time would run ahead of it.
+vi.mock('@/lib/pwa-notify/login-fingerprint', () => ({ loginFingerprint: async () => 'fingerprint' }));
 vi.mock('@/lib/offline/offline-mode', () => ({ offlineActive: () => true }));
 const popout = vi.hoisted(() => ({ value: false }));
 vi.mock('@/lib/popout/window-role', async (original) => ({
@@ -155,6 +157,7 @@ describe('in the desktop app', () => {
     expect(sounds.play).toHaveBeenCalledTimes(1);
     expect(screen.getAllByRole('button').map((button) => button.textContent).filter(Boolean)).toEqual(['snooze', 'snooze', 'snooze', 'join', 'open']);
     fireEvent.click(screen.getByText('join'));
+    await advance(0);
     expect(openExternal).toHaveBeenCalledWith('https://meet.jit.si/standup');
   });
 
@@ -333,7 +336,7 @@ describe('in a browser', () => {
     await advance(FIRE - Date.now() + 3000);
     expect(toastTitles()).toEqual(['Standup']);
     expect(shown).toHaveBeenCalledTimes(1);
-    expect(shown).toHaveBeenCalledWith('Standup', expect.objectContaining({ data: { kind: 'calendar-reminder' }, silent: false }));
+    expect(shown).toHaveBeenCalledWith('Standup', expect.objectContaining({ data: expect.objectContaining({ kind: 'calendar-reminder' }), silent: false }));
   });
 
   it('asks for no permission and shows none when it was not granted', async () => {

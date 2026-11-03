@@ -5,16 +5,18 @@ import { useLocale, useTranslations } from 'next-intl';
 import { remind, reminderSoundOn, reminderTitleAlert, reminderToastDuration } from '@/hooks/use-calendar-alerts';
 import { getPathPrefix } from '@/lib/browser-navigation';
 import { onAcknowledged } from '@/lib/calendar-reminders/channel';
-import { claimKey, claimNow } from '@/lib/calendar-reminders/claims';
+import { claimKey, firedWithoutStore, noteStoreFired } from '@/lib/calendar-reminders/claims';
 import { createReminderRunner } from '@/lib/calendar-reminders/runner';
 import { reminderTimeZone, setReminderPoke, useMissedReminders, useReminderSource } from '@/lib/calendar-reminders/state';
 import { closeSystemReminders, showSystemReminder } from '@/lib/calendar-reminders/system-notification';
 import { isAppLocked } from '@/lib/desktop/app-lock-state';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
+import { contentHiddenFor } from '@/lib/desktop/mail-notifications';
 import {
   buildMissedNotification,
   buildReminderNotification,
   dismissReminders,
+  joinLabel,
   joinMeeting,
   missedBody,
   SNOOZE_MINUTES,
@@ -32,8 +34,13 @@ import { isPopoutWindow } from '@/lib/popout/window-role';
 import { getStore } from '@/lib/store/client/api';
 import type { MissedBatch, ReminderAlert } from '@/lib/store/reminders/ledger';
 import { useAuthStore } from '@/stores/auth-store';
+import { useEmailStore } from '@/stores/email-store';
+import { usePolicyStore } from '@/stores/policy-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useToastStore } from '@/stores/toast-store';
+
+/** Under the store's LEASE_MS, with room for a hidden tab's slow timers. */
+const LOAN_RENEW_MS = 60_000;
 
 function viewOf(alert: ReminderAlert): CalendarAlertView {
   const triggerTime = new Date(alert.fireTimeMs).toISOString();
@@ -75,6 +82,7 @@ export function useStoreReminders(): void {
     snoozeShort: (minutes) => t('snooze_short', { count: minutes }),
     open: t('open'),
     join: t('join'),
+    joinHost: (host) => t('join_host', { host }),
     missedTitle: (count) => t('missed_title', { count }),
     missedMore: (count) => t('missed_more', { count }),
   };
@@ -88,6 +96,7 @@ export function useStoreReminders(): void {
   useEffect(() => {
     if (!signedIn || isPopoutWindow()) return;
     const toastsByKey = new Map<string, string>();
+    const loans = new Set<ReturnType<typeof setInterval>>();
 
     const inAppReminder = (account: string, alert: ReminderAlert) => {
       const current = labelsRef.current;
@@ -120,7 +129,16 @@ export function useStoreReminders(): void {
           secondaryAction: ten,
           action: fifteen,
           extraActions: [
-            ...(alert.joinUrl ? [{ label: current.join, onClick: () => joinMeeting(alert.joinUrl!) }] : []),
+            ...(alert.joinUrl ? [{
+              label: joinLabel(alert, current),
+              onClick: () => {
+                handled = true;
+                // Nothing opened, say a plugin stopped it: the reminder stands.
+                void joinMeeting(alert.joinUrl!).then((opened) => {
+                  if (opened) dismissReminders(account, [alert.key]);
+                });
+              },
+            }] : []),
             { label: current.open, onClick: () => { window.location.href = calendarUrlRef.current; } },
           ],
         } : {}),
@@ -135,9 +153,9 @@ export function useStoreReminders(): void {
       const hold = () => getStore().area(account, 'reminders.hold', { keys: [alert.key] }).catch(() => {});
       if (os) {
         const locked = isAppLocked();
-        const result = await os.notify(await buildReminderNotification(account, alert, labelsRef.current, sound));
-        // Paused, quiet hours, or nothing may be said now: the summary says it later.
-        if (locked || result.reason === 'paused' || result.reason === 'quiet-hours') {
+        const result = await os.notify(await buildReminderNotification(account, alert, labelsRef.current, sound)).catch(() => null);
+        // Paused, quiet hours, a toast that failed, or nothing may be said now: the summary says it later.
+        if (!result || locked || result.reason === 'paused' || result.reason === 'quiet-hours' || result.reason === 'failed') {
           await hold();
           return;
         }
@@ -155,22 +173,32 @@ export function useStoreReminders(): void {
         title: alert.title || labelsRef.current.untitled,
         body: labelsRef.current.when(alert),
         silent: !sound,
+        hidden: contentHiddenFor(account) ? { title: labelsRef.current.generic } : undefined,
       }, calendarUrlRef.current);
     };
 
     const showMissed = async (account: string) => {
       if (isAppLocked()) return;
       const timeZone = reminderTimeZone(useSettingsStore.getState().timeZone);
-      const batch = await getStore().area<MissedBatch | null>(account, 'reminders.takeMissed', { timeZone });
-      if (!batch) return;
+      const taken = await getStore().area<MissedBatch | null>(account, 'reminders.takeMissed', { timeZone });
+      if (!taken) return;
+      // What the path without a store already rang, before the store took over, was seen.
+      const rung = taken.alerts.filter((alert) => firedWithoutStore(claimKey(account, alert.uid, alert.alertId, alert.fireTimeMs)));
+      if (rung.length > 0) await getStore().area(account, 'reminders.dismiss', { keys: rung.map((alert) => alert.key) });
+      const batch: MissedBatch = { batch: taken.batch, alerts: taken.alerts.filter((alert) => !rung.includes(alert)) };
+      if (batch.alerts.length === 0) return;
       const current = labelsRef.current;
       const os = getDesktopBridge()?.os;
       if (os) {
-        const result = await os.notify(await buildMissedNotification(account, batch, current));
-        if (result.shown) return;
+        const release = () => getStore().area(account, 'reminders.releaseMissed', { batch: batch.batch });
+        const result = await os.notify(await buildMissedNotification(account, batch, current)).catch(() => null);
         // Told nobody, so it has to wait for a time when it can.
-        if (result.reason === 'paused' || result.reason === 'quiet-hours' || result.reason === 'duplicate') {
-          await getStore().area(account, 'reminders.releaseMissed', { batch: batch.batch });
+        if (!result || result.reason === 'paused' || result.reason === 'quiet-hours' || result.reason === 'duplicate' || result.reason === 'failed') {
+          await release();
+          return;
+        }
+        if (result.shown) {
+          await getStore().area(account, 'reminders.settleMissed', { batch: batch.batch });
           return;
         }
       }
@@ -195,14 +223,32 @@ export function useStoreReminders(): void {
         },
       });
       for (const key of keys) toastsByKey.set(key, id);
+      keepOnLoan(account, batch.batch, id, keys);
       if (!os) {
         void showSystemReminder({
           key: `missed:${batch.batch}`,
           title: current.missedTitle(batch.alerts.length),
           body,
           silent: true,
+          hidden: contentHiddenFor(account) ? { title: current.missedTitle(batch.alerts.length) } : undefined,
         }, calendarUrlRef.current);
       }
+    };
+
+    // Stays with this window while it's on screen here. A reload loses the toast, the
+    // renewals stop, and the store hands the summary out again.
+    const keepOnLoan = (account: string, batch: number, toastId: string, keys: string[]) => {
+      const onScreen = () => useToastStore.getState().toasts.some((toast) => toast.id === toastId)
+        || useMissedReminders.getState().alerts.some((alert) => keys.includes(alert.key));
+      const loan = setInterval(() => {
+        if (!onScreen()) {
+          clearInterval(loan);
+          loans.delete(loan);
+          return;
+        }
+        void getStore().area(account, 'reminders.renewMissed', { batch }).catch(() => {});
+      }, LOAN_RENEW_MS);
+      loans.add(loan);
     };
 
     const runner = createReminderRunner({
@@ -213,16 +259,17 @@ export function useStoreReminders(): void {
         return {
           timeZone: reminderTimeZone(settings.timeZone),
           tasks: settings.enableCalendarTasks,
-          muted: !settings.calendarNotificationsEnabled,
+          muted: !settings.calendarNotificationsEnabled || !usePolicyStore.getState().isFeatureEnabled('calendarEnabled'),
         };
       },
+      // Only this account's client has a stream the page can see. For the others, look.
+      needsPolling: (account) => !(account === useAuthStore.getState().activeAccountId && useEmailStore.getState().isPushConnected),
       hidden: () => document.visibilityState === 'hidden',
       offline: () => navigator.onLine === false,
       onDue: (account, alerts) => {
         for (const alert of alerts) {
-          // Whichever of the two paths got there first: one comes back from a snooze.
-          const key = claimKey(account, alert.uid, alert.alertId, alert.fireTimeMs);
-          if (!claimNow(key, alert.fireTimeMs) && !alert.snoozedUntil) continue;
+          // The other path may have got there first, at a handover.
+          if (!noteStoreFired(claimKey(account, alert.uid, alert.alertId, alert.fireTimeMs), alert.fireTimeMs)) continue;
           remind(viewOf(alert), () => {
             void showReminder(account, alert).catch((error) => {
               console.error('Failed to show a reminder:', error);
@@ -259,6 +306,7 @@ export function useStoreReminders(): void {
 
     return () => {
       runner.stop();
+      for (const loan of loans) clearInterval(loan);
       runnerRef.current = null;
       setReminderPoke(null);
       stopEvents();

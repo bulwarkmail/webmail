@@ -6666,7 +6666,9 @@
     "missed_dialog_title": "Kasutamata meeldetuletused",
     "missed_dialog_description": "Need saabusid, kui rakendus oli suletud, arvuti puhkas või teavitused olid peatatud.",
     "open_calendar": "Ava kalender",
-    "done": "Valmis"
+    "done": "Valmis",
+    "join_host": "Liitu ({host})",
+    "join_named": "Liitu: {title}"
   },
   "desktop_policy": {
     "server_refused": "Sinu organisatsioon ei luba seda serverit selles seadmes.",

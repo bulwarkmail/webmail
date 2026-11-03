@@ -6678,7 +6678,9 @@
     "missed_dialog_title": "Lời nhắc đã bỏ lỡ",
     "missed_dialog_description": "Những lời nhắc này đến hạn khi ứng dụng đóng, máy tính ngủ hoặc thông báo bị tạm dừng.",
     "open_calendar": "Mở lịch",
-    "done": "Xong"
+    "done": "Xong",
+    "join_host": "Tham gia ({host})",
+    "join_named": "Tham gia: {title}"
   },
   "desktop_policy": {
     "server_refused": "Tổ chức của bạn không cho phép máy chủ này trên thiết bị này.",

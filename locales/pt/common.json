@@ -6666,7 +6666,9 @@
     "missed_dialog_title": "Lembretes perdidos",
     "missed_dialog_description": "Venceram enquanto a aplicação estava fechada, o computador em suspensão ou as notificações em pausa.",
     "open_calendar": "Abrir calendário",
-    "done": "Concluído"
+    "done": "Concluído",
+    "join_host": "Entrar ({host})",
+    "join_named": "Entrar: {title}"
   },
   "desktop_policy": {
     "server_refused": "A sua organização não permite este servidor neste dispositivo.",

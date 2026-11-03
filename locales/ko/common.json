@@ -6666,7 +6666,9 @@
     "missed_dialog_title": "놓친 알림",
     "missed_dialog_description": "앱이 닫혀 있거나 컴퓨터가 절전 상태이거나 알림이 일시 중지된 동안 시간이 된 알림입니다.",
     "open_calendar": "캘린더 열기",
-    "done": "완료"
+    "done": "완료",
+    "join_host": "참가 ({host})",
+    "join_named": "참가: {title}"
   },
   "desktop_policy": {
     "server_refused": "조직에서 이 기기의 이 서버 사용을 허용하지 않습니다.",

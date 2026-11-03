@@ -231,8 +231,9 @@ describe('away', () => {
     const rig = setup();
     rig.server.addEvent(event());
     await synced(rig);
-    rig.now = FIRE - MIN;
+    rig.now = FIRE - 2 * MIN;
     await rig.tick();
+    // Over the limit for being away, and under ten minutes old.
     rig.now = FIRE + 5 * MIN;
     expect(await rig.tick()).toMatchObject({ due: [{ title: 'Standup' }], missed: 0 });
   });

@@ -6666,7 +6666,9 @@
     "missed_dialog_title": "Kaçırılan anımsatıcılar",
     "missed_dialog_description": "Uygulama kapalıyken, bilgisayar uykudayken veya bildirimler duraklatılmışken zamanı geldi.",
     "open_calendar": "Takvimi aç",
-    "done": "Bitti"
+    "done": "Bitti",
+    "join_host": "Katıl ({host})",
+    "join_named": "Katıl: {title}"
   },
   "desktop_policy": {
     "server_refused": "Kuruluşunuz bu cihazda bu sunucuya izin vermiyor.",

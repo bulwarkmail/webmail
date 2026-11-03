@@ -6666,7 +6666,9 @@
     "missed_dialog_title": "Reminders you missed",
     "missed_dialog_description": "These came due while the app was closed, the computer was asleep or notifications were paused.",
     "open_calendar": "Open calendar",
-    "done": "Done"
+    "done": "Done",
+    "join_host": "Join ({host})",
+    "join_named": "Join: {title}"
   },
   "desktop_policy": {
     "server_refused": "Your organisation doesn't allow this server on this device.",

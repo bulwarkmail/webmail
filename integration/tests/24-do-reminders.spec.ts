@@ -166,7 +166,7 @@ test('adds a system notification when permission is granted and the tab is not i
   }, title);
   expect(shown).toHaveLength(1);
   expect(shown[0].tag).toContain('calendar-reminder:');
-  expect(shown[0].data).toEqual({ kind: 'calendar-reminder' });
+  expect(shown[0].data).toMatchObject({ kind: 'calendar-reminder', url: expect.stringMatching(/\/calendar$/) });
   await context.clearPermissions();
 });
 

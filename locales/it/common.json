@@ -6666,7 +6666,9 @@
     "missed_dialog_title": "Promemoria persi",
     "missed_dialog_description": "Sono scattati mentre l'app era chiusa, il computer in sospensione o le notifiche in pausa.",
     "open_calendar": "Apri calendario",
-    "done": "Fatto"
+    "done": "Fatto",
+    "join_host": "Partecipa ({host})",
+    "join_named": "Partecipa: {title}"
   },
   "desktop_policy": {
     "server_refused": "La tua organizzazione non consente questo server su questo dispositivo.",

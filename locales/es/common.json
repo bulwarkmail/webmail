@@ -6666,7 +6666,9 @@
     "missed_dialog_title": "Recordatorios perdidos",
     "missed_dialog_description": "Vencieron mientras la aplicación estaba cerrada, el ordenador en reposo o las notificaciones en pausa.",
     "open_calendar": "Abrir calendario",
-    "done": "Listo"
+    "done": "Listo",
+    "join_host": "Unirse ({host})",
+    "join_named": "Unirse: {title}"
   },
   "desktop_policy": {
     "server_refused": "Tu organización no permite este servidor en este dispositivo.",

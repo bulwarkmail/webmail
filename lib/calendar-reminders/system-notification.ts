@@ -11,6 +11,8 @@ export interface SystemReminder {
   body: string;
   /** Do not disturb: on screen, but quiet. */
   silent: boolean;
+  /** Says nothing about the event: the app is locked, or the organisation says so. */
+  hidden?: { title: string };
 }
 
 function tagOf(key: string): string {
@@ -37,14 +39,15 @@ export function wantsSystemNotification(): boolean {
 
 export async function showSystemReminder(reminder: SystemReminder, openUrl: string): Promise<void> {
   if (!wantsSystemNotification()) return;
-  const options = { body: reminder.body, tag: tagOf(reminder.key), silent: reminder.silent };
+  const title = reminder.hidden ? reminder.hidden.title : reminder.title;
+  const options = { body: reminder.hidden ? '' : reminder.body, tag: tagOf(reminder.key), silent: reminder.silent };
   try {
     const worker = await registration();
     if (worker) {
-      await worker.showNotification(reminder.title, { ...options, data: { kind: 'calendar-reminder' } });
+      await worker.showNotification(title, { ...options, data: { kind: 'calendar-reminder', url: openUrl } });
       return;
     }
-    const shown = new Notification(reminder.title, options);
+    const shown = new Notification(title, options);
     shown.onclick = () => {
       window.focus();
       window.location.href = openUrl;

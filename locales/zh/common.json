@@ -6666,7 +6666,9 @@
     "missed_dialog_title": "错过的提醒",
     "missed_dialog_description": "这些提醒在应用关闭、电脑睡眠或通知暂停时到期。",
     "open_calendar": "打开日历",
-    "done": "完成"
+    "done": "完成",
+    "join_host": "加入 ({host})",
+    "join_named": "加入: {title}"
   },
   "desktop_policy": {
     "server_refused": "您的组织不允许在此设备上使用此服务器。",

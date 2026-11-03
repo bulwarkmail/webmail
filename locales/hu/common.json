@@ -6666,7 +6666,9 @@
     "missed_dialog_title": "Elmulasztott emlékeztetők",
     "missed_dialog_description": "Akkor jártak le, amikor az alkalmazás be volt zárva, a számítógép alvó állapotban volt, vagy az értesítések szüneteltek.",
     "open_calendar": "Naptár megnyitása",
-    "done": "Kész"
+    "done": "Kész",
+    "join_host": "Csatlakozás ({host})",
+    "join_named": "Csatlakozás: {title}"
   },
   "desktop_policy": {
     "server_refused": "A szervezete ezen az eszközön nem engedélyezi ezt a kiszolgálót.",

@@ -9,6 +9,7 @@ import {
   buildMissedNotification,
   buildReminderNotification,
   handleReminderCommand,
+  joinMeeting,
   missedBody,
   notifyWithoutStore,
   type ReminderLabels,
@@ -19,7 +20,8 @@ const ACCOUNT = 'alice@one';
 const accounts = [{ id: ACCOUNT, cookieSlot: 3, serverUrl: 'https://one.example', username: 'alice@example.org' }];
 let activeAccountId: string | null = ACCOUNT;
 vi.mock('@/stores/account-store', () => ({ useAccountStore: { getState: () => ({ accounts }) } }));
-vi.mock('@/stores/auth-store', () => ({ useAuthStore: { getState: () => ({ activeAccountId }) } }));
+vi.mock('@/stores/auth-store', () => ({ useAuthStore: { getState: () => ({ activeAccountId }), subscribe: () => () => {} } }));
+vi.mock('@/stores/policy-store', () => ({ usePolicyStore: { getState: () => ({ loaded: true }), subscribe: () => () => {} } }));
 
 const policy = vi.hoisted(() => ({ pushWithoutContent: false }));
 vi.mock('@/lib/device-policy', () => ({ devicesForAccount: () => ({ pushWithoutContent: policy.pushWithoutContent }) }));
@@ -36,6 +38,7 @@ const labels: ReminderLabels = {
   snoozeShort: (minutes) => `${minutes} min`,
   open: 'Open',
   join: 'Join',
+  joinHost: (host) => `Join (${host})`,
   missedTitle: (count) => `${count} missed`,
   missedMore: (count) => `and ${count} more`,
 };
@@ -43,7 +46,7 @@ const labels: ReminderLabels = {
 function alert(partial: Partial<ReminderAlert> = {}): ReminderAlert {
   return {
     key: `j1:uid-1:a:${FIRE}`, jmap: 'j1', uid: 'uid-1', kind: 'event', baseEventId: 'e1', recurrenceId: null, alertId: 'a', fireTimeMs: FIRE,
-    title: 'Secret board meeting', start: '2026-11-10T10:00:00', startMs: START, joinUrl: null, timeZone: 'Europe/Berlin', calendarId: 'cal1', calendarName: 'Personal',
+    title: 'Secret board meeting', start: '2026-11-10T10:00:00', startMs: START, joinUrl: null, joinHost: null, timeZone: 'Europe/Berlin', calendarId: 'cal1', calendarName: 'Personal',
     ...partial,
   };
 }
@@ -89,6 +92,9 @@ describe('what a reminder says', () => {
     expect(without.actions!.map((action) => action.id)).toEqual(['open', 'snooze-5', 'snooze-10', 'snooze-15']);
     const withLink = await buildReminderNotification(ACCOUNT, alert({ joinUrl: 'https://meet.jit.si/x' }), labels, false);
     expect(withLink.actions!.map((action) => action.id)).toEqual(['join', 'open', 'snooze-5', 'snooze-10', 'snooze-15']);
+    expect(withLink.actions![0].label).toBe('Join');
+    const foreign = await buildReminderNotification(ACCOUNT, alert({ joinUrl: 'https://calls.example.org/x', joinHost: 'calls.example.org' }), labels, false);
+    expect(foreign.actions![0].label).toBe('Join (calls.example.org)');
   });
 
   it('uses short snooze labels where five buttons share a row', async () => {
@@ -135,11 +141,70 @@ describe('what a reminder says', () => {
   });
 
   it('without a store says what it can, and nothing when locked', () => {
-    notifyWithoutStore('id', 'Dentist', 'In 5 min', { generic: 'GENERIC' }, ACCOUNT);
-    expect(notify).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'Dentist', body: 'In 5 min', context: '{"cal":true}' }));
+    notifyWithoutStore({ key: 'e1:a:1', fireTimeMs: 1, title: 'Dentist', body: 'In 5 min', sound: true }, { generic: 'GENERIC' }, ACCOUNT);
+    expect(notify).toHaveBeenCalledTimes(1);
+    expect(notify.mock.calls[0]).toEqual([expect.objectContaining({ id: 'reminder:e1:a:1', title: 'Dentist', body: 'In 5 min', context: '{"cal":true}', sound: true })]);
     setAppLockCheck(() => true);
-    notifyWithoutStore('id2', 'Dentist', 'In 5 min', { generic: 'GENERIC' }, ACCOUNT);
-    expect(notify).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'GENERIC', body: '' }));
+    notifyWithoutStore({ key: 'e1:a:1', fireTimeMs: 1, title: 'Dentist', body: 'In 5 min', sound: true }, { generic: 'GENERIC' }, ACCOUNT);
+    expect(notify).toHaveBeenCalledTimes(2);
+    expect(notify.mock.calls[1]).toEqual([expect.objectContaining({ title: 'GENERIC', body: '' })]);
+    expect(JSON.stringify(notify.mock.calls[1])).not.toContain('Dentist');
+    expect(JSON.stringify(notify.mock.calls[1])).not.toContain('e1');
+  });
+});
+
+describe('sizes', () => {
+  it('keeps the context under what main will take, with the longest key the store makes', async () => {
+    const key = `${'j'.repeat(40)}:#abc:9999:${'a'.repeat(64)}:${FIRE}`;
+    const { context } = await buildReminderNotification(ACCOUNT, alert({ key, uid: 'u'.repeat(5000) }), labels, false);
+    expect(context.length).toBeLessThan(1024);
+    expect(JSON.parse(context).r).toBe(key);
+  });
+});
+
+describe('Join is only ever a web link', () => {
+  for (const url of ['ms-msdt:/id PCWDiagnostic', 'search-ms:query=x', 'smb://evil.example/share', 'https://meet.google.com@evil.example/x', 'javascript:alert(1)', 'not a link']) {
+    it(`opens nothing for ${url}, in the app`, async () => {
+      expect(await joinMeeting(url)).toBe(false);
+      expect(openExternal).not.toHaveBeenCalled();
+    });
+
+    it(`opens nothing for ${url}, in a browser`, async () => {
+      window.bulwarkDesktop = undefined;
+      const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+      expect(await joinMeeting(url)).toBe(false);
+      expect(open).not.toHaveBeenCalled();
+      open.mockRestore();
+    });
+  }
+
+  it('opens a web link, in the app and in a browser', async () => {
+    expect(await joinMeeting('https://meet.jit.si/x')).toBe(true);
+    expect(openExternal).toHaveBeenCalledWith('https://meet.jit.si/x');
+    window.bulwarkDesktop = undefined;
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+    expect(await joinMeeting('https://meet.jit.si/y')).toBe(true);
+    expect(open).toHaveBeenCalledWith('https://meet.jit.si/y', '_blank', 'noopener,noreferrer');
+    open.mockRestore();
+  });
+
+  it('leaves the reminder standing when Join from a toast opened nothing', async () => {
+    vi.useFakeTimers({ now: FIRE - MIN, toFake: ['Date'] });
+    server.addEvent({ id: 'e1', uid: 'uid-1', title: 'Standup', virtualLocations: { v: { '@type': 'VirtualLocation', uri: 'https://meet.jit.si/standup' } }, start: '2026-11-10T10:00:00', timeZone: 'Europe/Berlin', alerts: { a: { '@type': 'Alert', action: 'display', trigger: { '@type': 'OffsetTrigger', offset: '-PT15M' } } } });
+    await store.sync(ACCOUNT);
+    const params = { timeZone: 'Europe/Berlin', tasks: true };
+    await store.area(ACCOUNT, 'reminders.tick', params);
+    vi.setSystemTime(FIRE);
+    const [reminder] = (await store.area<TickResult>(ACCOUNT, 'reminders.tick', params)).due;
+    const { uiHooks } = await import('@/lib/plugin-hooks');
+    const stop = uiHooks.onBeforeExternalLink.register('t', () => false);
+    const area = vi.spyOn(store, 'area');
+    await handleReminderCommand('join', await contextFor(reminder), env);
+    stop.dispose();
+    expect(openExternal).not.toHaveBeenCalled();
+    expect(area.mock.calls.filter(([, name]) => name === 'reminders.dismiss')).toEqual([]);
+    // The window comes up, since the button did nothing else.
+    expect(focus).toHaveBeenCalled();
   });
 });
 
@@ -231,6 +296,7 @@ describe('what its buttons do', () => {
 
   it('goes to the calendar for a store-less reminder, and leaves mail toasts alone', async () => {
     expect(await handleReminderCommand('open', JSON.stringify({ cal: true }), env)).toBe(true);
+    expect(env.leaveFor).toHaveBeenCalledTimes(1);
     expect(env.leaveFor).toHaveBeenCalledWith('/calendar');
     expect(await handleReminderCommand('open', JSON.stringify({ emailId: 'm1', slot: 3 }), env)).toBe(false);
     expect(await handleReminderCommand('open', '', env)).toBe(false);

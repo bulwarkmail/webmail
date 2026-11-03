@@ -6666,7 +6666,9 @@
     "missed_dialog_title": "Zmeškané pripomienky",
     "missed_dialog_description": "Nastali, keď bola aplikácia zatvorená, počítač v režime spánku alebo oznámenia pozastavené.",
     "open_calendar": "Otvoriť kalendár",
-    "done": "Hotovo"
+    "done": "Hotovo",
+    "join_host": "Pripojiť sa ({host})",
+    "join_named": "Pripojiť sa: {title}"
   },
   "desktop_policy": {
     "server_refused": "Vaša organizácia tento server na tomto zariadení nepovoľuje.",

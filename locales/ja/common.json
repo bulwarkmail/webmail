@@ -6666,7 +6666,9 @@
     "missed_dialog_title": "見逃したリマインダー",
     "missed_dialog_description": "アプリが閉じていた間、コンピューターがスリープしていた間、または通知を一時停止していた間に期限が来たものです。",
     "open_calendar": "カレンダーを開く",
-    "done": "完了"
+    "done": "完了",
+    "join_host": "参加 ({host})",
+    "join_named": "参加: {title}"
   },
   "desktop_policy": {
     "server_refused": "組織はこのデバイスでこのサーバーを許可していません。",

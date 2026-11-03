@@ -6666,7 +6666,9 @@
     "missed_dialog_title": "Rappels manqués",
     "missed_dialog_description": "Ils sont arrivés à échéance alors que l'application était fermée, l'ordinateur en veille ou les notifications en pause.",
     "open_calendar": "Ouvrir le calendrier",
-    "done": "Terminé"
+    "done": "Terminé",
+    "join_host": "Rejoindre ({host})",
+    "join_named": "Rejoindre: {title}"
   },
   "desktop_policy": {
     "server_refused": "Votre organisation n'autorise pas ce serveur sur cet appareil.",

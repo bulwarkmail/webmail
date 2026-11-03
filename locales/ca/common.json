@@ -6666,7 +6666,9 @@
     "missed_dialog_title": "Recordatoris perduts",
     "missed_dialog_description": "Van vèncer mentre l'aplicació estava tancada, l'ordinador en repòs o les notificacions en pausa.",
     "open_calendar": "Obre el calendari",
-    "done": "Fet"
+    "done": "Fet",
+    "join_host": "Uneix-te ({host})",
+    "join_named": "Uneix-te: {title}"
   },
   "desktop_policy": {
     "server_refused": "La teva organització no permet aquest servidor en aquest dispositiu.",
