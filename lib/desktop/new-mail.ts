@@ -81,9 +81,11 @@ export function startNewMailWatch(onMail: (mail: NewMail[]) => void): NewMailWat
   const report = async (client: IJMAPClient, accountId: string, ids: readonly string[]) => {
     const fresh = ids.filter((id) => !seen.includes(`${accountId}/${id}`));
     if (fresh.length === 0 || stopped) return;
-    for (const id of fresh) seen.push(`${accountId}/${id}`);
-    seen.splice(0, Math.max(0, seen.length - SEEN_LIMIT));
     const [emails, mailboxes] = await Promise.all([client.getSomeEmails(fresh, accountId), client.getAllMailboxes()]);
+    // Only what came back counts as told. With the store on, a push can overtake it: the
+    // device doesn't have the message yet, and its created event has to be able to tell it.
+    for (const email of emails) seen.push(`${accountId}/${email.id}`);
+    seen.splice(0, Math.max(0, seen.length - SEEN_LIMIT));
     const own = client.getAccountId();
     const mail = emails
       .filter((email) => notifyingMailbox(email, accountId, own, mailboxes))

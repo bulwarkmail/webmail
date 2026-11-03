@@ -166,6 +166,27 @@ describe('the watch', () => {
     watch.stop();
   });
 
+  it('a message the store has not got yet is not written off: its created event still tells it', async () => {
+    const { startNewMailWatch } = await import('../new-mail');
+    const { emitPushStateChange } = await import('@/lib/push-events');
+    const held: Record<string, Email> = {};
+    const fake = fakeClient(held, [{ created: ['a'], newState: 's2' }]);
+    const seen: string[] = [];
+    const watch = startNewMailWatch((mail) => seen.push(...mail.map((m) => m.email.id)));
+    watch.seed(fake);
+    await flush();
+    // The push got here first. The device answers, and it doesn't have the message.
+    emitPushStateChange({ changed: { acc: { Email: 's2' } } } as never, fake, 'active');
+    await flush();
+    expect(seen).toEqual([]);
+    // The store has synced it now.
+    held.a = email('a');
+    watch.noteCreated(fake, 'acc', ['a']);
+    await flush();
+    expect(seen).toEqual(['a']);
+    watch.stop();
+  });
+
   it('without a baseline the first push only sets one: old mail is not news', async () => {
     const { startNewMailWatch } = await import('../new-mail');
     const { emitPushStateChange } = await import('@/lib/push-events');
