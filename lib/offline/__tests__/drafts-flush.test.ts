@@ -67,7 +67,7 @@ beforeEach(async () => {
   forgetOrphanCheck();
   localStorage.clear();
   useOfflineStore.setState({ enabled: [], outbox: [], pendingChanges: 0, conflicts: [], localDrafts: [], browserOffline: false, downServers: [], startedOffline: false });
-  usePolicyStore.setState({ loaded: true, subject: null, policy: { ...usePolicyStore.getState().policy, organisation: DEFAULT_ORGANISATION_POLICY } });
+  usePolicyStore.setState({ loaded: true, subject: { email: 'alice@example.org', groups: [] }, policy: { ...usePolicyStore.getState().policy, organisation: DEFAULT_ORGANISATION_POLICY } });
   useAccountStore.setState({ accounts: [{ id: 'acc', label: 'alice', serverUrl: 'https://mail.example.org', username: 'alice@example.org' } as never] });
   const client = fakeClient();
   useAuthStore.setState({ client: client as never, activeAccountId: 'acc' });

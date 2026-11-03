@@ -53,6 +53,7 @@ export interface DownSendGuard {
 /** Errors that mean Bulwark refused to start the plugin, not that it broke. */
 const REFUSALS = new Set([
   'third-party-off',
+  'device-policy',
   'user-plugins-off',
   'approval-unavailable',
   'approval-denied',

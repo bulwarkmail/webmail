@@ -16,4 +16,8 @@ export const outboxArea: StoreArea = {
   syncers: [],
   calls: { ...OUTBOX_CALLS, ...DRAFT_CALLS },
   overlay,
+  // A draft only on this device has no other copy, however old it is.
+  spares: (ctx, jmap, type) => (type === 'Email'
+    ? ctx.db.all<{ local_id: string }>('SELECT local_id FROM draft_pending WHERE jmap = ?', [jmap]).map((row) => row.local_id)
+    : []),
 };

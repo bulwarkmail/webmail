@@ -54,13 +54,19 @@ export class StoreHost {
     if (existing) {
       if (params.session) this.setSession(params.account, params.session);
       this.setAuth(params.account, params.auth);
-      existing.engine.setScope(params.scope);
+      if (params.scope) existing.engine.setScope(params.scope);
       if (params.invertedKeywordSort !== null) existing.engine.setInvertedKeywordSort(params.invertedKeywordSort);
       void existing.engine.requestSync();
       return { created: false };
     }
     const db = await this.options.storage.open(params.file, params.keyHex);
     const created = !db.get("SELECT 1 AS yes FROM sqlite_master WHERE name = 'schema_migration'");
+    // Nothing to sync with yet. No file stays behind, or the next open couldn't tell that this one was new.
+    if (created && !params.session) {
+      db.close();
+      this.options.storage.remove(params.file);
+      throw new Error('No session for this account yet');
+    }
     const session = params.session ?? AccountEngine.storedSession(db);
     if (!session) {
       db.close();
@@ -111,8 +117,7 @@ export class StoreHost {
   setScope(account: string, scope: Parameters<AccountEngine['setScope']>[0]): void {
     const open = this.accounts.get(account);
     if (!open) return;
-    open.engine.setScope(scope);
-    void open.engine.requestSync();
+    if (open.engine.setScope(scope)) void open.engine.requestSync();
   }
 
   setInvertedKeywordSort(account: string, inverted: boolean): void {
@@ -131,7 +136,9 @@ export class StoreHost {
   async removeAccount(account: string, file: string): Promise<boolean> {
     await this.closeAccount(account);
     this.synced.delete(account);
-    return this.options.storage.remove(file);
+    const removed = this.options.storage.remove(file);
+    this.options.emit({ type: 'removed', account });
+    return removed;
   }
 
   async closeAll(): Promise<void> {
@@ -172,6 +179,12 @@ export class StoreHost {
         const open = this.accounts.get(account);
         if (!open) throw accountClosed();
         return open.engine.areaCall(name, callParams);
+      }
+      case 'setScope': {
+        const { account, scope } = params as Parameters<StoreRpc['setScope']>[0];
+        if (!this.accounts.has(account)) throw accountClosed();
+        this.setScope(account, scope);
+        return undefined;
       }
       case 'removeAccount': {
         const { account, file } = params as Parameters<StoreRpc['removeAccount']>[0];

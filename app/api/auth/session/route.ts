@@ -25,6 +25,7 @@ import { loginClientAddress } from '@/lib/auth/client-address';
 import { LOGIN_BUDGET_RETRY_AFTER_SECONDS, reserveLoginAttempt } from '@/lib/auth/verify-budget';
 import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
 import { isPastMaxAge, limitsEnforcedSince, maxSessionHoursFor, SESSION_TOO_OLD } from '@/lib/auth/session-age';
+import { devicePolicyServerRefusal } from '@/lib/desktop/server-policy';
 
 function sessionCookieOptions() {
   return {
@@ -141,6 +142,9 @@ export async function POST(request: NextRequest) {
     if (!serverUrl || !username || typeof (password || accessToken) !== 'string' || !!password === !!accessToken) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+
+    const refusedByDevice = devicePolicyServerRefusal(serverUrl);
+    if (refusedByDevice) return refusedByDevice;
 
     // Pin the upstream URL to a configured JMAP server so an unauthenticated
     // caller cannot point this route at internal hosts. We accept the global
@@ -314,6 +318,11 @@ export async function PUT(request: NextRequest) {
       clearStalwartAuthContextInStore(cookieStore, slot);
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
+
+    // The device's OS policy refuses this server for now: nothing restores, and the
+    // cookie stays, so the account comes back with no sign-in if the policy does.
+    const refusedByDevice = devicePolicyServerRefusal(credentials.serverUrl);
+    if (refusedByDevice) return refusedByDevice;
 
     const age = await checkSessionAge(cookieStore, slot, credentials);
     if ('maxHours' in age) return sessionTooOld(age.maxHours);

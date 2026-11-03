@@ -17,6 +17,7 @@ import { keptVersions, listHistory } from '@/lib/admin/extension-history';
 import { ExtensionPackageError, readPluginPackage, suspiciousCode } from '@/lib/extension-package';
 import { MAX_PLUGIN_SIZE } from '@/lib/plugin-types';
 import { configReadOnlyResponse } from '@/lib/admin/config-read-only-response';
+import { devicePolicyPluginRefusal } from '@/lib/desktop/server-policy';
 
 /**
  * GET /api/admin/plugins - List all admin-managed plugins
@@ -86,6 +87,9 @@ export async function POST(request: NextRequest) {
       throw err;
     }
     const { manifest, code } = pkg;
+
+    const refused = devicePolicyPluginRefusal(manifest.id);
+    if (refused) return refused;
 
     // Admin uploads reach every user, so the patterns a user upload only
     // warns about are refused here.
@@ -158,6 +162,12 @@ export async function PATCH(request: NextRequest) {
     }
     if (typeof enabled !== 'boolean' && typeof forceEnabled !== 'boolean') {
       return NextResponse.json({ error: 'enabled or forceEnabled must be a boolean' }, { status: 400 });
+    }
+
+    // Turning one off stays possible: the policy only stops what would run.
+    if (enabled === true || forceEnabled === true) {
+      const refused = devicePolicyPluginRefusal(id);
+      if (refused) return refused;
     }
 
     const updates: { enabled?: boolean; forceEnabled?: boolean } = {};

@@ -127,6 +127,7 @@ import type { Attachment as PostalMimeAttachment } from 'postal-mime';
 import { useSettingsStore } from "@/stores/settings-store";
 import { useShallow } from "zustand/react/shallow";
 import { useEffectiveMailLayout } from "@/hooks/use-effective-mail-layout";
+import { pluginRenderKey } from "@/hooks/use-plugin-rendered-body";
 import { registerComposeFlush } from "@/lib/compose-flush-registry";
 import { useExternalRecipientConfirmStore } from "@/stores/external-recipient-confirm-store";
 import { useUIStore } from "@/stores/ui-store";
@@ -1794,6 +1795,9 @@ export function EmailViewer({
   const [pluginRenderedHtml, setPluginRenderedHtml] = useState<string | null>(null);
   const [pluginRenderedText, setPluginRenderedText] = useState<string | null>(null);
   const [pluginRenderedAttachments, setPluginRenderedAttachments] = useState<PostalMimeAttachment[]>(NO_POSTAL_ATTACHMENTS);
+  // The plugin can't vouch for its body (mail with no integrity protection): external
+  // content stays off, whatever the settings or a trusted sender allow.
+  const [pluginBlocksExternal, setPluginBlocksExternal] = useState(false);
   // Bumped when a plugin calls `api.ui.rerenderEmail` (e.g. the S/MIME plugin
   // after the user unlocks a key from the banner) to force the onRenderEmailBody
   // hook to run again for the open message so the body re-decrypts.
@@ -2266,6 +2270,7 @@ export function EmailViewer({
     setPluginRenderedHtml(null);
     setPluginRenderedText(null);
     setPluginRenderedAttachments(NO_POSTAL_ATTACHMENTS);
+    setPluginBlocksExternal(false);
     setTnefHtml(null);
     setTnefText(null);
     setTnefAttachments(NO_TNEF_ATTACHMENTS);
@@ -2287,6 +2292,7 @@ export function EmailViewer({
       setPluginRenderedHtml(null);
       setPluginRenderedText(null);
       setPluginRenderedAttachments(NO_POSTAL_ATTACHMENTS);
+      setPluginBlocksExternal(false);
       return;
     }
     let cancelled = false;
@@ -2328,14 +2334,17 @@ export function EmailViewer({
           text?: string;
           attachments?: Array<{ name?: string; type?: string; size?: number; dataUrl?: string; cid?: string }>;
           handledBy?: string;
+          blockExternalContent?: boolean;
         };
         if (cancelled) return;
         if (!result || !result.handledBy) {
           setPluginRenderedHtml(null);
           setPluginRenderedText(null);
           setPluginRenderedAttachments(NO_POSTAL_ATTACHMENTS);
+          setPluginBlocksExternal(false);
           return;
         }
+        setPluginBlocksExternal(result.blockExternalContent === true);
         setPluginRenderedHtml(typeof result.html === 'string' && result.html ? result.html : null);
         setPluginRenderedText(typeof result.text === 'string' && result.text ? result.text : null);
         // Normalise the plugin's attachment shape into the PostalMime-like shape
@@ -2354,11 +2363,15 @@ export function EmailViewer({
         setPluginRenderedHtml(null);
         setPluginRenderedText(null);
         setPluginRenderedAttachments(NO_POSTAL_ATTACHMENTS);
+        setPluginBlocksExternal(false);
       }
     })();
 
     return () => { cancelled = true; };
-  }, [email, pluginRenderNonce]);
+    // Once per message, not per object: a render can be a key operation, and mark-read
+    // replaces the object. pluginRenderKey says what should run this again.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pluginRenderKey(email), pluginRenderNonce]);
 
   // TNEF (winmail.dat) detection and processing
   useEffect(() => {
@@ -2704,7 +2717,7 @@ export function EmailViewer({
   //   'ask'   = block until the user allows this message or trusts the sender.
   const shouldBlockExternal = useMemo(() => {
     if (!email) return false;
-    if (remoteHeldBack) return true;
+    if (remoteHeldBack || pluginBlocksExternal) return true;
     const senderEmail = email.from?.[0]?.email?.toLowerCase();
     const senderIsTrusted = senderEmail
       ? isSenderTrusted(senderEmail) || (trustedSendersAddressBook && isTrustedAddressBookSender(senderEmail))
@@ -2717,7 +2730,7 @@ export function EmailViewer({
     // permission changes, so they're deliberately omitted from deps (matches
     // the srcDoc rebuild contract described on `emailContent`).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [email, externalContentPolicy, allowExternalContent, remoteHeldBack]);
+  }, [email, externalContentPolicy, allowExternalContent, remoteHeldBack, pluginBlocksExternal]);
 
   // Reported as phishing ($phishing): a banner, its links turned off and
   // no cards (a phishing mail's "booking" is the lure).
@@ -5684,7 +5697,7 @@ ${printWatermark ? printWatermark.html : ''}
 
         {/* Unified Notification Banner - External Content + Calendar Invitation + Read Receipt */}
         {(senderVerification ||
-          (!plainView && hasBlockedContent && (remoteBlockedByOrg || (!allowExternalContent && externalContentPolicy !== 'allow'))) ||
+          (!plainView && !pluginBlocksExternal && hasBlockedContent && (remoteBlockedByOrg || (!allowExternalContent && externalContentPolicy !== 'allow'))) ||
           hasCalendarInvitation ||
           (readReceiptResponse === 'ask' && shouldOfferReadReceipt) ||
           structuredCards.length > 0) && (
@@ -5717,7 +5730,8 @@ ${printWatermark ? printWatermark.html : ''}
                 {/* External Content Controls */}
                 {/* shouldBlockExternal: gone once trust applies (e.g. the
                     policy finished loading after the first paint). */}
-                {!plainView && hasBlockedContent && shouldBlockExternal && (remoteBlockedByOrg || (!allowExternalContent && externalContentPolicy !== 'allow')) && (
+                {/* A plugin's own banner says why it keeps external content off, and there's nothing to load. */}
+                {!plainView && !pluginBlocksExternal && hasBlockedContent && shouldBlockExternal && (remoteBlockedByOrg || (!allowExternalContent && externalContentPolicy !== 'allow')) && (
                   <div className="flex items-start gap-3 py-1" data-testid="external-content-notice">
                     <div className="w-10 h-10 rounded-full bg-info/15 text-info flex items-center justify-center flex-shrink-0 shadow-sm">
                       <Image className="w-5 h-5" />

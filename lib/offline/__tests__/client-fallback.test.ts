@@ -43,7 +43,7 @@ beforeEach(async () => {
   forgetLegacyMove();
   localStorage.clear();
   useOfflineStore.setState({ enabled: [], downServers: [], browserOffline: false, outbox: [], pendingChanges: 0, conflicts: [] });
-  usePolicyStore.setState({ loaded: true, subject: null, policy: { ...usePolicyStore.getState().policy, organisation: DEFAULT_ORGANISATION_POLICY } });
+  usePolicyStore.setState({ loaded: true, subject: { email: 'alice@example.org', groups: [] }, policy: { ...usePolicyStore.getState().policy, organisation: DEFAULT_ORGANISATION_POLICY } });
   useAccountStore.setState({ accounts: [{ id: 'acc', serverUrl: SERVER, username: 'alice@example.org' } as never] });
   vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
     if (init?.mode === 'no-cors') {

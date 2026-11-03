@@ -649,9 +649,15 @@ export const useFileStore = create<FileState>((set, get) => ({
   })(),
 
   initClient: (client: IJMAPClient, accountId?: string | null) => {
+    const before = get().client as (IJMAPClient & { isOfflineOnly?: () => boolean }) | null;
     const patch: Partial<FileState> = { client };
     if (accountId !== undefined) patch.currentAccountId = accountId;
     set(patch);
+    // A start from the local copy: the real client just took over, and what's
+    // listed is what the device had, or the error of asking it.
+    const offlineBefore = before !== client && before?.isOfflineOnly?.();
+    const offlineNow = (client as IJMAPClient & { isOfflineOnly?: () => boolean }).isOfflineOnly?.();
+    if (offlineBefore && !offlineNow && get().supportsFiles) void get().refresh();
   },
 
   clearClient: () => {
@@ -983,7 +989,9 @@ export const useFileStore = create<FileState>((set, get) => ({
         error: error instanceof Error ? error.message : 'Failed to list directory',
         hasListed: true,
         isLoading: false,
-        resources: [],
+        // A refresh that fails keeps what the folder showed. Another folder's
+        // rows would be wrong here, so one being opened starts empty.
+        resources: opensFolder ? [] : get().resources,
       });
     }
   },

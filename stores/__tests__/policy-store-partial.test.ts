@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Before signing in the server answers with the public part of the policy;
 // the store has to fetch the rest once a session exists.
@@ -18,6 +18,33 @@ function answer(policy: object, scope?: string) {
 beforeEach(() => {
   fetchMock.mockReset();
   usePolicyStore.setState({ policy: { ...DEFAULT_POLICY }, loaded: false, partial: false });
+});
+
+describe('a public answer to a page that is signed in', () => {
+  const FULL = { ...DEFAULT_POLICY, organisation: { devices: { noOffline: true } } };
+
+  afterEach(() => localStorage.removeItem('auth-storage'));
+
+  it('doesn\'t replace the whole policy it has: the public part has no caps', async () => {
+    localStorage.setItem('auth-storage', JSON.stringify({ state: { isAuthenticated: true } }));
+    fetchMock.mockResolvedValueOnce(answer(FULL));
+    await usePolicyStore.getState().fetchPolicy();
+    expect(usePolicyStore.getState().policy.organisation?.devices.noOffline).toBe(true);
+
+    fetchMock.mockResolvedValueOnce(answer({ ...DEFAULT_POLICY }, 'public'));
+    await usePolicyStore.getState().fetchPolicy();
+    expect(usePolicyStore.getState().partial).toBe(false);
+    expect(usePolicyStore.getState().policy.organisation?.devices.noOffline).toBe(true);
+  });
+
+  it('does once nobody is signed in', async () => {
+    fetchMock.mockResolvedValueOnce(answer(FULL));
+    await usePolicyStore.getState().fetchPolicy();
+    fetchMock.mockResolvedValueOnce(answer({ ...DEFAULT_POLICY }, 'public'));
+    await usePolicyStore.getState().fetchPolicy();
+    expect(usePolicyStore.getState().partial).toBe(true);
+    expect(usePolicyStore.getState().policy.organisation?.devices.noOffline).toBeFalsy();
+  });
 });
 
 describe('policy store', () => {

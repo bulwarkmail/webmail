@@ -6,6 +6,8 @@ import { Check, Plus, LogOut, Mails, Star, ChevronDown, AlertCircle, GripVertica
 import { useTranslations } from "next-intl";
 import type { Mailbox } from "@/lib/jmap/types";
 import { useAccountStore, type AccountEntry } from "@/stores/account-store";
+import { useDesktopPolicy } from "@/lib/desktop/policy";
+import { accountRefusedByDesktopPolicy } from "@/lib/desktop/refused-accounts";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -95,7 +97,13 @@ export function AccountSwitcher({
   const tCommon = useTranslations("common");
   const ownMailboxes = useEmailStore((s) => s.mailboxes);
 
-  const accounts = useAccountStore((s) => s.accounts);
+  const storedAccounts = useAccountStore((s) => s.accounts);
+  const devicePolicy = useDesktopPolicy();
+  // One on a server the device's OS policy refuses is stopped, and isn't on offer here.
+  const accounts = useMemo(
+    () => (devicePolicy.AllowedJmapServers.value ? storedAccounts.filter((account) => !accountRefusedByDesktopPolicy(account, devicePolicy)) : storedAccounts),
+    [storedAccounts, devicePolicy],
+  );
   const setDefaultAccount = useAccountStore((s) => s.setDefaultAccount);
   const reorderAccounts = useAccountStore((s) => s.reorderAccounts);
   // Read activeAccountId from authStore so the selector matches the actually-loaded
