@@ -470,6 +470,19 @@ describe('queued edits', () => {
     expect(await engine.areaCall('contacts.pending', undefined)).toBe(0);
   });
 
+  it('refuses a card too large to ever send, so it cannot hold up the rest', async () => {
+    const server = new FakeContacts();
+    const card = server.addCard();
+    const { engine } = await synced(server);
+    const photo = { p: { kind: 'photo', uri: `data:image/jpeg;base64,${'A'.repeat(9 * 1024 * 1024)}` } };
+    const made = await call(engine, 'ContactCard/set', { create: { n: { name: { full: 'Big' }, addressBookIds: { book1: true }, media: photo } } });
+    expect(made.notCreated.n.type).toBe('tooLarge');
+    const edited = await call(engine, 'ContactCard/set', { update: { [card.id]: { media: photo } } });
+    expect(edited.notUpdated[card.id].type).toBe('tooLarge');
+    expect(await engine.areaCall('contacts.pending', undefined)).toBe(0);
+    expect((await call(engine, 'ContactCard/get', { ids: [card.id] })).list[0]).not.toHaveProperty('media');
+  });
+
   it('answers a patch that leads nowhere per record', async () => {
     const server = new FakeContacts();
     const card = server.addCard();

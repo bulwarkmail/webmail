@@ -27,6 +27,8 @@ const LOCAL_BLOB_MARK = '"blobId":"bulwark-local-';
 
 const SET_BATCH = 100;
 const SET_BATCH_BYTES = 5 * 1024 * 1024;
+/** The server takes 10 MB a request. A bigger card would hold up everything queued behind it, for good. */
+const MAX_RECORD_BYTES = 8 * 1024 * 1024;
 const GET_BATCH = 500;
 const CALLS_PER_REQUEST = 16;
 /** Set errors that say nothing about the edit itself: it goes out again next time. */
@@ -86,6 +88,8 @@ function holdsLocalBlob(value: unknown): boolean {
   return JSON.stringify(value).includes(LOCAL_BLOB_MARK);
 }
 
+const TOO_LARGE_ERROR: SetError = { type: 'tooLarge', description: 'This contact is too large to save' };
+
 const LOCAL_BLOB_ERROR: SetError = {
   type: 'invalidProperties',
   description: 'A photo that is not on the server yet cannot be used here',
@@ -100,9 +104,10 @@ export function queueCreate(ctx: StoreContext, jmap: string, card: JsonObject): 
   }
   const id = `${STAND_IN_PREFIX}${crypto.randomUUID()}`;
   const uid = typeof card.uid === 'string' && card.uid ? card.uid : `urn:uuid:${crypto.randomUUID()}`;
-  const payload = { ...card, uid };
-  savePending(ctx.db, ctx, { jmap, id, op: 'create', uid, payload: JSON.stringify(payload), base: null });
-  writeCard(ctx.db, jmap, { '@type': 'Card', version: '1.0', ...payload, id });
+  const payload = JSON.stringify({ ...card, uid });
+  if (payload.length > MAX_RECORD_BYTES) return TOO_LARGE_ERROR;
+  savePending(ctx.db, ctx, { jmap, id, op: 'create', uid, payload, base: null });
+  writeCard(ctx.db, jmap, { '@type': 'Card', version: '1.0', ...card, uid, id });
   return { id, uid };
 }
 
@@ -121,11 +126,13 @@ export function queueUpdate(ctx: StoreContext, jmap: string, rawId: string, patc
     throw error;
   }
   if (pending?.op === 'create') {
-    const payload = applyPatch(JSON.parse(pending.payload as string) as JsonObject, patch);
-    savePending(ctx.db, ctx, { jmap, id, op: 'create', uid: pending.uid, payload: JSON.stringify(payload), base: null });
+    const payload = JSON.stringify(applyPatch(JSON.parse(pending.payload as string) as JsonObject, patch));
+    if (payload.length > MAX_RECORD_BYTES) return TOO_LARGE_ERROR;
+    savePending(ctx.db, ctx, { jmap, id, op: 'create', uid: pending.uid, payload, base: null });
   } else {
-    const merged = pending ? mergePatches(JSON.parse(pending.payload as string) as Patch, patch) : patch;
-    savePending(ctx.db, ctx, { jmap, id, op: 'update', payload: JSON.stringify(merged), base: pending ? pending.base : JSON.stringify(card) });
+    const merged = JSON.stringify(pending ? mergePatches(JSON.parse(pending.payload as string) as Patch, patch) : patch);
+    if (merged.length > MAX_RECORD_BYTES) return TOO_LARGE_ERROR;
+    savePending(ctx.db, ctx, { jmap, id, op: 'update', payload: merged, base: pending ? pending.base : JSON.stringify(card) });
   }
   writeCard(ctx.db, jmap, visible);
   return null;
