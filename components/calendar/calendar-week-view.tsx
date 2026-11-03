@@ -152,7 +152,8 @@ export function CalendarWeekView({
 
   const measureColWidth = useCallback((root: HTMLElement | null) => {
     if (isMobile || !root) return MOBILE_COL_WIDTH;
-    return Math.max(MIN_COL_WIDTH, Math.floor((root.clientWidth - gutterWidth) / columnsPerWeek));
+    // Not rounded down: the pixels left over showed a sliver of next Monday at the edge.
+    return Math.max(MIN_COL_WIDTH, (root.clientWidth - gutterWidth) / columnsPerWeek);
   }, [isMobile, gutterWidth, columnsPerWeek]);
   const [colWidth, setColWidth] = useState(MOBILE_COL_WIDTH);
   const [viewportWidth, setViewportWidth] = useState(0);
