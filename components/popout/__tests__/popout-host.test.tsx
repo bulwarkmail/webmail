@@ -55,7 +55,7 @@ beforeEach(() => {
   FakeBroadcastChannel.reset();
   vi.stubGlobal('BroadcastChannel', FakeBroadcastChannel);
   // The bridge makes pop-outs available without stubbing the display mode.
-  window.bulwarkDesktop = { windows: {} };
+  window.bulwarkDesktop = { version: 1, platform: 'win32', windows: {} };
   stubLocks();
   sessionStorage.clear();
   heard = [];

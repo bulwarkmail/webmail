@@ -101,7 +101,7 @@ describe('popoutsAvailable', () => {
 
   it('asks the bridge too: display-mode is `browser` in Electron', async () => {
     stubDisplay({ standalone: false });
-    window.bulwarkDesktop = { windows: {} };
+    window.bulwarkDesktop = { version: 1, platform: 'win32', windows: {} };
     expect(await available()).toBe(true);
   });
 
@@ -168,7 +168,7 @@ describe('opening windows', () => {
   it('leaves it to the bridge when the bridge opens windows, under the same name', async () => {
     const { openMessageWindow } = await import('@/lib/popout/open');
     const bridgeOpen = vi.fn();
-    window.bulwarkDesktop = { windows: { open: bridgeOpen } };
+    window.bulwarkDesktop = { version: 1, platform: 'win32', windows: { open: bridgeOpen } };
     const open = vi.spyOn(window, 'open');
     expect(openMessageWindow({ emailId: 'bridged' })).toBe(true);
     expect(openMessageWindow({ emailId: 'bridged' })).toBe(true);

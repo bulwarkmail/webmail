@@ -72,7 +72,7 @@ describe('state across windows', () => {
   });
 
   it('also runs in the desktop app\'s main window', async () => {
-    window.bulwarkDesktop = { windows: {} };
+    window.bulwarkDesktop = { version: 1, platform: 'win32', windows: {} };
     stop = startWindowSync();
     writeFromAnotherWindow('locale-storage', { locale: 'fr' });
     await settle();
@@ -140,7 +140,7 @@ describe('the app-like behaviour', () => {
   });
 
   it('marks the page before the first paint when the bridge is there', () => {
-    window.bulwarkDesktop = {};
+    window.bulwarkDesktop = { version: 1, platform: 'win32' };
     runBoot();
     expect(document.documentElement.hasAttribute('data-desktop')).toBe(true);
   });
