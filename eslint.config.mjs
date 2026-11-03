@@ -90,6 +90,7 @@ export default [
       "examples/**",
       "integration/**",
       "scripts/a11y-guard/axe.min.js",
+      "vendor/**",
     ],
   },
 ];
