@@ -173,4 +173,18 @@ describe('with notifications off or do not disturb on', () => {
   });
 });
 
+describe('which login a push is for', () => {
+  it('names the login in the preview request', async () => {
+    const { push, previews } = loadWorker(() => ({ unreadTotal: 1, slot: 0, email: mail('e1') }));
+    await push(delivery('a', 'e1'));
+    expect(previews[0].searchParams.get('login')).toBe('me@example.org');
+  });
+
+  it('leaves it out when the push has no label', async () => {
+    const { push, previews } = loadWorker(() => ({ unreadTotal: 1, slot: 0, email: mail('e1') }));
+    await push({ kind: 'jmap-email-push', accountId: 'a', emailIds: ['e1'] });
+    expect(previews[0].searchParams.has('login')).toBe(false);
+  });
+});
+
 // -- end of cases --

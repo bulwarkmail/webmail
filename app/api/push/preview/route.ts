@@ -45,11 +45,12 @@ interface ResolvedTarget {
 // session of everyone it is shared with, who sees only that folder - not its
 // Inbox, nor the message that just arrived there.
 //
-// The push names nothing but the account id, and ids repeat across servers
-// (and a group account is listed by each member). When that leaves more than
-// one login, answer 'ambiguous' rather than guess: a wrong guess previews
+// Ids repeat across servers (and a group account is listed by each member), so
+// the account id alone can leave several logins. The push's label names the login
+// that registered it, which settles it among those that have the account. Without
+// one that fits, answer 'ambiguous' rather than guess: a wrong guess previews
 // another login's mail and opens it there.
-async function resolveTargetForAccount(accountId: string, forwarded: Record<string, string>): Promise<ResolvedTarget | 'ambiguous' | null> {
+async function resolveTargetForAccount(accountId: string, login: string | null, forwarded: Record<string, string>): Promise<ResolvedTarget | 'ambiguous' | null> {
   const cookieStore = await cookies();
   const probes: Promise<{ target: ResolvedTarget; own: boolean } | null>[] = [];
   for (let slot = 0; slot < MAX_ACCOUNT_SLOTS; slot++) {
@@ -91,6 +92,8 @@ async function resolveTargetForAccount(accountId: string, forwarded: Record<stri
     );
   }
   const results = (await Promise.all(probes)).filter((r) => r !== null);
+  const named = login ? results.filter((r) => r.target.username.toLowerCase() === login.toLowerCase()) : [];
+  if (named.length === 1) return named[0].target;
   const owners = results.filter((r) => r.own);
   if (owners.length === 1) return owners[0].target;
   if (results.length === 1) return results[0].target;
@@ -141,7 +144,7 @@ export async function GET(request: NextRequest) {
     let target: ResolvedTarget | null = null;
     let authHeader: string;
     if (requestedAccountId) {
-      const resolved = await resolveTargetForAccount(requestedAccountId, forwarded);
+      const resolved = await resolveTargetForAccount(requestedAccountId, request.nextUrl.searchParams.get('login'), forwarded);
       if (!resolved) {
         return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
       }

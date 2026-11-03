@@ -26,9 +26,9 @@ vi.mock('@/lib/account-utils', () => ({ MAX_ACCOUNT_SLOTS: 3 }));
 
 // slot 0: alice on one.example, slot 1: bob on two.example, slot 2: carol on one.example
 const LOGINS = [
-  { serverUrl: 'https://one.example', authHeader: 'Basic alice' },
-  { serverUrl: 'https://two.example', authHeader: 'Basic bob' },
-  { serverUrl: 'https://one.example', authHeader: 'Basic carol' },
+  { serverUrl: 'https://one.example', authHeader: 'Basic alice', username: 'alice@one.example' },
+  { serverUrl: 'https://two.example', authHeader: 'Basic bob', username: 'bob@two.example' },
+  { serverUrl: 'https://one.example', authHeader: 'Basic carol', username: 'carol@one.example' },
 ];
 vi.mock('@/lib/stalwart/auth-context', () => ({
   readStalwartAuthContextFromStore: (_store: unknown, slot: number) => LOGINS[slot] ?? null,
@@ -73,10 +73,10 @@ vi.mock('@/lib/admin/config-manager', async () => {
   return { configManager: { ensureLoaded: async () => {}, getPolicy: () => DEFAULT_POLICY } };
 });
 
-async function callRoute(accountId: string) {
+async function callRoute(accountId: string, login?: string) {
   const { GET } = await import('@/app/api/push/preview/route');
   const request = {
-    nextUrl: { searchParams: { get: (k: string) => (k === 'accountId' ? accountId : k === 'emailId' ? 'e1' : null) } },
+    nextUrl: { searchParams: { get: (k: string) => (k === 'accountId' ? accountId : k === 'emailId' ? 'e1' : k === 'login' ? login ?? null : null) } },
     headers: new Headers(),
   };
   const res = (await GET(request as unknown as Parameters<typeof GET>[0])) as unknown as {
@@ -91,6 +91,39 @@ const mailCalls = () => fetchJmapServer.mock.calls.filter(([url]) => !url.endsWi
 describe('push preview when the account id is in more than one login', () => {
   beforeEach(() => {
     fetchJmapServer.mockClear();
+  });
+
+  it('takes the login the push names when two servers use the same id', async () => {
+    SESSIONS = {
+      'Basic alice': session('https://one.example', 'a'),
+      'Basic bob': session('https://two.example', 'z'),
+      'Basic carol': session('https://one.example', 'z'),
+    };
+    const { status, body } = await callRoute('z', 'BOB@two.example');
+    expect(status).toBe(200);
+    expect(body.slot).toBe(1);
+    expect((body.email as { subject: string }).subject).toBe('mail of Basic bob');
+  });
+
+  it('takes the login the push names for a group two logins belong to', async () => {
+    SESSIONS = {
+      'Basic alice': session('https://one.example', 'a', ['team']),
+      'Basic bob': session('https://two.example', 'b'),
+      'Basic carol': session('https://one.example', 'c', ['team']),
+    };
+    const { status, body } = await callRoute('team', 'carol@one.example');
+    expect(status).toBe(200);
+    expect(body.slot).toBe(2);
+  });
+
+  it('does not take a login that does not have the account', async () => {
+    SESSIONS = {
+      'Basic alice': session('https://one.example', 'a', ['team']),
+      'Basic bob': session('https://two.example', 'b'),
+      'Basic carol': session('https://one.example', 'c', ['team']),
+    };
+    const { status } = await callRoute('team', 'bob@two.example');
+    expect(status).toBe(409);
   });
 
   it('shows no preview and names no login when two servers use the same id', async () => {

@@ -642,6 +642,9 @@ async function notifyAccount(accountId, emailIds, accountLabel) {
   if (!lockHidesContent) try {
     const query = new URLSearchParams();
     if (accountId) query.set("accountId", accountId);
+    // The relay record's label is the login that registered. Account and message
+    // ids repeat across logins, and this tells them apart.
+    if (accountLabel) query.set("login", accountLabel);
     if (freshIds.length > 0) query.set("emailId", freshIds[freshIds.length - 1]);
     const qs = query.toString();
     const previewUrl = `${BASE_PATH}/api/push/preview${qs ? `?${qs}` : ""}`;
