@@ -28,10 +28,14 @@ function likeTerm(value: unknown): string {
   return `%${String(value).replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
 }
 
-function filterSql(filter: Filter, jmap: string): Sql {
+/**
+ * `drivenBy` is the folder the query already starts from: repeating that
+ * condition would look the membership up again for every row.
+ */
+function filterSql(filter: Filter, jmap: string, drivenBy: string | null = null): Sql {
   if (typeof filter.operator === 'string') {
     const conditions = Array.isArray(filter.conditions) ? filter.conditions as Filter[] : [];
-    const parts = conditions.map((c) => filterSql(c, jmap));
+    const parts = conditions.map((c) => filterSql(c, jmap, filter.operator === 'AND' ? drivenBy : null));
     const params = parts.flatMap((p) => p.params);
     const joined = (joiner: string) => parts.map((p) => `(${p.sql})`).join(joiner);
     if (filter.operator === 'AND') return { sql: parts.length ? joined(' AND ') : '1', params };
@@ -44,6 +48,7 @@ function filterSql(filter: Filter, jmap: string): Sql {
   for (const [key, value] of Object.entries(filter)) {
     switch (key) {
       case 'inMailbox':
+        if (value === drivenBy) break;
         conditions.push('EXISTS (SELECT 1 FROM email_mailbox m WHERE m.email_rowid = e.rowid AND m.mailbox_id = ?)');
         params.push(String(value));
         break;
@@ -118,6 +123,15 @@ function filterSql(filter: Filter, jmap: string): Sql {
 
 interface Comparator { property?: string; isAscending?: boolean; keyword?: string }
 
+/**
+ * Newest first reads straight off an index. Any other order has to look at
+ * every row of the folder, which in a large mailbox takes seconds.
+ */
+function isNewestFirst(sort: Comparator[]): boolean {
+  if (sort.length === 0) return true;
+  return sort.length === 1 && sort[0].property === 'receivedAt' && sort[0].isAscending === false;
+}
+
 function orderSql(ctx: MethodContext, sort: Comparator[]): Sql {
   const levels = sort.length > 0 ? sort : [{ property: 'receivedAt', isAscending: false }];
   const parts: string[] = [];
@@ -165,9 +179,12 @@ const emailQuery: MethodHandler = (ctx, args) => {
   const jmap = jmapOf(ctx, args);
   const filter = (args.filter ?? undefined) as Filter | undefined;
   if (args.anchor !== undefined) throw new MethodError('unsupportedFilter', 'anchor needs the server');
-  const where = filter ? filterSql(filter, jmap) : { sql: '1', params: [] };
-  const order = orderSql(ctx, (args.sort as Comparator[]) ?? []);
   const box = drivingMailbox(filter);
+  const where = filter ? filterSql(filter, jmap, box) : { sql: '1', params: [] };
+  const sort = (args.sort as Comparator[]) ?? [];
+  const order: Sql = !isNewestFirst(sort)
+    ? orderSql(ctx, sort)
+    : { sql: box ? 'd.received_at DESC, d.email_rowid DESC' : 'e.received_at DESC, e.rowid DESC', params: [] };
   // Starting from the folder's own index keeps small folders fast in a large account.
   const from = box
     ? 'email_mailbox d INDEXED BY email_mailbox_list CROSS JOIN email e ON e.rowid = d.email_rowid'
@@ -194,8 +211,10 @@ const emailQuery: MethodHandler = (ctx, args) => {
   };
   if (args.calculateTotal) {
     const count = collapse ? 'COUNT(DISTINCT COALESCE(e.thread_id, e.id))' : 'COUNT(*)';
+    // A plain folder counts from its index alone, without reading a message.
+    const countFrom = box && !collapse && where.sql === '1' ? 'email_mailbox d INDEXED BY email_mailbox_list' : from;
     result.total = Number(ctx.db.get<{ n: number }>(
-      `SELECT ${count} AS n FROM ${from} WHERE ${base.sql} AND (${where.sql})`,
+      `SELECT ${count} AS n FROM ${countFrom} WHERE ${base.sql} AND (${where.sql})`,
       [...base.params, ...where.params],
     )?.n ?? 0);
   }

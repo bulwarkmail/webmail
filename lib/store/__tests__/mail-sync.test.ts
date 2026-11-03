@@ -6,6 +6,8 @@ import path from 'node:path';
 import { DEFAULT_SCOPE, type StoreContext, type StoreEvent } from '../area';
 import { AccountEngine } from '../engine/account-engine';
 import { runChangesLoop } from '../engine/changes';
+import { answerRequest, buildMethodTable } from '../engine/responder';
+import type { SqlValue } from '../storage';
 import { TransportError, type MethodCall } from '../engine/transport';
 import { mailArea } from '../mail';
 import { FAKE_SESSION, FakeJmap, JMAP_ACCOUNT } from './helpers/fake-jmap';
@@ -317,6 +319,50 @@ describe('when the server is busy or gone', () => {
     expect(events.filter((e) => e.type === 'created')).toEqual([
       { type: 'created', account: 'a@fake.test', jmap: JMAP_ACCOUNT, collection: 'Email', ids: ['fresh'] },
     ]);
+  });
+});
+
+describe('query plans', () => {
+  it('reads a newest-first folder page off the index, without sorting the folder', async () => {
+    const server = new FakeJmap();
+    for (let i = 0; i < 30; i += 1) server.addEmail();
+    const db = openMemoryStore();
+    const engine = engineFor(server, db);
+    await engine.requestSync();
+    const seen: string[] = [];
+    const spied = {
+      ...db,
+      all: <T extends object>(sql: string, params?: readonly SqlValue[]) => {
+        seen.push(sql);
+        return db.all<T>(sql, params);
+      },
+    };
+    const answer = await answerRequest(
+      { account: 'a', db: spied as typeof db, session: FAKE_SESSION, scope: EVERYTHING, now: Date.now, emit: () => {}, overlay: (_jmap, _type, records) => records, defaultJmap: JMAP_ACCOUNT, invertedKeywordSort: false },
+      buildMethodTable([mailArea]),
+      [['Email/query', { filter: INBOX, sort: [{ property: 'receivedAt', isAscending: false }], limit: 5 }, 'q']],
+    );
+    expect(answer?.methodResponses[0][1].ids).toHaveLength(5);
+    const [sql] = seen;
+    const plan = db.all<{ detail: string }>(`EXPLAIN QUERY PLAN ${sql}`, [JMAP_ACCOUNT, 'inbox', 5, 0]).map((row) => row.detail).join('; ');
+    expect(plan).not.toContain('TEMP B-TREE');
+    expect(plan).toContain('email_mailbox_list');
+    // The folder condition isn't looked up again for every row.
+    expect(sql).not.toContain('m.mailbox_id');
+  });
+});
+
+describe('a failure inside a transaction', () => {
+  it('reports the real error even when SQLite has already rolled back', () => {
+    const db = openMemoryStore();
+    db.exec('CREATE TABLE t (id INTEGER PRIMARY KEY)');
+    expect(() => db.transaction(() => {
+      db.exec('ROLLBACK');
+      throw new Error('disk is full');
+    })).toThrow('disk is full');
+    // And the connection still works.
+    db.transaction(() => db.run('INSERT INTO t (id) VALUES (1)'));
+    expect(db.all('SELECT id FROM t')).toHaveLength(1);
   });
 });
 

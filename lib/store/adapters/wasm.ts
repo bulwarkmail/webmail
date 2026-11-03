@@ -165,6 +165,8 @@ export class WasmStorage {
       const pageSize = Number(db.selectValue('PRAGMA page_size'));
       if (pageSize !== REQUIRED_PAGE_SIZE) throw new Error(`Refusing an unsafe page size: ${pageSize}`);
       db.exec('PRAGMA temp_store = MEMORY');
+      // Every page read is a decryption, so a miss costs more than usual.
+      db.exec('PRAGMA cache_size = -65536');
       db.exec('PRAGMA foreign_keys = OFF');
       db.exec('PRAGMA synchronous = NORMAL');
     } catch (error) {
