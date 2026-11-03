@@ -53,7 +53,7 @@ import { toStorageQuota, type JMAPQuota, type StorageQuota } from "@/lib/quota";
 import { messagePriorityHeaders, type MessagePriority } from "@/lib/message-priority";
 import { customHeaderProperties, withLabelHeaders } from "@/lib/outgoing/custom-headers";
 import { draftLabelProperty } from "@/lib/classification/labels";
-import { attachmentParts, HTML_PART_ID, relatedBodyStructure, TEXT_PART_ID, type OutgoingBodyPart } from "./outgoing-body";
+import { attachmentParts, HTML_PART_ID, relatedBodyStructure, repointAttachments, TEXT_PART_ID, type OutgoingBodyPart, type SavedPart } from "./outgoing-body";
 import { addBodyMediaToAttachments } from "./body-media-attachments";
 
 // Cap for the follow-up Email/get issued when a displayed body part comes
@@ -5082,6 +5082,8 @@ export class JMAPClient implements IJMAPClient {
       throw new Error('No drafts mailbox found');
     }
 
+    attachments = await this.withPartsOfFlushedDraft(attachments, draftId, options?.previousDraftAccountId);
+
     // Files attached offline go up now if the server answers. If it doesn't,
     // the draft stays on the device with them, as when offline.
     const hooks = getOfflineHooks();
@@ -5149,14 +5151,17 @@ export class JMAPClient implements IJMAPClient {
 
     // Images the HTML shows by cid: go into a multipart/related beside it
     // (#1451), so the draft and the mail sent from it display them.
-    const draftStructure = relatedBodyStructure(htmlBody, attachments);
-    if (draftStructure) {
-      delete emailData.textBody;
-      delete emailData.htmlBody;
-      emailData.bodyStructure = draftStructure;
-    } else if (attachments?.length) {
-      emailData.attachments = attachmentParts(attachments);
-    }
+    const putParts = (parts: typeof attachments) => {
+      const draftStructure = relatedBodyStructure(htmlBody, parts);
+      if (draftStructure) {
+        delete emailData.textBody;
+        delete emailData.htmlBody;
+        emailData.bodyStructure = draftStructure;
+      } else if (parts?.length) {
+        emailData.attachments = attachmentParts(parts);
+      }
+    };
+    putParts(attachments);
 
     // Destroy the previous draft version only AFTER the replacement was
     // created (#849). A combined `Email/set { create, destroy }` processes
@@ -5164,12 +5169,23 @@ export class JMAPClient implements IJMAPClient {
     // previous version (re-opened draft with attachments) and fails with
     // blobNotFound, the destroy still went through - deleting the last good
     // copy of the draft. Worst case now is an orphaned old version.
-    const response = await this.request([
+    const createVersion = () => this.request([
       ["Email/set", {
         accountId: draftAccountId,
         create: { [emailId]: emailData },
       }, "0"],
     ]);
+    let response = await createVersion();
+    // A part that died with the message it belonged to: its file is in the draft
+    // under another id now. Once, with the parts the draft has.
+    if (draftId && response.methodResponses?.[0]?.[1]?.notCreated?.[emailId]?.type === 'blobNotFound') {
+      const fresh = await this.withPartsOfDraft(attachments, draftId, options?.previousDraftAccountId);
+      if (fresh !== attachments) {
+        attachments = fresh;
+        putParts(fresh);
+        response = await createVersion();
+      }
+    }
 
     if (response.methodResponses?.[0]?.[0] === "Email/set") {
       const result = response.methodResponses[0][1];
@@ -5210,6 +5226,33 @@ export class JMAPClient implements IJMAPClient {
     throw new Error('Failed to save draft');
   }
 
+  /** `attachments` pointed at the parts the draft has now. The same list when nothing changes. */
+  private async withPartsOfDraft<T extends { blobId: string; name: string; size?: number }>(attachments: T[] | undefined, draftId: string, accountId: string | undefined): Promise<T[] | undefined> {
+    if (!attachments?.some((attachment) => !isLocalBlobId(attachment.blobId))) return attachments;
+    let email: Pick<Email, "attachments" | "textBody" | "htmlBody"> | undefined;
+    try {
+      const response = await this.request([["Email/get", { accountId: accountId || this.accountId, ids: [draftId], properties: ["attachments", "textBody", "htmlBody"] }, "0"]]);
+      email = response.methodResponses?.[0]?.[1]?.list?.[0];
+    } catch (error) {
+      debug.warn('email', 'Could not read the parts of the draft:', error);
+    }
+    if (!email) return attachments;
+    const parts: SavedPart[] = addBodyMediaToAttachments(email).attachments ?? [];
+    const fresh = repointAttachments(attachments, parts, (attachment) => isLocalBlobId(attachment.blobId));
+    return fresh.some((attachment, i) => attachment !== attachments[i]) ? fresh : attachments;
+  }
+
+  /**
+   * A stand-in that has reached the server: the draft was created anew there, so
+   * parts the page got from an older version may be gone.
+   */
+  private async withPartsOfFlushedDraft<T extends { blobId: string; name: string; size?: number }>(attachments: T[] | undefined, draftId: string | undefined, accountId: string | undefined): Promise<T[] | undefined> {
+    const offline = getOfflineHooks();
+    if (!draftId || !isStandInId(draftId) || !offline?.resolveStandIns || this.offlineOnly || offline.skipNetwork(this)) return attachments;
+    const resolved = await offline.resolveStandIns(this, [draftId]);
+    return resolved[draftId] ? this.withPartsOfDraft(attachments, draftId, accountId) : attachments;
+  }
+
   async sendEmail(
     to: string[],
     subject: string,
@@ -5230,9 +5273,12 @@ export class JMAPClient implements IJMAPClient {
     // one (see createDraft). `messageId` and `existingCopyId` come from the
     // offline outbox: a Message-ID fixed when the message was queued, and the
     // copy already on the server that only needs submitting (lib/store/outbox/dedupe.ts).
-    options?: SubmissionSendOptions & { draftAccountId?: string; messageId?: string; existingCopyId?: string }
+    options?: SubmissionSendOptions & { draftAccountId?: string; messageId?: string; existingCopyId?: string; partsRepointed?: boolean }
   ): Promise<SendEmailResult> {
     const holdForSeconds = delayedUntil ? this.validateDelayedUntil(delayedUntil) : undefined;
+    if (!options?.partsRepointed && !options?.existingCopyId) {
+      attachments = await this.beforeSubmission(() => this.withPartsOfFlushedDraft(attachments, draftId, options?.draftAccountId));
+    }
     const emailId = `send-${Date.now()}`;
     const targetAccountId = await this.beforeSubmission(() => this.resolveSendAccountId(fromEmail));
     const mboxResp = await this.beforeSubmission(() => this.request([
@@ -5510,6 +5556,14 @@ export class JMAPClient implements IJMAPClient {
     if (failure) {
       console.error('[sendEmail] JMAP method error:', failure);
       await this.discardUnsentCopy(draftCopyId, targetAccountId);
+      // A part that died with its message: nothing went out, so once more with
+      // the parts the draft has now.
+      if (failure.type === 'blobNotFound' && draftId && !options?.partsRepointed) {
+        const fresh = await this.withPartsOfDraft(attachments, draftId, options?.draftAccountId);
+        if (fresh !== attachments) {
+          return this.sendEmail(to, subject, body, cc, bcc, identityId, fromEmail, draftId, fromName, htmlBody, fresh, inReplyTo, references, delayedUntil, envelopeMailFrom, { ...options, partsRepointed: true });
+        }
+      }
       const propsHint = failure.properties?.length ? ` (properties: ${failure.properties.join(', ')})` : '';
       throw jmapError(`${failure.description || `Failed to send email: ${failure.type}`}${propsHint}`, failure);
     }
@@ -5623,12 +5677,16 @@ export class JMAPClient implements IJMAPClient {
     // a filing warning rather than a failed send (#849). The submission
     // record rides along, and nothing about it may turn into a warning.
     if (draftId && createdEmailId) {
+      // A draft still on the device is answered by the device, which can't
+      // remove a record on the server: that one goes on its own.
+      const recordAlongside = submissionToDestroy && !isStandInId(draftId) ? submissionToDestroy : undefined;
+      if (submissionToDestroy && !recordAlongside) await this.destroyEmailSubmissions([submissionToDestroy], submissionAccountId);
       try {
         const cleanupCalls: JMAPMethodCall[] = [
           ["Email/set", { accountId: options?.draftAccountId || this.accountId, destroy: [draftId] }, "0"],
         ];
-        if (submissionToDestroy) {
-          cleanupCalls.push(submissionDestroyCall([submissionToDestroy], submissionAccountId, "1"));
+        if (recordAlongside) {
+          cleanupCalls.push(submissionDestroyCall([recordAlongside], submissionAccountId, "1"));
         }
         const destroyResponse = await this.request(cleanupCalls);
         const destroyResult = destroyResponse.methodResponses?.find(([, , callId]) => callId === "0")?.[1];
@@ -5637,7 +5695,7 @@ export class JMAPClient implements IJMAPClient {
           const first = Object.values(destroyResult.notDestroyed as Record<string, { type?: string; description?: string }>)[0];
           filingError = filingError ?? (first?.description || first?.type || 'old draft cleanup failed');
         }
-        if (submissionToDestroy) readSubmissionDestroy(destroyResponse, "1");
+        if (recordAlongside) readSubmissionDestroy(destroyResponse, "1");
       } catch (err) {
         console.error('[sendEmail] old draft cleanup failed:', err);
         filingError = filingError ?? 'old draft cleanup failed';

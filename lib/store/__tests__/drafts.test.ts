@@ -11,7 +11,7 @@ import { outboxArea } from '../outbox';
 import { flushPatches, type PatchOutcome, type PendingPatch } from '../outbox/flush-patches';
 import type { StoredConflict } from '../outbox/items';
 import { FakeJmapDrafts } from './helpers/fake-drafts';
-import { FAKE_SESSION, JMAP_ACCOUNT } from './helpers/fake-jmap';
+import { FAKE_SESSION, JMAP_ACCOUNT, type FakeEmail } from './helpers/fake-jmap';
 import { openMemoryStore } from './helpers/node-adapter';
 
 const NOW = Date.UTC(2026, 10, 3);
@@ -408,14 +408,18 @@ describe('a lost response', () => {
     expect((await list())[0].status).toBe('uncertain');
   });
 
-  it('removes a copy that arrives after the draft was replaced on the way', async () => {
-    const id = await save({ text: 'Old' });
+  it('removes a copy that arrives after the draft was replaced on the way, only once the new one is up', async () => {
+    const id = await save({ text: 'Old', messageId: 'late@example.org' });
     await t.engine.areaCall('drafts.claim', { localId: id });
     const next = await save({ text: 'New', previous: id });
-    await t.engine.areaCall('drafts.created', { localId: id, seq: 1, jmap: JMAP_ACCOUNT, messageId: 'x', serverId: 'late', email: null, server: {} });
-    const pending = await t.engine.areaCall('outbox.pendingPatches', {}) as PendingPatch[];
-    expect(pending.map((row) => [row.recordId, row.op])).toEqual([['late', 'destroy']]);
+    t.server.addEmail({ id: 'late', subject: 'A draft', mailboxIds: { drafts: true }, keywords: { $seen: true, $draft: true }, messageId: ['late@example.org'], size: 3, receivedAt: new Date(NOW).toISOString() });
+    await t.engine.areaCall('drafts.created', { localId: id, seq: 1, jmap: JMAP_ACCOUNT, messageId: 'late@example.org', serverId: 'late', email: null, server: {}, ghostCopies: [] });
+    expect(await t.engine.areaCall('outbox.pendingPatches', {})).toEqual([]);
     expect((await get(next)).list).toHaveLength(1);
+    await flush();
+    await flushQueue();
+    expect(t.server.emails.has('late')).toBe(false);
+    expect((t.server.drafts()[0].bodyValues as Record<string, { value: string }>)['1'].value).toBe('New');
   });
 });
 
@@ -478,7 +482,9 @@ describe('files attached offline', () => {
     await flush();
     const [draft] = t.server.drafts();
     expect(t.server.uploads).toHaveLength(1);
-    expect((draft.attachments as Array<{ blobId: string; size: number }>)[0]).toMatchObject({ blobId: t.server.uploads[0].blobId, size: 5 });
+    const [part] = draft.attachments as Array<{ blobId: string; size: number }>;
+    expect(part.size).toBe(5);
+    expect(new TextDecoder().decode(t.server.bytesOf(part.blobId))).toBe('hello');
   });
 
   it('go up before the create that names them', async () => {
@@ -597,5 +603,279 @@ describe('sending a draft that\'s on the device', () => {
     await t.engine.areaCall('outbox.update', { id: entry, status: 'failed', error: { text: 'refused' } });
     await flush();
     expect(t.server.drafts()).toHaveLength(1);
+  });
+});
+
+const valueOf = (email: FakeEmail) => (email.bodyValues as Record<string, { value: string }>)['1'].value;
+
+describe('a draft naming a part that died with its message', () => {
+  function partOnServer(id: string, part: string, bytes: string) {
+    t.server.parts.set(part, new TextEncoder().encode(bytes));
+    t.server.addEmail({
+      id,
+      subject: 'On the server',
+      mailboxIds: { drafts: true },
+      keywords: { $seen: true, $draft: true },
+      attachments: [{ partId: part, blobId: part, name: 'a.txt', type: 'text/plain', size: bytes.length }] as never,
+    });
+  }
+
+  it('is pointed at the part of the version it replaces, and goes up', async () => {
+    partOnServer('R', 'part-live', 'abc');
+    await t.engine.requestSync();
+    await save({ previous: 'R', attachments: [{ blobId: 'part-dead', type: 'text/plain', name: 'a.txt' }] });
+    const { refused, finished } = await flush();
+    expect(refused).toEqual([]);
+    expect(finished).toBe(true);
+    await flushQueue();
+    const [draft] = t.server.drafts();
+    expect(t.server.drafts()).toHaveLength(1);
+    expect(new TextDecoder().decode(t.server.bytesOf((draft.attachments as Array<{ blobId: string }>)[0].blobId))).toBe('abc');
+  });
+
+  it('keeps two files of one name apart: one that\'s alive keeps its part', async () => {
+    t.server.parts.set('p-short', new Uint8Array(3));
+    t.server.parts.set('p-long', new Uint8Array(9));
+    t.server.addEmail({
+      id: 'R',
+      subject: 'Two',
+      mailboxIds: { drafts: true },
+      keywords: { $draft: true },
+      attachments: [
+        { partId: 'p-short', blobId: 'p-short', name: 'a.txt', type: 'text/plain', size: 3 },
+        { partId: 'p-long', blobId: 'p-long', name: 'a.txt', type: 'text/plain', size: 9 },
+      ] as never,
+    });
+    await t.engine.requestSync();
+    await save({ previous: 'R', attachments: [{ blobId: 'p-long', type: 'text/plain', name: 'a.txt' }, { blobId: 'dead', type: 'text/plain', name: 'a.txt' }] });
+    await flush();
+    const parts = t.server.drafts().find((email) => email.id !== 'R')?.attachments as Array<{ size: number }>;
+    expect(parts.map((part) => part.size).sort()).toEqual([3, 9]);
+  });
+
+  it('stays here with its error when nothing matches', async () => {
+    partOnServer('R', 'part-live', 'abc');
+    await t.engine.requestSync();
+    const id = await save({ previous: 'R', attachments: [{ blobId: 'part-dead', type: 'text/plain', name: 'other.txt' }] });
+    const { refused } = await flush();
+    expect(refused[0][1]).toMatchObject({ type: 'blobNotFound' });
+    expect((await list())[0]).toMatchObject({ localId: id, status: 'refused' });
+    expect(t.server.emails.has('R')).toBe(true);
+  });
+});
+
+describe('a version that may have reached the server, once replaced', () => {
+  async function lostThenReplaced(text = 'New') {
+    const first = await save({ text: 'Old', messageId: 'old@example.org' });
+    t.server.loseAnswerOf = 'Email/set';
+    await flush();
+    return { first, copy: t.server.drafts()[0].id, next: () => save({ text, previous: first }) };
+  }
+
+  it('is removed when it\'s the copy this device made', async () => {
+    const { next } = await lostThenReplaced();
+    await next();
+    await flush();
+    await flushQueue();
+    expect(t.server.drafts().map(valueOf)).toEqual(['New']);
+  });
+
+  it('is left alone when another client saved again under that Message-ID', async () => {
+    const { copy, next } = await lostThenReplaced();
+    t.server.destroyEmail(copy);
+    t.server.addEmail({ id: 'theirs', subject: 'Theirs now', mailboxIds: { drafts: true }, keywords: { $draft: true }, messageId: ['old@example.org'], size: 3, receivedAt: new Date(NOW).toISOString() });
+    await next();
+    await flush();
+    await flushQueue();
+    expect(t.server.emails.has('theirs')).toBe(true);
+    expect(t.server.drafts()).toHaveLength(2);
+  });
+
+  it('is left alone when it was received long after the attempt', async () => {
+    const { copy, next } = await lostThenReplaced();
+    t.server.updateEmail(copy, { receivedAt: new Date(NOW + 6 * 60 * 60 * 1000).toISOString() });
+    await next();
+    await flush();
+    await flushQueue();
+    expect(t.server.emails.has(copy)).toBe(true);
+  });
+
+  it('is left alone when its size doesn\'t fit', async () => {
+    const { copy, next } = await lostThenReplaced();
+    t.server.updateEmail(copy, { size: 5_000_000 });
+    await next();
+    await flush();
+    await flushQueue();
+    expect(t.server.emails.has(copy)).toBe(true);
+  });
+
+  it('is left alone when it\'s in another folder too, or no longer a draft', async () => {
+    const { copy, next } = await lostThenReplaced();
+    t.server.updateEmail(copy, { mailboxIds: { drafts: true, inbox: true } });
+    await next();
+    await flush();
+    await flushQueue();
+    expect(t.server.emails.has(copy)).toBe(true);
+
+    t = setup();
+    await t.engine.requestSync();
+    const again = await lostThenReplaced();
+    t.server.updateEmail(again.copy, { keywords: { $seen: true } });
+    await again.next();
+    await flush();
+    await flushQueue();
+    expect(t.server.emails.has(again.copy)).toBe(true);
+  });
+
+  it('is left alone when it moves between the lookup and the destroy', async () => {
+    const { copy, next } = await lostThenReplaced();
+    await next();
+    await flush();
+    t.server.updateEmail(copy, { mailboxIds: { trash: true } });
+    await flushQueue();
+    expect(t.server.emails.has(copy)).toBe(true);
+    expect((t.server.emails.get(copy)?.mailboxIds as Record<string, boolean>).trash).toBe(true);
+  });
+
+  it('isn\'t touched while the newer version is refused, and goes once that one is up', async () => {
+    const { copy, next } = await lostThenReplaced();
+    const newer = await next();
+    t.server.refuseCreate = { type: 'overQuota' };
+    await flush();
+    expect(await t.engine.areaCall('outbox.pendingPatches', {})).toEqual([]);
+    await flushQueue();
+    expect(t.server.emails.has(copy)).toBe(true);
+
+    t.server.refuseCreate = null;
+    await t.engine.areaCall('drafts.retry', { localId: newer });
+    await flush();
+    await flushQueue();
+    expect(t.server.emails.has(copy)).toBe(false);
+    expect(t.server.drafts().map(valueOf)).toEqual(['New']);
+  });
+
+  it('carries through later saves', async () => {
+    const { copy, first } = await lostThenReplaced();
+    const second = await save({ text: 'Two', previous: first });
+    await save({ text: 'Three', previous: second });
+    await flush();
+    await flushQueue();
+    expect(t.server.emails.has(copy)).toBe(false);
+    expect(t.server.drafts().map(valueOf)).toEqual(['Three']);
+  });
+
+  it('is looked up and removed under the same rules when the draft is discarded', async () => {
+    const { first, copy } = await lostThenReplaced();
+    await t.engine.answer([['Email/set', { destroy: [first] }, 'd']]);
+    await flush();
+    await flushQueue();
+    expect(t.server.emails.has(copy)).toBe(false);
+
+    t = setup();
+    await t.engine.requestSync();
+    const again = await lostThenReplaced();
+    t.server.updateEmail(again.copy, { subject: 'Renamed elsewhere' });
+    await t.engine.answer([['Email/set', { destroy: [again.first] }, 'd']]);
+    await flush();
+    await flushQueue();
+    expect(t.server.emails.has(again.copy)).toBe(true);
+  });
+
+  it('isn\'t taken for this draft\'s own copy when another client saved under its Message-ID', async () => {
+    const id = await save({ text: 'Mine', messageId: 'same@example.org' });
+    t.server.loseAnswerOf = 'Email/set';
+    await flush();
+    const copy = t.server.drafts()[0].id;
+    t.server.destroyEmail(copy);
+    t.server.addEmail({ id: 'theirs', subject: 'Theirs now', mailboxIds: { drafts: true }, keywords: { $draft: true }, messageId: ['same@example.org'], size: 3, receivedAt: new Date(NOW).toISOString() });
+    await flush();
+    expect(t.server.emails.has('theirs')).toBe(true);
+    expect(t.server.drafts().map((email) => email.subject).sort()).toEqual(['A draft', 'Theirs now']);
+    const resolved = await t.engine.areaCall('drafts.resolveStandIns', { ids: [id] }) as Record<string, string>;
+    expect(resolved[id]).not.toBe('theirs');
+  });
+});
+
+describe('a version the device doesn\'t keep, replaced', () => {
+  it('goes after the new one when it\'s a plain draft, checked against what the server says then', async () => {
+    t.server.addEmail({ id: 'R', subject: 'Not kept', mailboxIds: { drafts: true }, keywords: { $draft: true } });
+    await save({ subject: 'Mine', previous: 'R' });
+    await flush();
+    await flushQueue();
+    expect(t.server.emails.has('R')).toBe(false);
+  });
+
+  it('stays, and the user is told, when it\'s no longer a plain draft', async () => {
+    t.server.addEmail({ id: 'R', subject: 'Moved', mailboxIds: { trash: true }, keywords: { $draft: true } });
+    const { conflicted } = await (async () => {
+      await save({ subject: 'Mine', previous: 'R' });
+      return flush();
+    })();
+    await flushQueue();
+    expect(t.server.emails.has('R')).toBe(true);
+    expect(conflicted).toEqual(['Moved']);
+  });
+
+  it('stays when it moves between the read and the destroy', async () => {
+    t.server.addEmail({ id: 'R', subject: 'Moves', mailboxIds: { drafts: true }, keywords: { $draft: true } });
+    await save({ subject: 'Mine', previous: 'R' });
+    await flush();
+    t.server.updateEmail('R', { mailboxIds: { trash: true } });
+    await flushQueue();
+    expect(t.server.emails.has('R')).toBe(true);
+  });
+});
+
+describe('a lookup that fails', () => {
+  function queryFails(error: Error) {
+    const original = t.server.request.bind(t.server);
+    t.server.request = async (calls) => {
+      if (calls.some(([name]) => name === 'Email/query')) throw error;
+      return original(calls);
+    };
+    return () => { t.server.request = original; };
+  }
+
+  it('waits on an outage', async () => {
+    const first = await save({ messageId: 'old@example.org' });
+    t.server.loseAnswerOf = 'Email/set';
+    await flush();
+    const restore = queryFails(new TransportError('network', 'gone'));
+    const { finished } = await flush();
+    restore();
+    expect(finished).toBe(false);
+    expect((await list())[0].localId).toBe(first);
+  });
+
+  it('counts as no copies when the server refuses it for good, so the rest can go', async () => {
+    await save({ messageId: 'old@example.org' });
+    t.server.loseAnswerOf = 'Email/set';
+    await flush();
+    const restore = queryFails(new TransportError('http', 'Refused', 400));
+    const { finished } = await flush();
+    restore();
+    expect(finished).toBe(true);
+    expect(await list()).toEqual([]);
+  });
+
+  it('drops a ghost it can\'t ever look up', async () => {
+    const first = await save({ messageId: 'old@example.org' });
+    t.server.loseAnswerOf = 'Email/set';
+    await flush();
+    const copy = t.server.drafts()[0].id;
+    await t.engine.answer([['Email/set', { destroy: [first] }, 'd']]);
+    const restore = queryFails(new TransportError('http', 'Refused', 400));
+    await flush();
+    restore();
+    expect(await t.engine.areaCall('drafts.read', { before: 0 })).toMatchObject({ ghosts: [] });
+    expect(t.server.emails.has(copy)).toBe(true);
+  });
+});
+
+describe('a held file whose pieces don\'t add up', () => {
+  it('reads as gone, not as an empty file', async () => {
+    const blobId = await hold('hello');
+    t.db.run('DELETE FROM upload_chunk WHERE local_id = ?', [blobId]);
+    expect(await t.engine.areaCall('outbox.heldFile', { blobId })).toBeNull();
   });
 });

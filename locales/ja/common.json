@@ -5773,7 +5773,8 @@
     "toast_conflict": "下書き {subject} は別のデバイスで変更されました。両方のバージョンを残します。",
     "conflict_changed": "別のデバイスで変更されました。両方のバージョンが下書きにあります。",
     "conflict_gone": "別のデバイスで変更または削除されました。あなたのバージョンは下書きにあります。",
-    "banner_refused": "サーバーが拒否した下書き: {count}"
+    "banner_refused": "サーバーが拒否した下書き: {count}",
+    "banner_waiting": "サーバーを待っている下書き: {count}"
   },
   "deep_link": {
     "message_not_found": "このメッセージは利用できなくなりました。",

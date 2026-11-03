@@ -40,6 +40,38 @@ export function attachmentParts(attachments: OutgoingAttachment[]): OutgoingBody
   return attachments.map(attachmentPart);
 }
 
+/** A part of a saved message, as Email/get lists it. */
+export interface SavedPart {
+  blobId?: string | null;
+  name?: string | null;
+  size?: number;
+}
+
+/**
+ * The attachments of a message pointed at the parts of its saved version, by name
+ * and size. Every new message gets new part ids, and old ones die with their
+ * message. One whose size isn't known goes by name. `keep` leaves one as it is.
+ */
+export function repointAttachments<T extends { blobId: string; name: string; size?: number }>(
+  attachments: T[],
+  parts: readonly SavedPart[],
+  keep: (attachment: T) => boolean,
+): T[] {
+  const free = parts.filter((part) => part.blobId);
+  const take = (test: (part: SavedPart) => boolean): SavedPart | undefined => {
+    const at = free.findIndex(test);
+    return at < 0 ? undefined : free.splice(at, 1)[0];
+  };
+  // What's still alive keeps its part, so a file of the same name can't take it.
+  const alive = attachments.filter((attachment) => !keep(attachment) && take((part) => part.blobId === attachment.blobId));
+  return attachments.map((attachment) => {
+    if (keep(attachment) || alive.includes(attachment)) return attachment;
+    const found = take((part) => part.name === attachment.name && part.size === attachment.size)
+      ?? (attachment.size ? undefined : take((part) => part.name === attachment.name));
+    return found ? { ...attachment, blobId: found.blobId as string } : attachment;
+  });
+}
+
 function referencedByHtml(html: string, cid: string): boolean {
   const ref = `cid:${normalizeCid(cid)}`.toLowerCase();
   const lower = html.toLowerCase();

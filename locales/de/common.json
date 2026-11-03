@@ -5773,7 +5773,8 @@
     "toast_conflict": "Der Entwurf {subject} wurde auf einem anderen Gerät geändert. Beide Fassungen bleiben erhalten.",
     "conflict_changed": "Auf einem anderen Gerät geändert. Beide Fassungen liegen in den Entwürfen.",
     "conflict_gone": "Auf einem anderen Gerät geändert oder entfernt. Ihre Fassung liegt in den Entwürfen.",
-    "banner_refused": "Vom Server abgelehnte Entwürfe: {count}"
+    "banner_refused": "Vom Server abgelehnte Entwürfe: {count}",
+    "banner_waiting": "Entwürfe warten auf den Server: {count}"
   },
   "deep_link": {
     "message_not_found": "Diese Nachricht ist nicht mehr verfügbar.",

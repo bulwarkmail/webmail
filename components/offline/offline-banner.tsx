@@ -26,11 +26,12 @@ export function OfflineBanner() {
   const waiting = useOfflineStore((s) => s.outbox.length);
   const conflicts = useOfflineStore((s) => s.conflicts.length);
   const refusedDrafts = useOfflineStore((s) => s.localDrafts.filter((draft) => draft.status === 'refused').length);
+  const waitingDrafts = useOfflineStore((s) => s.localDrafts.filter((draft) => draft.status !== 'refused').length);
   const tConflicts = useTranslations('offlineConflicts');
   const tDrafts = useTranslations('offlineDrafts');
   const [open, setOpen] = useState(false);
   const offline = browserOffline || serverDown;
-  if (IS_LITE || !active || (!offline && waiting === 0 && conflicts === 0 && refusedDrafts === 0 && !open)) return null;
+  if (IS_LITE || !active || (!offline && waiting === 0 && conflicts === 0 && refusedDrafts === 0 && waitingDrafts === 0 && !open)) return null;
   return (
     <>
       <div
@@ -63,6 +64,17 @@ export function OfflineBanner() {
             className="min-h-11 rounded-md px-1 font-medium underline underline-offset-2 hover:bg-foreground/5 sm:min-h-0"
           >
             {tConflicts('banner', { count: conflicts })}
+          </button>
+        )}
+        {waitingDrafts > 0 && (
+          <button
+            type="button"
+            data-testid="offline-banner-drafts-waiting"
+            aria-haspopup="dialog"
+            onClick={() => setOpen(true)}
+            className="min-h-11 rounded-md px-1 font-medium underline underline-offset-2 hover:bg-foreground/5 sm:min-h-0"
+          >
+            {tDrafts('banner_waiting', { count: waitingDrafts })}
           </button>
         )}
         {refusedDrafts > 0 && (

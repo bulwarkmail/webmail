@@ -21,6 +21,12 @@ export const DRAFT_MIGRATIONS: readonly Migration[] = [
         sending_since INTEGER,
         -- Set once it may have reached the server: then it's looked up first.
         first_attempt_at INTEGER,
+        last_attempt_at INTEGER,
+        -- What this version should look like on the server.
+        size INTEGER NOT NULL DEFAULT 0,
+        -- Earlier versions that may have reached the server. Only removed once
+        -- this one is there, and only if they still look like those versions.
+        ghosts TEXT NOT NULL DEFAULT '[]',
         error TEXT,
         created_at INTEGER NOT NULL
       ) WITHOUT ROWID;
@@ -31,14 +37,27 @@ export const DRAFT_MIGRATIONS: readonly Migration[] = [
         server_id TEXT NOT NULL,
         at INTEGER NOT NULL
       ) WITHOUT ROWID;
-      -- A version that may have reached the server and has been replaced or
-      -- discarded here since. Looked up and removed when the server is back.
+      -- A version that may have reached the server, of a draft discarded here
+      -- since. Looked up and removed when the server is back.
       CREATE TABLE draft_ghost (
         jmap TEXT NOT NULL,
         message_id TEXT NOT NULL,
-        at INTEGER NOT NULL,
+        first_at INTEGER NOT NULL,
+        last_at INTEGER NOT NULL,
+        subject TEXT NOT NULL,
+        size INTEGER NOT NULL,
         PRIMARY KEY (jmap, message_id)
       ) WITHOUT ROWID;
+      -- An old version in another login: this store can't queue it. Removed
+      -- through that login once local_id is NULL: the new version is up, or the
+      -- draft was discarded or sent.
+      CREATE TABLE draft_elsewhere (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        local_id TEXT,
+        login TEXT NOT NULL,
+        jmap TEXT,
+        record_id TEXT NOT NULL
+      );
     `,
   },
   {

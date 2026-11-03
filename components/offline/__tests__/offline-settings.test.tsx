@@ -67,6 +67,30 @@ describe('Settings > Offline', () => {
     expect(screen.queryByTestId('offline-switch')).toBeNull();
   });
 
+  it('asks before turning off when a draft is only on this device, and counts both lists', () => {
+    useOfflineStore.setState({
+      enabled: ['acc'],
+      localDrafts: [{ account: 'acc', localId: 'local-1', jmap: 'j', subject: 'Only here', status: 'waiting', createdAt: 0 }],
+      outbox: [{ id: 1, account: 'acc', createdAt: 0, subject: 'Queued', to: [], status: 'waiting' }],
+    });
+    render(<OfflineSettings />);
+    fireEvent.click(screen.getByTestId('offline-switch'));
+    expect(offline.disableOffline).not.toHaveBeenCalled();
+    expect(screen.getByText('off_confirm_title')).toBeInTheDocument();
+    useOfflineStore.setState({ localDrafts: [], outbox: [] });
+  });
+
+  it('asks for one draft alone', () => {
+    useOfflineStore.setState({
+      enabled: ['acc'],
+      localDrafts: [{ account: 'acc', localId: 'local-1', jmap: 'j', subject: 'Only here', status: 'waiting', createdAt: 0 }],
+    });
+    render(<OfflineSettings />);
+    fireEvent.click(screen.getByTestId('offline-switch'));
+    expect(offline.disableOffline).not.toHaveBeenCalled();
+    useOfflineStore.setState({ localDrafts: [] });
+  });
+
   it('lists the outbox', () => {
     useOfflineStore.setState({ outbox: [{ id: 1, account: 'acc', createdAt: Date.now(), subject: 'Quarterly', to: ['b@example.org'], status: 'failed', error: { text: 'Rejected' } }] });
     render(<OfflineSettings />);

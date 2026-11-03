@@ -380,3 +380,102 @@ describe('raw messages for an export', () => {
     expect(db.get('SELECT 1 AS x FROM email_part')).toBeUndefined();
   });
 });
+
+describe('a kept file read back', () => {
+  it('isn\'t emptied by a download of the same file that the user opening it overtook', async () => {
+    const server = new Files();
+    withFile(server, 'm', 'b-1', 2 * 1024 * 1024 + 5);
+    server.files.get('b-1')?.fill(3);
+    const { engine } = engineFor(server);
+    server.onDownload = () => {
+      server.onDownload = null;
+      void engine.areaCall('mail.recordBlob', { jmap: JMAP_ACCOUNT, blobId: 'b-1', type: 'application/pdf', data: new Uint8Array(2 * 1024 * 1024 + 5).fill(3) });
+    };
+    await engine.requestSync();
+    const file = await kept(engine, 'b-1');
+    expect(file?.size).toBe(2 * 1024 * 1024 + 5);
+    expect((file as { blob: Blob }).blob.size).toBe(2 * 1024 * 1024 + 5);
+  });
+
+  it('doesn\'t lose what a kept file has when the next pass looks at it', async () => {
+    const server = new Files();
+    withFile(server, 'm', 'b-1', 300);
+    const { engine } = engineFor(server);
+    await engine.requestSync();
+    server.addEmail({ id: 'n', attachments: [{ partId: '2', blobId: 'b-1', size: 300, type: 'application/pdf', name: 'same.pdf' }] });
+    await engine.requestSync();
+    expect((await kept(engine, 'b-1'))?.blob.size).toBe(300);
+  });
+
+  it('reads as not kept when its pieces don\'t add up, and is fetched again', async () => {
+    const server = new Files();
+    withFile(server, 'm', 'b-1', 300);
+    const { engine, db } = engineFor(server);
+    await engine.requestSync();
+    db.run("DELETE FROM blob_chunk WHERE blob_id = 'b-1'");
+    expect(await kept(engine, 'b-1')).toBeNull();
+    server.downloads.length = 0;
+    await engine.requestSync();
+    expect(server.downloads).toEqual(['b-1']);
+    expect((await kept(engine, 'b-1'))?.blob.size).toBe(300);
+  });
+});
+
+describe('raw messages come last', () => {
+  it('after every file, even of older mail', async () => {
+    const server = new Files();
+    const order: string[] = [];
+    server.onDownload = (blobId) => order.push(blobId);
+    server.addEmail({ id: 'new', blobId: 'raw-new', size: 3, receivedAt: new Date(Date.UTC(2026, 9, 20)).toISOString() });
+    withFile(server, 'old', 'b-old', 3, 1, { blobId: 'raw-old', size: 3 });
+    const { engine } = engineFor(server);
+    await engine.requestSync();
+    expect(order).toEqual(['b-old', 'raw-new', 'raw-old']);
+  });
+
+  it('never push out a file, however old', async () => {
+    const server = new Files();
+    withFile(server, 'old', 'b-old', 40, 1);
+    const { engine } = engineFor(server, { ...SCOPE, maxTotalBytes: 60 });
+    await engine.requestSync();
+    const raw = new Uint8Array(40);
+    server.files.set('raw-new', raw);
+    server.addEmail({ id: 'new', blobId: 'raw-new', size: 40, receivedAt: new Date(Date.UTC(2026, 9, 20)).toISOString() });
+    await engine.requestSync();
+    expect(await kept(engine, 'b-old')).not.toBeNull();
+    expect(await engine.areaCall('mail.rawBlob', { jmap: JMAP_ACCOUNT, blobId: 'raw-new' })).toEqual({ ok: false, reason: 'not_kept' });
+  });
+
+  it('go first when a file needs the room, whatever their age', async () => {
+    const server = new Files();
+    server.files.set('raw-newest', new Uint8Array(40));
+    server.addEmail({ id: 'newest', blobId: 'raw-newest', size: 40, receivedAt: new Date(Date.UTC(2026, 9, 25)).toISOString() });
+    withFile(server, 'old', 'b-old', 10, 1);
+    const { engine } = engineFor(server, { ...SCOPE, maxTotalBytes: 60 });
+    await engine.requestSync();
+    expect(await engine.areaCall('mail.rawBlob', { jmap: JMAP_ACCOUNT, blobId: 'raw-newest' })).toMatchObject({ ok: true });
+    withFile(server, 'mid', 'b-mid', 30, 10);
+    await engine.requestSync();
+    expect(await kept(engine, 'b-mid')).not.toBeNull();
+    expect(await kept(engine, 'b-old')).not.toBeNull();
+    expect(await engine.areaCall('mail.rawBlob', { jmap: JMAP_ACCOUNT, blobId: 'raw-newest' })).toEqual({ ok: false, reason: 'not_kept' });
+  });
+});
+
+describe('a transfer that breaks', () => {
+  it('doesn\'t end the pass: the next file still comes, and this one is tried again', async () => {
+    const server = new Files();
+    withFile(server, 'new', 'b-new', 300, 20);
+    withFile(server, 'old', 'b-old', 300, 1);
+    server.onDownload = (blobId) => {
+      if (blobId === 'b-new') throw new TransportError('network', 'The download broke off', undefined, undefined, undefined, true);
+    };
+    const { engine } = engineFor(server);
+    await engine.requestSync();
+    expect(await kept(engine, 'b-old')).not.toBeNull();
+    expect(await kept(engine, 'b-new')).toBeNull();
+    server.onDownload = null;
+    await engine.requestSync();
+    expect(await kept(engine, 'b-new')).not.toBeNull();
+  });
+});

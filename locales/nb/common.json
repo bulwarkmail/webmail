@@ -5773,7 +5773,8 @@
     "toast_conflict": "Utkastet {subject} ble endret på en annen enhet. Begge versjonene beholdes.",
     "conflict_changed": "Endret på en annen enhet. Begge versjonene ligger i Utkast.",
     "conflict_gone": "Endret eller fjernet på en annen enhet. Din versjon ligger i Utkast.",
-    "banner_refused": "Utkast avvist av serveren: {count}"
+    "banner_refused": "Utkast avvist av serveren: {count}",
+    "banner_waiting": "Utkast som venter på serveren: {count}"
   },
   "deep_link": {
     "message_not_found": "Denne meldingen er ikke lenger tilgjengelig.",

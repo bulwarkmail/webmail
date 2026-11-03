@@ -5773,7 +5773,8 @@
     "toast_conflict": "草稿 {subject} 已在其他裝置上變更。兩個版本都會保留。",
     "conflict_changed": "已在其他裝置上變更。兩個版本都在草稿中。",
     "conflict_gone": "已在其他裝置上變更或刪除。您的版本在草稿中。",
-    "banner_refused": "伺服器拒絕的草稿：{count}"
+    "banner_refused": "伺服器拒絕的草稿：{count}",
+    "banner_waiting": "等待伺服器的草稿：{count}"
   },
   "deep_link": {
     "message_not_found": "已無法使用此郵件。",

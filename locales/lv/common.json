@@ -5773,7 +5773,8 @@
     "toast_conflict": "Melnraksts {subject} tika mainīts citā ierīcē. Abas versijas tiek saglabātas.",
     "conflict_changed": "Mainīts citā ierīcē. Abas versijas ir mapē Melnraksti.",
     "conflict_gone": "Mainīts vai noņemts citā ierīcē. Jūsu versija ir mapē Melnraksti.",
-    "banner_refused": "Servera noraidītie melnraksti: {count}"
+    "banner_refused": "Servera noraidītie melnraksti: {count}",
+    "banner_waiting": "Melnraksti, kas gaida serveri: {count}"
   },
   "deep_link": {
     "message_not_found": "Šī ziņa vairs nav pieejama.",

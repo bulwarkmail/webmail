@@ -6,9 +6,10 @@
  *
  * What's kept is bounded by the scope: nothing with `attachments` off, nothing
  * over `maxAttachmentBytes`, and `maxTotalBytes` in all. At the total a newer
- * message's file pushes out files of older messages, oldest first. Never the
- * files of a pinned message. Files held for a draft or a send are in `upload`,
- * pinned files in the files area, and neither is touched here.
+ * message's file pushes out raw messages first, then files of older messages,
+ * oldest first. Never the files of a pinned message. Raw messages come after
+ * every file and only take room that's free. Files held for a draft or a send
+ * are in `upload`, pinned files in the files area, and neither is touched here.
  *
  * A file comes in as a stream where the transport can, written in 1 MB chunks
  * that each commit on their own, and is held nowhere whole. Its row in `blob`
@@ -35,12 +36,16 @@ class DownloadStopped extends Error {}
 
 class DownloadTooLarge extends Error {}
 
+/** Someone else kept the same file while this one was coming in. */
+class AlreadyKept extends Error {}
+
 interface Part {
   blob_id: string;
   size: number;
   type: string | null;
   name: string | null;
   received_at: number;
+  raw: number;
 }
 
 function usedBytes(db: StorageAdapter): number {
@@ -52,19 +57,25 @@ const NOT_PINNED = `NOT EXISTS (
   WHERE p.jmap = b.jmap AND p.blob_id = b.blob_id AND k.keyword = '${PINNED}'
 )`;
 
-/** Whether `size` more can fit, counting what could be pushed out for mail received at `at`. */
-function couldFit(db: StorageAdapter, cap: number, size: number, at: number): boolean {
+const IS_RAW = `EXISTS (SELECT 1 FROM email_part r WHERE r.jmap = b.jmap AND r.blob_id = b.blob_id AND r.raw = 1)`;
+
+/**
+ * Whether `size` more can fit, counting what could be pushed out for mail
+ * received at `at`. A raw message pushes out nothing: it only takes what's free.
+ */
+function couldFit(db: StorageAdapter, cap: number, size: number, at: number, raw: boolean): boolean {
   const used = usedBytes(db);
   if (used + size <= cap) return true;
-  const older = Number(db.get<{ n: number | null }>(`SELECT SUM(b.size) AS n FROM blob b WHERE b.at < ? AND ${NOT_PINNED}`, [at])?.n ?? 0);
-  return used - older + size <= cap;
+  if (raw) return false;
+  const yielding = Number(db.get<{ n: number | null }>(`SELECT SUM(b.size) AS n FROM blob b WHERE (${IS_RAW} OR b.at < ?) AND ${NOT_PINNED}`, [at])?.n ?? 0);
+  return used - yielding + size <= cap;
 }
 
-/** Pushes out files of mail older than `at`, oldest first, until `size` more fits or nothing is left to push out. */
+/** Pushes out raw messages, then files of mail older than `at`, oldest first, until `size` more fits or nothing is left to push out. */
 function pushOut(db: StorageAdapter, cap: number, size: number, at: number): void {
   let used = usedBytes(db);
   while (used + size > cap) {
-    const oldest = db.all<{ jmap: string; blob_id: string; size: number }>(`SELECT b.jmap, b.blob_id, b.size FROM blob b WHERE b.at < ? AND ${NOT_PINNED} ORDER BY b.at ASC LIMIT 50`, [at]);
+    const oldest = db.all<{ jmap: string; blob_id: string; size: number }>(`SELECT b.jmap, b.blob_id, b.size FROM blob b WHERE (${IS_RAW} OR b.at < ?) AND ${NOT_PINNED} ORDER BY ${IS_RAW} DESC, b.at ASC LIMIT 50`, [at]);
     if (oldest.length === 0) return;
     for (const row of oldest) {
       if (used + size <= cap) break;
@@ -75,8 +86,8 @@ function pushOut(db: StorageAdapter, cap: number, size: number, at: number): voi
 }
 
 /** Makes room for `size` more. False, with nothing pushed out, when it can't. */
-function makeRoom(db: StorageAdapter, cap: number, size: number, at: number): boolean {
-  if (!couldFit(db, cap, size, at)) return false;
+function makeRoom(db: StorageAdapter, cap: number, size: number, at: number, raw: boolean): boolean {
+  if (!couldFit(db, cap, size, at, raw)) return false;
   pushOut(db, cap, size, at);
   return true;
 }
@@ -111,17 +122,22 @@ export function keptBlob(ctx: Pick<StoreContext, 'db' | 'scope'>, jmap: string, 
     // Each step only refers to the last Blob, so one chunk at a time is in memory here.
     blob = new Blob([blob, chunk.data as BlobPart], { type });
   }
+  // Better not there, and fetched again, than a file that reads as empty or cut short.
+  if (blob.size !== Number(row.size)) {
+    ctx.db.transaction(() => dropBlob(ctx.db, jmap, blobId));
+    return null;
+  }
   return { type: row.type, size: Number(row.size), blob };
 }
 
 /** A file the user opened online: kept if it belongs to a kept message and the scope allows it. */
 export function recordKeptBlob(ctx: Pick<StoreContext, 'db' | 'scope'>, jmap: string, blobId: string, type: string | null, data: Uint8Array): boolean {
   const { db, scope } = ctx;
-  const owner = db.get<{ received_at: number }>('SELECT received_at FROM email_part WHERE jmap = ? AND blob_id = ?', [jmap, blobId]);
+  const owner = db.get<{ received_at: number; raw: number }>('SELECT received_at, raw FROM email_part WHERE jmap = ? AND blob_id = ?', [jmap, blobId]);
   if (!owner || !scope.attachments || data.byteLength > scope.maxAttachmentBytes) return false;
   const at = Number(owner.received_at);
   return db.transaction(() => {
-    if (!makeRoom(db, scope.maxTotalBytes, data.byteLength, at)) return false;
+    if (!makeRoom(db, scope.maxTotalBytes, data.byteLength, at, Boolean(owner.raw))) return false;
     putBlob(db, jmap, blobId, type, data, at);
     return true;
   });
@@ -158,8 +174,13 @@ export function rawStatus(ctx: Pick<StoreContext, 'db' | 'scope'>, jmap: string,
   return { total, kept };
 }
 
-function clearChunks(db: StorageAdapter, jmap: string, blobId: string): void {
-  db.run('DELETE FROM blob_chunk WHERE jmap = ? AND blob_id = ?', [jmap, blobId]);
+function isKept(db: StorageAdapter, jmap: string, blobId: string): boolean {
+  return Boolean(db.get('SELECT 1 AS x FROM blob WHERE jmap = ? AND blob_id = ?', [jmap, blobId]));
+}
+
+/** What a download left. Never the pieces of a file that's kept: its row says they're whole. */
+function clearUnfinished(db: StorageAdapter, jmap: string, blobId: string): void {
+  if (!isKept(db, jmap, blobId)) db.run('DELETE FROM blob_chunk WHERE jmap = ? AND blob_id = ?', [jmap, blobId]);
 }
 
 /** Takes a body piece by piece and writes it in chunks, each committed on its own. */
@@ -170,6 +191,7 @@ function chunkWriter(ctx: SyncContext, jmap: string, blobId: string) {
   let total = 0;
   const write = () => {
     if (filled === 0) return;
+    if (isKept(ctx.db, jmap, blobId)) throw new AlreadyKept();
     ctx.db.run('INSERT INTO blob_chunk (jmap, blob_id, seq, data) VALUES (?, ?, ?, ?)', [jmap, blobId, seq, buffer.subarray(0, filled)]);
     seq += 1;
     filled = 0;
@@ -208,13 +230,15 @@ async function fetchOne(ctx: SyncContext, jmap: string, part: Part): Promise<Fet
   const blobId = String(part.blob_id);
   const type = part.type ?? 'application/octet-stream';
   const name = part.name ?? 'attachment';
-  clearChunks(db, jmap, blobId);
+  if (isKept(db, jmap, blobId)) return 'kept';
+  clearUnfinished(db, jmap, blobId);
   const writer = chunkWriter(ctx, jmap, blobId);
   try {
     if (transport.downloadStream) await transport.downloadStream(jmap, blobId, type, name, (piece) => writer.push(piece));
     else writer.push(await transport.download(jmap, blobId, type, name));
   } catch (error) {
-    clearChunks(db, jmap, blobId);
+    clearUnfinished(db, jmap, blobId);
+    if (error instanceof AlreadyKept) return 'kept';
     if (error instanceof DownloadStopped) return 'stopped';
     if (error instanceof DownloadTooLarge) {
       refuse(db, jmap, blobId);
@@ -225,16 +249,18 @@ async function fetchOne(ctx: SyncContext, jmap: string, part: Part): Promise<Fet
       return 'skipped';
     }
     // The connection works and this transfer broke: the next one may be fine.
-    if (error instanceof TransportError && (error as TransportError & { interrupted?: boolean }).interrupted) return 'skipped';
+    if (error instanceof TransportError && error.interrupted) return 'skipped';
     throw error;
   }
   const at = Number(part.received_at);
   const size = writer.total;
   return db.transaction((): Fetched => {
+    // The user opened it meanwhile, and that copy is whole.
+    if (isKept(db, jmap, blobId)) return 'kept';
     // Its message may have gone while this was on its way, or the rules changed.
     const wanted = ctx.scope.attachments && db.get('SELECT 1 AS x FROM email_part WHERE jmap = ? AND blob_id = ?', [jmap, blobId]);
-    if (!wanted || !makeRoom(db, ctx.scope.maxTotalBytes, size, at)) {
-      clearChunks(db, jmap, blobId);
+    if (!wanted || !makeRoom(db, ctx.scope.maxTotalBytes, size, at, Boolean(part.raw))) {
+      clearUnfinished(db, jmap, blobId);
       return 'skipped';
     }
     writer.writeLast();
@@ -259,10 +285,10 @@ async function fetchKept(ctx: SyncContext, jmap: string): Promise<void> {
   let done = 0;
   for (;;) {
     const parts = db.all<Part>(
-      `SELECT p.blob_id, p.size, p.type, p.name, p.received_at FROM email_part p
+      `SELECT p.blob_id, p.size, p.type, p.name, p.received_at, p.raw FROM email_part p
        WHERE p.jmap = ? AND p.refused = 0 AND p.size <= ?
          AND NOT EXISTS (SELECT 1 FROM blob b WHERE b.jmap = p.jmap AND b.blob_id = p.blob_id)
-       ORDER BY p.received_at DESC, p.raw ASC, p.blob_id ASC LIMIT ? OFFSET ?`,
+       ORDER BY p.raw ASC, p.received_at DESC, p.blob_id ASC LIMIT ? OFFSET ?`,
       [jmap, ctx.scope.maxAttachmentBytes, PAGE, passed],
     );
     if (parts.length === 0) return;
@@ -270,7 +296,7 @@ async function fetchKept(ctx: SyncContext, jmap: string): Promise<void> {
       if (ctx.stopped() || ctx.syncWanted()) return;
       // The same file a second time in this page: kept by now.
       if (db.get('SELECT 1 AS x FROM blob WHERE jmap = ? AND blob_id = ?', [jmap, String(part.blob_id)])) continue;
-      if (!couldFit(db, ctx.scope.maxTotalBytes, Number(part.size), Number(part.received_at))) {
+      if (!couldFit(db, ctx.scope.maxTotalBytes, Number(part.size), Number(part.received_at), Boolean(part.raw))) {
         passed += 1;
         passedInARow += 1;
         if (passedInARow >= MOST_PASSED_IN_A_ROW) return;

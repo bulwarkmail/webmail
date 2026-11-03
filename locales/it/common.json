@@ -5773,7 +5773,8 @@
     "toast_conflict": "La bozza {subject} è stata modificata su un altro dispositivo. Vengono conservate entrambe le versioni.",
     "conflict_changed": "Modificata su un altro dispositivo. Entrambe le versioni sono in Bozze.",
     "conflict_gone": "Modificata o rimossa su un altro dispositivo. La tua versione è in Bozze.",
-    "banner_refused": "Bozze rifiutate dal server: {count}"
+    "banner_refused": "Bozze rifiutate dal server: {count}",
+    "banner_waiting": "Bozze in attesa del server: {count}"
   },
   "deep_link": {
     "message_not_found": "Questo messaggio non è più disponibile.",

@@ -10,7 +10,7 @@ import type { StorageAdapter } from '../storage';
 
 export type DraftCreate = Record<string, unknown>;
 
-interface CreatePart {
+export interface CreatePart {
   partId?: string;
   blobId?: string;
   type?: string;

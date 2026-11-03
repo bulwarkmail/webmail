@@ -84,6 +84,11 @@ export async function readLocalDrafts(account?: string): Promise<LocalDraftRow[]
   return read.flat();
 }
 
+/** An old version in another login: removed through it once the draft here is on the server. */
+export function noteDraftReplacedElsewhere(account: string, localId: string, version: { login: string; jmap?: string; id: string }): Promise<void> {
+  return getStore().area(account, 'drafts.noteElsewhere', { localId, ...version });
+}
+
 /** Asks the server again about a draft it refused. */
 export function retryLocalDraft(account: string, localId: string): Promise<void> {
   return getStore().area(account, 'drafts.retry', { localId });

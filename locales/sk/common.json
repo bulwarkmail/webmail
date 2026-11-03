@@ -5773,7 +5773,8 @@
     "toast_conflict": "Koncept {subject} bol zmenený v inom zariadení. Obe verzie zostávajú zachované.",
     "conflict_changed": "Zmenené v inom zariadení. Obe verzie sú v Konceptoch.",
     "conflict_gone": "Zmenené alebo odstránené v inom zariadení. Vaša verzia je v Konceptoch.",
-    "banner_refused": "Koncepty odmietnuté serverom: {count}"
+    "banner_refused": "Koncepty odmietnuté serverom: {count}",
+    "banner_waiting": "Koncepty čakajúce na server: {count}"
   },
   "deep_link": {
     "message_not_found": "Táto správa už nie je dostupná.",

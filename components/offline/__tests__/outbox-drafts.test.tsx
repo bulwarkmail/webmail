@@ -112,12 +112,14 @@ describe('drafts that are only on this device', () => {
     expect(rows[1].textContent).toContain('conflict_gone');
   });
 
-  it('puts a refused one in the banner while online, and not one that only waits', () => {
+  it('says in the banner while online that drafts wait, and which were refused', () => {
     useOfflineStore.setState({ localDrafts: [draft()] });
     const { rerender } = render(<OfflineBanner />);
     expect(screen.queryByTestId('offline-banner-drafts')).toBeNull();
+    expect(screen.getByTestId('offline-banner-drafts-waiting').textContent).toContain('banner_waiting');
     act(() => useOfflineStore.setState({ localDrafts: [draft({ status: 'refused' })] }));
     rerender(<OfflineBanner />);
     expect(screen.getByTestId('offline-banner-drafts').textContent).toContain('banner_refused');
+    expect(screen.queryByTestId('offline-banner-drafts-waiting')).toBeNull();
   });
 });

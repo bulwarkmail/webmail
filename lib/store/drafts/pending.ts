@@ -26,6 +26,16 @@ export interface ReplacedDraft {
   subject: string | null;
 }
 
+/** What a version sent to the server should look like there, to tell it from anything else under its Message-ID. */
+export interface DraftVersion {
+  messageId: string;
+  /** Its first and last attempt. */
+  from: number;
+  to: number;
+  subject: string;
+  size: number;
+}
+
 export interface DraftRow {
   local_id: string;
   jmap: string;
@@ -37,6 +47,9 @@ export interface DraftRow {
   status: DraftStatus;
   sending_since: number | null;
   first_attempt_at: number | null;
+  last_attempt_at: number | null;
+  size: number;
+  ghosts: string;
   error: string | null;
   created_at: number;
 }
@@ -77,9 +90,18 @@ function isDraftCreate(ctx: MethodContext, jmap: string, create: DraftCreate): b
   return boxes.every((box) => drafts.includes(box));
 }
 
-function ghost(db: StorageAdapter, jmap: string, messageId: string, at: number): void {
-  db.run('INSERT OR REPLACE INTO draft_ghost (jmap, message_id, at) VALUES (?, ?, ?)', [jmap, messageId, at]);
+export function ghostsOf(row: Pick<DraftRow, 'ghosts'>): DraftVersion[] {
+  return JSON.parse(row.ghosts) as DraftVersion[];
 }
+
+/** This version as a later one sees it, if it may have reached the server. */
+export function versionOf(row: DraftRow): DraftVersion {
+  const from = Number(row.first_attempt_at ?? 0);
+  return { messageId: row.message_id, from, to: Number(row.last_attempt_at ?? from), subject: row.subject ?? '', size: Number(row.size) };
+}
+
+/** Attempts in a long outage are few, but nothing should grow without end. */
+const MOST_GHOSTS = 50;
 
 function currentGen(db: StorageAdapter, jmap: string): number {
   return Number(db.get<{ gen: number | null }>('SELECT MAX(gen) AS gen FROM email WHERE jmap = ?', [jmap])?.gen ?? 0);
@@ -102,9 +124,9 @@ export function createLocalDraft(ctx: MethodContext, jmap: string, create: Draft
   const stored: DraftCreate = { ...create, messageId: [messageId] };
   const { size } = writeLocalRow(ctx.db, jmap, id, stored, messageId, now);
   ctx.db.run(
-    `INSERT INTO draft_pending (local_id, jmap, seq, subject, create_json, message_id, replaces, status, first_attempt_at, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, '[]', ?, ?, ?)`,
-    [id, jmap, nextSeq(ctx.db), typeof create.subject === 'string' ? create.subject : '', JSON.stringify(stored), messageId, networkTried ? 'uncertain' : 'waiting', networkTried ? now : null, now],
+    `INSERT INTO draft_pending (local_id, jmap, seq, subject, create_json, message_id, replaces, status, first_attempt_at, last_attempt_at, size, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, '[]', ?, ?, ?, ?, ?)`,
+    [id, jmap, nextSeq(ctx.db), typeof create.subject === 'string' ? create.subject : '', JSON.stringify(stored), messageId, networkTried ? 'uncertain' : 'waiting', networkTried ? now : null, networkTried ? now : null, size, now],
   );
   return { id, blobId: id, threadId: id, size };
 }
@@ -148,12 +170,25 @@ function queueRemoval(db: StorageAdapter, target: ReplacedDraft, now: number): v
 function dropPending(ctx: Pick<StoreContext, 'db' | 'now'>, row: DraftRow, into: DraftRow | null): void {
   const { db } = ctx;
   const replaced = replacesOf(row);
+  const ghosts = [...ghostsOf(row), ...(row.first_attempt_at !== null ? [versionOf(row)] : [])];
   if (into) {
-    db.run('UPDATE draft_pending SET replaces = ? WHERE local_id = ?', [JSON.stringify([...replacesOf(into), ...replaced]), into.local_id]);
+    // Only once the new version is up: until then these may be the only copy on the server.
+    db.run('UPDATE draft_pending SET replaces = ?, ghosts = ? WHERE local_id = ?', [
+      JSON.stringify([...replacesOf(into), ...replaced]),
+      JSON.stringify([...ghostsOf(into), ...ghosts].slice(-MOST_GHOSTS)),
+      into.local_id,
+    ]);
+    db.run('UPDATE draft_elsewhere SET local_id = ? WHERE local_id = ?', [into.local_id, row.local_id]);
   } else {
     for (const target of replaced) queueRemoval(db, target, ctx.now());
+    for (const version of ghosts) {
+      db.run(
+        'INSERT OR REPLACE INTO draft_ghost (jmap, message_id, first_at, last_at, subject, size) VALUES (?, ?, ?, ?, ?, ?)',
+        [row.jmap, version.messageId, version.from, version.to, version.subject, version.size],
+      );
+    }
+    db.run('UPDATE draft_elsewhere SET local_id = NULL WHERE local_id = ?', [row.local_id]);
   }
-  if (row.first_attempt_at !== null) ghost(db, row.jmap, row.message_id, Number(row.first_attempt_at));
   db.run('DELETE FROM draft_pending WHERE local_id = ?', [row.local_id]);
   deleteEmail(db, row.jmap, row.local_id);
 }
@@ -187,6 +222,13 @@ export function destroyForDraft(ctx: Pick<StoreContext, 'db' | 'now'>, jmap: str
   db.run('DELETE FROM outbox_patch WHERE jmap = ? AND type = ? AND record_id = ?', [jmap, EMAIL_TYPE, id]);
   deleteEmail(db, jmap, id);
   return true;
+}
+
+/** A plain draft: only in the Drafts folder, with the keyword. Anything else someone did something with. */
+export function isPlainDraft(db: StorageAdapter, jmap: string, email: EmailObject): boolean {
+  const boxes = Object.entries((email.mailboxIds ?? {}) as Record<string, boolean>).filter(([, on]) => on).map(([box]) => box);
+  if (boxes.length !== 1 || !(email.keywords as Record<string, boolean> | undefined)?.$draft) return false;
+  return listObjects<{ id: string; role?: string | null }>(db, jmap, 'Mailbox').some((box) => box.id === boxes[0] && box.role === 'drafts');
 }
 
 /** A send naming a draft that's still on the device: the send takes care of it. */

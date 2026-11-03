@@ -5773,7 +5773,8 @@
     "toast_conflict": "{subject} taslağı başka bir cihazda değiştirildi. İki sürüm de saklanıyor.",
     "conflict_changed": "Başka bir cihazda değiştirildi. İki sürüm de Taslaklar'da.",
     "conflict_gone": "Başka bir cihazda değiştirildi veya kaldırıldı. Sizin sürümünüz Taslaklar'da.",
-    "banner_refused": "Sunucunun reddettiği taslaklar: {count}"
+    "banner_refused": "Sunucunun reddettiği taslaklar: {count}",
+    "banner_waiting": "Sunucuyu bekleyen taslaklar: {count}"
   },
   "deep_link": {
     "message_not_found": "Bu ileti artık kullanılamıyor.",

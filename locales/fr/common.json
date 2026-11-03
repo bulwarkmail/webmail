@@ -5773,7 +5773,8 @@
     "toast_conflict": "Le brouillon {subject} a été modifié sur un autre appareil. Les deux versions sont conservées.",
     "conflict_changed": "Modifié sur un autre appareil. Les deux versions sont dans Brouillons.",
     "conflict_gone": "Modifié ou supprimé sur un autre appareil. Votre version est dans Brouillons.",
-    "banner_refused": "Brouillons refusés par le serveur : {count}"
+    "banner_refused": "Brouillons refusés par le serveur : {count}",
+    "banner_waiting": "Brouillons en attente du serveur : {count}"
   },
   "deep_link": {
     "message_not_found": "Ce message n'est plus disponible.",

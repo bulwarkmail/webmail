@@ -5773,7 +5773,8 @@
     "toast_conflict": "Ciorna {subject} a fost modificată pe alt dispozitiv. Ambele versiuni sunt păstrate.",
     "conflict_changed": "Modificată pe alt dispozitiv. Ambele versiuni sunt în Ciorne.",
     "conflict_gone": "Modificată sau eliminată pe alt dispozitiv. Versiunea dvs. este în Ciorne.",
-    "banner_refused": "Ciorne refuzate de server: {count}"
+    "banner_refused": "Ciorne refuzate de server: {count}",
+    "banner_waiting": "Ciorne care așteaptă serverul: {count}"
   },
   "deep_link": {
     "message_not_found": "Acest mesaj nu mai este disponibil.",

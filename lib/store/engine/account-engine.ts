@@ -303,6 +303,8 @@ export class AccountEngine {
   /** Stops syncing and waits for the current batch. The database stays open for the caller to close. */
   async close(): Promise<void> {
     this.closed = true;
+    // A large download could otherwise hold up removing the account.
+    this.transport.abort?.();
     await this.running?.catch(() => {});
   }
 }

@@ -5774,7 +5774,8 @@
     "toast_conflict": "הטיוטה {subject} שונתה במכשיר אחר. שתי הגרסאות נשמרות.",
     "conflict_changed": "שונה במכשיר אחר. שתי הגרסאות נמצאות בטיוטות.",
     "conflict_gone": "שונה או הוסר במכשיר אחר. הגרסה שלך נמצאת בטיוטות.",
-    "banner_refused": "טיוטות שהשרת דחה: {count}"
+    "banner_refused": "טיוטות שהשרת דחה: {count}",
+    "banner_waiting": "טיוטות שממתינות לשרת: {count}"
   },
   "deep_link": {
     "message_not_found": "הודעה זו אינה זמינה עוד.",

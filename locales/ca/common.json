@@ -5773,7 +5773,8 @@
     "toast_conflict": "L'esborrany {subject} s'ha canviat en un altre dispositiu. Es conserven les dues versions.",
     "conflict_changed": "Canviat en un altre dispositiu. Les dues versions són a Esborranys.",
     "conflict_gone": "Canviat o eliminat en un altre dispositiu. La vostra versió és a Esborranys.",
-    "banner_refused": "Esborranys rebutjats pel servidor: {count}"
+    "banner_refused": "Esborranys rebutjats pel servidor: {count}",
+    "banner_waiting": "Esborranys que esperen el servidor: {count}"
   },
   "deep_link": {
     "message_not_found": "Aquest missatge ja no està disponible.",

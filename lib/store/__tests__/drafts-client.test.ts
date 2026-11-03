@@ -20,9 +20,11 @@ import { openMemoryStore } from './helpers/node-adapter';
 
 const NOW = Date.UTC(2026, 10, 3);
 const MAIL = 'urn:ietf:params:jmap:mail';
+const SUBMISSION = 'urn:ietf:params:jmap:submission';
+const STALWART = 'urn:stalwart:jmap';
 const SESSION = {
-  capabilities: { 'urn:ietf:params:jmap:core': { maxObjectsInGet: 500, maxObjectsInSet: 500 }, [MAIL]: {} },
-  accounts: { [JMAP_ACCOUNT]: { name: 'a@example.org', isPersonal: true, accountCapabilities: { [MAIL]: {} } } },
+  capabilities: { 'urn:ietf:params:jmap:core': { maxObjectsInGet: 500, maxObjectsInSet: 500 }, [MAIL]: {}, [SUBMISSION]: {}, [STALWART]: {} },
+  accounts: { [JMAP_ACCOUNT]: { name: 'a@example.org', isPersonal: true, accountCapabilities: { [MAIL]: {}, [SUBMISSION]: {}, [STALWART]: {} } } },
   primaryAccounts: { [MAIL]: JMAP_ACCOUNT },
   username: 'a@example.org',
   apiUrl: 'https://fake.test/api',
@@ -47,7 +49,7 @@ let client: JMAPClient;
 let wire: MethodCall[];
 
 beforeEach(async () => {
-  server = new FakeJmapDrafts({ mailboxes: [{ id: 'inbox', role: 'inbox' }, { id: 'drafts', role: 'drafts' }] });
+  server = new FakeJmapDrafts({ mailboxes: [{ id: 'inbox', role: 'inbox' }, { id: 'drafts', role: 'drafts' }, { id: 'sent', role: 'sent' }] });
   server.now = NOW;
   engine = new AccountEngine({
     account: 'a@fake.test',
@@ -278,7 +280,7 @@ describe('before the flush, with the server back', () => {
     online = true;
     await saveDraft('With a file, later', id, [{ blobId, name: 'note.txt', type: 'text/plain', size: 5 }]);
     const [draft] = server.drafts();
-    expect((draft.attachments as Array<{ blobId: string }>)[0].blobId).toBe(server.uploads[0].blobId);
+    expect(new TextDecoder().decode(server.bytesOf((draft.attachments as Array<{ blobId: string }>)[0].blobId))).toBe('hello');
   });
 });
 
@@ -299,5 +301,83 @@ describe('a file attached offline', () => {
     online = false;
     await expect(client.uploadBlob(new File(['x'], 'x.txt'), { noHold: true })).rejects.toThrow();
     expect(holdUpload).not.toHaveBeenCalled();
+  });
+});
+
+describe('an open composer\'s attachment after a flush', () => {
+  const FILE = { name: 'note.txt', type: 'text/plain', size: 5 };
+
+  /** A draft with a file on the server, edited offline with its part, and flushed: that part is dead now. */
+  async function flushedWithOldPart() {
+    const { blobId: uploaded } = await client.uploadBlob(new File(['hello'], 'note.txt', { type: 'text/plain' }));
+    const first = await saveDraft('Online', undefined, [{ ...FILE, blobId: uploaded }]);
+    const part = (server.emails.get(first)?.attachments as Array<{ blobId: string }>)[0].blobId;
+    // The upload's id would still work: only the part is left in the composer.
+    server.blobs.delete(uploaded);
+    online = false;
+    const standIn = await saveDraft('Offline', first, [{ ...FILE, blobId: part }]);
+    online = true;
+    await flushAll();
+    expect(server.emails.has(first)).toBe(false);
+    expect(server.bytesOf(part)).toBeUndefined();
+    return { standIn, part };
+  }
+
+  const fileOnServer = () => new TextDecoder().decode(server.bytesOf((server.drafts()[0].attachments as Array<{ blobId: string }>)[0].blobId));
+
+  it('survives the next save, which reads the real draft through the map', async () => {
+    const { standIn, part } = await flushedWithOldPart();
+    const saved = await saveDraft('Later', standIn, [{ ...FILE, blobId: part }]);
+    expect(server.drafts().map((email) => email.id)).toEqual([saved]);
+    expect(fileOnServer()).toBe('hello');
+  });
+
+  it('survives the next send', async () => {
+    const { standIn, part } = await flushedWithOldPart();
+    const result = await client.sendEmail(['b@example.org'], 'Subject', 'Text', undefined, undefined, undefined, 'a@example.org', standIn, undefined, undefined, [{ ...FILE, blobId: part }]);
+    expect(result.emailId).toBeTruthy();
+    expect(server.drafts()).toEqual([]);
+    expect((server.emails.get(result.emailId as string)?.attachments as unknown[])).toHaveLength(1);
+  });
+
+  it('retries once when the server says a part is gone under a real id too', async () => {
+    const { part } = await flushedWithOldPart();
+    const real = server.drafts()[0].id;
+    const saved = await saveDraft('Later', real, [{ ...FILE, blobId: part }]);
+    expect(server.drafts().map((email) => email.id)).toEqual([saved]);
+    expect(fileOnServer()).toBe('hello');
+  });
+
+  it('retries a send that says a part is gone under a real id', async () => {
+    const { part } = await flushedWithOldPart();
+    const real = server.drafts()[0].id;
+    const result = await client.sendEmail(['b@example.org'], 'Subject', 'Text', undefined, undefined, undefined, 'a@example.org', real, undefined, undefined, [{ ...FILE, blobId: part }]);
+    expect(result.emailId).toBeTruthy();
+  });
+
+  it('still fails when no part of that name and size is there', async () => {
+    const { standIn, part } = await flushedWithOldPart();
+    await expect(saveDraft('Later', standIn, [{ name: 'other.txt', type: 'text/plain', size: 5, blobId: part }])).rejects.toThrow(/blobNotFound/);
+  });
+
+  it('asks again at most once', async () => {
+    const { part } = await flushedWithOldPart();
+    const real = server.drafts()[0].id;
+    server.refuseCreate = { type: 'blobNotFound' };
+    wire.length = 0;
+    await expect(saveDraft('Later', real, [{ ...FILE, blobId: part }])).rejects.toThrow(/blobNotFound/);
+    expect(wire.filter(([name, args]) => name === 'Email/set' && args.create).length).toBeLessThanOrEqual(2);
+  });
+});
+
+describe('an online send of a draft still on the device', () => {
+  it('drops the draft here and still removes the submission record on the server', async () => {
+    online = false;
+    const id = await saveDraft('Only here');
+    online = true;
+    const result = await client.sendEmail(['b@example.org'], 'Subject', 'Text', undefined, undefined, undefined, 'a@example.org', id);
+    expect(result.emailId).toBeTruthy();
+    expect(await engine.areaCall('drafts.list', {})).toEqual([]);
+    expect(server.submissionsDestroyed()).toHaveLength(1);
   });
 });

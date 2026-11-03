@@ -8,9 +8,10 @@ import { setStoreBackend } from '@/lib/store/client/api';
 import { FakeJmapDrafts } from '@/lib/store/__tests__/helpers/fake-drafts';
 import { JMAP_ACCOUNT } from '@/lib/store/__tests__/helpers/fake-jmap';
 import { InProcessStore } from '@/lib/store/__tests__/helpers/in-process-store';
-import { refreshQueueState, startOfflineMode, wipeEverything } from '../offline-mode';
+import { consumeLost } from '../lost';
+import { refreshQueueState, startOfflineMode, wipeAccount, wipeEverything } from '../offline-mode';
 import { flushQueue } from '../flush';
-import { heldFile, holdFile, queueSend, readLocalDrafts, retryLocalDraft } from '../queue';
+import { heldFile, holdFile, noteDraftReplacedElsewhere, queueSend, readLocalDrafts, retryLocalDraft } from '../queue';
 import { forgetLegacyMove } from '../migrate-legacy';
 import { useOfflineStore, writeEnabled } from '../state';
 import type { JMAPClient } from '@/lib/jmap/client';
@@ -185,10 +186,102 @@ describe('flushQueue and drafts', () => {
   });
 });
 
-describe('a sign-out and local drafts', () => {
-  it('counts them as unsent, by name', async () => {
+describe('a wipe and local drafts', () => {
+  it('names them as lost when the user didn\'t agree', async () => {
+    // A second account stays, so the wipe doesn't take the whole store.
     await saveOffline('Only here');
     await refreshQueueState();
-    expect(useOfflineStore.getState().localDrafts.map((row) => row.subject)).toEqual(['Only here']);
+    consumeLost();
+    await wipeAccount('acc');
+    expect(consumeLost()).toEqual(['Only here']);
+  });
+});
+
+describe('a flush that stops', () => {
+  it('tries again soon when a passing failure stopped it', async () => {
+    await saveOffline('One');
+    server.offline = true;
+    const retryLater = vi.fn();
+    await flushQueue('acc', fakeClient() as unknown as JMAPClient, { notify: vi.fn(), allowed: () => true, retryLater });
+    expect(retryLater).toHaveBeenCalled();
+  });
+
+  it('doesn\'t when nothing stopped it', async () => {
+    await saveOffline('One');
+    const retryLater = vi.fn();
+    await flushQueue('acc', fakeClient() as unknown as JMAPClient, { notify: vi.fn(), allowed: () => true, retryLater });
+    expect(retryLater).not.toHaveBeenCalled();
+  });
+});
+
+describe('a reload in the middle of a flush', () => {
+  const nav = navigator as Navigator & { locks?: unknown };
+  afterEach(() => {
+    Object.defineProperty(nav, 'locks', { configurable: true, value: undefined });
+  });
+
+  async function leftSending() {
+    const id = await saveOffline('Left on the way');
+    expect(await store.area('acc', 'drafts.claim', { localId: id })).toBe(true);
+    return id;
+  }
+
+  it('goes on at once under the flush lock: nobody else can be sending it', async () => {
+    Object.defineProperty(nav, 'locks', { configurable: true, value: { request: (_name: string, run: () => Promise<unknown>) => run() } });
+    await leftSending();
+    await flushQueue('acc', fakeClient() as unknown as JMAPClient, { notify: vi.fn(), allowed: () => true });
+    expect(server.drafts()).toHaveLength(1);
+  });
+
+  it('waits the minute without Web Locks, because another tab may be on it', async () => {
+    await leftSending();
+    await flushQueue('acc', fakeClient() as unknown as JMAPClient, { notify: vi.fn(), allowed: () => true });
+    expect(server.drafts()).toEqual([]);
+  });
+});
+
+describe('an old version in another login', () => {
+  function clients() {
+    const other = { ...fakeClient(), deleteEmail: vi.fn(async () => {}) };
+    useAuthStore.setState({ getClientForAccount: ((id: string) => (id === 'other' ? other : undefined)) as never });
+    return other;
+  }
+
+  it('stays until the new version is on the server, then goes through its own login', async () => {
+    const other = clients();
+    server.addEmail({ id: 'R', subject: 'Elsewhere', mailboxIds: { drafts: true }, keywords: { $draft: true } });
+    const id = await saveOffline('New');
+    await noteDraftReplacedElsewhere('acc', id, { login: 'other', jmap: JMAP_ACCOUNT, id: 'R' });
+    expect(other.deleteEmail).not.toHaveBeenCalled();
+    server.refuseCreate = { type: 'overQuota' };
+    await flushQueue('acc', fakeClient() as unknown as JMAPClient, { notify: vi.fn(), allowed: () => true });
+    expect(other.deleteEmail).not.toHaveBeenCalled();
+    server.refuseCreate = null;
+    await retryLocalDraft('acc', id);
+    await flushQueue('acc', fakeClient() as unknown as JMAPClient, { notify: vi.fn(), allowed: () => true });
+    expect(other.deleteEmail).toHaveBeenCalledWith('R', JMAP_ACCOUNT);
+  });
+
+  it('stays when it\'s no longer a draft there', async () => {
+    const other = clients();
+    server.addEmail({ id: 'R', subject: 'Sent elsewhere', mailboxIds: { drafts: true }, keywords: {} });
+    const id = await saveOffline('New');
+    await noteDraftReplacedElsewhere('acc', id, { login: 'other', jmap: JMAP_ACCOUNT, id: 'R' });
+    await flushQueue('acc', fakeClient() as unknown as JMAPClient, { notify: vi.fn(), allowed: () => true });
+    expect(other.deleteEmail).not.toHaveBeenCalled();
+  });
+
+  it('carries over to the next save, and waits for that login to be there', async () => {
+    useAuthStore.setState({ getClientForAccount: (() => undefined) as never });
+    server.addEmail({ id: 'R', subject: 'Elsewhere', mailboxIds: { drafts: true }, keywords: { $draft: true } });
+    const first = await saveOffline('First');
+    await noteDraftReplacedElsewhere('acc', first, { login: 'other', jmap: JMAP_ACCOUNT, id: 'R' });
+    const second = await saveOffline('Second');
+    await store.answer('acc', [['Email/set', { accountId: JMAP_ACCOUNT, destroy: [first], replacedBy: second }, 'd']]);
+    await flushQueue('acc', fakeClient() as unknown as JMAPClient, { notify: vi.fn(), allowed: () => true });
+    expect(server.emails.has('R')).toBe(true);
+    const other = clients();
+    await flushQueue('acc', fakeClient() as unknown as JMAPClient, { notify: vi.fn(), allowed: () => true });
+    expect(other.deleteEmail).toHaveBeenCalledWith('R', JMAP_ACCOUNT);
   });
 });

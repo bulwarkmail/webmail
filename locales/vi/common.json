@@ -5785,7 +5785,8 @@
     "toast_conflict": "Bản nháp {subject} đã được thay đổi trên thiết bị khác. Cả hai phiên bản đều được giữ lại.",
     "conflict_changed": "Đã thay đổi trên thiết bị khác. Cả hai phiên bản đều ở trong Bản nháp.",
     "conflict_gone": "Đã thay đổi hoặc xóa trên thiết bị khác. Phiên bản của bạn ở trong Bản nháp.",
-    "banner_refused": "Bản nháp bị máy chủ từ chối: {count}"
+    "banner_refused": "Bản nháp bị máy chủ từ chối: {count}",
+    "banner_waiting": "Bản nháp đang chờ máy chủ: {count}"
   },
   "deep_link": {
     "message_not_found": "Thư này không còn nữa.",

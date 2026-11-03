@@ -212,6 +212,8 @@ function heldFile(ctx: StoreContext, params: { blobId: string }): { name: string
     // Each step only refers to the last Blob, so one chunk at a time is in memory here.
     blob = new Blob([blob, chunk.data as BlobPart], { type });
   }
+  // Pieces missing: as gone, so it's said so, rather than a file that uploads as empty.
+  if (blob.size !== Number(row.size)) return null;
   return { name: row.name ?? 'attachment', type, size: Number(row.size), blob };
 }
 

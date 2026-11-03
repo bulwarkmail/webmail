@@ -5773,7 +5773,8 @@
     "toast_conflict": "O rascunho {subject} foi alterado noutro dispositivo. As duas versões são mantidas.",
     "conflict_changed": "Alterado noutro dispositivo. As duas versões estão em Rascunhos.",
     "conflict_gone": "Alterado ou removido noutro dispositivo. A sua versão está em Rascunhos.",
-    "banner_refused": "Rascunhos recusados pelo servidor: {count}"
+    "banner_refused": "Rascunhos recusados pelo servidor: {count}",
+    "banner_waiting": "Rascunhos a aguardar o servidor: {count}"
   },
   "deep_link": {
     "message_not_found": "Esta mensagem não está mais disponível.",

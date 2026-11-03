@@ -5773,7 +5773,8 @@
     "toast_conflict": "The draft {subject} was changed on another device. Both versions are kept.",
     "conflict_changed": "Changed on another device. Both versions are in Drafts.",
     "conflict_gone": "Changed or removed on another device. Your version is in Drafts.",
-    "banner_refused": "Drafts the server refused: {count}"
+    "banner_refused": "Drafts the server refused: {count}",
+    "banner_waiting": "Drafts waiting for the server: {count}"
   },
   "deep_link": {
     "message_not_found": "This message is no longer available.",

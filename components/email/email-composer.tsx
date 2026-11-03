@@ -90,6 +90,7 @@ import { DirectoryPickerDialog } from "@/components/contacts/directory-picker-di
 import type { DirectoryEntry } from "@/stores/contact-store";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import { isStandInId } from "@/lib/jmap/stand-in-ids";
+import { noteDraftReplacedElsewhere } from "@/lib/offline/queue";
 import type { FileNode } from "@/lib/jmap/types";
 import { useContactStore, getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 import { renderTemplateWithPlugins, notifyTemplateApplied } from "@/stores/template-store";
@@ -2859,7 +2860,12 @@ export function EmailComposer({
         { priority, accountId: draftAccountId, previousDraftAccountId: replacedElsewhere ? undefined : previousDraftAccountId, classification: classificationRef.current.draftChoice },
       );
       if (replacedElsewhere) {
-        await removeDraftVersion(savedDraft.draftId!, previousDraftLogin, previousDraftAccountId);
+        if (isStandInId(savedDraftId) && savingLogin) {
+          // The new version is only on this device: the old one stays until it's up.
+          await noteDraftReplacedElsewhere(savingLogin, savedDraftId, { login: previousDraftLogin!, jmap: previousDraftAccountId, id: savedDraft.draftId! });
+        } else {
+          await removeDraftVersion(savedDraft.draftId!, previousDraftLogin, previousDraftAccountId);
+        }
       }
 
       // Update the ref synchronously so a queued save sees the new id and

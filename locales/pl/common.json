@@ -5773,7 +5773,8 @@
     "toast_conflict": "Wersja robocza {subject} została zmieniona na innym urządzeniu. Obie wersje zostają zachowane.",
     "conflict_changed": "Zmieniono na innym urządzeniu. Obie wersje są w Wersjach roboczych.",
     "conflict_gone": "Zmieniono lub usunięto na innym urządzeniu. Twoja wersja jest w Wersjach roboczych.",
-    "banner_refused": "Wersje robocze odrzucone przez serwer: {count}"
+    "banner_refused": "Wersje robocze odrzucone przez serwer: {count}",
+    "banner_waiting": "Wersje robocze czekające na serwer: {count}"
   },
   "deep_link": {
     "message_not_found": "Ta wiadomość nie jest już dostępna.",

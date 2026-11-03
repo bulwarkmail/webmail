@@ -5773,7 +5773,8 @@
     "toast_conflict": "Het concept {subject} is op een ander apparaat gewijzigd. Beide versies blijven bewaard.",
     "conflict_changed": "Gewijzigd op een ander apparaat. Beide versies staan in Concepten.",
     "conflict_gone": "Gewijzigd of verwijderd op een ander apparaat. Uw versie staat in Concepten.",
-    "banner_refused": "Door de server geweigerde concepten: {count}"
+    "banner_refused": "Door de server geweigerde concepten: {count}",
+    "banner_waiting": "Concepten die op de server wachten: {count}"
   },
   "deep_link": {
     "message_not_found": "Dit bericht is niet meer beschikbaar.",

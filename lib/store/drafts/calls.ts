@@ -4,9 +4,9 @@ import type { AreaCall, StoreContext } from '../area';
 import { upsertEmail, type EmailObject } from '../mail/records';
 import { savePatch, EMAIL_TYPE } from '../outbox/email-set';
 import type { ConflictSummary } from '../outbox/items';
-import { applyPatch, destroyConflicts, type RecordState } from '../outbox/patches';
+import { applyPatch, destroyConflicts, stateOf, type RecordState } from '../outbox/patches';
 import type { DraftCreate } from './local-email';
-import { destroyForDraft, listedDrafts, pendingForFlush, replaceLocalRow, replacesOf, resolveStandIns, type DraftError, type DraftRow, type DraftStatus } from './pending';
+import { destroyForDraft, ghostsOf, isPlainDraft, listedDrafts, pendingForFlush, replaceLocalRow, replacesOf, resolveStandIns, versionOf, type DraftError, type DraftRow, type DraftStatus, type DraftVersion } from './pending';
 
 export interface PendingDraft {
   localId: string;
@@ -18,12 +18,21 @@ export interface PendingDraft {
   replaces: ReturnType<typeof replacesOf>;
   status: DraftStatus;
   firstAttemptAt: number | null;
+  /** What this version should look like on the server. */
+  self: DraftVersion;
+  /** Earlier versions that may have reached the server. */
+  ghosts: DraftVersion[];
 }
 
-export interface DraftGhost {
+export interface DraftGhost extends DraftVersion {
   jmap: string;
-  messageId: string;
-  at: number;
+}
+
+export interface DraftElsewhere {
+  id: number;
+  login: string;
+  jmap: string | null;
+  recordId: string;
 }
 
 /** What the outbox view shows of a draft that's only on this device. */
@@ -50,6 +59,8 @@ function toPending(row: DraftRow): PendingDraft {
     replaces: replacesOf(row),
     status: row.status,
     firstAttemptAt: row.first_attempt_at === null ? null : Number(row.first_attempt_at),
+    self: versionOf(row),
+    ghosts: ghostsOf(row),
   };
 }
 
@@ -60,7 +71,14 @@ function read(ctx: StoreContext, params: { before: number }): { rows: PendingDra
     ctx.db.run('DELETE FROM draft_id_map WHERE at < ?', [ctx.now() - MAP_KEPT_MS]);
     return {
       rows: pendingForFlush(ctx.db).map(toPending),
-      ghosts: ctx.db.all<{ jmap: string; message_id: string; at: number }>('SELECT jmap, message_id, at FROM draft_ghost').map((row) => ({ jmap: row.jmap, messageId: row.message_id, at: Number(row.at) })),
+      ghosts: ctx.db.all<{ jmap: string; message_id: string; first_at: number; last_at: number; subject: string; size: number }>('SELECT * FROM draft_ghost').map((row) => ({
+        jmap: row.jmap,
+        messageId: row.message_id,
+        from: Number(row.first_at),
+        to: Number(row.last_at),
+        subject: row.subject,
+        size: Number(row.size),
+      })),
     };
   });
 }
@@ -80,9 +98,9 @@ function list(ctx: StoreContext): LocalDraftSummary[] {
 function claim(ctx: StoreContext, params: { localId: string }): boolean {
   const now = ctx.now();
   return ctx.db.run(
-    `UPDATE draft_pending SET status = 'sending', sending_since = ?, first_attempt_at = COALESCE(first_attempt_at, ?)
+    `UPDATE draft_pending SET status = 'sending', sending_since = ?, first_attempt_at = COALESCE(first_attempt_at, ?), last_attempt_at = ?
      WHERE local_id = ? AND status IN ('waiting', 'uncertain')`,
-    [now, now, params.localId],
+    [now, now, now, params.localId],
   ).changes === 1;
 }
 
@@ -90,9 +108,10 @@ function claim(ctx: StoreContext, params: { localId: string }): boolean {
 function failed(ctx: StoreContext, params: { localId: string; status: 'waiting' | 'uncertain' | 'refused'; error?: DraftError; neverSent?: boolean }): void {
   ctx.db.run(
     `UPDATE draft_pending SET status = ?, error = ?, sending_since = NULL,
-       first_attempt_at = CASE WHEN ? THEN NULL ELSE first_attempt_at END
+       first_attempt_at = CASE WHEN ? THEN NULL ELSE first_attempt_at END,
+       last_attempt_at = CASE WHEN ? THEN NULL ELSE last_attempt_at END
      WHERE local_id = ?`,
-    [params.status, params.error ? JSON.stringify(params.error) : null, params.neverSent ? 1 : 0, params.localId],
+    [params.status, params.error ? JSON.stringify(params.error) : null, params.neverSent ? 1 : 0, params.neverSent ? 1 : 0, params.localId],
   );
 }
 
@@ -112,6 +131,8 @@ interface CreatedParams {
   email: EmailObject | null;
   /** What the server has of the versions this replaces, with null for one it no longer has. */
   server: Record<string, EmailObject | null>;
+  /** Copies of earlier versions of this draft that still look untouched. */
+  ghostCopies: Array<{ id: string; base: RecordState }>;
 }
 
 function addConflict(ctx: StoreContext, jmap: string, recordId: string, summary: ConflictSummary): void {
@@ -130,13 +151,10 @@ function created(ctx: StoreContext, params: CreatedParams): { conflicts: string[
   const conflicts: string[] = [];
   ctx.db.transaction(() => {
     const now = ctx.now();
-    ctx.db.run('DELETE FROM draft_ghost WHERE jmap = ? AND message_id = ?', [params.jmap, params.messageId]);
     const row = ctx.db.get<DraftRow>('SELECT * FROM draft_pending WHERE local_id = ?', [params.localId]);
-    if (!row) {
-      // Replaced or discarded while it was on its way: this copy has no place.
-      savePatch(ctx.db, { jmap: params.jmap, record_id: params.serverId, op: 'destroy', patch: '{}', base: null, server: null, subject: null }, now);
-      return;
-    }
+    // Replaced or discarded while it was on its way: it left a ghost, and the
+    // next flush looks at this copy as it does at any other.
+    if (!row) return;
     ctx.db.run('INSERT OR REPLACE INTO draft_id_map (local_id, jmap, server_id, at) VALUES (?, ?, ?, ?)', [row.local_id, row.jmap, params.serverId, now]);
     replaceLocalRow(ctx.db, row, params.serverId, params.email);
     if (Number(row.seq) !== params.seq) {
@@ -147,11 +165,20 @@ function created(ctx: StoreContext, params: CreatedParams): { conflicts: string[
       if (kept) upsertEmail(ctx.db, row.jmap, applyPatch(JSON.parse(kept.json) as EmailObject, JSON.parse(patch)), Number(kept.gen));
     }
     ctx.db.run('DELETE FROM draft_pending WHERE local_id = ?', [row.local_id]);
+    ctx.db.run('UPDATE draft_elsewhere SET local_id = NULL WHERE local_id = ?', [row.local_id]);
+    for (const copy of params.ghostCopies) {
+      const state = JSON.stringify(copy.base);
+      savePatch(ctx.db, { jmap: row.jmap, record_id: copy.id, op: 'destroy', patch: '{}', base: state, server: state, subject: row.subject }, now);
+    }
     for (const target of replacesOf(row)) {
       const server = params.server[target.id];
-      const state = target.base ? JSON.stringify(target.base) : null;
-      // Not read on this run (added on the way): the queue checks it again anyway.
-      if (server === undefined || (server && !destroyConflicts(target.base, server))) {
+      // Not read on this run (added on the way). With what it looked like known,
+      // the queue checks it again. Without that, it stays: a spare copy.
+      if (server === undefined && !target.base) continue;
+      // A message this device didn't keep: what the server says now is all there is to go by.
+      const unchanged = server === undefined || (server !== null && (target.base ? !destroyConflicts(target.base, server) : isPlainDraft(ctx.db, target.jmap, server)));
+      if (unchanged) {
+        const state = JSON.stringify(target.base ?? stateOf(server as EmailObject));
         savePatch(ctx.db, { jmap: target.jmap, record_id: target.id, op: 'destroy', patch: '{}', base: state, server: state, subject: target.subject }, now);
         continue;
       }
@@ -168,12 +195,30 @@ function created(ctx: StoreContext, params: CreatedParams): { conflicts: string[
   return { conflicts };
 }
 
-/** The ghosts looked up: copies found go through the usual queue. */
-function ghostsLooked(ctx: StoreContext, params: { jmap: string; messageIds: string[]; found: string[] }): void {
+/** The ghosts of a discarded draft looked up: copies that still look untouched go through the usual queue. */
+function ghostsLooked(ctx: StoreContext, params: { jmap: string; messageIds: string[]; found: Array<{ id: string; base: RecordState }> }): void {
   ctx.db.transaction(() => {
     for (const messageId of params.messageIds) ctx.db.run('DELETE FROM draft_ghost WHERE jmap = ? AND message_id = ?', [params.jmap, messageId]);
-    for (const id of params.found) savePatch(ctx.db, { jmap: params.jmap, record_id: id, op: 'destroy', patch: '{}', base: null, server: null, subject: null }, ctx.now());
+    for (const copy of params.found) {
+      const state = JSON.stringify(copy.base);
+      savePatch(ctx.db, { jmap: params.jmap, record_id: copy.id, op: 'destroy', patch: '{}', base: state, server: state, subject: null }, ctx.now());
+    }
   });
+}
+
+/** An old version in another login, to be removed through it once the new one here is up. */
+function noteElsewhere(ctx: StoreContext, params: { localId: string; login: string; jmap?: string; id: string }): void {
+  const waiting = ctx.db.get('SELECT 1 AS x FROM draft_pending WHERE local_id = ?', [params.localId]);
+  ctx.db.run('INSERT INTO draft_elsewhere (local_id, login, jmap, record_id) VALUES (?, ?, ?, ?)', [waiting ? params.localId : null, params.login, params.jmap ?? null, params.id]);
+}
+
+function elsewhereReady(ctx: StoreContext): DraftElsewhere[] {
+  return ctx.db.all<{ id: number; login: string; jmap: string | null; record_id: string }>('SELECT id, login, jmap, record_id FROM draft_elsewhere WHERE local_id IS NULL')
+    .map((row) => ({ id: Number(row.id), login: row.login, jmap: row.jmap, recordId: row.record_id }));
+}
+
+function elsewhereDone(ctx: StoreContext, params: { id: number }): void {
+  ctx.db.run('DELETE FROM draft_elsewhere WHERE id = ?', [params.id]);
 }
 
 /** A send took care of this draft without the page holding a client's word for it. */
@@ -192,6 +237,9 @@ export const DRAFT_CALLS: Readonly<Record<string, AreaCall>> = {
   'drafts.retry': retry,
   'drafts.created': created,
   'drafts.ghostsLooked': ghostsLooked,
+  'drafts.noteElsewhere': noteElsewhere,
+  'drafts.elsewhereReady': elsewhereReady,
+  'drafts.elsewhereDone': elsewhereDone,
   'drafts.discard': discard,
   'drafts.resolveStandIns': (ctx, params: { ids: string[] }) => resolveStandIns(ctx.db, params.ids),
 };

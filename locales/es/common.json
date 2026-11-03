@@ -5773,7 +5773,8 @@
     "toast_conflict": "El borrador {subject} se cambió en otro dispositivo. Se conservan las dos versiones.",
     "conflict_changed": "Cambiado en otro dispositivo. Las dos versiones están en Borradores.",
     "conflict_gone": "Cambiado o eliminado en otro dispositivo. Su versión está en Borradores.",
-    "banner_refused": "Borradores rechazados por el servidor: {count}"
+    "banner_refused": "Borradores rechazados por el servidor: {count}",
+    "banner_waiting": "Borradores esperando al servidor: {count}"
   },
   "deep_link": {
     "message_not_found": "Este mensaje ya no está disponible.",

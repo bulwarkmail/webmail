@@ -5773,7 +5773,8 @@
     "toast_conflict": "Kladden {subject} blev ændret på en anden enhed. Begge versioner beholdes.",
     "conflict_changed": "Ændret på en anden enhed. Begge versioner ligger i Kladder.",
     "conflict_gone": "Ændret eller fjernet på en anden enhed. Din version ligger i Kladder.",
-    "banner_refused": "Kladder afvist af serveren: {count}"
+    "banner_refused": "Kladder afvist af serveren: {count}",
+    "banner_waiting": "Kladder, der venter på serveren: {count}"
   },
   "deep_link": {
     "message_not_found": "Denne besked er ikke længere tilgængelig.",
