@@ -11,6 +11,8 @@ vi.mock('@/i18n/navigation', () => ({
   usePathname: () => nav.pathname,
   useRouter: () => ({ replace: nav.replace }),
 }));
+const route = vi.hoisted(() => ({ segment: null as string | null }));
+vi.mock('next/navigation', () => ({ useSelectedLayoutSegment: () => route.segment }));
 const device = vi.hoisted(() => ({ desktop: true }));
 vi.mock('@/hooks/use-media-query', () => ({ useIsDesktop: () => device.desktop }));
 vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key }));
@@ -65,6 +67,14 @@ describe('ProInterfaceRedirect', () => {
     const cover = document.querySelector('[data-pro-takeover]');
     expect(cover?.querySelector('[data-boot-skeleton="pro"]')).not.toBeNull();
     expect(cover?.className).toContain('fixed');
+  });
+
+  it('covers nothing when the path changed but the shell is still up (browser Back)', () => {
+    route.segment = 'pro';
+    nav.pathname = '/calendar/month/2026-11-03';
+    const { container } = render(<ProInterfaceRedirect />);
+    expect(container.querySelector('[data-pro-takeover]')).toBeNull();
+    route.segment = null;
   });
 
   it('draws nothing on /pro itself, below desktop width, or on other pages', () => {

@@ -62,7 +62,7 @@ describe('leave guard', () => {
     });
     await vi.waitFor(() => expect((window.history.state as Record<string, unknown> | null)?.__closeOnBack).toBeTruthy());
     const order: string[] = [];
-    window.addEventListener('popstate', () => order.push('back landed'), { once: true });
+    window.addEventListener('popstate', () => order.push('back landed'), { once: true, capture: true });
     cleanups.push(registerLeaveGuard({
       isDirty: () => true,
       confirm: async () => { dialog.rerender({ open: false }); return true; },
