@@ -471,6 +471,38 @@ describe('attachments', () => {
     expect(refused.downloads).toEqual(['b-gone']);
   });
 
+  it.each([500, 503, 429, 401])('tries a file again after a %i, which says nothing about the file', async (status) => {
+    class Failing extends Files {
+      fails = true;
+      override async download(jmap?: string, blobId?: string): Promise<Uint8Array> {
+        if (this.fails) throw new TransportError('http', 'Nope', status);
+        return super.download(jmap, blobId);
+      }
+    }
+    const server = new Failing();
+    server.addEmail({ id: 'm', attachments: [{ blobId: 'b', size: 10, type: 'image/png' }] });
+    const { engine, db } = engineFor(server);
+    await engine.requestSync();
+    expect(db.get<{ refused: number }>('SELECT refused FROM email_part')?.refused).toBe(0);
+    server.fails = false;
+    server.addEmail({ id: 'n' });
+    await engine.requestSync();
+    expect(await engine.areaCall('mail.getBlob', { jmap: JMAP_ACCOUNT, blobId: 'b' })).not.toBeNull();
+  });
+
+  it.each([403, 404, 410])('gives up on a file after a %i', async (status) => {
+    class Refusing extends Files {
+      override async download(): Promise<Uint8Array> {
+        throw new TransportError('http', 'Nope', status);
+      }
+    }
+    const server = new Refusing();
+    server.addEmail({ id: 'm', attachments: [{ blobId: 'b', size: 10, type: 'image/png' }] });
+    const { engine, db } = engineFor(server);
+    await engine.requestSync();
+    expect(db.get<{ refused: number }>('SELECT refused FROM email_part')?.refused).toBe(1);
+  });
+
   it('files a blob the user opened only as far as the chosen scope allows', async () => {
     const server = new Files();
     server.addEmail({ id: 'm', attachments: [{ blobId: 'b-kept', size: 10, type: 'image/png' }] });
