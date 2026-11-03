@@ -843,6 +843,7 @@
     "mv_position": "{index} / {total}",
     "plugin_panel_show": "Bővítménypanel megjelenítése",
     "plugin_panel_hide": "Bővítménypanel elrejtése",
+    "plugin_panel": "Bővítménypanel",
     "copy": "Másolás",
     "contact_added": "Névjegy hozzáadva",
     "save_to_files": {
@@ -5838,8 +5839,8 @@
         "body": "Teljes üzeneteket küld a fiókodból, például aláírt vagy titkosított üzeneteket."
       },
       "email_blob_read": {
-        "title": "Üzenetek nyers tartalmának olvasása",
-        "body": "Olvassa az üzeneteid és mellékleteid eredeti adatait, valamint minden fájlét, amelyet küldés előtt csatolsz."
+        "title": "Mellékletek és üzenetforrások olvasása",
+        "body": "Olvassa a mellékleteket (a szövegüket és a képeiket is) és azoknak az üzeneteknek a teljes forrását, amelyekkel dolgozol, valamint minden fájlt, amelyet küldés előtt csatolsz."
       },
       "email_blob_write": {
         "title": "Mellékletek cseréje küldés előtt",
@@ -5857,6 +5858,10 @@
         "title": "Naptárad módosítása",
         "body": "Eseményeket hoz létre, módosít és töröl."
       },
+      "calendar_respond": {
+        "title": "Válasz a meghívókra",
+        "body": "Elfogadja vagy elutasítja a naptármeghívókat. A válaszod e-mailben megy a szervezőnek."
+      },
       "contacts_read": {
         "title": "Névjegyeid olvasása",
         "body": "Keres a címjegyzékeidben, és olvassa őket."
@@ -5867,11 +5872,11 @@
       },
       "files_read": {
         "title": "Fájljaid olvasása",
-        "body": "Böngészi és megnyitja a fiókodban tárolt fájlokat."
+        "body": "Megkeresi, megnyitja és elolvassa a fiókodban lévő fájlokat."
       },
       "files_write": {
         "title": "Fájljaid módosítása",
-        "body": "Fájlokat tölt fel, nevez át, helyez át és töröl a fiókodban."
+        "body": "Fájlokat ment, hoz létre, nevez át és helyez át a fiókodban, és megakadályozhatja egy fájl törlését."
       },
       "identity_read": {
         "title": "Küldő azonosságaid megtekintése",
@@ -5922,8 +5927,12 @@
         "body": "Látja a beállításaidat és a címkék meghatározásait."
       },
       "settings_write": {
+        "title": "Címkéid módosítása",
+        "body": "Hozzáadja, átnevezi és átrendezi a címkéidet, és megakadályozza a beállításaid módosítását."
+      },
+      "settings_change": {
         "title": "Beállításaid módosítása",
-        "body": "Címkéket ad hozzá, átrendezi őket, és módosítja a beállításaidat."
+        "body": "Módosítja az alkalmazás megjelenését és működését, például a témát, az időformátumot vagy az olvasóablakot. A szervezeted által megadott beállítások nem változnak."
       },
       "security_read": {
         "title": "Fiókod biztonságának megtekintése",
@@ -5984,6 +5993,10 @@
       "ui_email_details": {
         "title": "Panelek az üzenet részleteiben",
         "body": "Saját panelt jelenít meg egy megnyitott üzenet mellett vagy alatt."
+      },
+      "ui_side_panel": {
+        "title": "Panel hozzáadása más nézetekhez",
+        "body": "Saját panel megjelenítése a Naptár, a Névjegyek, a Fájlok és a Beállítások mellett."
       },
       "ui_download_file": {
         "title": "Fájlok mentése az eszközödre",

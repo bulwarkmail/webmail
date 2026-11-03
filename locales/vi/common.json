@@ -853,6 +853,7 @@
     },
     "plugin_panel_show": "Hiện bảng plugin",
     "plugin_panel_hide": "Ẩn bảng plugin",
+    "plugin_panel": "Bảng plugin",
     "frame_title": "Thư: {subject}",
     "frame_title_from": "Thư từ {sender}",
     "download_named": "Tải xuống {name}",
@@ -5850,8 +5851,8 @@
         "body": "Gửi thư hoàn chỉnh, ví dụ như thư đã ký hoặc mã hóa, từ tài khoản của bạn."
       },
       "email_blob_read": {
-        "title": "Đọc nội dung thô của thư",
-        "body": "Đọc các tệp đính kèm và toàn bộ nguồn thư bạn thao tác cũng như mọi tệp bạn đính kèm trước khi nó được gửi."
+        "title": "Đọc tệp đính kèm và nguồn thư",
+        "body": "Đọc tệp đính kèm (cả văn bản và hình ảnh trong đó) và toàn bộ nguồn của thư bạn thao tác, cũng như mọi tệp bạn đính kèm trước khi gửi."
       },
       "email_blob_write": {
         "title": "Thay thế tệp đính kèm trước khi gửi",
@@ -5869,6 +5870,10 @@
         "title": "Thay đổi lịch của bạn",
         "body": "Tạo, thay đổi và xóa các sự kiện."
       },
+      "calendar_respond": {
+        "title": "Trả lời lời mời",
+        "body": "Chấp nhận hoặc từ chối lời mời trên lịch. Câu trả lời của bạn được gửi đến người tổ chức qua email."
+      },
       "contacts_read": {
         "title": "Đọc danh bạ của bạn",
         "body": "Tìm kiếm và đọc sổ địa chỉ của bạn."
@@ -5879,11 +5884,11 @@
       },
       "files_read": {
         "title": "Đọc tệp của bạn",
-        "body": "Duyệt và mở các tệp được lưu trữ trong tài khoản của bạn."
+        "body": "Tìm, mở và đọc các tệp trong tài khoản của bạn."
       },
       "files_write": {
         "title": "Thay đổi tệp của bạn",
-        "body": "Tải lên, đổi tên, di chuyển và xóa các tệp trong tài khoản của bạn."
+        "body": "Lưu, tạo, đổi tên và di chuyển tệp trong tài khoản của bạn, đồng thời ngăn xóa một tệp."
       },
       "identity_read": {
         "title": "Xem địa chỉ người gửi của bạn",
@@ -5934,8 +5939,12 @@
         "body": "Xem tùy chọn và định nghĩa thẻ của bạn."
       },
       "settings_write": {
+        "title": "Thay đổi thẻ của bạn",
+        "body": "Thêm, đổi tên và sắp xếp lại các thẻ của bạn, đồng thời chặn các thay đổi đối với cài đặt của bạn."
+      },
+      "settings_change": {
         "title": "Thay đổi cài đặt của bạn",
-        "body": "Thêm và sắp xếp lại các thẻ và thay đổi tùy chọn của bạn."
+        "body": "Thay đổi giao diện và cách hoạt động của ứng dụng, chẳng hạn như chủ đề, định dạng giờ hoặc ngăn đọc. Các cài đặt do tổ chức của bạn đặt vẫn giữ nguyên."
       },
       "security_read": {
         "title": "Xem bảo mật tài khoản của bạn",
@@ -5996,6 +6005,10 @@
       "ui_email_details": {
         "title": "Thêm bảng vào chi tiết thư",
         "body": "Hiển thị bảng riêng bên cạnh hoặc bên dưới thư đang mở."
+      },
+      "ui_side_panel": {
+        "title": "Thêm bảng vào các chế độ xem khác",
+        "body": "Hiển thị bảng riêng bên cạnh Lịch, Danh bạ, Tệp và Cài đặt."
       },
       "ui_download_file": {
         "title": "Lưu tệp vào thiết bị",

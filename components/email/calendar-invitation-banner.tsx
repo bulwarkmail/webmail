@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { answerInvitation } from '@/lib/calendar-rsvp';
 import { createPortal } from 'react-dom';
 import {
   ArrowRight,
@@ -343,26 +344,6 @@ function buildInvitationChangeItems(
   }
 
   return changes;
-}
-
-function buildParticipantsForRsvp(
-  event: Partial<CalendarEvent>,
-  participantId: string,
-  status: 'accepted' | 'tentative' | 'declined',
-): Record<string, NonNullable<CalendarEvent['participants']>[string]> | null {
-  if (!event.participants) {
-    return null;
-  }
-
-  return Object.fromEntries(
-    Object.entries(event.participants).map(([id, participant]) => [
-      id,
-      {
-        ...participant,
-        participationStatus: id === participantId ? status : participant.participationStatus,
-      },
-    ]),
-  );
 }
 
 function getMethodIconTone(method: InvitationMethod, actorStatus?: string | null): string {
@@ -736,78 +717,30 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
     setActionNotice(null);
     setActionError(null);
     setIsProcessing(true);
-    const replyToForRsvp = parsedEvent.replyTo
-      || (parsedEvent.organizerCalendarAddress ? { imip: parsedEvent.organizerCalendarAddress } : null);
-
-    // The iMIP REPLY to the organizer is sent by the server: rsvpEvent /
-    // updateEvent below pass sendSchedulingMessages=true to CalendarEvent/set
-    // and Stalwart queues the iTIP REPLY itself. A manual client-side reply
-    // here produced duplicate emails.
     try {
-      // A copy in a shared or group account may not be loaded yet: look it up
-      // there before adding the invitation again.
-      const eventForRsvp = existingEvent
-        ? await resolveExistingEventForRsvp()
-        : sharedMailAccount && parsedEvent.uid ? await loadSharedCopy(parsedEvent.uid) : null;
-      const existingEventParticipant = eventForRsvp
-        ? findParticipantByEmails(eventForRsvp, actingEmails)
-        : null;
-      const canFallbackToParsedParticipant = Boolean(
-        existingEvent
-        && myParticipant
-        && (!eventForRsvp?.participants || Object.keys(eventForRsvp.participants).length === 0)
-      );
-      if (eventForRsvp && existingEventParticipant) {
-        // false: a plugin stopped it and said why; keep the old answer.
-        if (!(await (answerOptions ? rsvpEvent(client, eventForRsvp.id, existingEventParticipant.id, status, replyToForRsvp, undefined, answerOptions) : rsvpEvent(client, eventForRsvp.id, existingEventParticipant.id, status, replyToForRsvp)))) return;
+      const outcome = await answerInvitation({
+        client,
+        store: { rsvpEvent, updateEvent, importEvents, events: () => useCalendarStore.getState().events },
+        parsedEvent,
+        existingEvent,
+        myParticipant,
+        actingEmails,
+        calendarId: calId,
+        sharedMailAccount,
+        answerOptions,
+        resolveExisting: () => (existingEvent
+          ? resolveExistingEventForRsvp()
+          : parsedEvent.uid ? loadSharedCopy(parsedEvent.uid) : Promise.resolve(null)),
+      }, status);
+      // 'stopped': a plugin stopped it and said why; keep the old answer.
+      if (outcome === 'answered') {
         setRsvpStatus(status);
         setActionNotice(t('rsvp_sent'));
         setState('parsed');
-      } else if (eventForRsvp && canFallbackToParsedParticipant && myParticipant) {
-        const repairedParticipants = buildParticipantsForRsvp(parsedEvent, myParticipant.id, status);
-
-        if (!repairedParticipants) {
-          setActionError(t('action_failed'));
-        } else {
-          const updated = await updateEvent(client, eventForRsvp.id, {
-            participants: repairedParticipants,
-            // Stalwart routes the iTIP REPLY via the stored ORGANIZER
-            // (organizerCalendarAddress; the RFC 8984 replyTo is retired).
-            // Only repair a missing organizer - attendees may not modify it.
-            ...(replyToForRsvp?.imip && !eventForRsvp.organizerCalendarAddress
-              ? { organizerCalendarAddress: replyToForRsvp.imip }
-              : {}),
-          }, true);
-          if (!updated) return;
-          setRsvpStatus(status);
-          setActionNotice(t('rsvp_sent'));
-          setState('parsed');
-        }
-      } else if (eventForRsvp) {
-        setActionError(t('action_failed'));
-      } else if (calId) {
-        // A refusal (Stalwart 1.0's participant limit, say) lands in the
-        // catch below and is said as it is.
-        const imported = await importEvents(client, [parsedEvent], calId, { throwIfNoneImported: true });
-        if (imported === null) return;
-        if (imported > 0) {
-          const newEvent = useCalendarStore.getState().events.find(
-            (e) => e.uid === parsedEvent.uid && (sharedMailAccount ? e.accountId === sharedMailAccount : !e.isShared)
-          );
-          const participant = myParticipant
-            || (newEvent ? findParticipantByEmails(newEvent, actingEmails) : null);
-          if (newEvent && participant) {
-            if (!(await (answerOptions ? rsvpEvent(client, newEvent.id, participant.id, status, replyToForRsvp, undefined, answerOptions) : rsvpEvent(client, newEvent.id, participant.id, status, replyToForRsvp)))) return;
-            setRsvpStatus(status);
-            setActionNotice(t('rsvp_sent'));
-          } else {
-            setActionNotice(t('added'));
-          }
-          setState('parsed');
-        } else {
-          setActionError(t('action_failed'));
-        }
-      } else {
+      } else if (outcome === 'added') {
+        setActionNotice(t('added'));
+        setState('parsed');
+      } else if (outcome === 'failed') {
         setActionError(t('action_failed'));
       }
     } catch (err) {

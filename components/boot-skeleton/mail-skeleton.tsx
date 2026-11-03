@@ -404,9 +404,10 @@ function MobileHeaderSkeleton() {
  * The reader's top toolbar while a message loads. The loaded reader lifts its
  * toolbar above the message row on a tablet or desktop (EmailViewer's
  * `liftToolbar`); its loading state draws this there too, so the row below
- * doesn't move when the message arrives.
+ * doesn't move when the message arrives. `end` is a real control at the end
+ * of the row (the reader's plugin panel button), where the loaded toolbar has it.
  */
-export function MailMessageToolbarSkeleton() {
+export function MailMessageToolbarSkeleton({ end }: { end?: ReactNode } = {}) {
   const button = "h-8 w-20 rounded-md";
   return (
     <div className="bg-background flex-shrink-0 border-b border-border">
@@ -438,6 +439,7 @@ export function MailMessageToolbarSkeleton() {
             <Block className={button} />
             <Block className={cn(button, "max-md:hidden")} />
             <Block className="h-8 w-8 rounded-md" />
+            {end}
           </div>
         </div>
       </div>

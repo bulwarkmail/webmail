@@ -843,6 +843,7 @@
     "mv_position": "{index} av {total}",
     "plugin_panel_show": "Vis tilleggspanel",
     "plugin_panel_hide": "Skjul tilleggspanel",
+    "plugin_panel": "Tilleggspanel",
     "copy": "Kopier",
     "contact_added": "Kontakt lagt til",
     "save_to_files": {
@@ -5838,8 +5839,8 @@
         "body": "Sende ferdige meldinger, for eksempel signerte eller krypterte, fra kontoen din."
       },
       "email_blob_read": {
-        "title": "Lese råinnholdet i meldinger",
-        "body": "Lese de opprinnelige dataene i meldingene og vedleggene dine, og i hver fil du legger ved før den sendes."
+        "title": "Lese vedlegg og kilden til meldinger",
+        "body": "Lese vedlegg (også teksten og bildene i dem) og hele kilden til meldingene du jobber med, og hver fil du legger ved før den sendes."
       },
       "email_blob_write": {
         "title": "Erstatte vedlegg før sending",
@@ -5857,6 +5858,10 @@
         "title": "Endre kalenderen din",
         "body": "Opprette, endre og slette hendelser."
       },
+      "calendar_respond": {
+        "title": "Svare på invitasjoner",
+        "body": "Godta eller avslå kalenderinvitasjoner. Svaret ditt sendes til arrangøren på e-post."
+      },
       "contacts_read": {
         "title": "Lese kontaktene dine",
         "body": "Søke i og lese adressebøkene dine."
@@ -5867,11 +5872,11 @@
       },
       "files_read": {
         "title": "Lese filene dine",
-        "body": "Bla gjennom og åpne filene som er lagret på kontoen din."
+        "body": "Finne, åpne og lese filene på kontoen din."
       },
       "files_write": {
         "title": "Endre filene dine",
-        "body": "Laste opp, gi nytt navn til, flytte og slette filer på kontoen din."
+        "body": "Lagre, opprette, gi nytt navn til og flytte filer på kontoen din, og hindre at en fil blir slettet."
       },
       "identity_read": {
         "title": "Se avsenderidentitetene dine",
@@ -5922,8 +5927,12 @@
         "body": "Se innstillingene og etikettdefinisjonene dine."
       },
       "settings_write": {
+        "title": "Endre etikettene dine",
+        "body": "Legge til, gi nytt navn til og endre rekkefølgen på etikettene dine, og stoppe endringer i innstillingene dine."
+      },
+      "settings_change": {
         "title": "Endre innstillingene dine",
-        "body": "Legge til og endre rekkefølgen på etiketter og endre innstillingene dine."
+        "body": "Endre hvordan appen ser ut og fungerer, for eksempel tema, tidsformat eller leserute. Innstillinger som organisasjonen din har bestemt, forblir som de er."
       },
       "security_read": {
         "title": "Se kontosikkerheten din",
@@ -5984,6 +5993,10 @@
       "ui_email_details": {
         "title": "Legge til paneler i meldingsdetaljene",
         "body": "Vise et eget panel ved siden av eller under en åpen melding."
+      },
+      "ui_side_panel": {
+        "title": "Legg til et panel i andre visninger",
+        "body": "Vis sitt eget panel ved siden av Kalender, Kontakter, Filer og Innstillinger."
       },
       "ui_download_file": {
         "title": "Lagre filer på enheten din",

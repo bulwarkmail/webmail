@@ -843,6 +843,7 @@
     "mv_position": "{index} af {total}",
     "plugin_panel_show": "Vis pluginpanel",
     "plugin_panel_hide": "Skjul pluginpanel",
+    "plugin_panel": "Pluginpanel",
     "copy": "Kopiér",
     "contact_added": "Kontakt tilføjet",
     "save_to_files": {
@@ -5838,8 +5839,8 @@
         "body": "Sende færdige beskeder, f.eks. signerede eller krypterede, fra din konto."
       },
       "email_blob_read": {
-        "title": "Læse beskeders rå indhold",
-        "body": "Læse de originale data i dine beskeder og vedhæftninger og i alle filer, du vedhæfter, før de sendes."
+        "title": "Læse vedhæftninger og beskeders kilde",
+        "body": "Læse vedhæftninger (også deres tekst og billeder) og hele kilden til de beskeder, du arbejder med, og alle filer, du vedhæfter, før de sendes."
       },
       "email_blob_write": {
         "title": "Erstatte vedhæftninger før afsendelse",
@@ -5857,6 +5858,10 @@
         "title": "Ændre din kalender",
         "body": "Oprette, ændre og slette begivenheder."
       },
+      "calendar_respond": {
+        "title": "Svare på invitationer",
+        "body": "Acceptere eller afvise kalenderinvitationer. Dit svar sendes til arrangøren via e-mail."
+      },
       "contacts_read": {
         "title": "Læse dine kontakter",
         "body": "Søge i og læse dine adressebøger."
@@ -5867,11 +5872,11 @@
       },
       "files_read": {
         "title": "Læse dine filer",
-        "body": "Gennemse og åbne de filer, der er gemt på din konto."
+        "body": "Finde, åbne og læse filerne på din konto."
       },
       "files_write": {
         "title": "Ændre dine filer",
-        "body": "Uploade, omdøbe, flytte og slette filer på din konto."
+        "body": "Gemme, oprette, omdøbe og flytte filer på din konto og forhindre, at en fil bliver slettet."
       },
       "identity_read": {
         "title": "Se dine afsenderidentiteter",
@@ -5922,8 +5927,12 @@
         "body": "Se dine præferencer og tagdefinitioner."
       },
       "settings_write": {
+        "title": "Ændre dine tags",
+        "body": "Tilføje, omdøbe og omarrangere dine tags og forhindre ændringer i dine indstillinger."
+      },
+      "settings_change": {
         "title": "Ændre dine indstillinger",
-        "body": "Tilføje og omarrangere tags og ændre dine præferencer."
+        "body": "Ændre, hvordan appen ser ud og fungerer, for eksempel tema, tidsformat eller læserude. Indstillinger, som din organisation har fastsat, forbliver uændrede."
       },
       "security_read": {
         "title": "Se din kontos sikkerhed",
@@ -5984,6 +5993,10 @@
       "ui_email_details": {
         "title": "Tilføje paneler til beskeddetaljer",
         "body": "Vise sit eget panel ved siden af eller under en åben besked."
+      },
+      "ui_side_panel": {
+        "title": "Tilføj et panel til andre visninger",
+        "body": "Vis sit eget panel ved siden af Kalender, Kontakter, Filer og Indstillinger."
       },
       "ui_download_file": {
         "title": "Gemme filer på din enhed",

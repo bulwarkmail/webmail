@@ -445,4 +445,21 @@ describe('files provider', () => {
     expect(hits.map((h) => h.id)).toEqual(['d']);
     expect(hits[0]).toMatchObject({ isFolder: true });
   });
+
+  // The Files trash is a folder the app keeps (.Trash, one folder per
+  // delete): neither it nor what was deleted is a hit.
+  it('leaves the Files trash and everything in it out of the hits', async () => {
+    const listing = [
+      { id: 'zebra-live', parentId: null, name: 'zebra.txt', type: 'text/plain', blobId: 'b1', size: 1, created: '', modified: '' },
+      { id: 'trash', parentId: null, name: '.Trash', type: 'd', blobId: null, size: 0, created: '', modified: '' },
+      { id: 'batch', parentId: 'trash', name: '1730112000000~zebra', type: 'd', blobId: null, size: 0, created: '', modified: '' },
+      { id: 'zebra-gone', parentId: 'batch', name: 'zebra old.txt', type: 'text/plain', blobId: 'b2', size: 1, created: '', modified: '' },
+    ];
+    invalidateFileSearchCache();
+    const acc = account('login-t', { listAllFileNodesAcrossAccounts: vi.fn(async () => listing) });
+    const { hits } = await filesProvider.remote(parseSearchQuery('zebra'), acc, { limit: 10, signal });
+    expect(hits.map((h) => h.id)).toEqual(['zebra-live']);
+    const trash = await filesProvider.remote(parseSearchQuery('trash'), acc, { limit: 10, signal });
+    expect(trash.hits).toEqual([]);
+  });
 });

@@ -843,6 +843,7 @@
     "mv_position": "{index} von {total}",
     "plugin_panel_show": "Plugin-Bereich einblenden",
     "plugin_panel_hide": "Plugin-Bereich ausblenden",
+    "plugin_panel": "Plugin-Bereich",
     "copy": "Kopieren",
     "contact_added": "Kontakt hinzugefügt",
     "save_to_files": {
@@ -5838,8 +5839,8 @@
         "body": "Vollständige Nachrichten, zum Beispiel signierte oder verschlüsselte, von Ihrem Konto senden."
       },
       "email_blob_read": {
-        "title": "Rohinhalt von Nachrichten lesen",
-        "body": "Die Originaldaten Ihrer Nachrichten und Anhänge lesen, auch jeder Datei, die Sie vor dem Senden anhängen."
+        "title": "Anhänge und Quelltext von Nachrichten lesen",
+        "body": "Anhänge lesen (auch ihren Text und ihre Bilder) und den vollständigen Quelltext der Nachrichten, mit denen Sie arbeiten, sowie jede Datei, die Sie vor dem Senden anhängen."
       },
       "email_blob_write": {
         "title": "Anhänge vor dem Senden ersetzen",
@@ -5857,6 +5858,10 @@
         "title": "Ihren Kalender ändern",
         "body": "Termine erstellen, ändern und löschen."
       },
+      "calendar_respond": {
+        "title": "Auf Einladungen antworten",
+        "body": "Kalendereinladungen annehmen oder ablehnen. Ihre Antwort geht per E-Mail an den Organisator."
+      },
       "contacts_read": {
         "title": "Ihre Kontakte lesen",
         "body": "Ihre Adressbücher durchsuchen und lesen."
@@ -5867,11 +5872,11 @@
       },
       "files_read": {
         "title": "Ihre Dateien lesen",
-        "body": "Die in Ihrem Konto gespeicherten Dateien durchsuchen und öffnen."
+        "body": "Die Dateien in Ihrem Konto finden, öffnen und lesen."
       },
       "files_write": {
         "title": "Ihre Dateien ändern",
-        "body": "Dateien in Ihrem Konto hochladen, umbenennen, verschieben und löschen."
+        "body": "Dateien in Ihrem Konto speichern, erstellen, umbenennen und verschieben und das Löschen einer Datei verhindern."
       },
       "identity_read": {
         "title": "Ihre Absenderadressen sehen",
@@ -5922,8 +5927,12 @@
         "body": "Ihre Einstellungen und Label-Definitionen sehen."
       },
       "settings_write": {
+        "title": "Ihre Labels ändern",
+        "body": "Ihre Labels hinzufügen, umbenennen und neu anordnen und Änderungen an Ihren Einstellungen verhindern."
+      },
+      "settings_change": {
         "title": "Ihre Einstellungen ändern",
-        "body": "Labels hinzufügen und neu anordnen und Ihre Einstellungen ändern."
+        "body": "Ändern, wie die App aussieht und funktioniert, etwa das Design, das Zeitformat oder den Lesebereich. Einstellungen, die Ihre Organisation festgelegt hat, bleiben unverändert."
       },
       "security_read": {
         "title": "Ihre Kontosicherheit sehen",
@@ -5984,6 +5993,10 @@
       "ui_email_details": {
         "title": "Bereiche zu Nachrichtendetails hinzufügen",
         "body": "Einen eigenen Bereich neben oder unter einer geöffneten Nachricht anzeigen."
+      },
+      "ui_side_panel": {
+        "title": "Bereiche in anderen Ansichten hinzufügen",
+        "body": "Einen eigenen Bereich neben Kalender, Kontakten, Dateien und Einstellungen anzeigen."
       },
       "ui_download_file": {
         "title": "Dateien auf Ihrem Gerät speichern",

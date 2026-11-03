@@ -4726,17 +4726,19 @@ export class JMAPClient implements IJMAPClient {
     }
   }
 
-  async getThreadEmails(threadId: string, accountId?: string): Promise<Email[]> {
+  async getThreadEmails(threadId: string, accountId?: string, options?: { newest?: number }): Promise<Email[]> {
     try {
       const targetAccountId = accountId || this.accountId;
       const thread = await this.getThread(threadId, accountId);
       if (!thread?.emailIds?.length) {
         return [];
       }
+      // Thread/get lists a thread's messages oldest first (RFC 8621 3.1).
+      const ids = options?.newest !== undefined && options.newest > 0 ? thread.emailIds.slice(-options.newest) : thread.emailIds;
 
       const emails: Email[] = [];
 
-      for (const batchIds of batched(thread.emailIds, this.getMaxObjectsInGet())) {
+      for (const batchIds of batched(ids, this.getMaxObjectsInGet())) {
         const response = await this.request([
           ["Email/get", {
             accountId: targetAccountId,
@@ -7189,10 +7191,13 @@ export class JMAPClient implements IJMAPClient {
   }
 
   async deactivateSieveScript(accountId?: string): Promise<void> {
+    // RFC 9661 deactivates with onSuccessDeactivateScript. Stalwart (0.16 and
+    // 1.0) answers onSuccessActivateScript: null without error but leaves the
+    // script active, so a script could not be removed afterwards.
     const response = await this.request([
       ["SieveScript/set", {
         accountId: accountId || this.getSieveAccountId(),
-        onSuccessActivateScript: null,
+        onSuccessDeactivateScript: true,
       }, "0"]
     ], this.sieveUsing());
 
@@ -10584,6 +10589,29 @@ export class JMAPClient implements IJMAPClient {
     const refused = result[1].notUpdated?.[node.id as string];
     if (refused) {
       throw jmapError(refused.description || "Failed to update file node", refused);
+    }
+  }
+
+  async replaceFileNodeBlob(id: string, blobId: string): Promise<void> {
+    const node = this.resolveFileNodeId(id);
+    const response = await this.request(
+      [["FileNode/set", {
+        accountId: node.accountId,
+        // `modified: null` has the server stamp the change: Stalwart 1.0
+        // leaves a client-set `modified` alone on a content change (see
+        // updateFileNodeBlob in lib/wopi/files.ts); 0.16 bumps it anyway.
+        update: { [node.id as string]: { blobId, modified: null } },
+      }, "fns0"]],
+      this.fileUsing(),
+    );
+
+    const result = response.methodResponses?.[0];
+    if (!result || result[0] === "error") {
+      throw jmapError(result?.[1]?.description || "FileNode/set update failed", result?.[1]);
+    }
+    const refused = result[1].notUpdated?.[node.id as string];
+    if (refused) {
+      throw jmapError(refused.description || "Failed to replace the file's content", refused);
     }
   }
 

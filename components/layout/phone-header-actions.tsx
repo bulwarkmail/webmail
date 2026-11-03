@@ -7,6 +7,7 @@ import { IconButton } from "@/components/ui/icon-button";
 import { ContextMenuItem, ContextMenuSeparator } from "@/components/ui/context-menu";
 import { AccountSwitcher } from "@/components/layout/account-switcher";
 import { PluginActions } from "@/components/plugins/plugin-actions";
+import { AppSidePanelPhoneButton } from "@/components/plugins/app-side-panel";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
 import { useIsDesktop, useIsMobile } from "@/hooks/use-media-query";
 import { openCommandPalette } from "@/lib/app-commands";
@@ -140,6 +141,8 @@ export function PhoneHeaderActions({
 
   return (
     <div data-phone-header-actions="" className={cn("flex items-center gap-1 flex-shrink-0 ms-auto", className)}>
+      {/* A plugin's side panel of this view, which opens as a dialog on a phone. */}
+      <AppSidePanelPhoneButton />
       <PhoneHeaderMenu menuItems={menuItems} />
       {/* Which account you are in is otherwise only visible in Settings.
           Last, so it sits on the far edge, mirrored under RTL by the flex row. */}

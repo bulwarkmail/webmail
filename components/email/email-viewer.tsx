@@ -40,6 +40,7 @@ import { useBottomControls } from "@/hooks/use-bottom-controls";
 import { useComposingSurface } from "@/hooks/use-composing-surface";
 import { ReaderSelectionMenu, useReaderSelectionMenu, watchBodySelection, watchElementSelection } from "./reader-selection-menu";
 import { onPanelRequest } from "@/lib/plugin-sandbox/panel-requests";
+import { PluginPanelToggle, panelLabelOf, panelShortcutOf } from "@/components/plugins/app-side-panel";
 import type { ComposerMetadata } from "@/lib/plugin-sandbox/composer-registry";
 import { QuickReplyPluginActions } from "./quick-reply-plugin-actions";
 import { quickReplyEnvelope } from "@/lib/outgoing/quick-reply-envelope";
@@ -98,7 +99,6 @@ import {
   MapPin,
   StickyNote,
   PanelRightClose,
-  PanelRightOpen,
   Send,
   FolderInput,
   Sun,
@@ -136,6 +136,8 @@ import { useIsPaneScoped } from "@/hooks/use-pane-context";
 import { useAuthStore } from "@/stores/auth-store";
 import { useAccountStore } from "@/stores/account-store";
 import { useEmailStore, resolveEmailBlobContext, emailWriteSource, type EmailBlobContext } from "@/stores/email-store";
+import { useListSelection } from "@/lib/plugin-sandbox/assistant/b.list-selection";
+import { readability } from "@/lib/plugin-sandbox/assistant/b.projection";
 import { useThemeStore } from "@/stores/theme-store";
 import { EmailIdentityBadge } from "./email-identity-badge";
 import { ExternalSenderChip } from "./external-sender-chip";
@@ -288,6 +290,8 @@ interface EmailViewerProps {
   mailboxes?: Mailbox[];
   selectedMailbox?: string;
   className?: string;
+  /** The side panel hears of the messages ticked in the main list (false: a Pro tab, whose message isn't from that list). */
+  withListSelection?: boolean;
 }
 
 // Helper function to format recipients with contextual display
@@ -1313,6 +1317,7 @@ export function EmailViewer({
   mailboxes = [],
   selectedMailbox = "",
   className,
+  withListSelection = true,
 }: EmailViewerProps) {
   const t = useTranslations('email_viewer');
   const archiveActionEnabled = useArchiveActionEnabled();
@@ -1801,9 +1806,11 @@ export function EmailViewer({
   // each slot post its props to the plugin again and re-run shouldShow.
   const wantsPluginEmailView = hasDetailSidebar || hasDetailsSlotOffers || hasBannerOffers
     || hasHeaderOffers || hasBelowSubjectOffers || hasAboveQuoteOffers;
+  // A message of another connected login (unified view, Pro tab): the host
+  // reads parts only through the signed-in login, so plugins hear they can't.
   const pluginEmailView = useMemo(
-    () => (email && wantsPluginEmailView ? emailToReadView(email) : null),
-    [email, wantsPluginEmailView],
+    () => (email && wantsPluginEmailView ? { ...emailToReadView(email), ...readability(blobClient === client) } : null),
+    [email, wantsPluginEmailView, blobClient, client],
   );
   // Reader frames learn the layout: the bar a plugin shows on phones has no
   // place next to a side panel on a desktop.
@@ -1818,9 +1825,11 @@ export function EmailViewer({
     setBodySelection((prev) => (prev.text === text ? prev : (text ? { text } : NO_BODY_SELECTION)));
   }, []);
   const [detailFocusRequest, setDetailFocusRequest] = useState(0);
+  // The messages ticked in the list, for the AI assistant (lib/plugin-sandbox/assistant).
+  const listSelection = useListSelection(withListSelection);
   const pluginDetailProps = useMemo(
-    () => ({ email: pluginEmailView, selection: bodySelection, focusRequest: detailFocusRequest }),
-    [pluginEmailView, bodySelection, detailFocusRequest],
+    () => ({ email: pluginEmailView, selection: bodySelection, listSelection, focusRequest: detailFocusRequest }),
+    [pluginEmailView, bodySelection, listSelection, detailFocusRequest],
   );
   const selectionMenu = useReaderSelectionMenu();
   const emailIdRef = useRef(email?.id);
@@ -1884,6 +1893,12 @@ export function EmailViewer({
       setDetailSidebarForcedOpen(false);
     }
   };
+  // The one button that shows and hides the plugin side panel, at the end of
+  // the toolbar row in every state of the reader (message, loading, none, scheduled).
+  // The same button as in the other views' side panels (app-side-panel.tsx).
+  const panelToggle = hasDetailSidebar && !isMobile ? (
+    <PluginPanelToggle open={!sidebarCollapsed} onClick={toggleDetailSidebar} className={cn(mvViewer && "order-10")} shortcut={panelShortcutOf(detailSlots.map((o) => o.pluginId))} />
+  ) : null;
   useEffect(() => onPanelRequest((request) => {
     if (request.slot !== 'email-detail-sidebar') return null;
     const state = detailPanelRef.current;
@@ -3858,31 +3873,29 @@ ${printWatermark ? printWatermark.html : ''}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readReceiptResponse, shouldOfferReadReceipt, email?.id, sendReadReceiptNow]);
 
+  // The toolbar row with only the panel button: over the empty or loading
+  // reader, and on top when the user put the toolbar below the subject. Same
+  // height and place as the full toolbar, so the button never moves.
+  const toggleOnlyToolbar = panelToggle && liftToolbar ? (
+    <div
+      data-viewer-top-toolbar="full-width"
+      data-toolbar-toggle-only=""
+      className={cn("bg-background flex-shrink-0", !mvViewer && "border-b border-border")}
+    >
+      <div className={cn("px-2 sm:px-4 lg:px-6 flex items-center justify-end", mvViewer ? "h-12 lg:ps-4" : "h-14")}>
+        {panelToggle}
+      </div>
+    </div>
+  ) : null;
+
   // The plugin side panel. One element in the same place whatever the viewer
   // shows (a message, the next one loading, none), so its frame lives on while
-  // the user reads on instead of starting over with every message.
-  const panelToggleInToolbar = !!email;
+  // the user reads on instead of starting over with every message. Its button
+  // is always at the end of the toolbar row above it.
   const sidePanel = (
   <>
     {hasDetailSidebar && !isMobile && (
       <div className="contents" data-reader-side-panel="">
-        {/* With a message open the toggle sits in its toolbar; without one, here. */}
-        {sidebarCollapsed && !panelToggleInToolbar && (
-          <div className="flex flex-col items-center border-s border-border bg-background">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                setDetailSidebarCollapsed(false);
-                if (readerTooNarrow) setDetailSidebarForcedOpen(true);
-              }}
-              className="h-8 w-8 m-1"
-              aria-label={t('plugin_panel_show')}
-            >
-              <PanelRightOpen className="w-4 h-4" />
-            </Button>
-          </div>
-        )}
         {!sidebarCollapsed && (
           <>
             {!sidebarOverlay && (
@@ -3901,6 +3914,8 @@ ${printWatermark ? printWatermark.html : ''}
               />
             )}
             <div
+              role="complementary"
+              aria-label={panelLabelOf(detailSlots.map((o) => o.pluginId), t('plugin_panel'))}
               data-plugin-detail-panel={sidebarOverlay ? 'overlay' : 'docked'}
               className={cn(
                 "flex flex-col h-full border-s border-border bg-background overflow-hidden",
@@ -3910,22 +3925,6 @@ ${printWatermark ? printWatermark.html : ''}
                 ? { width: Math.min(detailSidebarWidth, Math.max(200, viewerWidth - 48)) }
                 : { width: detailSidebarWidth, minWidth: detailSidebarWidth }}
             >
-              {!panelToggleInToolbar && (
-                <div className="flex items-center justify-end px-1 py-1 border-b border-border shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      setDetailSidebarCollapsed(true);
-                      setDetailSidebarForcedOpen(false);
-                    }}
-                    className="h-7 w-7"
-                    aria-label={t('plugin_panel_hide')}
-                  >
-                    <PanelRightClose className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
               <div className="flex-1 min-h-0 overflow-y-auto">
                 <PluginSlot name="email-detail-sidebar" extraProps={pluginDetailProps} />
               </div>
@@ -3936,7 +3935,9 @@ ${printWatermark ? printWatermark.html : ''}
     )}
   </>
   );
-  const shell = (content: React.ReactNode, top: React.ReactNode = null) => (
+  // `top` is the row above the message row; by default the one holding only
+  // the panel button (none without a panel or on a phone).
+  const shell = (content: React.ReactNode, top: React.ReactNode = toggleOnlyToolbar) => (
     <div
       ref={setViewerRootEl}
       className={cn("flex-1 flex flex-col h-full bg-background overflow-hidden relative", className)}
@@ -3954,10 +3955,18 @@ ${printWatermark ? printWatermark.html : ''}
   // message pane, so a linked message keeps the shape it had before the app
   // started.
   // Its toolbar sits where the loaded reader puts its own: above the message
-  // row when lifted, so the row doesn't move when the message arrives.
+  // row when lifted, so the row doesn't move when the message arrives. The
+  // panel button is real in it, at the end of the row as in the loaded one.
   if (isLoading && !email) {
     const lifted = toolbarPosition === 'top' && liftToolbar;
-    return shell(<MailMessageSkeleton toolbar={!lifted} />, lifted ? <MailMessageToolbarSkeleton /> : null);
+    return shell(
+      <MailMessageSkeleton toolbar={!lifted} />,
+      lifted ? (
+        <div data-viewer-top-toolbar="full-width" className="flex-shrink-0">
+          <MailMessageToolbarSkeleton end={panelToggle} />
+        </div>
+      ) : toggleOnlyToolbar,
+    );
   }
 
   if (!email) {
@@ -4494,22 +4503,11 @@ ${printWatermark ? printWatermark.html : ''}
           )}
         </div>
         {/* The plugin side panel: shown or hidden for every message alike. */}
-        {hasDetailSidebar && !isMobile && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleDetailSidebar}
-            className={cn("h-8 w-8", mvViewer && "order-10")}
-            title={t(sidebarCollapsed ? 'plugin_panel_show' : 'plugin_panel_hide')}
-            aria-label={t(sidebarCollapsed ? 'plugin_panel_show' : 'plugin_panel_hide')}
-            aria-pressed={!sidebarCollapsed}
-            data-plugin-panel-toggle=""
-          >
-            {sidebarCollapsed ? <PanelRightOpen className="w-4 h-4 text-muted-foreground" /> : <PanelRightClose className="w-4 h-4 text-muted-foreground" />}
-          </Button>
-        )}
+        {toolbarPosition === 'top' && panelToggle}
       </div>
       )}
+      {/* A scheduled message has no organize actions; the panel button still ends the row. */}
+      {isScheduled && toolbarPosition === 'top' && panelToggle}
     </>
   );
 
@@ -4546,7 +4544,7 @@ ${printWatermark ? printWatermark.html : ''}
       data-tour="email-viewer"
       className={cn("flex-1 flex flex-col h-full bg-background overflow-hidden relative", className)}
     >
-    {toolbarPosition === 'top' && liftToolbar && topToolbar}
+    {toolbarPosition === 'top' && liftToolbar ? topToolbar : toggleOnlyToolbar}
     {/* The message and the side panels, below the toolbar. Overlays anchor here. */}
     <div className="flex-1 min-h-0 flex flex-row overflow-hidden relative">
     <>

@@ -843,6 +843,7 @@
     "mv_position": "{index} de {total}",
     "plugin_panel_show": "Mostrar el panel del complemento",
     "plugin_panel_hide": "Ocultar el panel del complemento",
+    "plugin_panel": "Panel del complemento",
     "copy": "Copiar",
     "contact_added": "Contacto añadido",
     "save_to_files": {
@@ -5838,8 +5839,8 @@
         "body": "Enviar mensajes completos, por ejemplo firmados o cifrados, desde tu cuenta."
       },
       "email_blob_read": {
-        "title": "Leer el contenido sin procesar de los mensajes",
-        "body": "Leer los datos originales de tus mensajes y adjuntos, y de cada archivo que adjuntas antes de enviarlo."
+        "title": "Leer los adjuntos y el código fuente de los mensajes",
+        "body": "Leer los adjuntos (también su texto y sus imágenes) y el código fuente completo de los mensajes con los que trabajas, y cada archivo que adjuntas antes de enviarlo."
       },
       "email_blob_write": {
         "title": "Reemplazar adjuntos antes de enviar",
@@ -5857,6 +5858,10 @@
         "title": "Cambiar tu calendario",
         "body": "Crear, cambiar y eliminar eventos."
       },
+      "calendar_respond": {
+        "title": "Responder a invitaciones",
+        "body": "Aceptar o rechazar invitaciones de calendario. Tu respuesta se envía al organizador por correo electrónico."
+      },
       "contacts_read": {
         "title": "Leer tus contactos",
         "body": "Buscar y leer en tus libretas de direcciones."
@@ -5867,11 +5872,11 @@
       },
       "files_read": {
         "title": "Leer tus archivos",
-        "body": "Explorar y abrir los archivos guardados en tu cuenta."
+        "body": "Buscar, abrir y leer los archivos de tu cuenta."
       },
       "files_write": {
         "title": "Cambiar tus archivos",
-        "body": "Subir, renombrar, mover y eliminar archivos de tu cuenta."
+        "body": "Guardar, crear, renombrar y mover archivos de tu cuenta, e impedir que se elimine un archivo."
       },
       "identity_read": {
         "title": "Ver tus direcciones de remitente",
@@ -5922,8 +5927,12 @@
         "body": "Ver tus preferencias y las definiciones de tus etiquetas."
       },
       "settings_write": {
+        "title": "Cambiar tus etiquetas",
+        "body": "Añadir, renombrar y reordenar tus etiquetas, e impedir cambios en tu configuración."
+      },
+      "settings_change": {
         "title": "Cambiar tu configuración",
-        "body": "Añadir y reordenar etiquetas y cambiar tus preferencias."
+        "body": "Cambiar el aspecto y el funcionamiento de la aplicación, como el tema, el formato de hora o el panel de lectura. La configuración que estableció tu organización no cambia."
       },
       "security_read": {
         "title": "Ver la seguridad de tu cuenta",
@@ -5984,6 +5993,10 @@
       "ui_email_details": {
         "title": "Añadir paneles a los detalles del mensaje",
         "body": "Mostrar su propio panel junto a un mensaje abierto o debajo de él."
+      },
+      "ui_side_panel": {
+        "title": "Añadir un panel a otras vistas",
+        "body": "Mostrar su propio panel junto al Calendario, los Contactos, los Archivos y los Ajustes."
       },
       "ui_download_file": {
         "title": "Guardar archivos en tu dispositivo",

@@ -86,6 +86,24 @@ describe('plugin permissions', () => {
       'drafts.create': 'email:write',
       'email.forward': 'email:forward',
       'notifications.show': 'ui:notifications',
+      'files.find': 'files:read',
+      'files.getText': 'files:read',
+      'files.attach': 'files:read',
+      'files.create': 'files:write',
+      'files.saveAttachments': 'files:write',
+      'files.move': 'files:write',
+      'files.rename': 'files:write',
+      // The AI assistant's actions (lib/plugin-sandbox/assistant/c.ts).
+      'calendar.respond': 'calendar:respond',
+      'calendar.undoDelete': 'calendar:write',
+      'filters.list': 'filters:read',
+      'filters.create': 'filters:write',
+      'filters.undo': 'filters:write',
+      'email.batch': 'email:write',
+      'email.undoBatch': 'email:write',
+      'app.describeSettings': 'settings:read',
+      'app.setSettings': 'settings:change',
+      'app.undoSettings': 'settings:change',
     });
   });
 });

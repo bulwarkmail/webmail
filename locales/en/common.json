@@ -853,6 +853,7 @@
     },
     "plugin_panel_show": "Show plugin panel",
     "plugin_panel_hide": "Hide plugin panel",
+    "plugin_panel": "Plugin panel",
     "frame_title": "Message: {subject}",
     "frame_title_from": "Message from {sender}",
     "download_named": "Download {name}",
@@ -5838,8 +5839,8 @@
         "body": "Send complete messages, for example signed or encrypted ones, from your account."
       },
       "email_blob_read": {
-        "title": "Read the raw content of messages",
-        "body": "Read attachments and the full source of messages you act on, and every file you attach before it is sent."
+        "title": "Read attachments and message sources",
+        "body": "Read attachments (their text and pictures too) and the full source of messages you act on, and every file you attach before it is sent."
       },
       "email_blob_write": {
         "title": "Replace attachments before sending",
@@ -5857,6 +5858,10 @@
         "title": "Change your calendar",
         "body": "Create, change and delete events."
       },
+      "calendar_respond": {
+        "title": "Answer invitations",
+        "body": "Accept or decline calendar invitations. Your answer goes to the organiser by email."
+      },
       "contacts_read": {
         "title": "Read your contacts",
         "body": "Search and read your address books."
@@ -5867,11 +5872,11 @@
       },
       "files_read": {
         "title": "Read your files",
-        "body": "Browse and open the files stored in your account."
+        "body": "Find, open and read the files in your account."
       },
       "files_write": {
         "title": "Change your files",
-        "body": "Upload, rename, move and delete files in your account."
+        "body": "Save, create, rename and move files in your account, and stop a file from being deleted."
       },
       "identity_read": {
         "title": "See your sender addresses",
@@ -5922,8 +5927,12 @@
         "body": "See your preferences and tag definitions."
       },
       "settings_write": {
+        "title": "Change your tags",
+        "body": "Add, rename and reorder your tags, and stop changes to your settings."
+      },
+      "settings_change": {
         "title": "Change your settings",
-        "body": "Add and reorder tags and change your preferences."
+        "body": "Change how the app looks and works, such as the theme, the time format or the reading pane. Settings your organisation set stay as they are."
       },
       "security_read": {
         "title": "See your account security",
@@ -5984,6 +5993,10 @@
       "ui_email_details": {
         "title": "Add panels to message details",
         "body": "Show its own panel next to or below an open message."
+      },
+      "ui_side_panel": {
+        "title": "Add a panel to other views",
+        "body": "Show its own panel next to Calendar, Contacts, Files and Settings."
       },
       "ui_download_file": {
         "title": "Save files to your device",

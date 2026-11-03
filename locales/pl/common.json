@@ -843,6 +843,7 @@
     "mv_position": "{index} z {total}",
     "plugin_panel_show": "Pokaż panel wtyczki",
     "plugin_panel_hide": "Ukryj panel wtyczki",
+    "plugin_panel": "Panel wtyczki",
     "copy": "Kopiuj",
     "contact_added": "Dodano kontakt",
     "save_to_files": {
@@ -5838,8 +5839,8 @@
         "body": "Wysyła z Twojego konta kompletne wiadomości, na przykład podpisane lub zaszyfrowane."
       },
       "email_blob_read": {
-        "title": "Odczyt surowej treści wiadomości",
-        "body": "Odczytuje oryginalne dane Twoich wiadomości i załączników oraz każdego pliku, który załączysz przed wysłaniem."
+        "title": "Odczyt załączników i źródła wiadomości",
+        "body": "Odczytuje załączniki (także ich tekst i obrazy) oraz pełne źródło wiadomości, na których pracujesz, a także każdy plik, który załączysz przed wysłaniem."
       },
       "email_blob_write": {
         "title": "Zastępowanie załączników przed wysłaniem",
@@ -5857,6 +5858,10 @@
         "title": "Zmiana kalendarza",
         "body": "Tworzy, zmienia i usuwa wydarzenia."
       },
+      "calendar_respond": {
+        "title": "Odpowiadanie na zaproszenia",
+        "body": "Akceptuje lub odrzuca zaproszenia z kalendarza. Twoja odpowiedź trafia do organizatora e-mailem."
+      },
       "contacts_read": {
         "title": "Odczyt kontaktów",
         "body": "Przeszukuje i odczytuje Twoje książki adresowe."
@@ -5867,11 +5872,11 @@
       },
       "files_read": {
         "title": "Odczyt plików",
-        "body": "Przegląda i otwiera pliki zapisane na Twoim koncie."
+        "body": "Wyszukiwanie, otwieranie i czytanie plików na Twoim koncie."
       },
       "files_write": {
         "title": "Zmiana plików",
-        "body": "Przesyła, zmienia nazwy, przenosi i usuwa pliki na Twoim koncie."
+        "body": "Zapisywanie, tworzenie, zmiana nazw i przenoszenie plików na Twoim koncie oraz blokowanie usunięcia pliku."
       },
       "identity_read": {
         "title": "Podgląd tożsamości nadawcy",
@@ -5922,8 +5927,12 @@
         "body": "Widzi Twoje preferencje i definicje etykiet."
       },
       "settings_write": {
+        "title": "Zmiana etykiet",
+        "body": "Dodaje etykiety, zmienia ich nazwy i kolejność oraz blokuje zmiany Twoich ustawień."
+      },
+      "settings_change": {
         "title": "Zmiana ustawień",
-        "body": "Dodaje etykiety, zmienia ich kolejność i zmienia Twoje preferencje."
+        "body": "Zmienia wygląd i działanie aplikacji, na przykład motyw, format czasu lub panel czytania. Ustawienia określone przez Twoją organizację pozostają bez zmian."
       },
       "security_read": {
         "title": "Podgląd zabezpieczeń konta",
@@ -5984,6 +5993,10 @@
       "ui_email_details": {
         "title": "Panele w szczegółach wiadomości",
         "body": "Pokazuje własny panel obok lub pod otwartą wiadomością."
+      },
+      "ui_side_panel": {
+        "title": "Dodawanie panelu do innych widoków",
+        "body": "Wyświetlanie własnego panelu obok Kalendarza, Kontaktów, Plików i Ustawień."
       },
       "ui_download_file": {
         "title": "Zapisywanie plików na urządzeniu",

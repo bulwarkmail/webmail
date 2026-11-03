@@ -11,7 +11,9 @@
 // DialogButtons) drawn by the host in its footer; confirm, alert and prompt
 // are the app's ConfirmDialog and PromptDialog. A custom dialog opened with
 // `anchor: 'trigger'` is a popover beside the control the user clicked
-// (dialog-anchor.ts), with a one-line header naming the plugin.
+// (dialog-anchor.ts), with a one-line header naming the plugin. `fill: true`
+// gives either form a fixed height the plugin's frame fills (a chat), so an
+// anchored, filled dialog is a tall popover beside the control.
 
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
@@ -124,6 +126,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
   // Footer buttons of a custom dialog: the plugin declares them, the host
   // draws them and passes each click back as `dialogButtonClick` ({ id, n }).
   const [buttons, setButtons] = useState<DialogButtonSpec[]>([]);
+  const viewportHeight = useVisibleHeight(current?.kind === 'custom' && current.fill === true);
   const [buttonClick, setButtonClick] = useState<{ id: string; n: number }>({ id: '', n: 0 });
   const setDialogButtons = useCallback((value: unknown) => { setButtons(readDialogButtons(value)); }, []);
   const pressButton = (id: string) => setButtonClick((c) => ({ id, n: c.n + 1 }));
@@ -198,6 +201,10 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
   const confirmLabel = current.confirmLabel ?? (current.kind === 'alert' ? t('ok') : current.kind === 'prompt' ? t('submit') : t('confirm'));
   const cancelLabel = current.cancelLabel ?? t('cancel');
   const custom = current.kind === 'custom';
+  const fill = custom && current.fill === true;
+  // A filled dialog is as tall as the visible window lets it be (a phone's
+  // keyboard takes its share), centred or as a popover alike.
+  const fillHeight = Math.min(640, Math.round(viewportHeight * 0.9) - 16);
 
   // Who is asking, under the title: plugins choose the title and message, so
   // the host names the plugin in a place the plugin can't change.
@@ -237,6 +244,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
       pluginId={current.pluginId}
       slot={(current.slot ?? 'plugin-dialog') as SlotName}
       extraProps={customProps}
+      fill={fill}
     />
   );
 
@@ -265,6 +273,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
             visibility: place ? undefined : 'hidden',
             width: `min(${current.width ?? 560}px, calc(100vw - ${2 * POPOVER_MARGIN}px))`,
             maxHeight: `calc(100vh - ${2 * POPOVER_MARGIN}px)`,
+            ...(fill ? { height: fillHeight } : {}),
           }}
           data-plugin-dialog={current.pluginId}
         >
@@ -276,7 +285,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
             </p>
             <PluginDialogMenu name={name} onTurnOff={turnOff} compact />
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto">{frame}</div>
+          <div className={cn('min-h-0 flex-1', fill ? 'flex flex-col overflow-hidden' : 'overflow-y-auto')}>{frame}</div>
           {footer}
         </div>
       </div>
@@ -299,7 +308,9 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
       <div
         ref={panelRef}
         className="flex w-full flex-col overflow-hidden rounded-lg border border-border bg-background text-foreground shadow-xl animate-in zoom-in-95 duration-200"
-        style={{ maxWidth: custom ? (current.width ?? 560) : 448, maxHeight: '90vh' }}
+        style={fill
+          ? { maxWidth: current.width ?? 560, height: fillHeight }
+          : { maxWidth: custom ? (current.width ?? 560) : 448, maxHeight: '90vh' }}
         data-plugin-dialog={current.pluginId}
       >
         {custom ? (
@@ -319,7 +330,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
                 <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+            <div className={cn('min-h-0 flex-1 px-6 py-4', fill ? 'flex flex-col overflow-hidden' : 'overflow-y-auto')}>
               {message}
               {frame}
             </div>
@@ -418,6 +429,21 @@ function usePopoverPlace(anchor: AnchorRect | undefined, panelRef: React.RefObje
 }
 
 /** A footer button's icon by name; unknown names show none. */
+/** The height of what the window shows now (the visual viewport, without a phone's keyboard), followed while `on`. */
+function useVisibleHeight(on: boolean): number {
+  const read = () => (typeof window === 'undefined' ? 800 : Math.round(window.visualViewport?.height ?? window.innerHeight));
+  const [height, setHeight] = useState(read);
+  useEffect(() => {
+    if (!on || typeof window === 'undefined') return;
+    const update = () => setHeight(read());
+    update();
+    const target = window.visualViewport ?? window;
+    target.addEventListener('resize', update);
+    return () => target.removeEventListener('resize', update);
+  }, [on]);
+  return height;
+}
+
 function FooterIcon({ name }: { name?: string }) {
   const Glyph = name ? iconForName(name) : null;
   return Glyph ? <Glyph className="w-4 h-4" aria-hidden="true" /> : null;

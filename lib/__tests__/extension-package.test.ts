@@ -42,6 +42,19 @@ describe('checkPluginManifest', () => {
       .toMatch(/Unknown permissions: root:all/);
   });
 
+  it('grants the optional permissions it knows and leaves out the others, with a warning', () => {
+    const { manifest, errors, warnings } = checkPluginManifest({ ...BASE, optionalPermissions: ['files:read', 'settings:fly', 'email:read'] });
+
+    expect(errors).toEqual([]);
+    expect(manifest!.permissions).toEqual(['email:read', 'files:read']);
+    expect(warnings.join()).toMatch(/Left out optional permissions .*settings:fly/);
+    expect(manifest).not.toHaveProperty('optionalPermissions');
+  });
+
+  it('refuses optional permissions given as a string', () => {
+    expect(checkPluginManifest({ ...BASE, optionalPermissions: 'files:read' }).errors.join()).toMatch(/"optionalPermissions" must be a list of strings/);
+  });
+
   it.each(['../index.js', '/index.js', 'a/../../x.js', 'index.css', 'a\\b.js'])('refuses entrypoint %s', (entrypoint) => {
     expect(checkPluginManifest({ ...BASE, entrypoint }).manifest).toBeNull();
   });

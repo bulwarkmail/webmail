@@ -78,7 +78,7 @@ import { useIdentityStore } from "@/stores/identity-store";
 import { useProMultiAccountIdentities, stripCrossAccountIdentityPrefix } from "@/hooks/use-pro-multi-account-identities";
 import { useAccountStore } from "@/stores/account-store";
 import { useSettingsStore } from "@/stores/settings-store";
-import { ComposerPluginSidebar, useComposerSidebars } from "./composer-plugin-sidebars";
+import { ComposerPanelToggle, ComposerPluginSidebar, useComposerSidebars } from "./composer-plugin-sidebars";
 import { ComposerSelectionMenu, useComposerSelectionMenu } from "./composer-selection-menu";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { usePluginSlotOffers } from "@/hooks/use-plugin-slot-offers";
@@ -2525,7 +2525,9 @@ export function EmailComposer({
   // offers "attach from there". No `file` is set, matching the existing
   // draft-part hydration path above (a blobId-only attachment is already a
   // supported shape, just never previously reachable from a plugin).
-  const handlePluginAttachmentAdd = useCallback(async (raw: PluginAttachmentUpload): Promise<boolean> => {
+  // `sourceAccountId` (host only, api.files.attach): the login whose Files
+  // hold the blob, so a draft sent from another login copies it over first.
+  const handlePluginAttachmentAdd = useCallback(async (raw: PluginAttachmentUpload, sourceAccountId?: string): Promise<boolean> => {
     // The values come from a plugin: check them, and run the same intercept
     // and size limit every other way of attaching a file goes through.
     const upload = normalizePluginAttachment(raw);
@@ -2543,7 +2545,7 @@ export function EmailComposer({
       toast.error(t('attachments_total_too_large', { max: formatFileSize(maxTotal) }));
       return false;
     }
-    setAttachments(prev => [...prev, upload]);
+    setAttachments(prev => [...prev, sourceAccountId ? { ...upload, sourceAccountId } : upload]);
     return true;
   }, [composerClient, t]);
   // Stable props, so a re-render of the composer doesn't post them to the
@@ -3085,6 +3087,7 @@ export function EmailComposer({
         return !!editor && replaceEditorSelection(editor, html, { below });
       },
       attach: (file) => pluginAttachRef.current(file as PluginAttachmentUpload),
+      attachFile: ({ sourceAccountId, ...file }) => pluginAttachRef.current(file as PluginAttachmentUpload, sourceAccountId),
     });
     setPluginComposerId(id);
     return unregister;
@@ -3174,6 +3177,14 @@ export function EmailComposer({
     [pluginDraft, pluginSelection, pluginComposerId, pluginSidebars.focusRequests.right],
   );
 
+  // The buttons that show and hide the plugin panels, in the header.
+  const leftPanelToggle = pluginSidebars.modes.left
+    ? <ComposerPanelToggle side="left" mode={pluginSidebars.modes.left} onToggle={() => pluginSidebars.toggle('left')} />
+    : null;
+  const rightPanelToggle = pluginSidebars.modes.right
+    ? <ComposerPanelToggle side="right" mode={pluginSidebars.modes.right} onToggle={() => pluginSidebars.toggle('right')} />
+    : null;
+
   // The right-click menu on selected text, when a plugin put entries in it.
   const selectionMenu = useComposerSelectionMenu();
   const readSelectedText = useCallback((): string => {
@@ -3213,7 +3224,8 @@ export function EmailComposer({
   );
   // A cloud picker attaches files, or puts share links in the text.
   const pluginAttachmentSourceProps = useMemo(
-    () => ({ onAttach: handlePluginAttachmentAdd, insertText: pluginInsertText, composerId: pluginComposerId }),
+    // One argument only: the login of a blob is the host's to say (attachFile).
+    () => ({ onAttach: (raw: PluginAttachmentUpload) => handlePluginAttachmentAdd(raw), insertText: pluginInsertText, composerId: pluginComposerId }),
     [handlePluginAttachmentAdd, pluginInsertText, pluginComposerId],
   );
   const pluginComposerIdRef = useRef(pluginComposerId);
@@ -4266,7 +4278,7 @@ export function EmailComposer({
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only" data-testid="composer-live-region">
         {liveMessage && <span key={liveMessage.n}>{liveMessage.text}</span>}
       </div>
-      <ComposerPluginSidebar side="left" mode={pluginSidebars.modes.left} onOpen={() => pluginSidebars.open('left')} onClose={() => pluginSidebars.close('left')} extraProps={pluginSidebarLeftProps} width={pluginSidebars.widths.left} onWidthChange={(w) => pluginSidebars.setSideWidth('left', w)} />
+      <ComposerPluginSidebar side="left" mode={pluginSidebars.modes.left} extraProps={pluginSidebarLeftProps} width={pluginSidebars.widths.left} onWidthChange={(w) => pluginSidebars.setSideWidth('left', w)} />
       {/* Right-side composer sidebar slot is rendered after the main content div below. */}
     <div
       className="flex flex-col h-full bg-background relative flex-1 min-w-0"
@@ -4298,6 +4310,8 @@ export function EmailComposer({
             {mode === 'reply' ? t('reply') : mode === 'replyAll' ? t('reply_all') : mode === 'forward' ? t('forward') : t('new_message')}
           </h3>
           {saveStatus === 'saving' && <Save className="w-3.5 h-3.5 animate-pulse text-muted-foreground flex-shrink-0" aria-label={t('saving')} />}
+          {leftPanelToggle}
+          {rightPanelToggle}
           {mvWindow.popOut && (
             <button
               type="button"
@@ -4334,6 +4348,8 @@ export function EmailComposer({
               : t('new_message')}
           </h3>
           {saveStatus === 'saving' && <Save className="w-3.5 h-3.5 animate-pulse text-muted-foreground flex-shrink-0" aria-label={t('saving')} />}
+          {mvWindow.state !== "minimized" && leftPanelToggle}
+          {mvWindow.state !== "minimized" && rightPanelToggle}
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); mvWindow.setState(mvWindow.state === "minimized" ? "normal" : "minimized"); }}
@@ -4363,7 +4379,9 @@ export function EmailComposer({
           </button>
         </div>
       ) : (
-      <div className="flex items-center gap-3 px-4 py-2 md:py-3 border-b bg-background">
+      <div className="flex items-center gap-3 px-4 py-2 md:py-0 md:h-14 border-b bg-background shrink-0" data-composer-header="">
+        {/* The left panel's button at the start, the right one's at the end: where each panel is. */}
+        {leftPanelToggle && <div className="hidden md:flex -ms-2">{leftPanelToggle}</div>}
         <div className="flex-1 min-w-0 flex items-center gap-3">
           <div className="flex items-center gap-2" data-testid="composer-save-status" data-status={saveStatus}>
             <h3 className="font-semibold text-base">
@@ -4431,6 +4449,7 @@ export function EmailComposer({
             {t('send')}
           </Button>
         )}
+        {rightPanelToggle}
         {/* Close at the top end (R4). On a phone it moves to the start, as
             the phone's mail apps have it, with Send at the end. */}
         <IconButton
@@ -5538,7 +5557,7 @@ export function EmailComposer({
         />
       )}
     </div>
-      <ComposerPluginSidebar side="right" mode={pluginSidebars.modes.right} onOpen={() => pluginSidebars.open('right')} onClose={() => pluginSidebars.close('right')} extraProps={pluginSidebarRightProps} width={pluginSidebars.widths.right} onWidthChange={(w) => pluginSidebars.setSideWidth('right', w)} />
+      <ComposerPluginSidebar side="right" mode={pluginSidebars.modes.right} extraProps={pluginSidebarRightProps} width={pluginSidebars.widths.right} onWidthChange={(w) => pluginSidebars.setSideWidth('right', w)} />
       <ComposerSelectionMenu menu={selectionMenu} composerId={pluginComposerId} onClipboard={clipboardFromMenu} />
     </div>
   );

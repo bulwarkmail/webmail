@@ -38,6 +38,8 @@ import type {
   TaskView, TemplateInput, TemplateView, VacationInput, VacationView, ComposerSnapshot, ComposerAttachmentData,
 } from '../plugin-types';
 import { AddressBook, ContactCard } from '../jmap/types';
+import { withAssistantRuntime } from './assistant/runtime';
+import { DEFAULT_API_TIMEOUT_MS, NETWORK_API_TIMEOUT_MS } from './api-timeouts';
 import { EncryptionAtRestConfig, PublicKeyInput } from '@/stores/account-security-store';
 
 // ─── Module-scope state ──────────────────────────────────────
@@ -160,6 +162,16 @@ function applyHostFeatures(next: HostFeaturesView | undefined): void {
   hostFeaturesState.externalRecipientWarning = next.externalRecipientWarning === true;
   // A host older than 1.20 doesn't send it, and never let such a plugin run in the mode.
   hostFeaturesState.noThirdPartyTraffic = next.noThirdPartyTraffic === true;
+  // The AI assistant's flags (lib/plugin-sandbox/assistant): whatever the host
+  // names, true or false; one it no longer names turns false.
+  const flags = hostFeaturesState as unknown as Record<string, boolean>;
+  const core = new Set(['externalSenderLabel', 'externalRecipientWarning', 'noThirdPartyTraffic']);
+  for (const key of Object.keys(flags)) {
+    if (!core.has(key) && !(key in next)) flags[key] = false;
+  }
+  for (const [key, value] of Object.entries(next)) {
+    if (!core.has(key)) flags[key] = value === true;
+  }
   for (const listener of hostFeatureListeners) {
     try { listener(hostFeaturesState); } catch (err) { console.error('[plugin] host feature listener failed', err); }
   }
@@ -325,12 +337,6 @@ function uid(): string {
 
 // ─── Sandboxed API facade (calls flow to host via postMessage) ─
 
-const DEFAULT_API_TIMEOUT_MS = 30_000;
-// http.post / http.fetch can be carrying an attachment to an external store,
-// which is a transfer rather than a round-trip - 30s is not enough for the
-// files a plugin has any reason to offload. Still bounded so a hung host
-// can't leak the pending promise.
-const NETWORK_API_TIMEOUT_MS = 120_000;
 
 function callApi(method: string, args: unknown[], timeoutMs: number = DEFAULT_API_TIMEOUT_MS): Promise<unknown> {
   const id = uid();
@@ -468,7 +474,12 @@ interface PluginKeywordCounts {
   unread: number;
 }
 
+/** The plugin's api, with the AI assistant's host APIs (lib/plugin-sandbox/assistant) added. */
 function buildPluginApi(manifest: PluginManifest) {
+  return withAssistantRuntime(buildCoreApi(manifest), callApi);
+}
+
+function buildCoreApi(manifest: PluginManifest) {
   applySettings({ ...manifest.settings });
   localeTables = JSON.parse(JSON.stringify(manifest.locales ?? {}));
   return {
@@ -779,8 +790,12 @@ function buildPluginApi(manifest: PluginManifest) {
        *  small menu of choices. The popover has a one-line header naming
        *  the plugin, takes `width` as the dialog does and the content's
        *  height, and closes on Escape or a click outside (null). Hosts
-       *  without it ignore the option. */
-      openDialog: (opts: { title?: string; slot: string; extraProps?: Record<string, unknown>; width?: number; anchor?: 'trigger' }) =>
+       *  without it ignore the option.
+       *
+       *  `fill: true` gives the dialog (or the popover) a fixed height, as
+       *  tall as the window lets it be up to 640 px, and the plugin's root
+       *  fills it, for a chat whose input stays at the bottom. */
+      openDialog: (opts: { title?: string; slot: string; extraProps?: Record<string, unknown>; width?: number; anchor?: 'trigger'; fill?: boolean }) =>
         callApi('ui.openDialog', [opts], 0) as Promise<unknown>,
       /** Re-runs the onRenderEmailBody hook for the open message (e.g. after a
        *  crypto plugin unlocks a key) so its body re-renders without a reload. */
@@ -945,9 +960,9 @@ function buildPluginApi(manifest: PluginManifest) {
        * body: `text` (sender, recipients, subject and body, whole words),
        * `from`, `to`, `subject`, `after`/`before` (dates), `hasAttachment`,
        * in one folder with `mailboxId`. At least one condition; limit 1-50
-       * (default 20).
+       * (default 20); `position` skips that many results (paging).
        */
-      search: (query: { text?: string; from?: string; to?: string; subject?: string; after?: string; before?: string; hasAttachment?: boolean; mailboxId?: string; limit?: number }) =>
+      search: (query: { text?: string; from?: string; to?: string; subject?: string; after?: string; before?: string; hasAttachment?: boolean; mailboxId?: string; limit?: number; position?: number }) =>
         callApi('email.search', [query]) as Promise<EmailSummary[]>,
       /**
        * The bytes of one attachment of a message (email:blob-read, at most

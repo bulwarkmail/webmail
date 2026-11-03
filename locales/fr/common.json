@@ -843,6 +843,7 @@
     "mv_position": "{index} sur {total}",
     "plugin_panel_show": "Afficher le panneau du plugin",
     "plugin_panel_hide": "Masquer le panneau du plugin",
+    "plugin_panel": "Panneau du plugin",
     "copy": "Copier",
     "contact_added": "Contact ajouté",
     "save_to_files": {
@@ -5838,8 +5839,8 @@
         "body": "Envoyer des messages complets, par exemple signés ou chiffrés, depuis votre compte."
       },
       "email_blob_read": {
-        "title": "Lire le contenu brut des messages",
-        "body": "Lire les données d'origine de vos messages et pièces jointes, ainsi que de chaque fichier que vous joignez avant l'envoi."
+        "title": "Lire les pièces jointes et la source des messages",
+        "body": "Lire les pièces jointes (y compris leur texte et leurs images) et la source complète des messages que vous traitez, ainsi que chaque fichier que vous joignez avant l'envoi."
       },
       "email_blob_write": {
         "title": "Remplacer les pièces jointes avant l'envoi",
@@ -5857,6 +5858,10 @@
         "title": "Modifier votre calendrier",
         "body": "Créer, modifier et supprimer des événements."
       },
+      "calendar_respond": {
+        "title": "Répondre aux invitations",
+        "body": "Accepter ou refuser des invitations de calendrier. Votre réponse est envoyée à l'organisateur par e-mail."
+      },
       "contacts_read": {
         "title": "Lire vos contacts",
         "body": "Rechercher et lire vos carnets d'adresses."
@@ -5867,11 +5872,11 @@
       },
       "files_read": {
         "title": "Lire vos fichiers",
-        "body": "Parcourir et ouvrir les fichiers stockés dans votre compte."
+        "body": "Rechercher, ouvrir et lire les fichiers de votre compte."
       },
       "files_write": {
         "title": "Modifier vos fichiers",
-        "body": "Téléverser, renommer, déplacer et supprimer des fichiers dans votre compte."
+        "body": "Enregistrer, créer, renommer et déplacer des fichiers dans votre compte, et empêcher la suppression d'un fichier."
       },
       "identity_read": {
         "title": "Voir vos adresses d'expéditeur",
@@ -5922,8 +5927,12 @@
         "body": "Voir vos préférences et la définition de vos étiquettes."
       },
       "settings_write": {
+        "title": "Modifier vos étiquettes",
+        "body": "Ajouter, renommer et réordonner vos étiquettes, et bloquer les modifications de vos paramètres."
+      },
+      "settings_change": {
         "title": "Modifier vos paramètres",
-        "body": "Ajouter et réordonner des étiquettes et modifier vos préférences."
+        "body": "Modifier l'apparence et le fonctionnement de l'application, comme le thème, le format d'heure ou le panneau de lecture. Les paramètres définis par votre organisation restent inchangés."
       },
       "security_read": {
         "title": "Voir la sécurité de votre compte",
@@ -5984,6 +5993,10 @@
       "ui_email_details": {
         "title": "Ajouter des panneaux aux détails des messages",
         "body": "Afficher son propre panneau à côté ou en dessous d'un message ouvert."
+      },
+      "ui_side_panel": {
+        "title": "Ajouter un panneau aux autres vues",
+        "body": "Afficher son propre panneau à côté de l’Agenda, des Contacts, des Fichiers et des Paramètres."
       },
       "ui_download_file": {
         "title": "Enregistrer des fichiers sur votre appareil",

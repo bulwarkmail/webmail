@@ -843,6 +843,7 @@
     "mv_position": "{index} / {total}",
     "plugin_panel_show": "Näita pistikprogrammi paneeli",
     "plugin_panel_hide": "Peida pistikprogrammi paneel",
+    "plugin_panel": "Pistikprogrammi paneel",
     "copy": "Kopeeri",
     "contact_added": "Kontakt lisatud",
     "save_to_files": {
@@ -5838,8 +5839,8 @@
         "body": "Saata sinu kontolt täielikke kirju, näiteks allkirjastatud või krüpteeritud."
       },
       "email_blob_read": {
-        "title": "Loe kirjade toorsisu",
-        "body": "Lugeda manuseid ja kirjade täielikku lähteteksti, millega tegutsed, ning iga faili, mille lisad, enne selle saatmist."
+        "title": "Lugeda manuseid ja kirjade lähteteksti",
+        "body": "Lugeda manuseid (ka nende teksti ja pilte) ja kirjade täielikku lähteteksti, millega tegutsed, ning iga faili, mille lisad, enne selle saatmist."
       },
       "email_blob_write": {
         "title": "Asenda manuseid enne saatmist",
@@ -5857,6 +5858,10 @@
         "title": "Muuda sinu kalendrit",
         "body": "Luua, muuta ja kustutada sündmusi."
       },
+      "calendar_respond": {
+        "title": "Vasta kutsetele",
+        "body": "Nõustuda kalendrikutsetega või neist keelduda. Sinu vastus saadetakse korraldajale e-postiga."
+      },
       "contacts_read": {
         "title": "Loe sinu kontakte",
         "body": "Otsida ja lugeda sinu aadressiraamatuid."
@@ -5867,11 +5872,11 @@
       },
       "files_read": {
         "title": "Loe sinu faile",
-        "body": "Sirvida ja avada sinu kontol hoitavaid faile."
+        "body": "Leida, avada ja lugeda sinu konto faile."
       },
       "files_write": {
         "title": "Muuda sinu faile",
-        "body": "Laadida üles, ümber nimetada, liigutada ja kustutada faile sinu kontol."
+        "body": "Salvestada, luua, ümber nimetada ja liigutada faile sinu kontol ning takistada faili kustutamist."
       },
       "identity_read": {
         "title": "Vaata sinu saatjaaadresse",
@@ -5922,8 +5927,12 @@
         "body": "Näha sinu eelistusi ja siltide definitsioone."
       },
       "settings_write": {
+        "title": "Muuda sinu silte",
+        "body": "Lisada, ümber nimetada ja ümber järjestada sinu silte ning takistada sinu seadete muutmist."
+      },
+      "settings_change": {
         "title": "Muuda sinu seadeid",
-        "body": "Lisada ja ümber järjestada silte ning muuta sinu eelistusi."
+        "body": "Muuta rakenduse välimust ja toimimist, näiteks teemat, kellaajavormingut või lugemispaani. Sinu organisatsiooni määratud seaded jäävad samaks."
       },
       "security_read": {
         "title": "Vaata sinu konto turvalisust",
@@ -5984,6 +5993,10 @@
       "ui_email_details": {
         "title": "Lisa kirja üksikasjadele paneele",
         "body": "Näidata oma paneeli avatud kirja kõrval või all."
+      },
+      "ui_side_panel": {
+        "title": "Lisa paneel teistesse vaadetesse",
+        "body": "Näita oma paneeli kalendri, kontaktide, failide ja seadete kõrval."
       },
       "ui_download_file": {
         "title": "Salvesta faile sinu seadmesse",

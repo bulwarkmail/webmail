@@ -843,6 +843,7 @@
     "mv_position": "{index} no {total}",
     "plugin_panel_show": "Rādīt spraudņa paneli",
     "plugin_panel_hide": "Slēpt spraudņa paneli",
+    "plugin_panel": "Spraudņa panelis",
     "copy": "Kopēt",
     "contact_added": "Kontakts pievienots",
     "save_to_files": {
@@ -5838,8 +5839,8 @@
         "body": "Sūtīt no jūsu konta pilnīgas vēstules, piemēram, parakstītas vai šifrētas."
       },
       "email_blob_read": {
-        "title": "Lasīt vēstuļu neapstrādātos datus",
-        "body": "Lasīt jūsu vēstuļu un pielikumu sākotnējos datus, kā arī katru failu, ko pievienojat, pirms tas tiek nosūtīts."
+        "title": "Lasīt pielikumus un vēstuļu avotu",
+        "body": "Lasīt pielikumus (arī to tekstu un attēlus) un to vēstuļu pilno avotu, ar kurām strādājat, kā arī katru failu, ko pievienojat, pirms tas tiek nosūtīts."
       },
       "email_blob_write": {
         "title": "Aizstāt pielikumus pirms nosūtīšanas",
@@ -5857,6 +5858,10 @@
         "title": "Mainīt jūsu kalendāru",
         "body": "Izveidot, mainīt un dzēst notikumus."
       },
+      "calendar_respond": {
+        "title": "Atbildēt uz ielūgumiem",
+        "body": "Pieņemt vai noraidīt kalendāra ielūgumus. Jūsu atbilde tiek nosūtīta organizatoram e-pastā."
+      },
       "contacts_read": {
         "title": "Lasīt jūsu kontaktus",
         "body": "Meklēt un lasīt jūsu adrešu grāmatās."
@@ -5867,11 +5872,11 @@
       },
       "files_read": {
         "title": "Lasīt jūsu failus",
-        "body": "Pārlūkot un atvērt jūsu kontā glabātos failus."
+        "body": "Atrast, atvērt un lasīt jūsu konta failus."
       },
       "files_write": {
         "title": "Mainīt jūsu failus",
-        "body": "Augšupielādēt, pārdēvēt, pārvietot un dzēst failus jūsu kontā."
+        "body": "Saglabāt, izveidot, pārdēvēt un pārvietot failus jūsu kontā un neļaut dzēst failu."
       },
       "identity_read": {
         "title": "Redzēt jūsu sūtītāja adreses",
@@ -5922,8 +5927,12 @@
         "body": "Redzēt jūsu preferences un tagu definīcijas."
       },
       "settings_write": {
+        "title": "Mainīt jūsu tagus",
+        "body": "Pievienot, pārdēvēt un pārkārtot jūsu tagus un neļaut mainīt jūsu iestatījumus."
+      },
+      "settings_change": {
         "title": "Mainīt jūsu iestatījumus",
-        "body": "Pievienot tagus, mainīt to secību un mainīt jūsu preferences."
+        "body": "Mainīt lietotnes izskatu un darbību, piemēram, tēmu, laika formātu vai lasīšanas rūti. Iestatījumi, ko noteikusi jūsu organizācija, paliek nemainīgi."
       },
       "security_read": {
         "title": "Redzēt jūsu konta drošību",
@@ -5984,6 +5993,10 @@
       "ui_email_details": {
         "title": "Pievienot paneļus vēstules informācijai",
         "body": "Rādīt savu paneli blakus atvērtai vēstulei vai zem tās."
+      },
+      "ui_side_panel": {
+        "title": "Pievienot paneli citiem skatiem",
+        "body": "Rādīt savu paneli blakus kalendāram, kontaktiem, failiem un iestatījumiem."
       },
       "ui_download_file": {
         "title": "Saglabāt failus jūsu ierīcē",

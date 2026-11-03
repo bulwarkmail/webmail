@@ -843,6 +843,7 @@
     "mv_position": "{index} din {total}",
     "plugin_panel_show": "Afișează panoul pluginului",
     "plugin_panel_hide": "Ascunde panoul pluginului",
+    "plugin_panel": "Panoul pluginului",
     "copy": "Copiază",
     "contact_added": "Contact adăugat",
     "save_to_files": {
@@ -5838,8 +5839,8 @@
         "body": "Trimite mesaje complete, de exemplu semnate sau criptate, din contul dvs."
       },
       "email_blob_read": {
-        "title": "Citirea conținutului brut al mesajelor",
-        "body": "Citește datele originale ale mesajelor și atașamentelor dvs. și ale fiecărui fișier pe care îl atașați înainte de trimitere."
+        "title": "Citirea atașamentelor și a sursei mesajelor",
+        "body": "Citește atașamentele (inclusiv textul și imaginile lor) și sursa completă a mesajelor cu care lucrați, precum și fiecare fișier pe care îl atașați înainte de trimitere."
       },
       "email_blob_write": {
         "title": "Înlocuirea atașamentelor înainte de trimitere",
@@ -5857,6 +5858,10 @@
         "title": "Modificarea calendarului",
         "body": "Creează, modifică și șterge evenimente."
       },
+      "calendar_respond": {
+        "title": "Răspunsul la invitații",
+        "body": "Acceptă sau refuză invitații din calendar. Răspunsul dvs. ajunge la organizator prin e-mail."
+      },
       "contacts_read": {
         "title": "Citirea contactelor",
         "body": "Caută în agendele dvs. și le citește."
@@ -5867,11 +5872,11 @@
       },
       "files_read": {
         "title": "Citirea fișierelor",
-        "body": "Răsfoiește și deschide fișierele stocate în contul dvs."
+        "body": "Găsește, deschide și citește fișierele din contul dvs."
       },
       "files_write": {
         "title": "Modificarea fișierelor",
-        "body": "Încarcă, redenumește, mută și șterge fișiere din contul dvs."
+        "body": "Salvează, creează, redenumește și mută fișiere în contul dvs. și poate împiedica ștergerea unui fișier."
       },
       "identity_read": {
         "title": "Vizualizarea identităților de expediere",
@@ -5922,8 +5927,12 @@
         "body": "Vede preferințele dvs. și definițiile etichetelor."
       },
       "settings_write": {
+        "title": "Modificarea etichetelor",
+        "body": "Adaugă, redenumește și reordonează etichetele dvs. și blochează modificările setărilor dvs."
+      },
+      "settings_change": {
         "title": "Modificarea setărilor",
-        "body": "Adaugă și reordonează etichete și modifică preferințele dvs."
+        "body": "Modifică aspectul și funcționarea aplicației, de exemplu tema, formatul orei sau panoul de citire. Setările stabilite de organizația dvs. rămân neschimbate."
       },
       "security_read": {
         "title": "Vizualizarea securității contului",
@@ -5984,6 +5993,10 @@
       "ui_email_details": {
         "title": "Adăugarea de panouri la detaliile mesajului",
         "body": "Afișează un panou propriu lângă sau sub un mesaj deschis."
+      },
+      "ui_side_panel": {
+        "title": "Adăugarea unui panou în alte vizualizări",
+        "body": "Afișarea propriului panou lângă Calendar, Contacte, Fișiere și Setări."
       },
       "ui_download_file": {
         "title": "Salvarea fișierelor pe dispozitiv",

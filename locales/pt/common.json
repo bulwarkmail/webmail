@@ -843,6 +843,7 @@
     "mv_position": "{index} de {total}",
     "plugin_panel_show": "Mostrar o painel do plugin",
     "plugin_panel_hide": "Ocultar o painel do plugin",
+    "plugin_panel": "Painel do plugin",
     "copy": "Copiar",
     "contact_added": "Contacto adicionado",
     "save_to_files": {
@@ -5838,8 +5839,8 @@
         "body": "Enviar mensagens completas, por exemplo assinadas ou criptografadas, a partir da sua conta."
       },
       "email_blob_read": {
-        "title": "Ler o conteúdo bruto das mensagens",
-        "body": "Ler os dados originais das suas mensagens e anexos, e de cada arquivo que você anexa antes do envio."
+        "title": "Ler anexos e o código-fonte das mensagens",
+        "body": "Ler os anexos (incluindo o texto e as imagens deles) e o código-fonte completo das mensagens com que você trabalha, e cada arquivo que você anexa antes do envio."
       },
       "email_blob_write": {
         "title": "Substituir anexos antes do envio",
@@ -5857,6 +5858,10 @@
         "title": "Alterar seu calendário",
         "body": "Criar, alterar e excluir eventos."
       },
+      "calendar_respond": {
+        "title": "Responder a convites",
+        "body": "Aceitar ou recusar convites de calendário. Sua resposta vai para o organizador por e-mail."
+      },
       "contacts_read": {
         "title": "Ler seus contatos",
         "body": "Pesquisar e ler seus catálogos de endereços."
@@ -5867,11 +5872,11 @@
       },
       "files_read": {
         "title": "Ler seus arquivos",
-        "body": "Navegar e abrir os arquivos armazenados na sua conta."
+        "body": "Encontrar, abrir e ler os arquivos da sua conta."
       },
       "files_write": {
         "title": "Alterar seus arquivos",
-        "body": "Enviar, renomear, mover e excluir arquivos na sua conta."
+        "body": "Salvar, criar, renomear e mover arquivos na sua conta, e impedir que um arquivo seja excluído."
       },
       "identity_read": {
         "title": "Ver suas identidades de envio",
@@ -5922,8 +5927,12 @@
         "body": "Ver suas preferências e definições de etiquetas."
       },
       "settings_write": {
+        "title": "Alterar suas etiquetas",
+        "body": "Adicionar, renomear e reordenar suas etiquetas e impedir alterações nas suas configurações."
+      },
+      "settings_change": {
         "title": "Alterar suas configurações",
-        "body": "Adicionar e reordenar etiquetas e alterar suas preferências."
+        "body": "Alterar a aparência e o funcionamento do aplicativo, como o tema, o formato de hora ou o painel de leitura. As configurações definidas pela sua organização continuam como estão."
       },
       "security_read": {
         "title": "Ver a segurança da sua conta",
@@ -5984,6 +5993,10 @@
       "ui_email_details": {
         "title": "Adicionar painéis aos detalhes da mensagem",
         "body": "Mostrar o próprio painel ao lado ou abaixo de uma mensagem aberta."
+      },
+      "ui_side_panel": {
+        "title": "Adicionar um painel a outras vistas",
+        "body": "Mostrar o seu próprio painel ao lado do Calendário, Contactos, Ficheiros e Definições."
       },
       "ui_download_file": {
         "title": "Salvar arquivos no seu dispositivo",

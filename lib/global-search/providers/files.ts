@@ -2,6 +2,7 @@ import { matchesTerms, type ParsedQuery } from '@/lib/global-search/query-parser
 import type { FileHit, SearchAccount, SearchProvider } from '@/lib/global-search/types';
 import type { FileNode } from '@/lib/jmap/types';
 import { fileNodeKind } from '@/lib/jmap/filenode-kind';
+import { findTrashFolder, trashSubtreeIds } from '@/lib/files-trash';
 import { useFileStore } from '@/stores/file-store';
 
 /**
@@ -93,9 +94,11 @@ export function rawFileNodeId(node: FileNode): string {
 
 function filterNodes(parsed: ParsedQuery, nodes: FileNode[], account: SearchAccount, limit: number, source: 'local' | 'remote'): FileHit[] {
   const hits: FileHit[] = [];
+  // The Files trash (.Trash, one folder per delete, what was deleted) is no hit.
+  const trashed = trashSubtreeIds(nodes, findTrashFolder(nodes)?.id);
   for (const node of nodes) {
     // The owner's folders above a shared node only feed the path below.
-    if (node.discoverableOnly) continue;
+    if (node.discoverableOnly || trashed.has(node.id)) continue;
     const kind = fileNodeKind(node);
     // A symlink has nothing a hit could open.
     if (kind === 'symlink') continue;

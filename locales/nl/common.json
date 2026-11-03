@@ -843,6 +843,7 @@
     "mv_position": "{index} van {total}",
     "plugin_panel_show": "Plug-inpaneel tonen",
     "plugin_panel_hide": "Plug-inpaneel verbergen",
+    "plugin_panel": "Plug-inpaneel",
     "copy": "Kopiëren",
     "contact_added": "Contact toegevoegd",
     "save_to_files": {
@@ -5838,8 +5839,8 @@
         "body": "Volledige berichten, bijvoorbeeld ondertekende of versleutelde, vanaf je account verzenden."
       },
       "email_blob_read": {
-        "title": "De ruwe inhoud van berichten lezen",
-        "body": "De oorspronkelijke gegevens van je berichten en bijlagen lezen, en van elk bestand dat je bijvoegt voordat het wordt verzonden."
+        "title": "Bijlagen en de bron van berichten lezen",
+        "body": "Bijlagen lezen (ook hun tekst en afbeeldingen) en de volledige bron van de berichten waarmee je werkt, en elk bestand dat je bijvoegt voordat het wordt verzonden."
       },
       "email_blob_write": {
         "title": "Bijlagen vervangen vóór het verzenden",
@@ -5857,6 +5858,10 @@
         "title": "Je agenda wijzigen",
         "body": "Afspraken aanmaken, wijzigen en verwijderen."
       },
+      "calendar_respond": {
+        "title": "Op uitnodigingen antwoorden",
+        "body": "Agenda-uitnodigingen accepteren of weigeren. Je antwoord gaat per e-mail naar de organisator."
+      },
       "contacts_read": {
         "title": "Je contacten lezen",
         "body": "Je adresboeken doorzoeken en lezen."
@@ -5867,11 +5872,11 @@
       },
       "files_read": {
         "title": "Je bestanden lezen",
-        "body": "De bestanden in je account bekijken en openen."
+        "body": "De bestanden in je account zoeken, openen en lezen."
       },
       "files_write": {
         "title": "Je bestanden wijzigen",
-        "body": "Bestanden in je account uploaden, hernoemen, verplaatsen en verwijderen."
+        "body": "Bestanden in je account opslaan, maken, hernoemen en verplaatsen, en voorkomen dat een bestand wordt verwijderd."
       },
       "identity_read": {
         "title": "Je afzenderadressen zien",
@@ -5922,8 +5927,12 @@
         "body": "Je voorkeuren en labeldefinities zien."
       },
       "settings_write": {
+        "title": "Je labels wijzigen",
+        "body": "Je labels toevoegen, hernoemen en herschikken, en wijzigingen in je instellingen tegenhouden."
+      },
+      "settings_change": {
         "title": "Je instellingen wijzigen",
-        "body": "Labels toevoegen en herschikken en je voorkeuren wijzigen."
+        "body": "Wijzigen hoe de app eruitziet en werkt, zoals het thema, de tijdnotatie of het leesvenster. Instellingen die je organisatie heeft vastgelegd, blijven zoals ze zijn."
       },
       "security_read": {
         "title": "De beveiliging van je account zien",
@@ -5984,6 +5993,10 @@
       "ui_email_details": {
         "title": "Panelen toevoegen aan berichtdetails",
         "body": "Een eigen paneel tonen naast of onder een geopend bericht."
+      },
+      "ui_side_panel": {
+        "title": "Een paneel toevoegen aan andere weergaven",
+        "body": "Een eigen paneel tonen naast Agenda, Contacten, Bestanden en Instellingen."
       },
       "ui_download_file": {
         "title": "Bestanden op je apparaat opslaan",

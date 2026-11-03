@@ -843,6 +843,7 @@
     "mv_position": "{index} di {total}",
     "plugin_panel_show": "Mostra il pannello del plugin",
     "plugin_panel_hide": "Nascondi il pannello del plugin",
+    "plugin_panel": "Pannello del plugin",
     "copy": "Copia",
     "contact_added": "Contatto aggiunto",
     "save_to_files": {
@@ -5838,8 +5839,8 @@
         "body": "Inviare messaggi completi, ad esempio firmati o cifrati, dal tuo account."
       },
       "email_blob_read": {
-        "title": "Leggere il contenuto grezzo dei messaggi",
-        "body": "Leggere i dati originali dei tuoi messaggi e allegati, e di ogni file che alleghi prima dell'invio."
+        "title": "Leggere gli allegati e il sorgente dei messaggi",
+        "body": "Leggere gli allegati (anche il loro testo e le loro immagini) e il sorgente completo dei messaggi su cui lavori, e ogni file che alleghi prima dell'invio."
       },
       "email_blob_write": {
         "title": "Sostituire gli allegati prima dell'invio",
@@ -5857,6 +5858,10 @@
         "title": "Modificare il tuo calendario",
         "body": "Creare, modificare ed eliminare eventi."
       },
+      "calendar_respond": {
+        "title": "Rispondere agli inviti",
+        "body": "Accettare o rifiutare inviti del calendario. La tua risposta arriva all'organizzatore via email."
+      },
       "contacts_read": {
         "title": "Leggere i tuoi contatti",
         "body": "Cercare e leggere nelle tue rubriche."
@@ -5867,11 +5872,11 @@
       },
       "files_read": {
         "title": "Leggere i tuoi file",
-        "body": "Sfogliare e aprire i file salvati nel tuo account."
+        "body": "Cercare, aprire e leggere i file del tuo account."
       },
       "files_write": {
         "title": "Modificare i tuoi file",
-        "body": "Caricare, rinominare, spostare ed eliminare file nel tuo account."
+        "body": "Salvare, creare, rinominare e spostare file nel tuo account e impedire che un file venga eliminato."
       },
       "identity_read": {
         "title": "Vedere i tuoi indirizzi mittente",
@@ -5922,8 +5927,12 @@
         "body": "Vedere le tue preferenze e le definizioni delle etichette."
       },
       "settings_write": {
+        "title": "Modificare le tue etichette",
+        "body": "Aggiungere, rinominare e riordinare le tue etichette e bloccare le modifiche alle tue impostazioni."
+      },
+      "settings_change": {
         "title": "Modificare le tue impostazioni",
-        "body": "Aggiungere e riordinare etichette e modificare le tue preferenze."
+        "body": "Modificare l'aspetto e il funzionamento dell'app, come il tema, il formato dell'ora o il pannello di lettura. Le impostazioni definite dalla tua organizzazione restano invariate."
       },
       "security_read": {
         "title": "Vedere la sicurezza del tuo account",
@@ -5984,6 +5993,10 @@
       "ui_email_details": {
         "title": "Aggiungere pannelli ai dettagli del messaggio",
         "body": "Mostrare un proprio pannello accanto o sotto un messaggio aperto."
+      },
+      "ui_side_panel": {
+        "title": "Aggiungere un pannello ad altre viste",
+        "body": "Mostrare un proprio pannello accanto a Calendario, Contatti, File e Impostazioni."
       },
       "ui_download_file": {
         "title": "Salvare file sul tuo dispositivo",

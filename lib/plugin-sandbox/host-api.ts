@@ -79,6 +79,7 @@ import { doComposerAttach, doComposerGetBody, doComposerGetSelection, doComposer
 import { wkdAllowed } from '../outgoing-hosts';
 import { noThirdPartyTraffic } from '../third-party-mode';
 import { openExternalLink } from '../plugin-hook-result';
+import { ASSISTANT_PERMS, NOT_MINE, dispatchAssistant } from './assistant';
 
 /**
  * Methods only callable from the privileged (same-origin) tier. These expose
@@ -117,6 +118,8 @@ const PRIVILEGED_ONLY_METHODS = new Set<string>([
 ]);
 
 export const PERM_PER_METHOD: Readonly<Record<string, Permission | null>> = {
+  // The AI assistant's host APIs, one table per area (lib/plugin-sandbox/assistant).
+  ...ASSISTANT_PERMS,
   // storage is unscoped by the manifest - implicit.
   'storage.get': null,
   'storage.set': null,
@@ -2038,6 +2041,12 @@ export async function dispatchApiCall(
     throw new Error(`Unknown API method "${method}"`);
   }
 
+  // The AI assistant's methods; every other call goes on without waiting a tick.
+  if (method in ASSISTANT_PERMS) {
+    const assistant = await dispatchAssistant(plugin, method, args);
+    if (assistant !== NOT_MINE) return assistant;
+  }
+
   switch (method) {
     case 'proxy.fetch': return proxyFetch(plugin, args, opts?.sink ?? null);
     case 'proxy.cancel': proxyCancel(plugin, args[0]); return undefined;
@@ -2223,7 +2232,7 @@ export async function dispatchApiCall(
       // real app-root overlay, instead of a fixed confirm/prompt form - see
       // the 'plugin-dialog' SlotName / host-dialog.ts comments for why this
       // exists (a small toolbar/row slot can't show a large custom UI).
-      const opts = (args[0] ?? {}) as { title?: string; slot?: string; extraProps?: Record<string, unknown>; width?: number; anchor?: unknown };
+      const opts = (args[0] ?? {}) as { title?: string; slot?: string; extraProps?: Record<string, unknown>; width?: number; fill?: boolean; anchor?: unknown };
       if (!opts.slot || typeof opts.slot !== 'string') {
         throw new Error('ui.openDialog requires a "slot" name');
       }
@@ -2234,8 +2243,10 @@ export async function dispatchApiCall(
         slot: opts.slot,
         extraProps: (opts.extraProps && typeof opts.extraProps === 'object') ? opts.extraProps : {},
         width: typeof opts.width === 'number' ? opts.width : undefined,
+        ...(opts.fill === true ? { fill: true } : {}),
         // Next to what the user just clicked, when the plugin asks and there
-        // was such a click; the place is the host's, never the plugin's.
+        // was such a click; the place is the host's, never the plugin's. With
+        // fill the popover takes the filled dialog's height.
         anchor: opts.anchor === 'trigger' ? triggerAnchor() ?? undefined : undefined,
       });
     }

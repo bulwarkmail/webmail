@@ -843,6 +843,7 @@
     "mv_position": "{index} de {total}",
     "plugin_panel_show": "Mostra el tauler del connector",
     "plugin_panel_hide": "Amaga el tauler del connector",
+    "plugin_panel": "Tauler del connector",
     "copy": "Copia",
     "contact_added": "S'ha afegit el contacte",
     "save_to_files": {
@@ -5838,8 +5839,8 @@
         "body": "Enviar missatges complets, per exemple signats o xifrats, des del vostre compte."
       },
       "email_blob_read": {
-        "title": "Llegir el contingut original dels missatges",
-        "body": "Llegir les dades originals dels vostres missatges i adjunts, i de cada fitxer que adjunteu abans d'enviar-lo."
+        "title": "Llegir els adjunts i el codi font dels missatges",
+        "body": "Llegir els adjunts (també el seu text i les seves imatges) i el codi font complet dels missatges amb què treballeu, i cada fitxer que adjunteu abans d'enviar-lo."
       },
       "email_blob_write": {
         "title": "Substituir adjunts abans d'enviar",
@@ -5857,6 +5858,10 @@
         "title": "Canviar el vostre calendari",
         "body": "Crear, canviar i suprimir esdeveniments."
       },
+      "calendar_respond": {
+        "title": "Respondre invitacions",
+        "body": "Acceptar o rebutjar invitacions de calendari. La vostra resposta s'envia a l'organitzador per correu electrònic."
+      },
       "contacts_read": {
         "title": "Llegir els vostres contactes",
         "body": "Cercar i llegir les vostres llibretes d'adreces."
@@ -5867,11 +5872,11 @@
       },
       "files_read": {
         "title": "Llegir els vostres fitxers",
-        "body": "Navegar pels fitxers desats al vostre compte i obrir-los."
+        "body": "Cercar, obrir i llegir els fitxers del vostre compte."
       },
       "files_write": {
         "title": "Canviar els vostres fitxers",
-        "body": "Pujar, canviar el nom, moure i suprimir fitxers del vostre compte."
+        "body": "Desar, crear, canviar el nom i moure fitxers del vostre compte, i impedir que se suprimeixi un fitxer."
       },
       "identity_read": {
         "title": "Veure les vostres identitats d'enviament",
@@ -5922,8 +5927,12 @@
         "body": "Veure les vostres preferències i les definicions d'etiquetes."
       },
       "settings_write": {
+        "title": "Canviar les vostres etiquetes",
+        "body": "Afegir, canviar el nom i reordenar les vostres etiquetes, i impedir canvis a la vostra configuració."
+      },
+      "settings_change": {
         "title": "Canviar la vostra configuració",
-        "body": "Afegir i reordenar etiquetes i canviar les vostres preferències."
+        "body": "Canviar l'aspecte i el funcionament de l'aplicació, com ara el tema, el format d'hora o la subfinestra de lectura. La configuració que ha establert la vostra organització es manté igual."
       },
       "security_read": {
         "title": "Veure la seguretat del compte",
@@ -5984,6 +5993,10 @@
       "ui_email_details": {
         "title": "Afegir panells als detalls del missatge",
         "body": "Mostrar un panell propi al costat o a sota d'un missatge obert."
+      },
+      "ui_side_panel": {
+        "title": "Afegir un tauler a altres vistes",
+        "body": "Mostrar el seu propi tauler al costat del Calendari, els Contactes, els Fitxers i la Configuració."
       },
       "ui_download_file": {
         "title": "Desar fitxers al dispositiu",

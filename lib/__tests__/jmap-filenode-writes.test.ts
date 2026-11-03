@@ -466,3 +466,23 @@ describe('FileNode write errors, names and types', () => {
     expect(sets(calls)).toHaveLength(4);
   });
 });
+
+// A file's content is replaced by pointing the node at a new blob: the
+// assistant's overwrite (api.files.create with replace). Same request on
+// 0.16 and 1.0; `modified: null` has 1.0 stamp the change.
+describe('replaceFileNodeBlob', () => {
+  it('sets the new blob and lets the server stamp the change, in the node\'s own account', async () => {
+    const { client, calls } = makeClient({});
+    await client.replaceFileNodeBlob('n1', 'blob-new');
+    await client.replaceFileNodeBlob('grp:n2', 'blob-team');
+    expect(sets(calls)).toEqual([
+      { accountId: 'me', update: { n1: { blobId: 'blob-new', modified: null } } },
+      { accountId: 'grp', update: { n2: { blobId: 'blob-team', modified: null } } },
+    ]);
+  });
+
+  it('throws when the server refuses it', async () => {
+    const { client } = makeClient({}, { refuse: (id) => (id === 'n1' ? { type: 'forbidden', description: 'Not allowed.' } : undefined) });
+    await expect(client.replaceFileNodeBlob('n1', 'blob-new')).rejects.toThrow('Not allowed.');
+  });
+});

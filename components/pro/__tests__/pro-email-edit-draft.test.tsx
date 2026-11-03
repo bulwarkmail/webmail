@@ -143,6 +143,12 @@ describe('Pro email view - editing a draft', () => {
     expect(initialData.draftAccountId).toBeUndefined();
   });
 
+  // The ticks in the main list are another view's: the tab's side panel doesn't get them.
+  it('gives the side panel of an email tab no list selection', async () => {
+    await openAndEdit(undefined);
+    expect(viewerProps.current?.withListSelection).toBe(false);
+  });
+
   // Pro shell with the 0.16.23 login active and the 1.0 login's Drafts
   // browsed: the store reads a row of that list through the 1.0 login. A
   // view that names no login can't tell, so it names none - the active one

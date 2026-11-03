@@ -843,6 +843,7 @@
     "mv_position": "{index} z {total}",
     "plugin_panel_show": "Zobrazit panel pluginu",
     "plugin_panel_hide": "Skrýt panel pluginu",
+    "plugin_panel": "Panel pluginu",
     "copy": "Kopírovat",
     "contact_added": "Kontakt přidán",
     "save_to_files": {
@@ -5838,8 +5839,8 @@
         "body": "Odesílá z vašeho účtu kompletní zprávy, například podepsané nebo šifrované."
       },
       "email_blob_read": {
-        "title": "Číst nezpracovaný obsah zpráv",
-        "body": "Čte původní data vašich zpráv a příloh i každého souboru, který připojíte před odesláním."
+        "title": "Číst přílohy a zdroj zpráv",
+        "body": "Čte přílohy (i jejich text a obrázky) a celý zdroj zpráv, se kterými pracujete, i každý soubor, který připojíte před odesláním."
       },
       "email_blob_write": {
         "title": "Nahrazovat přílohy před odesláním",
@@ -5857,6 +5858,10 @@
         "title": "Měnit váš kalendář",
         "body": "Vytváří, mění a maže události."
       },
+      "calendar_respond": {
+        "title": "Odpovídat na pozvánky",
+        "body": "Přijímá nebo odmítá pozvánky v kalendáři. Vaše odpověď se odešle organizátorovi e-mailem."
+      },
       "contacts_read": {
         "title": "Číst vaše kontakty",
         "body": "Prohledává a čte vaše adresáře."
@@ -5867,11 +5872,11 @@
       },
       "files_read": {
         "title": "Číst vaše soubory",
-        "body": "Prochází a otevírá soubory uložené ve vašem účtu."
+        "body": "Hledat, otevírat a číst soubory ve vašem účtu."
       },
       "files_write": {
         "title": "Měnit vaše soubory",
-        "body": "Nahrává, přejmenovává, přesouvá a maže soubory ve vašem účtu."
+        "body": "Ukládat, vytvářet, přejmenovávat a přesouvat soubory ve vašem účtu a zabránit smazání souboru."
       },
       "identity_read": {
         "title": "Vidět vaše identity odesílatele",
@@ -5922,8 +5927,12 @@
         "body": "Vidí vaše předvolby a definice štítků."
       },
       "settings_write": {
+        "title": "Měnit vaše štítky",
+        "body": "Přidává a přejmenovává vaše štítky, mění jejich pořadí a brání změnám vašeho nastavení."
+      },
+      "settings_change": {
         "title": "Měnit vaše nastavení",
-        "body": "Přidává štítky, mění jejich pořadí a mění vaše předvolby."
+        "body": "Mění vzhled a chování aplikace, například motiv, formát času nebo panel čtení. Nastavení určená vaší organizací zůstanou beze změny."
       },
       "security_read": {
         "title": "Vidět zabezpečení účtu",
@@ -5984,6 +5993,10 @@
       "ui_email_details": {
         "title": "Přidávat panely do podrobností zprávy",
         "body": "Zobrazuje vlastní panel vedle otevřené zprávy nebo pod ní."
+      },
+      "ui_side_panel": {
+        "title": "Přidat panel do dalších zobrazení",
+        "body": "Zobrazit vlastní panel vedle Kalendáře, Kontaktů, Souborů a Nastavení."
       },
       "ui_download_file": {
         "title": "Ukládat soubory do zařízení",
