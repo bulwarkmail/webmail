@@ -123,7 +123,7 @@ export function Dialog({
   );
 
   const footerRow = footer && (
-    <div className="flex items-center justify-end gap-3 px-6 pb-6 shrink-0">{footer}</div>
+    <div className="flex flex-wrap items-center justify-end gap-3 px-6 pb-6 shrink-0">{footer}</div>
   );
 
   // With an icon the title, text and body sit in one column beside it (a
