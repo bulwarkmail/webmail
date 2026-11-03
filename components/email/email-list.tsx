@@ -983,6 +983,12 @@ export function EmailList({
     `${items.length}:${renderedRows[0]?.index ?? -1}-${renderedRows[renderedRows.length - 1]?.index ?? -1}:${expandedThreadIds.size}:${paged ? page : -1}`,
   );
 
+  // Room under the last row for the round Compose button, which would otherwise
+  // sit on that row's actions (Mountain View has no such button). A spacer and
+  // not padding on the list: padding is a minimum height the list can't go
+  // under, and on a short screen it pushed the rows over the tab bar.
+  const composeButtonRoom = !mountainViewList ? <div aria-hidden="true" className="h-20" /> : null;
+
   return (
     <TagDisplayContext.Provider value={tagDisplay}>
     <div className={cn("flex flex-col min-h-0", className)}>
@@ -1193,9 +1199,7 @@ export function EmailList({
         // Where the focus goes when the message it was on is deleted,
         // archived or moved (components/layout/focus-rescue).
         data-focus-fallback=""
-        // Room under the last row for the round Compose button, which would
-        // otherwise sit on that row's actions (Mountain View has no such button).
-        className={cn("flex-1 overflow-y-auto bg-background relative outline-none", !mountainViewList && "pb-20")}
+        className="flex-1 min-h-0 overflow-y-auto bg-background relative outline-none"
         data-tour="email-list"
         // The column header above keeps the same gutter, so its titles stay over the columns.
         style={listColumns ? { scrollbarGutter: 'stable' } : undefined}
@@ -1259,6 +1263,7 @@ export function EmailList({
                   {footerIsLoadingMore ? t('loading_more') : t('pages.next')}
                 </Button>
               </nav>
+              {composeButtonRoom}
             </>
           ) : (
           <>
@@ -1315,6 +1320,7 @@ export function EmailList({
                 </div>
               )}
             </div>}
+            {composeButtonRoom}
           </>
           )
         )}
