@@ -39,7 +39,13 @@ export function runTransaction<T>(
     exec('COMMIT');
     return result;
   } catch (error) {
-    exec('ROLLBACK');
+    // SQLite has already rolled back after some errors (a full disk, a failed
+    // write). A second failure here must not hide the real one.
+    try {
+      exec('ROLLBACK');
+    } catch {
+      // Nothing left to roll back.
+    }
     throw error;
   } finally {
     state.depth -= 1;
