@@ -16,6 +16,7 @@ import { pinBlockedUntil, readVault } from "@/lib/app-lock/vault";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
 import type { DesktopOsUnlockKind } from "@/lib/desktop/types";
 import { isPopoutWindow } from "@/lib/popout/window-role";
+import { productName } from "@/lib/product-name";
 
 /** How long a pop-out waits to hear from a main window before it asks for the PIN itself. */
 const MAIN_ANSWER_MS = 500;
@@ -86,7 +87,7 @@ function Frame({ title, body, children }: { title: string; body?: string; childr
 
 function SetupForm() {
   const t = useTranslations("appLock");
-  const { appName } = useConfig();
+  const appName = productName(useConfig().appName);
   const [pin, setPin] = useState("");
   const [repeat, setRepeat] = useState("");
   const [busy, setBusy] = useState(false);
@@ -116,7 +117,7 @@ function SetupForm() {
 
 function UnlockForm() {
   const t = useTranslations("appLock");
-  const { appName } = useConfig();
+  const appName = productName(useConfig().appName);
   const { dialogProps, confirm } = useConfirmDialog();
   const [pin, setPin] = useState("");
   const [busy, setBusy] = useState(false);
@@ -252,7 +253,7 @@ function UnlockForm() {
 /** What covers a window while the app is locked. Reads nothing but the lock's own records. */
 export function LockScreen({ phase }: { phase: AppLockPhase }) {
   const t = useTranslations("appLock");
-  const { appName } = useConfig();
+  const appName = productName(useConfig().appName);
   if (phase === "setup") return <SetupForm />;
   if (phase === "locking") {
     return (
