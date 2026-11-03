@@ -184,6 +184,8 @@ export interface DesktopKeystoreBridge {
   revokeAccess: () => Promise<void>;
   /** Takes back this session's grants, for the next account. Absent on older shells. */
   clearGrants?: () => Promise<void>;
+}
+
 export interface DesktopPolicyBridge {
   /** What's in force now. Synchronous: a page can read it in its first render. */
   get: () => PolicySnapshot;
