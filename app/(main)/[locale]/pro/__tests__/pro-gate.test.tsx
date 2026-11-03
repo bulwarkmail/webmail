@@ -63,7 +63,7 @@ vi.mock('@/hooks/use-deep-link-url', () => ({ useDeepLinkUrl: () => {} }));
 const { default: ProHome } = await import('../page');
 const { useSettingsStore } = await import('@/stores/settings-store');
 const { useProTabStore, takeHandedOffComposeDraft } = await import('@/stores/pro-tab-store');
-const { PRO_TAB_DRAG_MIME } = await import('@/components/pro/pro-shell-drop');
+const { EMAIL_IDS_DRAG_MIME, PRO_TAB_DRAG_MIME } = await import('@/components/pro/pro-shell-drop');
 
 const replace = vi.fn();
 
@@ -174,6 +174,24 @@ describe('Pro page gate', () => {
     fireEvent.dragOver(surface, { dataTransfer });
     fireEvent.drop(surface, { dataTransfer });
     expect(useProTabStore.getState().tabs.find((t) => t.id === 'cal')?.paneId).toBe('split');
+  });
+
+  it('stops a message row dropped where it can go nowhere, so no field takes its subject', async () => {
+    auth.state.isAuthenticated = true;
+    auth.state.client = {};
+    const main = { id: 'home-mail', kind: 'mail' as const, labelKey: 'mail', closeable: false, paneId: 'main' as const };
+    useProTabStore.setState({
+      tabs: [main], activeTabId: main.id, activeSplitTabId: null, focusedPaneId: 'main',
+      splitOrientation: null, splitSide: 'right', readerTabId: null, loadedTabIds: ['home-mail'],
+    });
+    const { container } = render(<ProHome />);
+    await act(async () => {});
+    const surface = container.querySelector('[data-testid="mail-app"]')!;
+    const dataTransfer = { types: [EMAIL_IDS_DRAG_MIME, 'text/plain'], getData: () => '["m1"]', dropEffect: '' };
+    // No layout in jsdom: the position resolves to the middle, not a split edge.
+    const notPrevented = fireEvent.drop(surface, { dataTransfer });
+    expect(notPrevented).toBe(false);
+    expect(useProTabStore.getState().tabs).toHaveLength(1);
   });
 
   it('leaves a tab dropped on a tab strip to the strip', async () => {

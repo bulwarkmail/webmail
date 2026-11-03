@@ -80,6 +80,7 @@ import { useAccountStore } from "@/stores/account-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { ComposerPanelToggle, ComposerPluginSidebar, useComposerSidebars } from "./composer-plugin-sidebars";
 import { dragKindFromTypes } from "@/components/pro/pro-shell-drop";
+import { useIsPaneScoped } from "@/hooks/use-pane-context";
 import { ComposerSelectionMenu, useComposerSelectionMenu } from "./composer-selection-menu";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { usePluginSlotOffers } from "@/hooks/use-plugin-slot-offers";
@@ -170,8 +171,13 @@ import { registerComposeFlush } from "@/lib/compose-flush-registry";
 import { toUnicodeEmail } from "@/lib/idn";
 
 // A Pro tab, message or folder dragged across a composer tab is on its way to
-// the pane or the split edge: those drags belong to the shell.
-const isShellDrag = (e: React.DragEvent) => dragKindFromTypes(e.dataTransfer.types) !== null;
+// the pane or the split edge: those drags belong to the shell. There is no shell
+// outside Pro, and the composer stops them like any other drag: a message row
+// carries its subject as text, which To and Subject would take.
+function useIsShellDrag() {
+  const isPaneScoped = useIsPaneScoped();
+  return useCallback((e: React.DragEvent) => isPaneScoped && dragKindFromTypes(e.dataTransfer.types) !== null, [isPaneScoped]);
+}
 
 /**
  * Derives the text/plain alternative from the composer's HTML body, preserving
@@ -2501,6 +2507,7 @@ export function EmailComposer({
     dragTimeoutRef.current = setTimeout(clearDragState, 150);
   }, [clearDragState]);
 
+  const isShellDrag = useIsShellDrag();
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     if (isShellDrag(e)) return;
     e.preventDefault();
@@ -2509,21 +2516,21 @@ export function EmailComposer({
       setIsDraggingOver(true);
       resetDragTimeout();
     }
-  }, [resetDragTimeout]);
+  }, [isShellDrag, resetDragTimeout]);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     if (isShellDrag(e)) return;
     e.preventDefault();
     e.stopPropagation();
     resetDragTimeout();
-  }, [resetDragTimeout]);
+  }, [isShellDrag, resetDragTimeout]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     if (isShellDrag(e)) return;
     e.preventDefault();
     e.stopPropagation();
     resetDragTimeout();
-  }, [resetDragTimeout]);
+  }, [isShellDrag, resetDragTimeout]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     if (isShellDrag(e)) return;
@@ -2533,7 +2540,7 @@ export function EmailComposer({
     if (e.dataTransfer.files?.length) {
       addFiles(Array.from(e.dataTransfer.files));
     }
-  }, [addFiles, clearDragState]);
+  }, [addFiles, clearDragState, isShellDrag]);
 
   const removeAttachment = (index: number) => {
     const att = attachments[index];
@@ -6044,6 +6051,7 @@ export function RecipientChipInput({
     setDropIndex(past ? index + 1 : index);
   };
 
+  const isShellDrag = useIsShellDrag();
   // Insert the dragged chip at `target`. Same-field is a local reorder;
   // cross-field routes through onMoveChip with the destination index (#593).
   const performDrop = (e: React.DragEvent, target: number) => {

@@ -433,8 +433,10 @@ export default function ProHome() {
     if (!kind) return;
     const target = resolveTargetForEvent(e);
     setDraggedTabId(null);
-    if (!target) return;
+    // Also with nowhere to put it: a field under the pointer would take the text
+    // a message row carries.
     e.preventDefault();
+    if (!target) return;
 
     if (kind === 'tab') {
       const draggedId = e.dataTransfer.getData(PRO_TAB_DRAG_MIME);
