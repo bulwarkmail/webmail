@@ -5754,7 +5754,14 @@
     "dismiss_label": "Melding over {subject} sluiten",
     "banner": "Niet doorgevoerde wijzigingen: {count}",
     "toast": "Offline gemaakte wijzigingen niet doorgevoerd: {count}. Het Postvak UIT laat zien welke.",
-    "storage_failed": "Dit apparaat heeft geen ruimte meer voor offline mail. Maak ruimte vrij of bewaar minder via Instellingen."
+    "storage_failed": "Dit apparaat heeft geen ruimte meer voor offline mail. Maak ruimte vrij of bewaar minder via Instellingen.",
+    "signout_changes_title": "Afmelden met niet-opgeslagen wijzigingen?",
+    "signout_changes": "Wijzigingen die nog niet op de server staan: {count}. Afmelden verwijdert ze.",
+    "store_unavailable": "De offline mail op dit apparaat kan nu niet worden geopend. Niet-verzonden mail blijft hier en de app blijft het proberen.",
+    "store_reset": "De offline mail op dit apparaat kon niet worden gelezen en wordt opnieuw gedownload. Wat hier nog niet verzonden was, is weg.",
+    "legacy_stranded": "Deze browser kan niet-verzonden mail van een eerdere versie niet openen. De browser bijwerken kan die terughalen.",
+    "store_private": "Privévensters kunnen geen mail bewaren voor offline gebruik.",
+    "server_not_answering": "De mailserver antwoordt niet. Probeer het zo meteen opnieuw."
   },
   "deep_link": {
     "message_not_found": "Dit bericht is niet meer beschikbaar.",

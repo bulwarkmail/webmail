@@ -5754,7 +5754,14 @@
     "dismiss_label": "Ignora la nota su {subject}",
     "banner": "Modifiche non applicate: {count}",
     "toast": "Modifiche fatte offline non applicate: {count}. La posta in uscita indica quali.",
-    "storage_failed": "Questo dispositivo non ha più spazio per la posta offline. Libera spazio o conservane meno nelle impostazioni."
+    "storage_failed": "Questo dispositivo non ha più spazio per la posta offline. Libera spazio o conservane meno nelle impostazioni.",
+    "signout_changes_title": "Uscire con modifiche non salvate?",
+    "signout_changes": "Modifiche non ancora sul server: {count}. Uscendo vengono eliminate.",
+    "store_unavailable": "La posta offline di questo dispositivo non si può aprire ora. La posta non inviata resta qui e l'app continua a provare.",
+    "store_reset": "Non è stato possibile leggere la posta offline di questo dispositivo, quindi viene scaricata di nuovo. Ciò che non era stato inviato è perso.",
+    "legacy_stranded": "Questo browser non può aprire la posta non inviata conservata da una versione precedente. Aggiornare il browser può recuperarla.",
+    "store_private": "Le finestre private non possono conservare la posta per l'uso offline.",
+    "server_not_answering": "Il server di posta non risponde. Riprova tra un momento."
   },
   "deep_link": {
     "message_not_found": "Questo messaggio non è più disponibile.",

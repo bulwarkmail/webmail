@@ -5754,7 +5754,14 @@
     "dismiss_label": "关闭关于 {subject} 的提示",
     "banner": "未应用的更改：{count}",
     "toast": "离线时的更改未被应用：{count} 项。可在发件箱中查看。",
-    "storage_failed": "此设备已没有空间存放离线邮件。请释放空间，或在设置中减少保留的内容。"
+    "storage_failed": "此设备已没有空间存放离线邮件。请释放空间，或在设置中减少保留的内容。",
+    "signout_changes_title": "要在有未保存更改时退出登录吗？",
+    "signout_changes": "尚未到达服务器的更改：{count} 项。退出登录会删除它们。",
+    "store_unavailable": "现在无法打开此设备上的离线邮件。未发送的邮件仍保留在这里，应用会继续尝试。",
+    "store_reset": "无法读取此设备上的离线邮件，正在重新下载。未发送的内容已丢失。",
+    "legacy_stranded": "此浏览器无法打开早期版本保存的未发送邮件。更新浏览器可能会找回它们。",
+    "store_private": "隐私窗口无法保留供离线使用的邮件。",
+    "server_not_answering": "邮件服务器没有响应。请稍后再试。"
   },
   "deep_link": {
     "message_not_found": "此邮件已不可用。",

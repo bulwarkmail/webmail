@@ -68,6 +68,7 @@ export type OfflineNotice =
   | { kind: 'lost'; subjects: string[] }
   | { kind: 'conflict'; count: number }
   | { kind: 'storage-failed' }
+  | { kind: 'store-unavailable' }
   | { kind: 'refused-delete' }
   | { kind: 'refused-other' }
   | { kind: 'forbidden' }
@@ -140,6 +141,16 @@ function onlineClientFor(account: string) {
 /** A full disk stays full: once in a while is enough to say so. */
 const STORAGE_NOTICE_MS = 30 * 60_000;
 let lastStorageNotice = 0;
+let lastUnavailableNotice = 0;
+
+/** The store won't open: what waits in it is out of reach, and the user should know why. */
+function noteStoreUnavailable(): void {
+  if (useOfflineStore.getState().enabled.length === 0) return;
+  const now = Date.now();
+  if (now - lastUnavailableNotice < STORAGE_NOTICE_MS) return;
+  lastUnavailableNotice = now;
+  notify({ kind: 'store-unavailable' });
+}
 
 const storeHooks: StorePageHooks = {
   inputs(account) {
@@ -482,7 +493,8 @@ export async function refreshQueueState(): Promise<void> {
   try {
     // Sends of a tab closed on the way: uncertain, so they can be looked up.
     await settleStaleSends();
-    const { patches, outbox: entries, conflicts } = await readQueue();
+    const { failed, patches, outbox: entries, conflicts } = await readQueue();
+    if (failed.length > 0) noteStoreUnavailable();
     const rows: OutboxRow[] = entries.map((entry) => ({
       id: entry.id,
       account: entry.account,
@@ -492,9 +504,12 @@ export async function refreshQueueState(): Promise<void> {
       status: entry.status,
       error: entry.error,
     }));
-    useOfflineStore.setState({ outbox: rows, pendingChanges: patches, conflicts });
+    // What an account's store can't tell right now is still there.
+    const unread = useOfflineStore.getState().outbox.filter((row) => failed.includes(row.account));
+    useOfflineStore.setState({ outbox: [...unread, ...rows], pendingChanges: patches, conflicts });
   } catch {
     // The store is being deleted, or can't start.
+    noteStoreUnavailable();
   }
 }
 
@@ -681,6 +696,28 @@ async function unsentSubjects(scope: string): Promise<string[]> {
     // No store: what the state last saw.
   }
   return rows.filter((row) => scope === 'all' || row.account === scope).map((row) => row.subject);
+}
+
+/** How long a sign-out waits for the store's word on what would be lost. */
+const UNSENT_READ_MS = 2_000;
+
+/** What a sign-out of `scope` would delete: messages, and edits the server hasn't got. */
+export async function unsentCount(scope: string, waitMs = UNSENT_READ_MS): Promise<{ messages: number; changes: number }> {
+  const shown = useOfflineStore.getState();
+  const known = { messages: shown.outbox.filter((row) => scope === 'all' || row.account === scope).length, changes: shown.pendingChanges };
+  const accounts = (scope === 'all' ? visibleAccounts() : [scope]).filter((account) => shown.enabled.includes(account));
+  if (accounts.length === 0) return known;
+  const pendingIn = (account: string, area: string) => getStore().area<number>(account, `${area}.pending`).catch(() => 0);
+  const read = (async () => {
+    const { failed, outbox, patches } = await readQueue(scope === 'all' ? undefined : scope);
+    const edits = await Promise.all(accounts.flatMap((account) => [pendingIn(account, 'calendar'), pendingIn(account, 'contacts')]));
+    return {
+      // An account that can't answer counts with what it last said.
+      messages: outbox.length + shown.outbox.filter((row) => failed.includes(row.account)).length,
+      changes: patches + edits.reduce((sum, count) => sum + count, 0),
+    };
+  })().catch(() => known);
+  return Promise.race([read, new Promise<typeof known>((resolve) => setTimeout(() => resolve(known), waitMs))]);
 }
 
 /** Names the unsent messages a wipe of `scope` deletes, unless the user agreed. */

@@ -5754,7 +5754,14 @@
     "dismiss_label": "Dismiss the note about {subject}",
     "banner": "Changes that didn't go through: {count}",
     "toast": "Changes you made offline weren't applied: {count}. The outbox shows which.",
-    "storage_failed": "This device has no room left for offline mail. Free up space, or keep less in Settings."
+    "storage_failed": "This device has no room left for offline mail. Free up space, or keep less in Settings.",
+    "signout_changes_title": "Sign out with unsaved changes?",
+    "signout_changes": "Changes not yet on the server: {count}. Signing out deletes them.",
+    "store_unavailable": "Offline mail on this device can't be opened right now. Unsent mail stays here, and the app keeps trying.",
+    "store_reset": "Offline mail on this device couldn't be read, so it's being downloaded again. Anything unsent that was kept here is gone.",
+    "legacy_stranded": "This browser can't open unsent mail kept by an earlier version. Updating the browser may bring it back.",
+    "store_private": "Private windows can't keep mail for offline use.",
+    "server_not_answering": "The mail server isn't answering. Try again in a moment."
   },
   "deep_link": {
     "message_not_found": "This message is no longer available.",

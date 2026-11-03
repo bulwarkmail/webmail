@@ -20,8 +20,11 @@ import {
   enforcePolicy,
   offlineSessionFor,
   pluginsNotRunning,
+  refreshQueueState,
+  setOfflineNotifier,
   startOfflineMode,
   stricterNow,
+  unsentCount,
   wipeEverything,
 } from '../offline-mode';
 import { flushQueue, settleStaleSends, SENDING_STALE_MS } from '../flush';
@@ -30,7 +33,7 @@ import { forgetLegacyMove } from '../migrate-legacy';
 import { consumeLost } from '../lost';
 import { getOutboxHooks } from '../outbox-hooks';
 import { shellFiles } from '../shell';
-import { isOfflineNow, OFFLINE_ACCOUNTS_KEY, setServerDown, useOfflineStore, writeEnabled } from '../state';
+import { isOfflineNow, OFFLINE_ACCOUNTS_KEY, OFFLINE_EVICTED_KEY, setServerDown, useOfflineStore, writeEnabled } from '../state';
 
 function fakeClient(server = 'https://mail.example.org', overrides: Record<string, unknown> = {}) {
   return {
@@ -292,6 +295,78 @@ describe('11: starting from the device', () => {
     expect(await offlineSessionFor('acc', { withFolders: true })).toBeNull();
     await store.sync('acc');
     expect(await offlineSessionFor('acc', { withFolders: true })).toMatchObject({ primaryAccounts: { 'urn:ietf:params:jmap:mail': JMAP_ACCOUNT } });
+  });
+});
+
+describe('what a sign-out would delete', () => {
+  beforeEach(() => writeEnabled(['acc', 'other']));
+
+  const addCalendarEdit = async (account: string) => {
+    await store.ensureOpen(account);
+    store.dbs.get(account)!.run("INSERT INTO calendar_pending (jmap, record_id, kind, patch, queued_at) VALUES ('j1', 'ev', 'update', '{}', 1)");
+  };
+
+  it('counts the queue itself, not what the screen last saw', async () => {
+    await queueSend('acc', { subject: 'A', to: [] }, { kind: 'email', args: [] });
+    await queueSend('other', { subject: 'B', to: [] }, { kind: 'email', args: [] });
+    expect(useOfflineStore.getState().outbox).toEqual([]);
+    expect(await unsentCount('acc')).toEqual({ messages: 1, changes: 0 });
+    expect(await unsentCount('all')).toEqual({ messages: 2, changes: 0 });
+  });
+
+  it('counts changes and calendar edits, for the account asked about', async () => {
+    await addCalendarEdit('acc');
+    await store.area('acc', 'outbox.queueSend', { summary: { subject: 'A', to: [] }, item: { kind: 'email', args: [] } });
+    expect(await unsentCount('other')).toEqual({ messages: 0, changes: 0 });
+    expect(await unsentCount('acc')).toEqual({ messages: 1, changes: 1 });
+  });
+
+  it('counts an area that isn\'t here as nothing', async () => {
+    store.failArea = (name) => name === 'contacts.pending';
+    await addCalendarEdit('acc');
+    expect((await unsentCount('acc')).changes).toBe(1);
+  });
+
+  it('answers with the last known count when the store hangs', async () => {
+    useOfflineStore.setState({ outbox: [{ id: 1, account: 'acc', createdAt: 1, subject: 'A', to: [], status: 'waiting' }] as never, pendingChanges: 2 });
+    vi.spyOn(store, 'area').mockImplementation(() => new Promise(() => {}));
+    expect(await unsentCount('acc', 10)).toEqual({ messages: 1, changes: 2 });
+  });
+
+  it('doesn\'t count another signed-out account\'s waiting mail', async () => {
+    await queueSend('other', { subject: 'B', to: [] }, { kind: 'email', args: [] });
+    localStorage.setItem(OFFLINE_EVICTED_KEY, JSON.stringify({ other: Date.now() }));
+    expect(await unsentCount('all')).toEqual({ messages: 0, changes: 0 });
+  });
+});
+
+describe('a store that won\'t open', () => {
+  beforeEach(() => writeEnabled(['acc', 'other']));
+
+  it('holds up no other account, and keeps what it last showed', async () => {
+    await queueSend('acc', { subject: 'A', to: [] }, { kind: 'email', args: [] });
+    await queueSend('other', { subject: 'B', to: [] }, { kind: 'email', args: [] });
+    await refreshQueueState();
+    const area = store.area.bind(store);
+    vi.spyOn(store, 'area').mockImplementation(((account: string, name: string, params: unknown) => (account === 'other' ? Promise.reject(new Error('The local store could not start')) : area(account, name, params))) as never);
+    const notify = vi.fn();
+    setOfflineNotifier(notify);
+    await refreshQueueState();
+    expect(useOfflineStore.getState().outbox.map((row) => row.subject).sort()).toEqual(['A', 'B']);
+    expect(notify).toHaveBeenCalledWith({ kind: 'store-unavailable' });
+    // Not again right away.
+    notify.mockClear();
+    await refreshQueueState();
+    expect(notify).not.toHaveBeenCalled();
+  });
+
+  it('doesn\'t call an unreadable queue empty', async () => {
+    await queueSend('acc', { subject: 'A', to: [] }, { kind: 'email', args: [] });
+    await refreshQueueState();
+    vi.spyOn(store, 'area').mockRejectedValue(new Error('The local store could not start'));
+    await refreshQueueState();
+    expect(useOfflineStore.getState().outbox.map((row) => row.subject)).toEqual(['A']);
+    await expect(readQueue()).rejects.toThrow('could not start');
   });
 });
 

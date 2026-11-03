@@ -5754,7 +5754,14 @@
     "dismiss_label": "Afvis noten om {subject}",
     "banner": "Ændringer, der ikke blev gennemført: {count}",
     "toast": "Ændringer lavet offline, der ikke blev gennemført: {count}. Udbakken viser hvilke.",
-    "storage_failed": "Denne enhed har ikke mere plads til offlinemail. Frigør plads, eller behold mindre i indstillingerne."
+    "storage_failed": "Denne enhed har ikke mere plads til offlinemail. Frigør plads, eller behold mindre i indstillingerne.",
+    "signout_changes_title": "Log ud med ændringer, der ikke er gemt?",
+    "signout_changes": "Ændringer, der endnu ikke er på serveren: {count}. Når du logger ud, slettes de.",
+    "store_unavailable": "Offlinemail på denne enhed kan ikke åbnes lige nu. Ikke-sendt mail bliver her, og appen bliver ved med at prøve.",
+    "store_reset": "Offlinemail på denne enhed kunne ikke læses og hentes derfor igen. Det, der ikke var sendt, er væk.",
+    "legacy_stranded": "Denne browser kan ikke åbne ikke-sendt mail fra en tidligere version. En opdatering af browseren kan hente den tilbage.",
+    "store_private": "Private vinduer kan ikke gemme mail til brug offline.",
+    "server_not_answering": "Mailserveren svarer ikke. Prøv igen om lidt."
   },
   "deep_link": {
     "message_not_found": "Denne besked er ikke længere tilgængelig.",

@@ -5754,7 +5754,14 @@
     "dismiss_label": "{subject} ile ilgili notu kapat",
     "banner": "Uygulanmayan değişiklikler: {count}",
     "toast": "Çevrimdışı yapılan ve uygulanmayan değişiklikler: {count}. Giden kutusu hangileri olduğunu gösterir.",
-    "storage_failed": "Bu cihazda çevrimdışı e-posta için yer kalmadı. Yer açın veya Ayarlar'dan daha azını saklayın."
+    "storage_failed": "Bu cihazda çevrimdışı e-posta için yer kalmadı. Yer açın veya Ayarlar'dan daha azını saklayın.",
+    "signout_changes_title": "Kaydedilmemiş değişikliklerle oturum kapatılsın mı?",
+    "signout_changes": "Henüz sunucuda olmayan değişiklikler: {count}. Oturumu kapatmak bunları siler.",
+    "store_unavailable": "Bu cihazdaki çevrimdışı e-postalar şu anda açılamıyor. Gönderilmemiş e-postalar burada kalır ve uygulama denemeye devam eder.",
+    "store_reset": "Bu cihazdaki çevrimdışı e-postalar okunamadı, bu yüzden yeniden indiriliyor. Gönderilmemiş olanlar kayboldu.",
+    "legacy_stranded": "Bu tarayıcı, önceki bir sürümün sakladığı gönderilmemiş e-postaları açamıyor. Tarayıcıyı güncellemek bunları geri getirebilir.",
+    "store_private": "Gizli pencereler e-postaları çevrimdışı kullanım için saklayamaz.",
+    "server_not_answering": "E-posta sunucusu yanıt vermiyor. Birazdan yeniden deneyin."
   },
   "deep_link": {
     "message_not_found": "Bu ileti artık kullanılamıyor.",

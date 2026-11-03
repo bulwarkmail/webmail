@@ -5754,7 +5754,14 @@
     "dismiss_label": "A(z) {subject} megjegyzésének bezárása",
     "banner": "Nem alkalmazott módosítások: {count}",
     "toast": "Offline végzett, nem alkalmazott módosítások: {count}. A postázandók mappa mutatja, melyek.",
-    "storage_failed": "Ezen az eszközön nincs több hely az offline leveleknek. Szabadítson fel helyet, vagy tartson meg kevesebbet a beállításokban."
+    "storage_failed": "Ezen az eszközön nincs több hely az offline leveleknek. Szabadítson fel helyet, vagy tartson meg kevesebbet a beállításokban.",
+    "signout_changes_title": "Kijelentkezik a nem mentett módosításokkal?",
+    "signout_changes": "Még nem a szerveren lévő módosítások: {count}. A kijelentkezés törli őket.",
+    "store_unavailable": "Az eszközön lévő offline levelek most nem nyithatók meg. Az el nem küldött levelek itt maradnak, az alkalmazás pedig tovább próbálkozik.",
+    "store_reset": "Az eszközön lévő offline leveleket nem sikerült beolvasni, ezért újra letöltődnek. Ami nem lett elküldve, elveszett.",
+    "legacy_stranded": "Ez a böngésző nem tudja megnyitni egy korábbi verzió által megőrzött, el nem küldött leveleket. A böngésző frissítése visszahozhatja őket.",
+    "store_private": "A privát ablakok nem tudnak leveleket megőrizni offline használatra.",
+    "server_not_answering": "A levelezőszerver nem válaszol. Próbálja újra egy pillanat múlva."
   },
   "deep_link": {
     "message_not_found": "Ez az üzenet már nem érhető el.",

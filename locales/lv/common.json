@@ -5754,7 +5754,14 @@
     "dismiss_label": "Aizvērt piezīmi par {subject}",
     "banner": "Nepiemērotās izmaiņas: {count}",
     "toast": "Bezsaistē veiktās nepiemērotās izmaiņas: {count}. Izsūtne parāda, kuras.",
-    "storage_failed": "Šajā ierīcē vairs nav vietas bezsaistes pastam. Atbrīvojiet vietu vai iestatījumos glabājiet mazāk."
+    "storage_failed": "Šajā ierīcē vairs nav vietas bezsaistes pastam. Atbrīvojiet vietu vai iestatījumos glabājiet mazāk.",
+    "signout_changes_title": "Vai izrakstīties ar nesaglabātām izmaiņām?",
+    "signout_changes": "Izmaiņas, kas vēl nav serverī: {count}. Izrakstoties tās tiks izdzēstas.",
+    "store_unavailable": "Bezsaistes pastu šajā ierīcē pašlaik nevar atvērt. Nenosūtītais pasts paliek šeit, un lietotne turpina mēģināt.",
+    "store_reset": "Bezsaistes pastu šajā ierīcē neizdevās nolasīt, tāpēc tas tiek lejupielādēts vēlreiz. Tas, kas nebija nosūtīts, ir zudis.",
+    "legacy_stranded": "Šī pārlūkprogramma nevar atvērt iepriekšējās versijas saglabāto nenosūtīto pastu. Pārlūkprogrammas atjaunināšana var to atgūt.",
+    "store_private": "Privātie logi nevar glabāt pastu lietošanai bezsaistē.",
+    "server_not_answering": "Pasta serveris neatbild. Mēģiniet vēlreiz pēc brīža."
   },
   "deep_link": {
     "message_not_found": "Šī ziņa vairs nav pieejama.",

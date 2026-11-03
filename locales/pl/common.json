@@ -5754,7 +5754,14 @@
     "dismiss_label": "Odrzuć uwagę o {subject}",
     "banner": "Niezastosowane zmiany: {count}",
     "toast": "Niezastosowane zmiany wprowadzone offline: {count}. Skrzynka nadawcza pokazuje które.",
-    "storage_failed": "Na tym urządzeniu nie ma już miejsca na pocztę offline. Zwolnij miejsce lub zachowuj mniej w ustawieniach."
+    "storage_failed": "Na tym urządzeniu nie ma już miejsca na pocztę offline. Zwolnij miejsce lub zachowuj mniej w ustawieniach.",
+    "signout_changes_title": "Wylogować z niezapisanymi zmianami?",
+    "signout_changes": "Zmiany, których jeszcze nie ma na serwerze: {count}. Wylogowanie je usunie.",
+    "store_unavailable": "Nie można teraz otworzyć poczty offline na tym urządzeniu. Niewysłane wiadomości zostają tutaj, a aplikacja próbuje dalej.",
+    "store_reset": "Nie udało się odczytać poczty offline na tym urządzeniu, więc jest pobierana ponownie. To, co nie zostało wysłane, przepadło.",
+    "legacy_stranded": "Ta przeglądarka nie może otworzyć niewysłanych wiadomości z wcześniejszej wersji. Aktualizacja przeglądarki może je przywrócić.",
+    "store_private": "Okna prywatne nie mogą przechowywać poczty do użytku offline.",
+    "server_not_answering": "Serwer poczty nie odpowiada. Spróbuj ponownie za chwilę."
   },
   "deep_link": {
     "message_not_found": "Ta wiadomość nie jest już dostępna.",

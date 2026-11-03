@@ -39,10 +39,15 @@ interface StoredQueue {
 }
 
 /** Everything waiting for one account (or every account with it on), oldest first. */
-export async function readQueue(account?: string): Promise<{ patches: number; outbox: OutboxEntry[]; conflicts: ConflictEntry[] }> {
+export async function readQueue(account?: string): Promise<{ failed: string[]; patches: number; outbox: OutboxEntry[]; conflicts: ConflictEntry[] }> {
   const accounts = account ? [account] : visibleAccounts();
-  const read = await Promise.all(accounts.map(async (id) => ({ id, queue: await getStore().area<StoredQueue>(id, 'outbox.read') })));
+  const settled = await Promise.allSettled(accounts.map(async (id) => ({ id, queue: await getStore().area<StoredQueue>(id, 'outbox.read') })));
+  const read = settled.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []));
+  const failed = accounts.filter((_, index) => settled[index].status === 'rejected');
+  // Nothing could be read: that isn't an empty queue.
+  if (read.length === 0 && failed.length > 0) throw (settled[0] as PromiseRejectedResult).reason;
   return {
+    failed,
     patches: read.reduce((sum, { queue }) => sum + queue.patches, 0),
     outbox: read.flatMap(({ id, queue }) => queue.entries.map((entry) => ({ ...entry, account: id }))),
     conflicts: read.flatMap(({ id, queue }) => queue.conflicts.map((conflict) => ({

@@ -5766,7 +5766,14 @@
     "dismiss_label": "Đóng ghi chú về {subject}",
     "banner": "Các thay đổi chưa được áp dụng: {count}",
     "toast": "Thay đổi khi ngoại tuyến chưa được áp dụng: {count}. Hộp thư đi cho biết là những thay đổi nào.",
-    "storage_failed": "Thiết bị này không còn chỗ cho thư ngoại tuyến. Hãy giải phóng dung lượng hoặc giữ ít hơn trong Cài đặt."
+    "storage_failed": "Thiết bị này không còn chỗ cho thư ngoại tuyến. Hãy giải phóng dung lượng hoặc giữ ít hơn trong Cài đặt.",
+    "signout_changes_title": "Đăng xuất khi còn thay đổi chưa lưu?",
+    "signout_changes": "Thay đổi chưa có trên máy chủ: {count}. Đăng xuất sẽ xóa chúng.",
+    "store_unavailable": "Hiện không mở được thư ngoại tuyến trên thiết bị này. Thư chưa gửi vẫn ở đây và ứng dụng tiếp tục thử.",
+    "store_reset": "Không đọc được thư ngoại tuyến trên thiết bị này nên đang tải lại. Những gì chưa gửi đã mất.",
+    "legacy_stranded": "Trình duyệt này không mở được thư chưa gửi do phiên bản trước lưu. Cập nhật trình duyệt có thể lấy lại chúng.",
+    "store_private": "Cửa sổ riêng tư không thể giữ thư để dùng ngoại tuyến.",
+    "server_not_answering": "Máy chủ thư không phản hồi. Hãy thử lại sau giây lát."
   },
   "deep_link": {
     "message_not_found": "Thư này không còn nữa.",
