@@ -60,7 +60,7 @@ import { useIdentityStore } from "@/stores/identity-store";
 import { useUIStore, listPaneCssSize, SIDEBAR_MIN, SIDEBAR_MAX, EMAIL_LIST_MIN, EMAIL_LIST_MAX, EMAIL_LIST_HEIGHT_MIN, EMAIL_LIST_HEIGHT_MAX, READING_PANE_MIN_WIDTH, READING_PANE_MIN_HEIGHT, COMPOSER_PANE_MIN_HEIGHT } from "@/stores/ui-store";
 import { atLeast, useDeviceDetection } from "@/hooks/use-media-query";
 import { usePaneSize } from "@/hooks/use-pane-size";
-import { usePaneId } from "@/hooks/use-pane-context";
+import { useIsFocusedProTab, usePaneId } from "@/hooks/use-pane-context";
 import { useKeyboardShortcuts, type GoToMailboxTarget } from "@/hooks/use-keyboard-shortcuts";
 import { useUndoShortcut } from "@/hooks/use-undo-shortcut";
 import { confirmMailRemoval } from "@/lib/mail-removal-confirm";
@@ -217,6 +217,7 @@ function freshMailboxes(previous: Mailbox[], timeoutMs = 10_000): Promise<Mailbo
  * message itself has loaded, before showing it with a placeholder. (#1223)
  */
 const MV_CONVERSATION_WAIT_MS = 800;
+const NO_EMAILS: Email[] = [];
 
 /** Plugin buttons in the top bar are not about any one item. */
 const TOP_BAR_CONTEXT: Record<string, unknown> = {};
@@ -1229,14 +1230,27 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // reach the selection again back in the list.
   const shortcutsTargetSelection = selectedEmailKeys.size > 0 && !(mvShell && !cursorOnly && selectedEmail);
   const singleKeyShortcuts = useSettingsStore((s) => s.singleKeyShortcuts);
+  // Under Pro this page stays mounted behind other tabs. Its mail shortcuts
+  // are only for when it is in front: e on the Calendar tab archived the mail
+  // selected here, out of sight. The help opens from any tab. (c stays each
+  // surface's own: New event on the Calendar tab.)
+  const isFocusedProTab = useIsFocusedProTab();
+  const mailShortcutsApply = !isEmbedded || isFocusedProTab;
   useKeyboardShortcuts({
-    enabled: isAuthenticated && !showComposer,
+    enabled: isAuthenticated && !showComposer && mailShortcutsApply,
     singleKeyShortcuts,
     emails: activeEmails,
     selectedEmailId: selectedEmail?.id,
     selectionCount: selectedEmailKeys.size,
     mountainViewKeys: mvShell,
     handlers: keyboardHandlers,
+  });
+  const anyTabHandlers = useMemo(() => ({ onShowHelp: keyboardHandlers.onShowHelp }), [keyboardHandlers]);
+  useKeyboardShortcuts({
+    enabled: isAuthenticated && !showComposer && !mailShortcutsApply,
+    singleKeyShortcuts,
+    emails: NO_EMAILS,
+    handlers: anyTabHandlers,
   });
   // Ctrl+Z / z: undo the last mail actions, newest first.
   useUndoShortcut({ enabled: isAuthenticated && !showComposer, signedIn: isAuthenticated });
