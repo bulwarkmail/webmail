@@ -48,7 +48,8 @@ export function computeTooltipPosition(
 ): { top: number; left: number; actualPlacement: string } {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const tw = Math.max(tooltipSize.width, 200); // minimum fallback width
+  // minimum fallback width; never wider than the screen, measured off screen it can be
+  const tw = Math.min(Math.max(tooltipSize.width, 200), vw - 16);
   const th = Math.max(tooltipSize.height, 100); // minimum fallback height
 
   // Along the side it sits on, the card slides to stay on screen: above a
@@ -384,7 +385,8 @@ export function TourOverlay() {
         style={{
           top: tooltipPos?.top ?? -9999,
           left: tooltipPos?.left ?? -9999,
-          maxWidth: TOOLTIP_MAX_W,
+          // A margin of 8 on both sides, like the placement keeps.
+          maxWidth: `min(${TOOLTIP_MAX_W}px, calc(100vw - 16px))`,
           transition: reducedMotion ? "none" : "opacity 200ms ease, transform 200ms ease, top 300ms ease, left 300ms ease",
           pointerEvents: visible ? "auto" : "none",
         }}
