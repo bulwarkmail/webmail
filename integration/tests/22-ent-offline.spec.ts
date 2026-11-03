@@ -519,6 +519,94 @@ test('a draft written offline with a file survives a reload, is on the server on
   await context.close();
 });
 
+test('an open composer keeps its file through a flush: the next save and the send still have it', async ({ browser }) => {
+  const subject = `Offline open composer ${RUN}`;
+  const fileText = `Stays attached ${RUN}`;
+  const page = await userPage(browser, ENT.alice);
+  await enableOffline(page);
+  await toMail(page);
+  const context = page.context();
+
+  // Saved online, so the composer holds a part of that message.
+  await compose(page, ENT.bob, subject, `Online words ${RUN}`);
+  const composer = page.locator('[data-testid="email-composer"]');
+  await composer.locator('input[type="file"]').first().setInputFiles({ name: 'stays.txt', mimeType: 'text/plain', buffer: Buffer.from(fileText) });
+  await expect(composer).toContainText('stays.txt', { timeout: 15_000 });
+  await expect.poll(async () => (await serverDrafts(ENT.alice, subject)).length, { timeout: 30_000 }).toBe(1);
+  await expect.poll(async () => (await serverDrafts(ENT.alice, subject))[0]?.attachments.length ?? 0, { timeout: 30_000 }).toBe(1);
+  const before = (await serverDrafts(ENT.alice, subject))[0];
+  await page.waitForTimeout(2500);
+
+  // The server goes, and this edit stays on the device.
+  await blockMailServer(context);
+  await composer.locator('[contenteditable="true"]').first().click();
+  await page.keyboard.press('Control+End');
+  await page.keyboard.type(' offline edit');
+  await expect(composer.getByText('Saved on this device').first()).toBeVisible({ timeout: 60_000 });
+  expect(await serverDrafts(ENT.alice, subject)).toHaveLength(1);
+
+  // Back: the new version replaces the old one, and the old one's part dies with it.
+  await context.unroute(`${new URL(JMAP_URL).origin}/**`);
+  await expect.poll(async () => (await serverDrafts(ENT.alice, subject)).map((draft) => draft.id).join(), { timeout: 180_000, intervals: [2000] }).not.toBe(before.id);
+  await expect.poll(async () => (await serverDrafts(ENT.alice, subject)).length, { timeout: 60_000 }).toBe(1);
+
+  // The composer never closed. Saving again works, with the file.
+  await composer.locator('[contenteditable="true"]').first().click();
+  await page.keyboard.press('Control+End');
+  await page.keyboard.type(' later edit');
+  await expect(composer.getByTestId('composer-save-status').first()).toHaveAttribute('data-status', 'saved', { timeout: 30_000 });
+  await expect.poll(async () => {
+    const [draft] = await serverDrafts(ENT.alice, subject);
+    return draft ? (await rawMessage(ENT.alice, draft.blobId)).includes('later edit') : false;
+  }, { timeout: 30_000 }).toBe(true);
+  const [saved] = await serverDrafts(ENT.alice, subject);
+  expect(await rawMessage(ENT.alice, saved.attachments[0].blobId)).toContain(fileText);
+
+  await send(page);
+  await expect(composer).toBeHidden({ timeout: 30_000 });
+  const got = await waitForMessage(ENT.bob, (m) => m.subject === subject);
+  expect(await rawMessage(ENT.bob, got.blobId)).toContain('stays.txt');
+  await expect.poll(async () => (await serverDrafts(ENT.alice, subject)).length, { timeout: 30_000 }).toBe(0);
+  await context.close();
+});
+
+test('a draft whose answer got lost is on the server once, with the latest text', async ({ browser }) => {
+  const subject = `Offline draft lost answer ${RUN}`;
+  const page = await userPage(browser, ENT.alice);
+  await enableOffline(page);
+  await toMail(page);
+  const context = page.context();
+  const origin = `${new URL(JMAP_URL).origin}/**`;
+  await blockMailServer(context);
+  await waitUntilOffline(page);
+  await compose(page, ENT.bob, subject, `Only one copy ${RUN}`);
+  const composer = page.locator('[data-testid="email-composer"]');
+  await expect(composer.getByText('Saved on this device').first()).toBeVisible({ timeout: 30_000 });
+  await page.getByTestId('composer-close').first().click();
+  await expect(composer).toBeHidden({ timeout: 30_000 });
+
+  // The server comes back and takes the draft, but its answer never arrives.
+  let lost = 0;
+  await context.unroute(origin);
+  await context.route(origin, async (route) => {
+    const body = route.request().postData() ?? '';
+    if (lost === 0 && body.includes('Email/set') && body.includes(subject)) {
+      lost += 1;
+      await route.fetch();
+      await route.abort('connectionreset');
+      return;
+    }
+    await route.continue();
+  });
+  await expect.poll(() => lost, { timeout: 180_000 }).toBe(1);
+  await expect.poll(async () => (await serverDrafts(ENT.alice, subject)).length, { timeout: 30_000 }).toBe(1);
+  // Looked up by its Message-ID and found, on this server's own figures: no second copy.
+  await expect(page.getByTestId('offline-banner-drafts-waiting')).toHaveCount(0, { timeout: 180_000 });
+  await page.waitForTimeout(5000);
+  expect(await serverDrafts(ENT.alice, subject)).toHaveLength(1);
+  await context.close();
+});
+
 const ONE_PIXEL = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAEAQH/7yMK/gAAAABJRU5ErkJggg==', 'base64');
 
 async function uploadAs(account: string, data: Buffer, type: string): Promise<string> {
