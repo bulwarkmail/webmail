@@ -22,7 +22,6 @@ const draft = (overrides: Partial<LocalDraftRow> = {}): LocalDraftRow => ({
   jmap: 'j1',
   subject: 'Only here',
   status: 'waiting',
-  hasFiles: false,
   createdAt: Date.UTC(2026, 10, 3),
   ...overrides,
 });

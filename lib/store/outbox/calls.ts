@@ -156,8 +156,8 @@ function remove(ctx: StoreContext, params: { id: number }): void {
 
 // ---- Files attached offline ----
 
-/** The size the page cuts a file into on its way here. */
-export const HOLD_CHUNK_BYTES = 1024 * 1024;
+/** The same size the page cuts a file into on its way here. */
+const HOLD_CHUNK_BYTES = 1024 * 1024;
 
 /** A file that comes in pieces: nothing can read it until the last one is in. */
 function holdStart(ctx: StoreContext, params: { jmap?: string; name: string; type: string; size: number }): { blobId: string } {

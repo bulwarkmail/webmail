@@ -204,6 +204,12 @@ export function allPending(db: StorageAdapter): DraftRow[] {
   return db.all<DraftRow>('SELECT * FROM draft_pending ORDER BY seq ASC');
 }
 
+/** The drafts that are only here and nothing else speaks for. One a send names is that message, in the outbox. */
+export function listedDrafts(db: StorageAdapter): DraftRow[] {
+  const held = draftsWithQueuedSend(db);
+  return allPending(db).filter((row) => !held.has(row.local_id));
+}
+
 export function pendingForFlush(db: StorageAdapter): DraftRow[] {
   const held = draftsWithQueuedSend(db);
   return allPending(db).filter((row) => row.status !== 'refused' && !held.has(row.local_id));

@@ -5,8 +5,8 @@ import { upsertEmail, type EmailObject } from '../mail/records';
 import { savePatch, EMAIL_TYPE } from '../outbox/email-set';
 import type { ConflictSummary } from '../outbox/items';
 import { applyPatch, destroyConflicts, type RecordState } from '../outbox/patches';
-import { blobPartsOf, type DraftCreate } from './local-email';
-import { allPending, destroyForDraft, pendingForFlush, replaceLocalRow, replacesOf, resolveStandIns, type DraftError, type DraftRow, type DraftStatus } from './pending';
+import type { DraftCreate } from './local-email';
+import { destroyForDraft, listedDrafts, pendingForFlush, replaceLocalRow, replacesOf, resolveStandIns, type DraftError, type DraftRow, type DraftStatus } from './pending';
 
 export interface PendingDraft {
   localId: string;
@@ -33,7 +33,6 @@ export interface LocalDraftSummary {
   subject: string;
   status: DraftStatus;
   error?: DraftError;
-  hasFiles: boolean;
   createdAt: number;
 }
 
@@ -67,12 +66,11 @@ function read(ctx: StoreContext, params: { before: number }): { rows: PendingDra
 }
 
 function list(ctx: StoreContext): LocalDraftSummary[] {
-  return allPending(ctx.db).map((row) => ({
+  return listedDrafts(ctx.db).map((row) => ({
     localId: row.local_id,
     jmap: row.jmap,
     subject: row.subject ?? '',
     status: row.status,
-    hasFiles: blobPartsOf(JSON.parse(row.create_json) as DraftCreate).length > 0,
     createdAt: Number(row.created_at),
     ...(row.error ? { error: JSON.parse(row.error) as DraftError } : {}),
   }));

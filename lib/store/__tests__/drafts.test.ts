@@ -580,10 +580,12 @@ describe('sending a draft that\'s on the device', () => {
     });
     await flush();
     expect(t.server.drafts()).toEqual([]);
-    expect(await list()).toHaveLength(1);
+    expect((await get(id)).list).toHaveLength(1);
+    // It's that message, in the outbox: not counted a second time as unsent.
+    expect(await list()).toEqual([]);
 
     await t.engine.areaCall('drafts.discard', { jmap: JMAP_ACCOUNT, id });
-    expect(await list()).toEqual([]);
+    expect((await get(id)).notFound).toEqual([id]);
   });
 
   it('goes up as a draft if the send fails, so nothing depends on the outbox', async () => {
