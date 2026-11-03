@@ -10,7 +10,7 @@
 import type { SyncContext, Syncer } from '../area';
 import { deleteObject, putObject } from '../engine/core-schema';
 import { runChangesLoop } from '../engine/changes';
-import { responseFor, TransportError, type MethodCall } from '../engine/transport';
+import { JmapMethodError, responseFor, TransportError, type MethodCall } from '../engine/transport';
 import {
   deleteEmail,
   deleteEmailRow,
@@ -84,7 +84,12 @@ async function syncMailboxes(ctx: SyncContext, jmap: string): Promise<void> {
 
 // ---- Email list ----
 
-interface ListCursor { position: number; gen: number; captured: string }
+/**
+ * `anchor` is the last id a pass saw. A pass can be paused for days, and a
+ * position would shift with every deletion before it: a message would be
+ * skipped, and no /changes after the captured state would ever mention it.
+ */
+interface ListCursor { position: number; gen: number; captured: string; anchor?: string | null }
 
 /** The generation of the last full listing. One row is enough: every row of a pass has it or an older one. */
 function currentGen(ctx: SyncContext, jmap: string): number {
@@ -99,19 +104,50 @@ async function startFullList(ctx: SyncContext, jmap: string): Promise<ListCursor
   return cursor;
 }
 
+/**
+ * What the pass didn't see isn't necessarily gone: paging can miss a message
+ * when the anchor was lost. So the server is asked about each. Only what it says
+ * is gone, or what left the chosen window, is dropped. One batch to a
+ * transaction, so a reload picks up what's left.
+ */
+async function sweepUnseen(ctx: SyncContext, jmap: string, gen: number): Promise<boolean> {
+  for (;;) {
+    if (ctx.stopped()) return false;
+    const unseen = ctx.db.all<{ rowid: number; id: string }>('SELECT rowid, id FROM email WHERE jmap = ? AND gen < ? LIMIT ?', [jmap, gen, PAGE]);
+    if (unseen.length === 0) return true;
+    const response = await ctx.transport.request([['Email/get', {
+      accountId: jmap,
+      ids: unseen.map((row) => String(row.id)),
+      properties: EMAIL_LIST_PROPERTIES,
+    }, 'g']], MAIL_USING);
+    const found = responseFor(response, 'g')[1].list as EmailObject[];
+    ctx.db.transaction(() => {
+      const kept = new Set<string>();
+      for (const email of ctx.overlay(jmap, 'Email', found.filter((candidate) => inWindow(ctx, candidate)))) {
+        upsertEmail(ctx.db, jmap, email, gen);
+        kept.add(email.id);
+      }
+      for (const row of unseen) if (!kept.has(String(row.id))) deleteEmailRow(ctx.db, Number(row.rowid));
+    });
+  }
+}
+
 async function runFullList(ctx: SyncContext, jmap: string, start: ListCursor): Promise<boolean> {
   const cursor = { ...start };
   const filter = windowFilter(ctx);
   let total: number | null = null;
   for (;;) {
     if (ctx.stopped()) return false;
+    const pageArgs = (i: number): Record<string, unknown> => (cursor.anchor
+      ? { anchor: cursor.anchor, anchorOffset: 1 + i * PAGE }
+      : { position: cursor.position + i * PAGE });
     const calls: MethodCall[] = [];
     for (let i = 0; i < PAIRS_PER_REQUEST; i += 1) {
       calls.push(['Email/query', {
         accountId: jmap,
         ...(filter ? { filter } : {}),
         sort: [{ property: 'receivedAt', isAscending: false }],
-        position: cursor.position + i * PAGE,
+        ...pageArgs(i),
         limit: PAGE,
         calculateTotal: i === 0,
       }, `q${i}`]);
@@ -125,30 +161,36 @@ async function runFullList(ctx: SyncContext, jmap: string, start: ListCursor): P
     let done = false;
     let got = 0;
     const lists: EmailObject[][] = [];
-    for (let i = 0; i < PAIRS_PER_REQUEST; i += 1) {
-      const [, query] = responseFor(response, `q${i}`);
-      if (i === 0 && typeof query.total === 'number') total = query.total;
-      lists.push(responseFor(response, `g${i}`)[1].list as EmailObject[]);
-      got += (query.ids as string[]).length;
-      if ((query.ids as string[]).length < PAGE) {
-        done = true;
-        break;
+    try {
+      for (let i = 0; i < PAIRS_PER_REQUEST; i += 1) {
+        const [, query] = responseFor(response, `q${i}`);
+        if (i === 0 && typeof query.total === 'number') total = query.total;
+        lists.push(responseFor(response, `g${i}`)[1].list as EmailObject[]);
+        const ids = query.ids as string[];
+        got += ids.length;
+        if (ids.length > 0) cursor.anchor = ids[ids.length - 1];
+        if (ids.length < PAGE) {
+          done = true;
+          break;
+        }
       }
+    } catch (error) {
+      if (!(error instanceof JmapMethodError) || error.type !== 'anchorNotFound' || !cursor.anchor) throw error;
+      // The anchor was deleted, or left the window. Back to positions, a page
+      // earlier, since deletions before the cursor have shifted them.
+      cursor.anchor = null;
+      cursor.position = Math.max(0, cursor.position - PAGE);
+      continue;
     }
     cursor.position += got;
     ctx.db.transaction(() => {
       for (const list of lists) for (const email of ctx.overlay(jmap, 'Email', list)) upsertEmail(ctx.db, jmap, email, cursor.gen);
-      if (done) {
-        // Whatever this pass didn't see is gone from the server or the window.
-        const stale = ctx.db.all<{ rowid: number }>('SELECT rowid FROM email WHERE jmap = ? AND gen < ?', [jmap, cursor.gen]);
-        for (const row of stale) deleteEmailRow(ctx.db, Number(row.rowid));
-        ctx.setSyncState(jmap, 'Email', { state: cursor.captured, phase: null, cursor: null });
-      } else {
-        ctx.setSyncState(jmap, 'Email', { cursor: { ...cursor } });
-      }
+      ctx.setSyncState(jmap, 'Email', { cursor: { ...cursor } });
     });
     ctx.emit({ type: 'progress', account: ctx.account, area: 'mail', phase: 'list', done: cursor.position, total });
     if (done) {
+      if (!(await sweepUnseen(ctx, jmap, cursor.gen))) return false;
+      ctx.db.transaction(() => ctx.setSyncState(jmap, 'Email', { state: cursor.captured, phase: null, cursor: null }));
       ctx.emit({ type: 'changed', account: ctx.account, collections: ['Email'] });
       return true;
     }

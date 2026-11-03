@@ -130,11 +130,116 @@ describe('persisted state', () => {
       await engineFor(server, second).requestSync();
       expect(count(second, 'email')).toBe(4500);
       const firstQuery = callsNamed(server, 'Email/query')[0];
-      expect(firstQuery[1].position).toBe(listed);
+      expect(firstQuery[1]).toMatchObject({ anchorOffset: 1 });
+      expect(second.get<{ id: string }>('SELECT id FROM email WHERE id = ?', [firstQuery[1].anchor as string])).toBeTruthy();
+      expect(firstQuery[1]).not.toHaveProperty('position');
       second.close();
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  }, 30_000);
+});
+
+describe('a full pass while the server changes', () => {
+  // Newest first, four pages of 500 to a request: the second request starts at 2000.
+  function bigServer() {
+    const server = new FakeJmap();
+    for (let i = 0; i < 2600; i += 1) server.addEmail({ id: `m${i}` });
+    return server;
+  }
+
+  it('misses no message when something before its place is deleted, which would shift positions', async () => {
+    const server = bigServer();
+    const db = openMemoryStore();
+    let deleted = false;
+    server.beforeRequest = () => {
+      // Once the first request of the list has been answered: the newest
+      // message, long passed by the pass.
+      if (!deleted && callsNamed(server, 'Email/query').length >= 4) {
+        deleted = true;
+        server.destroyEmail('m2599');
+      }
+    };
+    await engineFor(server, db).requestSync();
+    expect(deleted).toBe(true);
+    expect(count(db, 'email')).toBe(2599);
+    for (let i = 0; i < 2599; i += 1) expect(db.get('SELECT 1 AS x FROM email WHERE id = ?', [`m${i}`])).toBeTruthy();
+  });
+
+  it('goes back to positions, with an overlap, when the anchor itself is deleted', async () => {
+    const server = bigServer();
+    const db = openMemoryStore();
+    let deleted = false;
+    server.beforeRequest = () => {
+      if (deleted || server.calls.filter(([n]) => n === 'Email/query').length < 4) return;
+      deleted = true;
+      // The last id of the first request, and one before it.
+      const newestFirst = [...server.emails.keys()].reverse();
+      server.destroyEmail(newestFirst[1999]);
+      server.destroyEmail(newestFirst[0]);
+    };
+    await engineFor(server, db).requestSync();
+    expect(deleted).toBe(true);
+    expect(count(db, 'email')).toBe(2598);
+    expect(callsNamed(server, 'Email/query').some(([, args]) => args.anchor === undefined && Number(args.position) > 0)).toBe(true);
+    expect(server.emails.size).toBe(2598);
+    for (const id of server.emails.keys()) expect(db.get('SELECT 1 AS x FROM email WHERE id = ?', [id])).toBeTruthy();
+  });
+
+  it('keeps what a pass missed but the server still has, and drops only what is gone or out of the window', async () => {
+    const server = new FakeJmap();
+    server.addEmail({ id: 'stays', subject: 'Before', receivedAt: '2026-11-01T00:00:00Z' });
+    server.addEmail({ id: 'gone', receivedAt: '2026-11-01T00:00:01Z' });
+    server.addEmail({ id: 'old', receivedAt: '2026-10-01T00:00:00Z' });
+    const db = openMemoryStore();
+    const engine = new AccountEngine({
+      account: 'a@fake.test', db, session: FAKE_SESSION, transport: server, areas: [mailArea],
+      scope: { ...DEFAULT_SCOPE, days: null }, now: () => Date.UTC(2026, 10, 3), sleep: async () => {},
+    });
+    await engine.requestSync();
+    expect(count(db, 'email')).toBe(3);
+
+    // A start over, in a narrower window, where paging misses `stays`.
+    engine.setScope({ ...DEFAULT_SCOPE, days: 10 });
+    server.hiddenFromQuery.add('stays');
+    server.updateEmail('stays', { subject: 'After' });
+    server.destroyEmail('gone');
+    server.truncateLog('Email');
+    server.calls.length = 0;
+    await engine.requestSync();
+    expect(db.all('SELECT id FROM email').map((row) => row.id)).toEqual(['stays']);
+    expect(JSON.parse(String(db.get<{ json: string }>('SELECT json FROM email WHERE id = ?', ['stays'])?.json)).subject).toBe('After');
+    // Its text wasn't thrown away either.
+    expect(count(db, 'email_body')).toBe(1);
+    expect(callsNamed(server, 'Email/get').some(([, args]) => (args.ids as string[] | undefined)?.includes('gone'))).toBe(true);
+  });
+
+  it('picks the check up again after a stop, and asks 500 at a time', async () => {
+    const server = new FakeJmap();
+    for (let i = 0; i < 700; i += 1) server.addEmail({ id: `m${i}` });
+    const db = openMemoryStore();
+    const engine = engineFor(server, db);
+    await engine.requestSync();
+    for (let i = 0; i < 700; i += 1) server.hiddenFromQuery.add(`m${i}`);
+    server.truncateLog('Email');
+    server.calls.length = 0;
+    let gets = 0;
+    server.beforeRequest = () => {
+      if (callsNamed(server, 'Email/get').filter(([, args]) => Array.isArray(args.ids) && (args.ids as string[]).length > 0).length > gets) gets += 1;
+      if (gets === 1) server.offline = true;
+    };
+    await engine.requestSync();
+    expect(count(db, 'email')).toBe(700);
+    server.offline = false;
+    server.beforeRequest = null;
+    await engine.requestSync();
+    expect(count(db, 'email')).toBe(700);
+    const sizes = callsNamed(server, 'Email/get').map(([, args]) => (args.ids as string[] | undefined)?.length ?? 0);
+    expect(Math.max(...sizes)).toBeLessThanOrEqual(500);
+    // The pass finished: back to /changes.
+    server.calls.length = 0;
+    await engine.requestSync();
+    expect(callsNamed(server, 'Email/query')).toHaveLength(0);
   });
 });
 

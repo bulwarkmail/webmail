@@ -101,14 +101,11 @@ export class FakeJmapMail extends FakeJmap {
         const matched = [...this.emails.values()]
           .filter((email) => this.matches(email, args.filter as Filter | undefined))
           .sort((a, b) => Date.parse(String(b.receivedAt)) - Date.parse(String(a.receivedAt)));
-        const position = Number(args.position ?? 0);
-        const limit = Math.min(Number(args.limit ?? 5000) || 5000, 5000);
         return {
           accountId: args.accountId,
           queryState: this.coll.Email.state(),
           canCalculateChanges: true,
-          position,
-          ids: matched.slice(position, position + limit).map((email) => email.id),
+          ...this.pageOf(matched.map((email) => email.id), args),
           ...(args.calculateTotal ? { total: matched.length } : {}),
         };
       }
