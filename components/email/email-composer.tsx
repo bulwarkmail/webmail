@@ -4206,6 +4206,9 @@ export function EmailComposer({
     // through React's tree although the dialog portals to the body: they
     // belong to that dialog, and Escape must close only it.
     if (!(e.target instanceof Node) || !e.currentTarget.contains(e.target)) return;
+    // Same for a dialog drawn inside the composer (the directory picker).
+    const targetDialog = e.target instanceof Element ? e.target.closest('[role="dialog"],[role="alertdialog"]') : null;
+    if (targetDialog && e.currentTarget.contains(targetDialog)) return;
 
     const isPlainEscape = e.key === 'Escape' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey;
     const hasPrimaryModifier = e.ctrlKey || e.metaKey;
@@ -6107,7 +6110,7 @@ export function RecipientChipInput({
               onDragOver={(e) => handleChipDragOver(e, i)}
               onDrop={(e) => { e.stopPropagation(); performDrop(e, dropIndex ?? i); }}
               className={cn(
-                "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-sm border border-border transition-colors",
+                "inline-flex items-center gap-1 max-w-full min-w-0 px-2 py-0.5 rounded-md text-sm border border-border transition-colors",
                 isEditing
                   ? "bg-background ring-1 ring-ring"
                   : ( customColor && colorStyles[customColor]
@@ -6172,7 +6175,7 @@ export function RecipientChipInput({
                 />
               ) : (
                 <span
-                  className="inline-flex items-center gap-1 max-w-[200px]"
+                  className="inline-flex items-center gap-1 min-w-0 max-w-[200px]"
                   title={chip.group ? chip.group.members.map(m => m.email).join(', ') : undefined}
                 >
                   {chip.group && <Users className="w-3 h-3 shrink-0" aria-hidden />}
@@ -6182,7 +6185,7 @@ export function RecipientChipInput({
               )}
               <button
                 type="button"
-                className={cn("flex items-center justify-center w-6 h-6 -m-1 rounded-full hover:bg-muted-foreground/20 transition-colors", TOUCH_HIT_AREA)}
+                className={cn("flex items-center justify-center shrink-0 w-6 h-6 -m-1 rounded-full hover:bg-muted-foreground/20 transition-colors", TOUCH_HIT_AREA)}
                 aria-label={isEditing ? t('recipient_remove') : t('recipient_remove_named', { name: recipientDisplayName(chip) })}
                 onClick={(e) => {
                   e.stopPropagation();
