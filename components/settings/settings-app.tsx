@@ -310,6 +310,13 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   const [searchQuery, setSearchQuery] = useState('');
   const [pendingHighlight, setPendingHighlight] = useState<{ tab: SettingsTabId; label: string; pluginId?: string; advanced?: boolean } | null>(null);
   const isDesktop = useIsDesktop();
+  // Narrowing the window (or turning a tablet) keeps the page that was open
+  // instead of dropping back to the page list.
+  const wasDesktop = useRef(isDesktop);
+  useEffect(() => {
+    if (wasDesktop.current && !isDesktop) setMobileShowContent(true);
+    wasDesktop.current = isDesktop;
+  }, [isDesktop]);
 
   const messages = useMessages() as Record<string, unknown>;
   const installedPlugins = usePluginStore((s) => s.plugins);

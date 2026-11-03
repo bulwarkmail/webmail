@@ -7,6 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // settings", the OAuth redirect) must open that page, with the list one Back
 // below it.
 
+const media = vi.hoisted(() => ({ desktop: false }));
+
 vi.mock('next-intl', () => ({
   useTranslations: (ns?: string) => (key: string) => (ns ? `${ns}.${key}` : key),
   useMessages: () => ({}),
@@ -15,7 +17,7 @@ vi.mock('next-intl', () => ({
 }));
 vi.mock('@/hooks/use-media-query', async (importOriginal) => ({
   atLeast: (await importOriginal<typeof import('@/hooks/use-media-query')>()).atLeast,
-  useIsDesktop: () => false,
+  useIsDesktop: () => media.desktop,
   useIsMobile: () => true,
   useMediaQuery: () => false,
   useDeviceDetection: () => ({ isMobile: true, isTablet: false, isDesktop: false }),
@@ -44,6 +46,7 @@ beforeEach(() => {
   useThemeStore.setState({ syncServerThemes: vi.fn().mockResolvedValue(undefined) } as never);
 });
 afterEach(() => {
+  media.desktop = false;
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -85,6 +88,18 @@ describe('Settings deep links on the phone', () => {
     render(<SettingsApp linkSegments={[]} />);
     expect(screen.getByTestId('settings-tab-appearance')).toBeTruthy();
     expect(screen.queryByText('appearance pane')).toBeNull();
+  });
+
+  it('keeps the open page when a desktop window narrows to the phone layout', () => {
+    window.history.replaceState(null, '', '/settings');
+    media.desktop = true;
+    const { rerender } = render(<SettingsApp linkSegments={[]} />);
+    expect(screen.getByText('appearance pane')).toBeTruthy();
+
+    media.desktop = false;
+    rerender(<SettingsApp linkSegments={[]} />);
+
+    expect(screen.getByText('appearance pane')).toBeTruthy();
   });
 
   it('opens a page at its top and keeps the place in the list', () => {
