@@ -43,7 +43,7 @@ import { EditedFilesHost } from '../edited-files-host';
 import { resetEditSessions, takeFilesForReply, useEditSessions } from '@/lib/desktop/edit-attachments';
 
 const session = (over: Record<string, unknown> = {}) => ({
-  id: 's1', name: 'a.docx', type: 'x/y', account: 'acct', source: '{"kind":"mail","emailId":"e1","ownerAccountId":"owner"}', changed: true, version: 1, claimed: false, ...over,
+  id: 's1', name: 'a.docx', type: 'x/y', account: 'acct', source: '{"kind":"mail","emailId":"e1","ownerAccountId":"owner"}', changed: true, version: 1, hash: 'h', claimed: false, ...over,
 });
 
 let bridge: { edit: Record<string, ReturnType<typeof vi.fn>>; dialogs: { confirm: ReturnType<typeof vi.fn> }; os: { notify: ReturnType<typeof vi.fn> } };
@@ -69,6 +69,7 @@ beforeEach(() => {
       open: vi.fn(),
       reopen: vi.fn(),
       list: vi.fn(async () => []),
+      settle: vi.fn(async () => []),
       read: vi.fn(async () => ({ ok: true, name: 'a.docx', type: 'x/y', data: new Uint8Array([1]), hash: 'h' })),
       taken: vi.fn(async () => {}),
       discard: vi.fn(async () => {}),

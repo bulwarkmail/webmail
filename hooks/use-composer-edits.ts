@@ -140,8 +140,11 @@ export function useComposerEdits<A extends EditableAttachment>({ attachments, se
 
   const sessionOf = useCallback((att: A) => (att.editSessionId ? sessions.find((s) => s.id === att.editSessionId) : undefined), [sessions]);
 
-  /** Whether this chip has saved edits to take. */
-  const hasUpdate = useCallback((att: A) => sessionOf(att)?.changed === true, [sessionOf]);
+  /** Whether this chip has saved edits to take. Its own file on its way up isn't one. */
+  const hasUpdate = useCallback((att: A) => {
+    const session = sessionOf(att);
+    return session?.changed === true && editFileInfo(att.file)?.hash !== session.hash;
+  }, [sessionOf]);
 
   const startEdit = useCallback(async (att: A) => {
     const key = att.editSessionId
@@ -182,10 +185,13 @@ export function useComposerEdits<A extends EditableAttachment>({ attachments, se
 
   /** Edits on the way out in an older version: asks first. False: don't send. */
   const confirmSend = useCallback(async (): Promise<boolean> => {
-    const { attachments: list, sessions: all } = latest.current;
+    const { attachments: list } = latest.current;
+    if (!list.some((att) => att.editSessionId)) return true;
+    // Someone who saves and goes straight to Send is the case this is for: the watcher may not have seen it yet.
+    const all = await getEditBridge()?.settle() ?? latest.current.sessions;
     const stale = list.flatMap((att) => {
       const session = att.editSessionId ? all.find((s) => s.id === att.editSessionId) : undefined;
-      return session?.changed ? [session] : [];
+      return session?.changed && editFileInfo(att.file)?.hash !== session.hash ? [session] : [];
     });
     const dialogs = getDesktopBridge()?.dialogs;
     if (stale.length === 0 || !dialogs) return true;

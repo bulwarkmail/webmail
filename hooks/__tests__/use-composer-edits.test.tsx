@@ -28,6 +28,7 @@ function fakeBridge() {
     open: vi.fn(async () => ({ ok: true as const, id: 's1' })),
     reopen: vi.fn(async () => ({ ok: true as const, id: 's1' })),
     list: vi.fn(async () => []),
+    settle: vi.fn(async () => useEditSessions.getState().sessions),
     read: vi.fn(async () => ({ ok: true as const, name: 'a.docx', type: 'x/y', data: new Uint8Array([1, 2]), hash: 'h2' })),
     taken: vi.fn(async () => {}),
     discard: vi.fn(async () => {}),
@@ -41,8 +42,8 @@ function fakeBridge() {
 let bridge: ReturnType<typeof fakeBridge>;
 let confirm: ReturnType<typeof vi.fn>;
 
-const session = (over: Partial<{ id: string; name: string; source: string; changed: boolean; claimed: boolean }> = {}) => ({
-  id: 's1', name: 'a.docx', type: 'x/y', account: 'acct', source: '{"kind":"draft","draftId":"d1"}', changed: false, version: 0, claimed: true, ...over,
+const session = (over: Partial<{ id: string; name: string; source: string; changed: boolean; claimed: boolean; hash: string }> = {}) => ({
+  id: 's1', name: 'a.docx', type: 'x/y', account: 'acct', source: '{"kind":"draft","draftId":"d1"}', changed: false, version: 0, hash: 'current', claimed: true, ...over,
 });
 
 interface Setup {
@@ -215,6 +216,31 @@ describe('sending', () => {
     expect(confirm.mock.calls[0][0]).toMatchObject({ buttons: ['send_stale_send', 'send_stale_back'], defaultId: 1 });
     confirm.mockResolvedValueOnce(0);
     await expect(result.current.edits.confirmSend()).resolves.toBe(true);
+  });
+
+  it('sees a save from a moment ago, which the list has not heard of', async () => {
+    useEditSessions.setState({ sessions: [session()] });
+    const { result } = setup({ start: [chip] });
+    bridge.settle.mockResolvedValueOnce([session({ changed: true })] as never);
+    confirm.mockResolvedValueOnce(1);
+    await expect(result.current.edits.confirmSend()).resolves.toBe(false);
+    expect(confirm).toHaveBeenCalledTimes(1);
+  });
+
+  it('a chip holding the version on disk has nothing to ask about, even before main hears it went up', async () => {
+    const outcome = await readEditedFile({ id: 's1', account: 'acct' });
+    if (!outcome.ok) throw new Error('refused');
+    useEditSessions.setState({ sessions: [session({ changed: true, hash: outcome.hash })] });
+    const { result } = setup({ start: [{ file: outcome.file, name: 'a.docx', type: 'x/y', editSessionId: 's1', uploading: true }] });
+    expect(result.current.edits.hasUpdate(result.current.attachments[0])).toBe(false);
+    await expect(result.current.edits.confirmSend()).resolves.toBe(true);
+    expect(confirm).not.toHaveBeenCalled();
+  });
+
+  it('a composer with no edited file asks main nothing', async () => {
+    const { result } = setup({ start: [{ name: 'a.docx', type: 'x/y', blobId: 'b' }] });
+    await expect(result.current.edits.confirmSend()).resolves.toBe(true);
+    expect(bridge.settle).not.toHaveBeenCalled();
   });
 
   it('sent or discarded: an unchanged copy goes, edits nobody took stay and lose their draft', async () => {

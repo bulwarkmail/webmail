@@ -36,6 +36,7 @@ function fakeBridge() {
     open: vi.fn(async () => ({ ok: true as const, id: 's1' })),
     reopen: vi.fn(async () => ({ ok: true as const, id: 's1' })),
     list: vi.fn(async () => []),
+    settle: vi.fn(async () => []),
     read: vi.fn(async () => ({ ok: true as const, name: 'a.docx', type: 'x/y', data: new Uint8Array([1, 2]), hash: 'h' })),
     taken: vi.fn(async () => {}),
     discard: vi.fn(async () => {}),
@@ -220,7 +221,7 @@ describe('a file on its way to a reply', () => {
 
 describe('what main says', () => {
   it('follows the list once per page', async () => {
-    const session = { id: 's1', name: 'a', type: '', account: 'x', source: '', changed: true, version: 1, claimed: false };
+    const session = { id: 's1', name: 'a', type: '', account: 'x', source: '', changed: true, version: 1, hash: 'h', claimed: false };
     bridge.list.mockResolvedValue([session] as never);
     followEditSessions();
     followEditSessions();

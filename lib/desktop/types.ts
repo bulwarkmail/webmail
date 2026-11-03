@@ -617,6 +617,8 @@ export interface DesktopEditSession {
   changed: boolean;
   /** Goes up with each save. */
   version: number;
+  /** What the file holds now: a chip holding this version has nothing to update. */
+  hash: string;
   /** A composer has it and offers the update itself. */
   claimed: boolean;
 }
@@ -657,6 +659,8 @@ export interface DesktopEditBridge {
   reopen: (ticket: string, id: string) => Promise<DesktopEditOpenResult>;
   /** Empty while locked. */
   list: () => Promise<DesktopEditSession[]>;
+  /** The list after looking at each file now, for a decision that can't wait for the watcher. */
+  settle: () => Promise<DesktopEditSession[]>;
   read: (id: string) => Promise<DesktopEditReadResult>;
   /** This version is where it should be, so it's no longer a change. */
   taken: (id: string, hash: string) => Promise<void>;
