@@ -5783,7 +5783,14 @@
     "refused_waiting": "Az új jelszóra váró, el nem küldött üzenetek: {count}. Eddig maradnak: {date}.",
     "refused_waiting_unknown": "Lehet, hogy el nem küldött üzenetek várnak az új jelszóra. Eddig maradnak: {date}.",
     "confirm_unsent_unknown": "Lehet, hogy el nem küldött üzenetek várakoznak itt. Elvesznek.",
-    "confirm_templates": "Ezen az eszközön mentett e-mail-sablonok"
+    "confirm_templates": "Ezen az eszközön mentett e-mail-sablonok",
+    "session_waiting": "A következő bejelentkezésre váró, el nem küldött üzenetek: {count}. Eddig maradnak: {date}.",
+    "session_waiting_unknown": "Lehet, hogy el nem küldött üzenetek várnak a következő bejelentkezésre. Eddig maradnak: {date}.",
+    "needs_sign_in": "Bejelentkezés szükséges",
+    "switcher_waiting": "El nem küldött üzenetek: {count}. Törlés erről az eszközről: {date}.",
+    "switcher_kept": "Az eszközön lévő levelek törlése: {date}.",
+    "sibling_waiting": "{name} kijelentkezett. El nem küldött üzenetek: {count}. Jelentkezzen be eddig: {date}, különben törlődnek erről az eszközről.",
+    "sibling_kept": "{name} kijelentkezett. Jelentkezzen be eddig: {date}, különben a levelek törlődnek erről az eszközről."
   },
   "offlineStorage": {
     "keep_description": "Megtartja a leveleit, a naptárát, a névjegyeit és a kiválasztott fájlokat, titkosítva ezen az eszközön. Offline olvashat, megjelölhet és áthelyezhet leveleket, a megírt levelek pedig a postázandók között várnak. Kijelentkezéskor minden törlődik.",

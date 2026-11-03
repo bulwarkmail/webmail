@@ -5783,7 +5783,14 @@
     "refused_waiting": "Nenosūtītie ziņojumi gaida jūsu jauno paroli: {count}. Tie paliek līdz {date}.",
     "refused_waiting_unknown": "Iespējams, nenosūtītie ziņojumi gaida jūsu jauno paroli. Tie paliek līdz {date}.",
     "confirm_unsent_unknown": "Šeit var būt nenosūtīti ziņojumi. Tie tiks zaudēti.",
-    "confirm_templates": "Šajā ierīcē saglabātās e-pasta veidnes"
+    "confirm_templates": "Šajā ierīcē saglabātās e-pasta veidnes",
+    "session_waiting": "Nenosūtītie ziņojumi gaida nākamo pieteikšanos: {count}. Tie paliek līdz {date}.",
+    "session_waiting_unknown": "Iespējams, nenosūtītie ziņojumi gaida nākamo pieteikšanos. Tie paliek līdz {date}.",
+    "needs_sign_in": "Nepieciešama pieteikšanās",
+    "switcher_waiting": "Nenosūtītie ziņojumi: {count}. Tiks izdzēsti no šīs ierīces {date}.",
+    "switcher_kept": "E-pasts šajā ierīcē tiks izdzēsts {date}.",
+    "sibling_waiting": "{name} tika izrakstīts. Nenosūtītie ziņojumi: {count}. Piesakieties līdz {date}, citādi tie tiks izdzēsti no šīs ierīces.",
+    "sibling_kept": "{name} tika izrakstīts. Piesakieties līdz {date}, citādi e-pasts tiks izdzēsts no šīs ierīces."
   },
   "offlineStorage": {
     "keep_description": "Glabā jūsu e-pastu, kalendāru, kontaktpersonas un izvēlētos failus šifrētus šajā ierīcē. Bezsaistē varat lasīt, atzīmēt un pārvietot vēstules, un tas, ko rakstāt, gaida izsūtnē. Izrakstoties viss tiek noņemts.",

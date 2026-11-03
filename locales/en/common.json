@@ -5783,7 +5783,14 @@
     "refused_waiting": "{count, plural, one {# unsent message waits} other {# unsent messages wait}} for your new password, until {date}.",
     "refused_waiting_unknown": "Unsent messages may be waiting for your new password, until {date}.",
     "confirm_unsent_unknown": "Unsent messages may be waiting here. They will be lost.",
-    "confirm_templates": "Email templates saved on this device"
+    "confirm_templates": "Email templates saved on this device",
+    "session_waiting": "{count, plural, one {# unsent message waits} other {# unsent messages wait}} for you to sign in again, until {date}.",
+    "session_waiting_unknown": "Unsent messages may be waiting for you to sign in again, until {date}.",
+    "needs_sign_in": "Needs sign-in",
+    "switcher_waiting": "Unsent messages: {count}. Deleted from this device on {date}.",
+    "switcher_kept": "Its mail on this device is deleted on {date}.",
+    "sibling_waiting": "{name} was signed out. Unsent messages: {count}. Sign in by {date} or they're deleted from this device.",
+    "sibling_kept": "{name} was signed out. Sign in by {date} or its mail is deleted from this device."
   },
   "offlineStorage": {
     "keep_description": "Keeps your mail, calendar, contacts and chosen files encrypted on this device. Offline you can read, flag and move mail, and what you write waits in the outbox. Signing out removes all of it.",

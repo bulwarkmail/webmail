@@ -5783,7 +5783,14 @@
     "refused_waiting": "Niet-verzonden berichten die op uw nieuwe wachtwoord wachten: {count}. Ze blijven tot {date}.",
     "refused_waiting_unknown": "Mogelijk wachten niet-verzonden berichten op uw nieuwe wachtwoord. Ze blijven tot {date}.",
     "confirm_unsent_unknown": "Hier wachten mogelijk niet-verzonden berichten. Ze gaan verloren.",
-    "confirm_templates": "E-mailsjablonen die op dit apparaat zijn opgeslagen"
+    "confirm_templates": "E-mailsjablonen die op dit apparaat zijn opgeslagen",
+    "session_waiting": "Niet-verzonden berichten die op uw volgende aanmelding wachten: {count}. Ze blijven tot {date}.",
+    "session_waiting_unknown": "Mogelijk wachten niet-verzonden berichten op uw volgende aanmelding. Ze blijven tot {date}.",
+    "needs_sign_in": "Aanmelden nodig",
+    "switcher_waiting": "Niet-verzonden berichten: {count}. Op {date} van dit apparaat verwijderd.",
+    "switcher_kept": "De e-mail op dit apparaat wordt op {date} verwijderd.",
+    "sibling_waiting": "{name} is afgemeld. Niet-verzonden berichten: {count}. Meld u uiterlijk {date} aan, anders worden ze van dit apparaat verwijderd.",
+    "sibling_kept": "{name} is afgemeld. Meld u uiterlijk {date} aan, anders wordt de e-mail van dit apparaat verwijderd."
   },
   "offlineStorage": {
     "keep_description": "Bewaart je e-mail, agenda, contacten en gekozen bestanden versleuteld op dit apparaat. Offline kun je e-mail lezen, markeren en verplaatsen, en wat je schrijft wacht in Postvak UIT. Afmelden verwijdert alles.",

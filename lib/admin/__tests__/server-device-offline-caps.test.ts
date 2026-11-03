@@ -7,15 +7,15 @@ import { sanitizeOrganisationPartial } from '../organisation-policy';
 
 const scope = (id: string, devices: Record<string, unknown>) => ({ id, label: id, match: { domains: [`${id}.example.org`] }, policy: { organisation: { devices } } });
 
-describe('wipeOnRefusedLogin', () => {
+describe('wipeOnForcedSignOut', () => {
   it('is off unless asked for, and survives the sanitizer', () => {
-    expect(DEFAULT_POLICY.organisation?.devices?.wipeOnRefusedLogin ?? false).toBe(false);
-    expect(sanitizeOrganisationPartial({ devices: { wipeOnRefusedLogin: true } }).devices).toMatchObject({ wipeOnRefusedLogin: true });
-    expect(sanitizeOrganisationPartial({ devices: { wipeOnRefusedLogin: 'yes' } }).devices?.wipeOnRefusedLogin).not.toBe(true);
+    expect(DEFAULT_POLICY.organisation?.devices?.wipeOnForcedSignOut ?? false).toBe(false);
+    expect(sanitizeOrganisationPartial({ devices: { wipeOnForcedSignOut: true } }).devices).toMatchObject({ wipeOnForcedSignOut: true });
+    expect(sanitizeOrganisationPartial({ devices: { wipeOnForcedSignOut: 'yes' } }).devices?.wipeOnForcedSignOut).not.toBe(true);
   });
 
   it('isn\'t set by the stand-in for a login nobody can read: that\'s for what stays on the server', () => {
-    expect(ALL_DEVICE_LIMITS.wipeOnRefusedLogin).toBe(false);
+    expect(ALL_DEVICE_LIMITS.wipeOnForcedSignOut).toBe(false);
   });
 });
 

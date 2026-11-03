@@ -5783,7 +5783,14 @@
     "refused_waiting": "Missatges sense enviar que esperen la teva contrasenya nova: {count}. Es conserven fins al {date}.",
     "refused_waiting_unknown": "És possible que hi hagi missatges sense enviar esperant la teva contrasenya nova. Es conserven fins al {date}.",
     "confirm_unsent_unknown": "És possible que hi hagi missatges sense enviar esperant aquí. Es perdran.",
-    "confirm_templates": "Plantilles de correu desades en aquest dispositiu"
+    "confirm_templates": "Plantilles de correu desades en aquest dispositiu",
+    "session_waiting": "Missatges sense enviar que esperen el teu proper inici de sessió: {count}. Es conserven fins al {date}.",
+    "session_waiting_unknown": "És possible que hi hagi missatges sense enviar esperant el teu proper inici de sessió. Es conserven fins al {date}.",
+    "needs_sign_in": "Cal iniciar la sessió",
+    "switcher_waiting": "Missatges sense enviar: {count}. S'eliminaran d'aquest dispositiu el {date}.",
+    "switcher_kept": "El correu d'aquest dispositiu s'eliminarà el {date}.",
+    "sibling_waiting": "S'ha tancat la sessió de {name}. Missatges sense enviar: {count}. Inicia la sessió abans del {date} o s'eliminaran d'aquest dispositiu.",
+    "sibling_kept": "S'ha tancat la sessió de {name}. Inicia la sessió abans del {date} o el correu s'eliminarà d'aquest dispositiu."
   },
   "offlineStorage": {
     "keep_description": "Desa el vostre correu, calendari, contactes i els fitxers que trieu, xifrats en aquest dispositiu. Sense connexió podeu llegir, marcar i moure correu, i el que escriviu espera a la safata de sortida. En tancar la sessió s'esborra tot.",

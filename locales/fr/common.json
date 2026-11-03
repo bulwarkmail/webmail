@@ -5783,7 +5783,14 @@
     "refused_waiting": "Messages non envoyés qui attendent votre nouveau mot de passe : {count}. Ils restent jusqu'au {date}.",
     "refused_waiting_unknown": "Des messages non envoyés attendent peut-être votre nouveau mot de passe. Ils restent jusqu'au {date}.",
     "confirm_unsent_unknown": "Des messages non envoyés attendent peut-être ici. Ils seront perdus.",
-    "confirm_templates": "Modèles d'e-mail enregistrés sur cet appareil"
+    "confirm_templates": "Modèles d'e-mail enregistrés sur cet appareil",
+    "session_waiting": "Messages non envoyés qui attendent votre prochaine connexion : {count}. Ils restent jusqu'au {date}.",
+    "session_waiting_unknown": "Des messages non envoyés attendent peut-être votre prochaine connexion. Ils restent jusqu'au {date}.",
+    "needs_sign_in": "Connexion requise",
+    "switcher_waiting": "Messages non envoyés : {count}. Supprimés de cet appareil le {date}.",
+    "switcher_kept": "Ses e-mails sur cet appareil seront supprimés le {date}.",
+    "sibling_waiting": "{name} a été déconnecté. Messages non envoyés : {count}. Connectez-vous avant le {date}, sinon ils seront supprimés de cet appareil.",
+    "sibling_kept": "{name} a été déconnecté. Connectez-vous avant le {date}, sinon ses e-mails seront supprimés de cet appareil."
   },
   "offlineStorage": {
     "keep_description": "Garde vos e-mails, votre agenda, vos contacts et les fichiers que vous choisissez, chiffrés sur cet appareil. Hors ligne, vous pouvez lire, signaler et déplacer des e-mails, et ce que vous écrivez attend dans la boîte d'envoi. La déconnexion supprime tout.",
