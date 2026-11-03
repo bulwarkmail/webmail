@@ -60,6 +60,7 @@ describe('the store and the OS integration', () => {
     useOfflineStore.setState({ enabled: ['alice@one', 'bob@two'] });
     await wipeAccount('alice@one').catch(() => {});
     expect(clearSurfaces).toHaveBeenCalled();
+    useOfflineStore.setState({ enabled: [] });
     window.bulwarkDesktop = undefined;
   });
 
