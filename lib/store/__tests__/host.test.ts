@@ -39,6 +39,18 @@ const params = (file: string, session: unknown = FAKE_SESSION, account = 'a') =>
   account, file, keyHex: KEY, session, scope: DEFAULT_SCOPE, invertedKeywordSort: null, auth: null,
 }) as Parameters<StoreHost['openAccount']>[0];
 
+describe('opening an account', () => {
+  it('says it was created, also after a first try with no session', async () => {
+    const storage = new FakeStorage();
+    await expect(host(storage).openAccount(params('/a1.db', null))).rejects.toThrow('No session');
+    expect(storage.files()).toEqual([]);
+    const running = host(storage);
+    expect(await running.openAccount(params('/a1.db'))).toEqual({ created: true });
+    await running.closeAll();
+    expect(await host(storage).openAccount(params('/a1.db', null))).toEqual({ created: false });
+  });
+});
+
 describe('removing an account', () => {
   it('tells every tab, once the file is gone', async () => {
     const storage = new FakeStorage();

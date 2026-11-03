@@ -61,6 +61,12 @@ export class StoreHost {
     }
     const db = await this.options.storage.open(params.file, params.keyHex);
     const created = !db.get("SELECT 1 AS yes FROM sqlite_master WHERE name = 'schema_migration'");
+    // Nothing to sync with yet. No file stays behind, or the next open couldn't tell that this one was new.
+    if (created && !params.session) {
+      db.close();
+      this.options.storage.remove(params.file);
+      throw new Error('No session for this account yet');
+    }
     const session = params.session ?? AccountEngine.storedSession(db);
     if (!session) {
       db.close();
