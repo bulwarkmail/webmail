@@ -6451,5 +6451,22 @@
       "next_issue": "Další pravopisná nebo gramatická chyba",
       "previous_issue": "Předchozí pravopisná nebo gramatická chyba"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Otevřít v novém okně",
+    "save_all_to_folder": "Uložit vše do složky…",
+    "saved_all": "{count, plural, one {# příloha uložena do {folder}.} few {# přílohy uloženy do {folder}.} other {# příloh uloženo do {folder}.}}",
+    "saved_partial": "Uloženo {saved} z {total} příloh do {folder}.",
+    "save_failed": "Přílohy se nepodařilo uložit do {folder}.",
+    "popup_blocked": "Prohlížeč nové okno zablokoval. Povolte vyskakovací okna pro tento web a zkuste to znovu.",
+    "opening": "Otevírání…",
+    "session_ended_title": "V tomto okně jste odhlášeni",
+    "session_ended_body": "Otevřete aplikaci, přihlaste se a potom toto okno otevřete znovu.",
+    "open_app": "Otevřít aplikaci",
+    "close_window": "Zavřít okno",
+    "message_gone_title": "Tato zpráva už tu není",
+    "message_gone_body": "Byla smazána nebo přesunuta do jiného účtu.",
+    "message_moved": "Tato zpráva byla přesunuta do jiné složky.",
+    "message_moved_to": "Tato zpráva byla přesunuta do {folder}."
   }
 }

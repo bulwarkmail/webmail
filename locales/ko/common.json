@@ -6451,5 +6451,22 @@
       "next_issue": "다음 맞춤법 또는 문법 문제",
       "previous_issue": "이전 맞춤법 또는 문법 문제"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "새 창에서 열기",
+    "save_all_to_folder": "모두 폴더에 저장…",
+    "saved_all": "{count, plural, other {첨부 파일 #개를 {folder}에 저장했습니다.}}",
+    "saved_partial": "첨부 파일 {total}개 중 {saved}개를 {folder}에 저장했습니다.",
+    "save_failed": "첨부 파일을 {folder}에 저장할 수 없습니다.",
+    "popup_blocked": "브라우저가 새 창을 차단했습니다. 이 사이트의 팝업을 허용한 후 다시 시도하세요.",
+    "opening": "여는 중…",
+    "session_ended_title": "이 창에서 로그아웃되었습니다",
+    "session_ended_body": "앱을 열어 로그인한 다음 이 창을 다시 여세요.",
+    "open_app": "앱 열기",
+    "close_window": "창 닫기",
+    "message_gone_title": "이 메시지는 더 이상 없습니다",
+    "message_gone_body": "삭제되었거나 다른 계정으로 이동되었습니다.",
+    "message_moved": "이 메시지는 다른 폴더로 이동되었습니다.",
+    "message_moved_to": "이 메시지는 {folder}(으)로 이동되었습니다."
   }
 }

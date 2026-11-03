@@ -6451,5 +6451,22 @@
       "next_issue": "Sonraki yazım veya dil bilgisi hatası",
       "previous_issue": "Önceki yazım veya dil bilgisi hatası"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Yeni pencerede aç",
+    "save_all_to_folder": "Tümünü bir klasöre kaydet…",
+    "saved_all": "{count, plural, one {# ek {folder} klasörüne kaydedildi.} other {# ek {folder} klasörüne kaydedildi.}}",
+    "saved_partial": "{total} ekten {saved} tanesi {folder} klasörüne kaydedildi.",
+    "save_failed": "Ekler {folder} klasörüne kaydedilemedi.",
+    "popup_blocked": "Tarayıcı yeni pencereyi engelledi. Bu site için açılır pencerelere izin verip yeniden deneyin.",
+    "opening": "Açılıyor…",
+    "session_ended_title": "Bu pencerede oturumunuz kapalı",
+    "session_ended_body": "Uygulamayı açıp oturum açın, ardından bu pencereyi yeniden açın.",
+    "open_app": "Uygulamayı aç",
+    "close_window": "Pencereyi kapat",
+    "message_gone_title": "Bu ileti artık yok",
+    "message_gone_body": "Silindi veya başka bir hesaba taşındı.",
+    "message_moved": "Bu ileti başka bir klasöre taşındı.",
+    "message_moved_to": "Bu ileti {folder} klasörüne taşındı."
   }
 }

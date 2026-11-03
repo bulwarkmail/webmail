@@ -41,6 +41,7 @@ export const LITE_REMOVED_PATHS = [
   "app/(main)/[...rest]",
   "app/(main)/[locale]/[...rest]",
   "app/(main)/protocol",
+  "app/(main)/[locale]/popout",
   "e2e",
   "integration",
 ];

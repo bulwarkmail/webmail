@@ -6451,5 +6451,22 @@
       "next_issue": "Nākamā pareizrakstības vai gramatikas kļūda",
       "previous_issue": "Iepriekšējā pareizrakstības vai gramatikas kļūda"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Atvērt jaunā logā",
+    "save_all_to_folder": "Saglabāt visu mapē…",
+    "saved_all": "{count, plural, zero {# pielikumi saglabāti mapē {folder}.} one {# pielikums saglabāts mapē {folder}.} other {# pielikumi saglabāti mapē {folder}.}}",
+    "saved_partial": "Saglabāti {saved} no {total} pielikumiem mapē {folder}.",
+    "save_failed": "Pielikumus neizdevās saglabāt mapē {folder}.",
+    "popup_blocked": "Pārlūks bloķēja jauno logu. Atļaujiet uznirstošos logus šai vietnei un mēģiniet vēlreiz.",
+    "opening": "Notiek atvēršana…",
+    "session_ended_title": "Šajā logā esat izrakstījies",
+    "session_ended_body": "Atveriet lietotni un pierakstieties, pēc tam atveriet šo logu vēlreiz.",
+    "open_app": "Atvērt lietotni",
+    "close_window": "Aizvērt logu",
+    "message_gone_title": "Šī ziņojuma vairs nav",
+    "message_gone_body": "Tas tika dzēsts vai pārvietots uz citu kontu.",
+    "message_moved": "Šis ziņojums tika pārvietots uz citu mapi.",
+    "message_moved_to": "Šis ziņojums tika pārvietots uz {folder}."
   }
 }

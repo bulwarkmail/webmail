@@ -6451,5 +6451,22 @@
       "next_issue": "Volgende spel- of grammaticafout",
       "previous_issue": "Vorige spel- of grammaticafout"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Openen in nieuw venster",
+    "save_all_to_folder": "Alles in een map opslaan…",
+    "saved_all": "{count, plural, one {# bijlage opgeslagen in {folder}.} other {# bijlagen opgeslagen in {folder}.}}",
+    "saved_partial": "{saved} van {total} bijlagen opgeslagen in {folder}.",
+    "save_failed": "De bijlagen konden niet in {folder} worden opgeslagen.",
+    "popup_blocked": "De browser heeft het nieuwe venster geblokkeerd. Sta pop-ups toe voor deze site en probeer het opnieuw.",
+    "opening": "Openen…",
+    "session_ended_title": "Je bent afgemeld in dit venster",
+    "session_ended_body": "Open de app en meld je aan, en open dit venster daarna opnieuw.",
+    "open_app": "App openen",
+    "close_window": "Venster sluiten",
+    "message_gone_title": "Dit bericht is er niet meer",
+    "message_gone_body": "Het is verwijderd of naar een ander account verplaatst.",
+    "message_moved": "Dit bericht is naar een andere map verplaatst.",
+    "message_moved_to": "Dit bericht is verplaatst naar {folder}."
   }
 }

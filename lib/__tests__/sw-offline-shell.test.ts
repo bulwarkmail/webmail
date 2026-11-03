@@ -65,6 +65,45 @@ describe('service worker with offline mode on', () => {
     expect(await deep!.text()).toBe('<html>mail page</html>');
   });
 
+  it('keeps pop-out pages, and starts a message it never saw from the page kept for it', async () => {
+    const caches = new FakeCaches();
+    await shellOn(caches, true);
+    let online = true;
+    const fetchMock = vi.fn(async (url: string) => {
+      if (!online) throw new TypeError('Failed to fetch');
+      return sameOrigin(`<html>${new URL(typeof url === 'string' ? url : (url as Request).url).pathname}</html>`);
+    });
+    const worker = loadWorker({ buildId: 'a', caches, clients: [], fetch: fetchMock as never });
+    await settle();
+    for (const path of ['/popout/compose', '/popout/message/_', '/']) {
+      const page = await worker.request({ url: `${ORIGIN}${path}`, mode: 'navigate' });
+      expect(page, path).not.toBeNull();
+    }
+    await settle();
+
+    online = false;
+    const message = await worker.request({ url: `${ORIGIN}/popout/message/never-seen`, mode: 'navigate' });
+    expect(await message!.text()).toBe('<html>/popout/message/_</html>');
+    const compose = await worker.request({ url: `${ORIGIN}/popout/compose?handoff=x`, mode: 'navigate' });
+    expect(await compose!.text()).toBe('<html>/popout/compose</html>');
+  });
+
+  it('never puts the whole app into a pop-out\'s window', async () => {
+    const caches = new FakeCaches();
+    await shellOn(caches, true);
+    let online = true;
+    const fetchMock = vi.fn(async () => {
+      if (!online) throw new TypeError('Failed to fetch');
+      return sameOrigin('<html>the whole app</html>');
+    });
+    const worker = loadWorker({ buildId: 'a', caches, clients: [], fetch: fetchMock });
+    await settle();
+    await worker.request({ url: `${ORIGIN}/`, mode: 'navigate' });
+    await settle();
+    online = false;
+    await expect(worker.request({ url: `${ORIGIN}/popout/compose`, mode: 'navigate' })).rejects.toThrow('Failed to fetch');
+  });
+
   it('serves a chunk of an older build from that build\'s cache, and keeps new ones per build', async () => {
     const caches = new FakeCaches();
     await shellOn(caches, true);

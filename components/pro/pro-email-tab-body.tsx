@@ -31,6 +31,7 @@ import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { saveQuickReplyDraft } from '@/lib/outgoing/quick-reply-envelope';
 import { canDownload } from '@/lib/device-policy';
+import { useOpenEmailInWindow } from '@/hooks/use-popouts-available';
 import { isFilePreviewable } from '@/lib/file-preview';
 import dynamic from 'next/dynamic';
 
@@ -65,6 +66,15 @@ interface ProEmailViewProps {
   accountId?: string;
   /** Fires once the full message is loaded (tab retitling, sidebar highlight). */
   onLoaded?: (email: Email) => void;
+  /**
+   * Opens a reply, forward or draft somewhere else than a Pro tab: a pop-out
+   * window (components/popout) has no tabs.
+   */
+  onOpenCompose?: (data: Omit<ProComposeTabData, 'sessionId'>) => void;
+  /** Flags and folders as the server has them now, when the host tracks them (a pop-out). */
+  liveState?: Pick<Email, 'keywords' | 'mailboxIds'> | null;
+  /** This view changed the message's flags, for a host other windows should hear from. */
+  onMailChanged?: () => void;
   /**
    * The message left this view: deleted, archived, moved, or reopened in the
    * composer. The host decides what that means (close the tab / clear the
@@ -120,7 +130,7 @@ function buildReplyContext(email: Email): ProReplyContext {
  * Hosted by `ProEmailTabBody` (a dedicated email tab) and by the folder tab's
  * reading pane.
  */
-export function ProEmailView({ emailId, client: clientOverride, clientAccountId, accountId, onLoaded, onClose, className }: ProEmailViewProps) {
+export function ProEmailView({ emailId, client: clientOverride, clientAccountId, accountId, onLoaded, onOpenCompose, liveState, onMailChanged, onClose, className }: ProEmailViewProps) {
   const t = useTranslations();
   const tNotifications = useTranslations('notifications');
   const tRemove = useTranslations('email_list.confirm_remove');
@@ -175,8 +185,12 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     onOpened?: () => void,
   ) => {
     const open = (prefill: ComposePrefill | null) => {
-      composerSessionIdRef.current += 1;
-      openComposeTabNow({ ...data, sessionId: composerSessionIdRef.current, prefill });
+      if (onOpenCompose) {
+        onOpenCompose({ ...data, prefill });
+      } else {
+        composerSessionIdRef.current += 1;
+        openComposeTabNow({ ...data, sessionId: composerSessionIdRef.current, prefill });
+      }
       onOpened?.();
     };
     if (emailHooks.onBeforeCompose.size === 0) {
@@ -191,7 +205,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     })).then((prefill) => {
       if (prefill) open(Object.keys(prefill).length > 0 ? prefill : null);
     });
-  }, [identities, openComposeTabNow, t]);
+  }, [identities, onOpenCompose, openComposeTabNow, t]);
 
   // Held in a ref so a host passing an inline callback doesn't refetch the
   // message on every render.
@@ -241,6 +255,13 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       cancelled = true;
     };
   }, [client, clientOverride, clientAccountId, emailId, accountId, fetchEmailContent]);
+
+  useEffect(() => {
+    if (!liveState) return;
+    setEmail((prev) => (prev && prev.id === emailId
+      ? { ...prev, keywords: liveState.keywords ?? prev.keywords, mailboxIds: liveState.mailboxIds ?? prev.mailboxIds }
+      : prev));
+  }, [liveState, emailId]);
 
   const currentMailboxRole = useMemo(() => {
     if (!email) return undefined;
@@ -359,6 +380,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     if (!client || !email) return;
     try {
       if (!(await toggleStar(client, email.id, emailKeyFor(email)))) return;
+      onMailChanged?.();
       // Reflect locally - the viewer re-reads from email-store's selectedEmail
       // shape only for the mail tab; here we update our local copy too.
       setEmail((prev) => prev ? {
@@ -372,12 +394,13 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       console.error('Toggle star failed:', err);
       toast.error(tNotifications('error_updating'));
     }
-  }, [client, email, toggleStar, tNotifications]);
+  }, [client, email, toggleStar, tNotifications, onMailChanged]);
 
   const handleMarkAsRead = useCallback(async (emailIdToMark: string, read: boolean, opts?: { automatic?: boolean }) => {
     if (!client) return;
     try {
       if (!(await markAsRead(client, emailIdToMark, read))) return;
+      onMailChanged?.();
       setEmail((prev) => prev && prev.id === emailIdToMark ? {
         ...prev,
         keywords: { ...prev.keywords, $seen: read },
@@ -387,7 +410,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       // A refused mark-as-read on opening needs no notice (see EmailViewer).
       if (!opts?.automatic) toast.error(tNotifications('error_updating'));
     }
-  }, [client, markAsRead, tNotifications]);
+  }, [client, markAsRead, tNotifications, onMailChanged]);
 
   const handleSetTag = useCallback((emailIdToTag: string, tagId: string | null) => {
     if (!email || email.id !== emailIdToTag) return;
@@ -447,6 +470,8 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     const blob = await preview.context.client.fetchBlob(preview.blobId, preview.name, preview.type, preview.context.accountId);
     return { blob, contentType: preview.type || blob.type };
   }, [preview]);
+
+  const openInWindow = useOpenEmailInWindow();
 
   const handleQuickReply = useCallback(async (body: string) => {
     handleReply(body);
@@ -525,6 +550,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
           onMarkAsRead={handleMarkAsRead}
           onSetTag={handleSetTag}
           onDownloadAttachment={handleDownloadAttachment}
+          onOpenInWindow={openInWindow && email ? () => openInWindow(email) : undefined}
           onQuickReply={handleQuickReply}
           onSaveQuickReplyDraft={handleSaveQuickReplyDraft}
           onEditDraft={handleEditDraft}

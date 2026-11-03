@@ -6451,5 +6451,22 @@
       "next_issue": "Næste stave- eller grammatikfejl",
       "previous_issue": "Forrige stave- eller grammatikfejl"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Åbn i nyt vindue",
+    "save_all_to_folder": "Gem alle i en mappe…",
+    "saved_all": "{count, plural, one {# vedhæftet fil gemt i {folder}.} other {# vedhæftede filer gemt i {folder}.}}",
+    "saved_partial": "{saved} af {total} vedhæftede filer gemt i {folder}.",
+    "save_failed": "De vedhæftede filer kunne ikke gemmes i {folder}.",
+    "popup_blocked": "Browseren blokerede det nye vindue. Tillad pop op-vinduer for dette websted, og prøv igen.",
+    "opening": "Åbner…",
+    "session_ended_title": "Du er logget ud i dette vindue",
+    "session_ended_body": "Åbn appen og log ind, og åbn derefter dette vindue igen.",
+    "open_app": "Åbn appen",
+    "close_window": "Luk vindue",
+    "message_gone_title": "Denne besked er væk",
+    "message_gone_body": "Den er slettet eller flyttet til en anden konto.",
+    "message_moved": "Denne besked er flyttet til en anden mappe.",
+    "message_moved_to": "Denne besked er flyttet til {folder}."
   }
 }

@@ -76,7 +76,7 @@ export function ProInterfaceRedirect() {
 
   if (!takingOver) return null;
   return (
-    <div className="fixed inset-0 z-50" data-pro-takeover="">
+    <div className="fixed inset-0 z-50 pt-[var(--titlebar-inset)]" data-pro-takeover="">
       <ProSkeleton label={label} />
     </div>
   );

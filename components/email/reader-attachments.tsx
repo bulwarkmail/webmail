@@ -52,6 +52,8 @@ interface ReaderAttachmentsProps<T extends ReaderAttachmentItem> {
   onOpen: (attachment: T) => void;
   onDownload: (attachment: T) => void;
   onDownloadAll: () => void;
+  /** "Save all to a folder": left out where the browser can't ask for one. */
+  onSaveAllToFolder?: () => void;
   downloadingAll: boolean;
   /**
    * The account's device policy turned downloads off (Organisation >
@@ -91,6 +93,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
   onOpen,
   onDownload,
   onDownloadAll,
+  onSaveAllToFolder,
   downloadingAll,
   downloadsOff = false,
   onSaveToFiles,
@@ -101,6 +104,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
   const t = useTranslations("email_viewer");
   const tFiles = useTranslations("files");
   const tDevice = useTranslations("device_policy");
+  const tWindows = useTranslations("pwaWindows");
   // Opens nothing: no preview, and downloads are off.
   const locked = (attachment: T) => downloadsOff && !opensPreview(attachment);
   const openLabel = (attachment: T, name: string) =>
@@ -262,6 +266,19 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
           >
             {downloadingAll ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
             {t("download_all")}
+          </Button>
+        )}
+        {attachments.length > 1 && !downloadsOff && onSaveAllToFolder && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onSaveAllToFolder}
+            disabled={downloadingAll}
+            className="shrink-0 gap-1.5 disabled:cursor-wait"
+            data-testid="attachments-save-to-folder"
+          >
+            <FolderInput className="h-4 w-4" />
+            {tWindows("save_all_to_folder")}
           </Button>
         )}
       </div>

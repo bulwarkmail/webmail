@@ -6452,5 +6452,22 @@
       "next_issue": "שגיאת האיות או הדקדוק הבאה",
       "previous_issue": "שגיאת האיות או הדקדוק הקודמת"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "פתיחה בחלון חדש",
+    "save_all_to_folder": "שמירת הכול בתיקייה…",
+    "saved_all": "{count, plural, one {קובץ מצורף אחד נשמר ב-{folder}.} two {# קבצים מצורפים נשמרו ב-{folder}.} other {# קבצים מצורפים נשמרו ב-{folder}.}}",
+    "saved_partial": "{saved} מתוך {total} קבצים מצורפים נשמרו ב-{folder}.",
+    "save_failed": "לא ניתן לשמור את הקבצים המצורפים ב-{folder}.",
+    "popup_blocked": "הדפדפן חסם את החלון החדש. יש לאפשר חלונות קופצים לאתר הזה ולנסות שוב.",
+    "opening": "בפתיחה…",
+    "session_ended_title": "התנתקת בחלון הזה",
+    "session_ended_body": "יש לפתוח את האפליקציה ולהתחבר, ואז לפתוח את החלון הזה שוב.",
+    "open_app": "פתיחת האפליקציה",
+    "close_window": "סגירת החלון",
+    "message_gone_title": "ההודעה הזו כבר לא קיימת",
+    "message_gone_body": "היא נמחקה או הועברה לחשבון אחר.",
+    "message_moved": "ההודעה הזו הועברה לתיקייה אחרת.",
+    "message_moved_to": "ההודעה הזו הועברה אל {folder}."
   }
 }

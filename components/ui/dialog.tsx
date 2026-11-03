@@ -155,8 +155,8 @@ export function Dialog({
   return createPortal(
     <div
       className={cn(
-        "fixed inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center z-[60] p-4 animate-in fade-in duration-150",
-        size === "full-on-phone" && "max-sm:p-0"
+        "fixed inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center z-[60] p-4 pt-[calc(1rem+var(--titlebar-inset))] animate-in fade-in duration-150",
+        size === "full-on-phone" && "max-sm:p-0 max-sm:pt-[var(--titlebar-inset)]"
       )}
       onMouseDown={(e) => {
         pressedOnBackdrop.current = e.target === e.currentTarget;

@@ -6451,5 +6451,22 @@
       "next_issue": "次のスペルまたは文法の問題",
       "previous_issue": "前のスペルまたは文法の問題"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "新しいウィンドウで開く",
+    "save_all_to_folder": "すべてをフォルダーに保存…",
+    "saved_all": "{count, plural, other {# 件の添付ファイルを {folder} に保存しました。}}",
+    "saved_partial": "{total} 件中 {saved} 件の添付ファイルを {folder} に保存しました。",
+    "save_failed": "添付ファイルを {folder} に保存できませんでした。",
+    "popup_blocked": "ブラウザーが新しいウィンドウをブロックしました。このサイトのポップアップを許可して、もう一度お試しください。",
+    "opening": "開いています…",
+    "session_ended_title": "このウィンドウではサインアウトしています",
+    "session_ended_body": "アプリを開いてサインインしてから、このウィンドウをもう一度開いてください。",
+    "open_app": "アプリを開く",
+    "close_window": "ウィンドウを閉じる",
+    "message_gone_title": "このメッセージはもうありません",
+    "message_gone_body": "削除されたか、別のアカウントに移動されました。",
+    "message_moved": "このメッセージは別のフォルダーに移動されました。",
+    "message_moved_to": "このメッセージは {folder} に移動されました。"
   }
 }

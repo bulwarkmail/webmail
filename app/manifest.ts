@@ -15,7 +15,8 @@ type WebAppProtocolHandler = {
   url: string;
 };
 
-type ExtendedManifest = MetadataRoute.Manifest & {
+type ExtendedManifest = Omit<MetadataRoute.Manifest, "display_override"> & {
+  display_override?: Array<"window-controls-overlay" | "standalone" | "minimal-ui" | "browser" | "fullscreen">;
   protocol_handlers?: WebAppProtocolHandler[];
   launch_handler?: {
     client_mode?: "navigate-existing" | "auto" | "focus-existing" | "navigate-new"
@@ -90,6 +91,9 @@ export default async function manifest(): Promise<ExtendedManifest> {
     start_url: withBase("/"),
     scope: withBase("/"),
     display: "standalone",
+    // The page draws up to the top of the window, next to the native controls
+    // (components/layout/window-title-bar.tsx). `display` is the fallback.
+    display_override: ["window-controls-overlay", "standalone"],
     orientation: "portrait-primary",
     theme_color: themeColor,
     background_color: backgroundColor,

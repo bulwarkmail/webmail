@@ -6463,5 +6463,22 @@
       "next_issue": "Lỗi chính tả hoặc ngữ pháp tiếp theo",
       "previous_issue": "Lỗi chính tả hoặc ngữ pháp trước đó"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Mở trong cửa sổ mới",
+    "save_all_to_folder": "Lưu tất cả vào thư mục…",
+    "saved_all": "{count, plural, other {Đã lưu # tệp đính kèm vào {folder}.}}",
+    "saved_partial": "Đã lưu {saved} trong {total} tệp đính kèm vào {folder}.",
+    "save_failed": "Không thể lưu tệp đính kèm vào {folder}.",
+    "popup_blocked": "Trình duyệt đã chặn cửa sổ mới. Hãy cho phép cửa sổ bật lên với trang này rồi thử lại.",
+    "opening": "Đang mở…",
+    "session_ended_title": "Bạn đã đăng xuất trong cửa sổ này",
+    "session_ended_body": "Hãy mở ứng dụng và đăng nhập, rồi mở lại cửa sổ này.",
+    "open_app": "Mở ứng dụng",
+    "close_window": "Đóng cửa sổ",
+    "message_gone_title": "Thư này không còn nữa",
+    "message_gone_body": "Thư đã bị xóa hoặc chuyển sang tài khoản khác.",
+    "message_moved": "Thư này đã được chuyển sang thư mục khác.",
+    "message_moved_to": "Thư này đã được chuyển đến {folder}."
   }
 }

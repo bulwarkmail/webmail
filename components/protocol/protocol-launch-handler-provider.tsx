@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useConfig } from "@/hooks/use-config";
+import { isPopoutPath } from "@/lib/popout/window-role";
 import { getPathPrefix } from "@/lib/browser-navigation";
 import { productName } from "@/lib/product-name";
 import { parseMailto } from "@/lib/protocol-handlers/mailto";
@@ -75,7 +76,7 @@ export function ProtocolLaunchHandlerProvider({ children }: ProtocolLaunchHandle
   const pathname = usePathname();
 
   useEffect(() => {
-    if (pathname.startsWith("/protocol/")) return;
+    if (pathname.startsWith("/protocol/") || isPopoutPath(pathname)) return;
 
     return listenForMailtoRequests((pending) => {
       savePendingMailto(pending);
@@ -90,7 +91,7 @@ export function ProtocolLaunchHandlerProvider({ children }: ProtocolLaunchHandle
   }, [pathname, router, t, appName]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !window.launchQueue) return;
+    if (typeof window === "undefined" || !window.launchQueue || isPopoutPath(pathname)) return;
 
     window.launchQueue.setConsumer((launchParams) => {
       if (!launchParams.targetURL) return;

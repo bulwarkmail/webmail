@@ -6451,5 +6451,22 @@
       "next_issue": "الخطأ الإملائي أو النحوي التالي",
       "previous_issue": "الخطأ الإملائي أو النحوي السابق"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "فتح في نافذة جديدة",
+    "save_all_to_folder": "حفظ الكل في مجلد…",
+    "saved_all": "{count, plural, zero {لم يُحفظ أي مرفق في {folder}.} one {تم حفظ مرفق واحد في {folder}.} two {تم حفظ مرفقين في {folder}.} few {تم حفظ # مرفقات في {folder}.} many {تم حفظ # مرفقًا في {folder}.} other {تم حفظ # مرفق في {folder}.}}",
+    "saved_partial": "تم حفظ {saved} من أصل {total} مرفقات في {folder}.",
+    "save_failed": "تعذر حفظ المرفقات في {folder}.",
+    "popup_blocked": "حظر المتصفح النافذة الجديدة. اسمح بالنوافذ المنبثقة لهذا الموقع وحاول مرة أخرى.",
+    "opening": "جارٍ الفتح…",
+    "session_ended_title": "تم تسجيل خروجك في هذه النافذة",
+    "session_ended_body": "افتح التطبيق وسجّل الدخول، ثم افتح هذه النافذة مرة أخرى.",
+    "open_app": "فتح التطبيق",
+    "close_window": "إغلاق النافذة",
+    "message_gone_title": "لم تعد هذه الرسالة موجودة",
+    "message_gone_body": "تم حذفها أو نقلها إلى حساب آخر.",
+    "message_moved": "تم نقل هذه الرسالة إلى مجلد آخر.",
+    "message_moved_to": "تم نقل هذه الرسالة إلى {folder}."
   }
 }

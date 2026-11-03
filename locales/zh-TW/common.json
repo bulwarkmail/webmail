@@ -6451,5 +6451,22 @@
       "next_issue": "下一個拼字或文法問題",
       "previous_issue": "上一個拼字或文法問題"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "在新視窗中開啟",
+    "save_all_to_folder": "全部儲存到資料夾…",
+    "saved_all": "{count, plural, other {已將 # 個附件儲存到 {folder}。}}",
+    "saved_partial": "已將 {total} 個附件中的 {saved} 個儲存到 {folder}。",
+    "save_failed": "無法將附件儲存到 {folder}。",
+    "popup_blocked": "瀏覽器封鎖了新視窗。請允許此網站顯示彈出式視窗，然後再試一次。",
+    "opening": "正在開啟…",
+    "session_ended_title": "你已在此視窗中登出",
+    "session_ended_body": "請開啟應用程式並登入，然後重新開啟此視窗。",
+    "open_app": "開啟應用程式",
+    "close_window": "關閉視窗",
+    "message_gone_title": "這封郵件已不存在",
+    "message_gone_body": "它已被刪除或移到其他帳戶。",
+    "message_moved": "這封郵件已移到其他資料夾。",
+    "message_moved_to": "這封郵件已移到 {folder}。"
   }
 }

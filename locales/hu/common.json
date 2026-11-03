@@ -6451,5 +6451,22 @@
       "next_issue": "Következő helyesírási vagy nyelvtani hiba",
       "previous_issue": "Előző helyesírási vagy nyelvtani hiba"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Megnyitás új ablakban",
+    "save_all_to_folder": "Összes mentése mappába…",
+    "saved_all": "{count, plural, one {# melléklet mentve ide: {folder}.} other {# melléklet mentve ide: {folder}.}}",
+    "saved_partial": "{total} mellékletből {saved} mentve ide: {folder}.",
+    "save_failed": "A mellékleteket nem sikerült ide menteni: {folder}.",
+    "popup_blocked": "A böngésző letiltotta az új ablakot. Engedélyezze az előugró ablakokat ennél a webhelynél, majd próbálja újra.",
+    "opening": "Megnyitás…",
+    "session_ended_title": "Ebben az ablakban ki van jelentkezve",
+    "session_ended_body": "Nyissa meg az alkalmazást, jelentkezzen be, majd nyissa meg újra ezt az ablakot.",
+    "open_app": "Alkalmazás megnyitása",
+    "close_window": "Ablak bezárása",
+    "message_gone_title": "Ez az üzenet már nincs meg",
+    "message_gone_body": "Törölték, vagy másik fiókba helyezték át.",
+    "message_moved": "Ezt az üzenetet másik mappába helyezték át.",
+    "message_moved_to": "Ezt az üzenetet ide helyezték át: {folder}."
   }
 }

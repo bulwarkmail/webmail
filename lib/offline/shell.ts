@@ -8,7 +8,7 @@ import { apiFetch, withBasePath } from '@/lib/browser-navigation';
 import { currentBuildId, SW_SCOPE } from '@/lib/app-update';
 
 /** The app's pages kept for a start without the network. */
-const SHELL_PAGES = ['/', '/mail', '/settings'];
+const SHELL_PAGES = ['/', '/mail', '/settings', '/popout/compose', '/popout/message/_'];
 
 /**
  * The files of this tab's build. After a deploy the server lists the new

@@ -6451,5 +6451,22 @@
       "next_issue": "Neste stave- eller grammatikkfeil",
       "previous_issue": "Forrige stave- eller grammatikkfeil"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Åpne i nytt vindu",
+    "save_all_to_folder": "Lagre alle i en mappe…",
+    "saved_all": "{count, plural, one {# vedlegg lagret i {folder}.} other {# vedlegg lagret i {folder}.}}",
+    "saved_partial": "{saved} av {total} vedlegg lagret i {folder}.",
+    "save_failed": "Kunne ikke lagre vedleggene i {folder}.",
+    "popup_blocked": "Nettleseren blokkerte det nye vinduet. Tillat popup-vinduer for dette nettstedet og prøv igjen.",
+    "opening": "Åpner…",
+    "session_ended_title": "Du er logget ut i dette vinduet",
+    "session_ended_body": "Åpne appen og logg inn, og åpne deretter dette vinduet på nytt.",
+    "open_app": "Åpne appen",
+    "close_window": "Lukk vindu",
+    "message_gone_title": "Denne meldingen er borte",
+    "message_gone_body": "Den ble slettet eller flyttet til en annen konto.",
+    "message_moved": "Denne meldingen ble flyttet til en annen mappe.",
+    "message_moved_to": "Denne meldingen ble flyttet til {folder}."
   }
 }

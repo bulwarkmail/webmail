@@ -6451,5 +6451,22 @@
       "next_issue": "Următoarea greșeală de ortografie sau gramatică",
       "previous_issue": "Greșeala de ortografie sau gramatică anterioară"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Deschide într-o fereastră nouă",
+    "save_all_to_folder": "Salvează tot într-un dosar…",
+    "saved_all": "{count, plural, one {# atașament salvat în {folder}.} few {# atașamente salvate în {folder}.} other {# de atașamente salvate în {folder}.}}",
+    "saved_partial": "{saved} din {total} atașamente salvate în {folder}.",
+    "save_failed": "Atașamentele nu au putut fi salvate în {folder}.",
+    "popup_blocked": "Browserul a blocat fereastra nouă. Permite ferestrele pop-up pentru acest site și încearcă din nou.",
+    "opening": "Se deschide…",
+    "session_ended_title": "Ești deconectat în această fereastră",
+    "session_ended_body": "Deschide aplicația și autentifică-te, apoi deschide din nou această fereastră.",
+    "open_app": "Deschide aplicația",
+    "close_window": "Închide fereastra",
+    "message_gone_title": "Acest mesaj nu mai există",
+    "message_gone_body": "A fost șters sau mutat în alt cont.",
+    "message_moved": "Acest mesaj a fost mutat în alt dosar.",
+    "message_moved_to": "Acest mesaj a fost mutat în {folder}."
   }
 }

@@ -33,6 +33,9 @@ import { AccountArchiveRestorePrompt } from "@/components/account-archive-prompt
 import { SessionTimeoutGuard } from "@/components/session/session-timeout-guard";
 import { AccountTemplateSync } from "@/components/templates/account-template-sync";
 import { FreeBusyAutoShare } from "@/components/calendar/free-busy-auto-share";
+import { MainWindowOnly } from "@/components/popout/main-window-only";
+import { PopoutHost } from "@/components/popout/popout-host";
+import { WindowSyncHost } from "@/components/popout/window-sync-host";
 import { IS_LITE } from "@/lib/lite";
 import { setRequestLocale } from "next-intl/server";
 import { locales } from "@/i18n/routing";
@@ -78,16 +81,22 @@ export default async function LocaleLayout({
               <TourProvider>
                 <ProtocolLaunchHandlerProvider>
                   <ProInterfaceRedirect />
-                  <ImpersonationReconciler />
-                  <PushBindingsHost />
+                  <MainWindowOnly>
+                    <ImpersonationReconciler />
+                    <PushBindingsHost />
+                    <FreeBusyAutoShare />
+                    {!IS_LITE && <PopoutHost />}
+                  </MainWindowOnly>
+                  {!IS_LITE && <WindowSyncHost />}
                   <SessionTimeoutGuard />
                   <AccountTemplateSync />
-                  <FreeBusyAutoShare />
                   {children}
                   <PluginDialogHost />
                   <ExternalRecipientConfirmHost />
                   <PhishingReportHost />
-                  <CommandPaletteHost />
+                  <MainWindowOnly>
+                    <CommandPaletteHost />
+                  </MainWindowOnly>
                   <AccessibilityQuickPanelHost />
                   <PaneCycleHost />
                   <FocusRescueHost />
@@ -98,15 +107,19 @@ export default async function LocaleLayout({
                   <PluginConsentDialog />
                   <PluginOAuthCallbackListener />
                   <PluginAppEvents />
-                  <PluginPageNavigator />
-                  <PWAInstallPrompt />
-                  <AppUpdatePrompt />
+                  <MainWindowOnly>
+                    <PluginPageNavigator />
+                    <PWAInstallPrompt />
+                    <AppUpdatePrompt />
+                  </MainWindowOnly>
                   {/* Offline mode isn't in Lite (no service worker there). */}
                   {!IS_LITE && <OfflineHost />}
                   <DevicePolicyHost />
-                  <PushNotificationPrompt />
-                  {/* Lite is a static bundle: no server keeps an archive there. */}
-                  {!IS_LITE && <AccountArchiveRestorePrompt />}
+                  <MainWindowOnly>
+                    <PushNotificationPrompt />
+                    {/* Lite is a static bundle: no server keeps an archive there. */}
+                    {!IS_LITE && <AccountArchiveRestorePrompt />}
+                  </MainWindowOnly>
                 </ProtocolLaunchHandlerProvider>
               </TourProvider>
             </EmbeddedBridgeProvider>

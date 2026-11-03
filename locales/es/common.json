@@ -6451,5 +6451,22 @@
       "next_issue": "Siguiente error de ortografía o gramática",
       "previous_issue": "Anterior error de ortografía o gramática"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Abrir en una ventana nueva",
+    "save_all_to_folder": "Guardar todo en una carpeta…",
+    "saved_all": "{count, plural, one {Se guardó # adjunto en {folder}.} other {Se guardaron # adjuntos en {folder}.}}",
+    "saved_partial": "Se guardaron {saved} de {total} adjuntos en {folder}.",
+    "save_failed": "No se pudieron guardar los adjuntos en {folder}.",
+    "popup_blocked": "El navegador bloqueó la ventana nueva. Permite las ventanas emergentes para este sitio e inténtalo de nuevo.",
+    "opening": "Abriendo…",
+    "session_ended_title": "Has cerrado sesión en esta ventana",
+    "session_ended_body": "Abre la aplicación e inicia sesión, y luego vuelve a abrir esta ventana.",
+    "open_app": "Abrir la aplicación",
+    "close_window": "Cerrar ventana",
+    "message_gone_title": "Este mensaje ya no está",
+    "message_gone_body": "Se eliminó o se movió a otra cuenta.",
+    "message_moved": "Este mensaje se movió a otra carpeta.",
+    "message_moved_to": "Este mensaje se movió a {folder}."
   }
 }

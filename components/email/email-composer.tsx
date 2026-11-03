@@ -166,6 +166,7 @@ import { htmlToPlainText as htmlToPlainTextShared } from "@/lib/html-to-text";
 import { fileStorage } from "@/lib/plugin-storage";
 import { usePolicyStore } from "@/stores/policy-store";
 import { registerComposeFlush } from "@/lib/compose-flush-registry";
+import type { RescuedDraft } from "@/lib/popout/channel";
 import { toUnicodeEmail } from "@/lib/idn";
 
 /**
@@ -280,6 +281,12 @@ export interface ComposerDraftData {
   unsaved?: boolean;
 }
 
+/** The window a draft moves to; see EmailComposerProps.popOut. */
+export interface ComposerPopOut {
+  handOver(data: ComposerDraftData): void;
+  cancel(): void;
+}
+
 interface EmailComposerProps {
   /**
    * Submits the message. Resolves `false` when the host sent nothing (it has
@@ -343,6 +350,29 @@ interface EmailComposerProps {
    */
   onDiscardDraft?: (draftId: string, draft?: { accountId?: string; localAccountId?: string }) => void;
   onSaveState?: (data: ComposerDraftData) => void;
+  /**
+   * Offers "Open in new window". Called in the click, since a browser only
+   * opens a window for a user action: the host opens it and answers with what
+   * takes the draft, or null when no window opened. The composer then saves,
+   * hands the draft over under the same draft id, and closes here.
+   */
+  popOut?: () => ComposerPopOut | null;
+  /**
+   * This composer is all a window shows (lib/popout). It closes itself once a
+   * message has gone, and closing the window with unsaved text asks first, so
+   * the save started on the way out gets to finish.
+   */
+  ownWindow?: {
+    /** The state as the window unloads, for a reload to start from. */
+    onUnloadState?: (data: ComposerDraftData) => void;
+    /** A save reached the server, for other windows showing the Drafts folder. */
+    onDraftSaved?: () => void;
+    /**
+     * Hands a draft to another window to save as this one closes: a request
+     * started now wouldn't survive. False when no window can take it.
+     */
+    rescueDraft?: (draft: RescuedDraft) => boolean;
+  };
   className?: string;
   initialDraftText?: string;
   initialData?: ComposerDraftData | null;
@@ -489,6 +519,8 @@ export function EmailComposer({
   requestCloseRef,
   onDiscardDraft,
   onSaveState,
+  popOut,
+  ownWindow,
   className,
   initialDraftText: initialDraftTextProp,
   initialData: initialDataProp,
@@ -501,6 +533,7 @@ export function EmailComposer({
 }: EmailComposerProps) {
   const t = useTranslations('email_composer');
   const tCommon = useTranslations('common');
+  const tWindows = useTranslations('pwaWindows');
   const tQuote = useTranslations('quote_header');
   const tViewer = useTranslations('email_viewer');
   const tClassification = useTranslations('classification');
@@ -1823,34 +1856,60 @@ export function EmailComposer({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveSessionKey]);
 
+  const rescueRequestRef = useRef<() => RescuedDraft | null>(() => null);
+
+  // The composer as a host needs it to bring it back: after a remount, in
+  // another window. Read through refs, so a handler set up once stays current.
+  const snapshotStateRef = useRef<() => ComposerDraftData>(() => { throw new Error('Not mounted'); });
+  snapshotStateRef.current = () => ({
+    ...stateRef.current,
+    draftAccountId: draftAccountIdRef.current,
+    mode,
+    replyTo,
+    priority: priorityRef.current,
+    classification: classificationRef.current.draftChoice,
+    // Edits the last save didn't cover; a minimised composer with
+    // none needs no save before an automatic sign-out.
+    unsaved: changeVersionRef.current !== savedVersionRef.current || saveFailedRef.current,
+  });
+
   // Auto-save state on unmount (when user navigates away without explicitly closing)
   useEffect(() => {
     return () => {
       if (explicitCloseRef.current) return;
-      if (onSaveState && isDirtyRef.current) {
-        const s = stateRef.current;
-        onSaveState({
-          ...s,
-          draftAccountId: draftAccountIdRef.current,
-          mode,
-          replyTo,
-          priority: priorityRef.current,
-          classification: classificationRef.current.draftChoice,
-          // Edits the last save didn't cover; a minimised composer with
-          // none needs no save before an automatic sign-out.
-          unsaved: changeVersionRef.current !== savedVersionRef.current || saveFailedRef.current,
-        });
-      }
+      if (onSaveState && isDirtyRef.current) onSaveState(snapshotStateRef.current());
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Auto-save draft to server on page close (best-effort)
+  const ownWindowRef = useRef(ownWindow);
+  ownWindowRef.current = ownWindow;
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (isDirtyRef.current) {
-        saveDraftRef.current();
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      const own = ownWindowRef.current;
+      if (!own) {
+        if (isDirtyRef.current) {
+          saveDraftRef.current();
+        }
+        return;
       }
+      // Sent, discarded or saved and closed: the window closes with nothing to keep.
+      if (explicitCloseRef.current || sentRef.current) return;
+      if (!isDirtyRef.current) return;
+      const state = snapshotStateRef.current();
+      own.onUnloadState?.(state);
+      if (!state.unsaved) return;
+      // A request started while a window closes is dropped, so another window
+      // saves it. A plugin may change or stop what is saved, and only runs here.
+      if (own.rescueDraft && emailHooks.onBeforeDraftAutoSave.size === 0) {
+        const draft = rescueRequestRef.current();
+        if (!draft || own.rescueDraft(draft)) return;
+      }
+      // Nobody can take it. The prompt keeps the window open: "stay" lets the
+      // save run, and "leave" is the user's own choice.
+      saveDraftRef.current();
+      event.preventDefault();
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
@@ -2652,28 +2711,17 @@ export function EmailComposer({
   }, [previewAttachment, composerClient]);
 
   // Auto-save draft functionality
-  // `auto`: the debounced save while typing. Only that one may be skipped
-  // by a plugin; saves on close and before send always run, or the text
-  // would be lost.
-  const saveDraftOnce = async (auto = false): Promise<string | null> => {
-    if (!client || !composerClient) return null;
-    const versionAtStart = changeVersionRef.current;
+  const draftRecipients = () => ({
+    toAddresses: expandRecipients(withInput(to, toInput)).map(r => formatRecipient(r.name, r.email)),
+    ccAddresses: expandRecipients(withInput(cc, ccInput)).map(r => formatRecipient(r.name, r.email)),
+    bccAddresses: expandRecipients(withInput(bcc, bccInput)).map(r => formatRecipient(r.name, r.email)),
+  });
 
-    const toAddresses = expandRecipients(withInput(to, toInput)).map(r => formatRecipient(r.name, r.email));
-    const ccAddresses = expandRecipients(withInput(cc, ccInput)).map(r => formatRecipient(r.name, r.email));
-    const bccAddresses = expandRecipients(withInput(bcc, bccInput)).map(r => formatRecipient(r.name, r.email));
+  const draftHasContent = (toAddresses: string[]) =>
+    !!toAddresses.length || !!subject || !!(plainTextMode ? body.trim() : htmlToPlainText(body).trim());
 
-    if (!toAddresses.length && !subject && !(plainTextMode ? body.trim() : htmlToPlainText(body).trim())) {
-      return null;
-    }
-
-    try {
-      await rehomeForeignBlobs();
-    } catch (error) {
-      // The save below then fails with blobNotFound and reports it.
-      debug.warn('email', 'Failed to copy forwarded parts to the sending account:', error);
-    }
-
+  // What a saved draft holds, as of now. No awaits: a closing window has none to spare.
+  const draftContent = () => {
     // Prepare attachments for draft. cid/disposition ride along so inline
     // parts of a re-opened draft keep matching the body's cid: references.
     const uploadedAttachments = attachmentsRef.current
@@ -2707,6 +2755,81 @@ export function EmailComposer({
           : appendPlainTextSignature(body, signatureIdentity, { separator: signatureSeparatorEnabled }))
       : htmlToPlainText(draftHtmlBody!, imageAltText);
 
+    return { uploadedAttachments, draftHtmlBody, draftTextBody };
+  };
+
+  // Get the selected identity or primary identity
+  // Generate sub-addressed email if tag is set
+  const draftSender = () => {
+    const identityFromEmail = currentIdentity?.email
+      ? subAddressTag
+        ? generateSubAddress(currentIdentity.email, subAddressTag, subAddressDelimiter)
+        : currentIdentity.email
+      : undefined;
+    const fromEmail = (fromOverrideEnabled && fromOverrideEmail.trim())
+      ? fromOverrideEmail.trim()
+      : identityFromEmail;
+    const fromName = (fromOverrideEnabled && fromOverrideEmail.trim())
+      ? (fromOverrideName.trim() || undefined)
+      : (currentIdentity?.name || undefined);
+    return { fromEmail, fromName };
+  };
+
+  // The save below, for another window to make as this one closes. Null with nothing to save.
+  rescueRequestRef.current = () => {
+    const { toAddresses, ccAddresses, bccAddresses } = draftRecipients();
+    if (!draftHasContent(toAddresses)) return null;
+    const { uploadedAttachments, draftHtmlBody, draftTextBody } = draftContent();
+    const { fromEmail, fromName } = draftSender();
+    const login = loginFor(currentIdentityParts.localAccountId);
+    const previousLogin = draftLocalAccountIdRef.current;
+    // A version saved through another login can't be replaced from this one.
+    const replaces = !previousLogin || previousLogin === login;
+    return {
+      localAccountId: login,
+      to: toAddresses,
+      subject,
+      body: draftTextBody,
+      cc: ccAddresses,
+      bcc: bccAddresses,
+      identityId: currentIdentityRawId,
+      fromEmail,
+      draftId: replaces ? draftIdRef.current || undefined : undefined,
+      attachments: uploadedAttachments,
+      fromName,
+      htmlBody: draftHtmlBody,
+      inReplyTo: replyThreadingHeaders?.inReplyTo,
+      references: replyThreadingHeaders?.references,
+      options: {
+        priority,
+        previousDraftAccountId: replaces ? draftAccountIdRef.current : undefined,
+        classification: classificationRef.current.draftChoice,
+      },
+    };
+  };
+
+  // `auto`: the debounced save while typing. Only that one may be skipped
+  // by a plugin; saves on close and before send always run, or the text
+  // would be lost.
+  const saveDraftOnce = async (auto = false): Promise<string | null> => {
+    if (!client || !composerClient) return null;
+    const versionAtStart = changeVersionRef.current;
+
+    const { toAddresses, ccAddresses, bccAddresses } = draftRecipients();
+
+    if (!draftHasContent(toAddresses)) {
+      return null;
+    }
+
+    try {
+      await rehomeForeignBlobs();
+    } catch (error) {
+      // The save below then fails with blobNotFound and reports it.
+      debug.warn('email', 'Failed to copy forwarded parts to the sending account:', error);
+    }
+
+    const { uploadedAttachments, draftHtmlBody, draftTextBody } = draftContent();
+
     // Create a hash of current data to compare with last saved. Hashing the
     // composed bodies (not the raw editor body) means a signature that changed
     // under an unchanged body - switching identity, toggling the separator -
@@ -2726,19 +2849,7 @@ export function EmailComposer({
 
     setSaveStatus('saving');
 
-    // Get the selected identity or primary identity
-    // Generate sub-addressed email if tag is set
-    const identityFromEmail = currentIdentity?.email
-      ? subAddressTag
-        ? generateSubAddress(currentIdentity.email, subAddressTag, subAddressDelimiter)
-        : currentIdentity.email
-      : undefined;
-    const fromEmail = (fromOverrideEnabled && fromOverrideEmail.trim())
-      ? fromOverrideEmail.trim()
-      : identityFromEmail;
-    const fromName = (fromOverrideEnabled && fromOverrideEmail.trim())
-      ? (fromOverrideName.trim() || undefined)
-      : (currentIdentity?.name || undefined);
+    const { fromEmail, fromName } = draftSender();
 
     try {
       const previousDraftId = draftIdRef.current;
@@ -2893,6 +3004,7 @@ export function EmailComposer({
       // Only the save the user asked for is read out: autosave would say it
       // every minute, and the save before sending is followed by "Sent".
       if (opts.announce && id && !saveFailedRef.current) announceStatus(t('draft_saved'));
+      if (id && !saveFailedRef.current) ownWindowRef.current?.onDraftSaved?.();
       return id;
     })();
     inflightSaveRef.current = promise;
@@ -3990,8 +4102,10 @@ export function EmailComposer({
       // Clear ref so unmount effect doesn't re-save
       stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode };
       // The host closes the composer from onSend or onScheduledSendCreated;
-      // a send the plugin made itself reaches neither (#1207).
-      if (sendHandledByPlugin && !effectiveDelayedUntil) cleanClose();
+      // a send the plugin made itself reaches neither (#1207). A window of
+      // its own closes only now: closing it stops whatever is still running,
+      // such as removing the draft's last version above.
+      if (ownWindowRef.current || (sendHandledByPlugin && !effectiveDelayedUntil)) cleanClose();
     } catch (err) {
       // Not sent, so the composer stays open and is an unsent draft again.
       explicitCloseRef.current = false;
@@ -4130,6 +4244,64 @@ export function EmailComposer({
       }
     }
   };
+
+  // Moves the draft to its own window. The window opens first, inside the
+  // click, and waits; this window saves what the server doesn't have yet,
+  // gives it the draft under the same id, and closes the composer here.
+  const [isPoppingOut, setIsPoppingOut] = useState(false);
+  const poppingOutRef = useRef(false);
+  const handlePopOut = async () => {
+    if (!popOut || poppingOutRef.current || isSendingRef.current || saveCloseAttemptRef.current) return;
+    const target = popOut();
+    if (!target) {
+      toast.error(tWindows('popup_blocked'));
+      return;
+    }
+    poppingOutRef.current = true;
+    setIsPoppingOut(true);
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+    try {
+      const uploads = await waitForPendingUploads(() => attachmentsRef.current, () => false);
+      if (uploads === 'failed') {
+        target.cancel();
+        toast.error(t('save_failed'));
+        return;
+      }
+      if (isDirtyRef.current && (changeVersionRef.current !== savedVersionRef.current || saveFailedRef.current)) {
+        // A failed save doesn't stop the move: the text goes along, marked unsaved.
+        await saveDraftRef.current().catch(() => null);
+      }
+      const data = snapshotStateRef.current();
+      target.handOver({
+        ...data,
+        draftId: draftIdRef.current ?? lastDraftIdRef.current,
+        draftLocalAccountId: draftLocalAccountIdRef.current,
+      });
+      explicitCloseRef.current = true;
+      sendCancelledRef.current = true;
+      emitClose();
+    } finally {
+      poppingOutRef.current = false;
+      setIsPoppingOut(false);
+    }
+  };
+
+  const popOutButton = (className: string, iconClassName: string) => popOut && (
+    <button
+      type="button"
+      onClick={(event) => { event.stopPropagation(); void handlePopOut(); }}
+      disabled={isPoppingOut || isSending}
+      className={className}
+      aria-label={tWindows('open_in_window')}
+      title={tWindows('open_in_window')}
+      data-testid="composer-open-in-window"
+    >
+      <ExternalLink className={iconClassName} />
+    </button>
+  );
 
   const handleDiscardAndClose = () => {
     cancelSaveAndClose();
@@ -4323,6 +4495,7 @@ export function EmailComposer({
               <ExternalLink className="h-4 w-4" />
             </button>
           )}
+          {popOutButton("grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground", "h-4 w-4")}
           <button
             type="button"
             onClick={() => handleClose()}
@@ -4350,6 +4523,7 @@ export function EmailComposer({
           {saveStatus === 'saving' && <Save className="w-3.5 h-3.5 animate-pulse text-muted-foreground flex-shrink-0" aria-label={t('saving')} />}
           {mvWindow.state !== "minimized" && leftPanelToggle}
           {mvWindow.state !== "minimized" && rightPanelToggle}
+          {mvWindow.state !== "minimized" && popOutButton("grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-foreground/10 hover:text-foreground", "h-4 w-4")}
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); mvWindow.setState(mvWindow.state === "minimized" ? "normal" : "minimized"); }}
@@ -4450,6 +4624,7 @@ export function EmailComposer({
           </Button>
         )}
         {rightPanelToggle}
+        {popOutButton("hidden md:grid h-8 w-8 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground", "w-4 h-4")}
         {/* Close at the top end (R4). On a phone it moves to the start, as
             the phone's mail apps have it, with Send at the end. */}
         <IconButton
