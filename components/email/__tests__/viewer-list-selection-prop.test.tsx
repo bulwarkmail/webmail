@@ -63,4 +63,40 @@ describe('the reader panel prop listSelection', () => {
     act(() => { useEmailStore.setState({ emails: [row('new'), row('a'), row('b'), row('c')] }); });
     expect(seen.at(-1)?.listSelection).toBe(before);
   });
+
+  it('does not render the reader again when the list changes but the ticks do not', () => {
+    useAuthStore.setState({ client });
+    useEmailStore.setState({ emails: [row('a'), row('b')], selectedEmailKeys: new Set(['a', 'b']), selectedMailbox: 'inbox', mailboxes });
+    render(<EmailViewer email={null} isLoading={false} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onDelete={() => {}} />);
+    const renders = seen.length;
+    act(() => { useEmailStore.setState({ emails: [row('new'), row('a'), row('b')] }); });
+    act(() => { useEmailStore.setState({ emails: [row('newer'), row('new'), row('a'), row('b')], threadEmailsCache: new Map() }); });
+    expect(seen.length).toBe(renders);
+    // A new tick does.
+    act(() => { useEmailStore.setState({ selectedEmailKeys: new Set(['a', 'b', 'new']) }); });
+    expect(seen.length).toBeGreaterThan(renders);
+  });
+
+  it('tells the panel when this login can not read the open message\'s parts', () => {
+    // An open message makes the viewer ask the login more; nothing of it matters here.
+    const client = new Proxy({ getAccountId: () => 'acc1' } as Record<string | symbol, unknown>, {
+      get: (target, key) => (key in target ? target[key] : key === 'then' ? undefined : () => undefined),
+    }) as unknown as IJMAPClient;
+    useAuthStore.setState({ client });
+    const message = { ...row('m'), textBody: [], htmlBody: [], attachments: [], bodyValues: {} } as unknown as Email;
+    const view = () => render(<EmailViewer email={message} isLoading={false} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onDelete={() => {}} blobSource={{ client: otherLogin, accountId: 'acc-2' }} />);
+    const otherLogin = { getAccountId: () => 'acc-2' } as unknown as IJMAPClient;
+    view();
+    expect((seen.at(-1)?.email as { blobsReadable?: boolean }).blobsReadable).toBe(false);
+    cleanup();
+    render(<EmailViewer email={message} isLoading={false} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onDelete={() => {}} blobSource={{ client, accountId: undefined }} />);
+    expect(seen.at(-1)?.email).not.toHaveProperty('blobsReadable');
+  });
+
+  it('gives a panel outside the main list (a Pro tab) no ticks', () => {
+    useAuthStore.setState({ client });
+    useEmailStore.setState({ emails: [row('a'), row('b')], selectedEmailKeys: new Set(['a', 'b']), selectedMailbox: 'inbox', mailboxes });
+    render(<EmailViewer email={null} isLoading={false} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onDelete={() => {}} withListSelection={false} />);
+    expect(seen.at(-1)).toMatchObject({ listSelection: null });
+  });
 });

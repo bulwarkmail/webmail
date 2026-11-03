@@ -2,7 +2,7 @@
 // the reader panel's `listSelection` prop, so the assistant can work on
 // several at once ("summarise these").
 
-import { useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { resolveEmailBlobContext, resolveSelectedEmails, useEmailStore } from '@/stores/email-store';
 import { useAuthStore } from '@/stores/auth-store';
@@ -33,18 +33,15 @@ export function listSelectionOf(state: SelectionState, client: IJMAPClient | nul
   return { emails, total };
 }
 
-/** listSelectionOf for the list on screen; the same object while the selection stays the same. */
-export function useListSelection(): ListSelectionView | null {
-  const selectedEmailKeys = useEmailStore((s) => s.selectedEmailKeys);
-  const emails = useEmailStore((s) => s.emails);
-  const threadEmailsCache = useEmailStore((s) => s.threadEmailsCache);
+/**
+ * listSelectionOf for the list on screen; the same object while the
+ * selection stays the same. The store is read through one selector that
+ * answers a string, so new mail, a search or a moved message re-render the
+ * caller only when the ticked messages change. `enabled` false (a Pro tab,
+ * whose panel isn't about the main list) always answers null.
+ */
+export function useListSelection(enabled = true): ListSelectionView | null {
   const client = useAuthStore((s) => s.client);
-  const last = useRef<{ key: string; value: ListSelectionView | null }>({ key: 'null', value: null });
-  return useMemo(() => {
-    const value = listSelectionOf({ selectedEmailKeys, emails, threadEmailsCache }, client);
-    const key = JSON.stringify(value);
-    // New mail arriving re-renders the list; the panel only hears of a new selection.
-    if (key !== last.current.key) last.current = { key, value };
-    return last.current.value;
-  }, [selectedEmailKeys, emails, threadEmailsCache, client]);
+  const key = useEmailStore((s) => (enabled ? JSON.stringify(listSelectionOf(s, client)) : 'null'));
+  return useMemo(() => JSON.parse(key) as ListSelectionView | null, [key]);
 }

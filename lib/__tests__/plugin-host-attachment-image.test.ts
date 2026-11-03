@@ -17,7 +17,7 @@ import { snapshotHostFeatures } from '../plugin-sandbox/host-features';
 import { withAssistantRuntime } from '../plugin-sandbox/assistant/runtime';
 
 // jsdom can't decode or draw images: createImageBitmap and OffscreenCanvas
-// are stood in for. A "picture" is a blob holding its size as JSON.
+// are stood in for. A "picture" is a PNG header declaring its size.
 
 function plugin(perms: string[], id = 'ai-assistant'): InstalledPlugin {
   return {
@@ -42,6 +42,16 @@ const SIZES: Record<string, { w: number; h: number }> = {
   'blob-photo': { w: 3000, h: 2000 }, 'blob-logo': { w: 240, h: 160 }, 'blob-pixel': { w: 1, h: 1 },
 };
 
+function pngHeader({ w, h }: { w: number; h: number }): Uint8Array {
+  const b = new Uint8Array(33);
+  b.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52]);
+  new DataView(b.buffer).setUint32(16, w);
+  new DataView(b.buffer).setUint32(20, h);
+  b[24] = 8;
+  b[25] = 2;
+  return b;
+}
+
 const message = {
   id: 'm1', threadId: 't1', mailboxIds: { inbox: true }, keywords: {}, subject: 'Logo', receivedAt: '2026-05-01T10:00:00Z',
   htmlBody: [{ partId: '1', blobId: 'b-html', size: 1, type: 'text/html' }],
@@ -63,13 +73,16 @@ beforeEach(() => {
   resetPluginRateLimits();
   exif.read.mockClear();
   vi.stubGlobal('OffscreenCanvas', FakeCanvas);
-  vi.stubGlobal('createImageBitmap', vi.fn(async (blob: Blob) => {
-    const { w, h } = JSON.parse(await blob.text()) as { w: number; h: number };
-    return { width: w, height: h, close() {} };
+  vi.stubGlobal('createImageBitmap', vi.fn(async (blob: Blob, options?: { resizeWidth?: number }) => {
+    const view = new DataView(await blob.arrayBuffer());
+    const w = view.getUint32(16);
+    const h = view.getUint32(20);
+    const width = options?.resizeWidth ?? w;
+    return { width, height: Math.round((h * width) / w), close() {} };
   }));
   client = {
     getEmail: vi.fn(async (id: string) => (id === 'm1' ? message : null)),
-    fetchBlobArrayBuffer: vi.fn(async (blobId: string) => new TextEncoder().encode(JSON.stringify(SIZES[blobId] ?? { w: 0, h: 0 })).buffer),
+    fetchBlobArrayBuffer: vi.fn(async (blobId: string) => pngHeader(SIZES[blobId] ?? { w: 0, h: 0 }).buffer),
     getAccountId: vi.fn(() => 'acc1'),
     getMailboxes: vi.fn(async () => []),
   };

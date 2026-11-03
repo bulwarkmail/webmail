@@ -26,6 +26,12 @@ export type DialogResult = boolean | Record<string, string> | null;
 
 export interface DialogRequest {
   id: string;
+  /**
+   * For `kind === 'custom'`: the plugin's frame fills the dialog, which is as
+   * tall as the window lets it be (at most 640 px), instead of growing with
+   * its content. For chats, whose input stays at the bottom.
+   */
+  fill?: boolean;
   pluginId: string;
   kind: DialogKind;
   title: string;

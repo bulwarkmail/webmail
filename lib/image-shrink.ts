@@ -5,6 +5,8 @@
 // has see-through parts. Images too small to show anything (tracking pixels,
 // spacers, icons) are not drawn at all.
 
+import { IMAGE_HEADER_BYTES, imageDimensions } from './image-size';
+
 /** Default and allowed range of the long edge, in pixels. */
 export const DEFAULT_IMAGE_SIDE = 1568;
 export const MIN_IMAGE_SIDE = 64;
@@ -61,27 +63,56 @@ export function fitSize(width: number, height: number, maxSide: number): { width
 /** Types the browser may decode that can carry transparency. */
 const ALPHA_TYPES = /^image\/(png|webp|gif|avif)$/i;
 
+/** Most pixels an image may declare; a larger one is not decoded (its pixels alone could fill the memory). */
+export const MAX_IMAGE_PIXELS = 50_000_000;
+
+/**
+ * Decodes with the photo's EXIF orientation and, when given, a smaller
+ * width. Browsers before imageOrientation (or resize) throw a TypeError on
+ * the options: then without them.
+ */
+async function decode(blob: Blob, resizeWidth: number | null): Promise<ImageBitmap> {
+  try {
+    return await createImageBitmap(blob, {
+      imageOrientation: 'from-image',
+      // Only the width: the browser keeps the aspect, whichever way EXIF turns the photo.
+      ...(resizeWidth ? { resizeWidth, resizeQuality: 'high' as const } : {}),
+    });
+  } catch (err) {
+    if (err instanceof TypeError) return createImageBitmap(blob);
+    throw err;
+  }
+}
+
 /**
  * The image in `blob`, at most `maxSide` on its long edge and
  * MAX_SHRUNK_IMAGE_BYTES in size. JPEG at quality 0.85, then 0.7, then
  * smaller by a quarter per step until it fits; PNG when transparent.
  * `small`: also shrink images below the "tiny" limits (still not trackers).
+ * The size comes from the file's header before anything is decoded: a
+ * format whose header isn't read here is unsupported, more than
+ * MAX_IMAGE_PIXELS too_big, trackers and tiny images are never decoded.
  */
 export async function shrinkImage(blob: Blob, { maxSide = DEFAULT_IMAGE_SIDE, small = false }: { maxSide?: number; small?: boolean } = {}): Promise<ShrinkResult> {
   if (typeof createImageBitmap !== 'function') return { status: 'unsupported' };
+  const declared = imageDimensions(new Uint8Array(await blob.slice(0, IMAGE_HEADER_BYTES).arrayBuffer()));
+  // HEIC, TIFF, SVG, a damaged file: no size to check, nothing to decode.
+  if (!declared || declared.width < 1 || declared.height < 1) return { status: 'unsupported' };
+  const { width: w, height: h } = declared;
+  if (w * h > MAX_IMAGE_PIXELS) return { status: 'too_big', width: w, height: h };
+  if (w <= TRACKER_SIDE && h <= TRACKER_SIDE) return { status: 'tracker', width: w, height: h };
+  if (!small && (Math.min(w, h) < TINY_SIDE || w * h < TINY_AREA)) return { status: 'tiny', width: w, height: h };
+  const side = Math.max(MIN_IMAGE_SIDE, Math.min(MAX_IMAGE_SIDE, Math.round(maxSide)));
+  const target = fitSize(w, h, side);
   let bitmap: ImageBitmap;
   try {
-    bitmap = await createImageBitmap(blob, { imageOrientation: 'from-image' });
+    bitmap = await decode(blob, target.width < w ? target.width : null);
   } catch {
-    // HEIC, TIFF, a broken file: nothing the browser can show.
-    return { status: 'unsupported' };
+    // A broken file: nothing the browser can show.
+    return { status: 'unsupported', width: w, height: h };
   }
   try {
-    const { width: w, height: h } = bitmap;
-    if (w <= TRACKER_SIDE && h <= TRACKER_SIDE) return { status: 'tracker', width: w, height: h };
-    if (!small && (Math.min(w, h) < TINY_SIDE || w * h < TINY_AREA)) return { status: 'tiny', width: w, height: h };
-    const side = Math.max(MIN_IMAGE_SIDE, Math.min(MAX_IMAGE_SIDE, Math.round(maxSide)));
-    let size = fitSize(w, h, side);
+    let size = fitSize(bitmap.width, bitmap.height, side);
     let transparent: boolean | null = ALPHA_TYPES.test(blob.type) ? null : false;
     for (let step = 0; step < 12; step++) {
       const canvas = makeCanvas(size.width, size.height);

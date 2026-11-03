@@ -8,7 +8,7 @@ import type { Attachment, Email } from '../../jmap/types';
 import { NOT_MINE } from './not-mine';
 import type { AreaHostFeaturesB, AttachmentImageView, AttachmentTextView } from './b.types';
 import { attachmentExtras, cidAltTexts } from './b.projection';
-import { readNamedEmail } from '../host-api-mail';
+import { readNamedEmail, sourceAccount } from '../host-api-mail';
 import { readBoolean, readId, readInteger, readObject, sessionClient, withinRate } from '../host-api-input';
 // The readers (pdf.js, the Office reader) load only when an attachment is read.
 import { DEFAULT_TEXT_CHARS, MAX_TEXT_CHARS, MAX_TEXT_SOURCE_BYTES } from '@/lib/attachment-text/types';
@@ -21,6 +21,7 @@ export const PERMS: Readonly<Record<string, Permission | null>> = {
   'email.getAttachmentText': 'email:blob-read',
   'email.getAttachmentImage': 'email:blob-read',
   'email.getThread': 'email:read',
+  'email.getThreadCount': 'email:read',
 };
 
 /** Attachment reads (text) a plugin may make per minute. */
@@ -29,6 +30,8 @@ export const MAX_ATTACHMENT_TEXT_PER_MINUTE = 30;
 export const MAX_ATTACHMENT_IMAGE_PER_MINUTE = 30;
 /** Conversations a plugin may read per minute. */
 export const MAX_THREADS_PER_MINUTE = 60;
+/** Conversation sizes a plugin may ask for per minute (a panel probing whether to offer a thread read). */
+export const MAX_THREAD_COUNTS_PER_MINUTE = 120;
 /** Most messages api.email.getThread returns (the newest of a longer conversation). */
 export const MAX_THREAD_MESSAGES = 50;
 
@@ -156,7 +159,8 @@ export async function doEmailGetThread(plugin: InstalledPlugin, emailIdArg: unkn
   const found = await readNamedEmail(client, emailId, method, opts.accountId);
   if (!found) throw new Error(`${method}: no message with id "${emailId}"`);
   const accountId = found.accountId ?? client.getAccountId();
-  const emails = found.email.threadId ? await client.getThreadEmails(found.email.threadId, found.accountId) : [];
+  // Only the newest messages are fetched, with their bodies; a thread of thousands stays one small read.
+  const emails = found.email.threadId ? await client.getThreadEmails(found.email.threadId, found.accountId, { newest: MAX_THREAD_MESSAGES }) : [];
   // A server that knows no thread for it: the message on its own.
   const list = emails.length ? emails : [found.email];
   return list
@@ -166,12 +170,34 @@ export async function doEmailGetThread(plugin: InstalledPlugin, emailIdArg: unkn
     .map((email) => emailToReadView(email, accountId));
 }
 
+/**
+ * How many messages the conversation of `emailId` has (Thread/get; no
+ * message bodies are read). 1 for a message without a thread. Routed like
+ * api.email.get; its own rate limit, so probing it never uses up getThread's.
+ */
+export async function doEmailGetThreadCount(plugin: InstalledPlugin, emailIdArg: unknown, optionsArg?: unknown): Promise<number> {
+  const method = 'email.getThreadCount';
+  const emailId = readId(emailIdArg, method, 'emailId');
+  const opts = readObject(optionsArg, method, 'options', ['accountId'], true);
+  if (!withinRate(method, plugin.id, MAX_THREAD_COUNTS_PER_MINUTE)) throw new Error(`${method}: too many reads, try again in a minute`);
+  const client = sessionClient(method);
+  const accountId = await sourceAccount(client, emailId, method, opts.accountId);
+  if (accountId === null) throw new Error(`${method}: no message with id "${emailId}"`);
+  // The summary only (no bodies), for its thread id.
+  const [email] = await client.getSomeEmails([emailId], accountId);
+  if (!email) throw new Error(`${method}: no message with id "${emailId}"`);
+  if (!email.threadId) return 1;
+  const thread = await client.getThread(email.threadId, accountId);
+  return Math.max(1, thread?.emailIds?.length ?? 1);
+}
+
 /** Runs a method of this area; NOT_MINE for any other. */
 export async function dispatch(plugin: InstalledPlugin, method: string, args: unknown[]): Promise<unknown> {
   switch (method) {
     case 'email.getAttachmentText': return doEmailGetAttachmentText(plugin, args[0], args[1], args[2]);
     case 'email.getAttachmentImage': return doEmailGetAttachmentImage(plugin, args[0], args[1], args[2]);
     case 'email.getThread': return doEmailGetThread(plugin, args[0], args[1]);
+    case 'email.getThreadCount': return doEmailGetThreadCount(plugin, args[0], args[1]);
     default: return NOT_MINE;
   }
 }

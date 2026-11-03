@@ -40,6 +40,7 @@ import { useBottomControls } from "@/hooks/use-bottom-controls";
 import { useComposingSurface } from "@/hooks/use-composing-surface";
 import { ReaderSelectionMenu, useReaderSelectionMenu, watchBodySelection, watchElementSelection } from "./reader-selection-menu";
 import { onPanelRequest } from "@/lib/plugin-sandbox/panel-requests";
+import { PluginPanelToggle, panelLabelOf, panelShortcutOf } from "@/components/plugins/app-side-panel";
 import type { ComposerMetadata } from "@/lib/plugin-sandbox/composer-registry";
 import { QuickReplyPluginActions } from "./quick-reply-plugin-actions";
 import { quickReplyEnvelope } from "@/lib/outgoing/quick-reply-envelope";
@@ -98,7 +99,6 @@ import {
   MapPin,
   StickyNote,
   PanelRightClose,
-  PanelRightOpen,
   Send,
   FolderInput,
   Sun,
@@ -136,6 +136,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useAccountStore } from "@/stores/account-store";
 import { useEmailStore, resolveEmailBlobContext, emailWriteSource, type EmailBlobContext } from "@/stores/email-store";
 import { useListSelection } from "@/lib/plugin-sandbox/assistant/b.list-selection";
+import { readability } from "@/lib/plugin-sandbox/assistant/b.projection";
 import { useThemeStore } from "@/stores/theme-store";
 import { EmailIdentityBadge } from "./email-identity-badge";
 import { ExternalSenderChip } from "./external-sender-chip";
@@ -288,6 +289,8 @@ interface EmailViewerProps {
   mailboxes?: Mailbox[];
   selectedMailbox?: string;
   className?: string;
+  /** The side panel hears of the messages ticked in the main list (false: a Pro tab, whose message isn't from that list). */
+  withListSelection?: boolean;
 }
 
 // Helper function to format recipients with contextual display
@@ -1313,6 +1316,7 @@ export function EmailViewer({
   mailboxes = [],
   selectedMailbox = "",
   className,
+  withListSelection = true,
 }: EmailViewerProps) {
   const t = useTranslations('email_viewer');
   const archiveActionEnabled = useArchiveActionEnabled();
@@ -1801,9 +1805,11 @@ export function EmailViewer({
   // each slot post its props to the plugin again and re-run shouldShow.
   const wantsPluginEmailView = hasDetailSidebar || hasDetailsSlotOffers || hasBannerOffers
     || hasHeaderOffers || hasBelowSubjectOffers || hasAboveQuoteOffers;
+  // A message of another connected login (unified view, Pro tab): the host
+  // reads parts only through the signed-in login, so plugins hear they can't.
   const pluginEmailView = useMemo(
-    () => (email && wantsPluginEmailView ? emailToReadView(email) : null),
-    [email, wantsPluginEmailView],
+    () => (email && wantsPluginEmailView ? { ...emailToReadView(email), ...readability(blobClient === client) } : null),
+    [email, wantsPluginEmailView, blobClient, client],
   );
   // Reader frames learn the layout: the bar a plugin shows on phones has no
   // place next to a side panel on a desktop.
@@ -1819,7 +1825,7 @@ export function EmailViewer({
   }, []);
   const [detailFocusRequest, setDetailFocusRequest] = useState(0);
   // The messages ticked in the list, for the AI assistant (lib/plugin-sandbox/assistant).
-  const listSelection = useListSelection();
+  const listSelection = useListSelection(withListSelection);
   const pluginDetailProps = useMemo(
     () => ({ email: pluginEmailView, selection: bodySelection, listSelection, focusRequest: detailFocusRequest }),
     [pluginEmailView, bodySelection, listSelection, detailFocusRequest],
@@ -1888,19 +1894,9 @@ export function EmailViewer({
   };
   // The one button that shows and hides the plugin side panel, at the end of
   // the toolbar row in every state of the reader (message, loading, none, scheduled).
+  // The same button as in the other views' side panels (app-side-panel.tsx).
   const panelToggle = hasDetailSidebar && !isMobile ? (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={toggleDetailSidebar}
-      className={cn("h-8 w-8 shrink-0", mvViewer && "order-10")}
-      title={t(sidebarCollapsed ? 'plugin_panel_show' : 'plugin_panel_hide')}
-      aria-label={t(sidebarCollapsed ? 'plugin_panel_show' : 'plugin_panel_hide')}
-      aria-pressed={!sidebarCollapsed}
-      data-plugin-panel-toggle=""
-    >
-      {sidebarCollapsed ? <PanelRightOpen className="w-4 h-4 text-muted-foreground" /> : <PanelRightClose className="w-4 h-4 text-muted-foreground" />}
-    </Button>
+    <PluginPanelToggle open={!sidebarCollapsed} onClick={toggleDetailSidebar} className={cn(mvViewer && "order-10")} shortcut={panelShortcutOf(detailSlots.map((o) => o.pluginId))} />
   ) : null;
   useEffect(() => onPanelRequest((request) => {
     if (request.slot !== 'email-detail-sidebar') return null;
@@ -3911,6 +3907,8 @@ ${printWatermark ? printWatermark.html : ''}
               />
             )}
             <div
+              role="complementary"
+              aria-label={panelLabelOf(detailSlots.map((o) => o.pluginId), t('plugin_panel'))}
               data-plugin-detail-panel={sidebarOverlay ? 'overlay' : 'docked'}
               className={cn(
                 "flex flex-col h-full border-s border-border bg-background overflow-hidden",

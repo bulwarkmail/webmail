@@ -61,7 +61,7 @@ const show = () => render(
 /** The plugin panel, open or folded to its toggle. */
 const sidePanel = () =>
   (document.querySelector('[data-plugin-detail-panel]') as HTMLElement | null)
-  ?? (screen.getByLabelText('plugin_panel_show').closest('div') as HTMLElement);
+  ?? (screen.getByLabelText('plugin_panel').closest('div') as HTMLElement);
 
 /** An item of the top toolbar. */
 const toolbarItem = () => document.querySelector('[data-overflow-item]') as HTMLElement;
@@ -139,12 +139,15 @@ describe('the reader toolbar and the plugin side panel', () => {
     const toggle = document.querySelector('[data-plugin-panel-toggle]') as HTMLElement;
     // At the end of the toolbar, not in the panel.
     expect(toggle.closest('[data-plugin-detail-panel]')).toBeNull();
-    expect(toggle.getAttribute('aria-label')).toBe('plugin_panel_hide');
+    expect(toggle.getAttribute('aria-label')).toBe('plugin_panel');
+    expect(toggle.getAttribute('aria-pressed')).toBe('true');
+    // A landmark for screen readers, named after its plugin.
+    expect(screen.getByRole('complementary')).toBe(document.querySelector('[data-plugin-detail-panel]'));
     act(() => { fireEvent.click(toggle); });
     expect(document.querySelector('[data-plugin-detail-panel]')).toBeNull();
     // Folded, the panel leaves no strip of its own: the toolbar button brings it back.
-    expect(screen.getAllByLabelText('plugin_panel_show')).toHaveLength(1);
-    act(() => { fireEvent.click(screen.getByLabelText('plugin_panel_show')); });
+    expect(screen.getAllByLabelText('plugin_panel')).toHaveLength(1);
+    act(() => { fireEvent.click(screen.getByLabelText('plugin_panel')); });
     expect(document.querySelector('[data-plugin-detail-panel]')).toBeTruthy();
   });
 
@@ -154,12 +157,13 @@ describe('the reader toolbar and the plugin side panel', () => {
     expect(row().hasAttribute('data-toolbar-toggle-only')).toBe(true);
     // As high as the full toolbar.
     expect(row().firstElementChild!.className).toContain('h-14');
-    expect(theToggle().getAttribute('title')).toBe('plugin_panel_hide');
+    expect(theToggle().getAttribute('title')).toBe('plugin_panel');
+    expect(theToggle().getAttribute('aria-pressed')).toBe('true');
     act(() => { fireEvent.click(theToggle()); });
     // Folded: no strip and no row of the panel's own, the same button in the same row.
     expect(document.querySelector('[data-plugin-detail-panel]')).toBeNull();
     expect(document.querySelector('[data-reader-side-panel]')!.children).toHaveLength(0);
-    expect(theToggle().getAttribute('aria-label')).toBe('plugin_panel_show');
+    expect(theToggle().getAttribute('aria-label')).toBe('plugin_panel');
     expect(theToggle().getAttribute('aria-pressed')).toBe('false');
     act(() => { fireEvent.click(theToggle()); });
     // Open: the panel holds no button row above the plugin's own header.

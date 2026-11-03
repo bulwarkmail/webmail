@@ -4,7 +4,7 @@
 // name a picture without looking at it.
 
 import type { Email } from '@/lib/jmap/types';
-import type { AttachmentExtrasB } from './b.types';
+import type { AttachmentExtrasB, EmailReadViewExtrasB } from './b.types';
 
 const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
 
@@ -48,6 +48,11 @@ export function cidAltTexts(email: Pick<Email, 'htmlBody' | 'bodyValues'>): Map<
     }
   }
   return out;
+}
+
+/** EmailReadView.blobsReadable: false when the signed-in login can't read the message's parts, else left out. */
+export function readability(readable: boolean): EmailReadViewExtrasB {
+  return readable ? {} : { blobsReadable: false };
 }
 
 /** `cid` and `alt` of one attachment, for EmailReadView.attachments (empty for a plain attachment). */

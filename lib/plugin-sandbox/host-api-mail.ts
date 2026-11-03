@@ -40,7 +40,7 @@ async function loadEmail(client: IJMAPClient, emailId: string, accountId?: strin
  * The account to read `emailId` from: undefined for the signed-in account,
  * null when it is not this login's to read.
  */
-async function sourceAccount(client: IJMAPClient, emailId: string, method: string, accountArg: unknown): Promise<string | undefined | null> {
+export async function sourceAccount(client: IJMAPClient, emailId: string, method: string, accountArg: unknown): Promise<string | undefined | null> {
   const { emails } = useEmailStore.getState();
   if (accountArg === undefined) {
     // A listed message of a shared account is asked of the account that owns
