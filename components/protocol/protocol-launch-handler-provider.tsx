@@ -111,6 +111,7 @@ export function ProtocolLaunchHandlerProvider({ children }: ProtocolLaunchHandle
   const router = useRouter();
   const pathname = usePathname();
   const tLaunch = useTranslations("pwaLaunch");
+  const tDesktop = useTranslations("desktopOs");
   const sentToTarget = useRef(new Set<string>());
   const { dialogProps, confirm } = useConfirmDialog();
   const [offer, setOffer] = useState<ShareOffer | null>(null);
@@ -213,6 +214,7 @@ export function ProtocolLaunchHandlerProvider({ children }: ProtocolLaunchHandle
         if (osEnv.current.pathname !== path) osEnv.current.push(path);
       },
       notifyFailed: () => toast.error(tLaunch("open_failed")),
+      notifyReplyLost: () => toast.error(tDesktop("reply_lost")),
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

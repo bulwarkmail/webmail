@@ -33,7 +33,8 @@ async function fingerprint() {
 const leaveFor = vi.fn();
 const push = vi.fn();
 const notifyFailed = vi.fn();
-const env = { leaveFor, push, notifyFailed };
+const notifyReplyLost = vi.fn();
+const env = { leaveFor, push, notifyFailed, notifyReplyLost };
 const focus = vi.fn();
 
 async function run(command: DesktopOsCommand) {
@@ -188,6 +189,33 @@ describe('a toast\'s buttons', () => {
       { kind: 'message', id: 'e1', slot: 3, ownerAccountId: 'acc', reply: true },
       { replyText: 'On my way' },
     );
+    stop();
+  });
+
+  it('behind the app lock an old toast acts on nothing, and the window comes up', async () => {
+    const { setAppLockCheck } = await import('../app-lock-state');
+    const { setMailLinkOpener } = await import('../mail-links');
+    const opener = vi.fn();
+    const stop = setMailLinkOpener(opener);
+    setAppLockCheck(() => true);
+    for (const action of ['delete', 'archive', 'mark-read', 'open', 'reply']) {
+      await run({ type: 'notification', action, context: await context(), reply: 'x' });
+    }
+    expect(runNotificationAction).not.toHaveBeenCalled();
+    expect(opener).not.toHaveBeenCalled();
+    expect(focus).toHaveBeenCalled();
+    setAppLockCheck(null);
+    stop();
+  });
+
+  it('typed text that has nowhere to go says so', async () => {
+    const { setMailLinkOpener } = await import('../mail-links');
+    const stop = setMailLinkOpener(vi.fn());
+    await run({ type: 'notification', action: 'reply', context: await context({ login: 'someone-else' }), reply: 'On my way' });
+    expect(notifyReplyLost).toHaveBeenCalled();
+    notifyReplyLost.mockClear();
+    await run({ type: 'notification', action: 'reply', context: await context({ login: 'someone-else' }) });
+    expect(notifyReplyLost).not.toHaveBeenCalled();
     stop();
   });
 

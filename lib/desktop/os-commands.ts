@@ -5,6 +5,7 @@
  * user's own OS, so it skips the question a web share gets (decision 17).
  */
 
+import { isAppLocked } from '@/lib/desktop/app-lock-state';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import type { DesktopOsCommand } from '@/lib/desktop/types';
 import { openMailLink } from '@/lib/desktop/mail-links';
@@ -25,6 +26,8 @@ export interface OsCommandEnv {
   push: (path: string) => void;
   /** Says something couldn't be opened. */
   notifyFailed: (names: readonly string[]) => void;
+  /** A typed reply that has nowhere to go: its message's login is gone from here. */
+  notifyReplyLost: () => void;
 }
 
 /** How long a toast's button waits for a cold start to sign in. */
@@ -77,6 +80,7 @@ async function openFromNotification(context: MailNotificationContext, env: OsCom
     openMailLink({ kind: 'message', id: context.emailId, slot: context.slot, ownerAccountId: context.accountId, ...(reply ? { reply: true } : {}) }, reply ? { replyText: reply.text } : undefined, env.leaveFor);
     return;
   }
+  if (reply?.text) env.notifyReplyLost();
   openMailLink({ kind: 'folder', ref: 'inbox', ...(known ? { slot: context.slot } : {}) }, undefined, env.leaveFor);
 }
 
@@ -89,6 +93,11 @@ function runAction(request: NotificationActionRequest): Promise<NotificationActi
 }
 
 async function handleNotification(action: string, rawContext: string, reply: string | undefined, env: OsCommandEnv): Promise<void> {
+  // An old toast's Delete doesn't act behind the lock, and its message doesn't open over it.
+  if (isAppLocked()) {
+    showWindow();
+    return;
+  }
   const context = parseContext(rawContext);
   if (action === 'reply') {
     await openFromNotification(context, env, { text: reply ?? '' });

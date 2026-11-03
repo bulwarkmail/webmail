@@ -2650,8 +2650,11 @@ export function EmailComposer({
     resetDragTimeout();
   }, [resetDragTimeout]);
 
-  // The desktop app: files dropped or pasted anywhere on the window come here.
-  useEffect(() => setComposerFileTarget((files) => void addFiles(files)), [addFiles]);
+  // The desktop app: files dropped or pasted anywhere on the window come here, if this one's on screen.
+  useEffect(() => setComposerFileTarget(
+    (files) => void addFiles(files),
+    () => !!composerRootEl?.isConnected && composerRootEl.getClientRects().length > 0,
+  ), [addFiles, composerRootEl]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();

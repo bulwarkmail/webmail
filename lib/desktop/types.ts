@@ -168,7 +168,7 @@ export interface DesktopOsNotification {
 
 export interface DesktopOsNotifyResult {
   shown: boolean;
-  reason?: 'duplicate' | 'paused' | 'quiet-hours' | 'focused' | 'unsupported' | 'invalid';
+  reason?: 'duplicate' | 'paused' | 'quiet-hours' | 'focused' | 'unsupported' | 'invalid' | 'failed';
   /** The page should play the sound the user picked. */
   playSound: boolean;
 }
@@ -214,8 +214,13 @@ export interface DesktopOsBridge {
   setSummary: (summary: DesktopOsSummary) => void;
   /** The taskbar's progress bar: lib/desktop/file-drag.ts setTaskbarProgress. */
   setProgress: (progress: number | null, mode?: 'normal' | 'indeterminate' | 'paused' | 'error') => void;
-  /** App lock's state: main clears the tray, jump list and toasts and strips what comes through. */
+  /**
+   * App lock's state. Main counts as locked until the main window's page says otherwise,
+   * and clears the tray, jump list and toasts and strips what comes through.
+   */
   setLocked: (locked: boolean) => void;
+  /** Sign-out or a wipe: delivered toasts, badge, tray and jump list go, and temporary files. */
+  clearSurfaces: () => void;
   notify: (notification: DesktopOsNotification) => Promise<DesktopOsNotifyResult>;
   onPower: (listener: (event: DesktopOsPowerEvent) => void) => () => void;
   /** Writes the files to a private folder and starts a drag. Only with the mouse held. */
@@ -225,6 +230,8 @@ export interface DesktopOsBridge {
   defaultAppStatus: () => Promise<DesktopOsDefaultAppStatus>;
   /** Offers the app to the OS and opens where the user chooses. */
   openDefaultAppSettings: () => Promise<DesktopOsDefaultAppStatus>;
+}
+
 export type DesktopKeystoreHash = 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512';
 
 export interface DesktopKeystoreCertificate {

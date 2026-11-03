@@ -685,15 +685,19 @@ function DraggableAttachmentChip({ attachment, client, accountId, enabled, downl
   const source = useMemo<AttachmentDragSource>(() => ({
     name: downloadName || attachment.name || 'download',
     type: attachment.type || 'application/octet-stream',
-    getBlob: async () => {
-      if (attachment.blobId && client) {
-        return client.fetchBlob(attachment.blobId, downloadName || attachment.name || undefined, attachment.type, accountId).catch(() => null);
-      }
-      const bytes = attachment.tnefData ?? (attachment.decryptedAttachment ? getAttachmentContentBytes(attachment.decryptedAttachment) : null);
-      if (!bytes || bytes.byteLength === 0) return null;
-      const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
-      return new Blob([buffer], { type: inertBlobType(attachment.type) });
-    },
+    // A decrypted attachment doesn't go through the app's temporary folder or the clipboard: it
+    // stays with the browser's drag, which only writes it where the user drops it.
+    ...(attachment.decryptedAttachment ? {} : {
+      getBlob: async () => {
+        if (attachment.blobId && client) {
+          return client.fetchBlob(attachment.blobId, downloadName || attachment.name || undefined, attachment.type, accountId).catch(() => null);
+        }
+        const bytes = attachment.tnefData;
+        if (!bytes || bytes.byteLength === 0) return null;
+        const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+        return new Blob([buffer], { type: inertBlobType(attachment.type) });
+      },
+    }),
     getBlobUrl: async () => {
       if (attachment.blobId && client) {
         try {

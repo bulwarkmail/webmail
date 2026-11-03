@@ -8,18 +8,28 @@
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { handOffDraft } from '@/lib/launch-handoff';
 
-type ComposerTarget = (files: File[]) => unknown;
+interface ComposerTarget {
+  take: (files: File[]) => unknown;
+  /** The Pro shell keeps composers mounted on tabs out of sight. */
+  visible: () => boolean;
+}
 
-let composerTarget: ComposerTarget | null = null;
+const composerTargets: ComposerTarget[] = [];
 /** Our own native drag passing over our own window isn't a new file. */
 let ownDrag = false;
 
-/** The open composer takes files itself. No effect outside the desktop app: only this file reads it. */
-export function setComposerFileTarget(target: ComposerTarget): () => void {
-  composerTarget = target;
+/** A composer on screen takes files itself. No effect outside the desktop app: only this file reads it. */
+export function setComposerFileTarget(take: ComposerTarget['take'], visible: ComposerTarget['visible']): () => void {
+  const target = { take, visible };
+  composerTargets.push(target);
   return () => {
-    if (composerTarget === target) composerTarget = null;
+    const at = composerTargets.indexOf(target);
+    if (at !== -1) composerTargets.splice(at, 1);
   };
+}
+
+function visibleComposer(): ComposerTarget | undefined {
+  return [...composerTargets].reverse().find((target) => target.visible());
 }
 
 export function setOwnDragActive(active: boolean): void {
@@ -27,8 +37,27 @@ export function setOwnDragActive(active: boolean): void {
 }
 
 function take(files: File[]): void {
-  if (composerTarget) composerTarget(files);
+  const composer = visibleComposer();
+  if (composer) composer.take(files);
   else handOffDraft({ files });
+}
+
+function isEditable(target: EventTarget | null): boolean {
+  const element = target as Partial<HTMLElement> & { closest?: (selector: string) => Element | null } | null;
+  return !!element?.closest?.('input, textarea, select, [contenteditable=""], [contenteditable="true"]');
+}
+
+/**
+ * Pasting a file is only meant where text isn't. A spreadsheet's cells also come as a
+ * picture of them, and a field that takes text wants the text. The one editable place a
+ * bare file belongs in is the composer it's being pasted into.
+ */
+function pasteIsForUs(event: ClipboardEvent): boolean {
+  const types = [...(event.clipboardData?.types ?? [])];
+  if (types.includes('text/plain') || types.includes('text/html')) return false;
+  if (!isEditable(event.target)) return true;
+  const inComposer = !!(event.target as Partial<Element> | null)?.closest?.('[data-testid="email-composer"]');
+  return inComposer && !!visibleComposer();
 }
 
 function hasFiles(event: DragEvent): boolean {
@@ -51,7 +80,7 @@ export function startWindowFiles(): () => void {
   const onPaste = (event: ClipboardEvent) => {
     if (event.defaultPrevented) return;
     const files = Array.from(event.clipboardData?.files ?? []);
-    if (files.length === 0) return;
+    if (files.length === 0 || !pasteIsForUs(event)) return;
     event.preventDefault();
     take(files);
   };

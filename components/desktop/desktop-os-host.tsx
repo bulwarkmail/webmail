@@ -4,7 +4,8 @@ import { useEffect, useRef } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useArchiveActionEnabled } from "@/lib/archive-gate";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
-import { startMailNotifications, type MailNotificationLabels, type MailNotifications } from "@/lib/desktop/mail-notifications";
+import { isAppLocked } from "@/lib/desktop/app-lock-state";
+import { contentHiddenFor, startMailNotifications, type MailNotificationLabels, type MailNotifications } from "@/lib/desktop/mail-notifications";
 import { startOsSummary } from "@/lib/desktop/os-summary";
 import { startPowerWatch } from "@/lib/desktop/power";
 import { startWindowFiles } from "@/lib/desktop/window-files";
@@ -49,7 +50,10 @@ export function DesktopOsHost() {
   labelsRef.current = labels;
 
   useEffect(() => {
-    if (!getDesktopBridge()?.os) return;
+    const os = getDesktopBridge()?.os;
+    if (!os) return;
+    // Main shows no content anywhere until this page has said it may.
+    os.setLocked(isAppLocked());
     const mail = startMailNotifications(labelsRef.current);
     mailRef.current = mail;
     const summary = startOsSummary(() => localeRef.current);
@@ -64,7 +68,7 @@ export function DesktopOsHost() {
       const event = "eventId" in view;
       void getDesktopBridge()?.os?.notify({
         id: `reminder:${event ? view.eventId : view.taskId}:${view.id}:${view.triggerTime}`,
-        title: (event ? view.eventTitle : view.taskTitle) || tCalendar("alert_title"),
+        title: (contentHiddenFor(useAuthStore.getState().activeAccountId) ? "" : event ? view.eventTitle : view.taskTitle) || tCalendar("alert_title"),
         body: "",
         context: "{}",
       });

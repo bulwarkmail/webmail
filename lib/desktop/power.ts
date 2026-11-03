@@ -13,12 +13,13 @@ import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { runSleepHandlers, runWakeHandlers } from '@/lib/desktop/system-events';
 import { usePolicyStore } from '@/stores/policy-store';
 
-/** A resume and an unlock usually come together. */
-const WAKE_REPEAT_MS = 2000;
+/** A resume, an unlock and a network change come together, and each would mean a round of requests. */
+const WAKE_REPEAT_MS = 30_000;
 
 function wake(): void {
   document.dispatchEvent(new Event('visibilitychange'));
-  window.dispatchEvent(new Event('online'));
+  // Woken up with no network: the browser's own event comes when there is one.
+  if (navigator.onLine !== false) window.dispatchEvent(new Event('online'));
   const policy = usePolicyStore.getState();
   if (policy.loaded && !policy.fetching) void policy.fetchPolicy();
   runWakeHandlers();
@@ -38,11 +39,20 @@ export function startPowerWatch(): () => void {
     if (event === 'resume' || event === 'unlock-screen') wakeOnce();
     else if (event === 'suspend') runSleepHandlers();
   });
-  // Wi-Fi to cable is a new network with no offline moment in between.
-  const connection = (navigator as unknown as { connection?: EventTarget }).connection;
-  connection?.addEventListener?.('change', wakeOnce);
+  // Wi-Fi to cable is a new network with no offline moment in between. This event also fires
+  // for every shift in its speed estimate, which isn't news. Where Chromium doesn't report the
+  // type, that leaves the stream's own ping check and the online event.
+  const connection = (navigator as unknown as { connection?: EventTarget & { type?: string } }).connection;
+  let lastType = connection?.type;
+  const onConnection = () => {
+    const type = connection?.type;
+    if (!type || type === lastType) return;
+    lastType = type;
+    wakeOnce();
+  };
+  connection?.addEventListener?.('change', onConnection);
   return () => {
     stopPower();
-    connection?.removeEventListener?.('change', wakeOnce);
+    connection?.removeEventListener?.('change', onConnection);
   };
 }
