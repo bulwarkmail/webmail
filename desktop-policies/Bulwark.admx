@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated from lib/desktop/policy-schema.ts by scripts/generate-desktop-policies.mjs. Do not edit. -->
+<policyDefinitions xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions" revision="1.0" schemaVersion="1.0">
+  <policyNamespaces>
+    <target prefix="bulwark" namespace="Bulwark.Policies.Desktop"/>
+  </policyNamespaces>
+  <resources minRequiredRevision="1.0"/>
+  <supportedOn>
+    <definitions>
+      <definition name="SUPPORTED_Bulwark_Desktop" displayName="$(string.SUPPORTED_Bulwark_Desktop)"/>
+    </definitions>
+  </supportedOn>
+  <categories>
+    <category name="Bulwark" displayName="$(string.Category_Bulwark)"/>
+    <category name="Bulwark_Desktop" displayName="$(string.Category_Desktop)"><parentCategory ref="Bulwark"/></category>
+    <category name="Bulwark_Desktop_Recommended" displayName="$(string.Category_Recommended)"><parentCategory ref="Bulwark"/></category>
+    <category name="Bulwark_Desktop_connection" displayName="$(string.Category_connection)"><parentCategory ref="Bulwark_Desktop"/></category>
+    <category name="Bulwark_Desktop_updates" displayName="$(string.Category_updates)"><parentCategory ref="Bulwark_Desktop"/></category>
+    <category name="Bulwark_Desktop_plugins" displayName="$(string.Category_plugins)"><parentCategory ref="Bulwark_Desktop"/></category>
+    <category name="Bulwark_Desktop_security" displayName="$(string.Category_security)"><parentCategory ref="Bulwark_Desktop"/></category>
+    <category name="Bulwark_Desktop_privacy" displayName="$(string.Category_privacy)"><parentCategory ref="Bulwark_Desktop"/></category>
+    <category name="Bulwark_Desktop_signIn" displayName="$(string.Category_signIn)"><parentCategory ref="Bulwark_Desktop"/></category>
+  </categories>
+  <policies>
+  <policy name="InstanceUrl" class="Both" displayName="$(string.InstanceUrl)" explainText="$(string.InstanceUrl_Explain)" presentation="$(presentation.InstanceUrl)" key="Software\Policies\Bulwark\Desktop">
+    <parentCategory ref="Bulwark_Desktop_connection"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <text id="InstanceUrl_Value" valueName="InstanceUrl" required="true" maxLength="2048"/>
+    </elements>
+  </policy>
+  <policy name="InstanceUrl_Recommended" class="Both" displayName="$(string.InstanceUrl)" explainText="$(string.InstanceUrl_Explain)" presentation="$(presentation.InstanceUrl_Recommended)" key="Software\Policies\Bulwark\Desktop\Recommended">
+    <parentCategory ref="Bulwark_Desktop_Recommended"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <text id="InstanceUrl_Recommended_Value" valueName="InstanceUrl" required="true" maxLength="2048"/>
+    </elements>
+  </policy>
+  <policy name="AllowStandalone" class="Both" displayName="$(string.AllowStandalone)" explainText="$(string.AllowStandalone_Explain)" key="Software\Policies\Bulwark\Desktop" valueName="AllowStandalone">
+    <parentCategory ref="Bulwark_Desktop_connection"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
+  <policy name="AllowStandalone_Recommended" class="Both" displayName="$(string.AllowStandalone)" explainText="$(string.AllowStandalone_Explain)" key="Software\Policies\Bulwark\Desktop\Recommended" valueName="AllowStandalone">
+    <parentCategory ref="Bulwark_Desktop_Recommended"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
+  <policy name="AllowedJmapServers" class="Both" displayName="$(string.AllowedJmapServers)" explainText="$(string.AllowedJmapServers_Explain)" presentation="$(presentation.AllowedJmapServers)" key="Software\Policies\Bulwark\Desktop\AllowedJmapServers">
+    <parentCategory ref="Bulwark_Desktop_connection"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <list id="AllowedJmapServers_Value" valuePrefix=""/>
+    </elements>
+  </policy>
+  <policy name="AllowedJmapServers_Recommended" class="Both" displayName="$(string.AllowedJmapServers)" explainText="$(string.AllowedJmapServers_Explain)" presentation="$(presentation.AllowedJmapServers_Recommended)" key="Software\Policies\Bulwark\Desktop\Recommended\AllowedJmapServers">
+    <parentCategory ref="Bulwark_Desktop_Recommended"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <list id="AllowedJmapServers_Recommended_Value" valuePrefix=""/>
+    </elements>
+  </policy>
+  <policy name="AllowInsecureInstance" class="Both" displayName="$(string.AllowInsecureInstance)" explainText="$(string.AllowInsecureInstance_Explain)" key="Software\Policies\Bulwark\Desktop" valueName="AllowInsecureInstance">
+    <parentCategory ref="Bulwark_Desktop_connection"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
+  <policy name="AllowInsecureInstance_Recommended" class="Both" displayName="$(string.AllowInsecureInstance)" explainText="$(string.AllowInsecureInstance_Explain)" key="Software\Policies\Bulwark\Desktop\Recommended" valueName="AllowInsecureInstance">
+    <parentCategory ref="Bulwark_Desktop_Recommended"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
+  <policy name="UpdateChannel" class="Both" displayName="$(string.UpdateChannel)" explainText="$(string.UpdateChannel_Explain)" presentation="$(presentation.UpdateChannel)" key="Software\Policies\Bulwark\Desktop">
+    <parentCategory ref="Bulwark_Desktop_updates"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <enum id="UpdateChannel_Value" valueName="UpdateChannel" required="true">
+        <item displayName="$(string.UpdateChannel_stable)"><value><string>stable</string></value></item>
+        <item displayName="$(string.UpdateChannel_beta)"><value><string>beta</string></value></item>
+      </enum>
+    </elements>
+  </policy>
+  <policy name="UpdateChannel_Recommended" class="Both" displayName="$(string.UpdateChannel)" explainText="$(string.UpdateChannel_Explain)" presentation="$(presentation.UpdateChannel_Recommended)" key="Software\Policies\Bulwark\Desktop\Recommended">
+    <parentCategory ref="Bulwark_Desktop_Recommended"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <enum id="UpdateChannel_Recommended_Value" valueName="UpdateChannel" required="true">
+        <item displayName="$(string.UpdateChannel_stable)"><value><string>stable</string></value></item>
+        <item displayName="$(string.UpdateChannel_beta)"><value><string>beta</string></value></item>
+      </enum>
+    </elements>
+  </policy>
+  <policy name="AutoUpdate" class="Both" displayName="$(string.AutoUpdate)" explainText="$(string.AutoUpdate_Explain)" key="Software\Policies\Bulwark\Desktop" valueName="AutoUpdate">
+    <parentCategory ref="Bulwark_Desktop_updates"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
+  <policy name="AutoUpdate_Recommended" class="Both" displayName="$(string.AutoUpdate)" explainText="$(string.AutoUpdate_Explain)" key="Software\Policies\Bulwark\Desktop\Recommended" valueName="AutoUpdate">
+    <parentCategory ref="Bulwark_Desktop_Recommended"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
+  <policy name="PluginsMode" class="Both" displayName="$(string.PluginsMode)" explainText="$(string.PluginsMode_Explain)" presentation="$(presentation.PluginsMode)" key="Software\Policies\Bulwark\Desktop">
+    <parentCategory ref="Bulwark_Desktop_plugins"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <enum id="PluginsMode_Value" valueName="PluginsMode" required="true">
+        <item displayName="$(string.PluginsMode_allowed)"><value><string>allowed</string></value></item>
+        <item displayName="$(string.PluginsMode_allowlist)"><value><string>allowlist</string></value></item>
+        <item displayName="$(string.PluginsMode_off)"><value><string>off</string></value></item>
+      </enum>
+    </elements>
+  </policy>
+  <policy name="PluginsMode_Recommended" class="Both" displayName="$(string.PluginsMode)" explainText="$(string.PluginsMode_Explain)" presentation="$(presentation.PluginsMode_Recommended)" key="Software\Policies\Bulwark\Desktop\Recommended">
+    <parentCategory ref="Bulwark_Desktop_Recommended"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <enum id="PluginsMode_Recommended_Value" valueName="PluginsMode" required="true">
+        <item displayName="$(string.PluginsMode_allowed)"><value><string>allowed</string></value></item>
+        <item displayName="$(string.PluginsMode_allowlist)"><value><string>allowlist</string></value></item>
+        <item displayName="$(string.PluginsMode_off)"><value><string>off</string></value></item>
+      </enum>
+    </elements>
+  </policy>
+  <policy name="PluginAllowlist" class="Both" displayName="$(string.PluginAllowlist)" explainText="$(string.PluginAllowlist_Explain)" presentation="$(presentation.PluginAllowlist)" key="Software\Policies\Bulwark\Desktop\PluginAllowlist">
+    <parentCategory ref="Bulwark_Desktop_plugins"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <list id="PluginAllowlist_Value" valuePrefix=""/>
+    </elements>
+  </policy>
+  <policy name="PluginAllowlist_Recommended" class="Both" displayName="$(string.PluginAllowlist)" explainText="$(string.PluginAllowlist_Explain)" presentation="$(presentation.PluginAllowlist_Recommended)" key="Software\Policies\Bulwark\Desktop\Recommended\PluginAllowlist">
+    <parentCategory ref="Bulwark_Desktop_Recommended"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <list id="PluginAllowlist_Recommended_Value" valuePrefix=""/>
+    </elements>
+  </policy>
+  <policy name="OfflineEnabled" class="Both" displayName="$(string.OfflineEnabled)" explainText="$(string.OfflineEnabled_Explain)" key="Software\Policies\Bulwark\Desktop" valueName="OfflineEnabled">
+    <parentCategory ref="Bulwark_Desktop_security"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
+  <policy name="OfflineEnabled_Recommended" class="Both" displayName="$(string.OfflineEnabled)" explainText="$(string.OfflineEnabled_Explain)" key="Software\Policies\Bulwark\Desktop\Recommended" valueName="OfflineEnabled">
+    <parentCategory ref="Bulwark_Desktop_Recommended"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
+  <policy name="AppLockRequired" class="Both" displayName="$(string.AppLockRequired)" explainText="$(string.AppLockRequired_Explain)" key="Software\Policies\Bulwark\Desktop" valueName="AppLockRequired">
+    <parentCategory ref="Bulwark_Desktop_security"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
+  <policy name="AppLockRequired_Recommended" class="Both" displayName="$(string.AppLockRequired)" explainText="$(string.AppLockRequired_Explain)" key="Software\Policies\Bulwark\Desktop\Recommended" valueName="AppLockRequired">
+    <parentCategory ref="Bulwark_Desktop_Recommended"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
+  <policy name="AppLockTimeoutMinutes" class="Both" displayName="$(string.AppLockTimeoutMinutes)" explainText="$(string.AppLockTimeoutMinutes_Explain)" presentation="$(presentation.AppLockTimeoutMinutes)" key="Software\Policies\Bulwark\Desktop">
+    <parentCategory ref="Bulwark_Desktop_security"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <decimal id="AppLockTimeoutMinutes_Value" valueName="AppLockTimeoutMinutes" required="true" minValue="1" maxValue="1440"/>
+    </elements>
+  </policy>
+  <policy name="AppLockTimeoutMinutes_Recommended" class="Both" displayName="$(string.AppLockTimeoutMinutes)" explainText="$(string.AppLockTimeoutMinutes_Explain)" presentation="$(presentation.AppLockTimeoutMinutes_Recommended)" key="Software\Policies\Bulwark\Desktop\Recommended">
+    <parentCategory ref="Bulwark_Desktop_Recommended"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <decimal id="AppLockTimeoutMinutes_Recommended_Value" valueName="AppLockTimeoutMinutes" required="true" minValue="1" maxValue="1440"/>
+    </elements>
+  </policy>
+  <policy name="TelemetryAllowed" class="Both" displayName="$(string.TelemetryAllowed)" explainText="$(string.TelemetryAllowed_Explain)" key="Software\Policies\Bulwark\Desktop" valueName="TelemetryAllowed">
+    <parentCategory ref="Bulwark_Desktop_privacy"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
+  <policy name="TelemetryAllowed_Recommended" class="Both" displayName="$(string.TelemetryAllowed)" explainText="$(string.TelemetryAllowed_Explain)" key="Software\Policies\Bulwark\Desktop\Recommended" valueName="TelemetryAllowed">
+    <parentCategory ref="Bulwark_Desktop_Recommended"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
+  <policy name="CrashReportsAllowed" class="Both" displayName="$(string.CrashReportsAllowed)" explainText="$(string.CrashReportsAllowed_Explain)" key="Software\Policies\Bulwark\Desktop" valueName="CrashReportsAllowed">
+    <parentCategory ref="Bulwark_Desktop_privacy"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
+  <policy name="CrashReportsAllowed_Recommended" class="Both" displayName="$(string.CrashReportsAllowed)" explainText="$(string.CrashReportsAllowed_Explain)" key="Software\Policies\Bulwark\Desktop\Recommended" valueName="CrashReportsAllowed">
+    <parentCategory ref="Bulwark_Desktop_Recommended"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <enabledValue><decimal value="1"/></enabledValue>
+    <disabledValue><decimal value="0"/></disabledValue>
+  </policy>
+  <policy name="QuickComposeShortcut" class="Both" displayName="$(string.QuickComposeShortcut)" explainText="$(string.QuickComposeShortcut_Explain)" presentation="$(presentation.QuickComposeShortcut)" key="Software\Policies\Bulwark\Desktop">
+    <parentCategory ref="Bulwark_Desktop_security"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <text id="QuickComposeShortcut_Value" valueName="QuickComposeShortcut" required="true" maxLength="64"/>
+    </elements>
+  </policy>
+  <policy name="QuickComposeShortcut_Recommended" class="Both" displayName="$(string.QuickComposeShortcut)" explainText="$(string.QuickComposeShortcut_Explain)" presentation="$(presentation.QuickComposeShortcut_Recommended)" key="Software\Policies\Bulwark\Desktop\Recommended">
+    <parentCategory ref="Bulwark_Desktop_Recommended"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <text id="QuickComposeShortcut_Recommended_Value" valueName="QuickComposeShortcut" required="true" maxLength="64"/>
+    </elements>
+  </policy>
+  <policy name="AuthServerAllowlist" class="Both" displayName="$(string.AuthServerAllowlist)" explainText="$(string.AuthServerAllowlist_Explain)" presentation="$(presentation.AuthServerAllowlist)" key="Software\Policies\Bulwark\Desktop">
+    <parentCategory ref="Bulwark_Desktop_signIn"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <text id="AuthServerAllowlist_Value" valueName="AuthServerAllowlist" required="true" maxLength="2048"/>
+    </elements>
+  </policy>
+  <policy name="AuthServerAllowlist_Recommended" class="Both" displayName="$(string.AuthServerAllowlist)" explainText="$(string.AuthServerAllowlist_Explain)" presentation="$(presentation.AuthServerAllowlist_Recommended)" key="Software\Policies\Bulwark\Desktop\Recommended">
+    <parentCategory ref="Bulwark_Desktop_Recommended"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <text id="AuthServerAllowlist_Recommended_Value" valueName="AuthServerAllowlist" required="true" maxLength="2048"/>
+    </elements>
+  </policy>
+  <policy name="AuthNegotiateDelegateAllowlist" class="Both" displayName="$(string.AuthNegotiateDelegateAllowlist)" explainText="$(string.AuthNegotiateDelegateAllowlist_Explain)" presentation="$(presentation.AuthNegotiateDelegateAllowlist)" key="Software\Policies\Bulwark\Desktop">
+    <parentCategory ref="Bulwark_Desktop_signIn"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <text id="AuthNegotiateDelegateAllowlist_Value" valueName="AuthNegotiateDelegateAllowlist" required="true" maxLength="2048"/>
+    </elements>
+  </policy>
+  <policy name="AuthNegotiateDelegateAllowlist_Recommended" class="Both" displayName="$(string.AuthNegotiateDelegateAllowlist)" explainText="$(string.AuthNegotiateDelegateAllowlist_Explain)" presentation="$(presentation.AuthNegotiateDelegateAllowlist_Recommended)" key="Software\Policies\Bulwark\Desktop\Recommended">
+    <parentCategory ref="Bulwark_Desktop_Recommended"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <text id="AuthNegotiateDelegateAllowlist_Recommended_Value" valueName="AuthNegotiateDelegateAllowlist" required="true" maxLength="2048"/>
+    </elements>
+  </policy>
+  <policy name="AutoSelectCertificateForUrls" class="Both" displayName="$(string.AutoSelectCertificateForUrls)" explainText="$(string.AutoSelectCertificateForUrls_Explain)" presentation="$(presentation.AutoSelectCertificateForUrls)" key="Software\Policies\Bulwark\Desktop\AutoSelectCertificateForUrls">
+    <parentCategory ref="Bulwark_Desktop_signIn"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <list id="AutoSelectCertificateForUrls_Value" valuePrefix=""/>
+    </elements>
+  </policy>
+  <policy name="AutoSelectCertificateForUrls_Recommended" class="Both" displayName="$(string.AutoSelectCertificateForUrls)" explainText="$(string.AutoSelectCertificateForUrls_Explain)" presentation="$(presentation.AutoSelectCertificateForUrls_Recommended)" key="Software\Policies\Bulwark\Desktop\Recommended\AutoSelectCertificateForUrls">
+    <parentCategory ref="Bulwark_Desktop_Recommended"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <list id="AutoSelectCertificateForUrls_Recommended_Value" valuePrefix=""/>
+    </elements>
+  </policy>
+  <policy name="WipeOfflineData" class="Both" displayName="$(string.WipeOfflineData)" explainText="$(string.WipeOfflineData_Explain)" presentation="$(presentation.WipeOfflineData)" key="Software\Policies\Bulwark\Desktop">
+    <parentCategory ref="Bulwark_Desktop_security"/>
+    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
+    <elements>
+      <text id="WipeOfflineData_Value" valueName="WipeOfflineData" required="true" maxLength="128"/>
+    </elements>
+  </policy>
+  </policies>
+</policyDefinitions>

@@ -1,0 +1,28 @@
+{
+  "InstanceUrl": "https://mail.example.com",
+  "AllowStandalone": false,
+  "AllowedJmapServers": [
+    "https://mail.example.com",
+    "https://*.mail.example.com"
+  ],
+  "AllowInsecureInstance": false,
+  "AutoUpdate": false,
+  "PluginsMode": "allowlist",
+  "PluginAllowlist": [
+    "example-plugin"
+  ],
+  "OfflineEnabled": true,
+  "AppLockRequired": true,
+  "AppLockTimeoutMinutes": 10,
+  "TelemetryAllowed": false,
+  "CrashReportsAllowed": false,
+  "QuickComposeShortcut": "CommandOrControl+Alt+N",
+  "AuthServerAllowlist": "*.example.com",
+  "AuthNegotiateDelegateAllowlist": "*.example.com",
+  "AutoSelectCertificateForUrls": [
+    "{\"pattern\":\"https://[*.]example.com\",\"filter\":{\"ISSUER\":{\"CN\":\"Example CA\"}}}"
+  ],
+  "Recommended": {
+    "UpdateChannel": "stable"
+  }
+}

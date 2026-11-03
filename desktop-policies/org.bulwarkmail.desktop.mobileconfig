@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated from lib/desktop/policy-schema.ts by scripts/generate-desktop-policies.mjs. Do not edit. -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>PayloadContent</key>
+  <array>
+    <dict>
+      <key>PayloadType</key>
+      <string>org.bulwarkmail.desktop</string>
+      <key>PayloadVersion</key>
+      <integer>1</integer>
+      <key>PayloadIdentifier</key>
+      <string>org.bulwarkmail.desktop.policy.settings</string>
+      <key>PayloadUUID</key>
+      <string>5E80E0D3-CC43-4BF3-85BB-594992C34B20</string>
+      <key>PayloadEnabled</key>
+      <true/>
+      <key>PayloadDisplayName</key>
+      <string>Bulwark settings</string>
+      <key>InstanceUrl</key>
+      <string>https://mail.example.com</string>
+      <key>AllowStandalone</key>
+      <false/>
+      <key>AllowedJmapServers</key>
+      <array>
+        <string>https://mail.example.com</string>
+        <string>https://*.mail.example.com</string>
+      </array>
+      <key>AllowInsecureInstance</key>
+      <false/>
+      <key>AutoUpdate</key>
+      <false/>
+      <key>PluginsMode</key>
+      <string>allowlist</string>
+      <key>PluginAllowlist</key>
+      <array>
+        <string>example-plugin</string>
+      </array>
+      <key>OfflineEnabled</key>
+      <true/>
+      <key>AppLockRequired</key>
+      <true/>
+      <key>AppLockTimeoutMinutes</key>
+      <integer>10</integer>
+      <key>TelemetryAllowed</key>
+      <false/>
+      <key>CrashReportsAllowed</key>
+      <false/>
+      <key>QuickComposeShortcut</key>
+      <string>CommandOrControl+Alt+N</string>
+      <key>AuthServerAllowlist</key>
+      <string>*.example.com</string>
+      <key>AuthNegotiateDelegateAllowlist</key>
+      <string>*.example.com</string>
+      <key>AutoSelectCertificateForUrls</key>
+      <array>
+        <string>{&quot;pattern&quot;:&quot;https://[*.]example.com&quot;,&quot;filter&quot;:{&quot;ISSUER&quot;:{&quot;CN&quot;:&quot;Example CA&quot;}}}</string>
+      </array>
+      <key>Recommended</key>
+      <dict>
+        <key>UpdateChannel</key>
+        <string>stable</string>
+      </dict>
+    </dict>
+  </array>
+  <key>PayloadType</key>
+  <string>Configuration</string>
+  <key>PayloadVersion</key>
+  <integer>1</integer>
+  <key>PayloadIdentifier</key>
+  <string>org.bulwarkmail.desktop.policy</string>
+  <key>PayloadUUID</key>
+  <string>AEC7BA2B-DD06-4BDF-83E5-147573C181F4</string>
+  <key>PayloadDisplayName</key>
+  <string>Bulwark Desktop</string>
+  <key>PayloadDescription</key>
+  <string>A sample profile. Remove what you do not want to set, and change the rest.</string>
+  <key>PayloadScope</key>
+  <string>System</string>
+</dict>
+</plist>
