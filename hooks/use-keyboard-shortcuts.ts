@@ -170,7 +170,9 @@ export function useKeyboardShortcuts({
       if (event.ctrlKey || event.metaKey) {
         switch (key) {
           case "a":
-            // Ctrl/Cmd + A: Select all
+            // Ctrl/Cmd + A: Select all. With nothing to select here (a Pro
+            // message tab) it stays the browser's select-all.
+            if (!h.onSelectAll) return;
             event.preventDefault();
             run("select-all", h.onSelectAll);
             return;

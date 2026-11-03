@@ -1,6 +1,7 @@
 import { render, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
+import { ProTabFocusContext } from '@/hooks/use-pane-context';
 
 /**
  * "Edit draft" on a message in a Pro folder or email tab. A draft in a group or
@@ -241,5 +242,38 @@ describe('Pro email view - replying and forwarding', () => {
     (viewerProps.current!.onReply as () => void)();
 
     expect(openComposeTab.mock.calls[0][0].sourceEmailSource).toEqual({ clientAccountId: 'userb@v016', accountId: undefined });
+  });
+});
+
+describe('Pro email view - keyboard', () => {
+  const client = { getEmail: vi.fn().mockResolvedValue(DRAFT), getUsername: () => 'userb@example.org', getAccountId: () => 'e' };
+  const press = (key: string, code: string) => document.dispatchEvent(new KeyboardEvent('keydown', { key, code, bubbles: true }));
+
+  beforeEach(() => {
+    viewerProps.current = null;
+    openComposeTab.mockClear();
+  });
+
+  it('replies on r while its tab is in front', async () => {
+    render(
+      <ProTabFocusContext.Provider value={true}>
+        <ProEmailView emailId="eaaaaab" client={client as never} clientAccountId="userb@v10" onClose={vi.fn()} />
+      </ProTabFocusContext.Provider>,
+    );
+    await waitFor(() => expect(viewerProps.current?.email).toBeTruthy());
+    press('r', 'KeyR');
+    expect(openComposeTab).toHaveBeenCalledTimes(1);
+    expect(openComposeTab.mock.calls[0][0]).toMatchObject({ mode: 'reply', sourceEmailId: 'eaaaaab' });
+  });
+
+  it('does nothing on r in a tab behind others', async () => {
+    render(
+      <ProTabFocusContext.Provider value={false}>
+        <ProEmailView emailId="eaaaaab" client={client as never} clientAccountId="userb@v10" onClose={vi.fn()} />
+      </ProTabFocusContext.Provider>,
+    );
+    await waitFor(() => expect(viewerProps.current?.email).toBeTruthy());
+    press('r', 'KeyR');
+    expect(openComposeTab).not.toHaveBeenCalled();
   });
 });

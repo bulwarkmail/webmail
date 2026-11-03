@@ -8,6 +8,8 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore, resolveEmailBlobContext, type EmailBlobContext, type EmailWriteSource } from "@/stores/email-store";
 import { useIdentityStore } from "@/stores/identity-store";
 import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-identities";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { useIsFocusedProTab } from "@/hooks/use-pane-context";
 import { findDraftIdentityIdForLogin } from "@/lib/draft-source";
 import { deliveryAddresses } from "@/lib/reply-identity";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -423,6 +425,30 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       console.error('Move failed:', err);
     }
   }, [client, email, moveToMailbox, onClose]);
+
+  // This view's message answers the same keys as a message in the mail tab,
+  // while its tab is the one in front.
+  const isFocusedTab = useIsFocusedProTab();
+  const singleKeyShortcuts = useSettingsStore((s) => s.singleKeyShortcuts);
+  const shortcutEmails = useMemo(() => (email ? [email] : []), [email]);
+  const shortcutHandlers = useMemo(() => ({
+    onCompose: () => openComposeTab({ mode: 'compose', title: t('email_composer.new_message') }, {}),
+    onReply: () => handleReply(),
+    onReplyAll: handleReplyAll,
+    onForward: handleForward,
+    onToggleStar: () => void handleToggleStar(),
+    onArchive: archiveActionEnabled ? () => void handleArchive() : undefined,
+    onDelete: () => void handleDelete(),
+    onMarkAsUnread: email ? () => void handleMarkAsRead(email.id, false) : undefined,
+    onMarkAsRead: email ? () => void handleMarkAsRead(email.id, true) : undefined,
+  }), [email, openComposeTab, t, handleReply, handleReplyAll, handleForward, handleToggleStar, archiveActionEnabled, handleArchive, handleDelete, handleMarkAsRead]);
+  useKeyboardShortcuts({
+    enabled: isFocusedTab && !!email,
+    singleKeyShortcuts,
+    emails: shortcutEmails,
+    selectedEmailId: email?.id,
+    handlers: shortcutHandlers,
+  });
 
   // An attachment shown in the preview because the message's account turned
   // downloads off (Organisation > Devices); the tab downloads otherwise.
