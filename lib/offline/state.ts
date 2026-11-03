@@ -74,6 +74,51 @@ export function writeEnabled(enabled: string[]): void {
   }
 }
 
+/** localStorage: accounts the app dropped by itself, and when. Their data waits for a new sign-in. */
+export const OFFLINE_EVICTED_KEY = 'bulwark-offline-evicted';
+/** How long that data waits. */
+export const EVICTED_KEEP_MS = 30 * 24 * 60 * 60 * 1000;
+
+export function readEvicted(): Record<string, number> {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(OFFLINE_EVICTED_KEY) ?? '{}') as unknown;
+    return parsed && typeof parsed === 'object' ? parsed as Record<string, number> : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeEvicted(evicted: Record<string, number>): void {
+  try {
+    if (Object.keys(evicted).length > 0) localStorage.setItem(OFFLINE_EVICTED_KEY, JSON.stringify(evicted));
+    else localStorage.removeItem(OFFLINE_EVICTED_KEY);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/** Only an account that keeps mail here has anything to wait for. */
+export function markEvicted(account: string, now = Date.now()): void {
+  if (useOfflineStore.getState().enabled.includes(account)) writeEvicted({ ...readEvicted(), [account]: now });
+}
+
+export function clearEvicted(account: string): void {
+  const evicted = readEvicted();
+  if (!(account in evicted)) return;
+  delete evicted[account];
+  writeEvicted(evicted);
+}
+
+export function isEvicted(account: string): boolean {
+  return account in readEvicted();
+}
+
+/** The accounts whose data may show here: not those waiting for a sign-in, which may be someone else's. */
+export function visibleAccounts(): string[] {
+  const evicted = readEvicted();
+  return useOfflineStore.getState().enabled.filter((account) => !(account in evicted));
+}
+
 export function serverKey(url: string): string {
   return url.replace(/\/+$/, '').toLowerCase();
 }

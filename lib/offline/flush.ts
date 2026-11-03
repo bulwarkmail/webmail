@@ -42,7 +42,7 @@ import {
   type OutboxEntry,
   type OutboxError,
 } from './queue';
-import { useOfflineStore } from './state';
+import { visibleAccounts } from './state';
 import type { OfflineNotice } from './offline-mode';
 
 export interface FlushDeps {
@@ -152,7 +152,7 @@ export async function flushQueue(account: string, client: JMAPClient, deps: Flus
 
 /** Marks sends of closed tabs uncertain (they may have gone out). */
 export async function settleStaleSends(account?: string, now = Date.now()): Promise<void> {
-  const accounts = account ? [account] : useOfflineStore.getState().enabled;
+  const accounts = account ? [account] : visibleAccounts();
   await Promise.all(accounts.map((id) => getStore().area(id, 'outbox.settleStale', { before: now - SENDING_STALE_MS })));
 }
 

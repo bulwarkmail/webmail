@@ -11,13 +11,15 @@
  * - Changes and sends made offline wait in the store's outbox and go out in
  *   order once the server answers again and the organisation's policy was
  *   fetched afresh (flush.ts).
- * - Everything is wiped at a full sign-out and the automatic sign-outs
- *   (lib/sign-out-cleanup.ts deletes the store and its keys), for one account
- *   when it signs out, is removed or switches offline mode off, and when the
- *   organisation forbids it (checked on every policy fetch). An account the
- *   app drops by itself (its session cookie ran out, say) keeps its data for
- *   the next sign-in. Unsent messages a sign-out deletes without the user's
- *   word are named (lost.ts).
+ * - Everything is wiped at a full sign-out, at the session limits and when the
+ *   server really refuses the login (`invalid_grant`), by
+ *   lib/sign-out-cleanup.ts; for one account when it signs out, is removed or
+ *   switches offline mode off, and when the organisation forbids it (checked on
+ *   every policy fetch). An account the app drops by itself because it couldn't
+ *   confirm the login (an outage, an unknown refusal, a session cookie that ran
+ *   out) keeps its data for 30 days or the next sign-in, hidden from everyone
+ *   else. Unsent messages a sign-out deletes without the user's word are named
+ *   (lost.ts).
  */
 
 import { IS_LITE } from '@/lib/lite';
@@ -52,7 +54,7 @@ import {
   type PolicyFingerprint,
 } from './queue';
 import { clearHandoffs } from '@/lib/launch-handoff';
-import { isOfflineNow, OFFLINE_ACCOUNTS_KEY, readEnabledFrom, serverKey, setServerDown, useOfflineStore, writeEnabled, type OutboxRow } from './state';
+import { clearEvicted, EVICTED_KEEP_MS, isEvicted, isOfflineNow, OFFLINE_ACCOUNTS_KEY, readEnabledFrom, readEvicted, visibleAccounts, serverKey, setServerDown, useOfflineStore, writeEnabled, type OutboxRow } from './state';
 import { flushQueue, settleStaleSends } from './flush';
 import { LEGACY_DB_NAME, moveLegacyOutbox } from './migrate-legacy';
 import { deleteShellCaches, tellServiceWorker } from './shell';
@@ -470,7 +472,7 @@ export async function refreshQueueState(): Promise<void> {
   if (!offlineSupported()) return;
   // Nothing is kept for an account that hasn't it on; and opening the
   // store would create it (on the sign-in page, after a sign-out).
-  if (useOfflineStore.getState().enabled.length === 0) {
+  if (visibleAccounts().length === 0) {
     useOfflineStore.setState({ outbox: [], pendingChanges: 0, conflicts: [] });
     return;
   }
@@ -494,9 +496,9 @@ export async function refreshQueueState(): Promise<void> {
 }
 
 export async function refreshUsage(): Promise<void> {
-  if (!offlineSupported() || useOfflineStore.getState().enabled.length === 0) return;
+  if (!offlineSupported() || visibleAccounts().length === 0) return;
   try {
-    const usage = await Promise.all(useOfflineStore.getState().enabled.map((account) => getStore().area<{ bytes: number }>(account, 'mail.usage')));
+    const usage = await Promise.all(visibleAccounts().map((account) => getStore().area<{ bytes: number }>(account, 'mail.usage')));
     useOfflineStore.setState({ usageBytes: usage.reduce((sum, { bytes }) => sum + bytes, 0) });
   } catch {
     /* deleted meanwhile */
@@ -699,10 +701,13 @@ export async function wipeAccount(account: string): Promise<void> {
   const timer = syncTimers.get(account);
   if (timer) clearTimeout(timer);
   syncTimers.delete(account);
+  // Waited for a sign-in that never came: whoever is here now mustn't read its subjects.
+  if (isEvicted(account)) named.add(account);
   if (useOfflineStore.getState().enabled.includes(account) || useOfflineStore.getState().outbox.some((row) => row.account === account)) {
     await nameLost(account, useAuthStore.getState().isAuthenticated);
   }
   named.delete(account);
+  clearEvicted(account);
   if (useOfflineStore.getState().enabled.includes(account)) {
     writeEnabled(useOfflineStore.getState().enabled.filter((id) => id !== account));
   }
@@ -743,6 +748,8 @@ export async function wipeEverything(): Promise<void> {
 
 /** Whether the policy of an account is known well enough to decide on it. */
 function policyDecided(account: string): boolean {
+  // Dropped, with no groups to wait for: what applies to everyone reaches it.
+  if (isEvicted(account)) return true;
   const auth = useAuthStore.getState();
   if (account === auth.activeAccountId || !auth.activeAccountId) return !usePolicyStore.getState().subjectPending;
   // Another signed-in account: its groups have to be known first (a group
@@ -758,9 +765,11 @@ export function enforcePolicy(): void {
   for (const account of useOfflineStore.getState().enabled) {
     if (!policyDecided(account)) continue;
     if (!offlineAllowed(account)) {
+      // Whoever is here now wasn't signed in to a dropped account.
+      const someoneElses = isEvicted(account);
       clearHandoffs();
       void wipeAccount(account);
-      notify({ kind: 'forbidden' });
+      if (!someoneElses) notify({ kind: 'forbidden' });
     }
   }
 }
@@ -882,6 +891,7 @@ export function startOfflineMode(): () => void {
   cleanups.push(onAccountRemoved((id, reason) => {
     if (reason === 'explicit') void wipeAccount(id);
   }));
+  void sweepAccountsGone();
 
   // Session, then a sync, for every account signed in with offline mode on.
   const syncSignedIn = () => {
@@ -923,23 +933,40 @@ export function startOfflineMode(): () => void {
   };
 }
 
+/**
+ * Data no signed-in account vouches for. A dropped account's waits 30 days. One
+ * that left the registry on purpose before this ran (a login without "remember
+ * me" ends at a reload, before the host mounts) goes now, naming lost mail.
+ */
+async function sweepAccountsGone(now = Date.now()): Promise<void> {
+  const evicted = readEvicted();
+  const accounts = useAccountStore.getState().accounts;
+  for (const account of useOfflineStore.getState().enabled) {
+    const at = evicted[account];
+    const gone = at !== undefined ? now - at > EVICTED_KEEP_MS : !accounts.some((entry) => entry.id === account);
+    if (gone) await wipeAccount(account).catch(() => {});
+  }
+}
+
 /** How often the store catches up while the tab is open, on top of pushes. */
 export const SYNC_INTERVAL_MS = 15 * 60 * 1000;
 
 // A full sign-out deletes the store (lib/sign-out-cleanup.ts); forget what
 // is held in memory as well.
-onFullSignOut(() => {
+onFullSignOut(({ keepLocalStore }) => {
   for (const timer of syncTimers.values()) clearTimeout(timer);
   syncTimers.clear();
-  getStore().stop();
+  if (!keepLocalStore) getStore().stop();
   confirmed.clear();
   named.clear();
-  useOfflineStore.setState({ enabled: [], outbox: [], pendingChanges: 0, conflicts: [], usageBytes: 0, syncing: [], lastSyncedAt: {}, startedOffline: false });
+  useOfflineStore.setState((s) => ({ enabled: keepLocalStore ? s.enabled : [], outbox: [], pendingChanges: 0, conflicts: [], usageBytes: 0, syncing: [], lastSyncedAt: {}, startedOffline: false }));
 });
 
 // Every sign-out the user didn't agree to lose mail at (the session limits,
 // a refused token renewal, a removed account) names the unsent messages.
-onBeforeSignOut(async (accountId) => {
+onBeforeSignOut(async (accountId, { keepLocalStore }) => {
+  // Nothing is lost: it waits for the next sign-in.
+  if (keepLocalStore) return;
   const stillSignedIn = accountId !== 'all' && useAccountStore.getState().accounts.some((a) => a.id !== accountId);
   await nameLost(accountId, stillSignedIn);
 });

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { generateAccountId, generateAvatarColor, getMaxAccounts } from '@/lib/account-utils';
 import { authHooks } from '@/lib/plugin-hooks';
+import { clearEvicted, markEvicted } from '@/lib/offline/state';
 
 export type AccountRemovalReason = 'explicit' | 'evicted';
 
@@ -111,6 +112,7 @@ export const useAccountStore = create<AccountState>()(
         const state = get();
 
         const id = generateAccountId(entry.username, entry.serverUrl);
+        clearEvicted(id);
         if (state.accounts.some((a) => a.id === id)) {
           // Already exists - update mutable fields and return existing id
           set((s) => ({
@@ -163,6 +165,7 @@ export const useAccountStore = create<AccountState>()(
 
       removeAccount: (accountId, reason = 'explicit') => {
         if (!get().accounts.some((a) => a.id === accountId)) return;
+        if (reason === 'evicted') markEvicted(accountId);
         for (const listener of [...removalListeners]) listener(accountId, reason);
         set((s) => {
           const remaining = s.accounts.filter((a) => a.id !== accountId);

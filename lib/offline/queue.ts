@@ -9,7 +9,7 @@
 import { requestOutboxSync } from '@/lib/pwa-notify/outbox-sync';
 import { getStore } from '@/lib/store/client/api';
 import type { ConflictSummary, OutboxError, OutboxStatus, OutboxSummary, PolicyFingerprint, SendItem, StoredConflict, StoredOutboxEntry } from '@/lib/store/outbox/items';
-import { useOfflineStore } from './state';
+import { visibleAccounts } from './state';
 
 export { LOCAL_BLOB_PREFIX, heldBlobIds, isLocalBlobId } from '@/lib/store/outbox/items';
 export type { EmailSendItem, OutboxError, OutboxStatus, OutboxSummary, PolicyFingerprint, RawSendItem, SendItem } from '@/lib/store/outbox/items';
@@ -40,7 +40,7 @@ interface StoredQueue {
 
 /** Everything waiting for one account (or every account with it on), oldest first. */
 export async function readQueue(account?: string): Promise<{ patches: number; outbox: OutboxEntry[]; conflicts: ConflictEntry[] }> {
-  const accounts = account ? [account] : useOfflineStore.getState().enabled;
+  const accounts = account ? [account] : visibleAccounts();
   const read = await Promise.all(accounts.map(async (id) => ({ id, queue: await getStore().area<StoredQueue>(id, 'outbox.read') })));
   return {
     patches: read.reduce((sum, { queue }) => sum + queue.patches, 0),

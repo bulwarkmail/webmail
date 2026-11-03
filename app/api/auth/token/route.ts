@@ -292,7 +292,10 @@ export async function PUT(request: NextRequest) {
         cookieStore.delete(refreshTokenServerCookieName(slot));
         cookieStore.delete(accessTokenCookieName(slot));
         clearIdToken(cookieStore, slot, request.nextUrl.basePath);
-        return NextResponse.json({ error: 'Refresh failed' }, { status: 401 });
+        // Only invalid_grant says the login itself is over. invalid_client, or
+        // a provider refusing an early refresh (#552), says nothing about it,
+        // and the client keeps the account's local data for those.
+        return NextResponse.json({ error: oauthErrorCode(errorText) === 'invalid_grant' ? 'invalid_grant' : 'Refresh failed' }, { status: 401 });
       }
       return NextResponse.json({ error: 'Token endpoint unavailable' }, { status: 503 });
     }
@@ -333,6 +336,15 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     logger.error('Token refresh error', { error: error instanceof Error ? error.message : 'Unknown error' });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+function oauthErrorCode(body: string): string | null {
+  try {
+    const code = (JSON.parse(body) as { error?: unknown }).error;
+    return typeof code === 'string' ? code : null;
+  } catch {
+    return null;
   }
 }
 

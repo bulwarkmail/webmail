@@ -1,8 +1,9 @@
 /**
- * The server refused this account's refresh token for good. Nothing wipes on
- * this yet: a refused account is dropped, and its local data stays for the next
- * sign-in. HOOK: the wipe work (lib/store/wipe) registers here to act on a
- * permanent rejection. Free of the stores, so the auth store can call it.
+ * The server really refused this login (`invalid_grant`), which the auth store
+ * follows with a sign-out that wipes the account's local data. An outage or any
+ * other refusal doesn't come here, and keeps the data. HOOK: lib/store/wipe
+ * registers here for what else a permanent rejection should do. Free of the
+ * stores, so the auth store can call it.
  */
 
 type Listener = (accountId: string) => void;
