@@ -392,7 +392,8 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
       {visibleCalendarName && (
         <div data-calendar-name dir="auto" className="opacity-85 text-[0.65625rem] truncate">{visibleCalendarName}</div>
       )}
-      {getParticipantCount(event) > 0 && (
+      {/* Below 45 minutes the block has room for the title line only: the count was cut in half. */}
+      {getParticipantCount(event) > 0 && durationMinutes >= 45 && (
         <div
           className="flex items-center gap-0.5 opacity-85 text-[0.65625rem]"
           title={t("participants.count", { count: getParticipantCount(event) })}
