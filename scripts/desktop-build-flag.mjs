@@ -7,6 +7,9 @@
 /** The marker scripts/standalone-guard.mjs looks for in a non-desktop build. */
 export const DESKTOP_TRUST_MARKER = 'bulwark.desktop.trustedJmapOrigins';
 
+/** A read of the flag that survived compiling: then setting it at runtime would work. */
+export const DESKTOP_FLAG_READ = 'NEXT_PUBLIC_BULWARK_DESKTOP';
+
 export function desktopBuildFlag(env = process.env) {
   return env.NEXT_PUBLIC_BULWARK_DESKTOP === '1' ? '1' : '';
 }

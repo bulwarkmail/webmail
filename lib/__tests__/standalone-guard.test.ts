@@ -39,6 +39,13 @@ describe('the desktop trust path', () => {
     expect(guardStandalone(dir, { desktopBuild: false })).toEqual(['.next/server/chunks/123.js (desktop trust path in a server build)']);
   });
 
+  it('fails a server build that still reads the flag at runtime', () => {
+    const dir = tempDir();
+    put(dir, 'server.js');
+    put(dir, '.next/server/chunks/9.js', 'let a="1"===process.env.NEXT_PUBLIC_BULWARK_DESKTOP');
+    expect(guardStandalone(dir, { desktopBuild: false })).toHaveLength(1);
+  });
+
   it('passes the desktop build itself', () => {
     const dir = tempDir();
     put(dir, 'server.js');

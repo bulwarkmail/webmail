@@ -173,7 +173,8 @@ export async function POST(request: NextRequest) {
       resolvedServerId = matchedEntry.id;
     } else if (configuredServerUrl && !customRequested) {
       upstreamUrl = configuredServerUrl;
-    } else if (IS_DESKTOP_BUILD && isDesktopTrustedServer(serverUrl)) {
+    // Spelled out as in lib/admin/jmap-servers.ts, so other builds don't hold it.
+    } else if (process.env.NEXT_PUBLIC_BULWARK_DESKTOP === '1' && isDesktopTrustedServer(serverUrl)) {
       upstreamUrl = serverUrl;
     } else if (allowCustomEndpoint) {
       if (!(await isPublicHttpUrl(serverUrl))) {

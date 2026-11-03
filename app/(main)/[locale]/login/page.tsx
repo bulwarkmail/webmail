@@ -993,30 +993,34 @@ function LoginPageContent() {
   };
 
   /** The desktop build: the server's own sign-in page in the system browser. */
+  // Spelled out, not IS_DESKTOP_BUILD: only this form keeps the route out of other
+  // builds' bundles, which Lite's check on API strings relies on.
   const handleDesktopBrowserSignIn = async () => {
-    const target = jmapEndpoint.trim();
-    if (!target) {
-      setDesktopNotice(tDesktop("server_needed"));
-      return;
+    if (process.env.NEXT_PUBLIC_BULWARK_DESKTOP === '1') {
+      const target = jmapEndpoint.trim();
+      if (!target) {
+        setDesktopNotice(tDesktop("server_needed"));
+        return;
+      }
+      setDesktopNotice(null);
+      setDesktopWaiting(true);
+      const prefix = getPathPrefix(params.locale as string);
+      const outcome = await runDesktopBrowserSignIn({
+        serverUrl: target,
+        callbackPath: `${prefix}/${params.locale}/auth/callback`,
+        slot: useAccountStore.getState().getNextCookieSlot(),
+        remember: persistProviderSession,
+        addAccount: isAddAccountMode,
+      });
+      if (outcome.kind === "callback") {
+        window.location.href = outcome.callbackUrl;
+        return;
+      }
+      setDesktopWaiting(false);
+      if (outcome.kind === "unavailable") setDesktopNotice(tDesktop("browser_unavailable"));
+      else if (outcome.kind === "declined") setDesktopNotice(tDesktop("server_declined"));
+      else if (outcome.kind === "failed") setDesktopNotice(tDesktop("browser_failed"));
     }
-    setDesktopNotice(null);
-    setDesktopWaiting(true);
-    const prefix = getPathPrefix(params.locale as string);
-    const outcome = await runDesktopBrowserSignIn({
-      serverUrl: target,
-      callbackPath: `${prefix}/${params.locale}/auth/callback`,
-      slot: useAccountStore.getState().getNextCookieSlot(),
-      remember: persistProviderSession,
-      addAccount: isAddAccountMode,
-    });
-    if (outcome.kind === "callback") {
-      window.location.href = outcome.callbackUrl;
-      return;
-    }
-    setDesktopWaiting(false);
-    if (outcome.kind === "unavailable") setDesktopNotice(tDesktop("browser_unavailable"));
-    else if (outcome.kind === "declined") setDesktopNotice(tDesktop("server_declined"));
-    else if (outcome.kind === "failed") setDesktopNotice(tDesktop("browser_failed"));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1858,7 +1862,7 @@ function LoginPageContent() {
                   </>
                 )}
 
-                {IS_DESKTOP_BUILD && !hasServerList && browserSignInAvailable() && (
+                {process.env.NEXT_PUBLIC_BULWARK_DESKTOP === "1" && !hasServerList && browserSignInAvailable() && (
                   <Button
                     type="button"
                     variant="outline"

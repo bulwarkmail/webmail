@@ -92,9 +92,10 @@ export type DesktopPluginInstallResult =
 export interface DesktopPluginsBridge {
   /**
    * Installs from the directory through the local admin API, with its signature
-   * and hash checks. The renderer never holds an admin session. Standalone only.
+   * and hash checks, after a native prompt. No version means the latest. The
+   * renderer never holds an admin session. Standalone only.
    */
-  install: (slug: string, version: string) => Promise<DesktopPluginInstallResult>;
+  install: (slug: string, version?: string) => Promise<DesktopPluginInstallResult>;
 }
 
 export interface BulwarkDesktopBridge {

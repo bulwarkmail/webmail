@@ -18,7 +18,7 @@
 import { existsSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { DESKTOP_TRUST_MARKER, desktopBuildFlag } from './desktop-build-flag.mjs';
+import { DESKTOP_FLAG_READ, DESKTOP_TRUST_MARKER, desktopBuildFlag } from './desktop-build-flag.mjs';
 
 /** Top-level project entries the running server needs. Traces drop the rest. */
 const TRACE_ALLOWED = new Set(['node_modules', '.next', 'public', 'locales', 'package.json', 'VERSION']);
@@ -154,8 +154,11 @@ export function findDesktopTrustPath(standaloneDir) {
       const full = path.join(dir, entry.name);
       if (entry.isDirectory()) {
         if (entry.name !== 'node_modules') visit(full);
-      } else if (entry.name.endsWith('.js') && readFileSync(full, 'utf8').includes(DESKTOP_TRUST_MARKER)) {
-        found.push(`${toPosix(path.relative(standaloneDir, full))} (desktop trust path in a server build)`);
+      } else if (entry.name.endsWith('.js')) {
+        const text = readFileSync(full, 'utf8');
+        if (text.includes(DESKTOP_TRUST_MARKER) || text.includes(DESKTOP_FLAG_READ)) {
+          found.push(`${toPosix(path.relative(standaloneDir, full))} (desktop trust path in a server build)`);
+        }
       }
     }
   };

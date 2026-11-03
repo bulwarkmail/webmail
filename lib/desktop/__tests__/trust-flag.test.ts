@@ -104,6 +104,14 @@ describe('the flag is fixed at build time', () => {
     expect(source).toContain("process.env.NEXT_PUBLIC_BULWARK_DESKTOP === '1'");
   });
 
+  it('the trust check uses the form the bundler can drop', () => {
+    for (const file of ['lib/admin/jmap-servers.ts', 'app/api/auth/totp-token-exchange/route.ts']) {
+      const source = readFileSync(path.join(ROOT, file), 'utf8');
+      expect(source, file).toMatch(/process\.env\.NEXT_PUBLIC_BULWARK_DESKTOP === '1' && isDesktopTrustedServer/);
+      expect(source, file).not.toMatch(/IS_DESKTOP_BUILD && isDesktopTrustedServer/);
+    }
+  });
+
   it('no image build sets it', () => {
     for (const file of ['Dockerfile', 'Dockerfile.lite']) {
       expect(readFileSync(path.join(ROOT, file), 'utf8')).not.toContain('NEXT_PUBLIC_BULWARK_DESKTOP');
