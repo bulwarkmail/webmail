@@ -99,6 +99,8 @@ export function MessageListTabs({ panelId }: { panelId: string }) {
   const handleSelect = (tabId: string) => {
     if (tabId === activeTabId) return;
     useMessageListTabsStore.getState().setActiveTab(tabId, selectedMailbox);
+    // The other tab lists other mail; ticks here would act on rows out of sight.
+    useEmailStore.getState().clearSelection();
     if (client) void useEmailStore.getState().fetchEmails(client);
   };
 

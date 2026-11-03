@@ -51,6 +51,15 @@ describe('MessageListTabs', () => {
     expect(screen.getByRole('tabpanel', { name: 'Primary' })).toHaveTextContent('list');
   });
 
+  it('drops ticked messages on a switch of tab, which lists other mail', () => {
+    useEmailStore.setState({ selectedEmailKeys: new Set(['a', 'b']) } as never);
+    render(<Harness />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Primary' }));
+    expect(useEmailStore.getState().selectedEmailKeys.size).toBe(2);
+    fireEvent.click(screen.getByRole('tab', { name: 'Social' }));
+    expect(useEmailStore.getState().selectedEmailKeys.size).toBe(0);
+  });
+
   it('keeps one tab stop and moves with the arrow keys', () => {
     render(<Harness />);
     const [primary, promotions, social] = screen.getAllByRole('tab');

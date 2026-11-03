@@ -71,6 +71,15 @@ describe('plugin list filters in the message list', () => {
     expect(fetchEmails).toHaveBeenCalledTimes(2);
   });
 
+  it('drops ticked messages when a chip narrows the list', async () => {
+    useEmailStore.setState({ selectedEmailKeys: new Set(['a', 'b']) });
+    render(<EmailList emails={[]} />);
+    const chip = await screen.findByRole('button', { name: 'Open' });
+    expect(useEmailStore.getState().selectedEmailKeys.size).toBe(2);
+    act(() => { fireEvent.click(chip); });
+    expect(useEmailStore.getState().selectedEmailKeys.size).toBe(0);
+  });
+
   it('does not call the folder empty while a filter hides its mail', async () => {
     render(<EmailList emails={[]} />);
     expect(await screen.findByText('no_emails_description')).toBeInTheDocument();

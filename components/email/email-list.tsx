@@ -1177,7 +1177,7 @@ export function EmailList({
         <PluginListFilters
           mailboxRole={effectiveMailboxRole ?? null}
           accountKind={folderAccountKind}
-          onChange={() => { if (client) void useEmailStore.getState().fetchEmails(client); }}
+          onChange={() => { clearSelection(); if (client) void useEmailStore.getState().fetchEmails(client); }}
         />
       )}
 
