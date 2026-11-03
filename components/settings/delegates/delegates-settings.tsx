@@ -11,7 +11,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { usePolicyStore } from "@/stores/policy-store";
 import { toast } from "@/stores/toast-store";
 import { useRestriction } from "@/hooks/use-restriction";
-import { loadPrincipalDirectory } from "@/lib/jmap/principal-directory";
+import { loadScopedPrincipalDirectory } from "@/lib/directory-scope";
 import type { Principal, PrincipalListing } from "@/lib/jmap/types";
 import type { ShareChangeResult, ShareTarget } from "@/lib/jmap/share-batch";
 import type { ShareKind } from "@/lib/jmap/share-rights";
@@ -76,7 +76,7 @@ export function DelegatesSettings() {
     setDirectory(null);
     setRemembered(rememberedPrincipals(accountKey));
     void reload();
-    void loadPrincipalDirectory(client).then((listing) => {
+    void loadScopedPrincipalDirectory(client).then((listing) => {
       if (!cancelled) setDirectory(listing);
     });
     return () => {

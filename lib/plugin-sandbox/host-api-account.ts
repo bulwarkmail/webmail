@@ -12,6 +12,7 @@ import type { InstalledPlugin } from '../plugin-types';
 import { useAccountStore } from '@/stores/account-store';
 import { useIdentityStore } from '@/stores/identity-store';
 import { resolveEmailBlobContext } from '@/stores/email-store';
+import { directoryScopeFor, inDirectoryScope } from '@/lib/directory-scope';
 import { isValidMetadataKey, MetadataTooLargeError, metadataValueBytes } from '../jmap/bulwark-metadata';
 import { confirmGroups, mailAccountKind, type MailAccountKind } from './account-kind';
 import { readObject, readString, sessionClient, withinRate } from './host-api-input';
@@ -141,6 +142,11 @@ async function loadDirectory(client: IJMAPClient, accountId: string): Promise<Di
         principals = await client.getPrincipals(accountId);
         complete = true;
       }
+    }
+    // The admin policy's directory rules apply here as in the app's own lists.
+    const scope = await directoryScopeFor(client, principals);
+    if (scope) {
+      principals = principals.filter((p) => inDirectoryScope(p.email || (p.name?.includes('@') ? p.name : ''), scope));
     }
     const entry: DirectoryCache = {
       at: Date.now(),
