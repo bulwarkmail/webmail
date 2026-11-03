@@ -15,10 +15,14 @@ function jmapOf(ctx: MethodContext, args: Record<string, unknown>): string {
   return (args.accountId as string | undefined) ?? ctx.session.primaryAccounts[CONTACTS_CAPABILITY] ?? ctx.defaultJmap;
 }
 
-/** The last state from the server. Throws when this type was never synced, so an empty answer always means empty. */
+/**
+ * The last state from the server. Throws until a first full pass finished, so
+ * an answer never passes off part of a list as the whole. A later resync
+ * (phase `list`) goes on answering from the copy it's refreshing.
+ */
 function syncedState(ctx: MethodContext, jmap: string, type: string): string | null {
   const row = ctx.db.get<{ state: string | null; phase: string | null }>('SELECT state, phase FROM sync_state WHERE jmap = ? AND type = ?', [jmap, type]);
-  if (!row || (!row.state && !row.phase)) throw new MethodError('serverUnavailable', 'Contacts not kept yet');
+  if (!row || (!row.state && row.phase !== 'list')) throw new MethodError('serverUnavailable', 'Contacts not kept yet');
   return row.state;
 }
 

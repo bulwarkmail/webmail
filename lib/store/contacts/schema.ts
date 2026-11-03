@@ -48,6 +48,8 @@ export const CONTACT_MIGRATIONS: readonly Migration[] = [
         base TEXT,
         -- A request may have reached the server, so a create looks for its uid first.
         attempted INTEGER NOT NULL DEFAULT 0,
+        -- The payload that request held: the server may have this, not the newer payload.
+        sent TEXT,
         queued_at INTEGER NOT NULL,
         UNIQUE (jmap, id)
       );

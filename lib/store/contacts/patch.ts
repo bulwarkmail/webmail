@@ -67,9 +67,13 @@ export function touchedProperties(patch: Patch): string[] {
   return [...new Set(Object.keys(patch).map((path) => steps(path)[0]))];
 }
 
-/** Deep equality that ignores key order. Absent and null count as the same. */
+function isNothing(value: unknown): boolean {
+  return value == null || (isObject(value) && Object.keys(value).length === 0);
+}
+
+/** Deep equality that ignores key order. Absent, null and an empty map count as the same. */
 export function sameJson(a: unknown, b: unknown): boolean {
-  if (a === b || (a == null && b == null)) return true;
+  if (a === b || (isNothing(a) && isNothing(b))) return true;
   if (Array.isArray(a) && Array.isArray(b)) {
     return a.length === b.length && a.every((item, i) => sameJson(item, b[i]));
   }
@@ -79,10 +83,27 @@ export function sameJson(a: unknown, b: unknown): boolean {
   return false;
 }
 
-/** Whether `actual` holds everything in `wanted`. A server may add properties of its own. */
-export function coversJson(wanted: unknown, actual: unknown): boolean {
-  if (isObject(wanted) && isObject(actual)) {
-    return Object.keys(wanted).every((key) => coversJson(wanted[key], actual[key]));
+/** Stalwart 1.0 keeps a data: URI in `media` as a blob: `uri` goes and `blobId` comes (measured). */
+function inlineKeptAsBlob(wanted: JsonObject, actual: JsonObject): boolean {
+  return typeof wanted.uri === 'string' && wanted.uri.startsWith('data:') && actual.uri == null && typeof actual.blobId === 'string';
+}
+
+/**
+ * Whether `actual` is `wanted` as far as a server can tell. A key only the
+ * server has is its own, unless `base` shows it was there before the edit:
+ * then the edit meant to remove it, and it hasn't happened yet.
+ */
+export function coversJson(wanted: unknown, actual: unknown, base?: unknown): boolean {
+  if (!isObject(wanted) || !isObject(actual)) return sameJson(wanted, actual);
+  const before = isObject(base) ? base : {};
+  const inline = inlineKeptAsBlob(wanted, actual);
+  for (const key of Object.keys(wanted)) {
+    if (inline && key === 'uri') continue;
+    if (!coversJson(wanted[key], actual[key], before[key])) return false;
   }
-  return sameJson(wanted, actual);
+  for (const key of Object.keys(actual)) {
+    if (key in wanted || (inline && key === 'blobId')) continue;
+    if (before[key] != null) return false;
+  }
+  return true;
 }

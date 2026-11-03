@@ -6,19 +6,19 @@ import path from 'node:path';
 import { textFilter } from '@/lib/jmap/search-utils';
 import { DEFAULT_SCOPE, type StoreEvent } from '../area';
 import { contactsArea } from '../contacts';
-import { applyPatch, mergePatches } from '../contacts/patch';
+import { applyPatch, coversJson, mergePatches, sameJson } from '../contacts/patch';
 import { AccountEngine } from '../engine/account-engine';
-import type { MethodCall } from '../engine/transport';
+import type { MethodCall, StoreSession } from '../engine/transport';
 import type { StorageAdapter } from '../storage';
 import { JMAP_ACCOUNT } from './helpers/fake-jmap';
 import { CONTACTS_SESSION, FakeContacts, MAIL_ONLY_ACCOUNT, SHARED_ACCOUNT } from './helpers/fake-contacts';
 import { openFileStore, openMemoryStore } from './helpers/node-adapter';
 
-function engineFor(server: FakeContacts, db: StorageAdapter = openMemoryStore(), emit?: (e: StoreEvent) => void) {
+function engineFor(server: FakeContacts, db: StorageAdapter = openMemoryStore(), emit?: (e: StoreEvent) => void, session: StoreSession = CONTACTS_SESSION) {
   return new AccountEngine({
     account: 'a@fake.test',
     db,
-    session: CONTACTS_SESSION,
+    session,
     transport: server,
     areas: [contactsArea],
     scope: DEFAULT_SCOPE,
@@ -107,9 +107,11 @@ describe('contacts sync', () => {
       const second = openFileStore(file);
       await engineFor(server, second).requestSync();
       expect(count(second, 'contact_card')).toBe(2600);
-      const positions = server.calls.filter(([name]) => name === 'ContactCard/query').map(([, args]) => args.position);
-      expect(positions[0]).toBe(2000);
       second.close();
+      // It goes on from the last card read, not from the start.
+      const first_ = server.calls.find(([name]) => name === 'ContactCard/query')?.[1];
+      expect(first_?.anchor).toBeTruthy();
+      expect(first_?.anchorOffset).toBe(1);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -668,6 +670,384 @@ describe('edits while sending', () => {
     expect(cards).toHaveLength(1);
     expect(cards[0].note).toBe('two');
     expect(await engine.areaCall('contacts.pending', undefined)).toBe(0);
+  });
+});
+
+const mine = (engine: AccountEngine, patch: Record<string, unknown>, id: string) => call(engine, 'ContactCard/set', { update: { [id]: patch } });
+const conflictsOf = async (engine: AccountEngine) => await engine.areaCall('contacts.conflicts', undefined) as Array<Record<string, any>>;
+const pendingOf = (engine: AccountEngine) => engine.areaCall('contacts.pending', undefined);
+
+describe('edits that make a card smaller', () => {
+  it.each<[string, Record<string, unknown>, Record<string, unknown>, Record<string, unknown>]>([
+    ['the last email', { emails: { e1: { address: 'a@example.org' } } }, { emails: {} }, { emails: {} }],
+    ['one of two emails', { emails: { e1: { address: 'a@example.org' }, e2: { address: 'b@example.org' } } }, { emails: { e1: { address: 'a@example.org' } } }, { emails: { e1: { address: 'a@example.org' } } }],
+    ['an email by pointer', { emails: { e1: { address: 'a@example.org' }, e2: { address: 'b@example.org' } } }, { 'emails/e2': null }, { emails: { e1: { address: 'a@example.org' } } }],
+    ['a keyword', { keywords: { work: true, home: true } }, { keywords: { work: true } }, { keywords: { work: true } }],
+    ['an address book', { addressBookIds: { book1: true, book2: true } }, { addressBookIds: { book2: true } }, { addressBookIds: { book2: true } }],
+    ['a group member', { kind: 'group', members: { 'urn:uuid:a': true, 'urn:uuid:b': true } }, { members: { 'urn:uuid:a': true } }, { members: { 'urn:uuid:a': true } }],
+  ])('sends the removal of %s', async (_label, start, patch, expected) => {
+    const server = new FakeContacts(['book1', 'book2']);
+    const card = server.addCard(start);
+    const { engine } = await synced(server);
+    await mine(engine, patch, card.id);
+    await engine.requestSync();
+    expect(server.account().cards.get(card.id)).toMatchObject(expected);
+    for (const [key, value] of Object.entries(expected)) expect(server.account().cards.get(card.id)?.[key]).toEqual(value);
+    expect(await conflictsOf(engine)).toEqual([]);
+    expect(await pendingOf(engine)).toBe(0);
+  });
+
+  it('reads a key only the server has as its own, and one it had before as not yet removed', () => {
+    const wanted = { e1: { address: 'a' } };
+    expect(coversJson(wanted, { e1: { address: 'a' }, added: { address: 'x' } }, { e1: { address: 'a' } })).toBe(true);
+    expect(coversJson(wanted, { e1: { address: 'a' }, e2: { address: 'b' } }, { e1: { address: 'a' }, e2: { address: 'b' } })).toBe(false);
+    expect(coversJson({ e: { '@type': 'x' } }, { e: { '@type': 'x', extra: 1 } }, undefined)).toBe(true);
+    // Stalwart 1.0 keeps a data: URI as a blob.
+    expect(coversJson({ m: { kind: 'photo', uri: 'data:image/png;base64,AA' } }, { m: { kind: 'photo', blobId: 'b1' } }, undefined)).toBe(true);
+    expect(coversJson({ m: { kind: 'logo', uri: 'data:image/png;base64,AA' } }, { m: { kind: 'photo', blobId: 'b1' } }, undefined)).toBe(false);
+    expect(sameJson({}, undefined)).toBe(true);
+  });
+});
+
+describe('flush failures', () => {
+  it('still syncs after the server refuses the set as a whole, and records the edits', async () => {
+    const server = new FakeContacts();
+    const card = server.addCard({ note: 'server' });
+    const { engine } = await synced(server);
+    await mine(engine, { note: 'mine' }, card.id);
+    await call(engine, 'ContactCard/set', { create: { n: { name: { full: 'New' }, addressBookIds: { book1: true } } } });
+    server.failSet = () => ({ jmapError: 'forbidden' });
+    server.addCard({ name: { full: 'From the server' } });
+    await engine.requestSync();
+    expect(await search(engine, 'from the server')).toEqual(['From the server']);
+    expect((await conflictsOf(engine)).map((c) => c.kind)).toEqual(['refused', 'refused']);
+    expect(await pendingOf(engine)).toBe(0);
+    expect((await call(engine, 'ContactCard/get', { ids: [card.id] })).list[0].note).toBe('server');
+  });
+
+  it('keeps edits and still syncs when the failure says nothing about them', async () => {
+    const server = new FakeContacts();
+    const card = server.addCard({ note: 'server' });
+    const { engine } = await synced(server);
+    await mine(engine, { note: 'mine' }, card.id);
+    server.failSet = () => ({ jmapError: 'serverFail' });
+    server.addCard({ name: { full: 'From the server' } });
+    await engine.requestSync();
+    expect(await search(engine, 'from the server')).toEqual(['From the server']);
+    expect(await conflictsOf(engine)).toEqual([]);
+    expect(await pendingOf(engine)).toBe(1);
+    server.failSet = null;
+    await engine.requestSync();
+    expect(server.account().cards.get(card.id)?.note).toBe('mine');
+  });
+
+  it('takes the rest of a batch through when one card makes the request fail', async () => {
+    const server = new FakeContacts();
+    const good = server.addCard({ note: 'a' });
+    const bad = server.addCard({ note: 'b' });
+    const { engine } = await synced(server);
+    await mine(engine, { note: 'good edit' }, good.id);
+    await mine(engine, { note: 'poison' }, bad.id);
+    server.failSet = (args) => (JSON.stringify(args).includes('poison') ? { http: 400 } : null);
+    await engine.requestSync();
+    expect(server.account().cards.get(good.id)?.note).toBe('good edit');
+    expect(server.account().cards.get(bad.id)?.note).toBe('b');
+    const conflicts = await conflictsOf(engine);
+    expect(conflicts.map((c) => [c.recordId, c.kind])).toEqual([[bad.id, 'refused']]);
+    expect(await pendingOf(engine)).toBe(0);
+  });
+
+  it('takes the request limit from the session', async () => {
+    const server = new FakeContacts();
+    const card = server.addCard();
+    const session = { ...CONTACTS_SESSION, capabilities: { ...CONTACTS_SESSION.capabilities, 'urn:ietf:params:jmap:core': { maxSizeRequest: 1000 } } };
+    const db = openMemoryStore();
+    const engine = engineFor(server, db, undefined, session);
+    await engine.requestSync();
+    const result = await mine(engine, { note: 'x'.repeat(2000) }, card.id);
+    expect(result.notUpdated[card.id].type).toBe('tooLarge');
+  });
+});
+
+describe('a uid another card has', () => {
+  it('does not turn an offline create into that card', async () => {
+    const server = new FakeContacts();
+    const other = server.addCard({ uid: 'urn:uuid:taken', name: { full: 'Their card' } });
+    const { db, engine } = await synced(server);
+    const { created } = await call(engine, 'ContactCard/set', { create: { n: { uid: 'urn:uuid:taken', name: { full: 'My card' }, addressBookIds: { book1: true } } } });
+    await engine.requestSync();
+    const conflicts = await conflictsOf(engine);
+    expect(conflicts).toHaveLength(1);
+    expect(conflicts[0]).toMatchObject({ kind: 'refused', recordId: created.n.id, summary: 'My card', local: { op: 'create', payload: { name: { full: 'My card' } } } });
+    expect((await call(engine, 'ContactCard/get', { ids: [created.n.id] })).notFound).toEqual([created.n.id]);
+    expect(db.all('SELECT id FROM contact_card').map((r) => r.id)).toEqual([other.id]);
+    expect(server.account().cards.get(other.id)).toMatchObject({ name: { full: 'Their card' } });
+  });
+
+  it('does not take someone else\'s card for its own after a failed attempt either', async () => {
+    const server = new FakeContacts();
+    const { engine } = await synced(server);
+    const { created } = await call(engine, 'ContactCard/set', { create: { n: { uid: 'urn:uuid:race', name: { full: 'Mine' }, addressBookIds: { book1: true } } } });
+    server.offlineBeforeSet = true;
+    await engine.requestSync();
+    const other = server.addCard({ uid: 'urn:uuid:race', name: { full: 'Theirs' } });
+    await engine.requestSync();
+    expect((await conflictsOf(engine)).map((c) => [c.recordId, c.kind])).toEqual([[created.n.id, 'refused']]);
+    expect(server.account().cards.size).toBe(1);
+    expect(server.account().cards.get(other.id)).toMatchObject({ name: { full: 'Theirs' } });
+  });
+
+  it('does not delete someone else\'s card when the create was deleted again', async () => {
+    const server = new FakeContacts();
+    const { engine } = await synced(server);
+    const { created } = await call(engine, 'ContactCard/set', { create: { n: { uid: 'urn:uuid:race', name: { full: 'Mine' }, addressBookIds: { book1: true } } } });
+    server.offlineBeforeSet = true;
+    await engine.requestSync();
+    await call(engine, 'ContactCard/set', { destroy: [created.n.id] });
+    const other = server.addCard({ uid: 'urn:uuid:race', name: { full: 'Theirs' } });
+    await engine.requestSync();
+    expect(server.account().cards.has(other.id)).toBe(true);
+    expect(await pendingOf(engine)).toBe(0);
+  });
+});
+
+describe('what the server really stored', () => {
+  const photo = { p: { kind: 'photo', uri: 'data:image/png;base64,iVBORw0KGgo=', mediaType: 'image/png' } };
+
+  it('does not read its own stored photo as a change after the network went, on 1.0', async () => {
+    const server = new FakeContacts();
+    server.mediaAsBlobs = true;
+    const { engine } = await synced(server);
+    const { created } = await call(engine, 'ContactCard/set', { create: { n: { name: { full: 'Foto' }, addressBookIds: { book1: true }, media: photo } } });
+    server.offlineAfterSet = true;
+    await engine.requestSync();
+    expect(server.account().cards.size).toBe(1);
+    server.offline = false;
+    await call(engine, 'ContactCard/set', { destroy: [created.n.id] });
+    await engine.requestSync();
+    expect(await conflictsOf(engine)).toEqual([]);
+    expect(server.account().cards.size).toBe(0);
+  });
+
+  it('adopts its own card by uid though the server keeps the photo as a blob', async () => {
+    const server = new FakeContacts();
+    server.mediaAsBlobs = true;
+    const { engine } = await synced(server);
+    await call(engine, 'ContactCard/set', { create: { n: { name: { full: 'Foto' }, addressBookIds: { book1: true }, media: photo } } });
+    server.loseNextSet = true;
+    await engine.requestSync();
+    await engine.requestSync();
+    expect(await conflictsOf(engine)).toEqual([]);
+    expect(await pendingOf(engine)).toBe(0);
+    expect(server.account().cards.size).toBe(1);
+  });
+
+  it('keeps the card as the server read it back, not as it was sent, before any delta', async () => {
+    const server = new FakeContacts();
+    server.mediaAsBlobs = true;
+    const { db, engine } = await synced(server);
+    await call(engine, 'ContactCard/set', { create: { n: { name: { full: 'Foto' }, addressBookIds: { book1: true }, media: photo } } });
+    // The network goes right after the read-back, before the delta of this pass.
+    server.beforeRequest = () => {
+      const set = server.calls.findIndex(([name]) => name === 'ContactCard/set');
+      if (set >= 0 && server.calls.slice(set).some(([name]) => name === 'ContactCard/get')) server.offline = true;
+    };
+    await engine.requestSync();
+    server.beforeRequest = null;
+    server.offline = false;
+    const row = db.get<{ json: string }>('SELECT json FROM contact_card');
+    expect((JSON.parse(row?.json as string) as { media: Record<string, unknown> }).media.p).toHaveProperty('blobId');
+    const id = [...server.account().cards.keys()][0];
+    await mine(engine, { note: 'after' }, id);
+    await engine.requestSync();
+    expect(await conflictsOf(engine)).toEqual([]);
+    expect(server.account().cards.get(id)?.note).toBe('after');
+  });
+
+  it('does not take a lost photo update for someone else changing it, on 1.0', async () => {
+    const server = new FakeContacts();
+    server.mediaAsBlobs = true;
+    const card = server.addCard({ note: 'old' });
+    const { engine } = await synced(server);
+    await mine(engine, { media: photo }, card.id);
+    server.loseNextSet = true;
+    await engine.requestSync();
+    await engine.requestSync();
+    expect(await conflictsOf(engine)).toEqual([]);
+    expect(await pendingOf(engine)).toBe(0);
+  });
+});
+
+describe('after a lost update', () => {
+  it('still deletes the card', async () => {
+    const server = new FakeContacts();
+    const card = server.addCard({ note: 'old' });
+    const { engine } = await synced(server);
+    await mine(engine, { note: 'mine' }, card.id);
+    server.loseNextSet = true;
+    await engine.requestSync();
+    await call(engine, 'ContactCard/set', { destroy: [card.id] });
+    await engine.requestSync();
+    expect(await conflictsOf(engine)).toEqual([]);
+    expect(server.account().cards.has(card.id)).toBe(false);
+  });
+
+  it('does not delete when someone else changed another property too', async () => {
+    const server = new FakeContacts();
+    const card = server.addCard({ note: 'old', name: { full: 'A' } });
+    const { engine } = await synced(server);
+    await mine(engine, { note: 'mine' }, card.id);
+    server.loseNextSet = true;
+    await engine.requestSync();
+    await call(engine, 'ContactCard/set', { destroy: [card.id] });
+    server.editCard(card.id, { name: { full: 'B' } });
+    await engine.requestSync();
+    expect(server.account().cards.has(card.id)).toBe(true);
+    expect((await conflictsOf(engine)).map((c) => c.kind)).toEqual(['changed']);
+  });
+
+  it('sends a newer edit of the same property', async () => {
+    const server = new FakeContacts();
+    const card = server.addCard({ note: 'old' });
+    const { engine } = await synced(server);
+    await mine(engine, { note: 'first' }, card.id);
+    server.loseNextSet = true;
+    await engine.requestSync();
+    await mine(engine, { note: 'second' }, card.id);
+    await engine.requestSync();
+    expect(await conflictsOf(engine)).toEqual([]);
+    expect(server.account().cards.get(card.id)?.note).toBe('second');
+  });
+});
+
+describe('a refusal while the page kept editing', () => {
+  it('keeps the newer edit, and only records a conflict if it is refused too', async () => {
+    const server = new FakeContacts();
+    const card = server.addCard({ note: 'old', name: { full: 'A' } });
+    const { engine } = await synced(server);
+    await mine(engine, { note: 'one' }, card.id);
+    server.refuse.set(card.id, { type: 'forbidden' });
+    const original = server.request.bind(server);
+    let edited = false;
+    server.request = async (calls: MethodCall[]) => {
+      if (!edited && calls.some(([name]) => name === 'ContactCard/set')) {
+        edited = true;
+        await mine(engine, { 'name/full': 'B' }, card.id);
+      }
+      return original(calls);
+    };
+    await engine.requestSync();
+    expect(await pendingOf(engine)).toBe(1);
+    expect(await conflictsOf(engine)).toEqual([]);
+    server.refuse.clear();
+    await engine.requestSync();
+    expect(server.account().cards.get(card.id)).toMatchObject({ note: 'one', name: { full: 'B' } });
+    expect(await pendingOf(engine)).toBe(0);
+  });
+});
+
+describe('session limits', () => {
+  it('takes maxObjectsInGet and maxCallsInRequest from the session', async () => {
+    const server = new FakeContacts();
+    server.maxObjectsInGet = 2;
+    const cards = [server.addCard(), server.addCard(), server.addCard(), server.addCard(), server.addCard()];
+    const session = { ...CONTACTS_SESSION, capabilities: { ...CONTACTS_SESSION.capabilities, 'urn:ietf:params:jmap:core': { maxObjectsInGet: 2, maxCallsInRequest: 4 } } };
+    const db = openMemoryStore();
+    const events: StoreEvent[] = [];
+    const engine = engineFor(server, db, (e) => events.push(e), session);
+    await engine.requestSync();
+    expect(events.filter((e) => e.type === 'error')).toEqual([]);
+    expect(count(db, 'contact_card')).toBe(5);
+    for (const [name, args] of server.calls) {
+      if (name === 'ContactCard/query') expect(args.limit).toBeLessThanOrEqual(2);
+    }
+    for (const card of cards.slice(0, 3)) await mine(engine, { note: 'x' }, card.id);
+    await engine.requestSync();
+    expect(events.filter((e) => e.type === 'error')).toEqual([]);
+    expect(await pendingOf(engine)).toBe(0);
+    expect(cards.slice(0, 3).map((c) => server.account().cards.get(c.id)?.note)).toEqual(['x', 'x', 'x']);
+  });
+});
+
+describe('an interrupted first sync', () => {
+  it('answers serverUnavailable until the first full pass is done', async () => {
+    const server = new FakeContacts();
+    for (let i = 0; i < 2600; i += 1) server.addCard();
+    const db = openMemoryStore();
+    const engine = engineFor(server, db);
+    let requests = 0;
+    server.beforeRequest = () => {
+      requests += 1;
+      if (requests === 4) server.offline = true;
+    };
+    await engine.requestSync();
+    expect(count(db, 'contact_card')).toBe(2000);
+    expect(await engine.answer([['ContactCard/query', { accountId: JMAP_ACCOUNT, limit: 50 }, '0']])).toBeNull();
+    expect(await engine.answer([['ContactCard/get', { accountId: JMAP_ACCOUNT, ids: null }, '0']])).toBeNull();
+    server.offline = false;
+    server.beforeRequest = null;
+    await engine.requestSync();
+    expect((await call(engine, 'ContactCard/query', { calculateTotal: true })).total).toBe(2600);
+  });
+
+  it('goes on answering from the old copy while a later resync runs', async () => {
+    const server = new FakeContacts();
+    for (let i = 0; i < 2600; i += 1) server.addCard();
+    const { db, engine } = await synced(server);
+    db.run("UPDATE sync_state SET state = 'bad state!' WHERE type = 'ContactCard'");
+    let requests = 0;
+    server.beforeRequest = () => {
+      requests += 1;
+      if (requests === 3) server.offline = true;
+    };
+    await engine.requestSync();
+    expect((await call(engine, 'ContactCard/query', { calculateTotal: true })).total).toBe(2600);
+  });
+});
+
+describe('paging while cards change', () => {
+  it('does not skip a card when an earlier one is deleted between requests', async () => {
+    const server = new FakeContacts();
+    const cards = Array.from({ length: 2600 }, () => server.addCard());
+    const db = openMemoryStore();
+    const engine = engineFor(server, db);
+    let queries = 0;
+    const original = server.request.bind(server);
+    server.request = async (calls: MethodCall[]) => {
+      if (calls.some(([name]) => name === 'ContactCard/query')) {
+        queries += 1;
+        if (queries === 2) server.removeCard(cards[0].id);
+      }
+      return original(calls);
+    };
+    await engine.requestSync();
+    const kept = new Set(db.all<{ id: string }>('SELECT id FROM contact_card').map((r) => r.id));
+    expect(cards.slice(1).filter((c) => !kept.has(c.id))).toEqual([]);
+    expect(kept.has(cards[0].id)).toBe(false);
+    const anchored = server.calls.filter(([name, args]) => name === 'ContactCard/query' && args.anchor !== undefined);
+    expect(anchored.length).toBeGreaterThan(0);
+  });
+
+  it('starts over when the card it paged from is gone', async () => {
+    const server = new FakeContacts();
+    const cards = Array.from({ length: 2600 }, () => server.addCard());
+    const db = openMemoryStore();
+    const engine = engineFor(server, db);
+    let queries = 0;
+    const original = server.request.bind(server);
+    server.request = async (calls: MethodCall[]) => {
+      if (calls.some(([name]) => name === 'ContactCard/query')) {
+        queries += 1;
+        if (queries === 2) server.removeCard(cards[1999].id);
+      }
+      return original(calls);
+    };
+    const events: StoreEvent[] = [];
+    await engine.requestSync();
+    expect(events).toEqual([]);
+    const kept = new Set(db.all<{ id: string }>('SELECT id FROM contact_card').map((r) => r.id));
+    expect(kept.size).toBe(2599);
+    expect(kept.has(cards[1999].id)).toBe(false);
   });
 });
 /* eslint-enable @typescript-eslint/no-explicit-any */
