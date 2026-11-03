@@ -304,6 +304,7 @@ export class AccountEngine {
       now: this.now,
       emit: this.emitter,
       stopped: () => this.closed || !this.online || this.scopeChanged,
+      requestSync: () => this.requestSync(),
       syncState: (jmap, type) => this.syncState(jmap, type),
       setSyncState: (jmap, type, row) => this.setSyncState(jmap, type, row),
       overlay: (jmap, type, records) => this.overlay(jmap, type, records),
@@ -321,6 +322,7 @@ export class AccountEngine {
       emit: this.emitter,
       overlay: (jmap, type, records) => this.overlay(jmap, type, records),
       keptByOthers: (area) => this.keptByOthers(area),
+      requestSync: () => this.requestSync(),
     };
   }
 

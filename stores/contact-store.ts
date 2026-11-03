@@ -13,6 +13,7 @@ import { sanitizeDisplayName, splitMailbox } from '@/lib/rfc5322-mailbox';
 import { inlineContactMedia, writeContactWithNewPhoto, type ContactSaveOptions } from '@/lib/contact-media';
 import { contactToView } from '@/lib/plugin-projection';
 import { PrincipalsRequestError } from '@/lib/jmap/principals-error';
+import { PartialAccountsError, partialAccounts, withFailedAccountsKept } from '@/lib/jmap/partial-accounts';
 import type { Principal } from '@/lib/jmap/types';
 import { currentStoreEpoch } from '@/lib/store-epoch';
 
@@ -614,7 +615,14 @@ export const useContactStore = create<ContactStore>()(
         } catch (error) {
           if (currentStoreEpoch() !== epoch) return;
           console.error('Failed to fetch contacts:', error);
-          set({ error: 'Failed to fetch contacts', isLoading: false, contactsLoaded: true });
+          // An account that couldn't answer keeps its cards; the others are fresh.
+          const partial = partialAccounts<ContactCard>(error);
+          set((state) => ({
+            error: 'Failed to fetch contacts',
+            isLoading: false,
+            contactsLoaded: true,
+            contacts: partial ? withFailedAccountsKept(partial, state.contacts) : state.contacts,
+          }));
         }
       },
 
@@ -656,7 +664,11 @@ export const useContactStore = create<ContactStore>()(
         } catch (error) {
           if (currentStoreEpoch() !== epoch) return;
           console.error('Failed to fetch address books:', error);
-          set({ error: 'Failed to fetch address books' });
+          const partial = partialAccounts<AddressBook>(error);
+          set((state) => ({
+            error: 'Failed to fetch address books',
+            addressBooks: partial ? withFailedAccountsKept(partial, state.addressBooks) : state.addressBooks,
+          }));
         }
       },
 
@@ -671,7 +683,12 @@ export const useContactStore = create<ContactStore>()(
                 return prefixContactsWithLocalAccount(list, localAccountId);
               } catch (error) {
                 debug.error(`Failed to fetch contacts for account ${localAccountId}:`, error);
-                return [] as ContactCard[];
+                // Keep what this login's cards were: it just couldn't answer.
+                const held = get().contacts.filter((contact) => contact.localAccountId === localAccountId);
+                const partial = partialAccounts<ContactCard>(error);
+                if (!partial) return held;
+                const fresh = prefixContactsWithLocalAccount(partial.items, localAccountId);
+                return withFailedAccountsKept(new PartialAccountsError(fresh, partial.failedAccountIds, partial.primaryAccountId, error), held);
               }
             }),
           );
@@ -694,7 +711,11 @@ export const useContactStore = create<ContactStore>()(
                 return prefixAddressBooksWithLocalAccount(list, localAccountId);
               } catch (error) {
                 debug.error(`Failed to fetch address books for account ${localAccountId}:`, error);
-                return [] as AddressBook[];
+                const held = get().addressBooks.filter((book) => book.localAccountId === localAccountId);
+                const partial = partialAccounts<AddressBook>(error);
+                if (!partial) return held;
+                const fresh = prefixAddressBooksWithLocalAccount(partial.items, localAccountId);
+                return withFailedAccountsKept(new PartialAccountsError(fresh, partial.failedAccountIds, partial.primaryAccountId, error), held);
               }
             }),
           );

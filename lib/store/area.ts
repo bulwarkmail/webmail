@@ -80,6 +80,8 @@ export interface StoreContext {
   overlay<T extends { id: string }>(jmap: string, type: string, records: T[]): T[];
   /** Attachments and files the other areas keep: `scope.maxTotalBytes` is for all of them together. */
   keptByOthers(area: string): number;
+  /** Starts a sync pass, or one more after the running pass. Resolves when they're done. */
+  requestSync(): Promise<void>;
 }
 
 /**
