@@ -8,3 +8,8 @@ macOS: org.bulwarkmail.desktop.mobileconfig is a sample. Change it and deploy it
 
 Linux: policies.json is a sample for /etc/bulwark/policies.json. It must be owned by root
 and writable only by root (mode 644). Otherwise the app refuses to start.
+
+Limits: these settings stop people from changing them inside the app. The app is
+not signed yet, so someone who can write to its folder or run their own copy can
+patch it. For a hard guarantee, also limit what may run with AppLocker or WDAC,
+and install per machine with the MSI so standard users cannot write to the folder.

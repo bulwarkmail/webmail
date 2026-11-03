@@ -1,8 +1,11 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_POLICY_SNAPSHOT,
   EMPTY_POLICY_LAYERS,
   POLICY_KEYS,
+  POLICY_CONSUMERS,
   POLICY_MAX_LIST_ITEMS,
   POLICY_SCHEMA,
   certificateMatchesRule,
@@ -27,7 +30,7 @@ describe('the schema', () => {
       'InstanceUrl', 'AllowStandalone', 'AllowedJmapServers', 'AllowInsecureInstance', 'UpdateChannel', 'AutoUpdate',
       'PluginsMode', 'PluginAllowlist', 'OfflineEnabled', 'AppLockRequired', 'AppLockTimeoutMinutes', 'TelemetryAllowed',
       'CrashReportsAllowed', 'QuickComposeShortcut', 'AuthServerAllowlist', 'AuthNegotiateDelegateAllowlist',
-      'AutoSelectCertificateForUrls', 'WipeOfflineData',
+      'AutoSelectCertificateForUrls', 'KeystoreAllowedOrigins', 'WipeOfflineData',
     ]);
     for (const key of POLICY_KEYS) {
       const { title, description } = POLICY_SCHEMA[key];
@@ -46,6 +49,7 @@ describe('precedence', () => {
       recommendedUser: { AppLockTimeoutMinutes: 9, QuickComposeShortcut: 'Ctrl+Alt+M' },
     };
     const snapshot = resolvePolicies(all);
+    expect(resolvePolicies(layers({ recommendedMachine: { PluginsMode: 'off' } })).PluginsMode).toMatchObject({ value: 'allowed', source: 'default' });
     expect(snapshot.UpdateChannel).toMatchObject({ value: 'beta', source: 'forced-machine', locked: true });
     expect(snapshot.AutoUpdate).toMatchObject({ value: false, source: 'forced-user', locked: true });
     expect(snapshot.AppLockTimeoutMinutes).toMatchObject({ value: 5, source: 'recommended-machine', locked: false });
@@ -75,6 +79,17 @@ describe('precedence', () => {
   });
 });
 
+describe('only a forced value counts for what decides what is allowed', () => {
+  it.each(['AllowStandalone', 'AllowedJmapServers', 'AllowInsecureInstance', 'PluginsMode', 'PluginAllowlist', 'AuthServerAllowlist', 'AuthNegotiateDelegateAllowlist', 'AutoSelectCertificateForUrls', 'KeystoreAllowedOrigins', 'WipeOfflineData'] as const)('%s', (key) => {
+    expect(POLICY_SCHEMA[key].forcedOnly).toBe(true);
+  });
+
+  it('a recommended AllowInsecureInstance can\'t let a forced http address through', () => {
+    const snapshot = resolvePolicies(layers({ forcedMachine: { InstanceUrl: 'http://bulwark.lan' }, recommendedMachine: { AllowInsecureInstance: 1 } }));
+    expect(snapshot.InstanceUrl).toMatchObject({ value: null, invalid: 'insecure' });
+  });
+});
+
 describe('hostile values fail closed', () => {
   const junk: unknown[] = [{}, [], null, 'a'.repeat(100_000), Number.NaN, { toString: 'x' }, ['x'], -1];
 
@@ -88,7 +103,7 @@ describe('hostile values fail closed', () => {
   it('forced values that make no sense take the strict side, and a weaker level never speaks instead', () => {
     const snapshot = resolvePolicies(layers({
       forcedMachine: { AllowStandalone: 'maybe', PluginsMode: 'banana', OfflineEnabled: 7, TelemetryAllowed: 'yes', AppLockRequired: 'no', AllowedJmapServers: 'https://a.example', QuickComposeShortcut: 'rm -rf' },
-      recommendedMachine: { AllowStandalone: 1, PluginsMode: 'allowed' },
+      recommendedMachine: { TelemetryAllowed: 1 },
     }));
     expect(snapshot.AllowStandalone).toMatchObject({ value: false, locked: true, invalid: 'not_a_switch' });
     expect(snapshot.PluginsMode).toMatchObject({ value: 'off', locked: true, invalid: 'unknown_value' });
@@ -101,9 +116,9 @@ describe('hostile values fail closed', () => {
   });
 
   it('a recommendation that makes no sense is simply not one', () => {
-    const snapshot = resolvePolicies(layers({ recommendedMachine: { PluginsMode: 'banana' }, recommendedUser: { PluginsMode: 'off' } }));
-    expect(snapshot.PluginsMode).toMatchObject({ value: 'off', source: 'recommended-user', locked: false });
-    expect(snapshot.PluginsMode.invalid).toBeUndefined();
+    const snapshot = resolvePolicies(layers({ recommendedMachine: { UpdateChannel: 'banana' }, recommendedUser: { UpdateChannel: 'beta' } }));
+    expect(snapshot.UpdateChannel).toMatchObject({ value: 'beta', source: 'recommended-user', locked: false });
+    expect(snapshot.UpdateChannel.invalid).toBeUndefined();
   });
 
   it('a list over the cap is refused as a whole, and bad entries drop out one by one', () => {
@@ -145,9 +160,17 @@ describe('InstanceUrl', () => {
     ['', 'empty'],
     [`https://${'a'.repeat(3000)}.com`, 'too_long'],
     ['https://exa\nmple.com', 'invalid_url'],
+    ['https://exa_mple.com', 'invalid_url'],
+    ['https://exa"mple.com', 'invalid_url'],
     [42, 'not_text'],
   ])('%s is refused', (raw, reason) => {
     expect(parseInstanceUrl(raw, false)).toEqual({ ok: false, reason });
+  });
+
+  it('takes an international name as its punycode, and IP literals', () => {
+    expect(parseInstanceUrl('https://müller.de', false)).toEqual({ ok: true, value: 'https://xn--mller-kva.de/' });
+    expect(parseInstanceUrl('https://10.0.0.5:8443', false)).toEqual({ ok: true, value: 'https://10.0.0.5:8443/' });
+    expect(parseInstanceUrl('https://[::1]/', false)).toEqual({ ok: true, value: 'https://[::1]/' });
   });
 
   it('allows http only with AllowInsecureInstance, resolved from the policies', () => {
@@ -211,7 +234,7 @@ describe('sign-in lists', () => {
     expect(parsePolicyValue('AuthServerAllowlist', '*.example.com, intranet')).toEqual({ ok: true, value: '*.example.com,intranet' });
   });
 
-  it.each(['*', '*.example.com,*', 'a b', '--no-sandbox x', 'a"b', 'a;b', ''])('%s is refused', (raw) => {
+  it.each(['*', '*.example.com,*', '*.com', '*example.com', 'a.*.example.com', '*.', 'a b', '--no-sandbox x', 'a"b', 'a;b', ''])('%s is refused', (raw) => {
     expect(parsePolicyValue('AuthServerAllowlist', raw).ok).toBe(false);
   });
 
@@ -290,6 +313,35 @@ describe('AutoSelectCertificateForUrls', () => {
     expect(certificateMatchesRule(parsed, { ...good, issuer: { commonName: 'Other', organizations: ['Org'] } })).toBe(false);
     expect(certificateMatchesRule(parsed, { ...good, subject: {} })).toBe(false);
     expect(certificateMatchesRule(parseCertificateRule(rule('example.com'))!, {})).toBe(true);
+  });
+});
+
+describe('KeystoreAllowedOrigins', () => {
+  it('takes https origins and drops the rest', () => {
+    expect(resolvePolicies(layers({ forcedMachine: { KeystoreAllowedOrigins: ['https://mail.example.com/', 'http://mail.example.com', 'https://mail.example.com/path', 'nonsense'] } })).KeystoreAllowedOrigins).toMatchObject({ value: ['https://mail.example.com'], dropped: 3 });
+  });
+});
+
+describe('every key has someone acting on it', () => {
+  it('names a consumer or who owes one', () => {
+    for (const key of POLICY_KEYS) {
+      const consumer = POLICY_CONSUMERS[key];
+      expect(consumer, key).toBeTruthy();
+      if ('pendingConsumer' in consumer) expect(consumer.pendingConsumer.length, key).toBeGreaterThan(5);
+    }
+  });
+
+  it('a consumer in this repo really reads the key', () => {
+    for (const key of POLICY_KEYS) {
+      const consumer = POLICY_CONSUMERS[key];
+      if ('repo' in consumer && consumer.repo === 'webmail') expect(readFileSync(path.join(process.cwd(), consumer.file), 'utf8'), key).toContain(key);
+    }
+  });
+
+  // The coordinator flips this when step 7 is done: then no key may be waiting.
+  const ALL_WIRED = false;
+  it.runIf(ALL_WIRED)('nobody is waiting any more', () => {
+    expect(POLICY_KEYS.filter((key) => 'pendingConsumer' in POLICY_CONSUMERS[key])).toEqual([]);
   });
 });
 

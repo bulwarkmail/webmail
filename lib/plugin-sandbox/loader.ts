@@ -39,7 +39,7 @@ import { hookArgsFor } from './hook-payload';
 import { rememberDeclaredHooks } from '../plugin-send-guards';
 import type { SlotName } from '../plugin-types';
 import { PLUGIN_REFUSED_ERROR, pluginAllowed } from '../outgoing-hosts';
-import { PLUGIN_POLICY_REFUSED_ERROR, pluginAllowedByDesktopPolicy } from '../desktop/policy';
+import { PLUGIN_POLICY_REFUSED_ERROR, pluginMayRunByDesktopPolicy } from '../desktop/policy';
 
 // ─── Hook-bus lookup (one flat map for name → bus) ────────────
 
@@ -232,7 +232,7 @@ export function loadSandboxedPlugin(plugin: InstalledPlugin): Promise<void> {
 async function startSandboxedPlugin(plugin: InstalledPlugin): Promise<void> {
   // The device's OS policy. On an instance this is the only gate there is: the
   // instance's server knows nothing of this device's policy.
-  if (!pluginAllowedByDesktopPolicy(plugin.id)) {
+  if (!pluginMayRunByDesktopPolicy(plugin)) {
     storeAccessor?.setPluginStatus(plugin.id, 'error', PLUGIN_POLICY_REFUSED_ERROR);
     return;
   }

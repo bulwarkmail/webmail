@@ -69,6 +69,23 @@ vi.mock('@/lib/security/url-guard', async (original) => ({
   isPublicHttpUrl: async () => true,
 }));
 
+const jar = vi.hoisted(() => ({ value: '' }));
+const deleted = vi.hoisted(() => [] as string[]);
+vi.mock('next/headers', () => ({
+  cookies: async () => ({
+    get: () => (jar.value ? { value: jar.value } : undefined),
+    set: () => {},
+    delete: (name: string) => deleted.push(name),
+    getAll: () => [],
+  }),
+}));
+vi.mock('@/lib/auth/crypto', () => ({
+  encryptSession: () => 'x',
+  decryptSession: () => ({ serverUrl: 'https://other.example.org', username: 'a', password: 'b' }),
+  decryptPayload: () => null,
+  encryptPayload: () => 'x',
+}));
+
 const POLICY_KEY = Symbol.for('bulwark.desktop.serverPolicy');
 
 function setPolicy(policy: Partial<ServerPolicy> | undefined) {
@@ -196,6 +213,20 @@ describe('AllowedJmapServers on the sign-in routes', () => {
     expect(answer.status).toBe(403);
     expect((await answer.json()).code).toBe('blocked_by_policy');
     expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('a stored session on a refused server isn\'t restored, and the cookie stays', async () => {
+    setPolicy({ pluginsMode: 'allowed', allowedJmapServers: ['https://mail.example.com'] });
+    jar.value = 'cookie';
+    deleted.length = 0;
+    const { PUT } = await import('@/app/api/auth/session/route');
+    const answer = await PUT(new NextRequest('http://localhost/api/auth/session', {
+      method: 'PUT',
+      headers: { 'sec-fetch-site': 'same-origin', 'sec-fetch-mode': 'cors', 'sec-fetch-dest': 'empty' },
+    }));
+    expect(answer.status).toBe(403);
+    expect((await answer.json()).code).toBe('blocked_by_policy');
+    expect(deleted).toEqual([]);
   });
 
   it('the browser sign-in\'s lookup refuses it too', async () => {

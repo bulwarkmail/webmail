@@ -195,13 +195,16 @@ function LoginPageContent() {
   // Only the desktop build sets these; a browser never shows them.
   const [desktopNotice, setDesktopNotice] = useState<string | null>(null);
   const [desktopWaiting, setDesktopWaiting] = useState(false);
-  const [desktopPolicyNotice, setDesktopPolicyNotice] = useState<string | null>(null);
   const tSessionLimits = useTranslations("session_limits");
   const tOffline = useTranslations("offline");
   const tTheme = useTranslations("settings.appearance.theme");
   const params = useParams();
   const searchParams = useSearchParams();
   const isAddAccountMode = searchParams.get("mode") === "add-account";
+  // Also when the app sent someone here because their server came off the list.
+  const [desktopPolicyNotice, setDesktopPolicyNotice] = useState<string | null>(
+    searchParams.get("notice") === "server_refused" ? tDesktopPolicy("server_refused") : null,
+  );
 
   // When the mobile app launches the webmail in a browser tab it tacks on
   // these params. We grab them once at mount and stash them in a ref so any
@@ -630,6 +633,11 @@ function LoginPageContent() {
   const signedOutOnPurpose = useRef<boolean | null>(null);
 
   const startServerSideSso = useCallback(async () => {
+    // The device's OS policy, as for a password: nothing starts towards a refused server.
+    if (selectedServer?.url && !jmapServerAllowedByDesktopPolicy(selectedServer.url, desktopPolicy)) {
+      setDesktopPolicyNotice(tDesktopPolicy("server_refused"));
+      return;
+    }
     setOauthLoading(true);
     try {
       const prefix = getPathPrefix(params.locale as string);
@@ -916,6 +924,11 @@ function LoginPageContent() {
    * whichever server is selected so that "Sign in with Google" is one tap.
    */
   const handleOAuthLogin = async (target?: PublicJmapServerEntry) => {
+    const oauthTarget = (target ?? selectedServer)?.url || (allowCustomJmapEndpoint ? jmapEndpoint : configuredServerUrl);
+    if (oauthTarget && !jmapServerAllowedByDesktopPolicy(oauthTarget, desktopPolicy)) {
+      setDesktopPolicyNotice(tDesktopPolicy("server_refused"));
+      return;
+    }
     if (LITE_OAUTH_AVAILABLE && !target) {
       await startLiteOAuth(probeTarget);
       return;

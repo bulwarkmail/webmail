@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { POLICY_KEYS, POLICY_RECOMMENDED_SUBKEY, POLICY_REGISTRY_ROOT, POLICY_SCHEMA, parsePolicyValue, resolvePolicies, type PolicyKey } from '../policy-schema';
+import { POLICY_KEYS, POLICY_REGISTRY_ROOT, POLICY_SCHEMA, parsePolicyValue, resolvePolicies, type PolicyKey } from '../policy-schema';
 import { generateAdml, generateAdmx, generateMobileconfig, generatePoliciesJson, generatePolicyFiles } from '../policy-templates';
 
 const NS = 'http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions';
@@ -108,7 +108,7 @@ describe('the ADMX', () => {
 
   it('puts list policies under their own subkey with numbered values', () => {
     const lists = POLICY_KEYS.filter((key) => POLICY_SCHEMA[key].type === 'list');
-    expect(lists).toEqual(['AllowedJmapServers', 'PluginAllowlist', 'AutoSelectCertificateForUrls']);
+    expect(lists).toEqual(['AllowedJmapServers', 'PluginAllowlist', 'AutoSelectCertificateForUrls', 'KeystoreAllowedOrigins']);
     for (const key of lists) {
       const forced = all(doc, 'policy').find((p) => p.getAttribute('name') === key)!;
       expect(forced.getAttribute('key')).toBe(`${POLICY_REGISTRY_ROOT}\\${key}`);
@@ -116,8 +116,8 @@ describe('the ADMX', () => {
       const list = all(forced, 'list')[0];
       // Empty prefix is what makes Windows name the values 1, 2, 3.
       expect(list.getAttribute('valuePrefix')).toBe('');
-      const recommended = all(doc, 'policy').find((p) => p.getAttribute('name') === `${key}_Recommended`)!;
-      expect(recommended.getAttribute('key')).toBe(`${POLICY_REGISTRY_ROOT}\\${POLICY_RECOMMENDED_SUBKEY}\\${key}`);
+      // Lists decide what's allowed, so they can only be forced.
+      expect(all(doc, 'policy').some((p) => p.getAttribute('name') === `${key}_Recommended`)).toBe(false);
     }
   });
 
@@ -181,6 +181,8 @@ describe('the samples', () => {
     }
     expect(snapshot.InstanceUrl.value).toBe('https://mail.example.com/');
     expect(snapshot.UpdateChannel.source).toBe('recommended-machine');
+    expect(generatePolicyFiles()['README.txt']).toContain('AppLocker');
+    expect(generateAdml('en')).not.toContain('1.0 and later');
     expect(snapshot.WipeOfflineData.value).toBeNull();
   });
 

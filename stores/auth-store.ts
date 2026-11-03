@@ -21,6 +21,8 @@ import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { DESKTOP_CLIENT_ID_KEY } from '@/lib/desktop/browser-sign-in';
 import { isEmbedded, notifyParent } from '@/lib/iframe-bridge';
 import { snapshotAccount, restoreAccount, clearAllStores, evictAccount, evictAll, forgetAccountRows } from '@/lib/account-state-manager';
+import { getDesktopPolicy, onDesktopPolicyChange } from '@/lib/desktop/policy';
+import { accountRefusedByDesktopPolicy, planForRefusedAccounts } from '@/lib/desktop/refused-accounts';
 import { clearAllPluginStorage, clearPluginStorageForAccount } from '@/lib/plugin-sandbox/storage-scope';
 import { broadcastSignOut, onSignedOutElsewhere, passSignOutGates, purgeSignedOutData, runBeforeSignOut, type SignOutCleanupOptions } from '@/lib/sign-out-cleanup';
 import { forgetPrincipals } from '@/lib/delegation/known-principals';
@@ -2470,7 +2472,7 @@ export const useAuthStore = create<AuthState>()(
         // Prefer an account that is signed in here: one restored from the
         // account list backup (or otherwise not connected) has no client, and
         // picking it signs out every account left.
-        const remainingAccounts = useAccountStore.getState().accounts;
+        const remainingAccounts = useAccountStore.getState().accounts.filter((account) => !accountRefusedByDesktopPolicy(account));
         const nextAccount = wasDemoMode
           ? undefined
           : remainingAccounts.find((a) => clients.has(a.id)) ?? remainingAccounts[0];
@@ -2652,7 +2654,7 @@ export const useAuthStore = create<AuthState>()(
 
         const accountStore = useAccountStore.getState();
         const targetAccount = accountStore.getAccountById(accountId);
-        if (!targetAccount) return;
+        if (!targetAccount || accountRefusedByDesktopPolicy(targetAccount)) return;
         // Restored from the account list backup and never signed in here:
         // there is no session to resume, so ask for the password instead.
         if (targetAccount.awaitingSignIn && !clients.has(accountId)) {
@@ -2876,7 +2878,15 @@ export const useAuthStore = create<AuthState>()(
 
       checkAuth: async () => {
         const accountStore = useAccountStore.getState();
-        let accounts = accountStore.accounts;
+        // An account on a server the device's OS policy refuses stays stored, with its
+        // cookies and local data, and stays out of everything until it's allowed again.
+        const everyAccount = accountStore.accounts;
+        let accounts = everyAccount.filter((account) => !accountRefusedByDesktopPolicy(account));
+        if (everyAccount.length > 0 && accounts.length === 0) {
+          set({ isLoading: false, isAuthenticated: false, client: null, activeAccountId: null });
+          if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) leaveForRefusedServer();
+          return;
+        }
 
         // If every account is a demo account, re-initialize demo mode
         // instead of trying to restore a server session (which doesn't exist).
@@ -2940,8 +2950,9 @@ export const useAuthStore = create<AuthState>()(
 
           // Determine which account to activate first
           const defaultAccount = accountStore.getDefaultAccount();
-          const activeId = get().activeAccountId;
-          const targetId = activeId || defaultAccount?.id || accounts[0].id;
+          const usable = (id: string | null | undefined) => (id && accounts.some((account) => account.id === id) ? id : null);
+          const activeId = usable(get().activeAccountId);
+          const targetId = activeId || usable(defaultAccount?.id) || accounts[0].id;
 
           // Restore one account: decrypt the stored credential/token, connect,
           // and sync the passthrough auth context. The context write never
@@ -3664,6 +3675,56 @@ useAuthStore.subscribe((state, prev) => {
     usePolicyStore.getState().setPolicySubject(subject);
   });
 });
+
+/** Off to the login page, which says why. The account stays, for when the policy allows it again. */
+function leaveForRefusedServer(): void {
+  if (isPopoutWindow()) {
+    closePopoutWindow();
+    return;
+  }
+  replaceWindowLocation(`${getLocaleLoginPath()}?notice=server_refused`);
+}
+
+const stoppedForPolicy = new Set<string>();
+
+/**
+ * The device's OS policy took a server off its list, or put one back. A refused account
+ * stops: no client, no push, no renewals, and with no client its store has nothing to
+ * sync through. It isn't signed out: cookies, outbox and mail stay. The active one moves
+ * to the next allowed account, or to the login page.
+ */
+export function applyDesktopServerPolicy(): void {
+  const auth = useAuthStore.getState();
+  const accounts = useAccountStore.getState().accounts;
+  const plan = planForRefusedAccounts(accounts, auth.activeAccountId, getDesktopPolicy());
+  for (const id of plan.stop) {
+    stoppedForPolicy.add(id);
+    clearRefreshTimer(id);
+    const client = clients.get(id);
+    if (client) {
+      forgetCalendarSubscriptions(client);
+      try { client.disconnect(); } catch { /* noop */ }
+      clients.delete(id);
+    }
+    useAccountStore.getState().updateAccount(id, { isConnected: false });
+  }
+  const returned = [...stoppedForPolicy].filter((id) => !plan.refused.includes(id));
+  for (const id of returned) stoppedForPolicy.delete(id);
+
+  if (plan.activeRefused) {
+    if (plan.next) void auth.switchAccount(plan.next);
+    else {
+      useAuthStore.setState({ client: null, isAuthenticated: false });
+      leaveForRefusedServer();
+    }
+    return;
+  }
+  // Allowed again. With nobody signed in the start-up path restores it from its cookies;
+  // otherwise it shows in the switcher again and connects when switched to.
+  if (returned.length > 0 && !auth.client) window.location.replace('/');
+}
+
+if (typeof window !== 'undefined') onDesktopPolicyChange(applyDesktopServerPolicy);
 
 // See canEnterLoginInPlace.
 let signedInSincePageLoad = useAuthStore.getState().isAuthenticated;

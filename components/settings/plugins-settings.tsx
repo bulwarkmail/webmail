@@ -15,7 +15,7 @@ import { PluginPermissionList } from '@/components/plugins/plugin-permission-lis
 import type { InstalledPlugin, PluginStatus, SettingFieldSchema } from '@/lib/plugin-types';
 import { effectiveSettings } from '@/lib/plugin-settings';
 import { PLUGIN_REFUSED_ERROR } from '@/lib/outgoing-hosts';
-import { PLUGIN_POLICY_REFUSED_ERROR, useDesktopPolicy } from '@/lib/desktop/policy';
+import { PLUGIN_POLICY_REFUSED_ERROR, pluginUploadsAllowedByDesktopPolicy, useDesktopPolicy } from '@/lib/desktop/policy';
 import { OrgLockedNote } from './org-locked-note';
 import { lookup } from '@/lib/plugin-sandbox/plugin-i18n';
 import { forgetCredentials, listConnectedAccounts, type ConnectedAccount } from '@/lib/plugin-sandbox/connect-dialog';
@@ -68,7 +68,7 @@ export function PluginsSettings() {
     return null;
   }
 
-  const uploadsAllowed = isFeatureEnabled('pluginsUploadEnabled') && !demoMode && devicePolicy.PluginsMode.value !== 'off';
+  const uploadsAllowed = isFeatureEnabled('pluginsUploadEnabled') && !demoMode && pluginUploadsAllowedByDesktopPolicy(devicePolicy);
   const requireApproval = isFeatureEnabled('requirePluginApproval');
 
   const handleToggle = async (plugin: InstalledPlugin) => {

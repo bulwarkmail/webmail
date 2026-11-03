@@ -75,6 +75,7 @@ export interface PolicyValues {
   AuthServerAllowlist: string | null;
   AuthNegotiateDelegateAllowlist: string | null;
   AutoSelectCertificateForUrls: CertificateRule[];
+  KeystoreAllowedOrigins: string[];
   WipeOfflineData: string | null;
 }
 
@@ -84,7 +85,11 @@ interface PolicyBase {
   category: PolicyCategory;
   title: PolicyText;
   description: PolicyText;
-  /** Only a forced value counts: there's no such thing as a recommended wipe. */
+  /**
+   * Only a forced value counts. Anything that decides what's allowed: it has no user
+   * choice to sit under, so a "recommended" one would act as forced without being
+   * shown as such, and only a forced value may loosen a forced one.
+   */
   forcedOnly?: boolean;
 }
 
@@ -123,7 +128,7 @@ export type PolicyDefinition = PolicyBase &
       }
     | {
         type: 'list';
-        item: 'server' | 'plugin' | 'certificate';
+        item: 'server' | 'plugin' | 'certificate' | 'origin';
         default: readonly never[] | null;
         label: PolicyText;
         sample: readonly string[];
@@ -147,6 +152,7 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
   },
   AllowStandalone: {
     category: 'connection',
+    forcedOnly: true,
     type: 'boolean',
     default: true,
     onInvalid: false,
@@ -159,6 +165,7 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
   },
   AllowedJmapServers: {
     category: 'connection',
+    forcedOnly: true,
     type: 'list',
     item: 'server',
     default: null,
@@ -166,12 +173,13 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
     label: { en: 'Allowed mail servers', de: 'Zugelassene Mailserver' },
     title: { en: 'Allowed mail servers', de: 'Zugelassene Mailserver' },
     description: {
-      en: 'The mail servers people may sign in to. One per line: an address such as https://mail.example.com, or https://*.example.com for all subdomains. A server without a scheme means https. Plain http must be named with http://. When this list is set, everything else is refused.',
-      de: 'Die Mailserver, bei denen sich Benutzer anmelden dürfen. Einer pro Zeile: eine Adresse wie https://mail.example.com oder https://*.example.com für alle Subdomains. Ein Server ohne Schema bedeutet https. Unverschlüsseltes http muss mit http:// angegeben werden. Ist diese Liste gesetzt, wird alles andere abgelehnt.',
+      en: 'The mail servers people may sign in to. One per line: an address such as https://mail.example.com, or https://*.example.com for all subdomains. A server without a scheme means https. Plain http must be named with http://. When this list is set, everything else is refused, and accounts on a server taken off the list stop until it is back, keeping their data. A Bulwark server the user picks, or the one under "Bulwark server" as a default, must be on the list too. A forced one does not need to be.',
+      de: 'Die Mailserver, bei denen sich Benutzer anmelden dürfen. Einer pro Zeile: eine Adresse wie https://mail.example.com oder https://*.example.com für alle Subdomains. Ein Server ohne Schema bedeutet https. Unverschlüsseltes http muss mit http:// angegeben werden. Ist diese Liste gesetzt, wird alles andere abgelehnt, und Konten auf einem Server, der von der Liste genommen wird, ruhen, bis er wieder darauf steht, und behalten ihre Daten. Ein Bulwark-Server, den der Benutzer wählt, oder der unter „Bulwark-Server“ als Standardwert muss ebenfalls auf der Liste stehen. Ein erzwungener nicht.',
     },
   },
   AllowInsecureInstance: {
     category: 'connection',
+    forcedOnly: true,
     type: 'boolean',
     default: false,
     onInvalid: false,
@@ -212,6 +220,7 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
   },
   PluginsMode: {
     category: 'plugins',
+    forcedOnly: true,
     type: 'enum',
     default: 'allowed',
     onInvalid: 'off',
@@ -223,12 +232,13 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
     ],
     title: { en: 'Which plugins may run', de: 'Welche Plugins laufen dürfen' },
     description: {
-      en: 'Whether plugins can be installed and run. A plugin that is refused keeps its data and settings: it comes back as it was if the policy allows it again.',
-      de: 'Ob Plugins installiert und ausgeführt werden dürfen. Ein abgelehntes Plugin behält seine Daten und Einstellungen: Es kommt unverändert zurück, wenn die Richtlinie es wieder erlaubt.',
+      en: 'Whether plugins can be installed and run. With the list or none, people cannot add a plugin themselves, since a package can name any id. With the list, only plugins your Bulwark server or the app\'s directory provides can run. A plugin that is refused keeps its data and settings: it comes back as it was if the policy allows it again.',
+      de: 'Ob Plugins installiert und ausgeführt werden dürfen. Mit der Liste oder ohne Plugins können Benutzer selbst keine Plugins hinzufügen, weil ein Paket jede beliebige ID nennen kann. Mit der Liste laufen nur Plugins, die Ihr Bulwark-Server oder das Verzeichnis der App bereitstellt. Ein abgelehntes Plugin behält seine Daten und Einstellungen: Es kommt unverändert zurück, wenn die Richtlinie es wieder erlaubt.',
     },
   },
   PluginAllowlist: {
     category: 'plugins',
+    forcedOnly: true,
     type: 'list',
     item: 'plugin',
     default: [],
@@ -318,6 +328,7 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
   },
   AuthServerAllowlist: {
     category: 'signIn',
+    forcedOnly: true,
     type: 'string',
     format: 'hostList',
     default: null,
@@ -332,6 +343,7 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
   },
   AuthNegotiateDelegateAllowlist: {
     category: 'signIn',
+    forcedOnly: true,
     type: 'string',
     format: 'hostList',
     default: null,
@@ -346,6 +358,7 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
   },
   AutoSelectCertificateForUrls: {
     category: 'signIn',
+    forcedOnly: true,
     type: 'list',
     item: 'certificate',
     default: [],
@@ -355,6 +368,20 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
     description: {
       en: 'One JSON rule per line, in the format Chrome uses: {"pattern":"https://[*.]example.com","filter":{"ISSUER":{"CN":"Example CA"}}}. The app then picks the matching certificate for that site without asking.',
       de: 'Eine JSON-Regel pro Zeile, im Format von Chrome: {"pattern":"https://[*.]example.com","filter":{"ISSUER":{"CN":"Example CA"}}}. Die App wählt dann für diese Website das passende Zertifikat ohne Rückfrage.',
+    },
+  },
+  KeystoreAllowedOrigins: {
+    category: 'signIn',
+    forcedOnly: true,
+    type: 'list',
+    item: 'origin',
+    default: [],
+    sample: ['https://mail.example.com'],
+    label: { en: 'Addresses', de: 'Adressen' },
+    title: { en: 'Sites that may use the system certificate store', de: 'Websites, die den Zertifikatspeicher des Systems verwenden dürfen' },
+    description: {
+      en: 'The Bulwark servers, by https address, whose plugins may sign and decrypt with the certificates in the operating system\'s store, without the user being asked for each site. One per line.',
+      de: 'Die Bulwark-Server, nach https-Adresse, deren Plugins mit den Zertifikaten im Speicher des Betriebssystems signieren und entschlüsseln dürfen, ohne dass der Benutzer für jede Website gefragt wird. Eine pro Zeile.',
     },
   },
   WipeOfflineData: {
@@ -368,8 +395,8 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
     label: { en: 'Wipe code', de: 'Löschcode' },
     title: { en: 'Delete mail kept on the device', de: 'Auf dem Gerät behaltene E-Mails löschen' },
     description: {
-      en: 'Set this to a new value, such as today\'s date, to delete all mail the app keeps on the device. Each value deletes once: the app remembers the ones it has acted on, so it stays safe to leave a value in place. Use a new value to delete again.',
-      de: 'Setzen Sie dies auf einen neuen Wert, etwa das heutige Datum, um alle E-Mails zu löschen, die die App auf dem Gerät behält. Jeder Wert löscht einmal: Die App merkt sich, welche sie schon ausgeführt hat, ein Wert kann also stehen bleiben. Verwenden Sie einen neuen Wert, um erneut zu löschen.',
+      en: 'Set this to a new value, such as today\'s date, to delete everything the app keeps on the device for every server and account: mail, keys, and sign-ins, so people sign in again. Each value deletes once: the app remembers the ones it has acted on, so it stays safe to leave a value in place. Use a new value to delete again.',
+      de: 'Setzen Sie dies auf einen neuen Wert, etwa das heutige Datum, um alles zu löschen, was die App für alle Server und Konten auf dem Gerät behält: E-Mails, Schlüssel und Anmeldungen, Benutzer melden sich also neu an. Jeder Wert löscht einmal: Die App merkt sich, welche sie schon ausgeführt hat, ein Wert kann also stehen bleiben. Verwenden Sie einen neuen Wert, um erneut zu löschen.',
     },
   },
 };
@@ -436,6 +463,9 @@ export function parseInstanceUrl(raw: unknown, allowInsecure: boolean): Parsed<s
     return fail('scheme');
   }
   if (!url.hostname || url.username || url.password || url.search || url.hash) return fail('invalid_url');
+  // After the parser's work a real name is plain letters, digits, dots and hyphens (an
+  // international one becomes xn--), or an IP literal. Anything else is not an address.
+  if (!/^(?:[a-z0-9.-]+|\[[0-9a-f:.]+\])$/.test(url.hostname)) return fail('invalid_url');
   return { ok: true, value: `${url.origin}${url.pathname.replace(/\/+$/, '')}/` };
 }
 
@@ -488,6 +518,19 @@ export function jmapServerAllowed(patterns: readonly string[] | null | undefined
   return false;
 }
 
+/** One entry of KeystoreAllowedOrigins: an https origin. */
+export function parseHttpsOrigin(raw: unknown): string | null {
+  if (typeof raw !== 'string' || raw.length > POLICY_MAX_STRING || CONTROL.test(raw)) return null;
+  try {
+    const url = new URL(raw.trim());
+    if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) return null;
+    if (url.pathname !== '/' || !/^[a-z0-9.-]+$/.test(url.hostname)) return null;
+    return url.origin;
+  } catch {
+    return null;
+  }
+}
+
 const PLUGIN_ID = /^[a-z0-9][a-z0-9._-]{0,127}$/;
 
 export function parsePluginId(raw: unknown): string | null {
@@ -526,8 +569,9 @@ function parseHostList(raw: unknown): Parsed<string> {
   if (!HOST_LIST.test(text)) return fail('invalid_host_list');
   const hosts = text.split(',').filter(Boolean);
   if (hosts.length === 0 || hosts.length > POLICY_MAX_LIST_ITEMS) return fail('invalid_host_list');
-  // `*` alone would hand Windows credentials to any site that asks.
-  if (hosts.some((host) => host === '*' || host === '*.')) return fail('invalid_host_list');
+  // A wildcard must sit in front of a real domain of two labels or more: `*` or `*.com`
+  // would hand Windows credentials to any site that asks.
+  if (hosts.some((host) => host.includes('*') && !/^\*\.[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+(?::\d+)?$/.test(host))) return fail('invalid_host_list');
   return { ok: true, value: hosts.join(',') };
 }
 
@@ -678,6 +722,8 @@ export function parsePolicyValue(key: PolicyKey, raw: unknown, allowInsecure = f
           return parseList(raw, parsePluginId);
         case 'certificate':
           return parseList(raw, parseCertificateRule);
+        case 'origin':
+          return parseList(raw, parseHttpsOrigin);
       }
   }
   return fail('unknown_policy');
@@ -755,6 +801,34 @@ export function effectivePolicyValue<T>(entry: { value: T; locked: boolean }, ch
 }
 
 export const DEFAULT_POLICY_SNAPSHOT: PolicySnapshot = resolvePolicies(EMPTY_POLICY_LAYERS);
+
+/**
+ * Who acts on each key, so none can sit idle: the desktop repo's test and the webmail's
+ * read the named file for the key. `pendingConsumer` names who still has to wire one.
+ */
+export type PolicyConsumer = { repo: 'shell' | 'webmail'; file: string } | { pendingConsumer: string };
+
+export const POLICY_CONSUMERS: Record<PolicyKey, PolicyConsumer> = {
+  InstanceUrl: { repo: 'shell', file: 'src/main/policy-start.ts' },
+  AllowStandalone: { repo: 'shell', file: 'src/main/policy-start.ts' },
+  AllowedJmapServers: { repo: 'shell', file: 'src/main/policy-start.ts' },
+  AllowInsecureInstance: { repo: 'shell', file: 'src/main/policy-start.ts' },
+  PluginsMode: { repo: 'webmail', file: 'lib/desktop/policy.ts' },
+  PluginAllowlist: { repo: 'webmail', file: 'lib/desktop/policy.ts' },
+  OfflineEnabled: { repo: 'webmail', file: 'lib/offline/scope.ts' },
+  WipeOfflineData: { repo: 'shell', file: 'src/main/features/policies.ts' },
+  AuthServerAllowlist: { repo: 'shell', file: 'src/main/features/policies.ts' },
+  AuthNegotiateDelegateAllowlist: { repo: 'shell', file: 'src/main/features/policies.ts' },
+  AutoUpdate: { pendingConsumer: 'feat/packaging: src/main/features/updater.ts' },
+  UpdateChannel: { pendingConsumer: 'feat/packaging: src/main/features/updater.ts' },
+  AppLockRequired: { pendingConsumer: 'step 7, app lock' },
+  AppLockTimeoutMinutes: { pendingConsumer: 'step 7, app lock' },
+  TelemetryAllowed: { pendingConsumer: 'step 7, telemetry consent' },
+  CrashReportsAllowed: { pendingConsumer: 'step 7, telemetry consent' },
+  QuickComposeShortcut: { pendingConsumer: 'step 7, quick compose' },
+  AutoSelectCertificateForUrls: { pendingConsumer: 'step 7, client certificates' },
+  KeystoreAllowedOrigins: { pendingConsumer: 'feat/native-helper: setKeystoreAllowedOrigins in src/main/features/keystore.ts' },
+};
 
 /** The part the embedded server enforces. Sent to it by message. */
 export interface ServerPolicy {

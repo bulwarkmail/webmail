@@ -319,6 +319,11 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
 
+    // The device's OS policy refuses this server for now: nothing restores, and the
+    // cookie stays, so the account comes back with no sign-in if the policy does.
+    const refusedByDevice = devicePolicyServerRefusal(credentials.serverUrl);
+    if (refusedByDevice) return refusedByDevice;
+
     const age = await checkSessionAge(cookieStore, slot, credentials);
     if ('maxHours' in age) return sessionTooOld(age.maxHours);
 

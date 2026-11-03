@@ -52,7 +52,6 @@ const harness = vi.hoisted(() => {
         state.listeners.push(listener);
         return () => {};
       },
-      onWipeOfflineData: () => () => {},
     },
   };
   return state;
@@ -174,13 +173,20 @@ describe('the client gates', () => {
     expect(usePluginStore.getState().plugins.map((p) => p.id)).toEqual(['kept']);
   });
 
-  it('installing a package is refused by the id in its manifest', async () => {
+  it('with a list nobody adds a package, even one naming a listed id', async () => {
     setPolicy({ PluginsMode: 'allowlist', PluginAllowlist: ['kept'] });
-    vi.mocked(extractPlugin).mockResolvedValue({ valid: true, errors: [], warnings: [], manifest: { id: 'refused-one' }, code: 'x' } as never);
+    vi.mocked(extractPlugin).mockResolvedValue({ valid: true, errors: [], warnings: [], manifest: { id: 'kept' }, code: 'x' } as never);
     const result = await usePluginStore.getState().installPlugin(new File(['x'], 'p.zip'));
     expect(result).toMatchObject({ success: false, reason: 'device-policy' });
     expect(usePluginStore.getState().plugins).toEqual([]);
     expect(pluginStorage.saveCode).not.toHaveBeenCalled();
+  });
+
+  it('a package the user added earlier under a listed id doesn\'t run', async () => {
+    setPolicy({ PluginsMode: 'allowlist', PluginAllowlist: ['refused-one'] });
+    usePluginStore.setState({ plugins: [plugin({ managed: false, enabled: false, status: 'installed' })] });
+    await usePluginStore.getState().enablePlugin('refused-one');
+    expect(usePluginStore.getState().plugins[0]).toMatchObject({ enabled: false, status: 'error', error: 'device-policy' });
   });
 
   it('turning one on is refused, and says why', async () => {

@@ -141,7 +141,7 @@ const INTRO: PolicyText = {
   en: 'Settings for the Bulwark desktop app.',
   de: 'Einstellungen für die Bulwark-Desktop-App.',
 };
-const SUPPORTED_TEXT: PolicyText = { en: 'Bulwark Desktop 1.0 and later', de: 'Bulwark Desktop 1.0 und höher' };
+const SUPPORTED_TEXT: PolicyText = { en: 'All versions of Bulwark Desktop', de: 'Alle Versionen von Bulwark Desktop' };
 const RECOMMENDED_TEXT: PolicyText = { en: 'Bulwark Desktop: defaults users can change', de: 'Bulwark Desktop: Standardwerte, die Benutzer ändern können' };
 
 function presentationFor(key: PolicyKey, id: string, language: Language): string | null {
@@ -299,6 +299,11 @@ export function generatePolicyFiles(): Record<string, string> {
       '',
       `Linux: policies.json is a sample for ${POLICY_LINUX_FILE}. It must be owned by root`,
       'and writable only by root (mode 644). Otherwise the app refuses to start.',
+      '',
+      'Limits: these settings stop people from changing them inside the app. The app is',
+      'not signed yet, so someone who can write to its folder or run their own copy can',
+      'patch it. For a hard guarantee, also limit what may run with AppLocker or WDAC,',
+      'and install per machine with the MSI so standard users cannot write to the folder.',
       '',
     ].join('\n'),
   };

@@ -48,14 +48,6 @@ export function onDesktopPolicyChange(listener: (snapshot: PolicySnapshot) => vo
   return getDesktopBridge()?.policy?.onChange?.(listener) ?? (() => {});
 }
 
-/**
- * Asks to hear about a forced WipeOfflineData value. The store's wipe goes here:
- * when the handler's promise resolves, the shell remembers the value for good.
- */
-export function onWipeOfflineData(handler: (nonce: string) => Promise<unknown>): () => void {
-  return getDesktopBridge()?.policy?.onWipeOfflineData?.(handler) ?? (() => {});
-}
-
 const serverSnapshot = () => DEFAULT_POLICY_SNAPSHOT;
 
 /** The policies, live, for a component. */
@@ -76,6 +68,21 @@ export function pluginAllowedByDesktopPolicy(id: string, snapshot: PolicySnapsho
   return pluginAllowedByPolicy(snapshot.PluginsMode.value, snapshot.PluginAllowlist.value, id);
 }
 
+/**
+ * Whether a plugin may run. A package names its own id, so with a list only what an
+ * admin deployed (`managed`) can match it: anyone could build a package called the
+ * same as a listed plugin.
+ */
+export function pluginMayRunByDesktopPolicy(plugin: { id: string; managed?: boolean }, snapshot: PolicySnapshot = getDesktopPolicy()): boolean {
+  if (snapshot.PluginsMode.value === 'allowed') return true;
+  return plugin.managed === true && pluginAllowedByDesktopPolicy(plugin.id, snapshot);
+}
+
+/** With a list or none, nobody adds a package of their own. Same reason. */
+export function pluginUploadsAllowedByDesktopPolicy(snapshot: PolicySnapshot = getDesktopPolicy()): boolean {
+  return snapshot.PluginsMode.value === 'allowed';
+}
+
 export function jmapServerAllowedByDesktopPolicy(serverUrl: string, snapshot: PolicySnapshot = getDesktopPolicy()): boolean {
   return jmapServerAllowed(snapshot.AllowedJmapServers.value, serverUrl);
 }
@@ -87,7 +94,7 @@ export function jmapServerAllowedByDesktopPolicy(serverUrl: string, snapshot: Po
  */
 export function customServerAllowedByDesktopPolicy(snapshot: PolicySnapshot = getDesktopPolicy()): boolean {
   const { AllowStandalone, InstanceUrl } = snapshot;
-  if (AllowStandalone.source !== 'default') return AllowStandalone.value;
+  if (AllowStandalone.locked) return AllowStandalone.value;
   return !InstanceUrl.locked;
 }
 

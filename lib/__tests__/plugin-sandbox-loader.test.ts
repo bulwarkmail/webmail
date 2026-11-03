@@ -106,7 +106,7 @@ describe('loadSandboxedPlugin under the OS policy of the device', () => {
   it('starts nothing the policy refuses: no frame, no download', async () => {
     const { EMPTY_POLICY_LAYERS, resolvePolicies } = await import('../desktop/policy-schema');
     const snapshot = (forcedMachine: Record<string, unknown>) => resolvePolicies({ ...EMPTY_POLICY_LAYERS, forcedMachine });
-    const bridgeWith = (current: ReturnType<typeof snapshot>) => ({ version: 1, platform: 'win32' as const, policy: { get: () => current, onChange: () => () => {}, onWipeOfflineData: () => () => {} } });
+    const bridgeWith = (current: ReturnType<typeof snapshot>) => ({ version: 1, platform: 'win32' as const, policy: { get: () => current, onChange: () => () => {} } });
     window.bulwarkDesktop = bridgeWith(snapshot({ PluginsMode: 'allowlist', PluginAllowlist: ['other-plugin'] }));
     mocks.getCode.mockResolvedValue(CODE);
     try {
@@ -119,6 +119,13 @@ describe('loadSandboxedPlugin under the OS policy of the device', () => {
       window.bulwarkDesktop = bridgeWith(snapshot({ PluginsMode: 'allowlist', PluginAllowlist: ['managed-plugin'] }));
       await loadSandboxedPlugin(plugin());
       expect(lastStatus()).toMatchObject({ id: 'managed-plugin', status: 'running' });
+      unloadSandboxedPlugin('managed-plugin');
+
+      // The same id on a package of the user's own doesn't pass.
+      mocks.createBackgroundInstance.mockClear();
+      await loadSandboxedPlugin(plugin({ managed: false }));
+      expect(lastStatus()).toMatchObject({ id: 'managed-plugin', status: 'error', error: 'device-policy' });
+      expect(mocks.createBackgroundInstance).not.toHaveBeenCalled();
     } finally {
       window.bulwarkDesktop = undefined;
     }

@@ -2,7 +2,8 @@ import { render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { BulwarkDesktopBridge } from '../types';
 import { EMPTY_POLICY_LAYERS, resolvePolicies, type PolicyLayer, type PolicySnapshot } from '../policy-schema';
-import { customServerAllowedByDesktopPolicy, desktopOfflinePolicy, desktopPolicyValue, jmapServerAllowedByDesktopPolicy, pluginAllowedByDesktopPolicy, useDesktopPolicy } from '../policy';
+import { customServerAllowedByDesktopPolicy, desktopOfflinePolicy, desktopPolicyValue, jmapServerAllowedByDesktopPolicy, pluginAllowedByDesktopPolicy, pluginMayRunByDesktopPolicy, pluginUploadsAllowedByDesktopPolicy, useDesktopPolicy } from '../policy';
+import { accountRefusedByDesktopPolicy, planForRefusedAccounts } from '../refused-accounts';
 
 function snapshotOf(forcedMachine: PolicyLayer, recommendedMachine: PolicyLayer = {}): PolicySnapshot {
   return resolvePolicies({ ...EMPTY_POLICY_LAYERS, forcedMachine, recommendedMachine });
@@ -24,7 +25,6 @@ function setBridgePolicy(snapshot: PolicySnapshot) {
         listeners.push(listener);
         return () => { listeners = listeners.filter((l) => l !== listener); };
       },
-      onWipeOfflineData: () => () => {},
     },
   } as BulwarkDesktopBridge;
 }
@@ -56,6 +56,34 @@ describe('in the app', () => {
     expect(jmapServerAllowedByDesktopPolicy('https://other.example')).toBe(false);
   });
 
+  it('with a list, a package of the user\'s own can\'t pass by naming a listed id, and nobody can add one', () => {
+    setBridgePolicy(snapshotOf({ PluginsMode: 'allowlist', PluginAllowlist: ['good'] }));
+    expect(pluginMayRunByDesktopPolicy({ id: 'good', managed: true })).toBe(true);
+    expect(pluginMayRunByDesktopPolicy({ id: 'good' })).toBe(false);
+    expect(pluginMayRunByDesktopPolicy({ id: 'bad', managed: true })).toBe(false);
+    expect(pluginUploadsAllowedByDesktopPolicy()).toBe(false);
+    setBridgePolicy(snapshotOf({ PluginsMode: 'off' }));
+    expect(pluginUploadsAllowedByDesktopPolicy()).toBe(false);
+    setBridgePolicy(snapshotOf({}));
+    expect(pluginMayRunByDesktopPolicy({ id: 'anything' })).toBe(true);
+    expect(pluginUploadsAllowedByDesktopPolicy()).toBe(true);
+  });
+
+  it('plans what happens to accounts on a server taken off the list', () => {
+    const accounts = [
+      { id: 'a', serverUrl: 'https://off.example', isConnected: true },
+      { id: 'b', serverUrl: 'https://on.example', isConnected: false },
+      { id: 'c', serverUrl: 'https://on.example', isConnected: true },
+    ];
+    const list = snapshotOf({ AllowedJmapServers: ['https://on.example'] });
+    expect(accountRefusedByDesktopPolicy(accounts[0], list)).toBe(true);
+    expect(accountRefusedByDesktopPolicy(accounts[1], list)).toBe(false);
+    expect(planForRefusedAccounts(accounts, 'a', list)).toEqual({ refused: ['a'], stop: ['a'], activeRefused: true, next: 'c' });
+    expect(planForRefusedAccounts(accounts, 'b', list)).toEqual({ refused: ['a'], stop: ['a'], activeRefused: false, next: null });
+    expect(planForRefusedAccounts([accounts[0]], 'a', list)).toEqual({ refused: ['a'], stop: ['a'], activeRefused: true, next: null });
+    expect(planForRefusedAccounts(accounts, 'a', snapshotOf({})).refused).toEqual([]);
+  });
+
   it('a forced server hides the field for one of your own, unless direct connections are left on', () => {
     setBridgePolicy(snapshotOf({ InstanceUrl: 'https://mail.example.com' }));
     expect(customServerAllowedByDesktopPolicy()).toBe(false);
@@ -65,6 +93,9 @@ describe('in the app', () => {
     expect(customServerAllowedByDesktopPolicy()).toBe(false);
     setBridgePolicy(snapshotOf({}, { InstanceUrl: 'https://mail.example.com' }));
     expect(customServerAllowedByDesktopPolicy()).toBe(true);
+    // A recommendation can't open what a forced server closed.
+    setBridgePolicy(snapshotOf({ InstanceUrl: 'https://mail.example.com' }, { AllowStandalone: 1 }));
+    expect(customServerAllowedByDesktopPolicy()).toBe(false);
   });
 
   it('forced offline goes over the user, recommended under', () => {

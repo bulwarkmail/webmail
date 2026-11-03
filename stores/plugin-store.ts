@@ -27,7 +27,7 @@ import { fetchServerPluginList } from '@/lib/server-plugin-list';
 import { IMPLICIT_PERMISSIONS } from '@/lib/plugin-types';
 import type { Permission } from '@/lib/plugin-types';
 import { IS_LITE } from '@/lib/lite';
-import { PLUGIN_POLICY_REFUSED_ERROR, onDesktopPolicyChange, pluginAllowedByDesktopPolicy } from '@/lib/desktop/policy';
+import { PLUGIN_POLICY_REFUSED_ERROR, onDesktopPolicyChange, pluginAllowedByDesktopPolicy, pluginMayRunByDesktopPolicy, pluginUploadsAllowedByDesktopPolicy } from '@/lib/desktop/policy';
 import { onFullSignOut } from '@/lib/sign-out-cleanup';
 import { forgetDeclaredHooks, setSendGuardSource } from '@/lib/plugin-send-guards';
 
@@ -144,6 +144,7 @@ export const usePluginStore = create<PluginStoreState>()(
 
       installPlugin: async (file: File) => {
         const policy = usePolicyStore.getState();
+        if (!pluginUploadsAllowedByDesktopPolicy()) return { success: false, reason: 'device-policy' };
         if (!policy.isFeatureEnabled('pluginsUploadEnabled')) {
           return { success: false, reason: 'uploads-disabled' };
         }
@@ -153,9 +154,6 @@ export const usePluginStore = create<PluginStoreState>()(
         }
 
         const { manifest, code } = result;
-        if (!pluginAllowedByDesktopPolicy(manifest.id)) {
-          return { success: false, reason: 'device-policy' };
-        }
         const { plugins } = get();
 
         // Check for duplicate
@@ -238,7 +236,7 @@ export const usePluginStore = create<PluginStoreState>()(
         const plugin = plugins.find(p => p.id === id);
         if (!plugin) return;
 
-        if (!pluginAllowedByDesktopPolicy(id)) {
+        if (!pluginMayRunByDesktopPolicy(plugin)) {
           set(state => ({ plugins: state.plugins.map(p => (p.id === id ? { ...p, status: 'error', error: PLUGIN_POLICY_REFUSED_ERROR } : p)) }));
           return;
         }
@@ -842,7 +840,7 @@ async function userPluginMayRun(
 function applyDesktopPluginPolicy(): void {
   const { plugins, setPluginStatus } = usePluginStore.getState();
   for (const plugin of plugins) {
-    const allowed = pluginAllowedByDesktopPolicy(plugin.id);
+    const allowed = pluginMayRunByDesktopPolicy(plugin);
     if (!allowed && getActivePlugin(plugin.id)) {
       deactivatePlugin(plugin.id);
       setPluginStatus(plugin.id, 'error', PLUGIN_POLICY_REFUSED_ERROR);

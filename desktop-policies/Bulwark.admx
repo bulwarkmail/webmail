@@ -42,12 +42,6 @@
     <enabledValue><decimal value="1"/></enabledValue>
     <disabledValue><decimal value="0"/></disabledValue>
   </policy>
-  <policy name="AllowStandalone_Recommended" class="Both" displayName="$(string.AllowStandalone)" explainText="$(string.AllowStandalone_Explain)" key="Software\Policies\Bulwark\Desktop\Recommended" valueName="AllowStandalone">
-    <parentCategory ref="Bulwark_Desktop_Recommended"/>
-    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
-    <enabledValue><decimal value="1"/></enabledValue>
-    <disabledValue><decimal value="0"/></disabledValue>
-  </policy>
   <policy name="AllowedJmapServers" class="Both" displayName="$(string.AllowedJmapServers)" explainText="$(string.AllowedJmapServers_Explain)" presentation="$(presentation.AllowedJmapServers)" key="Software\Policies\Bulwark\Desktop\AllowedJmapServers">
     <parentCategory ref="Bulwark_Desktop_connection"/>
     <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
@@ -55,21 +49,8 @@
       <list id="AllowedJmapServers_Value" valuePrefix=""/>
     </elements>
   </policy>
-  <policy name="AllowedJmapServers_Recommended" class="Both" displayName="$(string.AllowedJmapServers)" explainText="$(string.AllowedJmapServers_Explain)" presentation="$(presentation.AllowedJmapServers_Recommended)" key="Software\Policies\Bulwark\Desktop\Recommended\AllowedJmapServers">
-    <parentCategory ref="Bulwark_Desktop_Recommended"/>
-    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
-    <elements>
-      <list id="AllowedJmapServers_Recommended_Value" valuePrefix=""/>
-    </elements>
-  </policy>
   <policy name="AllowInsecureInstance" class="Both" displayName="$(string.AllowInsecureInstance)" explainText="$(string.AllowInsecureInstance_Explain)" key="Software\Policies\Bulwark\Desktop" valueName="AllowInsecureInstance">
     <parentCategory ref="Bulwark_Desktop_connection"/>
-    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
-    <enabledValue><decimal value="1"/></enabledValue>
-    <disabledValue><decimal value="0"/></disabledValue>
-  </policy>
-  <policy name="AllowInsecureInstance_Recommended" class="Both" displayName="$(string.AllowInsecureInstance)" explainText="$(string.AllowInsecureInstance_Explain)" key="Software\Policies\Bulwark\Desktop\Recommended" valueName="AllowInsecureInstance">
-    <parentCategory ref="Bulwark_Desktop_Recommended"/>
     <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
     <enabledValue><decimal value="1"/></enabledValue>
     <disabledValue><decimal value="0"/></disabledValue>
@@ -117,29 +98,11 @@
       </enum>
     </elements>
   </policy>
-  <policy name="PluginsMode_Recommended" class="Both" displayName="$(string.PluginsMode)" explainText="$(string.PluginsMode_Explain)" presentation="$(presentation.PluginsMode_Recommended)" key="Software\Policies\Bulwark\Desktop\Recommended">
-    <parentCategory ref="Bulwark_Desktop_Recommended"/>
-    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
-    <elements>
-      <enum id="PluginsMode_Recommended_Value" valueName="PluginsMode" required="true">
-        <item displayName="$(string.PluginsMode_allowed)"><value><string>allowed</string></value></item>
-        <item displayName="$(string.PluginsMode_allowlist)"><value><string>allowlist</string></value></item>
-        <item displayName="$(string.PluginsMode_off)"><value><string>off</string></value></item>
-      </enum>
-    </elements>
-  </policy>
   <policy name="PluginAllowlist" class="Both" displayName="$(string.PluginAllowlist)" explainText="$(string.PluginAllowlist_Explain)" presentation="$(presentation.PluginAllowlist)" key="Software\Policies\Bulwark\Desktop\PluginAllowlist">
     <parentCategory ref="Bulwark_Desktop_plugins"/>
     <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
     <elements>
       <list id="PluginAllowlist_Value" valuePrefix=""/>
-    </elements>
-  </policy>
-  <policy name="PluginAllowlist_Recommended" class="Both" displayName="$(string.PluginAllowlist)" explainText="$(string.PluginAllowlist_Explain)" presentation="$(presentation.PluginAllowlist_Recommended)" key="Software\Policies\Bulwark\Desktop\Recommended\PluginAllowlist">
-    <parentCategory ref="Bulwark_Desktop_Recommended"/>
-    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
-    <elements>
-      <list id="PluginAllowlist_Recommended_Value" valuePrefix=""/>
     </elements>
   </policy>
   <policy name="OfflineEnabled" class="Both" displayName="$(string.OfflineEnabled)" explainText="$(string.OfflineEnabled_Explain)" key="Software\Policies\Bulwark\Desktop" valueName="OfflineEnabled">
@@ -225,25 +188,11 @@
       <text id="AuthServerAllowlist_Value" valueName="AuthServerAllowlist" required="true" maxLength="2048"/>
     </elements>
   </policy>
-  <policy name="AuthServerAllowlist_Recommended" class="Both" displayName="$(string.AuthServerAllowlist)" explainText="$(string.AuthServerAllowlist_Explain)" presentation="$(presentation.AuthServerAllowlist_Recommended)" key="Software\Policies\Bulwark\Desktop\Recommended">
-    <parentCategory ref="Bulwark_Desktop_Recommended"/>
-    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
-    <elements>
-      <text id="AuthServerAllowlist_Recommended_Value" valueName="AuthServerAllowlist" required="true" maxLength="2048"/>
-    </elements>
-  </policy>
   <policy name="AuthNegotiateDelegateAllowlist" class="Both" displayName="$(string.AuthNegotiateDelegateAllowlist)" explainText="$(string.AuthNegotiateDelegateAllowlist_Explain)" presentation="$(presentation.AuthNegotiateDelegateAllowlist)" key="Software\Policies\Bulwark\Desktop">
     <parentCategory ref="Bulwark_Desktop_signIn"/>
     <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
     <elements>
       <text id="AuthNegotiateDelegateAllowlist_Value" valueName="AuthNegotiateDelegateAllowlist" required="true" maxLength="2048"/>
-    </elements>
-  </policy>
-  <policy name="AuthNegotiateDelegateAllowlist_Recommended" class="Both" displayName="$(string.AuthNegotiateDelegateAllowlist)" explainText="$(string.AuthNegotiateDelegateAllowlist_Explain)" presentation="$(presentation.AuthNegotiateDelegateAllowlist_Recommended)" key="Software\Policies\Bulwark\Desktop\Recommended">
-    <parentCategory ref="Bulwark_Desktop_Recommended"/>
-    <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
-    <elements>
-      <text id="AuthNegotiateDelegateAllowlist_Recommended_Value" valueName="AuthNegotiateDelegateAllowlist" required="true" maxLength="2048"/>
     </elements>
   </policy>
   <policy name="AutoSelectCertificateForUrls" class="Both" displayName="$(string.AutoSelectCertificateForUrls)" explainText="$(string.AutoSelectCertificateForUrls_Explain)" presentation="$(presentation.AutoSelectCertificateForUrls)" key="Software\Policies\Bulwark\Desktop\AutoSelectCertificateForUrls">
@@ -253,11 +202,11 @@
       <list id="AutoSelectCertificateForUrls_Value" valuePrefix=""/>
     </elements>
   </policy>
-  <policy name="AutoSelectCertificateForUrls_Recommended" class="Both" displayName="$(string.AutoSelectCertificateForUrls)" explainText="$(string.AutoSelectCertificateForUrls_Explain)" presentation="$(presentation.AutoSelectCertificateForUrls_Recommended)" key="Software\Policies\Bulwark\Desktop\Recommended\AutoSelectCertificateForUrls">
-    <parentCategory ref="Bulwark_Desktop_Recommended"/>
+  <policy name="KeystoreAllowedOrigins" class="Both" displayName="$(string.KeystoreAllowedOrigins)" explainText="$(string.KeystoreAllowedOrigins_Explain)" presentation="$(presentation.KeystoreAllowedOrigins)" key="Software\Policies\Bulwark\Desktop\KeystoreAllowedOrigins">
+    <parentCategory ref="Bulwark_Desktop_signIn"/>
     <supportedOn ref="SUPPORTED_Bulwark_Desktop"/>
     <elements>
-      <list id="AutoSelectCertificateForUrls_Recommended_Value" valuePrefix=""/>
+      <list id="KeystoreAllowedOrigins_Value" valuePrefix=""/>
     </elements>
   </policy>
   <policy name="WipeOfflineData" class="Both" displayName="$(string.WipeOfflineData)" explainText="$(string.WipeOfflineData_Explain)" presentation="$(presentation.WipeOfflineData)" key="Software\Policies\Bulwark\Desktop">

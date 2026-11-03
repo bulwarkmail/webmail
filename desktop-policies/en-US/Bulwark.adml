@@ -8,7 +8,7 @@
       <string id="Category_Bulwark">Bulwark</string>
       <string id="Category_Desktop">Bulwark Desktop</string>
       <string id="Category_Recommended">Bulwark Desktop: defaults users can change</string>
-      <string id="SUPPORTED_Bulwark_Desktop">Bulwark Desktop 1.0 and later</string>
+      <string id="SUPPORTED_Bulwark_Desktop">All versions of Bulwark Desktop</string>
       <string id="Category_connection">Connection</string>
       <string id="Category_updates">Updates</string>
       <string id="Category_plugins">Plugins</string>
@@ -20,7 +20,7 @@
       <string id="AllowStandalone">Allow direct connections to mail servers</string>
       <string id="AllowStandalone_Explain">When disabled, the app only opens a Bulwark server and nobody can sign in directly to a mail server. Accounts added earlier stay on the disk, but are hidden. If you force a Bulwark server and leave this not configured, direct connections are off too. Enable it to offer both.</string>
       <string id="AllowedJmapServers">Allowed mail servers</string>
-      <string id="AllowedJmapServers_Explain">The mail servers people may sign in to. One per line: an address such as https://mail.example.com, or https://*.example.com for all subdomains. A server without a scheme means https. Plain http must be named with http://. When this list is set, everything else is refused.</string>
+      <string id="AllowedJmapServers_Explain">The mail servers people may sign in to. One per line: an address such as https://mail.example.com, or https://*.example.com for all subdomains. A server without a scheme means https. Plain http must be named with http://. When this list is set, everything else is refused, and accounts on a server taken off the list stop until it is back, keeping their data. A Bulwark server the user picks, or the one under &quot;Bulwark server&quot; as a default, must be on the list too. A forced one does not need to be.</string>
       <string id="AllowInsecureInstance">Allow a Bulwark server on plain http</string>
       <string id="AllowInsecureInstance_Explain">When enabled, the address in &quot;Bulwark server&quot; may start with http://. Passwords and mail then travel unencrypted, and the browser features that need https, such as offline mail and S/MIME, do not work. Leave this off unless the server is on a network you trust.</string>
       <string id="UpdateChannel">Update channel</string>
@@ -30,7 +30,7 @@
       <string id="AutoUpdate">Update automatically</string>
       <string id="AutoUpdate_Explain">When disabled, the app does not look for updates or download them. Use this when SCCM, Intune or similar tools deliver updates.</string>
       <string id="PluginsMode">Which plugins may run</string>
-      <string id="PluginsMode_Explain">Whether plugins can be installed and run. A plugin that is refused keeps its data and settings: it comes back as it was if the policy allows it again.</string>
+      <string id="PluginsMode_Explain">Whether plugins can be installed and run. With the list or none, people cannot add a plugin themselves, since a package can name any id. With the list, only plugins your Bulwark server or the app&apos;s directory provides can run. A plugin that is refused keeps its data and settings: it comes back as it was if the policy allows it again.</string>
       <string id="PluginsMode_allowed">All plugins are allowed</string>
       <string id="PluginsMode_allowlist">Only plugins on the list</string>
       <string id="PluginsMode_off">No plugins</string>
@@ -54,30 +54,27 @@
       <string id="AuthNegotiateDelegateAllowlist_Explain">The servers the app may delegate Kerberos credentials to, separated by commas. Takes effect when the app restarts.</string>
       <string id="AutoSelectCertificateForUrls">Choose client certificates automatically</string>
       <string id="AutoSelectCertificateForUrls_Explain">One JSON rule per line, in the format Chrome uses: {&quot;pattern&quot;:&quot;https://[*.]example.com&quot;,&quot;filter&quot;:{&quot;ISSUER&quot;:{&quot;CN&quot;:&quot;Example CA&quot;}}}. The app then picks the matching certificate for that site without asking.</string>
+      <string id="KeystoreAllowedOrigins">Sites that may use the system certificate store</string>
+      <string id="KeystoreAllowedOrigins_Explain">The Bulwark servers, by https address, whose plugins may sign and decrypt with the certificates in the operating system&apos;s store, without the user being asked for each site. One per line.</string>
       <string id="WipeOfflineData">Delete mail kept on the device</string>
-      <string id="WipeOfflineData_Explain">Set this to a new value, such as today&apos;s date, to delete all mail the app keeps on the device. Each value deletes once: the app remembers the ones it has acted on, so it stays safe to leave a value in place. Use a new value to delete again.</string>
+      <string id="WipeOfflineData_Explain">Set this to a new value, such as today&apos;s date, to delete everything the app keeps on the device for every server and account: mail, keys, and sign-ins, so people sign in again. Each value deletes once: the app remembers the ones it has acted on, so it stays safe to leave a value in place. Use a new value to delete again.</string>
     </stringTable>
     <presentationTable>
       <presentation id="InstanceUrl"><textBox refId="InstanceUrl_Value"><label>Address of the Bulwark server</label></textBox></presentation>
       <presentation id="InstanceUrl_Recommended"><textBox refId="InstanceUrl_Recommended_Value"><label>Address of the Bulwark server</label></textBox></presentation>
       <presentation id="AllowedJmapServers"><listBox refId="AllowedJmapServers_Value">Allowed mail servers</listBox></presentation>
-      <presentation id="AllowedJmapServers_Recommended"><listBox refId="AllowedJmapServers_Recommended_Value">Allowed mail servers</listBox></presentation>
       <presentation id="UpdateChannel"><dropdownList refId="UpdateChannel_Value" noSort="true" defaultItem="0">Update channel</dropdownList></presentation>
       <presentation id="UpdateChannel_Recommended"><dropdownList refId="UpdateChannel_Recommended_Value" noSort="true" defaultItem="0">Update channel</dropdownList></presentation>
       <presentation id="PluginsMode"><dropdownList refId="PluginsMode_Value" noSort="true" defaultItem="0">Which plugins may run</dropdownList></presentation>
-      <presentation id="PluginsMode_Recommended"><dropdownList refId="PluginsMode_Recommended_Value" noSort="true" defaultItem="0">Which plugins may run</dropdownList></presentation>
       <presentation id="PluginAllowlist"><listBox refId="PluginAllowlist_Value">Plugin ids</listBox></presentation>
-      <presentation id="PluginAllowlist_Recommended"><listBox refId="PluginAllowlist_Recommended_Value">Plugin ids</listBox></presentation>
       <presentation id="AppLockTimeoutMinutes"><decimalTextBox refId="AppLockTimeoutMinutes_Value" defaultValue="10">Minutes</decimalTextBox></presentation>
       <presentation id="AppLockTimeoutMinutes_Recommended"><decimalTextBox refId="AppLockTimeoutMinutes_Recommended_Value" defaultValue="10">Minutes</decimalTextBox></presentation>
       <presentation id="QuickComposeShortcut"><textBox refId="QuickComposeShortcut_Value"><label>Shortcut</label></textBox></presentation>
       <presentation id="QuickComposeShortcut_Recommended"><textBox refId="QuickComposeShortcut_Recommended_Value"><label>Shortcut</label></textBox></presentation>
       <presentation id="AuthServerAllowlist"><textBox refId="AuthServerAllowlist_Value"><label>Servers</label></textBox></presentation>
-      <presentation id="AuthServerAllowlist_Recommended"><textBox refId="AuthServerAllowlist_Recommended_Value"><label>Servers</label></textBox></presentation>
       <presentation id="AuthNegotiateDelegateAllowlist"><textBox refId="AuthNegotiateDelegateAllowlist_Value"><label>Servers</label></textBox></presentation>
-      <presentation id="AuthNegotiateDelegateAllowlist_Recommended"><textBox refId="AuthNegotiateDelegateAllowlist_Recommended_Value"><label>Servers</label></textBox></presentation>
       <presentation id="AutoSelectCertificateForUrls"><listBox refId="AutoSelectCertificateForUrls_Value">Rules</listBox></presentation>
-      <presentation id="AutoSelectCertificateForUrls_Recommended"><listBox refId="AutoSelectCertificateForUrls_Recommended_Value">Rules</listBox></presentation>
+      <presentation id="KeystoreAllowedOrigins"><listBox refId="KeystoreAllowedOrigins_Value">Addresses</listBox></presentation>
       <presentation id="WipeOfflineData"><textBox refId="WipeOfflineData_Value"><label>Wipe code</label></textBox></presentation>
     </presentationTable>
   </resources>
