@@ -107,7 +107,8 @@ it('registers the hooks first, shows the local copy before connecting, then swap
   expect(useAuthStore.getState().isAuthenticated).toBe(true);
   expect(useAuthStore.getState().isLoading).toBe(false);
   expect(current()?.isOfflineOnly()).toBe(true);
-  expect(offline.order.indexOf('hooks')).toBeLessThan(offline.order.indexOf('local client'));
+  expect(offline.order[0]).toBe('hooks');
+  expect(offline.order).toContain('local client');
   // No "you're offline" while the server is simply being asked.
   expect(offline.order).not.toContain('startedOffline');
 

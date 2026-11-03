@@ -96,6 +96,16 @@ describe('the outbox', () => {
     expect(options).not.toHaveProperty('outbox');
   });
 
+  it('takes the domain of a Message-ID from a sender written with a name', async () => {
+    const client = fakeClient();
+    useAuthStore.setState({ client: client as never, activeAccountId: 'acc' });
+    writeEnabled(['acc']);
+    stop = startOfflineMode();
+    setOnline(false);
+    await useEmailStore.getState().sendEmail(client as never, ['b@example.org'], 'S', 'x', undefined, undefined, 'i', 'Alice <alice@example.net>', undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, { outbox: true } as never);
+    expect((await readQueue('acc')).outbox[0].messageId).toMatch(/@example\.net$/);
+  });
+
   it('sends with the Message-ID fixed at queueing, and the same one after a retry', async () => {
     const client = fakeClient({
       sendEmail: vi.fn()

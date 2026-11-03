@@ -386,7 +386,9 @@ const outbox: OutboxHooks = {
     const summary = summaryOf(stored);
     const labelled = !!options.labelHeaders && Object.keys(options.labelHeaders as object).length > 0;
     // Fixed now and kept across retries: how a lost response is told from a send that never arrived.
-    const messageId = generateMessageId((args[6] as string | undefined) || client.getUsername());
+    // Only its domain is used, and the sender may be written "Name <address>".
+    const sender = ((args[6] as string | undefined) || client.getUsername()).replace(/>.*$/, '');
+    const messageId = generateMessageId(sender);
     const id = await queueSend(account, summary, { kind: 'email', args: stored }, policyFingerprint(account, labelled), messageId);
     await refreshQueueState();
     notify({ kind: 'queued', subject: summary.subject });

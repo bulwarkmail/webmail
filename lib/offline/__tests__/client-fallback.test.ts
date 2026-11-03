@@ -195,6 +195,28 @@ describe('what the store answers and is told', () => {
     stop();
   });
 
+  it('never takes a refusal from the device for the answer to a send', async () => {
+    const { client, stop } = await ready();
+    await client.getMailboxes();
+    await client.getIdentities();
+    const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
+    const passThrough = fetchMock.getMockImplementation() as (url: string, init?: RequestInit) => Promise<Response>;
+    fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (String(init?.body ?? '').includes('EmailSubmission/set')) {
+        apiFails = 'network';
+        probeOk = false;
+      }
+      return passThrough(url, init);
+    });
+    server.mailboxes.set('drafts', { id: 'drafts', role: 'drafts' });
+    server.mailboxes.set('sent', { id: 'sent', role: 'sent' });
+    const error = await client.sendEmail(['bob@example.org'], 'Hi', 'Body', undefined, undefined, 'i1', 'alice@example.org').catch((e: unknown) => e) as Error;
+    // The connection broke: "may have gone", not a refusal, and not "never started".
+    expect(error).toBeInstanceOf(TypeError);
+    expect(error.message).toBe('Failed to fetch');
+    stop();
+  });
+
   it('never lets the device answer for the server when the outbox asks', async () => {
     const { client, stop } = await ready();
     apiFails = 'network';
