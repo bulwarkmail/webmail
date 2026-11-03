@@ -200,22 +200,22 @@ describe('files on the window', () => {
 
 describe('dragging an attachment out', () => {
   const blobUrl = 'blob:https://app/1';
-  const source = { name: 'report.pdf', type: 'application/pdf', getBlobUrl: async () => blobUrl };
+  const source = {
+    name: 'report.pdf',
+    type: 'application/pdf',
+    getBlobUrl: async () => blobUrl,
+    getBlob: async () => new Blob([new Uint8Array([1, 2, 3])]),
+  };
 
   async function ready() {
     const { useAttachmentDrag } = await import('@/hooks/use-attachment-drag');
     const hook = renderHook(() => useAttachmentDrag(source, true));
     act(() => hook.result.current.onPointerEnter());
     await act(async () => {
-      await Promise.resolve();
-      await Promise.resolve();
+      await new Promise((resolve) => setTimeout(resolve, 0));
     });
     return hook;
   }
-
-  beforeEach(() => {
-    vi.stubGlobal('fetch', vi.fn(async () => new Response(new Uint8Array([1, 2, 3]))));
-  });
 
   it('in the app: the OS\'s own drag, with the bytes for a real file', async () => {
     const startDrag = vi.fn(async () => true);
@@ -229,6 +229,22 @@ describe('dragging an attachment out', () => {
     const [files] = startDrag.mock.calls[0] as unknown as [{ name: string; data: Uint8Array }[]];
     expect(files[0].name).toBe('report.pdf');
     expect([...files[0].data]).toEqual([1, 2, 3]);
+  });
+
+  it('in the app, a drag before the bytes are here starts nothing and fetches them for the next', async () => {
+    const startDrag = vi.fn(async () => true);
+    setBridge({ startDrag, copyFiles: vi.fn() as never });
+    const { useAttachmentDrag } = await import('@/hooks/use-attachment-drag');
+    const hook = renderHook(() => useAttachmentDrag(source, true));
+    const event = { preventDefault: vi.fn(), dataTransfer: { setData: vi.fn(), effectAllowed: '' } };
+    hook.result.current.onDragStart(event as never);
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(startDrag).not.toHaveBeenCalled();
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    hook.result.current.onDragStart(event as never);
+    await waitFor(() => expect(startDrag).toHaveBeenCalled());
   });
 
   it('in a browser: still DownloadURL, and no copy button', async () => {

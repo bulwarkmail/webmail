@@ -734,11 +734,10 @@ describe('message row drag hover wiring', () => {
 
   it("in the desktop app an Alt drag is the OS's own with the real bytes, and a plain one stays the page's", async () => {
     const email = mail({ subject: 'Hello world' });
-    const { result } = renderHook(() => useEmailDrag({ email, sourceMailboxId: 'inbox' }));
-    await warm(result);
     const nativeDrag = vi.fn(async (_files: { name: string; data: Uint8Array }[]) => true);
     window.bulwarkDesktop = { version: 1, platform: 'win32', os: { startDrag: nativeDrag } } as never;
-    vi.stubGlobal('fetch', vi.fn(async (url: string) => new Response(await readBlob(objects.get(url)!))));
+    const { result } = renderHook(() => useEmailDrag({ email, sourceMailboxId: 'inbox' }));
+    await warm(result);
     try {
       startDrag.mockClear();
       // Plain: still a move to a folder, still DownloadURL for Explorer.

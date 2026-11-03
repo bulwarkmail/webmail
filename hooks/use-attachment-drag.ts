@@ -34,6 +34,8 @@ export interface AttachmentDragSource {
   name: string;
   type: string;
   getBlobUrl: () => Promise<string | null>;
+  /** The bytes themselves, for the desktop app's native drag. */
+  getBlob?: () => Promise<Blob | null>;
 }
 
 export interface UseAttachmentDragResult {
@@ -59,6 +61,8 @@ export function useAttachmentDrag(
   const urlRef = useRef<string | null>(null);
   const ownedRef = useRef<boolean>(false);
   const inFlightRef = useRef<Promise<string | null> | null>(null);
+  const blobRef = useRef<Blob | null>(null);
+  const nativeDrag = canDragNativeFiles() && !!source.getBlob;
 
   useEffect(() => {
     return () => {
@@ -73,6 +77,19 @@ export function useAttachmentDrag(
 
   const prefetch = useCallback(() => {
     if (!enabled) return;
+    if (nativeDrag) {
+      if (blobRef.current || inFlightRef.current) return;
+      inFlightRef.current = source.getBlob!()
+        .then((blob) => {
+          blobRef.current = blob;
+          return null;
+        })
+        .catch(() => null)
+        .finally(() => {
+          inFlightRef.current = null;
+        });
+      return;
+    }
     if (urlRef.current || inFlightRef.current) return;
     inFlightRef.current = source
       .getBlobUrl()
@@ -90,13 +107,22 @@ export function useAttachmentDrag(
       .finally(() => {
         inFlightRef.current = null;
       });
-  }, [enabled, source]);
+  }, [enabled, source, nativeDrag]);
 
   const handleDragStart = useCallback(
     (e: DragEvent<HTMLDivElement>) => {
       const url = urlRef.current;
       const name = source.name || "download";
       const type = source.type || "application/octet-stream";
+
+      // In the desktop app the OS's own drag, with the real file on disk first. The bytes
+      // aren't here yet: fetch them for the next try, as below.
+      if (nativeDrag) {
+        e.preventDefault();
+        if (blobRef.current) void startNativeFileDrag([{ name, blob: blobRef.current }]);
+        else prefetch();
+        return;
+      }
 
       if (!url) {
         // Blob isn't materialized yet. Kick off the fetch so the next attempt
@@ -107,13 +133,6 @@ export function useAttachmentDrag(
         return;
       }
 
-      // In the desktop app the OS's own drag, with the real file on disk first.
-      if (canDragNativeFiles()) {
-        e.preventDefault();
-        void startNativeFileDrag([{ name, url }]);
-        return;
-      }
-
       // `DownloadURL` format: <mime>:<filename>:<url>. The filename must be
       // raw - URL-encoding it lands literally on disk (`%20` instead of a
       // space). Callers are expected to sanitise reserved chars (`:` etc.)
@@ -121,7 +140,7 @@ export function useAttachmentDrag(
       e.dataTransfer.setData("DownloadURL", `${type}:${name}:${url}`);
       e.dataTransfer.effectAllowed = "copyMove";
     },
-    [source.name, source.type, prefetch],
+    [source.name, source.type, prefetch, nativeDrag],
   );
 
   const handleDragEnd = useCallback(() => {
@@ -136,8 +155,8 @@ export function useAttachmentDrag(
   }, []);
 
   const copyAsFile = useCallback(async () => {
-    const url = urlRef.current ?? await source.getBlobUrl();
-    return url ? copyFilesToClipboard([{ name: source.name || "download", url }]) : false;
+    const blob = blobRef.current ?? await source.getBlob?.();
+    return blob ? copyFilesToClipboard([{ name: source.name || "download", blob }]) : false;
   }, [source]);
 
   if (!enabled) return NOOP_HANDLERS;
@@ -147,6 +166,6 @@ export function useAttachmentDrag(
     onPointerEnter: prefetch,
     onDragStart: handleDragStart,
     onDragEnd: handleDragEnd,
-    ...(canDragNativeFiles() ? { onCopyAsFile: copyAsFile } : {}),
+    ...(nativeDrag ? { onCopyAsFile: copyAsFile } : {}),
   };
 }

@@ -6,11 +6,26 @@
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { setOwnDragActive } from '@/lib/desktop/window-files';
 
+/** The page's CSP keeps fetch off blob: URLs, so a file travels as its Blob. */
 export interface DragFile {
   name: string;
-  /** A blob: URL the page already holds. */
-  url?: string;
-  data?: Uint8Array;
+  blob: Blob;
+}
+
+const keptBlobs = new Map<string, Blob>();
+
+/** In the app, remembers what's behind an object URL made for dragging. */
+export function keepDragBlob(url: string, blob: Blob): string {
+  if (canDragNativeFiles()) keptBlobs.set(url, blob);
+  return url;
+}
+
+export function keptDragBlob(url: string): Blob | undefined {
+  return keptBlobs.get(url);
+}
+
+export function forgetDragBlob(url: string): void {
+  keptBlobs.delete(url);
 }
 
 export function canDragNativeFiles(): boolean {
@@ -18,10 +33,7 @@ export function canDragNativeFiles(): boolean {
 }
 
 async function toBytes(file: DragFile): Promise<{ name: string; data: Uint8Array }> {
-  if (file.data) return { name: file.name, data: file.data };
-  if (!file.url) throw new Error('A file needs its bytes or a URL');
-  const response = await fetch(file.url);
-  return { name: file.name, data: new Uint8Array(await response.arrayBuffer()) };
+  return { name: file.name, data: new Uint8Array(await file.blob.arrayBuffer()) };
 }
 
 /**
