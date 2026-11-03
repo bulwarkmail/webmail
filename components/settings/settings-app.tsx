@@ -1185,7 +1185,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
                           'w-4 h-4 shrink-0',
                           effectiveActiveTab === tab.id ? 'text-accent-foreground' : 'text-muted-foreground'
                         )} />
-                        <span className="truncate" title={tab.label}>{tab.label}</span>
+                        <span className="truncate" dir="auto" title={tab.label}>{tab.label}</span>
                       </button>
                       {subs.map((sub) => (
                         <button
