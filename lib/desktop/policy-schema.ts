@@ -827,7 +827,7 @@ export const POLICY_CONSUMERS: Record<PolicyKey, PolicyConsumer> = {
   CrashReportsAllowed: { repo: 'shell', file: 'src/main/features/privacy.ts' },
   QuickComposeShortcut: { pendingConsumer: 'step 7, quick compose' },
   AutoSelectCertificateForUrls: { pendingConsumer: 'step 7, client certificates' },
-  KeystoreAllowedOrigins: { pendingConsumer: 'feat/native-helper: setKeystoreAllowedOrigins in src/main/features/keystore.ts' },
+  KeystoreAllowedOrigins: { repo: 'shell', file: 'src/main/features/policies.ts' },
 };
 
 /** The part the embedded server enforces. Sent to it by message. */
