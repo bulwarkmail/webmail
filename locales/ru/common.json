@@ -6350,6 +6350,12 @@
     "sign_language": "Жестовый язык",
     "new_tab": "открывается в новой вкладке"
   },
+  "pwaNotify": {
+    "action_archive": "Архивировать",
+    "action_mark_read": "Отметить прочитанным",
+    "action_reply": "Ответить",
+    "reply_placeholder": "Напишите ответ"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Добавить в календарь",
     "update_in_calendar": "Обновить в календаре",

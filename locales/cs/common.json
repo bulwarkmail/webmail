@@ -6350,6 +6350,12 @@
     "sign_language": "Znakový jazyk",
     "new_tab": "otevře se na nové kartě"
   },
+  "pwaNotify": {
+    "action_archive": "Archivovat",
+    "action_mark_read": "Označit jako přečtené",
+    "action_reply": "Odpovědět",
+    "reply_placeholder": "Napište odpověď"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Přidat do kalendáře",
     "update_in_calendar": "Aktualizovat v kalendáři",

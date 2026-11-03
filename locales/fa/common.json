@@ -6350,6 +6350,12 @@
     "sign_language": "زبان اشاره",
     "new_tab": "در زبانه‌ای تازه باز می‌شود"
   },
+  "pwaNotify": {
+    "action_archive": "بایگانی",
+    "action_mark_read": "علامت‌گذاری خوانده شده",
+    "action_reply": "پاسخ",
+    "reply_placeholder": "پاسخ بنویسید"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "افزودن به تقویم",
     "update_in_calendar": "به‌روزرسانی در تقویم",

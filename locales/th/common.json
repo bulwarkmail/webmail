@@ -6358,6 +6358,12 @@
     "sign_language": "ภาษามือ",
     "new_tab": "เปิดในแท็บใหม่"
   },
+  "pwaNotify": {
+    "action_archive": "เก็บถาวร",
+    "action_mark_read": "ทำเครื่องหมายว่าอ่านแล้ว",
+    "action_reply": "ตอบกลับ",
+    "reply_placeholder": "เขียนคำตอบ"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "เพิ่มลงในปฏิทิน",
     "update_in_calendar": "อัปเดตในปฏิทิน",

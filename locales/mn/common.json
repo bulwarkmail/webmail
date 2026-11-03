@@ -6350,6 +6350,12 @@
     "sign_language": "Дохионы хэл",
     "new_tab": "шинэ табад нээгдэнэ"
   },
+  "pwaNotify": {
+    "action_archive": "Архив",
+    "action_mark_read": "Уншсан гэж тэмдэглэх",
+    "action_reply": "Хариулах",
+    "reply_placeholder": "Хариу бичих"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Хуанлид нэмэх",
     "update_in_calendar": "Хуанлид шинэчлэх",

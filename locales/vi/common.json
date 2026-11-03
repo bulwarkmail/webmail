@@ -6362,6 +6362,12 @@
     "sign_language": "Ngôn ngữ ký hiệu",
     "new_tab": "Mở trong một tab mới"
   },
+  "pwaNotify": {
+    "action_archive": "Lưu trữ",
+    "action_mark_read": "Đánh dấu là đã đọc",
+    "action_reply": "Trả lời",
+    "reply_placeholder": "Viết trả lời"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Thêm vào lịch",
     "update_in_calendar": "Cập nhật trong lịch",

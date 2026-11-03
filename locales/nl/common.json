@@ -6350,6 +6350,12 @@
     "sign_language": "Gebarentaal",
     "new_tab": "opent in een nieuw tabblad"
   },
+  "pwaNotify": {
+    "action_archive": "Archiveren",
+    "action_mark_read": "Markeren als gelezen",
+    "action_reply": "Beantwoorden",
+    "reply_placeholder": "Schrijf een antwoord"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Toevoegen aan agenda",
     "update_in_calendar": "Bijwerken in agenda",

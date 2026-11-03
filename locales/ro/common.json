@@ -6350,6 +6350,12 @@
     "sign_language": "Limbaj mimico-gestual",
     "new_tab": "se deschide într-o filă nouă"
   },
+  "pwaNotify": {
+    "action_archive": "Arhivează",
+    "action_mark_read": "Marcați ca citit",
+    "action_reply": "Răspunde",
+    "reply_placeholder": "Scrieți un răspuns"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Adaugă în calendar",
     "update_in_calendar": "Actualizează în calendar",

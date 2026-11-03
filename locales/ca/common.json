@@ -6350,6 +6350,12 @@
     "sign_language": "Llengua de signes",
     "new_tab": "s'obre en una pestanya nova"
   },
+  "pwaNotify": {
+    "action_archive": "Arxiva",
+    "action_mark_read": "Marca com a llegit",
+    "action_reply": "Respon",
+    "reply_placeholder": "Escriu una resposta"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Afegeix al calendari",
     "update_in_calendar": "Actualitza al calendari",

@@ -6350,6 +6350,12 @@
     "sign_language": "Jelnyelv",
     "new_tab": "új lapon nyílik meg"
   },
+  "pwaNotify": {
+    "action_archive": "Archiválás",
+    "action_mark_read": "Megjelölés olvasottként",
+    "action_reply": "Válasz",
+    "reply_placeholder": "Válasz írása"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Hozzáadás a naptárhoz",
     "update_in_calendar": "Frissítés a naptárban",
