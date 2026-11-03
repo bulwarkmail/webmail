@@ -11,15 +11,15 @@
  * - Changes and sends made offline wait in the store's outbox and go out in
  *   order once the server answers again and the organisation's policy was
  *   fetched afresh (flush.ts).
- * - Everything is wiped at a full sign-out, at the session limits and when the
- *   server really refuses the login (`invalid_grant`), by
- *   lib/sign-out-cleanup.ts; for one account when it signs out, is removed or
- *   switches offline mode off, and when the organisation forbids it (checked on
- *   every policy fetch). An account the app drops by itself because it couldn't
- *   confirm the login (an outage, an unknown refusal, a session cookie that ran
- *   out) keeps its data for 30 days or the next sign-in, hidden from everyone
- *   else. Unsent messages a sign-out deletes without the user's word are named
- *   (lost.ts).
+ * - Everything is wiped at a full sign-out, by lib/sign-out-cleanup.ts; for one
+ *   account when it signs out, is removed or switches offline mode off, and when
+ *   the organisation forbids it (checked on every policy fetch). An account the
+ *   app drops by itself keeps its data for 30 days or the next sign-in, hidden from
+ *   everyone else: when it couldn't confirm the login (an outage, an unknown
+ *   refusal, a session cookie that ran out), at the organisation's session limit,
+ *   and when the server refuses the login (`invalid_grant`, a lasting 401), unless
+ *   the organisation asks for deletion at once (lib/offline/device-wipe.ts). Unsent
+ *   messages a sign-out deletes without the user's word are named (lost.ts).
  */
 
 import { IS_LITE } from '@/lib/lite';
@@ -92,6 +92,7 @@ import { flushQueue, LOOKUP_WAIT_MS, SENDING_STALE_MS, settleStaleSends } from '
 import { LEGACY_DB_NAME, moveLegacyOutbox, strandedLegacyMessages } from './migrate-legacy';
 import { deleteShellCaches, tellServiceWorker } from './shell';
 import { rememberLost } from './lost';
+import { forgetEvictedSecrets } from './evicted-secrets';
 
 export type OfflineNotice =
   | { kind: 'queued'; subject: string }
@@ -1029,6 +1030,31 @@ export async function unsentCount(scope: string, waitMs = UNSENT_READ_MS): Promi
   return Promise.race([read, new Promise<typeof known>((resolve) => setTimeout(() => resolve(known), waitMs))]);
 }
 
+/** How long a wipe waits for the count. A wipe's report is the only record of what it deleted. */
+export const UNSENT_FOR_WIPE_MS = 10_000;
+
+async function unsentOfAccount(account: string, waitMs: number): Promise<number | null> {
+  const shown = useOfflineStore.getState();
+  // Reading an account's store would create it if it never had one.
+  if (!shown.enabled.includes(account)) return [...shown.outbox, ...shown.localDrafts].filter((row) => row.account === account).length;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const read = Promise.all([readQueue(account), readLocalDrafts(account)])
+    .then(([{ failed, outbox: entries }, drafts]) => (failed.length > 0 ? null : entries.length + drafts.length), () => null);
+  const answer = await Promise.race([read, new Promise<null>((resolve) => { timer = setTimeout(() => resolve(null), waitMs); })]);
+  clearTimeout(timer);
+  return answer;
+}
+
+/**
+ * How many unsent messages a wipe of `scope` deletes, one account or 'all', hidden
+ * accounts included. Null when the store can't say: that isn't the same as none.
+ */
+export async function unsentForWipe(scope: string, waitMs = UNSENT_FOR_WIPE_MS): Promise<number | null> {
+  const accounts = scope === 'all' ? useOfflineStore.getState().enabled : [scope];
+  const counts = await Promise.all(accounts.map((account) => unsentOfAccount(account, waitMs)));
+  return counts.includes(null) ? null : (counts as number[]).reduce((sum, count) => sum + count, 0);
+}
+
 /** Names the unsent messages a wipe of `scope` deletes, unless the user agreed. */
 async function nameLost(scope: string, stillSignedIn: boolean): Promise<void> {
   if (named.has(scope) || named.has('all')) return;
@@ -1051,7 +1077,10 @@ export async function wipeAccount(account: string): Promise<void> {
   if (timer) clearTimeout(timer);
   syncTimers.delete(account);
   // Waited for a sign-in that never came: whoever is here now mustn't read its subjects.
-  if (isEvicted(account)) named.add(account);
+  if (isEvicted(account)) {
+    named.add(account);
+    void forgetEvictedSecrets(account).catch(() => {});
+  }
   const before = useOfflineStore.getState();
   if (before.enabled.includes(account) || before.outbox.some((row) => row.account === account) || before.localDrafts.some((row) => row.account === account)) {
     await nameLost(account, useAuthStore.getState().isAuthenticated);
@@ -1352,7 +1381,7 @@ export function startOfflineMode(): () => void {
  * that left the registry on purpose before this ran (a login without "remember
  * me" ends at a reload, before the host mounts) goes now, naming lost mail.
  */
-async function sweepAccountsGone(now = Date.now()): Promise<void> {
+export async function sweepAccountsGone(now = Date.now()): Promise<void> {
   const evicted = readEvicted();
   const accounts = useAccountStore.getState().accounts;
   for (const account of useOfflineStore.getState().enabled) {

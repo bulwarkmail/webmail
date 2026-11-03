@@ -5775,6 +5775,28 @@
     "store_private": "Cửa sổ riêng tư không thể giữ thư để dùng ngoại tuyến.",
     "server_not_answering": "Máy chủ thư không phản hồi. Hãy thử lại sau giây lát."
   },
+  "offlineWipe": {
+    "note": "Tổ chức của bạn đã xóa dữ liệu của tài khoản này khỏi thiết bị này. Hãy đăng nhập để bắt đầu lại.",
+    "note_unsent": "Tổ chức của bạn đã xóa dữ liệu của tài khoản này khỏi thiết bị này. Số thư chưa gửi đã xóa: {count}.",
+    "settings_title": "Xóa mọi thứ khỏi thiết bị này",
+    "settings_description": "Dành cho khi bạn tặng máy tính này hoặc không dùng nữa. Thư của bạn trên máy chủ vẫn còn.",
+    "settings_button": "Xóa mọi thứ…",
+    "settings_wiping": "Đang xóa…",
+    "confirm_title": "Xóa mọi thứ khỏi thiết bị này?",
+    "confirm_message": "Thao tác này xóa những gì ứng dụng này lưu trên thiết bị này, cho mọi tài khoản ở đây. Thư của bạn trên máy chủ không bị ảnh hưởng.",
+    "confirm_mail": "Thư, lịch, danh bạ và tệp được lưu ở đây",
+    "confirm_unsent": "Số thư chưa gửi đang chờ ở đây: {count}. Chúng sẽ bị mất.",
+    "confirm_keys": "Khóa S/MIME và OpenPGP. Bạn cần bản sao lưu của riêng mình để dùng lại.",
+    "confirm_plugins": "Dữ liệu mà các tiện ích đã lưu ở đây",
+    "confirm_files": "Tệp đính kèm mở để chỉnh sửa và tệp đang chờ đính kèm",
+    "confirm_accounts": "Tất cả tài khoản sẽ đăng xuất",
+    "confirm_button": "Xóa mọi thứ",
+    "note_unknown": "Tổ chức của bạn đã xóa dữ liệu của tài khoản này khỏi thiết bị này. Các thư chưa gửi cũng có thể đã bị xóa.",
+    "refused_waiting": "Thư chưa gửi đang chờ mật khẩu mới của bạn: {count}. Được giữ đến {date}.",
+    "refused_waiting_unknown": "Có thể có thư chưa gửi đang chờ mật khẩu mới của bạn. Được giữ đến {date}.",
+    "confirm_unsent_unknown": "Có thể có thư chưa gửi đang chờ ở đây. Chúng sẽ bị mất.",
+    "confirm_templates": "Mẫu email đã lưu trên thiết bị này"
+  },
   "offlineStorage": {
     "keep_description": "Giữ thư, lịch, danh bạ và các tệp bạn chọn, được mã hóa trên thiết bị này. Khi ngoại tuyến bạn có thể đọc, gắn cờ và di chuyển thư, còn thư bạn viết sẽ chờ trong Hộp thư đi. Khi đăng xuất, tất cả sẽ bị xóa.",
     "window_label": "Giữ lại bao lâu",

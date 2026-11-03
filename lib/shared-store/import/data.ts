@@ -7,6 +7,7 @@ import { VAULT_COLLECTION } from '@/lib/plugin-secrets/vault';
 import { ARCHIVE_COLLECTION } from '@/lib/account-archive-storage';
 import { TELEMETRY_COLLECTION } from '@/lib/telemetry/state';
 import { VERSION_CHECK_COLLECTION } from '@/lib/version-check/state';
+import { DEVICES_COLLECTION } from '@/lib/devices/registry';
 
 /**
  * Part `data` of the shared-store import (#1066): every document of these
@@ -39,4 +40,5 @@ export const steps: ImportStep[] = [
   // state.json, logins.json and the instance id .telemetry-id
   copyCollection('telemetry', TELEMETRY_COLLECTION),
   copyCollection('version-check', VERSION_CHECK_COLLECTION),
+  copyCollection('devices', DEVICES_COLLECTION),
 ];

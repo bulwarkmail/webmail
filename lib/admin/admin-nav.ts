@@ -243,6 +243,7 @@ export const ADMIN_PAGES: readonly AdminPageDef[] = [
     sections: [
       { id: 'devices', title: 'Downloads, printing and notifications', keywords: 'download attachment export print watermark install prompt push sender subject' },
       { id: 'offline', title: 'Offline mode', keywords: 'offline cache device keep mail outbox' },
+      { id: 'registered', title: 'Registered devices', keywords: 'device registry wipe remote lost stolen laptop remove desktop app browser' },
     ],
   },
   {

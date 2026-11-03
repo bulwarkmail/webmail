@@ -59,6 +59,16 @@ describe('Offline mode section', () => {
     expect((puts[0].organisation as { devices: { noOffline: boolean } }).devices.noOffline).toBe(true);
   });
 
+  it('leaves a refused login\'s data alone by default, and can ask for deletion at once, per scope', async () => {
+    await renderSection();
+    const toggle = screen.getByTestId('org-devices-wipeOnRefusedLogin');
+    expect(toggle.getAttribute('aria-checked')).toBe('false');
+    act(() => latest!.setScopeId('field'));
+    fireEvent.click(screen.getByTestId('org-devices-wipeOnRefusedLogin'));
+    expect(latest!.policy?.scopes?.[0].policy.organisation).toEqual({ devices: { wipeOnRefusedLogin: true } });
+    expect(latest!.policy?.organisation?.devices.wipeOnRefusedLogin).toBe(false);
+  });
+
   it('writes a scope override only into that scope', async () => {
     await renderSection();
     act(() => latest!.setScopeId('field'));

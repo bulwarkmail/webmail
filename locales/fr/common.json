@@ -5763,6 +5763,28 @@
     "store_private": "Les fenêtres privées ne peuvent pas conserver le courrier pour une utilisation hors ligne.",
     "server_not_answering": "Le serveur de messagerie ne répond pas. Réessayez dans un instant."
   },
+  "offlineWipe": {
+    "note": "Votre organisation a supprimé les données de ce compte de cet appareil. Connectez-vous pour recommencer.",
+    "note_unsent": "Votre organisation a supprimé les données de ce compte de cet appareil. Messages non envoyés supprimés : {count}.",
+    "settings_title": "Tout supprimer de cet appareil",
+    "settings_description": "Si vous donnez cet ordinateur ou cessez de l'utiliser. Vos messages sur le serveur restent en place.",
+    "settings_button": "Tout supprimer…",
+    "settings_wiping": "Suppression…",
+    "confirm_title": "Tout supprimer de cet appareil ?",
+    "confirm_message": "Cela supprime ce que cette application garde sur cet appareil, pour tous les comptes présents. Vos messages sur le serveur ne sont pas touchés.",
+    "confirm_mail": "Messages, agendas, contacts et fichiers gardés ici",
+    "confirm_unsent": "Messages non envoyés en attente ici : {count}. Ils seront perdus.",
+    "confirm_keys": "Clés S/MIME et OpenPGP. Il vous faudra votre propre sauvegarde pour les réutiliser.",
+    "confirm_plugins": "Données enregistrées ici par les plugins",
+    "confirm_files": "Pièces jointes ouvertes pour modification et fichiers en attente d'être joints",
+    "confirm_accounts": "Tous les comptes sont déconnectés",
+    "confirm_button": "Tout supprimer",
+    "note_unknown": "Votre organisation a supprimé les données de ce compte sur cet appareil. Des messages non envoyés ont peut-être aussi été supprimés.",
+    "refused_waiting": "Messages non envoyés qui attendent votre nouveau mot de passe : {count}. Ils restent jusqu'au {date}.",
+    "refused_waiting_unknown": "Des messages non envoyés attendent peut-être votre nouveau mot de passe. Ils restent jusqu'au {date}.",
+    "confirm_unsent_unknown": "Des messages non envoyés attendent peut-être ici. Ils seront perdus.",
+    "confirm_templates": "Modèles d'e-mail enregistrés sur cet appareil"
+  },
   "offlineStorage": {
     "keep_description": "Garde vos e-mails, votre agenda, vos contacts et les fichiers que vous choisissez, chiffrés sur cet appareil. Hors ligne, vous pouvez lire, signaler et déplacer des e-mails, et ce que vous écrivez attend dans la boîte d'envoi. La déconnexion supprime tout.",
     "window_label": "Durée de conservation",

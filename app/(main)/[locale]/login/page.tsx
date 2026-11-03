@@ -14,6 +14,8 @@ import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { useAuthStore, consumeSignedOut, SESSION_EXPIRED_DRAFTS_UNSAVED_KEY } from "@/stores/auth-store";
 import { consumeLost } from "@/lib/offline/lost";
+import { consumeWipeNote, onRefusedLoginsChanged, refusedWaits, type RefusedWait, type WipeNote } from "@/lib/devices/wipe-state";
+import { wipeNoteText } from "@/components/offline/device-wipe-host";
 import { useAccountStore } from "@/stores/account-store";
 import { useThemeStore } from "@/stores/theme-store";
 import { usePolicyStore } from "@/stores/policy-store";
@@ -198,6 +200,7 @@ function LoginPageContent() {
   const [desktopWaiting, setDesktopWaiting] = useState(false);
   const tSessionLimits = useTranslations("session_limits");
   const tOffline = useTranslations("offline");
+  const tOfflineWipe = useTranslations("offlineWipe");
   const tTheme = useTranslations("settings.appearance.theme");
   const params = useParams();
   const searchParams = useSearchParams();
@@ -302,8 +305,16 @@ function LoginPageContent() {
   const [sessionEnd, setSessionEnd] = useState<SessionEndReason | null>(null);
   // Offline outbox messages a sign-out deleted unsent (#523), named once.
   const [outboxLost, setOutboxLost] = useState<string[]>([]);
+  // Unsent mail a wipe took with it: how many, never which.
+  const [wipeLost, setWipeLost] = useState<WipeNote | null>(null);
+  // Unsent mail that waits for a new password: how many and until when, never which.
+  const [refusedWaiting, setRefusedWaiting] = useState<RefusedWait[]>([]);
   useEffect(() => {
     setOutboxLost(consumeLost());
+    setWipeLost(consumeWipeNote());
+    const read = () => setRefusedWaiting(refusedWaits());
+    read();
+    return onRefusedLoginsChanged(read);
   }, []);
   const [expiredDraftsUnsaved, setExpiredDraftsUnsaved] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -1498,6 +1509,19 @@ function LoginPageContent() {
 
           {/* Form section */}
           <div className="px-8 pb-8">
+            {wipeLost !== null && (
+              <div className="mb-5 p-3 rounded-xl border border-warning/30 bg-warning/5 text-sm text-foreground" role="status" data-testid="device-wipe-note">
+                {wipeNoteText(wipeLost, tOfflineWipe)}
+              </div>
+            )}
+            {refusedWaiting.map((wait) => {
+              const date = new Date(wait.until).toLocaleDateString(String(params?.locale ?? "en"), { dateStyle: "medium" });
+              return (
+                <div key={wait.until} className="mb-5 p-3 rounded-xl border border-warning/30 bg-warning/5 text-sm text-foreground" role="status" data-testid="login-refused-waiting">
+                  {wait.unsent === null ? tOfflineWipe("refused_waiting_unknown", { date }) : tOfflineWipe("refused_waiting", { count: wait.unsent, date })}
+                </div>
+              );
+            })}
             {outboxLost.length > 0 && (
               <div className="mb-5 p-3 rounded-xl border border-warning/30 bg-warning/5 text-sm text-foreground [overflow-wrap:anywhere]" role="status" data-testid="session-outbox-lost">
                 {tOffline("signout.lost", { subjects: outboxLost.map((s) => s || tOffline("outbox.no_subject")).join(", ") })}
