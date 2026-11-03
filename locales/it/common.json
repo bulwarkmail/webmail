@@ -5756,6 +5756,25 @@
     "toast": "Modifiche fatte offline non applicate: {count}. La posta in uscita indica quali.",
     "storage_failed": "Questo dispositivo non ha più spazio per la posta offline. Libera spazio o conservane meno nelle impostazioni."
   },
+  "offlineDrafts": {
+    "title": "Bozze su questo dispositivo",
+    "description": "Queste bozze sono salvate su questo dispositivo. Passano da sole al server appena è raggiungibile.",
+    "saved_on_device": "Salvata su questo dispositivo",
+    "status_waiting": "In attesa del server",
+    "status_sending": "Salvataggio sul server",
+    "status_uncertain": "Verifica dell'arrivo sul server",
+    "status_refused": "Il server ha rifiutato questa bozza: {error}",
+    "file_missing": "Un file allegato non è più su questo dispositivo",
+    "open": "Apri",
+    "open_label": "Apri {subject}",
+    "retry": "Riprova",
+    "retry_label": "Riprova {subject}",
+    "toast_refused": "Non è stato possibile salvare la bozza {subject} sul server. Resta su questo dispositivo.",
+    "toast_conflict": "La bozza {subject} è stata modificata su un altro dispositivo. Vengono conservate entrambe le versioni.",
+    "conflict_changed": "Modificata su un altro dispositivo. Entrambe le versioni sono in Bozze.",
+    "conflict_gone": "Modificata o rimossa su un altro dispositivo. La tua versione è in Bozze.",
+    "banner_refused": "Bozze rifiutate dal server: {count}"
+  },
   "deep_link": {
     "message_not_found": "Questo messaggio non è più disponibile.",
     "thread_not_found": "Questa conversazione non è più disponibile.",

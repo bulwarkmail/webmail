@@ -1,6 +1,7 @@
 /** What the page asks the outbox. Each call is one SQLite transaction, so two tabs can't interleave. */
 
 import type { AreaCall, StoreContext } from '../area';
+import { heldBlobsOf, type DraftCreate } from '../drafts/local-email';
 import { metaGet, metaSet } from '../engine/core-schema';
 import { deleteEmail, upsertEmail, type EmailObject } from '../mail/records';
 import { nextSeq, queueUpdate, type PatchRow } from './email-set';
@@ -130,40 +131,102 @@ function settleStale(ctx: StoreContext, params: { before: number }): number {
   ).changes;
 }
 
-/** Removes an entry and the files it held. */
+/** Every held file a waiting message or a draft on this device still needs. */
+function neededFiles(ctx: StoreContext): Set<string> {
+  const forSends = ctx.db.all<OutboxRow>('SELECT * FROM outbox').flatMap((row) => heldBlobIds(toEntry(row).item));
+  const forDrafts = ctx.db.all<{ create_json: string }>('SELECT create_json FROM draft_pending').flatMap((row) => heldBlobsOf(JSON.parse(row.create_json) as DraftCreate));
+  return new Set([...forSends, ...forDrafts]);
+}
+
+function dropHeld(ctx: StoreContext, blobId: string): void {
+  ctx.db.run('DELETE FROM upload_chunk WHERE local_id = ?', [blobId]);
+  ctx.db.run('DELETE FROM upload WHERE local_id = ?', [blobId]);
+}
+
+/** Removes an entry and the files only it held. A draft may share one with the message it became. */
 function remove(ctx: StoreContext, params: { id: number }): void {
   ctx.db.transaction(() => {
     const row = ctx.db.get<OutboxRow>('SELECT * FROM outbox WHERE id = ?', [params.id]);
     if (!row) return;
-    for (const blobId of heldBlobIds(toEntry(row).item)) ctx.db.run('DELETE FROM upload WHERE local_id = ?', [blobId]);
     ctx.db.run('DELETE FROM outbox WHERE id = ?', [params.id]);
+    const needed = neededFiles(ctx);
+    for (const blobId of heldBlobIds(toEntry(row).item)) if (!needed.has(blobId)) dropHeld(ctx, blobId);
   });
 }
 
 // ---- Files attached offline ----
 
-function holdFile(ctx: StoreContext, params: { jmap?: string; name: string; type: string; data: Uint8Array; localId?: string }): { blobId: string; size: number; type: string } {
-  const blobId = params.localId ?? `${LOCAL_BLOB_PREFIX}${crypto.randomUUID()}`;
+/** The size the page cuts a file into on its way here. */
+export const HOLD_CHUNK_BYTES = 1024 * 1024;
+
+/** A file that comes in pieces: nothing can read it until the last one is in. */
+function holdStart(ctx: StoreContext, params: { jmap?: string; name: string; type: string; size: number }): { blobId: string } {
+  const blobId = `${LOCAL_BLOB_PREFIX}${crypto.randomUUID()}`;
   ctx.db.run(
-    'INSERT OR REPLACE INTO upload (local_id, jmap, type, name, size, data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [blobId, params.jmap ?? null, params.type, params.name, params.data.byteLength, params.data, ctx.now()],
+    "INSERT INTO upload (local_id, jmap, type, name, size, data, created_at, complete) VALUES (?, ?, ?, ?, ?, x'', ?, 0)",
+    [blobId, params.jmap ?? null, params.type, params.name, params.size, ctx.now()],
   );
-  return { blobId, size: params.data.byteLength, type: params.type || 'application/octet-stream' };
+  return { blobId };
 }
 
-function heldFile(ctx: StoreContext, params: { blobId: string }): { name: string; type: string; data: Uint8Array } | null {
-  const row = ctx.db.get<{ name: string | null; type: string | null; data: Uint8Array }>('SELECT name, type, data FROM upload WHERE local_id = ?', [params.blobId]);
-  return row ? { name: row.name ?? 'attachment', type: row.type ?? 'application/octet-stream', data: row.data } : null;
+function holdChunk(ctx: StoreContext, params: { blobId: string; seq: number; data: Uint8Array }): void {
+  ctx.db.run('INSERT OR REPLACE INTO upload_chunk (local_id, seq, data) VALUES (?, ?, ?)', [params.blobId, params.seq, params.data]);
 }
 
-/** Files held for no entry (attached offline to a message that was then discarded). SEAM: the drafts agent keeps its drafts' files here too. */
+function holdEnd(ctx: StoreContext, params: { blobId: string }): { blobId: string; size: number; type: string } {
+  ctx.db.run('UPDATE upload SET complete = 1 WHERE local_id = ?', [params.blobId]);
+  const row = ctx.db.get<{ size: number; type: string | null }>('SELECT size, type FROM upload WHERE local_id = ?', [params.blobId]);
+  return { blobId: params.blobId, size: Number(row?.size ?? 0), type: row?.type || 'application/octet-stream' };
+}
+
+function holdAbort(ctx: StoreContext, params: { blobId: string }): void {
+  ctx.db.transaction(() => dropHeld(ctx, params.blobId));
+}
+
+/** A file that's here as a whole already: the old database's, on its move here. */
+function holdFile(ctx: StoreContext, params: { jmap?: string; name: string; type: string; data: Uint8Array; localId?: string }): { blobId: string; size: number; type: string } {
+  return ctx.db.transaction(() => {
+    const blobId = params.localId ?? `${LOCAL_BLOB_PREFIX}${crypto.randomUUID()}`;
+    dropHeld(ctx, blobId);
+    ctx.db.run(
+      "INSERT INTO upload (local_id, jmap, type, name, size, data, created_at) VALUES (?, ?, ?, ?, ?, x'', ?)",
+      [blobId, params.jmap ?? null, params.type, params.name, params.data.byteLength, ctx.now()],
+    );
+    for (let at = 0, seq = 0; at < params.data.byteLength; at += HOLD_CHUNK_BYTES, seq += 1) {
+      ctx.db.run('INSERT INTO upload_chunk (local_id, seq, data) VALUES (?, ?, ?)', [blobId, seq, params.data.subarray(at, at + HOLD_CHUNK_BYTES)]);
+    }
+    return { blobId, size: params.data.byteLength, type: params.type || 'application/octet-stream' };
+  });
+}
+
+/** Piece by piece into a Blob, which the browser can keep out of this worker's memory. */
+function heldFile(ctx: StoreContext, params: { blobId: string }): { name: string; type: string; size: number; blob: Blob } | null {
+  const row = ctx.db.get<{ name: string | null; type: string | null; size: number; data: Uint8Array }>('SELECT name, type, size, data FROM upload WHERE local_id = ? AND complete = 1', [params.blobId]);
+  if (!row) return null;
+  const type = row.type || 'application/octet-stream';
+  // A file from before chunks has its bytes in the row; a new one has none there.
+  let blob = new Blob(row.data?.byteLength ? [row.data as BlobPart] : [], { type });
+  for (let seq = 0; ; seq += 1) {
+    const chunk = ctx.db.get<{ data: Uint8Array }>('SELECT data FROM upload_chunk WHERE local_id = ? AND seq = ?', [params.blobId, seq]);
+    if (!chunk) break;
+    // Each step only refers to the last Blob, so one chunk at a time is in memory here.
+    blob = new Blob([blob, chunk.data as BlobPart], { type });
+  }
+  return { name: row.name ?? 'attachment', type, size: Number(row.size), blob };
+}
+
+/**
+ * Files nothing needs any more: attached to a message that was then discarded,
+ * or sent or saved long enough ago. Not at once, because an open composer may
+ * still show one.
+ */
 function dropOrphans(ctx: StoreContext, params: { olderThan: number }): number {
   return ctx.db.transaction(() => {
-    const needed = new Set(ctx.db.all<OutboxRow>('SELECT * FROM outbox').flatMap((row) => heldBlobIds(toEntry(row).item)));
+    const needed = neededFiles(ctx);
     let dropped = 0;
     for (const row of ctx.db.all<{ local_id: string }>('SELECT local_id FROM upload WHERE created_at < ?', [params.olderThan])) {
       if (needed.has(String(row.local_id))) continue;
-      ctx.db.run('DELETE FROM upload WHERE local_id = ?', [row.local_id]);
+      dropHeld(ctx, String(row.local_id));
       dropped += 1;
     }
     return dropped;
@@ -274,6 +337,10 @@ export const OUTBOX_CALLS: Readonly<Record<string, AreaCall>> = {
   'outbox.settleStale': settleStale,
   'outbox.remove': remove,
   'outbox.holdFile': holdFile,
+  'outbox.holdStart': holdStart,
+  'outbox.holdChunk': holdChunk,
+  'outbox.holdEnd': holdEnd,
+  'outbox.holdAbort': holdAbort,
   'outbox.heldFile': heldFile,
   'outbox.dropOrphans': dropOrphans,
   'outbox.pendingPatches': pendingPatches,

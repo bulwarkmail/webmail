@@ -5756,6 +5756,25 @@
     "toast": "Ændringer lavet offline, der ikke blev gennemført: {count}. Udbakken viser hvilke.",
     "storage_failed": "Denne enhed har ikke mere plads til offlinemail. Frigør plads, eller behold mindre i indstillingerne."
   },
+  "offlineDrafts": {
+    "title": "Kladder på denne enhed",
+    "description": "Disse kladder er gemt på denne enhed. De sendes selv til serveren, så snart den kan nås.",
+    "saved_on_device": "Gemt på denne enhed",
+    "status_waiting": "Venter på serveren",
+    "status_sending": "Gemmer på serveren",
+    "status_uncertain": "Tjekker, om den nåede serveren",
+    "status_refused": "Serveren afviste denne kladde: {error}",
+    "file_missing": "En vedhæftet fil er ikke længere på denne enhed",
+    "open": "Åbn",
+    "open_label": "Åbn {subject}",
+    "retry": "Prøv igen",
+    "retry_label": "Prøv {subject} igen",
+    "toast_refused": "Kladden {subject} kunne ikke gemmes på serveren. Den bliver på denne enhed.",
+    "toast_conflict": "Kladden {subject} blev ændret på en anden enhed. Begge versioner beholdes.",
+    "conflict_changed": "Ændret på en anden enhed. Begge versioner ligger i Kladder.",
+    "conflict_gone": "Ændret eller fjernet på en anden enhed. Din version ligger i Kladder.",
+    "banner_refused": "Kladder afvist af serveren: {count}"
+  },
   "deep_link": {
     "message_not_found": "Denne besked er ikke længere tilgængelig.",
     "thread_not_found": "Denne samtale er ikke længere tilgængelig.",

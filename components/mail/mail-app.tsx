@@ -55,6 +55,7 @@ import { useAuthStore, redirectToLogin, saveRedirectAfterLogin, canEnterLoginInP
 import { useRouter } from '@/i18n/navigation';
 import { useSettingsStore } from "@/stores/settings-store";
 import { useEffectiveMailLayout } from "@/hooks/use-effective-mail-layout";
+import { useOfflineStore } from "@/lib/offline/state";
 import { useContactStore } from "@/stores/contact-store";
 import { useIdentityStore } from "@/stores/identity-store";
 import { useUIStore, SIDEBAR_MIN, SIDEBAR_MAX, EMAIL_LIST_MIN, EMAIL_LIST_MAX, EMAIL_LIST_HEIGHT_MIN, EMAIL_LIST_HEIGHT_MAX } from "@/stores/ui-store";
@@ -2667,6 +2668,19 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const reportDraftOpenFailure = (error: unknown) => {
     console.error('Cancelled the scheduled send, but opening the draft failed:', error);
   };
+
+  // A draft that's only on this device, opened from the outbox: the server
+  // doesn't list it, so nothing else can open it while online.
+  const draftToOpen = useOfflineStore((s) => s.draftToOpen);
+  useEffect(() => {
+    if (!draftToOpen || !client) return;
+    useOfflineStore.setState({ draftToOpen: null });
+    const draftClient = useAuthStore.getState().getClientForAccount(draftToOpen.account) ?? client;
+    void draftClient.getEmail(draftToOpen.id, draftToOpen.jmap)
+      .then((draft) => (draft ? handleEditDraft(draft, { accountId: draftToOpen.jmap, localAccountId: draftToOpen.account }) : undefined))
+      .catch((error) => console.error('Opening a draft kept on this device failed:', error));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when the outbox asks, with the handler of that render
+  }, [draftToOpen, client]);
 
   /**
    * "Cancel and edit" from the list or the viewer, neither of which waits for

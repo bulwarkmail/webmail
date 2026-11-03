@@ -8,6 +8,7 @@
 
 import { requestOutboxSync } from '@/lib/pwa-notify/outbox-sync';
 import { getStore } from '@/lib/store/client/api';
+import type { LocalDraftSummary } from '@/lib/store/drafts/calls';
 import type { ConflictSummary, OutboxError, OutboxStatus, OutboxSummary, PolicyFingerprint, SendItem, StoredConflict, StoredOutboxEntry } from '@/lib/store/outbox/items';
 import { useOfflineStore } from './state';
 
@@ -72,20 +73,49 @@ export function removeOutboxEntry(entry: Pick<OutboxEntry, 'account' | 'id'>): P
   return getStore().area(entry.account, 'outbox.remove', { id: entry.id });
 }
 
+export interface LocalDraftRow extends LocalDraftSummary {
+  account: string;
+}
+
+/** Drafts that are only on this device, oldest first. */
+export async function readLocalDrafts(account?: string): Promise<LocalDraftRow[]> {
+  const accounts = account ? [account] : useOfflineStore.getState().enabled;
+  const read = await Promise.all(accounts.map(async (id) => ((await getStore().area<LocalDraftSummary[] | undefined>(id, 'drafts.list')) ?? []).map((row) => ({ ...row, account: id }))));
+  return read.flat();
+}
+
+/** Asks the server again about a draft it refused. */
+export function retryLocalDraft(account: string, localId: string): Promise<void> {
+  return getStore().area(account, 'drafts.retry', { localId });
+}
+
 export function dismissConflict(account: string, id: number): Promise<void> {
   return getStore().area(account, 'outbox.dismissConflict', { id });
 }
 
 // ---- Files attached while offline ----
 
+/** A file on its way to the store is cut into pieces of this size, so it's never in memory as a whole. */
+const HOLD_CHUNK_BYTES = 1024 * 1024;
+
 /** Keeps a file under a stand-in blob id until its message is sent. */
 export async function holdFile(account: string, file: Blob, name: string, jmap?: string): Promise<{ blobId: string; size: number; type: string }> {
-  const data = new Uint8Array(await file.arrayBuffer());
-  return getStore().area(account, 'outbox.holdFile', { jmap, name, type: file.type, data });
+  const store = getStore();
+  const { blobId } = await store.area<{ blobId: string }>(account, 'outbox.holdStart', { jmap, name, type: file.type, size: file.size });
+  try {
+    for (let at = 0, seq = 0; at < file.size; at += HOLD_CHUNK_BYTES, seq += 1) {
+      const data = new Uint8Array(await file.slice(at, at + HOLD_CHUNK_BYTES).arrayBuffer());
+      await store.area(account, 'outbox.holdChunk', { blobId, seq, data });
+    }
+    return await store.area(account, 'outbox.holdEnd', { blobId });
+  } catch (error) {
+    await store.area(account, 'outbox.holdAbort', { blobId }).catch(() => {});
+    throw error;
+  }
 }
 
 export async function heldFile(account: string, blobId: string): Promise<File | null> {
-  const held = await getStore().area<{ name: string; type: string; data: Uint8Array } | null>(account, 'outbox.heldFile', { blobId });
+  const held = await getStore().area<{ name: string; type: string; blob: Blob } | null>(account, 'outbox.heldFile', { blobId });
   if (!held) return null;
-  return new File([held.data as BlobPart], held.name, { type: held.type });
+  return new File([held.blob], held.name, { type: held.type });
 }

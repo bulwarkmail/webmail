@@ -27,8 +27,12 @@ export interface OfflineClientRef {
 export interface OfflineHooks {
   /** Answer without trying the network: the browser says it is offline (or the client was started offline). */
   skipNetwork(client: OfflineClientRef): boolean;
-  /** An answer from the device for a request the network couldn't take, or null. */
-  answer(client: OfflineClientRef, methodCalls: OfflineMethodCall[]): Promise<OfflineResponse | null>;
+  /**
+   * An answer from the device for a request the network couldn't take, or null.
+   * `networkTried`: the request went out and its connection broke, so the server
+   * may have taken it even though no answer came.
+   */
+  answer(client: OfflineClientRef, methodCalls: OfflineMethodCall[], options?: { networkTried?: boolean }): Promise<OfflineResponse | null>;
   /** What the server answered, for the cache. */
   record(client: OfflineClientRef, methodCalls: OfflineMethodCall[], response: OfflineResponse): void;
   /** A request reached the server (true) or failed on the network (false). */
@@ -59,6 +63,11 @@ export interface OfflineHooks {
    * ids as they are.
    */
   resolveStandIns?(client: OfflineClientRef, ids: string[]): Promise<Record<string, string | null>>;
+  /**
+   * Files attached offline, uploaded now that the server answers, for a save
+   * that names them. Throws SendNotStartedError when the upload hits an outage.
+   */
+  resolveHeldAttachments?<T extends { blobId: string }>(client: OfflineClientRef, attachments: T[], accountId?: string): Promise<T[]>;
   /** The user opened this file: the local store keeps recently opened files. */
   fileOpened?(client: OfflineClientRef, accountId: string, id: string): void;
 }

@@ -1,7 +1,8 @@
 /** What the page asks the mail part of the store outside JMAP. */
 
 import type { AreaCall, StoreContext } from '../area';
-import { putBlob, storeBody, upsertEmail, type EmailObject } from './records';
+import { keptBlob, rawBlob, rawStatus, recordKeptBlob } from './attachments';
+import { storeBody, upsertEmail, type EmailObject } from './records';
 
 /**
  * A message the user opened online: kept with its text if the store doesn't
@@ -34,15 +35,11 @@ function recordOpened(ctx: StoreContext, params: { jmap: string; emails: EmailOb
 
 /** A file of a kept message the user opened. Nothing else is kept: not an export, not a stray file. */
 function recordBlob(ctx: StoreContext, params: { jmap: string; blobId: string; type: string | null; data: Uint8Array }): boolean {
-  const owner = ctx.db.get<{ received_at: number }>('SELECT received_at FROM email_part WHERE jmap = ? AND blob_id = ?', [params.jmap, params.blobId]);
-  if (!owner) return false;
-  putBlob(ctx.db, params.jmap, params.blobId, params.type, params.data, Number(owner.received_at));
-  return true;
+  return recordKeptBlob(ctx, params.jmap, params.blobId, params.type, params.data);
 }
 
-function getBlob(ctx: StoreContext, params: { jmap: string; blobId: string }): { type: string | null; data: Uint8Array } | null {
-  const row = ctx.db.get<{ type: string | null; data: Uint8Array }>('SELECT type, data FROM blob WHERE jmap = ? AND blob_id = ?', [params.jmap, params.blobId]);
-  return row ? { type: row.type, data: row.data } : null;
+function getBlob(ctx: StoreContext, params: { jmap: string; blobId: string }): { type: string | null; size: number; blob: Blob } | null {
+  return keptBlob(ctx, params.jmap, params.blobId);
 }
 
 /** How much of the disk this account's file takes. */
@@ -56,6 +53,10 @@ export const MAIL_CALLS: Readonly<Record<string, AreaCall>> = {
   'mail.recordOpened': recordOpened,
   'mail.recordBlob': recordBlob,
   'mail.getBlob': getBlob,
+  /** A whole message for an offline export, or why not. */
+  'mail.rawBlob': (ctx, params: { jmap: string; blobId: string }) => rawBlob(ctx, params.jmap, params.blobId),
+  /** How many messages an export could write now, so it can say how many it can't. */
+  'mail.rawStatus': (ctx, params: { jmap: string; mailboxId?: string }) => rawStatus(ctx, params.jmap, params.mailboxId),
   'mail.usage': usage,
   /** The session kept with the account, for a start from the local copy. */
   'mail.session': (ctx) => ctx.session,

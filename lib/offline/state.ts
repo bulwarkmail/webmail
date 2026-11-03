@@ -7,7 +7,7 @@
  */
 
 import { create } from 'zustand';
-import type { ConflictEntry, OutboxEntry, OutboxError } from './queue';
+import type { ConflictEntry, LocalDraftRow, OutboxEntry, OutboxError } from './queue';
 
 /** localStorage: the local account ids that keep mail on this device. */
 export const OFFLINE_ACCOUNTS_KEY = 'bulwark-offline-accounts';
@@ -35,6 +35,10 @@ interface OfflineState {
   pendingChanges: number;
   /** Changes the server refused, or that met a message changed on another device. */
   conflicts: ConflictEntry[];
+  /** Drafts that are only on this device: on their way up, or refused by the server. */
+  localDrafts: LocalDraftRow[];
+  /** A local draft the user asked to open, for the mail page to pick up. */
+  draftToOpen: { account: string; jmap: string; id: string } | null;
   usageBytes: number;
   /** Accounts whose mail is being brought onto the device right now. */
   syncing: string[];
@@ -59,6 +63,8 @@ export const useOfflineStore = create<OfflineState>()(() => ({
   outbox: [],
   pendingChanges: 0,
   conflicts: [],
+  localDrafts: [],
+  draftToOpen: null,
   usageBytes: 0,
   syncing: [],
   lastSyncedAt: {},

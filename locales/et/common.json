@@ -5756,6 +5756,25 @@
     "toast": "Võrguühenduseta tehtud rakendamata muudatused: {count}. Väljundkaust näitab, millised.",
     "storage_failed": "Selles seadmes pole enam ruumi võrguühenduseta kirjade jaoks. Vabastage ruumi või hoidke seadetes vähem."
   },
+  "offlineDrafts": {
+    "title": "Mustandid selles seadmes",
+    "description": "Need mustandid on salvestatud selles seadmes. Need lähevad serverisse ise, kui server on kättesaadav.",
+    "saved_on_device": "Salvestatud selles seadmes",
+    "status_waiting": "Ootab serverit",
+    "status_sending": "Salvestamine serverisse",
+    "status_uncertain": "Kontrollimine, kas see jõudis serverisse",
+    "status_refused": "Server keeldus sellest mustandist: {error}",
+    "file_missing": "Manustatud faili pole enam selles seadmes",
+    "open": "Ava",
+    "open_label": "Ava {subject}",
+    "retry": "Proovi uuesti",
+    "retry_label": "Proovi uuesti: {subject}",
+    "toast_refused": "Mustandit {subject} ei saanud serverisse salvestada. See jääb sellesse seadmesse.",
+    "toast_conflict": "Mustandit {subject} muudeti teises seadmes. Mõlemad versioonid jäävad alles.",
+    "conflict_changed": "Muudetud teises seadmes. Mõlemad versioonid on kaustas Mustandid.",
+    "conflict_gone": "Muudetud või eemaldatud teises seadmes. Teie versioon on kaustas Mustandid.",
+    "banner_refused": "Serveri tagasi lükatud mustandid: {count}"
+  },
   "deep_link": {
     "message_not_found": "See sõnum ei ole enam saadaval.",
     "thread_not_found": "See vestlus ei ole enam saadaval.",

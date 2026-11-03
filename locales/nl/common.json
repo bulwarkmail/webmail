@@ -5756,6 +5756,25 @@
     "toast": "Offline gemaakte wijzigingen niet doorgevoerd: {count}. Het Postvak UIT laat zien welke.",
     "storage_failed": "Dit apparaat heeft geen ruimte meer voor offline mail. Maak ruimte vrij of bewaar minder via Instellingen."
   },
+  "offlineDrafts": {
+    "title": "Concepten op dit apparaat",
+    "description": "Deze concepten zijn op dit apparaat opgeslagen. Ze gaan vanzelf naar de server zodra die bereikbaar is.",
+    "saved_on_device": "Opgeslagen op dit apparaat",
+    "status_waiting": "Wacht op de server",
+    "status_sending": "Wordt op de server opgeslagen",
+    "status_uncertain": "Controleren of het de server heeft bereikt",
+    "status_refused": "De server heeft dit concept geweigerd: {error}",
+    "file_missing": "Een bijgevoegd bestand staat niet meer op dit apparaat",
+    "open": "Openen",
+    "open_label": "{subject} openen",
+    "retry": "Opnieuw proberen",
+    "retry_label": "{subject} opnieuw proberen",
+    "toast_refused": "Het concept {subject} kon niet op de server worden opgeslagen. Het blijft op dit apparaat.",
+    "toast_conflict": "Het concept {subject} is op een ander apparaat gewijzigd. Beide versies blijven bewaard.",
+    "conflict_changed": "Gewijzigd op een ander apparaat. Beide versies staan in Concepten.",
+    "conflict_gone": "Gewijzigd of verwijderd op een ander apparaat. Uw versie staat in Concepten.",
+    "banner_refused": "Door de server geweigerde concepten: {count}"
+  },
   "deep_link": {
     "message_not_found": "Dit bericht is niet meer beschikbaar.",
     "thread_not_found": "Dit gesprek is niet meer beschikbaar.",

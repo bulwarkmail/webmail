@@ -23,6 +23,9 @@ export function OfflineHost() {
   const tConflicts = useTranslations('offlineConflicts');
   const tConflictsRef = useRef(tConflicts);
   tConflictsRef.current = tConflicts;
+  const tDrafts = useTranslations('offlineDrafts');
+  const tDraftsRef = useRef(tDrafts);
+  tDraftsRef.current = tDrafts;
   const { dialogProps, confirm } = useConfirmDialog();
   const confirmRef = useRef(confirm);
   confirmRef.current = confirm;
@@ -51,6 +54,14 @@ export function OfflineHost() {
         case 'conflict':
           toast.warning(tConflictsRef.current('toast', { count: notice.count }));
           break;
+        case 'draft-refused':
+          toast.error(tDraftsRef.current('toast_refused', { subject: notice.subject || tr('outbox.no_subject') }), {
+            message: notice.error.code ? tDraftsRef.current(notice.error.code) : notice.error.text,
+          });
+          break;
+        case 'draft-conflict':
+          toast.warning(tDraftsRef.current('toast_conflict', { subject: notice.subject || tr('outbox.no_subject') }));
+          break;
         case 'storage-failed':
           toast.warning(tConflictsRef.current('storage_failed'), { duration: 0 });
           break;
@@ -75,7 +86,8 @@ export function OfflineHost() {
     const stop = startOfflineMode();
     // Messages that would be lost: ask before a sign-out the user started.
     const removeGate = addSignOutGate(async (accountId) => {
-      const unsent = useOfflineStore.getState().outbox.filter((row) => accountId === 'all' || row.account === accountId).length;
+      const { outbox, localDrafts } = useOfflineStore.getState();
+      const unsent = [...outbox, ...localDrafts].filter((row) => accountId === 'all' || row.account === accountId).length;
       if (unsent === 0) return true;
       const tr = tRef.current;
       const ok = await confirmRef.current({

@@ -5756,6 +5756,25 @@
     "toast": "Nepoužité změny provedené offline: {count}. Které to jsou, ukazuje pošta k odeslání.",
     "storage_failed": "Na tomto zařízení už není místo pro poštu offline. Uvolněte místo nebo v nastavení ponechte méně."
   },
+  "offlineDrafts": {
+    "title": "Koncepty v tomto zařízení",
+    "description": "Tyto koncepty jsou uložené v tomto zařízení. Na server se odešlou samy, jakmile bude dostupný.",
+    "saved_on_device": "Uloženo v tomto zařízení",
+    "status_waiting": "Čeká na server",
+    "status_sending": "Ukládá se na server",
+    "status_uncertain": "Ověřuje se, zda dorazil na server",
+    "status_refused": "Server tento koncept odmítl: {error}",
+    "file_missing": "Přiložený soubor už v tomto zařízení není",
+    "open": "Otevřít",
+    "open_label": "Otevřít {subject}",
+    "retry": "Zkusit znovu",
+    "retry_label": "Zkusit znovu: {subject}",
+    "toast_refused": "Koncept {subject} se nepodařilo uložit na server. Zůstává v tomto zařízení.",
+    "toast_conflict": "Koncept {subject} byl změněn v jiném zařízení. Obě verze zůstávají zachovány.",
+    "conflict_changed": "Změněno v jiném zařízení. Obě verze jsou v Konceptech.",
+    "conflict_gone": "Změněno nebo odstraněno v jiném zařízení. Vaše verze je v Konceptech.",
+    "banner_refused": "Koncepty odmítnuté serverem: {count}"
+  },
   "deep_link": {
     "message_not_found": "Tato zpráva už není dostupná.",
     "thread_not_found": "Tato konverzace už není dostupná.",

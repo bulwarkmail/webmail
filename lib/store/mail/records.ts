@@ -85,12 +85,21 @@ export function upsertEmail(db: StorageAdapter, jmap: string, email: EmailObject
   return rowid;
 }
 
+/** Kept files are stored in pieces of this size. */
+export const BLOB_CHUNK_BYTES = 1024 * 1024;
+
+export function dropBlob(db: StorageAdapter, jmap: string, blobId: string): void {
+  db.run('DELETE FROM blob_chunk WHERE jmap = ? AND blob_id = ?', [jmap, blobId]);
+  db.run('DELETE FROM blob WHERE jmap = ? AND blob_id = ?', [jmap, blobId]);
+}
+
+/** A file that's here as a whole already. */
 export function putBlob(db: StorageAdapter, jmap: string, blobId: string, type: string | null, data: Uint8Array, at: number): void {
-  db.run(
-    `INSERT INTO blob (jmap, blob_id, type, size, at, data) VALUES (?, ?, ?, ?, ?, ?)
-     ON CONFLICT (jmap, blob_id) DO UPDATE SET type = excluded.type, size = excluded.size, at = excluded.at, data = excluded.data`,
-    [jmap, blobId, type, data.byteLength, at, data],
-  );
+  dropBlob(db, jmap, blobId);
+  for (let from = 0, seq = 0; from < data.byteLength; from += BLOB_CHUNK_BYTES, seq += 1) {
+    db.run('INSERT INTO blob_chunk (jmap, blob_id, seq, data) VALUES (?, ?, ?, ?)', [jmap, blobId, seq, data.subarray(from, from + BLOB_CHUNK_BYTES)]);
+  }
+  db.run("INSERT INTO blob (jmap, blob_id, type, size, at, data) VALUES (?, ?, ?, ?, ?, x'')", [jmap, blobId, type, data.byteLength, at]);
 }
 
 export function deleteEmail(db: StorageAdapter, jmap: string, id: string): void {
@@ -225,24 +234,48 @@ function forgetParts(db: StorageAdapter, rowid: number): void {
   const parts = db.all<{ jmap: string; blob_id: string }>('SELECT jmap, blob_id FROM email_part WHERE email_rowid = ?', [rowid]);
   db.run('DELETE FROM email_part WHERE email_rowid = ?', [rowid]);
   for (const part of parts) {
-    db.run(
-      'DELETE FROM blob WHERE jmap = ? AND blob_id = ? AND NOT EXISTS (SELECT 1 FROM email_part p WHERE p.jmap = ? AND p.blob_id = ?)',
-      [part.jmap, part.blob_id, part.jmap, part.blob_id],
-    );
+    if (db.get('SELECT 1 AS x FROM email_part WHERE jmap = ? AND blob_id = ?', [part.jmap, part.blob_id])) continue;
+    dropBlob(db, part.jmap, part.blob_id);
   }
 }
 
-function rememberParts(db: StorageAdapter, rowid: number, attachments: unknown): void {
+interface MimePart {
+  blobId?: unknown;
+  size?: unknown;
+  type?: unknown;
+  name?: unknown;
+  disposition?: unknown;
+  subParts?: MimePart[];
+}
+
+function leafParts(part: MimePart): MimePart[] {
+  return part.subParts ? part.subParts.flatMap(leafParts) : [part];
+}
+
+/**
+ * The parts a message needs as files: its attachments, and whatever else the
+ * body shows. Stalwart 1.0 doesn't list inline images under `attachments`, so
+ * those come from the body lists and the MIME tree. Text parts are in bodyValues.
+ */
+function fileParts(body: Record<string, unknown>): MimePart[] {
+  const listed = (key: string) => (Array.isArray(body[key]) ? body[key] as MimePart[] : []);
+  const shown = [...listed('textBody'), ...listed('htmlBody'), ...(body.bodyStructure ? leafParts(body.bodyStructure as MimePart) : [])]
+    .filter((part) => !(typeof part.type === 'string' && part.type.startsWith('text/')) || part.disposition === 'attachment');
+  return [...listed('attachments'), ...shown];
+}
+
+function rememberParts(db: StorageAdapter, rowid: number, list: Record<string, unknown>, body: Record<string, unknown>): void {
   const row = db.get<{ jmap: string; received_at: number }>('SELECT jmap, received_at FROM email WHERE rowid = ?', [rowid]);
-  if (!row || !Array.isArray(attachments)) return;
-  for (const part of attachments as Array<{ blobId?: unknown; size?: unknown; type?: unknown; name?: unknown }>) {
-    if (typeof part.blobId !== 'string') continue;
-    db.run(
-      `INSERT INTO email_part (jmap, blob_id, email_rowid, received_at, size, type, name) VALUES (?, ?, ?, ?, ?, ?, ?)
-       ON CONFLICT (jmap, blob_id, email_rowid) DO NOTHING`,
-      [row.jmap, part.blobId, rowid, row.received_at, typeof part.size === 'number' ? part.size : 0, typeof part.type === 'string' ? part.type : null, typeof part.name === 'string' ? part.name : null],
-    );
+  if (!row) return;
+  const remember = (blobId: string, size: unknown, type: unknown, name: unknown, raw: number) => db.run(
+    `INSERT INTO email_part (jmap, blob_id, email_rowid, received_at, size, type, name, raw) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT (jmap, blob_id, email_rowid) DO NOTHING`,
+    [row.jmap, blobId, rowid, row.received_at, typeof size === 'number' ? size : 0, typeof type === 'string' ? type : null, typeof name === 'string' ? name : null, raw],
+  );
+  for (const part of fileParts(body)) {
+    if (typeof part.blobId === 'string') remember(part.blobId, part.size, part.type, part.name, 0);
   }
+  if (typeof list.blobId === 'string') remember(list.blobId, list.size, 'message/rfc822', 'message.eml', 1);
 }
 
 export function storeBody(db: StorageAdapter, rowid: number, listJson: string, full: Record<string, unknown>): void {
@@ -250,7 +283,7 @@ export function storeBody(db: StorageAdapter, rowid: number, listJson: string, f
   const body: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(full)) if (!(key in list)) body[key] = value;
   const hadBody = Number(db.get<{ body_state: number }>('SELECT body_state FROM email WHERE rowid = ?', [rowid])?.body_state) === 1;
-  rememberParts(db, rowid, body.attachments);
+  rememberParts(db, rowid, list, body);
   db.run('INSERT INTO email_body (email_rowid, json) VALUES (?, ?) ON CONFLICT (email_rowid) DO UPDATE SET json = excluded.json', [rowid, JSON.stringify(body)]);
   db.run('UPDATE email SET body_state = 1 WHERE rowid = ?', [rowid]);
   // A first body is one insert. Only a body stored again has an old row to replace.

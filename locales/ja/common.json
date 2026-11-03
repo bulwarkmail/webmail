@@ -5756,6 +5756,25 @@
     "toast": "オフライン中の変更で適用されなかったもの: {count} 件。送信トレイで確認できます。",
     "storage_failed": "このデバイスにはオフラインメール用の空き容量がありません。空き容量を増やすか、設定で保存する量を減らしてください。"
   },
+  "offlineDrafts": {
+    "title": "このデバイスの下書き",
+    "description": "これらの下書きはこのデバイスに保存されています。サーバーに接続できるようになると自動で送られます。",
+    "saved_on_device": "このデバイスに保存しました",
+    "status_waiting": "サーバーを待っています",
+    "status_sending": "サーバーに保存しています",
+    "status_uncertain": "サーバーに届いたか確認しています",
+    "status_refused": "サーバーがこの下書きを拒否しました: {error}",
+    "file_missing": "添付ファイルがこのデバイスにありません",
+    "open": "開く",
+    "open_label": "{subject} を開く",
+    "retry": "再試行",
+    "retry_label": "{subject} を再試行",
+    "toast_refused": "下書き {subject} をサーバーに保存できませんでした。このデバイスに残ります。",
+    "toast_conflict": "下書き {subject} は別のデバイスで変更されました。両方のバージョンを残します。",
+    "conflict_changed": "別のデバイスで変更されました。両方のバージョンが下書きにあります。",
+    "conflict_gone": "別のデバイスで変更または削除されました。あなたのバージョンは下書きにあります。",
+    "banner_refused": "サーバーが拒否した下書き: {count}"
+  },
   "deep_link": {
     "message_not_found": "このメッセージは利用できなくなりました。",
     "thread_not_found": "この会話は利用できなくなりました。",

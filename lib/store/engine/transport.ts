@@ -43,6 +43,11 @@ export class TransportError extends Error {
 export interface JmapTransport {
   request(calls: MethodCall[], using: string[]): Promise<JmapResponse>;
   download(jmap: string, blobId: string, type: string, name: string): Promise<Uint8Array>;
+  /**
+   * The same, piece by piece, so a large file isn't held in memory. An error
+   * thrown by `sink` ends the download and comes out as it is.
+   */
+  downloadStream?(jmap: string, blobId: string, type: string, name: string, sink: (part: Uint8Array) => void): Promise<void>;
   upload(jmap: string, data: Uint8Array, type: string): Promise<{ blobId: string; type: string; size: number }>;
 }
 

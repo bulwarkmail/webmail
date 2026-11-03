@@ -89,7 +89,8 @@ export type ConflictReason = 'changed' | 'gone' | 'refused';
 
 export interface ConflictSummary {
   subject: string;
-  op: 'update' | 'destroy';
+  /** `draft`: a draft saved here met a version changed elsewhere. Both are kept. */
+  op: 'update' | 'destroy' | 'draft';
   reason: ConflictReason;
   /** The server's word when it refused. */
   detail?: string;

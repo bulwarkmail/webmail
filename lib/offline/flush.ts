@@ -28,7 +28,9 @@
 import type { JMAPClient } from '@/lib/jmap/client';
 import { isNetworkFailure } from '@/lib/jmap/offline-hooks';
 import type { SendEmailResult } from '@/lib/jmap/types';
+import { isStandInId } from '@/lib/jmap/stand-in-ids';
 import { getStore } from '@/lib/store/client/api';
+import { flushDrafts, type DraftFlushIo } from '@/lib/store/drafts/flush';
 import type { MethodCall } from '@/lib/store/engine/transport';
 import { decideRetry, type LookupIo, type RetryDecision } from '@/lib/store/outbox/dedupe';
 import { flushPatches, type PatchIo, type PatchOutcome, type PendingPatch } from '@/lib/store/outbox/flush-patches';
@@ -54,10 +56,18 @@ export interface FlushDeps {
   onScheduled?: (entry: OutboxEntry, result: SendEmailResult) => void;
   /** A send's connection broke though the server may be fine: look it up again soon. */
   retryLater?: () => void;
+  /** A draft saved on this device reached the server: lists and open pages read again. */
+  onDraftSent?: () => void;
 }
 
 /** A send is taken for at most this long before a closed tab's send counts as uncertain. */
 export const SENDING_STALE_MS = 60_000;
+
+/**
+ * How long a held file stays once nothing names it. An open composer may still
+ * show it after its draft went up or was replaced.
+ */
+const HELD_FILE_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
 
 const flushing = new Set<string>();
 
@@ -90,7 +100,7 @@ async function uploadHeld(account: string, client: JMAPClient, blobId: string): 
   const file = await heldFile(account, blobId);
   if (!file) throw new OutboxPrepError('file_missing');
   try {
-    return (await client.uploadBlob(file)).blobId;
+    return (await client.uploadBlob(file, { noHold: true })).blobId;
   } catch (error) {
     if (isNetworkFailure(error)) throw notStartedError('upload failed');
     throw error;
@@ -158,7 +168,31 @@ export async function settleStaleSends(account?: string, now = Date.now()): Prom
 
 /** The server refused the request itself: more tries won't change that. Outages and auth wait instead. */
 function isRequestRefusal(error: unknown): boolean {
-  return error instanceof Error && /^Request failed: (400|403|404|413|422)\b/.test(error.message);
+  return error instanceof Error && /^(Request failed|Failed to upload file): (400|403|404|413|422)\b/.test(error.message);
+}
+
+/** The drafts saved on this device. False when the run stopped on an outage. */
+function sendDrafts(account: string, client: JMAPClient, deps: FlushDeps): Promise<boolean> {
+  const store = getStore();
+  const io: DraftFlushIo = {
+    store: {
+      read: () => store.area(account, 'drafts.read', { before: Date.now() - SENDING_STALE_MS }),
+      claim: (localId) => store.area(account, 'drafts.claim', { localId }),
+      failed: (localId, status, error, neverSent) => store.area(account, 'drafts.failed', { localId, status, error, neverSent }),
+      created: (result) => store.area(account, 'drafts.created', result),
+      ghostsLooked: (jmap, messageIds, found) => store.area(account, 'drafts.ghostsLooked', { jmap, messageIds, found }),
+    },
+    request: (calls, using) => client.requestNetworkOnly(calls, using),
+    upload: async (jmap, blobId) => {
+      const file = await heldFile(account, blobId);
+      return file ? (await client.uploadBlob(file, { accountId: jmap, noHold: true })).blobId : null;
+    },
+    isRefusal: isRequestRefusal,
+    onRefused: (subject, error) => deps.notify({ kind: 'draft-refused', subject, error }),
+    onConflict: (subject) => deps.notify({ kind: 'draft-conflict', subject }),
+    onSent: () => deps.onDraftSent?.(),
+  };
+  return flushDrafts(io);
 }
 
 /** The changes queued before `upToSeq` (all, with null). False when the run stopped on an outage. */
@@ -194,8 +228,14 @@ async function lookUp(client: JMAPClient, entry: OutboxEntry): Promise<RetryDeci
 async function dropOldDraft(client: JMAPClient, entry: OutboxEntry): Promise<void> {
   if (entry.item.kind !== 'email' || typeof entry.item.args[7] !== 'string') return;
   const options = entry.item.args[15] as { draftAccountId?: string } | undefined;
+  const jmap = options?.draftAccountId || client.getAccountId();
   try {
-    await client.requestNetworkOnly([['Email/set', { accountId: options?.draftAccountId || client.getAccountId(), destroy: [entry.item.args[7]] }, '0']]);
+    if (isStandInId(entry.item.args[7])) {
+      // Never reached the server: it only has to stop going there.
+      await getStore().area(entry.account, 'drafts.discard', { jmap, id: entry.item.args[7] });
+      return;
+    }
+    await client.requestNetworkOnly([['Email/set', { accountId: jmap, destroy: [entry.item.args[7]] }, '0']]);
   } catch {
     // An orphan in Drafts, nothing worse.
   }
@@ -241,6 +281,9 @@ async function flushLocked(account: string, client: JMAPClient, deps: FlushDeps)
   flushing.add(account);
   try {
     await settleStaleSends(account);
+    // A draft goes before the changes that may be waiting: what it replaces
+    // only starts to go once it's there.
+    if (!(await sendDrafts(account, client, deps))) return;
     if (!(await settleUncertain(account, client, deps))) return;
     // In the order they were made: a reply's $answered, queued after the
     // reply, goes after it.
@@ -290,6 +333,7 @@ async function flushLocked(account: string, client: JMAPClient, deps: FlushDeps)
     }
     if (stillOffline() || !deps.allowed()) return;
     await sendPatches(account, client, deps, null);
+    await getStore().area(account, 'outbox.dropOrphans', { olderThan: Date.now() - HELD_FILE_GRACE_MS });
   } finally {
     flushing.delete(account);
   }

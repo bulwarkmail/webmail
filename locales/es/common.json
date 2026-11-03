@@ -5756,6 +5756,25 @@
     "toast": "Cambios hechos sin conexión que no se aplicaron: {count}. La bandeja de salida indica cuáles.",
     "storage_failed": "Este dispositivo no tiene espacio para el correo sin conexión. Libera espacio o guarda menos en Ajustes."
   },
+  "offlineDrafts": {
+    "title": "Borradores en este dispositivo",
+    "description": "Estos borradores están guardados en este dispositivo. Irán al servidor por sí solos en cuanto se pueda conectar con él.",
+    "saved_on_device": "Guardado en este dispositivo",
+    "status_waiting": "Esperando al servidor",
+    "status_sending": "Guardando en el servidor",
+    "status_uncertain": "Comprobando si llegó al servidor",
+    "status_refused": "El servidor rechazó este borrador: {error}",
+    "file_missing": "Un archivo adjunto ya no está en este dispositivo",
+    "open": "Abrir",
+    "open_label": "Abrir {subject}",
+    "retry": "Reintentar",
+    "retry_label": "Reintentar {subject}",
+    "toast_refused": "El borrador {subject} no se pudo guardar en el servidor. Se queda en este dispositivo.",
+    "toast_conflict": "El borrador {subject} se cambió en otro dispositivo. Se conservan las dos versiones.",
+    "conflict_changed": "Cambiado en otro dispositivo. Las dos versiones están en Borradores.",
+    "conflict_gone": "Cambiado o eliminado en otro dispositivo. Su versión está en Borradores.",
+    "banner_refused": "Borradores rechazados por el servidor: {count}"
+  },
   "deep_link": {
     "message_not_found": "Este mensaje ya no está disponible.",
     "thread_not_found": "Esta conversación ya no está disponible.",

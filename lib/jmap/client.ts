@@ -4,7 +4,8 @@ import { IncompleteDeleteError } from "./delete-error";
 import { downloadAllowed, saveBlobAs, type DownloadKind } from "@/lib/download-guard";
 import { ArchiveEmailsError } from "./archive-error";
 import { generateUUID } from '@/lib/utils';
-import { standInsIn, withRealIds, withStandInsBack } from './stand-in-ids';
+import { isStandInId, standInsIn, withRealIds, withStandInsBack } from './stand-in-ids';
+import { isLocalBlobId } from '@/lib/store/outbox/items';
 import type { Attachment, Email, Mailbox, MailboxRights, StateChange, AccountStates, CollectionChanges, ShareNotification, BusyPeriod, CalendarParticipantIdentity, CalendarEventNotification, Thread, Identity, EmailAddress, ContactCard, AddressBook, AddressBookRights, VacationResponse, Calendar, CalendarComponentType, CalendarRights, CalendarEvent, CalendarEventFilter, CalendarTask, CreateCalendarOptions, FileNode, FileNodeFilter, FileNodeRights, Principal, PrincipalAvailability, PrincipalListing, PushSubscription, EmailPushConfig, DeliveryStatus, EmailSubmission, RejectedRecipient, ScheduledEmail, SendEmailResult, SharedAccount } from "./types";
 import type { SieveScript, SieveCapabilities } from "./sieve-types";
 import type { BlobBatch, CalendarEventUpdateOptions, CalendarQueryOptions, FileNodeListings, IJMAPClient, KeywordDiscoveryResult, KeywordInfo, KeywordMigration, SearchEmailsResult, SearchRequestOptions, UploadedEmailImport, UploadedEmailImportResult } from "./client-interface";
@@ -2190,8 +2191,10 @@ export class JMAPClient implements IJMAPClient {
    * `networkOnly`: only the server's own word counts. A send or a change the
    * outbox hands over must never be answered by the device: the device would
    * queue it again, or answer for the server.
+   * `deviceOnly`: the other way round. What belongs to a draft saved on the
+   * device stays with it, even if the server came back in between.
    */
-  private async request(methodCalls: JMAPMethodCall[], using?: string[], opts?: { transfer?: boolean; skipOfflineRecord?: boolean; networkOnly?: boolean }): Promise<JMAPResponse> {
+  private async request(methodCalls: JMAPMethodCall[], using?: string[], opts?: { transfer?: boolean; skipOfflineRecord?: boolean; networkOnly?: boolean; deviceOnly?: boolean }): Promise<JMAPResponse> {
     if (!this.apiUrl) {
       throw new Error('Not connected. Call connect() first.');
     }
@@ -2201,32 +2204,30 @@ export class JMAPClient implements IJMAPClient {
     // browser is offline or the network fails. Without offline mode no hooks
     // are set and this is the plain network request.
     const offline = getOfflineHooks();
-    if (this.offlineOnly || offline?.skipNetwork(this)) {
+    // A stand-in id from an event or a draft created offline, still held by an
+    // open dialog or a list: the server knows it by its real id, or not yet at
+    // all. The store files what reached the server under the real id too.
+    const standIns = offline?.resolveStandIns ? standInsIn(methodCalls) : [];
+    let realIds: Record<string, string> | null = null;
+    let onDeviceOnly = false;
+    if (standIns.length > 0) {
+      const resolved = await offline!.resolveStandIns!(this, standIns);
+      const known = Object.entries(resolved).filter((entry): entry is [string, string] => !!entry[1]);
+      if (known.length > 0) {
+        realIds = Object.fromEntries(known);
+        methodCalls = withRealIds(methodCalls, realIds);
+      }
+      onDeviceOnly = standIns.some((id) => !resolved[id]);
+    }
+    const asAsked = (response: JMAPResponse) => (realIds ? withStandInsBack(response, realIds) : response);
+    if (this.offlineOnly || opts?.deviceOnly || onDeviceOnly || offline?.skipNetwork(this)) {
       const local = offline && !opts?.networkOnly ? await offline.answer(this, methodCalls) : null;
       if (local) {
         this.lastAnswerFromDevice = true;
-        return local as JMAPResponse;
+        return asAsked(local as JMAPResponse);
       }
       throw new OfflineUnavailableError();
     }
-    // A stand-in id from an event created offline, still held by an open dialog
-    // or a list: the server knows it by its real id, or not yet at all.
-    const standIns = offline?.resolveStandIns ? standInsIn(methodCalls) : [];
-    let realIds: Record<string, string> | null = null;
-    if (standIns.length > 0) {
-      const resolved = await offline!.resolveStandIns!(this, standIns);
-      if (standIns.some((id) => !resolved[id])) {
-        const local = opts?.networkOnly ? null : await offline!.answer(this, methodCalls);
-        if (local) {
-          this.lastAnswerFromDevice = true;
-          return local as JMAPResponse;
-        }
-        throw new OfflineUnavailableError();
-      }
-      realIds = resolved as Record<string, string>;
-      methodCalls = withRealIds(methodCalls, realIds);
-    }
-    const asAsked = (response: JMAPResponse) => (realIds ? withStandInsBack(response, realIds) : response);
     let answer: JMAPResponse;
     try {
       answer = await this.networkRequest(methodCalls, using, opts);
@@ -2234,7 +2235,7 @@ export class JMAPClient implements IJMAPClient {
       // Only when the server is really gone: a refusal without CORS
       // headers looks the same to the browser and must stay an error.
       if (offline && isNetworkFailure(error) && await offline.serverGone(this, error)) {
-        const local = opts?.networkOnly ? null : await offline.answer(this, methodCalls);
+        const local = opts?.networkOnly ? null : await offline.answer(this, methodCalls, { networkTried: true });
         if (local) {
           this.lastAnswerFromDevice = true;
           return asAsked(local as JMAPResponse);
@@ -5081,9 +5082,21 @@ export class JMAPClient implements IJMAPClient {
       throw new Error('No drafts mailbox found');
     }
 
+    // Files attached offline go up now if the server answers. If it doesn't,
+    // the draft stays on the device with them, as when offline.
+    const hooks = getOfflineHooks();
+    if (attachments?.some(att => isLocalBlobId(att.blobId)) && hooks?.resolveHeldAttachments && !this.offlineOnly && !hooks.skipNetwork(this)) {
+      try {
+        attachments = await hooks.resolveHeldAttachments(this, attachments, draftAccountId);
+      } catch (error) {
+        if (!(error instanceof Error) || error.name !== 'SendNotStartedError') throw error;
+      }
+    }
+
     const emailId = `draft-${Date.now()}`;
 
     interface EmailDraft {
+      messageId: string[];
       from: { name?: string; email: string }[];
       to: { name?: string; email: string }[];
       cc?: { name?: string; email: string }[];
@@ -5107,6 +5120,9 @@ export class JMAPClient implements IJMAPClient {
     const draftInReplyTo = inReplyTo?.map(stripMessageIdBrackets).filter(Boolean);
     const draftReferences = references?.map(stripMessageIdBrackets).filter(Boolean);
     const emailData: EmailDraft = {
+      // Fixed here: when the connection breaks on the way, this is how the
+      // device later finds out whether the server took the draft after all.
+      messageId: [generateMessageId(parseRecipientString(fromEmail || this.username).email)],
       from: [{ ...(sanitizedFromName ? { name: sanitizedFromName } : {}), email: fromEmail || this.username }],
       // "Name <addr>" must be split into the two JMAP fields: storing the whole
       // mailbox as the address makes the server treat the display name as part
@@ -5171,9 +5187,12 @@ export class JMAPClient implements IJMAPClient {
 
         if (draftId) {
           try {
+            // A version saved on the device replaces the old one when it
+            // reaches the server, not before: the old one stays there until then.
+            const onDevice = isStandInId(newDraftId);
             const destroyResponse = await this.request([
-              ["Email/set", { accountId: options?.previousDraftAccountId || this.accountId, destroy: [draftId] }, "0"],
-            ]);
+              ["Email/set", { accountId: options?.previousDraftAccountId || this.accountId, destroy: [draftId], ...(onDevice ? { replacedBy: newDraftId } : {}) }, "0"],
+            ], undefined, onDevice ? { deviceOnly: true } : undefined);
             const destroyResult = destroyResponse.methodResponses?.[0]?.[1];
             if (destroyResult?.notDestroyed) {
               console.warn('Failed to destroy old draft:', destroyResult.notDestroyed);
@@ -6281,6 +6300,8 @@ export class JMAPClient implements IJMAPClient {
           accountId?: string;
           onProgress?: (loaded: number, total: number) => void;
           signal?: AbortSignal;
+          /** A file already held on this device that's on its way up: an outage is an error, not a second copy. */
+          noHold?: boolean;
         },
   ): Promise<{ blobId: string; size: number; type: string }> {
     const opts =
@@ -6303,7 +6324,7 @@ export class JMAPClient implements IJMAPClient {
     // is uploaded when the message it belongs to is sent from the outbox.
     const offline = getOfflineHooks();
     if (this.offlineOnly || offline?.skipNetwork(this)) {
-      const held = offline ? await offline.holdUpload(this, file, targetAccountId) : null;
+      const held = offline && !opts.noHold ? await offline.holdUpload(this, file, targetAccountId) : null;
       if (held) return held;
       throw new OfflineUnavailableError();
     }
@@ -6338,7 +6359,7 @@ export class JMAPClient implements IJMAPClient {
       // The server is gone though the browser says it's online (#523): the
       // file waits on this device as when offline. Asking whether it is
       // gone tells an outage from a refusal (a too-large file, a quota).
-      if (offline && !opts.signal?.aborted && await offline.serverGone(this)) {
+      if (offline && !opts.noHold && !opts.signal?.aborted && await offline.serverGone(this)) {
         const held = await offline.holdUpload(this, file, targetAccountId);
         if (held) return held;
       }
@@ -6519,7 +6540,8 @@ export class JMAPClient implements IJMAPClient {
   private async offlineAwareDownload(url: string, blobId: string, accountId: string | undefined): Promise<Response | Blob> {
     const offline = getOfflineHooks();
     const account = accountId || this.accountId;
-    if (this.offlineOnly || offline?.skipNetwork(this)) {
+    // A file attached offline only exists on this device, whatever the network does.
+    if (this.offlineOnly || isLocalBlobId(blobId) || offline?.skipNetwork(this)) {
       const local = offline ? await offline.blob(this, blobId, account) : null;
       if (local) return local;
       throw new OfflineUnavailableError();

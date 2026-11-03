@@ -420,9 +420,9 @@ describe('sends', () => {
     const held = await t.engine.areaCall('outbox.holdFile', { name: 'note.txt', type: 'text/plain', data }) as { blobId: string; size: number };
     expect(held).toMatchObject({ size: 5, type: 'text/plain' });
     expect(held.blobId).toMatch(/^bulwark-local-/);
-    const file = await t.engine.areaCall('outbox.heldFile', { blobId: held.blobId }) as { name: string; data: Uint8Array };
+    const file = await t.engine.areaCall('outbox.heldFile', { blobId: held.blobId }) as { name: string; blob: Blob };
     expect(file.name).toBe('note.txt');
-    expect(new TextDecoder().decode(file.data)).toBe('hello');
+    expect(await file.blob.text()).toBe('hello');
     const id = await t.engine.areaCall('outbox.queueSend', { summary, item: { kind: 'raw', blobId: held.blobId, identityId: 'i' } }) as number;
     await t.engine.areaCall('outbox.remove', { id });
     expect(await t.engine.areaCall('outbox.heldFile', { blobId: held.blobId })).toBeNull();

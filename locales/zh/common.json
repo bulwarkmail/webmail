@@ -5756,6 +5756,25 @@
     "toast": "离线时的更改未被应用：{count} 项。可在发件箱中查看。",
     "storage_failed": "此设备已没有空间存放离线邮件。请释放空间，或在设置中减少保留的内容。"
   },
+  "offlineDrafts": {
+    "title": "此设备上的草稿",
+    "description": "这些草稿保存在此设备上。一旦能连接服务器，就会自动上传。",
+    "saved_on_device": "已保存在此设备上",
+    "status_waiting": "正在等待服务器",
+    "status_sending": "正在保存到服务器",
+    "status_uncertain": "正在检查是否已到达服务器",
+    "status_refused": "服务器拒绝了此草稿：{error}",
+    "file_missing": "附件已不在此设备上",
+    "open": "打开",
+    "open_label": "打开 {subject}",
+    "retry": "重试",
+    "retry_label": "重试 {subject}",
+    "toast_refused": "草稿 {subject} 无法保存到服务器。它仍保留在此设备上。",
+    "toast_conflict": "草稿 {subject} 已在其他设备上更改。两个版本都会保留。",
+    "conflict_changed": "已在其他设备上更改。两个版本都在草稿中。",
+    "conflict_gone": "已在其他设备上更改或删除。您的版本在草稿中。",
+    "banner_refused": "服务器拒绝的草稿：{count}"
+  },
   "deep_link": {
     "message_not_found": "此邮件已不可用。",
     "thread_not_found": "此会话已不可用。",
