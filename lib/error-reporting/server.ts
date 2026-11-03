@@ -95,6 +95,31 @@ export function captureRequestError(error: unknown, routePattern?: string): Prom
   }
 }
 
+export interface DesktopMainErrorInput {
+  name?: unknown;
+  message?: unknown;
+  stack?: unknown;
+  mechanism?: unknown;
+}
+
+/**
+ * An error in the desktop app's main process, handed over by the shell. Its frames are
+ * the shell's own files as `/desktop/...`. All of it is scrubbed here again.
+ */
+export function captureDesktopMainError(error: DesktopMainErrorInput): Promise<void> {
+  try {
+    return handleServerReport({
+      name: scrubName(error.name),
+      message: scrubText(error.message),
+      frames: parseStack(error.stack),
+      handled: false,
+      mechanism: error.mechanism === 'unhandledrejection' ? 'desktop-main-rejection' : 'desktop-main',
+    });
+  } catch {
+    return Promise.resolve();
+  }
+}
+
 /**
  * logger.error: a route that caught an error and logged it. The frames are
  * the logging call's, minus the logger's own `skip` frames.

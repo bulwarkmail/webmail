@@ -1037,7 +1037,7 @@ export function EventModal({
         <div className="h-1 w-full flex-shrink-0" style={{ backgroundColor: color }} />
 
         {/* Header */}
-        <div className="flex items-start justify-between gap-2 px-6 py-4 border-b border-border flex-shrink-0">
+        <div data-window-top-row="" className="flex items-start justify-between gap-2 px-6 py-4 border-b border-border flex-shrink-0">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />

@@ -5,9 +5,9 @@ import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 import { forgetDesktopServer } from '@/lib/desktop/bridge';
 import { generateAccountId, generateAvatarColor, getMaxAccounts } from '@/lib/account-utils';
 import { authHooks } from '@/lib/plugin-hooks';
-import { clearEvicted, markEvicted } from '@/lib/offline/state';
+import { clearEvicted, dropEvictedOwner, isEvicted, markEvicted, rememberEvictedOwner } from '@/lib/offline/state';
 
-export type AccountRemovalReason = 'explicit' | 'evicted';
+export type AccountRemovalReason = 'explicit' | 'evicted' | 'wiped';
 
 const removalListeners = new Set<(accountId: string, reason: AccountRemovalReason) => void>();
 
@@ -124,6 +124,7 @@ export const useAccountStore = create<AccountState>()(
 
         const id = generateAccountId(entry.username, entry.serverUrl);
         clearEvicted(id);
+        dropEvictedOwner(id);
         if (state.accounts.some((a) => a.id === id)) {
           // Already exists - update mutable fields and return existing id
           set((s) => ({
@@ -177,7 +178,10 @@ export const useAccountStore = create<AccountState>()(
       removeAccount: (accountId, reason = 'explicit') => {
         if (!get().accounts.some((a) => a.id === accountId)) return;
         const leaving = get().accounts.find((a) => a.id === accountId);
-        if (reason === 'evicted') markEvicted(accountId);
+        if (reason === 'evicted') {
+          markEvicted(accountId);
+          if (IS_DESKTOP_BUILD && leaving && isEvicted(accountId)) rememberEvictedOwner(accountId, leaving);
+        }
         for (const listener of [...removalListeners]) listener(accountId, reason);
         set((s) => {
           const remaining = s.accounts.filter((a) => a.id !== accountId);

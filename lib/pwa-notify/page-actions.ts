@@ -5,10 +5,12 @@ import { useEmailStore } from '@/stores/email-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { loginFingerprint } from './login-fingerprint';
 import { vetoHooksRegistered } from './plugin-veto';
+import { useSettingsStore } from '@/stores/settings-store';
 
 /** What the service worker posts when a notification's button is clicked (public/sw.js). */
 export interface NotificationActionRequest {
-  action: 'archive' | 'mark-read' | 'reply';
+  /** `delete` only comes from the desktop app's toasts, never from the worker. */
+  action: 'archive' | 'mark-read' | 'reply' | 'delete';
   emailId: string;
   accountId: string;
   /** When the worker asked. */
@@ -147,6 +149,24 @@ export async function runNotificationAction(
     });
     if (inBin) {
       answer('failed');
+      return;
+    }
+    if (request.action === 'delete') {
+      const store = useEmailStore.getState();
+      // In the list: the store's own delete, with its hooks and the Delete setting.
+      if (store.emails.some((row) => row.id === request.emailId && (row.sourceClientAccountId ?? entry.id) === entry.id)) {
+        answer(await store.deleteEmail(client, request.emailId) ? 'done' : 'failed');
+        return;
+      }
+      // Not in the list, so no store action can reach it, and plugins are never gone round.
+      const trash = mailboxes.find((mailbox) => mailbox.role === 'trash');
+      if (!trash || !email || vetoHooksRegistered()) {
+        answer('failed');
+        return;
+      }
+      const markRead = useSettingsStore.getState().deleteAction === 'trash-and-read';
+      await client.batchMoveEmails([request.emailId], trash.originalId || trash.id, accountId, markRead);
+      answer('done');
       return;
     }
     const done = request.action === 'mark-read'

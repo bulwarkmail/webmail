@@ -85,10 +85,16 @@ export function strictestOfAllScopes(policy: SettingsPolicy): ServerDevicePolicy
   return out;
 }
 
-/** Everything on, and each cap as low as it goes: when not even the policy can be read. */
-export const ALL_DEVICE_LIMITS: ServerDevicePolicy = Object.fromEntries(
-  Object.entries(DEFAULT_ORGANISATION_POLICY.devices).map(([key, off]) => [key, typeof off === 'number' ? 1 : true]),
-) as ServerDevicePolicy;
+/**
+ * Everything on, and each cap as low as it goes: when not even the policy can be
+ * read. Except deleting a device's mail, which is no limit on anything the server does.
+ */
+export const ALL_DEVICE_LIMITS: ServerDevicePolicy = {
+  ...Object.fromEntries(
+    Object.entries(DEFAULT_ORGANISATION_POLICY.devices).map(([key, off]) => [key, typeof off === 'number' ? 1 : true]),
+  ),
+  wipeOnForcedSignOut: false,
+} as ServerDevicePolicy;
 
 /**
  * The device policy that applies to this login. When its session can't be

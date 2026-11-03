@@ -17,6 +17,7 @@ import { inboxUnread, totalInboxUnread } from "@/lib/account-inbox-unread";
 import { isDocumentRTL } from "@/i18n/direction";
 import { cn, formatFileSize } from "@/lib/utils";
 import { useRouter } from "@/i18n/navigation";
+import { onRefusedLoginsChanged, siblingWaits, waitDate } from "@/lib/devices/wipe-state";
 import { Avatar } from "@/components/ui/avatar";
 import { useMenuNavigation } from "@/hooks/use-menu-navigation";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
@@ -116,6 +117,11 @@ export function AccountSwitcher({
   const removeAccount = useAuthStore((s) => s.removeAccount);
   const logoutAll = useAuthStore((s) => s.logoutAll);
   const { dialogProps: confirmDialogProps, confirm } = useConfirmDialog();
+  const tWipe = useTranslations("offlineWipe");
+  // An account that signed out by itself beside this one: its data waits.
+  const [, noteWaitsChanged] = useState(0);
+  useEffect(() => onRefusedLoginsChanged(() => noteWaitsChanged((count) => count + 1)), []);
+  const waiting = siblingWaits(activeAccountId);
 
   const updatePosition = useCallback(() => {
     if (!buttonRef.current) return;
@@ -513,6 +519,30 @@ export function AccountSwitcher({
                 </div>
               );
             })}
+            {waiting.map((wait) => (
+              <button
+                key={wait.account}
+                type="button"
+                role="menuitem"
+                data-testid="account-needs-sign-in"
+                className="w-full flex items-start gap-3 px-3 py-2.5 text-start transition-colors hover:bg-muted"
+                onClick={() => {
+                  setOpen(false);
+                  router.push(`/login?mode=add-account&username=${encodeURIComponent(wait.username)}` as never);
+                }}
+              >
+                <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-destructive" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium truncate">{toUnicodeEmail(wait.label)}</span>
+                  <span className="block text-xs text-foreground">{tWipe("needs_sign_in")}</span>
+                  <span className="block text-xs text-muted-foreground">
+                    {wait.unsent
+                      ? tWipe("switcher_waiting", { count: wait.unsent, date: waitDate(wait.until) })
+                      : tWipe("switcher_kept", { date: waitDate(wait.until) })}
+                  </span>
+                </span>
+              </button>
+            ))}
           </div>
 
           {/* Mountain View: the account actions as rows closing the white card,

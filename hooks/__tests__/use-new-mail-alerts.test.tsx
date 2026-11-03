@@ -39,6 +39,14 @@ describe('new mail alerts', () => {
     vi.useRealTimers();
   });
 
+  it('in the desktop app leaves the sound to the notification path, so it plays once', () => {
+    window.bulwarkDesktop = { version: 1, platform: 'win32', os: {} } as never;
+    renderHook(() => useNewMailAlerts());
+    arrive('a');
+    expect(playNotificationSound).not.toHaveBeenCalled();
+    window.bulwarkDesktop = undefined;
+  });
+
   it('tells screen readers once how many messages came, never what they say', () => {
     renderHook(() => useNewMailAlerts());
     arrive('a');

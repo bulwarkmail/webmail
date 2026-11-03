@@ -176,7 +176,7 @@ async function draftsCalled(subject: string): Promise<Array<{ id: string; subjec
 
 test.beforeAll(() => requireEntEnv());
 
-test.describe('the manifest and the title bar', () => {
+test.describe('the manifest and the window controls', () => {
   test('the manifest asks for the overlay and falls back to standalone', async ({ request, baseURL }) => {
     const res = await request.get(`${baseURL ?? process.env.IT_WEBMAIL_URL}/manifest.webmanifest`);
     const manifest = await res.json();
@@ -186,7 +186,8 @@ test.describe('the manifest and the title bar', () => {
 
   test('without an overlay nothing changes', async ({ browser }) => {
     const page = await appPage(browser);
-    await expect(page.locator('[data-window-title-bar]')).toHaveCount(0);
+    await expect(page.locator('html[data-window-controls]')).toHaveCount(0);
+    await expect(page.locator('[data-window-row]')).toHaveCount(0);
     const padding = await page.evaluate(() => {
       const root = document.querySelector('[class*="--app-top-inset"]') as HTMLElement;
       return { padding: getComputedStyle(root).paddingTop, top: root.getBoundingClientRect().top };
@@ -195,27 +196,24 @@ test.describe('the manifest and the title bar', () => {
     await page.context().close();
   });
 
-  test('with one, the app starts below a drag strip that leaves the controls free', async ({ browser }) => {
+  test('with one, the app runs to the top and its rightmost row leaves the controls free', async ({ browser }) => {
     const page = await appPage(browser, OVERLAY);
-    const strip = page.locator('[data-window-title-bar]');
-    await expect(strip).toBeVisible();
-    const box = await strip.boundingBox();
-    expect(box).toMatchObject({ x: 0, y: 0, height: 40 });
-    expect(box!.width).toBe(1440 - 140);
-    const region = await strip.evaluate((el) => {
+    await expect(page.locator('html[data-window-controls]')).toHaveCount(1);
+    const root = await page.evaluate(() => {
+      const el = document.querySelector('[class*="--app-top-inset"]') as HTMLElement;
+      return { padding: getComputedStyle(el).paddingTop, top: el.getBoundingClientRect().top };
+    });
+    expect(root).toEqual({ padding: '0px', top: 0 });
+    const row = page.locator('[data-window-row-right]').first();
+    await expect(row).toBeVisible();
+    const seen = await row.evaluate((el) => {
       const style = getComputedStyle(el) as CSSStyleDeclaration & { appRegion?: string; webkitAppRegion?: string };
-      return style.appRegion ?? style.webkitAppRegion;
+      return { region: style.appRegion ?? style.webkitAppRegion, padding: parseFloat(style.paddingRight), right: el.getBoundingClientRect().right };
     });
-    expect(region).toBe('drag');
-    // The window title, in small text.
-    await expect(strip).toContainText(/\S/);
-    const rail = await page.evaluate(() => {
-      const root = document.querySelector('[class*="--app-top-inset"]') as HTMLElement;
-      return { padding: getComputedStyle(root).paddingTop };
-    });
-    expect(rail.padding).toBe('40px');
-    await shot(page, 'pwa-windows-title-bar');
-    // A full-page dialog keeps clear of it too.
+    expect(seen.region).toBe('drag');
+    expect(seen.right).toBe(1440);
+    expect(seen.padding).toBeGreaterThanOrEqual(140);
+    await shot(page, 'pwa-windows-controls');
     await page.context().close();
   });
 });

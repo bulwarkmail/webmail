@@ -1,3 +1,4 @@
+import { DESKTOP_VERSION_SUFFIX } from '@/lib/desktop/desktop-telemetry';
 import type { Frame } from './stack';
 
 /**
@@ -144,6 +145,11 @@ export function releaseName(): string {
   return commit && commit !== 'unknown' ? `${version}+${commit}` : version;
 }
 
+/**
+ * In the desktop build with a suffix, which also reaches the collector: its error batches
+ * have no room for a tag, and its version field allows this.
+ */
 export function appVersion(): string {
-  return process.env.NEXT_PUBLIC_APP_VERSION || '0.0.0';
+  const version = process.env.NEXT_PUBLIC_APP_VERSION || '0.0.0';
+  return process.env.NEXT_PUBLIC_BULWARK_DESKTOP === '1' ? `${version}${DESKTOP_VERSION_SUFFIX}` : version;
 }

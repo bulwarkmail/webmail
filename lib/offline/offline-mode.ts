@@ -11,15 +11,15 @@
  * - Changes and sends made offline wait in the store's outbox and go out in
  *   order once the server answers again and the organisation's policy was
  *   fetched afresh (flush.ts).
- * - Everything is wiped at a full sign-out, at the session limits and when the
- *   server really refuses the login (`invalid_grant`), by
- *   lib/sign-out-cleanup.ts; for one account when it signs out, is removed or
- *   switches offline mode off, and when the organisation forbids it (checked on
- *   every policy fetch). An account the app drops by itself because it couldn't
- *   confirm the login (an outage, an unknown refusal, a session cookie that ran
- *   out) keeps its data for 30 days or the next sign-in, hidden from everyone
- *   else. Unsent messages a sign-out deletes without the user's word are named
- *   (lost.ts).
+ * - Everything is wiped at a full sign-out, by lib/sign-out-cleanup.ts; for one
+ *   account when it signs out, is removed or switches offline mode off, and when
+ *   the organisation forbids it (checked on every policy fetch). An account the
+ *   app drops by itself keeps its data for 30 days or the next sign-in, hidden from
+ *   everyone else: when it couldn't confirm the login (an outage, an unknown
+ *   refusal, a session cookie that ran out), at the organisation's session limit,
+ *   and when the server refuses the login (`invalid_grant`, a lasting 401), unless
+ *   the organisation asks for deletion at once (lib/offline/device-wipe.ts). Unsent
+ *   messages a sign-out deletes without the user's word are named (lost.ts).
  */
 
 import { IS_LITE } from '@/lib/lite';
@@ -30,6 +30,7 @@ import { labelsPolicyFor } from '@/lib/outgoing/classification';
 import { getSendGuardSource, guardState, guardsSending } from '@/lib/plugin-send-guards';
 import { emitPushStateChange } from '@/lib/push-events';
 import { requestOutboxSync } from '@/lib/pwa-notify/outbox-sync';
+import { emitStoreEvent } from '@/lib/offline/store-events';
 import { STORAGE_ERROR_AREA, type StoreScope, type StoreUsage } from '@/lib/store/area';
 import type { DraftError } from '@/lib/store/drafts/pending';
 import { configureStore, getStore, type StorePageHooks } from '@/lib/store/client/api';
@@ -92,6 +93,9 @@ import { flushQueue, LOOKUP_WAIT_MS, SENDING_STALE_MS, settleStaleSends } from '
 import { LEGACY_DB_NAME, moveLegacyOutbox, strandedLegacyMessages } from './migrate-legacy';
 import { deleteShellCaches, tellServiceWorker } from './shell';
 import { rememberLost } from './lost';
+import { forgetEvictedSecrets } from './evicted-secrets';
+import { clearDesktopSurfaces } from '@/lib/desktop/bridge';
+import { addSleepHandler, reportStoreCreatedMail } from '@/lib/desktop/system-events';
 
 export type OfflineNotice =
   | { kind: 'queued'; subject: string }
@@ -252,6 +256,11 @@ const storeHooks: StorePageHooks = {
     void refreshQueueState();
   },
   onEvent(event) {
+    emitStoreEvent(event);
+    if (event.type === 'created' && event.collection === 'Email') {
+      const client = onlineClientFor(event.account);
+      if (client) reportStoreCreatedMail(client, event.jmap, event.ids);
+    }
     if (event.type === 'synced') {
       useOfflineStore.setState((s) => {
         const { [event.account]: _full, ...storageFull } = s.storageFull;
@@ -1029,6 +1038,31 @@ export async function unsentCount(scope: string, waitMs = UNSENT_READ_MS): Promi
   return Promise.race([read, new Promise<typeof known>((resolve) => setTimeout(() => resolve(known), waitMs))]);
 }
 
+/** How long a wipe waits for the count. A wipe's report is the only record of what it deleted. */
+export const UNSENT_FOR_WIPE_MS = 10_000;
+
+async function unsentOfAccount(account: string, waitMs: number): Promise<number | null> {
+  const shown = useOfflineStore.getState();
+  // Reading an account's store would create it if it never had one.
+  if (!shown.enabled.includes(account)) return [...shown.outbox, ...shown.localDrafts].filter((row) => row.account === account).length;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const read = Promise.all([readQueue(account), readLocalDrafts(account)])
+    .then(([{ failed, outbox: entries }, drafts]) => (failed.length > 0 ? null : entries.length + drafts.length), () => null);
+  const answer = await Promise.race([read, new Promise<null>((resolve) => { timer = setTimeout(() => resolve(null), waitMs); })]);
+  clearTimeout(timer);
+  return answer;
+}
+
+/**
+ * How many unsent messages a wipe of `scope` deletes, one account or 'all', hidden
+ * accounts included. Null when the store can't say: that isn't the same as none.
+ */
+export async function unsentForWipe(scope: string, waitMs = UNSENT_FOR_WIPE_MS): Promise<number | null> {
+  const accounts = scope === 'all' ? useOfflineStore.getState().enabled : [scope];
+  const counts = await Promise.all(accounts.map((account) => unsentOfAccount(account, waitMs)));
+  return counts.includes(null) ? null : (counts as number[]).reduce((sum, count) => sum + count, 0);
+}
+
 /** Names the unsent messages a wipe of `scope` deletes, unless the user agreed. */
 async function nameLost(scope: string, stillSignedIn: boolean): Promise<void> {
   if (named.has(scope) || named.has('all')) return;
@@ -1047,11 +1081,15 @@ async function nameLost(scope: string, stillSignedIn: boolean): Promise<void> {
 }
 
 export async function wipeAccount(account: string): Promise<void> {
+  clearDesktopSurfaces();
   const timer = syncTimers.get(account);
   if (timer) clearTimeout(timer);
   syncTimers.delete(account);
   // Waited for a sign-in that never came: whoever is here now mustn't read its subjects.
-  if (isEvicted(account)) named.add(account);
+  if (isEvicted(account)) {
+    named.add(account);
+    void forgetEvictedSecrets(account).catch(() => {});
+  }
   const before = useOfflineStore.getState();
   if (before.enabled.includes(account) || before.outbox.some((row) => row.account === account) || before.localDrafts.some((row) => row.account === account)) {
     await nameLost(account, useAuthStore.getState().isAuthenticated);
@@ -1079,6 +1117,7 @@ export async function wipeAccount(account: string): Promise<void> {
 
 /** Nothing of offline mode stays on this device. */
 export async function wipeEverything(): Promise<void> {
+  clearDesktopSurfaces();
   for (const timer of syncTimers.values()) clearTimeout(timer);
   syncTimers.clear();
   writeEnabled([]);
@@ -1100,7 +1139,7 @@ export async function wipeEverything(): Promise<void> {
 }
 
 /** The organisation's word on this account, from the server or the last fetch. Defaults aren't its word. */
-function scopeDecided(account: string): boolean {
+export function scopeDecided(account: string): boolean {
   const { loaded, source, partial } = usePolicyStore.getState();
   // The public part a page gets before it's signed in has no caps and no scopes in it.
   return loaded && !partial && (source === 'server' || source === 'cache') && policyDecided(account);
@@ -1221,6 +1260,11 @@ export function startOfflineMode(): () => void {
     window.removeEventListener('online', onOnline);
     window.removeEventListener('offline', onOffline);
   });
+
+  // The desktop app going to sleep. Waking comes with the two events above and below.
+  cleanups.push(addSleepHandler(() => {
+    void getStore().setOnline(false).catch(() => {});
+  }));
 
   // Back in front: catch up now rather than at the next interval.
   const onVisible = () => {
@@ -1352,7 +1396,7 @@ export function startOfflineMode(): () => void {
  * that left the registry on purpose before this ran (a login without "remember
  * me" ends at a reload, before the host mounts) goes now, naming lost mail.
  */
-async function sweepAccountsGone(now = Date.now()): Promise<void> {
+export async function sweepAccountsGone(now = Date.now()): Promise<void> {
   const evicted = readEvicted();
   const accounts = useAccountStore.getState().accounts;
   for (const account of useOfflineStore.getState().enabled) {

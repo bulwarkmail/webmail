@@ -17,6 +17,9 @@ import {
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { ChevronRight } from "@/components/icons";
+import { useTranslations } from "next-intl";
+import { nativeMenusAvailable, readSettledMenu, showNativeMenu } from "@/lib/desktop/native-menu";
+import { toast } from "@/stores/toast-store";
 
 interface Position {
   x: number;
@@ -199,6 +202,9 @@ interface MenuLevel {
 const MenuLevelContext = createContext<MenuLevel | null>(null);
 const neverTouched = () => false;
 
+/** The desktop app shows this menu natively: it renders hidden, submenus and all, to be read. */
+const NativeMenuContext = createContext(false);
+
 function useMenuLevel(recentTouch: () => boolean): MenuLevel {
   const [openId, setOpenId] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -245,10 +251,54 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
     const recentTouch = useCallback(() => Date.now() - lastTouchAt.current < 800, []);
     const level = useMenuLevel(recentTouch);
     const { request: requestLevel } = level;
+    const [nativeRefused, setNativeRefused] = useState(false);
+    const nativeMode = isOpen && mounted && !nativeRefused && nativeMenusAvailable();
+    const positionRef = useRef(position);
+    positionRef.current = position;
+    const tDesktop = useTranslations("desktopUi.menu");
+    const tDesktopRef = useRef(tDesktop);
+    tDesktopRef.current = tDesktop;
 
     useEffect(() => {
       setMounted(true);
     }, []);
+
+    useEffect(() => {
+      if (!isOpen) setNativeRefused(false);
+    }, [isOpen]);
+
+    // In the desktop app: read what rendered and show that natively. See lib/desktop/native-menu.ts.
+    useEffect(() => {
+      if (!nativeMode) return;
+      const root = localRef.current;
+      if (!root) return;
+      let cancelled = false;
+      void (async () => {
+        const read = await readSettledMenu(root, () => cancelled);
+        if (cancelled) return;
+        if (read.unsupported) {
+          setNativeRefused(true);
+          return;
+        }
+        const { anchor: at } = positionRef.current;
+        // From a right-click it opens at the pointer, which the OS knows best.
+        const place = at
+          ? { x: at.align === "end" ? Math.max(0, at.right - root.getBoundingClientRect().width) : at.left, y: at.bottom + ANCHOR_GAP }
+          : undefined;
+        const outcome = await showNativeMenu(read, root, place, tDesktopRef.current("from_plugins"));
+        if (cancelled) return;
+        // "More from plugins": the menu itself, with what only it can show.
+        if (outcome === "html") {
+          setNativeRefused(true);
+          return;
+        }
+        if (outcome === "gone") toast.warning(tDesktopRef.current("pick_gone"));
+        onCloseRef.current();
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, [nativeMode]);
 
     const anchor = position.anchor;
     const anchorKey = anchor ? `${anchor.left},${anchor.top},${anchor.right},${anchor.bottom},${anchor.align ?? ""}` : "";
@@ -443,11 +493,11 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
     // Once placed (it is invisible, and can't take the focus, before), the
     // first item gets the focus.
     useEffect(() => {
-      if (!isOpen || !isPositioned) return;
+      if (!isOpen || !isPositioned || nativeMode) return;
       const root = localRef.current;
       if (!root || root.contains(document.activeElement)) return;
       return focusFirstItem(root);
-    }, [isOpen, isPositioned]);
+    }, [isOpen, isPositioned, nativeMode]);
 
     const setRefs = (node: HTMLDivElement | null) => {
       localRef.current = node;
@@ -463,6 +513,7 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
     const renderPosition = adjustedPosition ?? position;
 
     return createPortal(
+      <NativeMenuContext.Provider value={nativeMode}>
       <MenuLevelContext.Provider value={level}>
         <div
           ref={setRefs}
@@ -478,7 +529,7 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
             left: renderPosition.x,
             top: renderPosition.y,
             maxWidth: `calc(100vw - ${2 * VIEWPORT_MARGIN}px)`,
-            visibility: isPositioned ? "visible" : "hidden",
+            visibility: isPositioned && !nativeMode ? "visible" : "hidden",
           }}
           role="menu"
           aria-label={label}
@@ -493,7 +544,8 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
             {children}
           </div>
         </div>
-      </MenuLevelContext.Provider>,
+      </MenuLevelContext.Provider>
+      </NativeMenuContext.Provider>,
       document.body
     );
   }
@@ -578,11 +630,11 @@ export function ContextMenuItem({
       {Icon && <Icon className="w-4 h-4 flex-shrink-0" />}
       {hint ? (
         <span className="flex-1 min-w-0">
-          <span className="block">{label}</span>
+          <span className="block" data-menu-label="">{label}</span>
           <span className="block text-xs text-muted-foreground">{hint}</span>
         </span>
       ) : (
-        <span className="flex-1">{label}</span>
+        <span className="flex-1" data-menu-label="">{label}</span>
       )}
       {/* Key hints mean nothing without a keyboard: hidden on touch (R8). */}
       {shortcut && (
@@ -625,6 +677,7 @@ export function ContextMenuSubMenu({
   hint,
 }: ContextMenuSubMenuProps) {
   const parent = useContext(MenuLevelContext);
+  const native = useContext(NativeMenuContext);
   const id = useId();
   // Outside a ContextMenu (a host's own panel) it keeps its own state.
   const [localOpen, setLocalOpen] = useState(false);
@@ -704,16 +757,21 @@ export function ContextMenuSubMenu({
         {Icon && <Icon className="w-4 h-4 flex-shrink-0" />}
         {hint ? (
           <span className="flex-1 min-w-0">
-            <span className="block">{label}</span>
+            <span className="block" data-menu-label="">{label}</span>
             <span className="block text-xs text-muted-foreground">{hint}</span>
           </span>
         ) : (
-          <span className="flex-1">{label}</span>
+          <span className="flex-1" data-menu-label="">{label}</span>
         )}
         <ChevronRight className="w-4 h-4 text-muted-foreground" />
       </div>
 
-      {isOpen && !disabled && (
+      {native && !disabled && (
+        <div data-submenu-panel="" role="menu" aria-label={label} hidden={false}>
+          {children}
+        </div>
+      )}
+      {!native && isOpen && !disabled && (
         <MenuLevelContext.Provider value={ownLevel}>
           <SubMenuPanel
             ref={panelRef}
@@ -822,7 +880,7 @@ interface ContextMenuHeaderProps {
 
 export function ContextMenuHeader({ children }: ContextMenuHeaderProps) {
   return (
-    <div className="px-3 py-2 text-xs font-medium text-muted-foreground border-b border-border">
+    <div data-context-menu-header="" className="px-3 py-2 text-xs font-medium text-muted-foreground border-b border-border">
       {children}
     </div>
   );

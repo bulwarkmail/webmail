@@ -348,6 +348,7 @@ export function useAppSidePanel({ view, context, dock = true, hidden = false, on
         aria-label={panelLabelOf(shownIds, t('plugin_panel'))}
         data-app-side-panel={overlay ? 'overlay' : 'docked'}
         data-app-side-panel-view={view}
+        data-window-end-column=""
         className={cn(
           'flex flex-col h-full border-s border-border bg-background overflow-hidden shrink-0',
           overlay && 'absolute inset-y-0 end-0 z-30 shadow-xl',
