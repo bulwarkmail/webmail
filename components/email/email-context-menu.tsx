@@ -133,6 +133,8 @@ interface EmailContextMenuProps {
   extras?: MessageActionEntry[];
   /** The row's plugin entries (message-row-actions). Default true. */
   rowPlugins?: boolean;
+  /** Entries a caller adds after the message's own, such as its toolbar's overflow. */
+  extraEntries?: React.ReactNode;
   /** The menu's accessible name, e.g. "More actions" from the reader's ⋮. */
   label?: string;
 }
@@ -189,6 +191,7 @@ export function EmailContextMenu({
   omit,
   extras,
   rowPlugins = true,
+  extraEntries,
   label,
 }: EmailContextMenuProps) {
   const t = useTranslations("context_menu");
@@ -567,6 +570,7 @@ export function EmailContextMenu({
         <>
           {singleMenu}
           {rowPlugins && rowPluginBlock}
+          {extraEntries}
         </>
       )}
 

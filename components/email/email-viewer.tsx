@@ -30,7 +30,7 @@ import { buildContactsPath } from "@/lib/deep-links";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { Avatar } from "@/components/ui/avatar";
-import { ContextMenu } from "@/components/ui/context-menu";
+import { ContextMenu, ContextMenuSeparator } from "@/components/ui/context-menu";
 import { useContextMenu, type UseContextMenuReturn } from "@/hooks/use-context-menu";
 import { EmailContextMenu } from "./email-context-menu";
 import { useMessageActionList, type MessageActionEntry, type MessageActionKey, type MessageActionOptions, type MessageSubmenuKey } from "./message-actions";
@@ -208,6 +208,7 @@ const TOOLBAR_PRIORITY_ACTIONS: Record<string, MessageActionKey> = {
   '11': 'extra:view_mode',
 };
 const NO_ACTION_KEYS: ReadonlySet<MessageActionKey> = new Set();
+const NO_PLUGIN_KEYS: ReadonlySet<string> = new Set();
 
 /** Whatever a sub-view offers to act on, in the order it is read out. */
 const SUB_MENU_ITEM_SELECTOR = '[role="menuitem"],[role="menuitemcheckbox"],[role="menuitemradio"]';
@@ -1090,10 +1091,12 @@ interface ReaderMoreMenuProps {
   selectedMailbox: string;
   onMoveToMailbox?: (mailboxId: string) => void;
   onSetTag?: (tagId: string | null) => void;
+  /** The plugin buttons that gave way on the toolbar, as entries of the menu. */
+  pluginEntries?: React.ReactNode;
 }
 
 /** The reader's ⋮ on a desktop: the row's context menu, anchored to the button (R6). */
-function ReaderMoreMenu({ menu, options, label, mailboxes, selectedMailbox, onMoveToMailbox, onSetTag }: ReaderMoreMenuProps) {
+function ReaderMoreMenu({ menu, options, label, mailboxes, selectedMailbox, onMoveToMailbox, onSetTag, pluginEntries }: ReaderMoreMenuProps) {
   const { email } = options;
   const { copyTargets, copyToAccount } = useCopyToAccount(email, true);
   return (
@@ -1130,6 +1133,7 @@ function ReaderMoreMenu({ menu, options, label, mailboxes, selectedMailbox, onMo
       omit={options.omit}
       extras={options.extras}
       rowPlugins={false}
+      extraEntries={pluginEntries}
     />
   );
 }
@@ -1684,6 +1688,8 @@ export function EmailViewer({
   const tagMenuOpen = tagMenu.contextMenu.isOpen;
   // What the toolbar shows when the ⋮ opens; the menu leaves those out.
   const [readerMenuOmit, setReaderMenuOmit] = useState<ReadonlySet<MessageActionKey>>(NO_ACTION_KEYS);
+  // The plugin buttons that had no room on the toolbar when the ⋮ opened.
+  const [readerMenuPluginKeys, setReaderMenuPluginKeys] = useState<ReadonlySet<string>>(NO_PLUGIN_KEYS);
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   // The rows that open a sub-view, and the pieces of the mobile panel a
@@ -4112,6 +4118,14 @@ ${printWatermark ? printWatermark.html : ''}
     }
     return shown;
   };
+  // The plugin buttons that gave way on the toolbar: the ⋮ menu offers them.
+  const toolbarHiddenPluginActions = (): ReadonlySet<string> => {
+    const hidden = new Set<string>();
+    toolbarRef.current?.querySelectorAll<HTMLElement>('[data-plugin-action-key]').forEach((item) => {
+      if (item.getClientRects().length === 0) hidden.add(item.dataset.pluginActionKey!);
+    });
+    return hidden;
+  };
   const toggleViewMode = () => setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev);
   // The reader's own entries after the message's: the view toggle, Import
   // (into the open folder) and, with a keyboard, the shortcuts.
@@ -4297,6 +4311,7 @@ ${printWatermark ? printWatermark.html : ''}
             target={readerActionTarget}
             mailboxRole={currentMailboxRole ?? null}
             compact={!showToolbarLabels}
+            overflowItems
           />
         )}
       </div>
@@ -4524,6 +4539,7 @@ ${printWatermark ? printWatermark.html : ''}
                 return;
               }
               setReaderMenuOmit(toolbarShownActions());
+              setReaderMenuPluginKeys(toolbarHiddenPluginActions());
               readerMenu.openContextMenuFrom(e.currentTarget, null, 'end');
             }}
           >
@@ -4539,6 +4555,20 @@ ${printWatermark ? printWatermark.html : ''}
               selectedMailbox={selectedMailbox}
               onMoveToMailbox={onMoveToMailbox}
               onSetTag={onSetTag ? (tagId) => onSetTag(email.id, tagId) : undefined}
+              pluginEntries={readerMenuPluginKeys.size > 0 ? (
+                <>
+                  <ContextMenuSeparator />
+                  <PluginActions
+                    surface="reader-actions"
+                    variant="menu"
+                    context={readerActionContext}
+                    target={readerActionTarget}
+                    mailboxRole={currentMailboxRole ?? null}
+                    only={readerMenuPluginKeys}
+                    onRan={closeReaderMenu}
+                  />
+                </>
+              ) : undefined}
             />
           )}
         </div>
