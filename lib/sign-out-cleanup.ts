@@ -38,9 +38,10 @@ const SIGNED_OUT_STORAGE_KEYS = [
   'bulwark-offline-accounts',
   // Which accounts' data waits for a new sign-in, and until when.
   'bulwark-offline-evicted',
+  'bulwark-store-opened',
 ];
 
-const LOCAL_STORE_KEYS = new Set(['bulwark-offline-accounts', 'bulwark-offline-evicted']);
+const LOCAL_STORE_KEYS = new Set(['bulwark-offline-accounts', 'bulwark-offline-evicted', 'bulwark-store-opened']);
 
 const SIGNED_OUT_SIGNAL = 'bulwark:signed-out';
 

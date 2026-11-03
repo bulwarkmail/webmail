@@ -21,6 +21,9 @@ import {
 
 const CALL_TIMEOUT_MS = 60_000;
 const OWNER_WAIT_MS = 15_000;
+/** Calls waiting on the owner ask it this often whether it's still there. */
+const OWNER_PING_MS = 10_000;
+const OWNER_PING_MISSES = 3;
 /** A first sync of a large account runs a long time, and its promise is what ends "syncing". */
 const SYNC_TIMEOUT_MS = 30 * 60_000;
 
@@ -58,6 +61,8 @@ export class StoreClient {
   private isOwner = false;
   private readonly pending = new Map<string, Pending>();
   private readonly ownerWaiters: Array<() => void> = [];
+  private ownerWatch: ReturnType<typeof setInterval> | null = null;
+  private ownerAnswered: (() => void) | null = null;
   private lifecycleBound = false;
 
   constructor(private readonly options: StoreClientOptions = {}) {}
@@ -150,6 +155,7 @@ export class StoreClient {
         break;
       case 'owner-changed':
         this.owner = message.owner;
+        if (message.owner) this.ownerAnswered?.();
         if (message.owner) this.flushOwnerWaiters();
         break;
       case 'shutdown':
@@ -173,6 +179,41 @@ export class StoreClient {
     } else {
       pending.resolve(message.result);
     }
+  }
+
+  /**
+   * A tab that's frozen or stuck keeps the lock, and nothing else would tell.
+   * While calls wait, the owner is asked to answer; when it doesn't for a while,
+   * they stop waiting instead of running into their long time limits.
+   */
+  private watchOwner(): void {
+    if (this.ownerWatch) return;
+    let unanswered = 0;
+    this.ownerAnswered = () => { unanswered = 0; };
+    this.ownerWatch = setInterval(() => {
+      if (this.pending.size === 0) {
+        this.stopWatchingOwner();
+        return;
+      }
+      if (unanswered >= OWNER_PING_MISSES) {
+        this.owner = null;
+        this.stopWatchingOwner();
+        for (const [id, pending] of this.pending) {
+          this.pending.delete(id);
+          clearTimeout(pending.timer);
+          pending.reject(new StoreOwnerGoneError());
+        }
+        return;
+      }
+      unanswered += 1;
+      this.channel?.postMessage({ kind: 'who-owns' } satisfies ChannelMessage);
+    }, OWNER_PING_MS);
+  }
+
+  private stopWatchingOwner(): void {
+    if (this.ownerWatch) clearInterval(this.ownerWatch);
+    this.ownerWatch = null;
+    this.ownerAnswered = null;
   }
 
   private flushOwnerWaiters(): void {
@@ -202,6 +243,7 @@ export class StoreClient {
 
   private async rpc<K extends keyof StoreRpc>(method: K, params: Parameters<StoreRpc[K]>[0], timeoutMs = CALL_TIMEOUT_MS): Promise<ReturnType<StoreRpc[K]>> {
     await this.waitForOwner();
+    this.watchOwner();
     const id = crypto.randomUUID();
     const result = this.track<ReturnType<StoreRpc[K]>>(id, timeoutMs);
     this.channel?.postMessage({ kind: 'rpc', id, from: this.clientId, method, params } as ChannelMessage);
@@ -220,8 +262,14 @@ export class StoreClient {
     return this.isOwner;
   }
 
-  openAccount(params: OpenAccountParams): Promise<void> {
+  /** `created`: there was no database under this name. */
+  openAccount(params: OpenAccountParams): Promise<{ created?: boolean } | undefined> {
     return this.direct({ kind: 'open', id: crypto.randomUUID(), params });
+  }
+
+  /** Deletes every store file but these. */
+  pruneFiles(keep: string[]): Promise<void> {
+    return this.direct({ kind: 'prune-files', id: crypto.randomUUID(), keep });
   }
 
   closeAccount(account: string): Promise<void> {
@@ -266,6 +314,7 @@ export class StoreClient {
     this.channel = null;
     this.isOwner = false;
     this.owner = null;
+    this.stopWatchingOwner();
     for (const [id, pending] of this.pending) {
       this.pending.delete(id);
       clearTimeout(pending.timer);

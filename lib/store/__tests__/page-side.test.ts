@@ -1,9 +1,10 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { configureStore, getStore, setStoreBackend } from '../client/api';
-import { getAccountRecord } from '../client/keys';
+import { configureStore, getStore, setStoreBackend, STORE_OPENED_KEY } from '../client/api';
+import { forgetAccountKey, getAccountRecord } from '../client/keys';
 import { purgeStoreFiles } from '../client/purge';
-import { StoreClient } from '../client/store-client';
+import { StoreClient, StoreOwnerGoneError } from '../client/store-client';
+import { storeFilesToPrune } from '../worker/host';
 import { FAKE_SESSION } from './helpers/fake-jmap';
 
 /** Everything on one page: a BroadcastChannel that also reaches other objects here, as in a browser. */
@@ -25,6 +26,7 @@ class FakeChannel {
 
 class FakeWorker {
   static all: FakeWorker[] = [];
+  static openResult: unknown;
   onmessage: ((event: MessageEvent) => void) | null = null;
   posted: Array<Record<string, unknown>> = [];
   terminated = false;
@@ -33,7 +35,7 @@ class FakeWorker {
   }
   postMessage(message: Record<string, unknown>): void {
     this.posted.push(message);
-    if (message.kind === 'open') queueMicrotask(() => this.onmessage?.({ data: { kind: 'result', id: message.id } } as MessageEvent));
+    if (message.kind === 'open' || message.kind === 'prune-files') queueMicrotask(() => this.onmessage?.({ data: { kind: 'result', id: message.id, result: message.kind === 'open' ? FakeWorker.openResult : undefined } } as MessageEvent));
   }
   terminate(): void {
     this.terminated = true;
@@ -107,6 +109,47 @@ describe('a tab that starts after the owner', () => {
   });
 });
 
+describe('an owner that stopped answering', () => {
+  afterEach(() => vi.useRealTimers());
+
+  async function clientWithOwner(answers: () => boolean) {
+    vi.useFakeTimers();
+    const owner = new FakeChannel('bulwark-store-rpc');
+    owner.onmessage = (event) => {
+      const data = event.data as { kind: string };
+      if (data.kind === 'who-owns' && answers()) owner.postMessage({ kind: 'owner-changed', owner: 'elsewhere' });
+    };
+    const client = new StoreClient({ basePath: '' });
+    client.start();
+    await vi.advanceTimersByTimeAsync(0);
+    return client;
+  }
+
+  it('stops its calls waiting, long before their own time limit', async () => {
+    let answering = true;
+    const client = await clientWithOwner(() => answering);
+    const call = client.sync('a@x');
+    const failed = vi.fn();
+    void call.catch(failed);
+    await vi.advanceTimersByTimeAsync(0);
+    answering = false;
+    await vi.advanceTimersByTimeAsync(39_000);
+    expect(failed).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(11_000);
+    expect(failed.mock.calls[0][0]).toBeInstanceOf(StoreOwnerGoneError);
+    client.halt();
+  });
+
+  it('leaves calls alone while the owner answers', async () => {
+    const client = await clientWithOwner(() => true);
+    const failed = vi.fn();
+    void client.sync('a@x').catch(failed);
+    await vi.advanceTimersByTimeAsync(10 * 60_000);
+    expect(failed).not.toHaveBeenCalled();
+    client.halt();
+  });
+});
+
 describe('the owner tab calling its own worker', () => {
   it('waits for the worker on the channel, since a call posted before that is lost', async () => {
     const worker = new FakeChannel('bulwark-store-rpc');
@@ -165,7 +208,7 @@ describe('purgeStoreFiles', () => {
     const order: string[] = [];
     Object.defineProperty(window.navigator, 'locks', {
       configurable: true,
-      value: { request: async (name: string, run: () => Promise<void>) => { order.push(`lock ${name}`); await run(); order.push('unlock'); } },
+      value: { request: async (name: string, _options: unknown, run: () => Promise<void>) => { order.push(`lock ${name}`); await run(); order.push('unlock'); } },
     });
     storage(async (name, options) => {
       order.push(`remove ${name} ${JSON.stringify(options)}`);
@@ -174,6 +217,25 @@ describe('purgeStoreFiles', () => {
     expect(seen).toEqual([{ kind: 'shutdown' }]);
     expect(order).toEqual(['lock bulwark-store-owner', 'remove .bulwark-store {"recursive":true}', 'unlock']);
     expect((await indexedDB.databases()).map((d) => d.name)).not.toContain('bulwark-store');
+  });
+
+  it('deletes what it can when another tab never lets go of the owner lock', async () => {
+    const remove = vi.fn(async () => {});
+    storage(remove);
+    let waited: AbortSignal | undefined;
+    Object.defineProperty(window.navigator, 'locks', {
+      configurable: true,
+      value: {
+        // The browser gives up when the signal says so.
+        request: async (_name: string, options: { signal: AbortSignal }) => {
+          waited = options.signal;
+          throw new DOMException('Took too long', 'TimeoutError');
+        },
+      },
+    });
+    await purgeStoreFiles();
+    expect(waited).toBeInstanceOf(AbortSignal);
+    expect(remove).toHaveBeenCalledTimes(1);
   });
 
   it('waits out a worker that still holds the files, and shrugs at a pool that isn\'t there', async () => {
@@ -186,6 +248,12 @@ describe('purgeStoreFiles', () => {
 
     storage(async () => { throw Object.assign(new Error('none'), { name: 'NotFoundError' }); });
     await expect(purgeStoreFiles()).resolves.toBeUndefined();
+  });
+});
+
+describe('which files have no key', () => {
+  it('names store files with no key, and leaves anything else alone', () => {
+    expect(storeFilesToPrune(['/a01.db', '/a02.db', '/a02.db-journal', '/other', '/ab.DB'], ['/a02.db'])).toEqual(['/a01.db']);
   });
 });
 
@@ -212,6 +280,84 @@ describe('the page\'s store', () => {
     expect(open.params.file).toMatch(/^\/a[0-9a-f]+\.db$/);
     store.stop();
     expect(worker.terminated).toBe(true);
+  });
+
+  describe('when the key or the file of a store is gone', () => {
+    const lost = vi.fn();
+    const open = async () => {
+      configureStore({
+        inputs: () => ({ session: FAKE_SESSION, auth: 'Basic x', invertedKeywordSort: true }),
+        refreshAuth: async () => null,
+        onEvent: () => {},
+        onStoreLost: lost,
+      });
+      const store = getStore();
+      await store.ensureOpen('lost@x');
+      const worker = FakeWorker.all[FakeWorker.all.length - 1];
+      worker.becomeOwner();
+      await vi.waitFor(() => expect(worker.posted.some((m) => m.kind === 'open')).toBe(true));
+      await vi.waitFor(() => expect(localStorage.getItem(STORE_OPENED_KEY)).toContain('lost@x'));
+      store.stop();
+      return worker;
+    };
+
+    beforeEach(() => {
+      lost.mockClear();
+      localStorage.clear();
+    });
+
+    afterEach(async () => {
+      await forgetAccountKey('lost@x');
+    });
+
+    it('stays quiet about a first open, and removes nothing a key still names', async () => {
+      const worker = await open();
+      expect(lost).not.toHaveBeenCalled();
+      const prune = worker.posted.find((m) => m.kind === 'prune-files') as unknown as { keep: string[] };
+      const record = await getAccountRecord('lost@x');
+      expect(prune.keep).toContain(record!.file);
+    });
+
+    it('deletes the orphan and tells the page when the key went', async () => {
+      await open();
+      const before = await getAccountRecord('lost@x');
+      await forgetAccountKey('lost@x');
+      const worker = await open();
+      const after = await getAccountRecord('lost@x');
+      expect(after!.file).not.toBe(before!.file);
+      const prune = worker.posted.find((m) => m.kind === 'prune-files') as unknown as { keep: string[] };
+      expect(prune.keep).toContain(after!.file);
+      expect(prune.keep).not.toContain(before!.file);
+      expect(lost).toHaveBeenCalledWith('lost@x');
+    });
+
+    it('stays quiet on a normal reopen', async () => {
+      await open();
+      const worker = await open();
+      expect(lost).not.toHaveBeenCalled();
+      expect(worker.posted.some((m) => m.kind === 'prune-files')).toBe(false);
+    });
+
+    it('tells the page when the file went and the key stayed', async () => {
+      await open();
+      FakeWorker.openResult = { created: true };
+      try {
+        await open();
+      } finally {
+        FakeWorker.openResult = undefined;
+      }
+      expect(lost).toHaveBeenCalledWith('lost@x');
+    });
+
+    it('doesn\'t remember an account that was removed', async () => {
+      await open();
+      vi.spyOn(StoreClient.prototype, 'removeAccount').mockResolvedValue(true as never);
+      await getStore().remove('lost@x');
+      getStore().stop();
+      vi.restoreAllMocks();
+      await open();
+      expect(lost).not.toHaveBeenCalled();
+    });
   });
 
   it('runs the client\'s refresh when the worker needs auth, and hands the result over', async () => {
