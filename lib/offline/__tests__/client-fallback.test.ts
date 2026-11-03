@@ -242,7 +242,7 @@ describe('what the store answers and is told', () => {
     const { client, stop } = await ready();
     const note = vi.spyOn(store, 'noteStateChange');
     const { getOfflineHooks } = await import('@/lib/jmap/offline-hooks');
-    getOfflineHooks()?.stateChange(client, { changed: { acc1: { Email: 's99' } } });
+    getOfflineHooks()?.stateChange?.(client, { changed: { acc1: { Email: 's99' } } });
     expect(note).toHaveBeenCalledWith('acc', { acc1: { Email: 's99' } });
     stop();
   });
@@ -255,6 +255,28 @@ describe('what the store answers and is told', () => {
       const blob = await client.fetchBlob(held.blobId);
       expect(await blob.text()).toBe('hello');
     });
+    stop();
+  });
+
+  it('hands the other areas\u2019 lookups to the store', async () => {
+    const { client, stop } = await ready();
+    const { getOfflineHooks } = await import('@/lib/jmap/offline-hooks');
+    const area = vi.spyOn(store, 'area');
+    const hooks = getOfflineHooks();
+
+    area.mockResolvedValueOnce({ 'bulwark-new-1': 'real-1' });
+    expect(await hooks?.resolveStandIns?.(client, ['bulwark-new-1'])).toEqual({ 'bulwark-new-1': 'real-1' });
+    expect(area).toHaveBeenLastCalledWith('acc', 'calendar.resolveStandIns', { ids: ['bulwark-new-1'] });
+
+    hooks?.fileOpened?.(client, 'acc1', 'node-1');
+    expect(area).toHaveBeenLastCalledWith('acc', 'files.noteOpened', { jmap: 'acc1', id: 'node-1' });
+
+    // Not an attachment of a kept message: maybe a kept file.
+    area.mockResolvedValueOnce(null).mockResolvedValueOnce({ type: 'text/plain', data: new TextEncoder().encode('kept') });
+    const blob = await hooks?.blob(client, 'blob-1', 'acc1');
+    expect(await blob?.text()).toBe('kept');
+    expect(area).toHaveBeenLastCalledWith('acc', 'files.blob', { jmap: 'acc1', blobId: 'blob-1' });
+    area.mockRestore();
     stop();
   });
 

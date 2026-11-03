@@ -25,6 +25,7 @@ import { devicesForAccount } from '@/lib/device-policy';
 import { accountSubjectPending, useAccountSubjects } from '@/lib/org/account-subjects';
 import { labelsPolicyFor } from '@/lib/outgoing/classification';
 import { getSendGuardSource, guardState, guardsSending } from '@/lib/plugin-send-guards';
+import { emitPushStateChange } from '@/lib/push-events';
 import { requestOutboxSync } from '@/lib/pwa-notify/outbox-sync';
 import { STORAGE_ERROR_AREA } from '@/lib/store/area';
 import { configureStore, getStore, type StorePageHooks } from '@/lib/store/client/api';
@@ -242,6 +243,16 @@ const hooks: OfflineHooks = {
     }
     return answered;
   },
+  async resolveStandIns(client, ids) {
+    const account = accountForClient(client);
+    if (!offlineActive(account) || !account) return {};
+    return getStore().area<Record<string, string | null>>(account, 'calendar.resolveStandIns', { ids }).catch(() => ({}));
+  },
+  fileOpened(client, accountId, id) {
+    const account = accountForClient(client);
+    if (!offlineActive(account) || !account) return;
+    void getStore().area(account, 'files.noteOpened', { jmap: accountId, id }).catch(() => {});
+  },
   async searchLocal(client, methodCalls) {
     const account = accountForClient(client);
     if (!offlineActive(account) || !account) return null;
@@ -293,7 +304,9 @@ const hooks: OfflineHooks = {
     const account = accountForClient(client);
     if (!account || !offlineActive(account)) return null;
     if (isLocalBlobId(blobId)) return heldFile(account, blobId);
-    const kept = await getStore().area<{ type: string | null; data: Uint8Array } | null>(account, 'mail.getBlob', { jmap, blobId }).catch(() => null);
+    // An attachment, or a file from the Files area.
+    const kept = await getStore().area<KeptBlob | null>(account, 'mail.getBlob', { jmap, blobId }).catch(() => null)
+      ?? await getStore().area<KeptBlob | null>(account, 'files.blob', { jmap, blobId }).catch(() => null);
     return kept ? new Blob([kept.data as BlobPart], { type: kept.type || 'application/octet-stream' }) : null;
   },
   recordBlob(client, blobId, jmap, blob) {
@@ -311,6 +324,8 @@ const hooks: OfflineHooks = {
     return holdFile(account, file, file.name, accountId);
   },
 };
+
+interface KeptBlob { type: string | null; data: Uint8Array }
 
 /** Attachments and images opened while online are kept up to this size. */
 const MAX_RECORDED_BLOB_BYTES = 5 * 1024 * 1024;
@@ -554,13 +569,37 @@ function offerUndo(entry: OutboxEntry, result: SendEmailResult): void {
   });
 }
 
+/**
+ * What the other areas queued. The page may hold stand-in ids for what just
+ * went out, so it reads again, the way a push makes it. Only the types go by
+ * that way: the "state" isn't one, and nothing stores it.
+ */
+const AREA_FLUSHES = [
+  { call: 'calendar.flush', types: ['Calendar', 'CalendarEvent'] },
+  { call: 'contacts.flush', types: ['AddressBook', 'ContactCard'] },
+];
+
+async function flushAreas(account: string, client: NonNullable<ReturnType<typeof onlineClientFor>>): Promise<void> {
+  for (const { call, types } of AREA_FLUSHES) {
+    // Contacts may not be there in this build: nothing to flush then.
+    const tally = await getStore().area<{ sent?: number; conflicts?: number | unknown[] } | null>(account, call).catch(() => null);
+    if (!tally) continue;
+    const conflicts = Array.isArray(tally.conflicts) ? tally.conflicts.length : tally.conflicts ?? 0;
+    if (!tally.sent && !conflicts) continue;
+    const role = (useAuthStore.getState().client as unknown) === client ? 'active' : 'background';
+    const changed = { [client.getAccountId()]: Object.fromEntries(types.map((type) => [type, 'flushed'])) };
+    emitPushStateChange({ '@type': 'StateChange', changed } as never, client, role);
+  }
+}
+
 export async function flushAll(): Promise<void> {
   if (useOfflineStore.getState().startedOffline) {
     void leaveOfflineStart();
     return;
   }
-  const { outbox: rows, pendingChanges } = useOfflineStore.getState();
-  if (rows.length === 0 && pendingChanges === 0) return;
+  // Calendar and contact edits wait in their own areas, so what waits isn't known here.
+  const { outbox: rows, enabled } = useOfflineStore.getState();
+  if (rows.length === 0 && enabled.length === 0) return;
   // The organisation's current word before anything goes: a label now
   // required, a send check now required or offline mode now forbidden must
   // stop what waited under the old rules.
@@ -570,8 +609,7 @@ export async function flushAll(): Promise<void> {
     return;
   }
   enforcePolicy();
-  const accounts = new Set(rows.map((r) => r.account));
-  if (pendingChanges > 0) for (const id of useOfflineStore.getState().enabled) accounts.add(id);
+  const accounts = new Set([...rows.map((r) => r.account), ...useOfflineStore.getState().enabled]);
   for (const account of accounts) {
     const client = onlineClientFor(account);
     if (!client || !offlineActive(account)) continue;
@@ -582,6 +620,7 @@ export async function flushAll(): Promise<void> {
       onScheduled: offerUndo,
       retryLater: () => scheduleFlushAll(LOOKUP_AGAIN_MS),
     }).catch(() => {});
+    await flushAreas(account, client);
   }
   await refreshQueueState();
   for (const account of useOfflineStore.getState().enabled) scheduleSync(account, 3_000);

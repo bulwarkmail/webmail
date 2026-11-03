@@ -357,6 +357,47 @@ describe('a send whose response got lost', () => {
   });
 });
 
+describe('what the other areas queued', () => {
+  const flushWith = async (tally: unknown) => {
+    const { flushAll } = await import('../offline-mode');
+    const client = fakeClient();
+    useAuthStore.setState({ client: client as never, activeAccountId: 'acc' });
+    usePolicyStore.setState({ fetchPolicy: vi.fn(async () => {}), source: 'server' } as never);
+    const realArea = store.area.bind(store);
+    const calls: string[] = [];
+    store.area = (async (account: string, name: string, params?: unknown) => {
+      if (name.endsWith('.flush')) {
+        calls.push(name);
+        return tally;
+      }
+      return realArea(account, name, params);
+    }) as typeof store.area;
+    const { subscribePushStateChanges } = await import('@/lib/push-events');
+    const pushes: unknown[] = [];
+    const unsubscribe = subscribePushStateChanges((change, _client, role) => pushes.push([change.changed, role]));
+    useAccountStore.setState({ accounts: [{ id: 'acc', serverUrl: 'https://mail.example.org', username: 'alice@example.org' } as never] });
+    useAuthStore.setState({ getClientForAccount: () => client } as never);
+    writeEnabled(['acc']);
+    await flushAll();
+    unsubscribe();
+    return { calls, pushes };
+  };
+
+  it('flushes them, also with nothing in the outbox, and has the page read again', async () => {
+    const { calls, pushes } = await flushWith({ sent: 1, conflicts: 0, pending: 0 });
+    expect(calls).toEqual(['calendar.flush', 'contacts.flush']);
+    expect(pushes).toEqual([
+      [{ acc1: { Calendar: 'flushed', CalendarEvent: 'flushed' } }, 'active'],
+      [{ acc1: { AddressBook: 'flushed', ContactCard: 'flushed' } }, 'active'],
+    ]);
+  });
+
+  it('doesn\u2019t have the page read again when nothing went out', async () => {
+    const { pushes } = await flushWith({ sent: 0, conflicts: 0, pending: 0 });
+    expect(pushes).toEqual([]);
+  });
+});
+
 describe('conflicts reach the page', () => {
   it('lists a refused change and tells the user', async () => {
     const client = fakeClient();
