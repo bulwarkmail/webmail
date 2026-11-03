@@ -5850,6 +5850,10 @@
         "title": "Alterar seu calendário",
         "body": "Criar, alterar e excluir eventos."
       },
+      "calendar_respond": {
+        "title": "Responder a convites",
+        "body": "Aceitar ou recusar convites de calendário. Sua resposta vai para o organizador por e-mail."
+      },
       "contacts_read": {
         "title": "Ler seus contatos",
         "body": "Pesquisar e ler seus catálogos de endereços."
@@ -5915,8 +5919,12 @@
         "body": "Ver suas preferências e definições de etiquetas."
       },
       "settings_write": {
+        "title": "Alterar suas etiquetas",
+        "body": "Adicionar, renomear e reordenar suas etiquetas e impedir alterações nas suas configurações."
+      },
+      "settings_change": {
         "title": "Alterar suas configurações",
-        "body": "Adicionar e reordenar etiquetas e alterar suas preferências."
+        "body": "Alterar a aparência e o funcionamento do aplicativo, como o tema, o formato de hora ou o painel de leitura. As configurações definidas pela sua organização continuam como estão."
       },
       "security_read": {
         "title": "Ver a segurança da sua conta",

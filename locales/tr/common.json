@@ -5850,6 +5850,10 @@
         "title": "Takviminizi değiştirme",
         "body": "Etkinlik oluşturma, değiştirme ve silme."
       },
+      "calendar_respond": {
+        "title": "Davetleri yanıtlama",
+        "body": "Takvim davetlerini kabul etme veya reddetme. Yanıtınız organizatöre e-postayla gider."
+      },
       "contacts_read": {
         "title": "Kişilerinizi okuma",
         "body": "Adres defterlerinizde arama yapma ve onları okuma."
@@ -5915,8 +5919,12 @@
         "body": "Tercihlerinizi ve etiket tanımlarınızı görme."
       },
       "settings_write": {
+        "title": "Etiketlerinizi değiştirme",
+        "body": "Etiketlerinizi ekleme, yeniden adlandırma ve sıralarını değiştirme, ayrıca ayarlarınızdaki değişiklikleri engelleme."
+      },
+      "settings_change": {
         "title": "Ayarlarınızı değiştirme",
-        "body": "Etiket ekleme, sıralarını değiştirme ve tercihlerinizi değiştirme."
+        "body": "Uygulamanın görünümünü ve çalışma şeklini değiştirme; örneğin tema, saat biçimi veya okuma bölmesi. Kuruluşunuzun belirlediği ayarlar olduğu gibi kalır."
       },
       "security_read": {
         "title": "Hesap güvenliğinizi görme",

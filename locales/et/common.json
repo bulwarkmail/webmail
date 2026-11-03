@@ -5850,6 +5850,10 @@
         "title": "Muuda sinu kalendrit",
         "body": "Luua, muuta ja kustutada sündmusi."
       },
+      "calendar_respond": {
+        "title": "Vasta kutsetele",
+        "body": "Nõustuda kalendrikutsetega või neist keelduda. Sinu vastus saadetakse korraldajale e-postiga."
+      },
       "contacts_read": {
         "title": "Loe sinu kontakte",
         "body": "Otsida ja lugeda sinu aadressiraamatuid."
@@ -5915,8 +5919,12 @@
         "body": "Näha sinu eelistusi ja siltide definitsioone."
       },
       "settings_write": {
+        "title": "Muuda sinu silte",
+        "body": "Lisada, ümber nimetada ja ümber järjestada sinu silte ning takistada sinu seadete muutmist."
+      },
+      "settings_change": {
         "title": "Muuda sinu seadeid",
-        "body": "Lisada ja ümber järjestada silte ning muuta sinu eelistusi."
+        "body": "Muuta rakenduse välimust ja toimimist, näiteks teemat, kellaajavormingut või lugemispaani. Sinu organisatsiooni määratud seaded jäävad samaks."
       },
       "security_read": {
         "title": "Vaata sinu konto turvalisust",

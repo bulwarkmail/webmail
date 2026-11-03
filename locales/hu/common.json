@@ -5850,6 +5850,10 @@
         "title": "Naptárad módosítása",
         "body": "Eseményeket hoz létre, módosít és töröl."
       },
+      "calendar_respond": {
+        "title": "Válasz a meghívókra",
+        "body": "Elfogadja vagy elutasítja a naptármeghívókat. A válaszod e-mailben megy a szervezőnek."
+      },
       "contacts_read": {
         "title": "Névjegyeid olvasása",
         "body": "Keres a címjegyzékeidben, és olvassa őket."
@@ -5915,8 +5919,12 @@
         "body": "Látja a beállításaidat és a címkék meghatározásait."
       },
       "settings_write": {
+        "title": "Címkéid módosítása",
+        "body": "Hozzáadja, átnevezi és átrendezi a címkéidet, és megakadályozza a beállításaid módosítását."
+      },
+      "settings_change": {
         "title": "Beállításaid módosítása",
-        "body": "Címkéket ad hozzá, átrendezi őket, és módosítja a beállításaidat."
+        "body": "Módosítja az alkalmazás megjelenését és működését, például a témát, az időformátumot vagy az olvasóablakot. A szervezeted által megadott beállítások nem változnak."
       },
       "security_read": {
         "title": "Fiókod biztonságának megtekintése",

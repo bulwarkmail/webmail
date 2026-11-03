@@ -5850,6 +5850,10 @@
         "title": "Cambiar tu calendario",
         "body": "Crear, cambiar y eliminar eventos."
       },
+      "calendar_respond": {
+        "title": "Responder a invitaciones",
+        "body": "Aceptar o rechazar invitaciones de calendario. Tu respuesta se envía al organizador por correo electrónico."
+      },
       "contacts_read": {
         "title": "Leer tus contactos",
         "body": "Buscar y leer en tus libretas de direcciones."
@@ -5915,8 +5919,12 @@
         "body": "Ver tus preferencias y las definiciones de tus etiquetas."
       },
       "settings_write": {
+        "title": "Cambiar tus etiquetas",
+        "body": "Añadir, renombrar y reordenar tus etiquetas, e impedir cambios en tu configuración."
+      },
+      "settings_change": {
         "title": "Cambiar tu configuración",
-        "body": "Añadir y reordenar etiquetas y cambiar tus preferencias."
+        "body": "Cambiar el aspecto y el funcionamiento de la aplicación, como el tema, el formato de hora o el panel de lectura. La configuración que estableció tu organización no cambia."
       },
       "security_read": {
         "title": "Ver la seguridad de tu cuenta",

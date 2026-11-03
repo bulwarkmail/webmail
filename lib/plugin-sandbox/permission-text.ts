@@ -30,6 +30,10 @@ export const HIGH_RISK_PERMISSIONS: ReadonlySet<string> = new Set([
   // The out-of-office reply goes out to everyone who writes, in the user's
   // name, with whatever text the plugin set.
   'vacation:write',
+  // Answering an invitation sends a reply to the organiser in the user's name.
+  'calendar:respond',
+  // Changes how the app behaves for the user (lib/settings-schema.ts).
+  'settings:change',
 ]);
 
 /** Locale key segment for a permission: `email:read` → `email_read`. */
