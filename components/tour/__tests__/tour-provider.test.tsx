@@ -38,7 +38,8 @@ vi.mock('@/stores/settings-store', () => ({
 }));
 
 const { TourProvider, useTour } = await import('../tour-provider');
-const { getTourSteps } = await import('../tour-steps');
+const { getTourSteps, isTourStepOnPage, proTabOfTourStep } = await import('../tour-steps');
+const { useProTabStore } = await import('@/stores/pro-tab-store');
 
 let api: ReturnType<typeof useTour>;
 function Probe() {
@@ -138,5 +139,39 @@ describe('tour run', () => {
     act(() => api.skipStep(1));
     expect(probe()).toBe('off');
     expect(env.command).toHaveBeenCalledWith('tour-end');
+  });
+});
+
+describe('tour under the Pro shell', () => {
+  const stepTo = (id: string) => {
+    for (let i = 0; i < 30 && api.steps[api.currentStep]?.id !== id; i++) act(() => api.nextStep());
+  };
+
+  beforeEach(() => {
+    env.phone = false;
+    env.pathname = '/pro';
+    useProTabStore.setState({ tabs: [{ id: 'home-mail', kind: 'mail', labelKey: 'mail', closeable: false, paneId: 'main' }], activeTabId: 'home-mail', activeSplitTabId: null, focusedPaneId: 'main', loadedTabIds: ['home-mail'] });
+  });
+
+  it('opens the tab of each step instead of leaving the Pro route', () => {
+    start();
+    stepTo('calendar-view');
+    const focused = () => {
+      const s = useProTabStore.getState();
+      return s.tabs.find((t) => t.id === s.activeTabId)?.kind;
+    };
+    expect(focused()).toBe('calendar');
+    expect(env.push).not.toHaveBeenCalled();
+  });
+
+  it('counts a step as on its page there', () => {
+    expect(isTourStepOnPage({ page: '/calendar' }, '/pro')).toBe(true);
+    expect(isTourStepOnPage({ page: '/calendar' }, '/settings')).toBe(false);
+  });
+
+  it('leaves the composer step in the compose tab it just opened', () => {
+    expect(proTabOfTourStep({ target: '[data-tour="composer"]' })).toBeNull();
+    expect(proTabOfTourStep({ target: '[data-tour="sidebar"]' })).toBe('mail');
+    expect(proTabOfTourStep({ target: 'x', page: '/settings' })).toBe('settings');
   });
 });

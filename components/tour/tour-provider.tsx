@@ -8,7 +8,8 @@ import { useCalendarStore } from "@/stores/calendar-store";
 import { useWebDAVStore } from "@/stores/webdav-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { usePolicyStore } from "@/stores/policy-store";
-import { getTourSteps, isTourStepOnPage, type TourStep } from "./tour-steps";
+import { getTourSteps, isTourStepOnPage, PRO_ROUTE, proTabOfTourStep, type TourStep } from "./tour-steps";
+import { useProTabStore } from "@/stores/pro-tab-store";
 import { useIsMobile, useMediaQuery } from "@/hooks/use-media-query";
 import { requestAppCommand } from "@/lib/app-commands";
 import { TourOverlay } from "./tour-overlay";
@@ -87,6 +88,13 @@ export function TourProvider({ children }: { children: ReactNode }) {
   // closes it first.
   useEffect(() => {
     if (!step) return;
+    // Under Pro every app is a tab of the one route. Asking for another route
+    // only comes back here, which went round for as long as the tour ran.
+    if (pathname === PRO_ROUTE) {
+      const tab = proTabOfTourStep(step);
+      if (tab) useProTabStore.getState().openTab(tab);
+      return;
+    }
     if (!isTourStepOnPage(step, pathname)) {
       router.push(step.page ?? "/");
     } else if (phone && !step.page && step.view !== "reader") {
