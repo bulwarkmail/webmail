@@ -2,6 +2,7 @@
 
 import type { StoreArea } from './area';
 import { contactsArea } from './contacts';
+import { filesArea } from './files';
 import { mailArea } from './mail';
 
-export const STORE_AREAS: readonly StoreArea[] = [mailArea, contactsArea];
+export const STORE_AREAS: readonly StoreArea[] = [mailArea, contactsArea, filesArea];
