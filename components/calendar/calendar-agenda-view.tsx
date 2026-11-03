@@ -166,7 +166,7 @@ export function CalendarAgendaView({
 
   return (
     <div
-      className="flex-1 overflow-y-auto [overflow-anchor:none]"
+      className="flex-1 overflow-y-auto [overflow-anchor:none] max-md:pb-14"
       ref={scrollContainerRef}
       onWheel={handleWheel}
     >

@@ -1322,7 +1322,7 @@ export function FileBrowser({
         <div ref={sidePanel.rowRef} className="relative flex flex-1 min-h-0">
           <div
             ref={scrollAreaRef}
-            className="relative flex-1 min-w-0 overflow-y-auto"
+            className="relative flex-1 min-w-0 overflow-y-auto max-md:pb-20"
             onMouseDown={handleMarqueeMouseDown}
             onContextMenu={(e) => {
               if (accountPickerMode || (e.target as HTMLElement).closest("[data-resource]")) return;

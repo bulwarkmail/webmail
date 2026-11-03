@@ -436,7 +436,7 @@ export function CalendarWeekView({
   return (
     <div
       ref={rootRef}
-      className="flex min-h-0 min-w-0 flex-col flex-1 overflow-auto [overflow-anchor:none]"
+      className="flex min-h-0 min-w-0 flex-col flex-1 overflow-auto [overflow-anchor:none] max-md:pb-20"
       onScroll={handleStripScroll}
       role="grid"
       aria-label={t("views.week")}
