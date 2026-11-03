@@ -5778,7 +5778,12 @@
     "confirm_plugins": "外掛程式儲存在這裡的資料",
     "confirm_files": "為編輯而開啟的附件和等待附加的檔案",
     "confirm_accounts": "所有帳號都將登出",
-    "confirm_button": "移除所有內容"
+    "confirm_button": "移除所有內容",
+    "note_unknown": "您的組織已從此裝置移除此帳戶的資料。未傳送的郵件可能也已被刪除。",
+    "refused_waiting": "等待新密碼的未傳送郵件：{count} 封。保留至 {date}。",
+    "refused_waiting_unknown": "可能有未傳送的郵件正在等待新密碼。保留至 {date}。",
+    "confirm_unsent_unknown": "這裡可能有未傳送的郵件。它們將會遺失。",
+    "confirm_templates": "儲存在此裝置上的郵件範本"
   },
   "offlineStorage": {
     "keep_description": "在此裝置上加密保留你的郵件、行事曆、聯絡人和你選擇的檔案。離線時可以閱讀、標記和移動郵件，寫好的郵件會在寄件匣中等待。登出時會全部刪除。",

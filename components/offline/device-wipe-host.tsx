@@ -2,10 +2,16 @@
 
 import { useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { consumeWipeNote } from '@/lib/devices/wipe-state';
+import { consumeWipeNote, type WipeNote } from '@/lib/devices/wipe-state';
 import { startDeviceWipe } from '@/lib/offline/device-wipe';
 import { useAuthStore } from '@/stores/auth-store';
 import { toast } from '@/stores/toast-store';
+
+/** What a wipe left to say, as a sentence. Counts only. */
+export function wipeNoteText(note: WipeNote, t: (key: string, values?: { count: number }) => string): string {
+  if (note.unknown) return t('note_unknown');
+  return note.unsent > 0 ? t('note_unsent', { count: note.unsent }) : t('note');
+}
 
 /**
  * Runs the device's side of wipes on every page, the sign-in page too, so a
@@ -24,7 +30,7 @@ export function DeviceWipeHost() {
   useEffect(() => {
     if (!signedIn) return;
     const note = consumeWipeNote();
-    if (note) toast.warning(note.unsent > 0 ? tRef.current('note_unsent', { count: note.unsent }) : tRef.current('note'), { duration: 0 });
+    if (note) toast.warning(wipeNoteText(note, tRef.current), { duration: 0 });
   }, [signedIn]);
 
   return null;

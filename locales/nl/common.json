@@ -5778,7 +5778,12 @@
     "confirm_plugins": "Gegevens die plug-ins hier hebben opgeslagen",
     "confirm_files": "Bijlagen die zijn geopend om te bewerken en bestanden die nog worden bijgevoegd",
     "confirm_accounts": "Alle accounts worden afgemeld",
-    "confirm_button": "Alles verwijderen"
+    "confirm_button": "Alles verwijderen",
+    "note_unknown": "Uw organisatie heeft de gegevens van dit account van dit apparaat verwijderd. Mogelijk zijn ook niet-verzonden berichten verwijderd.",
+    "refused_waiting": "Niet-verzonden berichten die op uw nieuwe wachtwoord wachten: {count}. Ze blijven tot {date}.",
+    "refused_waiting_unknown": "Mogelijk wachten niet-verzonden berichten op uw nieuwe wachtwoord. Ze blijven tot {date}.",
+    "confirm_unsent_unknown": "Hier wachten mogelijk niet-verzonden berichten. Ze gaan verloren.",
+    "confirm_templates": "E-mailsjablonen die op dit apparaat zijn opgeslagen"
   },
   "offlineStorage": {
     "keep_description": "Bewaart je e-mail, agenda, contacten en gekozen bestanden versleuteld op dit apparaat. Offline kun je e-mail lezen, markeren en verplaatsen, en wat je schrijft wacht in Postvak UIT. Afmelden verwijdert alles.",

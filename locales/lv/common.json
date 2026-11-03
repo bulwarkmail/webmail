@@ -5778,7 +5778,12 @@
     "confirm_plugins": "Dati, ko šeit saglabājuši spraudņi",
     "confirm_files": "Rediģēšanai atvērti pielikumi un faili, kas gaida pievienošanu",
     "confirm_accounts": "Visi konti tiek izrakstīti",
-    "confirm_button": "Noņemt visu"
+    "confirm_button": "Noņemt visu",
+    "note_unknown": "Jūsu organizācija noņēma šī konta datus no šīs ierīces. Iespējams, ir izdzēsti arī nenosūtītie ziņojumi.",
+    "refused_waiting": "Nenosūtītie ziņojumi gaida jūsu jauno paroli: {count}. Tie paliek līdz {date}.",
+    "refused_waiting_unknown": "Iespējams, nenosūtītie ziņojumi gaida jūsu jauno paroli. Tie paliek līdz {date}.",
+    "confirm_unsent_unknown": "Šeit var būt nenosūtīti ziņojumi. Tie tiks zaudēti.",
+    "confirm_templates": "Šajā ierīcē saglabātās e-pasta veidnes"
   },
   "offlineStorage": {
     "keep_description": "Glabā jūsu e-pastu, kalendāru, kontaktpersonas un izvēlētos failus šifrētus šajā ierīcē. Bezsaistē varat lasīt, atzīmēt un pārvietot vēstules, un tas, ko rakstāt, gaida izsūtnē. Izrakstoties viss tiek noņemts.",

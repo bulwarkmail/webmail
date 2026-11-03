@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { IS_LITE } from '@/lib/lite';
 import { isDesktopApp } from '@/lib/desktop/bridge';
 import { signedInAccountIds } from '@/lib/device-policy';
-import { offlineSupported, readPersistence, refreshUsage, requestPersistence, safariMayDelete } from '@/lib/offline/offline-mode';
+import { offlineAllowed, offlineSupported, readPersistence, refreshUsage, requestPersistence, safariMayDelete } from '@/lib/offline/offline-mode';
 import { useOfflineStore } from '@/lib/offline/state';
 import { useDevicePolicy } from '@/hooks/use-device-policy';
 import { useAccountStore } from '@/stores/account-store';
@@ -82,10 +82,10 @@ export function OfflineSettings() {
               heading={several ? labels.find((entry) => entry.id === account)?.email || labels.find((entry) => entry.id === account)?.label || account : null}
             />
           ))}
+          {[active, ...accounts].some((account) => offlineAllowed(account)) && <WipeDeviceSection />}
         </>
       )}
       <OutboxList />
-      <WipeDeviceSection />
     </SettingsSection>
   );
 }

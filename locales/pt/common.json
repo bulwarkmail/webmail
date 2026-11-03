@@ -5778,7 +5778,12 @@
     "confirm_plugins": "Dados que os plugins guardaram aqui",
     "confirm_files": "Anexos abertos para edição e ficheiros à espera de serem anexados",
     "confirm_accounts": "Todas as contas terminam sessão",
-    "confirm_button": "Remover tudo"
+    "confirm_button": "Remover tudo",
+    "note_unknown": "A sua organização removeu os dados desta conta deste dispositivo. Mensagens por enviar também podem ter sido eliminadas.",
+    "refused_waiting": "Mensagens por enviar à espera da nova palavra-passe: {count}. Ficam até {date}.",
+    "refused_waiting_unknown": "Podem existir mensagens por enviar à espera da nova palavra-passe. Ficam até {date}.",
+    "confirm_unsent_unknown": "Podem existir mensagens por enviar aqui. Serão perdidas.",
+    "confirm_templates": "Modelos de e-mail guardados neste dispositivo"
   },
   "offlineStorage": {
     "keep_description": "Mantém o seu correio, calendário, contactos e os ficheiros que escolher, cifrados neste dispositivo. Offline pode ler, sinalizar e mover e-mails, e o que escrever espera na caixa de saída. Terminar a sessão remove tudo.",

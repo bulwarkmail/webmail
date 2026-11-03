@@ -354,6 +354,24 @@ test('the user removes everything from this device, from settings', async ({ bro
   await Promise.all([page.context().close(), admin.close()]);
 });
 
+test('the sign-in page says what waits for a new password, in numbers', async ({ browser }) => {
+  const context = await browser.newContext(contextOptions());
+  const page = await context.newPage();
+  await page.goto('/login');
+  await expect(page.locator('#username')).toBeVisible({ timeout: 30_000 });
+  const at = Date.now();
+  await page.evaluate((now) => {
+    localStorage.setItem('bulwark-offline-evicted', JSON.stringify({ 'someone@example.org': now }));
+    localStorage.setItem('bulwark-credentials-refused', JSON.stringify({ 'someone@example.org': { at: now, unsent: 3, certain: true } }));
+  }, at);
+  await page.reload();
+  const note = page.getByTestId('login-refused-waiting');
+  await expect(note).toBeVisible({ timeout: 30_000 });
+  await expect(note).toContainText('3 unsent messages wait for your new password');
+  await expect(note).not.toContainText('someone');
+  await context.close();
+});
+
 test('an account without offline mode has no row', async ({ browser }) => {
   const admin = await adminContext(browser);
   await forgetDevices(admin, ENT.carol);

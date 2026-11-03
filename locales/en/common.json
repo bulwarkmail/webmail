@@ -5778,7 +5778,12 @@
     "confirm_plugins": "Data that plugins stored here",
     "confirm_files": "Attachments opened for editing and files waiting to be attached",
     "confirm_accounts": "All accounts are signed out",
-    "confirm_button": "Remove everything"
+    "confirm_button": "Remove everything",
+    "note_unknown": "Your organisation removed this account's data from this device. Unsent messages may have been deleted too.",
+    "refused_waiting": "{count, plural, one {# unsent message waits} other {# unsent messages wait}} for your new password, until {date}.",
+    "refused_waiting_unknown": "Unsent messages may be waiting for your new password, until {date}.",
+    "confirm_unsent_unknown": "Unsent messages may be waiting here. They will be lost.",
+    "confirm_templates": "Email templates saved on this device"
   },
   "offlineStorage": {
     "keep_description": "Keeps your mail, calendar, contacts and chosen files encrypted on this device. Offline you can read, flag and move mail, and what you write waits in the outbox. Signing out removes all of it.",

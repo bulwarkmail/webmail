@@ -1,10 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_POLICY, type SettingsPolicy } from '../types';
 import { ALL_DEVICE_LIMITS, strictestOfAllScopes } from '../server-device-policy';
+import { sanitizeOrganisationPartial } from '../organisation-policy';
 
 // The offline caps are numbers in a section that used to hold only booleans.
 
 const scope = (id: string, devices: Record<string, unknown>) => ({ id, label: id, match: { domains: [`${id}.example.org`] }, policy: { organisation: { devices } } });
+
+describe('wipeOnRefusedLogin', () => {
+  it('is off unless asked for, and survives the sanitizer', () => {
+    expect(DEFAULT_POLICY.organisation?.devices?.wipeOnRefusedLogin ?? false).toBe(false);
+    expect(sanitizeOrganisationPartial({ devices: { wipeOnRefusedLogin: true } }).devices).toMatchObject({ wipeOnRefusedLogin: true });
+    expect(sanitizeOrganisationPartial({ devices: { wipeOnRefusedLogin: 'yes' } }).devices?.wipeOnRefusedLogin).not.toBe(true);
+  });
+
+  it('isn\'t set by the stand-in for a login nobody can read: that\'s for what stays on the server', () => {
+    expect(ALL_DEVICE_LIMITS.wipeOnRefusedLogin).toBe(false);
+  });
+});
 
 describe('strictest of all scopes', () => {
   it('keeps the lowest cap, and a boolean switch still turns on', () => {

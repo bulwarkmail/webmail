@@ -5778,7 +5778,12 @@
     "confirm_plugins": "Dane zapisane tutaj przez wtyczki",
     "confirm_files": "Załączniki otwarte do edycji i pliki czekające na dołączenie",
     "confirm_accounts": "Wszystkie konta zostaną wylogowane",
-    "confirm_button": "Usuń wszystko"
+    "confirm_button": "Usuń wszystko",
+    "note_unknown": "Twoja organizacja usunęła dane tego konta z tego urządzenia. Mogły też zostać usunięte niewysłane wiadomości.",
+    "refused_waiting": "Niewysłane wiadomości czekające na nowe hasło: {count}. Pozostaną do {date}.",
+    "refused_waiting_unknown": "Niewysłane wiadomości mogą czekać na nowe hasło. Pozostaną do {date}.",
+    "confirm_unsent_unknown": "Tutaj mogą czekać niewysłane wiadomości. Zostaną utracone.",
+    "confirm_templates": "Szablony e-maili zapisane na tym urządzeniu"
   },
   "offlineStorage": {
     "keep_description": "Przechowuje Twoją pocztę, kalendarz, kontakty i wybrane pliki zaszyfrowane na tym urządzeniu. Offline możesz czytać, oznaczać i przenosić wiadomości, a to, co napiszesz, czeka w skrzynce nadawczej. Wylogowanie usuwa wszystko.",

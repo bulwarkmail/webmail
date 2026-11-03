@@ -5778,7 +5778,12 @@
     "confirm_plugins": "Data som programtillegg har lagret her",
     "confirm_files": "Vedlegg som er åpnet for redigering, og filer som venter på å bli lagt ved",
     "confirm_accounts": "Alle kontoer logges av",
-    "confirm_button": "Fjern alt"
+    "confirm_button": "Fjern alt",
+    "note_unknown": "Organisasjonen din har fjernet dataene til denne kontoen fra denne enheten. Usendte meldinger kan også være slettet.",
+    "refused_waiting": "Usendte meldinger som venter på det nye passordet: {count}. De blir til {date}.",
+    "refused_waiting_unknown": "Usendte meldinger venter kanskje på det nye passordet. De blir til {date}.",
+    "confirm_unsent_unknown": "Det venter kanskje usendte meldinger her. De går tapt.",
+    "confirm_templates": "E-postmaler lagret på denne enheten"
   },
   "offlineStorage": {
     "keep_description": "Beholder e-posten, kalenderen, kontaktene og filene du velger, kryptert på denne enheten. Frakoblet kan du lese, flagge og flytte e-post, og det du skriver, venter i utboksen. Når du logger av, fjernes alt.",

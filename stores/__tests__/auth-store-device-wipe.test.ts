@@ -2,8 +2,8 @@ import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Where the auth store meets wipes: the check at a start comes before any local
-// data, a login the server ended fires the hook on every path, and a password
-// it keeps refusing signs out and starts a wait instead of wiping.
+// data, a refused login fires the hook on every path and only ever hides the data,
+// and the organisation's session limit isn't a refusal at all.
 
 const clients = vi.hoisted(() => ({
   connect: (async () => {}) as (client: unknown) => Promise<void>,
@@ -50,14 +50,16 @@ vi.mock('@/lib/offline/offline-mode', () => ({
 }));
 
 const heard = vi.hoisted(() => [] as string[]);
+const certain = vi.hoisted(() => [] as boolean[]);
 vi.mock('@/lib/offline/credentials-rejected', () => ({
-  noteCredentialsRejected: (account: string) => { heard.push(account); },
+  noteCredentialsRejected: (account: string, sure = true) => { heard.push(account); certain.push(sure); },
   onCredentialsRejected: () => () => {},
 }));
 
 import { readRefusedLogins, CREDENTIALS_REFUSED_CONFIRM_MS, markWipePending, clearWipePending } from '@/lib/devices/wipe-state';
 
 // Fresh for each test: a sign-out leaves slots closing in the module for a while.
+let isEvicted: typeof import('@/lib/offline/state').isEvicted;
 let useOfflineStore: typeof import('@/lib/offline/state').useOfflineStore;
 let useAccountStore: typeof import('@/stores/account-store').useAccountStore;
 let useAuthStore: typeof import('@/stores/auth-store').useAuthStore;
@@ -78,7 +80,7 @@ const json = (status: number, body: unknown) => new Response(JSON.stringify(body
 
 beforeEach(async () => {
   vi.resetModules();
-  ({ useOfflineStore } = await import('@/lib/offline/state'));
+  ({ useOfflineStore, isEvicted } = await import('@/lib/offline/state'));
   ({ useAccountStore } = await import('@/stores/account-store'));
   ({ useAuthStore } = await import('@/stores/auth-store'));
   const nav = await import('@/lib/browser-navigation');
@@ -86,6 +88,7 @@ beforeEach(async () => {
   sessionStorage.clear();
   order.length = 0;
   heard.length = 0;
+  certain.length = 0;
   clients.made.length = 0;
   clients.connect = async () => {};
   gate.run = async () => {};
@@ -161,17 +164,31 @@ describe('a login the server ended, at a start', () => {
     useAuthStore.setState({ activeAccountId: ALICE });
   });
 
-  it('invalid_grant fires the hook', async () => {
+  it('invalid_grant fires the hook, for certain, and only hides the data', async () => {
+    useOfflineStore.setState({ enabled: [ALICE] });
     answer = (url, method) => (url.includes('/api/auth/token') && method === 'PUT' ? json(401, { error: 'invalid_grant' }) : null);
     await useAuthStore.getState().checkAuth();
-    expect(heard).toEqual([ALICE]);
+    // With mail kept here the real connect goes on behind the local copy.
+    await vi.waitFor(() => expect(heard).toEqual([ALICE]));
+    expect(certain).toEqual([true]);
+    expect(isEvicted(ALICE)).toBe(true);
+    expect(useOfflineStore.getState().enabled).toEqual([ALICE]);
+    expect(Object.keys(readRefusedLogins())).toEqual([ALICE]);
   });
 
-  it('the session limit fires the hook, for a password login too', async () => {
-    useAccountStore.setState({ accounts: [account(ALICE, 0, 'basic')] } as never);
-    answer = (url, method) => (url.includes('/api/auth/session') && method === 'PUT' ? json(401, { error: 'session_expired', maxHours: 8 }) : null);
+  it.each([
+    ['a password login', 'basic', '/api/auth/session'],
+    ['an OAuth login', 'oauth', '/api/auth/token'],
+  ])('the session limit is no refusal, for %s: no hook, no wait, and the account is only dropped', async (_name, mode, route) => {
+    useOfflineStore.setState({ enabled: [ALICE] });
+    useAccountStore.setState({ accounts: [account(ALICE, 0, mode as 'basic' | 'oauth')] } as never);
+    answer = (url, method) => (url.includes(route) && method === 'PUT' ? json(401, { error: 'session_expired', maxHours: 8 }) : null);
     await useAuthStore.getState().checkAuth();
-    expect(heard).toEqual([ALICE]);
+    await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(ALICE)).toBeUndefined());
+    expect(heard).toEqual([]);
+    expect(readRefusedLogins()).toEqual({});
+    expect(isEvicted(ALICE)).toBe(true);
+    expect(useOfflineStore.getState().enabled).toEqual([ALICE]);
   });
 
   it.each([
@@ -200,11 +217,23 @@ describe('a login the server ended, at a switch', () => {
     useAuthStore.setState({ activeAccountId: ALICE, isAuthenticated: true });
   });
 
-  it('invalid_grant fires the hook and takes the account out for good', async () => {
+  it('invalid_grant fires the hook and hides the account, keeping its data', async () => {
+    useOfflineStore.setState({ enabled: [ALICE, BOB] });
     answer = (url, method) => (url.includes('/api/auth/token') && method === 'PUT' ? json(401, { error: 'invalid_grant' }) : null);
     await useAuthStore.getState().switchAccount(BOB);
     expect(heard).toEqual([BOB]);
     expect(useAccountStore.getState().getAccountById(BOB)).toBeUndefined();
+    expect(isEvicted(BOB)).toBe(true);
+    expect(useOfflineStore.getState().enabled).toContain(BOB);
+  });
+
+  it('the session limit doesn\'t fire it and only drops the account', async () => {
+    useOfflineStore.setState({ enabled: [ALICE, BOB] });
+    answer = (url, method) => (url.includes('/api/auth/token') && method === 'PUT' ? json(401, { error: 'session_expired', maxHours: 8 }) : null);
+    await useAuthStore.getState().switchAccount(BOB);
+    expect(heard).toEqual([]);
+    expect(isEvicted(BOB)).toBe(true);
+    expect(useOfflineStore.getState().enabled).toContain(BOB);
   });
 
   it('another refusal doesn\'t', async () => {
@@ -221,16 +250,65 @@ describe('a password the server keeps refusing', () => {
     useOfflineStore.setState({ enabled: [ALICE] });
   });
 
-  it('at a start: the wait begins, and no wipe', async () => {
+  it('at a start: signed out and hidden, not for certain, since one answer hasn\'t lasted', async () => {
+    useOfflineStore.setState({ enabled: [ALICE] });
+    clients.connect = async (client) => {
+      (client as { refused?: (ms: number) => void }).refused?.(0);
+      throw new Error('Invalid username or password');
+    };
+    await useAuthStore.getState().checkAuth();
+    await vi.waitFor(() => expect(heard).toEqual([ALICE]));
+    expect(Object.keys(readRefusedLogins())).toEqual([ALICE]);
+    expect(certain).toEqual([false]);
+    expect(useAccountStore.getState().accounts).toEqual([]);
+    expect(isEvicted(ALICE)).toBe(true);
+  });
+
+  describe('that recovered', () => {
+    /** Gone from this page and back, with a session cookie that ran out: nothing says anything about the password. */
+    async function backWithAFailingServer(): Promise<void> {
+      useAuthStore.getState().removeAccount(BOB, 'wiped');
+      useAccountStore.setState((state) => ({ accounts: [...state.accounts, account(BOB, 1, 'basic')] }) as never);
+      answer = (url, method) => (url.includes('/api/auth/session') && method === 'PUT' ? json(401, { error: 'No session' }) : null);
+      await useAuthStore.getState().switchAccount(BOB);
+      // Got as far as the failure that would read the mark.
+      expect(useAccountStore.getState().getAccountById(BOB)).toBeUndefined();
+    }
+
+    beforeEach(() => {
+      useOfflineStore.setState({ enabled: [] });
+      useAccountStore.setState({ accounts: [account(ALICE, 0, 'basic'), account(BOB, 1, 'basic')] } as never);
+    });
+
+    it('during the connect: a later failure isn\'t read as a refusal', async () => {
+      clients.connect = async (client) => {
+        if ((client as { username?: string }).username === 'bob') (client as { refused?: (ms: number) => void }).refused?.(0);
+      };
+      await useAuthStore.getState().checkAuth();
+      await vi.waitFor(() => expect(clients.made.length).toBeGreaterThanOrEqual(2));
+      await vi.waitFor(() => expect(useAuthStore.getState().getClientForAccount(BOB)).toBeTruthy());
+      await backWithAFailingServer();
+      expect(heard).toEqual([]);
+    });
+
+    it('while running: a short refusal leaves no mark either', async () => {
+      await useAuthStore.getState().checkAuth();
+      await vi.waitFor(() => expect(useAuthStore.getState().getClientForAccount(BOB)).toBeTruthy());
+      (useAuthStore.getState().getClientForAccount(BOB) as unknown as { refused: (ms: number) => void }).refused(0);
+      await backWithAFailingServer();
+      expect(heard).toEqual([]);
+    });
+  });
+
+  it('a refusal at a start in a page with no offline kept records no wait', async () => {
     useOfflineStore.setState({ enabled: [] });
     clients.connect = async (client) => {
       (client as { refused?: (ms: number) => void }).refused?.(0);
       throw new Error('Invalid username or password');
     };
     await useAuthStore.getState().checkAuth();
-    expect(Object.keys(readRefusedLogins())).toEqual([ALICE]);
-    expect(heard).toEqual([]);
-    expect(useAccountStore.getState().accounts).toEqual([]);
+    expect(readRefusedLogins()).toEqual({});
+    expect(heard).toEqual([ALICE]);
   });
 
   it('at a start, with a server that only failed: no wait', async () => {
@@ -259,12 +337,15 @@ describe('a password the server keeps refusing', () => {
       expect(readRefusedLogins()).toEqual({});
     });
 
-    it('lasting a minute signs out and starts the wait, and fires no hook', async () => {
+    it('lasting a minute signs out at once and hides the data, for certain', async () => {
       const client = await running();
+      useOfflineStore.setState({ enabled: [ALICE] });
       client.refused(CREDENTIALS_REFUSED_CONFIRM_MS);
       await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(ALICE)).toBeUndefined());
       expect(Object.keys(readRefusedLogins())).toEqual([ALICE]);
-      expect(heard).toEqual([]);
+      expect(heard).toEqual([ALICE]);
+      expect(certain).toEqual([true]);
+      expect(isEvicted(ALICE)).toBe(true);
       expect(sessionStorage.getItem('session_expired')).toBe('true');
     });
   });

@@ -5778,7 +5778,12 @@
     "confirm_plugins": "Datos que los plugins guardaron aquí",
     "confirm_files": "Adjuntos abiertos para editar y archivos a la espera de adjuntarse",
     "confirm_accounts": "Se cierra la sesión de todas las cuentas",
-    "confirm_button": "Quitar todo"
+    "confirm_button": "Quitar todo",
+    "note_unknown": "Tu organización ha eliminado los datos de esta cuenta de este dispositivo. Puede que también se hayan eliminado mensajes sin enviar.",
+    "refused_waiting": "Mensajes sin enviar que esperan tu nueva contraseña: {count}. Se conservan hasta el {date}.",
+    "refused_waiting_unknown": "Puede que haya mensajes sin enviar esperando tu nueva contraseña. Se conservan hasta el {date}.",
+    "confirm_unsent_unknown": "Puede que haya mensajes sin enviar esperando aquí. Se perderán.",
+    "confirm_templates": "Plantillas de correo guardadas en este dispositivo"
   },
   "offlineStorage": {
     "keep_description": "Guarda tu correo, tu calendario, tus contactos y los archivos que elijas, cifrados en este dispositivo. Sin conexión puedes leer, marcar y mover correo, y lo que escribas espera en la bandeja de salida. Al cerrar sesión se borra todo.",

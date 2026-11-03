@@ -40,6 +40,16 @@ describe('a check-in', () => {
     expect(await checkInWithInstance(record)).toBe('unavailable');
   });
 
+  it('hears that its row was wiped', async () => {
+    answer(200, JSON.stringify({ wipe: null, wiped: true }));
+    expect(await checkInWithInstance({ id: 'r', secret: 's' })).toBe('wiped');
+  });
+
+  it('reads a 429 as nothing', async () => {
+    answer(429, JSON.stringify({ error: 'rate limited' }));
+    expect(await checkInWithInstance({ id: 'r', secret: 's' })).toBe('unavailable');
+  });
+
   it('reads no network as nothing', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => { throw new TypeError('Failed to fetch'); }));
     expect(await checkInWithInstance(record)).toBe('unavailable');
@@ -48,11 +58,22 @@ describe('a check-in', () => {
 
 describe('registering', () => {
   it('names the account\'s cookie slot', async () => {
-    const fetchMock = vi.fn(async () => new Response(JSON.stringify(record), { status: 200 }));
+    const row = { ...record, user: 'a@b.c', server: 'https://b.c' };
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify(row), { status: 200 }));
     vi.stubGlobal('fetch', fetchMock);
-    expect(await registerWithInstance(3)).toEqual(record);
+    expect(await registerWithInstance(3)).toEqual(row);
     const init = (fetchMock.mock.calls as unknown as [string, RequestInit][])[0][1];
     expect((init.headers as Record<string, string>)['X-JMAP-Cookie-Slot']).toBe('3');
+  });
+
+  it('hands back the owner the instance gave', async () => {
+    answer(200, JSON.stringify({ id: 'r', secret: 's', user: 'a@b.c', server: 'https://b.c' }));
+    expect(await registerWithInstance(0)).toEqual({ id: 'r', secret: 's', user: 'a@b.c', server: 'https://b.c' });
+  });
+
+  it('won\'t take a row with no owner', async () => {
+    answer(200, JSON.stringify({ id: 'r', secret: 's' }));
+    expect(await registerWithInstance(0)).toBeNull();
   });
 
   it('gives null when it can\'t', async () => {
@@ -78,6 +99,30 @@ describe('reporting a wipe', () => {
     expect(await reportWipeToInstance(entry)).toBe(false);
     vi.stubGlobal('fetch', vi.fn(async () => { throw new TypeError('Failed to fetch'); }));
     expect(await reportWipeToInstance(entry)).toBe(false);
+  });
+});
+
+describe('a confirmation the instance turned down', () => {
+  it('is done when no wipe was asked: sending it again can\'t change that', async () => {
+    answer(409, JSON.stringify({ error: 'no_wipe_asked' }));
+    expect(await reportWipeToInstance({ id: 'r', secret: 's', reason: 'admin', unsent: 0 })).toBe(true);
+  });
+
+  it('tries again after a 429', async () => {
+    answer(429, JSON.stringify({ error: 'rate limited' }));
+    expect(await reportWipeToInstance({ id: 'r', secret: 's', reason: 'admin', unsent: 0 })).toBe(false);
+  });
+
+  it('sends the row, the reason and the count, and no account name', async () => {
+    answer(200, JSON.stringify({ ok: true }));
+    await reportWipeToInstance({ id: 'r', secret: 's', reason: 'admin', unsent: null, account: 'alice@example.org' });
+    expect(JSON.parse(String(vi.mocked(fetch).mock.calls[0][1]?.body))).toEqual({ id: 'r', secret: 's', reason: 'admin', unsent: null });
+  });
+
+  it('a row dropped at sign-out says so', async () => {
+    answer(200, JSON.stringify({ ok: true }));
+    await reportWipeToInstance({ id: 'r', secret: 's', reason: 'user', unsent: 0, drop: true });
+    expect(JSON.parse(String(vi.mocked(fetch).mock.calls[0][1]?.body))).toEqual({ id: 'r', secret: 's', drop: true });
   });
 });
 

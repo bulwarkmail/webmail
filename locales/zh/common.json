@@ -5778,7 +5778,12 @@
     "confirm_plugins": "插件保存在这里的数据",
     "confirm_files": "为编辑而打开的附件和等待添加的文件",
     "confirm_accounts": "所有帐户都将退出登录",
-    "confirm_button": "移除所有内容"
+    "confirm_button": "移除所有内容",
+    "note_unknown": "您的组织已从此设备中删除此账户的数据。未发送的邮件可能也已被删除。",
+    "refused_waiting": "等待新密码的未发送邮件：{count} 封。保留至 {date}。",
+    "refused_waiting_unknown": "可能有未发送的邮件在等待新密码。保留至 {date}。",
+    "confirm_unsent_unknown": "这里可能有未发送的邮件。它们将会丢失。",
+    "confirm_templates": "保存在此设备上的邮件模板"
   },
   "offlineStorage": {
     "keep_description": "在此设备上加密保留你的邮件、日历、联系人和你选择的文件。离线时可以阅读、标记和移动邮件，写好的邮件会在发件箱中等待。退出登录时会全部删除。",

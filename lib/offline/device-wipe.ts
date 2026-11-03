@@ -4,9 +4,16 @@
  *
  * - the instance's registry (lib/devices): a wipe an admin asked for, heard at
  *   check-in. At a start the check-in runs before the local copy is shown.
- * - the server refusing the stored login for good, through
- *   lib/offline/credentials-rejected.ts.
  * - the user, from settings.
+ * - the organisation, when it asks for deletion at once after a refused login
+ *   (`organisation.devices.wipeOnRefusedLogin`).
+ *
+ * A refused login on its own deletes nothing. The account signs out and its data
+ * hides until someone signs in with the new password, or for 30 days
+ * (EVICTED_KEEP_MS). What this file keeps for it is a number, for the sign-in page.
+ * The usual cause is a password changed on another device, and deleting there
+ * would lose unsent mail for very little protection against a thief. A deletion
+ * the organisation asked for takes the account's own data and nothing shared.
  *
  * Only a clear word wipes. An outage, a 500, an unknown answer: nothing happens.
  *
@@ -24,6 +31,10 @@
  * sealed one lasts 30 days, but a check-in only needs the secret, so a device
  * still hears its wipe. One that lost its key database has nothing left to wipe
  * and can't be told. Its row keeps saying the wipe is waiting.
+ *
+ * Wipes run one at a time across every window of this browser, under a Web Lock:
+ * the last account's wipe deletes the key database with every row in it, so a
+ * second wipe going on at that moment would put back a row just removed.
  */
 
 import { clearAllCheckpoints } from '@/lib/mail-import/checkpoints';
@@ -32,13 +43,19 @@ import { clearAllPluginStorage, clearPluginStorageForAccount } from '@/lib/plugi
 import { fileStorage } from '@/lib/plugin-storage';
 import { clearHandoffs } from '@/lib/launch-handoff';
 import { apiFetch } from '@/lib/browser-navigation';
+import { SW_SCOPE } from '@/lib/app-update';
+import { devicesForAccount, devicesForNoOne } from '@/lib/device-policy';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
+import { clearRescuedDrafts } from '@/lib/popout/rescued-drafts';
 import { isPopoutWindow } from '@/lib/popout/window-role';
+import { PUSH_STATE_CACHE } from '@/lib/push-preferences';
+import { ACCOUNT_STORAGE_KEYS, onBeforeSignOut } from '@/lib/sign-out-cleanup';
 import {
   checkInWithInstance,
   registerWithInstance,
   reportWipeToInstance,
+  type RegisteredRow,
 } from '@/lib/devices/client';
 import type { WipeReason } from '@/lib/devices/types';
 import {
@@ -52,7 +69,7 @@ import {
   readPendingWipes,
   readRefusedLogins,
   readWipeConfirmations,
-  REFUSED_KEEP_MS,
+  setRefusedCount,
   WHOLE_DEVICE,
   writeBlockedDatabases,
 } from '@/lib/devices/wipe-state';
@@ -63,11 +80,13 @@ import {
   putDeviceRecord,
   type DeviceRecord,
 } from '@/lib/store/client/keys';
-import { useAccountStore } from '@/stores/account-store';
+import { onAccountRemoved, useAccountStore, type AccountEntry } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
-import { noteCredentialsRejected, onCredentialsRejected } from './credentials-rejected';
-import { confirmLoss, registerOfflineHooks, unsentCount, wipeAccount, wipeEverything } from './offline-mode';
-import { clearEvicted, isEvicted, readEvicted, useOfflineStore } from './state';
+import { usePolicyStore } from '@/stores/policy-store';
+import { onCredentialsRejected } from './credentials-rejected';
+import { forgetEvictedSecrets } from './evicted-secrets';
+import { confirmLoss, registerOfflineHooks, unsentForWipe, wipeAccount, wipeEverything } from './offline-mode';
+import { clearEvicted, forgetMailSnapshot, isEvicted, readEvicted, serverKey, useOfflineStore } from './state';
 import { runWipeCleaners } from './wipe-registry';
 
 /** How long a start holds the local copy back for the instance's answer. Offline, it doesn't wait at all. */
@@ -80,9 +99,9 @@ const TICK_MS = 60 * 1000;
 const REPORT_BUDGET_MS = 3_000;
 /** How long a wipe waits for one database a running plugin frame holds open. */
 const DATABASE_BUDGET_MS = 2_000;
-const DATABASE_RETRIES = 5;
 
 const WIPE_CHANNEL = 'bulwark-device-wipe';
+const WIPE_LOCK = 'bulwark-device-wipe';
 
 /** The webmail's own databases. Any other on this origin was made by a privileged plugin. */
 const APP_DATABASES = new Set([
@@ -95,10 +114,36 @@ const APP_DATABASES = new Set([
 /** Deleted by name too, for browsers without `indexedDB.databases()`. */
 const KNOWN_PLUGIN_DATABASES = ['smime-plugin-store', 'bulwark-openpgp', 'smime-capability-probe', 'openpgp-capability-probe'];
 
-/** What every account shared and can't be told apart by account. */
-const SHARED_LOCAL_KEYS = ['notification-center', 'plugin-oauth-states', 'webmail_usernames', 'global-search', 'favicon-refresh'];
+/**
+ * What every account shared and can't be told apart by account, on top of what a
+ * full sign-out removes. `template-storage` is here though a sign-out keeps it:
+ * with settings sync off it's the user's own work and only here, which is why a
+ * sign-out leaves it, but a template can hold anything, and a device told to remove
+ * everything keeps no text. The question before a wipe from settings names it.
+ */
+const SHARED_LOCAL_KEYS = [
+  ...ACCOUNT_STORAGE_KEYS,
+  'notification-center',
+  'plugin-oauth-states',
+  'webmail_usernames',
+  'global-search',
+  'favicon-refresh',
+  'template-storage',
+];
+/** The WebDAV area's favourites, recent files and last folder. */
+const SHARED_LOCAL_PREFIXES = ['webdav-'];
 
 const running = new Map<string, Promise<void>>();
+
+let lockQueue: Promise<unknown> = Promise.resolve();
+
+/** One wipe at a time. Without Web Locks: at least in this window. */
+function underWipeLock(work: () => Promise<void>): Promise<void> {
+  if (typeof navigator !== 'undefined' && navigator.locks) return navigator.locks.request(WIPE_LOCK, work);
+  const turn = lockQueue.then(work, work);
+  lockQueue = turn.catch(() => {});
+  return turn;
+}
 
 // ---- Removing it ----
 
@@ -125,10 +170,13 @@ function deleteDatabase(name: string): Promise<boolean> {
  * Plugin-owned databases. S/MIME and OpenPGP keys aren't kept per account, so a
  * wipe of one account takes everyone's: keeping them would leave a wiped user's
  * private key behind. They're encrypted and come back from the user's own backup.
+ * One a running frame holds open stays on the list, and the wipe isn't reported
+ * as done until it's gone.
  */
 async function deletePluginDatabases(): Promise<void> {
   if (typeof indexedDB === 'undefined') return;
-  const names = new Set([...KNOWN_PLUGIN_DATABASES, ...Object.keys(readBlockedDatabases())]);
+  const tries = readBlockedDatabases();
+  const names = new Set([...KNOWN_PLUGIN_DATABASES, ...Object.keys(tries)]);
   try {
     for (const { name } of await indexedDB.databases()) {
       if (name && !APP_DATABASES.has(name)) names.add(name);
@@ -136,12 +184,9 @@ async function deletePluginDatabases(): Promise<void> {
   } catch {
     // No list in this browser: the names above.
   }
-  const tries = readBlockedDatabases();
   const blocked: Record<string, number> = {};
   await Promise.all([...names].map(async (name) => {
-    if (await deleteDatabase(name)) return;
-    const count = (tries[name] ?? 0) + 1;
-    if (count < DATABASE_RETRIES) blocked[name] = count;
+    if (!(await deleteDatabase(name))) blocked[name] = (tries[name] ?? 0) + 1;
   }));
   writeBlockedDatabases(blocked);
 }
@@ -175,6 +220,8 @@ async function forgetPluginAccounts(account: string | null): Promise<void> {
     headers: { 'X-JMAP-Cookie-Slot': String(slot) },
     signal: AbortSignal.timeout(REPORT_BUDGET_MS),
   }).catch(() => {})));
+  // An account dropped earlier has no cookie left to ask with.
+  await forgetEvictedSecrets(account);
 }
 
 async function forgetPluginSettings(): Promise<void> {
@@ -182,25 +229,51 @@ async function forgetPluginSettings(): Promise<void> {
   usePluginStore.setState((state) => ({ plugins: state.plugins.map((plugin) => ({ ...plugin, settings: {} })) }));
 }
 
-function removeLocalKeys(keys: string[]): void {
-  for (const key of keys) {
-    try {
-      localStorage.removeItem(key);
-    } catch {
-      /* storage unavailable */
+function removeLocalKeys(keys: string[], prefixes: string[]): void {
+  try {
+    const doomed = [...keys];
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index);
+      if (key && prefixes.some((prefix) => key.startsWith(prefix))) doomed.push(key);
     }
+    for (const key of doomed) localStorage.removeItem(key);
+  } catch {
+    /* storage unavailable */
   }
 }
 
-/** Everything else that's the account's or that accounts share. `account` null: all of it. */
-async function scrub(account: string | null): Promise<void> {
+async function pushRegistration(): Promise<ServiceWorkerRegistration | null> {
+  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return null;
+  return (await navigator.serviceWorker.getRegistration(SW_SCOPE).catch(() => null)) ?? null;
+}
+
+/** A sender and a subject can sit on screen long after the mail is gone. */
+async function closeShownNotifications(): Promise<void> {
+  const registration = await pushRegistration();
+  for (const notification of await registration?.getNotifications?.() ?? []) notification.close();
+}
+
+/** The subscription is the browser's, shared by every account on this origin. */
+async function endWebPushIfNobodyLeft(): Promise<void> {
+  if (useAccountStore.getState().accounts.length > 0) return;
+  const registration = await pushRegistration();
+  const subscription = await registration?.pushManager?.getSubscription();
+  await subscription?.unsubscribe();
+}
+
+/** What's the account's own: a deletion after a refused login goes no further than this. */
+async function scrubAccount(account: string): Promise<void> {
   await runWipeCleaners(account);
+  await forgetPluginAccounts(account).catch(() => {});
+  clearPluginStorageForAccount(account);
+  forgetMailSnapshot(account);
+}
+
+/** Everything accounts share, or that can't be told apart by account. */
+async function scrubShared(): Promise<void> {
   await clearShellFiles().catch(() => {});
   await deletePluginDatabases();
-  await forgetPluginAccounts(account);
   await forgetPluginSettings().catch(() => {});
-  if (account === null) clearAllPluginStorage();
-  else clearPluginStorageForAccount(account);
   await fileStorage.clearFiles().catch(() => {});
   await clearAllCheckpoints().catch(() => {});
   await sweepPrivateExports({ force: true }).catch(() => {});
@@ -210,13 +283,30 @@ async function scrub(account: string | null): Promise<void> {
     /* storage unavailable */
   }
   clearHandoffs();
+  clearRescuedDrafts();
   const { useNotificationCenterStore } = await import('@/stores/notification-center-store');
   useNotificationCenterStore.getState().clear();
-  removeLocalKeys(SHARED_LOCAL_KEYS);
+  await closeShownNotifications().catch(() => {});
+  if (typeof caches !== 'undefined') await caches.delete(PUSH_STATE_CACHE).catch(() => {});
+  removeLocalKeys(SHARED_LOCAL_KEYS, SHARED_LOCAL_PREFIXES);
 }
 
-async function flushConfirmations(): Promise<void> {
-  await Promise.all(readWipeConfirmations().map(async (entry) => {
+/**
+ * Sends what's ready to go. A wipe's confirmation is queued before anything is
+ * deleted, so that a crash can't lose it, and isn't sent until the deletion is
+ * done: `finished` is the wipe that just got there. What's still pending, or a
+ * plugin database that's still there, isn't a wipe that can be reported.
+ */
+async function flushConfirmations(finished?: string): Promise<void> {
+  const pending = readPendingWipes();
+  const blocked = Object.keys(readBlockedDatabases()).length > 0;
+  const deviceOpen = WHOLE_DEVICE in pending && finished !== WHOLE_DEVICE;
+  const ready = readWipeConfirmations().filter((entry) => {
+    if (entry.drop) return true;
+    if (deviceOpen || (blocked && entry.reason !== 'rejected')) return false;
+    return !entry.account || !(entry.account in pending) || entry.account === finished;
+  });
+  await Promise.all(ready.map(async (entry) => {
     if (await reportWipeToInstance(entry, AbortSignal.timeout(REPORT_BUDGET_MS))) dropWipeConfirmation(entry.id);
   }));
 }
@@ -242,8 +332,10 @@ function otherWindows(): BroadcastChannel | null {
   }
 }
 
-function tellOtherWindows(account: string | null): void {
-  otherWindows()?.postMessage({ account });
+type WipePhase = 'start' | 'end';
+
+function tellOtherWindows(account: string | null, phase: WipePhase): void {
+  otherWindows()?.postMessage({ account, phase });
 }
 
 async function signOutAccount(account: string): Promise<void> {
@@ -253,72 +345,137 @@ async function signOutAccount(account: string): Promise<void> {
   else auth.removeAccount(account, 'explicit');
 }
 
+/** The key database goes with the last account's store, and the other accounts' rows with it. */
+async function putRowsBack(rows: DeviceRecord[], wiped: string): Promise<void> {
+  const still = await listDeviceRecords().catch(() => [] as DeviceRecord[]);
+  for (const row of rows) {
+    if (row.account !== wiped && !still.some((entry) => entry.account === row.account)) await putDeviceRecord(row).catch(() => {});
+  }
+}
+
+export interface WipeAccountOptions {
+  /** Heard for this row: another window that got there first has removed it, and there's nothing to do. */
+  ifRow?: string;
+}
+
 /**
- * Takes one account off this device and signs it out. A refused login's sign-out
- * is the auth store's own, already on its way, and its lost mail is named as for
- * any sign-out nobody asked for. Everywhere else lost mail is a count.
+ * Takes one account off this device. A refused login's sign-out is the auth
+ * store's own, and what it deletes is only the account's: no shared key database,
+ * no plugin settings, and with nothing kept here nothing of offline mode either.
  */
-export function wipeAccountFromDevice(account: string, reason: WipeReason): Promise<void> {
+export function wipeAccountFromDevice(account: string, reason: WipeReason, options: WipeAccountOptions = {}): Promise<void> {
   const under = running.get(account);
   if (under) return under;
-  const work = eraseAccount(account, reason).finally(() => running.delete(account));
+  // Now, not when the lock comes: a window closed while it waits still finishes this.
+  markWipePending(account, reason);
+  const work = underWipeLock(() => eraseAccount(account, reason, options)).finally(() => running.delete(account));
   running.set(account, work);
   return work;
 }
 
-async function eraseAccount(account: string, reason: WipeReason): Promise<void> {
-  markWipePending(account, reason);
+async function eraseAccount(account: string, reason: WipeReason, options: WipeAccountOptions): Promise<void> {
+  // Another window finished it while this one waited for the lock.
+  if (!(account in readPendingWipes())) return;
   const records = await listDeviceRecords().catch(() => [] as DeviceRecord[]);
   const record = records.find((entry) => entry.account === account);
-  const named = reason === 'rejected';
-  const unsent = named ? 0 : (await unsentCount(account).catch(() => ({ messages: 0 }))).messages;
+  if (options.ifRow && record?.id !== options.ifRow) {
+    clearWipePending(account);
+    return;
+  }
+  tellOtherWindows(account, 'start');
   registerOfflineHooks();
-  if (!named) confirmLoss(account);
-  await wipeAccount(account).catch(() => {});
-  clearEvicted(account);
-  dropRefusedLogin(account);
-  await scrub(account).catch(() => {});
 
-  // The last account's wipe deletes the whole key database, with the rows of accounts that stay.
-  await deleteDeviceRecord(account).catch(() => {});
-  for (const other of records) {
-    if (other.account !== account) await putDeviceRecord(other).catch(() => {});
+  const ownOnly = reason === 'rejected';
+  const unsent = await unsentForWipe(account);
+  if (record && !readWipeConfirmations().some((entry) => entry.id === record.id)) {
+    queueWipeConfirmation({ account, id: record.id, secret: record.secret, reason, unsent });
+    if (reason === 'admin') addWipeNote(unsent);
   }
 
-  if (record) queueWipeConfirmation({ id: record.id, secret: record.secret, reason, unsent });
-  if (reason === 'admin') addWipeNote(unsent);
-  await flushConfirmations();
-  if (!named) await signOutAccount(account);
-  clearWipePending(account);
-  tellOtherWindows(account);
+  const shown = useOfflineStore.getState();
+  const keepsMail = shown.enabled.includes(account) || shown.outbox.some((row) => row.account === account) || shown.localDrafts.some((row) => row.account === account);
+  if (!ownOnly) confirmLoss(account);
+  let deleted = true;
+  if (!ownOnly || keepsMail) {
+    // Tried again at the next start: the row keeps waiting until then.
+    await wipeAccount(account).catch(() => { deleted = false; });
+  }
+  clearEvicted(account);
+  dropRefusedLogin(account);
+  await scrubAccount(account).catch(() => {});
+  if (!ownOnly) await scrubShared().catch(() => {});
+
+  await deleteDeviceRecord(account).catch(() => {});
+  await putRowsBack(records, account);
+
+  await flushConfirmations(deleted ? account : undefined);
+  if (!ownOnly) {
+    await signOutAccount(account);
+    await endWebPushIfNobodyLeft().catch(() => {});
+  }
+  if (deleted) clearWipePending(account);
+  tellOtherWindows(account, 'end');
 }
 
 /** Everything on this device, for everyone. The app's device preferences stay: they hold no mail. */
 export function wipeWholeDevice(reason: WipeReason): Promise<void> {
   const under = running.get(WHOLE_DEVICE);
   if (under) return under;
-  const work = eraseDevice(reason).finally(() => running.delete(WHOLE_DEVICE));
+  markWipePending(WHOLE_DEVICE, reason);
+  const work = underWipeLock(() => eraseDevice(reason)).finally(() => running.delete(WHOLE_DEVICE));
   running.set(WHOLE_DEVICE, work);
   return work;
 }
 
 async function eraseDevice(reason: WipeReason): Promise<void> {
-  markWipePending(WHOLE_DEVICE, reason);
-  const records = await listDeviceRecords().catch(() => [] as DeviceRecord[]);
-  const unsent = (await unsentCount('all').catch(() => ({ messages: 0 }))).messages;
+  if (!(WHOLE_DEVICE in readPendingWipes())) return;
+  tellOtherWindows(null, 'start');
   registerOfflineHooks();
+  const records = await listDeviceRecords().catch(() => [] as DeviceRecord[]);
+  const accounts = [...new Set([...useOfflineStore.getState().enabled, ...records.map((record) => record.account)])];
+  const counts = new Map(await Promise.all(accounts.map(async (account) => [account, await unsentForWipe(account)] as const)));
+  const queued = readWipeConfirmations();
+  for (const record of records) {
+    if (queued.some((entry) => entry.id === record.id)) continue;
+    queueWipeConfirmation({ account: record.account, id: record.id, secret: record.secret, reason, unsent: counts.get(record.account) ?? 0 });
+  }
+  if (reason === 'admin') {
+    const each = [...counts.values()];
+    addWipeNote(each.includes(null) ? null : (each as number[]).reduce((sum, count) => sum + count, 0));
+  }
+
   confirmLoss('all');
-  await scrub(null).catch(() => {});
-  await wipeEverything().catch(() => {});
+  await runWipeCleaners(null);
+  await forgetPluginAccounts(null).catch(() => {});
+  clearAllPluginStorage();
+  await scrubShared().catch(() => {});
+  let deleted = true;
+  await wipeEverything().catch(() => { deleted = false; });
   for (const account of Object.keys(readEvicted())) clearEvicted(account);
   for (const account of Object.keys(readRefusedLogins())) dropRefusedLogin(account);
-  for (const record of records) queueWipeConfirmation({ id: record.id, secret: record.secret, reason, unsent });
-  if (reason === 'admin') addWipeNote(unsent);
-  await flushConfirmations();
+  await flushConfirmations(deleted ? WHOLE_DEVICE : undefined);
   signalSignedOut();
   await useAuthStore.getState().logoutAll({ endProviderSession: false });
-  clearWipePending(WHOLE_DEVICE);
-  tellOtherWindows(null);
+  await endWebPushIfNobodyLeft().catch(() => {});
+  if (deleted) clearWipePending(WHOLE_DEVICE);
+  tellOtherWindows(null, 'end');
+}
+
+// ---- A sign-out: the row has nothing left to look after ----
+
+function queueDrop(row: Pick<DeviceRecord, 'id' | 'secret'>): void {
+  queueWipeConfirmation({ id: row.id, secret: row.secret, reason: 'user', unsent: 0, drop: true });
+}
+
+async function dropRows(scope: string): Promise<void> {
+  const records = await listDeviceRecords().catch(() => [] as DeviceRecord[]);
+  const rows = scope === 'all' ? records : records.filter((record) => record.account === scope);
+  if (rows.length === 0) return;
+  for (const row of rows) {
+    queueDrop(row);
+    await deleteDeviceRecord(row.account).catch(() => {});
+  }
+  await flushConfirmations();
 }
 
 // ---- Hearing about it ----
@@ -344,26 +501,51 @@ async function checkInRecord(record: DeviceRecord, now: number): Promise<void> {
   lastCheckIn.set(record.account, now);
   const answer = await checkInWithInstance(record, AbortSignal.timeout(REPORT_BUDGET_MS * 3));
   if (answer === 'wipe') {
-    await wipeAccountFromDevice(record.account, 'admin');
+    await wipeAccountFromDevice(record.account, 'admin', { ifRow: record.id });
     return;
   }
-  if (answer === 'forgotten') {
+  // The row is gone, or wiped already: what it was for is over. The account stays, and gets a new one.
+  if (answer === 'forgotten' || answer === 'wiped') {
     await deleteDeviceRecord(record.account).catch(() => {});
+    lastRegisterTry.delete(record.account);
     return;
   }
   // Signed out here with nothing kept: the row has nothing left to look after.
   if (answer === 'clear') {
     const known = useAccountStore.getState().accounts.some((entry) => entry.id === record.account);
-    if (!known && !useOfflineStore.getState().enabled.includes(record.account)) await deleteDeviceRecord(record.account).catch(() => {});
+    if (!known && !useOfflineStore.getState().enabled.includes(record.account)) await dropRows(record.account);
   }
 }
 
-async function registerAccount(accountId: string, slot: number): Promise<void> {
+/**
+ * The cookie slot decides whose row the instance makes. A slot that has moved on
+ * to another account since would leave this account's mail on someone else's row,
+ * where a wipe of this account never finds it. A bare name is the same person as a
+ * whole address: a token sign-in can claim either.
+ */
+function ownsRow(row: RegisteredRow, account: AccountEntry): boolean {
+  if (serverKey(row.server) !== serverKey(account.serverUrl)) return false;
+  const user = row.user.toLowerCase();
+  return [account.username, account.email].some((candidate) => {
+    const name = candidate?.toLowerCase();
+    if (!name) return false;
+    if (name === user) return true;
+    return (!name.includes('@') || !user.includes('@')) && name.split('@')[0] === user.split('@')[0];
+  });
+}
+
+async function registerAccount(account: AccountEntry): Promise<void> {
   const register = async () => {
     // Another window may have got here while this one waited.
-    if (await getDeviceRecord(accountId)) return;
-    const row = await registerWithInstance(slot, AbortSignal.timeout(REPORT_BUDGET_MS * 3));
-    if (row) await putDeviceRecord({ account: accountId, id: row.id, secret: row.secret, createdAt: Date.now() });
+    if (await getDeviceRecord(account.id)) return;
+    const row = await registerWithInstance(account.cookieSlot ?? 0, AbortSignal.timeout(REPORT_BUDGET_MS * 3));
+    if (!row) return;
+    if (ownsRow(row, account) && useAccountStore.getState().getAccountById(account.id)) {
+      await putDeviceRecord({ account: account.id, id: row.id, secret: row.secret, createdAt: Date.now() });
+      return;
+    }
+    queueDrop(row);
+    await flushConfirmations();
   };
   if (typeof navigator !== 'undefined' && navigator.locks) await navigator.locks.request('bulwark-device-register', register);
   else await register();
@@ -393,7 +575,7 @@ async function runCheckIns(force: boolean, now: number): Promise<void> {
       .filter((account) => force || now - (lastRegisterTry.get(account.id) ?? 0) >= REGISTER_RETRY_MS)
       .map((account) => {
         lastRegisterTry.set(account.id, now);
-        return registerAccount(account.id, account.cookieSlot ?? 0).catch(() => {});
+        return registerAccount(account).catch(() => {});
       }),
   ]);
 }
@@ -408,18 +590,46 @@ export async function finishInterruptedWipes(): Promise<void> {
   await retryBlockedDatabases();
 }
 
-/** Refused passwords whose day has passed, with no sign-in since. */
-export async function sweepRefusedLogins(now = Date.now()): Promise<void> {
-  for (const [account, at] of Object.entries(readRefusedLogins())) {
-    // Signed in again: the wait is over and nothing goes.
+// ---- A refused login ----
+
+function policyKnown(): boolean {
+  const { loaded, partial } = usePolicyStore.getState();
+  return loaded && !partial;
+}
+
+/** A number, for the sign-in page. Unknown stays unknown, and is asked again at the next look. */
+async function countRefused(account: string): Promise<void> {
+  if (!(account in readRefusedLogins())) return;
+  registerOfflineHooks();
+  setRefusedCount(account, await unsentForWipe(account));
+}
+
+/**
+ * The login was refused, and the auth store is signing it out and hiding the data.
+ * It goes now only if the organisation asked for that, and only for a refusal that
+ * is one for certain: a single bad answer at a start can be a server in trouble.
+ */
+async function heardRefusal(account: string, certain: boolean): Promise<void> {
+  if (certain && policyKnown() && devicesForAccount(account).wipeOnRefusedLogin) {
+    await wipeAccountFromDevice(account, 'rejected');
+    return;
+  }
+  await countRefused(account);
+}
+
+/** What the sign-in page reads: signed in again, the wait is over. A count that couldn't be had, and a policy that's new. */
+export async function sweepRefusedLogins(): Promise<void> {
+  for (const [account, wait] of Object.entries(readRefusedLogins())) {
     if (!isEvicted(account)) {
       dropRefusedLogin(account);
       continue;
     }
-    if (now - at < REFUSED_KEEP_MS) continue;
-    dropRefusedLogin(account);
-    noteCredentialsRejected(account);
-    await running.get(account);
+    // Nobody's signed in to it, so no groups to go by: what applies to everyone reaches it.
+    if (wait.certain && policyKnown() && devicesForNoOne().wipeOnRefusedLogin) {
+      await wipeAccountFromDevice(account, 'rejected');
+      continue;
+    }
+    if (wait.unsent === null) await countRefused(account);
   }
 }
 
@@ -429,8 +639,14 @@ let registered = false;
 export function registerDeviceWipe(): void {
   if (registered) return;
   registered = true;
-  onCredentialsRejected((account) => {
-    void wipeAccountFromDevice(account, 'rejected');
+  onCredentialsRejected((account, certain) => {
+    void heardRefusal(account, certain);
+  });
+  onBeforeSignOut(async (accountId, { keepLocalStore }) => {
+    if (!keepLocalStore) await dropRows(accountId);
+  });
+  onAccountRemoved((accountId, reason) => {
+    if (reason === 'explicit') void dropRows(accountId);
   });
 }
 
@@ -450,13 +666,29 @@ export async function runDeviceGate(): Promise<void> {
   ]);
 }
 
+/**
+ * Another window is wiping. An account this one isn't showing leaves its lists at
+ * once and in place, or the next write of the account registry here brings it back.
+ * One it's showing: its mail is in this window's memory, so it reloads once the wipe
+ * is done. Another account's unsaved text isn't touched.
+ */
+function heardFromOtherWindow(account: string | null, phase: WipePhase): void {
+  const auth = useAuthStore.getState();
+  if (account === null || account === auth.activeAccountId) {
+    if (phase === 'end') window.location.reload();
+    return;
+  }
+  if (useAccountStore.getState().getAccountById(account)) auth.removeAccount(account, 'wiped');
+  const { enabled } = useOfflineStore.getState();
+  if (enabled.includes(account)) useOfflineStore.setState({ enabled: enabled.filter((id) => id !== account) });
+}
+
 function listenToOtherWindows(): () => void {
   const channel = otherWindows();
   if (!channel) return () => {};
-  channel.onmessage = (event: MessageEvent<{ account: string | null }>) => {
-    const { account } = event.data ?? {};
-    // Its mail is in this window's memory. Another account's unsaved text isn't touched.
-    if (account === null || account === useAuthStore.getState().activeAccountId) window.location.reload();
+  channel.onmessage = (event: MessageEvent<{ account: string | null; phase?: WipePhase }>) => {
+    if (event.data?.account === undefined) return;
+    heardFromOtherWindow(event.data.account, event.data.phase ?? 'end');
   };
   return () => { channel.onmessage = null; };
 }
@@ -482,9 +714,13 @@ export function startDeviceWipe(): () => void {
     for (const account of state.enabled) lastRegisterTry.delete(account);
     void checkInDue().catch(() => {});
   });
+  const stopPolicy = usePolicyStore.subscribe((state, prev) => {
+    if (state.rawPolicy !== prev.rawPolicy || state.partial !== prev.partial) void sweepRefusedLogins().catch(() => {});
+  });
   return () => {
     stopOthers();
     stopEnabled();
+    stopPolicy();
     clearInterval(tick);
     window.removeEventListener('online', onOnline);
   };

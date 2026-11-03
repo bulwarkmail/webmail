@@ -5778,7 +5778,12 @@
     "confirm_plugins": "Daten, die Plugins hier gespeichert haben",
     "confirm_files": "Zum Bearbeiten geöffnete Anhänge und Dateien, die noch angehängt werden sollen",
     "confirm_accounts": "Alle Konten werden abgemeldet",
-    "confirm_button": "Alles entfernen"
+    "confirm_button": "Alles entfernen",
+    "note_unknown": "Ihre Organisation hat die Daten dieses Kontos von diesem Gerät entfernt. Dabei wurden möglicherweise auch ungesendete Nachrichten gelöscht.",
+    "refused_waiting": "Auf Ihr neues Passwort warten ungesendete Nachrichten: {count}. Sie bleiben bis zum {date}.",
+    "refused_waiting_unknown": "Möglicherweise warten ungesendete Nachrichten auf Ihr neues Passwort. Sie bleiben bis zum {date}.",
+    "confirm_unsent_unknown": "Hier warten möglicherweise ungesendete Nachrichten. Sie gehen verloren.",
+    "confirm_templates": "Auf diesem Gerät gespeicherte E-Mail-Vorlagen"
   },
   "offlineStorage": {
     "keep_description": "Behält Ihre E-Mails, Ihren Kalender, Ihre Kontakte und ausgewählte Dateien verschlüsselt auf diesem Gerät. Offline können Sie E-Mails lesen, markieren und verschieben, und was Sie schreiben, wartet im Postausgang. Beim Abmelden wird alles entfernt.",

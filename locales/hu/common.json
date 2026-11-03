@@ -5778,7 +5778,12 @@
     "confirm_plugins": "A bővítmények által itt tárolt adatok",
     "confirm_files": "Szerkesztésre megnyitott mellékletek és csatolásra váró fájlok",
     "confirm_accounts": "Minden fiók kijelentkezik",
-    "confirm_button": "Minden eltávolítása"
+    "confirm_button": "Minden eltávolítása",
+    "note_unknown": "A szervezete eltávolította a fiók adatait erről az eszközről. Lehet, hogy az el nem küldött üzenetek is törlődtek.",
+    "refused_waiting": "Az új jelszóra váró, el nem küldött üzenetek: {count}. Eddig maradnak: {date}.",
+    "refused_waiting_unknown": "Lehet, hogy el nem küldött üzenetek várnak az új jelszóra. Eddig maradnak: {date}.",
+    "confirm_unsent_unknown": "Lehet, hogy el nem küldött üzenetek várakoznak itt. Elvesznek.",
+    "confirm_templates": "Ezen az eszközön mentett e-mail-sablonok"
   },
   "offlineStorage": {
     "keep_description": "Megtartja a leveleit, a naptárát, a névjegyeit és a kiválasztott fájlokat, titkosítva ezen az eszközön. Offline olvashat, megjelölhet és áthelyezhet leveleket, a megírt levelek pedig a postázandók között várnak. Kijelentkezéskor minden törlődik.",

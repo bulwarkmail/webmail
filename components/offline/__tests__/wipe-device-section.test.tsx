@@ -1,9 +1,9 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const wipe = vi.hoisted(() => ({ whole: vi.fn(async () => {}), unsent: 0 }));
+const wipe = vi.hoisted(() => ({ whole: vi.fn(async () => {}), unsent: 0 as number | null }));
 vi.mock('@/lib/offline/device-wipe', () => ({ wipeWholeDevice: wipe.whole }));
-vi.mock('@/lib/offline/offline-mode', () => ({ unsentCount: async () => ({ messages: wipe.unsent, changes: 0 }) }));
+vi.mock('@/lib/offline/offline-mode', () => ({ unsentForWipe: async () => wipe.unsent }));
 
 import { WipeDeviceSection } from '../wipe-device-section';
 
@@ -17,7 +17,7 @@ describe('the wipe in settings', () => {
     render(<WipeDeviceSection />);
     fireEvent.click(screen.getByTestId('wipe-device-button'));
     const details = await screen.findByTestId('wipe-device-details');
-    for (const key of ['confirm_mail', 'confirm_keys', 'confirm_plugins', 'confirm_files', 'confirm_accounts']) {
+    for (const key of ['confirm_mail', 'confirm_keys', 'confirm_plugins', 'confirm_files', 'confirm_templates', 'confirm_accounts']) {
       expect(details.textContent).toContain(key);
     }
     expect(details.textContent).not.toContain('confirm_unsent');
@@ -29,6 +29,14 @@ describe('the wipe in settings', () => {
     render(<WipeDeviceSection />);
     fireEvent.click(screen.getByTestId('wipe-device-button'));
     expect((await screen.findByTestId('wipe-device-details')).textContent).toContain('confirm_unsent');
+  });
+
+  it('says it can\'t tell, not that there\'s nothing, when the count is unknown', async () => {
+    wipe.unsent = null;
+    render(<WipeDeviceSection />);
+    fireEvent.click(screen.getByTestId('wipe-device-button'));
+    const details = await screen.findByTestId('wipe-device-details');
+    expect(details.textContent).toContain('confirm_unsent_unknown');
   });
 
   it('wipes only after the yes, as the user\'s own', async () => {

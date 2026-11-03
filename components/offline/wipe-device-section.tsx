@@ -5,7 +5,10 @@ import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { wipeWholeDevice } from '@/lib/offline/device-wipe';
-import { unsentCount } from '@/lib/offline/offline-mode';
+import { unsentForWipe } from '@/lib/offline/offline-mode';
+
+/** The question doesn't wait as long for the count as the wipe itself does. */
+const QUESTION_WAIT_MS = 2_000;
 
 /**
  * "Remove everything from this device", for someone giving a computer away or
@@ -14,12 +17,12 @@ import { unsentCount } from '@/lib/offline/offline-mode';
 export function WipeDeviceSection() {
   const t = useTranslations('offlineWipe');
   const [asking, setAsking] = useState(false);
-  const [unsent, setUnsent] = useState(0);
+  // Null: the store couldn't say, which isn't the same as none.
+  const [unsent, setUnsent] = useState<number | null>(0);
   const [wiping, setWiping] = useState(false);
 
   const ask = async () => {
-    const { messages } = await unsentCount('all').catch(() => ({ messages: 0 }));
-    setUnsent(messages);
+    setUnsent(await unsentForWipe('all', QUESTION_WAIT_MS).catch(() => null));
     setAsking(true);
   };
 
@@ -55,10 +58,12 @@ export function WipeDeviceSection() {
         details={(
           <ul className="list-disc space-y-1 ps-5 text-sm text-muted-foreground" data-testid="wipe-device-details">
             <li>{t('confirm_mail')}</li>
-            {unsent > 0 && <li className="font-medium text-foreground">{t('confirm_unsent', { count: unsent })}</li>}
+            {unsent === null && <li className="font-medium text-foreground">{t('confirm_unsent_unknown')}</li>}
+            {unsent !== null && unsent > 0 && <li className="font-medium text-foreground">{t('confirm_unsent', { count: unsent })}</li>}
             <li>{t('confirm_keys')}</li>
             <li>{t('confirm_plugins')}</li>
             <li>{t('confirm_files')}</li>
+            <li>{t('confirm_templates')}</li>
             <li>{t('confirm_accounts')}</li>
           </ul>
         )}

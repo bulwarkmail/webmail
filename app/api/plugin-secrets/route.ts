@@ -114,6 +114,20 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
+  // An account dropped earlier, in the desktop app: no cookie left, and this server serves this device alone.
+  const { searchParams } = request.nextUrl;
+  const owner = searchParams.get('username');
+  const server = searchParams.get('server');
+  if (IS_DESKTOP_BUILD && searchParams.get('all') === 'true' && owner && server) {
+    try {
+      await deleteAllUserCredentials({ username: owner, serverUrl: server });
+      return NextResponse.json({ ok: true }, { headers: NO_STORE });
+    } catch (error) {
+      const unavailable = storedDataUnavailableResponse(error, NO_STORE);
+      if (unavailable) return unavailable;
+      throw error;
+    }
+  }
   const user = await currentUser(request);
   if (user instanceof NextResponse) return user;
   // A wipe in the desktop app, where this server and its files are on the device.
