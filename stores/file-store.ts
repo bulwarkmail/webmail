@@ -982,7 +982,9 @@ export const useFileStore = create<FileState>((set, get) => ({
         error: error instanceof Error ? error.message : 'Failed to list directory',
         hasListed: true,
         isLoading: false,
-        resources: [],
+        // A refresh that fails keeps what the folder showed. Another folder's
+        // rows would be wrong here, so one being opened starts empty.
+        resources: opensFolder ? [] : get().resources,
       });
     }
   },

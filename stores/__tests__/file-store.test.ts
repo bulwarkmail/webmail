@@ -120,6 +120,22 @@ describe('file-store hierarchy (issue #379)', () => {
     });
   });
 
+  it('keeps the listing when refreshing the same folder fails, and starts empty in a new one', async () => {
+    const client = makeMockClient([dir('stuff', 'Stuff', null), file('notes', 'Notes.md', null), file('inner', 'Inner.md', 'stuff')]);
+    useFileStore.getState().initClient(client);
+    await useFileStore.getState().navigate(null);
+    expect(useFileStore.getState().resources.map(r => r.name).sort()).toEqual(['Notes.md', 'Stuff']);
+
+    client.listAllFileNodes = async () => { throw new Error('offline'); };
+    await useFileStore.getState().navigate(null);
+    expect(useFileStore.getState().error).toBe('offline');
+    expect(useFileStore.getState().resources.map(r => r.name).sort()).toEqual(['Notes.md', 'Stuff']);
+
+    await useFileStore.getState().navigate('stuff', 'Stuff');
+    expect(useFileStore.getState().error).toBe('offline');
+    expect(useFileStore.getState().resources).toEqual([]);
+  });
+
   it('lists only root-level nodes at the root, not the whole tree flattened', async () => {
     // Stuff > Nonsense > Notes.md / Other.md (the exact shape from the issue)
     const client = makeMockClient([
