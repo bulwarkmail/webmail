@@ -317,6 +317,9 @@ const emailQuery: MethodHandler = (ctx, args) => {
     ).map((row) => String(row.id));
   // Stalwart's queryState is the Email state. Absent until the first sync, as allowed.
   const queryState = lastState(ctx, jmap, 'Email');
+  // Nothing here doesn't mean nothing there: an empty folder of a first sync
+  // that hasn't finished mustn't paint over what's on screen.
+  if (ids.length === 0 && position === 0 && !queryState) throw new MethodError('serverUnavailable', 'Mail not kept yet');
   const result: MethodResult = {
     accountId: jmap,
     canCalculateChanges: false,

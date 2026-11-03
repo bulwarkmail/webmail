@@ -54,7 +54,7 @@ import {
   type PolicyFingerprint,
 } from './queue';
 import { clearHandoffs } from '@/lib/launch-handoff';
-import { clearEvicted, EVICTED_KEEP_MS, isEvicted, isOfflineNow, OFFLINE_ACCOUNTS_KEY, readEnabledFrom, readEvicted, visibleAccounts, serverKey, setServerDown, useOfflineStore, writeEnabled, type OutboxRow } from './state';
+import { clearEvicted, EVICTED_KEEP_MS, forgetMailSnapshot, isEvicted, isOfflineNow, OFFLINE_ACCOUNTS_KEY, readEnabledFrom, readEvicted, visibleAccounts, serverKey, setServerDown, useOfflineStore, writeEnabled, type OutboxRow } from './state';
 import { flushQueue, settleStaleSends } from './flush';
 import { LEGACY_DB_NAME, moveLegacyOutbox } from './migrate-legacy';
 import { deleteShellCaches, tellServiceWorker } from './shell';
@@ -160,6 +160,7 @@ const storeHooks: StorePageHooks = {
   onEvent(event) {
     if (event.type === 'synced') {
       useOfflineStore.setState((s) => ({ lastSyncedAt: { ...s.lastSyncedAt, [event.account]: event.at } }));
+      forgetMailSnapshot(event.account);
       void refreshUsage();
     }
     if (event.type === 'error' && event.area === STORAGE_ERROR_AREA) {
@@ -392,6 +393,8 @@ const outbox: OutboxHooks = {
   shouldQueue(client) {
     const account = accountForClient(client);
     if (!account || !offlineActive(account)) return false;
+    // A local copy has no way to the server, whatever the probes last said.
+    if (client.isOfflineOnly?.()) return true;
     return isOfflineNow(client.getServerUrl()) || (typeof navigator !== 'undefined' && navigator.onLine === false);
   },
   async queueEmail(client, args) {
@@ -981,7 +984,7 @@ export async function serverUnreachable(serverUrl: string): Promise<boolean> {
 const SESSION_READ_TIMEOUT_MS = 5_000;
 
 /** The session kept for an account, for starting from the local copy. */
-export async function offlineSessionFor(account: string): Promise<unknown | null> {
+export async function offlineSessionFor(account: string, options: { withFolders?: boolean } = {}): Promise<unknown | null> {
   // The organisation's last word: the policy kept from the last fetch (the
   // fetch itself fails without a network), never the defaults.
   const policy = usePolicyStore.getState();
@@ -992,7 +995,10 @@ export async function offlineSessionFor(account: string): Promise<unknown | null
   try {
     await moveLegacyOutbox();
     return await Promise.race([
-      getStore().area<unknown>(account, 'mail.session'),
+      (async () => {
+        if (options.withFolders && !(await getStore().area<boolean>(account, 'mail.hasFolders'))) return null;
+        return getStore().area<unknown>(account, 'mail.session');
+      })(),
       new Promise<null>((resolve) => setTimeout(() => resolve(null), SESSION_READ_TIMEOUT_MS)),
     ]);
   } catch {

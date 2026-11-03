@@ -28,6 +28,7 @@ import { flushQueue, settleStaleSends, SENDING_STALE_MS } from '../flush';
 import { claimForSending, holdFile, queueSend, readQueue } from '../queue';
 import { forgetLegacyMove } from '../migrate-legacy';
 import { consumeLost } from '../lost';
+import { getOutboxHooks } from '../outbox-hooks';
 import { shellFiles } from '../shell';
 import { isOfflineNow, OFFLINE_ACCOUNTS_KEY, setServerDown, useOfflineStore, writeEnabled } from '../state';
 
@@ -282,6 +283,28 @@ describe('11: starting from the device', () => {
   it('hands out the session kept with the account', async () => {
     writeEnabled(['acc']);
     expect(await offlineSessionFor('acc')).toMatchObject({ primaryAccounts: { 'urn:ietf:params:jmap:mail': JMAP_ACCOUNT } });
+  });
+
+  it('doesn\'t offer a quick start before the store has its folders', async () => {
+    store = new InProcessStore(new FakeJmapMail());
+    setStoreBackend(store);
+    writeEnabled(['acc']);
+    expect(await offlineSessionFor('acc', { withFolders: true })).toBeNull();
+    await store.sync('acc');
+    expect(await offlineSessionFor('acc', { withFolders: true })).toMatchObject({ primaryAccounts: { 'urn:ietf:params:jmap:mail': JMAP_ACCOUNT } });
+  });
+});
+
+describe('a send on the local copy', () => {
+  it('queues, before the swap too, while the probes say the server is up', () => {
+    writeEnabled(['acc']);
+    stop = startOfflineMode();
+    useAuthStore.setState({ client: fakeClient('https://mail.example.org', { isOfflineOnly: () => true }) as never });
+    const client = useAuthStore.getState().client as never;
+    expect(isOfflineNow('https://mail.example.org')).toBe(false);
+    expect(getOutboxHooks()?.shouldQueue(client)).toBe(true);
+    useAuthStore.setState({ client: fakeClient() as never });
+    expect(getOutboxHooks()?.shouldQueue(useAuthStore.getState().client as never)).toBe(false);
   });
 });
 

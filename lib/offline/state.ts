@@ -119,6 +119,21 @@ export function visibleAccounts(): string[] {
   return useOfflineStore.getState().enabled.filter((account) => !(account in evicted));
 }
 
+/**
+ * Drops the plain-text list kept in localStorage for a quick start (email-store)
+ * once the store can do that job. Until an account's first sync finishes it's
+ * what stays on screen, so turning the store on alone doesn't remove it.
+ */
+export function forgetMailSnapshot(account: string): void {
+  try {
+    const raw = localStorage.getItem('email-snapshot');
+    if (raw && (JSON.parse(raw) as { account?: unknown } | null)?.account !== account) return;
+    localStorage.removeItem('email-snapshot');
+  } catch {
+    localStorage.removeItem('email-snapshot');
+  }
+}
+
 export function serverKey(url: string): string {
   return url.replace(/\/+$/, '').toLowerCase();
 }

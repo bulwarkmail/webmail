@@ -22,6 +22,8 @@ export interface OfflineClientRef {
   getServerUrl(): string;
   getUsername(): string;
   getAccountId(): string;
+  /** Answers from this device only: a local copy on screen at a start. */
+  isOfflineOnly?(): boolean;
 }
 
 export interface OfflineHooks {

@@ -1368,7 +1368,8 @@ async function startLocalCopyClient(accountId: string, serverUrl: string, userna
   if (IS_LITE || skipLocalCopy || !useOfflineStore.getState().enabled.includes(accountId)) return null;
   try {
     const offline = await import('@/lib/offline/offline-mode');
-    const session = await offline.offlineSessionFor(accountId);
+    // A store that has no folders yet has nothing to show: the snapshot stays up.
+    const session = await offline.offlineSessionFor(accountId, { withFolders: true });
     return session ? JMAPClient.fromOfflineSession(serverUrl, username, session) : null;
   } catch {
     return null;
@@ -2916,7 +2917,7 @@ export const useAuthStore = create<AuthState>()(
                     impersonated: session.impersonated === true,
                   });
                   void syncAccountDisplayName(account.id, client);
-                } else if (res.status >= 500) {
+                } else if (res.status >= 500 || res.status === 429) {
                   throw new TransientAuthError('Session restore failed', res.status);
                 } else {
                   throw new Error(`Session cookie missing: ${res.status}`);
@@ -2994,6 +2995,9 @@ export const useAuthStore = create<AuthState>()(
             if (!real) {
               if (useAccountStore.getState().getAccountById(entry.id)) {
                 clients.set(entry.id, local);
+                // A 5xx or a rate limit, with the server up otherwise. The app stays
+                // on the local copy, and says so, and leaves it when the server answers.
+                void import('@/lib/offline/offline-mode').then((offline) => offline.markStartedOffline()).catch(() => {});
                 return;
               }
               if (get().activeAccountId !== entry.id) return;
@@ -3006,6 +3010,15 @@ export const useAuthStore = create<AuthState>()(
             if (get().activeAccountId !== entry.id) return;
             initializeFeatureStores(real);
             set({ client: real, ...getClientRateLimitState(real), connectionLost: false, error: null });
+            // The local copy may have had none yet, and the server's are newer.
+            void real.getIdentities()
+              .then((raw) => {
+                if (get().client !== real) return;
+                const { identities, primaryIdentity } = loadIdentities(raw, entry.username);
+                set({ identities, primaryIdentity });
+                applyPreferredIdentity(entry.id);
+              })
+              .catch((err) => debug.error('Failed to load identities after the local copy:', err));
           };
 
           // A few at a time rather than one after the other: with many logins
@@ -3050,6 +3063,8 @@ export const useAuthStore = create<AuthState>()(
             // spending a serial round trip before the UI unblocks.
             const identitiesLoaded = targetClient.getIdentities()
               .then((raw) => {
+                // The real client took over meanwhile, and asks for itself.
+                if (localCopy && get().client !== null && get().client !== targetClient) return;
                 const { identities, primaryIdentity } = loadIdentities(raw, targetAccount.username);
                 set({ identities, primaryIdentity });
               })

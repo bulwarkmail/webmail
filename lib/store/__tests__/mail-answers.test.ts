@@ -263,6 +263,32 @@ describe('Email/query filters and sorts', () => {
   });
 });
 
+describe('a store without its mail yet', () => {
+  it('says so rather than answering an empty list, until the first sync has finished', async () => {
+    const server = new FakeJmapMail();
+    server.addEmail({ id: 'one' });
+    const { engine } = engineFor(server);
+    const inbox = Object.keys((server.emails.get('one')!.mailboxIds) as Record<string, boolean>)[0];
+    const query = () => one(engine, ['Email/query', { filter: { inMailbox: inbox } }, 'q']);
+    // No answer: the client reports it can't tell, and the list on screen stays.
+    expect(await query()).toBeUndefined();
+    await engine.requestSync();
+    expect((await query())![1].ids).toEqual(['one']);
+    // After a finished sync, an empty folder really is empty.
+    server.destroyEmail('one');
+    await engine.requestSync();
+    expect((await query())![1].ids).toEqual([]);
+  });
+
+  it('tells a start whether there are folders to show', async () => {
+    const server = new FakeJmapMail();
+    const { engine } = engineFor(server);
+    expect(await engine.areaCall('mail.hasFolders', {})).toBe(false);
+    await engine.requestSync();
+    expect(await engine.areaCall('mail.hasFolders', {})).toBe(true);
+  });
+});
+
 describe('keyword case, as measured on both Stalwart versions', () => {
   it('keeps two keywords differing only in case, and sync doesn\'t stop on them', async () => {
     const server = new FakeJmapMail();

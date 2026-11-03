@@ -59,4 +59,6 @@ export const MAIL_CALLS: Readonly<Record<string, AreaCall>> = {
   'mail.usage': usage,
   /** The session kept with the account, for a start from the local copy. */
   'mail.session': (ctx) => ctx.session,
+  /** Whether a start may show the store: it has a folder list from the server. */
+  'mail.hasFolders': (ctx) => ctx.db.get("SELECT 1 AS yes FROM sync_state WHERE type = 'Mailbox' AND state IS NOT NULL") !== undefined,
 };
