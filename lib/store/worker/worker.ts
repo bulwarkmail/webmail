@@ -137,9 +137,6 @@ scope.addEventListener('message', async (event) => {
     case 'set-session':
       host?.setSession(message.account, message.session);
       break;
-    case 'set-scope':
-      host?.setScope(message.account, message.scope);
-      break;
     case 'set-inverted':
       host?.setInvertedKeywordSort(message.account, message.inverted);
       break;

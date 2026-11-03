@@ -22,7 +22,7 @@ beforeEach(() => {
   setStoreBackend(store);
   seen.calls = 0;
   seen.onCall = () => {};
-  usePolicyStore.setState({ loaded: true, subject: null, policy: { ...usePolicyStore.getState().policy, organisation: DEFAULT_ORGANISATION_POLICY } });
+  usePolicyStore.setState({ loaded: true, subject: { email: 'alice@example.org', groups: [] }, policy: { ...usePolicyStore.getState().policy, organisation: DEFAULT_ORGANISATION_POLICY } });
   useAccountStore.setState({ accounts: [{ id: 'acc', serverUrl: 'https://mail.example.org', username: 'alice@example.org' } as never] });
 });
 

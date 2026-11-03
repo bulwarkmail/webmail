@@ -4,6 +4,7 @@ import { useRef, useState, type DragEvent, type KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
 import { Mail, Calendar, BookUser, HardDrive, Settings, PenSquare, MailOpen, Folder, Search, X, type AppIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
+import { useRestoredTabTitles } from "@/hooks/use-restored-tab-titles";
 import { useProTabStore, type ProTab, type ProTabKind, type ProPaneId } from "@/stores/pro-tab-store";
 import {
   PRO_TAB_DRAG_MIME,
@@ -63,6 +64,7 @@ export function ProTabBar({
 }: ProTabBarProps) {
   const tSidebar = useTranslations("sidebar");
   const reorderTab = useProTabStore((s) => s.reorderTab);
+  useRestoredTabTitles(tabs);
 
   const [dropIndicator, setDropIndicator] = useState<DropIndicator>(null);
   // True while an email or folder payload hovers the strip (both drop "anywhere").

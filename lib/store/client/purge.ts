@@ -5,7 +5,7 @@
  */
 
 import { OWNER_LOCK, POOL_DIRECTORY, RPC_CHANNEL, type ChannelMessage } from '../worker/protocol';
-import { deleteKeyDatabase } from './keys';
+import { deleteKeyDatabase, STORE_OPENED_KEY } from './keys';
 
 /** A worker just stopped may hold the files for a moment longer. */
 const REMOVE_TRIES = 10;
@@ -51,6 +51,12 @@ export async function deleteStorePool(): Promise<void> {
  */
 export function purgeStoreFiles(): Promise<void> {
   deleteKeyDatabase();
+  // Deleted on purpose: no account lost anything. The next open is a first one.
+  try {
+    localStorage.removeItem(STORE_OPENED_KEY);
+  } catch {
+    // Nothing kept, nothing to forget.
+  }
   try {
     const channel = new BroadcastChannel(RPC_CHANNEL);
     channel.postMessage({ kind: 'shutdown' } satisfies ChannelMessage);
