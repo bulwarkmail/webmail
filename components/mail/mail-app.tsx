@@ -57,7 +57,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { useEffectiveMailLayout } from "@/hooks/use-effective-mail-layout";
 import { useContactStore } from "@/stores/contact-store";
 import { useIdentityStore } from "@/stores/identity-store";
-import { useUIStore, listPaneCssSize, SIDEBAR_MIN, SIDEBAR_MAX, EMAIL_LIST_MIN, EMAIL_LIST_MAX, EMAIL_LIST_HEIGHT_MIN, EMAIL_LIST_HEIGHT_MAX, READING_PANE_MIN_WIDTH, READING_PANE_MIN_HEIGHT } from "@/stores/ui-store";
+import { useUIStore, listPaneCssSize, SIDEBAR_MIN, SIDEBAR_MAX, EMAIL_LIST_MIN, EMAIL_LIST_MAX, EMAIL_LIST_HEIGHT_MIN, EMAIL_LIST_HEIGHT_MAX, READING_PANE_MIN_WIDTH, READING_PANE_MIN_HEIGHT, COMPOSER_PANE_MIN_HEIGHT } from "@/stores/ui-store";
 import { useDeviceDetection } from "@/hooks/use-media-query";
 import { usePaneSize } from "@/hooks/use-pane-size";
 import { usePaneId } from "@/hooks/use-pane-context";
@@ -5139,7 +5139,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               isMobile
                 ? undefined
                 : isHorizontalMailLayout
-                  ? (!shouldHideHorizontalViewerPane ? { height: listPaneCssSize(emailListHeight, EMAIL_LIST_HEIGHT_MIN, READING_PANE_MIN_HEIGHT) } : undefined)
+                  ? (!shouldHideHorizontalViewerPane ? { height: listPaneCssSize(emailListHeight, EMAIL_LIST_HEIGHT_MIN, showComposer ? COMPOSER_PANE_MIN_HEIGHT : READING_PANE_MIN_HEIGHT) } : undefined)
                   : (!shouldCollapseListPane && !shouldHideViewerPane ? { width: listPaneCssSize(clampEmailListWidth(emailListWidth), EMAIL_LIST_MIN, READING_PANE_MIN_WIDTH) } : undefined)
             }
           >
