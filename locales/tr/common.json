@@ -249,6 +249,28 @@
     "active_account": "Etkin",
     "switching_account": "Hesap değiştiriliyor..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Yeni ileti",
+    "shortcut_calendar": "Takvim",
+    "shortcut_contacts": "Kişiler",
+    "unsupported_file": "{name} burada açılamıyor.",
+    "open_failed": "Dosya açılamadı. Yeniden açmayı deneyin.",
+    "share_gone": "Paylaştığınız içerik artık burada değil. Lütfen yeniden paylaşın.",
+    "share_files_lost": "Paylaşılan dosyalar saklanamadı. Onları iletiye yeniden ekleyin.",
+    "ics_needs_server": "Takvim dosyasını içe aktarmak için sunucu bağlantısı gerekir. İçe aktarma, yeniden çevrimiçi olduğunuzda başlar.",
+    "contacts_need_server": "Kişileri içe aktarmak için sunucu bağlantısı gerekir. Yeniden çevrimiçi olduğunuzda tekrar deneyin.",
+    "share_confirm_title": "Yeni bir ileti başlatılsın mı?",
+    "share_confirm_message": "Başka bir site veya uygulama ileti başlatmak istiyor. Siz kabul etmedikçe hiçbir şey yüklenmez veya kaydedilmez.",
+    "share_confirm_subject": "Konu:",
+    "share_confirm_text": "Metin:",
+    "share_confirm_files": "{count, plural, one {Dosya:} other {Dosyalar:}}",
+    "share_confirm_accept": "İletiyi başlat",
+    "share_confirm_decline": "Başlatma",
+    "share_cut": "Paylaşılan metin çok uzundu ve kısaltıldı.",
+    "handoff_expired": "Açtığınız veya paylaştığınız bir şey çok uzun süre bekledi ve artık yok. Lütfen yeniden açın veya paylaşın.",
+    "compose_waiting": "Sonrakini başlatmak için bu iletiyi kapatın.",
+    "save_first_failed": "İletiniz kaydedilemedi, bu yüzden dosya açılmadı. İletiyi kaydedin, ardından takvimi veya kişileri açın."
+  },
   "sidebar_apps": {
     "modal_title": "Kenar çubuğu uygulamaları",
     "add_new": "Uygulama ekle",

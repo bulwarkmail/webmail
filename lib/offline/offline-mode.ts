@@ -51,6 +51,7 @@ import {
   type OutboxSummary,
   type PolicyFingerprint,
 } from './queue';
+import { clearHandoffs } from '@/lib/launch-handoff';
 import { isOfflineNow, OFFLINE_ACCOUNTS_KEY, readEnabledFrom, serverKey, setServerDown, useOfflineStore, writeEnabled, type OutboxRow } from './state';
 import { flushQueue, settleStaleSends } from './flush';
 import { LEGACY_DB_NAME, moveLegacyOutbox } from './migrate-legacy';
@@ -646,6 +647,7 @@ export async function enableOffline(account: string): Promise<void> {
 /** Switches offline mode off for an account (the user confirmed losing unsent mail) and removes everything it kept here. */
 export async function disableOffline(account: string): Promise<void> {
   confirmLoss(account);
+  clearHandoffs();
   writeEnabled(useOfflineStore.getState().enabled.filter((id) => id !== account));
   await wipeAccount(account);
 }
@@ -733,6 +735,7 @@ export async function wipeEverything(): Promise<void> {
   }
   await tellServiceWorker(false);
   await deleteShellCaches();
+  clearHandoffs();
   confirmed.clear();
   named.clear();
   useOfflineStore.setState({ outbox: [], pendingChanges: 0, conflicts: [], usageBytes: 0, syncing: [], lastSyncedAt: {} });
@@ -755,6 +758,7 @@ export function enforcePolicy(): void {
   for (const account of useOfflineStore.getState().enabled) {
     if (!policyDecided(account)) continue;
     if (!offlineAllowed(account)) {
+      clearHandoffs();
       void wipeAccount(account);
       notify({ kind: 'forbidden' });
     }

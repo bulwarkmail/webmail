@@ -249,6 +249,28 @@
     "active_account": "Aktīvs",
     "switching_account": "Notiek konta pārslēgšana..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Jauna ziņa",
+    "shortcut_calendar": "Kalendārs",
+    "shortcut_contacts": "Kontakti",
+    "unsupported_file": "Failu {name} šeit nevar atvērt.",
+    "open_failed": "Failu neizdevās atvērt. Mēģiniet to atvērt vēlreiz.",
+    "share_gone": "Tas, ko kopīgojāt, šeit vairs nav. Lūdzu, kopīgojiet to vēlreiz.",
+    "share_files_lost": "Kopīgotos failus neizdevās saglabāt. Pievienojiet tos ziņai vēlreiz.",
+    "ics_needs_server": "Kalendāra faila importēšanai vajadzīgs savienojums ar serveri. Importēšana sāksies, kad atkal būsiet tiešsaistē.",
+    "contacts_need_server": "Kontaktu importēšanai vajadzīgs savienojums ar serveri. Mēģiniet vēlreiz, kad atkal būsiet tiešsaistē.",
+    "share_confirm_title": "Vai sākt jaunu ziņu?",
+    "share_confirm_message": "Cita vietne vai lietotne vēlas sākt ziņu. Bez jūsu piekrišanas nekas netiek augšupielādēts vai saglabāts.",
+    "share_confirm_subject": "Tēma:",
+    "share_confirm_text": "Teksts:",
+    "share_confirm_files": "{count, plural, zero {Faili:} one {Fails:} other {Faili:}}",
+    "share_confirm_accept": "Sākt ziņu",
+    "share_confirm_decline": "Nesākt",
+    "share_cut": "Kopīgotais teksts bija pārāk garš un tika saīsināts.",
+    "handoff_expired": "Tas, ko atvērāt vai kopīgojāt, gaidīja pārāk ilgi un vairs nav pieejams. Atveriet vai kopīgojiet to vēlreiz.",
+    "compose_waiting": "Aizveriet šo ziņu, lai sāktu nākamo.",
+    "save_first_failed": "Ziņu neizdevās saglabāt, tāpēc fails netika atvērts. Saglabājiet ziņu un pēc tam atveriet kalendāru vai kontaktus."
+  },
   "sidebar_apps": {
     "modal_title": "Sānu joslas lietotnes",
     "add_new": "Pievienot lietotni",

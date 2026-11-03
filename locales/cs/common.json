@@ -249,6 +249,28 @@
     "active_account": "Aktivní",
     "switching_account": "Přepínání účtu..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Nová zpráva",
+    "shortcut_calendar": "Kalendář",
+    "shortcut_contacts": "Kontakty",
+    "unsupported_file": "{name} zde nelze otevřít.",
+    "open_failed": "Soubor se nepodařilo otevřít. Zkuste ho otevřít znovu.",
+    "share_gone": "To, co jste sdíleli, už tu není. Sdílejte to prosím znovu.",
+    "share_files_lost": "Sdílené soubory se nepodařilo uchovat. Přidejte je do zprávy znovu.",
+    "ics_needs_server": "Import souboru kalendáře vyžaduje připojení k serveru. Import začne, až budete znovu online.",
+    "contacts_need_server": "Import kontaktů vyžaduje připojení k serveru. Zkuste to znovu, až budete online.",
+    "share_confirm_title": "Začít novou zprávu?",
+    "share_confirm_message": "Jiný web nebo aplikace chce začít zprávu. Bez vašeho souhlasu se nic nenahraje ani neuloží.",
+    "share_confirm_subject": "Předmět:",
+    "share_confirm_text": "Text:",
+    "share_confirm_files": "{count, plural, one {Soubor:} few {Soubory:} many {Souborů:} other {Soubory:}}",
+    "share_confirm_accept": "Začít zprávu",
+    "share_confirm_decline": "Nezačínat",
+    "share_cut": "Sdílený text byl příliš dlouhý a byl zkrácen.",
+    "handoff_expired": "To, co jste otevřeli nebo sdíleli, čekalo příliš dlouho a už tu není. Otevřete to nebo sdílejte znovu.",
+    "compose_waiting": "Zavřete tuto zprávu, abyste mohli začít další.",
+    "save_first_failed": "Zprávu se nepodařilo uložit, proto se soubor neotevřel. Uložte zprávu a pak otevřete kalendář nebo kontakty."
+  },
   "sidebar_apps": {
     "modal_title": "Aplikace postranního panelu",
     "add_new": "Přidat aplikaci",

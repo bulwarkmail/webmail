@@ -1,4 +1,5 @@
 import { fileStorage } from '@/lib/plugin-storage';
+import { clearHandoffs } from '@/lib/launch-handoff';
 import { clearAllCheckpoints } from '@/lib/mail-import/checkpoints';
 import { sweepPrivateExports } from '@/lib/mail-export/sinks';
 import { purgeStoreFiles } from '@/lib/store/client/purge';
@@ -117,6 +118,8 @@ export function purgeSignedOutData(): void {
     /* storage unavailable */
   }
   forgetOfflineShell();
+  // Files and links on their way into a draft or an import.
+  clearHandoffs();
   for (const cleanup of signedOutCleanups) {
     try {
       cleanup();

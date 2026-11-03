@@ -6,6 +6,7 @@ vi.mock('@/lib/plugin-storage', () => ({
 
 import { fileStorage } from '@/lib/plugin-storage';
 import { broadcastSignOut, onSignedOutElsewhere, purgeSignedOutData } from '@/lib/sign-out-cleanup';
+import { handOffFiles, pendingHandoffs } from '@/lib/launch-handoff';
 
 // A full sign-out left search history, open tabs (with subjects), Files
 // favourites and staged attachment bytes behind for the next person at the
@@ -14,6 +15,13 @@ import { broadcastSignOut, onSignedOutElsewhere, purgeSignedOutData } from '@/li
 beforeEach(() => localStorage.clear());
 
 describe('purgeSignedOutData', () => {
+  it('forgets files and links on their way into an account', () => {
+    handOffFiles([new File(['x'], 'a.ics')], 'calendar');
+    expect(pendingHandoffs()).toHaveLength(1);
+    purgeSignedOutData();
+    expect(pendingHandoffs()).toHaveLength(0);
+  });
+
   it("removes the accounts' leftovers and keeps device preferences", () => {
     for (const key of [
       'email-snapshot', 'pro-tabs', 'search-history-storage', 'calendar-storage',

@@ -249,6 +249,28 @@
     "active_account": "活动",
     "switching_account": "正在切换账户..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "新邮件",
+    "shortcut_calendar": "日历",
+    "shortcut_contacts": "联系人",
+    "unsupported_file": "无法在此处打开 {name}。",
+    "open_failed": "无法打开文件。请再次尝试打开。",
+    "share_gone": "您分享的内容已不在此处。请重新分享。",
+    "share_files_lost": "无法保留分享的文件。请将它们重新添加到邮件中。",
+    "ics_needs_server": "导入日历文件需要连接到服务器。您恢复联网后将开始导入。",
+    "contacts_need_server": "导入联系人需要连接到服务器。请在恢复联网后重试。",
+    "share_confirm_title": "要开始写新邮件吗?",
+    "share_confirm_message": "另一个网站或应用想要开始写一封邮件。除非您同意,否则不会上传或保存任何内容。",
+    "share_confirm_subject": "主题:",
+    "share_confirm_text": "正文:",
+    "share_confirm_files": "{count, plural, other {文件:}}",
+    "share_confirm_accept": "开始写邮件",
+    "share_confirm_decline": "不开始",
+    "share_cut": "分享的文本太长,已被缩短。",
+    "handoff_expired": "您打开或分享的内容等待时间过长,已不存在。请重新打开或分享。",
+    "compose_waiting": "请关闭此邮件以开始下一封。",
+    "save_first_failed": "无法保存您的邮件,因此未打开文件。请保存邮件,然后打开日历或联系人。"
+  },
   "sidebar_apps": {
     "modal_title": "侧边栏应用",
     "add_new": "添加应用",

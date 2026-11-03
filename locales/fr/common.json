@@ -249,6 +249,28 @@
     "active_account": "Actif",
     "switching_account": "Changement de compte..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Nouveau message",
+    "shortcut_calendar": "Calendrier",
+    "shortcut_contacts": "Contacts",
+    "unsupported_file": "{name} ne peut pas être ouvert ici.",
+    "open_failed": "Le fichier n'a pas pu être ouvert. Essayez de l'ouvrir à nouveau.",
+    "share_gone": "Ce que vous avez partagé n'est plus disponible. Partagez-le à nouveau.",
+    "share_files_lost": "Les fichiers partagés n'ont pas pu être conservés. Ajoutez-les de nouveau au message.",
+    "ics_needs_server": "L'importation d'un fichier de calendrier nécessite une connexion au serveur. Elle démarrera dès que vous serez de nouveau en ligne.",
+    "contacts_need_server": "L'importation de contacts nécessite une connexion au serveur. Réessayez quand vous serez de nouveau en ligne.",
+    "share_confirm_title": "Commencer un nouveau message ?",
+    "share_confirm_message": "Un autre site ou une autre application veut commencer un message. Rien n'est envoyé ni enregistré sans votre accord.",
+    "share_confirm_subject": "Objet :",
+    "share_confirm_text": "Texte :",
+    "share_confirm_files": "{count, plural, one {Fichier :} other {Fichiers :}}",
+    "share_confirm_accept": "Commencer le message",
+    "share_confirm_decline": "Ne pas commencer",
+    "share_cut": "Le texte partagé était trop long et a été raccourci.",
+    "handoff_expired": "Un élément que vous avez ouvert ou partagé a attendu trop longtemps et n'est plus disponible. Ouvrez-le ou partagez-le à nouveau.",
+    "compose_waiting": "Fermez ce message pour commencer le suivant.",
+    "save_first_failed": "Votre message n'a pas pu être enregistré, le fichier n'a donc pas été ouvert. Enregistrez le message, puis ouvrez le calendrier ou les contacts."
+  },
   "sidebar_apps": {
     "modal_title": "Applications de la barre latérale",
     "add_new": "Ajouter une application",

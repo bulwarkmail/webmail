@@ -249,6 +249,28 @@
     "active_account": "Actief",
     "switching_account": "Account wisselen..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Nieuw bericht",
+    "shortcut_calendar": "Agenda",
+    "shortcut_contacts": "Contacten",
+    "unsupported_file": "{name} kan hier niet worden geopend.",
+    "open_failed": "Het bestand kon niet worden geopend. Probeer het opnieuw te openen.",
+    "share_gone": "Wat je hebt gedeeld, is er niet meer. Deel het opnieuw.",
+    "share_files_lost": "De gedeelde bestanden konden niet worden bewaard. Voeg ze opnieuw aan het bericht toe.",
+    "ics_needs_server": "Voor het importeren van een agendabestand is een verbinding met de server nodig. Het importeren begint zodra je weer online bent.",
+    "contacts_need_server": "Voor het importeren van contacten is een verbinding met de server nodig. Probeer het opnieuw als je weer online bent.",
+    "share_confirm_title": "Een nieuw bericht beginnen?",
+    "share_confirm_message": "Een andere site of app wil een bericht beginnen. Er wordt niets geüpload of opgeslagen zonder je toestemming.",
+    "share_confirm_subject": "Onderwerp:",
+    "share_confirm_text": "Tekst:",
+    "share_confirm_files": "{count, plural, one {Bestand:} other {Bestanden:}}",
+    "share_confirm_accept": "Bericht beginnen",
+    "share_confirm_decline": "Niet beginnen",
+    "share_cut": "De gedeelde tekst was te lang en is ingekort.",
+    "handoff_expired": "Iets wat je hebt geopend of gedeeld, heeft te lang gewacht en is weg. Open of deel het opnieuw.",
+    "compose_waiting": "Sluit dit bericht om het volgende te beginnen.",
+    "save_first_failed": "Je bericht kon niet worden opgeslagen, dus het bestand is niet geopend. Sla het bericht op en open daarna de agenda of de contacten."
+  },
   "sidebar_apps": {
     "modal_title": "Zijbalk-apps",
     "add_new": "App toevoegen",

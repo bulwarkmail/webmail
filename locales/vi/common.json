@@ -249,6 +249,28 @@
     "active_account": "Đang hoạt động",
     "switching_account": "Đang chuyển đổi tài khoản..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Thư mới",
+    "shortcut_calendar": "Lịch",
+    "shortcut_contacts": "Danh bạ",
+    "unsupported_file": "Không thể mở {name} tại đây.",
+    "open_failed": "Không thể mở tệp. Hãy thử mở lại.",
+    "share_gone": "Nội dung bạn đã chia sẻ không còn ở đây. Vui lòng chia sẻ lại.",
+    "share_files_lost": "Không thể giữ các tệp đã chia sẻ. Hãy thêm lại chúng vào thư.",
+    "ics_needs_server": "Nhập tệp lịch cần kết nối với máy chủ. Quá trình nhập sẽ bắt đầu khi bạn trực tuyến trở lại.",
+    "contacts_need_server": "Nhập danh bạ cần kết nối với máy chủ. Hãy thử lại khi bạn trực tuyến trở lại.",
+    "share_confirm_title": "Bắt đầu thư mới?",
+    "share_confirm_message": "Một trang web hoặc ứng dụng khác muốn bắt đầu một thư. Sẽ không có gì được tải lên hoặc lưu nếu bạn không đồng ý.",
+    "share_confirm_subject": "Chủ đề:",
+    "share_confirm_text": "Nội dung:",
+    "share_confirm_files": "{count, plural, other {Tệp:}}",
+    "share_confirm_accept": "Bắt đầu thư",
+    "share_confirm_decline": "Không bắt đầu",
+    "share_cut": "Văn bản được chia sẻ quá dài và đã được rút ngắn.",
+    "handoff_expired": "Nội dung bạn đã mở hoặc chia sẻ đã chờ quá lâu và không còn nữa. Vui lòng mở hoặc chia sẻ lại.",
+    "compose_waiting": "Đóng thư này để bắt đầu thư tiếp theo.",
+    "save_first_failed": "Không thể lưu thư của bạn nên tệp chưa được mở. Hãy lưu thư, rồi mở lịch hoặc danh bạ."
+  },
   "sidebar_apps": {
     "modal_title": "Ứng dụng thanh bên",
     "add_new": "Thêm ứng dụng",

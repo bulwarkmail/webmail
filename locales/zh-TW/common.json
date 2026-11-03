@@ -249,6 +249,28 @@
     "active_account": "使用中",
     "switching_account": "正在切換帳號…"
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "新郵件",
+    "shortcut_calendar": "行事曆",
+    "shortcut_contacts": "聯絡人",
+    "unsupported_file": "無法在此處開啟 {name}。",
+    "open_failed": "無法開啟檔案。請再次嘗試開啟。",
+    "share_gone": "您分享的內容已不在此處。請重新分享。",
+    "share_files_lost": "無法保留分享的檔案。請將它們重新加入郵件。",
+    "ics_needs_server": "匯入行事曆檔案需要連線到伺服器。您恢復連線後將開始匯入。",
+    "contacts_need_server": "匯入聯絡人需要連線到伺服器。請在恢復連線後再試一次。",
+    "share_confirm_title": "要開始撰寫新郵件嗎?",
+    "share_confirm_message": "另一個網站或應用程式想要開始撰寫郵件。除非您同意,否則不會上傳或儲存任何內容。",
+    "share_confirm_subject": "主旨:",
+    "share_confirm_text": "內文:",
+    "share_confirm_files": "{count, plural, other {檔案:}}",
+    "share_confirm_accept": "開始撰寫郵件",
+    "share_confirm_decline": "不要開始",
+    "share_cut": "分享的文字太長,已被縮短。",
+    "handoff_expired": "您開啟或分享的內容等待太久,已不存在。請重新開啟或分享。",
+    "compose_waiting": "請關閉此郵件以開始下一封。",
+    "save_first_failed": "無法儲存您的郵件,因此未開啟檔案。請儲存郵件,然後開啟行事曆或聯絡人。"
+  },
   "sidebar_apps": {
     "modal_title": "側邊欄應用程式",
     "add_new": "新增應用程式",
