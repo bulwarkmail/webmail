@@ -4,7 +4,7 @@ import { FakeBroadcastChannel } from '@/lib/__tests__/fixtures/fake-broadcast-ch
 import { setLockedHere } from '@/lib/app-lock/state';
 import { openPopoutChannel, requestWindowSession, watchMainWindow, askRescuedDraftId, type PopoutMessage, type RescuedDraft } from '@/lib/popout/channel';
 import { takeRescuedDraft } from '@/lib/popout/rescued-drafts';
-import { createSessionOpener } from '@/lib/popout/sealed';
+import { createSessionOpener, credentialFingerprint } from '@/lib/popout/sealed';
 import { useAccountStore } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
@@ -133,6 +133,45 @@ describe('PopoutHost', () => {
     setLockedHere(false);
     popout.post({ type: 'session-request', requestId: 'r2', publicKey: opener.publicKey });
     await vi.waitFor(() => expect(answers()).toHaveLength(1));
+    expect(answers().map((message) => (message as { requestId: string }).requestId)).toEqual(['r2']);
+  });
+
+  it('renews no token for a pop-out while the app is locked', async () => {
+    const refresh = vi.fn(async () => 'next');
+    useAuthStore.setState({ refreshAccessToken: refresh as never });
+    render(<PopoutHost />);
+    await settle();
+    setLockedHere(true);
+    try {
+      const opener = await createSessionOpener();
+      const rejectedFingerprint = await credentialFingerprint('Bearer main');
+      popout.post({ type: 'session-request', requestId: 'r1', publicKey: opener.publicKey, accountId: 'alice', rejectedFingerprint });
+      await settle(40);
+      expect(refresh).not.toHaveBeenCalled();
+      expect(answers()).toEqual([]);
+    } finally {
+      setLockedHere(false);
+    }
+  });
+
+  it('answers nothing when the lock comes during the renewal', async () => {
+    const refresh = vi.fn(async () => {
+      setLockedHere(true);
+      return 'next';
+    });
+    useAuthStore.setState({ refreshAccessToken: refresh as never });
+    render(<PopoutHost />);
+    await settle();
+    try {
+      const opener = await createSessionOpener();
+      const rejectedFingerprint = await credentialFingerprint('Bearer main');
+      popout.post({ type: 'session-request', requestId: 'r1', publicKey: opener.publicKey, accountId: 'alice', rejectedFingerprint });
+      await vi.waitFor(() => expect(refresh).toHaveBeenCalled());
+      await settle(40);
+      expect(answers()).toEqual([]);
+    } finally {
+      setLockedHere(false);
+    }
   });
 
   it('a locked pop-out doesn\'t ask for a session', async () => {
