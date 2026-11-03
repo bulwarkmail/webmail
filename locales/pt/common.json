@@ -6501,6 +6501,21 @@
     "message_moved_to": "Esta mensagem foi movida para {folder}.",
     "window_not_ready": "A nova janela não abriu a tempo. O seu rascunho fica aqui."
   },
+  "desktopUi": {
+    "settings": {
+      "title": "Janelas",
+      "double_click_label": "Abrir mensagens numa nova janela com duplo clique",
+      "double_click_description": "Um único clique continua a abrir a mensagem junto à lista.",
+      "restore_label": "Reabrir janelas ao iniciar",
+      "restore_description": "As janelas de mensagens e rascunhos abertas ao sair voltam a aparecer."
+    },
+    "attachment": {
+      "open": "Abrir",
+      "save_as": "Guardar como…",
+      "copy": "Copiar",
+      "copy_failed": "Não foi possível copiar o ficheiro."
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "Entrar com o navegador",
     "browser_waiting": "Termine de entrar no navegador",

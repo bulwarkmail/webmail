@@ -6501,6 +6501,21 @@
     "message_moved_to": "Acest mesaj a fost mutat în {folder}.",
     "window_not_ready": "Fereastra nouă nu s-a deschis la timp. Ciorna rămâne aici."
   },
+  "desktopUi": {
+    "settings": {
+      "title": "Ferestre",
+      "double_click_label": "Deschide mesajele într-o fereastră nouă la dublu clic",
+      "double_click_description": "Un singur clic deschide în continuare mesajul lângă listă.",
+      "restore_label": "Redeschide ferestrele la pornire",
+      "restore_description": "Ferestrele de mesaje și ciorne deschise la ieșire revin."
+    },
+    "attachment": {
+      "open": "Deschide",
+      "save_as": "Salvează ca…",
+      "copy": "Copiază",
+      "copy_failed": "Fișierul nu a putut fi copiat."
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "Conectează-te cu browserul",
     "browser_waiting": "Finalizează conectarea în browser",

@@ -6501,6 +6501,21 @@
     "message_moved_to": "این پیام به {folder} منتقل شد.",
     "window_not_ready": "پنجرهٔ جدید به‌موقع باز نشد. پیش‌نویس شما همین‌جا می‌ماند."
   },
+  "desktopUi": {
+    "settings": {
+      "title": "پنجره‌ها",
+      "double_click_label": "باز کردن پیام‌ها در پنجرهٔ جدید با دوبار کلیک",
+      "double_click_description": "یک کلیک همچنان پیام را کنار فهرست باز می‌کند.",
+      "restore_label": "باز کردن دوبارهٔ پنجره‌ها هنگام شروع",
+      "restore_description": "پنجره‌های پیام و پیش‌نویس که هنگام خروج باز بودند برمی‌گردند."
+    },
+    "attachment": {
+      "open": "باز کردن",
+      "save_as": "ذخیره با نام…",
+      "copy": "کپی",
+      "copy_failed": "فایل کپی نشد."
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "ورود با مرورگر",
     "browser_waiting": "ورود را در مرورگر کامل کنید",

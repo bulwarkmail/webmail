@@ -6501,6 +6501,21 @@
     "message_moved_to": "تم نقل هذه الرسالة إلى {folder}.",
     "window_not_ready": "لم تفتح النافذة الجديدة في الوقت المناسب. تبقى مسودتك هنا."
   },
+  "desktopUi": {
+    "settings": {
+      "title": "النوافذ",
+      "double_click_label": "فتح الرسائل في نافذة جديدة بالنقر المزدوج",
+      "double_click_description": "النقرة الواحدة تفتح الرسالة بجانب القائمة كالمعتاد.",
+      "restore_label": "إعادة فتح النوافذ عند البدء",
+      "restore_description": "تعود نوافذ الرسائل والمسودات التي كانت مفتوحة عند الخروج."
+    },
+    "attachment": {
+      "open": "فتح",
+      "save_as": "حفظ باسم…",
+      "copy": "نسخ",
+      "copy_failed": "تعذّر نسخ الملف."
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "سجّل الدخول باستخدام المتصفح",
     "browser_waiting": "أكمل تسجيل الدخول في المتصفح",

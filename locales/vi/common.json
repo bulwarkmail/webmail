@@ -6513,6 +6513,21 @@
     "message_moved_to": "Thư này đã được chuyển đến {folder}.",
     "window_not_ready": "Cửa sổ mới không mở kịp. Bản nháp của bạn vẫn ở đây."
   },
+  "desktopUi": {
+    "settings": {
+      "title": "Cửa sổ",
+      "double_click_label": "Mở thư trong cửa sổ mới khi nhấp đúp",
+      "double_click_description": "Nhấp một lần vẫn mở thư bên cạnh danh sách.",
+      "restore_label": "Mở lại cửa sổ khi khởi động",
+      "restore_description": "Các cửa sổ thư và bản nháp đang mở khi thoát sẽ trở lại."
+    },
+    "attachment": {
+      "open": "Mở",
+      "save_as": "Lưu thành…",
+      "copy": "Sao chép",
+      "copy_failed": "Không thể sao chép tệp."
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "Đăng nhập bằng trình duyệt",
     "browser_waiting": "Hoàn tất đăng nhập trong trình duyệt",

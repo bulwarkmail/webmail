@@ -6501,6 +6501,21 @@
     "message_moved_to": "Denne besked er flyttet til {folder}.",
     "window_not_ready": "Det nye vindue åbnede ikke i tide. Din kladde bliver her."
   },
+  "desktopUi": {
+    "settings": {
+      "title": "Vinduer",
+      "double_click_label": "Åbn beskeder i et nyt vindue ved dobbeltklik",
+      "double_click_description": "Et enkelt klik åbner stadig beskeden ved siden af listen.",
+      "restore_label": "Åbn vinduer igen ved start",
+      "restore_description": "Besked- og kladdevinduer, der var åbne, da du lukkede, kommer tilbage."
+    },
+    "attachment": {
+      "open": "Åbn",
+      "save_as": "Gem som…",
+      "copy": "Kopiér",
+      "copy_failed": "Filen kunne ikke kopieres."
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "Log ind med din browser",
     "browser_waiting": "Gør login færdigt i din browser",

@@ -6501,6 +6501,21 @@
     "message_moved_to": "Questo messaggio è stato spostato in {folder}.",
     "window_not_ready": "La nuova finestra non si è aperta in tempo. La bozza rimane qui."
   },
+  "desktopUi": {
+    "settings": {
+      "title": "Finestre",
+      "double_click_label": "Apri i messaggi in una nuova finestra con il doppio clic",
+      "double_click_description": "Un solo clic apre comunque il messaggio accanto all’elenco.",
+      "restore_label": "Riapri le finestre all’avvio",
+      "restore_description": "Le finestre di messaggi e bozze aperte all’uscita tornano."
+    },
+    "attachment": {
+      "open": "Apri",
+      "save_as": "Salva con nome…",
+      "copy": "Copia",
+      "copy_failed": "Impossibile copiare il file."
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "Accedi con il browser",
     "browser_waiting": "Completa l'accesso nel browser",

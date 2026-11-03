@@ -6501,6 +6501,21 @@
     "message_moved_to": "Ta wiadomość została przeniesiona do {folder}.",
     "window_not_ready": "Nowe okno nie otworzyło się na czas. Twój szkic zostaje tutaj."
   },
+  "desktopUi": {
+    "settings": {
+      "title": "Okna",
+      "double_click_label": "Otwieraj wiadomości w nowym oknie po dwukrotnym kliknięciu",
+      "double_click_description": "Pojedyncze kliknięcie nadal otwiera wiadomość obok listy.",
+      "restore_label": "Otwieraj okna ponownie przy starcie",
+      "restore_description": "Okna wiadomości i wersji roboczych otwarte przy zamykaniu wrócą."
+    },
+    "attachment": {
+      "open": "Otwórz",
+      "save_as": "Zapisz jako…",
+      "copy": "Kopiuj",
+      "copy_failed": "Nie udało się skopiować pliku."
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "Zaloguj się w przeglądarce",
     "browser_waiting": "Dokończ logowanie w przeglądarce",

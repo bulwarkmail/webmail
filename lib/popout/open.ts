@@ -75,6 +75,12 @@ export function openMessageWindow(target: MessageWindowTarget): boolean {
   return focused(openWindow(messagePopoutUrl(target), `bulwark-message-${target.emailId.replace(/\W/g, '_')}`, 'message'));
 }
 
+/** A new message in its own window, with nothing to hand over. */
+export function openNewComposerWindow(localAccountId?: string | null): boolean {
+  const name = `bulwark-compose-new-${Date.now().toString(36)}`;
+  return focused(openWindow(appPath('/popout/compose') + query({ account: localAccountId }), name, 'compose'));
+}
+
 export interface ComposerWindow {
   /** Hands the draft over. True once the composer is on screen there; until then the sender keeps its copy. */
   handOver(payload: ComposePopoutPayload): Promise<boolean>;

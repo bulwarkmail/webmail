@@ -6501,6 +6501,21 @@
     "message_moved_to": "Denne meldingen ble flyttet til {folder}.",
     "window_not_ready": "Det nye vinduet åpnet seg ikke i tide. Utkastet blir her."
   },
+  "desktopUi": {
+    "settings": {
+      "title": "Vinduer",
+      "double_click_label": "Åpne meldinger i et nytt vindu ved dobbeltklikk",
+      "double_click_description": "Et enkelt klikk åpner fortsatt meldingen ved siden av listen.",
+      "restore_label": "Åpne vinduer på nytt ved start",
+      "restore_description": "Meldings- og utkastvinduer som var åpne da du avsluttet, kommer tilbake."
+    },
+    "attachment": {
+      "open": "Åpne",
+      "save_as": "Lagre som…",
+      "copy": "Kopier",
+      "copy_failed": "Filen kunne ikke kopieres."
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "Logg på med nettleseren",
     "browser_waiting": "Fullfør påloggingen i nettleseren",

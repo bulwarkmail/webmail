@@ -6501,6 +6501,21 @@
     "message_moved_to": "Ezt az üzenetet ide helyezték át: {folder}.",
     "window_not_ready": "Az új ablak nem nyílt meg időben. A piszkozat itt marad."
   },
+  "desktopUi": {
+    "settings": {
+      "title": "Ablakok",
+      "double_click_label": "Üzenetek megnyitása új ablakban dupla kattintással",
+      "double_click_description": "Egy kattintás továbbra is a lista mellett nyitja meg az üzenetet.",
+      "restore_label": "Ablakok újranyitása indításkor",
+      "restore_description": "A kilépéskor nyitva lévő üzenet- és piszkozatablakok visszatérnek."
+    },
+    "attachment": {
+      "open": "Megnyitás",
+      "save_as": "Mentés másként…",
+      "copy": "Másolás",
+      "copy_failed": "A fájlt nem sikerült másolni."
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "Bejelentkezés böngészővel",
     "browser_waiting": "Fejezze be a bejelentkezést a böngészőben",

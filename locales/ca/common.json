@@ -6501,6 +6501,21 @@
     "message_moved_to": "Aquest missatge s’ha mogut a {folder}.",
     "window_not_ready": "La finestra nova no s’ha obert a temps. L’esborrany es queda aquí."
   },
+  "desktopUi": {
+    "settings": {
+      "title": "Finestres",
+      "double_click_label": "Obre els missatges en una finestra nova amb doble clic",
+      "double_click_description": "Un sol clic continua obrint el missatge al costat de la llista.",
+      "restore_label": "Torna a obrir les finestres en iniciar",
+      "restore_description": "Les finestres de missatges i esborranys obertes en sortir tornen a aparèixer."
+    },
+    "attachment": {
+      "open": "Obre",
+      "save_as": "Desa com a…",
+      "copy": "Copia",
+      "copy_failed": "No s’ha pogut copiar el fitxer."
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "Inicia la sessió amb el navegador",
     "browser_waiting": "Acaba d'iniciar la sessió al navegador",

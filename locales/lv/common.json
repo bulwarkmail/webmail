@@ -6501,6 +6501,21 @@
     "message_moved_to": "Šis ziņojums tika pārvietots uz {folder}.",
     "window_not_ready": "Jaunais logs neatvērās laikus. Melnraksts paliek šeit."
   },
+  "desktopUi": {
+    "settings": {
+      "title": "Logi",
+      "double_click_label": "Atvērt ziņojumus jaunā logā ar dubultklikšķi",
+      "double_click_description": "Viens klikšķis joprojām atver ziņojumu blakus sarakstam.",
+      "restore_label": "Startējot atkal atvērt logus",
+      "restore_description": "Ziņojumu un melnrakstu logi, kas bija atvērti izejot, atgriežas."
+    },
+    "attachment": {
+      "open": "Atvērt",
+      "save_as": "Saglabāt kā…",
+      "copy": "Kopēt",
+      "copy_failed": "Failu neizdevās nokopēt."
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "Pierakstīties ar pārlūku",
     "browser_waiting": "Pabeidziet pierakstīšanos pārlūkā",
