@@ -511,7 +511,8 @@ export function CalendarWeekView({
             className={cn(gutterClass, "text-[0.625rem] text-muted-foreground p-1 text-end flex flex-col justify-between")}
             style={{ height: allDayHeight }}
           >
-            <span>{t("events.all_day")}</span>
+            {/* A long single word ("Ganztägig") must stay inside the narrow gutter of a phone. */}
+            <span className="hyphens-auto [overflow-wrap:anywhere]">{t("events.all_day")}</span>
             {isExpandable && (
               <button
                 type="button"
