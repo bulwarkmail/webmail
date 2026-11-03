@@ -82,6 +82,8 @@ export class FakeJmap implements JmapTransport {
   offline = false;
   /** Fails the next N requests as busy. */
   busyNext = 0;
+  /** Ids Email/query leaves out while Email/get still has them: a pass that missed a message. */
+  readonly hiddenFromQuery = new Set<string>();
   /** Called before each request; can change data while a sync is running. */
   beforeRequest: ((n: number) => void) | null = null;
   nextId = 1;
@@ -160,6 +162,18 @@ export class FakeJmap implements JmapTransport {
     this.coll[type].truncatedBelow = this.coll[type].log.length;
   }
 
+  /** The ids of a query's page, by position or by anchor, as Stalwart answers. */
+  protected pageOf(ids: string[], args: Record<string, unknown>): { position: number; ids: string[] } {
+    const limit = Math.min(Number(args.limit ?? 5000) || 5000, 5000);
+    let position = Number(args.position ?? 0);
+    if (args.anchor !== undefined) {
+      const at = ids.indexOf(String(args.anchor));
+      if (at < 0) throw Object.assign(new Error('anchor gone'), { jmapError: 'anchorNotFound' });
+      position = Math.max(0, at + Number(args.anchorOffset ?? 0));
+    }
+    return { position, ids: ids.slice(position, position + limit) };
+  }
+
   private queryIds(args: Record<string, unknown>): string[] {
     const filter = args.filter as { after?: string; inMailbox?: string } | undefined;
     let list = [...this.emails.values()];
@@ -169,7 +183,7 @@ export class FakeJmap implements JmapTransport {
     return list.map((e) => e.id);
   }
 
-  private handle(name: string, args: Record<string, unknown>): Record<string, unknown> {
+  protected handle(name: string, args: Record<string, unknown>): Record<string, unknown> {
     switch (name) {
       case 'Mailbox/get': {
         const ids = args.ids as string[] | null;
@@ -178,15 +192,12 @@ export class FakeJmap implements JmapTransport {
         return { accountId: args.accountId, state: this.coll.Mailbox.state(), list, notFound: [] };
       }
       case 'Email/query': {
-        const ids = this.queryIds(args);
-        const position = Number(args.position ?? 0);
-        const limit = Number(args.limit ?? 5000) || 5000;
+        const ids = this.queryIds(args).filter((id) => !this.hiddenFromQuery.has(id));
         return {
           accountId: args.accountId,
           queryState: this.coll.Email.state(),
           canCalculateChanges: true,
-          position,
-          ids: ids.slice(position, position + Math.min(limit, 5000)),
+          ...this.pageOf(ids, args),
           ...(args.calculateTotal ? { total: ids.length } : {}),
         };
       }
@@ -275,8 +286,12 @@ export class FakeJmap implements JmapTransport {
     return { methodResponses: done };
   }
 
-  async download(): Promise<Uint8Array> {
+  async download(_jmap: string, _blobId: string, _type: string, _name: string): Promise<Uint8Array> {
     return new Uint8Array();
+  }
+
+  async downloadStream(jmap: string, blobId: string, type: string, name: string, sink: (part: Uint8Array) => void): Promise<void> {
+    sink(await this.download(jmap, blobId, type, name));
   }
 
   async upload(): Promise<{ blobId: string; type: string; size: number }> {

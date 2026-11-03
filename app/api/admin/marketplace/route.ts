@@ -44,6 +44,7 @@ import {
 } from '@/lib/admin/marketplace-directory';
 import { MAX_PLUGIN_SIZE, MAX_THEME_SIZE } from '@/lib/plugin-types';
 import { createHash } from 'node:crypto';
+import { devicePolicyPluginRefusal } from '@/lib/desktop/server-policy';
 
 /** Query parameters the UI may pass on to the directory's list endpoint. */
 const FORWARDED = ['q', 'type', 'pluginType', 'tag', 'author', 'sort', 'order', 'page', 'perPage', 'featured'] as const;
@@ -159,6 +160,11 @@ export async function POST(request: NextRequest) {
     }
     if (typeof version !== 'string' || !RELEASE_VERSION.test(version)) {
       return NextResponse.json({ error: 'Invalid version: must look like 1.2.3' }, { status: 400 });
+    }
+
+    if (type === 'plugin') {
+      const refused = devicePolicyPluginRefusal(slug);
+      if (refused) return refused;
     }
 
     const directoryUrl = await getDirectoryUrl();

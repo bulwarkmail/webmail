@@ -42,6 +42,7 @@ import {
 } from '@/lib/auth/session-age';
 import { clearStalwartAuthContextInStore, readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
+import { devicePolicyServerRefusal } from '@/lib/desktop/server-policy';
 import {
   clearCustomUpstream,
   readCustomUpstream,
@@ -273,21 +274,33 @@ export async function PUT(request: NextRequest) {
     // The refresh token may have been minted by the password+TOTP login route,
     // which works without a configured OAuth client by falling back to the
     // default client id - refreshing must fall back the same way (#873).
+    // Discovery or the token endpoint out of reach is an outage: the client
+    // waits it out. A 500 here would count toward signing the user out.
+    let tokenResponse: Response;
     const upstream = IS_DESKTOP_BUILD ? await readCustomUpstream(cookieStore, slot) : null;
-    const tokenEndpoint = await getTokenEndpoint(serverId, upstream ? { upstream } : { fallbackClientId: DEFAULT_CLIENT_ID });
+    // The device's OS policy refuses this server for now. The cookies stay, so the
+    // account comes back with no sign-in if the policy does.
+    const refusedByDevice = upstream ? devicePolicyServerRefusal(upstream.serverUrl) : null;
+    if (refusedByDevice) return refusedByDevice;
+    try {
+      const tokenEndpoint = await getTokenEndpoint(serverId, upstream ? { upstream } : { fallbackClientId: DEFAULT_CLIENT_ID });
 
-    const params = buildOAuthParams({
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken,
-    }, serverId, await defaultClientOptions(serverId, upstream));
+      const params = buildOAuthParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+      }, serverId, await defaultClientOptions(serverId, upstream));
 
-    const tokenResponse = await observeUpstream('oauth', () => fetch(tokenEndpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params.toString(),
-      // See revokeRefreshToken: the body holds the refresh token.
-      redirect: 'error',
-    }));
+      tokenResponse = await observeUpstream('oauth', () => fetch(tokenEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString(),
+        // See revokeRefreshToken: the body holds the refresh token.
+        redirect: 'error',
+      }));
+    } catch (error) {
+      logger.warn('Token refresh: provider unreachable', { error: error instanceof Error ? error.message : 'Unknown error' });
+      return NextResponse.json({ error: 'Token endpoint unavailable' }, { status: 503 });
+    }
 
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
@@ -302,7 +315,10 @@ export async function PUT(request: NextRequest) {
         cookieStore.delete(accessTokenCookieName(slot));
         clearCustomUpstream(cookieStore, slot);
         clearIdToken(cookieStore, slot, request.nextUrl.basePath);
-        return NextResponse.json({ error: 'Refresh failed' }, { status: 401 });
+        // Only invalid_grant says the login itself is over. invalid_client, or
+        // a provider refusing an early refresh (#552), says nothing about it,
+        // and the client keeps the account's local data for those.
+        return NextResponse.json({ error: oauthErrorCode(errorText) === 'invalid_grant' ? 'invalid_grant' : 'Refresh failed' }, { status: 401 });
       }
       return NextResponse.json({ error: 'Token endpoint unavailable' }, { status: 503 });
     }
@@ -347,6 +363,15 @@ export async function PUT(request: NextRequest) {
     // tells it to keep the session and try again.
     if (IS_DESKTOP_BUILD) return NextResponse.json({ error: 'Token endpoint unavailable' }, { status: 503 });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+function oauthErrorCode(body: string): string | null {
+  try {
+    const code = (JSON.parse(body) as { error?: unknown }).error;
+    return typeof code === 'string' ? code : null;
+  } catch {
+    return null;
   }
 }
 

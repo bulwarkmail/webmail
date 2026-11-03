@@ -14,7 +14,7 @@
 
 import { createHash } from 'node:crypto';
 import { configManager } from './config-manager';
-import { DEFAULT_ORGANISATION_POLICY, type OrganisationPolicy } from './organisation-policy';
+import { DEFAULT_ORGANISATION_POLICY, strictestDevices, type OrganisationPolicy } from './organisation-policy';
 import { resolvePolicy, type PolicySubject } from './policy-scopes';
 import type { SettingsPolicy } from './types';
 import { fetchJmapSession } from '@/lib/stalwart/jmap-api';
@@ -75,20 +75,19 @@ export function strictDeviceSubject(creds: DeviceCreds): Promise<PolicySubject |
   return subject;
 }
 
-/** Every switch that Everyone or any scope turns on: for a login whose scopes can't be worked out. */
+/** Every switch that Everyone or any scope turns on, and the lowest of each cap: for a login whose scopes can't be worked out. */
 export function strictestOfAllScopes(policy: SettingsPolicy): ServerDevicePolicy {
-  const out: ServerDevicePolicy = { ...DEFAULT_ORGANISATION_POLICY.devices, ...(resolvePolicy(policy, null).policy.organisation?.devices ?? {}) };
+  let out: ServerDevicePolicy = { ...DEFAULT_ORGANISATION_POLICY.devices, ...(resolvePolicy(policy, null).policy.organisation?.devices ?? {}) };
   for (const scope of policy.scopes ?? []) {
     const devices = scope.policy?.organisation?.devices as Partial<ServerDevicePolicy> | undefined;
-    if (!devices) continue;
-    for (const key of Object.keys(out) as (keyof ServerDevicePolicy)[]) if (devices[key] === true) out[key] = true;
+    if (devices) out = strictestDevices(out, devices);
   }
   return out;
 }
 
-/** Everything on: when not even the policy can be read. */
+/** Everything on, and each cap as low as it goes: when not even the policy can be read. */
 export const ALL_DEVICE_LIMITS: ServerDevicePolicy = Object.fromEntries(
-  Object.keys(DEFAULT_ORGANISATION_POLICY.devices).map((key) => [key, true]),
+  Object.entries(DEFAULT_ORGANISATION_POLICY.devices).map(([key, off]) => [key, typeof off === 'number' ? 1 : true]),
 ) as ServerDevicePolicy;
 
 /**

@@ -157,6 +157,8 @@ export const OUTGOING_HOSTS: readonly OutgoingHost[] = [
  * has to be looked at again.
  */
 export const NON_REQUEST_HOSTS: readonly { host: string; files: readonly string[]; why: string }[] = [
+  { host: 'schemas.microsoft.com', why: 'XML namespace of the ADMX templates', files: ['lib/desktop/policy-templates.ts'] },
+  { host: 'www.apple.com', why: 'DTD named in the sample .mobileconfig', files: ['lib/desktop/policy-templates.ts'] },
   { host: 'bulwarkmail.org', why: 'docs links, comments and the contact URL in User-Agent headers', files: ['app/(main)/admin/_pages/telemetry.tsx', 'app/api/fetch-ical/route.ts', 'app/api/translate/route.ts', 'components/admin/org/sections/recovery-section.tsx', 'components/admin/org/sections/company-calendars-section.tsx', 'components/admin/org/sections/free-busy-section.tsx', 'components/admin/org/sections/labels-section.tsx', 'components/admin/org/sections/out-of-office-calendar-section.tsx', 'components/admin/org/sections/phishing-report-section.tsx', 'instrumentation.node.ts', 'lib/telemetry/state.ts', 'lib/telemetry/types.ts', 'app/(main)/admin/_pages/monitoring.tsx', 'lib/admin/types.ts', 'lib/error-reporting/client.ts', 'lib/error-reporting/lite.ts', 'lib/error-reporting/scrub.ts', 'instrumentation.ts', 'app/api/health/live/route.ts', 'app/api/health/ready/route.ts', 'app/api/metrics/route.ts', 'lib/metrics/index.ts', 'lib/tracing/config.ts', 'lib/tracing/scrub.ts', 'lib/tracing/start.ts'] },
   { host: 'bulwarkmail.org', why: 'docs links of the Notices, Devices (offline mode too) and out-of-office template pages', files: ['components/admin/org/sections/announcement-section.tsx', 'components/admin/org/sections/devices-section.tsx', 'components/admin/org/sections/offline-section.tsx', 'components/admin/org/sections/retention-section.tsx', 'components/admin/org/sections/vacation-templates-section.tsx'] },
   { host: 'bulwarkmail.com', why: 'JMAP capability URI', files: ['lib/jmap/client.ts'] },
@@ -182,6 +184,7 @@ export const NON_REQUEST_HOSTS: readonly { host: string; files: readonly string[
  * listed with the reason.
  */
 export const BUILT_URL_FILES: readonly { file: string; why: string }[] = [
+  { file: 'lib/desktop/policy-schema.ts', why: 'parses a host out of a policy value to check it, and fetches nothing' },
   { file: 'app/(main)/admin/_pages/marketplace-detail.tsx', why: "link to an extension's source host, from the directory's answer" },
   { file: 'app/(main)/setup/page.tsx', why: "the instance's own origin, and scheme checks of the admin-entered server URL" },
   { file: 'app/api/plugin-secrets/route.ts', why: "scheme check of a credential's server URL" },

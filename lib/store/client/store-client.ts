@@ -21,6 +21,11 @@ import {
 
 const CALL_TIMEOUT_MS = 60_000;
 const OWNER_WAIT_MS = 15_000;
+/** Calls waiting on the owner ask it this often whether it's still there. */
+const OWNER_PING_MS = 10_000;
+const OWNER_PING_MISSES = 3;
+/** A first sync of a large account runs a long time, and its promise is what ends "syncing". */
+const SYNC_TIMEOUT_MS = 30 * 60_000;
 
 export class StoreOwnerGoneError extends Error {
   constructor() {
@@ -44,6 +49,8 @@ export interface StoreClientOptions {
   onOwner?(): void;
   /** The worker asks for a fresh Authorization header. */
   onNeedAuth?(account: string): void;
+  /** Another tab signed everyone out: this tab's worker is gone. */
+  onHalted?(): void;
 }
 
 export class StoreClient {
@@ -54,6 +61,9 @@ export class StoreClient {
   private isOwner = false;
   private readonly pending = new Map<string, Pending>();
   private readonly ownerWaiters: Array<() => void> = [];
+  private ownerWatch: ReturnType<typeof setInterval> | null = null;
+  private ownerAnswered: (() => void) | null = null;
+  private lifecycleBound = false;
 
   constructor(private readonly options: StoreClientOptions = {}) {}
 
@@ -63,8 +73,10 @@ export class StoreClient {
       && typeof navigator !== 'undefined'
       && Boolean(navigator.locks)
       && typeof navigator.storage?.getDirectory === 'function'
-      && typeof FileSystemFileHandle !== 'undefined'
-      && 'createSyncAccessHandle' in FileSystemFileHandle.prototype;
+      // createSyncAccessHandle itself only exists inside a dedicated worker,
+      // so the page can't check for it. A browser without it fails at the
+      // worker's start, which the page hears as an error event.
+      && typeof FileSystemFileHandle !== 'undefined';
   }
 
   start(): void {
@@ -80,10 +92,14 @@ export class StoreClient {
       clientId: this.clientId,
       moduleUrl: new URL(`${base}/${SQLITE3MC_PUBLIC_DIR}/sqlite3.mjs`, location.origin).href,
     });
+    // An owner from before this tab won't announce itself again.
+    this.channel.postMessage({ kind: 'who-owns' } satisfies ChannelMessage);
     this.bindLifecycle();
   }
 
   private bindLifecycle(): void {
+    if (this.lifecycleBound) return;
+    this.lifecycleBound = true;
     // A clean handover when the tab goes. If this doesn't get to run, the lock
     // and the handles die with the worker and the next owner retries.
     addEventListener('pagehide', (event) => {
@@ -99,8 +115,10 @@ export class StoreClient {
     switch (message.kind) {
       case 'owner':
         this.isOwner = true;
-        this.owner = this.clientId;
-        this.flushOwnerWaiters();
+        // Not an owner to call yet. This message can overtake the worker's
+        // channel getting registered, and a call posted then never reaches it,
+        // so calls wait for the worker's answer on the channel itself.
+        this.channel?.postMessage({ kind: 'who-owns' } satisfies ChannelMessage);
         this.options.onOwner?.();
         break;
       case 'result': {
@@ -137,7 +155,12 @@ export class StoreClient {
         break;
       case 'owner-changed':
         this.owner = message.owner;
+        if (message.owner) this.ownerAnswered?.();
         if (message.owner) this.flushOwnerWaiters();
+        break;
+      case 'shutdown':
+        this.halt();
+        this.options.onHalted?.();
         break;
       default:
         break;
@@ -149,8 +172,48 @@ export class StoreClient {
     if (!pending) return;
     this.pending.delete(message.id);
     clearTimeout(pending.timer);
-    if (message.error) pending.reject(new Error(message.error));
-    else pending.resolve(message.result);
+    if (message.error) {
+      const error = new Error(message.error);
+      if (message.errorName) error.name = message.errorName;
+      pending.reject(error);
+    } else {
+      pending.resolve(message.result);
+    }
+  }
+
+  /**
+   * A tab that's frozen or stuck keeps the lock, and nothing else would tell.
+   * While calls wait, the owner is asked to answer; when it doesn't for a while,
+   * they stop waiting instead of running into their long time limits.
+   */
+  private watchOwner(): void {
+    if (this.ownerWatch) return;
+    let unanswered = 0;
+    this.ownerAnswered = () => { unanswered = 0; };
+    this.ownerWatch = setInterval(() => {
+      if (this.pending.size === 0) {
+        this.stopWatchingOwner();
+        return;
+      }
+      if (unanswered >= OWNER_PING_MISSES) {
+        this.owner = null;
+        this.stopWatchingOwner();
+        for (const [id, pending] of this.pending) {
+          this.pending.delete(id);
+          clearTimeout(pending.timer);
+          pending.reject(new StoreOwnerGoneError());
+        }
+        return;
+      }
+      unanswered += 1;
+      this.channel?.postMessage({ kind: 'who-owns' } satisfies ChannelMessage);
+    }, OWNER_PING_MS);
+  }
+
+  private stopWatchingOwner(): void {
+    if (this.ownerWatch) clearInterval(this.ownerWatch);
+    this.ownerWatch = null;
+    this.ownerAnswered = null;
   }
 
   private flushOwnerWaiters(): void {
@@ -178,10 +241,11 @@ export class StoreClient {
     });
   }
 
-  private async rpc<K extends keyof StoreRpc>(method: K, params: Parameters<StoreRpc[K]>[0]): Promise<ReturnType<StoreRpc[K]>> {
+  private async rpc<K extends keyof StoreRpc>(method: K, params: Parameters<StoreRpc[K]>[0], timeoutMs = CALL_TIMEOUT_MS): Promise<ReturnType<StoreRpc[K]>> {
     await this.waitForOwner();
+    this.watchOwner();
     const id = crypto.randomUUID();
-    const result = this.track<ReturnType<StoreRpc[K]>>(id, CALL_TIMEOUT_MS);
+    const result = this.track<ReturnType<StoreRpc[K]>>(id, timeoutMs);
     this.channel?.postMessage({ kind: 'rpc', id, from: this.clientId, method, params } as ChannelMessage);
     return result;
   }
@@ -198,16 +262,18 @@ export class StoreClient {
     return this.isOwner;
   }
 
-  openAccount(params: OpenAccountParams): Promise<void> {
+  /** `created`: there was no database under this name. */
+  openAccount(params: OpenAccountParams): Promise<{ created?: boolean } | undefined> {
     return this.direct({ kind: 'open', id: crypto.randomUUID(), params });
+  }
+
+  /** Deletes every store file but these. */
+  pruneFiles(keep: string[]): Promise<void> {
+    return this.direct({ kind: 'prune-files', id: crypto.randomUUID(), keep });
   }
 
   closeAccount(account: string): Promise<void> {
     return this.direct({ kind: 'close-account', id: crypto.randomUUID(), account });
-  }
-
-  removeAccount(account: string, file: string): Promise<boolean> {
-    return this.direct({ kind: 'remove-account', id: crypto.randomUUID(), account, file });
   }
 
   setAuth(account: string, auth: string | null): void {
@@ -218,23 +284,38 @@ export class StoreClient {
     this.post({ kind: 'set-session', account, session });
   }
 
-  setScope(account: string, scope: StoreScope): void {
-    this.post({ kind: 'set-scope', account, scope });
+  setInvertedKeywordSort(account: string, inverted: boolean): void {
+    this.post({ kind: 'set-inverted', account, inverted });
   }
 
   /** Hands the store over: the worker closes everything, then lets go of the lock. */
   async release(): Promise<void> {
     if (!this.worker) return;
-    const worker = this.worker;
     if (this.isOwner) {
       await this.direct({ kind: 'release', id: crypto.randomUUID() });
       this.isOwner = false;
       this.owner = null;
     }
-    worker.terminate();
+    this.halt();
+  }
+
+  /**
+   * Stops at once, with no handover. For a sign-out: the data goes anyway, and
+   * the worker's end frees the lock and the OPFS handles.
+   */
+  halt(): void {
+    this.worker?.terminate();
     this.worker = null;
     this.channel?.close();
     this.channel = null;
+    this.isOwner = false;
+    this.owner = null;
+    this.stopWatchingOwner();
+    for (const [id, pending] of this.pending) {
+      this.pending.delete(id);
+      clearTimeout(pending.timer);
+      pending.reject(new StoreOwnerGoneError());
+    }
   }
 
   // ---- Any tab ----
@@ -244,7 +325,15 @@ export class StoreClient {
   }
 
   sync(account: string): Promise<void> {
-    return this.rpc('sync', { account });
+    return this.rpc('sync', { account }, SYNC_TIMEOUT_MS);
+  }
+
+  setScope(account: string, scope: StoreScope): Promise<void> {
+    return this.rpc('setScope', { account, scope });
+  }
+
+  removeAccount(account: string, file: string): Promise<boolean> {
+    return this.rpc('removeAccount', { account, file });
   }
 
   noteStateChange(account: string, changed: Record<string, Record<string, string>>): Promise<void> {

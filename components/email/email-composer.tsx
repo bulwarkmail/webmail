@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useMvComposeWindow } from "@/components/email/mv-compose-context";
 import { useLocale, useTranslations } from "next-intl";
+import { isServerOutage } from "@/lib/jmap/offline-hooks";
 import { Button, TOUCH_HIT_AREA } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Dialog } from "@/components/ui/dialog";
@@ -89,6 +90,8 @@ import { FilePickerDialog } from "@/components/files/file-picker-dialog";
 import { DirectoryPickerDialog } from "@/components/contacts/directory-picker-dialog";
 import type { DirectoryEntry } from "@/stores/contact-store";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
+import { isStandInId } from "@/lib/jmap/stand-in-ids";
+import { noteDraftReplacedElsewhere } from "@/lib/offline/queue";
 import type { FileNode } from "@/lib/jmap/types";
 import { useContactStore, getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 import { renderTemplateWithPlugins, notifyTemplateApplied } from "@/stores/template-store";
@@ -559,7 +562,9 @@ export function EmailComposer({
   const tViewer = useTranslations('email_viewer');
   const tClassification = useTranslations('classification');
   const tProofreading = useTranslations('proofreading');
+  const tOfflineDrafts = useTranslations('offlineDrafts');
   const tOffline = useTranslations('offline');
+  const tOfflineNotes = useTranslations('offlineConflicts');
   const tSendGuards = useTranslations('send_guards');
   const timeFormat = useSettingsStore((state) => state.timeFormat);
   const plainTextModeDefault = useSettingsStore((state) => state.plainTextMode);
@@ -1048,6 +1053,8 @@ export function EmailComposer({
   const [draftLocalAccountId, setDraftLocalAccountId] = useState<string | undefined>(initialData?.draftLocalAccountId);
   const draftLocalAccountIdRef = useRef<string | undefined>(initialData?.draftLocalAccountId);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  // The last save stayed on this device: the server wasn't there.
+  const [savedOnDevice, setSavedOnDevice] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const saveCloseAttemptRef = useRef<{ cancelled: boolean; saving: boolean } | null>(null);
   const [isSavingAndClosing, setIsSavingAndClosing] = useState(false);
@@ -2996,7 +3003,12 @@ export function EmailComposer({
         { priority, accountId: draftAccountId, previousDraftAccountId: replacedElsewhere ? undefined : previousDraftAccountId, classification: classificationRef.current.draftChoice },
       );
       if (replacedElsewhere) {
-        await removeDraftVersion(savedDraft.draftId!, previousDraftLogin, previousDraftAccountId);
+        if (isStandInId(savedDraftId) && savingLogin) {
+          // The new version is only on this device: the old one stays until it's up.
+          await noteDraftReplacedElsewhere(savingLogin, savedDraftId, { login: previousDraftLogin!, jmap: previousDraftAccountId, id: savedDraft.draftId! });
+        } else {
+          await removeDraftVersion(savedDraft.draftId!, previousDraftLogin, previousDraftAccountId);
+        }
       }
 
       // Update the ref synchronously so a queued save sees the new id and
@@ -3048,6 +3060,7 @@ export function EmailComposer({
         }
       }
 
+      setSavedOnDevice(isStandInId(savedDraftId));
       setSaveStatus('saved');
       saveFailedRef.current = false;
       lastDraftIdRef.current = savedDraftId;
@@ -4213,6 +4226,8 @@ export function EmailComposer({
       } else if (err instanceof SubmissionQuotaError) {
         // At a full submission quota only an administrator can help.
         toast.error(sendFailureMessage(err, t));
+      } else if (isServerOutage(err)) {
+        toast.error(t('send_failed'), { message: tOfflineNotes('server_not_answering') });
       } else if (err instanceof Error && OFFLINE_SEND_ERRORS[err.name]) {
         // Offline mode (#523) refused to keep it: says why, in the user's language.
         toast.error(t('send_failed'), { message: tOffline(OFFLINE_SEND_ERRORS[err.name]) });
@@ -4667,7 +4682,7 @@ export function EmailComposer({
             {saveStatus === 'saved' && (
               <div className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
                 <Check className="w-3 h-3" />
-                <span className="hidden md:inline">{t('draft_saved')}</span>
+                <span className="hidden md:inline">{savedOnDevice ? tOfflineDrafts('saved_on_device') : t('draft_saved')}</span>
               </div>
             )}
             {saveStatus === 'error' && (
