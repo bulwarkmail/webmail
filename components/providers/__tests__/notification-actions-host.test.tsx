@@ -1,5 +1,6 @@
 import { act, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { loginFingerprint } from '@/lib/pwa-notify/login-fingerprint';
 import { NotificationActionsHost } from '../notification-actions-host';
 
 // The tab's end of the service worker: it keeps the worker's copy of the
@@ -9,7 +10,7 @@ import { NotificationActionsHost } from '../notification-actions-host';
 const writeNotificationActionPrefs = vi.fn(async (..._args: unknown[]) => {});
 const runNotificationAction = vi.fn(async (_request: unknown, answer: (status: string) => void) => answer('done'));
 const scheduleFlushAll = vi.fn();
-let state = { isAuthenticated: true, archiveMode: 'month', archiveEnabled: true };
+let state = { isAuthenticated: true, archiveMode: 'month', archiveEnabled: true, plugins: [] as Array<Record<string, unknown>>, accounts: [] as Array<{ serverUrl: string; username: string }> };
 
 vi.mock('@/lib/pwa-notify/worker-state', () => ({
   writeNotificationActionPrefs: (...args: unknown[]) => writeNotificationActionPrefs(...args),
@@ -26,10 +27,17 @@ vi.mock('@/stores/auth-store', () => ({
 vi.mock('@/stores/settings-store', () => ({
   useSettingsStore: (select: (s: { archiveMode: string }) => unknown) => select({ archiveMode: state.archiveMode }),
 }));
+vi.mock('@/stores/plugin-store', () => ({
+  usePluginStore: (select: (s: { plugins: unknown[] }) => unknown) => select({ plugins: state.plugins }),
+}));
 vi.mock('@/stores/email-store', () => ({ useEmailStore: { getState: () => ({}) } }));
-vi.mock('@/stores/account-store', () => ({ useAccountStore: { getState: () => ({ accounts: [] }) } }));
+vi.mock('@/stores/account-store', () => {
+  const useAccountStore = (select: (s: { accounts: unknown[] }) => unknown) => select({ accounts: state.accounts });
+  useAccountStore.getState = () => ({ accounts: state.accounts });
+  return { useAccountStore };
+});
 
-const worker = new EventTarget();
+const worker = Object.assign(new EventTarget(), { controller: null as null | { postMessage: ReturnType<typeof vi.fn> } });
 const fromWorker = (data: unknown, ports: unknown[] = []) => act(async () => {
   const event = new Event('message');
   Object.assign(event, { data, ports });
@@ -38,7 +46,8 @@ const fromWorker = (data: unknown, ports: unknown[] = []) => act(async () => {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  state = { isAuthenticated: true, archiveMode: 'month', archiveEnabled: true };
+  state = { isAuthenticated: true, archiveMode: 'month', archiveEnabled: true, plugins: [], accounts: [] };
+  worker.controller = null;
   Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: worker });
 });
 
@@ -52,6 +61,7 @@ describe('the mirror for the worker', () => {
     expect(writeNotificationActionPrefs).toHaveBeenCalledWith({
       archiveEnabled: true,
       archiveMode: 'month',
+      pluginsMayVeto: false,
       labels: { archive: 'action_archive', markRead: 'action_mark_read', reply: 'action_reply', replyPlaceholder: 'reply_placeholder' },
     });
   });
@@ -84,8 +94,44 @@ describe('the mirror for the worker', () => {
   });
 });
 
+describe('what the worker hears about plugins and logins', () => {
+  it('says when an enabled plugin may stop these actions, and when that ends', () => {
+    state.plugins = [{ enabled: true, permissions: ['email:write'] }];
+    const { rerender } = render(<NotificationActionsHost />);
+    expect(writeNotificationActionPrefs.mock.calls.at(-1)?.[0]).toMatchObject({ pluginsMayVeto: true });
+    state.plugins = [{ enabled: false, permissions: ['email:write'] }];
+    rerender(<NotificationActionsHost />);
+    expect(writeNotificationActionPrefs.mock.calls.at(-1)?.[0]).toMatchObject({ pluginsMayVeto: false });
+  });
+
+  it('tells the worker which logins this tab holds, as their fingerprints', async () => {
+    const postMessage = vi.fn();
+    worker.controller = { postMessage };
+    state.accounts = [{ serverUrl: 'https://one.example', username: 'alice@example.org' }];
+    await act(async () => { render(<NotificationActionsHost />); });
+    await vi.waitFor(() => expect(postMessage).toHaveBeenCalled());
+    expect(postMessage).toHaveBeenCalledWith({
+      type: 'client-logins',
+      logins: [await loginFingerprint('https://one.example', 'alice@example.org')],
+    });
+  });
+
+  it('tells it again when the logins change', async () => {
+    const postMessage = vi.fn();
+    worker.controller = { postMessage };
+    state.accounts = [{ serverUrl: 'https://one.example', username: 'alice@example.org' }];
+    let view!: ReturnType<typeof render>;
+    await act(async () => { view = render(<NotificationActionsHost />); });
+    await vi.waitFor(() => expect(postMessage).toHaveBeenCalledTimes(1));
+    state.accounts = [];
+    await act(async () => { view.rerender(<NotificationActionsHost />); });
+    await vi.waitFor(() => expect(postMessage).toHaveBeenCalledTimes(2));
+    expect(postMessage).toHaveBeenLastCalledWith({ type: 'client-logins', logins: [] });
+  });
+});
+
 describe('messages from the worker', () => {
-  const request = { kind: 'notification-action', action: 'mark-read', emailId: 'e1', accountId: 'a', slot: 0, login: 'fp' };
+  const request = { kind: 'notification-action', action: 'mark-read', emailId: 'e1', accountId: 'a', slot: 0, login: 'fp', at: Date.now() };
 
   it('runs a notification action and answers on its port', async () => {
     render(<NotificationActionsHost />);

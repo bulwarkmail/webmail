@@ -208,6 +208,12 @@ export interface BatchActionTarget {
    * wanted state. batchArchive and batchSetTag act on these only.
    */
   emails?: Email[];
+  /**
+   * The user pressed Archive for these, as on the app's own button, which
+   * files into an Archive shared with others too. Rules and plugins acting
+   * on their own are refused one.
+   */
+  userArchive?: boolean;
 }
 
 interface EmailStore {
@@ -1403,7 +1409,7 @@ async function archiveTarget(client: IJMAPClient, target: BatchActionTarget): Pr
   if (!archive) return false;
   // Never into an Archive someone else reads (or a year or month folder of
   // it): the share map isn't in the folder list, so the server is asked.
-  if (await isSharedOut(target.client, [...mailboxes, archive], archive.originalId || archive.id, target.accountId, { descendants: true })) {
+  if (!target.userArchive && await isSharedOut(target.client, [...mailboxes, archive], archive.originalId || archive.id, target.accountId, { descendants: true })) {
     throw new Error('The Archive folder is shared with other people');
   }
   const hookMailboxes = [...mailboxes.filter(m => m.id !== archive.id), archive];

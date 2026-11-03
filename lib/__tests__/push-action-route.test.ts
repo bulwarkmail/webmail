@@ -34,6 +34,11 @@ let sessionStatus = 200;
 let mailboxes: Array<Record<string, unknown>>;
 let email: Record<string, unknown> | null;
 let emailSetResult: Record<string, unknown> | null = null;
+// The answer to each Mailbox/set in turn; `undefined`: everything was created.
+let mailboxSetResults: Array<Record<string, unknown>> = [];
+let mailboxReads = 0;
+let mailboxesOnSecondRead: Array<Record<string, unknown>> | null = null;
+let emailSetResults: Array<Record<string, unknown>> = [];
 let sessionsAsked = 0;
 
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
@@ -50,11 +55,19 @@ vi.mock('@/lib/stalwart/server-fetch', () => ({
     }
     return json({
       methodResponses: calls.map(([name, args, id]) => {
-        if (name === 'Mailbox/get') return [name, { list: mailboxes }, id];
+        if (name === 'Mailbox/get') {
+          mailboxReads++;
+          return [name, { list: mailboxReads >= 2 && mailboxesOnSecondRead ? mailboxesOnSecondRead : mailboxes }, id];
+        }
         if (name === 'Email/get') return [name, { list: email ? [email] : [] }, id];
-        if (name === 'Mailbox/set') return [name, { created: {} }, id];
+        if (name === 'Mailbox/set') {
+          if (args.destroy) return [name, { destroyed: args.destroy }, id];
+          return [name, mailboxSetResults.shift() ?? {
+            created: Object.fromEntries(Object.keys(args.create as object).map((cid) => [cid, { id: `new-${cid}` }])),
+          }, id];
+        }
         const emailId = Object.keys(args.update as Record<string, unknown>)[0];
-        return [name, emailSetResult ?? { updated: { [emailId]: null } }, id];
+        return [name, emailSetResults.shift() ?? emailSetResult ?? { updated: { [emailId]: null } }, id];
       }),
     });
   },
@@ -74,12 +87,13 @@ async function call(body: Record<string, unknown>, headers: Record<string, strin
 }
 
 const fingerprint = (login: Login) => loginFingerprint(login.serverUrl, login.username);
+const destroyed = () => writes.flatMap((w) => w.calls).find(([name, args]) => name === 'Mailbox/set' && args.destroy)?.[1].destroy;
 const markRead = async (over: Record<string, unknown> = {}) => ({
   action: 'mark-read', accountId: 'a', emailId: 'e1', login: await fingerprint(ALICE), ...over,
 });
 const archive = async (over: Record<string, unknown> = {}) => ({ ...(await markRead()), action: 'archive', ...over });
 const emailSet = () => {
-  const call = writes[0].calls.find(([name]) => name === 'Email/set');
+  const call = writes.at(-1)!.calls.find(([name]) => name === 'Email/set');
   return call?.[1] as { accountId: string; update: Record<string, Record<string, unknown>> };
 };
 const mailboxSet = () => writes[0].calls.find(([name]) => name === 'Mailbox/set')?.[1] as { create: Record<string, Record<string, unknown>> } | undefined;
@@ -97,8 +111,12 @@ beforeEach(() => {
     accounts: { a: { name: 'alice@example.org', accountCapabilities: { 'urn:ietf:params:jmap:mail': {} } } },
   };
   mailboxes = [INBOX, ARCHIVE];
-  email = { id: 'e1', receivedAt: '2026-03-31T23:30:00Z' };
+  email = { id: 'e1', receivedAt: '2026-03-31T23:30:00Z', mailboxIds: { inbox: true } };
   emailSetResult = null;
+  mailboxSetResults = [];
+  mailboxReads = 0;
+  mailboxesOnSecondRead = null;
+  emailSetResults = [];
 });
 
 describe('who may ask', () => {
@@ -154,6 +172,13 @@ describe('which login', () => {
     expect(writes).toHaveLength(0);
   });
 
+  it('matches a server address written differently on either side', async () => {
+    LOGINS = [{ ...ALICE, serverUrl: 'https://one.example' }];
+    const login = await loginFingerprint('https://ONE.example:443/', ALICE.username);
+    expect((await call(await markRead({ login }))).status).toBe(200);
+    expect(writes).toHaveLength(1);
+  });
+
   it('answers 401 for an expired token: only a page refreshes it', async () => {
     sessionStatus = 401;
     expect((await call(await markRead())).status).toBe(401);
@@ -175,6 +200,53 @@ describe('which login', () => {
   it("doesn't take a name from Object.prototype for an account", async () => {
     const res = await call(await markRead({ accountId: 'constructor' }));
     expect(res.status).toBe(403);
+    expect(writes).toHaveLength(0);
+  });
+});
+
+describe('session limits', () => {
+  // The page applies them, from activity and sign-in time: an action from here
+  // would keep the login going past them.
+  it.each([
+    ['a maximum session age', { maxHours: 8 }],
+    ['an idle limit', { idleMinutes: 30 }],
+  ])('answers 401 under %s, so the app opens and applies it', async (_name, session) => {
+    policy = { organisation: { session } };
+    expect((await call(await markRead())).status).toBe(401);
+    expect((await call(await archive())).status).toBe(401);
+    expect(writes).toHaveLength(0);
+  });
+
+  it('follows the scope this login is in', async () => {
+    policy = { scopes: [{ id: 'team', label: 'Team', match: { domains: ['example.org'] }, policy: { organisation: { session: { maxHours: 8 } } } }] };
+    expect((await call(await markRead())).status).toBe(401);
+    expect(writes).toHaveLength(0);
+  });
+
+  it("isn't troubled by a scope this login is not in", async () => {
+    policy = { scopes: [{ id: 'other', label: 'Other', match: { domains: ['other.test'] }, policy: { organisation: { session: { maxHours: 8 } } } }] };
+    expect((await call(await markRead())).status).toBe(200);
+  });
+
+  it("answers 401 when the login's scopes can't be worked out", async () => {
+    subject = null;
+    expect((await call(await markRead())).status).toBe(401);
+    expect(writes).toHaveLength(0);
+  });
+});
+
+describe('a message since moved to Trash or Junk', () => {
+  it.each(['trash', 'junk'])('stays as it is in %s, and the app opens it', async (role) => {
+    mailboxes = [INBOX, ARCHIVE, { id: 'bin', name: 'Bin', role }];
+    email = { id: 'e1', receivedAt: '2026-03-31T23:30:00Z', mailboxIds: { bin: true } };
+    expect((await call(await markRead())).status).toBe(409);
+    expect((await call(await archive())).status).toBe(409);
+    expect(writes).toHaveLength(0);
+  });
+
+  it('answers 404 for Mark read on a message that is gone, writing nothing', async () => {
+    email = null;
+    expect((await call(await markRead())).status).toBe(404);
     expect(writes).toHaveLength(0);
   });
 });
@@ -286,6 +358,48 @@ describe('Archive', () => {
     expect(writes).toHaveLength(0);
   });
 
+  it('files into a folder another client made first, on one more try', async () => {
+    mailboxes = [INBOX, ARCHIVE];
+    mailboxesOnSecondRead = [INBOX, ARCHIVE, { id: 'y26', name: '2026', parentId: 'arch' }];
+    mailboxSetResults = [{ notCreated: { year: { type: 'alreadyExists' } } }];
+    emailSetResults = [{ notUpdated: { e1: { type: 'invalidProperties' } } }];
+    expect((await call(await archive({ archiveMode: 'year', timeZone: 'UTC' }))).status).toBe(200);
+    expect(mailboxReads).toBe(2);
+    expect(writes).toHaveLength(2);
+    expect(emailSet().update.e1).toEqual({ mailboxIds: { y26: true } });
+    expect(destroyed()).toBeUndefined();
+  });
+
+  it('tries only once more, and stops when the second try fails too', async () => {
+    mailboxes = [INBOX, ARCHIVE];
+    mailboxSetResults = [
+      { notCreated: { year: { type: 'alreadyExists' } } },
+      { notCreated: { year: { type: 'alreadyExists' } } },
+    ];
+    emailSetResult = { notUpdated: { e1: { type: 'invalidProperties' } } };
+    expect((await call(await archive({ archiveMode: 'year', timeZone: 'UTC' }))).status).toBe(502);
+    expect(writes).toHaveLength(2);
+  });
+
+  it('leaves no empty folder when the message then is refused, deepest first', async () => {
+    mailboxes = [INBOX];
+    emailSetResult = { notUpdated: { e1: { type: 'forbidden' } } };
+    expect((await call(await archive({ archiveMode: 'month', timeZone: 'UTC' }))).status).toBe(502);
+    expect(destroyed()).toEqual(['new-month', 'new-year', 'new-archive']);
+  });
+
+  it('keeps the folders it made when the message went in', async () => {
+    mailboxes = [INBOX];
+    expect((await call(await archive({ archiveMode: 'month', timeZone: 'UTC' }))).status).toBe(200);
+    expect(destroyed()).toBeUndefined();
+  });
+
+  it("files into an Archive shared with others, as the app's own button does", async () => {
+    mailboxes = [INBOX, { ...ARCHIVE, shareWith: { u2: { mayReadItems: true } } }];
+    expect((await call(await archive())).status).toBe(200);
+    expect(emailSet().update.e1).toEqual({ mailboxIds: { arch: true } });
+  });
+
   describe('the admin gate', () => {
     it('refuses when the admin turned Archive off, whatever the worker believes', async () => {
       policy = { features: { archiveActionEnabled: false } };
@@ -299,9 +413,10 @@ describe('Archive', () => {
       expect(writes).toHaveLength(0);
     });
 
+  
     it("refuses when the login's scopes can't be worked out", async () => {
       subject = null;
-      expect((await call(await archive())).status).toBe(403);
+      expect((await call(await archive())).status).toBe(401);
       expect(writes).toHaveLength(0);
     });
 

@@ -351,6 +351,10 @@ self.addEventListener("message", (event) => {
     event.waitUntil(recordClientBuild(event.source && event.source.id, data.buildId).then(deleteStaleShellCaches));
     return;
   }
+  if (data.type === "client-logins") {
+    event.waitUntil(recordClientLogins(event.source && event.source.id, data.logins));
+    return;
+  }
   if (data.type === "offline-shell") {
     // The switch is kept before the event ends. The shell's files are
     // fetched without holding the event open: a worker busy with an event
@@ -970,12 +974,16 @@ function buildClickUrl(data, reply) {
 // refreshes, so the route can fail; the message then opens in the app.
 
 const NOTIFICATION_ACTIONS = ["archive", "mark-read", "reply"];
-// How long a tab has to take an action. A frozen tab doesn't answer.
+// How long a tab has to take an action. A frozen tab doesn't answer. A tab that
+// holds the notification's login gets longer, since a busy page may still run
+// the action with its plugins; if it stays silent, the message opens and the
+// route isn't tried, which would go round them.
 const CLIENT_TAKE_MS = 1_000;
-const CLIENTS_TAKE_TOTAL_MS = 2_500;
+const LOGIN_HOLDER_TAKE_MS = 3_000;
+const CLIENTS_TAKE_TOTAL_MS = 4_000;
 // How long a tab that took it has before this worker stops waiting for the outcome.
 const CLIENT_RESULT_MS = 5_000;
-const ACTION_ROUTE_DEADLINE_MS = 6_000;
+const ACTION_ROUTE_DEADLINE_MS = 4_500;
 // All of the above stay inside the 10 s a browser allows openWindow and focus
 // after a notification click, so the fallback can still open the message.
 
@@ -989,10 +997,44 @@ function pendingReplyKey() {
   return `${self.location.origin}${BASE_PATH}/__push-state/pending-reply`;
 }
 
+function clientLoginsKey() {
+  return `${self.location.origin}${BASE_PATH}/__push-state/client-logins`;
+}
+
+async function readClientLogins() {
+  try {
+    const cache = await caches.open(PUSH_STATE_CACHE);
+    const res = await cache.match(clientLoginsKey());
+    const map = res ? await res.json() : null;
+    return map && typeof map === "object" ? map : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+/** Notes which logins an open tab holds, and forgets tabs that are gone. Kept across worker restarts. */
+async function recordClientLogins(clientId, logins) {
+  if (!clientId || !Array.isArray(logins)) return;
+  try {
+    const open = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    const openIds = new Set(open.map((c) => c.id));
+    const known = await readClientLogins();
+    const next = {};
+    for (const [id, held] of Object.entries(known)) if (openIds.has(id)) next[id] = held;
+    next[clientId] = logins.filter((login) => typeof login === "string");
+    const cache = await caches.open(PUSH_STATE_CACHE);
+    await cache.put(clientLoginsKey(), new Response(JSON.stringify(next), { headers: { "Content-Type": "application/json" } }));
+  } catch (_) {
+    // Such a tab counts as not holding the login.
+  }
+}
+
 /**
  * What the page mirrors into this store (lib/pwa-notify/worker-state.ts): the
- * labels in the user's language, Archive on or off, how Archive files mail.
- * Nothing stored: no Archive button, since the admin may have turned it off.
+ * labels in the user's language, Archive on or off, how Archive files mail,
+ * and whether an enabled plugin may veto these actions. Nothing stored: no
+ * Archive button, since the admin may have turned it off, and no route, since
+ * a plugin may be there.
  */
 async function readNotificationActionPrefs() {
   let stored = null;
@@ -1007,6 +1049,7 @@ async function readNotificationActionPrefs() {
   return {
     archiveEnabled: !!stored && stored.archiveEnabled === true,
     archiveMode: stored && typeof stored.archiveMode === "string" ? stored.archiveMode : "single",
+    pluginsMayVeto: !stored || stored.pluginsMayVeto !== false,
     labels: {
       archive: labels.archive || "Archive",
       markRead: labels.markRead || "Mark as read",
@@ -1063,8 +1106,8 @@ function notificationActionOf(event, data) {
   return data.kind === "email" && data.emailId && data.accountId ? event.action : null;
 }
 
-/** Asks one tab. Resolves "done", "failed" (it tried), or "declined" (it didn't take it). */
-function askClient(client, message) {
+/** Asks one tab. Resolves "done", "failed" (it tried), "declined" (it didn't take it) or "silent" (no answer). */
+function askClient(client, message, takeMs) {
   return new Promise((resolve) => {
     if (typeof MessageChannel !== "function") {
       resolve("declined");
@@ -1077,7 +1120,7 @@ function askClient(client, message) {
       channel.port1.onmessage = null;
       resolve(result);
     };
-    timer = setTimeout(() => finish("declined"), CLIENT_TAKE_MS);
+    timer = setTimeout(() => finish("silent"), takeMs);
     channel.port1.onmessage = (answer) => {
       const status = answer.data && answer.data.status;
       if (status === "accepted") {
@@ -1102,13 +1145,22 @@ async function askOpenClients(message, allClients) {
   const ordered = allClients
     .filter((client) => !client.frameType || client.frameType === "top-level")
     .sort((a, b) => score(a) - score(b));
+  const held = await readClientLogins();
+  const holdsLogin = (client) => Array.isArray(held[client.id]) && held[client.id].includes(message.login);
   const giveUpAt = Date.now() + CLIENTS_TAKE_TOTAL_MS;
+  let silentHolder = false;
   for (const client of ordered) {
-    if (Date.now() >= giveUpAt) break;
-    const result = await askClient(client, message);
-    if (result !== "declined") return { result, client };
+    if (Date.now() >= giveUpAt) {
+      silentHolder = silentHolder || holdsLogin(client);
+      continue;
+    }
+    const holder = holdsLogin(client);
+    const result = await askClient(client, message, holder ? LOGIN_HOLDER_TAKE_MS : CLIENT_TAKE_MS);
+    if (result === "silent") silentHolder = silentHolder || holder;
+    else if (result !== "declined") return { result, client };
   }
-  return { result: "declined", client: null };
+  // A silent tab with this login may have plugins that would stop the action.
+  return { result: silentHolder ? "failed" : "declined", client: null };
 }
 
 /** Keeps a typed reply for the page the click is about to open; it's not for a URL. */
@@ -1129,6 +1181,9 @@ async function keepPendingReply(emailId, text) {
 async function postNotificationAction(action, data) {
   const prefs = await readNotificationActionPrefs();
   if (action === "archive" && !prefs.archiveEnabled) return false;
+  // Plugins run in pages. One that may stop or watch this action can't from
+  // the route, so the app opens instead.
+  if (prefs.pluginsMayVeto) return false;
   const body = { action, accountId: data.accountId, emailId: data.emailId, login: data.login };
   if (action === "archive") {
     body.archiveMode = prefs.archiveMode;
@@ -1165,6 +1220,8 @@ async function runNotificationAction(action, data, reply, allClients) {
     accountId: data.accountId,
     slot: data.slot,
     login: data.login,
+    // A frozen tab that thaws later must not act on a click long since handled.
+    at: Date.now(),
     ...(text ? { text } : {}),
   }, allClients);
   if (result === "done") {
@@ -1177,12 +1234,13 @@ async function runNotificationAction(action, data, reply, allClients) {
     }
     return true;
   }
-  // A tab with a live login tried and failed: the route won't do better.
-  if (result === "failed") return false;
   if (action === "reply") {
     if (text) await keepPendingReply(data.emailId, text);
     return false;
   }
+  // A tab with this login tried and failed, or stayed silent: the route won't
+  // do better and would go round its plugins.
+  if (result === "failed") return false;
   return postNotificationAction(action, data);
 }
 

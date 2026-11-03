@@ -23,7 +23,7 @@ afterEach(() => {
 
 describe('the worker store', () => {
   it('holds the prefs where sw.js reads them', async () => {
-    const prefs = { archiveEnabled: true, archiveMode: 'year' as const, labels: { archive: 'A', markRead: 'M', reply: 'R', replyPlaceholder: 'P' } };
+    const prefs = { archiveEnabled: true, archiveMode: 'year' as const, pluginsMayVeto: true, labels: { archive: 'A', markRead: 'M', reply: 'R', replyPlaceholder: 'P' } };
     await writeNotificationActionPrefs(prefs);
     const cache = await caches.open(PUSH_STATE_CACHE);
     const stored = await cache.match(notificationActionPrefsKey(window.location.origin));
@@ -41,7 +41,7 @@ describe('the worker store', () => {
 
   it('survives a browser without the Cache API', async () => {
     vi.stubGlobal('caches', undefined);
-    await expect(writeNotificationActionPrefs({ archiveEnabled: false, archiveMode: 'single', labels: { archive: '', markRead: '', reply: '', replyPlaceholder: '' } })).resolves.toBeUndefined();
+    await expect(writeNotificationActionPrefs({ archiveEnabled: false, archiveMode: 'single', pluginsMayVeto: false, labels: { archive: '', markRead: '', reply: '', replyPlaceholder: '' } })).resolves.toBeUndefined();
     await expect(consumePendingReplyText('e1')).resolves.toBe('');
   });
 });

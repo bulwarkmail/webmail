@@ -10,6 +10,7 @@ const PUSH_CACHE = 'bulwark-push-state-v1';
 const PREFS = {
   archiveEnabled: true,
   archiveMode: 'month',
+  pluginsMayVeto: false,
   labels: { archive: 'Archivieren', markRead: 'Als gelesen markieren', reply: 'Antworten', replyPlaceholder: 'Antwort schreiben' },
 };
 const ONE_MESSAGE = { kind: 'email', emailId: 'e1', threadId: 't1', accountId: 'a', slot: 2, login: 'fp' };
@@ -210,7 +211,7 @@ describe('Mark read and Archive', () => {
     const w = worker({ caches: await cachesWith(PREFS), clients: [client] });
     await w.click('mark-read');
     expect(client.messages.find((m) => m.kind === 'notification-action')).toEqual({
-      kind: 'notification-action', action: 'mark-read', emailId: 'e1', threadId: 't1', accountId: 'a', slot: 2, login: 'fp',
+      kind: 'notification-action', action: 'mark-read', emailId: 'e1', threadId: 't1', accountId: 'a', slot: 2, login: 'fp', at: expect.any(Number),
     });
     expect(w.posts()).toHaveLength(0);
     expect(client.navigate).not.toHaveBeenCalled();
@@ -254,6 +255,77 @@ describe('Mark read and Archive', () => {
     expect(body).toMatchObject({ action: 'archive', archiveMode: 'month', accountId: 'a', emailId: 'e1', login: 'fp' });
     expect(typeof body.timeZone).toBe('string');
     expect(body.timeZone).not.toBe('');
+  });
+
+  it('send when they asked, so a tab that thaws later can tell', async () => {
+    const client = tab('t', ['done']);
+    const before = Date.now();
+    const w = worker({ caches: await cachesWith(PREFS), clients: [client] });
+    await w.click('mark-read');
+    const at = client.messages.find((m) => m.kind === 'notification-action')?.at as number;
+    expect(at).toBeGreaterThanOrEqual(before);
+    expect(at).toBeLessThanOrEqual(Date.now());
+  });
+
+  it('leave the route alone while an enabled plugin may stop them, and open the message', async () => {
+    const w = worker({ caches: await cachesWith({ ...PREFS, pluginsMayVeto: true }) });
+    await w.click('mark-read');
+    expect(w.posts()).toHaveLength(0);
+    expect(w.openWindow).toHaveBeenCalledWith(MESSAGE_URL);
+  });
+
+  it('leave the route alone before any page has said what plugins there are', async () => {
+    const w = worker({ caches: await cachesWith() });
+    await w.click('mark-read');
+    expect(w.posts()).toHaveLength(0);
+    expect(w.openWindow).toHaveBeenCalledWith(MESSAGE_URL);
+  });
+
+  it('open the message when a tab holding this login stays silent, without the route', async () => {
+    const silent = tab('held', []);
+    const w = worker({ caches: await cachesWith(PREFS), clients: [silent] });
+    await w.dispatch('message', { data: { type: 'client-logins', logins: ['fp'] }, source: { id: 'held' } });
+    await w.click('archive');
+    expect(w.posts()).toHaveLength(0);
+    expect(silent.focus).toHaveBeenCalled();
+    expect(silent.navigate).toHaveBeenCalledWith(MESSAGE_URL);
+  });
+
+  it('give a busy tab holding this login longer than the others', async () => {
+    const busy = tab('held', []);
+    const post = busy.postMessage;
+    busy.postMessage = (message: Record<string, unknown>, ports?: MessagePort[]) => {
+      post(message, ports);
+      if (message.kind === 'notification-action') setTimeout(() => ports?.[0]?.postMessage({ status: 'done' }), 1_500);
+    };
+    const w = worker({ caches: await cachesWith(PREFS), clients: [busy] });
+    await w.dispatch('message', { data: { type: 'client-logins', logins: ['fp'] }, source: { id: 'held' } });
+    await w.click('mark-read');
+    expect(busy.navigate).not.toHaveBeenCalled();
+    expect(w.posts()).toHaveLength(0);
+    expect(w.openWindow).not.toHaveBeenCalled();
+  });
+
+  it('take another tab that answers over a silent one holding this login', async () => {
+    const silent = tab('held', [], { visibilityState: 'visible', focused: true });
+    const alive = tab('alive', ['done']);
+    const w = worker({ caches: await cachesWith(PREFS), clients: [silent, alive] });
+    await w.dispatch('message', { data: { type: 'client-logins', logins: ['fp'] }, source: { id: 'held' } });
+    await w.click('mark-read');
+    expect(alive.messages.some((m) => m.kind === 'notification-action')).toBe(true);
+    expect(silent.navigate).not.toHaveBeenCalled();
+    expect(w.posts()).toHaveLength(0);
+  });
+
+  it('forget tabs that are gone when another reports its logins', async () => {
+    const caches = await cachesWith(PREFS);
+    const clients = [tab('one', []), tab('two', [])];
+    const w = worker({ caches, clients });
+    await w.dispatch('message', { data: { type: 'client-logins', logins: ['fp'] }, source: { id: 'one' } });
+    clients.shift();
+    await w.dispatch('message', { data: { type: 'client-logins', logins: ['other'] }, source: { id: 'two' } });
+    const cache = await caches.open(PUSH_CACHE);
+    expect(await (await cache.match(`${ORIGIN}/__push-state/client-logins`))!.json()).toEqual({ two: ['other'] });
   });
 
   it('use the route when a tab never answers, so a frozen tab costs a moment only', async () => {
@@ -328,6 +400,17 @@ describe('Reply', () => {
     const cache = await caches.open(PUSH_CACHE);
     const kept = await (await cache.match(`${ORIGIN}/__push-state/pending-reply`))!.json();
     expect(kept).toMatchObject({ emailId: 'e1', text: 'Private words' });
+  });
+
+  it('keeps typed text and the reply link when a tab holding this login stays silent', async () => {
+    const caches = await cachesWith(PREFS);
+    const silent = tab('held', []);
+    const w = worker({ caches, clients: [silent] });
+    await w.dispatch('message', { data: { type: 'client-logins', logins: ['fp'] }, source: { id: 'held' } });
+    await w.click('reply', { reply: 'Private words' });
+    expect(silent.navigate).toHaveBeenCalledWith(`${MESSAGE_URL}&reply=1`);
+    const cache = await caches.open(PUSH_CACHE);
+    expect(await (await cache.match(`${ORIGIN}/__push-state/pending-reply`))!.json()).toMatchObject({ text: 'Private words' });
   });
 
   it('leaves nothing in the store without typed text', async () => {

@@ -6,8 +6,20 @@
  *
  * Runs in the page and on the server: both ends compare the result.
  */
+function canonicalServerUrl(serverUrl: string): string {
+  // The registry keeps what the user typed, the cookie what the login route
+  // normalised: `https://Mail.Example.org:443/` and `https://mail.example.org`
+  // are the same server.
+  try {
+    const url = new URL(serverUrl);
+    return `${url.origin}${url.pathname}`.replace(/\/+$/, '');
+  } catch {
+    return serverUrl.replace(/\/+$/, '');
+  }
+}
+
 export async function loginFingerprint(serverUrl: string, username: string | undefined): Promise<string> {
-  const text = `${serverUrl.replace(/\/+$/, '')}\n${(username ?? '').trim().toLowerCase()}`;
+  const text = `${canonicalServerUrl(serverUrl)}\n${(username ?? '').trim().toLowerCase()}`;
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
   return Array.from(new Uint8Array(digest).slice(0, 16), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }

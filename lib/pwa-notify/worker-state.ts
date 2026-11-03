@@ -9,6 +9,8 @@ import { PUSH_STATE_CACHE } from '@/lib/push-preferences';
 export interface NotificationActionPrefs {
   archiveEnabled: boolean;
   archiveMode: 'single' | 'year' | 'month';
+  /** An enabled plugin may stop or watch these actions: the worker leaves the route alone. */
+  pluginsMayVeto: boolean;
   labels: { archive: string; markRead: string; reply: string; replyPlaceholder: string };
 }
 

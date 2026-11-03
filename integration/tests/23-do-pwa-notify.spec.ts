@@ -1,6 +1,6 @@
 import { test, expect, type BrowserContext, type Page, type Worker } from '@playwright/test';
 import { JMAP_URL } from './helpers/config';
-import { ENT, deliver, jmapAs, requireEntEnv, userPage } from './helpers/ent';
+import { ENT, adminContext, deliver, jmapAs, requireEntEnv, userPage, withPolicy } from './helpers/ent';
 
 /**
  * A notification's Archive, Mark read and Reply, and Background Sync, in
@@ -395,6 +395,35 @@ test.describe('with no tab open', () => {
     }
   });
 
+  test('with an enabled plugin that may stop it, the route is skipped and the message opens', async () => {
+    const mail = await oneUnread();
+    const shown = await pushed(sw, mail.accountId, mail.id);
+    await sw.evaluate(async () => {
+      const cache = await caches.open('bulwark-push-state-v1');
+      const key = `${self.location.origin}/__push-state/actions`;
+      const prefs = await (await cache.match(key))!.json();
+      await cache.put(key, new Response(JSON.stringify({ ...prefs, pluginsMayVeto: true })));
+    });
+    await closeTheApp();
+    await routePosts(sw);
+    await click(sw, 'mark-read', shown.data);
+    expect(await routePosts(sw)).toEqual([]);
+    expect((await opened(sw))[0]).toContain(`/mail/message/${mail.id}`);
+    expect((await serverCopy(mail.id)).keywords.$seen).toBeFalsy();
+  });
+
+  test('a message since moved to Trash stays there, and opens in the app', async () => {
+    const mail = await oneUnread();
+    const shown = await pushed(sw, mail.accountId, mail.id);
+    await closeTheApp();
+    const client = await jmapAs(USER);
+    const trash = await client.mailboxByRole('trash');
+    await client.moveEmail(mail.id, trash!.id);
+    await click(sw, 'archive', shown.data);
+    expect((await opened(sw))[0]).toContain(`/mail/message/${mail.id}`);
+    expect(Object.keys((await serverCopy(mail.id)).mailboxIds)).toEqual([trash!.id]);
+  });
+
   test('with the context cookie gone the message opens instead, and stays as it was', async () => {
     const mail = await oneUnread();
     const shown = await pushed(sw, mail.accountId, mail.id);
@@ -445,6 +474,63 @@ test.describe('with no tab open', () => {
     await page.reload();
     await expect(page.getByText('Please answer.').first()).toBeVisible({ timeout: 45_000 });
     expect(await replyInput()).toBe(false);
+  });
+});
+
+test.describe('Reply in the Pro shell', () => {
+  test('opens the composer in the message tab, with the typed text, from the live tab and from the link', async ({ browser }) => {
+    const page = await userPage(browser, USER);
+    const context = page.context();
+    await context.grantPermissions(['notifications']);
+    await page.evaluate(() => {
+      const raw = localStorage.getItem('settings-storage');
+      const stored = raw ? JSON.parse(raw) : { state: {} };
+      stored.state = { ...stored.state, proInterface: true };
+      localStorage.setItem('settings-storage', JSON.stringify(stored));
+    });
+    await page.goto('/pro');
+    await expect(page.locator('[data-pro-takeover]')).toHaveCount(0, { timeout: 60_000 });
+    const sw = await workerOf(context, page);
+    const replyIsOpen = (subject: string) => page.evaluate((text) => {
+      const inputs = [...document.querySelectorAll('input')] as HTMLInputElement[];
+      return inputs.some((input) => input.value === `Re: ${text}`);
+    }, subject);
+
+    const live = await oneUnread();
+    const liveShown = await pushed(sw, live.accountId, live.id);
+    // Until the shell's mail surface is up the tab declines, and the worker
+    // falls back to the link: ask again. Taken once, no window opens.
+    await expect.poll(async () => {
+      await click(sw, 'reply', liveShown.data, `Pro typed ${RUN}`);
+      return (await opened(sw)).length;
+    }, { timeout: 45_000, intervals: [3_000] }).toBe(0);
+    await expect.poll(() => replyIsOpen(live.subject), { timeout: 30_000 }).toBe(true);
+    await expect(page.getByText(`Pro typed ${RUN}`).first()).toBeVisible({ timeout: 10_000 });
+
+    const linked = await oneUnread();
+    await page.goto(`/mail/message/${linked.id}?owner=${linked.accountId}&reply=1`);
+    await expect.poll(() => replyIsOpen(linked.subject), { timeout: 60_000 }).toBe(true);
+    await context.close();
+  });
+});
+
+test.describe('session limits', () => {
+  test('under a maximum session age the route answers 401 and writes nothing', async ({ browser }) => {
+    const admin = await adminContext(browser);
+    const page = await userPage(browser, USER);
+    await page.context().grantPermissions(['notifications']);
+    const sw = await workerOf(page.context(), page);
+    const mail = await oneUnread();
+    const shown = await pushed(sw, mail.accountId, mail.id);
+    await withPolicy(admin, { organisation: { session: { idleMinutes: 0, maxHours: 8, warnSeconds: 60 } } }, async () => {
+      const res = await page.request.post('/api/push/action', {
+        data: { action: 'mark-read', accountId: mail.accountId, emailId: mail.id, login: shown.data.login },
+      });
+      expect(res.status()).toBe(401);
+    });
+    expect((await serverCopy(mail.id)).keywords.$seen).toBeFalsy();
+    await page.context().close();
+    await admin.close();
   });
 });
 
