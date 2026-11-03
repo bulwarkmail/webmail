@@ -19,6 +19,12 @@ import { settingsId } from '@/lib/settings-sync';
 import { getStore, type CollectionOptions } from '@/lib/shared-store';
 import type { DeviceView, WipeReason } from './types';
 
+/**
+ * A new row is written to the state dir and stays half a year, for anyone with a
+ * session. Enough for an office turning this on in one morning: a device turned
+ * away tries again in a quarter of an hour.
+ */
+export const REGISTER_PER_HOUR = 60;
 export const DEVICE_ID_RE = /^[0-9a-f]{64}\/[0-9a-f]{32}$/;
 export const DEVICE_SECRET_RE = /^[0-9a-f]{64}$/;
 const USER_KEY_RE = /^[0-9a-f]{64}$/;
