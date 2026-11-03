@@ -107,6 +107,31 @@ describe('a tab that starts after the owner', () => {
   });
 });
 
+describe('the owner tab calling its own worker', () => {
+  it('waits for the worker on the channel, since a call posted before that is lost', async () => {
+    const worker = new FakeChannel('bulwark-store-rpc');
+    const heard: Array<{ kind: string; id?: string; from?: string }> = [];
+    worker.onmessage = (event) => heard.push(event.data as { kind: string });
+    const client = new StoreClient();
+    client.start();
+    FakeWorker.all[0].becomeOwner();
+    expect(client.ownsStore).toBe(true);
+
+    const call = client.area('a', 'x.y');
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(heard.some(({ kind }) => kind === 'rpc')).toBe(false);
+    // It asked again, for when the first announcement was missed.
+    expect(heard.filter(({ kind }) => kind === 'who-owns')).toHaveLength(2);
+
+    worker.postMessage({ kind: 'owner-changed', owner: client.clientId });
+    await vi.waitFor(() => expect(heard.some(({ kind }) => kind === 'rpc')).toBe(true));
+    const rpc = heard.find(({ kind }) => kind === 'rpc')!;
+    worker.postMessage({ kind: 'reply', id: rpc.id, to: rpc.from, result: 'done' });
+    await expect(call).resolves.toBe('done');
+    client.halt();
+  });
+});
+
 describe('a sign-out in any tab', () => {
   it('stops this tab\'s worker and rejects what was waiting', async () => {
     const halted = vi.fn();
@@ -209,6 +234,7 @@ describe('the page\'s store', () => {
     expect(await getAccountRecord('a@x')).not.toBeNull();
 
     const owner = new FakeChannel('bulwark-store-rpc');
+    owner.postMessage({ kind: 'owner-changed', owner: 'worker' });
     const removed: unknown[] = [];
     owner.onmessage = (event) => {
       const message = event.data as { kind: string; id: string; from: string; method: string; params: unknown };

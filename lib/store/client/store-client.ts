@@ -110,8 +110,10 @@ export class StoreClient {
     switch (message.kind) {
       case 'owner':
         this.isOwner = true;
-        this.owner = this.clientId;
-        this.flushOwnerWaiters();
+        // Not an owner to call yet. This message can overtake the worker's
+        // channel getting registered, and a call posted then never reaches it,
+        // so calls wait for the worker's answer on the channel itself.
+        this.channel?.postMessage({ kind: 'who-owns' } satisfies ChannelMessage);
         this.options.onOwner?.();
         break;
       case 'result': {
