@@ -5320,6 +5320,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                       onDone={() => {
                         if (advancedSearchDebounceRef.current) void runAdvancedSearchNow();
                         toggleAdvancedSearch();
+                        // On a phone the panel is full screen: the results are behind it.
+                        setMobileSearchOpen(false);
                       }}
                       folderSelect={!isUnifiedView ? renderSearchFolderSelect(SELECT_CLASS, true) : undefined}
                     />
@@ -5496,7 +5498,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 });
               }}
               className={cn(
-                "absolute z-40 shadow-lg",
+                // Under the drawer's backdrop (z-40), which comes earlier in the page.
+                "absolute z-30 shadow-lg",
                 mvMobile
                   ? "bottom-4 end-4 h-14 gap-3 rounded-2xl px-5"
                   : isMobile
