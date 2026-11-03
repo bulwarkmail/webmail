@@ -334,6 +334,8 @@ describe('a send whose response got lost', () => {
   it('a lookup that can\'t decide leaves it uncertain for the user, who can still send it', async () => {
     const client = fakeClient();
     const entry = await uncertainSend(client);
+    // The store's own sync mustn't take the failure meant for the lookup.
+    await store.sync('acc');
     server.failNext.set('Email/query', 'forbidden');
     await flush(client);
     expect(client.sendEmail).not.toHaveBeenCalled();
