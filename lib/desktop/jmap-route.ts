@@ -1,7 +1,7 @@
 /**
  * Where the page reaches a plain http mail server in the desktop app.
  *
- * The app's page is https, so Chromium blocks a fetch to http://192.168.x as
+ * The app's page is https, so Chromium blocks a fetch to a plain http address as
  * mixed content, whatever the CSP says. The embedded server forwards
  * `/__jmap/<id>/...` to servers the user approved (src/server/jmap-proxy.ts in
  * the desktop repo), where the id is the base64url of the server's origin. The
