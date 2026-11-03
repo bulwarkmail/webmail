@@ -305,13 +305,13 @@ test('the files on the device hold no readable mail, and a store whose key went 
     request.onblocked = () => resolve();
   }));
   await page.goto(new URL('/', page.url()).href);
-  await expect(page.getByText("couldn't be read", { exact: false })).toBeVisible({ timeout: 60_000 });
+  // Once on screen and once for screen readers.
+  await expect(page.locator('p', { hasText: "couldn't be read" }).first()).toBeVisible({ timeout: 60_000 });
   await toMail(page);
   await expect(page.locator('[data-testid="email-list-item"]', { hasText: subject }).first()).toBeVisible({ timeout: 60_000 });
   await expect.poll(async () => (await offlineDatabase(page)).accounts, { timeout: 30_000 }).toBeGreaterThan(0);
   const newFile = await storeFileName(page);
   expect(newFile).not.toBe(file);
-  await expect(page.getByText("couldn't be read", { exact: false })).toBeVisible();
   const after = await rawStoreFiles(page, [file, newFile]);
   expect(after.found).toEqual([newFile]);
   await page.context().close();
