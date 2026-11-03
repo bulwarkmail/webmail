@@ -195,21 +195,15 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
 
   const handleSaveState = useCallback((state: ComposerDraftData) => {
     updateComposeDraft(tabIdRef.current, state);
-    // Keep the tab title in sync with the working subject.
-    const subject = state.subject?.trim() || t('email_composer.new_message');
-    updateTabTitle(tabIdRef.current, subject);
-  }, [updateComposeDraft, updateTabTitle, t]);
+  }, [updateComposeDraft]);
 
-  // On first mount, ensure the tab title matches whatever subject we were
-  // initialised with. The opener's title already says "Re: …" or "Fwd: …" for
-  // a reply or forward. replyTo is no source for it: the mail tab fills that
-  // in from the selected message for a new message too.
-  useEffect(() => {
-    const title = data.initialData?.subject?.trim() || data.title || t('email_composer.new_message');
-    updateTabTitle(tabIdRef.current, title);
-    // Run once on mount only.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // The tab's title is the subject as it is typed, so several open compose
+  // tabs can be told apart. replyTo is no source for it: the mail tab fills
+  // that in from the selected message for a new message too.
+  const newMessageTitle = t('email_composer.new_message');
+  const handleSubjectChange = useCallback((subject: string) => {
+    updateTabTitle(tabIdRef.current, subject.trim() || newMessageTitle);
+  }, [updateTabTitle, newMessageTitle]);
 
   // Mirrors the standard shell (see the same prop in `components/mail/mail-app.tsx`).
   // Without it `mode === 'compose'` resolves `findComposeIdentityId(identities,
@@ -252,6 +246,7 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
           requestCloseRef={requestCloseRef}
           onDiscardDraft={handleDiscardDraft}
           onSaveState={handleSaveState}
+          onSubjectChange={handleSubjectChange}
           className="flex-1"
         />
       </ErrorBoundary>

@@ -348,6 +348,8 @@ interface EmailComposerProps {
    */
   onDiscardDraft?: (draftId: string, draft?: { accountId?: string; localAccountId?: string }) => void;
   onSaveState?: (data: ComposerDraftData) => void;
+  /** The subject as typed, for a host that shows it (a Pro compose tab's title). */
+  onSubjectChange?: (subject: string) => void;
   className?: string;
   initialDraftText?: string;
   initialData?: ComposerDraftData | null;
@@ -494,6 +496,7 @@ export function EmailComposer({
   requestCloseRef,
   onDiscardDraft,
   onSaveState,
+  onSubjectChange,
   className,
   initialDraftText: initialDraftTextProp,
   initialData: initialDataProp,
@@ -1827,6 +1830,10 @@ export function EmailComposer({
   // The session is fixed for the life of this mount.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveSessionKey]);
+
+  useEffect(() => {
+    onSubjectChange?.(subject);
+  }, [onSubjectChange, subject]);
 
   // Auto-save state on unmount (when user navigates away without explicitly closing)
   useEffect(() => {

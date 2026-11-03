@@ -5,7 +5,13 @@ import React from 'react';
 // The mail tab hands every compose tab the selected message as replyTo, a new
 // message too. A new message was titled after whatever message was open.
 
-vi.mock('@/components/email/email-composer', () => ({ EmailComposer: () => React.createElement('div') }));
+const composer = vi.hoisted(() => ({ onSubjectChange: null as ((s: string) => void) | null }));
+vi.mock('@/components/email/email-composer', () => ({
+  EmailComposer: (props: { onSubjectChange: (s: string) => void }) => {
+    composer.onSubjectChange = props.onSubjectChange;
+    return React.createElement('div');
+  },
+}));
 vi.mock('@/components/error', () => ({
   ErrorBoundary: ({ children }: { children: React.ReactNode }) => React.createElement(React.Fragment, null, children),
   ComposerErrorFallback: () => null,
@@ -35,20 +41,23 @@ import { ProComposeTabBody } from '../pro-compose-tab-body';
 const selected = { subject: 'Invoice August' };
 
 describe('Pro compose tab title', () => {
-  beforeEach(() => updateTabTitle.mockClear());
-
-  it('stays the new-message title with a message selected in the mail tab', () => {
-    render(<ProComposeTabBody tabId="t" data={{ sessionId: 1, mode: 'compose', title: 'New message', replyTo: selected }} />);
-    expect(updateTabTitle).toHaveBeenLastCalledWith('t', 'New message');
+  beforeEach(() => {
+    updateTabTitle.mockClear();
+    composer.onSubjectChange = null;
   });
 
-  it('keeps the prefix the opener gave a reply', () => {
-    render(<ProComposeTabBody tabId="t" data={{ sessionId: 1, mode: 'reply', title: 'Re: Invoice August', replyTo: selected }} />);
-    expect(updateTabTitle).toHaveBeenLastCalledWith('t', 'Re: Invoice August');
+  it('does not take the title of the message selected in the mail tab', () => {
+    render(<ProComposeTabBody tabId="t" data={{ sessionId: 1, mode: 'compose', title: 'email_composer.new_message', replyTo: selected }} />);
+    composer.onSubjectChange!('');
+    expect(updateTabTitle).toHaveBeenLastCalledWith('t', 'email_composer.new_message');
+    expect(updateTabTitle).not.toHaveBeenCalledWith('t', 'Invoice August');
   });
 
-  it('follows the subject of a reopened draft', () => {
-    render(<ProComposeTabBody tabId="t" data={{ sessionId: 1, mode: 'compose', title: 'x', initialData: { subject: 'Lunch?' } as never }} />);
+  it('follows the subject as it is typed, and falls back when it is emptied', () => {
+    render(<ProComposeTabBody tabId="t" data={{ sessionId: 1, mode: 'compose', title: 'email_composer.new_message' }} />);
+    composer.onSubjectChange!('Lunch?');
     expect(updateTabTitle).toHaveBeenLastCalledWith('t', 'Lunch?');
+    composer.onSubjectChange!('   ');
+    expect(updateTabTitle).toHaveBeenLastCalledWith('t', 'email_composer.new_message');
   });
 });
