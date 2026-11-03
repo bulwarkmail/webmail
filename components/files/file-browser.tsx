@@ -3,12 +3,13 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import {
-  Upload, FolderPlus, Download, Trash2, Pencil, Copy, Clipboard, Scissors, Info,
+  Upload, FolderPlus, Download, Trash2, Pencil, Copy, Clipboard, Scissors, Info, Pin, PinOff,
   FilePlus, CopyPlus, AlertCircle, FolderUp, Share2, SquarePen, Eye, FolderOpen,
   RefreshCw, Star, StarOff, Plus, CheckSquare, File, RotateCcw, FolderInput,
 } from "@/components/icons";
 import { useIsDesktop, useIsMobile, useMediaQuery } from "@/hooks/use-media-query";
 import { useContextMenu } from "@/hooks/use-context-menu";
+import { useKeepFileOffline } from "@/hooks/use-keep-file-offline";
 import { useRegisterCommands } from "@/lib/command-registry";
 import { formatShortcutCombo } from "@/lib/shortcut-keys";
 import { Button } from "@/components/ui/button";
@@ -319,6 +320,8 @@ export function FileBrowser({
   const dragDepth = useRef(0);
   const anchorName = useRef<string | null>(null);
   const menu = useContextMenu<MenuData>();
+  const tOffline = useTranslations("offlineStorage");
+  const { keptOffline, canKeepOffline, toggleKeptOffline } = useKeepFileOffline(client);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -938,6 +941,13 @@ export function FileBrowser({
               <ContextMenuItem icon={SquarePen} label={t("office_edit")} onClick={() => { closeMenu(); onEditFile(resource.name); }} />
             )}
           </>
+        )}
+        {canKeepOffline(resource) && (
+          <ContextMenuItem
+            icon={keptOffline.has(resource.id) ? PinOff : Pin}
+            label={keptOffline.has(resource.id) ? tOffline("unpin") : tOffline("keep_offline")}
+            onClick={() => { closeMenu(); void toggleKeptOffline(resource); }}
+          />
         )}
         {(canShare(resource) || (resource.isDirectory && !resource.isShared)) && <ContextMenuSeparator />}
         {canShare(resource) && (

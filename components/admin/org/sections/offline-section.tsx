@@ -25,7 +25,7 @@ const CAP_FIELDS: CapField[] = [
   {
     key: 'offlineMaxAttachmentMb',
     label: 'Largest attachment or file kept',
-    description: 'Anything bigger is removed from the device and opened from the server when there is a connection.',
+    description: 'Anything bigger leaves the device and opens from the server when there is a connection. Files someone chose to keep offline count only towards the total below.',
     unit: 'MB',
     max: 1024 * 1024,
   },

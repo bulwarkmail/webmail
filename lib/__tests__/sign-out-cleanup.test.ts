@@ -26,6 +26,7 @@ describe('purgeSignedOutData', () => {
     for (const key of [
       'email-snapshot', 'pro-tabs', 'search-history-storage', 'calendar-storage',
       'files-favorites', 'files-recent-files', 'files-path-stack', 'bulwark-delegate-names',
+      'bulwark-offline-accounts', 'bulwark-offline-choices', 'bulwark-offline-health',
       'settings-storage', 'theme-storage', 'locale-storage', 'template-storage', 'files-view-mode',
     ]) localStorage.setItem(key, 'x');
 

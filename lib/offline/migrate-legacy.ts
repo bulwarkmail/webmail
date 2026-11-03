@@ -14,7 +14,8 @@ import { getStore } from '@/lib/store/client/api';
 import type { StoreSession } from '@/lib/store/engine/transport';
 import type { LegacyImport } from '@/lib/store/outbox/calls';
 import type { OutboxError, OutboxStatus, OutboxSummary, PolicyFingerprint, SendItem } from '@/lib/store/outbox/items';
-import { useOfflineStore } from './state';
+import { LEGACY_CHOICE } from './scope';
+import { useOfflineStore, writeChoice } from './state';
 
 export const LEGACY_DB_NAME = 'bulwark-offline';
 
@@ -172,6 +173,8 @@ async function moveNow(): Promise<void> {
     const keyRecord = await result(db.transaction('keys', 'readonly').objectStore('keys').get('aes')) as { key: CryptoKey } | undefined;
     const key = keyRecord?.key ?? null;
     for (const account of useOfflineStore.getState().enabled) {
+      // Keeps the window it had: a choice now, so a later default can't change it.
+      if (!useOfflineStore.getState().choices[account]) writeChoice(account, LEGACY_CHOICE);
       const part = await readAccount(db, key, account);
       const { session, ...content } = part;
       if (session) await getStore().ensureOpen(account, session);

@@ -21,13 +21,13 @@
  */
 
 import { IS_LITE } from '@/lib/lite';
-import { devicesForAccount } from '@/lib/device-policy';
+import { devicesForAccount, signedInAccountIds } from '@/lib/device-policy';
 import { accountSubjectPending, useAccountSubjects } from '@/lib/org/account-subjects';
 import { labelsPolicyFor } from '@/lib/outgoing/classification';
 import { getSendGuardSource, guardState, guardsSending } from '@/lib/plugin-send-guards';
 import { emitPushStateChange } from '@/lib/push-events';
 import { requestOutboxSync } from '@/lib/pwa-notify/outbox-sync';
-import { STORAGE_ERROR_AREA } from '@/lib/store/area';
+import { STORAGE_ERROR_AREA, type StoreScope, type StoreUsage } from '@/lib/store/area';
 import { configureStore, getStore, type StorePageHooks } from '@/lib/store/client/api';
 import { purgeStoreFiles } from '@/lib/store/client/purge';
 import type { StoreSession } from '@/lib/store/engine/transport';
@@ -52,7 +52,30 @@ import {
   type PolicyFingerprint,
 } from './queue';
 import { clearHandoffs } from '@/lib/launch-handoff';
-import { isOfflineNow, OFFLINE_ACCOUNTS_KEY, readEnabledFrom, serverKey, setServerDown, useOfflineStore, writeEnabled, type OutboxRow } from './state';
+import {
+  forgetAccountState,
+  forgetAllAccountState,
+  isOfflineNow,
+  OFFLINE_ACCOUNTS_KEY,
+  OFFLINE_CHOICES_KEY,
+  OFFLINE_HEALTH_KEY,
+  readEnabledFrom,
+  readStoredChoices,
+  readStoredHealth,
+  serverKey,
+  setServerDown,
+  useOfflineStore,
+  writeChoice,
+  writeEnabled,
+  writeHealth,
+  type AreaConflict,
+  type OutboxRow,
+  type UserChoice,
+} from './state';
+import { effectiveScope, offlineDefaultOn, olderThanCap, platformDefault, userChoiceFor, type EffectiveScope } from './scope';
+import { isStandaloneDisplayMode } from '@/lib/standalone-display';
+import { readPersistence, requestPersistence, safariMayDelete, wasEvicted } from './storage-health';
+import { nextProgress } from './sync-progress';
 import { flushQueue, settleStaleSends } from './flush';
 import { LEGACY_DB_NAME, moveLegacyOutbox } from './migrate-legacy';
 import { deleteShellCaches, tellServiceWorker } from './shell';
@@ -66,6 +89,8 @@ export type OfflineNotice =
   | { kind: 'lost'; subjects: string[] }
   | { kind: 'conflict'; count: number }
   | { kind: 'storage-failed' }
+  | { kind: 'evicted'; lost: number }
+  | { kind: 'default-on' }
   | { kind: 'refused-delete' }
   | { kind: 'refused-other' }
   | { kind: 'forbidden' }
@@ -107,6 +132,11 @@ export function offlineAllowed(account: string | null | undefined): boolean {
   return offlineSupported() && !devicesForAccount(account ?? null).noOffline;
 }
 
+/** What this account keeps here: the organisation's policy over the user's choice over the platform's default. */
+export function scopeForAccount(account: string): EffectiveScope {
+  return effectiveScope(account, userChoiceFor(account), devicesForAccount(account), platformDefault());
+}
+
 /** "Keep mail on this device" is on for this account here, and allowed. */
 export function offlineActive(account: string | null | undefined): boolean {
   return !!account && useOfflineStore.getState().enabled.includes(account) && offlineAllowed(account);
@@ -145,6 +175,9 @@ const storeHooks: StorePageHooks = {
     return {
       session: (client?.getSessionSnapshot() as StoreSession | undefined) ?? null,
       auth: client?.getAuthHeader() ?? null,
+      // Until the policy is known the store keeps its last scope, so a slow
+      // start doesn't read as a wider window that has to be fetched.
+      scope: scopeDecided(account) ? scopeForAccount(account).scope : undefined,
       invertedKeywordSort: client?.keywordSortInverted() ?? null,
     };
   },
@@ -155,12 +188,34 @@ const storeHooks: StorePageHooks = {
     await client.requestNetworkOnly([['Core/echo', {}, '0']]);
     return client.getAuthHeader();
   },
+  onOpened(account, found) {
+    const health = useOfflineStore.getState().health[account];
+    if (wasEvicted({ opened: !!health?.opened, ...found })) {
+      const lost = health?.pending ?? 0;
+      writeHealth(account, { opened: true, pending: 0, evicted: { at: Date.now(), lost } });
+      notify({ kind: 'evicted', lost });
+      void refreshQueueState();
+      return;
+    }
+    writeHealth(account, { opened: true });
+  },
   onEvent(event) {
     if (event.type === 'synced') {
-      useOfflineStore.setState((s) => ({ lastSyncedAt: { ...s.lastSyncedAt, [event.account]: event.at } }));
+      useOfflineStore.setState((s) => {
+        const { [event.account]: _full, ...storageFull } = s.storageFull;
+        const { [event.account]: _progress, ...progress } = s.progress;
+        return { lastSyncedAt: { ...s.lastSyncedAt, [event.account]: event.at }, storageFull, progress };
+      });
+      writeHealth(event.account, { lastSync: event.at });
       void refreshUsage();
+      // A pass also sends what the calendar and contacts have waiting.
+      void refreshQueueState();
+    }
+    if (event.type === 'progress') {
+      useOfflineStore.setState((s) => ({ progress: { ...s.progress, [event.account]: nextProgress(s.progress[event.account], event, Date.now()) } }));
     }
     if (event.type === 'error' && event.area === STORAGE_ERROR_AREA) {
+      useOfflineStore.setState((s) => ({ storageFull: { ...s.storageFull, [event.account]: s.storageFull[event.account] ?? Date.now() } }));
       const now = Date.now();
       if (now - lastStorageNotice < STORAGE_NOTICE_MS) return;
       lastStorageNotice = now;
@@ -193,6 +248,9 @@ function noticeRefused(answered: OfflineResponse | null, methodCalls: OfflineMet
     && Object.values((result?.notUpdated ?? {}) as Record<string, { type?: string }>).some((error) => error.type === 'invalidProperties'));
   notify({ kind: emptied ? 'refused-delete' : 'refused-other' });
 }
+
+/** What the store may keep for later when it answers for the server. */
+const QUEUEING_METHOD = /^(Email|CalendarEvent|Calendar|ContactCard|AddressBook)\/set$/;
 
 const probes = new Map<string, Promise<boolean>>();
 /** A black-holed connection never answers the probe either. */
@@ -238,7 +296,7 @@ const hooks: OfflineHooks = {
       // The store couldn't start or lost its owner: as if nothing were kept.
     }
     noticeRefused(answered, methodCalls);
-    if (methodCalls.some(([name]) => name === 'Email/set') && answered) {
+    if (answered && methodCalls.some(([name]) => QUEUEING_METHOD.test(name))) {
       requestOutboxSync();
       void refreshQueueState();
     }
@@ -270,7 +328,11 @@ const hooks: OfflineHooks = {
     if (!offlineActive(account) || !account) return;
     for (const [name, result, callId] of response.methodResponses) {
       if (name !== 'Email/get' || !Array.isArray(result?.list)) continue;
-      const opened = (result.list as Array<{ bodyValues?: Record<string, { isTruncated?: boolean }> }>).filter(hasWholeText);
+      // Past the organisation's cap a message isn't kept, however it got opened.
+      const cap = devicesForAccount(account).offlineMaxDays;
+      const now = Date.now();
+      const opened = (result.list as Array<{ bodyValues?: Record<string, { isTruncated?: boolean }>; receivedAt?: unknown }>)
+        .filter((email) => hasWholeText(email) && !olderThanCap(email.receivedAt, cap, now));
       if (opened.length === 0) continue;
       const args = methodCalls.find(([n, , id]) => id === callId && n === name)?.[1];
       const jmap = (result.accountId as string) || (args?.accountId as string) || client.getAccountId();
@@ -471,13 +533,13 @@ export async function refreshQueueState(): Promise<void> {
   // Nothing is kept for an account that hasn't it on; and opening the
   // store would create it (on the sign-in page, after a sign-out).
   if (useOfflineStore.getState().enabled.length === 0) {
-    useOfflineStore.setState({ outbox: [], pendingChanges: 0, conflicts: [] });
+    useOfflineStore.setState({ outbox: [], pendingChanges: 0, conflicts: [], areaConflicts: [] });
     return;
   }
   try {
     // Sends of a tab closed on the way: uncertain, so they can be looked up.
     await settleStaleSends();
-    const { patches, outbox: entries, conflicts } = await readQueue();
+    const { patches, patchesBy, outbox: entries, conflicts } = await readQueue();
     const rows: OutboxRow[] = entries.map((entry) => ({
       id: entry.id,
       account: entry.account,
@@ -487,17 +549,72 @@ export async function refreshQueueState(): Promise<void> {
       status: entry.status,
       error: entry.error,
     }));
-    useOfflineStore.setState({ outbox: rows, pendingChanges: patches, conflicts });
+    const { enabled } = useOfflineStore.getState();
+    const areas = await Promise.all(enabled.map(readAreaState));
+    useOfflineStore.setState({ outbox: rows, pendingChanges: patches, conflicts, areaConflicts: areas.flatMap((area) => area.conflicts) });
+    // What a browser clearing the store would lose. Counted here, and the
+    // count is all that's kept outside the store.
+    enabled.forEach((account, index) => {
+      const sends = rows.filter((row) => row.account === account).length;
+      writeHealth(account, { pending: sends + (patchesBy[account] ?? 0) + areas[index].pending });
+    });
   } catch {
     // The store is being deleted, or can't start.
   }
 }
 
+interface StoredCalendarConflict { id: number; createdAt: number; title: string | null; reason: 'refused' | 'changedOnServer' | 'destroyedOnServer'; kind: string; description: string | null; errorType: string | null }
+interface StoredContactConflict { id: number; createdAt: number; summary: string; kind: 'refused' | 'changed' | 'gone'; local: { op?: string }; error: string | null }
+
+/** What the calendar and contacts have waiting or couldn't send. An area this build doesn't have counts as empty. */
+async function readAreaState(account: string): Promise<{ conflicts: AreaConflict[]; pending: number }> {
+  const read = <T,>(name: string, none: T) => getStore().area<T | null | undefined>(account, name).then((value) => value ?? none, () => none);
+  const [calendar, contacts, calendarPending, contactsPending] = await Promise.all([
+    read<StoredCalendarConflict[]>('calendar.conflicts', []),
+    read<StoredContactConflict[]>('contacts.conflicts', []),
+    read<number>('calendar.pending', 0),
+    read<number>('contacts.pending', 0),
+  ]);
+  const conflicts: AreaConflict[] = [
+    ...calendar.map((row): AreaConflict => ({
+      area: 'calendar',
+      account,
+      id: row.id,
+      createdAt: row.createdAt,
+      title: row.title ?? '',
+      reason: row.reason === 'refused' ? 'refused' : row.reason === 'destroyedOnServer' ? 'gone' : 'changed',
+      destroy: row.kind === 'destroy',
+      detail: row.description ?? row.errorType,
+    })),
+    ...contacts.map((row): AreaConflict => ({
+      area: 'contacts',
+      account,
+      id: row.id,
+      createdAt: row.createdAt,
+      title: row.summary,
+      reason: row.kind,
+      destroy: row.local?.op === 'destroy',
+      detail: row.error,
+    })),
+  ];
+  return { conflicts, pending: calendarPending + contactsPending };
+}
+
+/** The user has seen it: the calendar's or the contacts' copy stays as the server has it. */
+export async function dismissAreaConflict(conflict: AreaConflict): Promise<void> {
+  await getStore().area(conflict.account, `${conflict.area}.dismissConflict`, { id: conflict.id });
+  await refreshQueueState();
+}
+
 export async function refreshUsage(): Promise<void> {
-  if (!offlineSupported() || useOfflineStore.getState().enabled.length === 0) return;
+  const { enabled } = useOfflineStore.getState();
+  if (!offlineSupported() || enabled.length === 0) return;
   try {
-    const usage = await Promise.all(useOfflineStore.getState().enabled.map((account) => getStore().area<{ bytes: number }>(account, 'mail.usage')));
-    useOfflineStore.setState({ usageBytes: usage.reduce((sum, { bytes }) => sum + bytes, 0) });
+    const usage = await Promise.all(enabled.map((account) => getStore().area<StoreUsage>(account, 'store.usage')));
+    useOfflineStore.setState({
+      usageBytes: usage.reduce((sum, { bytes }) => sum + bytes, 0),
+      usage: Object.fromEntries(enabled.map((account, index) => [account, usage[index]])),
+    });
   } catch {
     /* deleted meanwhile */
   }
@@ -586,6 +703,7 @@ async function flushAreas(account: string, client: NonNullable<ReturnType<typeof
     const tally = await getStore().area<{ sent?: number; conflicts?: number | unknown[] } | null>(account, call).catch(() => null);
     if (!tally) continue;
     const conflicts = Array.isArray(tally.conflicts) ? tally.conflicts.length : tally.conflicts ?? 0;
+    if (conflicts > 0) notify({ kind: 'conflict', count: conflicts });
     if (!tally.sent && !conflicts) continue;
     const role = (useAuthStore.getState().client as unknown) === client ? 'active' : 'background';
     const changed = { [client.getAccountId()]: Object.fromEntries(types.map((type) => [type, 'flushed'])) };
@@ -632,13 +750,12 @@ export async function flushAll(): Promise<void> {
 export async function enableOffline(account: string): Promise<void> {
   if (!offlineAllowed(account)) return;
   const enabled = useOfflineStore.getState().enabled;
+  // Before the list: an account on the list without a choice is one from before the local store.
+  writeChoice(account, { on: true });
   if (!enabled.includes(account)) writeEnabled([...enabled, account]);
-  // Ask the browser not to clear it when space runs low (it may say no).
-  try {
-    void navigator.storage?.persist?.().catch(() => false);
-  } catch {
-    /* no Storage API */
-  }
+  // Ask the browser not to clear it when space runs low. It may say no, which
+  // the settings page shows, with a way to ask again.
+  void requestPersistence();
   await getStore().ensureOpen(account).catch(() => {});
   await tellServiceWorker(true);
   scheduleSync(account, 0);
@@ -648,9 +765,93 @@ export async function enableOffline(account: string): Promise<void> {
 export async function disableOffline(account: string): Promise<void> {
   confirmLoss(account);
   clearHandoffs();
-  writeEnabled(useOfflineStore.getState().enabled.filter((id) => id !== account));
-  await wipeAccount(account);
+  disabling.add(account);
+  try {
+    writeEnabled(useOfflineStore.getState().enabled.filter((id) => id !== account));
+    await wipeAccount(account);
+    // Remembered where the app would turn it on by itself.
+    if (offlineDefaultOn()) writeChoice(account, { on: false });
+  } finally {
+    disabling.delete(account);
+  }
 }
+
+/** On their way off: the desktop default doesn't turn them back on meanwhile. */
+const disabling = new Set<string>();
+
+/**
+ * Removes everything kept for an account, unsent messages included (the user
+ * confirmed), and its key, and starts again from the server if it stays on.
+ */
+export async function clearAccount(account: string): Promise<void> {
+  confirmLoss(account);
+  const timer = syncTimers.get(account);
+  if (timer) clearTimeout(timer);
+  syncTimers.delete(account);
+  await nameLost(account, false);
+  named.delete(account);
+  try {
+    await getStore().remove(account);
+  } catch {
+    // No store: nothing to remove. The key is gone in any case.
+  }
+  writeHealth(account, { opened: false, pending: 0, evicted: undefined, lastSync: undefined });
+  useOfflineStore.setState((s) => {
+    const { [account]: _usage, ...usage } = s.usage;
+    const { [account]: _full, ...storageFull } = s.storageFull;
+    const { [account]: _progress, ...progress } = s.progress;
+    const { [account]: _synced, ...lastSyncedAt } = s.lastSyncedAt;
+    return { usage, storageFull, progress, lastSyncedAt };
+  });
+  await refreshQueueState();
+  if (useOfflineStore.getState().enabled.includes(account)) {
+    await getStore().ensureOpen(account).catch(() => {});
+    scheduleSync(account, 0);
+  }
+}
+
+/** The user changed what an account keeps. Written first, so a reload holds to it. */
+export function chooseScope(account: string, patch: UserChoice): void {
+  writeChoice(account, patch);
+  pushScope(account);
+}
+
+/** The store's scope follows the page's answer. Nothing happens in the store if it's the same as before. */
+function pushScope(account: string): void {
+  if (!useOfflineStore.getState().enabled.includes(account) || !scopeDecided(account) || !offlineActive(account)) return;
+  const scope: StoreScope = scopeForAccount(account).scope;
+  void getStore().setScope(account, scope).then(() => refreshUsage()).catch(() => {});
+}
+
+/** The notice about the desktop default was shown on this device. Not account data, so it outlives a sign-out. */
+const DEFAULT_ON_NOTICE_KEY = 'bulwark-offline-default-notice';
+
+/**
+ * The desktop app keeps mail for every account without asking, unless the
+ * organisation forbids it or the user turned it off. Says so once.
+ */
+function applyDefaultOn(): void {
+  if (!offlineDefaultOn() || !offlineSupported()) return;
+  for (const account of signedInAccountIds()) {
+    if (useOfflineStore.getState().enabled.includes(account) || disabling.has(account) || !scopeDecided(account)) continue;
+    if (!scopeForAccount(account).enabled) continue;
+    void enableOffline(account);
+    try {
+      if (localStorage.getItem(DEFAULT_ON_NOTICE_KEY)) continue;
+      localStorage.setItem(DEFAULT_ON_NOTICE_KEY, '1');
+    } catch {
+      continue;
+    }
+    notify({ kind: 'default-on' });
+  }
+}
+
+/** The evicted warning was read. */
+export function dismissEvicted(account: string): void {
+  writeHealth(account, { evicted: undefined });
+}
+
+export { readPersistence, requestPersistence, safariMayDelete };
 
 // ---- Unsent mail a wipe deletes ----
 
@@ -706,6 +907,7 @@ export async function wipeAccount(account: string): Promise<void> {
   if (useOfflineStore.getState().enabled.includes(account)) {
     writeEnabled(useOfflineStore.getState().enabled.filter((id) => id !== account));
   }
+  forgetAccountState(account);
   // Nobody keeps mail here any more: everything goes (and isn't opened
   // again, which would create it anew).
   if (useOfflineStore.getState().enabled.length === 0) {
@@ -726,6 +928,7 @@ export async function wipeEverything(): Promise<void> {
   for (const timer of syncTimers.values()) clearTimeout(timer);
   syncTimers.clear();
   writeEnabled([]);
+  forgetAllAccountState();
   getStore().stop();
   await purgeStoreFiles();
   try {
@@ -738,7 +941,13 @@ export async function wipeEverything(): Promise<void> {
   clearHandoffs();
   confirmed.clear();
   named.clear();
-  useOfflineStore.setState({ outbox: [], pendingChanges: 0, conflicts: [], usageBytes: 0, syncing: [], lastSyncedAt: {} });
+  useOfflineStore.setState({ outbox: [], pendingChanges: 0, conflicts: [], areaConflicts: [], usageBytes: 0, syncing: [], lastSyncedAt: {} });
+}
+
+/** The organisation's word on this account, from the server or the last fetch. Defaults aren't its word. */
+function scopeDecided(account: string): boolean {
+  const { loaded, source } = usePolicyStore.getState();
+  return loaded && (source === 'server' || source === 'cache') && policyDecided(account);
 }
 
 /** Whether the policy of an account is known well enough to decide on it. */
@@ -761,8 +970,12 @@ export function enforcePolicy(): void {
       clearHandoffs();
       void wipeAccount(account);
       notify({ kind: 'forbidden' });
+      continue;
     }
+    // A lowered cap prunes what's kept, and a raised one starts fetching.
+    pushScope(account);
   }
+  applyDefaultOn();
 }
 
 // ---- Started without the server ----
@@ -852,6 +1065,8 @@ export function startOfflineMode(): () => void {
   // there): stop here too, and don't write anything for that account. One
   // switched on there has to be opened here if this tab owns the store.
   const onStorage = (event: StorageEvent) => {
+    if (event.key === OFFLINE_CHOICES_KEY || event.key === null) useOfflineStore.setState({ choices: readStoredChoices() });
+    if (event.key === OFFLINE_HEALTH_KEY || event.key === null) useOfflineStore.setState({ health: readStoredHealth() });
     if (event.key !== OFFLINE_ACCOUNTS_KEY && event.key !== null) return;
     const next = readEnabledFrom(event.key === null ? null : event.newValue);
     const before = useOfflineStore.getState().enabled;
@@ -885,6 +1100,7 @@ export function startOfflineMode(): () => void {
 
   // Session, then a sync, for every account signed in with offline mode on.
   const syncSignedIn = () => {
+    applyDefaultOn();
     for (const account of useOfflineStore.getState().enabled) {
       const client = onlineClientFor(account);
       if (!client || !offlineActive(account)) continue;
@@ -906,7 +1122,16 @@ export function startOfflineMode(): () => void {
     clearInterval(reconnect);
   });
 
-  if (useOfflineStore.getState().enabled.length > 0) void tellServiceWorker(true);
+  if (useOfflineStore.getState().enabled.length > 0) {
+    void tellServiceWorker(true);
+    void readPersistence().then((state) => {
+      if (state === 'refused' && isStandaloneDisplayMode()) void requestPersistence();
+    });
+  }
+  // An installed app is usually told yes where the tab was told no.
+  const onInstalled = () => { if (useOfflineStore.getState().enabled.length > 0) void requestPersistence(); };
+  window.addEventListener('appinstalled', onInstalled);
+  cleanups.push(() => window.removeEventListener('appinstalled', onInstalled));
   void (async () => {
     await moveLegacyOutbox();
     await refreshQueueState();
@@ -934,7 +1159,10 @@ onFullSignOut(() => {
   getStore().stop();
   confirmed.clear();
   named.clear();
-  useOfflineStore.setState({ enabled: [], outbox: [], pendingChanges: 0, conflicts: [], usageBytes: 0, syncing: [], lastSyncedAt: {}, startedOffline: false });
+  useOfflineStore.setState({
+    enabled: [], outbox: [], pendingChanges: 0, conflicts: [], areaConflicts: [], usageBytes: 0, usage: {}, choices: {}, health: {},
+    storageFull: {}, progress: {}, syncing: [], lastSyncedAt: {}, startedOffline: false,
+  });
 });
 
 // Every sign-out the user didn't agree to lose mail at (the session limits,

@@ -36,6 +36,9 @@ const SIGNED_OUT_STORAGE_KEYS = [
   // Offline mode's "Keep mail on this device" (lib/offline/state.ts): the
   // next person signing in here starts with it off.
   'bulwark-offline-accounts',
+  // What each account chose to keep, and what's known about its store.
+  'bulwark-offline-choices',
+  'bulwark-offline-health',
 ];
 
 const SIGNED_OUT_SIGNAL = 'bulwark:signed-out';

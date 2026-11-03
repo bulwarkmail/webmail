@@ -39,11 +39,12 @@ interface StoredQueue {
 }
 
 /** Everything waiting for one account (or every account with it on), oldest first. */
-export async function readQueue(account?: string): Promise<{ patches: number; outbox: OutboxEntry[]; conflicts: ConflictEntry[] }> {
+export async function readQueue(account?: string): Promise<{ patches: number; patchesBy: Record<string, number>; outbox: OutboxEntry[]; conflicts: ConflictEntry[] }> {
   const accounts = account ? [account] : useOfflineStore.getState().enabled;
   const read = await Promise.all(accounts.map(async (id) => ({ id, queue: await getStore().area<StoredQueue>(id, 'outbox.read') })));
   return {
     patches: read.reduce((sum, { queue }) => sum + queue.patches, 0),
+    patchesBy: Object.fromEntries(read.map(({ id, queue }) => [id, queue.patches])),
     outbox: read.flatMap(({ id, queue }) => queue.entries.map((entry) => ({ ...entry, account: id }))),
     conflicts: read.flatMap(({ id, queue }) => queue.conflicts.map((conflict) => ({
       id: conflict.id,
