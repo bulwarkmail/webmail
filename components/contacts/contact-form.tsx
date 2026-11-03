@@ -873,10 +873,10 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
 
           {/* Email */}
           <FormSection icon={Mail} title={t("email")}>
-            <div className="space-y-2">
+            <div className="space-y-2 @container">
               {emails.map((entry, i) => (
                 <div key={i}>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap @md:flex-nowrap items-center gap-2">
                     <Input
                       type="email"
                       inputMode="email"
@@ -894,7 +894,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                       aria-label={t("email")}
                       aria-invalid={emailErrors[i] ? true : undefined}
                       aria-describedby={emailErrors[i] ? fieldId(`email-error-${i}`) : undefined}
-                      className={cn("flex-1", emailErrors[i] && "border-destructive focus-visible:border-destructive")}
+                      className={cn("grow basis-full @md:basis-0", emailErrors[i] && "border-destructive focus-visible:border-destructive")}
                     />
                     <Select
                       value={entry.context}
@@ -929,9 +929,10 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
 
           {/* Phone */}
           <FormSection icon={Phone} title={t("phone")}>
-            <div className="space-y-2">
+            <div className="space-y-2 @container">
+              {/* In a narrow pane the number takes a line of its own: beside the two selects it was cut to two digits. */}
               {phones.map((entry, i) => (
-                <div key={i} className="flex items-center gap-2">
+                <div key={i} className="flex flex-wrap @md:flex-nowrap items-center gap-2">
                   <Input
                     type="tel"
                     inputMode="tel"
@@ -943,7 +944,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                     }}
                     placeholder={t("phone_placeholder")}
                     aria-label={t("phone")}
-                    className="flex-1"
+                    className="grow basis-full @md:basis-0"
                   />
                   <Select
                     value={entry.feature}
@@ -952,7 +953,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                       next[i] = { ...next[i], feature: e.target.value as PhoneEntry["feature"] };
                       setPhones(next);
                     }}
-                    className="w-[5.5rem]"
+                    className="w-28"
                     aria-label={t("phone_type")}
                   >
                     <option value="">{t("phone_type")}</option>
