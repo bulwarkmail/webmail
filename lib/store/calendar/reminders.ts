@@ -12,6 +12,7 @@ import { format, parseISO } from 'date-fns';
 import { buildAlertKey, computeFireTime, computeTaskFireTime, getEffectiveAlerts, parseAlertOffset } from '@/lib/calendar-alerts';
 import { isTaskLikeObject } from '@/lib/calendar-component-detection';
 import { normalizeCalendarEventLike, parseDurationSeconds } from '@/lib/calendar-event-normalization';
+import { findMeetingLink, type EventPlaces } from '@/lib/event-links';
 import type { Calendar, CalendarEvent, CalendarEventAlert, CalendarTask } from '@/lib/jmap/types';
 import { expandRecurringEvents } from '@/lib/recurrence-expansion';
 import { listObjects } from '../engine/core-schema';
@@ -22,6 +23,8 @@ export interface UpcomingAlert {
   /** Stable for this alert at this time. Use it to remember what was shown. */
   key: string;
   jmap: string;
+  /** The series' uid, or the id where there's none: the same one whichever path shows the reminder. */
+  uid: string;
   kind: 'event' | 'task';
   /** The stored event or task: the master of a series. */
   baseEventId: string;
@@ -32,6 +35,10 @@ export interface UpcomingAlert {
   title: string;
   /** The start as a wall clock, or a task's due when it has no start. */
   start: string | null;
+  /** The start as an instant, to say how long until it. Null when it can't be told. */
+  startMs: number | null;
+  /** Joins the meeting, when the event has a video link. */
+  joinUrl: string | null;
   timeZone: string | null;
   calendarId: string | null;
   calendarName: string | null;
@@ -82,6 +89,24 @@ function withInstants(object: CalendarObject, zone: string): CalendarObject {
   };
 }
 
+/**
+ * RFC 8984 4.5.2: on a series `acknowledged` sits on the master and covers what fired
+ * up to then. Read as "never again", one dismissal in another app would silence every
+ * later occurrence. An event once is done with it either way.
+ */
+function acknowledgedAlready(alert: CalendarEventAlert, fireTimeMs: number, series: boolean): boolean {
+  if (!alert.acknowledged) return false;
+  if (!series) return true;
+  const at = new Date(alert.acknowledged).getTime();
+  return Number.isNaN(at) || fireTimeMs <= at;
+}
+
+function instant(value: string | null | undefined): number | null {
+  if (!value) return null;
+  const ms = new Date(value).getTime();
+  return Number.isNaN(ms) ? null : ms;
+}
+
 function firstCalendar(calendarIds: unknown, calendars: Calendar[]): { id: string | null; name: string | null } {
   const id = Object.keys((calendarIds ?? {}) as Record<string, boolean>)[0] ?? null;
   return { id, name: calendars.find((calendar) => calendar.id === id)?.name ?? null };
@@ -101,7 +126,8 @@ export function listUpcomingAlerts(db: StorageAdapter, options: UpcomingAlertsOp
     const object = JSON.parse(row.json) as CalendarObject;
     const calendar = firstCalendar(object.calendarIds, calendars);
     // With the account: Stalwart's ids repeat across accounts, and one meeting can be in two.
-    const stableId = `${row.jmap}:${typeof object.uid === 'string' && object.uid ? object.uid : object.id}`;
+    const uid = typeof object.uid === 'string' && object.uid ? object.uid : object.id;
+    const stableId = `${row.jmap}:${uid}`;
 
     if (isTaskLikeObject(object)) {
       const task = object as unknown as CalendarTask;
@@ -113,6 +139,7 @@ export function listUpcomingAlerts(db: StorageAdapter, options: UpcomingAlertsOp
         add({
           key: buildAlertKey(stableId, alertId, fireTimeMs),
           jmap: row.jmap,
+          uid,
           kind: 'task',
           baseEventId: object.id,
           recurrenceId: null,
@@ -120,6 +147,8 @@ export function listUpcomingAlerts(db: StorageAdapter, options: UpcomingAlertsOp
           fireTimeMs,
           title: task.title ?? '',
           start: task.start ?? task.due ?? null,
+          startMs: instant(task.start ?? task.due),
+          joinUrl: findMeetingLink(task as unknown as EventPlaces)?.uri ?? null,
           timeZone: task.timeZone ?? null,
           calendarId: calendar.id,
           calendarName: calendar.name,
@@ -138,13 +167,14 @@ export function listUpcomingAlerts(db: StorageAdapter, options: UpcomingAlertsOp
       if (occurrence.status === 'cancelled') continue;
       const isMasterOfSeries = series && occurrence === master;
       for (const [alertId, alert] of Object.entries(getEffectiveAlerts(occurrence, calendars) ?? {})) {
-        if (alert.action !== 'display' || alert.acknowledged) continue;
+        if (alert.action !== 'display') continue;
         if (isMasterOfSeries && alert.trigger['@type'] !== 'AbsoluteTrigger') continue;
         const fireTimeMs = computeFireTime(occurrence, alert.trigger);
-        if (fireTimeMs === null) continue;
+        if (fireTimeMs === null || acknowledgedAlready(alert, fireTimeMs, series)) continue;
         add({
           key: buildAlertKey(stableId, alertId, fireTimeMs),
           jmap: row.jmap,
+          uid,
           kind: 'event',
           baseEventId: object.id,
           recurrenceId: occurrence.recurrenceId ?? null,
@@ -152,6 +182,8 @@ export function listUpcomingAlerts(db: StorageAdapter, options: UpcomingAlertsOp
           fireTimeMs,
           title: occurrence.title ?? '',
           start: occurrence.start,
+          startMs: instant(occurrence.utcStart) ?? instant(occurrence.start),
+          joinUrl: findMeetingLink(occurrence as unknown as EventPlaces)?.uri ?? null,
           timeZone: occurrence.timeZone ?? null,
           calendarId: calendar.id,
           calendarName: calendar.name,
