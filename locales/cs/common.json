@@ -4909,6 +4909,9 @@
     "mini_has_events": "má události",
     "mini_week_number": "Týden {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "Tato změna vyžaduje připojení k serveru. Prozatím změňte jen tuto událost, nebo to zkuste znovu po obnovení připojení."
+  },
   "advanced_search": {
     "title": "Pokročilé hledání",
     "from": "Od",

@@ -1,5 +1,5 @@
 import { addDays, differenceInCalendarDays, parseISO, startOfDay, subMilliseconds } from "date-fns";
-import { parseDuration } from "@/components/calendar/event-card";
+import { parseDuration } from "@/lib/calendar-event-normalization";
 import type { CalendarEvent } from "@/lib/jmap/types";
 import { fromWallClock, isValidTimeZone, parseLocalDateTime, toDisplayDate } from "@/lib/timezone";
 

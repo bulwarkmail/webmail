@@ -96,9 +96,10 @@ export type MethodHandler = (ctx: MethodContext, args: Record<string, unknown>, 
 /**
  * A call from the page that isn't JMAP: outbox rows, usage, clearing. Reached
  * from any tab with `store.area(account, 'outbox.list', params)`. Names are
- * unique across areas and start with the area's name.
+ * unique across areas and start with the area's name. It gets the sync context,
+ * because some calls talk to the server (`calendar.flush`).
  */
-export type AreaCall = (ctx: StoreContext, params: never) => unknown | Promise<unknown>;
+export type AreaCall = (ctx: SyncContext, params: never) => unknown | Promise<unknown>;
 
 export interface StoreArea {
   name: string;

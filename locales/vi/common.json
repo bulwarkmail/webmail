@@ -4921,6 +4921,9 @@
     "mini_has_events": "Có sự kiện",
     "mini_week_number": "Tuần {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "Thay đổi này cần kết nối với máy chủ. Hiện chỉ thay đổi sự kiện này, hoặc thử lại khi bạn trực tuyến trở lại."
+  },
   "calendar_event_notifications": {
     "someone": "Ai đó",
     "invited": "{name} đã mời bạn tham gia \"{title}\"",

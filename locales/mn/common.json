@@ -4909,6 +4909,9 @@
     "mini_has_events": "үйл явдалтай",
     "mini_week_number": "{week}-р долоо хоног"
   },
+  "calendar_offline": {
+    "split_needs_server": "Энэ өөрчлөлтөд сервертэй холболт шаардлагатай. Одоохондоо зөвхөн энэ үйл явдлыг өөрчлөх эсвэл онлайн болсны дараа дахин оролдоно уу."
+  },
   "calendar_event_notifications": {
     "someone": "Хэн нэгэн",
     "invited": "{name} таныг \"{title}\"-д урилаа",

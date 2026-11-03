@@ -4,6 +4,7 @@ import { IncompleteDeleteError } from "./delete-error";
 import { downloadAllowed, saveBlobAs, type DownloadKind } from "@/lib/download-guard";
 import { ArchiveEmailsError } from "./archive-error";
 import { generateUUID } from '@/lib/utils';
+import { standInsIn, withRealIds, withStandInsBack } from './stand-in-ids';
 import type { Attachment, Email, Mailbox, MailboxRights, StateChange, AccountStates, CollectionChanges, ShareNotification, BusyPeriod, CalendarParticipantIdentity, CalendarEventNotification, Thread, Identity, EmailAddress, ContactCard, AddressBook, AddressBookRights, VacationResponse, Calendar, CalendarComponentType, CalendarRights, CalendarEvent, CalendarEventFilter, CalendarTask, CreateCalendarOptions, FileNode, FileNodeFilter, FileNodeRights, Principal, PrincipalAvailability, PrincipalListing, PushSubscription, EmailPushConfig, DeliveryStatus, EmailSubmission, RejectedRecipient, ScheduledEmail, SendEmailResult, SharedAccount } from "./types";
 import type { SieveScript, SieveCapabilities } from "./sieve-types";
 import type { BlobBatch, CalendarEventUpdateOptions, CalendarQueryOptions, FileNodeListings, IJMAPClient, KeywordDiscoveryResult, KeywordInfo, KeywordMigration, SearchEmailsResult, SearchRequestOptions, UploadedEmailImport, UploadedEmailImportResult } from "./client-interface";
@@ -2198,9 +2199,30 @@ export class JMAPClient implements IJMAPClient {
     const offline = getOfflineHooks();
     if (this.offlineOnly || offline?.skipNetwork(this)) {
       const local = offline ? await offline.answer(this, methodCalls) : null;
-      if (local) return local as JMAPResponse;
+      if (local) {
+        this.lastAnswerFromDevice = true;
+        return local as JMAPResponse;
+      }
       throw new OfflineUnavailableError();
     }
+    // A stand-in id from an event created offline, still held by an open dialog
+    // or a list: the server knows it by its real id, or not yet at all.
+    const standIns = offline?.resolveStandIns ? standInsIn(methodCalls) : [];
+    let realIds: Record<string, string> | null = null;
+    if (standIns.length > 0) {
+      const resolved = await offline!.resolveStandIns!(this, standIns);
+      if (standIns.some((id) => !resolved[id])) {
+        const local = await offline!.answer(this, methodCalls);
+        if (local) {
+          this.lastAnswerFromDevice = true;
+          return local as JMAPResponse;
+        }
+        throw new OfflineUnavailableError();
+      }
+      realIds = resolved as Record<string, string>;
+      methodCalls = withRealIds(methodCalls, realIds);
+    }
+    const asAsked = (response: JMAPResponse) => (realIds ? withStandInsBack(response, realIds) : response);
     let answer: JMAPResponse;
     try {
       answer = await this.networkRequest(methodCalls, using, opts);
@@ -2209,15 +2231,25 @@ export class JMAPClient implements IJMAPClient {
       // headers looks the same to the browser and must stay an error.
       if (offline && isNetworkFailure(error) && await offline.serverGone(this)) {
         const local = await offline.answer(this, methodCalls);
-        if (local) return local as JMAPResponse;
+        if (local) {
+          this.lastAnswerFromDevice = true;
+          return asAsked(local as JMAPResponse);
+        }
       }
       throw error;
     }
+    this.lastAnswerFromDevice = false;
     if (offline) {
       offline.noteNetwork(this, true);
       if (!opts?.skipOfflineRecord) offline.record(this, methodCalls, answer);
     }
-    return answer;
+    return asAsked(answer);
+  }
+
+  private lastAnswerFromDevice = false;
+
+  answeredFromDevice(): boolean {
+    return this.lastAnswerFromDevice;
   }
 
   private async networkRequest(methodCalls: JMAPMethodCall[], using?: string[], opts?: { transfer?: boolean }): Promise<JMAPResponse> {
@@ -9459,6 +9491,8 @@ export class JMAPClient implements IJMAPClient {
     // Strip client-only shared fields before sending to JMAP
     const { originalId: _oi, baseEventId: _be, originalCalendarIds: _oc, accountId: _ai, accountName: _an, isShared: _is, ...cleanEvent } = event as CalendarEvent;
     cleanRecurrenceRules(cleanEvent as unknown as Record<string, unknown>);
+    // Chosen here, not by the server: if the answer is lost, this finds the event again.
+    cleanEvent.uid ||= generateUUID();
 
     debug.group('CalendarEvent/create', 'calendar');
     debug.log('calendar', 'CalendarEvent/create outgoing payload', {
@@ -9565,6 +9599,7 @@ export class JMAPClient implements IJMAPClient {
       for (const { event, index } of batch) {
         const { originalId: _oi, originalCalendarIds: _oc, accountId: _ai, accountName: _an, isShared: _is, ...clean } = event as CalendarEvent;
         cleanRecurrenceRules(clean as unknown as Record<string, unknown>);
+        clean.uid ||= generateUUID();
         createMap[`new-${index}`] = clean;
       }
 
@@ -9989,7 +10024,7 @@ export class JMAPClient implements IJMAPClient {
       accountId = resolved.accountId;
       taskData.calendarIds = resolved.calendarIds;
     }
-    const cleanTask = { ...completeBareTaskDates(taskData), '@type': 'Task' };
+    const cleanTask = { ...completeBareTaskDates(taskData), '@type': 'Task', uid: taskData.uid || generateUUID() };
 
     debug.group('CalendarTask/create', 'tasks');
     debug.log('tasks', 'CalendarTask/create accountId', accountId);

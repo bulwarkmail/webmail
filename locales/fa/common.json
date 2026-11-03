@@ -4909,6 +4909,9 @@
     "mini_has_events": "رویداد دارد",
     "mini_week_number": "هفته {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "این تغییر به اتصال به سرور نیاز دارد. فعلاً فقط همین رویداد را تغییر دهید، یا پس از برقراری اتصال دوباره تلاش کنید."
+  },
   "calendar_event_notifications": {
     "someone": "کسی",
     "invited": "{name} شما را به «{title}» دعوت کرد",

@@ -217,7 +217,7 @@ export class AccountEngine {
   async areaCall(name: string, params: unknown): Promise<unknown> {
     const call = this.calls.get(name);
     if (!call) throw new Error(`Unknown store call ${name}`);
-    return call(this.storeContext(), params as never);
+    return call(this.syncContext(), params as never);
   }
 
   /** An answer from the device. Null when nothing in the request could be answered. */

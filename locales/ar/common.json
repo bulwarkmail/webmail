@@ -4909,6 +4909,9 @@
     "mini_has_events": "فيه أحداث",
     "mini_week_number": "الأسبوع {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "يحتاج هذا التغيير إلى اتصال بالخادم. غيّر هذا الحدث فقط الآن، أو حاول مرة أخرى عند عودة الاتصال."
+  },
   "calendar_event_notifications": {
     "someone": "شخص ما",
     "invited": "دعاك {name} إلى \"{title}\"",

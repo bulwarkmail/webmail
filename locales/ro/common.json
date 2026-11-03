@@ -4909,6 +4909,9 @@
     "mini_has_events": "are evenimente",
     "mini_week_number": "Săptămâna {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "Această modificare are nevoie de conexiune la server. Modifică deocamdată doar acest eveniment sau încearcă din nou când ești din nou online."
+  },
   "calendar_event_notifications": {
     "someone": "Cineva",
     "invited": "{name} te-a invitat la „{title}”",

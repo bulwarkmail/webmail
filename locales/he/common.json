@@ -4828,6 +4828,9 @@
     "mini_has_events": "יש אירועים",
     "mini_week_number": "שבוע {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "שינוי זה דורש חיבור לשרת. שנו כרגע רק את האירוע הזה, או נסו שוב כשהחיבור יחזור."
+  },
   "advanced_search": {
     "title": "חיפוש מתקדם",
     "from": "מ",

@@ -4909,6 +4909,9 @@
     "mini_has_events": "har hendelser",
     "mini_week_number": "Uke {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "Denne endringen krever tilkobling til serveren. Endre bare denne hendelsen for nå, eller prøv igjen når du er tilkoblet."
+  },
   "calendar_event_notifications": {
     "someone": "Noen",
     "invited": "{name} har invitert deg til «{title}»",

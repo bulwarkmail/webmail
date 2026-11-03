@@ -51,6 +51,12 @@ export interface OfflineHooks {
    * Left out when there is no store, and searches then go to the server alone.
    */
   searchLocal?(client: OfflineClientRef, methodCalls: OfflineMethodCall[]): Promise<OfflineResponse | null>;
+  /**
+   * Real ids for stand-in ids the page still holds (lib/jmap/stand-in-ids.ts), or
+   * null for one that hasn't reached the server yet. Without it the client sends
+   * ids as they are.
+   */
+  resolveStandIns?(client: OfflineClientRef, ids: string[]): Promise<Record<string, string | null>>;
 }
 
 const KEY = '__bulwarkOfflineHooks';
