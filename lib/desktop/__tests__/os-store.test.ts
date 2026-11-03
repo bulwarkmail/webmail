@@ -55,6 +55,9 @@ describe('the store and the OS integration', () => {
     const clearSurfaces = vi.fn();
     window.bulwarkDesktop = { version: 1, platform: 'win32', os: { clearSurfaces } } as never;
     const { wipeAccount } = await import('@/lib/offline/offline-mode');
+    const { useOfflineStore } = await import('@/lib/offline/state');
+    // Not the last account, so this isn't the wipe of everything, which clears as well.
+    useOfflineStore.setState({ enabled: ['alice@one', 'bob@two'] });
     await wipeAccount('alice@one').catch(() => {});
     expect(clearSurfaces).toHaveBeenCalled();
     window.bulwarkDesktop = undefined;
