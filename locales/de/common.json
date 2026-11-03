@@ -5783,7 +5783,14 @@
     "refused_waiting": "Auf Ihr neues Passwort warten ungesendete Nachrichten: {count}. Sie bleiben bis zum {date}.",
     "refused_waiting_unknown": "Möglicherweise warten ungesendete Nachrichten auf Ihr neues Passwort. Sie bleiben bis zum {date}.",
     "confirm_unsent_unknown": "Hier warten möglicherweise ungesendete Nachrichten. Sie gehen verloren.",
-    "confirm_templates": "Auf diesem Gerät gespeicherte E-Mail-Vorlagen"
+    "confirm_templates": "Auf diesem Gerät gespeicherte E-Mail-Vorlagen",
+    "session_waiting": "Ungesendete Nachrichten, die auf Ihre nächste Anmeldung warten: {count}. Sie bleiben bis zum {date}.",
+    "session_waiting_unknown": "Möglicherweise warten ungesendete Nachrichten auf Ihre nächste Anmeldung. Sie bleiben bis zum {date}.",
+    "needs_sign_in": "Anmeldung nötig",
+    "switcher_waiting": "Ungesendete Nachrichten: {count}. Werden am {date} von diesem Gerät gelöscht.",
+    "switcher_kept": "Die E-Mails auf diesem Gerät werden am {date} gelöscht.",
+    "sibling_waiting": "{name} wurde abgemeldet. Ungesendete Nachrichten: {count}. Melden Sie sich bis zum {date} an, sonst werden sie von diesem Gerät gelöscht.",
+    "sibling_kept": "{name} wurde abgemeldet. Melden Sie sich bis zum {date} an, sonst werden die E-Mails von diesem Gerät gelöscht."
   },
   "offlineStorage": {
     "keep_description": "Behält Ihre E-Mails, Ihren Kalender, Ihre Kontakte und ausgewählte Dateien verschlüsselt auf diesem Gerät. Offline können Sie E-Mails lesen, markieren und verschieben, und was Sie schreiben, wartet im Postausgang. Beim Abmelden wird alles entfernt.",

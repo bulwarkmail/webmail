@@ -5783,7 +5783,14 @@
     "refused_waiting": "Mensajes sin enviar que esperan tu nueva contraseña: {count}. Se conservan hasta el {date}.",
     "refused_waiting_unknown": "Puede que haya mensajes sin enviar esperando tu nueva contraseña. Se conservan hasta el {date}.",
     "confirm_unsent_unknown": "Puede que haya mensajes sin enviar esperando aquí. Se perderán.",
-    "confirm_templates": "Plantillas de correo guardadas en este dispositivo"
+    "confirm_templates": "Plantillas de correo guardadas en este dispositivo",
+    "session_waiting": "Mensajes sin enviar que esperan tu próximo inicio de sesión: {count}. Se conservan hasta el {date}.",
+    "session_waiting_unknown": "Puede que haya mensajes sin enviar esperando tu próximo inicio de sesión. Se conservan hasta el {date}.",
+    "needs_sign_in": "Requiere iniciar sesión",
+    "switcher_waiting": "Mensajes sin enviar: {count}. Se eliminarán de este dispositivo el {date}.",
+    "switcher_kept": "Su correo en este dispositivo se eliminará el {date}.",
+    "sibling_waiting": "Se ha cerrado la sesión de {name}. Mensajes sin enviar: {count}. Inicia sesión antes del {date} o se eliminarán de este dispositivo.",
+    "sibling_kept": "Se ha cerrado la sesión de {name}. Inicia sesión antes del {date} o su correo se eliminará de este dispositivo."
   },
   "offlineStorage": {
     "keep_description": "Guarda tu correo, tu calendario, tus contactos y los archivos que elijas, cifrados en este dispositivo. Sin conexión puedes leer, marcar y mover correo, y lo que escribas espera en la bandeja de salida. Al cerrar sesión se borra todo.",

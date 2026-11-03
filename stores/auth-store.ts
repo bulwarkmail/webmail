@@ -39,7 +39,7 @@ import { IS_LITE, IS_LITE_STALWART } from '@/lib/lite';
 import { withTokenLock } from '@/lib/auth/token-lock';
 import { requestWindowSession, type SharedAccountSession } from '@/lib/popout/channel';
 import { closePopoutWindow, isPopoutWindow, mainWindowStorage } from '@/lib/popout/window-role';
-import { noteCredentialsRejected } from '@/lib/offline/credentials-rejected';
+import { noteCredentialsRejected, type ForcedSignOutKind } from '@/lib/offline/credentials-rejected';
 import { CREDENTIALS_REFUSED_CONFIRM_MS, markLoginRefused, wipeWorkWaiting } from '@/lib/devices/wipe-state';
 import { markEvicted, readEvicted, useOfflineStore } from '@/lib/offline/state';
 import { toAsciiEmail } from '@/lib/idn';
@@ -176,6 +176,8 @@ export interface LogoutOptions {
    * hidden, for the next sign-in or 30 days.
    */
   keepLocalData?: boolean;
+  /** It's the organisation's idle or session limit that ended it: with `keepLocalData`, what lib/offline/device-wipe.ts is told. */
+  sessionLimit?: boolean;
 }
 
 const ERROR_PATTERNS: Array<{ key: string; matches: string[] }> = [
@@ -805,18 +807,27 @@ function holdClient(accountId: string, client: JMAPClient): void {
 }
 
 /**
- * The server refused this login, and the data hides from here on. It waits for the
- * new password, or goes after 30 days, or now if the organisation asks for that
+ * This login ended with nobody asking: the server refused it, or the organisation's
+ * idle or session limit ran out. The data hides from here on. It waits for the next
+ * sign-in, or goes after 30 days, or now if the organisation asks for that
  * (lib/devices/wipe-state.ts, lib/offline/device-wipe.ts). The usual cause is a
  * password changed on another device: nothing goes by itself, unsent mail included.
- * `certain`: `invalid_grant`, or a 401 that lasted. Not one bad answer at a connect.
+ * `certain`: not one bad answer at a connect.
  */
-function noteRefusedLogin(accountId: string, certain: boolean): void {
+function noteRefusedLogin(accountId: string, certain: boolean, kind: ForcedSignOutKind = 'refused'): void {
   if (useOfflineStore.getState().enabled.includes(accountId)) {
-    markLoginRefused(accountId, certain);
+    const { accounts } = useAccountStore.getState();
+    const account = accounts.find((entry) => entry.id === accountId);
+    markLoginRefused(accountId, {
+      certain,
+      kind,
+      seenBy: accounts.filter((entry) => entry.id !== accountId).map((entry) => entry.id),
+      label: account?.email || account?.username,
+      username: account?.username,
+    });
     markEvicted(accountId);
   }
-  noteCredentialsRejected(accountId, certain);
+  noteCredentialsRejected(accountId, certain, kind);
 }
 
 /**
@@ -1315,17 +1326,19 @@ function recordPermanentRefreshFailure(status: number, accountId?: string): bool
 }
 
 /**
- * Whether the server refused the login itself: invalid_grant. That signs out and
- * hides the data (noteRefusedLogin). Anything else keeps it the same way with no
- * word to anyone, including a body we can't read and the organisation's session
- * limit, which says the session is old and nothing about the password.
+ * What a refused renewal says about the login: the server refused it
+ * (invalid_grant), or the organisation's session limit was reached, which says
+ * nothing about the password. Both sign out and hide the data (noteRefusedLogin).
+ * Anything else keeps it the same way with no word to anyone, including a body
+ * we can't read.
  */
-async function loginRefused(res: Response): Promise<boolean> {
+async function forcedSignOutOf(res: Response): Promise<ForcedSignOutKind | null> {
   try {
     const { error } = await res.clone().json() as { error?: unknown };
-    return error === 'invalid_grant';
+    if (error === 'invalid_grant') return 'refused';
+    return error === SESSION_TOO_OLD ? 'session' : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -2398,15 +2411,15 @@ export const useAuthStore = create<AuthState>()(
               // maintenance windows and offline spells.
               if (res.status === 401) {
                 resetRefreshBackoff(accountId ?? undefined);
-                const refused = await loginRefused(res);
+                const forced = await forcedSignOutOf(res);
                 // Only this login's refresh token was refused.
                 if (accountId && !isActive) {
-                  if (refused) noteRefusedLogin(accountId, true);
+                  if (forced) noteRefusedLogin(accountId, true, forced);
                   get().removeAccount(accountId, 'evicted');
                   return null;
                 }
                 await saveDraftsBeforeExpiry(slot);
-                if (refused && accountId) noteRefusedLogin(accountId, true);
+                if (forced && accountId) noteRefusedLogin(accountId, true, forced);
                 notifyParent('sso:session-expired');
                 markSessionExpired();
                 get().logout({ endProviderSession: false, keepLocalData: true });
@@ -2669,7 +2682,12 @@ export const useAuthStore = create<AuthState>()(
 
       logoutAll: async (options) => {
         if (options?.endProviderSession !== false && !(await passSignOutGates('all'))) return;
-        await beforeLogoutHooks('all');
+        const keepLocalData = options?.keepLocalData === true;
+        // Before anything goes, while the accounts are still there to be named.
+        if (options?.sessionLimit) {
+          for (const account of useAccountStore.getState().accounts) noteRefusedLogin(account.id, true, 'session');
+        }
+        await beforeLogoutHooks('all', { keepLocalStore: keepLocalData });
 
         const accountStore = useAccountStore.getState();
         const allAccounts = [...accountStore.accounts];
@@ -2696,11 +2714,11 @@ export const useAuthStore = create<AuthState>()(
         // Credentials are cleared before the page state - see logout().
         const endSessionUrl = await cleanup;
 
-        performFullLogout(set);
+        performFullLogout(set, { keepLocalStore: keepLocalData });
 
         // Clear all accounts from registry
         for (const account of allAccounts) {
-          accountStore.removeAccount(account.id);
+          accountStore.removeAccount(account.id, keepLocalData ? 'evicted' : 'explicit');
         }
 
         clearKeystoreGrants();
@@ -2739,7 +2757,7 @@ export const useAuthStore = create<AuthState>()(
         let targetClient = clients.get(accountId);
         const wasConnected = !!targetClient;
         let targetRestoreRateLimited = false;
-        let targetRefused = false;
+        let targetForced: ForcedSignOutKind | null = null;
 
         if (!targetClient) {
           // Null out the client immediately so the page doesn't fire data-loading
@@ -2756,7 +2774,7 @@ export const useAuthStore = create<AuthState>()(
           try {
             if (targetAccount.authMode === 'oauth') {
               const res = await fetchSlotAccessToken(targetAccount.cookieSlot, { remember: targetAccount.rememberMe });
-              if (!res.ok && res.status === 401) targetRefused = await loginRefused(res);
+              if (!res.ok && res.status === 401) targetForced = await forcedSignOutOf(res);
               if (res.ok) {
                 const { access_token, expires_in } = await res.json();
                 targetClient = JMAPClient.withBearer(targetAccount.serverUrl, access_token, targetAccount.username, () => get().refreshAccessToken({ accountId }));
@@ -2773,7 +2791,7 @@ export const useAuthStore = create<AuthState>()(
               }
             } else if (targetAccount.rememberMe) {
               const res = await fetchSlotSession(targetAccount.cookieSlot);
-              if (!res.ok && res.status === 401) targetRefused = await loginRefused(res);
+              if (!res.ok && res.status === 401) targetForced = await forcedSignOutOf(res);
               if (res.ok) {
                 const session: RememberedSession = await res.json();
                 targetClient = clientForSession(session);
@@ -2825,7 +2843,8 @@ export const useAuthStore = create<AuthState>()(
           }
 
           // Cannot restore - remove the stale account and redirect to login
-          if (targetRefused || refusedAtConnect.has(accountId)) noteRefusedLogin(accountId, targetRefused);
+          if (targetForced) noteRefusedLogin(accountId, true, targetForced);
+          else if (refusedAtConnect.has(accountId)) noteRefusedLogin(accountId, false);
           refusedAtConnect.delete(accountId);
           evictAccount(accountId);
           accountStore.removeAccount(accountId, 'evicted');
@@ -3086,7 +3105,7 @@ export const useAuthStore = create<AuthState>()(
                   // Repeated 500/502 (see recordPermanentRefreshFailure) falls
                   // through here and evicts the account like a rejection. (#972)
                   if (res.status >= 500) notifySignInAgain();
-                  throw Object.assign(new Error(`Token refresh failed: ${res.status}`), { refused: await loginRefused(res) });
+                  throw Object.assign(new Error(`Token refresh failed: ${res.status}`), { forced: await forcedSignOutOf(res) });
                 }
               } else {
                 const res = await fetchSlotSession(account.cookieSlot);
@@ -3107,7 +3126,7 @@ export const useAuthStore = create<AuthState>()(
                 } else if (res.status >= 500 || res.status === 429) {
                   throw new TransientAuthError('Session restore failed', res.status);
                 } else {
-                  throw Object.assign(new Error(`Session cookie missing: ${res.status}`), { refused: await loginRefused(res) });
+                  throw Object.assign(new Error(`Session cookie missing: ${res.status}`), { forced: await forcedSignOutOf(res) });
                 }
               }
             } catch (err) {
@@ -3145,8 +3164,9 @@ export const useAuthStore = create<AuthState>()(
               // again rather than seeing a stale error entry forever. Its
               // refresh token goes with it: nothing would use or revoke it. Its
               // local data waits.
-              const refused = (err as { refused?: boolean }).refused === true;
-              if (refused || refusedAtConnect.has(account.id)) noteRefusedLogin(account.id, refused);
+              const { forced } = err as { forced?: ForcedSignOutKind | null };
+              if (forced) noteRefusedLogin(account.id, true, forced);
+              else if (refusedAtConnect.has(account.id)) noteRefusedLogin(account.id, false);
               refusedAtConnect.delete(account.id);
               evictAccount(account.id);
               accountStore.removeAccount(account.id, 'evicted');

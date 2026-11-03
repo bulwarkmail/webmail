@@ -51,8 +51,9 @@ vi.mock('@/lib/offline/offline-mode', () => ({
 
 const heard = vi.hoisted(() => [] as string[]);
 const certain = vi.hoisted(() => [] as boolean[]);
+const kinds = vi.hoisted(() => [] as string[]);
 vi.mock('@/lib/offline/credentials-rejected', () => ({
-  noteCredentialsRejected: (account: string, sure = true) => { heard.push(account); certain.push(sure); },
+  noteCredentialsRejected: (account: string, sure = true, kind = 'refused') => { heard.push(account); certain.push(sure); kinds.push(kind); },
   onCredentialsRejected: () => () => {},
 }));
 
@@ -97,6 +98,7 @@ beforeEach(async () => {
   order.length = 0;
   heard.length = 0;
   certain.length = 0;
+  kinds.length = 0;
   clients.made.length = 0;
   clients.connect = async () => {};
   gate.run = async () => {};
@@ -189,14 +191,15 @@ describe('a login the server ended, at a start', () => {
   it.each([
     ['a password login', 'basic', '/api/auth/session'],
     ['an OAuth login', 'oauth', '/api/auth/token'],
-  ])('the session limit is no refusal, for %s: no hook, no wait, and the account is only dropped', async (_name, mode, route) => {
+  ])('the session limit goes the same way, as what it is, for %s: nothing about the password', async (_name, mode, route) => {
     useOfflineStore.setState({ enabled: [ALICE] });
     useAccountStore.setState({ accounts: [account(ALICE, 0, mode as 'basic' | 'oauth')] } as never);
     answer = (url, method) => (url.includes(route) && method === 'PUT' ? json(401, { error: 'session_expired', maxHours: 8 }) : null);
     await useAuthStore.getState().checkAuth();
     await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(ALICE)).toBeUndefined());
-    expect(heard).toEqual([]);
-    expect(readRefusedLogins()).toEqual({});
+    expect(heard).toEqual([ALICE]);
+    expect(kinds).toEqual(['session']);
+    expect(readRefusedLogins()[ALICE]).toMatchObject({ kind: 'session', certain: true });
     expect(isEvicted(ALICE)).toBe(true);
     expect(useOfflineStore.getState().enabled).toEqual([ALICE]);
   });
@@ -239,11 +242,12 @@ describe('a login the server ended, at a switch', () => {
     expect(useOfflineStore.getState().enabled).toContain(BOB);
   });
 
-  it('the session limit doesn\'t fire it and only drops the account', async () => {
+  it('the session limit fires it as what it is, and only drops the account', async () => {
     useOfflineStore.setState({ enabled: [ALICE, BOB] });
     answer = (url, method) => (url.includes('/api/auth/token') && method === 'PUT' ? json(401, { error: 'session_expired', maxHours: 8 }) : null);
     await useAuthStore.getState().switchAccount(BOB);
-    expect(heard).toEqual([]);
+    expect(heard).toEqual([BOB]);
+    expect(kinds).toEqual(['session']);
     expect(isEvicted(BOB)).toBe(true);
     expect(useOfflineStore.getState().enabled).toContain(BOB);
   });
@@ -251,6 +255,33 @@ describe('a login the server ended, at a switch', () => {
   it('another refusal doesn\'t', async () => {
     answer = (url, method) => (url.includes('/api/auth/token') && method === 'PUT' ? json(401, { error: 'Refresh failed' }) : null);
     await useAuthStore.getState().switchAccount(BOB);
+    expect(heard).toEqual([]);
+  });
+});
+
+describe('a refusal with another account signed in', () => {
+  beforeEach(() => {
+    useAccountStore.setState({ accounts: [account(ALICE, 0, 'oauth'), account(BOB, 1, 'oauth')], activeAccountId: ALICE, defaultAccountId: ALICE } as never);
+    useAuthStore.setState({ activeAccountId: ALICE, isAuthenticated: true });
+  });
+
+  it('writes down who was there, so the note reaches them and nobody later', async () => {
+    useOfflineStore.setState({ enabled: [ALICE, BOB] });
+    answer = (url, method) => (url.includes('/api/auth/token') && method === 'PUT' ? json(401, { error: 'invalid_grant' }) : null);
+    await useAuthStore.getState().refreshAccessToken({ accountId: BOB });
+    expect(readRefusedLogins()[BOB]).toMatchObject({ seenBy: [ALICE], label: BOB, username: 'bob' });
+  });
+});
+
+describe('a login with no "Remember me", when the browser closed', () => {
+  it('still takes its data with it: that was the choice on a shared computer', async () => {
+    const reasons = await removalReasons();
+    useAccountStore.setState({ accounts: [{ ...account(ALICE, 0, 'basic'), rememberMe: false }], activeAccountId: ALICE, defaultAccountId: ALICE } as never);
+    useAuthStore.setState({ activeAccountId: ALICE });
+    useOfflineStore.setState({ enabled: [ALICE] });
+    await useAuthStore.getState().checkAuth();
+    await vi.waitFor(() => expect(reasons).toEqual(['explicit']));
+    expect(readRefusedLogins()).toEqual({});
     expect(heard).toEqual([]);
   });
 });

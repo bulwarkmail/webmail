@@ -5783,7 +5783,14 @@
     "refused_waiting": "Saatmata sõnumid ootavad teie uut parooli: {count}. Need jäävad alles kuni {date}.",
     "refused_waiting_unknown": "Saatmata sõnumid võivad oodata teie uut parooli. Need jäävad alles kuni {date}.",
     "confirm_unsent_unknown": "Siin võivad oodata saatmata sõnumid. Need lähevad kaduma.",
-    "confirm_templates": "Selles seadmes salvestatud e-kirjade mallid"
+    "confirm_templates": "Selles seadmes salvestatud e-kirjade mallid",
+    "session_waiting": "Saatmata sõnumid ootavad järgmist sisselogimist: {count}. Need jäävad alles kuni {date}.",
+    "session_waiting_unknown": "Saatmata sõnumid võivad oodata järgmist sisselogimist. Need jäävad alles kuni {date}.",
+    "needs_sign_in": "Vajab sisselogimist",
+    "switcher_waiting": "Saatmata sõnumid: {count}. Kustutatakse sellest seadmest {date}.",
+    "switcher_kept": "Selle seadme e-kirjad kustutatakse {date}.",
+    "sibling_waiting": "{name} logiti välja. Saatmata sõnumid: {count}. Logige sisse hiljemalt {date}, muidu kustutatakse need sellest seadmest.",
+    "sibling_kept": "{name} logiti välja. Logige sisse hiljemalt {date}, muidu kustutatakse e-kirjad sellest seadmest."
   },
   "offlineStorage": {
     "keep_description": "Hoiab sinu kirju, kalendrit, kontakte ja valitud faile krüptitult selles seadmes. Võrguta saad kirju lugeda, märgistada ja teisaldada ning see, mida kirjutad, ootab väljuvate kirjade kastis. Välja logides eemaldatakse kõik.",

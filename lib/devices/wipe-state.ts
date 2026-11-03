@@ -4,6 +4,7 @@
  * is a count, a row id and the secret for that one row.
  */
 
+import type { ForcedSignOutKind } from '@/lib/offline/credentials-rejected';
 import { EVICTED_KEEP_MS, readEvicted } from '@/lib/offline/state';
 import type { WipeReason } from './types';
 
@@ -107,7 +108,7 @@ export function consumeWipeNote(): WipeNote | null {
   return note.unknown ? { unsent: note.unsent, unknown: true } : { unsent: note.unsent };
 }
 
-// ---- A refused login: what waits for the new password. A count, never subjects ----
+// ---- A login ended with nobody asking: what waits for the next sign-in. A count, never subjects ----
 
 export interface RefusedLogin {
   at: number;
@@ -115,6 +116,23 @@ export interface RefusedLogin {
   unsent: number | null;
   /** Not one bad answer at a start: what a deletion the organisation asked for needs. */
   certain: boolean;
+  /** Absent: `refused`. */
+  kind?: ForcedSignOutKind;
+  /** The count has been asked for, whatever came back. */
+  counted?: boolean;
+  /** Accounts signed in beside it at the time: they may see its name, and nobody else does. */
+  seenBy?: string[];
+  label?: string;
+  username?: string;
+  toasted?: boolean;
+}
+
+export interface RefusedLoginMark {
+  certain?: boolean;
+  kind?: ForcedSignOutKind;
+  seenBy?: string[];
+  label?: string;
+  username?: string;
 }
 
 export function readRefusedLogins(): Record<string, RefusedLogin> {
@@ -134,14 +152,24 @@ function writeRefused(refused: Record<string, RefusedLogin>): void {
   for (const listener of [...refusedListeners]) listener();
 }
 
-export function markLoginRefused(account: string, certain = true, now = Date.now()): void {
+export function markLoginRefused(account: string, mark: RefusedLoginMark = {}, now = Date.now()): void {
   const before = readRefusedLogins();
-  writeRefused({ ...before, [account]: { at: before[account]?.at ?? now, unsent: null, certain: certain || before[account]?.certain === true } });
+  const { certain = true, kind = 'refused', seenBy, label, username } = mark;
+  writeRefused({
+    ...before,
+    [account]: {
+      at: before[account]?.at ?? now,
+      unsent: null,
+      certain: certain || before[account]?.certain === true,
+      kind,
+      ...(seenBy?.length ? { seenBy, label, username } : {}),
+    },
+  });
 }
 
 export function setRefusedCount(account: string, unsent: number | null): void {
   const before = readRefusedLogins();
-  if (before[account]) writeRefused({ ...before, [account]: { ...before[account], unsent } });
+  if (before[account]) writeRefused({ ...before, [account]: { ...before[account], unsent, counted: true } });
 }
 
 export function dropRefusedLogin(account: string): void {
@@ -155,6 +183,7 @@ export interface RefusedWait {
   unsent: number | null;
   /** When the data goes if nobody signs in. */
   until: number;
+  kind: ForcedSignOutKind;
 }
 
 /** What the sign-in page says. Numbers only: whoever reads it may not be the person it's about. */
@@ -162,7 +191,51 @@ export function refusedWaits(): RefusedWait[] {
   const evicted = readEvicted();
   return Object.entries(readRefusedLogins())
     .filter(([account, wait]) => account in evicted && wait.unsent !== 0)
-    .map(([account, wait]) => ({ unsent: wait.unsent, until: evicted[account] + EVICTED_KEEP_MS }));
+    .map(([account, wait]) => ({ unsent: wait.unsent, until: evicted[account] + EVICTED_KEEP_MS, kind: wait.kind ?? 'refused' }));
+}
+
+export interface SiblingWait extends RefusedWait {
+  account: string;
+  label: string;
+  username: string;
+}
+
+function asSiblingWait(account: string, wait: RefusedLogin, evictedAt: number): SiblingWait {
+  return {
+    account,
+    label: wait.label ?? account,
+    username: wait.username ?? '',
+    unsent: wait.unsent,
+    until: evictedAt + EVICTED_KEEP_MS,
+    kind: wait.kind ?? 'refused',
+  };
+}
+
+/** For the account switcher: accounts that left while `active` was signed in beside them. Nobody else sees their names. */
+export function siblingWaits(active: string | null | undefined): SiblingWait[] {
+  if (!active) return [];
+  const evicted = readEvicted();
+  return Object.entries(readRefusedLogins())
+    .filter(([account, wait]) => account in evicted && wait.seenBy?.includes(active))
+    .map(([account, wait]) => asSiblingWait(account, wait, evicted[account]));
+}
+
+/** Once each: what the toast says when such an account leaves. Waits for the count, so it can say it. */
+export function takeSiblingToasts(active: string | null | undefined): SiblingWait[] {
+  if (!active) return [];
+  const evicted = readEvicted();
+  const refused = readRefusedLogins();
+  const due = Object.entries(refused)
+    .filter(([account, wait]) => account in evicted && wait.seenBy?.includes(active) && wait.counted && !wait.toasted);
+  if (due.length === 0) return [];
+  writeRefused({ ...refused, ...Object.fromEntries(due.map(([account, wait]) => [account, { ...wait, toasted: true }])) });
+  return due.map(([account, wait]) => asSiblingWait(account, wait, evicted[account]));
+}
+
+/** A date for these notes, in the page's language. */
+export function waitDate(until: number): string {
+  const language = typeof document === 'undefined' ? undefined : document.documentElement.lang || undefined;
+  return new Date(until).toLocaleDateString(language, { dateStyle: 'medium' });
 }
 
 // ---- Plugin databases a running frame kept open: tried again at the next load ----

@@ -5,11 +5,11 @@
  * - the instance's registry (lib/devices): a wipe an admin asked for, heard at
  *   check-in. At a start the check-in runs before the local copy is shown.
  * - the user, from settings.
- * - the organisation, when it asks for deletion at once after a refused login
- *   (`organisation.devices.wipeOnRefusedLogin`).
+ * - the organisation, when it asks for deletion at once after a refused login or
+ *   an idle or session limit (`organisation.devices.wipeOnForcedSignOut`).
  *
- * A refused login on its own deletes nothing. The account signs out and its data
- * hides until someone signs in with the new password, or for 30 days
+ * A refused login or an idle or session limit on its own deletes nothing. The
+ * account signs out and its data hides until the next sign-in, or for 30 days
  * (EVICTED_KEEP_MS). What this file keeps for it is a number, for the sign-in page.
  * The usual cause is a password changed on another device, and deleting there
  * would lose unsent mail for very little protection against a thief. A deletion
@@ -83,7 +83,7 @@ import {
 import { onAccountRemoved, useAccountStore, type AccountEntry } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePolicyStore } from '@/stores/policy-store';
-import { onCredentialsRejected } from './credentials-rejected';
+import { onCredentialsRejected, type ForcedSignOutKind } from './credentials-rejected';
 import { forgetEvictedSecrets } from './evicted-secrets';
 import { confirmLoss, registerOfflineHooks, unsentForWipe, wipeAccount, wipeEverything } from './offline-mode';
 import { clearEvicted, forgetMailSnapshot, isEvicted, readEvicted, serverKey, useOfflineStore } from './state';
@@ -385,7 +385,7 @@ async function eraseAccount(account: string, reason: WipeReason, options: WipeAc
   tellOtherWindows(account, 'start');
   registerOfflineHooks();
 
-  const ownOnly = reason === 'rejected';
+  const ownOnly = reason === 'rejected' || reason === 'session';
   const unsent = await unsentForWipe(account);
   if (record && !readWipeConfirmations().some((entry) => entry.id === record.id)) {
     queueWipeConfirmation({ account, id: record.id, secret: record.secret, reason, unsent });
@@ -604,14 +604,16 @@ async function countRefused(account: string): Promise<void> {
   setRefusedCount(account, await unsentForWipe(account));
 }
 
+const wipeReasonFor = (kind: ForcedSignOutKind | undefined): WipeReason => (kind === 'session' ? 'session' : 'rejected');
+
 /**
- * The login was refused, and the auth store is signing it out and hiding the data.
- * It goes now only if the organisation asked for that, and only for a refusal that
- * is one for certain: a single bad answer at a start can be a server in trouble.
+ * The login ended with nobody asking, and the auth store is signing it out and
+ * hiding the data. It goes now only if the organisation asked for that, and only
+ * when it's certain: a single bad answer at a start can be a server in trouble.
  */
-async function heardRefusal(account: string, certain: boolean): Promise<void> {
-  if (certain && policyKnown() && devicesForAccount(account).wipeOnRefusedLogin) {
-    await wipeAccountFromDevice(account, 'rejected');
+async function heardRefusal(account: string, certain: boolean, kind: ForcedSignOutKind): Promise<void> {
+  if (certain && policyKnown() && devicesForAccount(account).wipeOnForcedSignOut) {
+    await wipeAccountFromDevice(account, wipeReasonFor(kind));
     return;
   }
   await countRefused(account);
@@ -625,8 +627,8 @@ export async function sweepRefusedLogins(): Promise<void> {
       continue;
     }
     // Nobody's signed in to it, so no groups to go by: what applies to everyone reaches it.
-    if (wait.certain && policyKnown() && devicesForNoOne().wipeOnRefusedLogin) {
-      await wipeAccountFromDevice(account, 'rejected');
+    if (wait.certain && policyKnown() && devicesForNoOne().wipeOnForcedSignOut) {
+      await wipeAccountFromDevice(account, wipeReasonFor(wait.kind));
       continue;
     }
     if (wait.unsent === null) await countRefused(account);
@@ -639,8 +641,8 @@ let registered = false;
 export function registerDeviceWipe(): void {
   if (registered) return;
   registered = true;
-  onCredentialsRejected((account, certain) => {
-    void heardRefusal(account, certain);
+  onCredentialsRejected((account, certain, kind) => {
+    void heardRefusal(account, certain, kind);
   });
   onBeforeSignOut(async (accountId, { keepLocalStore }) => {
     if (!keepLocalStore) await dropRows(accountId);

@@ -5795,7 +5795,14 @@
     "refused_waiting": "Thư chưa gửi đang chờ mật khẩu mới của bạn: {count}. Được giữ đến {date}.",
     "refused_waiting_unknown": "Có thể có thư chưa gửi đang chờ mật khẩu mới của bạn. Được giữ đến {date}.",
     "confirm_unsent_unknown": "Có thể có thư chưa gửi đang chờ ở đây. Chúng sẽ bị mất.",
-    "confirm_templates": "Mẫu email đã lưu trên thiết bị này"
+    "confirm_templates": "Mẫu email đã lưu trên thiết bị này",
+    "session_waiting": "Thư chưa gửi đang chờ lần đăng nhập tiếp theo: {count}. Được giữ đến {date}.",
+    "session_waiting_unknown": "Có thể có thư chưa gửi đang chờ lần đăng nhập tiếp theo. Được giữ đến {date}.",
+    "needs_sign_in": "Cần đăng nhập",
+    "switcher_waiting": "Thư chưa gửi: {count}. Sẽ bị xóa khỏi thiết bị này vào {date}.",
+    "switcher_kept": "Email trên thiết bị này sẽ bị xóa vào {date}.",
+    "sibling_waiting": "{name} đã bị đăng xuất. Thư chưa gửi: {count}. Hãy đăng nhập trước {date}, nếu không chúng sẽ bị xóa khỏi thiết bị này.",
+    "sibling_kept": "{name} đã bị đăng xuất. Hãy đăng nhập trước {date}, nếu không email sẽ bị xóa khỏi thiết bị này."
   },
   "offlineStorage": {
     "keep_description": "Giữ thư, lịch, danh bạ và các tệp bạn chọn, được mã hóa trên thiết bị này. Khi ngoại tuyến bạn có thể đọc, gắn cờ và di chuyển thư, còn thư bạn viết sẽ chờ trong Hộp thư đi. Khi đăng xuất, tất cả sẽ bị xóa.",

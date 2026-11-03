@@ -5783,7 +5783,14 @@
     "refused_waiting": "Usendte beskeder, der venter på din nye adgangskode: {count}. De bliver til {date}.",
     "refused_waiting_unknown": "Usendte beskeder venter måske på din nye adgangskode. De bliver til {date}.",
     "confirm_unsent_unknown": "Der venter måske usendte beskeder her. De går tabt.",
-    "confirm_templates": "E-mailskabeloner gemt på denne enhed"
+    "confirm_templates": "E-mailskabeloner gemt på denne enhed",
+    "session_waiting": "Usendte beskeder, der venter på din næste login: {count}. De bliver til {date}.",
+    "session_waiting_unknown": "Usendte beskeder venter måske på din næste login. De bliver til {date}.",
+    "needs_sign_in": "Kræver login",
+    "switcher_waiting": "Usendte beskeder: {count}. Slettes fra denne enhed den {date}.",
+    "switcher_kept": "Mailen på denne enhed slettes den {date}.",
+    "sibling_waiting": "{name} blev logget ud. Usendte beskeder: {count}. Log ind senest {date}, ellers slettes de fra denne enhed.",
+    "sibling_kept": "{name} blev logget ud. Log ind senest {date}, ellers slettes mailen fra denne enhed."
   },
   "offlineStorage": {
     "keep_description": "Beholder din mail, kalender, dine kontakter og de filer, du vælger, krypteret på denne enhed. Offline kan du læse, markere og flytte mail, og det, du skriver, venter i udbakken. Når du logger ud, fjernes det hele.",

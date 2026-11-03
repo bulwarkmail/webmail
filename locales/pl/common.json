@@ -5783,7 +5783,14 @@
     "refused_waiting": "Niewysłane wiadomości czekające na nowe hasło: {count}. Pozostaną do {date}.",
     "refused_waiting_unknown": "Niewysłane wiadomości mogą czekać na nowe hasło. Pozostaną do {date}.",
     "confirm_unsent_unknown": "Tutaj mogą czekać niewysłane wiadomości. Zostaną utracone.",
-    "confirm_templates": "Szablony e-maili zapisane na tym urządzeniu"
+    "confirm_templates": "Szablony e-maili zapisane na tym urządzeniu",
+    "session_waiting": "Niewysłane wiadomości czekające na następne logowanie: {count}. Pozostaną do {date}.",
+    "session_waiting_unknown": "Niewysłane wiadomości mogą czekać na następne logowanie. Pozostaną do {date}.",
+    "needs_sign_in": "Wymaga zalogowania",
+    "switcher_waiting": "Niewysłane wiadomości: {count}. Zostaną usunięte z tego urządzenia {date}.",
+    "switcher_kept": "Poczta na tym urządzeniu zostanie usunięta {date}.",
+    "sibling_waiting": "Konto {name} zostało wylogowane. Niewysłane wiadomości: {count}. Zaloguj się do {date}, inaczej zostaną usunięte z tego urządzenia.",
+    "sibling_kept": "Konto {name} zostało wylogowane. Zaloguj się do {date}, inaczej poczta zostanie usunięta z tego urządzenia."
   },
   "offlineStorage": {
     "keep_description": "Przechowuje Twoją pocztę, kalendarz, kontakty i wybrane pliki zaszyfrowane na tym urządzeniu. Offline możesz czytać, oznaczać i przenosić wiadomości, a to, co napiszesz, czeka w skrzynce nadawczej. Wylogowanie usuwa wszystko.",

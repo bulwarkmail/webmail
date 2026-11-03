@@ -5783,7 +5783,14 @@
     "refused_waiting": "Yeni parolanızı bekleyen gönderilmemiş iletiler: {count}. {date} tarihine kadar kalır.",
     "refused_waiting_unknown": "Gönderilmemiş iletiler yeni parolanızı bekliyor olabilir. {date} tarihine kadar kalır.",
     "confirm_unsent_unknown": "Burada gönderilmemiş iletiler bekliyor olabilir. Kaybolacaklar.",
-    "confirm_templates": "Bu cihazda kayıtlı e-posta şablonları"
+    "confirm_templates": "Bu cihazda kayıtlı e-posta şablonları",
+    "session_waiting": "Bir sonraki oturum açmanızı bekleyen gönderilmemiş iletiler: {count}. {date} tarihine kadar kalır.",
+    "session_waiting_unknown": "Gönderilmemiş iletiler bir sonraki oturum açmanızı bekliyor olabilir. {date} tarihine kadar kalır.",
+    "needs_sign_in": "Oturum açılması gerekiyor",
+    "switcher_waiting": "Gönderilmemiş iletiler: {count}. {date} tarihinde bu cihazdan silinecek.",
+    "switcher_kept": "Bu cihazdaki e-postalar {date} tarihinde silinecek.",
+    "sibling_waiting": "{name} oturumu kapatıldı. Gönderilmemiş iletiler: {count}. {date} tarihine kadar oturum açın, yoksa bu cihazdan silinecekler.",
+    "sibling_kept": "{name} oturumu kapatıldı. {date} tarihine kadar oturum açın, yoksa e-postalar bu cihazdan silinecek."
   },
   "offlineStorage": {
     "keep_description": "E-postalarınızı, takviminizi, kişilerinizi ve seçtiğiniz dosyaları bu cihazda şifreli olarak tutar. Çevrimdışıyken e-postaları okuyabilir, işaretleyebilir ve taşıyabilirsiniz; yazdıklarınız giden kutusunda bekler. Oturumu kapatınca hepsi silinir.",

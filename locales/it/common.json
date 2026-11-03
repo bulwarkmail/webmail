@@ -5783,7 +5783,14 @@
     "refused_waiting": "Messaggi non inviati in attesa della nuova password: {count}. Restano fino al {date}.",
     "refused_waiting_unknown": "Alcuni messaggi non inviati potrebbero essere in attesa della nuova password. Restano fino al {date}.",
     "confirm_unsent_unknown": "Qui potrebbero esserci messaggi non inviati in attesa. Andranno persi.",
-    "confirm_templates": "Modelli di email salvati su questo dispositivo"
+    "confirm_templates": "Modelli di email salvati su questo dispositivo",
+    "session_waiting": "Messaggi non inviati in attesa del prossimo accesso: {count}. Restano fino al {date}.",
+    "session_waiting_unknown": "Alcuni messaggi non inviati potrebbero essere in attesa del prossimo accesso. Restano fino al {date}.",
+    "needs_sign_in": "Accesso richiesto",
+    "switcher_waiting": "Messaggi non inviati: {count}. Eliminati da questo dispositivo il {date}.",
+    "switcher_kept": "Le sue email su questo dispositivo verranno eliminate il {date}.",
+    "sibling_waiting": "{name} è stato disconnesso. Messaggi non inviati: {count}. Accedi entro il {date} o verranno eliminati da questo dispositivo.",
+    "sibling_kept": "{name} è stato disconnesso. Accedi entro il {date} o le sue email verranno eliminate da questo dispositivo."
   },
   "offlineStorage": {
     "keep_description": "Conserva la tua posta, il calendario, i contatti e i file che scegli, cifrati su questo dispositivo. Offline puoi leggere, contrassegnare e spostare la posta, e ciò che scrivi aspetta nella posta in uscita. Uscendo dall'account viene rimosso tutto.",

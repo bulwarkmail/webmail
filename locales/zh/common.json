@@ -5783,7 +5783,14 @@
     "refused_waiting": "等待新密码的未发送邮件：{count} 封。保留至 {date}。",
     "refused_waiting_unknown": "可能有未发送的邮件在等待新密码。保留至 {date}。",
     "confirm_unsent_unknown": "这里可能有未发送的邮件。它们将会丢失。",
-    "confirm_templates": "保存在此设备上的邮件模板"
+    "confirm_templates": "保存在此设备上的邮件模板",
+    "session_waiting": "等待下次登录的未发送邮件：{count} 封。保留至 {date}。",
+    "session_waiting_unknown": "可能有未发送的邮件在等待下次登录。保留至 {date}。",
+    "needs_sign_in": "需要登录",
+    "switcher_waiting": "未发送邮件：{count} 封。将于 {date} 从此设备删除。",
+    "switcher_kept": "此设备上的邮件将于 {date} 删除。",
+    "sibling_waiting": "{name} 已退出登录。未发送邮件：{count} 封。请在 {date} 前登录，否则将从此设备删除。",
+    "sibling_kept": "{name} 已退出登录。请在 {date} 前登录，否则邮件将从此设备删除。"
   },
   "offlineStorage": {
     "keep_description": "在此设备上加密保留你的邮件、日历、联系人和你选择的文件。离线时可以阅读、标记和移动邮件，写好的邮件会在发件箱中等待。退出登录时会全部删除。",

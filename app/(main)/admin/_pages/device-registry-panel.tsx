@@ -235,6 +235,7 @@ function wipeReasonLabel(reason: NonNullable<DeviceView['wipeReason']>): string 
   switch (reason) {
     case 'user': return 'by the user';
     case 'rejected': return 'the server refused the login';
+    case 'session': return 'the session limit ran out';
     default: return reason;
   }
 }

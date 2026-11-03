@@ -5783,7 +5783,14 @@
     "refused_waiting": "Neodeslané zprávy čekající na nové heslo: {count}. Zůstanou do {date}.",
     "refused_waiting_unknown": "Na nové heslo možná čekají neodeslané zprávy. Zůstanou do {date}.",
     "confirm_unsent_unknown": "Možná tu čekají neodeslané zprávy. Budou ztraceny.",
-    "confirm_templates": "Šablony e-mailů uložené v tomto zařízení"
+    "confirm_templates": "Šablony e-mailů uložené v tomto zařízení",
+    "session_waiting": "Neodeslané zprávy čekající na další přihlášení: {count}. Zůstanou do {date}.",
+    "session_waiting_unknown": "Na další přihlášení možná čekají neodeslané zprávy. Zůstanou do {date}.",
+    "needs_sign_in": "Vyžaduje přihlášení",
+    "switcher_waiting": "Neodeslané zprávy: {count}. Budou smazány z tohoto zařízení {date}.",
+    "switcher_kept": "Pošta v tomto zařízení bude smazána {date}.",
+    "sibling_waiting": "Účet {name} byl odhlášen. Neodeslané zprávy: {count}. Přihlaste se do {date}, jinak budou z tohoto zařízení smazány.",
+    "sibling_kept": "Účet {name} byl odhlášen. Přihlaste se do {date}, jinak bude pošta z tohoto zařízení smazána."
   },
   "offlineStorage": {
     "keep_description": "Uchovává vaši poštu, kalendář, kontakty a vybrané soubory zašifrované v tomto zařízení. Offline můžete poštu číst, označovat a přesouvat a to, co napíšete, čeká v odesílané poště. Odhlášení vše odstraní.",

@@ -5783,7 +5783,14 @@
     "refused_waiting": "Mesaje netrimise care așteaptă parola nouă: {count}. Rămân până la {date}.",
     "refused_waiting_unknown": "Este posibil ca mesaje netrimise să aștepte parola nouă. Rămân până la {date}.",
     "confirm_unsent_unknown": "Este posibil să existe aici mesaje netrimise. Se vor pierde.",
-    "confirm_templates": "Șabloane de e-mail salvate pe acest dispozitiv"
+    "confirm_templates": "Șabloane de e-mail salvate pe acest dispozitiv",
+    "session_waiting": "Mesaje netrimise care așteaptă următoarea conectare: {count}. Rămân până la {date}.",
+    "session_waiting_unknown": "Este posibil ca mesaje netrimise să aștepte următoarea conectare. Rămân până la {date}.",
+    "needs_sign_in": "Necesită conectare",
+    "switcher_waiting": "Mesaje netrimise: {count}. Vor fi șterse de pe acest dispozitiv la {date}.",
+    "switcher_kept": "E-mailurile de pe acest dispozitiv vor fi șterse la {date}.",
+    "sibling_waiting": "{name} a fost deconectat. Mesaje netrimise: {count}. Conectați-vă până la {date}, altfel vor fi șterse de pe acest dispozitiv.",
+    "sibling_kept": "{name} a fost deconectat. Conectați-vă până la {date}, altfel e-mailurile vor fi șterse de pe acest dispozitiv."
   },
   "offlineStorage": {
     "keep_description": "Păstrează e-mailurile, calendarul, contactele și fișierele alese de dvs., criptate pe acest dispozitiv. Offline puteți citi, marca și muta e-mailuri, iar ce scrieți așteaptă în Mesaje de trimis. La deconectare se șterge totul.",

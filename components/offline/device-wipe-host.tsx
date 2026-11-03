@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { consumeWipeNote, type WipeNote } from '@/lib/devices/wipe-state';
+import { consumeWipeNote, onRefusedLoginsChanged, takeSiblingToasts, waitDate, type WipeNote } from '@/lib/devices/wipe-state';
 import { startDeviceWipe } from '@/lib/offline/device-wipe';
 import { useAuthStore } from '@/stores/auth-store';
 import { toast } from '@/stores/toast-store';
@@ -32,6 +32,18 @@ export function DeviceWipeHost() {
     const note = consumeWipeNote();
     if (note) toast.warning(wipeNoteText(note, tRef.current), { duration: 0 });
   }, [signedIn]);
+
+  // An account beside this one signed out by itself: once, when it's known what waits.
+  useEffect(() => {
+    const look = () => {
+      for (const wait of takeSiblingToasts(useAuthStore.getState().activeAccountId)) {
+        const values = { name: wait.label, date: waitDate(wait.until) };
+        toast.warning(wait.unsent ? tRef.current('sibling_waiting', { ...values, count: wait.unsent }) : tRef.current('sibling_kept', values), { duration: 0 });
+      }
+    };
+    look();
+    return onRefusedLoginsChanged(look);
+  }, []);
 
   return null;
 }
