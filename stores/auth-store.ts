@@ -1631,7 +1631,7 @@ function endPushForSignOut(signingOut: Iterable<IJMAPClient>): Promise<void> {
     (async () => {
       const { endWebPushForSignOut } = await import('@/lib/web-push');
       for (const client of signingOut) await endWebPushForSignOut(client);
-    })(),
+    })().catch(() => undefined),
     new Promise<void>((resolve) => setTimeout(resolve, LOGOUT_HOOK_BUDGET_MS)),
   ]);
 }
@@ -1641,6 +1641,11 @@ function beforeLogoutHooks(accountId: string, options: SignOutCleanupOptions = {
     Promise.all([authHooks.onBeforeLogout.emit({ accountId }), runBeforeSignOut(accountId, options)]).then(() => {}),
     new Promise<void>((resolve) => setTimeout(resolve, LOGOUT_HOOK_BUDGET_MS)),
   ]);
+}
+
+/** Test helper: the store's own clients come from signing in. */
+export function setClientForTests(accountId: string, client: JMAPClient): void {
+  clients.set(accountId, client);
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -2704,17 +2709,18 @@ export const useAuthStore = create<AuthState>()(
         const slot = account.cookieSlot ?? 0;
         const wasOAuth = account.authMode === 'oauth';
         const client = clients.get(accountId);
-        // The login's push goes first, while its session still works.
-        const pushEnded = client && reason === 'explicit' ? endPushForSignOut([client]) : Promise.resolve();
-
-        // The cleanup marks the slot closing right away, so a renewal in flight
-        // cannot bring the session back.
-        void pushEnded.finally(() => clearSlotCredentials(slot, wasOAuth));
+        // The slot is closing from here on: a renewal in flight cannot bring the
+        // session back.
+        closingSlots.add(slot);
         clearRefreshTimer(accountId);
-        if (client) {
-          forgetCalendarSubscriptions(client);
-          try { client.disconnect(); } catch { /* noop */ }
-        }
+        if (client) forgetCalendarSubscriptions(client);
+        // The login's push goes first: a client that disconnected has no account
+        // id and no API left to reach the server with.
+        const pushEnded = client && reason === 'explicit' ? endPushForSignOut([client]) : Promise.resolve();
+        void pushEnded.finally(() => {
+          try { client?.disconnect(); } catch { /* noop */ }
+          return clearSlotCredentials(slot, wasOAuth);
+        });
         clients.delete(accountId);
         evictAccount(accountId);
         forgetAccountRows(accountId, get().client);
