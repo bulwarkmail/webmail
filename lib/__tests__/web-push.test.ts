@@ -472,6 +472,41 @@ describe('enableWebPush', () => {
 // Registrations made before the client learned about the delivery filter are
 // repaired in the background on app start - nobody should have to find the
 // settings toggle to stop the spam pushes.
+describe('enableWebPush when the verification does not come', () => {
+  // The relay's poll stays empty until `arrivesAfterTouch` calls come in, like a
+  // Stalwart that skipped the verification until the subscription is touched.
+  function installSilentRelay(codeOnceTouched: () => boolean) {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      const json = (body: unknown) => ({ ok: true, status: 200, json: async () => body }) as Response;
+      if (url.endsWith('/api/push/vapid-public-key')) return json({ publicKey: 'QUJD' });
+      if (url.includes('/api/push/verify/')) return json({ verificationCode: codeOnceTouched() ? 'late-code' : null });
+      return json({});
+    });
+    vi.stubGlobal('fetch', fetchMock);
+  }
+
+  afterEach(() => { vi.useRealTimers(); });
+
+  it('touches the subscription after the server\'s minute, which makes it send the code', async () => {
+    vi.useFakeTimers();
+    const client = makeClient([]);
+    installSilentRelay(() => (client.updatePushSubscription as ReturnType<typeof vi.fn>).mock.calls.length > 0);
+
+    const run = enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+    const settled = run.then(() => 'done', (error: Error) => error.message);
+    await vi.advanceTimersByTimeAsync(58_000);
+    expect(client.updatePushSubscription).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(10_000);
+
+    expect(client.updatePushSubscription).toHaveBeenCalledTimes(1);
+    expect((client.updatePushSubscription as ReturnType<typeof vi.fn>).mock.calls[0][0]).toBe('push-new');
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(await settled).toBe('done');
+    expect(client.verifyPushSubscription).toHaveBeenCalledWith('push-new', 'late-code');
+  });
+});
+
 describe('resyncWebPush when the relay changed (#903)', () => {
   afterEach(() => setNoThirdPartyTraffic(false));
 

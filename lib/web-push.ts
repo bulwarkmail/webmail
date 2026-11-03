@@ -632,17 +632,32 @@ async function relayReportsDead(
   return (await relayStatusFor(relayBaseUrl, subscriptionId)) === 'inactive';
 }
 
+// Stalwart rate-limits PushVerification per account (60 s by default).
+const VERIFICATION_RESEND_AFTER_MS = 62_000;
+const VERIFICATION_TIMEOUT_MS = 80_000;
+
 async function pollVerificationCode(
   relayBaseUrl: string,
   subscriptionId: string,
+  askAgain: () => Promise<unknown>,
 ): Promise<string> {
-  // Stalwart per-account rate-limits PushVerification posts (default 60s).
-  // If there are leftover unverified subscriptions on the account, our new
-  // one queues up behind them - so we wait long enough to clear one verify
-  // window even in the unlucky case.
-  const timeoutAt = Date.now() + 75_000;
+  // If there are leftover unverified subscriptions on the account, our new one
+  // queues up behind them, so we wait long enough to clear one verify window.
+  //
+  // Stalwart hands out the lowest free subscription id, so one destroyed and
+  // created again within the window (off and on again, or a retry) gets the same
+  // id. It takes that for a repeat and drops the verification for good, on 0.16.27
+  // and 1.0 alike (push.rs: `verified_id == subscription.id`). Any change to the
+  // subscription after the window makes it send one.
+  const startedAt = Date.now();
+  const timeoutAt = startedAt + VERIFICATION_TIMEOUT_MS;
+  let askedAgain = false;
   let delay = 400;
   while (Date.now() < timeoutAt) {
+    if (!askedAgain && Date.now() - startedAt >= VERIFICATION_RESEND_AFTER_MS) {
+      askedAgain = true;
+      await askAgain().catch(() => undefined);
+    }
     const res = await fetch(
       buildRelayUrl(relayBaseUrl, `/api/push/verify/${encodeURIComponent(subscriptionId)}`),
     );
@@ -866,7 +881,9 @@ export async function enableWebPush(
   const serverAssignedId = created.result;
   rememberRefusedEmailPushAccounts(accountId, refusedBefore, emailPush, created.emailPush);
 
-  const verificationCode = await pollVerificationCode(relayBaseUrl, deviceClientId);
+  const verificationCode = await pollVerificationCode(relayBaseUrl, deviceClientId, () =>
+    params.client.updatePushSubscription(serverAssignedId, { expires: expiresFromNow(SUBSCRIPTION_EXPIRES_DAYS) }),
+  );
   await params.client.verifyPushSubscription(serverAssignedId, verificationCode);
   localStorage.setItem(subIdKey, serverAssignedId);
   localStorage.setItem(relayBaseKey(accountId), relayBaseUrl);
