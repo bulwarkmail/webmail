@@ -4636,6 +4636,7 @@
         "status_inactive": "ไม่ได้เปิดใช้งานบนอุปกรณ์นี้",
         "status_unsupported": "เบราว์เซอร์นี้ไม่รองรับ Web Push",
         "status_lite": "Web Push ไม่พร้อมใช้งานใน Bulwark Lite จำเป็นต้องใช้ Bulwark server",
+        "status_demo": "การแจ้งเตือนในพื้นหลังไม่พร้อมใช้งานในเดโม",
         "status_busy": "กำลังดำเนินการ…",
         "enable": "เปิดใช้งาน",
         "reenable": "ลงทะเบียนใหม่",

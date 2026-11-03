@@ -1780,6 +1780,7 @@
         "status_inactive": "No habilitado en este dispositivo",
         "status_unsupported": "Este navegador no admite Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "Las notificaciones en segundo plano no están disponibles en la demo.",
         "title": "Notificaciones en segundo plano",
         "devices_title": "Dispositivos registrados",
         "devices_desc": "Todos los dispositivos registrados para recibir notificaciones en segundo plano de esta cuenta. Al revocar uno, deja de recibirlas de inmediato.",

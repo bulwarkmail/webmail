@@ -43,6 +43,7 @@ export function MultiAccountPushSettings({ relayBaseUrl }: { relayBaseUrl?: stri
   const accounts = useAccountStore(s => s.accounts);
   // Re-read the client map whenever a connection appears or drops.
   const revision = useAuthStore(s => s.connectedAccountsRevision);
+  const isDemoMode = useAuthStore(s => s.isDemoMode);
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
   const [chosen, setChosen] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
@@ -67,7 +68,7 @@ export function MultiAccountPushSettings({ relayBaseUrl }: { relayBaseUrl?: stri
 
   useEffect(() => { void refresh(); }, [refresh, revision]);
 
-  if (!isWebPushSupported() || connected.length < 2) return null;
+  if (!isWebPushSupported() || isDemoMode || connected.length < 2) return null;
 
   const toggle = (id: string, on: boolean) => setChosen(prev => {
     const next = new Set(prev);

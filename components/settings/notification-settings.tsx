@@ -72,7 +72,10 @@ export function NotificationSettings() {
   const username = useAuthStore((s) => s.username);
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
 
-  const supported = typeof window !== 'undefined' && isWebPushSupported();
+  // The demo client has no mail server to subscribe with. Enabling would get as
+  // far as a relay record and a browser subscription, then fail.
+  const isDemoMode = useAuthStore((s) => s.isDemoMode);
+  const supported = typeof window !== 'undefined' && isWebPushSupported() && !isDemoMode;
   // "Inbox only" is enforced by the server's emailPush filter; without that
   // capability (Stalwart < 0.16.16) the toggle would do nothing.
   const inboxOnlyAvailable = supported && !!client && serverSupportsEmailPush(client);
@@ -145,7 +148,7 @@ export function NotificationSettings() {
   // In the static Lite build push is off by design (no service worker, see
   // components/service-worker-registration.tsx), not a browser limitation.
   const statusDescription = pushStatus.kind === 'unsupported'
-    ? (IS_LITE ? t('push.status_lite') : `${t('push.status_unsupported')} ${t('push.ios_hint')}`)
+    ? (IS_LITE ? t('push.status_lite') : isDemoMode ? t('push.status_demo') : `${t('push.status_unsupported')} ${t('push.ios_hint')}`)
     : noRelay && !pushEnabled
       ? tThirdParty('push_needs_relay')
     : busy

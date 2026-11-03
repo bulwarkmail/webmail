@@ -1780,6 +1780,7 @@
         "status_inactive": "Non activé sur cet appareil",
         "status_unsupported": "Ce navigateur ne prend pas en charge Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "Les notifications en arrière-plan ne sont pas disponibles dans la démo.",
         "title": "Notifications en arrière-plan",
         "devices_title": "Appareils enregistrés",
         "devices_desc": "Tous les appareils enregistrés pour recevoir les notifications en arrière-plan de ce compte. Révoquer un appareil l’empêche immédiatement d’en recevoir.",

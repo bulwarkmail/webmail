@@ -1780,6 +1780,7 @@
         "status_inactive": "Non abilitato su questo dispositivo",
         "status_unsupported": "Questo browser non supporta Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "Le notifiche in background non sono disponibili nella demo.",
         "title": "Notifiche in background",
         "devices_title": "Dispositivi registrati",
         "devices_desc": "Tutti i dispositivi registrati per ricevere le notifiche in background di questo account. Revocandone uno, smette subito di riceverle.",

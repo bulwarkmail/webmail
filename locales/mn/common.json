@@ -1740,6 +1740,7 @@
         "status_inactive": "Энэ төхөөрөмж дээр идэвхжээгүй",
         "status_unsupported": "Энэ хөтөч Web Push-ийг дэмждэггүй",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "Демо хувилбарт арын мэдэгдэл ашиглах боломжгүй.",
         "status_busy": "Ажиллаж байна…",
         "enable": "Идэвхжүүлэх",
         "reenable": "Дахин бүртгүүлэх",

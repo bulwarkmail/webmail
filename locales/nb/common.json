@@ -1740,6 +1740,7 @@
         "status_inactive": "Ikke aktivert på denne enheten",
         "status_unsupported": "Denne nettleseren støtter ikke Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "Bakgrunnsvarsler er ikke tilgjengelige i demoen.",
         "status_busy": "Behandler...",
         "enable": "Aktiver",
         "reenable": "Registrer på nytt",

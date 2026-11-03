@@ -1780,6 +1780,7 @@
         "status_inactive": "在此设备上未启用",
         "status_unsupported": "此浏览器不支持 Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "演示版不提供后台通知。",
         "title": "后台通知",
         "devices_title": "已注册的设备",
         "devices_desc": "已注册接收此账户后台通知的所有设备。撤销后，该设备会立即停止接收。",
