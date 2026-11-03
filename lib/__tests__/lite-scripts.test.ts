@@ -60,7 +60,6 @@ import {
   stalwartRewriteIndex,
   stalwartZipEntryProblems,
   unexpectedEngineFiles,
-  LITE_REMOVED_PATHS,
   unexpectedApiStrings,
   withScriptHashCsp,
 } from '../../scripts/lite/lib.mjs';
