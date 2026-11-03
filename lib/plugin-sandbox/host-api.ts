@@ -2041,8 +2041,11 @@ export async function dispatchApiCall(
     throw new Error(`Unknown API method "${method}"`);
   }
 
-  const assistant = await dispatchAssistant(plugin, method, args);
-  if (assistant !== NOT_MINE) return assistant;
+  // The AI assistant's methods; every other call goes on without waiting a tick.
+  if (method in ASSISTANT_PERMS) {
+    const assistant = await dispatchAssistant(plugin, method, args);
+    if (assistant !== NOT_MINE) return assistant;
+  }
 
   switch (method) {
     case 'proxy.fetch': return proxyFetch(plugin, args, opts?.sink ?? null);
