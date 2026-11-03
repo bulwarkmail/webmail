@@ -6089,7 +6089,8 @@ export function RecipientChipInput({
     <div className="flex-1 min-w-0">
       <div
         className={cn(
-          "flex flex-wrap items-center gap-1 min-h-[32px] cursor-text",
+          // A long list scrolls by itself, or a reply-all to 80 people leaves no room for the text.
+          "flex flex-wrap items-center gap-1 min-h-[32px] max-h-[min(30dvh,10rem)] overflow-y-auto p-0.5 -m-0.5 cursor-text",
           validationError && "ring-2 ring-red-500 dark:ring-red-400 rounded",
           isDragOver && "ring-2 ring-primary/50 rounded bg-accent/20"
         )}

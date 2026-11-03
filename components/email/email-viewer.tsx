@@ -4765,7 +4765,8 @@ ${printWatermark ? printWatermark.html : ''}
                 {/* h2 under the app's h1 ("Inbox – Mail"); the reader's
                     blocks below are h3 and h4, so no level is skipped. */}
                 <h2 dir="auto" className={cn(
-                  "text-foreground break-words min-w-0",
+                  // The header stays while the message scrolls: a very long subject scrolls by itself.
+                  "text-foreground break-words min-w-0 max-h-[35dvh] overflow-y-auto",
                   mvViewer ? "text-[1.375rem] leading-7 font-normal" : "text-lg lg:text-xl font-bold tracking-tight"
                 )}>
                   {email.subject || t('no_subject')}
