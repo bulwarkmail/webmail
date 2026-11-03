@@ -238,6 +238,15 @@ export function loadSandboxedPlugin(plugin: InstalledPlugin): Promise<void> {
   return run;
 }
 
+/**
+ * Turned off during a start with no remembered slots: unload found nothing
+ * registered, so the frame is still up and the status still unset.
+ */
+function stopCancelledStart(pluginId: string, background: { destroy(): void } | null): void {
+  try { background?.destroy(); } catch { /* ignore */ }
+  storeAccessor?.setPluginStatus(pluginId, 'disabled');
+}
+
 async function startSandboxedPlugin(plugin: InstalledPlugin, retried = false): Promise<void> {
   // A plugin that declares network access doesn't start while third-party
   // traffic is off; the rest run (#903).
@@ -280,6 +289,10 @@ async function startSandboxedPlugin(plugin: InstalledPlugin, retried = false): P
       INIT_TIMEOUT_MS,
       `[plugin-sandbox] "${plugin.id}" init`,
     );
+    if (startsCancelled.has(plugin.id)) {
+      stopCancelledStart(plugin.id, bg);
+      return;
+    }
 
     // Wire hook proxies: every hookName the plugin registered gets a HookBus
     // entry whose handler dispatches into the sandbox. `shortcut:<id>` hooks
@@ -360,6 +373,10 @@ async function startSandboxedPlugin(plugin: InstalledPlugin, retried = false): P
   } catch (err) {
     // Turned off while it was starting: unload has set the status.
     if (background?.closed && getActive(plugin.id)?.background !== background) return;
+    if (startsCancelled.has(plugin.id)) {
+      stopCancelledStart(plugin.id, background);
+      return;
+    }
     // Offered from the last start: take the slots back down.
     if (background && getActive(plugin.id)?.background === background) deregisterActive(plugin.id);
     // A busy machine can take longer than the limit to boot a frame, and the
