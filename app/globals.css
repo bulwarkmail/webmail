@@ -1165,6 +1165,22 @@ optgroup {
   inset-inline-end: 3.25rem;
 }
 
+/* Large text in a narrow window leaves the field little width, less than these
+   paddings add up to: the input then stuck out under the bell, with the filter
+   button on top of the magnifier. Here the text gets what the magnifier had. */
+[data-interface-layout="mountain-view"] .mv-topbar-search {
+  container-type: inline-size;
+}
+@container (max-width: 16rem) {
+  [data-interface-layout="mountain-view"] .mv-topbar input[data-search-input] {
+    padding-inline-start: 0.75rem;
+    padding-inline-end: 2.75rem;
+  }
+  [data-interface-layout="mountain-view"] .mv-topbar-search > div > form > div > svg {
+    display: none;
+  }
+}
+
 /* The magnifier sits on the field's baseline grid, one 48px hit area in. */
 [data-interface-layout="mountain-view"] .mv-topbar-search > div > form > div > svg {
   inset-inline-start: 1rem;
