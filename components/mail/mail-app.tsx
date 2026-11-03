@@ -5351,7 +5351,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             {!isScheduledView && <MessageListTabs panelId={messageListPanelId} />}
             <WelcomeBanner />
 
-            <div {...messageListPanelProps} className="flex-1 min-h-0 flex flex-col">
+            <div {...messageListPanelProps} className="flex-1 min-h-0 flex flex-col overflow-hidden">
             <ErrorBoundary fallback={EmailListErrorFallback}>
               <EmailList
                 onFindFromSender={mvShell ? (sender) => void handleSelectContactSuggestion(sender, 'from') : undefined}
