@@ -19,6 +19,7 @@ import {
   confirmLoss,
   enforcePolicy,
   offlineSessionFor,
+  offlineSupported,
   pluginsNotRunning,
   refreshQueueState,
   setOfflineNotifier,
@@ -27,9 +28,11 @@ import {
   unsentCount,
   wipeEverything,
 } from '../offline-mode';
-import { flushQueue, LOOKUP_WAIT_MS, settleStaleSends, SENDING_STALE_MS } from '../flush';
+import { flushQueue, forgetOrphanCheck, LOOKUP_WAIT_MS, ORPHAN_FILE_AGE_MS, settleStaleSends, SENDING_STALE_MS } from '../flush';
+import { installMayPass } from '@/lib/store/adapters/wasm';
+import { isServerOutage, SendNotStartedError } from '@/lib/jmap/offline-hooks';
 import { claimForSending, holdFile, LOCAL_BLOB_PREFIX, queueSend, readQueue, updateOutboxEntry } from '../queue';
-import { forgetLegacyMove } from '../migrate-legacy';
+import { forgetLegacyMove, strandedLegacyMessages } from '../migrate-legacy';
 import { consumeLost } from '../lost';
 import { getOutboxHooks } from '../outbox-hooks';
 import { shellFiles } from '../shell';
@@ -524,6 +527,88 @@ describe('waiting mail after a normal start', () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe('old files', () => {
+  it('go after a flush, once a day, not a file that\'s still recent', async () => {
+    forgetOrphanCheck();
+    writeEnabled(['acc']);
+    const { blobId } = await holdFile('acc', new File(['x'], 'x.txt', { type: 'text/plain' }), 'x.txt');
+    const client = fakeClient() as unknown as JMAPClient;
+    const flush = () => flushQueue('acc', client, { notify: vi.fn(), allowed: () => true });
+    await flush();
+    expect(await store.area('acc', 'outbox.heldFile', { blobId })).not.toBeNull();
+
+    const area = vi.spyOn(store, 'area');
+    await flush();
+    expect(area.mock.calls.some(([, name]) => name === 'outbox.dropOrphans')).toBe(false);
+
+    const later = Date.now() + ORPHAN_FILE_AGE_MS + 1000;
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(later);
+    try {
+      await flush();
+      expect(area.mock.calls.some(([, name]) => name === 'outbox.dropOrphans')).toBe(true);
+      expect(await store.area('acc', 'outbox.heldFile', { blobId })).toBeNull();
+    } finally {
+      clock.mockRestore();
+      area.mockRestore();
+    }
+  });
+});
+
+describe('a browser that can\'t run the store', () => {
+  it('says so when the old database holds unsent mail', async () => {
+    await new Promise<void>((resolve) => {
+      const request = indexedDB.open('bulwark-offline', 1);
+      request.onupgradeneeded = () => { request.result.createObjectStore('queue', { keyPath: 'id' }); };
+      request.onsuccess = () => {
+        const put = request.result.transaction('queue', 'readwrite').objectStore('queue');
+        put.put({ id: 1, kind: 'patch' });
+        put.put({ id: 2, kind: 'send' });
+        put.transaction.oncomplete = () => { request.result.close(); resolve(); };
+      };
+    });
+    expect(await strandedLegacyMessages()).toBe(1);
+    store.isSupported = false;
+    const notify = vi.fn();
+    setOfflineNotifier(notify);
+    stop = startOfflineMode();
+    await vi.waitFor(() => expect(notify).toHaveBeenCalledWith({ kind: 'legacy-stranded' }));
+    store.isSupported = true;
+    await new Promise<void>((resolve) => {
+      const remove = indexedDB.deleteDatabase('bulwark-offline');
+      remove.onsuccess = () => resolve();
+    });
+    expect(await strandedLegacyMessages()).toBe(0);
+  });
+
+  it('turns the switch off in a window that refuses the private file system', async () => {
+    writeEnabled([]);
+    Object.defineProperty(window.navigator, 'storage', { configurable: true, value: { getDirectory: async () => { throw new DOMException('The operation is insecure.', 'SecurityError'); } } });
+    try {
+      stop = startOfflineMode();
+      await vi.waitFor(() => expect(useOfflineStore.getState().storageBlocked).toBe(true));
+      expect(offlineSupported()).toBe(false);
+    } finally {
+      delete (window.navigator as { storage?: unknown }).storage;
+      useOfflineStore.setState({ storageBlocked: false });
+    }
+  });
+
+  it('doesn\'t retry the install where the browser refuses it', () => {
+    expect(installMayPass(new DOMException('The operation is insecure.', 'SecurityError'))).toBe(false);
+    expect(installMayPass(new DOMException('Handle is busy', 'NoModificationAllowedError'))).toBe(true);
+  });
+});
+
+describe('the wording of an outage', () => {
+  it('tells a proxy with no server behind it from a missing connection', () => {
+    const gateway = Object.assign(new Error('Request failed: 502'), { name: 'GatewayError' });
+    expect(isServerOutage(gateway)).toBe(true);
+    expect(isServerOutage(new SendNotStartedError(gateway))).toBe(true);
+    expect(isServerOutage(new SendNotStartedError(new TypeError('Failed to fetch')))).toBe(false);
+    expect(isServerOutage(new TypeError('Failed to fetch'))).toBe(false);
   });
 });
 

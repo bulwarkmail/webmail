@@ -32,6 +32,8 @@ interface OfflineState {
   downServers: string[];
   /** The app started without the server, from the mail on this device. */
   startedOffline: boolean;
+  /** The browser won't hand out the private file system here: a private window, say. */
+  storageBlocked: boolean;
   /**
    * Accounts whose store came back empty since this page loaded: the browser
    * cleared their key or file. Whatever warns about eviction can go by this.
@@ -63,6 +65,7 @@ export const useOfflineStore = create<OfflineState>()(() => ({
   downServers: [],
   startedOffline: false,
   storeLost: [],
+  storageBlocked: false,
   outbox: [],
   pendingChanges: 0,
   conflicts: [],

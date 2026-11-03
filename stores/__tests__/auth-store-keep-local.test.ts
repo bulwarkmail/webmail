@@ -192,6 +192,25 @@ describe('data waiting for a sign-in', () => {
   });
 });
 
+describe('a sign-out that has to drop another account', () => {
+  const BOB = 'bob@mail.example.test';
+
+  it('keeps that account\'s data for its next sign-in, since nobody asked it', async () => {
+    useAccountStore.setState({ accounts: [entry(ALICE, 0), { ...entry(BOB, 1), hasError: true }] } as never);
+    state.writeEnabled([ALICE, BOB]);
+    await queue.queueSend(BOB, { subject: 'Bob\'s', to: [] }, { kind: 'email', args: [] });
+    offline.startOfflineMode();
+    tokenAnswers(() => answer(200));
+    await useAuthStore.getState().logout({ endProviderSession: false });
+    await vi.waitFor(() => expect(useAccountStore.getState().accounts).toEqual([]));
+    await vi.waitFor(() => expect(store.removed).toEqual([ALICE]));
+    expect(purge.files).toBe(0);
+    expect(state.isEvicted(BOB)).toBe(true);
+    expect(state.useOfflineStore.getState().enabled).toEqual([BOB]);
+    expect(lost.consumeLost()).not.toContain('Bob\'s');
+  });
+});
+
 describe('a login without "remember me"', () => {
   it('ends with its data at a reload, naming lost mail, even before the host runs', async () => {
     useAccountStore.setState({ accounts: [{ ...entry(ALICE, 0), rememberMe: false }] } as never);

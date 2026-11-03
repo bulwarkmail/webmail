@@ -56,7 +56,7 @@ import {
 import { clearHandoffs } from '@/lib/launch-handoff';
 import { clearEvicted, EVICTED_KEEP_MS, forgetMailSnapshot, isEvicted, offlineScopeFor, isOfflineNow, OFFLINE_ACCOUNTS_KEY, readEnabledFrom, readEvicted, visibleAccounts, serverKey, setServerDown, useOfflineStore, writeEnabled, type OutboxRow } from './state';
 import { flushQueue, LOOKUP_WAIT_MS, SENDING_STALE_MS, settleStaleSends } from './flush';
-import { LEGACY_DB_NAME, moveLegacyOutbox } from './migrate-legacy';
+import { LEGACY_DB_NAME, moveLegacyOutbox, strandedLegacyMessages } from './migrate-legacy';
 import { deleteShellCaches, tellServiceWorker } from './shell';
 import { rememberLost } from './lost';
 
@@ -70,6 +70,7 @@ export type OfflineNotice =
   | { kind: 'storage-failed' }
   | { kind: 'store-unavailable' }
   | { kind: 'store-reset' }
+  | { kind: 'legacy-stranded' }
   | { kind: 'refused-delete' }
   | { kind: 'refused-other' }
   | { kind: 'forbidden' }
@@ -98,7 +99,7 @@ function hasIndexedDb(): boolean {
 
 /** Offline mode is possible here at all: not in Lite, with what the store needs. */
 export function offlineSupported(): boolean {
-  if (IS_LITE || !hasIndexedDb()) return false;
+  if (IS_LITE || !hasIndexedDb() || useOfflineStore.getState().storageBlocked) return false;
   try {
     return typeof crypto !== 'undefined' && !!crypto.subtle && getStore().supported();
   } catch {
@@ -878,6 +879,7 @@ export function registerOfflineHooks(): void {
 
 /** Runs offline mode in this tab. Safe to call more than once. */
 export function startOfflineMode(): () => void {
+  if (!started && !offlineSupported()) void noteStrandedMail();
   if (started || !offlineSupported()) return () => {};
   started = true;
   registerOfflineHooks();
@@ -941,6 +943,7 @@ export function startOfflineMode(): () => void {
     if (reason === 'explicit') void wipeAccount(id);
   }));
   void sweepAccountsGone();
+  void checkStorageAccess();
 
   // Session, then a sync, for every account signed in with offline mode on.
   // A client that just became real is what the waiting mail was waiting for:
@@ -1022,6 +1025,25 @@ function checkStaleSendsLater(): void {
     staleCheck = null;
     void refreshQueueState().then(() => scheduleFlushAll(0));
   }, SENDING_STALE_MS + 1_000);
+}
+
+/** Firefox's private windows refuse this at once, where the worker would try for half a minute. */
+async function checkStorageAccess(): Promise<void> {
+  try {
+    await navigator.storage.getDirectory();
+  } catch (error) {
+    if ((error as Error)?.name === 'SecurityError') useOfflineStore.setState({ storageBlocked: true });
+  }
+}
+
+let strandedNoted = false;
+
+/** An earlier version's unsent mail, in a browser that can't run what would move it. */
+async function noteStrandedMail(): Promise<void> {
+  if (strandedNoted || IS_LITE || !hasIndexedDb()) return;
+  if ((await strandedLegacyMessages().catch(() => 0)) === 0) return;
+  strandedNoted = true;
+  notify({ kind: 'legacy-stranded' });
 }
 
 /** How often the store catches up while the tab is open, on top of pushes. */

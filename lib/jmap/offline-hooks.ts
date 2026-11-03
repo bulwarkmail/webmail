@@ -88,6 +88,13 @@ export function isNetworkFailure(error: unknown): boolean {
   return error.name === 'TypeError' && /fetch|network|load failed|internet/i.test(error.message);
 }
 
+/** The connection is fine and a proxy answered: the mail server behind it is what's gone. */
+export function isServerOutage(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  if (error.name === 'GatewayError') return true;
+  return error.name === 'SendNotStartedError' && (error as SendNotStartedError).cause instanceof Error && ((error as SendNotStartedError).cause as Error).name === 'GatewayError';
+}
+
 /** Thrown for a request the device can't answer while the server can't be reached. */
 export class OfflineUnavailableError extends Error {
   constructor(message = 'Not available offline') {
