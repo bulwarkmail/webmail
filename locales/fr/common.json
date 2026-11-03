@@ -5743,6 +5743,26 @@
       "no_drafts_mailbox": "Votre dossier Brouillons est introuvable."
     }
   },
+  "offlineConflicts": {
+    "title": "Modifications non appliquées",
+    "description": "Vous avez fait ces modifications hors ligne. Elles n'ont pas été appliquées et le message reste tel qu'il est sur le serveur.",
+    "changed": "Modifié sur un autre appareil, votre modification n'a pas été appliquée",
+    "changed_delete": "Modifié sur un autre appareil, le message n'a pas été supprimé",
+    "gone": "N'est plus sur le serveur, votre modification n'a pas été appliquée",
+    "refused": "Le serveur a refusé cette modification : {reason}",
+    "dismiss": "Ignorer",
+    "dismiss_label": "Ignorer la note sur {subject}",
+    "banner": "Modifications non appliquées : {count}",
+    "toast": "Des modifications faites hors ligne n'ont pas été appliquées : {count}. La boîte d'envoi indique lesquelles.",
+    "storage_failed": "Cet appareil n'a plus de place pour le courrier hors ligne. Libérez de l'espace ou conservez moins dans les paramètres.",
+    "signout_changes_title": "Se déconnecter avec des modifications non enregistrées ?",
+    "signout_changes": "Modifications pas encore sur le serveur : {count}. La déconnexion les supprime.",
+    "store_unavailable": "Le courrier hors ligne de cet appareil ne peut pas être ouvert pour le moment. Les messages non envoyés restent ici et l'application continue d'essayer.",
+    "store_reset": "Le courrier hors ligne de cet appareil n'a pas pu être lu : il est de nouveau téléchargé. Ce qui n'était pas envoyé est perdu.",
+    "legacy_stranded": "Ce navigateur ne peut pas ouvrir les messages non envoyés conservés par une version précédente. Le mettre à jour peut les récupérer.",
+    "store_private": "Les fenêtres privées ne peuvent pas conserver le courrier pour une utilisation hors ligne.",
+    "server_not_answering": "Le serveur de messagerie ne répond pas. Réessayez dans un instant."
+  },
   "deep_link": {
     "message_not_found": "Ce message n'est plus disponible.",
     "thread_not_found": "Cette conversation n'est plus disponible.",

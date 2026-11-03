@@ -1,14 +1,17 @@
 /** The storage adapter for tests: real SQLite with FTS5 through node:sqlite. */
 
-import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
+import type { DatabaseSync, SQLInputValue } from 'node:sqlite';
 import { runTransaction, type SqlRow, type SqlValue, type StorageAdapter } from '../../storage';
 
+// Not an import: Vite refuses node:sqlite in the jsdom tests of lib/offline.
+const sqlite = process.getBuiltinModule('node:sqlite');
+
 export function openMemoryStore(): StorageAdapter {
-  return adapterFor(new DatabaseSync(':memory:'));
+  return adapterFor(new sqlite.DatabaseSync(':memory:'));
 }
 
 export function openFileStore(file: string): StorageAdapter {
-  return adapterFor(new DatabaseSync(file));
+  return adapterFor(new sqlite.DatabaseSync(file));
 }
 
 function adapterFor(db: DatabaseSync): StorageAdapter {

@@ -38,6 +38,7 @@ import { SendCancelledCleanupError } from "@/lib/send-failure-message";
 import type { StorageQuota } from "@/lib/quota";
 import { isArchiveActionEnabled } from "@/lib/archive-gate";
 import { getOutboxHooks } from "@/lib/offline/outbox-hooks";
+import { useOfflineStore } from "@/lib/offline/state";
 import {
   READ_FILTER, UNREAD_FILTER, UNREAD_SECTION_SIZE, andFilters, isUnreadFirstView, mergeUnreadSection,
   openSectionRows, sectionFromUnreadRows, unreadSectionRowCount, withoutReached, type UnreadSection,
@@ -1626,10 +1627,13 @@ function threadCountsPatch(
 function captureEmailListView(): () => boolean {
   const view = useEmailStore.getState();
   const activeAccountId = useAuthStore.getState().activeAccountId;
+  // A local copy's late answer must not overwrite what the real client loaded.
+  const authClient = useAuthStore.getState().client;
   const epoch = currentStoreEpoch();
   return () => {
     const current = useEmailStore.getState();
     return currentStoreEpoch() === epoch
+      && useAuthStore.getState().client === authClient
       && current.selectedMailbox === view.selectedMailbox
       && current.selectedKeyword === view.selectedKeyword
       && current.viewingAccountId === view.viewingAccountId
@@ -8728,6 +8732,8 @@ if (typeof window !== 'undefined') {
       if (s.searchQuery || s.selectedKeyword || s.isScheduledView || s.viewingAccountId || s.isUnifiedView) return;
       const account = persistedAuthState()?.activeAccountId;
       if (typeof account !== 'string' || !account) return;
+      // Its mail lives encrypted in the store, and not in plain localStorage too.
+      if (useOfflineStore.getState().enabled.includes(account)) return;
       try {
         window.localStorage.setItem(EMAIL_SNAPSHOT_KEY, JSON.stringify({
           v: EMAIL_SNAPSHOT_VERSION,

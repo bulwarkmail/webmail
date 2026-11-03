@@ -166,7 +166,39 @@ describe('oauth token route - access token cache (#552)', () => {
 
     const { status } = await callPut();
 
-    expect(status).toBe(500);
+    expect(status).toBe(503);
+    expect(cookieStore.get('jmap_rt')).toBeTruthy();
+  });
+
+  it('names a real invalid_grant, and only that, for the client to wipe on', async () => {
+    const refuse = (status: number, body: string) => fetchMock.mockResolvedValueOnce(new Response(body, { status }));
+    cookieStore.set('jmap_rt', 'refresh-token');
+    refuse(400, JSON.stringify({ error: 'invalid_grant' }));
+    expect(await callPut({ force: 'true' })).toMatchObject({ status: 401, body: { error: 'invalid_grant' } });
+
+    for (const body of [JSON.stringify({ error: 'invalid_client' }), JSON.stringify({ error: 'invalid_request', error_description: 'Token is not valid yet' }), '<html>Forbidden</html>']) {
+      cookieStore.set('jmap_rt', 'refresh-token');
+      refuse(403, body);
+      const { status, body: answer } = await callPut({ force: 'true' });
+      expect(status).toBe(401);
+      expect(answer.error).not.toBe('invalid_grant');
+    }
+  });
+
+  it('answers 503 when the token endpoint is out of reach, which the client waits out', async () => {
+    cookieStore.set('jmap_rt', 'refresh-token');
+    fetchMock.mockRejectedValue(new TypeError('fetch failed'));
+    const { status } = await callPut({ force: 'true' });
+    expect(status).toBe(503);
+    expect(cookieStore.get('jmap_rt')).toBeTruthy();
+  });
+
+  it('answers 503 when discovery fails, also for a server it has no config for', async () => {
+    cookieStore.set('jmap_rt', 'refresh-token');
+    getTokenEndpoint.mockRejectedValue(new Error('OAuth misconfigured'));
+    const { status } = await callPut({ force: 'true' });
+    expect(status).toBe(503);
+    expect(fetchMock).not.toHaveBeenCalled();
     expect(cookieStore.get('jmap_rt')).toBeTruthy();
   });
 

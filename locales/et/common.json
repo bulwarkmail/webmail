@@ -5743,6 +5743,26 @@
       "no_drafts_mailbox": "Kausta Mustandid ei leitud."
     }
   },
+  "offlineConflicts": {
+    "title": "Rakendamata muudatused",
+    "description": "Tegite need muudatused võrguühenduseta. Neid ei rakendatud ja kiri jääb selliseks, nagu see on serveris.",
+    "changed": "Muudetud teises seadmes, teie muudatust ei rakendatud",
+    "changed_delete": "Muudetud teises seadmes, seda ei kustutatud",
+    "gone": "Pole enam serveris, teie muudatust ei rakendatud",
+    "refused": "Server keeldus sellest muudatusest: {reason}",
+    "dismiss": "Sulge",
+    "dismiss_label": "Sulge märkus teemal {subject}",
+    "banner": "Rakendamata muudatused: {count}",
+    "toast": "Võrguühenduseta tehtud rakendamata muudatused: {count}. Väljundkaust näitab, millised.",
+    "storage_failed": "Selles seadmes pole enam ruumi võrguühenduseta kirjade jaoks. Vabastage ruumi või hoidke seadetes vähem.",
+    "signout_changes_title": "Kas logida välja salvestamata muudatustega?",
+    "signout_changes": "Muudatused, mida serveris veel pole: {count}. Väljalogimine kustutab need.",
+    "store_unavailable": "Selle seadme võrguühenduseta kirju ei saa praegu avada. Saatmata kirjad jäävad siia ja rakendus proovib edasi.",
+    "store_reset": "Selle seadme võrguühenduseta kirju ei õnnestunud lugeda, seega laaditakse need uuesti alla. Mis oli saatmata, on kadunud.",
+    "legacy_stranded": "See brauser ei saa avada varasema versiooni hoitud saatmata kirju. Brauseri uuendamine võib need tagasi tuua.",
+    "store_private": "Privaatsed aknad ei saa kirju võrguühenduseta kasutamiseks hoida.",
+    "server_not_answering": "Meiliserver ei vasta. Proovige kohe uuesti."
+  },
   "deep_link": {
     "message_not_found": "See sõnum ei ole enam saadaval.",
     "thread_not_found": "See vestlus ei ole enam saadaval.",

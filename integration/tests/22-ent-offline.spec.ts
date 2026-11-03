@@ -24,6 +24,9 @@ import { JMAP_URL } from './helpers/config';
  * - a mail written offline waits in the outbox; the required classification
  *   label still stops it; once online it goes out with SIO-Label;
  * - read, flag and delete to Trash made offline reach the server;
+ * - a change the server can no longer take shows as changed on another device;
+ * - the Trash emptied offline is emptied on the server after;
+ * - a send whose response got lost is looked up and goes out once;
  * - a sign-out the user starts asks first when unsent mail would be lost,
  *   then wipes the device; the idle sign-out wipes it and the login page
  *   names the lost message;
@@ -148,24 +151,69 @@ async function send(page: Page): Promise<void> {
   await page.keyboard.press('Control+Enter');
 }
 
-/** Whether the offline database exists, without opening it (opening would create it). */
+/** Whether anything of the local store is left, without opening it (opening would create it). */
 async function offlineDatabaseExists(page: Page): Promise<boolean> {
-  return page.evaluate(async () => (await indexedDB.databases()).some((d) => d.name === 'bulwark-offline'));
+  return page.evaluate(async () => {
+    if ((await indexedDB.databases()).some((d) => d.name === 'bulwark-store' || d.name === 'bulwark-offline')) return true;
+    const root = await navigator.storage.getDirectory();
+    return root.getDirectoryHandle('.bulwark-store').then(() => true, () => false);
+  });
 }
 
-async function offlineDatabase(page: Page): Promise<{ exists: boolean; emails: number }> {
+/**
+ * The store's files as bytes, with no worker holding them: which of `needles`
+ * occur in them. Goes to a same-origin file without scripts first, so that
+ * leaving the app ends the owner.
+ */
+async function rawStoreFiles(page: Page, needles: string[]): Promise<{ bytes: number; found: string[] }> {
+  await page.goto(new URL('/sw.js', page.url()).href);
+  return page.evaluate(async (wanted) => {
+    const read = async (dir: FileSystemDirectoryHandle): Promise<string[]> => {
+      const parts: string[] = [];
+      for await (const handle of (dir as unknown as { values(): AsyncIterable<FileSystemHandle> }).values()) {
+        if (handle.kind === 'directory') parts.push(...await read(handle as FileSystemDirectoryHandle));
+        else parts.push(new TextDecoder('latin1').decode(await (await (handle as FileSystemFileHandle).getFile()).arrayBuffer()));
+      }
+      return parts;
+    };
+    const root = await navigator.storage.getDirectory();
+    const files = await read(await root.getDirectoryHandle('.bulwark-store'));
+    return {
+      bytes: files.reduce((sum, file) => sum + file.length, 0),
+      found: wanted.filter((needle) => files.some((file) => file.includes(needle))),
+    };
+  }, needles);
+}
+
+/** The file of the account's store, from the key database. */
+async function storeFileName(page: Page): Promise<string> {
+  return page.evaluate(() => new Promise<string>((resolve, reject) => {
+    const open = indexedDB.open('bulwark-store');
+    open.onerror = () => reject(open.error);
+    open.onsuccess = () => {
+      const all = open.result.transaction('accounts').objectStore('accounts').getAll();
+      all.onsuccess = () => {
+        open.result.close();
+        resolve((all.result as Array<{ file: string }>)[0].file);
+      };
+    };
+  }));
+}
+
+/** The accounts the local store holds a key for. Their mail is in encrypted files nothing here can read. */
+async function offlineDatabase(page: Page): Promise<{ exists: boolean; accounts: number }> {
   return page.evaluate(async () => {
     const dbs = await indexedDB.databases();
-    if (!dbs.some((d) => d.name === 'bulwark-offline')) return { exists: false, emails: 0 };
-    return new Promise<{ exists: boolean; emails: number }>((resolve) => {
-      const req = indexedDB.open('bulwark-offline');
+    if (!dbs.some((d) => d.name === 'bulwark-store')) return { exists: false, accounts: 0 };
+    return new Promise<{ exists: boolean; accounts: number }>((resolve) => {
+      const req = indexedDB.open('bulwark-store');
       req.onsuccess = () => {
         const db = req.result;
-        if (!db.objectStoreNames.contains('emails')) { db.close(); resolve({ exists: true, emails: 0 }); return; }
-        const count = db.transaction('emails').objectStore('emails').count();
-        count.onsuccess = () => { db.close(); resolve({ exists: true, emails: count.result }); };
+        if (!db.objectStoreNames.contains('accounts')) { db.close(); resolve({ exists: true, accounts: 0 }); return; }
+        const count = db.transaction('accounts').objectStore('accounts').count();
+        count.onsuccess = () => { db.close(); resolve({ exists: true, accounts: count.result }); };
       };
-      req.onerror = () => resolve({ exists: false, emails: 0 });
+      req.onerror = () => resolve({ exists: false, accounts: 0 });
     });
   });
 }
@@ -227,6 +275,45 @@ test('with the browser offline, kept mail opens, also after a reload without a n
   // Back online: a reload signs in as usual.
   await page.context().setOffline(false);
   await expect(page.getByText('You’re online again', { exact: false }).or(page.getByText("You're online again", { exact: false })).first()).toBeVisible({ timeout: 30_000 });
+  await page.context().close();
+});
+
+test('the files on the device hold no readable mail, and a store whose key went starts over', async ({ browser }) => {
+  const subject = `Offline encrypted ${RUN}`;
+  const secret = `Secret body ${RUN}`;
+  await deliverAndWait(subject, secret);
+  const page = await userPage(browser, ENT.alice);
+  await enableOffline(page);
+  await toMail(page);
+  await expect.poll(async () => (await offlineDatabase(page)).accounts, { timeout: 30_000 }).toBeGreaterThan(0);
+  await openMessage(page, subject);
+  await expect(body(page)).toContainText(secret, { timeout: 20_000 });
+  // Long enough for the store to have the message and its text on disk.
+  await page.waitForTimeout(5_000);
+  const file = await storeFileName(page);
+
+  const raw = await rawStoreFiles(page, [subject, secret, 'SQLite format 3', file]);
+  expect(raw.bytes).toBeGreaterThan(100_000);
+  // The name of the file is the one thing here in the clear: the search works.
+  expect(raw.found).toEqual([file]);
+
+  // The browser clears the key database and leaves the files.
+  await page.evaluate(() => new Promise<void>((resolve) => {
+    const request = indexedDB.deleteDatabase('bulwark-store');
+    request.onsuccess = () => resolve();
+    request.onerror = () => resolve();
+    request.onblocked = () => resolve();
+  }));
+  await page.goto(new URL('/', page.url()).href);
+  // Once on screen and once for screen readers.
+  await expect(page.locator('p', { hasText: "couldn't be read" }).first()).toBeVisible({ timeout: 60_000 });
+  await toMail(page);
+  await expect(page.locator('[data-testid="email-list-item"]', { hasText: subject }).first()).toBeVisible({ timeout: 60_000 });
+  await expect.poll(async () => (await offlineDatabase(page)).accounts, { timeout: 30_000 }).toBeGreaterThan(0);
+  const newFile = await storeFileName(page);
+  expect(newFile).not.toBe(file);
+  const after = await rawStoreFiles(page, [file, newFile]);
+  expect(after.found).toEqual([newFile]);
   await page.context().close();
 });
 
@@ -332,6 +419,111 @@ test('read, flag and delete to Trash made offline reach the server once back onl
   await page.context().close();
 });
 
+test('a change the server can no longer take is shown as changed on another device', async ({ browser }) => {
+  const subject = `Offline conflict ${RUN}`;
+  await deliverAndWait(subject, 'Moved twice');
+  const page = await userPage(browser, ENT.alice);
+  await enableOffline(page);
+  await toMail(page);
+  await page.context().setOffline(true);
+
+  await openMessage(page, subject);
+  await page.keyboard.press('Delete');
+  await expect(page.locator('[data-testid="email-list-item"]', { hasText: subject })).toHaveCount(0, { timeout: 15_000 });
+
+  // Meanwhile another device files it elsewhere.
+  const other = await jmapAs(ENT.alice);
+  const junk = (await other.mailboxByRole('junk'))!.id;
+  const id = (await waitForMessage(ENT.alice, (m) => m.subject === subject)).id;
+  await other.request([['Email/set', { accountId: other.accountId, update: { [id]: { mailboxIds: { [junk]: true } } } }, '0']]);
+
+  await page.context().setOffline(false);
+  await page.getByTestId('offline-banner-conflicts').click({ timeout: 90_000 });
+  const row = page.getByTestId('offline-conflict-row').filter({ hasText: subject });
+  await expect(row).toHaveAttribute('data-reason', 'changed');
+  await expect(row).toContainText('Changed on another device');
+  // The other device's move stands.
+  expect(Object.keys((await waitForMessage(ENT.alice, (m) => m.subject === subject)).mailboxIds)).toEqual([junk]);
+  await shot(page, 'f-offline-conflict');
+  await row.getByRole('button', { name: /^Dismiss/ }).click();
+  await expect(page.getByTestId('offline-conflict-row').filter({ hasText: subject })).toHaveCount(0);
+  await page.context().close();
+});
+
+test('emptying the Trash offline shows at once and reaches the server once back online', async ({ browser }) => {
+  const subject = `Offline empty trash ${RUN}`;
+  await deliverAndWait(subject, 'Gone for good');
+  const client = await jmapAs(ENT.alice);
+  const trash = (await client.mailboxByRole('trash'))!.id;
+  const id = (await waitForMessage(ENT.alice, (m) => m.subject === subject)).id;
+  await client.request([['Email/set', { accountId: client.accountId, update: { [id]: { mailboxIds: { [trash]: true } } } }, '0']]);
+  const page = await userPage(browser, ENT.alice);
+  await enableOffline(page);
+  await toMail(page);
+  await page.context().setOffline(true);
+
+  await page.getByText('Trash', { exact: true }).first().click();
+  await expect(page.locator('[data-testid="email-list-item"]', { hasText: subject }).first()).toBeVisible({ timeout: 30_000 });
+  await page.getByRole('button', { name: 'Empty folder' }).first().click();
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Empty folder' }).click();
+  await expect(page.locator('[data-testid="email-list-item"]', { hasText: subject })).toHaveCount(0, { timeout: 15_000 });
+  // Nothing reached the server yet.
+  expect((await messages(ENT.alice, RUN)).some((m) => m.subject === subject)).toBe(true);
+
+  await page.context().setOffline(false);
+  await expect.poll(async () => (await messages(ENT.alice, RUN)).some((m) => m.subject === subject), { timeout: 90_000 }).toBe(false);
+  await page.context().close();
+});
+
+/** A send taken from the outbox gets no answer. `arrives` is what reached the server of it. */
+async function loseResponse(browser: Browser, subject: string, arrives: (body: { methodCalls: Array<[string, unknown, string]> }) => void) {
+  const page = await userPage(browser, ENT.alice);
+  await enableOffline(page);
+  await toMail(page);
+  const context = page.context();
+  await blockMailServer(context);
+  await waitUntilOffline(page);
+  await compose(page, ENT.bob, subject, 'Only one copy');
+  await send(page);
+  await expect(page.getByTestId('offline-banner-outbox')).toHaveText('1 message in the outbox', { timeout: 30_000 });
+
+  // The server comes back, and takes the send, but its answer never arrives.
+  const origin = `${new URL(JMAP_URL).origin}/**`;
+  let lost = 0;
+  await context.unroute(origin);
+  await context.route(origin, async (route) => {
+    const sent = route.request().postData() ?? '';
+    if (lost === 0 && sent.includes('EmailSubmission/set')) {
+      lost += 1;
+      const body = JSON.parse(sent);
+      arrives(body);
+      await route.fetch({ postData: JSON.stringify(body) });
+      await route.abort('connectionreset');
+      return;
+    }
+    await route.continue();
+  });
+
+  await expect.poll(() => lost, { timeout: 120_000 }).toBe(1);
+  // Looked up, found in Sent, done: the row goes without another submission.
+  await expect(page.getByTestId('offline-banner-outbox')).toHaveCount(0, { timeout: 120_000 });
+  await waitForMessage(ENT.bob, (m) => m.subject === subject);
+  const copies = (await messages(ENT.alice, RUN)).filter((m) => m.subject === subject);
+  expect(copies).toHaveLength(1);
+  expect(copies[0].keywords.$draft).toBeFalsy();
+  await context.close();
+}
+
+test('a send whose response got lost goes out once', async ({ browser }) => {
+  await loseResponse(browser, `Offline lost response ${RUN}`, () => {});
+});
+
+test('a send of which only the draft arrived is submitted, and goes out once', async ({ browser }) => {
+  await loseResponse(browser, `Offline lost submission ${RUN}`, (body) => {
+    body.methodCalls = body.methodCalls.filter(([name]) => name === 'Email/set');
+  });
+});
+
 test('signing out asks first when unsent mail would be lost, then wipes the device', async ({ browser }) => {
   const subject = `Unsent at sign-out ${RUN}`;
   const page = await userPage(browser, ENT.alice);
@@ -342,7 +534,7 @@ test('signing out asks first when unsent mail would be lost, then wipes the devi
   await compose(page, ENT.bob, subject, 'Never sent');
   await send(page);
   await expect(page.getByTestId('offline-banner-outbox')).toHaveText('1 message in the outbox', { timeout: 30_000 });
-  expect((await offlineDatabase(page)).emails).toBeGreaterThan(0);
+  expect((await offlineDatabase(page)).accounts).toBeGreaterThan(0);
 
   // Sign out from the account menu: asked first, and Cancel keeps everything.
   await accountSwitcher(page).click();
@@ -417,17 +609,20 @@ test('forbidding offline mode wipes the device at the next policy fetch and hide
   await enableOffline(carol);
   await toMail(alice);
   const loadedAt = Date.now();
-  expect((await offlineDatabase(alice)).emails).toBeGreaterThan(0);
+  expect((await offlineDatabase(alice)).accounts).toBeGreaterThan(0);
 
+  // Waiting starts now: the app may fetch the policy again at any time, not
+  // only on focus, and the notice doesn't stay.
+  const notice = alice.getByText('Your organisation turned off offline mode', { exact: false }).first().waitFor({ state: 'visible', timeout: 180_000 });
   // ent-team (alice, not carol) may no longer keep mail on devices.
   await setPolicy(browser, {
     scopes: [{ id: 'no-offline', label: 'No offline', match: { groups: [ENT.team] }, policy: { organisation: { devices: { noOffline: true } } } }],
   });
   // The open tab fetches the policy again when it gets focus (at most once a minute).
   await alice.waitForTimeout(Math.max(0, 62_000 - (Date.now() - loadedAt)));
-  await alice.evaluate(() => window.dispatchEvent(new Event('focus')));
-  await expect(alice.getByText('Your organisation turned off offline mode', { exact: false }).first()).toBeVisible({ timeout: 30_000 });
-  await expect.poll(async () => (await offlineDatabase(alice)).emails, { timeout: 20_000 }).toBe(0);
+  await alice.evaluate(() => window.dispatchEvent(new Event('focus'))).catch(() => {});
+  await notice;
+  await expect.poll(async () => (await offlineDatabase(alice)).accounts, { timeout: 20_000 }).toBe(0);
   await alice.goto('/settings/backup/offline');
   await expect(alice.getByTestId('offline-forbidden')).toBeVisible({ timeout: 30_000 });
   await expect(alice.getByTestId('offline-switch')).toHaveCount(0);
@@ -436,7 +631,7 @@ test('forbidding offline mode wipes the device at the next policy fetch and hide
   // carol is outside the scope: her switch and her mail stay.
   await carol.reload();
   await expect(carol.getByTestId('offline-switch')).toHaveAttribute('aria-checked', 'true', { timeout: 30_000 });
-  expect((await offlineDatabase(carol)).emails).toBeGreaterThan(0);
+  expect((await offlineDatabase(carol)).accounts).toBeGreaterThan(0);
   await alice.context().close();
   await carol.context().close();
   await setPolicy(browser, {});

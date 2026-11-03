@@ -5743,6 +5743,26 @@
       "no_drafts_mailbox": "Priečinok Koncepty sa nenašiel."
     }
   },
+  "offlineConflicts": {
+    "title": "Nepoužité zmeny",
+    "description": "Tieto zmeny ste urobili offline. Neboli použité a správa zostáva tak, ako je na serveri.",
+    "changed": "Zmenené na inom zariadení, vaša zmena nebola použitá",
+    "changed_delete": "Zmenené na inom zariadení, správa nebola odstránená",
+    "gone": "Už nie je na serveri, vaša zmena nebola použitá",
+    "refused": "Server túto zmenu odmietol: {reason}",
+    "dismiss": "Zavrieť",
+    "dismiss_label": "Zavrieť poznámku o {subject}",
+    "banner": "Nepoužité zmeny: {count}",
+    "toast": "Nepoužité zmeny urobené offline: {count}. Ktoré to sú, ukazuje pošta na odoslanie.",
+    "storage_failed": "V tomto zariadení už nie je miesto na poštu offline. Uvoľnite miesto alebo v nastaveniach ponechajte menej.",
+    "signout_changes_title": "Odhlásiť sa s neuloženými zmenami?",
+    "signout_changes": "Zmeny, ktoré ešte nie sú na serveri: {count}. Odhlásenie ich odstráni.",
+    "store_unavailable": "Poštu offline v tomto zariadení teraz nemožno otvoriť. Neodoslaná pošta tu zostáva a aplikácia to skúša ďalej.",
+    "store_reset": "Poštu offline v tomto zariadení sa nepodarilo prečítať, preto sa sťahuje znova. Čo nebolo odoslané, je preč.",
+    "legacy_stranded": "Tento prehliadač neotvorí neodoslanú poštu uloženú staršou verziou. Aktualizácia prehliadača ju môže vrátiť.",
+    "store_private": "Súkromné okná nemôžu uchovávať poštu na používanie offline.",
+    "server_not_answering": "Poštový server neodpovedá. Skúste to o chvíľu znova."
+  },
   "deep_link": {
     "message_not_found": "Táto správa už nie je dostupná.",
     "thread_not_found": "Táto konverzácia už nie je dostupná.",

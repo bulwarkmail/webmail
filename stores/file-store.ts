@@ -1,3 +1,4 @@
+import { getOfflineHooks, type OfflineClientRef } from '@/lib/jmap/offline-hooks';
 import { create } from 'zustand';
 import type { FileNodeListings, IJMAPClient } from '@/lib/jmap/client-interface';
 import type { FileNode, FileNodeRights } from '@/lib/jmap/types';
@@ -1688,7 +1689,8 @@ export const useFileStore = create<FileState>((set, get) => ({
   },
 
   addRecentFile: (name: string, id: string) => {
-    const { recentFiles } = get();
+    const { recentFiles, client } = get();
+    if (client && id) getOfflineHooks()?.fileOpened?.(client as OfflineClientRef, client.getFilesAccountId(), id);
     const entry = { name, id, timestamp: Date.now() };
     const filtered = recentFiles.filter(r => r.id !== id);
     const next = [entry, ...filtered].slice(0, 20);

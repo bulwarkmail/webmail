@@ -28,6 +28,9 @@ export const DEFAULT_SCOPE: StoreScope = {
   maxTotalBytes: 2 * 1024 * 1024 * 1024,
 };
 
+/** The `area` of an error event for a write that failed: a full disk, the browser's quota. */
+export const STORAGE_ERROR_AREA = 'storage';
+
 export interface SyncStateRow {
   state: string | null;
   /** The newest state the server told us about, to know when a run is caught up. */
@@ -52,7 +55,17 @@ export interface StoreContext {
   scope: StoreScope;
   now(): number;
   emit(event: StoreEvent): void;
+  /** Records of one type as this device shows them: see RecordOverlay. */
+  overlay<T extends { id: string }>(jmap: string, type: string, records: T[]): T[];
 }
+
+/**
+ * What an area changes about records another area stores: the outbox lays
+ * changes that wait for the server over what the server sent. Runs inside the
+ * caller's transaction. Returns the records to use; a record left out is one
+ * this device already treats as gone.
+ */
+export type RecordOverlay = (ctx: Pick<StoreContext, 'db' | 'now'>, jmap: string, type: string, records: Array<{ id: string }>) => Array<{ id: string }>;
 
 export interface SyncContext extends StoreContext {
   transport: JmapTransport;
@@ -107,4 +120,5 @@ export interface StoreArea {
   methods: Readonly<Record<string, MethodHandler>>;
   syncers: readonly Syncer[];
   calls?: Readonly<Record<string, AreaCall>>;
+  overlay?: RecordOverlay;
 }

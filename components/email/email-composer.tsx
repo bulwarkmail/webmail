@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useMvComposeWindow } from "@/components/email/mv-compose-context";
 import { useLocale, useTranslations } from "next-intl";
+import { isServerOutage } from "@/lib/jmap/offline-hooks";
 import { Button, TOUCH_HIT_AREA } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Dialog } from "@/components/ui/dialog";
@@ -560,6 +561,7 @@ export function EmailComposer({
   const tClassification = useTranslations('classification');
   const tProofreading = useTranslations('proofreading');
   const tOffline = useTranslations('offline');
+  const tOfflineNotes = useTranslations('offlineConflicts');
   const tSendGuards = useTranslations('send_guards');
   const timeFormat = useSettingsStore((state) => state.timeFormat);
   const plainTextModeDefault = useSettingsStore((state) => state.plainTextMode);
@@ -4213,6 +4215,8 @@ export function EmailComposer({
       } else if (err instanceof SubmissionQuotaError) {
         // At a full submission quota only an administrator can help.
         toast.error(sendFailureMessage(err, t));
+      } else if (isServerOutage(err)) {
+        toast.error(t('send_failed'), { message: tOfflineNotes('server_not_answering') });
       } else if (err instanceof Error && OFFLINE_SEND_ERRORS[err.name]) {
         // Offline mode (#523) refused to keep it: says why, in the user's language.
         toast.error(t('send_failed'), { message: tOffline(OFFLINE_SEND_ERRORS[err.name]) });

@@ -5743,6 +5743,26 @@
       "no_drafts_mailbox": "Mappen Kladder blev ikke fundet."
     }
   },
+  "offlineConflicts": {
+    "title": "Ændringer, der ikke blev gennemført",
+    "description": "Du lavede disse ændringer offline. De blev ikke gennemført, og beskeden forbliver, som den er på serveren.",
+    "changed": "Ændret på en anden enhed, din ændring blev ikke gennemført",
+    "changed_delete": "Ændret på en anden enhed, den blev ikke slettet",
+    "gone": "Findes ikke længere på serveren, din ændring blev ikke gennemført",
+    "refused": "Serveren afviste denne ændring: {reason}",
+    "dismiss": "Afvis",
+    "dismiss_label": "Afvis noten om {subject}",
+    "banner": "Ændringer, der ikke blev gennemført: {count}",
+    "toast": "Ændringer lavet offline, der ikke blev gennemført: {count}. Udbakken viser hvilke.",
+    "storage_failed": "Denne enhed har ikke mere plads til offlinemail. Frigør plads, eller behold mindre i indstillingerne.",
+    "signout_changes_title": "Log ud med ændringer, der ikke er gemt?",
+    "signout_changes": "Ændringer, der endnu ikke er på serveren: {count}. Når du logger ud, slettes de.",
+    "store_unavailable": "Offlinemail på denne enhed kan ikke åbnes lige nu. Ikke-sendt mail bliver her, og appen bliver ved med at prøve.",
+    "store_reset": "Offlinemail på denne enhed kunne ikke læses og hentes derfor igen. Det, der ikke var sendt, er væk.",
+    "legacy_stranded": "Denne browser kan ikke åbne ikke-sendt mail fra en tidligere version. En opdatering af browseren kan hente den tilbage.",
+    "store_private": "Private vinduer kan ikke gemme mail til brug offline.",
+    "server_not_answering": "Mailserveren svarer ikke. Prøv igen om lidt."
+  },
   "deep_link": {
     "message_not_found": "Denne besked er ikke længere tilgængelig.",
     "thread_not_found": "Denne samtale er ikke længere tilgængelig.",
