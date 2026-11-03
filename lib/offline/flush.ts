@@ -58,6 +58,9 @@ export interface FlushDeps {
   retryLater?: () => void;
 }
 
+/** A message that just went may not show in a lookup yet, which would send it twice. */
+export const LOOKUP_WAIT_MS = 30_000;
+
 /** A send is taken for at most this long before a closed tab's send counts as uncertain. */
 export const SENDING_STALE_MS = 60_000;
 
@@ -225,6 +228,10 @@ async function settleUncertain(account: string, client: JMAPClient, deps: FlushD
   for (const entry of outbox) {
     if (entry.status !== 'uncertain') continue;
     if (stillOffline() || !deps.allowed()) return false;
+    if (entry.lastAttemptAt && Date.now() - entry.lastAttemptAt < LOOKUP_WAIT_MS) {
+      deps.retryLater?.();
+      continue;
+    }
     let decision: RetryDecision;
     try {
       decision = await lookUp(client, entry);

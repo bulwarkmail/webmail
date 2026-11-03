@@ -264,6 +264,8 @@ describe('a send whose response got lost', () => {
     const entry = (await readQueue('acc')).outbox[0];
     await store.area('acc', 'outbox.claim', { id: entry.id });
     await store.area('acc', 'outbox.update', { id: entry.id, status: 'uncertain' });
+    // The wait before a lookup has passed.
+    store.dbs.get('acc')!.run('UPDATE outbox SET last_attempt_at = ?', [Date.now() - 31_000]);
     return entry;
   }
 

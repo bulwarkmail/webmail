@@ -27,13 +27,14 @@ import {
   unsentCount,
   wipeEverything,
 } from '../offline-mode';
-import { flushQueue, settleStaleSends, SENDING_STALE_MS } from '../flush';
+import { flushQueue, LOOKUP_WAIT_MS, settleStaleSends, SENDING_STALE_MS } from '../flush';
 import { claimForSending, holdFile, LOCAL_BLOB_PREFIX, queueSend, readQueue, updateOutboxEntry } from '../queue';
 import { forgetLegacyMove } from '../migrate-legacy';
 import { consumeLost } from '../lost';
 import { getOutboxHooks } from '../outbox-hooks';
 import { shellFiles } from '../shell';
-import { isOfflineNow, OFFLINE_ACCOUNTS_KEY, OFFLINE_EVICTED_KEY, setServerDown, useOfflineStore, writeEnabled } from '../state';
+import { DEFAULT_SCOPE } from '@/lib/store/area';
+import { isOfflineNow, OFFLINE_ACCOUNTS_KEY, OFFLINE_EVICTED_KEY, OFFLINE_SCOPE_KEY, offlineScopeFor, setServerDown, useOfflineStore, writeEnabled } from '../state';
 
 function fakeClient(server = 'https://mail.example.org', overrides: Record<string, unknown> = {}) {
   return {
@@ -288,6 +289,41 @@ describe('11: starting from the device', () => {
     expect(await offlineSessionFor('acc')).toMatchObject({ primaryAccounts: { 'urn:ietf:params:jmap:mail': JMAP_ACCOUNT } });
   });
 
+  it('gives up on a policy fetch that never answers', async () => {
+    writeEnabled(['acc']);
+    usePolicyStore.setState({ loaded: false, fetching: false, source: 'none' });
+    vi.useFakeTimers();
+    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})));
+    try {
+      const session = offlineSessionFor('acc');
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(await session).toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+      vi.useRealTimers();
+    }
+  });
+
+  it('doesn\'t wait for the old database to finish moving', async () => {
+    writeEnabled(['acc']);
+    forgetLegacyMove();
+    const legacy = indexedDB.open;
+    vi.spyOn(indexedDB, 'open').mockImplementation(((name: string, version?: number) => {
+      // A database that never opens.
+      if (name === 'bulwark-offline') return { result: null } as never;
+      return legacy.call(indexedDB, name, version);
+    }) as never);
+    vi.useFakeTimers();
+    try {
+      const session = offlineSessionFor('acc');
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(await session).toMatchObject({ primaryAccounts: { 'urn:ietf:params:jmap:mail': JMAP_ACCOUNT } });
+    } finally {
+      vi.useRealTimers();
+      vi.restoreAllMocks();
+    }
+  });
+
   it('doesn\'t offer a quick start before the store has its folders', async () => {
     store = new InProcessStore(new FakeJmapMail());
     setStoreBackend(store);
@@ -427,6 +463,38 @@ describe('a send the server couldn\'t take right now', () => {
     await flushQueue('acc', fakeClient('https://mail.example.org', { sendEmail, uploadBlob }) as unknown as JMAPClient, { notify: vi.fn(), allowed: () => true });
     expect(sendEmail).not.toHaveBeenCalled();
     expect((await readQueue('acc')).outbox[0].status).toBe('waiting');
+  });
+});
+
+describe('looking up a send that may have gone', () => {
+  it('waits until about 30 seconds after the last try', async () => {
+    writeEnabled(['acc']);
+    const id = await queueSend('acc', { subject: 'Hello', to: [] }, { kind: 'email', args: [] }, undefined, 'fixed@example.org');
+    await claimForSending('acc', id);
+    await updateOutboxEntry({ account: 'acc', id }, { status: 'uncertain' });
+    const requestNetworkOnly = vi.fn(async () => { throw new TypeError('Failed to fetch'); });
+    const client = fakeClient('https://mail.example.org', { requestNetworkOnly, resolveSendAccountId: async () => 'j1', submissionAccountFor: () => 'j1' }) as unknown as JMAPClient;
+    const retryLater = vi.fn();
+    await flushQueue('acc', client, { notify: vi.fn(), allowed: () => true, retryLater });
+    expect(requestNetworkOnly).not.toHaveBeenCalled();
+    expect(retryLater).toHaveBeenCalled();
+    const later = Date.now() + LOOKUP_WAIT_MS + 1000;
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(later);
+    try {
+      await flushQueue('acc', client, { notify: vi.fn(), allowed: () => true, retryLater });
+      expect(requestNetworkOnly).toHaveBeenCalled();
+    } finally {
+      clock.mockRestore();
+    }
+  });
+});
+
+describe('what the store is told to keep', () => {
+  it('follows what the account chose, on top of the defaults', () => {
+    expect(offlineScopeFor('acc')).toEqual(DEFAULT_SCOPE);
+    localStorage.setItem(OFFLINE_SCOPE_KEY, JSON.stringify({ acc: { attachments: false, days: 7 } }));
+    expect(offlineScopeFor('acc')).toEqual({ ...DEFAULT_SCOPE, attachments: false, days: 7 });
+    expect(offlineScopeFor('other')).toEqual(DEFAULT_SCOPE);
   });
 });
 

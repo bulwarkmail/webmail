@@ -471,6 +471,26 @@ describe('attachments', () => {
     expect(refused.downloads).toEqual(['b-gone']);
   });
 
+  it('files a blob the user opened only as far as the chosen scope allows', async () => {
+    const server = new Files();
+    server.addEmail({ id: 'm', attachments: [{ blobId: 'b-kept', size: 10, type: 'image/png' }] });
+    const data = new Uint8Array(10);
+    const record = { jmap: JMAP_ACCOUNT, blobId: 'b-kept', type: 'image/png', data };
+
+    const none = engineFor(server, { ...EVERYTHING, attachments: false });
+    await none.engine.requestSync();
+    expect(await none.engine.areaCall('mail.recordBlob', record)).toBe(false);
+    expect(await none.engine.areaCall('mail.getBlob', { jmap: JMAP_ACCOUNT, blobId: 'b-kept' })).toBeNull();
+
+    const small = engineFor(server, { ...EVERYTHING, attachments: true, maxAttachmentBytes: 9 });
+    await small.engine.requestSync();
+    expect(await small.engine.areaCall('mail.recordBlob', record)).toBe(false);
+
+    const fits = engineFor(server, { ...EVERYTHING, attachments: true, maxAttachmentBytes: 10 });
+    await fits.engine.requestSync();
+    expect(await fits.engine.areaCall('mail.recordBlob', record)).toBe(true);
+  });
+
   it('files a blob the user opened only under a kept message: never a stray file', async () => {
     const server = new Files();
     server.addEmail({ id: 'm', attachments: [{ blobId: 'b-kept', size: 99_999_999, type: 'image/png' }] });

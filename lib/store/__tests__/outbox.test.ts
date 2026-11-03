@@ -34,7 +34,7 @@ function setup() {
     transport: server,
     areas: [mailArea, outboxArea],
     scope: { ...DEFAULT_SCOPE, days: null },
-    now: () => NOW,
+    now: () => clock,
     sleep: async () => {},
   });
   return { server, db, engine };
@@ -43,6 +43,7 @@ function setup() {
 let t: ReturnType<typeof setup>;
 
 beforeEach(async () => {
+  clock = NOW;
   t = setup();
   await t.engine.requestSync();
 });
@@ -56,6 +57,8 @@ async function local(id: string) {
   const answer = await t.engine.answer([['Email/get', { ids: [id], properties: ['keywords', 'mailboxIds', 'subject'] }, 'g']]);
   return answer?.methodResponses[0][1].list[0];
 }
+
+let clock = NOW;
 
 async function boxes() {
   const answer = await t.engine.answer([['Mailbox/get', {}, 'm']]);
@@ -430,7 +433,7 @@ describe('sends', () => {
     expect(await t.engine.areaCall('outbox.claim', { id })).toBe(true);
     expect(await t.engine.areaCall('outbox.claim', { id })).toBe(false);
     const entry = (await read()).entries[0];
-    expect(entry).toMatchObject({ status: 'sending', sendingSince: NOW, firstAttemptAt: NOW, messageId: 'fixed@example.org', item });
+    expect(entry).toMatchObject({ status: 'sending', sendingSince: NOW, lastAttemptAt: NOW, messageId: 'fixed@example.org', item });
   });
 
   it('marks what a closed tab left behind uncertain', async () => {
@@ -439,15 +442,28 @@ describe('sends', () => {
     await t.engine.areaCall('outbox.settleStale', { before: NOW });
     expect((await read()).entries[0].status).toBe('sending');
     await t.engine.areaCall('outbox.settleStale', { before: NOW + 1 });
-    expect((await read()).entries[0].status).toBe('uncertain');
+    expect((await read()).entries[0]).toMatchObject({ status: 'uncertain', firstAttemptAt: NOW });
   });
 
   it('keeps the first attempt time across retries, so the lookup covers the first copy', async () => {
     const id = await t.engine.areaCall('outbox.queueSend', { summary, item }) as number;
     await t.engine.areaCall('outbox.claim', { id });
+    await t.engine.areaCall('outbox.update', { id, status: 'uncertain' });
+    expect((await read()).entries[0].firstAttemptAt).toBe(NOW);
+    clock = NOW + 60_000;
     await t.engine.areaCall('outbox.update', { id, status: 'waiting' });
     await t.engine.areaCall('outbox.claim', { id });
-    expect((await read()).entries[0].firstAttemptAt).toBe(NOW);
+    await t.engine.areaCall('outbox.update', { id, status: 'uncertain' });
+    const entry = (await read()).entries[0];
+    expect(entry.firstAttemptAt).toBe(NOW);
+    expect(entry.lastAttemptAt).toBe(NOW + 60_000);
+  });
+
+  it('doesn\'t call a try that never started an attempt', async () => {
+    const id = await t.engine.areaCall('outbox.queueSend', { summary, item }) as number;
+    await t.engine.areaCall('outbox.claim', { id });
+    await t.engine.areaCall('outbox.update', { id, status: 'waiting' });
+    expect((await read()).entries[0].firstAttemptAt).toBeUndefined();
   });
 
   it('keeps order across changes and sends, and a later merge moves a change later', async () => {

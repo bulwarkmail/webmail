@@ -7,6 +7,7 @@
  */
 
 import { create } from 'zustand';
+import { DEFAULT_SCOPE, type StoreScope } from '@/lib/store/area';
 import type { ConflictEntry, OutboxEntry, OutboxError } from './queue';
 
 /** localStorage: the local account ids that keep mail on this device. */
@@ -71,6 +72,18 @@ export function writeEnabled(enabled: string[]): void {
     else localStorage.removeItem(OFFLINE_ACCOUNTS_KEY);
   } catch {
     /* storage unavailable */
+  }
+}
+
+/** localStorage: what each account chose to keep offline, on top of the defaults. */
+export const OFFLINE_SCOPE_KEY = 'bulwark-offline-scope';
+
+export function offlineScopeFor(account: string): StoreScope {
+  try {
+    const chosen = (JSON.parse(localStorage.getItem(OFFLINE_SCOPE_KEY) ?? '{}') as Record<string, Partial<StoreScope>>)[account];
+    return { ...DEFAULT_SCOPE, ...chosen };
+  } catch {
+    return DEFAULT_SCOPE;
   }
 }
 

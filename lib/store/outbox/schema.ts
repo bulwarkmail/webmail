@@ -2,6 +2,15 @@ import type { Migration } from '../storage';
 
 export const OUTBOX_MIGRATIONS: readonly Migration[] = [
   {
+    id: 201,
+    name: 'outbox_last_attempt',
+    sql: `
+      -- When the latest try began. It becomes first_attempt_at only once a try
+      -- may have reached the server.
+      ALTER TABLE outbox ADD COLUMN last_attempt_at INTEGER;
+    `,
+  },
+  {
     id: 200,
     name: 'outbox',
     sql: `

@@ -7,7 +7,6 @@ import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import { addSignOutGate } from '@/lib/sign-out-cleanup';
 import { reloadToNewBuild } from '@/lib/app-update';
 import { confirmLoss, setOfflineNotifier, startOfflineMode, unsentCount, type OfflineNotice } from '@/lib/offline/offline-mode';
-import { useOfflineStore } from '@/lib/offline/state';
 import { toast } from '@/stores/toast-store';
 
 /**

@@ -55,6 +55,8 @@ class PageStore implements StoreBackend {
   private readonly opening = new Map<string, Promise<void>>();
   /** The engine can't start in this browser: don't keep every caller waiting for an owner. */
   private broken = false;
+  /** What the owner's engine was last told to keep. */
+  private readonly sentScope = new Map<string, string>();
 
   constructor(private readonly hooks: () => StorePageHooks | null) {}
 
@@ -90,6 +92,7 @@ class PageStore implements StoreBackend {
 
   private reset(): void {
     this.client = null;
+    this.sentScope.clear();
     this.wanted.clear();
     this.opening.clear();
     this.broken = false;
@@ -103,6 +106,7 @@ class PageStore implements StoreBackend {
       const client = this.started();
       const { keyHex, record } = await openAccountKey(account, this.hooks()?.keyLayers?.() ?? []);
       const inputs = this.hooks()?.inputs(account) ?? { session: null, auth: null, invertedKeywordSort: null };
+      if (inputs.scope) this.sentScope.set(account, JSON.stringify(inputs.scope));
       await client.openAccount({
         account,
         file: record.file,
@@ -132,6 +136,12 @@ class PageStore implements StoreBackend {
     if (!inputs) return;
     if (inputs.session) client.setSession(account, inputs.session);
     client.setAuth(account, inputs.auth);
+    // Only a real change: setting it starts over what a full disk made the store give up on.
+    const scope = inputs.scope ? JSON.stringify(inputs.scope) : null;
+    if (inputs.scope && scope !== this.sentScope.get(account)) {
+      if (this.sentScope.has(account)) client.setScope(account, inputs.scope);
+      this.sentScope.set(account, scope!);
+    }
     if (inputs.invertedKeywordSort !== null) client.setInvertedKeywordSort(account, inputs.invertedKeywordSort);
   }
 

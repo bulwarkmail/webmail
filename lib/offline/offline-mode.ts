@@ -54,8 +54,8 @@ import {
   type PolicyFingerprint,
 } from './queue';
 import { clearHandoffs } from '@/lib/launch-handoff';
-import { clearEvicted, EVICTED_KEEP_MS, forgetMailSnapshot, isEvicted, isOfflineNow, OFFLINE_ACCOUNTS_KEY, readEnabledFrom, readEvicted, visibleAccounts, serverKey, setServerDown, useOfflineStore, writeEnabled, type OutboxRow } from './state';
-import { flushQueue, settleStaleSends } from './flush';
+import { clearEvicted, EVICTED_KEEP_MS, forgetMailSnapshot, isEvicted, offlineScopeFor, isOfflineNow, OFFLINE_ACCOUNTS_KEY, readEnabledFrom, readEvicted, visibleAccounts, serverKey, setServerDown, useOfflineStore, writeEnabled, type OutboxRow } from './state';
+import { flushQueue, LOOKUP_WAIT_MS, settleStaleSends } from './flush';
 import { LEGACY_DB_NAME, moveLegacyOutbox } from './migrate-legacy';
 import { deleteShellCaches, tellServiceWorker } from './shell';
 import { rememberLost } from './lost';
@@ -159,6 +159,7 @@ const storeHooks: StorePageHooks = {
       session: (client?.getSessionSnapshot() as StoreSession | undefined) ?? null,
       auth: client?.getAuthHeader() ?? null,
       invertedKeywordSort: client?.keywordSortInverted() ?? null,
+      scope: offlineScopeFor(account),
     };
   },
   async refreshAuth(account) {
@@ -571,7 +572,7 @@ export function scheduleFlushAll(delayMs = 1_000): void {
 /** How long after a failed policy fetch the outbox asks again. */
 const POLICY_RETRY_MS = 60_000;
 /** A lost response with the server still there: nothing else would start the lookup. */
-const LOOKUP_AGAIN_MS = 30_000;
+const LOOKUP_AGAIN_MS = LOOKUP_WAIT_MS + 1_000;
 
 /** A send held by the server for undo, from the outbox: the undo toast as after any send. */
 function offerUndo(entry: OutboxEntry, result: SendEmailResult): void {
@@ -1021,16 +1022,24 @@ export async function serverUnreachable(serverUrl: string): Promise<boolean> {
 const SESSION_READ_TIMEOUT_MS = 5_000;
 
 /** The session kept for an account, for starting from the local copy. */
+/** A start doesn't hang on a black-holed fetch or a stuck database. */
+const BOOT_WAIT_MS = 3_000;
+
+function withinBootWait(work: Promise<unknown>): Promise<unknown> {
+  return Promise.race([work.catch(() => {}), new Promise((resolve) => setTimeout(resolve, BOOT_WAIT_MS))]);
+}
+
 export async function offlineSessionFor(account: string, options: { withFolders?: boolean } = {}): Promise<unknown | null> {
   // The organisation's last word: the policy kept from the last fetch (the
   // fetch itself fails without a network), never the defaults.
   const policy = usePolicyStore.getState();
-  if (!policy.loaded && !policy.fetching) await policy.fetchPolicy();
-  else await whenPolicySettled(3000);
-  if (!offlineActive(account)) return null;
+  await withinBootWait(!policy.loaded && !policy.fetching ? policy.fetchPolicy() : whenPolicySettled(BOOT_WAIT_MS));
+  // Still nothing to go on: the usual start, which has its own errors.
+  if (!usePolicyStore.getState().loaded || !offlineActive(account)) return null;
   registerOfflineHooks();
   try {
-    await moveLegacyOutbox();
+    // What's in the old database goes on moving behind the start.
+    await withinBootWait(moveLegacyOutbox());
     return await Promise.race([
       (async () => {
         if (options.withFolders && !(await getStore().area<boolean>(account, 'mail.hasFolders'))) return null;
