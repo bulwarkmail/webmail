@@ -15,6 +15,7 @@ import type { HostFeaturesView, InstalledPlugin } from '../plugin-types';
 import type { OrganisationPolicy } from '@/lib/admin/organisation-policy';
 import { assistantFeatures } from './assistant';
 import { keystoreFeature } from './host-api-keystore';
+import { pluginHasPermission } from './permissions';
 
 /** The external-mail-warning plugin, retired in favour of organisation.externalMail. */
 export const EXTERNAL_MAIL_WARNING_PLUGIN_ID = 'external-mail-warning';
@@ -34,6 +35,7 @@ export function snapshotHostFeatures(plugin?: InstalledPlugin): HostFeaturesView
     // The AI assistant's host APIs this webmail offers (lib/plugin-sandbox/assistant).
     ...assistantFeatures(plugin),
     ...keystoreFeature(plugin),
+    ...(plugin && pluginHasPermission(plugin, 'email:render-takeover') ? { blockExternalContent: true } : {}),
   };
 }
 
