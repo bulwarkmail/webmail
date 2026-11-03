@@ -1,5 +1,5 @@
 import { test, expect, type BrowserContext, type Page } from '@playwright/test';
-import { ENT, ENT_PASSWORD, adminContext, deliver, requireEntEnv, shot, userPage } from './helpers/ent';
+import { ENT, ENT_PASSWORD, adminContext, contextOptions, deliver, requireEntEnv, shot, userPage } from './helpers/ent';
 import { JMAP_URL } from './helpers/config';
 
 /**
