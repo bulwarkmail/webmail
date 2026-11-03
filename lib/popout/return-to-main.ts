@@ -16,7 +16,7 @@ const OPEN_WAIT_MS = RETURN_WAIT_MS - 2000;
 export type ReturnAnswer = 'shown' | 'busy';
 export type ReturnResult = ReturnAnswer | 'no-answer';
 
-/** From a pop-out: true once the composer is on screen in the main window. */
+/** From a pop-out: `shown` once the composer is on screen in the main window. */
 export function returnComposerToMain(payload: ComposePopoutPayload, accountId?: string | null, waitMs = RETURN_WAIT_MS): Promise<ReturnResult> {
   return new Promise((resolve) => {
     const returnId = newPopoutId();
