@@ -6350,6 +6350,12 @@
     "sign_language": "İşaret dili",
     "new_tab": "yeni sekmede açılır"
   },
+  "pwaNotify": {
+    "action_archive": "Arşivle",
+    "action_mark_read": "Okundu olarak işaretle",
+    "action_reply": "Yanıtla",
+    "reply_placeholder": "Yanıt yazın"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Takvime ekle",
     "update_in_calendar": "Takvimde güncelle",

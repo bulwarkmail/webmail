@@ -6350,6 +6350,12 @@
     "sign_language": "수어",
     "new_tab": "새 탭에서 열림"
   },
+  "pwaNotify": {
+    "action_archive": "보관",
+    "action_mark_read": "읽은 상태로 표시",
+    "action_reply": "답장",
+    "reply_placeholder": "답장 쓰기"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "캘린더에 추가",
     "update_in_calendar": "캘린더에서 업데이트",

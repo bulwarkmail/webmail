@@ -6350,6 +6350,12 @@
     "sign_language": "手语",
     "new_tab": "在新标签页中打开"
   },
+  "pwaNotify": {
+    "action_archive": "归档",
+    "action_mark_read": "标记为已读",
+    "action_reply": "回复",
+    "reply_placeholder": "撰写回复"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "添加到日历",
     "update_in_calendar": "在日历中更新",

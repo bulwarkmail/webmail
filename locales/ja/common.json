@@ -6350,6 +6350,12 @@
     "sign_language": "手話",
     "new_tab": "新しいタブで開きます"
   },
+  "pwaNotify": {
+    "action_archive": "アーカイブ",
+    "action_mark_read": "既読にする",
+    "action_reply": "返信",
+    "reply_placeholder": "返信を入力"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "カレンダーに追加",
     "update_in_calendar": "カレンダーを更新",

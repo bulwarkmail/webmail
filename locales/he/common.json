@@ -6351,6 +6351,12 @@
     "sign_language": "שפת סימנים",
     "new_tab": "נפתח בכרטיסייה חדשה"
   },
+  "pwaNotify": {
+    "action_archive": "ארכיון",
+    "action_mark_read": "סמן כנקרא",
+    "action_reply": "השב",
+    "reply_placeholder": "כתיבת תשובה"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "הוסף ליומן",
     "update_in_calendar": "עדכן ביומן",

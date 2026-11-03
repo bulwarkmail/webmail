@@ -6350,6 +6350,12 @@
     "sign_language": "Tegnspråk",
     "new_tab": "åpnes i en ny fane"
   },
+  "pwaNotify": {
+    "action_archive": "Arkiver",
+    "action_mark_read": "Merk som lest",
+    "action_reply": "Svar",
+    "reply_placeholder": "Skriv et svar"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Legg til i kalenderen",
     "update_in_calendar": "Oppdater i kalenderen",

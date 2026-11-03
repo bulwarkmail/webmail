@@ -6350,6 +6350,12 @@
     "sign_language": "Langue des signes",
     "new_tab": "s'ouvre dans un nouvel onglet"
   },
+  "pwaNotify": {
+    "action_archive": "Archiver",
+    "action_mark_read": "Marquer comme lu",
+    "action_reply": "Répondre",
+    "reply_placeholder": "Écrire une réponse"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Ajouter au calendrier",
     "update_in_calendar": "Mettre à jour dans le calendrier",

@@ -6350,6 +6350,12 @@
     "sign_language": "Viipekeel",
     "new_tab": "avaneb uuel vahekaardil"
   },
+  "pwaNotify": {
+    "action_archive": "Arhiveeri",
+    "action_mark_read": "Märgi loetuks",
+    "action_reply": "Vasta",
+    "reply_placeholder": "Kirjuta vastus"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Lisa kalendrisse",
     "update_in_calendar": "Uuenda kalendris",
