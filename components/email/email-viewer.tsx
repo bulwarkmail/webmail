@@ -5533,10 +5533,7 @@ ${printWatermark ? printWatermark.html : ''}
                     </Row>
                     {effectiveAttachments.length > 0 && (
                       <Row label={t('attachments')}>
-                        {t('details.attachments_summary', {
-                          count: effectiveAttachments.length,
-                          size: formatFileSize(totalAttachmentSize),
-                        })}
+                        {t('attachments_count', { count: effectiveAttachments.length })} · {formatFileSize(totalAttachmentSize)}
                       </Row>
                     )}
                     {email.accountLabel && (
