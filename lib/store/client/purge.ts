@@ -50,7 +50,7 @@ export async function deleteStorePool(): Promise<void> {
  * Started synchronously: the sign-out may navigate away right after.
  */
 export function purgeStoreFiles(): Promise<void> {
-  deleteKeyDatabase();
+  const keysGone = deleteKeyDatabase();
   // Deleted on purpose: no account lost anything. The next open is a first one.
   try {
     localStorage.removeItem(STORE_OPENED_KEY);
@@ -64,7 +64,8 @@ export function purgeStoreFiles(): Promise<void> {
   } catch {
     // No BroadcastChannel: no store either.
   }
-  return deleteStorePool().catch(() => {
+  const poolGone = deleteStorePool().catch(() => {
     // The key is gone, so what's left can't be read.
   });
+  return Promise.all([keysGone, poolGone]).then(() => undefined);
 }

@@ -7,7 +7,7 @@
 
 import type { StoreEvent, StoreScope } from '../area';
 import type { JmapResponse, MethodCall, StoreSession } from '../engine/transport';
-import { forgetAccountKey, getAccountRecord, knownStoreFiles, openAccountKey, STORE_OPENED_KEY, type WrapLayer } from './keys';
+import { forgetAccountKey, getAccountRecord, knownStoreFiles, listAccountRecords, openAccountKey, STORE_OPENED_KEY, type StoreKeyLayerMissingError, type WrapLayer } from './keys';
 import { StoreClient } from './store-client';
 
 export interface StoreAccountInputs {
@@ -33,6 +33,8 @@ export interface StorePageHooks {
   ownerTaken?(): Promise<void>;
   /** An account this device kept mail for has an empty store now: its key or its file went. */
   onStoreLost?(account: string): void;
+  /** This tab became the owner and has no lock key: the app lock has to ask again. */
+  onKeyLocked?(): void;
 }
 
 /** What lib/offline uses. A seam, so its tests run the real engine on node:sqlite. */
@@ -53,6 +55,22 @@ export interface StoreBackend {
   remove(account: string): Promise<void>;
   /** Stops this tab's worker at once (a sign-out; the files go separately). */
   stop(): void;
+  /**
+   * App lock: closes the databases and stops this tab's worker, with every key it had.
+   * Waits for a clean close at most `closeMs`. Until `unlock`, every call is refused.
+   */
+  lock?(closeMs: number): Promise<void>;
+  /** This tab has the key again: its worker starts first, and takes the store. */
+  unlock?(ownerWaitMs: number): Promise<void>;
+  ownsStoreHere?(): boolean;
+}
+
+/** The app is locked: the store is closed, and its key isn't in memory anywhere. */
+export class StoreLockedError extends Error {
+  constructor() {
+    super('The local store is closed while the app is locked');
+    this.name = 'StoreLockedError';
+  }
 }
 
 /** How long a call waits for the owner to have opened an account. */
@@ -90,6 +108,8 @@ class PageStore implements StoreBackend {
    * can start the open again, and the second try finds the key the first one made.
    */
   private readonly keyJustMade = new Set<string>();
+  private locked = false;
+  private ownerReady: (() => void) | null = null;
   /** False from taking over the store until this tab has heard the policy again. */
   private scopeCurrent = true;
 
@@ -100,6 +120,7 @@ class PageStore implements StoreBackend {
   }
 
   private started(): StoreClient {
+    if (this.locked) throw new StoreLockedError();
     if (this.client) return this.client;
     this.broken = false;
     const client = new StoreClient({
@@ -112,6 +133,7 @@ class PageStore implements StoreBackend {
         this.hooks()?.onEvent(event);
       },
       onOwner: () => {
+        this.ownerReady?.();
         this.opening.clear();
         const hooks = this.hooks();
         if (hooks?.ownerTaken) {
@@ -144,13 +166,22 @@ class PageStore implements StoreBackend {
     this.broken = false;
   }
 
+  private async readKey(account: string): ReturnType<typeof openAccountKey> {
+    try {
+      return await openAccountKey(account, this.hooks()?.keyLayers?.() ?? []);
+    } catch (error) {
+      if ((error as Error)?.name === 'StoreKeyLayerMissingError' && (error as StoreKeyLayerMissingError).layer === 'applock') this.hooks()?.onKeyLocked?.();
+      throw error;
+    }
+  }
+
   /** Only the owner may open: the key goes to this tab's own worker, never over the channel. */
   private openHere(account: string): Promise<void> {
     const running = this.opening.get(account);
     if (running) return running;
     const run = (async () => {
       const client = this.started();
-      const { keyHex, record, fresh } = await openAccountKey(account, this.hooks()?.keyLayers?.() ?? []);
+      const { keyHex, record, fresh } = await this.readKey(account);
       if (fresh) this.keyJustMade.add(account);
       // The old file, if the key alone went, can never be read again.
       if (this.keyJustMade.has(account)) await client.pruneFiles(await knownStoreFiles()).catch(() => {});
@@ -175,7 +206,44 @@ class PageStore implements StoreBackend {
     return run;
   }
 
+  async lock(closeMs: number): Promise<void> {
+    this.locked = true;
+    const client = this.client;
+    this.client = null;
+    this.opening.clear();
+    this.keyJustMade.clear();
+    if (!client) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    await Promise.race([
+      client.release().catch(() => {}),
+      new Promise((resolve) => { timer = setTimeout(resolve, closeMs); }),
+    ]);
+    clearTimeout(timer);
+    // Past the wait a sync may still be running. Stopping the worker ends it, as a crash would.
+    client.halt();
+  }
+
+  async unlock(ownerWaitMs: number): Promise<void> {
+    this.locked = false;
+    if (this.client?.ownsStore || !StoreClient.supported()) return;
+    if ((await listAccountRecords().catch(() => [])).length === 0) return;
+    await new Promise<void>((resolve) => {
+      const timer = setTimeout(resolve, ownerWaitMs);
+      this.ownerReady = () => {
+        clearTimeout(timer);
+        this.ownerReady = null;
+        resolve();
+      };
+      this.started();
+    });
+  }
+
+  ownsStoreHere(): boolean {
+    return this.client?.ownsStore ?? false;
+  }
+
   async ensureOpen(account: string, session?: StoreSession | null): Promise<void> {
+    if (this.locked) throw new StoreLockedError();
     this.wanted.set(account, session ?? this.wanted.get(account) ?? null);
     const client = this.started();
     if (client.ownsStore) await this.openHere(account);
@@ -196,6 +264,7 @@ class PageStore implements StoreBackend {
 
   /** A call for an account: the owner may still be opening it, in this tab or another. */
   private async whenOpen<T>(account: string, call: (client: StoreClient) => Promise<T>): Promise<T> {
+    if (this.locked) throw new StoreLockedError();
     if (this.broken) throw new Error('The local store could not start');
     await this.ensureOpen(account);
     for (let attempt = 0; ; attempt += 1) {
@@ -229,7 +298,7 @@ class PageStore implements StoreBackend {
   }
 
   async setOnline(online: boolean): Promise<void> {
-    if (!this.client || this.broken) return;
+    if (this.locked || !this.client || this.broken) return;
     await this.client.setOnline(online);
   }
 

@@ -66,6 +66,21 @@ describe('useSidebarApps CSP cookie', () => {
     expect(sessionStorage.getItem('bulwark:pending-inline-app')).toContain('app-1');
   });
 
+  it('with the app lock on, opens beside the app instead: a reload would ask for the PIN', () => {
+    localStorage.setItem('bulwark-app-lock', JSON.stringify({ on: true, locked: false }));
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+    try {
+      useSettingsStore.setState({ sidebarApps: [app()] });
+      const { result } = renderHook(() => useSidebarApps());
+      act(() => result.current.handleInlineApp('app-1', 'https://board.example.com/x', 'Board'));
+      expect(reload).not.toHaveBeenCalled();
+      expect(open).toHaveBeenCalledWith('https://board.example.com/x', '_blank', 'noopener,noreferrer');
+    } finally {
+      open.mockRestore();
+      localStorage.removeItem('bulwark-app-lock');
+    }
+  });
+
   it('reopens the pending app after that reload without reloading again', () => {
     useSettingsStore.setState({ sidebarApps: [app()] });
     const { result: first } = renderHook(() => useSidebarApps());

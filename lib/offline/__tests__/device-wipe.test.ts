@@ -129,6 +129,89 @@ function expectUntouched(): void {
   expect(wipeState.readPendingWipes()).toEqual({});
 }
 
+describe('with the app lock', () => {
+  const vaultDb = 'bulwark-app-lock';
+
+  async function vaultOf(): Promise<typeof import('@/lib/app-lock/vault')> {
+    return import('@/lib/app-lock/vault');
+  }
+
+  it('a wipe of one account leaves the others their way in', async () => {
+    const vault = await vaultOf();
+    (await vault.createVault('correct-pin')).fill(0);
+    useAccountStore.setState({ accounts: [entry(ALICE, 0), entry(BOB, 1)], activeAccountId: ALICE, defaultAccountId: ALICE } as never);
+    respond = () => noWipe();
+    await keys.putDeviceRecord({ account: BOB, id: BOB_ROW, secret: SECRET, createdAt: 1 });
+    await wipe.wipeAccountFromDevice(BOB, 'admin');
+    expect(await databases()).toContain(vaultDb);
+    expect(await vault.readVault()).not.toBeNull();
+  });
+
+  it('what was sealed goes with it: a device told to remove an account keeps none of its text', async () => {
+    const vault = await vaultOf();
+    (await vault.createVault('correct-pin')).fill(0);
+    await vault.sealDraft({ subject: 'Text of a wiped account' });
+    useAccountStore.setState({ accounts: [entry(ALICE, 0), entry(BOB, 1)], activeAccountId: ALICE, defaultAccountId: ALICE } as never);
+    respond = () => noWipe();
+    await keys.putDeviceRecord({ account: BOB, id: BOB_ROW, secret: SECRET, createdAt: 1 });
+    await wipe.wipeAccountFromDevice(BOB, 'admin');
+    expect(await vault.countSealed()).toBe(0);
+  });
+
+  it('with no account left, the vault and the lock go too', async () => {
+    const vault = await vaultOf();
+    (await vault.createVault('correct-pin')).fill(0);
+    localStorage.setItem('bulwark-app-lock', JSON.stringify({ on: true, locked: true }));
+    useAccountStore.setState({ accounts: [entry(ALICE, 0)], activeAccountId: ALICE, defaultAccountId: ALICE } as never);
+    respond = () => noWipe();
+    await keys.putDeviceRecord({ account: ALICE, id: ROW, secret: SECRET, createdAt: 1 });
+    await wipe.wipeAccountFromDevice(ALICE, 'admin');
+    await vi.waitFor(async () => expect(await databases()).not.toContain(vaultDb));
+    expect(localStorage.getItem('bulwark-app-lock')).toBeNull();
+  });
+
+  it('also when the last account isn\'t the active one, as at a lock screen where nothing has started', async () => {
+    const vault = await vaultOf();
+    (await vault.createVault('correct-pin')).fill(0);
+    localStorage.setItem('bulwark-app-lock', JSON.stringify({ on: true, locked: true }));
+    wipe.setWipeReloadForTests(() => {});
+    useAccountStore.setState({ accounts: [entry(BOB, 1)], activeAccountId: null, defaultAccountId: null } as never);
+    useAuthStore.setState({ activeAccountId: null });
+    respond = () => noWipe();
+    await keys.putDeviceRecord({ account: BOB, id: BOB_ROW, secret: SECRET, createdAt: 1 });
+    await wipe.wipeAccountFromDevice(BOB, 'admin');
+    wipe.setWipeReloadForTests(null);
+    await vi.waitFor(async () => expect(await databases()).not.toContain(vaultDb));
+    expect(localStorage.getItem('bulwark-app-lock')).toBeNull();
+  });
+
+  it('a wipe of the whole device takes them as well', async () => {
+    const vault = await vaultOf();
+    (await vault.createVault('correct-pin')).fill(0);
+    localStorage.setItem('bulwark-app-lock', JSON.stringify({ on: true, locked: true }));
+    respond = () => noWipe();
+    await wipe.wipeWholeDevice('user');
+    await vi.waitFor(async () => expect(await databases()).not.toContain(vaultDb));
+    expect(localStorage.getItem('bulwark-app-lock')).toBeNull();
+  });
+
+  it('a device at the lock screen hears a wipe: the check-in runs with no key and no session', async () => {
+    const vault = await vaultOf();
+    let reloads = 0;
+    wipe.setWipeReloadForTests(() => { reloads += 1; });
+    (await vault.createVault('correct-pin')).fill(0);
+    localStorage.setItem('bulwark-app-lock', JSON.stringify({ on: true, locked: true }));
+    useAccountStore.setState({ accounts: [entry(ALICE, 0), entry(BOB, 1)], activeAccountId: ALICE, defaultAccountId: ALICE } as never);
+    await keys.putDeviceRecord({ account: BOB, id: BOB_ROW, secret: SECRET, createdAt: 1 });
+    respond = (url, init) => (url.includes('/api/devices') && JSON.parse(String(init?.body ?? '{}')).id === BOB_ROW ? wipeNow() : noWipe());
+    await wipe.checkInDue(true);
+    await vi.waitFor(async () => expect(await keys.getDeviceRecord(BOB)).toBeNull());
+    expect(await vault.readVault(), 'Alice still has to get in').not.toBeNull();
+    await vi.waitFor(() => expect(reloads, 'nothing started for Alice stays in memory').toBe(1));
+    wipe.setWipeReloadForTests(null);
+  });
+});
+
 describe('wipe on the next connect', () => {
   beforeEach(() => {
     respond = (url) => (url.endsWith('/api/devices/wiped') ? json(200, { ok: true }) : wipeNow());

@@ -25,6 +25,8 @@ import { snapshotAccount, restoreAccount, clearAllStores, evictAccount, evictAll
 import { getDesktopPolicy, onDesktopPolicyChange } from '@/lib/desktop/policy';
 import { accountRefusedByDesktopPolicy, planForRefusedAccounts } from '@/lib/desktop/refused-accounts';
 import { clearAllPluginStorage, clearPluginStorageForAccount } from '@/lib/plugin-sandbox/storage-scope';
+import { clearPendingCookies, freshLoginDone } from '@/lib/app-lock/sign-out';
+import { isAppLockedNow, isAppLockOn } from '@/lib/app-lock/state';
 import { broadcastSignOut, onSignedOutElsewhere, passSignOutGates, purgeSignedOutData, runBeforeSignOut, type SignOutCleanupOptions } from '@/lib/sign-out-cleanup';
 import { forgetPrincipals } from '@/lib/delegation/known-principals';
 import { useSearchHistoryStore } from './search-history-store';
@@ -2994,7 +2996,9 @@ export const useAuthStore = create<AuthState>()(
         // registry so the normal restoration path picks it up. Without this
         // the cookies sit unused and the SPA bounces to the login screen.
         // (Not in Lite: nothing hands sessions over server-side.)
-        if (accounts.length === 0 && !IS_LITE) {
+        // Not while a forgotten PIN's cookies wait to be cleared: this would sign that
+        // login back in with no PIN. The DELETE goes first, and adoption waits for it.
+        if (accounts.length === 0 && !IS_LITE && await clearPendingCookies()) {
           try {
             const restore = await apiFetch('/api/auth/session', { method: 'PUT' });
             if (restore.ok) {
@@ -3082,7 +3086,9 @@ export const useAuthStore = create<AuthState>()(
               forgottenAccounts += 1;
               evictAccount(account.id);
               // The user's choice on what may be a shared computer: its local data goes too.
-              accountStore.removeAccount(account.id, 'explicit');
+              // Not when the app lock is on: its reload ended this page, not the session, so
+              // the mail and the outbox wait for the next sign-in.
+              accountStore.removeAccount(account.id, isAppLockOn() ? 'evicted' : 'explicit');
               if (account.authMode === 'oauth') void clearSlotCredentials(account.cookieSlot, true);
               return;
             }
@@ -3603,6 +3609,8 @@ export const useAuthStore = create<AuthState>()(
       },
 
       startSharedSession: async (options) => {
+        // Locked: not from another window, and not from the cookies either.
+        if (isAppLockedNow()) return 'no-session';
         set({ isLoading: true, client: null });
         const accountStore = useAccountStore.getState();
         const answer = await requestWindowSession(options?.accountId ? { accountId: options.accountId } : {});
@@ -3838,10 +3846,14 @@ if (typeof window !== 'undefined') {
   onDesktopPolicyChange(applyDesktopServerPolicy);
 }
 
-// See canEnterLoginInPlace.
-let signedInSincePageLoad = useAuthStore.getState().isAuthenticated;
+// See canEnterLoginInPlace. A page that starts behind the app lock has shown nothing yet,
+// whatever the stored state says, and a page load here would ask for the PIN again.
+let signedInSincePageLoad = !isAppLockOn() && useAuthStore.getState().isAuthenticated;
 useAuthStore.subscribe((state) => {
-  if (state.isAuthenticated) signedInSincePageLoad = true;
+  if (state.isAuthenticated) {
+    signedInSincePageLoad = true;
+    freshLoginDone();
+  }
 });
 
 // Another tab signed everyone out: this one's cookies and account list are

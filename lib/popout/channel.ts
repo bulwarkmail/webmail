@@ -12,6 +12,7 @@
  */
 
 import type { ComposerDraftData } from '@/components/email/email-composer';
+import { isAppLockedNow } from '@/lib/app-lock/state';
 import type { MessagePriority } from '@/lib/message-priority';
 import type { ComposePopoutPayload } from './compose-payload';
 import { canSealSessions, createSessionOpener, credentialFingerprint, type SealedAnswer } from './sealed';
@@ -154,7 +155,7 @@ export async function requestWindowSession(
   options: { accountId?: string; rejectedAuthHeader?: string } = {},
   timeoutMs: number = SESSION_ANSWER_MS,
 ): Promise<SharedSessionAnswer | null> {
-  if (!canSealSessions()) return null;
+  if (!canSealSessions() || isAppLockedNow()) return null;
   const opener = await createSessionOpener();
   const rejectedFingerprint = options.rejectedAuthHeader ? await credentialFingerprint(options.rejectedAuthHeader) : undefined;
   return new Promise((resolve) => {
@@ -167,6 +168,11 @@ export async function requestWindowSession(
     };
     const channel = openPopoutChannel((message) => {
       if (message.type !== 'session-answer' || message.requestId !== requestId) return;
+      // Locked while the answer was on its way: it is not opened.
+      if (isAppLockedNow()) {
+        finish(null);
+        return;
+      }
       void opener.open<SharedSessionAnswer>(message.sealed).then(finish, () => finish(null));
     });
     if (!channel) {

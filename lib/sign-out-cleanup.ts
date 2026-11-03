@@ -1,3 +1,4 @@
+import { forgetAppLockAtSignOut } from '@/lib/app-lock/sign-out';
 import { fileStorage } from '@/lib/plugin-storage';
 import { clearHandoffs } from '@/lib/launch-handoff';
 import { clearAllCheckpoints } from '@/lib/mail-import/checkpoints';
@@ -65,6 +66,8 @@ export interface SignOutCleanupOptions {
    * when an account that was dropped that way still has data here.
    */
   keepLocalStore?: boolean;
+  /** A forgotten PIN goes through this with the lock still up: it lifts the lock itself, last. */
+  keepAppLock?: boolean;
 }
 
 /** Run `cleanup` when everyone signs out in this tab. */
@@ -145,6 +148,8 @@ export function purgeSignedOutData(options: SignOutCleanupOptions = {}): void {
     }
     forgetOfflineShell();
   }
+  // With no store left, the app lock has nothing to guard, and a next person shouldn't meet it.
+  if (!options.keepLocalStore && !options.keepAppLock) void forgetAppLockAtSignOut();
   // Files and links on their way into a draft or an import.
   clearHandoffs();
   clearDesktopSurfaces();

@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, ToggleSwitch } from './settings-section';
 import { LanguageSettings } from './language-settings';
+import { AppLockSettings } from './app-lock-settings';
 import { DesktopKeystoreSettings } from './desktop-keystore-settings';
 import { DesktopTelemetrySettings } from './desktop-telemetry-settings';
 import { ProtocolHandlerSettings } from './protocol-handler-settings';
@@ -27,6 +28,8 @@ export function GeneralSettings({ supportsCalendar }: { supportsCalendar: boolea
   return (
     <div className="space-y-8">
       <LanguageSettings />
+
+      <AppLockSettings />
 
       <DesktopOsSettings />
 

@@ -292,6 +292,39 @@ export interface DesktopPolicyBridge {
   onChange: (listener: (snapshot: PolicySnapshot) => void) => () => void;
 }
 
+export type DesktopOsUnlockKind = 'hello' | 'touchid';
+
+export type DesktopOsUnlockAnswer = { ok: true; key: Uint8Array } | { ok: false; reason: 'unavailable' | 'denied' | 'not-locked' | 'failed' };
+
+/**
+ * App lock in the desktop app. Main holds whether it's locked, and nothing a page says can
+ * lift that: `prove` needs what only a real unlock gives, Windows Hello and Touch ID run in
+ * main, and `forget` asks natively without the proof. A same-origin plugin frame can reach
+ * this through `parent`, so that has to hold on a call alone. What it mustn't reach at all,
+ * `lock` and `osUnlock`, the page takes once with `claim` before any frame exists.
+ */
+export interface DesktopAppLockBridge {
+  status: () => Promise<{ locked: boolean; enrolled: boolean; os: DesktopOsUnlockKind | null; osEnrolled: boolean; wrap?: boolean }>;
+  /** Once per document: the calls only the page itself may make. Null for whoever comes second. */
+  claim: () => { lock: () => void; osUnlock: () => Promise<DesktopOsUnlockAnswer> } | null;
+  /** Sets up the proof. False when one exists. */
+  enroll: (proof: Uint8Array) => Promise<boolean>;
+  /** Lifts the lock when the proof is the right one. */
+  prove: (proof: Uint8Array) => Promise<boolean>;
+  /** The lock goes off for good. */
+  disable: (proof: Uint8Array) => Promise<boolean>;
+  /** The PIN is lost, or everyone signed out. With no proof, main asks the user natively. */
+  forget: (proof?: Uint8Array) => Promise<boolean>;
+  /** Through safeStorage, for this origin only. Null where the OS has no real key store. */
+  wrap: (data: Uint8Array) => Promise<Uint8Array | null>;
+  unwrap: (data: Uint8Array) => Promise<Uint8Array | null>;
+  /** Asks Windows Hello or Touch ID, then keeps the key in the OS's encrypted storage. */
+  osEnroll: (proof: Uint8Array, lockKey: Uint8Array) => Promise<boolean>;
+  osRemove: () => Promise<void>;
+  /** The screen locked, or "Lock now" in the menu or tray. Returns the unsubscribe. */
+  onLockRequest: (listener: () => void) => () => void;
+}
+
 export interface DesktopOsSettings {
   /** Closing the main window leaves the app running in the tray. */
   closeToTray: boolean;
@@ -470,6 +503,7 @@ export interface BulwarkDesktopBridge {
   auth?: DesktopAuthBridge;
   plugins?: DesktopPluginsBridge;
   keystore?: DesktopKeystoreBridge;
+  appLock?: DesktopAppLockBridge;
   privacy?: DesktopPrivacyBridge;
 }
 

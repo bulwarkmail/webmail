@@ -104,7 +104,8 @@ export async function getAccountRecord(account: string): Promise<AccountRecord |
   });
 }
 
-export async function listAccountRecords(): Promise<AccountRecord[]> {
+export async function listAccountRecords(onlyIfThere = false): Promise<AccountRecord[]> {
+  if (onlyIfThere && !(await keyDatabaseExists())) return [];
   return withDb((db) => promisify(db.transaction(ACCOUNTS, 'readonly').objectStore(ACCOUNTS).getAll()) as Promise<AccountRecord[]>);
 }
 
@@ -227,10 +228,17 @@ export class StoreKeyLayerMissingError extends Error {
 }
 
 /** Deletes every key at sign-out. Works with no worker running, on any page. */
-export function deleteKeyDatabase(): void {
-  try {
-    indexedDB.deleteDatabase(DB_NAME);
-  } catch {
-    // Private mode or similar: nothing was stored either.
-  }
+export function deleteKeyDatabase(): Promise<void> {
+  return new Promise((resolve) => {
+    try {
+      const request = indexedDB.deleteDatabase(DB_NAME);
+      request.onsuccess = () => resolve();
+      request.onerror = () => resolve();
+      // A connection still open goes on its own: withDb closes after each use.
+      request.onblocked = () => resolve();
+    } catch {
+      // Private mode or similar: nothing was stored either.
+      resolve();
+    }
+  });
 }

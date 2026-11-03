@@ -13,6 +13,7 @@
 import type { Email } from '../jmap/types';
 import type { InstalledPlugin, SearchResultEmail } from '../plugin-types';
 import { appPath, buildMailPath } from '../deep-links';
+import { goInApp } from './page-navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import { useProTabStore } from '@/stores/pro-tab-store';
 import { readId, readObject, withinRate } from './host-api-input';
@@ -140,7 +141,7 @@ export async function requestOpenEmail(plugin: InstalledPlugin, input: unknown):
   if (!withinRate('open-email', plugin.id, LINK_LOADS_PER_MINUTE)) {
     throw new Error(`${method}: at most ${LINK_LOADS_PER_MINUTE} times a minute from outside the mail page`);
   }
-  window.location.assign(appPath(messagePath(email)));
+  goInApp(messagePath(email), appPath(messagePath(email)));
 }
 
 /** Test helper. */

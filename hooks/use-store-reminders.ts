@@ -10,6 +10,7 @@ import { createReminderRunner } from '@/lib/calendar-reminders/runner';
 import { reminderTimeZone, setReminderPoke, useMissedReminders, useReminderSource } from '@/lib/calendar-reminders/state';
 import { closeSystemReminders, showSystemReminder } from '@/lib/calendar-reminders/system-notification';
 import { isAppLocked } from '@/lib/desktop/app-lock-state';
+import { goInApp } from '@/lib/plugin-sandbox/page-navigation';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { contentHiddenFor } from '@/lib/desktop/mail-notifications';
 import {
@@ -117,7 +118,7 @@ export function useStoreReminders(): void {
         message: current.when(alert),
         duration: reminderToastDuration(),
         onClick: () => {
-          window.location.href = calendarUrlRef.current;
+          goInApp('/calendar', calendarUrlRef.current);
         },
         onDismiss: () => {
           toastsByKey.delete(alert.key);
@@ -139,7 +140,7 @@ export function useStoreReminders(): void {
                 });
               },
             }] : []),
-            { label: current.open, onClick: () => { window.location.href = calendarUrlRef.current; } },
+            { label: current.open, onClick: () => { goInApp('/calendar', calendarUrlRef.current); } },
           ],
         } : {}),
       });

@@ -20,6 +20,52 @@ async function shellOn(caches: FakeCaches, on: boolean) {
 
 const settle = () => new Promise((r) => setTimeout(r, 0));
 
+describe('the app lock\'s question whether a reload would land anywhere', () => {
+  const probe = new Headers({ 'x-bulwark-reload-probe': '1' });
+
+  it('is answered from the shell while offline: a reload would work', async () => {
+    const caches = new FakeCaches();
+    await shellOn(caches, true);
+    let online = true;
+    const fetchMock = vi.fn(async () => {
+      if (!online) throw new TypeError('offline');
+      return sameOrigin('<html>');
+    });
+    const worker = loadWorker({ buildId: 'a', caches, clients: [], fetch: fetchMock });
+    await settle();
+    await worker.request({ url: `${ORIGIN}/mail`, mode: 'navigate' });
+    await settle();
+    online = false;
+    const answer = await worker.request({ url: `${ORIGIN}/mail`, headers: probe });
+    expect(answer?.status).toBe(200);
+  });
+
+  it('gives the 5xx through: a reload would land on that', async () => {
+    const caches = new FakeCaches();
+    await shellOn(caches, true);
+    const worker = loadWorker({ buildId: 'a', caches, clients: [], fetch: vi.fn(async () => new Response('', { status: 502 })) });
+    await settle();
+    const answer = await worker.request({ url: `${ORIGIN}/mail`, headers: probe });
+    expect(answer?.status).toBe(502);
+  });
+
+  it('fails with no shell and no network, so the page knows to stay', async () => {
+    const caches = new FakeCaches();
+    await shellOn(caches, true);
+    const worker = loadWorker({ buildId: 'a', caches, clients: [], fetch: vi.fn(async () => { throw new TypeError('offline'); }) });
+    await settle();
+    await expect(worker.request({ url: `${ORIGIN}/mail`, headers: probe })).rejects.toThrow();
+  });
+
+  it('leaves any other fetch of a page to the network', async () => {
+    const caches = new FakeCaches();
+    await shellOn(caches, true);
+    const worker = loadWorker({ buildId: 'a', caches, clients: [], fetch: vi.fn(async () => sameOrigin('<html>')) });
+    await settle();
+    expect(await worker.request({ url: `${ORIGIN}/mail` })).toBeNull();
+  });
+});
+
 describe('service worker with offline mode off', () => {
   it('leaves every request to the network and caches nothing', async () => {
     const caches = new FakeCaches();

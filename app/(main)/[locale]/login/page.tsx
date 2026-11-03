@@ -1,5 +1,6 @@
 "use client";
 
+import { freshLoginRequired } from "@/lib/app-lock/sign-out";
 import { Suspense, useState, useEffect, useRef, useCallback, useId, useMemo } from "react";
 import { IS_DESKTOP_BUILD } from "@/lib/desktop/flag";
 import { forgetDesktopServer, getDesktopBridge } from "@/lib/desktop/bridge";
@@ -678,6 +679,7 @@ function LoginPageContent() {
           locale: params.locale,
           server_id: selectedServer?.id,
           remember: persistProviderSession,
+          ...(freshLoginRequired() ? { fresh_login: true } : {}),
           ...(isMobileHandoff
             ? {
                 mobile_redirect_uri: mobileRedirectUri,
@@ -931,6 +933,7 @@ function LoginPageContent() {
     if (isAddAccountMode) {
       authUrl.searchParams.set("prompt", "select_account");
     }
+    if (freshLoginRequired()) authUrl.searchParams.set("prompt", "login");
 
     window.location.href = authUrl.toString();
   };
@@ -1029,6 +1032,7 @@ function LoginPageContent() {
     if (isAddAccountMode) {
       authUrl.searchParams.set("prompt", "select_account");
     }
+    if (freshLoginRequired()) authUrl.searchParams.set("prompt", "login");
 
     window.location.href = authUrl.toString();
   };

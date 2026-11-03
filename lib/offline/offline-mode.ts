@@ -22,6 +22,7 @@
  *   messages a sign-out deletes without the user's word are named (lost.ts).
  */
 
+import { appLockKeyLayers, onStoreKeyMissing } from '@/lib/app-lock/controller';
 import { IS_LITE } from '@/lib/lite';
 import { desktopJmapBase } from '@/lib/desktop/jmap-route';
 import { devicesForAccount, devicesForNoOne, signedInAccountIds } from '@/lib/device-policy';
@@ -221,6 +222,8 @@ function noteStoreUnavailable(): void {
 }
 
 const storeHooks: StorePageHooks = {
+  keyLayers: appLockKeyLayers,
+  onKeyLocked: onStoreKeyMissing,
   inputs(account) {
     const client = onlineClientFor(account);
     return {

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { AppLockGate } from "@/components/app-lock/app-lock-gate";
 import { IntlProvider } from "@/components/providers/intl-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { CalendarAlertProvider } from "@/components/providers/calendar-alert-provider";
@@ -79,6 +80,7 @@ export default async function LocaleLayout({
 
   return (
     <IntlProvider locale={locale} messages={messages}>
+      <AppLockGate>
       <ThemeProvider>
         <CalendarAlertProvider>
           <RateLimitToastProvider>
@@ -122,7 +124,6 @@ export default async function LocaleLayout({
                   </MainWindowOnly>
                   {/* Offline mode isn't in Lite (no service worker there). */}
                   {!IS_LITE && <OfflineHost />}
-                  {!IS_LITE && <DeviceWipeHost />}
                   {!IS_LITE && <NotificationActionsHost />}
                   <DevicePolicyHost />
                   <MainWindowOnly>
@@ -136,6 +137,9 @@ export default async function LocaleLayout({
           </RateLimitToastProvider>
         </CalendarAlertProvider>
       </ThemeProvider>
+      </AppLockGate>
+      {/* Beside the gate, not under it: a stolen device at the lock screen still has to hear a wipe. */}
+      {!IS_LITE && <DeviceWipeHost />}
     </IntlProvider>
   );
 }

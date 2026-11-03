@@ -21,6 +21,7 @@ import { playNotificationSound } from '@/lib/notification-sound';
 import { lastingToastDuration } from '@/lib/toast-duration';
 import { startTitleAlert } from '@/lib/title-alert';
 import { getPathPrefix } from '@/lib/browser-navigation';
+import { goInApp } from '@/lib/plugin-sandbox/page-navigation';
 import { isAppLocked } from '@/lib/desktop/app-lock-state';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { contentHiddenFor } from '@/lib/desktop/mail-notifications';
@@ -180,7 +181,7 @@ export function useCalendarAlerts() {
               message,
               duration: reminderToastDuration(),
               onClick: () => {
-                window.location.href = `${getPathPrefix(locale)}/${locale}/calendar`;
+                goInApp('/calendar', `${getPathPrefix(locale)}/${locale}/calendar`);
               },
               onDismiss: () => {
                 void calendarHooks.onCalendarAlertAcknowledge.emit({ alertId: alert.alertId, eventId: alert.eventId });
@@ -221,7 +222,7 @@ export function useCalendarAlerts() {
                 message: taskMsg,
                 duration: reminderToastDuration(),
                 onClick: () => {
-                  window.location.href = `${getPathPrefix(locale)}/${locale}/calendar`;
+                  goInApp('/calendar', `${getPathPrefix(locale)}/${locale}/calendar`);
                 },
                 onDismiss: () => {
                   void calendarHooks.onCalendarAlertAcknowledge.emit({ alertId: taskAlert.alertId, taskId: taskAlert.taskId });

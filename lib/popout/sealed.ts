@@ -46,10 +46,15 @@ async function deriveKey(privateKey: CryptoKey, peer: JsonWebKey): Promise<Crypt
   return crypto.subtle.deriveKey({ name: 'ECDH', public: publicKey }, privateKey, AES, false, ['encrypt', 'decrypt']);
 }
 
-/** The asking window's side: a key to send along, and what opens the answer. */
-export async function createSessionOpener(): Promise<SessionOpener> {
-  const pair = await crypto.subtle.generateKey(ECDH, false, ['deriveKey']);
-  const publicKey = await crypto.subtle.exportKey('jwk', pair.publicKey);
+/**
+ * The asking window's side: a key to send along, and what opens the answer. With
+ * `stored`, a private key kept elsewhere (app lock's sealed drafts) opens instead.
+ */
+export async function createSessionOpener(stored?: JsonWebKey): Promise<SessionOpener> {
+  const pair = stored
+    ? { privateKey: await crypto.subtle.importKey('jwk', stored, ECDH, false, ['deriveKey']), publicKey: null }
+    : await crypto.subtle.generateKey(ECDH, false, ['deriveKey']);
+  const publicKey = pair.publicKey ? await crypto.subtle.exportKey('jwk', pair.publicKey) : {};
   return {
     publicKey,
     async open<T>(sealed: SealedAnswer): Promise<T> {
