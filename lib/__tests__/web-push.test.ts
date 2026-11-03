@@ -903,6 +903,60 @@ describe('a subscription id the server gave to another device', () => {
   });
 });
 
+describe('a setup that gets stuck', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    delete (navigator as unknown as { locks?: unknown }).locks;
+  });
+
+  it('fails in the end and lets the next one through', async () => {
+    vi.useFakeTimers();
+    let tail: Promise<unknown> = Promise.resolve();
+    Object.defineProperty(navigator, 'locks', {
+      configurable: true,
+      value: { request: (_n: string, run: () => Promise<unknown>) => { const next = tail.then(run, run); tail = next.catch(() => undefined); return next; } },
+    });
+    const { registration } = installPushBrowser();
+    (registration.pushManager.getSubscription as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
+    (registration.pushManager.subscribe as ReturnType<typeof vi.fn>).mockReturnValueOnce(new Promise(() => {}));
+    const client = makeClient([]);
+    installFetch({});
+
+    const stuck = enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false }).then(() => 'done', () => 'failed');
+    await vi.advanceTimersByTimeAsync(1_000);
+    const second = enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false }).then(() => 'done', () => 'failed');
+    await vi.advanceTimersByTimeAsync(200_000);
+
+    expect(await stuck).toBe('failed');
+    expect(await second).toBe('done');
+  });
+
+  it('turns off for the account it was asked about, even if the client disconnected while waiting', async () => {
+    let tail: Promise<unknown> = Promise.resolve();
+    let release = () => {};
+    tail = new Promise<void>((resolve) => { release = resolve; });
+    Object.defineProperty(navigator, 'locks', {
+      configurable: true,
+      value: { request: (_n: string, run: () => Promise<unknown>) => { const next = tail.then(run, run); tail = next.catch(() => undefined); return next; } },
+    });
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-mine');
+    localStorage.setItem(RELAY_BASE_KEY, RELAY);
+    const client = makeClient([sub('push-mine', THIS_DEVICE)]);
+    let accountId = ACCOUNT_ID;
+    (client as unknown as { getAccountId: () => string }).getAccountId = () => accountId;
+    const calls = installFetch({});
+
+    const off = disableWebPush({ client, relayBaseUrl: RELAY }).catch(() => undefined);
+    accountId = '';
+    release();
+    await off;
+
+    expect(localStorage.getItem(SUB_KEY)).toBeNull();
+    expect(calls).toContainEqual({ url: `${RELAY}/api/push/register/${THIS_DEVICE}`, method: 'DELETE' });
+  });
+});
+
 describe('resyncWebPush when the relay changed (#903)', () => {
   afterEach(() => setNoThirdPartyTraffic(false));
 
