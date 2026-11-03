@@ -1125,15 +1125,20 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     },
     onFocusSearch: () => {
       if (isScheduledView) return;
+      const findSearchInput = () => document.querySelector<HTMLInputElement>('[data-search-input]');
       const focusSearch = () => {
-        const searchInput = document.querySelector('[data-search-input]') as HTMLInputElement;
+        const searchInput = findSearchInput();
         if (searchInput) {
           searchInput.focus();
           searchInput.select();
         }
       };
-      // The field is in the list, which an open message can have collapsed.
-      if (shouldCollapseListPane) {
+      // The field can be in the list, which an open message has collapsed, and
+      // that message has to close first. Mountain View's is in the top bar.
+      if (findSearchInput()?.closest('[inert]')) {
+        // A linked message still arriving holds the list collapsed: nothing to
+        // go back to yet.
+        if (deepLinkPane !== null) return;
         handleMobileBack();
         requestAnimationFrame(() => requestAnimationFrame(focusSearch));
       } else {
@@ -1220,7 +1225,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [activeEmails, selectedEmail, client, selectedMailbox, isMobile, isTablet, selectedEmailKeys, mailboxes, isScheduledView, mvShell, cursorOnly, showCrossStarred, isUnifiedView, unifiedRole, archiveActionEnabled]);
+  }), [activeEmails, selectedEmail, client, selectedMailbox, isMobile, isTablet, selectedEmailKeys, mailboxes, isScheduledView, mvShell, cursorOnly, showCrossStarred, isUnifiedView, unifiedRole, archiveActionEnabled, deepLinkPane]);
 
   // Initialize keyboard shortcuts
   // Mountain View keeps the ticked rows while a message is read (#1231). The
