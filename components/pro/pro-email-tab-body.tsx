@@ -34,6 +34,8 @@ import { saveQuickReplyDraft } from '@/lib/outgoing/quick-reply-envelope';
 import { canDownload } from '@/lib/device-policy';
 import { useOpenEmailInWindow } from '@/hooks/use-popouts-available';
 import { isFilePreviewable } from '@/lib/file-preview';
+import { useDesktopCommands } from '@/lib/desktop/commands';
+import { isPopoutWindow } from '@/lib/popout/window-role';
 import dynamic from 'next/dynamic';
 
 // Only needed when the device policy turns downloads off.
@@ -449,6 +451,29 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     setEmailKeywordsLocal(emailIdToTag, keywords);
     setEmail({ ...email, keywords });
   }, [email, setEmailKeywordsLocal]);
+
+  // In a pop-out this message is all there is, so the menu bar's Message menu means it.
+  const inOwnWindow = typeof window !== 'undefined' && isPopoutWindow();
+  const seen = !!email?.keywords?.$seen;
+  useDesktopCommands({
+    'message.reply': () => handleReply(),
+    'message.replyAll': handleReplyAll,
+    'message.forward': handleForward,
+    'message.markRead': () => { if (email) void handleMarkAsRead(email.id, true); },
+    'message.markUnread': () => { if (email) void handleMarkAsRead(email.id, false); },
+    'message.star': () => void handleToggleStar(),
+    'message.archive': archiveActionEnabled ? () => void handleArchive() : undefined,
+    'message.delete': () => void handleDelete(),
+  }, {
+    'message.reply': !!email,
+    'message.replyAll': !!email,
+    'message.forward': !!email,
+    'message.markRead': !!email && !seen,
+    'message.markUnread': !!email && seen,
+    'message.star': !!email,
+    'message.archive': !!email && archiveActionEnabled,
+    'message.delete': !!email,
+  }, inOwnWindow);
 
   const handleMoveToMailbox = useCallback(async (mailboxId: string) => {
     if (!client || !email) return;

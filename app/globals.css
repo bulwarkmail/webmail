@@ -587,6 +587,11 @@ optgroup {
   -webkit-app-region: drag;
 }
 
+.window-title-bar-item {
+  app-region: no-drag;
+  -webkit-app-region: no-drag;
+}
+
 /* Safe area insets for notched devices (iPhone X+, etc.) */
 .safe-area-inset-top {
   padding-top: env(safe-area-inset-top);
