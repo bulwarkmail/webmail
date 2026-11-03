@@ -2712,7 +2712,15 @@ export const useAuthStore = create<AuthState>()(
           for (const account of useAccountStore.getState().accounts) noteRefusedLogin(account.id, true, 'session');
         }
         await beforeLogoutHooks('all', { keepLocalStore: keepLocalData });
-        if (!get().isDemoMode && !keepLocalData) await endPushForSignOut(clients.values());
+        if (!get().isDemoMode && !keepLocalData) {
+          // Each connected login first, on a budget that one unreachable server can
+          // use up. What's left, and whoever had no connection, only needs the relay.
+          await endPushForSignOut(clients.values());
+          await Promise.race([
+            import('@/lib/web-push').then((push) => push.dropAllWebPushRegistrations()).catch(() => undefined),
+            new Promise<void>((resolve) => setTimeout(resolve, LOGOUT_HOOK_BUDGET_MS)),
+          ]);
+        }
 
         const accountStore = useAccountStore.getState();
         const allAccounts = [...accountStore.accounts];
