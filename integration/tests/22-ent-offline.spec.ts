@@ -590,6 +590,296 @@ test('at 390 px: the offline settings, the outbox and the reload prompt fit', as
   await page.context().close();
 });
 
+// ---- What a device keeps (design A4, A7, A8, A9) ----
+
+/** A message from long ago, in ent-alice's Inbox. Email/import takes the received date. */
+async function importOld(account: string, subject: string, daysAgo: number): Promise<void> {
+  const client = await jmapAs(account);
+  const receivedAt = new Date(Date.now() - daysAgo * 86_400_000).toISOString().replace(/\.\d+Z$/, 'Z');
+  const raw = `From: ${ENT.bob}\r\nTo: ${account}\r\nSubject: ${subject}\r\nDate: ${new Date(receivedAt).toUTCString()}\r\nMessage-ID: <${subject.replace(/\W/g, '')}@example.org>\r\nContent-Type: text/plain\r\n\r\nOld body ${RUN}\r\n`;
+  const auth = 'Basic ' + Buffer.from(`${account}:${process.env.IT_ENT_PASSWORD}`).toString('base64');
+  const upload = await fetch(`${JMAP_URL}/jmap/upload/${client.accountId}/`, { method: 'POST', headers: { Authorization: auth, 'Content-Type': 'message/rfc822' }, body: raw });
+  if (!upload.ok) throw new Error(`upload: ${upload.status}`);
+  const { blobId } = await upload.json() as { blobId: string };
+  const boxes = await client.request([['Mailbox/query', { accountId: client.accountId, filter: { role: 'inbox' } }, '0']]);
+  const inbox = boxes.methodResponses[0][1].ids[0] as string;
+  const done = await client.request([['Email/import', { accountId: client.accountId, emails: { a: { blobId, mailboxIds: { [inbox]: true }, keywords: {}, receivedAt } } }, '0']]);
+  if (!done.methodResponses[0][1].created?.a) throw new Error(`import: ${JSON.stringify(done.methodResponses[0][1])}`);
+}
+
+/** How many messages the settings page says are kept. */
+async function keptMessages(page: Page): Promise<number> {
+  const text = await page.getByTestId('offline-usage').locator('[data-part="mail"] dd').innerText();
+  return Number(text.match(/\(([\d.,]+) /)?.[1].replace(/[.,]/g, '') ?? NaN);
+}
+
+async function statusSettled(page: Page): Promise<void> {
+  await expect(page.getByTestId('offline-status')).toContainText('updated', { timeout: 180_000 });
+}
+
+test('a cap from the organisation prunes kept mail at the next policy fetch, and lifting it fetches the mail back', async ({ browser }) => {
+  const old = `Old message ${RUN}`;
+  await importOld(ENT.alice, old, 200);
+  const page = await userPage(browser, ENT.alice);
+  await enableOffline(page);
+  const windowRow = page.locator('[data-search-label="How far back to keep"]');
+  await windowRow.locator('select').selectOption('all');
+  await expect.poll(() => keptMessages(page), { timeout: 120_000 }).toBeGreaterThan(0);
+  await statusSettled(page);
+  await expect(async () => {
+    await page.getByTestId('offline-status').waitFor();
+    const client = await jmapAs(ENT.alice);
+    const total = await client.request([['Email/query', { accountId: client.accountId, calculateTotal: true, limit: 0 }, '0']]);
+    expect(await keptMessages(page)).toBe(total.methodResponses[0][1].total);
+  }).toPass({ timeout: 180_000, intervals: [2000] });
+  const before = await keptMessages(page);
+
+  await setPolicy(browser, { organisation: { devices: { offlineMaxDays: 30, noOfflineAttachments: true } } });
+  await page.reload();
+  await expect(windowRow.locator('select')).toHaveValue('30', { timeout: 60_000 });
+  await expect(windowRow.locator('select option')).toHaveText(['30 days']);
+  await expect(windowRow.getByText('Set by your organisation')).toBeVisible();
+  const attachments = page.getByTestId('offline-attachments');
+  await expect(attachments).toHaveAttribute('aria-checked', 'false');
+  await expect(page.locator('[data-search-label="Keep attachments"]').getByText('Set by your organisation')).toBeVisible();
+  await expect.poll(() => keptMessages(page), { timeout: 60_000 }).toBeLessThan(before);
+  await windowRow.scrollIntoViewIfNeeded();
+  await shot(page, 'do-storage-page-capped');
+
+  // Offline, the old message isn't there either: it left the device, not only the list.
+  await toMail(page);
+  await blockMailServer(page.context());
+  await waitUntilOffline(page);
+  await page.goto('/mail?q=' + encodeURIComponent(`"Old message"`)).catch(() => {});
+  await expect(page.locator('[data-testid="email-list-item"]', { hasText: old })).toHaveCount(0);
+  await page.context().unroute(`${new URL(JMAP_URL).origin}/**`);
+
+  await setPolicy(browser, {});
+  await page.goto('/settings/backup/offline');
+  await expect(windowRow.locator('select')).toHaveValue('all', { timeout: 60_000 });
+  await expect.poll(() => keptMessages(page), { timeout: 180_000, intervals: [2000] }).toBe(before);
+  await page.context().close();
+});
+
+test('the storage page: usage, choices, clearing an account', async ({ browser }) => {
+  const subject = `Cleared and fetched again ${RUN}`;
+  await deliverAndWait(subject, `Body ${RUN}`);
+  const page = await userPage(browser, ENT.alice);
+  await enableOffline(page);
+  await expect(page.getByTestId('offline-usage')).toContainText('Messages and search index');
+  await expect.poll(() => keptMessages(page), { timeout: 60_000 }).toBeGreaterThan(0);
+  await shot(page, 'do-storage-page');
+
+  // Keyboard: the choices are native controls in tab order, and the state survives a reload.
+  const select = page.locator('[data-search-label="How far back to keep"] select');
+  await select.focus();
+  await select.selectOption('365');
+  await page.reload();
+  await expect(select).toHaveValue('365', { timeout: 60_000 });
+  await expect(page.getByTestId('offline-status')).toContainText('updated', { timeout: 180_000 });
+
+  const before = await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => { const r = indexedDB.open('bulwark-store'); r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); });
+    const all = await new Promise<Array<{ file: string }>>((resolve) => { const r = db.transaction('accounts').objectStore('accounts').getAll(); r.onsuccess = () => resolve(r.result); });
+    db.close();
+    return all.map((record) => record.file);
+  });
+  expect(before).toHaveLength(1);
+
+  await page.getByTestId('offline-clear').click();
+  await expect(page.getByRole('alertdialog').or(page.getByRole('dialog'))).toContainText('Clear this account on this device?');
+  await page.getByRole('button', { name: 'Clear', exact: true }).click();
+  // A new key and file, and the mail comes back by itself, with the window kept.
+  await expect(async () => {
+    const after = await page.evaluate(async () => {
+      const db = await new Promise<IDBDatabase>((resolve, reject) => { const r = indexedDB.open('bulwark-store'); r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); });
+      const all = await new Promise<Array<{ file: string }>>((resolve) => { const r = db.transaction('accounts').objectStore('accounts').getAll(); r.onsuccess = () => resolve(r.result); });
+      db.close();
+      return all.map((record) => record.file);
+    });
+    expect(after).toHaveLength(1);
+    expect(after).not.toEqual(before);
+  }).toPass({ timeout: 60_000 });
+  await expect.poll(() => keptMessages(page), { timeout: 180_000, intervals: [2000] }).toBeGreaterThan(0);
+  await expect(select).toHaveValue('365');
+  await page.context().close();
+});
+
+test('the storage page fits at 390 px', async ({ browser }) => {
+  const phone = await userPage(browser, ENT.alice, true);
+  await enableOffline(phone, true);
+  const overflow = await phone.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
+  await shot(phone, 'do-storage-page-390');
+  await phone.context().close();
+});
+
+test('a store the browser deleted is noticed, says what was lost and syncs again', async ({ browser }) => {
+  const subject = `After the eviction ${RUN}`;
+  await deliverAndWait(subject, `Body ${RUN}`);
+  const page = await userPage(browser, ENT.alice);
+  await enableOffline(page);
+
+  // No app on this page, so no worker holds the files, as after closing the tab.
+  await page.goto('/manifest.webmanifest');
+  await expect.poll(() => page.evaluate(async () => {
+    const root = await navigator.storage.getDirectory();
+    const raw = localStorage.getItem('bulwark-offline-health');
+    const health = JSON.parse(raw ?? '{}') as Record<string, { pending?: number }>;
+    for (const entry of Object.values(health)) entry.pending = 2;
+    localStorage.setItem('bulwark-offline-health', JSON.stringify(health));
+    return root.removeEntry('.bulwark-store', { recursive: true }).then(() => 'gone', (error: Error) => error.name);
+  }), { timeout: 30_000 }).toBe('gone');
+
+  await page.goto('/settings/backup/offline');
+  await expect(page.getByTestId('offline-evicted')).toContainText('The browser deleted the mail kept on this device', { timeout: 60_000 });
+  await expect(page.getByTestId('offline-evicted')).toContainText('2 unsent messages or changes were lost');
+  await expect.poll(() => keptMessages(page), { timeout: 180_000, intervals: [2000] }).toBeGreaterThan(0);
+  await page.getByTestId('offline-evicted').getByRole('button', { name: 'OK' }).click();
+  await expect(page.getByTestId('offline-evicted')).toHaveCount(0);
+
+  // The key gone and the file still there: nobody can read it, so it goes too.
+  await page.goto('/manifest.webmanifest');
+  await page.evaluate(() => new Promise<void>((resolve, reject) => {
+    const r = indexedDB.open('bulwark-store');
+    r.onerror = () => reject(r.error);
+    r.onsuccess = () => {
+      const tx = r.result.transaction('accounts', 'readwrite');
+      tx.objectStore('accounts').clear();
+      tx.oncomplete = () => { r.result.close(); resolve(); };
+    };
+  }));
+  await page.goto('/settings/backup/offline');
+  await expect(page.getByTestId('offline-evicted')).toBeVisible({ timeout: 60_000 });
+  await expect.poll(() => keptMessages(page), { timeout: 180_000, intervals: [2000] }).toBeGreaterThan(0);
+  await page.context().close();
+});
+
+test('a browser that refuses to keep the data gets a warning and can be asked again', async ({ browser }) => {
+  const page = await userPage(browser, ENT.alice);
+  await page.context().addInitScript(() => {
+    const answer = () => Promise.resolve(Boolean((window as unknown as { __grant?: boolean }).__grant));
+    StorageManager.prototype.persist = answer;
+    StorageManager.prototype.persisted = answer;
+  });
+  await enableOffline(page);
+  await expect(page.getByTestId('offline-persist-refused')).toContainText('This browser may delete the kept mail');
+  await page.evaluate(() => { (window as unknown as { __grant?: boolean }).__grant = true; });
+  await page.getByTestId('offline-persist-retry').click();
+  await expect(page.getByTestId('offline-persist-refused')).toHaveCount(0);
+  await page.context().close();
+});
+
+test('nothing of a kept message is readable on the device', async ({ browser }) => {
+  const subject = `Rawcheck ${RUN} ${RUN}quokka`;
+  const text = `Rawbody ${RUN} ${RUN}wombat`;
+  await deliverAndWait(subject, text);
+  const page = await userPage(browser, ENT.alice);
+  await toMail(page);
+  await openMessage(page, subject);
+
+  /** Everything this origin has stored, as raw bytes where it's a file, looked through for a term. */
+  const findIn = (term: string) => page.evaluate(async (needle) => {
+    const hits: string[] = [];
+    const encoded = new TextEncoder().encode(needle);
+    const has = (bytes: Uint8Array) => {
+      outer: for (let i = 0; i <= bytes.length - encoded.length; i += 1) {
+        for (let j = 0; j < encoded.length; j += 1) if (bytes[i + j] !== encoded[j]) continue outer;
+        return true;
+      }
+      return false;
+    };
+    let files = 0;
+    let bytesRead = 0;
+    const walk = async (dir: FileSystemDirectoryHandle, path: string) => {
+      for await (const [name, handle] of (dir as unknown as { entries(): AsyncIterable<[string, FileSystemHandle]> }).entries()) {
+        if (handle.kind === 'directory') { await walk(handle as FileSystemDirectoryHandle, `${path}/${name}`); continue; }
+        // Works while the worker holds the handles.
+        const bytes = new Uint8Array(await (await (handle as FileSystemFileHandle).getFile()).arrayBuffer());
+        files += 1;
+        bytesRead += bytes.length;
+        if (has(bytes)) hits.push(`opfs:${path}/${name}`);
+      }
+    };
+    await walk(await navigator.storage.getDirectory(), '');
+
+    const flatten = (value: unknown): string => {
+      if (value instanceof ArrayBuffer) return new TextDecoder('latin1').decode(value);
+      if (ArrayBuffer.isView(value)) return new TextDecoder('latin1').decode(value as Uint8Array);
+      if (typeof value === 'string') return value;
+      if (Array.isArray(value)) return value.map(flatten).join(' ');
+      if (value && typeof value === 'object' && !(value instanceof CryptoKey)) return Object.entries(value).map(([key, inner]) => `${key} ${flatten(inner)}`).join(' ');
+      return String(value);
+    };
+    for (const info of await indexedDB.databases()) {
+      if (!info.name) continue;
+      const db = await new Promise<IDBDatabase>((resolve, reject) => { const r = indexedDB.open(info.name!); r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); });
+      for (const store of db.objectStoreNames) {
+        const rows = await new Promise<unknown[]>((resolve) => { const r = db.transaction(store).objectStore(store).getAll(); r.onsuccess = () => resolve(r.result); r.onerror = () => resolve([]); });
+        if (flatten(rows).includes(needle)) hits.push(`indexeddb:${info.name}/${store}`);
+      }
+      db.close();
+    }
+    for (const [label, storage] of [['localStorage', localStorage], ['sessionStorage', sessionStorage]] as const) {
+      for (let i = 0; i < storage.length; i += 1) {
+        const key = storage.key(i)!;
+        if (`${key} ${storage.getItem(key)}`.includes(needle)) hits.push(`${label}:${key}`);
+      }
+    }
+    for (const name of await caches.keys()) {
+      const cache = await caches.open(name);
+      for (const request of await cache.keys()) {
+        const response = await cache.match(request);
+        if (response && (await response.clone().text()).includes(needle)) hits.push(`cache:${name}:${request.url}`);
+      }
+    }
+    return { hits, files, bytesRead };
+  }, term);
+
+  // The check can see plaintext: without the store, the boot snapshot has the subject.
+  await expect.poll(async () => (await findIn(subject)).hits, { timeout: 15_000 }).toContain('localStorage:email-snapshot');
+
+  await enableOffline(page);
+  await expect(async () => {
+    const client = await jmapAs(ENT.alice);
+    const total = await client.request([['Email/query', { accountId: client.accountId, calculateTotal: true, limit: 0 }, '0']]);
+    expect(await keptMessages(page)).toBeGreaterThanOrEqual(total.methodResponses[0][1].total);
+  }).toPass({ timeout: 180_000, intervals: [2000] });
+  await toMail(page);
+  await openMessage(page, subject);
+  await expect(body(page)).toContainText(text, { timeout: 20_000 });
+  await page.waitForTimeout(1500);
+
+  for (const term of [subject, text, `${RUN}quokka`, `${RUN}wombat`]) {
+    const { hits, files, bytesRead } = await findIn(term);
+    expect(files, 'the store has its files').toBeGreaterThan(0);
+    expect(bytesRead, 'and they hold something').toBeGreaterThan(100_000);
+    expect(hits, `plaintext "${term}"`).toEqual([]);
+  }
+  await page.reload();
+  await expect(page.locator('[data-testid="email-list-item"]', { hasText: subject }).first()).toBeVisible({ timeout: 60_000 });
+  await page.waitForTimeout(1500);
+  expect((await findIn(subject)).hits).toEqual([]);
+  await page.context().close();
+});
+
+test('the admin page saves the caps and no longer promises 30 days or 250 MB', async ({ browser }) => {
+  const admin = await adminContext(browser);
+  const page = await admin.newPage();
+  await page.goto('/admin/org-devices');
+  const days = page.getByTestId('org-devices-offlineMaxDays');
+  await expect(days).toBeVisible({ timeout: 60_000 });
+  await expect(page.locator('body')).not.toContainText('250 MB');
+  await days.fill('45');
+  await page.getByTestId('org-devices-noOfflineAttachments').click();
+  await page.getByRole('button', { name: 'Save', exact: true }).first().click();
+  await expect.poll(async () => ((await getPolicy(admin)).organisation as { devices?: { offlineMaxDays?: number; noOfflineAttachments?: boolean } }).devices, { timeout: 15_000 })
+    .toMatchObject({ offlineMaxDays: 45, noOfflineAttachments: true });
+  await shot(page, 'do-admin-offline-caps');
+  await putPolicy(admin, { ...original, scopes: [] });
+  await admin.close();
+});
+
 test('a deploy makes the open tab offer a reload and serves no stale chunks', async ({ browser }) => {
   const redeploy = process.env.IT_OFFLINE_REDEPLOY;
   test.skip(!redeploy, 'set IT_OFFLINE_REDEPLOY to the command that deploys a second build (enterprise-rig/scratch/f-redeploy.sh)');

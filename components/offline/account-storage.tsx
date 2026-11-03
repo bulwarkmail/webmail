@@ -128,7 +128,7 @@ export function AccountStorage({ account, primary, heading }: { account: string;
             {syncing && progressWorthShowing(progress) && <ProgressLine progress={progress} />}
             {usage && usage.parts.length > 0 && (
               <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-xs" data-testid={testId('offline-usage')}>
-                {usage.parts.map((part) => (
+                {usage.parts.filter((part) => part.items > 0).map((part) => (
                   <div key={part.part} className="contents" data-part={part.part}>
                     <dt className="min-w-0 text-muted-foreground">{tStorage(`usage_${part.part}`)}</dt>
                     <dd className="text-end tabular-nums text-foreground">{tStorage('usage_row', { size: formatFileSize(part.bytes), count: part.items })}</dd>
