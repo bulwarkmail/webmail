@@ -278,6 +278,8 @@ const ENTRIES: SettingSchemaEntry[] = [
     opts(`${EB}reply_identity_match.`, ['exact', 'domain']), { gate: 'customFromEnabled' }),
   choice('signaturePosition', 'composing', `${EB}signature_position.label`,
     opts(`${EB}signature_position.`, ['above_quote', 'below_quote'])),
+  bool('signatureNewMailEnabled', 'composing', `${EB}signature_new_mail.label`),
+  bool('signatureReplyForwardEnabled', 'composing', `${EB}signature_reply_forward.label`),
   bool('signatureSeparatorEnabled', 'composing', `${EB}signature_separator.label`),
   // 10/30/60 read "{seconds} seconds" (send_delay.seconds): formatted.
   choice('sendDelaySeconds', 'composing', `${EB}send_delay.label`, [
@@ -420,6 +422,8 @@ export const DENIED_SETTINGS: readonly string[] = [
   'defaultReplyMode', 'subAddressDelimiter',
   // Sends push metadata to another server.
   'pushRelayUrl',
+  // Turning proofreading on sends what the user writes to a checker plugin.
+  'proofreading', 'proofreadingPlugins',
   // A browser voice id the model can't know.
   'readAloudVoice',
   // Maps and lists keyed by server ids.
@@ -427,7 +431,7 @@ export const DENIED_SETTINGS: readonly string[] = [
   'folderIcons', 'folderCountModes', 'preferredIdentityIds',
   // App bookkeeping and UI state, not preferences.
   'onboardingCompleted', 'tourCompleted', 'mvUnreadSectionCollapsed', 'mvEverythingElseCollapsed',
-  'vacationCalendarBlocks', 'explicitSettings',
+  'vacationCalendarBlocks', 'explicitSettings', 'proofreadingNoticeSeen',
   // Security, debugging and sync.
   'sessionTimeout', 'debugMode', 'debugCategories', 'settingsSyncDisabled',
   // Tags (they have their own keywords.* actions), filters and add-ons.
@@ -443,9 +447,12 @@ export const DENIED_SETTINGS: readonly string[] = [
  * - birthdayCalendarColor: a colour, set in the calendar app, not in Settings.
  * - vacationBlockCalendar: the page also adds or removes the busy event
  *   (vacationBlockChanged); updateSetting alone would not.
+ * - writingLanguage: a language from lib/proofreading/languages, and the
+ *   organisation policy may pin it.
  */
 export const NOT_YET_SETTINGS: readonly string[] = [
   'messageListOrder', 'filesSettings', 'activeThemeId', 'birthdayCalendarColor', 'vacationBlockCalendar',
+  'writingLanguage',
 ];
 
 /** Line breaks, tabs and other control characters. */
