@@ -280,13 +280,14 @@ export function CalendarToolbar({
             {/* Each pill is as wide as its label plus an even share of the rest, so a
                 long label ("جدول الأعمال", "Aufgaben") neither wraps nor touches the edge. */}
             <div className="flex items-center gap-1.5">
-              <div className="flex flex-1 border border-border rounded-md overflow-hidden">
+              {/* Past the row's room (Finnish, a large text size) the pills scroll rather than slide under the buttons. */}
+              <div className="flex flex-1 min-w-0 border border-border rounded-md overflow-x-auto scroll-hidden">
                 {views.map((v) => (
                   <button
                     key={v}
                     onClick={() => onViewModeChange(v)}
                     className={cn(
-                      "flex-auto min-h-11 px-1.5 text-[0.6875rem] font-medium transition-colors touch-manipulation",
+                      "flex-auto shrink-0 whitespace-nowrap min-h-11 px-1.5 text-[0.6875rem] font-medium transition-colors touch-manipulation",
                       v === viewMode
                         ? "bg-primary text-primary-foreground"
                         : "text-muted-foreground active:bg-muted"
@@ -303,8 +304,9 @@ export function CalendarToolbar({
                   <Search />
                 </IconButton>
               )}
+              {/* On the smallest phones the view names need its room; the drawer lists the calendars too. */}
               {calendars && selectedCalendarIds && onToggleVisibility && (
-                <div className="relative" ref={dropdownRef}>
+                <div className="relative max-[22.5rem]:hidden" ref={dropdownRef}>
                   <IconButton
                     size="icon-lg"
                     variant="outline"
