@@ -48,7 +48,7 @@ import { getOwnAddresses } from "@/lib/filters/quick-rule-target";
 import { emitThreadExpand } from "@/lib/plugin-thread-expand";
 import { normalizeAddress } from "@/lib/filters/quick-rules";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
-import { PluginListFilters } from "./plugin-list-filters";
+import { PluginListFilters, useFolderListFiltered } from "./plugin-list-filters";
 import { PluginActions, useFolderAccountKind } from "@/components/plugins/plugin-actions";
 import { useUnreadFirstSection } from "@/hooks/use-unread-first-section";
 import { useTimeoutWhileMounted } from "@/hooks/use-timeout-while-mounted";
@@ -532,6 +532,9 @@ export function EmailList({
   );
   const bulkActionContext = useMemo(() => ({ emailIds: selectedEmailIds }), [selectedEmailIds]);
   const folderAccountKind = useFolderAccountKind();
+  // A filter chip or a category tab on: the folder itself may well have mail.
+  const pluginFilterOn = useFolderListFiltered(effectiveMailboxRole ?? null, folderAccountKind);
+  const listNarrowed = pluginFilterOn || useMessageListTabsStore.getState().getCategoryFilter(effectiveMailboxRole) !== null;
   // "Remove from this folder" (#615): offered for a selection only when every
   // selected message is also in another folder.
   const removeFromFolder = useRemoveFromFolder();
@@ -1222,7 +1225,7 @@ export function EmailList({
             <EmptyState
               icon={isScheduledView ? CalendarClock : isSearching ? SearchX : MailX}
               title={isScheduledView ? t('no_scheduled_emails') : isSearching ? t('no_search_results') : t('no_emails')}
-              description={isScheduledView ? t('no_scheduled_emails_description') : isSearching ? t('no_search_results_description') : t('no_emails_description')}
+              description={isScheduledView ? t('no_scheduled_emails_description') : isSearching ? t('no_search_results_description') : listNarrowed ? undefined : t('no_emails_description')}
               actions={!isScheduledView && isSearching && onClearSearch ? (
                 <Button size="sm" variant="outline" onClick={onClearSearch}>{tSidebar('clear_search')}</Button>
               ) : !isScheduledView && !isSearching && effectiveMailboxRole === 'drafts' && onCompose ? (
