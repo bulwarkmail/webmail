@@ -38,6 +38,55 @@ describe('email boot snapshot', { timeout: 30_000 }, () => {
   });
 });
 
+// With the local store on, the mail is encrypted on the device, and subjects in
+// localStorage would give it away.
+describe('email boot snapshot with the local store on', { timeout: 30_000 }, () => {
+  const ROW = { id: 'e1', subject: 'Secret subject', mailboxIds: { inbox: true } };
+  const SNAPSHOT = { v: 3, account: 'alice@mail.example', mailboxes: MAILBOXES, selectedMailbox: 'inbox', emails: [ROW] };
+
+  async function boot(enabled: string[]) {
+    persistSession('alice@mail.example');
+    localStorage.setItem('email-snapshot', JSON.stringify(SNAPSHOT));
+    localStorage.setItem('bulwark-offline-accounts', JSON.stringify(enabled));
+    vi.resetModules();
+    return (await import('@/stores/email-store')).useEmailStore;
+  }
+
+  it('is removed at the start and not restored', async () => {
+    const store = await boot(['alice@mail.example']);
+    expect(localStorage.getItem('email-snapshot')).toBeNull();
+    expect(store.getState().emails).toEqual([]);
+  });
+
+  it('still works for an account without it', async () => {
+    const store = await boot(['bob@mail.example']);
+    expect(localStorage.getItem('email-snapshot')).not.toBeNull();
+    expect(store.getState().emails).toHaveLength(1);
+  });
+
+  it('is never written while it is on', async () => {
+    const store = await boot(['alice@mail.example']);
+    store.setState({ mailboxes: MAILBOXES as never, emails: [ROW] as never, selectedMailbox: 'inbox' });
+    await new Promise((resolve) => setTimeout(resolve, 1100));
+    expect(localStorage.getItem('email-snapshot')).toBeNull();
+  });
+
+  it('is written without it, as the control', async () => {
+    const store = await boot([]);
+    store.setState({ emails: [{ ...ROW, id: 'e2' }] as never });
+    await new Promise((resolve) => setTimeout(resolve, 1100));
+    expect(localStorage.getItem('email-snapshot')).toContain('e2');
+  });
+
+  it('goes the moment the user turns it on', async () => {
+    const store = await boot([]);
+    expect(store.getState().emails).toHaveLength(1);
+    const { useOfflineStore } = await import('@/lib/offline/state');
+    useOfflineStore.setState({ enabled: ['alice@mail.example'] });
+    expect(localStorage.getItem('email-snapshot')).toBeNull();
+  });
+});
+
 // The snapshot keeps the last plain folder that was open; a session that
 // ended in a unified view left Trash there, and every visit to "/" opened it.
 describe('email boot snapshot folder', { timeout: 30_000 }, () => {

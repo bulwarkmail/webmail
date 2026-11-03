@@ -38,6 +38,7 @@ import { SendCancelledCleanupError } from "@/lib/send-failure-message";
 import type { StorageQuota } from "@/lib/quota";
 import { isArchiveActionEnabled } from "@/lib/archive-gate";
 import { getOutboxHooks } from "@/lib/offline/outbox-hooks";
+import { useOfflineStore } from "@/lib/offline/state";
 import {
   READ_FILTER, UNREAD_FILTER, UNREAD_SECTION_SIZE, andFilters, isUnreadFirstView, mergeUnreadSection,
   openSectionRows, sectionFromUnreadRows, unreadSectionRowCount, withoutReached, type UnreadSection,
@@ -8629,6 +8630,15 @@ const EMAIL_SNAPSHOT_KEY = 'email-snapshot';
 const EMAIL_SNAPSHOT_VERSION = 3;
 const EMAIL_SNAPSHOT_MAX_EMAILS = 50;
 
+/**
+ * With the local store on, the mail is encrypted on this device, and a copy of
+ * subjects in localStorage would give that away. The store paints the list at
+ * start itself (startLocalCopyClient), so the snapshot isn't needed there.
+ */
+function keptEncrypted(account: unknown): boolean {
+  return typeof account === 'string' && useOfflineStore.getState().enabled.includes(account);
+}
+
 function isEmailListSync(value: unknown, mailboxId: string): value is EmailListSync {
   const sync = value as EmailListSync | null;
   return !!sync && typeof sync.state === 'string' && typeof sync.accountId === 'string' && sync.mailboxId === mailboxId;
@@ -8651,6 +8661,7 @@ if (typeof window !== 'undefined') {
   try {
     const auth = persistedAuthState();
     const authed = auth?.isAuthenticated === true;
+    if (keptEncrypted(auth?.activeAccountId)) window.localStorage.removeItem(EMAIL_SNAPSHOT_KEY);
     const raw = authed ? window.localStorage.getItem(EMAIL_SNAPSHOT_KEY) : null;
     if (raw) {
       const snap = JSON.parse(raw);
@@ -8698,6 +8709,12 @@ if (typeof window !== 'undefined') {
   } catch { /* corrupt snapshot - start empty */ }
 
   let snapshotTimer: ReturnType<typeof setTimeout> | null = null;
+  // Turned on just now: what's there goes at once.
+  useOfflineStore.subscribe((state, prev) => {
+    if (state.enabled === prev.enabled || !keptEncrypted(persistedAuthState()?.activeAccountId)) return;
+    if (snapshotTimer) { clearTimeout(snapshotTimer); snapshotTimer = null; }
+    try { window.localStorage.removeItem(EMAIL_SNAPSHOT_KEY); } catch { /* ignore */ }
+  });
   useEmailStore.subscribe((state, prev) => {
     if (
       state.emails === prev.emails &&
@@ -8727,7 +8744,7 @@ if (typeof window !== 'undefined') {
       // would be read as the active account's mail. (#847)
       if (s.searchQuery || s.selectedKeyword || s.isScheduledView || s.viewingAccountId || s.isUnifiedView) return;
       const account = persistedAuthState()?.activeAccountId;
-      if (typeof account !== 'string' || !account) return;
+      if (typeof account !== 'string' || !account || keptEncrypted(account)) return;
       try {
         window.localStorage.setItem(EMAIL_SNAPSHOT_KEY, JSON.stringify({
           v: EMAIL_SNAPSHOT_VERSION,
