@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react';
 import { debug } from '@/lib/debug';
+import { getDesktopBridge } from '@/lib/desktop/bridge';
+import { isPopoutWindow } from '@/lib/popout/window-role';
 
 /**
  * Badges the *installed* PWA's icon — the shortcut Chrome/Edge pin next to
@@ -34,6 +36,13 @@ export function useAppBadge(count: number, enabled = true): void {
     if (typeof navigator === 'undefined') return;
 
     const effectiveCount = enabled ? count : 0;
+
+    // The desktop app's own icon. A pop-out has its own account and no say in it.
+    const desktopOs = getDesktopBridge()?.os;
+    if (desktopOs) {
+      if (!isPopoutWindow()) desktopOs.setBadge(effectiveCount);
+      return;
+    }
 
     void (async () => {
       try {

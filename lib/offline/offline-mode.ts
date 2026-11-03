@@ -62,6 +62,7 @@ import { flushQueue, LOOKUP_WAIT_MS, SENDING_STALE_MS, settleStaleSends } from '
 import { LEGACY_DB_NAME, moveLegacyOutbox, strandedLegacyMessages } from './migrate-legacy';
 import { deleteShellCaches, tellServiceWorker } from './shell';
 import { rememberLost } from './lost';
+import { addSleepHandler, reportStoreCreatedMail } from '@/lib/desktop/system-events';
 
 export type OfflineNotice =
   | { kind: 'queued'; subject: string }
@@ -196,6 +197,10 @@ const storeHooks: StorePageHooks = {
     notify({ kind: 'store-reset' });
   },
   onEvent(event) {
+    if (event.type === 'created' && event.collection === 'Email') {
+      const client = onlineClientFor(event.account);
+      if (client) reportStoreCreatedMail(client, event.jmap, event.ids);
+    }
     if (event.type === 'synced') {
       useOfflineStore.setState((s) => ({ lastSyncedAt: { ...s.lastSyncedAt, [event.account]: event.at } }));
       forgetMailSnapshot(event.account);
@@ -956,6 +961,11 @@ export function startOfflineMode(): () => void {
     window.removeEventListener('online', onOnline);
     window.removeEventListener('offline', onOffline);
   });
+
+  // The desktop app going to sleep. Waking comes with the two events above and below.
+  cleanups.push(addSleepHandler(() => {
+    void getStore().setOnline(false).catch(() => {});
+  }));
 
   // Back in front: catch up now rather than at the next interval.
   const onVisible = () => {

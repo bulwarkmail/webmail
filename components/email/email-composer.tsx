@@ -171,6 +171,7 @@ import { usePolicyStore } from "@/stores/policy-store";
 import { registerComposeFlush } from "@/lib/compose-flush-registry";
 import type { RescuedDraft } from "@/lib/popout/channel";
 import { toUnicodeEmail } from "@/lib/idn";
+import { setComposerFileTarget } from "@/lib/desktop/window-files";
 
 /**
  * Derives the text/plain alternative from the composer's HTML body, preserving
@@ -2648,6 +2649,9 @@ export function EmailComposer({
     e.stopPropagation();
     resetDragTimeout();
   }, [resetDragTimeout]);
+
+  // The desktop app: files dropped or pasted anywhere on the window come here.
+  useEffect(() => setComposerFileTarget((files) => void addFiles(files)), [addFiles]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
