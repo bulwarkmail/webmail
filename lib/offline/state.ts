@@ -7,11 +7,46 @@
  */
 
 import { create } from 'zustand';
-import { DEFAULT_SCOPE, type StoreScope } from '@/lib/store/area';
+import { DEFAULT_SCOPE, type StoreScope, type StoreUsage } from '@/lib/store/area';
 import type { ConflictEntry, OutboxEntry, OutboxError } from './queue';
+import type { PersistState } from './storage-health';
+import type { SyncProgress } from './sync-progress';
 
 /** localStorage: the local account ids that keep mail on this device. */
 export const OFFLINE_ACCOUNTS_KEY = 'bulwark-offline-accounts';
+/** localStorage: what each account chose to keep offline, on top of the defaults. Numbers and switches only. */
+export const OFFLINE_SCOPE_KEY = 'bulwark-offline-scope';
+/** localStorage: what's known about each account's store with the store gone. Numbers only, never content. */
+export const OFFLINE_HEALTH_KEY = 'bulwark-offline-health';
+
+export interface UserChoice extends Partial<Pick<StoreScope, 'days' | 'attachments' | 'maxAttachmentBytes'>> {
+  /** Off here means the user turned it off: the desktop app's default doesn't turn it back on. */
+  on?: boolean;
+}
+
+export interface AccountHealth {
+  /** Unsent messages and changes last counted: what an eviction loses. */
+  pending?: number;
+  /** When the last sync finished. Survives a reload, unlike the running state. */
+  lastSync?: number;
+  /** The store came back empty (see `storeLost`). Unlike that, this stays across a reload until the user has read it. */
+  reset?: { at: number; lost: number };
+  /** The user cleared the account: another tab that owns the store opens the new one. */
+  clearedAt?: number;
+}
+
+/** A calendar or contact edit that didn't go through. Lives in its own area's store. */
+export interface AreaConflict {
+  area: 'calendar' | 'contacts';
+  account: string;
+  id: number;
+  createdAt: number;
+  title: string;
+  reason: 'refused' | 'changed' | 'gone';
+  /** A delete can't be taken back, so it reads differently. */
+  destroy: boolean;
+  detail: string | null;
+}
 
 export interface OutboxRow {
   id: number;
@@ -43,7 +78,18 @@ interface OfflineState {
   pendingChanges: number;
   /** Changes the server refused, or that met a message changed on another device. */
   conflicts: ConflictEntry[];
+  /** The same for calendar events and contacts. */
+  areaConflicts: AreaConflict[];
   usageBytes: number;
+  usage: Record<string, StoreUsage>;
+  choices: Record<string, UserChoice>;
+  health: Record<string, AccountHealth>;
+  /** What the browser said about keeping this site's data. */
+  persist: PersistState;
+  /** Accounts that couldn't write, and since when. Gone after the next good sync. */
+  storageFull: Record<string, number>;
+  /** How far the sync running for an account got. */
+  progress: Record<string, SyncProgress>;
   /** Accounts whose mail is being brought onto the device right now. */
   syncing: string[];
   lastSyncedAt: Record<string, number>;
@@ -59,6 +105,25 @@ function readEnabled(): string[] {
   }
 }
 
+function readRecord<T>(key: string): Record<string, T> {
+  try {
+    const raw = typeof localStorage === 'undefined' ? null : localStorage.getItem(key);
+    const parsed = raw ? JSON.parse(raw) : null;
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as Record<string, T> : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeRecord(key: string, value: Record<string, unknown>): void {
+  try {
+    if (Object.keys(value).length > 0) localStorage.setItem(key, JSON.stringify(value));
+    else localStorage.removeItem(key);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 export const useOfflineStore = create<OfflineState>()(() => ({
   enabled: readEnabled(),
   browserOffline: typeof navigator !== 'undefined' && navigator.onLine === false,
@@ -69,10 +134,57 @@ export const useOfflineStore = create<OfflineState>()(() => ({
   outbox: [],
   pendingChanges: 0,
   conflicts: [],
+  areaConflicts: [],
   usageBytes: 0,
+  usage: {},
+  choices: readRecord<UserChoice>(OFFLINE_SCOPE_KEY),
+  health: readRecord<AccountHealth>(OFFLINE_HEALTH_KEY),
+  persist: 'unknown',
+  storageFull: {},
+  progress: {},
   syncing: [],
   lastSyncedAt: {},
 }));
+
+export function writeChoice(account: string, patch: UserChoice): void {
+  const choices = { ...useOfflineStore.getState().choices, [account]: { ...useOfflineStore.getState().choices[account], ...patch } };
+  useOfflineStore.setState({ choices });
+  writeRecord(OFFLINE_SCOPE_KEY, choices);
+}
+
+export function forgetAccountState(account: string): void {
+  const { choices, health, usage, storageFull, progress } = useOfflineStore.getState();
+  const without = <T,>(record: Record<string, T>) => Object.fromEntries(Object.entries(record).filter(([id]) => id !== account));
+  const next = { choices: without(choices), health: without(health), usage: without(usage), storageFull: without(storageFull), progress: without(progress) };
+  useOfflineStore.setState(next);
+  writeRecord(OFFLINE_SCOPE_KEY, next.choices);
+  writeRecord(OFFLINE_HEALTH_KEY, next.health);
+}
+
+export function writeHealth(account: string, patch: AccountHealth): void {
+  const { health } = useOfflineStore.getState();
+  const current = health[account];
+  if (current && Object.entries(patch).every(([key, value]) => current[key as keyof AccountHealth] === value)) return;
+  const next = { ...health, [account]: { ...current, ...patch } };
+  useOfflineStore.setState({ health: next });
+  writeRecord(OFFLINE_HEALTH_KEY, next);
+}
+
+/** The state of other tabs, after a storage event. */
+export function readStoredChoices(): Record<string, UserChoice> {
+  return readRecord<UserChoice>(OFFLINE_SCOPE_KEY);
+}
+
+export function readStoredHealth(): Record<string, AccountHealth> {
+  return readRecord<AccountHealth>(OFFLINE_HEALTH_KEY);
+}
+
+/** Nothing is kept for anyone any more. */
+export function forgetAllAccountState(): void {
+  useOfflineStore.setState({ choices: {}, health: {}, usage: {}, storageFull: {}, progress: {}, areaConflicts: [] });
+  writeRecord(OFFLINE_SCOPE_KEY, {});
+  writeRecord(OFFLINE_HEALTH_KEY, {});
+}
 
 export function writeEnabled(enabled: string[]): void {
   useOfflineStore.setState({ enabled });
@@ -84,12 +196,10 @@ export function writeEnabled(enabled: string[]): void {
   }
 }
 
-/** localStorage: what each account chose to keep offline, on top of the defaults. */
-export const OFFLINE_SCOPE_KEY = 'bulwark-offline-scope';
-
+/** What the user chose, over the defaults. The organisation's caps come on top: scopeForAccount in offline-mode.ts. */
 export function offlineScopeFor(account: string): StoreScope {
   try {
-    const chosen = (JSON.parse(localStorage.getItem(OFFLINE_SCOPE_KEY) ?? '{}') as Record<string, Partial<StoreScope>>)[account];
+    const { on: _on, ...chosen } = (JSON.parse(localStorage.getItem(OFFLINE_SCOPE_KEY) ?? '{}') as Record<string, UserChoice>)[account] ?? {};
     return { ...DEFAULT_SCOPE, ...chosen };
   } catch {
     return DEFAULT_SCOPE;

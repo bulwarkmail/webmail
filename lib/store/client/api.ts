@@ -5,7 +5,7 @@
  * configureStore, so the worker bundle stays free of them.
  */
 
-import { DEFAULT_SCOPE, type StoreEvent, type StoreScope } from '../area';
+import type { StoreEvent, StoreScope } from '../area';
 import type { JmapResponse, MethodCall, StoreSession } from '../engine/transport';
 import { forgetAccountKey, getAccountRecord, knownStoreFiles, openAccountKey, type WrapLayer } from './keys';
 import { StoreClient } from './store-client';
@@ -13,6 +13,7 @@ import { StoreClient } from './store-client';
 export interface StoreAccountInputs {
   session: StoreSession | null;
   auth: string | null;
+  /** Left out while the organisation's policy isn't known: the store keeps the last one. */
   scope?: StoreScope;
   invertedKeywordSort: boolean | null;
 }
@@ -38,6 +39,8 @@ export interface StoreBackend {
   refresh(account: string): void;
   answer(account: string, calls: MethodCall[]): Promise<JmapResponse | null>;
   area<T = unknown>(account: string, name: string, params?: unknown): Promise<T>;
+  /** What the store may keep. A tightened scope prunes at once, also without a network. */
+  setScope(account: string, scope: StoreScope): Promise<void>;
   sync(account: string): Promise<void>;
   noteStateChange(account: string, changed: Record<string, Record<string, string>>): Promise<void>;
   setOnline(online: boolean): Promise<void>;
@@ -98,6 +101,8 @@ class PageStore implements StoreBackend {
       buildId: process.env.NEXT_PUBLIC_BUILD_ID,
       onEvent: (event) => {
         if (event.type === 'error' && event.area === 'store' && !event.account) this.broken = true;
+        // Another tab cleared it: what this tab remembers opening is gone.
+        if (event.type === 'removed') this.opening.delete(event.account);
         this.hooks()?.onEvent(event);
       },
       onOwner: () => {
@@ -140,7 +145,7 @@ class PageStore implements StoreBackend {
         file: record.file,
         keyHex,
         session: inputs.session ?? this.wanted.get(account) ?? null,
-        scope: inputs.scope ?? DEFAULT_SCOPE,
+        scope: inputs.scope,
         invertedKeywordSort: inputs.invertedKeywordSort,
         auth: inputs.auth,
       });
@@ -171,7 +176,7 @@ class PageStore implements StoreBackend {
     // Only a real change: setting it starts over what a full disk made the store give up on.
     const scope = inputs.scope ? JSON.stringify(inputs.scope) : null;
     if (inputs.scope && scope !== this.sentScope.get(account)) {
-      if (this.sentScope.has(account)) client.setScope(account, inputs.scope);
+      if (this.sentScope.has(account)) void client.setScope(account, inputs.scope).catch(() => {});
       this.sentScope.set(account, scope!);
     }
     if (inputs.invertedKeywordSort !== null) client.setInvertedKeywordSort(account, inputs.invertedKeywordSort);
@@ -197,6 +202,11 @@ class PageStore implements StoreBackend {
 
   area<T = unknown>(account: string, name: string, params?: unknown): Promise<T> {
     return this.whenOpen(account, (client) => client.area<T>(account, name, params));
+  }
+
+  setScope(account: string, scope: StoreScope): Promise<void> {
+    this.sentScope.set(account, JSON.stringify(scope));
+    return this.whenOpen(account, (client) => client.setScope(account, scope));
   }
 
   sync(account: string): Promise<void> {

@@ -2,10 +2,12 @@
 
 import { useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
+import { useRouter } from '@/i18n/navigation';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import { addSignOutGate } from '@/lib/sign-out-cleanup';
 import { reloadToNewBuild } from '@/lib/app-update';
+import { buildSettingsPath } from '@/lib/deep-links';
 import { confirmLoss, setOfflineNotifier, startOfflineMode, unsentCount, type OfflineNotice } from '@/lib/offline/offline-mode';
 import { toast } from '@/stores/toast-store';
 
@@ -22,6 +24,12 @@ export function OfflineHost() {
   const tConflicts = useTranslations('offlineConflicts');
   const tConflictsRef = useRef(tConflicts);
   tConflictsRef.current = tConflicts;
+  const tStorage = useTranslations('offlineStorage');
+  const tStorageRef = useRef(tStorage);
+  tStorageRef.current = tStorage;
+  const router = useRouter();
+  const routerRef = useRef(router);
+  routerRef.current = router;
   const { dialogProps, confirm } = useConfirmDialog();
   const confirmRef = useRef(confirm);
   confirmRef.current = confirm;
@@ -29,6 +37,7 @@ export function OfflineHost() {
   useEffect(() => {
     const show = (notice: OfflineNotice) => {
       const tr = tRef.current;
+      const openStorage = { label: tStorageRef.current('open_settings'), onClick: () => routerRef.current.push(buildSettingsPath('backup', 'offline')) };
       switch (notice.kind) {
         case 'queued':
           toast.info(tr('toast.queued'));
@@ -51,13 +60,20 @@ export function OfflineHost() {
           toast.warning(tConflictsRef.current('toast', { count: notice.count }));
           break;
         case 'storage-failed':
-          toast.warning(tConflictsRef.current('storage_failed'), { duration: 0 });
+          toast.warning(tStorageRef.current('storage_full_title'), { message: tStorageRef.current('storage_full_text'), duration: 0, action: openStorage });
+          break;
+        case 'default-on':
+          toast.info(tStorageRef.current('default_on'), { duration: 0, action: openStorage });
           break;
         case 'legacy-stranded':
           toast.warning(tConflictsRef.current('legacy_stranded'), { duration: 0 });
           break;
         case 'store-reset':
-          toast.warning(tConflictsRef.current('store_reset'), { duration: 0 });
+          toast.warning(tConflictsRef.current('store_reset'), {
+            message: notice.lost > 0 ? tStorageRef.current('evicted_lost', { count: notice.lost }) : undefined,
+            duration: 0,
+            action: openStorage,
+          });
           break;
         case 'store-unavailable':
           toast.warning(tConflictsRef.current('store_unavailable'), { duration: 0 });
@@ -103,7 +119,7 @@ export function OfflineHost() {
     return () => {
       removeGate();
       stop();
-      setOfflineNotifier(() => {});
+      setOfflineNotifier(null);
     };
   }, []);
 

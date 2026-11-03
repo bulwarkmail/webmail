@@ -1,7 +1,7 @@
 import type { StoreArea } from '../area';
 import { CALENDAR_METHODS } from './methods';
 import { CALENDAR_MIGRATIONS } from './schema';
-import { calendarSyncer, flushCalendar } from './sync';
+import { applyCalendarScope, calendarSyncer, flushCalendar } from './sync';
 import { listConflicts, resolveStandIns } from './writes';
 
 export const calendarArea: StoreArea = {
@@ -9,6 +9,11 @@ export const calendarArea: StoreArea = {
   migrations: CALENDAR_MIGRATIONS,
   methods: CALENDAR_METHODS,
   syncers: [calendarSyncer],
+  applyScope: applyCalendarScope,
+  usage: (ctx) => {
+    const row = ctx.db.get<{ bytes: number | null; items: number }>('SELECT SUM(LENGTH(json)) AS bytes, COUNT(*) AS items FROM calendar_event');
+    return [{ part: 'calendar', bytes: Number(row?.bytes ?? 0), items: Number(row?.items ?? 0) }];
+  },
   calls: {
     'calendar.flush': (ctx) => flushCalendar(ctx),
     /** Edits the server hasn't got, for the question before a sign-out. */

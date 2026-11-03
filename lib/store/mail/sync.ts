@@ -11,6 +11,7 @@ import type { SyncContext, Syncer } from '../area';
 import { deleteObject, putObject } from '../engine/core-schema';
 import { runChangesLoop } from '../engine/changes';
 import { JmapMethodError, responseFor, TransportError, type MethodCall } from '../engine/transport';
+import { pruneAttachments } from './scope';
 import {
   deleteEmail,
   deleteEmailRow,
@@ -357,7 +358,10 @@ async function backfillBodies(ctx: SyncContext, jmap: string): Promise<void> {
  */
 async function fetchAttachments(ctx: SyncContext, jmap: string): Promise<void> {
   if (!ctx.scope.attachments) return;
-  let used = Number(ctx.db.get<{ n: number | null }>('SELECT SUM(size) AS n FROM blob')?.n ?? 0);
+  // The Files area may have taken its part of the total since the last pass.
+  const others = ctx.keptByOthers('mail');
+  await pruneAttachments(ctx);
+  let used = others + Number(ctx.db.get<{ n: number | null }>('SELECT SUM(size) AS n FROM blob')?.n ?? 0);
   for (;;) {
     if (ctx.stopped()) return;
     const parts = ctx.db.all<{ blob_id: string; size: number; type: string | null; name: string | null; received_at: number }>(

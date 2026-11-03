@@ -395,6 +395,22 @@ describe('the page\'s store', () => {
     store.stop();
   });
 
+  it('opens an account again once another tab removed it', async () => {
+    allowEngine();
+    const store = getStore();
+    await store.ensureOpen('a@x');
+    const worker = FakeWorker.all[0];
+    worker.becomeOwner();
+    await vi.waitFor(() => expect(worker.posted.filter((m) => m.kind === 'open')).toHaveLength(1));
+    await store.ensureOpen('a@x');
+    expect(worker.posted.filter((m) => m.kind === 'open')).toHaveLength(1);
+
+    worker.onmessage?.({ data: { kind: 'event', event: { type: 'removed', account: 'a@x' } } } as MessageEvent);
+    await store.ensureOpen('a@x');
+    await vi.waitFor(() => expect(worker.posted.filter((m) => m.kind === 'open')).toHaveLength(2));
+    store.stop();
+  });
+
   it('stops waiting when the engine couldn\'t start in this browser', async () => {
     allowEngine();
     const store = getStore();

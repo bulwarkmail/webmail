@@ -9,7 +9,7 @@
 
 import { isTaskLikeObject } from '@/lib/calendar-component-detection';
 import { SYNTHETIC_ID_PROBE } from '@/lib/recurrence-instances';
-import type { StoreContext, SyncContext, Syncer } from '../area';
+import type { ScopeChange, StoreContext, StoreScope, SyncContext, Syncer } from '../area';
 import { runChangesLoop } from '../engine/changes';
 import { metaGet, metaSet, putObject } from '../engine/core-schema';
 import { JmapMethodError, responseFor, TransportError } from '../engine/transport';
@@ -88,10 +88,15 @@ async function syncCalendars(ctx: SyncContext, jmap: string): Promise<boolean> {
   return true;
 }
 
+/** How far back single events are kept: as far as the scope says, never past the two years. */
+function pastWindowMs(scope: StoreScope): number {
+  return scope.days === null ? PAST_WINDOW_MS : Math.min(PAST_WINDOW_MS, scope.days * 86_400_000);
+}
+
 function inWindow(ctx: SyncContext, event: CalendarObject): boolean {
   if (isSeries(event) || isTaskLikeObject(event)) return true;
   const { end } = instantsOf(event, 'UTC');
-  return end === null || end >= ctx.now() - PAST_WINDOW_MS;
+  return end === null || end >= ctx.now() - pastWindowMs(ctx.scope);
 }
 
 interface ListCursor { position: number; gen: number; captured: string }
@@ -225,12 +230,28 @@ async function syncEvents(ctx: SyncContext, jmap: string): Promise<boolean> {
 }
 
 /** Single events that aged out of the window. The window moves on without any change on the server. */
-function pruneOld(ctx: SyncContext, jmap: string): void {
-  ctx.db.run(
+function pruneOld(ctx: SyncContext, jmap: string): number {
+  return ctx.db.run(
     `DELETE FROM calendar_event WHERE jmap = ? AND is_series = 0 AND is_task = 0 AND end_ms IS NOT NULL AND end_ms < ?
        AND NOT EXISTS (SELECT 1 FROM calendar_pending p WHERE p.jmap = calendar_event.jmap AND p.record_id = calendar_event.id)`,
-    [jmap, ctx.now() - PAST_WINDOW_MS],
-  );
+    [jmap, ctx.now() - pastWindowMs(ctx.scope)],
+  ).changes;
+}
+
+/**
+ * Tighter: old single events go now, without the server. Wider: they weren't
+ * kept and no /changes will name them, so the next pass lists everything again.
+ */
+export function applyCalendarScope(ctx: SyncContext, { previous, next }: ScopeChange): void {
+  const jmaps = ctx.db.all<{ jmap: string }>('SELECT DISTINCT jmap FROM calendar_event').map((row) => row.jmap);
+  const removed = jmaps.reduce((sum, jmap) => sum + pruneOld(ctx, jmap), 0);
+  if (removed > 0) ctx.emit({ type: 'changed', account: ctx.account, collections: ['CalendarEvent'] });
+  if (!previous || pastWindowMs(next) <= pastWindowMs(previous)) return;
+  ctx.db.transaction(() => {
+    for (const { jmap } of ctx.db.all<{ jmap: string }>("SELECT jmap FROM sync_state WHERE type = 'CalendarEvent'")) {
+      ctx.setSyncState(jmap, 'CalendarEvent', { state: null, phase: null, cursor: null });
+    }
+  });
 }
 
 /**

@@ -4,7 +4,7 @@
  * test hands it a transport.
  */
 
-import { DEFAULT_SCOPE } from '../../area';
+import { DEFAULT_SCOPE, type StoreScope } from '../../area';
 import { STORE_AREAS } from '../../areas';
 import type { StoreBackend } from '../../client/api';
 import { AccountEngine } from '../../engine/account-engine';
@@ -73,6 +73,11 @@ export class InProcessStore implements StoreBackend {
     if (this.failArea?.(name)) throw new Error(`${name} failed`);
     const result = await this.engine(account).areaCall(name, structuredClone(params));
     return (result === undefined ? undefined : structuredClone(result)) as T;
+  }
+
+  async setScope(account: string, scope: StoreScope): Promise<void> {
+    const engine = this.engine(account);
+    if (engine.setScope(scope)) await engine.requestSync();
   }
 
   async sync(account: string): Promise<void> {

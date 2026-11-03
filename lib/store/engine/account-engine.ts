@@ -4,7 +4,7 @@
  * the UI. Nothing here touches the DOM, so tests run it on node:sqlite.
  */
 
-import { MethodError, STORAGE_ERROR_AREA, type AreaCall, type MethodHandler, type RecordOverlay, type StoreArea, type StoreContext, type StoreEvent, type StoreScope, type SyncContext, type SyncStateRow, type Syncer } from '../area';
+import { DEFAULT_SCOPE, MethodError, STORAGE_ERROR_AREA, type AreaCall, type MethodHandler, type RecordOverlay, type StoreArea, type StoreContext, type StoreEvent, type StoreScope, type StoreUsage, type SyncContext, type SyncStateRow, type Syncer } from '../area';
 import { isStorageFailure, migrate, type StorageAdapter } from '../storage';
 import { answerRequest, buildMethodTable } from './responder';
 import { TransportError, type JmapResponse, type JmapTransport, type MethodCall, type StoreSession } from './transport';
@@ -16,7 +16,8 @@ export interface AccountEngineOptions {
   session: StoreSession;
   transport: JmapTransport;
   areas: readonly StoreArea[];
-  scope: StoreScope;
+  /** Left out when the page can't tell yet (the policy hasn't arrived): the last one stays. */
+  scope?: StoreScope;
   invertedKeywordSort?: boolean;
   emit?: (event: StoreEvent) => void;
   now?: () => number;
@@ -29,6 +30,13 @@ const RATE_BACKOFF_MS = 2_000;
 /** After a failed write: the first wait, and the longest. */
 const STORAGE_BACKOFF_MS = 60_000;
 const STORAGE_BACKOFF_MAX_MS = 60 * 60_000;
+/** The window moves on without anything changing on the server. */
+const SCOPE_TIDY_MS = 24 * 60 * 60_000;
+const SCOPE_KEY = 'scope';
+const SCOPE_APPLIED_KEY = 'scope_applied';
+/** Set while one is being applied: part of it may be done, so that's what the next one starts from. */
+const SCOPE_APPLYING_KEY = 'scope_applying';
+const SCOPE_TIDIED_KEY = 'scope_tidied_at';
 
 export class AccountEngine {
   readonly account: string;
@@ -36,6 +44,7 @@ export class AccountEngine {
   private session: StoreSession;
   private scope: StoreScope;
   private readonly transport: JmapTransport;
+  private readonly areas: readonly StoreArea[];
   private readonly syncers: readonly Syncer[];
   private readonly methods: ReadonlyMap<string, MethodHandler>;
   private readonly calls = new Map<string, AreaCall>();
@@ -51,12 +60,14 @@ export class AccountEngine {
   /** A write failed (full disk, quota): no sync before this time, however much the server pushes. */
   private storageBlockedUntil = 0;
   private storageFailures = 0;
+  /** The scope changed: a pass under way stops, and what's kept is brought in line first. */
+  private scopeChanged = false;
 
   constructor(options: AccountEngineOptions) {
     this.account = options.account;
     this.db = options.db;
     this.session = options.session;
-    this.scope = options.scope;
+    this.areas = options.areas;
     this.transport = options.transport;
     this.syncers = options.areas.flatMap((area) => area.syncers);
     this.methods = buildMethodTable(options.areas);
@@ -70,8 +81,12 @@ export class AccountEngine {
     this.emitter = options.emit ?? (() => {});
     this.now = options.now ?? Date.now;
     this.sleep = options.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
+    this.calls.set('store.usage', () => this.usage());
     migrate(this.db, [...CORE_MIGRATIONS, ...options.areas.flatMap((area) => area.migrations)]);
     metaSet(this.db, 'session', JSON.stringify(options.session));
+    const storedScope = metaGet(this.db, SCOPE_KEY);
+    this.scope = options.scope ?? (storedScope ? JSON.parse(storedScope) as StoreScope : DEFAULT_SCOPE);
+    metaSet(this.db, SCOPE_KEY, JSON.stringify(this.scope));
     // An offline start has no way to probe the server, so the last answer stays.
     this.invertedKeywordSort = options.invertedKeywordSort ?? metaGet(this.db, 'inverted_keyword_sort') === '1';
     if (options.invertedKeywordSort !== undefined) metaSet(this.db, 'inverted_keyword_sort', options.invertedKeywordSort ? '1' : '0');
@@ -89,11 +104,64 @@ export class AccountEngine {
     metaSet(this.db, 'session', JSON.stringify(session));
   }
 
-  setScope(scope: StoreScope): void {
+  /** True when this is a change. The caller asks for a sync, which applies it, also offline. */
+  setScope(scope: StoreScope): boolean {
+    const json = JSON.stringify(scope);
+    if (json === JSON.stringify(this.scope)) return false;
     this.scope = scope;
+    this.scopeChanged = true;
     // The user may just have made room by keeping less.
     this.storageBlockedUntil = 0;
-    metaSet(this.db, 'scope', JSON.stringify(scope));
+    metaSet(this.db, SCOPE_KEY, json);
+    return true;
+  }
+
+  /** False when something more urgent than a sync came up: the disk is full. */
+  private async applyScope(): Promise<boolean> {
+    const wanted = JSON.stringify(this.scope);
+    const applied = metaGet(this.db, SCOPE_APPLYING_KEY) ?? metaGet(this.db, SCOPE_APPLIED_KEY);
+    const tidied = Number(metaGet(this.db, SCOPE_TIDIED_KEY) ?? 0);
+    this.scopeChanged = false;
+    if (applied === wanted && metaGet(this.db, SCOPE_APPLYING_KEY) === null && this.now() - tidied < SCOPE_TIDY_MS) return true;
+    const ctx: SyncContext = { ...this.syncContext(), stopped: () => this.closed || this.scopeChanged };
+    const change = { previous: applied ? JSON.parse(applied) as StoreScope : null, next: this.scope };
+    metaSet(this.db, SCOPE_APPLYING_KEY, wanted);
+    try {
+      for (const area of this.areas) await area.applyScope?.(ctx, change);
+    } catch (error) {
+      if (isStorageFailure(error)) {
+        this.noteStorageFailure(error);
+        return false;
+      }
+      // What's kept stays as it is, and this runs again at the next pass.
+      this.emitter({ type: 'error', account: this.account, area: 'scope', message: error instanceof Error ? error.message : String(error) });
+      return true;
+    }
+    if (ctx.stopped()) return !this.closed;
+    this.db.transaction(() => {
+      metaSet(this.db, SCOPE_APPLIED_KEY, wanted);
+      metaSet(this.db, SCOPE_APPLYING_KEY, null);
+      metaSet(this.db, SCOPE_TIDIED_KEY, String(this.now()));
+    });
+    return true;
+  }
+
+  private keptByOthers(name: string): number {
+    return this.areas.reduce((sum, area) => sum + (area.name === name ? 0 : area.keptBytes?.({ db: this.db }) ?? 0), 0);
+  }
+
+  /** Free pages stay in the file for the next writes, so they don't count as used. */
+  private usage(): StoreUsage {
+    const pages = Number(this.db.get<{ page_count: number }>('PRAGMA page_count')?.page_count ?? 0);
+    const free = Number(this.db.get<{ freelist_count: number }>('PRAGMA freelist_count')?.freelist_count ?? 0);
+    const size = Number(this.db.get<{ page_size: number }>('PRAGMA page_size')?.page_size ?? 0);
+    const bytes = (pages - free) * size;
+    const parts = this.areas.flatMap((area) => area.usage?.({ db: this.db }) ?? []);
+    const counted = parts.reduce((sum, part) => sum + part.bytes, 0);
+    return {
+      bytes,
+      parts: parts.map((part) => (part.part === 'mail' ? { ...part, bytes: Math.max(0, bytes - counted) } : part)),
+    };
   }
 
   setInvertedKeywordSort(inverted: boolean): void {
@@ -161,8 +229,9 @@ export class AccountEngine {
   private async runLoop(): Promise<void> {
     do {
       this.again = false;
-      await this.runOnce();
-    } while (this.again && !this.closed && this.online && this.now() >= this.storageBlockedUntil);
+      if (await this.applyScope()) await this.runOnce();
+      // A changed scope is applied without the network too.
+    } while (!this.closed && this.now() >= this.storageBlockedUntil && (this.scopeChanged || (this.again && this.online)));
   }
 
   private async runOnce(): Promise<void> {
@@ -173,10 +242,11 @@ export class AccountEngine {
       for (const jmap of jmapAccounts) {
         const capabilities = this.session.accounts[jmap].accountCapabilities ?? this.session.capabilities;
         if (!(syncer.capability in capabilities)) continue;
-        if (this.closed || !this.online) return;
+        if (this.closed || !this.online || this.scopeChanged) return;
         if (!(await this.runSyncer(ctx, syncer, jmap))) return;
       }
     }
+    if (this.scopeChanged) return;
     this.storageFailures = 0;
     if (!this.closed && this.online) this.emitter({ type: 'synced', account: this.account, at: this.now() });
   }
@@ -233,10 +303,12 @@ export class AccountEngine {
       transport: this.transport,
       now: this.now,
       emit: this.emitter,
-      stopped: () => this.closed || !this.online,
+      stopped: () => this.closed || !this.online || this.scopeChanged,
+      requestSync: () => this.requestSync(),
       syncState: (jmap, type) => this.syncState(jmap, type),
       setSyncState: (jmap, type, row) => this.setSyncState(jmap, type, row),
       overlay: (jmap, type, records) => this.overlay(jmap, type, records),
+      keptByOthers: (area) => this.keptByOthers(area),
     };
   }
 
@@ -249,6 +321,8 @@ export class AccountEngine {
       now: this.now,
       emit: this.emitter,
       overlay: (jmap, type, records) => this.overlay(jmap, type, records),
+      keptByOthers: (area) => this.keptByOthers(area),
+      requestSync: () => this.requestSync(),
     };
   }
 
