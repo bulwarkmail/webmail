@@ -25,6 +25,8 @@ export function WindowTitleBar() {
   const [entries, setEntries] = useState<DesktopMenuBarEntry[] | null>(null);
   const stripRef = useRef<HTMLDivElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
+  // What to do once the names are on screen: open that menu, or null to focus the first name.
+  const afterShow = useRef<string | null | undefined>(undefined);
 
   const openMenu = useCallback((id: string) => {
     const button = stripRef.current?.querySelector<HTMLElement>(`[data-menu-id="${CSS.escape(id)}"]`);
@@ -45,15 +47,19 @@ export function WindowTitleBar() {
       }
       void bar.entries().then((list) => {
         previousFocus.current ??= document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        afterShow.current = event.open ?? null;
         setEntries(list);
-        // Once the names are on screen.
-        window.setTimeout(() => {
-          if (event.open) openMenu(event.open);
-          else stripRef.current?.querySelector<HTMLElement>("button")?.focus();
-        }, 0);
       });
     });
-  }, [openMenu]);
+  }, []);
+
+  useEffect(() => {
+    const next = afterShow.current;
+    if (!entries || next === undefined) return;
+    afterShow.current = undefined;
+    if (next) openMenu(next);
+    else stripRef.current?.querySelector<HTMLElement>("button")?.focus();
+  }, [entries, openMenu]);
 
   useEffect(() => watchTitlebarArea((next) => {
     applyTitlebarInset(next);
