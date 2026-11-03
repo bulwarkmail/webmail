@@ -488,6 +488,68 @@ describe('enableWebPush when the verification does not come', () => {
 
   afterEach(() => { vi.useRealTimers(); });
 
+  it('keeps polling through a network blip', async () => {
+    vi.useFakeTimers();
+    const client = makeClient([]);
+    let polls = 0;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      const json = (body: unknown) => ({ ok: true, status: 200, json: async () => body }) as Response;
+      if (url.endsWith('/api/push/vapid-public-key')) return json({ publicKey: 'QUJD' });
+      if (url.includes('/api/push/verify/')) {
+        polls += 1;
+        if (polls === 1) throw new TypeError('Failed to fetch');
+        return json({ verificationCode: 'code' });
+      }
+      return json({});
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const settled = enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false }).then(() => 'done', (error: Error) => error.message);
+    await vi.advanceTimersByTimeAsync(5_000);
+
+    expect(await settled).toBe('done');
+    expect(client.verifyPushSubscription).toHaveBeenCalledWith('push-new', 'code');
+  });
+
+  it('removes its unverified subscription and reads as off when the code never comes', async () => {
+    vi.useFakeTimers();
+    const client = makeClient([]);
+    installSilentRelay(() => false);
+
+    const settled = enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false }).then(() => 'done', (error: Error) => error.message);
+    await vi.advanceTimersByTimeAsync(120_000);
+
+    expect(await settled).toMatch(/verif/i);
+    expect(client.destroyed).toEqual(['push-new']);
+    expect(localStorage.getItem(SUB_KEY)).toBeNull();
+    expect(client.verifyPushSubscription).not.toHaveBeenCalled();
+  });
+
+  it('removes its subscription when the server refuses the code', async () => {
+    const client = makeClient([]);
+    installFetch({});
+    (client.verifyPushSubscription as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Verification code does not match.'));
+
+    await expect(enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).rejects.toThrow('does not match');
+
+    expect(client.destroyed).toEqual(['push-new']);
+    expect(localStorage.getItem(SUB_KEY)).toBeNull();
+  });
+
+  it('keeps the old subscription working when its replacement fails verification', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-old');
+    const client = makeClient([sub('push-old', THIS_DEVICE)]);
+    installFetch({});
+    (client.verifyPushSubscription as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('nope'));
+
+    await expect(enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false, forceRecreate: true })).rejects.toThrow('nope');
+
+    expect(client.destroyed).toEqual(['push-new']);
+    expect(localStorage.getItem(SUB_KEY)).toBe('push-old');
+  });
+
   it('touches the subscription after the server\'s minute, which makes it send the code', async () => {
     vi.useFakeTimers();
     const client = makeClient([]);
