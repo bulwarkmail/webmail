@@ -45,6 +45,8 @@ export interface MailNotificationContext {
   accountId?: string;
   slot?: number;
   login?: string;
+  /** Not mail: an attachment saved in another program (components/desktop/edited-files-host.tsx). */
+  editedFile?: boolean;
 }
 
 /** True where this module plays the new-mail sound, so useNewMailAlerts doesn't as well. */

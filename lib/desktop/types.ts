@@ -604,6 +604,71 @@ export interface DesktopPrivacyBridge {
   onChange: (listener: (state: DesktopPrivacyState) => void) => () => void;
 }
 
+/** An attachment copied to a private folder and open in its default program. */
+export interface DesktopEditSession {
+  id: string;
+  name: string;
+  type: string;
+  /** The local account it belongs to. */
+  account: string;
+  /** What the page said it came from. Main only keeps it. */
+  source: string;
+  /** Saved differently from what the page last took. */
+  changed: boolean;
+  /** Goes up with each save. */
+  version: number;
+  /** A composer has it and offers the update itself. */
+  claimed: boolean;
+}
+
+export interface DesktopEditFile {
+  /** One session per key: Edit on the same attachment opens the same file. */
+  key: string;
+  name: string;
+  type: string;
+  data: Uint8Array;
+  account: string;
+  source: string;
+}
+
+export type DesktopEditBeginResult =
+  | { ok: true; ticket: string; /** A session for that key exists: reopen this one. */ open?: string }
+  | { ok: false; reason: 'locked' | 'gesture' };
+
+export type DesktopEditOpenResult =
+  | { ok: true; id: string }
+  | { ok: false; reason: 'locked' | 'ticket' | 'type' | 'too-large' | 'full' | 'no-app' | 'failed' };
+
+export type DesktopEditReadResult =
+  | { ok: true; name: string; type: string; data: Uint8Array; hash: string }
+  | { ok: false; reason: 'locked' | 'missing' | 'busy' | 'too-large' };
+
+/**
+ * Edit on an attachment: a private copy opened in its default program, watched for saves.
+ * Main refuses file types that run something and anything while locked. It can't know the
+ * organisation's rules, so lib/desktop/edit-attachments.ts asks those at each step.
+ */
+export interface DesktopEditBridge {
+  /** Whether this file may go through Edit at all: the same rule main enforces. */
+  canEdit: (name: string) => boolean;
+  /** Straight from the click: main checks it was one. The ticket lasts long enough to fetch the bytes. */
+  begin: (key: string) => Promise<DesktopEditBeginResult>;
+  open: (ticket: string, file: DesktopEditFile) => Promise<DesktopEditOpenResult>;
+  reopen: (ticket: string, id: string) => Promise<DesktopEditOpenResult>;
+  /** Empty while locked. */
+  list: () => Promise<DesktopEditSession[]>;
+  read: (id: string) => Promise<DesktopEditReadResult>;
+  /** This version is where it should be, so it's no longer a change. */
+  taken: (id: string, hash: string) => Promise<void>;
+  discard: (id: string) => Promise<void>;
+  /** An account's copies, or with null all of this origin's. */
+  clear: (account: string | null) => Promise<void>;
+  setSource: (id: string, source: string) => void;
+  /** A composer holds it, or stopped. Ends by itself with the page. */
+  claim: (id: string, on: boolean) => void;
+  onChange: (listener: (sessions: DesktopEditSession[]) => void) => () => void;
+}
+
 export interface BulwarkDesktopBridge {
   version: number;
   platform: 'win32' | 'darwin' | 'linux';
@@ -626,6 +691,7 @@ export interface BulwarkDesktopBridge {
   appLock?: DesktopAppLockBridge;
   localImport?: DesktopLocalImportBridge;
   privacy?: DesktopPrivacyBridge;
+  edit?: DesktopEditBridge;
 }
 
 declare global {

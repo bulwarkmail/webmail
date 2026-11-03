@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import {
   X,
   Paperclip,
+  FilePen,
   Send,
   Save,
   Check,
@@ -178,6 +179,7 @@ import { noteOpenDraft } from "@/lib/desktop/window-restore";
 import type { RescuedDraft } from "@/lib/popout/channel";
 import { toUnicodeEmail } from "@/lib/idn";
 import { setComposerFileTarget } from "@/lib/desktop/window-files";
+import { useComposerEdits } from "@/hooks/use-composer-edits";
 
 // A Pro tab, message or folder dragged across a composer tab is on its way to
 // the pane or the split edge: those drags belong to the shell. There is no shell
@@ -480,6 +482,8 @@ interface EmailComposerProps {
 
 type ComposerAttachment = {
   file?: File;
+  // The desktop app's Edit: which session's file this is. See useComposerEdits.
+  editSessionId?: string;
   // Login whose server holds `blobId`, set for parts of the original message
   // on a forward - the message may go out through another account, which
   // cannot resolve them. See rehomeForeignBlobs.
@@ -580,6 +584,7 @@ export function EmailComposer({
   const tQuote = useTranslations('quote_header');
   const tViewer = useTranslations('email_viewer');
   const tClassification = useTranslations('classification');
+  const tEdit = useTranslations('desktopEdit');
   const tProofreading = useTranslations('proofreading');
   const tOfflineDrafts = useTranslations('offlineDrafts');
   const tOffline = useTranslations('offline');
@@ -2745,6 +2750,22 @@ export function EmailComposer({
   const [composerRootEl, setComposerRootEl] = useState<HTMLDivElement | null>(null);
 
   // The desktop app: files dropped or pasted anywhere on the window come here, if this one's on screen.
+  const loadAttachmentForEdit = useCallback(async (att: ComposerAttachment): Promise<Blob> => {
+    if (att.file) return att.file;
+    if (!composerClient || !att.blobId) throw new Error('No content for this attachment');
+    return composerClient.fetchBlob(att.blobId, att.name, att.type);
+  }, [composerClient]);
+  const composerEdits = useComposerEdits<ComposerAttachment>({
+    attachments,
+    setAttachments,
+    addFiles,
+    load: loadAttachmentForEdit,
+    account: composerAccountId ?? '',
+    draftId,
+    ownerAccountId: draftAccountId,
+    repliesTo: mode === 'reply' || mode === 'replyAll' ? sourceEmailId : undefined,
+    ready: !!client,
+  });
   useEffect(() => setComposerFileTarget(
     (files) => void addFiles(files),
     () => !!composerRootEl?.isConnected && composerRootEl.getClientRects().length > 0,
@@ -3707,6 +3728,9 @@ export function EmailComposer({
   } = {}) => {
     if (isSendingRef.current) return;
 
+    // Saved in another program and not on this message yet: not silently the older one.
+    if (!(await composerEdits.confirmSend())) return;
+
     if (attachmentsRef.current.some(att => att.uploading)) {
       isSendingRef.current = true;
       setIsSending(true);
@@ -4242,6 +4266,7 @@ export function EmailComposer({
         }
       }
 
+      composerEdits.finish();
       setTo([]);
       setCc([]);
       setBcc([]);
@@ -4483,6 +4508,7 @@ export function EmailComposer({
       attachment.abortController?.abort();
     }
     setShowCloseDialog(false);
+    composerEdits.finish();
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
@@ -5390,6 +5416,28 @@ export function EmailComposer({
                       </button>
                     ) : (
                       <div className="flex items-center gap-2 min-w-0">{label}</div>
+                    )}
+                    {composerEdits.hasUpdate(att) && !att.uploading && (
+                      <button
+                        type="button"
+                        onClick={() => void composerEdits.update(att)}
+                        className="-my-0.5 whitespace-nowrap text-xs font-medium text-primary hover:underline"
+                        data-testid="composer-edit-update"
+                      >
+                        {tEdit('update')}
+                      </button>
+                    )}
+                    {!att.uploading && !att.error && composerEdits.canEdit(att.name) && (
+                      <button
+                        type="button"
+                        onClick={() => void composerEdits.startEdit(att)}
+                        className={cn("-my-0.5 hover:text-foreground text-muted-foreground min-w-6 min-h-6 flex items-center justify-center", TOUCH_HIT_AREA)}
+                        title={tEdit('edit')}
+                        aria-label={tEdit('edit_named', { name: att.name })}
+                        data-testid="composer-edit"
+                      >
+                        <FilePen className="w-3 h-3" />
+                      </button>
                     )}
                     <button
                       onClick={() => removeAttachment(index)}

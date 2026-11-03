@@ -51,6 +51,8 @@ import {
 } from "@/components/icons";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
 import { useTranslations } from "next-intl";
+import { FilePen } from "@/components/icons";
+import { editAccountOf, useEditAttachment } from "@/hooks/use-edit-attachment";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useContactStore } from "@/stores/contact-store";
 import { useEmailStore, resolveEmailBlobContext, type EmailBlobContext } from "@/stores/email-store";
@@ -589,6 +591,8 @@ export function ConversationEmailBody({
   const fallbackSource = useEmailStore(useShallow(() => resolveEmailBlobContext(email, client)));
   const source = blobSource ?? fallbackSource;
   const { client: blobClient, accountId } = source;
+  const editAccount = source.clientAccountId ?? editAccountOf(email);
+  const { canEdit: canEditAttachment, edit: editAttachment } = useEditAttachment(editAccount);
   // Reported as phishing: a banner, links off, no cards (as in the reader).
   const phishingMarked = usePhishingMarked(email);
   const tPhishing = useTranslations('phishing_report');
@@ -1072,6 +1076,28 @@ export function ConversationEmailBody({
                     <Download className="w-4 h-4 text-muted-foreground" />
                   )}
                 </button>
+                {blobClient && attachment.blobId && !phishingMarked && canEditAttachment(attachment.name) && (
+                  <button
+                    type="button"
+                    title={t('desktopEdit.edit')}
+                    aria-label={t('desktopEdit.edit_named', { name: stripBidiControls(attachment.name ?? '') })}
+                    className="-ms-1.5 self-center rounded-lg p-2 text-muted-foreground hover:text-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const { blobId } = attachment;
+                      void editAttachment({
+                        key: `mail:${editAccount}:${email.id}:${blobId}`,
+                        name: attachment.name ?? 'attachment',
+                        type: attachment.type,
+                        account: editAccount,
+                        source: { kind: 'mail', emailId: email.id, ownerAccountId: accountId },
+                        load: () => blobClient.fetchBlobArrayBuffer(blobId, undefined, undefined, accountId),
+                      });
+                    }}
+                  >
+                    <FilePen className="h-4 w-4" />
+                  </button>
+                )}
                 <AttachmentPluginMenu emailId={email.id} attachment={attachment} className="-ms-1.5 self-center p-2 rounded-lg" />
                 </React.Fragment>
               );

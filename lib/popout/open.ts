@@ -81,6 +81,12 @@ export function openNewComposerWindow(localAccountId?: string | null): boolean {
   return focused(openWindow(appPath('/popout/compose') + query({ account: localAccountId }), name, 'compose'));
 }
 
+/** A saved draft in a composer window of its own. The same draft twice focuses the same window. */
+export function openDraftWindow(target: { draftId: string; localAccountId?: string | null; ownerAccountId?: string | null }): boolean {
+  const url = appPath('/popout/compose') + query({ draft: target.draftId, account: target.localAccountId, owner: target.ownerAccountId });
+  return focused(openWindow(url, `bulwark-compose-draft-${target.draftId.replace(/\W/g, '_')}`, 'compose'));
+}
+
 export interface ComposerWindow {
   /** Hands the draft over. True once the composer is on screen there; until then the sender keeps its copy. */
   handOver(payload: ComposePopoutPayload): Promise<boolean>;

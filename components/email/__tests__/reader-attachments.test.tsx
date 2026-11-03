@@ -55,6 +55,24 @@ describe('the right-click menu in the desktop app', () => {
     expect(popup.mock.calls[0][0].map((item) => item.label)).toEqual(['open']);
   });
 
+  it('Edit shows when the file can be edited and runs the action', async () => {
+    const onEdit = vi.fn();
+    const { props, popup } = await openMenu((items) => items.find((i) => i.label === 'edit')?.id ?? null, { onEdit, canEdit: () => true });
+    const labels = popup.mock.calls[0][0].flatMap((i: { label?: string }) => (i.label ? [i.label] : []));
+    expect(labels).toEqual(['open', 'save_as', 'edit', 'copy']);
+    await waitFor(() => expect(onEdit).toHaveBeenCalledWith(props.attachments[0]));
+  });
+
+  it('Edit stays out for a file it cannot take', async () => {
+    const { popup } = await openMenu(() => null, { onEdit: vi.fn(), canEdit: () => false });
+    expect(popup.mock.calls[0][0].map((i: { label?: string }) => i.label)).not.toContain('edit');
+  });
+
+  it('Edit stays out with downloads off, whatever else says yes', async () => {
+    const { popup } = await openMenu(() => null, { onEdit: vi.fn(), canEdit: () => true, downloadsOff: true });
+    expect(popup.mock.calls[0][0].map((i: { label?: string }) => i.label)).not.toContain('edit');
+  });
+
   it('a browser keeps its own menu', async () => {
     window.bulwarkDesktop = undefined;
     renderBar([file('1', 'report.pdf')], { onCopyFile: vi.fn() });
