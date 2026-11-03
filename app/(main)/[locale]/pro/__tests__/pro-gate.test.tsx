@@ -1,4 +1,4 @@
-import { act, render } from '@testing-library/react';
+import { act, fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Until the session is up the Pro page draws the same skeleton the server
@@ -60,6 +60,8 @@ vi.mock('@/hooks/use-sidebar-apps', () => ({
 vi.mock('@/hooks/use-deep-link-url', () => ({ useDeepLinkUrl: () => {} }));
 const { default: ProHome } = await import('../page');
 const { useSettingsStore } = await import('@/stores/settings-store');
+const { useProTabStore } = await import('@/stores/pro-tab-store');
+const { PRO_TAB_DRAG_MIME } = await import('@/components/pro/pro-shell-drop');
 
 const replace = vi.fn();
 
@@ -110,5 +112,50 @@ describe('Pro page gate', () => {
     const shell = container.querySelector('[data-pro-shell]');
     expect(shell).not.toBeNull();
     expect(shell?.querySelector('[data-testid="mail-app"]')).not.toBeNull();
+  });
+
+  it('moves a tab dropped on a surface that stops every drop', async () => {
+    auth.state.isAuthenticated = true;
+    auth.state.client = {};
+    const main = { id: 'home-mail', kind: 'mail' as const, labelKey: 'mail', closeable: false, paneId: 'main' as const };
+    const other = { id: 'cal', kind: 'calendar' as const, labelKey: 'calendar', closeable: true, paneId: 'main' as const };
+    const split = { id: 'files', kind: 'files' as const, labelKey: 'files', closeable: true, paneId: 'split' as const };
+    useProTabStore.setState({
+      tabs: [main, other, split], activeTabId: main.id, activeSplitTabId: split.id, focusedPaneId: 'main',
+      splitOrientation: 'vertical', splitSide: 'right', readerTabId: null, loadedTabIds: ['home-mail', 'cal', 'files'],
+    });
+    const { container } = render(<ProHome />);
+    await act(async () => {});
+    const surface = container.querySelector('[data-testid="mail-app"]')!;
+    for (const type of ['dragover', 'drop']) {
+      surface.addEventListener(type, (e) => { e.preventDefault(); e.stopPropagation(); });
+    }
+    const dataTransfer = { types: [PRO_TAB_DRAG_MIME], getData: () => 'cal', dropEffect: '' };
+    // No layout in jsdom: the position resolves to the right half, the split.
+    fireEvent.dragOver(surface, { dataTransfer });
+    fireEvent.drop(surface, { dataTransfer });
+    expect(useProTabStore.getState().tabs.find((t) => t.id === 'cal')?.paneId).toBe('split');
+  });
+
+  it('leaves a tab dropped on a tab strip to the strip', async () => {
+    auth.state.isAuthenticated = true;
+    auth.state.client = {};
+    const main = { id: 'home-mail', kind: 'mail' as const, labelKey: 'mail', closeable: false, paneId: 'main' as const };
+    const other = { id: 'cal', kind: 'calendar' as const, labelKey: 'calendar', closeable: true, paneId: 'main' as const };
+    const split = { id: 'files', kind: 'files' as const, labelKey: 'files', closeable: true, paneId: 'split' as const };
+    useProTabStore.setState({
+      tabs: [main, other, split], activeTabId: main.id, activeSplitTabId: split.id, focusedPaneId: 'main',
+      splitOrientation: 'vertical', splitSide: 'right', readerTabId: null, loadedTabIds: ['home-mail', 'cal', 'files'],
+    });
+    const { container } = render(<ProHome />);
+    await act(async () => {});
+    const strip = container.querySelector('[role="tablist"]')!;
+    strip.setAttribute('data-pane-strip', 'main');
+    const seen = vi.fn((e: Event) => { e.preventDefault(); });
+    strip.addEventListener('drop', seen);
+    const dataTransfer = { types: [PRO_TAB_DRAG_MIME], getData: () => 'cal', dropEffect: '' };
+    fireEvent.drop(strip, { dataTransfer });
+    expect(seen).toHaveBeenCalled();
+    expect(useProTabStore.getState().tabs.find((t) => t.id === 'cal')?.paneId).toBe('main');
   });
 });

@@ -451,6 +451,27 @@ export default function ProHome() {
     }
   };
 
+  // A tab being dragged is the shell's business wherever it goes, except onto
+  // a tab strip: no surface takes tabs, and many drop handlers (settings rows,
+  // address books, calendar days) stop or claim whatever crosses them. So the
+  // shell answers on the way down, before they see it. Messages and folders
+  // stay on the way up: a folder row in a pane is a real target for those.
+  const isTabDragOffStrip = (e: DragEvent<HTMLDivElement>) =>
+    dragKindFromTypes(e.dataTransfer.types) === 'tab'
+    && !(e.target instanceof Element && e.target.closest('[data-pane-strip]'));
+
+  const handleBodyDragOverCapture = (e: DragEvent<HTMLDivElement>) => {
+    if (!isTabDragOffStrip(e)) return;
+    e.stopPropagation();
+    handleBodyDragOver(e);
+  };
+
+  const handleBodyDropCapture = (e: DragEvent<HTMLDivElement>) => {
+    if (!isTabDragOffStrip(e)) return;
+    e.stopPropagation();
+    handleBodyDrop(e);
+  };
+
   // Until the session is up: the same skeleton the server drew, so hydration
   // matches and nothing moves. Below desktop width the effect above is about
   // to send the visitor to the standard page; keep the skeleton up meanwhile
@@ -516,7 +537,7 @@ export default function ProHome() {
           {/* Leftmost Navigation Rail - identical to the standard layout */}
           <div
             className="w-14 bg-secondary flex flex-col flex-shrink-0"
-            style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}
+            style={{ borderInlineEnd: '1px solid rgba(128, 128, 128, 0.3)' }}
           >
             <NavigationRail
               collapsed
@@ -544,8 +565,12 @@ export default function ProHome() {
           )}
 
           {!inlineApp && (
+            // The split's side and the drop zones are physical (left, right),
+            // so the row must not flip in RTL: a drop on the right went left.
             <div
-              className="relative flex flex-row flex-1 overflow-hidden min-w-0"
+              className="relative flex flex-row rtl:flex-row-reverse flex-1 overflow-hidden min-w-0"
+              onDragOverCapture={handleBodyDragOverCapture}
+              onDropCapture={handleBodyDropCapture}
               onDragOver={handleBodyDragOver}
               onDragLeave={handleBodyDragLeave}
               onDrop={handleBodyDrop}
