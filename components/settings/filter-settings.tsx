@@ -105,7 +105,7 @@ export function RuleSummary({ rule }: { rule: FilterRule }) {
         ))}
         {extra}
       </span>
-      <span className="mx-1 opacity-50">→</span>
+      {" "}<span className="mx-0.5 opacity-50">→</span>{" "}
       <span className="inline">
         {actions.map((act, i) => (
           <span key={i}>
@@ -734,8 +734,8 @@ export function FilterSettings() {
         )}
       </SettingsSection>
 
-      <div className="flex items-center justify-between">
-        <div className="flex gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {!isOpaque && (
             <Button
               variant="outline"
