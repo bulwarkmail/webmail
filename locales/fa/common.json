@@ -6591,5 +6591,19 @@
     "copy_as_file": "رونوشت به‌صورت پرونده",
     "copied": "پرونده رونوشت شد. می‌توانید آن را در یک پوشه بچسبانید.",
     "copy_failed": "رونوشت پرونده ممکن نشد."
+  },
+  "desktopReminders": {
+    "generic_title": "یادآوری",
+    "snooze": "تعویق {count} دقیقه",
+    "snooze_short": "{count} دقیقه",
+    "open": "باز کردن",
+    "join": "پیوستن",
+    "missed_title": "{count, plural, one {# یادآوری از دست‌رفته} other {# یادآوری از دست‌رفته}}",
+    "missed_more": "و {count} مورد دیگر",
+    "missed_show": "نمایش",
+    "missed_dialog_title": "یادآوری‌های از دست‌رفته",
+    "missed_dialog_description": "این یادآوری‌ها زمانی رسیدند که برنامه بسته بود، رایانه در خواب بود یا اعلان‌ها متوقف بودند.",
+    "open_calendar": "باز کردن تقویم",
+    "done": "تمام"
   }
 }

@@ -6591,5 +6591,19 @@
     "copy_as_file": "複製為檔案",
     "copied": "檔案已複製。您可以將其貼到資料夾中。",
     "copy_failed": "無法複製檔案。"
+  },
+  "desktopReminders": {
+    "generic_title": "提醒",
+    "snooze": "{count} 分鐘後再提醒",
+    "snooze_short": "{count} 分鐘",
+    "open": "開啟",
+    "join": "加入",
+    "missed_title": "{count, plural, other {# 則錯過的提醒}}",
+    "missed_more": "還有 {count} 則",
+    "missed_show": "顯示",
+    "missed_dialog_title": "錯過的提醒",
+    "missed_dialog_description": "這些提醒在應用程式關閉、電腦睡眠或通知暫停時到期。",
+    "open_calendar": "開啟日曆",
+    "done": "完成"
   }
 }

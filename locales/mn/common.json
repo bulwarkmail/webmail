@@ -6591,5 +6591,19 @@
     "copy_as_file": "Файл болгож хуулах",
     "copied": "Файлыг хууллаа. Хавтсанд буулгаж болно.",
     "copy_failed": "Файлыг хуулж чадсангүй."
+  },
+  "desktopReminders": {
+    "generic_title": "Сануулга",
+    "snooze": "{count} минут хойшлуулах",
+    "snooze_short": "{count} мин",
+    "open": "Нээх",
+    "join": "Нэгдэх",
+    "missed_title": "{count, plural, one {Алдсан # сануулга} other {Алдсан # сануулга}}",
+    "missed_more": "бас {count}",
+    "missed_show": "Харуулах",
+    "missed_dialog_title": "Алдсан сануулгууд",
+    "missed_dialog_description": "Апп хаалттай, компьютер унтсан эсвэл мэдэгдэл түр зогссон үед хугацаа нь болсон.",
+    "open_calendar": "Хуанли нээх",
+    "done": "Болсон"
   }
 }

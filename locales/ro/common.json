@@ -6591,5 +6591,19 @@
     "copy_as_file": "Copiază ca fișier",
     "copied": "Fișier copiat. Îl poți lipi într-un dosar.",
     "copy_failed": "Fișierul nu a putut fi copiat."
+  },
+  "desktopReminders": {
+    "generic_title": "Memento",
+    "snooze": "Amână {count} min",
+    "snooze_short": "{count} min",
+    "open": "Deschide",
+    "join": "Participă",
+    "missed_title": "{count, plural, one {# memento ratat} few {# mementouri ratate} other {# de mementouri ratate}}",
+    "missed_more": "și încă {count}",
+    "missed_show": "Afișează",
+    "missed_dialog_title": "Mementouri ratate",
+    "missed_dialog_description": "Au venit la scadență cât timp aplicația era închisă, computerul în repaus sau notificările în pauză.",
+    "open_calendar": "Deschide calendarul",
+    "done": "Gata"
   }
 }

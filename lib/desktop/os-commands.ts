@@ -8,6 +8,7 @@
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import type { DesktopOsCommand } from '@/lib/desktop/types';
 import { openMailLink } from '@/lib/desktop/mail-links';
+import { handleReminderCommand } from '@/lib/desktop/reminder-notifications';
 import type { MailNotificationContext } from '@/lib/desktop/mail-notifications';
 import { handOffDraft, handOffFiles, handOffNewMessage, kindForFile } from '@/lib/launch-handoff';
 import { parseMailto } from '@/lib/protocol-handlers/mailto';
@@ -89,6 +90,7 @@ function runAction(request: NotificationActionRequest): Promise<NotificationActi
 }
 
 async function handleNotification(action: string, rawContext: string, reply: string | undefined, env: OsCommandEnv): Promise<void> {
+  if (await handleReminderCommand(action, rawContext, env)) return;
   const context = parseContext(rawContext);
   if (action === 'reply') {
     await openFromNotification(context, env, { text: reply ?? '' });

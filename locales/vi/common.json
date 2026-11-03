@@ -6603,5 +6603,19 @@
     "copy_as_file": "Sao chép dưới dạng tệp",
     "copied": "Đã sao chép tệp. Bạn có thể dán vào một thư mục.",
     "copy_failed": "Không thể sao chép tệp."
+  },
+  "desktopReminders": {
+    "generic_title": "Lời nhắc",
+    "snooze": "Báo lại sau {count} phút",
+    "snooze_short": "{count} phút",
+    "open": "Mở",
+    "join": "Tham gia",
+    "missed_title": "{count, plural, other {# lời nhắc đã bỏ lỡ}}",
+    "missed_more": "và {count} lời nhắc khác",
+    "missed_show": "Hiển thị",
+    "missed_dialog_title": "Lời nhắc đã bỏ lỡ",
+    "missed_dialog_description": "Những lời nhắc này đến hạn khi ứng dụng đóng, máy tính ngủ hoặc thông báo bị tạm dừng.",
+    "open_calendar": "Mở lịch",
+    "done": "Xong"
   }
 }

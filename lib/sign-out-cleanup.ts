@@ -21,6 +21,7 @@ const SIGNED_OUT_STORAGE_KEYS = [
   'contact-storage',
   'calendar-storage',
   'calendar-notification-storage',
+  'calendar-alert-claims',
   // Open tabs name messages and their subjects.
   'pro-tabs',
   'search-history-storage',

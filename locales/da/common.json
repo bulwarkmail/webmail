@@ -6591,5 +6591,19 @@
     "copy_as_file": "Kopiér som fil",
     "copied": "Filen er kopieret. Du kan indsætte den i en mappe.",
     "copy_failed": "Filen kunne ikke kopieres."
+  },
+  "desktopReminders": {
+    "generic_title": "Påmindelse",
+    "snooze": "Udsæt {count} min.",
+    "snooze_short": "{count} min.",
+    "open": "Åbn",
+    "join": "Deltag",
+    "missed_title": "{count, plural, one {# overset påmindelse} other {# oversete påmindelser}}",
+    "missed_more": "og {count} mere",
+    "missed_show": "Vis",
+    "missed_dialog_title": "Oversete påmindelser",
+    "missed_dialog_description": "De forfaldt, mens appen var lukket, computeren sov, eller notifikationer var sat på pause.",
+    "open_calendar": "Åbn kalender",
+    "done": "Færdig"
   }
 }

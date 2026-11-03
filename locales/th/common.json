@@ -6599,5 +6599,19 @@
     "copy_as_file": "คัดลอกเป็นไฟล์",
     "copied": "คัดลอกไฟล์แล้ว คุณวางลงในโฟลเดอร์ได้",
     "copy_failed": "คัดลอกไฟล์ไม่ได้"
+  },
+  "desktopReminders": {
+    "generic_title": "การแจ้งเตือน",
+    "snooze": "เลื่อน {count} นาที",
+    "snooze_short": "{count} นาที",
+    "open": "เปิด",
+    "join": "เข้าร่วม",
+    "missed_title": "{count, plural, other {การแจ้งเตือนที่พลาด # รายการ}}",
+    "missed_more": "และอีก {count} รายการ",
+    "missed_show": "แสดง",
+    "missed_dialog_title": "การแจ้งเตือนที่พลาด",
+    "missed_dialog_description": "ถึงเวลาแจ้งเตือนขณะที่แอปปิดอยู่ คอมพิวเตอร์อยู่ในโหมดพัก หรือหยุดการแจ้งเตือนชั่วคราว",
+    "open_calendar": "เปิดปฏิทิน",
+    "done": "เสร็จ"
   }
 }

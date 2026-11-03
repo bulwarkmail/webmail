@@ -6591,5 +6591,19 @@
     "copy_as_file": "Copy as file",
     "copied": "File copied. You can paste it into a folder.",
     "copy_failed": "The file could not be copied."
+  },
+  "desktopReminders": {
+    "generic_title": "Reminder",
+    "snooze": "Snooze {count} min",
+    "snooze_short": "{count} min",
+    "open": "Open",
+    "join": "Join",
+    "missed_title": "{count, plural, one {# reminder you missed} other {# reminders you missed}}",
+    "missed_more": "and {count} more",
+    "missed_show": "Show",
+    "missed_dialog_title": "Reminders you missed",
+    "missed_dialog_description": "These came due while the app was closed, the computer was asleep or notifications were paused.",
+    "open_calendar": "Open calendar",
+    "done": "Done"
   }
 }

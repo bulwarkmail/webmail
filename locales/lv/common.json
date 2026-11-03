@@ -6591,5 +6591,19 @@
     "copy_as_file": "Kopēt kā failu",
     "copied": "Fails nokopēts. Varat to ielīmēt mapē.",
     "copy_failed": "Failu neizdevās nokopēt."
+  },
+  "desktopReminders": {
+    "generic_title": "Atgādinājums",
+    "snooze": "Atlikt par {count} min",
+    "snooze_short": "{count} min",
+    "open": "Atvērt",
+    "join": "Pievienoties",
+    "missed_title": "{count, plural, zero {# nokavētu atgādinājumu} one {# nokavēts atgādinājums} other {# nokavēti atgādinājumi}}",
+    "missed_more": "un vēl {count}",
+    "missed_show": "Rādīt",
+    "missed_dialog_title": "Nokavētie atgādinājumi",
+    "missed_dialog_description": "Tie pienāca, kamēr lietotne bija aizvērta, dators bija miega režīmā vai paziņojumi bija apturēti.",
+    "open_calendar": "Atvērt kalendāru",
+    "done": "Gatavs"
   }
 }

@@ -6591,5 +6591,19 @@
     "copy_as_file": "Kopírovať ako súbor",
     "copied": "Súbor skopírovaný. Môžete ho vložiť do priečinka.",
     "copy_failed": "Súbor sa nepodarilo skopírovať."
+  },
+  "desktopReminders": {
+    "generic_title": "Pripomienka",
+    "snooze": "Odložiť o {count} min",
+    "snooze_short": "{count} min",
+    "open": "Otvoriť",
+    "join": "Pripojiť sa",
+    "missed_title": "{count, plural, one {# zmeškaná pripomienka} few {# zmeškané pripomienky} many {# zmeškanej pripomienky} other {# zmeškaných pripomienok}}",
+    "missed_more": "a ďalšie ({count})",
+    "missed_show": "Zobraziť",
+    "missed_dialog_title": "Zmeškané pripomienky",
+    "missed_dialog_description": "Nastali, keď bola aplikácia zatvorená, počítač v režime spánku alebo oznámenia pozastavené.",
+    "open_calendar": "Otvoriť kalendár",
+    "done": "Hotovo"
   }
 }

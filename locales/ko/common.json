@@ -6591,5 +6591,19 @@
     "copy_as_file": "파일로 복사",
     "copied": "파일을 복사했습니다. 폴더에 붙여넣을 수 있습니다.",
     "copy_failed": "파일을 복사할 수 없습니다."
+  },
+  "desktopReminders": {
+    "generic_title": "알림",
+    "snooze": "{count}분 후 다시 알림",
+    "snooze_short": "{count}분",
+    "open": "열기",
+    "join": "참가",
+    "missed_title": "{count, plural, other {놓친 알림 #개}}",
+    "missed_more": "외 {count}개",
+    "missed_show": "보기",
+    "missed_dialog_title": "놓친 알림",
+    "missed_dialog_description": "앱이 닫혀 있거나 컴퓨터가 절전 상태이거나 알림이 일시 중지된 동안 시간이 된 알림입니다.",
+    "open_calendar": "캘린더 열기",
+    "done": "완료"
   }
 }

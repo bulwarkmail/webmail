@@ -9,11 +9,8 @@ import { startOsSummary } from "@/lib/desktop/os-summary";
 import { startPowerWatch } from "@/lib/desktop/power";
 import { startWindowFiles } from "@/lib/desktop/window-files";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
-import { calendarHooks } from "@/lib/plugin-hooks";
-import type { CalendarAlertView } from "@/lib/plugin-types";
 import { useAccountStore } from "@/stores/account-store";
 import { useAuthStore } from "@/stores/auth-store";
-import { useSettingsStore } from "@/stores/settings-store";
 
 /**
  * The main window's end of the desktop app's OS integration: new mail as native
@@ -25,7 +22,6 @@ export function DesktopOsHost() {
   const t = useTranslations("desktopOs");
   const tNotify = useTranslations("notifications");
   const tPush = useTranslations("pwaNotify");
-  const tCalendar = useTranslations("calendar.notifications");
   const locale = useLocale();
   const archiveEnabled = useArchiveActionEnabled();
   const clientKey = useAccountStore((s) => s.accounts.map((a) => a.id).join("\n"));
@@ -56,29 +52,14 @@ export function DesktopOsHost() {
     summaryRef.current = summary;
     const stopPower = startPowerWatch();
     const stopFiles = startWindowFiles();
-    // Reminders' own native notification (snooze, join) comes with the reminders work.
-    // Until then a reminder must not fire into a hidden window unseen.
-    const reminders = calendarHooks.onCalendarAlert.register("desktop-os", (view: CalendarAlertView) => {
-      const { calendarNotificationsEnabled } = useSettingsStore.getState();
-      if (!calendarNotificationsEnabled) return;
-      const event = "eventId" in view;
-      void getDesktopBridge()?.os?.notify({
-        id: `reminder:${event ? view.eventId : view.taskId}:${view.id}:${view.triggerTime}`,
-        title: (event ? view.eventTitle : view.taskTitle) || tCalendar("alert_title"),
-        body: "",
-        context: "{}",
-      });
-    });
     return () => {
       mail.stop();
       summary.stop();
       stopPower();
       stopFiles();
-      reminders.dispose();
       mailRef.current = null;
       summaryRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

@@ -6591,5 +6591,19 @@
     "copy_as_file": "Copiar como ficheiro",
     "copied": "Ficheiro copiado. Pode colá-lo numa pasta.",
     "copy_failed": "Não foi possível copiar o ficheiro."
+  },
+  "desktopReminders": {
+    "generic_title": "Lembrete",
+    "snooze": "Adiar {count} min",
+    "snooze_short": "{count} min",
+    "open": "Abrir",
+    "join": "Entrar",
+    "missed_title": "{count, plural, one {# lembrete perdido} other {# lembretes perdidos}}",
+    "missed_more": "e mais {count}",
+    "missed_show": "Mostrar",
+    "missed_dialog_title": "Lembretes perdidos",
+    "missed_dialog_description": "Venceram enquanto a aplicação estava fechada, o computador em suspensão ou as notificações em pausa.",
+    "open_calendar": "Abrir calendário",
+    "done": "Concluído"
   }
 }

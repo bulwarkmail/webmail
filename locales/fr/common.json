@@ -6591,5 +6591,19 @@
     "copy_as_file": "Copier en tant que fichier",
     "copied": "Fichier copié. Vous pouvez le coller dans un dossier.",
     "copy_failed": "Le fichier n'a pas pu être copié."
+  },
+  "desktopReminders": {
+    "generic_title": "Rappel",
+    "snooze": "Reporter de {count} min",
+    "snooze_short": "{count} min",
+    "open": "Ouvrir",
+    "join": "Rejoindre",
+    "missed_title": "{count, plural, one {# rappel manqué} other {# rappels manqués}}",
+    "missed_more": "et {count} de plus",
+    "missed_show": "Afficher",
+    "missed_dialog_title": "Rappels manqués",
+    "missed_dialog_description": "Ils sont arrivés à échéance alors que l'application était fermée, l'ordinateur en veille ou les notifications en pause.",
+    "open_calendar": "Ouvrir le calendrier",
+    "done": "Terminé"
   }
 }

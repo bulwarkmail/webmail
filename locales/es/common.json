@@ -6591,5 +6591,19 @@
     "copy_as_file": "Copiar como archivo",
     "copied": "Archivo copiado. Puedes pegarlo en una carpeta.",
     "copy_failed": "No se pudo copiar el archivo."
+  },
+  "desktopReminders": {
+    "generic_title": "Recordatorio",
+    "snooze": "Posponer {count} min",
+    "snooze_short": "{count} min",
+    "open": "Abrir",
+    "join": "Unirse",
+    "missed_title": "{count, plural, one {# recordatorio perdido} other {# recordatorios perdidos}}",
+    "missed_more": "y {count} más",
+    "missed_show": "Mostrar",
+    "missed_dialog_title": "Recordatorios perdidos",
+    "missed_dialog_description": "Vencieron mientras la aplicación estaba cerrada, el ordenador en reposo o las notificaciones en pausa.",
+    "open_calendar": "Abrir calendario",
+    "done": "Listo"
   }
 }

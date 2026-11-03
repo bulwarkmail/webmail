@@ -6591,5 +6591,19 @@
     "copy_as_file": "Kopiuj jako plik",
     "copied": "Plik skopiowany. Możesz wkleić go do folderu.",
     "copy_failed": "Nie udało się skopiować pliku."
+  },
+  "desktopReminders": {
+    "generic_title": "Przypomnienie",
+    "snooze": "Odłóż o {count} min",
+    "snooze_short": "{count} min",
+    "open": "Otwórz",
+    "join": "Dołącz",
+    "missed_title": "{count, plural, one {# pominięte przypomnienie} few {# pominięte przypomnienia} many {# pominiętych przypomnień} other {# pominiętego przypomnienia}}",
+    "missed_more": "i jeszcze {count}",
+    "missed_show": "Pokaż",
+    "missed_dialog_title": "Pominięte przypomnienia",
+    "missed_dialog_description": "Pojawiły się, gdy aplikacja była zamknięta, komputer był uśpiony lub powiadomienia były wstrzymane.",
+    "open_calendar": "Otwórz kalendarz",
+    "done": "Gotowe"
   }
 }

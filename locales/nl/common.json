@@ -6591,5 +6591,19 @@
     "copy_as_file": "Kopiëren als bestand",
     "copied": "Bestand gekopieerd. Je kunt het in een map plakken.",
     "copy_failed": "Het bestand kon niet worden gekopieerd."
+  },
+  "desktopReminders": {
+    "generic_title": "Herinnering",
+    "snooze": "{count} min uitstellen",
+    "snooze_short": "{count} min",
+    "open": "Openen",
+    "join": "Deelnemen",
+    "missed_title": "{count, plural, one {# gemiste herinnering} other {# gemiste herinneringen}}",
+    "missed_more": "en nog {count}",
+    "missed_show": "Tonen",
+    "missed_dialog_title": "Gemiste herinneringen",
+    "missed_dialog_description": "Deze kwamen op terwijl de app gesloten was, de computer sliep of meldingen gepauzeerd waren.",
+    "open_calendar": "Agenda openen",
+    "done": "Klaar"
   }
 }

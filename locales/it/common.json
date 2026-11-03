@@ -6591,5 +6591,19 @@
     "copy_as_file": "Copia come file",
     "copied": "File copiato. Puoi incollarlo in una cartella.",
     "copy_failed": "Impossibile copiare il file."
+  },
+  "desktopReminders": {
+    "generic_title": "Promemoria",
+    "snooze": "Rimanda di {count} min",
+    "snooze_short": "{count} min",
+    "open": "Apri",
+    "join": "Partecipa",
+    "missed_title": "{count, plural, one {# promemoria perso} other {# promemoria persi}}",
+    "missed_more": "e altri {count}",
+    "missed_show": "Mostra",
+    "missed_dialog_title": "Promemoria persi",
+    "missed_dialog_description": "Sono scattati mentre l'app era chiusa, il computer in sospensione o le notifiche in pausa.",
+    "open_calendar": "Apri calendario",
+    "done": "Fatto"
   }
 }

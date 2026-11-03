@@ -6591,5 +6591,19 @@
     "copy_as_file": "Másolás fájlként",
     "copied": "Fájl másolva. Beillesztheti egy mappába.",
     "copy_failed": "A fájlt nem sikerült másolni."
+  },
+  "desktopReminders": {
+    "generic_title": "Emlékeztető",
+    "snooze": "Halasztás {count} perccel",
+    "snooze_short": "{count} perc",
+    "open": "Megnyitás",
+    "join": "Csatlakozás",
+    "missed_title": "{count, plural, one {# elmulasztott emlékeztető} other {# elmulasztott emlékeztető}}",
+    "missed_more": "és még {count}",
+    "missed_show": "Megjelenítés",
+    "missed_dialog_title": "Elmulasztott emlékeztetők",
+    "missed_dialog_description": "Akkor jártak le, amikor az alkalmazás be volt zárva, a számítógép alvó állapotban volt, vagy az értesítések szüneteltek.",
+    "open_calendar": "Naptár megnyitása",
+    "done": "Kész"
   }
 }

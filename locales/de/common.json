@@ -6591,5 +6591,19 @@
     "copy_as_file": "Als Datei kopieren",
     "copied": "Datei kopiert. Sie können sie in einen Ordner einfügen.",
     "copy_failed": "Die Datei konnte nicht kopiert werden."
+  },
+  "desktopReminders": {
+    "generic_title": "Erinnerung",
+    "snooze": "{count} Min. schlummern",
+    "snooze_short": "{count} Min.",
+    "open": "Öffnen",
+    "join": "Teilnehmen",
+    "missed_title": "{count, plural, one {# verpasste Erinnerung} other {# verpasste Erinnerungen}}",
+    "missed_more": "und {count} weitere",
+    "missed_show": "Anzeigen",
+    "missed_dialog_title": "Verpasste Erinnerungen",
+    "missed_dialog_description": "Diese wurden fällig, während die App geschlossen war, der Computer im Ruhezustand war oder Benachrichtigungen pausiert waren.",
+    "open_calendar": "Kalender öffnen",
+    "done": "Fertig"
   }
 }

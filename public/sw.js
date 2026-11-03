@@ -1096,6 +1096,7 @@ function getReusableClientScore(state) {
 
 function buildClickUrl(data, reply) {
   if (!data) return `${BASE_PATH}/`;
+  if (data.kind === "calendar-reminder") return `${BASE_PATH}/calendar`;
   const params = new URLSearchParams();
   if (Number.isInteger(data.slot)) params.set("slot", String(data.slot));
   if (typeof data.accountId === "string" && data.accountId) params.set("owner", data.accountId);

@@ -30,6 +30,7 @@ import { labelsPolicyFor } from '@/lib/outgoing/classification';
 import { getSendGuardSource, guardState, guardsSending } from '@/lib/plugin-send-guards';
 import { emitPushStateChange } from '@/lib/push-events';
 import { requestOutboxSync } from '@/lib/pwa-notify/outbox-sync';
+import { emitStoreEvent } from '@/lib/offline/store-events';
 import { STORAGE_ERROR_AREA } from '@/lib/store/area';
 import type { DraftError } from '@/lib/store/drafts/pending';
 import { configureStore, getStore, type StorePageHooks } from '@/lib/store/client/api';
@@ -197,6 +198,7 @@ const storeHooks: StorePageHooks = {
     notify({ kind: 'store-reset' });
   },
   onEvent(event) {
+    emitStoreEvent(event);
     if (event.type === 'created' && event.collection === 'Email') {
       const client = onlineClientFor(event.account);
       if (client) reportStoreCreatedMail(client, event.jmap, event.ids);

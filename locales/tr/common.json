@@ -6591,5 +6591,19 @@
     "copy_as_file": "Dosya olarak kopyala",
     "copied": "Dosya kopyalandı. Bir klasöre yapıştırabilirsiniz.",
     "copy_failed": "Dosya kopyalanamadı."
+  },
+  "desktopReminders": {
+    "generic_title": "Anımsatıcı",
+    "snooze": "{count} dk ertele",
+    "snooze_short": "{count} dk",
+    "open": "Aç",
+    "join": "Katıl",
+    "missed_title": "{count, plural, one {Kaçırılan # anımsatıcı} other {Kaçırılan # anımsatıcı}}",
+    "missed_more": "ve {count} tane daha",
+    "missed_show": "Göster",
+    "missed_dialog_title": "Kaçırılan anımsatıcılar",
+    "missed_dialog_description": "Uygulama kapalıyken, bilgisayar uykudayken veya bildirimler duraklatılmışken zamanı geldi.",
+    "open_calendar": "Takvimi aç",
+    "done": "Bitti"
   }
 }

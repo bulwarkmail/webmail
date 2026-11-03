@@ -6591,5 +6591,19 @@
     "copy_as_file": "复制为文件",
     "copied": "文件已复制。你可以将其粘贴到文件夹中。",
     "copy_failed": "无法复制文件。"
+  },
+  "desktopReminders": {
+    "generic_title": "提醒",
+    "snooze": "{count} 分钟后再提醒",
+    "snooze_short": "{count} 分钟",
+    "open": "打开",
+    "join": "加入",
+    "missed_title": "{count, plural, other {# 条错过的提醒}}",
+    "missed_more": "还有 {count} 条",
+    "missed_show": "显示",
+    "missed_dialog_title": "错过的提醒",
+    "missed_dialog_description": "这些提醒在应用关闭、电脑睡眠或通知暂停时到期。",
+    "open_calendar": "打开日历",
+    "done": "完成"
   }
 }

@@ -6591,5 +6591,19 @@
     "copy_as_file": "Kopeeri failina",
     "copied": "Fail on kopeeritud. Saad selle kausta kleepida.",
     "copy_failed": "Faili ei saanud kopeerida."
+  },
+  "desktopReminders": {
+    "generic_title": "Meeldetuletus",
+    "snooze": "Lükka {count} min edasi",
+    "snooze_short": "{count} min",
+    "open": "Ava",
+    "join": "Liitu",
+    "missed_title": "{count, plural, one {# kasutamata meeldetuletus} other {# kasutamata meeldetuletust}}",
+    "missed_more": "ja veel {count}",
+    "missed_show": "Näita",
+    "missed_dialog_title": "Kasutamata meeldetuletused",
+    "missed_dialog_description": "Need saabusid, kui rakendus oli suletud, arvuti puhkas või teavitused olid peatatud.",
+    "open_calendar": "Ava kalender",
+    "done": "Valmis"
   }
 }

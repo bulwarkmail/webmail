@@ -6591,5 +6591,19 @@
     "copy_as_file": "نسخ كملف",
     "copied": "تم نسخ الملف. يمكنك لصقه في مجلد.",
     "copy_failed": "تعذّر نسخ الملف."
+  },
+  "desktopReminders": {
+    "generic_title": "تذكير",
+    "snooze": "تأجيل {count} د",
+    "snooze_short": "{count} د",
+    "open": "فتح",
+    "join": "انضمام",
+    "missed_title": "{count, plural, zero {لا تذكيرات فائتة} one {تذكير فائت واحد} two {تذكيران فائتان} few {# تذكيرات فائتة} many {# تذكيرًا فائتًا} other {# تذكير فائت}}",
+    "missed_more": "و{count} أخرى",
+    "missed_show": "عرض",
+    "missed_dialog_title": "التذكيرات الفائتة",
+    "missed_dialog_description": "حان موعد هذه التذكيرات بينما كان التطبيق مغلقًا أو الكمبيوتر في وضع السكون أو الإشعارات متوقفة مؤقتًا.",
+    "open_calendar": "فتح التقويم",
+    "done": "تم"
   }
 }
