@@ -393,10 +393,12 @@ export function CalendarMonthView({
               return hiddenEvents + hiddenTasks;
             })
             : null;
+          // Rows that grow with their content make room for the new event's preview.
+          const previewRows = !capRows && pendingPreview && week.some((day) => checkIsSameDay(pendingPreview.start, day)) ? 1 : 0;
           return (
           <div key={dayKey(week[0])} data-week={dayKey(week[0])} className="relative flex-shrink-0 border-b border-border" role="row" style={{
             minHeight: showChips && !overflowing
-              ? Math.max(rowMinHeight, overlayTop + 4 + contentRows * rowHeight + 8)
+              ? Math.max(rowMinHeight, overlayTop + 4 + (contentRows + previewRows) * rowHeight + 8)
               : rowMinHeight,
           }}>
             <div className="grid grid-cols-7 h-full">
@@ -528,6 +530,7 @@ export function CalendarMonthView({
                       isMobile={isMobile}
                       calendarMap={calendarMap}
                       pendingPreview={pendingPreview}
+                      lastRow={capRows ? rowCapacity - 1 : Infinity}
                       selectedEventId={selectedEventId}
                       currentUserEmails={currentUserEmails}
                       canEditEvent={canEditEvent}
@@ -569,7 +572,7 @@ type WeekSegment = ReturnType<typeof buildWeekSegments>[number];
  */
 function MonthCellEntries({
   dayIndex, week, segments, rowLimit, rowCount, dayEventRows, dayTasks, hidden, overlayTop, rowHeight, chipHeight,
-  isMobile, calendarMap, pendingPreview, selectedEventId, currentUserEmails, canEditEvent, inView, timedStyle,
+  isMobile, calendarMap, pendingPreview, lastRow, selectedEventId, currentUserEmails, canEditEvent, inView, timedStyle,
   onSelectEvent, onHoverEvent, onHoverLeave, onContextMenuEvent, onToggleTaskComplete, onSelectTask, onShowMore, moreLabel, paint,
 }: {
   dayIndex: number;
@@ -586,6 +589,8 @@ function MonthCellEntries({
   isMobile?: boolean;
   calendarMap: Map<string, Calendar>;
   pendingPreview?: PendingEventPreview | null;
+  /** The last row a fixed-height week has room for; the preview must not go past it. */
+  lastRow: number;
   selectedEventId?: string | null;
   currentUserEmails?: string[];
   canEditEvent: (event: CalendarEvent) => boolean;
@@ -686,17 +691,18 @@ function MonthCellEntries({
         </div>
       )}
       {preview && (() => {
-        const previewRow = Math.max(rowCount, dayEventRows[dayIndex] + dayTasks[dayIndex].length);
+        // On a full day it lies over the last row: below it, it landed on the next week's date.
+        const previewRow = Math.min(lastRow, Math.max(rowCount, dayEventRows[dayIndex] + dayTasks[dayIndex].length));
         const color = paint(calendarMap.get(preview.calendarId)?.color || "#3b82f6");
         return (
-          <div className="absolute z-10 px-0.5 pointer-events-none" style={place(previewRow)}>
+          <div className="absolute z-20 px-0.5 pointer-events-none" style={place(previewRow)}>
             <div
               data-pending-preview
               className={cn(
                 "h-full rounded text-[0.625rem] font-medium truncate border-2 border-dashed",
                 isMobile ? "leading-[1rem] px-1" : "leading-[1.25rem] px-1.5"
               )}
-              style={{ borderColor: color, color, backgroundColor: `${color}10` }}
+              style={{ borderColor: color, color, backgroundColor: `color-mix(in srgb, ${color} 6%, var(--color-background))` }}
             >
               {preview.title}
             </div>
