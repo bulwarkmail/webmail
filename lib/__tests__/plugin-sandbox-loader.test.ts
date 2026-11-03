@@ -121,6 +121,81 @@ describe('loadSandboxedPlugin in the no-third-party mode (#903)', () => {
   });
 });
 
+describe('loadSandboxedPlugin when a frame is slow to boot', () => {
+  const hung = () => ({ ...fakeBackground(), initPromise: new Promise(() => {}) });
+
+  // The bundle check runs on real promises and crypto: wait for the frame
+  // that is due before moving the clock past its timeout.
+  const framesStarted = async (count: number) => {
+    for (let i = 0; i < 2000 && mocks.createBackgroundInstance.mock.calls.length < count; i++) {
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+    await new Promise((resolve) => setImmediate(resolve));
+  };
+
+  beforeEach(() => { vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] }); });
+  afterEach(() => { vi.useRealTimers(); });
+
+  it('tries once more after the init timeout and runs when the second frame answers', async () => {
+    mocks.getCode.mockResolvedValue(CODE);
+    const first = hung();
+    mocks.createBackgroundInstance.mockReturnValueOnce(first);
+
+    const run = loadSandboxedPlugin(plugin());
+    await framesStarted(1);
+    await vi.advanceTimersByTimeAsync(30_000);
+    await framesStarted(2);
+    await run;
+
+    expect(first.destroy).toHaveBeenCalled();
+    expect(mocks.createBackgroundInstance).toHaveBeenCalledTimes(2);
+    expect(statuses.some((s) => s.status === 'error')).toBe(false);
+    expect(lastStatus()).toMatchObject({ id: 'managed-plugin', status: 'running' });
+  });
+
+  it('reports the error when the second try times out too, and stops there', async () => {
+    mocks.getCode.mockResolvedValue(CODE);
+    mocks.createBackgroundInstance.mockImplementation(() => hung());
+
+    const run = loadSandboxedPlugin(plugin());
+    await framesStarted(1);
+    await vi.advanceTimersByTimeAsync(30_000);
+    await framesStarted(2);
+    await vi.advanceTimersByTimeAsync(30_000);
+    await run;
+
+    expect(mocks.createBackgroundInstance).toHaveBeenCalledTimes(2);
+    expect(lastStatus()).toMatchObject({ id: 'managed-plugin', status: 'error' });
+    expect(lastStatus().error).toMatch(/timed out/);
+  });
+
+  it('does not try again when the plugin was turned off while it started', async () => {
+    mocks.getCode.mockResolvedValue(CODE);
+    mocks.createBackgroundInstance.mockImplementation(() => hung());
+
+    const run = loadSandboxedPlugin(plugin());
+    await framesStarted(1);
+    unloadSandboxedPlugin('managed-plugin');
+    await vi.advanceTimersByTimeAsync(30_000);
+    await run;
+
+    expect(mocks.createBackgroundInstance).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not retry a plugin that fails for another reason', async () => {
+    mocks.getCode.mockResolvedValue(CODE);
+    mocks.createBackgroundInstance.mockImplementationOnce(() => ({
+      ...fakeBackground(),
+      initPromise: Promise.reject(new Error('bundle threw')),
+    }));
+
+    await loadSandboxedPlugin(plugin());
+
+    expect(mocks.createBackgroundInstance).toHaveBeenCalledTimes(1);
+    expect(lastStatus()).toMatchObject({ status: 'error', error: 'bundle threw' });
+  });
+});
+
 describe('loadSandboxedPlugin bundle sourcing', () => {
   it('runs a managed plugin from IndexedDB when the cached copy verifies', async () => {
     mocks.getCode.mockResolvedValue(CODE);

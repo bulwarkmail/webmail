@@ -197,10 +197,12 @@ function permittedOffers(plugin: InstalledPlugin, slots: InitDoneInfo['slots'], 
 // slower machines, while still catching truly stuck plugins.
 const INIT_TIMEOUT_MS = 30_000;
 
+class InitTimeoutError extends Error {}
+
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const timer = setTimeout(() => {
-      reject(new Error(`${label} timed out after ${ms}ms`));
+      reject(new InitTimeoutError(`${label} timed out after ${ms}ms`));
     }, ms);
     promise.then(
       (v) => { clearTimeout(timer); resolve(v); },
@@ -210,6 +212,8 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 }
 
 const loading = new Map<string, Promise<void>>();
+/** Turned off while starting: a start that timed out doesn't try again. */
+const startsCancelled = new Set<string>();
 
 /**
  * Start a plugin. Calling it again for a plugin that is running or still
@@ -221,14 +225,20 @@ export function loadSandboxedPlugin(plugin: InstalledPlugin): Promise<void> {
   // Before the registry: a plugin offering remembered slots is registered
   // while it is still starting.
   const pending = loading.get(plugin.id);
-  if (pending) return pending;
+  if (pending) {
+    startsCancelled.delete(plugin.id);
+    return pending;
+  }
   if (getActive(plugin.id)) return Promise.resolve();
-  const run = startSandboxedPlugin(plugin).finally(() => loading.delete(plugin.id));
+  const run = startSandboxedPlugin(plugin).finally(() => {
+    loading.delete(plugin.id);
+    startsCancelled.delete(plugin.id);
+  });
   loading.set(plugin.id, run);
   return run;
 }
 
-async function startSandboxedPlugin(plugin: InstalledPlugin): Promise<void> {
+async function startSandboxedPlugin(plugin: InstalledPlugin, retried = false): Promise<void> {
   // A plugin that declares network access doesn't start while third-party
   // traffic is off; the rest run (#903).
   if (!pluginAllowed(plugin)) {
@@ -352,6 +362,15 @@ async function startSandboxedPlugin(plugin: InstalledPlugin): Promise<void> {
     if (background?.closed && getActive(plugin.id)?.background !== background) return;
     // Offered from the last start: take the slots back down.
     if (background && getActive(plugin.id)?.background === background) deregisterActive(plugin.id);
+    // A busy machine can take longer than the limit to boot a frame, and the
+    // plugin then stayed off until the next page load: its pages and buttons
+    // missing. One more go; plugins start in parallel, so a plugin that
+    // really hangs holds up nobody else.
+    if (err instanceof InitTimeoutError && !retried && !startsCancelled.has(plugin.id)) {
+      console.warn(`[plugin-sandbox] "${plugin.id}" took too long to start, trying once more`);
+      try { background?.destroy(); } catch { /* ignore */ }
+      return startSandboxedPlugin(plugin, true);
+    }
     const msg = (err as Error).message ?? String(err);
     storeAccessor?.setPluginStatus(plugin.id, 'error', msg);
     console.error(`[plugin-sandbox] Failed to load "${plugin.id}":`, err);
@@ -414,6 +433,7 @@ setCheckerDispatcher({
 // ─── Unload ───────────────────────────────────────────────────
 
 export function unloadSandboxedPlugin(pluginId: string): void {
+  if (loading.has(pluginId)) startsCancelled.add(pluginId);
   const entry = deregisterActive(pluginId);
   if (!entry) return;
   for (const d of entry.hookDisposables) {
