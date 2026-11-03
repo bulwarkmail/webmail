@@ -530,16 +530,27 @@ test('a send of which only the draft arrived is submitted, and goes out once', a
 
 interface ServerDraft { id: string; subject: string; blobId: string; attachments: Array<{ blobId: string; name: string; size: number }> }
 
-/** The account's Drafts folder as the server has it, for one subject. */
+/**
+ * The account's Drafts folder as the server has it, for one subject. Polled, on
+ * an account the app under test and other runs use too: the server's rate limit
+ * says nothing about the draft, so it waits that out.
+ */
 async function serverDrafts(account: string, subject: string): Promise<ServerDraft[]> {
-  const client = await jmapAs(account);
-  const boxes = await client.request([['Mailbox/get', { accountId: client.accountId, properties: ['id', 'role'] }, '0']]);
-  const drafts = (boxes.methodResponses[0][1].list as Array<{ id: string; role: string | null }>).find((box) => box.role === 'drafts');
-  const r = await client.request([
-    ['Email/query', { accountId: client.accountId, filter: { inMailbox: drafts?.id }, limit: 200 }, '0'],
-    ['Email/get', { accountId: client.accountId, '#ids': { resultOf: '0', name: 'Email/query', path: '/ids' }, properties: ['id', 'subject', 'blobId', 'attachments'] }, '1'],
-  ]);
-  return (r.methodResponses[1][1].list as ServerDraft[]).filter((email) => email.subject === subject);
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      const client = await jmapAs(account);
+      const boxes = await client.request([['Mailbox/get', { accountId: client.accountId, properties: ['id', 'role'] }, '0']]);
+      const drafts = (boxes.methodResponses[0][1].list as Array<{ id: string; role: string | null }>).find((box) => box.role === 'drafts');
+      const r = await client.request([
+        ['Email/query', { accountId: client.accountId, filter: { inMailbox: drafts?.id }, limit: 200 }, '0'],
+        ['Email/get', { accountId: client.accountId, '#ids': { resultOf: '0', name: 'Email/query', path: '/ids' }, properties: ['id', 'subject', 'blobId', 'attachments'] }, '1'],
+      ]);
+      return (r.methodResponses[1][1].list as ServerDraft[]).filter((email) => email.subject === subject);
+    } catch (error) {
+      if (attempt >= 6 || !/\b429\b/.test(String(error))) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 10_000));
+    }
+  }
 }
 
 test('a draft written offline with a file survives a reload, is on the server once after reconnecting, and can be sent', async ({ browser }) => {
