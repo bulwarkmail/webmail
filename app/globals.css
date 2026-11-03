@@ -1334,6 +1334,15 @@ optgroup {
   inset-inline-end: 0;
 }
 
+/* A phone on its side counts as a tablet, which keeps the bottom bar. With a
+   message or the composer open the bar takes a sixth of a window this short and
+   leaves the message a few lines; a phone held upright hides it there too. */
+@media (max-height: 32rem) {
+  body:has([data-tour="email-viewer"], [data-tour="composer"]) [data-mobile-navigation] {
+    display: none;
+  }
+}
+
 /* The account popover: a wide card with a very round corner, rather
    than the narrow menu the rail and the sidebar switchers drop. */
 [data-interface-layout="mountain-view"] [data-mv-account-popover] {
