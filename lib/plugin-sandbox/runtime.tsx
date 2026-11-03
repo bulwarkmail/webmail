@@ -508,14 +508,15 @@ function buildCoreApi(manifest: PluginManifest) {
     },
     /**
      * The OS certificate store and smart cards, in the desktop app. Privileged tier
-     * with the `keystore` permission, when api.host.features.keystore is true. No
-     * timeout: the OS may be showing a PIN prompt, and the host always answers.
-     * Errors are bare codes: keystore:cancelled, not-found, unsupported, locked,
-     * invalid, failed.
+     * with the `keystore` permission, when api.host.features.keystore is true. The
+     * shell asks the user first, so any call can answer keystore:cancelled. Key
+     * operations have no timeout here: the OS may be showing a PIN prompt, and the shell
+     * gives up by itself. Errors are bare codes: keystore:cancelled, not-found,
+     * unsupported, locked, invalid, failed.
      */
     keystore: {
-      /** Certificates fit for mail that have a private key. Never prompts. */
-      list: () => callApi('keystore.list', [], 0),
+      /** Certificates fit for mail that have a private key. The OS doesn't prompt, and it has the usual timeout. */
+      list: () => callApi('keystore.list', []),
       /** Signs a digest. scheme: { scheme: 'rsa-pkcs1' | 'rsa-pss' | 'ecdsa', hash }. RSA gives the raw signature, ECDSA DER. */
       sign: (id: string, digest: Uint8Array, scheme: unknown) => callApi('keystore.sign', [id, digest, scheme], 0) as Promise<Uint8Array>,
       /** Unwraps a content key. scheme: { scheme: 'rsa-pkcs1' } or { scheme: 'rsa-oaep', hash, label? }. */

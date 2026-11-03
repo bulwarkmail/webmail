@@ -5861,7 +5861,7 @@
       },
       "keystore": {
         "title": "Utiliser les certificats de cet ordinateur",
-        "body": "Signe et déchiffre des messages avec les certificats du magasin de certificats de cet ordinateur ou d'une carte à puce. La clé privée y reste. Le système peut vous demander votre code PIN."
+        "body": "Demande à signer et déchiffrer des messages avec les certificats de cet ordinateur ou d'une carte à puce. L'application vous pose d'abord la question. Le plugin ne reçoit jamais la clé privée, mais tant que vous l'autorisez, il peut signer en votre nom et lire ce qu'il déchiffre."
       },
       "email_raw_send": {
         "title": "Envoyer des messages qu'il a lui-même créés",
@@ -6513,5 +6513,13 @@
     "server_needed": "Saisissez d'abord l'adresse du serveur.",
     "server_declined": "Vous n'avez pas autorisé ce serveur, donc rien ne lui a été envoyé.",
     "server_invalid": "Cette adresse de serveur n'est pas valide."
+  },
+  "desktop_keystore": {
+    "title": "Certificats de cet ordinateur",
+    "description": "Ce serveur peut demander à utiliser vos certificats et cartes à puce. La question vous est quand même posée avant l'utilisation de chaque certificat.",
+    "label": "Accès de ce serveur",
+    "label_description": "Retirez votre autorisation. Le serveur devra la redemander.",
+    "revoke": "Retirer",
+    "revoked": "Autorisation retirée"
   }
 }

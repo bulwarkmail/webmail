@@ -5861,7 +5861,7 @@
       },
       "keystore": {
         "title": "Używanie certyfikatów z tego komputera",
-        "body": "Podpisuje i odszyfrowuje wiadomości certyfikatami z magazynu certyfikatów tego komputera lub z karty inteligentnej. Klucz prywatny tam pozostaje. System może poprosić o kod PIN."
+        "body": "Prosi o podpisywanie i odszyfrowywanie wiadomości certyfikatami z tego komputera lub karty inteligentnej. Aplikacja najpierw zapyta. Wtyczka nigdy nie dostaje klucza prywatnego, ale dopóki na to pozwalasz, może podpisywać w Twoim imieniu i czytać to, co odszyfruje."
       },
       "email_raw_send": {
         "title": "Wysyłanie wiadomości utworzonych przez wtyczkę",
@@ -6513,5 +6513,13 @@
     "server_needed": "Najpierw wpisz adres serwera.",
     "server_declined": "Ten serwer nie został dozwolony, więc nic do niego nie wysłano.",
     "server_invalid": "Ten adres serwera jest nieprawidłowy."
+  },
+  "desktop_keystore": {
+    "title": "Certyfikaty na tym komputerze",
+    "description": "Ten serwer może prosić o użycie Twoich certyfikatów i kart inteligentnych. Przed użyciem każdego certyfikatu nadal zostaniesz zapytany.",
+    "label": "Dostęp tego serwera",
+    "label_description": "Cofnij swoją zgodę. Serwer będzie musiał zapytać ponownie.",
+    "revoke": "Cofnij",
+    "revoked": "Zgoda została cofnięta"
   }
 }

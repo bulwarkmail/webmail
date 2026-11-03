@@ -5861,7 +5861,7 @@
       },
       "keystore": {
         "title": "A számítógépen lévő tanúsítványok használata",
-        "body": "Üzenetek aláírása és visszafejtése a számítógép tanúsítványtárolójában vagy intelligens kártyán lévő tanúsítványokkal. A titkos kulcs ott marad. A rendszer kérheti a PIN-kódját."
+        "body": "Kéri, hogy üzeneteket írhasson alá és fejthessen vissza a számítógépen vagy intelligens kártyán lévő tanúsítványokkal. Az alkalmazás előbb megkérdezi Önt. A bővítmény soha nem kapja meg a titkos kulcsot, de amíg engedélyezi, az Ön nevében írhat alá, és elolvashatja, amit visszafejt."
       },
       "email_raw_send": {
         "title": "Saját maga által összeállított üzenetek küldése",
@@ -6513,5 +6513,13 @@
     "server_needed": "Először adja meg a szerver címét.",
     "server_declined": "Nem engedélyezte ezt a szervert, ezért semmit sem küldtünk neki.",
     "server_invalid": "Ez a szervercím nem érvényes."
+  },
+  "desktop_keystore": {
+    "title": "A számítógépen lévő tanúsítványok",
+    "description": "Ez a kiszolgáló kérheti a tanúsítványai és intelligens kártyái használatát. Minden tanúsítvány használata előtt így is megkérdezzük.",
+    "label": "A kiszolgáló hozzáférése",
+    "label_description": "Vonja vissza az engedélyét. A kiszolgálónak újra kérnie kell.",
+    "revoke": "Visszavonás",
+    "revoked": "Engedély visszavonva"
   }
 }

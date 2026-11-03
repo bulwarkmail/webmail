@@ -5861,7 +5861,7 @@
       },
       "keystore": {
         "title": "Use certificates on this computer",
-        "body": "Sign and decrypt messages with certificates in this computer's certificate store or on a smart card. The private key stays there. Your system may ask for your PIN."
+        "body": "Ask to sign and decrypt messages with certificates on this computer or a smart card. The app asks you first. The plugin never gets the private key, but while you allow it, it can sign in your name and read what it decrypts."
       },
       "email_raw_send": {
         "title": "Send messages it built itself",
@@ -6513,5 +6513,13 @@
     "server_needed": "Enter your server's address first.",
     "server_declined": "You didn't allow this server, so nothing was sent to it.",
     "server_invalid": "This server address isn't valid."
+  },
+  "desktop_keystore": {
+    "title": "Certificates on this computer",
+    "description": "This server may ask to use your certificates and smart cards. You are still asked before each certificate is used.",
+    "label": "Access for this server",
+    "label_description": "Take back your permission. The server has to ask again.",
+    "revoke": "Take back",
+    "revoked": "Permission taken back"
   }
 }

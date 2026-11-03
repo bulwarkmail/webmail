@@ -5861,7 +5861,7 @@
       },
       "keystore": {
         "title": "Izmantot šī datora sertifikātus",
-        "body": "Paraksta un atšifrē ziņojumus ar sertifikātiem, kas atrodas šī datora sertifikātu krātuvē vai viedkartē. Privātā atslēga paliek tur. Sistēma var prasīt jūsu PIN kodu."
+        "body": "Lūdz parakstīt un atšifrēt ziņojumus ar šī datora vai viedkartes sertifikātiem. Lietotne vispirms jautā jums. Spraudnis nekad nesaņem privāto atslēgu, taču, kamēr to atļaujat, tas var parakstīt jūsu vārdā un lasīt to, ko atšifrē."
       },
       "email_raw_send": {
         "title": "Sūtīt paša izveidotas vēstules",
@@ -6513,5 +6513,13 @@
     "server_needed": "Vispirms ievadiet servera adresi.",
     "server_declined": "Jūs neatļāvāt šo serveri, tāpēc tam nekas netika nosūtīts.",
     "server_invalid": "Šī servera adrese nav derīga."
+  },
+  "desktop_keystore": {
+    "title": "Šī datora sertifikāti",
+    "description": "Šis serveris var lūgt izmantot jūsu sertifikātus un viedkartes. Pirms katra sertifikāta izmantošanas jums tomēr tiks jautāts.",
+    "label": "Šī servera piekļuve",
+    "label_description": "Atsauciet savu atļauju. Serverim būs jālūdz vēlreiz.",
+    "revoke": "Atsaukt",
+    "revoked": "Atļauja atsaukta"
   }
 }

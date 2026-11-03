@@ -5861,7 +5861,7 @@
       },
       "keystore": {
         "title": "Kasuta selle arvuti sertifikaate",
-        "body": "Allkirjastab ja dekrüpteerib sõnumeid selle arvuti sertifikaadihoidlas või kiipkaardil olevate sertifikaatidega. Privaatvõti jääb sinna. Süsteem võib küsida teie PIN-koodi."
+        "body": "Palub sõnumeid allkirjastada ja dekrüpteerida selle arvuti või kiipkaardi sertifikaatidega. Rakendus küsib teilt enne. Pistikprogramm ei saa kunagi privaatvõtit, kuid seni, kuni seda lubate, saab see teie nimel allkirjastada ja lugeda seda, mida dekrüpteerib."
       },
       "email_raw_send": {
         "title": "Saada ise koostatud kirju",
@@ -6513,5 +6513,13 @@
     "server_needed": "Sisesta kõigepealt serveri aadress.",
     "server_declined": "Sa ei lubanud seda serverit, nii et sellele ei saadetud midagi.",
     "server_invalid": "See serveri aadress ei kehti."
+  },
+  "desktop_keystore": {
+    "title": "Selle arvuti sertifikaadid",
+    "description": "See server võib paluda teie sertifikaate ja kiipkaarte kasutada. Enne iga sertifikaadi kasutamist küsitakse teilt siiski luba.",
+    "label": "Selle serveri juurdepääs",
+    "label_description": "Võtke oma luba tagasi. Server peab siis uuesti küsima.",
+    "revoke": "Võta tagasi",
+    "revoked": "Luba võeti tagasi"
   }
 }

@@ -3,9 +3,9 @@
 // private key never reaches the webmail, and the OS's own prompts stay on.
 //
 // Privileged tier only (host-api.ts), so a user-uploaded plugin never gets here.
-// A privileged frame is same-origin and can reach window.parent.bulwarkDesktop
-// directly; these checks are for the front door, and the safeguards that hold in
-// both cases are in the shell and the OS.
+// None of this is a security boundary: a privileged frame is same-origin and can reach
+// window.parent.bulwarkDesktop directly. The checks are for the front door. What holds in
+// both cases is in the shell: a native dialog in main (keystore-consent.ts) and the OS.
 //
 // RPC errors reach the frame as message strings only, so the code is the message:
 // keystore:cancelled, keystore:not-found, keystore:unsupported, keystore:locked,
@@ -118,8 +118,10 @@ export async function doKeystoreCall(plugin: InstalledPlugin, method: string, ar
   // The OS may be showing a PIN dialog right now, which the host can't see. While it
   // is, the plugin is waiting on the user, not hung: this holds the hook timer the
   // way one of its own dialogs does, so a card's PIN during onRenderEmailBody doesn't
-  // count towards auto-disable.
-  const release = holdForUser(plugin.id);
+  // count towards auto-disable. Not for a list: it never touches a card, and a plugin
+  // shouldn't be able to stop the timer with it. The hold has an absolute deadline
+  // (plugin-hooks.ts), and the shell gives up on a stuck call before that.
+  const release = method === 'keystore.list' ? () => {} : holdForUser(plugin.id);
   try {
     return await run();
   } catch (error) {

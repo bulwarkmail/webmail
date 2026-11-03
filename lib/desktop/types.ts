@@ -141,7 +141,12 @@ export interface DesktopKeystoreCertificate {
   signSchemes: string[];
   decryptSchemes: string[];
   canAgree: boolean;
+  /** The key can also sign the user in somewhere: the user is asked per use. */
+  askEachUse: boolean;
 }
+
+/** Whether this origin may use the keystore at all. `app` is standalone. */
+export type DesktopKeystoreAccessState = 'app' | 'policy' | 'stored' | 'off';
 
 export type DesktopKeystoreSignScheme =
   | { scheme: 'rsa-pkcs1'; hash: DesktopKeystoreHash }
@@ -158,11 +163,13 @@ export type DesktopKeystoreDecryptScheme =
 /**
  * The OS certificate store and smart cards. Present only where the native helper
  * loaded and the OS has one. Failures reject with a bare code as the message:
- * keystore:cancelled, not-found, unsupported, locked, invalid, failed. The key never
- * leaves the OS, and its own prompts stay on, so a call may take as long as a PIN.
+ * keystore:cancelled, not-found, unsupported, locked, invalid, failed. The shell asks the
+ * user in a native dialog before any of this, on top of which the OS has its own prompts,
+ * so a call may take a while. On an instance it stays off until policy or the user allows
+ * it. The key never leaves the OS.
  */
 export interface DesktopKeystoreBridge {
-  /** Certificates fit for mail that have a private key. Never prompts. */
+  /** Certificates fit for mail that have a private key. The OS doesn't prompt. */
   list: () => Promise<DesktopKeystoreCertificate[]>;
   /** RSA gives the raw signature, ECDSA a DER ECDSA-Sig-Value. */
   sign: (id: string, digest: Uint8Array, scheme: DesktopKeystoreSignScheme) => Promise<Uint8Array>;
@@ -170,6 +177,9 @@ export interface DesktopKeystoreBridge {
   decrypt: (id: string, data: Uint8Array, scheme: DesktopKeystoreDecryptScheme) => Promise<Uint8Array>;
   /** The raw shared secret, big-endian. The peer's key is an EC SubjectPublicKeyInfo. */
   agree: (id: string, peerPublicKey: Uint8Array) => Promise<Uint8Array>;
+  accessState: () => Promise<DesktopKeystoreAccessState>;
+  /** Takes back a stored yes and this session's grants. Only ever narrows. */
+  revokeAccess: () => Promise<void>;
 }
 
 export interface BulwarkDesktopBridge {

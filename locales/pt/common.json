@@ -5861,7 +5861,7 @@
       },
       "keystore": {
         "title": "Usar certificados deste computador",
-        "body": "Assina e desencripta mensagens com certificados do repositório de certificados deste computador ou de um cartão inteligente. A chave privada fica lá. O sistema pode pedir o seu PIN."
+        "body": "Pede para assinar e desencriptar mensagens com certificados deste computador ou de um cartão inteligente. A aplicação pergunta-lhe primeiro. O plugin nunca recebe a chave privada, mas enquanto o permitir pode assinar em seu nome e ler o que desencripta."
       },
       "email_raw_send": {
         "title": "Enviar mensagens criadas por ele mesmo",
@@ -6513,5 +6513,13 @@
     "server_needed": "Digite primeiro o endereço do servidor.",
     "server_declined": "Você não permitiu este servidor, então nada foi enviado a ele.",
     "server_invalid": "Este endereço de servidor não é válido."
+  },
+  "desktop_keystore": {
+    "title": "Certificados deste computador",
+    "description": "Este servidor pode pedir para usar os seus certificados e cartões inteligentes. Mesmo assim, ser-lhe-á perguntado antes de cada certificado ser usado.",
+    "label": "Acesso deste servidor",
+    "label_description": "Retire a sua permissão. O servidor terá de pedir novamente.",
+    "revoke": "Retirar",
+    "revoked": "Permissão retirada"
   }
 }

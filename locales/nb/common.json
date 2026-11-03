@@ -5861,7 +5861,7 @@
       },
       "keystore": {
         "title": "Bruk sertifikater på denne datamaskinen",
-        "body": "Signer og dekrypter meldinger med sertifikater i datamaskinens sertifikatlager eller på et smartkort. Den private nøkkelen blir værende der. Systemet kan be om PIN-koden din."
+        "body": "Ber om å signere og dekryptere meldinger med sertifikater på denne datamaskinen eller et smartkort. Appen spør deg først. Tillegget får aldri den private nøkkelen, men så lenge du tillater det, kan det signere i ditt navn og lese det det dekrypterer."
       },
       "email_raw_send": {
         "title": "Sende meldinger det har laget selv",
@@ -6513,5 +6513,13 @@
     "server_needed": "Skriv inn serveradressen først.",
     "server_declined": "Du tillot ikke denne serveren, så ingenting ble sendt til den.",
     "server_invalid": "Denne serveradressen er ikke gyldig."
+  },
+  "desktop_keystore": {
+    "title": "Sertifikater på denne datamaskinen",
+    "description": "Denne serveren kan be om å bruke sertifikatene og smartkortene dine. Du blir likevel spurt før hvert sertifikat brukes.",
+    "label": "Tilgang for denne serveren",
+    "label_description": "Trekk tilbake tillatelsen din. Serveren må da spørre på nytt.",
+    "revoke": "Trekk tilbake",
+    "revoked": "Tillatelsen er trukket tilbake"
   }
 }

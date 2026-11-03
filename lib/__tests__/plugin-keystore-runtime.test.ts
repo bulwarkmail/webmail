@@ -71,21 +71,29 @@ describe('api.keystore in the sandbox', () => {
     expect(g.__pluginApi!.host.features.keystore).toBeFalsy();
   }, 30_000);
 
-  it('no call gives up while the host has not answered: a PIN can take minutes', async () => {
+  it('a list has the ordinary RPC timeout: it never waits on a card', async () => {
+    await boot({ keystore: true });
+    vi.useFakeTimers();
+    const listing = g.__pluginApi!.keystore.list();
+    const outcome = listing.then(() => 'answered', (error: Error) => error.message);
+    await vi.advanceTimersByTimeAsync(31_000);
+    await expect(outcome).resolves.toMatch(/timed out/);
+  }, 30_000);
+
+  it('no key operation gives up while the host has not answered: a PIN can take minutes', async () => {
     await boot({ keystore: true });
     vi.useFakeTimers();
     const api = g.__pluginApi!.keystore;
     const digest = new Uint8Array(32);
     const settled: string[] = [];
     const watch = (name: string, promise: Promise<unknown>) => promise.then(() => settled.push(name), () => settled.push(`${name} rejected`));
-    watch('list', api.list());
     watch('sign', api.sign('id', digest, { scheme: 'rsa-pkcs1', hash: 'SHA-256' }));
     watch('decrypt', api.decrypt('id', new Uint8Array(256), { scheme: 'rsa-pkcs1' }));
     watch('agree', api.agree('id', new Uint8Array(91)));
     // Past the RPC's 30 s and past the network calls' 120 s.
     await vi.advanceTimersByTimeAsync(600_000);
     expect(settled).toEqual([]);
-    expect(requests().map((request) => request.method)).toEqual(['keystore.list', 'keystore.sign', 'keystore.decrypt', 'keystore.agree']);
+    expect(requests().map((request) => request.method)).toEqual(['keystore.sign', 'keystore.decrypt', 'keystore.agree']);
   }, 30_000);
 
   it('passes the bytes as bytes, and hands an error back with the code as its message', async () => {

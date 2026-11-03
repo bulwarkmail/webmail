@@ -281,6 +281,59 @@ describe('a keystore call and the hook timer', () => {
     expect(hasDialogFor(ID)).toBe(false);
   });
 
+  it('a list takes no hold: it never waits on a card, and a hung list must not stop the hook timer', async () => {
+    const bridge = fakeBridge();
+    bridge.list.mockImplementation(() => new Promise(() => {}));
+    installBridge(bridge);
+    renderHooks.onRenderEmailBody.register(ID, async (body: object) => {
+      await dispatchApiCall(plugin(), 'keystore.list', [], { privileged: true });
+      return { ...body, html: 'never' };
+    });
+    const ran = renderHooks.onRenderEmailBody.transform({ html: 'as it was' });
+    expect(hasDialogFor(ID)).toBe(false);
+    await vi.advanceTimersByTimeAsync(6000);
+    await expect(ran).resolves.toEqual({ html: 'as it was' });
+    expect(console.error).toHaveBeenCalled();
+  });
+
+  it('a call that never answers cannot hold the hook for ever: there is an absolute deadline', async () => {
+    const bridge = fakeBridge();
+    bridge.decrypt.mockImplementation(() => new Promise(() => {}));
+    installBridge(bridge);
+    // This call never ends, so its hold never does: an id of its own.
+    const hung = plugin({ id: 'hung-plugin' });
+    renderHooks.onRenderEmailBody.register(hung.id, async (body: object) => {
+      await dispatchApiCall(hung, 'keystore.decrypt', ['id', new Uint8Array(256), { scheme: 'rsa-pkcs1' }], { privileged: true });
+      return { ...body, html: 'never' };
+    });
+    const ran = renderHooks.onRenderEmailBody.transform({ html: 'as it was' });
+    let settled = false;
+    void ran.then(() => { settled = true; });
+    // Longer than the shell's own 5 minute cap, which would normally end it first.
+    await vi.advanceTimersByTimeAsync(5 * 60_000);
+    expect(settled).toBe(false);
+    await vi.advanceTimersByTimeAsync(11 * 60_000);
+    expect(settled).toBe(true);
+    await expect(ran).resolves.toEqual({ html: 'as it was' });
+    expect(console.error).toHaveBeenCalled();
+  });
+
+  it('holds that keep coming and going do not reset the deadline', async () => {
+    renderHooks.onRenderEmailBody.register(ID, () => new Promise<object>(() => {}));
+    let release = holdForUser(ID);
+    const ran = renderHooks.onRenderEmailBody.transform({ html: 'as it was' });
+    let settled = false;
+    void ran.then(() => { settled = true; });
+    for (let minute = 0; minute < 20 && !settled; minute += 1) {
+      await vi.advanceTimersByTimeAsync(4000);
+      release();
+      release = holdForUser(ID);
+      await vi.advanceTimersByTimeAsync(60_000 - 4000);
+    }
+    release();
+    expect(settled).toBe(true);
+  });
+
   it('a hook that hangs with no keystore call still times out', async () => {
     renderHooks.onRenderEmailBody.register(ID, () => new Promise<object>(() => {}));
     const ran = renderHooks.onRenderEmailBody.transform({ html: 'as it was' });

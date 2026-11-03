@@ -5861,7 +5861,7 @@
       },
       "keystore": {
         "title": "Utilitzar els certificats d'aquest ordinador",
-        "body": "Signa i desxifra missatges amb certificats del magatzem de certificats d'aquest ordinador o d'una targeta intel·ligent. La clau privada es queda allà. El sistema us pot demanar el PIN."
+        "body": "Demana signar i desxifrar missatges amb certificats d'aquest ordinador o d'una targeta intel·ligent. L'aplicació us ho pregunta abans. El connector no rep mai la clau privada, però mentre ho permeteu pot signar en nom vostre i llegir el que desxifra."
       },
       "email_raw_send": {
         "title": "Enviar missatges que ha creat ell mateix",
@@ -6513,5 +6513,13 @@
     "server_needed": "Primer escriu l'adreça del servidor.",
     "server_declined": "No has permès aquest servidor, així que no s'hi ha enviat res.",
     "server_invalid": "Aquesta adreça de servidor no és vàlida."
+  },
+  "desktop_keystore": {
+    "title": "Certificats d'aquest ordinador",
+    "description": "Aquest servidor pot demanar utilitzar els vostres certificats i targetes intel·ligents. Tot i així, se us preguntarà abans d'utilitzar cada certificat.",
+    "label": "Accés d'aquest servidor",
+    "label_description": "Retira el permís. El servidor ho haurà de tornar a demanar.",
+    "revoke": "Retira",
+    "revoked": "Permís retirat"
   }
 }

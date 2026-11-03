@@ -5861,7 +5861,7 @@
       },
       "keystore": {
         "title": "Brug certifikater på denne computer",
-        "body": "Signer og dekrypter beskeder med certifikater i computerens certifikatlager eller på et chipkort. Den private nøgle bliver, hvor den er. Systemet kan bede om din pinkode."
+        "body": "Beder om at signere og dekryptere beskeder med certifikater på denne computer eller et chipkort. Appen spørger dig først. Pluginnet får aldrig den private nøgle, men så længe du tillader det, kan det signere i dit navn og læse det, det dekrypterer."
       },
       "email_raw_send": {
         "title": "Sende beskeder, det selv har lavet",
@@ -6513,5 +6513,13 @@
     "server_needed": "Angiv først serverens adresse.",
     "server_declined": "Du tillod ikke denne server, så der blev ikke sendt noget til den.",
     "server_invalid": "Denne serveradresse er ikke gyldig."
+  },
+  "desktop_keystore": {
+    "title": "Certifikater på denne computer",
+    "description": "Denne server kan bede om at bruge dine certifikater og chipkort. Du bliver stadig spurgt, før hvert certifikat bruges.",
+    "label": "Adgang for denne server",
+    "label_description": "Træk din tilladelse tilbage. Serveren skal så spørge igen.",
+    "revoke": "Træk tilbage",
+    "revoked": "Tilladelsen er trukket tilbage"
   }
 }

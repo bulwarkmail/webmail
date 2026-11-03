@@ -5861,7 +5861,7 @@
       },
       "keystore": {
         "title": "Zertifikate auf diesem Computer verwenden",
-        "body": "Nachrichten mit Zertifikaten aus dem Zertifikatspeicher dieses Computers oder von einer Smartcard signieren und entschlüsseln. Der private Schlüssel bleibt dort. Das System fragt eventuell nach Ihrer PIN."
+        "body": "Bittet darum, Nachrichten mit Zertifikaten auf diesem Computer oder einer Smartcard zu signieren und zu entschlüsseln. Die App fragt Sie vorher. Das Plugin erhält nie den privaten Schlüssel, kann aber, solange Sie es zulassen, in Ihrem Namen signieren und lesen, was es entschlüsselt."
       },
       "email_raw_send": {
         "title": "Selbst erstellte Nachrichten senden",
@@ -6513,5 +6513,13 @@
     "server_needed": "Geben Sie zuerst die Adresse Ihres Servers ein.",
     "server_declined": "Sie haben diesen Server nicht zugelassen, daher wurde nichts an ihn gesendet.",
     "server_invalid": "Diese Serveradresse ist ungültig."
+  },
+  "desktop_keystore": {
+    "title": "Zertifikate auf diesem Computer",
+    "description": "Dieser Server darf darum bitten, Ihre Zertifikate und Smartcards zu verwenden. Vor der Verwendung eines Zertifikats werden Sie trotzdem gefragt.",
+    "label": "Zugriff für diesen Server",
+    "label_description": "Nehmen Sie Ihre Erlaubnis zurück. Der Server muss dann erneut fragen.",
+    "revoke": "Zurücknehmen",
+    "revoked": "Erlaubnis zurückgenommen"
   }
 }

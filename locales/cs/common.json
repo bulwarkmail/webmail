@@ -5861,7 +5861,7 @@
       },
       "keystore": {
         "title": "Používat certifikáty v tomto počítači",
-        "body": "Podepisuje a dešifruje zprávy pomocí certifikátů v úložišti certifikátů tohoto počítače nebo na čipové kartě. Soukromý klíč zůstává tam. Systém si může vyžádat váš PIN."
+        "body": "Žádá o podepisování a dešifrování zpráv pomocí certifikátů v tomto počítači nebo na čipové kartě. Aplikace se vás nejprve zeptá. Plugin nikdy nedostane soukromý klíč, ale dokud to povolíte, může podepisovat vaším jménem a číst, co dešifruje."
       },
       "email_raw_send": {
         "title": "Odesílat zprávy, které sám vytvořil",
@@ -6513,5 +6513,13 @@
     "server_needed": "Nejdřív zadejte adresu serveru.",
     "server_declined": "Tento server jste nepovolili, proto se na něj nic neodeslalo.",
     "server_invalid": "Tato adresa serveru není platná."
+  },
+  "desktop_keystore": {
+    "title": "Certifikáty v tomto počítači",
+    "description": "Tento server může žádat o použití vašich certifikátů a čipových karet. Před použitím každého certifikátu se vás přesto zeptáme.",
+    "label": "Přístup tohoto serveru",
+    "label_description": "Odvolejte své povolení. Server se bude muset zeptat znovu.",
+    "revoke": "Odvolat",
+    "revoked": "Povolení bylo odvoláno"
   }
 }
