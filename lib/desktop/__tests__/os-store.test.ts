@@ -4,6 +4,9 @@ import type { StorePageHooks } from '@/lib/store/client/api';
 
 /** The local store and the OS integration: mail it found, and a machine going to sleep. */
 
+// The first import of offline-mode compiles a good part of the app.
+vi.setConfig({ testTimeout: 60_000, hookTimeout: 60_000 });
+
 const configured = vi.hoisted(() => ({ hooks: null as StorePageHooks | null }));
 const setOnline = vi.hoisted(() => vi.fn(async () => {}));
 
