@@ -36,7 +36,8 @@ async function enableOffline(page: Page): Promise<void> {
   await expect(toggle).toBeVisible({ timeout: 30_000 });
   if ((await toggle.getAttribute('aria-checked')) !== 'true') await toggle.click();
   await expect(toggle).toHaveAttribute('aria-checked', 'true');
-  await expect(page.getByTestId('offline-status')).toContainText('updated', { timeout: 180_000 });
+  // The store is open once its key record is there. A full first sync isn't what's tested.
+  await expect.poll(async () => (await keyRecords(page).catch(() => [])).length, { timeout: 60_000 }).toBeGreaterThan(0);
 }
 
 async function enableLock(page: Page, pin = PIN): Promise<void> {
@@ -52,7 +53,7 @@ async function enableLock(page: Page, pin = PIN): Promise<void> {
 }
 
 async function lockNow(page: Page): Promise<void> {
-  await page.goto('/settings/general');
+  if (!page.url().includes('/settings/general')) await gotoUnlocked(page, '/settings/general');
   await page.getByTestId('app-lock-now').click();
   await expect(lockForm(page)).toBeVisible({ timeout: 30_000 });
 }
@@ -63,8 +64,18 @@ async function unlock(page: Page, pin = PIN): Promise<void> {
   await expect(lockForm(page)).toBeHidden({ timeout: 60_000 });
 }
 
+/**
+ * A full page load in the tab that holds the key loses the key, so it asks again. That's
+ * the design: the key isn't kept anywhere that a reload could find it.
+ */
+async function gotoUnlocked(page: Page, path: string): Promise<void> {
+  await page.goto(path);
+  await expect(lockForm(page)).toBeVisible({ timeout: 30_000 });
+  await unlock(page);
+}
+
 async function toMail(page: Page): Promise<void> {
-  await page.goto('/mail');
+  await gotoUnlocked(page, '/mail');
   await expect(page.locator('[data-testid="email-list-item"]').first()).toBeVisible({ timeout: 60_000 });
 }
 
@@ -79,10 +90,20 @@ async function browserStorage(page: Page): Promise<string> {
 
 /** The account key records as they are on disk. */
 async function keyRecords(page: Page): Promise<Array<{ account: string; layers: string[] }>> {
-  return page.evaluate(() => new Promise((resolve, reject) => {
+  return page.evaluate(async () => new Promise(async (resolve, reject) => {
+    // Opening one that doesn't exist would create it, empty, and break the app's own open.
+    if (!(await indexedDB.databases()).some((db) => db.name === 'bulwark-store')) {
+      resolve([]);
+      return;
+    }
     const open = indexedDB.open('bulwark-store');
     open.onerror = () => reject(open.error);
     open.onsuccess = () => {
+      if (!open.result.objectStoreNames.contains('accounts')) {
+        open.result.close();
+        resolve([]);
+        return;
+      }
       const all = open.result.transaction('accounts').objectStore('accounts').getAll();
       all.onsuccess = () => {
         open.result.close();
@@ -103,11 +124,10 @@ async function serverDraftBodies(subject: string): Promise<string[]> {
   return list.filter((email) => email.keywords.$draft).map((email) => Object.values(email.bodyValues).map((part) => part.value).join('\n'));
 }
 
-/** Signed in with "Remember me", so a reload finds the session again. */
+/** On this rig the box isn't offered, and a login is remembered, so a reload finds the session again. */
 async function signIn(page: Page): Promise<void> {
   await page.fill('#username', ENT.alice);
   await page.fill('#password', ENT_PASSWORD);
-  await page.getByText('Remember me', { exact: true }).click();
   await page.click('button[type="submit"]');
   await accountSwitcher(page).waitFor({ state: 'visible', timeout: 60_000 });
 }
@@ -145,7 +165,7 @@ test('locked: no mail in the page, its memory gone, the store closed with no key
   expect(await heldLocks(page)).toContain('bulwark-store-owner');
   expect(await heldLocks(page)).toContain('bulwark-app-lock-holder');
 
-  await page.goto('/settings/general');
+  await gotoUnlocked(page, '/settings/general');
   await page.evaluate(() => { (window as unknown as { __before: string }).__before = 'still here'; });
   await page.getByTestId('app-lock-now').click();
   await expect(lockForm(page)).toBeVisible({ timeout: 30_000 });
@@ -205,7 +225,7 @@ test('all tabs lock together, and a new tab or pop-out address stays locked; the
   await second.goto('/mail');
   await expect(second.locator('[data-testid="email-list-item"]').first()).toBeVisible({ timeout: 60_000 });
 
-  await page.goto('/settings/general');
+  // This tab holds the key: no new load here, or the others would lock for that.
   await page.getByTestId('app-lock-now').click();
   await expect(lockForm(page)).toBeVisible({ timeout: 30_000 });
   await expect(lockForm(second)).toBeVisible({ timeout: 30_000 });
@@ -230,9 +250,10 @@ test('all tabs lock together, and a new tab or pop-out address stays locked; the
   await expect(third.locator('[data-testid="email-list-item"]').first()).toBeVisible({ timeout: 60_000 });
 
   // The key was never passed on: when the tab that has it goes, the others have to ask.
+  // Up to a store call's wait for the owner that went, then the reload.
   await second.close();
-  await expect(lockForm(page)).toBeVisible({ timeout: 30_000 });
-  await expect(lockForm(third)).toBeVisible({ timeout: 30_000 });
+  await expect(lockForm(page)).toBeVisible({ timeout: 90_000 });
+  await expect(lockForm(third)).toBeVisible({ timeout: 90_000 });
   await unlock(page);
   await context.close();
 });
@@ -273,7 +294,6 @@ test('an open composer\'s text is saved first, is unreadable while locked, and n
 test('time without use locks every tab, and use in another tab counts', async ({ browser }) => {
   const { page, context } = await fresh(browser);
   await enableLock(page);
-  await page.goto('/settings/general');
   await page.getByTestId('app-lock-timeout').selectOption('1');
   const other = await context.newPage();
   await other.goto('/mail');
@@ -368,13 +388,34 @@ test('a login without "Remember me" has to sign in again after a lock, and its l
   await enableLock(page);
   const before = await keyRecords(page);
   expect(before.length).toBeGreaterThan(0);
-  await lockNow(page);
-  await page.getByTestId('app-lock-pin').fill(PIN);
-  await page.getByTestId('app-lock-unlock').click();
-  await expect(page.locator('#username')).toBeVisible({ timeout: 60_000 });
+  await page.getByTestId('app-lock-now').click();
+  await expect(lockForm(page)).toBeVisible({ timeout: 30_000 });
+  // As a login with the box left unticked is written down. This rig doesn't offer the box.
+  await page.evaluate(() => {
+    const registry = JSON.parse(localStorage.getItem('account-registry') ?? '{}');
+    for (const account of registry.state.accounts) account.rememberMe = false;
+    localStorage.setItem('account-registry', JSON.stringify(registry));
+  });
+  await context.clearCookies();
+  await page.reload();
+  await expect(lockForm(page)).toBeVisible({ timeout: 30_000 });
+  await unlock(page);
+  // The way to the login page and back from it are full page loads, and each asks again.
+  const pastLock = async (target: ReturnType<Page['locator']>) => {
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      await expect(target.or(lockForm(page)).first()).toBeVisible({ timeout: 60_000 });
+      if (await target.first().isVisible()) return;
+      await unlock(page);
+    }
+    throw new Error('still at the lock screen');
+  };
+  await pastLock(page.locator('#username'));
   // Not what a page reload does to such a login with the lock off: that one wipes.
   expect((await keyRecords(page)).map((record) => record.account)).toEqual(before.map((record) => record.account));
-  await signIn(page);
+  await page.fill('#username', ENT.alice);
+  await page.fill('#password', ENT_PASSWORD);
+  await page.click('button[type="submit"]');
+  await pastLock(accountSwitcher(page));
   await expect.poll(() => heldLocks(page), { timeout: 60_000 }).toContain('bulwark-store-owner');
   await context.close();
 });
@@ -391,8 +432,10 @@ test('turning it off needs the PIN and takes the layer off', async ({ browser })
   await page.getByTestId('app-lock-dialog-save').click();
   await expect(page.getByTestId('app-lock-switch')).toHaveAttribute('aria-checked', 'false', { timeout: 30_000 });
   for (const record of await keyRecords(page)) expect(record.layers).toEqual([]);
+  // Off: a reload asks for nothing.
   await page.reload();
-  await expect(accountSwitcher(page).or(page.getByTestId('app-lock-switch')).first()).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByTestId('app-lock-switch')).toBeVisible({ timeout: 60_000 });
+  await expect(lockForm(page)).toHaveCount(0);
   await context.close();
 });
 

@@ -257,6 +257,3 @@ export async function openSealedDrafts(lockKey: CryptoKey): Promise<unknown[]> {
   });
   return out;
 }
-
-export { keyFromPrf };
-export type { SealedAnswer };

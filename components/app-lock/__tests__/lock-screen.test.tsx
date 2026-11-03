@@ -9,9 +9,11 @@ import { writeAppLockFile } from '@/lib/app-lock/state';
 vi.mock('@/hooks/use-config', () => ({ useConfig: () => ({ appName: 'Bulwark' }) }));
 
 const unlockWithPin = vi.hoisted(() => vi.fn());
+const forgetEverything = vi.hoisted(() => vi.fn());
 vi.mock('@/lib/app-lock/controller', async (original) => ({
   ...(await original<typeof import('@/lib/app-lock/controller')>()),
   unlockWithPin,
+  forgetEverything,
 }));
 
 function setPolicy(required: boolean, minutes: number | null, locked: boolean): void {
@@ -32,6 +34,7 @@ beforeEach(async () => {
   await deleteVault();
   localStorage.clear();
   unlockWithPin.mockReset();
+  forgetEverything.mockReset();
 });
 
 afterEach(() => {
@@ -81,6 +84,28 @@ describe('the lock screen', () => {
     await waitFor(() => expect(screen.getByTestId('app-lock-forgot')).toBeInTheDocument());
     expect(screen.queryByTestId('app-lock-passkey')).toBeNull();
     expect(screen.queryByTestId('app-lock-os')).toBeNull();
+  });
+
+  it('asks about a forgotten PIN inside the lock screen: everything on <body> beside it is hidden', async () => {
+    (await createVault('correct-pin')).fill(0);
+    render(<LockScreen phase="locked" />);
+    fireEvent.click(await screen.findByTestId('app-lock-forgot'));
+    const confirm = screen.getByRole('button', { name: 'forgot_confirm' });
+    expect(confirm.closest('[data-app-lock-overlay]')).not.toBeNull();
+    expect(screen.getByRole('dialog')).toHaveTextContent('forgot_body');
+    fireEvent.click(screen.getByRole('button', { name: 'cancel' }));
+    expect(await screen.findByTestId('app-lock-pin')).toBeInTheDocument();
+    expect(forgetEverything).not.toHaveBeenCalled();
+  });
+
+  it('forgets only after the yes, and comes back when main says no', async () => {
+    (await createVault('correct-pin')).fill(0);
+    forgetEverything.mockResolvedValue(false);
+    render(<LockScreen phase="locked" />);
+    fireEvent.click(await screen.findByTestId('app-lock-forgot'));
+    fireEvent.click(screen.getByRole('button', { name: 'forgot_confirm' }));
+    await waitFor(() => expect(forgetEverything).toHaveBeenCalledTimes(1));
+    expect(await screen.findByTestId('app-lock-pin')).toBeInTheDocument();
   });
 
   it('says it\'s saving rather than ask for anything while it locks', () => {

@@ -4,10 +4,8 @@ import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from 
 import { useTranslations } from "next-intl";
 import { Lock } from "@/components/icons";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { useConfig } from "@/hooks/use-config";
-import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { NewPinFields, newPinReady } from "./pin-fields";
 import { enableAppLock, forgetEverything, unlockWithOs, unlockWithPasskey, unlockWithPin, type AppLockPhase } from "@/lib/app-lock/controller";
 import { passkeysPossible } from "@/lib/app-lock/passkey";
@@ -118,7 +116,7 @@ function SetupForm() {
 function UnlockForm() {
   const t = useTranslations("appLock");
   const appName = productName(useConfig().appName);
-  const { dialogProps, confirm } = useConfirmDialog();
+  const [forgetting, setForgetting] = useState(false);
   const [pin, setPin] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -180,15 +178,31 @@ function UnlockForm() {
     }
   };
 
-  const forgot = async () => {
-    const ok = await confirm({
-      title: t("forgot_title"),
-      message: t("forgot_body"),
-      confirmText: t("forgot_confirm"),
-      variant: "destructive",
-    });
-    if (ok) await forgetEverything();
-  };
+  // Here and not in a dialog: a dialog is a portal on <body>, which the lock keeps hidden.
+  if (forgetting) {
+    return (
+      <Frame title={t("forgot_title")} body={t("forgot_body")}>
+        <div className="flex flex-col gap-2" data-testid="app-lock-forget">
+          <Button
+            variant="destructive"
+            className="w-full"
+            disabled={busy}
+            onClick={() => {
+              setBusy(true);
+              void forgetEverything().catch(() => false).then((gone) => {
+                if (gone) return;
+                setBusy(false);
+                setForgetting(false);
+              });
+            }}
+          >
+            {t("forgot_confirm")}
+          </Button>
+          <Button variant="ghost" className="w-full" disabled={busy} onClick={() => setForgetting(false)}>{t("cancel")}</Button>
+        </div>
+      </Frame>
+    );
+  }
 
   if (mainThere) {
     return (
@@ -241,11 +255,10 @@ function UnlockForm() {
             {t("use_passkey")}
           </Button>
         )}
-        <Button type="button" variant="ghost" className="w-full" onClick={forgot} data-testid="app-lock-forgot">
+        <Button type="button" variant="ghost" className="w-full" onClick={() => setForgetting(true)} data-testid="app-lock-forgot">
           {t("forgot")}
         </Button>
       </form>
-      <ConfirmDialog {...dialogProps} />
     </Frame>
   );
 }
