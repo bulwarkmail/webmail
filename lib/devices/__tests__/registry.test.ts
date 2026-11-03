@@ -199,9 +199,23 @@ describe('the rules', () => {
     expect(await registry.getDevice(waiting.id)).not.toBeNull();
   });
 
+  it('prunes the user\'s own rows also in the hour after the registry-wide look', async () => {
+    const registry = await import('../registry');
+    const start = Date.now() + 2 * 365 * 24 * 60 * 60 * 1000;
+    vi.useFakeTimers({ now: start, toFake: ['Date'] });
+    const old = await registry.registerDevice('alice@example.org', 'https://mail.example.org', info);
+    // Someone else's registration has the look just before the row goes stale.
+    vi.setSystemTime(start + registry.DEVICE_PRUNE_MS - 30 * 60 * 1000);
+    await registry.registerDevice('bob@example.org', 'https://mail.example.org', info);
+    vi.setSystemTime(start + registry.DEVICE_PRUNE_MS + 60_000);
+    await registry.registerDevice('alice@example.org', 'https://mail.example.org', info);
+    vi.useRealTimers();
+    expect(await registry.getDevice(old.id)).toBeNull();
+  });
+
   it('abandoned rows expire with no admin looking, others\' too, through any registration', async () => {
     const registry = await import('../registry');
-    const start = Date.now() + 365 * 24 * 60 * 60 * 1000;
+    const start = Date.now() + 4 * 365 * 24 * 60 * 60 * 1000;
     vi.useFakeTimers({ now: start, toFake: ['Date'] });
     const abandoned = await registry.registerDevice('bob@example.org', 'https://mail.example.org', info);
     const waiting = await registry.registerDevice('bob@example.org', 'https://mail.example.org', info);

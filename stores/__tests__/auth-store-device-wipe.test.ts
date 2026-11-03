@@ -74,6 +74,14 @@ function account(id: string, slot: number, authMode: 'basic' | 'oauth') {
   };
 }
 
+/** How accounts leave: 'explicit' is what takes their data with it. */
+async function removalReasons(): Promise<string[]> {
+  const { onAccountRemoved } = await import('@/stores/account-store');
+  const reasons: string[] = [];
+  onAccountRemoved((_id, reason) => { reasons.push(reason); });
+  return reasons;
+}
+
 type Answer = (url: string, method: string) => Response | null;
 let answer: Answer;
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
@@ -165,11 +173,13 @@ describe('a login the server ended, at a start', () => {
   });
 
   it('invalid_grant fires the hook, for certain, and only hides the data', async () => {
+    const reasons = await removalReasons();
     useOfflineStore.setState({ enabled: [ALICE] });
     answer = (url, method) => (url.includes('/api/auth/token') && method === 'PUT' ? json(401, { error: 'invalid_grant' }) : null);
     await useAuthStore.getState().checkAuth();
     // With mail kept here the real connect goes on behind the local copy.
     await vi.waitFor(() => expect(heard).toEqual([ALICE]));
+    await vi.waitFor(() => expect(reasons).toEqual(['evicted']));
     expect(certain).toEqual([true]);
     expect(isEvicted(ALICE)).toBe(true);
     expect(useOfflineStore.getState().enabled).toEqual([ALICE]);
@@ -218,10 +228,12 @@ describe('a login the server ended, at a switch', () => {
   });
 
   it('invalid_grant fires the hook and hides the account, keeping its data', async () => {
+    const reasons = await removalReasons();
     useOfflineStore.setState({ enabled: [ALICE, BOB] });
     answer = (url, method) => (url.includes('/api/auth/token') && method === 'PUT' ? json(401, { error: 'invalid_grant' }) : null);
     await useAuthStore.getState().switchAccount(BOB);
     expect(heard).toEqual([BOB]);
+    expect(reasons).toEqual(['evicted']);
     expect(useAccountStore.getState().getAccountById(BOB)).toBeUndefined();
     expect(isEvicted(BOB)).toBe(true);
     expect(useOfflineStore.getState().enabled).toContain(BOB);
@@ -282,7 +294,7 @@ describe('a password the server keeps refusing', () => {
 
     it('during the connect: a later failure isn\'t read as a refusal', async () => {
       clients.connect = async (client) => {
-        if ((client as { username?: string }).username === 'bob') (client as { refused?: (ms: number) => void }).refused?.(0);
+        (client as { refused?: (ms: number) => void }).refused?.(0);
       };
       await useAuthStore.getState().checkAuth();
       await vi.waitFor(() => expect(clients.made.length).toBeGreaterThanOrEqual(2));

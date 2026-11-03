@@ -505,6 +505,8 @@ describe('a refused login (lib/offline/credentials-rejected.ts)', () => {
     expect(state.isEvicted(ALICE)).toBe(false);
     expect(state.visibleAccounts()).toEqual([ALICE]);
     expect((await queue.readQueue(ALICE)).outbox.map((row) => row.summary.subject)).toEqual(['Unsent']);
+    // Signed in: the page says nothing from here on, even before the next look.
+    expect(wipeState.refusedWaits()).toEqual([]);
 
     await wipe.sweepRefusedLogins();
     expect(wipeState.readRefusedLogins()).toEqual({});
@@ -717,8 +719,11 @@ describe('other windows', () => {
     vi.stubGlobal('location', { ...window.location, reload });
     useAccountStore.setState({ accounts: [entry(ALICE, 0), entry(BOB, 1)] } as never);
     state.writeEnabled([ALICE, BOB]);
+    await keys.putDeviceRecord({ account: BOB, id: BOB_ROW, secret: SECRET, createdAt: 1 });
     const stop = wipe.startDeviceWipe();
     const other = new BroadcastChannel('bulwark-device-wipe');
+    await vi.waitFor(() => expect(sent.length).toBeGreaterThan(0));
+    sent.length = 0;
 
     other.postMessage({ account: BOB, phase });
     await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(BOB)).toBeUndefined());
@@ -729,6 +734,9 @@ describe('other windows', () => {
     expect(state.isEvicted(BOB)).toBe(false);
     expect(store.removed).toEqual([]);
     expect(purge.files).toBe(0);
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(sent.filter((call) => call.url.endsWith('/wiped'))).toEqual([]);
+    expect((await keys.getDeviceRecord(BOB))?.id).toBe(BOB_ROW);
     expect(JSON.parse(localStorage.getItem('account-registry') ?? '{"state":{"accounts":[]}}').state.accounts.map((a: { id: string }) => a.id)).not.toContain(BOB);
 
     other.close();
@@ -928,10 +936,14 @@ describe('two wipes at once', () => {
   });
 
   it('a wipe heard twice is done once: the second finds the row gone', async () => {
+    let cleaned = 0;
+    registry.onDeviceWipe(() => { cleaned += 1; });
     await wipe.wipeAccountFromDevice(ALICE, 'admin', { ifRow: ROW });
+    expect(cleaned).toBe(1);
     const reports = sent.filter((call) => call.url.endsWith('/wiped')).length;
     expect(wipeState.consumeWipeNote()).toEqual({ unsent: 0 });
     await wipe.wipeAccountFromDevice(ALICE, 'admin', { ifRow: ROW });
+    expect(cleaned).toBe(1);
     expect(sent.filter((call) => call.url.endsWith('/wiped'))).toHaveLength(reports);
     expect(wipeState.consumeWipeNote()).toBeNull();
     expect(wipeState.readPendingWipes()).toEqual({});
@@ -958,6 +970,16 @@ describe('a sign-out', () => {
     await useAuthStore.getState().logout({ endProviderSession: false });
     await vi.waitFor(() => expect(sent.find((call) => call.url.endsWith('/wiped'))?.body).toEqual({ id: ROW, secret: SECRET, drop: true }));
     expect(wipeState.readWipeConfirmations()).toEqual([]);
+  });
+
+  it('has its row on the way before the key database goes with the rest', async () => {
+    respond = () => json(503, {});
+    let queuedAtPurge: string[] | null = null;
+    purge.during = () => { queuedAtPurge ??= wipeState.readWipeConfirmations().map((entry) => entry.id); };
+    wipe.registerDeviceWipe();
+    await useAuthStore.getState().logout({ endProviderSession: false });
+    await vi.waitFor(() => expect(purge.files).toBeGreaterThan(0));
+    expect(queuedAtPurge).toEqual([ROW]);
   });
 
   it('removing another account drops its row too, and keeps this one\'s', async () => {
@@ -1098,6 +1120,12 @@ describe('what else goes with a wipe', () => {
     await wipe.wipeAccountFromDevice(ALICE, 'admin');
     expect(closed).toEqual(['From Eve']);
     expect(unsubscribed).toBe(0);
+    // No full sign-out comes along to clean up behind it. A store may write itself back, empty.
+    for (const key of ['pro-tabs', 'search-history-storage', 'files-favorites', 'files-recent-files', 'files-last-parent-id', 'files-path-stack',
+      'bulwark-delegate-names', 'calendar-notification-storage', 'webdav-favorites', 'webdav-recent-files', 'webdav-last-path', 'template-storage']) {
+      expect([key, localStorage.getItem(key)]).not.toEqual([key, 'x']);
+    }
+    expect(deletedCaches).toContain('bulwark-push-state-v1');
   });
 
   it('a wipe from settings takes them too', async () => {
