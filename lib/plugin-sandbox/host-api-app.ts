@@ -10,6 +10,7 @@ import { detectBrowserLocale } from '@/i18n/detect-locale';
 import { useLocaleStore } from '@/stores/locale-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useThemeStore } from '@/stores/theme-store';
+import { useCalendarStore } from '@/stores/calendar-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { fetchConfig, type ConfigData } from '@/hooks/use-config';
@@ -132,7 +133,34 @@ export const SHARED_SETTINGS = [
   'showWeekNumbers', 'calendarWorkingDays', 'enableCalendarTasks', 'showBirthdayCalendar',
   'emailNotificationsEnabled', 'emailNotificationSound', 'calendarNotificationsEnabled',
   'enableUnifiedMailbox', 'sessionTimeout',
+  // Everything else app.setSettings may change (lib/settings-schema.ts), so
+  // a plugin reads the current value before it proposes a new one.
+  'colorfulSidebarIcons', 'showFolderTotalCount', 'hideAccountSwitcher', 'showRailAccountList',
+  'unifiedCrossAccount', 'includeGroupInUnified', 'enableCrossUnreadView', 'enableCrossStarredView', 'enableCrossAllView',
+  'tintListRowsByAccount', 'showAccountDot', 'showSharedMailAccounts', 'compactSharedMailboxes', 'showAdvancedSettings',
+  'dateLocale', 'protocolOpenMode', 'showOnboardingOnNewDevices',
+  'mvInboxType', 'messageListOrderScope', 'tintListRowsByTag', 'senderFavicons', 'showAvatarsInJunk',
+  'hoverActions', 'hoverActionsMode', 'hoverActionsCorner', 'swipeRightAction', 'swipeLeftAction',
+  'searchDefaultScope', 'clearSearchOnFolderChange',
+  'messageSpacing', 'attachmentImagePreviewsEnabled', 'hideInlineImageAttachments',
+  'filenameSpaceReplacement', 'filenameLowercase', 'filenameStripDiacritics', 'filenameCollapseSeparators', 'postExportAction',
+  'recipientMentionsEnabled', 'mentionAddsRecipientTo', 'rtlEditingSupport', 'quickReplyEnabled', 'replyIdentityMatch',
+  'attachmentReminderEnabled', 'attachmentReminderKeywords', 'emptySubjectWarningEnabled', 'placeholderWarningEnabled',
+  'notificationSoundChoice', 'pushNotifyInboxOnly', 'faviconUnreadBadge', 'calendarNotificationSound', 'doNotDisturb', 'visualAlerts',
+  'calendarInvitationParsingEnabled', 'showTimeInMonthView', 'calendarTintedEvents', 'calendarMonthTimedEvents',
+  'calendarLimitHours', 'calendarDayStartHour', 'calendarDayEndHour', 'calendarHideNonWorkingDays',
+  'calendarFreeScroll', 'calendarHoverPreview', 'showTasksOnCalendar',
+  'groupContactsByLetter', 'sortContactsByLastName', 'showContactsDirectory',
+  'showAccessibilityButton', 'lineSpacing', 'letterSpacing', 'wordSpacing', 'paragraphSpacing', 'readingWidth',
+  'readingMask', 'plainLanguage', 'reduceTransparency', 'showColorNames', 'colorBlindPalette', 'pauseAnimatedImages',
+  'focusAlwaysVisible', 'largeCursor', 'openOnHover', 'showRowActionButton', 'nativeScrollbars',
+  'mailViewMode', 'mailTextScale', 'mailMinFontSize', 'mailOverrideStyles', 'mailFitWidth', 'readAloudRate',
+  'composeFontFamily', 'composeFontSize', 'confirmDelete', 'confirmArchive', 'unreadCountStyle',
+  'announceNewMail', 'announceRowPreview', 'simpleMode', 'simpleModePagedList',
 ] as const;
+
+/** Lists longer than this are cut; the reminder words (29 by default) must come through whole. */
+const MAX_LIST_ITEMS = 50;
 
 export function doAppGetSettings(): AppSettingsView {
   const state = useSettingsStore.getState() as unknown as Record<string, unknown>;
@@ -140,7 +168,7 @@ export function doAppGetSettings(): AppSettingsView {
   for (const key of SHARED_SETTINGS) {
     const value = state[key];
     if (typeof value === 'string' || typeof value === 'boolean' || (typeof value === 'number' && Number.isFinite(value))) out[key] = value;
-    else if (Array.isArray(value) && value.every((v) => typeof v === 'number' || typeof v === 'string')) out[key] = value.slice(0, 20) as number[] | string[];
+    else if (Array.isArray(value) && value.every((v) => typeof v === 'number' || typeof v === 'string')) out[key] = value.slice(0, MAX_LIST_ITEMS) as number[] | string[];
   }
   // Plugins written before Reduce motion (v9) read this switch.
   out.animationsEnabled = state.reduceMotion !== 'on';
@@ -155,5 +183,8 @@ export function doAppGetSettings(): AppSettingsView {
   if (typeof theme === 'string') out.theme = theme;
   const locale = useLocaleStore.getState().locale;
   if (locale) out.language = locale;
+  // Settings > Calendar > Default view (the calendar store's viewMode).
+  const calendarView = useCalendarStore.getState().viewMode;
+  if (typeof calendarView === 'string') out.calendarView = calendarView;
   return out;
 }

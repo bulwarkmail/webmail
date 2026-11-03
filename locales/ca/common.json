@@ -5850,6 +5850,10 @@
         "title": "Canviar el vostre calendari",
         "body": "Crear, canviar i suprimir esdeveniments."
       },
+      "calendar_respond": {
+        "title": "Respondre invitacions",
+        "body": "Acceptar o rebutjar invitacions de calendari. La vostra resposta s'envia a l'organitzador per correu electrònic."
+      },
       "contacts_read": {
         "title": "Llegir els vostres contactes",
         "body": "Cercar i llegir les vostres llibretes d'adreces."
@@ -5915,8 +5919,12 @@
         "body": "Veure les vostres preferències i les definicions d'etiquetes."
       },
       "settings_write": {
+        "title": "Canviar les vostres etiquetes",
+        "body": "Afegir, canviar el nom i reordenar les vostres etiquetes, i impedir canvis a la vostra configuració."
+      },
+      "settings_change": {
         "title": "Canviar la vostra configuració",
-        "body": "Afegir i reordenar etiquetes i canviar les vostres preferències."
+        "body": "Canviar l'aspecte i el funcionament de l'aplicació, com ara el tema, el format d'hora o la subfinestra de lectura. La configuració que ha establert la vostra organització es manté igual."
       },
       "security_read": {
         "title": "Veure la seguretat del compte",

@@ -7074,10 +7074,13 @@ export class JMAPClient implements IJMAPClient {
   }
 
   async deactivateSieveScript(accountId?: string): Promise<void> {
+    // RFC 9661 deactivates with onSuccessDeactivateScript. Stalwart (0.16 and
+    // 1.0) answers onSuccessActivateScript: null without error but leaves the
+    // script active, so a script could not be removed afterwards.
     const response = await this.request([
       ["SieveScript/set", {
         accountId: accountId || this.getSieveAccountId(),
-        onSuccessActivateScript: null,
+        onSuccessDeactivateScript: true,
       }, "0"]
     ], this.sieveUsing());
 

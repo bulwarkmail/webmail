@@ -20,6 +20,8 @@ export function ComposingSettings() {
   const t = useTranslations('settings.email_behavior');
   const tPage = useTranslations('settings.composing_page');
   const templatesEnabled = usePolicyStore((s) => s.isFeatureEnabled('templatesEnabled'));
+  // The admin panel can lock or hide these three (restriction-keys.ts).
+  const { isSettingLocked, isSettingHidden } = usePolicyStore();
   const [newKeyword, setNewKeyword] = useState('');
 
   const {
@@ -49,12 +51,14 @@ export function ComposingSettings() {
   return (
     <div className="space-y-8">
       <SettingsSection id="editor" title={tPage('title')} description={tPage('description')}>
-        <SettingItem label={t('plain_text_mode.label')} description={t('plain_text_mode.description')}>
+        {!isSettingHidden('plainTextMode') && (
+        <SettingItem label={t('plain_text_mode.label')} description={t('plain_text_mode.description')} locked={isSettingLocked('plainTextMode')}>
           <ToggleSwitch
             checked={plainTextMode}
             onChange={(checked) => updateSetting('plainTextMode', checked)}
           />
         </SettingItem>
+        )}
 
         <SettingItem label={t('recipient_mentions.label')} description={t('recipient_mentions.description')}>
           <ToggleSwitch
@@ -93,15 +97,17 @@ export function ComposingSettings() {
           />
         </SettingItem>
 
-        <SettingItem label={t('auto_select_reply_identity.label')} description={t('auto_select_reply_identity.description')}>
+        {!isSettingHidden('autoSelectReplyIdentity') && (
+        <SettingItem label={t('auto_select_reply_identity.label')} description={t('auto_select_reply_identity.description')} locked={isSettingLocked('autoSelectReplyIdentity')}>
           <ToggleSwitch
             checked={autoSelectReplyIdentity}
             onChange={(checked) => updateSetting('autoSelectReplyIdentity', checked)}
           />
         </SettingItem>
+        )}
 
-        {autoSelectReplyIdentity && customFromEnabled && (
-          <SettingItem nested label={t('reply_identity_match.label')} description={t('reply_identity_match.description')}>
+        {autoSelectReplyIdentity && customFromEnabled && !isSettingHidden('replyIdentityMatch') && (
+          <SettingItem nested label={t('reply_identity_match.label')} description={t('reply_identity_match.description')} locked={isSettingLocked('replyIdentityMatch')}>
             <Select
               value={replyIdentityMatch}
               onChange={(value) => updateSetting('replyIdentityMatch', value as ReplyIdentityMatch)}

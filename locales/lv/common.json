@@ -5850,6 +5850,10 @@
         "title": "Mainīt jūsu kalendāru",
         "body": "Izveidot, mainīt un dzēst notikumus."
       },
+      "calendar_respond": {
+        "title": "Atbildēt uz ielūgumiem",
+        "body": "Pieņemt vai noraidīt kalendāra ielūgumus. Jūsu atbilde tiek nosūtīta organizatoram e-pastā."
+      },
       "contacts_read": {
         "title": "Lasīt jūsu kontaktus",
         "body": "Meklēt un lasīt jūsu adrešu grāmatās."
@@ -5915,8 +5919,12 @@
         "body": "Redzēt jūsu preferences un tagu definīcijas."
       },
       "settings_write": {
+        "title": "Mainīt jūsu tagus",
+        "body": "Pievienot, pārdēvēt un pārkārtot jūsu tagus un neļaut mainīt jūsu iestatījumus."
+      },
+      "settings_change": {
         "title": "Mainīt jūsu iestatījumus",
-        "body": "Pievienot tagus, mainīt to secību un mainīt jūsu preferences."
+        "body": "Mainīt lietotnes izskatu un darbību, piemēram, tēmu, laika formātu vai lasīšanas rūti. Iestatījumi, ko noteikusi jūsu organizācija, paliek nemainīgi."
       },
       "security_read": {
         "title": "Redzēt jūsu konta drošību",
