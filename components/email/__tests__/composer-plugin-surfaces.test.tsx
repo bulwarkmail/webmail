@@ -543,6 +543,29 @@ describe('composer-sidebar and composer-sidebar-right', () => {
     expect(panel('right').style.width).toBe('360px');
   });
 
+  it('keep a panel laid over the composer between its header and its bottom bar', () => {
+    stubWidth(700);
+    offerSlots('p1', ['composer-sidebar-right']);
+    const rect = (top: number, bottom: number) => ({ top, bottom, left: 0, right: 700, width: 700, height: bottom - top, x: 0, y: top, toJSON: () => ({}) });
+    const original = Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = function (this: Element) {
+      if (this.matches('[data-testid="email-composer"]')) return rect(100, 800);
+      if (this.matches('[data-composer-header]')) return rect(100, 156);
+      if (this.matches('[data-composer-footer]')) return rect(740, 800);
+      return original.call(this);
+    };
+    try {
+      localStorage.setItem('composerPluginSidebarCollapsed:right', '1');
+      render(<EmailComposer initialData={DRAFT} onClose={vi.fn()} />);
+      fireEvent.click(document.querySelector('[data-composer-panel-toggle="right"]')!);
+      expect(panel('right').dataset.composerSidebarMode).toBe('overlay');
+      expect(panel('right').style.top).toBe('56px');
+      expect(panel('right').style.bottom).toBe('60px');
+    } finally {
+      Element.prototype.getBoundingClientRect = original;
+    }
+  });
+
   it('folds a widened panel sooner, since it needs the room', () => {
     localStorage.setItem('composerPluginSidebarWidth:right', '480');
     stubWidth(1000);

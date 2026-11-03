@@ -2,7 +2,7 @@
 
 import { useMemo, useSyncExternalStore, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { iconForName, MoreVertical, Puzzle } from '@/components/icons';
+import { iconForName, Puzzle } from '@/components/icons';
 import { ContextMenu, ContextMenuItem } from '@/components/ui/context-menu';
 import { useContextMenu } from '@/hooks/use-context-menu';
 import { cn } from '@/lib/utils';
@@ -113,14 +113,26 @@ interface PluginActionsProps {
   target?: MessageActionTarget;
   /** Surfaces about the selection: the open folder's account kind. */
   accountKind?: MailAccountKind | null;
+  /**
+   * The buttons join their toolbar's overflow measurement, on one line, and
+   * give way before the toolbar's own items. Buttons that gave way are named
+   * by `data-plugin-action-key`, for `only` on the toolbar's menu.
+   */
+  overflowItems?: boolean;
+  /** Draw only these actions, by `data-plugin-action-key`. */
+  only?: ReadonlySet<string>;
 }
+
+/** Above every item of a toolbar's own, so that a plugin's button gives way first. */
+const PLUGIN_OVERFLOW_PRIORITY_BASE = 100;
 
 /**
  * Buttons or menu entries plugins declared with api.ui.setActions. The host
  * draws them so they match the app; the plugin gets the click.
  */
-export function PluginActions({ surface, context, variant = 'buttons', mailboxRole, mimeType, className, compact, overflow, onRan, target, accountKind }: PluginActionsProps) {
-  const actions = usePluginActions(surface, { mailboxRole, mimeType, ...targetFilter(target, accountKind) });
+export function PluginActions({ surface, context, variant = 'buttons', mailboxRole, mimeType, className, compact, overflow, onRan, target, accountKind, overflowItems, only }: PluginActionsProps) {
+  const applicable = usePluginActions(surface, { mailboxRole, mimeType, ...targetFilter(target, accountKind) });
+  const actions = only ? applicable.filter((a) => only.has(`${a.pluginId}:${a.id}`)) : applicable;
   const [busy, setBusy] = useState<string | null>(null);
   if (actions.length === 0) return null;
   if (overflow && variant === 'buttons') {
@@ -157,8 +169,8 @@ export function PluginActions({ surface, context, variant = 'buttons', mailboxRo
   }
 
   return (
-    <div className={cn('inline-flex flex-wrap items-center gap-1', className)} data-plugin-actions={surface}>
-      {actions.map((action) => {
+    <div className={cn('inline-flex items-center gap-1', overflowItems ? 'flex-nowrap' : 'flex-wrap', className)} data-plugin-actions={surface}>
+      {actions.map((action, index) => {
         const Icon = iconForName(action.icon) ?? Puzzle;
         const key = `${action.pluginId}:${action.id}`;
         return (
@@ -168,6 +180,11 @@ export function PluginActions({ surface, context, variant = 'buttons', mailboxRo
             disabled={busy === key}
             title={compact ? `${action.label} (${action.pluginName})` : action.pluginName}
             aria-label={action.label}
+            {...(overflowItems ? {
+              'data-overflow-item': '',
+              'data-overflow-priority': PLUGIN_OVERFLOW_PRIORITY_BASE + index,
+              'data-plugin-action-key': key,
+            } : {})}
             onClick={(e) => { e.stopPropagation(); void run(action); }}
             className={cn(
               'relative inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-sm text-muted-foreground transition-colors',
@@ -213,7 +230,8 @@ function PluginActionsOverflow({ surface, context, mailboxRole, mimeType, classN
           'hover:bg-muted hover:text-foreground focus-visible:outline-hidden',
         )}
       >
-        <MoreVertical className="h-4 w-4" />
+        {/* Not a second ⋮: toolbars have their own right next to this. */}
+        <Puzzle className="h-4 w-4" />
       </button>
       <ContextMenu ref={menuRef} isOpen={contextMenu.isOpen} position={contextMenu.position} onClose={closeContextMenu}>
         <PluginActions

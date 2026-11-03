@@ -105,7 +105,7 @@ export function RuleSummary({ rule }: { rule: FilterRule }) {
         ))}
         {extra}
       </span>
-      <span className="mx-1 opacity-50">→</span>
+      {" "}<span className="mx-0.5 opacity-50">→</span>{" "}
       <span className="inline">
         {actions.map((act, i) => (
           <span key={i}>
@@ -666,7 +666,7 @@ export function FilterSettings() {
                   onDragOver={(e) => handleDragOver(e, index)}
                   onDrop={(e) => handleDrop(e, index)}
                   onDragEnd={handleDragEnd}
-                  className={`flex items-start gap-3 p-3 rounded-md border transition-colors ${
+                  className={`flex flex-wrap items-start gap-x-3 gap-y-1 p-3 rounded-md border transition-colors sm:flex-nowrap ${
                     dragOverIndex === index
                       ? "border-primary bg-primary/5"
                       : "border-border hover:bg-muted/50"
@@ -687,8 +687,9 @@ export function FilterSettings() {
                     />
                   </div>
 
+                  {/* On a phone the name and summary get a line of their own, under the controls. */}
                   <div
-                    className="flex-1 min-w-0 cursor-pointer"
+                    className="flex-1 min-w-0 cursor-pointer max-sm:order-last max-sm:basis-full"
                     onClick={() => {
                       setEditingRule(rule);
                       setShowRuleModal(true);
@@ -719,6 +720,7 @@ export function FilterSettings() {
                     count={rules.length}
                     name={rule.name}
                     onMove={(from, to) => void moveRule(from, to)}
+                    className="max-sm:ms-auto"
                   />
                   <IconButton
                     label={t("delete_rule")}
@@ -734,8 +736,8 @@ export function FilterSettings() {
         )}
       </SettingsSection>
 
-      <div className="flex items-center justify-between">
-        <div className="flex gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {!isOpaque && (
             <Button
               variant="outline"

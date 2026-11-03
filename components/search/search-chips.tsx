@@ -19,6 +19,7 @@ export function SearchChips({
   className,
 }: SearchChipsProps) {
   const t = useTranslations("advanced_search");
+  const tChip = useTranslations("plugin_list");
 
   const chips: { key: keyof SearchFilters; label: string; value: string }[] = [];
 
@@ -90,6 +91,8 @@ export function SearchChips({
           <button
             type="button"
             onClick={() => onRemoveFilter(chip.key)}
+            aria-label={tChip("remove_filter", { label: chip.label })}
+            title={tChip("remove_filter", { label: chip.label })}
             className="-my-1 -me-1 p-1.5 rounded-full hover:bg-primary/20 transition-colors"
           >
             <X className="w-3 h-3" />

@@ -1264,7 +1264,7 @@ function LoginPageContent() {
   // Demo-only mode: show only a large demo login button
   if (demoMode && !isAddAccountMode) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-muted/10 to-muted/30 relative px-4">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-muted/10 to-muted/30 relative px-4 py-16">
         {/* Theme toggle, hidden while the theme policy locks the mode (#1280) */}
         <div data-window-beside-controls="" className="absolute top-5 end-5" ref={themeMenuRef} hidden={colorModeLocked} suppressHydrationWarning>
           <button
@@ -1417,7 +1417,7 @@ function LoginPageContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-muted/10 to-muted/30 relative px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-muted/10 to-muted/30 relative px-4 py-16">
       <MobileHandoffConsent
         url={pendingHandoff?.url ?? null}
         resolveUrl={pendingHandoff?.resolveUrl ?? null}

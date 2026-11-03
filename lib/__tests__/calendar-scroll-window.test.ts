@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
+import { mostVisibleMonthDay,
   baseRange, computeScrollWindow, fixedScrollWindowState, freshScrollWindowState, growScrollWindow,
   normalizeScrollWindowState, scrollWindowContains, SCROLL_WINDOW_MAX, SCROLL_WINDOW_STEP,
   type ScrollWindowOptions,
@@ -103,5 +103,31 @@ describe('normalizeScrollWindowState / scrollWindowContains', () => {
   it('keys the anchor by calendar day', () => {
     expect(freshScrollWindowState('day', new Date(2026, 8, 9, 23, 59)).anchorKey).toBe('2026-09-09');
     expect(key(new Date(Date.UTC(2026, 8, 9)))).toBe('2026-09-09');
+  });
+});
+
+describe('mostVisibleMonthDay', () => {
+  // Weeks of 2026, 100px each, from Monday 26 October.
+  const rows = [new Date(2026, 9, 26), new Date(2026, 10, 2), new Date(2026, 10, 9), new Date(2026, 10, 16)]
+    .map((weekStart, i) => ({ weekStart, top: i * 100, bottom: (i + 1) * 100 }));
+  const monthKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}`;
+
+  it('names the month of the later week in a pane two weeks high', () => {
+    // Six October days and eight November days: not the month of the top week.
+    expect(mostVisibleMonthDay(rows, 0, 200, monthKey)).toEqual(new Date(2026, 10, 1));
+  });
+
+  it('names the month before while only the week holding the 1st shows', () => {
+    expect(mostVisibleMonthDay(rows, 0, 100, monthKey)).toEqual(new Date(2026, 9, 26));
+  });
+
+  it('counts a week cut by the edge for the part that shows', () => {
+    // A sliver of the November week against the whole week of October days.
+    expect(mostVisibleMonthDay(rows, 0, 110, monthKey)).toEqual(new Date(2026, 9, 26));
+  });
+
+  it('leaves out rows outside the pane and returns nothing without rows in view', () => {
+    expect(mostVisibleMonthDay(rows, 150, 400, monthKey)).toEqual(new Date(2026, 10, 2));
+    expect(mostVisibleMonthDay(rows, 900, 1000, monthKey)).toBeNull();
   });
 });

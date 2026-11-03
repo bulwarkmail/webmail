@@ -12,6 +12,7 @@ import {
 import { SettingsSection, SettingItem } from '@/components/settings/settings-section';
 import { Button } from '@/components/ui/button';
 import { AdminPageHeader } from '@/components/admin/page-header';
+import { EmptyState } from '@/components/admin/empty-state';
 import { AdminBodySkeleton } from '@/components/boot-skeleton/admin-skeleton';
 import { Badge, type BadgeTone } from '@/components/admin/badge';
 import { useAdminFeedback } from '@/components/admin/feedback';
@@ -113,6 +114,18 @@ export function VersionPage() {
       )}
     />
   );
+
+  if (!loading && !data) {
+    return (
+      <div>
+        {header}
+        <EmptyState
+          title="Could not load the update status"
+          action={<Button type="button" size="sm" onClick={() => void refresh()}>Retry</Button>}
+        />
+      </div>
+    );
+  }
 
   if (loading || !data) {
     return (

@@ -279,15 +279,17 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
             ...style,
           }}
         >
-          <div className="flex items-center gap-1 min-w-0">
-            {textStyle === "dot" && (
-              <span data-event-dot aria-hidden="true" className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-            )}
-            <span className="flex-shrink-0 font-normal opacity-85">{safeFormat(startDate, timeFmt)}</span>
-            <span dir="auto" className="flex-1 min-w-0 truncate text-start font-medium">{event.title || t("events.no_title")}</span>
-            {visibleCalendarName && (
-              <span data-calendar-name dir="auto" className="min-w-0 max-w-[45%] shrink truncate font-normal opacity-85">{visibleCalendarName}</span>
-            )}
+          <div className="@container">
+            <div className="flex items-center gap-1 min-w-0">
+              {textStyle === "dot" && (
+                <span data-event-dot aria-hidden="true" className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+              )}
+              <span className="hidden @min-[5.5rem]:inline flex-shrink-0 font-normal opacity-85">{safeFormat(startDate, timeFmt)}</span>
+              <span dir="auto" className="flex-1 min-w-0 truncate text-start font-medium">{event.title || t("events.no_title")}</span>
+              {visibleCalendarName && (
+                <span data-calendar-name dir="auto" className="hidden @min-[9rem]:inline min-w-0 max-w-[45%] shrink truncate font-normal opacity-85">{visibleCalendarName}</span>
+              )}
+            </div>
           </div>
         </button>
       );
@@ -314,14 +316,18 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
         )}
         style={{ ...eventFillStyle(color, { inactive: isInactive, selected: isSelected, tinted }), ...style }}
       >
-        <div className="flex items-center gap-1 min-w-0">
-          {showTimeInMonthView && !event.showWithoutTime && (
-            <span className="flex-shrink-0 font-normal opacity-85">{format(startDate, timeFmt)}</span>
-          )}
-          <span dir="auto" className={cn("flex-1 min-w-0 truncate text-start font-medium", isInactive && "line-through")}>{event.title || t("events.no_title")}</span>
-          {visibleCalendarName && (
-            <span data-calendar-name dir="auto" className="min-w-0 max-w-[45%] shrink truncate font-normal opacity-85">{visibleCalendarName}</span>
-          )}
+        {/* The title comes first: in a narrow day the time and the calendar's
+            name left it no room, or one letter. */}
+        <div className="@container">
+          <div className="flex items-center gap-1 min-w-0">
+            {showTimeInMonthView && !event.showWithoutTime && (
+              <span className="hidden @min-[5.5rem]:inline flex-shrink-0 font-normal opacity-85">{format(startDate, timeFmt)}</span>
+            )}
+            <span dir="auto" className={cn("flex-1 min-w-0 truncate text-start font-medium", isInactive && "line-through")}>{event.title || t("events.no_title")}</span>
+            {visibleCalendarName && (
+              <span data-calendar-name dir="auto" className="hidden @min-[9rem]:inline min-w-0 max-w-[45%] shrink truncate font-normal opacity-85">{visibleCalendarName}</span>
+            )}
+          </div>
         </div>
       </button>
     );
@@ -370,16 +376,20 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
           )}
         </div>
       </div>
+      {/* Not in a block too narrow for it (several events at once): it broke over three lines of clipped text. */}
       {!event.showWithoutTime && durationMinutes >= 45 && (
-        <div className="opacity-85 text-[0.65625rem]">
-          {/* Start before end in a right-to-left layout too. */}
-          <bdi dir="ltr">{timeString}</bdi>
+        <div className="@container">
+          <div className="hidden @min-[4.25rem]:block opacity-85 text-[0.65625rem]">
+            {/* Start before end in a right-to-left layout too. */}
+            <bdi dir="ltr">{timeString}</bdi>
+          </div>
         </div>
       )}
       {visibleCalendarName && (
         <div data-calendar-name dir="auto" className="opacity-85 text-[0.65625rem] truncate">{visibleCalendarName}</div>
       )}
-      {getParticipantCount(event) > 0 && (
+      {/* Below 45 minutes the block has room for the title line only: the count was cut in half. */}
+      {getParticipantCount(event) > 0 && durationMinutes >= 45 && (
         <div
           className="flex items-center gap-0.5 opacity-85 text-[0.65625rem]"
           title={t("participants.count", { count: getParticipantCount(event) })}

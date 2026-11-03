@@ -122,7 +122,7 @@ export function MultiAccountPushSettings({ relayBaseUrl }: { relayBaseUrl?: stri
           <label className="flex items-start gap-2 ps-6 text-sm">
             <input type="checkbox" className="mt-1" disabled={busy} checked={chosen.has(account.id)}
               onChange={e => toggle(account.id, e.target.checked)} />
-            <span>
+            <span className="min-w-0 wrap-anywhere">
               <span className="block">{account.displayName || account.label || account.username}</span>
               <span className="block text-xs text-muted-foreground">
                 <bdi dir="ltr">{account.email || account.username}</bdi> · {enabled[account.id] ? t('state_on') : t('state_off')}

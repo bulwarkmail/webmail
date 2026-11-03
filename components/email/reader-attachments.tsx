@@ -308,7 +308,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
 
       <div className={cn(
         "grid",
-        layout === "cards" ? "grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-3" : "grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-2",
+        layout === "cards" ? "grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-3" : "grid-cols-[repeat(auto-fill,minmax(min(100%,20rem),1fr))] gap-2",
       )}>
         {shown.map((attachment) => (
           <div key={attachment.id} className="flex min-w-0 flex-col gap-1" onContextMenu={desktopMenu ? (event) => menu.openContextMenu(event, attachment) : undefined}>

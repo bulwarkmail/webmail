@@ -152,7 +152,8 @@ export function CalendarWeekView({
 
   const measureColWidth = useCallback((root: HTMLElement | null) => {
     if (isMobile || !root) return MOBILE_COL_WIDTH;
-    return Math.max(MIN_COL_WIDTH, Math.floor((root.clientWidth - gutterWidth) / columnsPerWeek));
+    // Not rounded down: the pixels left over showed a sliver of next Monday at the edge.
+    return Math.max(MIN_COL_WIDTH, (root.clientWidth - gutterWidth) / columnsPerWeek);
   }, [isMobile, gutterWidth, columnsPerWeek]);
   const [colWidth, setColWidth] = useState(MOBILE_COL_WIDTH);
   const [viewportWidth, setViewportWidth] = useState(0);
@@ -435,7 +436,7 @@ export function CalendarWeekView({
   return (
     <div
       ref={rootRef}
-      className="flex min-h-0 min-w-0 flex-col flex-1 overflow-auto [overflow-anchor:none]"
+      className="flex min-h-0 min-w-0 flex-col flex-1 overflow-auto [overflow-anchor:none] max-md:pb-20"
       onScroll={handleStripScroll}
       role="grid"
       aria-label={t("views.week")}
@@ -510,7 +511,8 @@ export function CalendarWeekView({
             className={cn(gutterClass, "text-[0.625rem] text-muted-foreground p-1 text-end flex flex-col justify-between")}
             style={{ height: allDayHeight }}
           >
-            <span>{t("events.all_day")}</span>
+            {/* A long single word ("Ganztägig") must stay inside the narrow gutter of a phone. */}
+            <span className="hyphens-auto [overflow-wrap:anywhere]">{t("events.all_day")}</span>
             {isExpandable && (
               <button
                 type="button"

@@ -134,7 +134,7 @@ export function AccessibilitySettings() {
   return (
     <div className="space-y-8">
       <SettingsSection id="presets" title={t('presets.title')} description={t('presets.description')}>
-        <div className="grid gap-2 sm:grid-cols-2" role="group" aria-label={t('presets.title')}>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2" role="group" aria-label={t('presets.title')}>
           {ACCESSIBILITY_PRESET_IDS.map((id) => (
             <button
               key={id}
@@ -143,7 +143,7 @@ export function AccessibilitySettings() {
               className="flex items-start gap-3 text-start rounded-md border border-border px-3 py-2.5 hover:bg-muted transition-colors"
             >
               <AccessibilityPresetPreview id={id} />
-              <span className="min-w-0">
+              <span className="min-w-0 wrap-anywhere">
                 <span className="block text-sm font-medium text-foreground">{t(`presets.${id}.label`)}</span>
                 <span className="block text-xs text-muted-foreground mt-0.5">{t(`presets.${id}.description`)}</span>
               </span>

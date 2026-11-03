@@ -130,8 +130,9 @@
 }
 /* Inside a scroll container a positive offset is clipped; draw it inside.
    `focus-inset` does the same for any control that sits flush against the
-   edge of a clipping container. */
-:is([role="option"], [role="row"], [role="treeitem"], [role="gridcell"], [role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"], [role="tab"], .focus-inset):focus-visible {
+   edge of a clipping container. The selector is padded to outweigh the two
+   rules above, whose :not() lists count towards their specificity. */
+html:root :is([role="option"], [role="row"], [role="treeitem"], [role="gridcell"], [role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"], [role="tab"], .focus-inset):focus-visible:focus-visible:focus-visible:focus-visible {
   outline-offset: calc(var(--focus-ring-width) * -1) !important;
 }
 /* The focused element scrolls clear of sticky headers and the bottom bar,

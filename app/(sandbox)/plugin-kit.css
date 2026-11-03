@@ -80,11 +80,16 @@
    forced colours. Kit components carry no focus ring of their own. Only
    containers focused from script (tabindex="-1" without a control role) skip
    it. */
-:is(.bk, .bk *):focus-visible:not([tabindex="-1"]:not(a[href], button, input, select, textarea, [role="button"], [role="menuitem"], [role="option"], [role="tab"], [role="row"], [role="gridcell"], [role="checkbox"], [role="switch"], [role="radio"])) {
+:is(.bk, .bk *):focus-visible:where(:not([tabindex="-1"]:not(a[href], button, input, select, textarea, [role="button"], [role="menuitem"], [role="option"], [role="tab"], [role="row"], [role="gridcell"], [role="checkbox"], [role="switch"], [role="radio"]))) {
   outline: 2px solid var(--color-ring) !important;
   outline-offset: 2px !important;
 }
 :is(.bk [role="option"], .bk [role="row"], .bk [role="tab"], .bk .focus-inset, .bk.focus-inset):focus-visible {
+  outline-offset: -2px !important;
+}
+/* A field usually spans the whole frame, and the frame clips what leaves it:
+   drawn outside, its ring only shows above and below it. */
+:is(input.bk, textarea.bk, select.bk, .bk input, .bk textarea, .bk select):focus-visible {
   outline-offset: -2px !important;
 }
 @media (forced-colors: active) {

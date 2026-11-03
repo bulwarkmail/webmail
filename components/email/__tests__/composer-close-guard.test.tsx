@@ -1,3 +1,4 @@
+import { PaneIdContext } from '@/hooks/use-pane-context';
 import { render, screen, fireEvent, waitFor, act, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import React from 'react';
@@ -182,6 +183,32 @@ vi.mock('@/components/email/quoted-html', () => ({
 vi.mock('@/lib/template-utils', () => ({ substitutePlaceholders: (s: string) => s }));
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
+
+describe('a message row dragged over the composer', () => {
+  const rowDrag = { types: ['application/x-email-ids', 'text/plain'], files: [], getData: () => 'Subject of the row', dropEffect: '' };
+  const subjectField = () => screen.getByDisplayValue('Half-written');
+  const draft = {
+    to: '', cc: '', bcc: '', subject: 'Half-written', body: '', showCc: false, showBcc: false,
+    selectedIdentityId: 'id-me', subAddressTag: '', mode: 'compose' as const, draftId: null,
+  };
+
+  it('is stopped in the standard shell, or Subject would take the row\'s subject', () => {
+    render(<EmailComposer initialData={draft} onClose={vi.fn()} />);
+    // fireEvent returns false when the event's default was prevented.
+    expect(fireEvent.dragOver(subjectField(), { dataTransfer: rowDrag })).toBe(false);
+    expect(fireEvent.drop(subjectField(), { dataTransfer: rowDrag })).toBe(false);
+  });
+
+  it('is left to the shell inside a Pro pane', () => {
+    render(
+      <PaneIdContext.Provider value="main">
+        <EmailComposer initialData={draft} onClose={vi.fn()} />
+      </PaneIdContext.Provider>,
+    );
+    expect(fireEvent.dragOver(subjectField(), { dataTransfer: rowDrag })).toBe(true);
+    expect(fireEvent.drop(subjectField(), { dataTransfer: rowDrag })).toBe(true);
+  });
+});
 
 /**
  * A host that replaces the compose session - a mailto: click, say - must not

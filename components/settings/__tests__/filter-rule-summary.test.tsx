@@ -93,6 +93,7 @@ describe('filter rule summary (expanded view)', () => {
     unmount();
 
     const { container } = render(<RuleSummary rule={all} />);
-    expect(container.textContent).toBe('condition_fields.all→action_types.mark_read');
+    // Spaces around the arrow, so a long line can break there and not inside a word.
+    expect(container.textContent).toBe('condition_fields.all → action_types.mark_read');
   });
 });

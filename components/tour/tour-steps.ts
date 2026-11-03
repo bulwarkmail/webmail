@@ -1,3 +1,5 @@
+import type { ProAppTabKind } from "@/stores/pro-tab-store";
+
 export interface TourStep {
   id: string;
   target: string;
@@ -50,6 +52,14 @@ function isCovered(el: Element, r: DOMRect): boolean {
   return !!top && top !== el && !el.contains(top) && !top.contains(el);
 }
 
+/** The Pro tab that holds the app the step is about. */
+export function proTabOfTourStep(step: Pick<TourStep, "page" | "target">): ProAppTabKind | null {
+  // The composer has a tab of its own, which the step just opened.
+  if (step.target === COMPOSER_TARGET) return null;
+  const page = step.page?.replace(/^\//, "");
+  return page === "calendar" || page === "contacts" || page === "files" || page === "settings" ? page : "mail";
+}
+
 /** Whether the user is in the app the step is about. */
 export function isTourStepOnPage(step: Pick<TourStep, "page">, pathname: string): boolean {
   const page = step.page && step.page !== "/" ? step.page : null;
@@ -61,6 +71,8 @@ export function isTourStepOnPage(step: Pick<TourStep, "page">, pathname: string)
 function clickTourTarget(selector: string): void {
   (findTourTarget(selector) as HTMLElement | null)?.click();
 }
+
+const COMPOSER_TARGET = '[data-tour="composer"]';
 
 export const BASE_TOUR_STEPS: TourStep[] = [
   {
@@ -162,7 +174,7 @@ export const BASE_TOUR_STEPS: TourStep[] = [
 export const DEMO_TOUR_STEPS: TourStep[] = [
   {
     id: "compose-open",
-    target: '[data-tour="composer"]',
+    target: COMPOSER_TARGET,
     titleKey: "tour.compose_open_title",
     descriptionKey: "tour.compose_open_desc",
     placement: "left",

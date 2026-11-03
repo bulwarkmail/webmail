@@ -71,7 +71,7 @@ export function WelcomeBanner() {
       role="complementary"
       aria-label={t("title")}
       className={`border-b border-border bg-accent/30 transition-all duration-300 ease-out ${
-        dismissed ? "opacity-0 scale-y-0 max-h-0 pointer-events-none" : "opacity-100 scale-y-100 max-h-96"
+        dismissed ? "opacity-0 scale-y-0 max-h-0 pointer-events-none" : "opacity-100 scale-y-100 max-h-[min(24rem,40dvh)] [@media(max-height:480px)]:max-h-[30dvh] overflow-y-auto"
       }`}
       onTransitionEnd={() => {
         if (dismissed) setVisible(false);
@@ -99,7 +99,7 @@ export function WelcomeBanner() {
             <X />
           </IconButton>
         </div>
-        <div className="mt-2.5 flex justify-end gap-2">
+        <div className="mt-2.5 flex flex-wrap justify-end gap-2">
           <Button
             variant="outline"
             size="xs"

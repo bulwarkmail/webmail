@@ -173,3 +173,25 @@ describe('useKeyboardShortcuts: Enter on a link or button', () => {
     expect(onOpenEmail).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('useKeyboardShortcuts: Ctrl+A', () => {
+  const pressCtrlA = () => {
+    const event = new KeyboardEvent('keydown', { key: 'a', code: 'KeyA', ctrlKey: true, bubbles: true, cancelable: true });
+    document.dispatchEvent(event);
+    return event;
+  };
+
+  it('selects all where there is a list', () => {
+    const onSelectAll = vi.fn();
+    const { unmount } = renderHook(() => useKeyboardShortcuts({ emails: [], handlers: { onSelectAll } }));
+    expect(pressCtrlA().defaultPrevented).toBe(true);
+    expect(onSelectAll).toHaveBeenCalled();
+    unmount();
+  });
+
+  it('leaves it to the browser without a list', () => {
+    const { unmount } = renderHook(() => useKeyboardShortcuts({ emails: [], selectedEmailId: 'e1', handlers: {} }));
+    expect(pressCtrlA().defaultPrevented).toBe(false);
+    unmount();
+  });
+});
