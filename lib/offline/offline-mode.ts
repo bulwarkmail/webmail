@@ -107,11 +107,20 @@ export type OfflineNotice =
   | { kind: 'forbidden' }
   | { kind: 'back-online-reload' };
 
-let notify: (notice: OfflineNotice) => void = () => {};
+/**
+ * The auth store opens the local store at start, and that can be before the
+ * host component has mounted: what's said until then waits for it.
+ */
+const earlyNotices: OfflineNotice[] = [];
+const holdNotice = (notice: OfflineNotice) => {
+  if (earlyNotices.length < 20) earlyNotices.push(notice);
+};
+let notify: (notice: OfflineNotice) => void = holdNotice;
 
-/** Where the notices go (the host component turns them into toasts). */
-export function setOfflineNotifier(fn: (notice: OfflineNotice) => void): void {
-  notify = fn;
+/** Where the notices go (the host component turns them into toasts). Null: none is there at the moment. */
+export function setOfflineNotifier(fn: ((notice: OfflineNotice) => void) | null): void {
+  notify = fn ?? holdNotice;
+  if (fn) for (const notice of earlyNotices.splice(0)) fn(notice);
 }
 
 export function offlineNotify(notice: OfflineNotice): void {

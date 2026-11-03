@@ -185,6 +185,19 @@ describe('a store the browser cleared', () => {
     expect(useOfflineStore.getState().health.acc.reset).toBeUndefined();
   });
 
+  it('says so also when the store opened before the host component was there', async () => {
+    setOfflineNotifier(null);
+    await openAccountKey('acc');
+    hadStore('acc');
+    FakeWorker.created = true;
+    const worker = await openAsOwner('acc');
+    await vi.waitFor(() => expect(worker.posted.some((m) => m.kind === 'open')).toBe(true));
+    await vi.waitFor(() => expect(useOfflineStore.getState().storeLost).toEqual(['acc']));
+    expect(notices).toEqual([]);
+    setOfflineNotifier((notice) => notices.push(notice));
+    expect(notices).toContainEqual({ kind: 'store-reset', lost: 0 });
+  });
+
   it('keeps only numbers about it outside the store', () => {
     writeHealth('acc', { pending: 2, reset: { at: 5, lost: 2 }, lastSync: 9 });
     expect(JSON.parse(localStorage.getItem(OFFLINE_HEALTH_KEY)!)).toEqual({ acc: { pending: 2, reset: { at: 5, lost: 2 }, lastSync: 9 } });

@@ -119,7 +119,7 @@ export function OfflineHost() {
     return () => {
       removeGate();
       stop();
-      setOfflineNotifier(() => {});
+      setOfflineNotifier(null);
     };
   }, []);
 
