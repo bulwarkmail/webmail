@@ -234,6 +234,13 @@ describe('the outbox', () => {
     // Not tried again on its own.
     await flushQueue('acc', cut as unknown as JMAPClient, { notify: vi.fn(), allowed: () => true });
     expect(cut.sendEmail).toHaveBeenCalledTimes(1);
+
+    // With the server still there, nothing else would start the lookup.
+    const entry = (await readQueue('acc')).outbox[0];
+    await store.area('acc', 'outbox.update', { id: entry.id, status: 'waiting' });
+    const retryLater = vi.fn();
+    await flushQueue('acc', cut as unknown as JMAPClient, { notify: vi.fn(), allowed: () => true, retryLater });
+    expect(retryLater).toHaveBeenCalledTimes(1);
   });
 
   it('sends nothing once the organisation forbids offline mode', async () => {

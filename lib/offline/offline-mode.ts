@@ -534,6 +534,8 @@ export function scheduleFlushAll(delayMs = 1_000): void {
 
 /** How long after a failed policy fetch the outbox asks again. */
 const POLICY_RETRY_MS = 60_000;
+/** A lost response with the server still there: nothing else would start the lookup. */
+const LOOKUP_AGAIN_MS = 30_000;
 
 /** A send held by the server for undo, from the outbox: the undo toast as after any send. */
 function offerUndo(entry: OutboxEntry, result: SendEmailResult): void {
@@ -578,6 +580,7 @@ export async function flushAll(): Promise<void> {
       allowed: () => offlineAllowed(account),
       stricterNow,
       onScheduled: offerUndo,
+      retryLater: () => scheduleFlushAll(LOOKUP_AGAIN_MS),
     }).catch(() => {});
   }
   await refreshQueueState();

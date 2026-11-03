@@ -52,6 +52,8 @@ export interface FlushDeps {
   stricterNow?: (entry: OutboxEntry) => boolean;
   /** A held send went out (an undo window still open). */
   onScheduled?: (entry: OutboxEntry, result: SendEmailResult) => void;
+  /** A send's connection broke though the server may be fine: look it up again soon. */
+  retryLater?: () => void;
 }
 
 /** A send is taken for at most this long before a closed tab's send counts as uncertain. */
@@ -272,6 +274,7 @@ async function flushLocked(account: string, client: JMAPClient, deps: FlushDeps)
         if (isNetworkFailure(error) || (error instanceof Error && error.name === 'SendUnconfirmedError')) {
           // It may have reached the server: looked up before it goes again.
           await updateOutboxEntry(entry, { status: 'uncertain' });
+          deps.retryLater?.();
           return;
         }
         const text = error instanceof Error ? error.message : String(error);
