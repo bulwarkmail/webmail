@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { popoverShift } from '../rich-text-editor';
+import { popoverShift } from '../popover-shift';
 
 describe('popoverShift', () => {
   const bounds = { left: 0, right: 320 };
