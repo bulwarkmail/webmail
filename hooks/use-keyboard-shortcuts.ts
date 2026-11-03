@@ -198,10 +198,14 @@ export function useKeyboardShortcuts({
         }
       }
 
+      // A key without a handler here is left alone, default and all: this page
+      // can stay mounted behind another Pro tab with only a few of its handlers,
+      // and the Calendar and Contacts tabs skip a key someone already claimed.
       switch (key) {
         // Navigation
         case "j":
         case "arrowdown":
+          if (!h.onNextEmail && !(event.shiftKey && h.onExtendSelection)) break;
           event.preventDefault();
           if (event.shiftKey && h.onExtendSelection) {
             const extend = h.onExtendSelection;
@@ -213,6 +217,7 @@ export function useKeyboardShortcuts({
 
         case "k":
         case "arrowup":
+          if (!h.onPreviousEmail && !(event.shiftKey && h.onExtendSelection)) break;
           event.preventDefault();
           if (event.shiftKey && h.onExtendSelection) {
             const extend = h.onExtendSelection;
@@ -233,6 +238,7 @@ export function useKeyboardShortcuts({
           break;
 
         case "escape":
+          if (!h.onCloseEmail && !h.onDeselectAll) break;
           event.preventDefault();
           run("close", h.onCloseEmail || h.onDeselectAll ? () => { h.onCloseEmail?.(); h.onDeselectAll?.(); } : undefined);
           break;
@@ -309,22 +315,26 @@ export function useKeyboardShortcuts({
 
         // Global actions
         case "c":
+          if (!h.onCompose) break;
           event.preventDefault();
           run("compose", h.onCompose);
           break;
 
         case "/":
+          if (!h.onFocusSearch) break;
           event.preventDefault();
           run("focus-search", h.onFocusSearch);
           break;
 
         case "?":
+          if (!h.onShowHelp) break;
           event.preventDefault();
           run("show-help", h.onShowHelp);
           break;
 
         case "g":
           if (event.shiftKey) {
+            if (!h.onRefresh) break;
             event.preventDefault();
             run("refresh", h.onRefresh);
           } else if (mountainViewKeys && h.onGoToMailbox) {
@@ -351,7 +361,7 @@ export function useKeyboardShortcuts({
 
         // Navigation: next unread, as in Thunderbird (#514)
         case "n":
-          if (!event.shiftKey) {
+          if (!event.shiftKey && h.onNextUnread) {
             event.preventDefault();
             run("next-unread", h.onNextUnread);
           }
