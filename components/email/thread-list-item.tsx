@@ -646,7 +646,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
           onOpenMenu: onContextMenu ? handleContextMenu : undefined,
         })}
         className={cn(
-          "relative group cursor-pointer select-none transition-shadow duration-200 border-b border-border overflow-hidden",
+          "@container/mail-row relative group cursor-pointer select-none transition-shadow duration-200 border-b border-border overflow-hidden",
           mvMobileRow && "border-b-transparent",
           resolvedRowTint ? resolvedRowTint : (
             selected
@@ -1354,7 +1354,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
           data-mv-row={mvRow && !rowTint ? "" : undefined}
           data-checked={isChecked ? "" : undefined}
           className={cn(
-            "relative group cursor-pointer select-none transition-shadow duration-200 overflow-hidden",
+            "@container/mail-row relative group cursor-pointer select-none transition-shadow duration-200 overflow-hidden",
             rowTint ? rowTint : (
               isSelected
                 ? "bg-accent"
