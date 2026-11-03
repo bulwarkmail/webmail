@@ -1328,6 +1328,16 @@ optgroup {
 /* The advanced filters drop from the search field with a small gap and take
    its corner, so the two read as one control. Position and width come from
    the field's own box, measured by FilterPanelHost. */
+/* The compose window docks beside the side panel, not over it: over it, the
+   window hides the panel's Close button and the rail's own buttons. The rail is
+   3.5rem wide, an open panel 300px plus 8px of margin. */
+[data-interface-layout="mountain-view"]:has([data-mv-side-rail]) {
+  --mv-compose-end: 4.5rem;
+}
+[data-interface-layout="mountain-view"]:has([data-mv-side-panel], [data-plugin-side-panel]) {
+  --mv-compose-end: 23.75rem;
+}
+
 [data-interface-layout="mountain-view"] [data-mv-filter-panel] {
   border-radius: var(--mv-search-radius);
 }
