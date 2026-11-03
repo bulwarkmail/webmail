@@ -980,6 +980,12 @@ export interface HostFeaturesView extends AssistantHostFeatures {
    * down.
    */
   noThirdPartyTraffic: boolean;
+  /**
+   * The desktop app's OS certificate store and smart cards are there for this
+   * plugin: privileged tier, the `keystore` permission, and a shell that has them.
+   * Absent otherwise. See `api.keystore`.
+   */
+  keystore?: boolean;
 }
 
 /** One setting `api.app.searchSettings` found, in the user's language. */
@@ -1546,6 +1552,10 @@ export const ALL_PERMISSIONS = [
   // message bodies and private keys; only granted to a signed, admin-approved
   // privileged bundle after explicit high-risk consent.
   'crypto:full',
+  // Sign and decrypt with the OS certificate store and smart cards, in the desktop
+  // app. Declare it in optionalPermissions: as a plain permission it would be an
+  // install error on a webmail that doesn't know it. Privileged tier only.
+  'keystore',
   // Submit a fully-formed raw RFC822 message via JMAP (used after a plugin
   // signs/encrypts an outgoing message itself).
   'email:raw-send',

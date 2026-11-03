@@ -5891,6 +5891,10 @@
         "title": "Toàn quyền truy cập vào ứng dụng này",
         "body": "Chạy với các quyền tương tự như chính webmail. Nó có thể đọc tất cả thư và các khóa được lưu trữ của bạn và hành động thay bạn. Chỉ cho phép điều này đối với các plugin mà bạn hoàn toàn tin tưởng."
       },
+      "keystore": {
+        "title": "Dùng chứng chỉ trên máy tính này",
+        "body": "Yêu cầu ký và giải mã thư bằng chứng chỉ trên máy tính này hoặc thẻ thông minh. Ứng dụng sẽ hỏi bạn trước. Tiện ích không bao giờ nhận được khóa riêng, nhưng khi bạn cho phép, tiện ích có thể ký dưới tên bạn và đọc nội dung đã giải mã."
+      },
       "email_raw_send": {
         "title": "Gửi thư nó tự tạo",
         "body": "Gửi thư hoàn chỉnh, ví dụ như thư đã ký hoặc mã hóa, từ tài khoản của bạn."
@@ -6541,5 +6545,13 @@
     "server_needed": "Trước tiên hãy nhập địa chỉ máy chủ.",
     "server_declined": "Bạn không cho phép máy chủ này nên không có gì được gửi đến đó.",
     "server_invalid": "Địa chỉ máy chủ này không hợp lệ."
+  },
+  "desktop_keystore": {
+    "title": "Chứng chỉ trên máy tính này",
+    "description": "Máy chủ này có thể yêu cầu dùng chứng chỉ và thẻ thông minh của bạn. Bạn vẫn được hỏi trước khi mỗi chứng chỉ được dùng.",
+    "label": "Quyền truy cập của máy chủ này",
+    "label_description": "Thu hồi quyền của bạn. Máy chủ sẽ phải hỏi lại.",
+    "revoke": "Thu hồi",
+    "revoked": "Đã thu hồi quyền"
   }
 }

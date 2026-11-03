@@ -5879,6 +5879,10 @@
         "title": "Teljes hozzáférés az alkalmazáshoz",
         "body": "Ugyanazokkal a jogokkal fut, mint maga a webmail. Olvashatja az összes leveledet és tárolt kulcsodat, és a nevedben járhat el. Csak olyan bővítménynek engedélyezd, amelyben teljesen megbízol."
       },
+      "keystore": {
+        "title": "A számítógépen lévő tanúsítványok használata",
+        "body": "Kéri, hogy üzeneteket írhasson alá és fejthessen vissza a számítógépen vagy intelligens kártyán lévő tanúsítványokkal. Az alkalmazás előbb megkérdezi Önt. A bővítmény soha nem kapja meg a titkos kulcsot, de amíg engedélyezi, az Ön nevében írhat alá, és elolvashatja, amit visszafejt."
+      },
       "email_raw_send": {
         "title": "Saját maga által összeállított üzenetek küldése",
         "body": "Teljes üzeneteket küld a fiókodból, például aláírt vagy titkosított üzeneteket."
@@ -6529,5 +6533,13 @@
     "server_needed": "Először adja meg a szerver címét.",
     "server_declined": "Nem engedélyezte ezt a szervert, ezért semmit sem küldtünk neki.",
     "server_invalid": "Ez a szervercím nem érvényes."
+  },
+  "desktop_keystore": {
+    "title": "A számítógépen lévő tanúsítványok",
+    "description": "Ez a kiszolgáló kérheti a tanúsítványai és intelligens kártyái használatát. Minden tanúsítvány használata előtt így is megkérdezzük.",
+    "label": "A kiszolgáló hozzáférése",
+    "label_description": "Vonja vissza az engedélyét. A kiszolgálónak újra kérnie kell.",
+    "revoke": "Visszavonás",
+    "revoked": "Engedély visszavonva"
   }
 }

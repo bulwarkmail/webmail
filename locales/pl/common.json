@@ -5879,6 +5879,10 @@
         "title": "Pełny dostęp do aplikacji",
         "body": "Działa z tymi samymi uprawnieniami co sam webmail. Może czytać całą Twoją pocztę i zapisane klucze oraz działać w Twoim imieniu. Zezwalaj na to tylko wtyczkom, którym w pełni ufasz."
       },
+      "keystore": {
+        "title": "Używanie certyfikatów z tego komputera",
+        "body": "Prosi o podpisywanie i odszyfrowywanie wiadomości certyfikatami z tego komputera lub karty inteligentnej. Aplikacja najpierw zapyta. Wtyczka nigdy nie dostaje klucza prywatnego, ale dopóki na to pozwalasz, może podpisywać w Twoim imieniu i czytać to, co odszyfruje."
+      },
       "email_raw_send": {
         "title": "Wysyłanie wiadomości utworzonych przez wtyczkę",
         "body": "Wysyła z Twojego konta kompletne wiadomości, na przykład podpisane lub zaszyfrowane."
@@ -6529,5 +6533,13 @@
     "server_needed": "Najpierw wpisz adres serwera.",
     "server_declined": "Ten serwer nie został dozwolony, więc nic do niego nie wysłano.",
     "server_invalid": "Ten adres serwera jest nieprawidłowy."
+  },
+  "desktop_keystore": {
+    "title": "Certyfikaty na tym komputerze",
+    "description": "Ten serwer może prosić o użycie Twoich certyfikatów i kart inteligentnych. Przed użyciem każdego certyfikatu nadal zostaniesz zapytany.",
+    "label": "Dostęp tego serwera",
+    "label_description": "Cofnij swoją zgodę. Serwer będzie musiał zapytać ponownie.",
+    "revoke": "Cofnij",
+    "revoked": "Zgoda została cofnięta"
   }
 }

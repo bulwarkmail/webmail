@@ -5879,6 +5879,10 @@
         "title": "Acceso total a esta aplicación",
         "body": "Se ejecuta con los mismos derechos que el propio webmail. Puede leer todo tu correo y tus claves guardadas y actuar en tu nombre. Permítelo solo en complementos en los que confíes plenamente."
       },
+      "keystore": {
+        "title": "Usar certificados de este ordenador",
+        "body": "Pide firmar y descifrar mensajes con certificados de este ordenador o de una tarjeta inteligente. La aplicación le pregunta antes. El complemento nunca recibe la clave privada, pero mientras lo permita puede firmar en su nombre y leer lo que descifra."
+      },
       "email_raw_send": {
         "title": "Enviar mensajes que creó él mismo",
         "body": "Enviar mensajes completos, por ejemplo firmados o cifrados, desde tu cuenta."
@@ -6529,5 +6533,13 @@
     "server_needed": "Primero escribe la dirección del servidor.",
     "server_declined": "No permitiste este servidor, así que no se le envió nada.",
     "server_invalid": "Esta dirección de servidor no es válida."
+  },
+  "desktop_keystore": {
+    "title": "Certificados de este ordenador",
+    "description": "Este servidor puede pedir usar sus certificados y tarjetas inteligentes. Aun así, se le preguntará antes de usar cada certificado.",
+    "label": "Acceso de este servidor",
+    "label_description": "Retire su permiso. El servidor tendrá que volver a pedirlo.",
+    "revoke": "Retirar",
+    "revoked": "Permiso retirado"
   }
 }

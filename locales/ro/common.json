@@ -5879,6 +5879,10 @@
         "title": "Acces complet la această aplicație",
         "body": "Rulează cu aceleași drepturi ca webmailul însuși. Poate citi toate e-mailurile și cheile stocate și poate acționa în numele dvs. Permiteți acest lucru doar pluginurilor în care aveți încredere deplină."
       },
+      "keystore": {
+        "title": "Folosește certificatele de pe acest computer",
+        "body": "Cere să semneze și să decripteze mesaje cu certificate de pe acest computer sau de pe un smart card. Aplicația vă întreabă mai întâi. Pluginul nu primește niciodată cheia privată, dar cât timp permiteți poate semna în numele dvs. și poate citi ce decriptează."
+      },
       "email_raw_send": {
         "title": "Trimiterea mesajelor create de el însuși",
         "body": "Trimite mesaje complete, de exemplu semnate sau criptate, din contul dvs."
@@ -6529,5 +6533,13 @@
     "server_needed": "Introdu mai întâi adresa serverului.",
     "server_declined": "Nu ai permis acest server, așa că nu i s-a trimis nimic.",
     "server_invalid": "Această adresă de server nu este validă."
+  },
+  "desktop_keystore": {
+    "title": "Certificate de pe acest computer",
+    "description": "Acest server poate cere să vă folosească certificatele și smart cardurile. Veți fi întrebat în continuare înainte de folosirea fiecărui certificat.",
+    "label": "Accesul acestui server",
+    "label_description": "Retrageți permisiunea. Serverul va trebui să ceară din nou.",
+    "revoke": "Retrage",
+    "revoked": "Permisiune retrasă"
   }
 }

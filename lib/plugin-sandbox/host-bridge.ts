@@ -15,6 +15,7 @@ import { withBasePath } from '../browser-navigation';
 import { snapshotHostTheme, type ThemeSnapshot } from './host-theme';
 import { snapshotHostFeatures, watchHostFeatures } from './host-features';
 import { assistantFeatures } from './assistant';
+import { keystoreFeature } from './host-api-keystore';
 import { effectiveSettings } from '../plugin-settings';
 import { clampSlotHeight, clampSlotWidth, isInlineSlot, MAX_INLINE_SLOT_WIDTH } from './slot-layout';
 import { resolveDateLocale } from '../utils';
@@ -680,7 +681,7 @@ export class SandboxInstance {
   /** Push what api.host.features says now; before init it goes into the init payload. */
   /** The flags of api.host.features that depend on this plugin. */
   ownHostFeatures(): Partial<HostFeaturesView> {
-    return assistantFeatures(this.plugin);
+    return { ...assistantFeatures(this.plugin), ...keystoreFeature(this.plugin) };
   }
 
   setHostFeatures(features: HostFeaturesView): void {

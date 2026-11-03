@@ -11,6 +11,8 @@ import { ALL_PERMISSIONS, IMPLICIT_PERMISSIONS } from '../plugin-types';
  */
 export const HIGH_RISK_PERMISSIONS: ReadonlySet<string> = new Set([
   'crypto:full',
+  // Signs and decrypts in the user's name with their certificates.
+  'keystore',
   // email.get reads any message in the account, not only the open one.
   'email:read',
   'email:send',

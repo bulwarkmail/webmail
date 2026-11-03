@@ -111,6 +111,77 @@ export interface DesktopPluginsBridge {
   install: (slug: string, version?: string) => Promise<DesktopPluginInstallResult>;
 }
 
+export type DesktopKeystoreHash = 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512';
+
+export interface DesktopKeystoreCertificate {
+  /** Opaque: the only ids sign, decrypt and agree accept. */
+  id: string;
+  /** The leaf, DER. */
+  certificate: Uint8Array;
+  /** Intermediates, DER, without leaf and root. May be empty. */
+  chain: Uint8Array[];
+  subject: string;
+  issuer: string;
+  /** Hex. */
+  serial: string;
+  /** Milliseconds since 1970. */
+  notBefore: number;
+  notAfter: number;
+  /** keyUsage names. Empty without the extension. */
+  usages: string[];
+  /** extendedKeyUsage OIDs. Empty without the extension. */
+  extendedUsages: string[];
+  /** The key's algorithm OID. */
+  algorithm: string;
+  keyType: 'rsa' | 'ec';
+  curve?: 'P-256' | 'P-384' | 'P-521';
+  keyBits: number;
+  /** A hint for the UI. */
+  source: 'software' | 'smartcard' | 'keychain' | 'unknown';
+  signSchemes: string[];
+  decryptSchemes: string[];
+  canAgree: boolean;
+  /** The key can also sign the user in somewhere: the user is asked per use. */
+  askEachUse: boolean;
+}
+
+/** Whether this origin may use the keystore at all. `app` is standalone. */
+export type DesktopKeystoreAccessState = 'app' | 'policy' | 'stored' | 'off';
+
+export type DesktopKeystoreSignScheme =
+  | { scheme: 'rsa-pkcs1'; hash: DesktopKeystoreHash }
+  /** MGF1 on the same hash, salt as long as the hash. */
+  | { scheme: 'rsa-pss'; hash: DesktopKeystoreHash }
+  /** `hash` names the digest's length. */
+  | { scheme: 'ecdsa'; hash: DesktopKeystoreHash };
+
+export type DesktopKeystoreDecryptScheme =
+  | { scheme: 'rsa-pkcs1' }
+  /** MGF1 on the same hash. */
+  | { scheme: 'rsa-oaep'; hash: DesktopKeystoreHash; label?: Uint8Array };
+
+/**
+ * The OS certificate store and smart cards. Present only where the native helper
+ * loaded and the OS has one. Failures reject with a bare code as the message:
+ * keystore:cancelled, not-found, unsupported, locked, invalid, failed. The shell asks the
+ * user in a native dialog before any of this, on top of which the OS has its own prompts,
+ * so a call may take a while. On an instance it stays off until policy or the user allows
+ * it. The key never leaves the OS.
+ */
+export interface DesktopKeystoreBridge {
+  /** Certificates fit for mail that have a private key. The OS doesn't prompt. */
+  list: () => Promise<DesktopKeystoreCertificate[]>;
+  /** RSA gives the raw signature, ECDSA a DER ECDSA-Sig-Value. */
+  sign: (id: string, digest: Uint8Array, scheme: DesktopKeystoreSignScheme) => Promise<Uint8Array>;
+  /** Unwraps a CMS content key. */
+  decrypt: (id: string, data: Uint8Array, scheme: DesktopKeystoreDecryptScheme) => Promise<Uint8Array>;
+  /** The raw shared secret, big-endian. The peer's key is an EC SubjectPublicKeyInfo. */
+  agree: (id: string, peerPublicKey: Uint8Array) => Promise<Uint8Array>;
+  accessState: () => Promise<DesktopKeystoreAccessState>;
+  /** Takes back a stored yes and this session's grants. Only ever narrows. */
+  revokeAccess: () => Promise<void>;
+}
+
 export interface BulwarkDesktopBridge {
   version: number;
   platform: 'win32' | 'darwin' | 'linux';
@@ -123,6 +194,7 @@ export interface BulwarkDesktopBridge {
   servers?: DesktopServersBridge;
   auth?: DesktopAuthBridge;
   plugins?: DesktopPluginsBridge;
+  keystore?: DesktopKeystoreBridge;
 }
 
 declare global {

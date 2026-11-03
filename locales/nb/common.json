@@ -5879,6 +5879,10 @@
         "title": "Full tilgang til denne appen",
         "body": "Kjører med de samme rettighetene som selve webmailen. Det kan lese all e-posten din og lagrede nøkler og handle på dine vegne. Tillat dette bare for tillegg du stoler fullt på."
       },
+      "keystore": {
+        "title": "Bruk sertifikater på denne datamaskinen",
+        "body": "Ber om å signere og dekryptere meldinger med sertifikater på denne datamaskinen eller et smartkort. Appen spør deg først. Tillegget får aldri den private nøkkelen, men så lenge du tillater det, kan det signere i ditt navn og lese det det dekrypterer."
+      },
       "email_raw_send": {
         "title": "Sende meldinger det har laget selv",
         "body": "Sende ferdige meldinger, for eksempel signerte eller krypterte, fra kontoen din."
@@ -6529,5 +6533,13 @@
     "server_needed": "Skriv inn serveradressen først.",
     "server_declined": "Du tillot ikke denne serveren, så ingenting ble sendt til den.",
     "server_invalid": "Denne serveradressen er ikke gyldig."
+  },
+  "desktop_keystore": {
+    "title": "Sertifikater på denne datamaskinen",
+    "description": "Denne serveren kan be om å bruke sertifikatene og smartkortene dine. Du blir likevel spurt før hvert sertifikat brukes.",
+    "label": "Tilgang for denne serveren",
+    "label_description": "Trekk tilbake tillatelsen din. Serveren må da spørre på nytt.",
+    "revoke": "Trekk tilbake",
+    "revoked": "Tillatelsen er trukket tilbake"
   }
 }

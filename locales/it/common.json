@@ -5879,6 +5879,10 @@
         "title": "Accesso completo a questa app",
         "body": "Funziona con gli stessi diritti della webmail stessa. Può leggere tutta la tua posta e le chiavi salvate e agire per conto tuo. Consentilo solo ai plugin di cui ti fidi completamente."
       },
+      "keystore": {
+        "title": "Usare i certificati di questo computer",
+        "body": "Chiede di firmare e decifrare i messaggi con i certificati di questo computer o di una smart card. L'app te lo chiede prima. Il plugin non riceve mai la chiave privata, ma finché lo consenti può firmare a tuo nome e leggere ciò che decifra."
+      },
       "email_raw_send": {
         "title": "Inviare messaggi creati da sé",
         "body": "Inviare messaggi completi, ad esempio firmati o cifrati, dal tuo account."
@@ -6529,5 +6533,13 @@
     "server_needed": "Inserisci prima l'indirizzo del server.",
     "server_declined": "Non hai autorizzato questo server, quindi non gli è stato inviato nulla.",
     "server_invalid": "Questo indirizzo del server non è valido."
+  },
+  "desktop_keystore": {
+    "title": "Certificati di questo computer",
+    "description": "Questo server può chiedere di usare i tuoi certificati e le tue smart card. Ti verrà comunque chiesto prima di usare ogni certificato.",
+    "label": "Accesso di questo server",
+    "label_description": "Ritira il tuo permesso. Il server dovrà chiederlo di nuovo.",
+    "revoke": "Ritira",
+    "revoked": "Permesso ritirato"
   }
 }

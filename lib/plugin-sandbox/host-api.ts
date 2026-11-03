@@ -80,6 +80,7 @@ import { wkdAllowed } from '../outgoing-hosts';
 import { noThirdPartyTraffic } from '../third-party-mode';
 import { openExternalLink } from '../plugin-hook-result';
 import { ASSISTANT_PERMS, NOT_MINE, dispatchAssistant } from './assistant';
+import { KEYSTORE_METHODS, KEYSTORE_PERMS, doKeystoreCall } from './host-api-keystore';
 
 /**
  * Methods only callable from the privileged (same-origin) tier. These expose
@@ -115,11 +116,14 @@ const PRIVILEGED_ONLY_METHODS = new Set<string>([
   // This entry used to read `upfiles.set`, which matches no dispatched method
   // and therefore gated nothing - the dispatcher calls it `upfiles.save`.
   'upfiles.save',
+  // The OS certificate store: never for an untrusted plugin, whatever it declares.
+  ...KEYSTORE_METHODS,
 ]);
 
 export const PERM_PER_METHOD: Readonly<Record<string, Permission | null>> = {
   // The AI assistant's host APIs, one table per area (lib/plugin-sandbox/assistant).
   ...ASSISTANT_PERMS,
+  ...KEYSTORE_PERMS,
   // storage is unscoped by the manifest - implicit.
   'storage.get': null,
   'storage.set': null,
@@ -2046,6 +2050,8 @@ export async function dispatchApiCall(
     const assistant = await dispatchAssistant(plugin, method, args);
     if (assistant !== NOT_MINE) return assistant;
   }
+
+  if (method in KEYSTORE_PERMS) return doKeystoreCall(plugin, method, args);
 
   switch (method) {
     case 'proxy.fetch': return proxyFetch(plugin, args, opts?.sink ?? null);

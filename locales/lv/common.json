@@ -5879,6 +5879,10 @@
         "title": "Pilna piekļuve lietotnei",
         "body": "Darbojas ar tādām pašām tiesībām kā pats webmail. Var lasīt visu jūsu pastu un saglabātās atslēgas un rīkoties jūsu vārdā. Atļaujiet to tikai spraudņiem, kuriem pilnībā uzticaties."
       },
+      "keystore": {
+        "title": "Izmantot šī datora sertifikātus",
+        "body": "Lūdz parakstīt un atšifrēt ziņojumus ar šī datora vai viedkartes sertifikātiem. Lietotne vispirms jautā jums. Spraudnis nekad nesaņem privāto atslēgu, taču, kamēr to atļaujat, tas var parakstīt jūsu vārdā un lasīt to, ko atšifrē."
+      },
       "email_raw_send": {
         "title": "Sūtīt paša izveidotas vēstules",
         "body": "Sūtīt no jūsu konta pilnīgas vēstules, piemēram, parakstītas vai šifrētas."
@@ -6529,5 +6533,13 @@
     "server_needed": "Vispirms ievadiet servera adresi.",
     "server_declined": "Jūs neatļāvāt šo serveri, tāpēc tam nekas netika nosūtīts.",
     "server_invalid": "Šī servera adrese nav derīga."
+  },
+  "desktop_keystore": {
+    "title": "Šī datora sertifikāti",
+    "description": "Šis serveris var lūgt izmantot jūsu sertifikātus un viedkartes. Pirms katra sertifikāta izmantošanas jums tomēr tiks jautāts.",
+    "label": "Šī servera piekļuve",
+    "label_description": "Atsauciet savu atļauju. Serverim būs jālūdz vēlreiz.",
+    "revoke": "Atsaukt",
+    "revoked": "Atļauja atsaukta"
   }
 }

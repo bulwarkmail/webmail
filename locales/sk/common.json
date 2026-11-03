@@ -5879,6 +5879,10 @@
         "title": "Úplný prístup k tejto aplikácii",
         "body": "Beží s rovnakými právami ako samotný webmail. Môže čítať všetku vašu poštu a uložené kľúče a konať vo vašom mene. Povoľte to len doplnkom, ktorým úplne dôverujete."
       },
+      "keystore": {
+        "title": "Používať certifikáty v tomto počítači",
+        "body": "Žiada o podpisovanie a dešifrovanie správ pomocou certifikátov v tomto počítači alebo na čipovej karte. Aplikácia sa vás najprv opýta. Doplnok nikdy nedostane súkromný kľúč, ale kým to povolíte, môže podpisovať vaším menom a čítať, čo dešifruje."
+      },
       "email_raw_send": {
         "title": "Odosielať správy, ktoré sám vytvoril",
         "body": "Odosiela z vášho účtu kompletné správy, napríklad podpísané alebo šifrované."
@@ -6529,5 +6533,13 @@
     "server_needed": "Najprv zadajte adresu servera.",
     "server_declined": "Tento server ste nepovolili, preto sa naň nič neodoslalo.",
     "server_invalid": "Táto adresa servera nie je platná."
+  },
+  "desktop_keystore": {
+    "title": "Certifikáty v tomto počítači",
+    "description": "Tento server môže žiadať o použitie vašich certifikátov a čipových kariet. Pred použitím každého certifikátu sa vás aj tak opýtame.",
+    "label": "Prístup tohto servera",
+    "label_description": "Odvolajte svoje povolenie. Server sa bude musieť opýtať znova.",
+    "revoke": "Odvolať",
+    "revoked": "Povolenie bolo odvolané"
   }
 }

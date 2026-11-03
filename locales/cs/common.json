@@ -5879,6 +5879,10 @@
         "title": "Plný přístup k této aplikaci",
         "body": "Běží se stejnými právy jako samotný webmail. Může číst veškerou vaši poštu a uložené klíče a jednat vaším jménem. Povolte to jen pluginům, kterým plně důvěřujete."
       },
+      "keystore": {
+        "title": "Používat certifikáty v tomto počítači",
+        "body": "Žádá o podepisování a dešifrování zpráv pomocí certifikátů v tomto počítači nebo na čipové kartě. Aplikace se vás nejprve zeptá. Plugin nikdy nedostane soukromý klíč, ale dokud to povolíte, může podepisovat vaším jménem a číst, co dešifruje."
+      },
       "email_raw_send": {
         "title": "Odesílat zprávy, které sám vytvořil",
         "body": "Odesílá z vašeho účtu kompletní zprávy, například podepsané nebo šifrované."
@@ -6529,5 +6533,13 @@
     "server_needed": "Nejdřív zadejte adresu serveru.",
     "server_declined": "Tento server jste nepovolili, proto se na něj nic neodeslalo.",
     "server_invalid": "Tato adresa serveru není platná."
+  },
+  "desktop_keystore": {
+    "title": "Certifikáty v tomto počítači",
+    "description": "Tento server může žádat o použití vašich certifikátů a čipových karet. Před použitím každého certifikátu se vás přesto zeptáme.",
+    "label": "Přístup tohoto serveru",
+    "label_description": "Odvolejte své povolení. Server se bude muset zeptat znovu.",
+    "revoke": "Odvolat",
+    "revoked": "Povolení bylo odvoláno"
   }
 }

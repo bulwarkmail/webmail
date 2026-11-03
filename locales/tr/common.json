@@ -5879,6 +5879,10 @@
         "title": "Bu uygulamaya tam erişim",
         "body": "Webmail'in kendisiyle aynı haklarla çalışır. Tüm e-postalarınızı ve kayıtlı anahtarlarınızı okuyabilir, sizin adınıza işlem yapabilir. Buna yalnızca tamamen güvendiğiniz eklentiler için izin verin."
       },
+      "keystore": {
+        "title": "Bu bilgisayardaki sertifikaları kullan",
+        "body": "Bu bilgisayardaki veya akıllı karttaki sertifikalarla iletileri imzalamak ve şifresini çözmek ister. Uygulama önce size sorar. Eklenti özel anahtarı asla almaz, ancak siz izin verdiğiniz sürece adınıza imzalayabilir ve şifresini çözdüğünü okuyabilir."
+      },
       "email_raw_send": {
         "title": "Kendi oluşturduğu iletileri gönderme",
         "body": "Hesabınızdan imzalı veya şifreli iletiler gibi eksiksiz iletiler gönderme."
@@ -6529,5 +6533,13 @@
     "server_needed": "Önce sunucu adresini girin.",
     "server_declined": "Bu sunucuya izin vermediniz, bu yüzden ona hiçbir şey gönderilmedi.",
     "server_invalid": "Bu sunucu adresi geçerli değil."
+  },
+  "desktop_keystore": {
+    "title": "Bu bilgisayardaki sertifikalar",
+    "description": "Bu sunucu, sertifikalarınızı ve akıllı kartlarınızı kullanmak isteyebilir. Her sertifika kullanılmadan önce yine de size sorulur.",
+    "label": "Bu sunucunun erişimi",
+    "label_description": "İzninizi geri alın. Sunucunun yeniden sorması gerekir.",
+    "revoke": "Geri al",
+    "revoked": "İzin geri alındı"
   }
 }
