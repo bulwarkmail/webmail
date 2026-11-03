@@ -428,6 +428,8 @@ export interface EnableWebPushParams {
   // that outlives a permission change keeps pushing for mailboxes the user can
   // no longer read - recreating is the only client-side remedy (#841).
   forceRecreate?: boolean;
+  // For a re-sync: stop if another tab turned push off while this waited its turn.
+  onlyIfStillOn?: boolean;
   // Scope OS push notifications to Inbox-only mail. Mirrors settings-store's
   // pushNotifyInboxOnly. Required, not optional: it changes the server-side
   // delivery filter, so every caller must decide explicitly.
@@ -813,6 +815,9 @@ async function enableWebPushForThisTab(
   params: EnableWebPushParams,
   relayBaseUrl: string,
 ): Promise<EnableWebPushResult> {
+  if (params.onlyIfStillOn && !localStorage.getItem(subscriptionIdKey(params.client.getAccountId()))) {
+    return { subscriptionId: '' };
+  }
   const registration = await ensureServiceWorker();
 
   const vapidPublicKey = await fetchVapidPublicKey(relayBaseUrl);
@@ -914,6 +919,8 @@ async function enableWebPushForThisTab(
         const refreshed = await refreshSubscriptionExpires(params.client, match, emailPush);
         if (refreshed) {
           rememberRefusedEmailPushAccounts(accountId, refusedBefore, emailPush, refreshed.emailPush);
+          // Unless it moved, which goes the other way, this is where it lives.
+          if (!localStorage.getItem(relayBaseKey(accountId))) localStorage.setItem(relayBaseKey(accountId), relayBaseUrl);
           return { subscriptionId: storedServerId };
         }
       }
@@ -1317,6 +1324,7 @@ async function runResync(accountId: string, params: ResyncWebPushParams): Promis
     if (!moved && !params.force && !(await resyncDue(accountId))) return false;
     await enableWebPush({
       client: params.client,
+      onlyIfStillOn: true,
       forceRecreate: moved,
       relayBaseUrl: params.relayBaseUrl,
       accountLabel: params.accountLabel,
