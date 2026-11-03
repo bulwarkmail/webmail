@@ -6631,5 +6631,30 @@
     "plugins_off": "Twoja organizacja wyłączyła wtyczki na tym urządzeniu.",
     "plugins_allowlist": "Twoja organizacja zezwala na tym urządzeniu tylko na wybrane wtyczki.",
     "off": "Wyłączone"
+  },
+  "desktopTelemetry": {
+    "section_title": "Dane o użyciu i raporty o awariach",
+    "section_description": "Oba są wyłączone, dopóki ich nie włączysz, a każdy ma własny przełącznik.",
+    "telemetry_label": "Wysyłaj dane o użyciu",
+    "telemetry_description": "Raz dziennie: wersja aplikacji, system operacyjny i sposób łączenia się aplikacji. Przy własnym serwerze poczty także włączone funkcje i przybliżona liczba kont. Nigdy poczta, adresy ani nazwy serwerów.",
+    "crash_label": "Wysyłaj raporty o awariach",
+    "crash_description": "Błędy aplikacji są wysyłane z nazwami plików z kodu samej aplikacji i krótkimi, oczyszczonymi komunikatami. Jeśli sama aplikacja ulegnie awarii, plik awarii zostaje na tym komputerze i opuszcza go tylko wtedy, gdy go wyślesz.",
+    "crash_memory": "Plik awarii to kopia części pamięci aplikacji z chwili awarii, więc może zawierać fragmenty otwartej poczty. Bulwark usuwa nazwy użytkowników, adresy i tokeny logowania, które znajdzie, ale nie może obiecać, że znajdzie wszystko.",
+    "instance_note": "Na serwerze Bulwark jego administrator osobno decyduje, co strony mu zgłaszają.",
+    "forced_off": "Twoja organizacja to wyłączyła.",
+    "url_label": "Dokąd trafiają pliki awarii",
+    "url_description": "Adres https, który odbiera plik awarii. Bulwark nie ma własnego.",
+    "url_invalid": "Wpisz pełny adres https.",
+    "url_save": "Zapisz",
+    "files_label": "Pliki awarii na tym komputerze",
+    "files_description": "Bulwark zachowuje kilka najnowszych i usuwa starsze niż miesiąc.",
+    "files_empty": "Brak plików awarii.",
+    "file_size": "{size} KB",
+    "send": "Wyślij raport o awarii…",
+    "delete_all": "Usuń wszystkie",
+    "sent": "Raport o awarii wysłany.",
+    "send_no_consent": "Najpierw włącz raporty o awariach.",
+    "send_no_url": "Nie ustawiono adresu, więc nie ma dokąd tego wysłać. Wpisz go powyżej.",
+    "send_failed": "Nie udało się wysłać raportu o awarii."
   }
 }

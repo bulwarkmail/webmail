@@ -33,7 +33,9 @@ export function parseStack(stack: unknown): Frame[] {
   for (const line of stack.split('\n')) {
     const match = V8.exec(line) ?? GECKO.exec(line);
     if (!match) continue;
-    const [, fn, file, lineNo, column] = match;
+    const [, fn, rawFile, lineNo, column] = match;
+    // "at async file:1:2": an anonymous async frame.
+    const file = rawFile.replace(/^async /, '');
     // "at fn (native)" and eval chains carry no file worth keeping.
     frames.push({
       path: scrubFramePath(file),

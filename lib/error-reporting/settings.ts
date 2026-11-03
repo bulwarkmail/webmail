@@ -2,6 +2,7 @@ import { configManager } from '@/lib/admin/config-manager';
 import { parseDsn } from './envelope';
 import { metricsEnabled } from '@/lib/metrics';
 import { effectiveErrorsConsent } from '@/lib/telemetry/state';
+import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 import type { ClientSettings } from './client';
 
 /**
@@ -45,6 +46,8 @@ export function errorReportingSettings(): ErrorReportingSettings {
  */
 export async function shouldCollectErrors(): Promise<boolean> {
   await configManager.ensureLoaded();
+  // The desktop user's own yes, and nothing else: a DSN in a config file isn't consent.
+  if (IS_DESKTOP_BUILD) return (await effectiveErrorsConsent()).consent !== 'off';
   if (errorReportingSettings().dsn || metricsEnabled()) return true;
   return (await effectiveErrorsConsent()).consent !== 'off';
 }
@@ -52,5 +55,7 @@ export async function shouldCollectErrors(): Promise<boolean> {
 /** What /api/config hands the browser. */
 export async function browserErrorSettings(): Promise<ClientSettings> {
   const settings = errorReportingSettings();
-  return { ...settings, collect: await shouldCollectErrors() };
+  const collect = await shouldCollectErrors();
+  // A browser sends to the DSN by itself, so it mustn't get one before the user said yes.
+  return { ...settings, dsn: IS_DESKTOP_BUILD && !collect ? '' : settings.dsn, collect };
 }

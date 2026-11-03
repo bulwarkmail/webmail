@@ -1,4 +1,5 @@
 import { apiFetch, getPathPrefix } from '@/lib/browser-navigation';
+import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { scrubRoutePath } from '@/lib/route-groups';
 import { debugIdsByPath } from './debug-ids';
 import {
@@ -176,10 +177,19 @@ export function captureReport(report: ErrorReport): void {
   deliver(withCrumbs);
 }
 
+/**
+ * `CrashReportsAllowed` forced off, on any page of the desktop app. An instance's own
+ * settings decide the rest there: its admin chose what its pages report to it.
+ */
+function forbiddenByDevicePolicy(): boolean {
+  const entry = getDesktopBridge()?.policy?.get?.().CrashReportsAllowed;
+  return !!entry && entry.locked && entry.value === false;
+}
+
 function deliver(report: ErrorReport): void {
   const s = state();
   const settings = s.settings;
-  if (!settings) return;
+  if (!settings || forbiddenByDevicePolicy()) return;
   const version = appVersion();
   const print = fingerprint(report.name, report.frames, version, report.code);
   if (!limiter().allow(print)) return;
@@ -194,7 +204,12 @@ function deliver(report: ErrorReport): void {
       platform: 'javascript',
       fingerprint: print,
       debugIds: debugIdsByPath(),
-      tags: { runtime: 'browser', ...(process.env.NEXT_PUBLIC_BULWARK_LITE === '1' ? { lite: 'yes' } : {}) },
+      tags: {
+        runtime: 'browser',
+        ...(process.env.NEXT_PUBLIC_BULWARK_LITE === '1' ? { lite: 'yes' } : {}),
+        // An instance's build knows nothing of the app it's in, so the bridge says.
+        ...(getDesktopBridge() ? { platform: 'desktop' } : {}),
+      },
     });
     send(envelopeUrl(dsn), buildEnvelope(event), {
       // text/plain keeps it a simple request: no preflight, no custom header.

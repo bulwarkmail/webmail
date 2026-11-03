@@ -5,6 +5,8 @@ import { effectiveErrorsConsent, getInstanceId } from './state';
 import { getLoginCounts } from './login-tracker';
 import { isErrorCode } from '@/lib/error-reporting/envelope';
 import { readErrors, utcDay, type Aggregate } from '@/lib/error-reporting/aggregate';
+import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
+import { desktopServerPrivacy } from '@/lib/desktop/server-privacy';
 import {
   MAX_TELEMETRY_ERRORS,
   MAX_TELEMETRY_FRAMES,
@@ -23,6 +25,10 @@ export function markProcessStart(): void {
 }
 
 function readPackage(): { version: string; build: string | null } {
+  // The desktop app's version, not the webmail's it carries, and mode and channel in the
+  // one field the collector keeps (lib/desktop/desktop-telemetry.ts).
+  const desktop = desktopServerPrivacy();
+  if (desktop) return { version: desktop.appVersion, build: desktop.build };
   try {
     const pkg = JSON.parse(
       readFileSync(path.join(process.cwd(), 'package.json'), 'utf8'),
@@ -34,6 +40,7 @@ function readPackage(): { version: string; build: string | null } {
 }
 
 function detectPlatform(): Platform {
+  if (IS_DESKTOP_BUILD) return 'desktop';
   if (process.env.KUBERNETES_SERVICE_HOST) return 'k8s';
   // /.dockerenv is the standard Docker container marker.
   try {
@@ -154,6 +161,8 @@ export function errorsForDay(agg: Aggregate, day: string): TelemetryError[] {
  */
 export async function buildPayload(): Promise<AnyTelemetryPayload> {
   const base = await buildPayloadV1();
+  // Crash report consent has its own way out, /v1/errors. A heartbeat is only telemetry.
+  if (IS_DESKTOP_BUILD) return base;
   // Daily and instant mode both send the last complete day with the heartbeat.
   if ((await effectiveErrorsConsent()).consent === 'off') return base;
   return { ...base, schema: '2', errors: errorsForPayload(await readErrors()) };

@@ -5,6 +5,7 @@ import { useSettingsStore } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, ToggleSwitch } from './settings-section';
 import { LanguageSettings } from './language-settings';
 import { DesktopKeystoreSettings } from './desktop-keystore-settings';
+import { DesktopTelemetrySettings } from './desktop-telemetry-settings';
 import { ProtocolHandlerSettings } from './protocol-handler-settings';
 import { useTour } from '@/components/tour/tour-provider';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,7 @@ export function GeneralSettings({ supportsCalendar }: { supportsCalendar: boolea
 
       {!IS_LITE && <ProtocolHandlerSettings supportsCalendar={supportsCalendar} />}
       <DesktopKeystoreSettings />
+      <DesktopTelemetrySettings />
 
       <SettingsSection id="tour" title={tTour('settings_section')}>
         <SettingItem label={tTour('restart_title')} description={tTour('restart_desc')}>

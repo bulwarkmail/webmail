@@ -6631,5 +6631,30 @@
     "plugins_off": "Tu organización ha desactivado los complementos en este dispositivo.",
     "plugins_allowlist": "Tu organización solo permite determinados complementos en este dispositivo.",
     "off": "Desactivado"
+  },
+  "desktopTelemetry": {
+    "section_title": "Datos de uso e informes de fallos",
+    "section_description": "Ambos están desactivados hasta que los actives, y cada uno tiene su propio interruptor.",
+    "telemetry_label": "Enviar datos de uso",
+    "telemetry_description": "Una vez al día: la versión de la aplicación, tu sistema operativo y cómo se conecta la aplicación. Con tu propio servidor de correo, también qué funciones están activas y un número aproximado de cuentas. Nunca correos, direcciones ni nombres de servidor.",
+    "crash_label": "Enviar informes de fallos",
+    "crash_description": "Los errores de la aplicación se envían con nombres de archivo del propio código de la aplicación y mensajes breves y limpios. Si la propia aplicación falla, un archivo de fallo queda en este ordenador y solo sale de él si lo envías.",
+    "crash_memory": "Un archivo de fallo es una copia de parte de la memoria de la aplicación en el momento del fallo, así que puede contener partes de correos abiertos. Bulwark elimina los nombres de usuario, las direcciones y los tokens de inicio de sesión que encuentra, pero no puede prometer encontrarlo todo.",
+    "instance_note": "En un servidor Bulwark, su administrador decide por separado qué le comunican sus páginas.",
+    "forced_off": "Tu organización ha desactivado esto.",
+    "url_label": "Destino de los archivos de fallo",
+    "url_description": "La dirección https que recibe un archivo de fallo. Bulwark no incluye ninguna.",
+    "url_invalid": "Escribe una dirección https completa.",
+    "url_save": "Guardar",
+    "files_label": "Archivos de fallo en este ordenador",
+    "files_description": "Bulwark conserva los más recientes y elimina los de más de un mes.",
+    "files_empty": "No hay archivos de fallo.",
+    "file_size": "{size} KB",
+    "send": "Enviar informe de fallo…",
+    "delete_all": "Eliminar todo",
+    "sent": "Informe de fallo enviado.",
+    "send_no_consent": "Activa primero los informes de fallos.",
+    "send_no_url": "No hay ninguna dirección, así que no hay adónde enviarlo. Escribe una arriba.",
+    "send_failed": "No se ha podido enviar el informe de fallo."
   }
 }

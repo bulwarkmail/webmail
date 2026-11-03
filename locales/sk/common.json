@@ -6631,5 +6631,30 @@
     "plugins_off": "Vaša organizácia na tomto zariadení vypla pluginy.",
     "plugins_allowlist": "Vaša organizácia na tomto zariadení povoľuje len niektoré pluginy.",
     "off": "Vypnuté"
+  },
+  "desktopTelemetry": {
+    "section_title": "Údaje o používaní a hlásenia o zlyhaniach",
+    "section_description": "Oboje je vypnuté, kým to nezapnete, a každé má vlastný prepínač.",
+    "telemetry_label": "Odosielať údaje o používaní",
+    "telemetry_description": "Raz denne: verzia aplikácie, váš operačný systém a spôsob pripojenia aplikácie. Pri vlastnom poštovom serveri aj zapnuté funkcie a približný počet účtov. Nikdy pošta, adresy ani názvy serverov.",
+    "crash_label": "Odosielať hlásenia o zlyhaniach",
+    "crash_description": "Chyby v aplikácii sa odosielajú s názvami súborov z kódu aplikácie a krátkymi, očistenými správami. Keď zlyhá samotná aplikácia, súbor o zlyhaní zostane v tomto počítači a odíde len vtedy, keď ho odošlete.",
+    "crash_memory": "Súbor o zlyhaní je kópia časti pamäte aplikácie v okamihu zlyhania, takže môže obsahovať časti otvorenej pošty. Bulwark odstráni používateľské mená, adresy a prihlasovacie tokeny, ktoré nájde, ale nemôže sľúbiť, že nájde všetko.",
+    "instance_note": "Na serveri Bulwark rozhoduje jeho správca samostatne o tom, čo mu stránky hlásia.",
+    "forced_off": "Vaša organizácia to vypla.",
+    "url_label": "Kam idú súbory o zlyhaní",
+    "url_description": "Adresa https, ktorá prijíma súbor o zlyhaní. Bulwark žiadnu nemá.",
+    "url_invalid": "Zadajte úplnú adresu https.",
+    "url_save": "Uložiť",
+    "files_label": "Súbory o zlyhaní v tomto počítači",
+    "files_description": "Bulwark ponechá najnovšie a odstráni tie staršie ako mesiac.",
+    "files_empty": "Žiadne súbory o zlyhaní.",
+    "file_size": "{size} KB",
+    "send": "Odoslať hlásenie o zlyhaní…",
+    "delete_all": "Odstrániť všetko",
+    "sent": "Hlásenie o zlyhaní odoslané.",
+    "send_no_consent": "Najprv zapnite hlásenia o zlyhaniach.",
+    "send_no_url": "Nie je nastavená žiadna adresa, takže to nie je kam odoslať. Zadajte ju vyššie.",
+    "send_failed": "Hlásenie o zlyhaní sa nepodarilo odoslať."
   }
 }

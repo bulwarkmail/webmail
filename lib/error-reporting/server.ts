@@ -9,6 +9,7 @@ import { errorReportingSettings, shouldCollectErrors } from './settings';
 import { scrubName, scrubText } from './scrub';
 import { parseStack, type Frame } from './stack';
 import { debugIdsByPath } from './debug-ids';
+import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 
 /**
  * Error reporting on the server: errors Next hands to onRequestError
@@ -56,7 +57,7 @@ async function deliver(report: ErrorReport): Promise<void> {
     platform: 'node',
     fingerprint: print,
     debugIds: debugIdsByPath(),
-    tags: { runtime: 'server' },
+    tags: { runtime: 'server', ...(IS_DESKTOP_BUILD ? { platform: 'desktop' } : {}) },
   });
   s.sending++;
   try {
@@ -89,6 +90,31 @@ export function captureRequestError(error: unknown, routePattern?: string): Prom
       mechanism: 'request',
       // A route pattern from the code ("/api/admin/[id]"), never the request's URL.
       ...(typeof routePattern === 'string' && ROUTE_PATTERN.test(routePattern) ? { route: routePattern } : {}),
+    });
+  } catch {
+    return Promise.resolve();
+  }
+}
+
+export interface DesktopMainErrorInput {
+  name?: unknown;
+  message?: unknown;
+  stack?: unknown;
+  mechanism?: unknown;
+}
+
+/**
+ * An error in the desktop app's main process, handed over by the shell. Its frames are
+ * the shell's own files as `/desktop/...`. All of it is scrubbed here again.
+ */
+export function captureDesktopMainError(error: DesktopMainErrorInput): Promise<void> {
+  try {
+    return handleServerReport({
+      name: scrubName(error.name),
+      message: scrubText(error.message),
+      frames: parseStack(error.stack),
+      handled: false,
+      mechanism: error.mechanism === 'unhandledrejection' ? 'desktop-main-rejection' : 'desktop-main',
     });
   } catch {
     return Promise.resolve();

@@ -6631,5 +6631,30 @@
     "plugins_off": "La tua organizzazione ha disattivato i plugin su questo dispositivo.",
     "plugins_allowlist": "La tua organizzazione consente solo alcuni plugin su questo dispositivo.",
     "off": "Disattivato"
+  },
+  "desktopTelemetry": {
+    "section_title": "Dati di utilizzo e segnalazioni di arresto anomalo",
+    "section_description": "Entrambi restano disattivati finché non li attivi, e ognuno ha il proprio interruttore.",
+    "telemetry_label": "Invia dati di utilizzo",
+    "telemetry_description": "Una volta al giorno: la versione dell'app, il tuo sistema operativo e come si connette l'app. Con un tuo server di posta, anche quali funzioni sono attive e un numero approssimativo di account. Mai email, indirizzi o nomi di server.",
+    "crash_label": "Invia segnalazioni di arresto anomalo",
+    "crash_description": "Gli errori dell'app vengono inviati con i nomi dei file del codice dell'app e brevi messaggi ripuliti. Se l'app stessa si arresta, un file di arresto resta su questo computer e ne esce solo se lo invii.",
+    "crash_memory": "Un file di arresto è una copia di parte della memoria dell'app al momento dell'arresto, quindi può contenere parti di email aperte. Bulwark rimuove i nomi utente, gli indirizzi e i token di accesso che trova, ma non può promettere di trovare tutto.",
+    "instance_note": "Su un server Bulwark, il suo amministratore decide separatamente cosa le sue pagine gli segnalano.",
+    "forced_off": "La tua organizzazione ha disattivato questa opzione.",
+    "url_label": "Destinazione dei file di arresto",
+    "url_description": "L'indirizzo https che riceve un file di arresto. Bulwark non ne include nessuno.",
+    "url_invalid": "Inserisci un indirizzo https completo.",
+    "url_save": "Salva",
+    "files_label": "File di arresto su questo computer",
+    "files_description": "Bulwark conserva i più recenti ed elimina quelli più vecchi di un mese.",
+    "files_empty": "Nessun file di arresto.",
+    "file_size": "{size} KB",
+    "send": "Invia segnalazione di arresto…",
+    "delete_all": "Elimina tutti",
+    "sent": "Segnalazione di arresto inviata.",
+    "send_no_consent": "Attiva prima le segnalazioni di arresto anomalo.",
+    "send_no_url": "Non è impostato alcun indirizzo, quindi non c'è dove inviarla. Inseriscine uno qui sopra.",
+    "send_failed": "Impossibile inviare la segnalazione di arresto."
   }
 }

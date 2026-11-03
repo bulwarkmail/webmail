@@ -6631,5 +6631,30 @@
     "plugins_off": "조직에서 이 기기의 플러그인을 껐습니다.",
     "plugins_allowlist": "조직에서 이 기기에 특정 플러그인만 허용합니다.",
     "off": "끔"
+  },
+  "desktopTelemetry": {
+    "section_title": "사용 정보 및 충돌 보고서",
+    "section_description": "둘 다 켤 때까지 꺼져 있으며, 각각 별도의 스위치가 있습니다.",
+    "telemetry_label": "사용 정보 보내기",
+    "telemetry_description": "하루에 한 번: 앱 버전, 운영 체제, 앱의 연결 방식을 보냅니다. 자체 메일 서버를 쓰면 켜진 기능과 대략적인 계정 수도 보냅니다. 메일, 주소, 서버 이름은 절대 보내지 않습니다.",
+    "crash_label": "충돌 보고서 보내기",
+    "crash_description": "앱 오류는 앱 자체 코드의 파일 이름과 정리된 짧은 메시지와 함께 전송됩니다. 앱 자체가 충돌하면 충돌 파일이 이 컴퓨터에 남고, 직접 보낼 때만 밖으로 나갑니다.",
+    "crash_memory": "충돌 파일은 충돌 당시 앱 메모리 일부의 복사본이므로 열려 있던 메일의 일부가 포함될 수 있습니다. Bulwark는 찾아낸 사용자 이름, 주소, 로그인 토큰을 제거하지만 모두 찾는다고 약속할 수는 없습니다.",
+    "instance_note": "Bulwark 서버에서는 페이지가 서버에 무엇을 보고할지 해당 서버의 관리자가 별도로 정합니다.",
+    "forced_off": "조직에서 이 기능을 껐습니다.",
+    "url_label": "충돌 파일을 보낼 곳",
+    "url_description": "충돌 파일을 받는 https 주소입니다. Bulwark에는 기본 주소가 없습니다.",
+    "url_invalid": "전체 https 주소를 입력하세요.",
+    "url_save": "저장",
+    "files_label": "이 컴퓨터의 충돌 파일",
+    "files_description": "Bulwark는 최신 파일을 보관하고 한 달이 지난 파일은 삭제합니다.",
+    "files_empty": "충돌 파일이 없습니다.",
+    "file_size": "{size} KB",
+    "send": "충돌 보고서 보내기…",
+    "delete_all": "모두 삭제",
+    "sent": "충돌 보고서를 보냈습니다.",
+    "send_no_consent": "먼저 충돌 보고서를 켜세요.",
+    "send_no_url": "주소가 설정되지 않아 보낼 곳이 없습니다. 위에 입력하세요.",
+    "send_failed": "충돌 보고서를 보낼 수 없습니다."
   }
 }

@@ -7,6 +7,8 @@ import {
 import { buildPayload } from './payload';
 import { fetchTelemetryTarget, resolveEndpointAllowed } from './endpoint-guard';
 import { DEFAULT_ENDPOINT } from './types';
+import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
+import { DESKTOP_CATCH_UP_MS, DESKTOP_RETRY_MS } from '@/lib/desktop/desktop-telemetry';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const JITTER_MS = 2 * 60 * 60 * 1000; // ± 2 hours
@@ -164,12 +166,16 @@ async function scheduleNext(delayMs: number, generation: number): Promise<void> 
 }
 
 async function tick(slot: string, generation: number): Promise<void> {
+  let failed = false;
   try {
-    await sendOnce({ reason: 'scheduled', slot });
+    const result = await sendOnce({ reason: 'scheduled', slot });
+    failed = !result.ok && result.error !== 'already sent';
   } catch (err) {
+    failed = true;
     logger.warn('telemetry: heartbeat failed', { error: err instanceof Error ? err.message : String(err) });
   }
-  await scheduleNext(jitteredDelay(DAY_MS), generation);
+  // A laptop that woke up offline shouldn't lose the day.
+  await scheduleNext(IS_DESKTOP_BUILD && failed ? DESKTOP_RETRY_MS : jitteredDelay(DAY_MS), generation);
 }
 
 // Run by the scheduler leader (lib/scheduler-leader.ts). Idempotent.
@@ -187,7 +193,9 @@ export async function startScheduler(): Promise<void> {
   }
   // If we have a next-scheduled time in the future use it; otherwise schedule
   // FIRST_DELAY_MS out. This means after a restart we don't fire immediately.
-  let delay = FIRST_DELAY_MS;
+  // A desktop app isn't a server: quit within the hour on every start, and it would
+  // never send. So what's due goes out soon after a start.
+  let delay = IS_DESKTOP_BUILD ? DESKTOP_CATCH_UP_MS : FIRST_DELAY_MS;
   if (state.nextScheduledAt) {
     const remaining = new Date(state.nextScheduledAt).getTime() - Date.now();
     if (remaining > 0) delay = Math.min(remaining, DAY_MS + JITTER_MS);

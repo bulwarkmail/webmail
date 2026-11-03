@@ -39,7 +39,7 @@ export const OUTGOING_HOSTS: readonly OutgoingHost[] = [
     host: 'telemetry.bulwarkmail.org',
     files: ['lib/telemetry/types.ts'],
     side: 'server',
-    usedBy: 'Anonymous daily heartbeat, sent only after an admin turned telemetry on; with instant error counts on, also the current day\'s error counts as they change.',
+    usedBy: 'Anonymous daily heartbeat, sent only after an admin, or the desktop app\'s user, turned telemetry on; with instant error counts on, also the current day\'s error counts as they change.',
     off: 'Off by default. BULWARK_TELEMETRY=off, or System > Usage stats (switch it off or clear the collector URL).',
     inMode: 'Never sent, whatever the telemetry setting says.',
     lite: false,

@@ -6631,5 +6631,30 @@
     "plugins_off": "Your organisation turned off plugins on this device.",
     "plugins_allowlist": "Your organisation only allows certain plugins on this device.",
     "off": "Off"
+  },
+  "desktopTelemetry": {
+    "section_title": "Usage info and crash reports",
+    "section_description": "Both are off until you turn them on, and each has its own switch.",
+    "telemetry_label": "Send usage info",
+    "telemetry_description": "Once a day: the app version, your operating system and how the app connects. With your own mail server, also which features are on and a rough number of accounts. Never mail, addresses or server names.",
+    "crash_label": "Send crash reports",
+    "crash_description": "Errors in the app go out with file names from the app's own code and short, cleaned-up messages. If the app itself crashes, a crash file stays on this computer and only leaves when you send it.",
+    "crash_memory": "A crash file is a copy of part of the app's memory when it crashed, so it can contain parts of open mail. Bulwark removes user names, addresses and sign-in tokens it can find, but it can't promise to find everything.",
+    "instance_note": "On a Bulwark server, that server's admin decides separately what its pages report to it.",
+    "forced_off": "Your organisation turned this off.",
+    "url_label": "Where crash files go",
+    "url_description": "The https address that receives a crash file. Bulwark doesn't come with one.",
+    "url_invalid": "Enter a full https address.",
+    "url_save": "Save",
+    "files_label": "Crash files on this computer",
+    "files_description": "Bulwark keeps the newest few and deletes ones older than a month.",
+    "files_empty": "No crash files.",
+    "file_size": "{size} KB",
+    "send": "Send crash report…",
+    "delete_all": "Delete all",
+    "sent": "Crash report sent.",
+    "send_no_consent": "Turn on crash reports first.",
+    "send_no_url": "No address is set, so there's nowhere to send this. Enter one above.",
+    "send_failed": "The crash report couldn't be sent."
   }
 }

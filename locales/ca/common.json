@@ -6631,5 +6631,30 @@
     "plugins_off": "La teva organització ha desactivat els connectors en aquest dispositiu.",
     "plugins_allowlist": "La teva organització només permet determinats connectors en aquest dispositiu.",
     "off": "Desactivat"
+  },
+  "desktopTelemetry": {
+    "section_title": "Dades d'ús i informes d'errors greus",
+    "section_description": "Tots dos estan desactivats fins que els activis, i cadascun té el seu interruptor.",
+    "telemetry_label": "Envia dades d'ús",
+    "telemetry_description": "Un cop al dia: la versió de l'aplicació, el teu sistema operatiu i com es connecta l'aplicació. Amb un servidor de correu propi, també quines funcions estan actives i un nombre aproximat de comptes. Mai correus, adreces ni noms de servidor.",
+    "crash_label": "Envia informes d'errors greus",
+    "crash_description": "Els errors de l'aplicació s'envien amb noms de fitxer del codi de l'aplicació i missatges curts i nets. Si la mateixa aplicació es tanca per un error, un fitxer d'error queda en aquest ordinador i només en surt si l'envies.",
+    "crash_memory": "Un fitxer d'error és una còpia d'una part de la memòria de l'aplicació en el moment de l'error, de manera que pot contenir parts de correus oberts. Bulwark elimina els noms d'usuari, les adreces i els testimonis d'inici de sessió que troba, però no pot prometre trobar-ho tot.",
+    "instance_note": "En un servidor Bulwark, el seu administrador decideix per separat què li comuniquen les pàgines.",
+    "forced_off": "La teva organització ho ha desactivat.",
+    "url_label": "Destinació dels fitxers d'error",
+    "url_description": "L'adreça https que rep un fitxer d'error. Bulwark no n'inclou cap.",
+    "url_invalid": "Escriu una adreça https completa.",
+    "url_save": "Desa",
+    "files_label": "Fitxers d'error en aquest ordinador",
+    "files_description": "Bulwark conserva els més recents i elimina els de més d'un mes.",
+    "files_empty": "No hi ha fitxers d'error.",
+    "file_size": "{size} KB",
+    "send": "Envia l'informe d'error…",
+    "delete_all": "Elimina-ho tot",
+    "sent": "Informe d'error enviat.",
+    "send_no_consent": "Activa primer els informes d'errors greus.",
+    "send_no_url": "No hi ha cap adreça, així que no hi ha on enviar-ho. Escriu-ne una a dalt.",
+    "send_failed": "No s'ha pogut enviar l'informe d'error."
   }
 }

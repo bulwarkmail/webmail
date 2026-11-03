@@ -1,3 +1,4 @@
+import { DESKTOP_FRAME_PREFIX, DESKTOP_VERSION_SUFFIX } from '@/lib/desktop/desktop-telemetry';
 import type { Frame } from './stack';
 
 /**
@@ -93,7 +94,7 @@ export function buildEvent(report: ErrorReport, ctx: EventContext): Record<strin
     ...(frame.fn ? { function: frame.fn } : {}),
     ...(frame.line !== undefined ? { lineno: frame.line } : {}),
     ...(frame.column !== undefined ? { colno: frame.column } : {}),
-    in_app: frame.path.startsWith('/_next/') || frame.path.startsWith('/.next/'),
+    in_app: frame.path.startsWith('/_next/') || frame.path.startsWith('/.next/') || frame.path.startsWith(DESKTOP_FRAME_PREFIX),
   }));
   const images = [...new Set(report.frames.map((frame) => frame.path))]
     .filter((path) => ctx.debugIds.has(path))
@@ -144,6 +145,11 @@ export function releaseName(): string {
   return commit && commit !== 'unknown' ? `${version}+${commit}` : version;
 }
 
+/**
+ * In the desktop build with a suffix, which also reaches the collector: its error batches
+ * have no room for a tag, and its version field allows this.
+ */
 export function appVersion(): string {
-  return process.env.NEXT_PUBLIC_APP_VERSION || '0.0.0';
+  const version = process.env.NEXT_PUBLIC_APP_VERSION || '0.0.0';
+  return process.env.NEXT_PUBLIC_BULWARK_DESKTOP === '1' ? `${version}${DESKTOP_VERSION_SUFFIX}` : version;
 }

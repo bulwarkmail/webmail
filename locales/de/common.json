@@ -6631,5 +6631,30 @@
     "plugins_off": "Ihre Organisation hat Plugins auf diesem Gerät ausgeschaltet.",
     "plugins_allowlist": "Ihre Organisation erlaubt auf diesem Gerät nur bestimmte Plugins.",
     "off": "Aus"
+  },
+  "desktopTelemetry": {
+    "section_title": "Nutzungsdaten und Absturzberichte",
+    "section_description": "Beides bleibt aus, bis Sie es einschalten, und jedes hat einen eigenen Schalter.",
+    "telemetry_label": "Nutzungsdaten senden",
+    "telemetry_description": "Einmal am Tag: die App-Version, Ihr Betriebssystem und die Art der Verbindung. Bei einem eigenen Mailserver auch, welche Funktionen aktiv sind, und eine ungefähre Zahl der Konten. Niemals E-Mails, Adressen oder Servernamen.",
+    "crash_label": "Absturzberichte senden",
+    "crash_description": "Fehler in der App werden mit Dateinamen aus dem eigenen Code der App und kurzen, bereinigten Meldungen gesendet. Stürzt die App selbst ab, bleibt eine Absturzdatei auf diesem Computer und verlässt ihn nur, wenn Sie sie senden.",
+    "crash_memory": "Eine Absturzdatei ist eine Kopie eines Teils des Arbeitsspeichers der App beim Absturz und kann daher Teile geöffneter E-Mails enthalten. Bulwark entfernt Benutzernamen, Adressen und Anmeldetokens, die es findet, kann aber nicht versprechen, alles zu finden.",
+    "instance_note": "Bei einem Bulwark-Server entscheidet dessen Administrator getrennt davon, was seine Seiten an ihn melden.",
+    "forced_off": "Ihre Organisation hat das ausgeschaltet.",
+    "url_label": "Ziel der Absturzdateien",
+    "url_description": "Die https-Adresse, die eine Absturzdatei empfängt. Bulwark bringt keine mit.",
+    "url_invalid": "Geben Sie eine vollständige https-Adresse ein.",
+    "url_save": "Speichern",
+    "files_label": "Absturzdateien auf diesem Computer",
+    "files_description": "Bulwark behält die neuesten und löscht alles, was älter als einen Monat ist.",
+    "files_empty": "Keine Absturzdateien.",
+    "file_size": "{size} KB",
+    "send": "Absturzbericht senden…",
+    "delete_all": "Alle löschen",
+    "sent": "Absturzbericht gesendet.",
+    "send_no_consent": "Schalten Sie zuerst die Absturzberichte ein.",
+    "send_no_url": "Es ist keine Adresse eingetragen, daher gibt es kein Ziel. Geben Sie oben eine ein.",
+    "send_failed": "Der Absturzbericht konnte nicht gesendet werden."
   }
 }
