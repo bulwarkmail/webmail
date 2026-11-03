@@ -24,6 +24,9 @@ import { JMAP_URL } from './helpers/config';
  * - a mail written offline waits in the outbox; the required classification
  *   label still stops it; once online it goes out with SIO-Label;
  * - read, flag and delete to Trash made offline reach the server;
+ * - a change the server can no longer take shows as changed on another device;
+ * - the Trash emptied offline is emptied on the server after;
+ * - a send whose response got lost is looked up and goes out once;
  * - a sign-out the user starts asks first when unsent mail would be lost,
  *   then wipes the device; the idle sign-out wipes it and the login page
  *   names the lost message;
@@ -335,6 +338,98 @@ test('read, flag and delete to Trash made offline reach the server once back onl
   await expect.poll(async () => (await waitForMessage(ENT.alice, (m) => m.subject === flag)).keywords.$flagged === true, { timeout: 60_000 }).toBe(true);
   await expect.poll(async () => !!(await waitForMessage(ENT.alice, (m) => m.subject === trash)).mailboxIds[trashId], { timeout: 60_000 }).toBe(true);
   await page.context().close();
+});
+
+test('a change the server can no longer take is shown as changed on another device', async ({ browser }) => {
+  const subject = `Offline conflict ${RUN}`;
+  await deliverAndWait(subject, 'Moved twice');
+  const page = await userPage(browser, ENT.alice);
+  await enableOffline(page);
+  await toMail(page);
+  await page.context().setOffline(true);
+
+  await openMessage(page, subject);
+  await page.keyboard.press('Delete');
+  await expect(page.locator('[data-testid="email-list-item"]', { hasText: subject })).toHaveCount(0, { timeout: 15_000 });
+
+  // Meanwhile another device files it elsewhere.
+  const other = await jmapAs(ENT.alice);
+  const junk = (await other.mailboxByRole('junk'))!.id;
+  const id = (await waitForMessage(ENT.alice, (m) => m.subject === subject)).id;
+  await other.request([['Email/set', { accountId: other.accountId, update: { [id]: { mailboxIds: { [junk]: true } } } }, '0']]);
+
+  await page.context().setOffline(false);
+  await page.getByTestId('offline-banner-conflicts').click({ timeout: 90_000 });
+  const row = page.getByTestId('offline-conflict-row').filter({ hasText: subject });
+  await expect(row).toHaveAttribute('data-reason', 'changed');
+  await expect(row).toContainText('Changed on another device');
+  // The other device's move stands.
+  expect(Object.keys((await waitForMessage(ENT.alice, (m) => m.subject === subject)).mailboxIds)).toEqual([junk]);
+  await shot(page, 'f-offline-conflict');
+  await row.getByRole('button', { name: /^Dismiss/ }).click();
+  await expect(page.getByTestId('offline-conflict-row').filter({ hasText: subject })).toHaveCount(0);
+  await page.context().close();
+});
+
+test('emptying the Trash offline shows at once and reaches the server once back online', async ({ browser }) => {
+  const subject = `Offline empty trash ${RUN}`;
+  await deliverAndWait(subject, 'Gone for good');
+  const client = await jmapAs(ENT.alice);
+  const trash = (await client.mailboxByRole('trash'))!.id;
+  const id = (await waitForMessage(ENT.alice, (m) => m.subject === subject)).id;
+  await client.request([['Email/set', { accountId: client.accountId, update: { [id]: { mailboxIds: { [trash]: true } } } }, '0']]);
+  const page = await userPage(browser, ENT.alice);
+  await enableOffline(page);
+  await toMail(page);
+  await page.context().setOffline(true);
+
+  await page.getByText('Trash', { exact: true }).first().click();
+  await expect(page.locator('[data-testid="email-list-item"]', { hasText: subject }).first()).toBeVisible({ timeout: 30_000 });
+  await page.getByRole('button', { name: 'Empty folder' }).first().click();
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Empty folder' }).click();
+  await expect(page.locator('[data-testid="email-list-item"]', { hasText: subject })).toHaveCount(0, { timeout: 15_000 });
+  // Nothing reached the server yet.
+  expect((await messages(ENT.alice, RUN)).some((m) => m.subject === subject)).toBe(true);
+
+  await page.context().setOffline(false);
+  await expect.poll(async () => (await messages(ENT.alice, RUN)).some((m) => m.subject === subject), { timeout: 90_000 }).toBe(false);
+  await page.context().close();
+});
+
+test('a send whose response got lost goes out once', async ({ browser }) => {
+  const subject = `Offline lost response ${RUN}`;
+  const page = await userPage(browser, ENT.alice);
+  await enableOffline(page);
+  await toMail(page);
+  const context = page.context();
+  await blockMailServer(context);
+  await waitUntilOffline(page);
+  await compose(page, ENT.bob, subject, 'Only one copy');
+  await send(page);
+  await expect(page.getByTestId('offline-banner-outbox')).toHaveText('1 message in the outbox', { timeout: 30_000 });
+
+  // The server comes back, and takes the send, but its answer never arrives.
+  const origin = `${new URL(JMAP_URL).origin}/**`;
+  let lost = 0;
+  await context.unroute(origin);
+  await context.route(origin, async (route) => {
+    if (lost === 0 && (route.request().postData() ?? '').includes('EmailSubmission/set')) {
+      lost += 1;
+      await route.fetch();
+      await route.abort('connectionreset');
+      return;
+    }
+    await route.continue();
+  });
+
+  await expect.poll(() => lost, { timeout: 120_000 }).toBe(1);
+  // Looked up, found in Sent, done: the row goes without another submission.
+  await expect(page.getByTestId('offline-banner-outbox')).toHaveCount(0, { timeout: 120_000 });
+  await waitForMessage(ENT.bob, (m) => m.subject === subject);
+  const copies = (await messages(ENT.alice, RUN)).filter((m) => m.subject === subject);
+  expect(copies).toHaveLength(1);
+  expect(copies[0].keywords.$draft).toBeFalsy();
+  await context.close();
 });
 
 test('signing out asks first when unsent mail would be lost, then wipes the device', async ({ browser }) => {
