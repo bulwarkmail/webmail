@@ -10,6 +10,7 @@ import { useThemeStore } from '@/stores/theme-store';
 import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
 import { EmbeddedContext } from '@/hooks/use-is-embedded';
 import { ProTabFocusContext } from '@/hooks/use-pane-context';
+import { useProTabStore, type ProTabKind } from '@/stores/pro-tab-store';
 
 // Under Pro the mail page stays mounted behind other tabs. Its shortcuts acted
 // from there: e on the Calendar tab archived the mail selected in the hidden
@@ -102,12 +103,48 @@ function renderPro(focused: boolean) {
   );
 }
 
+function withTabInFront(kind: ProTabKind) {
+  useProTabStore.setState({
+    tabs: [
+      { id: 'home-mail', kind: 'mail', labelKey: 'mail', closeable: false, paneId: 'main' },
+      { id: 'front', kind, labelKey: kind, closeable: true, paneId: 'main' },
+    ],
+    activeTabId: 'front', activeSplitTabId: null, focusedPaneId: 'main',
+  } as never);
+}
+
 describe('mail shortcuts under the Pro shell', () => {
-  it('leaves only the help on while another tab is in front', () => {
+  it.each(['files', 'settings', 'contacts', 'folder', 'search', 'email', 'compose'] as ProTabKind[])(
+    'leaves the help and a new message on while a %s tab is in front, and nothing that acts on mail',
+    (kind) => {
+      withTabInFront(kind);
+      renderPro(false);
+      const active = activeShortcuts();
+      expect(active).toHaveLength(1);
+      expect(Object.keys(active[0].handlers).sort()).toEqual(['onCompose', 'onShowHelp']);
+    },
+  );
+
+  it('leaves c to the Calendar tab, whose c is New event', () => {
+    withTabInFront('calendar');
     renderPro(false);
     const active = activeShortcuts();
     expect(active).toHaveLength(1);
     expect(Object.keys(active[0].handlers)).toEqual(['onShowHelp']);
+  });
+
+  it('goes by the pane in focus when the Calendar tab is in the other one', () => {
+    withTabInFront('calendar');
+    useProTabStore.setState({
+      tabs: [
+        { id: 'home-mail', kind: 'mail', labelKey: 'mail', closeable: false, paneId: 'main' },
+        { id: 'front', kind: 'calendar', labelKey: 'calendar', closeable: true, paneId: 'main' },
+        { id: 'files', kind: 'files', labelKey: 'files', closeable: true, paneId: 'split' },
+      ],
+      activeSplitTabId: 'files', focusedPaneId: 'split',
+    } as never);
+    renderPro(false);
+    expect(activeShortcuts()[0].handlers.onCompose).toBeTypeOf('function');
   });
 
   it('has the mail shortcuts on while the mail tab is in front', () => {

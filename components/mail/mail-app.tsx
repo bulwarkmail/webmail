@@ -1244,9 +1244,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const singleKeyShortcuts = useSettingsStore((s) => s.singleKeyShortcuts);
   // Under Pro this page stays mounted behind other tabs. Its mail shortcuts
   // are only for when it is in front: e on the Calendar tab archived the mail
-  // selected here, out of sight. The help opens from any tab. (c stays each
-  // surface's own: New event on the Calendar tab.)
+  // selected here, out of sight. The help opens from any tab, and so does a new
+  // message, which touches nothing out of sight, except on the Calendar tab: its
+  // c is New event.
   const isFocusedProTab = useIsFocusedProTab();
+  const calendarTabInFront = useProTabStore((state) => {
+    const id = state.focusedPaneId === 'split' ? state.activeSplitTabId : state.activeTabId;
+    return state.tabs.find((tab) => tab.id === id)?.kind === 'calendar';
+  });
   const mailShortcutsApply = !isEmbedded || isFocusedProTab;
   useKeyboardShortcuts({
     enabled: isAuthenticated && !showComposer && mailShortcutsApply,
@@ -1257,7 +1262,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     mountainViewKeys: mvShell,
     handlers: keyboardHandlers,
   });
-  const anyTabHandlers = useMemo(() => ({ onShowHelp: keyboardHandlers.onShowHelp }), [keyboardHandlers]);
+  const anyTabHandlers = useMemo(() => ({
+    onShowHelp: keyboardHandlers.onShowHelp,
+    ...(calendarTabInFront ? {} : { onCompose: keyboardHandlers.onCompose }),
+  }), [keyboardHandlers, calendarTabInFront]);
   useKeyboardShortcuts({
     enabled: isAuthenticated && !showComposer && !mailShortcutsApply,
     singleKeyShortcuts,

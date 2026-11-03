@@ -427,12 +427,11 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
   }, [client, email, moveToMailbox, onClose]);
 
   // This view's message answers the same keys as a message in the mail tab,
-  // while its tab is the one in front.
+  // while its tab is the one in front. c comes from the mail page, as on any tab.
   const isFocusedTab = useIsFocusedProTab();
   const singleKeyShortcuts = useSettingsStore((s) => s.singleKeyShortcuts);
   const shortcutEmails = useMemo(() => (email ? [email] : []), [email]);
   const shortcutHandlers = useMemo(() => ({
-    onCompose: () => openComposeTab({ mode: 'compose', title: t('email_composer.new_message') }, {}),
     onReply: () => handleReply(),
     onReplyAll: handleReplyAll,
     onForward: handleForward,
@@ -441,7 +440,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     onDelete: () => void handleDelete(),
     onMarkAsUnread: email ? () => void handleMarkAsRead(email.id, false) : undefined,
     onMarkAsRead: email ? () => void handleMarkAsRead(email.id, true) : undefined,
-  }), [email, openComposeTab, t, handleReply, handleReplyAll, handleForward, handleToggleStar, archiveActionEnabled, handleArchive, handleDelete, handleMarkAsRead]);
+  }), [email, handleReply, handleReplyAll, handleForward, handleToggleStar, archiveActionEnabled, handleArchive, handleDelete, handleMarkAsRead]);
   useKeyboardShortcuts({
     enabled: isFocusedTab && !!email,
     singleKeyShortcuts,
