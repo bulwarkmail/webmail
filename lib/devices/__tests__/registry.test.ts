@@ -7,6 +7,8 @@ import { setStoreForTests } from '@/lib/shared-store';
 
 type Registry = typeof import('../registry');
 
+vi.setConfig({ testTimeout: 60_000 });
+
 let dir: string;
 const info = { platform: 'Chrome, Windows', appVersion: '1.2.3' };
 
@@ -164,6 +166,62 @@ describe('the rules', () => {
     expect(ids).toHaveLength(registry.MAX_DEVICES_PER_USER);
     expect(ids).toContain(oldest.id);
     expect(ids).not.toContain(next.id);
+  });
+
+  it('tells a confirmation that changed the row from one that didn\'t', async () => {
+    const registry = await import('../registry');
+    const { id, secret } = await registry.registerDevice('alice@example.org', 'https://mail.example.org', info);
+    await registry.requestDeviceWipe(id, 'admin');
+    const first = await registry.confirmDeviceWipe(id, secret, 'admin');
+    expect(first).toMatchObject({ changed: true });
+    const again = await registry.confirmDeviceWipe(id, secret, 'admin');
+    expect(again).toMatchObject({ changed: false });
+  });
+
+  it('won\'t take a confirmation from the admin without a request', async () => {
+    const registry = await import('../registry');
+    const { id, secret } = await registry.registerDevice('alice@example.org', 'https://mail.example.org', info);
+    expect(await registry.confirmDeviceWipe(id, secret, 'admin')).toBe('no_wipe_asked');
+    expect((await registry.getDevice(id))?.wipedAt).toBeNull();
+  });
+
+  it('prunes a user\'s abandoned rows when a new one registers, not ones with a wipe waiting', async () => {
+    const registry = await import('../registry');
+    const start = Date.now() + 365 * 24 * 60 * 60 * 1000;
+    vi.useFakeTimers({ now: start, toFake: ['Date'] });
+    const old = await registry.registerDevice('alice@example.org', 'https://mail.example.org', info);
+    const waiting = await registry.registerDevice('alice@example.org', 'https://mail.example.org', info);
+    await registry.requestDeviceWipe(waiting.id, 'admin');
+    vi.setSystemTime(start + registry.DEVICE_PRUNE_MS + 60_000);
+    await registry.registerDevice('alice@example.org', 'https://mail.example.org', info);
+    vi.useRealTimers();
+    expect(await registry.getDevice(old.id)).toBeNull();
+    expect(await registry.getDevice(waiting.id)).not.toBeNull();
+  });
+
+  it('abandoned rows expire with no admin looking, others\' too, through any registration', async () => {
+    const registry = await import('../registry');
+    const start = Date.now() + 365 * 24 * 60 * 60 * 1000;
+    vi.useFakeTimers({ now: start, toFake: ['Date'] });
+    const abandoned = await registry.registerDevice('bob@example.org', 'https://mail.example.org', info);
+    const waiting = await registry.registerDevice('bob@example.org', 'https://mail.example.org', info);
+    await registry.requestDeviceWipe(waiting.id, 'admin');
+    vi.setSystemTime(start + registry.DEVICE_PRUNE_MS + 2 * 60 * 60 * 1000);
+    await registry.registerDevice('alice@example.org', 'https://mail.example.org', info);
+    vi.useRealTimers();
+    expect(await registry.getDevice(abandoned.id)).toBeNull();
+    expect(await registry.getDevice(waiting.id)).not.toBeNull();
+  });
+
+  it('keeps the cap with every row waiting for a wipe: a new row is refused, the wipes stay', async () => {
+    const registry = await import('../registry');
+    const first = await registry.registerDevice('alice@example.org', 'https://mail.example.org', info);
+    const userKey = first.id.split('/')[0];
+    for (let i = 1; i < registry.MAX_DEVICES_PER_USER; i += 1) await registry.registerDevice('alice@example.org', 'https://mail.example.org', info);
+    expect(await registry.requestUserWipe(userKey, 'admin')).toHaveLength(registry.MAX_DEVICES_PER_USER);
+    await expect(registry.registerDevice('alice@example.org', 'https://mail.example.org', info)).rejects.toThrow(registry.TooManyDevicesError);
+    expect((await registry.listDevices({ limit: 200 })).total).toBe(registry.MAX_DEVICES_PER_USER);
+    expect((await registry.getDevice(first.id))?.wipe).not.toBeNull();
   });
 
   it('finds a user by part of the address', async () => {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClientIP } from '@/lib/admin/session';
-import { checkInDevice, DEVICE_ID_RE, DEVICE_SECRET_RE, registerDevice } from '@/lib/devices/registry';
+import { checkInDevice, DEVICE_ID_RE, DEVICE_SECRET_RE, registerDevice, TooManyDevicesError } from '@/lib/devices/registry';
 import { logger } from '@/lib/logger';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { getStore } from '@/lib/shared-store';
@@ -11,6 +11,12 @@ const NO_STORE = { 'Cache-Control': 'no-store' };
 const MAX_BODY_BYTES = 2048;
 // Per address: a whole office can sit behind one, checking in as it starts up.
 const PER_MINUTE = 300;
+/**
+ * A new row is written to the state dir and stays half a year, for anyone with a
+ * session. Enough for an office turning this on in one morning: a device turned
+ * away tries again in a quarter of an hour.
+ */
+export const REGISTER_PER_HOUR = 60;
 
 function cleanText(value: unknown): string {
   if (typeof value !== 'string') return '';
@@ -54,14 +60,23 @@ export async function POST(request: NextRequest) {
       }
       const device = await checkInDevice(body.id, body.secret, info);
       if (!device) return NextResponse.json({ error: 'unknown_device' }, { status: 404, headers: NO_STORE });
-      return NextResponse.json({ wipe: device.wipe ? { requestedAt: device.wipe.requestedAt } : null }, { headers: NO_STORE });
+      if (device.wipe) return NextResponse.json({ wipe: { requestedAt: device.wipe.requestedAt } }, { headers: NO_STORE });
+      // Its data went already. A device still holding this row starts over.
+      return NextResponse.json(device.wipedAt ? { wipe: null, wiped: true } : { wipe: null }, { headers: NO_STORE });
     }
 
     const creds = await getStalwartCredentials(request);
     if (!creds) return NextResponse.json({ error: 'Not authenticated' }, { status: 401, headers: NO_STORE });
+    const newRows = await getStore().counters.reserve([
+      { key: `device-register:${getClientIP(request)}`, max: REGISTER_PER_HOUR, windowMs: 60 * 60 * 1000 },
+    ]).catch(() => ({ ok: true }));
+    if (!newRows.ok) return NextResponse.json({ error: 'rate limited' }, { status: 429, headers: NO_STORE });
     const created = await registerDevice(creds.accountName, creds.serverUrl, info);
     return NextResponse.json({ ...created, wipe: null }, { headers: NO_STORE });
   } catch (error) {
+    if (error instanceof Error && error.name === new TooManyDevicesError().name) {
+      return NextResponse.json({ error: 'too_many_devices' }, { status: 429, headers: NO_STORE });
+    }
     if (isStoreUnavailable(error)) {
       return NextResponse.json({ error: 'Temporarily unavailable' }, { status: 503, headers: { ...NO_STORE, 'Retry-After': '30' } });
     }

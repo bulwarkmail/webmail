@@ -8,15 +8,17 @@ const creds = vi.hoisted(() => ({ value: null as null | { accountName: string; s
 vi.mock('@/lib/stalwart/credentials', () => ({ getStalwartCredentials: async () => creds.value }));
 
 const admin = vi.hoisted(() => ({ allowed: true }));
+// Rate limits are per address and outlive a test: each test is its own address.
+const client = vi.hoisted(() => ({ ip: '', count: 0 }));
 vi.mock('@/lib/admin/session', async (original) => ({
   ...await original<typeof import('@/lib/admin/session')>(),
   requireAdminAuth: async () => (admin.allowed
     ? { session: { role: 'admin' } }
     : { error: new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 }) }),
-  getClientIP: () => '203.0.113.9',
+  getClientIP: () => client.ip,
 }));
 
-import { POST as checkIn } from '../route';
+import { POST as checkIn, REGISTER_PER_HOUR } from '../route';
 import { POST as wiped } from '../wiped/route';
 import { GET as adminList, POST as adminAct } from '../../admin/devices/route';
 import * as registry from '@/lib/devices/registry';
@@ -49,7 +51,11 @@ async function register(): Promise<{ id: string; secret: string }> {
   return body;
 }
 
+vi.setConfig({ testTimeout: 60_000 });
+
 beforeEach(() => {
+  client.count += 1;
+  client.ip = `203.0.113.${client.count}`;
   dir = mkdtempSync(path.join(tmpdir(), 'bw-device-routes-'));
   vi.stubEnv('ADMIN_STATE_DIR', dir);
   admin.allowed = true;
@@ -97,6 +103,45 @@ describe('POST /api/devices', () => {
     expect(await wrong.json()).toEqual(await missing.json());
   });
 
+  it('tells the device whose row was wiped, so it can start over', async () => {
+    const { id, secret } = await register();
+    await registry.requestDeviceWipe(id, 'admin');
+    await registry.confirmDeviceWipe(id, secret, 'admin');
+    const answer = await checkIn(request('/api/devices', { id, secret, platform: 'x', appVersion: '1' }));
+    expect(await answer.json()).toEqual({ wipe: null, wiped: true });
+  });
+
+  it('gives a new row\'s owner with the row, so the device can check it', async () => {
+    creds.value = { accountName: 'alice@example.org', serverUrl: 'https://mail.example.org' };
+    const response = await checkIn(request('/api/devices', { platform: 'x', appVersion: '1' }));
+    expect(await response.json()).toMatchObject({ user: 'alice@example.org', server: 'https://mail.example.org' });
+  });
+
+  it('holds new rows to a much lower limit per address than check-ins, and a 429 changes nothing', async () => {
+    creds.value = { accountName: 'alice@example.org', serverUrl: 'https://mail.example.org' };
+    const statuses: number[] = [];
+    for (let i = 0; i <= REGISTER_PER_HOUR; i += 1) {
+      statuses.push((await checkIn(request('/api/devices', { platform: 'x', appVersion: '1' }))).status);
+    }
+    expect(statuses.slice(0, REGISTER_PER_HOUR).every((status) => status === 200)).toBe(true);
+    expect(statuses.at(-1)).toBe(429);
+    expect((await registry.listDevices()).total).toBe(REGISTER_PER_HOUR);
+
+    // A device that's already registered still hears about its wipe.
+    const [{ id }] = (await registry.listDevices()).devices;
+    await registry.requestDeviceWipe(id, 'admin');
+    const answer = await checkIn(request('/api/devices', { id, secret: 'f'.repeat(64) }));
+    expect(answer.status).toBe(404);
+  });
+
+  it('turns down a new row past the cap when every row has a wipe waiting', async () => {
+    creds.value = { accountName: 'alice@example.org', serverUrl: 'https://mail.example.org' };
+    const spy = vi.spyOn(registry, 'registerDevice').mockRejectedValueOnce(new registry.TooManyDevicesError());
+    const response = await checkIn(request('/api/devices', { platform: 'x', appVersion: '1' }));
+    spy.mockRestore();
+    expect(response.status).toBe(429);
+  });
+
   it('won\'t store a platform with control characters or at any length', async () => {
     creds.value = { accountName: 'alice@example.org', serverUrl: 'https://mail.example.org' };
     const response = await checkIn(request('/api/devices', { platform: `a\nb${'x'.repeat(200)}`, appVersion: '1' }));
@@ -120,7 +165,79 @@ describe('POST /api/devices/wiped', () => {
     expect(device?.wipedAt).not.toBeNull();
     const entry = audit().find((line) => line.action === 'device.wipe.confirm');
     expect(entry?.detail).toMatchObject({ device: id, user: 'alice@example.org', reason: 'admin', unsentDeleted: 2 });
-    expect(entry?.ip).toBe('203.0.113.9');
+    expect(entry?.ip).toBe(client.ip);
+  });
+
+  it('sent again, writes no second entry: a row that didn\'t change leaves no trace', async () => {
+    const { id, secret } = await register();
+    await registry.requestDeviceWipe(id, 'admin');
+    for (let i = 0; i < 3; i += 1) {
+      expect((await wiped(request('/api/devices/wiped', { id, secret, reason: 'admin', unsent: 2 }))).status).toBe(200);
+    }
+    expect(audit().filter((line) => line.action === 'device.wipe.confirm')).toHaveLength(1);
+  });
+
+  it('won\'t let any signed-in user fill the log: repeating a user wipe writes one entry', async () => {
+    const { id, secret } = await register();
+    for (let i = 0; i < 3; i += 1) await wiped(request('/api/devices/wiped', { id, secret, reason: 'user', unsent: 0 }));
+    expect(audit().filter((line) => line.action === 'device.wipe.confirm')).toHaveLength(1);
+  });
+
+  it('refuses reason admin when no wipe was asked, changes nothing and writes nothing', async () => {
+    const { id, secret } = await register();
+    const response = await wiped(request('/api/devices/wiped', { id, secret, reason: 'admin', unsent: 0 }));
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: 'no_wipe_asked' });
+    expect((await registry.getDevice(id))?.wipedAt).toBeNull();
+    expect(audit().filter((line) => line.action === 'device.wipe.confirm')).toEqual([]);
+  });
+
+  it('turns down a reason it doesn\'t know instead of calling it the admin\'s', async () => {
+    const { id, secret } = await register();
+    await registry.requestDeviceWipe(id, 'admin');
+    expect((await wiped(request('/api/devices/wiped', { id, secret, reason: 'mischief' }))).status).toBe(400);
+    expect((await registry.getDevice(id))?.wipe).not.toBeNull();
+  });
+
+  it('records an unknown count as unknown, not as none', async () => {
+    const { id, secret } = await register();
+    await registry.requestDeviceWipe(id, 'admin');
+    await wiped(request('/api/devices/wiped', { id, secret, reason: 'admin', unsent: null }));
+    expect(audit().find((line) => line.action === 'device.wipe.confirm')?.detail).toMatchObject({ unsentDeleted: 'unknown' });
+  });
+
+  it('a sign-out drops the row with its secret, and writes nothing', async () => {
+    const { id, secret } = await register();
+    expect((await wiped(request('/api/devices/wiped', { id, secret, drop: true }))).status).toBe(200);
+    expect(await registry.getDevice(id)).toBeNull();
+    expect(audit()).toEqual([]);
+  });
+
+  it('a sign-out with a wipe waiting answers that wipe: the row stays, confirmed and on the record', async () => {
+    const { id, secret } = await register();
+    await registry.requestDeviceWipe(id, 'admin');
+    expect((await wiped(request('/api/devices/wiped', { id, secret, drop: true }))).status).toBe(200);
+    const device = await registry.getDevice(id);
+    expect(device?.wipe).toBeNull();
+    expect(device?.wipedAt).not.toBeNull();
+    expect(audit().filter((line) => line.action === 'device.wipe.confirm')).toHaveLength(1);
+  });
+
+  it('won\'t drop a row without the right secret', async () => {
+    const { id } = await register();
+    expect((await wiped(request('/api/devices/wiped', { id, secret: 'f'.repeat(64), drop: true }))).status).toBe(404);
+    expect(await registry.getDevice(id)).not.toBeNull();
+  });
+
+  it('answers 429 past the limit and takes nothing', async () => {
+    const { id } = await register();
+    await registry.requestDeviceWipe(id, 'admin');
+    let last = 200;
+    for (let i = 0; i <= 300 && last !== 429; i += 1) {
+      last = (await wiped(request('/api/devices/wiped', { id, secret: 'f'.repeat(64), reason: 'admin' }))).status;
+    }
+    expect(last).toBe(429);
+    expect((await registry.getDevice(id))?.wipe).not.toBeNull();
   });
 
   it('takes nothing without the right secret and writes no entry', async () => {
