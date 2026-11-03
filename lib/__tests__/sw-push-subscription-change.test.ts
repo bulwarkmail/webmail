@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from 'vitest';
 // in a VM with a minimal ServiceWorkerGlobalScope and fire the event.
 const SW_SOURCE = readFileSync(join(process.cwd(), 'public', 'sw.js'), 'utf8');
 
-function loadWorker(tabs: { postMessage: (msg: unknown) => void }[], registrations?: unknown) {
+function loadWorker(tabs: { postMessage: (msg: unknown) => void }[], registrations?: unknown, config: { noThirdPartyTraffic?: boolean } | null = {}) {
   const listeners = new Map<string, (event: unknown) => void>();
   const newSubscription = { toJSON: () => ({ endpoint: 'https://push.example/new', keys: { p256dh: 'p', auth: 'a' } }) };
   const subscribe = vi.fn(async (_options: { userVisibleOnly?: boolean; applicationServerKey?: Uint8Array }) => newSubscription);
@@ -23,8 +23,12 @@ function loadWorker(tabs: { postMessage: (msg: unknown) => void }[], registratio
     self,
     atob,
     caches: { open: async () => ({ match: async () => (registrations ? { json: async () => registrations } : undefined) }) },
-    fetch: vi.fn(async (url: string, init: { body: string }) => {
-      relayCalls.push({ url, body: JSON.parse(init.body) });
+    fetch: vi.fn(async (url: string, init?: { body: string }) => {
+      if (url.endsWith('/api/config')) {
+        if (!config) throw new TypeError('offline');
+        return { ok: true, json: async () => config };
+      }
+      relayCalls.push({ url, body: JSON.parse(init!.body) });
       return { ok: true };
     }),
     URL, URLSearchParams, Response, Date, console, Uint8Array,
@@ -67,6 +71,18 @@ describe('service worker pushsubscriptionchange', () => {
     expect(subscribe.mock.calls[0][0]).toMatchObject({ userVisibleOnly: true });
     expect(Array.from(subscribe.mock.calls[0][0].applicationServerKey!)).toEqual([65, 66, 67]);
     expect(relayCalls).toHaveLength(2);
+  });
+
+  it('calls no relay while third-party traffic is off: the page moves it', async () => {
+    const { fire, relayCalls, newSubscription } = loadWorker([], REGISTRATIONS, { noThirdPartyTraffic: true });
+    await fire('pushsubscriptionchange', { oldSubscription: null, newSubscription });
+    expect(relayCalls).toEqual([]);
+  });
+
+  it('calls no relay when it cannot find out', async () => {
+    const { fire, relayCalls, newSubscription } = loadWorker([], REGISTRATIONS, null);
+    await fire('pushsubscriptionchange', { oldSubscription: null, newSubscription });
+    expect(relayCalls).toEqual([]);
   });
 
   it('calls no relay for a browser where push was never on', async () => {

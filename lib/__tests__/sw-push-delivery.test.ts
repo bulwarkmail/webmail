@@ -295,4 +295,26 @@ describe('nothing new to say', () => {
   });
 });
 
+describe('a push naming several accounts, one server slow', () => {
+  it('does not make the others wait out its deadline', async () => {
+    const started: string[] = [];
+    let release = () => {};
+    const slow = new Promise<void>((resolve) => { release = resolve; });
+    const fetchSlow = vi.fn(async (input: string) => {
+      const url = new URL(input, 'https://mail.example.com');
+      const account = url.searchParams.get('accountId') ?? '';
+      started.push(account);
+      if (account === 'slow') await slow;
+      return { ok: true, json: async () => ({ unreadTotal: 1, slot: 0, email: mail(`m-${account}`) }) };
+    });
+    const w = loadWorker(() => null, { globals: { fetch: fetchSlow } });
+    const done = w.push({ kind: 'jmap-state-change', accountId: 'slow', changed: { slow: { EmailDelivery: 's' }, fast: { EmailDelivery: 's' } } });
+    await vi.waitFor(() => expect(started).toEqual(['slow', 'fast']));
+    await vi.waitFor(() => expect(w.shade.has('bulwark-mail:fast')).toBe(true));
+    release();
+    await done;
+    expect(w.shade.size).toBe(2);
+  });
+});
+
 // -- end of cases --
