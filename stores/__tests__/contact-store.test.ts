@@ -9,7 +9,7 @@ import {
   normalizeContactPhotoUri,
   TRUSTED_SENDERS_BOOK_NAME,
 } from '../contact-store';
-import type { ContactCard, ContactMedia } from '@/lib/jmap/types';
+import type { AddressBook, ContactCard, ContactMedia } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { clearContactPhotoCache } from '@/lib/contact-photo-cache';
 import { PrincipalsRequestError } from '@/lib/jmap/principals-error';
@@ -1361,6 +1361,38 @@ describe('contact-store', () => {
 
       expect(client.updateContact).toHaveBeenCalledWith('c-1', { addressBookIds: { 'ab-2': true } }, undefined);
       expect(useContactStore.getState().contacts[0].addressBookIds).toEqual({ 'me@host::ab-2': true });
+    });
+  });
+
+  describe('an account that cannot answer', () => {
+    it('keeps its contacts and books while the other accounts refresh', async () => {
+      const failing = {
+        getAllContacts: vi.fn().mockRejectedValue(new Error('offline')),
+        getAllAddressBooks: vi.fn().mockRejectedValue(new Error('offline')),
+      } as unknown as IJMAPClient;
+      const working = {
+        getAllContacts: vi.fn().mockResolvedValue([makeContact({ id: 'b1' })]),
+        getAllAddressBooks: vi.fn().mockResolvedValue([{ id: 'bookb', name: 'B' }]),
+      } as unknown as IJMAPClient;
+      const kept = makeContact({ id: 'acc-a::a1', localAccountId: 'acc-a' });
+      const keptBook = { id: 'acc-a::booka', name: 'A', localAccountId: 'acc-a' } as AddressBook;
+      useContactStore.setState({ contacts: [kept], addressBooks: [keptBook] });
+      const accounts = [{ client: failing, localAccountId: 'acc-a' }, { client: working, localAccountId: 'acc-b' }];
+
+      await useContactStore.getState().fetchAllAccountsContacts(accounts);
+      await useContactStore.getState().fetchAllAccountsAddressBooks(accounts);
+
+      const state = useContactStore.getState();
+      expect(state.contacts.map((c) => c.id)).toEqual(['acc-a::a1', 'acc-b::b1']);
+      expect(state.addressBooks.map((b) => b.id)).toEqual(['acc-a::booka', 'acc-b::bookb']);
+    });
+
+    it('keeps the list when the only account fails', async () => {
+      const failing = { getAllContacts: vi.fn().mockRejectedValue(new Error('offline')) } as unknown as IJMAPClient;
+      useContactStore.setState({ contacts: [makeContact()] });
+      await useContactStore.getState().fetchContacts(failing);
+      expect(useContactStore.getState().contacts).toHaveLength(1);
+      expect(useContactStore.getState().error).toBe('Failed to fetch contacts');
     });
   });
 

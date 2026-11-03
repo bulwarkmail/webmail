@@ -671,7 +671,8 @@ export const useContactStore = create<ContactStore>()(
                 return prefixContactsWithLocalAccount(list, localAccountId);
               } catch (error) {
                 debug.error(`Failed to fetch contacts for account ${localAccountId}:`, error);
-                return [] as ContactCard[];
+                // Keep what this account's cards were: it just couldn't answer.
+                return get().contacts.filter((contact) => contact.localAccountId === localAccountId);
               }
             }),
           );
@@ -694,7 +695,7 @@ export const useContactStore = create<ContactStore>()(
                 return prefixAddressBooksWithLocalAccount(list, localAccountId);
               } catch (error) {
                 debug.error(`Failed to fetch address books for account ${localAccountId}:`, error);
-                return [] as AddressBook[];
+                return get().addressBooks.filter((book) => book.localAccountId === localAccountId);
               }
             }),
           );

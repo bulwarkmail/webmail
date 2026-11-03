@@ -7327,7 +7327,10 @@ export class JMAPClient implements IJMAPClient {
     }
   }
 
+  /** Throws when no account could answer, so a failure doesn't read as having no address books. */
   async getAllAddressBooks(): Promise<AddressBook[]> {
+    let answered = 0;
+    let failure: unknown;
     try {
       const allBooks: AddressBook[] = [];
       const primaryId = this.getContactsAccountId();
@@ -7353,17 +7356,23 @@ export class JMAPClient implements IJMAPClient {
               isShared: !isPrimary,
             }));
             allBooks.push(...books);
+            answered += 1;
+          } else if (response.methodResponses?.[0]?.[0] === "error") {
+            const refused = response.methodResponses[0][1];
+            throw new Error(refused?.description || refused?.type || "AddressBook/get failed");
           }
         } catch (error) {
           console.error(`Failed to fetch address books for account ${accountId}:`, error);
+          failure ??= error;
         }
       }
 
-      return allBooks;
+      if (answered > 0 || !failure) return allBooks;
     } catch (error) {
       console.error('Failed to fetch all address books:', error);
       return this.getAddressBooks();
     }
+    throw failure;
   }
 
   async createAddressBook(name: string): Promise<AddressBook> {
@@ -8230,6 +8239,8 @@ export class JMAPClient implements IJMAPClient {
       ], this.contactUsing());
 
       const queryResult = response.methodResponses?.[0];
+      // A refused call isn't an empty address book: the caller keeps what it has.
+      if (queryResult?.[0] === "error") throw new Error(queryResult[1]?.description || queryResult[1]?.type || "ContactCard/query failed");
       if (queryResult?.[0] !== "ContactCard/query") break;
 
       const ids: string[] = queryResult[1].ids || [];
@@ -8252,8 +8263,10 @@ export class JMAPClient implements IJMAPClient {
         ["ContactCard/get", { accountId, ids: chunk }, "g"],
       ], this.contactUsing());
 
-      if (response.methodResponses?.[0]?.[0] === "ContactCard/get") {
-        const list = (response.methodResponses[0][1].list || []) as ContactCard[];
+      const getResult = response.methodResponses?.[0];
+      if (getResult?.[0] === "error") throw new Error(getResult[1]?.description || getResult[1]?.type || "ContactCard/get failed");
+      if (getResult?.[0] === "ContactCard/get") {
+        const list = (getResult[1].list || []) as ContactCard[];
         allContacts.push(...list.map(contactFromWire));
       }
     }
@@ -8273,7 +8286,10 @@ export class JMAPClient implements IJMAPClient {
     }
   }
 
+  /** Throws when no account could answer, so a failure doesn't read as an empty address book. */
   async getAllContacts(): Promise<ContactCard[]> {
+    let answered = 0;
+    let failure: unknown;
     try {
       const allContacts: ContactCard[] = [];
       const primaryId = this.getContactsAccountId();
@@ -8297,16 +8313,19 @@ export class JMAPClient implements IJMAPClient {
             isShared: !isPrimary,
           }));
           allContacts.push(...contacts);
+          answered += 1;
         } catch (error) {
           console.error(`Failed to fetch contacts for account ${accountId}:`, error);
+          failure ??= error;
         }
       }
 
-      return allContacts;
+      if (answered > 0 || !failure) return allContacts;
     } catch (error) {
       console.error('Failed to fetch all contacts:', error);
       return this.getContacts();
     }
+    throw failure;
   }
 
   async getContact(contactId: string, accountId?: string): Promise<ContactCard | null> {
