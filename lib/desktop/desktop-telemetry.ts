@@ -27,13 +27,22 @@ export interface DesktopServerPrivacy {
   appVersion: string;
   /** `desktop.<mode>.<channel>`. */
   build: string;
+  /** Only a test build of the shell sets this. Nothing on disk can: see `telemetryEndpoint`. */
+  endpoint?: string;
 }
 
 /**
- * How soon after a start a heartbeat that's due goes out. The server's own hour is
- * right for a server. An app quit within an hour of every start would never send.
+ * How soon after a start a heartbeat that's due goes out. The server's own hour is right
+ * for a server: an app quit within an hour of every start would never send. Random, so
+ * the collector can't read when someone starts their computer from when it arrives.
  */
-export const DESKTOP_CATCH_UP_MS = 30_000;
+export const DESKTOP_CATCH_UP_MIN_MS = 30_000;
+export const DESKTOP_CATCH_UP_MAX_MS = 600_000;
+
+export function desktopCatchUpMs(random: () => number = Math.random): number {
+  return DESKTOP_CATCH_UP_MIN_MS + Math.floor(random() * (DESKTOP_CATCH_UP_MAX_MS - DESKTOP_CATCH_UP_MIN_MS));
+}
+
 /** A failed send tries again this much later, not a day later. */
 export const DESKTOP_RETRY_MS = 60 * 60_000;
 export const DESKTOP_HEARTBEAT_INTERVAL_MS = 24 * 60 * 60_000;
@@ -79,9 +88,10 @@ export function desktopOsFamily(platform: string): DesktopOsFamily {
 }
 
 /** How long until the next heartbeat, given when the last one went out. */
-export function heartbeatDelayMs(lastSentAt: number | null | undefined, now: number): number {
-  if (!lastSentAt || lastSentAt > now) return DESKTOP_CATCH_UP_MS;
-  return Math.max(DESKTOP_CATCH_UP_MS, lastSentAt + DESKTOP_HEARTBEAT_INTERVAL_MS - now);
+export function heartbeatDelayMs(lastSentAt: number | null | undefined, now: number, catchUp: number = desktopCatchUpMs()): number {
+  if (!lastSentAt || lastSentAt > now) return catchUp;
+  const left = lastSentAt + DESKTOP_HEARTBEAT_INTERVAL_MS - now;
+  return left > 0 ? left : catchUp;
 }
 
 export interface DesktopPingInput {

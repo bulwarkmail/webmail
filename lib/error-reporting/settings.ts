@@ -33,7 +33,8 @@ export function parseEnvironment(value: unknown): string {
 export function errorReportingSettings(): ErrorReportingSettings {
   const raw = configManager.get<string>('errorReportingDsn', '');
   return {
-    dsn: parseDsn(raw) ? raw.trim() : '',
+    // A desktop user has no admin, so a config file can't name somewhere to send errors.
+    dsn: !IS_DESKTOP_BUILD && parseDsn(raw) ? raw.trim() : '',
     sampleRate: parseSampleRate(configManager.get<string>('errorReportingSampleRate', '1')),
     environment: parseEnvironment(configManager.get<string>('errorReportingEnvironment', 'production')),
   };
@@ -46,7 +47,7 @@ export function errorReportingSettings(): ErrorReportingSettings {
  */
 export async function shouldCollectErrors(): Promise<boolean> {
   await configManager.ensureLoaded();
-  // The desktop user's own yes, and nothing else: a DSN in a config file isn't consent.
+  // The desktop user's own yes, and nothing else.
   if (IS_DESKTOP_BUILD) return (await effectiveErrorsConsent()).consent !== 'off';
   if (errorReportingSettings().dsn || metricsEnabled()) return true;
   return (await effectiveErrorsConsent()).consent !== 'off';
@@ -55,7 +56,5 @@ export async function shouldCollectErrors(): Promise<boolean> {
 /** What /api/config hands the browser. */
 export async function browserErrorSettings(): Promise<ClientSettings> {
   const settings = errorReportingSettings();
-  const collect = await shouldCollectErrors();
-  // A browser sends to the DSN by itself, so it mustn't get one before the user said yes.
-  return { ...settings, dsn: IS_DESKTOP_BUILD && !collect ? '' : settings.dsn, collect };
+  return { ...settings, collect: await shouldCollectErrors() };
 }

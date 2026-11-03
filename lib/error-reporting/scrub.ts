@@ -132,7 +132,7 @@ export function scrubFunctionName(input: unknown): string | undefined {
  * The path of a stack frame's file, without origin, base path, query or
  * fragment: `/_next/static/chunks/x.js` for the browser bundle,
  * `/.next/server/...` for the server's, `node:...` for Node's own modules,
- * `node_modules/...` for dependencies, `/desktop/...` for the desktop app's main
+ * `node_modules/...` for dependencies, in the desktop build `/desktop/...` for its main
  * process, which the shell rewrites its own files to, so a path on disk never gets
  * here; `[other]` for anything else
  * (extensions, plugin code, evaluated code).
@@ -140,7 +140,10 @@ export function scrubFunctionName(input: unknown): string | undefined {
 export function scrubFramePath(input: unknown): string {
   if (typeof input !== 'string' || input === '') return '[other]';
   const path = input.split(/[?#]/, 1)[0].replace(/\\/g, '/');
-  if (path.startsWith(DESKTOP_FRAME_PREFIX)) return /^[\w./@+~-]+$/.test(path) && !path.includes('..') ? path : '[other]';
+  // Spelled out, so a server build compiles this away and reads paths as it always did.
+  if (process.env.NEXT_PUBLIC_BULWARK_DESKTOP === '1' && path.startsWith(DESKTOP_FRAME_PREFIX)) {
+    return /^[\w./@+~-]+$/.test(path) && !path.includes('..') ? path : '[other]';
+  }
   for (const marker of ['/_next/static/', '/.next/server/', '/.next/static/']) {
     const at = path.indexOf(marker);
     if (at >= 0) {

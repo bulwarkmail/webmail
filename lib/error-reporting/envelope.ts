@@ -1,4 +1,4 @@
-import { DESKTOP_FRAME_PREFIX, DESKTOP_VERSION_SUFFIX } from '@/lib/desktop/desktop-telemetry';
+import { DESKTOP_VERSION_SUFFIX } from '@/lib/desktop/desktop-telemetry';
 import type { Frame } from './stack';
 
 /**
@@ -94,7 +94,7 @@ export function buildEvent(report: ErrorReport, ctx: EventContext): Record<strin
     ...(frame.fn ? { function: frame.fn } : {}),
     ...(frame.line !== undefined ? { lineno: frame.line } : {}),
     ...(frame.column !== undefined ? { colno: frame.column } : {}),
-    in_app: frame.path.startsWith('/_next/') || frame.path.startsWith('/.next/') || frame.path.startsWith(DESKTOP_FRAME_PREFIX),
+    in_app: frame.path.startsWith('/_next/') || frame.path.startsWith('/.next/'),
   }));
   const images = [...new Set(report.frames.map((frame) => frame.path))]
     .filter((path) => ctx.debugIds.has(path))

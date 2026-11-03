@@ -1,29 +1,24 @@
 // @vitest-environment node
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { loadCollectorValidator } from '@/lib/__tests__/collector-validator';
 import {
-  DESKTOP_CATCH_UP_MS,
+  DESKTOP_CATCH_UP_MAX_MS,
+  DESKTOP_CATCH_UP_MIN_MS,
   DESKTOP_HEARTBEAT_INTERVAL_MS,
   buildDesktopErrorBatch,
   buildDesktopPing,
   consentInForce,
   desktopBuildTag,
+  desktopCatchUpMs,
   desktopChannel,
   desktopOsFamily,
   forcedOffByPolicy,
   heartbeatDelayMs,
 } from '../desktop-telemetry';
 
-const DASHBOARD = process.env.BULWARK_DASHBOARD_DIR ?? 'C:/Users/info/Downloads/jmap-webmail/repos/dashboard';
-const VALIDATE = path.join(DASHBOARD, 'telemetry-collector/src/validate.ts');
-const collector = existsSync(VALIDATE)
-  ? (await import(/* @vite-ignore */ pathToFileURL(VALIDATE).href) as {
-      validate(input: unknown): Record<string, unknown> | null;
-      validateErrorBatch(input: unknown): Record<string, unknown> | null;
-    })
-  : null;
+const collector = await loadCollectorValidator();
 
 const NOT_SET = { value: true, locked: false };
 const FORCED_OFF = { value: false, locked: true };
@@ -57,19 +52,36 @@ describe('consent', () => {
 
 describe('when a heartbeat is due', () => {
   const now = Date.parse('2026-11-03T12:00:00Z');
+  const CATCH_UP = 123_000;
 
   it('soon, with none sent yet or the last one long ago', () => {
-    expect(heartbeatDelayMs(undefined, now)).toBe(DESKTOP_CATCH_UP_MS);
-    expect(heartbeatDelayMs(null, now)).toBe(DESKTOP_CATCH_UP_MS);
-    expect(heartbeatDelayMs(now - 3 * DESKTOP_HEARTBEAT_INTERVAL_MS, now)).toBe(DESKTOP_CATCH_UP_MS);
+    expect(heartbeatDelayMs(undefined, now, CATCH_UP)).toBe(CATCH_UP);
+    expect(heartbeatDelayMs(null, now, CATCH_UP)).toBe(CATCH_UP);
+    expect(heartbeatDelayMs(now - 3 * DESKTOP_HEARTBEAT_INTERVAL_MS, now, CATCH_UP)).toBe(CATCH_UP);
   });
 
   it('a day after the last, and not sooner', () => {
-    expect(heartbeatDelayMs(now - 3_600_000, now)).toBe(DESKTOP_HEARTBEAT_INTERVAL_MS - 3_600_000);
+    expect(heartbeatDelayMs(now - 3_600_000, now, CATCH_UP)).toBe(DESKTOP_HEARTBEAT_INTERVAL_MS - 3_600_000);
   });
 
   it('soon again if the clock went back', () => {
-    expect(heartbeatDelayMs(now + 3_600_000, now)).toBe(DESKTOP_CATCH_UP_MS);
+    expect(heartbeatDelayMs(now + 3_600_000, now, CATCH_UP)).toBe(CATCH_UP);
+  });
+
+  it('soon means somewhere from 30 s to 10 min, so a start time can\'t be read from it', () => {
+    expect(desktopCatchUpMs(() => 0)).toBe(30_000);
+    expect(desktopCatchUpMs(() => 0.5)).toBe(315_000);
+    expect(desktopCatchUpMs(() => 0.999999)).toBeLessThanOrEqual(600_000);
+    expect(desktopCatchUpMs(() => 0.999999)).toBeGreaterThan(599_000);
+    expect(DESKTOP_CATCH_UP_MIN_MS).toBe(30_000);
+    expect(DESKTOP_CATCH_UP_MAX_MS).toBe(600_000);
+    const seen = new Set(Array.from({ length: 50 }, () => desktopCatchUpMs()));
+    expect(seen.size).toBeGreaterThan(1);
+    for (const value of seen) {
+      expect(value).toBeGreaterThanOrEqual(30_000);
+      expect(value).toBeLessThanOrEqual(600_000);
+    }
+    expect(heartbeatDelayMs(null, now)).toBeLessThanOrEqual(600_000);
   });
 });
 
@@ -95,7 +107,7 @@ describe('the shell\'s own heartbeat', () => {
   it.skipIf(!collector)('is what the real collector accepts, as schema 1 and as schema 2', () => {
     const clean = collector!.validate(ping())!;
     expect(clean).toMatchObject({ schema: '1', build: 'desktop.instance.beta', version: '0.3.0-beta.1', os_family: 'windows', node_version: '22.11.0' });
-    expect(['unknown', 'desktop']).toContain(clean.platform);
+    expect(clean.platform).toBe('desktop');
     // Any extra top-level field would make schema 2 refuse the whole heartbeat.
     expect(collector!.validate({ ...ping(), schema: '2', errors: [] })).not.toBeNull();
   });
@@ -107,6 +119,9 @@ describe('the shell\'s own heartbeat', () => {
     ]);
     const clean = collector!.validateErrorBatch(batch)!;
     expect(clean).not.toBeNull();
+    expect(collector!.validateErrorBatch(buildDesktopErrorBatch('f0c1a2b3-c4d5-4e6f-8a9b-0c1d2e3f4a5b', now, [
+      { name: 'TypeError', fingerprint: '0123456789abcdef', version: '0.3.0-beta.1+desktop', count: 1 },
+    ]))).not.toBeNull();
     expect(clean.errors).toEqual([expect.objectContaining({ name: 'TypeError', count: '6-10', version: '0.3.0+desktop', days: 1, frames: [] })]);
   });
 

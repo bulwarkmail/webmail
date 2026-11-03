@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { DesktopCrashFile, DesktopCrashSendResult, DesktopPrivacyState } from '@/lib/desktop/types';
@@ -164,5 +166,24 @@ describe('crash files', () => {
     render(<DesktopTelemetrySettings />);
     fireEvent.click(await screen.findByRole('button', { name: 'delete_all' }));
     await waitFor(() => expect(privacy.deleteCrashes).toHaveBeenCalledTimes(1));
+  });
+});
+
+describe('the text', () => {
+  const en = JSON.parse(readFileSync(path.join(process.cwd(), 'locales/en/common.json'), 'utf8')).desktopTelemetry as Record<string, string>;
+
+  it('names everything a heartbeat holds, in plain words', () => {
+    for (const word of [/a random ID/, /app version/, /Node version/, /operating system/, /how long the app has been running/, /how many plugins and themes/]) {
+      expect(en.telemetry_description).toMatch(word);
+    }
+    expect(en.telemetry_description).not.toMatch(/uptime/i);
+  });
+
+  it('says crash reports carry a random ID too', () => {
+    expect(en.crash_description).toMatch(/a random ID/);
+  });
+
+  it('says a crash file can still hold the text of mail after scrubbing', () => {
+    expect(en.crash_memory).toMatch(/can still contain the text of your mail/);
   });
 });

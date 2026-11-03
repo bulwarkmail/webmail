@@ -35,6 +35,14 @@ function setBridge(bridge: unknown): void {
 const forcedOff = { value: false, locked: true, source: 'machine' };
 
 describe('main-process frames', () => {
+  beforeEach(() => {
+    // The rule is compiled into the desktop build only.
+    vi.stubEnv('NEXT_PUBLIC_BULWARK_DESKTOP', '1');
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it('keeps a report whose frames are the shell\'s', () => {
     const report = reportFromError(withStack(MAIN_STACK), 'desktop-main', false);
     expect(report).not.toBeNull();
@@ -67,6 +75,21 @@ describe('main-process frames', () => {
     'https://evil.example/desktop/x.js',
   ])('gives nothing away for %s', (input) => {
     expect(scrubFramePath(input)).toBe('[other]');
+  });
+});
+
+describe('a server install', () => {
+  it('sees no difference: a /desktop/ path is just another path', () => {
+    expect(scrubFramePath('/desktop/main.mjs')).toBe('[other]');
+    expect(parseStack('TypeError: x\n    at async /desktop/main.mjs:90:3')[0].path).toBe('[other]');
+    expect(reportFromError(withStack('TypeError: x\n    at a (/desktop/main.mjs:1:2)'), 'onerror', false)).toBeNull();
+  });
+
+  it('keeps reading an anonymous async frame as it did', () => {
+    // scrubFunctionName and the marker search see the same text as before this existed.
+    const [frame] = parseStack('TypeError: x\n    at async https://mail.example.org/_next/static/chunks/1.js:2:30');
+    expect(frame.path).toBe('/_next/static/chunks/1.js');
+    expect(parseStack('TypeError: x\n    at async node:internal/x:1:2')[0].path).toBe('[other]');
   });
 });
 
@@ -129,6 +152,77 @@ describe('tagged as the desktop app', () => {
     configureErrorReporting(SETTINGS);
     captureException(bundleError());
     expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  describe('consent taken back with a page open', () => {
+    function privacyBridge(on: boolean) {
+      let listener: ((state: unknown) => void) | undefined;
+      const say = (next: boolean, forcedOff = false) => listener?.({ telemetry: { on: false, forcedOff: false }, crashReports: { on: next, forcedOff, uploadUrl: '' } });
+      setBridge({
+        version: 1,
+        platform: 'win32',
+        mode: 'instance',
+        privacy: {
+          get: async () => ({ telemetry: { on: false, forcedOff: false }, crashReports: { on, forcedOff: false, uploadUrl: '' } }),
+          onChange: (next: (state: unknown) => void) => {
+            listener = next;
+            return () => {};
+          },
+        },
+      });
+      return say;
+    }
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+    it('stops an open page sending to a DSN', async () => {
+      const say = privacyBridge(true);
+      configureErrorReporting(SETTINGS);
+      await settle();
+      captureException(bundleError());
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      say(false);
+      captureException(withStack('TypeError: other\n    at b (https://mail.example.org/_next/static/chunks/2.js:2:30)'));
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('and a config arriving afterwards doesn\'t bring it back', async () => {
+      const say = privacyBridge(true);
+      configureErrorReporting(SETTINGS);
+      await settle();
+      say(false);
+      configureErrorReporting(SETTINGS);
+      captureException(bundleError());
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it('a change to something else, with crash reports never on, leaves an instance\'s own settings alone', async () => {
+      const say = privacyBridge(false);
+      configureErrorReporting(SETTINGS);
+      await settle();
+      say(false);
+      captureException(bundleError());
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('a policy forcing it off stops it, however it stood', async () => {
+      const say = privacyBridge(false);
+      configureErrorReporting(SETTINGS);
+      await settle();
+      say(false, true);
+      captureException(bundleError());
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it('saying yes again lifts it', async () => {
+      const say = privacyBridge(true);
+      configureErrorReporting(SETTINGS);
+      await settle();
+      say(false);
+      say(true);
+      configureErrorReporting(SETTINGS);
+      captureException(bundleError());
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('in the version, in the desktop build only: the collector has no room for a tag', () => {

@@ -9,7 +9,6 @@ import { errorReportingSettings, shouldCollectErrors } from './settings';
 import { scrubName, scrubText } from './scrub';
 import { parseStack, type Frame } from './stack';
 import { debugIdsByPath } from './debug-ids';
-import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 
 /**
  * Error reporting on the server: errors Next hands to onRequestError
@@ -57,7 +56,7 @@ async function deliver(report: ErrorReport): Promise<void> {
     platform: 'node',
     fingerprint: print,
     debugIds: debugIdsByPath(),
-    tags: { runtime: 'server', ...(IS_DESKTOP_BUILD ? { platform: 'desktop' } : {}) },
+    tags: { runtime: 'server' },
   });
   s.sending++;
   try {

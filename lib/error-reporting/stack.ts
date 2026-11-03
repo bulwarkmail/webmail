@@ -34,8 +34,9 @@ export function parseStack(stack: unknown): Frame[] {
     const match = V8.exec(line) ?? GECKO.exec(line);
     if (!match) continue;
     const [, fn, rawFile, lineNo, column] = match;
-    // "at async file:1:2": an anonymous async frame.
-    const file = rawFile.replace(/^async /, '');
+    // "at async file:1:2": an anonymous async frame, as main's stacks have them. Spelled
+    // out, so a server build compiles this away.
+    const file = process.env.NEXT_PUBLIC_BULWARK_DESKTOP === '1' ? rawFile.replace(/^async /, '') : rawFile;
     // "at fn (native)" and eval chains carry no file worth keeping.
     frames.push({
       path: scrubFramePath(file),

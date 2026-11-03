@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     'browser',
     // The version the tab runs (a tab left open across an update runs the
     // old one, and its frames point into that); the server's when absent.
-    typeof body.version === 'string' && /^\d+\.\d+\.\d+(?:[-+][\w.-]{1,40})?$/.test(body.version) ? body.version : appVersion(),
+    typeof body.version === 'string' && /^\d+\.\d+\.\d+(?:-[\w.-]{1,40})?(?:\+[\w.-]{1,40})?$/.test(body.version) ? body.version : appVersion(),
   );
   countBrowserError();
   return new NextResponse(null, { status: 204, headers: NO_STORE });

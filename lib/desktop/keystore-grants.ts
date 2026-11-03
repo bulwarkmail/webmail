@@ -9,3 +9,11 @@ import { getDesktopBridge } from './bridge';
 export function clearKeystoreGrants(): void {
   void Promise.resolve(getDesktopBridge()?.keystore?.clearGrants?.()).catch(() => {});
 }
+
+/**
+ * Deletes the crash files on this computer. They can hold the mail of whoever was signed
+ * in when the app crashed, so the next account at this computer doesn't get to send them.
+ */
+export function clearDesktopCrashFiles(): void {
+  void Promise.resolve(getDesktopBridge()?.privacy?.deleteCrashes?.()).catch(() => {});
+}

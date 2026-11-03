@@ -1,10 +1,9 @@
 // @vitest-environment node
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // The desktop app's heartbeat and error counts, on a real socket: what counts is what
@@ -37,15 +36,11 @@ import { resetInstantErrorsForTests, sendInstantErrors } from '@/lib/telemetry/i
 import { flushErrors, recordError, resetAggregateForTests } from '@/lib/error-reporting/aggregate';
 import { shouldCollectErrors } from '@/lib/error-reporting/settings';
 import { fetchTelemetryTarget } from '@/lib/telemetry/endpoint-guard';
+import { OUTGOING_HOSTS } from '@/lib/admin/outgoing-hosts-registry';
+import { DESKTOP_CATCH_UP_MAX_MS, DESKTOP_CATCH_UP_MIN_MS } from '@/lib/desktop/desktop-telemetry';
+import { loadCollectorValidator } from './collector-validator';
 
-const DASHBOARD = process.env.BULWARK_DASHBOARD_DIR ?? 'C:/Users/info/Downloads/jmap-webmail/repos/dashboard';
-const VALIDATE = path.join(DASHBOARD, 'telemetry-collector/src/validate.ts');
-const collector = existsSync(VALIDATE)
-  ? (await import(/* @vite-ignore */ pathToFileURL(VALIDATE).href) as {
-      validate(input: unknown): { schema: string; build: string | null; platform: string; version: string } | null;
-      validateErrorBatch(input: unknown): { errors: { version: string; frames: unknown[] }[] } | null;
-    })
-  : null;
+const collector = await loadCollectorValidator();
 
 interface Received {
   path: string;
@@ -54,6 +49,7 @@ interface Received {
 
 let server: Server;
 let received: Received[] = [];
+let answer = 200;
 let base = '';
 let dir = '';
 
@@ -62,7 +58,7 @@ const TRUSTED = Symbol.for('bulwark.desktop.trustedJmapOrigins');
 const holder = globalThis as unknown as Record<symbol, unknown>;
 
 function shellSays(privacy: { telemetry: boolean; crashReports: boolean } | null): void {
-  holder[PRIVACY] = privacy ? { ...privacy, appVersion: '0.3.0', build: 'desktop.standalone.beta' } : undefined;
+  holder[PRIVACY] = privacy ? { ...privacy, appVersion: '0.3.0', build: 'desktop.standalone.beta', endpoint: `${base}/v1/heartbeat` } : undefined;
 }
 
 beforeAll(async () => {
@@ -71,7 +67,7 @@ beforeAll(async () => {
     req.on('data', (chunk) => { raw += chunk; });
     req.on('end', () => {
       received.push({ path: req.url ?? '', body: JSON.parse(raw) });
-      res.writeHead(200, { 'content-type': 'application/json' });
+      res.writeHead(answer, { 'content-type': 'application/json' });
       res.end('{"ok":true}');
     });
   });
@@ -86,16 +82,18 @@ afterAll(async () => {
 beforeEach(async () => {
   flag.IS_DESKTOP_BUILD = true;
   received = [];
+  answer = 200;
   dir = mkdtempSync(path.join(tmpdir(), 'bw-telemetry-desktop-'));
   vi.stubEnv('TELEMETRY_DATA_DIR', dir);
   vi.stubEnv('BULWARK_TELEMETRY_ALLOW_PRIVATE', '1');
-  // What the shell's profile sets: the environment plays no part either way.
-  vi.stubEnv('BULWARK_TELEMETRY', 'off');
+  vi.stubEnv('BULWARK_TELEMETRY', '');
+  vi.stubEnv('BULWARK_TELEMETRY_DISABLED', '');
   vi.stubEnv('BULWARK_TELEMETRY_ERRORS', '');
   shellSays(null);
   resetAggregateForTests();
   resetInstantErrorsForTests();
-  await saveState({ consent: 'off', endpoint: `${base}/v1/heartbeat`, consentedAt: null, lastSentAt: null, nextScheduledAt: null });
+  // Never used on the desktop build. Reaching it would show up as a failed send.
+  await saveState({ consent: 'off', endpoint: 'http://127.0.0.1:1/ignored', consentedAt: null, lastSentAt: null, nextScheduledAt: null });
 });
 
 afterEach(async () => {
@@ -157,8 +155,7 @@ describe('the heartbeat with consent', () => {
     expect(clean.schema).toBe('1');
     expect(clean.build).toBe('desktop.standalone.beta');
     expect(clean.version).toBe('0.3.0');
-    // `unknown` until the collector patch is deployed, then `desktop`.
-    expect(['unknown', 'desktop']).toContain(clean.platform);
+    expect(clean.platform).toBe('desktop');
     // Schema 2 refuses any extra key, so this proves there is none.
     expect(collector!.validate({ ...received[0].body, schema: '2', errors: [] })).not.toBeNull();
   });
@@ -172,17 +169,30 @@ describe('the heartbeat with consent', () => {
 describe('quit within an hour of each start', () => {
   const nextIn = async () => new Date((await loadState()).nextScheduledAt!).getTime() - Date.now();
 
-  it('after a restart with a slot in the past, a heartbeat goes within a minute, not an hour', async () => {
+  it.each([
+    [0, DESKTOP_CATCH_UP_MIN_MS],
+    [0.5, (DESKTOP_CATCH_UP_MIN_MS + DESKTOP_CATCH_UP_MAX_MS) / 2],
+    [0.999999, DESKTOP_CATCH_UP_MAX_MS],
+  ])('after a restart with a slot in the past, at random %s it goes after about %s ms, not an hour', async (random, expected) => {
     shellSays({ telemetry: true, crashReports: false });
+    vi.spyOn(Math, 'random').mockReturnValue(random);
     await saveState({ ...(await loadState()), nextScheduledAt: new Date(Date.now() - 3 * 86_400_000).toISOString() });
     await startScheduler();
-    expect(await nextIn()).toBeLessThanOrEqual(60_000);
+    const wait = await nextIn();
+    vi.restoreAllMocks();
+    expect(wait).toBeGreaterThan(expected - 5_000);
+    expect(wait).toBeLessThanOrEqual(expected);
+  });
+
+  it('the wait is between 30 s and 10 min, and differs from start to start', () => {
+    expect(DESKTOP_CATCH_UP_MIN_MS).toBe(30_000);
+    expect(DESKTOP_CATCH_UP_MAX_MS).toBe(600_000);
   });
 
   it('the first run with consent does not wait an hour either', async () => {
     shellSays({ telemetry: true, crashReports: false });
     await startScheduler();
-    expect(await nextIn()).toBeLessThanOrEqual(60_000);
+    expect(await nextIn()).toBeLessThanOrEqual(DESKTOP_CATCH_UP_MAX_MS);
   });
 
   it('a slot still ahead stays where it is', async () => {
@@ -196,11 +206,107 @@ describe('quit within an hour of each start', () => {
   it('a server build still waits the hour', async () => {
     flag.IS_DESKTOP_BUILD = false;
     vi.stubEnv('BULWARK_TELEMETRY', 'on');
-    await saveState({ ...(await loadState()), nextScheduledAt: new Date(Date.now() - 86_400_000).toISOString() });
+    await saveState({ ...(await loadState()), endpoint: `${base}/v1/heartbeat`, nextScheduledAt: new Date(Date.now() - 86_400_000).toISOString() });
     await startScheduler();
     const wait = await nextIn();
     expect(wait).toBeGreaterThan(59 * 60_000);
     expect(wait).toBeLessThanOrEqual(3_600_000);
+  });
+});
+
+describe('BULWARK_TELEMETRY=off', () => {
+  beforeEach(() => {
+    vi.stubEnv('BULWARK_TELEMETRY', 'off');
+    shellSays({ telemetry: true, crashReports: true });
+  });
+
+  it('beats the user\'s yes for the heartbeat', async () => {
+    expect((await sendOnce()).ok).toBe(false);
+    expect(received).toEqual([]);
+  });
+
+  it('beats it for error counts too, and nothing is collected', async () => {
+    expect(await shouldCollectErrors()).toBe(false);
+    recordError({ name: 'TypeError', frames: [] }, 'server', '1.20.0+desktop');
+    await flushErrors();
+    await sendInstantErrors();
+    expect(received).toEqual([]);
+  });
+
+  it('the legacy variable does the same', async () => {
+    vi.stubEnv('BULWARK_TELEMETRY', '');
+    vi.stubEnv('BULWARK_TELEMETRY_DISABLED', '1');
+    expect((await sendOnce()).ok).toBe(false);
+    expect(await shouldCollectErrors()).toBe(false);
+    expect(received).toEqual([]);
+  });
+
+  it('=on is no yes by itself', async () => {
+    vi.stubEnv('BULWARK_TELEMETRY', 'on');
+    shellSays({ telemetry: false, crashReports: false });
+    expect((await sendOnce()).ok).toBe(false);
+    expect(received).toEqual([]);
+  });
+
+  it('the list of outgoing hosts says how the desktop app differs', () => {
+    const entry = OUTGOING_HOSTS.find((host) => host.id === 'telemetry')!;
+    expect(entry.usedBy).toMatch(/crash report consent alone/i);
+    expect(entry.off).toMatch(/desktop app/i);
+    expect(entry.off).toMatch(/no admin page/i);
+  });
+});
+
+describe('a refusal from the collector', () => {
+  it('isn\'t retried on every tick', async () => {
+    answer = 400;
+    shellSays({ telemetry: false, crashReports: true });
+    recordError({ name: 'TypeError', frames: [] }, 'server', '0.3.0-beta.1+desktop');
+    await flushErrors();
+    await sendInstantErrors();
+    await sendInstantErrors();
+    await sendInstantErrors();
+    expect(received).toHaveLength(1);
+  });
+
+  it('a passing failure is tried again', async () => {
+    answer = 503;
+    shellSays({ telemetry: false, crashReports: true });
+    recordError({ name: 'TypeError', frames: [] }, 'server', '1.20.0+desktop');
+    await flushErrors();
+    await sendInstantErrors();
+    await sendInstantErrors();
+    expect(received).toHaveLength(2);
+  });
+
+  it('rate limiting is tried again', async () => {
+    answer = 429;
+    shellSays({ telemetry: false, crashReports: true });
+    recordError({ name: 'TypeError', frames: [] }, 'server', '1.20.0+desktop');
+    await flushErrors();
+    await sendInstantErrors();
+    await sendInstantErrors();
+    expect(received).toHaveLength(2);
+  });
+
+  it.skipIf(!collector)('a beta version with the tag is what the patched collector takes', async () => {
+    shellSays({ telemetry: false, crashReports: true });
+    recordError({ name: 'TypeError', frames: [] }, 'server', '0.3.0-beta.1+desktop');
+    await flushErrors();
+    await sendInstantErrors();
+    expect(collector!.validateErrorBatch(received[0].body)!.errors[0].version).toBe('0.3.0-beta.1+desktop');
+  });
+
+  it('a server build still retries as before', async () => {
+    flag.IS_DESKTOP_BUILD = false;
+    vi.stubEnv('BULWARK_TELEMETRY', 'on');
+    vi.stubEnv('BULWARK_TELEMETRY_ERRORS', 'instant');
+    answer = 400;
+    await saveState({ ...(await loadState()), endpoint: `${base}/v1/heartbeat` });
+    recordError({ name: 'TypeError', frames: [] }, 'server', '1.20.0');
+    await flushErrors();
+    await sendInstantErrors();
+    await sendInstantErrors();
+    expect(received).toHaveLength(2);
   });
 });
 
@@ -278,16 +384,14 @@ describe('a server build', () => {
     expect((await sendOnce()).ok).toBe(false);
     expect(received).toEqual([]);
     expect(await shouldCollectErrors()).toBe(false);
-    await saveState({ ...(await loadState()), consent: 'on' });
+    await saveState({ ...(await loadState()), consent: 'on', endpoint: `${base}/v1/heartbeat` });
     expect((await sendOnce()).ok).toBe(true);
     expect(received[0].body.platform).not.toBe('desktop');
     expect(received[0].body.build).not.toBe('desktop.standalone.beta');
   });
 });
 
-// So a typo in the path can't quietly turn the checks above off here.
-it('finds the collector on this machine', () => {
-  if (process.env.CI) return;
-  writeFileSync(path.join(dir, 'probe'), '');
-  expect(existsSync(VALIDATE)).toBe(true);
+// So a typo in the path can't quietly turn the checks above off on a machine with the repo.
+it.skipIf(process.env.CI)('finds the collector on this machine', () => {
+  expect(collector).not.toBeNull();
 });

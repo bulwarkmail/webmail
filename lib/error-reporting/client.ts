@@ -42,6 +42,10 @@ interface ClientState {
   breadcrumbs: Breadcrumb[];
   limiter: ReportLimiter | null;
   installed: boolean;
+  /** In the desktop app: the shell's privacy changes are being listened to. */
+  watchingConsent: boolean;
+  /** The user took crash reports back, or a policy did. A later config doesn't undo that. */
+  withdrawn: boolean;
 }
 
 // On globalThis: the error boundary, the JMAP client and the root component
@@ -49,7 +53,7 @@ interface ClientState {
 const KEY = Symbol.for('bulwark.error-reporting.client');
 function state(): ClientState {
   const g = globalThis as typeof globalThis & { [KEY]?: ClientState };
-  return (g[KEY] ??= { settings: undefined, pending: [], breadcrumbs: [], limiter: null, installed: false });
+  return (g[KEY] ??= { settings: undefined, pending: [], breadcrumbs: [], limiter: null, installed: false, watchingConsent: false, withdrawn: false });
 }
 
 function sessionStore(): Storage | null {
@@ -74,10 +78,36 @@ function currentRoute(): string | undefined {
   return scrubRoutePath(location.pathname, basePath());
 }
 
+/**
+ * Consent taken back while a page is open, in the desktop app. A change to anything else
+ * with crash reports never on leaves an instance's own settings alone: its admin chose
+ * those, and the settings page says so.
+ */
+function watchDesktopConsent(): void {
+  const s = state();
+  const bridge = getDesktopBridge();
+  if (s.watchingConsent || !bridge?.privacy?.onChange) return;
+  s.watchingConsent = true;
+  let on: boolean | null = null;
+  void Promise.resolve(bridge.privacy.get?.()).then((current) => {
+    on ??= current?.crashReports.on ?? null;
+  }).catch(() => {});
+  bridge.privacy.onChange((next) => {
+    const tookBack = on === true && !next.crashReports.on;
+    on = next.crashReports.on;
+    if (on) s.withdrawn = false;
+    if (tookBack || next.crashReports.forcedOff) {
+      s.withdrawn = true;
+      configureErrorReporting(null);
+    }
+  });
+}
+
 /** Apply the settings from /api/config (or Lite's policy.json); null switches reporting off. */
 export function configureErrorReporting(settings: ClientSettings | null): void {
   const s = state();
-  const on = settings && (parseDsn(settings.dsn) || settings.collect) ? settings : null;
+  watchDesktopConsent();
+  const on = !s.withdrawn && settings && (parseDsn(settings.dsn) || settings.collect) ? settings : null;
   s.settings = on;
   const queued = s.pending;
   s.pending = [];
