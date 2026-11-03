@@ -140,7 +140,7 @@ describe('Pro page gate', () => {
       await act(async () => {});
       expect(routerReplace).toHaveBeenCalledWith('/');
       expect(replace).not.toHaveBeenCalled();
-      expect(takeHandedOffComposeDraft()?.subject).toBe('Typed');
+      expect(takeHandedOffComposeDraft()?.draft.subject).toBe('Typed');
       expect(useProTabStore.getState().tabs.some((t) => t.id === 'c1')).toBe(false);
     });
 

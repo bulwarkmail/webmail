@@ -248,15 +248,19 @@ export function handOffComposeTab(id: string): void {
   handedOffComposeTabId = id;
 }
 
-/** The handed-off tab's draft, closing the tab. Null when there is none, or it was never edited. */
-export function takeHandedOffComposeDraft(): ComposerDraftData | null {
+/**
+ * The handed-off tab's draft and the message it answers, closing the tab. Null
+ * when there is none, or it was never edited.
+ */
+export function takeHandedOffComposeDraft(): { draft: ComposerDraftData; sourceEmailId?: string; sourceEmailSource?: EmailWriteSource } | null {
   const id = handedOffComposeTabId;
   handedOffComposeTabId = null;
   if (!id) return null;
   const { tabs, closeTab } = useProTabStore.getState();
-  const draft = tabs.find((tab) => tab.id === id)?.composeData?.initialData ?? null;
-  if (draft) closeTab(id);
-  return draft;
+  const data = tabs.find((tab) => tab.id === id)?.composeData;
+  if (!data?.initialData) return null;
+  closeTab(id);
+  return { draft: data.initialData, sourceEmailId: data.sourceEmailId ?? undefined, sourceEmailSource: data.sourceEmailSource ?? undefined };
 }
 
 function makeId(): string {

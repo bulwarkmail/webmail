@@ -37,7 +37,7 @@ import type { UnifiedAccountClient } from "@/lib/unified-mailbox";
 import { connectedAccountsGrew } from "@/lib/unified-mailbox";
 import { messagePriorityFromHeaders, type MessagePriority } from "@/lib/message-priority";
 import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
-import { useEmailStore, annotateScheduledEmails, annotateScheduledEmail, pendingInitialData, buildUnifiedAccountClients, invalidateUnifiedMailboxes, captureViewToken, ArchiveMailboxNotFoundError, ensureArchiveMailbox, resolveSelectedEmails, resolveUnstampedEmailAccountId, resolveEmailBlobContext, resolveEmailActionContext, emailWriteSource, emailLinkSource, type EmailBlobContext, emptyFolderMovesToTrash, bulkDeleteIsPermanent, shouldConfirmBulkDelete, isAggregateListView, removalFolder, canRemoveFromFolder, restoreBatchesFor, restoreBatchesForSelection, TrashMailboxNotFoundError, type EmailRestoreBatch , type CrossAccountMoveReceipt } from "@/stores/email-store";
+import { useEmailStore, annotateScheduledEmails, annotateScheduledEmail, pendingInitialData, buildUnifiedAccountClients, invalidateUnifiedMailboxes, captureViewToken, ArchiveMailboxNotFoundError, ensureArchiveMailbox, resolveSelectedEmails, resolveUnstampedEmailAccountId, resolveEmailBlobContext, resolveEmailActionContext, emailWriteSource, emailLinkSource, type EmailBlobContext, type EmailWriteSource, emptyFolderMovesToTrash, bulkDeleteIsPermanent, shouldConfirmBulkDelete, isAggregateListView, removalFolder, canRemoveFromFolder, restoreBatchesFor, restoreBatchesForSelection, TrashMailboxNotFoundError, type EmailRestoreBatch , type CrossAccountMoveReceipt } from "@/stores/email-store";
 import { findDraftIdentityIdForLogin, listRowSource, resolveDraftSource, type DraftSource } from "@/lib/draft-source";
 import { useRemoveFromFolder } from "@/hooks/use-remove-from-folder";
 import { groupSearchScopeFolders, SEARCH_SCOPE_ALL_FOLDERS } from "@/lib/search-scope-folders";
@@ -265,6 +265,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // its edits over as it unmounts, too late for the one already mounting there,
   // so that one is mounted once more with them.
   const [composerRemount, setComposerRemount] = useState(0);
+  // A draft carried over from a Pro compose tab answers the message that tab was
+  // opened from, whatever is selected here. Holds for the session it arrived in.
+  const [handedOffSource, setHandedOffSource] = useState<{ session: number; emailId?: string; source?: EmailWriteSource } | null>(null);
   const composerSessionRef = useRef(composerSessionId);
   composerSessionRef.current = composerSessionId;
   const composerHostRef = useRef('pane');
@@ -1441,9 +1444,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // with its draft here. And the way back further down, in onSaveState.
   useEffect(() => {
     if (isEmbedded) return;
-    const draft = takeHandedOffComposeDraft();
-    if (!draft) return;
+    const handedOff = takeHandedOffComposeDraft();
+    if (!handedOff) return;
+    const { draft, sourceEmailId, sourceEmailSource } = handedOff;
     setComposerSessionId((id) => id + 1);
+    setHandedOffSource({ session: composerSessionId + 1, emailId: sourceEmailId, source: sourceEmailSource });
     setPendingDraft(draft);
     setComposerMode(draft.mode);
     setShowComposer(true);
@@ -2228,6 +2233,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Its login and account, pinned too: the folder open at send time may hold
   // another account's message under the same id.
   const composerSource = usePinnedPerSession(composerSessionId, selectedEmail ? emailWriteSource(selectedEmail, client) : undefined);
+  const handedOffToSession = handedOffSource?.session === composerSessionId ? handedOffSource : null;
+  const answeredEmailId = handedOffToSession ? handedOffToSession.emailId : composerSourceEmail?.id;
+  const answeredEmailSource = handedOffToSession ? handedOffToSession.source : composerSource;
 
   const handleEmailSend = async (data: {
     to: string[];
@@ -2278,7 +2286,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
     try {
       const effectiveMode = pendingDraft?.mode ?? composerMode;
-      const originalEmailId = composerSourceEmail?.id;
+      const originalEmailId = answeredEmailId;
 
       const result = await sendEmail(sendClient, data.to, data.subject, data.body, data.cc, data.bcc, data.identityId, data.fromEmail, data.draftId, data.fromName, data.htmlBody, data.attachments, data.inReplyTo, data.references, data.delayedUntil, data.envelopeMailFrom, composerSendOptions(data));
       submitted = true;
@@ -2319,7 +2327,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       if (originalEmailId && (effectiveMode === 'reply' || effectiveMode === 'replyAll' || effectiveMode === 'forward')) {
         const keyword = effectiveMode === 'forward' ? '$forwarded' : '$answered';
         try {
-          await useEmailStore.getState().markEmailKeyword(client, originalEmailId, keyword, composerSource);
+          await useEmailStore.getState().markEmailKeyword(client, originalEmailId, keyword, answeredEmailSource);
         } catch (e) {
           debug.error(`Failed to set ${keyword} keyword:`, e);
         }
@@ -4925,7 +4933,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         initialData={pendingDraft}
         prefill={composerPrefill}
         sessionKey={`inline-${composerSessionId}`}
-        sourceEmailId={composerSourceEmail?.id}
+        sourceEmailId={answeredEmailId}
         onSaveState={(data) => {
           setComposerPrefill(null);
           if (suppressComposerStateSaveSessionRef.current === composerSessionId) {
@@ -4940,6 +4948,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               mode: data.mode,
               replyTo: data.replyTo,
               initialData: data,
+              sourceEmailId: answeredEmailId ?? null,
+              sourceEmailSource: answeredEmailSource ?? null,
               title: data.subject?.trim() || t('email_composer.new_message'),
             });
             return;
