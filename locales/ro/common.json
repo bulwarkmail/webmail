@@ -6509,5 +6509,27 @@
     "server_needed": "Introdu mai întâi adresa serverului.",
     "server_declined": "Nu ai permis acest server, așa că nu i s-a trimis nimic.",
     "server_invalid": "Această adresă de server nu este validă."
+  },
+  "desktop_updates": {
+    "title": "Actualizări",
+    "version_label": "Bulwark {version}",
+    "status_idle": "Bulwark caută singur actualizări.",
+    "status_checking": "Se caută actualizări…",
+    "status_up_to_date": "Aveți cea mai nouă versiune.",
+    "status_downloading": "Se descarcă versiunea {version}…",
+    "status_ready": "Versiunea {version} este gata. Se instalează la următoarea închidere sau reporniți acum.",
+    "status_available": "Versiunea {version} este disponibilă.",
+    "status_available_per_machine": "Versiunea {version} este disponibilă. Bulwark este instalat pentru toată lumea pe acest computer, așa că actualizările le instalează un administrator.",
+    "status_older": "Aveți o versiune beta. Versiunea stabilă {version} este mai veche, așa că Bulwark rămâne pe această versiune până când cea stabilă o ajunge din urmă.",
+    "status_error": "Nu s-au putut căuta actualizări. Bulwark încearcă din nou mai târziu.",
+    "status_off": "Organizația dvs. a dezactivat actualizările din aplicație.",
+    "check": "Caută acum",
+    "restart": "Repornește pentru actualizare",
+    "download": "Descarcă",
+    "install_older": "Instalează versiunea mai veche…",
+    "channel_label": "Canal de actualizare",
+    "channel_description": "Versiunile beta apar mai devreme și pot avea mai multe probleme.",
+    "channel_stable": "Stabil",
+    "channel_beta": "Beta"
   }
 }

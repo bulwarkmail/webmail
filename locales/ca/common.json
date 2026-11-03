@@ -6509,5 +6509,27 @@
     "server_needed": "Primer escriu l'adreça del servidor.",
     "server_declined": "No has permès aquest servidor, així que no s'hi ha enviat res.",
     "server_invalid": "Aquesta adreça de servidor no és vàlida."
+  },
+  "desktop_updates": {
+    "title": "Actualitzacions",
+    "version_label": "Bulwark {version}",
+    "status_idle": "Bulwark cerca actualitzacions tot sol.",
+    "status_checking": "S’estan cercant actualitzacions…",
+    "status_up_to_date": "Teniu l’última versió.",
+    "status_downloading": "S’està baixant la versió {version}…",
+    "status_ready": "La versió {version} està a punt. S’instal·larà la pròxima vegada que sortiu, o reinicieu ara.",
+    "status_available": "La versió {version} està disponible.",
+    "status_available_per_machine": "La versió {version} està disponible. Bulwark està instal·lat per a tothom en aquest ordinador, així que un administrador instal·la les actualitzacions.",
+    "status_older": "Teniu una beta. La versió estable {version} és anterior, així que Bulwark es queda en aquesta versió fins que l’estable l’atrapi.",
+    "status_error": "No s’han pogut cercar actualitzacions. Bulwark ho tornarà a provar més tard.",
+    "status_off": "La vostra organització ha desactivat les actualitzacions a l’aplicació.",
+    "check": "Cerca ara",
+    "restart": "Reinicia per actualitzar",
+    "download": "Baixa",
+    "install_older": "Instal·la una versió anterior…",
+    "channel_label": "Canal d’actualització",
+    "channel_description": "Les versions beta arriben abans i poden tenir més problemes.",
+    "channel_stable": "Estable",
+    "channel_beta": "Beta"
   }
 }

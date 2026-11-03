@@ -6509,5 +6509,27 @@
     "server_needed": "請先輸入伺服器位址。",
     "server_declined": "你沒有允許此伺服器,因此沒有傳送任何內容給它。",
     "server_invalid": "此伺服器位址無效。"
+  },
+  "desktop_updates": {
+    "title": "更新",
+    "version_label": "Bulwark {version}",
+    "status_idle": "Bulwark 會自動檢查更新。",
+    "status_checking": "正在檢查更新…",
+    "status_up_to_date": "已是最新版本。",
+    "status_downloading": "正在下載版本 {version}…",
+    "status_ready": "版本 {version} 已準備好。將在下次結束時安裝，也可以立即重新啟動。",
+    "status_available": "版本 {version} 可用。",
+    "status_available_per_machine": "版本 {version} 可用。Bulwark 是為這台電腦的所有使用者安裝的，因此由管理員安裝更新。",
+    "status_older": "你使用的是測試版。穩定版 {version} 較舊，因此 Bulwark 會維持目前版本，直到穩定版趕上。",
+    "status_error": "無法檢查更新。Bulwark 稍後會再試。",
+    "status_off": "你的組織已關閉應用程式內更新。",
+    "check": "立即檢查",
+    "restart": "重新啟動以更新",
+    "download": "下載",
+    "install_older": "安裝舊版本…",
+    "channel_label": "更新管道",
+    "channel_description": "測試版較早推出，問題可能較多。",
+    "channel_stable": "穩定版",
+    "channel_beta": "測試版"
   }
 }

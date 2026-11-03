@@ -6509,5 +6509,27 @@
     "server_needed": "Primero escribe la dirección del servidor.",
     "server_declined": "No permitiste este servidor, así que no se le envió nada.",
     "server_invalid": "Esta dirección de servidor no es válida."
+  },
+  "desktop_updates": {
+    "title": "Actualizaciones",
+    "version_label": "Bulwark {version}",
+    "status_idle": "Bulwark busca actualizaciones por sí solo.",
+    "status_checking": "Buscando actualizaciones…",
+    "status_up_to_date": "Tienes la última versión.",
+    "status_downloading": "Descargando la versión {version}…",
+    "status_ready": "La versión {version} está lista. Se instalará la próxima vez que salgas, o reinicia ahora.",
+    "status_available": "La versión {version} está disponible.",
+    "status_available_per_machine": "La versión {version} está disponible. Bulwark está instalado para todos en este equipo, así que un administrador instala las actualizaciones.",
+    "status_older": "Tienes una beta. La versión estable {version} es anterior, así que Bulwark sigue en esta versión hasta que la estable la alcance.",
+    "status_error": "No se pudo buscar actualizaciones. Bulwark lo intentará más tarde.",
+    "status_off": "Tu organización ha desactivado las actualizaciones en la aplicación.",
+    "check": "Buscar ahora",
+    "restart": "Reiniciar para actualizar",
+    "download": "Descargar",
+    "install_older": "Instalar versión anterior…",
+    "channel_label": "Canal de actualización",
+    "channel_description": "Las versiones beta llegan antes y pueden tener más problemas.",
+    "channel_stable": "Estable",
+    "channel_beta": "Beta"
   }
 }

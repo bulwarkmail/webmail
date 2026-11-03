@@ -6509,5 +6509,27 @@
     "server_needed": "Enter your server's address first.",
     "server_declined": "You didn't allow this server, so nothing was sent to it.",
     "server_invalid": "This server address isn't valid."
+  },
+  "desktop_updates": {
+    "title": "Updates",
+    "version_label": "Bulwark {version}",
+    "status_idle": "Bulwark checks for updates by itself.",
+    "status_checking": "Checking for updates…",
+    "status_up_to_date": "You have the latest version.",
+    "status_downloading": "Downloading version {version}…",
+    "status_ready": "Version {version} is ready. It installs the next time you quit, or restart now.",
+    "status_available": "Version {version} is available.",
+    "status_available_per_machine": "Version {version} is available. Bulwark is installed for everyone on this computer, so an administrator installs updates.",
+    "status_older": "You have a beta. Stable {version} is older, so Bulwark stays on this version until stable catches up.",
+    "status_error": "Couldn't check for updates. Bulwark tries again later.",
+    "status_off": "Your organisation turned off updates in the app.",
+    "check": "Check now",
+    "restart": "Restart to update",
+    "download": "Download",
+    "install_older": "Install older version…",
+    "channel_label": "Update channel",
+    "channel_description": "Beta versions come earlier and can have more problems.",
+    "channel_stable": "Stable",
+    "channel_beta": "Beta"
   }
 }

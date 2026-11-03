@@ -6509,5 +6509,27 @@
     "server_needed": "Vispirms ievadiet servera adresi.",
     "server_declined": "Jūs neatļāvāt šo serveri, tāpēc tam nekas netika nosūtīts.",
     "server_invalid": "Šī servera adrese nav derīga."
+  },
+  "desktop_updates": {
+    "title": "Atjauninājumi",
+    "version_label": "Bulwark {version}",
+    "status_idle": "Bulwark pats meklē atjauninājumus.",
+    "status_checking": "Meklē atjauninājumus…",
+    "status_up_to_date": "Jums ir jaunākā versija.",
+    "status_downloading": "Lejupielādē versiju {version}…",
+    "status_ready": "Versija {version} ir gatava. Tā tiks instalēta nākamajā aizvēršanas reizē, vai restartējiet tūlīt.",
+    "status_available": "Ir pieejama versija {version}.",
+    "status_available_per_machine": "Ir pieejama versija {version}. Bulwark ir instalēts visiem šī datora lietotājiem, tāpēc atjauninājumus instalē administrators.",
+    "status_older": "Jums ir beta versija. Stabilā versija {version} ir vecāka, tāpēc Bulwark paliek šajā versijā, līdz stabilā to panāk.",
+    "status_error": "Neizdevās meklēt atjauninājumus. Bulwark mēģinās vēlreiz vēlāk.",
+    "status_off": "Jūsu organizācija ir izslēgusi atjauninājumus lietotnē.",
+    "check": "Meklēt tūlīt",
+    "restart": "Restartēt, lai atjauninātu",
+    "download": "Lejupielādēt",
+    "install_older": "Instalēt vecāku versiju…",
+    "channel_label": "Atjauninājumu kanāls",
+    "channel_description": "Beta versijas iznāk ātrāk, un tajās var būt vairāk problēmu.",
+    "channel_stable": "Stabilā",
+    "channel_beta": "Beta"
   }
 }

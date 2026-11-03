@@ -6509,5 +6509,27 @@
     "server_needed": "先にサーバーのアドレスを入力してください。",
     "server_declined": "このサーバーを許可しなかったため、何も送信していません。",
     "server_invalid": "このサーバーアドレスは正しくありません。"
+  },
+  "desktop_updates": {
+    "title": "アップデート",
+    "version_label": "Bulwark {version}",
+    "status_idle": "Bulwark は自動でアップデートを確認します。",
+    "status_checking": "アップデートを確認しています…",
+    "status_up_to_date": "最新バージョンです。",
+    "status_downloading": "バージョン {version} をダウンロードしています…",
+    "status_ready": "バージョン {version} の準備ができました。次回の終了時にインストールされます。今すぐ再起動することもできます。",
+    "status_available": "バージョン {version} が利用できます。",
+    "status_available_per_machine": "バージョン {version} が利用できます。Bulwark はこのコンピューターの全員向けにインストールされているため、アップデートは管理者がインストールします。",
+    "status_older": "ベータ版をお使いです。安定版 {version} はこれより古いため、安定版が追いつくまで Bulwark はこのバージョンのままです。",
+    "status_error": "アップデートを確認できませんでした。Bulwark は後でもう一度試します。",
+    "status_off": "アプリ内のアップデートは組織によってオフにされています。",
+    "check": "今すぐ確認",
+    "restart": "再起動してアップデート",
+    "download": "ダウンロード",
+    "install_older": "古いバージョンをインストール…",
+    "channel_label": "アップデートチャンネル",
+    "channel_description": "ベータ版は早く届きますが、問題が多い場合があります。",
+    "channel_stable": "安定版",
+    "channel_beta": "ベータ版"
   }
 }

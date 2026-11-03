@@ -6509,5 +6509,27 @@
     "server_needed": "Skriv inn serveradressen først.",
     "server_declined": "Du tillot ikke denne serveren, så ingenting ble sendt til den.",
     "server_invalid": "Denne serveradressen er ikke gyldig."
+  },
+  "desktop_updates": {
+    "title": "Oppdateringer",
+    "version_label": "Bulwark {version}",
+    "status_idle": "Bulwark ser etter oppdateringer selv.",
+    "status_checking": "Ser etter oppdateringer…",
+    "status_up_to_date": "Du har den nyeste versjonen.",
+    "status_downloading": "Laster ned versjon {version}…",
+    "status_ready": "Versjon {version} er klar. Den installeres neste gang du avslutter, eller start på nytt nå.",
+    "status_available": "Versjon {version} er tilgjengelig.",
+    "status_available_per_machine": "Versjon {version} er tilgjengelig. Bulwark er installert for alle på denne datamaskinen, så en administrator installerer oppdateringer.",
+    "status_older": "Du har en beta. Stabil versjon {version} er eldre, så Bulwark blir på denne versjonen til stabil har tatt den igjen.",
+    "status_error": "Kunne ikke se etter oppdateringer. Bulwark prøver igjen senere.",
+    "status_off": "Organisasjonen din har slått av oppdateringer i appen.",
+    "check": "Se etter nå",
+    "restart": "Start på nytt for å oppdatere",
+    "download": "Last ned",
+    "install_older": "Installer eldre versjon…",
+    "channel_label": "Oppdateringskanal",
+    "channel_description": "Betaversjoner kommer tidligere og kan ha flere problemer.",
+    "channel_stable": "Stabil",
+    "channel_beta": "Beta"
   }
 }

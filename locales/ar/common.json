@@ -6509,5 +6509,27 @@
     "server_needed": "أدخل عنوان الخادم أولًا.",
     "server_declined": "لم تسمح بهذا الخادم، لذا لم يُرسل إليه أي شيء.",
     "server_invalid": "عنوان الخادم هذا غير صالح."
+  },
+  "desktop_updates": {
+    "title": "التحديثات",
+    "version_label": "Bulwark {version}",
+    "status_idle": "يبحث Bulwark عن التحديثات بنفسه.",
+    "status_checking": "جارٍ البحث عن تحديثات…",
+    "status_up_to_date": "لديك أحدث إصدار.",
+    "status_downloading": "جارٍ تنزيل الإصدار {version}…",
+    "status_ready": "الإصدار {version} جاهز. سيُثبَّت عند الخروج في المرة القادمة، أو أعد التشغيل الآن.",
+    "status_available": "الإصدار {version} متاح.",
+    "status_available_per_machine": "الإصدار {version} متاح. Bulwark مثبَّت لجميع مستخدمي هذا الكمبيوتر، لذلك يثبّت المسؤول التحديثات.",
+    "status_older": "لديك إصدار تجريبي. الإصدار المستقر {version} أقدم، لذلك يبقى Bulwark على هذا الإصدار حتى يلحق به الإصدار المستقر.",
+    "status_error": "تعذّر البحث عن تحديثات. سيحاول Bulwark مرة أخرى لاحقًا.",
+    "status_off": "أوقفت مؤسستك التحديثات داخل التطبيق.",
+    "check": "ابحث الآن",
+    "restart": "أعد التشغيل للتحديث",
+    "download": "تنزيل",
+    "install_older": "تثبيت إصدار أقدم…",
+    "channel_label": "قناة التحديث",
+    "channel_description": "تصل الإصدارات التجريبية أبكر وقد تكون فيها مشكلات أكثر.",
+    "channel_stable": "مستقر",
+    "channel_beta": "تجريبي"
   }
 }

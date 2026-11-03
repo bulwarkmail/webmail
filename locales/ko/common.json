@@ -6509,5 +6509,27 @@
     "server_needed": "먼저 서버 주소를 입력하세요.",
     "server_declined": "이 서버를 허용하지 않아 아무것도 보내지 않았습니다.",
     "server_invalid": "이 서버 주소는 올바르지 않습니다."
+  },
+  "desktop_updates": {
+    "title": "업데이트",
+    "version_label": "Bulwark {version}",
+    "status_idle": "Bulwark가 업데이트를 알아서 확인합니다.",
+    "status_checking": "업데이트 확인 중…",
+    "status_up_to_date": "최신 버전입니다.",
+    "status_downloading": "버전 {version} 다운로드 중…",
+    "status_ready": "버전 {version}이(가) 준비되었습니다. 다음에 종료할 때 설치되며, 지금 다시 시작할 수도 있습니다.",
+    "status_available": "버전 {version}을(를) 사용할 수 있습니다.",
+    "status_available_per_machine": "버전 {version}을(를) 사용할 수 있습니다. Bulwark가 이 컴퓨터의 모든 사용자용으로 설치되어 있어 관리자가 업데이트를 설치합니다.",
+    "status_older": "베타 버전을 사용 중입니다. 안정 버전 {version}이(가) 더 오래되어, 안정 버전이 따라올 때까지 Bulwark는 이 버전을 유지합니다.",
+    "status_error": "업데이트를 확인하지 못했습니다. Bulwark가 나중에 다시 시도합니다.",
+    "status_off": "조직에서 앱 내 업데이트를 껐습니다.",
+    "check": "지금 확인",
+    "restart": "다시 시작하여 업데이트",
+    "download": "다운로드",
+    "install_older": "이전 버전 설치…",
+    "channel_label": "업데이트 채널",
+    "channel_description": "베타 버전은 더 빨리 나오지만 문제가 더 많을 수 있습니다.",
+    "channel_stable": "안정",
+    "channel_beta": "베타"
   }
 }

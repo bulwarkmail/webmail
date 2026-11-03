@@ -9,6 +9,7 @@ import { useTour } from '@/components/tour/tour-provider';
 import { Button } from '@/components/ui/button';
 import { PlayCircle } from '@/components/icons';
 import { IS_LITE } from '@/lib/lite';
+import { DesktopUpdateSettings } from './desktop-update-settings';
 
 /**
  * The General page: language and time, which links the browser hands to
@@ -46,6 +47,8 @@ export function GeneralSettings({ supportsCalendar }: { supportsCalendar: boolea
           />
         </SettingItem>
       </SettingsSection>
+
+      {!IS_LITE && <DesktopUpdateSettings />}
     </div>
   );
 }

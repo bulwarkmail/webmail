@@ -6510,5 +6510,27 @@
     "server_needed": "קודם צריך להזין את כתובת השרת.",
     "server_declined": "לא אישרת את השרת הזה, לכן לא נשלח אליו דבר.",
     "server_invalid": "כתובת השרת הזו לא תקינה."
+  },
+  "desktop_updates": {
+    "title": "עדכונים",
+    "version_label": "Bulwark {version}",
+    "status_idle": "Bulwark מחפש עדכונים בעצמו.",
+    "status_checking": "מחפש עדכונים…",
+    "status_up_to_date": "יש לך את הגרסה האחרונה.",
+    "status_downloading": "מוריד את גרסה {version}…",
+    "status_ready": "גרסה {version} מוכנה. היא תותקן בפעם הבאה שתצא, או הפעל מחדש עכשיו.",
+    "status_available": "גרסה {version} זמינה.",
+    "status_available_per_machine": "גרסה {version} זמינה. Bulwark מותקן לכל המשתמשים במחשב הזה, ולכן מנהל מתקין עדכונים.",
+    "status_older": "יש לך גרסת בטא. הגרסה היציבה {version} ישנה יותר, ולכן Bulwark נשאר בגרסה הזו עד שהיציבה תשיג אותה.",
+    "status_error": "לא ניתן היה לחפש עדכונים. Bulwark ינסה שוב מאוחר יותר.",
+    "status_off": "הארגון שלך כיבה עדכונים באפליקציה.",
+    "check": "חפש עכשיו",
+    "restart": "הפעל מחדש כדי לעדכן",
+    "download": "הורדה",
+    "install_older": "התקן גרסה ישנה יותר…",
+    "channel_label": "ערוץ עדכונים",
+    "channel_description": "גרסאות בטא מגיעות מוקדם יותר ועלולות להיות בהן יותר בעיות.",
+    "channel_stable": "יציב",
+    "channel_beta": "בטא"
   }
 }

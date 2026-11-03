@@ -6521,5 +6521,27 @@
     "server_needed": "Trước tiên hãy nhập địa chỉ máy chủ.",
     "server_declined": "Bạn không cho phép máy chủ này nên không có gì được gửi đến đó.",
     "server_invalid": "Địa chỉ máy chủ này không hợp lệ."
+  },
+  "desktop_updates": {
+    "title": "Cập nhật",
+    "version_label": "Bulwark {version}",
+    "status_idle": "Bulwark tự kiểm tra bản cập nhật.",
+    "status_checking": "Đang kiểm tra bản cập nhật…",
+    "status_up_to_date": "Bạn đang dùng phiên bản mới nhất.",
+    "status_downloading": "Đang tải phiên bản {version}…",
+    "status_ready": "Phiên bản {version} đã sẵn sàng. Bản này sẽ được cài vào lần thoát tới, hoặc khởi động lại ngay.",
+    "status_available": "Đã có phiên bản {version}.",
+    "status_available_per_machine": "Đã có phiên bản {version}. Bulwark được cài cho mọi người trên máy tính này nên quản trị viên sẽ cài bản cập nhật.",
+    "status_older": "Bạn đang dùng bản beta. Bản ổn định {version} cũ hơn nên Bulwark giữ phiên bản này đến khi bản ổn định theo kịp.",
+    "status_error": "Không kiểm tra được bản cập nhật. Bulwark sẽ thử lại sau.",
+    "status_off": "Tổ chức của bạn đã tắt cập nhật trong ứng dụng.",
+    "check": "Kiểm tra ngay",
+    "restart": "Khởi động lại để cập nhật",
+    "download": "Tải xuống",
+    "install_older": "Cài phiên bản cũ hơn…",
+    "channel_label": "Kênh cập nhật",
+    "channel_description": "Bản beta ra sớm hơn và có thể có nhiều lỗi hơn.",
+    "channel_stable": "Ổn định",
+    "channel_beta": "Beta"
   }
 }
