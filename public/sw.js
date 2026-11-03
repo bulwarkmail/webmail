@@ -604,7 +604,19 @@ async function handlePush(event) {
     ? []
     : Object.keys(changed).filter((id) => changed[id] && typeof changed[id] === "object" && "EmailDelivery" in changed[id]);
   for (const accountId of withNewMail.length > 0 ? withNewMail : [named]) {
-    await notifyAccount(accountId, emailIds, accountLabel);
+    try {
+      await notifyAccount(accountId, emailIds, accountLabel);
+    } catch (_) {
+      // Nothing above may cost the user the alert, or a browser its quota for
+      // this site: see showWithoutAlert.
+      await self.registration.showNotification(accountLabel ? `New mail (${accountLabel})` : "New mail", {
+        body: "You have new mail",
+        tag: "bulwark-mail:" + (accountId || "default"),
+        icon: `${BASE_PATH}/api/pwa-icon/192`,
+        badge: `${BASE_PATH}/api/pwa-icon/192`,
+        data: { kind: "mail-list", accountId },
+      });
+    }
   }
 }
 

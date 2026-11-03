@@ -187,4 +187,26 @@ describe('which login a push is for', () => {
   });
 });
 
+describe('when building the notification goes wrong', () => {
+  it('still shows one', async () => {
+    const { push, shade } = loadWorker(() => ({ unreadTotal: 1, slot: 0, login: 'fp', email: mail('e1') }), {
+      globals: { Notification: { get maxActions() { throw new Error('no such thing'); } } },
+    });
+    await push(delivery('a', 'e1'));
+    expect(shade.size).toBe(1);
+  });
+
+  it('shows one for a push that is no JSON at all', async () => {
+    const { dispatch, shade } = loadWorker(() => null);
+    await dispatch('push', { data: { json: () => { throw new SyntaxError('not JSON'); } } });
+    expect(shade.size).toBe(1);
+  });
+
+  it('shows one for a push without any data', async () => {
+    const { dispatch, shade } = loadWorker(() => null);
+    await dispatch('push', {});
+    expect(shade.size).toBe(1);
+  });
+});
+
 // -- end of cases --
