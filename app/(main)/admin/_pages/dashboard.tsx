@@ -50,6 +50,18 @@ export function storageSummary(data: InstancesData | null): { value: string; des
   return { value: `Shared store, ${count}`, description: data.location };
 }
 
+/**
+ * The line under the version number. Only the server's updateAvailable means
+ * there is something to install: latest can be older than what runs here, right
+ * after a release or on a beta. A version the server doesn't know gets no line.
+ */
+export function versionSummary(version: VersionData | null): { text?: string; tone: StatTone } {
+  if (!version || version.status?.severity === 'unknown') return { tone: 'muted' };
+  const { updateAvailable, latest, severity } = version.status ?? {};
+  if (!updateAvailable || !latest) return { text: 'Up to date', tone: 'muted' };
+  return { text: `v${latest} available`, tone: severity === 'security' || severity === 'deprecated' ? 'danger' : 'warning' };
+}
+
 const PAGE = adminPageDef('dashboard');
 
 export function DashboardPage() {
@@ -144,13 +156,7 @@ export function DashboardPage() {
   const jmapUrl = config?.jmapServerUrl || '-';
   const jmapHostname = jmapUrl !== '-' ? (() => { try { return new URL(jmapUrl).hostname; } catch { return jmapUrl; } })() : '-';
 
-  const newer = version?.status?.latest && version.status.latest !== version.current ? version.status.latest : null;
-  const severity = version?.status?.severity ?? 'none';
-  const versionSub: { text?: string; tone: StatTone } = !version
-    ? { tone: 'muted' }
-    : newer
-      ? { text: `v${newer} available`, tone: severity === 'security' || severity === 'deprecated' ? 'danger' : 'warning' }
-      : { text: 'Up to date', tone: 'muted' };
+  const versionSub = versionSummary(version);
 
   return (
     <div>
