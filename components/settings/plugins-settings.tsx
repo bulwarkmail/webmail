@@ -294,7 +294,7 @@ function PluginCard({ plugin, isExpanded, isForceEnabled, controlsDisabled, onTo
           )}
 
           <div>
-            <span className="text-xs font-medium text-foreground">
+            <span className="block text-xs font-medium text-foreground">
               {isManaged ? t('permissions_managed') : t('permissions')}
             </span>
             <div className="mt-1.5">
@@ -309,7 +309,7 @@ function PluginCard({ plugin, isExpanded, isForceEnabled, controlsDisabled, onTo
 
           {plugin.settingsSchema && Object.keys(plugin.settingsSchema).length > 0 && (
             <div className="space-y-2">
-              <span className="text-xs font-medium text-foreground">{t('settings')}</span>
+              <span className="block text-xs font-medium text-foreground">{t('settings')}</span>
               {Object.entries(plugin.settingsSchema).map(([key, schema]) => (
                 <PluginSettingField
                   key={key}
@@ -441,8 +441,8 @@ function PluginSettingField({ fieldKey, schema: raw, value, onChange, translate 
     case 'boolean':
       return (
         <div data-search-label={schema.label} className="flex items-center justify-between gap-3">
-          <div>
-            <span className="text-xs text-foreground">{schema.label}</span>
+          <div className="flex-1 min-w-0">
+            <span className="block text-xs text-foreground">{schema.label}</span>
             {schema.description && <p className="text-[0.625rem] text-muted-foreground">{schema.description}</p>}
           </div>
           <ToggleSwitch checked={value as boolean} onChange={(v) => onChange(v)} ariaLabel={schema.label} />
@@ -451,16 +451,16 @@ function PluginSettingField({ fieldKey, schema: raw, value, onChange, translate 
 
     case 'select':
       return (
-        <div data-search-label={schema.label} className="flex items-center justify-between gap-3">
-          <div>
-            <label htmlFor={inputId} className="text-xs text-foreground">{schema.label}</label>
+        <div data-search-label={schema.label} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <div className="flex-1 min-w-40">
+            <label htmlFor={inputId} className="block text-xs text-foreground">{schema.label}</label>
             {schema.description && <p className="text-[0.625rem] text-muted-foreground">{schema.description}</p>}
           </div>
           <select
             id={inputId}
             value={String(value)}
             onChange={(e) => onChange(e.target.value)}
-            className="rounded border border-border bg-background px-2 py-1 text-xs text-foreground"
+            className="max-w-full rounded border border-border bg-background px-2 py-1 text-xs text-foreground"
           >
             {(Array.isArray(schema.options) ? schema.options : []).map(opt => (
               <option key={opt} value={opt}>{translate(opt)}</option>
@@ -472,7 +472,7 @@ function PluginSettingField({ fieldKey, schema: raw, value, onChange, translate 
     case 'string':
       return (
         <div data-search-label={schema.label}>
-          <label htmlFor={inputId} className="text-xs text-foreground">{schema.label}</label>
+          <label htmlFor={inputId} className="block text-xs text-foreground">{schema.label}</label>
           {schema.description && <p className="text-[0.625rem] text-muted-foreground">{schema.description}</p>}
           <input
             id={inputId}
@@ -486,9 +486,9 @@ function PluginSettingField({ fieldKey, schema: raw, value, onChange, translate 
 
     case 'number':
       return (
-        <div data-search-label={schema.label} className="flex items-center justify-between gap-3">
-          <div>
-            <label htmlFor={inputId} className="text-xs text-foreground">{schema.label}</label>
+        <div data-search-label={schema.label} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <div className="flex-1 min-w-40">
+            <label htmlFor={inputId} className="block text-xs text-foreground">{schema.label}</label>
             {schema.description && <p className="text-[0.625rem] text-muted-foreground">{schema.description}</p>}
           </div>
           <input
