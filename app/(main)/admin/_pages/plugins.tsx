@@ -27,6 +27,7 @@ export function PluginsPage() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const setMessage = useAdminFeedback();
+  const [loadFailed, setLoadFailed] = useState(false);
   // On/off per plugin waits for Save, like the policy switches below.
   const [enabledDraft, setEnabledDraft] = useState<Record<string, boolean>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -40,11 +41,15 @@ export function PluginsPage() {
   const fetchPlugins = useCallback(async () => {
     try {
       const res = await apiFetch('/api/admin/plugins');
-      if (res.ok) setPlugins(await res.json());
+      if (!res.ok) throw new Error();
+      setPlugins(await res.json());
+    } catch {
+      setLoadFailed(true);
+      setMessage({ type: 'error', text: 'Could not load the plugins' });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setMessage]);
 
   const fetchPolicy = useCallback(async () => {
     try {
@@ -211,8 +216,8 @@ export function PluginsPage() {
           ) : plugins.length === 0 ? (
             <EmptyState
               icon={Puzzle}
-              title="No plugins installed"
-              hint="Install one from the marketplace or upload a plugin ZIP."
+              title={loadFailed ? 'Could not load the plugins' : 'No plugins installed'}
+              hint={loadFailed ? undefined : 'Install one from the marketplace or upload a plugin ZIP.'}
               action={<AdminButtonLink href={adminPath('marketplace')}><Store className="h-4 w-4" /> Browse the marketplace</AdminButtonLink>}
             />
           ) : (

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { Badge } from '@/components/admin/badge';
 import { EmptyState } from '@/components/admin/empty-state';
+import { useAdminFeedback } from '@/components/admin/feedback';
 import { inputClass } from '@/components/admin/config-items';
 import type { AuditEntry } from '@/lib/admin/types';
 import { formatAuditDetail } from '@/lib/admin/audit-format';
@@ -21,21 +22,28 @@ export function LogsPage() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [actionFilter, setActionFilter] = useState('');
+  const [loadFailed, setLoadFailed] = useState(false);
+  const setMessage = useAdminFeedback();
   const limit = 50;
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
+    setLoadFailed(false);
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (actionFilter) params.set('action', actionFilter);
 
-    const res = await apiFetch(`/api/admin/audit?${params}`);
-    if (res.ok) {
+    try {
+      const res = await apiFetch(`/api/admin/audit?${params}`);
+      if (!res.ok) throw new Error();
       const data = await res.json();
       setEntries(data.entries || []);
       setTotal(data.total || 0);
+    } catch {
+      setLoadFailed(true);
+      setMessage({ type: 'error', text: 'Could not load the audit log' });
     }
     setLoading(false);
-  }, [page, actionFilter]);
+  }, [page, actionFilter, setMessage]);
 
   useEffect(() => { fetchLogs(); }, [fetchLogs]);
 
@@ -88,8 +96,8 @@ export function LogsPage() {
       ) : entries.length === 0 ? (
         <EmptyState
           icon={ScrollText}
-          title="No entries found"
-          hint={actionFilter ? 'Nothing matches this action filter.' : 'Admin actions show up here as they happen.'}
+          title={loadFailed ? 'Could not load the audit log' : 'No entries found'}
+          hint={loadFailed ? undefined : actionFilter ? 'Nothing matches this action filter.' : 'Admin actions show up here as they happen.'}
         />
       ) : (
         <>

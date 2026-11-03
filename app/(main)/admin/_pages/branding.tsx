@@ -117,8 +117,13 @@ export function BrandingPage() {
 
   async function fetchConfig() {
     setLoading(true);
-    const res = await apiFetch('/api/admin/config');
-    if (res.ok) setConfig(await res.json());
+    try {
+      const res = await apiFetch('/api/admin/config');
+      if (!res.ok) throw new Error();
+      setConfig(await res.json());
+    } catch {
+      setMessage({ type: 'error', text: 'Could not load the settings' });
+    }
     setLoading(false);
   }
 
