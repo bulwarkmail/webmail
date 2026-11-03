@@ -1,11 +1,9 @@
 /**
  * Whether the app is locked, for everything that would show mail outside the app.
  *
- * App lock isn't built yet. When it is, its code calls setAppLockCheck once with a
- * function that answers from its own state, and calls bridge.os.setLocked on every
- * change: main then clears the tray, the jump list and delivered toasts, and strips
- * anything that still comes through. Nothing else needs to change. Until then it
- * answers false.
+ * lib/app-lock/controller.ts calls setAppLockCheck once, at the start of each page, with
+ * a function that answers from its own state. Main keeps its own answer for the tray, the
+ * jump list and toasts (the shell's app-lock-gate.ts).
  */
 
 let check: (() => boolean) | null = null;

@@ -10,6 +10,7 @@
 import type { WrapLayer } from '@/lib/store/client/keys';
 
 export const LOCK_LAYER = 'applock';
+export const SHELL_LAYER = 'safeStorage';
 /** OWASP's floor for PBKDF2-HMAC-SHA256. A wrong guess costs this much, online or off. */
 export const PBKDF2_ITERATIONS = 600_000;
 export const MIN_PIN_LENGTH = 6;
@@ -38,6 +39,42 @@ export function pinBytes(pin: string): Uint8Array {
 
 export function pinLongEnough(pin: string): boolean {
   return [...pin.normalize('NFKC')].length >= MIN_PIN_LENGTH;
+}
+
+/** A few of what people pick most, as the check below reads them. Runs and repeats are found by rule. */
+const COMMON_PINS = new Set([
+  'password', 'password1', 'password123', 'passwort', 'qwerty', 'qwertz', 'qwerty123', 'qwertyuiop', 'asdfgh', 'yxcvbn', 'zxcvbn',
+  '1q2w3e', '1q2w3e4r', 'q1w2e3', 'abc123', 'a1b2c3', '123abc', 'letmein', 'iloveyou', 'admin123', 'welcome', 'welcome1', 'monkey', 'dragon',
+  '147258', '159753', '258456', '789456', '102030', '101010', '696969', '111222', '121314', '131313', '123321', '112233',
+]);
+
+/** Digits go round, as on a keypad: 7890123. */
+function allSameStep(chars: string[], step: number): boolean {
+  return chars.every((char, index) => {
+    if (index === 0) return true;
+    const distance = char.codePointAt(0)! - chars[index - 1].codePointAt(0)!;
+    const digits = /\d/.test(char) && /\d/.test(chars[index - 1]);
+    return distance === step || (digits && (distance + 10) % 10 === (step + 10) % 10);
+  });
+}
+
+/** Refused when a PIN is set. Someone with the disk tries exactly these first, and PBKDF2 can't help with those. */
+export function pinIsObvious(pin: string): boolean {
+  const chars = [...pin.normalize('NFKC').toLowerCase()];
+  if (COMMON_PINS.has(chars.join(''))) return true;
+  if (allSameStep(chars, 0) || allSameStep(chars, 1) || allSameStep(chars, -1)) return true;
+  // 121212, 123123, abcabc: a short piece over and over.
+  for (let size = 1; size <= 3; size += 1) {
+    if (chars.length >= size * 2 && chars.every((char, index) => char === chars[index % size])) return true;
+  }
+  return false;
+}
+
+export class ObviousPinError extends Error {
+  constructor() {
+    super('That PIN is too easy to guess');
+    this.name = 'ObviousPinError';
+  }
 }
 
 /** Slow on purpose. Not extractable: it only ever wraps the lock key. */

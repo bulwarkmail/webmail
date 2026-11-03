@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
       purpose: rawPurpose,
       slot: rawSlot,
       remember,
+      fresh_login: freshLogin,
     } = await request.json();
 
     // `reauth` drives the step-up flow for device pairing: it forces a fresh
@@ -178,7 +179,9 @@ export async function POST(request: NextRequest) {
     // depends on the IdP supporting this OIDC param. Deliberately no max_age=0:
     // some IdPs (Authelia) re-evaluate max_age at the consent step and loop
     // back to login forever, and nothing on our side reads auth_time.
-    if (isReauth) {
+    // The same after a forgotten app lock PIN: the provider's session outlived it, and
+    // someone at the device shouldn't walk back in through it (lib/app-lock/sign-out.ts).
+    if (isReauth || freshLogin === true) {
       authUrl.searchParams.set('prompt', 'login');
     }
 

@@ -7,6 +7,7 @@ import { deleteKeyDatabase, getAccountRecord, openAccountKey } from '@/lib/store
 import {
   addOsUnlock,
   appLockHold,
+  changeAppLockPin,
   appLockKeyLayers,
   bootAppLock,
   disableAppLock,
@@ -17,12 +18,14 @@ import {
   resetAppLockForTests,
   setReloadForTests,
   startAppLock,
+  STAY_RETRY_MS,
   unlockWithOs,
   unlockWithPin,
 } from '../controller';
+import { LOCK_LAYER } from '../crypto';
 import { appLockRequired, effectiveTimeout } from '../policy';
 import { APP_LOCK_KEY, isAppLockedNow, readAppLockFile, setLockedHere } from '../state';
-import { deleteVault } from '../vault';
+import { createVault, deleteVault, readVault, sealDraft, VaultExistsError } from '../vault';
 
 const PIN = 'correct-pin';
 
@@ -85,6 +88,9 @@ function bridge(overrides: Record<string, unknown> = {}) {
     osRemove: vi.fn(async () => {}),
     osUnlock: vi.fn(async () => ({ ok: false as const, reason: 'denied' as const })),
     onLockRequest: vi.fn(() => () => {}),
+    claim: vi.fn(() => ({ lock: appLock.lock, osUnlock: appLock.osUnlock })),
+    wrap: vi.fn(async () => null),
+    unwrap: vi.fn(async () => null),
     ...overrides,
   };
   (window as unknown as { bulwarkDesktop: unknown }).bulwarkDesktop = { version: 1, platform: 'win32', appLock };
@@ -205,10 +211,68 @@ describe('while locked', () => {
     expect(holdDuringSave).toBeNull();
   });
 
-  it('notifications go by it: the check the OS code asks says locked', async () => {
+  it('the check the OS code asks follows the lock both ways', async () => {
+    expect(isAppLocked()).toBe(false);
     await enableAppLock(PIN);
     asNewDocument();
     expect(isAppLocked()).toBe(true);
+    await unlockWithPin(PIN);
+    expect(isAppLocked()).toBe(false);
+  });
+
+  it('a start that finds the app locked takes subjects out of storage too: a quit or a crash left them there', async () => {
+    await enableAppLock(PIN);
+    await lockedAndReloaded();
+    localStorage.setItem('email-snapshot', '{"emails":[{"subject":"Secret"}]}');
+    localStorage.setItem('contact-storage', '{"state":{"contacts":[{"name":"Secret Person"}]}}');
+    localStorage.setItem('notification-center', '[{"title":"Secret notice"}]');
+    asNewDocument();
+    await vi.waitFor(() => expect(JSON.stringify({ ...localStorage })).not.toContain('Secret'));
+  });
+
+  it('so does a start after a crash while unlocked, once it finds nobody holds the key', async () => {
+    await enableAppLock(PIN);
+    resetAppLockForTests();
+    localStorage.setItem('email-snapshot', '{"emails":[{"subject":"Secret"}]}');
+    localStorage.setItem('notification-center', '[{"title":"Secret notice"}]');
+    bootAppLock();
+    await vi.waitFor(() => expect(getAppLockPhase()).toBe('locked'));
+    await vi.waitFor(() => expect(JSON.stringify({ ...localStorage })).not.toContain('Secret'));
+  });
+
+  it('a start where another tab holds the key leaves storage alone', async () => {
+    await enableAppLock(PIN);
+    resetAppLockForTests();
+    localStorage.setItem('email-snapshot', '{"emails":[{"subject":"Kept"}]}');
+    (window.navigator.locks.query as ReturnType<typeof vi.fn>).mockResolvedValue({ held: [{ name: 'bulwark-app-lock-holder' }], pending: [] });
+    (window.navigator.locks.request as ReturnType<typeof vi.fn>).mockImplementation(() => new Promise(() => {}));
+    bootAppLock();
+    await vi.waitFor(() => expect(getAppLockPhase()).toBe('open'));
+    expect(localStorage.getItem('email-snapshot')).toContain('Kept');
+  });
+
+  it('contacts and notifications come back at unlock, sealed while locked', async () => {
+    await enableAppLock(PIN);
+    localStorage.setItem('contact-storage', '{"state":{"contacts":[{"name":"Secret Person"}]},"version":0}');
+    localStorage.setItem('notification-center', JSON.stringify([{ id: 'n', time: 1, level: 'info', title: 'Secret notice', body: '', read: false }]));
+    await lockedAndReloaded();
+    expect(JSON.stringify({ ...localStorage })).not.toContain('Secret');
+    await unlockWithPin(PIN);
+    expect(localStorage.getItem('contact-storage')).toContain('Secret Person');
+    expect(localStorage.getItem('notification-center')).toContain('Secret notice');
+    const { useNotificationCenterStore } = await import('@/stores/notification-center-store');
+    expect(useNotificationCenterStore.getState().entries.map((entry) => entry.title)).toContain('Secret notice');
+  });
+
+  it('a newer copy replaces the sealed one instead of piling up', async () => {
+    await enableAppLock(PIN);
+    localStorage.setItem('notification-center', '[{"id":"n","title":"Old notice"}]');
+    await lockedAndReloaded();
+    localStorage.setItem('notification-center', '[{"id":"n","title":"New notice"}]');
+    asNewDocument();
+    await vi.waitFor(() => expect(localStorage.getItem('notification-center')).toBeNull());
+    await unlockWithPin(PIN);
+    expect(localStorage.getItem('notification-center')).toContain('New notice');
   });
 
   it('a browser closed without locking counts as locked: nobody holds the key', async () => {
@@ -288,8 +352,62 @@ describe('locking', () => {
     lockEverywhere();
     await vi.waitFor(() => expect(getAppLockPhase()).toBe('locked-stay'));
     expect(reloads).toBe(0);
+    (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(new Response(null, { status: 200 }));
     window.dispatchEvent(new Event('online'));
-    expect(reloads).toBe(1);
+    await vi.waitFor(() => expect(reloads).toBe(1));
+  });
+
+  it('asks in a way the service worker can answer: a GET that it knows is this probe', async () => {
+    await enableAppLock(PIN);
+    await lockedAndReloaded();
+    const [, init] = (fetch as ReturnType<typeof vi.fn>).mock.calls.at(-1) as [string, RequestInit];
+    expect(init.method).toBe('GET');
+    expect(new Headers(init.headers).get('x-bulwark-reload-probe')).toBe('1');
+  });
+
+  it('a 5xx counts as out of reach: a reload would land on the error page', async () => {
+    (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(new Response(null, { status: 503 }));
+    await enableAppLock(PIN);
+    lockEverywhere();
+    await vi.waitFor(() => expect(getAppLockPhase()).toBe('locked-stay'));
+    expect(reloads).toBe(0);
+  });
+
+  it('keeps trying on a timer: nothing says "online" when only the server was down', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+    try {
+      (fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('down'));
+      await enableAppLock(PIN);
+      lockEverywhere();
+      await vi.waitFor(() => expect(getAppLockPhase()).toBe('locked-stay'));
+      vi.advanceTimersByTime(STAY_RETRY_MS);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      expect(reloads, 'still down').toBe(0);
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(new Response(null, { status: 200 }));
+      vi.advanceTimersByTime(STAY_RETRY_MS);
+      await vi.waitFor(() => expect(reloads).toBe(1));
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('a pop-out that unlocks with no main window leaves sealed drafts sealed, for the main window', async () => {
+    await enableAppLock(PIN);
+    await sealDraft({ subject: 'Sealed text' });
+    await lockedAndReloaded();
+    window.history.replaceState(null, '', '/popout/compose');
+    try {
+      asNewDocument();
+      await unlockWithPin(PIN);
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(sessionStorage.getItem('bulwark-rescued-drafts')).toBeNull();
+    } finally {
+      window.history.replaceState(null, '', '/');
+    }
+    lockEverywhere();
+    asNewDocument();
+    await unlockWithPin(PIN);
+    await vi.waitFor(() => expect(sessionStorage.getItem('bulwark-rescued-drafts')).toContain('Sealed text'));
   });
 });
 
@@ -390,6 +508,108 @@ describe('the desktop app', () => {
     expect(isAppLockedNow()).toBe(false);
   });
 
+  it('a page takes the two calls a frame must not reach once, before any frame runs', async () => {
+    const appLock = bridge();
+    bootAppLock();
+    expect(appLock.claim).toHaveBeenCalledTimes(1);
+    await enableAppLock(PIN);
+    await lockedAndReloaded();
+    expect(appLock.lock).toHaveBeenCalled();
+  });
+
+  it('a claim someone else got first leaves this page with no OS unlock, and the PIN working', async () => {
+    const appLock = bridge({ claim: vi.fn(() => null) });
+    await enableAppLock(PIN);
+    await lockedAndReloaded();
+    expect(await unlockWithOs()).toBe(false);
+    expect(appLock.osUnlock).not.toHaveBeenCalled();
+    await unlockWithPin(PIN);
+    expect(isAppLockedNow()).toBe(false);
+  });
+
+  it('a no from main on a good PIN isn\'t ignored: it enrolls again, and is unlocked', async () => {
+    const appLock = bridge();
+    await enableAppLock(PIN);
+    await lockedAndReloaded();
+    appLock.enroll.mockClear();
+    appLock.prove.mockResolvedValue(false as never);
+    await unlockWithPin(PIN);
+    expect(appLock.enroll).toHaveBeenCalledTimes(1);
+    expect(isAppLockedNow()).toBe(false);
+  });
+
+  it('main keeps an older lock: it asks natively, and only a yes replaces it', async () => {
+    const appLock = bridge();
+    await enableAppLock(PIN);
+    await lockedAndReloaded();
+    appLock.prove.mockResolvedValue(false as never);
+    appLock.enroll.mockResolvedValueOnce(false as never);
+    appLock.forget.mockResolvedValueOnce(false as never);
+    await expect(unlockWithPin(PIN)).rejects.toThrow();
+    expect(isAppLockedNow(), 'main still locked, so the page is').toBe(true);
+    expect(appLock.enroll).toHaveBeenCalledTimes(2);
+
+    appLock.enroll.mockResolvedValueOnce(false as never);
+    appLock.forget.mockResolvedValueOnce(true as never);
+    appLock.enroll.mockResolvedValueOnce(true as never);
+    await unlockWithPin(PIN);
+    expect(isAppLockedNow()).toBe(false);
+  });
+
+  it('turning it off with main refusing the proof: it asks, and a no leaves everything on', async () => {
+    const appLock = bridge({ disable: vi.fn(async () => false), forget: vi.fn(async () => false) });
+    await openAccountKey('acc');
+    await enableAppLock(PIN);
+    await expect(disableAppLock(PIN)).rejects.toThrow();
+    expect(readAppLockFile().on).toBe(true);
+    expect((await getAccountRecord('acc'))?.layers).toEqual(['applock']);
+    expect(await readVault()).not.toBeNull();
+    appLock.forget.mockResolvedValue(true);
+    await disableAppLock(PIN);
+    expect(readAppLockFile().on).toBe(false);
+  });
+
+  it('turning it off when main has no lock at all just goes on', async () => {
+    bridge({
+      disable: vi.fn(async () => false),
+      forget: vi.fn(async () => false),
+      status: vi.fn(async () => ({ locked: false, enrolled: false, os: null, osEnrolled: false })),
+    });
+    await enableAppLock(PIN);
+    await disableAppLock(PIN);
+    expect(readAppLockFile().on).toBe(false);
+  });
+
+  it('a sign-out in the tab with the key shows main the proof, so nothing asks', async () => {
+    const appLock = bridge();
+    await enableAppLock(PIN);
+    const proof = appLock.enroll.mock.calls[0][0 as never] as unknown as Uint8Array;
+    const { forgetAppLockAtSignOut } = await import('../sign-out');
+    await forgetAppLockAtSignOut();
+    expect(Array.from(appLock.forget.mock.calls[0][0 as never] as unknown as Uint8Array)).toEqual(Array.from(proof));
+    expect(await readVault()).toBeNull();
+  });
+
+  it('a record with main\'s safeStorage layer opens, and keeps it under the lock', async () => {
+    bridge({
+      status: vi.fn(async () => ({ locked: false, enrolled: true, os: null, osEnrolled: false, wrap: true })),
+      wrap: vi.fn(async (data: Uint8Array) => Uint8Array.from([7, ...data])),
+      unwrap: vi.fn(async (data: Uint8Array) => (data[0] === 7 ? data.slice(1) : null)),
+    });
+    const safe = {
+      name: 'safeStorage',
+      wrap: async (data: Uint8Array) => Uint8Array.from([7, ...data]),
+      unwrap: async (data: Uint8Array) => data.slice(1),
+    };
+    const { keyHex } = await openAccountKey('acc', [safe]);
+    await enableAppLock(PIN);
+    expect((await getAccountRecord('acc'))?.layers).toEqual(['safeStorage', LOCK_LAYER]);
+    await expect(openAccountKey('acc', appLockKeyLayers())).resolves.toMatchObject({ keyHex });
+    // Off, nothing asks main at a start, so main's wrap goes too.
+    await disableAppLock(PIN);
+    expect((await getAccountRecord('acc'))?.layers).toEqual([]);
+  });
+
   it('forgetting asks main first: a no changes nothing', async () => {
     const appLock = bridge({ forget: vi.fn(async () => false) });
     await enableAppLock(PIN);
@@ -422,9 +642,10 @@ describe('policy', () => {
     expect(appLockHold()).toBeInstanceOf(Promise);
   });
 
-  it('a required lock doesn\'t stand in front of the login page', () => {
+  it('a required lock doesn\'t stand in front of the login page', async () => {
     withPolicy({ value: true, locked: true });
     bootAppLock();
+    await vi.waitFor(() => expect(appLockHold()).toBeNull());
     expect(getAppLockPhase()).toBe('open');
   });
 
@@ -461,11 +682,61 @@ describe('policy', () => {
   });
 });
 
+describe('a lost lock file', () => {
+  it('a vault means on: the file going doesn\'t turn the lock off', async () => {
+    await enableAppLock(PIN);
+    await lockedAndReloaded();
+    localStorage.removeItem(APP_LOCK_KEY);
+    asNewDocument();
+    expect(appLockHold(), 'held back while it looks').toBeInstanceOf(Promise);
+    await vi.waitFor(() => expect(getAppLockPhase()).toBe('locked'));
+    expect(readAppLockFile()).toMatchObject({ on: true, locked: true });
+    await unlockWithPin(PIN);
+    expect(isAppLockedNow()).toBe(false);
+  });
+
+  it('so does an unreadable one', async () => {
+    await enableAppLock(PIN);
+    await lockedAndReloaded();
+    localStorage.setItem(APP_LOCK_KEY, '{broken');
+    asNewDocument();
+    await vi.waitFor(() => expect(getAppLockPhase()).toBe('locked'));
+  });
+
+  it('turning it on doesn\'t overwrite a vault that still holds a key', async () => {
+    await openAccountKey('acc');
+    await enableAppLock(PIN);
+    localStorage.removeItem(APP_LOCK_KEY);
+    const before = await readVault();
+    resetAppLockForTests();
+    await expect(enableAppLock('another-pin-82')).rejects.toBeInstanceOf(VaultExistsError);
+    expect((await readVault())?.pin.data).toEqual(before?.pin.data);
+    await expect(createVault('another-pin-82')).rejects.toBeInstanceOf(VaultExistsError);
+  });
+});
+
+describe('a PIN anyone would guess', () => {
+  it('is refused when set, and changing to one too', async () => {
+    await expect(enableAppLock('123456')).rejects.toMatchObject({ name: 'ObviousPinError' });
+    expect(await readVault()).toBeNull();
+    await enableAppLock(PIN);
+    await expect(changeAppLockPin(PIN, '000000')).rejects.toMatchObject({ name: 'ObviousPinError' });
+    await unlockAfterChangeRefused();
+  });
+
+  async function unlockAfterChangeRefused(): Promise<void> {
+    await lockedAndReloaded();
+    await unlockWithPin(PIN);
+    expect(isAppLockedNow()).toBe(false);
+  }
+});
+
 describe('off', () => {
-  it('is the default: nothing is held back and no layer is asked for', () => {
+  it('is the default: nothing is shown as locked and no layer is asked for', async () => {
     bootAppLock();
+    await vi.waitFor(() => expect(appLockHold()).toBeNull());
     expect(getAppLockPhase()).toBe('open');
-    expect(appLockHold()).toBeNull();
+    expect(isAppLockedNow()).toBe(false);
     expect(appLockKeyLayers()).toEqual([]);
     expect(localStorage.getItem(APP_LOCK_KEY)).toBeNull();
   });

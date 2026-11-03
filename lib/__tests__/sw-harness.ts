@@ -71,9 +71,9 @@ export function loadWorker(opts: {
     await Promise.all(waits);
   }
   /** A fetch event: what the worker answered, or null when it left the request to the network. */
-  async function request(req: { url: string; method?: string; mode?: string }): Promise<Response | null> {
+  async function request(req: { url: string; method?: string; mode?: string; headers?: Headers }): Promise<Response | null> {
     let answer: Promise<Response> | null = null;
-    listeners.get('fetch')?.({ request: { method: 'GET', mode: 'cors', ...req }, respondWith: (p: Promise<Response>) => { answer = p; } });
+    listeners.get('fetch')?.({ request: { method: 'GET', mode: 'cors', headers: new Headers(), ...req }, respondWith: (p: Promise<Response>) => { answer = p; } });
     return answer ? await answer : null;
   }
   return { dispatch, listeners, request, shown, skipped: () => skipped };

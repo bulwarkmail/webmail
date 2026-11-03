@@ -3,7 +3,7 @@
 import { useId } from "react";
 import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
-import { pinLongEnough } from "@/lib/app-lock/crypto";
+import { pinIsObvious, pinLongEnough } from "@/lib/app-lock/crypto";
 
 /** The new PIN, twice. Says what's wrong only once there's something to say. */
 export function NewPinFields({ pin, repeat, onPin, onRepeat }: {
@@ -17,6 +17,7 @@ export function NewPinFields({ pin, repeat, onPin, onRepeat }: {
   const repeatId = useId();
   const hintId = useId();
   const tooShort = pin.length > 0 && !pinLongEnough(pin);
+  const obvious = pinLongEnough(pin) && pinIsObvious(pin);
   const mismatch = repeat.length > 0 && repeat !== pin;
   return (
     <div className="space-y-3">
@@ -30,9 +31,10 @@ export function NewPinFields({ pin, repeat, onPin, onRepeat }: {
           value={pin}
           onChange={(event) => onPin(event.target.value)}
           aria-describedby={hintId}
-          aria-invalid={tooShort || undefined}
+          aria-invalid={tooShort || obvious || undefined}
         />
         <p id={hintId} className="text-xs text-muted-foreground">{t("pin_hint")}</p>
+        {obvious && <p role="alert" className="text-xs text-destructive">{t("pin_obvious")}</p>}
       </div>
       <div className="space-y-1">
         <label htmlFor={repeatId} className="text-sm font-medium text-foreground">{t("pin_repeat")}</label>
@@ -52,7 +54,7 @@ export function NewPinFields({ pin, repeat, onPin, onRepeat }: {
 }
 
 export function newPinReady(pin: string, repeat: string): boolean {
-  return pinLongEnough(pin) && pin === repeat;
+  return pinLongEnough(pin) && !pinIsObvious(pin) && pin === repeat;
 }
 
 /** A PIN already set, asked again before something that needs it. */

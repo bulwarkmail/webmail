@@ -223,6 +223,8 @@ function offlineRoute(request) {
   if (request.method !== "GET") return null;
   const url = new URL(request.url);
   if (request.mode === "navigate" && appPagePath(url) !== null) return respondWithDocument;
+  // The app lock asks whether a reload would land anywhere, and has to hear what a reload would.
+  if (request.headers.get("x-bulwark-reload-probe") && appPagePath(url) !== null) return respondWithDocument;
   if (staticPath(url)) return respondWithStatic;
   if (url.origin === self.location.origin && url.pathname === BASE_PATH + "/api/config") return respondWithConfig;
   return null;

@@ -47,6 +47,9 @@ import { SW_SCOPE } from '@/lib/app-update';
 import { devicesForAccount, devicesForNoOne } from '@/lib/device-policy';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
+import { forgetAppLockAtSignOut } from '@/lib/app-lock/sign-out';
+import { isAppLockedNow } from '@/lib/app-lock/state';
+import { clearSealed, VAULT_DB } from '@/lib/app-lock/vault';
 import { clearRescuedDrafts } from '@/lib/popout/rescued-drafts';
 import { isPopoutWindow } from '@/lib/popout/window-role';
 import { PUSH_STATE_CACHE } from '@/lib/push-preferences';
@@ -110,6 +113,8 @@ const APP_DATABASES = new Set([
   'bulwark-company-calendars',
   'bulwark-mail-import',
   'bulwark-offline',
+  // The other accounts' way in: it goes when no account is left, see `forgetLockIfNobodyLeft`.
+  VAULT_DB,
 ]);
 /** Deleted by name too, for browsers without `indexedDB.databases()`. */
 const KNOWN_PLUGIN_DATABASES = ['smime-plugin-store', 'bulwark-openpgp', 'smime-capability-probe', 'openpgp-capability-probe'];
@@ -261,6 +266,12 @@ async function endWebPushIfNobodyLeft(): Promise<void> {
   await subscription?.unsubscribe();
 }
 
+/** With nobody left after this there's nothing to lock for, and a next person shouldn't meet it. */
+async function forgetLockIfNobodyStays(leaving: string | null): Promise<void> {
+  if (leaving !== null && useAccountStore.getState().accounts.some((entry) => entry.id !== leaving)) return;
+  await forgetAppLockAtSignOut();
+}
+
 /** What's the account's own: a deletion after a refused login goes no further than this. */
 async function scrubAccount(account: string): Promise<void> {
   await runWipeCleaners(account);
@@ -284,6 +295,7 @@ async function scrubShared(): Promise<void> {
   }
   clearHandoffs();
   clearRescuedDrafts();
+  await clearSealed().catch(() => {});
   const { useNotificationCenterStore } = await import('@/stores/notification-center-store');
   useNotificationCenterStore.getState().clear();
   await closeShownNotifications().catch(() => {});
@@ -409,12 +421,29 @@ async function eraseAccount(account: string, reason: WipeReason, options: WipeAc
   await putRowsBack(records, account);
 
   await flushConfirmations(deleted ? account : undefined);
+  const wasLocked = isAppLockedNow();
   if (!ownOnly) {
+    await forgetLockIfNobodyStays(account).catch(() => {});
     await signOutAccount(account);
     await endWebPushIfNobodyLeft().catch(() => {});
   }
   if (deleted) clearWipePending(account);
   tellOtherWindows(account, 'end');
+  // Heard at the lock screen: signing out may have started the next account here, and with
+  // nobody left a new page is what takes the lock screen away.
+  if (wasLocked && !ownOnly) reloadPage();
+}
+
+let reloadSeam: (() => void) | null = null;
+
+function reloadPage(): void {
+  if (reloadSeam) reloadSeam();
+  else window.location.reload();
+}
+
+/** Test helper: jsdom can't reload. */
+export function setWipeReloadForTests(run: (() => void) | null): void {
+  reloadSeam = run;
 }
 
 /** Everything on this device, for everyone. The app's device preferences stay: they hold no mail. */
@@ -455,6 +484,7 @@ async function eraseDevice(reason: WipeReason): Promise<void> {
   for (const account of Object.keys(readRefusedLogins())) dropRefusedLogin(account);
   await flushConfirmations(deleted ? WHOLE_DEVICE : undefined);
   signalSignedOut();
+  await forgetLockIfNobodyStays(null).catch(() => {});
   await useAuthStore.getState().logoutAll({ endProviderSession: false });
   await endWebPushIfNobodyLeft().catch(() => {});
   if (deleted) clearWipePending(WHOLE_DEVICE);
@@ -465,6 +495,14 @@ async function eraseDevice(reason: WipeReason): Promise<void> {
 
 function queueDrop(row: Pick<DeviceRecord, 'id' | 'secret'>): void {
   queueWipeConfirmation({ id: row.id, secret: row.secret, reason: 'user', unsent: 0, drop: true });
+}
+
+/**
+ * A forgotten PIN is about to delete the key database with the rows in it: the instance hears
+ * at the next start that they're over. No network here, and that's what the order there needs.
+ */
+export async function forgetDeviceRows(): Promise<void> {
+  for (const row of await listDeviceRecords().catch(() => [] as DeviceRecord[])) queueDrop(row);
 }
 
 async function dropRows(scope: string): Promise<void> {

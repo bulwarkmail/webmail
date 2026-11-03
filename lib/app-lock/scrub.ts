@@ -4,10 +4,12 @@
  * anywhere else is sealed first (see lib/app-lock/vault.ts).
  */
 
-import { sealDraft } from './vault';
+import { openSealedLocal, sealDraft, sealLocal } from './vault';
 
 /** Subjects and senders: a list snapshot for a fast start, and the Pro tabs' names. */
 const LOCAL_KEYS = ['email-snapshot', 'pro-tabs'];
+/** People's names, and what notices said. Nothing fetches these back, so they wait sealed for the unlock. */
+const SEALED_LOCAL_KEYS = ['contact-storage', 'notification-center'];
 const SESSION_KEYS = ['bulwark-offline-lost'];
 const SESSION_PREFIXES = ['bulwark-popout-compose:'];
 const RESCUED_KEY = 'bulwark-rescued-drafts';
@@ -34,11 +36,42 @@ export async function scrubBrowserStorage(): Promise<void> {
   } catch {
     // Storage blocked: nothing was kept there either.
   }
+  for (const key of SEALED_LOCAL_KEYS) {
+    try {
+      const value = localStorage.getItem(key);
+      if (value === null) continue;
+      await sealLocal(key, value).catch(() => false);
+      localStorage.removeItem(key);
+    } catch {
+      // As above.
+    }
+  }
   for (const key of LOCAL_KEYS) {
     try {
       localStorage.removeItem(key);
     } catch {
       // As above.
     }
+  }
+}
+
+/** Puts back what a lock sealed. Only the tab with the lock key can. */
+export async function restoreSealedStorage(lockKey: CryptoKey): Promise<void> {
+  try {
+    for (const [key, value] of await openSealedLocal(lockKey)) localStorage.setItem(key, value);
+  } catch {
+    // They stay sealed for the next unlock.
+  }
+}
+
+/** The stores read storage once, at import: before anyone unlocked. They read it again now. */
+export async function reloadSealedStores(): Promise<void> {
+  try {
+    const { reloadNotificationCenter } = await import('@/stores/notification-center-store');
+    reloadNotificationCenter();
+    const { useContactStore } = await import('@/stores/contact-store');
+    await useContactStore.persist?.rehydrate();
+  } catch {
+    // What's on disk is there at the next load.
   }
 }

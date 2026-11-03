@@ -24,14 +24,18 @@ import { IS_LITE } from '@/lib/lite';
 import { keepRescuedDraft } from '@/lib/popout/rescued-drafts';
 import { closePopoutWindow, isPopoutWindow } from '@/lib/popout/window-role';
 import { getStore, type StoreBackend } from '@/lib/store/client/api';
-import { listAccountRecords, rewrapAccountKey, StoreKeyLayerMissingError, type WrapLayer } from '@/lib/store/client/keys';
+import { forgetAccountKey, listAccountRecords, rewrapAccountKey, StoreKeyLayerMissingError, type AccountRecord, type WrapLayer } from '@/lib/store/client/keys';
+import { purgeStoreFiles } from '@/lib/store/client/purge';
+import { purgeSignedOutData } from '@/lib/sign-out-cleanup';
 import { OWNER_LOCK } from '@/lib/store/worker/protocol';
+import type { DesktopOsUnlockAnswer } from '@/lib/desktop/types';
 import type { ComposerDraftData } from '@/components/email/email-composer';
-import { importLockKey, LOCK_LAYER, lockLayer, mainProof } from './crypto';
+import { importLockKey, LOCK_LAYER, lockLayer, mainProof, SHELL_LAYER } from './crypto';
 import { watchIdle } from './idle';
 import { createPasskey, passkeyPrf, PasskeyNoPrfError } from './passkey';
 import { appLockRequired, effectiveTimeout, onLockPolicyChange } from './policy';
-import { scrubBrowserStorage } from './scrub';
+import { reloadSealedStores, restoreSealedStorage, scrubBrowserStorage } from './scrub';
+import { clearPendingCookies, markCookiesToClear, rememberMainProof, requireFreshLogin } from './sign-out';
 import {
   APP_LOCK_CHANNEL,
   APP_LOCK_HOLDER,
@@ -55,6 +59,7 @@ import {
   readVault,
   removeVaultPrf,
   sealDraft,
+  vaultExists,
 } from './vault';
 
 export type AppLockPhase =
@@ -76,6 +81,12 @@ const STORE_CLOSE_MS = 5_000;
 const OWNER_WAIT_MS = 5_000;
 const HOLDER_WAIT_MS = 1_500;
 const RELOAD_PROBE_MS = 2_000;
+/** How long a start without the lock file holds the page for the look at the vault. */
+const VAULT_LOOK_MS = 1_500;
+/** Locked on a page that couldn't reload: how often it tries again. Only the server may have been down. */
+export const STAY_RETRY_MS = 30_000;
+/** How long a forgotten PIN waits for the sign-out, on top of the cookies' own wait. Nothing depends on it by then. */
+const FORGET_LOGOUT_MS = 5_000;
 const DRAFTS_SAVED_KEY = 'bulwark-app-lock-drafts-saved';
 
 let booted = false;
@@ -88,6 +99,23 @@ let heldKey: CryptoKey | null = null;
 let releaseHolder: (() => void) | null = null;
 let holderWatch: AbortController | null = null;
 let stopIdle: (() => void) | null = null;
+let stopStay: (() => void) | null = null;
+/** Setting up right now: the vault this tab just wrote says nothing about a lost file. */
+let enabling = false;
+/** Main's wrap for the keys, when it has a real one. Known once asked: unlocking and enabling ask first. */
+let shellWraps = false;
+
+/**
+ * The two calls a same-origin frame mustn't reach: a frame can get at the parent's bridge, and
+ * main can't tell those calls apart (the shell's ipc.ts). The preload hands them out once per
+ * document, and this takes them in the first render, before any frame exists.
+ */
+let controls: { lock: () => void; osUnlock: () => Promise<DesktopOsUnlockAnswer> } | null | undefined;
+
+function desktopControls() {
+  if (controls === undefined) controls = getDesktopBridge()?.appLock?.claim() ?? null;
+  return controls;
+}
 
 function setPhase(next: AppLockPhase): void {
   if (phase === next) return;
@@ -146,6 +174,7 @@ export function bootAppLock(): void {
   if (booted || typeof window === 'undefined' || IS_LITE) return;
   booted = true;
   setAppLockCheck(isAppLockedNow);
+  desktopControls();
   const file = readAppLockFile();
   if (file.on) {
     setLockedHere(true);
@@ -153,6 +182,7 @@ export function bootAppLock(): void {
     if (file.locked) {
       phase = 'locked';
       tellDesktopLocked();
+      void scrubBrowserStorage();
     } else {
       phase = 'checking';
       void settleCheck();
@@ -160,10 +190,72 @@ export function bootAppLock(): void {
     return;
   }
   markDocument(false);
+  hold = newHold();
   if (setupNeeded()) {
-    hold = newHold();
     phase = 'setup';
+  } else {
+    setLockedHere(true);
+    phase = 'checking';
   }
+  void settleNoFile();
+}
+
+function lockedFromNow(): void {
+  writeAppLockFile({ ...readAppLockFile(), on: true, locked: true });
+  setLockedHere(true);
+  markDocument(true);
+  hold ??= newHold();
+  tellDesktopLocked();
+  tellServiceWorker('locked');
+  void scrubBrowserStorage();
+  setPhase('locked');
+}
+
+/**
+ * No file says the lock is on. Most often that's the truth, and this takes one look at
+ * IndexedDB. But the file can go on its own (a cleared site setting, an extension, someone
+ * at the keyboard), and the vault is what really decides: it holds the key the store's
+ * keys depend on. A look that takes too long lets the page go on, and locks it if it ends in a vault.
+ */
+async function settleNoFile(): Promise<void> {
+  const looking = vaultExists();
+  let waited = false;
+  const found = await Promise.race([
+    looking,
+    new Promise<boolean>((resolve) => setTimeout(() => {
+      waited = true;
+      resolve(false);
+    }, VAULT_LOOK_MS)),
+  ]);
+  if (readAppLockFile().on) {
+    // Another tab turned it on meanwhile.
+    if (phase === 'checking') void settleCheck();
+    return;
+  }
+  if (found && !enabling) {
+    lockedFromNow();
+    return;
+  }
+  if (phase === 'checking') {
+    setLockedHere(false);
+    const next = setupNeeded() ? 'setup' : 'open';
+    setPhase(next);
+    if (next === 'open') {
+      hold?.release();
+      hold = null;
+    }
+  }
+  if (waited) {
+    void looking.then((late) => {
+      if (late && !enabling && !readAppLockFile().on) void lockLate();
+    });
+  }
+}
+
+async function lockLate(): Promise<void> {
+  writeAppLockFile({ ...readAppLockFile(), on: true, locked: true });
+  postAppLockMessage({ type: 'lock' });
+  await applyLockHere();
 }
 
 async function holderAlive(): Promise<boolean> {
@@ -193,14 +285,11 @@ async function settleCheck(): Promise<void> {
     return;
   }
   // Nobody holds the key: a crash, or the browser was closed without saying so.
-  writeAppLockFile({ ...readAppLockFile(), locked: true });
-  tellDesktopLocked();
-  tellServiceWorker('locked');
-  setPhase('locked');
+  lockedFromNow();
 }
 
 function tellDesktopLocked(): void {
-  getDesktopBridge()?.appLock?.lock();
+  desktopControls()?.lock();
 }
 
 /** The service worker shows push notifications with no page around. Kept across its restarts. */
@@ -268,12 +357,14 @@ async function becomeHolder(): Promise<void> {
 
 function dropKey(): void {
   heldKey = null;
+  rememberMainProof(null);
   releaseHolder?.();
   releaseHolder = null;
 }
 
 /** The app starts, or goes on, in this tab. */
 function openUp(): void {
+  stopStay?.();
   setLockedHere(false);
   markDocument(false);
   setPhase('open');
@@ -352,13 +443,44 @@ export function setReloadForTests(run: (() => void) | null): void {
   reloadSeam = run;
 }
 
+/**
+ * Whether a reload would land on a page. The service worker answers this as it would answer
+ * the reload (public/sw.js), from its copy of the shell when offline, so a lock with no
+ * network still clears memory. Only a page with neither stays where it is.
+ */
 async function pageReachable(): Promise<boolean> {
   try {
-    const response = await fetch(window.location.href, { method: 'HEAD', cache: 'no-store', signal: AbortSignal.timeout(RELOAD_PROBE_MS) });
+    const response = await fetch(window.location.href, {
+      method: 'GET',
+      cache: 'no-store',
+      headers: { 'x-bulwark-reload-probe': '1' },
+      signal: AbortSignal.timeout(RELOAD_PROBE_MS),
+    });
+    void response.body?.cancel().catch(() => {});
     return response.status < 500;
   } catch {
     return false;
   }
+}
+
+/** Off the screen now, out of memory as soon as a reload can land somewhere. */
+function stayUntilReachable(): void {
+  setPhase('locked-stay');
+  const tryNow = () => {
+    void pageReachable().then((reachable) => {
+      if (reachable && isAppLockedNow() && phase === 'locked-stay') {
+        stopStay?.();
+        reloadPage();
+      }
+    });
+  };
+  const timer = setInterval(tryNow, STAY_RETRY_MS);
+  window.addEventListener('online', tryNow);
+  stopStay = () => {
+    clearInterval(timer);
+    window.removeEventListener('online', tryNow);
+    stopStay = null;
+  };
 }
 
 async function applyLockHere(): Promise<void> {
@@ -392,11 +514,8 @@ async function applyLockHere(): Promise<void> {
     return;
   }
   // The server is out of reach and there's no copy of the page: a reload would land on the
-  // browser's error page, with no way to unlock. Off the screen now, out of memory when it's back.
-  setPhase('locked-stay');
-  window.addEventListener('online', () => {
-    if (isAppLockedNow()) reloadPage();
-  });
+  // browser's error page, with no way to unlock.
+  stayUntilReachable();
 }
 
 function storeBackend(): StoreBackend {
@@ -413,19 +532,46 @@ async function lockStore(): Promise<void> {
 
 // ---- Unlocking ----
 
+/**
+ * Main has to agree before this tab opens: a page can't go on while main says locked. A no
+ * on a good PIN means main lost its record or keeps one from before. Having the proof shows
+ * the PIN was right, so it enrolls again. Main refuses that while it holds another lock, and
+ * then only the user can let that one go, natively.
+ */
+async function proveToMain(proof: Uint8Array): Promise<void> {
+  const member = getDesktopBridge()?.appLock;
+  if (!member) return;
+  if (await member.prove(proof).catch(() => false)) return;
+  if (await member.enroll(proof).catch(() => false)) return;
+  if (await member.forget().catch(() => false) && await member.enroll(proof).catch(() => false)) return;
+  throw new Error('The desktop app stays locked');
+}
+
+async function askShell(): Promise<void> {
+  const member = getDesktopBridge()?.appLock;
+  shellWraps = member?.wrap ? Boolean((await member.status().catch(() => null))?.wrap) : false;
+}
+
 async function holdAndOpen(raw: Uint8Array): Promise<void> {
   try {
     const proof = await mainProof(raw);
     const key = await importLockKey(raw);
-    await getDesktopBridge()?.appLock?.prove(proof).catch(() => false);
+    await proveToMain(proof);
+    rememberMainProof(proof);
     heldKey = key;
   } finally {
     raw.fill(0);
   }
+  await askShell();
   await becomeHolder();
   const key = heldKey!;
   await addLayerWhereMissing(key);
   await storeBackend().unlock?.(OWNER_WAIT_MS);
+  // Before the app below starts, and before the others hear: they read it again when they do.
+  if (!isPopoutWindow()) {
+    await restoreSealedStorage(key);
+    await reloadSealedStores();
+  }
   writeAppLockFile({ ...readAppLockFile(), on: true, locked: false });
   postAppLockMessage({ type: 'unlocked' });
   tellServiceWorker('unlocked');
@@ -433,12 +579,11 @@ async function holdAndOpen(raw: Uint8Array): Promise<void> {
   await deliverSealedDrafts(key);
 }
 
+/** A pop-out is about to close and nothing listens for it with no main window: they wait for one. */
 async function deliverSealedDrafts(key: CryptoKey): Promise<void> {
+  if (isPopoutWindow()) return;
   try {
-    for (const state of await openSealedDrafts(key)) {
-      if (isPopoutWindow()) postAppLockMessage({ type: 'unsealed-draft', state });
-      else keepRescuedDraft(state as ComposerDraftData);
-    }
+    for (const state of await openSealedDrafts(key)) keepRescuedDraft(state as ComposerDraftData);
   } catch {
     // They stay sealed for the next unlock.
   }
@@ -458,7 +603,7 @@ export async function unlockWithPasskey(): Promise<void> {
 
 /** Windows Hello or Touch ID. Main asks, and only hands over the key after a yes. */
 export async function unlockWithOs(): Promise<boolean> {
-  const member = getDesktopBridge()?.appLock;
+  const member = desktopControls();
   if (!member) return false;
   const answer = await member.osUnlock();
   if (!answer.ok) return false;
@@ -471,23 +616,48 @@ export async function unlockWithOs(): Promise<boolean> {
 /** A store record made when the lock was off, or before a crash: it gets the layer now. */
 async function addLayerWhereMissing(key: CryptoKey): Promise<void> {
   const layer = lockLayer(key);
-  for (const record of await listAccountRecords().catch(() => [])) {
-    if (!record.layers.includes(LOCK_LAYER)) await rewrapAccountKey(record.account, [layer], [layer]);
+  const shell = shellLayer();
+  for (const record of await listAccountRecords().catch(() => [] as AccountRecord[])) {
+    if (record.layers.includes(LOCK_LAYER)) continue;
+    // Whatever wraps it already has to come off to get at the key, and goes back on under the lock.
+    await rewrapAccountKey(record.account, shell ? [shell] : [], shell ? [shell, layer] : [layer]).catch((error: unknown) => {
+      // One account's record that can't open here (a copied profile) doesn't keep the others shut.
+      console.warn('[app-lock] A record stays without the layer:', (error as Error)?.name);
+    });
   }
 }
 
+/** Off again, and main's wrap with it: with the lock off nothing asks main, and a start must not need it. */
 async function removeLayerEverywhere(key: CryptoKey): Promise<void> {
   const layer = lockLayer(key);
-  for (const record of await listAccountRecords().catch(() => [])) {
-    if (record.layers.includes(LOCK_LAYER)) await rewrapAccountKey(record.account, [layer], []);
+  const shell = shellLayer();
+  for (const record of await listAccountRecords().catch(() => [] as AccountRecord[])) {
+    if (record.layers.length > 0) await rewrapAccountKey(record.account, shell ? [shell, layer] : [layer], []);
   }
+}
+
+/** The desktop's safeStorage around the database key (the build prompt's second layer), while the lock is on. */
+function shellLayer(): WrapLayer | null {
+  const member = getDesktopBridge()?.appLock;
+  if (!shellWraps || !member?.wrap || !member.unwrap) return null;
+  const through = async (run: (data: Uint8Array) => Promise<Uint8Array | null>, data: Uint8Array) => {
+    const out = await run(data);
+    if (!out) throw new StoreKeyLayerMissingError(SHELL_LAYER);
+    return out;
+  };
+  return {
+    name: SHELL_LAYER,
+    wrap: (data) => through(member.wrap, data),
+    unwrap: (data) => through(member.unwrap, data),
+  };
 }
 
 /** What the store's key handling uses. Throws while this tab has no key, so nothing opens or gets written unwrapped. */
 export function appLockKeyLayers(): readonly WrapLayer[] {
   if (!readAppLockFile().on) return [];
   if (!heldKey) throw new StoreKeyLayerMissingError(LOCK_LAYER);
-  return [lockLayer(heldKey)];
+  const shell = shellLayer();
+  return shell ? [shell, lockLayer(heldKey)] : [lockLayer(heldKey)];
 }
 
 /** This tab inherited the store and has no key for it. */
@@ -504,6 +674,15 @@ async function ownerIsElsewhere(): Promise<boolean> {
 // ---- Settings ----
 
 export async function enableAppLock(pin: string): Promise<void> {
+  enabling = true;
+  try {
+    await enable(pin);
+  } finally {
+    enabling = false;
+  }
+}
+
+async function enable(pin: string): Promise<void> {
   const raw = await createVault(pin);
   const proof = await mainProof(raw);
   const member = getDesktopBridge()?.appLock;
@@ -518,6 +697,8 @@ export async function enableAppLock(pin: string): Promise<void> {
   const key = await importLockKey(raw);
   raw.fill(0);
   heldKey = key;
+  rememberMainProof(proof);
+  await askShell();
   await becomeHolder();
   await addLayerWhereMissing(key);
   const file: AppLockFile = { ...readAppLockFile(), on: true, locked: false };
@@ -541,11 +722,12 @@ export async function disableAppLock(pin: string): Promise<void> {
   let key: CryptoKey;
   try {
     const proof = await mainProof(raw);
-    await getDesktopBridge()?.appLock?.disable(proof);
+    await letMainGo(proof);
     key = await importLockKey(raw);
   } finally {
     raw.fill(0);
   }
+  await askShell();
   await removeLayerEverywhere(key);
   await deleteVault();
   writeAppLockFile({ on: false, locked: false });
@@ -554,7 +736,17 @@ export async function disableAppLock(pin: string): Promise<void> {
   afterOff();
 }
 
+/** A no means main keeps a lock from before this PIN. Only the user can let that go, natively. */
+async function letMainGo(proof: Uint8Array): Promise<void> {
+  const member = getDesktopBridge()?.appLock;
+  if (!member || await member.disable(proof).catch(() => false)) return;
+  const status = await member.status().catch(() => null);
+  if (status && !status.enrolled) return;
+  if (!(await member.forget().catch(() => false))) throw new Error('The desktop app keeps the lock');
+}
+
 function afterOff(): void {
+  stopStay?.();
   stopIdle?.();
   stopIdle = null;
   holderWatch?.abort();
@@ -604,25 +796,76 @@ export async function addOsUnlock(pin: string): Promise<boolean> {
   }
 }
 
+let leaveSeam: (() => void) | null = null;
+
+/** Tests only: jsdom can't navigate. */
+export function setLeaveForTests(run: (() => void) | null): void {
+  leaveSeam = run;
+}
+
+function leaveForLogin(): void {
+  if (leaveSeam) leaveSeam();
+  else window.location.replace(new URL(process.env.NEXT_PUBLIC_BASE_PATH || '/', window.location.origin).href);
+}
+
+/** The keys, for sure: with them gone the store's files can't be read, and no record is left wanting the vault. */
+async function removeAccountKeys(): Promise<boolean> {
+  await purgeStoreFiles().catch(() => {});
+  const left = await listAccountRecords(true).catch(() => [] as AccountRecord[]);
+  for (const record of left) await forgetAccountKey(record.account).catch(() => {});
+  return left.length === 0 || (await listAccountRecords(true).catch(() => left)).length === 0;
+}
+
 /**
  * The way out when the PIN is gone: all local data, and every login on this device. The
  * server keeps everything except what waited in the outbox here.
+ *
+ * In an order that doesn't depend on the server. The registry and the keys go first, with
+ * no network, and the lock stays up meanwhile, so wherever this stops nobody is signed in
+ * without a PIN and no record wants a vault that's gone. The lock lifts last. Only then the
+ * sign-out, which needs the server and may hang: nothing waits for it beyond its time.
+ *
+ * What it leaves: the HttpOnly cookies when the server is out of reach, under a mark the
+ * start-up clears first (lib/app-lock/sign-out.ts). And the identity provider's session,
+ * which stays open: the next login asks the provider for a real one.
  */
 export async function forgetEverything(): Promise<boolean> {
   const member = getDesktopBridge()?.appLock;
   // Native: a page's word alone can't lift the desktop's lock.
   if (member && !(await member.forget())) return false;
-  const { useAuthStore } = await import('@/stores/auth-store');
-  await Promise.race([
-    useAuthStore.getState().logoutAll({ endProviderSession: false }),
-    new Promise((resolve) => setTimeout(resolve, STORE_CLOSE_MS)),
-  ]).catch(() => {});
+  markCookiesToClear();
+  requireFreshLogin();
+  try {
+    sessionStorage.setItem('signed_out', 'true');
+  } catch {
+    // Only the login page's automatic redirect goes by it.
+  }
+  const { forgetDeviceRows } = await import('@/lib/offline/device-wipe');
+  await forgetDeviceRows().catch(() => {});
+  const { useAccountStore } = await import('@/stores/account-store');
+  useAccountStore.setState({ accounts: [], activeAccountId: null, defaultAccountId: null } as never);
+  try {
+    localStorage.removeItem('account-registry');
+  } catch {
+    // Storage blocked: nothing was kept there either.
+  }
+  if (!(await removeAccountKeys())) return false;
+  purgeSignedOutData({ keepAppLock: true });
+
   await deleteVault();
   writeAppLockFile({ on: false, locked: false });
   postAppLockMessage({ type: 'off' });
   tellServiceWorker('off');
-  afterOff();
-  window.location.replace(new URL(process.env.NEXT_PUBLIC_BASE_PATH || '/', window.location.origin).href);
+  rememberMainProof(null);
+
+  const { useAuthStore } = await import('@/stores/auth-store');
+  await Promise.race([
+    Promise.resolve().then(() => useAuthStore.getState().logoutAll({ endProviderSession: false })).catch(() => {}),
+    new Promise((resolve) => setTimeout(resolve, FORGET_LOGOUT_MS)),
+  ]);
+  await clearPendingCookies();
+  // This tab stays behind its lock screen until the new page: nothing of the app starts here.
+  leaveForLogin();
   return true;
 }
 
@@ -646,8 +889,10 @@ function onMessage(message: AppLockMessage): void {
       break;
     case 'unlocked':
       if (phase === 'locked' || phase === 'checking' || phase === 'locked-stay') {
-        void desktopSaysLocked().then((locked) => {
-          if (!locked) openUp();
+        void desktopSaysLocked().then(async (locked) => {
+          if (locked) return;
+          await reloadSealedStores();
+          openUp();
         });
       }
       break;
@@ -667,9 +912,6 @@ function onMessage(message: AppLockMessage): void {
       break;
     case 'focus-main':
       if (!isPopoutWindow()) window.focus();
-      break;
-    case 'unsealed-draft':
-      if (!isPopoutWindow()) keepRescuedDraft(message.state as ComposerDraftData);
       break;
   }
 }
@@ -724,6 +966,11 @@ export function resetAppLockForTests(): void {
   holderWatch = null;
   stopIdle?.();
   stopIdle = null;
+  stopStay?.();
+  controls = undefined;
+  enabling = false;
+  shellWraps = false;
+  rememberMainProof(null);
   listeners.clear();
   setLockedHere(false);
 }

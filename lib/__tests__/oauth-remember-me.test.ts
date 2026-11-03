@@ -113,6 +113,16 @@ describe('server-side SSO', () => {
     return res.json();
   }
 
+  it('asks the provider for a real login after a forgotten app lock PIN, and only then', async () => {
+    const authorize = async (extra: Record<string, unknown>) => {
+      const started = await ssoStart(post('/api/auth/sso/start', { redirect_uri: 'https://webmail.example/en/auth/callback', ...extra }));
+      return new URL((await started.json()).authorize_url).searchParams.get('prompt');
+    };
+    expect(await authorize({})).toBeNull();
+    expect(await authorize({ fresh_login: true })).toBe('login');
+    expect(await authorize({ fresh_login: 'yes' }), 'only the page\'s own true').toBeNull();
+  });
+
   it('carries an unticked box from start to complete', async () => {
     const body = await signIn({ remember: false });
     expect(body.remember).toBe(false);

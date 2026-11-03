@@ -25,6 +25,7 @@ import { snapshotAccount, restoreAccount, clearAllStores, evictAccount, evictAll
 import { getDesktopPolicy, onDesktopPolicyChange } from '@/lib/desktop/policy';
 import { accountRefusedByDesktopPolicy, planForRefusedAccounts } from '@/lib/desktop/refused-accounts';
 import { clearAllPluginStorage, clearPluginStorageForAccount } from '@/lib/plugin-sandbox/storage-scope';
+import { clearPendingCookies, freshLoginDone } from '@/lib/app-lock/sign-out';
 import { isAppLockedNow, isAppLockOn } from '@/lib/app-lock/state';
 import { broadcastSignOut, onSignedOutElsewhere, passSignOutGates, purgeSignedOutData, runBeforeSignOut, type SignOutCleanupOptions } from '@/lib/sign-out-cleanup';
 import { forgetPrincipals } from '@/lib/delegation/known-principals';
@@ -2974,7 +2975,9 @@ export const useAuthStore = create<AuthState>()(
         // registry so the normal restoration path picks it up. Without this
         // the cookies sit unused and the SPA bounces to the login screen.
         // (Not in Lite: nothing hands sessions over server-side.)
-        if (accounts.length === 0 && !IS_LITE) {
+        // Not while a forgotten PIN's cookies wait to be cleared: this would sign that
+        // login back in with no PIN. The DELETE goes first, and adoption waits for it.
+        if (accounts.length === 0 && !IS_LITE && await clearPendingCookies()) {
           try {
             const restore = await apiFetch('/api/auth/session', { method: 'PUT' });
             if (restore.ok) {
@@ -3821,10 +3824,14 @@ if (typeof window !== 'undefined') {
   onDesktopPolicyChange(applyDesktopServerPolicy);
 }
 
-// See canEnterLoginInPlace.
-let signedInSincePageLoad = useAuthStore.getState().isAuthenticated;
+// See canEnterLoginInPlace. A page that starts behind the app lock has shown nothing yet,
+// whatever the stored state says, and a page load here would ask for the PIN again.
+let signedInSincePageLoad = !isAppLockOn() && useAuthStore.getState().isAuthenticated;
 useAuthStore.subscribe((state) => {
-  if (state.isAuthenticated) signedInSincePageLoad = true;
+  if (state.isAuthenticated) {
+    signedInSincePageLoad = true;
+    freshLoginDone();
+  }
 });
 
 // Another tab signed everyone out: this one's cookies and account list are

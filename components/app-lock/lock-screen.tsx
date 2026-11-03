@@ -16,8 +16,9 @@ import type { DesktopOsUnlockKind } from "@/lib/desktop/types";
 import { isPopoutWindow } from "@/lib/popout/window-role";
 import { productName } from "@/lib/product-name";
 
-/** How long a pop-out waits to hear from a main window before it asks for the PIN itself. */
-const MAIN_ANSWER_MS = 500;
+/** How often a pop-out asks whether a main window is there, and how long a silence means it's gone. */
+const MAIN_PING_MS = 1_000;
+const MAIN_GONE_MS = 2_500;
 
 function secondsLeft(until: number): number {
   return Math.max(0, Math.ceil((until - Date.now()) / 1000));
@@ -39,20 +40,28 @@ function useBlockedUntil(): [number, (until: number) => void] {
 
 /**
  * Whether a main window is there. The tab that unlocks keeps the key for as long as it lives,
- * and a pop-out is about to close: so a pop-out sends people to the main window.
+ * and a pop-out is about to close: so a pop-out sends people to the main window. It keeps
+ * asking, because a main window that closes or crashes says nothing, and with none left the
+ * pop-out has to take the PIN itself or nobody can get in.
  */
 function useMainWindowThere(): boolean {
   const [there, setThere] = useState(false);
   useEffect(() => {
     if (!isPopoutWindow() || typeof BroadcastChannel === "undefined") return;
     const channel = new BroadcastChannel(APP_LOCK_CHANNEL);
+    let heardAt = 0;
     channel.onmessage = (event: MessageEvent<AppLockMessage>) => {
-      if (event.data.type === "main-pong") setThere(true);
+      if (event.data.type !== "main-pong") return;
+      heardAt = Date.now();
+      setThere(true);
     };
     postAppLockMessage({ type: "main-ping" });
-    const timer = setTimeout(() => postAppLockMessage({ type: "main-ping" }), MAIN_ANSWER_MS);
+    const timer = setInterval(() => {
+      if (Date.now() - heardAt > MAIN_GONE_MS) setThere(false);
+      postAppLockMessage({ type: "main-ping" });
+    }, MAIN_PING_MS);
     return () => {
-      clearTimeout(timer);
+      clearInterval(timer);
       channel.close();
     };
   }, []);
@@ -182,6 +191,7 @@ function UnlockForm() {
   if (forgetting) {
     return (
       <Frame title={t("forgot_title")} body={t("forgot_body")}>
+        <p className="text-center text-sm text-muted-foreground">{t("forgot_provider")}</p>
         <div className="flex flex-col gap-2" data-testid="app-lock-forget">
           <Button
             variant="destructive"

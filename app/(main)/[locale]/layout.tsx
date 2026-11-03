@@ -120,7 +120,6 @@ export default async function LocaleLayout({
                   </MainWindowOnly>
                   {/* Offline mode isn't in Lite (no service worker there). */}
                   {!IS_LITE && <OfflineHost />}
-                  {!IS_LITE && <DeviceWipeHost />}
                   {!IS_LITE && <NotificationActionsHost />}
                   <DevicePolicyHost />
                   <MainWindowOnly>
@@ -135,6 +134,8 @@ export default async function LocaleLayout({
         </CalendarAlertProvider>
       </ThemeProvider>
       </AppLockGate>
+      {/* Beside the gate, not under it: a stolen device at the lock screen still has to hear a wipe. */}
+      {!IS_LITE && <DeviceWipeHost />}
     </IntlProvider>
   );
 }

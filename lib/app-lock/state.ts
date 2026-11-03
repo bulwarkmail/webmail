@@ -2,7 +2,9 @@
  * App lock's plain facts, and how tabs tell each other. No secrets and no mail:
  * whether the lock is on, whether it is locked now, and the timeout. This stays
  * in localStorage because the first frame has to know, before anything async can
- * run. Someone who can edit it can't unlock anything: the keys need the PIN.
+ * run. Someone who can edit it can't unlock anything: the keys need the PIN. Someone
+ * who removes it gets nothing either: a start looks for the vault before it goes on
+ * (lib/app-lock/controller.ts).
  *
  * Imports nothing, so anything may import it: lib/popout/channel.ts, the store's
  * flush and the auth store all ask here.
@@ -79,9 +81,7 @@ export type AppLockMessage =
   /** Asks whether a main window is there: a pop-out sends people to it to unlock. */
   | { type: 'main-ping' }
   | { type: 'main-pong' }
-  | { type: 'focus-main' }
-  /** A draft a locking pop-out couldn't save, unsealed: a main window keeps it. */
-  | { type: 'unsealed-draft'; state: unknown };
+  | { type: 'focus-main' };
 
 export function postAppLockMessage(message: AppLockMessage): void {
   if (typeof BroadcastChannel === 'undefined') return;

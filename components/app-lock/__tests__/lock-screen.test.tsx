@@ -108,6 +108,43 @@ describe('the lock screen', () => {
     expect(await screen.findByTestId('app-lock-pin')).toBeInTheDocument();
   });
 
+  describe('in a pop-out', () => {
+    class Channel {
+      static open = new Set<Channel>();
+      onmessage: ((event: MessageEvent) => void) | null = null;
+      constructor() { Channel.open.add(this); }
+      postMessage(data: unknown): void {
+        for (const channel of Channel.open) if (channel !== this) channel.onmessage?.({ data } as MessageEvent);
+      }
+      close(): void { Channel.open.delete(this); }
+    }
+
+    beforeEach(() => {
+      Channel.open.clear();
+      vi.stubGlobal('BroadcastChannel', Channel);
+      window.history.replaceState(null, '', '/popout/compose');
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+      window.history.replaceState(null, '', '/');
+    });
+
+    it('sends people to the main window, and asks for the PIN itself once that has closed', async () => {
+      (await createVault('correct-pin')).fill(0);
+      const main = new Channel();
+      let mainOpen = true;
+      main.onmessage = (event) => {
+        if (mainOpen && (event.data as { type: string }).type === 'main-ping') main.postMessage({ type: 'main-pong' });
+      };
+      render(<LockScreen phase="locked" />);
+      expect(await screen.findByRole('button', { name: 'open_main' })).toBeInTheDocument();
+      mainOpen = false;
+      main.close();
+      expect(await screen.findByTestId('app-lock-pin', {}, { timeout: 6000 })).toBeInTheDocument();
+    }, 15_000);
+  });
+
   it('says it\'s saving rather than ask for anything while it locks', () => {
     render(<LockScreen phase="locking" />);
     expect(screen.queryByTestId('app-lock-pin')).toBeNull();
@@ -122,14 +159,28 @@ describe('the lock screen', () => {
     fireEvent.change(screen.getByTestId('app-lock-new-pin'), { target: { value: '12345' } });
     fireEvent.change(screen.getByTestId('app-lock-repeat-pin'), { target: { value: '12345' } });
     expect(save).toBeDisabled();
-    fireEvent.change(screen.getByTestId('app-lock-new-pin'), { target: { value: '123456' } });
+    fireEvent.change(screen.getByTestId('app-lock-new-pin'), { target: { value: '482913' } });
     expect(save).toBeDisabled();
-    fireEvent.change(screen.getByTestId('app-lock-repeat-pin'), { target: { value: '123456' } });
+    fireEvent.change(screen.getByTestId('app-lock-repeat-pin'), { target: { value: '482913' } });
     expect(save).toBeEnabled();
   });
 });
 
 describe('the settings', () => {
+  it('say what a PIN protects against here', () => {
+    render(<AppLockSettings />);
+    expect(screen.getByText('protects_desc')).toBeInTheDocument();
+  });
+
+  it('won\'t save a PIN anyone would guess', async () => {
+    render(<AppLockSettings />);
+    fireEvent.click(screen.getByTestId('app-lock-switch'));
+    fireEvent.change(await screen.findByTestId('app-lock-new-pin'), { target: { value: '123456' } });
+    fireEvent.change(screen.getByTestId('app-lock-repeat-pin'), { target: { value: '123456' } });
+    expect(screen.getByText('pin_obvious')).toBeInTheDocument();
+    expect(screen.getByTestId('app-lock-dialog-save')).toBeDisabled();
+  });
+
   it('are off by default, with nothing else shown', () => {
     render(<AppLockSettings />);
     expect(screen.getByTestId('app-lock-switch')).toHaveAttribute('aria-checked', 'false');

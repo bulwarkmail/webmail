@@ -72,6 +72,7 @@ export function AppLockSettings() {
     if (name === "WrongPinError") return t("wrong_pin");
     if (name === "PinBlockedError") return t("blocked_later");
     if (name === "PasskeyNoPrfError") return t("passkey_no_prf");
+    if (name === "ObviousPinError") return t("pin_obvious");
     return t("save_failed");
   };
 
@@ -127,6 +128,7 @@ export function AppLockSettings() {
       <SettingItem label={t("enable_label")} description={t("enable_desc")} locked={required}>
         <ToggleSwitch checked={on || required} onChange={(next) => setPending(next ? "enable" : "disable")} testId="app-lock-switch" />
       </SettingItem>
+      <p className="text-xs text-muted-foreground" data-testid="app-lock-protects">{t("protects_desc")}</p>
 
       {on && (
         <>

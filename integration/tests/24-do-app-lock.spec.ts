@@ -1,5 +1,5 @@
 import { test, expect, type Browser, type BrowserContext, type Page } from '@playwright/test';
-import { ENT, ENT_PASSWORD, contextOptions, deliver, jmapAs, requireEntEnv, shot, userPage } from './helpers/ent';
+import { ENT, ENT_PASSWORD, contextOptions, deliver, jmapAs, requireEntEnv, shot } from './helpers/ent';
 import { accountSwitcher } from './helpers/app';
 
 /**
@@ -14,7 +14,9 @@ import { accountSwitcher } from './helpers/app';
  * - time without use across tabs;
  * - a new tab, a pop-out address and a fresh start stay locked;
  * - a passkey with PRF through a virtual authenticator, and one without, which keeps the PIN;
- * - forgetting the PIN removes the data and signs out.
+ * - forgetting the PIN removes the data and signs out, also offline and with a server that hangs;
+ * - offline with a shell, a lock still goes through a reload, and memory with it;
+ * - a device at the lock screen hears a remote wipe.
  */
 
 test.describe.configure({ mode: 'serial' });
@@ -30,8 +32,13 @@ test.beforeAll(async () => {
   await deliver({ from: ENT.bob, to: [ENT.alice], subject: SECRET_SUBJECT, text: `Body of ${SECRET_SUBJECT}` });
 });
 
-async function enableOffline(page: Page): Promise<void> {
-  await page.goto('/settings/backup/offline');
+type Go = (page: Page, path: string) => Promise<unknown>;
+
+const hardGoto: Go = (page, path) => page.goto(path);
+const softGoto: Go = (page, path) => page.evaluate((target) => (window as unknown as { next: { router: { push(path: string): void } } }).next.router.push(target), path);
+
+async function enableOffline(page: Page, go = hardGoto): Promise<void> {
+  await go(page, '/settings/backup/offline');
   const toggle = page.getByTestId('offline-switch');
   await expect(toggle).toBeVisible({ timeout: 30_000 });
   if ((await toggle.getAttribute('aria-checked')) !== 'true') await toggle.click();
@@ -40,8 +47,8 @@ async function enableOffline(page: Page): Promise<void> {
   await expect.poll(async () => (await keyRecords(page).catch(() => [])).length, { timeout: 60_000 }).toBeGreaterThan(0);
 }
 
-async function enableLock(page: Page, pin = PIN): Promise<void> {
-  await page.goto('/settings/general');
+async function enableLock(page: Page, pin = PIN, go = hardGoto): Promise<void> {
+  await go(page, '/settings/general');
   const toggle = page.getByTestId('app-lock-switch');
   await expect(toggle).toBeVisible({ timeout: 30_000 });
   await expect(toggle).toHaveAttribute('aria-checked', 'false');
@@ -179,9 +186,11 @@ test('locked: no mail in the page, its memory gone, the store closed with no key
   const held = await heldLocks(page);
   expect(held, 'no worker holds the store').not.toContain('bulwark-store-owner');
   expect(held, 'nobody holds the key').not.toContain('bulwark-app-lock-holder');
-  // What the app below the gate would have started: nothing asks for mail.
+  // What the app below the gate would start: from the very start of a locked page, nothing asks for mail.
   const requests: string[] = [];
   page.on('request', (request) => { if (/\/jmap|\/api\/auth\/(session|token)/.test(request.url())) requests.push(request.url()); });
+  await page.reload();
+  await expect(lockForm(page)).toBeVisible({ timeout: 30_000 });
   await page.waitForTimeout(1500);
   expect(requests).toEqual([]);
   await shot(page, 'app-lock-screen');
@@ -382,22 +391,23 @@ test('a passkey with no PRF is refused when added, and the PIN stays', async ({ 
 });
 
 test('a login without "Remember me" has to sign in again after a lock, and its local data waits', async ({ browser }) => {
-  const page = await userPage(browser, ENT.alice);
-  const context = page.context();
-  await enableOffline(page);
-  await enableLock(page);
+  const context = await browser.newContext(contextOptions());
+  const page = await context.newPage();
+  // The server has the box switched off. This asks for it as a server with it on does: the rest is the real login.
+  await page.route('**/api/config', async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({ response, json: { ...(await response.json()), loginShowRememberMe: true, rememberMeEnabled: true } });
+  });
+  await page.goto('/');
+  await expect(page.getByText('Remember me', { exact: true })).toBeVisible({ timeout: 30_000 });
+  await signIn(page);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('account-registry') ?? '{}').state.accounts[0].rememberMe)).toBe(false);
+  // By the router: such a login doesn't survive a page load, with or without a lock.
+  await enableOffline(page, softGoto);
+  await enableLock(page, PIN, softGoto);
   const before = await keyRecords(page);
   expect(before.length).toBeGreaterThan(0);
   await page.getByTestId('app-lock-now').click();
-  await expect(lockForm(page)).toBeVisible({ timeout: 30_000 });
-  // As a login with the box left unticked is written down. This rig doesn't offer the box.
-  await page.evaluate(() => {
-    const registry = JSON.parse(localStorage.getItem('account-registry') ?? '{}');
-    for (const account of registry.state.accounts) account.rememberMe = false;
-    localStorage.setItem('account-registry', JSON.stringify(registry));
-  });
-  await context.clearCookies();
-  await page.reload();
   await expect(lockForm(page)).toBeVisible({ timeout: 30_000 });
   await unlock(page);
   // The way to the login page and back from it are full page loads, and each asks again.
@@ -439,16 +449,156 @@ test('turning it off needs the PIN and takes the layer off', async ({ browser })
   await context.close();
 });
 
+/** What must be gone once the PIN is forgotten, however the server behaved. */
+async function expectNothingLeft(page: Page): Promise<void> {
+  expect(await page.evaluate(() => localStorage.getItem('bulwark-app-lock'))).toBeNull();
+  await expect.poll(async () => page.evaluate(async () => (await indexedDB.databases()).map((db) => db.name)), { timeout: 30_000 })
+    .not.toEqual(expect.arrayContaining(['bulwark-app-lock']));
+  await expect.poll(async () => page.evaluate(async () => (await indexedDB.databases()).map((db) => db.name)), { timeout: 30_000 })
+    .not.toEqual(expect.arrayContaining(['bulwark-store']));
+  // The encrypted files themselves, in the browser's private folder.
+  await expect.poll(() => page.evaluate(async () => {
+    const names: string[] = [];
+    for await (const name of (await navigator.storage.getDirectory() as unknown as { keys(): AsyncIterable<string> }).keys()) names.push(name);
+    return names;
+  }), { timeout: 30_000 }).toEqual([]);
+  expect(await page.evaluate(() => localStorage.getItem('account-registry') ?? '')).not.toContain('@');
+}
+
+const SESSION_COOKIE = /^jmap_/;
+
+async function forgetPin(page: Page): Promise<void> {
+  await page.getByTestId('app-lock-forgot').click();
+  await page.getByRole('button', { name: 'Remove and sign out' }).click();
+}
+
 test('a forgotten PIN: local data goes, everyone signs out, and the login page is next', async ({ browser }) => {
   const { page, context } = await fresh(browser);
   await enableOffline(page);
   await enableLock(page);
   await lockNow(page);
-  await page.getByTestId('app-lock-forgot').click();
-  await page.getByRole('button', { name: 'Remove and sign out' }).click();
+  await forgetPin(page);
   await expect(page.locator('#username')).toBeVisible({ timeout: 60_000 });
-  expect(await page.evaluate(() => localStorage.getItem('bulwark-app-lock'))).toBeNull();
-  const databases = await page.evaluate(async () => (await indexedDB.databases()).map((db) => db.name));
-  expect(databases).not.toContain('bulwark-app-lock');
+  await expectNothingLeft(page);
+  await expect.poll(async () => (await context.cookies()).filter((cookie) => SESSION_COOKIE.test(cookie.name)).map((cookie) => cookie.name), { timeout: 30_000 }).toEqual([]);
+  expect(await page.evaluate(() => localStorage.getItem('bulwark-cookies-to-clear'))).toBeNull();
+  await context.close();
+});
+
+test('a forgotten PIN with a server that hangs: nothing waits for it, and nobody is signed in', async ({ browser }) => {
+  const { page, context } = await fresh(browser);
+  await enableOffline(page);
+  await enableLock(page);
+  await lockNow(page);
+  // Sign-out's calls never answer.
+  await context.route(/\/api\/(auth|settings|devices)/, () => { /* no answer */ });
+  const started = Date.now();
+  await forgetPin(page);
+  await page.waitForURL((url) => !url.pathname.includes('/settings'), { timeout: 60_000 });
+  expect(Date.now() - started, 'bounded, whatever the server does').toBeLessThan(45_000);
+  await expectNothingLeft(page);
+  // The session cookie stays, as the server never heard. The mark keeps it from signing anyone in.
+  expect(await page.evaluate(() => localStorage.getItem('bulwark-cookies-to-clear'))).toBe('1');
+  await context.unroute(/\/api\/(auth|settings|devices)/);
+  await page.goto('/');
+  await expect(page.locator('#username')).toBeVisible({ timeout: 60_000 });
+  await expect(accountSwitcher(page)).toHaveCount(0);
+  await expect.poll(async () => (await context.cookies()).filter((cookie) => SESSION_COOKIE.test(cookie.name)).map((cookie) => cookie.name), { timeout: 30_000 }).toEqual([]);
+  expect(await page.evaluate(() => localStorage.getItem('bulwark-cookies-to-clear'))).toBeNull();
+  await context.close();
+});
+
+test('a forgotten PIN offline: the cookie that stays signs nobody in, then or when the network is back', async ({ browser }) => {
+  const { page, context } = await fresh(browser);
+  await enableOffline(page);
+  await enableLock(page);
+  await lockNow(page);
+  await context.setOffline(true);
+  await forgetPin(page);
+  // No network, so no way to delete an HttpOnly cookie, and the shell went with the rest.
+  await page.waitForURL((url) => !url.pathname.includes('/settings'), { timeout: 60_000 });
+  expect((await context.cookies()).some((cookie) => SESSION_COOKIE.test(cookie.name))).toBe(true);
+  const asked: string[] = [];
+  context.on('request', (request) => {
+    if (/\/api\/auth\/session/.test(request.url())) asked.push(request.method());
+  });
+  await context.setOffline(false);
+  await page.goto('/');
+  await expect(page.locator('#username')).toBeVisible({ timeout: 60_000 });
+  await expect(accountSwitcher(page)).toHaveCount(0);
+  await expectNothingLeft(page);
+  await expect.poll(async () => (await context.cookies()).filter((cookie) => SESSION_COOKIE.test(cookie.name)).map((cookie) => cookie.name), { timeout: 30_000 }).toEqual([]);
+  expect(await page.evaluate(() => localStorage.getItem('bulwark-cookies-to-clear'))).toBeNull();
+  expect(asked[0], 'the DELETE goes before anything could adopt the cookie').toBe('DELETE');
+  await context.close();
+});
+
+test('locked offline, with the shell kept: the page still reloads, so nothing stays in memory', async ({ browser }) => {
+  const { page, context } = await fresh(browser);
+  await enableOffline(page);
+  await expect.poll(() => page.evaluate(async () => (await navigator.serviceWorker.getRegistration()) ? (await caches.keys()).filter((key) => key.startsWith('bulwark-shell-')).length : 0), { timeout: 60_000 }).toBeGreaterThan(0);
+  await enableLock(page);
+  await page.goto('/settings/general');
+  await expect(lockForm(page)).toBeVisible({ timeout: 30_000 });
+  await unlock(page);
+  await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller)), { timeout: 30_000 }).toBe(true);
+  await page.evaluate(() => { (window as unknown as { __before: string }).__before = 'still here'; });
+  await context.setOffline(true);
+  await page.getByTestId('app-lock-now').click();
+  await expect(lockForm(page)).toBeVisible({ timeout: 60_000 });
+  expect(await page.evaluate(() => (window as unknown as { __before?: string }).__before), 'a new document').toBeUndefined();
+  await context.close();
+});
+
+test('a server answering 5xx: the lock holds on the page, and the reload comes when it can', async ({ browser }) => {
+  const { page, context } = await fresh(browser);
+  await enableLock(page);
+  await page.evaluate(() => { (window as unknown as { __before: string }).__before = 'still here'; });
+  await context.route('**/settings/general*', (route) => route.fulfill({ status: 503, body: 'down' }));
+  await page.getByTestId('app-lock-now').click();
+  await expect(lockForm(page)).toBeVisible({ timeout: 60_000 });
+  expect(await page.evaluate(() => (window as unknown as { __before?: string }).__before), 'stayed').toBe('still here');
+  await expect(page.locator('body')).not.toContainText('Lock now');
+  await context.unroute('**/settings/general*');
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __before?: string }).__before), { timeout: 30_000 }).toBeUndefined();
+  await expect(lockForm(page)).toBeVisible({ timeout: 30_000 });
+  await context.close();
+});
+
+test('a device at the lock screen hears a remote wipe, and what it hears takes the data', async ({ browser }) => {
+  const { page, context } = await fresh(browser);
+  let wipeWaits = false;
+  let checkedInLocked = false;
+  // The registry itself is the remote wipe spec's to test: here it says what it says for a wipe.
+  await context.route('**/api/devices', async (route) => {
+    const body = route.request().postDataJSON() as { id?: string } | null;
+    if (wipeWaits && body?.id) {
+      checkedInLocked = true;
+      await route.fulfill({ json: { wipe: { requestedAt: '2026-11-03T00:00:00.000Z' } } });
+      return;
+    }
+    await route.continue();
+  });
+  await enableOffline(page);
+  await enableLock(page);
+  await expect.poll(() => page.evaluate(() => new Promise<number>((resolve) => {
+    const open = indexedDB.open('bulwark-store');
+    open.onsuccess = () => {
+      const all = open.result.transaction('keys').objectStore('keys').getAllKeys();
+      all.onsuccess = () => {
+        open.result.close();
+        resolve(all.result.filter((key) => String(key).startsWith('device:')).length);
+      };
+    };
+  })), { timeout: 60_000 }).toBeGreaterThan(0);
+
+  wipeWaits = true;
+  await page.getByTestId('app-lock-now').click();
+  // The lock screen comes first, and nobody unlocks.
+  await expect(page.locator('#username').or(lockForm(page)).first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('#username')).toBeVisible({ timeout: 90_000 });
+  expect(checkedInLocked).toBe(true);
+  await expectNothingLeft(page);
   await context.close();
 });
