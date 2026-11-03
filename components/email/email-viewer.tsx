@@ -2094,8 +2094,22 @@ export function EmailViewer({
     });
     resizeObserver.observe(el);
 
+    // A plugin's frame in the row gets its width some time after it mounts
+    // and changes it when it likes, without a change to the row's children.
+    const slotObserver = new ResizeObserver(() => {
+      measuredToolbarRef.current.clear();
+      scheduleCalculate();
+    });
+    const observeSlots = () => {
+      el.querySelectorAll('[data-plugin-slot="toolbar-actions"]').forEach((slot) => slotObserver.observe(slot));
+    };
+    observeSlots();
+
     // Recalculate when children change (conditional items, label visibility)
-    const mutationObserver = new MutationObserver(scheduleCalculate);
+    const mutationObserver = new MutationObserver(() => {
+      observeSlots();
+      scheduleCalculate();
+    });
     mutationObserver.observe(el, { childList: true, subtree: true });
 
     // Initial synchronous calculation to avoid flash
@@ -2104,6 +2118,7 @@ export function EmailViewer({
     return () => {
       if (rafId !== null) cancelAnimationFrame(rafId);
       resizeObserver.disconnect();
+      slotObserver.disconnect();
       mutationObserver.disconnect();
     };
   }, [
