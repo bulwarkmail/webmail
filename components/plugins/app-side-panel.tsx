@@ -78,7 +78,7 @@ export function PluginPanelToggle({ open, onClick, className, buttonRef, shortcu
       aria-keyshortcuts={shortcut ?? undefined}
       data-plugin-panel-toggle=""
     >
-      {open ? <PanelRightClose className="w-4 h-4 text-muted-foreground" /> : <PanelRightOpen className="w-4 h-4 text-muted-foreground" />}
+      {open ? <PanelRightClose className="w-4 h-4 text-muted-foreground rtl:-scale-x-100" /> : <PanelRightOpen className="w-4 h-4 text-muted-foreground rtl:-scale-x-100" />}
     </Button>
   );
 }

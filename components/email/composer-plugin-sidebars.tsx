@@ -225,7 +225,7 @@ export function ComposerPanelToggle({
       aria-pressed={isOpen}
       data-composer-panel-toggle={side}
     >
-      <Icon className="h-4 w-4" />
+      <Icon className="h-4 w-4 rtl:-scale-x-100" />
     </button>
   );
 }
