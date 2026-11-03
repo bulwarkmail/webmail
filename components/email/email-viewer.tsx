@@ -4346,7 +4346,7 @@ ${printWatermark ? printWatermark.html : ''}
             title={t('tooltips.archive')}
           >
             <Archive className="w-4 h-4" />
-            {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:text-sm">{t('archive')}</span>}
+            {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:text-sm sm:whitespace-nowrap">{t('archive')}</span>}
           </Button>
         )}
         {/* Delete */}
@@ -4358,7 +4358,7 @@ ${printWatermark ? printWatermark.html : ''}
           title={t('tooltips.delete')}
         >
           <Trash2 className="w-4 h-4" />
-          {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:text-sm">{t('delete')}</span>}
+          {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:text-sm sm:whitespace-nowrap">{t('delete')}</span>}
         </Button>
         {/* Move to folder */}
         {moveTree.length > 0 && onMoveToMailbox && (
@@ -4378,7 +4378,7 @@ ${printWatermark ? printWatermark.html : ''}
               aria-expanded={moveMenuOpen}
             >
               <FolderInput className="w-4 h-4" />
-              {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:text-sm">{t('move')}</span>}
+              {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:text-sm sm:whitespace-nowrap">{t('move')}</span>}
             </Button>
             <ContextMenu ref={moveMenu.menuRef} isOpen={moveMenuOpen} position={moveMenu.contextMenu.position} onClose={closeMoveMenu} label={t('move_to')}>
               <div className="w-56 max-h-72 overflow-y-auto">
@@ -4410,7 +4410,7 @@ ${printWatermark ? printWatermark.html : ''}
             aria-expanded={tagMenuOpen}
           >
             <Tag className="w-4 h-4" />
-            {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:text-sm">{t('tag')}</span>}
+            {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:text-sm sm:whitespace-nowrap">{t('tag')}</span>}
           </Button>
           <ContextMenu ref={tagMenu.menuRef} isOpen={tagMenuOpen} position={tagMenu.contextMenu.position} onClose={closeTagMenu} label={t('tag')}>
             <div className="w-56">
@@ -4445,7 +4445,7 @@ ${printWatermark ? printWatermark.html : ''}
             ) : (
               <ShieldAlert className={cn("h-4 w-4", !mvViewer && "text-red-600 dark:text-red-400")} />
             )}
-            {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:text-sm">{isInJunkFolder ? t('spam.not_spam_title') : t('spam.button_title')}</span>}
+            {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:text-sm sm:whitespace-nowrap">{isInJunkFolder ? t('spam.not_spam_title') : t('spam.button_title')}</span>}
           </Button>
         )}
 
@@ -4467,7 +4467,7 @@ ${printWatermark ? printWatermark.html : ''}
         >
           {isUnread ? <MailOpen className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
           {showToolbarLabels && (
-            <span className="grid text-center text-[0.625rem] leading-tight sm:text-sm">
+            <span className="grid text-center text-[0.625rem] leading-tight sm:text-sm sm:whitespace-nowrap">
               <span className={cn("col-start-1 row-start-1", !isUnread && "invisible")} aria-hidden={!isUnread}>{t('read')}</span>
               <span className={cn("col-start-1 row-start-1", isUnread && "invisible")} aria-hidden={isUnread}>{t('unread')}</span>
             </span>
@@ -5157,6 +5157,14 @@ ${printWatermark ? printWatermark.html : ''}
                   <>
                     <span>→ {t('recipient_to_prefix')}</span>
                     {renderClickableRecipients(email.to, currentUserEmail, t, handleViewContactSidebar)}
+                    {email.to.length > 2 && (
+                      <button
+                        onClick={() => setShowFullHeaders(!showFullHeaders)}
+                        className="text-primary hover:underline text-sm"
+                      >
+                        {t('more_count', { count: email.to.length - 2 })}
+                      </button>
+                    )}
                   </>
                 )}
                 {email.cc && email.cc.length > 0 && (

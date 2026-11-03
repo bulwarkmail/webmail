@@ -425,6 +425,14 @@ describe('reader surfaces in the phone conversation view', () => {
   });
 });
 
+describe('recipients row', () => {
+  it('says how many recipients are left out, in the phone row as in the desktop one', () => {
+    const to = ['a', 'b', 'c', 'd'].map((n) => ({ name: n, email: `${n}@example.com` }));
+    viewer(textMail('Hola', { to } as Partial<Email>));
+    expect(screen.getAllByText('more_count')).toHaveLength(2);
+  });
+});
+
 describe('reader-actions', () => {
   it('adds the plugin buttons to the reader toolbar', async () => {
     act(() => setPluginActions('p', 'Translator', 'reader-actions', [{ id: 'translate', label: 'Translate' }]));
