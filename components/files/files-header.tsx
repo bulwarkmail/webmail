@@ -213,12 +213,13 @@ export function FilesHeader({
   const renderCrumb = (crumb: Crumb, index: number) => {
     const isLast = crumb === crumbs[crumbs.length - 1];
     return (
-      <li key={`${crumb.id ?? "root"}:${crumb.path}`} className="flex items-center min-w-0 shrink-0 last:shrink">
+      <li key={`${crumb.id ?? "root"}:${crumb.path}`} className="flex items-center min-w-0 shrink first:shrink-0 last:shrink-[0.25]">
         {index > 0 && <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />}
         <button
           type="button"
           onClick={() => onNavigateCrumb(crumb)}
           aria-current={isLast ? "page" : undefined}
+          title={crumb.name}
           className={cn(
             "px-1.5 py-1 rounded-md transition-colors truncate max-w-[16rem]",
             isLast ? "font-semibold text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted",
