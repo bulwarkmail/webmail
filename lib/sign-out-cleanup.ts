@@ -1,6 +1,7 @@
 import { fileStorage } from '@/lib/plugin-storage';
 import { clearHandoffs } from '@/lib/launch-handoff';
 import { clearAllCheckpoints } from '@/lib/mail-import/checkpoints';
+import { clearDesktopSurfaces } from '@/lib/desktop/bridge';
 import { sweepPrivateExports } from '@/lib/mail-export/sinks';
 import { purgeStoreFiles } from '@/lib/store/client/purge';
 
@@ -21,6 +22,7 @@ const SIGNED_OUT_STORAGE_KEYS = [
   'contact-storage',
   'calendar-storage',
   'calendar-notification-storage',
+  'calendar-alert-claims',
   // Open tabs name messages and their subjects.
   'pro-tabs',
   'search-history-storage',
@@ -145,6 +147,7 @@ export function purgeSignedOutData(options: SignOutCleanupOptions = {}): void {
   }
   // Files and links on their way into a draft or an import.
   clearHandoffs();
+  clearDesktopSurfaces();
   for (const cleanup of signedOutCleanups) {
     try {
       cleanup(options);

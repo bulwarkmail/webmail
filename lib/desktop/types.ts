@@ -192,6 +192,129 @@ export interface DesktopPolicyBridge {
   onChange: (listener: (snapshot: PolicySnapshot) => void) => () => void;
 }
 
+export interface DesktopOsSettings {
+  /** Closing the main window leaves the app running in the tray. */
+  closeToTray: boolean;
+  startAtLogin: boolean;
+  /** At login: no window, only the tray. */
+  startMinimized: boolean;
+  /** Taskbar flash or dock bounce on new mail. */
+  attentionOnNewMail: boolean;
+  quietHoursEnabled: boolean;
+  /** HH:MM, local time. */
+  quietHoursStart: string;
+  quietHoursEnd: string;
+  /** "Show Bulwark", an Electron accelerator. Null: off. */
+  showShortcut: string | null;
+}
+
+export interface DesktopOsStatus {
+  settings: DesktopOsSettings;
+  pausedUntil: number | null;
+  /** The shortcut in settings is really held. Another app can have it. */
+  shortcutActive: boolean;
+}
+
+export interface DesktopOsFile {
+  name: string;
+  data: Uint8Array;
+}
+
+/** What the OS asks the app to do: a tray item, a jump list entry, a toast, a double-clicked file. */
+export type DesktopOsCommand =
+  | { type: 'new-message' }
+  | { type: 'navigate'; target: 'inbox' | 'calendar' | 'contacts' }
+  | { type: 'open-message'; emailId: string; accountId?: string; context?: string }
+  | { type: 'open-mailbox'; mailboxId: string }
+  | { type: 'mailto'; url: string }
+  | { type: 'webcal'; url: string }
+  | { type: 'files'; reason: 'open' | 'attach'; files: DesktopOsFile[]; failed: string[] }
+  | { type: 'notification'; action: string; context: string; reply?: string };
+
+export interface DesktopOsNotification {
+  /** Tag of the toast. Showing an id again within a few minutes does nothing. */
+  id: string;
+  group?: string;
+  title: string;
+  body: string;
+  /** Handed back with the action. Keep it short: Windows keeps it in the toast. */
+  context: string;
+  actions?: { id: string; label: string }[];
+  reply?: { label: string; placeholder: string };
+  /** The user wants a sound with this. */
+  sound?: boolean;
+  /** New mail: flash the taskbar or bounce the dock if that's on. */
+  attention?: boolean;
+  /** What a locked app says instead: new mail unless this says otherwise. */
+  kind?: 'mail' | 'reminder';
+}
+
+export interface DesktopOsNotifyResult {
+  shown: boolean;
+  reason?: 'duplicate' | 'paused' | 'quiet-hours' | 'focused' | 'unsupported' | 'invalid' | 'failed';
+  /** The page should play the sound the user picked. */
+  playSound: boolean;
+}
+
+export interface DesktopOsTrayMessage {
+  emailId: string;
+  accountId: string;
+  sender: string;
+  subject: string;
+  context?: string;
+}
+
+export interface DesktopOsSummary {
+  unread: DesktopOsTrayMessage[];
+  /** Newest conversations, whether read or not, for the jump list. */
+  recent: DesktopOsTrayMessage[];
+  nextEvent: { title: string; when: string } | null;
+}
+
+export type DesktopOsPowerEvent = 'suspend' | 'resume' | 'lock-screen' | 'unlock-screen';
+
+export interface DesktopOsDefaultAppStatus {
+  /** Offered to the OS as a mail app. */
+  registered: boolean;
+  mailto: boolean;
+  webcal: boolean;
+}
+
+export interface DesktopOsBridge {
+  /**
+   * What the OS asks for. Main holds these until the main window's page subscribes,
+   * so a cold start loses nothing.
+   */
+  onCommand: (listener: (command: DesktopOsCommand) => void) => () => void;
+  getStatus: () => Promise<DesktopOsStatus>;
+  setSettings: (patch: Partial<DesktopOsSettings>) => Promise<DesktopOsStatus>;
+  /** Pause notifications until this time, or null to end the pause. */
+  setPaused: (until: number | null) => void;
+  onStatusChange: (listener: (status: DesktopOsStatus) => void) => () => void;
+  /** The unread count: overlay on Windows, setBadgeCount on macOS and Linux, the tray's dot. */
+  setBadge: (count: number) => void;
+  /** What the tray and the jump list show. */
+  setSummary: (summary: DesktopOsSummary) => void;
+  /** The taskbar's progress bar: lib/desktop/file-drag.ts setTaskbarProgress. */
+  setProgress: (progress: number | null, mode?: 'normal' | 'indeterminate' | 'paused' | 'error') => void;
+  /**
+   * App lock's state. Main counts as locked until the main window's page says otherwise,
+   * and clears the tray, jump list and toasts and strips what comes through.
+   */
+  setLocked: (locked: boolean) => void;
+  /** Sign-out or a wipe: delivered toasts, badge, tray and jump list go, and temporary files. */
+  clearSurfaces: () => void;
+  notify: (notification: DesktopOsNotification) => Promise<DesktopOsNotifyResult>;
+  onPower: (listener: (event: DesktopOsPowerEvent) => void) => () => void;
+  /** Writes the files to a private folder and starts a drag. Only with the mouse held. */
+  startDrag: (files: DesktopOsFile[]) => Promise<boolean>;
+  /** The same, onto the clipboard as files. */
+  copyFiles: (files: DesktopOsFile[]) => Promise<boolean>;
+  defaultAppStatus: () => Promise<DesktopOsDefaultAppStatus>;
+  /** Offers the app to the OS and opens where the user chooses. */
+  openDefaultAppSettings: () => Promise<DesktopOsDefaultAppStatus>;
+}
+
 export interface BulwarkDesktopBridge {
   version: number;
   platform: 'win32' | 'darwin' | 'linux';
@@ -201,6 +324,7 @@ export interface BulwarkDesktopBridge {
   menu?: DesktopMenuBridge;
   shell?: DesktopShellBridge;
   lifecycle?: DesktopLifecycleBridge;
+  os?: DesktopOsBridge;
   policy?: DesktopPolicyBridge;
   servers?: DesktopServersBridge;
   auth?: DesktopAuthBridge;

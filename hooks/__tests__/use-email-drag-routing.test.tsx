@@ -731,4 +731,32 @@ describe('message row drag hover wiring', () => {
     expect(retry.payload.get('DownloadURL')).toMatch(/^message\/rfc822:Message.eml:blob:/);
     expect(await text(payloadBlob(retry.payload))).toBe(bytes('shared-b', authB));
   });
+
+  it("in the desktop app an Alt drag is the OS's own with the real bytes, and a plain one stays the page's", async () => {
+    const email = mail({ subject: 'Hello world' });
+    const nativeDrag = vi.fn(async (_files: { name: string; data: Uint8Array }[]) => true);
+    window.bulwarkDesktop = { version: 1, platform: 'win32', os: { startDrag: nativeDrag } } as never;
+    const { result } = renderHook(() => useEmailDrag({ email, sourceMailboxId: 'inbox' }));
+    await warm(result);
+    try {
+      startDrag.mockClear();
+      // Plain: still a move to a folder, still DownloadURL for Explorer.
+      expect(drag(result.current.dragHandlers).has('DownloadURL')).toBe(true);
+      expect(startDrag).toHaveBeenCalled();
+      expect(nativeDrag).not.toHaveBeenCalled();
+
+      startDrag.mockClear();
+      const preventDefault = vi.fn();
+      const dataTransfer = { setData: vi.fn(), setDragImage: vi.fn(), effectAllowed: '' };
+      act(() => result.current.dragHandlers.onDragStart({ altKey: true, preventDefault, dataTransfer } as unknown as DragEvent<HTMLDivElement>));
+      expect(preventDefault).toHaveBeenCalled();
+      expect(startDrag).not.toHaveBeenCalled();
+      await waitFor(() => expect(nativeDrag).toHaveBeenCalled(), { container: document.createElement('div') });
+      const [files] = nativeDrag.mock.calls[0];
+      expect(files[0].name).toBe('Hello world.eml');
+      expect(new TextDecoder().decode(files[0].data)).toBe(bytes('primary-a', authA));
+    } finally {
+      window.bulwarkDesktop = undefined;
+    }
+  });
 });

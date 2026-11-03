@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "@/i18n/navigation";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useConfig } from "@/hooks/use-config";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
+import { startOsCommands } from "@/lib/desktop/os-commands";
 import { flushComposers } from "@/lib/compose-flush-registry";
 import { isPopoutPath } from "@/lib/popout/window-role";
 import { isStandaloneDisplayMode } from "@/lib/standalone-display";
@@ -110,6 +111,7 @@ export function ProtocolLaunchHandlerProvider({ children }: ProtocolLaunchHandle
   const router = useRouter();
   const pathname = usePathname();
   const tLaunch = useTranslations("pwaLaunch");
+  const tDesktop = useTranslations("desktopOs");
   const sentToTarget = useRef(new Set<string>());
   const { dialogProps, confirm } = useConfirmDialog();
   const [offer, setOffer] = useState<ShareOffer | null>(null);
@@ -200,6 +202,22 @@ export function ProtocolLaunchHandlerProvider({ children }: ProtocolLaunchHandle
     goToTarget();
     return subscribeHandoff("any", goToTarget);
   }, [pathname, leaveFor]);
+
+  // The desktop app: what the OS asks for arrives over the bridge, not launchQueue.
+  const osEnv = useRef({ leaveFor, push: router.push as (path: string) => void, pathname });
+  osEnv.current = { leaveFor, push: router.push as (path: string) => void, pathname };
+  useEffect(() => {
+    if (isPopoutPath(window.location.pathname)) return;
+    return startOsCommands({
+      leaveFor: (path) => osEnv.current.leaveFor(path),
+      push: (path) => {
+        if (osEnv.current.pathname !== path) osEnv.current.push(path);
+      },
+      notifyFailed: () => toast.error(tLaunch("open_failed")),
+      notifyReplyLost: () => toast.error(tDesktop("reply_lost")),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (pathname.startsWith("/protocol/") || isPopoutPath(pathname)) return;

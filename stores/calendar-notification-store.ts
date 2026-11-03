@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { clearClaims } from '@/lib/calendar-reminders/claims';
 
 const RETENTION_THRESHOLD_MS = 24 * 60 * 60 * 1000;
 
@@ -37,6 +38,7 @@ export const useCalendarNotificationStore = create<CalendarNotificationStore>()(
 
       clearAll: () => {
         set({ acknowledgedAlerts: {} });
+        clearClaims();
       },
     }),
     {

@@ -19,6 +19,11 @@ export function forgetDesktopServer(serverUrl: string, reason: 'failed' | 'signe
   getDesktopBridge()?.servers?.forget?.(serverUrl, reason);
 }
 
+/** Nothing of an account stays on the OS's surfaces after a sign-out or a wipe. */
+export function clearDesktopSurfaces(): void {
+  getDesktopBridge()?.os?.clearSurfaces?.();
+}
+
 /** True in any window of the desktop app, standalone or on an instance. */
 export function isDesktopApp(): boolean {
   return getDesktopBridge() !== null;
