@@ -597,7 +597,9 @@ export function NavigationRail({
   return (
     <div
       className={cn(
-        "flex flex-col h-full",
+        // On a short window (a phone on its side) the whole rail scrolls: the
+        // pinned group at the bottom left the apps room for two icons.
+        "flex flex-col h-full scroll-hidden [@media(max-height:32rem)]:overflow-y-auto",
         collapsed ? "items-center" : "",
         className
       )}
@@ -617,7 +619,7 @@ export function NavigationRail({
 
       <nav
         className={cn(
-          "flex flex-col flex-1 min-h-0 overflow-y-auto scroll-hidden",
+          "flex flex-col flex-1 min-h-0 overflow-y-auto scroll-hidden [@media(max-height:32rem)]:flex-none [@media(max-height:32rem)]:overflow-visible",
           collapsed ? "items-center gap-1 py-3 px-1" : "gap-0.5 py-2 px-2",
         )}
         role="navigation"
