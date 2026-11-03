@@ -6451,5 +6451,14 @@
       "next_issue": "Järgmine õigekirja- või grammatikaviga",
       "previous_issue": "Eelmine õigekirja- või grammatikaviga"
     }
+  },
+  "desktop_sign_in": {
+    "browser_button": "Logi sisse brauseriga",
+    "browser_waiting": "Lõpeta sisselogimine brauseris",
+    "browser_unavailable": "See server ei paku brauseri kaudu sisselogimist. Kasuta parooli.",
+    "browser_failed": "Brauseri kaudu sisselogimine ei õnnestunud. Proovi uuesti.",
+    "server_needed": "Sisesta kõigepealt serveri aadress.",
+    "server_declined": "Sa ei lubanud seda serverit, nii et sellele ei saadetud midagi.",
+    "server_invalid": "See serveri aadress ei kehti."
   }
 }

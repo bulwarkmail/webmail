@@ -6451,5 +6451,14 @@
       "next_issue": "Next spelling or grammar issue",
       "previous_issue": "Previous spelling or grammar issue"
     }
+  },
+  "desktop_sign_in": {
+    "browser_button": "Sign in with your browser",
+    "browser_waiting": "Finish signing in in your browser",
+    "browser_unavailable": "This server doesn't offer sign-in through a browser. Use your password instead.",
+    "browser_failed": "Signing in through your browser didn't work. Try again.",
+    "server_needed": "Enter your server's address first.",
+    "server_declined": "You didn't allow this server, so nothing was sent to it.",
+    "server_invalid": "This server address isn't valid."
   }
 }

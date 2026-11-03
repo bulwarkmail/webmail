@@ -1,6 +1,8 @@
 "use client";
 
 import { Suspense, useEffect, useRef, useState } from "react";
+import { IS_DESKTOP_BUILD } from "@/lib/desktop/flag";
+import { DESKTOP_CLIENT_ID_KEY, DESKTOP_REDIRECT_URI_KEY } from "@/lib/desktop/browser-sign-in";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/stores/auth-store";
@@ -116,9 +118,12 @@ function OAuthCallbackInner() {
       const prefix = getPathPrefix(params.locale as string);
       // Lite on Stalwart registers one locale-free URI (lib/auth/lite-oauth.ts);
       // the entry document brought us here from it.
-      const redirectUri = LITE_OAUTH_AVAILABLE
+      // The desktop app's browser sign-in redirected to its loopback listener
+      // (lib/desktop/browser-sign-in.ts), which this page's origin can't tell.
+      const desktopRedirectUri = IS_DESKTOP_BUILD ? sessionStorage.getItem(DESKTOP_REDIRECT_URI_KEY) : null;
+      const redirectUri = desktopRedirectUri ?? (LITE_OAUTH_AVAILABLE
         ? getLiteOAuthRedirectUri()
-        : `${window.location.origin}${prefix}/${params.locale}/auth/callback`;
+        : `${window.location.origin}${prefix}/${params.locale}/auth/callback`);
 
       loginWithOAuth(serverUrl, code, codeVerifier, redirectUri, serverId)
         .then((success) => {
@@ -128,6 +133,10 @@ function OAuthCallbackInner() {
             sessionStorage.removeItem("oauth_server_url");
             sessionStorage.removeItem("oauth_server_id");
             sessionStorage.removeItem("oauth_add_account_mode");
+            if (IS_DESKTOP_BUILD) {
+              sessionStorage.removeItem(DESKTOP_REDIRECT_URI_KEY);
+              sessionStorage.removeItem(DESKTOP_CLIENT_ID_KEY);
+            }
             let redirectTo = `${prefix}/${params.locale}`;
             try {
               const saved = sessionStorage.getItem('redirect_after_login');

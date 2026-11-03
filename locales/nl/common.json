@@ -6451,5 +6451,14 @@
       "next_issue": "Volgende spel- of grammaticafout",
       "previous_issue": "Vorige spel- of grammaticafout"
     }
+  },
+  "desktop_sign_in": {
+    "browser_button": "Inloggen met je browser",
+    "browser_waiting": "Rond het inloggen af in je browser",
+    "browser_unavailable": "Deze server biedt geen inloggen via een browser. Gebruik je wachtwoord.",
+    "browser_failed": "Inloggen via de browser is niet gelukt. Probeer het opnieuw.",
+    "server_needed": "Vul eerst het adres van de server in.",
+    "server_declined": "Je hebt deze server niet toegestaan, dus er is niets naartoe gestuurd.",
+    "server_invalid": "Dit serveradres is niet geldig."
   }
 }

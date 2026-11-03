@@ -6451,5 +6451,14 @@
       "next_issue": "Error d'ortografia o de gramàtica següent",
       "previous_issue": "Error d'ortografia o de gramàtica anterior"
     }
+  },
+  "desktop_sign_in": {
+    "browser_button": "Inicia la sessió amb el navegador",
+    "browser_waiting": "Acaba d'iniciar la sessió al navegador",
+    "browser_unavailable": "Aquest servidor no permet iniciar la sessió amb el navegador. Fes servir la contrasenya.",
+    "browser_failed": "No s'ha pogut iniciar la sessió amb el navegador. Torna-ho a provar.",
+    "server_needed": "Primer escriu l'adreça del servidor.",
+    "server_declined": "No has permès aquest servidor, així que no s'hi ha enviat res.",
+    "server_invalid": "Aquesta adreça de servidor no és vàlida."
   }
 }

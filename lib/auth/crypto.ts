@@ -121,7 +121,9 @@ export type PayloadPurpose =
   /** A pairing grant or code record in the shared store (lib/auth/pairing-store.ts). */
   | 'pairing-store'
   /** A parked mobile hand-off sign-in in the shared store (lib/auth/handoff-store.ts). */
-  | 'handoff-store';
+  | 'handoff-store'
+  /** Which server a desktop account's refresh token belongs to (lib/oauth/custom-upstream.ts). */
+  | 'custom-upstream';
 
 /**
  * Whether a blob minted before purposes were bound may be re-admitted for
@@ -145,6 +147,7 @@ const LEGACY_PAYLOAD_MARKERS: Record<PayloadPurpose, (payload: Record<string, un
   'session-age': () => false,
   'pairing-store': () => false,
   'handoff-store': () => false,
+  'custom-upstream': () => false,
 };
 
 export function encryptPayload(payload: Record<string, unknown>, purpose: PayloadPurpose): string {

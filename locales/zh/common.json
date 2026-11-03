@@ -6451,5 +6451,14 @@
       "next_issue": "下一个拼写或语法问题",
       "previous_issue": "上一个拼写或语法问题"
     }
+  },
+  "desktop_sign_in": {
+    "browser_button": "使用浏览器登录",
+    "browser_waiting": "请在浏览器中完成登录",
+    "browser_unavailable": "此服务器不支持通过浏览器登录。请使用密码。",
+    "browser_failed": "无法通过浏览器登录。请重试。",
+    "server_needed": "请先输入服务器地址。",
+    "server_declined": "你没有允许此服务器,因此没有向它发送任何内容。",
+    "server_invalid": "此服务器地址无效。"
   }
 }

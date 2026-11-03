@@ -6451,5 +6451,14 @@
       "next_issue": "Nākamā pareizrakstības vai gramatikas kļūda",
       "previous_issue": "Iepriekšējā pareizrakstības vai gramatikas kļūda"
     }
+  },
+  "desktop_sign_in": {
+    "browser_button": "Pierakstīties ar pārlūku",
+    "browser_waiting": "Pabeidziet pierakstīšanos pārlūkā",
+    "browser_unavailable": "Šis serveris nepiedāvā pierakstīšanos ar pārlūku. Izmantojiet paroli.",
+    "browser_failed": "Pierakstīšanās ar pārlūku neizdevās. Mēģiniet vēlreiz.",
+    "server_needed": "Vispirms ievadiet servera adresi.",
+    "server_declined": "Jūs neatļāvāt šo serveri, tāpēc tam nekas netika nosūtīts.",
+    "server_invalid": "Šī servera adrese nav derīga."
   }
 }

@@ -6451,5 +6451,14 @@
       "next_issue": "Următoarea greșeală de ortografie sau gramatică",
       "previous_issue": "Greșeala de ortografie sau gramatică anterioară"
     }
+  },
+  "desktop_sign_in": {
+    "browser_button": "Conectează-te cu browserul",
+    "browser_waiting": "Finalizează conectarea în browser",
+    "browser_unavailable": "Acest server nu oferă conectare prin browser. Folosește parola.",
+    "browser_failed": "Conectarea prin browser nu a reușit. Încearcă din nou.",
+    "server_needed": "Introdu mai întâi adresa serverului.",
+    "server_declined": "Nu ai permis acest server, așa că nu i s-a trimis nimic.",
+    "server_invalid": "Această adresă de server nu este validă."
   }
 }

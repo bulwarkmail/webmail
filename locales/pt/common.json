@@ -6451,5 +6451,14 @@
       "next_issue": "Próximo erro de ortografia ou gramática",
       "previous_issue": "Erro de ortografia ou gramática anterior"
     }
+  },
+  "desktop_sign_in": {
+    "browser_button": "Entrar com o navegador",
+    "browser_waiting": "Termine de entrar no navegador",
+    "browser_unavailable": "Este servidor não oferece entrada pelo navegador. Use sua senha.",
+    "browser_failed": "Não foi possível entrar pelo navegador. Tente novamente.",
+    "server_needed": "Digite primeiro o endereço do servidor.",
+    "server_declined": "Você não permitiu este servidor, então nada foi enviado a ele.",
+    "server_invalid": "Este endereço de servidor não é válido."
   }
 }

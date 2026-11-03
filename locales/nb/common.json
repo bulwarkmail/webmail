@@ -6451,5 +6451,14 @@
       "next_issue": "Neste stave- eller grammatikkfeil",
       "previous_issue": "Forrige stave- eller grammatikkfeil"
     }
+  },
+  "desktop_sign_in": {
+    "browser_button": "Logg på med nettleseren",
+    "browser_waiting": "Fullfør påloggingen i nettleseren",
+    "browser_unavailable": "Denne serveren tilbyr ikke pålogging via nettleser. Bruk passordet ditt.",
+    "browser_failed": "Pålogging via nettleseren mislyktes. Prøv igjen.",
+    "server_needed": "Skriv inn serveradressen først.",
+    "server_declined": "Du tillot ikke denne serveren, så ingenting ble sendt til den.",
+    "server_invalid": "Denne serveradressen er ikke gyldig."
   }
 }

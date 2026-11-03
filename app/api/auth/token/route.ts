@@ -41,6 +41,14 @@ import {
   writeSignInStamp,
 } from '@/lib/auth/session-age';
 import { clearStalwartAuthContextInStore, readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
+import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
+import {
+  clearCustomUpstream,
+  readCustomUpstream,
+  resolveCustomUpstream,
+  writeCustomUpstream,
+  type CustomUpstream,
+} from '@/lib/oauth/custom-upstream';
 
 function parseSlot(raw: string | null): number | null {
   if (raw === null) return null;
@@ -57,13 +65,13 @@ function getSlot(request: NextRequest): number {
 // not hold it up for long.
 const REVOCATION_TIMEOUT_MS = 3000;
 
-async function revokeRefreshToken(token: string, serverId: string | null, metadata: OAuthMetadata | null): Promise<void> {
+async function revokeRefreshToken(token: string, serverId: string | null, metadata: OAuthMetadata | null, upstream: CustomUpstream | null): Promise<void> {
   const revocationEndpoint = metadata?.revocation_endpoint;
   if (!revocationEndpoint) return;
   const params = buildOAuthParams({
     token,
     token_type_hint: 'refresh_token',
-  }, serverId, await defaultClientOptions(serverId).catch(() => ({ fallbackClientId: DEFAULT_CLIENT_ID })));
+  }, serverId, await defaultClientOptions(serverId, upstream).catch(() => ({ fallbackClientId: DEFAULT_CLIENT_ID })));
 
   try {
     // Never follow a redirect with the refresh token and client secret in
@@ -90,12 +98,12 @@ async function revokeRefreshToken(token: string, serverId: string | null, metada
  * Stalwart, and for a logout page shared with other apps, which must keep
  * working once the provider starts advertising its own.
  */
-function endSessionUrlFor(metadata: OAuthMetadata | null, serverId: string | null, idToken: string | undefined): string | null {
+function endSessionUrlFor(metadata: OAuthMetadata | null, serverId: string | null, idToken: string | undefined, upstream: CustomUpstream | null): string | null {
   if (!isEndSessionEnabled()) return null;
   let clientId: string;
   let configuredEndpoint: string | undefined;
   try {
-    ({ clientId, endSessionUrl: configuredEndpoint } = getRequiredConfig(serverId));
+    ({ clientId, endSessionUrl: configuredEndpoint } = upstream ? getRequiredConfig(serverId, { upstream }) : getRequiredConfig(serverId));
   } catch {
     return null;
   }
@@ -146,7 +154,7 @@ export async function POST(request: NextRequest) {
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
   try {
-    const { code, code_verifier, redirect_uri, slot: bodySlot, server_id: bodyServerId, remember: bodyRemember } = await request.json();
+    const { code, code_verifier, redirect_uri, slot: bodySlot, server_id: bodyServerId, remember: bodyRemember, custom_server_url: customServerUrl, client_id: bodyClientId } = await request.json();
     // "Remember me" left unticked: the cookies end with the browser session.
     // Clients from before the choice remembered every sign-in.
     const remember = bodyRemember !== false;
@@ -158,7 +166,14 @@ export async function POST(request: NextRequest) {
     const slot = typeof bodySlot === 'number' && bodySlot >= 0 && bodySlot < MAX_ACCOUNT_SLOTS ? bodySlot : getSlot(request);
     const serverId = typeof bodyServerId === 'string' && bodyServerId ? bodyServerId : null;
 
-    const tokens = await exchangeCodeForTokens(code, code_verifier, redirect_uri, serverId);
+    // The desktop app signs in to a server the user typed, with a client it
+    // registered there. Nothing configured here knows about either.
+    const customUpstream = IS_DESKTOP_BUILD && !serverId ? await resolveCustomUpstream(customServerUrl, bodyClientId) : null;
+    if (IS_DESKTOP_BUILD && !serverId && !customUpstream) {
+      return NextResponse.json({ error: 'invalid_server_url' }, { status: 400 });
+    }
+
+    const tokens = await exchangeCodeForTokens(code, code_verifier, redirect_uri, serverId, customUpstream ? { upstream: customUpstream } : undefined);
     // A sign-in: the maximum session length counts from here, on the server
     // and, from this answer, in the browser.
     const signedInAt = Date.now();
@@ -187,6 +202,7 @@ export async function POST(request: NextRequest) {
     } else if (cookieStore.get(serverCookieName)) {
       cookieStore.delete(serverCookieName);
     }
+    if (customUpstream) writeCustomUpstream(cookieStore, slot, customUpstream, remember);
 
     return response;
   } catch (error) {
@@ -257,12 +273,13 @@ export async function PUT(request: NextRequest) {
     // The refresh token may have been minted by the password+TOTP login route,
     // which works without a configured OAuth client by falling back to the
     // default client id - refreshing must fall back the same way (#873).
-    const tokenEndpoint = await getTokenEndpoint(serverId, { fallbackClientId: DEFAULT_CLIENT_ID });
+    const upstream = IS_DESKTOP_BUILD ? await readCustomUpstream(cookieStore, slot) : null;
+    const tokenEndpoint = await getTokenEndpoint(serverId, upstream ? { upstream } : { fallbackClientId: DEFAULT_CLIENT_ID });
 
     const params = buildOAuthParams({
       grant_type: 'refresh_token',
       refresh_token: refreshToken,
-    }, serverId, await defaultClientOptions(serverId));
+    }, serverId, await defaultClientOptions(serverId, upstream));
 
     const tokenResponse = await observeUpstream('oauth', () => fetch(tokenEndpoint, {
       method: 'POST',
@@ -283,6 +300,7 @@ export async function PUT(request: NextRequest) {
         cookieStore.delete(cookieName);
         cookieStore.delete(refreshTokenServerCookieName(slot));
         cookieStore.delete(accessTokenCookieName(slot));
+        clearCustomUpstream(cookieStore, slot);
         clearIdToken(cookieStore, slot, request.nextUrl.basePath);
         return NextResponse.json({ error: 'Refresh failed' }, { status: 401 });
       }
@@ -324,6 +342,10 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error) {
     logger.error('Token refresh error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    // On the desktop this route runs on the user's machine, so an unreachable
+    // mail server lands here. The client signs out after repeated 500s; a 503
+    // tells it to keep the session and try again.
+    if (IS_DESKTOP_BUILD) return NextResponse.json({ error: 'Token endpoint unavailable' }, { status: 503 });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -343,19 +365,20 @@ async function signOutSlot(
   const refreshToken = cookieStore.get(cookieName)?.value;
   const serverId = cookieStore.get(refreshTokenServerCookieName(slot))?.value || null;
   const idToken = cookieStore.get(idTokenCookieName(slot))?.value;
+  const upstream = IS_DESKTOP_BUILD ? await readCustomUpstream(cookieStore, slot) : null;
 
   // With revocation off (#1388) the token is only dropped from the browser.
   const tokenToRevoke = refreshToken && isRevokeOnSignOutEnabled() ? refreshToken : undefined;
   let endSessionUrl: string | null = null;
   if (tokenToRevoke || endSession) {
-    const metadata = await getMetadata(serverId, { fallbackClientId: DEFAULT_CLIENT_ID }).catch((err) => {
+    const metadata = await getMetadata(serverId, upstream ? { upstream } : { fallbackClientId: DEFAULT_CLIENT_ID }).catch((err) => {
       logger.warn('Failed to discover OAuth metadata during logout', {
         error: err instanceof Error ? err.message : 'Unknown error',
       });
       return null;
     });
-    if (tokenToRevoke) await revokeRefreshToken(tokenToRevoke, serverId, metadata);
-    if (endSession) endSessionUrl = endSessionUrlFor(metadata, serverId, idToken);
+    if (tokenToRevoke) await revokeRefreshToken(tokenToRevoke, serverId, metadata, upstream);
+    if (endSession) endSessionUrl = endSessionUrlFor(metadata, serverId, idToken, upstream);
   }
 
   // Cleared whether or not revocation worked: the browser must not be able
@@ -366,6 +389,7 @@ async function signOutSlot(
     if (cookieStore.get(name)) cookieStore.delete(name);
   }
   clearSignInStamp(cookieStore, slot);
+  if (IS_DESKTOP_BUILD) clearCustomUpstream(cookieStore, slot);
   if (idToken !== undefined) clearIdToken(cookieStore, slot, basePath);
   return endSessionUrl;
 }

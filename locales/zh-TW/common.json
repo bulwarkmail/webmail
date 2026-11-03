@@ -6451,5 +6451,14 @@
       "next_issue": "下一個拼字或文法問題",
       "previous_issue": "上一個拼字或文法問題"
     }
+  },
+  "desktop_sign_in": {
+    "browser_button": "使用瀏覽器登入",
+    "browser_waiting": "請在瀏覽器中完成登入",
+    "browser_unavailable": "此伺服器不支援透過瀏覽器登入。請使用密碼。",
+    "browser_failed": "無法透過瀏覽器登入。請再試一次。",
+    "server_needed": "請先輸入伺服器位址。",
+    "server_declined": "你沒有允許此伺服器,因此沒有傳送任何內容給它。",
+    "server_invalid": "此伺服器位址無效。"
   }
 }

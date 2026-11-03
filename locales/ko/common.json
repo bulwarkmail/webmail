@@ -6451,5 +6451,14 @@
       "next_issue": "다음 맞춤법 또는 문법 문제",
       "previous_issue": "이전 맞춤법 또는 문법 문제"
     }
+  },
+  "desktop_sign_in": {
+    "browser_button": "브라우저로 로그인",
+    "browser_waiting": "브라우저에서 로그인을 마치세요",
+    "browser_unavailable": "이 서버는 브라우저 로그인을 지원하지 않습니다. 비밀번호를 사용하세요.",
+    "browser_failed": "브라우저 로그인에 실패했습니다. 다시 시도하세요.",
+    "server_needed": "먼저 서버 주소를 입력하세요.",
+    "server_declined": "이 서버를 허용하지 않아 아무것도 보내지 않았습니다.",
+    "server_invalid": "이 서버 주소는 올바르지 않습니다."
   }
 }

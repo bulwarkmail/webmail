@@ -6451,5 +6451,14 @@
       "next_issue": "次のスペルまたは文法の問題",
       "previous_issue": "前のスペルまたは文法の問題"
     }
+  },
+  "desktop_sign_in": {
+    "browser_button": "ブラウザでサインイン",
+    "browser_waiting": "ブラウザでサインインを完了してください",
+    "browser_unavailable": "このサーバーはブラウザでのサインインに対応していません。パスワードを使用してください。",
+    "browser_failed": "ブラウザでのサインインに失敗しました。もう一度お試しください。",
+    "server_needed": "先にサーバーのアドレスを入力してください。",
+    "server_declined": "このサーバーを許可しなかったため、何も送信していません。",
+    "server_invalid": "このサーバーアドレスは正しくありません。"
   }
 }

@@ -6451,5 +6451,14 @@
       "next_issue": "Další pravopisná nebo gramatická chyba",
       "previous_issue": "Předchozí pravopisná nebo gramatická chyba"
     }
+  },
+  "desktop_sign_in": {
+    "browser_button": "Přihlásit se v prohlížeči",
+    "browser_waiting": "Dokončete přihlášení v prohlížeči",
+    "browser_unavailable": "Tento server přihlášení přes prohlížeč nenabízí. Použijte heslo.",
+    "browser_failed": "Přihlášení přes prohlížeč se nezdařilo. Zkuste to znovu.",
+    "server_needed": "Nejdřív zadejte adresu serveru.",
+    "server_declined": "Tento server jste nepovolili, proto se na něj nic neodeslalo.",
+    "server_invalid": "Tato adresa serveru není platná."
   }
 }

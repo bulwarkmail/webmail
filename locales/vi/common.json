@@ -6463,5 +6463,14 @@
       "next_issue": "Lỗi chính tả hoặc ngữ pháp tiếp theo",
       "previous_issue": "Lỗi chính tả hoặc ngữ pháp trước đó"
     }
+  },
+  "desktop_sign_in": {
+    "browser_button": "Đăng nhập bằng trình duyệt",
+    "browser_waiting": "Hoàn tất đăng nhập trong trình duyệt",
+    "browser_unavailable": "Máy chủ này không hỗ trợ đăng nhập qua trình duyệt. Hãy dùng mật khẩu.",
+    "browser_failed": "Không thể đăng nhập qua trình duyệt. Hãy thử lại.",
+    "server_needed": "Trước tiên hãy nhập địa chỉ máy chủ.",
+    "server_declined": "Bạn không cho phép máy chủ này nên không có gì được gửi đến đó.",
+    "server_invalid": "Địa chỉ máy chủ này không hợp lệ."
   }
 }

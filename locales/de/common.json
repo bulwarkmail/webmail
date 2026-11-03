@@ -6451,5 +6451,14 @@
       "next_issue": "Nächster Rechtschreib- oder Grammatikfehler",
       "previous_issue": "Vorheriger Rechtschreib- oder Grammatikfehler"
     }
+  },
+  "desktop_sign_in": {
+    "browser_button": "Mit dem Browser anmelden",
+    "browser_waiting": "Schließen Sie die Anmeldung im Browser ab",
+    "browser_unavailable": "Dieser Server bietet keine Anmeldung über den Browser an. Verwenden Sie stattdessen Ihr Passwort.",
+    "browser_failed": "Die Anmeldung über den Browser hat nicht geklappt. Versuchen Sie es noch einmal.",
+    "server_needed": "Geben Sie zuerst die Adresse Ihres Servers ein.",
+    "server_declined": "Sie haben diesen Server nicht zugelassen, daher wurde nichts an ihn gesendet.",
+    "server_invalid": "Diese Serveradresse ist ungültig."
   }
 }
