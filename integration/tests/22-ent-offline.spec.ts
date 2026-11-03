@@ -519,18 +519,17 @@ test('forbidding offline mode wipes the device at the next policy fetch and hide
   const loadedAt = Date.now();
   expect((await offlineDatabase(alice)).accounts).toBeGreaterThan(0);
 
+  // Waiting starts now: the app may fetch the policy again at any time, not
+  // only on focus, and the notice doesn't stay.
+  const notice = alice.getByText('Your organisation turned off offline mode', { exact: false }).first().waitFor({ state: 'visible', timeout: 180_000 });
   // ent-team (alice, not carol) may no longer keep mail on devices.
   await setPolicy(browser, {
     scopes: [{ id: 'no-offline', label: 'No offline', match: { groups: [ENT.team] }, policy: { organisation: { devices: { noOffline: true } } } }],
   });
-  // The open tab fetches the policy again when it gets focus (at most once a
-  // minute). The list paints from the device before the app's own fetches are
-  // done, so the minute may run from a little after loadedAt.
+  // The open tab fetches the policy again when it gets focus (at most once a minute).
   await alice.waitForTimeout(Math.max(0, 62_000 - (Date.now() - loadedAt)));
-  await expect(async () => {
-    await alice.evaluate(() => window.dispatchEvent(new Event('focus')));
-    await expect(alice.getByText('Your organisation turned off offline mode', { exact: false }).first()).toBeVisible({ timeout: 4_000 });
-  }).toPass({ timeout: 90_000 });
+  await alice.evaluate(() => window.dispatchEvent(new Event('focus'))).catch(() => {});
+  await notice;
   await expect.poll(async () => (await offlineDatabase(alice)).accounts, { timeout: 20_000 }).toBe(0);
   await alice.goto('/settings/backup/offline');
   await expect(alice.getByTestId('offline-forbidden')).toBeVisible({ timeout: 30_000 });
