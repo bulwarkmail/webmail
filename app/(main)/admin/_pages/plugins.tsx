@@ -245,7 +245,7 @@ export function PluginsPage() {
                           {plugin.forceEnabled && <Badge tone="warning" icon={<Lock className="h-3 w-3" />}>Forced on</Badge>}
                           {plugin.dev && <Badge tone="info" title="Loaded from the dev plugins directory">Dev</Badge>}
                           {risky.length > 0 && (
-                            <Badge tone="warning" icon={<ShieldAlert className="h-3 w-3" />} title={risky.join(', ')}>
+                            <Badge tone="warning" icon={<ShieldAlert className="h-3 w-3" />} title={risky.join(', ')} className="whitespace-normal">
                               {risky.length} high-risk permission{risky.length === 1 ? '' : 's'}
                             </Badge>
                           )}
