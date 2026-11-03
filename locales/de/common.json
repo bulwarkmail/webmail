@@ -1799,7 +1799,12 @@
         "confirm_revoke_message_this": "Dieses Gerät empfängt sofort keine Hintergrundbenachrichtigungen mehr.",
         "shared_mailboxes_no_push": "Postfächer, die andere mit Ihnen teilen, senden keine Hintergrundbenachrichtigungen.",
         "error_forbidden": "Der Mailserver erlaubt für dieses Konto keine Hintergrundbenachrichtigungen.",
-        "error_over_quota": "Für dieses Konto gibt es auf dem Mailserver zu viele Push-Registrierungen (meist sind 15 erlaubt). Widerrufen Sie Geräte, die Sie nicht mehr nutzen, in den Benachrichtigungseinstellungen und versuchen Sie es erneut."
+        "error_over_quota": "Für dieses Konto gibt es auf dem Mailserver zu viele Push-Registrierungen (meist sind 15 erlaubt). Widerrufen Sie Geräte, die Sie nicht mehr nutzen, in den Benachrichtigungseinstellungen und versuchen Sie es erneut.",
+        "error_blocked": "Benachrichtigungen sind für diese Website blockiert. Erlauben Sie sie in den Website-Einstellungen Ihres Browsers und versuchen Sie es dann erneut.",
+        "error_not_granted": "Benachrichtigungen wurden nicht erlaubt, Push bleibt deshalb aus.",
+        "error_verification_timeout": "Der Mailserver hat dieses Gerät nicht rechtzeitig bestätigt, Push bleibt deshalb aus. Versuchen Sie es in einer Minute erneut.",
+        "error_relay": "Das Push-Relay ist gerade nicht erreichbar, Push bleibt deshalb aus. Versuchen Sie es später erneut.",
+        "error_teardown": "Push ist in diesem Browser aus, aber der Mailserver oder das Relay waren nicht erreichbar. Benachrichtigungen können noch einige Tage ankommen. Widerrufen Sie dieses Gerät unten, sobald Sie wieder online sind."
       }
     },
     "language_region": {

@@ -1799,7 +1799,12 @@
         "confirm_revoke_message_this": "To urządzenie natychmiast przestanie odbierać powiadomienia w tle.",
         "shared_mailboxes_no_push": "Skrzynki pocztowe udostępnione ci przez innych nie wysyłają powiadomień w tle.",
         "error_forbidden": "Serwer poczty nie zezwala na powiadomienia w tle dla tego konta.",
-        "error_over_quota": "To konto ma zbyt wiele rejestracji push na serwerze poczty (limit wynosi zwykle 15). Unieważnij nieużywane urządzenia w ustawieniach powiadomień i spróbuj ponownie."
+        "error_over_quota": "To konto ma zbyt wiele rejestracji push na serwerze poczty (limit wynosi zwykle 15). Unieważnij nieużywane urządzenia w ustawieniach powiadomień i spróbuj ponownie.",
+        "error_blocked": "Powiadomienia są zablokowane dla tej witryny. Zezwól na nie w ustawieniach witryny w przeglądarce i spróbuj ponownie.",
+        "error_not_granted": "Nie zezwolono na powiadomienia, więc push pozostaje wyłączony.",
+        "error_verification_timeout": "Serwer poczty nie potwierdził tego urządzenia na czas, więc push pozostaje wyłączony. Spróbuj ponownie za minutę.",
+        "error_relay": "Przekaźnik push jest teraz niedostępny, więc push pozostaje wyłączony. Spróbuj ponownie później.",
+        "error_teardown": "Push jest wyłączony w tej przeglądarce, ale serwer poczty lub przekaźnik był niedostępny. Powiadomienia mogą przychodzić jeszcze przez kilka dni. Gdy znów będziesz online, unieważnij to urządzenie poniżej."
       }
     },
     "language_region": {

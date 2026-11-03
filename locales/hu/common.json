@@ -1766,7 +1766,12 @@
         "confirm_revoke_message_this": "Ez az eszköz azonnal nem kap több háttérértesítést.",
         "shared_mailboxes_no_push": "A mások által Önnel megosztott postafiókok nem küldenek háttérértesítéseket.",
         "error_forbidden": "A levelezőszerver ennél a fióknál nem engedélyezi a háttérértesítéseket.",
-        "error_over_quota": "Ennek a fióknak túl sok push-regisztrációja van a levelezőszerveren (a korlát általában 15). Az értesítési beállításokban vonja vissza a már nem használt eszközöket, majd próbálja újra."
+        "error_over_quota": "Ennek a fióknak túl sok push-regisztrációja van a levelezőszerveren (a korlát általában 15). Az értesítési beállításokban vonja vissza a már nem használt eszközöket, majd próbálja újra.",
+        "error_blocked": "Az értesítések le vannak tiltva ezen a webhelyen. Engedélyezd őket a böngésző webhelybeállításaiban, majd próbáld újra.",
+        "error_not_granted": "Az értesítések nem lettek engedélyezve, ezért a push kikapcsolva marad.",
+        "error_verification_timeout": "A levelezőszerver nem erősítette meg időben ezt az eszközt, ezért a push kikapcsolva marad. Próbáld újra egy perc múlva.",
+        "error_relay": "A push relay most nem érhető el, ezért a push kikapcsolva marad. Próbáld újra később.",
+        "error_teardown": "A push ki van kapcsolva ebben a böngészőben, de a levelezőszerver vagy a relay nem volt elérhető. Néhány napig még érkezhetnek értesítések. Ha újra online vagy, vond vissza lent ezt az eszközt."
       },
       "push_all": {
           "title": "All accounts",

@@ -1799,7 +1799,12 @@
         "confirm_revoke_message_this": "Este dispositivo dejará de recibir notificaciones en segundo plano de inmediato.",
         "shared_mailboxes_no_push": "Los buzones que otras personas comparten contigo no envían notificaciones en segundo plano.",
         "error_forbidden": "El servidor de correo no permite notificaciones en segundo plano para esta cuenta.",
-        "error_over_quota": "Esta cuenta tiene demasiados registros push en el servidor de correo (el límite suele ser 15). Revoca los dispositivos que ya no uses en la configuración de notificaciones e inténtalo de nuevo."
+        "error_over_quota": "Esta cuenta tiene demasiados registros push en el servidor de correo (el límite suele ser 15). Revoca los dispositivos que ya no uses en la configuración de notificaciones e inténtalo de nuevo.",
+        "error_blocked": "Las notificaciones están bloqueadas para este sitio. Permítelas en la configuración del sitio de tu navegador y vuelve a intentarlo.",
+        "error_not_granted": "No se permitieron las notificaciones, así que las notificaciones push siguen desactivadas.",
+        "error_verification_timeout": "El servidor de correo no confirmó este dispositivo a tiempo, así que las notificaciones push siguen desactivadas. Inténtalo de nuevo en un minuto.",
+        "error_relay": "No se puede acceder al relé de notificaciones en este momento, así que las notificaciones push siguen desactivadas. Inténtalo más tarde.",
+        "error_teardown": "Las notificaciones push están desactivadas en este navegador, pero no se pudo acceder al servidor de correo o al relé. Es posible que sigan llegando notificaciones durante unos días. Revoca este dispositivo abajo cuando vuelvas a tener conexión."
       }
     },
     "language_region": {
