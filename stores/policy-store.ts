@@ -157,6 +157,15 @@ function resolved(rawPolicy: SettingsPolicy, subject: PolicySubject | null) {
 
 const INITIAL = resolved({ ...DEFAULT_POLICY }, null);
 
+/** The session auth-store keeps, read without importing it. */
+function persistedSignedIn(): boolean {
+  try {
+    return JSON.parse(localStorage.getItem('auth-storage') ?? 'null')?.state?.isAuthenticated === true;
+  } catch {
+    return false;
+  }
+}
+
 export const usePolicyStore = create<PolicyState>()((set, get) => ({
   ...INITIAL,
   subject: null,
@@ -213,6 +222,12 @@ export const usePolicyStore = create<PolicyState>()((set, get) => ({
         const current = get();
         if (current.source === 'server' && lastServerJson === json && current.partial === partial
           && (current.scopeDomains ?? []).join(',') === (scopeDomains ?? []).join(',')) {
+          set({ loaded: true });
+          return;
+        }
+        // A signed-in page that got the public part (its cookie wasn't there yet)
+        // keeps the whole policy it has: the public part has no caps and no scopes.
+        if (partial && !current.partial && (current.source === 'server' || current.source === 'cache') && persistedSignedIn()) {
           set({ loaded: true });
           return;
         }

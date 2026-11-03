@@ -7,6 +7,12 @@
  * the record makes the file unreadable even if deleting it failed.
  */
 
+/**
+ * localStorage: accounts that have had a store here. Holds nothing but the
+ * account's id, and it outlives what a browser may clear of the rest.
+ */
+export const STORE_OPENED_KEY = 'bulwark-store-opened';
+
 const DB_NAME = 'bulwark-store';
 const DB_VERSION = 1;
 const KEYS = 'keys';

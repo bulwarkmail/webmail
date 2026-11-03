@@ -56,7 +56,7 @@ beforeEach(async () => {
   forgetLegacyMove();
   localStorage.clear();
   useOfflineStore.setState({ enabled: [], outbox: [], pendingChanges: 0, conflicts: [], browserOffline: false, downServers: [], startedOffline: false });
-  usePolicyStore.setState({ loaded: true, subject: null, policy: { ...usePolicyStore.getState().policy, organisation: DEFAULT_ORGANISATION_POLICY } });
+  usePolicyStore.setState({ loaded: true, subject: { email: 'alice@example.org', groups: [] }, policy: { ...usePolicyStore.getState().policy, organisation: DEFAULT_ORGANISATION_POLICY } });
   useAccountStore.setState({ accounts: [{ id: 'acc', label: 'alice', serverUrl: 'https://mail.example.org', username: 'alice@example.org' } as never] });
 });
 
@@ -336,6 +336,8 @@ describe('a send whose response got lost', () => {
   it('a lookup that can\'t decide leaves it uncertain for the user, who can still send it', async () => {
     const client = fakeClient();
     const entry = await uncertainSend(client);
+    // The store's own sync mustn't take the failure meant for the lookup.
+    await store.sync('acc');
     server.failNext.set('Email/query', 'forbidden');
     await flush(client);
     expect(client.sendEmail).not.toHaveBeenCalled();
@@ -424,6 +426,7 @@ describe('wiping offline data', () => {
     useAuthStore.setState({ client: client as never, activeAccountId: 'acc' });
     writeEnabled(['acc']);
     stop = startOfflineMode();
+    usePolicyStore.getState().setPolicySubject({ email: 'alice@example.org', groups: [] });
     usePolicyStore.setState({ policy: { ...usePolicyStore.getState().policy, organisation: { ...DEFAULT_ORGANISATION_POLICY, devices: { ...DEFAULT_ORGANISATION_POLICY.devices, noOffline: true } } } });
     enforcePolicy();
     await vi.waitFor(async () => expect(useOfflineStore.getState().enabled).toEqual([]));

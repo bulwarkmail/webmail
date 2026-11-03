@@ -286,7 +286,7 @@ export class FakeJmap implements JmapTransport {
     return { methodResponses: done };
   }
 
-  async download(): Promise<Uint8Array> {
+  async download(_jmap: string, _blobId: string, _type: string, _name: string): Promise<Uint8Array> {
     return new Uint8Array();
   }
 

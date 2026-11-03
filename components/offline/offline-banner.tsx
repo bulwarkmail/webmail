@@ -24,7 +24,7 @@ export function OfflineBanner() {
   const browserOffline = useOfflineStore((s) => s.browserOffline || s.startedOffline);
   const serverDown = useOfflineStore((s) => !!server && s.downServers.includes(serverKey(server)));
   const waiting = useOfflineStore((s) => s.outbox.length);
-  const conflicts = useOfflineStore((s) => s.conflicts.length);
+  const conflicts = useOfflineStore((s) => s.conflicts.length + s.areaConflicts.length);
   const refusedDrafts = useOfflineStore((s) => s.localDrafts.filter((draft) => draft.status === 'refused').length);
   const waitingDrafts = useOfflineStore((s) => s.localDrafts.filter((draft) => draft.status !== 'refused').length);
   const tConflicts = useTranslations('offlineConflicts');

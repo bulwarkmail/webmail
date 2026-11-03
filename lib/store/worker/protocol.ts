@@ -15,7 +15,8 @@ export interface OpenAccountParams {
   /** 32 bytes in hex. Only ever sent to this tab's own worker, never over the channel. */
   keyHex: string;
   session: StoreSession | null;
-  scope: StoreScope;
+  /** Undefined while the page can't tell (no policy yet): the store keeps the last one. */
+  scope?: StoreScope;
   /** Null when this tab's client hasn't probed it: the stored answer stays. */
   invertedKeywordSort: boolean | null;
   /** The page's current Authorization header. */
@@ -33,6 +34,8 @@ export interface StoreRpc {
   area(params: { account: string; name: string; params: unknown }): unknown;
   /** Closes an account and deletes its file. The name holds no account data. */
   removeAccount(params: { account: string; file: string }): boolean;
+  /** How far back to keep mail, and what else. Any tab may say, since a policy reaches every tab. */
+  setScope(params: { account: string; scope: StoreScope }): void;
 }
 
 export interface StoreStatus {
@@ -79,7 +82,6 @@ export type PageToWorker =
   | { kind: 'set-auth'; account: string; auth: string | null }
   | { kind: 'set-inverted'; account: string; inverted: boolean }
   | { kind: 'set-session'; account: string; session: StoreSession }
-  | { kind: 'set-scope'; account: string; scope: StoreScope }
   | { kind: 'release'; id: string };
 
 export type WorkerToPage =

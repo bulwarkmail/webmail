@@ -52,6 +52,13 @@ interface Part {
   raw: number;
 }
 
+type KeptContext = Pick<StoreContext, 'db' | 'scope'> & Partial<Pick<StoreContext, 'keptByOthers'>>;
+
+/** The total is for everything an account keeps, so what the Files area holds takes its part. */
+function mailCap(ctx: KeptContext): number {
+  return Math.max(0, ctx.scope.maxTotalBytes - (ctx.keptByOthers?.('mail') ?? 0));
+}
+
 function usedBytes(db: StorageAdapter): number {
   return Number(db.get<{ n: number | null }>('SELECT SUM(size) AS n FROM blob')?.n ?? 0);
 }
@@ -97,7 +104,7 @@ function makeRoom(db: StorageAdapter, cap: number, size: number, at: number, raw
 }
 
 /** A tighter scope applies at once, not at the next sync. */
-export function applyAttachmentScope(ctx: Pick<StoreContext, 'db' | 'scope'>): void {
+export function applyAttachmentScope(ctx: KeptContext): void {
   const { db, scope } = ctx;
   db.transaction(() => {
     if (!scope.attachments) {
@@ -108,7 +115,7 @@ export function applyAttachmentScope(ctx: Pick<StoreContext, 'db' | 'scope'>): v
     for (const row of db.all<{ jmap: string; blob_id: string }>('SELECT jmap, blob_id FROM blob WHERE size > ?', [scope.maxAttachmentBytes])) {
       dropBlob(db, row.jmap, row.blob_id);
     }
-    pushOut(db, scope.maxTotalBytes, 0, Number.MAX_SAFE_INTEGER);
+    pushOut(db, mailCap(ctx), 0, Number.MAX_SAFE_INTEGER);
   });
 }
 
@@ -135,13 +142,13 @@ export function keptBlob(ctx: Pick<StoreContext, 'db' | 'scope'>, jmap: string, 
 }
 
 /** A file the user opened online: kept if it belongs to a kept message and the scope allows it. */
-export function recordKeptBlob(ctx: Pick<StoreContext, 'db' | 'scope'>, jmap: string, blobId: string, type: string | null, data: Uint8Array): boolean {
+export function recordKeptBlob(ctx: KeptContext, jmap: string, blobId: string, type: string | null, data: Uint8Array): boolean {
   const { db, scope } = ctx;
   const owner = db.get<{ received_at: number; raw: number }>('SELECT received_at, raw FROM email_part WHERE jmap = ? AND blob_id = ?', [jmap, blobId]);
   if (!owner || !scope.attachments || data.byteLength > scope.maxAttachmentBytes) return false;
   const at = Number(owner.received_at);
   return db.transaction(() => {
-    if (!makeRoom(db, scope.maxTotalBytes, data.byteLength, at, Boolean(owner.raw))) return false;
+    if (!makeRoom(db, mailCap(ctx), data.byteLength, at, Boolean(owner.raw))) return false;
     putBlob(db, jmap, blobId, type, data, at);
     return true;
   });
@@ -264,7 +271,7 @@ async function fetchOne(ctx: SyncContext, jmap: string, part: Part): Promise<Fet
     if (isKept(db, jmap, blobId)) return 'kept';
     // Its message may have gone while this was on its way, or the rules changed.
     const wanted = ctx.scope.attachments && db.get('SELECT 1 AS x FROM email_part WHERE jmap = ? AND blob_id = ?', [jmap, blobId]);
-    if (!wanted || !makeRoom(db, ctx.scope.maxTotalBytes, size, at, Boolean(part.raw))) {
+    if (!wanted || !makeRoom(db, mailCap(ctx), size, at, Boolean(part.raw))) {
       clearUnfinished(db, jmap, blobId);
       return 'skipped';
     }
@@ -301,7 +308,7 @@ async function fetchKept(ctx: SyncContext, jmap: string): Promise<void> {
       if (ctx.stopped() || ctx.syncWanted()) return;
       // The same file a second time in this page: kept by now.
       if (db.get('SELECT 1 AS x FROM blob WHERE jmap = ? AND blob_id = ?', [jmap, String(part.blob_id)])) continue;
-      if (!couldFit(db, ctx.scope.maxTotalBytes, Number(part.size), Number(part.received_at), Boolean(part.raw))) {
+      if (!couldFit(db, mailCap(ctx), Number(part.size), Number(part.received_at), Boolean(part.raw))) {
         passed += 1;
         passedInARow += 1;
         if (passedInARow >= MOST_PASSED_IN_A_ROW) return;

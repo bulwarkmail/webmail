@@ -56,7 +56,7 @@ function fakeClient(server = 'https://mail.example.org', overrides: Record<strin
 }
 
 function setPolicyOrg(organisation: Record<string, unknown>) {
-  usePolicyStore.setState({ loaded: true, source: 'server', subject: null, subjectPending: false, policy: { ...usePolicyStore.getState().policy, organisation: { ...DEFAULT_ORGANISATION_POLICY, ...organisation } as never } });
+  usePolicyStore.setState({ loaded: true, source: 'server', subject: { email: 'alice@example.org', groups: [] }, subjectPending: false, policy: { ...usePolicyStore.getState().policy, organisation: { ...DEFAULT_ORGANISATION_POLICY, ...organisation } as never } });
 }
 
 function setOnline(online: boolean) {
@@ -368,7 +368,7 @@ describe('what a sign-out would delete', () => {
   });
 
   it('answers with the last known count when the store hangs', async () => {
-    useOfflineStore.setState({ outbox: [{ id: 1, account: 'acc', createdAt: 1, subject: 'A', to: [], status: 'waiting' }] as never, pendingChanges: 2 });
+    useOfflineStore.setState({ outbox: [{ id: 1, account: 'acc', createdAt: 1, subject: 'A', to: [], status: 'waiting' }] as never, changesBy: { acc: 2 } });
     const hung: Array<(error: Error) => void> = [];
     vi.spyOn(store, 'area').mockImplementation(() => new Promise((_resolve, reject) => { hung.push(reject); }));
     expect(await unsentCount('acc', 10)).toEqual({ messages: 1, changes: 2 });

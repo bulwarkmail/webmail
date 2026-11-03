@@ -6,9 +6,9 @@ import { usePathname, useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { deleteOutboxEntry, retryOutboxEntry } from '@/lib/offline/flush';
-import { refreshQueueState, scheduleFlushAll } from '@/lib/offline/offline-mode';
+import { dismissAreaConflict, refreshQueueState, scheduleFlushAll } from '@/lib/offline/offline-mode';
 import { dismissConflict, retryLocalDraft, type ConflictEntry, type LocalDraftRow } from '@/lib/offline/queue';
-import { isOfflineNow, useOfflineStore, type OutboxRow } from '@/lib/offline/state';
+import { isOfflineNow, useOfflineStore, type AreaConflict, type OutboxRow } from '@/lib/offline/state';
 import { useAccountStore } from '@/stores/account-store';
 
 /**
@@ -25,6 +25,7 @@ export function OutboxList({ heading = true, onOpenDraft }: { heading?: boolean;
   const t = useTranslations('offline.outbox');
   const tErrors = useTranslations('offline.errors');
   const tConflicts = useTranslations('offlineConflicts');
+  const tStorage = useTranslations('offlineStorage');
   const tDrafts = useTranslations('offlineDrafts');
   const router = useRouter();
   const pathname = usePathname();
@@ -33,6 +34,7 @@ export function OutboxList({ heading = true, onOpenDraft }: { heading?: boolean;
   const rows = useOfflineStore((s) => s.outbox);
   const changes = useOfflineStore((s) => s.pendingChanges);
   const conflicts = useOfflineStore((s) => s.conflicts);
+  const areaConflicts = useOfflineStore((s) => s.areaConflicts);
   const accounts = useAccountStore((s) => s.accounts);
   const [deleting, setDeleting] = useState<OutboxRow | null>(null);
   const several = new Set(rows.map((r) => r.account)).size > 1 || accounts.length > 1;
@@ -79,6 +81,12 @@ export function OutboxList({ heading = true, onOpenDraft }: { heading?: boolean;
     if (conflict.summary.reason === 'refused') return tConflicts('refused', { reason: conflict.summary.detail ?? '' });
     if (conflict.summary.reason === 'gone') return tConflicts('gone');
     return tConflicts(conflict.summary.op === 'destroy' ? 'changed_delete' : 'changed');
+  };
+
+  const areaConflictText = (conflict: AreaConflict) => {
+    if (conflict.reason === 'refused') return tConflicts('refused', { reason: conflict.detail ?? '' });
+    if (conflict.reason === 'gone') return tConflicts('gone');
+    return tConflicts(conflict.destroy ? 'changed_delete' : 'changed');
   };
 
   const dismiss = async (conflict: ConflictEntry) => {
@@ -144,7 +152,7 @@ export function OutboxList({ heading = true, onOpenDraft }: { heading?: boolean;
       {changes > 0 && (
         <p className="mt-2 text-xs text-muted-foreground" data-testid="offline-pending-changes">{t('changes', { count: changes })}</p>
       )}
-      {conflicts.length > 0 && (
+      {conflicts.length + areaConflicts.length > 0 && (
         <div className="mt-3" data-testid="offline-conflicts">
           <p className="text-xs text-muted-foreground">{tConflicts('description')}</p>
           <ul className="mt-2 divide-y divide-border rounded-md border border-border" aria-label={tConflicts('title')}>
@@ -158,6 +166,21 @@ export function OutboxList({ heading = true, onOpenDraft }: { heading?: boolean;
                 </div>
                 <div className="flex shrink-0 gap-2">
                   <Button variant="outline" size="sm" aria-label={tConflicts('dismiss_label', { subject: conflict.summary.subject || t('no_subject') })} onClick={() => void dismiss(conflict)}>{tConflicts('dismiss')}</Button>
+                </div>
+              </li>
+            ))}
+            {areaConflicts.map((conflict) => (
+              <li key={`${conflict.account}:${conflict.area}:${conflict.id}`} className="flex flex-col gap-2 px-3 py-2.5 sm:flex-row sm:items-start sm:justify-between" data-testid="offline-conflict-row" data-area={conflict.area} data-reason={conflict.reason}>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-foreground">
+                    {tStorage(conflict.area === 'calendar' ? 'conflict_calendar' : 'conflict_contacts')}: {conflict.title || t('no_subject')}
+                  </p>
+                  <p className="text-xs text-destructive [overflow-wrap:anywhere]">
+                    {areaConflictText(conflict)} · {format.dateTime(conflict.createdAt, { dateStyle: 'short', timeStyle: 'short' })}
+                  </p>
+                </div>
+                <div className="flex shrink-0 gap-2">
+                  <Button variant="outline" size="sm" aria-label={tConflicts('dismiss_label', { subject: conflict.title || t('no_subject') })} onClick={() => void dismissAreaConflict(conflict)}>{tConflicts('dismiss')}</Button>
                 </div>
               </li>
             ))}

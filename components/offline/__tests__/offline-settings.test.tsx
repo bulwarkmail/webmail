@@ -19,7 +19,7 @@ import { setStoreBackend, type StoreBackend } from '@/lib/store/client/api';
 function setNoOffline(noOffline: boolean) {
   usePolicyStore.setState({
     loaded: true,
-    subject: null,
+    subject: { email: 'alice@example.org', groups: [] },
     policy: { ...usePolicyStore.getState().policy, organisation: { ...DEFAULT_ORGANISATION_POLICY, devices: { ...DEFAULT_ORGANISATION_POLICY.devices, noOffline } } },
   });
 }
@@ -54,12 +54,12 @@ describe('Settings > Offline', () => {
     expect(offline.enableOffline).toHaveBeenCalledWith('acc');
   });
 
-  it('asks before turning off with unsent messages', () => {
+  it('asks before turning off with unsent messages', async () => {
     useOfflineStore.setState({ enabled: ['acc'], outbox: [{ id: 1, account: 'acc', createdAt: Date.now(), subject: 'Hi', to: ['b@example.org'], status: 'waiting' }] });
     render(<OfflineSettings />);
     fireEvent.click(screen.getByTestId('offline-switch'));
+    expect(await screen.findByText('off_confirm_title')).toBeInTheDocument();
     expect(offline.disableOffline).not.toHaveBeenCalled();
-    expect(screen.getByText('off_confirm_title')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'off_confirm' }));
     expect(offline.disableOffline).toHaveBeenCalledWith('acc');
   });
@@ -78,7 +78,7 @@ describe('Settings > Offline', () => {
     expect(screen.queryByTestId('offline-switch')).toBeNull();
   });
 
-  it('asks before turning off when a draft is only on this device, and counts both lists', () => {
+  it('asks before turning off when a draft is only on this device, and counts both lists', async () => {
     useOfflineStore.setState({
       enabled: ['acc'],
       localDrafts: [{ account: 'acc', localId: 'local-1', jmap: 'j', subject: 'Only here', status: 'waiting', createdAt: 0 }],
@@ -86,8 +86,8 @@ describe('Settings > Offline', () => {
     });
     render(<OfflineSettings />);
     fireEvent.click(screen.getByTestId('offline-switch'));
+    expect(await screen.findByText('off_confirm_title')).toBeInTheDocument();
     expect(offline.disableOffline).not.toHaveBeenCalled();
-    expect(screen.getByText('off_confirm_title')).toBeInTheDocument();
     useOfflineStore.setState({ localDrafts: [], outbox: [] });
   });
 

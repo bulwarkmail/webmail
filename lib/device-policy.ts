@@ -26,7 +26,7 @@
  * the export engine and previews read blobs too.
  */
 
-import { DEFAULT_ORGANISATION_POLICY, type OrganisationPolicy } from '@/lib/admin/organisation-policy';
+import { DEFAULT_ORGANISATION_POLICY, strictestDevices, type OrganisationPolicy } from '@/lib/admin/organisation-policy';
 import { setDownloadGuard } from '@/lib/download-guard';
 import { subjectForAccount } from '@/lib/org/account-subjects';
 import { useAuthStore } from '@/stores/auth-store';
@@ -36,8 +36,6 @@ import { usePolicyStore } from '@/stores/policy-store';
 export type DevicePolicy = OrganisationPolicy['devices'];
 
 export const NO_DEVICE_LIMITS: DevicePolicy = DEFAULT_ORGANISATION_POLICY.devices;
-
-const KEYS = Object.keys(NO_DEVICE_LIMITS) as (keyof DevicePolicy)[];
 
 function devicesOf(policy: { organisation?: OrganisationPolicy } | null | undefined): DevicePolicy {
   return { ...NO_DEVICE_LIMITS, ...(policy?.organisation?.devices ?? {}) };
@@ -86,6 +84,11 @@ export function devicesForAccount(subject: DeviceSubject): DevicePolicy {
   return devicesOf(policy);
 }
 
+/** What applies to anyone, with no account's groups: for data of an account nobody here is signed in to. */
+export function devicesForNoOne(): DevicePolicy {
+  return devicesOf(usePolicyStore.getState().resolveFor(null));
+}
+
 /** Local ids of every account signed in here, the active one included. */
 export function signedInAccountIds(): string[] {
   const auth = useAuthStore.getState();
@@ -99,14 +102,9 @@ export function signedInAccountIds(): string[] {
   return [...ids];
 }
 
-/** Every switch that any signed-in account has on: for pages that aren't about one account. */
+/** Every switch that any signed-in account has on, and the lowest of each cap: for pages that aren't about one account. */
 export function getStrictestDevices(): DevicePolicy {
-  const out: DevicePolicy = { ...devicesForAccount(null) };
-  for (const id of signedInAccountIds()) {
-    const devices = devicesForAccount(id);
-    for (const key of KEYS) if (devices[key]) out[key] = true;
-  }
-  return out;
+  return signedInAccountIds().reduce((out, id) => strictestDevices(out, devicesForAccount(id)), devicesForAccount(null));
 }
 
 /** The switches that keep mail in: a copy may only go where they are at least as strict. */

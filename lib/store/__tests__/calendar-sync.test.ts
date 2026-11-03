@@ -22,7 +22,7 @@ function setup(version: StalwartVersion = '1.0', server = new FakeCalendarJmap(v
     session,
     transport: server,
     areas: [calendarArea],
-    scope: DEFAULT_SCOPE,
+    scope: { ...DEFAULT_SCOPE, days: null },
     emit: (event) => events.push(event),
     now: () => NOW,
     sleep: async () => {},
