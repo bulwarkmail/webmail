@@ -16,6 +16,8 @@ import { getWopiEditorOrigins } from "./lib/wopi/discovery";
 import { detectSetupState } from "./lib/setup/state";
 import { isServedOverHttps } from "./lib/security/request-protocol";
 import { bootGateResponse } from "./lib/shared-store/boot-gate";
+import { IS_DESKTOP_BUILD } from "./lib/desktop/flag";
+import { isDesktopBlockedRoute } from "./lib/desktop/blocked-routes";
 
 const intlMiddleware = createIntlMiddleware(routing);
 
@@ -266,6 +268,10 @@ export async function proxy(request: NextRequest) {
   // GET/HEAD/OPTIONS pass through untouched.
   if (pathname.startsWith("/api/") && !isOriginGateExempt(pathname) && !isSameOriginRequest(request)) {
     return NextResponse.json({ error: "Cross-origin request rejected" }, { status: 403 });
+  }
+
+  if (IS_DESKTOP_BUILD && isDesktopBlockedRoute(pathname)) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   if (PROXY_SKIP_PATTERN.test(pathname) || isStaticAssetPath(pathname)) {

@@ -5,6 +5,7 @@ import { createHash } from "crypto";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { pruneTraces } from "./scripts/standalone-guard.mjs";
+import { desktopBuildFlag } from "./scripts/desktop-build-flag.mjs";
 
 // Prefer an explicit build arg (passed in by CI / Docker, where .git is
 // excluded from the build context) and fall back to `git rev-parse` for
@@ -193,6 +194,9 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_BASE_PATH: basePath,
     NEXT_PUBLIC_DEV_MOCK_JMAP: process.env.DEV_MOCK_JMAP ?? "",
     NEXT_PUBLIC_BULWARK_LITE: isLite ? "1" : "",
+    // Always a literal, so setting the variable when starting a server build
+    // does nothing (lib/desktop/flag.ts).
+    NEXT_PUBLIC_BULWARK_DESKTOP: desktopBuildFlag(),
   },
 };
 
