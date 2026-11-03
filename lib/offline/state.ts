@@ -1,13 +1,13 @@
 /**
  * What offline mode (#523) shows: which accounts keep mail on this device,
  * whether the browser is offline, what waits in the outbox, how much the
- * cache uses. The switch itself ("Keep mail on this device") is per account
+ * local store uses. The switch itself ("Keep mail on this device") is per account
  * and per browser, in localStorage, never synced: it is off until the user
  * turns it on here.
  */
 
 import { create } from 'zustand';
-import type { OutboxEntry, OutboxError } from './queue';
+import type { ConflictEntry, OutboxEntry, OutboxError } from './queue';
 
 /** localStorage: the local account ids that keep mail on this device. */
 export const OFFLINE_ACCOUNTS_KEY = 'bulwark-offline-accounts';
@@ -33,6 +33,8 @@ interface OfflineState {
   startedOffline: boolean;
   outbox: OutboxRow[];
   pendingChanges: number;
+  /** Changes the server refused, or that met a message changed on another device. */
+  conflicts: ConflictEntry[];
   usageBytes: number;
   /** Accounts whose mail is being brought onto the device right now. */
   syncing: string[];
@@ -56,6 +58,7 @@ export const useOfflineStore = create<OfflineState>()(() => ({
   startedOffline: false,
   outbox: [],
   pendingChanges: 0,
+  conflicts: [],
   usageBytes: 0,
   syncing: [],
   lastSyncedAt: {},

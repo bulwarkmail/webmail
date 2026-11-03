@@ -5718,6 +5718,18 @@
       "no_drafts_mailbox": "Je map Concepten is niet gevonden."
     }
   },
+  "offlineConflicts": {
+    "title": "Niet doorgevoerde wijzigingen",
+    "description": "Je hebt deze wijzigingen offline gemaakt. Ze zijn niet doorgevoerd en het bericht blijft zoals het op de server staat.",
+    "changed": "Gewijzigd op een ander apparaat, je wijziging is niet doorgevoerd",
+    "changed_delete": "Gewijzigd op een ander apparaat, niet verwijderd",
+    "gone": "Staat niet meer op de server, je wijziging is niet doorgevoerd",
+    "refused": "De server heeft deze wijziging geweigerd: {reason}",
+    "dismiss": "Sluiten",
+    "dismiss_label": "Melding over {subject} sluiten",
+    "banner": "Niet doorgevoerde wijzigingen: {count}",
+    "toast": "Offline gemaakte wijzigingen niet doorgevoerd: {count}. Het Postvak UIT laat zien welke."
+  },
   "deep_link": {
     "message_not_found": "Dit bericht is niet meer beschikbaar.",
     "thread_not_found": "Dit gesprek is niet meer beschikbaar.",

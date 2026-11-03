@@ -21,6 +21,8 @@ import {
 
 const CALL_TIMEOUT_MS = 60_000;
 const OWNER_WAIT_MS = 15_000;
+/** A first sync of a large account runs a long time, and its promise is what ends "syncing". */
+const SYNC_TIMEOUT_MS = 30 * 60_000;
 
 export class StoreOwnerGoneError extends Error {
   constructor() {
@@ -44,6 +46,8 @@ export interface StoreClientOptions {
   onOwner?(): void;
   /** The worker asks for a fresh Authorization header. */
   onNeedAuth?(account: string): void;
+  /** Another tab signed everyone out: this tab's worker is gone. */
+  onHalted?(): void;
 }
 
 export class StoreClient {
@@ -54,6 +58,7 @@ export class StoreClient {
   private isOwner = false;
   private readonly pending = new Map<string, Pending>();
   private readonly ownerWaiters: Array<() => void> = [];
+  private lifecycleBound = false;
 
   constructor(private readonly options: StoreClientOptions = {}) {}
 
@@ -80,10 +85,14 @@ export class StoreClient {
       clientId: this.clientId,
       moduleUrl: new URL(`${base}/${SQLITE3MC_PUBLIC_DIR}/sqlite3.mjs`, location.origin).href,
     });
+    // An owner from before this tab won't announce itself again.
+    this.channel.postMessage({ kind: 'who-owns' } satisfies ChannelMessage);
     this.bindLifecycle();
   }
 
   private bindLifecycle(): void {
+    if (this.lifecycleBound) return;
+    this.lifecycleBound = true;
     // A clean handover when the tab goes. If this doesn't get to run, the lock
     // and the handles die with the worker and the next owner retries.
     addEventListener('pagehide', (event) => {
@@ -139,6 +148,10 @@ export class StoreClient {
         this.owner = message.owner;
         if (message.owner) this.flushOwnerWaiters();
         break;
+      case 'shutdown':
+        this.halt();
+        this.options.onHalted?.();
+        break;
       default:
         break;
     }
@@ -149,8 +162,13 @@ export class StoreClient {
     if (!pending) return;
     this.pending.delete(message.id);
     clearTimeout(pending.timer);
-    if (message.error) pending.reject(new Error(message.error));
-    else pending.resolve(message.result);
+    if (message.error) {
+      const error = new Error(message.error);
+      if (message.errorName) error.name = message.errorName;
+      pending.reject(error);
+    } else {
+      pending.resolve(message.result);
+    }
   }
 
   private flushOwnerWaiters(): void {
@@ -178,10 +196,10 @@ export class StoreClient {
     });
   }
 
-  private async rpc<K extends keyof StoreRpc>(method: K, params: Parameters<StoreRpc[K]>[0]): Promise<ReturnType<StoreRpc[K]>> {
+  private async rpc<K extends keyof StoreRpc>(method: K, params: Parameters<StoreRpc[K]>[0], timeoutMs = CALL_TIMEOUT_MS): Promise<ReturnType<StoreRpc[K]>> {
     await this.waitForOwner();
     const id = crypto.randomUUID();
-    const result = this.track<ReturnType<StoreRpc[K]>>(id, CALL_TIMEOUT_MS);
+    const result = this.track<ReturnType<StoreRpc[K]>>(id, timeoutMs);
     this.channel?.postMessage({ kind: 'rpc', id, from: this.clientId, method, params } as ChannelMessage);
     return result;
   }
@@ -206,10 +224,6 @@ export class StoreClient {
     return this.direct({ kind: 'close-account', id: crypto.randomUUID(), account });
   }
 
-  removeAccount(account: string, file: string): Promise<boolean> {
-    return this.direct({ kind: 'remove-account', id: crypto.randomUUID(), account, file });
-  }
-
   setAuth(account: string, auth: string | null): void {
     this.post({ kind: 'set-auth', account, auth });
   }
@@ -222,19 +236,37 @@ export class StoreClient {
     this.post({ kind: 'set-scope', account, scope });
   }
 
+  setInvertedKeywordSort(account: string, inverted: boolean): void {
+    this.post({ kind: 'set-inverted', account, inverted });
+  }
+
   /** Hands the store over: the worker closes everything, then lets go of the lock. */
   async release(): Promise<void> {
     if (!this.worker) return;
-    const worker = this.worker;
     if (this.isOwner) {
       await this.direct({ kind: 'release', id: crypto.randomUUID() });
       this.isOwner = false;
       this.owner = null;
     }
-    worker.terminate();
+    this.halt();
+  }
+
+  /**
+   * Stops at once, with no handover. For a sign-out: the data goes anyway, and
+   * the worker's end frees the lock and the OPFS handles.
+   */
+  halt(): void {
+    this.worker?.terminate();
     this.worker = null;
     this.channel?.close();
     this.channel = null;
+    this.isOwner = false;
+    this.owner = null;
+    for (const [id, pending] of this.pending) {
+      this.pending.delete(id);
+      clearTimeout(pending.timer);
+      pending.reject(new StoreOwnerGoneError());
+    }
   }
 
   // ---- Any tab ----
@@ -244,7 +276,11 @@ export class StoreClient {
   }
 
   sync(account: string): Promise<void> {
-    return this.rpc('sync', { account });
+    return this.rpc('sync', { account }, SYNC_TIMEOUT_MS);
+  }
+
+  removeAccount(account: string, file: string): Promise<boolean> {
+    return this.rpc('removeAccount', { account, file });
   }
 
   noteStateChange(account: string, changed: Record<string, Record<string, string>>): Promise<void> {

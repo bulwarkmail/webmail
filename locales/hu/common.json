@@ -5718,6 +5718,18 @@
       "no_drafts_mailbox": "A Piszkozatok mappa nem található."
     }
   },
+  "offlineConflicts": {
+    "title": "Nem alkalmazott módosítások",
+    "description": "Ezeket a módosításokat offline végezte. Nem lettek alkalmazva, és az üzenet úgy marad, ahogy a szerveren van.",
+    "changed": "Másik eszközön módosult, az Ön módosítása nem lett alkalmazva",
+    "changed_delete": "Másik eszközön módosult, nem lett törölve",
+    "gone": "Már nincs a szerveren, az Ön módosítása nem lett alkalmazva",
+    "refused": "A szerver elutasította ezt a módosítást: {reason}",
+    "dismiss": "Bezárás",
+    "dismiss_label": "A(z) {subject} megjegyzésének bezárása",
+    "banner": "Nem alkalmazott módosítások: {count}",
+    "toast": "Offline végzett, nem alkalmazott módosítások: {count}. A postázandók mappa mutatja, melyek."
+  },
   "deep_link": {
     "message_not_found": "Ez az üzenet már nem érhető el.",
     "thread_not_found": "Ez a beszélgetés már nem érhető el.",

@@ -5718,6 +5718,18 @@
       "no_drafts_mailbox": "No s'ha trobat la carpeta Esborranys."
     }
   },
+  "offlineConflicts": {
+    "title": "Canvis no aplicats",
+    "description": "Heu fet aquests canvis sense connexió. No s'han aplicat i el missatge queda tal com és al servidor.",
+    "changed": "Canviat en un altre dispositiu, el vostre canvi no s'ha aplicat",
+    "changed_delete": "Canviat en un altre dispositiu, no s'ha suprimit",
+    "gone": "Ja no és al servidor, el vostre canvi no s'ha aplicat",
+    "refused": "El servidor ha rebutjat aquest canvi: {reason}",
+    "dismiss": "Descarta",
+    "dismiss_label": "Descarta la nota sobre {subject}",
+    "banner": "Canvis no aplicats: {count}",
+    "toast": "Canvis fets sense connexió que no s'han aplicat: {count}. La safata de sortida indica quins."
+  },
   "deep_link": {
     "message_not_found": "Aquest missatge ja no està disponible.",
     "thread_not_found": "Aquesta conversa ja no està disponible.",

@@ -5718,6 +5718,18 @@
       "no_drafts_mailbox": "임시보관함 폴더를 찾을 수 없습니다."
     }
   },
+  "offlineConflicts": {
+    "title": "적용되지 않은 변경 사항",
+    "description": "오프라인 상태에서 변경한 내용입니다. 적용되지 않았으며 메시지는 서버에 있는 그대로 유지됩니다.",
+    "changed": "다른 기기에서 변경되어 변경 사항이 적용되지 않았습니다",
+    "changed_delete": "다른 기기에서 변경되어 삭제되지 않았습니다",
+    "gone": "서버에 더 이상 없어 변경 사항이 적용되지 않았습니다",
+    "refused": "서버가 이 변경을 거부했습니다: {reason}",
+    "dismiss": "닫기",
+    "dismiss_label": "{subject} 관련 메모 닫기",
+    "banner": "적용되지 않은 변경 사항: {count}",
+    "toast": "오프라인에서 변경했지만 적용되지 않은 항목: {count}개. 보낼 편지함에서 확인할 수 있습니다."
+  },
   "deep_link": {
     "message_not_found": "이 메시지를 더 이상 사용할 수 없습니다.",
     "thread_not_found": "이 대화를 더 이상 사용할 수 없습니다.",

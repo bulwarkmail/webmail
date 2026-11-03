@@ -5718,6 +5718,18 @@
       "no_drafts_mailbox": "Dosarul Ciorne nu a fost găsit."
     }
   },
+  "offlineConflicts": {
+    "title": "Modificări neaplicate",
+    "description": "Ați făcut aceste modificări offline. Nu au fost aplicate, iar mesajul rămâne așa cum este pe server.",
+    "changed": "Modificat pe alt dispozitiv, modificarea dvs. nu a fost aplicată",
+    "changed_delete": "Modificat pe alt dispozitiv, nu a fost șters",
+    "gone": "Nu mai este pe server, modificarea dvs. nu a fost aplicată",
+    "refused": "Serverul a refuzat această modificare: {reason}",
+    "dismiss": "Închide",
+    "dismiss_label": "Închide nota despre {subject}",
+    "banner": "Modificări neaplicate: {count}",
+    "toast": "Modificări făcute offline care nu au fost aplicate: {count}. Căsuța de trimitere arată care."
+  },
   "deep_link": {
     "message_not_found": "Acest mesaj nu mai este disponibil.",
     "thread_not_found": "Această conversație nu mai este disponibilă.",

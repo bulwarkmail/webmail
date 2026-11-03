@@ -9,7 +9,7 @@ import { useVacationStore } from './vacation-store';
 import { subscriptionOwner, useCalendarStore } from './calendar-store';
 import { useFilterStore } from './filter-store';
 import { useSettingsStore } from './settings-store';
-import { useAccountStore, type AccountEntry } from './account-store';
+import { useAccountStore, type AccountEntry, type AccountRemovalReason } from './account-store';
 import { fetchPrincipalDisplayName } from '@/lib/stalwart/principal';
 import { fetchConfig, getCachedConfig } from '@/hooks/use-config';
 import { debug } from '@/lib/debug';
@@ -30,6 +30,8 @@ import { SESSION_TOO_OLD } from '@/lib/session-policy/constants';
 import type { Identity } from '@/lib/jmap/types';
 import { authHooks } from '@/lib/plugin-hooks';
 import { IS_LITE, IS_LITE_STALWART } from '@/lib/lite';
+import { noteCredentialsRejected } from '@/lib/offline/credentials-rejected';
+import { useOfflineStore } from '@/lib/offline/state';
 import { toAsciiEmail } from '@/lib/idn';
 import { flushComposers } from '@/lib/compose-flush-registry';
 import { sortIdentities } from '@/lib/identity-order';
@@ -116,7 +118,7 @@ interface AuthState {
    * (the organisation's session limits, which sign out without asking).
    */
   logoutAll: (options?: LogoutOptions) => Promise<void>;
-  removeAccount: (accountId: string) => void;
+  removeAccount: (accountId: string, reason?: AccountRemovalReason) => void;
   switchAccount: (accountId: string) => Promise<void>;
   checkAuth: () => Promise<void>;
   clearError: () => void;
@@ -1337,6 +1339,25 @@ async function startOfflineClient(accountId: string, serverUrl: string, username
   }
 }
 
+/**
+ * The account's local copy, to show right away while the real connect runs. A
+ * client that answers from the device only; null without the local store for
+ * that account, and the start goes the usual way.
+ */
+async function startLocalCopyClient(accountId: string, serverUrl: string, username: string): Promise<JMAPClient | null> {
+  if (IS_LITE || skipLocalCopy || !useOfflineStore.getState().enabled.includes(accountId)) return null;
+  try {
+    const offline = await import('@/lib/offline/offline-mode');
+    const session = await offline.offlineSessionFor(accountId);
+    return session ? JMAPClient.fromOfflineSession(serverUrl, username, session) : null;
+  } catch {
+    return null;
+  }
+}
+
+// While device-only clients get replaced, restoring goes straight to the server.
+let skipLocalCopy = false;
+
 function performFullLogout(set: (state: Partial<AuthState>) => void): void {
   useSettingsStore.getState().disableSync();
   // With settings sync on, the local settings and templates are a copy of the
@@ -2196,8 +2217,9 @@ export const useAuthStore = create<AuthState>()(
               if (res.status === 401) {
                 resetRefreshBackoff(accountId ?? undefined);
                 // Only this login's refresh token was refused.
+                if (accountId) noteCredentialsRejected(accountId);
                 if (accountId && !isActive) {
-                  get().removeAccount(accountId);
+                  get().removeAccount(accountId, 'evicted');
                   return null;
                 }
                 await saveDraftsBeforeExpiry(slot);
@@ -2215,7 +2237,7 @@ export const useAuthStore = create<AuthState>()(
                 notifyParent('sso:session-expired');
                 markSessionExpired();
                 // removeAccount() on the active account would sign out as if the user asked to.
-                if (accountId && accountId !== get().activeAccountId) get().removeAccount(accountId);
+                if (accountId && accountId !== get().activeAccountId) get().removeAccount(accountId, 'evicted');
                 else {
                   await saveDraftsBeforeExpiry(slot);
                   get().logout({ endProviderSession: false });
@@ -2431,7 +2453,7 @@ export const useAuthStore = create<AuthState>()(
       // drop it from the registry, and clear its per-slot cookies. If asked to
       // remove the active account, defer to logout() which handles switching
       // away or redirecting.
-      removeAccount: (accountId: string) => {
+      removeAccount: (accountId: string, reason = 'explicit') => {
         if (accountId === get().activeAccountId) { void get().logout(); return; }
         const accountStore = useAccountStore.getState();
         const account = accountStore.getAccountById(accountId);
@@ -2451,7 +2473,7 @@ export const useAuthStore = create<AuthState>()(
         clients.delete(accountId);
         evictAccount(accountId);
         forgetAccountRows(accountId, get().client);
-        accountStore.removeAccount(accountId);
+        accountStore.removeAccount(accountId, reason);
         forgetPrincipals(accountId);
         clearPluginStorageForAccount(accountId);
       },
@@ -2611,7 +2633,7 @@ export const useAuthStore = create<AuthState>()(
 
           // Cannot restore - remove the stale account and redirect to login
           evictAccount(accountId);
-          accountStore.removeAccount(accountId);
+          accountStore.removeAccount(accountId, 'evicted');
           void clearSlotCredentials(targetAccount.cookieSlot, targetAccount.authMode === 'oauth');
 
           // Restore the previous account if still available
@@ -2789,6 +2811,12 @@ export const useAuthStore = create<AuthState>()(
           // with a stale client reference while we're restoring accounts.
           set({ isLoading: true, client: null });
 
+          // The offline hooks have to be there before the first request, or a
+          // start without the server has nothing to paint from.
+          if (!IS_LITE && useOfflineStore.getState().enabled.length > 0) {
+            await import('@/lib/offline/offline-mode').then((offline) => offline.registerOfflineHooks()).catch(() => {});
+          }
+
           // Determine which account to activate first
           const defaultAccount = accountStore.getDefaultAccount();
           const activeId = get().activeAccountId;
@@ -2817,7 +2845,7 @@ export const useAuthStore = create<AuthState>()(
             if (!account.rememberMe && !IS_LITE) {
               forgottenAccounts += 1;
               evictAccount(account.id);
-              accountStore.removeAccount(account.id);
+              accountStore.removeAccount(account.id, 'evicted');
               if (account.authMode === 'oauth') void clearSlotCredentials(account.cookieSlot, true);
               return;
             }
@@ -2901,7 +2929,7 @@ export const useAuthStore = create<AuthState>()(
               // again rather than seeing a stale error entry forever. Its
               // refresh token goes with it: nothing would use or revoke it.
               evictAccount(account.id);
-              accountStore.removeAccount(account.id);
+              accountStore.removeAccount(account.id, 'evicted');
               void clearSlotCredentials(account.cookieSlot, account.authMode === 'oauth');
             }
           };
@@ -2912,7 +2940,44 @@ export const useAuthStore = create<AuthState>()(
           // bump re-runs per-client effects (push binding) over the full set.
           const targetEntry = accounts.find((account) => account.id === targetId);
           const otherAccounts = accounts.filter((account) => account.id !== targetId);
-          if (targetEntry) await restoreAccount(targetEntry);
+          // With the local store on, the local copy shows at once and the real
+          // connect takes over when it's done (swapInRealClient below).
+          const localCopy = targetEntry && !targetEntry.awaitingSignIn && targetEntry.rememberMe
+            ? await startLocalCopyClient(targetEntry.id, targetEntry.serverUrl, targetEntry.username)
+            : null;
+          if (localCopy && targetEntry) {
+            clients.set(targetEntry.id, localCopy);
+            accountStore.updateAccount(targetEntry.id, { isConnected: true, hasError: false });
+          } else if (targetEntry) {
+            await restoreAccount(targetEntry);
+          }
+
+          /**
+           * The real connect behind a local copy on screen. No reload and no
+           * loading state: the client in the store changes and the pages
+           * refetch from the server. A refused account goes through the usual
+           * restore path, an unreachable server keeps the local copy.
+           */
+          const swapInRealClient = async (entry: (typeof accounts)[number], local: JMAPClient) => {
+            clients.delete(entry.id);
+            await restoreAccount(entry);
+            const real = clients.get(entry.id);
+            if (!real) {
+              if (useAccountStore.getState().getAccountById(entry.id)) {
+                clients.set(entry.id, local);
+                return;
+              }
+              if (get().activeAccountId !== entry.id) return;
+              // Refused, and evicted by the restore. Whoever is left, or the login page.
+              set({ client: null, isAuthenticated: false, activeAccountId: null });
+              if (useAccountStore.getState().accounts.length > 0) await get().checkAuth();
+              else markSessionExpired();
+              return;
+            }
+            if (get().activeAccountId !== entry.id) return;
+            initializeFeatureStores(real);
+            set({ client: real, ...getClientRateLimitState(real), connectionLost: false, error: null });
+          };
 
           // A few at a time rather than one after the other: with many logins
           // the serial walk left the last of them - and with it a complete
@@ -2974,6 +3039,7 @@ export const useAuthStore = create<AuthState>()(
               error: null,
               activeAccountId: targetId,
             });
+            if (localCopy && targetEntry) void swapInRealClient(targetEntry, localCopy);
 
             fetchConfig().then(config => {
               if (!config.settingsSyncEnabled) return;
@@ -3292,7 +3358,12 @@ export const useAuthStore = create<AuthState>()(
         const offline = [...clients.entries()].filter(([, c]) => c.isOfflineOnly());
         if (offline.length === 0) return true;
         for (const [id] of offline) clients.delete(id);
-        await get().checkAuth();
+        skipLocalCopy = true;
+        try {
+          await get().checkAuth();
+        } finally {
+          skipLocalCopy = false;
+        }
         return offline.every(([id]) => {
           const client = clients.get(id);
           return !!client && !client.isOfflineOnly();

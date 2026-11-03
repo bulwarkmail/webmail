@@ -5718,6 +5718,18 @@
       "no_drafts_mailbox": "Nie znaleziono folderu Wersje robocze."
     }
   },
+  "offlineConflicts": {
+    "title": "Niezastosowane zmiany",
+    "description": "Te zmiany wprowadzono w trybie offline. Nie zostały zastosowane, a wiadomość pozostaje taka jak na serwerze.",
+    "changed": "Zmieniono na innym urządzeniu, Twoja zmiana nie została zastosowana",
+    "changed_delete": "Zmieniono na innym urządzeniu, wiadomość nie została usunięta",
+    "gone": "Nie ma już na serwerze, Twoja zmiana nie została zastosowana",
+    "refused": "Serwer odrzucił tę zmianę: {reason}",
+    "dismiss": "Odrzuć",
+    "dismiss_label": "Odrzuć uwagę o {subject}",
+    "banner": "Niezastosowane zmiany: {count}",
+    "toast": "Niezastosowane zmiany wprowadzone offline: {count}. Skrzynka nadawcza pokazuje które."
+  },
   "deep_link": {
     "message_not_found": "Ta wiadomość nie jest już dostępna.",
     "thread_not_found": "Ta rozmowa nie jest już dostępna.",

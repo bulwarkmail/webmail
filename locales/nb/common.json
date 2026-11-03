@@ -5718,6 +5718,18 @@
       "no_drafts_mailbox": "Fant ikke mappen Utkast."
     }
   },
+  "offlineConflicts": {
+    "title": "Endringer som ikke ble utført",
+    "description": "Du gjorde disse endringene uten nett. De ble ikke utført, og meldingen forblir som den er på serveren.",
+    "changed": "Endret på en annen enhet, endringen din ble ikke utført",
+    "changed_delete": "Endret på en annen enhet, den ble ikke slettet",
+    "gone": "Finnes ikke lenger på serveren, endringen din ble ikke utført",
+    "refused": "Serveren avviste denne endringen: {reason}",
+    "dismiss": "Lukk",
+    "dismiss_label": "Lukk merknaden om {subject}",
+    "banner": "Endringer som ikke ble utført: {count}",
+    "toast": "Endringer gjort uten nett som ikke ble utført: {count}. Utboksen viser hvilke."
+  },
   "deep_link": {
     "message_not_found": "Denne meldingen er ikke lenger tilgjengelig.",
     "thread_not_found": "Denne samtalen er ikke lenger tilgjengelig.",

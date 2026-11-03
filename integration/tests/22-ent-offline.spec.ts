@@ -148,24 +148,29 @@ async function send(page: Page): Promise<void> {
   await page.keyboard.press('Control+Enter');
 }
 
-/** Whether the offline database exists, without opening it (opening would create it). */
+/** Whether anything of the local store is left, without opening it (opening would create it). */
 async function offlineDatabaseExists(page: Page): Promise<boolean> {
-  return page.evaluate(async () => (await indexedDB.databases()).some((d) => d.name === 'bulwark-offline'));
+  return page.evaluate(async () => {
+    if ((await indexedDB.databases()).some((d) => d.name === 'bulwark-store' || d.name === 'bulwark-offline')) return true;
+    const root = await navigator.storage.getDirectory();
+    return root.getDirectoryHandle('.bulwark-store').then(() => true, () => false);
+  });
 }
 
-async function offlineDatabase(page: Page): Promise<{ exists: boolean; emails: number }> {
+/** The accounts the local store holds a key for. Their mail is in encrypted files nothing here can read. */
+async function offlineDatabase(page: Page): Promise<{ exists: boolean; accounts: number }> {
   return page.evaluate(async () => {
     const dbs = await indexedDB.databases();
-    if (!dbs.some((d) => d.name === 'bulwark-offline')) return { exists: false, emails: 0 };
-    return new Promise<{ exists: boolean; emails: number }>((resolve) => {
-      const req = indexedDB.open('bulwark-offline');
+    if (!dbs.some((d) => d.name === 'bulwark-store')) return { exists: false, accounts: 0 };
+    return new Promise<{ exists: boolean; accounts: number }>((resolve) => {
+      const req = indexedDB.open('bulwark-store');
       req.onsuccess = () => {
         const db = req.result;
-        if (!db.objectStoreNames.contains('emails')) { db.close(); resolve({ exists: true, emails: 0 }); return; }
-        const count = db.transaction('emails').objectStore('emails').count();
-        count.onsuccess = () => { db.close(); resolve({ exists: true, emails: count.result }); };
+        if (!db.objectStoreNames.contains('accounts')) { db.close(); resolve({ exists: true, accounts: 0 }); return; }
+        const count = db.transaction('accounts').objectStore('accounts').count();
+        count.onsuccess = () => { db.close(); resolve({ exists: true, accounts: count.result }); };
       };
-      req.onerror = () => resolve({ exists: false, emails: 0 });
+      req.onerror = () => resolve({ exists: false, accounts: 0 });
     });
   });
 }
@@ -342,7 +347,7 @@ test('signing out asks first when unsent mail would be lost, then wipes the devi
   await compose(page, ENT.bob, subject, 'Never sent');
   await send(page);
   await expect(page.getByTestId('offline-banner-outbox')).toHaveText('1 message in the outbox', { timeout: 30_000 });
-  expect((await offlineDatabase(page)).emails).toBeGreaterThan(0);
+  expect((await offlineDatabase(page)).accounts).toBeGreaterThan(0);
 
   // Sign out from the account menu: asked first, and Cancel keeps everything.
   await accountSwitcher(page).click();
@@ -417,7 +422,7 @@ test('forbidding offline mode wipes the device at the next policy fetch and hide
   await enableOffline(carol);
   await toMail(alice);
   const loadedAt = Date.now();
-  expect((await offlineDatabase(alice)).emails).toBeGreaterThan(0);
+  expect((await offlineDatabase(alice)).accounts).toBeGreaterThan(0);
 
   // ent-team (alice, not carol) may no longer keep mail on devices.
   await setPolicy(browser, {
@@ -427,7 +432,7 @@ test('forbidding offline mode wipes the device at the next policy fetch and hide
   await alice.waitForTimeout(Math.max(0, 62_000 - (Date.now() - loadedAt)));
   await alice.evaluate(() => window.dispatchEvent(new Event('focus')));
   await expect(alice.getByText('Your organisation turned off offline mode', { exact: false }).first()).toBeVisible({ timeout: 30_000 });
-  await expect.poll(async () => (await offlineDatabase(alice)).emails, { timeout: 20_000 }).toBe(0);
+  await expect.poll(async () => (await offlineDatabase(alice)).accounts, { timeout: 20_000 }).toBe(0);
   await alice.goto('/settings/backup/offline');
   await expect(alice.getByTestId('offline-forbidden')).toBeVisible({ timeout: 30_000 });
   await expect(alice.getByTestId('offline-switch')).toHaveCount(0);
@@ -436,7 +441,7 @@ test('forbidding offline mode wipes the device at the next policy fetch and hide
   // carol is outside the scope: her switch and her mail stay.
   await carol.reload();
   await expect(carol.getByTestId('offline-switch')).toHaveAttribute('aria-checked', 'true', { timeout: 30_000 });
-  expect((await offlineDatabase(carol)).emails).toBeGreaterThan(0);
+  expect((await offlineDatabase(carol)).accounts).toBeGreaterThan(0);
   await alice.context().close();
   await carol.context().close();
   await setPolicy(browser, {});

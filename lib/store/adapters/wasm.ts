@@ -12,11 +12,11 @@
  */
 
 import { runTransaction, type SqlRow, type SqlValue, type StorageAdapter } from '../storage';
+import { POOL_DIRECTORY } from '../worker/protocol';
 
 const VFS = 'multipleciphers-opfs-sahpool';
 const INIT_TIMEOUT_MS = 30_000;
 const REQUIRED_PAGE_SIZE = 8192;
-const POOL_DIRECTORY = '.bulwark-store';
 const INITIAL_CAPACITY = 16;
 /** A database and its journal, plus room for one more. */
 const SLOTS_PER_DATABASE = 3;

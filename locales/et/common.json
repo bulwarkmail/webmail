@@ -5718,6 +5718,18 @@
       "no_drafts_mailbox": "Kausta Mustandid ei leitud."
     }
   },
+  "offlineConflicts": {
+    "title": "Rakendamata muudatused",
+    "description": "Tegite need muudatused võrguühenduseta. Neid ei rakendatud ja kiri jääb selliseks, nagu see on serveris.",
+    "changed": "Muudetud teises seadmes, teie muudatust ei rakendatud",
+    "changed_delete": "Muudetud teises seadmes, seda ei kustutatud",
+    "gone": "Pole enam serveris, teie muudatust ei rakendatud",
+    "refused": "Server keeldus sellest muudatusest: {reason}",
+    "dismiss": "Sulge",
+    "dismiss_label": "Sulge märkus teemal {subject}",
+    "banner": "Rakendamata muudatused: {count}",
+    "toast": "Võrguühenduseta tehtud rakendamata muudatused: {count}. Väljundkaust näitab, millised."
+  },
   "deep_link": {
     "message_not_found": "See sõnum ei ole enam saadaval.",
     "thread_not_found": "See vestlus ei ole enam saadaval.",

@@ -21,8 +21,6 @@ export const OUTBOX_MIGRATIONS: readonly Migration[] = [
         message_id TEXT,
         -- The copy already on the server that only needs submitting.
         copy_id TEXT,
-        -- The user said send again: no lookup first.
-        skip_lookup INTEGER NOT NULL DEFAULT 0,
         error TEXT
       );
       -- One row per record, later changes merged in. base is the record's state

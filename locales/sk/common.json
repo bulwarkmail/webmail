@@ -5718,6 +5718,18 @@
       "no_drafts_mailbox": "Priečinok Koncepty sa nenašiel."
     }
   },
+  "offlineConflicts": {
+    "title": "Nepoužité zmeny",
+    "description": "Tieto zmeny ste urobili offline. Neboli použité a správa zostáva tak, ako je na serveri.",
+    "changed": "Zmenené na inom zariadení, vaša zmena nebola použitá",
+    "changed_delete": "Zmenené na inom zariadení, správa nebola odstránená",
+    "gone": "Už nie je na serveri, vaša zmena nebola použitá",
+    "refused": "Server túto zmenu odmietol: {reason}",
+    "dismiss": "Zavrieť",
+    "dismiss_label": "Zavrieť poznámku o {subject}",
+    "banner": "Nepoužité zmeny: {count}",
+    "toast": "Nepoužité zmeny urobené offline: {count}. Ktoré to sú, ukazuje pošta na odoslanie."
+  },
   "deep_link": {
     "message_not_found": "Táto správa už nie je dostupná.",
     "thread_not_found": "Táto konverzácia už nie je dostupná.",

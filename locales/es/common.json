@@ -5718,6 +5718,18 @@
       "no_drafts_mailbox": "No se encontró tu carpeta Borradores."
     }
   },
+  "offlineConflicts": {
+    "title": "Cambios no aplicados",
+    "description": "Hiciste estos cambios sin conexión. No se aplicaron y el mensaje queda como está en el servidor.",
+    "changed": "Cambiado en otro dispositivo, tu cambio no se aplicó",
+    "changed_delete": "Cambiado en otro dispositivo, no se eliminó",
+    "gone": "Ya no está en el servidor, tu cambio no se aplicó",
+    "refused": "El servidor rechazó este cambio: {reason}",
+    "dismiss": "Descartar",
+    "dismiss_label": "Descartar la nota sobre {subject}",
+    "banner": "Cambios no aplicados: {count}",
+    "toast": "Cambios hechos sin conexión que no se aplicaron: {count}. La bandeja de salida indica cuáles."
+  },
   "deep_link": {
     "message_not_found": "Este mensaje ya no está disponible.",
     "thread_not_found": "Esta conversación ya no está disponible.",

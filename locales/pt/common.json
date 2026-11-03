@@ -5718,6 +5718,18 @@
       "no_drafts_mailbox": "Não foi possível encontrar a pasta Rascunhos."
     }
   },
+  "offlineConflicts": {
+    "title": "Alterações não aplicadas",
+    "description": "Fez estas alterações offline. Não foram aplicadas e a mensagem fica como está no servidor.",
+    "changed": "Alterada noutro dispositivo, a sua alteração não foi aplicada",
+    "changed_delete": "Alterada noutro dispositivo, não foi eliminada",
+    "gone": "Já não está no servidor, a sua alteração não foi aplicada",
+    "refused": "O servidor recusou esta alteração: {reason}",
+    "dismiss": "Dispensar",
+    "dismiss_label": "Dispensar a nota sobre {subject}",
+    "banner": "Alterações não aplicadas: {count}",
+    "toast": "Alterações feitas offline não aplicadas: {count}. A caixa de saída mostra quais."
+  },
   "deep_link": {
     "message_not_found": "Esta mensagem não está mais disponível.",
     "thread_not_found": "Esta conversa não está mais disponível.",

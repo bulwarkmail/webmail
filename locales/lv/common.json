@@ -5718,6 +5718,18 @@
       "no_drafts_mailbox": "Mape Melnraksti netika atrasta."
     }
   },
+  "offlineConflicts": {
+    "title": "Nepiemērotās izmaiņas",
+    "description": "Šīs izmaiņas veicāt bezsaistē. Tās netika piemērotas, un ziņojums paliek tāds, kāds tas ir serverī.",
+    "changed": "Mainīts citā ierīcē, jūsu izmaiņas netika piemērotas",
+    "changed_delete": "Mainīts citā ierīcē, tas netika izdzēsts",
+    "gone": "Vairs nav serverī, jūsu izmaiņas netika piemērotas",
+    "refused": "Serveris noraidīja šīs izmaiņas: {reason}",
+    "dismiss": "Aizvērt",
+    "dismiss_label": "Aizvērt piezīmi par {subject}",
+    "banner": "Nepiemērotās izmaiņas: {count}",
+    "toast": "Bezsaistē veiktās nepiemērotās izmaiņas: {count}. Izsūtne parāda, kuras."
+  },
   "deep_link": {
     "message_not_found": "Šī ziņa vairs nav pieejama.",
     "thread_not_found": "Šī sarakste vairs nav pieejama.",

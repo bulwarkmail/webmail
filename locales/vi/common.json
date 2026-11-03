@@ -5730,6 +5730,18 @@
       "no_drafts_mailbox": "Không tìm thấy thư mục Thư nháp."
     }
   },
+  "offlineConflicts": {
+    "title": "Các thay đổi chưa được áp dụng",
+    "description": "Bạn đã thực hiện các thay đổi này khi ngoại tuyến. Chúng chưa được áp dụng và thư vẫn giữ nguyên như trên máy chủ.",
+    "changed": "Đã thay đổi trên thiết bị khác nên thay đổi của bạn chưa được áp dụng",
+    "changed_delete": "Đã thay đổi trên thiết bị khác nên chưa bị xóa",
+    "gone": "Không còn trên máy chủ nên thay đổi của bạn chưa được áp dụng",
+    "refused": "Máy chủ đã từ chối thay đổi này: {reason}",
+    "dismiss": "Đóng",
+    "dismiss_label": "Đóng ghi chú về {subject}",
+    "banner": "Các thay đổi chưa được áp dụng: {count}",
+    "toast": "Thay đổi khi ngoại tuyến chưa được áp dụng: {count}. Hộp thư đi cho biết là những thay đổi nào."
+  },
   "deep_link": {
     "message_not_found": "Thư này không còn nữa.",
     "thread_not_found": "Cuộc trò chuyện này không còn tồn tại nữa.",

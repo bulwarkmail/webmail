@@ -5718,6 +5718,18 @@
       "no_drafts_mailbox": "Složka Koncepty nebyla nalezena."
     }
   },
+  "offlineConflicts": {
+    "title": "Nepoužité změny",
+    "description": "Tyto změny jste provedli offline. Nebyly použity a zpráva zůstává tak, jak je na serveru.",
+    "changed": "Změněno na jiném zařízení, vaše změna nebyla použita",
+    "changed_delete": "Změněno na jiném zařízení, zpráva nebyla smazána",
+    "gone": "Už není na serveru, vaše změna nebyla použita",
+    "refused": "Server tuto změnu odmítl: {reason}",
+    "dismiss": "Zavřít",
+    "dismiss_label": "Zavřít poznámku o {subject}",
+    "banner": "Nepoužité změny: {count}",
+    "toast": "Nepoužité změny provedené offline: {count}. Které to jsou, ukazuje pošta k odeslání."
+  },
   "deep_link": {
     "message_not_found": "Tato zpráva už není dostupná.",
     "thread_not_found": "Tato konverzace už není dostupná.",

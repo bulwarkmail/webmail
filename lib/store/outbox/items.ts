@@ -68,7 +68,6 @@ export interface StoredOutboxEntry {
   fingerprint?: PolicyFingerprint;
   messageId?: string;
   copyId?: string;
-  skipLookup?: boolean;
 }
 
 /** Stand-in blob ids of files kept on this device start with this. */

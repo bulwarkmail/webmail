@@ -5718,6 +5718,18 @@
       "no_drafts_mailbox": "找不到“草稿”文件夹。"
     }
   },
+  "offlineConflicts": {
+    "title": "未应用的更改",
+    "description": "这些更改是您离线时做的。它们没有被应用，邮件保持服务器上的状态。",
+    "changed": "已在其他设备上更改，您的更改未被应用",
+    "changed_delete": "已在其他设备上更改，未被删除",
+    "gone": "服务器上已没有此邮件，您的更改未被应用",
+    "refused": "服务器拒绝了此更改：{reason}",
+    "dismiss": "关闭",
+    "dismiss_label": "关闭关于 {subject} 的提示",
+    "banner": "未应用的更改：{count}",
+    "toast": "离线时的更改未被应用：{count} 项。可在发件箱中查看。"
+  },
   "deep_link": {
     "message_not_found": "此邮件已不可用。",
     "thread_not_found": "此会话已不可用。",

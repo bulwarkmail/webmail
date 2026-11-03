@@ -5718,6 +5718,18 @@
       "no_drafts_mailbox": "Ihr Ordner „Entwürfe“ wurde nicht gefunden."
     }
   },
+  "offlineConflicts": {
+    "title": "Nicht übernommene Änderungen",
+    "description": "Sie haben diese Änderungen offline gemacht. Sie wurden nicht übernommen, die Nachricht bleibt wie auf dem Server.",
+    "changed": "Auf einem anderen Gerät geändert, Ihre Änderung wurde nicht übernommen",
+    "changed_delete": "Auf einem anderen Gerät geändert, die Nachricht wurde nicht gelöscht",
+    "gone": "Nicht mehr auf dem Server, Ihre Änderung wurde nicht übernommen",
+    "refused": "Der Server hat diese Änderung abgelehnt: {reason}",
+    "dismiss": "Ausblenden",
+    "dismiss_label": "Hinweis zu {subject} ausblenden",
+    "banner": "Nicht übernommene Änderungen: {count}",
+    "toast": "Offline gemachte Änderungen wurden nicht übernommen: {count}. Welche, steht im Postausgang."
+  },
   "deep_link": {
     "message_not_found": "Diese Nachricht ist nicht mehr verfügbar.",
     "thread_not_found": "Diese Unterhaltung ist nicht mehr verfügbar.",

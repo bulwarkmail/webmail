@@ -5718,6 +5718,18 @@
       "no_drafts_mailbox": "Impossibile trovare la cartella Bozze."
     }
   },
+  "offlineConflicts": {
+    "title": "Modifiche non applicate",
+    "description": "Hai fatto queste modifiche offline. Non sono state applicate e il messaggio resta com'è sul server.",
+    "changed": "Modificato su un altro dispositivo, la tua modifica non è stata applicata",
+    "changed_delete": "Modificato su un altro dispositivo, non è stato eliminato",
+    "gone": "Non è più sul server, la tua modifica non è stata applicata",
+    "refused": "Il server ha rifiutato questa modifica: {reason}",
+    "dismiss": "Ignora",
+    "dismiss_label": "Ignora la nota su {subject}",
+    "banner": "Modifiche non applicate: {count}",
+    "toast": "Modifiche fatte offline non applicate: {count}. La posta in uscita indica quali."
+  },
   "deep_link": {
     "message_not_found": "Questo messaggio non è più disponibile.",
     "thread_not_found": "Questa conversazione non è più disponibile.",

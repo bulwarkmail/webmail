@@ -5718,6 +5718,18 @@
       "no_drafts_mailbox": "找不到「草稿」資料夾。"
     }
   },
+  "offlineConflicts": {
+    "title": "未套用的變更",
+    "description": "這些變更是您離線時做的。它們沒有被套用，郵件維持伺服器上的狀態。",
+    "changed": "已在其他裝置上變更，您的變更未被套用",
+    "changed_delete": "已在其他裝置上變更，未被刪除",
+    "gone": "伺服器上已沒有此郵件，您的變更未被套用",
+    "refused": "伺服器拒絕了此變更：{reason}",
+    "dismiss": "關閉",
+    "dismiss_label": "關閉關於 {subject} 的提示",
+    "banner": "未套用的變更：{count}",
+    "toast": "離線時的變更未被套用：{count} 項。可在寄件匣中查看。"
+  },
   "deep_link": {
     "message_not_found": "已無法使用此郵件。",
     "thread_not_found": "已無法使用此對話串。",

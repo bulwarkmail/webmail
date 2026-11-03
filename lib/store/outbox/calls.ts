@@ -31,7 +31,6 @@ interface OutboxRow {
   summary: string;
   message_id: string | null;
   copy_id: string | null;
-  skip_lookup: number;
   error: string | null;
 }
 
@@ -50,7 +49,6 @@ function toEntry(row: OutboxRow): StoredOutboxEntry {
     ...(row.error ? { error: JSON.parse(row.error) as OutboxError } : {}),
     ...(row.message_id ? { messageId: row.message_id } : {}),
     ...(row.copy_id ? { copyId: row.copy_id } : {}),
-    ...(row.skip_lookup ? { skipLookup: true } : {}),
   };
 }
 
@@ -109,18 +107,16 @@ function claim(ctx: StoreContext, params: { id: number }): boolean {
 }
 
 /** Deleted meanwhile stays deleted: there's no row to update. */
-function update(ctx: StoreContext, params: { id: number; status: OutboxStatus; error?: OutboxError; copyId?: string | null; skipLookup?: boolean }): void {
+function update(ctx: StoreContext, params: { id: number; status: OutboxStatus; error?: OutboxError; copyId?: string | null }): void {
   ctx.db.run(
     `UPDATE outbox SET status = ?, error = ?, sending_since = NULL,
-       copy_id = CASE WHEN ? THEN ? ELSE copy_id END,
-       skip_lookup = COALESCE(?, skip_lookup)
+       copy_id = CASE WHEN ? THEN ? ELSE copy_id END
      WHERE id = ?`,
     [
       params.status,
       params.error ? JSON.stringify(params.error) : null,
       params.copyId === undefined ? 0 : 1,
       params.copyId ?? null,
-      params.skipLookup === undefined ? null : (params.skipLookup ? 1 : 0),
       params.id,
     ],
   );

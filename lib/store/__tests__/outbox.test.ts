@@ -63,7 +63,7 @@ async function boxes() {
 }
 
 const io = (server: FakeJmapMail = t.server, isRefusal: (error: unknown) => boolean = () => false) => ({
-  request: (calls: MethodCall[], using: string[]) => server.request(calls, using),
+  request: (calls: MethodCall[]) => server.request(calls),
   isRefusal,
 });
 

@@ -20,6 +20,9 @@ export function OfflineHost() {
   const t = useTranslations('offline');
   const tRef = useRef(t);
   tRef.current = t;
+  const tConflicts = useTranslations('offlineConflicts');
+  const tConflictsRef = useRef(tConflicts);
+  tConflictsRef.current = tConflicts;
   const { dialogProps, confirm } = useConfirmDialog();
   const confirmRef = useRef(confirm);
   confirmRef.current = confirm;
@@ -44,6 +47,9 @@ export function OfflineHost() {
           break;
         case 'lost':
           toast.warning(tr('toast.lost', { subjects: notice.subjects.map((s) => s || tr('outbox.no_subject')).join(', ') }), { duration: 0 });
+          break;
+        case 'conflict':
+          toast.warning(tConflictsRef.current('toast', { count: notice.count }));
           break;
         case 'refused-delete':
           toast.warning(tr('toast.refused_delete'));

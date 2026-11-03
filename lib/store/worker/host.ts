@@ -30,6 +30,13 @@ export interface StoreHostOptions {
   needAuth(account: string): void;
 }
 
+/** The owner hasn't opened this account yet. The caller may try again shortly. */
+function accountClosed(): Error {
+  const error = new Error('The local store is not open for this account');
+  error.name = 'StoreAccountClosedError';
+  return error;
+}
+
 export class StoreHost {
   private readonly accounts = new Map<string, OpenAccount>();
   private online = true;
@@ -43,7 +50,7 @@ export class StoreHost {
       if (params.session) this.setSession(params.account, params.session);
       this.setAuth(params.account, params.auth);
       existing.engine.setScope(params.scope);
-      existing.engine.setInvertedKeywordSort(params.invertedKeywordSort);
+      if (params.invertedKeywordSort !== null) existing.engine.setInvertedKeywordSort(params.invertedKeywordSort);
       void existing.engine.requestSync();
       return;
     }
@@ -69,7 +76,7 @@ export class StoreHost {
       transport,
       areas: this.options.areas,
       scope: params.scope,
-      invertedKeywordSort: params.invertedKeywordSort,
+      invertedKeywordSort: params.invertedKeywordSort ?? undefined,
       emit: (event) => {
         if (event.type === 'synced') this.synced.set(event.account, event.at);
         this.options.emit(event);
@@ -101,6 +108,10 @@ export class StoreHost {
     void open.engine.requestSync();
   }
 
+  setInvertedKeywordSort(account: string, inverted: boolean): void {
+    this.accounts.get(account)?.engine.setInvertedKeywordSort(inverted);
+  }
+
   async closeAccount(account: string): Promise<void> {
     const open = this.accounts.get(account);
     if (!open) return;
@@ -126,7 +137,7 @@ export class StoreHost {
       case 'answer': {
         const { account, calls } = params as Parameters<StoreRpc['answer']>[0];
         const open = this.accounts.get(account);
-        if (!open) throw new Error('The local store is not open for this account');
+        if (!open) throw accountClosed();
         return open.engine.answer(calls);
       }
       case 'sync': {
@@ -152,8 +163,12 @@ export class StoreHost {
       case 'area': {
         const { account, name, params: callParams } = params as Parameters<StoreRpc['area']>[0];
         const open = this.accounts.get(account);
-        if (!open) throw new Error('The local store is not open for this account');
+        if (!open) throw accountClosed();
         return open.engine.areaCall(name, callParams);
+      }
+      case 'removeAccount': {
+        const { account, file } = params as Parameters<StoreRpc['removeAccount']>[0];
+        return this.removeAccount(account, file);
       }
       default:
         throw new Error(`Unknown store call ${String(method)}`);

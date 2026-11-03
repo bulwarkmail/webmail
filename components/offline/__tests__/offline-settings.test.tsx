@@ -14,6 +14,7 @@ import { useOfflineStore } from '@/lib/offline/state';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { DEFAULT_ORGANISATION_POLICY } from '@/lib/admin/organisation-policy';
+import { setStoreBackend, type StoreBackend } from '@/lib/store/client/api';
 
 function setNoOffline(noOffline: boolean) {
   usePolicyStore.setState({
@@ -24,6 +25,8 @@ function setNoOffline(noOffline: boolean) {
 }
 
 beforeEach(() => {
+  // jsdom has no OPFS: the store's page side says it's there, as a browser would.
+  setStoreBackend({ supported: () => true } as unknown as StoreBackend);
   offline.enableOffline.mockClear();
   offline.disableOffline.mockClear();
   useAuthStore.setState({ activeAccountId: 'acc' });

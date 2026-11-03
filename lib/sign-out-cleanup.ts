@@ -1,6 +1,7 @@
 import { fileStorage } from '@/lib/plugin-storage';
 import { clearAllCheckpoints } from '@/lib/mail-import/checkpoints';
 import { sweepPrivateExports } from '@/lib/mail-export/sinks';
+import { purgeStoreFiles } from '@/lib/store/client/purge';
 
 /**
  * What a full sign-out removes from this browser beyond the stores that
@@ -106,8 +107,10 @@ export function purgeSignedOutData(): void {
   void clearAllCheckpoints().catch(() => {});
   // Mail exports written to the browser's private files and not deleted yet.
   void sweepPrivateExports({ force: true }).catch(() => {});
-  // Offline mode (#523): the mail kept on this device, the outbox, the key
-  // they were encrypted with, and the app shell the service worker kept.
+  // Offline mode (#523): the local store with the mail and the outbox, the keys
+  // it was encrypted with, and the app shell the service worker kept. Also the
+  // database of older versions, in case it wasn't moved yet.
+  void purgeStoreFiles();
   try {
     window.indexedDB?.deleteDatabase('bulwark-offline');
   } catch {

@@ -5718,6 +5718,18 @@
       "no_drafts_mailbox": "Votre dossier Brouillons est introuvable."
     }
   },
+  "offlineConflicts": {
+    "title": "Modifications non appliquées",
+    "description": "Vous avez fait ces modifications hors ligne. Elles n'ont pas été appliquées et le message reste tel qu'il est sur le serveur.",
+    "changed": "Modifié sur un autre appareil, votre modification n'a pas été appliquée",
+    "changed_delete": "Modifié sur un autre appareil, le message n'a pas été supprimé",
+    "gone": "N'est plus sur le serveur, votre modification n'a pas été appliquée",
+    "refused": "Le serveur a refusé cette modification : {reason}",
+    "dismiss": "Ignorer",
+    "dismiss_label": "Ignorer la note sur {subject}",
+    "banner": "Modifications non appliquées : {count}",
+    "toast": "Des modifications faites hors ligne n'ont pas été appliquées : {count}. La boîte d'envoi indique lesquelles."
+  },
   "deep_link": {
     "message_not_found": "Ce message n'est plus disponible.",
     "thread_not_found": "Cette conversation n'est plus disponible.",

@@ -1,7 +1,7 @@
 /**
  * Where the JMAP client hands over to offline mode (#523, lib/offline/).
- * The client knows nothing about the cache: it asks these hooks whether to
- * skip the network, gives them what the server answered, and asks them for
+ * The client knows nothing about the local store: it asks these hooks whether
+ * to skip the network, gives them what the server answered, and asks them for
  * an answer when the network is gone. Nothing is registered while offline
  * mode is off for every account, so the client then behaves as before.
  *
@@ -36,15 +36,23 @@ export interface OfflineHooks {
   /**
    * After a request failed on the network: whether the server can't be
    * reached at all (then the device answers), or it only refused that
-   * request (then it stays an error).
+   * request (then it stays an error). `error` is what the request failed with.
    */
-  serverGone(client: OfflineClientRef): Promise<boolean>;
+  serverGone(client: OfflineClientRef, error?: unknown): Promise<boolean>;
+  /** The server pushed new states, for the local store to catch up. */
+  stateChange(client: OfflineClientRef, change: { changed?: Record<string, Record<string, string>> }): void;
   /** A blob kept on the device, or null. */
   blob(client: OfflineClientRef, blobId: string, accountId: string): Promise<Blob | null>;
   /** A blob the server sent, for the cache. */
   recordBlob(client: OfflineClientRef, blobId: string, accountId: string, blob: Blob): void;
   /** Keep a file to upload later; the stand-in blob id, or null when offline mode doesn't cover the client. */
   holdUpload(client: OfflineClientRef, file: File, accountId: string): Promise<{ blobId: string; size: number; type: string } | null>;
+  /**
+   * Search calls answered from the local store while the server is asked too
+   * (lib/jmap/search-merge.ts). Null when the store doesn't cover the client.
+   * Left out when there is no store, and searches then go to the server alone.
+   */
+  searchLocal?(client: OfflineClientRef, methodCalls: OfflineMethodCall[]): Promise<OfflineResponse | null>;
 }
 
 const KEY = '__bulwarkOfflineHooks';
@@ -59,10 +67,14 @@ export function getOfflineHooks(): OfflineHooks | null {
   return (globalThis as HookGlobal)[KEY] ?? null;
 }
 
-/** The network refused the request (not an HTTP error): offline, DNS, a dropped connection. */
+/**
+ * The server can't be talked to: offline, DNS, a dropped connection, a request
+ * that hung until its deadline, a proxy answering for a server that's down.
+ * Not an answer from the server itself.
+ */
 export function isNetworkFailure(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
-  if (error.name === 'OfflineUnavailableError') return true;
+  if (error.name === 'OfflineUnavailableError' || error.name === 'RequestTimeoutError' || error.name === 'GatewayError') return true;
   return error.name === 'TypeError' && /fetch|network|load failed|internet/i.test(error.message);
 }
 
