@@ -4,6 +4,7 @@ import { DEFAULT_SCOPE, type StoreArea, type StoreScope } from '../area';
 import { calendarArea } from '../calendar';
 import { AccountEngine } from '../engine/account-engine';
 import { mailArea } from '../mail';
+import { outboxArea } from '../outbox';
 import { CALENDAR_SESSION, FakeCalendarJmap } from './helpers/fake-calendar';
 import { FAKE_SESSION, FakeJmap, JMAP_ACCOUNT } from './helpers/fake-jmap';
 import { openMemoryStore } from './helpers/node-adapter';
@@ -39,7 +40,7 @@ function setup(server: FakeJmap, scope: StoreScope, areas: StoreArea[] = [mailAr
 }
 
 const ids = (db: ReturnType<typeof openMemoryStore>, table = 'email') => db.all<{ id: string }>(`SELECT id FROM ${table} ORDER BY id`).map((row) => row.id);
-const blobs = (db: ReturnType<typeof openMemoryStore>) => db.all<{ blob_id: string }>('SELECT blob_id FROM blob ORDER BY blob_id').map((row) => row.blob_id);
+const blobs = (db: ReturnType<typeof openMemoryStore>) => db.all<{ blob_id: string }>("SELECT blob_id FROM blob WHERE blob_id LIKE 'b-%' ORDER BY blob_id").map((row) => row.blob_id);
 const count = (db: ReturnType<typeof openMemoryStore>, table: string) => Number(db.get<{ n: number }>(`SELECT COUNT(*) AS n FROM ${table}`)?.n);
 
 describe('a tightened scope', () => {
@@ -133,6 +134,44 @@ describe('a tightened scope', () => {
     engine.setScope(EVERYTHING);
     await engine.requestSync();
     expect(blobs(db)).toEqual(['b-1']);
+  });
+
+  it('takes the chunks of a forbidden attachment too, not only its row', async () => {
+    const server = new Files();
+    server.withFile('m', 'b-1', 3 * 1024 * 1024, 1);
+    const { engine, db } = setup(server, EVERYTHING);
+    await engine.requestSync();
+    expect(blobs(db)).toEqual(['b-1']);
+    expect(count(db, 'blob_chunk')).toBeGreaterThan(0);
+    engine.setScope({ ...EVERYTHING, attachments: false });
+    await engine.requestSync();
+    expect(count(db, 'blob')).toBe(0);
+    expect(count(db, 'blob_chunk')).toBe(0);
+  });
+
+  it('never takes the file of a pinned message for the total', async () => {
+    const server = new Files();
+    server.withFile('pinned', 'b-pinned', 100, 3);
+    const pinned = server.emails.get('pinned') as { keywords?: Record<string, boolean> };
+    pinned.keywords = { ...pinned.keywords, $pinned: true };
+    server.withFile('other', 'b-other', 100, 2);
+    const { engine, db } = setup(server, EVERYTHING);
+    await engine.requestSync();
+    engine.setScope({ ...EVERYTHING, maxTotalBytes: 150 });
+    await engine.requestSync();
+    expect(blobs(db)).toEqual(['b-pinned']);
+  });
+
+  it('keeps an old draft that is only on this device', async () => {
+    const server = new FakeJmap();
+    server.addEmail({ id: 'old', receivedAt: iso(100) });
+    server.addEmail({ id: 'local-draft', receivedAt: iso(100) });
+    const { engine, db } = setup(server, EVERYTHING, [mailArea, outboxArea]);
+    await engine.requestSync();
+    db.run("INSERT INTO draft_pending (local_id, jmap, seq, create_json, message_id, created_at) VALUES ('local-draft', ?, 1, '{}', 'm@x', 1)", [JMAP_ACCOUNT]);
+    engine.setScope({ ...EVERYTHING, days: 30 });
+    await engine.requestSync();
+    expect(ids(db)).toEqual(['local-draft']);
   });
 
   it('drops attachments over the new size', async () => {
@@ -302,9 +341,10 @@ describe('what the storage page reads', () => {
     await engine.requestSync();
     const before = await engine.areaCall('store.usage', undefined) as { bytes: number; parts: Array<{ part: string; bytes: number; items: number }> };
     const parts = Object.fromEntries(before.parts.map((part) => [part.part, part]));
-    expect(parts.attachments).toEqual({ part: 'attachments', bytes: 50_000, items: 1 });
+    // The file, and the raw messages an export reads.
+    expect(parts.attachments.bytes).toBeGreaterThanOrEqual(50_000);
     expect(parts.mail.items).toBe(2);
-    expect(parts.mail.bytes).toBe(before.bytes - 50_000);
+    expect(parts.mail.bytes).toBe(before.bytes - parts.attachments.bytes);
 
     engine.setScope({ ...EVERYTHING, days: 30, attachments: false });
     await engine.requestSync();

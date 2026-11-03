@@ -4,6 +4,12 @@ import React from 'react';
 import { EmailComposer, type ComposerDraftData } from '../email-composer';
 import { useAuthStore } from '@/stores/auth-store';
 
+const offlineQueue = vi.hoisted(() => ({ noteDraftReplacedElsewhere: vi.fn(async () => {}) }));
+vi.mock('@/lib/offline/queue', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/offline/queue')>()),
+  noteDraftReplacedElsewhere: offlineQueue.noteDraftReplacedElsewhere,
+}));
+
 // ─── Heavy component mocks (mirrors composer-close-guard.test.tsx) ────────────
 
 vi.mock('@/components/email/rich-text-editor', () => ({
@@ -291,6 +297,19 @@ describe('a draft and the login it was saved with', () => {
 
     composer.discard();
     expect(onDiscardDraft).toHaveBeenCalledWith('draft-b2', { accountId: undefined, localAccountId: 'login-b' });
+  });
+
+  it('leaves the old version in its own login while the new one is only on the device', async () => {
+    const composer = open(DRAFT);
+    await composer.editSubject('Hello', 'Hello 2');
+    (clientB.createDraft as ReturnType<typeof vi.fn>).mockReset();
+    (clientB.createDraft as ReturnType<typeof vi.fn>).mockResolvedValue('local-standin');
+    composer.switchFrom('login-b::id-b');
+    await composer.editSubject('Hello 2', 'Hello 3');
+
+    expect(clientB.createDraft).toHaveBeenCalledTimes(1);
+    expect(clientA.deleteEmail).not.toHaveBeenCalled();
+    expect(offlineQueue.noteDraftReplacedElsewhere).toHaveBeenCalledWith('login-b', 'local-standin', { login: 'login-a', jmap: undefined, id: 'draft-a2' });
   });
 
   it('keeps replacing versions through createDraft while the login stays the same', async () => {

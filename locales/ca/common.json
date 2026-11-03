@@ -5818,6 +5818,26 @@
     "unpin": "Deixa de desar sense connexió",
     "unpin_label": "Deixa de desar {name} sense connexió"
   },
+  "offlineDrafts": {
+    "title": "Esborranys en aquest dispositiu",
+    "description": "Aquests esborranys estan desats en aquest dispositiu. Aniran al servidor sols tan bon punt s'hi pugui connectar.",
+    "saved_on_device": "Desat en aquest dispositiu",
+    "status_waiting": "Esperant el servidor",
+    "status_sending": "Desant al servidor",
+    "status_uncertain": "Comprovant si ha arribat al servidor",
+    "status_refused": "El servidor ha rebutjat aquest esborrany: {error}",
+    "file_missing": "Un fitxer adjunt ja no és en aquest dispositiu",
+    "open": "Obre",
+    "open_label": "Obre {subject}",
+    "retry": "Torna-ho a provar",
+    "retry_label": "Torna a provar {subject}",
+    "toast_refused": "L'esborrany {subject} no s'ha pogut desar al servidor. Es queda en aquest dispositiu.",
+    "toast_conflict": "L'esborrany {subject} s'ha canviat en un altre dispositiu. Es conserven les dues versions.",
+    "conflict_changed": "Canviat en un altre dispositiu. Les dues versions són a Esborranys.",
+    "conflict_gone": "Canviat o eliminat en un altre dispositiu. La vostra versió és a Esborranys.",
+    "banner_refused": "Esborranys rebutjats pel servidor: {count}",
+    "banner_waiting": "Esborranys que esperen el servidor: {count}"
+  },
   "deep_link": {
     "message_not_found": "Aquest missatge ja no està disponible.",
     "thread_not_found": "Aquesta conversa ja no està disponible.",
@@ -5933,6 +5953,10 @@
       "crypto_full": {
         "title": "Accés complet a aquesta aplicació",
         "body": "S'executa amb els mateixos drets que el mateix webmail. Pot llegir tot el vostre correu i les claus desades i actuar en nom vostre. Permeteu-ho només als connectors en què confieu plenament."
+      },
+      "keystore": {
+        "title": "Utilitzar els certificats d'aquest ordinador",
+        "body": "Demana signar i desxifrar missatges amb certificats d'aquest ordinador o d'una targeta intel·ligent. L'aplicació us ho pregunta abans. El connector no rep mai la clau privada, però mentre ho permeteu pot signar en nom vostre i llegir el que desxifra."
       },
       "email_raw_send": {
         "title": "Enviar missatges que ha creat ell mateix",
@@ -6584,5 +6608,13 @@
     "server_needed": "Primer escriu l'adreça del servidor.",
     "server_declined": "No has permès aquest servidor, així que no s'hi ha enviat res.",
     "server_invalid": "Aquesta adreça de servidor no és vàlida."
+  },
+  "desktop_keystore": {
+    "title": "Certificats d'aquest ordinador",
+    "description": "Aquest servidor pot demanar utilitzar els vostres certificats i targetes intel·ligents. Tot i així, se us preguntarà abans d'utilitzar cada certificat.",
+    "label": "Accés d'aquest servidor",
+    "label_description": "Retira el permís. El servidor ho haurà de tornar a demanar.",
+    "revoke": "Retira",
+    "revoked": "Permís retirat"
   }
 }

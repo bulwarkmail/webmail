@@ -6,7 +6,6 @@ import { TransportError, type MethodCall } from '../engine/transport';
 import { mailArea } from '../mail';
 import { outboxArea } from '../outbox';
 import { CLOCK_SKEW_MARGIN_MS, decideRetry, LOOKUP_TRUSTED_MS, type LookupArgs } from '../outbox/dedupe';
-import { addHeldFileSource } from '../outbox/calls';
 import { flushPatches, type PatchOutcome, type PendingPatch } from '../outbox/flush-patches';
 import type { StoredConflict, StoredOutboxEntry } from '../outbox/items';
 import { mergePatches, patchConflicts } from '../outbox/patches';
@@ -485,23 +484,14 @@ describe('sends', () => {
     const held = await t.engine.areaCall('outbox.holdFile', { name: 'note.txt', type: 'text/plain', data }) as { blobId: string; size: number };
     expect(held).toMatchObject({ size: 5, type: 'text/plain' });
     expect(held.blobId).toMatch(/^bulwark-local-/);
-    const file = await t.engine.areaCall('outbox.heldFile', { blobId: held.blobId }) as { name: string; data: Uint8Array };
+    const file = await t.engine.areaCall('outbox.heldFile', { blobId: held.blobId }) as { name: string; blob: Blob };
     expect(file.name).toBe('note.txt');
-    expect(new TextDecoder().decode(file.data)).toBe('hello');
+    expect(await file.blob.text()).toBe('hello');
     const id = await t.engine.areaCall('outbox.queueSend', { summary, item: { kind: 'raw', blobId: held.blobId, identityId: 'i' } }) as number;
     await t.engine.areaCall('outbox.remove', { id });
     expect(await t.engine.areaCall('outbox.heldFile', { blobId: held.blobId })).toBeNull();
     await t.engine.areaCall('outbox.update', { id, status: 'failed' });
     expect((await read()).entries).toEqual([]);
-  });
-
-  it('leaves a file alone that another area holds', async () => {
-    const held = await t.engine.areaCall('outbox.holdFile', { name: 'draft.txt', type: 'text/plain', data: new Uint8Array(1) }) as { blobId: string };
-    const stale = await t.engine.areaCall('outbox.holdFile', { name: 'old.txt', type: 'text/plain', data: new Uint8Array(1) }) as { blobId: string };
-    addHeldFileSource(() => [held.blobId]);
-    expect(await t.engine.areaCall('outbox.dropOrphans', { olderThan: NOW + 1 })).toBe(1);
-    expect(await t.engine.areaCall('outbox.heldFile', { blobId: held.blobId })).not.toBeNull();
-    expect(await t.engine.areaCall('outbox.heldFile', { blobId: stale.blobId })).toBeNull();
   });
 
   it('drops old files nothing needs', async () => {

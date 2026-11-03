@@ -1,4 +1,5 @@
 import type { StoreArea } from '../area';
+import { applyAttachmentScope, attachmentSyncer } from './attachments';
 import { MAIL_CALLS } from './calls';
 import { MAIL_METHODS } from './methods';
 import { MAIL_MIGRATIONS } from './schema';
@@ -10,9 +11,10 @@ export const mailArea: StoreArea = {
   name: 'mail',
   migrations: [...MAIL_MIGRATIONS, ...SEARCH_MIGRATIONS],
   methods: MAIL_METHODS,
-  syncers: [mailSyncer, identitySyncer, quotaSyncer],
+  syncers: [mailSyncer, identitySyncer, quotaSyncer, attachmentSyncer],
   calls: MAIL_CALLS,
   applyScope: applyMailScope,
   usage: mailUsage,
   keptBytes: (ctx) => Number(ctx.db.get<{ n: number | null }>('SELECT SUM(size) AS n FROM blob')?.n ?? 0),
+  scopeChanged: applyAttachmentScope,
 };

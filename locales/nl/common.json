@@ -5818,6 +5818,26 @@
     "unpin": "Niet meer offline bewaren",
     "unpin_label": "{name} niet meer offline bewaren"
   },
+  "offlineDrafts": {
+    "title": "Concepten op dit apparaat",
+    "description": "Deze concepten zijn op dit apparaat opgeslagen. Ze gaan vanzelf naar de server zodra die bereikbaar is.",
+    "saved_on_device": "Opgeslagen op dit apparaat",
+    "status_waiting": "Wacht op de server",
+    "status_sending": "Wordt op de server opgeslagen",
+    "status_uncertain": "Controleren of het de server heeft bereikt",
+    "status_refused": "De server heeft dit concept geweigerd: {error}",
+    "file_missing": "Een bijgevoegd bestand staat niet meer op dit apparaat",
+    "open": "Openen",
+    "open_label": "{subject} openen",
+    "retry": "Opnieuw proberen",
+    "retry_label": "{subject} opnieuw proberen",
+    "toast_refused": "Het concept {subject} kon niet op de server worden opgeslagen. Het blijft op dit apparaat.",
+    "toast_conflict": "Het concept {subject} is op een ander apparaat gewijzigd. Beide versies blijven bewaard.",
+    "conflict_changed": "Gewijzigd op een ander apparaat. Beide versies staan in Concepten.",
+    "conflict_gone": "Gewijzigd of verwijderd op een ander apparaat. Uw versie staat in Concepten.",
+    "banner_refused": "Door de server geweigerde concepten: {count}",
+    "banner_waiting": "Concepten die op de server wachten: {count}"
+  },
   "deep_link": {
     "message_not_found": "Dit bericht is niet meer beschikbaar.",
     "thread_not_found": "Dit gesprek is niet meer beschikbaar.",
@@ -5933,6 +5953,10 @@
       "crypto_full": {
         "title": "Volledige toegang tot deze app",
         "body": "Draait met dezelfde rechten als de webmail zelf. Hij kan al je e-mail en opgeslagen sleutels lezen en namens jou handelen. Sta dit alleen toe voor plug-ins die je volledig vertrouwt."
+      },
+      "keystore": {
+        "title": "Certificaten op deze computer gebruiken",
+        "body": "Vraagt om berichten te ondertekenen en te ontsleutelen met certificaten op deze computer of een smartcard. De app vraagt het u eerst. De plug-in krijgt nooit de privésleutel, maar zolang u het toestaat, kan hij in uw naam ondertekenen en lezen wat hij ontsleutelt."
       },
       "email_raw_send": {
         "title": "Zelf samengestelde berichten verzenden",
@@ -6584,5 +6608,13 @@
     "server_needed": "Vul eerst het adres van de server in.",
     "server_declined": "Je hebt deze server niet toegestaan, dus er is niets naartoe gestuurd.",
     "server_invalid": "Dit serveradres is niet geldig."
+  },
+  "desktop_keystore": {
+    "title": "Certificaten op deze computer",
+    "description": "Deze server kan vragen om uw certificaten en smartcards te gebruiken. U krijgt nog steeds een vraag voordat een certificaat wordt gebruikt.",
+    "label": "Toegang voor deze server",
+    "label_description": "Trek uw toestemming in. De server moet dan opnieuw vragen.",
+    "revoke": "Intrekken",
+    "revoked": "Toestemming ingetrokken"
   }
 }

@@ -5818,6 +5818,26 @@
     "unpin": "Dejar de guardar sin conexión",
     "unpin_label": "Dejar de guardar {name} sin conexión"
   },
+  "offlineDrafts": {
+    "title": "Borradores en este dispositivo",
+    "description": "Estos borradores están guardados en este dispositivo. Irán al servidor por sí solos en cuanto se pueda conectar con él.",
+    "saved_on_device": "Guardado en este dispositivo",
+    "status_waiting": "Esperando al servidor",
+    "status_sending": "Guardando en el servidor",
+    "status_uncertain": "Comprobando si llegó al servidor",
+    "status_refused": "El servidor rechazó este borrador: {error}",
+    "file_missing": "Un archivo adjunto ya no está en este dispositivo",
+    "open": "Abrir",
+    "open_label": "Abrir {subject}",
+    "retry": "Reintentar",
+    "retry_label": "Reintentar {subject}",
+    "toast_refused": "El borrador {subject} no se pudo guardar en el servidor. Se queda en este dispositivo.",
+    "toast_conflict": "El borrador {subject} se cambió en otro dispositivo. Se conservan las dos versiones.",
+    "conflict_changed": "Cambiado en otro dispositivo. Las dos versiones están en Borradores.",
+    "conflict_gone": "Cambiado o eliminado en otro dispositivo. Su versión está en Borradores.",
+    "banner_refused": "Borradores rechazados por el servidor: {count}",
+    "banner_waiting": "Borradores esperando al servidor: {count}"
+  },
   "deep_link": {
     "message_not_found": "Este mensaje ya no está disponible.",
     "thread_not_found": "Esta conversación ya no está disponible.",
@@ -5933,6 +5953,10 @@
       "crypto_full": {
         "title": "Acceso total a esta aplicación",
         "body": "Se ejecuta con los mismos derechos que el propio webmail. Puede leer todo tu correo y tus claves guardadas y actuar en tu nombre. Permítelo solo en complementos en los que confíes plenamente."
+      },
+      "keystore": {
+        "title": "Usar certificados de este ordenador",
+        "body": "Pide firmar y descifrar mensajes con certificados de este ordenador o de una tarjeta inteligente. La aplicación le pregunta antes. El complemento nunca recibe la clave privada, pero mientras lo permita puede firmar en su nombre y leer lo que descifra."
       },
       "email_raw_send": {
         "title": "Enviar mensajes que creó él mismo",
@@ -6584,5 +6608,13 @@
     "server_needed": "Primero escribe la dirección del servidor.",
     "server_declined": "No permitiste este servidor, así que no se le envió nada.",
     "server_invalid": "Esta dirección de servidor no es válida."
+  },
+  "desktop_keystore": {
+    "title": "Certificados de este ordenador",
+    "description": "Este servidor puede pedir usar sus certificados y tarjetas inteligentes. Aun así, se le preguntará antes de usar cada certificado.",
+    "label": "Acceso de este servidor",
+    "label_description": "Retire su permiso. El servidor tendrá que volver a pedirlo.",
+    "revoke": "Retirar",
+    "revoked": "Permiso retirado"
   }
 }

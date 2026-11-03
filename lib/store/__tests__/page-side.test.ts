@@ -331,6 +331,42 @@ describe('the page\'s store', () => {
       expect(lost).toHaveBeenCalledWith('lost@x');
     });
 
+    it('still tells the page when a new owner takes over the open that found the key gone', async () => {
+      await open();
+      const before = await getAccountRecord('lost@x');
+      await forgetAccountKey('lost@x');
+      configureStore({
+        inputs: () => ({ session: FAKE_SESSION, auth: 'Basic x', invertedKeywordSort: true }),
+        refreshAuth: async () => null,
+        onEvent: () => {},
+        onStoreLost: lost,
+      });
+      const store = getStore();
+      await store.ensureOpen('lost@x');
+      const worker = FakeWorker.all[FakeWorker.all.length - 1];
+      const post = worker.postMessage.bind(worker);
+      let dropped = false;
+      worker.postMessage = (message) => {
+        if (message.kind === 'open' && !dropped) {
+          // The first open never gets its answer: ownership moved under it.
+          dropped = true;
+          worker.posted.push(message);
+          return;
+        }
+        post(message);
+      };
+      worker.becomeOwner();
+      await vi.waitFor(() => expect(dropped).toBe(true));
+      worker.becomeOwner();
+      await vi.waitFor(() => expect(lost).toHaveBeenCalledWith('lost@x'));
+      expect(lost).toHaveBeenCalledTimes(1);
+      const after = await getAccountRecord('lost@x');
+      const prunes = worker.posted.filter((m) => m.kind === 'prune-files') as unknown as Array<{ keep: string[] }>;
+      expect(prunes.at(-1)?.keep).toContain(after!.file);
+      expect(prunes.at(-1)?.keep).not.toContain(before!.file);
+      store.stop();
+    });
+
     it('stays quiet on a normal reopen', async () => {
       await open();
       const worker = await open();

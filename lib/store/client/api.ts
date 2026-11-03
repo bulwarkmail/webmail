@@ -84,6 +84,11 @@ class PageStore implements StoreBackend {
   private readonly opening = new Map<string, Promise<void>>();
   /** The engine can't start in this browser: don't keep every caller waiting for an owner. */
   private broken = false;
+  /**
+   * Accounts whose key was just made, until their store has opened. A new owner
+   * can start the open again, and the second try finds the key the first one made.
+   */
+  private readonly keyJustMade = new Set<string>();
   /** What the owner's engine was last told to keep. */
   private readonly sentScope = new Map<string, string>();
 
@@ -136,8 +141,9 @@ class PageStore implements StoreBackend {
     const run = (async () => {
       const client = this.started();
       const { keyHex, record, fresh } = await openAccountKey(account, this.hooks()?.keyLayers?.() ?? []);
+      if (fresh) this.keyJustMade.add(account);
       // The old file, if the key alone went, can never be read again.
-      if (fresh) await client.pruneFiles(await knownStoreFiles()).catch(() => {});
+      if (this.keyJustMade.has(account)) await client.pruneFiles(await knownStoreFiles()).catch(() => {});
       const inputs = this.hooks()?.inputs(account) ?? { session: null, auth: null, invertedKeywordSort: null };
       if (inputs.scope) this.sentScope.set(account, JSON.stringify(inputs.scope));
       const opened = await client.openAccount({
@@ -149,7 +155,8 @@ class PageStore implements StoreBackend {
         invertedKeywordSort: inputs.invertedKeywordSort,
         auth: inputs.auth,
       });
-      if (fresh || opened?.created) {
+      // Whichever try of them gets here first says so.
+      if (this.keyJustMade.delete(account) || opened?.created) {
         if (readOpenedAccounts().includes(account)) this.hooks()?.onStoreLost?.(account);
       }
       rememberOpened(account, true);

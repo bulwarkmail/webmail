@@ -456,6 +456,13 @@ export function checkPluginManifest(m: Record<string, unknown>, opts: { appVersi
       permissions = [...new Set([...permissions, ...asked.filter((p) => KNOWN_PERMISSIONS.has(p))])];
     }
   }
+  // Only the privileged tier may reach the OS certificate store. Left out rather than
+  // refused, like an optional permission this version doesn't offer: the host would
+  // refuse the calls anyway, and consent shouldn't ask for what can't be used.
+  if (tier !== 'privileged' && permissions.includes('keystore')) {
+    warnings.push('Left out the "keystore" permission: it needs the privileged tier');
+    permissions = permissions.filter((p) => p !== 'keystore');
+  }
   if (tier === 'privileged' && !permissions.includes('crypto:full')) {
     errors.push('A privileged plugin must request the "crypto:full" permission');
   }

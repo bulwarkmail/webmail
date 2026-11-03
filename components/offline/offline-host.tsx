@@ -30,6 +30,9 @@ export function OfflineHost() {
   const router = useRouter();
   const routerRef = useRef(router);
   routerRef.current = router;
+  const tDrafts = useTranslations('offlineDrafts');
+  const tDraftsRef = useRef(tDrafts);
+  tDraftsRef.current = tDrafts;
   const { dialogProps, confirm } = useConfirmDialog();
   const confirmRef = useRef(confirm);
   confirmRef.current = confirm;
@@ -59,6 +62,14 @@ export function OfflineHost() {
         case 'conflict':
           toast.warning(tConflictsRef.current('toast', { count: notice.count }));
           break;
+        case 'draft-refused':
+          toast.error(tDraftsRef.current('toast_refused', { subject: notice.subject || tr('outbox.no_subject') }), {
+            message: notice.error.code ? tDraftsRef.current(notice.error.code) : notice.error.text,
+          });
+          break;
+        case 'draft-conflict':
+          toast.warning(tDraftsRef.current('toast_conflict', { subject: notice.subject || tr('outbox.no_subject') }));
+          break;
         case 'storage-failed':
           toast.warning(tStorageRef.current('storage_full_title'), { message: tStorageRef.current('storage_full_text'), duration: 0, action: openStorage });
           break;
@@ -70,7 +81,7 @@ export function OfflineHost() {
           break;
         case 'store-reset':
           toast.warning(tConflictsRef.current('store_reset'), {
-            message: notice.lost > 0 ? tStorageRef.current('evicted_lost', { count: notice.lost }) : undefined,
+            message: notice.lost ? tStorageRef.current('evicted_lost', { count: notice.lost }) : undefined,
             duration: 0,
             action: openStorage,
           });

@@ -5818,6 +5818,26 @@
     "unpin": "Nicht mehr offline behalten",
     "unpin_label": "{name} nicht mehr offline behalten"
   },
+  "offlineDrafts": {
+    "title": "Entwürfe auf diesem Gerät",
+    "description": "Diese Entwürfe sind auf diesem Gerät gespeichert. Sie gehen von selbst an den Server, sobald er erreichbar ist.",
+    "saved_on_device": "Auf diesem Gerät gespeichert",
+    "status_waiting": "Wartet auf den Server",
+    "status_sending": "Wird auf dem Server gespeichert",
+    "status_uncertain": "Es wird geprüft, ob er den Server erreicht hat",
+    "status_refused": "Der Server hat diesen Entwurf abgelehnt: {error}",
+    "file_missing": "Eine angehängte Datei ist nicht mehr auf diesem Gerät",
+    "open": "Öffnen",
+    "open_label": "{subject} öffnen",
+    "retry": "Erneut versuchen",
+    "retry_label": "{subject} erneut versuchen",
+    "toast_refused": "Der Entwurf {subject} konnte nicht auf dem Server gespeichert werden. Er bleibt auf diesem Gerät.",
+    "toast_conflict": "Der Entwurf {subject} wurde auf einem anderen Gerät geändert. Beide Fassungen bleiben erhalten.",
+    "conflict_changed": "Auf einem anderen Gerät geändert. Beide Fassungen liegen in den Entwürfen.",
+    "conflict_gone": "Auf einem anderen Gerät geändert oder entfernt. Ihre Fassung liegt in den Entwürfen.",
+    "banner_refused": "Vom Server abgelehnte Entwürfe: {count}",
+    "banner_waiting": "Entwürfe warten auf den Server: {count}"
+  },
   "deep_link": {
     "message_not_found": "Diese Nachricht ist nicht mehr verfügbar.",
     "thread_not_found": "Diese Unterhaltung ist nicht mehr verfügbar.",
@@ -5933,6 +5953,10 @@
       "crypto_full": {
         "title": "Vollzugriff auf diese App",
         "body": "Läuft mit denselben Rechten wie das Webmail selbst. Es kann alle Ihre E-Mails und gespeicherten Schlüssel lesen und in Ihrem Namen handeln. Erlauben Sie das nur Plugins, denen Sie voll vertrauen."
+      },
+      "keystore": {
+        "title": "Zertifikate auf diesem Computer verwenden",
+        "body": "Bittet darum, Nachrichten mit Zertifikaten auf diesem Computer oder einer Smartcard zu signieren und zu entschlüsseln. Die App fragt Sie vorher. Das Plugin erhält nie den privaten Schlüssel, kann aber, solange Sie es zulassen, in Ihrem Namen signieren und lesen, was es entschlüsselt."
       },
       "email_raw_send": {
         "title": "Selbst erstellte Nachrichten senden",
@@ -6584,5 +6608,13 @@
     "server_needed": "Geben Sie zuerst die Adresse Ihres Servers ein.",
     "server_declined": "Sie haben diesen Server nicht zugelassen, daher wurde nichts an ihn gesendet.",
     "server_invalid": "Diese Serveradresse ist ungültig."
+  },
+  "desktop_keystore": {
+    "title": "Zertifikate auf diesem Computer",
+    "description": "Dieser Server darf darum bitten, Ihre Zertifikate und Smartcards zu verwenden. Vor der Verwendung eines Zertifikats werden Sie trotzdem gefragt.",
+    "label": "Zugriff für diesen Server",
+    "label_description": "Nehmen Sie Ihre Erlaubnis zurück. Der Server muss dann erneut fragen.",
+    "revoke": "Zurücknehmen",
+    "revoked": "Erlaubnis zurückgenommen"
   }
 }

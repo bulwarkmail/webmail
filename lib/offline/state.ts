@@ -8,7 +8,7 @@
 
 import { create } from 'zustand';
 import { DEFAULT_SCOPE, type StoreScope, type StoreUsage } from '@/lib/store/area';
-import type { ConflictEntry, OutboxEntry, OutboxError } from './queue';
+import type { ConflictEntry, LocalDraftRow, OutboxEntry, OutboxError } from './queue';
 import type { PersistState } from './storage-health';
 import type { SyncProgress } from './sync-progress';
 
@@ -80,6 +80,10 @@ interface OfflineState {
   conflicts: ConflictEntry[];
   /** The same for calendar events and contacts. */
   areaConflicts: AreaConflict[];
+  /** Drafts that are only on this device: on their way up, or refused by the server. */
+  localDrafts: LocalDraftRow[];
+  /** A local draft the user asked to open, for the mail page to pick up. */
+  draftToOpen: { account: string; jmap: string; id: string } | null;
   usageBytes: number;
   usage: Record<string, StoreUsage>;
   choices: Record<string, UserChoice>;
@@ -135,6 +139,8 @@ export const useOfflineStore = create<OfflineState>()(() => ({
   pendingChanges: 0,
   conflicts: [],
   areaConflicts: [],
+  localDrafts: [],
+  draftToOpen: null,
   usageBytes: 0,
   usage: {},
   choices: readRecord<UserChoice>(OFFLINE_SCOPE_KEY),

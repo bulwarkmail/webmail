@@ -13,7 +13,8 @@ import { mailArea } from '../mail';
 import { FAKE_SESSION, FakeJmap, JMAP_ACCOUNT } from './helpers/fake-jmap';
 import { openFileStore, openMemoryStore } from './helpers/node-adapter';
 
-const EVERYTHING = { ...DEFAULT_SCOPE, days: null };
+// No files: raw messages would add a commit per message, and these tests are about mail.
+const EVERYTHING = { ...DEFAULT_SCOPE, days: null, attachments: false };
 const INBOX = { inMailbox: 'inbox' };
 
 function engineFor(server: FakeJmap, db = openMemoryStore(), emit?: (e: StoreEvent) => void) {
@@ -443,7 +444,7 @@ describe('query plans', () => {
       },
     };
     const answer = await answerRequest(
-      { account: 'a', db: spied as typeof db, session: FAKE_SESSION, scope: EVERYTHING, now: Date.now, emit: () => {}, overlay: (_jmap, _type, records) => records, keptByOthers: () => 0, requestSync: async () => {}, defaultJmap: JMAP_ACCOUNT, invertedKeywordSort: false },
+      { account: 'a', db: spied as typeof db, session: FAKE_SESSION, scope: EVERYTHING, now: Date.now, emit: () => {}, overlay: (_jmap, _type, records) => records, keptByOthers: () => 0, sparedRecords: () => [], requestSync: async () => {}, defaultJmap: JMAP_ACCOUNT, invertedKeywordSort: false },
       buildMethodTable([mailArea]),
       [['Email/query', { filter: INBOX, sort: [{ property: 'receivedAt', isAscending: false }], limit: 5 }, 'q']],
     );

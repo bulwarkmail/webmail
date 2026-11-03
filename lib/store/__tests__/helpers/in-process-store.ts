@@ -19,6 +19,19 @@ const NO_SERVER: JmapTransport = {
   upload: async () => ({ blobId: 'x', type: '', size: 0 }),
 };
 
+/**
+ * What crosses to the worker and back is a copy, except a Blob: that goes by
+ * reference there, and jsdom's Blob can't be cloned here.
+ */
+function acrossWorker<T>(value: T): T {
+  if (value instanceof Blob) return value;
+  if (Array.isArray(value)) return value.map(acrossWorker) as T;
+  if (value && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, acrossWorker(item)])) as T;
+  }
+  return structuredClone(value);
+}
+
 export class InProcessStore implements StoreBackend {
   readonly engines = new Map<string, AccountEngine>();
   readonly dbs = new Map<string, StorageAdapter>();
@@ -71,8 +84,8 @@ export class InProcessStore implements StoreBackend {
 
   async area<T = unknown>(account: string, name: string, params?: unknown): Promise<T> {
     if (this.failArea?.(name)) throw new Error(`${name} failed`);
-    const result = await this.engine(account).areaCall(name, structuredClone(params));
-    return (result === undefined ? undefined : structuredClone(result)) as T;
+    const result = await this.engine(account).areaCall(name, acrossWorker(params));
+    return (result === undefined ? undefined : acrossWorker(result)) as T;
   }
 
   async setScope(account: string, scope: StoreScope): Promise<void> {

@@ -406,7 +406,9 @@ describe('attachments', () => {
   class Files extends FakeJmapMail {
     downloads: string[] = [];
     missing = new Set<string>();
-    override async download(_jmap?: string, blobId?: string): Promise<Uint8Array> {
+    override async download(_jmap?: string, blobId?: string, type?: string): Promise<Uint8Array> {
+      // Raw messages are kept too since exports read them; these tests are about attachments.
+      if (type === 'message/rfc822') return new Uint8Array([9]);
       this.downloads.push(String(blobId));
       if (this.offline) throw new TransportError('network', 'Failed to fetch');
       if (this.missing.has(String(blobId))) throw new TransportError('http', 'Gone', 404);
@@ -426,9 +428,9 @@ describe('attachments', () => {
     const { engine, db } = engineFor(server, { ...EVERYTHING, maxAttachmentBytes: 1000 });
     await engine.requestSync();
     expect(server.downloads).toEqual(['b-small']);
-    const stored = await engine.areaCall('mail.getBlob', { jmap: JMAP_ACCOUNT, blobId: 'b-small' }) as { type: string; data: Uint8Array };
+    const stored = await engine.areaCall('mail.getBlob', { jmap: JMAP_ACCOUNT, blobId: 'b-small' }) as { type: string; blob: Blob };
     expect(stored.type).toBe('application/pdf');
-    expect([...stored.data]).toEqual([1, 2, 3]);
+    expect([...new Uint8Array(await stored.blob.arrayBuffer())]).toEqual([1, 2, 3]);
 
     server.destroyEmail('small');
     await engine.requestSync();

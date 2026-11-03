@@ -124,9 +124,9 @@ describe('moving the old outbox into the store', () => {
     expect(outbox[0].messageId).toMatch(/@example\.org$/);
     expect(outbox[1].messageId).toBeUndefined();
     expect(outbox[3].messageId).toBe('raw-1@example.org');
-    const file = await store.area<{ name: string; data: Uint8Array }>('acc', 'outbox.heldFile', { blobId: 'bulwark-local-raw' });
+    const file = await store.area<{ name: string; blob: Blob }>('acc', 'outbox.heldFile', { blobId: 'bulwark-local-raw' });
     expect(file.name).toBe('message.eml');
-    expect(new TextDecoder().decode(file.data)).toBe(RAW);
+    expect(await file.blob.text()).toBe(RAW);
     expect(await oldExists()).toBe(false);
     expect(store.has('stranger')).toBe(false);
   });

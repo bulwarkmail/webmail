@@ -82,6 +82,8 @@ export interface StoreContext {
   overlay<T extends { id: string }>(jmap: string, type: string, records: T[]): T[];
   /** Attachments and files the other areas keep: `scope.maxTotalBytes` is for all of them together. */
   keptByOthers(area: string): number;
+  /** Records of one type another area needs to stay, whatever the window says. */
+  sparedRecords(jmap: string, type: string): string[];
   /** Starts a sync pass, or one more after the running pass. Resolves when they're done. */
   requestSync(): Promise<void>;
 }
@@ -98,6 +100,10 @@ export interface SyncContext extends StoreContext {
   transport: JmapTransport;
   /** True once the engine is closing or lost the network: stop at the next batch. */
   stopped(): boolean;
+  /** A newer pass was asked for. Work that can wait stops, and the next pass carries on with it. */
+  syncWanted(): boolean;
+  /** Waits, to stay polite to the server. */
+  pause(ms: number): Promise<void>;
   syncState(jmap: string, type: string): SyncStateRow;
   /** Call inside the transaction that writes the data, so the two can't disagree. */
   setSyncState(jmap: string, type: string, row: Partial<SyncStateRow>): void;
@@ -108,6 +114,8 @@ export interface Syncer {
   name: string;
   /** The JMAP capability an account must advertise for this to run for it. */
   capability: string;
+  /** Runs after every other syncer of the pass, for work that can wait. */
+  low?: boolean;
   /** Runs one pass for one JMAP account. Must be safe to stop between batches and start again. */
   run(ctx: SyncContext, jmap: string): Promise<void>;
 }
@@ -129,6 +137,8 @@ export interface MethodContext extends StoreContext {
   invertedKeywordSort: boolean;
   /** Earlier responses in this request, for creation-id references. */
   createdIds: Map<string, string>;
+  /** The whole request this call came in. */
+  calls: readonly MethodCall[];
 }
 
 export type MethodHandler = (ctx: MethodContext, args: Record<string, unknown>, call: MethodCall) => MethodResult | Promise<MethodResult>;
@@ -158,4 +168,8 @@ export interface StoreArea {
   usage?: (ctx: Pick<StoreContext, 'db'>) => StoreUsagePart[];
   /** Attachments and file contents it holds: what counts towards `scope.maxTotalBytes`. */
   keptBytes?: (ctx: Pick<StoreContext, 'db'>) => number;
+  /** Records it needs, stored by another area, that no window may take away. */
+  spares?: (ctx: Pick<StoreContext, 'db'>, jmap: string, type: string) => string[];
+  /** At start and when the scope changes: a tighter policy applies at once, not at the next sync. */
+  scopeChanged?(ctx: StoreContext): void;
 }
