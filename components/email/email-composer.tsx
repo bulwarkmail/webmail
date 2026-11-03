@@ -5248,11 +5248,11 @@ export function EmailComposer({
                 data-testid="composer-discard"
                 aria-label={t('discard')}
                 title={t('discard')}
-                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 md:@max-[26rem]/composer-bar:px-2.5"
+                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 md:@max-[26rem]/composer-bar:px-2.5 max-md:@max-[23rem]/composer-bar:px-2.5"
               >
                 {/* Next to Send in a narrow composer the word runs over the tools on the left. */}
-                <Trash2 className="hidden w-4 h-4 md:block md:@[26rem]/composer-bar:hidden" aria-hidden="true" />
-                <span className="md:hidden md:@[26rem]/composer-bar:inline">{t('discard')}</span>
+                <Trash2 className="hidden w-4 h-4 max-md:@max-[23rem]/composer-bar:block md:block md:@[26rem]/composer-bar:hidden" aria-hidden="true" />
+                <span className="max-md:@max-[23rem]/composer-bar:hidden md:hidden md:@[26rem]/composer-bar:inline">{t('discard')}</span>
               </Button>
             )}
             {composerClient?.hasDelayedSend() || hasSendMenuActions ? (
