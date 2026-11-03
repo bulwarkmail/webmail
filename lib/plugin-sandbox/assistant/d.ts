@@ -29,7 +29,7 @@ import { TRASH_FOLDER_NAME, findTrashFolder, trashBatchName, trashSubtreeIds } f
 import { fileNameProblem, type FileNameProblem } from '@/lib/file-name-rules';
 import { invalidateFileSearchCache, pathOfNode } from '@/lib/global-search/providers/files';
 import { saveBlobsToFiles } from '@/lib/files-save';
-import { fileHooks } from '@/lib/plugin-hooks';
+import { emailHooks, fileHooks } from '@/lib/plugin-hooks';
 import { fileToView } from '@/lib/plugin-projection';
 import { pluginHasPermission } from '../permissions';
 import { readNamedEmail } from '../host-api-mail';
@@ -153,7 +153,8 @@ function needPermission(plugin: InstalledPlugin, method: string, permission: Per
   if (!pluginHasPermission(plugin, permission)) throw new Error(`Plugin "${plugin.id}" lacks permission "${permission}"`);
 }
 
-function readWrite(method: string, plugin: InstalledPlugin): void {
+/** Counts a change to Files against the plugin's limit, refusing past it. */
+function countWrite(method: string, plugin: InstalledPlugin): void {
   if (!withinRate('files-write', plugin.id, MAX_FILE_WRITES_PER_MINUTE)) {
     throw new Error(`${method}: at most ${MAX_FILE_WRITES_PER_MINUTE} changes to Files a minute`);
   }
@@ -276,8 +277,15 @@ async function readableFile(method: string, plugin: InstalledPlugin, fileArg: un
   return { client, node };
 }
 
-function fetchNode(client: IJMAPClient, node: FileNode): Promise<ArrayBuffer> {
-  return client.fetchBlobArrayBuffer(node.blobId as string, node.name || undefined, node.type || undefined, ...(node.isShared && node.accountId ? [node.accountId] : []));
+/**
+ * A file's bytes, read no further than MAX_TEXT_SOURCE_BYTES + 1: the size
+ * the listing gives may be wrong, so the download stops itself. Null when
+ * the file is bigger than that.
+ */
+async function fetchNode(client: IJMAPClient, node: FileNode): Promise<ArrayBuffer | null> {
+  const accountId = node.isShared && node.accountId ? node.accountId : undefined;
+  const data = await client.fetchBlobArrayBuffer(node.blobId as string, node.name || undefined, node.type || undefined, accountId, MAX_TEXT_SOURCE_BYTES + 1);
+  return data.byteLength > MAX_TEXT_SOURCE_BYTES ? null : data;
 }
 
 /** The text of a file, with the attachment reader (see AttachmentTextView). */
@@ -295,6 +303,7 @@ export async function doFilesGetText(plugin: InstalledPlugin, fileArg: unknown, 
     return { ...base, format: textFormatOf(name, type), status: 'too_big', text: '', truncated: false };
   }
   const data = await fetchNode(client, node);
+  if (!data) return { ...base, format: textFormatOf(name, type), status: 'too_big', text: '', truncated: false };
   const result = await extractText(data, { name, type, maxChars });
   return { ...base, size: data.byteLength, ...result };
 }
@@ -322,6 +331,7 @@ export async function doFilesGetImage(plugin: InstalledPlugin, fileArg: unknown,
   if (!isRasterImage(name, sourceType)) return answer('unsupported');
   if ((node.size || 0) > MAX_TEXT_SOURCE_BYTES) return answer('too_big');
   const data = await fetchNode(client, node);
+  if (!data) return answer('too_big');
   const shrunk = await shrinkImage(new Blob([data], { type: sourceType }), { maxSide });
   if (shrunk.status !== 'ok' || !shrunk.bytes || !shrunk.type) return answer(shrunk.status === 'ok' ? 'failed' : shrunk.status, shrunk.width, shrunk.height);
   const exif = wantExif ? readPhotoExif(data) : null;
@@ -345,7 +355,9 @@ function readFileIds(method: string, value: unknown): string[] {
 /**
  * Attach files to the open draft (`composerId`, compose:write) or to a new
  * one (`newDraft`, compose:open), by their blobs: no download, no upload.
- * The composer's own checks run (size limit, onBeforeAttachmentUpload).
+ * Either way each file passes onBeforeAttachmentUpload and the server's
+ * limit for all attachments of a message: the open composer checks them
+ * itself; for a new draft they are checked here, before compose.open.
  */
 export async function doFilesAttach(plugin: InstalledPlugin, idsArg: unknown, targetArg: unknown): Promise<FileAttachResult> {
   const method = 'files.attach';
@@ -377,9 +389,23 @@ export async function doFilesAttach(plugin: InstalledPlugin, idsArg: unknown, ta
   }
 
   const draft = readObject(target.newDraft, method, 'newDraft', ['to', 'subject', 'body']);
+  const refused: string[] = [];
+  const passed: typeof refs = [];
+  for (const ref of refs) {
+    if (await emailHooks.onBeforeAttachmentUpload.intercept({ name: ref.name, type: ref.type, size: ref.size })) passed.push(ref);
+    else refused.push(ref.name);
+  }
+  const maxTotal = client.getMaxSizeAttachmentsPerEmail?.() ?? 0;
+  let total = 0;
+  const fitting = passed.filter((ref) => {
+    if (maxTotal > 0 && total + ref.size > maxTotal) { refused.push(ref.name); return false; }
+    total += ref.size;
+    return true;
+  });
+  if (!fitting.length) return { attached: [], refused };
   // compose.open checks the addresses, the subject and the body, and asks before it replaces an open draft.
-  doComposeOpen(plugin, { ...draft, attachments: refs });
-  return { attached: refs.map((r) => r.name), refused: [] };
+  doComposeOpen(plugin, { ...draft, attachments: fitting });
+  return { attached: fitting.map((r) => r.name), refused };
 }
 
 // ─── Writing: only the user's own drive, never a shared folder ───
@@ -400,14 +426,23 @@ async function ownDrive(method: string): Promise<OwnDrive> {
 
 const sharedOut = (node: FileNode) => !!node.shareWith && Object.keys(node.shareWith).length > 0;
 
-/** Whether `node` or a folder above it is shared with someone. */
-function inSharedPlace(drive: OwnDrive, node: FileNode | null): boolean {
+/**
+ * Whether `node` or a folder above it is shared with someone: 'shared',
+ * 'own', or 'unknown' when a folder on the way up is not in the listing
+ * (a listing cut short, or a node that moved meanwhile), which counts as
+ * shared.
+ */
+function placeOf(drive: OwnDrive, node: FileNode): 'own' | 'shared' | 'unknown' {
   const seen = new Set<string>();
-  for (let at = node; at && !seen.has(at.id); at = at.parentId ? drive.byId.get(at.parentId) ?? null : null) {
+  for (let at: FileNode | undefined = node; at; ) {
+    if (seen.has(at.id)) return 'unknown';
     seen.add(at.id);
-    if (sharedOut(at)) return true;
+    if (sharedOut(at)) return 'shared';
+    if (at.parentId == null) return 'own';
+    at = drive.byId.get(at.parentId);
+    if (!at) return 'unknown';
   }
-  return false;
+  return 'unknown';
 }
 
 /** A node of the user's own drive, outside the trash, not in a shared folder. */
@@ -415,7 +450,9 @@ function ownNode(method: string, drive: OwnDrive, id: string): FileNode {
   if (id.includes(':')) throw new Error(`${method}: that file is in a drive someone shared with you; the assistant only changes your own files`);
   const node = drive.byId.get(id);
   if (!node || drive.trashed.has(node.id) || fileNodeKind(node) === 'symlink') throw new Error(`${method}: no file or folder with id "${id}" in your own files`);
-  if (inSharedPlace(drive, node)) throw new Error(`${method}: "${node.name}" is shared with others; the assistant doesn't change shared files`);
+  const place = placeOf(drive, node);
+  if (place === 'shared') throw new Error(`${method}: "${node.name}" is shared with others; the assistant doesn't change shared files`);
+  if (place === 'unknown') throw new Error(`${method}: the folders above "${node.name}" couldn't be read, so it can't tell whether they are shared; try again`);
   return node;
 }
 
@@ -480,9 +517,10 @@ export async function doFilesSaveAttachments(plugin: InstalledPlugin, emailArg: 
   const blobIds = [...new Set(blobsArg.map((b, i) => readId(b, method, `blobIds[${i}]`)))];
   const folderId = readFolderId(method, folderArg);
   const opts = readObject(optionsArg, method, 'options', ['accountId'], true);
+  // Counted before anything is read: a refused write counts too, and costs no listing.
+  countWrite(method, plugin);
   const drive = await ownDrive(method);
   const folder = ownFolder(method, drive, folderId);
-  readWrite(method, plugin);
   const found = await readNamedEmail(drive.client, emailId, method, opts.accountId);
   if (!found) throw new Error(`${method}: no message with id "${emailId}"`);
   const parts = blobIds.map((blobId) => {
@@ -516,6 +554,8 @@ export async function doFilesCreate(plugin: InstalledPlugin, inputArg: unknown):
   if (!(TEXT_TYPES as readonly unknown[]).includes(input.type)) throw new Error(`${method}: type must be text/markdown or text/plain`);
   const type = input.type as typeof TEXT_TYPES[number];
   const replaceId = input.replace === undefined ? null : readId(input.replace, method, 'replace');
+  // Counted before anything is read: a refused write counts too, and costs no listing.
+  countWrite(method, plugin);
   const drive = await ownDrive(method);
   const { client } = drive;
 
@@ -523,7 +563,6 @@ export async function doFilesCreate(plugin: InstalledPlugin, inputArg: unknown):
     const node = ownNode(method, drive, replaceId);
     if (isFolder(node) || !node.blobId) throw new Error(`${method}: "${node.name}" is a folder`);
     if (!isTextFile(node)) throw new Error(`${method}: only text and Markdown files can be replaced; "${node.name}" is not one`);
-    readWrite(method, plugin);
     const parent = node.parentId ? drive.byId.get(node.parentId) ?? null : null;
     const path = pathOf(drive, parent);
     const file = new File([content], node.name, { type: node.type || type });
@@ -533,7 +572,13 @@ export async function doFilesCreate(plugin: InstalledPlugin, inputArg: unknown):
     const trash = findTrashFolder(drive.nodes) ?? await client.createFileDirectory(TRASH_FOLDER_NAME, null);
     const batch = await client.createFileDirectory(trashBatchName(node.parentId ?? null), trash.id);
     const kept = await client.createFileNode(node.name, node.blobId, node.type || type, node.size || 0, batch.id);
-    await client.replaceFileNodeBlob(node.id, uploaded.blobId);
+    try {
+      await client.replaceFileNodeBlob(node.id, uploaded.blobId);
+    } catch (error) {
+      // Nothing changed: take the copy out of the trash again, so no stray old version stays there.
+      await client.destroyFileNodes([batch.id]).catch(() => {});
+      throw error;
+    }
     const now = new Date().toISOString();
     const replaced: FileNode = { ...node, blobId: uploaded.blobId, size: uploaded.size ?? file.size, modified: now };
     void fileHooks.onAfterFileUpload.emit(fileToView(replaced, path));
@@ -543,7 +588,6 @@ export async function doFilesCreate(plugin: InstalledPlugin, inputArg: unknown):
 
   const name = readNewName(method, client, input.name);
   const folder = ownFolder(method, drive, readFolderId(method, input.folderId));
-  readWrite(method, plugin);
   const path = pathOf(drive, folder);
   const file = new File([content], name, { type });
   if (!(await fileHooks.onBeforeFileUpload.intercept({ name, size: file.size, type, path }))) throw new Error(`${method}: ${STOPPED}`);
@@ -559,6 +603,8 @@ export async function doFilesCreate(plugin: InstalledPlugin, inputArg: unknown):
 export async function doFilesCreateFolder(plugin: InstalledPlugin, inputArg: unknown): Promise<FileInfo> {
   const method = 'files.createFolder';
   const input = readObject(inputArg, method, 'input', ['parentId', 'name']);
+  // Counted before anything is read: a refused write counts too, and costs no listing.
+  countWrite(method, plugin);
   const drive = await ownDrive(method);
   const name = readNewName(method, drive.client, input.name);
   const parent = ownFolder(method, drive, readFolderId(method, input.parentId, 'parentId'));
@@ -568,7 +614,6 @@ export async function doFilesCreateFolder(plugin: InstalledPlugin, inputArg: unk
     for (let at = parent; at; at = at.parentId ? drive.byId.get(at.parentId) ?? null : null) depth++;
     if (depth > maxDepth) throw new Error(`${method}: folders can't be nested deeper than ${maxDepth} levels`);
   }
-  readWrite(method, plugin);
   const path = pathOf(drive, parent);
   const created = await drive.client.createFileDirectory(name, parent?.id ?? null);
   void fileHooks.onDirectoryCreate.emit(fileToView(created, path));
@@ -586,6 +631,8 @@ export async function doFilesMove(plugin: InstalledPlugin, fileArg: unknown, fol
   const fileId = readId(fileArg, method, 'fileId');
   const folderId = readFolderId(method, folderArg);
   if (folderId !== null && folderId.includes(':')) throw new Error(`${method}: files can't be moved to another person's drive`);
+  // Counted before anything is read: a refused write counts too, and costs no listing.
+  countWrite(method, plugin);
   const drive = await ownDrive(method);
   const node = ownNode(method, drive, fileId);
   const target = ownFolder(method, drive, folderId);
@@ -596,12 +643,12 @@ export async function doFilesMove(plugin: InstalledPlugin, fileArg: unknown, fol
   }
   const clash = drive.nodes.find((n) => (n.parentId ?? null) === (target?.id ?? null) && n.name === node.name && n.id !== node.id);
   if (clash) throw new Error(`${method}: there is already something named "${node.name}" there`);
-  readWrite(method, plugin);
   const fromPath = pathOf(drive, from ? drive.byId.get(from) ?? null : null);
   const toPath = pathOf(drive, target);
   if (!(await fileHooks.onBeforeFileMove.intercept({ files: [fileToView(node, fromPath)], toPath }))) throw new Error(`${method}: ${STOPPED}`);
   await drive.client.updateFileNode(node.id, { parentId: target?.id ?? null });
-  void fileHooks.onFileMove.emit({ files: [fileToView({ ...node, parentId: target?.id ?? null }, toPath)], toPath });
+  // As the Files store reports a move: the item as it was, from where it was.
+  void fileHooks.onFileMove.emit({ files: [fileToView(node, fromPath)], toPath });
   afterWrite();
   return { file: { ...infoOf(node, drive.nodes), path: toPath, parentId: target?.id ?? null }, previousFolderId: from };
 }
@@ -610,13 +657,14 @@ export async function doFilesMove(plugin: InstalledPlugin, fileArg: unknown, fol
 export async function doFilesRename(plugin: InstalledPlugin, fileArg: unknown, nameArg: unknown): Promise<{ file: FileInfo; previousName: string }> {
   const method = 'files.rename';
   const fileId = readId(fileArg, method, 'fileId');
+  // Counted before anything is read: a refused write counts too, and costs no listing.
+  countWrite(method, plugin);
   const drive = await ownDrive(method);
   const name = readNewName(method, drive.client, nameArg);
   const node = ownNode(method, drive, fileId);
   if (name === node.name) throw new Error(`${method}: it is already called "${name}"`);
   const clash = drive.nodes.find((n) => (n.parentId ?? null) === (node.parentId ?? null) && n.name === name && n.id !== node.id);
   if (clash) throw new Error(`${method}: there is already something named "${name}" in that folder`);
-  readWrite(method, plugin);
   const path = pathOf(drive, node.parentId ? drive.byId.get(node.parentId) ?? null : null);
   const view = fileToView(node, path);
   if (!(await fileHooks.onBeforeFileRename.intercept({ file: view, newName: name }))) throw new Error(`${method}: ${STOPPED}`);

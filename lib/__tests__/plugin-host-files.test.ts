@@ -7,12 +7,17 @@ import { useEmailStore } from '@/stores/email-store';
 import { useFileStore } from '@/stores/file-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { DEFAULT_POLICY } from '@/lib/admin/types';
-import { fileHooks } from '@/lib/plugin-hooks';
+import { emailHooks, fileHooks } from '@/lib/plugin-hooks';
+import { MAX_TEXT_SOURCE_BYTES } from '@/lib/attachment-text/types';
 
 vi.mock('@/stores/toast-store', () => ({
   toast: { success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() },
 }));
 const composeOpen = vi.hoisted(() => vi.fn(() => 'opened'));
+const shrink = vi.hoisted(() => vi.fn(async () => ({ status: 'ok', type: 'image/jpeg', width: 800, height: 600, bytes: new Uint8Array([1, 2, 3]) })));
+const exif = vi.hoisted(() => vi.fn(() => ({ taken: '2026-10-01T10:00:00', lat: 52.5, lon: 13.4 })));
+vi.mock('@/lib/image-shrink', async (importOriginal) => ({ ...(await importOriginal<typeof import('@/lib/image-shrink')>()), shrinkImage: shrink }));
+vi.mock('@/lib/exif', () => ({ readPhotoExif: exif }));
 vi.mock('../plugin-sandbox/host-api-compose', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../plugin-sandbox/host-api-compose')>()),
   doComposeOpen: composeOpen,
@@ -87,6 +92,8 @@ beforeEach(() => {
   resetComposers();
   forgetFileListing();
   composeOpen.mockClear();
+  shrink.mockClear();
+  exif.mockClear();
   own = ownNodes();
   client = {
     supportsFiles: vi.fn(() => true),
@@ -98,6 +105,7 @@ beforeEach(() => {
     createFileDirectory: vi.fn(async (name: string, parentId: string | null) => ({ id: `dir-${++seq}`, name, parentId, blobId: null, type: 'd', size: 0, created: '', modified: '' })),
     updateFileNode: vi.fn(async () => undefined),
     replaceFileNodeBlob: vi.fn(async () => undefined),
+    destroyFileNodes: vi.fn(async (ids: string[]) => ({ destroyed: ids, notDestroyed: [] })),
     getFileNameRules: vi.fn(() => RULES),
     getMaxFileNodeDepth: vi.fn(() => 64),
     getAccountId: vi.fn(() => 'me'),
@@ -114,6 +122,7 @@ beforeEach(() => {
 afterEach(() => {
   useAuthStore.setState({ client: null });
   for (const bus of Object.values(fileHooks)) bus.clear();
+  emailHooks.onBeforeAttachmentUpload.clear();
   useFileStore.setState({ client: null, hasListed: false });
 });
 
@@ -196,9 +205,9 @@ describe('files.getText', () => {
   it('reads a file with the attachment reader, and a shared one from its owner\'s account', async () => {
     const out = await call('files.getText', 'notes');
     expect(out).toMatchObject({ name: 'notes.md', format: 'text', status: 'ok', text: '# Notes\n\nLaunch on 12 December.', truncated: false });
-    expect(client.fetchBlobArrayBuffer).toHaveBeenLastCalledWith('blob-notes', 'notes.md', 'text/markdown');
+    expect(client.fetchBlobArrayBuffer).toHaveBeenLastCalledWith('blob-notes', 'notes.md', 'text/markdown', undefined, MAX_TEXT_SOURCE_BYTES + 1);
     await call('files.getText', 'bob:plan');
-    expect(client.fetchBlobArrayBuffer).toHaveBeenLastCalledWith('blob-bob:plan', 'Bob plan.txt', 'text/plain', 'bob');
+    expect(client.fetchBlobArrayBuffer).toHaveBeenLastCalledWith('blob-bob:plan', 'Bob plan.txt', 'text/plain', 'bob', MAX_TEXT_SOURCE_BYTES + 1);
     await expect(call('files.getText', 'docs')).rejects.toThrow(/is a folder/);
     await expect(call('files.getText', 'gone')).rejects.toThrow(/no file or folder/);
   });
@@ -368,5 +377,81 @@ describe('writes stay in the user\'s own drive', () => {
   it('allows 20 changes a minute', async () => {
     for (let i = 0; i < 20; i++) await call('files.createFolder', { name: `F${i}` });
     await expect(call('files.createFolder', { name: 'F20' })).rejects.toThrow(/at most 20 changes/);
+  });
+});
+
+
+describe('files.getImage', () => {
+  it('shrinks a picture, reads the photo\'s date and place only when asked, and refuses SVG', async () => {
+    own.push(file('drawing', 'drawing.svg', 'docs', 'image/svg+xml', '2026-01-01T00:00:00Z'));
+    const plain = await call('files.getImage', 'photo');
+    expect(plain).toEqual({ name: 'whiteboard.jpg', type: 'image/jpeg', width: 800, height: 600, data: 'AQID', status: 'ok' });
+    expect(exif).not.toHaveBeenCalled();
+    const withPlace = await call('files.getImage', 'photo', { exif: true });
+    expect(withPlace).toMatchObject({ exif: { taken: '2026-10-01T10:00:00', lat: 52.5, lon: 13.4 } });
+    const fetches = client.fetchBlobArrayBuffer.mock.calls.length;
+    expect(await call('files.getImage', 'drawing')).toMatchObject({ status: 'unsupported', data: '' });
+    // SVG can load remote content: it is never fetched.
+    expect(client.fetchBlobArrayBuffer.mock.calls.length).toBe(fetches);
+  });
+
+  it('allows 30 reads a minute', async () => {
+    for (let i = 0; i < 30; i++) await call('files.getImage', 'photo');
+    await expect(call('files.getImage', 'photo')).rejects.toThrow(/too many reads/);
+  });
+
+  // The size in the listing may be wrong: the download stops past the limit.
+  it('stops a download past 20 MB and answers too_big', async () => {
+    client.fetchBlobArrayBuffer.mockResolvedValueOnce(new ArrayBuffer(MAX_TEXT_SOURCE_BYTES + 1));
+    expect(await call('files.getText', 'notes')).toMatchObject({ status: 'too_big', text: '' });
+    expect(client.fetchBlobArrayBuffer).toHaveBeenLastCalledWith('blob-notes', 'notes.md', 'text/markdown', undefined, MAX_TEXT_SOURCE_BYTES + 1);
+    client.fetchBlobArrayBuffer.mockResolvedValueOnce(new ArrayBuffer(MAX_TEXT_SOURCE_BYTES + 1));
+    expect(await call('files.getImage', 'photo')).toMatchObject({ status: 'too_big' });
+    expect(shrink).not.toHaveBeenCalled();
+  });
+});
+
+describe('the review fixes', () => {
+  // compose.open itself runs no attachment checks: files.attach runs them for a new draft.
+  it('runs the attachment intercept and the size limit for a new draft, and leaves vetoed files out', async () => {
+    emailHooks.onBeforeAttachmentUpload.register('dlp', (info: { name: string }) => info.name !== 'report.pdf');
+    const vetoed = await call('files.attach', ['report'], { newDraft: { to: ['bob@example.org'] } });
+    expect(vetoed).toEqual({ attached: [], refused: ['report.pdf'] });
+    expect(composeOpen).not.toHaveBeenCalled();
+    const some = await call('files.attach', ['report', 'notes'], { newDraft: {} });
+    expect(some).toEqual({ attached: ['notes.md'], refused: ['report.pdf'] });
+    expect(composeOpen).toHaveBeenCalledWith(ASSISTANT, { attachments: [{ blobId: 'blob-notes', name: 'notes.md', type: 'text/markdown', size: 100 }] });
+    emailHooks.onBeforeAttachmentUpload.clear();
+    client.getMaxSizeAttachmentsPerEmail = vi.fn(() => 150);
+    const fit = await call('files.attach', ['notes', 'budget'], { newDraft: {} });
+    expect(fit).toEqual({ attached: ['notes.md'], refused: ['budget 2026.xlsx'] });
+  });
+
+  it('refuses a write when a folder above is missing from the listing', async () => {
+    own.push(folder('orphan', 'Orphan', 'gone-parent'), file('lost', 'lost.md', 'orphan', 'text/markdown', '2026-01-01T00:00:00Z'));
+    await expect(call('files.create', { folderId: 'orphan', name: 'a.md', content: 'x', type: 'text/markdown' })).rejects.toThrow(/couldn't be read/);
+    await expect(call('files.rename', 'lost', 'found.md')).rejects.toThrow(/couldn't be read/);
+    expect(client.uploadBlob).not.toHaveBeenCalled();
+    expect(client.updateFileNode).not.toHaveBeenCalled();
+  });
+
+  it('tells plugins about a move with the item as it was, like the Files app', async () => {
+    const moved = vi.fn();
+    fileHooks.onFileMove.register('other', moved);
+    await call('files.move', 'notes', null);
+    await vi.waitFor(() => expect(moved).toHaveBeenCalledWith({ files: [expect.objectContaining({ id: 'notes', path: '/Documents' })], toPath: '/' }));
+  });
+
+  it('counts refused writes, before reading the drive', async () => {
+    for (let i = 0; i < 20; i++) await expect(call('files.createFolder', { parentId: 'team', name: `F${i}` })).rejects.toThrow(/shared with others/);
+    await expect(call('files.createFolder', { name: 'F20' })).rejects.toThrow(/at most 20 changes/);
+    expect(client.listAllFileNodes).toHaveBeenCalledTimes(20);
+  });
+
+  it('takes the old version out of the trash again when the server refuses the new content', async () => {
+    client.replaceFileNodeBlob.mockRejectedValueOnce(new Error('modified: invalid'));
+    await expect(call('files.create', { replace: 'notes', content: 'New', type: 'text/markdown' })).rejects.toThrow('modified: invalid');
+    const batchId = (await client.createFileDirectory.mock.results[0].value).id;
+    expect(client.destroyFileNodes).toHaveBeenCalledWith([batchId]);
   });
 });
