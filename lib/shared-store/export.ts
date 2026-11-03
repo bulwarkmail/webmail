@@ -11,6 +11,7 @@ import { VAULT_COLLECTION } from '@/lib/plugin-secrets/vault';
 import { ARCHIVE_COLLECTION } from '@/lib/account-archive-storage';
 import { TELEMETRY_COLLECTION } from '@/lib/telemetry/state';
 import { VERSION_CHECK_COLLECTION } from '@/lib/version-check/state';
+import { DEVICES_COLLECTION } from '@/lib/devices/registry';
 import { getStore } from './index';
 import { exportSteps as extExportSteps } from './import/ext';
 import { localCollection, localLog } from './local';
@@ -93,6 +94,7 @@ export const EXPORT_STEPS: ExportStep[] = [
   exportCollection('account-archives', ARCHIVE_COLLECTION),
   exportCollection('telemetry', TELEMETRY_COLLECTION),
   exportCollection('version-check', VERSION_CHECK_COLLECTION),
+  exportCollection('devices', DEVICES_COLLECTION),
 ];
 
 export async function exportSharedData(steps: ExportStep[] = EXPORT_STEPS): Promise<Record<string, number>> {

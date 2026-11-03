@@ -28,6 +28,7 @@ import { PluginOAuthCallbackListener } from "@/components/providers/plugin-oauth
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { AppUpdatePrompt } from "@/components/app-update-prompt";
 import { OfflineHost } from "@/components/offline/offline-host";
+import { DeviceWipeHost } from "@/components/offline/device-wipe-host";
 import { NotificationActionsHost } from "@/components/providers/notification-actions-host";
 import { DevicePolicyHost } from "@/components/device/device-policy-host";
 import { PushNotificationPrompt } from "@/components/push-notification-prompt";
@@ -119,6 +120,7 @@ export default async function LocaleLayout({
                   </MainWindowOnly>
                   {/* Offline mode isn't in Lite (no service worker there). */}
                   {!IS_LITE && <OfflineHost />}
+                  {!IS_LITE && <DeviceWipeHost />}
                   {!IS_LITE && <NotificationActionsHost />}
                   <DevicePolicyHost />
                   <MainWindowOnly>

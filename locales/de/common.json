@@ -5763,6 +5763,28 @@
     "store_private": "Private Fenster können keine E-Mails für die Offline-Nutzung behalten.",
     "server_not_answering": "Der Mailserver antwortet nicht. Versuchen Sie es gleich noch einmal."
   },
+  "offlineWipe": {
+    "note": "Ihre Organisation hat die Daten dieses Kontos von diesem Gerät entfernt. Melden Sie sich an, um neu zu beginnen.",
+    "note_unsent": "Ihre Organisation hat die Daten dieses Kontos von diesem Gerät entfernt. Gelöschte ungesendete Nachrichten: {count}.",
+    "settings_title": "Alles von diesem Gerät entfernen",
+    "settings_description": "Für den Fall, dass Sie diesen Computer weitergeben oder nicht mehr nutzen. Ihre E-Mails auf dem Server bleiben erhalten.",
+    "settings_button": "Alles entfernen…",
+    "settings_wiping": "Wird entfernt…",
+    "confirm_title": "Alles von diesem Gerät entfernen?",
+    "confirm_message": "Damit wird gelöscht, was diese App auf diesem Gerät speichert, für alle Konten hier. Ihre E-Mails auf dem Server bleiben unberührt.",
+    "confirm_mail": "Hier gespeicherte E-Mails, Kalender, Kontakte und Dateien",
+    "confirm_unsent": "Hier wartende ungesendete Nachrichten: {count}. Sie gehen verloren.",
+    "confirm_keys": "S/MIME- und OpenPGP-Schlüssel. Um sie wieder zu nutzen, brauchen Sie Ihre eigene Sicherung.",
+    "confirm_plugins": "Daten, die Plugins hier gespeichert haben",
+    "confirm_files": "Zum Bearbeiten geöffnete Anhänge und Dateien, die noch angehängt werden sollen",
+    "confirm_accounts": "Alle Konten werden abgemeldet",
+    "confirm_button": "Alles entfernen",
+    "note_unknown": "Ihre Organisation hat die Daten dieses Kontos von diesem Gerät entfernt. Dabei wurden möglicherweise auch ungesendete Nachrichten gelöscht.",
+    "refused_waiting": "Auf Ihr neues Passwort warten ungesendete Nachrichten: {count}. Sie bleiben bis zum {date}.",
+    "refused_waiting_unknown": "Möglicherweise warten ungesendete Nachrichten auf Ihr neues Passwort. Sie bleiben bis zum {date}.",
+    "confirm_unsent_unknown": "Hier warten möglicherweise ungesendete Nachrichten. Sie gehen verloren.",
+    "confirm_templates": "Auf diesem Gerät gespeicherte E-Mail-Vorlagen"
+  },
   "offlineStorage": {
     "keep_description": "Behält Ihre E-Mails, Ihren Kalender, Ihre Kontakte und ausgewählte Dateien verschlüsselt auf diesem Gerät. Offline können Sie E-Mails lesen, markieren und verschieben, und was Sie schreiben, wartet im Postausgang. Beim Abmelden wird alles entfernt.",
     "window_label": "Wie weit zurück behalten",

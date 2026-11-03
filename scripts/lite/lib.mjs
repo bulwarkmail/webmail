@@ -100,6 +100,8 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/plugin-secrets",
   // stores/settings-store.ts - settingsSyncEnabled is pinned off.
   "/api/settings",
+  // lib/devices/client.ts - offline mode and its wipes aren't in Lite (no OfflineHost, IS_LITE guards in the auth store).
+  "/api/devices",
   // Stalwart's own account discovery (lib/auth/lite-oauth.ts), not a route of this app.
   "/api/discover",
   // OAuth / SSO / pairing - Lite discovers and redeems codes in the browser

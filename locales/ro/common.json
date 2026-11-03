@@ -5763,6 +5763,28 @@
     "store_private": "Ferestrele private nu pot păstra e-mailuri pentru utilizare offline.",
     "server_not_answering": "Serverul de e-mail nu răspunde. Încercați din nou imediat."
   },
+  "offlineWipe": {
+    "note": "Organizația dvs. a eliminat datele acestui cont de pe acest dispozitiv. Conectați-vă pentru a începe din nou.",
+    "note_unsent": "Organizația dvs. a eliminat datele acestui cont de pe acest dispozitiv. Mesaje netrimise șterse: {count}.",
+    "settings_title": "Elimină tot de pe acest dispozitiv",
+    "settings_description": "Pentru când dați acest computer altcuiva sau nu îl mai folosiți. E-mailurile de pe server rămân.",
+    "settings_button": "Elimină tot…",
+    "settings_wiping": "Se elimină…",
+    "confirm_title": "Eliminați tot de pe acest dispozitiv?",
+    "confirm_message": "Se șterge ceea ce această aplicație păstrează pe acest dispozitiv, pentru toate conturile de aici. E-mailurile de pe server nu sunt atinse.",
+    "confirm_mail": "E-mailuri, calendare, contacte și fișiere păstrate aici",
+    "confirm_unsent": "Mesaje netrimise care așteaptă aici: {count}. Se vor pierde.",
+    "confirm_keys": "Chei S/MIME și OpenPGP. Pentru a le folosi din nou aveți nevoie de propria copie de rezervă.",
+    "confirm_plugins": "Date stocate aici de pluginuri",
+    "confirm_files": "Atașamente deschise pentru editare și fișiere care așteaptă să fie atașate",
+    "confirm_accounts": "Toate conturile sunt deconectate",
+    "confirm_button": "Elimină tot",
+    "note_unknown": "Organizația dvs. a eliminat datele acestui cont de pe acest dispozitiv. Este posibil să fi fost șterse și mesaje netrimise.",
+    "refused_waiting": "Mesaje netrimise care așteaptă parola nouă: {count}. Rămân până la {date}.",
+    "refused_waiting_unknown": "Este posibil ca mesaje netrimise să aștepte parola nouă. Rămân până la {date}.",
+    "confirm_unsent_unknown": "Este posibil să existe aici mesaje netrimise. Se vor pierde.",
+    "confirm_templates": "Șabloane de e-mail salvate pe acest dispozitiv"
+  },
   "offlineStorage": {
     "keep_description": "Păstrează e-mailurile, calendarul, contactele și fișierele alese de dvs., criptate pe acest dispozitiv. Offline puteți citi, marca și muta e-mailuri, iar ce scrieți așteaptă în Mesaje de trimis. La deconectare se șterge totul.",
     "window_label": "Cât de departe în urmă se păstrează",

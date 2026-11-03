@@ -171,6 +171,12 @@ export interface IJMAPClient {
   hasSSEStream(): boolean;
   onConnectionChange(callback: (connected: boolean) => void): void;
   onRateLimit(callback: (rateLimited: boolean, retryAfterMs: number) => void): void;
+  /**
+   * The mail server itself answered 401 after a fresh try at signing in, with
+   * `refusedForMs` since it first did with no good answer in between. Not called
+   * for an outage, a proxy's page or a token renewal that failed.
+   */
+  onCredentialsRefused?(callback: (refusedForMs: number) => void): void;
   isRateLimited(): boolean;
   getRateLimitRemainingMs(): number;
   onStateChange(callback: (change: StateChange) => void): void;

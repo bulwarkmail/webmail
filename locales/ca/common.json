@@ -5763,6 +5763,28 @@
     "store_private": "Les finestres privades no poden desar correu per fer-lo servir sense connexió.",
     "server_not_answering": "El servidor de correu no respon. Torneu-ho a provar d'aquí a un moment."
   },
+  "offlineWipe": {
+    "note": "La teva organització ha tret les dades d'aquest compte d'aquest dispositiu. Inicia la sessió per tornar a començar.",
+    "note_unsent": "La teva organització ha tret les dades d'aquest compte d'aquest dispositiu. Missatges sense enviar eliminats: {count}.",
+    "settings_title": "Treu-ho tot d'aquest dispositiu",
+    "settings_description": "Per quan regalis aquest ordinador o el deixis d'utilitzar. El teu correu al servidor es manté.",
+    "settings_button": "Treu-ho tot…",
+    "settings_wiping": "S'està traient…",
+    "confirm_title": "Vols treure-ho tot d'aquest dispositiu?",
+    "confirm_message": "Això elimina el que aquesta aplicació guarda en aquest dispositiu, per a tots els comptes d'aquí. El teu correu al servidor no es toca.",
+    "confirm_mail": "Correu, calendaris, contactes i fitxers guardats aquí",
+    "confirm_unsent": "Missatges sense enviar en espera aquí: {count}. Es perdran.",
+    "confirm_keys": "Claus S/MIME i OpenPGP. Necessitaràs la teva pròpia còpia de seguretat per tornar-les a utilitzar.",
+    "confirm_plugins": "Dades que els connectors han guardat aquí",
+    "confirm_files": "Adjunts oberts per editar i fitxers pendents d'adjuntar",
+    "confirm_accounts": "Es tanca la sessió de tots els comptes",
+    "confirm_button": "Treu-ho tot",
+    "note_unknown": "La teva organització ha eliminat les dades d'aquest compte d'aquest dispositiu. És possible que també s'hagin suprimit missatges sense enviar.",
+    "refused_waiting": "Missatges sense enviar que esperen la teva contrasenya nova: {count}. Es conserven fins al {date}.",
+    "refused_waiting_unknown": "És possible que hi hagi missatges sense enviar esperant la teva contrasenya nova. Es conserven fins al {date}.",
+    "confirm_unsent_unknown": "És possible que hi hagi missatges sense enviar esperant aquí. Es perdran.",
+    "confirm_templates": "Plantilles de correu desades en aquest dispositiu"
+  },
   "offlineStorage": {
     "keep_description": "Desa el vostre correu, calendari, contactes i els fitxers que trieu, xifrats en aquest dispositiu. Sense connexió podeu llegir, marcar i moure correu, i el que escriviu espera a la safata de sortida. En tancar la sessió s'esborra tot.",
     "window_label": "Fins a quan enrere desar",

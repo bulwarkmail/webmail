@@ -50,6 +50,7 @@ const describeCap = (value: number, unit: string) => (value > 0 ? `${value} ${un
 export function OfflineSection({ draft }: { draft: OrgPolicyDraft }) {
   const forbid = draft.orgValue('devices', 'noOffline');
   const noAttachments = draft.orgValue('devices', 'noOfflineAttachments');
+  const wipeOnRefused = draft.orgValue('devices', 'wipeOnRefusedLogin');
   return (
     <SettingsSection
       id="offline"
@@ -103,6 +104,15 @@ export function OfflineSection({ draft }: { draft: OrgPolicyDraft }) {
         <div className="flex flex-col items-start gap-1 sm:items-end">
           <ToggleSwitch checked={noAttachments.value} onChange={(v) => draft.setOrgValue('devices', 'noOfflineAttachments', v)} testId="org-devices-noOfflineAttachments" />
           <InheritNote draft={draft} own={noAttachments.own} everyone={noAttachments.everyone ? 'on' : 'off'} onReset={() => draft.clearOrgValue('devices', 'noOfflineAttachments')} />
+        </div>
+      </SettingItem>
+      <SettingItem
+        label="Delete a device's mail as soon as the server refuses its login"
+        description="Off: the device signs out and hides what it keeps, unsent messages included, until someone signs in with the new password, or for 30 days. That's what a password changed on another device needs. On: it's deleted right away, unsent messages included, and only that account's. A wipe you ask for below is immediate either way."
+      >
+        <div className="flex flex-col items-start gap-1 sm:items-end">
+          <ToggleSwitch checked={wipeOnRefused.value} onChange={(v) => draft.setOrgValue('devices', 'wipeOnRefusedLogin', v)} testId="org-devices-wipeOnRefusedLogin" />
+          <InheritNote draft={draft} own={wipeOnRefused.own} everyone={wipeOnRefused.everyone ? 'on' : 'off'} onReset={() => draft.clearOrgValue('devices', 'wipeOnRefusedLogin')} />
         </div>
       </SettingItem>
       <p className="pt-2 text-xs text-muted-foreground">

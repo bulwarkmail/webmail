@@ -5763,6 +5763,28 @@
     "store_private": "Privaatsed aknad ei saa kirju võrguühenduseta kasutamiseks hoida.",
     "server_not_answering": "Meiliserver ei vasta. Proovige kohe uuesti."
   },
+  "offlineWipe": {
+    "note": "Teie organisatsioon eemaldas selle konto andmed sellest seadmest. Alustamiseks logige uuesti sisse.",
+    "note_unsent": "Teie organisatsioon eemaldas selle konto andmed sellest seadmest. Kustutatud saatmata kirju: {count}.",
+    "settings_title": "Eemalda sellest seadmest kõik",
+    "settings_description": "Juhuks, kui annate selle arvuti ära või lõpetate selle kasutamise. Teie kirjad serveris jäävad alles.",
+    "settings_button": "Eemalda kõik…",
+    "settings_wiping": "Eemaldamine…",
+    "confirm_title": "Kas eemaldada sellest seadmest kõik?",
+    "confirm_message": "See kustutab kõik, mida see rakendus selles seadmes hoiab, kõigi siinsete kontode jaoks. Teie kirju serveris see ei puuduta.",
+    "confirm_mail": "Siin hoitavad kirjad, kalendrid, kontaktid ja failid",
+    "confirm_unsent": "Siin ootavaid saatmata kirju: {count}. Need lähevad kaotsi.",
+    "confirm_keys": "S/MIME- ja OpenPGP-võtmed. Nende uuesti kasutamiseks on vaja teie enda varukoopiat.",
+    "confirm_plugins": "Pistikprogrammide siia salvestatud andmed",
+    "confirm_files": "Muutmiseks avatud manused ja lisamist ootavad failid",
+    "confirm_accounts": "Kõik kontod logitakse välja",
+    "confirm_button": "Eemalda kõik",
+    "note_unknown": "Teie organisatsioon eemaldas selle konto andmed sellest seadmest. Võimalik, et kustutati ka saatmata sõnumid.",
+    "refused_waiting": "Saatmata sõnumid ootavad teie uut parooli: {count}. Need jäävad alles kuni {date}.",
+    "refused_waiting_unknown": "Saatmata sõnumid võivad oodata teie uut parooli. Need jäävad alles kuni {date}.",
+    "confirm_unsent_unknown": "Siin võivad oodata saatmata sõnumid. Need lähevad kaduma.",
+    "confirm_templates": "Selles seadmes salvestatud e-kirjade mallid"
+  },
   "offlineStorage": {
     "keep_description": "Hoiab sinu kirju, kalendrit, kontakte ja valitud faile krüptitult selles seadmes. Võrguta saad kirju lugeda, märgistada ja teisaldada ning see, mida kirjutad, ootab väljuvate kirjade kastis. Välja logides eemaldatakse kõik.",
     "window_label": "Kui kaugele minevikku hoida",

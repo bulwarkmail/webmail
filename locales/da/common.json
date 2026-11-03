@@ -5763,6 +5763,28 @@
     "store_private": "Private vinduer kan ikke gemme mail til brug offline.",
     "server_not_answering": "Mailserveren svarer ikke. Prøv igen om lidt."
   },
+  "offlineWipe": {
+    "note": "Din organisation har fjernet denne kontos data fra denne enhed. Log ind for at starte forfra.",
+    "note_unsent": "Din organisation har fjernet denne kontos data fra denne enhed. Slettede ikke-sendte beskeder: {count}.",
+    "settings_title": "Fjern alt fra denne enhed",
+    "settings_description": "Til når du giver computeren væk eller holder op med at bruge den. Din post på serveren bliver.",
+    "settings_button": "Fjern alt…",
+    "settings_wiping": "Fjerner…",
+    "confirm_title": "Fjern alt fra denne enhed?",
+    "confirm_message": "Det sletter det, denne app gemmer på denne enhed, for alle konti her. Din post på serveren røres ikke.",
+    "confirm_mail": "Post, kalendere, kontakter og filer gemt her",
+    "confirm_unsent": "Ikke-sendte beskeder, der venter her: {count}. De går tabt.",
+    "confirm_keys": "S/MIME- og OpenPGP-nøgler. Du skal bruge din egen sikkerhedskopi for at bruge dem igen.",
+    "confirm_plugins": "Data, som plugins har gemt her",
+    "confirm_files": "Vedhæftede filer åbnet til redigering og filer, der venter på at blive vedhæftet",
+    "confirm_accounts": "Alle konti logges ud",
+    "confirm_button": "Fjern alt",
+    "note_unknown": "Din organisation har fjernet denne kontos data fra denne enhed. Usendte beskeder kan også være slettet.",
+    "refused_waiting": "Usendte beskeder, der venter på din nye adgangskode: {count}. De bliver til {date}.",
+    "refused_waiting_unknown": "Usendte beskeder venter måske på din nye adgangskode. De bliver til {date}.",
+    "confirm_unsent_unknown": "Der venter måske usendte beskeder her. De går tabt.",
+    "confirm_templates": "E-mailskabeloner gemt på denne enhed"
+  },
   "offlineStorage": {
     "keep_description": "Beholder din mail, kalender, dine kontakter og de filer, du vælger, krypteret på denne enhed. Offline kan du læse, markere og flytte mail, og det, du skriver, venter i udbakken. Når du logger ud, fjernes det hele.",
     "window_label": "Hvor langt tilbage der beholdes",
