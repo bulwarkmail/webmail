@@ -6545,6 +6545,21 @@
     "message_moved_to": "This message was moved to {folder}.",
     "window_not_ready": "The new window did not open in time. Your draft stays here."
   },
+  "desktopUi": {
+    "settings": {
+      "title": "Windows",
+      "double_click_label": "Open messages in a new window on double-click",
+      "double_click_description": "A single click still opens the message next to the list.",
+      "restore_label": "Reopen windows at start",
+      "restore_description": "Message and draft windows that were open when you quit come back."
+    },
+    "attachment": {
+      "open": "Open",
+      "save_as": "Save as…",
+      "copy": "Copy",
+      "copy_failed": "The file could not be copied."
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "Sign in with your browser",
     "browser_waiting": "Finish signing in in your browser",

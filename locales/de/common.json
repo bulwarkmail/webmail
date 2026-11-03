@@ -6545,6 +6545,21 @@
     "message_moved_to": "Diese Nachricht wurde nach {folder} verschoben.",
     "window_not_ready": "Das neue Fenster wurde nicht rechtzeitig geöffnet. Ihr Entwurf bleibt hier."
   },
+  "desktopUi": {
+    "settings": {
+      "title": "Fenster",
+      "double_click_label": "Nachrichten per Doppelklick in einem neuen Fenster öffnen",
+      "double_click_description": "Ein einfacher Klick öffnet die Nachricht weiterhin neben der Liste.",
+      "restore_label": "Fenster beim Start wieder öffnen",
+      "restore_description": "Nachrichten- und Entwurfsfenster, die beim Beenden offen waren, werden wieder geöffnet."
+    },
+    "attachment": {
+      "open": "Öffnen",
+      "save_as": "Speichern unter…",
+      "copy": "Kopieren",
+      "copy_failed": "Die Datei konnte nicht kopiert werden."
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "Mit dem Browser anmelden",
     "browser_waiting": "Schließen Sie die Anmeldung im Browser ab",

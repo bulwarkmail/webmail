@@ -6545,6 +6545,21 @@
     "message_moved_to": "See kiri teisaldati kausta {folder}.",
     "window_not_ready": "Uus aken ei avanenud õigeks ajaks. Mustand jääb siia."
   },
+  "desktopUi": {
+    "settings": {
+      "title": "Aknad",
+      "double_click_label": "Ava kirjad topeltklõpsuga uues aknas",
+      "double_click_description": "Üks klõps avab kirja endiselt loendi kõrval.",
+      "restore_label": "Ava aknad käivitamisel uuesti",
+      "restore_description": "Kirja- ja mustandiaknad, mis olid väljumisel avatud, tulevad tagasi."
+    },
+    "attachment": {
+      "open": "Ava",
+      "save_as": "Salvesta nimega…",
+      "copy": "Kopeeri",
+      "copy_failed": "Faili ei saanud kopeerida."
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "Logi sisse brauseriga",
     "browser_waiting": "Lõpeta sisselogimine brauseris",

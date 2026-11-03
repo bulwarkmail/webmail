@@ -159,6 +159,7 @@ import { requestInternalMailto } from "@/lib/protocol-handlers/mailto";
 import { imageBlobUrl, inertBlobType, isFilePreviewable, isMimeTypeSafeForInlinePreview, toInertBlob } from "@/lib/file-preview";
 import { openPreviewInNewWindow } from "@/lib/standalone-display";
 import { downloadAllowed, saveBlobAs } from "@/lib/download-guard";
+import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { canPickFolder, createUniqueNamer, isPickerCancelled, pickFolder, saveFilesToFolder, type FolderHandle } from "@/lib/attachments/save-to-folder";
 import { useDevicePolicy } from "@/hooks/use-device-policy";
 import { Watermark, useWatermarkText } from "@/components/device/watermark";
@@ -3109,6 +3110,8 @@ export function EmailViewer({
 
   // What the attachment bar and the attachment cards share.
   const attachmentCardsRef = useRef<HTMLDivElement>(null);
+  const desktopClipboard = getDesktopBridge()?.clipboard;
+  const tDesktopUi = useTranslations('desktopUi.attachment');
   const readerAttachmentProps = {
     attachments: effectiveAttachments,
     thumbUrls: imageThumbUrls,
@@ -3117,6 +3120,13 @@ export function EmailViewer({
     onDownload: handleEffectiveAttachmentDownload,
     onDownloadAll: handleDownloadAllAttachments,
     onSaveAllToFolder: canPickFolder() ? () => void handleSaveAllToFolder() : undefined,
+    onCopyFile: desktopClipboard && blobClient ? (attachment: EffectiveAttachment) => {
+      if (!attachment.blobId || !downloadAllowed('attachment', email)) return;
+      void blobClient.fetchBlobArrayBuffer(attachment.blobId, undefined, undefined, blobAccountId)
+        .then((data) => desktopClipboard.copyFile(resolveAttachmentName(attachment), data))
+        .then((copied) => { if (!copied) toast.error(tDesktopUi('copy_failed')); })
+        .catch(() => toast.error(tDesktopUi('copy_failed')));
+    } : undefined,
     downloadingAll: isDownloadingAll,
     downloadsOff,
     // Save to Files would get around the policy: Files downloads are off too, but the copy would stay.

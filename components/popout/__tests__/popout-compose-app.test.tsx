@@ -67,6 +67,51 @@ function openAt(handoffId: string) {
   render(<PopoutComposeApp />);
 }
 
+describe('a composer coming back on its draft', () => {
+  const closeSelf = vi.fn();
+
+  beforeEach(() => {
+    closeSelf.mockClear();
+    window.bulwarkDesktop = { version: 1, platform: 'win32', windows: { closeSelf } } as never;
+  });
+
+  afterEach(() => {
+    window.bulwarkDesktop = undefined;
+  });
+
+  const draft = {
+    id: 'd1', subject: 'Half-written', to: [{ email: 'a@example.org' }], cc: [], bcc: [], from: [{ email: 'me@example.org' }],
+    bodyValues: { t: { value: 'Text' } }, textBody: [{ partId: 't', type: 'text/plain' }], htmlBody: [], attachments: [{ blobId: 'b1', name: 'a.pdf', type: 'application/pdf', size: 3 }],
+  };
+
+  const openDraft = (getEmail: ReturnType<typeof vi.fn>, search = 'draft=d1&account=alice&owner=group') => {
+    useAuthStore.setState({ client: { getEmail } as never, getClientForAccount: () => undefined } as never);
+    window.history.replaceState(null, '', `/en/popout/compose?${search}`);
+    render(<PopoutComposeApp />);
+  };
+
+  it('reads the draft from where it lives, and opens the composer on it, id and all', async () => {
+    const getEmail = vi.fn(async () => draft);
+    openDraft(getEmail);
+    await waitFor(() => expect(screen.getByTestId('composer').textContent).toBe('Half-written'));
+    expect(getEmail).toHaveBeenCalledWith('d1', 'group');
+    // Saving goes over this draft, not next to it, and its files stay.
+    expect(composer?.initialData).toMatchObject({ draftId: 'd1', draftAccountId: 'group', draftLocalAccountId: 'alice', to: 'a@example.org' });
+    expect((composer?.initialData as unknown as { attachments: unknown[] }).attachments).toHaveLength(1);
+  });
+
+  it('a draft that has gone since (sent elsewhere) closes the window', async () => {
+    openDraft(vi.fn(async () => null));
+    await waitFor(() => expect(closeSelf).toHaveBeenCalledTimes(1));
+    expect(screen.queryByTestId('composer')).toBeNull();
+  });
+
+  it('a server that doesn\'t answer closes it too: the draft is safe on the server', async () => {
+    openDraft(vi.fn(async () => { throw new Error('offline'); }));
+    await waitFor(() => expect(closeSelf).toHaveBeenCalledTimes(1));
+  });
+});
+
 describe('PopoutComposeApp', () => {
   it('tells the opening window to let go only with the composer on screen', async () => {
     const handoff = createComposeHandoff()!;

@@ -6545,6 +6545,21 @@
     "message_moved_to": "这封邮件已移动到 {folder}。",
     "window_not_ready": "新窗口未能及时打开。你的草稿仍保留在这里。"
   },
+  "desktopUi": {
+    "settings": {
+      "title": "窗口",
+      "double_click_label": "双击时在新窗口中打开邮件",
+      "double_click_description": "单击仍会在列表旁打开邮件。",
+      "restore_label": "启动时重新打开窗口",
+      "restore_description": "退出时打开的邮件和草稿窗口会恢复。"
+    },
+    "attachment": {
+      "open": "打开",
+      "save_as": "另存为…",
+      "copy": "复制",
+      "copy_failed": "无法复制文件。"
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "使用浏览器登录",
     "browser_waiting": "请在浏览器中完成登录",

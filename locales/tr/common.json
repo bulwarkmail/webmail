@@ -6545,6 +6545,21 @@
     "message_moved_to": "Bu ileti {folder} klasörüne taşındı.",
     "window_not_ready": "Yeni pencere zamanında açılmadı. Taslağınız burada kalıyor."
   },
+  "desktopUi": {
+    "settings": {
+      "title": "Pencereler",
+      "double_click_label": "İletileri çift tıklamayla yeni pencerede aç",
+      "double_click_description": "Tek tıklama iletiyi yine listenin yanında açar.",
+      "restore_label": "Başlangıçta pencereleri yeniden aç",
+      "restore_description": "Çıkarken açık olan ileti ve taslak pencereleri geri gelir."
+    },
+    "attachment": {
+      "open": "Aç",
+      "save_as": "Farklı kaydet…",
+      "copy": "Kopyala",
+      "copy_failed": "Dosya kopyalanamadı."
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "Tarayıcıyla oturum aç",
     "browser_waiting": "Oturum açmayı tarayıcınızda tamamlayın",

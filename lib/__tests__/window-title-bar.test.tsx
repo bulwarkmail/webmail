@@ -1,7 +1,7 @@
-import { act, cleanup, render } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { WindowTitleBar } from '@/components/layout/window-title-bar';
 import { TITLEBAR_INSET_VAR, readTitlebarArea } from '@/lib/window-controls-overlay';
 
@@ -28,6 +28,97 @@ afterEach(() => {
   cleanup();
   installOverlay(undefined);
   document.documentElement.style.removeProperty(TITLEBAR_INSET_VAR);
+});
+
+describe('the menu strip in the desktop app', () => {
+  type BarEvent = { visible: boolean; open?: string };
+
+  function withBar() {
+    let send: (event: BarEvent) => void = () => {};
+    const open = vi.fn();
+    window.bulwarkDesktop = {
+      version: 1,
+      platform: 'win32',
+      menu: {
+        setState: () => {},
+        bar: {
+          entries: async () => [{ id: 'file', label: 'File', mnemonic: 'f' }, { id: 'edit', label: 'Edit', mnemonic: 'e' }],
+          open,
+          onEvent: (listener: (event: BarEvent) => void) => {
+            send = listener;
+            return () => {};
+          },
+        },
+      },
+    } as never;
+    return { open, send: (event: BarEvent) => send(event) };
+  }
+
+  afterEach(() => {
+    window.bulwarkDesktop = undefined;
+  });
+
+  const overlayOn = () => {
+    Object.defineProperty(navigator, 'windowControlsOverlay', {
+      configurable: true,
+      value: Object.assign(new EventTarget(), { visible: true, getTitlebarAreaRect: () => ({ x: 0, y: 0, width: 800, height: 36 }) }),
+    });
+  };
+
+  afterEach(() => {
+    delete (navigator as unknown as { windowControlsOverlay?: unknown }).windowControlsOverlay;
+  });
+
+  it('Alt shows the names with the focus on the first, and Escape gives it back', async () => {
+    overlayOn();
+    const bar = withBar();
+    const before = document.createElement('button');
+    document.body.appendChild(before);
+    before.focus();
+    render(<WindowTitleBar />);
+    await act(async () => bar.send({ visible: true }));
+    const file = await screen.findByRole('menuitem', { name: 'File' });
+    await waitFor(() => expect(document.activeElement).toBe(file));
+    fireEvent.keyDown(file, { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'Edit' }));
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    expect(screen.queryByRole('menubar')).toBeNull();
+    expect(document.activeElement).toBe(before);
+    before.remove();
+  });
+
+  it('a name opens that menu natively', async () => {
+    overlayOn();
+    const bar = withBar();
+    render(<WindowTitleBar />);
+    await act(async () => bar.send({ visible: true }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Edit' }));
+    expect(bar.open).toHaveBeenCalledWith('edit', expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) }));
+  });
+
+  it('Alt and a letter opens that one right away', async () => {
+    overlayOn();
+    const bar = withBar();
+    render(<WindowTitleBar />);
+    await act(async () => bar.send({ visible: true, open: 'file' }));
+    await waitFor(() => expect(bar.open).toHaveBeenCalledWith('file', expect.anything()));
+  });
+
+  it('the shell can take it away again', async () => {
+    overlayOn();
+    const bar = withBar();
+    render(<WindowTitleBar />);
+    await act(async () => bar.send({ visible: true }));
+    await screen.findByRole('menubar');
+    await act(async () => bar.send({ visible: false }));
+    expect(screen.queryByRole('menubar')).toBeNull();
+  });
+
+  it('with no bridge there is none, and the title stays', async () => {
+    overlayOn();
+    render(<WindowTitleBar />);
+    expect(screen.queryByRole('menubar')).toBeNull();
+  });
 });
 
 describe('the title bar', () => {

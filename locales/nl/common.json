@@ -6545,6 +6545,21 @@
     "message_moved_to": "Dit bericht is verplaatst naar {folder}.",
     "window_not_ready": "Het nieuwe venster is niet op tijd geopend. Je concept blijft hier."
   },
+  "desktopUi": {
+    "settings": {
+      "title": "Vensters",
+      "double_click_label": "Berichten openen in een nieuw venster met dubbelklikken",
+      "double_click_description": "Eén klik opent het bericht nog steeds naast de lijst.",
+      "restore_label": "Vensters opnieuw openen bij het starten",
+      "restore_description": "Bericht- en conceptvensters die open waren bij het afsluiten, komen terug."
+    },
+    "attachment": {
+      "open": "Openen",
+      "save_as": "Opslaan als…",
+      "copy": "Kopiëren",
+      "copy_failed": "Het bestand kon niet worden gekopieerd."
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "Inloggen met je browser",
     "browser_waiting": "Rond het inloggen af in je browser",

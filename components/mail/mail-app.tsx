@@ -63,6 +63,10 @@ import { useDeviceDetection } from "@/hooks/use-media-query";
 import { usePaneSize } from "@/hooks/use-pane-size";
 import { usePaneId } from "@/hooks/use-pane-context";
 import { useKeyboardShortcuts, type GoToMailboxTarget } from "@/hooks/use-keyboard-shortcuts";
+import { useDesktopCommands } from "@/lib/desktop/commands";
+import { useDesktopPrefs } from "@/lib/desktop/preferences";
+import { hasDesktopWindows } from "@/lib/popout/support";
+import { composerDataFromDraft } from "@/lib/draft-composer-data";
 import { useUndoShortcut } from "@/hooks/use-undo-shortcut";
 import { confirmMailRemoval } from "@/lib/mail-removal-confirm";
 import { findNextUnreadIndex } from "@/lib/next-unread-email";
@@ -1216,6 +1220,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Mountain View keeps the ticked rows while a message is read (#1231). The
   // shortcuts then act on the message on screen, as its toolbar does, and
   // reach the selection again back in the list.
+  const openEmailInWindow = useOpenEmailInWindow();
   const shortcutsTargetSelection = selectedEmailKeys.size > 0 && !(mvShell && !cursorOnly && selectedEmail);
   const singleKeyShortcuts = useSettingsStore((s) => s.singleKeyShortcuts);
   useKeyboardShortcuts({
@@ -1258,6 +1263,59 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       else backToList();
     },
   }, isAuthenticated && !!client);
+
+  // The desktop app's menu bar: the same handlers as the keys, and what's enabled
+  // from what's on screen (lib/desktop/commands.ts).
+  const desktopTarget = !showComposer && (!!selectedEmail || selectedEmailKeys.size > 0);
+  const desktopSingle = !showComposer && !!selectedEmail;
+  const mailLayoutSetting = useSettingsStore((s) => s.mailLayout);
+  const layoutFixed = interfaceLayout === 'mountain-view';
+  useDesktopCommands({
+    'file.newMessage': keyboardHandlers.onCompose,
+    'edit.search': keyboardHandlers.onFocusSearch,
+    'view.refresh': () => void handleManualRefresh(),
+    'view.layout.split': () => useSettingsStore.getState().updateSetting('mailLayout', 'split'),
+    'view.layout.horizontal': () => useSettingsStore.getState().updateSetting('mailLayout', 'horizontal'),
+    'view.layout.focus': () => useSettingsStore.getState().updateSetting('mailLayout', 'focus'),
+    'message.reply': keyboardHandlers.onReply,
+    'message.replyAll': keyboardHandlers.onReplyAll,
+    'message.forward': keyboardHandlers.onForward,
+    'message.markRead': () => void keyboardHandlers.onMarkAsRead?.(),
+    'message.markUnread': () => void keyboardHandlers.onMarkAsUnread?.(),
+    'message.star': () => void keyboardHandlers.onToggleStar?.(),
+    'message.move': () => { if (selectedEmail) setMoveDialogEmail(selectedEmail); },
+    'message.archive': keyboardHandlers.onArchive ? () => void keyboardHandlers.onArchive?.() : undefined,
+    'message.spam': () => void keyboardHandlers.onToggleSpam?.(),
+    'message.delete': () => void keyboardHandlers.onDelete?.(),
+    'message.openWindow': () => { if (selectedEmail) openEmailInWindow?.(selectedEmail); },
+    'go.inbox': () => keyboardHandlers.onGoToMailbox('inbox'),
+    'go.sent': () => keyboardHandlers.onGoToMailbox('sent'),
+    'go.drafts': () => keyboardHandlers.onGoToMailbox('drafts'),
+    'go.nextMessage': keyboardHandlers.onNextEmail,
+    'go.previousMessage': keyboardHandlers.onPreviousEmail,
+    'go.nextUnread': keyboardHandlers.onNextUnread,
+  }, {
+    'view.refresh': true,
+    'view.layout.split': { enabled: !layoutFixed, checked: mailLayoutSetting === 'split' },
+    'view.layout.horizontal': { enabled: !layoutFixed, checked: mailLayoutSetting === 'horizontal' },
+    'view.layout.focus': { enabled: !layoutFixed, checked: mailLayoutSetting === 'focus' },
+    'message.reply': desktopSingle,
+    'message.replyAll': desktopSingle,
+    'message.forward': desktopSingle,
+    'message.markRead': desktopTarget && !(selectedEmail && selectedEmailKeys.size === 0 && selectedEmail.keywords?.$seen),
+    'message.markUnread': desktopTarget && !(selectedEmail && selectedEmailKeys.size === 0 && !selectedEmail.keywords?.$seen),
+    'message.star': desktopSingle,
+    'message.move': desktopSingle,
+    'message.archive': desktopTarget && archiveActionEnabled,
+    'message.spam': desktopTarget,
+    'message.delete': desktopTarget,
+    'message.openWindow': desktopSingle && !!openEmailInWindow,
+    'go.sent': true,
+    'go.drafts': true,
+    'go.nextMessage': !showComposer,
+    'go.previousMessage': !showComposer,
+    'go.nextUnread': !showComposer,
+  }, isAuthenticated && !isEmbedded);
 
   // Shared mail refresh: re-fetch mailboxes (unread counts) + the active list
   // via JMAP. Used by both the browser refresh gestures and the toolbar button.
@@ -2266,7 +2324,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const composerSource = usePinnedPerSession(composerSessionId, selectedEmail ? emailWriteSource(selectedEmail, client) : undefined);
 
   const popoutsOn = usePopoutsAvailable();
-  const openEmailInWindow = useOpenEmailInWindow();
+  const desktopDoubleClick = useDesktopPrefs().openOnDoubleClick && hasDesktopWindows() && !isMobile && !!openEmailInWindow;
   // Text from a closing pop-out that couldn't be saved: the "Continue draft"
   // slot, once it is free.
   useEffect(() => {
@@ -2604,17 +2662,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
     draft = await emailHooks.onBeforeEditDraft.transform(draft);
 
-    const { body: draftBody, bodyText, plainTextMode: draftPlainTextMode } = getDraftComposerBody(draft);
+    const { bodyText } = getDraftComposerBody(draft);
 
-    // Restore the identity the draft was composed with. Match the saved From
-    // (name + address) against the same list the composer renders — the flat
-    // cross-account list when multi-account is on — so a draft from a non-active
-    // account, or one of two identities sharing an address, is restored rather
-    // than reset to the default.
+    // The list the composer renders: the flat cross-account one when multi-account is on.
     const composerIdentities = multiAccountIdentities.enabled
       ? multiAccountIdentities.allIdentities
       : identities;
-    const matchedIdentityId = findDraftIdentityIdForLogin(composerIdentities, draft.from?.[0], localAccountId);
 
     const draftRecipients = (list: typeof draft.to) => (list ?? []).map(a => a.email).filter(Boolean);
     if (!(await withComposeGate('compose', {
@@ -2627,46 +2680,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // Increment session ID to force the composer to remount with fresh state,
     // even if it was already open (e.g. right-clicking a draft while composing).
     setComposerSessionId(id => id + 1);
-    setPendingDraft({
-      to: draft.to?.map(a => a.email).filter(Boolean).join(', ') || '',
-      cc: draft.cc?.map(a => a.email).filter(Boolean).join(', ') || '',
-      bcc: draft.bcc?.map(a => a.email).filter(Boolean).join(', ') || '',
-      // Drafts saved before #1189 stored an empty subject as the composer's
-      // "(No Subject)" placeholder; reopen those with an empty field.
-      subject: draft.subject && draft.subject !== t('email_composer.no_subject') ? draft.subject : '',
-      body: draftBody,
-      // Re-open in the format the draft was written in (#1022).
-      plainTextMode: draftPlainTextMode,
-      showCc: (draft.cc?.length || 0) > 0,
-      showBcc: (draft.bcc?.length || 0) > 0,
-      selectedIdentityId: matchedIdentityId,
-      subAddressTag: '',
-      mode: 'compose',
-      draftId: draft.id,
-      draftAccountId: accountId,
-      draftLocalAccountId: localAccountId,
-      // A reply draft re-opens in compose mode; its threading headers must
-      // come along or the reply leaves its thread.
-      inReplyTo: draft.inReplyTo ?? undefined,
-      references: draft.references ?? undefined,
-      priority: messagePriorityFromHeaders(draft.headers),
-      // A sent message brought back (Undo, Cancel and edit) has no draft
-      // marker: its SIO-Label says which label it went out with.
-      classification: reopenedLabelChoice(draft.headers, localAccountId),
-      // Existing server-side attachments must ride along, or the composer
-      // starts empty and the next save/send silently rebuilds the draft
-      // without them (#849).
-      attachments: (draft.attachments ?? [])
-        .filter(a => !!a.blobId)
-        .map(a => ({
-          blobId: a.blobId,
-          name: a.name,
-          type: a.type,
-          size: a.size,
-          cid: a.cid,
-          disposition: a.disposition,
-        })),
-    });
+    setPendingDraft(composerDataFromDraft(draft, {
+      accountId,
+      localAccountId,
+      identities: composerIdentities,
+      noSubject: t('email_composer.no_subject'),
+    }));
     setComposerMode('compose');
     setShowComposer(true);
     if (isMobile) setActiveView('viewer');
@@ -5539,7 +5558,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 onEmailSelect={handleEmailSelect}
                 onOpenSearchResult={handleEmailSelect}
                 onEmailPrefetch={handleEmailPrefetch}
-                onEmailDoubleClick={isEmbedded ? ((email) => {
+                onEmailDoubleClick={!isEmbedded ? (desktopDoubleClick ? (email) => {
+                  // A draft goes back in the composer, as it does from a single click.
+                  if (email.keywords?.$draft) void handleEditDraft(email);
+                  else openEmailInWindow?.(email);
+                } : undefined) : ((email) => {
                   const store = useProTabStore.getState();
                   const hasSplit = store.tabs.some((tab) => tab.paneId === 'split');
                   // In a split, open on the *other* side so this list stays
@@ -5570,7 +5593,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     mailboxId: selectedMailbox,
                     title: email.subject?.trim() || t('email_composer.new_message'),
                   }, { pane: targetPane, reuseReader: hasSplit });
-                }) : undefined}
+                })}
                 onOpenConversation={handleOpenConversation}
                 // Context menu handlers
                 onReply={(email) => {

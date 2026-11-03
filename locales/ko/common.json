@@ -6545,6 +6545,21 @@
     "message_moved_to": "이 메시지는 {folder}(으)로 이동되었습니다.",
     "window_not_ready": "새 창이 제때 열리지 않았습니다. 임시 보관 메일은 여기에 남아 있습니다."
   },
+  "desktopUi": {
+    "settings": {
+      "title": "창",
+      "double_click_label": "두 번 클릭하면 메시지를 새 창에서 열기",
+      "double_click_description": "한 번 클릭하면 지금처럼 목록 옆에 메시지가 열립니다.",
+      "restore_label": "시작할 때 창 다시 열기",
+      "restore_description": "종료할 때 열려 있던 메시지와 임시보관 창이 다시 열립니다."
+    },
+    "attachment": {
+      "open": "열기",
+      "save_as": "다른 이름으로 저장…",
+      "copy": "복사",
+      "copy_failed": "파일을 복사할 수 없습니다."
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "브라우저로 로그인",
     "browser_waiting": "브라우저에서 로그인을 마치세요",

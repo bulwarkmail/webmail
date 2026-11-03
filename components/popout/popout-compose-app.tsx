@@ -18,6 +18,8 @@ import { announceMailChanged, announceSentToMainWindow, askRescuedDraftId, watch
 import { acknowledgeComposeHandoff, receiveComposeHandoff, rememberComposePayload, rememberedComposePayload, watchHandoffCancel } from "@/lib/popout/compose-handoff";
 import type { ComposePopoutPayload } from "@/lib/popout/compose-payload";
 import { closePopoutWindow } from "@/lib/popout/window-role";
+import { composerDataFromDraft } from "@/lib/draft-composer-data";
+import { useIdentityStore } from "@/stores/identity-store";
 import { PopoutShell, PopoutSkeleton } from "./popout-shell";
 
 /** A warning with no main window left to show it stays this long before the window goes. */
@@ -31,10 +33,60 @@ const EMPTY_PAYLOAD: ComposePopoutPayload = { mode: "compose" };
 /** How long a reloaded window waits to hear what became of the text it handed over on the way out. */
 const RESCUE_ANSWER_MS = 2000;
 
-function readLaunch(): { handoffId: string | null; accountId?: string } {
+function readLaunch(): { handoffId: string | null; accountId?: string; draftId?: string; ownerAccountId?: string } {
   if (typeof window === "undefined") return { handoffId: null };
   const search = new URLSearchParams(window.location.search);
-  return { handoffId: search.get("handoff"), accountId: search.get("account") ?? undefined };
+  return {
+    handoffId: search.get("handoff"),
+    accountId: search.get("account") ?? undefined,
+    draftId: search.get("draft") ?? undefined,
+    ownerAccountId: search.get("owner") ?? undefined,
+  };
+}
+
+/**
+ * The composer that was open when the desktop app quit, back on its draft. A draft
+ * that has gone since (sent or deleted elsewhere) means there's nothing to show.
+ */
+function RestoredDraft({ draftId, accountId, ownerAccountId, onReady }: {
+  draftId: string;
+  accountId?: string;
+  ownerAccountId?: string;
+  onReady: (payload: ComposePopoutPayload) => void;
+}) {
+  const t = useTranslations();
+  const tWindows = useTranslations("pwaWindows");
+  const client = useAuthStore((s) => (accountId ? s.getClientForAccount(accountId) : undefined) ?? s.client);
+  const identities = useIdentityStore((s) => s.identities);
+  useEffect(() => {
+    if (!client) return;
+    let cancelled = false;
+    void client.getEmail(draftId, ownerAccountId).then((draft) => {
+      if (cancelled) return;
+      if (!draft) {
+        closePopoutWindow();
+        return;
+      }
+      onReady({
+        mode: "compose",
+        initialData: composerDataFromDraft(draft, {
+          accountId: ownerAccountId,
+          localAccountId: accountId,
+          identities,
+          noSubject: t("email_composer.no_subject"),
+        }),
+      });
+    }).catch((error) => {
+      debug.error("Failed to reopen a draft:", error);
+      if (!cancelled) closePopoutWindow();
+    });
+    return () => {
+      cancelled = true;
+    };
+    // Once per client: the draft doesn't change under a window still opening.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client, draftId, ownerAccountId]);
+  return <PopoutSkeleton label={tWindows("opening")} />;
 }
 
 /** The composer alone, in its own window: sending, autosave and discard go through the shared stores, as in a Pro tab. */
@@ -181,8 +233,8 @@ function PopoutComposer({ payload, handoffId }: { payload: ComposePopoutPayload;
 /** `/popout/compose`: a draft handed over by another window, or a new message. */
 export function PopoutComposeApp() {
   const t = useTranslations("pwaWindows");
-  const [{ handoffId, accountId }] = useState(readLaunch);
-  const [payload, setPayload] = useState<ComposePopoutPayload | null>(handoffId ? null : EMPTY_PAYLOAD);
+  const [{ handoffId, accountId, draftId, ownerAccountId }] = useState(readLaunch);
+  const [payload, setPayload] = useState<ComposePopoutPayload | null>(handoffId || draftId ? null : EMPTY_PAYLOAD);
 
   useEffect(() => {
     if (!handoffId) return;
@@ -216,7 +268,9 @@ export function PopoutComposeApp() {
 
   return (
     <PopoutShell kind="compose" accountId={accountId}>
-      {payload ? <PopoutComposer payload={payload} handoffId={handoffId} /> : <PopoutSkeleton label={t("opening")} />}
+      {payload ? <PopoutComposer payload={payload} handoffId={handoffId} />
+        : draftId ? <RestoredDraft draftId={draftId} accountId={accountId} ownerAccountId={ownerAccountId} onReady={setPayload} />
+        : <PopoutSkeleton label={t("opening")} />}
     </PopoutShell>
   );
 }

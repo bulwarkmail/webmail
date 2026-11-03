@@ -6545,6 +6545,21 @@
     "message_moved_to": "Ce message a été déplacé vers {folder}.",
     "window_not_ready": "La nouvelle fenêtre ne s’est pas ouverte à temps. Votre brouillon reste ici."
   },
+  "desktopUi": {
+    "settings": {
+      "title": "Fenêtres",
+      "double_click_label": "Ouvrir les messages dans une nouvelle fenêtre par double-clic",
+      "double_click_description": "Un simple clic ouvre toujours le message à côté de la liste.",
+      "restore_label": "Rouvrir les fenêtres au démarrage",
+      "restore_description": "Les fenêtres de messages et de brouillons ouvertes à la fermeture reviennent."
+    },
+    "attachment": {
+      "open": "Ouvrir",
+      "save_as": "Enregistrer sous…",
+      "copy": "Copier",
+      "copy_failed": "Impossible de copier le fichier."
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "Se connecter avec le navigateur",
     "browser_waiting": "Terminez la connexion dans votre navigateur",

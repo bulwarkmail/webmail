@@ -6545,6 +6545,21 @@
     "message_moved_to": "Este mensaje se movió a {folder}.",
     "window_not_ready": "La ventana nueva no se abrió a tiempo. Tu borrador se queda aquí."
   },
+  "desktopUi": {
+    "settings": {
+      "title": "Ventanas",
+      "double_click_label": "Abrir mensajes en una ventana nueva con doble clic",
+      "double_click_description": "Un solo clic sigue abriendo el mensaje junto a la lista.",
+      "restore_label": "Volver a abrir las ventanas al iniciar",
+      "restore_description": "Las ventanas de mensajes y borradores abiertas al salir vuelven a aparecer."
+    },
+    "attachment": {
+      "open": "Abrir",
+      "save_as": "Guardar como…",
+      "copy": "Copiar",
+      "copy_failed": "No se pudo copiar el archivo."
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "Iniciar sesión con el navegador",
     "browser_waiting": "Termina de iniciar sesión en el navegador",

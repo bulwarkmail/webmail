@@ -6545,6 +6545,21 @@
     "message_moved_to": "這封郵件已移到 {folder}。",
     "window_not_ready": "新視窗未能及時開啟。你的草稿仍保留在這裡。"
   },
+  "desktopUi": {
+    "settings": {
+      "title": "視窗",
+      "double_click_label": "按兩下時在新視窗中開啟郵件",
+      "double_click_description": "按一下仍會在清單旁開啟郵件。",
+      "restore_label": "啟動時重新開啟視窗",
+      "restore_description": "結束時開啟的郵件和草稿視窗會恢復。"
+    },
+    "attachment": {
+      "open": "開啟",
+      "save_as": "另存新檔…",
+      "copy": "複製",
+      "copy_failed": "無法複製檔案。"
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "使用瀏覽器登入",
     "browser_waiting": "請在瀏覽器中完成登入",

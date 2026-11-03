@@ -6545,6 +6545,21 @@
     "message_moved_to": "Táto správa bola presunutá do {folder}.",
     "window_not_ready": "Nové okno sa neotvorilo včas. Koncept zostáva tu."
   },
+  "desktopUi": {
+    "settings": {
+      "title": "Okná",
+      "double_click_label": "Otvárať správy v novom okne dvojitým kliknutím",
+      "double_click_description": "Jedným kliknutím sa správa stále otvorí vedľa zoznamu.",
+      "restore_label": "Pri spustení znova otvoriť okná",
+      "restore_description": "Okná správ a konceptov otvorené pri ukončení sa vrátia."
+    },
+    "attachment": {
+      "open": "Otvoriť",
+      "save_as": "Uložiť ako…",
+      "copy": "Kopírovať",
+      "copy_failed": "Súbor sa nepodarilo skopírovať."
+    }
+  },
   "desktop_sign_in": {
     "browser_button": "Prihlásiť sa v prehliadači",
     "browser_waiting": "Dokončite prihlásenie v prehliadači",
