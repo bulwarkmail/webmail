@@ -1209,7 +1209,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   };
 
   return (
-    <div className={cn("flex flex-col overflow-hidden pt-[env(safe-area-inset-top)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
+    <div className={cn("flex flex-col overflow-hidden pt-[var(--app-top-inset)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
       {!isEmbedded && <SkipLink>{tShell("skip_to_content")}</SkipLink>}
       <AppTopBannerSlot />
       {refreshIndicator}
@@ -1265,7 +1265,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
                       "border-e border-border flex flex-col flex-shrink-0 bg-background",
                       !isSidebarResizing && "transition-[width] duration-300",
                       isNarrow && cn(
-                        "absolute inset-y-0 start-0 z-50 w-72 pt-[env(safe-area-inset-top)]",
+                        "absolute inset-y-0 start-0 z-50 w-72 pt-[var(--app-top-inset)]",
                         "transform transition-[transform,visibility] duration-300 ease-in-out",
                         !narrowSidebarOpen && "invisible -translate-x-full rtl:translate-x-full"
                       )

@@ -6482,5 +6482,23 @@
       "next_issue": "Järgmine õigekirja- või grammatikaviga",
       "previous_issue": "Eelmine õigekirja- või grammatikaviga"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Ava uues aknas",
+    "save_all_to_folder": "Salvesta kõik kausta…",
+    "saved_all": "{count, plural, one {# manus salvestati kausta {folder}.} other {# manust salvestati kausta {folder}.}}",
+    "saved_partial": "{total} manusest {saved} salvestati kausta {folder}.",
+    "save_failed": "Manuseid ei saanud kausta {folder} salvestada.",
+    "popup_blocked": "Brauser blokeeris uue akna. Luba selle saidi hüpikaknad ja proovi uuesti.",
+    "opening": "Avamine…",
+    "session_ended_title": "Oled selles aknas välja logitud",
+    "session_ended_body": "Ava rakendus ja logi sisse, seejärel ava see aken uuesti.",
+    "open_app": "Ava rakendus",
+    "close_window": "Sulge aken",
+    "message_gone_title": "Seda kirja enam ei ole",
+    "message_gone_body": "See kustutati või teisaldati teisele kontole.",
+    "message_moved": "See kiri teisaldati teise kausta.",
+    "message_moved_to": "See kiri teisaldati kausta {folder}.",
+    "window_not_ready": "Uus aken ei avanenud õigeks ajaks. Mustand jääb siia."
   }
 }

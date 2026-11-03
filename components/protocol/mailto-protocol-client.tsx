@@ -1,5 +1,6 @@
 "use client";
 
+import { isStandaloneDisplayMode } from "@/lib/standalone-display";
 import { useEffect } from "react";
 import { MailSkeleton } from "@/components/boot-skeleton/mail-skeleton";
 import type { RailLabels } from "@/components/boot-skeleton/shell";
@@ -7,7 +8,6 @@ import { parseMailto } from "@/lib/protocol-handlers/mailto";
 import { requestOpenMailtoInExistingClient, savePendingMailto } from "@/lib/protocol-handlers/session";
 import { useSettingsStore } from "@/stores/settings-store";
 
-type StandaloneNavigator = Navigator & { standalone?: boolean };
 
 function getProtocolPathPrefix(): string {
   const marker = "/protocol/mailto";
@@ -34,9 +34,7 @@ function openFallbackAppTab(raw: string): boolean {
 }
 
 function shouldOpenFallbackAppTab(): boolean {
-  const standalone = window.matchMedia?.("(display-mode: standalone)").matches
-    || (navigator as StandaloneNavigator).standalone === true;
-  return !standalone && window.history.length > 1;
+  return !isStandaloneDisplayMode() && window.history.length > 1;
 }
 
 async function focusExistingClient() {

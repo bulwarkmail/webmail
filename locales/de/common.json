@@ -6482,5 +6482,23 @@
       "next_issue": "Nächster Rechtschreib- oder Grammatikfehler",
       "previous_issue": "Vorheriger Rechtschreib- oder Grammatikfehler"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "In neuem Fenster öffnen",
+    "save_all_to_folder": "Alle in einem Ordner speichern…",
+    "saved_all": "{count, plural, one {# Anhang in {folder} gespeichert.} other {# Anhänge in {folder} gespeichert.}}",
+    "saved_partial": "{saved} von {total} Anhängen in {folder} gespeichert.",
+    "save_failed": "Die Anhänge konnten nicht in {folder} gespeichert werden.",
+    "popup_blocked": "Der Browser hat das neue Fenster blockiert. Erlauben Sie Pop-ups für diese Seite und versuchen Sie es noch einmal.",
+    "opening": "Wird geöffnet…",
+    "session_ended_title": "Sie sind in diesem Fenster abgemeldet",
+    "session_ended_body": "Öffnen Sie die App, melden Sie sich an und öffnen Sie dieses Fenster dann noch einmal.",
+    "open_app": "App öffnen",
+    "close_window": "Fenster schließen",
+    "message_gone_title": "Diese Nachricht ist nicht mehr da",
+    "message_gone_body": "Sie wurde gelöscht oder in ein anderes Konto verschoben.",
+    "message_moved": "Diese Nachricht wurde in einen anderen Ordner verschoben.",
+    "message_moved_to": "Diese Nachricht wurde nach {folder} verschoben.",
+    "window_not_ready": "Das neue Fenster wurde nicht rechtzeitig geöffnet. Ihr Entwurf bleibt hier."
   }
 }

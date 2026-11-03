@@ -6482,5 +6482,23 @@
       "next_issue": "Faute d'orthographe ou de grammaire suivante",
       "previous_issue": "Faute d'orthographe ou de grammaire précédente"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Ouvrir dans une nouvelle fenêtre",
+    "save_all_to_folder": "Tout enregistrer dans un dossier…",
+    "saved_all": "{count, plural, one {# pièce jointe enregistrée dans {folder}.} other {# pièces jointes enregistrées dans {folder}.}}",
+    "saved_partial": "{saved} pièces jointes sur {total} enregistrées dans {folder}.",
+    "save_failed": "Impossible d’enregistrer les pièces jointes dans {folder}.",
+    "popup_blocked": "Le navigateur a bloqué la nouvelle fenêtre. Autorisez les fenêtres pop-up pour ce site et réessayez.",
+    "opening": "Ouverture…",
+    "session_ended_title": "Vous êtes déconnecté dans cette fenêtre",
+    "session_ended_body": "Ouvrez l’application et connectez-vous, puis rouvrez cette fenêtre.",
+    "open_app": "Ouvrir l’application",
+    "close_window": "Fermer la fenêtre",
+    "message_gone_title": "Ce message n’existe plus",
+    "message_gone_body": "Il a été supprimé ou déplacé vers un autre compte.",
+    "message_moved": "Ce message a été déplacé vers un autre dossier.",
+    "message_moved_to": "Ce message a été déplacé vers {folder}.",
+    "window_not_ready": "La nouvelle fenêtre ne s’est pas ouverte à temps. Votre brouillon reste ici."
   }
 }

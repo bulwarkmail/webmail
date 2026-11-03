@@ -6482,5 +6482,23 @@
       "next_issue": "Error d'ortografia o de gramàtica següent",
       "previous_issue": "Error d'ortografia o de gramàtica anterior"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Obre en una finestra nova",
+    "save_all_to_folder": "Desa-ho tot en una carpeta…",
+    "saved_all": "{count, plural, one {S’ha desat # adjunt a {folder}.} other {S’han desat # adjunts a {folder}.}}",
+    "saved_partial": "S’han desat {saved} de {total} adjunts a {folder}.",
+    "save_failed": "No s’han pogut desar els adjunts a {folder}.",
+    "popup_blocked": "El navegador ha blocat la finestra nova. Permet les finestres emergents per a aquest lloc i torna-ho a provar.",
+    "opening": "S’està obrint…",
+    "session_ended_title": "Has tancat la sessió en aquesta finestra",
+    "session_ended_body": "Obre l’aplicació i inicia la sessió, i després torna a obrir aquesta finestra.",
+    "open_app": "Obre l’aplicació",
+    "close_window": "Tanca la finestra",
+    "message_gone_title": "Aquest missatge ja no hi és",
+    "message_gone_body": "S’ha suprimit o s’ha mogut a un altre compte.",
+    "message_moved": "Aquest missatge s’ha mogut a una altra carpeta.",
+    "message_moved_to": "Aquest missatge s’ha mogut a {folder}.",
+    "window_not_ready": "La finestra nova no s’ha obert a temps. L’esborrany es queda aquí."
   }
 }

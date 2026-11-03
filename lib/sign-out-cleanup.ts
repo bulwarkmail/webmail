@@ -38,6 +38,7 @@ const SIGNED_OUT_STORAGE_KEYS = [
 ];
 
 const SIGNED_OUT_SIGNAL = 'bulwark:signed-out';
+export { SIGNED_OUT_SIGNAL as SIGNED_OUT_KEY };
 
 // Stores the auth store can't import (they import it) clear themselves here.
 const signedOutCleanups = new Set<() => void>();

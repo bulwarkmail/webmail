@@ -6482,5 +6482,23 @@
       "next_issue": "Następny błąd pisowni lub gramatyki",
       "previous_issue": "Poprzedni błąd pisowni lub gramatyki"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Otwórz w nowym oknie",
+    "save_all_to_folder": "Zapisz wszystko w folderze…",
+    "saved_all": "{count, plural, one {Zapisano # załącznik w {folder}.} few {Zapisano # załączniki w {folder}.} other {Zapisano # załączników w {folder}.}}",
+    "saved_partial": "Zapisano {saved} z {total} załączników w {folder}.",
+    "save_failed": "Nie udało się zapisać załączników w {folder}.",
+    "popup_blocked": "Przeglądarka zablokowała nowe okno. Zezwól na wyskakujące okna dla tej strony i spróbuj ponownie.",
+    "opening": "Otwieranie…",
+    "session_ended_title": "Wylogowano w tym oknie",
+    "session_ended_body": "Otwórz aplikację i zaloguj się, a potem otwórz to okno ponownie.",
+    "open_app": "Otwórz aplikację",
+    "close_window": "Zamknij okno",
+    "message_gone_title": "Tej wiadomości już nie ma",
+    "message_gone_body": "Została usunięta lub przeniesiona na inne konto.",
+    "message_moved": "Ta wiadomość została przeniesiona do innego folderu.",
+    "message_moved_to": "Ta wiadomość została przeniesiona do {folder}.",
+    "window_not_ready": "Nowe okno nie otworzyło się na czas. Twój szkic zostaje tutaj."
   }
 }

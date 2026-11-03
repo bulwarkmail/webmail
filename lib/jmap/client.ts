@@ -1687,6 +1687,25 @@ export class JMAPClient implements IJMAPClient {
     return client;
   }
 
+  /**
+   * A client on a credential another window of this browser holds (a pop-out,
+   * lib/popout): the header as that window sends it, whatever kind it is.
+   */
+  static withSharedAuth(
+    serverUrl: string,
+    username: string,
+    authHeader: string,
+    onTokenRefresh?: () => Promise<string | null>,
+  ): JMAPClient {
+    const client = new JMAPClient(serverUrl, username, '');
+    client.authHeader = authHeader;
+    if (authHeader.startsWith('Bearer ')) {
+      client.authMode = 'bearer';
+      client.onTokenRefresh = onTokenRefresh;
+    }
+    return client;
+  }
+
   updateAccessToken(token: string): void {
     this.authHeader = `Bearer ${token}`;
   }

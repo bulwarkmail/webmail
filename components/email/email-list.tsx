@@ -27,6 +27,7 @@ import { useEmailStore, resolveEmailBlobContext, ArchiveMailboxNotFoundError, re
 import { useRemoveFromFolder } from "@/hooks/use-remove-from-folder";
 import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "@/stores/auth-store";
+import { useOpenEmailInWindow } from "@/hooks/use-popouts-available";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useListRowShape } from "@/hooks/use-list-row-shape";
 import { MailListRowsSkeleton, type MailRowShape } from "@/components/boot-skeleton/mail-skeleton";
@@ -177,6 +178,7 @@ export function EmailList({
 }: EmailListProps) {
   const t = useTranslations('email_list');
   const tContextMenu = useTranslations('context_menu');
+  const openInWindow = useOpenEmailInWindow();
   const tSpam = useTranslations('email_viewer.spam');
   const tNotifications = useTranslations('notifications');
   const tViewer = useTranslations('email_viewer');
@@ -1360,6 +1362,7 @@ export function EmailList({
               : [contextMenuEmail!];
             await copyToAccount(emails, accountId, mailboxId);
           }}
+          onOpenInWindow={openInWindow && contextMenuEmail ? () => openInWindow(contextMenuEmail) : undefined}
           // Export, print and View source follow the device policy of the row's own account.
           onExport={contextMenuEmail && !canExport(contextMenuEmail) ? undefined : () => {
             const target = contextMenuEmail!;

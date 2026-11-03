@@ -108,7 +108,7 @@ if (typeof caches !== "undefined" && caches && typeof caches.open === "function"
   readOfflineShell();
 }
 
-const APP_SECTIONS = new Set(["", "mail", "settings", "calendar", "contacts", "files", "pro", "apps", "protocol"]);
+const APP_SECTIONS = new Set(["", "mail", "settings", "calendar", "contacts", "files", "pro", "apps", "protocol", "popout"]);
 
 /** The page path inside the app ("/mail/inbox"), or null for anything that isn't a page of the app. */
 function appPagePath(url) {
@@ -138,7 +138,12 @@ function documentKey(url) {
 async function cachedDocument(url) {
   const path = appPagePath(url) || "/";
   const section = "/" + (path.split("/").filter(Boolean)[0] || "");
-  const candidates = [documentKey(url), self.location.origin + BASE_PATH + (section === "/" ? "" : section), self.location.origin + BASE_PATH];
+  const appRoot = self.location.origin + BASE_PATH;
+  // A pop-out has no section page, and the start page would put the whole app
+  // into its window. Its own kind of page reads the id from the address bar.
+  const candidates = section === "/popout"
+    ? [documentKey(url), appRoot + (path.startsWith("/popout/message/") ? "/popout/message/_" : "/popout/compose")]
+    : [documentKey(url), appRoot + (section === "/" ? "" : section), appRoot];
   // Only looked into when it exists: opening it would create it again
   // after the next build's worker deleted it.
   if (await caches.has(SHELL_CACHE)) {

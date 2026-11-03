@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import { mainWindowStorage } from '@/lib/popout/window-role';
 import { generateAccountId, generateAvatarColor, getMaxAccounts } from '@/lib/account-utils';
 import { authHooks } from '@/lib/plugin-hooks';
 
@@ -250,6 +251,7 @@ export const useAccountStore = create<AccountState>()(
     }),
     {
       name: 'account-registry',
+      storage: createJSONStorage(mainWindowStorage),
       partialize: (state) => ({
         accounts: state.accounts,
         activeAccountId: state.activeAccountId,

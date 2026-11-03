@@ -294,7 +294,7 @@ export function AppShellSkeleton({
       <SkeletonRegion
         surface={surface}
         label={label}
-        className="flex flex-col overflow-hidden pt-[env(safe-area-inset-top)] h-dvh bg-background lg:mv:bg-[var(--mv-canvas)] boot-out:hidden boot-pro-frame:hidden"
+        className="flex flex-col overflow-hidden pt-[var(--app-top-inset)] h-dvh bg-background lg:mv:bg-[var(--mv-canvas)] boot-out:hidden boot-pro-frame:hidden"
       >
         <MvTopBarSkeleton search={mvSearch} menu={mvMenu} className="hidden lg:mv:flex" />
         <div className={cn("flex flex-1 min-h-0 overflow-hidden", rowClassName)}>

@@ -6482,5 +6482,23 @@
       "next_issue": "下一个拼写或语法问题",
       "previous_issue": "上一个拼写或语法问题"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "在新窗口中打开",
+    "save_all_to_folder": "全部保存到文件夹…",
+    "saved_all": "{count, plural, other {已将 # 个附件保存到 {folder}。}}",
+    "saved_partial": "已将 {total} 个附件中的 {saved} 个保存到 {folder}。",
+    "save_failed": "无法将附件保存到 {folder}。",
+    "popup_blocked": "浏览器阻止了新窗口。请允许此网站显示弹出窗口，然后重试。",
+    "opening": "正在打开…",
+    "session_ended_title": "你已在此窗口中退出登录",
+    "session_ended_body": "请打开应用并登录，然后重新打开此窗口。",
+    "open_app": "打开应用",
+    "close_window": "关闭窗口",
+    "message_gone_title": "这封邮件已不存在",
+    "message_gone_body": "它已被删除或移动到其他账户。",
+    "message_moved": "这封邮件已移动到其他文件夹。",
+    "message_moved_to": "这封邮件已移动到 {folder}。",
+    "window_not_ready": "新窗口未能及时打开。你的草稿仍保留在这里。"
   }
 }

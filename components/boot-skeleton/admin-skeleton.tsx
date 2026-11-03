@@ -171,7 +171,7 @@ export function AdminSkeleton({ label, page, backLabel, searchLabel, labels, cla
     <SkeletonRegion
       surface="admin"
       label={label}
-      className={cn("h-dvh bg-background pt-[env(safe-area-inset-top)]", className)}
+      className={cn("h-dvh bg-background pt-[var(--app-top-inset)]", className)}
     >
       {/* Desktop */}
       <div className="hidden lg:flex h-full">

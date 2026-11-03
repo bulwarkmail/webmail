@@ -20,8 +20,11 @@ import { locales, defaultLocale } from "@/i18n/routing";
 import { IS_LITE, LITE_MOUNT_GLOBAL } from "@/lib/lite";
 import { accessibilityBootScript } from "@/lib/accessibility-settings";
 import { bootSkeletonScript } from "@/lib/boot-skeleton/boot-script";
+import { WindowTitleBar } from "@/components/layout/window-title-bar";
 import "../globals.css";
 import "../print.css";
+import "../desktop.css";
+import { desktopBootScript } from "@/lib/desktop/boot";
 
 // This layout renders <html> and sits ABOVE the [locale] segment, so
 // next-intl's getLocale() returns the default locale here - emitting
@@ -308,6 +311,7 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               (function() {${IS_LITE ? liteLocaleBootstrap() : ""}
+                ${desktopBootScript()}
                 try {
                   const stored = localStorage.getItem('theme-storage');
                   const theme = stored ? JSON.parse(stored).state.theme : 'system';
@@ -330,6 +334,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${hankenGrotesk.variable} antialiased`}
       >
         <ServiceWorkerRegistration />
+        <WindowTitleBar />
         {!themeColorConfigured && <ThemeColorSync />}
         <FaviconBadge />
         <ErrorReportingRoot />

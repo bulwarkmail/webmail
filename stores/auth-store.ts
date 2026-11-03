@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import { JMAPClient, RateLimitError, RequestTimeoutError } from '@/lib/jmap/client';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { useIdentityStore } from './identity-store';
@@ -30,6 +30,9 @@ import { SESSION_TOO_OLD } from '@/lib/session-policy/constants';
 import type { Identity } from '@/lib/jmap/types';
 import { authHooks } from '@/lib/plugin-hooks';
 import { IS_LITE, IS_LITE_STALWART } from '@/lib/lite';
+import { withTokenLock } from '@/lib/auth/token-lock';
+import { requestWindowSession, type SharedAccountSession } from '@/lib/popout/channel';
+import { closePopoutWindow, isPopoutWindow, mainWindowStorage } from '@/lib/popout/window-role';
 import { toAsciiEmail } from '@/lib/idn';
 import { flushComposers } from '@/lib/compose-flush-registry';
 import { sortIdentities } from '@/lib/identity-order';
@@ -119,6 +122,12 @@ interface AuthState {
   removeAccount: (accountId: string) => void;
   switchAccount: (accountId: string) => Promise<void>;
   checkAuth: () => Promise<void>;
+  /**
+   * Start-up of a pop-out window, in place of checkAuth: takes the session
+   * from a main window, or from the remembered cookies when none is open.
+   * Never evicts an account and starts no token timers.
+   */
+  startSharedSession: (options?: { accountId?: string }) => Promise<'ready' | 'no-session'>;
   clearError: () => void;
   syncIdentities: () => void;
   /**
@@ -604,21 +613,30 @@ async function noteSessionAnswer(res: Response, slot: number | undefined): Promi
  * access token. `remember: false` keeps a rotated refresh token in a cookie
  * that ends with the browser session.
  */
-async function fetchSlotAccessToken(slot: number, opts: { force?: boolean; remember?: boolean } = {}): Promise<Response> {
+function fetchSlotAccessToken(slot: number, opts: { force?: boolean; remember?: boolean } = {}): Promise<Response> {
   // Renewing would write the tokens of a slot being signed out back.
-  if (closingSlots.has(slot)) return jsonResponse({ error: 'signed_out' }, 401);
-  if (!IS_LITE) {
-    const query = `${opts.force ? '&force=true' : ''}${opts.remember === false ? '&remember=false' : ''}`;
-    return trackSessionWrite(slot, (signal) => apiFetch(`/api/auth/token?slot=${slot}${query}`, { method: 'PUT', signal }))
-      .then((res) => noteSessionAnswer(res, slot));
-  }
-  // Like the route's cookie cache: a restore resumes with the token it had,
-  // since a renewal before the refresh token's `nbf` is refused (#552).
-  if (!opts.force) {
-    const cached = readLiteAccessToken(slot);
-    if (cached) return jsonResponse({ access_token: cached.accessToken, expires_in: cached.expiresIn });
-  }
-  return trackSessionWrite(slot, async () => {
+  if (closingSlots.has(slot)) return Promise.resolve(jsonResponse({ error: 'signed_out' }, 401));
+  // Tracked from before the wait, so a sign-out can call off a renewal still
+  // queued on the lock.
+  return trackSessionWrite(slot, (signal) => withTokenLock(slot, async ({ contended }) => {
+    // The slot may have started closing during the wait.
+    if (closingSlots.has(slot)) return jsonResponse({ error: 'signed_out' }, 401);
+    // One at a time across windows: each must send the refresh token the last
+    // answer wrote (lib/auth/token-lock.ts). After waiting for another window,
+    // what it renewed is what this one wanted: forcing a second renewal this
+    // soon can be refused (Rauthy `nbf`, #552).
+    const force = opts.force && !contended;
+    if (!IS_LITE) {
+      const query = `${force ? '&force=true' : ''}${opts.remember === false ? '&remember=false' : ''}`;
+      return apiFetch(`/api/auth/token?slot=${slot}${query}`, { method: 'PUT', signal })
+        .then((res) => noteSessionAnswer(res, slot));
+    }
+    // Like the route's cookie cache: a restore resumes with the token it had,
+    // since a renewal before the refresh token's `nbf` is refused (#552).
+    if (!force) {
+      const cached = readLiteAccessToken(slot);
+      if (cached) return jsonResponse({ access_token: cached.accessToken, expires_in: cached.expiresIn });
+    }
     try {
       const tokens = await liteRefreshTokens(slot);
       return jsonResponse({ access_token: tokens.accessToken, expires_in: tokens.expiresIn });
@@ -626,7 +644,7 @@ async function fetchSlotAccessToken(slot: number, opts: { force?: boolean; remem
       if (err instanceof LiteLoginError) return jsonResponse({ error: err.code }, liteErrorStatus(err));
       throw err; // network failure - callers treat it as an outage, not a rejection
     }
-  });
+  }, { signal }));
 }
 
 /** PUT /api/auth/session[?slot=N] - the slot's remembered password or access token. */
@@ -950,6 +968,11 @@ export function redirectToLogin(): void {
 
 function navigateToLogin(): void {
   if (typeof window === 'undefined') return;
+  // Signing in happens in the main window; a pop-out just goes away.
+  if (isPopoutWindow()) {
+    closePopoutWindow();
+    return;
+  }
 
   const loginPath = getLocaleLoginPath();
   if (window.location.pathname === loginPath) return;
@@ -1116,6 +1139,50 @@ function snapshotAndClearForSwitch(activeAccountId: string | null): void {
 }
 const refreshTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const refreshPromises = new Map<string, Promise<string | null>>();
+
+/** Told when a pop-out's session can't be renewed any more and no main window is left to do it. */
+export const SHARED_SESSION_ENDED_EVENT = 'bulwark:shared-session-ended';
+
+function bearerToken(header: string): string | null {
+  return header.startsWith('Bearer ') ? header.slice('Bearer '.length) : null;
+}
+
+/**
+ * A new token for a pop-out, whose credential the server just refused. It asks
+ * the main window first: that one owns the renewal, and usually already has
+ * the next token. Only with no main window left does the pop-out renew, under
+ * the same lock (fetchSlotAccessToken), and it never signs anyone out.
+ */
+async function renewSharedToken(accountId: string): Promise<string | null> {
+  const client = clients.get(accountId);
+  const account = useAccountStore.getState().getAccountById(accountId);
+  if (!client || !account) return null;
+  const rejected = client.getAuthHeader();
+  try {
+    const answer = await requestWindowSession({ accountId, rejectedAuthHeader: rejected });
+    const shared = answer?.sessions.find((session) => session.accountId === accountId);
+    if (shared) return shared.authHeader === rejected ? null : bearerToken(shared.authHeader);
+
+    let res = await fetchSlotAccessToken(account.cookieSlot, { remember: account.rememberMe });
+    if (res.ok) {
+      let { access_token } = await res.json();
+      // The cached token is the one the server refused.
+      if (`Bearer ${access_token}` === rejected) {
+        res = await fetchSlotAccessToken(account.cookieSlot, { force: true, remember: account.rememberMe });
+        if (res.ok) ({ access_token } = await res.json());
+      }
+      if (res.ok) {
+        await syncStalwartAuthContext(account.serverUrl, account.username, `Bearer ${access_token}`, account.cookieSlot);
+        return access_token;
+      }
+    }
+    if (res.status === 401 && typeof window !== 'undefined') window.dispatchEvent(new Event(SHARED_SESSION_ENDED_EVENT));
+    return null;
+  } catch (error) {
+    debug.error('Token renewal in a pop-out failed:', error);
+    return null;
+  }
+}
 
 // Retry backoff for transiently failed token refreshes (#588). The values
 // are pseudo-expiries for scheduleRefresh - its "expiry - 60s" math turns
@@ -2174,9 +2241,16 @@ export const useAuthStore = create<AuthState>()(
           return refreshPromise;
         }
 
+        // A pop-out is on another window's session: it asks that window first.
+        if (isPopoutWindow()) {
+          if (!accountId) return null;
+          const renewal = renewSharedToken(accountId).finally(() => refreshPromises.delete(accountId));
+          refreshPromises.set(accountId, renewal);
+          return renewal;
+        }
+
         const account = accountId ? useAccountStore.getState().getAccountById(accountId) : null;
         const slot = account?.cookieSlot ?? 0;
-        const isActive = !accountId || accountId === get().activeAccountId;
         // The account is being signed out: a renewal now would only undo that.
         if (closingSlots.has(slot)) return null;
 
@@ -2187,6 +2261,12 @@ export const useAuthStore = create<AuthState>()(
             // scheduled renewal), so the server-side cache must be skipped.
             // Session restore passes allowCached to reuse a still-valid token.
             const res = await fetchSlotAccessToken(slot, { force: !options?.allowCached, remember: account?.rememberMe });
+
+            // Possibly a long wait for another window's renewal. A slot closing
+            // or an account gone by now says nothing about any session, and a
+            // refusal mustn't sign out whichever account is active by now.
+            if (closingSlots.has(slot) || (account && !useAccountStore.getState().getAccountById(account.id))) return null;
+            const isActive = !accountId || accountId === get().activeAccountId;
 
             if (!res.ok) {
               // Only a definitive 401 ends the session. Anything else (5xx
@@ -3280,6 +3360,105 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
+      startSharedSession: async (options) => {
+        set({ isLoading: true, client: null });
+        const accountStore = useAccountStore.getState();
+        const answer = await requestWindowSession(options?.accountId ? { accountId: options.accountId } : {});
+        const sessions = answer?.sessions ?? [];
+
+        // No main window open: what the cookies still hold. A login made
+        // without "Remember me" has nothing there, and that is no reason to
+        // evict it: the list is the main window's business.
+        const restoreFromCookies = async (account: AccountEntry): Promise<JMAPClient | null> => {
+          if (account.awaitingSignIn) return null;
+          if (account.authMode === 'oauth') {
+            const res = await fetchSlotAccessToken(account.cookieSlot, { remember: account.rememberMe });
+            if (res.status >= 500) throw new TransientAuthError('Token refresh failed', res.status);
+            if (!res.ok) return null;
+            const { access_token } = await res.json();
+            await syncStalwartAuthContext(account.serverUrl, account.username, `Bearer ${access_token}`, account.cookieSlot);
+            return JMAPClient.withBearer(account.serverUrl, access_token, account.username, () => get().refreshAccessToken({ accountId: account.id }));
+          }
+          if (!account.rememberMe && !IS_LITE) return null;
+          const res = await fetchSlotSession(account.cookieSlot);
+          if (res.status >= 500) throw new TransientAuthError('Session restore failed', res.status);
+          if (!res.ok) return null;
+          const session: RememberedSession = await res.json();
+          return clientForSession(session);
+        };
+
+        const adopt = async (accountId: string, session?: SharedAccountSession): Promise<JMAPClient | null> => {
+          const account = accountStore.getAccountById(accountId);
+          if (!account) return null;
+          try {
+            if (session?.offlineOnly) throw new TransientAuthError('The main window is offline', 503);
+            const client = session
+              ? JMAPClient.withSharedAuth(account.serverUrl, account.username, session.authHeader, session.authMode === 'oauth'
+                ? () => get().refreshAccessToken({ accountId })
+                : undefined)
+              : await restoreFromCookies(account);
+            if (!client) return null;
+            bindClientStatusHandlers(client, set, get, accountId);
+            await client.connect();
+            clients.set(accountId, client);
+            accountStore.updateAccount(accountId, { isConnected: true, hasError: false });
+            return client;
+          } catch (error) {
+            debug.error(`A pop-out could not use account ${accountId}:`, error);
+            if (!isTransientAuthError(error)) return null;
+            const offlineClient = await startOfflineClient(accountId, account.serverUrl, account.username);
+            if (offlineClient) clients.set(accountId, offlineClient);
+            return offlineClient;
+          }
+        };
+
+        const targetId = options?.accountId
+          ?? answer?.activeAccountId
+          ?? accountStore.activeAccountId
+          ?? accountStore.getDefaultAccount()?.id
+          ?? null;
+        const account = targetId ? accountStore.getAccountById(targetId) : undefined;
+        const client = account ? await adopt(account.id, sessions.find((session) => session.accountId === account.id)) : null;
+        if (!account || !client) {
+          set({ isLoading: false, isAuthenticated: false, client: null });
+          return 'no-session';
+        }
+
+        // The window's other logins: a draft may live in one (see
+        // ComposerDraftData), and the Pro From picker lists them.
+        const others = sessions.filter((session) => session.accountId !== account.id);
+        if (others.length > 0) {
+          void Promise.allSettled(others.map((session) => adopt(session.accountId, session))).then(() => {
+            set((state) => ({ connectedAccountsRevision: state.connectedAccountsRevision + 1 }));
+          });
+        }
+
+        accountStore.setActiveAccount(account.id);
+        initializeFeatureStores(client);
+        let loaded: ReturnType<typeof loadIdentities> = { identities: [], primaryIdentity: null };
+        try {
+          loaded = loadIdentities(await client.getIdentities(), account.username);
+        } catch (error) {
+          debug.error('Failed to load identities in a pop-out:', error);
+        }
+        set({
+          isAuthenticated: true,
+          isLoading: false,
+          serverUrl: account.serverUrl,
+          username: account.username,
+          client,
+          ...getClientRateLimitState(client),
+          identities: loaded.identities,
+          primaryIdentity: loaded.primaryIdentity,
+          authMode: account.authMode,
+          rememberMe: account.rememberMe,
+          connectionLost: false,
+          error: null,
+          activeAccountId: account.id,
+        });
+        return 'ready';
+      },
+
       getClientForAccount: (accountId: string) => {
         return clients.get(accountId);
       },
@@ -3301,6 +3480,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
+      storage: createJSONStorage(mainWindowStorage),
       partialize: (state) => {
         // Don't persist unauthenticated state - prevents resurrecting stale sessions
         if (!state.isAuthenticated) return {};
@@ -3367,6 +3547,8 @@ useAuthStore.subscribe((state) => {
 // gone too, so leave for the login page instead of showing stale mail.
 if (typeof window !== 'undefined') {
   onSignedOutElsewhere(() => {
+    // A pop-out saves its typing first (components/popout/popout-shell.tsx).
+    if (isPopoutWindow()) return;
     if (useAuthStore.getState().isAuthenticated) navigateToLogin();
   });
 }

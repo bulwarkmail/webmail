@@ -6482,5 +6482,23 @@
       "next_issue": "Next spelling or grammar issue",
       "previous_issue": "Previous spelling or grammar issue"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Open in new window",
+    "save_all_to_folder": "Save all to a folder…",
+    "saved_all": "{count, plural, one {Saved # attachment to {folder}.} other {Saved # attachments to {folder}.}}",
+    "saved_partial": "Saved {saved} of {total} attachments to {folder}.",
+    "save_failed": "Could not save the attachments to {folder}.",
+    "popup_blocked": "The browser blocked the new window. Allow pop-ups for this site and try again.",
+    "opening": "Opening…",
+    "session_ended_title": "You are signed out in this window",
+    "session_ended_body": "Open the app and sign in, then open this window again.",
+    "open_app": "Open the app",
+    "close_window": "Close window",
+    "message_gone_title": "This message is gone",
+    "message_gone_body": "It was deleted or moved to another account.",
+    "message_moved": "This message was moved to another folder.",
+    "message_moved_to": "This message was moved to {folder}.",
+    "window_not_ready": "The new window did not open in time. Your draft stays here."
   }
 }

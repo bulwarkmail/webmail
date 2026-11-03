@@ -15,6 +15,8 @@ import { threadKeyFor } from "@/lib/thread-utils";
 import { formatRejectedRecipients } from "@/lib/jmap/client";
 import { announceSent } from "@/lib/plugin-after-send";
 import { composerSendOptions } from "@/lib/outgoing/composer-send-options";
+import { usePopoutsAvailable } from "@/hooks/use-popouts-available";
+import { openComposerWindow } from "@/lib/popout/open";
 
 interface ProComposeTabBodyProps {
   tabId: string;
@@ -212,6 +214,8 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const popoutsOn = usePopoutsAvailable();
+
   // Mirrors the standard shell (see the same prop in `components/mail/mail-app.tsx`).
   // Without it `mode === 'compose'` resolves `findComposeIdentityId(identities,
   // undefined)` -> null and every new message in the Pro shell defaults to the
@@ -234,6 +238,22 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
     );
   });
 
+  const popOut = useCallback(() => {
+    const target = openComposerWindow(useAuthStore.getState().activeAccountId);
+    if (!target) return null;
+    return {
+      cancel: target.cancel,
+      handOver: (state: ComposerDraftData) => target.handOver({
+        mode: state.mode,
+        replyTo: state.replyTo,
+        initialData: state,
+        sourceEmailId: data.sourceEmailId,
+        sourceEmailSource: data.sourceEmailSource,
+        composeFromAccountEmail,
+      }),
+    };
+  }, [composeFromAccountEmail, data.sourceEmailId, data.sourceEmailSource]);
+
   return (
     <div className="flex h-full w-full flex-col bg-background">
       <ErrorBoundary fallback={ComposerErrorFallback}>
@@ -254,6 +274,7 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
           requestCloseRef={requestCloseRef}
           onDiscardDraft={handleDiscardDraft}
           onSaveState={handleSaveState}
+          popOut={popoutsOn ? popOut : undefined}
           className="flex-1"
         />
       </ErrorBoundary>
