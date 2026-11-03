@@ -190,9 +190,12 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill = false, min
       <div
         ref={wrapperRef}
         style={inline
-          ? { display: 'inline-block', verticalAlign: 'middle', height, width: width ?? 0, maxWidth: '100%', overflow: 'hidden', visibility: height > 0 ? undefined : 'hidden' }
-          // A frame with nothing to show must not be a stop for Tab, where the focus would vanish.
-          : fill ? { flex: '1 1 0%', minHeight: minFillHeight ?? 0 } : { height, minHeight: height, visibility: height > 0 ? undefined : 'hidden' }}
+          ? { display: 'inline-block', verticalAlign: 'middle', height, width: width ?? 0, maxWidth: '100%', overflow: 'hidden' }
+          : fill ? { flex: '1 1 0%', minHeight: minFillHeight ?? 0 } : { height, minHeight: height }}
+        // A frame with nothing to show must not be a stop for Tab, where the
+        // focus would vanish. Not visibility: hidden, because the browser stops
+        // rendering an isolated frame then, and only its rendering reports a height.
+        inert={!fill && height === 0}
         data-plugin-iframe-slot={`${pluginId}:${slot}`}
         data-plugin-iframe-fill={fill || undefined}
       />

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, waitFor } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import type { InstalledPlugin } from '@/lib/plugin-types';
 
 const evaluateShouldShow = vi.fn(async () => true);
@@ -12,7 +12,11 @@ vi.mock('@/lib/plugin-sandbox/registry', () => ({
     code: '',
     tier: 'untrusted',
     background: { evaluateShouldShow },
-    slotOffers: [{ name: 'email-banner', hasShouldShow, order: 100 }, { name: 'composer-sidebar-right', hasShouldShow: false, order: 100, fill: true }],
+    slotOffers: [
+      { name: 'email-banner', hasShouldShow, order: 100 },
+      { name: 'composer-sidebar-right', hasShouldShow: false, order: 100, fill: true },
+      { name: 'toolbar-actions', hasShouldShow: false, order: 100 },
+    ],
   }),
 }));
 
@@ -84,6 +88,43 @@ describe('PluginIframeSlot', () => {
     await waitFor(() => expect(createSlotInstance).toHaveBeenCalled());
     const opts = (createSlotInstance.mock.calls[0] as unknown[])[0] as { extraProps: Record<string, unknown> };
     expect(opts.extraProps.email).toEqual(EMAIL);
+  });
+});
+
+describe('PluginIframeSlot with nothing to show yet', () => {
+  type SlotOptions = { onResize: (height: number, width?: number) => void };
+  const reportSize = (height: number, width?: number) => act(() => {
+    ((createSlotInstance.mock.calls[0] as unknown[])[0] as SlotOptions).onResize(height, width);
+  });
+
+  it.each([
+    ['block', 'email-banner', ['ui:email-banner']],
+    ['inline', 'toolbar-actions', ['ui:toolbar']],
+  ] as const)('keeps a %s frame rendered and out of the Tab order until it reports a height', async (_kind, slot, perms) => {
+    activePlugin = plugin([...perms]);
+    const { container } = render(<PluginIframeSlot pluginId="p1" slot={slot} extraProps={{}} />);
+    await waitFor(() => expect(createSlotInstance).toHaveBeenCalled());
+    const wrapper = container.querySelector('[data-plugin-iframe-slot]') as HTMLElement;
+
+    expect(wrapper).toHaveAttribute('inert');
+    // Hidden, an isolated frame stops rendering and can never report the height that would unhide it.
+    expect(wrapper.style.visibility).toBe('');
+
+    reportSize(32, 100);
+    expect(wrapper).not.toHaveAttribute('inert');
+    expect(wrapper.style.height).toBe('32px');
+
+    // Its content went away: nothing to land on again, still rendered.
+    reportSize(0, 100);
+    expect(wrapper).toHaveAttribute('inert');
+    expect(wrapper.style.visibility).toBe('');
+  });
+
+  it('leaves a frame that fills its panel alone: its height never comes from the frame', async () => {
+    activePlugin = plugin(['ui:composer-sidebar']);
+    const { container } = render(<PluginIframeSlot pluginId="p1" slot="composer-sidebar-right" extraProps={{}} fill />);
+    await waitFor(() => expect(createSlotInstance).toHaveBeenCalled());
+    expect(container.querySelector('[data-plugin-iframe-slot]')).not.toHaveAttribute('inert');
   });
 });
 
