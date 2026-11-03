@@ -204,7 +204,7 @@ export function ThreadEmailItem({
                     ))}
                   </span>
                 )}
-                <span className={cn("min-w-0 shrink-[9999] truncate", isUnread ? "text-muted-foreground" : "text-muted-foreground")}>
+                <span className={cn("flex-1 min-w-0 truncate", isUnread ? "text-muted-foreground" : "text-muted-foreground")}>
                   {cleanPreview(email.preview) || t('no_preview_available')}
                 </span>
               </div>
@@ -311,8 +311,7 @@ export function ThreadEmailItem({
           {/* Single line: Sender, indicators, preview, date */}
           <div className="flex items-center gap-2">
             <span className={cn(
-              "min-w-0 shrink-[9999] truncate text-sm max-w-[150px]",
-              tagIds.length > 0 && "max-w-24 shrink-[2]",
+              "flex-1 min-w-0 truncate text-sm max-w-[150px]",
               isUnread
                 ? "font-semibold text-foreground"
                 : "font-medium text-muted-foreground"
@@ -345,7 +344,7 @@ export function ThreadEmailItem({
               )}
             </div>
             {tagIds.length > 0 && (
-              <span className={cn(ROW_TAG_GROUP_CLASS, 'basis-12 grow')}>
+              <span className={ROW_TAG_GROUP_CLASS}>
                 {tagIds.map((id) => (
                   <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} className="max-w-[min(12rem,100%)]" />
                 ))}
@@ -354,7 +353,7 @@ export function ThreadEmailItem({
 
             {/* Preview snippet */}
             <span className={cn(
-              "text-sm truncate flex-1 min-w-0 shrink-[9999]",
+              "text-sm flex-1 min-w-0 truncate",
               isUnread
                 ? "text-muted-foreground"
                 : "text-muted-foreground"
