@@ -359,8 +359,8 @@ interface EmailComposerProps {
   popOut?: () => ComposerPopOut | null;
   /**
    * This composer is all a window shows (lib/popout). It closes itself once a
-   * message has gone, and closing the window with unsaved text asks first, so
-   * the save started on the way out gets to finish.
+   * message has gone. Closing the window with unsaved text hands the draft to
+   * another window to save, or asks first when there is none.
    */
   ownWindow?: {
     /** The state as the window unloads, for a reload to start from. */
