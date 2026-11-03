@@ -5754,7 +5754,14 @@
     "dismiss_label": "Sulge märkus teemal {subject}",
     "banner": "Rakendamata muudatused: {count}",
     "toast": "Võrguühenduseta tehtud rakendamata muudatused: {count}. Väljundkaust näitab, millised.",
-    "storage_failed": "Selles seadmes pole enam ruumi võrguühenduseta kirjade jaoks. Vabastage ruumi või hoidke seadetes vähem."
+    "storage_failed": "Selles seadmes pole enam ruumi võrguühenduseta kirjade jaoks. Vabastage ruumi või hoidke seadetes vähem.",
+    "signout_changes_title": "Kas logida välja salvestamata muudatustega?",
+    "signout_changes": "Muudatused, mida serveris veel pole: {count}. Väljalogimine kustutab need.",
+    "store_unavailable": "Selle seadme võrguühenduseta kirju ei saa praegu avada. Saatmata kirjad jäävad siia ja rakendus proovib edasi.",
+    "store_reset": "Selle seadme võrguühenduseta kirju ei õnnestunud lugeda, seega laaditakse need uuesti alla. Mis oli saatmata, on kadunud.",
+    "legacy_stranded": "See brauser ei saa avada varasema versiooni hoitud saatmata kirju. Brauseri uuendamine võib need tagasi tuua.",
+    "store_private": "Privaatsed aknad ei saa kirju võrguühenduseta kasutamiseks hoida.",
+    "server_not_answering": "Meiliserver ei vasta. Proovige kohe uuesti."
   },
   "offlineStorage": {
     "keep_description": "Hoiab sinu kirju, kalendrit, kontakte ja valitud faile krüptitult selles brauseris. Võrguta saad kirju lugeda, märgistada ja teisaldada ning see, mida kirjutad, ootab väljuvate kirjade kastis. Välja logides eemaldatakse kõik.",
@@ -6550,5 +6557,32 @@
       "next_issue": "Järgmine õigekirja- või grammatikaviga",
       "previous_issue": "Eelmine õigekirja- või grammatikaviga"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Ava uues aknas",
+    "save_all_to_folder": "Salvesta kõik kausta…",
+    "saved_all": "{count, plural, one {# manus salvestati kausta {folder}.} other {# manust salvestati kausta {folder}.}}",
+    "saved_partial": "{total} manusest {saved} salvestati kausta {folder}.",
+    "save_failed": "Manuseid ei saanud kausta {folder} salvestada.",
+    "popup_blocked": "Brauser blokeeris uue akna. Luba selle saidi hüpikaknad ja proovi uuesti.",
+    "opening": "Avamine…",
+    "session_ended_title": "Oled selles aknas välja logitud",
+    "session_ended_body": "Ava rakendus ja logi sisse, seejärel ava see aken uuesti.",
+    "open_app": "Ava rakendus",
+    "close_window": "Sulge aken",
+    "message_gone_title": "Seda kirja enam ei ole",
+    "message_gone_body": "See kustutati või teisaldati teisele kontole.",
+    "message_moved": "See kiri teisaldati teise kausta.",
+    "message_moved_to": "See kiri teisaldati kausta {folder}.",
+    "window_not_ready": "Uus aken ei avanenud õigeks ajaks. Mustand jääb siia."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Logi sisse brauseriga",
+    "browser_waiting": "Lõpeta sisselogimine brauseris",
+    "browser_unavailable": "See server ei paku brauseri kaudu sisselogimist. Kasuta parooli.",
+    "browser_failed": "Brauseri kaudu sisselogimine ei õnnestunud. Proovi uuesti.",
+    "server_needed": "Sisesta kõigepealt serveri aadress.",
+    "server_declined": "Sa ei lubanud seda serverit, nii et sellele ei saadetud midagi.",
+    "server_invalid": "See serveri aadress ei kehti."
   }
 }

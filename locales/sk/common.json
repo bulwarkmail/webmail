@@ -5754,7 +5754,14 @@
     "dismiss_label": "Zavrieť poznámku o {subject}",
     "banner": "Nepoužité zmeny: {count}",
     "toast": "Nepoužité zmeny urobené offline: {count}. Ktoré to sú, ukazuje pošta na odoslanie.",
-    "storage_failed": "V tomto zariadení už nie je miesto na poštu offline. Uvoľnite miesto alebo v nastaveniach ponechajte menej."
+    "storage_failed": "V tomto zariadení už nie je miesto na poštu offline. Uvoľnite miesto alebo v nastaveniach ponechajte menej.",
+    "signout_changes_title": "Odhlásiť sa s neuloženými zmenami?",
+    "signout_changes": "Zmeny, ktoré ešte nie sú na serveri: {count}. Odhlásenie ich odstráni.",
+    "store_unavailable": "Poštu offline v tomto zariadení teraz nemožno otvoriť. Neodoslaná pošta tu zostáva a aplikácia to skúša ďalej.",
+    "store_reset": "Poštu offline v tomto zariadení sa nepodarilo prečítať, preto sa sťahuje znova. Čo nebolo odoslané, je preč.",
+    "legacy_stranded": "Tento prehliadač neotvorí neodoslanú poštu uloženú staršou verziou. Aktualizácia prehliadača ju môže vrátiť.",
+    "store_private": "Súkromné okná nemôžu uchovávať poštu na používanie offline.",
+    "server_not_answering": "Poštový server neodpovedá. Skúste to o chvíľu znova."
   },
   "offlineStorage": {
     "keep_description": "Uchováva vašu poštu, kalendár, kontakty a vybrané súbory zašifrované v tomto prehliadači. Offline môžete poštu čítať, označovať a presúvať a to, čo napíšete, čaká na odoslanie. Odhlásenie všetko odstráni.",
@@ -6550,5 +6557,32 @@
       "next_issue": "Ďalšia pravopisná alebo gramatická chyba",
       "previous_issue": "Predchádzajúca pravopisná alebo gramatická chyba"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Otvoriť v novom okne",
+    "save_all_to_folder": "Uložiť všetko do priečinka…",
+    "saved_all": "{count, plural, one {# príloha uložená do {folder}.} few {# prílohy uložené do {folder}.} other {# príloh uložených do {folder}.}}",
+    "saved_partial": "Uložených {saved} z {total} príloh do {folder}.",
+    "save_failed": "Prílohy sa nepodarilo uložiť do {folder}.",
+    "popup_blocked": "Prehliadač zablokoval nové okno. Povoľte kontextové okná pre túto stránku a skúste to znova.",
+    "opening": "Otvára sa…",
+    "session_ended_title": "V tomto okne ste odhlásení",
+    "session_ended_body": "Otvorte aplikáciu, prihláste sa a potom toto okno otvorte znova.",
+    "open_app": "Otvoriť aplikáciu",
+    "close_window": "Zavrieť okno",
+    "message_gone_title": "Táto správa tu už nie je",
+    "message_gone_body": "Bola odstránená alebo presunutá do iného účtu.",
+    "message_moved": "Táto správa bola presunutá do iného priečinka.",
+    "message_moved_to": "Táto správa bola presunutá do {folder}.",
+    "window_not_ready": "Nové okno sa neotvorilo včas. Koncept zostáva tu."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Prihlásiť sa v prehliadači",
+    "browser_waiting": "Dokončite prihlásenie v prehliadači",
+    "browser_unavailable": "Tento server neponúka prihlásenie cez prehliadač. Použite heslo.",
+    "browser_failed": "Prihlásenie cez prehliadač sa nepodarilo. Skúste to znova.",
+    "server_needed": "Najprv zadajte adresu servera.",
+    "server_declined": "Tento server ste nepovolili, preto sa naň nič neodoslalo.",
+    "server_invalid": "Táto adresa servera nie je platná."
   }
 }

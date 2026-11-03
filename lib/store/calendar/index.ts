@@ -16,9 +16,9 @@ export const calendarArea: StoreArea = {
   },
   calls: {
     'calendar.flush': (ctx) => flushCalendar(ctx),
-    'calendar.conflicts': (ctx) => listConflicts(ctx.db),
-    /** How many writes wait to go out. */
+    /** Edits the server hasn't got, for the question before a sign-out. */
     'calendar.pending': (ctx) => Number(ctx.db.get<{ n: number }>('SELECT COUNT(*) AS n FROM calendar_pending')?.n ?? 0),
+    'calendar.conflicts': (ctx) => listConflicts(ctx.db),
     'calendar.resolveStandIns': (ctx, params: { ids: string[] }) => resolveStandIns(ctx.db, params.ids),
     'calendar.dismissConflict': (ctx, params: { id: number }) => {
       ctx.db.run('DELETE FROM calendar_conflict WHERE id = ?', [params.id]);

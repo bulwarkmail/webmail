@@ -1,4 +1,6 @@
 import { recordJmapCall, reportJmapFailure } from "@/lib/error-reporting/client";
+import { getDesktopBridge } from '@/lib/desktop/bridge';
+import { desktopJmapBase, desktopJmapOrigin, isDesktopProxiedServer, withDesktopBlobType } from '@/lib/desktop/jmap-route';
 import { advertisesMailboxMetadata, bulwarkEntries, escapeMetadataPathSegment, MAX_METADATA_ENTRY_BYTES, METADATA_CAPABILITY, MetadataPatchError, MetadataRefusedError, MetadataTooLargeError, MetadataUnsupportedError, metadataValueBytes, namespaceFor } from "./bulwark-metadata";
 import { IncompleteDeleteError } from "./delete-error";
 import { downloadAllowed, saveBlobAs, type DownloadKind } from "@/lib/download-guard";
@@ -1690,6 +1692,25 @@ export class JMAPClient implements IJMAPClient {
     return client;
   }
 
+  /**
+   * A client on a credential another window of this browser holds (a pop-out,
+   * lib/popout): the header as that window sends it, whatever kind it is.
+   */
+  static withSharedAuth(
+    serverUrl: string,
+    username: string,
+    authHeader: string,
+    onTokenRefresh?: () => Promise<string | null>,
+  ): JMAPClient {
+    const client = new JMAPClient(serverUrl, username, '');
+    client.authHeader = authHeader;
+    if (authHeader.startsWith('Bearer ')) {
+      client.authMode = 'bearer';
+      client.onTokenRefresh = onTokenRefresh;
+    }
+    return client;
+  }
+
   updateAccessToken(token: string): void {
     this.authHeader = `Bearer ${token}`;
   }
@@ -1894,7 +1915,7 @@ export class JMAPClient implements IJMAPClient {
           const retryHeaders = { ...init?.headers as Record<string, string>, 'Authorization': this.authHeader };
           response = await this.timedFetch(url, init, retryHeaders, timeoutMs);
         }
-      } else if (this.authMode === 'basic' && !this.reconnecting && url !== `${this.serverUrl}/.well-known/jmap`) {
+      } else if (this.authMode === 'basic' && !this.reconnecting && url !== this.discoveryUrl()) {
         // JMAP session may have expired - re-establish and retry once
         this.reconnecting = true;
         try {
@@ -1944,7 +1965,7 @@ export class JMAPClient implements IJMAPClient {
    * and retry directly against the final URL so we can re-send Authorization.
    */
   private async fetchSessionResponse(): Promise<Response> {
-    const discoveryUrl = `${this.serverUrl}/.well-known/jmap`;
+    const discoveryUrl = this.discoveryUrl();
     const response = await this.authenticatedFetch(discoveryUrl, { method: 'GET' });
     // A proxy in front of the session URL answers the header-less redirected
     // request with 401 instead of Stalwart's silent 200 - the credentials are
@@ -1987,7 +2008,7 @@ export class JMAPClient implements IJMAPClient {
   async connect(): Promise<void> {
     if (this.offlineOnly) throw new OfflineUnavailableError();
     this.intentionallyDisconnected = false;
-    const sessionUrl = `${this.serverUrl}/.well-known/jmap`;
+    const sessionUrl = this.discoveryUrl();
 
     try {
       const sessionResponse = await this.fetchSessionResponse();
@@ -2144,10 +2165,15 @@ export class JMAPClient implements IJMAPClient {
     this.capabilities = {};
   }
 
+  /** Same as serverUrl, except for a plain http server in the desktop app (lib/desktop/jmap-route.ts). */
+  private discoveryUrl(): string {
+    return `${desktopJmapBase(this.serverUrl)}/.well-known/jmap`;
+  }
+
   private rewriteSessionUrl(url: string): string {
     if (!url) return url;
     try {
-      const { origin } = new URL(this.serverUrl);
+      const origin = desktopJmapOrigin(this.serverUrl);
       if (!/^(https?:)?\/\//i.test(url)) {
         return origin + (url.startsWith('/') ? url : '/' + url);
       }
@@ -2180,6 +2206,14 @@ export class JMAPClient implements IJMAPClient {
     if (session.eventSourceUrl) {
       session.eventSourceUrl = rewrite(session.eventSourceUrl);
     }
+    // A download or upload origin of its own needs the CORS headers the desktop
+    // app adds for this account's servers.
+    getDesktopBridge()?.servers?.noteSession(this.serverUrl, {
+      apiUrl: session.apiUrl,
+      downloadUrl: session.downloadUrl,
+      uploadUrl: session.uploadUrl,
+      eventSourceUrl: session.eventSourceUrl,
+    });
   }
 
   /**
@@ -6508,7 +6542,7 @@ export class JMAPClient implements IJMAPClient {
     if (!response.ok) {
       throw new Error(`Failed to fetch blob: ${response.status}`);
     }
-    const blob = await response.blob();
+    const blob = withDesktopBlobType(await response.blob(), this.serverUrl, type);
     getOfflineHooks()?.recordBlob(this, blobId, accountId || this.accountId, blob);
     return blob;
   }
@@ -6992,6 +7026,10 @@ export class JMAPClient implements IJMAPClient {
 
   getEventSourceUrl(): string | null {
     if (!this.session) return null;
+    // A plain http server in the desktop app shares the app's own origin, on
+    // http/1.1 and six sockets, with every window. Push streams pinning those
+    // would stall the app, so these accounts poll (setupPushNotifications).
+    if (isDesktopProxiedServer(this.serverUrl)) return null;
 
     // RFC 8620: session root level, with fallback to capabilities for some servers
     const coreCapability = this.session.capabilities?.["urn:ietf:params:jmap:core"] as { eventSourceUrl?: string } | undefined;

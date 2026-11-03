@@ -5754,7 +5754,14 @@
     "dismiss_label": "Odrzuć uwagę o {subject}",
     "banner": "Niezastosowane zmiany: {count}",
     "toast": "Niezastosowane zmiany wprowadzone offline: {count}. Skrzynka nadawcza pokazuje które.",
-    "storage_failed": "Na tym urządzeniu nie ma już miejsca na pocztę offline. Zwolnij miejsce lub zachowuj mniej w ustawieniach."
+    "storage_failed": "Na tym urządzeniu nie ma już miejsca na pocztę offline. Zwolnij miejsce lub zachowuj mniej w ustawieniach.",
+    "signout_changes_title": "Wylogować z niezapisanymi zmianami?",
+    "signout_changes": "Zmiany, których jeszcze nie ma na serwerze: {count}. Wylogowanie je usunie.",
+    "store_unavailable": "Nie można teraz otworzyć poczty offline na tym urządzeniu. Niewysłane wiadomości zostają tutaj, a aplikacja próbuje dalej.",
+    "store_reset": "Nie udało się odczytać poczty offline na tym urządzeniu, więc jest pobierana ponownie. To, co nie zostało wysłane, przepadło.",
+    "legacy_stranded": "Ta przeglądarka nie może otworzyć niewysłanych wiadomości z wcześniejszej wersji. Aktualizacja przeglądarki może je przywrócić.",
+    "store_private": "Okna prywatne nie mogą przechowywać poczty do użytku offline.",
+    "server_not_answering": "Serwer poczty nie odpowiada. Spróbuj ponownie za chwilę."
   },
   "offlineStorage": {
     "keep_description": "Przechowuje Twoją pocztę, kalendarz, kontakty i wybrane pliki zaszyfrowane w tej przeglądarce. Offline możesz czytać, oznaczać i przenosić wiadomości, a to, co napiszesz, czeka w skrzynce nadawczej. Wylogowanie usuwa wszystko.",
@@ -6550,5 +6557,32 @@
       "next_issue": "Następny błąd pisowni lub gramatyki",
       "previous_issue": "Poprzedni błąd pisowni lub gramatyki"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Otwórz w nowym oknie",
+    "save_all_to_folder": "Zapisz wszystko w folderze…",
+    "saved_all": "{count, plural, one {Zapisano # załącznik w {folder}.} few {Zapisano # załączniki w {folder}.} other {Zapisano # załączników w {folder}.}}",
+    "saved_partial": "Zapisano {saved} z {total} załączników w {folder}.",
+    "save_failed": "Nie udało się zapisać załączników w {folder}.",
+    "popup_blocked": "Przeglądarka zablokowała nowe okno. Zezwól na wyskakujące okna dla tej strony i spróbuj ponownie.",
+    "opening": "Otwieranie…",
+    "session_ended_title": "Wylogowano w tym oknie",
+    "session_ended_body": "Otwórz aplikację i zaloguj się, a potem otwórz to okno ponownie.",
+    "open_app": "Otwórz aplikację",
+    "close_window": "Zamknij okno",
+    "message_gone_title": "Tej wiadomości już nie ma",
+    "message_gone_body": "Została usunięta lub przeniesiona na inne konto.",
+    "message_moved": "Ta wiadomość została przeniesiona do innego folderu.",
+    "message_moved_to": "Ta wiadomość została przeniesiona do {folder}.",
+    "window_not_ready": "Nowe okno nie otworzyło się na czas. Twój szkic zostaje tutaj."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Zaloguj się w przeglądarce",
+    "browser_waiting": "Dokończ logowanie w przeglądarce",
+    "browser_unavailable": "Ten serwer nie oferuje logowania przez przeglądarkę. Użyj hasła.",
+    "browser_failed": "Logowanie przez przeglądarkę nie powiodło się. Spróbuj ponownie.",
+    "server_needed": "Najpierw wpisz adres serwera.",
+    "server_declined": "Ten serwer nie został dozwolony, więc nic do niego nie wysłano.",
+    "server_invalid": "Ten adres serwera jest nieprawidłowy."
   }
 }

@@ -6,7 +6,7 @@ import { forgetLegacyMove, LEGACY_DB_NAME, moveLegacyOutbox } from '../migrate-l
 import { readQueue } from '../queue';
 import { DEFAULT_ORGANISATION_POLICY } from '@/lib/admin/organisation-policy';
 import { effectiveScope, platformDefault, userChoiceFor } from '../scope';
-import { OFFLINE_CHOICES_KEY, useOfflineStore, writeChoice } from '../state';
+import { OFFLINE_SCOPE_KEY, useOfflineStore, writeChoice } from '../state';
 
 /** The old database, exactly as lib/offline/db.ts laid it out. */
 const STORES = ['keys', 'emails', 'bodies', 'blobs', 'misc', 'ledger', 'queue', 'uploads'];
@@ -87,6 +87,22 @@ afterEach(() => {
 });
 
 describe('moving the old outbox into the store', () => {
+  it('gives a sender written "Name <address>" a Message-ID with a clean domain', async () => {
+    await seedOld();
+    const db = await new Promise<IDBDatabase>((resolve) => {
+      const request = indexedDB.open(LEGACY_DB_NAME);
+      request.onsuccess = () => resolve(request.result);
+    });
+    await put(db, 'queue', {
+      id: 20, account: 'acc', kind: 'send', createdAt: 20, status: 'waiting',
+      ...(await seal({ summary: { subject: 'Named', to: [] }, item: { kind: 'email', args: [[], 'Named', 'x', null, null, 'i', 'Alice <a@example.org>'] } })),
+    });
+    db.close();
+    await moveLegacyOutbox();
+    const named = (await readQueue('acc')).outbox.find((entry) => entry.summary.subject === 'Named');
+    expect(named?.messageId).toMatch(/@example\.org$/);
+  });
+
   it('moves everything that can\'t be fetched again, then deletes the old database', async () => {
     await seedOld();
     await moveLegacyOutbox();
@@ -165,7 +181,7 @@ describe('moving the old outbox into the store', () => {
     const state = useOfflineStore.getState();
     expect(state.enabled).toContain('acc');
     expect(state.choices.acc).toMatchObject({ on: true, days: 30 });
-    expect(JSON.parse(localStorage.getItem(OFFLINE_CHOICES_KEY)!).acc.days).toBe(30);
+    expect(JSON.parse(localStorage.getItem(OFFLINE_SCOPE_KEY)!).acc.days).toBe(30);
     expect(effectiveScope('acc', userChoiceFor('acc'), DEFAULT_ORGANISATION_POLICY.devices, platformDefault()).scope.days).toBe(30);
   });
 

@@ -326,7 +326,7 @@ function CommandPalette({ onClose, onShowShortcuts }: { onClose: () => void; onS
         aria-label={t("title")}
         className={cn(
           "w-full max-w-xl overflow-hidden rounded-lg border border-border bg-background text-foreground shadow-xl",
-          "max-sm:h-full max-sm:max-w-none max-sm:rounded-none max-sm:border-0 max-sm:pt-[env(safe-area-inset-top)]",
+          "max-sm:h-full max-sm:max-w-none max-sm:rounded-none max-sm:border-0 max-sm:pt-[var(--app-top-inset)]",
           "flex flex-col",
         )}
       >

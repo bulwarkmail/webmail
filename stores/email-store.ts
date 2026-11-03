@@ -1627,10 +1627,13 @@ function threadCountsPatch(
 function captureEmailListView(): () => boolean {
   const view = useEmailStore.getState();
   const activeAccountId = useAuthStore.getState().activeAccountId;
+  // A local copy's late answer must not overwrite what the real client loaded.
+  const authClient = useAuthStore.getState().client;
   const epoch = currentStoreEpoch();
   return () => {
     const current = useEmailStore.getState();
     return currentStoreEpoch() === epoch
+      && useAuthStore.getState().client === authClient
       && current.selectedMailbox === view.selectedMailbox
       && current.selectedKeyword === view.selectedKeyword
       && current.viewingAccountId === view.viewingAccountId
@@ -8630,15 +8633,6 @@ const EMAIL_SNAPSHOT_KEY = 'email-snapshot';
 const EMAIL_SNAPSHOT_VERSION = 3;
 const EMAIL_SNAPSHOT_MAX_EMAILS = 50;
 
-/**
- * With the local store on, the mail is encrypted on this device, and a copy of
- * subjects in localStorage would give that away. The store paints the list at
- * start itself (startLocalCopyClient), so the snapshot isn't needed there.
- */
-function keptEncrypted(account: unknown): boolean {
-  return typeof account === 'string' && useOfflineStore.getState().enabled.includes(account);
-}
-
 function isEmailListSync(value: unknown, mailboxId: string): value is EmailListSync {
   const sync = value as EmailListSync | null;
   return !!sync && typeof sync.state === 'string' && typeof sync.accountId === 'string' && sync.mailboxId === mailboxId;
@@ -8661,7 +8655,6 @@ if (typeof window !== 'undefined') {
   try {
     const auth = persistedAuthState();
     const authed = auth?.isAuthenticated === true;
-    if (keptEncrypted(auth?.activeAccountId)) window.localStorage.removeItem(EMAIL_SNAPSHOT_KEY);
     const raw = authed ? window.localStorage.getItem(EMAIL_SNAPSHOT_KEY) : null;
     if (raw) {
       const snap = JSON.parse(raw);
@@ -8709,12 +8702,6 @@ if (typeof window !== 'undefined') {
   } catch { /* corrupt snapshot - start empty */ }
 
   let snapshotTimer: ReturnType<typeof setTimeout> | null = null;
-  // Turned on just now: what's there goes at once.
-  useOfflineStore.subscribe((state, prev) => {
-    if (state.enabled === prev.enabled || !keptEncrypted(persistedAuthState()?.activeAccountId)) return;
-    if (snapshotTimer) { clearTimeout(snapshotTimer); snapshotTimer = null; }
-    try { window.localStorage.removeItem(EMAIL_SNAPSHOT_KEY); } catch { /* ignore */ }
-  });
   useEmailStore.subscribe((state, prev) => {
     if (
       state.emails === prev.emails &&
@@ -8744,7 +8731,9 @@ if (typeof window !== 'undefined') {
       // would be read as the active account's mail. (#847)
       if (s.searchQuery || s.selectedKeyword || s.isScheduledView || s.viewingAccountId || s.isUnifiedView) return;
       const account = persistedAuthState()?.activeAccountId;
-      if (typeof account !== 'string' || !account || keptEncrypted(account)) return;
+      if (typeof account !== 'string' || !account) return;
+      // Its mail lives encrypted in the store, and not in plain localStorage too.
+      if (useOfflineStore.getState().enabled.includes(account)) return;
       try {
         window.localStorage.setItem(EMAIL_SNAPSHOT_KEY, JSON.stringify({
           v: EMAIL_SNAPSHOT_VERSION,

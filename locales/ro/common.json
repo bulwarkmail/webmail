@@ -5754,7 +5754,14 @@
     "dismiss_label": "Închide nota despre {subject}",
     "banner": "Modificări neaplicate: {count}",
     "toast": "Modificări făcute offline care nu au fost aplicate: {count}. Căsuța de trimitere arată care.",
-    "storage_failed": "Acest dispozitiv nu mai are loc pentru e-mailul offline. Eliberați spațiu sau păstrați mai puțin din setări."
+    "storage_failed": "Acest dispozitiv nu mai are loc pentru e-mailul offline. Eliberați spațiu sau păstrați mai puțin din setări.",
+    "signout_changes_title": "Vă deconectați cu modificări nesalvate?",
+    "signout_changes": "Modificări care nu sunt încă pe server: {count}. Deconectarea le șterge.",
+    "store_unavailable": "E-mailul offline de pe acest dispozitiv nu poate fi deschis acum. E-mailul netrimis rămâne aici, iar aplicația continuă să încerce.",
+    "store_reset": "E-mailul offline de pe acest dispozitiv nu a putut fi citit, așa că se descarcă din nou. Ce nu fusese trimis s-a pierdut.",
+    "legacy_stranded": "Acest browser nu poate deschide e-mailul netrimis păstrat de o versiune anterioară. Actualizarea browserului îl poate recupera.",
+    "store_private": "Ferestrele private nu pot păstra e-mailuri pentru utilizare offline.",
+    "server_not_answering": "Serverul de e-mail nu răspunde. Încercați din nou imediat."
   },
   "offlineStorage": {
     "keep_description": "Păstrează e-mailurile, calendarul, contactele și fișierele alese de dvs., criptate în acest browser. Offline puteți citi, marca și muta e-mailuri, iar ce scrieți așteaptă în Mesaje de trimis. La deconectare se șterge totul.",
@@ -6550,5 +6557,32 @@
       "next_issue": "Următoarea greșeală de ortografie sau gramatică",
       "previous_issue": "Greșeala de ortografie sau gramatică anterioară"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Deschide într-o fereastră nouă",
+    "save_all_to_folder": "Salvează tot într-un dosar…",
+    "saved_all": "{count, plural, one {# atașament salvat în {folder}.} few {# atașamente salvate în {folder}.} other {# de atașamente salvate în {folder}.}}",
+    "saved_partial": "{saved} din {total} atașamente salvate în {folder}.",
+    "save_failed": "Atașamentele nu au putut fi salvate în {folder}.",
+    "popup_blocked": "Browserul a blocat fereastra nouă. Permite ferestrele pop-up pentru acest site și încearcă din nou.",
+    "opening": "Se deschide…",
+    "session_ended_title": "Ești deconectat în această fereastră",
+    "session_ended_body": "Deschide aplicația și autentifică-te, apoi deschide din nou această fereastră.",
+    "open_app": "Deschide aplicația",
+    "close_window": "Închide fereastra",
+    "message_gone_title": "Acest mesaj nu mai există",
+    "message_gone_body": "A fost șters sau mutat în alt cont.",
+    "message_moved": "Acest mesaj a fost mutat în alt dosar.",
+    "message_moved_to": "Acest mesaj a fost mutat în {folder}.",
+    "window_not_ready": "Fereastra nouă nu s-a deschis la timp. Ciorna rămâne aici."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Conectează-te cu browserul",
+    "browser_waiting": "Finalizează conectarea în browser",
+    "browser_unavailable": "Acest server nu oferă conectare prin browser. Folosește parola.",
+    "browser_failed": "Conectarea prin browser nu a reușit. Încearcă din nou.",
+    "server_needed": "Introdu mai întâi adresa serverului.",
+    "server_declined": "Nu ai permis acest server, așa că nu i s-a trimis nimic.",
+    "server_invalid": "Această adresă de server nu este validă."
   }
 }

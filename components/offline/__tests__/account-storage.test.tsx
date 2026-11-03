@@ -101,13 +101,20 @@ describe('what an account keeps', () => {
     const select = screen.getByText('attachment_cap_label').closest('[data-search-label]')!.querySelector('select') as HTMLSelectElement;
     expect([...select.options].map((o) => o.value)).toEqual(['5', '10']);
     fireEvent.change(select, { target: { value: '5' } });
-    expect(offline.chooseScope).toHaveBeenCalledWith('acc', { maxAttachmentMb: 5 });
+    expect(offline.chooseScope).toHaveBeenCalledWith('acc', { maxAttachmentBytes: 5 * 1024 * 1024 });
   });
 
   it('says when the total is set by the organisation', () => {
     setDevices({ offlineMaxTotalMb: 100 });
     render(<OfflineSettings />);
     expect(screen.getByTestId('offline-total-locked').textContent).toContain('total_locked');
+  });
+
+  it('locks the switch when the desktop policy forces it', () => {
+    (window as { bulwarkDesktop?: unknown }).bulwarkDesktop = { version: 1, policy: { get: () => ({ OfflineEnabled: { value: true, locked: true, source: 'machine' } }) } };
+    render(<OfflineSettings />);
+    expect(screen.getByTestId('offline-switch').closest('[inert]')).not.toBeNull();
+    delete (window as { bulwarkDesktop?: unknown }).bulwarkDesktop;
   });
 
   it('shows nothing of this with offline off', () => {
@@ -128,7 +135,7 @@ describe('what it takes', () => {
   });
 
   it('shows the time of the last sync from before a reload', () => {
-    useOfflineStore.setState({ health: { acc: { opened: true, lastSync: Date.now() - 60_000 } } });
+    useOfflineStore.setState({ health: { acc: { lastSync: Date.now() - 60_000 } } });
     render(<OfflineSettings />);
     expect(screen.getByTestId('offline-status').textContent).toContain('usage_updated');
   });
@@ -182,11 +189,11 @@ describe('what the browser may do', () => {
   });
 
   it('warns about a store it deleted, with the count, until read', () => {
-    useOfflineStore.setState({ health: { acc: { opened: true, evicted: { at: 1, lost: 2 } } } });
+    useOfflineStore.setState({ health: { acc: { reset: { at: 1, lost: 2 } } } });
     render(<OfflineSettings />);
     expect(screen.getByTestId('offline-evicted').textContent).toContain('evicted_lost');
     fireEvent.click(within(screen.getByTestId('offline-evicted')).getByRole('button', { name: 'evicted_dismiss' }));
-    expect(useOfflineStore.getState().health.acc.evicted).toBeUndefined();
+    expect(useOfflineStore.getState().health.acc.reset).toBeUndefined();
   });
 
   it('says the device is full, with what to do', () => {

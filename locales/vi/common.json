@@ -5766,7 +5766,14 @@
     "dismiss_label": "Đóng ghi chú về {subject}",
     "banner": "Các thay đổi chưa được áp dụng: {count}",
     "toast": "Thay đổi khi ngoại tuyến chưa được áp dụng: {count}. Hộp thư đi cho biết là những thay đổi nào.",
-    "storage_failed": "Thiết bị này không còn chỗ cho thư ngoại tuyến. Hãy giải phóng dung lượng hoặc giữ ít hơn trong Cài đặt."
+    "storage_failed": "Thiết bị này không còn chỗ cho thư ngoại tuyến. Hãy giải phóng dung lượng hoặc giữ ít hơn trong Cài đặt.",
+    "signout_changes_title": "Đăng xuất khi còn thay đổi chưa lưu?",
+    "signout_changes": "Thay đổi chưa có trên máy chủ: {count}. Đăng xuất sẽ xóa chúng.",
+    "store_unavailable": "Hiện không mở được thư ngoại tuyến trên thiết bị này. Thư chưa gửi vẫn ở đây và ứng dụng tiếp tục thử.",
+    "store_reset": "Không đọc được thư ngoại tuyến trên thiết bị này nên đang tải lại. Những gì chưa gửi đã mất.",
+    "legacy_stranded": "Trình duyệt này không mở được thư chưa gửi do phiên bản trước lưu. Cập nhật trình duyệt có thể lấy lại chúng.",
+    "store_private": "Cửa sổ riêng tư không thể giữ thư để dùng ngoại tuyến.",
+    "server_not_answering": "Máy chủ thư không phản hồi. Hãy thử lại sau giây lát."
   },
   "offlineStorage": {
     "keep_description": "Giữ thư, lịch, danh bạ và các tệp bạn chọn, được mã hóa trong trình duyệt này. Khi ngoại tuyến bạn có thể đọc, gắn cờ và di chuyển thư, còn thư bạn viết sẽ chờ trong Hộp thư đi. Khi đăng xuất, tất cả sẽ bị xóa.",
@@ -6562,5 +6569,32 @@
       "next_issue": "Lỗi chính tả hoặc ngữ pháp tiếp theo",
       "previous_issue": "Lỗi chính tả hoặc ngữ pháp trước đó"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Mở trong cửa sổ mới",
+    "save_all_to_folder": "Lưu tất cả vào thư mục…",
+    "saved_all": "{count, plural, other {Đã lưu # tệp đính kèm vào {folder}.}}",
+    "saved_partial": "Đã lưu {saved} trong {total} tệp đính kèm vào {folder}.",
+    "save_failed": "Không thể lưu tệp đính kèm vào {folder}.",
+    "popup_blocked": "Trình duyệt đã chặn cửa sổ mới. Hãy cho phép cửa sổ bật lên với trang này rồi thử lại.",
+    "opening": "Đang mở…",
+    "session_ended_title": "Bạn đã đăng xuất trong cửa sổ này",
+    "session_ended_body": "Hãy mở ứng dụng và đăng nhập, rồi mở lại cửa sổ này.",
+    "open_app": "Mở ứng dụng",
+    "close_window": "Đóng cửa sổ",
+    "message_gone_title": "Thư này không còn nữa",
+    "message_gone_body": "Thư đã bị xóa hoặc chuyển sang tài khoản khác.",
+    "message_moved": "Thư này đã được chuyển sang thư mục khác.",
+    "message_moved_to": "Thư này đã được chuyển đến {folder}.",
+    "window_not_ready": "Cửa sổ mới không mở kịp. Bản nháp của bạn vẫn ở đây."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Đăng nhập bằng trình duyệt",
+    "browser_waiting": "Hoàn tất đăng nhập trong trình duyệt",
+    "browser_unavailable": "Máy chủ này không hỗ trợ đăng nhập qua trình duyệt. Hãy dùng mật khẩu.",
+    "browser_failed": "Không thể đăng nhập qua trình duyệt. Hãy thử lại.",
+    "server_needed": "Trước tiên hãy nhập địa chỉ máy chủ.",
+    "server_declined": "Bạn không cho phép máy chủ này nên không có gì được gửi đến đó.",
+    "server_invalid": "Địa chỉ máy chủ này không hợp lệ."
   }
 }

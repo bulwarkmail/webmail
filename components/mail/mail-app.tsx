@@ -150,6 +150,9 @@ import { INTERNAL_MAILTO_EVENT, type ParsedMailto } from "@/lib/protocol-handler
 import { PLUGIN_REPLY_EVENT, type PluginReplyRequest } from "@/lib/plugin-sandbox/host-api-compose";
 import { onOpenEmail, type OpenEmailHandler, type OpenEmailOutcome } from "@/lib/plugin-sandbox/open-email";
 import { mailtoComposerDraft } from "./mailto-draft";
+import { useOpenEmailInWindow, usePopoutsAvailable } from "@/hooks/use-popouts-available";
+import { openComposerWindow } from "@/lib/popout/open";
+import { onRescuedDraft, takeRescuedDraft } from "@/lib/popout/rescued-drafts";
 import { getQuoteBodies } from "@/lib/email-composer-utils";
 import { emailHooks } from "@/lib/plugin-hooks";
 import { afterRequestDispatch } from "@/lib/after-request-dispatch";
@@ -2260,6 +2263,39 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Its login and account, pinned too: the folder open at send time may hold
   // another account's message under the same id.
   const composerSource = usePinnedPerSession(composerSessionId, selectedEmail ? emailWriteSource(selectedEmail, client) : undefined);
+
+  const popoutsOn = usePopoutsAvailable();
+  const openEmailInWindow = useOpenEmailInWindow();
+  // Text from a closing pop-out that couldn't be saved: the "Continue draft"
+  // slot, once it is free.
+  useEffect(() => {
+    const adopt = () => {
+      if (pendingDraft || showComposer) return;
+      const draft = takeRescuedDraft();
+      if (draft) setPendingDraft(draft);
+    };
+    adopt();
+    return onRescuedDraft(adopt);
+  }, [pendingDraft, showComposer]);
+  const composerPopOut = () => {
+    const target = openComposerWindow(activeAccountId);
+    if (!target) return null;
+    return {
+      cancel: target.cancel,
+      handOver: (state: ComposerDraftData) => target.handOver({
+        mode: state.mode,
+        replyTo: state.replyTo,
+        initialData: state,
+        sourceEmailId: composerSourceEmail?.id,
+        sourceEmailSource: composerSource,
+        composeFromAccountEmail: resolveComposeAccountEmail(
+          mailboxes,
+          selectedMailbox,
+          useAccountStore.getState().getAccountById(viewingAccountId ?? activeAccountId ?? '')?.email,
+        ),
+      }),
+    };
+  };
 
   const handleEmailSend = async (data: {
     to: string[];
@@ -5012,6 +5048,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           handleDiscardDraft(draftId, draft);
           setPendingDraft(null);
         }}
+        popOut={popoutsOn && !isEmbedded ? composerPopOut : undefined}
       />
     </ErrorBoundary>
   );
@@ -5022,7 +5059,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   return (
     <DragDropProvider>
-      <div ref={appRootRef} className={cn("flex flex-col overflow-hidden pt-[env(safe-area-inset-top)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
+      <div ref={appRootRef} className={cn("flex flex-col overflow-hidden pt-[var(--app-top-inset)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
         {/* Rail and folders are many Tab stops: jump past them (WCAG 2.4.1). */}
         <a
           href="#message-list"
@@ -5135,7 +5172,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             isEmbedded
               ? (isMobile || isTablet
                   ? cn(
-                      "absolute inset-y-0 start-0 w-72 pt-[env(safe-area-inset-top)]",
+                      "absolute inset-y-0 start-0 w-72 pt-[var(--app-top-inset)]",
                       "transform transition-transform duration-300 ease-in-out",
                       // translate-x is physical, so RTL needs the opposite
                       // sign or the drawer slides off the wrong edge.
@@ -5146,7 +5183,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   // Mobile/Tablet: fixed overlay
                   // start-0 rather than left-0: in RTL the drawer belongs on
                   // the right, matching the hamburger that opens it.
-                  "max-lg:fixed max-lg:inset-y-0 max-lg:start-0 max-lg:w-72 max-lg:pt-[env(safe-area-inset-top)]",
+                  "max-lg:fixed max-lg:inset-y-0 max-lg:start-0 max-lg:w-72 max-lg:pt-[var(--app-top-inset)]",
                   "max-lg:transform max-lg:transition-transform max-lg:duration-300 max-lg:ease-in-out",
                   !sidebarOpen && "max-lg:-translate-x-full max-lg:rtl:translate-x-full",
                   // Desktop: normal flow
@@ -5288,7 +5325,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             {(!isMobile || mobileSearchOpen) && (
             <div className={cn(
               "border-b border-border bg-background",
-              isMobile && mobileSearchOpen && "fixed inset-0 z-50 overflow-y-auto"
+              isMobile && mobileSearchOpen && "fixed inset-0 z-50 overflow-y-auto pt-[var(--titlebar-inset)]"
             )}>
               {isMobile && mobileSearchOpen && (
                 <div className="h-14 px-2 flex items-center border-b border-border">
@@ -5650,7 +5687,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               isHorizontalMailLayout ? "min-h-0" : "h-full",
               // Mobile: full screen overlay when active
               "max-md:fixed max-md:inset-0 max-md:z-30",
-              "max-md:h-full max-md:pt-[env(safe-area-inset-top)]",
+              "max-md:h-full max-md:pt-[var(--app-top-inset)]",
               isMobile && mobileView !== "viewer" && "max-md:hidden",
               // Tablet/Desktop: relative. Pane-mobile instead overlays the
               // pane (absolute within the relative content row above) - the
@@ -5835,6 +5872,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     } : undefined}
                     mvInlineComposer={mvInlineReply ? <MvComposeInline onPopOut={handleMvPopOut}>{composerNode}</MvComposeInline> : undefined}
                     onToggleFullscreen={!isEmbedded && !isMobile ? () => setFullscreenReading((v) => !v) : undefined}
+                    onOpenInWindow={!isEmbedded && !isMobile && openEmailInWindow && selectedEmail ? () => openEmailInWindow(selectedEmail) : undefined}
                     isFullscreen={fullscreenReading}
                     onShowShortcuts={() => setShowShortcutsModal(true)}
                     onEditDraft={handleEditDraft}

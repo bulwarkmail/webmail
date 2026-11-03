@@ -109,7 +109,7 @@ describe('the user picking what to keep', () => {
     await store.sync('acc');
     chooseScope('acc', { days: 30 });
     await vi.waitFor(() => expect(ids()).toEqual(['new']));
-    expect(JSON.parse(localStorage.getItem('bulwark-offline-choices')!).acc.days).toBe(30);
+    expect(JSON.parse(localStorage.getItem('bulwark-offline-scope')!).acc.days).toBe(30);
   });
 
   it('can\'t get past the cap', () => {
@@ -150,23 +150,22 @@ describe('clearing an account', () => {
     expect(store.removed).toContain('acc');
     expect(useOfflineStore.getState().enabled).toEqual(['acc']);
     expect(store.dbs.get('acc')).not.toBe(before);
-    expect(useOfflineStore.getState().health.acc?.opened).toBe(false);
-    // It isn't read as a browser clearing the store at the next open.
-    expect(notices.filter((n) => n.kind === 'evicted')).toEqual([]);
+    expect(useOfflineStore.getState().health.acc?.clearedAt).toBeGreaterThan(0);
+    expect(notices.filter((n) => n.kind === 'store-reset')).toEqual([]);
   });
 });
 
 describe('clearing in another tab', () => {
   it('opens the new store here, in case this tab owns it', async () => {
     writeEnabled(['acc']);
-    writeHealth('acc', { opened: true });
+    writeHealth('acc', { clearedAt: 1 });
     const stop = startOfflineMode();
     const ensureOpen = vi.spyOn(store, 'ensureOpen');
     ensureOpen.mockClear();
-    localStorage.setItem(OFFLINE_HEALTH_KEY, JSON.stringify({ acc: { opened: false, pending: 0 } }));
+    localStorage.setItem(OFFLINE_HEALTH_KEY, JSON.stringify({ acc: { clearedAt: 2, pending: 0 } }));
     window.dispatchEvent(new StorageEvent('storage', { key: OFFLINE_HEALTH_KEY }));
     expect(ensureOpen).toHaveBeenCalledWith('acc');
-    expect(useOfflineStore.getState().health.acc.opened).toBe(false);
+    expect(useOfflineStore.getState().health.acc.clearedAt).toBe(2);
     stop();
   });
 });

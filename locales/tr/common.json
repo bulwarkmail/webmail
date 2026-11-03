@@ -5754,7 +5754,14 @@
     "dismiss_label": "{subject} ile ilgili notu kapat",
     "banner": "Uygulanmayan değişiklikler: {count}",
     "toast": "Çevrimdışı yapılan ve uygulanmayan değişiklikler: {count}. Giden kutusu hangileri olduğunu gösterir.",
-    "storage_failed": "Bu cihazda çevrimdışı e-posta için yer kalmadı. Yer açın veya Ayarlar'dan daha azını saklayın."
+    "storage_failed": "Bu cihazda çevrimdışı e-posta için yer kalmadı. Yer açın veya Ayarlar'dan daha azını saklayın.",
+    "signout_changes_title": "Kaydedilmemiş değişikliklerle oturum kapatılsın mı?",
+    "signout_changes": "Henüz sunucuda olmayan değişiklikler: {count}. Oturumu kapatmak bunları siler.",
+    "store_unavailable": "Bu cihazdaki çevrimdışı e-postalar şu anda açılamıyor. Gönderilmemiş e-postalar burada kalır ve uygulama denemeye devam eder.",
+    "store_reset": "Bu cihazdaki çevrimdışı e-postalar okunamadı, bu yüzden yeniden indiriliyor. Gönderilmemiş olanlar kayboldu.",
+    "legacy_stranded": "Bu tarayıcı, önceki bir sürümün sakladığı gönderilmemiş e-postaları açamıyor. Tarayıcıyı güncellemek bunları geri getirebilir.",
+    "store_private": "Gizli pencereler e-postaları çevrimdışı kullanım için saklayamaz.",
+    "server_not_answering": "E-posta sunucusu yanıt vermiyor. Birazdan yeniden deneyin."
   },
   "offlineStorage": {
     "keep_description": "E-postalarınızı, takviminizi, kişilerinizi ve seçtiğiniz dosyaları bu tarayıcıda şifreli olarak tutar. Çevrimdışıyken e-postaları okuyabilir, işaretleyebilir ve taşıyabilirsiniz; yazdıklarınız giden kutusunda bekler. Oturumu kapatınca hepsi silinir.",
@@ -6550,5 +6557,32 @@
       "next_issue": "Sonraki yazım veya dil bilgisi hatası",
       "previous_issue": "Önceki yazım veya dil bilgisi hatası"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Yeni pencerede aç",
+    "save_all_to_folder": "Tümünü bir klasöre kaydet…",
+    "saved_all": "{count, plural, one {# ek {folder} klasörüne kaydedildi.} other {# ek {folder} klasörüne kaydedildi.}}",
+    "saved_partial": "{total} ekten {saved} tanesi {folder} klasörüne kaydedildi.",
+    "save_failed": "Ekler {folder} klasörüne kaydedilemedi.",
+    "popup_blocked": "Tarayıcı yeni pencereyi engelledi. Bu site için açılır pencerelere izin verip yeniden deneyin.",
+    "opening": "Açılıyor…",
+    "session_ended_title": "Bu pencerede oturumunuz kapalı",
+    "session_ended_body": "Uygulamayı açıp oturum açın, ardından bu pencereyi yeniden açın.",
+    "open_app": "Uygulamayı aç",
+    "close_window": "Pencereyi kapat",
+    "message_gone_title": "Bu ileti artık yok",
+    "message_gone_body": "Silindi veya başka bir hesaba taşındı.",
+    "message_moved": "Bu ileti başka bir klasöre taşındı.",
+    "message_moved_to": "Bu ileti {folder} klasörüne taşındı.",
+    "window_not_ready": "Yeni pencere zamanında açılmadı. Taslağınız burada kalıyor."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Tarayıcıyla oturum aç",
+    "browser_waiting": "Oturum açmayı tarayıcınızda tamamlayın",
+    "browser_unavailable": "Bu sunucu tarayıcıyla oturum açmayı desteklemiyor. Parolanızı kullanın.",
+    "browser_failed": "Tarayıcıyla oturum açılamadı. Yeniden deneyin.",
+    "server_needed": "Önce sunucu adresini girin.",
+    "server_declined": "Bu sunucuya izin vermediniz, bu yüzden ona hiçbir şey gönderilmedi.",
+    "server_invalid": "Bu sunucu adresi geçerli değil."
   }
 }

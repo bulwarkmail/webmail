@@ -380,10 +380,12 @@ async function fetchAttachments(ctx: SyncContext, jmap: string): Promise<void> {
       try {
         data = await ctx.transport.download(jmap, blobId, part.type ?? 'application/octet-stream', part.name ?? 'attachment');
       } catch (error) {
-        if (error instanceof TransportError && error.kind === 'http') {
+        // Only what says this file won't come. Anything else, like a 500 or a 429, is tried at the next sync.
+        if (error instanceof TransportError && error.kind === 'http' && PERMANENT_DOWNLOAD_STATUSES.has(error.status ?? 0)) {
           ctx.db.run('UPDATE email_part SET refused = 1 WHERE jmap = ? AND blob_id = ?', [jmap, blobId]);
           continue;
         }
+        if (error instanceof TransportError && error.kind === 'http') return;
         throw error;
       }
       putBlob(ctx.db, jmap, blobId, part.type, data, Number(part.received_at));
@@ -391,6 +393,8 @@ async function fetchAttachments(ctx: SyncContext, jmap: string): Promise<void> {
     }
   }
 }
+
+const PERMANENT_DOWNLOAD_STATUSES = new Set([403, 404, 410]);
 
 // ---- Identities and quotas ----
 

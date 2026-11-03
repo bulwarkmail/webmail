@@ -31,6 +31,8 @@ export function OfflineSettings() {
   const labels = useAccountStore((s) => s.accounts);
   const enabledCount = useOfflineStore((s) => s.enabled.length);
   const persist = useOfflineStore((s) => s.persist);
+  const blocked = useOfflineStore((s) => s.storageBlocked);
+  const tNotes = useTranslations('offlineConflicts');
   const [asking, setAsking] = useState(false);
 
   useEffect(() => {
@@ -51,7 +53,9 @@ export function OfflineSettings() {
 
   return (
     <SettingsSection id="offline" title={t('title')} description={t('description')}>
-      {!offlineSupported() ? (
+      {blocked ? (
+        <p className="text-sm text-muted-foreground" data-testid="offline-private">{tNotes('store_private')}</p>
+      ) : !offlineSupported() ? (
         <p className="text-sm text-muted-foreground" data-testid="offline-unsupported">{t('unsupported')}</p>
       ) : (
         <>

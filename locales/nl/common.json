@@ -5754,7 +5754,14 @@
     "dismiss_label": "Melding over {subject} sluiten",
     "banner": "Niet doorgevoerde wijzigingen: {count}",
     "toast": "Offline gemaakte wijzigingen niet doorgevoerd: {count}. Het Postvak UIT laat zien welke.",
-    "storage_failed": "Dit apparaat heeft geen ruimte meer voor offline mail. Maak ruimte vrij of bewaar minder via Instellingen."
+    "storage_failed": "Dit apparaat heeft geen ruimte meer voor offline mail. Maak ruimte vrij of bewaar minder via Instellingen.",
+    "signout_changes_title": "Afmelden met niet-opgeslagen wijzigingen?",
+    "signout_changes": "Wijzigingen die nog niet op de server staan: {count}. Afmelden verwijdert ze.",
+    "store_unavailable": "De offline mail op dit apparaat kan nu niet worden geopend. Niet-verzonden mail blijft hier en de app blijft het proberen.",
+    "store_reset": "De offline mail op dit apparaat kon niet worden gelezen en wordt opnieuw gedownload. Wat hier nog niet verzonden was, is weg.",
+    "legacy_stranded": "Deze browser kan niet-verzonden mail van een eerdere versie niet openen. De browser bijwerken kan die terughalen.",
+    "store_private": "Privévensters kunnen geen mail bewaren voor offline gebruik.",
+    "server_not_answering": "De mailserver antwoordt niet. Probeer het zo meteen opnieuw."
   },
   "offlineStorage": {
     "keep_description": "Bewaart je e-mail, agenda, contacten en gekozen bestanden versleuteld in deze browser. Offline kun je e-mail lezen, markeren en verplaatsen, en wat je schrijft wacht in Postvak UIT. Afmelden verwijdert alles.",
@@ -6550,5 +6557,32 @@
       "next_issue": "Volgende spel- of grammaticafout",
       "previous_issue": "Vorige spel- of grammaticafout"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Openen in nieuw venster",
+    "save_all_to_folder": "Alles in een map opslaan…",
+    "saved_all": "{count, plural, one {# bijlage opgeslagen in {folder}.} other {# bijlagen opgeslagen in {folder}.}}",
+    "saved_partial": "{saved} van {total} bijlagen opgeslagen in {folder}.",
+    "save_failed": "De bijlagen konden niet in {folder} worden opgeslagen.",
+    "popup_blocked": "De browser heeft het nieuwe venster geblokkeerd. Sta pop-ups toe voor deze site en probeer het opnieuw.",
+    "opening": "Openen…",
+    "session_ended_title": "Je bent afgemeld in dit venster",
+    "session_ended_body": "Open de app en meld je aan, en open dit venster daarna opnieuw.",
+    "open_app": "App openen",
+    "close_window": "Venster sluiten",
+    "message_gone_title": "Dit bericht is er niet meer",
+    "message_gone_body": "Het is verwijderd of naar een ander account verplaatst.",
+    "message_moved": "Dit bericht is naar een andere map verplaatst.",
+    "message_moved_to": "Dit bericht is verplaatst naar {folder}.",
+    "window_not_ready": "Het nieuwe venster is niet op tijd geopend. Je concept blijft hier."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Inloggen met je browser",
+    "browser_waiting": "Rond het inloggen af in je browser",
+    "browser_unavailable": "Deze server biedt geen inloggen via een browser. Gebruik je wachtwoord.",
+    "browser_failed": "Inloggen via de browser is niet gelukt. Probeer het opnieuw.",
+    "server_needed": "Vul eerst het adres van de server in.",
+    "server_declined": "Je hebt deze server niet toegestaan, dus er is niets naartoe gestuurd.",
+    "server_invalid": "Dit serveradres is niet geldig."
   }
 }

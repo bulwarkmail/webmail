@@ -38,52 +38,69 @@ describe('email boot snapshot', { timeout: 30_000 }, () => {
   });
 });
 
-// With the local store on, the mail is encrypted on the device, and subjects in
-// localStorage would give it away.
-describe('email boot snapshot with the local store on', { timeout: 30_000 }, () => {
-  const ROW = { id: 'e1', subject: 'Secret subject', mailboxIds: { inbox: true } };
-  const SNAPSHOT = { v: 3, account: 'alice@mail.example', mailboxes: MAILBOXES, selectedMailbox: 'inbox', emails: [ROW] };
+// With the local store on, mail doesn't go to localStorage in plain text too.
+describe('email boot snapshot for an account in the local store', { timeout: 30_000 }, () => {
+  const STATE = { mailboxes: MAILBOXES, selectedMailbox: 'inbox', emails: [{ id: 'e1', mailboxIds: { inbox: true } }] };
 
-  async function boot(enabled: string[]) {
-    persistSession('alice@mail.example');
-    localStorage.setItem('email-snapshot', JSON.stringify(SNAPSHOT));
-    localStorage.setItem('bulwark-offline-accounts', JSON.stringify(enabled));
+  async function fresh(account: string) {
+    vi.useFakeTimers();
+    persistSession(account);
     vi.resetModules();
-    return (await import('@/stores/email-store')).useEmailStore;
+    const { useEmailStore } = await import('@/stores/email-store');
+    const offline = await import('@/lib/offline/state');
+    return { useEmailStore, offline };
   }
 
-  it('is removed at the start and not restored', async () => {
-    const store = await boot(['alice@mail.example']);
+  afterEach(() => vi.useRealTimers());
+
+  it('isn\'t written', async () => {
+    const { useEmailStore, offline } = await fresh('alice@mail.example');
+    offline.useOfflineStore.setState({ enabled: ['alice@mail.example'] });
+    useEmailStore.setState(STATE as never);
+    await vi.advanceTimersByTimeAsync(1500);
     expect(localStorage.getItem('email-snapshot')).toBeNull();
-    expect(store.getState().emails).toEqual([]);
   });
 
-  it('still works for an account without it', async () => {
-    const store = await boot(['bob@mail.example']);
+  it('is written for an account outside it', async () => {
+    const { useEmailStore, offline } = await fresh('alice@mail.example');
+    offline.useOfflineStore.setState({ enabled: ['bob@mail.example'] });
+    useEmailStore.setState(STATE as never);
+    await vi.advanceTimersByTimeAsync(1500);
+    expect(JSON.parse(localStorage.getItem('email-snapshot') ?? '{}').account).toBe('alice@mail.example');
+  });
+
+  it('goes only when that account\'s store can take over', async () => {
+    const { offline } = await fresh('alice@mail.example');
+    localStorage.setItem('email-snapshot', JSON.stringify({ v: 3, account: 'alice@mail.example', mailboxes: MAILBOXES }));
+    offline.forgetMailSnapshot('bob@mail.example');
     expect(localStorage.getItem('email-snapshot')).not.toBeNull();
-    expect(store.getState().emails).toHaveLength(1);
-  });
-
-  it('is never written while it is on', async () => {
-    const store = await boot(['alice@mail.example']);
-    store.setState({ mailboxes: MAILBOXES as never, emails: [ROW] as never, selectedMailbox: 'inbox' });
-    await new Promise((resolve) => setTimeout(resolve, 1100));
+    offline.forgetMailSnapshot('alice@mail.example');
     expect(localStorage.getItem('email-snapshot')).toBeNull();
   });
+});
 
-  it('is written without it, as the control', async () => {
-    const store = await boot([]);
-    store.setState({ emails: [{ ...ROW, id: 'e2' }] as never });
-    await new Promise((resolve) => setTimeout(resolve, 1100));
-    expect(localStorage.getItem('email-snapshot')).toContain('e2');
-  });
-
-  it('goes the moment the user turns it on', async () => {
-    const store = await boot([]);
-    expect(store.getState().emails).toHaveLength(1);
-    const { useOfflineStore } = await import('@/lib/offline/state');
-    useOfflineStore.setState({ enabled: ['alice@mail.example'] });
-    expect(localStorage.getItem('email-snapshot')).toBeNull();
+// A client's late answer doesn't land on the client that replaced it.
+describe('a list answer from a client that was replaced', { timeout: 30_000 }, () => {
+  it('is dropped', async () => {
+    persistSession('alice@mail.example');
+    vi.resetModules();
+    const { useEmailStore } = await import('@/stores/email-store');
+    const { useAuthStore } = await import('@/stores/auth-store');
+    const rows = [{ id: 'stale', mailboxIds: { inbox: true } }];
+    let answer: (value: unknown) => void = () => {};
+    const local = {
+      getAccountId: () => 'acc',
+      getEmails: vi.fn(() => new Promise((resolve) => { answer = resolve; })),
+      getThreadEmailCounts: vi.fn(async () => ({})),
+    };
+    useAuthStore.setState({ client: local as never, activeAccountId: 'alice@mail.example' });
+    useEmailStore.setState({ mailboxes: MAILBOXES as never, selectedMailbox: 'inbox', emails: [] });
+    const fetching = useEmailStore.getState().fetchEmails(local as never, 'inbox');
+    await vi.waitFor(() => expect(local.getEmails).toHaveBeenCalled());
+    useAuthStore.setState({ client: { getAccountId: () => 'acc' } as never });
+    answer({ emails: rows, hasMore: false, total: 1, state: 's1' });
+    await fetching;
+    expect(useEmailStore.getState().emails).toEqual([]);
   });
 });
 

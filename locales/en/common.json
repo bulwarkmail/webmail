@@ -5754,7 +5754,14 @@
     "dismiss_label": "Dismiss the note about {subject}",
     "banner": "Changes that didn't go through: {count}",
     "toast": "Changes you made offline weren't applied: {count}. The outbox shows which.",
-    "storage_failed": "This device has no room left for offline mail. Free up space, or keep less in Settings."
+    "storage_failed": "This device has no room left for offline mail. Free up space, or keep less in Settings.",
+    "signout_changes_title": "Sign out with unsaved changes?",
+    "signout_changes": "Changes not yet on the server: {count}. Signing out deletes them.",
+    "store_unavailable": "Offline mail on this device can't be opened right now. Unsent mail stays here, and the app keeps trying.",
+    "store_reset": "Offline mail on this device couldn't be read, so it's being downloaded again. Anything unsent that was kept here is gone.",
+    "legacy_stranded": "This browser can't open unsent mail kept by an earlier version. Updating the browser may bring it back.",
+    "store_private": "Private windows can't keep mail for offline use.",
+    "server_not_answering": "The mail server isn't answering. Try again in a moment."
   },
   "offlineStorage": {
     "keep_description": "Keeps your mail, calendar, contacts and chosen files encrypted in this browser. Offline you can read, flag and move mail, and what you write waits in the outbox. Signing out removes all of it.",
@@ -6550,5 +6557,32 @@
       "next_issue": "Next spelling or grammar issue",
       "previous_issue": "Previous spelling or grammar issue"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Open in new window",
+    "save_all_to_folder": "Save all to a folder…",
+    "saved_all": "{count, plural, one {Saved # attachment to {folder}.} other {Saved # attachments to {folder}.}}",
+    "saved_partial": "Saved {saved} of {total} attachments to {folder}.",
+    "save_failed": "Could not save the attachments to {folder}.",
+    "popup_blocked": "The browser blocked the new window. Allow pop-ups for this site and try again.",
+    "opening": "Opening…",
+    "session_ended_title": "You are signed out in this window",
+    "session_ended_body": "Open the app and sign in, then open this window again.",
+    "open_app": "Open the app",
+    "close_window": "Close window",
+    "message_gone_title": "This message is gone",
+    "message_gone_body": "It was deleted or moved to another account.",
+    "message_moved": "This message was moved to another folder.",
+    "message_moved_to": "This message was moved to {folder}.",
+    "window_not_ready": "The new window did not open in time. Your draft stays here."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Sign in with your browser",
+    "browser_waiting": "Finish signing in in your browser",
+    "browser_unavailable": "This server doesn't offer sign-in through a browser. Use your password instead.",
+    "browser_failed": "Signing in through your browser didn't work. Try again.",
+    "server_needed": "Enter your server's address first.",
+    "server_declined": "You didn't allow this server, so nothing was sent to it.",
+    "server_invalid": "This server address isn't valid."
   }
 }

@@ -136,6 +136,36 @@ describe('Pro email view - editing a draft', () => {
     expect(initialData).toMatchObject({ draftId: 'eaaaaab', draftAccountId: 'c' });
   });
 
+  describe('in a window of its own', () => {
+    async function editIn({ onOpenCompose, onClose }: { onOpenCompose: () => Promise<boolean>; onClose: () => void }) {
+      const client = { getEmail: vi.fn().mockResolvedValue(DRAFT), getUsername: () => 'userb@example.org', getAccountId: () => 'e' };
+      render(<ProEmailView emailId="d1" client={client as never} onOpenCompose={onOpenCompose} onClose={onClose} />);
+      await waitFor(() => expect(viewerProps.current?.email).toBeTruthy());
+      (viewerProps.current!.onEditDraft as () => void)();
+    }
+
+    it('leaves the message window only once the draft is on screen in the other, or it would take the draft with it', async () => {
+      let show: (shown: boolean) => void = () => {};
+      const onClose = vi.fn();
+      const onOpenCompose = vi.fn(() => new Promise<boolean>((resolve) => { show = resolve; }));
+      await editIn({ onOpenCompose, onClose });
+      await waitFor(() => expect(onOpenCompose).toHaveBeenCalledTimes(1));
+      expect(onClose).not.toHaveBeenCalled();
+      show(true);
+      await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+    });
+
+    it('stays when the draft did not make it', async () => {
+      const onClose = vi.fn();
+      const onOpenCompose = vi.fn(async () => false);
+      await editIn({ onOpenCompose, onClose });
+      await waitFor(() => expect(onOpenCompose).toHaveBeenCalledTimes(1));
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      expect(onClose).not.toHaveBeenCalled();
+      expect(openComposeTab).not.toHaveBeenCalled();
+    });
+  });
+
   it('opens an own draft without an account, as before', async () => {
     const initialData = await openAndEdit(undefined);
 

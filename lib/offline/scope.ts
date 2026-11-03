@@ -5,6 +5,7 @@
  * forbids, and that includes the desktop app's default of keeping mail.
  */
 
+import { getDesktopBridge, isDesktopApp } from '@/lib/desktop/bridge';
 import { DEFAULT_SCOPE, type StoreScope } from '@/lib/store/area';
 import type { DevicePolicy } from '@/lib/device-policy';
 import { useOfflineStore, type UserChoice } from './state';
@@ -17,10 +18,12 @@ export const WINDOW_CHOICES: readonly (number | null)[] = [30, 90, 365, null];
 export const ATTACHMENT_CAP_CHOICES: readonly number[] = [5, 25, 100, 500];
 
 /** What the old offline mode kept, for those who had it on before the local store. */
-export const LEGACY_CHOICE: UserChoice = { on: true, days: 30, attachments: true, maxAttachmentMb: 5 };
+export const LEGACY_CHOICE: UserChoice = { on: true, days: 30, attachments: true, maxAttachmentBytes: 5 * MB };
 
 export interface PlatformDefault {
   on: boolean;
+  /** The OS policy says so either way (desktop `OfflineEnabled`, forced): no user choice applies. */
+  forced?: boolean | null;
   scope: StoreScope;
 }
 
@@ -32,6 +35,8 @@ export interface EffectiveScope {
   /** What the policy decides, for the settings page: these show "Set by your organisation". */
   locked: {
     offline: boolean;
+    /** The switch itself: forced on or off by the OS policy. */
+    forced: boolean;
     days: boolean;
     attachments: boolean;
     maxAttachment: boolean;
@@ -39,13 +44,37 @@ export interface EffectiveScope {
   };
 }
 
-/** The desktop app keeps mail without asking. Browsers stay opt-in. Feature-detected: the bridge is only there in the app. */
+interface OfflineEnabledSetting {
+  value?: unknown;
+  locked?: unknown;
+  source?: unknown;
+}
+
+/** `OfflineEnabled` from the desktop app's OS policies. Feature-detected: older shells have no such member. */
+function offlineEnabledPolicy(): OfflineEnabledSetting | null {
+  const bridge = getDesktopBridge() as { policy?: { get?: () => { OfflineEnabled?: OfflineEnabledSetting } | null | undefined } } | null;
+  try {
+    return bridge?.policy?.get?.()?.OfflineEnabled ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The desktop app keeps mail without asking, unless a recommended policy says
+ * otherwise. Browsers stay opt-in. Feature-detected: the bridge is only there in the app.
+ */
 export function offlineDefaultOn(): boolean {
-  return typeof window !== 'undefined' && Boolean((window as { bulwarkDesktop?: unknown }).bulwarkDesktop);
+  if (!isDesktopApp()) return false;
+  const setting = offlineEnabledPolicy();
+  if (setting && setting.source !== 'default' && typeof setting.value === 'boolean') return setting.value;
+  return true;
 }
 
 export function platformDefault(): PlatformDefault {
-  return { on: offlineDefaultOn(), scope: DEFAULT_SCOPE };
+  const setting = offlineEnabledPolicy();
+  const forced = setting?.locked && typeof setting.value === 'boolean' ? setting.value : null;
+  return { on: offlineDefaultOn(), forced, scope: DEFAULT_SCOPE };
 }
 
 /** Null means everything, so any cap is lower. */
@@ -66,10 +95,10 @@ export function effectiveScope(
 ): EffectiveScope {
   const choice = userChoice ?? {};
   const days = choice.days !== undefined ? choice.days : defaults.scope.days;
-  const maxAttachment = choice.maxAttachmentMb !== undefined ? choice.maxAttachmentMb * MB : defaults.scope.maxAttachmentBytes;
+  const maxAttachment = choice.maxAttachmentBytes ?? defaults.scope.maxAttachmentBytes;
   return {
     account,
-    enabled: !policy.noOffline && (choice.on ?? defaults.on),
+    enabled: !policy.noOffline && (defaults.forced ?? choice.on ?? defaults.on),
     scope: {
       days: cappedDays(days, policy.offlineMaxDays),
       attachments: !policy.noOfflineAttachments && (choice.attachments ?? defaults.scope.attachments),
@@ -78,6 +107,7 @@ export function effectiveScope(
     },
     locked: {
       offline: policy.noOffline,
+      forced: typeof defaults.forced === 'boolean',
       days: policy.offlineMaxDays > 0,
       attachments: policy.noOfflineAttachments,
       maxAttachment: policy.offlineMaxAttachmentMb > 0,

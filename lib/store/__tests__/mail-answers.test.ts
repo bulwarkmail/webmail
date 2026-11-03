@@ -263,6 +263,51 @@ describe('Email/query filters and sorts', () => {
   });
 });
 
+describe('a store without its mail yet', () => {
+  it('says so rather than answering an empty list, until the first sync has finished', async () => {
+    const server = new FakeJmapMail();
+    server.addEmail({ id: 'one' });
+    const { engine } = engineFor(server);
+    const inbox = Object.keys((server.emails.get('one')!.mailboxIds) as Record<string, boolean>)[0];
+    const query = () => one(engine, ['Email/query', { filter: { inMailbox: inbox } }, 'q']);
+    // No answer: the client reports it can't tell, and the list on screen stays.
+    expect(await query()).toBeUndefined();
+    await engine.requestSync();
+    expect((await query())![1].ids).toEqual(['one']);
+    // After a finished sync, an empty folder really is empty.
+    server.destroyEmail('one');
+    await engine.requestSync();
+    expect((await query())![1].ids).toEqual([]);
+  });
+
+  it('tells a start whether there are folders to show', async () => {
+    const server = new FakeJmapMail();
+    const { engine } = engineFor(server);
+    expect(await engine.areaCall('mail.hasFolders', {})).toBe(false);
+    await engine.requestSync();
+    expect(await engine.areaCall('mail.hasFolders', {})).toBe(true);
+  });
+});
+
+describe('keyword case, as measured on both Stalwart versions', () => {
+  it('keeps two keywords differing only in case, and sync doesn\'t stop on them', async () => {
+    const server = new FakeJmapMail();
+    server.addEmail({ id: 'both', keywords: { Tag: true, tag: true, $seen: true } });
+    server.addEmail({ id: 'upper', keywords: { Tag: true, $SEEN: true, $seen: true } });
+    server.addEmail({ id: 'none', keywords: {} });
+    const { engine, db } = engineFor(server);
+    await engine.requestSync();
+    expect(db.get<{ n: number }>('SELECT COUNT(*) AS n FROM email')?.n).toBe(3);
+    const has = async (keyword: string) => (await one(engine, ['Email/query', { filter: { hasKeyword: keyword }, sort: [{ property: 'receivedAt', isAscending: false }] }, 'q']))![1].ids;
+    expect(await has('Tag')).toEqual(['upper', 'both']);
+    expect(await has('tag')).toEqual(['both']);
+    expect(await has('TAG')).toEqual([]);
+    expect(await has('$SEEN')).toEqual(['upper', 'both']);
+    const [, counts] = (await one(engine, ['Keyword/get', { ids: ['Tag', 'tag', '$SEEN'] }, 'k']))!;
+    expect(counts.list).toEqual([{ id: 'Tag', total: 2, unread: 0 }, { id: 'tag', total: 1, unread: 0 }, { id: '$SEEN', total: 2, unread: 0 }]);
+  });
+});
+
 describe('the rest of the mail methods', () => {
   it('answers Core/echo with what it was given', async () => {
     const { engine } = engineFor(new FakeJmapMail());
@@ -424,6 +469,58 @@ describe('attachments', () => {
     await engine.requestSync();
     await engine.requestSync();
     expect(refused.downloads).toEqual(['b-gone']);
+  });
+
+  it.each([500, 503, 429, 401])('tries a file again after a %i, which says nothing about the file', async (status) => {
+    class Failing extends Files {
+      fails = true;
+      override async download(jmap?: string, blobId?: string): Promise<Uint8Array> {
+        if (this.fails) throw new TransportError('http', 'Nope', status);
+        return super.download(jmap, blobId);
+      }
+    }
+    const server = new Failing();
+    server.addEmail({ id: 'm', attachments: [{ blobId: 'b', size: 10, type: 'image/png' }] });
+    const { engine, db } = engineFor(server);
+    await engine.requestSync();
+    expect(db.get<{ refused: number }>('SELECT refused FROM email_part')?.refused).toBe(0);
+    server.fails = false;
+    server.addEmail({ id: 'n' });
+    await engine.requestSync();
+    expect(await engine.areaCall('mail.getBlob', { jmap: JMAP_ACCOUNT, blobId: 'b' })).not.toBeNull();
+  });
+
+  it.each([403, 404, 410])('gives up on a file after a %i', async (status) => {
+    class Refusing extends Files {
+      override async download(): Promise<Uint8Array> {
+        throw new TransportError('http', 'Nope', status);
+      }
+    }
+    const server = new Refusing();
+    server.addEmail({ id: 'm', attachments: [{ blobId: 'b', size: 10, type: 'image/png' }] });
+    const { engine, db } = engineFor(server);
+    await engine.requestSync();
+    expect(db.get<{ refused: number }>('SELECT refused FROM email_part')?.refused).toBe(1);
+  });
+
+  it('files a blob the user opened only as far as the chosen scope allows', async () => {
+    const server = new Files();
+    server.addEmail({ id: 'm', attachments: [{ blobId: 'b-kept', size: 10, type: 'image/png' }] });
+    const data = new Uint8Array(10);
+    const record = { jmap: JMAP_ACCOUNT, blobId: 'b-kept', type: 'image/png', data };
+
+    const none = engineFor(server, { ...EVERYTHING, attachments: false });
+    await none.engine.requestSync();
+    expect(await none.engine.areaCall('mail.recordBlob', record)).toBe(false);
+    expect(await none.engine.areaCall('mail.getBlob', { jmap: JMAP_ACCOUNT, blobId: 'b-kept' })).toBeNull();
+
+    const small = engineFor(server, { ...EVERYTHING, attachments: true, maxAttachmentBytes: 9 });
+    await small.engine.requestSync();
+    expect(await small.engine.areaCall('mail.recordBlob', record)).toBe(false);
+
+    const fits = engineFor(server, { ...EVERYTHING, attachments: true, maxAttachmentBytes: 10 });
+    await fits.engine.requestSync();
+    expect(await fits.engine.areaCall('mail.recordBlob', record)).toBe(true);
   });
 
   it('files a blob the user opened only under a kept message: never a stray file', async () => {

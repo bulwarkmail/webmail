@@ -5754,7 +5754,14 @@
     "dismiss_label": "Hinweis zu {subject} ausblenden",
     "banner": "Nicht übernommene Änderungen: {count}",
     "toast": "Offline gemachte Änderungen wurden nicht übernommen: {count}. Welche, steht im Postausgang.",
-    "storage_failed": "Auf diesem Gerät ist kein Platz mehr für Offline-E-Mails. Geben Sie Speicher frei oder behalten Sie in den Einstellungen weniger."
+    "storage_failed": "Auf diesem Gerät ist kein Platz mehr für Offline-E-Mails. Geben Sie Speicher frei oder behalten Sie in den Einstellungen weniger.",
+    "signout_changes_title": "Mit nicht gespeicherten Änderungen abmelden?",
+    "signout_changes": "Änderungen, die noch nicht auf dem Server sind: {count}. Beim Abmelden werden sie gelöscht.",
+    "store_unavailable": "Die Offline-E-Mails auf diesem Gerät lassen sich gerade nicht öffnen. Nicht gesendete E-Mails bleiben hier, und die App versucht es weiter.",
+    "store_reset": "Die Offline-E-Mails auf diesem Gerät konnten nicht gelesen werden und werden neu heruntergeladen. Was hier noch nicht gesendet war, ist verloren.",
+    "legacy_stranded": "Dieser Browser kann nicht gesendete E-Mails einer früheren Version nicht öffnen. Ein Browser-Update kann sie zurückholen.",
+    "store_private": "Private Fenster können keine E-Mails für die Offline-Nutzung behalten.",
+    "server_not_answering": "Der Mailserver antwortet nicht. Versuchen Sie es gleich noch einmal."
   },
   "offlineStorage": {
     "keep_description": "Behält Ihre E-Mails, Ihren Kalender, Ihre Kontakte und ausgewählte Dateien verschlüsselt in diesem Browser. Offline können Sie E-Mails lesen, markieren und verschieben, und was Sie schreiben, wartet im Postausgang. Beim Abmelden wird alles entfernt.",
@@ -6550,5 +6557,32 @@
       "next_issue": "Nächster Rechtschreib- oder Grammatikfehler",
       "previous_issue": "Vorheriger Rechtschreib- oder Grammatikfehler"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "In neuem Fenster öffnen",
+    "save_all_to_folder": "Alle in einem Ordner speichern…",
+    "saved_all": "{count, plural, one {# Anhang in {folder} gespeichert.} other {# Anhänge in {folder} gespeichert.}}",
+    "saved_partial": "{saved} von {total} Anhängen in {folder} gespeichert.",
+    "save_failed": "Die Anhänge konnten nicht in {folder} gespeichert werden.",
+    "popup_blocked": "Der Browser hat das neue Fenster blockiert. Erlauben Sie Pop-ups für diese Seite und versuchen Sie es noch einmal.",
+    "opening": "Wird geöffnet…",
+    "session_ended_title": "Sie sind in diesem Fenster abgemeldet",
+    "session_ended_body": "Öffnen Sie die App, melden Sie sich an und öffnen Sie dieses Fenster dann noch einmal.",
+    "open_app": "App öffnen",
+    "close_window": "Fenster schließen",
+    "message_gone_title": "Diese Nachricht ist nicht mehr da",
+    "message_gone_body": "Sie wurde gelöscht oder in ein anderes Konto verschoben.",
+    "message_moved": "Diese Nachricht wurde in einen anderen Ordner verschoben.",
+    "message_moved_to": "Diese Nachricht wurde nach {folder} verschoben.",
+    "window_not_ready": "Das neue Fenster wurde nicht rechtzeitig geöffnet. Ihr Entwurf bleibt hier."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Mit dem Browser anmelden",
+    "browser_waiting": "Schließen Sie die Anmeldung im Browser ab",
+    "browser_unavailable": "Dieser Server bietet keine Anmeldung über den Browser an. Verwenden Sie stattdessen Ihr Passwort.",
+    "browser_failed": "Die Anmeldung über den Browser hat nicht geklappt. Versuchen Sie es noch einmal.",
+    "server_needed": "Geben Sie zuerst die Adresse Ihres Servers ein.",
+    "server_declined": "Sie haben diesen Server nicht zugelassen, daher wurde nichts an ihn gesendet.",
+    "server_invalid": "Diese Serveradresse ist ungültig."
   }
 }

@@ -1,3 +1,5 @@
+import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
+
 /**
  * Utilities for multi-account support:
  * - Account ID generation
@@ -136,6 +138,9 @@ export function isHttp2Available(): boolean {
  * once HTTP/2+ is observed, otherwise returns {@link MAX_ACCOUNTS_HTTP1}.
  */
 export function getMaxAccounts(): number {
+  // The cap is for the push streams sharing one http/1.1 origin. The embedded
+  // server speaks http/1.1, but each account streams from its own mail server.
+  if (IS_DESKTOP_BUILD) return MAX_ACCOUNT_SLOTS;
   return isHttp2Available() ? MAX_ACCOUNT_SLOTS : MAX_ACCOUNTS_HTTP1;
 }
 

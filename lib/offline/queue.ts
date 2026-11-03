@@ -9,7 +9,7 @@
 import { requestOutboxSync } from '@/lib/pwa-notify/outbox-sync';
 import { getStore } from '@/lib/store/client/api';
 import type { ConflictSummary, OutboxError, OutboxStatus, OutboxSummary, PolicyFingerprint, SendItem, StoredConflict, StoredOutboxEntry } from '@/lib/store/outbox/items';
-import { useOfflineStore } from './state';
+import { visibleAccounts } from './state';
 
 export { LOCAL_BLOB_PREFIX, heldBlobIds, isLocalBlobId } from '@/lib/store/outbox/items';
 export type { EmailSendItem, OutboxError, OutboxStatus, OutboxSummary, PolicyFingerprint, RawSendItem, SendItem } from '@/lib/store/outbox/items';
@@ -39,10 +39,15 @@ interface StoredQueue {
 }
 
 /** Everything waiting for one account (or every account with it on), oldest first. */
-export async function readQueue(account?: string): Promise<{ patches: number; patchesBy: Record<string, number>; outbox: OutboxEntry[]; conflicts: ConflictEntry[] }> {
-  const accounts = account ? [account] : useOfflineStore.getState().enabled;
-  const read = await Promise.all(accounts.map(async (id) => ({ id, queue: await getStore().area<StoredQueue>(id, 'outbox.read') })));
+export async function readQueue(account?: string): Promise<{ failed: string[]; patches: number; patchesBy: Record<string, number>; outbox: OutboxEntry[]; conflicts: ConflictEntry[] }> {
+  const accounts = account ? [account] : visibleAccounts();
+  const settled = await Promise.allSettled(accounts.map(async (id) => ({ id, queue: await getStore().area<StoredQueue>(id, 'outbox.read') })));
+  const read = settled.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []));
+  const failed = accounts.filter((_, index) => settled[index].status === 'rejected');
+  // Nothing could be read: that isn't an empty queue.
+  if (read.length === 0 && failed.length > 0) throw (settled[0] as PromiseRejectedResult).reason;
   return {
+    failed,
     patches: read.reduce((sum, { queue }) => sum + queue.patches, 0),
     patchesBy: Object.fromEntries(read.map(({ id, queue }) => [id, queue.patches])),
     outbox: read.flatMap(({ id, queue }) => queue.entries.map((entry) => ({ ...entry, account: id }))),

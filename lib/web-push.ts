@@ -5,6 +5,7 @@
 // register endpoint we hit on the relay.
 
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
+import { isDesktopApp } from '@/lib/desktop/bridge';
 import type { AccountInfo, EmailPushConfig, Mailbox } from '@/lib/jmap/types';
 import { isJmapSetError, jmapErrorType } from '@/lib/jmap/jmap-error';
 import { DEFAULT_RELAY_BASE_URL } from '@/lib/push-relays';
@@ -443,6 +444,8 @@ export function isWebPushSupported(): boolean {
   // No service worker is registered in the static Lite build (see
   // components/service-worker-registration.tsx), so push cannot be enabled.
   if (IS_LITE) return false;
+  // Electron has the API, but subscribing always fails: it has no push service.
+  if (isDesktopApp()) return false;
   return (
     'serviceWorker' in navigator &&
     'PushManager' in window &&

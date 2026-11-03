@@ -11,7 +11,7 @@ import {
   userChoiceFor,
   windowOptions,
 } from '../scope';
-import { useOfflineStore } from '../state';
+import { offlineScopeFor, useOfflineStore } from '../state';
 
 const NO_LIMITS = DEFAULT_ORGANISATION_POLICY.devices;
 const MB = 1024 * 1024;
@@ -25,7 +25,7 @@ describe('effectiveScope', () => {
   });
 
   it('the user over the default', () => {
-    const effective = effectiveScope('a', { on: true, days: 30, attachments: false, maxAttachmentMb: 5 }, NO_LIMITS, BROWSER);
+    const effective = effectiveScope('a', { on: true, days: 30, attachments: false, maxAttachmentBytes: 5 * MB }, NO_LIMITS, BROWSER);
     expect(effective.enabled).toBe(true);
     expect(effective.scope).toEqual({ ...DEFAULT_SCOPE, days: 30, attachments: false, maxAttachmentBytes: 5 * MB });
     expect(effectiveScope('a', { on: false }, NO_LIMITS, DESKTOP).enabled).toBe(false);
@@ -41,11 +41,11 @@ describe('effectiveScope', () => {
 
   it('a cap lowers the choice and the default, also "everything", and never raises', () => {
     const policy = { ...NO_LIMITS, offlineMaxDays: 60, offlineMaxAttachmentMb: 10, offlineMaxTotalMb: 100 };
-    const capped = effectiveScope('a', { days: null, maxAttachmentMb: 500 }, policy, DESKTOP);
+    const capped = effectiveScope('a', { days: null, maxAttachmentBytes: 500 * MB }, policy, DESKTOP);
     expect(capped.scope).toEqual({ days: 60, attachments: true, maxAttachmentBytes: 10 * MB, maxTotalBytes: 100 * MB });
     expect(capped.locked).toMatchObject({ days: true, maxAttachment: true, maxTotal: true, attachments: false });
     expect(effectiveScope('a', null, { ...policy, offlineMaxDays: 30 }, DESKTOP).scope.days).toBe(30);
-    const under = effectiveScope('a', { days: 30, maxAttachmentMb: 5 }, policy, BROWSER);
+    const under = effectiveScope('a', { days: 30, maxAttachmentBytes: 5 * MB }, policy, BROWSER);
     expect(under.scope.days).toBe(30);
     expect(under.scope.maxAttachmentBytes).toBe(5 * MB);
   });
@@ -66,6 +66,53 @@ describe('the platform default', () => {
     (window as { bulwarkDesktop?: unknown }).bulwarkDesktop = { version: 1 };
     expect(offlineDefaultOn()).toBe(true);
     expect(platformDefault().on).toBe(true);
+  });
+});
+
+describe('the OfflineEnabled policy of the desktop app', () => {
+  const withPolicy = (OfflineEnabled: unknown) => {
+    (window as { bulwarkDesktop?: unknown }).bulwarkDesktop = { version: 1, policy: { get: () => ({ OfflineEnabled }) } };
+  };
+  afterEach(() => { delete (window as { bulwarkDesktop?: unknown }).bulwarkDesktop; });
+
+  it('recommended off changes the default, and a user can still turn it on', () => {
+    withPolicy({ value: false, locked: false, source: 'machine' });
+    expect(offlineDefaultOn()).toBe(false);
+    expect(effectiveScope('a', null, NO_LIMITS, platformDefault()).enabled).toBe(false);
+    expect(effectiveScope('a', { on: true }, NO_LIMITS, platformDefault()).enabled).toBe(true);
+  });
+
+  it('the shipped default is no recommendation', () => {
+    withPolicy({ value: false, locked: false, source: 'default' });
+    expect(offlineDefaultOn()).toBe(true);
+  });
+
+  it('forced beats what the user chose, either way', () => {
+    withPolicy({ value: true, locked: true, source: 'machine' });
+    expect(effectiveScope('a', { on: false }, NO_LIMITS, platformDefault())).toMatchObject({ enabled: true, locked: { forced: true } });
+    withPolicy({ value: false, locked: true, source: 'machine' });
+    expect(effectiveScope('a', { on: true }, NO_LIMITS, platformDefault()).enabled).toBe(false);
+  });
+
+  it('the organisation still beats it', () => {
+    withPolicy({ value: true, locked: true, source: 'machine' });
+    expect(effectiveScope('a', null, { ...NO_LIMITS, noOffline: true }, platformDefault()).enabled).toBe(false);
+  });
+
+  it('a shell without the member, or a member that throws, is the plain default', () => {
+    (window as { bulwarkDesktop?: unknown }).bulwarkDesktop = { version: 1 };
+    expect(offlineDefaultOn()).toBe(true);
+    (window as { bulwarkDesktop?: unknown }).bulwarkDesktop = { version: 1, policy: { get: () => { throw new Error('gone'); } } };
+    expect(platformDefault()).toMatchObject({ on: true, forced: null });
+  });
+});
+
+describe('the seam for what a user chose', () => {
+  it('reads bulwark-offline-scope over the defaults, without the switch', () => {
+    localStorage.setItem('bulwark-offline-scope', JSON.stringify({ acc: { on: true, days: 30 } }));
+    expect(offlineScopeFor('acc')).toEqual({ ...DEFAULT_SCOPE, days: 30 });
+    expect(offlineScopeFor('other')).toEqual(DEFAULT_SCOPE);
+    localStorage.removeItem('bulwark-offline-scope');
   });
 });
 

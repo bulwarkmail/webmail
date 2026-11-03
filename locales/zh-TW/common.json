@@ -5754,7 +5754,14 @@
     "dismiss_label": "關閉關於 {subject} 的提示",
     "banner": "未套用的變更：{count}",
     "toast": "離線時的變更未被套用：{count} 項。可在寄件匣中查看。",
-    "storage_failed": "此裝置已沒有空間存放離線郵件。請釋出空間，或在設定中減少保留的內容。"
+    "storage_failed": "此裝置已沒有空間存放離線郵件。請釋出空間，或在設定中減少保留的內容。",
+    "signout_changes_title": "要在有未儲存變更時登出嗎？",
+    "signout_changes": "尚未到達伺服器的變更：{count} 項。登出會刪除它們。",
+    "store_unavailable": "目前無法開啟此裝置上的離線郵件。未傳送的郵件仍保留在這裡，應用程式會繼續嘗試。",
+    "store_reset": "無法讀取此裝置上的離線郵件，正在重新下載。未傳送的內容已遺失。",
+    "legacy_stranded": "此瀏覽器無法開啟舊版本保存的未傳送郵件。更新瀏覽器可能會找回它們。",
+    "store_private": "私密視窗無法保留供離線使用的郵件。",
+    "server_not_answering": "郵件伺服器沒有回應。請稍後再試。"
   },
   "offlineStorage": {
     "keep_description": "在此瀏覽器中加密保留你的郵件、行事曆、聯絡人和你選擇的檔案。離線時可以閱讀、標記和移動郵件，寫好的郵件會在寄件匣中等待。登出時會全部刪除。",
@@ -6550,5 +6557,32 @@
       "next_issue": "下一個拼字或文法問題",
       "previous_issue": "上一個拼字或文法問題"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "在新視窗中開啟",
+    "save_all_to_folder": "全部儲存到資料夾…",
+    "saved_all": "{count, plural, other {已將 # 個附件儲存到 {folder}。}}",
+    "saved_partial": "已將 {total} 個附件中的 {saved} 個儲存到 {folder}。",
+    "save_failed": "無法將附件儲存到 {folder}。",
+    "popup_blocked": "瀏覽器封鎖了新視窗。請允許此網站顯示彈出式視窗，然後再試一次。",
+    "opening": "正在開啟…",
+    "session_ended_title": "你已在此視窗中登出",
+    "session_ended_body": "請開啟應用程式並登入，然後重新開啟此視窗。",
+    "open_app": "開啟應用程式",
+    "close_window": "關閉視窗",
+    "message_gone_title": "這封郵件已不存在",
+    "message_gone_body": "它已被刪除或移到其他帳戶。",
+    "message_moved": "這封郵件已移到其他資料夾。",
+    "message_moved_to": "這封郵件已移到 {folder}。",
+    "window_not_ready": "新視窗未能及時開啟。你的草稿仍保留在這裡。"
+  },
+  "desktop_sign_in": {
+    "browser_button": "使用瀏覽器登入",
+    "browser_waiting": "請在瀏覽器中完成登入",
+    "browser_unavailable": "此伺服器不支援透過瀏覽器登入。請使用密碼。",
+    "browser_failed": "無法透過瀏覽器登入。請再試一次。",
+    "server_needed": "請先輸入伺服器位址。",
+    "server_declined": "你沒有允許此伺服器,因此沒有傳送任何內容給它。",
+    "server_invalid": "此伺服器位址無效。"
   }
 }

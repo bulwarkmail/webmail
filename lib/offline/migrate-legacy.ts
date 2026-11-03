@@ -145,7 +145,8 @@ async function readAccount(db: IDBDatabase, key: CryptoKey | null, account: stri
       if (item.kind === 'raw') messageId = rawIds.get(item.blobId);
       // Not sent yet: it can still get a fixed id. One that left under the old
       // code had another id, which nothing here knows.
-      else if (status === 'waiting' && typeof item.args[6] === 'string') messageId = generateMessageId(item.args[6]);
+      // Only its domain is used, and the sender may be written "Name <address>".
+      else if (status === 'waiting' && typeof item.args[6] === 'string') messageId = generateMessageId(item.args[6].replace(/>.*$/, ''));
       part.entries.push({
         summary: payload.summary,
         item,
@@ -191,6 +192,20 @@ async function moveNow(): Promise<void> {
 export function moveLegacyOutbox(): Promise<void> {
   moving ??= moveNow().catch(() => {});
   return moving;
+}
+
+/** Messages an earlier version left in its database. For a browser the store can't run in, which can't move them. */
+export async function strandedLegacyMessages(): Promise<number> {
+  if (typeof indexedDB === 'undefined') return 0;
+  const db = await openLegacy().catch(() => null);
+  if (!db) return 0;
+  try {
+    if (!storeNamesHold(db, 'queue')) return 0;
+    const records = await result(db.transaction('queue', 'readonly').objectStore('queue').getAll()) as Array<{ kind?: string }>;
+    return records.filter((record) => record.kind !== 'patch').length;
+  } finally {
+    db.close();
+  }
 }
 
 /** Tests only: forget that this page already ran it. */

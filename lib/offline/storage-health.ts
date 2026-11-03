@@ -48,13 +48,3 @@ export function safariMayDelete(userAgent: string = typeof navigator === 'undefi
   if (/iPhone|iPad|iPod/.test(userAgent)) return true;
   return /Macintosh/.test(userAgent) && /Safari\//.test(userAgent) && !/Chrome|Chromium|Edg\/|OPR\//.test(userAgent);
 }
-
-/**
- * Whether the browser took away what was kept for an account: its key record
- * with no file, or no key where one was made. A file with no key can't be read
- * by anyone and is swept without a word; if the account had been opened, that
- * is the second case. On a first open neither applies.
- */
-export function wasEvicted(state: { opened: boolean; hadKey: boolean; fileExisted: boolean }): boolean {
-  return state.hadKey ? !state.fileExisted : state.opened;
-}

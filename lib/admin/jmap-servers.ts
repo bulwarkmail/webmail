@@ -1,6 +1,8 @@
 /**
  * Multi-server JMAP support: schema, parsing, lookup, and redaction helpers.
  */
+import { isDesktopTrustedServer } from '@/lib/desktop/trusted-servers';
+
 
 export interface JmapServerOAuthConfig {
   clientId?: string;
@@ -223,6 +225,10 @@ export function resolveTrustedJmapUrl(
   }
   const matched = servers.find((s) => normalizeUrl(s.url) === target);
   if (matched) return matched.url;
+  // A server the user approved in the desktop app. Spelled out, not IS_DESKTOP_BUILD:
+  // only this form lets the bundler drop the branch and the module behind it, so
+  // that no other build holds this path at all (scripts/standalone-guard.mjs checks).
+  if (process.env.NEXT_PUBLIC_BULWARK_DESKTOP === '1' && isDesktopTrustedServer(requestedUrl)) return trimUrl(requestedUrl);
   // No match - caller decides whether to honor the request anyway (e.g. when
   // allowCustomJmapEndpoint is enabled).
   return null;

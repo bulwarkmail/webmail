@@ -78,7 +78,7 @@ export type PageToWorker =
   | { kind: 'init'; clientId: string; moduleUrl: string }
   | { kind: 'open'; id: string; params: OpenAccountParams }
   | { kind: 'close-account'; id: string; account: string }
-  | { kind: 'sweep-files'; id: string; known: string[] }
+  | { kind: 'prune-files'; id: string; keep: string[] }
   | { kind: 'set-auth'; account: string; auth: string | null }
   | { kind: 'set-inverted'; account: string; inverted: boolean }
   | { kind: 'set-session'; account: string; session: StoreSession }

@@ -9,11 +9,14 @@ import { FetchTransport, type StoreSession } from '../engine/transport';
 import type { StorageAdapter } from '../storage';
 import type { OpenAccountParams, StoreRpc, StoreStatus } from './protocol';
 
+/** Files in the pool that belong to no key. A name that isn't a store file's is left alone. */
+export function storeFilesToPrune(files: readonly string[], keep: readonly string[]): string[] {
+  return files.filter((file) => /^\/a[0-9a-f]+\.db$/.test(file) && !keep.includes(file));
+}
+
 export interface HostStorage {
   open(file: string, keyHex: string): Promise<StorageAdapter>;
   remove(file: string): boolean;
-  /** Database files in the pool. Their names say nothing about the accounts. */
-  files(): string[];
 }
 
 interface OpenAccount {
@@ -46,8 +49,7 @@ export class StoreHost {
 
   constructor(private readonly options: StoreHostOptions) {}
 
-  /** Says whether the account's file was there: gone with a key still around, the browser cleared it. */
-  async openAccount(params: OpenAccountParams): Promise<{ fileExisted: boolean }> {
+  async openAccount(params: OpenAccountParams): Promise<{ created: boolean }> {
     const existing = this.accounts.get(params.account);
     if (existing) {
       if (params.session) this.setSession(params.account, params.session);
@@ -55,12 +57,10 @@ export class StoreHost {
       if (params.scope) existing.engine.setScope(params.scope);
       if (params.invertedKeywordSort !== null) existing.engine.setInvertedKeywordSort(params.invertedKeywordSort);
       void existing.engine.requestSync();
-      return { fileExisted: true };
+      return { created: false };
     }
-    let fileExisted = this.options.storage.files().includes(params.file);
-    // Nothing to sync with yet: no empty file, or the next open would take it for the real one.
-    if (!fileExisted && !params.session) throw new Error('No session for this account yet');
-    const db = await this.openOrReplace(params, () => { fileExisted = false; });
+    const db = await this.options.storage.open(params.file, params.keyHex);
+    const created = !db.get("SELECT 1 AS yes FROM sqlite_master WHERE name = 'schema_migration'");
     const session = params.session ?? AccountEngine.storedSession(db);
     if (!session) {
       db.close();
@@ -91,32 +91,7 @@ export class StoreHost {
     account.engine.setOnline(this.online);
     this.accounts.set(params.account, account);
     void account.engine.requestSync();
-    return { fileExisted };
-  }
-
-  /** A file this key can't read is lost for good, whatever happened to it, and everything in it can be fetched again. */
-  private async openOrReplace(params: OpenAccountParams, onReplaced: () => void): Promise<StorageAdapter> {
-    try {
-      return await this.options.storage.open(params.file, params.keyHex);
-    } catch (error) {
-      if ((error as Error)?.name !== 'StoreKeyError' || !params.session) throw error;
-      this.options.storage.remove(params.file);
-      onReplaced();
-      return this.options.storage.open(params.file, params.keyHex);
-    }
-  }
-
-  /** Deletes files no account has a key for. Nothing can read them. Files in use stay, whatever the list says. */
-  sweepFiles(known: readonly string[]): number {
-    const keep = new Set(known);
-    for (const open of this.accounts.values()) keep.add(open.file);
-    let removed = 0;
-    for (const name of this.options.storage.files()) {
-      const file = name.replace(/-journal$/, '');
-      if (keep.has(file)) continue;
-      if (this.options.storage.remove(file)) removed += 1;
-    }
-    return removed;
+    return { created };
   }
 
   setAuth(account: string, auth: string | null): void {

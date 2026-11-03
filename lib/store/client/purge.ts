@@ -10,6 +10,8 @@ import { deleteKeyDatabase } from './keys';
 /** A worker just stopped may hold the files for a moment longer. */
 const REMOVE_TRIES = 10;
 const REMOVE_WAIT_MS = 200;
+/** A sign-out doesn't wait for a tab that never lets go of the owner lock. */
+const POOL_LOCK_WAIT_MS = 5_000;
 
 async function removePool(): Promise<void> {
   const root = await navigator.storage.getDirectory();
@@ -28,8 +30,18 @@ async function removePool(): Promise<void> {
 /** Deletes the pool folder, holding the owner lock so no worker can take the files meanwhile. */
 export async function deleteStorePool(): Promise<void> {
   if (typeof navigator === 'undefined' || typeof navigator.storage?.getDirectory !== 'function') return;
-  if (navigator.locks) await navigator.locks.request(OWNER_LOCK, removePool);
-  else await removePool();
+  if (!navigator.locks) {
+    await removePool();
+    return;
+  }
+  try {
+    await navigator.locks.request(OWNER_LOCK, { signal: AbortSignal.timeout(POOL_LOCK_WAIT_MS) }, removePool);
+  } catch (error) {
+    if ((error as Error)?.name !== 'TimeoutError' && (error as Error)?.name !== 'AbortError') throw error;
+    // A tab that won't let go, stuck or asleep: the key is gone, so what can be
+    // deleted goes now, and what it still holds can't be read anyway.
+    await removePool();
+  }
 }
 
 /**

@@ -11,7 +11,7 @@ function AppErrorLayout({ kind, ...props }: FallbackProps & { kind: "page" | "se
   const Fallback = kind === "settings" ? SettingsErrorFallback : PageErrorFallback;
   // The navigation stays, so one app crashing doesn't strand the user in it.
   return (
-    <div className="flex h-dvh bg-background pt-[env(safe-area-inset-top)]">
+    <div className="flex h-dvh bg-background pt-[var(--app-top-inset)]">
       {!isMobile && (
         <div className="w-14 bg-secondary flex flex-col flex-shrink-0 border-e border-border">
           <NavigationRail collapsed />

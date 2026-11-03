@@ -1,5 +1,6 @@
 "use client";
 
+import { isStandaloneDisplayMode } from "@/lib/standalone-display";
 import { useEffect } from "react";
 import { parseWebcal } from "@/lib/protocol-handlers/webcal";
 import { savePendingWebcal } from "@/lib/protocol-handlers/session";
@@ -7,7 +8,6 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { CalendarSkeleton, type CalendarSkeletonText } from "@/components/boot-skeleton/calendar-skeleton";
 import type { RailLabels } from "@/components/boot-skeleton/shell";
 
-type StandaloneNavigator = Navigator & { standalone?: boolean };
 
 function getProtocolPathPrefix(): string {
   const marker = "/protocol/webcal";
@@ -34,9 +34,7 @@ function openFallbackAppTab(raw: string): boolean {
 }
 
 function shouldOpenFallbackAppTab(): boolean {
-  const standalone = window.matchMedia?.("(display-mode: standalone)").matches
-    || (navigator as StandaloneNavigator).standalone === true;
-  return !standalone && window.history.length > 1;
+  return !isStandaloneDisplayMode() && window.history.length > 1;
 }
 
 interface WebcalProtocolClientProps {

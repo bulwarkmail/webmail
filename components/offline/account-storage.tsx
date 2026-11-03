@@ -8,7 +8,7 @@ import { OrgLockedNote } from '@/components/settings/org-locked-note';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { formatFileSize } from '@/lib/utils';
-import { chooseScope, clearAccount, disableOffline, dismissEvicted, enableOffline, scopeForAccount } from '@/lib/offline/offline-mode';
+import { chooseScope, clearAccount, disableOffline, dismissStoreReset, enableOffline, scopeForAccount } from '@/lib/offline/offline-mode';
 import { attachmentCapOptions, maxAttachmentMb, windowOptions } from '@/lib/offline/scope';
 import { useOfflineStore } from '@/lib/offline/state';
 import { minutesLeft, progressWorthShowing, type SyncProgress } from '@/lib/offline/sync-progress';
@@ -51,7 +51,7 @@ export function AccountStorage({ account, primary, heading }: { account: string;
   const usage = useOfflineStore((s) => s.usage[account]);
   const syncing = useOfflineStore((s) => s.syncing.includes(account));
   const lastSynced = useOfflineStore((s) => s.lastSyncedAt[account] ?? s.health[account]?.lastSync);
-  const evicted = useOfflineStore((s) => s.health[account]?.evicted);
+  const storeReset = useOfflineStore((s) => s.health[account]?.reset);
   const storageFull = useOfflineStore((s) => !!s.storageFull[account]);
   const progress = useOfflineStore((s) => s.progress[account]);
   const unsent = useOfflineStore((s) => s.outbox.filter((row) => row.account === account).length);
@@ -89,7 +89,7 @@ export function AccountStorage({ account, primary, heading }: { account: string;
   return (
     <div className={heading ? 'rounded-md border border-border px-3' : undefined} data-testid={testId('offline-account')}>
       {heading && <p className="pt-3 text-sm font-semibold text-foreground [overflow-wrap:anywhere]">{heading}</p>}
-      <SettingItem label={t('keep_label')} description={tStorage('keep_description')}>
+      <SettingItem label={t('keep_label')} description={tStorage('keep_description')} locked={locked.forced}>
         <ToggleSwitch
           checked={enabled}
           testId={testId('offline-switch')}
@@ -100,13 +100,13 @@ export function AccountStorage({ account, primary, heading }: { account: string;
           }}
         />
       </SettingItem>
-      {evicted && (
+      {storeReset && (
         <div className="my-2 flex flex-col gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-200 sm:flex-row sm:items-center sm:justify-between" role="alert" data-testid="offline-evicted">
           <p className="min-w-0">
             {tStorage('evicted')}
-            {evicted.lost > 0 && <> {tStorage('evicted_lost', { count: evicted.lost })}</>}
+            {storeReset.lost > 0 && <> {tStorage('evicted_lost', { count: storeReset.lost })}</>}
           </p>
-          <Button variant="outline" size="sm" className="shrink-0" onClick={() => dismissEvicted(account)}>{tStorage('evicted_dismiss')}</Button>
+          <Button variant="outline" size="sm" className="shrink-0" onClick={() => dismissStoreReset(account)}>{tStorage('evicted_dismiss')}</Button>
         </div>
       )}
       {enabled && (
@@ -169,7 +169,7 @@ export function AccountStorage({ account, primary, heading }: { account: string;
               <div className="flex flex-col items-start gap-1 sm:items-end">
                 <Select
                   value={String(currentCap)}
-                  onChange={(value) => chooseScope(account, { maxAttachmentMb: Number(value) })}
+                  onChange={(value) => chooseScope(account, { maxAttachmentBytes: Number(value) * MB })}
                   options={(caps.includes(currentCap) ? caps : [...caps, currentCap].sort((a, b) => a - b)).map((mb) => ({ value: String(mb), label: formatFileSize(mb * MB) }))}
                 />
                 {locked.maxAttachment && caps.length > 1 && <OrgLockedNote />}

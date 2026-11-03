@@ -1,7 +1,11 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import { mainWindowStorage } from '@/lib/popout/window-role';
+import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
+import { forgetDesktopServer } from '@/lib/desktop/bridge';
 import { generateAccountId, generateAvatarColor, getMaxAccounts } from '@/lib/account-utils';
 import { authHooks } from '@/lib/plugin-hooks';
+import { clearEvicted, markEvicted } from '@/lib/offline/state';
 
 export type AccountRemovalReason = 'explicit' | 'evicted';
 
@@ -11,6 +15,14 @@ const removalListeners = new Set<(accountId: string, reason: AccountRemovalReaso
 export function onAccountRemoved(listener: (accountId: string, reason: AccountRemovalReason) => void): () => void {
   removalListeners.add(listener);
   return () => removalListeners.delete(listener);
+}
+
+function sameServerOrigin(a: string, b: string): boolean {
+  try {
+    return new URL(a).origin === new URL(b).origin;
+  } catch {
+    return a === b;
+  }
 }
 
 export interface AccountEntry {
@@ -111,6 +123,7 @@ export const useAccountStore = create<AccountState>()(
         const state = get();
 
         const id = generateAccountId(entry.username, entry.serverUrl);
+        clearEvicted(id);
         if (state.accounts.some((a) => a.id === id)) {
           // Already exists - update mutable fields and return existing id
           set((s) => ({
@@ -163,6 +176,8 @@ export const useAccountStore = create<AccountState>()(
 
       removeAccount: (accountId, reason = 'explicit') => {
         if (!get().accounts.some((a) => a.id === accountId)) return;
+        const leaving = get().accounts.find((a) => a.id === accountId);
+        if (reason === 'evicted') markEvicted(accountId);
         for (const listener of [...removalListeners]) listener(accountId, reason);
         set((s) => {
           const remaining = s.accounts.filter((a) => a.id !== accountId);
@@ -188,6 +203,10 @@ export const useAccountStore = create<AccountState>()(
           };
         });
         void authHooks.onAccountRemove.emit({ accountId });
+        // The desktop app stops trusting a server its last account left.
+        if (IS_DESKTOP_BUILD && leaving && !get().accounts.some((a) => sameServerOrigin(a.serverUrl, leaving.serverUrl))) {
+          forgetDesktopServer(leaving.serverUrl, 'signed-out');
+        }
       },
 
       setActiveAccount: (accountId) => {
@@ -265,6 +284,7 @@ export const useAccountStore = create<AccountState>()(
     }),
     {
       name: 'account-registry',
+      storage: createJSONStorage(mainWindowStorage),
       partialize: (state) => ({
         accounts: state.accounts,
         activeAccountId: state.activeAccountId,

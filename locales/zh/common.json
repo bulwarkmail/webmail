@@ -5754,7 +5754,14 @@
     "dismiss_label": "关闭关于 {subject} 的提示",
     "banner": "未应用的更改：{count}",
     "toast": "离线时的更改未被应用：{count} 项。可在发件箱中查看。",
-    "storage_failed": "此设备已没有空间存放离线邮件。请释放空间，或在设置中减少保留的内容。"
+    "storage_failed": "此设备已没有空间存放离线邮件。请释放空间，或在设置中减少保留的内容。",
+    "signout_changes_title": "要在有未保存更改时退出登录吗？",
+    "signout_changes": "尚未到达服务器的更改：{count} 项。退出登录会删除它们。",
+    "store_unavailable": "现在无法打开此设备上的离线邮件。未发送的邮件仍保留在这里，应用会继续尝试。",
+    "store_reset": "无法读取此设备上的离线邮件，正在重新下载。未发送的内容已丢失。",
+    "legacy_stranded": "此浏览器无法打开早期版本保存的未发送邮件。更新浏览器可能会找回它们。",
+    "store_private": "隐私窗口无法保留供离线使用的邮件。",
+    "server_not_answering": "邮件服务器没有响应。请稍后再试。"
   },
   "offlineStorage": {
     "keep_description": "在此浏览器中加密保留你的邮件、日历、联系人和你选择的文件。离线时可以阅读、标记和移动邮件，写好的邮件会在发件箱中等待。退出登录时会全部删除。",
@@ -6550,5 +6557,32 @@
       "next_issue": "下一个拼写或语法问题",
       "previous_issue": "上一个拼写或语法问题"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "在新窗口中打开",
+    "save_all_to_folder": "全部保存到文件夹…",
+    "saved_all": "{count, plural, other {已将 # 个附件保存到 {folder}。}}",
+    "saved_partial": "已将 {total} 个附件中的 {saved} 个保存到 {folder}。",
+    "save_failed": "无法将附件保存到 {folder}。",
+    "popup_blocked": "浏览器阻止了新窗口。请允许此网站显示弹出窗口，然后重试。",
+    "opening": "正在打开…",
+    "session_ended_title": "你已在此窗口中退出登录",
+    "session_ended_body": "请打开应用并登录，然后重新打开此窗口。",
+    "open_app": "打开应用",
+    "close_window": "关闭窗口",
+    "message_gone_title": "这封邮件已不存在",
+    "message_gone_body": "它已被删除或移动到其他账户。",
+    "message_moved": "这封邮件已移动到其他文件夹。",
+    "message_moved_to": "这封邮件已移动到 {folder}。",
+    "window_not_ready": "新窗口未能及时打开。你的草稿仍保留在这里。"
+  },
+  "desktop_sign_in": {
+    "browser_button": "使用浏览器登录",
+    "browser_waiting": "请在浏览器中完成登录",
+    "browser_unavailable": "此服务器不支持通过浏览器登录。请使用密码。",
+    "browser_failed": "无法通过浏览器登录。请重试。",
+    "server_needed": "请先输入服务器地址。",
+    "server_declined": "你没有允许此服务器,因此没有向它发送任何内容。",
+    "server_invalid": "此服务器地址无效。"
   }
 }

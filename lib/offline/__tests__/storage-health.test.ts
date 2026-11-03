@@ -15,8 +15,8 @@ import {
   wipeEverything,
   type OfflineNotice,
 } from '../offline-mode';
-import { readPersistence, requestPersistence, safariMayDelete, wasEvicted } from '../storage-health';
-import { OFFLINE_CHOICES_KEY, OFFLINE_HEALTH_KEY, useOfflineStore, writeChoice, writeEnabled, writeHealth } from '../state';
+import { readPersistence, requestPersistence, safariMayDelete } from '../storage-health';
+import { markEvicted, OFFLINE_HEALTH_KEY, OFFLINE_SCOPE_KEY, useOfflineStore, writeChoice, writeEnabled, writeHealth } from '../state';
 
 /** Everything on one page: a BroadcastChannel that also reaches other objects here, as in a browser. */
 class FakeChannel {
@@ -37,8 +37,8 @@ class FakeChannel {
 
 class FakeWorker {
   static all: FakeWorker[] = [];
-  /** What the worker found on OPFS. */
-  static fileExisted = true;
+  /** What the worker found on OPFS: no database under this name. */
+  static created = false;
   onmessage: ((event: MessageEvent) => void) | null = null;
   posted: Array<Record<string, unknown>> = [];
   constructor() {
@@ -46,8 +46,8 @@ class FakeWorker {
   }
   postMessage(message: Record<string, unknown>): void {
     this.posted.push(message);
-    if (message.kind === 'open') queueMicrotask(() => this.onmessage?.({ data: { kind: 'result', id: message.id, result: { fileExisted: FakeWorker.fileExisted } } } as MessageEvent));
-    if (message.kind === 'sweep-files') queueMicrotask(() => this.onmessage?.({ data: { kind: 'result', id: message.id, result: 0 } } as MessageEvent));
+    if (message.kind === 'open') queueMicrotask(() => this.onmessage?.({ data: { kind: 'result', id: message.id, result: { created: FakeWorker.created } } } as MessageEvent));
+    if (message.kind === 'prune-files') queueMicrotask(() => this.onmessage?.({ data: { kind: 'result', id: message.id } } as MessageEvent));
   }
   terminate(): void {}
 }
@@ -90,17 +90,17 @@ beforeEach(() => {
   deleteKeyDatabase();
   FakeChannel.open.clear();
   FakeWorker.all = [];
-  FakeWorker.fileExisted = true;
+  FakeWorker.created = false;
   rpcs.length = 0;
   notices.length = 0;
   vi.stubGlobal('BroadcastChannel', FakeChannel);
   vi.stubGlobal('Worker', FakeWorker);
   vi.stubGlobal('FileSystemFileHandle', class {});
   setStorage({ getDirectory: async () => ({ removeEntry: async () => {} }), persist: async () => true, persisted: async () => true });
-  Object.defineProperty(window.navigator, 'locks', { configurable: true, value: { request: async (_name: string, fn: () => unknown) => fn() } });
+  Object.defineProperty(window.navigator, 'locks', { configurable: true, value: { request: async (_name: string, ...rest: unknown[]) => (rest.at(-1) as () => unknown)() } });
   useOfflineStore.setState({
     enabled: [], outbox: [], pendingChanges: 0, conflicts: [], areaConflicts: [], usage: {}, usageBytes: 0, choices: {}, health: {},
-    storageFull: {}, progress: {}, persist: 'unknown', syncing: [], lastSyncedAt: {}, browserOffline: false, downServers: [], startedOffline: false,
+    storeLost: [], storageFull: {}, progress: {}, persist: 'unknown', syncing: [], lastSyncedAt: {}, browserOffline: false, downServers: [], startedOffline: false,
   });
   usePolicyStore.setState({ loaded: true, source: 'server', subject: null, subjectPending: false, policy: { ...usePolicyStore.getState().policy, organisation: DEFAULT_ORGANISATION_POLICY } } as never);
   setStoreBackend(null);
@@ -131,57 +131,63 @@ async function openAsOwner(account: string): Promise<FakeWorker> {
 }
 
 describe('a store the browser cleared', () => {
+  const hadStore = (account: string) => localStorage.setItem('bulwark-store-opened', JSON.stringify([account]));
+
   it('a key with no file: warns, with how many waiting items went', async () => {
     await openAccountKey('acc');
-    writeHealth('acc', { opened: true, pending: 3 });
-    FakeWorker.fileExisted = false;
+    hadStore('acc');
+    writeHealth('acc', { pending: 3 });
+    FakeWorker.created = true;
     await openAsOwner('acc');
-    await vi.waitFor(() => expect(notices).toContainEqual({ kind: 'evicted', lost: 3 }));
-    expect(useOfflineStore.getState().health.acc.evicted?.lost).toBe(3);
-    expect(useOfflineStore.getState().health.acc.pending).toBe(0);
+    await vi.waitFor(() => expect(notices).toContainEqual({ kind: 'store-reset', lost: 3 }));
+    const state = useOfflineStore.getState();
+    expect(state.storeLost).toEqual(['acc']);
+    expect(state.health.acc.reset?.lost).toBe(3);
+    expect(state.health.acc.pending).toBe(0);
   });
 
   it('no key where one was made: warns too', async () => {
-    writeHealth('acc', { opened: true, pending: 0 });
-    FakeWorker.fileExisted = false;
+    hadStore('acc');
     await openAsOwner('acc');
-    await vi.waitFor(() => expect(notices).toContainEqual({ kind: 'evicted', lost: 0 }));
+    await vi.waitFor(() => expect(notices).toContainEqual({ kind: 'store-reset', lost: 0 }));
   });
 
   it('a first open is not an eviction', async () => {
-    FakeWorker.fileExisted = false;
-    await openAsOwner('acc');
-    await vi.waitFor(() => expect(useOfflineStore.getState().health.acc?.opened).toBe(true));
-    expect(notices.filter((n) => n.kind === 'evicted')).toEqual([]);
+    FakeWorker.created = true;
+    const worker = await openAsOwner('acc');
+    await vi.waitFor(() => expect(worker.posted.some((m) => m.kind === 'open')).toBe(true));
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(notices.filter((n) => n.kind === 'store-reset')).toEqual([]);
+    expect(useOfflineStore.getState().health.acc?.reset).toBeUndefined();
   });
 
   it('a normal start is not one either', async () => {
     await openAccountKey('acc');
-    writeHealth('acc', { opened: true, pending: 3 });
+    hadStore('acc');
+    writeHealth('acc', { pending: 3 });
     await openAsOwner('acc');
-    await vi.waitFor(() => expect(FakeWorker.all[0].posted.some((m) => m.kind === 'open')).toBe(true));
     await new Promise((resolve) => setTimeout(resolve, 5));
     expect(notices).toEqual([]);
+    expect(useOfflineStore.getState().health.acc.pending).toBe(3);
   });
 
-  it('files with no key are swept once this tab owns the store', async () => {
-    const { record } = await openAccountKey('acc');
-    const worker = await openAsOwner('acc');
-    await vi.waitFor(() => expect(worker.posted.some((m) => m.kind === 'sweep-files')).toBe(true));
-    expect((worker.posted.find((m) => m.kind === 'sweep-files') as { known: string[] }).known).toEqual([record.file]);
-  });
-
-  it('wasEvicted', () => {
-    expect(wasEvicted({ opened: true, hadKey: true, fileExisted: false })).toBe(true);
-    expect(wasEvicted({ opened: false, hadKey: true, fileExisted: false })).toBe(true);
-    expect(wasEvicted({ opened: true, hadKey: false, fileExisted: false })).toBe(true);
-    expect(wasEvicted({ opened: false, hadKey: false, fileExisted: false })).toBe(false);
-    expect(wasEvicted({ opened: true, hadKey: true, fileExisted: true })).toBe(false);
+  it('tells nobody who wasn\'t signed in to an account dropped by the app', async () => {
+    await openAccountKey('acc');
+    hadStore('acc');
+    writeHealth('acc', { pending: 3 });
+    useOfflineStore.setState({ enabled: ['acc'] });
+    markEvicted('acc');
+    useOfflineStore.setState({ enabled: [] });
+    FakeWorker.created = true;
+    await openAsOwner('acc');
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(notices).toEqual([]);
+    expect(useOfflineStore.getState().health.acc.reset).toBeUndefined();
   });
 
   it('keeps only numbers about it outside the store', () => {
-    writeHealth('acc', { opened: true, pending: 2, evicted: { at: 5, lost: 2 }, lastSync: 9 });
-    expect(JSON.parse(localStorage.getItem(OFFLINE_HEALTH_KEY)!)).toEqual({ acc: { opened: true, pending: 2, evicted: { at: 5, lost: 2 }, lastSync: 9 } });
+    writeHealth('acc', { pending: 2, reset: { at: 5, lost: 2 }, lastSync: 9 });
+    expect(JSON.parse(localStorage.getItem(OFFLINE_HEALTH_KEY)!)).toEqual({ acc: { pending: 2, reset: { at: 5, lost: 2 }, lastSync: 9 } });
   });
 });
 
@@ -264,7 +270,7 @@ describe('removing an account', () => {
     writeEnabled(['gone', 'stays']);
     writeChoice('gone', { days: 30 });
     writeChoice('stays', { days: 90 });
-    writeHealth('gone', { opened: true, pending: 1 });
+    writeHealth('gone', { pending: 1 });
     await openAsOwner('stays');
 
     await wipeAccount('gone');
@@ -274,7 +280,7 @@ describe('removing an account', () => {
     expect(rpcs).toContainEqual({ method: 'removeAccount', params: { account: 'gone', file: record.file } });
     expect(useOfflineStore.getState().choices).toEqual({ stays: { days: 90 } });
     expect(useOfflineStore.getState().health.gone).toBeUndefined();
-    expect(JSON.parse(localStorage.getItem(OFFLINE_CHOICES_KEY)!)).toEqual({ stays: { days: 90 } });
+    expect(JSON.parse(localStorage.getItem(OFFLINE_SCOPE_KEY)!)).toEqual({ stays: { days: 90 } });
   });
 
   it('with the last account, deletes the pool and every key', async () => {
@@ -288,7 +294,7 @@ describe('removing an account', () => {
 
     expect(removeEntry).toHaveBeenCalledWith('.bulwark-store', { recursive: true });
     await vi.waitFor(async () => expect(await getAccountRecord('acc')).toBeNull());
-    expect(localStorage.getItem(OFFLINE_CHOICES_KEY)).toBeNull();
+    expect(localStorage.getItem(OFFLINE_SCOPE_KEY)).toBeNull();
     expect(localStorage.getItem(OFFLINE_HEALTH_KEY)).toBeNull();
   });
 
@@ -313,13 +319,13 @@ describe('a full sign-out', () => {
     await openAccountKey('acc');
     writeEnabled(['acc']);
     writeChoice('acc', { days: 30 });
-    writeHealth('acc', { opened: true, pending: 2 });
+    writeHealth('acc', { pending: 2 });
 
     purgeSignedOutData();
 
     await vi.waitFor(() => expect(removeEntry).toHaveBeenCalledWith('.bulwark-store', { recursive: true }));
     await vi.waitFor(async () => expect(await getAccountRecord('acc')).toBeNull());
-    for (const key of ['bulwark-offline-accounts', OFFLINE_CHOICES_KEY, OFFLINE_HEALTH_KEY]) expect(localStorage.getItem(key)).toBeNull();
+    for (const key of ['bulwark-offline-accounts', OFFLINE_SCOPE_KEY, OFFLINE_HEALTH_KEY]) expect(localStorage.getItem(key)).toBeNull();
     expect(useOfflineStore.getState().choices).toEqual({});
     expect(useOfflineStore.getState().health).toEqual({});
   });
