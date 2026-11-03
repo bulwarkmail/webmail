@@ -45,6 +45,18 @@ interface NavItem {
   badge?: number;
 }
 
+/**
+ * How wide a phone tab bar entry should be, or null when all of them fit at
+ * the normal width. A bar that doesn't fit shows whole entries and half of
+ * the next: half an entry says there is more to scroll to, a few cut-off
+ * pixels only look broken.
+ */
+export function tabBarItemWidth(barWidth: number, count: number, minWidth = 52): number | null {
+  if (!barWidth || count * minWidth <= barWidth) return null;
+  const whole = Math.max(1, Math.floor(barWidth / minWidth - 0.5));
+  return barWidth / (whole + 0.5);
+}
+
 interface NavigationRailProps {
   orientation?: "vertical" | "horizontal";
   collapsed?: boolean;
@@ -236,6 +248,14 @@ export function NavigationRail({
   useEffect(() => {
     tabBarScrollRef.current?.querySelector('[aria-current="page"]')?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
   }, [pathname]);
+  const [tabBarWidth, setTabBarWidth] = useState(0);
+  useEffect(() => {
+    const bar = tabBarScrollRef.current;
+    if (!bar || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => setTabBarWidth(bar.clientWidth));
+    observer.observe(bar);
+    return () => observer.disconnect();
+  }, [orientation]);
   const router = useRouter();
   const { appLogoLightUrl, appLogoDarkUrl } = useConfig();
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
@@ -406,6 +426,7 @@ export function NavigationRail({
     const scrollingCount = visibleItems.length + pluginPages.length
       + visibleSidebarApps.filter((app) => app.showOnMobile).length
       + (isStalwartAdmin || adminActive ? 1 : 0);
+    const itemWidth = tabBarItemWidth(tabBarWidth, scrollingCount);
     return (
       <nav
         ref={tabBarRef}
@@ -422,7 +443,10 @@ export function NavigationRail({
           ref={tabBarScrollRef}
           data-mobile-navigation-scroll=""
           className="flex items-center min-w-0 overflow-x-auto mobile-scroll-hidden"
-          style={{ flex: `${scrollingCount} 1 ${scrollingCount * 52}px` }}
+          style={{
+            flex: `${scrollingCount} 1 ${scrollingCount * 52}px`,
+            ...(itemWidth ? { "--tab-item-width": `${itemWidth}px` } as React.CSSProperties : {}),
+          }}
         >
         {visibleItems.map((item) => {
           const isActive = getIsActive(item.href, item.id);
@@ -434,7 +458,7 @@ export function NavigationRail({
               onClick={handleNavClick(item.id as 'mail' | 'calendar' | 'contacts' | 'files' | 'settings')}
               data-tour={`nav-${item.id}`}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[52px]",
+                "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[var(--tab-item-width,52px)]",
                 "transition-colors duration-150",
                 isActive
                   ? "text-primary"
@@ -476,7 +500,7 @@ export function NavigationRail({
               data-plugin-page-link={`${page.pluginId}/${page.id}`}
               title={page.pluginName}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[52px]",
+                "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[var(--tab-item-width,52px)]",
                 "transition-colors duration-150",
                 isActive
                   ? "text-primary"
@@ -515,7 +539,7 @@ export function NavigationRail({
                 }
               }}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[52px]",
+                "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[var(--tab-item-width,52px)]",
                 "transition-colors duration-150",
                 isActive
                   ? "text-primary"
@@ -538,7 +562,7 @@ export function NavigationRail({
           <a
             href={`${getPathPrefix()}/admin`}
             className={cn(
-              "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[52px]",
+              "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[var(--tab-item-width,52px)]",
               "transition-colors duration-150",
               adminActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
             )}
