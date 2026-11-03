@@ -39,6 +39,38 @@ describe('plugin dialog focus', () => {
     await waitFor(() => expect(opener).toHaveFocus());
   });
 
+  it('leaves Enter to the focused button, so Cancel on a destructive confirm never answers yes', async () => {
+    render(<PluginDialogHost />);
+    let answer: Promise<boolean>;
+    act(() => { answer = awaitDialog({ pluginId: 'p', kind: 'confirm', title: 'Delete it?', message: 'Sure?', danger: true }); });
+    const cancel = screen.getByRole('button', { name: 'cancel' });
+    expect(cancel).toHaveFocus();
+
+    // Not prevented: the browser turns Enter on a button into a click on it.
+    let notPrevented = false;
+    await act(async () => { notPrevented = fireEvent.keyDown(cancel, { key: 'Enter' }); });
+    expect(notPrevented).toBe(true);
+    expect(head()).not.toBeNull();
+
+    await act(async () => { fireEvent.click(cancel); });
+    await expect(answer!).resolves.toBe(false);
+  });
+
+  it('does not take Enter from the message of a destructive confirm as a yes', async () => {
+    render(<PluginDialogHost />);
+    act(() => { void awaitDialog({ pluginId: 'p', kind: 'confirm', title: 'Delete it?', message: 'Sure?', danger: true }); });
+    await act(async () => { fireEvent.keyDown(screen.getByText('Sure?'), { key: 'Enter' }); });
+    expect(head()).not.toBeNull();
+  });
+
+  it('still accepts a harmless confirm on Enter from its message', async () => {
+    render(<PluginDialogHost />);
+    let answer: Promise<boolean>;
+    act(() => { answer = awaitDialog({ pluginId: 'p', kind: 'confirm', title: 'Send?', message: 'Sure?' }); });
+    await act(async () => { fireEvent.keyDown(screen.getByText('Sure?'), { key: 'Enter' }); });
+    await expect(answer!).resolves.toBe(true);
+  });
+
   it('starts in the first field of a prompt and marks required fields', async () => {
     render(<PluginDialogHost />);
     let answer: Promise<Record<string, string> | null>;

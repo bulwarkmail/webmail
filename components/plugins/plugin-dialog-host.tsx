@@ -169,6 +169,9 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
         // validation and works from within an input); confirm/alert accept.
         // Custom dialogs resolve only via their own onResult callback or the
         // host's X/Escape - an Enter press has no defined meaning for them.
+        // On a button Enter is that button's: Cancel must not answer yes. And
+        // a destructive confirm only says yes from its own button.
+        if ((e.target as Element | null)?.closest?.('button') || current.danger) return;
         e.preventDefault();
         resolveThis(true);
       }
