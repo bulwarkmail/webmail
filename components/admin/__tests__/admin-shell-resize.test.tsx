@@ -68,6 +68,6 @@ describe('AdminShell across the desktop breakpoint', () => {
         <p>page</p>
       </AdminShell>,
     );
-    expect(scrollIntoView.mock.contexts.some((el: Element) => el.getAttribute('aria-current') === 'page')).toBe(true);
+    expect(scrollIntoView.mock.contexts.some((el) => (el as Element).getAttribute('aria-current') === 'page')).toBe(true);
   });
 });

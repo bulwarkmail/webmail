@@ -142,7 +142,7 @@ describe('Escape inside a slot frame', () => {
     if (wrapperAttr) wrapper.setAttribute(wrapperAttr, 'p1');
     document.body.appendChild(wrapper);
     const inst = createSlotInstance({
-      plugin: plugin(), slot: 'plugin-dialog', code: '', locale: 'en', tier: 'untrusted', extraProps: {}, hostContainer: wrapper,
+      plugin: plugin(), slot: 'plugin-dialog', code: '', locale: 'en', tier: 'untrusted', extraProps: {}, hostContainer: wrapper, onResize: () => {},
     });
     instances.push(inst);
     const keys: string[] = [];
