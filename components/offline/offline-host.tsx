@@ -53,6 +53,9 @@ export function OfflineHost() {
         case 'storage-failed':
           toast.warning(tConflictsRef.current('storage_failed'), { duration: 0 });
           break;
+        case 'store-reset':
+          toast.warning(tConflictsRef.current('store_reset'), { duration: 0 });
+          break;
         case 'store-unavailable':
           toast.warning(tConflictsRef.current('store_unavailable'), { duration: 0 });
           break;

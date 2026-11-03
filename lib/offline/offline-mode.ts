@@ -55,7 +55,7 @@ import {
 } from './queue';
 import { clearHandoffs } from '@/lib/launch-handoff';
 import { clearEvicted, EVICTED_KEEP_MS, forgetMailSnapshot, isEvicted, offlineScopeFor, isOfflineNow, OFFLINE_ACCOUNTS_KEY, readEnabledFrom, readEvicted, visibleAccounts, serverKey, setServerDown, useOfflineStore, writeEnabled, type OutboxRow } from './state';
-import { flushQueue, LOOKUP_WAIT_MS, settleStaleSends } from './flush';
+import { flushQueue, LOOKUP_WAIT_MS, SENDING_STALE_MS, settleStaleSends } from './flush';
 import { LEGACY_DB_NAME, moveLegacyOutbox } from './migrate-legacy';
 import { deleteShellCaches, tellServiceWorker } from './shell';
 import { rememberLost } from './lost';
@@ -69,6 +69,7 @@ export type OfflineNotice =
   | { kind: 'conflict'; count: number }
   | { kind: 'storage-failed' }
   | { kind: 'store-unavailable' }
+  | { kind: 'store-reset' }
   | { kind: 'refused-delete' }
   | { kind: 'refused-other' }
   | { kind: 'forbidden' }
@@ -168,6 +169,12 @@ const storeHooks: StorePageHooks = {
     // Through the client: a 401 there runs its token renewal or re-auth.
     await client.requestNetworkOnly([['Core/echo', {}, '0']]);
     return client.getAuthHeader();
+  },
+  onStoreLost(account) {
+    // Whoever is here wasn't signed in to a dropped account: nothing to tell them.
+    if (isEvicted(account)) return;
+    useOfflineStore.setState((s) => ({ storeLost: [...new Set([...s.storeLost, account])] }));
+    notify({ kind: 'store-reset' });
   },
   onEvent(event) {
     if (event.type === 'synced') {
@@ -508,6 +515,7 @@ export async function refreshQueueState(): Promise<void> {
     // What an account's store can't tell right now is still there.
     const unread = useOfflineStore.getState().outbox.filter((row) => failed.includes(row.account));
     useOfflineStore.setState({ outbox: [...unread, ...rows], pendingChanges: patches, conflicts });
+    if (rows.some((row) => row.status === 'sending')) checkStaleSendsLater();
   } catch {
     // The store is being deleted, or can't start.
     noteStoreUnavailable();
@@ -935,13 +943,22 @@ export function startOfflineMode(): () => void {
   void sweepAccountsGone();
 
   // Session, then a sync, for every account signed in with offline mode on.
+  // A client that just became real is what the waiting mail was waiting for:
+  // the flush at the start may have run before it was connected.
+  const flushedFor = new WeakSet<object>();
   const syncSignedIn = () => {
+    let connected = false;
     for (const account of useOfflineStore.getState().enabled) {
       const client = onlineClientFor(account);
       if (!client || !offlineActive(account)) continue;
       void getStore().ensureOpen(account).then(() => getStore().refresh(account)).catch(() => {});
       scheduleSync(account, 3_000);
+      if (!flushedFor.has(client)) {
+        flushedFor.add(client);
+        if (!isOfflineNow(client.getServerUrl())) connected = true;
+      }
     }
+    if (connected) scheduleFlushAll(1_000);
   };
   cleanups.push(useAuthStore.subscribe((state, prev) => {
     if (state.client !== prev.client || state.connectedAccountsRevision !== prev.connectedAccountsRevision) syncSignedIn();
@@ -951,10 +968,17 @@ export function startOfflineMode(): () => void {
   const interval = setInterval(() => {
     for (const account of useOfflineStore.getState().enabled) scheduleSync(account, 0);
   }, SYNC_INTERVAL_MS);
-  const reconnect = setInterval(() => { void leaveOfflineStart(); }, RECONNECT_MS);
+  const reconnect = setInterval(() => {
+    void leaveOfflineStart();
+    // Nothing else tells a server that was down is back: a client that thinks
+    // it's down has no reason to ask it. A passing probe starts the flush.
+    for (const server of useOfflineStore.getState().downServers) void probeServer(server);
+  }, RECONNECT_MS);
   cleanups.push(() => {
     clearInterval(interval);
     clearInterval(reconnect);
+    if (staleCheck) clearTimeout(staleCheck);
+    staleCheck = null;
   });
 
   if (useOfflineStore.getState().enabled.length > 0) void tellServiceWorker(true);
@@ -987,6 +1011,17 @@ async function sweepAccountsGone(now = Date.now()): Promise<void> {
     const gone = at !== undefined ? now - at > EVICTED_KEEP_MS : !accounts.some((entry) => entry.id === account);
     if (gone) await wipeAccount(account).catch(() => {});
   }
+}
+
+let staleCheck: ReturnType<typeof setTimeout> | null = null;
+
+/** A send taken by a tab that closed on the way: nothing else comes back to it. */
+function checkStaleSendsLater(): void {
+  if (staleCheck) return;
+  staleCheck = setTimeout(() => {
+    staleCheck = null;
+    void refreshQueueState().then(() => scheduleFlushAll(0));
+  }, SENDING_STALE_MS + 1_000);
 }
 
 /** How often the store catches up while the tab is open, on top of pushes. */

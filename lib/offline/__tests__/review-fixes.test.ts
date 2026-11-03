@@ -61,6 +61,7 @@ function setOnline(online: boolean) {
 }
 
 let stop: () => void = () => {};
+const useRealClient = useAuthStore.getState().getClientForAccount;
 let store: InProcessStore;
 
 beforeEach(async () => {
@@ -365,8 +366,10 @@ describe('what a sign-out would delete', () => {
 
   it('answers with the last known count when the store hangs', async () => {
     useOfflineStore.setState({ outbox: [{ id: 1, account: 'acc', createdAt: 1, subject: 'A', to: [], status: 'waiting' }] as never, pendingChanges: 2 });
-    vi.spyOn(store, 'area').mockImplementation(() => new Promise(() => {}));
+    const hung: Array<(error: Error) => void> = [];
+    vi.spyOn(store, 'area').mockImplementation(() => new Promise((_resolve, reject) => { hung.push(reject); }));
     expect(await unsentCount('acc', 10)).toEqual({ messages: 1, changes: 2 });
+    for (const reject of hung) reject(new Error('Gone'));
   });
 
   it('doesn\'t count another signed-out account\'s waiting mail', async () => {
@@ -463,6 +466,64 @@ describe('a send the server couldn\'t take right now', () => {
     await flushQueue('acc', fakeClient('https://mail.example.org', { sendEmail, uploadBlob }) as unknown as JMAPClient, { notify: vi.fn(), allowed: () => true });
     expect(sendEmail).not.toHaveBeenCalled();
     expect((await readQueue('acc')).outbox[0].status).toBe('waiting');
+  });
+});
+
+describe('waiting mail after a normal start', () => {
+  const realFetchPolicy = usePolicyStore.getState().fetchPolicy;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    // rawPolicy: what the policy is worked out from again when the subject changes.
+    usePolicyStore.setState({ fetchPolicy: vi.fn(async () => {}), source: 'server', rawPolicy: usePolicyStore.getState().policy } as never);
+    useOfflineStore.setState({ downServers: [] });
+    writeEnabled(['acc']);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    usePolicyStore.setState({ fetchPolicy: realFetchPolicy });
+    useOfflineStore.setState({ downServers: [] });
+  });
+
+  it('goes when the client becomes real after the flush at the start', async () => {
+    await queueSend('acc', { subject: 'Hello', to: [] }, { kind: 'email', args: [] });
+    stop = startOfflineMode();
+    // The flush at the start finds no client yet.
+    await vi.advanceTimersByTimeAsync(5_000);
+    const client = fakeClient();
+    useAuthStore.setState({ getClientForAccount: () => client, client: client as never } as never);
+    try {
+      await vi.advanceTimersByTimeAsync(1_500);
+      expect(client.sendEmail).toHaveBeenCalledTimes(1);
+    } finally {
+      useAuthStore.setState({ getClientForAccount: useRealClient, client: null });
+    }
+  });
+
+  it('comes back to a send a closed tab left behind', async () => {
+    const id = await queueSend('acc', { subject: 'Hello', to: [] }, { kind: 'email', args: [] });
+    await claimForSending('acc', id);
+    stop = startOfflineMode();
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect((await readQueue('acc')).outbox[0].status).toBe('sending');
+    await vi.advanceTimersByTimeAsync(SENDING_STALE_MS);
+    expect((await readQueue('acc')).outbox[0].status).toBe('uncertain');
+  });
+
+  it('asks a server that was down, on an interval, and flushes when it answers', async () => {
+    const fetcher = vi.fn(async (_url: string) => new Response(null, { status: 200 }));
+    vi.stubGlobal('fetch', fetcher);
+    try {
+      stop = startOfflineMode();
+      await vi.advanceTimersByTimeAsync(5_000);
+      setServerDown('https://mail.example.org', true);
+      await vi.advanceTimersByTimeAsync(30_000);
+      expect(fetcher.mock.calls.map(([url]) => String(url))).toContain('https://mail.example.org/.well-known/jmap');
+      expect(isOfflineNow('https://mail.example.org')).toBe(false);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
 

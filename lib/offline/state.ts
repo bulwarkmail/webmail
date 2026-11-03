@@ -32,6 +32,11 @@ interface OfflineState {
   downServers: string[];
   /** The app started without the server, from the mail on this device. */
   startedOffline: boolean;
+  /**
+   * Accounts whose store came back empty since this page loaded: the browser
+   * cleared their key or file. Whatever warns about eviction can go by this.
+   */
+  storeLost: string[];
   outbox: OutboxRow[];
   pendingChanges: number;
   /** Changes the server refused, or that met a message changed on another device. */
@@ -57,6 +62,7 @@ export const useOfflineStore = create<OfflineState>()(() => ({
   browserOffline: typeof navigator !== 'undefined' && navigator.onLine === false,
   downServers: [],
   startedOffline: false,
+  storeLost: [],
   outbox: [],
   pendingChanges: 0,
   conflicts: [],
