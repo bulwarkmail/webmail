@@ -237,6 +237,10 @@ export function CalendarMonthView({
   const visibleMonthRef = useRef(visibleMonthDate);
   const scrollFrameRef = useRef<number | null>(null);
 
+  // The week at the top of the view and how far it is scrolled, as a share of its
+  // height. Rows change height with the window; see the effect below.
+  const topWeekRef = useRef<{ key: string; progress: number } | null>(null);
+
   const sampleVisibleMonth = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -246,6 +250,14 @@ export function CalendarMonthView({
       const rect = row.getBoundingClientRect();
       return { weekStart: parseDayKey(row.dataset.week ?? ""), top: rect.top, bottom: rect.bottom };
     });
+    const viewTop = box.top + hHeight;
+    const topRow = rows.find((row) => row.bottom > viewTop);
+    if (topRow) {
+      topWeekRef.current = {
+        key: dayKey(topRow.weekStart),
+        progress: Math.max(0, viewTop - topRow.top) / Math.max(1, topRow.bottom - topRow.top),
+      };
+    }
     const day = mostVisibleMonthDay(rows, box.top + hHeight, box.top + el.clientHeight, (d) => `${getYear(d)}-${getMonth(d)}`);
     if (!day) return;
     const current = visibleMonthRef.current;
@@ -263,6 +275,35 @@ export function CalendarMonthView({
     });
   }, [sampleVisibleMonth]);
 
+  // A resized window or a turned phone changes the height of every week while
+  // the scroll offset stays put, which slid the view to other weeks under a title
+  // that still named the month. Keep the same week at the top. Watched on the
+  // rows themselves, since their height also depends on what is in them.
+  const weekHeightsRef = useRef(new Map<string, number>());
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      let changed = false;
+      el.querySelectorAll<HTMLElement>("[data-week]").forEach((row) => {
+        const key = row.dataset.week ?? "";
+        const height = row.getBoundingClientRect().height;
+        const known = weekHeightsRef.current.get(key);
+        if (known !== undefined && known !== height) changed = true;
+        weekHeightsRef.current.set(key, height);
+      });
+      const anchor = topWeekRef.current;
+      if (!changed || !anchor) return;
+      const row = el.querySelector<HTMLElement>(`[data-week="${anchor.key}"]`);
+      if (!row) return;
+      const rect = row.getBoundingClientRect();
+      const viewTop = el.getBoundingClientRect().top + (headerRef.current?.offsetHeight ?? 0);
+      el.scrollTop += rect.top + anchor.progress * rect.height - viewTop;
+    });
+    el.querySelectorAll("[data-week]").forEach((row) => observer.observe(row));
+    return () => observer.disconnect();
+  }, [weekSegments]);
+
   // Navigation puts the first week of the focused month at the top.
   const scrollToFocus = useCallback(() => {
     const el = scrollRef.current;
@@ -274,6 +315,7 @@ export function CalendarMonthView({
       const hHeight = headerRef.current?.offsetHeight ?? 0;
       el.scrollTop += row.getBoundingClientRect().top - el.getBoundingClientRect().top - hHeight;
     }
+    topWeekRef.current = { key: targetKey, progress: 0 };
     visibleMonthRef.current = focus.date;
     setVisibleMonthDate(focus.date);
   }, [focus.date, getMonthGridDays]);
