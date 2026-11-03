@@ -45,6 +45,18 @@ export interface OfflineHooks {
   recordBlob(client: OfflineClientRef, blobId: string, accountId: string, blob: Blob): void;
   /** Keep a file to upload later; the stand-in blob id, or null when offline mode doesn't cover the client. */
   holdUpload(client: OfflineClientRef, file: File, accountId: string): Promise<{ blobId: string; size: number; type: string } | null>;
+  /**
+   * Search calls answered from the local store while the server is asked too
+   * (lib/jmap/search-merge.ts). Null when the store doesn't cover the client.
+   * Left out when there is no store, and searches then go to the server alone.
+   */
+  searchLocal?(client: OfflineClientRef, methodCalls: OfflineMethodCall[]): Promise<OfflineResponse | null>;
+  /**
+   * Real ids for stand-in ids the page still holds (lib/jmap/stand-in-ids.ts), or
+   * null for one that hasn't reached the server yet. Without it the client sends
+   * ids as they are.
+   */
+  resolveStandIns?(client: OfflineClientRef, ids: string[]): Promise<Record<string, string | null>>;
 }
 
 const KEY = '__bulwarkOfflineHooks';

@@ -26,6 +26,8 @@ const PAGE = 500;
 const PAIRS_PER_REQUEST = 4;
 const BODY_BATCH_IDS = 100;
 const BODY_BATCH_BYTES = 8 * 1024 * 1024;
+/** Bodies fetched before one commit. Every commit writes search index segments, so fewer is much cheaper. */
+const BODY_REQUESTS_PER_COMMIT = 5;
 const MAX_BODY_VALUE_BYTES = 1_000_000;
 const DELTA_BATCH = 500;
 
@@ -83,11 +85,15 @@ async function syncMailboxes(ctx: SyncContext, jmap: string): Promise<void> {
 
 interface ListCursor { position: number; gen: number; captured: string }
 
+/** The generation of the last full listing. One row is enough: every row of a pass has it or an older one. */
+function currentGen(ctx: SyncContext, jmap: string): number {
+  return Number(ctx.db.get<{ gen: number }>('SELECT gen FROM email WHERE jmap = ? ORDER BY gen DESC LIMIT 1', [jmap])?.gen ?? 0);
+}
+
 async function startFullList(ctx: SyncContext, jmap: string): Promise<ListCursor> {
   const response = await ctx.transport.request([['Email/get', { accountId: jmap, ids: [], properties: ['id'] }, 's']], MAIL_USING);
   const captured = String(responseFor(response, 's')[1].state);
-  const gen = (ctx.db.get<{ gen: number | null }>('SELECT MAX(gen) AS gen FROM email WHERE jmap = ?', [jmap])?.gen ?? 0) + 1;
-  const cursor: ListCursor = { position: 0, gen: Number(gen), captured };
+  const cursor: ListCursor = { position: 0, gen: currentGen(ctx, jmap) + 1, captured };
   ctx.db.transaction(() => ctx.setSyncState(jmap, 'Email', { state: null, phase: 'list', cursor: { ...cursor } }));
   return cursor;
 }
@@ -171,11 +177,11 @@ async function syncEmailDelta(ctx: SyncContext, jmap: string, since: string, tar
       const created = new Set(page.created);
       const newIds: string[] = [];
       ctx.db.transaction(() => {
+        const gen = fetched.length > 0 ? currentGen(ctx, jmap) : 0;
         for (const email of fetched) {
           const known = ctx.db.get('SELECT 1 AS x FROM email WHERE jmap = ? AND id = ?', [jmap, email.id]);
           // An old message changing doesn't pull it into the window.
           if (!known && !inWindow(ctx, email)) continue;
-          const gen = Number(ctx.db.get<{ gen: number | null }>('SELECT MAX(gen) AS gen FROM email WHERE jmap = ?', [jmap])?.gen ?? 0);
           upsertEmail(ctx.db, jmap, email, gen);
           if (!known && created.has(email.id)) newIds.push(email.id);
         }
@@ -254,39 +260,48 @@ async function backfillBodies(ctx: SyncContext, jmap: string): Promise<void> {
   let done = 0;
   const totalRow = ctx.db.get<{ n: number }>('SELECT COUNT(*) AS n FROM email WHERE jmap = ? AND body_state = 0', [jmap]);
   const total = Number(totalRow?.n ?? 0);
+  if (total === 0) return;
   for (;;) {
     if (ctx.stopped()) return;
     const candidates = ctx.db.all<{ rowid: number; id: string; size: number; json: string }>(
       'SELECT rowid, id, size, json FROM email WHERE jmap = ? AND body_state = 0 ORDER BY received_at DESC LIMIT ?',
-      [jmap, BODY_BATCH_IDS],
+      [jmap, BODY_BATCH_IDS * BODY_REQUESTS_PER_COMMIT],
     );
     if (candidates.length === 0) return;
-    let bytes = 0;
-    const batch: typeof candidates = [];
-    for (const row of candidates) {
-      if (batch.length > 0 && bytes + Number(row.size) > BODY_BATCH_BYTES) break;
-      bytes += Number(row.size);
-      batch.push(row);
+    const fetched = new Map<string, EmailObject>();
+    const asked: typeof candidates = [];
+    let next = 0;
+    for (let request = 0; request < BODY_REQUESTS_PER_COMMIT && next < candidates.length; request += 1) {
+      let bytes = 0;
+      const batch: typeof candidates = [];
+      while (next < candidates.length && batch.length < BODY_BATCH_IDS) {
+        const row = candidates[next];
+        if (batch.length > 0 && bytes + Number(row.size) > BODY_BATCH_BYTES) break;
+        bytes += Number(row.size);
+        batch.push(row);
+        next += 1;
+      }
+      const response = await ctx.transport.request([['Email/get', {
+        accountId: jmap,
+        ids: batch.map((row) => String(row.id)),
+        properties: ['id', ...EMAIL_BODY_PROPERTIES],
+        fetchTextBodyValues: true,
+        fetchHTMLBodyValues: true,
+        fetchAllBodyValues: true,
+        maxBodyValueBytes: MAX_BODY_VALUE_BYTES,
+      }, 'b']], MAIL_USING);
+      for (const email of responseFor(response, 'b')[1].list as EmailObject[]) fetched.set(email.id, email);
+      asked.push(...batch);
+      if (ctx.stopped()) break;
     }
-    const response = await ctx.transport.request([['Email/get', {
-      accountId: jmap,
-      ids: batch.map((row) => String(row.id)),
-      properties: ['id', ...EMAIL_BODY_PROPERTIES],
-      fetchTextBodyValues: true,
-      fetchHTMLBodyValues: true,
-      fetchAllBodyValues: true,
-      maxBodyValueBytes: MAX_BODY_VALUE_BYTES,
-    }, 'b']], MAIL_USING);
-    const list = responseFor(response, 'b')[1].list as EmailObject[];
-    const byId = new Map(list.map((email) => [email.id, email]));
     ctx.db.transaction(() => {
-      for (const row of batch) {
-        const full = byId.get(String(row.id));
+      for (const row of asked) {
+        const full = fetched.get(String(row.id));
         if (full) storeBody(ctx.db, Number(row.rowid), String(row.json), full);
         else ctx.db.run('UPDATE email SET body_state = 2 WHERE rowid = ?', [row.rowid]);
       }
     });
-    done += batch.length;
+    done += asked.length;
     ctx.emit({ type: 'progress', account: ctx.account, area: 'mail', phase: 'bodies', done, total });
   }
 }

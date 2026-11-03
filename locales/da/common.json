@@ -249,6 +249,28 @@
     "active_account": "Aktiv",
     "switching_account": "Skifter konto..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Ny besked",
+    "shortcut_calendar": "Kalender",
+    "shortcut_contacts": "Kontakter",
+    "unsupported_file": "{name} kan ikke åbnes her.",
+    "open_failed": "Filen kunne ikke åbnes. Prøv at åbne den igen.",
+    "share_gone": "Det, du delte, er her ikke længere. Del det venligst igen.",
+    "share_files_lost": "De delte filer kunne ikke gemmes. Tilføj dem til beskeden igen.",
+    "ics_needs_server": "Import af en kalenderfil kræver forbindelse til serveren. Importen starter, når du er online igen.",
+    "contacts_need_server": "Import af kontakter kræver forbindelse til serveren. Prøv igen, når du er online igen.",
+    "share_confirm_title": "Vil du starte en ny besked?",
+    "share_confirm_message": "Et andet websted eller en anden app vil starte en besked. Intet uploades eller gemmes, medmindre du accepterer.",
+    "share_confirm_subject": "Emne:",
+    "share_confirm_text": "Tekst:",
+    "share_confirm_files": "{count, plural, one {Fil:} other {Filer:}}",
+    "share_confirm_accept": "Start besked",
+    "share_confirm_decline": "Start ikke",
+    "share_cut": "Den delte tekst var for lang og er blevet forkortet.",
+    "handoff_expired": "Noget, du åbnede eller delte, ventede for længe og er væk. Åbn eller del det igen.",
+    "compose_waiting": "Luk denne besked for at starte den næste.",
+    "save_first_failed": "Din besked kunne ikke gemmes, så filen er ikke åbnet. Gem beskeden, og åbn derefter kalenderen eller kontakterne."
+  },
   "sidebar_apps": {
     "modal_title": "Sidepanel-apps",
     "add_new": "Tilføj app",
@@ -4909,6 +4931,9 @@
     "mini_has_events": "har begivenheder",
     "mini_week_number": "Uge {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "Denne ændring kræver forbindelse til serveren. Ret kun denne begivenhed for nu, eller prøv igen, når du er online."
+  },
   "calendar_event_notifications": {
     "someone": "Nogen",
     "invited": "{name} har inviteret dig til \"{title}\"",
@@ -6349,6 +6374,12 @@
     "easy_read": "Let læst",
     "sign_language": "Tegnsprog",
     "new_tab": "åbner i en ny fane"
+  },
+  "pwaNotify": {
+    "action_archive": "Arkivér",
+    "action_mark_read": "Markér som læst",
+    "action_reply": "Svar",
+    "reply_placeholder": "Skriv et svar"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "Tilføj til kalender",

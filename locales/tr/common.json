@@ -249,6 +249,28 @@
     "active_account": "Etkin",
     "switching_account": "Hesap değiştiriliyor..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Yeni ileti",
+    "shortcut_calendar": "Takvim",
+    "shortcut_contacts": "Kişiler",
+    "unsupported_file": "{name} burada açılamıyor.",
+    "open_failed": "Dosya açılamadı. Yeniden açmayı deneyin.",
+    "share_gone": "Paylaştığınız içerik artık burada değil. Lütfen yeniden paylaşın.",
+    "share_files_lost": "Paylaşılan dosyalar saklanamadı. Onları iletiye yeniden ekleyin.",
+    "ics_needs_server": "Takvim dosyasını içe aktarmak için sunucu bağlantısı gerekir. İçe aktarma, yeniden çevrimiçi olduğunuzda başlar.",
+    "contacts_need_server": "Kişileri içe aktarmak için sunucu bağlantısı gerekir. Yeniden çevrimiçi olduğunuzda tekrar deneyin.",
+    "share_confirm_title": "Yeni bir ileti başlatılsın mı?",
+    "share_confirm_message": "Başka bir site veya uygulama ileti başlatmak istiyor. Siz kabul etmedikçe hiçbir şey yüklenmez veya kaydedilmez.",
+    "share_confirm_subject": "Konu:",
+    "share_confirm_text": "Metin:",
+    "share_confirm_files": "{count, plural, one {Dosya:} other {Dosyalar:}}",
+    "share_confirm_accept": "İletiyi başlat",
+    "share_confirm_decline": "Başlatma",
+    "share_cut": "Paylaşılan metin çok uzundu ve kısaltıldı.",
+    "handoff_expired": "Açtığınız veya paylaştığınız bir şey çok uzun süre bekledi ve artık yok. Lütfen yeniden açın veya paylaşın.",
+    "compose_waiting": "Sonrakini başlatmak için bu iletiyi kapatın.",
+    "save_first_failed": "İletiniz kaydedilemedi, bu yüzden dosya açılmadı. İletiyi kaydedin, ardından takvimi veya kişileri açın."
+  },
   "sidebar_apps": {
     "modal_title": "Kenar çubuğu uygulamaları",
     "add_new": "Uygulama ekle",
@@ -4909,6 +4931,9 @@
     "mini_has_events": "etkinlik var",
     "mini_week_number": "{week}. hafta"
   },
+  "calendar_offline": {
+    "split_needs_server": "Bu değişiklik için sunucu bağlantısı gerekir. Şimdilik yalnızca bu etkinliği değiştirin veya yeniden çevrimiçi olduğunuzda tekrar deneyin."
+  },
   "calendar_event_notifications": {
     "someone": "Birisi",
     "invited": "{name} sizi \"{title}\" etkinliğine davet etti",
@@ -6349,6 +6374,12 @@
     "easy_read": "Kolay okunur",
     "sign_language": "İşaret dili",
     "new_tab": "yeni sekmede açılır"
+  },
+  "pwaNotify": {
+    "action_archive": "Arşivle",
+    "action_mark_read": "Okundu olarak işaretle",
+    "action_reply": "Yanıtla",
+    "reply_placeholder": "Yanıt yazın"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "Takvime ekle",

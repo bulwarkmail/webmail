@@ -249,6 +249,28 @@
     "active_account": "アクティブ",
     "switching_account": "アカウントを切り替えています..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "新規メッセージ",
+    "shortcut_calendar": "カレンダー",
+    "shortcut_contacts": "連絡先",
+    "unsupported_file": "{name} はここでは開けません。",
+    "open_failed": "ファイルを開けませんでした。もう一度開いてください。",
+    "share_gone": "共有した内容はもうありません。もう一度共有してください。",
+    "share_files_lost": "共有したファイルを保持できませんでした。メッセージにもう一度追加してください。",
+    "ics_needs_server": "カレンダーファイルのインポートにはサーバーへの接続が必要です。オンラインに戻るとインポートが始まります。",
+    "contacts_need_server": "連絡先のインポートにはサーバーへの接続が必要です。オンラインに戻ってからもう一度お試しください。",
+    "share_confirm_title": "新しいメッセージを開始しますか?",
+    "share_confirm_message": "別のサイトまたはアプリがメッセージを開始しようとしています。同意しない限り、何もアップロードも保存もされません。",
+    "share_confirm_subject": "件名:",
+    "share_confirm_text": "本文:",
+    "share_confirm_files": "{count, plural, other {ファイル:}}",
+    "share_confirm_accept": "メッセージを開始",
+    "share_confirm_decline": "開始しない",
+    "share_cut": "共有されたテキストが長すぎるため短縮されました。",
+    "handoff_expired": "開いた、または共有した内容は待機時間が長すぎたためなくなりました。もう一度開くか共有してください。",
+    "compose_waiting": "次のメッセージを開始するには、このメッセージを閉じてください。",
+    "save_first_failed": "メッセージを保存できなかったため、ファイルを開いていません。メッセージを保存してから、カレンダーまたは連絡先を開いてください。"
+  },
   "sidebar_apps": {
     "modal_title": "サイドバーアプリ",
     "add_new": "アプリを追加",
@@ -4909,6 +4931,9 @@
     "mini_has_events": "イベントあり",
     "mini_week_number": "第{week}週"
   },
+  "calendar_offline": {
+    "split_needs_server": "この変更にはサーバーへの接続が必要です。今はこの予定だけを変更するか、オンラインに戻ってからもう一度お試しください。"
+  },
   "advanced_search": {
     "title": "詳細検索",
     "from": "差出人",
@@ -6349,6 +6374,12 @@
     "easy_read": "わかりやすい版",
     "sign_language": "手話",
     "new_tab": "新しいタブで開きます"
+  },
+  "pwaNotify": {
+    "action_archive": "アーカイブ",
+    "action_mark_read": "既読にする",
+    "action_reply": "返信",
+    "reply_placeholder": "返信を入力"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "カレンダーに追加",

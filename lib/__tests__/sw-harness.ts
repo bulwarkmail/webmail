@@ -29,17 +29,41 @@ export class FakeCaches {
   }
 }
 
-export function loadWorker(opts: { buildId: string; caches: FakeCaches; clients: Array<{ id: string }>; fetch?: (input: unknown) => Promise<Response> }) {
+export interface ShownNotification {
+  title: string;
+  options: Record<string, unknown>;
+}
+
+export function loadWorker(opts: {
+  buildId: string;
+  caches: FakeCaches;
+  clients: Array<{ id: string }>;
+  fetch?: (input: unknown, init?: RequestInit) => Promise<Response>;
+  /** More globals of a real worker: Notification, NotificationEvent, MessageChannel. */
+  globals?: Record<string, unknown>;
+  openWindow?: (url: string) => Promise<unknown>;
+  /** What showNotification does, after it was recorded in `shown`. */
+  showNotification?: (title: string, options: Record<string, unknown>) => Promise<void>;
+  notifications?: Array<Record<string, unknown>>;
+  location?: string;
+}) {
   const listeners = new Map<string, (event: unknown) => void>();
+  const shown: ShownNotification[] = [];
   let skipped = 0;
   const self = {
-    location: { href: `https://mail.example.com/sw.js?v=${opts.buildId}`, origin: 'https://mail.example.com' },
+    location: { href: opts.location ?? `https://mail.example.com/sw.js?v=${opts.buildId}`, origin: 'https://mail.example.com' },
     addEventListener: (type: string, fn: (event: unknown) => void) => listeners.set(type, fn),
     skipWaiting: () => { skipped++; },
-    clients: { claim: async () => {}, matchAll: async () => opts.clients },
-    registration: { showNotification: async () => {}, getNotifications: async () => [] },
+    clients: { claim: async () => {}, matchAll: async () => opts.clients, openWindow: opts.openWindow },
+    registration: {
+      showNotification: async (title: string, options: Record<string, unknown>) => {
+        shown.push({ title, options });
+        await opts.showNotification?.(title, options);
+      },
+      getNotifications: async () => opts.notifications ?? [],
+    },
   };
-  const context = vm.createContext({ self, caches: opts.caches, fetch: opts.fetch ?? (async () => { throw new TypeError('offline'); }), URL, URLSearchParams, Request, Response, Headers, Date, console, AbortController, setTimeout, clearTimeout });
+  const context = vm.createContext({ self, caches: opts.caches, fetch: opts.fetch ?? (async () => { throw new TypeError('offline'); }), URL, URLSearchParams, Request, Response, Headers, Date, console, AbortController, setTimeout, clearTimeout, crypto: globalThis.crypto, TextEncoder, btoa, ...opts.globals });
   vm.runInContext(SW_SOURCE, context);
   async function dispatch(type: string, event: Record<string, unknown> = {}) {
     const waits: Promise<unknown>[] = [];
@@ -52,5 +76,5 @@ export function loadWorker(opts: { buildId: string; caches: FakeCaches; clients:
     listeners.get('fetch')?.({ request: { method: 'GET', mode: 'cors', ...req }, respondWith: (p: Promise<Response>) => { answer = p; } });
     return answer ? await answer : null;
   }
-  return { dispatch, listeners, request, skipped: () => skipped };
+  return { dispatch, listeners, request, shown, skipped: () => skipped };
 }

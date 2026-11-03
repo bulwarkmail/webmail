@@ -645,6 +645,19 @@ function raisesSequences(series: Partial<CalendarEvent>, master: CalendarEvent, 
  */
 export type OccurrenceOutcome = boolean | 'stopped';
 
+/**
+ * "This and all following" splits a series: ends the old one, creates the rest as
+ * a new one. Queued on a device these are two writes the server takes or refuses
+ * apart, with no one there to put the series back when only one goes through, so
+ * it waits for the server.
+ */
+export class SeriesSplitNeedsServerError extends Error {
+  constructor() {
+    super('Splitting a series needs the server');
+    this.name = 'SeriesSplitNeedsServerError';
+  }
+}
+
 /** The store actions resolve to false when a plugin stopped the write. */
 function stopped(result: boolean | void): boolean {
   return result === false;
@@ -1035,6 +1048,11 @@ export async function saveOccurrenceEdit(
       // From the first occurrence on is the whole series; ended before its
       // first occurrence, the series would be left with none.
       if (isFirstOccurrence(event, master)) return saveOccurrenceEdit('all', edit, actions);
+      if (client.answeredFromDevice) {
+        // Whether the server is there right now: the last answer may be minutes old.
+        await client.getCalendarEvent(master.originalId ?? master.id, master.accountId);
+        if (client.answeredFromDevice()) throw new SeriesSplitNeedsServerError();
+      }
       const truncated = await truncateSeries(master, event, actions, { sendScheduling, userEmails: edit.userEmails });
       if (!truncated) return 'stopped';
       const { restore, announced, removed } = truncated;

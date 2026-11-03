@@ -185,6 +185,16 @@ describe('mail paths', () => {
     expect(parseMailPath(['thread', 't1'])).toEqual({ kind: 'thread', id: 't1', accountId: undefined });
   });
 
+  it("reads a notification's reply flag on a message link, and only there", () => {
+    expect(parseMailPath(['message', 'm1'], new URLSearchParams('slot=1&owner=a&reply=1'))).toMatchObject({
+      kind: 'message', id: 'm1', slot: 1, ownerAccountId: 'a', reply: true,
+    });
+    expect(parseMailPath(['message', 'm1'], new URLSearchParams('reply=0'))).not.toHaveProperty('reply');
+    expect(parseMailPath(['message', 'm1'])).not.toHaveProperty('reply');
+    expect(parseMailPath(['folder', 'inbox'], new URLSearchParams('reply=1'))).not.toHaveProperty('reply');
+    expect(parseMailPath(['thread', 't1'], new URLSearchParams('reply=1'))).not.toHaveProperty('reply');
+  });
+
   it('reads the fullscreen marker on message links', () => {
     expect(parseMailPath(['message', 'm1'], new URLSearchParams('view=fullscreen'))).toEqual({
       kind: 'message',

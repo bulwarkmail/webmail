@@ -249,6 +249,28 @@
     "active_account": "Actiu",
     "switching_account": "Canviant de compte..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Missatge nou",
+    "shortcut_calendar": "Calendari",
+    "shortcut_contacts": "Contactes",
+    "unsupported_file": "{name} no es pot obrir aquí.",
+    "open_failed": "No s'ha pogut obrir el fitxer. Torneu a obrir-lo.",
+    "share_gone": "El que heu compartit ja no hi és. Torneu a compartir-ho.",
+    "share_files_lost": "No s'han pogut conservar els fitxers compartits. Torneu-los a afegir al missatge.",
+    "ics_needs_server": "Per importar un fitxer de calendari cal connexió amb el servidor. La importació començarà quan torneu a estar en línia.",
+    "contacts_need_server": "Per importar contactes cal connexió amb el servidor. Torneu-ho a provar quan torneu a estar en línia.",
+    "share_confirm_title": "Voleu començar un missatge nou?",
+    "share_confirm_message": "Un altre lloc o aplicació vol començar un missatge. No es puja ni es desa res si no hi esteu d'acord.",
+    "share_confirm_subject": "Assumpte:",
+    "share_confirm_text": "Text:",
+    "share_confirm_files": "{count, plural, one {Fitxer:} other {Fitxers:}}",
+    "share_confirm_accept": "Comença el missatge",
+    "share_confirm_decline": "No el comencis",
+    "share_cut": "El text compartit era massa llarg i s'ha escurçat.",
+    "handoff_expired": "Una cosa que heu obert o compartit ha esperat massa i ja no hi és. Torneu-la a obrir o compartir.",
+    "compose_waiting": "Tanqueu aquest missatge per començar el següent.",
+    "save_first_failed": "No s'ha pogut desar el missatge, per això no s'ha obert el fitxer. Deseu el missatge i obriu el calendari o els contactes."
+  },
   "sidebar_apps": {
     "modal_title": "Aplicacions de la barra lateral",
     "add_new": "Afegeix una aplicació",
@@ -4909,6 +4931,9 @@
     "mini_has_events": "té esdeveniments",
     "mini_week_number": "Setmana {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "Aquest canvi necessita connexió amb el servidor. Canvia només aquest esdeveniment de moment, o torna-ho a provar quan tornis a estar connectat."
+  },
   "calendar_event_notifications": {
     "someone": "Algú",
     "invited": "{name} t'ha convidat a \"{title}\"",
@@ -6349,6 +6374,12 @@
     "easy_read": "Lectura fàcil",
     "sign_language": "Llengua de signes",
     "new_tab": "s'obre en una pestanya nova"
+  },
+  "pwaNotify": {
+    "action_archive": "Arxiva",
+    "action_mark_read": "Marca com a llegit",
+    "action_reply": "Respon",
+    "reply_placeholder": "Escriu una resposta"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "Afegeix al calendari",

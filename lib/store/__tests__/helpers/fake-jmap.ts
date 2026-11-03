@@ -25,7 +25,7 @@ type ChangeKind = 'created' | 'updated' | 'destroyed';
 
 interface Log { kind: ChangeKind; id: string }
 
-class Collection {
+export class Collection {
   log: Log[] = [];
   /** Below this log position, states are refused as truncated. */
   truncatedBelow = 0;

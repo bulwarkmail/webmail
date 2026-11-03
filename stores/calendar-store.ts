@@ -5,7 +5,7 @@ import type { Calendar, CalendarEvent, CalendarParticipant, CalendarParticipantI
 import { debug } from '@/lib/debug';
 import { getEventStartDate, normalizeAllDayDuration } from '@/lib/calendar-utils';
 import { displayNow } from '@/lib/timezone';
-import { parseDuration } from '@/components/calendar/event-card';
+import { parseDuration } from '@/lib/calendar-event-normalization';
 import { sanitizeOutgoingCalendarEventData } from '@/lib/calendar-event-normalization';
 import { feedChanged, feedFields } from '@/lib/calendar-feed-diff';
 import { expandRecurringEvents } from '@/lib/recurrence-expansion';

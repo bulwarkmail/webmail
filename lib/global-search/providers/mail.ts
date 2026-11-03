@@ -119,6 +119,7 @@ export const mailProvider: SearchProvider = {
         entry.isShared ? entry.jmapAccountId : undefined,
         limit,
         position,
+        { palette: true },
       );
       if (result.hasMore) hasMore = true;
       for (const raw of result.emails) {

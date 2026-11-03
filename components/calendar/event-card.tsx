@@ -4,6 +4,7 @@ import { useCallback, useRef, useState, type CSSProperties, type DragEvent } fro
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import type { CalendarEvent, Calendar } from "@/lib/jmap/types";
+import { parseDuration } from "@/lib/calendar-event-normalization";
 import { format } from "date-fns";
 import { ChevronDown, ChevronUp, Users } from "@/components/icons";
 import { getParticipantCount, isDeclinedByUser } from "@/lib/calendar-participants";
@@ -99,20 +100,6 @@ export function eventFillStyle(
 /** The class that draws the light style's bar; declined and cancelled events keep their outline. */
 export function eventFillClass(tinted: boolean, inactive: boolean): string | undefined {
   return tinted && !inactive ? "start-bar" : undefined;
-}
-
-function parseDuration(duration: string | undefined): number {
-  if (!duration) return 0;
-  let totalMinutes = 0;
-  const weekMatch = duration.match(/(\d+)W/);
-  const hourMatch = duration.match(/(\d+)H/);
-  const minMatch = duration.match(/(\d+)M/);
-  const dayMatch = duration.match(/(\d+)D/);
-  if (weekMatch) totalMinutes += parseInt(weekMatch[1]) * 7 * 24 * 60;
-  if (dayMatch) totalMinutes += parseInt(dayMatch[1]) * 24 * 60;
-  if (hourMatch) totalMinutes += parseInt(hourMatch[1]) * 60;
-  if (minMatch) totalMinutes += parseInt(minMatch[1]);
-  return totalMinutes;
 }
 
 function createEventDragPreview(title: string, timeRange: string, color: string): HTMLElement {

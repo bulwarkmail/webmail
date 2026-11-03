@@ -23,7 +23,7 @@ export const MAIL_MIGRATIONS: readonly Migration[] = [
         gen INTEGER NOT NULL DEFAULT 0,
         UNIQUE (jmap, id)
       );
-      CREATE INDEX email_received ON email (jmap, received_at DESC);
+      CREATE INDEX email_received ON email (jmap, received_at DESC, rowid DESC);
       CREATE INDEX email_thread ON email (jmap, thread_id);
       CREATE INDEX email_backfill ON email (jmap, body_state, received_at DESC);
       CREATE TABLE email_mailbox (
@@ -33,7 +33,7 @@ export const MAIL_MIGRATIONS: readonly Migration[] = [
         received_at INTEGER NOT NULL,
         PRIMARY KEY (email_rowid, mailbox_id)
       ) WITHOUT ROWID;
-      CREATE INDEX email_mailbox_list ON email_mailbox (jmap, mailbox_id, received_at DESC);
+      CREATE INDEX email_mailbox_list ON email_mailbox (jmap, mailbox_id, received_at DESC, email_rowid DESC);
       CREATE TABLE email_keyword (
         email_rowid INTEGER NOT NULL REFERENCES email (rowid) ON DELETE CASCADE,
         keyword TEXT NOT NULL,

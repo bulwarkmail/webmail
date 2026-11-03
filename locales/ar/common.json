@@ -249,6 +249,28 @@
     "active_account": "نشط",
     "switching_account": "جارٍ تبديل الحساب..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "رسالة جديدة",
+    "shortcut_calendar": "التقويم",
+    "shortcut_contacts": "جهات الاتصال",
+    "unsupported_file": "لا يمكن فتح {name} هنا.",
+    "open_failed": "تعذر فتح الملف. حاول فتحه مرة أخرى.",
+    "share_gone": "ما شاركته لم يعد موجودًا. يرجى مشاركته مرة أخرى.",
+    "share_files_lost": "تعذر الاحتفاظ بالملفات المشتركة. أضفها إلى الرسالة مرة أخرى.",
+    "ics_needs_server": "يحتاج استيراد ملف تقويم إلى اتصال بالخادم. يبدأ الاستيراد عند عودتك إلى الاتصال بالإنترنت.",
+    "contacts_need_server": "يحتاج استيراد جهات الاتصال إلى اتصال بالخادم. حاول مرة أخرى عند عودتك إلى الاتصال بالإنترنت.",
+    "share_confirm_title": "هل تريد بدء رسالة جديدة؟",
+    "share_confirm_message": "يريد موقع أو تطبيق آخر بدء رسالة. لن يُرفع أو يُحفظ أي شيء إلا إذا وافقت.",
+    "share_confirm_subject": "الموضوع:",
+    "share_confirm_text": "النص:",
+    "share_confirm_files": "{count, plural, one {ملف:} other {ملفات:}}",
+    "share_confirm_accept": "بدء الرسالة",
+    "share_confirm_decline": "عدم البدء",
+    "share_cut": "كان النص المشترك طويلًا جدًا وتم اختصاره.",
+    "handoff_expired": "انتظر شيء فتحته أو شاركته مدة طويلة ولم يعد موجودًا. يرجى فتحه أو مشاركته مرة أخرى.",
+    "compose_waiting": "أغلق هذه الرسالة لبدء الرسالة التالية.",
+    "save_first_failed": "تعذر حفظ رسالتك، لذلك لم يُفتح الملف. احفظ الرسالة ثم افتح التقويم أو جهات الاتصال."
+  },
   "sidebar_apps": {
     "modal_title": "تطبيقات الشريط الجانبي",
     "add_new": "إضافة تطبيق",
@@ -4909,6 +4931,9 @@
     "mini_has_events": "فيه أحداث",
     "mini_week_number": "الأسبوع {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "يحتاج هذا التغيير إلى اتصال بالخادم. غيّر هذا الحدث فقط الآن، أو حاول مرة أخرى عند عودة الاتصال."
+  },
   "calendar_event_notifications": {
     "someone": "شخص ما",
     "invited": "دعاك {name} إلى \"{title}\"",
@@ -6349,6 +6374,12 @@
     "easy_read": "قراءة سهلة",
     "sign_language": "لغة الإشارة",
     "new_tab": "يُفتح في علامة تبويب جديدة"
+  },
+  "pwaNotify": {
+    "action_archive": "أرشفة",
+    "action_mark_read": "تمييز كمقروءة",
+    "action_reply": "رد",
+    "reply_placeholder": "اكتب ردًا"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "إضافة إلى التقويم",

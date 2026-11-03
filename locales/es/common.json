@@ -249,6 +249,28 @@
     "active_account": "Activa",
     "switching_account": "Cambiando de cuenta..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Mensaje nuevo",
+    "shortcut_calendar": "Calendario",
+    "shortcut_contacts": "Contactos",
+    "unsupported_file": "{name} no se puede abrir aquí.",
+    "open_failed": "No se pudo abrir el archivo. Intenta abrirlo de nuevo.",
+    "share_gone": "Lo que compartiste ya no está aquí. Compártelo de nuevo.",
+    "share_files_lost": "No se pudieron conservar los archivos compartidos. Añádelos de nuevo al mensaje.",
+    "ics_needs_server": "Importar un archivo de calendario requiere conexión con el servidor. La importación empezará cuando vuelvas a estar en línea.",
+    "contacts_need_server": "Importar contactos requiere conexión con el servidor. Inténtalo de nuevo cuando vuelvas a estar en línea.",
+    "share_confirm_title": "¿Empezar un mensaje nuevo?",
+    "share_confirm_message": "Otro sitio o aplicación quiere empezar un mensaje. No se sube ni se guarda nada si no aceptas.",
+    "share_confirm_subject": "Asunto:",
+    "share_confirm_text": "Texto:",
+    "share_confirm_files": "{count, plural, one {Archivo:} other {Archivos:}}",
+    "share_confirm_accept": "Empezar mensaje",
+    "share_confirm_decline": "No empezar",
+    "share_cut": "El texto compartido era demasiado largo y se ha acortado.",
+    "handoff_expired": "Algo que abriste o compartiste esperó demasiado y ya no está. Ábrelo o compártelo de nuevo.",
+    "compose_waiting": "Cierra este mensaje para empezar el siguiente.",
+    "save_first_failed": "No se pudo guardar tu mensaje, así que el archivo no se ha abierto. Guarda el mensaje y luego abre el calendario o los contactos."
+  },
   "sidebar_apps": {
     "modal_title": "Aplicaciones de la barra lateral",
     "add_new": "Añadir aplicación",
@@ -4909,6 +4931,9 @@
     "mini_has_events": "tiene eventos",
     "mini_week_number": "Semana {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "Este cambio necesita conexión con el servidor. Cambia solo este evento por ahora o inténtalo de nuevo cuando vuelvas a tener conexión."
+  },
   "advanced_search": {
     "title": "Búsqueda avanzada",
     "from": "De",
@@ -6349,6 +6374,12 @@
     "easy_read": "Lectura fácil",
     "sign_language": "Lengua de signos",
     "new_tab": "se abre en una pestaña nueva"
+  },
+  "pwaNotify": {
+    "action_archive": "Archivar",
+    "action_mark_read": "Marcar como leído",
+    "action_reply": "Responder",
+    "reply_placeholder": "Escribe una respuesta"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "Añadir al calendario",
