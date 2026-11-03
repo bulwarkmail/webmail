@@ -217,8 +217,8 @@ export function TemplateManagerModal({ isOpen, onClose, accountId }: TemplateMan
         )}
 
         {source && !formOpen && (
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex-1 relative">
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <div className="flex-1 min-w-40 relative">
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 value={searchQuery}
@@ -272,7 +272,7 @@ export function TemplateManagerModal({ isOpen, onClose, accountId }: TemplateMan
         <div className="space-y-2">
           {source && filtered.map((template) => (
             <div key={template.id} className="rounded-md border border-border hover:bg-muted/50 transition-colors" data-testid="template-row">
-              <div className="flex items-center gap-2 sm:gap-3 p-3">
+              <div className="flex flex-wrap items-center gap-2 p-3 sm:flex-nowrap sm:gap-3">
                 {isPersonal && (
                   <IconButton
                     label={tSettings('favorite')}
@@ -289,7 +289,8 @@ export function TemplateManagerModal({ isOpen, onClose, accountId }: TemplateMan
                   </IconButton>
                 )}
 
-                <div className="flex-1 min-w-0">
+                {/* On a phone the actions go under the name instead of squeezing it. */}
+                <div className="flex-1 min-w-0 max-sm:basis-[calc(100%-3rem)]">
                   <div className="flex items-center gap-2 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate" dir="auto" title={template.name}>
                       {template.name}
@@ -312,7 +313,7 @@ export function TemplateManagerModal({ isOpen, onClose, accountId }: TemplateMan
                   )}
                 </div>
 
-                <div className="flex items-center gap-1 flex-shrink-0">
+                <div className="flex items-center gap-1 flex-shrink-0 max-sm:ms-auto">
                   {editable ? (
                     <>
                       <IconButton
