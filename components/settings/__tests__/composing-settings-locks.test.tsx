@@ -11,6 +11,7 @@ import { usePolicyStore } from '@/stores/policy-store';
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
+  useLocale: () => 'en',
 }));
 
 vi.mock('../settings-section', async (importOriginal) => ({
