@@ -411,6 +411,11 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   });
   const [isResizing, setIsResizing] = useState(false);
   const dragStartWidth = useRef(256);
+  // The phone's page list keeps its place while a page is open on top of it.
+  const mobileListScrollTop = useRef(0);
+  const attachMobileList = useCallback((el: HTMLElement | null) => {
+    if (el) el.scrollTop = mobileListScrollTop.current;
+  }, []);
 
   // Check auth on mount – skip when already authenticated so that navigating
   // between routes doesn't retrigger checkAuth's transient `{ client: null,
@@ -920,7 +925,8 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
             <PhoneHeaderActions />
           </div>
 
-          <AppMain embedded={isEmbedded} label={activeTabLabel} className="flex-1 overflow-y-auto p-4">
+          {/* A key per page: a page opens at its top, not at the scroll offset of the one before. */}
+          <AppMain key={effectiveActiveTab} embedded={isEmbedded} label={activeTabLabel} className="flex-1 overflow-y-auto p-4">
             {renderTabContent()}
           </AppMain>
 
@@ -952,7 +958,15 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
           <PhoneHeaderActions />
         </div>
 
-        <AppMain embedded={isEmbedded} label={t('title')} className="flex-1 overflow-y-auto" data-tour="settings-tabs">
+        <AppMain
+          key="settings-page-list"
+          ref={attachMobileList}
+          onScroll={(e) => { mobileListScrollTop.current = e.currentTarget.scrollTop; }}
+          embedded={isEmbedded}
+          label={t('title')}
+          className="flex-1 overflow-y-auto"
+          data-tour="settings-tabs"
+        >
           <div className="px-4 pt-3 pb-1">
             <ToolbarSearch
               value={searchQuery}
@@ -1047,7 +1061,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
 
   // Desktop layout
   const settingsMain = (
-      <AppMain ref={attachContentScroll as (el: HTMLElement | null) => void} embedded={isEmbedded} label={activeTabLabel} className="flex-1 overflow-y-auto">
+      <AppMain key={effectiveActiveTab} ref={attachContentScroll as (el: HTMLElement | null) => void} embedded={isEmbedded} label={activeTabLabel} className="flex-1 overflow-y-auto">
         <div className={effectiveActiveTab.startsWith(PLUGIN_PAGE_PREFIX) ? "px-6 py-6" : "max-w-3xl mx-auto px-6 py-6"}>
           {/* The page's heading for screen readers; the sidebar shows which
               page is open (the phone header has a visible one). */}

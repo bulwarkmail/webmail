@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // On the phone the tab list is a screen of its own. A link to
@@ -85,5 +85,25 @@ describe('Settings deep links on the phone', () => {
     render(<SettingsApp linkSegments={[]} />);
     expect(screen.getByTestId('settings-tab-appearance')).toBeTruthy();
     expect(screen.queryByText('appearance pane')).toBeNull();
+  });
+
+  it('opens a page at its top and keeps the place in the list', () => {
+    window.history.replaceState(null, '', '/settings');
+    render(<SettingsApp linkSegments={[]} />);
+    const list = document.querySelector('main') as HTMLElement;
+    list.scrollTop = 400;
+    fireEvent.scroll(list);
+
+    fireEvent.click(screen.getByTestId('settings-tab-organize'));
+    expect(screen.getByText('organize pane')).toBeTruthy();
+    const page = document.querySelector('main') as HTMLElement;
+    expect(page.scrollTop).toBe(0);
+
+    page.scrollTop = 900;
+    act(() => {
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    expect(screen.getByTestId('settings-tab-organize')).toBeTruthy();
+    expect((document.querySelector('main') as HTMLElement).scrollTop).toBe(400);
   });
 });
