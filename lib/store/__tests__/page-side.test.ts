@@ -56,6 +56,22 @@ afterEach(() => {
   configureStore(null);
 });
 
+describe('whether the store can run here', () => {
+  afterEach(() => {
+    delete (window.navigator as { storage?: unknown }).storage;
+    delete (window.navigator as { locks?: unknown }).locks;
+  });
+
+  it('doesn’t ask the page for what only exists in a worker', () => {
+    expect(StoreClient.supported()).toBe(false);
+    Object.defineProperty(window.navigator, 'storage', { configurable: true, value: { getDirectory: async () => ({}) } });
+    Object.defineProperty(window.navigator, 'locks', { configurable: true, value: { request: async () => {} } });
+    // As on a real page: the class is there, without createSyncAccessHandle on it.
+    vi.stubGlobal('FileSystemFileHandle', class {});
+    expect(StoreClient.supported()).toBe(true);
+  });
+});
+
 describe('a tab that starts after the owner', () => {
   it('asks who owns the store, so its calls don\'t wait for an announcement that never comes', async () => {
     const owner = new FakeChannel('bulwark-store-rpc');

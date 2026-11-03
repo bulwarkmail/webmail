@@ -68,8 +68,10 @@ export class StoreClient {
       && typeof navigator !== 'undefined'
       && Boolean(navigator.locks)
       && typeof navigator.storage?.getDirectory === 'function'
-      && typeof FileSystemFileHandle !== 'undefined'
-      && 'createSyncAccessHandle' in FileSystemFileHandle.prototype;
+      // createSyncAccessHandle itself only exists inside a dedicated worker,
+      // so the page can't check for it. A browser without it fails at the
+      // worker's start, which the page hears as an error event.
+      && typeof FileSystemFileHandle !== 'undefined';
   }
 
   start(): void {
