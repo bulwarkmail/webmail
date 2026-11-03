@@ -15,11 +15,12 @@
  * no secret service) says no, and the wrap stays as it is.
  */
 
+import { VAULT_DB } from './state';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { sealFor, createSessionOpener, type SealedAnswer } from '@/lib/popout/sealed';
 import { keyFromPin, keyFromPrf, ObviousPinError, open, PBKDF2_ITERATIONS, pinIsObvious, randomBytes, seal, type WrappedBytes } from './crypto';
 
-export const VAULT_DB = 'bulwark-app-lock';
+export { VAULT_DB };
 const DB_VERSION = 1;
 const RECORDS = 'records';
 const SEALED = 'sealed';

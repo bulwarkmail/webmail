@@ -71,7 +71,11 @@ type PendingUndoSend = {
   submissionAccountId?: string;
 };
 
-const NO_SELECTION = () => ({ selectedEmailKeys: new Set<string>(), lastSelectedEmailKey: null });
+// Nothing ticked stays the same object: a new empty set re-renders all that reads the selection.
+const NO_SELECTION = (state: { selectedEmailKeys: Set<string> }) => ({
+  selectedEmailKeys: state.selectedEmailKeys.size === 0 ? state.selectedEmailKeys : new Set<string>(),
+  lastSelectedEmailKey: null,
+});
 
 /** Drop the matching emails from a key-based selection. */
 function dropFromSelection(
@@ -3620,7 +3624,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   // counted in the selection bar, with Delete acting on rows nobody can see.
   setSearchQuery: (query) => set((state) => ({
     searchQuery: query,
-    ...(query === state.searchQuery ? {} : NO_SELECTION()),
+    ...(query === state.searchQuery ? {} : NO_SELECTION(state)),
   })),
   setQuota: (quota) => set({ quota }),
 
@@ -3715,7 +3719,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   clearSelection: () => {
-    set({ selectedEmailKeys: new Set(), lastSelectedEmailKey: null });
+    set(NO_SELECTION(get()));
   },
 
   // JMAP operations
@@ -5378,7 +5382,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     // trip later. What the mail view renders from is written only once the
     // request is on its way (see afterRequestDispatch); the controller is
     // recorded at once so a superseding search can still cancel this one.
-    set({ searchAbortController: controller, ...(typedQuery === get().searchQuery ? {} : NO_SELECTION()) });
+    set({ searchAbortController: controller, ...(typedQuery === get().searchQuery ? {} : NO_SELECTION(get())) });
     afterRequestDispatch(() => {
       if (get().searchAbortController === controller) set({ isLoading: true, error: null, searchQuery: typedQuery });
     });
@@ -5616,7 +5620,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   setSearchFilters: (filters) => {
     set((state) => ({
       searchFilters: { ...state.searchFilters, ...filters },
-      ...NO_SELECTION(),
+      ...NO_SELECTION(state),
     }));
   },
 
@@ -5625,7 +5629,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     set((state) => ({
       searchMailboxId: mailboxId,
       searchScopeFollowsFolder: false,
-      ...(mailboxId !== state.searchMailboxId && (state.searchQuery.trim() || !isFilterEmpty(state.searchFilters)) ? NO_SELECTION() : {}),
+      ...(mailboxId !== state.searchMailboxId && (state.searchQuery.trim() || !isFilterEmpty(state.searchFilters)) ? NO_SELECTION(state) : {}),
     }));
   },
 
@@ -5641,7 +5645,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       searchFilters: { ...DEFAULT_SEARCH_FILTERS },
       searchMailboxId: currentSearchScopeDefault(mailboxesInView(state), state.selectedMailbox),
       searchScopeFollowsFolder: false,
-      ...(isFilterEmpty(state.searchFilters) ? {} : NO_SELECTION()),
+      ...(isFilterEmpty(state.searchFilters) ? {} : NO_SELECTION(state)),
     }));
   },
 

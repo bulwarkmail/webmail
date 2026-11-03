@@ -14,6 +14,10 @@ export const APP_LOCK_KEY = 'bulwark-app-lock';
 /** When someone last used a window or tab. Shared by all of them. */
 export const APP_LOCK_ACTIVITY_KEY = 'bulwark-app-lock-activity';
 export const APP_LOCK_CHANNEL = 'bulwark:app-lock';
+/** The IndexedDB database of lib/app-lock/vault.ts. */
+export const VAULT_DB = 'bulwark-app-lock';
+/** Set by the head script once it knows this browser has no vault. */
+const NO_VAULT_GLOBAL = '__bulwarkNoAppLockVault';
 /** Web Lock held by the tab that has the lock key, for as long as it lives. */
 export const APP_LOCK_HOLDER = 'bulwark-app-lock-holder';
 
@@ -94,10 +98,25 @@ export function postAppLockMessage(message: AppLockMessage): void {
   }
 }
 
-/** Runs in the head script, before the first paint. Self-contained: it is stringified. */
+/**
+ * Runs in the head script, before the first paint. Self-contained: it is stringified.
+ *
+ * With no lock file it already asks whether there's a vault, which is what a start has to
+ * know before it may go on. The answer is usually in before the page's scripts have
+ * loaded, so someone with no lock never waits for the look. Only listing the databases:
+ * opening one would create it.
+ */
 export function appLockBootScript(): string {
   return `try {
     var appLock = JSON.parse(localStorage.getItem(${JSON.stringify(APP_LOCK_KEY)}) || 'null');
     if (appLock && appLock.on === true) document.documentElement.setAttribute('data-app-locked', '');
+    else indexedDB.databases().then(function (dbs) {
+      if (!dbs.some(function (db) { return db.name === ${JSON.stringify(VAULT_DB)}; })) window[${JSON.stringify(NO_VAULT_GLOBAL)}] = true;
+    }, function () {});
   } catch (e) {}`;
+}
+
+/** The head script's look has answered, and there is no vault. Anything else says nothing. */
+export function headScriptFoundNoVault(): boolean {
+  return typeof window !== 'undefined' && (window as unknown as Record<string, unknown>)[NO_VAULT_GLOBAL] === true;
 }

@@ -24,7 +24,7 @@ import {
 } from '../controller';
 import { LOCK_LAYER } from '../crypto';
 import { appLockRequired, effectiveTimeout } from '../policy';
-import { APP_LOCK_KEY, isAppLockedNow, readAppLockFile, setLockedHere } from '../state';
+import { APP_LOCK_KEY, appLockBootScript, isAppLockedNow, readAppLockFile, setLockedHere } from '../state';
 import { createVault, deleteVault, readVault, sealDraft, VaultExistsError } from '../vault';
 
 const PIN = 'correct-pin';
@@ -634,6 +634,85 @@ describe('the desktop app', () => {
     expect(await forgetEverything()).toBe(false);
     expect(appLock.forget).toHaveBeenCalled();
     expect(readAppLockFile()).toMatchObject({ on: true, locked: true });
+  });
+});
+
+describe('a start with no lock file', () => {
+  /** Runs the head script of app/(main)/layout.tsx and waits until its look has answered. */
+  async function headScript(): Promise<void> {
+    const databases = vi.spyOn(indexedDB, 'databases');
+    new Function(appLockBootScript())();
+    await databases.mock.results[0]?.value;
+    await Promise.resolve();
+    databases.mockRestore();
+  }
+
+  afterEach(() => {
+    delete (window as unknown as Record<string, unknown>).__bulwarkNoAppLockVault;
+  });
+
+  it('holds nothing back once the head script found no vault: the app starts in the first render', async () => {
+    await headScript();
+    bootAppLock();
+    expect(appLockHold()).toBeNull();
+    expect(getAppLockPhase()).toBe('open');
+    expect(isAppLockedNow()).toBe(false);
+  });
+
+  it('still waits for the look when the head script has no answer yet', async () => {
+    bootAppLock();
+    expect(appLockHold()).toBeInstanceOf(Promise);
+    expect(getAppLockPhase()).toBe('checking');
+    await vi.waitFor(() => expect(appLockHold()).toBeNull());
+    expect(getAppLockPhase()).toBe('open');
+  });
+
+  it('a lost file with a vault still locks: the head script doesn\'t let that start through', async () => {
+    await enableAppLock(PIN);
+    localStorage.removeItem(APP_LOCK_KEY);
+    resetAppLockForTests();
+    await headScript();
+    bootAppLock();
+    expect(appLockHold()).toBeInstanceOf(Promise);
+    await vi.waitFor(() => expect(getAppLockPhase()).toBe('locked'));
+    expect(readAppLockFile().on).toBe(true);
+    expect(isAppLockedNow()).toBe(true);
+  });
+
+  it('a lock file on means no look at all: the first frame already knows', async () => {
+    localStorage.setItem(APP_LOCK_KEY, JSON.stringify({ on: true, locked: true }));
+    const databases = vi.spyOn(indexedDB, 'databases');
+    new Function(appLockBootScript())();
+    expect(databases).not.toHaveBeenCalled();
+    expect(document.documentElement.hasAttribute('data-app-locked')).toBe(true);
+    databases.mockRestore();
+    document.documentElement.removeAttribute('data-app-locked');
+  });
+
+  it('a look that fails says nothing, and the start waits for its own', async () => {
+    const databases = vi.spyOn(indexedDB, 'databases').mockRejectedValue(new Error('blocked'));
+    new Function(appLockBootScript())();
+    await databases.mock.results[0].value.catch(() => {});
+    databases.mockRestore();
+    bootAppLock();
+    expect(appLockHold()).toBeInstanceOf(Promise);
+    await vi.waitFor(() => expect(appLockHold()).toBeNull());
+  });
+
+  it('a required lock still waits for its PIN, vault or no vault', async () => {
+    await headScript();
+    bridge();
+    (window as unknown as { bulwarkDesktop: Record<string, unknown> }).bulwarkDesktop.policy = {
+      get: () => ({
+        AppLockRequired: { value: true, locked: true, source: 'forced-machine' },
+        AppLockTimeoutMinutes: { value: null, locked: false, source: 'default' },
+      }),
+      onChange: () => () => {},
+    };
+    localStorage.setItem('account-registry', JSON.stringify({ state: { accounts: [{ id: 'a' }] } }));
+    bootAppLock();
+    expect(getAppLockPhase()).toBe('setup');
+    expect(appLockHold()).toBeInstanceOf(Promise);
   });
 });
 

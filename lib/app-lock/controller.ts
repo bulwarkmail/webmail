@@ -40,6 +40,7 @@ import {
   APP_LOCK_CHANNEL,
   APP_LOCK_HOLDER,
   APP_LOCK_KEY,
+  headScriptFoundNoVault,
   isAppLockedNow,
   postAppLockMessage,
   readAppLockFile,
@@ -190,6 +191,8 @@ export function bootAppLock(): void {
     return;
   }
   markDocument(false);
+  // The look already came back empty: nothing to hold back for.
+  if (headScriptFoundNoVault() && !setupNeeded()) return;
   hold = newHold();
   if (setupNeeded()) {
     phase = 'setup';

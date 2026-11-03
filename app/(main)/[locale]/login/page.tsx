@@ -1,7 +1,7 @@
 "use client";
 
 import { freshLoginRequired } from "@/lib/app-lock/sign-out";
-import { Suspense, useState, useEffect, useRef, useCallback, useId, useMemo } from "react";
+import { Suspense, useState, useEffect, useRef, useCallback, useId, useMemo, useSyncExternalStore } from "react";
 import { IS_DESKTOP_BUILD } from "@/lib/desktop/flag";
 import { forgetDesktopServer, getDesktopBridge } from "@/lib/desktop/bridge";
 import { customServerAllowedByDesktopPolicy, jmapServerAllowedByDesktopPolicy, useDesktopPolicy } from "@/lib/desktop/policy";
@@ -746,8 +746,12 @@ function LoginPageContent() {
   }, [setTheme]);
 
   // The server HTML, and every visit until /api/config answers: the card's
-  // shape, the same one signed-out visitors of the app pages get first.
-  if (configLoading) {
+  // shape, the same one signed-out visitors of the app pages get first. Also
+  // the pass that hydrates that HTML, however far the config has got: this
+  // page's Suspense boundary hydrates after the app around it, which may have
+  // fetched the config by then, and drawing the form would throw the HTML away.
+  const hydrating = useSyncExternalStore(neverChanges, notHydrating, isHydrating);
+  if (configLoading || hydrating) {
     return <LoginSkeleton label={t("loading")} />;
   }
 
@@ -2065,6 +2069,10 @@ function LoginPageContent() {
     </div>
   );
 }
+
+const neverChanges = () => () => {};
+const notHydrating = () => false;
+const isHydrating = () => true;
 
 // useSearchParams() above must sit under a Suspense boundary for the route to
 // prerender (the static Lite build); at runtime the boundary never suspends.

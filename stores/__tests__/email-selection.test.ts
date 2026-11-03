@@ -51,6 +51,17 @@ describe('email-store selection', () => {
       expect(ticked()).toBe(1);
     });
 
+    it('leaves an empty selection the same object, so nothing reading it renders again', () => {
+      useEmailStore.setState({ selectedEmailKeys: new Set(), lastSelectedEmailKey: 'opened' });
+      const empty = useEmailStore.getState().selectedEmailKeys;
+      const pending = new Promise<never>(() => {});
+      useEmailStore.getState().setSearchQuery('rollback');
+      void useEmailStore.getState().searchEmails({ searchEmails: () => pending } as never, 'other');
+      useEmailStore.getState().clearSelection();
+      expect(useEmailStore.getState().selectedEmailKeys).toBe(empty);
+      expect(useEmailStore.getState().lastSelectedEmailKey).toBeNull();
+    });
+
     it('drops them when a search runs for another query, before its results land', () => {
       const pending = new Promise<never>(() => {});
       void useEmailStore.getState().searchEmails({ searchEmails: () => pending } as never, 'rollback');

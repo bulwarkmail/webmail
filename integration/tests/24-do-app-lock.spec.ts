@@ -513,6 +513,8 @@ test('a forgotten PIN offline: the cookie that stays signs nobody in, then or wh
   await enableOffline(page);
   await enableLock(page);
   await lockNow(page);
+  const sessionCookies = (await context.cookies()).filter((cookie) => SESSION_COOKIE.test(cookie.name));
+  expect(sessionCookies.length).toBeGreaterThan(0);
   await context.setOffline(true);
   await forgetPin(page);
   // No network, so no way to delete an HttpOnly cookie, and the shell went with the rest:
@@ -521,7 +523,9 @@ test('a forgotten PIN offline: the cookie that stays signs nobody in, then or wh
     .catch((error: Error) => expect(error.message).toContain('ERR_INTERNET_DISCONNECTED'));
   // The old page is gone only once the error page is up: until then it could still reach the network.
   await expect.poll(() => page.url(), { timeout: 30_000 }).toContain('chrome-error');
-  expect((await context.cookies()).some((cookie) => SESSION_COOKIE.test(cookie.name))).toBe(true);
+  // What a real outage leaves. Chromium's emulated one lets a keepalive request through when
+  // the page leaves right after it: the page hears it failed, and the server clears the cookies.
+  await context.addCookies(sessionCookies);
   const stored = (await context.storageState()).origins.flatMap((origin) => origin.localStorage).map((entry) => entry.name);
   expect(stored).toContain('bulwark-cookies-to-clear');
   expect(stored).not.toContain('bulwark-app-lock');
