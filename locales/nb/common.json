@@ -5763,6 +5763,26 @@
     "store_private": "Private vinduer kan ikke beholde e-post for bruk uten nett.",
     "server_not_answering": "E-postserveren svarer ikke. Prøv igjen om litt."
   },
+  "offlineDrafts": {
+    "title": "Utkast på denne enheten",
+    "description": "Disse utkastene er lagret på denne enheten. De går til serveren av seg selv så snart den kan nås.",
+    "saved_on_device": "Lagret på denne enheten",
+    "status_waiting": "Venter på serveren",
+    "status_sending": "Lagrer på serveren",
+    "status_uncertain": "Sjekker om det nådde serveren",
+    "status_refused": "Serveren avviste dette utkastet: {error}",
+    "file_missing": "En vedlagt fil er ikke lenger på denne enheten",
+    "open": "Åpne",
+    "open_label": "Åpne {subject}",
+    "retry": "Prøv igjen",
+    "retry_label": "Prøv {subject} igjen",
+    "toast_refused": "Utkastet {subject} kunne ikke lagres på serveren. Det blir på denne enheten.",
+    "toast_conflict": "Utkastet {subject} ble endret på en annen enhet. Begge versjonene beholdes.",
+    "conflict_changed": "Endret på en annen enhet. Begge versjonene ligger i Utkast.",
+    "conflict_gone": "Endret eller fjernet på en annen enhet. Din versjon ligger i Utkast.",
+    "banner_refused": "Utkast avvist av serveren: {count}",
+    "banner_waiting": "Utkast som venter på serveren: {count}"
+  },
   "deep_link": {
     "message_not_found": "Denne meldingen er ikke lenger tilgjengelig.",
     "thread_not_found": "Denne samtalen er ikke lenger tilgjengelig.",
@@ -5878,6 +5898,10 @@
       "crypto_full": {
         "title": "Full tilgang til denne appen",
         "body": "Kjører med de samme rettighetene som selve webmailen. Det kan lese all e-posten din og lagrede nøkler og handle på dine vegne. Tillat dette bare for tillegg du stoler fullt på."
+      },
+      "keystore": {
+        "title": "Bruk sertifikater på denne datamaskinen",
+        "body": "Ber om å signere og dekryptere meldinger med sertifikater på denne datamaskinen eller et smartkort. Appen spør deg først. Tillegget får aldri den private nøkkelen, men så lenge du tillater det, kan det signere i ditt navn og lese det det dekrypterer."
       },
       "email_raw_send": {
         "title": "Sende meldinger det har laget selv",
@@ -6530,34 +6554,12 @@
     "server_declined": "Du tillot ikke denne serveren, så ingenting ble sendt til den.",
     "server_invalid": "Denne serveradressen er ikke gyldig."
   },
-  "desktopOs": {
-    "section_title": "Skrivebordsapp",
-    "section_description": "Slik samarbeider appen med datamaskinen din.",
-    "close_to_tray_label": "Fortsett i systemstatusfeltet ved lukking",
-    "close_to_tray_description": "Ny e-post og påminnelser fortsetter å komme etter at du lukker vinduet.",
-    "start_at_login_label": "Start når du logger på datamaskinen",
-    "start_at_login_description": "Appen starter av seg selv når du logger på.",
-    "start_minimized_label": "Start i systemstatusfeltet",
-    "start_minimized_description": "Det åpnes ikke noe vindu ved pålogging. Åpne appen med ikonet i systemstatusfeltet.",
-    "attention_label": "Blink i oppgavelinjen ved ny e-post",
-    "attention_mac_label": "La Dock-ikonet sprette ved ny e-post",
-    "attention_description": "Bare når appen ikke er foran.",
-    "quiet_hours_label": "Stille timer",
-    "quiet_hours_description": "Ingen varsler eller lyder i dette tidsrommet. E-post kommer fortsatt.",
-    "quiet_hours_from": "Fra",
-    "quiet_hours_to": "til",
-    "show_shortcut_label": "Vis appen med en hurtigtast",
-    "show_shortcut_description": "{keys} henter appen frem fra hvilken som helst annen app.",
-    "show_shortcut_taken": "En annen app bruker {keys}. Lukk den appen, eller slå dette av og på igjen.",
-    "default_app_label": "Standard e-postapp",
-    "default_app_description": "Åpne e-postlenker og .eml-, .ics- og .vcf-filer med denne appen.",
-    "default_app_is_default": "Denne appen åpner e-postlenkene dine.",
-    "default_app_button": "Velg standardapp…",
-    "new_mail": "Ny e-post",
-    "no_subject": "(uten emne)",
-    "action_delete": "Slett",
-    "copy_as_file": "Kopier som fil",
-    "copied": "Filen er kopiert. Du kan lime den inn i en mappe.",
-    "copy_failed": "Filen kunne ikke kopieres."
+  "desktop_keystore": {
+    "title": "Sertifikater på denne datamaskinen",
+    "description": "Denne serveren kan be om å bruke sertifikatene og smartkortene dine. Du blir likevel spurt før hvert sertifikat brukes.",
+    "label": "Tilgang for denne serveren",
+    "label_description": "Trekk tilbake tillatelsen din. Serveren må da spørre på nytt.",
+    "revoke": "Trekk tilbake",
+    "revoked": "Tillatelsen er trukket tilbake"
   }
 }

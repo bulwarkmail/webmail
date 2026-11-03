@@ -5775,6 +5775,26 @@
     "store_private": "Cửa sổ riêng tư không thể giữ thư để dùng ngoại tuyến.",
     "server_not_answering": "Máy chủ thư không phản hồi. Hãy thử lại sau giây lát."
   },
+  "offlineDrafts": {
+    "title": "Bản nháp trên thiết bị này",
+    "description": "Các bản nháp này được lưu trên thiết bị này. Chúng sẽ tự chuyển lên máy chủ ngay khi kết nối được.",
+    "saved_on_device": "Đã lưu trên thiết bị này",
+    "status_waiting": "Đang chờ máy chủ",
+    "status_sending": "Đang lưu lên máy chủ",
+    "status_uncertain": "Đang kiểm tra xem đã đến máy chủ chưa",
+    "status_refused": "Máy chủ đã từ chối bản nháp này: {error}",
+    "file_missing": "Một tệp đính kèm không còn trên thiết bị này",
+    "open": "Mở",
+    "open_label": "Mở {subject}",
+    "retry": "Thử lại",
+    "retry_label": "Thử lại {subject}",
+    "toast_refused": "Không thể lưu bản nháp {subject} lên máy chủ. Bản nháp vẫn ở trên thiết bị này.",
+    "toast_conflict": "Bản nháp {subject} đã được thay đổi trên thiết bị khác. Cả hai phiên bản đều được giữ lại.",
+    "conflict_changed": "Đã thay đổi trên thiết bị khác. Cả hai phiên bản đều ở trong Bản nháp.",
+    "conflict_gone": "Đã thay đổi hoặc xóa trên thiết bị khác. Phiên bản của bạn ở trong Bản nháp.",
+    "banner_refused": "Bản nháp bị máy chủ từ chối: {count}",
+    "banner_waiting": "Bản nháp đang chờ máy chủ: {count}"
+  },
   "deep_link": {
     "message_not_found": "Thư này không còn nữa.",
     "thread_not_found": "Cuộc trò chuyện này không còn tồn tại nữa.",
@@ -5890,6 +5910,10 @@
       "crypto_full": {
         "title": "Toàn quyền truy cập vào ứng dụng này",
         "body": "Chạy với các quyền tương tự như chính webmail. Nó có thể đọc tất cả thư và các khóa được lưu trữ của bạn và hành động thay bạn. Chỉ cho phép điều này đối với các plugin mà bạn hoàn toàn tin tưởng."
+      },
+      "keystore": {
+        "title": "Dùng chứng chỉ trên máy tính này",
+        "body": "Yêu cầu ký và giải mã thư bằng chứng chỉ trên máy tính này hoặc thẻ thông minh. Ứng dụng sẽ hỏi bạn trước. Tiện ích không bao giờ nhận được khóa riêng, nhưng khi bạn cho phép, tiện ích có thể ký dưới tên bạn và đọc nội dung đã giải mã."
       },
       "email_raw_send": {
         "title": "Gửi thư nó tự tạo",
@@ -6542,34 +6566,12 @@
     "server_declined": "Bạn không cho phép máy chủ này nên không có gì được gửi đến đó.",
     "server_invalid": "Địa chỉ máy chủ này không hợp lệ."
   },
-  "desktopOs": {
-    "section_title": "Ứng dụng máy tính",
-    "section_description": "Cách ứng dụng hoạt động với máy tính của bạn.",
-    "close_to_tray_label": "Tiếp tục chạy ở khay hệ thống khi đóng",
-    "close_to_tray_description": "Thư mới và lời nhắc vẫn đến sau khi bạn đóng cửa sổ.",
-    "start_at_login_label": "Khởi động khi đăng nhập vào máy tính",
-    "start_at_login_description": "Ứng dụng tự khởi động khi bạn đăng nhập.",
-    "start_minimized_label": "Khởi động ở khay hệ thống",
-    "start_minimized_description": "Không có cửa sổ nào mở khi đăng nhập. Mở bằng biểu tượng ở khay hệ thống.",
-    "attention_label": "Nhấp nháy thanh tác vụ khi có thư mới",
-    "attention_mac_label": "Làm biểu tượng Dock nảy khi có thư mới",
-    "attention_description": "Chỉ khi ứng dụng không ở phía trước.",
-    "quiet_hours_label": "Giờ yên tĩnh",
-    "quiet_hours_description": "Không có thông báo hay âm thanh vào giờ này. Thư vẫn đến.",
-    "quiet_hours_from": "Từ",
-    "quiet_hours_to": "đến",
-    "show_shortcut_label": "Hiện ứng dụng bằng phím tắt",
-    "show_shortcut_description": "{keys} đưa ứng dụng lên trước từ bất kỳ ứng dụng nào khác.",
-    "show_shortcut_taken": "Ứng dụng khác đang dùng {keys}. Hãy đóng ứng dụng đó, hoặc tắt rồi bật lại tùy chọn này.",
-    "default_app_label": "Ứng dụng thư mặc định",
-    "default_app_description": "Mở liên kết thư và tệp .eml, .ics, .vcf bằng ứng dụng này.",
-    "default_app_is_default": "Ứng dụng này mở các liên kết thư của bạn.",
-    "default_app_button": "Chọn ứng dụng mặc định…",
-    "new_mail": "Thư mới",
-    "no_subject": "(không có chủ đề)",
-    "action_delete": "Xóa",
-    "copy_as_file": "Sao chép dưới dạng tệp",
-    "copied": "Đã sao chép tệp. Bạn có thể dán vào một thư mục.",
-    "copy_failed": "Không thể sao chép tệp."
+  "desktop_keystore": {
+    "title": "Chứng chỉ trên máy tính này",
+    "description": "Máy chủ này có thể yêu cầu dùng chứng chỉ và thẻ thông minh của bạn. Bạn vẫn được hỏi trước khi mỗi chứng chỉ được dùng.",
+    "label": "Quyền truy cập của máy chủ này",
+    "label_description": "Thu hồi quyền của bạn. Máy chủ sẽ phải hỏi lại.",
+    "revoke": "Thu hồi",
+    "revoked": "Đã thu hồi quyền"
   }
 }

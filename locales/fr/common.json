@@ -5763,6 +5763,26 @@
     "store_private": "Les fenêtres privées ne peuvent pas conserver le courrier pour une utilisation hors ligne.",
     "server_not_answering": "Le serveur de messagerie ne répond pas. Réessayez dans un instant."
   },
+  "offlineDrafts": {
+    "title": "Brouillons sur cet appareil",
+    "description": "Ces brouillons sont enregistrés sur cet appareil. Ils partent seuls vers le serveur dès qu'il est joignable.",
+    "saved_on_device": "Enregistré sur cet appareil",
+    "status_waiting": "En attente du serveur",
+    "status_sending": "Enregistrement sur le serveur",
+    "status_uncertain": "Vérification de son arrivée sur le serveur",
+    "status_refused": "Le serveur a refusé ce brouillon : {error}",
+    "file_missing": "Un fichier joint n'est plus sur cet appareil",
+    "open": "Ouvrir",
+    "open_label": "Ouvrir {subject}",
+    "retry": "Réessayer",
+    "retry_label": "Réessayer {subject}",
+    "toast_refused": "Le brouillon {subject} n'a pas pu être enregistré sur le serveur. Il reste sur cet appareil.",
+    "toast_conflict": "Le brouillon {subject} a été modifié sur un autre appareil. Les deux versions sont conservées.",
+    "conflict_changed": "Modifié sur un autre appareil. Les deux versions sont dans Brouillons.",
+    "conflict_gone": "Modifié ou supprimé sur un autre appareil. Votre version est dans Brouillons.",
+    "banner_refused": "Brouillons refusés par le serveur : {count}",
+    "banner_waiting": "Brouillons en attente du serveur : {count}"
+  },
   "deep_link": {
     "message_not_found": "Ce message n'est plus disponible.",
     "thread_not_found": "Cette conversation n'est plus disponible.",
@@ -5878,6 +5898,10 @@
       "crypto_full": {
         "title": "Accès complet à cette application",
         "body": "S'exécute avec les mêmes droits que le webmail lui-même. Il peut lire tous vos e-mails et vos clés enregistrées, et agir en votre nom. N'autorisez ceci que pour des plugins en qui vous avez entièrement confiance."
+      },
+      "keystore": {
+        "title": "Utiliser les certificats de cet ordinateur",
+        "body": "Demande à signer et déchiffrer des messages avec les certificats de cet ordinateur ou d'une carte à puce. L'application vous pose d'abord la question. Le plugin ne reçoit jamais la clé privée, mais tant que vous l'autorisez, il peut signer en votre nom et lire ce qu'il déchiffre."
       },
       "email_raw_send": {
         "title": "Envoyer des messages qu'il a lui-même créés",
@@ -6530,34 +6554,12 @@
     "server_declined": "Vous n'avez pas autorisé ce serveur, donc rien ne lui a été envoyé.",
     "server_invalid": "Cette adresse de serveur n'est pas valide."
   },
-  "desktopOs": {
-    "section_title": "Application de bureau",
-    "section_description": "Comment l'application fonctionne avec votre ordinateur.",
-    "close_to_tray_label": "Rester dans la zone de notification à la fermeture",
-    "close_to_tray_description": "Le courrier et les rappels continuent d'arriver après la fermeture de la fenêtre.",
-    "start_at_login_label": "Démarrer à l'ouverture de session",
-    "start_at_login_description": "L'application démarre seule quand vous ouvrez votre session.",
-    "start_minimized_label": "Démarrer dans la zone de notification",
-    "start_minimized_description": "Aucune fenêtre ne s'ouvre à l'ouverture de session. Ouvrez-la avec l'icône de la zone de notification.",
-    "attention_label": "Faire clignoter la barre des tâches à l'arrivée de courrier",
-    "attention_mac_label": "Faire rebondir l'icône du Dock à l'arrivée de courrier",
-    "attention_description": "Seulement quand l'application n'est pas au premier plan.",
-    "quiet_hours_label": "Heures calmes",
-    "quiet_hours_description": "Ni notifications ni sons pendant ces heures. Le courrier continue d'arriver.",
-    "quiet_hours_from": "De",
-    "quiet_hours_to": "à",
-    "show_shortcut_label": "Afficher l'application avec un raccourci clavier",
-    "show_shortcut_description": "{keys} amène l'application au premier plan depuis n'importe quelle autre.",
-    "show_shortcut_taken": "Une autre application utilise {keys}. Fermez-la, ou désactivez puis réactivez cette option.",
-    "default_app_label": "Application de messagerie par défaut",
-    "default_app_description": "Ouvrir les liens de messagerie et les fichiers .eml, .ics et .vcf avec cette application.",
-    "default_app_is_default": "Cette application ouvre vos liens de messagerie.",
-    "default_app_button": "Choisir l'application par défaut…",
-    "new_mail": "Nouveau courrier",
-    "no_subject": "(sans objet)",
-    "action_delete": "Supprimer",
-    "copy_as_file": "Copier en tant que fichier",
-    "copied": "Fichier copié. Vous pouvez le coller dans un dossier.",
-    "copy_failed": "Le fichier n'a pas pu être copié."
+  "desktop_keystore": {
+    "title": "Certificats de cet ordinateur",
+    "description": "Ce serveur peut demander à utiliser vos certificats et cartes à puce. La question vous est quand même posée avant l'utilisation de chaque certificat.",
+    "label": "Accès de ce serveur",
+    "label_description": "Retirez votre autorisation. Le serveur devra la redemander.",
+    "revoke": "Retirer",
+    "revoked": "Autorisation retirée"
   }
 }

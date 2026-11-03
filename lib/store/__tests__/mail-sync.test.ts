@@ -13,7 +13,8 @@ import { mailArea } from '../mail';
 import { FAKE_SESSION, FakeJmap, JMAP_ACCOUNT } from './helpers/fake-jmap';
 import { openFileStore, openMemoryStore } from './helpers/node-adapter';
 
-const EVERYTHING = { ...DEFAULT_SCOPE, days: null };
+// No files: raw messages would add a commit per message, and these tests are about mail.
+const EVERYTHING = { ...DEFAULT_SCOPE, days: null, attachments: false };
 const INBOX = { inMailbox: 'inbox' };
 
 function engineFor(server: FakeJmap, db = openMemoryStore(), emit?: (e: StoreEvent) => void) {

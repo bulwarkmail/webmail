@@ -5763,6 +5763,26 @@
     "store_private": "Soukromá okna nemohou uchovávat poštu pro použití offline.",
     "server_not_answering": "Poštovní server neodpovídá. Zkuste to za chvíli znovu."
   },
+  "offlineDrafts": {
+    "title": "Koncepty v tomto zařízení",
+    "description": "Tyto koncepty jsou uložené v tomto zařízení. Na server se odešlou samy, jakmile bude dostupný.",
+    "saved_on_device": "Uloženo v tomto zařízení",
+    "status_waiting": "Čeká na server",
+    "status_sending": "Ukládá se na server",
+    "status_uncertain": "Ověřuje se, zda dorazil na server",
+    "status_refused": "Server tento koncept odmítl: {error}",
+    "file_missing": "Přiložený soubor už v tomto zařízení není",
+    "open": "Otevřít",
+    "open_label": "Otevřít {subject}",
+    "retry": "Zkusit znovu",
+    "retry_label": "Zkusit znovu: {subject}",
+    "toast_refused": "Koncept {subject} se nepodařilo uložit na server. Zůstává v tomto zařízení.",
+    "toast_conflict": "Koncept {subject} byl změněn v jiném zařízení. Obě verze zůstávají zachovány.",
+    "conflict_changed": "Změněno v jiném zařízení. Obě verze jsou v Konceptech.",
+    "conflict_gone": "Změněno nebo odstraněno v jiném zařízení. Vaše verze je v Konceptech.",
+    "banner_refused": "Koncepty odmítnuté serverem: {count}",
+    "banner_waiting": "Koncepty čekající na server: {count}"
+  },
   "deep_link": {
     "message_not_found": "Tato zpráva už není dostupná.",
     "thread_not_found": "Tato konverzace už není dostupná.",
@@ -5878,6 +5898,10 @@
       "crypto_full": {
         "title": "Plný přístup k této aplikaci",
         "body": "Běží se stejnými právy jako samotný webmail. Může číst veškerou vaši poštu a uložené klíče a jednat vaším jménem. Povolte to jen pluginům, kterým plně důvěřujete."
+      },
+      "keystore": {
+        "title": "Používat certifikáty v tomto počítači",
+        "body": "Žádá o podepisování a dešifrování zpráv pomocí certifikátů v tomto počítači nebo na čipové kartě. Aplikace se vás nejprve zeptá. Plugin nikdy nedostane soukromý klíč, ale dokud to povolíte, může podepisovat vaším jménem a číst, co dešifruje."
       },
       "email_raw_send": {
         "title": "Odesílat zprávy, které sám vytvořil",
@@ -6530,34 +6554,12 @@
     "server_declined": "Tento server jste nepovolili, proto se na něj nic neodeslalo.",
     "server_invalid": "Tato adresa serveru není platná."
   },
-  "desktopOs": {
-    "section_title": "Desktopová aplikace",
-    "section_description": "Jak aplikace spolupracuje s vaším počítačem.",
-    "close_to_tray_label": "Po zavření běžet dál v oznamovací oblasti",
-    "close_to_tray_description": "Nová pošta a připomenutí chodí i po zavření okna.",
-    "start_at_login_label": "Spustit po přihlášení k počítači",
-    "start_at_login_description": "Aplikace se po přihlášení spustí sama.",
-    "start_minimized_label": "Spustit v oznamovací oblasti",
-    "start_minimized_description": "Po přihlášení se neotevře žádné okno. Otevřete ji ikonou v oznamovací oblasti.",
-    "attention_label": "Při nové poště blikat na hlavním panelu",
-    "attention_mac_label": "Při nové poště poskakovat ikonou v Docku",
-    "attention_description": "Jen když aplikace není v popředí.",
-    "quiet_hours_label": "Doba klidu",
-    "quiet_hours_description": "V tuto dobu žádná oznámení ani zvuky. Pošta dál přichází.",
-    "quiet_hours_from": "Od",
-    "quiet_hours_to": "do",
-    "show_shortcut_label": "Zobrazit aplikaci klávesovou zkratkou",
-    "show_shortcut_description": "{keys} přenese aplikaci do popředí z jakékoli jiné aplikace.",
-    "show_shortcut_taken": "{keys} používá jiná aplikace. Zavřete ji, nebo tuto volbu vypněte a znovu zapněte.",
-    "default_app_label": "Výchozí poštovní aplikace",
-    "default_app_description": "Otevírat poštovní odkazy a soubory .eml, .ics a .vcf v této aplikaci.",
-    "default_app_is_default": "Tato aplikace otevírá vaše poštovní odkazy.",
-    "default_app_button": "Vybrat výchozí aplikaci…",
-    "new_mail": "Nová pošta",
-    "no_subject": "(bez předmětu)",
-    "action_delete": "Smazat",
-    "copy_as_file": "Kopírovat jako soubor",
-    "copied": "Soubor zkopírován. Můžete ho vložit do složky.",
-    "copy_failed": "Soubor se nepodařilo zkopírovat."
+  "desktop_keystore": {
+    "title": "Certifikáty v tomto počítači",
+    "description": "Tento server může žádat o použití vašich certifikátů a čipových karet. Před použitím každého certifikátu se vás přesto zeptáme.",
+    "label": "Přístup tohoto serveru",
+    "label_description": "Odvolejte své povolení. Server se bude muset zeptat znovu.",
+    "revoke": "Odvolat",
+    "revoked": "Povolení bylo odvoláno"
   }
 }

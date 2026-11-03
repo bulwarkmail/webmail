@@ -506,6 +506,24 @@ function buildCoreApi(manifest: PluginManifest) {
         return () => { hostFeatureListeners.delete(listener); };
       },
     },
+    /**
+     * The OS certificate store and smart cards, in the desktop app. Privileged tier
+     * with the `keystore` permission, when api.host.features.keystore is true. The
+     * shell asks the user first, so any call can answer keystore:cancelled. Key
+     * operations have no timeout here: the OS may be showing a PIN prompt, and the shell
+     * gives up by itself. Errors are bare codes: keystore:cancelled, not-found,
+     * unsupported, locked, invalid, failed.
+     */
+    keystore: {
+      /** Certificates fit for mail that have a private key. The OS doesn't prompt, and it has the usual timeout. */
+      list: () => callApi('keystore.list', []),
+      /** Signs a digest. scheme: { scheme: 'rsa-pkcs1' | 'rsa-pss' | 'ecdsa', hash }. RSA gives the raw signature, ECDSA DER. */
+      sign: (id: string, digest: Uint8Array, scheme: unknown) => callApi('keystore.sign', [id, digest, scheme], 0) as Promise<Uint8Array>,
+      /** Unwraps a content key. scheme: { scheme: 'rsa-pkcs1' } or { scheme: 'rsa-oaep', hash, label? }. */
+      decrypt: (id: string, data: Uint8Array, scheme: unknown) => callApi('keystore.decrypt', [id, data, scheme], 0) as Promise<Uint8Array>,
+      /** ECDH: the raw shared secret, big-endian, from the peer's SubjectPublicKeyInfo. */
+      agree: (id: string, peerPublicKey: Uint8Array) => callApi('keystore.agree', [id, peerPublicKey], 0) as Promise<Uint8Array>,
+    },
     /** The app the plugin runs in: product, the administrator's name for it, version, edition. No permission needed. */
     app: {
       getInfo: () => callApi('app.getInfo', []) as Promise<AppInfoView>,

@@ -5763,6 +5763,26 @@
     "store_private": "Private windows can't keep mail for offline use.",
     "server_not_answering": "The mail server isn't answering. Try again in a moment."
   },
+  "offlineDrafts": {
+    "title": "Drafts on this device",
+    "description": "These drafts are saved on this device. They go to the server by themselves once it can be reached.",
+    "saved_on_device": "Saved on this device",
+    "status_waiting": "Waiting for the server",
+    "status_sending": "Saving to the server",
+    "status_uncertain": "Checking whether it reached the server",
+    "status_refused": "The server refused this draft: {error}",
+    "file_missing": "A file attached to it is no longer on this device",
+    "open": "Open",
+    "open_label": "Open {subject}",
+    "retry": "Try again",
+    "retry_label": "Try {subject} again",
+    "toast_refused": "The draft {subject} couldn't be saved on the server. It stays on this device.",
+    "toast_conflict": "The draft {subject} was changed on another device. Both versions are kept.",
+    "conflict_changed": "Changed on another device. Both versions are in Drafts.",
+    "conflict_gone": "Changed or removed on another device. Your version is in Drafts.",
+    "banner_refused": "Drafts the server refused: {count}",
+    "banner_waiting": "Drafts waiting for the server: {count}"
+  },
   "deep_link": {
     "message_not_found": "This message is no longer available.",
     "thread_not_found": "This conversation is no longer available.",
@@ -5878,6 +5898,10 @@
       "crypto_full": {
         "title": "Full access to this app",
         "body": "Runs with the same rights as the webmail itself. It can read all your mail and stored keys and act for you. Only allow this for plugins you fully trust."
+      },
+      "keystore": {
+        "title": "Use certificates on this computer",
+        "body": "Ask to sign and decrypt messages with certificates on this computer or a smart card. The app asks you first. The plugin never gets the private key, but while you allow it, it can sign in your name and read what it decrypts."
       },
       "email_raw_send": {
         "title": "Send messages it built itself",
@@ -6530,34 +6554,12 @@
     "server_declined": "You didn't allow this server, so nothing was sent to it.",
     "server_invalid": "This server address isn't valid."
   },
-  "desktopOs": {
-    "section_title": "Desktop app",
-    "section_description": "How the app works with your computer.",
-    "close_to_tray_label": "Keep running in the tray when closed",
-    "close_to_tray_description": "New mail and reminders keep coming after you close the window.",
-    "start_at_login_label": "Start when you sign in to your computer",
-    "start_at_login_description": "The app starts by itself when you sign in.",
-    "start_minimized_label": "Start in the tray",
-    "start_minimized_description": "No window opens at sign-in. Use the tray icon to open it.",
-    "attention_label": "Flash the taskbar on new mail",
-    "attention_mac_label": "Bounce the Dock icon on new mail",
-    "attention_description": "Only when the app is not in front.",
-    "quiet_hours_label": "Quiet hours",
-    "quiet_hours_description": "No notifications or sounds at these times. Mail still arrives.",
-    "quiet_hours_from": "From",
-    "quiet_hours_to": "to",
-    "show_shortcut_label": "Show the app with a keyboard shortcut",
-    "show_shortcut_description": "{keys} brings the app to the front, from any other app.",
-    "show_shortcut_taken": "Another app is using {keys}. Close that app, or turn this off and on again.",
-    "default_app_label": "Default mail app",
-    "default_app_description": "Open mail links and .eml, .ics and .vcf files with this app.",
-    "default_app_is_default": "This app opens your mail links.",
-    "default_app_button": "Choose default app…",
-    "new_mail": "New mail",
-    "no_subject": "(no subject)",
-    "action_delete": "Delete",
-    "copy_as_file": "Copy as file",
-    "copied": "File copied. You can paste it into a folder.",
-    "copy_failed": "The file could not be copied."
+  "desktop_keystore": {
+    "title": "Certificates on this computer",
+    "description": "This server may ask to use your certificates and smart cards. You are still asked before each certificate is used.",
+    "label": "Access for this server",
+    "label_description": "Take back your permission. The server has to ask again.",
+    "revoke": "Take back",
+    "revoked": "Permission taken back"
   }
 }

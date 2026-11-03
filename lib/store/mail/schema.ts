@@ -92,4 +92,22 @@ export const MAIL_MIGRATIONS: readonly Migration[] = [
       ) WITHOUT ROWID;
     `,
   },
+  // In the drafts range: this came with drafts and attachments.
+  {
+    id: 410,
+    name: 'kept files in chunks, raw messages',
+    sql: `
+      -- Binding a whole file grows the WASM heap by its size, and that never shrinks.
+      -- A file counts as kept once its row in blob exists.
+      CREATE TABLE blob_chunk (
+        jmap TEXT NOT NULL,
+        blob_id TEXT NOT NULL,
+        seq INTEGER NOT NULL,
+        data BLOB NOT NULL,
+        PRIMARY KEY (jmap, blob_id, seq)
+      );
+      -- 1 for the whole message (Email.blobId), for an export.
+      ALTER TABLE email_part ADD COLUMN raw INTEGER NOT NULL DEFAULT 0;
+    `,
+  },
 ];

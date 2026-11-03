@@ -5763,6 +5763,26 @@
     "store_private": "Privātie logi nevar glabāt pastu lietošanai bezsaistē.",
     "server_not_answering": "Pasta serveris neatbild. Mēģiniet vēlreiz pēc brīža."
   },
+  "offlineDrafts": {
+    "title": "Melnraksti šajā ierīcē",
+    "description": "Šie melnraksti ir saglabāti šajā ierīcē. Tie paši nonāks serverī, tiklīdz tas būs sasniedzams.",
+    "saved_on_device": "Saglabāts šajā ierīcē",
+    "status_waiting": "Gaida serveri",
+    "status_sending": "Saglabā serverī",
+    "status_uncertain": "Pārbauda, vai tas sasniedza serveri",
+    "status_refused": "Serveris noraidīja šo melnrakstu: {error}",
+    "file_missing": "Pievienotais fails vairs nav šajā ierīcē",
+    "open": "Atvērt",
+    "open_label": "Atvērt {subject}",
+    "retry": "Mēģināt vēlreiz",
+    "retry_label": "Mēģināt vēlreiz: {subject}",
+    "toast_refused": "Melnrakstu {subject} neizdevās saglabāt serverī. Tas paliek šajā ierīcē.",
+    "toast_conflict": "Melnraksts {subject} tika mainīts citā ierīcē. Abas versijas tiek saglabātas.",
+    "conflict_changed": "Mainīts citā ierīcē. Abas versijas ir mapē Melnraksti.",
+    "conflict_gone": "Mainīts vai noņemts citā ierīcē. Jūsu versija ir mapē Melnraksti.",
+    "banner_refused": "Servera noraidītie melnraksti: {count}",
+    "banner_waiting": "Melnraksti, kas gaida serveri: {count}"
+  },
   "deep_link": {
     "message_not_found": "Šī ziņa vairs nav pieejama.",
     "thread_not_found": "Šī sarakste vairs nav pieejama.",
@@ -5878,6 +5898,10 @@
       "crypto_full": {
         "title": "Pilna piekļuve lietotnei",
         "body": "Darbojas ar tādām pašām tiesībām kā pats webmail. Var lasīt visu jūsu pastu un saglabātās atslēgas un rīkoties jūsu vārdā. Atļaujiet to tikai spraudņiem, kuriem pilnībā uzticaties."
+      },
+      "keystore": {
+        "title": "Izmantot šī datora sertifikātus",
+        "body": "Lūdz parakstīt un atšifrēt ziņojumus ar šī datora vai viedkartes sertifikātiem. Lietotne vispirms jautā jums. Spraudnis nekad nesaņem privāto atslēgu, taču, kamēr to atļaujat, tas var parakstīt jūsu vārdā un lasīt to, ko atšifrē."
       },
       "email_raw_send": {
         "title": "Sūtīt paša izveidotas vēstules",
@@ -6530,34 +6554,12 @@
     "server_declined": "Jūs neatļāvāt šo serveri, tāpēc tam nekas netika nosūtīts.",
     "server_invalid": "Šī servera adrese nav derīga."
   },
-  "desktopOs": {
-    "section_title": "Darbvirsmas lietotne",
-    "section_description": "Kā lietotne darbojas ar jūsu datoru.",
-    "close_to_tray_label": "Aizverot turpināt darbu teknē",
-    "close_to_tray_description": "Jauns pasts un atgādinājumi turpina pienākt arī pēc loga aizvēršanas.",
-    "start_at_login_label": "Sākt, piesakoties datorā",
-    "start_at_login_description": "Lietotne sākas pati, kad piesakāties.",
-    "start_minimized_label": "Sākt teknē",
-    "start_minimized_description": "Piesakoties logs neatveras. Atveriet to ar teknes ikonu.",
-    "attention_label": "Mirgot uzdevumjoslā, pienākot pastam",
-    "attention_mac_label": "Lēkāt Dock ikonai, pienākot pastam",
-    "attention_description": "Tikai tad, ja lietotne nav priekšplānā.",
-    "quiet_hours_label": "Klusuma stundas",
-    "quiet_hours_description": "Šajā laikā nav paziņojumu un skaņu. Pasts turpina pienākt.",
-    "quiet_hours_from": "No",
-    "quiet_hours_to": "līdz",
-    "show_shortcut_label": "Rādīt lietotni ar īsinājumtaustiņu",
-    "show_shortcut_description": "{keys} parāda lietotni priekšplānā no jebkuras citas lietotnes.",
-    "show_shortcut_taken": "{keys} izmanto cita lietotne. Aizveriet to vai izslēdziet un atkal ieslēdziet šo iestatījumu.",
-    "default_app_label": "Noklusējuma pasta lietotne",
-    "default_app_description": "Atvērt pasta saites un .eml, .ics un .vcf failus ar šo lietotni.",
-    "default_app_is_default": "Šī lietotne atver jūsu pasta saites.",
-    "default_app_button": "Izvēlēties noklusējuma lietotni…",
-    "new_mail": "Jauns pasts",
-    "no_subject": "(nav tēmas)",
-    "action_delete": "Dzēst",
-    "copy_as_file": "Kopēt kā failu",
-    "copied": "Fails nokopēts. Varat to ielīmēt mapē.",
-    "copy_failed": "Failu neizdevās nokopēt."
+  "desktop_keystore": {
+    "title": "Šī datora sertifikāti",
+    "description": "Šis serveris var lūgt izmantot jūsu sertifikātus un viedkartes. Pirms katra sertifikāta izmantošanas jums tomēr tiks jautāts.",
+    "label": "Šī servera piekļuve",
+    "label_description": "Atsauciet savu atļauju. Serverim būs jālūdz vēlreiz.",
+    "revoke": "Atsaukt",
+    "revoked": "Atļauja atsaukta"
   }
 }

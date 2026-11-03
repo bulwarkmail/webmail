@@ -5763,6 +5763,26 @@
     "store_private": "A privát ablakok nem tudnak leveleket megőrizni offline használatra.",
     "server_not_answering": "A levelezőszerver nem válaszol. Próbálja újra egy pillanat múlva."
   },
+  "offlineDrafts": {
+    "title": "Piszkozatok ezen az eszközön",
+    "description": "Ezek a piszkozatok ezen az eszközön vannak mentve. Maguktól a szerverre kerülnek, amint az elérhető.",
+    "saved_on_device": "Mentve ezen az eszközön",
+    "status_waiting": "Várakozás a szerverre",
+    "status_sending": "Mentés a szerverre",
+    "status_uncertain": "Annak ellenőrzése, hogy elérte-e a szervert",
+    "status_refused": "A szerver elutasította ezt a piszkozatot: {error}",
+    "file_missing": "Egy csatolt fájl már nincs ezen az eszközön",
+    "open": "Megnyitás",
+    "open_label": "{subject} megnyitása",
+    "retry": "Újra",
+    "retry_label": "{subject} újrapróbálása",
+    "toast_refused": "A(z) {subject} piszkozatot nem sikerült a szerverre menteni. Ezen az eszközön marad.",
+    "toast_conflict": "A(z) {subject} piszkozat egy másik eszközön módosult. Mindkét változat megmarad.",
+    "conflict_changed": "Másik eszközön módosult. Mindkét változat a Piszkozatok között van.",
+    "conflict_gone": "Másik eszközön módosult vagy törlődött. Az Ön változata a Piszkozatok között van.",
+    "banner_refused": "A szerver által elutasított piszkozatok: {count}",
+    "banner_waiting": "A szerverre váró piszkozatok: {count}"
+  },
   "deep_link": {
     "message_not_found": "Ez az üzenet már nem érhető el.",
     "thread_not_found": "Ez a beszélgetés már nem érhető el.",
@@ -5878,6 +5898,10 @@
       "crypto_full": {
         "title": "Teljes hozzáférés az alkalmazáshoz",
         "body": "Ugyanazokkal a jogokkal fut, mint maga a webmail. Olvashatja az összes leveledet és tárolt kulcsodat, és a nevedben járhat el. Csak olyan bővítménynek engedélyezd, amelyben teljesen megbízol."
+      },
+      "keystore": {
+        "title": "A számítógépen lévő tanúsítványok használata",
+        "body": "Kéri, hogy üzeneteket írhasson alá és fejthessen vissza a számítógépen vagy intelligens kártyán lévő tanúsítványokkal. Az alkalmazás előbb megkérdezi Önt. A bővítmény soha nem kapja meg a titkos kulcsot, de amíg engedélyezi, az Ön nevében írhat alá, és elolvashatja, amit visszafejt."
       },
       "email_raw_send": {
         "title": "Saját maga által összeállított üzenetek küldése",
@@ -6530,34 +6554,12 @@
     "server_declined": "Nem engedélyezte ezt a szervert, ezért semmit sem küldtünk neki.",
     "server_invalid": "Ez a szervercím nem érvényes."
   },
-  "desktopOs": {
-    "section_title": "Asztali alkalmazás",
-    "section_description": "Hogyan működik az alkalmazás a számítógépével.",
-    "close_to_tray_label": "Bezáráskor fusson tovább a tálcán",
-    "close_to_tray_description": "Az új levelek és emlékeztetők az ablak bezárása után is megérkeznek.",
-    "start_at_login_label": "Indítás a számítógépre való bejelentkezéskor",
-    "start_at_login_description": "Az alkalmazás bejelentkezéskor magától elindul.",
-    "start_minimized_label": "Indítás a tálcán",
-    "start_minimized_description": "Bejelentkezéskor nem nyílik ablak. A tálcaikonnal nyithatja meg.",
-    "attention_label": "Tálca villogtatása új levélnél",
-    "attention_mac_label": "Dock-ikon ugráltatása új levélnél",
-    "attention_description": "Csak ha az alkalmazás nincs előtérben.",
-    "quiet_hours_label": "Csendes órák",
-    "quiet_hours_description": "Ekkor nincs értesítés és hang. A levelek továbbra is megérkeznek.",
-    "quiet_hours_from": "Ettől",
-    "quiet_hours_to": "eddig",
-    "show_shortcut_label": "Az alkalmazás megjelenítése billentyűparanccsal",
-    "show_shortcut_description": "{keys} bármely más alkalmazásból előtérbe hozza az alkalmazást.",
-    "show_shortcut_taken": "Egy másik alkalmazás használja ezt: {keys}. Zárja be azt, vagy kapcsolja ki és be ezt a beállítást.",
-    "default_app_label": "Alapértelmezett levelezőalkalmazás",
-    "default_app_description": "A levélhivatkozások és a .eml, .ics és .vcf fájlok megnyitása ezzel az alkalmazással.",
-    "default_app_is_default": "Ez az alkalmazás nyitja meg a levélhivatkozásait.",
-    "default_app_button": "Alapértelmezett alkalmazás kiválasztása…",
-    "new_mail": "Új levél",
-    "no_subject": "(nincs tárgy)",
-    "action_delete": "Törlés",
-    "copy_as_file": "Másolás fájlként",
-    "copied": "Fájl másolva. Beillesztheti egy mappába.",
-    "copy_failed": "A fájlt nem sikerült másolni."
+  "desktop_keystore": {
+    "title": "A számítógépen lévő tanúsítványok",
+    "description": "Ez a kiszolgáló kérheti a tanúsítványai és intelligens kártyái használatát. Minden tanúsítvány használata előtt így is megkérdezzük.",
+    "label": "A kiszolgáló hozzáférése",
+    "label_description": "Vonja vissza az engedélyét. A kiszolgálónak újra kérnie kell.",
+    "revoke": "Visszavonás",
+    "revoked": "Engedély visszavonva"
   }
 }

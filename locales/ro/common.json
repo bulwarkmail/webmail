@@ -5763,6 +5763,26 @@
     "store_private": "Ferestrele private nu pot păstra e-mailuri pentru utilizare offline.",
     "server_not_answering": "Serverul de e-mail nu răspunde. Încercați din nou imediat."
   },
+  "offlineDrafts": {
+    "title": "Ciorne pe acest dispozitiv",
+    "description": "Aceste ciorne sunt salvate pe acest dispozitiv. Ajung singure pe server imediat ce poate fi contactat.",
+    "saved_on_device": "Salvat pe acest dispozitiv",
+    "status_waiting": "Se așteaptă serverul",
+    "status_sending": "Se salvează pe server",
+    "status_uncertain": "Se verifică dacă a ajuns pe server",
+    "status_refused": "Serverul a refuzat această ciornă: {error}",
+    "file_missing": "Un fișier atașat nu mai este pe acest dispozitiv",
+    "open": "Deschide",
+    "open_label": "Deschide {subject}",
+    "retry": "Încearcă din nou",
+    "retry_label": "Încearcă din nou: {subject}",
+    "toast_refused": "Ciorna {subject} nu a putut fi salvată pe server. Rămâne pe acest dispozitiv.",
+    "toast_conflict": "Ciorna {subject} a fost modificată pe alt dispozitiv. Ambele versiuni sunt păstrate.",
+    "conflict_changed": "Modificată pe alt dispozitiv. Ambele versiuni sunt în Ciorne.",
+    "conflict_gone": "Modificată sau eliminată pe alt dispozitiv. Versiunea dvs. este în Ciorne.",
+    "banner_refused": "Ciorne refuzate de server: {count}",
+    "banner_waiting": "Ciorne care așteaptă serverul: {count}"
+  },
   "deep_link": {
     "message_not_found": "Acest mesaj nu mai este disponibil.",
     "thread_not_found": "Această conversație nu mai este disponibilă.",
@@ -5878,6 +5898,10 @@
       "crypto_full": {
         "title": "Acces complet la această aplicație",
         "body": "Rulează cu aceleași drepturi ca webmailul însuși. Poate citi toate e-mailurile și cheile stocate și poate acționa în numele dvs. Permiteți acest lucru doar pluginurilor în care aveți încredere deplină."
+      },
+      "keystore": {
+        "title": "Folosește certificatele de pe acest computer",
+        "body": "Cere să semneze și să decripteze mesaje cu certificate de pe acest computer sau de pe un smart card. Aplicația vă întreabă mai întâi. Pluginul nu primește niciodată cheia privată, dar cât timp permiteți poate semna în numele dvs. și poate citi ce decriptează."
       },
       "email_raw_send": {
         "title": "Trimiterea mesajelor create de el însuși",
@@ -6530,34 +6554,12 @@
     "server_declined": "Nu ai permis acest server, așa că nu i s-a trimis nimic.",
     "server_invalid": "Această adresă de server nu este validă."
   },
-  "desktopOs": {
-    "section_title": "Aplicație desktop",
-    "section_description": "Cum funcționează aplicația cu computerul tău.",
-    "close_to_tray_label": "Rămâne în zona de notificări la închidere",
-    "close_to_tray_description": "E-mailurile noi și mementourile continuă să sosească după închiderea ferestrei.",
-    "start_at_login_label": "Pornește la conectarea în computer",
-    "start_at_login_description": "Aplicația pornește singură când te conectezi.",
-    "start_minimized_label": "Pornește în zona de notificări",
-    "start_minimized_description": "La conectare nu se deschide nicio fereastră. Deschide-o din pictograma din zona de notificări.",
-    "attention_label": "Clipește în bara de activități la e-mail nou",
-    "attention_mac_label": "Sare pictograma din Dock la e-mail nou",
-    "attention_description": "Doar când aplicația nu este în față.",
-    "quiet_hours_label": "Ore de liniște",
-    "quiet_hours_description": "Fără notificări sau sunete în aceste ore. E-mailurile sosesc în continuare.",
-    "quiet_hours_from": "De la",
-    "quiet_hours_to": "până la",
-    "show_shortcut_label": "Arată aplicația cu o comandă rapidă de la tastatură",
-    "show_shortcut_description": "{keys} aduce aplicația în față din orice altă aplicație.",
-    "show_shortcut_taken": "Altă aplicație folosește {keys}. Închide-o sau dezactivează și reactivează această opțiune.",
-    "default_app_label": "Aplicația de e-mail implicită",
-    "default_app_description": "Deschide linkurile de e-mail și fișierele .eml, .ics și .vcf cu această aplicație.",
-    "default_app_is_default": "Această aplicație îți deschide linkurile de e-mail.",
-    "default_app_button": "Alege aplicația implicită…",
-    "new_mail": "E-mail nou",
-    "no_subject": "(fără subiect)",
-    "action_delete": "Șterge",
-    "copy_as_file": "Copiază ca fișier",
-    "copied": "Fișier copiat. Îl poți lipi într-un dosar.",
-    "copy_failed": "Fișierul nu a putut fi copiat."
+  "desktop_keystore": {
+    "title": "Certificate de pe acest computer",
+    "description": "Acest server poate cere să vă folosească certificatele și smart cardurile. Veți fi întrebat în continuare înainte de folosirea fiecărui certificat.",
+    "label": "Accesul acestui server",
+    "label_description": "Retrageți permisiunea. Serverul va trebui să ceară din nou.",
+    "revoke": "Retrage",
+    "revoked": "Permisiune retrasă"
   }
 }

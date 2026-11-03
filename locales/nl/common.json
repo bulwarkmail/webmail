@@ -5763,6 +5763,26 @@
     "store_private": "Privévensters kunnen geen mail bewaren voor offline gebruik.",
     "server_not_answering": "De mailserver antwoordt niet. Probeer het zo meteen opnieuw."
   },
+  "offlineDrafts": {
+    "title": "Concepten op dit apparaat",
+    "description": "Deze concepten zijn op dit apparaat opgeslagen. Ze gaan vanzelf naar de server zodra die bereikbaar is.",
+    "saved_on_device": "Opgeslagen op dit apparaat",
+    "status_waiting": "Wacht op de server",
+    "status_sending": "Wordt op de server opgeslagen",
+    "status_uncertain": "Controleren of het de server heeft bereikt",
+    "status_refused": "De server heeft dit concept geweigerd: {error}",
+    "file_missing": "Een bijgevoegd bestand staat niet meer op dit apparaat",
+    "open": "Openen",
+    "open_label": "{subject} openen",
+    "retry": "Opnieuw proberen",
+    "retry_label": "{subject} opnieuw proberen",
+    "toast_refused": "Het concept {subject} kon niet op de server worden opgeslagen. Het blijft op dit apparaat.",
+    "toast_conflict": "Het concept {subject} is op een ander apparaat gewijzigd. Beide versies blijven bewaard.",
+    "conflict_changed": "Gewijzigd op een ander apparaat. Beide versies staan in Concepten.",
+    "conflict_gone": "Gewijzigd of verwijderd op een ander apparaat. Uw versie staat in Concepten.",
+    "banner_refused": "Door de server geweigerde concepten: {count}",
+    "banner_waiting": "Concepten die op de server wachten: {count}"
+  },
   "deep_link": {
     "message_not_found": "Dit bericht is niet meer beschikbaar.",
     "thread_not_found": "Dit gesprek is niet meer beschikbaar.",
@@ -5878,6 +5898,10 @@
       "crypto_full": {
         "title": "Volledige toegang tot deze app",
         "body": "Draait met dezelfde rechten als de webmail zelf. Hij kan al je e-mail en opgeslagen sleutels lezen en namens jou handelen. Sta dit alleen toe voor plug-ins die je volledig vertrouwt."
+      },
+      "keystore": {
+        "title": "Certificaten op deze computer gebruiken",
+        "body": "Vraagt om berichten te ondertekenen en te ontsleutelen met certificaten op deze computer of een smartcard. De app vraagt het u eerst. De plug-in krijgt nooit de privésleutel, maar zolang u het toestaat, kan hij in uw naam ondertekenen en lezen wat hij ontsleutelt."
       },
       "email_raw_send": {
         "title": "Zelf samengestelde berichten verzenden",
@@ -6530,34 +6554,12 @@
     "server_declined": "Je hebt deze server niet toegestaan, dus er is niets naartoe gestuurd.",
     "server_invalid": "Dit serveradres is niet geldig."
   },
-  "desktopOs": {
-    "section_title": "Desktop-app",
-    "section_description": "Hoe de app samenwerkt met je computer.",
-    "close_to_tray_label": "Bij sluiten doorgaan in het systeemvak",
-    "close_to_tray_description": "Nieuwe mail en herinneringen blijven komen nadat je het venster sluit.",
-    "start_at_login_label": "Starten als je je aanmeldt op de computer",
-    "start_at_login_description": "De app start vanzelf als je je aanmeldt.",
-    "start_minimized_label": "Starten in het systeemvak",
-    "start_minimized_description": "Bij het aanmelden opent geen venster. Open de app met het pictogram in het systeemvak.",
-    "attention_label": "Taakbalk laten knipperen bij nieuwe mail",
-    "attention_mac_label": "Dock-pictogram laten stuiteren bij nieuwe mail",
-    "attention_description": "Alleen als de app niet vooraan staat.",
-    "quiet_hours_label": "Stille uren",
-    "quiet_hours_description": "Geen meldingen of geluiden op deze tijden. Mail blijft binnenkomen.",
-    "quiet_hours_from": "Van",
-    "quiet_hours_to": "tot",
-    "show_shortcut_label": "App tonen met een sneltoets",
-    "show_shortcut_description": "{keys} haalt de app naar voren vanuit elke andere app.",
-    "show_shortcut_taken": "Een andere app gebruikt {keys}. Sluit die app, of zet dit uit en weer aan.",
-    "default_app_label": "Standaard-mailapp",
-    "default_app_description": "Maillinks en .eml-, .ics- en .vcf-bestanden openen met deze app.",
-    "default_app_is_default": "Deze app opent je maillinks.",
-    "default_app_button": "Standaard-app kiezen…",
-    "new_mail": "Nieuwe mail",
-    "no_subject": "(geen onderwerp)",
-    "action_delete": "Verwijderen",
-    "copy_as_file": "Kopiëren als bestand",
-    "copied": "Bestand gekopieerd. Je kunt het in een map plakken.",
-    "copy_failed": "Het bestand kon niet worden gekopieerd."
+  "desktop_keystore": {
+    "title": "Certificaten op deze computer",
+    "description": "Deze server kan vragen om uw certificaten en smartcards te gebruiken. U krijgt nog steeds een vraag voordat een certificaat wordt gebruikt.",
+    "label": "Toegang voor deze server",
+    "label_description": "Trek uw toestemming in. De server moet dan opnieuw vragen.",
+    "revoke": "Intrekken",
+    "revoked": "Toestemming ingetrokken"
   }
 }

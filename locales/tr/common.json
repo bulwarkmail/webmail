@@ -5763,6 +5763,26 @@
     "store_private": "Gizli pencereler e-postaları çevrimdışı kullanım için saklayamaz.",
     "server_not_answering": "E-posta sunucusu yanıt vermiyor. Birazdan yeniden deneyin."
   },
+  "offlineDrafts": {
+    "title": "Bu cihazdaki taslaklar",
+    "description": "Bu taslaklar bu cihaza kaydedildi. Sunucuya ulaşılır ulaşılmaz kendiliğinden gönderilir.",
+    "saved_on_device": "Bu cihaza kaydedildi",
+    "status_waiting": "Sunucu bekleniyor",
+    "status_sending": "Sunucuya kaydediliyor",
+    "status_uncertain": "Sunucuya ulaşıp ulaşmadığı denetleniyor",
+    "status_refused": "Sunucu bu taslağı reddetti: {error}",
+    "file_missing": "Ekli bir dosya artık bu cihazda değil",
+    "open": "Aç",
+    "open_label": "{subject} öğesini aç",
+    "retry": "Yeniden dene",
+    "retry_label": "{subject} için yeniden dene",
+    "toast_refused": "{subject} taslağı sunucuya kaydedilemedi. Bu cihazda kalıyor.",
+    "toast_conflict": "{subject} taslağı başka bir cihazda değiştirildi. İki sürüm de saklanıyor.",
+    "conflict_changed": "Başka bir cihazda değiştirildi. İki sürüm de Taslaklar'da.",
+    "conflict_gone": "Başka bir cihazda değiştirildi veya kaldırıldı. Sizin sürümünüz Taslaklar'da.",
+    "banner_refused": "Sunucunun reddettiği taslaklar: {count}",
+    "banner_waiting": "Sunucuyu bekleyen taslaklar: {count}"
+  },
   "deep_link": {
     "message_not_found": "Bu ileti artık kullanılamıyor.",
     "thread_not_found": "Bu sohbet artık kullanılamıyor.",
@@ -5878,6 +5898,10 @@
       "crypto_full": {
         "title": "Bu uygulamaya tam erişim",
         "body": "Webmail'in kendisiyle aynı haklarla çalışır. Tüm e-postalarınızı ve kayıtlı anahtarlarınızı okuyabilir, sizin adınıza işlem yapabilir. Buna yalnızca tamamen güvendiğiniz eklentiler için izin verin."
+      },
+      "keystore": {
+        "title": "Bu bilgisayardaki sertifikaları kullan",
+        "body": "Bu bilgisayardaki veya akıllı karttaki sertifikalarla iletileri imzalamak ve şifresini çözmek ister. Uygulama önce size sorar. Eklenti özel anahtarı asla almaz, ancak siz izin verdiğiniz sürece adınıza imzalayabilir ve şifresini çözdüğünü okuyabilir."
       },
       "email_raw_send": {
         "title": "Kendi oluşturduğu iletileri gönderme",
@@ -6530,34 +6554,12 @@
     "server_declined": "Bu sunucuya izin vermediniz, bu yüzden ona hiçbir şey gönderilmedi.",
     "server_invalid": "Bu sunucu adresi geçerli değil."
   },
-  "desktopOs": {
-    "section_title": "Masaüstü uygulaması",
-    "section_description": "Uygulamanın bilgisayarınızla nasıl çalıştığı.",
-    "close_to_tray_label": "Kapatınca sistem tepsisinde çalışmaya devam et",
-    "close_to_tray_description": "Pencereyi kapattıktan sonra da yeni postalar ve anımsatıcılar gelmeye devam eder.",
-    "start_at_login_label": "Bilgisayarda oturum açınca başlat",
-    "start_at_login_description": "Oturum açtığınızda uygulama kendiliğinden başlar.",
-    "start_minimized_label": "Sistem tepsisinde başlat",
-    "start_minimized_description": "Oturum açarken pencere açılmaz. Sistem tepsisindeki simgeyle açın.",
-    "attention_label": "Yeni postada görev çubuğunu yanıp söndür",
-    "attention_mac_label": "Yeni postada Dock simgesini zıplat",
-    "attention_description": "Yalnızca uygulama önde değilken.",
-    "quiet_hours_label": "Sessiz saatler",
-    "quiet_hours_description": "Bu saatlerde bildirim ve ses yok. Postalar gelmeye devam eder.",
-    "quiet_hours_from": "Başlangıç",
-    "quiet_hours_to": "bitiş",
-    "show_shortcut_label": "Uygulamayı klavye kısayoluyla göster",
-    "show_shortcut_description": "{keys} uygulamayı başka herhangi bir uygulamadan öne getirir.",
-    "show_shortcut_taken": "{keys} başka bir uygulama tarafından kullanılıyor. O uygulamayı kapatın ya da bunu kapatıp yeniden açın.",
-    "default_app_label": "Varsayılan posta uygulaması",
-    "default_app_description": "Posta bağlantılarını ve .eml, .ics, .vcf dosyalarını bu uygulamayla aç.",
-    "default_app_is_default": "Posta bağlantılarınızı bu uygulama açıyor.",
-    "default_app_button": "Varsayılan uygulamayı seç…",
-    "new_mail": "Yeni posta",
-    "no_subject": "(konu yok)",
-    "action_delete": "Sil",
-    "copy_as_file": "Dosya olarak kopyala",
-    "copied": "Dosya kopyalandı. Bir klasöre yapıştırabilirsiniz.",
-    "copy_failed": "Dosya kopyalanamadı."
+  "desktop_keystore": {
+    "title": "Bu bilgisayardaki sertifikalar",
+    "description": "Bu sunucu, sertifikalarınızı ve akıllı kartlarınızı kullanmak isteyebilir. Her sertifika kullanılmadan önce yine de size sorulur.",
+    "label": "Bu sunucunun erişimi",
+    "label_description": "İzninizi geri alın. Sunucunun yeniden sorması gerekir.",
+    "revoke": "Geri al",
+    "revoked": "İzin geri alındı"
   }
 }

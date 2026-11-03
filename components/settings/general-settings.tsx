@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, ToggleSwitch } from './settings-section';
 import { LanguageSettings } from './language-settings';
+import { DesktopKeystoreSettings } from './desktop-keystore-settings';
 import { ProtocolHandlerSettings } from './protocol-handler-settings';
 import { DesktopOsSettings } from './desktop-os-settings';
 import { useTour } from '@/components/tour/tour-provider';
@@ -28,6 +29,7 @@ export function GeneralSettings({ supportsCalendar }: { supportsCalendar: boolea
       <DesktopOsSettings />
 
       {!IS_LITE && <ProtocolHandlerSettings supportsCalendar={supportsCalendar} />}
+      <DesktopKeystoreSettings />
 
       <SettingsSection id="tour" title={tTour('settings_section')}>
         <SettingItem label={tTour('restart_title')} description={tTour('restart_desc')}>

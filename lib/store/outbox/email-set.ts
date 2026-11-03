@@ -4,7 +4,10 @@
  * same way. Answers carry no state: a made-up one would reach the server later.
  */
 
+import { isStandInId } from '@/lib/jmap/stand-in-ids';
 import { MethodError, type MethodContext, type MethodHandler, type RecordOverlay } from '../area';
+import { createLocalDraft, destroyForDraft, updateLocalDraft } from '../drafts/pending';
+import type { DraftCreate } from '../drafts/local-email';
 import { metaGet, metaSet } from '../engine/core-schema';
 import { deleteEmail, upsertEmail, type EmailObject } from '../mail/records';
 import type { StorageAdapter } from '../storage';
@@ -24,6 +27,7 @@ export interface PatchRow {
 }
 
 const EMAIL = 'Email';
+export const EMAIL_TYPE = EMAIL;
 
 /** The next place in the order changes and sends were made. */
 export function nextSeq(db: StorageAdapter): number {
@@ -32,11 +36,11 @@ export function nextSeq(db: StorageAdapter): number {
   return next;
 }
 
-function pendingRow(db: StorageAdapter, jmap: string, id: string): PatchRow | undefined {
+export function pendingRow(db: StorageAdapter, jmap: string, id: string): PatchRow | undefined {
   return db.get<PatchRow>('SELECT * FROM outbox_patch WHERE jmap = ? AND type = ? AND record_id = ?', [jmap, EMAIL, id]);
 }
 
-function savePatch(db: StorageAdapter, row: Omit<PatchRow, 'seq' | 'queued_at' | 'type'>, now: number): void {
+export function savePatch(db: StorageAdapter, row: Omit<PatchRow, 'seq' | 'queued_at' | 'type'>, now: number): void {
   db.run(
     `INSERT INTO outbox_patch (jmap, type, record_id, op, patch, base, server, subject, seq, queued_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -45,7 +49,7 @@ function savePatch(db: StorageAdapter, row: Omit<PatchRow, 'seq' | 'queued_at' |
   );
 }
 
-function localEmail(db: StorageAdapter, jmap: string, id: string): { email: EmailObject; gen: number } | null {
+export function localEmail(db: StorageAdapter, jmap: string, id: string): { email: EmailObject; gen: number } | null {
   const row = db.get<{ json: string; gen: number }>('SELECT json, gen FROM email WHERE jmap = ? AND id = ?', [jmap, id]);
   return row ? { email: JSON.parse(row.json) as EmailObject, gen: Number(row.gen) } : null;
 }
@@ -90,13 +94,16 @@ export function queueDestroy(db: StorageAdapter, jmap: string, id: string, now: 
   if (local) deleteEmail(db, jmap, id);
 }
 
-/**
- * SEAM for the drafts agent: Email/set create is theirs. Until it lands every
- * create is refused per message, so createDraft throws and the composer shows
- * its "draft not saved" state, as it does today.
- */
-function createEmails(_ctx: MethodContext, _jmap: string, create: Record<string, unknown>): Record<string, { type: string; description: string }> {
-  return Object.fromEntries(Object.keys(create).map((id) => [id, { type: 'serverUnavailable', description: 'Saving a draft needs the server' }]));
+/** A draft stays on this device until it can go up (lib/store/drafts). Any other new message needs the server. */
+function createEmails(ctx: MethodContext, jmap: string, create: Record<string, unknown>, networkTried: boolean): { created: Record<string, unknown>; notCreated: Record<string, unknown> } {
+  const created: Record<string, unknown> = {};
+  const notCreated: Record<string, unknown> = {};
+  for (const [creationId, email] of Object.entries(create)) {
+    const { refused, ...answer } = createLocalDraft(ctx, jmap, email as DraftCreate, networkTried);
+    if (refused) notCreated[creationId] = answer;
+    else created[creationId] = answer;
+  }
+  return { created, notCreated };
 }
 
 export const emailSet: MethodHandler = (ctx, args) => {
@@ -107,14 +114,15 @@ export const emailSet: MethodHandler = (ctx, args) => {
   const result: Record<string, unknown> = { accountId: jmap };
   ctx.db.transaction(() => {
     if (args.create && Object.keys(args.create as object).length > 0) {
-      result.created = {};
-      result.notCreated = createEmails(ctx, jmap, args.create as Record<string, unknown>);
+      const { created, notCreated } = createEmails(ctx, jmap, args.create as Record<string, unknown>, args.networkTried === true);
+      result.created = created;
+      if (Object.keys(notCreated).length > 0) result.notCreated = notCreated;
     }
     if (args.update) {
       const updated: Record<string, null> = {};
       const notUpdated: Record<string, unknown> = {};
       for (const [id, patch] of Object.entries(args.update as Record<string, Patch>)) {
-        const problem = queueUpdate(ctx.db, jmap, id, patch, ctx.now());
+        const problem = isStandInId(id) ? updateLocalDraft(ctx, jmap, id, patch) : queueUpdate(ctx.db, jmap, id, patch, ctx.now());
         if (problem) notUpdated[id] = problem;
         else updated[id] = null;
       }
@@ -122,7 +130,10 @@ export const emailSet: MethodHandler = (ctx, args) => {
       if (Object.keys(notUpdated).length > 0) result.notUpdated = notUpdated;
     }
     if (Array.isArray(args.destroy)) {
-      for (const id of args.destroy as string[]) queueDestroy(ctx.db, jmap, id, ctx.now());
+      const replacedBy = typeof args.replacedBy === 'string' ? args.replacedBy : undefined;
+      for (const id of args.destroy as string[]) {
+        if (!destroyForDraft(ctx, jmap, id, replacedBy)) queueDestroy(ctx.db, jmap, id, ctx.now());
+      }
       result.destroyed = args.destroy;
     }
   });
