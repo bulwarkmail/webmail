@@ -842,7 +842,9 @@ test('nothing of a kept message is readable on the device', async ({ browser }) 
   await enableOffline(page);
   await expect(async () => {
     const client = await jmapAs(ENT.alice);
-    const total = await client.request([['Email/query', { accountId: client.accountId, calculateTotal: true, limit: 0 }, '0']]);
+    // The default window: the old message of the cap test stays out.
+    const after = new Date(Date.now() - 90 * 86_400_000).toISOString().replace(/\.\d+Z$/, 'Z');
+    const total = await client.request([['Email/query', { accountId: client.accountId, filter: { after }, calculateTotal: true, limit: 0 }, '0']]);
     expect(await keptMessages(page)).toBeGreaterThanOrEqual(total.methodResponses[0][1].total);
   }).toPass({ timeout: 180_000, intervals: [2000] });
   await toMail(page);
