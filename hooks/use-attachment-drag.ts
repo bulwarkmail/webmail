@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, DragEvent } from "react";
+import { canDragNativeFiles, copyFilesToClipboard, startNativeFileDrag } from "@/lib/desktop/file-drag";
 
 // Chromium ships the `DownloadURL` DataTransfer entry, which the OS reads on
 // drop to materialize a real file. Firefox and Safari ignore it, so we only
@@ -40,6 +41,8 @@ export interface UseAttachmentDragResult {
   onPointerEnter: () => void;
   onDragStart: (e: DragEvent<HTMLDivElement>) => void;
   onDragEnd: (e: DragEvent<HTMLDivElement>) => void;
+  /** The desktop app: put the file on the clipboard, for pasting into Explorer or Finder. */
+  onCopyAsFile?: () => Promise<boolean>;
 }
 
 const NOOP_HANDLERS: UseAttachmentDragResult = {
@@ -104,6 +107,13 @@ export function useAttachmentDrag(
         return;
       }
 
+      // In the desktop app the OS's own drag, with the real file on disk first.
+      if (canDragNativeFiles()) {
+        e.preventDefault();
+        void startNativeFileDrag([{ name, url }]);
+        return;
+      }
+
       // `DownloadURL` format: <mime>:<filename>:<url>. The filename must be
       // raw - URL-encoding it lands literally on disk (`%20` instead of a
       // space). Callers are expected to sanitise reserved chars (`:` etc.)
@@ -125,6 +135,11 @@ export function useAttachmentDrag(
     }
   }, []);
 
+  const copyAsFile = useCallback(async () => {
+    const url = urlRef.current ?? await source.getBlobUrl();
+    return url ? copyFilesToClipboard([{ name: source.name || "download", url }]) : false;
+  }, [source]);
+
   if (!enabled) return NOOP_HANDLERS;
 
   return {
@@ -132,5 +147,6 @@ export function useAttachmentDrag(
     onPointerEnter: prefetch,
     onDragStart: handleDragStart,
     onDragEnd: handleDragEnd,
+    ...(canDragNativeFiles() ? { onCopyAsFile: copyAsFile } : {}),
   };
 }

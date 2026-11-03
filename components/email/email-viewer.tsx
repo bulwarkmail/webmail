@@ -677,6 +677,7 @@ interface DraggableAttachmentChipProps {
     onPointerEnter: () => void;
     onDragStart: (e: React.DragEvent<HTMLDivElement>) => void;
     onDragEnd: (e: React.DragEvent<HTMLDivElement>) => void;
+    onCopyAsFile?: () => Promise<boolean>;
   }) => React.ReactNode;
 }
 

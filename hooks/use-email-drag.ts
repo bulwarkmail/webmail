@@ -9,6 +9,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useDragDropContext } from "@/contexts/drag-drop-context";
 import { useUIStore } from "@/stores/ui-store";
 import { isDragOutSupported } from "@/hooks/use-attachment-drag";
+import { canDragNativeFiles, startNativeFileDrag } from "@/lib/desktop/file-drag";
 import { canExport } from "@/lib/device-policy";
 import { appUrl, buildMailPath } from "@/lib/deep-links";
 import {
@@ -295,6 +296,13 @@ export function useEmailDrag({ email, sourceMailboxId, threadEmails }: UseEmailD
         const url = singleRef.current?.key === route.key ? singleRef.current.url : null;
         if (url) {
           const name = emailExportFilename(emailsToDrag[0], filenameOptions);
+          // Desktop app, Alt held: the OS's own drag with the real file. A plain drag has
+          // to stay the page's, because it also moves the message to a folder.
+          if (e.altKey && canDragNativeFiles()) {
+            e.preventDefault();
+            void startNativeFileDrag([{ name, url }]);
+            return;
+          }
           // `DownloadURL` format: <mime>:<filename>:<url>. Chromium expects
           // the filename raw - URL-encoding it ends up literally on disk
           // (e.g. `%20` instead of a space). The sanitiser already removed
@@ -313,6 +321,11 @@ export function useEmailDrag({ email, sourceMailboxId, threadEmails }: UseEmailD
         const routed = emailsToDrag.map((em) => routeEmail(em, filenameOptions));
         const ready = getReadyBundle(routed, bundleOptions);
         if (ready) {
+          if (e.altKey && canDragNativeFiles()) {
+            e.preventDefault();
+            void startNativeFileDrag([{ name: ready.name, url: ready.url }]);
+            return;
+          }
           e.dataTransfer.setData(
             "DownloadURL",
             `application/zip:${ready.name}:${ready.url}`,

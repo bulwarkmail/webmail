@@ -1,0 +1,70 @@
+/**
+ * Waking up without stale state. After sleep, an unlock or a network change, the app
+ * does what it does when a tab comes back into view: the JMAP client checks for state
+ * changes and replaces a dead stream, the identities and policy refresh. Those are the
+ * handlers already listening, so this only gives them the word. The hidden main window
+ * of the desktop app never goes out of view, so without this they wouldn't hear it.
+ *
+ * The local store registers with addWakeHandler and addSleepHandler (setOnline, sync).
+ */
+
+import { getDesktopBridge } from '@/lib/desktop/bridge';
+import { usePolicyStore } from '@/stores/policy-store';
+
+type Handler = () => void;
+
+const wakeHandlers = new Set<Handler>();
+const sleepHandlers = new Set<Handler>();
+/** A resume and an unlock usually come together. */
+const WAKE_REPEAT_MS = 2000;
+
+export function addWakeHandler(handler: Handler): () => void {
+  wakeHandlers.add(handler);
+  return () => wakeHandlers.delete(handler);
+}
+
+export function addSleepHandler(handler: Handler): () => void {
+  sleepHandlers.add(handler);
+  return () => sleepHandlers.delete(handler);
+}
+
+function runAll(handlers: Set<Handler>): void {
+  for (const handler of [...handlers]) {
+    try {
+      handler();
+    } catch (error) {
+      console.error('A wake or sleep handler failed:', error);
+    }
+  }
+}
+
+function wake(): void {
+  document.dispatchEvent(new Event('visibilitychange'));
+  window.dispatchEvent(new Event('online'));
+  const policy = usePolicyStore.getState();
+  if (policy.loaded && !policy.fetching) void policy.fetchPolicy();
+  runAll(wakeHandlers);
+}
+
+export function startPowerWatch(): () => void {
+  const bridge = getDesktopBridge()?.os;
+  if (!bridge) return () => {};
+  let lastWake = 0;
+  const wakeOnce = () => {
+    const now = Date.now();
+    if (now - lastWake < WAKE_REPEAT_MS) return;
+    lastWake = now;
+    wake();
+  };
+  const stopPower = bridge.onPower((event) => {
+    if (event === 'resume' || event === 'unlock-screen') wakeOnce();
+    else if (event === 'suspend') runAll(sleepHandlers);
+  });
+  // Wi-Fi to cable is a new network with no offline moment in between.
+  const connection = (navigator as unknown as { connection?: EventTarget }).connection;
+  connection?.addEventListener?.('change', wakeOnce);
+  return () => {
+    stopPower();
+    connection?.removeEventListener?.('change', wakeOnce);
+  };
+}

@@ -5,6 +5,7 @@ import { useSettingsStore } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, ToggleSwitch } from './settings-section';
 import { LanguageSettings } from './language-settings';
 import { ProtocolHandlerSettings } from './protocol-handler-settings';
+import { DesktopOsSettings } from './desktop-os-settings';
 import { useTour } from '@/components/tour/tour-provider';
 import { Button } from '@/components/ui/button';
 import { PlayCircle } from '@/components/icons';
@@ -23,6 +24,8 @@ export function GeneralSettings({ supportsCalendar }: { supportsCalendar: boolea
   return (
     <div className="space-y-8">
       <LanguageSettings />
+
+      <DesktopOsSettings />
 
       {!IS_LITE && <ProtocolHandlerSettings supportsCalendar={supportsCalendar} />}
 

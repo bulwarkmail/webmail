@@ -13,6 +13,7 @@ const makeClient = (accountId: string) => ({
   getAccountId: () => accountId,
   getEmail: vi.fn(async (id: string) => (id === 'gone' ? null : { id, receivedAt: '2026-01-01T00:00:00Z', mailboxIds: { [id === 'binned' ? 'bin' : 'inbox']: true } })),
   getMailboxes: vi.fn(async () => [{ id: 'inbox', role: 'inbox' }, { id: 'x', originalId: 'bin', role: 'trash' }]),
+  batchMoveEmails: vi.fn(async (..._args: unknown[]) => {}),
 });
 let clients: Record<string, ReturnType<typeof makeClient>>;
 let activeAccountId = 'alice@one';
@@ -31,7 +32,9 @@ vi.mock('@/stores/auth-store', () => ({
     }),
   },
 }));
-vi.mock('@/stores/email-store', () => ({ useEmailStore: { getState: () => ({ batchMarkAsRead, batchArchive }) } }));
+let listed: { id: string; sourceClientAccountId?: string }[] = [];
+const deleteEmail = vi.fn(async (..._args: unknown[]) => true);
+vi.mock('@/stores/email-store', () => ({ useEmailStore: { getState: () => ({ batchMarkAsRead, batchArchive, deleteEmail, emails: listed }) } }));
 // Each login's own subject, and a policy that reads it: the gate of the login
 // the notification is for, not of the one that's active here.
 vi.mock('@/lib/org/account-subjects', () => ({ subjectForAccount: (id: string) => ({ email: id, groups: [] }) }));
@@ -43,6 +46,7 @@ vi.mock('@/stores/policy-store', () => ({
   },
 }));
 vi.mock('../plugin-veto', () => ({ vetoHooksRegistered: () => hooksRegistered }));
+vi.mock('@/stores/settings-store', () => ({ useSettingsStore: { getState: () => ({ deleteAction: 'trash' }) } }));
 
 async function run(over: Partial<NotificationActionRequest> = {}) {
   const request: NotificationActionRequest = {
@@ -65,6 +69,7 @@ beforeEach(() => {
   activeAccountId = 'alice@one';
   gateOff.clear();
   hooksRegistered = false;
+  listed = [];
   batchMarkAsRead.mockResolvedValue(true);
   batchArchive.mockResolvedValue(true);
 });
@@ -276,5 +281,36 @@ describe('Reply', () => {
     await run({ action: 'reply' });
     expect(current).toHaveBeenCalled();
     removeCurrent();
+  });
+});
+
+describe("Delete, from the desktop app's toast", () => {
+  it('goes through the store when the message is in the list, with its hooks and the Delete setting', async () => {
+    listed = [{ id: 'e1' }];
+    expect(await run({ action: 'delete' })).toEqual(['accepted', 'done']);
+    expect(deleteEmail).toHaveBeenCalledWith(clients['alice@one'], 'e1');
+    expect(clients['alice@one'].batchMoveEmails).not.toHaveBeenCalled();
+  });
+
+  it("moves it to Trash by the folder's real id when it is not in the list", async () => {
+    expect(await run({ action: 'delete' })).toEqual(['accepted', 'done']);
+    expect(clients['alice@one'].batchMoveEmails).toHaveBeenCalledWith(['e1'], 'bin', undefined, expect.any(Boolean));
+    expect(deleteEmail).not.toHaveBeenCalled();
+  });
+
+  it('plugins are never gone round: with a veto hook listening, the message opens instead', async () => {
+    hooksRegistered = true;
+    expect(await run({ action: 'delete' })).toEqual(['accepted', 'failed']);
+    expect(clients['alice@one'].batchMoveEmails).not.toHaveBeenCalled();
+  });
+
+  it('a message since moved to Trash stays there', async () => {
+    clients['alice@one'].getEmail.mockResolvedValue({ id: 'e1', mailboxIds: { bin: true } } as never);
+    expect(await run({ action: 'delete' })).toEqual(['accepted', 'failed']);
+    expect(clients['alice@one'].batchMoveEmails).not.toHaveBeenCalled();
+  });
+
+  it("the worker can't send one", () => {
+    expect(isNotificationActionRequest({ action: 'delete', emailId: 'e1', accountId: 'a', at: Date.now() })).toBe(false);
   });
 });
