@@ -422,7 +422,7 @@ export function NavigationRail({
           ref={tabBarScrollRef}
           data-mobile-navigation-scroll=""
           className="flex items-center min-w-0 overflow-x-auto mobile-scroll-hidden"
-          style={{ flex: `${scrollingCount} 1 ${scrollingCount * 55}px` }}
+          style={{ flex: `${scrollingCount} 1 ${scrollingCount * 52}px` }}
         >
         {visibleItems.map((item) => {
           const isActive = getIsActive(item.href, item.id);
@@ -434,7 +434,7 @@ export function NavigationRail({
               onClick={handleNavClick(item.id as 'mail' | 'calendar' | 'contacts' | 'files' | 'settings')}
               data-tour={`nav-${item.id}`}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[55px]",
+                "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[52px]",
                 "transition-colors duration-150",
                 isActive
                   ? "text-primary"
@@ -476,7 +476,7 @@ export function NavigationRail({
               data-plugin-page-link={`${page.pluginId}/${page.id}`}
               title={page.pluginName}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[55px]",
+                "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[52px]",
                 "transition-colors duration-150",
                 isActive
                   ? "text-primary"
@@ -515,7 +515,7 @@ export function NavigationRail({
                 }
               }}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[55px]",
+                "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[52px]",
                 "transition-colors duration-150",
                 isActive
                   ? "text-primary"
@@ -538,7 +538,7 @@ export function NavigationRail({
           <a
             href={`${getPathPrefix()}/admin`}
             className={cn(
-              "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[55px]",
+              "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[52px]",
               "transition-colors duration-150",
               adminActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
             )}
@@ -572,7 +572,7 @@ export function NavigationRail({
           onClick={handleNavClick('settings')}
           data-tour="nav-settings"
           className={cn(
-            "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[55px]",
+            "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[52px]",
             "transition-colors duration-150",
             isSettingsActive
               ? "text-primary"
