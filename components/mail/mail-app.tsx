@@ -142,6 +142,7 @@ import { usePluginStore } from "@/stores/plugin-store";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
 import { canDownload } from "@/lib/device-policy";
 import { consumePendingMailto, subscribeToPendingMailto } from "@/lib/protocol-handlers/session";
+import { subscribeHandoff, takeHandoff } from "@/lib/launch-handoff";
 import { INTERNAL_MAILTO_EVENT, type ParsedMailto } from "@/lib/protocol-handlers/mailto";
 import { PLUGIN_REPLY_EVENT, type PluginReplyRequest } from "@/lib/plugin-sandbox/host-api-compose";
 import { onOpenEmail, type OpenEmailHandler, type OpenEmailOutcome } from "@/lib/plugin-sandbox/open-email";
@@ -230,6 +231,9 @@ const UNIFIED_LIST_PUSH = {
   },
 };
 
+/** A draft from outside: a mailto:, or a share with files. ParsedMailto stays JSON, for sessionStorage. */
+type DraftRequest = ParsedMailto & { initialFiles?: File[] };
+
 export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Static Lite build: the route params are empty, read the link from the URL.
   const linkSegments = useLiteLinkSegments('mail', routeSegments);
@@ -314,7 +318,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Office attachments open read-only in the configured WOPI editor (#1047).
   const [officeAttachment, setOfficeAttachment] = useState<{ blobId: string; name: string; type?: string; size?: number; accountId: string; slot: number | null } | null>(null);
   const wopiStatus = useWopiStatus(true);
-  const [pendingMailtoAccountChoice, setPendingMailtoAccountChoice] = useState<ParsedMailto | null>(null);
+  const [pendingMailtoAccountChoice, setPendingMailtoAccountChoice] = useState<DraftRequest | null>(null);
+  // Files from a share or a launch, for the next composer. It attaches an
+  // array once, so a stale one does nothing.
+  const [composerInitialFiles, setComposerInitialFiles] = useState<File[] | null>(null);
   const [isProtocolAccountSwitching, setIsProtocolAccountSwitching] = useState(false);
   const markAsReadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastUndoToastSubmissionRef = useRef<string | null>(null);
@@ -1376,6 +1383,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       initialDraftText: composerDraftText,
       initialData: pendingDraft,
       prefill: composerPrefill,
+      initialFiles: composerInitialFiles,
       sourceEmailId: selectedEmail?.id ?? null,
       sourceEmailSource: selectedEmail ? emailWriteSource(selectedEmail, client) : null,
       title,
@@ -1386,6 +1394,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     setComposerDraftText("");
     setPendingDraft(null);
     setComposerPrefill(null);
+    setComposerInitialFiles(null);
     setComposerQuoteHeader(null);
     // We only react to the rising edge of `showComposer` here; the other
     // variables read above are captured-but-stale-safe because the next
@@ -1465,18 +1474,19 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     return true;
   }, [identities, t]);
 
-  const applyMailtoDraft = useCallback((pending: ParsedMailto, suppressOutgoingStash: boolean) => {
+  const applyMailtoDraft = useCallback((pending: DraftRequest, suppressOutgoingStash: boolean) => {
     if (suppressOutgoingStash) {
       suppressComposerStateSaveSessionRef.current = composerSessionId;
     }
     setComposerSessionId((id) => id + 1);
     setPendingDraft(mailtoComposerDraft(pending, useSettingsStore.getState().plainTextMode));
+    setComposerInitialFiles(pending.initialFiles ?? null);
     setComposerMode("compose");
     setShowComposer(true);
     if (isMobile) setActiveView("viewer");
   }, [composerSessionId, isMobile, setActiveView]);
 
-  const openMailtoDraft = useCallback((pending: ParsedMailto) => withComposeGate('compose', {
+  const openMailtoDraft = useCallback((pending: DraftRequest) => withComposeGate('compose', {
     to: pending.to, cc: pending.cc, subject: pending.subject, body: pending.body,
   }, () => {
     // A live composer owns text the user has not sent. Replacing it outright
@@ -1495,7 +1505,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     applyMailtoDraft(pending, showComposer);
   }), [applyMailtoDraft, showComposer, withComposeGate]);
 
-  const openMailtoForAccount = useCallback(async (pending: ParsedMailto, accountId: string) => {
+  const openMailtoForAccount = useCallback(async (pending: DraftRequest, accountId: string) => {
     setIsProtocolAccountSwitching(true);
     try {
       if (useAuthStore.getState().activeAccountId !== accountId) {
@@ -1519,13 +1529,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     });
   }, []);
 
-  const handleMailtoProtocolRequest = useCallback(async (pending: ParsedMailto) => {
-    if (!(await mailtoAllowed(pending))) return;
-    // From another app of this webmail: the account in use, no question.
-    if (pending.inApp) {
-      openMailtoDraft(pending);
-      return;
-    }
+  // A draft that comes from outside: which account it goes out from.
+  const routeOutsideDraft = useCallback((pending: DraftRequest) => {
     const protocolAccounts = getMailtoProtocolAccounts();
     if (protocolAccounts.length > 1) {
       setPendingMailtoAccountChoice(pending);
@@ -1539,7 +1544,52 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     }
 
     openMailtoDraft(pending);
-  }, [activeAccountId, getMailtoProtocolAccounts, mailtoAllowed, openMailtoDraft, openMailtoForAccount]);
+  }, [activeAccountId, getMailtoProtocolAccounts, openMailtoDraft, openMailtoForAccount]);
+
+  const handleMailtoProtocolRequest = useCallback(async (pending: ParsedMailto) => {
+    if (!(await mailtoAllowed(pending))) return;
+    // From another app of this webmail: the account in use, no question.
+    if (pending.inApp) {
+      openMailtoDraft(pending);
+      return;
+    }
+    routeOutsideDraft(pending);
+  }, [mailtoAllowed, openMailtoDraft, routeOutsideDraft]);
+
+  // A new draft from a shortcut, a share or the desktop app
+  // (lib/launch-handoff.ts). Not a mailto:, so onMailtoIntercept stays out of
+  // it; onBeforeCompose still runs. The standard page that renders while the
+  // Pro shell takes over must leave it for the Pro one.
+  const proTakingOver = proInterfaceActive && !isEmbedded;
+  useEffect(() => {
+    if (!isAuthenticated || !client || proTakingOver) return;
+
+    const openHandoff = () => {
+      for (let handoff = takeHandoff('compose'); handoff; handoff = takeHandoff('compose')) {
+        if (!handoff.subject && !handoff.body && handoff.files.length === 0) {
+          void withComposeGate('compose', {}, () => {
+            startFreshComposerSession();
+            setComposerMode('compose');
+            setShowComposer(true);
+            if (isMobile) setActiveView('viewer');
+          });
+          continue;
+        }
+        routeOutsideDraft({
+          to: [],
+          cc: [],
+          bcc: [],
+          subject: handoff.subject ?? '',
+          body: handoff.body ?? '',
+          initialFiles: handoff.files,
+        });
+      }
+    };
+
+    openHandoff();
+    return subscribeHandoff('compose', openHandoff);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, client, proTakingOver, routeOutsideDraft, withComposeGate, isMobile]);
 
   useEffect(() => {
     if (!isAuthenticated || !client) return;
@@ -4848,6 +4898,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         initialDraftText={composerDraftText}
         initialData={pendingDraft}
         prefill={composerPrefill}
+        initialFiles={composerInitialFiles}
         sessionKey={`inline-${composerSessionId}`}
         sourceEmailId={composerSourceEmail?.id}
         onSaveState={(data) => {

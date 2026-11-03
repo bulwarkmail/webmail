@@ -232,6 +232,62 @@ function pickFromFiles(nodes: FileNode[]) {
   fireEvent.click(screen.getByTestId('fake-file-picker'));
 }
 
+describe('files handed to a new composer (a share, a launch)', () => {
+  afterEach(() => {
+    useAuthStore.setState({ client: null });
+    vi.clearAllMocks();
+    hoisted.beforeAttachmentUpload.mockImplementation(async () => true);
+  });
+
+  const uploading = () => filesClient({ uploadBlob: vi.fn(() => new Promise(() => {})), getMaxSizeUpload: () => 0 });
+
+  it('attaches them when it opens', async () => {
+    useAuthStore.setState({ client: uploading() as never });
+    render(<EmailComposer onClose={vi.fn()} initialFiles={[new File(['x'], 'shared.pdf', { type: 'application/pdf' })]} />);
+    expect(await screen.findByText('shared.pdf')).toBeInTheDocument();
+  });
+
+  it('waits for the client', async () => {
+    const files = [new File(['x'], 'shared.pdf')];
+    const view = render(<EmailComposer onClose={vi.fn()} initialFiles={files} />);
+    await act(async () => {});
+    expect(hoisted.beforeAttachmentUpload).not.toHaveBeenCalled();
+
+    useAuthStore.setState({ client: uploading() as never });
+    view.rerender(<EmailComposer key="with-client" onClose={vi.fn()} initialFiles={files} />);
+    expect(await screen.findByText('shared.pdf')).toBeInTheDocument();
+  });
+
+  it('attaches an array once, also when the composer remounts with it', async () => {
+    useAuthStore.setState({ client: uploading() as never });
+    const files = [new File(['x'], 'shared.pdf')];
+    const first = render(<EmailComposer onClose={vi.fn()} initialFiles={files} />);
+    await screen.findByText('shared.pdf');
+    first.unmount();
+
+    render(<EmailComposer onClose={vi.fn()} initialFiles={files} />);
+    await act(async () => {});
+    expect(hoisted.beforeAttachmentUpload).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('shared.pdf')).toBeNull();
+  });
+
+  it('runs the same checks as a picked file: a plugin may refuse it', async () => {
+    hoisted.beforeAttachmentUpload.mockImplementation(async (info) => info.name !== 'setup.exe');
+    useAuthStore.setState({ client: uploading() as never });
+    render(<EmailComposer onClose={vi.fn()} initialFiles={[new File(['x'], 'setup.exe'), new File(['x'], 'notes.pdf')]} />);
+    expect(await screen.findByText('notes.pdf')).toBeInTheDocument();
+    expect(screen.queryByText('setup.exe')).toBeNull();
+  });
+
+  it('runs the same checks as a picked file: the size limit', async () => {
+    useAuthStore.setState({ client: filesClient({ getMaxSizeUpload: () => 1 }) as never });
+    render(<EmailComposer onClose={vi.fn()} initialFiles={[new File(['too big'], 'big.pdf')]} />);
+    await act(async () => {});
+    expect(hoisted.toastError).toHaveBeenCalledWith('attachment_too_large');
+    expect(screen.queryByText('big.pdf')).toBeNull();
+  });
+});
+
 describe('attach from Files', () => {
   afterEach(() => {
     useAuthStore.setState({ client: null });

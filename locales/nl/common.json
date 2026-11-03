@@ -249,6 +249,17 @@
     "active_account": "Actief",
     "switching_account": "Account wisselen..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Nieuw bericht",
+    "shortcut_calendar": "Agenda",
+    "shortcut_contacts": "Contacten",
+    "unsupported_file": "{name} kan hier niet worden geopend.",
+    "open_failed": "Het bestand kon niet worden geopend. Probeer het opnieuw te openen.",
+    "share_gone": "Wat je hebt gedeeld, is er niet meer. Deel het opnieuw.",
+    "share_files_lost": "De gedeelde bestanden konden niet worden bewaard. Voeg ze opnieuw aan het bericht toe.",
+    "ics_needs_server": "Voor het importeren van een agendabestand is een verbinding met de server nodig. Het importeren begint zodra je weer online bent.",
+    "contacts_need_server": "Voor het importeren van contacten is een verbinding met de server nodig. Probeer het opnieuw als je weer online bent."
+  },
   "sidebar_apps": {
     "modal_title": "Zijbalk-apps",
     "add_new": "App toevoegen",

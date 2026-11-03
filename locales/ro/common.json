@@ -249,6 +249,17 @@
     "active_account": "Activ",
     "switching_account": "Se schimbă contul..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Mesaj nou",
+    "shortcut_calendar": "Calendar",
+    "shortcut_contacts": "Contacte",
+    "unsupported_file": "{name} nu poate fi deschis aici.",
+    "open_failed": "Fișierul nu a putut fi deschis. Încercați să îl deschideți din nou.",
+    "share_gone": "Ce ați partajat nu mai este aici. Partajați din nou.",
+    "share_files_lost": "Fișierele partajate nu au putut fi păstrate. Adăugați-le din nou la mesaj.",
+    "ics_needs_server": "Importul unui fișier de calendar are nevoie de conexiune la server. Importul începe când reveniți online.",
+    "contacts_need_server": "Importul contactelor are nevoie de conexiune la server. Încercați din nou când reveniți online."
+  },
   "sidebar_apps": {
     "modal_title": "Aplicații din bara laterală",
     "add_new": "Adăugați aplicația",

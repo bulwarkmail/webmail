@@ -1,5 +1,8 @@
 import type { MetadataRoute } from "next";
 import { headers } from "next/headers";
+import { getTranslations } from "next-intl/server";
+import { localeFromAcceptLanguage } from "@/i18n/locale-matcher";
+import { routing } from "@/i18n/routing";
 import { configManager } from "@/lib/admin/config-manager";
 import {
   matchDomainBranding,
@@ -15,8 +18,27 @@ type WebAppProtocolHandler = {
   url: string;
 };
 
+type WebAppFileHandler = {
+  action: string;
+  accept: Record<string, string[]>;
+};
+
+type WebAppShareTarget = {
+  action: string;
+  method: "POST";
+  enctype: "multipart/form-data";
+  params: {
+    title: string;
+    text: string;
+    url: string;
+    files: Array<{ name: string; accept: string[] }>;
+  };
+};
+
 type ExtendedManifest = MetadataRoute.Manifest & {
   protocol_handlers?: WebAppProtocolHandler[];
+  file_handlers?: WebAppFileHandler[];
+  share_target?: WebAppShareTarget;
   launch_handler?: {
     client_mode?: "navigate-existing" | "auto" | "focus-existing" | "navigate-new"
       | Array<"navigate-existing" | "auto" | "focus-existing" | "navigate-new">;
@@ -32,7 +54,8 @@ const withBase = (p: string) => `${BASE_PATH}${p}`;
 export default async function manifest(): Promise<ExtendedManifest> {
   await configManager.ensureLoaded();
 
-  const host = pickRequestHost(await headers());
+  const requestHeaders = await headers();
+  const host = pickRequestHost(requestHeaders);
   const domainOverrides = matchDomainBranding(
     host,
     parseDomainBranding(configManager.get<unknown>("domainBranding", [])),
@@ -83,6 +106,17 @@ export default async function manifest(): Promise<ExtendedManifest> {
         { src: withBase("/icon-maskable-dark-512x512.png"), sizes: "512x512", type: "image/png", purpose: "maskable" },
       ];
 
+  // Shortcut names show in the OS menu, in the language the browser asks in.
+  const t = await getTranslations({
+    locale: localeFromAcceptLanguage(requestHeaders.get("accept-language"), routing.locales) ?? routing.defaultLocale,
+    namespace: "pwaLaunch",
+  });
+  const shortcutIcons = [{
+    src: withBase(hasCustomIcon ? "/api/pwa-icon/192" : "/icon-192x192.png"),
+    sizes: "192x192",
+    type: "image/png",
+  }];
+
   return {
     name: appName,
     short_name: shortName,
@@ -118,6 +152,31 @@ export default async function manifest(): Promise<ExtendedManifest> {
       { protocol: "mailto", url: withBase("/protocol/mailto?url=%s") },
       { protocol: "webcal", url: withBase("/protocol/webcal?url=%s") },
     ],
+    shortcuts: [
+      { name: t("shortcut_new_message"), url: withBase("/?compose=1"), icons: shortcutIcons },
+      { name: t("shortcut_calendar"), url: withBase("/calendar"), icons: shortcutIcons },
+      { name: t("shortcut_contacts"), url: withBase("/contacts"), icons: shortcutIcons },
+    ],
+    // Where a file goes is decided by its type, in lib/launch-handoff.ts. The
+    // actions are the pages a new window should start on.
+    file_handlers: [
+      { action: withBase("/mail"), accept: { "message/rfc822": [".eml"] } },
+      { action: withBase("/calendar"), accept: { "text/calendar": [".ics", ".ical"] } },
+      { action: withBase("/contacts"), accept: { "text/vcard": [".vcf", ".vcard"], "text/x-vcard": [".vcf", ".vcard"] } },
+    ],
+    // Not under /api/: proxy.ts refuses a POST from outside there. The service
+    // worker takes it (public/sw.js); without one, app/(main)/protocol/share.
+    share_target: {
+      action: withBase("/protocol/share"),
+      method: "POST",
+      enctype: "multipart/form-data",
+      params: {
+        title: "title",
+        text: "text",
+        url: "url",
+        files: [{ name: "files", accept: ["*/*"] }],
+      },
+    },
     launch_handler: {
       client_mode: ["focus-existing", "navigate-new"],
     },

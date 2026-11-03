@@ -249,6 +249,17 @@
     "active_account": "Đang hoạt động",
     "switching_account": "Đang chuyển đổi tài khoản..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Thư mới",
+    "shortcut_calendar": "Lịch",
+    "shortcut_contacts": "Danh bạ",
+    "unsupported_file": "Không thể mở {name} tại đây.",
+    "open_failed": "Không thể mở tệp. Hãy thử mở lại.",
+    "share_gone": "Nội dung bạn đã chia sẻ không còn ở đây. Vui lòng chia sẻ lại.",
+    "share_files_lost": "Không thể giữ các tệp đã chia sẻ. Hãy thêm lại chúng vào thư.",
+    "ics_needs_server": "Nhập tệp lịch cần kết nối với máy chủ. Quá trình nhập sẽ bắt đầu khi bạn trực tuyến trở lại.",
+    "contacts_need_server": "Nhập danh bạ cần kết nối với máy chủ. Hãy thử lại khi bạn trực tuyến trở lại."
+  },
   "sidebar_apps": {
     "modal_title": "Ứng dụng thanh bên",
     "add_new": "Thêm ứng dụng",

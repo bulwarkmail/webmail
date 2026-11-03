@@ -249,6 +249,17 @@
     "active_account": "アクティブ",
     "switching_account": "アカウントを切り替えています..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "新規メッセージ",
+    "shortcut_calendar": "カレンダー",
+    "shortcut_contacts": "連絡先",
+    "unsupported_file": "{name} はここでは開けません。",
+    "open_failed": "ファイルを開けませんでした。もう一度開いてください。",
+    "share_gone": "共有した内容はもうありません。もう一度共有してください。",
+    "share_files_lost": "共有したファイルを保持できませんでした。メッセージにもう一度追加してください。",
+    "ics_needs_server": "カレンダーファイルのインポートにはサーバーへの接続が必要です。オンラインに戻るとインポートが始まります。",
+    "contacts_need_server": "連絡先のインポートにはサーバーへの接続が必要です。オンラインに戻ってからもう一度お試しください。"
+  },
   "sidebar_apps": {
     "modal_title": "サイドバーアプリ",
     "add_new": "アプリを追加",

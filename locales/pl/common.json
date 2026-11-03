@@ -249,6 +249,17 @@
     "active_account": "Aktywne",
     "switching_account": "Przełączanie konta..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Nowa wiadomość",
+    "shortcut_calendar": "Kalendarz",
+    "shortcut_contacts": "Kontakty",
+    "unsupported_file": "Nie można tu otworzyć pliku {name}.",
+    "open_failed": "Nie udało się otworzyć pliku. Spróbuj otworzyć go ponownie.",
+    "share_gone": "To, co udostępniono, już tu nie istnieje. Udostępnij to ponownie.",
+    "share_files_lost": "Nie udało się zachować udostępnionych plików. Dodaj je ponownie do wiadomości.",
+    "ics_needs_server": "Import pliku kalendarza wymaga połączenia z serwerem. Import zacznie się, gdy znów będziesz online.",
+    "contacts_need_server": "Import kontaktów wymaga połączenia z serwerem. Spróbuj ponownie, gdy znów będziesz online."
+  },
   "sidebar_apps": {
     "modal_title": "Aplikacje paska bocznego",
     "add_new": "Dodaj aplikację",

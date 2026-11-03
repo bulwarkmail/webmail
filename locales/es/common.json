@@ -249,6 +249,17 @@
     "active_account": "Activa",
     "switching_account": "Cambiando de cuenta..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Mensaje nuevo",
+    "shortcut_calendar": "Calendario",
+    "shortcut_contacts": "Contactos",
+    "unsupported_file": "{name} no se puede abrir aquí.",
+    "open_failed": "No se pudo abrir el archivo. Intenta abrirlo de nuevo.",
+    "share_gone": "Lo que compartiste ya no está aquí. Compártelo de nuevo.",
+    "share_files_lost": "No se pudieron conservar los archivos compartidos. Añádelos de nuevo al mensaje.",
+    "ics_needs_server": "Importar un archivo de calendario requiere conexión con el servidor. La importación empezará cuando vuelvas a estar en línea.",
+    "contacts_need_server": "Importar contactos requiere conexión con el servidor. Inténtalo de nuevo cuando vuelvas a estar en línea."
+  },
   "sidebar_apps": {
     "modal_title": "Aplicaciones de la barra lateral",
     "add_new": "Añadir aplicación",

@@ -93,6 +93,7 @@ import { useCompanyCalendars } from "./use-company-calendars";
 import { sharedCalendarColorKey, autoAssignSharedCalendarColors } from "@/lib/shared-calendar-colors";
 import { debug } from "@/lib/debug";
 import { consumePendingWebcal, hasPendingWebcal, subscribeToPendingWebcal } from "@/lib/protocol-handlers/session";
+import { useHandoffFiles } from "@/hooks/use-handoff-files";
 import type { ParsedWebcal } from "@/lib/protocol-handlers/webcal";
 import { appPath, buildCalendarPath, parseCalendarPath, type CalendarDeepLink } from "@/lib/deep-links";
 import { consumePendingDeepLinkEntry, subscribePendingDeepLink } from "@/lib/deep-link-handoff";
@@ -178,6 +179,10 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
   const { client, isAuthenticated, logout, checkAuth, switchAccount, activeAccountId, isLoading: authLoading } = useAuthStore();
   const [initialCheckDone, setInitialCheckDone] = useState(() => useAuthStore.getState().isAuthenticated && !!useAuthStore.getState().client);
+  // A .ics opened from the OS (lib/launch-handoff.ts). The standard page that
+  // renders while the Pro shell takes over leaves it for the Pro one. A demo
+  // has no import.
+  const launchedFile = useHandoffFiles("calendar", isAuthenticated && !!client && !demoMode && (isEmbedded || !proInterfaceActive));
   const { quota, isPushConnected } = useEmailStore();
   const {
     calendars, events, selectedDate, viewMode, selectedCalendarIds,
@@ -2571,6 +2576,16 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
             setShowImportModal(false);
             setPendingSubscription(null);
           }}
+        />
+      )}
+
+      {launchedFile.file && client && (
+        <ICalImportModal
+          key={`${launchedFile.file.name}:${launchedFile.file.lastModified}`}
+          calendars={displayCalendars}
+          client={client}
+          initialFile={launchedFile.file}
+          onClose={launchedFile.done}
         />
       )}
 

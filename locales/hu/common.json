@@ -249,6 +249,17 @@
     "active_account": "Aktív",
     "switching_account": "Fiók váltása..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Új üzenet",
+    "shortcut_calendar": "Naptár",
+    "shortcut_contacts": "Névjegyek",
+    "unsupported_file": "A(z) {name} itt nem nyitható meg.",
+    "open_failed": "A fájlt nem sikerült megnyitni. Próbálja meg újra megnyitni.",
+    "share_gone": "Amit megosztott, már nincs itt. Kérjük, ossza meg újra.",
+    "share_files_lost": "A megosztott fájlokat nem sikerült megőrizni. Adja hozzá őket újra az üzenethez.",
+    "ics_needs_server": "A naptárfájl importálásához kapcsolat kell a szerverrel. Az importálás akkor indul el, amikor újra online lesz.",
+    "contacts_need_server": "A névjegyek importálásához kapcsolat kell a szerverrel. Próbálja újra, amikor ismét online lesz."
+  },
   "sidebar_apps": {
     "modal_title": "Oldalsáv alkalmazások",
     "add_new": "Alkalmazás hozzáadása",

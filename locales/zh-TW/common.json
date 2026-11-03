@@ -249,6 +249,17 @@
     "active_account": "使用中",
     "switching_account": "正在切換帳號…"
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "新郵件",
+    "shortcut_calendar": "行事曆",
+    "shortcut_contacts": "聯絡人",
+    "unsupported_file": "無法在此處開啟 {name}。",
+    "open_failed": "無法開啟檔案。請再次嘗試開啟。",
+    "share_gone": "您分享的內容已不在此處。請重新分享。",
+    "share_files_lost": "無法保留分享的檔案。請將它們重新加入郵件。",
+    "ics_needs_server": "匯入行事曆檔案需要連線到伺服器。您恢復連線後將開始匯入。",
+    "contacts_need_server": "匯入聯絡人需要連線到伺服器。請在恢復連線後再試一次。"
+  },
   "sidebar_apps": {
     "modal_title": "側邊欄應用程式",
     "add_new": "新增應用程式",

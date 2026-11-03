@@ -213,6 +213,9 @@ function createChipDragPreview(label: string): HTMLElement {
 // inserts as a single chip and expands into its members on send.
 type SuggestionItem = { name: string; email: string; group?: { id: string; memberCount: number } };
 
+// Which `initialFiles` arrays are attached: a remount gets the same array.
+const attachedInitialFiles = new WeakSet<File[]>();
+
 export interface ComposerDraftData {
   to: string;
   cc: string;
@@ -360,6 +363,12 @@ interface EmailComposerProps {
   sessionKey?: string;
   /** Id of the message being replied to or forwarded, for onComposerOpen. */
   sourceEmailId?: string;
+  /**
+   * Files to attach when the composer opens, from a share or a launch (see
+   * lib/launch-handoff.ts). They go through the same checks as a picked file.
+   * Attached once per array, also when the composer remounts with it.
+   */
+  initialFiles?: File[] | null;
   mode?: 'compose' | 'reply' | 'replyAll' | 'forward';
   /**
    * Email of the mailbox/account the user is viewing when they start a new
@@ -492,6 +501,7 @@ export function EmailComposer({
   className,
   initialDraftText: initialDraftTextProp,
   initialData: initialDataProp,
+  initialFiles,
   prefill,
   sessionKey,
   sourceEmailId,
@@ -2460,6 +2470,12 @@ export function EmailComposer({
       }
     }
   }, [client, t]);
+
+  useEffect(() => {
+    if (!client || !initialFiles || initialFiles.length === 0 || attachedInitialFiles.has(initialFiles)) return;
+    attachedInitialFiles.add(initialFiles);
+    void addFiles(initialFiles);
+  }, [client, initialFiles, addFiles]);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files) return;

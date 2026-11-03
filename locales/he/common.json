@@ -5272,6 +5272,17 @@
     "active_account": "פעיל",
     "switching_account": "החלפת חשבון…"
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "הודעה חדשה",
+    "shortcut_calendar": "לוח שנה",
+    "shortcut_contacts": "אנשי קשר",
+    "unsupported_file": "לא ניתן לפתוח כאן את {name}.",
+    "open_failed": "לא ניתן היה לפתוח את הקובץ. נסו לפתוח אותו שוב.",
+    "share_gone": "מה ששיתפתם כבר לא נמצא כאן. שתפו אותו שוב.",
+    "share_files_lost": "לא ניתן היה לשמור את הקבצים ששותפו. הוסיפו אותם שוב להודעה.",
+    "ics_needs_server": "ייבוא קובץ לוח שנה דורש חיבור לשרת. הייבוא יתחיל כשתחזרו להיות מחוברים.",
+    "contacts_need_server": "ייבוא אנשי קשר דורש חיבור לשרת. נסו שוב כשתחזרו להיות מחוברים."
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "סמן תיקייה כקרויה",
     "mark_folder_tree_read": "סמן תיקייה ותת־תיקיות כקרויות",

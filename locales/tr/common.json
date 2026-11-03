@@ -249,6 +249,17 @@
     "active_account": "Etkin",
     "switching_account": "Hesap değiştiriliyor..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Yeni ileti",
+    "shortcut_calendar": "Takvim",
+    "shortcut_contacts": "Kişiler",
+    "unsupported_file": "{name} burada açılamıyor.",
+    "open_failed": "Dosya açılamadı. Yeniden açmayı deneyin.",
+    "share_gone": "Paylaştığınız içerik artık burada değil. Lütfen yeniden paylaşın.",
+    "share_files_lost": "Paylaşılan dosyalar saklanamadı. Onları iletiye yeniden ekleyin.",
+    "ics_needs_server": "Takvim dosyasını içe aktarmak için sunucu bağlantısı gerekir. İçe aktarma, yeniden çevrimiçi olduğunuzda başlar.",
+    "contacts_need_server": "Kişileri içe aktarmak için sunucu bağlantısı gerekir. Yeniden çevrimiçi olduğunuzda tekrar deneyin."
+  },
   "sidebar_apps": {
     "modal_title": "Kenar çubuğu uygulamaları",
     "add_new": "Uygulama ekle",

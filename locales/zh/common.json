@@ -249,6 +249,17 @@
     "active_account": "活动",
     "switching_account": "正在切换账户..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "新邮件",
+    "shortcut_calendar": "日历",
+    "shortcut_contacts": "联系人",
+    "unsupported_file": "无法在此处打开 {name}。",
+    "open_failed": "无法打开文件。请再次尝试打开。",
+    "share_gone": "您分享的内容已不在此处。请重新分享。",
+    "share_files_lost": "无法保留分享的文件。请将它们重新添加到邮件中。",
+    "ics_needs_server": "导入日历文件需要连接到服务器。您恢复联网后将开始导入。",
+    "contacts_need_server": "导入联系人需要连接到服务器。请在恢复联网后重试。"
+  },
   "sidebar_apps": {
     "modal_title": "侧边栏应用",
     "add_new": "添加应用",

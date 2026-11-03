@@ -249,6 +249,17 @@
     "active_account": "Aktiivne",
     "switching_account": "Konto vahetamine..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Uus kiri",
+    "shortcut_calendar": "Kalender",
+    "shortcut_contacts": "Kontaktid",
+    "unsupported_file": "Faili {name} ei saa siin avada.",
+    "open_failed": "Faili ei saanud avada. Proovi see uuesti avada.",
+    "share_gone": "See, mida jagasid, pole enam siin. Jaga seda palun uuesti.",
+    "share_files_lost": "Jagatud faile ei saanud alles hoida. Lisa need kirjale uuesti.",
+    "ics_needs_server": "Kalendrifaili importimiseks on vaja ühendust serveriga. Import algab, kui oled jälle võrgus.",
+    "contacts_need_server": "Kontaktide importimiseks on vaja ühendust serveriga. Proovi uuesti, kui oled jälle võrgus."
+  },
   "sidebar_apps": {
     "modal_title": "Külgriba rakendused",
     "add_new": "Lisa rakendus",

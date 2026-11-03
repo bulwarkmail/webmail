@@ -108,7 +108,7 @@ if (typeof caches !== "undefined" && caches && typeof caches.open === "function"
   readOfflineShell();
 }
 
-const APP_SECTIONS = new Set(["", "mail", "settings", "calendar", "contacts", "files", "pro", "apps"]);
+const APP_SECTIONS = new Set(["", "mail", "settings", "calendar", "contacts", "files", "pro", "apps", "protocol"]);
 
 /** The page path inside the app ("/mail/inbox"), or null for anything that isn't a page of the app. */
 function appPagePath(url) {
@@ -311,7 +311,61 @@ async function deleteStaleShellCaches() {
   }
 }
 
+// ---- Share target: what the OS shares goes into a new draft ----
+//
+// The manifest's share_target POSTs here. Files can't travel through a
+// redirect, so they wait in the Cache API until the page takes them (same
+// layout as lib/launch-handoff.ts, which also removes them). Without a worker
+// the POST reaches app/(main)/protocol/share/route.ts.
+const HANDOFF_CACHE = "bulwark-launch-handoff-v1";
+
+function isShareTarget(request) {
+  if (request.method !== "POST" || request.mode !== "navigate") return false;
+  const url = new URL(request.url);
+  return url.origin === self.location.origin && url.pathname.replace(/\/+$/, "") === BASE_PATH + "/protocol/share";
+}
+
+async function receiveShare(request) {
+  const land = (params) => Response.redirect(self.location.origin + BASE_PATH + "/?" + new URLSearchParams(params), 303);
+  let form;
+  try {
+    form = await request.formData();
+  } catch (_) {
+    return land({ share: "unavailable", share_files: "1" });
+  }
+  const field = (name) => {
+    const value = form.get(name);
+    return typeof value === "string" ? value : "";
+  };
+  const shared = { title: field("title"), text: field("text"), url: field("url") };
+  const files = form.getAll("files").filter((file) => typeof file !== "string" && file.size > 0);
+  const id = crypto.randomUUID();
+  const prefix = "/__bulwark/handoff/" + id + "/";
+  let cache = null;
+  try {
+    cache = await caches.open(HANDOFF_CACHE);
+    const list = files.map((file) => ({ name: file.name, type: file.type }));
+    await cache.put(prefix + "meta", new Response(JSON.stringify({ kind: "compose", createdAt: Date.now(), ...shared, files: list })));
+    await Promise.all(files.map((file, index) => cache.put(prefix + index, new Response(file))));
+    return land({ share: id });
+  } catch (_) {
+    // No room for the files. The text can still come along in the address.
+    if (cache) await Promise.all([...files.map((_file, index) => cache.delete(prefix + index)), cache.delete(prefix + "meta")]).catch(() => {});
+    return land({
+      share: "unavailable",
+      share_title: shared.title.slice(0, 300),
+      share_text: shared.text.slice(0, 4000),
+      share_url: shared.url.slice(0, 2000),
+      ...(files.length > 0 ? { share_files: "1" } : {}),
+    });
+  }
+}
+
 self.addEventListener("fetch", (event) => {
+  if (isShareTarget(event.request)) {
+    event.respondWith(receiveShare(event.request));
+    return;
+  }
   // Offline mode off (known): the network, untouched, as without a worker.
   if (offlineShellOn === false) return;
   const route = offlineRoute(event.request);

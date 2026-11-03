@@ -249,6 +249,17 @@
     "active_account": "Actiu",
     "switching_account": "Canviant de compte..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Missatge nou",
+    "shortcut_calendar": "Calendari",
+    "shortcut_contacts": "Contactes",
+    "unsupported_file": "{name} no es pot obrir aquí.",
+    "open_failed": "No s'ha pogut obrir el fitxer. Torneu a obrir-lo.",
+    "share_gone": "El que heu compartit ja no hi és. Torneu a compartir-ho.",
+    "share_files_lost": "No s'han pogut conservar els fitxers compartits. Torneu-los a afegir al missatge.",
+    "ics_needs_server": "Per importar un fitxer de calendari cal connexió amb el servidor. La importació començarà quan torneu a estar en línia.",
+    "contacts_need_server": "Per importar contactes cal connexió amb el servidor. Torneu-ho a provar quan torneu a estar en línia."
+  },
   "sidebar_apps": {
     "modal_title": "Aplicacions de la barra lateral",
     "add_new": "Afegeix una aplicació",

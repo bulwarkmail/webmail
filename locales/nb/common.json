@@ -249,6 +249,17 @@
     "active_account": "Aktiv",
     "switching_account": "Bytter konto..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Ny melding",
+    "shortcut_calendar": "Kalender",
+    "shortcut_contacts": "Kontakter",
+    "unsupported_file": "{name} kan ikke åpnes her.",
+    "open_failed": "Filen kunne ikke åpnes. Prøv å åpne den på nytt.",
+    "share_gone": "Det du delte, er ikke her lenger. Del det på nytt.",
+    "share_files_lost": "De delte filene kunne ikke tas vare på. Legg dem til i meldingen på nytt.",
+    "ics_needs_server": "Import av en kalenderfil krever tilkobling til serveren. Importen starter når du er på nett igjen.",
+    "contacts_need_server": "Import av kontakter krever tilkobling til serveren. Prøv igjen når du er på nett igjen."
+  },
   "sidebar_apps": {
     "modal_title": "Apper i sidefeltet",
     "add_new": "Legg til app",
