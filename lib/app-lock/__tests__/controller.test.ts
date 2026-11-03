@@ -197,6 +197,14 @@ describe('while locked', () => {
     expect(isAppLockedNow()).toBe(true);
   });
 
+  it('a running page isn\'t held back while it saves: composers stay mounted until the reload', async () => {
+    await enableAppLock(PIN);
+    let holdDuringSave: Promise<void> | null | undefined;
+    registerComposeFlush(async () => { holdDuringSave = appLockHold(); });
+    await lockedAndReloaded();
+    expect(holdDuringSave).toBeNull();
+  });
+
   it('notifications go by it: the check the OS code asks says locked', async () => {
     await enableAppLock(PIN);
     asNewDocument();
@@ -286,15 +294,23 @@ describe('locking', () => {
 });
 
 describe('the store when a tab inherits it without the key', () => {
-  it('locks everywhere instead of opening or writing an unwrapped key', async () => {
+  it('asks for the lock instead of opening, or writing a key outside the layer', async () => {
     await enableAppLock(PIN);
+    // This tab has no key: the one that had it went.
     resetAppLockForTests();
+    (window.navigator.locks.query as ReturnType<typeof vi.fn>).mockResolvedValue({ held: [{ name: 'bulwark-app-lock-holder' }], pending: [] });
+    (window.navigator.locks.request as ReturnType<typeof vi.fn>).mockImplementation(() => new Promise(() => {}));
     bootAppLock();
-    await vi.waitFor(() => expect(getAppLockPhase()).toBe('locked'));
-    const layers = () => appLockKeyLayers();
-    expect(layers).toThrow(expect.objectContaining({ name: 'StoreKeyLayerMissingError' }));
-    // A new account can't get a key record outside the layer either.
+    await vi.waitFor(() => expect(getAppLockPhase()).toBe('open'));
+    const onKeyLocked = vi.fn();
+    configureStore({ ...hooks, onKeyLocked });
+    await expect(getStore().ensureOpen('new-account', { apiUrl: 'x' } as never).then(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      await getStore().ensureOpen('new-account');
+    })).rejects.toMatchObject({ name: 'StoreKeyLayerMissingError' });
+    expect(onKeyLocked).toHaveBeenCalled();
     expect(await getAccountRecord('new-account')).toBeNull();
+    expect(lastWorker().posted.some((m) => m.kind === 'open')).toBe(false);
   });
 
   it('a new account after unlock gets its key under the lock', async () => {

@@ -366,7 +366,6 @@ async function applyLockHere(): Promise<void> {
   const wasRunning = phase === 'open';
   setLockedHere(true);
   markDocument(true);
-  hold ??= newHold();
   setPhase('locking');
   tellDesktopLocked();
   tellServiceWorker('locked');
@@ -699,7 +698,7 @@ export function startAppLock(): () => void {
     startIdle();
     if (!heldKey) watchHolder();
   }
-  tellServiceWorker(readAppLockFile().on ? (isAppLockedNow() ? 'locked' : 'unlocked') : 'off');
+  if (readAppLockFile().on) tellServiceWorker(isAppLockedNow() ? 'locked' : 'unlocked');
   return () => {
     channel?.close();
     window.removeEventListener('storage', onStorage);

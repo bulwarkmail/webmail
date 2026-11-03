@@ -122,28 +122,37 @@ describe('PopoutHost', () => {
     expect(JSON.stringify(heard)).not.toContain('Bearer main');
   });
 
-  it('gives no credentials while the app is locked, also to a pop-out that never heard of the lock', async () => {
+  it('gives no credentials while the app is locked, to a pop-out that never heard of the lock', async () => {
     render(<PopoutHost />);
     await settle();
     setLockedHere(true);
-    const channel = openPopoutChannel(() => {});
     const opener = await createSessionOpener();
-    channel?.post({ type: 'session-request', requestId: 'r1', publicKey: opener.publicKey });
+    popout.post({ type: 'session-request', requestId: 'r1', publicKey: opener.publicKey });
     await settle();
-    channel?.close();
     expect(answers()).toEqual([]);
-    await expect(requestWindowSession({}, 100)).resolves.toBeNull();
     setLockedHere(false);
-    await expect(requestWindowSession({}, 2000)).resolves.toMatchObject({ activeAccountId: 'alice' });
+    popout.post({ type: 'session-request', requestId: 'r2', publicKey: opener.publicKey });
+    await vi.waitFor(() => expect(answers()).toHaveLength(1));
   });
 
-  it('a locked pop-out takes no session from the cookies either', async () => {
+  it('a locked pop-out doesn\'t ask for a session', async () => {
+    setLockedHere(true);
+    await expect(requestWindowSession({}, 100)).resolves.toBeNull();
+    setLockedHere(false);
+    expect(heard.filter((message) => message.type === 'session-request')).toEqual([]);
+  });
+
+  it('a locked pop-out takes no session from the cookies either, and asks nobody', async () => {
+    const fetched = vi.fn(async () => new Response('{}'));
+    vi.stubGlobal('fetch', fetched);
     setLockedHere(true);
     try {
-      await expect(useAuthStore.getState().startSharedSession({})).resolves.toBe('no-session');
+      await expect(useAuthStore.getState().startSharedSession({ accountId: 'alice' })).resolves.toBe('no-session');
     } finally {
       setLockedHere(false);
     }
+    expect(fetched).not.toHaveBeenCalled();
+    expect(useAuthStore.getState().client).not.toBeNull();
   });
 
   it('says nothing while it has no session to lend, so a pop-out goes on to the cookies', async () => {
