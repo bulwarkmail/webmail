@@ -4,46 +4,24 @@
  * changes and replaces a dead stream, the identities and policy refresh. Those are the
  * handlers already listening, so this only gives them the word. The hidden main window
  * of the desktop app never goes out of view, so without this they wouldn't hear it.
- *
- * The local store registers with addWakeHandler and addSleepHandler (setOnline, sync).
+ * The local store hangs on the same two: `online` is setOnline(true) and a flush,
+ * `visibilitychange` is a sync per account. It takes itself offline for a sleep through
+ * addSleepHandler, in lib/desktop/system-events.ts.
  */
 
 import { getDesktopBridge } from '@/lib/desktop/bridge';
+import { runSleepHandlers, runWakeHandlers } from '@/lib/desktop/system-events';
 import { usePolicyStore } from '@/stores/policy-store';
 
-type Handler = () => void;
-
-const wakeHandlers = new Set<Handler>();
-const sleepHandlers = new Set<Handler>();
 /** A resume and an unlock usually come together. */
 const WAKE_REPEAT_MS = 2000;
-
-export function addWakeHandler(handler: Handler): () => void {
-  wakeHandlers.add(handler);
-  return () => wakeHandlers.delete(handler);
-}
-
-export function addSleepHandler(handler: Handler): () => void {
-  sleepHandlers.add(handler);
-  return () => sleepHandlers.delete(handler);
-}
-
-function runAll(handlers: Set<Handler>): void {
-  for (const handler of [...handlers]) {
-    try {
-      handler();
-    } catch (error) {
-      console.error('A wake or sleep handler failed:', error);
-    }
-  }
-}
 
 function wake(): void {
   document.dispatchEvent(new Event('visibilitychange'));
   window.dispatchEvent(new Event('online'));
   const policy = usePolicyStore.getState();
   if (policy.loaded && !policy.fetching) void policy.fetchPolicy();
-  runAll(wakeHandlers);
+  runWakeHandlers();
 }
 
 export function startPowerWatch(): () => void {
@@ -58,7 +36,7 @@ export function startPowerWatch(): () => void {
   };
   const stopPower = bridge.onPower((event) => {
     if (event === 'resume' || event === 'unlock-screen') wakeOnce();
-    else if (event === 'suspend') runAll(sleepHandlers);
+    else if (event === 'suspend') runSleepHandlers();
   });
   // Wi-Fi to cable is a new network with no offline moment in between.
   const connection = (navigator as unknown as { connection?: EventTarget }).connection;

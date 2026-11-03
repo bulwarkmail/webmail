@@ -311,7 +311,8 @@ describe('from arrival to toast and sound', () => {
   });
 
   it("the store's created event reaches a running watch, and nothing else", async () => {
-    const { noteStoreCreated, startMailNotifications, MAIL_BATCH_MS } = await import('../mail-notifications');
+    const { startMailNotifications, MAIL_BATCH_MS } = await import('../mail-notifications');
+    const { reportStoreCreatedMail: noteStoreCreated } = await import('../system-events');
     const notify = vi.fn(async () => ({ shown: true, playSound: false }));
     setBridge({ version: 1, platform: 'win32', os: { notify } as never });
     client = fakeClient({ a: email('a') });

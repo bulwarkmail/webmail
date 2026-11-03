@@ -271,7 +271,8 @@ describe('waking up', () => {
     let fire: (event: DesktopOsPowerEvent) => void = () => {};
     setBridge({ onPower: (listener: (event: DesktopOsPowerEvent) => void) => { fire = listener; return () => {}; }, ...os });
     const power = await import('../power');
-    return { fire: (event: DesktopOsPowerEvent) => fire(event), power, stop: power.startPowerWatch() };
+    const events = await import('../system-events');
+    return { fire: (event: DesktopOsPowerEvent) => fire(event), power: events, stop: power.startPowerWatch() };
   }
 
   it('a resume checks for changes at once, the way a tab coming back does, and only once with the unlock', async () => {

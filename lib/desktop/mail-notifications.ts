@@ -14,6 +14,7 @@ import { getDesktopBridge } from '@/lib/desktop/bridge';
 import type { DesktopOsNotification } from '@/lib/desktop/types';
 import { isAppLocked } from '@/lib/desktop/app-lock-state';
 import { startNewMailWatch, type NewMail, type NewMailWatch } from '@/lib/desktop/new-mail';
+import { setStoreCreatedListener } from '@/lib/desktop/system-events';
 import { devicesForAccount } from '@/lib/device-policy';
 import { playNotificationSound } from '@/lib/notification-sound';
 import { isPopoutWindow } from '@/lib/popout/window-role';
@@ -130,17 +131,6 @@ export interface MailNotifications extends NewMailWatch {
   setLabels(labels: MailNotificationLabels): void;
 }
 
-let current: MailNotifications | null = null;
-
-/**
- * The local store's `created` event, from lib/offline/offline-mode.ts's onEvent, once
- * an account lives in the store: `noteStoreCreated(client, event.jmap, event.ids)`.
- * Does nothing where notifications don't run: in a browser, in a pop-out.
- */
-export function noteStoreCreated(client: IJMAPClient, accountId: string, ids: readonly string[]): void {
-  current?.noteCreated(client, accountId, ids);
-}
-
 export function startMailNotifications(initial: MailNotificationLabels): MailNotifications {
   let labels = initial;
   let batch: NewMail[] = [];
@@ -176,9 +166,9 @@ export function startMailNotifications(initial: MailNotificationLabels): MailNot
       watch.stop();
       if (timer) clearTimeout(timer);
       timer = null;
-      if (current === handle) current = null;
+      setStoreCreatedListener(null);
     },
   };
-  current = handle;
+  setStoreCreatedListener((client, accountId, ids) => watch.noteCreated(client, accountId, ids));
   return handle;
 }
