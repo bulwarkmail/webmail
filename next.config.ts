@@ -104,6 +104,13 @@ const nextConfig: NextConfig = {
   typescript: {
     tsconfigPath: "tsconfig.build.json",
   },
+  // next-intl's plugin adds a webpack hook, and with one Next runs the client,
+  // server and edge compilers in its main process on one heap, which outgrew
+  // Node's default limit of about 2.2 GB (#1510). In workers each compiler has
+  // its own heap, freed when it finishes. Turbopack builds don't read this.
+  experimental: {
+    webpackBuildWorker: true,
+  },
   // No proxyClientMaxBodySize: Next copies every body proxy.ts runs for up to
   // that size before routing, so it stays at the 10 MB default. The routes
   // that take bigger uploads (WOPI saves, WebDAV, /api/plugin-proxy) are left

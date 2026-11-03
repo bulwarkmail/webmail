@@ -225,7 +225,7 @@ export function CalendarToolbar({
       <div className="border-b border-border">
         {/* ── MOBILE TOOLBAR ── */}
         {isMobile && (
-          <div className="flex flex-col gap-1 px-2 py-2">
+          <div data-window-top-row="" className="flex flex-col gap-1 px-2 py-2">
             {/* Row 1 while searching: the search box with a way back. */}
             {mobileSearchField ? (
               <div className="flex items-center gap-1">

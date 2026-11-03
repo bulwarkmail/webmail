@@ -78,6 +78,21 @@ afterEach(() => {
   window.history.replaceState(null, '', '/');
 });
 
+describe('a message opened from a bulwark:// link', () => {
+  it('asks for nothing automatic: such a link may show a message, not act on it', async () => {
+    window.history.replaceState(null, '', '/en/popout/message/m%2F1?account=login-b&via=link');
+    render(<PopoutMessageApp id="m/1" />);
+    await settle();
+    expect((view as unknown as { noAutomaticActions?: boolean }).noAutomaticActions).toBe(true);
+  });
+
+  it('an ordinary pop-out acts as ever', async () => {
+    render(<PopoutMessageApp id="m/1" />);
+    await settle();
+    expect((view as unknown as { noAutomaticActions?: boolean }).noAutomaticActions).toBeFalsy();
+  });
+});
+
 describe('PopoutMessageApp', () => {
   it('opens the message of the address, through its login and account', async () => {
     render(<PopoutMessageApp id="rendered-for-another-id" />);

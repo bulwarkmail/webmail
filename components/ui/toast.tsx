@@ -36,6 +36,8 @@ export interface Toast {
    * that has one lays its actions out on a row of their own.
    */
   tertiaryAction?: ToastAction;
+  /** More actions at the end of that row. Needs a tertiaryAction. */
+  extraActions?: ToastAction[];
   /**
    * Work in progress, e.g. an upload: 0..1, or null while the amount is
    * unknown. The bottom line then shows progress instead of a countdown,
@@ -291,6 +293,7 @@ export function ToastItem({ toast, onClose, held = false, onFocusLost }: ToastPr
             {actionButton(toast.tertiaryAction)}
             {toast.secondaryAction && actionButton(toast.secondaryAction)}
             {toast.action && actionButton(toast.action)}
+            {toast.extraActions?.map((action) => <span key={action.label} className="contents">{actionButton(action)}</span>)}
           </div>
         )}
       </div>

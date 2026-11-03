@@ -175,6 +175,12 @@ export interface OrganisationPolicy {
     offlineMaxAttachmentMb: number;
     /** All attachments and files of one account on a device, in MB. 0 is no cap. */
     offlineMaxTotalMb: number;
+    /**
+     * A device deletes an account's offline data as soon as it signs out with nobody
+     * asking (the server refused the login, or the idle or session limit ran out),
+     * instead of hiding it for 30 days until the next sign-in. Unsent mail goes with it.
+     */
+    wipeOnForcedSignOut: boolean;
   };
   calendars: {
     /** Adds up across scopes by id. */
@@ -200,6 +206,7 @@ export const DEFAULT_ORGANISATION_POLICY: OrganisationPolicy = {
     noDownloads: false, noExport: false, noPrint: false, noInstallPrompt: false,
     pushWithoutContent: false, watermark: false, noOffline: false,
     offlineMaxDays: 0, noOfflineAttachments: false, offlineMaxAttachmentMb: 0, offlineMaxTotalMb: 0,
+    wipeOnForcedSignOut: false,
   },
   calendars: { feeds: [], freeBusyGroup: '' },
 };
@@ -544,6 +551,7 @@ export function sanitizeOrganisationPartial(raw: unknown): DeepPartial<Organisat
     noOfflineAttachments: bool(dev.noOfflineAttachments),
     offlineMaxAttachmentMb: count(dev.offlineMaxAttachmentMb, MAX_OFFLINE_MB),
     offlineMaxTotalMb: count(dev.offlineMaxTotalMb, MAX_OFFLINE_MB),
+    wipeOnForcedSignOut: bool(dev.wipeOnForcedSignOut),
   });
 
   const cal = section('calendars');

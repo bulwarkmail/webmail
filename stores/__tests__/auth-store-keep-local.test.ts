@@ -99,20 +99,22 @@ describe('an automatic sign-out of the active account', () => {
     expectKept();
   });
 
-  it('wipes on a real invalid_grant, and names the lost mail', async () => {
+  it('keeps the data on a real invalid_grant: a password changed elsewhere gets it back with the new one', async () => {
     tokenAnswers(() => answer(401, { error: 'invalid_grant' }));
     offline.startOfflineMode();
     await refresh();
-    await vi.waitFor(() => expect(purge.files).toBeGreaterThan(0));
-    expect(localStorage.getItem(state.OFFLINE_ACCOUNTS_KEY)).toBeNull();
-    expect(lost.consumeLost()).toEqual(['Unsent']);
+    await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(ALICE)).toBeUndefined());
+    expectKept();
+    expect(lost.consumeLost()).toEqual([]);
   });
 
-  it('wipes at the organisation\'s session limit', async () => {
+  it('keeps the data at the organisation\'s session limit: that says nothing about the password', async () => {
     const { SESSION_TOO_OLD } = await import('@/lib/session-policy/constants');
     tokenAnswers(() => answer(401, { error: SESSION_TOO_OLD, maxHours: 8 }));
+    offline.startOfflineMode();
     await refresh();
-    await vi.waitFor(() => expect(purge.files).toBeGreaterThan(0));
+    await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(ALICE)).toBeUndefined());
+    expectKept();
   });
 });
 
@@ -134,11 +136,12 @@ describe('a background account', () => {
     expect(store.removed).toEqual([]);
   });
 
-  it('wipes on a real invalid_grant', async () => {
+  it('keeps its data on a real invalid_grant too', async () => {
     tokenAnswers(() => answer(401, { error: 'invalid_grant' }));
     await token();
-    await vi.waitFor(() => expect(store.removed).toEqual([BOB]));
-    expect(state.isEvicted(BOB)).toBe(false);
+    await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(BOB)).toBeUndefined());
+    expect(state.isEvicted(BOB)).toBe(true);
+    expect(store.removed).toEqual([]);
   });
 });
 
@@ -221,5 +224,18 @@ describe('a login without "remember me"', () => {
     offline.startOfflineMode();
     await vi.waitFor(() => expect(purge.files).toBeGreaterThan(0));
     expect(lost.consumeLost()).toEqual(['Unsent']);
+  });
+
+  it('keeps its data when the reload was the app lock\'s: it has to sign in again, and loses nothing', async () => {
+    localStorage.setItem('bulwark-app-lock', JSON.stringify({ on: true, locked: false }));
+    useAccountStore.setState({ accounts: [{ ...entry(ALICE, 0), rememberMe: false }] } as never);
+    tokenAnswers(() => answer(200));
+    await useAuthStore.getState().checkAuth();
+    expect(useAccountStore.getState().getAccountById(ALICE)).toBeUndefined();
+    expect(state.isEvicted(ALICE)).toBe(true);
+    offline.startOfflineMode();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(purge.files).toBe(0);
+    expect(lost.consumeLost()).toEqual([]);
   });
 });

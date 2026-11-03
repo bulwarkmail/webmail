@@ -142,6 +142,7 @@ export function PluginSidePanel() {
       {active && (
         <aside
           data-plugin-side-panel={active.pluginId}
+          data-window-end-column=""
           className="flex w-[300px] shrink-0 flex-col overflow-hidden border-s border-border bg-background"
           aria-label={active.title}
         >
@@ -150,6 +151,7 @@ export function PluginSidePanel() {
       )}
       {inRail.length > 0 && <nav
         data-plugin-side-rail=""
+        data-window-end-column=""
         className="flex w-12 shrink-0 flex-col items-center gap-1 border-s border-border bg-background pt-2"
         aria-label={t('mv_side_panel')}
       >

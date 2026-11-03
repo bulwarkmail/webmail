@@ -34,6 +34,8 @@ import { saveQuickReplyDraft } from '@/lib/outgoing/quick-reply-envelope';
 import { canDownload } from '@/lib/device-policy';
 import { useOpenEmailInWindow } from '@/hooks/use-popouts-available';
 import { isFilePreviewable } from '@/lib/file-preview';
+import { useDesktopCommands } from '@/lib/desktop/commands';
+import { isPopoutWindow } from '@/lib/popout/window-role';
 import dynamic from 'next/dynamic';
 
 // Only needed when the device policy turns downloads off.
@@ -77,6 +79,8 @@ interface ProEmailViewProps {
   liveState?: Pick<Email, 'keywords' | 'mailboxIds'> | null;
   /** This view changed the message's flags, for a host other windows should hear from. */
   onMailChanged?: () => void;
+  /** See EmailViewer. */
+  noAutomaticActions?: boolean;
   /**
    * The message left this view: deleted, archived, moved, or reopened in the
    * composer. The host decides what that means (close the tab / clear the
@@ -132,7 +136,7 @@ function buildReplyContext(email: Email): ProReplyContext {
  * Hosted by `ProEmailTabBody` (a dedicated email tab) and by the folder tab's
  * reading pane.
  */
-export function ProEmailView({ emailId, client: clientOverride, clientAccountId, accountId, onLoaded, onOpenCompose, liveState, onMailChanged, onClose, className }: ProEmailViewProps) {
+export function ProEmailView({ emailId, client: clientOverride, clientAccountId, accountId, onLoaded, onOpenCompose, liveState, onMailChanged, noAutomaticActions, onClose, className }: ProEmailViewProps) {
   const t = useTranslations();
   const tNotifications = useTranslations('notifications');
   const tRemove = useTranslations('email_list.confirm_remove');
@@ -450,6 +454,29 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     setEmail({ ...email, keywords });
   }, [email, setEmailKeywordsLocal]);
 
+  // In a pop-out this message is all there is, so the menu bar's Message menu means it.
+  const inOwnWindow = typeof window !== 'undefined' && isPopoutWindow();
+  const seen = !!email?.keywords?.$seen;
+  useDesktopCommands({
+    'message.reply': () => handleReply(),
+    'message.replyAll': handleReplyAll,
+    'message.forward': handleForward,
+    'message.markRead': () => { if (email) void handleMarkAsRead(email.id, true); },
+    'message.markUnread': () => { if (email) void handleMarkAsRead(email.id, false); },
+    'message.star': () => void handleToggleStar(),
+    'message.archive': archiveActionEnabled ? () => void handleArchive() : undefined,
+    'message.delete': () => void handleDelete(),
+  }, {
+    'message.reply': !!email,
+    'message.replyAll': !!email,
+    'message.forward': !!email,
+    'message.markRead': !!email && !seen,
+    'message.markUnread': !!email && seen,
+    'message.star': !!email,
+    'message.archive': !!email && archiveActionEnabled,
+    'message.delete': !!email,
+  }, inOwnWindow);
+
   const handleMoveToMailbox = useCallback(async (mailboxId: string) => {
     if (!client || !email) return;
     try {
@@ -549,6 +576,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     <div className={cn("flex h-full flex-col bg-background", className)}>
       <ErrorBoundary fallback={EmailViewerErrorFallback}>
         <EmailViewer
+          noAutomaticActions={noAutomaticActions}
           email={email}
           blobSource={blobSource}
           isLoading={isLoading}

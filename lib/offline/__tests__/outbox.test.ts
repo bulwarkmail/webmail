@@ -10,6 +10,7 @@ import { setStoreBackend } from '@/lib/store/client/api';
 import { FakeJmapMail } from '@/lib/store/__tests__/helpers/fake-jmap-mail';
 import { InProcessStore } from '@/lib/store/__tests__/helpers/in-process-store';
 import { enforcePolicy, startOfflineMode, wipeEverything } from '../offline-mode';
+import { setLockedHere } from '@/lib/app-lock/state';
 import { flushQueue } from '../flush';
 import { holdFile, readQueue } from '../queue';
 import { forgetLegacyMove } from '../migrate-legacy';
@@ -250,6 +251,45 @@ describe('the outbox', () => {
     await flushQueue('acc', client as unknown as JMAPClient, { notify: vi.fn(), allowed: () => false });
     expect(client.requestNetworkOnly).not.toHaveBeenCalled();
     expect(server.emails.get('m1')?.keywords).toEqual({});
+  });
+});
+
+describe('the app locking during a flush', () => {
+  it('stops before the next message, and the rest goes after the unlock', async () => {
+    const sent: unknown[] = [];
+    const client = fakeClient({
+      sendEmail: vi.fn(async (...args: unknown[]) => {
+        sent.push(args);
+        // The timer fires while the first send is under way.
+        if (sent.length === 1) setLockedHere(true);
+        return { scheduled: false, emailId: `sent-${sent.length}`, emailSubmissionId: `sub-${sent.length}` };
+      }),
+    });
+    useAuthStore.setState({ client: client as never, activeAccountId: 'acc' });
+    writeEnabled(['acc']);
+    stop = startOfflineMode();
+    setOnline(false);
+    await sendArgs(client, { outbox: true });
+    await sendArgs(client, { outbox: true });
+    // Only the flush below: nothing starts one of its own when the network comes back.
+    stop();
+    stop = () => {};
+    setOnline(true);
+    expect((await readQueue('acc')).outbox).toHaveLength(2);
+    (client.sendEmail as ReturnType<typeof vi.fn>).mockClear();
+    try {
+      await flushQueue('acc', client as unknown as JMAPClient, { notify: vi.fn(), allowed: () => true });
+    } finally {
+      setLockedHere(false);
+    }
+    expect(sent).toHaveLength(1);
+    const waiting = (await readQueue('acc')).outbox;
+    expect(waiting).toHaveLength(1);
+    expect(waiting[0].status).toBe('waiting');
+
+    await flushQueue('acc', client as unknown as JMAPClient, { notify: vi.fn(), allowed: () => true });
+    expect(sent).toHaveLength(2);
+    expect((await readQueue('acc')).outbox).toHaveLength(0);
   });
 });
 

@@ -46,6 +46,29 @@ describe('Settings > Offline', () => {
     }
   });
 
+  it('offers removing everything where offline mode exists', () => {
+    render(<OfflineSettings />);
+    expect(screen.getByTestId('wipe-device-section')).toBeTruthy();
+  });
+
+  it('doesn\'t where it can\'t be used: a private window, a store that isn\'t there, an organisation\'s no', () => {
+    useOfflineStore.setState({ storageBlocked: true });
+    const privateWindow = render(<OfflineSettings />);
+    expect(screen.queryByTestId('wipe-device-section')).toBeNull();
+    privateWindow.unmount();
+    useOfflineStore.setState({ storageBlocked: false });
+
+    setStoreBackend({ supported: () => false } as unknown as StoreBackend);
+    const noStore = render(<OfflineSettings />);
+    expect(screen.queryByTestId('wipe-device-section')).toBeNull();
+    noStore.unmount();
+    setStoreBackend({ supported: () => true } as unknown as StoreBackend);
+
+    setNoOffline(true);
+    render(<OfflineSettings />);
+    expect(screen.queryByTestId('wipe-device-section')).toBeNull();
+  });
+
   it('is off until the user turns it on in this browser', () => {
     render(<OfflineSettings />);
     const toggle = screen.getByTestId('offline-switch');

@@ -4,17 +4,46 @@ import { useEffect, useRef } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Loader2, Pause } from "@/components/icons";
 import { isJobActive, useMailTransferStore } from "@/stores/mail-transfer-store";
+import { showTaskbarProgress } from "@/lib/desktop/taskbar-progress";
+import { onDeviceWipe } from "@/lib/offline/wipe-registry";
 import { onBeforeSignOut } from "@/lib/sign-out-cleanup";
 import { clearCheckpointsFor } from "@/lib/mail-import/checkpoints";
-import { sweepPrivateExports } from "@/lib/mail-export/sinks";
+import { dropExportFiles, sweepPrivateExports } from "@/lib/mail-export/sinks";
 import { useAuthStore } from "@/stores/auth-store";
 import { toast } from "@/stores/toast-store";
 import { MailImportDialog } from "./mail-import-dialog";
 import { MailExportDialog } from "./mail-export-dialog";
+import { LocalExportDialog } from "./local-export-dialog";
 import { formatClock } from "./transfer-progress";
 
 /** How long sign-out waits for a cancelled job to stop (its budget is 2 s). */
 const SIGN_OUT_WAIT_MS = 1500;
+
+/**
+ * Stops the job of an account that goes, and frees what its export kept in this
+ * browser. `all`: whoever's job it is. Another account's job goes on.
+ */
+async function stopJobOf(accountId: string): Promise<void> {
+  // Finished exports waiting out their grace period, with the dialog long closed.
+  dropExportFiles(accountId);
+  const store = useMailTransferStore.getState();
+  const job = store.job;
+  if (!job || !(accountId === "all" || !job.scope || job.scope === accountId)) return;
+  const forget = () => {
+    const now = useMailTransferStore.getState();
+    if (now.job?.controller === job.controller) now.close({ now: true });
+  };
+  if (isJobActive(job)) {
+    store.cancelJob("signout");
+    await Promise.race([job.finished, new Promise((resolve) => setTimeout(resolve, SIGN_OUT_WAIT_MS))]);
+    // Still going after the wait: close() leaves a running job be, so it goes when it ends.
+    if (isJobActive(useMailTransferStore.getState().job)) {
+      void job.finished?.then(forget, forget);
+      return;
+    }
+  }
+  forget();
+}
 
 /**
  * Draws the mail import and export dialogs, and while it is hidden with a job running,
@@ -31,16 +60,14 @@ export function MailTransferHost() {
   // Another account signing out leaves the job alone. The job's checkpoint
   // goes after the job has stopped, so a late write can't bring it back.
   useEffect(() => onBeforeSignOut(async (accountId) => {
-    const store = useMailTransferStore.getState();
-    const job = store.job;
-    if (job && (accountId === "all" || !job.scope || job.scope === accountId)) {
-      if (isJobActive(job)) {
-        store.cancelJob("signout");
-        await Promise.race([job.finished, new Promise((resolve) => setTimeout(resolve, SIGN_OUT_WAIT_MS))]);
-      }
-      useMailTransferStore.getState().close({ now: true });
-    }
+    await stopJobOf(accountId);
     if (accountId !== "all") await clearCheckpointsFor(accountId);
+  }), []);
+
+  // A wipe takes the same, and every spool no tab holds. `null` is everything on this device.
+  useEffect(() => onDeviceWipe(async (account) => {
+    await stopJobOf(account ?? "all");
+    await sweepPrivateExports({ force: account === null });
   }), []);
 
   // Export files a closed tab or a crash left in the browser's private
@@ -49,6 +76,20 @@ export function MailTransferHost() {
   useEffect(() => {
     if (!isJobActive(useMailTransferStore.getState().job)) void sweepPrivateExports();
   }, [activeAccountId]);
+
+  // The desktop app shows a running export on its taskbar button.
+  const exportPhase = job?.kind === "export" ? job.progress.phase : null;
+  const exportFraction = job?.kind === "export" ? job.progress.fraction : 0;
+  const onTaskbar = useRef(false);
+  useEffect(() => {
+    if (exportPhase === "running" || exportPhase === "paused") {
+      onTaskbar.current = true;
+      showTaskbarProgress(exportFraction, exportPhase === "paused" ? "paused" : "normal");
+    } else if (onTaskbar.current) {
+      onTaskbar.current = false;
+      showTaskbarProgress(null);
+    }
+  }, [exportPhase, exportFraction]);
 
   // A job that ends while its dialog is hidden says so, with a way back to its summary.
   const tImport = useTranslations("mail_import");
@@ -64,8 +105,8 @@ export function MailTransferHost() {
     if (job.kind === "import") {
       if (phase === "done") toast.success(tImport("toast_done", { imported: job.progress.imported, failed: job.progress.failed }), { action });
       else toast.warning(tImport("toast_stopped"), { action });
-    } else if (phase === "done") {
-      toast.success(tExport("toast_done", { name: job.progress.file?.name ?? "" }), { action });
+    } else if (phase === "done" && job.progress.file) {
+      toast.success(tExport("toast_done", { name: job.progress.file.name }), { action });
     } else {
       toast.warning(tExport("toast_stopped"), { action });
     }
@@ -77,6 +118,7 @@ export function MailTransferHost() {
     <>
       {request?.kind === "import" && <MailImportDialog request={request} />}
       {request?.kind === "export" && <MailExportDialog request={request} />}
+      {request?.kind === "local-export" && <LocalExportDialog request={request} />}
       {!visible && isJobActive(job) && <TransferChip />}
     </>
   );

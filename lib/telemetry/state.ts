@@ -6,6 +6,8 @@ import { isStoreUnavailable, StoredDataUnreadableError } from '@/lib/stored-data
 import type { TelemetryStateFile, ConsentState, ErrorsConsent } from './types';
 import { DEFAULT_ENDPOINT } from './types';
 import { isNoThirdPartyTrafficOn } from '@/lib/admin/third-party-mode';
+import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
+import { desktopServerPrivacy } from '@/lib/desktop/server-privacy';
 
 export function getDir(): string {
   return process.env.TELEMETRY_DATA_DIR ||
@@ -195,6 +197,13 @@ export async function effectiveErrorsConsent(): Promise<{
 }> {
   const telemetry = await effectiveConsent();
   if (telemetry.source === 'no-third-party') return { consent: 'off', source: 'no-third-party' };
+  // The desktop user's crash report consent, separate from telemetry: either can be on
+  // without the other. Instant, because without a heartbeat nothing else carries them.
+  // BULWARK_TELEMETRY=off stops these too, so it means what it says on a managed machine.
+  if (IS_DESKTOP_BUILD) {
+    const on = desktopServerPrivacy()?.crashReports && envOverride() !== 'off' && errorsEnvOverride() !== 'off';
+    return { consent: on ? 'instant' : 'off', source: 'env' };
+  }
   if (telemetry.consent !== 'on') return { consent: 'off', source: 'telemetry' };
   const env = errorsEnvOverride();
   if (env) return { consent: env, source: 'env' };
@@ -213,8 +222,20 @@ export async function effectiveConsent(): Promise<{
   const envState = envOverride();
   const state = await loadState();
   if (await isNoThirdPartyTrafficOn()) return { consent: 'off', source: 'no-third-party', state };
+  // The user answers in the shell. Nothing on disk can say yes for them, and in the
+  // environment only an off counts: main passes that through and nothing else.
+  if (IS_DESKTOP_BUILD) return { consent: desktopServerPrivacy()?.telemetry && envState !== 'off' ? 'on' : 'off', source: 'env', state };
   if (envState) return { consent: envState, source: 'env', state };
   return { consent: state.consent, source: 'file', state };
+}
+
+/**
+ * Where heartbeats go. On the desktop build the state file has no say, since anything on
+ * the machine can write to it. A desktop user has their two switches instead.
+ */
+export function telemetryEndpoint(state: TelemetryStateFile): string {
+  if (IS_DESKTOP_BUILD) return desktopServerPrivacy()?.endpoint ?? DEFAULT_ENDPOINT;
+  return state.endpoint ?? DEFAULT_ENDPOINT;
 }
 
 export function endpointEnabled(endpoint: string | undefined): boolean {

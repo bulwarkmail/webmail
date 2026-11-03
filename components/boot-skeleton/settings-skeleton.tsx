@@ -163,7 +163,7 @@ function SettingsPage({ sections }: { sections: number }) {
 /** A phone header row: back arrow, title, then the ⋮ menu and the avatar (PhoneHeaderActions). */
 function PhoneHeader({ list }: { list: boolean }) {
   return (
-    <div className="flex items-center gap-2 px-4 h-14 border-b border-border bg-background shrink-0">
+    <div data-window-row-right="" className="flex items-center gap-2 px-4 h-14 border-b border-border bg-background shrink-0">
       <span className="grid place-items-center h-11 w-11 shrink-0">
         <ArrowLeft className="w-5 h-5" />
       </span>
@@ -270,6 +270,11 @@ export function SettingsSkeletonBody({ embedded = false }: { embedded?: boolean 
       <div className={cn("flex-1 min-w-0 min-h-0", embedded ? "flex" : "hidden lg:flex")}>
         <SettingsNav embedded={embedded} />
         <div aria-hidden="true" className="flex-1 min-w-0 overflow-hidden">
+          {embedded ? null : (
+            <div data-window-only="" data-window-row-right="" className="items-center gap-2 h-14 box-content border-b border-border px-2 sm:px-4 lg:px-6 shrink-0">
+              <Line className="text-sm" bar="h-3.5" w="6rem" />
+            </div>
+          )}
           <div className="max-w-3xl mx-auto px-6 py-6">
             <SettingsPage sections={3} />
           </div>

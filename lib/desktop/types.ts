@@ -18,6 +18,8 @@ export interface DesktopWindowInfo {
   type: DesktopWindowType;
   title: string;
   focused: boolean;
+  /** False for a main window hidden while pop-outs are open. */
+  visible?: boolean;
 }
 
 export interface DesktopWindowsBridge {
@@ -36,13 +38,72 @@ export interface DesktopWindowsBridge {
   list?: () => Promise<DesktopWindowInfo[]>;
   /** Fires when a window opens, closes, retitles or takes the focus. Returns the unsubscribe. */
   onChanged?: (listener: (windows: DesktopWindowInfo[]) => void) => () => void;
+  /**
+   * This page has saved or discarded and closes its window. Goes through the shell
+   * so bounds get stored and no second save runs. Works however the window opened.
+   */
+  closeSelf?: () => void;
+  /** What this window's open drafts come back as at the next start: pop-out composer addresses. */
+  setRestore?: (urls: string[]) => void;
+  setRestoreEnabled?: (enabled: boolean) => void;
+  /** Signed in, with a session to lend: windows from last time can open. */
+  sessionReady?: () => void;
+  /** The warm spare's page, see components/popout/popout-spare-app.tsx. */
+  spare?: {
+    ready: () => void;
+    taken: () => void;
+    onActivate: (listener: (url: string) => void) => () => void;
+  };
 }
 
 export interface DesktopThemeBridge {
   /** The page's colours, for title bar buttons and the first frame of new windows. */
   set: (theme: { dark: boolean; background: string; foreground?: string }) => void;
-  /** Fires when the OS switches between light and dark. Returns the unsubscribe. */
-  onSystemChange?: (listener: (system: { dark: boolean; highContrast: boolean }) => void) => () => void;
+  /** Fires when the OS switches between light and dark, contrast or accent. Returns the unsubscribe. */
+  onSystemChange?: (listener: (system: DesktopSystemTheme) => void) => () => void;
+  /** How the OS looks now. */
+  system?: () => Promise<DesktopSystemTheme>;
+}
+
+export interface DesktopSystemTheme {
+  dark: boolean;
+  highContrast: boolean;
+  /** The OS accent colour as #rrggbb, where the OS has one and tells. */
+  accent?: string;
+}
+
+export type DesktopMenuState = Record<string, boolean | { enabled?: boolean; checked?: boolean }>;
+
+/** A native menu built from an HTML one (lib/desktop/native-menu.ts). */
+export interface DesktopNativeMenuItem {
+  /** Handed back when this item is chosen. Left out of separators and submenus. */
+  id?: string;
+  label?: string;
+  type?: 'normal' | 'separator' | 'checkbox' | 'radio';
+  enabled?: boolean;
+  checked?: boolean;
+  submenu?: DesktopNativeMenuItem[];
+}
+
+export interface DesktopMenuBarEntry {
+  id: string;
+  label: string;
+  /** The letter that opens it with Alt, lower case. */
+  mnemonic?: string;
+}
+
+export interface DesktopMenuBarEvent {
+  visible: boolean;
+  /** Open this menu right away: Alt plus its letter. */
+  open?: string;
+}
+
+/** What a page answers when asked to save before a window goes. */
+export interface DesktopFlushAnswer {
+  failed?: number;
+  timedOut?: boolean;
+  /** Mail waiting to be sent. */
+  unsent?: number;
 }
 
 export interface DesktopMenuBridge {
@@ -50,12 +111,51 @@ export interface DesktopMenuBridge {
    * What the app menu shows as enabled or checked, by command id. The shell
    * keeps the last state per window and applies it when that window has focus.
    */
-  setState: (state: Record<string, boolean | { enabled?: boolean; checked?: boolean }>) => void;
+  setState: (state: DesktopMenuState) => void;
+  /** A menu command to run. Returns the unsubscribe. */
+  onCommand?: (listener: (id: string) => void) => () => void;
+  /** Shows a native menu. At the pointer when `at` is left out. Answers with the id picked, or null. */
+  popup?: (items: DesktopNativeMenuItem[], at?: { x: number; y: number }) => Promise<string | null>;
+  /** The strip that stands in for a menu bar in a window with no native bar. */
+  bar?: {
+    entries: () => Promise<DesktopMenuBarEntry[]>;
+    /** Opens that menu natively, at page coordinates. */
+    open: (id: string, at: { x: number; y: number }) => void;
+    onEvent: (listener: (event: DesktopMenuBarEvent) => void) => () => void;
+  };
 }
 
 export interface DesktopShellBridge {
   /** http, https and mailto only. */
   openExternal: (url: string) => void;
+  /** The shell's menus follow `ui`, in `labels` (lib/desktop/languages.ts). Spellcheck follows `ui` and `composer`. */
+  setLanguages?: (languages: { ui: string; composer?: string[]; labels?: Record<string, string> }) => void;
+}
+
+export interface DesktopSpellcheckBridge {
+  /** Languages with neither an OS checker nor a dictionary here. */
+  missing: () => Promise<string[]>;
+  onMissing: (listener: (language: string) => void) => () => void;
+  /** The user said yes: dictionaries may come from Google. Never with no-third-party mode on. */
+  allowDownload: () => void;
+}
+
+export interface DesktopDialogsBridge {
+  /** A native question. Answers with the index of the button chosen. The last button is the safe one. */
+  confirm: (options: {
+    message: string;
+    detail?: string;
+    buttons: string[];
+    defaultId?: number;
+    type?: 'none' | 'info' | 'warning' | 'question';
+  }) => Promise<number>;
+}
+
+export interface DesktopClipboardBridge {
+  /** Puts a file on the clipboard, for pasting into a folder. False when that didn't work. */
+  copyFile: (name: string, data: ArrayBuffer) => Promise<boolean>;
+  /** Signed out: nothing copied from that account stays on disk. */
+  clearFiles?: () => void;
 }
 
 export type DesktopServerPrepareResult =
@@ -85,7 +185,7 @@ export interface DesktopLifecycleBridge {
    * Before a window closes or the app quits, the shell asks the page to save what
    * it has and waits a few seconds. A window with no handler closes at once.
    */
-  onFlushRequest: (handler: () => Promise<unknown>) => () => void;
+  onFlushRequest: (handler: () => Promise<DesktopFlushAnswer | unknown>) => () => void;
 }
 
 export type DesktopBrowserSignInResult =
@@ -229,6 +329,199 @@ export interface DesktopPolicyBridge {
   onChange: (listener: (snapshot: PolicySnapshot) => void) => () => void;
 }
 
+export type DesktopOsUnlockKind = 'hello' | 'touchid';
+
+export type DesktopOsUnlockAnswer = { ok: true; key: Uint8Array } | { ok: false; reason: 'unavailable' | 'denied' | 'not-locked' | 'failed' };
+
+/**
+ * App lock in the desktop app. Main holds whether it's locked, and nothing a page says can
+ * lift that: `prove` needs what only a real unlock gives, Windows Hello and Touch ID run in
+ * main, and `forget` asks natively without the proof. A same-origin plugin frame can reach
+ * this through `parent`, so that has to hold on a call alone. What it mustn't reach at all,
+ * `lock` and `osUnlock`, the page takes once with `claim` before any frame exists.
+ */
+export interface DesktopAppLockBridge {
+  status: () => Promise<{ locked: boolean; enrolled: boolean; os: DesktopOsUnlockKind | null; osEnrolled: boolean; wrap?: boolean }>;
+  /** Once per document: the calls only the page itself may make. Null for whoever comes second. */
+  claim: () => { lock: () => void; osUnlock: () => Promise<DesktopOsUnlockAnswer> } | null;
+  /** Sets up the proof. False when one exists. */
+  enroll: (proof: Uint8Array) => Promise<boolean>;
+  /** Lifts the lock when the proof is the right one. */
+  prove: (proof: Uint8Array) => Promise<boolean>;
+  /** The lock goes off for good. */
+  disable: (proof: Uint8Array) => Promise<boolean>;
+  /** The PIN is lost, or everyone signed out. With no proof, main asks the user natively. */
+  forget: (proof?: Uint8Array) => Promise<boolean>;
+  /** Through safeStorage, for this origin only. Null where the OS has no real key store. */
+  wrap: (data: Uint8Array) => Promise<Uint8Array | null>;
+  unwrap: (data: Uint8Array) => Promise<Uint8Array | null>;
+  /** Asks Windows Hello or Touch ID, then keeps the key in the OS's encrypted storage. */
+  osEnroll: (proof: Uint8Array, lockKey: Uint8Array) => Promise<boolean>;
+  osRemove: () => Promise<void>;
+  /** The screen locked, or "Lock now" in the menu or tray. Returns the unsubscribe. */
+  onLockRequest: (listener: () => void) => () => void;
+}
+
+export interface DesktopOsSettings {
+  /** Closing the main window leaves the app running in the tray. */
+  closeToTray: boolean;
+  startAtLogin: boolean;
+  /** At login: no window, only the tray. */
+  startMinimized: boolean;
+  /** Taskbar flash or dock bounce on new mail. */
+  attentionOnNewMail: boolean;
+  quietHoursEnabled: boolean;
+  /** HH:MM, local time. */
+  quietHoursStart: string;
+  quietHoursEnd: string;
+  /** "Show Bulwark", an Electron accelerator. Null: off. */
+  showShortcut: string | null;
+}
+
+export interface DesktopOsStatus {
+  settings: DesktopOsSettings;
+  pausedUntil: number | null;
+  /** The shortcut in settings is really held. Another app can have it. */
+  shortcutActive: boolean;
+}
+
+export interface DesktopOsFile {
+  name: string;
+  data: Uint8Array;
+}
+
+/** What the OS asks the app to do: a tray item, a jump list entry, a toast, a double-clicked file. */
+export type DesktopOsCommand =
+  | { type: 'new-message' }
+  | { type: 'navigate'; target: 'inbox' | 'calendar' | 'contacts' }
+  | { type: 'open-message'; emailId: string; accountId?: string; context?: string }
+  | { type: 'open-mailbox'; mailboxId: string }
+  | { type: 'mailto'; url: string }
+  | { type: 'webcal'; url: string }
+  | { type: 'files'; reason: 'open' | 'attach'; files: DesktopOsFile[]; failed: string[] }
+  | { type: 'notification'; action: string; context: string; reply?: string };
+
+export interface DesktopOsNotification {
+  /** Tag of the toast. Showing an id again within a few minutes does nothing. */
+  id: string;
+  group?: string;
+  title: string;
+  body: string;
+  /** Handed back with the action. Keep it short: Windows keeps it in the toast. */
+  context: string;
+  actions?: { id: string; label: string }[];
+  reply?: { label: string; placeholder: string };
+  /** The user wants a sound with this. */
+  sound?: boolean;
+  /** New mail: flash the taskbar or bounce the dock if that's on. */
+  attention?: boolean;
+  /** What a locked app says instead: new mail unless this says otherwise. */
+  kind?: 'mail' | 'reminder';
+}
+
+export interface DesktopOsNotifyResult {
+  shown: boolean;
+  reason?: 'duplicate' | 'paused' | 'quiet-hours' | 'focused' | 'unsupported' | 'invalid' | 'failed';
+  /** The page should play the sound the user picked. */
+  playSound: boolean;
+}
+
+export interface DesktopOsTrayMessage {
+  emailId: string;
+  accountId: string;
+  sender: string;
+  subject: string;
+  context?: string;
+}
+
+export interface DesktopOsSummary {
+  unread: DesktopOsTrayMessage[];
+  /** Newest conversations, whether read or not, for the jump list. */
+  recent: DesktopOsTrayMessage[];
+  nextEvent: { title: string; when: string } | null;
+}
+
+export type DesktopOsPowerEvent = 'suspend' | 'resume' | 'lock-screen' | 'unlock-screen';
+
+export interface DesktopOsDefaultAppStatus {
+  /** Offered to the OS as a mail app. */
+  registered: boolean;
+  mailto: boolean;
+  webcal: boolean;
+}
+
+export interface DesktopOsBridge {
+  /**
+   * What the OS asks for. Main holds these until the main window's page subscribes,
+   * so a cold start loses nothing.
+   */
+  onCommand: (listener: (command: DesktopOsCommand) => void) => () => void;
+  getStatus: () => Promise<DesktopOsStatus>;
+  setSettings: (patch: Partial<DesktopOsSettings>) => Promise<DesktopOsStatus>;
+  /** Pause notifications until this time, or null to end the pause. */
+  setPaused: (until: number | null) => void;
+  onStatusChange: (listener: (status: DesktopOsStatus) => void) => () => void;
+  /** The unread count: overlay on Windows, setBadgeCount on macOS and Linux, the tray's dot. */
+  setBadge: (count: number) => void;
+  /** What the tray and the jump list show. */
+  setSummary: (summary: DesktopOsSummary) => void;
+  /** The taskbar's progress bar: lib/desktop/file-drag.ts setTaskbarProgress. */
+  setProgress: (progress: number | null, mode?: 'normal' | 'indeterminate' | 'paused' | 'error') => void;
+  /**
+   * App lock's state. Main counts as locked until the main window's page says otherwise,
+   * and clears the tray, jump list and toasts and strips what comes through.
+   */
+  setLocked: (locked: boolean) => void;
+  /** Sign-out or a wipe: delivered toasts, badge, tray and jump list go, and temporary files. */
+  clearSurfaces: () => void;
+  notify: (notification: DesktopOsNotification) => Promise<DesktopOsNotifyResult>;
+  onPower: (listener: (event: DesktopOsPowerEvent) => void) => () => void;
+  /** Writes the files to a private folder and starts a drag. Only with the mouse held. */
+  startDrag: (files: DesktopOsFile[]) => Promise<boolean>;
+  /** The same, onto the clipboard as files. */
+  copyFiles: (files: DesktopOsFile[]) => Promise<boolean>;
+  defaultAppStatus: () => Promise<DesktopOsDefaultAppStatus>;
+  /** Offers the app to the OS and opens where the user chooses. */
+  openDefaultAppSettings: () => Promise<DesktopOsDefaultAppStatus>;
+}
+
+export interface DesktopPrivacyState {
+  /** `forcedOff`: a policy says no, so `on` is false and the user can't change it. */
+  telemetry: { on: boolean; forcedOff: boolean };
+  /** `uploadUrl` is where "Send crash report" goes. Empty: nowhere, and the action says so. */
+  crashReports: { on: boolean; forcedOff: boolean; uploadUrl: string };
+}
+
+export interface DesktopCrashFile {
+  /** Opaque: the only values `sendCrash` accepts. */
+  id: string;
+  /** Milliseconds since 1970. */
+  createdAt: number;
+  bytes: number;
+}
+
+export type DesktopCrashSendResult =
+  | { ok: true }
+  | { ok: false; reason: 'no-consent' | 'no-url' | 'not-found' | 'cancelled' | 'failed' };
+
+/**
+ * Telemetry and crash reports, each with its own consent, both off until the user says
+ * yes. A same-origin plugin can reach this, so saying yes and sending a crash file both
+ * ask in a native dialog that names where it goes.
+ */
+export interface DesktopPrivacyBridge {
+  get: () => Promise<DesktopPrivacyState>;
+  setTelemetry: (on: boolean) => Promise<DesktopPrivacyState>;
+  setCrashReports: (on: boolean) => Promise<DesktopPrivacyState>;
+  /** https, or http on this computer. Empty clears it. */
+  setCrashUploadUrl: (url: string) => Promise<{ ok: boolean; state: DesktopPrivacyState }>;
+  listCrashes: () => Promise<DesktopCrashFile[]>;
+  sendCrash: (id: string) => Promise<DesktopCrashSendResult>;
+  deleteCrashes: () => Promise<void>;
+  /** Also fires when a policy changes. Returns the unsubscribe. */
+  onChange: (listener: (state: DesktopPrivacyState) => void) => () => void;
+}
+
 export interface BulwarkDesktopBridge {
   version: number;
   platform: 'win32' | 'darwin' | 'linux';
@@ -237,13 +530,19 @@ export interface BulwarkDesktopBridge {
   theme?: DesktopThemeBridge;
   menu?: DesktopMenuBridge;
   shell?: DesktopShellBridge;
+  dialogs?: DesktopDialogsBridge;
+  spellcheck?: DesktopSpellcheckBridge;
+  clipboard?: DesktopClipboardBridge;
   lifecycle?: DesktopLifecycleBridge;
   updates?: DesktopUpdatesBridge;
+  os?: DesktopOsBridge;
   policy?: DesktopPolicyBridge;
   servers?: DesktopServersBridge;
   auth?: DesktopAuthBridge;
   plugins?: DesktopPluginsBridge;
   keystore?: DesktopKeystoreBridge;
+  appLock?: DesktopAppLockBridge;
+  privacy?: DesktopPrivacyBridge;
 }
 
 declare global {

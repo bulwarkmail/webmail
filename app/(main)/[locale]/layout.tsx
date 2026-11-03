@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { AppLockGate } from "@/components/app-lock/app-lock-gate";
 import { IntlProvider } from "@/components/providers/intl-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { CalendarAlertProvider } from "@/components/providers/calendar-alert-provider";
@@ -27,7 +28,9 @@ import { PluginOAuthCallbackListener } from "@/components/providers/plugin-oauth
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { AppUpdatePrompt } from "@/components/app-update-prompt";
 import { OfflineHost } from "@/components/offline/offline-host";
+import { DeviceWipeHost } from "@/components/offline/device-wipe-host";
 import { NotificationActionsHost } from "@/components/providers/notification-actions-host";
+import { DesktopOsHost } from "@/components/desktop/desktop-os-host";
 import { DevicePolicyHost } from "@/components/device/device-policy-host";
 import { PushNotificationPrompt } from "@/components/push-notification-prompt";
 import { AccountArchiveRestorePrompt } from "@/components/account-archive-prompt";
@@ -37,6 +40,8 @@ import { FreeBusyAutoShare } from "@/components/calendar/free-busy-auto-share";
 import { MainWindowOnly } from "@/components/popout/main-window-only";
 import { PopoutHost } from "@/components/popout/popout-host";
 import { WindowSyncHost } from "@/components/popout/window-sync-host";
+import { DesktopHost } from "@/components/desktop/desktop-host";
+import { WindowMenuBar } from "@/components/layout/window-menu-bar";
 import { IS_LITE } from "@/lib/lite";
 import { setRequestLocale } from "next-intl/server";
 import { locales } from "@/i18n/routing";
@@ -75,6 +80,7 @@ export default async function LocaleLayout({
 
   return (
     <IntlProvider locale={locale} messages={messages}>
+      <AppLockGate>
       <ThemeProvider>
         <CalendarAlertProvider>
           <RateLimitToastProvider>
@@ -85,10 +91,13 @@ export default async function LocaleLayout({
                   <MainWindowOnly>
                     <ImpersonationReconciler />
                     <PushBindingsHost />
+                    <DesktopOsHost />
                     <FreeBusyAutoShare />
                     {!IS_LITE && <PopoutHost />}
                   </MainWindowOnly>
                   {!IS_LITE && <WindowSyncHost />}
+                  {!IS_LITE && <WindowMenuBar />}
+                  {!IS_LITE && <DesktopHost />}
                   <SessionTimeoutGuard />
                   <AccountTemplateSync />
                   {children}
@@ -128,6 +137,9 @@ export default async function LocaleLayout({
           </RateLimitToastProvider>
         </CalendarAlertProvider>
       </ThemeProvider>
+      </AppLockGate>
+      {/* Beside the gate, not under it: a stolen device at the lock screen still has to hear a wipe. */}
+      {!IS_LITE && <DeviceWipeHost />}
     </IntlProvider>
   );
 }

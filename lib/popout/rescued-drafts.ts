@@ -46,6 +46,12 @@ export function takeRescuedDraft(): ComposerDraftData | null {
   return first;
 }
 
+/** A wipe: the text of a message nobody could save goes too. */
+export function clearRescuedDrafts(): void {
+  memory = [];
+  write([]);
+}
+
 /** Calls `listener` when a draft comes in. Returns the unsubscribe. */
 export function onRescuedDraft(listener: () => void): () => void {
   listeners.add(listener);

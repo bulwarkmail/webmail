@@ -160,6 +160,7 @@ import { requestInternalMailto } from "@/lib/protocol-handlers/mailto";
 import { imageBlobUrl, inertBlobType, isFilePreviewable, isMimeTypeSafeForInlinePreview, toInertBlob } from "@/lib/file-preview";
 import { openPreviewInNewWindow } from "@/lib/standalone-display";
 import { downloadAllowed, saveBlobAs } from "@/lib/download-guard";
+import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { canPickFolder, createUniqueNamer, isPickerCancelled, pickFolder, saveFilesToFolder, type FolderHandle } from "@/lib/attachments/save-to-folder";
 import { useDevicePolicy } from "@/hooks/use-device-policy";
 import { Watermark, useWatermarkText } from "@/components/device/watermark";
@@ -290,6 +291,11 @@ interface EmailViewerProps {
   onToggleFullscreen?: () => void;
   /** Opens this message in its own window; left out where that isn't on offer. */
   onOpenInWindow?: () => void;
+  /**
+   * Opened by something outside the app (a bulwark:// link), not by the user in it.
+   * It shows the message and does nothing on its own: no mark as read, no read receipt.
+   */
+  noAutomaticActions?: boolean;
   isFullscreen?: boolean;
   currentUserEmail?: string;
   currentUserName?: string;
@@ -678,6 +684,7 @@ interface DraggableAttachmentChipProps {
     onPointerEnter: () => void;
     onDragStart: (e: React.DragEvent<HTMLDivElement>) => void;
     onDragEnd: (e: React.DragEvent<HTMLDivElement>) => void;
+    onCopyAsFile?: () => Promise<boolean>;
   }) => React.ReactNode;
 }
 
@@ -685,6 +692,19 @@ function DraggableAttachmentChip({ attachment, client, accountId, enabled, downl
   const source = useMemo<AttachmentDragSource>(() => ({
     name: downloadName || attachment.name || 'download',
     type: attachment.type || 'application/octet-stream',
+    // A decrypted attachment doesn't go through the app's temporary folder or the clipboard: it
+    // stays with the browser's drag, which only writes it where the user drops it.
+    ...(attachment.decryptedAttachment ? {} : {
+      getBlob: async () => {
+        if (attachment.blobId && client) {
+          return client.fetchBlob(attachment.blobId, downloadName || attachment.name || undefined, attachment.type, accountId).catch(() => null);
+        }
+        const bytes = attachment.tnefData;
+        if (!bytes || bytes.byteLength === 0) return null;
+        const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+        return new Blob([buffer], { type: inertBlobType(attachment.type) });
+      },
+    }),
     getBlobUrl: async () => {
       if (attachment.blobId && client) {
         try {
@@ -1324,6 +1344,7 @@ export function EmailViewer({
   onCompose,
   onToggleFullscreen,
   onOpenInWindow,
+  noAutomaticActions = false,
   isFullscreen = false,
   currentUserEmail,
   currentUserName,
@@ -2203,7 +2224,7 @@ export function EmailViewer({
 
   useEffect(() => {
     // Mark as read when email is viewed, respecting the delay setting
-    if (!email || !onMarkAsRead) {
+    if (!email || !onMarkAsRead || noAutomaticActions) {
       return;
     }
 
@@ -3122,6 +3143,8 @@ export function EmailViewer({
 
   // What the attachment bar and the attachment cards share.
   const attachmentCardsRef = useRef<HTMLDivElement>(null);
+  const desktopClipboard = getDesktopBridge()?.clipboard;
+  const tDesktopUi = useTranslations('desktopUi.attachment');
   const readerAttachmentProps = {
     attachments: effectiveAttachments,
     thumbUrls: imageThumbUrls,
@@ -3130,6 +3153,13 @@ export function EmailViewer({
     onDownload: handleEffectiveAttachmentDownload,
     onDownloadAll: handleDownloadAllAttachments,
     onSaveAllToFolder: canPickFolder() ? () => void handleSaveAllToFolder() : undefined,
+    onCopyFile: desktopClipboard && blobClient ? (attachment: EffectiveAttachment) => {
+      if (!attachment.blobId || !downloadAllowed('attachment', email)) return;
+      void blobClient.fetchBlobArrayBuffer(attachment.blobId, undefined, undefined, blobAccountId)
+        .then((data) => desktopClipboard.copyFile(resolveAttachmentName(attachment), data))
+        .then((copied) => { if (!copied) toast.error(tDesktopUi('copy_failed')); })
+        .catch(() => toast.error(tDesktopUi('copy_failed')));
+    } : undefined,
     downloadingAll: isDownloadingAll,
     downloadsOff,
     // Save to Files would get around the policy: Files downloads are off too, but the copy would stay.
@@ -3951,7 +3981,7 @@ ${printWatermark ? printWatermark.html : ''}
     if (autoMdnRef.current !== email?.id) autoMdnRef.current = null;
   }, [email?.id]);
   useEffect(() => {
-    if (readReceiptResponse !== 'always') return;
+    if (readReceiptResponse !== 'always' || noAutomaticActions) return;
     if (!shouldOfferReadReceipt || !email) return;
     if (autoMdnRef.current === email.id) return;
     autoMdnRef.current = email.id;
@@ -4108,7 +4138,9 @@ ${printWatermark ? printWatermark.html : ''}
     // in a split pane - the empty reading pane should always say what it is
     // and offer a way forward.
     return shell(
-      <div className="flex-1 min-w-0 flex flex-col items-center justify-center bg-gradient-to-br from-muted/30 to-muted/50">
+      <div className="relative flex-1 min-w-0 flex flex-col items-center justify-center bg-gradient-to-br from-muted/30 to-muted/50">
+        {/* An empty reading pane's top is still the window's top, to drag by. */}
+        <div aria-hidden="true" data-window-top-row="" className="absolute inset-x-0 top-0 h-14" />
         <div className="text-center p-8">
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-background shadow-lg flex items-center justify-center">
             <Mail className="w-10 h-10 text-muted-foreground" />

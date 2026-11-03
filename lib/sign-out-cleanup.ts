@@ -1,6 +1,8 @@
+import { forgetAppLockAtSignOut } from '@/lib/app-lock/sign-out';
 import { fileStorage } from '@/lib/plugin-storage';
 import { clearHandoffs } from '@/lib/launch-handoff';
 import { clearAllCheckpoints } from '@/lib/mail-import/checkpoints';
+import { clearDesktopSurfaces } from '@/lib/desktop/bridge';
 import { sweepPrivateExports } from '@/lib/mail-export/sinks';
 import { purgeStoreFiles } from '@/lib/store/client/purge';
 
@@ -21,6 +23,7 @@ const SIGNED_OUT_STORAGE_KEYS = [
   'contact-storage',
   'calendar-storage',
   'calendar-notification-storage',
+  'calendar-alert-claims',
   // Open tabs name messages and their subjects.
   'pro-tabs',
   'search-history-storage',
@@ -38,13 +41,17 @@ const SIGNED_OUT_STORAGE_KEYS = [
   'bulwark-offline-accounts',
   // Which accounts' data waits for a new sign-in, and until when.
   'bulwark-offline-evicted',
+  'bulwark-offline-evicted-owners',
   'bulwark-store-opened',
   // What each account chose to keep, and what's known about its store.
   'bulwark-offline-scope',
   'bulwark-offline-health',
 ];
 
-const LOCAL_STORE_KEYS = new Set(['bulwark-offline-accounts', 'bulwark-offline-evicted', 'bulwark-store-opened', 'bulwark-offline-scope', 'bulwark-offline-health']);
+const LOCAL_STORE_KEYS = new Set(['bulwark-offline-accounts', 'bulwark-offline-evicted', 'bulwark-offline-evicted-owners', 'bulwark-store-opened', 'bulwark-offline-scope', 'bulwark-offline-health']);
+
+/** What's the accounts' but isn't the local store's: a wipe of one account that leaves others signed in takes these too. */
+export const ACCOUNT_STORAGE_KEYS = SIGNED_OUT_STORAGE_KEYS.filter((key) => !LOCAL_STORE_KEYS.has(key));
 
 const SIGNED_OUT_SIGNAL = 'bulwark:signed-out';
 export { SIGNED_OUT_SIGNAL as SIGNED_OUT_KEY };
@@ -59,6 +66,8 @@ export interface SignOutCleanupOptions {
    * when an account that was dropped that way still has data here.
    */
   keepLocalStore?: boolean;
+  /** A forgotten PIN goes through this with the lock still up: it lifts the lock itself, last. */
+  keepAppLock?: boolean;
 }
 
 /** Run `cleanup` when everyone signs out in this tab. */
@@ -131,7 +140,7 @@ export function purgeSignedOutData(options: SignOutCleanupOptions = {}): void {
   // it was encrypted with, and the app shell the service worker kept. Also the
   // database of older versions, in case it wasn't moved yet.
   if (!options.keepLocalStore) {
-    void purgeStoreFiles();
+    void purgeStoreFiles().catch(() => {});
     try {
       window.indexedDB?.deleteDatabase('bulwark-offline');
     } catch {
@@ -139,8 +148,11 @@ export function purgeSignedOutData(options: SignOutCleanupOptions = {}): void {
     }
     forgetOfflineShell();
   }
+  // With no store left, the app lock has nothing to guard, and a next person shouldn't meet it.
+  if (!options.keepLocalStore && !options.keepAppLock) void forgetAppLockAtSignOut();
   // Files and links on their way into a draft or an import.
   clearHandoffs();
+  clearDesktopSurfaces();
   for (const cleanup of signedOutCleanups) {
     try {
       cleanup(options);

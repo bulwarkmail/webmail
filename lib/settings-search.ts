@@ -71,6 +71,8 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.language_region.time_format.label' },
     { label: 'settings.language_region.time_zone.label' },
     { label: 'settings.language_region.first_day.label' },
+    { label: 'appLock.section_title' },
+    { label: 'appLock.enable_label' },
     { label: 'protocol_handlers.title' },
     { label: 'protocol_handlers.mailto_label' },
     { label: 'protocol_handlers.webcal_label' },
@@ -373,7 +375,7 @@ export const ARCHIVE_ACTION_SEARCH_PATHS: ReadonlySet<string> = new Set(['settin
 
 export const tabKeywords: Record<Tab, string> = {
   account: 'profile email user signin signout reorder rearrange drag dropdown switcher multi-account identities from address signature plus addressing unified mailbox shared group',
-  general: 'language locale region timezone date time format mailto webcal links default app protocol handler tour onboarding',
+  general: 'language locale region timezone date time format mailto webcal links default app protocol handler tour onboarding lock pin passkey windows hello touch id',
   notifications: 'sound alert push badge favicon tab icon unread count background relay device',
   appearance: 'theme dark light font size accent color animation density custom theme css skin toolbar sidebar account switcher icons rail layout reading pane',
   accessibility: 'a11y accessible vision blind low vision screen reader contrast motion animation reduce zoom text size font dyslexia spacing keyboard shortcuts focus outline cursor pointer targets colour blind color sound visual alert hearing deaf simple plain language read aloud',

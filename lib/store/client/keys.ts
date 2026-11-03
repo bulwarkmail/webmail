@@ -104,7 +104,8 @@ export async function getAccountRecord(account: string): Promise<AccountRecord |
   });
 }
 
-export async function listAccountRecords(): Promise<AccountRecord[]> {
+export async function listAccountRecords(onlyIfThere = false): Promise<AccountRecord[]> {
+  if (onlyIfThere && !(await keyDatabaseExists())) return [];
   return withDb((db) => promisify(db.transaction(ACCOUNTS, 'readonly').objectStore(ACCOUNTS).getAll()) as Promise<AccountRecord[]>);
 }
 
@@ -170,6 +171,55 @@ export async function forgetAccountKey(account: string): Promise<void> {
   await withDb((db) => promisify(db.transaction(ACCOUNTS, 'readwrite').objectStore(ACCOUNTS).delete(account)).then(() => undefined));
 }
 
+/**
+ * This browser profile's row at the instance, for one account: its id, and the
+ * secret that lets a device answer for that row without a session. In this
+ * database and nowhere else, because a start has to read it before any store
+ * opens, and a copy in the store could never outlive the key that opens it. A
+ * cleared database means a new device at the next registration.
+ */
+export interface DeviceRecord {
+  account: string;
+  id: string;
+  secret: string;
+  createdAt: number;
+}
+
+const DEVICE_RECORD_PREFIX = 'device:';
+// ':' + 1, so the range holds exactly the prefixed keys.
+const DEVICE_RECORD_END = 'device;';
+
+export async function getDeviceRecord(account: string): Promise<DeviceRecord | null> {
+  return withDb(async (db) => {
+    const found = await promisify(db.transaction(KEYS, 'readonly').objectStore(KEYS).get(DEVICE_RECORD_PREFIX + account)) as { record: DeviceRecord } | undefined;
+    return found?.record ?? null;
+  });
+}
+
+export async function putDeviceRecord(record: DeviceRecord): Promise<void> {
+  await withDb((db) => promisify(db.transaction(KEYS, 'readwrite').objectStore(KEYS).put({ id: DEVICE_RECORD_PREFIX + record.account, record })).then(() => undefined));
+}
+
+export async function deleteDeviceRecord(account: string): Promise<void> {
+  if (!(await keyDatabaseExists())) return;
+  await withDb((db) => promisify(db.transaction(KEYS, 'readwrite').objectStore(KEYS).delete(DEVICE_RECORD_PREFIX + account)).then(() => undefined));
+}
+
+/** Opening the database makes it, so a browser that can say it isn't there doesn't open it. */
+async function keyDatabaseExists(): Promise<boolean> {
+  if (typeof indexedDB.databases !== 'function') return true;
+  return (await indexedDB.databases()).some((database) => database.name === DB_NAME);
+}
+
+export async function listDeviceRecords(onlyIfThere = true): Promise<DeviceRecord[]> {
+  if (onlyIfThere && !(await keyDatabaseExists())) return [];
+  return withDb(async (db) => {
+    const range = IDBKeyRange.bound(DEVICE_RECORD_PREFIX, DEVICE_RECORD_END, false, true);
+    const rows = await promisify(db.transaction(KEYS, 'readonly').objectStore(KEYS).getAll(range)) as Array<{ record: DeviceRecord }>;
+    return rows.map((row) => row.record);
+  });
+}
+
 export class StoreKeyLayerMissingError extends Error {
   constructor(readonly layer: string) {
     super(`The key needs the ${layer} layer`);
@@ -178,10 +228,17 @@ export class StoreKeyLayerMissingError extends Error {
 }
 
 /** Deletes every key at sign-out. Works with no worker running, on any page. */
-export function deleteKeyDatabase(): void {
-  try {
-    indexedDB.deleteDatabase(DB_NAME);
-  } catch {
-    // Private mode or similar: nothing was stored either.
-  }
+export function deleteKeyDatabase(): Promise<void> {
+  return new Promise((resolve) => {
+    try {
+      const request = indexedDB.deleteDatabase(DB_NAME);
+      request.onsuccess = () => resolve();
+      request.onerror = () => resolve();
+      // A connection still open goes on its own: withDb closes after each use.
+      request.onblocked = () => resolve();
+    } catch {
+      // Private mode or similar: nothing was stored either.
+      resolve();
+    }
+  });
 }

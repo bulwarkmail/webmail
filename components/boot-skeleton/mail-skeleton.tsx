@@ -411,7 +411,7 @@ export function MailMessageToolbarSkeleton({ end }: { end?: ReactNode } = {}) {
   const button = "h-8 w-20 rounded-md";
   return (
     <div className="bg-background flex-shrink-0 border-b border-border">
-      <div className="px-2 sm:px-4 lg:px-6 flex items-center h-14">
+      <div data-window-row-right="" className="px-2 sm:px-4 lg:px-6 flex items-center h-14">
         {/* Phones: back, then icon-over-label actions. */}
         <div className="sm:hidden flex items-center justify-between gap-0.5 w-full">
           <span className="flex items-center justify-center h-9 w-9 -ms-1 flex-shrink-0">

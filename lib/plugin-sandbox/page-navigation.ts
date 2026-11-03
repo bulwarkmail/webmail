@@ -54,6 +54,16 @@ export function navigateInApp(href: string): boolean {
   return true;
 }
 
+/**
+ * Moves the tab through the router, which keeps the page, and with it the app lock's key.
+ * A full load makes the user type the PIN again.
+ */
+export function goInApp(routerHref: string, fullHref: string): void {
+  if (navigateInApp(routerHref)) return;
+  // full-load: no router in this window, as in a pop-out or before the app has mounted.
+  window.location.assign(fullHref);
+}
+
 /** Test helper. */
 export function resetPageNavigation(): void {
   handler = null;

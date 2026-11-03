@@ -4,5 +4,6 @@
  * frame. Nothing happens in a browser, which has no bridge.
  */
 export function desktopBootScript(): string {
-  return `if (window.bulwarkDesktop) document.documentElement.setAttribute('data-desktop', '');`;
+  return `if (window.bulwarkDesktop) document.documentElement.setAttribute('data-desktop', '');
+                if (navigator.windowControlsOverlay && navigator.windowControlsOverlay.visible) document.documentElement.setAttribute('data-window-controls', '');`;
 }

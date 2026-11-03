@@ -1,5 +1,6 @@
 "use client";
 
+import { isAppLockedNow } from "@/lib/app-lock/state";
 import { AppMain, SkipLink } from "@/components/layout/app-landmarks";
 import { Suspense, useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -231,7 +232,10 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   // Leaving the page or going Back asks too.
   useEffect(() => {
     if (!editorDirty) return;
-    const onBeforeUnload = (e: BeforeUnloadEvent) => e.preventDefault();
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      // The app lock asks nobody: the page is going to the lock screen.
+      if (!isAppLockedNow()) e.preventDefault();
+    };
     window.addEventListener("beforeunload", onBeforeUnload);
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [editorDirty]);

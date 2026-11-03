@@ -36,8 +36,7 @@ html[data-desktop] :is(
   [role="treeitem"],
   [role="row"],
   [data-composer-header],
-  [data-mv-compose-titlebar],
-  [data-window-title-bar]
+  [data-mv-compose-titlebar]
 ) {
   -webkit-user-select: none;
   user-select: none;

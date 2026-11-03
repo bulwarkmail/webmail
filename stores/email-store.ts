@@ -38,6 +38,7 @@ import { SendCancelledCleanupError } from "@/lib/send-failure-message";
 import type { StorageQuota } from "@/lib/quota";
 import { isArchiveActionEnabled } from "@/lib/archive-gate";
 import { getOutboxHooks } from "@/lib/offline/outbox-hooks";
+import { isAppLockOn } from "@/lib/app-lock/state";
 import { useOfflineStore } from "@/lib/offline/state";
 import {
   READ_FILTER, UNREAD_FILTER, UNREAD_SECTION_SIZE, andFilters, isUnreadFirstView, mergeUnreadSection,
@@ -8734,6 +8735,8 @@ if (typeof window !== 'undefined') {
       if (typeof account !== 'string' || !account) return;
       // Its mail lives encrypted in the store, and not in plain localStorage too.
       if (useOfflineStore.getState().enabled.includes(account)) return;
+      // Nor with an app lock, which must not leave subjects readable on disk.
+      if (isAppLockOn()) return;
       try {
         window.localStorage.setItem(EMAIL_SNAPSHOT_KEY, JSON.stringify({
           v: EMAIL_SNAPSHOT_VERSION,

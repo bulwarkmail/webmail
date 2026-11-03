@@ -7,6 +7,7 @@
  * stores/auth-store.ts and stores/account-store.ts ask here.
  */
 
+import { getDesktopBridge } from '@/lib/desktop/bridge';
 import { withBasePath } from '@/lib/browser-navigation';
 import { locales } from '@/i18n/routing';
 
@@ -28,7 +29,7 @@ export function isPopoutPath(pathname: string): boolean {
   if (before.length > 0 && !(locales as readonly string[]).includes(before[before.length - 1])) return false;
   if (before.some((segment) => OTHER_SECTIONS.has(segment))) return false;
   const rest = segments.slice(at + 1);
-  return (rest.length === 1 && rest[0] === 'compose') || (rest.length === 2 && rest[0] === 'message');
+  return (rest.length === 1 && (rest[0] === 'compose' || rest[0] === 'spare')) || (rest.length === 2 && rest[0] === 'message');
 }
 
 export function isPopoutWindow(): boolean {
@@ -61,6 +62,13 @@ export function mainWindowStorage(): Pick<Storage, 'getItem' | 'setItem' | 'remo
  */
 export function closePopoutWindow(): void {
   if (typeof window === 'undefined') return;
+  // The desktop app closes it for us: however the window came to be, and past the
+  // shell's own bookkeeping. Whoever calls this has saved or discarded by now.
+  const closeSelf = getDesktopBridge()?.windows?.closeSelf;
+  if (closeSelf) {
+    closeSelf();
+    return;
+  }
   window.close();
   window.setTimeout(() => {
     if (!window.closed) window.location.replace(withBasePath('/'));
