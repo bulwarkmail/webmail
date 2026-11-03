@@ -34,6 +34,9 @@ function recordOpened(ctx: StoreContext, params: { jmap: string; emails: EmailOb
 
 /** A file of a kept message the user opened. Nothing else is kept: not an export, not a stray file. */
 function recordBlob(ctx: StoreContext, params: { jmap: string; blobId: string; type: string | null; data: Uint8Array }): boolean {
+  if (!ctx.scope.attachments || params.data.byteLength > ctx.scope.maxAttachmentBytes) return false;
+  const used = Number(ctx.db.get<{ n: number | null }>('SELECT SUM(size) AS n FROM blob')?.n ?? 0);
+  if (used + ctx.keptByOthers('mail') + params.data.byteLength > ctx.scope.maxTotalBytes) return false;
   const owner = ctx.db.get<{ received_at: number }>('SELECT received_at FROM email_part WHERE jmap = ? AND blob_id = ?', [params.jmap, params.blobId]);
   if (!owner) return false;
   putBlob(ctx.db, params.jmap, params.blobId, params.type, params.data, Number(owner.received_at));

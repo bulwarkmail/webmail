@@ -220,8 +220,12 @@ export class StoreClient {
     return this.isOwner;
   }
 
-  openAccount(params: OpenAccountParams): Promise<void> {
+  openAccount(params: OpenAccountParams): Promise<{ fileExisted: boolean }> {
     return this.direct({ kind: 'open', id: crypto.randomUUID(), params });
+  }
+
+  sweepFiles(known: string[]): Promise<number> {
+    return this.direct({ kind: 'sweep-files', id: crypto.randomUUID(), known });
   }
 
   closeAccount(account: string): Promise<void> {
@@ -234,10 +238,6 @@ export class StoreClient {
 
   setSession(account: string, session: StoreSession): void {
     this.post({ kind: 'set-session', account, session });
-  }
-
-  setScope(account: string, scope: StoreScope): void {
-    this.post({ kind: 'set-scope', account, scope });
   }
 
   setInvertedKeywordSort(account: string, inverted: boolean): void {
@@ -281,6 +281,10 @@ export class StoreClient {
 
   sync(account: string): Promise<void> {
     return this.rpc('sync', { account }, SYNC_TIMEOUT_MS);
+  }
+
+  setScope(account: string, scope: StoreScope): Promise<void> {
+    return this.rpc('setScope', { account, scope });
   }
 
   removeAccount(account: string, file: string): Promise<boolean> {

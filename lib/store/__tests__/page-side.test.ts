@@ -25,6 +25,7 @@ class FakeChannel {
 
 class FakeWorker {
   static all: FakeWorker[] = [];
+  static opened = { fileExisted: true };
   onmessage: ((event: MessageEvent) => void) | null = null;
   posted: Array<Record<string, unknown>> = [];
   terminated = false;
@@ -33,7 +34,7 @@ class FakeWorker {
   }
   postMessage(message: Record<string, unknown>): void {
     this.posted.push(message);
-    if (message.kind === 'open') queueMicrotask(() => this.onmessage?.({ data: { kind: 'result', id: message.id } } as MessageEvent));
+    if (message.kind === 'open') queueMicrotask(() => this.onmessage?.({ data: { kind: 'result', id: message.id, result: FakeWorker.opened } } as MessageEvent));
   }
   terminate(): void {
     this.terminated = true;

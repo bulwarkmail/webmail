@@ -5,14 +5,15 @@
  * configureStore, so the worker bundle stays free of them.
  */
 
-import { DEFAULT_SCOPE, type StoreEvent, type StoreScope } from '../area';
+import type { StoreEvent, StoreScope } from '../area';
 import type { JmapResponse, MethodCall, StoreSession } from '../engine/transport';
-import { forgetAccountKey, getAccountRecord, openAccountKey, type WrapLayer } from './keys';
+import { forgetAccountKey, getAccountRecord, listAccountRecords, openAccountKey, type WrapLayer } from './keys';
 import { StoreClient } from './store-client';
 
 export interface StoreAccountInputs {
   session: StoreSession | null;
   auth: string | null;
+  /** Left out while the organisation's policy isn't known: the store keeps the last one. */
   scope?: StoreScope;
   invertedKeywordSort: boolean | null;
 }
@@ -23,6 +24,8 @@ export interface StorePageHooks {
   /** Runs the client's refresh path; the fresh Authorization header, or null. */
   refreshAuth(account: string): Promise<string | null>;
   onEvent(event: StoreEvent): void;
+  /** What opening an account found: its key from before, and its file. Owner tab only. */
+  onOpened?(account: string, found: { hadKey: boolean; fileExisted: boolean }): void;
   /** Wrap layers on top of the WebCrypto one (desktop keychain, app lock). */
   keyLayers?(): readonly WrapLayer[];
 }
@@ -36,6 +39,8 @@ export interface StoreBackend {
   refresh(account: string): void;
   answer(account: string, calls: MethodCall[]): Promise<JmapResponse | null>;
   area<T = unknown>(account: string, name: string, params?: unknown): Promise<T>;
+  /** What the store may keep. A tightened scope prunes at once, also without a network. */
+  setScope(account: string, scope: StoreScope): Promise<void>;
   sync(account: string): Promise<void>;
   noteStateChange(account: string, changed: Record<string, Record<string, string>>): Promise<void>;
   setOnline(online: boolean): Promise<void>;
@@ -75,6 +80,7 @@ class PageStore implements StoreBackend {
       onOwner: () => {
         this.opening.clear();
         for (const account of this.wanted.keys()) void this.openHere(account).catch(() => {});
+        void this.sweepOrphans();
       },
       onNeedAuth: (account) => {
         void (this.hooks()?.refreshAuth(account) ?? Promise.resolve(null))
@@ -95,23 +101,35 @@ class PageStore implements StoreBackend {
     this.broken = false;
   }
 
+  /** Files whose key is gone can't be read by anyone: they only take room. */
+  private async sweepOrphans(): Promise<void> {
+    try {
+      const records = await listAccountRecords();
+      await this.client?.sweepFiles(records.map((record) => record.file));
+    } catch {
+      // Tried again the next time this tab or another becomes the owner.
+    }
+  }
+
   /** Only the owner may open: the key goes to this tab's own worker, never over the channel. */
   private openHere(account: string): Promise<void> {
     const running = this.opening.get(account);
     if (running) return running;
     const run = (async () => {
       const client = this.started();
+      const hadKey = Boolean(await getAccountRecord(account));
       const { keyHex, record } = await openAccountKey(account, this.hooks()?.keyLayers?.() ?? []);
       const inputs = this.hooks()?.inputs(account) ?? { session: null, auth: null, invertedKeywordSort: null };
-      await client.openAccount({
+      const { fileExisted } = await client.openAccount({
         account,
         file: record.file,
         keyHex,
         session: inputs.session ?? this.wanted.get(account) ?? null,
-        scope: inputs.scope ?? DEFAULT_SCOPE,
+        scope: inputs.scope,
         invertedKeywordSort: inputs.invertedKeywordSort,
         auth: inputs.auth,
       });
+      this.hooks()?.onOpened?.(account, { hadKey, fileExisted });
     })();
     this.opening.set(account, run);
     run.catch(() => this.opening.delete(account));
@@ -132,6 +150,7 @@ class PageStore implements StoreBackend {
     if (!inputs) return;
     if (inputs.session) client.setSession(account, inputs.session);
     client.setAuth(account, inputs.auth);
+    if (inputs.scope) void client.setScope(account, inputs.scope).catch(() => {});
     if (inputs.invertedKeywordSort !== null) client.setInvertedKeywordSort(account, inputs.invertedKeywordSort);
   }
 
@@ -155,6 +174,10 @@ class PageStore implements StoreBackend {
 
   area<T = unknown>(account: string, name: string, params?: unknown): Promise<T> {
     return this.whenOpen(account, (client) => client.area<T>(account, name, params));
+  }
+
+  setScope(account: string, scope: StoreScope): Promise<void> {
+    return this.whenOpen(account, (client) => client.setScope(account, scope));
   }
 
   sync(account: string): Promise<void> {

@@ -110,8 +110,7 @@ scope.addEventListener('message', async (event) => {
       break;
     case 'open':
       try {
-        await requireHost().openAccount(message.params);
-        reply(message.id);
+        reply(message.id, await requireHost().openAccount(message.params));
       } catch (error) {
         replyError(message.id, error);
       }
@@ -124,14 +123,18 @@ scope.addEventListener('message', async (event) => {
         replyError(message.id, error);
       }
       break;
+    case 'sweep-files':
+      try {
+        reply(message.id, requireHost().sweepFiles(message.known));
+      } catch (error) {
+        replyError(message.id, error);
+      }
+      break;
     case 'set-auth':
       host?.setAuth(message.account, message.auth);
       break;
     case 'set-session':
       host?.setSession(message.account, message.session);
-      break;
-    case 'set-scope':
-      host?.setScope(message.account, message.scope);
       break;
     case 'set-inverted':
       host?.setInvertedKeywordSort(message.account, message.inverted);
