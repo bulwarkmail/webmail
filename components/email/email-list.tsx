@@ -122,7 +122,7 @@ type ListItem =
   | { kind: 'unread-empty' };
 
 /** Below this width the batch toolbar drops its labels (see batchNarrow). */
-const BATCH_TOOLBAR_WIDE = 480;
+const BATCH_TOOLBAR_WIDE = 640;
 
 // Declared out here so re-renders of the list keep the same element. Inside
 // EmailList every render made a new component, which remounted the skeleton
