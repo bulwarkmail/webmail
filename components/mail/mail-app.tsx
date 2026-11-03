@@ -2154,6 +2154,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Folder loaded, search results, the reconnecting and rate-limit banners.
   useMailStatusAnnouncements();
 
+  // A composer opened from the drawer (a plugin's birthday greeting, a contact)
+  // must not stay under it.
+  useEffect(() => {
+    if (showComposer && (isMobile || isTablet)) setSidebarOpen(false);
+    // Only when a composer opens: the drawer may be opened over one later.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showComposer]);
+
   // Lock body scroll when sidebar is open on mobile/tablet
   useEffect(() => {
     if ((isMobile || isTablet) && sidebarOpen) {

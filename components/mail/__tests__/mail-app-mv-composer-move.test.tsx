@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mailbox } from '@/lib/jmap/types';
 import { useAuthStore } from '@/stores/auth-store';
@@ -7,6 +7,7 @@ import { useEmailStore } from '@/stores/email-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { usePluginStore } from '@/stores/plugin-store';
 import { useThemeStore } from '@/stores/theme-store';
+import { useUIStore } from '@/stores/ui-store';
 import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
 
 // Mountain View draws the composer in a window, a card or the reading pane
@@ -117,5 +118,36 @@ describe('moving the Mountain View composer between layouts', () => {
     device.current = { isMobile: false, isTablet: false, isDesktop: true };
     rerender(<MailApp />);
     await waitFor(() => expect(screen.getByLabelText<HTMLInputElement>('stub subject').value).toBe('Still here'));
+  });
+});
+
+describe('a composer opened from the phone and tablet drawer', () => {
+  const openFromInsideDrawer = () => window.dispatchEvent(new CustomEvent('bulwark:mailto', {
+    detail: { to: ['bob@example.org'], cc: [], bcc: [], subject: '', body: '' },
+    cancelable: true,
+  }));
+
+  beforeEach(() => {
+    device.current = { isMobile: false, isTablet: true, isDesktop: false };
+    useSettingsStore.setState({ interfaceLayout: 'default' } as never);
+    useUIStore.setState({ sidebarOpen: true });
+  });
+
+  it('closes the drawer instead of leaving the composer under it', async () => {
+    render(<MailApp />);
+    expect(useUIStore.getState().sidebarOpen).toBe(true);
+    openFromInsideDrawer();
+    await screen.findByLabelText('stub subject');
+    await waitFor(() => expect(useUIStore.getState().sidebarOpen).toBe(false));
+  });
+
+  it('lets the drawer open again over a composer that is already open', async () => {
+    render(<MailApp />);
+    openFromInsideDrawer();
+    await screen.findByLabelText('stub subject');
+    await waitFor(() => expect(useUIStore.getState().sidebarOpen).toBe(false));
+    act(() => useUIStore.setState({ sidebarOpen: true }));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(useUIStore.getState().sidebarOpen).toBe(true);
   });
 });
