@@ -147,8 +147,8 @@ export function EditedFilesHost() {
     <section
       aria-label={t("offers_label")}
       data-testid="edited-files"
-      // The toasts have the other corner, and one is up right when this appears. Over the sidebar (50), under dialogs (60).
-      className="fixed bottom-4 start-[4.75rem] z-[55] flex max-h-[60vh] w-[22rem] max-w-[calc(100vw-6rem)] flex-col gap-2 overflow-y-auto"
+      // Toasts have one corner and the account menu the other, and both have to stay reachable: over the mail columns, under any menu or dialog.
+      className="fixed inset-x-0 bottom-4 z-40 mx-auto flex max-h-[60vh] w-[22rem] max-w-[calc(100vw-2rem)] flex-col gap-2 overflow-y-auto"
     >
       {offers.map((session) => {
         const source = parseEditSource(session.source);
