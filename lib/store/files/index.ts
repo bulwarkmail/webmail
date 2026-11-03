@@ -1,5 +1,5 @@
 import type { StoreArea } from '../area';
-import { fileBlob, keptStatus, noteOpened, pinFile, readFile, unpinFile, type NodeRef } from './keep';
+import { applyFilesScope, fileBlob, filesUsage, keptStatus, noteOpened, pinFile, readFile, unpinFile, type NodeRef } from './keep';
 import { FILE_METHODS } from './methods';
 import { FILE_MIGRATIONS } from './schema';
 import { filesSyncer } from './sync';
@@ -11,6 +11,9 @@ export const filesArea: StoreArea = {
   migrations: FILE_MIGRATIONS,
   methods: FILE_METHODS,
   syncers: [filesSyncer],
+  applyScope: applyFilesScope,
+  usage: filesUsage,
+  keptBytes: (ctx) => filesUsage(ctx)[0].bytes,
   calls: {
     /** Keep this file's content on the device until it's unpinned. */
     'files.pin': (ctx, params: NodeRef) => pinFile(ctx, params),

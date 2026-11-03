@@ -13,7 +13,7 @@
  */
 
 import { TransportError } from '../engine/transport';
-import { MethodError, type StoreContext, type SyncContext } from '../area';
+import { MethodError, type ScopeChange, type StoreContext, type StoreUsagePart, type SyncContext } from '../area';
 import type { StorageAdapter } from '../storage';
 import { nodeMediaType, type WireNode } from './records';
 
@@ -218,6 +218,50 @@ export async function fetchKeptFiles(ctx: SyncContext, jmap: string): Promise<vo
     ctx.emit({ type: 'progress', account: ctx.account, area: 'files', phase: 'contents', done, total: todo.length });
   }
   if (done > 0) ctx.emit({ type: 'changed', account: ctx.account, collections: ['FileContent'] });
+}
+
+/**
+ * What the scope no longer allows leaves now, without the network. The pins
+ * stay, so a loosened scope fetches them back at the next pass. A pin ignores
+ * the size limit but not the total: the organisation's cap wins over it.
+ */
+export function applyFilesScope(ctx: SyncContext, _change: ScopeChange): void {
+  const { db, scope } = ctx;
+  let changed = false;
+  db.transaction(() => {
+    if (!scope.attachments) {
+      for (const blob of keptBlobs(db)) {
+        dropBlob(db, blob.jmap, blob.blob_id);
+        changed = true;
+      }
+      db.run("UPDATE file_node SET keep_error = 'notAllowed' WHERE pinned = 1 OR opened_at IS NOT NULL");
+      return;
+    }
+    const largest = Math.min(scope.maxAttachmentBytes, capBytes(ctx));
+    for (const blob of keptBlobs(db)) {
+      if (blob.pinned || Number(blob.size) <= largest) continue;
+      pushOut(db, blob);
+      changed = true;
+    }
+    const before = keptBlobs(db).length;
+    makeRoom(ctx, 0, { pinned: true, openedAt: 0 });
+    if (keptBlobs(db).length !== before) changed = true;
+    // Past the total with pins alone: the newest kept go first, as they would have been refused.
+    let pinned = pinnedBytes(db);
+    for (const blob of keptBlobs(db).filter((row) => row.pinned).sort((a, b) => Number(b.kept_at) - Number(a.kept_at))) {
+      if (pinned <= scope.maxTotalBytes) break;
+      pinned -= Number(blob.size);
+      dropBlob(db, blob.jmap, blob.blob_id);
+      setError(db, blob.jmap, blob.blob_id, 'overLimit');
+      changed = true;
+    }
+  });
+  if (changed) ctx.emit({ type: 'changed', account: ctx.account, collections: ['FileContent'] });
+}
+
+export function filesUsage(ctx: Pick<StoreContext, 'db'>): StoreUsagePart[] {
+  const row = ctx.db.get<{ bytes: number | null; items: number }>('SELECT SUM(size) AS bytes, COUNT(*) AS items FROM file_blob');
+  return [{ part: 'files', bytes: Number(row?.bytes ?? 0), items: Number(row?.items ?? 0) }];
 }
 
 // ---- Calls from the page ----
