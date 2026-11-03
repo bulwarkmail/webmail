@@ -259,6 +259,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const [composerDraftText, setComposerDraftText] = useState("");
   const [pendingDraft, setPendingDraft] = useState<ComposerDraftData | null>(null);
   const [composerSessionId, setComposerSessionId] = useState(0);
+  // Mountain View draws the composer in a window, a card or the reading pane
+  // depending on the width, and React mounts it anew in each. The composer hands
+  // its edits over as it unmounts, too late for the one already mounting there,
+  // so that one is mounted once more with them.
+  const [composerRemount, setComposerRemount] = useState(0);
+  const composerSessionRef = useRef(composerSessionId);
+  composerSessionRef.current = composerSessionId;
+  const composerHostRef = useRef('pane');
+  const composerRemountHostRef = useRef('pane');
+  const composerRemountSessionRef = useRef(composerSessionId);
+  const showComposerRef = useRef(showComposer);
+  showComposerRef.current = showComposer;
   // Fields a plugin filled in through onBeforeCompose for the composer about
   // to open. Dropped once the composer hands its own state back, so a
   // remount restores what the user wrote instead.
@@ -4525,6 +4537,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const mvInlineReply = mvShell && showComposer && !isEmbedded && !mvReplyPoppedOut
     && (pendingDraft?.mode ?? composerMode) !== 'compose' && Boolean(selectedEmail);
   const floatingComposer = mvShell && showComposer && !isEmbedded && !mvInlineReply;
+  const composerHost = floatingComposer ? 'window' : mvInlineReply ? 'inline' : 'pane';
+  composerHostRef.current = composerHost;
+  if (!showComposer || composerRemountSessionRef.current !== composerSessionId) {
+    composerRemountSessionRef.current = composerSessionId;
+    composerRemountHostRef.current = composerHost;
+  }
   const hasViewerContent = (showComposer && !floatingComposer) || Boolean(conversationThread)
     || Boolean(selectedEmail && !(mvShell && cursorOnly)) || deepLinkPane !== null;
   // A linked message on a phone opens over the list, as one picked there does.
@@ -4835,7 +4853,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }}
     >
       <EmailComposer
-        key={composerSessionId}
+        key={`${composerSessionId}:${composerRemount}`}
         mode={pendingDraft?.mode ?? composerMode}
         composeFromAccountEmail={resolveComposeAccountEmail(
           mailboxes,
@@ -4877,6 +4895,13 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           if (suppressComposerStateSaveSessionRef.current === composerSessionId) {
             suppressComposerStateSaveSessionRef.current = null;
             return;
+          }
+          if (showComposerRef.current && composerSessionRef.current === composerSessionId) {
+            // Still open: it moved to another host, or is the stand-in mounted
+            // there before the edits arrived. The stand-in's state is out of date.
+            if (composerHostRef.current === composerRemountHostRef.current) return;
+            composerRemountHostRef.current = composerHostRef.current;
+            setComposerRemount((n) => n + 1);
           }
           setPendingDraft(data);
         }}
