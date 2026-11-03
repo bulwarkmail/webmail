@@ -8,6 +8,7 @@ import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { isDesktopApp } from '@/lib/desktop/bridge';
 import type { AccountInfo, EmailPushConfig, Mailbox } from '@/lib/jmap/types';
 import { isJmapSetError, jmapErrorType } from '@/lib/jmap/jmap-error';
+import { WebPushStepError } from '@/lib/web-push-errors';
 import { DEFAULT_RELAY_BASE_URL } from '@/lib/push-relays';
 import { isBuiltInHost, relayAllowed } from '@/lib/outgoing-hosts';
 import { noThirdPartyTraffic } from '@/lib/third-party-mode';
@@ -526,12 +527,14 @@ function readPushKey(
 }
 
 async function fetchVapidPublicKey(relayBaseUrl: string): Promise<string> {
-  const res = await fetch(buildRelayUrl(relayBaseUrl, '/api/push/vapid-public-key'));
+  const res = await fetch(buildRelayUrl(relayBaseUrl, '/api/push/vapid-public-key')).catch((err: unknown) => {
+    throw new WebPushStepError('relay', `Could not reach the push relay: ${String(err)}`);
+  });
   if (!res.ok) {
     if (res.status === 503) {
       throw new Error('The push relay does not have Web Push configured');
     }
-    throw new Error(`Failed to fetch VAPID key: ${res.status}`);
+    throw new WebPushStepError('relay', `Failed to fetch VAPID key: ${res.status}`);
   }
   const body = (await res.json()) as { publicKey?: string };
   if (!body.publicKey) throw new Error('Relay returned an empty VAPID key');
@@ -541,11 +544,11 @@ async function fetchVapidPublicKey(relayBaseUrl: string): Promise<string> {
 async function ensurePermission(): Promise<void> {
   if (Notification.permission === 'granted') return;
   if (Notification.permission === 'denied') {
-    throw new Error('Notifications are blocked - allow them in browser settings to continue');
+    throw new WebPushStepError('blocked', 'Notifications are blocked - allow them in browser settings to continue');
   }
   const result = await Notification.requestPermission();
   if (result !== 'granted') {
-    throw new Error('Notification permission was not granted');
+    throw new WebPushStepError(result === 'denied' ? 'blocked' : 'not-granted', 'Notification permission was not granted');
   }
 }
 
@@ -584,9 +587,11 @@ async function registerWithRelay(params: {
       subscription: { endpoint, keys: { p256dh: keys.p256dh, auth: keys.auth } },
       accountLabel: params.accountLabel,
     }),
+  }).catch((err: unknown) => {
+    throw new WebPushStepError('relay', `Could not reach the push relay: ${String(err)}`);
   });
   if (!res.ok) {
-    throw new Error(`Relay register failed: ${res.status}`);
+    throw new WebPushStepError('relay', `Relay register failed: ${res.status}`);
   }
 }
 
@@ -673,7 +678,7 @@ async function pollVerificationCode(
     await new Promise((r) => setTimeout(r, delay));
     delay = Math.min(delay * 1.5, 2000);
   }
-  throw new Error('Timed out waiting for PushVerification from the JMAP server');
+  throw new WebPushStepError('verification-timeout', 'Timed out waiting for PushVerification from the JMAP server');
 }
 
 // Push the subscription's expiry forward and re-sync `types` / the delivery
@@ -946,16 +951,17 @@ async function dropRelayRecord(relayBaseUrl: string, deviceClientId: string): Pr
       buildRelayUrl(relayBaseUrl, `/api/push/register/${encodeURIComponent(deviceClientId)}`),
       { method: 'DELETE' },
     );
-    return res.ok;
+    return res.ok || res.status === 404;
   } catch {
     return false;
   }
 }
 
-// Best-effort teardown: clear the JMAP subscription, the relay mapping, and
-// (only when no other accounts still need it) the browser-wide
-// PushSubscription. Any single failure is swallowed so the user always ends
-// up in a "disabled" state locally.
+// Teardown: clear the JMAP subscription, the relay mapping, and (only when no
+// other accounts still need it) the browser-wide PushSubscription. A failed step
+// doesn't stop the others, and the browser always ends up "disabled" locally, so
+// a later page load won't bring push back. But a server or relay that couldn't be
+// told keeps pinging this browser for days, so the caller hears about it at the end.
 export function disableWebPush(params: DisableWebPushParams): Promise<void> {
   return oneTabAtATime(() => disableWebPushForThisTab(params));
 }
@@ -976,16 +982,22 @@ async function disableWebPushForThisTab(params: DisableWebPushParams): Promise<v
   // enable, or site data cleared between sessions can leave a registration this
   // client no longer tracks - and Stalwart keeps fanning StateChanges out to it
   // until it expires, so "disable" has to mean gone (#841).
+  const failed: string[] = [];
   const idsToDestroy = new Set<string>();
   if (storedServerId) idsToDestroy.add(storedServerId);
   if (deviceClientId) {
-    const existingSubs = await params.client.listPushSubscriptions().catch(() => []);
+    const existingSubs = await params.client.listPushSubscriptions().catch(() => {
+      failed.push('listing the subscriptions');
+      return [];
+    });
     for (const s of existingSubs) {
       if (s.deviceClientId === deviceClientId) idsToDestroy.add(s.id);
     }
   }
   for (const id of idsToDestroy) {
-    await params.client.destroyPushSubscription(id).catch(() => undefined);
+    await params.client.destroyPushSubscription(id).catch(() => {
+      failed.push('destroying a subscription');
+    });
   }
   localStorage.removeItem(subIdKey);
   localStorage.removeItem(relayBaseKey(accountId));
@@ -996,7 +1008,7 @@ async function disableWebPushForThisTab(params: DisableWebPushParams): Promise<v
   if (deviceClientId) {
     // The relay this device registered with can differ from the current choice.
     for (const relay of new Set([registeredWith ?? relayBaseUrl, relayBaseUrl])) {
-      await dropRelayRecord(relay, deviceClientId);
+      if (!(await dropRelayRecord(relay, deviceClientId))) failed.push('dropping the relay record');
     }
   }
   // Keep the deviceClientId around so a later re-enable for this account
@@ -1012,6 +1024,10 @@ async function disableWebPushForThisTab(params: DisableWebPushParams): Promise<v
     const registration = await navigator.serviceWorker.getRegistration(SW_SCOPE);
     const sub = await registration?.pushManager.getSubscription();
     if (sub) await sub.unsubscribe().catch(() => undefined);
+  }
+
+  if (failed.length > 0) {
+    throw new WebPushStepError('teardown', `Push is off in this browser, but ${failed.join(' and ')} failed`);
   }
 }
 

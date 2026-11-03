@@ -1799,7 +1799,12 @@
         "confirm_revoke_message_this": "Cet appareil cessera immédiatement de recevoir les notifications en arrière-plan.",
         "shared_mailboxes_no_push": "Les boîtes aux lettres que d'autres personnes partagent avec vous n'envoient pas de notifications en arrière-plan.",
         "error_forbidden": "Le serveur de messagerie n'autorise pas les notifications en arrière-plan pour ce compte.",
-        "error_over_quota": "Ce compte a trop d'enregistrements push sur le serveur de messagerie (la limite est généralement de 15). Révoquez les appareils que vous n'utilisez plus dans les paramètres de notification, puis réessayez."
+        "error_over_quota": "Ce compte a trop d'enregistrements push sur le serveur de messagerie (la limite est généralement de 15). Révoquez les appareils que vous n'utilisez plus dans les paramètres de notification, puis réessayez.",
+        "error_blocked": "Les notifications sont bloquées pour ce site. Autorisez-les dans les paramètres du site de votre navigateur, puis réessayez.",
+        "error_not_granted": "Les notifications n'ont pas été autorisées, les notifications push restent donc désactivées.",
+        "error_verification_timeout": "Le serveur de messagerie n'a pas confirmé cet appareil à temps, les notifications push restent donc désactivées. Réessayez dans une minute.",
+        "error_relay": "Le relais de notifications est injoignable pour le moment, les notifications push restent donc désactivées. Réessayez plus tard.",
+        "error_teardown": "Les notifications push sont désactivées dans ce navigateur, mais le serveur de messagerie ou le relais n'a pas pu être joint. Des notifications peuvent encore arriver pendant quelques jours. Révoquez cet appareil ci-dessous une fois de nouveau en ligne."
       }
     },
     "language_region": {

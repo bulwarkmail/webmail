@@ -1799,7 +1799,12 @@
         "confirm_revoke_message_this": "Bu cihaz arka plan bildirimlerini almayı hemen bırakacak.",
         "shared_mailboxes_no_push": "Başkalarının sizinle paylaştığı posta kutuları arka plan bildirimi göndermez.",
         "error_forbidden": "Posta sunucusu bu hesap için arka plan bildirimlerine izin vermiyor.",
-        "error_over_quota": "Bu hesabın posta sunucusunda çok fazla push kaydı var (sınır genellikle 15'tir). Artık kullanmadığınız cihazları bildirim ayarlarından iptal edip yeniden deneyin."
+        "error_over_quota": "Bu hesabın posta sunucusunda çok fazla push kaydı var (sınır genellikle 15'tir). Artık kullanmadığınız cihazları bildirim ayarlarından iptal edip yeniden deneyin.",
+        "error_blocked": "Bu site için bildirimler engellendi. Tarayıcınızın site ayarlarından izin verin ve yeniden deneyin.",
+        "error_not_granted": "Bildirimlere izin verilmedi, bu yüzden anlık bildirim kapalı kalıyor.",
+        "error_verification_timeout": "Posta sunucusu bu cihazı zamanında onaylamadı, bu yüzden anlık bildirim kapalı kalıyor. Bir dakika sonra yeniden deneyin.",
+        "error_relay": "Anlık bildirim aktarıcısına şu anda ulaşılamıyor, bu yüzden anlık bildirim kapalı kalıyor. Daha sonra yeniden deneyin.",
+        "error_teardown": "Anlık bildirim bu tarayıcıda kapatıldı, ancak posta sunucusuna veya aktarıcıya ulaşılamadı. Bildirimler birkaç gün daha gelebilir. Yeniden çevrimiçi olduğunuzda bu cihazı aşağıdan iptal edin."
       }
     },
     "language_region": {

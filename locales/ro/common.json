@@ -1766,7 +1766,12 @@
         "confirm_revoke_message_this": "Acest dispozitiv va înceta imediat să primească notificări în fundal.",
         "shared_mailboxes_no_push": "Căsuțele poștale pe care alții le partajează cu dvs. nu trimit notificări în fundal.",
         "error_forbidden": "Serverul de e-mail nu permite notificări în fundal pentru acest cont.",
-        "error_over_quota": "Acest cont are prea multe înregistrări push pe serverul de e-mail (limita este de obicei 15). Revocați din setările de notificări dispozitivele pe care nu le mai folosiți, apoi încercați din nou."
+        "error_over_quota": "Acest cont are prea multe înregistrări push pe serverul de e-mail (limita este de obicei 15). Revocați din setările de notificări dispozitivele pe care nu le mai folosiți, apoi încercați din nou.",
+        "error_blocked": "Notificările sunt blocate pentru acest site. Permite-le în setările site-ului din browser, apoi încearcă din nou.",
+        "error_not_granted": "Notificările nu au fost permise, deci push rămâne dezactivat.",
+        "error_verification_timeout": "Serverul de e-mail nu a confirmat la timp acest dispozitiv, deci push rămâne dezactivat. Încearcă din nou peste un minut.",
+        "error_relay": "Releul push nu poate fi accesat acum, deci push rămâne dezactivat. Încearcă din nou mai târziu.",
+        "error_teardown": "Push este dezactivat în acest browser, dar serverul de e-mail sau releul nu au putut fi accesate. Notificările pot continua să sosească câteva zile. Revocă acest dispozitiv mai jos când ești din nou online."
       },
       "push_all": {
           "title": "All accounts",

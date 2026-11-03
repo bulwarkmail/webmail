@@ -1799,7 +1799,12 @@
         "confirm_revoke_message_this": "Toto zařízení okamžitě přestane přijímat oznámení na pozadí.",
         "shared_mailboxes_no_push": "Poštovní schránky, které s vámi sdílejí ostatní, neodesílají oznámení na pozadí.",
         "error_forbidden": "Poštovní server pro tento účet nepovoluje oznámení na pozadí.",
-        "error_over_quota": "Tento účet má na poštovním serveru příliš mnoho registrací push (limit je obvykle 15). V nastavení oznámení odvolejte zařízení, která už nepoužíváte, a zkuste to znovu."
+        "error_over_quota": "Tento účet má na poštovním serveru příliš mnoho registrací push (limit je obvykle 15). V nastavení oznámení odvolejte zařízení, která už nepoužíváte, a zkuste to znovu.",
+        "error_blocked": "Oznámení jsou pro tento web blokována. Povolte je v nastavení webu v prohlížeči a zkuste to znovu.",
+        "error_not_granted": "Oznámení nebyla povolena, takže push zůstává vypnutý.",
+        "error_verification_timeout": "Poštovní server toto zařízení včas nepotvrdil, takže push zůstává vypnutý. Zkuste to znovu za minutu.",
+        "error_relay": "Push relay teď není dostupné, takže push zůstává vypnutý. Zkuste to později.",
+        "error_teardown": "Push je v tomto prohlížeči vypnutý, ale poštovní server nebo relay nebyly dostupné. Oznámení mohou ještě několik dní přicházet. Až budete online, odvolejte toto zařízení níže."
       }
     },
     "language_region": {

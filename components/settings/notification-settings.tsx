@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useIdentityStore } from '@/stores/identity-store';
-import { jmapErrorType } from '@/lib/jmap/jmap-error';
 import { SettingsSection, SettingItem, ToggleSwitch, Select } from './settings-section';
 import { playNotificationSound, NOTIFICATION_SOUNDS } from '@/lib/notification-sound';
 import type { NotificationSoundChoice } from '@/lib/notification-sound';
@@ -27,6 +26,7 @@ import {
   revokePushDevice,
   serverSupportsEmailPush,
 } from '@/lib/web-push';
+import { webPushErrorKey } from '@/lib/web-push-errors';
 import type { PushDevice } from '@/lib/web-push';
 import { IS_LITE } from '@/lib/lite';
 import { useNoThirdPartyTraffic } from '@/hooks/use-third-party-mode';
@@ -171,14 +171,9 @@ export function NotificationSettings() {
   // The refusals a user can do something about get readable text; anything
   // else keeps the error's own message.
   const pushErrorMessage = (err: unknown, fallback: string) => {
-    switch (jmapErrorType(err)) {
-      case 'forbidden':
-        return t('push.error_forbidden');
-      case 'overQuota':
-        return t('push.error_over_quota');
-      default:
-        return err instanceof Error ? err.message : fallback;
-    }
+    const key = webPushErrorKey(err);
+    if (key) return t(`push.${key}`);
+    return err instanceof Error ? err.message : fallback;
   };
 
   // `forceRecreate` is what the Re-register button is for: without it the enable
@@ -265,10 +260,7 @@ export function NotificationSettings() {
       await disableWebPush({ client, relayBaseUrl: activeRelayUrl });
       setPushStatus({ kind: 'idle' });
     } catch (err) {
-      setPushStatus({
-        kind: 'error',
-        message: err instanceof Error ? err.message : 'Failed to disable push',
-      });
+      setPushStatus({ kind: 'error', message: pushErrorMessage(err, 'Failed to disable push') });
     } finally {
       await refreshDevices();
     }
@@ -290,10 +282,7 @@ export function NotificationSettings() {
       await revokePushDevice({ client, device, relayBaseUrl: activeRelayUrl });
       if (device.isThisDevice) setPushStatus({ kind: 'idle' });
     } catch (err) {
-      setPushStatus({
-        kind: 'error',
-        message: err instanceof Error ? err.message : 'Failed to revoke device',
-      });
+      setPushStatus({ kind: 'error', message: pushErrorMessage(err, 'Failed to revoke device') });
     } finally {
       setRevokingId(null);
       await refreshDevices();

@@ -16,6 +16,7 @@ import {
   revokePushDevice,
   waitForWebPushResync,
 } from '@/lib/web-push';
+import { webPushErrorKey } from '@/lib/web-push-errors';
 import { DEFAULT_RELAY_BASE_URL } from '@/lib/push-relays';
 import { setNoThirdPartyTraffic } from '@/lib/third-party-mode';
 
@@ -637,6 +638,105 @@ describe('two tabs at once', () => {
     installFetch({});
     await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
     expect(client.createPushSubscription).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('what enabling and disabling say when they fail', () => {
+  it('tells a blocked browser from a question not answered', async () => {
+    const client = makeClient([]);
+    installFetch({});
+    (globalThis as unknown as { Notification: unknown }).Notification = { permission: 'denied' };
+    (window as unknown as { Notification: unknown }).Notification = { permission: 'denied' };
+    await expect(enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).rejects.toSatisfy((e) => webPushErrorKey(e) === 'error_blocked');
+
+    const unanswered = { permission: 'default', requestPermission: async () => 'default' };
+    (globalThis as unknown as { Notification: unknown }).Notification = unanswered;
+    (window as unknown as { Notification: unknown }).Notification = unanswered;
+    await expect(enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).rejects.toSatisfy((e) => webPushErrorKey(e) === 'error_not_granted');
+    expect(client.createPushSubscription).not.toHaveBeenCalled();
+  });
+
+  it('names an unreachable relay, and a relay that refuses', async () => {
+    const client = makeClient([]);
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new TypeError('Failed to fetch'); }));
+    await expect(enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).rejects.toSatisfy((e) => webPushErrorKey(e) === 'error_relay');
+
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const json = (body: unknown, status = 200) => ({ ok: status < 300, status, json: async () => body }) as Response;
+      return String(input).endsWith('/vapid-public-key') ? json({ publicKey: 'QUJD' }) : json({}, 500);
+    }));
+    await expect(enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).rejects.toSatisfy((e) => webPushErrorKey(e) === 'error_relay');
+    expect(client.createPushSubscription).not.toHaveBeenCalled();
+  });
+
+  it('names a verification that never came', async () => {
+    vi.useFakeTimers();
+    try {
+      const client = makeClient([]);
+      vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        const json = (body: unknown) => ({ ok: true, status: 200, json: async () => body }) as Response;
+        if (url.endsWith('/vapid-public-key')) return json({ publicKey: 'QUJD' });
+        return json({ verificationCode: null });
+      }));
+      const settled = enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false }).catch((e: unknown) => webPushErrorKey(e));
+      await vi.advanceTimersByTimeAsync(120_000);
+      expect(await settled).toBe('error_verification_timeout');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps naming the server refusals, and nothing for an unknown error', () => {
+    expect(webPushErrorKey(refusedMap())).toBe('error_forbidden');
+    expect(webPushErrorKey(jmapSetError('x', OVER_QUOTA))).toBe('error_over_quota');
+    expect(webPushErrorKey(new Error('boom'))).toBeNull();
+  });
+
+  it('says so when turning off could not reach the server, and still ends up off here', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-mine');
+    const client = makeClient([sub('push-mine', THIS_DEVICE)]);
+    installFetch({});
+    (client.destroyPushSubscription as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('offline'));
+
+    await expect(disableWebPush({ client, relayBaseUrl: RELAY })).rejects.toSatisfy((e) => webPushErrorKey(e) === 'error_teardown');
+
+    expect(localStorage.getItem(SUB_KEY)).toBeNull();
+  });
+
+  it('says so when turning off could not reach the relay', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-mine');
+    const client = makeClient([sub('push-mine', THIS_DEVICE)]);
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new TypeError('Failed to fetch'); }));
+
+    await expect(disableWebPush({ client, relayBaseUrl: RELAY })).rejects.toSatisfy((e) => webPushErrorKey(e) === 'error_teardown');
+
+    expect(client.destroyed).toEqual(['push-mine']);
+    expect(localStorage.getItem(SUB_KEY)).toBeNull();
+  });
+
+  it('does not count a record the relay no longer has as a failure', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-mine');
+    const client = makeClient([sub('push-mine', THIS_DEVICE)]);
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 404, json: async () => ({}) })));
+
+    await expect(disableWebPush({ client, relayBaseUrl: RELAY })).resolves.toBeUndefined();
+  });
+
+  it('keeps the browser subscription for the other account, and says nothing when all went well', async () => {
+    const { browserSub } = installPushBrowser();
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-mine');
+    localStorage.setItem('bulwark.push.subscriptionId.v1.other-account', 'push-other');
+    const client = makeClient([sub('push-mine', THIS_DEVICE)]);
+    installFetch({});
+
+    await expect(disableWebPush({ client, relayBaseUrl: RELAY })).resolves.toBeUndefined();
+
+    expect(browserSub.unsubscribe).not.toHaveBeenCalled();
   });
 });
 

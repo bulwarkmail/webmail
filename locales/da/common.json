@@ -1766,7 +1766,12 @@
         "confirm_revoke_message_this": "Denne enhed stopper med at modtage baggrundsnotifikationer med det samme.",
         "shared_mailboxes_no_push": "Postkasser, som andre deler med dig, sender ikke baggrundsnotifikationer.",
         "error_forbidden": "Mailserveren tillader ikke baggrundsnotifikationer for denne konto.",
-        "error_over_quota": "Denne konto har for mange push-registreringer på mailserveren (grænsen er normalt 15). Tilbagekald enheder, du ikke længere bruger, i notifikationsindstillingerne, og prøv igen."
+        "error_over_quota": "Denne konto har for mange push-registreringer på mailserveren (grænsen er normalt 15). Tilbagekald enheder, du ikke længere bruger, i notifikationsindstillingerne, og prøv igen.",
+        "error_blocked": "Notifikationer er blokeret for dette websted. Tillad dem i browserens webstedsindstillinger, og prøv igen.",
+        "error_not_granted": "Notifikationer blev ikke tilladt, så push forbliver slået fra.",
+        "error_verification_timeout": "Mailserveren bekræftede ikke denne enhed i tide, så push forbliver slået fra. Prøv igen om et minut.",
+        "error_relay": "Push-relayet kan ikke nås lige nu, så push forbliver slået fra. Prøv igen senere.",
+        "error_teardown": "Push er slået fra i denne browser, men mailserveren eller relayet kunne ikke nås. Der kan stadig komme notifikationer i nogle dage. Tilbagekald denne enhed nedenfor, når du er online igen."
       },
       "push_all": {
           "title": "All accounts",
