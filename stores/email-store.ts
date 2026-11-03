@@ -69,6 +69,8 @@ type PendingUndoSend = {
   submissionAccountId?: string;
 };
 
+const NO_SELECTION = () => ({ selectedEmailKeys: new Set<string>(), lastSelectedEmailKey: null });
+
 /** Drop the matching emails from a key-based selection. */
 function dropFromSelection(
   state: { emails: Email[]; selectedEmailKeys: Set<string> },
@@ -3603,7 +3605,12 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   setLoading: (loading) => set({ isLoading: loading }),
   setLoadingEmail: (loading) => set({ isLoadingEmail: loading }),
   setError: (error) => set({ error }),
-  setSearchQuery: (query) => set({ searchQuery: query }),
+  // Another search lists other mail: ticks kept from the last list would stay
+  // counted in the selection bar, with Delete acting on rows nobody can see.
+  setSearchQuery: (query) => set((state) => ({
+    searchQuery: query,
+    ...(query === state.searchQuery ? {} : NO_SELECTION()),
+  })),
   setQuota: (quota) => set({ quota }),
 
   toggleEmailSelection: (email) => {
@@ -5360,7 +5367,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     // trip later. What the mail view renders from is written only once the
     // request is on its way (see afterRequestDispatch); the controller is
     // recorded at once so a superseding search can still cancel this one.
-    set({ searchAbortController: controller });
+    set({ searchAbortController: controller, ...(typedQuery === get().searchQuery ? {} : NO_SELECTION()) });
     afterRequestDispatch(() => {
       if (get().searchAbortController === controller) set({ isLoading: true, error: null, searchQuery: typedQuery });
     });
@@ -5598,6 +5605,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   setSearchFilters: (filters) => {
     set((state) => ({
       searchFilters: { ...state.searchFilters, ...filters },
+      ...NO_SELECTION(),
     }));
   },
 
@@ -5617,6 +5625,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       searchFilters: { ...DEFAULT_SEARCH_FILTERS },
       searchMailboxId: currentSearchScopeDefault(mailboxesInView(state), state.selectedMailbox),
       searchScopeFollowsFolder: false,
+      ...(isFilterEmpty(state.searchFilters) ? {} : NO_SELECTION()),
     }));
   },
 
