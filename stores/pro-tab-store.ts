@@ -128,7 +128,7 @@ export interface ProTab {
  * localStorage would give it away. The tab's body puts the title back when it
  * has read the message.
  */
-const TITLE_UNTIL_LOADED = '…';
+export const TITLE_UNTIL_LOADED = '…';
 
 function withoutSubjects(tabs: ProTab[]): ProTab[] {
   if (useOfflineStore.getState().enabled.length === 0) return tabs;
@@ -687,7 +687,9 @@ export const useProTabStore = create<ProTabState>()(
 
         updateTabTitle: (id, title) => {
           set({
-            tabs: get().tabs.map((tab) => (tab.id === id ? { ...tab, title } : tab)),
+            tabs: get().tabs.map((tab) => (tab.id === id
+              ? { ...tab, title, ...(tab.emailData ? { emailData: { ...tab.emailData, title } } : {}) }
+              : tab)),
           });
         },
 

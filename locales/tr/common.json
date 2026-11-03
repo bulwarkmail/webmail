@@ -5764,7 +5764,7 @@
     "server_not_answering": "E-posta sunucusu yanıt vermiyor. Birazdan yeniden deneyin."
   },
   "offlineStorage": {
-    "keep_description": "E-postalarınızı, takviminizi, kişilerinizi ve seçtiğiniz dosyaları bu tarayıcıda şifreli olarak tutar. Çevrimdışıyken e-postaları okuyabilir, işaretleyebilir ve taşıyabilirsiniz; yazdıklarınız giden kutusunda bekler. Oturumu kapatınca hepsi silinir.",
+    "keep_description": "E-postalarınızı, takviminizi, kişilerinizi ve seçtiğiniz dosyaları bu cihazda şifreli olarak tutar. Çevrimdışıyken e-postaları okuyabilir, işaretleyebilir ve taşıyabilirsiniz; yazdıklarınız giden kutusunda bekler. Oturumu kapatınca hepsi silinir.",
     "window_label": "Ne kadar geriye tutulsun",
     "window_description": "Daha eski e-postalar ve takvim etkinlikleri bu cihazdan kaldırılır. Bağlantınız olduğunda yine açabilirsiniz.",
     "window_days": "{days, plural, one {# gün} other {# gün}}",
@@ -5792,7 +5792,7 @@
     "clear_description": "Bu cihazın bu hesap için tuttuğu her şeyi siler, sonra yeniden indirir.",
     "clear_button": "Temizle…",
     "clear_confirm_title": "Bu hesap bu cihazda temizlensin mi?",
-    "clear_confirm_message": "Bu cihazın bu hesap için tuttuğu her şey silinir ve yeniden indirilir. Sunucudaki e-postalarınız kalır.",
+    "clear_confirm_message": "Bu cihazın {account} için tuttuğu her şey silinir ve yeniden indirilir. Sunucudaki e-postalarınız kalır.",
     "clear_confirm_unsent": "{count, plural, one {# gönderilmemiş ileti kaybolacak.} other {# gönderilmemiş ileti kaybolacak.}}",
     "clear_confirm": "Temizle",
     "persist_refused": "Alan azaldığında bu tarayıcı tutulan e-postaları silebilir. Uygulamayı yüklemek genellikle bunu önler.",
@@ -5816,7 +5816,13 @@
     "kept_error_download": "İndirilemedi",
     "keep_offline": "Çevrimdışı tut",
     "unpin": "Çevrimdışı tutmayı bırak",
-    "unpin_label": "{name} dosyasını çevrimdışı tutmayı bırak"
+    "unpin_label": "{name} dosyasını çevrimdışı tutmayı bırak",
+    "warning_desktop": "Bu bilgisayarın kullanıcı hesabını kullanabilen herkes bu e-postaları okuyabilir. Disk şifrelemesini kullanın.",
+    "off_confirm_text": "Bu işlem, bu cihazın {account} için tuttuğu her şeyi siler. Sunucudaki e-postalarınız kalır.",
+    "unsent_changes": "{count, plural, one {Sunucuya ulaşmamış # değişiklik kaybolacak.} other {Sunucuya ulaşmamış # değişiklik kaybolacak.}}",
+    "clear_needs_connection": "Her şey yeniden indirileceği için bağlantı gerekir.",
+    "usage_label": "Bu cihazın tuttukları",
+    "pin_not_ready": "Bu dosya henüz bu cihazın listesinde değil. Biraz sonra yeniden deneyin."
   },
   "offlineDrafts": {
     "title": "Bu cihazdaki taslaklar",

@@ -5764,7 +5764,7 @@
     "server_not_answering": "De mailserver antwoordt niet. Probeer het zo meteen opnieuw."
   },
   "offlineStorage": {
-    "keep_description": "Bewaart je e-mail, agenda, contacten en gekozen bestanden versleuteld in deze browser. Offline kun je e-mail lezen, markeren en verplaatsen, en wat je schrijft wacht in Postvak UIT. Afmelden verwijdert alles.",
+    "keep_description": "Bewaart je e-mail, agenda, contacten en gekozen bestanden versleuteld op dit apparaat. Offline kun je e-mail lezen, markeren en verplaatsen, en wat je schrijft wacht in Postvak UIT. Afmelden verwijdert alles.",
     "window_label": "Hoe ver terug bewaren",
     "window_description": "Oudere e-mail en agenda-items verdwijnen van dit apparaat. Je kunt ze nog openen als je online bent.",
     "window_days": "{days, plural, one {# dag} other {# dagen}}",
@@ -5792,7 +5792,7 @@
     "clear_description": "Verwijdert alles wat dit apparaat voor dit account bewaart en downloadt het daarna opnieuw.",
     "clear_button": "Wissen…",
     "clear_confirm_title": "Dit account op dit apparaat wissen?",
-    "clear_confirm_message": "Alles wat dit apparaat voor dit account bewaart, wordt verwijderd en opnieuw gedownload. Je e-mail op de server blijft staan.",
+    "clear_confirm_message": "Alles wat dit apparaat voor {account} bewaart, wordt verwijderd en opnieuw gedownload. Je e-mail op de server blijft staan.",
     "clear_confirm_unsent": "{count, plural, one {# niet-verzonden bericht gaat verloren.} other {# niet-verzonden berichten gaan verloren.}}",
     "clear_confirm": "Wissen",
     "persist_refused": "Deze browser kan de bewaarde e-mail verwijderen als de ruimte opraakt. De app installeren voorkomt dat meestal.",
@@ -5816,7 +5816,13 @@
     "kept_error_download": "Kon niet worden gedownload",
     "keep_offline": "Offline bewaren",
     "unpin": "Niet meer offline bewaren",
-    "unpin_label": "{name} niet meer offline bewaren"
+    "unpin_label": "{name} niet meer offline bewaren",
+    "warning_desktop": "Iedereen die dit gebruikersaccount op deze computer kan gebruiken, kan deze e-mail lezen. Gebruik schijfversleuteling.",
+    "off_confirm_text": "Hiermee wordt alles verwijderd wat dit apparaat voor {account} bewaart. Je e-mail op de server blijft staan.",
+    "unsent_changes": "{count, plural, one {# wijziging die de server niet heeft bereikt, gaat verloren.} other {# wijzigingen die de server niet hebben bereikt, gaan verloren.}}",
+    "clear_needs_connection": "Hiervoor is een verbinding nodig, omdat alles opnieuw wordt gedownload.",
+    "usage_label": "Wat dit apparaat bewaart",
+    "pin_not_ready": "Dit bestand staat nog niet op de lijst van dit apparaat. Probeer het zo meteen opnieuw."
   },
   "offlineDrafts": {
     "title": "Concepten op dit apparaat",

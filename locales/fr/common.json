@@ -5764,7 +5764,7 @@
     "server_not_answering": "Le serveur de messagerie ne répond pas. Réessayez dans un instant."
   },
   "offlineStorage": {
-    "keep_description": "Garde vos e-mails, votre agenda, vos contacts et les fichiers que vous choisissez, chiffrés dans ce navigateur. Hors ligne, vous pouvez lire, signaler et déplacer des e-mails, et ce que vous écrivez attend dans la boîte d'envoi. La déconnexion supprime tout.",
+    "keep_description": "Garde vos e-mails, votre agenda, vos contacts et les fichiers que vous choisissez, chiffrés sur cet appareil. Hors ligne, vous pouvez lire, signaler et déplacer des e-mails, et ce que vous écrivez attend dans la boîte d'envoi. La déconnexion supprime tout.",
     "window_label": "Durée de conservation",
     "window_description": "Les e-mails et événements plus anciens quittent cet appareil. Vous pouvez toujours les ouvrir quand vous êtes connecté.",
     "window_days": "{days, plural, one {# jour} other {# jours}}",
@@ -5792,7 +5792,7 @@
     "clear_description": "Supprime tout ce que cet appareil garde pour ce compte, puis le télécharge de nouveau.",
     "clear_button": "Vider…",
     "clear_confirm_title": "Vider ce compte sur cet appareil ?",
-    "clear_confirm_message": "Tout ce que cet appareil garde pour ce compte est supprimé puis téléchargé de nouveau. Vos e-mails sur le serveur restent en place.",
+    "clear_confirm_message": "Tout ce que cet appareil garde pour {account} est supprimé puis téléchargé de nouveau. Vos e-mails sur le serveur restent en place.",
     "clear_confirm_unsent": "{count, plural, one {# message non envoyé sera perdu.} other {# messages non envoyés seront perdus.}}",
     "clear_confirm": "Vider",
     "persist_refused": "Ce navigateur peut supprimer les e-mails gardés quand la place manque. Installer l'application l'évite en général.",
@@ -5816,7 +5816,13 @@
     "kept_error_download": "Téléchargement impossible",
     "keep_offline": "Garder hors ligne",
     "unpin": "Ne plus garder hors ligne",
-    "unpin_label": "Ne plus garder {name} hors ligne"
+    "unpin_label": "Ne plus garder {name} hors ligne",
+    "warning_desktop": "Toute personne qui peut utiliser le compte utilisateur de cet ordinateur peut lire ces e-mails. Utilisez le chiffrement du disque.",
+    "off_confirm_text": "Cela supprime tout ce que cet appareil garde pour {account}. Vos e-mails sur le serveur restent en place.",
+    "unsent_changes": "{count, plural, one {# modification qui n'a pas atteint le serveur sera perdue.} other {# modifications qui n'ont pas atteint le serveur seront perdues.}}",
+    "clear_needs_connection": "Une connexion est nécessaire, car tout est téléchargé de nouveau.",
+    "usage_label": "Ce que cet appareil garde",
+    "pin_not_ready": "Ce fichier n'est pas encore dans la liste de cet appareil. Réessayez dans un instant."
   },
   "offlineDrafts": {
     "title": "Brouillons sur cet appareil",

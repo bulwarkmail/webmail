@@ -32,6 +32,15 @@ describe('the time left', () => {
     expect(bodies.startedDone).toBe(10);
   });
 
+  it('starts the sample over after a gap: time asleep isn\'t the rate', () => {
+    const start = nextProgress(undefined, event('bodies', 0, 10_000), 0);
+    const before = nextProgress(start, event('bodies', 100, 10_000), 10_000);
+    const after = nextProgress(before, event('bodies', 200, 10_000), 10_000 + 3_600_000);
+    expect(after.startedAt).toBe(10_000 + 3_600_000);
+    expect(after.startedDone).toBe(200);
+    expect(minutesLeft(after)).toBeNull();
+  });
+
   it('has no time without a total, or when done', () => {
     const open = nextProgress(undefined, event('list', 0, null), 0);
     expect(minutesLeft(nextProgress(open, event('list', 500, null), 10_000))).toBeNull();

@@ -5764,7 +5764,7 @@
     "server_not_answering": "E-postserveren svarer ikke. Prøv igjen om litt."
   },
   "offlineStorage": {
-    "keep_description": "Beholder e-posten, kalenderen, kontaktene og filene du velger, kryptert i denne nettleseren. Frakoblet kan du lese, flagge og flytte e-post, og det du skriver, venter i utboksen. Når du logger av, fjernes alt.",
+    "keep_description": "Beholder e-posten, kalenderen, kontaktene og filene du velger, kryptert på denne enheten. Frakoblet kan du lese, flagge og flytte e-post, og det du skriver, venter i utboksen. Når du logger av, fjernes alt.",
     "window_label": "Hvor langt tilbake som beholdes",
     "window_description": "Eldre e-post og kalenderhendelser forlater denne enheten. Du kan fortsatt åpne dem når du er tilkoblet.",
     "window_days": "{days, plural, one {# dag} other {# dager}}",
@@ -5792,7 +5792,7 @@
     "clear_description": "Sletter alt denne enheten beholder for denne kontoen, og laster det ned på nytt.",
     "clear_button": "Tøm…",
     "clear_confirm_title": "Tømme denne kontoen på denne enheten?",
-    "clear_confirm_message": "Alt denne enheten beholder for denne kontoen, slettes og lastes ned på nytt. E-posten din på serveren blir værende.",
+    "clear_confirm_message": "Alt denne enheten beholder for {account}, slettes og lastes ned på nytt. E-posten din på serveren blir værende.",
     "clear_confirm_unsent": "{count, plural, one {# usendt melding går tapt.} other {# usendte meldinger går tapt.}}",
     "clear_confirm": "Tøm",
     "persist_refused": "Denne nettleseren kan slette den beholdte e-posten når plassen blir knapp. Å installere appen hjelper vanligvis.",
@@ -5816,7 +5816,13 @@
     "kept_error_download": "Kunne ikke lastes ned",
     "keep_offline": "Behold frakoblet",
     "unpin": "Slutt å beholde frakoblet",
-    "unpin_label": "Slutt å beholde {name} frakoblet"
+    "unpin_label": "Slutt å beholde {name} frakoblet",
+    "warning_desktop": "Alle som kan bruke brukerkontoen på denne datamaskinen, kan lese denne e-posten. Bruk diskkryptering.",
+    "off_confirm_text": "Dette sletter alt denne enheten beholder for {account}. E-posten din på serveren blir værende.",
+    "unsent_changes": "{count, plural, one {# endring som ikke har nådd serveren, går tapt.} other {# endringer som ikke har nådd serveren, går tapt.}}",
+    "clear_needs_connection": "Dette krever en tilkobling, fordi alt lastes ned på nytt.",
+    "usage_label": "Dette beholder enheten",
+    "pin_not_ready": "Denne filen er ikke på listen til denne enheten ennå. Prøv igjen om litt."
   },
   "offlineDrafts": {
     "title": "Utkast på denne enheten",

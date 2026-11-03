@@ -56,7 +56,7 @@ function fakeClient(server = 'https://mail.example.org', overrides: Record<strin
 }
 
 function setPolicyOrg(organisation: Record<string, unknown>) {
-  usePolicyStore.setState({ loaded: true, source: 'server', subject: null, subjectPending: false, policy: { ...usePolicyStore.getState().policy, organisation: { ...DEFAULT_ORGANISATION_POLICY, ...organisation } as never } });
+  usePolicyStore.setState({ loaded: true, source: 'server', subject: { email: 'alice@example.org', groups: [] }, subjectPending: false, policy: { ...usePolicyStore.getState().policy, organisation: { ...DEFAULT_ORGANISATION_POLICY, ...organisation } as never } });
 }
 
 function setOnline(online: boolean) {

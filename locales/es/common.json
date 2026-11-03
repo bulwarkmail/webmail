@@ -5764,7 +5764,7 @@
     "server_not_answering": "El servidor de correo no responde. Inténtalo de nuevo en un momento."
   },
   "offlineStorage": {
-    "keep_description": "Guarda tu correo, tu calendario, tus contactos y los archivos que elijas, cifrados en este navegador. Sin conexión puedes leer, marcar y mover correo, y lo que escribas espera en la bandeja de salida. Al cerrar sesión se borra todo.",
+    "keep_description": "Guarda tu correo, tu calendario, tus contactos y los archivos que elijas, cifrados en este dispositivo. Sin conexión puedes leer, marcar y mover correo, y lo que escribas espera en la bandeja de salida. Al cerrar sesión se borra todo.",
     "window_label": "Cuánto tiempo atrás guardar",
     "window_description": "El correo y los eventos más antiguos salen de este dispositivo. Aún puedes abrirlos cuando tengas conexión.",
     "window_days": "{days, plural, one {# día} other {# días}}",
@@ -5792,7 +5792,7 @@
     "clear_description": "Elimina todo lo que este dispositivo guarda de esta cuenta y lo vuelve a descargar.",
     "clear_button": "Vaciar…",
     "clear_confirm_title": "¿Vaciar esta cuenta en este dispositivo?",
-    "clear_confirm_message": "Todo lo que este dispositivo guarda de esta cuenta se elimina y se vuelve a descargar. Tu correo en el servidor se mantiene.",
+    "clear_confirm_message": "Todo lo que este dispositivo guarda de {account} se elimina y se vuelve a descargar. Tu correo en el servidor se mantiene.",
     "clear_confirm_unsent": "{count, plural, one {Se perderá # mensaje sin enviar.} other {Se perderán # mensajes sin enviar.}}",
     "clear_confirm": "Vaciar",
     "persist_refused": "Este navegador puede borrar el correo guardado cuando falte espacio. Instalar la aplicación suele evitarlo.",
@@ -5816,7 +5816,13 @@
     "kept_error_download": "No se pudo descargar",
     "keep_offline": "Guardar sin conexión",
     "unpin": "Dejar de guardar sin conexión",
-    "unpin_label": "Dejar de guardar {name} sin conexión"
+    "unpin_label": "Dejar de guardar {name} sin conexión",
+    "warning_desktop": "Cualquiera que pueda usar la cuenta de usuario de este ordenador puede leer este correo. Usa el cifrado de disco.",
+    "off_confirm_text": "Esto elimina todo lo que este dispositivo guarda de {account}. Tu correo en el servidor se mantiene.",
+    "unsent_changes": "{count, plural, one {Se perderá # cambio que no ha llegado al servidor.} other {Se perderán # cambios que no han llegado al servidor.}}",
+    "clear_needs_connection": "Hace falta conexión, porque todo se vuelve a descargar.",
+    "usage_label": "Lo que guarda este dispositivo",
+    "pin_not_ready": "Este archivo aún no está en la lista de este dispositivo. Inténtalo de nuevo en un momento."
   },
   "offlineDrafts": {
     "title": "Borradores en este dispositivo",

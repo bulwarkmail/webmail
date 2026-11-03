@@ -4,8 +4,9 @@
  *
  * What gets kept:
  * - A pinned file stays until it's unpinned or removed on the server. The cap
- *   doesn't push it out and the size limit for one file doesn't apply. The
- *   account's total limit (scope.maxTotalBytes, which a policy can lower) does.
+ *   doesn't push it out and the user's own size limit doesn't apply. The
+ *   organisation's limit on one file (scope.orgMaxFileBytes) and the account's
+ *   total (scope.maxTotalBytes, which a policy can lower) do.
  * - A recently opened file is kept if it's within scope.maxAttachmentBytes, and
  *   pushed out oldest first when the cap is reached. Its opened_at goes with
  *   it, so it isn't fetched straight back.
@@ -121,6 +122,12 @@ function makeRoom(ctx: StoreContext, size: number, incoming: { pinned: boolean; 
   return true;
 }
 
+/** The organisation's limit on one file, which a pin obeys. The user's own doesn't bind a pin. */
+function overOrgLimit(ctx: Pick<StoreContext, 'scope'>, size: number): boolean {
+  const cap = ctx.scope.orgMaxFileBytes;
+  return typeof cap === 'number' && size > cap;
+}
+
 function pinnedBytes(db: StorageAdapter): number {
   return keptBlobs(db).filter((blob) => blob.pinned).reduce((sum, blob) => sum + Number(blob.size), 0);
 }
@@ -177,6 +184,10 @@ export async function fetchKeptFiles(ctx: SyncContext, jmap: string): Promise<vo
     const want = wantedRow(db, jmap, blobId);
     if (!want) continue;
     const known = Number(want.size ?? 0);
+    if (want.pinned && overOrgLimit(ctx, known)) {
+      setError(db, jmap, blobId, 'tooLarge');
+      continue;
+    }
     if (!want.pinned && known > Math.min(ctx.scope.maxAttachmentBytes, capBytes(ctx))) {
       setError(db, jmap, blobId, 'tooLarge');
       continue;
@@ -200,11 +211,11 @@ export async function fetchKeptFiles(ctx: SyncContext, jmap: string): Promise<vo
     db.transaction(() => {
       const now = wantedRow(db, jmap, blobId);
       if (!now) return;
-      if (now.pinned ? pinnedBytes(db) + data.length > ctx.scope.maxTotalBytes : data.length > Math.min(ctx.scope.maxAttachmentBytes, capBytes(ctx))) {
+      if (now.pinned ? overOrgLimit(ctx, data.length) || pinnedBytes(db) + data.length > ctx.scope.maxTotalBytes : data.length > Math.min(ctx.scope.maxAttachmentBytes, capBytes(ctx))) {
         // The size in the metadata was wrong or missing. With the real one
         // noted, the next pass sees this without downloading it again.
         db.run('UPDATE file_node SET size = ? WHERE jmap = ? AND blob_id = ?', [data.length, jmap, blobId]);
-        setError(db, jmap, blobId, now.pinned ? 'overLimit' : 'tooLarge');
+        setError(db, jmap, blobId, !now.pinned || overOrgLimit(ctx, data.length) ? 'tooLarge' : 'overLimit');
         return;
       }
       if (!makeRoom(ctx, data.length, { pinned: Boolean(now.pinned), openedAt: Number(now.opened_at ?? 0) })) {
@@ -239,8 +250,13 @@ export function applyFilesScope(ctx: SyncContext, _change: ScopeChange): void {
     }
     const largest = Math.min(scope.maxAttachmentBytes, capBytes(ctx));
     for (const blob of keptBlobs(db)) {
-      if (blob.pinned || Number(blob.size) <= largest) continue;
-      pushOut(db, blob);
+      if (blob.pinned ? !overOrgLimit(ctx, Number(blob.size)) : Number(blob.size) <= largest) continue;
+      if (blob.pinned) {
+        dropBlob(db, blob.jmap, blob.blob_id);
+        setError(db, blob.jmap, blob.blob_id, 'tooLarge');
+      } else {
+        pushOut(db, blob);
+      }
       changed = true;
     }
     const before = keptBlobs(db).length;

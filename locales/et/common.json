@@ -5764,7 +5764,7 @@
     "server_not_answering": "Meiliserver ei vasta. Proovige kohe uuesti."
   },
   "offlineStorage": {
-    "keep_description": "Hoiab sinu kirju, kalendrit, kontakte ja valitud faile krüptitult selles brauseris. Võrguta saad kirju lugeda, märgistada ja teisaldada ning see, mida kirjutad, ootab väljuvate kirjade kastis. Välja logides eemaldatakse kõik.",
+    "keep_description": "Hoiab sinu kirju, kalendrit, kontakte ja valitud faile krüptitult selles seadmes. Võrguta saad kirju lugeda, märgistada ja teisaldada ning see, mida kirjutad, ootab väljuvate kirjade kastis. Välja logides eemaldatakse kõik.",
     "window_label": "Kui kaugele minevikku hoida",
     "window_description": "Vanemad kirjad ja kalendrisündmused kaovad sellest seadmest. Saad neid endiselt avada, kui oled võrgus.",
     "window_days": "{days, plural, one {# päev} other {# päeva}}",
@@ -5792,7 +5792,7 @@
     "clear_description": "Kustutab kõik, mida see seade selle konto jaoks hoiab, ja laadib selle uuesti alla.",
     "clear_button": "Tühjenda…",
     "clear_confirm_title": "Kas tühjendada see konto selles seadmes?",
-    "clear_confirm_message": "Kõik, mida see seade selle konto jaoks hoiab, kustutatakse ja laaditakse uuesti alla. Sinu kirjad serveris jäävad alles.",
+    "clear_confirm_message": "Kõik, mida see seade kontoga {account} seoses hoiab, kustutatakse ja laaditakse uuesti alla. Sinu kirjad serveris jäävad alles.",
     "clear_confirm_unsent": "{count, plural, one {# saatmata kiri läheb kaotsi.} other {# saatmata kirja lähevad kaotsi.}}",
     "clear_confirm": "Tühjenda",
     "persist_refused": "See brauser võib hoitud kirjad kustutada, kui ruumi napib. Rakenduse paigaldamine hoiab selle tavaliselt ära.",
@@ -5816,7 +5816,13 @@
     "kept_error_download": "Allalaadimine ebaõnnestus",
     "keep_offline": "Hoia võrguta",
     "unpin": "Ära hoia enam võrguta",
-    "unpin_label": "Ära hoia faili {name} enam võrguta"
+    "unpin_label": "Ära hoia faili {name} enam võrguta",
+    "warning_desktop": "Igaüks, kes saab selle arvuti kasutajakontot kasutada, saab neid kirju lugeda. Kasuta kettakrüptimist.",
+    "off_confirm_text": "See kustutab kõik, mida see seade kontoga {account} seoses hoiab. Sinu kirjad serveris jäävad alles.",
+    "unsent_changes": "{count, plural, one {# muudatus, mis ei jõudnud serverisse, läheb kaotsi.} other {# muudatust, mis ei jõudnud serverisse, lähevad kaotsi.}}",
+    "clear_needs_connection": "See vajab ühendust, sest kõik laaditakse uuesti alla.",
+    "usage_label": "Mida see seade hoiab",
+    "pin_not_ready": "Seda faili ei ole selle seadme loendis veel. Proovi hetke pärast uuesti."
   },
   "offlineDrafts": {
     "title": "Mustandid selles seadmes",

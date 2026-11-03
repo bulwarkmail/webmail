@@ -19,6 +19,11 @@ export interface StoreScope {
   /** The largest attachment kept, and the total for all of them. */
   maxAttachmentBytes: number;
   maxTotalBytes: number;
+  /**
+   * The organisation's cap on one file, when it set one. Unlike
+   * `maxAttachmentBytes`, which is also the user's own choice, a pin obeys it.
+   */
+  orgMaxFileBytes?: number | null;
 }
 
 export const DEFAULT_SCOPE: StoreScope = {

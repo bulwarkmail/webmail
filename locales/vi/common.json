@@ -5776,7 +5776,7 @@
     "server_not_answering": "Máy chủ thư không phản hồi. Hãy thử lại sau giây lát."
   },
   "offlineStorage": {
-    "keep_description": "Giữ thư, lịch, danh bạ và các tệp bạn chọn, được mã hóa trong trình duyệt này. Khi ngoại tuyến bạn có thể đọc, gắn cờ và di chuyển thư, còn thư bạn viết sẽ chờ trong Hộp thư đi. Khi đăng xuất, tất cả sẽ bị xóa.",
+    "keep_description": "Giữ thư, lịch, danh bạ và các tệp bạn chọn, được mã hóa trên thiết bị này. Khi ngoại tuyến bạn có thể đọc, gắn cờ và di chuyển thư, còn thư bạn viết sẽ chờ trong Hộp thư đi. Khi đăng xuất, tất cả sẽ bị xóa.",
     "window_label": "Giữ lại bao lâu",
     "window_description": "Thư và sự kiện lịch cũ hơn sẽ bị xóa khỏi thiết bị này. Bạn vẫn có thể mở chúng khi có kết nối.",
     "window_days": "{days, plural, other {# ngày}}",
@@ -5804,7 +5804,7 @@
     "clear_description": "Xóa mọi thứ thiết bị này giữ cho tài khoản này, rồi tải lại.",
     "clear_button": "Xóa…",
     "clear_confirm_title": "Xóa tài khoản này trên thiết bị này?",
-    "clear_confirm_message": "Mọi thứ thiết bị này giữ cho tài khoản này sẽ bị xóa và tải lại. Thư của bạn trên máy chủ vẫn còn.",
+    "clear_confirm_message": "Mọi thứ thiết bị này giữ cho {account} sẽ bị xóa và tải lại. Thư của bạn trên máy chủ vẫn còn.",
     "clear_confirm_unsent": "{count, plural, other {# thư chưa gửi sẽ bị mất.}}",
     "clear_confirm": "Xóa",
     "persist_refused": "Trình duyệt này có thể xóa thư đã giữ khi sắp hết dung lượng. Cài đặt ứng dụng thường giúp tránh điều này.",
@@ -5828,7 +5828,13 @@
     "kept_error_download": "Không tải xuống được",
     "keep_offline": "Giữ ngoại tuyến",
     "unpin": "Ngừng giữ ngoại tuyến",
-    "unpin_label": "Ngừng giữ {name} ngoại tuyến"
+    "unpin_label": "Ngừng giữ {name} ngoại tuyến",
+    "warning_desktop": "Bất kỳ ai dùng được tài khoản người dùng trên máy tính này đều có thể đọc thư này. Hãy dùng mã hóa ổ đĩa.",
+    "off_confirm_text": "Thao tác này xóa mọi thứ thiết bị này giữ cho {account}. Thư của bạn trên máy chủ vẫn còn.",
+    "unsent_changes": "{count, plural, other {# thay đổi chưa đến được máy chủ sẽ bị mất.}}",
+    "clear_needs_connection": "Cần có kết nối, vì mọi thứ sẽ được tải lại.",
+    "usage_label": "Những gì thiết bị này giữ",
+    "pin_not_ready": "Tệp này chưa có trong danh sách của thiết bị này. Hãy thử lại sau giây lát."
   },
   "offlineDrafts": {
     "title": "Bản nháp trên thiết bị này",

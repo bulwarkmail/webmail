@@ -5764,7 +5764,7 @@
     "server_not_answering": "Der Mailserver antwortet nicht. Versuchen Sie es gleich noch einmal."
   },
   "offlineStorage": {
-    "keep_description": "Behält Ihre E-Mails, Ihren Kalender, Ihre Kontakte und ausgewählte Dateien verschlüsselt in diesem Browser. Offline können Sie E-Mails lesen, markieren und verschieben, und was Sie schreiben, wartet im Postausgang. Beim Abmelden wird alles entfernt.",
+    "keep_description": "Behält Ihre E-Mails, Ihren Kalender, Ihre Kontakte und ausgewählte Dateien verschlüsselt auf diesem Gerät. Offline können Sie E-Mails lesen, markieren und verschieben, und was Sie schreiben, wartet im Postausgang. Beim Abmelden wird alles entfernt.",
     "window_label": "Wie weit zurück behalten",
     "window_description": "Ältere E-Mails und Kalendertermine werden von diesem Gerät entfernt. Sie können sie weiterhin öffnen, solange Sie online sind.",
     "window_days": "{days, plural, one {# Tag} other {# Tage}}",
@@ -5792,7 +5792,7 @@
     "clear_description": "Löscht alles, was dieses Gerät für dieses Konto behält, und lädt es danach neu.",
     "clear_button": "Leeren…",
     "clear_confirm_title": "Dieses Konto auf diesem Gerät leeren?",
-    "clear_confirm_message": "Alles, was dieses Gerät für dieses Konto behält, wird gelöscht und neu geladen. Ihre E-Mails auf dem Server bleiben erhalten.",
+    "clear_confirm_message": "Alles, was dieses Gerät für {account} behält, wird gelöscht und neu geladen. Ihre E-Mails auf dem Server bleiben erhalten.",
     "clear_confirm_unsent": "{count, plural, one {# ungesendete Nachricht geht verloren.} other {# ungesendete Nachrichten gehen verloren.}}",
     "clear_confirm": "Leeren",
     "persist_refused": "Dieser Browser kann die behaltenen E-Mails löschen, wenn der Platz knapp wird. Die App zu installieren verhindert das meistens.",
@@ -5816,7 +5816,13 @@
     "kept_error_download": "Konnte nicht geladen werden",
     "keep_offline": "Offline behalten",
     "unpin": "Nicht mehr offline behalten",
-    "unpin_label": "{name} nicht mehr offline behalten"
+    "unpin_label": "{name} nicht mehr offline behalten",
+    "warning_desktop": "Jeder, der dieses Benutzerkonto am Computer nutzen kann, kann diese E-Mails lesen. Nutzen Sie eine Festplattenverschlüsselung.",
+    "off_confirm_text": "Dadurch wird alles gelöscht, was dieses Gerät für {account} behält. Ihre E-Mails auf dem Server bleiben erhalten.",
+    "unsent_changes": "{count, plural, one {# Änderung, die den Server nicht erreicht hat, geht verloren.} other {# Änderungen, die den Server nicht erreicht haben, gehen verloren.}}",
+    "clear_needs_connection": "Dafür ist eine Verbindung nötig, weil alles neu geladen wird.",
+    "usage_label": "Was dieses Gerät behält",
+    "pin_not_ready": "Diese Datei steht noch nicht auf der Liste dieses Geräts. Versuchen Sie es gleich noch einmal."
   },
   "offlineDrafts": {
     "title": "Entwürfe auf diesem Gerät",

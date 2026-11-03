@@ -344,6 +344,32 @@ describe('pinned files', () => {
       expect(await rig.engine.areaCall('files.read', ref(pinned.id))).not.toBeNull();
     });
 
+    it('holds a pin to the organisation\'s cap on one file, not to the user\'s own', async () => {
+      const server = new FakeFiles();
+      const pinned = server.addFile('pinned', null, 60);
+      const rig = await synced(server);
+      await rig.engine.areaCall('files.pin', ref(pinned.id));
+      await rig.engine.requestSync();
+      await keptOffline(rig);
+      rig.engine.setScope({ ...DEFAULT_SCOPE, maxAttachmentBytes: 10, orgMaxFileBytes: null });
+      await rig.engine.requestSync();
+      expect(await rig.engine.areaCall('files.read', ref(pinned.id))).not.toBeNull();
+
+      rig.engine.setScope({ ...DEFAULT_SCOPE, maxAttachmentBytes: 10, orgMaxFileBytes: 10 });
+      await rig.engine.requestSync();
+      expect(await rig.engine.areaCall('files.read', ref(pinned.id))).toBeNull();
+      expect((await rig.engine.areaCall('files.kept', undefined) as any).files[0]).toMatchObject({ pinned: true, kept: false, error: 'tooLarge' });
+
+      // Not fetched back while the cap holds; fetched back once it's lifted.
+      server.downloads.length = 0;
+      rig.engine.setOnline(true);
+      await rig.engine.requestSync();
+      expect(server.downloads).toEqual([]);
+      rig.engine.setScope({ ...DEFAULT_SCOPE, orgMaxFileBytes: null });
+      await rig.engine.requestSync();
+      expect(await rig.engine.areaCall('files.read', ref(pinned.id))).not.toBeNull();
+    });
+
     it('holds even pins to a lower total, newest out first, and doesn\'t fetch them back', async () => {
       const server = new FakeFiles();
       const older = server.addFile('older', null, 60);

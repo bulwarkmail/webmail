@@ -25,7 +25,7 @@ const CAP_FIELDS: CapField[] = [
   {
     key: 'offlineMaxAttachmentMb',
     label: 'Largest attachment or file kept',
-    description: 'Anything bigger leaves the device and opens from the server when there is a connection. Files someone chose to keep offline count only towards the total below.',
+    description: 'Anything bigger leaves the device and opens from the server when there is a connection. This also holds for files someone chose to keep offline.',
     unit: 'MB',
     max: 1024 * 1024,
   },
@@ -107,8 +107,8 @@ export function OfflineSection({ draft }: { draft: OrgPolicyDraft }) {
       </SettingItem>
       <p className="pt-2 text-xs text-muted-foreground">
         What a device keeps: mail in every folder from the window the person picks (30 days, 90 days, a year or everything),
-        with calendar, contacts and files, encrypted in the browser. That protects against someone copying the browser&apos;s
-        files, not against someone using the unlocked browser. The limits above can only lower what people pick: where several
+        with calendar, contacts and files, encrypted on the device. That protects against someone copying its files, not
+        against someone using the unlocked browser or app. The limits above can only lower what people pick: where several
         scopes apply, the lowest value counts, so a scope can&apos;t raise what another one lowered. The app holds itself to
         them when it fetches the policy; the server can&apos;t check what is on a device. Every sign-out, the automatic one
         after inactivity included, deletes everything. With several accounts signed in, each account follows its own settings.

@@ -5764,7 +5764,7 @@
     "server_not_answering": "O servidor de correio não está a responder. Tente novamente daqui a pouco."
   },
   "offlineStorage": {
-    "keep_description": "Mantém o seu correio, calendário, contactos e os ficheiros que escolher, cifrados neste navegador. Offline pode ler, sinalizar e mover e-mails, e o que escrever espera na caixa de saída. Terminar a sessão remove tudo.",
+    "keep_description": "Mantém o seu correio, calendário, contactos e os ficheiros que escolher, cifrados neste dispositivo. Offline pode ler, sinalizar e mover e-mails, e o que escrever espera na caixa de saída. Terminar a sessão remove tudo.",
     "window_label": "Quanto tempo atrás manter",
     "window_description": "Os e-mails e eventos mais antigos saem deste dispositivo. Pode continuar a abri-los quando tiver ligação.",
     "window_days": "{days, plural, one {# dia} other {# dias}}",
@@ -5792,7 +5792,7 @@
     "clear_description": "Elimina tudo o que este dispositivo mantém para esta conta e volta a transferi-lo.",
     "clear_button": "Limpar…",
     "clear_confirm_title": "Limpar esta conta neste dispositivo?",
-    "clear_confirm_message": "Tudo o que este dispositivo mantém para esta conta é eliminado e transferido novamente. O seu correio no servidor mantém-se.",
+    "clear_confirm_message": "Tudo o que este dispositivo mantém para {account} é eliminado e transferido novamente. O seu correio no servidor mantém-se.",
     "clear_confirm_unsent": "{count, plural, one {# mensagem por enviar será perdida.} other {# mensagens por enviar serão perdidas.}}",
     "clear_confirm": "Limpar",
     "persist_refused": "Este navegador pode eliminar o correio mantido quando o espaço escasseia. Instalar a aplicação costuma evitá-lo.",
@@ -5816,7 +5816,13 @@
     "kept_error_download": "Não foi possível transferir",
     "keep_offline": "Manter offline",
     "unpin": "Deixar de manter offline",
-    "unpin_label": "Deixar de manter {name} offline"
+    "unpin_label": "Deixar de manter {name} offline",
+    "warning_desktop": "Qualquer pessoa que possa usar a conta de utilizador deste computador pode ler este correio. Use a cifragem do disco.",
+    "off_confirm_text": "Isto elimina tudo o que este dispositivo mantém para {account}. O seu correio no servidor mantém-se.",
+    "unsent_changes": "{count, plural, one {# alteração que não chegou ao servidor será perdida.} other {# alterações que não chegaram ao servidor serão perdidas.}}",
+    "clear_needs_connection": "É preciso ter ligação, porque tudo é transferido novamente.",
+    "usage_label": "O que este dispositivo mantém",
+    "pin_not_ready": "Este ficheiro ainda não está na lista deste dispositivo. Tente novamente dentro de instantes."
   },
   "offlineDrafts": {
     "title": "Rascunhos neste dispositivo",

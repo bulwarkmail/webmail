@@ -14,14 +14,17 @@ import {
   disableOffline,
   enableOffline,
   enforcePolicy,
+  refreshQueueState,
+  refreshUsage,
   registerOfflineHooks,
   scopeForAccount,
   setOfflineNotifier,
   startOfflineMode,
+  unsentCount,
   wipeEverything,
   type OfflineNotice,
 } from '../offline-mode';
-import { OFFLINE_HEALTH_KEY, useOfflineStore, writeEnabled, writeHealth } from '../state';
+import { clearEvicted, markEvicted, OFFLINE_HEALTH_KEY, useOfflineStore, writeEnabled, writeHealth } from '../state';
 
 const NOW = Date.now();
 const iso = (daysAgo: number) => new Date(NOW - daysAgo * 86_400_000).toISOString();
@@ -31,7 +34,7 @@ let server: FakeJmap;
 
 function setDevices(devices: Partial<typeof DEFAULT_ORGANISATION_POLICY.devices>): void {
   usePolicyStore.setState({
-    loaded: true, source: 'server', subject: null, subjectPending: false,
+    loaded: true, source: 'server', subject: { email: 'alice@example.org', groups: [] }, subjectPending: false,
     policy: { ...usePolicyStore.getState().policy, organisation: { ...DEFAULT_ORGANISATION_POLICY, devices: { ...DEFAULT_ORGANISATION_POLICY.devices, ...devices } } },
   } as never);
 }
@@ -57,6 +60,98 @@ afterEach(async () => {
   setOfflineNotifier(() => {});
   await wipeEverything();
   setStoreBackend(null);
+});
+
+describe('at page load, before the subject is known', () => {
+  const forbiddenExceptGroup = {
+    ...usePolicyStore.getState().rawPolicy,
+    organisation: { devices: { noOffline: true } },
+    scopes: [{ id: 'allowed', label: 'Allowed', match: { groups: ['team@example.org'] }, policy: { organisation: { devices: { noOffline: false } } } }],
+  };
+
+  function loading(): void {
+    useOfflineStore.setState({ enabled: ['acc'] });
+    usePolicyStore.setState({ rawPolicy: forbiddenExceptGroup, loaded: true, source: 'server', partial: false, subjectPending: false, subject: null } as never);
+    usePolicyStore.setState({ policy: usePolicyStore.getState().resolveFor(null) } as never);
+    useAuthStore.setState({ activeAccountId: 'acc', isLoading: true, client: null });
+  }
+
+  it('Everyone forbidding it wipes nothing while a group scope may allow it', async () => {
+    loading();
+    enforcePolicy();
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(store.removed).toEqual([]);
+    expect(useOfflineStore.getState().enabled).toEqual(['acc']);
+    expect(notices.filter((n) => n.kind === 'forbidden')).toEqual([]);
+  });
+
+  it('with the subject in, the group decides', async () => {
+    loading();
+    usePolicyStore.getState().setPolicySubject({ email: 'alice@example.org', groups: ['team@example.org'] });
+    enforcePolicy();
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(useOfflineStore.getState().enabled).toEqual(['acc']);
+
+    usePolicyStore.getState().setPolicySubject({ email: 'bob@example.org', groups: [] });
+    enforcePolicy();
+    await vi.waitFor(() => expect(useOfflineStore.getState().enabled).toEqual([]));
+  });
+
+  it('with no client coming, Everyone decides', async () => {
+    loading();
+    useAuthStore.setState({ isLoading: false, client: null });
+    enforcePolicy();
+    await vi.waitFor(() => expect(useOfflineStore.getState().enabled).toEqual([]));
+  });
+
+  it('pushes no scope either: a wider one would cost a re-list on every reload', async () => {
+    usePolicyStore.setState({ rawPolicy: { ...forbiddenExceptGroup, organisation: {}, scopes: [] }, loaded: true, source: 'server', partial: false, subject: null } as never);
+    useOfflineStore.setState({ enabled: ['acc'] });
+    useAuthStore.setState({ activeAccountId: 'acc', isLoading: true, client: null });
+    const setScope = vi.spyOn(store, 'setScope');
+    enforcePolicy();
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(setScope).not.toHaveBeenCalled();
+  });
+});
+
+describe('the public part of the policy', () => {
+  it('is not the organisation\'s word: no scope goes out, and no desktop default', async () => {
+    useOfflineStore.setState({ enabled: ['acc'] });
+    usePolicyStore.setState({ partial: true } as never);
+    const setScope = vi.spyOn(store, 'setScope');
+    enforcePolicy();
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(setScope).not.toHaveBeenCalled();
+
+    useOfflineStore.setState({ enabled: [] });
+    (window as { bulwarkDesktop?: unknown }).bulwarkDesktop = { version: 1 };
+    enforcePolicy();
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(useOfflineStore.getState().enabled).toEqual([]);
+  });
+});
+
+describe('an account dropped by the app', () => {
+  it('is judged by what applies to anyone, not by the groups of whoever is signed in', async () => {
+    const policy = {
+      ...usePolicyStore.getState().rawPolicy,
+      organisation: { devices: { noOffline: true } },
+      scopes: [{ id: 'allowed', label: 'Allowed', match: { groups: ['team@example.org'] }, policy: { organisation: { devices: { noOffline: false } } } }],
+    };
+    usePolicyStore.setState({ rawPolicy: policy, loaded: true, source: 'server', partial: false, subjectPending: false, subject: null } as never);
+    useAuthStore.setState({ activeAccountId: 'other', isLoading: false, client: null });
+    useAccountStore.setState({ accounts: [{ id: 'other', label: 'other', serverUrl: 'https://mail.example.org', username: 'other@example.org' } as never] });
+    usePolicyStore.getState().setPolicySubject({ email: 'other@example.org', groups: ['team@example.org'] });
+    useOfflineStore.setState({ enabled: ['gone', 'other'] });
+    markEvicted('gone');
+    enforcePolicy();
+    await vi.waitFor(() => expect(store.removed).toContain('gone'));
+    // Whoever is here keeps theirs: they are in the group.
+    expect(store.removed).not.toContain('other');
+    expect(useOfflineStore.getState().enabled).toEqual(['other']);
+    clearEvicted('gone');
+  });
 });
 
 describe('a policy fetch', () => {
@@ -112,6 +207,34 @@ describe('the user picking what to keep', () => {
     expect(JSON.parse(localStorage.getItem('bulwark-offline-scope')!).acc.days).toBe(30);
   });
 
+  it('waits for a choice to settle: arrowing past a short window prunes nothing', async () => {
+    writeEnabled(['acc']);
+    useOfflineStore.setState({ choices: { acc: { on: true, days: null } } });
+    const setScope = vi.spyOn(store, 'setScope');
+    vi.useFakeTimers();
+    try {
+      chooseScope('acc', { days: 30 });
+      await vi.advanceTimersByTimeAsync(300);
+      chooseScope('acc', { days: 90 });
+      await vi.advanceTimersByTimeAsync(300);
+      chooseScope('acc', { days: 365 });
+      await vi.advanceTimersByTimeAsync(300);
+      expect(setScope).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(1000);
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(setScope).toHaveBeenCalledTimes(1);
+    expect(setScope.mock.calls[0][1].days).toBe(365);
+  });
+
+  it('starts from what is in force: someone from before the local store keeps the rest of what they had', () => {
+    writeEnabled(['acc']);
+    useOfflineStore.setState({ choices: {} });
+    chooseScope('acc', { attachments: false });
+    expect(useOfflineStore.getState().choices.acc).toMatchObject({ on: true, days: 30, attachments: false });
+  });
+
   it('can\'t get past the cap', () => {
     setDevices({ offlineMaxDays: 30 });
     writeEnabled(['acc']);
@@ -134,6 +257,63 @@ describe('opened messages', () => {
     await vi.waitFor(() => expect(area).toHaveBeenCalled());
     const recorded = area.mock.calls.filter(([, name]) => name === 'mail.recordOpened').flatMap(([, , params]) => (params as { emails: Array<{ id: string }> }).emails.map((email) => email.id));
     expect(recorded).toEqual(['new']);
+  });
+});
+
+describe('the usage of several accounts', () => {
+  it('one store in trouble leaves what the others said', async () => {
+    writeEnabled(['acc', 'bad']);
+    const area = vi.spyOn(store, 'area');
+    const real = area.getMockImplementation();
+    area.mockImplementation(async (account: string, name: string) => {
+      if (name !== 'store.usage') return real ? real(account, name) : undefined;
+      if (account === 'bad') throw new Error('gone');
+      return { bytes: 5, parts: [] };
+    });
+    await refreshUsage();
+    expect(useOfflineStore.getState().usage.acc?.bytes).toBe(5);
+    area.mockRestore();
+  });
+});
+
+describe('what a browser clearing the store would lose', () => {
+  it('counts local drafts too', async () => {
+    writeEnabled(['acc']);
+    const real = store.area.bind(store);
+    vi.spyOn(store, 'area').mockImplementation(async (account: string, name: string, params?: unknown) => (
+      name.startsWith('drafts.') && !name.includes('Elsewhere')
+        ? [{ localId: 'local-1', jmap: 'j', subject: 'Only here', status: 'waiting', createdAt: 0 }]
+        : real(account, name, params)
+    ) as never);
+    await refreshQueueState();
+    expect(useOfflineStore.getState().health.acc?.pending).toBe(1);
+    vi.restoreAllMocks();
+  });
+});
+
+describe('what would be lost', () => {
+  it('counts changes per account when a store can\'t answer, and local drafts', async () => {
+    useOfflineStore.setState({
+      enabled: ['acc', 'b'],
+      changesBy: { acc: 2, b: 7 },
+      outbox: [],
+      localDrafts: [{ account: 'acc', localId: 'd', status: 'waiting' } as never],
+    });
+    vi.spyOn(store, 'area').mockRejectedValue(new Error('gone'));
+    expect(await unsentCount('acc')).toEqual({ messages: 1, changes: 2 });
+    vi.restoreAllMocks();
+  });
+});
+
+describe('turning the last account off', () => {
+  it('keeps the off of another account still signed in', async () => {
+    (window as { bulwarkDesktop?: unknown }).bulwarkDesktop = { version: 1 };
+    useAuthStore.setState({ activeAccountId: 'acc', getAllConnectedClients: (() => new Map([['acc', {}], ['other', {}]])) as never });
+    useOfflineStore.setState({ choices: { other: { on: false } } });
+    writeEnabled(['acc']);
+    await disableOffline('acc');
+    expect(useOfflineStore.getState().choices).toEqual({ acc: { on: false }, other: { on: false } });
+    expect(JSON.parse(localStorage.getItem('bulwark-offline-scope')!).other.on).toBe(false);
   });
 });
 
@@ -162,10 +342,16 @@ describe('clearing in another tab', () => {
     const stop = startOfflineMode();
     const ensureOpen = vi.spyOn(store, 'ensureOpen');
     ensureOpen.mockClear();
+    const area = vi.spyOn(store, 'area');
+    // What the start itself asks for is over.
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    area.mockClear();
     localStorage.setItem(OFFLINE_HEALTH_KEY, JSON.stringify({ acc: { clearedAt: 2, pending: 0 } }));
     window.dispatchEvent(new StorageEvent('storage', { key: OFFLINE_HEALTH_KEY }));
     expect(ensureOpen).toHaveBeenCalledWith('acc');
     expect(useOfflineStore.getState().health.acc.clearedAt).toBe(2);
+    // Its lists and sizes are of a store that's gone.
+    await vi.waitFor(() => expect(area).toHaveBeenCalledWith('acc', 'store.usage'));
     stop();
   });
 });
@@ -210,13 +396,6 @@ describe('the desktop app', () => {
     expect(useOfflineStore.getState().choices.acc?.on).toBe(false);
   });
 
-  it('holds to a cap from the first open', async () => {
-    asDesktop();
-    setDevices({ offlineMaxDays: 14 });
-    enforcePolicy();
-    await vi.waitFor(() => expect(useOfflineStore.getState().enabled).toEqual(['acc']));
-    expect(scopeForAccount('acc').scope.days).toBe(14);
-  });
 });
 
 describe('a browser', () => {

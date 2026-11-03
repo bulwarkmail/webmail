@@ -84,6 +84,11 @@ export function devicesForAccount(subject: DeviceSubject): DevicePolicy {
   return devicesOf(policy);
 }
 
+/** What applies to anyone, with no account's groups: for data of an account nobody here is signed in to. */
+export function devicesForNoOne(): DevicePolicy {
+  return devicesOf(usePolicyStore.getState().resolveFor(null));
+}
+
 /** Local ids of every account signed in here, the active one included. */
 export function signedInAccountIds(): string[] {
   const auth = useAuthStore.getState();

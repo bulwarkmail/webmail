@@ -5764,7 +5764,7 @@
     "server_not_answering": "A levelezőszerver nem válaszol. Próbálja újra egy pillanat múlva."
   },
   "offlineStorage": {
-    "keep_description": "Megtartja a leveleit, a naptárát, a névjegyeit és a kiválasztott fájlokat, titkosítva ebben a böngészőben. Offline olvashat, megjelölhet és áthelyezhet leveleket, a megírt levelek pedig a postázandók között várnak. Kijelentkezéskor minden törlődik.",
+    "keep_description": "Megtartja a leveleit, a naptárát, a névjegyeit és a kiválasztott fájlokat, titkosítva ezen az eszközön. Offline olvashat, megjelölhet és áthelyezhet leveleket, a megírt levelek pedig a postázandók között várnak. Kijelentkezéskor minden törlődik.",
     "window_label": "Mennyi időre visszamenőleg maradjon meg",
     "window_description": "A régebbi levelek és naptáresemények lekerülnek erről az eszközről. Online állapotban továbbra is megnyithatja őket.",
     "window_days": "{days, plural, one {# nap} other {# nap}}",
@@ -5792,7 +5792,7 @@
     "clear_description": "Törli mindazt, amit ez az eszköz ehhez a fiókhoz megtart, majd újra letölti.",
     "clear_button": "Kiürítés…",
     "clear_confirm_title": "Kiüríti a fiókot ezen az eszközön?",
-    "clear_confirm_message": "Minden, amit ez az eszköz ehhez a fiókhoz megtart, törlődik és újra letöltődik. A szerveren lévő levelei megmaradnak.",
+    "clear_confirm_message": "Minden, amit ez az eszköz a(z) {account} fiókhoz megtart, törlődik és újra letöltődik. A szerveren lévő levelei megmaradnak.",
     "clear_confirm_unsent": "{count, plural, one {# el nem küldött levél elvész.} other {# el nem küldött levél elvész.}}",
     "clear_confirm": "Kiürítés",
     "persist_refused": "Ez a böngésző törölheti a megtartott leveleket, ha fogy a hely. Az alkalmazás telepítése ezt általában megakadályozza.",
@@ -5816,7 +5816,13 @@
     "kept_error_download": "Nem sikerült letölteni",
     "keep_offline": "Megtartás offline",
     "unpin": "Megtartás offline megszüntetése",
-    "unpin_label": "{name} offline megtartásának megszüntetése"
+    "unpin_label": "{name} offline megtartásának megszüntetése",
+    "warning_desktop": "Aki használhatja ennek a számítógépnek a felhasználói fiókját, elolvashatja ezeket a leveleket. Használjon lemeztitkosítást.",
+    "off_confirm_text": "Ez törli mindazt, amit ez az eszköz a(z) {account} fiókhoz megtart. A szerveren lévő levelei megmaradnak.",
+    "unsent_changes": "{count, plural, one {# módosítás, amely nem jutott el a szerverre, elvész.} other {# módosítás, amely nem jutott el a szerverre, elvész.}}",
+    "clear_needs_connection": "Ehhez kapcsolat kell, mert minden újra letöltődik.",
+    "usage_label": "Mit tart meg ez az eszköz",
+    "pin_not_ready": "Ez a fájl még nincs rajta az eszköz listáján. Próbálja újra egy pillanat múlva."
   },
   "offlineDrafts": {
     "title": "Piszkozatok ezen az eszközön",

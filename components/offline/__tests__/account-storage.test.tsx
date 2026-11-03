@@ -4,6 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const offline = vi.hoisted(() => ({
   clearAccount: vi.fn(async () => {}),
+  disableOffline: vi.fn(async () => {}),
+  unsentCount: vi.fn(async () => ({ messages: 0, changes: 0 })),
   chooseScope: vi.fn(),
   requestPersistence: vi.fn(async () => 'refused'),
   dismissAreaConflict: vi.fn(async () => {}),
@@ -11,6 +13,8 @@ const offline = vi.hoisted(() => ({
 vi.mock('@/lib/offline/offline-mode', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/offline/offline-mode')>()),
   clearAccount: offline.clearAccount,
+  disableOffline: offline.disableOffline,
+  unsentCount: offline.unsentCount,
   chooseScope: offline.chooseScope,
   requestPersistence: offline.requestPersistence,
   dismissAreaConflict: offline.dismissAreaConflict,
@@ -21,6 +25,7 @@ vi.mock('@/lib/offline/offline-mode', async (importOriginal) => ({
 import { OfflineSettings } from '../offline-settings';
 import { OfflineBanner } from '../offline-banner';
 import { useOfflineStore } from '@/lib/offline/state';
+import { useAccountStore } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { DEFAULT_ORGANISATION_POLICY } from '@/lib/admin/organisation-policy';
@@ -37,7 +42,7 @@ const area = vi.fn(async (_account: string, name: string) => (name === 'files.ke
 
 function setDevices(devices: Partial<typeof DEFAULT_ORGANISATION_POLICY.devices>) {
   usePolicyStore.setState({
-    loaded: true, source: 'server', subject: null,
+    loaded: true, source: 'server', subject: { email: 'alice@example.org', groups: [] },
     policy: { ...usePolicyStore.getState().policy, organisation: { ...DEFAULT_ORGANISATION_POLICY, devices: { ...DEFAULT_ORGANISATION_POLICY.devices, ...devices } } },
   } as never);
 }
@@ -140,6 +145,15 @@ describe('what it takes', () => {
     expect(screen.getByTestId('offline-status').textContent).toContain('usage_updated');
   });
 
+  it('announces the phase, not every number', () => {
+    const now = Date.now();
+    useOfflineStore.setState({ syncing: ['acc'], progress: { acc: { area: 'mail', phase: 'bodies', done: 500, total: 5000, startedAt: now, startedDone: 0, at: now } } });
+    render(<OfflineSettings />);
+    expect(screen.getByTestId('offline-progress-phase').textContent).toBe('progress_bodies');
+    expect(screen.getByTestId('offline-progress-phase').getAttribute('role')).toBe('status');
+    expect(screen.getByTestId('offline-progress').querySelectorAll('[aria-live]')).toHaveLength(1);
+  });
+
   it('shows a large sync going on, with the time left once it can tell', () => {
     const now = Date.now();
     useOfflineStore.setState({
@@ -163,14 +177,55 @@ describe('what it takes', () => {
 });
 
 describe('clearing an account', () => {
-  it('asks first, naming unsent mail', () => {
-    useOfflineStore.setState({ outbox: [{ id: 1, account: 'acc', createdAt: 1, subject: 'Hi', to: [], status: 'waiting' }] });
+  it('asks first, reading then what would be lost: messages and changes', async () => {
+    offline.unsentCount.mockResolvedValue({ messages: 1, changes: 3 });
     render(<OfflineSettings />);
     fireEvent.click(screen.getByTestId('offline-clear'));
     expect(offline.clearAccount).not.toHaveBeenCalled();
+    expect(await screen.findByText(/unsent_changes/)).toBeInTheDocument();
     expect(screen.getByText(/clear_confirm_unsent/)).toBeInTheDocument();
+    expect(offline.unsentCount).toHaveBeenCalledWith('acc');
     fireEvent.click(screen.getByRole('button', { name: 'clear_confirm' }));
     expect(offline.clearAccount).toHaveBeenCalledWith('acc');
+  });
+
+  it('says nothing is lost when nothing is', async () => {
+    offline.unsentCount.mockResolvedValue({ messages: 0, changes: 0 });
+    render(<OfflineSettings />);
+    fireEvent.click(screen.getByTestId('offline-clear'));
+    expect(await screen.findByText('clear_confirm_message')).toBeInTheDocument();
+    await waitFor(() => expect(offline.unsentCount).toHaveBeenCalled());
+    expect(screen.queryByText(/unsent_changes/)).toBeNull();
+  });
+
+  it('can\'t be asked for without a connection, since it downloads everything again', () => {
+    useOfflineStore.setState({ browserOffline: true });
+    render(<OfflineSettings />);
+    expect(screen.getByTestId('offline-clear')).toBeDisabled();
+    expect(screen.getByText('clear_needs_connection')).toBeInTheDocument();
+  });
+
+  it('nor after a start from the local copy', () => {
+    useOfflineStore.setState({ startedOffline: true });
+    render(<OfflineSettings />);
+    expect(screen.getByTestId('offline-clear')).toBeDisabled();
+  });
+});
+
+describe('the off switch', () => {
+  it('asks when only changes wait, naming them', async () => {
+    offline.unsentCount.mockResolvedValue({ messages: 0, changes: 2 });
+    render(<OfflineSettings />);
+    fireEvent.click(screen.getByTestId('offline-switch'));
+    expect(await screen.findByText(/unsent_changes/)).toBeInTheDocument();
+    expect(offline.disableOffline).not.toHaveBeenCalled();
+  });
+
+  it('asks nothing when nothing waits', async () => {
+    offline.unsentCount.mockResolvedValue({ messages: 0, changes: 0 });
+    render(<OfflineSettings />);
+    fireEvent.click(screen.getByTestId('offline-switch'));
+    await waitFor(() => expect(offline.disableOffline).toHaveBeenCalledWith('acc'));
   });
 });
 
@@ -239,6 +294,30 @@ describe('everything that did not go through', () => {
   });
 });
 
+describe('for screen readers', () => {
+  it('names each account\'s group when there are several, and the usage list', () => {
+    useAuthStore.setState({ activeAccountId: 'acc', getAllConnectedClients: (() => new Map([['acc', {}], ['b', {}]])) as never });
+    useAccountStore.setState({ accounts: [{ id: 'acc', label: 'A', email: 'a@example.org' }, { id: 'b', label: 'B', email: 'b@example.org' }] as never });
+    render(<OfflineSettings />);
+    expect(screen.getByRole('group', { name: 'a@example.org' })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'b@example.org' })).toBeInTheDocument();
+    expect(screen.getByTestId('offline-usage').getAttribute('aria-label')).toBe('usage_label');
+    useAccountStore.setState({ accounts: [] });
+  });
+});
+
+describe('in the desktop app', () => {
+  afterEach(() => { delete (window as { bulwarkDesktop?: unknown }).bulwarkDesktop; });
+
+  it('says what the risk is there, and only there', () => {
+    render(<OfflineSettings />);
+    expect(screen.queryByTestId('offline-desktop-warning')).toBeNull();
+    (window as { bulwarkDesktop?: unknown }).bulwarkDesktop = { version: 1 };
+    render(<OfflineSettings />);
+    expect(screen.getByTestId('offline-desktop-warning').textContent).toBe('warning_desktop');
+  });
+});
+
 describe('files kept offline', () => {
   it('lists the pinned ones with their state, and can let go of one', async () => {
     render(<OfflineSettings />);
@@ -249,6 +328,15 @@ describe('files kept offline', () => {
     expect(screen.queryByText('Opened.txt')).toBeNull();
     fireEvent.click(within(rows[0]).getByRole('button', { name: 'unpin_label' }));
     await waitFor(() => expect(area).toHaveBeenCalledWith('acc', 'files.unpin', expect.objectContaining({ jmap: 'j', id: 'f1' })));
+  });
+
+  it('an unpin the store refuses leaves the list as it is, with no error thrown about', async () => {
+    render(<OfflineSettings />);
+    const rows = await screen.findAllByTestId('offline-kept-file');
+    area.mockImplementationOnce(async () => { throw new Error('gone'); });
+    fireEvent.click(within(rows[0]).getByRole('button', { name: 'unpin_label' }));
+    await waitFor(() => expect(area).toHaveBeenCalledWith('acc', 'files.unpin', expect.anything()));
+    expect(await screen.findAllByTestId('offline-kept-file')).toHaveLength(2);
   });
 
   it('a node of another account goes by that account', () => {

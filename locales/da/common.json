@@ -5764,7 +5764,7 @@
     "server_not_answering": "Mailserveren svarer ikke. Prøv igen om lidt."
   },
   "offlineStorage": {
-    "keep_description": "Beholder din mail, kalender, dine kontakter og de filer, du vælger, krypteret i denne browser. Offline kan du læse, markere og flytte mail, og det, du skriver, venter i udbakken. Når du logger ud, fjernes det hele.",
+    "keep_description": "Beholder din mail, kalender, dine kontakter og de filer, du vælger, krypteret på denne enhed. Offline kan du læse, markere og flytte mail, og det, du skriver, venter i udbakken. Når du logger ud, fjernes det hele.",
     "window_label": "Hvor langt tilbage der beholdes",
     "window_description": "Ældre mail og kalenderbegivenheder forlader denne enhed. Du kan stadig åbne dem, når du har forbindelse.",
     "window_days": "{days, plural, one {# dag} other {# dage}}",
@@ -5792,7 +5792,7 @@
     "clear_description": "Sletter alt, denne enhed beholder for denne konto, og henter det derefter igen.",
     "clear_button": "Ryd…",
     "clear_confirm_title": "Ryd denne konto på denne enhed?",
-    "clear_confirm_message": "Alt, denne enhed beholder for denne konto, slettes og hentes igen. Din mail på serveren bliver liggende.",
+    "clear_confirm_message": "Alt, denne enhed beholder for {account}, slettes og hentes igen. Din mail på serveren bliver liggende.",
     "clear_confirm_unsent": "{count, plural, one {# usendt besked går tabt.} other {# usendte beskeder går tabt.}}",
     "clear_confirm": "Ryd",
     "persist_refused": "Denne browser kan slette den beholdte mail, når pladsen bliver knap. Det hjælper normalt at installere appen.",
@@ -5816,7 +5816,13 @@
     "kept_error_download": "Kunne ikke hentes",
     "keep_offline": "Behold offline",
     "unpin": "Behold ikke længere offline",
-    "unpin_label": "Behold ikke {name} offline længere"
+    "unpin_label": "Behold ikke {name} offline længere",
+    "warning_desktop": "Alle, der kan bruge denne computers brugerkonto, kan læse denne mail. Brug diskkryptering.",
+    "off_confirm_text": "Det sletter alt, denne enhed beholder for {account}. Din mail på serveren bliver liggende.",
+    "unsent_changes": "{count, plural, one {# ændring, der ikke er nået frem til serveren, går tabt.} other {# ændringer, der ikke er nået frem til serveren, går tabt.}}",
+    "clear_needs_connection": "Det kræver en forbindelse, fordi alt hentes igen.",
+    "usage_label": "Det her beholder denne enhed",
+    "pin_not_ready": "Denne fil er ikke på denne enheds liste endnu. Prøv igen om lidt."
   },
   "offlineDrafts": {
     "title": "Kladder på denne enhed",

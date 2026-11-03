@@ -5764,7 +5764,7 @@
     "server_not_answering": "The mail server isn't answering. Try again in a moment."
   },
   "offlineStorage": {
-    "keep_description": "Keeps your mail, calendar, contacts and chosen files encrypted in this browser. Offline you can read, flag and move mail, and what you write waits in the outbox. Signing out removes all of it.",
+    "keep_description": "Keeps your mail, calendar, contacts and chosen files encrypted on this device. Offline you can read, flag and move mail, and what you write waits in the outbox. Signing out removes all of it.",
     "window_label": "How far back to keep",
     "window_description": "Older mail and calendar events leave this device. You can still open them when you have a connection.",
     "window_days": "{days, plural, one {# day} other {# days}}",
@@ -5792,8 +5792,8 @@
     "clear_description": "Deletes everything this device keeps for this account, then downloads it again.",
     "clear_button": "Clear…",
     "clear_confirm_title": "Clear this account on this device?",
-    "clear_confirm_message": "Everything this device keeps for this account is deleted and downloaded again. Your mail on the server stays.",
-    "clear_confirm_unsent": "{count, plural, one {# unsent message is lost.} other {# unsent messages are lost.}}",
+    "clear_confirm_message": "Everything this device keeps for {account} is deleted and downloaded again. Your mail on the server stays.",
+    "clear_confirm_unsent": "{count, plural, one {# message that was not sent is lost.} other {# messages that were not sent are lost.}}",
     "clear_confirm": "Clear",
     "persist_refused": "This browser may delete the kept mail when space runs low. Installing the app usually stops that.",
     "persist_retry": "Ask again",
@@ -5816,7 +5816,13 @@
     "kept_error_download": "Couldn't be downloaded",
     "keep_offline": "Keep offline",
     "unpin": "Stop keeping offline",
-    "unpin_label": "Stop keeping {name} offline"
+    "unpin_label": "Stop keeping {name} offline",
+    "warning_desktop": "Anyone who can use this computer account can read this mail. Use disk encryption.",
+    "off_confirm_text": "This deletes everything this device keeps for {account}. Your mail on the server stays.",
+    "unsent_changes": "{count, plural, one {# change that hasn't reached the server is lost.} other {# changes that haven't reached the server are lost.}}",
+    "clear_needs_connection": "This needs a connection, because everything is downloaded again.",
+    "usage_label": "What this device keeps",
+    "pin_not_ready": "This file isn't on this device's list yet. Try again in a moment."
   },
   "offlineDrafts": {
     "title": "Drafts on this device",

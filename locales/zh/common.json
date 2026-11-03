@@ -5764,7 +5764,7 @@
     "server_not_answering": "邮件服务器没有响应。请稍后再试。"
   },
   "offlineStorage": {
-    "keep_description": "在此浏览器中加密保留你的邮件、日历、联系人和你选择的文件。离线时可以阅读、标记和移动邮件，写好的邮件会在发件箱中等待。退出登录时会全部删除。",
+    "keep_description": "在此设备上加密保留你的邮件、日历、联系人和你选择的文件。离线时可以阅读、标记和移动邮件，写好的邮件会在发件箱中等待。退出登录时会全部删除。",
     "window_label": "保留多久以内的内容",
     "window_description": "更早的邮件和日历事件会从此设备中移除。联网时你仍可以打开它们。",
     "window_days": "{days, plural, other {# 天}}",
@@ -5792,7 +5792,7 @@
     "clear_description": "删除此设备为该账户保留的全部内容，然后重新下载。",
     "clear_button": "清除…",
     "clear_confirm_title": "在此设备上清除该账户？",
-    "clear_confirm_message": "此设备为该账户保留的全部内容会被删除并重新下载。服务器上的邮件不受影响。",
+    "clear_confirm_message": "此设备为 {account} 保留的全部内容会被删除并重新下载。服务器上的邮件不受影响。",
     "clear_confirm_unsent": "{count, plural, other {# 封未发送的邮件将丢失。}}",
     "clear_confirm": "清除",
     "persist_refused": "存储空间不足时，此浏览器可能会删除保留的邮件。安装应用通常可以避免这种情况。",
@@ -5816,7 +5816,13 @@
     "kept_error_download": "无法下载",
     "keep_offline": "离线保留",
     "unpin": "不再离线保留",
-    "unpin_label": "不再离线保留 {name}"
+    "unpin_label": "不再离线保留 {name}",
+    "warning_desktop": "任何能使用这台电脑用户账户的人都可以阅读这些邮件。请使用磁盘加密。",
+    "off_confirm_text": "这会删除此设备为 {account} 保留的全部内容。服务器上的邮件不受影响。",
+    "unsent_changes": "{count, plural, other {# 项尚未到达服务器的更改将丢失。}}",
+    "clear_needs_connection": "需要联网，因为所有内容都会重新下载。",
+    "usage_label": "此设备保留的内容",
+    "pin_not_ready": "此文件还不在此设备的列表中。请稍后再试。"
   },
   "offlineDrafts": {
     "title": "此设备上的草稿",

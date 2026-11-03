@@ -50,7 +50,8 @@ export function useKeptFiles(account: string | null | undefined) {
 
   const unpin = useCallback(async (ref: { jmap: string; id: string }) => {
     if (!account) return;
-    await getStore().area(account, 'files.unpin', ref);
+    // The store being in trouble: the list says what's so.
+    await getStore().area(account, 'files.unpin', ref).catch(() => {});
     await read();
   }, [account, read]);
 

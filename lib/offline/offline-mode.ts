@@ -24,7 +24,7 @@
 
 import { IS_LITE } from '@/lib/lite';
 import { desktopJmapBase } from '@/lib/desktop/jmap-route';
-import { devicesForAccount, signedInAccountIds } from '@/lib/device-policy';
+import { devicesForAccount, devicesForNoOne, signedInAccountIds } from '@/lib/device-policy';
 import { accountSubjectPending, useAccountSubjects } from '@/lib/org/account-subjects';
 import { labelsPolicyFor } from '@/lib/outgoing/classification';
 import { getSendGuardSource, guardState, guardsSending } from '@/lib/plugin-send-guards';
@@ -160,9 +160,14 @@ export function offlineAllowed(account: string | null | undefined): boolean {
   return offlineSupported() && !devicesForAccount(account ?? null).noOffline;
 }
 
+/** A dropped account's data isn't judged by the groups of whoever is signed in now. */
+function policyOfKept(account: string) {
+  return isEvicted(account) ? devicesForNoOne() : devicesForAccount(account);
+}
+
 /** What this account keeps here: the organisation's policy over the user's choice over the platform's default. */
 export function scopeForAccount(account: string): EffectiveScope {
-  return effectiveScope(account, userChoiceFor(account), devicesForAccount(account), platformDefault());
+  return effectiveScope(account, userChoiceFor(account), policyOfKept(account), platformDefault());
 }
 
 /** "Keep mail on this device" is on for this account here, and allowed. */
@@ -192,6 +197,9 @@ function onlineClientFor(account: string) {
 }
 
 // ---- The store's way to this tab ----
+
+/** How long a tab that took over the store waits for the policy before going on as if it hadn't heard. */
+const OWNER_POLICY_WAIT_MS = 5_000;
 
 /** A full disk stays full: once in a while is enough to say so. */
 const STORAGE_NOTICE_MS = 30 * 60_000;
@@ -225,6 +233,13 @@ const storeHooks: StorePageHooks = {
     // Through the client: a 401 there runs its token renewal or re-auth.
     await client.requestNetworkOnly([['Core/echo', {}, '0']]);
     return client.getAuthHeader();
+  },
+  async ownerTaken() {
+    // This tab may have sat in the background: its policy can be old.
+    await Promise.race([
+      usePolicyStore.getState().fetchPolicy(),
+      new Promise((resolve) => setTimeout(resolve, OWNER_POLICY_WAIT_MS)),
+    ]);
   },
   onStoreLost(account) {
     // Whoever is here wasn't signed in to a dropped account: nothing to tell them.
@@ -617,14 +632,23 @@ export async function refreshQueueState(): Promise<void> {
     const unreadDrafts = shown.localDrafts.filter((row) => failed.includes(row.account));
     const accounts = visibleAccounts();
     const areas = await Promise.all(accounts.map(readAreaState));
-    useOfflineStore.setState({ outbox: [...unread, ...rows], pendingChanges: patches, conflicts, localDrafts: [...unreadDrafts, ...drafts], areaConflicts: areas.flatMap((area) => area.conflicts) });
+    const changesBy = Object.fromEntries(accounts.map((account, index) => [account, (patchesBy[account] ?? 0) + areas[index].pending]));
+    useOfflineStore.setState((s) => ({
+      outbox: [...unread, ...rows],
+      pendingChanges: patches,
+      conflicts,
+      localDrafts: [...unreadDrafts, ...drafts],
+      areaConflicts: areas.flatMap((area) => area.conflicts),
+      // An account that couldn't answer counts with what it last said.
+      changesBy: { ...changesBy, ...Object.fromEntries(failed.map((account) => [account, s.changesBy[account] ?? 0])) },
+    }));
     if (rows.some((row) => row.status === 'sending')) checkStaleSendsLater();
     // What a browser clearing the store would lose. Counted here, and the
     // count is all that's kept outside the store. A store that couldn't be
     // read keeps its last count.
     accounts.forEach((account, index) => {
       if (failed.includes(account)) return;
-      const sends = rows.filter((row) => row.account === account).length;
+      const sends = rows.filter((row) => row.account === account).length + drafts.filter((row) => row.account === account).length;
       writeHealth(account, { pending: sends + (patchesBy[account] ?? 0) + areas[index].pending });
     });
   } catch {
@@ -680,10 +704,15 @@ export async function refreshUsage(): Promise<void> {
   const accounts = visibleAccounts();
   if (!offlineSupported() || accounts.length === 0) return;
   try {
-    const usage = await Promise.all(accounts.map((account) => getStore().area<StoreUsage>(account, 'store.usage')));
-    useOfflineStore.setState({
-      usageBytes: usage.reduce((sum, { bytes }) => sum + bytes, 0),
-      usage: Object.fromEntries(accounts.map((account, index) => [account, usage[index]])),
+    const settled = await Promise.allSettled(accounts.map((account) => getStore().area<StoreUsage>(account, 'store.usage')));
+    // One account's store being in trouble says nothing about the others'.
+    useOfflineStore.setState((s) => {
+      const usage = { ...s.usage };
+      accounts.forEach((account, index) => {
+        const result = settled[index];
+        if (result.status === 'fulfilled' && result.value) usage[account] = result.value;
+      });
+      return { usage, usageBytes: accounts.reduce((sum, account) => sum + (usage[account]?.bytes ?? 0), 0) };
     });
   } catch {
     /* deleted meanwhile */
@@ -889,9 +918,20 @@ export async function clearAccount(account: string): Promise<void> {
 
 /** The user changed what an account keeps. Written first, so a reload holds to it. */
 export function chooseScope(account: string, patch: UserChoice): void {
-  writeChoice(account, patch);
-  pushScope(account);
+  // Over what's in force: someone from before the local store has a choice nobody wrote down.
+  writeChoice(account, { ...userChoiceFor(account), ...patch });
+  // Arrowing through a list passes shorter windows on the way: those prune.
+  const waiting = scopeTimers.get(account);
+  if (waiting) clearTimeout(waiting);
+  scopeTimers.set(account, setTimeout(() => {
+    scopeTimers.delete(account);
+    pushScope(account);
+  }, SCOPE_SETTLE_MS));
 }
+
+/** How long a choice has to stay before the store acts on it. */
+const SCOPE_SETTLE_MS = 800;
+const scopeTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
 /** The store's scope follows the page's answer. Nothing happens in the store if it's the same as before. */
 function pushScope(account: string): void {
@@ -968,7 +1008,7 @@ const UNSENT_READ_MS = 2_000;
  */
 export async function unsentCount(scope: string, waitMs = UNSENT_READ_MS): Promise<{ messages: number; changes: number }> {
   const shown = useOfflineStore.getState();
-  const known = { messages: [...shown.outbox, ...shown.localDrafts].filter((row) => scope === 'all' || row.account === scope).length, changes: shown.pendingChanges };
+  const known = { messages: [...shown.outbox, ...shown.localDrafts].filter((row) => scope === 'all' || row.account === scope).length, changes: scope === 'all' ? Object.values(shown.changesBy).reduce((sum, count) => sum + count, 0) : shown.changesBy[scope] ?? 0 };
   const accounts = (scope === 'all' ? visibleAccounts() : [scope]).filter((account) => shown.enabled.includes(account));
   if (accounts.length === 0) return known;
   const pendingIn = (account: string, area: string) => getStore().area<number>(account, `${area}.pending`).catch(() => 0);
@@ -1038,7 +1078,8 @@ export async function wipeEverything(): Promise<void> {
   for (const timer of syncTimers.values()) clearTimeout(timer);
   syncTimers.clear();
   writeEnabled([]);
-  forgetAllAccountState();
+  // Turned off by hand and still signed in: that stays their word.
+  forgetAllAccountState(signedInAccountIds());
   getStore().stop();
   await purgeStoreFiles();
   try {
@@ -1056,8 +1097,9 @@ export async function wipeEverything(): Promise<void> {
 
 /** The organisation's word on this account, from the server or the last fetch. Defaults aren't its word. */
 function scopeDecided(account: string): boolean {
-  const { loaded, source } = usePolicyStore.getState();
-  return loaded && (source === 'server' || source === 'cache') && policyDecided(account);
+  const { loaded, source, partial } = usePolicyStore.getState();
+  // The public part a page gets before it's signed in has no caps and no scopes in it.
+  return loaded && !partial && (source === 'server' || source === 'cache') && policyDecided(account);
 }
 
 /** Whether the policy of an account is known well enough to decide on it. */
@@ -1065,7 +1107,13 @@ function policyDecided(account: string): boolean {
   // Dropped, with no groups to wait for: what applies to everyone reaches it.
   if (isEvicted(account)) return true;
   const auth = useAuthStore.getState();
-  if (account === auth.activeAccountId || !auth.activeAccountId) return !usePolicyStore.getState().subjectPending;
+  if (account === auth.activeAccountId || !auth.activeAccountId) {
+    const { subject, subjectPending } = usePolicyStore.getState();
+    if (subjectPending) return false;
+    // The active account's id is kept across a reload and its subject isn't: until
+    // it's there only Everyone's values show, and a group scope may say otherwise.
+    return !auth.activeAccountId || subject !== null || !(auth.isLoading || auth.client);
+  }
   // Another signed-in account: its groups have to be known first (a group
   // scope may forbid it); a signed-out one is wiped with its sign-out.
   if (!auth.getClientForAccount?.(account)) return false;
@@ -1080,7 +1128,7 @@ export function enforcePolicy(): void {
     if (!policyDecided(account)) continue;
     // What the organisation says, not whether this window can open the store:
     // a blocked store says nothing against the data in it.
-    if (devicesForAccount(account).noOffline) {
+    if (policyOfKept(account).noOffline) {
       // Whoever is here now wasn't signed in to a dropped account.
       const someoneElses = isEvicted(account);
       clearHandoffs();
@@ -1189,7 +1237,11 @@ export function startOfflineMode(): () => void {
       useOfflineStore.setState({ health });
       // Another tab cleared an account that stays on: if this tab owns the store, it opens the new one.
       for (const id of useOfflineStore.getState().enabled) {
-        if (health[id]?.clearedAt && health[id].clearedAt !== before[id]?.clearedAt) void getStore().ensureOpen(id).catch(() => {});
+        if (health[id]?.clearedAt && health[id].clearedAt !== before[id]?.clearedAt) {
+          void getStore().ensureOpen(id).catch(() => {});
+          void refreshQueueState();
+          void refreshUsage();
+        }
       }
     }
     if (event.key !== OFFLINE_ACCOUNTS_KEY && event.key !== null) return;

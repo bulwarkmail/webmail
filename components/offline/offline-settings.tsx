@@ -6,6 +6,7 @@ import { AlertTriangle } from '@/components/icons';
 import { SettingsSection } from '@/components/settings/settings-section';
 import { Button } from '@/components/ui/button';
 import { IS_LITE } from '@/lib/lite';
+import { isDesktopApp } from '@/lib/desktop/bridge';
 import { signedInAccountIds } from '@/lib/device-policy';
 import { offlineSupported, readPersistence, refreshUsage, requestPersistence, safariMayDelete } from '@/lib/offline/offline-mode';
 import { useOfflineStore } from '@/lib/offline/state';
@@ -61,7 +62,7 @@ export function OfflineSettings() {
         <>
           <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-200">
             <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            <p>{t('warning')}</p>
+            <p data-testid="offline-warning">{isDesktopApp() ? tStorage('warning_desktop') : t('warning')}</p>
           </div>
           {enabledCount > 0 && persist === 'refused' && (
             <div className="flex flex-col gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-200 sm:flex-row sm:items-center sm:justify-between" role="status" data-testid="offline-persist-refused">

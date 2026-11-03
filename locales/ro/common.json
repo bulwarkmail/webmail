@@ -5764,7 +5764,7 @@
     "server_not_answering": "Serverul de e-mail nu răspunde. Încercați din nou imediat."
   },
   "offlineStorage": {
-    "keep_description": "Păstrează e-mailurile, calendarul, contactele și fișierele alese de dvs., criptate în acest browser. Offline puteți citi, marca și muta e-mailuri, iar ce scrieți așteaptă în Mesaje de trimis. La deconectare se șterge totul.",
+    "keep_description": "Păstrează e-mailurile, calendarul, contactele și fișierele alese de dvs., criptate pe acest dispozitiv. Offline puteți citi, marca și muta e-mailuri, iar ce scrieți așteaptă în Mesaje de trimis. La deconectare se șterge totul.",
     "window_label": "Cât de departe în urmă se păstrează",
     "window_description": "E-mailurile și evenimentele mai vechi dispar de pe acest dispozitiv. Le puteți deschide în continuare când sunteți online.",
     "window_days": "{days, plural, one {# zi} few {# zile} other {# de zile}}",
@@ -5792,7 +5792,7 @@
     "clear_description": "Șterge tot ce păstrează acest dispozitiv pentru acest cont, apoi descarcă din nou.",
     "clear_button": "Golește…",
     "clear_confirm_title": "Goliți acest cont pe acest dispozitiv?",
-    "clear_confirm_message": "Tot ce păstrează acest dispozitiv pentru acest cont este șters și descărcat din nou. E-mailurile dvs. de pe server rămân.",
+    "clear_confirm_message": "Tot ce păstrează acest dispozitiv pentru {account} este șters și descărcat din nou. E-mailurile dvs. de pe server rămân.",
     "clear_confirm_unsent": "{count, plural, one {# mesaj netrimis se pierde.} few {# mesaje netrimise se pierd.} other {# de mesaje netrimise se pierd.}}",
     "clear_confirm": "Golește",
     "persist_refused": "Acest browser poate șterge e-mailurile păstrate când se termină spațiul. Instalarea aplicației de obicei previne asta.",
@@ -5816,7 +5816,13 @@
     "kept_error_download": "Nu a putut fi descărcat",
     "keep_offline": "Păstrează offline",
     "unpin": "Nu mai păstra offline",
-    "unpin_label": "Nu mai păstra {name} offline"
+    "unpin_label": "Nu mai păstra {name} offline",
+    "warning_desktop": "Oricine poate folosi contul de utilizator al acestui computer poate citi acest e-mail. Folosiți criptarea discului.",
+    "off_confirm_text": "Aceasta șterge tot ce păstrează acest dispozitiv pentru {account}. E-mailurile dvs. de pe server rămân.",
+    "unsent_changes": "{count, plural, one {# modificare care nu a ajuns pe server se pierde.} few {# modificări care nu au ajuns pe server se pierd.} other {# de modificări care nu au ajuns pe server se pierd.}}",
+    "clear_needs_connection": "Este nevoie de o conexiune, deoarece totul este descărcat din nou.",
+    "usage_label": "Ce păstrează acest dispozitiv",
+    "pin_not_ready": "Acest fișier nu se află încă în lista acestui dispozitiv. Încercați din nou peste un moment."
   },
   "offlineDrafts": {
     "title": "Ciorne pe acest dispozitiv",

@@ -5764,7 +5764,7 @@
     "server_not_answering": "Poštový server neodpovedá. Skúste to o chvíľu znova."
   },
   "offlineStorage": {
-    "keep_description": "Uchováva vašu poštu, kalendár, kontakty a vybrané súbory zašifrované v tomto prehliadači. Offline môžete poštu čítať, označovať a presúvať a to, čo napíšete, čaká na odoslanie. Odhlásenie všetko odstráni.",
+    "keep_description": "Uchováva vašu poštu, kalendár, kontakty a vybrané súbory zašifrované v tomto zariadení. Offline môžete poštu čítať, označovať a presúvať a to, čo napíšete, čaká na odoslanie. Odhlásenie všetko odstráni.",
     "window_label": "Ako dlho do minulosti uchovávať",
     "window_description": "Staršia pošta a udalosti z kalendára toto zariadenie opustia. Keď budete online, môžete ich stále otvoriť.",
     "window_days": "{days, plural, one {# deň} few {# dni} many {# dňa} other {# dní}}",
@@ -5792,7 +5792,7 @@
     "clear_description": "Zmaže všetko, čo toto zariadenie pre tento účet uchováva, a stiahne to znova.",
     "clear_button": "Vymazať…",
     "clear_confirm_title": "Vymazať tento účet na tomto zariadení?",
-    "clear_confirm_message": "Všetko, čo toto zariadenie pre tento účet uchováva, sa zmaže a stiahne znova. Vaša pošta na serveri zostane.",
+    "clear_confirm_message": "Všetko, čo toto zariadenie uchováva pre účet {account}, sa zmaže a stiahne znova. Vaša pošta na serveri zostane.",
     "clear_confirm_unsent": "{count, plural, one {# neodoslaná správa sa stratí.} few {# neodoslané správy sa stratia.} many {# neodoslanej správy sa stratí.} other {# neodoslaných správ sa stratí.}}",
     "clear_confirm": "Vymazať",
     "persist_refused": "Tento prehliadač môže uchovanú poštu zmazať, keď dôjde miesto. Inštalácia aplikácie tomu zvyčajne zabráni.",
@@ -5816,7 +5816,13 @@
     "kept_error_download": "Nepodarilo sa stiahnuť",
     "keep_offline": "Uchovať offline",
     "unpin": "Prestať uchovávať offline",
-    "unpin_label": "Prestať uchovávať {name} offline"
+    "unpin_label": "Prestať uchovávať {name} offline",
+    "warning_desktop": "Každý, kto môže používať používateľský účet na tomto počítači, môže túto poštu čítať. Použite šifrovanie disku.",
+    "off_confirm_text": "Tým sa zmaže všetko, čo toto zariadenie uchováva pre účet {account}. Vaša pošta na serveri zostane.",
+    "unsent_changes": "{count, plural, one {# zmena, ktorá sa nedostala na server, sa stratí.} few {# zmeny, ktoré sa nedostali na server, sa stratia.} many {# zmeny, ktorá sa nedostala na server, sa stratí.} other {# zmien, ktoré sa nedostali na server, sa stratí.}}",
+    "clear_needs_connection": "Je potrebné pripojenie, pretože sa všetko stiahne znova.",
+    "usage_label": "Čo toto zariadenie uchováva",
+    "pin_not_ready": "Tento súbor ešte nie je v zozname tohto zariadenia. Skúste to o chvíľu znova."
   },
   "offlineDrafts": {
     "title": "Koncepty v tomto zariadení",

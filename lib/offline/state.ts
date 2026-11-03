@@ -80,6 +80,8 @@ interface OfflineState {
   conflicts: ConflictEntry[];
   /** The same for calendar events and contacts. */
   areaConflicts: AreaConflict[];
+  /** Changes waiting, per account: mail's, the calendar's and the contacts'. */
+  changesBy: Record<string, number>;
   /** Drafts that are only on this device: on their way up, or refused by the server. */
   localDrafts: LocalDraftRow[];
   /** A local draft the user asked to open, for the mail page to pick up. */
@@ -139,6 +141,7 @@ export const useOfflineStore = create<OfflineState>()(() => ({
   pendingChanges: 0,
   conflicts: [],
   areaConflicts: [],
+  changesBy: {},
   localDrafts: [],
   draftToOpen: null,
   usageBytes: 0,
@@ -185,10 +188,14 @@ export function readStoredHealth(): Record<string, AccountHealth> {
   return readRecord<AccountHealth>(OFFLINE_HEALTH_KEY);
 }
 
-/** Nothing is kept for anyone any more. */
-export function forgetAllAccountState(): void {
-  useOfflineStore.setState({ choices: {}, health: {}, usage: {}, storageFull: {}, progress: {}, areaConflicts: [] });
-  writeRecord(OFFLINE_SCOPE_KEY, {});
+/** Nothing is kept for anyone any more. Those still signed in stay off if they turned it off. */
+export function forgetAllAccountState(signedIn: readonly string[] = []): void {
+  const off: Record<string, UserChoice> = {};
+  for (const [account, choice] of Object.entries(useOfflineStore.getState().choices)) {
+    if (choice.on === false && signedIn.includes(account)) off[account] = { on: false };
+  }
+  useOfflineStore.setState({ choices: off, health: {}, usage: {}, storageFull: {}, progress: {}, areaConflicts: [], changesBy: {} });
+  writeRecord(OFFLINE_SCOPE_KEY, off);
   writeRecord(OFFLINE_HEALTH_KEY, {});
 }
 

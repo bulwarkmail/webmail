@@ -967,7 +967,9 @@ async function statusSettled(page: Page): Promise<void> {
 
 test('a cap from the organisation prunes kept mail at the next policy fetch, and lifting it fetches the mail back', async ({ browser }) => {
   const old = `Old message ${RUN}`;
+  const recent = `Recent message ${RUN}`;
   await importOld(ENT.alice, old, 200);
+  await deliverAndWait(recent, `Recent body ${RUN}`);
   const page = await userPage(browser, ENT.alice);
   await enableOffline(page);
   const windowRow = page.locator('[data-search-label="How far back to keep"]');
@@ -998,8 +1000,18 @@ test('a cap from the organisation prunes kept mail at the next policy fetch, and
   await toMail(page);
   await blockMailServer(page.context());
   await waitUntilOffline(page);
-  await page.goto('/mail?q=' + encodeURIComponent(`"Old message"`)).catch(() => {});
-  await expect(page.locator('[data-testid="email-list-item"]', { hasText: old })).toHaveCount(0);
+  const search = async (term: string) => {
+    const box = page.getByPlaceholder('Search mail').first();
+    await box.fill(term);
+    await box.press('Enter');
+  };
+  const rows = page.locator('[data-testid="email-list-item"]');
+  // A word of a message that stayed finds it, so the search does work here.
+  await search(recent);
+  await expect(rows.filter({ hasText: recent }).first()).toBeVisible({ timeout: 30_000 });
+  await search(old);
+  await expect(rows.filter({ hasText: recent })).toHaveCount(0, { timeout: 30_000 });
+  await expect(rows.filter({ hasText: old })).toHaveCount(0);
   await page.context().unroute(`${new URL(JMAP_URL).origin}/**`);
 
   await setPolicy(browser, {});
@@ -1056,8 +1068,20 @@ test('the storage page: usage, choices, clearing an account', async ({ browser }
 test('the storage page fits at 390 px', async ({ browser }) => {
   const phone = await userPage(browser, ENT.alice, true);
   await enableOffline(phone, true);
-  const overflow = await phone.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-  expect(overflow).toBeLessThanOrEqual(0);
+  // Scrolling happens in the pane, so the page's own width says nothing: nothing may reach past the screen.
+  const section = phone.locator('[data-settings-section="offline"]');
+  await expect(section).toBeVisible();
+  const past = await section.evaluate((root) => {
+    const width = document.documentElement.clientWidth;
+    const out: string[] = [];
+    for (const el of [root, ...root.querySelectorAll<HTMLElement>('*')]) {
+      const box = el.getBoundingClientRect();
+      if (box.width > 0 && (box.right > width + 1 || box.left < -1)) out.push(`${el.tagName} ${el.getAttribute('data-testid') ?? ''} ${Math.round(box.right)}`);
+      if (el.scrollWidth > el.clientWidth + 1 && getComputedStyle(el).overflowX !== 'visible' && getComputedStyle(el).overflowX !== 'hidden') out.push(`scrolls: ${el.tagName} ${el.className}`);
+    }
+    return out;
+  });
+  expect(past).toEqual([]);
   await shot(phone, 'do-storage-page-390');
   await phone.context().close();
 });
@@ -1119,10 +1143,40 @@ test('a browser that refuses to keep the data gets a warning and can be asked ag
   await page.context().close();
 });
 
+/** A message with a text attachment of `size` bytes, repeating `term`, imported so the bytes stay as they are. */
+async function importWithAttachment(account: string, subject: string, term: string, size: number): Promise<void> {
+  const client = await jmapAs(account);
+  const content = `${term} `.repeat(Math.ceil(size / (term.length + 1)));
+  const boundary = `b${RUN}`;
+  const raw = [
+    `From: ${ENT.bob}`, `To: ${account}`, `Subject: ${subject}`, `Date: ${new Date().toUTCString()}`, `Message-ID: <${RUN}att@example.org>`, 'MIME-Version: 1.0',
+    `Content-Type: multipart/mixed; boundary="${boundary}"`, '', `--${boundary}`, 'Content-Type: text/plain', '', `See the file ${RUN}`, `--${boundary}`,
+    'Content-Type: text/plain; name="kept.txt"', 'Content-Disposition: attachment; filename="kept.txt"', 'Content-Transfer-Encoding: 8bit', '', content, `--${boundary}--`, '',
+  ].join('\r\n');
+  const auth = 'Basic ' + Buffer.from(`${account}:${process.env.IT_ENT_PASSWORD}`).toString('base64');
+  const upload = await fetch(`${JMAP_URL}/jmap/upload/${client.accountId}/`, { method: 'POST', headers: { Authorization: auth, 'Content-Type': 'message/rfc822' }, body: raw });
+  if (!upload.ok) throw new Error(`upload: ${upload.status}`);
+  const { blobId } = await upload.json() as { blobId: string };
+  const boxes = await client.request([['Mailbox/query', { accountId: client.accountId, filter: { role: 'inbox' } }, '0']]);
+  const inbox = boxes.methodResponses[0][1].ids[0] as string;
+  const done = await client.request([['Email/import', { accountId: client.accountId, emails: { a: { blobId, mailboxIds: { [inbox]: true }, keywords: {}, receivedAt: new Date().toISOString().replace(/\.\d+Z$/, 'Z') } } }, '0']]);
+  if (!done.methodResponses[0][1].created?.a) throw new Error(`import: ${JSON.stringify(done.methodResponses[0][1])}`);
+}
+
+/** How many bytes of attachments the settings page says are kept, roughly: it's what the store counts. */
+async function keptAttachmentBytes(page: Page): Promise<number> {
+  const row = page.getByTestId('offline-usage').locator('[data-part="attachments"] dd');
+  if ((await row.count()) === 0) return 0;
+  const match = (await row.innerText()).replace(',', '.').match(/([\d.]+)\s*(B|KB|MB|GB)/);
+  return match ? Number(match[1]) * { B: 1, KB: 1024, MB: 1024 ** 2, GB: 1024 ** 3 }[match[2] as 'B' | 'KB' | 'MB' | 'GB'] : 0;
+}
+
 test('nothing of a kept message is readable on the device', async ({ browser }) => {
   const subject = `Rawcheck ${RUN} ${RUN}quokka`;
   const text = `Rawbody ${RUN} ${RUN}wombat`;
+  const inFile = `${RUN}platypus`;
   await deliverAndWait(subject, text);
+  await importWithAttachment(ENT.alice, `Rawfile ${RUN}`, inFile, 300_000);
   const page = await userPage(browser, ENT.alice);
   await toMail(page);
   await openMessage(page, subject);
@@ -1201,13 +1255,16 @@ test('nothing of a kept message is readable on the device', async ({ browser }) 
   await expect(body(page)).toContainText(text, { timeout: 20_000 });
   await page.waitForTimeout(1500);
 
-  for (const term of [subject, text, `${RUN}quokka`, `${RUN}wombat`]) {
+  // The file has to be on the device for this to say anything: 300 KB of it.
+  await page.goto('/settings/backup/offline');
+  await expect.poll(() => keptAttachmentBytes(page), { timeout: 180_000, intervals: [2000] }).toBeGreaterThan(300_000);
+  for (const term of [subject, text, `${RUN}quokka`, `${RUN}wombat`, inFile]) {
     const { hits, files, bytesRead } = await findIn(term);
     expect(files, 'the store has its files').toBeGreaterThan(0);
     expect(bytesRead, 'and they hold something').toBeGreaterThan(100_000);
     expect(hits, `plaintext "${term}"`).toEqual([]);
   }
-  await page.reload();
+  await page.goto('/mail');
   await expect(page.locator('[data-testid="email-list-item"]', { hasText: subject }).first()).toBeVisible({ timeout: 60_000 });
   await page.waitForTimeout(1500);
   expect((await findIn(subject)).hits).toEqual([]);

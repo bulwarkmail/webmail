@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_ORGANISATION_POLICY } from '@/lib/admin/organisation-policy';
 import { DEFAULT_SCOPE } from '@/lib/store/area';
 import {
@@ -27,7 +27,7 @@ describe('effectiveScope', () => {
   it('the user over the default', () => {
     const effective = effectiveScope('a', { on: true, days: 30, attachments: false, maxAttachmentBytes: 5 * MB }, NO_LIMITS, BROWSER);
     expect(effective.enabled).toBe(true);
-    expect(effective.scope).toEqual({ ...DEFAULT_SCOPE, days: 30, attachments: false, maxAttachmentBytes: 5 * MB });
+    expect(effective.scope).toEqual({ ...DEFAULT_SCOPE, days: 30, attachments: false, maxAttachmentBytes: 5 * MB, orgMaxFileBytes: null });
     expect(effectiveScope('a', { on: false }, NO_LIMITS, DESKTOP).enabled).toBe(false);
     expect(effectiveScope('a', { days: null }, NO_LIMITS, BROWSER).scope.days).toBeNull();
   });
@@ -42,8 +42,11 @@ describe('effectiveScope', () => {
   it('a cap lowers the choice and the default, also "everything", and never raises', () => {
     const policy = { ...NO_LIMITS, offlineMaxDays: 60, offlineMaxAttachmentMb: 10, offlineMaxTotalMb: 100 };
     const capped = effectiveScope('a', { days: null, maxAttachmentBytes: 500 * MB }, policy, DESKTOP);
-    expect(capped.scope).toEqual({ days: 60, attachments: true, maxAttachmentBytes: 10 * MB, maxTotalBytes: 100 * MB });
+    expect(capped.scope).toMatchObject({ days: 60, attachments: true, maxAttachmentBytes: 10 * MB, maxTotalBytes: 100 * MB });
     expect(capped.locked).toMatchObject({ days: true, maxAttachment: true, maxTotal: true, attachments: false });
+    // Sent on its own: a pin obeys this one, not the user's size.
+    expect(capped.scope.orgMaxFileBytes).toBe(10 * MB);
+    expect(effectiveScope('a', { maxAttachmentBytes: 5 * MB }, NO_LIMITS, BROWSER).scope.orgMaxFileBytes).toBeNull();
     expect(effectiveScope('a', null, { ...policy, offlineMaxDays: 30 }, DESKTOP).scope.days).toBe(30);
     const under = effectiveScope('a', { days: 30, maxAttachmentBytes: 5 * MB }, policy, BROWSER);
     expect(under.scope.days).toBe(30);
@@ -151,10 +154,27 @@ describe('what the page offers', () => {
 });
 
 describe('Lite', () => {
-  it('reads the caps from the same policy.json, and has no store to apply them to', async () => {
+  it('reads the caps from the same policy.json', async () => {
     const { applyLitePolicy } = await import('@/lib/lite-config');
     const policy = applyLitePolicy({ organisation: { devices: { offlineMaxDays: 30, noOfflineAttachments: true, offlineMaxTotalMb: 'lots' } } } as never);
     expect(policy.organisation?.devices).toMatchObject({ offlineMaxDays: 30, noOfflineAttachments: true, offlineMaxTotalMb: 0 });
+    // A cap is lower than anything, also where nothing else is known.
+    expect(effectiveScope('a', { days: null }, policy.organisation!.devices, BROWSER).scope).toMatchObject({ days: 30, attachments: false });
+  });
+
+  it('has no store to apply them to, whatever a caller asks', async () => {
+    vi.resetModules();
+    vi.doMock('@/lib/lite', async (original) => ({ ...(await original<typeof import('@/lib/lite')>()), IS_LITE: true }));
+    try {
+      const { enableOffline, offlineSupported } = await import('../offline-mode');
+      const { useOfflineStore: lite } = await import('../state');
+      expect(offlineSupported()).toBe(false);
+      await enableOffline('a');
+      expect(lite.getState().enabled).toEqual([]);
+    } finally {
+      vi.doUnmock('@/lib/lite');
+      vi.resetModules();
+    }
   });
 });
 

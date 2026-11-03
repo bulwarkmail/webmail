@@ -5764,7 +5764,7 @@
     "server_not_answering": "El servidor de correu no respon. Torneu-ho a provar d'aquí a un moment."
   },
   "offlineStorage": {
-    "keep_description": "Desa el vostre correu, calendari, contactes i els fitxers que trieu, xifrats en aquest navegador. Sense connexió podeu llegir, marcar i moure correu, i el que escriviu espera a la safata de sortida. En tancar la sessió s'esborra tot.",
+    "keep_description": "Desa el vostre correu, calendari, contactes i els fitxers que trieu, xifrats en aquest dispositiu. Sense connexió podeu llegir, marcar i moure correu, i el que escriviu espera a la safata de sortida. En tancar la sessió s'esborra tot.",
     "window_label": "Fins a quan enrere desar",
     "window_description": "El correu i els esdeveniments més antics surten d'aquest dispositiu. Encara els podeu obrir quan tingueu connexió.",
     "window_days": "{days, plural, one {# dia} other {# dies}}",
@@ -5792,7 +5792,7 @@
     "clear_description": "Suprimeix tot el que aquest dispositiu desa d'aquest compte i ho torna a baixar.",
     "clear_button": "Buida…",
     "clear_confirm_title": "Voleu buidar aquest compte en aquest dispositiu?",
-    "clear_confirm_message": "Tot el que aquest dispositiu desa d'aquest compte se suprimeix i es torna a baixar. El vostre correu al servidor no es toca.",
+    "clear_confirm_message": "Tot el que aquest dispositiu desa de {account} se suprimeix i es torna a baixar. El vostre correu al servidor no es toca.",
     "clear_confirm_unsent": "{count, plural, one {Es perdrà # missatge sense enviar.} other {Es perdran # missatges sense enviar.}}",
     "clear_confirm": "Buida",
     "persist_refused": "Aquest navegador pot esborrar el correu desat quan falti espai. Instal·lar l'aplicació sol evitar-ho.",
@@ -5816,7 +5816,13 @@
     "kept_error_download": "No s'ha pogut baixar",
     "keep_offline": "Desa sense connexió",
     "unpin": "Deixa de desar sense connexió",
-    "unpin_label": "Deixa de desar {name} sense connexió"
+    "unpin_label": "Deixa de desar {name} sense connexió",
+    "warning_desktop": "Qualsevol persona que pugui fer servir el compte d'usuari d'aquest ordinador pot llegir aquest correu. Feu servir el xifratge de disc.",
+    "off_confirm_text": "Això suprimeix tot el que aquest dispositiu desa de {account}. El vostre correu al servidor no es toca.",
+    "unsent_changes": "{count, plural, one {Es perdrà # canvi que no ha arribat al servidor.} other {Es perdran # canvis que no han arribat al servidor.}}",
+    "clear_needs_connection": "Cal una connexió, perquè tot es torna a baixar.",
+    "usage_label": "Què desa aquest dispositiu",
+    "pin_not_ready": "Aquest fitxer encara no és a la llista d'aquest dispositiu. Torneu-ho a provar d'aquí a un moment."
   },
   "offlineDrafts": {
     "title": "Esborranys en aquest dispositiu",

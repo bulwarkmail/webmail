@@ -102,7 +102,7 @@ beforeEach(() => {
     enabled: [], outbox: [], pendingChanges: 0, conflicts: [], areaConflicts: [], usage: {}, usageBytes: 0, choices: {}, health: {},
     storeLost: [], storageFull: {}, progress: {}, persist: 'unknown', syncing: [], lastSyncedAt: {}, browserOffline: false, downServers: [], startedOffline: false,
   });
-  usePolicyStore.setState({ loaded: true, source: 'server', subject: null, subjectPending: false, policy: { ...usePolicyStore.getState().policy, organisation: DEFAULT_ORGANISATION_POLICY } } as never);
+  usePolicyStore.setState({ loaded: true, source: 'server', subject: { email: 'alice@example.org', groups: [] }, subjectPending: false, policy: { ...usePolicyStore.getState().policy, organisation: DEFAULT_ORGANISATION_POLICY } } as never);
   setStoreBackend(null);
   setOfflineNotifier((notice) => notices.push(notice));
   registerOfflineHooks();
@@ -198,9 +198,70 @@ describe('a store the browser cleared', () => {
     expect(notices).toContainEqual({ kind: 'store-reset', lost: 0 });
   });
 
+  it('off and on again is no eviction', async () => {
+    await openAccountKey('acc');
+    hadStore('acc');
+    writeEnabled(['acc']);
+    await wipeAccount('acc');
+    expect(localStorage.getItem('bulwark-store-opened')).toBeNull();
+    FakeWorker.created = true;
+    await openAsOwner('acc');
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(notices.filter((n) => n.kind === 'store-reset')).toEqual([]);
+  });
+
   it('keeps only numbers about it outside the store', () => {
     writeHealth('acc', { pending: 2, reset: { at: 5, lost: 2 }, lastSync: 9 });
     expect(JSON.parse(localStorage.getItem(OFFLINE_HEALTH_KEY)!)).toEqual({ acc: { pending: 2, reset: { at: 5, lost: 2 }, lastSync: 9 } });
+  });
+});
+
+describe('the scope an account opens with', () => {
+  const setDays = (offlineMaxDays: number) => usePolicyStore.setState({
+    policy: { ...usePolicyStore.getState().policy, organisation: { ...DEFAULT_ORGANISATION_POLICY, devices: { ...DEFAULT_ORGANISATION_POLICY.devices, offlineMaxDays } } },
+  } as never);
+  const openParams = (worker: FakeWorker) => worker.posted.find((m) => m.kind === 'open')?.params as { scope?: { days: number | null } } | undefined;
+
+  function holdPolicy(): () => void {
+    let release = () => {};
+    const fetchPolicy = vi.fn(() => new Promise<void>((resolve) => { release = resolve; }));
+    usePolicyStore.setState({ fetchPolicy } as never);
+    return () => release();
+  }
+
+  afterEach(() => { usePolicyStore.setState({ fetchPolicy: realFetchPolicy } as never); });
+  const realFetchPolicy = usePolicyStore.getState().fetchPolicy;
+
+  it('none from a tab that just took over, and the cap once it has heard the policy', async () => {
+    const heard = holdPolicy();
+    setDays(14);
+    const worker = await openAsOwner('acc');
+    await vi.waitFor(() => expect(openParams(worker)).toBeTruthy());
+    // This tab's policy may be old: the store keeps what it has.
+    expect(openParams(worker)?.scope).toBeUndefined();
+    expect(rpcs.filter((rpc) => rpc.method === 'setScope')).toEqual([]);
+
+    heard();
+    await vi.waitFor(() => expect(rpcs.filter((rpc) => rpc.method === 'setScope')).toHaveLength(1));
+    expect((rpcs.find((rpc) => rpc.method === 'setScope')!.params as unknown as { scope: { days: number } }).scope.days).toBe(14);
+  });
+
+  it('a stale cap the fetch corrects isn\'t what goes out', async () => {
+    const heard = holdPolicy();
+    setDays(365);
+    await openAsOwner('acc');
+    setDays(14);
+    heard();
+    await vi.waitFor(() => expect(rpcs.filter((rpc) => rpc.method === 'setScope')).toHaveLength(1));
+    expect((rpcs.find((rpc) => rpc.method === 'setScope')!.params as unknown as { scope: { days: number } }).scope.days).toBe(14);
+  });
+
+  it('none before the policy is known, at the real inputs', async () => {
+    usePolicyStore.setState({ source: 'none' } as never);
+    const worker = await openAsOwner('acc');
+    await vi.waitFor(() => expect(openParams(worker)).toBeTruthy());
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(rpcs.filter((rpc) => rpc.method === 'setScope')).toEqual([]);
   });
 });
 

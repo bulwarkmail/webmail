@@ -5764,7 +5764,7 @@
     "server_not_answering": "Serwer poczty nie odpowiada. Spróbuj ponownie za chwilę."
   },
   "offlineStorage": {
-    "keep_description": "Przechowuje Twoją pocztę, kalendarz, kontakty i wybrane pliki zaszyfrowane w tej przeglądarce. Offline możesz czytać, oznaczać i przenosić wiadomości, a to, co napiszesz, czeka w skrzynce nadawczej. Wylogowanie usuwa wszystko.",
+    "keep_description": "Przechowuje Twoją pocztę, kalendarz, kontakty i wybrane pliki zaszyfrowane na tym urządzeniu. Offline możesz czytać, oznaczać i przenosić wiadomości, a to, co napiszesz, czeka w skrzynce nadawczej. Wylogowanie usuwa wszystko.",
     "window_label": "Jak daleko wstecz przechowywać",
     "window_description": "Starsza poczta i wydarzenia z kalendarza znikają z tego urządzenia. Nadal możesz je otworzyć, gdy masz połączenie.",
     "window_days": "{days, plural, one {# dzień} few {# dni} many {# dni} other {# dnia}}",
@@ -5792,7 +5792,7 @@
     "clear_description": "Usuwa wszystko, co to urządzenie przechowuje dla tego konta, a potem pobiera to ponownie.",
     "clear_button": "Wyczyść…",
     "clear_confirm_title": "Wyczyścić to konto na tym urządzeniu?",
-    "clear_confirm_message": "Wszystko, co to urządzenie przechowuje dla tego konta, zostanie usunięte i pobrane ponownie. Twoja poczta na serwerze zostaje.",
+    "clear_confirm_message": "Wszystko, co to urządzenie przechowuje dla konta {account}, zostanie usunięte i pobrane ponownie. Twoja poczta na serwerze zostaje.",
     "clear_confirm_unsent": "{count, plural, one {# niewysłana wiadomość zostanie utracona.} few {# niewysłane wiadomości zostaną utracone.} many {# niewysłanych wiadomości zostanie utraconych.} other {# niewysłanej wiadomości zostanie utraconej.}}",
     "clear_confirm": "Wyczyść",
     "persist_refused": "Ta przeglądarka może usunąć przechowywaną pocztę, gdy zabraknie miejsca. Zainstalowanie aplikacji zwykle temu zapobiega.",
@@ -5816,7 +5816,13 @@
     "kept_error_download": "Nie udało się pobrać",
     "keep_offline": "Przechowuj offline",
     "unpin": "Nie przechowuj już offline",
-    "unpin_label": "Nie przechowuj już {name} offline"
+    "unpin_label": "Nie przechowuj już {name} offline",
+    "warning_desktop": "Każdy, kto może korzystać z konta użytkownika na tym komputerze, może czytać tę pocztę. Użyj szyfrowania dysku.",
+    "off_confirm_text": "To usuwa wszystko, co to urządzenie przechowuje dla konta {account}. Twoja poczta na serwerze zostaje.",
+    "unsent_changes": "{count, plural, one {# zmiana, która nie dotarła do serwera, zostanie utracona.} few {# zmiany, które nie dotarły do serwera, zostaną utracone.} many {# zmian, które nie dotarły do serwera, zostanie utraconych.} other {# zmiany, która nie dotarła do serwera, zostanie utraconej.}}",
+    "clear_needs_connection": "Potrzebne jest połączenie, bo wszystko zostanie pobrane ponownie.",
+    "usage_label": "Co przechowuje to urządzenie",
+    "pin_not_ready": "Tego pliku nie ma jeszcze na liście tego urządzenia. Spróbuj ponownie za chwilę."
   },
   "offlineDrafts": {
     "title": "Wersje robocze na tym urządzeniu",

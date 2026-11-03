@@ -5764,7 +5764,7 @@
     "server_not_answering": "Pasta serveris neatbild. Mēģiniet vēlreiz pēc brīža."
   },
   "offlineStorage": {
-    "keep_description": "Glabā jūsu e-pastu, kalendāru, kontaktpersonas un izvēlētos failus šifrētus šajā pārlūkā. Bezsaistē varat lasīt, atzīmēt un pārvietot vēstules, un tas, ko rakstāt, gaida izsūtnē. Izrakstoties viss tiek noņemts.",
+    "keep_description": "Glabā jūsu e-pastu, kalendāru, kontaktpersonas un izvēlētos failus šifrētus šajā ierīcē. Bezsaistē varat lasīt, atzīmēt un pārvietot vēstules, un tas, ko rakstāt, gaida izsūtnē. Izrakstoties viss tiek noņemts.",
     "window_label": "Cik tālu atpakaļ glabāt",
     "window_description": "Vecākās vēstules un kalendāra notikumi pazūd no šīs ierīces. Tās joprojām varat atvērt, kad ir savienojums.",
     "window_days": "{days, plural, zero {# dienu} one {# diena} other {# dienas}}",
@@ -5792,7 +5792,7 @@
     "clear_description": "Izdzēš visu, ko šī ierīce glabā šim kontam, un lejupielādē to no jauna.",
     "clear_button": "Notīrīt…",
     "clear_confirm_title": "Vai notīrīt šo kontu šajā ierīcē?",
-    "clear_confirm_message": "Viss, ko šī ierīce glabā šim kontam, tiek izdzēsts un lejupielādēts no jauna. Jūsu e-pasts serverī paliek.",
+    "clear_confirm_message": "Viss, ko šī ierīce glabā kontam {account}, tiek izdzēsts un lejupielādēts no jauna. Jūsu e-pasts serverī paliek.",
     "clear_confirm_unsent": "{count, plural, zero {# neizsūtītu vēstuļu tiks zaudēts.} one {Tiks zaudēta # neizsūtīta vēstule.} other {Tiks zaudētas # neizsūtītas vēstules.}}",
     "clear_confirm": "Notīrīt",
     "persist_refused": "Šis pārlūks var izdzēst glabāto e-pastu, kad pietrūkst vietas. Lietotnes instalēšana to parasti novērš.",
@@ -5816,7 +5816,13 @@
     "kept_error_download": "Nevarēja lejupielādēt",
     "keep_offline": "Glabāt bezsaistē",
     "unpin": "Pārtraukt glabāt bezsaistē",
-    "unpin_label": "Pārtraukt glabāt {name} bezsaistē"
+    "unpin_label": "Pārtraukt glabāt {name} bezsaistē",
+    "warning_desktop": "Ikviens, kas var izmantot šī datora lietotāja kontu, var lasīt šo e-pastu. Izmantojiet diska šifrēšanu.",
+    "off_confirm_text": "Tas izdzēš visu, ko šī ierīce glabā kontam {account}. Jūsu e-pasts serverī paliek.",
+    "unsent_changes": "{count, plural, zero {# izmaiņu, kas nesasniedza serveri, tiks zaudēts.} one {Tiks zaudēta # izmaiņa, kas nesasniedza serveri.} other {Tiks zaudētas # izmaiņas, kas nesasniedza serveri.}}",
+    "clear_needs_connection": "Nepieciešams savienojums, jo viss tiek lejupielādēts no jauna.",
+    "usage_label": "Ko glabā šī ierīce",
+    "pin_not_ready": "Šī faila vēl nav šīs ierīces sarakstā. Mēģiniet vēlreiz pēc brīža."
   },
   "offlineDrafts": {
     "title": "Melnraksti šajā ierīcē",

@@ -104,6 +104,7 @@ export function effectiveScope(
       attachments: !policy.noOfflineAttachments && (choice.attachments ?? defaults.scope.attachments),
       maxAttachmentBytes: cappedBytes(maxAttachment, policy.offlineMaxAttachmentMb),
       maxTotalBytes: cappedBytes(defaults.scope.maxTotalBytes, policy.offlineMaxTotalMb),
+      orgMaxFileBytes: policy.offlineMaxAttachmentMb > 0 ? policy.offlineMaxAttachmentMb * MB : null,
     },
     locked: {
       offline: policy.noOffline,

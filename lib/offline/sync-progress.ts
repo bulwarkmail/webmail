@@ -22,6 +22,8 @@ export interface SyncProgress {
 const BODY_COST_PER_LIST_ITEM = 10;
 /** An estimate from less than this jumps about too much to show. */
 const MIN_SAMPLE_MS = 5_000;
+/** A pause this long (asleep, offline) says nothing about the rate: the sample starts again. */
+const SAMPLE_GAP_MS = 60_000;
 /** Too small to be worth a progress line: new mail arriving in a normal pass. */
 const MIN_ITEMS_SHOWN = 50;
 
@@ -30,7 +32,7 @@ export function nextProgress(
   event: { area: string; phase: string; done: number; total: number | null },
   now: number,
 ): SyncProgress {
-  const samePhase = previous?.area === event.area && previous.phase === event.phase && event.done >= previous.done;
+  const samePhase = previous?.area === event.area && previous.phase === event.phase && event.done >= previous.done && now - previous.at < SAMPLE_GAP_MS;
   return {
     area: event.area,
     phase: event.phase,

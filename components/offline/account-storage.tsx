@@ -1,18 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useFormatter, useTranslations } from 'next-intl';
 import { Lock } from '@/components/icons';
 import { SettingItem, Select, ToggleSwitch } from '@/components/settings/settings-section';
 import { OrgLockedNote } from '@/components/settings/org-locked-note';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { isDesktopApp } from '@/lib/desktop/bridge';
 import { formatFileSize } from '@/lib/utils';
-import { chooseScope, clearAccount, disableOffline, dismissStoreReset, enableOffline, scopeForAccount } from '@/lib/offline/offline-mode';
+import { chooseScope, clearAccount, disableOffline, dismissStoreReset, enableOffline, scopeForAccount, unsentCount } from '@/lib/offline/offline-mode';
 import { attachmentCapOptions, maxAttachmentMb, windowOptions } from '@/lib/offline/scope';
-import { useOfflineStore } from '@/lib/offline/state';
+import { isOfflineNow, useOfflineStore } from '@/lib/offline/state';
 import { minutesLeft, progressWorthShowing, type SyncProgress } from '@/lib/offline/sync-progress';
 import { devicesForAccount } from '@/lib/device-policy';
+import { useAccountStore } from '@/stores/account-store';
 import { KeptFiles } from './kept-files';
 
 const MB = 1024 * 1024;
@@ -32,7 +34,9 @@ function ProgressLine({ progress }: { progress: SyncProgress }) {
     : t('progress_count', { done: format.number(progress.done), total: format.number(progress.total) });
   return (
     <div className="space-y-1" data-testid="offline-progress">
-      <p className="text-xs text-muted-foreground" role="status" aria-live="polite">
+      {/* Only the phase is announced: the numbers change every moment. */}
+      <p className="sr-only" role="status" aria-live="polite" data-testid="offline-progress-phase">{phase}</p>
+      <p className="text-xs text-muted-foreground">
         {phase}: {count}{left !== null && <> · {t('progress_left', { minutes: left })}</>}
       </p>
       {progress.total !== null && progress.total > 0 && (
@@ -40,6 +44,22 @@ function ProgressLine({ progress }: { progress: SyncProgress }) {
       )}
     </div>
   );
+}
+
+/** What a clear or switching off would lose, read when the question is asked. */
+function useUnsent(account: string) {
+  const [unsent, setUnsent] = useState({ messages: 0, changes: 0 });
+  const live = useRef(true);
+  useEffect(() => {
+    live.current = true;
+    return () => { live.current = false; };
+  }, []);
+  const read = async () => {
+    const counted = await unsentCount(account);
+    if (live.current) setUnsent(counted);
+    return counted;
+  };
+  return { unsent, read };
 }
 
 /** One account in Settings > Backup & reset > Offline. */
@@ -54,9 +74,16 @@ export function AccountStorage({ account, primary, heading }: { account: string;
   const storeReset = useOfflineStore((s) => s.health[account]?.reset);
   const storageFull = useOfflineStore((s) => !!s.storageFull[account]);
   const progress = useOfflineStore((s) => s.progress[account]);
-  const unsent = useOfflineStore((s) => s.outbox.filter((row) => row.account === account).length);
+  const server = useAccountStore((s) => s.accounts.find((entry) => entry.id === account)?.serverUrl);
+  const address = useAccountStore((s) => {
+    const entry = s.accounts.find((candidate) => candidate.id === account);
+    return entry?.email || entry?.username || account;
+  });
+  // Clearing downloads everything again, which can't happen without the server.
+  const cantClear = useOfflineStore((s) => s.startedOffline || s.browserOffline || (!!server && isOfflineNow(server)));
   // Re-renders on a choice; the value itself is worked out below, with the policy.
   useOfflineStore((s) => s.choices[account]);
+  const { unsent, read: readUnsent } = useUnsent(account);
   const [confirmOff, setConfirmOff] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
   const devices = devicesForAccount(account);
@@ -85,9 +112,27 @@ export function AccountStorage({ account, primary, heading }: { account: string;
   };
   const caps = attachmentCapOptions(devices.offlineMaxAttachmentMb);
   const currentCap = maxAttachmentMb(scope);
+  const lostText = [
+    unsent.messages > 0 ? tStorage('clear_confirm_unsent', { count: unsent.messages }) : null,
+    unsent.changes > 0 ? tStorage('unsent_changes', { count: unsent.changes }) : null,
+  ].filter(Boolean).join(' ');
+  const askClear = () => {
+    setConfirmClear(true);
+    void readUnsent();
+  };
+  const turnOff = async () => {
+    const counted = await readUnsent();
+    if (counted.messages + counted.changes > 0) setConfirmOff(true);
+    else void disableOffline(account);
+  };
 
   return (
-    <div className={heading ? 'rounded-md border border-border px-3' : undefined} data-testid={testId('offline-account')}>
+    <div
+      className={heading ? 'rounded-md border border-border px-3' : undefined}
+      role={heading ? 'group' : undefined}
+      aria-label={heading ?? undefined}
+      data-testid={testId('offline-account')}
+    >
       {heading && <p className="pt-3 text-sm font-semibold text-foreground [overflow-wrap:anywhere]">{heading}</p>}
       <SettingItem label={t('keep_label')} description={tStorage('keep_description')} locked={locked.forced}>
         <ToggleSwitch
@@ -95,11 +140,11 @@ export function AccountStorage({ account, primary, heading }: { account: string;
           testId={testId('offline-switch')}
           onChange={(on) => {
             if (on) void enableOffline(account);
-            else if (unsent > 0) setConfirmOff(true);
-            else void disableOffline(account);
+            else void turnOff();
           }}
         />
       </SettingItem>
+      {isDesktopApp() && <p className="text-xs text-muted-foreground" data-testid={testId('offline-desktop-warning')}>{tStorage('warning_desktop')}</p>}
       {storeReset && (
         <div className="my-2 flex flex-col gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-200 sm:flex-row sm:items-center sm:justify-between" role="alert" data-testid="offline-evicted">
           <p className="min-w-0">
@@ -114,7 +159,7 @@ export function AccountStorage({ account, primary, heading }: { account: string;
           {storageFull && (
             <div className="my-2 flex flex-col gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-foreground sm:flex-row sm:items-center sm:justify-between" role="alert" data-testid="offline-storage-full">
               <p className="min-w-0"><span className="font-medium">{tStorage('storage_full_title')}</span> {tStorage('storage_full_text')}</p>
-              <Button variant="outline" size="sm" className="shrink-0" onClick={() => setConfirmClear(true)}>{tStorage('clear_button')}</Button>
+              <Button variant="outline" size="sm" className="shrink-0" disabled={cantClear} onClick={askClear}>{tStorage('clear_button')}</Button>
             </div>
           )}
           <div className="space-y-2 py-3">
@@ -127,7 +172,7 @@ export function AccountStorage({ account, primary, heading }: { account: string;
             </p>
             {syncing && progressWorthShowing(progress) && <ProgressLine progress={progress} />}
             {usage && usage.parts.length > 0 && (
-              <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-xs" data-testid={testId('offline-usage')}>
+              <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-xs" aria-label={tStorage('usage_label')} data-testid={testId('offline-usage')}>
                 {usage.parts.filter((part) => part.items > 0).map((part) => (
                   <div key={part.part} className="contents" data-part={part.part}>
                     <dt className="min-w-0 text-muted-foreground">{tStorage(`usage_${part.part}`)}</dt>
@@ -177,8 +222,8 @@ export function AccountStorage({ account, primary, heading }: { account: string;
             </SettingItem>
           )}
           <KeptFiles account={account} />
-          <SettingItem label={tStorage('clear_label')} description={tStorage('clear_description')}>
-            <Button variant="outline" size="sm" onClick={() => setConfirmClear(true)} data-testid={testId('offline-clear')}>{tStorage('clear_button')}</Button>
+          <SettingItem label={tStorage('clear_label')} description={cantClear ? tStorage('clear_needs_connection') : tStorage('clear_description')}>
+            <Button variant="outline" size="sm" disabled={cantClear} onClick={askClear} data-testid={testId('offline-clear')}>{tStorage('clear_button')}</Button>
           </SettingItem>
         </>
       )}
@@ -187,7 +232,7 @@ export function AccountStorage({ account, primary, heading }: { account: string;
         onClose={() => setConfirmOff(false)}
         onConfirm={() => { setConfirmOff(false); void disableOffline(account); }}
         title={t('off_confirm_title')}
-        message={t('off_confirm_message', { count: unsent })}
+        message={`${tStorage('off_confirm_text', { account: address })} ${lostText}`.trim()}
         confirmText={t('off_confirm')}
         variant="destructive"
       />
@@ -196,7 +241,7 @@ export function AccountStorage({ account, primary, heading }: { account: string;
         onClose={() => setConfirmClear(false)}
         onConfirm={() => { setConfirmClear(false); void clearAccount(account); }}
         title={tStorage('clear_confirm_title')}
-        message={unsent > 0 ? `${tStorage('clear_confirm_message')} ${tStorage('clear_confirm_unsent', { count: unsent })}` : tStorage('clear_confirm_message')}
+        message={`${tStorage('clear_confirm_message', { account: address })} ${lostText}`.trim()}
         confirmText={tStorage('clear_confirm')}
         variant="destructive"
       />
