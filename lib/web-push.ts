@@ -874,7 +874,9 @@ async function enableWebPushForThisTab(
   const storedServerId = localStorage.getItem(subIdKey);
   let replacedServerId: string | null = null;
   if (storedServerId) {
-    const match = existingSubs.find((s) => s.id === storedServerId);
+    // By device too: Stalwart gives the id of an expired subscription to the next
+    // one, which may be another device's.
+    const match = existingSubs.find((s) => s.id === storedServerId && s.deviceClientId === deviceClientId);
     if (match) {
       if (!params.forceRecreate) {
         const refreshed = await refreshSubscriptionExpires(params.client, match, emailPush);
@@ -910,7 +912,7 @@ async function enableWebPushForThisTab(
   //     relay can't vouch for (a different relay, a non-Bulwark client, a
   //     network blip) - is left untouched.
   for (const s of existingSubs) {
-    if (s.id === storedServerId) continue;
+    if (s.id === replacedServerId) continue;
     if (s.deviceClientId === deviceClientId) {
       await params.client.destroyPushSubscription(s.id).catch(() => undefined);
       continue;
@@ -1018,7 +1020,8 @@ async function disableWebPushForThisTab(params: DisableWebPushParams): Promise<v
   // until it expires, so "disable" has to mean gone (#841).
   const failed: string[] = [];
   const idsToDestroy = new Set<string>();
-  if (storedServerId) idsToDestroy.add(storedServerId);
+  // The stored id alone can have gone to another device since (Stalwart reuses them).
+  if (storedServerId && !deviceClientId) idsToDestroy.add(storedServerId);
   if (deviceClientId) {
     const existingSubs = await params.client.listPushSubscriptions().catch(() => {
       failed.push('listing the subscriptions');
