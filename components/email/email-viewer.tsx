@@ -4252,16 +4252,16 @@ ${printWatermark ? printWatermark.html : ''}
               title={t('reschedule_send')}
             >
               <CalendarClock className="w-4 h-4" />
-              {showToolbarLabels && <span className="hidden sm:inline text-sm whitespace-nowrap">{t('reschedule_send')}</span>}
+              {showToolbarLabels && <span className="hidden @[52rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reschedule_send')}</span>}
             </Button>
             <Button variant="ghost" size="sm" onClick={onCancelScheduledForEdit} className="hidden sm:flex sm:h-8 sm:gap-1.5 sm:py-0" title={email.isSmimeScheduled ? t('cancel_and_compose_again') : t('cancel_and_edit')}>
               <Pencil className="w-4 h-4" />
-              {showToolbarLabels && <span className="hidden sm:inline text-sm whitespace-nowrap">{email.isSmimeScheduled ? t('cancel_and_compose_again') : t('cancel_and_edit')}</span>}
+              {showToolbarLabels && <span className="hidden @[52rem]/reader-toolbar:inline text-sm whitespace-nowrap">{email.isSmimeScheduled ? t('cancel_and_compose_again') : t('cancel_and_edit')}</span>}
             </Button>
             {onCancelScheduledSend && !email.isSmimeScheduled && (
               <Button variant="ghost" size="sm" onClick={onCancelScheduledSend} className="hidden sm:flex sm:h-8 sm:gap-1.5 sm:py-0" title={t('cancel_scheduled_send')} data-testid="cancel-scheduled-send">
                 <CalendarX className="w-4 h-4" />
-                {showToolbarLabels && <span className="hidden sm:inline text-sm whitespace-nowrap">{t('cancel_scheduled_send')}</span>}
+                {showToolbarLabels && <span className="hidden @[52rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('cancel_scheduled_send')}</span>}
               </Button>
             )}
           </>
@@ -4612,7 +4612,7 @@ ${printWatermark ? printWatermark.html : ''}
         <div
           ref={toolbarRef}
           data-mv-viewer-toolbar={mvViewer ? "" : undefined}
-          className={cn("flex items-center gap-0.5 sm:gap-2 w-full", mvViewer ? "justify-start" : "justify-between")}
+          className={cn("@container/reader-toolbar flex items-center gap-0.5 sm:gap-2 w-full", mvViewer ? "justify-start" : "justify-between")}
         >
           {renderToolbarItems(true)}
           {mvViewer && mvPosition && (
@@ -4859,7 +4859,7 @@ ${printWatermark ? printWatermark.html : ''}
       {toolbarPosition === 'below-subject' && (
         <div className="bg-background border-b border-border">
           <div className="px-2 sm:px-4 lg:px-6 py-1 sm:py-1.5">
-            <div ref={toolbarRef} className="flex items-center justify-between gap-0.5 sm:gap-2">
+            <div ref={toolbarRef} className="@container/reader-toolbar flex items-center justify-between gap-0.5 sm:gap-2">
               {renderToolbarItems(false)}
             </div>
           </div>
