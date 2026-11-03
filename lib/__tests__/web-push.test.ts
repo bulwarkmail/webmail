@@ -569,6 +569,77 @@ describe('enableWebPush when the verification does not come', () => {
   });
 });
 
+describe('two tabs at once', () => {
+  // What the browser's Web Locks do: one holder at a time, in order.
+  function installLocks() {
+    let tail: Promise<unknown> = Promise.resolve();
+    const request = vi.fn(async (_name: string, run: () => Promise<unknown>) => {
+      const next = tail.then(run, run);
+      tail = next.catch(() => undefined);
+      return next;
+    });
+    Object.defineProperty(navigator, 'locks', { configurable: true, value: { request } });
+    return request;
+  }
+
+  afterEach(() => {
+    delete (navigator as unknown as { locks?: unknown }).locks;
+  });
+
+  // A server that knows what was created and destroyed, as the race needs.
+  function statefulClient() {
+    const subs: JmapPushSubscription[] = [];
+    const client = makeClient(subs);
+    let next = 0;
+    (client.createPushSubscription as ReturnType<typeof vi.fn>).mockImplementation(async (params: { deviceClientId: string }) => {
+      const id = `push-${++next}`;
+      subs.push(sub(id, params.deviceClientId));
+      return id;
+    });
+    (client.verifyPushSubscription as ReturnType<typeof vi.fn>).mockImplementation(async (id: string) => {
+      if (client.destroyed.includes(id)) throw new Error('notFound');
+    });
+    return client;
+  }
+
+  it('makes one subscription, and neither tab fails', async () => {
+    installLocks();
+    const client = statefulClient();
+    installFetch({});
+
+    const results = await Promise.allSettled([
+      enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false }),
+      enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false }),
+    ]);
+
+    expect(results.map((r) => r.status)).toEqual(['fulfilled', 'fulfilled']);
+    expect(client.createPushSubscription).toHaveBeenCalledTimes(1);
+    expect(client.destroyed).toEqual([]);
+    expect(await client.listPushSubscriptions()).toHaveLength(1);
+  });
+
+  it('waits for a running enable before turning off', async () => {
+    const request = installLocks();
+    const client = statefulClient();
+    installFetch({});
+
+    const enabling = enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+    await vi.waitFor(() => expect(request).toHaveBeenCalledTimes(1));
+    await Promise.all([enabling, disableWebPush({ client, relayBaseUrl: RELAY })]);
+
+    expect(request).toHaveBeenCalledTimes(2);
+    expect(await client.listPushSubscriptions()).toEqual([]);
+    expect(localStorage.getItem(SUB_KEY)).toBeNull();
+  });
+
+  it('still works in a browser without Web Locks', async () => {
+    const client = statefulClient();
+    installFetch({});
+    await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+    expect(client.createPushSubscription).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('resyncWebPush when the relay changed (#903)', () => {
   afterEach(() => setNoThirdPartyTraffic(false));
 

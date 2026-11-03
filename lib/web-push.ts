@@ -720,6 +720,15 @@ async function refreshSubscriptionExpires(
   }
 }
 
+// Another tab may be on the same steps, and the relay and the server only know
+// one registration per device: one tab would reap the subscription the other is
+// verifying. Tabs take turns, in every browser that has Web Locks. Whoever comes
+// second finds the first one's work and only refreshes it.
+function oneTabAtATime<T>(run: () => Promise<T>): Promise<T> {
+  const locks = typeof navigator !== 'undefined' ? navigator.locks : undefined;
+  return locks ? locks.request('bulwark-web-push', run) as Promise<T> : run();
+}
+
 export async function enableWebPush(
   params: EnableWebPushParams,
 ): Promise<EnableWebPushResult> {
@@ -732,7 +741,15 @@ export async function enableWebPush(
   const relayBaseUrl = (params.relayBaseUrl ?? DEFAULT_RELAY_BASE_URL).replace(/\/+$/, '');
   if (!relayBaseUrl) throw new Error('relayBaseUrl is required');
 
+  // Outside the lock: the browser's question must come with the user's click.
   await ensurePermission();
+  return oneTabAtATime(() => enableWebPushForThisTab(params, relayBaseUrl));
+}
+
+async function enableWebPushForThisTab(
+  params: EnableWebPushParams,
+  relayBaseUrl: string,
+): Promise<EnableWebPushResult> {
   const registration = await ensureServiceWorker();
 
   const vapidPublicKey = await fetchVapidPublicKey(relayBaseUrl);
@@ -914,7 +931,11 @@ export interface DisableWebPushParams {
 // (only when no other accounts still need it) the browser-wide
 // PushSubscription. Any single failure is swallowed so the user always ends
 // up in a "disabled" state locally.
-export async function disableWebPush(params: DisableWebPushParams): Promise<void> {
+export function disableWebPush(params: DisableWebPushParams): Promise<void> {
+  return oneTabAtATime(() => disableWebPushForThisTab(params));
+}
+
+async function disableWebPushForThisTab(params: DisableWebPushParams): Promise<void> {
   const relayBaseUrl = (params.relayBaseUrl ?? DEFAULT_RELAY_BASE_URL).replace(/\/+$/, '');
   const accountId = params.client.getAccountId();
 
