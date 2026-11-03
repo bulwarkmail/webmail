@@ -4,8 +4,9 @@
  * natively. A pick clicks the row the HTML menu has for it, so a menu has one list of
  * entries with one set of handlers and the two can't drift.
  *
- * A menu with something a native one can't show (a plugin's frame, a colour picker,
- * a row with no text) stays HTML. So does anything marked data-native-menu="html".
+ * A menu with something a native one can't show (a colour picker, a row with no text)
+ * stays HTML. So does anything marked data-native-menu="html". A plugin's frame in the
+ * menu doesn't: the rest shows natively, with one line that opens the HTML menu.
  */
 
 import { getDesktopBridge } from './bridge';
@@ -21,9 +22,14 @@ export interface ReadMenu {
   elements: Map<string, HTMLElement>;
   /** There's something here a native menu can't show. */
   unsupported: boolean;
+  /** A plugin drew something of its own in the menu. */
+  hasFrames: boolean;
 }
 
 const ROW = '[role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"], button, a[href]';
+
+/** The native line that opens the HTML menu instead. */
+export const HTML_MENU_ITEM = "html-menu";
 
 function isDisabled(el: HTMLElement): boolean {
   return (el as HTMLButtonElement).disabled === true || el.getAttribute('aria-disabled') === 'true';
@@ -40,7 +46,8 @@ function isHidden(el: Element): boolean {
 
 export function readMenu(root: HTMLElement): ReadMenu {
   const elements = new Map<string, HTMLElement>();
-  let unsupported = root.querySelector('[data-native-menu="html"], iframe, select, textarea, input[type="color"]') !== null;
+  let unsupported = root.querySelector('[data-native-menu="html"], select, textarea, input[type="color"]') !== null;
+  let hasFrames = false;
   let next = 1;
 
   const walk = (container: Element, into: DesktopNativeMenuItem[]): void => {
@@ -48,6 +55,12 @@ export function readMenu(root: HTMLElement): ReadMenu {
       if (!(child instanceof HTMLElement) || isHidden(child)) continue;
       if (child.getAttribute('role') === 'separator') {
         into.push({ type: 'separator' });
+        continue;
+      }
+      if (child.tagName === 'IFRAME') {
+        // Only a plugin's own slot has this coming. Anything else stays HTML whole.
+        if (child.closest('[data-plugin-slot]')) hasFrames = true;
+        else unsupported = true;
         continue;
       }
       if (child.dataset.submenuPanel !== undefined) continue;
@@ -105,7 +118,7 @@ export function readMenu(root: HTMLElement): ReadMenu {
 
   const items: DesktopNativeMenuItem[] = [];
   walk(root, items);
-  return { items, elements, unsupported };
+  return { items, elements, unsupported, hasFrames };
 }
 
 const SETTLE_MS = 30;
@@ -127,17 +140,46 @@ export async function readSettledMenu(root: HTMLElement, cancelled: () => boolea
   return previous;
 }
 
-/** Shows it and clicks the row picked. Resolves when the menu has gone. */
-export async function showNativeMenu(read: ReadMenu, at?: { x: number; y: number }): Promise<void> {
+function labelOfId(items: DesktopNativeMenuItem[], id: string): string | undefined {
+  for (const item of items) {
+    if (item.id === id) return item.label;
+    const below = item.submenu && labelOfId(item.submenu, id);
+    if (below) return below;
+  }
+  return undefined;
+}
+
+export type NativeMenuOutcome = 'done' | 'html' | 'gone';
+
+/**
+ * Shows it and clicks the row picked. Says when the pick found nothing: the page can
+ * re-render under a menu that stays up (the list refreshing), and a row that's gone
+ * would otherwise do nothing with no word about it. If the same line is back at the
+ * same place, that's the one.
+ */
+export async function showNativeMenu(read: ReadMenu, root: HTMLElement, at?: { x: number; y: number }, fromPlugins?: string): Promise<NativeMenuOutcome> {
   const popup = getDesktopBridge()?.menu?.popup;
-  if (!popup) return;
+  if (!popup) return 'done';
+  const items = read.hasFrames && fromPlugins
+    ? [...read.items, { type: 'separator' as const }, { id: HTML_MENU_ITEM, label: fromPlugins }]
+    : read.items;
   document.documentElement.dataset.nativeMenuOpen = '';
+  let picked: string | null;
   try {
-    const picked = await popup(read.items, at);
-    if (picked) read.elements.get(picked)?.click();
+    picked = await popup(items, at);
   } finally {
     delete document.documentElement.dataset.nativeMenuOpen;
   }
+  if (!picked) return 'done';
+  if (picked === HTML_MENU_ITEM) return 'html';
+  let row = read.elements.get(picked);
+  if (!row?.isConnected) {
+    const again = root.isConnected ? readMenu(root) : null;
+    row = again && labelOfId(again.items, picked) === labelOfId(read.items, picked) ? again.elements.get(picked) : undefined;
+  }
+  if (!row?.isConnected) return 'gone';
+  row.click();
+  return 'done';
 }
 
 /** A native menu is up: the window's blur or a stray event says nothing about it. */

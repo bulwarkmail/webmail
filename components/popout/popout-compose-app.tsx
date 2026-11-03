@@ -18,9 +18,15 @@ import { announceMailChanged, announceSentToMainWindow, askRescuedDraftId, watch
 import { acknowledgeComposeHandoff, receiveComposeHandoff, rememberComposePayload, rememberedComposePayload, watchHandoffCancel } from "@/lib/popout/compose-handoff";
 import type { ComposePopoutPayload } from "@/lib/popout/compose-payload";
 import { closePopoutWindow } from "@/lib/popout/window-role";
-import { composerDataFromDraft } from "@/lib/draft-composer-data";
+import { Button } from "@/components/ui/button";
+import { composerDataFromDraft, isRestorableDraft } from "@/lib/draft-composer-data";
+import { noteOpenDraft } from "@/lib/desktop/window-restore";
+import { findDraftIdentityIdForLogin } from "@/lib/draft-source";
+import { emailHooks } from "@/lib/plugin-hooks";
+import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-identities";
 import { useIdentityStore } from "@/stores/identity-store";
-import { PopoutShell, PopoutSkeleton } from "./popout-shell";
+import type { Email } from "@/lib/jmap/types";
+import { PopoutNotice, PopoutShell, PopoutSkeleton } from "./popout-shell";
 
 /** A warning with no main window left to show it stays this long before the window goes. */
 const WARNING_READ_MS = 8000;
@@ -44,9 +50,20 @@ function readLaunch(): { handoffId: string | null; accountId?: string; draftId?:
   };
 }
 
+/** How long a restored draft waits for the identity that wrote it to load. */
+const IDENTITY_WAIT_MS = 4000;
+
 /**
  * The composer that was open when the desktop app quit, back on its draft. A draft
  * that has gone since (sent or deleted elsewhere) means there's nothing to show.
+ * A server that doesn't answer says nothing about it: the window stays, offers to try
+ * again, and the draft stays on the list for the next start.
+ *
+ * Only through the login the address names, and never without one: ids repeat across
+ * accounts, so another login could hold someone else's message under this id.
+ *
+ * The From stays what it was. With several accounts the other accounts' identities
+ * load later, and the composer would otherwise start on the default and save that.
  */
 function RestoredDraft({ draftId, accountId, ownerAccountId, onReady }: {
   draftId: string;
@@ -55,37 +72,92 @@ function RestoredDraft({ draftId, accountId, ownerAccountId, onReady }: {
   onReady: (payload: ComposePopoutPayload) => void;
 }) {
   const t = useTranslations();
+  const tRestore = useTranslations("desktopUi.restore");
   const tWindows = useTranslations("pwaWindows");
-  const client = useAuthStore((s) => (accountId ? s.getClientForAccount(accountId) : undefined) ?? s.client);
-  const identities = useIdentityStore((s) => s.identities);
+  const client = useAuthStore((s) => (accountId ? s.getClientForAccount(accountId) : undefined));
+  const ownIdentities = useIdentityStore((s) => s.identities);
+  const multi = useProMultiAccountIdentities();
+  const identities = multi.enabled ? multi.allIdentities : ownIdentities;
+  const [draft, setDraft] = useState<Email | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const [waitOver, setWaitOver] = useState(false);
+
+  // Until the composer takes over, this window still stands for the draft.
   useEffect(() => {
+    const key = `restored-${draftId}`;
+    noteOpenDraft(key, { draftId, localAccountId: accountId, ownerAccountId });
+    return () => noteOpenDraft(key, null);
+  }, [draftId, accountId, ownerAccountId]);
+
+  useEffect(() => {
+    if (!accountId) {
+      closePopoutWindow();
+      return;
+    }
     if (!client) return;
     let cancelled = false;
-    void client.getEmail(draftId, ownerAccountId).then((draft) => {
+    setFailed(false);
+    void Promise.all([client.getEmail(draftId, ownerAccountId), client.getMailboxes(ownerAccountId)]).then(async ([found, mailboxes]) => {
       if (cancelled) return;
-      if (!draft) {
+      if (!found || !isRestorableDraft(found, mailboxes)) {
         closePopoutWindow();
         return;
       }
-      onReady({
-        mode: "compose",
-        initialData: composerDataFromDraft(draft, {
-          accountId: ownerAccountId,
-          localAccountId: accountId,
-          identities,
-          noSubject: t("email_composer.no_subject"),
-        }),
-      });
+      const transformed = await emailHooks.onBeforeEditDraft.transform(found);
+      if (!cancelled) setDraft(transformed);
     }).catch((error) => {
       debug.error("Failed to reopen a draft:", error);
-      if (!cancelled) closePopoutWindow();
+      if (!cancelled) setFailed(true);
     });
     return () => {
       cancelled = true;
     };
-    // Once per client: the draft doesn't change under a window still opening.
+  }, [client, accountId, draftId, ownerAccountId, attempt]);
+
+  // Back online: try by itself.
+  useEffect(() => {
+    if (!failed) return;
+    const retry = () => setAttempt((n) => n + 1);
+    window.addEventListener("online", retry);
+    return () => window.removeEventListener("online", retry);
+  }, [failed]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setWaitOver(true), IDENTITY_WAIT_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!draft) return;
+    const from = draft.from?.[0];
+    const matched = findDraftIdentityIdForLogin(identities, from, accountId);
+    // The identity may still be on its way: wait for it, then keep the address as it was.
+    if (!matched && from && !waitOver) return;
+    const data = composerDataFromDraft(draft, {
+      accountId: ownerAccountId,
+      localAccountId: accountId,
+      identities,
+      noSubject: t("email_composer.no_subject"),
+    });
+    onReady({
+      mode: "compose",
+      initialData: !matched && from?.email
+        ? { ...data, fromOverrideEnabled: true, fromOverrideEmail: from.email, fromOverrideName: from.name ?? "" }
+        : data,
+    });
+    // onReady swaps this component out; `t` changes nothing here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client, draftId, ownerAccountId]);
+  }, [draft, identities, waitOver]);
+
+  if (failed) {
+    return (
+      <PopoutNotice title={tRestore("unavailable_title")} body={tRestore("unavailable_body")}>
+        <Button onClick={() => setAttempt((n) => n + 1)}>{tRestore("try_again")}</Button>
+        <Button variant="ghost" onClick={closePopoutWindow}>{tRestore("close")}</Button>
+      </PopoutNotice>
+    );
+  }
   return <PopoutSkeleton label={tWindows("opening")} />;
 }
 
@@ -205,7 +277,15 @@ function PopoutComposer({ payload, handoffId }: { payload: ComposePopoutPayload;
     onUnloadState: (state: ComposerDraftData) => {
       if (handoffId) rememberComposePayload(handoffId, { ...payload, initialData: state, prefill: null });
     },
-    onDraftSaved: () => announceMailChanged(useAuthStore.getState().activeAccountId),
+    onDraftSaved: (draftId: string) => {
+      announceMailChanged(useAuthStore.getState().activeAccountId);
+      // A save makes a new id, and this address is what a reload starts from.
+      const url = new URL(window.location.href);
+      if (url.searchParams.has("draft")) {
+        url.searchParams.set("draft", draftId);
+        window.history.replaceState(null, "", `${url.pathname}${url.search}`);
+      }
+    },
   }), [handoffId, mainWindow, payload]);
 
   return (

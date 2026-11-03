@@ -13,9 +13,11 @@ export interface DesktopWindowPrefs {
   openOnDoubleClick: boolean;
   /** The windows open at quit come back at the next start. */
   restoreWindows: boolean;
+  /** Spellcheck dictionaries from Google, for a language the OS has no checker for. Asked once. */
+  dictionaryDownload: 'ask' | 'yes' | 'no';
 }
 
-const DEFAULTS: DesktopWindowPrefs = { openOnDoubleClick: true, restoreWindows: true };
+const DEFAULTS: DesktopWindowPrefs = { openOnDoubleClick: true, restoreWindows: true, dictionaryDownload: 'ask' };
 
 let cached: DesktopWindowPrefs | null = null;
 const listeners = new Set<() => void>();
@@ -32,6 +34,7 @@ export function readDesktopPrefs(): DesktopWindowPrefs {
   cached = {
     openOnDoubleClick: typeof stored.openOnDoubleClick === 'boolean' ? stored.openOnDoubleClick : DEFAULTS.openOnDoubleClick,
     restoreWindows: typeof stored.restoreWindows === 'boolean' ? stored.restoreWindows : DEFAULTS.restoreWindows,
+    dictionaryDownload: stored.dictionaryDownload === 'yes' || stored.dictionaryDownload === 'no' ? stored.dictionaryDownload : DEFAULTS.dictionaryDownload,
   };
   return cached;
 }

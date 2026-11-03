@@ -24,7 +24,7 @@ const CHECK_INTERVAL_MS = 60_000;
  * The id from the address bar: a page the service worker kept for a start
  * without the network was rendered for another id.
  */
-function readLaunch(paramId: string): { emailId: string; accountId?: string; ownerAccountId?: string } {
+function readLaunch(paramId: string): { emailId: string; accountId?: string; ownerAccountId?: string; fromLink?: boolean } {
   if (typeof window === "undefined") return { emailId: paramId };
   const segments = window.location.pathname.split("/").filter(Boolean);
   const at = segments.lastIndexOf("message");
@@ -35,7 +35,7 @@ function readLaunch(paramId: string): { emailId: string; accountId?: string; own
     // A malformed address: the route's own value.
   }
   const search = new URLSearchParams(window.location.search);
-  return { emailId, accountId: search.get("account") ?? undefined, ownerAccountId: search.get("owner") ?? undefined };
+  return { emailId, accountId: search.get("account") ?? undefined, ownerAccountId: search.get("owner") ?? undefined, fromLink: search.get("via") === "link" };
 }
 
 type Presence = "present" | "gone";
@@ -96,7 +96,7 @@ function useMessagePresence(emailId: string, ownerAccountId: string | undefined)
   return { presence, mailboxIds, liveState };
 }
 
-function PopoutMessage({ emailId, accountId, ownerAccountId }: { emailId: string; accountId?: string; ownerAccountId?: string }) {
+function PopoutMessage({ emailId, accountId, ownerAccountId, fromLink }: { emailId: string; accountId?: string; ownerAccountId?: string; fromLink?: boolean }) {
   const t = useTranslations("pwaWindows");
   const tSidebar = useTranslations("sidebar");
   const login = useAuthStore((s) => accountId ?? s.activeAccountId ?? undefined);
@@ -194,6 +194,7 @@ function PopoutMessage({ emailId, accountId, ownerAccountId }: { emailId: string
         onOpenCompose={openCompose}
         liveState={liveState}
         onMailChanged={handleMailChanged}
+        noAutomaticActions={fromLink}
         className="min-h-0 w-full flex-1"
       />
     </>
@@ -205,7 +206,7 @@ export function PopoutMessageApp({ id }: { id: string }) {
   const [launch] = useState(() => readLaunch(id));
   return (
     <PopoutShell kind="message" accountId={launch.accountId}>
-      <PopoutMessage emailId={launch.emailId} accountId={launch.accountId} ownerAccountId={launch.ownerAccountId} />
+      <PopoutMessage emailId={launch.emailId} accountId={launch.accountId} ownerAccountId={launch.ownerAccountId} fromLink={launch.fromLink} />
     </PopoutShell>
   );
 }

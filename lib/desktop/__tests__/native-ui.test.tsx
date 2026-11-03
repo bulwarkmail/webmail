@@ -8,6 +8,7 @@ import { readMenu } from '../native-menu';
 import { noteOpenDraft, resetOpenDrafts, restoreUrlFor } from '../window-restore';
 import { readDesktopPrefs, resetDesktopPrefsCache, setDesktopPref } from '../preferences';
 import { closePopoutWindow, isPopoutPath } from '@/lib/popout/window-role';
+import { toast } from '@/stores/toast-store';
 
 function setBridge(bridge: Partial<BulwarkDesktopBridge> | undefined) {
   window.bulwarkDesktop = bridge as BulwarkDesktopBridge | undefined;
@@ -122,6 +123,42 @@ describe('an HTML menu shown natively', () => {
     await waitFor(() => expect(document.body.querySelector<HTMLElement>('[role="menu"]')?.style.visibility).toBe('visible'));
     expect(popup).not.toHaveBeenCalled();
     expect(screen.getByRole('menuitem', { name: /Reply/ })).toBeTruthy();
+  });
+
+  it('a plugin\'s frame keeps the rest native, with a line to the HTML menu', async () => {
+    const frame = (
+      <div data-plugin-slot="context-menu-email"><iframe title="plugin" /></div>
+    );
+    const onClose = vi.fn();
+    const { items } = await openMenu(testMenu(frame), onClose);
+    expect(items.at(-1)).toMatchObject({ label: 'from_plugins' });
+    expect(items.map((item) => item.label)).toContain('Reply');
+    await act(async () => {
+      answer(items.at(-1)!.id!);
+    });
+    await waitFor(() => expect(document.body.querySelector<HTMLElement>('[role="menu"]')?.style.visibility).toBe('visible'));
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('a frame that is no plugin\'s stays HTML whole', () => {
+    const root = document.createElement('div');
+    root.innerHTML = '<button role="menuitem">Reply</button><iframe></iframe>';
+    expect(readMenu(root).unsupported).toBe(true);
+  });
+
+  it('a row that went while the menu was up says so, instead of doing nothing', async () => {
+    const warning = vi.spyOn(toast, 'warning').mockImplementation(() => '' as never);
+    const reply = vi.fn();
+    const { items, onClose } = await openMenu(testMenu(undefined, { reply }));
+    const row = screen.getAllByRole('menuitem', { hidden: true }).find((el) => el.textContent?.includes('Reply'))!;
+    row.parentElement!.remove();
+    await act(async () => {
+      answer(items[1].id!);
+    });
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    expect(reply).not.toHaveBeenCalled();
+    expect(warning).toHaveBeenCalledWith('pick_gone');
+    warning.mockRestore();
   });
 
   it('a row with no words stays HTML too: a colour swatch says nothing in a native menu', () => {
@@ -242,7 +279,7 @@ describe('a pop-out closing itself', () => {
 
 describe('window settings', () => {
   it('both default to on, and stay on this computer', () => {
-    expect(readDesktopPrefs()).toEqual({ openOnDoubleClick: true, restoreWindows: true });
+    expect(readDesktopPrefs()).toEqual({ openOnDoubleClick: true, restoreWindows: true, dictionaryDownload: 'ask' });
     setDesktopPref('restoreWindows', false);
     resetDesktopPrefsCache();
     expect(readDesktopPrefs().restoreWindows).toBe(false);

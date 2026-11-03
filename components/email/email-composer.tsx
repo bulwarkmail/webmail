@@ -170,6 +170,7 @@ import { fileStorage } from "@/lib/plugin-storage";
 import { usePolicyStore } from "@/stores/policy-store";
 import { registerComposeFlush } from "@/lib/compose-flush-registry";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
+import { noteComposerLanguage } from "@/lib/desktop/languages";
 import { noteOpenDraft } from "@/lib/desktop/window-restore";
 import type { RescuedDraft } from "@/lib/popout/channel";
 import { toUnicodeEmail } from "@/lib/idn";
@@ -385,7 +386,7 @@ interface EmailComposerProps {
     /** The state as the window unloads, for a reload to start from. */
     onUnloadState?: (data: ComposerDraftData) => void;
     /** A save reached the server, for other windows showing the Drafts folder. */
-    onDraftSaved?: () => void;
+    onDraftSaved?: (draftId: string) => void;
     /**
      * Hands a draft to another window to save as this one closes: a request
      * started now wouldn't survive. False when that can't be done safely.
@@ -1948,7 +1949,7 @@ export function EmailComposer({
   // A composer that comes back with the app: a draft it opened on counts from the start.
   // Gone with the composer: sent, discarded or closed.
   useEffect(() => {
-    if (draftIdRef.current) noteOpenDraft(effectiveSessionKey, { draftId: draftIdRef.current, localAccountId: draftLocalAccountIdRef.current, ownerAccountId: draftAccountIdRef.current });
+    if (draftIdRef.current) noteOpenDraft(effectiveSessionKey, { draftId: draftIdRef.current, localAccountId: draftLocalAccountIdRef.current ?? useAuthStore.getState().activeAccountId, ownerAccountId: draftAccountIdRef.current });
     return () => noteOpenDraft(effectiveSessionKey, null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveSessionKey]);
@@ -3028,7 +3029,7 @@ export function EmailComposer({
       draftAccountIdRef.current = draftAccountId;
       draftLocalAccountIdRef.current = savingLogin;
       // Before a save's promise settles: quitting waits for it, then keeps this list.
-      noteOpenDraft(effectiveSessionKey, { draftId: savedDraftId, localAccountId: savingLogin, ownerAccountId: draftAccountId });
+      noteOpenDraft(effectiveSessionKey, { draftId: savedDraftId, localAccountId: savingLogin ?? useAuthStore.getState().activeAccountId, ownerAccountId: draftAccountId });
       setDraftId(savedDraftId);
       setDraftAccountId(draftAccountId);
       setDraftLocalAccountId(savingLogin);
@@ -3109,7 +3110,7 @@ export function EmailComposer({
       // Only the save the user asked for is read out: autosave would say it
       // every minute, and the save before sending is followed by "Sent".
       if (opts.announce && id && !saveFailedRef.current) announceStatus(t('draft_saved'));
-      if (id && !saveFailedRef.current) ownWindowRef.current?.onDraftSaved?.();
+      if (id && !saveFailedRef.current) ownWindowRef.current?.onDraftSaved?.(id);
       return id;
     })();
     inflightSaveRef.current = promise;
@@ -3372,6 +3373,11 @@ export function EmailComposer({
   const uiLocale = useLocale();
   const writingLanguage = useSettingsStore((s) => s.writingLanguage);
   const textLang = writingLanguage && writingLanguage !== 'auto' ? writingLanguage : uiLocale;
+  // The desktop app's spellcheck follows what's being written.
+  useEffect(() => {
+    noteComposerLanguage(effectiveSessionKey, textLang);
+    return () => noteComposerLanguage(effectiveSessionKey, null);
+  }, [effectiveSessionKey, textLang]);
   const proofreading = useProofreading({
     composerId: pluginComposerId,
     sessionKey: effectiveSessionKey,

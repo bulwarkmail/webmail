@@ -126,8 +126,16 @@ export interface DesktopMenuBridge {
 export interface DesktopShellBridge {
   /** http, https and mailto only. */
   openExternal: (url: string) => void;
-  /** The shell's menus follow `ui`. Spellcheck follows both. */
-  setLanguages?: (languages: { ui: string; composer?: string[] }) => void;
+  /** The shell's menus follow `ui`, in `labels` (lib/desktop/languages.ts). Spellcheck follows `ui` and `composer`. */
+  setLanguages?: (languages: { ui: string; composer?: string[]; labels?: Record<string, string> }) => void;
+}
+
+export interface DesktopSpellcheckBridge {
+  /** Languages with neither an OS checker nor a dictionary here. */
+  missing: () => Promise<string[]>;
+  onMissing: (listener: (language: string) => void) => () => void;
+  /** The user said yes: dictionaries may come from Google. Never with no-third-party mode on. */
+  allowDownload: () => void;
 }
 
 export interface DesktopDialogsBridge {
@@ -144,6 +152,8 @@ export interface DesktopDialogsBridge {
 export interface DesktopClipboardBridge {
   /** Puts a file on the clipboard, for pasting into a folder. False when that didn't work. */
   copyFile: (name: string, data: ArrayBuffer) => Promise<boolean>;
+  /** Signed out: nothing copied from that account stays on disk. */
+  clearFiles?: () => void;
 }
 
 export type DesktopServerPrepareResult =
@@ -281,6 +291,7 @@ export interface BulwarkDesktopBridge {
   menu?: DesktopMenuBridge;
   shell?: DesktopShellBridge;
   dialogs?: DesktopDialogsBridge;
+  spellcheck?: DesktopSpellcheckBridge;
   clipboard?: DesktopClipboardBridge;
   lifecycle?: DesktopLifecycleBridge;
   servers?: DesktopServersBridge;

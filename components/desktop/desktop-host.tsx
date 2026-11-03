@@ -1,22 +1,30 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
+import { useStrictestDevices } from "@/hooks/use-device-policy";
 import { useRouter } from "@/i18n/navigation";
 import { openKeyboardShortcuts, parkAppCommand, requestAppCommand, type AppCommand } from "@/lib/app-commands";
+import { onComposerOpened, composerIsOpen } from "@/lib/compose-flush-registry";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { runDesktopCommand, setDesktopBaseState } from "@/lib/desktop/commands";
-import { useDesktopPrefs } from "@/lib/desktop/preferences";
+import { dictionaryDownloadAllowed } from "@/lib/desktop/dictionary-download";
+import { noteComposerLanguage, setDesktopInterfaceLanguage, shellLabels } from "@/lib/desktop/languages";
+import { openLinkFromNativeMenu } from "@/lib/desktop/open-link";
+import { readDesktopPrefs, setDesktopPref, useDesktopPrefs } from "@/lib/desktop/preferences";
 import { applySystemAccent } from "@/lib/desktop/system-accent";
 import type { DesktopSystemTheme } from "@/lib/desktop/types";
 import { canDownloadAnywhere, canPrintAnywhere } from "@/lib/device-policy";
 import { useOfflineStore } from "@/lib/offline/state";
 import { openNewComposerWindow } from "@/lib/popout/open";
 import { isPopoutWindow } from "@/lib/popout/window-role";
+import { onBeforeSignOut, onFullSignOut } from "@/lib/sign-out-cleanup";
 import { useAuthStore } from "@/stores/auth-store";
+import { useEmailStore } from "@/stores/email-store";
 import { useLocaleStore } from "@/stores/locale-store";
-import { usePolicyStore } from "@/stores/policy-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useThemeStore } from "@/stores/theme-store";
+import { toast } from "@/stores/toast-store";
 
 /**
  * The webmail's side of what every desktop window needs: runs menu commands nothing
@@ -28,13 +36,15 @@ export function DesktopHost() {
   const router = useRouter();
   const routerRef = useRef(router);
   routerRef.current = router;
+  const t = useTranslations();
+  const tRef = useRef(t);
+  tRef.current = t;
 
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const singleKeys = useSettingsStore((s) => s.singleKeyShortcuts);
   const writingLanguage = useSettingsStore((s) => s.writingLanguage);
   const uiLocale = useLocaleStore((s) => s.locale);
-  const policyLoaded = usePolicyStore((s) => s.loaded);
-  const accounts = useAuthStore((s) => s.getAllConnectedClients().size);
+  const strictest = useStrictestDevices();
   const { restoreWindows } = useDesktopPrefs();
   const theme = useThemeStore((s) => s.theme);
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
@@ -68,6 +78,16 @@ export function DesktopHost() {
         routerRef.current.push(`/mail/folder/${encodeURIComponent(id.slice("link.folder:".length))}`);
         return;
       }
+      // Open Link in a native menu.
+      if (id.startsWith("link.open:")) {
+        try {
+          const { url, text } = JSON.parse(id.slice("link.open:".length)) as { url: string; text: string };
+          void openLinkFromNativeMenu(url, text, useEmailStore.getState().selectedEmail?.id);
+        } catch {
+          // Only the shell sends this, and it sends JSON.
+        }
+        return;
+      }
       if (!runDesktopCommand(id)) fallback[id]?.();
     });
   }, []);
@@ -79,6 +99,7 @@ export function DesktopHost() {
     const signedIn = isAuthenticated;
     const popout = isPopoutWindow();
     setDesktopBaseState({
+      "link.check": true,
       "shortcuts.singleKeys": singleKeys,
       "policy.download": canDownloadAnywhere(),
       "file.print": canPrint,
@@ -92,24 +113,79 @@ export function DesktopHost() {
       "go.files": signedIn,
       "help.shortcuts": true,
     });
-  }, [isAuthenticated, singleKeys, policyLoaded, accounts]);
+  }, [isAuthenticated, singleKeys, strictest]);
 
-  // Menus and spellcheck follow the interface, and the composer's language too.
+  // Menus and spellcheck follow the interface.
   useEffect(() => {
-    const shell = getDesktopBridge()?.shell;
-    if (!shell?.setLanguages) return;
     const ui = uiLocale || document.documentElement.lang;
-    if (!ui) return;
-    const composer = writingLanguage && writingLanguage !== "auto" ? [writingLanguage] : [];
-    shell.setLanguages({ ui, composer });
-  }, [uiLocale, writingLanguage]);
+    if (ui) setDesktopInterfaceLanguage(ui, shellLabels(tRef.current as unknown as (key: string) => string));
+  }, [uiLocale]);
+
+  // What the user writes in, whichever composer asks for it too.
+  useEffect(() => {
+    noteComposerLanguage("settings", writingLanguage && writingLanguage !== "auto" ? writingLanguage : null);
+  }, [writingLanguage]);
+
+  // A language with no checker in the OS needs a dictionary from Google: the composer
+  // asks once, and never in no-third-party mode. Until a yes, the shell has nowhere to
+  // fetch from at all.
+  useEffect(() => {
+    const spellcheck = getDesktopBridge()?.spellcheck;
+    if (!spellcheck) return;
+    if (readDesktopPrefs().dictionaryDownload === "yes" && dictionaryDownloadAllowed()) spellcheck.allowDownload();
+    const waiting = new Set<string>();
+    const offer = () => {
+      const [language] = waiting;
+      if (!language || !composerIsOpen() || !dictionaryDownloadAllowed()) return;
+      if (readDesktopPrefs().dictionaryDownload !== "ask") return;
+      // Asked once, whatever comes of it.
+      setDesktopPref("dictionaryDownload", "no");
+      const translate = tRef.current;
+      let name = language;
+      try {
+        name = new Intl.DisplayNames([document.documentElement.lang || "en"], { type: "language" }).of(language) ?? language;
+      } catch {
+        // The tag itself will do.
+      }
+      toast.info(translate("desktopUi.spellcheck.offer", { language: name }), {
+        duration: 0,
+        action: {
+          label: translate("desktopUi.spellcheck.download"),
+          onClick: () => {
+            setDesktopPref("dictionaryDownload", "yes");
+            if (dictionaryDownloadAllowed()) spellcheck.allowDownload();
+          },
+        },
+      });
+    };
+    const heard = (language: string) => {
+      waiting.add(language);
+      offer();
+    };
+    void spellcheck.missing().then((list) => list.forEach(heard));
+    const stopMissing = spellcheck.onMissing(heard);
+    const stopComposer = onComposerOpened(offer);
+    return () => {
+      stopMissing();
+      stopComposer();
+    };
+  }, []);
+
+  // Signed out: nothing of that account stays on the file clipboard.
+  useEffect(() => {
+    const clipboard = getDesktopBridge()?.clipboard;
+    if (!clipboard?.clearFiles) return;
+    const clear = () => clipboard.clearFiles?.();
+    onFullSignOut(clear);
+    onBeforeSignOut(async () => clear());
+  }, []);
 
   // The windows' behaviour lives here, the shell only needs its copy.
   useEffect(() => {
     getDesktopBridge()?.windows?.setRestoreEnabled?.(restoreWindows);
   }, [restoreWindows]);
 
-  // Signed in: this window has a session to lend, so pop-outs from last time can open.
+  // Signed in: this window has a session to lend, for pop-outs from last time and links.
   useEffect(() => {
     if (!isAuthenticated || isPopoutWindow()) return;
     getDesktopBridge()?.windows?.sessionReady?.();

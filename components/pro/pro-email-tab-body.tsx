@@ -79,6 +79,8 @@ interface ProEmailViewProps {
   liveState?: Pick<Email, 'keywords' | 'mailboxIds'> | null;
   /** This view changed the message's flags, for a host other windows should hear from. */
   onMailChanged?: () => void;
+  /** See EmailViewer. */
+  noAutomaticActions?: boolean;
   /**
    * The message left this view: deleted, archived, moved, or reopened in the
    * composer. The host decides what that means (close the tab / clear the
@@ -134,7 +136,7 @@ function buildReplyContext(email: Email): ProReplyContext {
  * Hosted by `ProEmailTabBody` (a dedicated email tab) and by the folder tab's
  * reading pane.
  */
-export function ProEmailView({ emailId, client: clientOverride, clientAccountId, accountId, onLoaded, onOpenCompose, liveState, onMailChanged, onClose, className }: ProEmailViewProps) {
+export function ProEmailView({ emailId, client: clientOverride, clientAccountId, accountId, onLoaded, onOpenCompose, liveState, onMailChanged, noAutomaticActions, onClose, className }: ProEmailViewProps) {
   const t = useTranslations();
   const tNotifications = useTranslations('notifications');
   const tRemove = useTranslations('email_list.confirm_remove');
@@ -574,6 +576,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     <div className={cn("flex h-full flex-col bg-background", className)}>
       <ErrorBoundary fallback={EmailViewerErrorFallback}>
         <EmailViewer
+          noAutomaticActions={noAutomaticActions}
           email={email}
           blobSource={blobSource}
           isLoading={isLoading}

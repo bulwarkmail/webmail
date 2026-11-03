@@ -14,6 +14,21 @@ import { getDesktopBridge } from '@/lib/desktop/bridge';
 
 export type ComposeFlush = () => Promise<void>;
 
+const openedListeners = new Set<() => void>();
+
+/** A composer is open in this window. */
+export function composerIsOpen(): boolean {
+  return flushes.size > 0;
+}
+
+/** Calls `listener` as a composer opens. Returns the unsubscribe. */
+export function onComposerOpened(listener: () => void): () => void {
+  openedListeners.add(listener);
+  return () => {
+    openedListeners.delete(listener);
+  };
+}
+
 /** Less than the desktop shell waits for a closing window. */
 const DESKTOP_FLUSH_MS = 3000;
 
@@ -44,6 +59,7 @@ export function registerComposeFlush(flush: ComposeFlush): () => void {
   flushes.set(id, flush);
   for (const waiter of [...waiters]) waiter(flush);
   syncDesktopFlush();
+  for (const listener of [...openedListeners]) listener();
   return () => {
     flushes.delete(id);
     syncDesktopFlush();

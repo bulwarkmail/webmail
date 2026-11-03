@@ -17,7 +17,9 @@ import {
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { ChevronRight } from "@/components/icons";
+import { useTranslations } from "next-intl";
 import { nativeMenusAvailable, readSettledMenu, showNativeMenu } from "@/lib/desktop/native-menu";
+import { toast } from "@/stores/toast-store";
 
 interface Position {
   x: number;
@@ -253,6 +255,9 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
     const nativeMode = isOpen && mounted && !nativeRefused && nativeMenusAvailable();
     const positionRef = useRef(position);
     positionRef.current = position;
+    const tDesktop = useTranslations("desktopUi.menu");
+    const tDesktopRef = useRef(tDesktop);
+    tDesktopRef.current = tDesktop;
 
     useEffect(() => {
       setMounted(true);
@@ -280,8 +285,15 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
         const place = at
           ? { x: at.align === "end" ? Math.max(0, at.right - root.getBoundingClientRect().width) : at.left, y: at.bottom + ANCHOR_GAP }
           : undefined;
-        await showNativeMenu(read, place);
-        if (!cancelled) onCloseRef.current();
+        const outcome = await showNativeMenu(read, root, place, tDesktopRef.current("from_plugins"));
+        if (cancelled) return;
+        // "More from plugins": the menu itself, with what only it can show.
+        if (outcome === "html") {
+          setNativeRefused(true);
+          return;
+        }
+        if (outcome === "gone") toast.warning(tDesktopRef.current("pick_gone"));
+        onCloseRef.current();
       })();
       return () => {
         cancelled = true;

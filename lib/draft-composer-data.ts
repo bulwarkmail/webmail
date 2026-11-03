@@ -1,9 +1,24 @@
 import type { ComposerDraftData } from '@/components/email/email-composer';
 import { findDraftIdentityIdForLogin, type DraftSource } from '@/lib/draft-source';
 import { getDraftComposerBody } from '@/lib/email-body-selection';
-import type { Email, Identity } from '@/lib/jmap/types';
+import type { Email, Identity, Mailbox } from '@/lib/jmap/types';
 import { messagePriorityFromHeaders } from '@/lib/message-priority';
 import { reopenedLabelChoice } from '@/lib/outgoing/classification';
+
+/**
+ * Whether a message may reopen as a draft from an id kept since last time. Sending
+ * keeps the id, and a composer on it would replace, resend or delete the message. A
+ * draft has `$draft` or sits in Drafts (a send undone comes back without the keyword);
+ * and in Sent or Trash it's nothing to edit, whatever its keywords say.
+ */
+export function isRestorableDraft(
+  draft: Pick<Email, 'keywords' | 'mailboxIds'>,
+  mailboxes: Pick<Mailbox, 'id' | 'originalId' | 'role'>[],
+): boolean {
+  const roles = Object.keys(draft.mailboxIds ?? {}).map((id) => mailboxes.find((m) => m.id === id || m.originalId === id)?.role);
+  if (roles.includes('sent') || roles.includes('trash')) return false;
+  return !!draft.keywords?.$draft || roles.includes('drafts');
+}
 
 /**
  * What a composer starts from when a saved draft is opened: from the list, or from

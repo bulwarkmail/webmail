@@ -290,6 +290,11 @@ interface EmailViewerProps {
   onToggleFullscreen?: () => void;
   /** Opens this message in its own window; left out where that isn't on offer. */
   onOpenInWindow?: () => void;
+  /**
+   * Opened by something outside the app (a bulwark:// link), not by the user in it.
+   * It shows the message and does nothing on its own: no mark as read, no read receipt.
+   */
+  noAutomaticActions?: boolean;
   isFullscreen?: boolean;
   currentUserEmail?: string;
   currentUserName?: string;
@@ -1324,6 +1329,7 @@ export function EmailViewer({
   onCompose,
   onToggleFullscreen,
   onOpenInWindow,
+  noAutomaticActions = false,
   isFullscreen = false,
   currentUserEmail,
   currentUserName,
@@ -2200,7 +2206,7 @@ export function EmailViewer({
 
   useEffect(() => {
     // Mark as read when email is viewed, respecting the delay setting
-    if (!email || !onMarkAsRead) {
+    if (!email || !onMarkAsRead || noAutomaticActions) {
       return;
     }
 
@@ -3948,7 +3954,7 @@ ${printWatermark ? printWatermark.html : ''}
     if (autoMdnRef.current !== email?.id) autoMdnRef.current = null;
   }, [email?.id]);
   useEffect(() => {
-    if (readReceiptResponse !== 'always') return;
+    if (readReceiptResponse !== 'always' || noAutomaticActions) return;
     if (!shouldOfferReadReceipt || !email) return;
     if (autoMdnRef.current === email.id) return;
     autoMdnRef.current = email.id;

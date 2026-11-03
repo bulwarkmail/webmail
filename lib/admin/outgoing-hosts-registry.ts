@@ -107,6 +107,16 @@ export const OUTGOING_HOSTS: readonly OutgoingHost[] = [
     lite: false,
   },
   {
+    id: 'spellcheck-dictionaries',
+    host: 'redirector.gvt1.com',
+    files: ['lib/desktop/dictionary-download.ts'],
+    side: 'browser',
+    usedBy: 'Desktop app only: a spellcheck dictionary from Google, for a language the OS has no checker for, after the user said yes when the composer asked. The text being written is not sent.',
+    off: 'Answer no when the composer asks once. Nothing is fetched until a yes.',
+    inMode: 'The composer does not ask, and the app has no address to fetch dictionaries from.',
+    lite: false,
+  },
+  {
     id: 'translate',
     host: 'api.mymemory.translated.net',
     files: ['app/api/translate/route.ts'],
