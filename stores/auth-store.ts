@@ -3682,10 +3682,12 @@ function leaveForRefusedServer(): void {
     closePopoutWindow();
     return;
   }
-  replaceWindowLocation(`${getLocaleLoginPath()}?notice=server_refused`);
+  replaceWindowLocation(getLocaleLoginPath());
 }
 
-const stoppedForPolicy = new Set<string>();
+// What's refused now, as of this page's start too: a reload to the login page mustn't
+// forget that an account is waiting, or it wouldn't come back when it's allowed again.
+let refusedAccounts = new Set<string>();
 
 /**
  * The device's OS policy took a server off its list, or put one back. A refused account
@@ -3698,7 +3700,6 @@ export function applyDesktopServerPolicy(): void {
   const accounts = useAccountStore.getState().accounts;
   const plan = planForRefusedAccounts(accounts, auth.activeAccountId, getDesktopPolicy());
   for (const id of plan.stop) {
-    stoppedForPolicy.add(id);
     clearRefreshTimer(id);
     const client = clients.get(id);
     if (client) {
@@ -3708,8 +3709,8 @@ export function applyDesktopServerPolicy(): void {
     }
     useAccountStore.getState().updateAccount(id, { isConnected: false });
   }
-  const returned = [...stoppedForPolicy].filter((id) => !plan.refused.includes(id));
-  for (const id of returned) stoppedForPolicy.delete(id);
+  const returned = [...refusedAccounts].filter((id) => !plan.refused.includes(id));
+  refusedAccounts = new Set(plan.refused);
 
   if (plan.activeRefused) {
     if (plan.next) void auth.switchAccount(plan.next);
@@ -3724,7 +3725,10 @@ export function applyDesktopServerPolicy(): void {
   if (returned.length > 0 && !auth.client) window.location.replace('/');
 }
 
-if (typeof window !== 'undefined') onDesktopPolicyChange(applyDesktopServerPolicy);
+if (typeof window !== 'undefined') {
+  refusedAccounts = new Set(planForRefusedAccounts(useAccountStore.getState().accounts, null, getDesktopPolicy()).refused);
+  onDesktopPolicyChange(applyDesktopServerPolicy);
+}
 
 // See canEnterLoginInPlace.
 let signedInSincePageLoad = useAuthStore.getState().isAuthenticated;

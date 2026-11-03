@@ -4,6 +4,7 @@ import { Suspense, useState, useEffect, useRef, useCallback, useId, useMemo } fr
 import { IS_DESKTOP_BUILD } from "@/lib/desktop/flag";
 import { forgetDesktopServer, getDesktopBridge } from "@/lib/desktop/bridge";
 import { customServerAllowedByDesktopPolicy, jmapServerAllowedByDesktopPolicy, useDesktopPolicy } from "@/lib/desktop/policy";
+import { accountRefusedByDesktopPolicy } from "@/lib/desktop/refused-accounts";
 import { browserSignInAvailable, runDesktopBrowserSignIn } from "@/lib/desktop/browser-sign-in";
 import { useRouter } from "@/i18n/navigation";
 import { useParams, useSearchParams } from "next/navigation";
@@ -201,10 +202,15 @@ function LoginPageContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const isAddAccountMode = searchParams.get("mode") === "add-account";
-  // Also when the app sent someone here because their server came off the list.
-  const [desktopPolicyNotice, setDesktopPolicyNotice] = useState<string | null>(
-    searchParams.get("notice") === "server_refused" ? tDesktopPolicy("server_refused") : null,
-  );
+  const [desktopPolicyNotice, setDesktopPolicyNotice] = useState<string | null>(null);
+  // Whichever way someone got here: every account they have is on a server the device's
+  // OS policy refuses for now. They wait, and come back when it's allowed again.
+  useEffect(() => {
+    const stored = useAccountStore.getState().accounts;
+    if (stored.length > 0 && stored.every((account) => accountRefusedByDesktopPolicy(account, desktopPolicy))) {
+      setDesktopPolicyNotice(tDesktopPolicy("server_refused"));
+    }
+  }, [desktopPolicy, tDesktopPolicy]);
 
   // When the mobile app launches the webmail in a browser tab it tacks on
   // these params. We grab them once at mount and stash them in a ref so any
