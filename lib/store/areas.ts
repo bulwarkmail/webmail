@@ -2,5 +2,6 @@
 
 import type { StoreArea } from './area';
 import { mailArea } from './mail';
+import { outboxArea } from './outbox';
 
-export const STORE_AREAS: readonly StoreArea[] = [mailArea];
+export const STORE_AREAS: readonly StoreArea[] = [mailArea, outboxArea];
