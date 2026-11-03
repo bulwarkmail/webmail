@@ -13,6 +13,7 @@ import type { AddressBook, ContactCard, ContactMedia } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { clearContactPhotoCache } from '@/lib/contact-photo-cache';
 import { PrincipalsRequestError } from '@/lib/jmap/principals-error';
+import { PartialAccountsError } from '@/lib/jmap/partial-accounts';
 import { setClientLookup } from '../client-registry';
 
 vi.stubGlobal('crypto', { randomUUID: () => '00000000-0000-0000-0000-000000000000' });
@@ -1385,6 +1386,46 @@ describe('contact-store', () => {
       const state = useContactStore.getState();
       expect(state.contacts.map((c) => c.id)).toEqual(['acc-a::a1', 'acc-b::b1']);
       expect(state.addressBooks.map((b) => b.id)).toEqual(['acc-a::booka', 'acc-b::bookb']);
+    });
+
+    it('keeps the primary account\'s cards when only a shared account answered', async () => {
+      const refusal = new PartialAccountsError<ContactCard>([makeContact({ id: 'shared:s2', accountId: 'shared', isShared: true })], ['me'], 'me', new Error('offline'));
+      const failing = { getAllContacts: vi.fn().mockRejectedValue(refusal) } as unknown as IJMAPClient;
+      useContactStore.setState({
+        contacts: [
+          makeContact({ id: 'p1', accountId: 'me' }),
+          // A card just created has no accountId yet: it's the primary account's.
+          makeContact({ id: 'p2' }),
+          makeContact({ id: 'shared:s1', accountId: 'shared', isShared: true }),
+        ],
+      });
+      await useContactStore.getState().fetchContacts(failing);
+      const state = useContactStore.getState();
+      expect(state.contacts.map((c) => c.id).sort()).toEqual(['p1', 'p2', 'shared:s2']);
+      expect(state.error).toBe('Failed to fetch contacts');
+      expect(state.isLoading).toBe(false);
+    });
+
+    it('keeps the primary account\'s books when only a shared account answered', async () => {
+      const refusal = new PartialAccountsError<AddressBook>([{ id: 'shared:b', name: 'B', accountId: 'shared' } as AddressBook], ['me'], 'me', new Error('offline'));
+      const failing = { getAllAddressBooks: vi.fn().mockRejectedValue(refusal) } as unknown as IJMAPClient;
+      useContactStore.setState({ addressBooks: [{ id: 'mine', name: 'Mine', accountId: 'me' } as AddressBook] });
+      await useContactStore.getState().fetchAddressBooks(failing);
+      expect(useContactStore.getState().addressBooks.map((b) => b.id).sort()).toEqual(['mine', 'shared:b']);
+    });
+
+    it('keeps a failed JMAP account of one login while its others refresh', async () => {
+      const refusal = new PartialAccountsError<ContactCard>([makeContact({ id: 's2', accountId: 'shared' })], ['me'], 'me', new Error('offline'));
+      const failing = { getAllContacts: vi.fn().mockRejectedValue(refusal) } as unknown as IJMAPClient;
+      useContactStore.setState({
+        contacts: [
+          makeContact({ id: 'acc-a::p1', accountId: 'me', localAccountId: 'acc-a' }),
+          makeContact({ id: 'acc-a::s1', accountId: 'shared', localAccountId: 'acc-a' }),
+          makeContact({ id: 'acc-b::x', accountId: 'me', localAccountId: 'acc-b' }),
+        ],
+      });
+      await useContactStore.getState().fetchAllAccountsContacts([{ client: failing, localAccountId: 'acc-a' }]);
+      expect(useContactStore.getState().contacts.map((c) => c.id).sort()).toEqual(['acc-a::p1', 'acc-a::s2']);
     });
 
     it('keeps the list when the only account fails', async () => {

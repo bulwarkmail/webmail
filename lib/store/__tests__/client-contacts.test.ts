@@ -6,6 +6,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { JMAPClient } from '@/lib/jmap/client';
 import { setOfflineHooks, type OfflineHooks } from '@/lib/jmap/offline-hooks';
+import { partialAccounts } from '@/lib/jmap/partial-accounts';
+import type { AddressBook, ContactCard } from '@/lib/jmap/types';
 import { DEFAULT_SCOPE } from '../area';
 import { contactsArea } from '../contacts';
 import { AccountEngine } from '../engine/account-engine';
@@ -78,6 +80,27 @@ describe('the client over the store', () => {
     expect(shared).toMatchObject({ id: `${SHARED_ACCOUNT}:c1`, originalId: 'c1', isShared: true });
     const books = await client.getAllAddressBooks();
     expect(books.map((b) => b.id).sort()).toEqual(['book1', `${SHARED_ACCOUNT}:teambook`]);
+  });
+
+  it('says which account failed, with what the others gave', async () => {
+    const { client, engine } = await offlineClient(seeded());
+    const failPrimary: Partial<OfflineHooks> = {
+      skipNetwork: () => true,
+      answer: async (_client, calls) => (calls[0][1].accountId === JMAP_ACCOUNT
+        ? { methodResponses: calls.map(([, , id]) => ['error', { type: 'serverUnavailable' }, id]) }
+        : engine.answer(calls)),
+      record: () => {},
+      noteNetwork: () => {},
+    };
+    setOfflineHooks(failPrimary as OfflineHooks);
+    const contacts = await client.getAllContacts().catch((error: unknown) => error);
+    const partial = partialAccounts<ContactCard>(contacts);
+    expect(partial?.failedAccountIds).toEqual([JMAP_ACCOUNT]);
+    expect(partial?.primaryAccountId).toBe(JMAP_ACCOUNT);
+    expect(partial?.items.map((c) => c.name?.full)).toEqual(['Dora Team']);
+    const books = partialAccounts<AddressBook>(await client.getAllAddressBooks().catch((error: unknown) => error));
+    expect(books?.failedAccountIds).toEqual([JMAP_ACCOUNT]);
+    expect(books?.items.map((b) => b.originalId)).toEqual(['teambook']);
   });
 
   it('searches with its own filter', async () => {

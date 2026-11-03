@@ -19,6 +19,7 @@ import { isTaskLikeObject, type ScannedCalendarObject } from "@/lib/calendar-com
 import { DEFAULT_CALENDAR_COMPONENTS, mkCalendarCollection, newCalendarCollectionName } from "@/lib/webdav/calendar-collection";
 import { sanitizeDisplayName, splitMailbox } from "@/lib/rfc5322-mailbox";
 import { decodeFileNodeName } from "./filenode-name";
+import { PartialAccountsError } from "./partial-accounts";
 import { fileNodeKind, fromDraftFileNode, toDraftFileNodeCreate } from "./filenode-kind";
 import { fileNodeDepth } from "./filenode-depth";
 import { contactFromWire, contactToWire } from "./contact-wire";
@@ -7327,13 +7328,16 @@ export class JMAPClient implements IJMAPClient {
     }
   }
 
-  /** Throws when no account could answer, so a failure doesn't read as having no address books. */
+  /**
+   * Throws PartialAccountsError when an account couldn't answer, with what the
+   * others gave, so a failure doesn't read as that account having no books.
+   */
   async getAllAddressBooks(): Promise<AddressBook[]> {
-    let answered = 0;
+    const failed: string[] = [];
     let failure: unknown;
+    const allBooks: AddressBook[] = [];
+    const primaryId = this.getContactsAccountId();
     try {
-      const allBooks: AddressBook[] = [];
-      const primaryId = this.getContactsAccountId();
       const accountIds = this.getContactCapableAccountIds();
 
       for (const accountId of accountIds) {
@@ -7356,23 +7360,23 @@ export class JMAPClient implements IJMAPClient {
               isShared: !isPrimary,
             }));
             allBooks.push(...books);
-            answered += 1;
           } else if (response.methodResponses?.[0]?.[0] === "error") {
             const refused = response.methodResponses[0][1];
             throw new Error(refused?.description || refused?.type || "AddressBook/get failed");
           }
         } catch (error) {
           console.error(`Failed to fetch address books for account ${accountId}:`, error);
+          failed.push(accountId);
           failure ??= error;
         }
       }
 
-      if (answered > 0 || !failure) return allBooks;
+      if (failed.length === 0) return allBooks;
     } catch (error) {
       console.error('Failed to fetch all address books:', error);
       return this.getAddressBooks();
     }
-    throw failure;
+    throw new PartialAccountsError(allBooks, failed, primaryId, failure);
   }
 
   async createAddressBook(name: string): Promise<AddressBook> {
@@ -8286,13 +8290,17 @@ export class JMAPClient implements IJMAPClient {
     }
   }
 
-  /** Throws when no account could answer, so a failure doesn't read as an empty address book. */
+  /**
+   * Throws PartialAccountsError when an account couldn't answer, with what the
+   * others gave, so a failure doesn't read as that account having no cards.
+   */
   async getAllContacts(): Promise<ContactCard[]> {
-    let answered = 0;
+    const failed: string[] = [];
     let failure: unknown;
+    let allContacts: ContactCard[] = [];
+    const primaryId = this.getContactsAccountId();
     try {
-      const allContacts: ContactCard[] = [];
-      const primaryId = this.getContactsAccountId();
+      allContacts = [];
       const accountIds = this.getContactCapableAccountIds();
 
       for (const accountId of accountIds) {
@@ -8313,19 +8321,19 @@ export class JMAPClient implements IJMAPClient {
             isShared: !isPrimary,
           }));
           allContacts.push(...contacts);
-          answered += 1;
         } catch (error) {
           console.error(`Failed to fetch contacts for account ${accountId}:`, error);
+          failed.push(accountId);
           failure ??= error;
         }
       }
 
-      if (answered > 0 || !failure) return allContacts;
+      if (failed.length === 0) return allContacts;
     } catch (error) {
       console.error('Failed to fetch all contacts:', error);
       return this.getContacts();
     }
-    throw failure;
+    throw new PartialAccountsError(allContacts, failed, primaryId, failure);
   }
 
   async getContact(contactId: string, accountId?: string): Promise<ContactCard | null> {
