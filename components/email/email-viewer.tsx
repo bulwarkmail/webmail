@@ -15,6 +15,8 @@ import { useReadAloud } from "@/hooks/use-read-aloud";
 import { ReadAloudBar } from "./read-aloud-bar";
 import { ReaderAttachments, type AttachmentDragProps } from "./reader-attachments";
 import { ReaderViewDialog } from "./reader-view-dialog";
+import { MessagePrint, type MessagePrintFields } from "./message-print";
+import { usePrintListener, usePrinting } from "@/components/print/print-root";
 import { ReadingMask } from "./reading-mask";
 import { collectReferencedCids, isEmbeddedInBody, isReportPart, normalizeCid, rewriteCidReferences } from "@/lib/attachment-visibility";
 import { getAttachmentDisplayName } from "@/lib/attachment-name";
@@ -368,6 +370,12 @@ function getAttachmentContentBytes(attachment: {
   }
 
   return null;
+}
+
+/** Whether the element takes up room on screen (not in a hidden tab or a display: none pane). */
+function isShownOnScreen(el: HTMLElement): boolean {
+  if (typeof el.checkVisibility === 'function') return el.checkVisibility();
+  return el.getClientRects().length > 0;
 }
 
 /**
@@ -3644,6 +3652,34 @@ export function EmailViewer({
     openMailImport({ mailboxId: useEmailStore.getState().selectedMailbox || undefined });
   };
 
+  // What a printout of the message shows, for the Print action's window and
+  // for the page's print copy (Ctrl+P). Text fields are unescaped.
+  const messagePrintFields = (): MessagePrintFields | null => {
+    if (!email) return null;
+    const printSender = email.from?.[0];
+    const formatRecipient = (r: { name?: string | null; email: string }) =>
+      r.name ? `${r.name} <${r.email}>` : r.email;
+    // The body was sanitized with EMAIL_IFRAME_SANITIZE_CONFIG which permits
+    // <style>. A printout has no iframe isolation, so re-sanitize with the
+    // stricter config that forbids <style> before injecting into the DOM.
+    // A plain-text body is escaped text with its own newlines: it prints its
+    // trailing quote opened instead of behind the collapsed toggle.
+    const plain = !effectiveEmailContent.isHtml;
+    return {
+      subject: email.subject || t('no_subject'),
+      sender: printSender?.name
+        ? `${printSender.name} <${printSender.email}>`
+        : printSender?.email || t('unknown_sender'),
+      to: email.to?.map(formatRecipient).join(', ') || '',
+      cc: email.cc?.map(formatRecipient).join(', ') || '',
+      date: formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }),
+      bodyHtml: plain
+        ? effectiveEmailContent.html.replace(/<details>/g, '<details open>')
+        : sanitizeEmailHtml(effectiveEmailContent.html),
+      plain,
+    };
+  };
+
   // Print only the email content in a new window. A print asked for from
   // the list's row menu brings its own window, opened in that click.
   const handlePrint = (openedWindow?: Window) => {
@@ -3652,26 +3688,16 @@ export function EmailViewer({
       openedWindow?.close();
       return;
     }
+    const fields = messagePrintFields();
+    if (!fields) return;
     const printWatermark = watermark ? watermarkForPrint(watermark) : null;
-    const printSender = email.from?.[0];
-    const date = formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
-    const formatRecipient = (r: { name?: string | null; email: string }) =>
-      r.name ? `${escapeHtml(r.name)} &lt;${escapeHtml(r.email)}&gt;` : escapeHtml(r.email);
-    const toList = email.to?.map(formatRecipient).join(', ') || '';
-    const ccList = email.cc?.map(formatRecipient).join(', ') || '';
-    const subjectText = email.subject || t('no_subject');
-    const senderText = printSender?.name
-      ? `${printSender.name} <${printSender.email}>`
-      : printSender?.email || t('unknown_sender');
-    // The body was sanitized with EMAIL_IFRAME_SANITIZE_CONFIG which permits
-    // <style>. The print window has no iframe isolation, so re-sanitize with
-    // the stricter config that forbids <style> before injecting into the DOM.
-    // A plain-text body is escaped text with its own newlines: it prints its
-    // trailing quote opened instead of behind the collapsed toggle.
-    const plainBody = !effectiveEmailContent.isHtml;
-    const printableBody = plainBody
-      ? effectiveEmailContent.html.replace(/<details>/g, '<details open>')
-      : sanitizeEmailHtml(effectiveEmailContent.html);
+    const date = fields.date;
+    const toList = escapeHtml(fields.to);
+    const ccList = escapeHtml(fields.cc);
+    const subjectText = fields.subject;
+    const senderText = fields.sender;
+    const plainBody = fields.plain;
+    const printableBody = fields.bodyHtml;
 
     const printWindow = openedWindow ?? window.open('', '_blank');
     if (!printWindow) return;
@@ -3737,6 +3763,20 @@ ${printWatermark ? printWatermark.html : ''}
     usePrintRequestStore.getState().setRequest(null);
     if (!printRequest.win.closed) handlePrintRef.current(printRequest.win);
   }, [printReady, printRequest]);
+
+  // Ctrl+P and the browser's Print menu print the message alone (app/print.css),
+  // not the app around it with its plugin panels and fixed heights. Only a
+  // reader on screen when printing starts: a Pro tab in the background keeps
+  // its message off the paper. Checked once, as the app is hidden while printing.
+  usePrintListener();
+  const printing = usePrinting();
+  const printShown = useMemo(
+    () => printing && !!viewerRootEl && isShownOnScreen(viewerRootEl),
+    [printing, viewerRootEl],
+  );
+  const printCopyFields = printShown && !devices.noPrint && !isLoading && !!email?.bodyValues
+    ? messagePrintFields()
+    : null;
 
   // Detect List-Unsubscribe header for newsletter banners
   const listHeaders = useMemo(() => {
@@ -4544,6 +4584,7 @@ ${printWatermark ? printWatermark.html : ''}
       data-tour="email-viewer"
       className={cn("flex-1 flex flex-col h-full bg-background overflow-hidden relative", className)}
     >
+    {printCopyFields && <MessagePrint fields={printCopyFields} />}
     {toolbarPosition === 'top' && liftToolbar ? topToolbar : toggleOnlyToolbar}
     {/* The message and the side panels, below the toolbar. Overlays anchor here. */}
     <div className="flex-1 min-h-0 flex flex-row overflow-hidden relative">

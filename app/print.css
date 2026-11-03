@@ -713,3 +713,28 @@
   color: var(--pr-muted);
   white-space: nowrap;
 }
+
+/* ---- A mail message (components/email/message-print.tsx) ---------------- */
+
+.pr-message-meta {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 2mm;
+  margin: 1.5mm 0 0;
+  color: var(--pr-muted);
+  font-size: 8.5pt;
+}
+
+.pr-message-meta > div {
+  display: contents;
+}
+
+.pr-message-meta dt {
+  color: var(--pr-ink);
+  font-weight: 600;
+}
+
+.pr-message-meta dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
