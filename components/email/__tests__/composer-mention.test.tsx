@@ -538,6 +538,14 @@ describe('composer with the @ recipient list', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
+  it('pulls the last recipient back whole on Backspace, without the key deleting its last character', async () => {
+    await renderComposer({ to: 'Sarah Kim <sarah@example.com>' });
+    const to = within(screen.getByTestId('composer-to')).getByRole('combobox') as HTMLInputElement;
+    // fireEvent returns false when the handler stopped the key's default action.
+    expect(fireEvent.keyDown(to, { key: 'Backspace' })).toBe(false);
+    expect(to.value).toBe('Sarah Kim <sarah@example.com>');
+  });
+
   // The directory picker is drawn inside the composer itself, not portaled.
   it('lets Escape in the directory picker leave the composer alone', async () => {
     // Every other capability answers nothing.

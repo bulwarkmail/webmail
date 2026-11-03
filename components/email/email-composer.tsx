@@ -5930,6 +5930,8 @@ export function RecipientChipInput({
     // Backspace on an empty input pulls the last chip back into the input for
     // quick editing.
     if (e.key === 'Backspace' && !inputText && chips.length > 0) {
+      // Or the key goes on to delete the closing ">" of what was just put back.
+      e.preventDefault();
       const lastChip = chips[chips.length - 1];
       onChipsChange(chips.slice(0, -1));
       onInputChange(formatRecipient(lastChip.name, lastChip.email));
