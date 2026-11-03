@@ -958,6 +958,50 @@ describe('a setup that gets stuck', () => {
   });
 });
 
+describe('a re-sync waiting its turn', () => {
+  afterEach(() => { delete (navigator as unknown as { locks?: unknown }).locks; });
+
+  it('does not bring back what another tab turned off meanwhile', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-mine');
+    localStorage.setItem(RELAY_BASE_KEY, RELAY);
+    const client = makeClient([sub('push-mine', THIS_DEVICE)]);
+    installFetch({ [THIS_DEVICE]: true });
+    let turn: Promise<unknown> = Promise.resolve();
+    let release = () => {};
+    turn = new Promise<void>((resolve) => { release = resolve; });
+    Object.defineProperty(navigator, 'locks', {
+      configurable: true,
+      value: { request: (_n: string, run: () => Promise<unknown>) => { const next = turn.then(run, run); turn = next.catch(() => undefined); return next; } },
+    });
+
+    const resync = resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+    await vi.waitFor(() => expect((navigator as unknown as { locks: unknown }).locks).toBeTruthy());
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    localStorage.removeItem(SUB_KEY); // The other tab, holding the lock.
+    release();
+    await resync;
+
+    expect(client.updatePushSubscription).not.toHaveBeenCalled();
+    expect(client.createPushSubscription).not.toHaveBeenCalled();
+    expect(localStorage.getItem(SUB_KEY)).toBeNull();
+  });
+});
+
+describe('a registration from before the relay was remembered', () => {
+  it('gets the relay noted when it is refreshed', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-mine');
+    const client = makeClient([sub('push-mine', THIS_DEVICE)]);
+    installFetch({ [THIS_DEVICE]: true });
+
+    await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(localStorage.getItem(RELAY_BASE_KEY)).toBe(RELAY);
+    expect(client.createPushSubscription).not.toHaveBeenCalled();
+  });
+});
+
 describe('resyncWebPush when the relay changed (#903)', () => {
   afterEach(() => setNoThirdPartyTraffic(false));
 
