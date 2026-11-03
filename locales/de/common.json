@@ -1029,6 +1029,7 @@
     "recipients_refused": "Nicht gesendet: Der Server hat {recipients} abgelehnt.",
     "recipients_partly_refused": "Der Server hat {recipients} abgelehnt. Die anderen Empfänger erhalten die Nachricht.",
     "send_offline": "Sie scheinen offline zu sein. Die Nachricht ist noch da, senden Sie sie erneut, sobald Sie wieder online sind.",
+    "archive_after_reply_queued": "Ihre Nachricht wird gesendet, sobald Sie wieder online sind. Das Original bleibt im Posteingang.",
     "formatting": "Formatierung",
     "send_recipients_rejected": "Nicht gesendet – der Server hat alle Empfänger abgelehnt.",
     "send_plugin_failed": "Nicht gesendet – ein Plugin, das den Versand übernimmt, ist fehlgeschlagen oder hat zu lange gebraucht. Prüfen Sie den Ordner „Gesendet“, bevor Sie erneut senden.",
@@ -2067,6 +2068,10 @@
       "placeholder_warning": {
         "label": "Warnung bei Platzhaltern",
         "description": "Vor dem Senden einer Nachricht nachfragen, die noch Platzhalter wie [TIME] oder [Ihr Name], leere Vorlagenfelder oder unfertigen Text wie TODO oder TBD enthält."
+      },
+      "archive_after_reply": {
+        "label": "Nach dem Antworten archivieren",
+        "description": "Wenn Sie auf eine Nachricht im Posteingang antworten oder sie weiterleiten, wird sie archiviert, sobald Ihre Nachricht gesendet ist."
       },
       "recipient_mentions": {
         "label": "Empfänger mit @ erwähnen",

@@ -1021,6 +1021,7 @@
     "show_less": "Show less",
     "send_failed": "Failed to send email",
     "send_offline": "You seem to be offline. The message is still here, send it again once you are back online.",
+    "archive_after_reply_queued": "Your message will be sent when you are back online. The original stays in your Inbox.",
     "send_timeout": "The server stopped responding. Check your Sent folder before sending again — the message may have gone out.",
     "submission_quota": "The server has too many sent-message records for this account. Bulwark removed the ones it could; if this keeps happening, ask your administrator to raise the email submission limit.",
     "submission_limit": "The server refused to send the message because a limit was reached: {reason}",
@@ -2070,6 +2071,10 @@
       "placeholder_warning": {
         "label": "Placeholder warning",
         "description": "Ask for confirmation before sending a message that still has placeholders like [TIME] or [Your Name], template fields left empty, or unfinished text like TODO or TBD."
+      },
+      "archive_after_reply": {
+        "label": "Archive after replying",
+        "description": "When you reply to or forward a message in your Inbox, archive it once your message is sent."
       },
       "recipient_mentions": {
         "label": "Mention recipients with @",

@@ -1024,6 +1024,7 @@
     "recipients_refused": "Ikke sendt: serveren afviste {recipients}.",
     "recipients_partly_refused": "Serveren afviste {recipients}. De øvrige modtagere får beskeden.",
     "send_offline": "Du ser ud til at være offline. Beskeden er her stadig, send den igen, når du er online.",
+    "archive_after_reply_queued": "Din besked sendes, når du er online igen. Den oprindelige bliver i indbakken.",
     "formatting": "Formatering",
     "send_recipients_rejected": "Ikke sendt - serveren afviste alle modtagere.",
     "send_plugin_failed": "Ikke sendt - et plugin, der står for afsendelsen, fejlede eller tog for lang tid. Tjek mappen Sendt, før du sender igen.",
@@ -2070,6 +2071,10 @@
       "placeholder_warning": {
         "label": "Advarsel om pladsholdere",
         "description": "Bed om bekræftelse, før en besked sendes, der stadig har pladsholdere som [TIME] eller [Dit navn], tomme skabelonfelter eller ufærdig tekst som TODO eller TBD."
+      },
+      "archive_after_reply": {
+        "label": "Arkivér efter svar",
+        "description": "Når du svarer på eller videresender en besked i din indbakke, arkiveres den, når din besked er sendt."
       },
       "recipient_mentions": {
         "label": "Nævn modtagere med @",

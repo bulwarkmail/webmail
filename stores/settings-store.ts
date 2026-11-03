@@ -634,6 +634,7 @@ interface SettingsState extends AccessibilitySettings {
   signatureSeparatorEnabled: boolean; // Prefix the signature with the RFC 3676 "-- " delimiter
   signatureDetails: SignatureDetails; // Title, department, phone, mobile for the organisation signature (lib/org-signature.ts)
   requestReadReceiptDefault: boolean; // Pre-check "request read receipt" in the composer
+  archiveAfterReply: boolean; // Archive an Inbox message once a reply to it or a forward of it is sent
   readReceiptResponse: ReadReceiptResponse; // How to respond to incoming read-receipt requests
 
   // Privacy & Security
@@ -982,6 +983,7 @@ const DEFAULT_SETTINGS = {
   signatureSeparatorEnabled: true,
   signatureDetails: EMPTY_SIGNATURE_DETAILS,
   requestReadReceiptDefault: false,
+  archiveAfterReply: false,
   readReceiptResponse: 'ask' as ReadReceiptResponse,
 
   // Privacy & Security
@@ -1430,6 +1432,7 @@ export const useSettingsStore = create<SettingsState>()(
           signatureSeparatorEnabled: state.signatureSeparatorEnabled,
           signatureDetails: state.signatureDetails,
           requestReadReceiptDefault: state.requestReadReceiptDefault,
+          archiveAfterReply: state.archiveAfterReply,
           readReceiptResponse: state.readReceiptResponse,
           sessionTimeout: state.sessionTimeout,
           emailNotificationsEnabled: state.emailNotificationsEnabled,

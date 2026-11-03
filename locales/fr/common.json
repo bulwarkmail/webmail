@@ -1029,6 +1029,7 @@
     "recipients_refused": "Non envoyé : le serveur a refusé {recipients}.",
     "recipients_partly_refused": "Le serveur a refusé {recipients}. Les autres destinataires reçoivent le message.",
     "send_offline": "Vous semblez hors ligne. Le message est toujours là ; renvoyez-le une fois de nouveau en ligne.",
+    "archive_after_reply_queued": "Votre message sera envoyé dès que vous serez de nouveau en ligne. L'original reste dans la boîte de réception.",
     "formatting": "Mise en forme",
     "send_recipients_rejected": "Non envoyé : le serveur a refusé tous les destinataires.",
     "send_plugin_failed": "Non envoyé : un plugin chargé de l'envoi a échoué ou a pris trop de temps. Vérifiez le dossier Envoyés avant de renvoyer le message.",
@@ -2067,6 +2068,10 @@
       "placeholder_warning": {
         "label": "Avertissement d'espaces réservés",
         "description": "Demander confirmation avant d'envoyer un message qui contient encore des espaces réservés comme [TIME] ou [Votre nom], des champs de modèle vides ou du texte inachevé comme TODO ou TBD."
+      },
+      "archive_after_reply": {
+        "label": "Archiver après la réponse",
+        "description": "Lorsque vous répondez à un message de la boîte de réception ou le transférez, il est archivé une fois votre message envoyé."
       },
       "recipient_mentions": {
         "label": "Mentionner les destinataires avec @",

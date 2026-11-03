@@ -1029,6 +1029,7 @@
     "recipients_refused": "送信されませんでした: サーバーが {recipients} を拒否しました。",
     "recipients_partly_refused": "サーバーが {recipients} を拒否しました。他の宛先にはメッセージが届きます。",
     "send_offline": "オフラインのようです。メッセージはそのまま残っています。オンラインに戻ったら再送信してください。",
+    "archive_after_reply_queued": "オンラインに戻ったときにメッセージが送信されます。元のメッセージは受信トレイに残ります。",
     "formatting": "書式",
     "send_recipients_rejected": "送信されませんでした。サーバーがすべての宛先を拒否しました。",
     "send_plugin_failed": "送信されませんでした。送信を処理するプラグインが失敗したか、時間がかかりすぎました。もう一度送信する前に送信済みフォルダーを確認してください。",
@@ -2067,6 +2068,10 @@
       "placeholder_warning": {
         "label": "プレースホルダーの警告",
         "description": "[TIME] や [あなたの名前] などのプレースホルダー、空のテンプレート項目、TODO や TBD などの未完成のテキストが残っているメッセージを送信する前に確認します。"
+      },
+      "archive_after_reply": {
+        "label": "返信後にアーカイブ",
+        "description": "受信トレイのメッセージに返信または転送すると、送信後にそのメッセージをアーカイブします。"
       },
       "recipient_mentions": {
         "label": "@で宛先をメンション",

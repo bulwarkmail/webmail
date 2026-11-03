@@ -1025,6 +1025,7 @@
     "recipients_refused": "Gönderilmedi: sunucu şu alıcıları reddetti: {recipients}.",
     "recipients_partly_refused": "Sunucu şu alıcıları reddetti: {recipients}. Diğer alıcılar iletiyi alır.",
     "send_offline": "Çevrimdışı görünüyorsunuz. İleti hâlâ burada; yeniden çevrimiçi olduğunuzda tekrar gönderin.",
+    "archive_after_reply_queued": "İletiniz yeniden çevrimiçi olduğunuzda gönderilecek. Orijinal ileti Gelen kutusunda kalır.",
     "formatting": "Biçimlendirme",
     "send_recipients_rejected": "Gönderilmedi - sunucu tüm alıcıları reddetti.",
     "send_plugin_failed": "Gönderilmedi - gönderimi üstlenen bir eklenti başarısız oldu ya da çok uzun sürdü. Yeniden göndermeden önce Gönderilenler klasörünü kontrol edin.",
@@ -2067,6 +2068,10 @@
       "placeholder_warning": {
         "label": "Yer tutucu uyarısı",
         "description": "Hâlâ [TIME] veya [Adınız] gibi yer tutucular, boş şablon alanları ya da TODO veya TBD gibi bitmemiş metin içeren bir ileti gönderilmeden önce onay iste."
+      },
+      "archive_after_reply": {
+        "label": "Yanıtladıktan sonra arşivle",
+        "description": "Gelen kutusundaki bir iletiyi yanıtladığınızda veya ilettiğinizde, iletiniz gönderildikten sonra arşivlenir."
       },
       "recipient_mentions": {
         "label": "Alıcılardan @ ile bahset",

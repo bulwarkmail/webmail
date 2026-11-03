@@ -154,7 +154,7 @@ import { prefetchEmailContent, requestEmailContent } from "@/lib/email-prefetch"
 import { createMailboxWithHooks } from "@/lib/plugin-mail-hooks";
 import { emailToReadView } from "@/lib/plugin-projection";
 import { emitThreadExpand } from "@/lib/plugin-thread-expand";
-import { announceSent, cancelAnnouncedSend, releaseAnnouncedSend } from "@/lib/plugin-after-send";
+import { announceSent, cancelAnnouncedSend, releaseAnnouncedSend, whenSent } from "@/lib/plugin-after-send";
 import { composeOptionsFor, runBeforeCompose, type ComposePrefill, type ComposerOpenMode } from "@/lib/plugin-compose-gate";
 import { formatMailto } from "@/lib/protocol-handlers/mailto";
 import { buildQuoteHeader } from "@/lib/quote-header";
@@ -2258,6 +2258,35 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         }
       }
 
+      // "Archive the original after replying or forwarding": the message
+      // answered from the Inbox goes the way the Archive action sends it, undo
+      // included. Only from the Inbox - a reply from another folder leaves the
+      // original where the user filed it. Like the keyword above this runs
+      // before the scheduled early-return, so delayed sends archive too.
+      if (
+        composerSourceEmail
+        && !composerSourceEmail.keywords?.$draft
+        && (effectiveMode === 'reply' || effectiveMode === 'replyAll' || effectiveMode === 'forward')
+        && useSettingsStore.getState().archiveAfterReply
+        && isArchiveActionEnabled()
+      ) {
+        const sourceMailboxes = resolveEmailActionContext(composerSourceEmail, client).mailboxes;
+        const inbox = sourceMailboxes.find((mb) => mb.role === 'inbox');
+        const inInbox = !!inbox && !!(
+          composerSourceEmail.mailboxIds?.[inbox.id]
+          || (inbox.originalId && composerSourceEmail.mailboxIds?.[inbox.originalId])
+        );
+        if (inInbox) {
+          // Kept in the offline outbox: the reply has not gone yet, so the
+          // original stays where it is. A send held for Undo archives once
+          // the hold is over, and not at all when it is undone. Through the
+          // ref: by then the open message and folder may have changed.
+          const original = composerSourceEmail;
+          if (result.queued) toast.info(t('email_composer.archive_after_reply_queued'));
+          else whenSent(result, () => { void handleArchiveRef.current?.(original); });
+        }
+      }
+
       const refreshRepliedThreadAfterSend = async (emailId: string | undefined) => {
         if (!emailId || !client) return;
         const emailState = useEmailStore.getState();
@@ -2769,6 +2798,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Not inside the Pro shell, which keeps this tab mounted while hidden and
   // opens the message in an email tab instead (pro/page.tsx).
   const pluginOpenEmailRef = useRef<OpenEmailHandler | null>(null);
+  // The latest Archive action, for "archive after replying" once an undo hold is over.
+  const handleArchiveRef = useRef<((email: Email) => Promise<void>) | null>(null);
   useEffect(() => {
     if (isEmbedded) return;
     return onOpenEmail(async (email) => (
@@ -3153,6 +3184,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       toast.error(t('notifications.error_archiving'), error instanceof Error ? error.message : undefined);
     }
   };
+
+  handleArchiveRef.current = handleArchive;
 
   // "Remove from this folder" for the open message (#615): only when it is
   // in the folder the list shows and in another one too.

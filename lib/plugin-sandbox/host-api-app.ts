@@ -130,7 +130,7 @@ export const SHARED_SETTINGS = [
   'deleteAction', 'archiveMode', 'permanentlyDeleteJunk', 'confirmBulkDelete',
   'sendDelaySeconds', 'sendConfirmation', 'defaultReplyMode', 'plainTextMode', 'signaturePosition', 'signatureSeparatorEnabled',
   'signatureNewMailEnabled', 'signatureReplyForwardEnabled',
-  'requestReadReceiptDefault', 'readReceiptResponse', 'autoSelectReplyIdentity',
+  'requestReadReceiptDefault', 'readReceiptResponse', 'autoSelectReplyIdentity', 'archiveAfterReply',
   'showWeekNumbers', 'calendarWorkingDays', 'enableCalendarTasks', 'showBirthdayCalendar',
   'emailNotificationsEnabled', 'emailNotificationSound', 'calendarNotificationsEnabled',
   'enableUnifiedMailbox', 'sessionTimeout',

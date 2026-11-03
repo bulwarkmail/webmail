@@ -1025,6 +1025,7 @@
     "recipients_refused": "Ikke sendt: serveren avviste {recipients}.",
     "recipients_partly_refused": "Serveren avviste {recipients}. De andre mottakerne får meldingen.",
     "send_offline": "Du ser ut til å være frakoblet. Meldingen er her fortsatt, send den på nytt når du er tilkoblet igjen.",
+    "archive_after_reply_queued": "Meldingen sendes når du er tilkoblet igjen. Originalen blir liggende i innboksen.",
     "formatting": "Formatering",
     "send_recipients_rejected": "Ikke sendt – serveren avviste alle mottakerne.",
     "send_plugin_failed": "Ikke sendt - et tillegg som står for sendingen, mislyktes eller brukte for lang tid. Sjekk Sendt-mappen før du sender på nytt.",
@@ -2070,6 +2071,10 @@
       "placeholder_warning": {
         "label": "Advarsel om plassholdere",
         "description": "Be om bekreftelse før du sender en melding som fortsatt har plassholdere som [TIME] eller [Ditt navn], tomme malfelt eller uferdig tekst som TODO eller TBD."
+      },
+      "archive_after_reply": {
+        "label": "Arkiver etter svar",
+        "description": "Når du svarer på eller videresender en melding i innboksen, arkiveres den når meldingen din er sendt."
       },
       "recipient_mentions": {
         "label": "Nevn mottakere med @",

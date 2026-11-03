@@ -1029,6 +1029,7 @@
     "recipients_refused": "Niet verzonden: de server heeft {recipients} geweigerd.",
     "recipients_partly_refused": "De server heeft {recipients} geweigerd. De andere ontvangers krijgen het bericht.",
     "send_offline": "Je lijkt offline te zijn. Het bericht staat er nog; verstuur het opnieuw zodra je weer online bent.",
+    "archive_after_reply_queued": "Je bericht wordt verzonden zodra je weer online bent. Het origineel blijft in je Postvak IN.",
     "formatting": "Opmaak",
     "send_recipients_rejected": "Niet verzonden - de server heeft alle ontvangers geweigerd.",
     "send_plugin_failed": "Niet verzonden - een plug-in die het verzenden afhandelt, is mislukt of duurde te lang. Controleer je map Verzonden voordat je opnieuw verzendt.",
@@ -2067,6 +2068,10 @@
       "placeholder_warning": {
         "label": "Waarschuwing bij tijdelijke aanduidingen",
         "description": "Vraag om bevestiging voordat een bericht wordt verzonden dat nog tijdelijke aanduidingen bevat zoals [TIME] of [Uw naam], lege sjabloonvelden of onafgemaakte tekst zoals TODO of TBD."
+      },
+      "archive_after_reply": {
+        "label": "Archiveren na beantwoorden",
+        "description": "Als je een bericht in je Postvak IN beantwoordt of doorstuurt, wordt het gearchiveerd zodra je bericht is verzonden."
       },
       "recipient_mentions": {
         "label": "Ontvangers noemen met @",

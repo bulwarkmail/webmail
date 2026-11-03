@@ -1022,6 +1022,7 @@
     "recipients_refused": "Nie wysłano: serwer odrzucił {recipients}.",
     "recipients_partly_refused": "Serwer odrzucił {recipients}. Pozostali odbiorcy otrzymają wiadomość.",
     "send_offline": "Wygląda na to, że jesteś offline. Wiadomość nadal tu jest, wyślij ją ponownie po odzyskaniu połączenia.",
+    "archive_after_reply_queued": "Wiadomość zostanie wysłana, gdy wrócisz do trybu online. Oryginał zostaje w Odebranych.",
     "formatting": "Formatowanie",
     "send_recipients_rejected": "Nie wysłano – serwer odrzucił wszystkich odbiorców.",
     "send_plugin_failed": "Nie wysłano – wtyczka obsługująca wysyłanie zawiodła lub działała zbyt długo. Przed ponownym wysłaniem sprawdź folder Wysłane.",
@@ -2067,6 +2068,10 @@
       "placeholder_warning": {
         "label": "Ostrzeżenie o symbolach zastępczych",
         "description": "Poproś o potwierdzenie przed wysłaniem wiadomości, która wciąż zawiera symbole zastępcze, takie jak [TIME] lub [Twoje imię], puste pola szablonu albo niedokończony tekst, taki jak TODO lub TBD."
+      },
+      "archive_after_reply": {
+        "label": "Archiwizuj po odpowiedzi",
+        "description": "Gdy odpowiesz na wiadomość w Odebranych lub ją przekażesz, zostanie zarchiwizowana po wysłaniu Twojej wiadomości."
       },
       "recipient_mentions": {
         "label": "Wspominaj odbiorców za pomocą @",

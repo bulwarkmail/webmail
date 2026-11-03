@@ -1025,6 +1025,7 @@
     "recipients_refused": "Netrimis: serverul a respins {recipients}.",
     "recipients_partly_refused": "Serverul a respins {recipients}. Ceilalți destinatari primesc mesajul.",
     "send_offline": "Se pare că ești offline. Mesajul este încă aici; trimite-l din nou când revii online.",
+    "archive_after_reply_queued": "Mesajul va fi trimis când revii online. Originalul rămâne în Mesaje primite.",
     "formatting": "Formatare",
     "send_recipients_rejected": "Netrimis - serverul a respins toți destinatarii.",
     "send_plugin_failed": "Nu a fost trimis - un plugin care se ocupă de trimitere a eșuat sau a durat prea mult. Verifică dosarul Trimise înainte de a trimite din nou.",
@@ -2070,6 +2071,10 @@
       "placeholder_warning": {
         "label": "Avertisment pentru substituenți",
         "description": "Cere confirmare înainte de a trimite un mesaj care încă are substituenți precum [TIME] sau [Numele tău], câmpuri de șablon goale sau text neterminat precum TODO sau TBD."
+      },
+      "archive_after_reply": {
+        "label": "Arhivează după răspuns",
+        "description": "Când răspunzi la un mesaj din Mesaje primite sau îl redirecționezi, acesta este arhivat după ce mesajul tău este trimis."
       },
       "recipient_mentions": {
         "label": "Menționează destinatarii cu @",

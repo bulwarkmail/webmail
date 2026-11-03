@@ -1025,6 +1025,7 @@
     "recipients_refused": "Nincs elküldve: a kiszolgáló elutasította a következőt: {recipients}.",
     "recipients_partly_refused": "A kiszolgáló elutasította a következőt: {recipients}. A többi címzett megkapja az üzenetet.",
     "send_offline": "Úgy tűnik, nincs kapcsolat. Az üzenet megmaradt, küldd el újra, ha újra online vagy.",
+    "archive_after_reply_queued": "Az üzenete akkor megy el, amikor újra online lesz. Az eredeti a beérkezett üzenetek között marad.",
     "formatting": "Formázás",
     "send_recipients_rejected": "Nem lett elküldve – a szerver minden címzettet elutasított.",
     "send_plugin_failed": "Nem lett elküldve – egy küldést végző bővítmény hibát jelzett vagy túl sokáig tartott. Újraküldés előtt nézd meg az Elküldött mappát.",
@@ -2070,6 +2071,10 @@
       "placeholder_warning": {
         "label": "Figyelmeztetés helykitöltők esetén",
         "description": "Megerősítés kérése olyan üzenet küldése előtt, amelyben még helykitöltők vannak, például [TIME] vagy [Az Ön neve], üres sablonmezők vagy befejezetlen szöveg, például TODO vagy TBD."
+      },
+      "archive_after_reply": {
+        "label": "Archiválás válasz után",
+        "description": "Ha válaszol egy beérkezett üzenetre vagy továbbítja, az üzenete elküldése után archiválódik."
       },
       "recipient_mentions": {
         "label": "Címzettek említése @ jellel",
