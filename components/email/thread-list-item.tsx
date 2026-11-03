@@ -809,7 +809,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                       </>
                     ) : (sender?.name || (sender?.email && formatAddress(sender.email)) || tUnknown)}
                   </span>
-                  <div className={cn("flex min-w-0 flex-1 items-center text-sm", mvRow ? "gap-0" : "gap-2")}>
+                  <div className={cn("flex min-w-0 flex-1 items-center overflow-hidden text-sm", mvRow ? "gap-0" : "gap-2")}>
                     {tagIds.length > 0 && (
                       <span className={cn(TAG_GROUP_CLASS, mvRow && "me-2")}>
                         {tagIds.map((id) => (
@@ -1574,7 +1574,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       {displayNames.join(', ')}
                     </span>
                     )}
-                    <div className={cn("flex min-w-0 flex-1 items-center text-sm", mvRow ? "gap-0" : "gap-2")}>
+                    <div className={cn("flex min-w-0 flex-1 items-center overflow-hidden text-sm", mvRow ? "gap-0" : "gap-2")}>
                       {((!mvRow && !columns) || tagIds.length > 0) && (
                       <span className={cn(TAG_GROUP_CLASS, mvRow && "me-2")}>
                         {!mvRow && !columns && (
