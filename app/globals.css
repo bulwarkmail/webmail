@@ -1179,6 +1179,23 @@ optgroup {
   [data-interface-layout="mountain-view"] .mv-topbar-search > div > form > div > svg {
     display: none;
   }
+  /* Typed text stops at the clear button, and the / key cap makes way for the
+     placeholder. */
+  [data-interface-layout="mountain-view"] .mv-topbar input[data-search-input]:not(:placeholder-shown) {
+    padding-inline-end: 5rem;
+  }
+  [data-interface-layout="mountain-view"] .mv-topbar-search > div > form > div > div kbd {
+    display: none;
+  }
+}
+/* No room left for both: the text goes first. */
+@container (max-width: 9rem) {
+  [data-interface-layout="mountain-view"] .mv-topbar input[data-search-input]:not(:placeholder-shown) {
+    padding-inline-end: 2.75rem;
+  }
+  [data-interface-layout="mountain-view"] .mv-topbar-search > div > form > div > div {
+    display: none;
+  }
 }
 
 /* The magnifier sits on the field's baseline grid, one 48px hit area in. */
