@@ -58,6 +58,8 @@ import {
   stalwartPrefixProblems,
   stalwartRewriteIndex,
   stalwartZipEntryProblems,
+  unexpectedEngineFiles,
+  LITE_REMOVED_PATHS,
   unexpectedApiStrings,
   withScriptHashCsp,
 } from '../../scripts/lite/lib.mjs';
@@ -339,6 +341,33 @@ describe('lite build helpers', () => {
     expect(unexpectedApiStrings(['/api/config', '/api/plugins/x', '/api/push/register/web'])).toEqual([]);
     expect(unexpectedApiStrings(['/api/brand-new-thing', '/api/config'])).toEqual(['/api/brand-new-thing']);
     expect(LITE_API_STRING_ALLOWLIST).toContain('/api/config');
+  });
+});
+
+describe('the local store in an export', () => {
+  it('finds every engine file, and nothing else', () => {
+    expect(unexpectedEngineFiles([
+      'store-worker.js',
+      'sqlite3mc/2.6.1-3.54.0/sqlite3.mjs',
+      'sqlite3mc\\2.6.1-3.54.0\\sqlite3.wasm',
+      '_next/static/media/sqlite3.wasm',
+      'pst-worker.js',
+      'en/mail/index.html',
+      '_next/static/chunks/app.js',
+    ])).toEqual([
+      'store-worker.js',
+      'sqlite3mc/2.6.1-3.54.0/sqlite3.mjs',
+      'sqlite3mc/2.6.1-3.54.0/sqlite3.wasm',
+      '_next/static/media/sqlite3.wasm',
+    ]);
+  });
+
+  it('removes what a dev checkout holds before a build, and offline mode never starts in Lite', () => {
+    expect(LITE_REMOVED_PATHS).toEqual(expect.arrayContaining(['public/store-worker.js', 'public/sqlite3mc']));
+    const offlineMode = readFileSync(join(process.cwd(), 'lib/offline/offline-mode.ts'), 'utf8');
+    expect(offlineMode).toMatch(/if \(IS_LITE \|\| !hasIndexedDb\(\)\) return false;/);
+    const build = readFileSync(join(process.cwd(), 'scripts/lite/build.mjs'), 'utf8');
+    expect(build).not.toMatch(/build-store-worker/);
   });
 });
 
