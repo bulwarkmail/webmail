@@ -101,6 +101,20 @@ export function deleteEmailRow(db: StorageAdapter, rowid: number): void {
   db.run('DELETE FROM email WHERE rowid = ?', [rowid]);
 }
 
+/** German HTML mail often writes its umlauts as entities: unread, "M&uuml;ller" would never be found. */
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', shy: '',
+  auml: 'ä', ouml: 'ö', uuml: 'ü', Auml: 'Ä', Ouml: 'Ö', Uuml: 'Ü', szlig: 'ß',
+  eacute: 'é', egrave: 'è', agrave: 'à', ccedil: 'ç', ndash: '-', mdash: '-', hellip: '...', euro: '€',
+  bdquo: '"', ldquo: '"', rdquo: '"', lsquo: "'", rsquo: "'",
+};
+
+function decodeEntity(whole: string, name: string): string {
+  if (name[0] !== '#') return NAMED_ENTITIES[name] ?? whole;
+  const code = /^#x/i.test(name) ? parseInt(name.slice(2), 16) : parseInt(name.slice(1), 10);
+  return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : whole;
+}
+
 /** Plain text of a message for the search index: the text part, or the HTML part without its tags. */
 export function bodyText(email: Record<string, unknown>): string {
   const values = (email.bodyValues ?? {}) as Record<string, { value?: string }>;
@@ -113,25 +127,25 @@ export function bodyText(email: Record<string, unknown>): string {
   return parts('htmlBody')
     .map((part) => values[part.partId ?? '']?.value ?? '')
     .join('\n')
-    .replace(/<(style|script)[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/<(style|script|head)\b[\s\S]*?<\/\1>/gi, ' ')
     .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
+    .replace(/&(#\d+|#x[\da-f]+|[a-z]+\d*);/gi, decodeEntity)
     .replace(/\s+/g, ' ');
 }
 
 /** A long message past this is rare and only bloats the index. */
-const INDEX_BODY_CHARS = 200_000;
+export const INDEX_BODY_CHARS = 200_000;
 
 export function indexEmail(db: StorageAdapter, rowid: number, email: Record<string, unknown>, body: string): void {
   const subject = typeof email.subject === 'string' ? email.subject : '';
   const from = addressText(email.from);
-  const to = [addressText(email.to), addressText(email.cc), addressText(email.bcc)].filter(Boolean).join(' ');
+  const to = addressText(email.to);
+  const cc = addressText(email.cc);
+  const bcc = addressText(email.bcc);
   const text = body.slice(0, INDEX_BODY_CHARS);
   for (const table of ['email_fts_word', 'email_fts_tri']) {
-    db.run(`INSERT INTO ${table} (rowid, subject, from_addr, to_addr, body) VALUES (?, ?, ?, ?, ?)`, [rowid, subject, from, to, text]);
+    db.run(`INSERT INTO ${table} (rowid, subject, from_addr, to_addr, cc_addr, bcc_addr, body) VALUES (?, ?, ?, ?, ?, ?, ?)`, [rowid, subject, from, to, cc, bcc, text]);
   }
 }
 
