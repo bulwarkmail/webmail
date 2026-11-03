@@ -45,6 +45,18 @@ interface NavItem {
   badge?: number;
 }
 
+/**
+ * How wide a phone tab bar entry should be, or null when all of them fit at
+ * the normal width. A bar that doesn't fit shows whole entries and half of
+ * the next: half an entry says there is more to scroll to, a few cut-off
+ * pixels only look broken.
+ */
+export function tabBarItemWidth(barWidth: number, count: number, minWidth = 52): number | null {
+  if (!barWidth || count * minWidth <= barWidth) return null;
+  const whole = Math.max(1, Math.floor(barWidth / minWidth - 0.5));
+  return barWidth / (whole + 0.5);
+}
+
 interface NavigationRailProps {
   orientation?: "vertical" | "horizontal";
   collapsed?: boolean;
@@ -230,6 +242,20 @@ export function NavigationRail({
   // The phone tab bar: toasts sit above it.
   const tabBarRef = useBottomControls(orientation === "horizontal");
   const pathname = usePathname();
+  // Each app draws its own tab bar, so its scroll position starts over: bring
+  // the current entry back into view when it lies past the edge of a full bar.
+  const tabBarScrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    tabBarScrollRef.current?.querySelector('[aria-current="page"]')?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+  }, [pathname]);
+  const [tabBarWidth, setTabBarWidth] = useState(0);
+  useEffect(() => {
+    const bar = tabBarScrollRef.current;
+    if (!bar || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => setTabBarWidth(bar.clientWidth));
+    observer.observe(bar);
+    return () => observer.disconnect();
+  }, [orientation]);
   const router = useRouter();
   const { appLogoLightUrl, appLogoDarkUrl } = useConfig();
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
@@ -394,18 +420,34 @@ export function NavigationRail({
     };
 
   if (orientation === "horizontal") {
+    // Settings stays outside the part that scrolls: plugin pages and apps fill
+    // the bar, and the last entry must not end up off screen with nothing to
+    // say there is more. Sized by item count so all entries are equally wide.
+    const scrollingCount = visibleItems.length + pluginPages.length
+      + visibleSidebarApps.filter((app) => app.showOnMobile).length
+      + (isStalwartAdmin || adminActive ? 1 : 0);
+    const itemWidth = tabBarItemWidth(tabBarWidth, scrollingCount);
     return (
       <nav
         ref={tabBarRef}
         data-mobile-navigation=""
         className={cn(
-          "flex items-center bg-background border-t border-border shrink-0 overflow-x-auto mobile-scroll-hidden pb-[calc(env(safe-area-inset-bottom)/2)]",
+          "flex items-center bg-background border-t border-border shrink-0 pb-[calc(env(safe-area-inset-bottom)/2)]",
           mountainView && "min-h-16 border-t-0 bg-secondary shadow-[0_-1px_3px_rgb(0_0_0/0.08)]",
           className
         )}
         role="navigation"
         aria-label={t("nav_label")}
       >
+        <div
+          ref={tabBarScrollRef}
+          data-mobile-navigation-scroll=""
+          className="flex items-center min-w-0 overflow-x-auto mobile-scroll-hidden"
+          style={{
+            flex: `${scrollingCount} 1 ${scrollingCount * 52}px`,
+            ...(itemWidth ? { "--tab-item-width": `${itemWidth}px` } as React.CSSProperties : {}),
+          }}
+        >
         {visibleItems.map((item) => {
           const isActive = getIsActive(item.href, item.id);
           const Icon = item.icon;
@@ -416,7 +458,7 @@ export function NavigationRail({
               onClick={handleNavClick(item.id as 'mail' | 'calendar' | 'contacts' | 'files' | 'settings')}
               data-tour={`nav-${item.id}`}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
+                "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[var(--tab-item-width,52px)]",
                 "transition-colors duration-150",
                 isActive
                   ? "text-primary"
@@ -458,7 +500,7 @@ export function NavigationRail({
               data-plugin-page-link={`${page.pluginId}/${page.id}`}
               title={page.pluginName}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
+                "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[var(--tab-item-width,52px)]",
                 "transition-colors duration-150",
                 isActive
                   ? "text-primary"
@@ -497,7 +539,7 @@ export function NavigationRail({
                 }
               }}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
+                "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[var(--tab-item-width,52px)]",
                 "transition-colors duration-150",
                 isActive
                   ? "text-primary"
@@ -520,7 +562,7 @@ export function NavigationRail({
           <a
             href={`${getPathPrefix()}/admin`}
             className={cn(
-              "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
+              "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[var(--tab-item-width,52px)]",
               "transition-colors duration-150",
               adminActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
             )}
@@ -546,13 +588,15 @@ export function NavigationRail({
           </a>
         )}
 
+        </div>
+
         {/* Settings */}
         <Link
           href="/settings"
           onClick={handleNavClick('settings')}
           data-tour="nav-settings"
           className={cn(
-            "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
+            "flex flex-col items-center justify-center gap-1 py-2 px-0.5 min-h-[44px] grow shrink-0 basis-[52px]",
             "transition-colors duration-150",
             isSettingsActive
               ? "text-primary"
@@ -577,7 +621,9 @@ export function NavigationRail({
   return (
     <div
       className={cn(
-        "flex flex-col h-full",
+        // On a short window (a phone on its side) the whole rail scrolls: the
+        // pinned group at the bottom left the apps room for two icons.
+        "flex flex-col h-full scroll-hidden [@media(max-height:32rem)]:overflow-y-auto",
         collapsed ? "items-center" : "",
         className
       )}
@@ -598,7 +644,7 @@ export function NavigationRail({
       <nav
         data-window-rail=""
         className={cn(
-          "flex flex-col flex-1 min-h-0 overflow-y-auto scroll-hidden",
+          "flex flex-col flex-1 min-h-0 overflow-y-auto scroll-hidden [@media(max-height:32rem)]:flex-none [@media(max-height:32rem)]:overflow-visible",
           collapsed ? "items-center gap-1 py-3 px-1" : "gap-0.5 py-2 px-2",
         )}
         role="navigation"

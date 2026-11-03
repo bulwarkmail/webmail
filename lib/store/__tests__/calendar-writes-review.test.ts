@@ -433,8 +433,10 @@ describe('flush around other accounts', () => {
       alerts: { a: { '@type': 'Alert', action: 'display', trigger: { '@type': 'OffsetTrigger', offset: '-PT15M' } } },
     });
     await s.engine.requestSync();
-    const options = { from: Date.UTC(2026, 10, 10), to: Date.UTC(2026, 10, 11), timeZone: 'Europe/Berlin' };
-    expect(listUpcomingAlerts(s.db, options).map((alert) => alert.jmap).sort()).toEqual([JMAP_ACCOUNT, 'shared'].sort());
+    // The same uid in both accounts rings once, from the account asked for:
+    // the shared one for as long as it has the event.
+    const options = { from: Date.UTC(2026, 10, 10), to: Date.UTC(2026, 10, 11), timeZone: 'Europe/Berlin', prefer: 'shared' };
+    expect(listUpcomingAlerts(s.db, options).map((alert) => alert.jmap)).toEqual(['shared']);
     s.engine.setSession(CALENDAR_SESSION);
     await s.engine.requestSync();
     expect(s.db.all("SELECT 1 FROM calendar_event WHERE jmap = 'shared'")).toEqual([]);
@@ -463,7 +465,19 @@ describe('reminder keys', () => {
     });
     s.server.addEvent({ id: 'e1', start: '2026-11-10T10:00:00', alerts: { a: { '@type': 'Alert', action: 'display', trigger: { '@type': 'OffsetTrigger', offset: '-PT15M' } } } });
     await s.engine.requestSync();
-    expect(listUpcomingAlerts(s.db, { from: Date.UTC(2026, 10, 10), to: Date.UTC(2026, 10, 11), timeZone: 'Europe/Berlin' })).toHaveLength(2);
+    const day = { from: Date.UTC(2026, 10, 10), to: Date.UTC(2026, 10, 11), timeZone: 'Europe/Berlin' };
+    // The same uid too: one meeting, which rings once, under the key of the account it rings from.
+    const [own, ...moreOwn] = listUpcomingAlerts(s.db, { ...day, prefer: JMAP_ACCOUNT });
+    const [shared, ...moreShared] = listUpcomingAlerts(s.db, { ...day, prefer: 'shared' });
+    expect([...moreOwn, ...moreShared]).toEqual([]);
+    expect(own.key).not.toBe(shared.key);
+    // Only the id in common: two events, which both ring. The fake server has one
+    // set of events, so the second account's gets its own uid here.
+    s.db.run("UPDATE calendar_event SET json = json_set(json, '$.uid', 'other@example.org') WHERE jmap = 'shared'");
+    const alerts = listUpcomingAlerts(s.db, day);
+    expect(alerts.map((alert) => alert.jmap).sort()).toEqual([JMAP_ACCOUNT, 'shared'].sort());
+    expect(alerts[0].baseEventId).toBe(alerts[1].baseEventId);
+    expect(alerts[0].key).not.toBe(alerts[1].key);
   });
 });
 

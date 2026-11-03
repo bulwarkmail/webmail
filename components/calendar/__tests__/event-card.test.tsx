@@ -34,6 +34,16 @@ describe('EventCard', () => {
     cleanup();
   });
 
+  // The block of a short event has room for its title line only; the count was cut in half.
+  it.each([
+    ['PT30M', false],
+    ['PT45M', true],
+  ])('shows the participant count on a %s block: %s', (duration, shown) => {
+    const event = { ...makeOccurrence('a', 'accepted'), duration } as CalendarEvent;
+    render(<EventCard event={event} variant="block" currentUserEmails={me} />);
+    expect(screen.queryByTitle('participants.count') !== null).toBe(shown);
+  });
+
   it.each(['chip', 'span', 'block'] as const)('strikes through an occurrence the user declined (%s)', (variant) => {
     render(<EventCard event={makeOccurrence('a', 'declined')} variant={variant} currentUserEmails={me} />);
     const card = screen.getByRole('button');

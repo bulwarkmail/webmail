@@ -14,11 +14,12 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { movedEventUpdates } from "@/lib/calendar-participants";
 import { useSettingsStore, type MonthTimedEventStyle } from "@/stores/settings-store";
+import { FONT_SIZE_SCALE } from "@/lib/accessibility-settings";
 import type { PendingEventPreview } from "./event-modal";
 import { toast } from "@/stores/toast-store";
 import { useCalendarLocale } from "@/hooks/use-calendar-locale";
 import { useScrollWindow } from "@/hooks/use-scroll-window";
-import { dayKey, parseDayKey, type ScrollWindowViewProps } from "@/lib/calendar-scroll-window";
+import { dayKey, mostVisibleMonthDay, parseDayKey, type ScrollWindowViewProps } from "@/lib/calendar-scroll-window";
 import { useCalendarErrorMessage } from "@/hooks/use-calendar-error-message";
 import { PluginDayLabel } from "./plugin-day-label";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
@@ -61,8 +62,21 @@ interface CalendarMonthViewProps extends ScrollWindowViewProps {
   onMoveEvent?: MoveEventHandler;
 }
 
-/** Fraction of the viewport height at which the "current month" is sampled. */
-const VISIBLE_MONTH_SAMPLE = 0.4;
+/**
+ * The month grid's rows are positioned in pixels, so they follow the text size
+ * by hand: at a fixed height large text was cut off and ran into the day number.
+ */
+export function monthGridMetrics(isMobile: boolean, textScale: number) {
+  const scale = Math.max(1, textScale);
+  const overlayTop = Math.round((isMobile ? 34 : 30) * scale);
+  // 24px chips with a mouse (WCAG 2.5.8); touch screens show dots.
+  const rowHeight = Math.round((isMobile ? 18 : 26) * scale);
+  const chipHeight = rowHeight - 2;
+  // A wide-screen week row fits at least three entries and the "N more"
+  // link, so a short window (1280x720) does not cut every day to one.
+  const baseRowMinHeight = isMobile ? 52 : overlayTop + 4 + 8 + 4 * rowHeight;
+  return { overlayTop, rowHeight, chipHeight, baseRowMinHeight };
+}
 
 export function CalendarMonthView({
   selectedDate,
@@ -102,13 +116,8 @@ export function CalendarMonthView({
   // On mobile the month view collapses events to dots unless the user opted
   // into full entries via "Show time in month view" (#666).
   const showChips = !isMobile || showTimeInMonthView;
-  const overlayTop = isMobile ? 34 : 30;
-  // 24px chips with a mouse (WCAG 2.5.8); touch screens show dots.
-  const rowHeight = isMobile ? 18 : 26;
-  const chipHeight = rowHeight - 2;
-  // A wide-screen week row fits at least three entries and the "N more"
-  // link, so a short window (1280x720) does not cut every day to one.
-  const baseRowMinHeight = isMobile ? 52 : overlayTop + 4 + 8 + 4 * rowHeight;
+  const textScale = FONT_SIZE_SCALE[useSettingsStore((state) => state.fontSize)] ?? 1;
+  const { overlayTop, rowHeight, chipHeight, baseRowMinHeight } = monthGridMetrics(Boolean(isMobile), textScale);
   const {
     dayHeaderKeys,
     getMonthGridDays,
@@ -220,30 +229,42 @@ export function CalendarMonthView({
   const rowCapacity = Math.max(1, Math.floor((rowMinHeight - overlayTop - 4 - 8) / rowHeight));
   const capRows = showChips && !isMobile;
 
-  // The month the user is looking at: sampled a little above the middle of
-  // the viewport. It dims the other months' days and drives the title.
+  // The month the user is looking at: the one with the most days in view. It
+  // dims the other months' days and drives the title. One point on the screen
+  // won't do: in a short pane it hit the week holding the 1st, and today's
+  // month was called by the name of the one before.
   const [visibleMonthDate, setVisibleMonthDate] = useState<Date>(() => focus.date);
   const visibleMonthRef = useRef(visibleMonthDate);
   const scrollFrameRef = useRef<number | null>(null);
+
+  // The week at the top of the view and how far it is scrolled, as a share of its
+  // height. Rows change height with the window; see the effect below.
+  const topWeekRef = useRef<{ key: string; progress: number } | null>(null);
 
   const sampleVisibleMonth = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
     const hHeight = headerRef.current?.offsetHeight ?? 0;
-    const sampleY = el.getBoundingClientRect().top + hHeight + (el.clientHeight - hHeight) * VISIBLE_MONTH_SAMPLE;
-    const rows = el.querySelectorAll<HTMLElement>("[data-week]");
-    let hit: HTMLElement | null = null;
-    for (const row of rows) {
-      if (row.getBoundingClientRect().bottom >= sampleY) { hit = row; break; }
+    const box = el.getBoundingClientRect();
+    const rows = Array.from(el.querySelectorAll<HTMLElement>("[data-week]"), (row) => {
+      const rect = row.getBoundingClientRect();
+      return { weekStart: parseDayKey(row.dataset.week ?? ""), top: rect.top, bottom: rect.bottom };
+    });
+    const viewTop = box.top + hHeight;
+    const topRow = rows.find((row) => row.bottom > viewTop);
+    if (topRow) {
+      topWeekRef.current = {
+        key: dayKey(topRow.weekStart),
+        progress: Math.max(0, viewTop - topRow.top) / Math.max(1, topRow.bottom - topRow.top),
+      };
     }
-    const weekKey = hit?.dataset.week;
-    if (!weekKey) return;
-    const midWeek = addDays(parseDayKey(weekKey), 3);
+    const day = mostVisibleMonthDay(rows, box.top + hHeight, box.top + el.clientHeight, (d) => `${getYear(d)}-${getMonth(d)}`);
+    if (!day) return;
     const current = visibleMonthRef.current;
-    if (getMonth(midWeek) === getMonth(current) && getYear(midWeek) === getYear(current)) return;
-    visibleMonthRef.current = midWeek;
-    setVisibleMonthDate(midWeek);
-    onVisibleDateChange?.(midWeek);
+    if (getMonth(day) === getMonth(current) && getYear(day) === getYear(current)) return;
+    visibleMonthRef.current = day;
+    setVisibleMonthDate(day);
+    onVisibleDateChange?.(day);
   }, [getMonth, getYear, onVisibleDateChange]);
 
   const handleScroll = useCallback(() => {
@@ -253,6 +274,35 @@ export function CalendarMonthView({
       sampleVisibleMonth();
     });
   }, [sampleVisibleMonth]);
+
+  // A resized window or a turned phone changes the height of every week while
+  // the scroll offset stays put, which slid the view to other weeks under a title
+  // that still named the month. Keep the same week at the top. Watched on the
+  // rows themselves, since their height also depends on what is in them.
+  const weekHeightsRef = useRef(new Map<string, number>());
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      let changed = false;
+      el.querySelectorAll<HTMLElement>("[data-week]").forEach((row) => {
+        const key = row.dataset.week ?? "";
+        const height = row.getBoundingClientRect().height;
+        const known = weekHeightsRef.current.get(key);
+        if (known !== undefined && known !== height) changed = true;
+        weekHeightsRef.current.set(key, height);
+      });
+      const anchor = topWeekRef.current;
+      if (!changed || !anchor) return;
+      const row = el.querySelector<HTMLElement>(`[data-week="${anchor.key}"]`);
+      if (!row) return;
+      const rect = row.getBoundingClientRect();
+      const viewTop = el.getBoundingClientRect().top + (headerRef.current?.offsetHeight ?? 0);
+      el.scrollTop += rect.top + anchor.progress * rect.height - viewTop;
+    });
+    el.querySelectorAll("[data-week]").forEach((row) => observer.observe(row));
+    return () => observer.disconnect();
+  }, [weekSegments]);
 
   // Navigation puts the first week of the focused month at the top.
   const scrollToFocus = useCallback(() => {
@@ -265,6 +315,7 @@ export function CalendarMonthView({
       const hHeight = headerRef.current?.offsetHeight ?? 0;
       el.scrollTop += row.getBoundingClientRect().top - el.getBoundingClientRect().top - hHeight;
     }
+    topWeekRef.current = { key: targetKey, progress: 0 };
     visibleMonthRef.current = focus.date;
     setVisibleMonthDate(focus.date);
   }, [focus.date, getMonthGridDays]);
@@ -331,10 +382,11 @@ export function CalendarMonthView({
   }, []);
 
   const handleCellDrop = useCallback(async (e: DragEvent<HTMLDivElement>, day: Date) => {
-    e.preventDefault();
-    setDropDayKey(null);
+    // Anything else (a Pro tab or message moving to this pane) is not ours.
     const json = e.dataTransfer.getData("application/x-calendar-event");
     if (!json) return;
+    e.preventDefault();
+    setDropDayKey(null);
     try {
       const data = JSON.parse(json);
       const originalStart = parseISO(data.originalStart);
@@ -393,10 +445,12 @@ export function CalendarMonthView({
               return hiddenEvents + hiddenTasks;
             })
             : null;
+          // Rows that grow with their content make room for the new event's preview.
+          const previewRows = !capRows && pendingPreview && week.some((day) => checkIsSameDay(pendingPreview.start, day)) ? 1 : 0;
           return (
           <div key={dayKey(week[0])} data-week={dayKey(week[0])} className="relative flex-shrink-0 border-b border-border" role="row" style={{
             minHeight: showChips && !overflowing
-              ? Math.max(rowMinHeight, overlayTop + 4 + contentRows * rowHeight + 8)
+              ? Math.max(rowMinHeight, overlayTop + 4 + (contentRows + previewRows) * rowHeight + 8)
               : rowMinHeight,
           }}>
             <div className="grid grid-cols-7 h-full">
@@ -528,6 +582,7 @@ export function CalendarMonthView({
                       isMobile={isMobile}
                       calendarMap={calendarMap}
                       pendingPreview={pendingPreview}
+                      lastRow={capRows ? rowCapacity - 1 : Infinity}
                       selectedEventId={selectedEventId}
                       currentUserEmails={currentUserEmails}
                       canEditEvent={canEditEvent}
@@ -569,7 +624,7 @@ type WeekSegment = ReturnType<typeof buildWeekSegments>[number];
  */
 function MonthCellEntries({
   dayIndex, week, segments, rowLimit, rowCount, dayEventRows, dayTasks, hidden, overlayTop, rowHeight, chipHeight,
-  isMobile, calendarMap, pendingPreview, selectedEventId, currentUserEmails, canEditEvent, inView, timedStyle,
+  isMobile, calendarMap, pendingPreview, lastRow, selectedEventId, currentUserEmails, canEditEvent, inView, timedStyle,
   onSelectEvent, onHoverEvent, onHoverLeave, onContextMenuEvent, onToggleTaskComplete, onSelectTask, onShowMore, moreLabel, paint,
 }: {
   dayIndex: number;
@@ -586,6 +641,8 @@ function MonthCellEntries({
   isMobile?: boolean;
   calendarMap: Map<string, Calendar>;
   pendingPreview?: PendingEventPreview | null;
+  /** The last row a fixed-height week has room for; the preview must not go past it. */
+  lastRow: number;
   selectedEventId?: string | null;
   currentUserEmails?: string[];
   canEditEvent: (event: CalendarEvent) => boolean;
@@ -686,17 +743,18 @@ function MonthCellEntries({
         </div>
       )}
       {preview && (() => {
-        const previewRow = Math.max(rowCount, dayEventRows[dayIndex] + dayTasks[dayIndex].length);
+        // On a full day it lies over the last row: below it, it landed on the next week's date.
+        const previewRow = Math.min(lastRow, Math.max(rowCount, dayEventRows[dayIndex] + dayTasks[dayIndex].length));
         const color = paint(calendarMap.get(preview.calendarId)?.color || "#3b82f6");
         return (
-          <div className="absolute z-10 px-0.5 pointer-events-none" style={place(previewRow)}>
+          <div className="absolute z-20 px-0.5 pointer-events-none" style={place(previewRow)}>
             <div
               data-pending-preview
               className={cn(
                 "h-full rounded text-[0.625rem] font-medium truncate border-2 border-dashed",
                 isMobile ? "leading-[1rem] px-1" : "leading-[1.25rem] px-1.5"
               )}
-              style={{ borderColor: color, color, backgroundColor: `${color}10` }}
+              style={{ borderColor: color, color, backgroundColor: `color-mix(in srgb, ${color} 6%, var(--color-background))` }}
             >
               {preview.title}
             </div>

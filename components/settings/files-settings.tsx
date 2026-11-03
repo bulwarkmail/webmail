@@ -160,7 +160,7 @@ export function FilesSettingsComponent() {
 
   return (
     <div>
-      <div className="sticky top-0 z-10 bg-background pb-4 -mx-4 px-4 -mt-4 pt-4 lg:-mx-6 lg:px-6 lg:-mt-6 lg:pt-6 border-b border-border mb-6">
+      <div className="[@media(min-height:640px)]:sticky top-0 z-10 bg-background pb-4 -mx-4 px-4 -mt-4 pt-4 lg:-mx-6 lg:px-6 lg:-mt-6 lg:pt-6 border-b border-border mb-6">
         <p className="text-sm font-medium text-foreground mb-1">{t("preview.label")}</p>
         <FilesSettingsPreview settings={settings} />
       </div>

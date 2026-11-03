@@ -155,14 +155,22 @@ describe('the rules', () => {
 
   it('caps a user\'s rows by dropping the oldest without a wipe waiting', async () => {
     const registry: Registry = await import('../registry');
-    const oldest = await registry.registerDevice('alice@example.org', 'https://mail.example.org', info);
+    // A second apart: rows of the same millisecond have no oldest, and a fast
+    // machine registers several in one.
+    let clock = Date.now() + 3 * 365 * 24 * 60 * 60 * 1000;
+    vi.useFakeTimers({ now: clock, toFake: ['Date'] });
+    const register = () => {
+      clock += 1000;
+      vi.setSystemTime(clock);
+      return registry.registerDevice('alice@example.org', 'https://mail.example.org', info);
+    };
+    const oldest = await register();
     await registry.requestDeviceWipe(oldest.id, 'admin');
-    const next = await registry.registerDevice('alice@example.org', 'https://mail.example.org', info);
-    for (let i = 2; i < registry.MAX_DEVICES_PER_USER; i += 1) {
-      await registry.registerDevice('alice@example.org', 'https://mail.example.org', info);
-    }
-    await registry.registerDevice('alice@example.org', 'https://mail.example.org', info);
+    const next = await register();
+    for (let i = 2; i < registry.MAX_DEVICES_PER_USER; i += 1) await register();
+    await register();
     const ids = (await registry.listDevices({ limit: 200 })).devices.map((device) => device.id);
+    vi.useRealTimers();
     expect(ids).toHaveLength(registry.MAX_DEVICES_PER_USER);
     expect(ids).toContain(oldest.id);
     expect(ids).not.toContain(next.id);

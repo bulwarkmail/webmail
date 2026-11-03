@@ -48,11 +48,16 @@ export function MonitoringPage() {
   const setMessage = useAdminFeedback();
 
   const load = useCallback(async () => {
-    const [configRes, stateRes] = await Promise.all([apiFetch('/api/admin/config'), apiFetch('/api/admin/monitoring')]);
-    if (configRes.ok) setConfig(await configRes.json());
-    if (stateRes.ok) setState(await stateRes.json());
+    try {
+      const [configRes, stateRes] = await Promise.all([apiFetch('/api/admin/config'), apiFetch('/api/admin/monitoring')]);
+      if (configRes.ok) setConfig(await configRes.json());
+      if (stateRes.ok) setState(await stateRes.json());
+      if (!configRes.ok || !stateRes.ok) throw new Error();
+    } catch {
+      setMessage({ type: 'error', text: 'Could not load the settings' });
+    }
     setLoading(false);
-  }, []);
+  }, [setMessage]);
 
   useEffect(() => { void load(); }, [load]);
 

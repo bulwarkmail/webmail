@@ -37,6 +37,22 @@ describe('admin branding image fields', () => {
     expect(wildcardFavicon.getAttribute('title')).toBe('Enter URL');
   });
 
+  // onError hides the image; while a URL is being typed each partial URL fails,
+  // and the hidden element used to stay hidden for the finished URL too.
+  it('brings the preview back after a URL that failed to load', async () => {
+    const { container } = render(<BrandingPage />);
+    await screen.findByRole('button', { name: 'mail.example.com' });
+    const field = screen.getByRole('textbox', { name: 'App logo (dark mode)' });
+    const preview = () => container.querySelector('img[alt="App logo (dark mode)"]') as HTMLImageElement;
+
+    fireEvent.change(field, { target: { value: '/branding/lo' } });
+    fireEvent.error(preview());
+    expect(preview().style.display).toBe('none');
+
+    fireEvent.change(field, { target: { value: '/branding/logo.svg' } });
+    expect(preview().style.display).toBe('');
+  });
+
   // R9: the result in the past tense, without "successfully".
   it('reports an upload without "successfully"', async () => {
     const { container } = render(<BrandingPage />);

@@ -8,6 +8,7 @@ import { AdminLink } from '@/components/admin/admin-link';
 import { AdminList, AdminListRow } from '@/components/admin/list';
 import { Badge } from '@/components/admin/badge';
 import type { AuditEntry } from '@/lib/admin/types';
+import { formatAuditDetail } from '@/lib/admin/audit-format';
 import { adminPageDef, adminPath } from '@/lib/admin/admin-nav';
 import { apiFetch } from '@/lib/browser-navigation';
 import type { UpdateStatus } from '@/lib/version-check/types';
@@ -232,7 +233,7 @@ export function DashboardPage() {
                 <AdminListRow
                   key={i}
                   title={<code className="font-mono text-xs">{entry.action}</code>}
-                  description={formatDetail(entry.detail) || undefined}
+                  description={formatAuditDetail(entry.detail) || undefined}
                   meta={<>{entry.ip} &middot; {new Date(entry.ts).toLocaleString()}</>}
                 />
               ))}
@@ -285,12 +286,4 @@ function StatTile({ label, value, sub, subTone = 'muted', href }: StatTileProps)
 
 function OnOff({ on }: { on: boolean }) {
   return <Badge tone={on ? 'success' : 'muted'}>{on ? 'On' : 'Off'}</Badge>;
-}
-
-function formatDetail(detail: Record<string, unknown>): string {
-  if (!detail || Object.keys(detail).length === 0) return '';
-  if (detail.key) return `${detail.key}: ${detail.old} → ${detail.new}`;
-  if (detail.reason) return String(detail.reason);
-  if (detail.changes && Array.isArray(detail.changes)) return `${detail.changes.length} setting(s) changed`;
-  return JSON.stringify(detail).slice(0, 80);
 }

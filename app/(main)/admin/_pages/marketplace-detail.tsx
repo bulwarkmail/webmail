@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import {
   ArrowUpCircle,
   Download,
@@ -40,6 +40,7 @@ import { useAdminFeedback } from '@/components/admin/feedback';
 import { installVersion } from './marketplace';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
+import { scrollBehavior } from '@/lib/reduced-motion';
 import { ChangelogBadges, ChangelogEntries, ChangelogNotes, type ChangelogFlags } from '@/components/admin/changelog';
 import { versionsBetween } from '@/lib/admin/changelog-range';
 
@@ -136,6 +137,7 @@ const smallButtonClass = 'h-8 gap-1 text-xs';
 
 export function MarketplaceDetailPage({ slug }: { slug: string }) {
   const { dialogProps: confirmProps, confirm } = useConfirmDialog();
+  const pageRef = useRef<HTMLDivElement>(null);
 
   const [data, setData] = useState<PreviewData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -184,6 +186,9 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
     window.history.replaceState(null, '', url.toString());
     setSelected(version);
     setMessage(null);
+    // What a pick changes is at the top: the notices and the install button.
+    // From a row of the versions table it would all happen out of sight.
+    pageRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
   }
 
   async function handleInstall(version: string) {
@@ -342,7 +347,7 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
   const updateAvailable = data.installed && !!ext.latest && !!data.installedVersion && compareVersions(ext.latest.version, data.installedVersion) > 0;
 
   return (
-    <div>
+    <div ref={pageRef}>
       <AdminPageHeader
         back={BACK}
         leading={(
@@ -559,8 +564,9 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
           title="Versions"
           description="Every published version. Versions this server still has a copy of can be put back without the directory."
         >
-          <div className="overflow-x-auto rounded-lg border border-border">
-            <table className="w-full text-sm">
+          {/* relative: the header's sr-only text is absolute, and only a positioned scroller clips it. Left free, it widens a phone's layout viewport and every dialog goes with it. */}
+          <div className="relative overflow-x-auto rounded-lg border border-border">
+            <table className="w-full min-w-[40rem] text-sm">
               <thead>
                 <tr className="border-b border-border">
                   <th className={thClass}>Version</th>

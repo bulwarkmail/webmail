@@ -216,7 +216,7 @@ function MvRowLead({
         onDoubleClick={(e) => e.stopPropagation()}
         className="group/check -ms-3 flex items-start self-stretch ps-3 pe-0.5"
       >
-        <span className="flex h-10 items-center">
+        <span className="flex h-[var(--list-item-height)] items-center">
           <span
             className={cn(
               "p-1 rounded-full transition-colors group-hover/check:bg-foreground/10",
@@ -232,7 +232,7 @@ function MvRowLead({
         </span>
       </button>
       {onToggleStar && (
-        <span className="flex h-10 items-center">
+        <span className="flex h-[var(--list-item-height)] items-center">
           <button
             type="button"
             aria-label={starLabel}
@@ -310,10 +310,10 @@ function describeAccount(label: string | undefined, account: AccountEntry | unde
  * aggregate "All …" views (All Mail / unified / cross-account) where rows come
  * from different folders. `email.sourceFolder` is stamped at fetch time.
  */
-function SourceFolderTag({ name }: { name: string }) {
+function SourceFolderTag({ name, tight }: { name: string; tight?: boolean }) {
   return (
     <span
-      className="inline-flex max-w-[8rem] shrink-0 items-center gap-1 truncate rounded-full border border-border bg-muted/40 px-1.5 py-0.5 text-[0.6875rem] text-muted-foreground"
+      className={cn("inline-flex shrink-0 items-center gap-1 truncate rounded-full border border-border bg-muted/40 px-1.5 py-0.5 text-[0.6875rem] text-muted-foreground", tight ? "max-w-[4.5rem]" : "max-w-[8rem]")}
       title={name}
     >
       <Folder className="h-3 w-3 shrink-0" />
@@ -451,7 +451,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const formatAddress = useOwnDomainAddress();
     const tagScope = useEmailTagScope(email);
     const { sortTagIds, tagColor } = useKeywordFormat(tagScope);
-    const { variant: tagVariant, placement: tagPlacement } = useTagDisplay();
+    const { variant: tagVariant, placement: tagPlacement, tight: senderLineTight } = useTagDisplay();
     const tintListRowsByTag = useSettingsStore((state) => state.tintListRowsByTag);
     const tintListRowsByAccount = useSettingsStore((state) => state.tintListRowsByAccount);
     // The tint replaces the dot, and the dot can be switched off on its own (#912).
@@ -646,7 +646,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
           onOpenMenu: onContextMenu ? handleContextMenu : undefined,
         })}
         className={cn(
-          "relative group cursor-pointer select-none transition-shadow duration-200 border-b border-border overflow-hidden",
+          "@container/mail-row relative group cursor-pointer select-none transition-shadow duration-200 border-b border-border overflow-hidden",
           mvMobileRow && "border-b-transparent",
           resolvedRowTint ? resolvedRowTint : (
             selected
@@ -707,7 +707,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
         )}
         <div
           role="gridcell"
-          className={cn('px-3', showRowActionButton && onContextMenu && 'pe-12', oneLineRow ? 'flex items-center' : 'flex items-start', mvRow && 'min-h-10', swipeEnabled && 'relative z-10 bg-inherit')}
+          className={cn('px-3', showRowActionButton && onContextMenu && 'pe-12', oneLineRow ? 'flex items-center' : 'flex items-start', mvRow && 'min-h-[var(--list-item-height)]', swipeEnabled && 'relative z-10 bg-inherit')}
           style={{ gap: 'var(--density-item-gap)', paddingBlock: mvRow ? undefined : 'var(--density-item-py)', transform: swipeEnabled && offsetX ? `translateX(${offsetX}px)` : undefined, transition: swipeEnabled && offsetX === 0 ? 'transform 200ms ease-out' : undefined }}
         >
           {/* Checkbox - only for extra-compact density (no avatar) while in selection mode */}
@@ -772,7 +772,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
           <div className="flex-1 min-w-0">
             {oneLineRow ? (
               <>
-              <div className={cn("flex items-center justify-between gap-3", mvRow && "min-h-10")}>
+              <div className={cn("flex items-center justify-between gap-3", mvRow && "min-h-[var(--list-item-height)]")}>
                 <div className="flex min-w-0 flex-1 items-center gap-3">
                   {/* In columns the dot sits inside the From cell, so a row
                       with it starts its columns where the header does. */}
@@ -809,7 +809,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                       </>
                     ) : (sender?.name || (sender?.email && formatAddress(sender.email)) || tUnknown)}
                   </span>
-                  <div className={cn("flex min-w-0 flex-1 items-center text-sm", mvRow ? "gap-0" : "gap-2")}>
+                  <div className={cn("flex min-w-0 flex-1 items-center overflow-hidden text-sm", mvRow ? "gap-0" : "gap-2")}>
                     {tagIds.length > 0 && (
                       <span className={cn(TAG_GROUP_CLASS, mvRow && "me-2")}>
                         {tagIds.map((id) => (
@@ -845,7 +845,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     </>
                   )}
                   {showPaperclip && <StatusIcon icon={Paperclip} label={tStatus('has_attachment')} className="w-3.5 h-3.5 text-muted-foreground" />}
-                  {showSourceFolder && <SourceFolderTag name={email.sourceFolder!} />}
+                  {showSourceFolder && <SourceFolderTag name={email.sourceFolder!} tight={senderLineTight} />}
                   {scheduledSendLabel ? (
                     <span
                       className={cn("inline-flex max-w-[11rem] shrink-0 items-center gap-1 truncate rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-xs font-medium tabular-nums text-sky-700 dark:text-sky-300", columns && "max-w-28")}
@@ -894,7 +894,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     {tagPlacement === 'sender' && tagIds.length > 0 && (
                       <span className={TAG_GROUP_CLASS}>
                         {tagIds.map((id) => (
-                          <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} />
+                          <TagBadge key={id} tagId={id} variant={senderLineTight && (showSourceFolder || tagIds.length > 1) ? 'dot' : tagVariant} scope={tagScope} />
                         ))}
                       </span>
                   )}
@@ -923,7 +923,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                    {showSourceFolder && <SourceFolderTag name={email.sourceFolder!} />}
+                    {showSourceFolder && <SourceFolderTag name={email.sourceFolder!} tight={senderLineTight} />}
                     {scheduledSendLabel ? (
                       <span
                         className="inline-flex max-w-[11rem] shrink-0 items-center gap-1 truncate rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[0.6875rem] font-medium tabular-nums text-sky-700 dark:text-sky-300"
@@ -1181,7 +1181,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
 
     const tagScope = useEmailTagScope(latestEmail);
     const { sortTagIds, tagColor } = useKeywordFormat(tagScope);
-    const { variant: tagVariant, placement: tagPlacement } = useTagDisplay();
+    const { variant: tagVariant, placement: tagPlacement, tight: senderLineTight } = useTagDisplay();
     const tintListRowsByTag = useSettingsStore((state) => state.tintListRowsByTag);
     const tintListRowsByAccount = useSettingsStore((state) => state.tintListRowsByAccount);
     // The tint replaces the dot, and the dot can be switched off on its own (#912).
@@ -1354,7 +1354,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
           data-mv-row={mvRow && !rowTint ? "" : undefined}
           data-checked={isChecked ? "" : undefined}
           className={cn(
-            "relative group cursor-pointer select-none transition-shadow duration-200 overflow-hidden",
+            "@container/mail-row relative group cursor-pointer select-none transition-shadow duration-200 overflow-hidden",
             rowTint ? rowTint : (
               isSelected
                 ? "bg-accent"
@@ -1411,7 +1411,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
           )}
           <div
             role="gridcell"
-            className={cn('px-3', showRowActionButton && onContextMenu && 'pe-12', oneLineRow ? 'flex items-center' : 'flex items-start', mvRow && 'min-h-10', threadSwipeEnabled && 'relative z-10 bg-inherit')}
+            className={cn('px-3', showRowActionButton && onContextMenu && 'pe-12', oneLineRow ? 'flex items-center' : 'flex items-start', mvRow && 'min-h-[var(--list-item-height)]', threadSwipeEnabled && 'relative z-10 bg-inherit')}
             style={{ gap: 'var(--density-item-gap)', paddingBlock: mvRow ? undefined : 'var(--density-item-py)', transform: threadSwipeEnabled && threadOffsetX ? `translateX(${threadOffsetX}px)` : undefined, transition: threadSwipeEnabled && threadOffsetX === 0 ? 'transform 200ms ease-out' : undefined }}
           >
             {/* Checkbox for thread selection - only for extra-compact density (no avatar) while in selection mode */}
@@ -1503,7 +1503,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
             <div className="flex-1 min-w-0">
               {oneLineRow ? (
                 <>
-                <div className={cn("flex items-center justify-between gap-3", mvRow && "min-h-10")}>
+                <div className={cn("flex items-center justify-between gap-3", mvRow && "min-h-[var(--list-item-height)]")}>
                   <div className="flex min-w-0 flex-1 items-center gap-3">
                     {!columns && isUnifiedView && latestEmail.accountId && threadAccountColor && showAccountDot && (
                       <span
@@ -1574,7 +1574,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       {displayNames.join(', ')}
                     </span>
                     )}
-                    <div className={cn("flex min-w-0 flex-1 items-center text-sm", mvRow ? "gap-0" : "gap-2")}>
+                    <div className={cn("flex min-w-0 flex-1 items-center overflow-hidden text-sm", mvRow ? "gap-0" : "gap-2")}>
                       {((!mvRow && !columns) || tagIds.length > 0) && (
                       <span className={cn(TAG_GROUP_CLASS, mvRow && "me-2")}>
                         {!mvRow && !columns && (
@@ -1616,7 +1616,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       </>
                     )}
                     {hasAttachment && <StatusIcon icon={Paperclip} label={tStatus('has_attachment')} className="w-3.5 h-3.5 text-muted-foreground" />}
-                    {showSourceFolder && <SourceFolderTag name={latestEmail.sourceFolder!} />}
+                    {showSourceFolder && <SourceFolderTag name={latestEmail.sourceFolder!} tight={senderLineTight} />}
                     {scheduledSendLabel ? (
                       <span
                         className={cn("inline-flex max-w-[11rem] shrink-0 items-center gap-1 truncate rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-xs font-medium tabular-nums text-sky-700 dark:text-sky-300", columns && "max-w-28")}
@@ -1674,7 +1674,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                           title={t('messages_tooltip', { count: emailCount })}
                         />
                         {tagPlacement === 'sender' && tagIds.map((id) => (
-                          <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} />
+                          <TagBadge key={id} tagId={id} variant={senderLineTight && (showSourceFolder || tagIds.length > 1) ? 'dot' : tagVariant} scope={tagScope} />
                         ))}
                       </span>
                       <div className="flex items-center gap-1.5">
@@ -1702,7 +1702,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
-                      {showSourceFolder && <SourceFolderTag name={latestEmail.sourceFolder!} />}
+                      {showSourceFolder && <SourceFolderTag name={latestEmail.sourceFolder!} tight={senderLineTight} />}
                       {scheduledSendLabel ? (
                         <span
                           className="inline-flex max-w-[11rem] shrink-0 items-center gap-1 truncate rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[0.6875rem] font-medium tabular-nums text-sky-700 dark:text-sky-300"

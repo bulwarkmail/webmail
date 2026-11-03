@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useCallback, useLayoutEffect, useState, useRef } from "react";
+import { popoverShift } from "@/lib/popover-shift";
 import { createPortal } from "react-dom";
 import { useEditor, useEditorState, EditorContent, type Editor } from "@tiptap/react";
 import type { SuggestionProps } from "@tiptap/suggestion";
@@ -152,7 +153,7 @@ interface RichTextEditorProps {
 export function editorA11yAttributes({ ariaLabel, ariaInvalid, ariaDescribedBy, defaultTextStyle, spellcheck = true, lang }: Pick<RichTextEditorProps, 'ariaLabel' | 'ariaInvalid' | 'ariaDescribedBy' | 'defaultTextStyle' | 'spellcheck' | 'lang'>): Record<string, string> {
   const style = defaultTextStyle ? composeTextStyleCss(defaultTextStyle) : "";
   return {
-    class: "tiptap min-h-[100px] px-4 py-3 text-sm text-foreground",
+    class: "tiptap focus-inset min-h-[100px] px-4 py-3 text-sm text-foreground",
     ...(style ? { style } : {}),
     role: "textbox",
     "aria-multiline": "true",
@@ -237,6 +238,19 @@ function ToolbarPopover({
     const list = items();
     const checked = list.find((el) => el.getAttribute("aria-checked") === "true");
     (checked ?? list[0])?.focus();
+  }, []);
+
+  // Anchored to its button, it would run off a narrow composer's edge.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const toolbar = el?.closest('[role="toolbar"]');
+    if (!el || !toolbar) return;
+    const box = toolbar.getBoundingClientRect();
+    const shift = popoverShift(el.getBoundingClientRect(), {
+      left: Math.max(box.left, 0),
+      right: Math.min(box.right, window.innerWidth),
+    });
+    if (shift !== 0) el.style.transform = `translateX(${shift}px)`;
   }, []);
 
   const close = (returnFocus: boolean) => {

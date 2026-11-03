@@ -124,7 +124,11 @@ export function ProofreadingStatus({ proofreading, plainTextMode }: Props) {
         )}
       >
         {icon}
-        <span className="whitespace-nowrap">{label}</span>
+        {/* In a narrow composer the words run over Discard; the count still shows. */}
+        <span className="hidden whitespace-nowrap @[40rem]/composer-bar:inline">{label}</span>
+        {status.on && !status.paused && !status.trouble && status.count > 0 && (
+          <span className="tabular-nums @[40rem]/composer-bar:hidden">{status.count}</span>
+        )}
       </button>
       {open && (
         <div

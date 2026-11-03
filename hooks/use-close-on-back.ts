@@ -106,11 +106,16 @@ export function useCloseOnBack({ onBack, active = true, shouldHold }: UseCloseOn
         if (currentEntry() !== ours) return;
         const url = window.location.href;
         pendingHistoryBack = new Promise<void>((resolve) => {
-          window.addEventListener("popstate", () => {
+          // Tidying up, not a navigation, so Next.js must not hear of it. To
+          // its router this Back is a route change when the page has written
+          // the URL by hand: under the Pro shell, whose one route is /pro, it
+          // sent the whole shell through its takeover whenever a dialog closed.
+          window.addEventListener("popstate", (event) => {
+            event.stopImmediatePropagation();
             if (window.location.href !== url) window.history.replaceState(window.history.state, "", url);
             pendingHistoryBack = null;
             resolve();
-          }, { once: true });
+          }, { once: true, capture: true });
         });
         window.history.back();
       });

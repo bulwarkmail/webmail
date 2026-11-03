@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { MessageListTabs, useMessageListPanelProps } from '../message-list-tabs';
 import { useMessageListTabsStore } from '@/stores/message-list-tabs-store';
 import { useEmailStore } from '@/stores/email-store';
+import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
 import type { Mailbox } from '@/lib/jmap/types';
 
 // The category strip is a tablist in the user's language whose active tab
@@ -35,6 +36,7 @@ describe('MessageListTabs', () => {
       selectedMailbox: 'mb-inbox',
       selectedKeyword: null,
       searchQuery: '',
+      searchFilters: { ...DEFAULT_SEARCH_FILTERS },
       isUnifiedView: false,
     } as never);
   });
@@ -47,6 +49,15 @@ describe('MessageListTabs', () => {
     expect(active).toHaveAttribute('aria-selected', 'true');
     expect(active).toHaveAttribute('aria-controls', 'panel');
     expect(screen.getByRole('tabpanel', { name: 'Primary' })).toHaveTextContent('list');
+  });
+
+  it('drops ticked messages on a switch of tab, which lists other mail', () => {
+    useEmailStore.setState({ selectedEmailKeys: new Set(['a', 'b']) } as never);
+    render(<Harness />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Primary' }));
+    expect(useEmailStore.getState().selectedEmailKeys.size).toBe(2);
+    fireEvent.click(screen.getByRole('tab', { name: 'Social' }));
+    expect(useEmailStore.getState().selectedEmailKeys.size).toBe(0);
   });
 
   it('keeps one tab stop and moves with the arrow keys', () => {
@@ -70,5 +81,12 @@ describe('MessageListTabs', () => {
     render(<Harness />);
     expect(screen.queryByRole('tablist')).toBeNull();
     expect(screen.queryByRole('tabpanel')).toBeNull();
+  });
+
+  // A tab click fetches the folder again, which threw away the filter search.
+  it('stays away during a search that only uses the filters', () => {
+    useEmailStore.setState({ searchFilters: { ...DEFAULT_SEARCH_FILTERS, from: 'bob' } } as never);
+    render(<Harness />);
+    expect(screen.queryByRole('tablist')).toBeNull();
   });
 });

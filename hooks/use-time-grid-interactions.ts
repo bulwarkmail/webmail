@@ -398,10 +398,11 @@ export function useTimeGridInteractions({
   }, []);
 
   const handleColumnDrop = useCallback(async (e: DragEvent<HTMLDivElement>, day: Date) => {
-    e.preventDefault();
-    setDropTarget(null);
+    // Anything else (a Pro tab or message moving to this pane) is not ours.
     const json = e.dataTransfer.getData("application/x-calendar-event");
     if (!json) return;
+    e.preventDefault();
+    setDropTarget(null);
     try {
       const data = JSON.parse(json);
       const minutes = snapDragMinutes(e);

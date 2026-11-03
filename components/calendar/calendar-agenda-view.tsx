@@ -166,7 +166,7 @@ export function CalendarAgendaView({
 
   return (
     <div
-      className="flex-1 overflow-y-auto [overflow-anchor:none]"
+      className="flex-1 overflow-y-auto [overflow-anchor:none] max-md:pb-14"
       ref={scrollContainerRef}
       onWheel={handleWheel}
     >
@@ -220,7 +220,7 @@ export function CalendarAgendaView({
             </span>
             <span className="min-w-0 leading-tight">
               <span className={cn(
-                "block text-[0.6875rem] font-medium truncate first-letter:uppercase",
+                "block text-[0.6875rem] font-medium break-words first-letter:uppercase",
                 today ? "text-primary" : "text-muted-foreground",
               )}>
                 {intlFormatter.dateTime(group.date, { month: "short", weekday: "short" })}
@@ -261,10 +261,11 @@ export function CalendarAgendaView({
                   onMouseEnter={(e) => onHoverEvent?.(ev, e.currentTarget.getBoundingClientRect())}
                   onMouseLeave={() => onHoverLeave?.()}
                   onContextMenu={onContextMenuEvent ? (e) => onContextMenuEvent(e, ev) : undefined}
-                  className="w-full flex items-start gap-3 px-2 rounded-md hover:bg-muted/60 transition-colors text-start"
+                  className="w-full flex flex-wrap min-[30rem]:flex-nowrap items-start gap-x-3 gap-y-0.5 px-2 rounded-md hover:bg-muted/60 transition-colors text-start"
                   style={{ paddingBlock: 'var(--density-item-py)' }}
                 >
-                  <span className="w-28 sm:w-32 flex-shrink-0 text-sm text-muted-foreground tabular-nums">
+                  {/* On a phone the time takes a line of its own: beside the date column it left the title two words. */}
+                  <span className="basis-full min-[30rem]:basis-auto min-[30rem]:w-28 sm:w-32 flex-shrink-0 text-sm text-muted-foreground tabular-nums">
                     {ev.showWithoutTime ? t("events.all_day") : <bdi dir="ltr">{`${formatTime(start)} – ${formatTime(end)}`}</bdi>}
                   </span>
 

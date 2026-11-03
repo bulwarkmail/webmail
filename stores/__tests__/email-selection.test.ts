@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useEmailStore } from '../email-store';
+import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
 
 function makeEmail(id: string, threadId = `thread-${id}`) {
   return {
@@ -28,6 +29,68 @@ describe('email-store selection', () => {
       lastSelectedEmailKey: null,
       selectedEmail: null,
       listRows: null,
+    });
+  });
+
+  describe('a different search', () => {
+    const ticked = () => useEmailStore.getState().selectedEmailKeys.size;
+    beforeEach(() => {
+      useEmailStore.setState({ searchQuery: 'beacon', searchFilters: { ...DEFAULT_SEARCH_FILTERS } });
+      useEmailStore.getState().toggleEmailSelection({ id: 'b' });
+      expect(ticked()).toBe(1);
+    });
+
+    it('drops the ticks when the query changes, also to nothing', () => {
+      useEmailStore.getState().setSearchQuery('');
+      expect(ticked()).toBe(0);
+      expect(useEmailStore.getState().lastSelectedEmailKey).toBeNull();
+    });
+
+    it('keeps them when the same query is set again', () => {
+      useEmailStore.getState().setSearchQuery('beacon');
+      expect(ticked()).toBe(1);
+    });
+
+    it('drops them when a search runs for another query, before its results land', () => {
+      const pending = new Promise<never>(() => {});
+      void useEmailStore.getState().searchEmails({ searchEmails: () => pending } as never, 'rollback');
+      expect(ticked()).toBe(0);
+    });
+
+    it('keeps them when the same search runs again', () => {
+      const pending = new Promise<never>(() => {});
+      void useEmailStore.getState().searchEmails({ searchEmails: () => pending } as never, 'beacon');
+      expect(ticked()).toBe(1);
+    });
+
+    it('drops them when the folder searched in changes', () => {
+      useEmailStore.getState().setSearchMailboxId('archive');
+      expect(ticked()).toBe(0);
+    });
+
+    it('keeps them when the same folder searched in is set again', () => {
+      useEmailStore.setState({ searchMailboxId: 'archive' });
+      useEmailStore.getState().setSearchMailboxId('archive');
+      expect(ticked()).toBe(1);
+    });
+
+    it('keeps them when the folder searched in changes with no search running: the list stays', () => {
+      useEmailStore.setState({ searchQuery: '' });
+      useEmailStore.getState().setSearchMailboxId('archive');
+      expect(ticked()).toBe(1);
+    });
+
+    it('drops them when a filter changes or the filters are cleared', () => {
+      useEmailStore.getState().setSearchFilters({ isUnread: true });
+      expect(ticked()).toBe(0);
+      useEmailStore.getState().toggleEmailSelection({ id: 'b' });
+      useEmailStore.getState().clearSearchFilters();
+      expect(ticked()).toBe(0);
+    });
+
+    it('keeps them when clearing filters that were not set', () => {
+      useEmailStore.getState().clearSearchFilters();
+      expect(ticked()).toBe(1);
     });
   });
 

@@ -8,8 +8,10 @@ import { useAdminUnsavedStore } from '@/stores/admin-unsaved-store';
 const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() }));
 vi.mock('@/stores/toast-store', () => ({ toast, useToastStore: () => [] }));
 let fail = false;
+let failLoad = false;
 vi.mock('@/lib/browser-navigation', () => ({
   apiFetch: vi.fn(async (_url: string, init?: RequestInit) => {
+    if (!init?.method && failLoad) return new Response('{}', { status: 500 });
     if (init?.method === 'POST' && fail) {
       return new Response(JSON.stringify({ error: 'not a URL' }), { status: 400, headers: { 'content-type': 'application/json' } });
     }
@@ -26,6 +28,7 @@ import { TelemetryPage } from '../_pages/telemetry';
 
 afterEach(() => {
   fail = false;
+  failLoad = false;
   toast.success.mockClear();
   toast.error.mockClear();
   useAdminUnsavedStore.setState({ dirty: {}, pendingLeave: null, pendingScope: null });
@@ -38,6 +41,18 @@ async function saveEndpoint(value: string) {
 }
 
 describe('admin feedback', () => {
+  // A failed load left the page on its loading skeleton for good.
+  it('says a page could not load and offers to try again', async () => {
+    failLoad = true;
+    render(<TelemetryPage />);
+    const retry = await screen.findByRole('button', { name: 'Retry' });
+    expect(screen.getByText('Could not load the usage stats')).toBeTruthy();
+
+    failLoad = false;
+    fireEvent.click(retry);
+    expect(await screen.findByLabelText('Collector URL')).toBeTruthy();
+  });
+
   it('says a save worked in a success toast, with no banner', async () => {
     await saveEndpoint('https://collector.example');
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith('Telemetry settings saved.'));

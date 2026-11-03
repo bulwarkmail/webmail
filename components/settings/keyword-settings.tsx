@@ -121,13 +121,14 @@ function KeywordRow({
       onDrop={onDrop}
       onDragEnd={onDragEnd}
       className={cn(
-        "flex items-center gap-3 py-2.5 px-3 rounded-md border bg-background group transition-opacity",
+        "flex flex-wrap items-center gap-x-3 gap-y-2 py-2.5 px-3 rounded-md border bg-background group transition-opacity sm:flex-nowrap",
         isDragging ? "opacity-40" : "opacity-100",
         isDragOver ? "border-primary" : "border-border"
       )}
     >
-      <GripVertical className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-50 cursor-grab" />
-      <div className="flex min-w-0 flex-1">
+      <GripVertical className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-50 cursor-grab max-sm:hidden" />
+      {/* On a phone the name gets a line of its own, the controls wrap under it. */}
+      <div className="flex min-w-0 flex-1 max-sm:basis-full">
         <TagBadge tagId={keyword.id} variant="badge" className="text-xs" />
       </div>
       <span

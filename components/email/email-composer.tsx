@@ -80,6 +80,8 @@ import { useProMultiAccountIdentities, stripCrossAccountIdentityPrefix } from "@
 import { useAccountStore } from "@/stores/account-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { ComposerPanelToggle, ComposerPluginSidebar, useComposerSidebars } from "./composer-plugin-sidebars";
+import { dragKindFromTypes } from "@/components/pro/pro-shell-drop";
+import { useIsPaneScoped } from "@/hooks/use-pane-context";
 import { ComposerSelectionMenu, useComposerSelectionMenu } from "./composer-selection-menu";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { usePluginSlotOffers } from "@/hooks/use-plugin-slot-offers";
@@ -176,6 +178,15 @@ import { noteOpenDraft } from "@/lib/desktop/window-restore";
 import type { RescuedDraft } from "@/lib/popout/channel";
 import { toUnicodeEmail } from "@/lib/idn";
 import { setComposerFileTarget } from "@/lib/desktop/window-files";
+
+// A Pro tab, message or folder dragged across a composer tab is on its way to
+// the pane or the split edge: those drags belong to the shell. There is no shell
+// outside Pro, and the composer stops them like any other drag: a message row
+// carries its subject as text, which To and Subject would take.
+function useIsShellDrag() {
+  const isPaneScoped = useIsPaneScoped();
+  return useCallback((e: React.DragEvent) => isPaneScoped && dragKindFromTypes(e.dataTransfer.types) !== null, [isPaneScoped]);
+}
 
 /**
  * Derives the text/plain alternative from the composer's HTML body, preserving
@@ -395,6 +406,8 @@ interface EmailComposerProps {
      */
     rescueDraft?: (draft: RescuedDraft) => boolean;
   };
+  /** The subject as typed, for a host that shows it (a Pro compose tab's title). */
+  onSubjectChange?: (subject: string) => void;
   className?: string;
   initialDraftText?: string;
   initialData?: ComposerDraftData | null;
@@ -549,6 +562,7 @@ export function EmailComposer({
   onSaveState,
   popOut,
   ownWindow,
+  onSubjectChange,
   className,
   initialDraftText: initialDraftTextProp,
   initialData: initialDataProp,
@@ -1847,6 +1861,10 @@ export function EmailComposer({
   if (priority !== initialPriorityRef.current) isDirtyRef.current = true;
   const initialLabelChoiceRef = useRef(classification.choice);
   if (classification.choice !== initialLabelChoiceRef.current) isDirtyRef.current = true;
+  // Text the host handed in is no edit to hand back: it has its own copy, and a
+  // stand-in mounted before the edits arrived must not overwrite them.
+  const hasEditsRef = useRef(false);
+  hasEditsRef.current = isDirtyRef.current;
   // Text handed in that the server doesn't have yet is unsaved work, however
   // little it differs from what this composer started with.
   if (initialData?.unsaved && changeVersionRef.current !== savedVersionRef.current) isDirtyRef.current = true;
@@ -1937,13 +1955,20 @@ export function EmailComposer({
     requireTls,
   });
 
+  useEffect(() => {
+    onSubjectChange?.(subject);
+  }, [onSubjectChange, subject]);
+
   // Auto-save state on unmount (when user navigates away without explicitly closing)
   useEffect(() => {
     return () => {
       if (explicitCloseRef.current) return;
-      // Kept in the host's memory across a remount, handed-in or not. Only
-      // the server stays out of it.
-      if (onSaveState && (isDirtyRef.current || uneditedRef.current)) onSaveState(snapshotStateRef.current());
+      // Kept in the host's memory across a remount, handed-in or not. Only the
+      // server stays out of it. Only what the host has no copy of: an edit, or a
+      // draft saved under a new id.
+      if (onSaveState && (hasEditsRef.current || uneditedRef.current || draftIdRef.current !== (initialData?.draftId ?? null))) {
+        onSaveState(snapshotStateRef.current());
+      }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -2643,35 +2668,40 @@ export function EmailComposer({
     dragTimeoutRef.current = setTimeout(clearDragState, 150);
   }, [clearDragState]);
 
+  const isShellDrag = useIsShellDrag();
   const handleDragEnter = useCallback((e: React.DragEvent) => {
+    if (isShellDrag(e)) return;
     e.preventDefault();
     e.stopPropagation();
     if (e.dataTransfer.types.includes('Files')) {
       setIsDraggingOver(true);
       resetDragTimeout();
     }
-  }, [resetDragTimeout]);
+  }, [isShellDrag, resetDragTimeout]);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
+    if (isShellDrag(e)) return;
     e.preventDefault();
     e.stopPropagation();
     resetDragTimeout();
-  }, [resetDragTimeout]);
+  }, [isShellDrag, resetDragTimeout]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
+    if (isShellDrag(e)) return;
     e.preventDefault();
     e.stopPropagation();
     resetDragTimeout();
-  }, [resetDragTimeout]);
+  }, [isShellDrag, resetDragTimeout]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
+    if (isShellDrag(e)) return;
     e.preventDefault();
     e.stopPropagation();
     clearDragState();
     if (e.dataTransfer.files?.length) {
       addFiles(Array.from(e.dataTransfer.files));
     }
-  }, [addFiles, clearDragState]);
+  }, [addFiles, clearDragState, isShellDrag]);
 
   const removeAttachment = (index: number) => {
     const att = attachments[index];
@@ -4539,6 +4569,11 @@ export function EmailComposer({
     // through React's tree although the dialog portals to the body: they
     // belong to that dialog, and Escape must close only it.
     if (!(e.target instanceof Node) || !e.currentTarget.contains(e.target)) return;
+    // Same for what is drawn inside the composer: the directory picker and the
+    // formatting toolbar's menus, which close on Escape themselves. This
+    // handler runs in the capture phase, so they would never see it.
+    const targetDialog = e.target instanceof Element ? e.target.closest('[role="dialog"],[role="alertdialog"],[role="menu"]') : null;
+    if (targetDialog && e.currentTarget.contains(targetDialog)) return;
 
     const isPlainEscape = e.key === 'Escape' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey;
     const hasPrimaryModifier = e.ctrlKey || e.metaKey;
@@ -4821,15 +4856,17 @@ export function EmailComposer({
       <div ref={composerFieldsRef} className="shrink-0 space-y-0 border-b">
           {/* From field */}
           <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50">
-            <span className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('from')}:</span>
-            <div className="flex-1 flex items-center gap-1 min-w-0">
+            <span className="text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap">{t('from')}:</span>
+            <div className={cn("flex-1 flex items-center gap-1 min-w-0", fromOverrideEnabled && "flex-wrap")}>
               {fromOverrideEnabled ? (
-                <div className="flex-1 flex items-center gap-1 min-w-0">
+                // Both fields need room to type in: on a narrow composer they take a
+                // line of their own, or a line each, rather than squeeze to nothing.
+                <div className="flex-1 flex flex-wrap items-center gap-1 min-w-52">
                   <Input
                     value={fromOverrideName}
                     onChange={(e) => setFromOverrideName(e.target.value)}
                     placeholder={t('from_override.name_placeholder')}
-                    className="h-7 text-sm w-32 md:w-40 shrink-0"
+                    className="h-7 text-sm flex-1 min-w-32 md:flex-none md:w-40"
                     aria-label={t('from_override.name_label')}
                   />
                   <Input
@@ -4837,7 +4874,7 @@ export function EmailComposer({
                     onChange={(e) => setFromOverrideEmail(e.target.value)}
                     placeholder={t('from_override.email_placeholder')}
                     type="email"
-                    className="h-7 text-sm flex-1 min-w-0 font-mono"
+                    className="h-7 text-sm flex-[2] min-w-32 font-mono"
                     aria-label={t('from_override.email_label')}
                   />
                 </div>
@@ -4950,7 +4987,7 @@ export function EmailComposer({
 
           {/* To field */}
           <div data-testid="composer-to" className={cn("flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative", shakeField === 'to' && "animate-shake")}>
-            <span id={fieldLabelId('to')} className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('to')}:</span>
+            <span id={fieldLabelId('to')} className="text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap">{t('to')}:</span>
             <RecipientChipInput
               labelId={fieldLabelId('to')}
               chips={to}
@@ -5009,6 +5046,7 @@ export function EmailComposer({
                 }}
                 onDragLeave={() => setIsDraggingChipOverCc(false)}
                 onDrop={(e) => {
+                  if (isShellDrag(e)) return;
                   e.preventDefault();
                   setIsDraggingChipOverCc(false);
                   const raw = e.dataTransfer.getData('application/x-recipient-chip');
@@ -5033,6 +5071,7 @@ export function EmailComposer({
                 }}
                 onDragLeave={() => setIsDraggingChipOverBcc(false)}
                 onDrop={(e) => {
+                  if (isShellDrag(e)) return;
                   e.preventDefault();
                   setIsDraggingChipOverBcc(false);
                   const raw = e.dataTransfer.getData('application/x-recipient-chip');
@@ -5050,7 +5089,7 @@ export function EmailComposer({
           {/* Cc field */}
           {showCc && (
             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative">
-              <span id={fieldLabelId('cc')} className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('cc_label')}</span>
+              <span id={fieldLabelId('cc')} className="text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap">{t('cc_label')}</span>
               <RecipientChipInput
                 labelId={fieldLabelId('cc')}
                 chips={cc}
@@ -5081,7 +5120,7 @@ export function EmailComposer({
           {/* Bcc field */}
           {showBcc && (
             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative">
-              <span id={fieldLabelId('bcc')} className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('bcc_label')}</span>
+              <span id={fieldLabelId('bcc')} className="text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap">{t('bcc_label')}</span>
               <RecipientChipInput
                 labelId={fieldLabelId('bcc')}
                 chips={bcc}
@@ -5111,7 +5150,7 @@ export function EmailComposer({
 
           {/* Subject field */}
           <div className="flex flex-wrap items-center gap-2 px-4 py-2.5">
-            <label htmlFor={`${fieldIdBase}-subject`} className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('subject_label')}</label>
+            <label htmlFor={`${fieldIdBase}-subject`} className="text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap">{t('subject_label')}</label>
             <Input
               id={`${fieldIdBase}-subject`}
               ref={subjectInputRef}
@@ -5398,14 +5437,15 @@ export function EmailComposer({
             one row (see [data-mv-compose-footer] in globals.css): Send first,
             the tools after it, and Discard as a bin at the far end. */}
         <div
+          data-composer-footer=""
           data-mv-compose-footer={mvWindow ? "" : undefined}
           className={cn(
             "@container/composer-bar flex items-center justify-between px-4 py-2.5 max-md:py-1.5 bg-background shrink-0 pb-[calc(0.625rem+env(safe-area-inset-bottom)/2)]",
             mvWindow ? "gap-1" : "border-t",
           )}
         >
-          {/* Left side actions */}
-          <div className="flex min-w-0 flex-1 items-center gap-1">
+          {/* Left side actions. Plugins add to them: past the room they wrap, not under Discard. */}
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
             <input
               ref={fileInputRef}
               type="file"
@@ -5584,9 +5624,13 @@ export function EmailComposer({
                 variant="ghost"
                 onClick={handleDiscardClick}
                 data-testid="composer-discard"
-                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                aria-label={t('discard')}
+                title={t('discard')}
+                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 md:@max-[26rem]/composer-bar:px-2.5 max-md:@max-[23rem]/composer-bar:px-2.5"
               >
-                {t('discard')}
+                {/* Next to Send in a narrow composer the word runs over the tools on the left. */}
+                <Trash2 className="hidden w-4 h-4 max-md:@max-[23rem]/composer-bar:block md:block md:@[26rem]/composer-bar:hidden" aria-hidden="true" />
+                <span className="max-md:@max-[23rem]/composer-bar:hidden md:hidden md:@[26rem]/composer-bar:inline">{t('discard')}</span>
               </Button>
             )}
             {composerClient?.hasDelayedSend() || hasSendMenuActions ? (
@@ -6264,6 +6308,8 @@ export function RecipientChipInput({
     // Backspace on an empty input pulls the last chip back into the input for
     // quick editing.
     if (e.key === 'Backspace' && !inputText && chips.length > 0) {
+      // Or the key goes on to delete the closing ">" of what was just put back.
+      e.preventDefault();
       const lastChip = chips[chips.length - 1];
       onChipsChange(chips.slice(0, -1));
       onInputChange(formatRecipient(lastChip.name, lastChip.email));
@@ -6352,9 +6398,11 @@ export function RecipientChipInput({
     setDropIndex(past ? index + 1 : index);
   };
 
+  const isShellDrag = useIsShellDrag();
   // Insert the dragged chip at `target`. Same-field is a local reorder;
   // cross-field routes through onMoveChip with the destination index (#593).
   const performDrop = (e: React.DragEvent, target: number) => {
+    if (isShellDrag(e)) return;
     e.preventDefault();
     setIsDragOver(false);
     setDropIndex(null);
@@ -6402,7 +6450,8 @@ export function RecipientChipInput({
     <div className="flex-1 min-w-0">
       <div
         className={cn(
-          "flex flex-wrap items-center gap-1 min-h-[32px] cursor-text",
+          // A long list scrolls by itself, or a reply-all to 80 people leaves no room for the text.
+          "flex flex-wrap items-center gap-1 min-h-[32px] max-h-[min(30dvh,10rem)] overflow-y-auto p-0.5 -m-0.5 cursor-text",
           validationError && "ring-2 ring-red-500 dark:ring-red-400 rounded",
           isDragOver && "ring-2 ring-primary/50 rounded bg-accent/20"
         )}
@@ -6452,7 +6501,7 @@ export function RecipientChipInput({
               onDragOver={(e) => handleChipDragOver(e, i)}
               onDrop={(e) => { e.stopPropagation(); performDrop(e, dropIndex ?? i); }}
               className={cn(
-                "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-sm border border-border transition-colors",
+                "inline-flex items-center gap-1 max-w-full min-w-0 px-2 py-0.5 rounded-md text-sm border border-border transition-colors",
                 isEditing
                   ? "bg-background ring-1 ring-ring"
                   : ( customColor && colorStyles[customColor]
@@ -6517,7 +6566,7 @@ export function RecipientChipInput({
                 />
               ) : (
                 <span
-                  className="inline-flex items-center gap-1 max-w-[200px]"
+                  className="inline-flex items-center gap-1 min-w-0 max-w-[200px]"
                   title={chip.group ? chip.group.members.map(m => m.email).join(', ') : undefined}
                 >
                   {chip.group && <Users className="w-3 h-3 shrink-0" aria-hidden />}
@@ -6527,7 +6576,7 @@ export function RecipientChipInput({
               )}
               <button
                 type="button"
-                className={cn("flex items-center justify-center w-6 h-6 -m-1 rounded-full hover:bg-muted-foreground/20 transition-colors", TOUCH_HIT_AREA)}
+                className={cn("flex items-center justify-center shrink-0 w-6 h-6 -m-1 rounded-full hover:bg-muted-foreground/20 transition-colors", TOUCH_HIT_AREA)}
                 aria-label={isEditing ? t('recipient_remove') : t('recipient_remove_named', { name: recipientDisplayName(chip) })}
                 onClick={(e) => {
                   e.stopPropagation();

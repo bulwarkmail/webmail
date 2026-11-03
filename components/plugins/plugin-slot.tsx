@@ -13,6 +13,9 @@ interface PluginSlotProps {
   extraProps?: Record<string, unknown>;
 }
 
+/** Height a filling frame keeps when it shares its panel with other frames. */
+export const SHARED_FILL_MIN_HEIGHT = 280;
+
 export function PluginSlot({ name, className, extraProps }: PluginSlotProps) {
   // Without a retired plugin's offer while Bulwark does its job (host-features.ts).
   const offers = usePluginSlotOffers(name);
@@ -21,8 +24,11 @@ export function PluginSlot({ name, className, extraProps }: PluginSlotProps) {
 
   // Inline slots line up next to each other in a toolbar row. A panel slot
   // with a frame that fills the panel takes the panel's height and shares
-  // it between such frames.
+  // it between such frames. Next to another frame it keeps a usable height
+  // however short the panel is: the panel scrolls instead of squeezing it
+  // away, input and all.
   const fills = offers.some((offer) => offer.fill);
+  const minFillHeight = offers.length > 1 ? SHARED_FILL_MIN_HEIGHT : undefined;
   return (
     <div
       className={isInlineSlot(name)
@@ -37,6 +43,7 @@ export function PluginSlot({ name, className, extraProps }: PluginSlotProps) {
           slot={name}
           extraProps={extraProps}
           fill={offer.fill}
+          minFillHeight={offer.fill ? minFillHeight : undefined}
         />
       ))}
     </div>
