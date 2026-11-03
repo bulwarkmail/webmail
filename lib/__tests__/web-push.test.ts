@@ -741,6 +741,80 @@ describe('what enabling and disabling say when they fail', () => {
   });
 });
 
+describe('an endpoint the push service gave up on', () => {
+  const ENDPOINT_KEY = `bulwark.push.endpoint.v1.${ACCOUNT_ID}`;
+
+  function registered() {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-mine');
+    localStorage.setItem(RELAY_BASE_KEY, RELAY);
+    localStorage.setItem(ENDPOINT_KEY, 'https://fcm.example/endpoint');
+    return makeClient([sub('push-mine', THIS_DEVICE)]);
+  }
+
+  it('gets a new subscription when the relay dropped the record for the very endpoint this browser still holds', async () => {
+    const { browserSub, registration } = installPushBrowser();
+    const client = registered();
+    installFetch({}); // The relay answers 404 for this device.
+
+    await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(browserSub.unsubscribe).toHaveBeenCalledTimes(1);
+    expect(registration.pushManager.subscribe).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the subscription while the relay knows the record', async () => {
+    const { browserSub } = installPushBrowser();
+    const client = registered();
+    installFetch({ [THIS_DEVICE]: true });
+
+    await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(browserSub.unsubscribe).not.toHaveBeenCalled();
+  });
+
+  it('keeps it when the relay cannot be asked', async () => {
+    const { browserSub } = installPushBrowser();
+    const client = registered();
+    const calls: string[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      calls.push(url);
+      if (url.includes('/api/push/active/')) throw new TypeError('blip');
+      const json = (body: unknown) => ({ ok: true, status: 200, json: async () => body }) as Response;
+      return url.endsWith('/vapid-public-key') ? json({ publicKey: 'QUJD' }) : json({});
+    }));
+
+    await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(calls.some((url) => url.includes('/api/push/active/'))).toBe(true);
+    expect(browserSub.unsubscribe).not.toHaveBeenCalled();
+  });
+
+  it('only registers when another account already moved the browser to a new endpoint', async () => {
+    const { browserSub } = installPushBrowser();
+    const client = registered();
+    localStorage.setItem(ENDPOINT_KEY, 'https://fcm.example/older');
+    installFetch({});
+
+    await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(browserSub.unsubscribe).not.toHaveBeenCalled();
+    expect(localStorage.getItem(ENDPOINT_KEY)).toBe('https://fcm.example/endpoint');
+  });
+
+  it('does not mistake a move to another relay for a dead endpoint', async () => {
+    const { browserSub } = installPushBrowser();
+    const client = registered();
+    localStorage.setItem(RELAY_BASE_KEY, 'https://old-relay.example');
+    installFetch({});
+
+    await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(browserSub.unsubscribe).not.toHaveBeenCalled();
+  });
+});
+
 describe('resyncWebPush when the relay changed (#903)', () => {
   afterEach(() => setNoThirdPartyTraffic(false));
 

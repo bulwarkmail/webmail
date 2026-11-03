@@ -53,6 +53,12 @@ function relayBaseKey(accountId: string): string {
   return RELAY_BASE_PREFIX + accountId;
 }
 
+/** The browser endpoint this account last gave the relay: see relayDroppedOurEndpoint. */
+const ENDPOINT_PREFIX = 'bulwark.push.endpoint.v1.';
+function endpointKey(accountId: string): string {
+  return ENDPOINT_PREFIX + accountId;
+}
+
 function emailPushRefusedKey(accountId: string): string {
   return EMAIL_PUSH_REFUSED_PREFIX + accountId;
 }
@@ -642,6 +648,28 @@ async function relayReportsDead(
 const VERIFICATION_RESEND_AFTER_MS = 62_000;
 const VERIFICATION_TIMEOUT_MS = 80_000;
 
+/**
+ * The relay deletes a record when the push service answers 404 or 410. The browser
+ * doesn't get told: it keeps the subscription, and registering that endpoint again
+ * only lasts until the next push. Only for the endpoint this account registered:
+ * after another account moved the browser on, a missing record means nothing.
+ */
+async function relayDroppedOurEndpoint(
+  accountId: string,
+  relayBaseUrl: string,
+  subscriptionId: string,
+  endpoint: string,
+): Promise<boolean> {
+  if (localStorage.getItem(relayBaseKey(accountId)) !== relayBaseUrl) return false;
+  if (localStorage.getItem(endpointKey(accountId)) !== endpoint) return false;
+  try {
+    const res = await fetch(buildRelayUrl(relayBaseUrl, `/api/push/active/${encodeURIComponent(subscriptionId)}`));
+    return res.status === 404;
+  } catch {
+    return false;
+  }
+}
+
 async function pollVerificationCode(
   relayBaseUrl: string,
   subscriptionId: string,
@@ -785,15 +813,20 @@ async function enableWebPushForThisTab(
     await pushSubscription.unsubscribe().catch(() => undefined);
     pushSubscription = null;
   }
+  const accountId = params.client.getAccountId();
+  const deviceClientId = getOrCreateDeviceClientId(accountId);
+  if (pushSubscription && await relayDroppedOurEndpoint(accountId, relayBaseUrl, deviceClientId, pushSubscription.endpoint)) {
+    await pushSubscription.unsubscribe().catch(() => undefined);
+    pushSubscription = null;
+    // The other accounts' records point at the old endpoint: their turn comes too.
+    lastResync.clear();
+  }
   if (!pushSubscription) {
     pushSubscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey,
     });
   }
-
-  const accountId = params.client.getAccountId();
-  const deviceClientId = getOrCreateDeviceClientId(accountId);
 
   await registerWithRelay({
     relayBaseUrl,
@@ -807,6 +840,7 @@ async function enableWebPushForThisTab(
     },
     accountLabel: params.accountLabel,
   });
+  localStorage.setItem(endpointKey(accountId), pushSubscription.endpoint);
   await keepRelayRegistration(accountId, {
     relay: relayBaseUrl,
     subscriptionId: deviceClientId,
@@ -1001,6 +1035,7 @@ async function disableWebPushForThisTab(params: DisableWebPushParams): Promise<v
   }
   localStorage.removeItem(subIdKey);
   localStorage.removeItem(relayBaseKey(accountId));
+  localStorage.removeItem(endpointKey(accountId));
   await forgetRelayRegistration(accountId);
   // Enabling again starts from the full emailPush map.
   localStorage.removeItem(emailPushRefusedKey(accountId));
