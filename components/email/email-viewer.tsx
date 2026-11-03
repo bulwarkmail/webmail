@@ -30,7 +30,7 @@ import { buildContactsPath } from "@/lib/deep-links";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { Avatar } from "@/components/ui/avatar";
-import { ContextMenu } from "@/components/ui/context-menu";
+import { ContextMenu, ContextMenuSeparator } from "@/components/ui/context-menu";
 import { useContextMenu, type UseContextMenuReturn } from "@/hooks/use-context-menu";
 import { EmailContextMenu } from "./email-context-menu";
 import { useMessageActionList, type MessageActionEntry, type MessageActionKey, type MessageActionOptions, type MessageSubmenuKey } from "./message-actions";
@@ -212,6 +212,7 @@ const TOOLBAR_PRIORITY_ACTIONS: Record<string, MessageActionKey> = {
   '11': 'extra:view_mode',
 };
 const NO_ACTION_KEYS: ReadonlySet<MessageActionKey> = new Set();
+const NO_PLUGIN_KEYS: ReadonlySet<string> = new Set();
 
 /** Whatever a sub-view offers to act on, in the order it is read out. */
 const SUB_MENU_ITEM_SELECTOR = '[role="menuitem"],[role="menuitemcheckbox"],[role="menuitemradio"]';
@@ -1115,10 +1116,12 @@ interface ReaderMoreMenuProps {
   selectedMailbox: string;
   onMoveToMailbox?: (mailboxId: string) => void;
   onSetTag?: (tagId: string | null) => void;
+  /** The plugin buttons that gave way on the toolbar, as entries of the menu. */
+  pluginEntries?: React.ReactNode;
 }
 
 /** The reader's ⋮ on a desktop: the row's context menu, anchored to the button (R6). */
-function ReaderMoreMenu({ menu, options, label, mailboxes, selectedMailbox, onMoveToMailbox, onSetTag }: ReaderMoreMenuProps) {
+function ReaderMoreMenu({ menu, options, label, mailboxes, selectedMailbox, onMoveToMailbox, onSetTag, pluginEntries }: ReaderMoreMenuProps) {
   const { email } = options;
   const { copyTargets, copyToAccount } = useCopyToAccount(email, true);
   return (
@@ -1155,6 +1158,7 @@ function ReaderMoreMenu({ menu, options, label, mailboxes, selectedMailbox, onMo
       omit={options.omit}
       extras={options.extras}
       rowPlugins={false}
+      extraEntries={pluginEntries}
     />
   );
 }
@@ -1637,6 +1641,11 @@ export function EmailViewer({
   const [quickReplyText, setQuickReplyText] = useState("");
   const quickReplyRef = useRef<HTMLTextAreaElement>(null);
   const [isQuickReplyFocused, setIsQuickReplyFocused] = useState(false);
+  const quickReplyBoxRef = useRef<HTMLDivElement>(null);
+  // Focused, the box grows by its buttons: bring them up, they'd sit below the fold.
+  useEffect(() => {
+    if (isQuickReplyFocused) quickReplyBoxRef.current?.scrollIntoView?.({ block: 'nearest' });
+  }, [isQuickReplyFocused]);
   const [isSendingQuickReply, setIsSendingQuickReply] = useState(false);
   /** The recipients and identity the quick reply would be sent with. */
   const quickMetadata = (): ComposerMetadata => {
@@ -1712,6 +1721,8 @@ export function EmailViewer({
   const tagMenuOpen = tagMenu.contextMenu.isOpen;
   // What the toolbar shows when the ⋮ opens; the menu leaves those out.
   const [readerMenuOmit, setReaderMenuOmit] = useState<ReadonlySet<MessageActionKey>>(NO_ACTION_KEYS);
+  // The plugin buttons that had no room on the toolbar when the ⋮ opened.
+  const [readerMenuPluginKeys, setReaderMenuPluginKeys] = useState<ReadonlySet<string>>(NO_PLUGIN_KEYS);
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   // The rows that open a sub-view, and the pieces of the mobile panel a
@@ -2119,8 +2130,22 @@ export function EmailViewer({
     });
     resizeObserver.observe(el);
 
+    // A plugin's frame in the row gets its width some time after it mounts
+    // and changes it when it likes, without a change to the row's children.
+    const slotObserver = new ResizeObserver(() => {
+      measuredToolbarRef.current.clear();
+      scheduleCalculate();
+    });
+    const observeSlots = () => {
+      el.querySelectorAll('[data-plugin-slot="toolbar-actions"]').forEach((slot) => slotObserver.observe(slot));
+    };
+    observeSlots();
+
     // Recalculate when children change (conditional items, label visibility)
-    const mutationObserver = new MutationObserver(scheduleCalculate);
+    const mutationObserver = new MutationObserver(() => {
+      observeSlots();
+      scheduleCalculate();
+    });
     mutationObserver.observe(el, { childList: true, subtree: true });
 
     // Initial synchronous calculation to avoid flash
@@ -2129,6 +2154,7 @@ export function EmailViewer({
     return () => {
       if (rafId !== null) cancelAnimationFrame(rafId);
       resizeObserver.disconnect();
+      slotObserver.disconnect();
       mutationObserver.disconnect();
     };
   }, [
@@ -4097,8 +4123,8 @@ ${printWatermark ? printWatermark.html : ''}
         ? '/branding/Bulwark_Logo_with_Lettering_White_and_Color.svg'
         : '/branding/Bulwark_Logo_with_Lettering_Dark_Color.svg');
       return shell(
-        <div className="flex-1 min-w-0 flex flex-col items-center justify-center bg-gradient-to-br from-muted/30 to-muted/50">
-          <div className="text-center p-8 max-w-md">
+        <div className="flex-1 min-w-0 flex flex-col overflow-y-auto bg-gradient-to-br from-muted/30 to-muted/50">
+          <div className="m-auto text-center p-8 max-w-md">
             <img
               src={logoSrc}
               alt="Bulwark Mail"
@@ -4142,10 +4168,10 @@ ${printWatermark ? printWatermark.html : ''}
     // in a split pane - the empty reading pane should always say what it is
     // and offer a way forward.
     return shell(
-      <div className="relative flex-1 min-w-0 flex flex-col items-center justify-center bg-gradient-to-br from-muted/30 to-muted/50">
+      <div className="relative flex-1 min-w-0 flex flex-col overflow-y-auto bg-gradient-to-br from-muted/30 to-muted/50">
         {/* An empty reading pane's top is still the window's top, to drag by. */}
         <div aria-hidden="true" data-window-top-row="" className="absolute inset-x-0 top-0 h-14" />
-        <div className="text-center p-8">
+        <div className="m-auto text-center p-8">
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-background shadow-lg flex items-center justify-center">
             <Mail className="w-10 h-10 text-muted-foreground" />
           </div>
@@ -4195,6 +4221,14 @@ ${printWatermark ? printWatermark.html : ''}
       shown.add('forward');
     }
     return shown;
+  };
+  // The plugin buttons that gave way on the toolbar: the ⋮ menu offers them.
+  const toolbarHiddenPluginActions = (): ReadonlySet<string> => {
+    const hidden = new Set<string>();
+    toolbarRef.current?.querySelectorAll<HTMLElement>('[data-plugin-action-key]').forEach((item) => {
+      if (item.getClientRects().length === 0) hidden.add(item.dataset.pluginActionKey!);
+    });
+    return hidden;
   };
   const toggleViewMode = () => setEmailViewDarkOverride(prev => prev === null ? !(resolvedTheme === 'dark') : !prev);
   // The reader's own entries after the message's: the view toggle, Import
@@ -4307,16 +4341,16 @@ ${printWatermark ? printWatermark.html : ''}
               title={t('reschedule_send')}
             >
               <CalendarClock className="w-4 h-4" />
-              {showToolbarLabels && <span className="hidden sm:inline text-sm whitespace-nowrap">{t('reschedule_send')}</span>}
+              {showToolbarLabels && <span className="hidden @[52rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reschedule_send')}</span>}
             </Button>
             <Button variant="ghost" size="sm" onClick={onCancelScheduledForEdit} className="hidden sm:flex sm:h-8 sm:gap-1.5 sm:py-0" title={email.isSmimeScheduled ? t('cancel_and_compose_again') : t('cancel_and_edit')}>
               <Pencil className="w-4 h-4" />
-              {showToolbarLabels && <span className="hidden sm:inline text-sm whitespace-nowrap">{email.isSmimeScheduled ? t('cancel_and_compose_again') : t('cancel_and_edit')}</span>}
+              {showToolbarLabels && <span className="hidden @[52rem]/reader-toolbar:inline text-sm whitespace-nowrap">{email.isSmimeScheduled ? t('cancel_and_compose_again') : t('cancel_and_edit')}</span>}
             </Button>
             {onCancelScheduledSend && !email.isSmimeScheduled && (
               <Button variant="ghost" size="sm" onClick={onCancelScheduledSend} className="hidden sm:flex sm:h-8 sm:gap-1.5 sm:py-0" title={t('cancel_scheduled_send')} data-testid="cancel-scheduled-send">
                 <CalendarX className="w-4 h-4" />
-                {showToolbarLabels && <span className="hidden sm:inline text-sm whitespace-nowrap">{t('cancel_scheduled_send')}</span>}
+                {showToolbarLabels && <span className="hidden @[52rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('cancel_scheduled_send')}</span>}
               </Button>
             )}
           </>
@@ -4345,7 +4379,7 @@ ${printWatermark ? printWatermark.html : ''}
           title={t('tooltips.reply')}
         >
           <Reply className="w-4 h-4" />
-          {showToolbarLabels && <span className="hidden sm:inline text-sm whitespace-nowrap">{t('reply')}</span>}
+          {showToolbarLabels && <span className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reply')}</span>}
         </Button>
         <Button
           variant="ghost"
@@ -4357,7 +4391,7 @@ ${printWatermark ? printWatermark.html : ''}
           title={t('tooltips.reply_all')}
         >
           <ReplyAll className="w-4 h-4" />
-          {showToolbarLabels && <span className="hidden sm:inline text-sm whitespace-nowrap">{t('reply_all')}</span>}
+          {showToolbarLabels && <span className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reply_all')}</span>}
         </Button>
         <Button
           variant="ghost"
@@ -4369,7 +4403,7 @@ ${printWatermark ? printWatermark.html : ''}
           title={t('tooltips.forward')}
         >
           <Forward className="w-4 h-4" />
-          {showToolbarLabels && <span className="hidden sm:inline text-sm whitespace-nowrap">{t('forward')}</span>}
+          {showToolbarLabels && <span className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('forward')}</span>}
         </Button>
         </>)}
         <PluginSlot name="toolbar-actions" />
@@ -4381,6 +4415,7 @@ ${printWatermark ? printWatermark.html : ''}
             target={readerActionTarget}
             mailboxRole={currentMailboxRole ?? null}
             compact={!showToolbarLabels}
+            overflowItems
           />
         )}
       </div>
@@ -4400,7 +4435,7 @@ ${printWatermark ? printWatermark.html : ''}
             title={t('tooltips.archive')}
           >
             <Archive className="w-4 h-4" />
-            {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:text-sm">{t('archive')}</span>}
+            {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('archive')}</span>}
           </Button>
         )}
         {/* Delete */}
@@ -4412,7 +4447,7 @@ ${printWatermark ? printWatermark.html : ''}
           title={t('tooltips.delete')}
         >
           <Trash2 className="w-4 h-4" />
-          {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:text-sm">{t('delete')}</span>}
+          {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('delete')}</span>}
         </Button>
         {/* Move to folder */}
         {moveTree.length > 0 && onMoveToMailbox && (
@@ -4432,7 +4467,7 @@ ${printWatermark ? printWatermark.html : ''}
               aria-expanded={moveMenuOpen}
             >
               <FolderInput className="w-4 h-4" />
-              {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:text-sm">{t('move')}</span>}
+              {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('move')}</span>}
             </Button>
             <ContextMenu ref={moveMenu.menuRef} isOpen={moveMenuOpen} position={moveMenu.contextMenu.position} onClose={closeMoveMenu} label={t('move_to')}>
               <div className="w-56 max-h-72 overflow-y-auto">
@@ -4464,7 +4499,7 @@ ${printWatermark ? printWatermark.html : ''}
             aria-expanded={tagMenuOpen}
           >
             <Tag className="w-4 h-4" />
-            {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:text-sm">{t('tag')}</span>}
+            {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('tag')}</span>}
           </Button>
           <ContextMenu ref={tagMenu.menuRef} isOpen={tagMenuOpen} position={tagMenu.contextMenu.position} onClose={closeTagMenu} label={t('tag')}>
             <div className="w-56">
@@ -4499,7 +4534,7 @@ ${printWatermark ? printWatermark.html : ''}
             ) : (
               <ShieldAlert className={cn("h-4 w-4", !mvViewer && "text-red-600 dark:text-red-400")} />
             )}
-            {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:text-sm">{isInJunkFolder ? t('spam.not_spam_title') : t('spam.button_title')}</span>}
+            {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{isInJunkFolder ? t('spam.not_spam_title') : t('spam.button_title')}</span>}
           </Button>
         )}
 
@@ -4521,7 +4556,7 @@ ${printWatermark ? printWatermark.html : ''}
         >
           {isUnread ? <MailOpen className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
           {showToolbarLabels && (
-            <span className="grid text-center text-[0.625rem] leading-tight sm:text-sm">
+            <span className="grid text-center text-[0.625rem] leading-tight sm:text-sm sm:whitespace-nowrap">
               <span className={cn("col-start-1 row-start-1", !isUnread && "invisible")} aria-hidden={!isUnread}>{t('read')}</span>
               <span className={cn("col-start-1 row-start-1", isUnread && "invisible")} aria-hidden={isUnread}>{t('unread')}</span>
             </span>
@@ -4622,6 +4657,7 @@ ${printWatermark ? printWatermark.html : ''}
                 return;
               }
               setReaderMenuOmit(toolbarShownActions());
+              setReaderMenuPluginKeys(toolbarHiddenPluginActions());
               readerMenu.openContextMenuFrom(e.currentTarget, null, 'end');
             }}
           >
@@ -4637,6 +4673,20 @@ ${printWatermark ? printWatermark.html : ''}
               selectedMailbox={selectedMailbox}
               onMoveToMailbox={onMoveToMailbox}
               onSetTag={onSetTag ? (tagId) => onSetTag(email.id, tagId) : undefined}
+              pluginEntries={readerMenuPluginKeys.size > 0 ? (
+                <>
+                  <ContextMenuSeparator />
+                  <PluginActions
+                    surface="reader-actions"
+                    variant="menu"
+                    context={readerActionContext}
+                    target={readerActionTarget}
+                    mailboxRole={currentMailboxRole ?? null}
+                    only={readerMenuPluginKeys}
+                    onRan={closeReaderMenu}
+                  />
+                </>
+              ) : undefined}
             />
           )}
         </div>
@@ -4665,7 +4715,7 @@ ${printWatermark ? printWatermark.html : ''}
         <div
           ref={toolbarRef}
           data-mv-viewer-toolbar={mvViewer ? "" : undefined}
-          className={cn("flex items-center gap-0.5 sm:gap-2 w-full", mvViewer ? "justify-start" : "justify-between")}
+          className={cn("@container/reader-toolbar flex items-center gap-0.5 sm:gap-2 w-full", mvViewer ? "justify-start" : "justify-between")}
         >
           {renderToolbarItems(true)}
           {mvViewer && mvPosition && (
@@ -4794,7 +4844,8 @@ ${printWatermark ? printWatermark.html : ''}
       )}>
         {/* Mountain View lines the subject up with the sender's name below it. */}
         <div className={cn("px-4 lg:px-6", mvViewer && "lg:ps-[80px] pt-3 pb-1")} style={mvViewer ? undefined : { paddingBlock: 'var(--density-header-py)' }}>
-          <div className="flex items-start justify-between gap-2 lg:gap-4">
+          {/* In a narrow pane the date takes its own line instead of squeezing the subject to a column. */}
+          <div className="flex flex-wrap items-start justify-between gap-x-2 gap-y-1 lg:gap-x-4">
             {/* Back button (for below-subject mode on tablet) */}
             {toolbarPosition === 'below-subject' && (isMobile || (isTablet && !tabletListVisible) || (isFocusedMailLayout && !isMobile)) && onBack && (
               <Button
@@ -4807,12 +4858,13 @@ ${printWatermark ? printWatermark.html : ''}
                 <ArrowLeft className="w-5 h-5" />
               </Button>
             )}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-[min(100%,16rem)]">
               <div className="flex items-start gap-2">
                 {/* h2 under the app's h1 ("Inbox – Mail"); the reader's
                     blocks below are h3 and h4, so no level is skipped. */}
                 <h2 dir="auto" className={cn(
-                  "text-foreground break-words min-w-0",
+                  // The header stays while the message scrolls: a very long subject scrolls by itself.
+                  "text-foreground break-words min-w-0 max-h-[35dvh] overflow-y-auto",
                   mvViewer ? "text-[1.375rem] leading-7 font-normal" : "text-lg lg:text-xl font-bold tracking-tight"
                 )}>
                   {email.subject || t('no_subject')}
@@ -4924,7 +4976,7 @@ ${printWatermark ? printWatermark.html : ''}
       {toolbarPosition === 'below-subject' && (
         <div className="bg-background border-b border-border">
           <div className="px-2 sm:px-4 lg:px-6 py-1 sm:py-1.5">
-            <div ref={toolbarRef} className="flex items-center justify-between gap-0.5 sm:gap-2">
+            <div ref={toolbarRef} className="@container/reader-toolbar flex items-center justify-between gap-0.5 sm:gap-2">
               {renderToolbarItems(false)}
             </div>
           </div>
@@ -5119,7 +5171,7 @@ ${printWatermark ? printWatermark.html : ''}
                 )}
                 <button
                   onClick={() => setShowFullHeaders(!showFullHeaders)}
-                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ms-1"
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ms-1 whitespace-nowrap"
                 >
                   {showFullHeaders ? (
                     <>
@@ -5222,6 +5274,14 @@ ${printWatermark ? printWatermark.html : ''}
                   <>
                     <span>→ {t('recipient_to_prefix')}</span>
                     {renderClickableRecipients(email.to, currentUserEmail, t, handleViewContactSidebar)}
+                    {email.to.length > 2 && (
+                      <button
+                        onClick={() => setShowFullHeaders(!showFullHeaders)}
+                        className="text-primary hover:underline text-sm"
+                      >
+                        {t('more_count', { count: email.to.length - 2 })}
+                      </button>
+                    )}
                   </>
                 )}
                 {email.cc && email.cc.length > 0 && (
@@ -5241,7 +5301,7 @@ ${printWatermark ? printWatermark.html : ''}
                 )}
                 <button
                   onClick={() => setShowFullHeaders(!showFullHeaders)}
-                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ms-1"
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ms-1 whitespace-nowrap"
                 >
                   {showFullHeaders ? (
                     <>
@@ -5613,10 +5673,7 @@ ${printWatermark ? printWatermark.html : ''}
                     </Row>
                     {effectiveAttachments.length > 0 && (
                       <Row label={t('attachments')}>
-                        {t('details.attachments_summary', {
-                          count: effectiveAttachments.length,
-                          size: formatFileSize(totalAttachmentSize),
-                        })}
+                        {t('attachments_count', { count: effectiveAttachments.length })} · {formatFileSize(totalAttachmentSize)}
                       </Row>
                     )}
                     {email.accountLabel && (
@@ -5998,7 +6055,7 @@ ${printWatermark ? printWatermark.html : ''}
           )}
 
           {/* Quick Reply Section - hidden for drafts and while loading a new email */}
-          {showQuickReply && (<div className="bg-background border-t border-border px-6 mt-auto" style={{ paddingBlock: 'var(--density-header-py)' }}>
+          {showQuickReply && (<div ref={quickReplyBoxRef} className="bg-background border-t border-border px-6 mt-auto max-sm:scroll-mb-16" style={{ paddingBlock: 'var(--density-header-py)' }}>
             <div className="flex items-start" style={{ gap: 'var(--density-item-gap)' }}>
               <div className="flex-shrink-0">
                 <Avatar
@@ -6141,7 +6198,7 @@ ${printWatermark ? printWatermark.html : ''}
             onClick={onNavigatePrev}
             disabled={!onNavigatePrev}
             className={cn(
-              "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] transition-colors duration-150",
+              "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] min-w-0 transition-colors duration-150",
               onNavigatePrev ? "text-muted-foreground active:text-foreground" : "text-muted-foreground/30"
             )}
             aria-label={t('tooltips.previous')}
@@ -6152,7 +6209,7 @@ ${printWatermark ? printWatermark.html : ''}
           {isDraft && onEditDraft ? (
             <button
               onClick={() => onEditDraft()}
-              className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] text-primary active:text-primary/80 transition-colors duration-150"
+              className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] min-w-0 text-primary active:text-primary/80 transition-colors duration-150"
               aria-label={t('tooltips.edit_draft')}
             >
               <Pencil className="w-5 h-5" />
@@ -6162,21 +6219,21 @@ ${printWatermark ? printWatermark.html : ''}
           <>
           <button
             onClick={() => onReply?.()}
-            className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] text-muted-foreground active:text-foreground transition-colors duration-150"
+            className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] min-w-0 text-muted-foreground active:text-foreground transition-colors duration-150"
           >
             <Reply className="w-5 h-5" />
             <span className="text-[0.625rem] font-medium leading-tight truncate max-w-full">{t('reply')}</span>
           </button>
           <button
             onClick={onReplyAll}
-            className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] text-muted-foreground active:text-foreground transition-colors duration-150"
+            className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] min-w-0 text-muted-foreground active:text-foreground transition-colors duration-150"
           >
             <ReplyAll className="w-5 h-5" />
             <span className="text-[0.625rem] font-medium leading-tight truncate max-w-full">{t('reply_all')}</span>
           </button>
           <button
             onClick={onForward}
-            className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] text-muted-foreground active:text-foreground transition-colors duration-150"
+            className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] min-w-0 text-muted-foreground active:text-foreground transition-colors duration-150"
           >
             <Forward className="w-5 h-5" />
             <span className="text-[0.625rem] font-medium leading-tight truncate max-w-full">{t('forward')}</span>
@@ -6186,7 +6243,7 @@ ${printWatermark ? printWatermark.html : ''}
             onClick={onNavigateNext}
             disabled={!onNavigateNext}
             className={cn(
-              "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] transition-colors duration-150",
+              "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] min-w-0 transition-colors duration-150",
               onNavigateNext ? "text-muted-foreground active:text-foreground" : "text-muted-foreground/30"
             )}
             aria-label={t('tooltips.next')}

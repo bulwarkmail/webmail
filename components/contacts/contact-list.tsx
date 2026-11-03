@@ -649,7 +649,7 @@ export function ContactList({
         aria-label={t("title")}
         aria-multiselectable
         onKeyDown={handleListKeyDown}
-        className="flex-1 overflow-y-auto"
+        className="flex-1 overflow-y-auto max-md:pb-20"
       >
         {sorted.length === 0 && isLoading && !searchQuery && activeFilters === 0 ? (
           // The rows the page skeleton drew, at the same density.

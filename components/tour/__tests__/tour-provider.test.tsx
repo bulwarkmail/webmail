@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const env = vi.hoisted(() => ({
   phone: true,
+  proActive: false,
   pathname: '/mail/folder/inbox',
   push: vi.fn(),
   command: vi.fn(),
@@ -19,6 +20,7 @@ vi.mock('@/hooks/use-media-query', () => ({
   useIsMobile: () => env.phone,
 }));
 vi.mock('@/lib/app-commands', () => ({ requestAppCommand: env.command }));
+vi.mock('@/components/pro/pro-interface-redirect', () => ({ useProInterfaceActive: () => env.proActive }));
 vi.mock('../tour-overlay', () => ({ TourOverlay: () => null }));
 vi.mock('@/stores/auth-store', () => ({
   useAuthStore: (sel: (s: unknown) => unknown) => sel({ isDemoMode: true, client: { supportsContacts: () => true } }),
@@ -38,7 +40,8 @@ vi.mock('@/stores/settings-store', () => ({
 }));
 
 const { TourProvider, useTour } = await import('../tour-provider');
-const { getTourSteps } = await import('../tour-steps');
+const { getTourSteps, proTabOfTourStep } = await import('../tour-steps');
+const { useProTabStore } = await import('@/stores/pro-tab-store');
 
 let api: ReturnType<typeof useTour>;
 function Probe() {
@@ -50,6 +53,7 @@ const probe = () => screen.getByTestId('probe').textContent;
 
 beforeEach(() => {
   env.phone = true;
+  env.proActive = false;
   env.pathname = '/mail/folder/inbox';
   env.push.mockClear();
   env.command.mockClear();
@@ -138,5 +142,36 @@ describe('tour run', () => {
     act(() => api.skipStep(1));
     expect(probe()).toBe('off');
     expect(env.command).toHaveBeenCalledWith('tour-end');
+  });
+});
+
+describe('tour under the Pro shell', () => {
+  const stepTo = (id: string) => {
+    for (let i = 0; i < 30 && api.steps[api.currentStep]?.id !== id; i++) act(() => api.nextStep());
+  };
+
+  beforeEach(() => {
+    env.phone = false;
+    env.proActive = true;
+    // Not /pro: the address the focused tab wrote can reach the router.
+    env.pathname = '/calendar/month/2026-11-03';
+    useProTabStore.setState({ tabs: [{ id: 'home-mail', kind: 'mail', labelKey: 'mail', closeable: false, paneId: 'main' }], activeTabId: 'home-mail', activeSplitTabId: null, focusedPaneId: 'main', loadedTabIds: ['home-mail'] });
+  });
+
+  it('opens the tab of each step instead of leaving the Pro route', () => {
+    start();
+    stepTo('calendar-view');
+    const focused = () => {
+      const s = useProTabStore.getState();
+      return s.tabs.find((t) => t.id === s.activeTabId)?.kind;
+    };
+    expect(focused()).toBe('calendar');
+    expect(env.push).not.toHaveBeenCalled();
+  });
+
+  it('leaves the composer step in the compose tab it just opened', () => {
+    expect(proTabOfTourStep({ target: '[data-tour="composer"]' })).toBeNull();
+    expect(proTabOfTourStep({ target: '[data-tour="sidebar"]' })).toBe('mail');
+    expect(proTabOfTourStep({ target: 'x', page: '/settings' })).toBe('settings');
   });
 });

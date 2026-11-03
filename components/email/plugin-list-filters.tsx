@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { iconForName, X } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import {
+  activeListFilterCondition,
   activeListFilterKeys,
   listFilterApplies,
   listFilterRevision,
@@ -15,6 +16,15 @@ import {
 import type { MailAccountKind } from "@/lib/plugin-sandbox/account-kind";
 
 const NONE = new Set<string>();
+
+/** Whether a plugin's filter is narrowing this folder's list right now. */
+export function useFolderListFiltered(mailboxRole: string | null, accountKind: MailAccountKind | null): boolean {
+  return useSyncExternalStore(
+    subscribeListFilters,
+    () => activeListFilterCondition({ role: mailboxRole, accountKind }) !== null,
+    () => false,
+  );
+}
 
 /**
  * The keyword filters plugins offer for this folder (api.ui.setListFilters),

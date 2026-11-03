@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Loader2, Search } from "@/components/icons";
 import { useTranslations } from "next-intl";
 import { useGlobalSearch } from "@/hooks/use-global-search";
+import { usePaneSize } from "@/hooks/use-pane-size";
 import { openHit } from "@/lib/global-search/open-hit";
 import type { SearchScope } from "@/lib/global-search/query-parser";
 import { hitKey, SEARCH_KINDS, type GlobalSearchHit, type SearchKind } from "@/lib/global-search/types";
@@ -13,9 +14,14 @@ import { useSearchHistoryStore } from "@/stores/search-history-store";
 import { SearchFacets } from "@/components/global-search/search-facets";
 import { SearchPreview } from "@/components/global-search/search-preview";
 import { SearchResultList } from "@/components/global-search/search-result-list";
+import { cn } from "@/lib/utils";
 
 export const SEARCH_TAB_REMOTE_LIMIT = 100;
 export const SEARCH_TAB_LOCAL_LIMIT = 50;
+/** Facets, a 384 px list and a preview need a pane this wide (Tailwind's lg). */
+const PREVIEW_MIN_PANE = 1024;
+/** Below this (a split pane) the facets narrow so the list keeps room for its rows. */
+const WIDE_FACETS_MIN_PANE = 768;
 
 export interface SearchTabBodyProps {
   tabId: string;
@@ -89,9 +95,15 @@ export function SearchTabBody({ tabId, data }: SearchTabBodyProps) {
   const setAccountId = (accountId: string | null) => updateSearchTab(tabId, { accountId });
   const handleOpen = (hit: GlobalSearchHit) => { void openHit(hit, { proShell: true }); };
 
+  // The tab lives in a pane, which a split can make far narrower than the
+  // window, so the pane's width decides and not a viewport breakpoint.
+  const paneWidth = usePaneSize();
+  const showPreview = paneWidth === null || paneWidth >= PREVIEW_MIN_PANE;
+  const wideFacets = paneWidth === null || paneWidth >= WIDE_FACETS_MIN_PANE;
+
   return (
     <div className="flex h-full min-h-0 w-full bg-background">
-      <aside className="w-56 shrink-0 bg-secondary border-e border-border overflow-y-auto">
+      <aside className={cn("shrink-0 bg-secondary border-e border-border overflow-y-auto", wideFacets ? "w-56" : "w-40")}>
         <SearchFacets
           scope={data.scope}
           onScopeChange={setScope}
@@ -105,7 +117,7 @@ export function SearchTabBody({ tabId, data }: SearchTabBodyProps) {
         />
       </aside>
 
-      <section className="flex-1 lg:flex-none lg:w-96 min-w-0 flex flex-col border-e border-border">
+      <section className={cn("min-w-0 flex flex-col", showPreview ? "w-96 flex-none border-e border-border" : "flex-1")}>
         <div className="flex h-10 flex-shrink-0 items-center gap-2 border-b border-border px-3">
           <Search className="w-4 h-4 shrink-0 text-muted-foreground" />
           <input
@@ -126,7 +138,8 @@ export function SearchTabBody({ tabId, data }: SearchTabBodyProps) {
             kinds={kinds}
             flat={flat}
             selectedKey={selected ? hitKey(selected) : null}
-            onSelect={setSelected}
+            // No preview to fill: a click opens the hit, as its Open button would.
+            onSelect={showPreview ? setSelected : handleOpen}
             onOpen={handleOpen}
             onLoadMoreMail={loadMoreMail}
           />
@@ -139,9 +152,11 @@ export function SearchTabBody({ tabId, data }: SearchTabBodyProps) {
         </div>
       </section>
 
-      <aside className="hidden lg:block flex-1 min-w-0 overflow-y-auto">
-        <SearchPreview hit={selected} onOpen={handleOpen} onClose={() => setSelected(null)} />
-      </aside>
+      {showPreview && (
+        <aside className="flex-1 min-w-0 overflow-y-auto">
+          <SearchPreview hit={selected} onOpen={handleOpen} onClose={() => setSelected(null)} />
+        </aside>
+      )}
     </div>
   );
 }

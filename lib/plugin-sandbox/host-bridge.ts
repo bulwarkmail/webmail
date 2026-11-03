@@ -552,6 +552,15 @@ export class SandboxInstance {
         return;
       }
 
+      case 'frame-escape': {
+        // Only for a dialog's own frame: elsewhere Escape in a frame means
+        // nothing to the host, and shouldn't close the message around it.
+        if (this.iframe.closest('[data-plugin-dialog], [data-plugin-dialog-popover]')) {
+          this.iframe.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+        }
+        return;
+      }
+
       case 'slot-resize': {
         // The iframe has no intrinsic height - sync it to the content height
         // the sandbox reported, otherwise the wrapper reserves space but the

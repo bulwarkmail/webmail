@@ -1,7 +1,7 @@
 import { StrictMode, type ReactNode } from 'react';
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { useCloseOnBack } from '../use-close-on-back';
+import { historySettled, useCloseOnBack } from '../use-close-on-back';
 
 const entry = () => (window.history.state as Record<string, unknown> | null)?.__closeOnBack;
 
@@ -42,6 +42,23 @@ describe('useCloseOnBack (R5)', () => {
     rerender({ active: false });
     await waitFor(() => expect(entry()).toBeUndefined());
     await waitFor(() => expect(window.location.pathname).toBe('/calendar/week/2026-09-14'));
+  });
+
+  it('keeps its clean-up Back from the router, and passes a real Back on', async () => {
+    const heard = vi.fn();
+    window.addEventListener('popstate', heard);
+    const { rerender } = await openOverlay();
+    rerender({ active: false });
+    await waitFor(() => expect(entry()).toBeUndefined());
+    await historySettled();
+    expect(heard).not.toHaveBeenCalled();
+
+    const second = await openOverlay();
+    window.history.back();
+    await waitFor(() => expect(second.onBack).toHaveBeenCalledTimes(1));
+    expect(heard).toHaveBeenCalledTimes(1);
+    second.unmount();
+    window.removeEventListener('popstate', heard);
   });
 
   it('does not undo a navigation that pushed its own entry', async () => {

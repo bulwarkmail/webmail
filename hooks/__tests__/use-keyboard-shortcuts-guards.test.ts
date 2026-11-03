@@ -154,6 +154,36 @@ describe('useKeyboardShortcuts: arrows only in the message list', () => {
   });
 });
 
+describe('useKeyboardShortcuts: keys without a handler', () => {
+  // A later listener skips a key that is already defaultPrevented
+  // (isAppShortcutBlocked), so claiming it would take it from the Calendar tab.
+  const prevented = (key: string, code: string, init: KeyboardEventInit = {}) => {
+    const event = new KeyboardEvent('keydown', { key, code, bubbles: true, cancelable: true, ...init });
+    document.body.dispatchEvent(event);
+    return event.defaultPrevented;
+  };
+
+  it.each([
+    ['c', 'KeyC', {}],
+    ['n', 'KeyN', {}],
+    ['/', 'Slash', {}],
+    ['j', 'KeyJ', {}],
+    ['k', 'KeyK', {}],
+    ['Escape', 'Escape', {}],
+    ['G', 'KeyG', { shiftKey: true }],
+  ] as [string, string, KeyboardEventInit][])('leaves %s alone', (key, code, init) => {
+    renderHook(() => useKeyboardShortcuts({ emails: [], handlers: { onShowHelp: vi.fn() } }));
+    expect(prevented(key, code, init)).toBe(false);
+  });
+
+  it('claims a key it has a handler for', () => {
+    const onCompose = vi.fn();
+    renderHook(() => useKeyboardShortcuts({ emails: [], handlers: { onCompose } }));
+    expect(prevented('c', 'KeyC')).toBe(true);
+    expect(onCompose).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('useKeyboardShortcuts: single-key shortcuts off', () => {
   it.each([
     ['j', 'KeyJ', {}, 'onNextEmail'],

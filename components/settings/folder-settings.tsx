@@ -518,11 +518,11 @@ export function FolderSettings() {
     const parentName = parentId ? ownMailboxes.find(m => m.id === parentId)?.name : null;
     return (
       <div
-        className="flex items-center gap-2 mt-1 p-2.5 bg-muted/30 rounded-md border border-border"
+        className="flex flex-wrap items-center gap-2 mt-1 p-2.5 bg-muted/30 rounded-md border border-border"
         style={{ marginInlineStart: depth * 16 }}
       >
         <FolderPlus className="w-4 h-4 text-primary flex-shrink-0" />
-        <div className="flex-1 flex flex-col gap-1">
+        <div className="flex-1 basis-40 min-w-0 flex flex-col gap-1">
           {parentName && (
             <span className="text-xs text-muted-foreground">
               {t('subfolder_of', { name: parentName })}
@@ -542,7 +542,7 @@ export function FolderSettings() {
               }
             }}
             placeholder={parentId ? t('subfolder_name') : t('new_folder_name')}
-            className="flex-1 px-2 py-1 text-sm rounded border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-hidden"
+            className="flex-1 min-w-0 px-2 py-1 text-sm rounded border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-hidden"
             autoFocus
             disabled={isLoading}
           />
@@ -592,7 +592,7 @@ export function FolderSettings() {
               if (e.key === 'Enter') handleRename(mb.id);
               if (e.key === 'Escape') cancelEdit();
             }}
-            className="flex-1 px-2 py-1 text-sm rounded border border-border bg-background text-foreground focus:outline-hidden"
+            className="flex-1 min-w-0 px-2 py-1 text-sm rounded border border-border bg-background text-foreground focus:outline-hidden"
             autoFocus
             disabled={isLoading}
           />
@@ -733,7 +733,7 @@ export function FolderSettings() {
               value={folderCountModes?.[mb.id] ?? ''}
               onChange={(value) => setCountMode(mb.id, value)}
               ariaLabel={t('count_mode', { name: mb.name })}
-              className="px-1.5 py-0.5 text-xs max-w-[9rem]"
+              className="px-1.5 py-0.5 text-xs max-w-[9rem] pointer-coarse:max-w-[12rem]"
               options={countModeOptions}
             />
             {mb.myRights?.mayCreateChild && (

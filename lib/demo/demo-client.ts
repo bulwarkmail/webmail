@@ -523,8 +523,9 @@ export class DemoJMAPClient implements IJMAPClient {
   /**
    * Minimal JMAP filter evaluator for demo mode: supports the conditions the
    * message-list category tabs and the folder-less search scopes use
-   * (hasKeyword / notKeyword / from / text / inMailbox / inMailboxOtherThan
-   * and AND / OR / NOT operators). Unknown conditions are ignored.
+   * (hasKeyword / notKeyword / from / text / header / inMailbox /
+   * inMailboxOtherThan and AND / OR / NOT operators). Unknown conditions are
+   * ignored.
    */
   private matchesFilter(e: Email, filter: Record<string, unknown>): boolean {
     if (typeof filter.operator === 'string') {
@@ -563,6 +564,16 @@ export class DemoJMAPClient implements IJMAPClient {
       const q = filter.body.toLowerCase();
       const bodyText = Object.values(e.bodyValues || {}).map(v => v.value).join(' ').toLowerCase();
       if (!bodyText.includes(q)) return false;
+    }
+    // RFC 8621 4.4.1: [name] tests that the header exists, [name, value] that
+    // its value contains the text. Ignoring it would match every message.
+    if (Array.isArray(filter.header) && typeof filter.header[0] === 'string') {
+      const wanted = filter.header[0].toLowerCase();
+      const text = typeof filter.header[1] === 'string' ? filter.header[1].toLowerCase() : null;
+      const match = Object.entries(e.headers ?? {}).some(([name, value]) =>
+        name.toLowerCase() === wanted
+        && (text === null || (Array.isArray(value) ? value : [value]).some(v => String(v).toLowerCase().includes(text))));
+      if (!match) return false;
     }
     if (typeof filter.inMailbox === 'string' && !e.mailboxIds[filter.inMailbox]) return false;
     if (Array.isArray(filter.inMailboxOtherThan)) {

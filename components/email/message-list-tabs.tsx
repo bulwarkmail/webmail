@@ -12,6 +12,7 @@ import { iconForName } from '@/components/icons';
 import { useMessageListTabsStore } from '@/stores/message-list-tabs-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { isFilterEmpty } from '@/lib/jmap/search-utils';
 import { cn } from '@/lib/utils';
 
 /**
@@ -29,6 +30,7 @@ export function useMessageListTabsVisible(): boolean {
   const mailboxes = useEmailStore((s) => s.mailboxes);
   const selectedKeyword = useEmailStore((s) => s.selectedKeyword);
   const searchQuery = useEmailStore((s) => s.searchQuery);
+  const filtersEmpty = useEmailStore((s) => isFilterEmpty(s.searchFilters));
   const isUnifiedView = useEmailStore((s) => s.isUnifiedView);
   const role = mailboxes.find((mb) => mb.id === selectedMailbox)?.role?.toLowerCase() ?? null;
   // Tabs only make sense on a plain mailbox view: tag views, searches and
@@ -40,6 +42,7 @@ export function useMessageListTabsVisible(): boolean {
     mailboxRoles.includes(role) &&
     !selectedKeyword &&
     !searchQuery &&
+    filtersEmpty &&
     !isUnifiedView
   );
 }
@@ -96,6 +99,8 @@ export function MessageListTabs({ panelId }: { panelId: string }) {
   const handleSelect = (tabId: string) => {
     if (tabId === activeTabId) return;
     useMessageListTabsStore.getState().setActiveTab(tabId, selectedMailbox);
+    // The other tab lists other mail; ticks here would act on rows out of sight.
+    useEmailStore.getState().clearSelection();
     if (client) void useEmailStore.getState().fetchEmails(client);
   };
 

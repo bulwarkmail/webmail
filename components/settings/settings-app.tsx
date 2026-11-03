@@ -310,6 +310,13 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   const [searchQuery, setSearchQuery] = useState('');
   const [pendingHighlight, setPendingHighlight] = useState<{ tab: SettingsTabId; label: string; pluginId?: string; advanced?: boolean } | null>(null);
   const isDesktop = useIsDesktop();
+  // Narrowing the window (or turning a tablet) keeps the page that was open
+  // instead of dropping back to the page list.
+  const wasDesktop = useRef(isDesktop);
+  useEffect(() => {
+    if (wasDesktop.current && !isDesktop) setMobileShowContent(true);
+    wasDesktop.current = isDesktop;
+  }, [isDesktop]);
 
   const messages = useMessages() as Record<string, unknown>;
   const installedPlugins = usePluginStore((s) => s.plugins);
@@ -411,6 +418,11 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   });
   const [isResizing, setIsResizing] = useState(false);
   const dragStartWidth = useRef(256);
+  // The phone's page list keeps its place while a page is open on top of it.
+  const mobileListScrollTop = useRef(0);
+  const attachMobileList = useCallback((el: HTMLElement | null) => {
+    if (el) el.scrollTop = mobileListScrollTop.current;
+  }, []);
 
   // Check auth on mount – skip when already authenticated so that navigating
   // between routes doesn't retrigger checkAuth's transient `{ client: null,
@@ -505,7 +517,12 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
         window.history.replaceState(window.history.state, '', listPath);
       }
     }
-    window.history.pushState({ __settingsSubmenu: true }, '');
+    // Once per open page: this runs again each time the window crosses the
+    // phone breakpoint, and the entry from the last crossing is still there.
+    // Back leaves that entry, so opening a page afterwards adds a new one.
+    if (!(window.history.state as { __settingsSubmenu?: boolean } | null)?.__settingsSubmenu) {
+      window.history.pushState({ __settingsSubmenu: true }, '');
+    }
 
     const handlePop = () => {
       setMobileShowContent(false);
@@ -920,7 +937,8 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
             <PhoneHeaderActions />
           </div>
 
-          <AppMain embedded={isEmbedded} label={activeTabLabel} className="flex-1 overflow-y-auto p-4">
+          {/* A key per page: a page opens at its top, not at the scroll offset of the one before. */}
+          <AppMain key={effectiveActiveTab} embedded={isEmbedded} label={activeTabLabel} className="flex-1 overflow-y-auto p-4">
             {renderTabContent()}
           </AppMain>
 
@@ -952,7 +970,15 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
           <PhoneHeaderActions />
         </div>
 
-        <AppMain embedded={isEmbedded} label={t('title')} className="flex-1 overflow-y-auto" data-tour="settings-tabs">
+        <AppMain
+          key="settings-page-list"
+          ref={attachMobileList}
+          onScroll={(e) => { mobileListScrollTop.current = e.currentTarget.scrollTop; }}
+          embedded={isEmbedded}
+          label={t('title')}
+          className="flex-1 overflow-y-auto"
+          data-tour="settings-tabs"
+        >
           <div className="px-4 pt-3 pb-1">
             <ToolbarSearch
               value={searchQuery}
@@ -1047,7 +1073,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
 
   // Desktop layout
   const settingsMain = (
-      <AppMain ref={attachContentScroll as (el: HTMLElement | null) => void} embedded={isEmbedded} label={activeTabLabel} className="flex-1 overflow-y-auto">
+      <AppMain key={effectiveActiveTab} ref={attachContentScroll as (el: HTMLElement | null) => void} embedded={isEmbedded} label={activeTabLabel} className="flex-1 overflow-y-auto">
         <div className={effectiveActiveTab.startsWith(PLUGIN_PAGE_PREFIX) ? "px-6 py-6" : "max-w-3xl mx-auto px-6 py-6"}>
           {/* The page's heading for screen readers; the sidebar shows which
               page is open (the phone header has a visible one). */}
@@ -1164,7 +1190,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
                           'w-4 h-4 shrink-0',
                           effectiveActiveTab === tab.id ? 'text-accent-foreground' : 'text-muted-foreground'
                         )} />
-                        <span className="truncate" title={tab.label}>{tab.label}</span>
+                        <span className="truncate" dir="auto" title={tab.label}>{tab.label}</span>
                       </button>
                       {subs.map((sub) => (
                         <button

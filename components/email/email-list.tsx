@@ -42,6 +42,7 @@ import { toast } from "@/stores/toast-store";
 import { confirmMailRemoval } from "@/lib/mail-removal-confirm";
 import { markSelectionReadWithUndo, runBatchEmailAction, setSelectionTagWithUndo, toastWithUndo, undoLabels, undoMoveAction } from "@/lib/email-action-toast";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { measureVisibleRow } from "@/lib/virtual-row-measure";
 import { TagDisplayContext, useMeasuredTagDisplay } from "@/hooks/use-tag-display";
 import { SearchChips } from "@/components/search/search-chips";
 import { isFilterEmpty, DEFAULT_SEARCH_FILTERS } from "@/lib/jmap/search-utils";
@@ -49,7 +50,7 @@ import { getOwnAddresses } from "@/lib/filters/quick-rule-target";
 import { emitThreadExpand } from "@/lib/plugin-thread-expand";
 import { normalizeAddress } from "@/lib/filters/quick-rules";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
-import { PluginListFilters } from "./plugin-list-filters";
+import { PluginListFilters, useFolderListFiltered } from "./plugin-list-filters";
 import { PluginActions, useFolderAccountKind } from "@/components/plugins/plugin-actions";
 import { useUnreadFirstSection } from "@/hooks/use-unread-first-section";
 import { useTimeoutWhileMounted } from "@/hooks/use-timeout-while-mounted";
@@ -123,7 +124,7 @@ type ListItem =
   | { kind: 'unread-empty' };
 
 /** Below this width the batch toolbar drops its labels (see batchNarrow). */
-const BATCH_TOOLBAR_WIDE = 480;
+const BATCH_TOOLBAR_WIDE = 640;
 
 // Declared out here so re-renders of the list keep the same element. Inside
 // EmailList every render made a new component, which remounted the skeleton
@@ -495,8 +496,7 @@ export function EmailList({
     // Keep sub-pixel row heights. The default measurer rounds them, so a
     // row could start up to half a pixel inside the one above it and paint
     // over that row's divider (at 125% or 150% display scaling).
-    measureElement: (element, entry) =>
-      entry?.borderBoxSize?.[0]?.blockSize ?? element.getBoundingClientRect().height,
+    measureElement: measureVisibleRow,
   });
 
 
@@ -534,6 +534,9 @@ export function EmailList({
   );
   const bulkActionContext = useMemo(() => ({ emailIds: selectedEmailIds }), [selectedEmailIds]);
   const folderAccountKind = useFolderAccountKind();
+  // A filter chip or a category tab on: the folder itself may well have mail.
+  const pluginFilterOn = useFolderListFiltered(effectiveMailboxRole ?? null, folderAccountKind);
+  const listNarrowed = pluginFilterOn || useMessageListTabsStore.getState().getCategoryFilter(effectiveMailboxRole) !== null;
   // "Remove from this folder" (#615): offered for a selection only when every
   // selected message is also in another folder.
   const removeFromFolder = useRemoveFromFolder();
@@ -982,6 +985,12 @@ export function EmailList({
     `${items.length}:${renderedRows[0]?.index ?? -1}-${renderedRows[renderedRows.length - 1]?.index ?? -1}:${expandedThreadIds.size}:${paged ? page : -1}`,
   );
 
+  // Room under the last row for the round Compose button, which would otherwise
+  // sit on that row's actions (Mountain View has no such button). A spacer and
+  // not padding on the list: padding is a minimum height the list can't go
+  // under, and on a short screen it pushed the rows over the tab bar.
+  const composeButtonRoom = !mountainViewList ? <div aria-hidden="true" className="h-20" /> : null;
+
   return (
     <TagDisplayContext.Provider value={tagDisplay}>
     <div className={cn("flex flex-col min-h-0", className)}>
@@ -1143,9 +1152,9 @@ export function EmailList({
 
       {/* Empty Folder Banner for Junk/Trash */}
       {isEmptyableFolder && emails.length > 0 && !hasSelection && (
-        <div className="px-4 py-2 border-b border-border bg-muted/30 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <AlertTriangle className="w-4 h-4" />
+        <div className="px-4 py-2 border-b border-border bg-muted/30 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0 text-sm text-muted-foreground">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>{currentMailbox?.role === 'junk' ? t('empty_folder.junk_hint') : t('empty_folder.trash_hint')}</span>
           </div>
           <Button
@@ -1153,7 +1162,7 @@ export function EmailList({
             size="sm"
             onClick={handleEmptyFolder}
             disabled={isProcessing}
-            className="text-destructive border-destructive/30 hover:bg-destructive/10 text-xs"
+            className="shrink-0 whitespace-nowrap text-destructive border-destructive/30 hover:bg-destructive/10 text-xs"
           >
             {isProcessing ? (
               <Loader2 className="w-3 h-3 animate-spin me-1" />
@@ -1170,7 +1179,7 @@ export function EmailList({
         <PluginListFilters
           mailboxRole={effectiveMailboxRole ?? null}
           accountKind={folderAccountKind}
-          onChange={() => { if (client) void useEmailStore.getState().fetchEmails(client); }}
+          onChange={() => { clearSelection(); if (client) void useEmailStore.getState().fetchEmails(client); }}
         />
       )}
 
@@ -1192,9 +1201,7 @@ export function EmailList({
         // Where the focus goes when the message it was on is deleted,
         // archived or moved (components/layout/focus-rescue).
         data-focus-fallback=""
-        // Room under the last row for the round Compose button, which would
-        // otherwise sit on that row's actions (Mountain View has no such button).
-        className={cn("flex-1 overflow-y-auto bg-background relative outline-none", !mountainViewList && "pb-20")}
+        className="flex-1 min-h-0 overflow-y-auto bg-background relative outline-none"
         data-tour="email-list"
         // The column header above keeps the same gutter, so its titles stay over the columns.
         style={listColumns ? { scrollbarGutter: 'stable' } : undefined}
@@ -1224,7 +1231,7 @@ export function EmailList({
             <EmptyState
               icon={isScheduledView ? CalendarClock : isSearching ? SearchX : MailX}
               title={isScheduledView ? t('no_scheduled_emails') : isSearching ? t('no_search_results') : t('no_emails')}
-              description={isScheduledView ? t('no_scheduled_emails_description') : isSearching ? t('no_search_results_description') : t('no_emails_description')}
+              description={isScheduledView ? t('no_scheduled_emails_description') : isSearching ? t('no_search_results_description') : listNarrowed ? undefined : t('no_emails_description')}
               actions={!isScheduledView && isSearching && onClearSearch ? (
                 <Button size="sm" variant="outline" onClick={onClearSearch}>{tSidebar('clear_search')}</Button>
               ) : !isScheduledView && !isSearching && effectiveMailboxRole === 'drafts' && onCompose ? (
@@ -1258,6 +1265,7 @@ export function EmailList({
                   {footerIsLoadingMore ? t('loading_more') : t('pages.next')}
                 </Button>
               </nav>
+              {composeButtonRoom}
             </>
           ) : (
           <>
@@ -1314,6 +1322,7 @@ export function EmailList({
                 </div>
               )}
             </div>}
+            {composeButtonRoom}
           </>
           )
         )}

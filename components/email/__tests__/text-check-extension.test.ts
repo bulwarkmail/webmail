@@ -3,7 +3,7 @@ import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import { undo } from '@tiptap/pm/history';
 import {
-  applyIssueReplacement, createTextCheckExtension, drawnIssues, selectNextIssue, setTextIssues, type TextIssueRange,
+  applyIssueReplacement, createTextCheckExtension, drawnIssues, selectNextIssue, setActiveIssue, setTextIssues, type TextIssueRange,
 } from '../proofreading/text-check-extension';
 
 const editors: Editor[] = [];
@@ -52,6 +52,21 @@ describe('text check underlines', () => {
     // Typing inside it drops it.
     type(editor, dem.from + 5, 'x');
     expect(drawnIssues(editor.state)).toHaveLength(0);
+  });
+
+  it('marks the issue whose popup is open, keeps the others, and goes back when it closes', () => {
+    const { editor } = setup('Ich habe dem Brief geschrieben');
+    setTextIssues(editor, [range(editor, 'dem'), range(editor, 'Brief')]);
+    const active = () => [...editor.view.dom.querySelectorAll('.text-issue-active')].map((el) => el.getAttribute('data-text-issue'));
+
+    setActiveIssue(editor, 'dem');
+    expect(active()).toEqual(['dem']);
+    setActiveIssue(editor, 'Brief');
+    expect(active()).toEqual(['Brief']);
+    expect(drawnIssues(editor.state).map((r) => r.key)).toEqual(['dem', 'Brief']);
+    setActiveIssue(editor, null);
+    expect(active()).toEqual([]);
+    expect(drawnIssues(editor.state).map((r) => r.key)).toEqual(['dem', 'Brief']);
   });
 
   it('applies a replacement as one undo step', () => {
