@@ -4481,14 +4481,16 @@ export function EmailComposer({
           {/* From field */}
           <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50">
             <span className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('from')}:</span>
-            <div className="flex-1 flex items-center gap-1 min-w-0">
+            <div className={cn("flex-1 flex items-center gap-1 min-w-0", fromOverrideEnabled && "flex-wrap")}>
               {fromOverrideEnabled ? (
-                <div className="flex-1 flex items-center gap-1 min-w-0">
+                // Both fields need room to type in: on a narrow composer they take a
+                // line of their own, or a line each, rather than squeeze to nothing.
+                <div className="flex-1 flex flex-wrap items-center gap-1 min-w-52">
                   <Input
                     value={fromOverrideName}
                     onChange={(e) => setFromOverrideName(e.target.value)}
                     placeholder={t('from_override.name_placeholder')}
-                    className="h-7 text-sm w-32 md:w-40 shrink-0"
+                    className="h-7 text-sm flex-1 min-w-32 md:flex-none md:w-40"
                     aria-label={t('from_override.name_label')}
                   />
                   <Input
@@ -4496,7 +4498,7 @@ export function EmailComposer({
                     onChange={(e) => setFromOverrideEmail(e.target.value)}
                     placeholder={t('from_override.email_placeholder')}
                     type="email"
-                    className="h-7 text-sm flex-1 min-w-0 font-mono"
+                    className="h-7 text-sm flex-[2] min-w-32 font-mono"
                     aria-label={t('from_override.email_label')}
                   />
                 </div>
