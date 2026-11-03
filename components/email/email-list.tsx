@@ -41,6 +41,7 @@ import { toast } from "@/stores/toast-store";
 import { confirmMailRemoval } from "@/lib/mail-removal-confirm";
 import { markSelectionReadWithUndo, runBatchEmailAction, setSelectionTagWithUndo, toastWithUndo, undoLabels, undoMoveAction } from "@/lib/email-action-toast";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { measureVisibleRow } from "@/lib/virtual-row-measure";
 import { TagDisplayContext, useMeasuredTagDisplay } from "@/hooks/use-tag-display";
 import { SearchChips } from "@/components/search/search-chips";
 import { isFilterEmpty, DEFAULT_SEARCH_FILTERS } from "@/lib/jmap/search-utils";
@@ -493,8 +494,7 @@ export function EmailList({
     // Keep sub-pixel row heights. The default measurer rounds them, so a
     // row could start up to half a pixel inside the one above it and paint
     // over that row's divider (at 125% or 150% display scaling).
-    measureElement: (element, entry) =>
-      entry?.borderBoxSize?.[0]?.blockSize ?? element.getBoundingClientRect().height,
+    measureElement: measureVisibleRow,
   });
 
 
