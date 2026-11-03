@@ -156,7 +156,7 @@ export function findDesktopTrustPath(standaloneDir) {
         if (entry.name !== 'node_modules') visit(full);
       } else if (entry.name.endsWith('.js')) {
         const text = readFileSync(full, 'utf8');
-        if (text.includes(DESKTOP_TRUST_MARKER) || text.includes(DESKTOP_FLAG_READ)) {
+        if (text.includes(DESKTOP_TRUST_MARKER) || DESKTOP_FLAG_READ.test(text)) {
           found.push(`${toPosix(path.relative(standaloneDir, full))} (desktop trust path in a server build)`);
         }
       }

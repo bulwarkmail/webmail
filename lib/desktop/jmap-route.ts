@@ -34,6 +34,19 @@ export function desktopJmapBase(serverUrl: string): string {
   }
 }
 
+/** True for a server the page reaches through the embedded server. */
+export function isDesktopProxiedServer(serverUrl: string): boolean {
+  return desktopJmapBase(serverUrl) !== serverUrl;
+}
+
+/**
+ * The route answers everything but JSON as octet-stream, so that nothing can render
+ * on the app's origin. A blob for the page gets back the type it asked for.
+ */
+export function withDesktopBlobType(blob: Blob, serverUrl: string, type: string | undefined): Blob {
+  return type && isDesktopProxiedServer(serverUrl) ? new Blob([blob], { type }) : blob;
+}
+
 /** The origin part of {@link desktopJmapBase}, onto which session URLs are moved. */
 export function desktopJmapOrigin(serverUrl: string): string {
   const { origin, protocol } = new URL(serverUrl);

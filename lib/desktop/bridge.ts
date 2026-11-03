@@ -14,6 +14,11 @@ export function getDesktopBridge(): BulwarkDesktopBridge | null {
   return bridge;
 }
 
+/** Nothing added for this server stays: see DesktopServersBridge. */
+export function forgetDesktopServer(serverUrl: string, reason: 'failed' | 'signed-out'): void {
+  getDesktopBridge()?.servers?.forget?.(serverUrl, reason);
+}
+
 /** True in any window of the desktop app, standalone or on an instance. */
 export function isDesktopApp(): boolean {
   return getDesktopBridge() !== null;

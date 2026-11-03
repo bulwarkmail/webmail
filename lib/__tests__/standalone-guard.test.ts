@@ -46,6 +46,19 @@ describe('the desktop trust path', () => {
     expect(guardStandalone(dir, { desktopBuild: false })).toHaveLength(1);
   });
 
+  it('passes a server build whose server.js holds the config, with the name as a JSON key', () => {
+    const dir = tempDir();
+    put(dir, 'server.js', 'const nextConfig = {"env":{"NEXT_PUBLIC_BULWARK_LITE":"","NEXT_PUBLIC_BULWARK_DESKTOP":""}}');
+    expect(guardStandalone(dir, { desktopBuild: false })).toEqual([]);
+  });
+
+  it('fails the bracket form of the read too', () => {
+    const dir = tempDir();
+    put(dir, 'server.js');
+    put(dir, '.next/server/chunks/9.js', 'let a=process.env["NEXT_PUBLIC_BULWARK_DESKTOP"]');
+    expect(guardStandalone(dir, { desktopBuild: false })).toHaveLength(1);
+  });
+
   it('passes the desktop build itself', () => {
     const dir = tempDir();
     put(dir, 'server.js');

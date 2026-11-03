@@ -66,11 +66,24 @@ export interface DesktopServersBridge {
    * LAN or plain http, and lets the app reach it. Standalone mode only.
    */
   prepare: (serverUrl: string) => Promise<DesktopServerPrepareResult>;
-  /** The origins a session names, for the CORS headers the shell adds for them. */
+  /**
+   * The sign-in worked, so the server stays: what `prepare` added lasts only until
+   * the app quits before this. Other origins a session names get a prompt.
+   */
   noteSession: (
     serverUrl: string,
     urls: { apiUrl?: string; downloadUrl?: string; uploadUrl?: string; eventSourceUrl?: string },
   ) => void;
+  /** A sign-in that failed, or the last account on this server signing out. */
+  forget?: (serverUrl: string, reason: 'failed' | 'signed-out') => void;
+}
+
+export interface DesktopLifecycleBridge {
+  /**
+   * Before a window closes or the app quits, the shell asks the page to save what
+   * it has and waits a few seconds. A window with no handler closes at once.
+   */
+  onFlushRequest: (handler: () => Promise<unknown>) => () => void;
 }
 
 export type DesktopBrowserSignInResult =
@@ -106,6 +119,7 @@ export interface BulwarkDesktopBridge {
   theme?: DesktopThemeBridge;
   menu?: DesktopMenuBridge;
   shell?: DesktopShellBridge;
+  lifecycle?: DesktopLifecycleBridge;
   servers?: DesktopServersBridge;
   auth?: DesktopAuthBridge;
   plugins?: DesktopPluginsBridge;

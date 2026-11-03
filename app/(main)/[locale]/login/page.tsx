@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useEffect, useRef, useCallback, useId } from "react";
 import { IS_DESKTOP_BUILD } from "@/lib/desktop/flag";
-import { getDesktopBridge } from "@/lib/desktop/bridge";
+import { forgetDesktopServer, getDesktopBridge } from "@/lib/desktop/bridge";
 import { browserSignInAvailable, runDesktopBrowserSignIn } from "@/lib/desktop/browser-sign-in";
 import { useRouter } from "@/i18n/navigation";
 import { useParams, useSearchParams } from "next/navigation";
@@ -1017,6 +1017,7 @@ function LoginPageContent() {
         return;
       }
       setDesktopWaiting(false);
+      forgetDesktopServer(target, "failed");
       if (outcome.kind === "unavailable") setDesktopNotice(tDesktop("browser_unavailable"));
       else if (outcome.kind === "declined") setDesktopNotice(tDesktop("server_declined"));
       else if (outcome.kind === "failed") setDesktopNotice(tDesktop("browser_failed"));
@@ -1043,6 +1044,8 @@ function LoginPageContent() {
     if (signInWithToken) {
       if (await loginWithToken(effectiveServerUrl, accessToken, persistSession)) {
         router.push('/');
+      } else if (IS_DESKTOP_BUILD) {
+        forgetDesktopServer(effectiveServerUrl, 'failed');
       }
       return;
     }
@@ -1094,6 +1097,8 @@ function LoginPageContent() {
     } else if (isMobileHandoff) {
       // Stale payload should never feed into a later retry's redirect.
       mobileHandoffPayloadRef.current = null;
+    } else if (IS_DESKTOP_BUILD) {
+      forgetDesktopServer(effectiveServerUrl, 'failed');
     }
   };
 
