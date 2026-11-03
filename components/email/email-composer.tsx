@@ -5066,8 +5066,8 @@ export function EmailComposer({
             mvWindow ? "gap-1" : "border-t",
           )}
         >
-          {/* Left side actions */}
-          <div className="flex min-w-0 flex-1 items-center gap-1">
+          {/* Left side actions. Plugins add to them: past the room they wrap, not under Discard. */}
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
             <input
               ref={fileInputRef}
               type="file"
