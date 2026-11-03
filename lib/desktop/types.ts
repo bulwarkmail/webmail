@@ -180,6 +180,8 @@ export interface DesktopKeystoreBridge {
   accessState: () => Promise<DesktopKeystoreAccessState>;
   /** Takes back a stored yes and this session's grants. Only ever narrows. */
   revokeAccess: () => Promise<void>;
+  /** Takes back this session's grants, for the next account. Absent on older shells. */
+  clearGrants?: () => Promise<void>;
 }
 
 export interface BulwarkDesktopBridge {
