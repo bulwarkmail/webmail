@@ -14,7 +14,7 @@ import { isBuiltInHost, relayAllowed } from '@/lib/outgoing-hosts';
 import { noThirdPartyTraffic } from '@/lib/third-party-mode';
 import { IS_LITE } from '@/lib/lite';
 import { serviceWorkerUrl, SW_SCOPE } from '@/lib/app-update';
-import { forgetRelayRegistration, keepRelayRegistration } from '@/lib/pwa-notify/worker-state';
+import { forgetRelayRegistration, keepRelayRegistration, readRelayRegistrations } from '@/lib/pwa-notify/worker-state';
 import {
   EMPTY_NOTIFICATION_MUTES,
   isAccountMuted,
@@ -664,9 +664,25 @@ async function relayDroppedOurEndpoint(
   if (localStorage.getItem(endpointKey(accountId)) !== endpoint) return false;
   try {
     const res = await fetch(buildRelayUrl(relayBaseUrl, `/api/push/active/${encodeURIComponent(subscriptionId)}`));
-    return res.status === 404;
+    if (res.status !== 404) return false;
+    // An old relay without this route answers 404 for everything.
+    const body = (await res.json().catch(() => null)) as { error?: unknown } | null;
+    return body?.error === 'Unknown subscription';
   } catch {
     return false;
+  }
+}
+
+/** The browser moved to a new endpoint: every other login's relay record has to follow, connected in this tab or not. */
+async function moveOtherLogins(accountId: string, subscription: PushSubscription): Promise<void> {
+  const others = Object.entries(await readRelayRegistrations()).filter(([id]) => id !== accountId);
+  for (const [, entry] of others) {
+    await registerWithRelay({
+      relayBaseUrl: entry.relay,
+      subscriptionId: entry.subscriptionId,
+      subscription: { endpoint: subscription.endpoint, keys: { p256dh: readPushKey(subscription, 'p256dh'), auth: readPushKey(subscription, 'auth') } },
+      accountLabel: entry.accountLabel,
+    }).catch(() => undefined);
   }
 }
 
@@ -815,9 +831,11 @@ async function enableWebPushForThisTab(
   }
   const accountId = params.client.getAccountId();
   const deviceClientId = getOrCreateDeviceClientId(accountId);
+  let endpointGivenUp = false;
   if (pushSubscription && await relayDroppedOurEndpoint(accountId, relayBaseUrl, deviceClientId, pushSubscription.endpoint)) {
     await pushSubscription.unsubscribe().catch(() => undefined);
     pushSubscription = null;
+    endpointGivenUp = true;
     // The other accounts' records point at the old endpoint: their turn comes too.
     lastResync.clear();
   }
@@ -826,6 +844,7 @@ async function enableWebPushForThisTab(
       userVisibleOnly: true,
       applicationServerKey,
     });
+    if (endpointGivenUp) await moveOtherLogins(accountId, pushSubscription);
   }
 
   await registerWithRelay({

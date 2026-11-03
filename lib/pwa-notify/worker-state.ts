@@ -45,9 +45,20 @@ interface RelayRegistrations {
   entries: Record<string, RelayRegistration>;
 }
 
-async function readRelayRegistrations(cache: Cache, key: string): Promise<RelayRegistrations> {
+async function readStored(cache: Cache, key: string): Promise<RelayRegistrations> {
   const stored = (await (await cache.match(key))?.json()) as RelayRegistrations | undefined;
   return stored?.entries ? stored : { entries: {} };
+}
+
+/** Every login's relay registration on this browser, by JMAP account id. */
+export async function readRelayRegistrations(): Promise<Record<string, RelayRegistration>> {
+  try {
+    if (typeof caches === 'undefined') return {};
+    const cache = await caches.open(PUSH_STATE_CACHE);
+    return (await readStored(cache, relayRegistrationsKey(window.location.origin))).entries;
+  } catch {
+    return {};
+  }
 }
 
 /**
@@ -60,7 +71,7 @@ export async function keepRelayRegistration(accountId: string, entry: RelayRegis
     if (typeof caches === 'undefined') return;
     const cache = await caches.open(PUSH_STATE_CACHE);
     const key = relayRegistrationsKey(window.location.origin);
-    const stored = await readRelayRegistrations(cache, key);
+    const stored = await readStored(cache, key);
     stored.entries[accountId] = entry;
     stored.applicationServerKey = applicationServerKey;
     await cache.put(key, new Response(JSON.stringify(stored), { headers: { 'Content-Type': 'application/json' } }));
@@ -74,7 +85,7 @@ export async function forgetRelayRegistration(accountId: string): Promise<void> 
     if (typeof caches === 'undefined') return;
     const cache = await caches.open(PUSH_STATE_CACHE);
     const key = relayRegistrationsKey(window.location.origin);
-    const stored = await readRelayRegistrations(cache, key);
+    const stored = await readStored(cache, key);
     if (!(accountId in stored.entries)) return;
     delete stored.entries[accountId];
     await cache.put(key, new Response(JSON.stringify(stored), { headers: { 'Content-Type': 'application/json' } }));
