@@ -640,7 +640,7 @@ function LoginPageContent() {
 
   const startServerSideSso = useCallback(async () => {
     // The device's OS policy, as for a password: nothing starts towards a refused server.
-    if (selectedServer?.url && !jmapServerAllowedByDesktopPolicy(selectedServer.url, desktopPolicy)) {
+    if (serverUrl && !jmapServerAllowedByDesktopPolicy(serverUrl, desktopPolicy)) {
       setDesktopPolicyNotice(tDesktopPolicy("server_refused"));
       return;
     }
@@ -700,7 +700,7 @@ function LoginPageContent() {
     } catch {
       setOauthLoading(false);
     }
-  }, [params.locale, selectedServer?.id, selectedServer?.url, desktopPolicy, tDesktopPolicy, persistProviderSession, isMobileHandoff, mobileRedirectUri, mobileState, mobileChallenge]);
+  }, [params.locale, selectedServer?.id, serverUrl, desktopPolicy, tDesktopPolicy, persistProviderSession, isMobileHandoff, mobileRedirectUri, mobileState, mobileChallenge]);
 
   useEffect(() => {
     // After signing out, show the login page rather than signing straight
@@ -1174,6 +1174,12 @@ function LoginPageContent() {
   // has to pick which one SSO targets before the button starts the flow, since
   // the selection drives OAuth discovery and the server_id sent to the callback
   // (issue #799).
+  const desktopPolicyAlert = desktopPolicyNotice && (
+    <p role="alert" data-testid="desktop-policy-notice" className="mt-2 text-sm text-warning leading-relaxed">
+      {desktopPolicyNotice}
+    </p>
+  );
+
   const serverPicker = hasServerList && jmapServers.length > 1 ? (
     <div className="space-y-1.5">
       <label htmlFor="jmap-server-select" className="block text-sm font-medium text-foreground">
@@ -1588,6 +1594,7 @@ function LoginPageContent() {
               /* OAuth-only mode: server picker (if any) plus the SSO button */
               <div className="space-y-4">
                 {serverPicker}
+                {desktopPolicyAlert}
                 {oauthMetadata && showRememberMe && rememberMeBox}
                 {oauthMetadata ? (
                   <Button
@@ -1917,11 +1924,7 @@ function LoginPageContent() {
                     {desktopWaiting ? tDesktop("browser_waiting") : tDesktop("browser_button")}
                   </Button>
                 )}
-                {desktopPolicyNotice && (
-                  <p role="alert" data-testid="desktop-policy-notice" className="mt-2 text-sm text-warning leading-relaxed">
-                    {desktopPolicyNotice}
-                  </p>
-                )}
+                {desktopPolicyAlert}
                 {IS_DESKTOP_BUILD && desktopNotice && (
                   <p role="alert" data-testid="desktop-notice" className="mt-2 text-sm text-warning leading-relaxed">
                     {desktopNotice}
