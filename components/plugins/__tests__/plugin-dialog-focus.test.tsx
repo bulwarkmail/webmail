@@ -52,4 +52,29 @@ describe('plugin dialog focus', () => {
     await expect(answer!).resolves.toBeNull();
     await waitFor(() => expect(opener).toHaveFocus());
   });
+
+  it('lets the keyboard reach a confirm message to scroll it, starting on the button', () => {
+    render(<PluginDialogHost />);
+    act(() => { void awaitDialog({ pluginId: 'p', kind: 'confirm', title: 'Send?', message: 'A long list of recipients' }); });
+
+    expect(screen.getByRole('button', { name: 'confirm' })).toHaveFocus();
+    expect(screen.getByText('A long list of recipients').parentElement).toHaveAttribute('tabindex', '0');
+  });
+
+  it('lets the keyboard reach a prompt message to scroll it, starting in the field', () => {
+    render(<PluginDialogHost />);
+    act(() => {
+      void awaitPrompt({ pluginId: 'p', kind: 'prompt', title: 'Name', message: 'A long explanation', fields: [{ name: 'n', label: 'Name' }] });
+    });
+
+    expect(screen.getByRole('textbox', { name: 'Name' })).toHaveFocus();
+    expect(screen.getByText('A long explanation').parentElement).toHaveAttribute('tabindex', '0');
+  });
+
+  it('adds no stop for Tab when there is no message', () => {
+    render(<PluginDialogHost />);
+    act(() => { void awaitDialog({ pluginId: 'p', kind: 'confirm', title: 'Send?', message: '' }); });
+
+    expect(screen.getByRole('dialog').querySelector('[tabindex="0"]')).toBeNull();
+  });
 });

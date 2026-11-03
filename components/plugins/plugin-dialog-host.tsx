@@ -350,10 +350,10 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
             </div>
             {/* A long message scrolls here, under the title and over the buttons.
                 The panel itself clips: the focus on a button would scroll the
-                title away for good. */}
+                title away for good. A stop for Tab, so the arrow keys can scroll it. */}
             {isPrompt ? (
               <form onSubmit={(e) => { e.preventDefault(); submitPrompt(); }} className="flex min-h-0 flex-1 flex-col">
-                <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-3">
+                <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-3" tabIndex={message ? 0 : undefined}>
                   {message}
                   <div className="mb-6 flex flex-col gap-4">
                     {fields.map((f) => (
@@ -383,7 +383,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
               </form>
             ) : (
               <>
-                <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-3">{message}</div>
+                <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-3" tabIndex={message ? 0 : undefined}>{message}</div>
                 <div className={cn('flex shrink-0 items-center justify-end gap-3 px-6 pb-6', !current.message && 'mt-3')}>
                   {current.kind === 'confirm' && (
                     <Button ref={cancelButtonRef} type="button" variant="outline" onClick={cancel}>{cancelLabel}</Button>
