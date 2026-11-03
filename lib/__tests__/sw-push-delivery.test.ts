@@ -85,4 +85,62 @@ describe('a state-change push naming several accounts', () => {
   });
 });
 
+describe('what a notification counts', () => {
+  it('opens the one new message, however much older mail is unread', async () => {
+    const { push, shade } = loadWorker(() => ({ unreadTotal: 40, slot: 0, login: 'fp', email: mail('e1') }));
+    await push(delivery('a', 'e1'));
+    const shown = shade.get('bulwark-mail:a')!;
+    expect(shown.body).toBe('Hello');
+    expect(shown.data).toMatchObject({ kind: 'email', emailId: 'e1', accountId: 'a', slot: 0, login: 'fp' });
+  });
+
+  it('counts the messages it announced, not the unread mail, and opens the inbox for a group', async () => {
+    const { push, shade } = loadWorker((url) => ({ unreadTotal: 40, slot: 0, email: mail(String(url.searchParams.get('emailId')), `About ${url.searchParams.get('emailId')}`) }));
+    await push(delivery('a', 'e1'));
+    await push(delivery('a', 'e2'));
+    let shown = shade.get('bulwark-mail:a')!;
+    expect(shown.body).toBe('About e2\n+1 more message');
+    expect(shown.data).toMatchObject({ kind: 'mail-list', accountId: 'a', slot: 0 });
+    await push(delivery('a', 'e3', 'e4'));
+    shown = shade.get('bulwark-mail:a')!;
+    expect(shown.body).toBe('About e4\n+3 more messages');
+  });
+
+  it('starts over once the notification was dismissed', async () => {
+    const { push, shade } = loadWorker((url) => ({ unreadTotal: 2, slot: 0, email: mail(String(url.searchParams.get('emailId'))) }));
+    await push(delivery('a', 'e1'));
+    shade.get('bulwark-mail:a')!.close();
+    await push(delivery('a', 'e2'));
+    expect(shade.get('bulwark-mail:a')!.data).toMatchObject({ kind: 'email', emailId: 'e2' });
+  });
+
+  it('does not count a redelivered message twice', async () => {
+    const { push, shade } = loadWorker((url) => ({ unreadTotal: 2, slot: 0, email: mail(String(url.searchParams.get('emailId'))) }));
+    await push(delivery('a', 'e1'));
+    await push(delivery('a', 'e1'));
+    expect(shade.get('bulwark-mail:a')!.data).toMatchObject({ kind: 'email', emailId: 'e1' });
+    expect(shade.get('bulwark-mail:a')!.options).toMatchObject({ silent: true });
+  });
+
+  it('counts on the state-change path too', async () => {
+    let id = 'e1';
+    const { push, shade } = loadWorker(() => ({ unreadTotal: 5, slot: 0, email: mail(id) }));
+    await push({ kind: 'jmap-state-change', accountId: 'a', changed: { a: { EmailDelivery: 's' } } });
+    expect(shade.get('bulwark-mail:a')!.data).toMatchObject({ kind: 'email', emailId: 'e1' });
+    id = 'e2';
+    await push({ kind: 'jmap-state-change', accountId: 'a', changed: { a: { EmailDelivery: 's2' } } });
+    expect(shade.get('bulwark-mail:a')!.body).toBe('Hello\n+1 more message');
+  });
+
+  it('says how many new messages without naming any when details are hidden', async () => {
+    const { push, shade } = loadWorker((url) => ({ unreadTotal: 9, slot: 0, redacted: true, email: { id: url.searchParams.get('emailId'), threadId: 't' } }));
+    await push(delivery('a', 'e1'));
+    expect(shade.get('bulwark-mail:a')!.body).toBe('You have new mail');
+    expect(shade.get('bulwark-mail:a')!.data).toMatchObject({ kind: 'email', emailId: 'e1' });
+    await push(delivery('a', 'e2'));
+    expect(shade.get('bulwark-mail:a')!.title).toBe('New mail (me@example.org)');
+    expect(shade.get('bulwark-mail:a')!.body).toBe('2 new messages');
+  });
+});
+
 // -- end of cases --

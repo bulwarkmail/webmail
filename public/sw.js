@@ -693,31 +693,36 @@ async function notifyAccount(accountId, emailIds, accountLabel) {
   // into a single, self-updating notification instead of one toast per message
   // (Android renders one notification per unique tag, which is why 50 arrivals
   // used to stack 50 toasts). The newest message is the headline and a
-  // Gmail-style "+N more" line carries the rest, counted from the account's
-  // unread total.
+  // Gmail-style "+N more" line carries the rest: the messages this notification
+  // has announced and the user hasn't dismissed. Mail that was unread before
+  // doesn't count, or one new message in a full inbox would say "+40 more" and
+  // open the inbox instead of itself.
+  const announced = freshIds.length > 0 ? freshIds : (email ? [email.id] : []);
+  const ids = Array.from(new Set((await idsOnScreen(groupTag)).concat(announced))).slice(-NOTIFICATION_IDS_LIMIT);
+  const more = Math.max(ids.length - 1, 0);
+  const oneMessage = email ? { kind: "email", emailId: email.id, threadId: email.threadId, accountId, slot, login, ids } : null;
   let title;
   let body;
-  let data = { kind: "mail-list", accountId, slot };
+  let data = { kind: "mail-list", accountId, slot, ids };
 
   if (email && preview && preview.redacted) {
     // The organisation keeps sender and subject off notifications
     // (Organisation > Devices): the route sent neither.
     title = accountLabel ? `New mail (${accountLabel})` : "New mail";
-    body = unreadTotal > 1 ? `${unreadTotal} unread messages` : "You have new mail";
-    if (unreadTotal <= 1) data = { kind: "email", emailId: email.id, threadId: email.threadId, accountId, slot, login };
+    body = more > 0 ? `${ids.length} new messages` : "You have new mail";
+    if (more === 0) data = oneMessage;
   } else if (email) {
     const sender = email.from && email.from[0];
     const senderName = (sender && sender.name) || (sender && sender.email) || "New mail";
     title = senderName + (accountLabel ? ` (${accountLabel})` : "");
     body = email.subject || email.preview || "(no subject)";
-    const more = unreadTotal > 1 ? unreadTotal - 1 : 0;
     if (more > 0) {
-      // Several unread: this is a group. Keep the newest as the headline, add
-      // the "+N more" count, and open the inbox (not one message) on click.
+      // Several new: this is a group. Keep the newest as the headline, add the
+      // "+N more" count, and open the inbox (not one message) on click.
       body += "\n" + (more === 1 ? "+1 more message" : `+${more} more messages`);
     } else {
-      // Exactly one unread: deep-link straight to that message on click.
-      data = { kind: "email", emailId: email.id, threadId: email.threadId, accountId, slot, login };
+      // One new message: deep-link straight to it on click.
+      data = oneMessage;
     }
   } else {
     title = accountLabel ? `New mail (${accountLabel})` : "New mail";
@@ -742,9 +747,23 @@ async function notifyAccount(accountId, emailIds, accountLabel) {
     silent: !audible,
   });
 
-  const announced = freshIds.length > 0 ? freshIds : (email ? [email.id] : []);
   if (announced.length > 0) {
     await writeNotifiedIds(accountId, notified.concat(announced));
+  }
+}
+
+const NOTIFICATION_IDS_LIMIT = 100;
+
+/** The messages the account's notification on screen stands for. */
+async function idsOnScreen(groupTag) {
+  try {
+    const shown = (await self.registration.getNotifications({ tag: groupTag }))[0];
+    const data = shown && shown.data;
+    if (!data) return [];
+    if (Array.isArray(data.ids)) return data.ids.filter((id) => typeof id === "string");
+    return typeof data.emailId === "string" ? [data.emailId] : [];
+  } catch (_) {
+    return [];
   }
 }
 

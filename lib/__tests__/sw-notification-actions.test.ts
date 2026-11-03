@@ -90,12 +90,13 @@ const previewOf = (unreadTotal: number) => JSON.stringify({
 });
 
 describe('the buttons a notification gets', () => {
-  const buttonsFor = async (opts: { prefs?: unknown; max?: number | null; inline?: boolean; unreadTotal?: number }) => {
+  const buttonsFor = async (opts: { prefs?: unknown; max?: number | null; inline?: boolean; unreadTotal?: number; onScreen?: string[] }) => {
     const w = worker({
       caches: await cachesWith(opts.prefs),
       max: opts.max,
       inline: opts.inline,
       fetch: async () => new Response(previewOf(opts.unreadTotal ?? 1), { status: 200 }),
+      ...(opts.onScreen ? { notifications: [{ data: { ids: opts.onScreen } }] } : {}),
     });
     await pushFor({})(w);
     expect(w.shown).toHaveLength(1);
@@ -133,7 +134,7 @@ describe('the buttons a notification gets', () => {
   });
 
   it('gives the group notification none: it names no message', async () => {
-    expect(await buttonsFor({ prefs: PREFS, unreadTotal: 4 })).toBeUndefined();
+    expect(await buttonsFor({ prefs: PREFS, onScreen: ['e0'] })).toBeUndefined();
   });
 
   it('gives a message without its login none', async () => {
