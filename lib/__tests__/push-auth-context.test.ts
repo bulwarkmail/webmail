@@ -11,6 +11,10 @@ vi.mock('@/lib/auth/session-age', () => ({
   maxSessionHoursFor: async () => maxHours.value,
 }));
 const impersonation = vi.hoisted(() => ({ master: null as string | null }));
+const policy = vi.hoisted(() => ({ value: {} as Record<string, unknown> }));
+vi.mock('@/lib/admin/config-manager', () => ({
+  configManager: { ensureLoaded: async () => {}, getPolicy: () => policy.value },
+}));
 vi.mock('@/lib/impersonation/master-config', () => ({
   readImpersonationConfig: () => (impersonation.master ? { masterPassword: impersonation.master } : null),
 }));
@@ -31,6 +35,7 @@ beforeEach(() => {
   process.env.SESSION_SECRET = 'a-test-secret-that-is-long-enough-for-this-0123456789';
   maxHours.value = 0;
   impersonation.master = null;
+  policy.value = {};
 });
 
 describe('readPushAuthContext', () => {
@@ -55,6 +60,24 @@ describe('readPushAuthContext', () => {
     maxHours.value = 1;
     expect(await readPushAuthContext(store({ [sessionCookieName(0)]: remembered(Date.now() - 2 * 3600_000) }), 0)).toBeNull();
     expect(await readPushAuthContext(store({ [sessionCookieName(0)]: remembered() }), 0)).not.toBeNull();
+  });
+
+  it('stays out when the organisation has limits only a page enforces', async () => {
+    const cookies = store({ [sessionCookieName(0)]: remembered() });
+    policy.value = { organisation: { session: { idleMinutes: 30 } } };
+    expect(await readPushAuthContext(cookies, 0)).toBeNull();
+    policy.value = { scopes: [{ match: { domains: ['example.org'] }, policy: { organisation: { session: { idleMinutes: 5 } } } }] };
+    expect(await readPushAuthContext(cookies, 0)).toBeNull();
+    policy.value = { scopes: [{ match: { groups: ['staff@example.org'] }, policy: { organisation: { session: { maxHours: 8 } } } }] };
+    expect(await readPushAuthContext(cookies, 0)).toBeNull();
+    // A maximum by domain the server checks itself, above.
+    policy.value = { scopes: [{ match: { domains: ['example.org'] }, policy: { organisation: { session: { maxHours: 8 } } } }] };
+    expect(await readPushAuthContext(cookies, 0)).not.toBeNull();
+  });
+
+  it('stays out for a bare user name, which policies for a domain cannot match', async () => {
+    const token = encryptSession('https://mail.example.org', 'john', 'pw', Date.now());
+    expect(await readPushAuthContext(store({ [sessionCookieName(0)]: token }), 0)).toBeNull();
   });
 
   it('refuses garbage and a cookie holding the impersonation master password', async () => {
