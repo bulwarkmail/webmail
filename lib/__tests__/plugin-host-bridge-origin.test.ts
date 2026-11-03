@@ -136,6 +136,34 @@ describe('slot sizing', () => {
   });
 });
 
+describe('Escape inside a slot frame', () => {
+  const inFrame = (wrapperAttr?: string) => {
+    const wrapper = document.createElement('div');
+    if (wrapperAttr) wrapper.setAttribute(wrapperAttr, 'p1');
+    document.body.appendChild(wrapper);
+    const inst = createSlotInstance({
+      plugin: plugin(), slot: 'plugin-dialog', code: '', locale: 'en', tier: 'untrusted', extraProps: {}, hostContainer: wrapper,
+    });
+    instances.push(inst);
+    const keys: string[] = [];
+    const onKey = (e: KeyboardEvent) => { keys.push(e.key); };
+    document.addEventListener('keydown', onKey, true);
+    post(inst.iframe.contentWindow, 'null', { type: 'frame-escape' });
+    document.removeEventListener('keydown', onKey, true);
+    wrapper.remove();
+    return keys;
+  };
+
+  it('reaches the host dialog when the frame is one', () => {
+    expect(inFrame('data-plugin-dialog')).toEqual(['Escape']);
+    expect(inFrame('data-plugin-dialog-popover')).toEqual(['Escape']);
+  });
+
+  it('stays in the frame anywhere else', () => {
+    expect(inFrame()).toEqual([]);
+  });
+});
+
 describe('shouldShow context', () => {
   it('leaves host callbacks out instead of failing to post them', async () => {
     const inst = booted(createBackgroundInstance({ plugin: plugin(), code: '', locale: 'en', tier: 'untrusted' }));

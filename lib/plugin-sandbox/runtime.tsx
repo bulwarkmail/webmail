@@ -1516,6 +1516,10 @@ async function bootSlot(payload: SlotInit): Promise<void> {
 
   const reactRoot = renderer.ReactDOM.createRoot(rootEl);
   reactRoot.render(React.createElement(SlotShell));
+  // Last in line: a dropdown in the frame that closes on Escape prevents the default.
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && event.isTrusted && !event.defaultPrevented) sendToHost({ type: 'frame-escape' });
+  });
   sendToHost({ type: 'init-done', hooks: [], slots: [], shortcuts: [] });
 }
 
