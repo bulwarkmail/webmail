@@ -7,9 +7,10 @@
 // room at all. When the composer is too narrow for an open panel next to
 // it, the panel folds by itself (right first); opening it anyway lays it
 // over the composer instead of squeezing the message into a column nobody
-// can write in.
+// can write in. Laid over, it stays between the composer's header and its
+// bottom bar: the panel's own button, Close and Send stay in reach.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { useTranslations } from "next-intl";
 import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from "@/components/icons";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
@@ -229,6 +230,32 @@ export function ComposerPanelToggle({
   );
 }
 
+const COMPOSER_HEADER = "[data-composer-header], [data-mv-compose-titlebar], [data-mv-compose-inline-bar]";
+const COMPOSER_FOOTER = "[data-composer-footer]";
+
+/** How far a panel laid over the composer keeps off its top and bottom, to leave the header and the bottom bar free. */
+function useOverlayInsets(active: boolean, panelRef: RefObject<HTMLElement | null>): { top: number; bottom: number } {
+  const [insets, setInsets] = useState({ top: 0, bottom: 0 });
+  useLayoutEffect(() => {
+    const root = panelRef.current?.parentElement;
+    if (!active || !root) return;
+    const header = root.querySelector(COMPOSER_HEADER);
+    const footer = root.querySelector(COMPOSER_FOOTER);
+    const measure = () => {
+      const box = root.getBoundingClientRect();
+      const top = header ? Math.max(0, Math.round(header.getBoundingClientRect().bottom - box.top)) : 0;
+      const bottom = footer ? Math.max(0, Math.round(box.bottom - footer.getBoundingClientRect().top)) : 0;
+      setInsets((prev) => (prev.top === top && prev.bottom === bottom ? prev : { top, bottom }));
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    for (const el of [root, header, footer]) if (el) observer.observe(el);
+    return () => observer.disconnect();
+  }, [active, panelRef]);
+  return insets;
+}
+
 /** One plugin panel of the composer, in the mode useComposerSidebars picked. */
 export function ComposerPluginSidebar({
   side,
@@ -246,6 +273,8 @@ export function ComposerPluginSidebar({
   onWidthChange?: (width: number) => void;
 }) {
   const dragStart = useRef(width);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const insets = useOverlayInsets(mode === "overlay", panelRef);
   if (!mode) return null;
   const border = side === "left" ? "border-e" : "border-s";
 
@@ -274,12 +303,13 @@ export function ComposerPluginSidebar({
     <>
     {side === "right" && handle}
     <div
+      ref={panelRef}
       className={cn(
-        "hidden md:flex flex-col shrink-0 h-full border-border bg-background overflow-hidden",
+        "hidden md:flex flex-col shrink-0 border-border bg-background overflow-hidden",
         border,
-        mode === "overlay" && cn("absolute inset-y-0 z-30 shadow-xl", side === "left" ? "start-0" : "end-0"),
+        mode === "overlay" ? cn("absolute z-30 shadow-xl", side === "left" ? "start-0" : "end-0") : "h-full",
       )}
-      style={{ width }}
+      style={mode === "overlay" ? { width, top: insets.top, bottom: insets.bottom } : { width }}
       data-composer-sidebar={side}
       data-composer-sidebar-mode={mode}
     >
