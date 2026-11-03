@@ -29,6 +29,60 @@ export function pendingReplyKey(origin: string): string {
   return `${origin}${BASE_PATH}/__push-state/pending-reply`;
 }
 
+/** The cache key sw.js finds the relay registrations under. */
+export function relayRegistrationsKey(origin: string): string {
+  return `${origin}${BASE_PATH}/__push-state/relay-registrations`;
+}
+
+export interface RelayRegistration {
+  relay: string;
+  subscriptionId: string;
+  accountLabel?: string;
+}
+
+interface RelayRegistrations {
+  applicationServerKey?: string;
+  entries: Record<string, RelayRegistration>;
+}
+
+async function readRelayRegistrations(cache: Cache, key: string): Promise<RelayRegistrations> {
+  const stored = (await (await cache.match(key))?.json()) as RelayRegistrations | undefined;
+  return stored?.entries ? stored : { entries: {} };
+}
+
+/**
+ * Lets the worker re-register a new browser endpoint with the relay when no tab
+ * is open (pushsubscriptionchange). None of this is secret to the browser that
+ * subscribed, and it opens nothing but the relay record.
+ */
+export async function keepRelayRegistration(accountId: string, entry: RelayRegistration, applicationServerKey: string): Promise<void> {
+  try {
+    if (typeof caches === 'undefined') return;
+    const cache = await caches.open(PUSH_STATE_CACHE);
+    const key = relayRegistrationsKey(window.location.origin);
+    const stored = await readRelayRegistrations(cache, key);
+    stored.entries[accountId] = entry;
+    stored.applicationServerKey = applicationServerKey;
+    await cache.put(key, new Response(JSON.stringify(stored), { headers: { 'Content-Type': 'application/json' } }));
+  } catch {
+    // A new endpoint then waits for the page's re-sync.
+  }
+}
+
+export async function forgetRelayRegistration(accountId: string): Promise<void> {
+  try {
+    if (typeof caches === 'undefined') return;
+    const cache = await caches.open(PUSH_STATE_CACHE);
+    const key = relayRegistrationsKey(window.location.origin);
+    const stored = await readRelayRegistrations(cache, key);
+    if (!(accountId in stored.entries)) return;
+    delete stored.entries[accountId];
+    await cache.put(key, new Response(JSON.stringify(stored), { headers: { 'Content-Type': 'application/json' } }));
+  } catch {
+    // Signing out deletes the store anyway.
+  }
+}
+
 export async function writeNotificationActionPrefs(prefs: NotificationActionPrefs): Promise<void> {
   try {
     if (typeof caches === 'undefined') return;
