@@ -1109,10 +1109,19 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     },
     onFocusSearch: () => {
       if (isScheduledView) return;
-      const searchInput = document.querySelector('[data-search-input]') as HTMLInputElement;
-      if (searchInput) {
-        searchInput.focus();
-        searchInput.select();
+      const focusSearch = () => {
+        const searchInput = document.querySelector('[data-search-input]') as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.select();
+        }
+      };
+      // The field is in the list, which an open message can have collapsed.
+      if (shouldCollapseListPane) {
+        handleMobileBack();
+        requestAnimationFrame(() => requestAnimationFrame(focusSearch));
+      } else {
+        focusSearch();
       }
     },
     onShowHelp: () => {
@@ -5089,6 +5098,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           <section
             ref={listPaneRef}
             aria-labelledby={listHeadingId}
+            // Collapsed to no width under the reading pane: Tab must not walk
+            // through its toolbar and rows, which nobody can see.
+            inert={shouldCollapseListPane}
             className={cn(
               "relative flex flex-col bg-background min-w-0",
               isHorizontalMailLayout

@@ -273,6 +273,24 @@ describe.each([
   });
 });
 
+describe('A list collapsed under an open message (focused layout)', () => {
+  const list = () => screen.getByText('message list').closest('section')!;
+
+  it('is out of the Tab order while the message is open', async () => {
+    render(<MailApp />);
+    await screen.findByText('stub archive', {}, { timeout: 5000 });
+    expect(list()).toHaveAttribute('inert');
+  });
+
+  it('comes back for the / shortcut, whose search field lives in it', async () => {
+    render(<MailApp />);
+    await screen.findByText('stub archive', {}, { timeout: 5000 });
+    act(() => { fireEvent.keyDown(window, { key: '/' }); });
+    await waitFor(() => expect(selectedId()).toBeNull());
+    await waitFor(() => expect(list()).not.toHaveAttribute('inert'));
+  });
+});
+
 describe('The e shortcut in Mountain View', () => {
   beforeEach(() => {
     useSettingsStore.setState({ interfaceLayout: 'mountain-view' } as never);
