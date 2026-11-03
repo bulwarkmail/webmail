@@ -153,7 +153,7 @@ interface RichTextEditorProps {
 export function editorA11yAttributes({ ariaLabel, ariaInvalid, ariaDescribedBy, defaultTextStyle, spellcheck = true, lang }: Pick<RichTextEditorProps, 'ariaLabel' | 'ariaInvalid' | 'ariaDescribedBy' | 'defaultTextStyle' | 'spellcheck' | 'lang'>): Record<string, string> {
   const style = defaultTextStyle ? composeTextStyleCss(defaultTextStyle) : "";
   return {
-    class: "tiptap min-h-[100px] px-4 py-3 text-sm text-foreground",
+    class: "tiptap focus-inset min-h-[100px] px-4 py-3 text-sm text-foreground",
     ...(style ? { style } : {}),
     role: "textbox",
     "aria-multiline": "true",
