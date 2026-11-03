@@ -209,6 +209,9 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
   // keyboard takes its share), centred or as a popover alike.
   const fillHeight = Math.min(640, Math.round(viewportHeight * 0.9) - 16);
 
+  // Plugins choose the title, however long: it scrolls within its own part of
+  // the dialog, so it can't push the line below and the buttons out of it.
+  const titleClass = 'max-h-[30vh] overflow-y-auto text-lg font-semibold text-foreground [overflow-wrap:anywhere]';
   // Who is asking, under the title: plugins choose the title and message, so
   // the host names the plugin in a place the plugin can't change.
   const attribution = (
@@ -320,7 +323,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
           <>
             <div className="flex items-start gap-1 px-6 py-4 border-b border-border">
               <div className="min-w-0 flex-1 pe-2">
-                <h2 id={titleId} className="text-lg font-semibold text-foreground [overflow-wrap:anywhere]">{current.title}</h2>
+                <h2 id={titleId} className={titleClass}>{current.title}</h2>
                 {attribution}
               </div>
               <PluginDialogMenu name={name} onTurnOff={turnOff} />
@@ -343,7 +346,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
           <>
             <div className="flex shrink-0 items-start gap-1 px-6 pt-6">
               <div className="min-w-0 flex-1 pe-2">
-                <h2 id={titleId} className="text-lg font-semibold text-foreground [overflow-wrap:anywhere]">{current.title}</h2>
+                <h2 id={titleId} className={titleClass}>{current.title}</h2>
                 {attribution}
               </div>
               <PluginDialogMenu name={name} onTurnOff={turnOff} />
