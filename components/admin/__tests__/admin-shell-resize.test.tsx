@@ -55,4 +55,19 @@ describe('AdminShell across the desktop breakpoint', () => {
     expect(screen.getByRole('textbox', { name: 'field' })).toHaveValue('edited');
     expect(onMount).toHaveBeenCalledTimes(1);
   });
+
+  // On a laptop the list runs past its fold: a page opened from a link used
+  // to leave its own entry out of sight.
+  it('brings the open page into view in the sidebar', () => {
+    Element.prototype.scrollTo = () => {};
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    mockWidth(true);
+    render(
+      <AdminShell authenticated isStalwartAutoLogin={false} configReadOnly={false} onLogout={() => {}}>
+        <p>page</p>
+      </AdminShell>,
+    );
+    expect(scrollIntoView.mock.contexts.some((el: Element) => el.getAttribute('aria-current') === 'page')).toBe(true);
+  });
 });
