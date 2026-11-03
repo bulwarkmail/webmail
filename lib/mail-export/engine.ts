@@ -30,11 +30,26 @@ export interface ExportFolder {
   path: string[];
 }
 
+export type NotKeptReason = "attachments_off" | "not_kept";
+
+/**
+ * A local-store export has no original of this message and can't reach the
+ * server. Counted by reason in `notKept`, not listed one by one.
+ */
+export class MessageNotKeptError extends Error {
+  constructor(readonly reason: NotKeptReason) {
+    super("The original of this message is not on this device");
+    this.name = "MessageNotKeptError";
+  }
+}
+
 export interface ExportProgress {
   phase: ExportPhase;
   exported: number;
   failed: number;
   failures: { label: string; reason: string }[];
+  /** The part of `failed` a local-store export had no original for, by reason. */
+  notKept?: Partial<Record<NotKeptReason, number>>;
   total: number;
   fraction: number;
   pausedUntil?: number;
@@ -42,8 +57,11 @@ export interface ExportProgress {
   error?: string;
 }
 
+/** What an export reads through: the real client, or lib/mail-export/local-store-client.ts. */
+export type ExportClient = Pick<IJMAPClient, "queryEmailFields" | "getBlobsAsBase64" | "fetchBlobForTransfer" | "fetchBlob" | "getMaxConcurrentRequests">;
+
 export interface ExportOptions {
-  client: IJMAPClient;
+  client: ExportClient;
   accountId: string;
   folders: ExportFolder[];
   format: ExportFormat;
@@ -53,7 +71,10 @@ export interface ExportOptions {
   now?: () => number;
   sleep?: (ms: number, signal: AbortSignal) => Promise<void>;
   reportEveryMs?: number;
-  /** Requests per minute the export allows itself (the server's limit is 1000 for everything). */
+  /**
+   * Requests per minute the export allows itself (the server's limit is 1000 for
+   * everything). Infinity for a client that keeps to the limit itself.
+   */
   requestsPerMinute?: number;
 }
 
@@ -141,10 +162,11 @@ export function folderTree(mailboxes: Mailbox[]): ExportFolder[] {
 }
 
 /** Keeps the export under a number of requests per minute. */
-class RateGate {
+export class RateGate {
   private times: number[] = [];
   constructor(private readonly perMinute: number, private readonly now: () => number, private readonly sleep: (ms: number) => Promise<void>) {}
   async take(): Promise<void> {
+    if (this.perMinute === Infinity) return;
     for (;;) {
       const t = this.now();
       this.times = this.times.filter((x) => t - x < 60_000);
@@ -167,7 +189,7 @@ export async function runExport(options: ExportOptions): Promise<ExportProgress>
     if (!force && t - lastReport < (options.reportEveryMs ?? 150)) return;
     lastReport = t;
     progress.fraction = progress.total > 0 ? Math.min(1, (progress.exported + progress.failed) / progress.total) : 0;
-    options.onProgress({ ...progress, failures: [...progress.failures] });
+    options.onProgress({ ...progress, failures: [...progress.failures], ...(progress.notKept ? { notKept: { ...progress.notKept } } : {}) });
   };
   const fail = (label: string, reason: string) => {
     progress.failed++;
@@ -319,7 +341,14 @@ export async function runExport(options: ExportOptions): Promise<ExportProgress>
           const raw = results[i];
           seq++;
           if (raw instanceof Error) {
-            fail(ref.subject, raw.message);
+            if (raw.name === "MessageNotKeptError") {
+              const { reason } = raw as MessageNotKeptError;
+              progress.failed++;
+              progress.notKept = { ...progress.notKept, [reason]: (progress.notKept?.[reason] ?? 0) + 1 };
+            } else {
+              fail(ref.subject, raw.message);
+            }
+            report();
             continue;
           }
           if (options.format === "mbox") {
@@ -335,6 +364,8 @@ export async function runExport(options: ExportOptions): Promise<ExportProgress>
       }
       if (stream) await stream.close();
     }
+    // A cancel with nothing left to fetch must not close and hand out the file.
+    if (signal.aborted) throw cancelled();
     if (zip) await zip.finish();
     progress.file = await sink.close();
     progress.phase = "done";
