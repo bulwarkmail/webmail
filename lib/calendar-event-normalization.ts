@@ -39,6 +39,21 @@ export function parseDurationSeconds(duration: string | undefined): number | nul
   return (((weeks * 7 + days) * 24 + hours) * 60 + minutes) * 60 + seconds;
 }
 
+/** A duration in whole minutes, 0 when there is none. */
+export function parseDuration(duration: string | undefined): number {
+  if (!duration) return 0;
+  let totalMinutes = 0;
+  const weekMatch = duration.match(/(\d+)W/);
+  const hourMatch = duration.match(/(\d+)H/);
+  const minMatch = duration.match(/(\d+)M/);
+  const dayMatch = duration.match(/(\d+)D/);
+  if (weekMatch) totalMinutes += parseInt(weekMatch[1]) * 7 * 24 * 60;
+  if (dayMatch) totalMinutes += parseInt(dayMatch[1]) * 24 * 60;
+  if (hourMatch) totalMinutes += parseInt(hourMatch[1]) * 60;
+  if (minMatch) totalMinutes += parseInt(minMatch[1]);
+  return totalMinutes;
+}
+
 export function normalizeAllDayDurationValue(duration: string | undefined): string | undefined {
   const totalSeconds = parseDurationSeconds(duration);
   if (totalSeconds === null || totalSeconds < 86400 || totalSeconds % 86400 !== 0) {
