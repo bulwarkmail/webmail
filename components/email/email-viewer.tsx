@@ -4295,7 +4295,7 @@ ${printWatermark ? printWatermark.html : ''}
           title={t('tooltips.reply')}
         >
           <Reply className="w-4 h-4" />
-          {showToolbarLabels && <span className="hidden sm:inline text-sm whitespace-nowrap">{t('reply')}</span>}
+          {showToolbarLabels && <span className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reply')}</span>}
         </Button>
         <Button
           variant="ghost"
@@ -4307,7 +4307,7 @@ ${printWatermark ? printWatermark.html : ''}
           title={t('tooltips.reply_all')}
         >
           <ReplyAll className="w-4 h-4" />
-          {showToolbarLabels && <span className="hidden sm:inline text-sm whitespace-nowrap">{t('reply_all')}</span>}
+          {showToolbarLabels && <span className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('reply_all')}</span>}
         </Button>
         <Button
           variant="ghost"
@@ -4319,7 +4319,7 @@ ${printWatermark ? printWatermark.html : ''}
           title={t('tooltips.forward')}
         >
           <Forward className="w-4 h-4" />
-          {showToolbarLabels && <span className="hidden sm:inline text-sm whitespace-nowrap">{t('forward')}</span>}
+          {showToolbarLabels && <span className="hidden @[30rem]/reader-toolbar:inline text-sm whitespace-nowrap">{t('forward')}</span>}
         </Button>
         </>)}
         <PluginSlot name="toolbar-actions" />
@@ -4351,7 +4351,7 @@ ${printWatermark ? printWatermark.html : ''}
             title={t('tooltips.archive')}
           >
             <Archive className="w-4 h-4" />
-            {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:text-sm sm:whitespace-nowrap">{t('archive')}</span>}
+            {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('archive')}</span>}
           </Button>
         )}
         {/* Delete */}
@@ -4363,7 +4363,7 @@ ${printWatermark ? printWatermark.html : ''}
           title={t('tooltips.delete')}
         >
           <Trash2 className="w-4 h-4" />
-          {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:text-sm sm:whitespace-nowrap">{t('delete')}</span>}
+          {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('delete')}</span>}
         </Button>
         {/* Move to folder */}
         {moveTree.length > 0 && onMoveToMailbox && (
@@ -4383,7 +4383,7 @@ ${printWatermark ? printWatermark.html : ''}
               aria-expanded={moveMenuOpen}
             >
               <FolderInput className="w-4 h-4" />
-              {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:text-sm sm:whitespace-nowrap">{t('move')}</span>}
+              {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('move')}</span>}
             </Button>
             <ContextMenu ref={moveMenu.menuRef} isOpen={moveMenuOpen} position={moveMenu.contextMenu.position} onClose={closeMoveMenu} label={t('move_to')}>
               <div className="w-56 max-h-72 overflow-y-auto">
@@ -4415,7 +4415,7 @@ ${printWatermark ? printWatermark.html : ''}
             aria-expanded={tagMenuOpen}
           >
             <Tag className="w-4 h-4" />
-            {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:text-sm sm:whitespace-nowrap">{t('tag')}</span>}
+            {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{t('tag')}</span>}
           </Button>
           <ContextMenu ref={tagMenu.menuRef} isOpen={tagMenuOpen} position={tagMenu.contextMenu.position} onClose={closeTagMenu} label={t('tag')}>
             <div className="w-56">
@@ -4450,7 +4450,7 @@ ${printWatermark ? printWatermark.html : ''}
             ) : (
               <ShieldAlert className={cn("h-4 w-4", !mvViewer && "text-red-600 dark:text-red-400")} />
             )}
-            {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:text-sm sm:whitespace-nowrap">{isInJunkFolder ? t('spam.not_spam_title') : t('spam.button_title')}</span>}
+            {showToolbarLabels && <span className="text-[0.625rem] leading-tight sm:hidden sm:text-sm sm:whitespace-nowrap sm:@[30rem]/reader-toolbar:inline">{isInJunkFolder ? t('spam.not_spam_title') : t('spam.button_title')}</span>}
           </Button>
         )}
 
