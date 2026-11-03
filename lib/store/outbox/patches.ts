@@ -4,6 +4,8 @@
  * the whole map.
  */
 
+import { keywordKey } from '../mail/records';
+
 export type Patch = Record<string, unknown>;
 
 export interface RecordState {
@@ -103,14 +105,14 @@ export function mergePatches(earlier: Patch, later: Patch): Patch {
 }
 
 function sameMap(a: Record<string, boolean> | undefined, b: Record<string, boolean> | undefined): boolean {
-  const left = Object.keys(a ?? {}).filter((key) => a?.[key]).map((key) => key.toLowerCase()).sort();
-  const right = Object.keys(b ?? {}).filter((key) => b?.[key]).map((key) => key.toLowerCase()).sort();
+  const left = Object.keys(a ?? {}).filter((key) => a?.[key]).map(keywordKey).sort();
+  const right = Object.keys(b ?? {}).filter((key) => b?.[key]).map(keywordKey).sort();
   return left.length === right.length && left.every((key, i) => key === right[i]);
 }
 
 function has(map: Record<string, boolean> | undefined, key: string): boolean {
-  const wanted = key.toLowerCase();
-  return Object.keys(map ?? {}).some((name) => name.toLowerCase() === wanted && map?.[name]);
+  const wanted = keywordKey(key);
+  return Object.keys(map ?? {}).some((name) => keywordKey(name) === wanted && map?.[name]);
 }
 
 /**

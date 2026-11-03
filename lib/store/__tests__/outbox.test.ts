@@ -319,9 +319,18 @@ describe('conflicts', () => {
     expect((await local('a'))?.subject).toBe('Aye');
   });
 
-  it('compares per property, ignoring case in keyword names', () => {
-    const base = { keywords: { '$Label:A': true }, mailboxIds: { x: true } };
-    expect(patchConflicts({ 'keywords/$label:a': null }, base, { keywords: { '$label:a': true }, mailboxIds: { x: true } })).toBe(false);
+  it('compares per property, keywords the way the server does', () => {
+    const base = { keywords: { '$SEEN': true, '$label:A': true }, mailboxIds: { x: true } };
+    // System flags fold.
+    expect(patchConflicts({ 'keywords/$seen': null }, base, { keywords: { $seen: true, '$label:A': true }, mailboxIds: { x: true } })).toBe(false);
+    // Custom keywords are case-sensitive: the server now has another one.
+    expect(patchConflicts({ 'keywords/$label:A': null }, base, { keywords: { '$label:a': true }, mailboxIds: { x: true } })).toBe(false);
+    expect(patchConflicts({ 'keywords/$label:a': true }, { keywords: {}, mailboxIds: {} }, { keywords: { '$label:A': true }, mailboxIds: {} })).toBe(false);
+    expect(patchConflicts({ 'keywords/$label:A': true }, { keywords: { '$label:A': true }, mailboxIds: {} }, { keywords: { '$label:a': true }, mailboxIds: {} })).toBe(true);
+  });
+
+  it('compares per property', () => {
+    const base = { keywords: { '$label:a': true }, mailboxIds: { x: true } };
     expect(patchConflicts({ 'keywords/$seen': true }, base, { keywords: {}, mailboxIds: { x: true } })).toBe(false);
     expect(patchConflicts({ keywords: { $seen: true } }, base, { keywords: {}, mailboxIds: { x: true } })).toBe(true);
     expect(patchConflicts({ keywords: { $seen: true } }, base, { keywords: { $seen: true }, mailboxIds: { x: true } })).toBe(false);

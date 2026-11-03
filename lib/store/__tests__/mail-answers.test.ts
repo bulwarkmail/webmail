@@ -263,6 +263,25 @@ describe('Email/query filters and sorts', () => {
   });
 });
 
+describe('keyword case, as measured on both Stalwart versions', () => {
+  it('keeps two keywords differing only in case, and sync doesn\'t stop on them', async () => {
+    const server = new FakeJmapMail();
+    server.addEmail({ id: 'both', keywords: { Tag: true, tag: true, $seen: true } });
+    server.addEmail({ id: 'upper', keywords: { Tag: true, $SEEN: true, $seen: true } });
+    server.addEmail({ id: 'none', keywords: {} });
+    const { engine, db } = engineFor(server);
+    await engine.requestSync();
+    expect(db.get<{ n: number }>('SELECT COUNT(*) AS n FROM email')?.n).toBe(3);
+    const has = async (keyword: string) => (await one(engine, ['Email/query', { filter: { hasKeyword: keyword }, sort: [{ property: 'receivedAt', isAscending: false }] }, 'q']))![1].ids;
+    expect(await has('Tag')).toEqual(['upper', 'both']);
+    expect(await has('tag')).toEqual(['both']);
+    expect(await has('TAG')).toEqual([]);
+    expect(await has('$SEEN')).toEqual(['upper', 'both']);
+    const [, counts] = (await one(engine, ['Keyword/get', { ids: ['Tag', 'tag', '$SEEN'] }, 'k']))!;
+    expect(counts.list).toEqual([{ id: 'Tag', total: 2, unread: 0 }, { id: 'tag', total: 1, unread: 0 }, { id: '$SEEN', total: 2, unread: 0 }]);
+  });
+});
+
 describe('the rest of the mail methods', () => {
   it('answers Core/echo with what it was given', async () => {
     const { engine } = engineFor(new FakeJmapMail());
