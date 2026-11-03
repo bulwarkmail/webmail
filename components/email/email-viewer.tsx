@@ -4036,8 +4036,8 @@ ${printWatermark ? printWatermark.html : ''}
         ? '/branding/Bulwark_Logo_with_Lettering_White_and_Color.svg'
         : '/branding/Bulwark_Logo_with_Lettering_Dark_Color.svg');
       return shell(
-        <div className="flex-1 min-w-0 flex flex-col items-center justify-center bg-gradient-to-br from-muted/30 to-muted/50">
-          <div className="text-center p-8 max-w-md">
+        <div className="flex-1 min-w-0 flex flex-col overflow-y-auto bg-gradient-to-br from-muted/30 to-muted/50">
+          <div className="m-auto text-center p-8 max-w-md">
             <img
               src={logoSrc}
               alt="Bulwark Mail"
@@ -4081,8 +4081,8 @@ ${printWatermark ? printWatermark.html : ''}
     // in a split pane - the empty reading pane should always say what it is
     // and offer a way forward.
     return shell(
-      <div className="flex-1 min-w-0 flex flex-col items-center justify-center bg-gradient-to-br from-muted/30 to-muted/50">
-        <div className="text-center p-8">
+      <div className="flex-1 min-w-0 flex flex-col overflow-y-auto bg-gradient-to-br from-muted/30 to-muted/50">
+        <div className="m-auto text-center p-8">
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-background shadow-lg flex items-center justify-center">
             <Mail className="w-10 h-10 text-muted-foreground" />
           </div>
