@@ -3360,6 +3360,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     }
     if (isTablet) {
       setTabletListVisible(true);
+      setSidebarOpen(false);
     }
     if (viewingClient) {
       // Keep an active search applied when switching folders (#553), unless
@@ -3413,6 +3414,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
       if (isTablet) {
         setTabletListVisible(true);
+        setSidebarOpen(false);
       }
       if (client) await fetchScheduledEmails(client);
       return;
@@ -3432,6 +3434,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
       if (isTablet) {
         setTabletListVisible(true);
+        setSidebarOpen(false);
       }
 
       const isSameView = captureViewToken();
@@ -3470,6 +3473,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
       if (isTablet) {
         setTabletListVisible(true);
+        setSidebarOpen(false);
       }
 
       const isSameView = captureViewToken();
@@ -3509,6 +3513,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // On tablet, show the list again
     if (isTablet) {
       setTabletListVisible(true);
+      setSidebarOpen(false);
     }
 
     if (client) {
@@ -3541,6 +3546,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // On tablet, show the list again
     if (isTablet) {
       setTabletListVisible(true);
+      setSidebarOpen(false);
     }
 
     if (client) {
@@ -3569,6 +3575,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // On tablet, show the list again
     if (isTablet) {
       setTabletListVisible(true);
+      setSidebarOpen(false);
     }
 
     if (isTogglingOff) {
