@@ -549,7 +549,7 @@ interface ConversationEmailBodyProps {
  */
 export function ConversationEmailBody({
   email,
-  allowExternal,
+  allowExternal: externalAllowed,
   onAllowExternal,
   onTrustSender,
   onDownloadAttachment,
@@ -602,6 +602,8 @@ export function ConversationEmailBody({
   const cidBlobUrls = useMemo(() => cidResult?.request === cidRequest ? cidResult.urls : {}, [cidResult, cidRequest]);
   // A crypto plugin's decrypted body (PGP, S/MIME) replaces the message's own.
   const pluginBody = usePluginRenderedBody(email);
+  // The plugin can't vouch for its body: external content stays off, whatever was allowed.
+  const allowExternal = externalAllowed && !pluginBody.blockExternal;
   // reader-above-quote: the body the quote was collapsed in, once it is on screen.
   const [htmlBodyEl, setHtmlBodyEl] = useState<HTMLElement | null>(null);
   const [plainBodyEl, setPlainBodyEl] = useState<HTMLDivElement | null>(null);
@@ -930,7 +932,7 @@ export function ConversationEmailBody({
     <div className={className}>
       {phishingMarked && <PhishingMarkBanner className="px-4" />}
       {/* External content warning */}
-      {hasBlockedContent && !allowExternal && emailContent.isHtml && (
+      {hasBlockedContent && !allowExternal && !pluginBody.blockExternal && emailContent.isHtml && (
         <div className="px-4 py-2 bg-muted/50 flex items-center justify-between text-sm" data-testid="external-content-notice">
           <span className="text-muted-foreground">
             {remoteBlockedByOrg ? t("third_party.remote_content_blocked") : t("email_viewer.external_content_warning")}

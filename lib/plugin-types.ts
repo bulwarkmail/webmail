@@ -986,6 +986,12 @@ export interface HostFeaturesView extends AssistantHostFeatures {
    * Absent otherwise. See `api.keystore`.
    */
   keystore?: boolean;
+  /**
+   * onRenderEmailBody may return `blockExternalContent: true` to keep external content
+   * off for that body, whatever the settings and trusted senders allow. Per plugin, for
+   * those with `email:render-takeover`. Absent on webmails that ignore the field.
+   */
+  blockExternalContent?: boolean;
 }
 
 /** One setting `api.app.searchSettings` found, in the user's language. */
