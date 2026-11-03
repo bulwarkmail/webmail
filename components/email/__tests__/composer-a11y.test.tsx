@@ -444,7 +444,10 @@ describe('confirm before sending (MO-16)', () => {
     fireEvent.keyDown(screen.getByTestId('composer-subject'), { key: 'Enter', ctrlKey: true });
 
     const dialog = await screen.findByRole('alertdialog');
-    fireEvent.keyDown(dialog, { key: 'Escape' });
+    // The dialog takes the focus in the same effect that starts listening
+    // for Escape, which can run after the dialog is already in the DOM.
+    await waitFor(() => expect(dialog).toContainElement(document.activeElement as HTMLElement));
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
     await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
     await act(async () => {});
     expect(onSend).not.toHaveBeenCalled();
