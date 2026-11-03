@@ -17,6 +17,21 @@ describe('SubAddressHelper', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
+  it('keeps that Escape from what is around it, so the composer stays open', () => {
+    const composerKey = vi.fn();
+    render(
+      <div onKeyDown={composerKey}>
+        <SubAddressHelper baseEmail="nora@example.com" recipientEmails={[]} onSelectTag={() => {}} />
+      </div>,
+    );
+    fireEvent.click(screen.getByTitle('button_tooltip'));
+
+    fireEvent.keyDown(screen.getByRole('dialog', { name: 'popover_title' }), { key: 'Escape' });
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(composerKey).not.toHaveBeenCalled();
+  });
+
   it('moves back on screen when its button is near the left edge', () => {
     const rect = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({ left: -80, right: 240 } as DOMRect);
     const dialog = open();
