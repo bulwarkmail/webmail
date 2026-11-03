@@ -5493,7 +5493,11 @@
     "resume_gone": "Import z tego komputera nie może być kontynuowany, bo jego pliki zniknęły.",
     "pst_in_use": "Nie można odczytać {names}, gdy plik jest otwarty w Outlooku. Zamknij Outlooka i wyszukaj ponownie.",
     "description": "Znajdź pocztę na tym komputerze albo wybierz pliki .eml, .zip, .mbox lub Outlook .pst.",
-    "settings_description": "Przenieś pocztę z Thunderbirda albo z plików .eml, ZIP, mbox lub Outlook .pst."
+    "settings_description": "Przenieś pocztę z Thunderbirda albo z plików .eml, ZIP, mbox lub Outlook .pst.",
+    "resume_refused": "Nie można teraz odczytać: {names}. Reszta idzie dalej, a te zostaną sprawdzone ponownie przy następnym uruchomieniu.",
+    "resume_stop_trying": "Nie próbuj więcej",
+    "resume_hand_picked": "Wybierz te pliki ponownie, aby zaimportować resztę: {names}. Zaimportowane już wiadomości zostaną pominięte.",
+    "scan_incomplete": "Wyszukiwanie trwało zbyt długo i zostało zatrzymane. Oto co znalazło do tego czasu."
   },
   "recover_deleted": {
     "tab": "Odzyskaj usunięte elementy",

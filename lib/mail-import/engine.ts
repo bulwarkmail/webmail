@@ -2,6 +2,7 @@ import type { IJMAPClient, UploadedEmailImport, UploadedEmailImportResult } from
 import type { Mailbox } from "@/lib/jmap/types";
 import { checkpointKey, deleteCheckpoint, readCheckpoint, writeCheckpoint } from "./checkpoints";
 import type { ImportDedupe } from "./dedupe";
+import { isNetworkFailure } from "@/lib/jmap/offline-hooks";
 import { holdLock } from "./locks";
 import { emlSource, maildirSource, mboxSource, zipSource, type ImportFormat, type ImportItem, type ItemSource, type MaildirFile, type SkipReason, type SourceOptions } from "./sources";
 
@@ -414,11 +415,12 @@ export async function runImport(options: ImportOptions): Promise<ImportProgress>
         }
       } catch (error) {
         const name = (error as { name?: string } | null)?.name;
-        // The messages are uploaded and waiting. Going offline isn't a try.
-        if (isOffline(error)) {
+        // The messages are uploaded and waiting. The server being out of reach isn't a try.
+        if (isNetworkFailure(error)) {
           attempt--;
-          await sleep(NETWORK_PAUSE_MS, options.signal).catch(() => {});
-          if (options.signal.aborted) break;
+          pausedUntil = Math.max(pausedUntil, now() + NETWORK_PAUSE_MS);
+          await waitWhilePaused().catch(() => {});
+          if (signal.aborted) break;
           continue;
         }
         if (name === "RateLimitError" && attempt < 3) {
@@ -484,20 +486,30 @@ export async function runImport(options: ImportOptions): Promise<ImportProgress>
   const upload = async (item: Extract<ImportItem, { kind: "message" }>, fileIndex: number) => {
     const u = { fileIndex, index: item.index, label: item.label };
     let mailboxId: string;
-    // Before the folder too: created offline, it would only exist on this device.
-    await waitWhilePaused();
-    try {
-      mailboxId = await folders.resolve(options.keepFolders ? item.folder : [], item.folderRole);
-    } catch (error) {
-      if (isAbort(error) || signal.aborted) throw new ImportCancelled();
-      fail(u, error instanceof Error ? error.message : String(error));
-      return;
+    // Waits before the folder too: asked for offline, a folder is refused or answered from this
+    // device, and neither is a folder on the server. A connection lost during the call shows below.
+    for (;;) {
+      await waitWhilePaused();
+      try {
+        mailboxId = await folders.resolve(options.keepFolders ? item.folder : [], item.folderRole);
+        break;
+      } catch (error) {
+        if (isAbort(error) || signal.aborted) throw new ImportCancelled();
+        // Says nothing about this message, so it doesn't count towards the failures in a row.
+        if (isNetworkFailure(error)) {
+          pausedUntil = Math.max(pausedUntil, now() + NETWORK_PAUSE_MS);
+          continue;
+        }
+        fail(u, error instanceof Error ? error.message : String(error));
+        return;
+      }
     }
     let seenKey: string | undefined;
     if (options.dedupe) {
       try {
-        seenKey = await options.dedupe.keyFor(item, mailboxId);
-        if (inFlight.has(seenKey) || (await options.dedupe.has(seenKey))) {
+        const { key, seen } = await options.dedupe.check(item, mailboxId);
+        seenKey = key;
+        if (seen || inFlight.has(key)) {
           skip("duplicate");
           handled(u);
           return;
@@ -620,6 +632,10 @@ export async function runImport(options: ImportOptions): Promise<ImportProgress>
       try {
         for await (const item of source) {
           if (signal.aborted) throw state.stopped ?? new ImportCancelled();
+          if (item.kind === "failed") {
+            fail({ fileIndex: f, index: item.index, label: item.label }, item.reason);
+            continue;
+          }
           if (item.kind === "skipped") {
             // Items an earlier run handled are already counted in its imported total.
             if (item.reason !== "resumed") skip(item.reason);

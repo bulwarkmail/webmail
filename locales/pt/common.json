@@ -5493,7 +5493,11 @@
     "resume_gone": "A importação deste computador não pode continuar porque os arquivos sumiram.",
     "pst_in_use": "{names} não pode ser lido enquanto o Outlook o mantiver aberto. Feche o Outlook e procure novamente.",
     "description": "Procure e-mails neste computador ou escolha arquivos .eml, .zip, .mbox ou Outlook .pst.",
-    "settings_description": "Traga e-mails do Thunderbird ou de arquivos .eml, ZIP, mbox ou Outlook .pst."
+    "settings_description": "Traga e-mails do Thunderbird ou de arquivos .eml, ZIP, mbox ou Outlook .pst.",
+    "resume_refused": "Não podem ser lidos agora: {names}. O resto continua, e estes são tentados novamente no próximo início.",
+    "resume_stop_trying": "Parar de tentar",
+    "resume_hand_picked": "Escolha estes arquivos novamente para importar o resto: {names}. As mensagens já importadas são ignoradas.",
+    "scan_incomplete": "A procura demorou demais e foi interrompida. Isto é o que ela encontrou até então."
   },
   "recover_deleted": {
     "tab": "Recuperar itens excluídos",

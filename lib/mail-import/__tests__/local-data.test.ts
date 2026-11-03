@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { runImport, type ImportOptions, type ImportProgress } from '@/lib/mail-import/engine';
-import { checkpointKey, clearCheckpointsFor, deleteCheckpoint, readCheckpoint } from '@/lib/mail-import/checkpoints';
+import { checkpointKey, clearCheckpointsFor, deleteCheckpoint, readCheckpoint, seenInMemory } from '@/lib/mail-import/checkpoints';
 import { localDedupe, messageIdOf } from '@/lib/mail-import/dedupe';
 import { durationWords, importHours } from '@/lib/mail-import/estimate';
 import { rangeBacking, registerPstFile, openSync, readSync } from '@/lib/mail-import/pst/shims/fs';
 import { maildirSource, mboxSource, type ImportItem, type MaildirFile, type SourceOptions } from '@/lib/mail-import/sources';
 import { isOstFile, LOCAL_FILE_UNAVAILABLE, LocalFile, toImportFile } from '@/lib/desktop/local-import';
+import { JMAPClient } from '@/lib/jmap/client';
 import type { IJMAPClient, UploadedEmailImport } from '@/lib/jmap/client-interface';
 import type { Mailbox } from '@/lib/jmap/types';
 
@@ -49,6 +50,8 @@ function fakeServer() {
 }
 
 function run(options: Partial<ImportOptions> & Pick<ImportOptions, 'client' | 'files'>): Promise<ImportProgress> {
+  // Time that passes when the import sleeps: a pause has to end without the test waiting for it.
+  let clock = Date.now();
   return runImport({
     accountId: 'acc',
     targetMailboxId: null,
@@ -57,7 +60,8 @@ function run(options: Partial<ImportOptions> & Pick<ImportOptions, 'client' | 'f
     resume: false,
     signal: new AbortController().signal,
     onProgress: () => {},
-    sleep: async () => {},
+    now: () => clock,
+    sleep: async (ms) => { clock += ms; },
     ...options,
   });
 }
@@ -143,6 +147,37 @@ describe('Maildir', () => {
     expect(read).toHaveBeenCalledWith(1);
   });
 
+  it('a message that can not be read now is a failure the next run tries again, never one it moves past', async () => {
+    const source = folder([message('a'), message('held'), message('c')]);
+    const real = source.readEntry.bind(source);
+    let held = true;
+    source.readEntry = async (index) => {
+      if (index === 1 && held) throw new Error(LOCAL_FILE_UNAVAILABLE);
+      return real(index);
+    };
+    const server = fakeServer();
+    const scope = freshScope();
+    const files = [{ file: source as unknown as File, format: 'maildir' as const, folder: ['Box'] }];
+    const first = await run({ client: server.client, scope, files });
+    expect(first.phase).toBe('done');
+    expect(first.failed).toBe(1);
+    expect(first.retryable).toBe(1);
+    expect(first.skipped.deleted).toBeUndefined();
+    expect(first.failures[0].reason).toBe(LOCAL_FILE_UNAVAILABLE);
+    expect(server.subjects()).toEqual(['a', 'c']);
+
+    // The checkpoint has a gap there: the next run reads that one and nothing else.
+    held = false;
+    const second = await run({ client: server.client, scope, resume: true, files });
+    expect(second.failed).toBe(0);
+    expect(server.subjects()).toEqual(['a', 'c', 'held']);
+  });
+
+  it('a message that has really gone is skipped, and only that', async () => {
+    const items = await collect(folder([null]));
+    expect(items[0]).toMatchObject({ kind: 'skipped', reason: 'deleted' });
+  });
+
   it('runs through the engine as a format of its own', async () => {
     const server = fakeServer();
     const result = await run({ client: server.client, files: [{ file: folder([message('m1'), message('m2')]) as unknown as File, format: 'maildir', folder: ['Box'] }] });
@@ -197,24 +232,71 @@ describe('dedupe across runs', () => {
     expect(result.skipped.duplicate).toBe(1);
   });
 
-  it('a different size under the same Message-ID is another message, and no Message-ID goes by the bytes', async () => {
+  const asItem = (text: string) => ({ data: new Blob([text]), size: text.length });
+
+  it('two mails with the same Message-ID and length that differ only in Date are two mails', async () => {
+    const server = fakeServer();
+    const scope = freshScope();
+    const dated = (day: string) => `Message-ID: <fixed@mailer.example.org>\r\nDate: ${day} May 2020 10:00:00 +0000\r\nSubject: Reminder\r\n\r\nPay up\r\n`;
+    const one = dated('05');
+    const two = dated('12');
+    expect(one.length).toBe(two.length);
+    const box = (text: string) => `From - Tue May 05 10:00:00 2020\r\n${text}\r\n`;
+    const result = await run({
+      client: server.client,
+      scope,
+      dedupe: localDedupe(scope, 'acc'),
+      files: [{ file: file(box(one) + box(two), 'p/Inbox'), format: 'mbox', folder: ['Inbox'] }],
+    });
+    expect(result.imported).toBe(2);
+    expect(result.skipped.duplicate).toBeUndefined();
+    expect(server.imported.map((m) => /Date: (\d+)/.exec(m.text)?.[1]).sort()).toEqual(['05', '12']);
+  });
+
+  it('a message only differing in the state headers Thunderbird rewrites is the same message', async () => {
     const dedupe = localDedupe(freshScope(), 'acc');
-    const item = (text: string) => ({ data: new Blob([text]), size: text.length });
-    const a = await dedupe.keyFor(item(message('same')), 'inbox');
-    expect(await dedupe.keyFor(item(message('same')), 'inbox')).toBe(a);
-    expect(await dedupe.keyFor(item(`${message('same')}more`), 'inbox')).not.toBe(a);
-    expect(await dedupe.keyFor(item(message('same')), 'sent')).not.toBe(a);
-    const none = await dedupe.keyFor(item('Subject: x\r\n\r\none'), 'inbox');
-    expect(await dedupe.keyFor(item('Subject: x\r\n\r\ntwo'), 'inbox')).not.toBe(none);
+    const a = await dedupe.check(asItem(message('same', 'X-Mozilla-Status: 0001\r\nX-Mozilla-Status2: 00000000\r\n')), 'inbox');
+    const b = await dedupe.check(asItem(message('same', 'X-Mozilla-Status: 0011\r\n')), 'inbox');
+    expect(b.key).toBe(a.key);
+    const c = await dedupe.check(asItem(`${message('same')}more`), 'inbox');
+    expect(c.key).not.toBe(a.key);
+    const d = await dedupe.check(asItem(message('same', 'X-Mozilla-Status: 0001\r\nX-Mozilla-Status2: 00000000\r\n')), 'sent');
+    expect(d.key).not.toBe(a.key);
+  });
+
+  it('what an earlier version remembered still counts: nothing is imported again, and it moves to the new key', async () => {
+    const scope = freshScope();
+    const dedupe = localDedupe(scope, 'acc');
+    const text = message('old');
+    // The earlier format: a hash of the Message-ID and the size.
+    const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`id:old@example.org:${text.length}`)));
+    const hash = Array.from(digest, (byte) => byte.toString(16).padStart(2, '0')).join('');
+    await dedupe.add([[scope, 'acc', 'inbox', hash].join('\u0000')]);
+
+    const first = await dedupe.check(asItem(text), 'inbox');
+    expect(first.seen).toBe(true);
+    expect(first.key).toContain('v2:');
+    // Moved: known under its own key now, whatever happens to the old one.
+    expect(seenInMemory.has(first.key)).toBe(true);
+    // And an old record isn't everything: another message is still new.
+    expect((await dedupe.check(asItem(message('other')), 'inbox')).seen).toBe(false);
+  });
+
+  it('a message without a Message-ID goes by its bytes', async () => {
+    const dedupe = localDedupe(freshScope(), 'acc');
+    const none = await dedupe.check(asItem('Subject: x\r\n\r\none'), 'inbox');
+    expect((await dedupe.check(asItem('Subject: x\r\n\r\ntwo'), 'inbox')).key).not.toBe(none.key);
   });
 
   it('a sign-out forgets what was imported', async () => {
     const scope = freshScope();
     const dedupe = localDedupe(scope, 'acc');
-    await dedupe.add(['k']);
-    expect(await dedupe.has('k')).toBe(true);
+    const item = { data: new Blob([message('m')]), size: message('m').length };
+    const { key } = await dedupe.check(item, 'inbox');
+    await dedupe.add([key]);
+    expect((await dedupe.check(item, 'inbox')).seen).toBe(true);
     await clearCheckpointsFor(scope);
-    expect(await dedupe.has('k')).toBe(false);
+    expect((await dedupe.check(item, 'inbox')).seen).toBe(false);
   });
 
   it('stopping mid-way leaves a checkpoint, and the next run neither repeats nor loses a message', async () => {
@@ -295,6 +377,69 @@ describe('when the server can not be reached', () => {
     expect(server.subjects()).toEqual(['a']);
   });
 
+  const dropped = () => Object.assign(new TypeError('Failed to fetch'), {});
+
+  it('a connection lost while making a folder pauses: it does not count towards the failures that stop an import', async () => {
+    const server = fakeServer();
+    const real = server.client.createMailbox.bind(server.client);
+    let left = 12;
+    server.client.createMailbox = (async (...args: Parameters<typeof real>) => {
+      if (left-- > 0) throw dropped();
+      return real(...args);
+    }) as typeof server.client.createMailbox;
+    let clock = Date.now();
+    const seen: ImportProgress[] = [];
+    const result = await run({
+      client: server.client,
+      scope: freshScope(),
+      now: () => clock,
+      sleep: async (ms) => { clock += ms; },
+      onProgress: (p) => seen.push(p),
+      files: [{ file: file(mbox(['a', 'b', 'c']), 'p/New'), format: 'mbox', folder: ['New'] }],
+    });
+    expect(result.phase).toBe('done');
+    expect(result.failed).toBe(0);
+    expect(server.subjects()).toEqual(['a', 'b', 'c']);
+    expect(seen.some((p) => p.phase === 'paused')).toBe(true);
+  });
+
+  it('a connection lost on Email/import pauses too, and the same messages go in after it', async () => {
+    const server = fakeServer();
+    const real = server.client.importUploadedEmails!.bind(server.client);
+    let left = 12;
+    server.client.importUploadedEmails = (async (entries: UploadedEmailImport[]) => {
+      if (left-- > 0) throw dropped();
+      return real(entries);
+    }) as typeof server.client.importUploadedEmails;
+    let clock = Date.now();
+    const result = await run({
+      client: server.client,
+      scope: freshScope(),
+      now: () => clock,
+      sleep: async (ms) => { clock += ms; },
+      files: [{ file: file(mbox(['a']), 'p/Inbox'), format: 'mbox', folder: ['Inbox'] }],
+    });
+    expect(result.failed).toBe(0);
+    expect(server.subjects()).toEqual(['a']);
+  });
+
+  it('an error from the server itself still counts: that message may be the problem', async () => {
+    const server = fakeServer();
+    server.client.createMailbox = (async () => { throw new Error('forbidden name'); }) as typeof server.client.createMailbox;
+    const result = await run({ client: server.client, scope: freshScope(), files: [{ file: file(mbox(['a']), 'p/New'), format: 'mbox', folder: ['New'] }] });
+    expect(result.failed).toBe(1);
+    expect(result.failures[0].reason).toBe('forbidden name');
+  });
+
+  it('the real Email/import call only takes the server\'s word', async () => {
+    const client = new JMAPClient('https://mail.example.org', 'a@example.org', 'pw');
+    const request = vi.fn(async () => ({ methodResponses: [['Email/import', { created: { imp0: { id: 'e1' } } }, '0']] }));
+    (client as unknown as { request: typeof request }).request = request;
+    const results = await client.importUploadedEmails([{ blobId: 'b', mailboxIds: { inbox: true }, keywords: {} }], 'acc');
+    expect(results).toEqual([{ id: 'e1' }]);
+    expect((request.mock.calls[0] as unknown[])[2]).toMatchObject({ networkOnly: true });
+  });
+
   it('with the browser offline nothing is tried, not even the folder, until it is back', async () => {
     const server = fakeServer();
     const create = vi.spyOn(server.client, 'createMailbox');
@@ -361,6 +506,24 @@ describe('a file read from disk through the shell', () => {
     // The right length with the wrong status is no range of the file either.
     fetchMock.mockResolvedValueOnce(new Response(new Uint8Array(4), { status: 200 }));
     await expect(local.slice(0, 4).arrayBuffer()).rejects.toThrow(LOCAL_FILE_UNAVAILABLE);
+  });
+
+  it('a file held for a moment is tried again, and only then reported', async () => {
+    const naps: number[] = [];
+    const local = new LocalFile({ ...grant, kind: 'maildir', entrySizes: [3] }, async (ms) => { naps.push(ms); });
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 503 })).mockResolvedValueOnce(new Response('abc', { status: 200 }));
+    expect(new TextDecoder().decode((await local.readEntry(0))!)).toBe('abc');
+    expect(naps).toHaveLength(1);
+
+    fetchMock.mockReset();
+    fetchMock.mockImplementation(async () => new Response(null, { status: 503 }));
+    await expect(local.readEntry(0)).rejects.toThrow(LOCAL_FILE_UNAVAILABLE);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+
+    // A range too, and a fetch that throws counts the same.
+    fetchMock.mockReset();
+    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch')).mockResolvedValueOnce(new Response(new Uint8Array(3), { status: 206 }));
+    expect((await local.slice(0, 3).arrayBuffer()).byteLength).toBe(3);
   });
 
   it('a Maildir message comes by position, and one that has gone is null', async () => {

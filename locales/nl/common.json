@@ -5493,7 +5493,11 @@
     "resume_gone": "De import vanaf deze computer kan niet verder, omdat de bestanden weg zijn.",
     "pst_in_use": "{names} kan niet worden gelezen zolang Outlook het geopend heeft. Sluit Outlook en zoek opnieuw.",
     "description": "Zoek e-mail op deze computer, of kies .eml-, .zip-, .mbox- of Outlook-.pst-bestanden.",
-    "settings_description": "Haal e-mail op uit Thunderbird, of uit .eml-, ZIP-, mbox- of Outlook-.pst-bestanden."
+    "settings_description": "Haal e-mail op uit Thunderbird, of uit .eml-, ZIP-, mbox- of Outlook-.pst-bestanden.",
+    "resume_refused": "Nu niet leesbaar: {names}. De rest gaat door, en deze worden bij de volgende start opnieuw geprobeerd.",
+    "resume_stop_trying": "Niet meer proberen",
+    "resume_hand_picked": "Kies deze bestanden opnieuw om de rest te importeren: {names}. Al geïmporteerde berichten worden overgeslagen.",
+    "scan_incomplete": "Het zoeken duurde te lang en is gestopt. Dit is wat er tot dan toe is gevonden."
   },
   "recover_deleted": {
     "tab": "Verwijderde items herstellen",

@@ -5680,7 +5680,11 @@
     "resume_gone": "Không thể tiếp tục nhập từ máy tính này vì các tệp đã mất.",
     "pst_in_use": "Không thể đọc {names} khi Outlook đang mở tệp. Hãy đóng Outlook và tìm lại.",
     "description": "Tìm thư trên máy tính này, hoặc chọn tệp .eml, .zip, .mbox hay Outlook .pst.",
-    "settings_description": "Lấy thư từ Thunderbird, hoặc từ tệp .eml, ZIP, mbox hay Outlook .pst."
+    "settings_description": "Lấy thư từ Thunderbird, hoặc từ tệp .eml, ZIP, mbox hay Outlook .pst.",
+    "resume_refused": "Hiện không đọc được: {names}. Phần còn lại vẫn tiếp tục, và các mục này sẽ được thử lại ở lần khởi động sau.",
+    "resume_stop_trying": "Ngừng thử",
+    "resume_hand_picked": "Hãy chọn lại các tệp này để nhập phần còn lại: {names}. Các thư đã nhập sẽ được bỏ qua.",
+    "scan_incomplete": "Việc tìm kiếm mất quá lâu và đã dừng. Đây là những gì đã tìm thấy đến lúc đó."
   },
   "recover_deleted": {
     "tab": "Khôi phục các mục đã xóa",

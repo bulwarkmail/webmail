@@ -5668,7 +5668,11 @@
     "resume_gone": "這台電腦的匯入無法繼續,因為檔案已不存在。",
     "pst_in_use": "Outlook 開啟 {names} 時無法讀取。請關閉 Outlook 並重新尋找。",
     "description": "在這台電腦上尋找郵件,或選擇 .eml、.zip、.mbox 或 Outlook .pst 檔案。",
-    "settings_description": "從 Thunderbird 或 .eml、ZIP、mbox、Outlook .pst 檔案匯入郵件。"
+    "settings_description": "從 Thunderbird 或 .eml、ZIP、mbox、Outlook .pst 檔案匯入郵件。",
+    "resume_refused": "目前無法讀取:{names}。其餘部分繼續進行,這些將在下次啟動時重試。",
+    "resume_stop_trying": "不再嘗試",
+    "resume_hand_picked": "請重新選擇這些檔案以匯入其餘部分:{names}。已匯入的郵件會被略過。",
+    "scan_incomplete": "尋找耗時過長,已停止。這是到那時為止找到的內容。"
   },
   "recover_deleted": {
     "tab": "復原已刪除的項目",

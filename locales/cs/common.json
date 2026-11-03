@@ -5493,7 +5493,11 @@
     "resume_gone": "Import z tohoto počítače nemůže pokračovat, protože jeho soubory zmizely.",
     "pst_in_use": "{names} nelze přečíst, dokud je soubor otevřený v Outlooku. Zavřete Outlook a hledejte znovu.",
     "description": "Najděte poštu v tomto počítači, nebo vyberte soubory .eml, .zip, .mbox či Outlook .pst.",
-    "settings_description": "Přeneste poštu z Thunderbirdu nebo ze souborů .eml, ZIP, mbox či Outlook .pst."
+    "settings_description": "Přeneste poštu z Thunderbirdu nebo ze souborů .eml, ZIP, mbox či Outlook .pst.",
+    "resume_refused": "Teď nelze přečíst: {names}. Zbytek pokračuje a tyto se zkusí znovu při dalším spuštění.",
+    "resume_stop_trying": "Už nezkoušet",
+    "resume_hand_picked": "Vyberte tyto soubory znovu, abyste importovali zbytek: {names}. Už importované zprávy se přeskočí.",
+    "scan_incomplete": "Hledání trvalo příliš dlouho a bylo zastaveno. Toto našlo do té doby."
   },
   "recover_deleted": {
     "tab": "Obnovit smazané položky",

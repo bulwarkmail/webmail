@@ -5493,7 +5493,11 @@
     "resume_gone": "Imports no šī datora nevar turpināties, jo tā faili ir pazuduši.",
     "pst_in_use": "{names} nevar nolasīt, kamēr tas ir atvērts programmā Outlook. Aizveriet Outlook un meklējiet vēlreiz.",
     "description": "Meklējiet pastu šajā datorā vai izvēlieties .eml, .zip, .mbox vai Outlook .pst failus.",
-    "settings_description": "Ievediet pastu no Thunderbird vai no .eml, ZIP, mbox vai Outlook .pst failiem."
+    "settings_description": "Ievediet pastu no Thunderbird vai no .eml, ZIP, mbox vai Outlook .pst failiem.",
+    "resume_refused": "Pašlaik nevar nolasīt: {names}. Pārējais turpinās, un šos mēģinās vēlreiz nākamajā startā.",
+    "resume_stop_trying": "Vairs nemēģināt",
+    "resume_hand_picked": "Izvēlieties šos failus vēlreiz, lai importētu pārējo: {names}. Jau importētie ziņojumi tiek izlaisti.",
+    "scan_incomplete": "Meklēšana aizņēma pārāk ilgu laiku un tika apturēta. Lūk, ko tā līdz tam atrada."
   },
   "recover_deleted": {
     "tab": "Atjaunot dzēstos vienumus",

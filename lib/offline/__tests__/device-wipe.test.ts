@@ -803,6 +803,36 @@ describe('what the desktop app keeps outside the page', () => {
     expect(shell.clearClipboardFiles).toHaveBeenCalled();
   });
 
+  it('the import from this computer goes too, and the shell hears it before the record is gone', async () => {
+    const order: string[] = [];
+    const { readStoredJob, writeStoredJob } = await import('@/lib/mail-import/checkpoints');
+    await writeStoredJob(ALICE, { id: 'job', scope: ALICE });
+    const localImport = {
+      release: vi.fn(async () => {}),
+      releaseAll: vi.fn(async () => {
+        order.push(`releaseAll, record ${JSON.stringify(await readStoredJob(ALICE))}`);
+      }),
+    };
+    const window2 = window as { bulwarkDesktop?: { localImport?: unknown } };
+    window2.bulwarkDesktop = { ...window2.bulwarkDesktop, localImport };
+    respond = () => json(200, { ok: true });
+    await wipe.wipeWholeDevice('user');
+    expect(order).toEqual([`releaseAll, record ${JSON.stringify({ id: 'job', scope: ALICE })}`]);
+    expect(await readStoredJob(ALICE)).toBeNull();
+  });
+
+  it('a wipe of one account releases that account\'s import in the shell', async () => {
+    const { writeStoredJob } = await import('@/lib/mail-import/checkpoints');
+    await writeStoredJob(ALICE, { id: 'job', scope: ALICE });
+    const localImport = { release: vi.fn(async () => {}), releaseAll: vi.fn(async () => {}) };
+    const window2 = window as { bulwarkDesktop?: { localImport?: unknown } };
+    window2.bulwarkDesktop = { ...window2.bulwarkDesktop, localImport };
+    respond = (url) => (url.endsWith('/wiped') ? json(200, { ok: true }) : wipeNow());
+    await wipe.runDeviceGate();
+    await waitForNoAccounts();
+    expect(localImport.release).toHaveBeenCalledWith('job');
+  });
+
   it('a shell without those calls wipes all the same', async () => {
     (window as { bulwarkDesktop?: unknown }).bulwarkDesktop = { version: 1, platform: 'win32', mode: 'instance' };
     respond = (url) => (url.endsWith('/wiped') ? json(200, { ok: true }) : wipeNow());

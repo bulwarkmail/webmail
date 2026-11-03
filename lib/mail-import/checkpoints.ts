@@ -24,7 +24,7 @@ const DB_NAME = "bulwark-mail-import";
 const STORE = "checkpoints";
 /** What lib/mail-import/dedupe.ts remembers. Same database, so a sign-out takes it along. */
 export const SEEN_STORE = "seen";
-/** What an import from this computer needs to go on after a restart (the desktop app). One record. */
+/** What an import from this computer needs to go on after a restart (the desktop app). One per account. */
 const JOB_STORE = "jobs";
 /** Older checkpoints are dropped: the file has likely changed or been forgotten. */
 const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
@@ -43,7 +43,7 @@ const memory = new Map<string, ImportCheckpoint>();
 
 /** The fallback where IndexedDB isn't available, by key, with the scope as the value. */
 export const seenInMemory = new Map<string, string>();
-let jobInMemory: unknown = null;
+const jobsInMemory = new Map<string, unknown>();
 
 function forgetSeenInMemory(scope?: string): void {
   for (const [key, value] of seenInMemory) if (!scope || value === scope) seenInMemory.delete(key);
@@ -99,29 +99,44 @@ async function withStore<T>(mode: IDBTransactionMode, run: (store: IDBObjectStor
 
 /**
  * In IndexedDB rather than localStorage, which Chromium writes to disk late: an import
- * killed in its first minute would come back as if it had never started.
+ * killed in its first minute would come back as if it had never started. One per Bulwark
+ * account, so one account's import doesn't overwrite another's.
  */
-export async function readStoredJob<T>(): Promise<T | null> {
-  if (!hasIdb()) return (jobInMemory as T | null);
+export async function readStoredJob<T>(scope: string): Promise<T | null> {
+  const inMemory = () => (jobsInMemory.get(scope) as T | undefined) ?? null;
+  if (!hasIdb()) return inMemory();
   try {
     const db = await openDb();
-    const found = (await done(db.transaction(JOB_STORE, "readonly").objectStore(JOB_STORE).get("job"))) as { value: T } | undefined;
+    const found = (await done(db.transaction(JOB_STORE, "readonly").objectStore(JOB_STORE).get(scope))) as { value: T } | undefined;
     return found?.value ?? null;
   } catch {
-    return (jobInMemory as T | null);
+    return inMemory();
   }
 }
 
-export async function writeStoredJob(value: unknown): Promise<void> {
-  jobInMemory = value;
+export async function writeStoredJob(scope: string, value: unknown): Promise<void> {
+  if (value === null) jobsInMemory.delete(scope);
+  else jobsInMemory.set(scope, value);
   if (!hasIdb()) return;
   try {
     const db = await openDb();
     const store = db.transaction(JOB_STORE, "readwrite").objectStore(JOB_STORE);
-    if (value === null) await done(store.delete("job"));
-    else await done(store.put({ key: "job", value }));
+    if (value === null) await done(store.delete(scope));
+    else await done(store.put({ key: scope, value }));
   } catch {
     /* kept in memory for this window */
+  }
+}
+
+/** Every account's. */
+export async function clearStoredJobs(): Promise<void> {
+  jobsInMemory.clear();
+  if (!hasIdb()) return;
+  try {
+    const db = await openDb();
+    await done(db.transaction(JOB_STORE, "readwrite").objectStore(JOB_STORE).clear());
+  } catch {
+    /* nothing stored */
   }
 }
 
@@ -185,7 +200,7 @@ export async function clearCheckpointsFor(scope: string): Promise<void> {
 /** Removes every checkpoint (everyone signed out). */
 export async function clearAllCheckpoints(): Promise<void> {
   memory.clear();
-  jobInMemory = null;
+  jobsInMemory.clear();
   forgetSeenInMemory();
   if (!hasIdb()) return;
   const db = dbPromise ? await dbPromise.catch(() => null) : null;

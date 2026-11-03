@@ -5668,7 +5668,11 @@
     "resume_gone": "Importul de pe acest computer nu poate continua, pentru că fișierele lui au dispărut.",
     "pst_in_use": "{names} nu poate fi citit cât timp este deschis în Outlook. Închideți Outlook și căutați din nou.",
     "description": "Găsiți e-mailuri pe acest computer sau alegeți fișiere .eml, .zip, .mbox ori Outlook .pst.",
-    "settings_description": "Aduceți e-mailuri din Thunderbird sau din fișiere .eml, ZIP, mbox ori Outlook .pst."
+    "settings_description": "Aduceți e-mailuri din Thunderbird sau din fișiere .eml, ZIP, mbox ori Outlook .pst.",
+    "resume_refused": "Nu pot fi citite acum: {names}. Restul continuă, iar acestea sunt încercate din nou la următoarea pornire.",
+    "resume_stop_trying": "Nu mai încerca",
+    "resume_hand_picked": "Alegeți din nou aceste fișiere pentru a importa restul: {names}. Mesajele deja importate sunt omise.",
+    "scan_incomplete": "Căutarea a durat prea mult și a fost oprită. Iată ce a găsit până atunci."
   },
   "recover_deleted": {
     "tab": "Recuperați elementele șterse",

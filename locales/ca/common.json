@@ -5668,7 +5668,11 @@
     "resume_gone": "La importació d'aquest ordinador no pot continuar perquè els fitxers ja no hi són.",
     "pst_in_use": "{names} no es pot llegir mentre Outlook el tingui obert. Tanca Outlook i torna a cercar.",
     "description": "Cerca correu en aquest ordinador, o tria fitxers .eml, .zip, .mbox o Outlook .pst.",
-    "settings_description": "Porta correu de Thunderbird, o de fitxers .eml, ZIP, mbox o Outlook .pst."
+    "settings_description": "Porta correu de Thunderbird, o de fitxers .eml, ZIP, mbox o Outlook .pst.",
+    "resume_refused": "Ara no es poden llegir: {names}. La resta continua, i aquests es tornen a provar al pròxim inici.",
+    "resume_stop_trying": "Deixa de provar-ho",
+    "resume_hand_picked": "Torna a triar aquests fitxers per importar la resta: {names}. Els missatges ja importats s'ometen.",
+    "scan_incomplete": "La cerca ha trigat massa i s'ha aturat. Això és el que ha trobat fins aleshores."
   },
   "recover_deleted": {
     "tab": "Recupera elements suprimits",

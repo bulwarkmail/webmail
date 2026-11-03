@@ -75,6 +75,7 @@ export function MailImportDialog({ request }: { request: ImportRequest }) {
   const [skipSeen, setSkipSeen] = useState(true);
   const [listing, setListing] = useState(false);
   const [ostChosen, setOstChosen] = useState<string[]>([]);
+  const [lockHeld, setLockHeld] = useState(false);
   const inDesktopApp = !!getDesktopBridge()?.localImport;
   const localFiles = useMemo(() => (local?.files ?? []).map(toImportFile), [local]);
   const [target, setTarget] = useState<string>(initialTarget);
@@ -148,15 +149,17 @@ export function MailImportDialog({ request }: { request: ImportRequest }) {
       }
       const files: ImportFile[] = [...localFiles, ...picked.map((p) => ({ file: p.file, format: p.format }))];
       if (files.length === 0) { close(); return; }
+      setLockHeld(false);
       void startLocalImport({
         jobId: local.jobId,
         files,
+        handPicked: picked.map((p) => p.file.name),
         accountId,
         targetMailboxId: targetId,
         keepFolders: effectiveKeep,
         resume: resume && resumable > 0,
         dedupe: skipSeen,
-      });
+      }).then((started) => setLockHeld(!started));
       return;
     }
     startImport({
@@ -169,6 +172,11 @@ export function MailImportDialog({ request }: { request: ImportRequest }) {
   };
 
   const onClose = () => (active ? hide() : close());
+  // Left without starting: the shell gives up the files the user confirmed, and their paths.
+  const leaveSetup = () => {
+    if (local) void getDesktopBridge()?.localImport?.release(local.jobId).catch(() => {});
+    close();
+  };
 
   if (!visible) return null;
 
@@ -202,7 +210,7 @@ export function MailImportDialog({ request }: { request: ImportRequest }) {
   return (
     <Dialog
       isOpen
-      onClose={() => close()}
+      onClose={leaveSetup}
       size="full-on-phone"
       title={t("title")}
       description={inDesktopApp ? tLocal("description") : t("description")}
@@ -210,12 +218,13 @@ export function MailImportDialog({ request }: { request: ImportRequest }) {
       initialFocus={chooseButton}
       footer={(
         <>
-          <Button variant="outline" onClick={() => close()}>{t("cancel")}</Button>
+          <Button variant="outline" onClick={leaveSetup}>{t("cancel")}</Button>
           <Button onClick={onStart} disabled={!canStart} data-testid="mail-import-start">{t("start")}</Button>
         </>
       )}
     >
       <div className="mt-4 space-y-5">
+        {lockHeld && <p role="status" className="text-sm text-destructive" data-testid="local-import-busy">{t("error_busy")}</p>}
         {inDesktopApp && !local && (
           <LocalImportPanel
             onListing={setListing}
@@ -425,7 +434,7 @@ function ProgressBody({ progress: p, t, tLocal, locale, statusId }: { progress: 
               <p className="font-medium text-destructive">{t("summary_failed", { count: p.failed })}</p>
               <ul className="mt-1 list-disc ps-5 text-muted-foreground">
                 {p.failures.map((f, i) => (
-                  <li key={i} className="break-words">{f.label || t("untitled")}: {f.reason === "invalid" ? t("failure_invalid") : f.reason}</li>
+                  <li key={i} className="break-words">{f.label || t("untitled")}: {f.reason === "invalid" ? t("failure_invalid") : f.reason === LOCAL_FILE_UNAVAILABLE ? tLocal("file_unavailable") : f.reason}</li>
                 ))}
               </ul>
             </div>

@@ -5668,7 +5668,11 @@
     "resume_gone": "Bu bilgisayardan içe aktarma devam edemiyor, çünkü dosyaları yok.",
     "pst_in_use": "{names}, Outlook açık tuttuğu sürece okunamaz. Outlook'u kapatıp yeniden arayın.",
     "description": "Bu bilgisayarda posta bulun veya .eml, .zip, .mbox ya da Outlook .pst dosyaları seçin.",
-    "settings_description": "Postayı Thunderbird'den veya .eml, ZIP, mbox ya da Outlook .pst dosyalarından getirin."
+    "settings_description": "Postayı Thunderbird'den veya .eml, ZIP, mbox ya da Outlook .pst dosyalarından getirin.",
+    "resume_refused": "Şu anda okunamıyor: {names}. Geri kalanı sürer, bunlar bir sonraki başlatmada yeniden denenir.",
+    "resume_stop_trying": "Denemeyi bırak",
+    "resume_hand_picked": "Geri kalanını içe aktarmak için bu dosyaları yeniden seçin: {names}. Zaten aktarılan iletiler atlanır.",
+    "scan_incomplete": "Arama çok uzun sürdü ve durduruldu. O ana kadar bulduğu bunlar."
   },
   "recover_deleted": {
     "tab": "Silinen öğeleri kurtar",

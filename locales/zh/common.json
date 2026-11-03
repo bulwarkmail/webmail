@@ -5493,7 +5493,11 @@
     "resume_gone": "这台电脑的导入无法继续,因为文件已不存在。",
     "pst_in_use": "Outlook 打开 {names} 时无法读取。请关闭 Outlook 并重新查找。",
     "description": "在这台电脑上查找邮件,或选择 .eml、.zip、.mbox 或 Outlook .pst 文件。",
-    "settings_description": "从 Thunderbird 或 .eml、ZIP、mbox、Outlook .pst 文件导入邮件。"
+    "settings_description": "从 Thunderbird 或 .eml、ZIP、mbox、Outlook .pst 文件导入邮件。",
+    "resume_refused": "目前无法读取:{names}。其余部分继续进行,这些将在下次启动时重试。",
+    "resume_stop_trying": "不再尝试",
+    "resume_hand_picked": "请重新选择这些文件以导入其余部分:{names}。已导入的邮件会被跳过。",
+    "scan_incomplete": "查找耗时过长,已停止。这是到那时为止找到的内容。"
   },
   "recover_deleted": {
     "tab": "恢复已删除项目",

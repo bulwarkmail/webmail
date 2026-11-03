@@ -5668,7 +5668,11 @@
     "resume_gone": "Import sellest arvutist ei saa jätkuda, sest selle failid on kadunud.",
     "pst_in_use": "{names} ei saa lugeda, kuni Outlook seda avatuna hoiab. Sulge Outlook ja otsi uuesti.",
     "description": "Otsi kirju sellest arvutist või vali .eml-, .zip-, .mbox- või Outlooki .pst-failid.",
-    "settings_description": "Too kirjad Thunderbirdist või .eml-, ZIP-, mbox- või Outlooki .pst-failidest."
+    "settings_description": "Too kirjad Thunderbirdist või .eml-, ZIP-, mbox- või Outlooki .pst-failidest.",
+    "resume_refused": "Praegu ei saa lugeda: {names}. Ülejäänu jätkub ja neid proovitakse järgmisel käivitamisel uuesti.",
+    "resume_stop_trying": "Ära enam proovi",
+    "resume_hand_picked": "Vali need failid uuesti, et ülejäänu importida: {names}. Juba imporditud kirjad jäetakse vahele.",
+    "scan_incomplete": "Otsing kestis liiga kaua ja peatati. See on see, mida ta seni leidis."
   },
   "recover_deleted": {
     "tab": "Taasta kustutatud üksused",

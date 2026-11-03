@@ -5493,7 +5493,11 @@
     "resume_gone": "ファイルがなくなったため、このコンピューターからのインポートを続行できません。",
     "pst_in_use": "{names} は Outlook で開かれている間は読み取れません。Outlook を閉じてもう一度検索してください。",
     "description": "このコンピューターのメールを探すか、.eml、.zip、.mbox、Outlook .pst ファイルを選択してください。",
-    "settings_description": "Thunderbird、または .eml、ZIP、mbox、Outlook .pst ファイルからメールを取り込みます。"
+    "settings_description": "Thunderbird、または .eml、ZIP、mbox、Outlook .pst ファイルからメールを取り込みます。",
+    "resume_refused": "現在読み取れません: {names}。残りは続行し、これらは次回の起動時にもう一度試します。",
+    "resume_stop_trying": "試行をやめる",
+    "resume_hand_picked": "残りをインポートするには、これらのファイルをもう一度選択してください: {names}。インポート済みのメッセージはスキップされます。",
+    "scan_incomplete": "検索に時間がかかりすぎたため停止しました。それまでに見つかったものです。"
   },
   "recover_deleted": {
     "tab": "削除済みアイテムの復元",

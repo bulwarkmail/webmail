@@ -5668,7 +5668,11 @@
     "resume_gone": "Importen fra denne datamaskinen kan ikke fortsette, fordi filene er borte.",
     "pst_in_use": "{names} kan ikke leses mens Outlook har filen åpen. Lukk Outlook og søk igjen.",
     "description": "Finn e-post på denne datamaskinen, eller velg .eml-, .zip-, .mbox- eller Outlook .pst-filer.",
-    "settings_description": "Hent e-post fra Thunderbird eller fra .eml-, ZIP-, mbox- eller Outlook .pst-filer."
+    "settings_description": "Hent e-post fra Thunderbird eller fra .eml-, ZIP-, mbox- eller Outlook .pst-filer.",
+    "resume_refused": "Kan ikke leses akkurat nå: {names}. Resten fortsetter, og disse prøves igjen ved neste start.",
+    "resume_stop_trying": "Ikke prøv mer",
+    "resume_hand_picked": "Velg disse filene på nytt for å importere resten: {names}. Meldinger som allerede er importert, hoppes over.",
+    "scan_incomplete": "Søket tok for lang tid og ble stoppet. Dette er det den fant frem til da."
   },
   "recover_deleted": {
     "tab": "Gjenopprett slettede elementer",

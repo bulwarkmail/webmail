@@ -1,6 +1,12 @@
 import { getDesktopBridge } from "@/lib/desktop/bridge";
-import { toImportFile } from "@/lib/desktop/local-import";
-import { readStoredJob, writeStoredJob } from "@/lib/mail-import/checkpoints";
+import {
+  forgetLocalImportJob,
+  forgetLocalImportOf,
+  readLocalImportJob,
+  saveLocalImportJob,
+  toImportFile,
+  type LocalImportJobRecord,
+} from "@/lib/desktop/local-import";
 import { holdLock, waitForLock } from "@/lib/mail-import/locks";
 import type { ImportFile, ImportProgress } from "@/lib/mail-import/engine";
 import { useAuthStore } from "@/stores/auth-store";
@@ -15,39 +21,21 @@ import { startImport } from "./start-import";
  * paths. The shell asks the user again before it reads anything after a restart.
  */
 
-/** Across the windows of the app: the one that has this runs the job. */
-const JOB_LOCK = "bulwark-local-import-job";
-
-export interface LocalImportJobRecord {
-  id: string;
-  scope: string;
-  accountId: string;
-  targetMailboxId: string | null;
-  keepFolders: boolean;
-  dedupe: boolean;
-}
-
-export function readLocalImportJob(): Promise<LocalImportJobRecord | null> {
-  return readStoredJob<LocalImportJobRecord>();
-}
-
-export function saveLocalImportJob(job: LocalImportJobRecord): Promise<void> {
-  return writeStoredJob(job);
-}
-
-export function forgetLocalImportJob(): Promise<void> {
-  return writeStoredJob(null);
-}
+/** Across the windows of the app: the one that has this runs the account's job. */
+const jobLock = (scope: string) => `bulwark-local-import-job:${scope}`;
 
 let releaseLock: (() => void) | null = null;
 
-function ended(job: LocalImportJobRecord, result: ImportProgress): void {
+async function ended(job: LocalImportJobRecord, result: ImportProgress): Promise<void> {
   releaseLock?.();
   releaseLock = null;
   // A failed import comes back at the next start: the network or the server is usually why.
   if (result.phase === "failed") return;
-  void forgetLocalImportJob();
-  void getDesktopBridge()?.localImport?.release(job.id).catch(() => {});
+  // Folders a resume couldn't read stay to be tried, unless the user said to stop trying.
+  const latest = await readLocalImportJob(job.scope);
+  if (result.phase === "done" && latest?.retryOnly?.length) return;
+  await forgetLocalImportJob(job.scope);
+  await getDesktopBridge()?.localImport?.release(job.id).catch(() => {});
 }
 
 async function run(job: LocalImportJobRecord, files: ImportFile[], resume: boolean): Promise<void> {
@@ -60,7 +48,7 @@ async function run(job: LocalImportJobRecord, files: ImportFile[], resume: boole
     keepFolders: job.keepFolders,
     resume,
     dedupe: job.dedupe,
-    onEnd: (result) => ended(job, result),
+    onEnd: (result) => void ended(job, result),
   });
 }
 
@@ -68,6 +56,8 @@ export interface StartLocalImport {
   jobId: string;
   /** Files of this job, and any files chosen the ordinary way in the same dialog. */
   files: ImportFile[];
+  /** Those chosen by hand. There's no way back to them after a restart. */
+  handPicked: string[];
   accountId: string;
   targetMailboxId: string | null;
   keepFolders: boolean;
@@ -75,15 +65,27 @@ export interface StartLocalImport {
   dedupe: boolean;
 }
 
-export async function startLocalImport(input: StartLocalImport): Promise<void> {
+/** False when another window of the app is importing for this account already: nothing started. */
+export async function startLocalImport(input: StartLocalImport): Promise<boolean> {
   const scope = useAuthStore.getState().activeAccountId ?? "default";
+  const lock = await holdLock(jobLock(scope));
+  if (!lock) return false;
   releaseLock?.();
-  releaseLock = await holdLock(JOB_LOCK);
+  releaseLock = lock;
   await run(
-    { id: input.jobId, scope, accountId: input.accountId, targetMailboxId: input.targetMailboxId, keepFolders: input.keepFolders, dedupe: input.dedupe },
+    {
+      id: input.jobId,
+      scope,
+      accountId: input.accountId,
+      targetMailboxId: input.targetMailboxId,
+      keepFolders: input.keepFolders,
+      dedupe: input.dedupe,
+      handPicked: input.handPicked,
+    },
     input.files,
     input.resume,
   );
+  return true;
 }
 
 /** Started from the device's copy of the session: it answers from here, and the real one comes later. */
@@ -91,7 +93,14 @@ export function isDeviceOnlyClient(client: unknown): boolean {
   return !!(client as { isOfflineOnly?: () => boolean } | null)?.isOfflineOnly?.();
 }
 
-export type ResumeOutcome = "none" | "resumed" | "resumed-thunderbird-running" | "later" | "gone";
+export interface ResumeResult {
+  outcome: "none" | "resumed" | "later" | "gone";
+  thunderbirdRunning?: boolean;
+  /** Folders that can't be read now. Said out loud: the job stays open for them. */
+  refused?: string[];
+  /** Files chosen by hand in the dialog, which can't come back by themselves. */
+  handPicked?: string[];
+}
 
 /**
  * Goes on with an import an earlier run of the app left, once the same account is signed
@@ -103,53 +112,67 @@ export type ResumeOutcome = "none" | "resumed" | "resumed-thunderbird-running" |
  * window can be closed. Whoever waits then takes over. When the job ended instead, there
  * is no record left and this does nothing.
  */
-export async function resumeLocalImport(): Promise<ResumeOutcome> {
+export async function resumeLocalImport(): Promise<ResumeResult> {
+  const none: ResumeResult = { outcome: "none" };
   const bridge = getDesktopBridge()?.localImport;
   const auth = useAuthStore.getState();
   const store = useMailTransferStore.getState();
-  if (!bridge || !auth.client || isDeviceOnlyClient(auth.client) || isJobActive(store.job)) return "none";
+  if (!bridge || !auth.client || isDeviceOnlyClient(auth.client) || isJobActive(store.job)) return none;
   const scope = auth.activeAccountId ?? "default";
-  const waiting = await readLocalImportJob();
-  if (!waiting || waiting.scope !== scope) return "none";
-  if (/^(\/[a-zA-Z-]{2,10})?\/popout(\/|$)/.test(window.location.pathname)) return "none";
-  const lock = await waitForLock(JOB_LOCK);
+  const waiting = await readLocalImportJob(scope);
+  if (!waiting) return none;
+  if (/^(\/[a-zA-Z-]{2,10})?\/popout(\/|$)/.test(window.location.pathname)) return none;
+  const lock = await waitForLock(jobLock(scope));
   let keepLock = false;
   try {
     // A long wait: look again at what's true now.
-    const job = await readLocalImportJob();
+    const job = await readLocalImportJob(scope);
     const now = useAuthStore.getState();
-    if (!job || job.scope !== scope || !now.client || isDeviceOnlyClient(now.client) || (now.activeAccountId ?? "default") !== scope || isJobActive(useMailTransferStore.getState().job)) return "none";
+    if (!job || !now.client || isDeviceOnlyClient(now.client) || (now.activeAccountId ?? "default") !== scope || isJobActive(useMailTransferStore.getState().job)) return none;
     const result = await bridge.resume(job.id);
     if (!result.ok) {
-      if (result.reason === "later" || result.reason === "busy") return "later";
-      await forgetLocalImportJob();
-      return result.reason === "stopped" ? "none" : "gone";
+      // In use: they're there and may be readable next time, so the job stays.
+      if (result.reason === "in-use") return { outcome: "later", refused: result.refused };
+      if (result.reason === "later" || result.reason === "busy") return { outcome: "later" };
+      await forgetLocalImportJob(scope);
+      return result.reason === "stopped" ? none : { outcome: "gone", refused: result.refused };
+    }
+    const wanted = job.retryOnly?.length ? new Set(job.retryOnly) : null;
+    const files = wanted ? result.files.filter((file) => wanted.has(file.name)) : result.files;
+    const refused = wanted ? result.refused.filter((name) => wanted.has(name)) : result.refused;
+    const handPicked = job.handPicked ?? [];
+    const next: LocalImportJobRecord = { ...job, handPicked: [], retryOnly: refused };
+    if (files.length === 0) {
+      // Nothing to do now, and the record still says what's left.
+      await saveLocalImportJob(next);
+      return { outcome: "later", refused, handPicked };
     }
     keepLock = true;
     releaseLock = lock;
     // A dialog to come back to from the corner chip, closed for now.
     store.open({ kind: "import" });
     store.hide();
-    await run(job, result.files.map(toImportFile), true);
-    return result.thunderbirdRunning ? "resumed-thunderbird-running" : "resumed";
+    await run(next, files.map((file) => toImportFile(file)), true);
+    return { outcome: "resumed", thunderbirdRunning: result.thunderbirdRunning, refused, handPicked };
   } finally {
     if (!keepLock) lock();
   }
 }
 
-/** A sign-out takes the job along: the checkpoints and what's remembered are gone too. */
-export async function forgetLocalImportFor(accountId: string): Promise<void> {
-  const bridge = getDesktopBridge()?.localImport;
-  if (accountId === "all") {
-    await forgetLocalImportJob();
-    await bridge?.releaseAll().catch(() => {});
+/** "Stop trying": the folders a resume couldn't read are let go. What's running goes on. */
+export async function stopTryingRefused(scope: string): Promise<void> {
+  const job = await readLocalImportJob(scope);
+  if (!job) return;
+  const store = useMailTransferStore.getState();
+  if (isJobActive(store.job)) {
+    await saveLocalImportJob({ ...job, retryOnly: [] });
     return;
   }
-  const job = await readLocalImportJob();
-  if (job?.scope !== accountId) return;
-  await forgetLocalImportJob();
-  await bridge?.release(job.id).catch(() => {});
+  await forgetLocalImportOf(scope);
 }
+
+/** A sign-out takes the job along: the checkpoints and what's remembered are gone too. */
+export const forgetLocalImportFor = forgetLocalImportOf;
 
 /** Contacts of the confirmed address books, the ones not there yet. How many went in. */
 export async function importLocalContacts(vcards: string[]): Promise<number> {
@@ -159,12 +182,4 @@ export async function importLocalContacts(vcards: string[]): Promise<number> {
   const parsed = parseVCard(vcards.join("\r\n"));
   const duplicates = detectDuplicates(store.contacts, parsed);
   return store.importContacts(client, parsed.filter((_, index) => !duplicates.has(index)));
-}
-
-/** The taskbar's bar, where the shell has one (feat/os-integration's os.setProgress). */
-export function setImportTaskbarProgress(progress: ImportProgress | null): void {
-  const os = (getDesktopBridge() as { os?: { setProgress?: (value: number | null, mode?: "normal" | "paused") => void } } | null)?.os;
-  if (!os?.setProgress) return;
-  if (!progress || (progress.phase !== "running" && progress.phase !== "paused")) os.setProgress(null);
-  else os.setProgress(progress.fraction, progress.phase === "paused" ? "paused" : "normal");
 }

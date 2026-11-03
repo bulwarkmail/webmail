@@ -544,7 +544,11 @@
     "resume_gone": "การนำเข้าจากคอมพิวเตอร์เครื่องนี้ดำเนินต่อไม่ได้ เพราะไฟล์หายไป",
     "pst_in_use": "อ่าน {names} ไม่ได้ขณะที่ Outlook เปิดไฟล์อยู่ ปิด Outlook แล้วค้นหาอีกครั้ง",
     "description": "ค้นหาเมลบนคอมพิวเตอร์เครื่องนี้ หรือเลือกไฟล์ .eml, .zip, .mbox หรือ Outlook .pst",
-    "settings_description": "นำเมลเข้าจาก Thunderbird หรือจากไฟล์ .eml, ZIP, mbox หรือ Outlook .pst"
+    "settings_description": "นำเมลเข้าจาก Thunderbird หรือจากไฟล์ .eml, ZIP, mbox หรือ Outlook .pst",
+    "resume_refused": "ยังอ่านไม่ได้ตอนนี้: {names} ส่วนที่เหลือทำต่อไป และจะลองรายการเหล่านี้อีกครั้งเมื่อเริ่มครั้งถัดไป",
+    "resume_stop_trying": "เลิกลอง",
+    "resume_hand_picked": "เลือกไฟล์เหล่านี้อีกครั้งเพื่อนำเข้าส่วนที่เหลือ: {names} ข้อความที่นำเข้าแล้วจะถูกข้าม",
+    "scan_incomplete": "การค้นหาใช้เวลานานเกินไปและถูกหยุด นี่คือสิ่งที่พบจนถึงตอนนั้น"
   },
   "recover_deleted": {
     "tab": "กู้คืนรายการที่ลบ",

@@ -5668,7 +5668,11 @@
     "resume_gone": "The import from this computer can't go on, because its files are gone.",
     "pst_in_use": "{names} can't be read while Outlook has it open. Close Outlook and search again.",
     "description": "Find mail on this computer, or choose .eml, .zip, .mbox or Outlook .pst files.",
-    "settings_description": "Bring in mail from Thunderbird, or from .eml, ZIP, mbox or Outlook .pst files."
+    "settings_description": "Bring in mail from Thunderbird, or from .eml, ZIP, mbox or Outlook .pst files.",
+    "resume_refused": "Can't read right now: {names}. The rest goes on, and these are tried again at the next start.",
+    "resume_stop_trying": "Stop trying",
+    "resume_hand_picked": "Choose these files again to import the rest of them: {names}. Messages already imported are skipped.",
+    "scan_incomplete": "The search took too long and was stopped. This is what it found until then."
   },
   "recover_deleted": {
     "tab": "Recover deleted items",

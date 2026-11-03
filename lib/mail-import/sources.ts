@@ -56,7 +56,15 @@ export interface ImportSkip {
   label?: string;
 }
 
-export type ImportItem = ImportMessage | ImportSkip;
+/** Couldn't be read now, which may pass: a failure, and the next run tries it again. */
+export interface ImportReadFailure {
+  kind: "failed";
+  index: number;
+  label: string;
+  reason: string;
+}
+
+export type ImportItem = ImportMessage | ImportSkip | ImportReadFailure;
 
 export interface SourceOptions {
   /** Messages larger than this are skipped as too_large without reading them in. */
@@ -290,8 +298,17 @@ export async function* maildirSource(file: MaildirFile, options: SourceOptions, 
     } else if (size > options.maxMessageBytes) {
       yield { kind: "skipped", index, reason: "too_large", label: String(index + 1) };
     } else {
-      const bytes = await file.readEntry(index);
-      yield bytes ? maildirItem(bytes, index, folder) : { kind: "skipped", index, reason: "deleted" };
+      let bytes: Uint8Array | null = null;
+      let failure: string | null = null;
+      try {
+        bytes = await file.readEntry(index);
+      } catch (error) {
+        if ((error as { name?: string } | null)?.name === "AbortError") throw error;
+        failure = error instanceof Error ? error.message : String(error);
+      }
+      // Null is the file saying it has really gone. Anything else must not move the import past it.
+      if (failure !== null) yield { kind: "failed", index, label: `${file.name} #${index + 1}`, reason: failure };
+      else yield bytes ? maildirItem(bytes, index, folder) : { kind: "skipped", index, reason: "deleted" };
     }
     doneBytes += size;
     options.onProgress?.(doneBytes / Math.max(1, file.size));

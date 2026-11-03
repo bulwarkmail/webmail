@@ -5493,7 +5493,11 @@
     "resume_gone": "L'importazione da questo computer non può continuare perché i suoi file non ci sono più.",
     "pst_in_use": "{names} non è leggibile finché Outlook lo tiene aperto. Chiudi Outlook e cerca di nuovo.",
     "description": "Cerca la posta su questo computer, o scegli file .eml, .zip, .mbox o Outlook .pst.",
-    "settings_description": "Importa la posta da Thunderbird, o da file .eml, ZIP, mbox o Outlook .pst."
+    "settings_description": "Importa la posta da Thunderbird, o da file .eml, ZIP, mbox o Outlook .pst.",
+    "resume_refused": "Non leggibili ora: {names}. Il resto continua, e questi verranno riprovati al prossimo avvio.",
+    "resume_stop_trying": "Non riprovare",
+    "resume_hand_picked": "Scegli di nuovo questi file per importare il resto: {names}. I messaggi già importati vengono saltati.",
+    "scan_incomplete": "La ricerca ha richiesto troppo tempo ed è stata interrotta. Ecco cosa ha trovato fin lì."
   },
   "recover_deleted": {
     "tab": "Recupera elementi eliminati",

@@ -5668,7 +5668,11 @@
     "resume_gone": "Az importálás erről a számítógépről nem folytatható, mert a fájljai eltűntek.",
     "pst_in_use": "{names} nem olvasható, amíg az Outlook megnyitva tartja. Zárja be az Outlookot, és keressen újra.",
     "description": "Keressen leveleket ezen a számítógépen, vagy válasszon .eml, .zip, .mbox vagy Outlook .pst fájlokat.",
-    "settings_description": "Hozzon át leveleket a Thunderbirdből, vagy .eml, ZIP, mbox vagy Outlook .pst fájlokból."
+    "settings_description": "Hozzon át leveleket a Thunderbirdből, vagy .eml, ZIP, mbox vagy Outlook .pst fájlokból.",
+    "resume_refused": "Most nem olvasható: {names}. A többi folytatódik, ezeket a következő indításkor újra megpróbálja.",
+    "resume_stop_trying": "Ne próbálja többet",
+    "resume_hand_picked": "Válassza ki újra ezeket a fájlokat a többi importálásához: {names}. A már importált üzenetek kimaradnak.",
+    "scan_incomplete": "A keresés túl sokáig tartott, ezért leállt. Ezt találta addig."
   },
   "recover_deleted": {
     "tab": "Törölt elemek visszaállítása",

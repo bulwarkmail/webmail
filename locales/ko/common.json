@@ -5493,7 +5493,11 @@
     "resume_gone": "파일이 없어져 이 컴퓨터에서 가져오기를 계속할 수 없습니다.",
     "pst_in_use": "Outlook에서 열려 있는 동안에는 {names}을(를) 읽을 수 없습니다. Outlook을 닫고 다시 검색하세요.",
     "description": "이 컴퓨터에서 메일을 찾거나 .eml, .zip, .mbox 또는 Outlook .pst 파일을 선택하세요.",
-    "settings_description": "Thunderbird 또는 .eml, ZIP, mbox, Outlook .pst 파일에서 메일을 가져옵니다."
+    "settings_description": "Thunderbird 또는 .eml, ZIP, mbox, Outlook .pst 파일에서 메일을 가져옵니다.",
+    "resume_refused": "지금은 읽을 수 없습니다: {names}. 나머지는 계속되며, 이 항목은 다음 시작 때 다시 시도합니다.",
+    "resume_stop_trying": "그만 시도",
+    "resume_hand_picked": "나머지를 가져오려면 이 파일을 다시 선택하세요: {names}. 이미 가져온 메시지는 건너뜁니다.",
+    "scan_incomplete": "검색이 너무 오래 걸려 중지되었습니다. 그때까지 찾은 항목입니다."
   },
   "recover_deleted": {
     "tab": "삭제된 항목 복구",

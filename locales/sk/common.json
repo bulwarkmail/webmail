@@ -5668,7 +5668,11 @@
     "resume_gone": "Import z tohto počítača nemôže pokračovať, pretože jeho súbory zmizli.",
     "pst_in_use": "{names} sa nedá prečítať, kým je súbor otvorený v Outlooku. Zatvorte Outlook a hľadajte znova.",
     "description": "Nájdite poštu v tomto počítači alebo vyberte súbory .eml, .zip, .mbox či Outlook .pst.",
-    "settings_description": "Preneste poštu z Thunderbirdu alebo zo súborov .eml, ZIP, mbox či Outlook .pst."
+    "settings_description": "Preneste poštu z Thunderbirdu alebo zo súborov .eml, ZIP, mbox či Outlook .pst.",
+    "resume_refused": "Teraz sa nedajú prečítať: {names}. Zvyšok pokračuje a tieto sa skúsia znova pri ďalšom spustení.",
+    "resume_stop_trying": "Už neskúšať",
+    "resume_hand_picked": "Vyberte tieto súbory znova, aby ste importovali zvyšok: {names}. Už importované správy sa preskočia.",
+    "scan_incomplete": "Hľadanie trvalo príliš dlho a bolo zastavené. Toto našlo dovtedy."
   },
   "recover_deleted": {
     "tab": "Obnoviť odstránené položky",

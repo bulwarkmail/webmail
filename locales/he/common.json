@@ -5669,7 +5669,11 @@
     "resume_gone": "הייבוא מהמחשב הזה לא יכול להמשיך כי הקבצים שלו נעלמו.",
     "pst_in_use": "אי אפשר לקרוא את {names} כל עוד הוא פתוח ב-Outlook. סגור את Outlook וחפש שוב.",
     "description": "מצא דואר במחשב הזה, או בחר קובצי ‎.eml,‏ ‎.zip,‏ ‎.mbox או Outlook ‎.pst.",
-    "settings_description": "הבא דואר מ-Thunderbird, או מקובצי ‎.eml,‏ ZIP,‏ mbox או Outlook ‎.pst."
+    "settings_description": "הבא דואר מ-Thunderbird, או מקובצי ‎.eml,‏ ZIP,‏ mbox או Outlook ‎.pst.",
+    "resume_refused": "לא ניתן לקרוא כרגע: {names}. השאר ממשיך, ואלה ינוסו שוב בהפעלה הבאה.",
+    "resume_stop_trying": "הפסק לנסות",
+    "resume_hand_picked": "בחר שוב בקבצים האלה כדי לייבא את השאר: {names}. הודעות שכבר יובאו ידולגו.",
+    "scan_incomplete": "החיפוש נמשך זמן רב מדי והופסק. זה מה שנמצא עד אז."
   },
   "recover_deleted": {
     "tab": "שחזור פריטים שנמחקו",

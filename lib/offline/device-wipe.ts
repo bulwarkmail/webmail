@@ -88,6 +88,7 @@ import { forgetEvictedSecrets } from './evicted-secrets';
 import { confirmLoss, registerOfflineHooks, unsentForWipe, wipeAccount, wipeEverything } from './offline-mode';
 import { clearEvicted, forgetMailSnapshot, isEvicted, readEvicted, serverKey, useOfflineStore } from './state';
 import { runWipeCleaners } from './wipe-registry';
+import { forgetLocalImportOf } from '@/lib/desktop/local-import';
 
 /** How long a start holds the local copy back for the instance's answer. Offline, it doesn't wait at all. */
 export const BOOT_CHECK_IN_BUDGET_MS = 1_000;
@@ -264,6 +265,7 @@ async function endWebPushIfNobodyLeft(): Promise<void> {
 /** What's the account's own: a deletion after a refused login goes no further than this. */
 async function scrubAccount(account: string): Promise<void> {
   await runWipeCleaners(account);
+  await forgetLocalImportOf(account).catch(() => {});
   await forgetPluginAccounts(account).catch(() => {});
   clearPluginStorageForAccount(account);
   forgetMailSnapshot(account);
@@ -272,6 +274,8 @@ async function scrubAccount(account: string): Promise<void> {
 /** Everything accounts share, or that can't be told apart by account. */
 async function scrubShared(): Promise<void> {
   await clearShellFiles().catch(() => {});
+  // Before clearAllCheckpoints takes the job records: they're how the shell's paths get named.
+  await forgetLocalImportOf('all').catch(() => {});
   await deletePluginDatabases();
   await forgetPluginSettings().catch(() => {});
   await fileStorage.clearFiles().catch(() => {});

@@ -5493,7 +5493,11 @@
     "resume_gone": "Der Import von diesem Computer kann nicht weitergehen, weil seine Dateien fehlen.",
     "pst_in_use": "{names} kann nicht gelesen werden, solange Outlook die Datei geöffnet hat. Schließen Sie Outlook und suchen Sie noch einmal.",
     "description": "Suchen Sie E-Mails auf diesem Computer, oder wählen Sie .eml-, .zip-, .mbox- oder Outlook-.pst-Dateien.",
-    "settings_description": "Holen Sie E-Mails aus Thunderbird oder aus .eml-, ZIP-, mbox- oder Outlook-.pst-Dateien."
+    "settings_description": "Holen Sie E-Mails aus Thunderbird oder aus .eml-, ZIP-, mbox- oder Outlook-.pst-Dateien.",
+    "resume_refused": "Gerade nicht lesbar: {names}. Der Rest läuft weiter, und diese werden beim nächsten Start noch einmal versucht.",
+    "resume_stop_trying": "Nicht mehr versuchen",
+    "resume_hand_picked": "Wählen Sie diese Dateien noch einmal aus, um den Rest zu importieren: {names}. Bereits importierte Nachrichten werden übersprungen.",
+    "scan_incomplete": "Die Suche hat zu lange gedauert und wurde beendet. Das hat sie bis dahin gefunden."
   },
   "recover_deleted": {
     "tab": "Gelöschte E-Mails",

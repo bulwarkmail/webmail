@@ -74,6 +74,60 @@ describe('MailImportDialog', () => {
       expect(screen.queryByText('renamed.pst')).toBeNull();
     });
 
+    const confirmedBridge = () => {
+      const release = vi.fn(async () => {});
+      appBridge({
+        scan: vi.fn(async () => ({ ok: true, candidates: [{ handle: 'h', app: 'thunderbird', kind: 'mbox', group: 'default', account: 'Local Folders', folder: ['Inbox'], name: 'p/Inbox', size: 10, lastModified: 1 }], books: [], refused: [], calendars: 0, thunderbirdRunning: false })),
+        grant: vi.fn(async () => ({ ok: true, jobId: 'job', files: [{ url: 'bulwark-import://f/t', name: 'p/Inbox', kind: 'mbox', folder: ['Inbox'], size: 10, lastModified: 1 }], contacts: [], refused: [], thunderbirdRunning: false })),
+        resume: vi.fn(async () => ({ ok: false, reason: 'later' })),
+        release,
+      });
+      return release;
+    };
+
+    const confirmOne = async () => {
+      fireEvent.click(screen.getByTestId('local-import-find'));
+      await screen.findByTestId('local-import-list');
+      fireEvent.click(screen.getByTestId('local-import-confirm'));
+      await screen.findByTestId('local-import-picked');
+    };
+
+    it('closing without starting gives up the confirmed files in the shell', async () => {
+      const release = confirmedBridge();
+      render(<MailTransferHost />);
+      act(() => openMailImport());
+      await confirmOne();
+      expect(release).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole('button', { name: 'cancel' }));
+      expect(release).toHaveBeenCalledWith('job');
+      expect(useMailTransferStore.getState().request).toBeNull();
+    });
+
+    it('closing by the X or Escape does too', async () => {
+      const release = confirmedBridge();
+      render(<MailTransferHost />);
+      act(() => openMailImport());
+      await confirmOne();
+      fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+      await waitFor(() => expect(release).toHaveBeenCalledWith('job'));
+    });
+
+    it('says so, and starts nothing, when another window is importing for this account', async () => {
+      const release = confirmedBridge();
+      vi.stubGlobal('navigator', Object.assign(Object.create(navigator), {
+        locks: { request: (_name: string, options: { ifAvailable?: boolean }, callback: (lock: unknown) => unknown) => (options.ifAvailable ? Promise.resolve(callback(null)) : new Promise(() => {})) },
+      }));
+      render(<MailTransferHost />);
+      act(() => openMailImport());
+      await confirmOne();
+      await waitFor(() => expect((screen.getByTestId('mail-import-start') as HTMLButtonElement).disabled).toBe(false));
+      fireEvent.click(screen.getByTestId('mail-import-start'));
+      expect((await screen.findByTestId('local-import-busy')).textContent).toBe('error_busy');
+      expect(startImport).not.toHaveBeenCalled();
+      expect(release).not.toHaveBeenCalled();
+      vi.unstubAllGlobals();
+    });
+
     it('holds the rest of the dialog back while the list is open, and hands the confirmed files to the import', async () => {
       const files = [{ url: 'bulwark-import://f/t', name: 'p/Inbox', kind: 'mbox', folder: ['Inbox'], size: 10, lastModified: 1 }];
       appBridge({

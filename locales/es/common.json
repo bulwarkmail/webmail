@@ -5493,7 +5493,11 @@
     "resume_gone": "La importación desde este equipo no puede continuar porque sus archivos ya no están.",
     "pst_in_use": "{names} no se puede leer mientras Outlook lo tenga abierto. Cierre Outlook y busque de nuevo.",
     "description": "Busque correo en este equipo o elija archivos .eml, .zip, .mbox u Outlook .pst.",
-    "settings_description": "Traiga correo de Thunderbird o de archivos .eml, ZIP, mbox u Outlook .pst."
+    "settings_description": "Traiga correo de Thunderbird o de archivos .eml, ZIP, mbox u Outlook .pst.",
+    "resume_refused": "No se pueden leer ahora: {names}. El resto continúa, y estos se intentan de nuevo en el próximo inicio.",
+    "resume_stop_trying": "Dejar de intentarlo",
+    "resume_hand_picked": "Elija de nuevo estos archivos para importar el resto: {names}. Los mensajes ya importados se omiten.",
+    "scan_incomplete": "La búsqueda tardó demasiado y se detuvo. Esto es lo que encontró hasta entonces."
   },
   "recover_deleted": {
     "tab": "Recuperar elementos eliminados",

@@ -5493,7 +5493,11 @@
     "resume_gone": "L'import depuis cet ordinateur ne peut pas continuer, car ses fichiers ont disparu.",
     "pst_in_use": "{names} n'est pas lisible tant qu'Outlook l'a ouvert. Fermez Outlook et relancez la recherche.",
     "description": "Cherchez le courrier sur cet ordinateur, ou choisissez des fichiers .eml, .zip, .mbox ou Outlook .pst.",
-    "settings_description": "Importez le courrier de Thunderbird, ou de fichiers .eml, ZIP, mbox ou Outlook .pst."
+    "settings_description": "Importez le courrier de Thunderbird, ou de fichiers .eml, ZIP, mbox ou Outlook .pst.",
+    "resume_refused": "Illisibles pour l'instant : {names}. Le reste continue, et ceux-ci seront réessayés au prochain démarrage.",
+    "resume_stop_trying": "Ne plus essayer",
+    "resume_hand_picked": "Choisissez de nouveau ces fichiers pour importer le reste : {names}. Les messages déjà importés sont ignorés.",
+    "scan_incomplete": "La recherche a pris trop de temps et a été arrêtée. Voici ce qu'elle a trouvé jusque-là."
   },
   "recover_deleted": {
     "tab": "Récupérer des éléments supprimés",

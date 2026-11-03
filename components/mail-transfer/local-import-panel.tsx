@@ -132,7 +132,7 @@ export function LocalImportPanel({ onPick, onListing }: {
     try {
       const result = await bridge.scan();
       if (!result.ok) {
-        setNote(result.reason === "declined" ? t("scan_declined") : null);
+        setNote(result.reason === "declined" ? t("scan_declined") : result.reason === "failed" ? t("scan_failed") : null);
         return;
       }
       setScan(result);
@@ -196,6 +196,7 @@ export function LocalImportPanel({ onPick, onListing }: {
   return (
     <div className="space-y-3" data-testid="local-import-panel">
       {nothing && <p role="status" className="text-sm text-muted-foreground" data-testid="local-import-nothing">{t("nothing_found")}</p>}
+      {scan.incomplete && <p role="status" className="text-sm text-foreground" data-testid="local-import-incomplete">{t("scan_incomplete")}</p>}
       {scan.thunderbirdRunning && <ThunderbirdWarning t={t} />}
       {!nothing && (
         <div className="max-h-72 divide-y divide-border overflow-y-auto rounded-md border border-border" aria-label={t("found_list")} data-testid="local-import-list">

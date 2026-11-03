@@ -5668,7 +5668,11 @@
     "resume_gone": "لا يمكن متابعة الاستيراد من هذا الكمبيوتر لأن ملفاته اختفت.",
     "pst_in_use": "لا يمكن قراءة {names} ما دام Outlook يفتحه. أغلق Outlook وابحث مرة أخرى.",
     "description": "ابحث عن البريد على هذا الكمبيوتر، أو اختر ملفات ‎.eml أو ‎.zip أو ‎.mbox أو Outlook ‎.pst.",
-    "settings_description": "استورد البريد من Thunderbird أو من ملفات ‎.eml أو ZIP أو mbox أو Outlook ‎.pst."
+    "settings_description": "استورد البريد من Thunderbird أو من ملفات ‎.eml أو ZIP أو mbox أو Outlook ‎.pst.",
+    "resume_refused": "لا يمكن قراءتها الآن: {names}. يستمر الباقي، وستُجرَّب هذه مرة أخرى عند التشغيل التالي.",
+    "resume_stop_trying": "التوقف عن المحاولة",
+    "resume_hand_picked": "اختر هذه الملفات مرة أخرى لاستيراد الباقي: {names}. يتم تخطي الرسائل المستوردة بالفعل.",
+    "scan_incomplete": "استغرق البحث وقتًا طويلاً وتم إيقافه. هذا ما وجده حتى ذلك الحين."
   },
   "recover_deleted": {
     "tab": "استعادة العناصر المحذوفة",

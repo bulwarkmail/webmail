@@ -15,7 +15,7 @@ import { MailImportDialog } from "./mail-import-dialog";
 import { MailExportDialog } from "./mail-export-dialog";
 import { LocalExportDialog } from "./local-export-dialog";
 import { formatClock } from "./transfer-progress";
-import { forgetLocalImportFor, isDeviceOnlyClient, resumeLocalImport, setImportTaskbarProgress } from "./local-import-job";
+import { forgetLocalImportFor, isDeviceOnlyClient, resumeLocalImport, stopTryingRefused } from "./local-import-job";
 
 /** How long sign-out waits for a cancelled job to stop (its budget is 2 s). */
 const SIGN_OUT_WAIT_MS = 1500;
@@ -69,6 +69,7 @@ export function MailTransferHost() {
   // A wipe takes the same, and every spool no tab holds. `null` is everything on this device.
   useEffect(() => onDeviceWipe(async (account) => {
     await stopJobOf(account ?? "all");
+    await forgetLocalImportFor(account ?? "all");
     await sweepPrivateExports({ force: account === null });
   }), []);
 
@@ -80,18 +81,18 @@ export function MailTransferHost() {
   }, [activeAccountId]);
 
   // The desktop app shows a running export on its taskbar button.
-  const exportPhase = job?.kind === "export" ? job.progress.phase : null;
-  const exportFraction = job?.kind === "export" ? job.progress.fraction : 0;
+  const jobPhase = job?.progress.phase ?? null;
+  const jobFraction = job?.progress.fraction ?? 0;
   const onTaskbar = useRef(false);
   useEffect(() => {
-    if (exportPhase === "running" || exportPhase === "paused") {
+    if (jobPhase === "running" || jobPhase === "paused") {
       onTaskbar.current = true;
-      showTaskbarProgress(exportFraction, exportPhase === "paused" ? "paused" : "normal");
+      showTaskbarProgress(jobFraction, jobPhase === "paused" ? "paused" : "normal");
     } else if (onTaskbar.current) {
       onTaskbar.current = false;
       showTaskbarProgress(null);
     }
-  }, [exportPhase, exportFraction]);
+  }, [jobPhase, jobFraction]);
 
   // A job that ends while its dialog is hidden says so, with a way back to its summary.
   const tImport = useTranslations("mail_import");
@@ -108,23 +109,20 @@ export function MailTransferHost() {
     const scope = activeAccountId ?? "default";
     if (asked.current === scope) return;
     asked.current = scope;
-    void resumeLocalImport().then((outcome) => {
-      if (outcome === "resumed-thunderbird-running") toast.warning(tLocal("thunderbird_running"));
-      else if (outcome === "gone") toast.warning(tLocal("resume_gone"));
+    void resumeLocalImport().then(({ outcome, thunderbirdRunning, refused, handPicked }) => {
+      if (thunderbirdRunning) toast.warning(tLocal("thunderbird_running"));
+      if (outcome === "gone") {
+        toast.warning(refused?.length ? tLocal("files_refused", { names: refused.join(", ") }) : tLocal("resume_gone"));
+      } else if (refused?.length) {
+        toast.warning(tLocal("resume_refused", { names: refused.join(", ") }), {
+          action: { label: tLocal("resume_stop_trying"), onClick: () => void stopTryingRefused(scope) },
+        });
+      }
+      if (handPicked?.length) toast.warning(tLocal("resume_hand_picked", { names: handPicked.join(", ") }));
     }).catch(() => {});
     // The translator is a new function on every render in tests; the account is what matters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client, activeAccountId]);
-
-  // The bar on the taskbar follows an import, where the app has one.
-  const importProgress = job?.kind === "import" ? job.progress : null;
-  const barShown = useRef(false);
-  useEffect(() => {
-    // Not when it was never ours: the bar may be showing an export.
-    if (!importProgress && !barShown.current) return;
-    barShown.current = !!importProgress;
-    setImportTaskbarProgress(importProgress);
-  }, [importProgress]);
 
   const lastPhase = useRef<string | undefined>(undefined);
   useEffect(() => {
