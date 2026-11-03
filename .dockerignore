@@ -10,6 +10,7 @@ lite-image
 !.env.dev.example
 scripts/
 !scripts/lite/
+!scripts/desktop-build-flag.mjs
 !scripts/build-plugin-sandbox.mjs
 !scripts/build-pst-worker.mjs
 !scripts/build-store-worker.mjs
