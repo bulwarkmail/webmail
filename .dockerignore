@@ -14,6 +14,7 @@ scripts/
 !scripts/build-pst-worker.mjs
 !scripts/healthcheck.mjs
 !scripts/sourcemaps.mjs
+!scripts/standalone-guard.mjs
 # Built in the image by scripts/build-plugin-sandbox.mjs
 public/plugin-sandbox-assets/
 TODO.md

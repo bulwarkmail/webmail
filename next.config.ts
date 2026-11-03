@@ -4,6 +4,7 @@ import { execSync } from "child_process";
 import { createHash } from "crypto";
 import { readFileSync } from "fs";
 import { join } from "path";
+import { pruneTraces } from "./scripts/standalone-guard.mjs";
 
 // Prefer an explicit build arg (passed in by CI / Docker, where .git is
 // excluded from the build context) and fall back to `git rev-parse` for
@@ -154,10 +155,9 @@ const nextConfig: NextConfig = {
   // Sibling repos checked out under ./repos/ are unrelated source trees that
   // Turbopack's NFT can otherwise rope into the trace when dynamic fs calls
   // confuse it. Keeps the build from ballooning memory tracing dead code.
-  // The trace follows fs reads, and the runtime reads its state directories,
-  // so a build from a checkout that has been run would copy the admin
-  // password hash, the plugin signing key, the audit log and .env secrets
-  // into .next/standalone - and from there into the image.
+  // These excludes are not what keeps private state out of the build: they
+  // miss several traces. runAfterProductionCompile below and the final check
+  // in scripts/standalone-guard.mjs do that.
   // Only "./repos" goes under "*": that key also feeds the next-server trace,
   // where Next matches each glob anywhere in the path, so "./data/**/*" would
   // drop node_modules/next/dist/lib/metadata/* and the server would not start.
@@ -167,6 +167,15 @@ const nextConfig: NextConfig = {
     "*": ["./repos/**/*"],
     "!(next-server)": ["./data/**/*", "./local-data/**/*", "./.env*"],
   },
+  ...(isLite
+    ? {}
+    : {
+        compiler: {
+          runAfterProductionCompile: async ({ distDir, projectDir }) => {
+            pruneTraces({ distDir, projectDir });
+          },
+        },
+      }),
   turbopack: {
     root: process.env.NEXT_TURBOPACK_ROOT || import.meta.dirname,
     ...(sourceMaps ? { debugIds: true } : {}),
