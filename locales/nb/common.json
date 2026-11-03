@@ -6530,6 +6530,22 @@
     "channel_label": "Oppdateringskanal",
     "channel_description": "Betaversjoner kommer tidligere og kan ha flere problemer.",
     "channel_stable": "Stabil",
-    "channel_beta": "Beta"
+    "channel_beta": "Beta",
+    "shell_restart": "Start på nytt for å oppdatere",
+    "shell_check": "Se etter oppdateringer…",
+    "shell_available": "Bulwark {version} er tilgjengelig",
+    "shell_ready_title": "Bulwark er klar til å oppdatere",
+    "shell_ready_body": "Versjon {version} installeres neste gang du avslutter. Klikk for å starte på nytt nå. Utkastene dine lagres først.",
+    "shell_available_title": "Det finnes en ny versjon av Bulwark",
+    "shell_none_title": "Bulwark er oppdatert",
+    "shell_none_detail": "Du har versjon {version}.",
+    "shell_failed_title": "Bulwark kunne ikke se etter oppdateringer",
+    "shell_failed_detail": "Sjekk tilkoblingen og prøv igjen senere. Ingenting er endret.",
+    "shell_beta_title": "Bytte til betaversjoner?",
+    "shell_beta_detail": "Du får nye versjoner tidligere, og de kan ha flere problemer. For å gå tilbake installerer du en eldre stabil versjon eller venter til stabil har tatt den igjen.",
+    "shell_beta_confirm": "Bytt til beta",
+    "shell_older_title": "Tilbake til Bulwark {version}?",
+    "shell_older_detail": "Du har betaen {current}. Stabil {target} er eldre og kan kanskje ikke lese det betaen har lagret på denne datamaskinen. E-posten blir på serveren, men e-post lagret frakoblet kan lastes ned på nytt, og endringer som ikke er sendt, kan gå tapt. Hvis du venter, tar stabil igjen betaen, og du bytter uten dette trinnet.",
+    "shell_older_confirm": "Installer eldre versjon"
   }
 }

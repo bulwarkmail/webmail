@@ -6530,6 +6530,22 @@
     "channel_label": "Kanál aktualizácií",
     "channel_description": "Verzie beta prichádzajú skôr a môžu mať viac problémov.",
     "channel_stable": "Stabilná",
-    "channel_beta": "Beta"
+    "channel_beta": "Beta",
+    "shell_restart": "Reštartovať a aktualizovať",
+    "shell_check": "Skontrolovať aktualizácie…",
+    "shell_available": "Je dostupný Bulwark {version}",
+    "shell_ready_title": "Bulwark je pripravený na aktualizáciu",
+    "shell_ready_body": "Verzia {version} sa nainštaluje pri ďalšom ukončení. Kliknutím reštartujete teraz. Koncepty sa najprv uložia.",
+    "shell_available_title": "Je dostupná nová verzia Bulwark",
+    "shell_none_title": "Bulwark je aktuálny",
+    "shell_none_detail": "Máte verziu {version}.",
+    "shell_failed_title": "Bulwark nemohol skontrolovať aktualizácie",
+    "shell_failed_detail": "Skontrolujte pripojenie a skúste to neskôr. Nič sa nezmenilo.",
+    "shell_beta_title": "Prejsť na verzie beta?",
+    "shell_beta_detail": "Nové verzie dostanete skôr a môžu mať viac problémov. Na návrat nainštalujete staršiu stabilnú verziu alebo počkáte, kým ju stabilná dobehne.",
+    "shell_beta_confirm": "Prejsť na betu",
+    "shell_older_title": "Vrátiť sa na Bulwark {version}?",
+    "shell_older_detail": "Máte betu {current}. Stabilná {target} je staršia a nemusí prečítať, čo beta uložila na tomto počítači. Pošta zostáva na serveri, ale pošta uložená offline sa môže stiahnuť znova a neodoslané zmeny sa môžu stratiť. Ak počkáte, stabilná betu dobehne a prejdete na ňu bez tohto kroku.",
+    "shell_older_confirm": "Nainštalovať staršiu verziu"
   }
 }

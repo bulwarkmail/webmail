@@ -6530,6 +6530,22 @@
     "channel_label": "Update channel",
     "channel_description": "Beta versions come earlier and can have more problems.",
     "channel_stable": "Stable",
-    "channel_beta": "Beta"
+    "channel_beta": "Beta",
+    "shell_restart": "Restart to update",
+    "shell_check": "Check for updates…",
+    "shell_available": "Bulwark {version} is available",
+    "shell_ready_title": "Bulwark is ready to update",
+    "shell_ready_body": "Version {version} installs the next time you quit. Click to restart now. Your drafts are saved first.",
+    "shell_available_title": "A new version of Bulwark is available",
+    "shell_none_title": "Bulwark is up to date",
+    "shell_none_detail": "You have version {version}.",
+    "shell_failed_title": "Bulwark couldn't check for updates",
+    "shell_failed_detail": "Check your connection and try again later. Nothing has changed.",
+    "shell_beta_title": "Switch to beta versions?",
+    "shell_beta_detail": "You get new versions earlier, and they can have more problems. To go back later, you install an older stable version or wait until stable catches up.",
+    "shell_beta_confirm": "Switch to beta",
+    "shell_older_title": "Go back to Bulwark {version}?",
+    "shell_older_detail": "You have the beta {current}. Stable {target} is older, and it may not be able to read what the beta saved on this computer. Your mail stays on your server, but mail kept for offline use may download again and changes not yet sent can be lost. If you wait, stable catches up and you move to it without this step.",
+    "shell_older_confirm": "Install older version"
   }
 }

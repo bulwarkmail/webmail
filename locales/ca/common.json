@@ -6530,6 +6530,22 @@
     "channel_label": "Canal d’actualització",
     "channel_description": "Les versions beta arriben abans i poden tenir més problemes.",
     "channel_stable": "Estable",
-    "channel_beta": "Beta"
+    "channel_beta": "Beta",
+    "shell_restart": "Reinicia per actualitzar",
+    "shell_check": "Cerca actualitzacions…",
+    "shell_available": "Bulwark {version} està disponible",
+    "shell_ready_title": "Bulwark està a punt per actualitzar-se",
+    "shell_ready_body": "La versió {version} s’instal·larà la pròxima vegada que sortiu. Feu clic per reiniciar ara. Els esborranys es desen primer.",
+    "shell_available_title": "Hi ha una versió nova de Bulwark",
+    "shell_none_title": "Bulwark està al dia",
+    "shell_none_detail": "Teniu la versió {version}.",
+    "shell_failed_title": "Bulwark no ha pogut cercar actualitzacions",
+    "shell_failed_detail": "Comproveu la connexió i torneu-ho a provar més tard. No ha canviat res.",
+    "shell_beta_title": "Voleu passar a versions beta?",
+    "shell_beta_detail": "Rebeu les versions noves abans, i poden tenir més problemes. Per tornar, instal·leu una versió estable anterior o espereu que l’estable l’atrapi.",
+    "shell_beta_confirm": "Passa a beta",
+    "shell_older_title": "Voleu tornar a Bulwark {version}?",
+    "shell_older_detail": "Teniu la beta {current}. L’estable {target} és anterior i pot no llegir el que la beta ha desat en aquest ordinador. El correu es queda al servidor, però el correu desat fora de línia es pot tornar a baixar i els canvis sense enviar es poden perdre. Si espereu, l’estable atrapa la beta i hi passeu sense aquest pas.",
+    "shell_older_confirm": "Instal·la una versió anterior"
   }
 }

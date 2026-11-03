@@ -6530,6 +6530,22 @@
     "channel_label": "Güncelleme kanalı",
     "channel_description": "Beta sürümleri daha erken gelir ve daha fazla sorun içerebilir.",
     "channel_stable": "Kararlı",
-    "channel_beta": "Beta"
+    "channel_beta": "Beta",
+    "shell_restart": "Güncellemek için yeniden başlat",
+    "shell_check": "Güncellemeleri denetle…",
+    "shell_available": "Bulwark {version} kullanılabilir",
+    "shell_ready_title": "Bulwark güncellenmeye hazır",
+    "shell_ready_body": "{version} sürümü bir sonraki çıkışta yüklenir. Şimdi yeniden başlatmak için tıklayın. Taslaklarınız önce kaydedilir.",
+    "shell_available_title": "Bulwark’ın yeni bir sürümü var",
+    "shell_none_title": "Bulwark güncel",
+    "shell_none_detail": "{version} sürümüne sahipsiniz.",
+    "shell_failed_title": "Bulwark güncellemeleri denetleyemedi",
+    "shell_failed_detail": "Bağlantınızı kontrol edip daha sonra yeniden deneyin. Hiçbir şey değişmedi.",
+    "shell_beta_title": "Beta sürümlerine geçilsin mi?",
+    "shell_beta_detail": "Yeni sürümleri daha erken alırsınız ve daha fazla sorun içerebilirler. Geri dönmek için eski bir kararlı sürüm yüklersiniz veya kararlı sürümün yetişmesini beklersiniz.",
+    "shell_beta_confirm": "Betaya geç",
+    "shell_older_title": "Bulwark {version} sürümüne dönülsün mü?",
+    "shell_older_detail": "Beta {current} sürümündesiniz. Kararlı {target} daha eski ve betanın bu bilgisayara kaydettiklerini okuyamayabilir. Postanız sunucuda kalır, ancak çevrimdışı saklanan posta yeniden indirilebilir ve gönderilmemiş değişiklikler kaybolabilir. Beklerseniz kararlı sürüm yetişir ve bu adım olmadan geçersiniz.",
+    "shell_older_confirm": "Eski sürümü yükle"
   }
 }

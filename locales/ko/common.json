@@ -6530,6 +6530,22 @@
     "channel_label": "업데이트 채널",
     "channel_description": "베타 버전은 더 빨리 나오지만 문제가 더 많을 수 있습니다.",
     "channel_stable": "안정",
-    "channel_beta": "베타"
+    "channel_beta": "베타",
+    "shell_restart": "다시 시작하여 업데이트",
+    "shell_check": "업데이트 확인…",
+    "shell_available": "Bulwark {version}을(를) 사용할 수 있습니다",
+    "shell_ready_title": "Bulwark 업데이트 준비 완료",
+    "shell_ready_body": "버전 {version}은(는) 다음에 종료할 때 설치됩니다. 지금 다시 시작하려면 클릭하세요. 임시 보관함이 먼저 저장됩니다.",
+    "shell_available_title": "Bulwark 새 버전이 있습니다",
+    "shell_none_title": "Bulwark가 최신 상태입니다",
+    "shell_none_detail": "버전 {version}을(를) 사용 중입니다.",
+    "shell_failed_title": "Bulwark가 업데이트를 확인하지 못했습니다",
+    "shell_failed_detail": "연결을 확인하고 나중에 다시 시도하세요. 변경된 것은 없습니다.",
+    "shell_beta_title": "베타 버전으로 전환할까요?",
+    "shell_beta_detail": "새 버전을 더 빨리 받지만 문제가 더 많을 수 있습니다. 되돌리려면 이전 안정 버전을 설치하거나 안정 버전이 따라올 때까지 기다립니다.",
+    "shell_beta_confirm": "베타로 전환",
+    "shell_older_title": "Bulwark {version}(으)로 돌아갈까요?",
+    "shell_older_detail": "베타 {current}을(를) 사용 중입니다. 안정 버전 {target}은(는) 더 오래되어 베타가 이 컴퓨터에 저장한 내용을 읽지 못할 수 있습니다. 메일은 서버에 남지만 오프라인 메일은 다시 다운로드될 수 있고 보내지 않은 변경 사항은 사라질 수 있습니다. 기다리면 안정 버전이 따라오고 이 단계 없이 전환됩니다.",
+    "shell_older_confirm": "이전 버전 설치"
   }
 }

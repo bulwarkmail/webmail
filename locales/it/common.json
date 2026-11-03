@@ -6530,6 +6530,22 @@
     "channel_label": "Canale di aggiornamento",
     "channel_description": "Le versioni beta arrivano prima e possono avere più problemi.",
     "channel_stable": "Stabile",
-    "channel_beta": "Beta"
+    "channel_beta": "Beta",
+    "shell_restart": "Riavvia per aggiornare",
+    "shell_check": "Cerca aggiornamenti…",
+    "shell_available": "Bulwark {version} è disponibile",
+    "shell_ready_title": "Bulwark è pronto per l’aggiornamento",
+    "shell_ready_body": "La versione {version} verrà installata alla prossima chiusura. Fai clic per riavviare ora. Le bozze vengono salvate prima.",
+    "shell_available_title": "È disponibile una nuova versione di Bulwark",
+    "shell_none_title": "Bulwark è aggiornato",
+    "shell_none_detail": "Hai la versione {version}.",
+    "shell_failed_title": "Bulwark non ha potuto cercare aggiornamenti",
+    "shell_failed_detail": "Controlla la connessione e riprova più tardi. Non è cambiato nulla.",
+    "shell_beta_title": "Passare alle versioni beta?",
+    "shell_beta_detail": "Ricevi le nuove versioni prima, e possono avere più problemi. Per tornare indietro installi una versione stabile precedente o aspetti che la stabile raggiunga la beta.",
+    "shell_beta_confirm": "Passa alla beta",
+    "shell_older_title": "Tornare a Bulwark {version}?",
+    "shell_older_detail": "Hai la beta {current}. La stabile {target} è precedente e potrebbe non leggere ciò che la beta ha salvato su questo computer. La posta resta sul server, ma quella salvata offline può essere riscaricata e le modifiche non ancora inviate possono andare perse. Se aspetti, la stabile raggiunge la beta e ci passi senza questo passaggio.",
+    "shell_older_confirm": "Installa versione precedente"
   }
 }

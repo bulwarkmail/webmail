@@ -6530,6 +6530,22 @@
     "channel_label": "قناة التحديث",
     "channel_description": "تصل الإصدارات التجريبية أبكر وقد تكون فيها مشكلات أكثر.",
     "channel_stable": "مستقر",
-    "channel_beta": "تجريبي"
+    "channel_beta": "تجريبي",
+    "shell_restart": "أعد التشغيل للتحديث",
+    "shell_check": "البحث عن تحديثات…",
+    "shell_available": "Bulwark {version} متاح",
+    "shell_ready_title": "Bulwark جاهز للتحديث",
+    "shell_ready_body": "سيُثبَّت الإصدار {version} عند الخروج في المرة القادمة. انقر لإعادة التشغيل الآن. تُحفظ مسوداتك أولًا.",
+    "shell_available_title": "يتوفر إصدار جديد من Bulwark",
+    "shell_none_title": "Bulwark محدَّث",
+    "shell_none_detail": "لديك الإصدار {version}.",
+    "shell_failed_title": "تعذّر على Bulwark البحث عن تحديثات",
+    "shell_failed_detail": "تحقق من اتصالك وحاول لاحقًا. لم يتغير شيء.",
+    "shell_beta_title": "التبديل إلى الإصدارات التجريبية؟",
+    "shell_beta_detail": "تحصل على الإصدارات الجديدة أبكر، وقد تكون فيها مشكلات أكثر. للعودة، ثبّت إصدارًا مستقرًا أقدم أو انتظر حتى يلحق به الإصدار المستقر.",
+    "shell_beta_confirm": "التبديل إلى التجريبي",
+    "shell_older_title": "العودة إلى Bulwark {version}؟",
+    "shell_older_detail": "لديك الإصدار التجريبي {current}. الإصدار المستقر {target} أقدم وقد لا يقرأ ما حفظه التجريبي على هذا الكمبيوتر. يبقى بريدك على الخادم، لكن البريد المحفوظ دون اتصال قد يُنزَّل مجددًا وقد تضيع التغييرات غير المرسلة. إذا انتظرت، يلحق المستقر بالتجريبي وتنتقل إليه دون هذه الخطوة.",
+    "shell_older_confirm": "تثبيت إصدار أقدم"
   }
 }

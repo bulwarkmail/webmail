@@ -6530,6 +6530,22 @@
     "channel_label": "Opdateringskanal",
     "channel_description": "Betaversioner kommer tidligere og kan have flere problemer.",
     "channel_stable": "Stabil",
-    "channel_beta": "Beta"
+    "channel_beta": "Beta",
+    "shell_restart": "Genstart for at opdatere",
+    "shell_check": "Søg efter opdateringer…",
+    "shell_available": "Bulwark {version} er tilgængelig",
+    "shell_ready_title": "Bulwark er klar til at opdatere",
+    "shell_ready_body": "Version {version} installeres, næste gang du afslutter. Klik for at genstarte nu. Dine kladder gemmes først.",
+    "shell_available_title": "Der er en ny version af Bulwark",
+    "shell_none_title": "Bulwark er opdateret",
+    "shell_none_detail": "Du har version {version}.",
+    "shell_failed_title": "Bulwark kunne ikke søge efter opdateringer",
+    "shell_failed_detail": "Tjek din forbindelse, og prøv igen senere. Intet er ændret.",
+    "shell_beta_title": "Skift til betaversioner?",
+    "shell_beta_detail": "Du får nye versioner tidligere, og de kan have flere problemer. For at gå tilbage installerer du en ældre stabil version eller venter, til stabil har indhentet den.",
+    "shell_beta_confirm": "Skift til beta",
+    "shell_older_title": "Tilbage til Bulwark {version}?",
+    "shell_older_detail": "Du har betaen {current}. Stabil {target} er ældre og kan måske ikke læse, hvad betaen har gemt på denne computer. Din mail bliver på serveren, men mail gemt offline kan blive hentet igen, og ændringer, der ikke er sendt, kan gå tabt. Hvis du venter, indhenter stabil betaen, og du skifter uden dette trin.",
+    "shell_older_confirm": "Installer ældre version"
   }
 }

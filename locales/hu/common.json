@@ -6530,6 +6530,22 @@
     "channel_label": "Frissítési csatorna",
     "channel_description": "A béta verziók korábban érkeznek, és több hibájuk lehet.",
     "channel_stable": "Stabil",
-    "channel_beta": "Béta"
+    "channel_beta": "Béta",
+    "shell_restart": "Újraindítás a frissítéshez",
+    "shell_check": "Frissítések keresése…",
+    "shell_available": "Elérhető a Bulwark {version}",
+    "shell_ready_title": "A Bulwark készen áll a frissítésre",
+    "shell_ready_body": "A(z) {version} verzió a következő kilépéskor települ. Kattintson az újraindításhoz. A piszkozatok előbb mentésre kerülnek.",
+    "shell_available_title": "Elérhető a Bulwark új verziója",
+    "shell_none_title": "A Bulwark naprakész",
+    "shell_none_detail": "A(z) {version} verzió van telepítve.",
+    "shell_failed_title": "A Bulwark nem tudott frissítéseket keresni",
+    "shell_failed_detail": "Ellenőrizze a kapcsolatot, és próbálja később. Semmi sem változott.",
+    "shell_beta_title": "Átvált a béta verziókra?",
+    "shell_beta_detail": "Az új verziókat hamarabb kapja, és több hibájuk lehet. A visszatéréshez régebbi stabil verziót telepít, vagy megvárja, amíg a stabil utoléri.",
+    "shell_beta_confirm": "Váltás bétára",
+    "shell_older_title": "Vissza a Bulwark {version} verzióra?",
+    "shell_older_detail": "Béta verziója van: {current}. A(z) {target} stabil régebbi, és lehet, hogy nem tudja olvasni, amit a béta ezen a gépen mentett. A levelei a szerveren maradnak, de az offline tárolt levelek újra letöltődhetnek, és az el nem küldött módosítások elveszhetnek. Ha vár, a stabil utoléri a bétát, és e lépés nélkül vált rá.",
+    "shell_older_confirm": "Régebbi verzió telepítése"
   }
 }

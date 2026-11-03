@@ -6530,6 +6530,22 @@
     "channel_label": "Canal de actualización",
     "channel_description": "Las versiones beta llegan antes y pueden tener más problemas.",
     "channel_stable": "Estable",
-    "channel_beta": "Beta"
+    "channel_beta": "Beta",
+    "shell_restart": "Reiniciar para actualizar",
+    "shell_check": "Buscar actualizaciones…",
+    "shell_available": "Bulwark {version} está disponible",
+    "shell_ready_title": "Bulwark está listo para actualizarse",
+    "shell_ready_body": "La versión {version} se instalará la próxima vez que salgas. Haz clic para reiniciar ahora. Tus borradores se guardan antes.",
+    "shell_available_title": "Hay una nueva versión de Bulwark",
+    "shell_none_title": "Bulwark está al día",
+    "shell_none_detail": "Tienes la versión {version}.",
+    "shell_failed_title": "Bulwark no pudo buscar actualizaciones",
+    "shell_failed_detail": "Comprueba tu conexión e inténtalo más tarde. No ha cambiado nada.",
+    "shell_beta_title": "¿Cambiar a versiones beta?",
+    "shell_beta_detail": "Recibes las versiones nuevas antes, y pueden tener más problemas. Para volver, instalas una versión estable anterior o esperas a que la estable alcance a la beta.",
+    "shell_beta_confirm": "Cambiar a beta",
+    "shell_older_title": "¿Volver a Bulwark {version}?",
+    "shell_older_detail": "Tienes la beta {current}. La estable {target} es anterior y puede no leer lo que la beta guardó en este equipo. Tu correo sigue en tu servidor, pero el correo guardado sin conexión puede volver a descargarse y los cambios sin enviar pueden perderse. Si esperas, la estable alcanza a la beta y pasas a ella sin este paso.",
+    "shell_older_confirm": "Instalar versión anterior"
   }
 }

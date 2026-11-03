@@ -6530,6 +6530,22 @@
     "channel_label": "Uuenduste kanal",
     "channel_description": "Beetaversioonid tulevad varem ja neis võib olla rohkem probleeme.",
     "channel_stable": "Stabiilne",
-    "channel_beta": "Beeta"
+    "channel_beta": "Beeta",
+    "shell_restart": "Taaskäivita uuendamiseks",
+    "shell_check": "Otsi uuendusi…",
+    "shell_available": "Bulwark {version} on saadaval",
+    "shell_ready_title": "Bulwark on uuendamiseks valmis",
+    "shell_ready_body": "Versioon {version} paigaldatakse järgmisel sulgemisel. Klõpsa, et kohe taaskäivitada. Mustandid salvestatakse enne.",
+    "shell_available_title": "Saadaval on Bulwarki uus versioon",
+    "shell_none_title": "Bulwark on ajakohane",
+    "shell_none_detail": "Sul on versioon {version}.",
+    "shell_failed_title": "Bulwark ei saanud uuendusi otsida",
+    "shell_failed_detail": "Kontrolli ühendust ja proovi hiljem uuesti. Midagi ei muutunud.",
+    "shell_beta_title": "Kas minna beetaversioonidele?",
+    "shell_beta_detail": "Saad uued versioonid varem ja neis võib olla rohkem probleeme. Tagasi minemiseks paigaldad vanema stabiilse versiooni või ootad, kuni stabiilne järele jõuab.",
+    "shell_beta_confirm": "Mine beetale",
+    "shell_older_title": "Kas minna tagasi Bulwarki {version} peale?",
+    "shell_older_detail": "Sul on beeta {current}. Stabiilne {target} on vanem ega pruugi lugeda seda, mida beeta sellesse arvutisse salvestas. Sinu kirjad jäävad serverisse, kuid võrguühenduseta hoitud kirjad võidakse uuesti alla laadida ja saatmata muudatused võivad kaduda. Kui ootad, jõuab stabiilne järele ja lähed sellele üle ilma selle sammuta.",
+    "shell_older_confirm": "Paigalda vanem versioon"
   }
 }

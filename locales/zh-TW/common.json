@@ -6530,6 +6530,22 @@
     "channel_label": "更新管道",
     "channel_description": "測試版較早推出，問題可能較多。",
     "channel_stable": "穩定版",
-    "channel_beta": "測試版"
+    "channel_beta": "測試版",
+    "shell_restart": "重新啟動以更新",
+    "shell_check": "檢查更新…",
+    "shell_available": "Bulwark {version} 可用",
+    "shell_ready_title": "Bulwark 已準備好更新",
+    "shell_ready_body": "版本 {version} 將在下次結束時安裝。按一下立即重新啟動。草稿會先儲存。",
+    "shell_available_title": "Bulwark 有新版本",
+    "shell_none_title": "Bulwark 已是最新",
+    "shell_none_detail": "你的版本是 {version}。",
+    "shell_failed_title": "Bulwark 無法檢查更新",
+    "shell_failed_detail": "請檢查網路連線，稍後再試。沒有任何變更。",
+    "shell_beta_title": "切換到測試版？",
+    "shell_beta_detail": "你會更早收到新版本，但問題可能較多。要切回，請安裝較舊的穩定版，或等待穩定版趕上。",
+    "shell_beta_confirm": "切換到測試版",
+    "shell_older_title": "回到 Bulwark {version}？",
+    "shell_older_detail": "你使用的是測試版 {current}。穩定版 {target} 較舊，可能讀不了測試版在這台電腦上儲存的內容。郵件仍在伺服器上，但離線儲存的郵件可能會重新下載，未傳送的變更可能遺失。如果等待，穩定版趕上後你可以無需此步驟切換。",
+    "shell_older_confirm": "安裝舊版本"
   }
 }

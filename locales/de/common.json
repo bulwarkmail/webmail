@@ -6530,6 +6530,22 @@
     "channel_label": "Update-Kanal",
     "channel_description": "Beta-Versionen kommen früher und können mehr Probleme haben.",
     "channel_stable": "Stabil",
-    "channel_beta": "Beta"
+    "channel_beta": "Beta",
+    "shell_restart": "Neu starten und aktualisieren",
+    "shell_check": "Nach Updates suchen…",
+    "shell_available": "Bulwark {version} ist verfügbar",
+    "shell_ready_title": "Bulwark kann aktualisiert werden",
+    "shell_ready_body": "Version {version} wird beim nächsten Beenden installiert. Klicken Sie, um jetzt neu zu starten. Ihre Entwürfe werden vorher gespeichert.",
+    "shell_available_title": "Eine neue Version von Bulwark ist verfügbar",
+    "shell_none_title": "Bulwark ist auf dem neuesten Stand",
+    "shell_none_detail": "Sie haben Version {version}.",
+    "shell_failed_title": "Bulwark konnte nicht nach Updates suchen",
+    "shell_failed_detail": "Prüfen Sie Ihre Verbindung und versuchen Sie es später noch einmal. Es wurde nichts geändert.",
+    "shell_beta_title": "Zu Beta-Versionen wechseln?",
+    "shell_beta_detail": "Sie erhalten neue Versionen früher, und sie können mehr Probleme haben. Um später zurückzuwechseln, installieren Sie eine ältere stabile Version oder warten, bis die stabile Version aufgeholt hat.",
+    "shell_beta_confirm": "Zu Beta wechseln",
+    "shell_older_title": "Zurück zu Bulwark {version}?",
+    "shell_older_detail": "Sie haben die Beta {current}. Die stabile Version {target} ist älter und kann möglicherweise nicht lesen, was die Beta auf diesem Computer gespeichert hat. Ihre E-Mails bleiben auf Ihrem Server, aber offline gespeicherte E-Mails werden eventuell neu geladen, und noch nicht gesendete Änderungen können verloren gehen. Wenn Sie warten, holt die stabile Version auf, und Sie wechseln ohne diesen Schritt.",
+    "shell_older_confirm": "Ältere Version installieren"
   }
 }

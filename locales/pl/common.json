@@ -6530,6 +6530,22 @@
     "channel_label": "Kanał aktualizacji",
     "channel_description": "Wersje beta pojawiają się wcześniej i mogą mieć więcej problemów.",
     "channel_stable": "Stabilna",
-    "channel_beta": "Beta"
+    "channel_beta": "Beta",
+    "shell_restart": "Uruchom ponownie, aby zaktualizować",
+    "shell_check": "Sprawdź aktualizacje…",
+    "shell_available": "Dostępny jest Bulwark {version}",
+    "shell_ready_title": "Bulwark jest gotowy do aktualizacji",
+    "shell_ready_body": "Wersja {version} zainstaluje się przy następnym zamknięciu. Kliknij, aby uruchomić ponownie teraz. Wersje robocze zostaną najpierw zapisane.",
+    "shell_available_title": "Dostępna jest nowa wersja Bulwark",
+    "shell_none_title": "Bulwark jest aktualny",
+    "shell_none_detail": "Masz wersję {version}.",
+    "shell_failed_title": "Bulwark nie mógł sprawdzić aktualizacji",
+    "shell_failed_detail": "Sprawdź połączenie i spróbuj później. Nic się nie zmieniło.",
+    "shell_beta_title": "Przejść na wersje beta?",
+    "shell_beta_detail": "Nowe wersje dostajesz wcześniej i mogą mieć więcej problemów. Aby wrócić, instalujesz starszą wersję stabilną lub czekasz, aż stabilna dogoni betę.",
+    "shell_beta_confirm": "Przejdź na betę",
+    "shell_older_title": "Wrócić do Bulwark {version}?",
+    "shell_older_detail": "Masz betę {current}. Stabilna {target} jest starsza i może nie odczytać tego, co beta zapisała na tym komputerze. Poczta zostaje na serwerze, ale poczta zapisana offline może pobrać się ponownie, a niewysłane zmiany mogą przepaść. Jeśli poczekasz, stabilna dogoni betę i przejdziesz na nią bez tego kroku.",
+    "shell_older_confirm": "Zainstaluj starszą wersję"
   }
 }

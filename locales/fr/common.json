@@ -6530,6 +6530,22 @@
     "channel_label": "Canal de mise à jour",
     "channel_description": "Les versions bêta arrivent plus tôt et peuvent avoir plus de problèmes.",
     "channel_stable": "Stable",
-    "channel_beta": "Bêta"
+    "channel_beta": "Bêta",
+    "shell_restart": "Redémarrer pour mettre à jour",
+    "shell_check": "Rechercher des mises à jour…",
+    "shell_available": "Bulwark {version} est disponible",
+    "shell_ready_title": "Bulwark est prêt à se mettre à jour",
+    "shell_ready_body": "La version {version} s’installera la prochaine fois que vous quitterez. Cliquez pour redémarrer maintenant. Vos brouillons sont enregistrés d’abord.",
+    "shell_available_title": "Une nouvelle version de Bulwark est disponible",
+    "shell_none_title": "Bulwark est à jour",
+    "shell_none_detail": "Vous avez la version {version}.",
+    "shell_failed_title": "Bulwark n’a pas pu rechercher les mises à jour",
+    "shell_failed_detail": "Vérifiez votre connexion et réessayez plus tard. Rien n’a changé.",
+    "shell_beta_title": "Passer aux versions bêta ?",
+    "shell_beta_detail": "Vous recevez les nouvelles versions plus tôt, et elles peuvent avoir plus de problèmes. Pour revenir, vous installez une version stable plus ancienne ou attendez que la version stable rattrape.",
+    "shell_beta_confirm": "Passer à la bêta",
+    "shell_older_title": "Revenir à Bulwark {version} ?",
+    "shell_older_detail": "Vous avez la bêta {current}. La version stable {target} est plus ancienne et peut ne pas lire ce que la bêta a enregistré sur cet ordinateur. Vos e-mails restent sur votre serveur, mais les e-mails gardés hors ligne peuvent être retéléchargés et les changements pas encore envoyés peuvent être perdus. Si vous attendez, la version stable rattrape et vous y passez sans cette étape.",
+    "shell_older_confirm": "Installer la version plus ancienne"
   }
 }

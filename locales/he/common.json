@@ -6531,6 +6531,22 @@
     "channel_label": "ערוץ עדכונים",
     "channel_description": "גרסאות בטא מגיעות מוקדם יותר ועלולות להיות בהן יותר בעיות.",
     "channel_stable": "יציב",
-    "channel_beta": "בטא"
+    "channel_beta": "בטא",
+    "shell_restart": "הפעל מחדש כדי לעדכן",
+    "shell_check": "חפש עדכונים…",
+    "shell_available": "Bulwark {version} זמין",
+    "shell_ready_title": "Bulwark מוכן לעדכון",
+    "shell_ready_body": "גרסה {version} תותקן בפעם הבאה שתצא. לחץ כדי להפעיל מחדש עכשיו. הטיוטות נשמרות קודם.",
+    "shell_available_title": "יש גרסה חדשה של Bulwark",
+    "shell_none_title": "Bulwark מעודכן",
+    "shell_none_detail": "יש לך גרסה {version}.",
+    "shell_failed_title": "Bulwark לא הצליח לחפש עדכונים",
+    "shell_failed_detail": "בדוק את החיבור ונסה שוב מאוחר יותר. שום דבר לא השתנה.",
+    "shell_beta_title": "לעבור לגרסאות בטא?",
+    "shell_beta_detail": "תקבל גרסאות חדשות מוקדם יותר, וייתכנו בהן יותר בעיות. כדי לחזור, תתקין גרסה יציבה ישנה יותר או תחכה שהיציבה תשיג אותה.",
+    "shell_beta_confirm": "עבור לבטא",
+    "shell_older_title": "לחזור ל-Bulwark {version}?",
+    "shell_older_detail": "יש לך בטא {current}. היציבה {target} ישנה יותר ועלולה לא לקרוא את מה שהבטא שמרה במחשב הזה. הדואר נשאר בשרת, אבל דואר ששמור לא מקוון עשוי לרדת מחדש ושינויים שלא נשלחו עלולים לאבד. אם תחכה, היציבה תשיג את הבטא ותעבור בלי השלב הזה.",
+    "shell_older_confirm": "התקן גרסה ישנה יותר"
   }
 }

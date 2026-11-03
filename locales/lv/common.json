@@ -6530,6 +6530,22 @@
     "channel_label": "Atjauninājumu kanāls",
     "channel_description": "Beta versijas iznāk ātrāk, un tajās var būt vairāk problēmu.",
     "channel_stable": "Stabilā",
-    "channel_beta": "Beta"
+    "channel_beta": "Beta",
+    "shell_restart": "Restartēt, lai atjauninātu",
+    "shell_check": "Meklēt atjauninājumus…",
+    "shell_available": "Pieejams Bulwark {version}",
+    "shell_ready_title": "Bulwark ir gatavs atjaunināšanai",
+    "shell_ready_body": "Versija {version} tiks instalēta nākamajā aizvēršanas reizē. Noklikšķiniet, lai restartētu tūlīt. Melnraksti vispirms tiek saglabāti.",
+    "shell_available_title": "Pieejama jauna Bulwark versija",
+    "shell_none_title": "Bulwark ir atjaunināts",
+    "shell_none_detail": "Jums ir versija {version}.",
+    "shell_failed_title": "Bulwark nevarēja meklēt atjauninājumus",
+    "shell_failed_detail": "Pārbaudiet savienojumu un mēģiniet vēlāk. Nekas nav mainījies.",
+    "shell_beta_title": "Pāriet uz beta versijām?",
+    "shell_beta_detail": "Jaunas versijas saņemat ātrāk, un tajās var būt vairāk problēmu. Lai atgrieztos, instalējat vecāku stabilo versiju vai gaidāt, līdz stabilā to panāk.",
+    "shell_beta_confirm": "Pāriet uz beta",
+    "shell_older_title": "Atgriezties pie Bulwark {version}?",
+    "shell_older_detail": "Jums ir beta {current}. Stabilā {target} ir vecāka un var nespēt nolasīt, ko beta saglabāja šajā datorā. Pasts paliek serverī, bet bezsaistē saglabātais pasts var tikt lejupielādēts vēlreiz, un nenosūtītās izmaiņas var pazust. Ja pagaidāt, stabilā panāk beta versiju, un pārejat bez šī soļa.",
+    "shell_older_confirm": "Instalēt vecāku versiju"
   }
 }

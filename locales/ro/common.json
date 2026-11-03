@@ -6530,6 +6530,22 @@
     "channel_label": "Canal de actualizare",
     "channel_description": "Versiunile beta apar mai devreme și pot avea mai multe probleme.",
     "channel_stable": "Stabil",
-    "channel_beta": "Beta"
+    "channel_beta": "Beta",
+    "shell_restart": "Repornește pentru actualizare",
+    "shell_check": "Caută actualizări…",
+    "shell_available": "Bulwark {version} este disponibil",
+    "shell_ready_title": "Bulwark este gata de actualizare",
+    "shell_ready_body": "Versiunea {version} se instalează la următoarea închidere. Faceți clic pentru a reporni acum. Ciornele se salvează întâi.",
+    "shell_available_title": "Există o versiune nouă de Bulwark",
+    "shell_none_title": "Bulwark este actualizat",
+    "shell_none_detail": "Aveți versiunea {version}.",
+    "shell_failed_title": "Bulwark nu a putut căuta actualizări",
+    "shell_failed_detail": "Verificați conexiunea și încercați mai târziu. Nu s-a schimbat nimic.",
+    "shell_beta_title": "Treceți la versiuni beta?",
+    "shell_beta_detail": "Primiți versiunile noi mai devreme și pot avea mai multe probleme. Pentru a reveni, instalați o versiune stabilă mai veche sau așteptați să ajungă stabila din urmă.",
+    "shell_beta_confirm": "Treci la beta",
+    "shell_older_title": "Reveniți la Bulwark {version}?",
+    "shell_older_detail": "Aveți beta {current}. Stabila {target} este mai veche și s-ar putea să nu citească ce a salvat beta pe acest computer. E-mailurile rămân pe server, dar cele păstrate offline se pot descărca din nou, iar modificările netrimise se pot pierde. Dacă așteptați, stabila ajunge beta din urmă și treceți la ea fără acest pas.",
+    "shell_older_confirm": "Instalează versiunea mai veche"
   }
 }
