@@ -338,17 +338,20 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
           </>
         ) : (
           <>
-            <div className="flex items-start gap-1 px-6 pt-6">
+            <div className="flex shrink-0 items-start gap-1 px-6 pt-6">
               <div className="min-w-0 flex-1 pe-2">
                 <h2 id={titleId} className="text-lg font-semibold text-foreground [overflow-wrap:anywhere]">{current.title}</h2>
                 {attribution}
               </div>
               <PluginDialogMenu name={name} onTurnOff={turnOff} />
             </div>
-            <div className="px-6 pt-3 pb-6">
-              {message}
-              {isPrompt ? (
-                <form onSubmit={(e) => { e.preventDefault(); submitPrompt(); }}>
+            {/* A long message scrolls here, under the title and over the buttons.
+                The panel itself clips: the focus on a button would scroll the
+                title away for good. */}
+            {isPrompt ? (
+              <form onSubmit={(e) => { e.preventDefault(); submitPrompt(); }} className="flex min-h-0 flex-1 flex-col">
+                <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-3">
+                  {message}
                   <div className="mb-6 flex flex-col gap-4">
                     {fields.map((f) => (
                       <label key={f.name} className="block">
@@ -369,13 +372,16 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
                       <p className="rounded-md bg-warning/10 px-3 py-2 text-xs text-foreground">{t('password_note', { name })}</p>
                     )}
                   </div>
-                  <div className="flex items-center justify-end gap-3">
-                    <Button type="button" variant="outline" onClick={cancel}>{cancelLabel}</Button>
-                    <Button type="submit" disabled={!canSubmit}>{confirmLabel}</Button>
-                  </div>
-                </form>
-              ) : (
-                <div className={cn('flex items-center justify-end gap-3', !current.message && 'mt-3')}>
+                </div>
+                <div className="flex shrink-0 items-center justify-end gap-3 px-6 pb-6">
+                  <Button type="button" variant="outline" onClick={cancel}>{cancelLabel}</Button>
+                  <Button type="submit" disabled={!canSubmit}>{confirmLabel}</Button>
+                </div>
+              </form>
+            ) : (
+              <>
+                <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-3">{message}</div>
+                <div className={cn('flex shrink-0 items-center justify-end gap-3 px-6 pb-6', !current.message && 'mt-3')}>
                   {current.kind === 'confirm' && (
                     <Button ref={cancelButtonRef} type="button" variant="outline" onClick={cancel}>{cancelLabel}</Button>
                   )}
@@ -388,8 +394,8 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
                     {confirmLabel}
                   </Button>
                 </div>
-              )}
-            </div>
+              </>
+            )}
           </>
         )}
       </div>
