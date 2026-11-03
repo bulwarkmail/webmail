@@ -13,6 +13,8 @@ export const PUSH_STATE_CACHE = 'bulwark-push-state-v1';
 export interface PushPreferences {
   /** False: show push notifications for new mail without a sound. */
   sound: boolean;
+  /** False: "Email notifications" is off or do not disturb is on. */
+  show: boolean;
 }
 
 /** The cache key sw.js reads the preferences from. */

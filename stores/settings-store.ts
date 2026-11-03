@@ -2276,17 +2276,19 @@ if (typeof window !== 'undefined') {
   applyInterfaceLayout(store.interfaceLayout, store.density);
 
   // The service worker shows push notifications without this store, so it
-  // reads the sound preference from its own Cache store (#1289).
-  // Do not disturb can't keep a push from showing (browsers require one per
-  // push), but it keeps it silent.
-  const pushSound = (s: SettingsState) => s.emailNotificationsEnabled && s.emailNotificationSound && !s.doNotDisturb;
+  // reads these from its own Cache store (#1289).
+  const pushShow = (s: SettingsState) => s.emailNotificationsEnabled && !s.doNotDisturb;
+  const pushSound = (s: SettingsState) => pushShow(s) && s.emailNotificationSound;
   let lastPushSound = pushSound(store);
-  void writePushPreferences({ sound: lastPushSound });
+  let lastPushShow = pushShow(store);
+  void writePushPreferences({ sound: lastPushSound, show: lastPushShow });
   useSettingsStore.subscribe((state) => {
     const sound = pushSound(state);
-    if (sound === lastPushSound) return;
+    const show = pushShow(state);
+    if (sound === lastPushSound && show === lastPushShow) return;
     lastPushSound = sound;
-    void writePushPreferences({ sound });
+    lastPushShow = show;
+    void writePushPreferences({ sound, show });
   });
 
   // The policy arrives after this store has rehydrated (and again with the
