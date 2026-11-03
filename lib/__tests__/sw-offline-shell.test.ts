@@ -126,6 +126,31 @@ describe('service worker with offline mode on', () => {
     expect(await worker.request({ url: `${ORIGIN}/mail`, mode: 'navigate' })).toBeNull();
   });
 
+  it('keeps the store\'s worker and database engine, so the store starts offline', async () => {
+    const caches = new FakeCaches();
+    await shellOn(caches, true);
+    let online = true;
+    const fetchMock = vi.fn(async (url: unknown) => {
+      if (!online) throw new TypeError('Failed to fetch');
+      return sameOrigin(`file ${String(url)}`, 'text/javascript');
+    });
+    const worker = loadWorker({ buildId: 'a', caches, clients: [], fetch: fetchMock });
+    await settle();
+    const urls = ['/store-worker.js?v=a', '/sqlite3mc/1.2/sqlite3.mjs', '/sqlite3mc/1.2/sqlite3.wasm'];
+    await worker.dispatch('message', { data: { type: 'offline-shell', on: true, urls, buildId: 'a' } });
+    const shell = await caches.open('bulwark-shell-a');
+    await vi.waitFor(async () => {
+      for (const url of urls) expect(await shell.match(`${ORIGIN}${url}`)).toBeDefined();
+    });
+    online = false;
+    for (const url of urls) {
+      const answer = await worker.request({ url: `${ORIGIN}${url}` });
+      expect(await answer!.text()).toContain(url);
+    }
+    // Only those: another root file still goes to the network.
+    expect(await worker.request({ url: `${ORIGIN}/other.js` })).toBeNull();
+  });
+
   it('keeps a newer tab’s shell in that tab’s build cache, not its own', async () => {
     const caches = new FakeCaches();
     const fetchMock = vi.fn(async () => sameOrigin('x', 'text/javascript'));

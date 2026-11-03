@@ -126,7 +126,10 @@ function appPagePath(url) {
 
 function staticPath(url) {
   if (url.origin !== self.location.origin) return false;
-  return url.pathname.startsWith(BASE_PATH + "/_next/static/");
+  if (url.pathname.startsWith(BASE_PATH + "/_next/static/")) return true;
+  // The local store's engine: named by build (?v=) and by version, so it can be
+  // kept like a hashed file, and an offline start needs it.
+  return url.pathname === BASE_PATH + "/store-worker.js" || url.pathname.startsWith(BASE_PATH + "/sqlite3mc/");
 }
 
 /** Where a page of the app is kept: its address without the query. */
