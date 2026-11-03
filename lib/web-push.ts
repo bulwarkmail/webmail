@@ -913,10 +913,15 @@ async function enableWebPushForThisTab(
     await params.client.destroyPushSubscription(serverAssignedId).catch(() => undefined);
     throw err;
   }
+  const previousRelay = localStorage.getItem(relayBaseKey(accountId));
   localStorage.setItem(subIdKey, serverAssignedId);
   localStorage.setItem(relayBaseKey(accountId), relayBaseUrl);
   if (replacedServerId) {
     await params.client.destroyPushSubscription(replacedServerId).catch(() => undefined);
+  }
+  // Moved: the old relay would otherwise keep this browser's endpoint for 90 days.
+  if (previousRelay && previousRelay !== relayBaseUrl) {
+    await dropRelayRecord(previousRelay, deviceClientId);
   }
 
   return { subscriptionId: serverAssignedId };
@@ -925,6 +930,20 @@ async function enableWebPushForThisTab(
 export interface DisableWebPushParams {
   client: IJMAPClient;
   relayBaseUrl?: string;
+}
+
+/** Nothing is sent to a relay that may not be used, such as the built-in one in the no-third-party mode. */
+async function dropRelayRecord(relayBaseUrl: string, deviceClientId: string): Promise<boolean> {
+  if (!relayBaseUrl || !relayAllowed(relayBaseUrl)) return true;
+  try {
+    const res = await fetch(
+      buildRelayUrl(relayBaseUrl, `/api/push/register/${encodeURIComponent(deviceClientId)}`),
+      { method: 'DELETE' },
+    );
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 // Best-effort teardown: clear the JMAP subscription, the relay mapping, and
@@ -944,6 +963,7 @@ async function disableWebPushForThisTab(params: DisableWebPushParams): Promise<v
 
   const storedServerId = localStorage.getItem(subIdKey);
   const deviceClientId = localStorage.getItem(devIdKey);
+  const registeredWith = localStorage.getItem(relayBaseKey(accountId));
 
   // Destroy every subscription the server holds for this device, not just the
   // id we happen to have recorded. A destroy that lost its round-trip, a failed
@@ -966,11 +986,11 @@ async function disableWebPushForThisTab(params: DisableWebPushParams): Promise<v
   // Enabling again starts from the full emailPush map.
   localStorage.removeItem(emailPushRefusedKey(accountId));
 
-  if (deviceClientId && relayBaseUrl && relayAllowed(relayBaseUrl)) {
-    await fetch(
-      buildRelayUrl(relayBaseUrl, `/api/push/register/${encodeURIComponent(deviceClientId)}`),
-      { method: 'DELETE' },
-    ).catch(() => undefined);
+  if (deviceClientId) {
+    // The relay this device registered with can differ from the current choice.
+    for (const relay of new Set([registeredWith ?? relayBaseUrl, relayBaseUrl])) {
+      await dropRelayRecord(relay, deviceClientId);
+    }
   }
   // Keep the deviceClientId around so a later re-enable for this account
   // reuses the same relay subscriptionId rather than scattering orphans.
@@ -1053,15 +1073,7 @@ export async function revokePushDevice(params: {
   }
 
   await params.client.destroyPushSubscription(params.device.id);
-  if (relayBaseUrl && relayAllowed(relayBaseUrl) && params.device.deviceClientId) {
-    await fetch(
-      buildRelayUrl(
-        relayBaseUrl,
-        `/api/push/register/${encodeURIComponent(params.device.deviceClientId)}`,
-      ),
-      { method: 'DELETE' },
-    ).catch(() => undefined);
-  }
+  if (params.device.deviceClientId) await dropRelayRecord(relayBaseUrl, params.device.deviceClientId);
 }
 
 export async function isWebPushEnabled(accountId: string): Promise<boolean> {
