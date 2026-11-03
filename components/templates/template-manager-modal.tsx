@@ -159,7 +159,7 @@ export function TemplateManagerModal({ isOpen, onClose, accountId }: TemplateMan
         testId="template-manager"
       >
         {/* The mail shortcuts behind the dialog must not see its keys. */}
-        <div onKeyDown={(e) => e.stopPropagation()}>
+        <div className="pt-3" onKeyDown={(e) => e.stopPropagation()}>
         {showTabs && (
           <div
             role="tablist"
