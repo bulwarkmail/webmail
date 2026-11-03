@@ -6498,6 +6498,7 @@
     "message_gone_title": "Este mensaje ya no está",
     "message_gone_body": "Se eliminó o se movió a otra cuenta.",
     "message_moved": "Este mensaje se movió a otra carpeta.",
-    "message_moved_to": "Este mensaje se movió a {folder}."
+    "message_moved_to": "Este mensaje se movió a {folder}.",
+    "window_not_ready": "La ventana nueva no se abrió a tiempo. Tu borrador se queda aquí."
   }
 }

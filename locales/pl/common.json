@@ -6498,6 +6498,7 @@
     "message_gone_title": "Tej wiadomości już nie ma",
     "message_gone_body": "Została usunięta lub przeniesiona na inne konto.",
     "message_moved": "Ta wiadomość została przeniesiona do innego folderu.",
-    "message_moved_to": "Ta wiadomość została przeniesiona do {folder}."
+    "message_moved_to": "Ta wiadomość została przeniesiona do {folder}.",
+    "window_not_ready": "Nowe okno nie otworzyło się na czas. Twój szkic zostaje tutaj."
   }
 }

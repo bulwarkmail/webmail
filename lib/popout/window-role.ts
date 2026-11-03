@@ -8,14 +8,25 @@
  */
 
 import { withBasePath } from '@/lib/browser-navigation';
+import { locales } from '@/i18n/routing';
 
-/** First path segments that are pages of their own, so a files path like /files/popout/compose isn't taken for a pop-out. */
+const BUILD_BASE_PATH = (process.env.NEXT_PUBLIC_BASE_PATH ?? '').replace(/\/+$/, '');
+
+/** Path segments that are pages of their own, so a files path like /files/popout/compose isn't taken for a pop-out. */
 const OTHER_SECTIONS = new Set(['mail', 'calendar', 'contacts', 'files', 'settings', 'apps', 'pro', 'admin', 'protocol', 'setup', 'connector', 'login', 'auth', 'plugins']);
 
 export function isPopoutPath(pathname: string): boolean {
-  const segments = pathname.split('/').filter(Boolean);
+  // The mount comes off first: an app served under /mail isn't on its mail page.
+  const inApp = BUILD_BASE_PATH && (pathname === BUILD_BASE_PATH || pathname.startsWith(`${BUILD_BASE_PATH}/`))
+    ? pathname.slice(BUILD_BASE_PATH.length)
+    : pathname;
+  const segments = inApp.split('/').filter(Boolean);
   const at = segments.indexOf('popout');
-  if (at < 0 || segments.slice(0, at).some((segment) => OTHER_SECTIONS.has(segment))) return false;
+  if (at < 0) return false;
+  // Before it: nothing, or a locale, with a mount only a reverse proxy knows ahead of that.
+  const before = segments.slice(0, at);
+  if (before.length > 0 && !(locales as readonly string[]).includes(before[before.length - 1])) return false;
+  if (before.some((segment) => OTHER_SECTIONS.has(segment))) return false;
   const rest = segments.slice(at + 1);
   return (rest.length === 1 && rest[0] === 'compose') || (rest.length === 2 && rest[0] === 'message');
 }

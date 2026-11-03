@@ -6510,6 +6510,7 @@
     "message_gone_title": "Thư này không còn nữa",
     "message_gone_body": "Thư đã bị xóa hoặc chuyển sang tài khoản khác.",
     "message_moved": "Thư này đã được chuyển sang thư mục khác.",
-    "message_moved_to": "Thư này đã được chuyển đến {folder}."
+    "message_moved_to": "Thư này đã được chuyển đến {folder}.",
+    "window_not_ready": "Cửa sổ mới không mở kịp. Bản nháp của bạn vẫn ở đây."
   }
 }

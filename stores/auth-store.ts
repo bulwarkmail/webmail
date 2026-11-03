@@ -614,32 +614,37 @@ async function noteSessionAnswer(res: Response, slot: number | undefined): Promi
  * that ends with the browser session.
  */
 function fetchSlotAccessToken(slot: number, opts: { force?: boolean; remember?: boolean } = {}): Promise<Response> {
-  // One at a time across windows: each must send the refresh token the last
-  // answer wrote (lib/auth/token-lock.ts).
-  return withTokenLock(slot, async () => {
-    // Renewing would write the tokens of a slot being signed out back.
+  // Renewing would write the tokens of a slot being signed out back.
+  if (closingSlots.has(slot)) return Promise.resolve(jsonResponse({ error: 'signed_out' }, 401));
+  // Tracked from before the wait, so a sign-out can call off a renewal still
+  // queued on the lock.
+  return trackSessionWrite(slot, (signal) => withTokenLock(slot, async ({ contended }) => {
+    // The slot may have started closing during the wait.
     if (closingSlots.has(slot)) return jsonResponse({ error: 'signed_out' }, 401);
+    // One at a time across windows: each must send the refresh token the last
+    // answer wrote (lib/auth/token-lock.ts). After waiting for another window,
+    // what it renewed is what this one wanted: forcing a second renewal this
+    // soon can be refused (Rauthy `nbf`, #552).
+    const force = opts.force && !contended;
     if (!IS_LITE) {
-      const query = `${opts.force ? '&force=true' : ''}${opts.remember === false ? '&remember=false' : ''}`;
-      return trackSessionWrite(slot, (signal) => apiFetch(`/api/auth/token?slot=${slot}${query}`, { method: 'PUT', signal }))
+      const query = `${force ? '&force=true' : ''}${opts.remember === false ? '&remember=false' : ''}`;
+      return apiFetch(`/api/auth/token?slot=${slot}${query}`, { method: 'PUT', signal })
         .then((res) => noteSessionAnswer(res, slot));
     }
     // Like the route's cookie cache: a restore resumes with the token it had,
     // since a renewal before the refresh token's `nbf` is refused (#552).
-    if (!opts.force) {
+    if (!force) {
       const cached = readLiteAccessToken(slot);
       if (cached) return jsonResponse({ access_token: cached.accessToken, expires_in: cached.expiresIn });
     }
-    return trackSessionWrite(slot, async () => {
-      try {
-        const tokens = await liteRefreshTokens(slot);
-        return jsonResponse({ access_token: tokens.accessToken, expires_in: tokens.expiresIn });
-      } catch (err) {
-        if (err instanceof LiteLoginError) return jsonResponse({ error: err.code }, liteErrorStatus(err));
-        throw err; // network failure - callers treat it as an outage, not a rejection
-      }
-    });
-  });
+    try {
+      const tokens = await liteRefreshTokens(slot);
+      return jsonResponse({ access_token: tokens.accessToken, expires_in: tokens.expiresIn });
+    } catch (err) {
+      if (err instanceof LiteLoginError) return jsonResponse({ error: err.code }, liteErrorStatus(err));
+      throw err; // network failure - callers treat it as an outage, not a rejection
+    }
+  }, { signal }));
 }
 
 /** PUT /api/auth/session[?slot=N] - the slot's remembered password or access token. */
@@ -1134,9 +1139,6 @@ function snapshotAndClearForSwitch(activeAccountId: string | null): void {
 }
 const refreshTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const refreshPromises = new Map<string, Promise<string | null>>();
-
-/** This window is a pop-out on another window's session (startSharedSession). */
-let sharedSessionWindow = false;
 
 /** Told when a pop-out's session can't be renewed any more and no main window is left to do it. */
 export const SHARED_SESSION_ENDED_EVENT = 'bulwark:shared-session-ended';
@@ -2239,7 +2241,8 @@ export const useAuthStore = create<AuthState>()(
           return refreshPromise;
         }
 
-        if (sharedSessionWindow) {
+        // A pop-out is on another window's session: it asks that window first.
+        if (isPopoutWindow()) {
           if (!accountId) return null;
           const renewal = renewSharedToken(accountId).finally(() => refreshPromises.delete(accountId));
           refreshPromises.set(accountId, renewal);
@@ -2248,7 +2251,6 @@ export const useAuthStore = create<AuthState>()(
 
         const account = accountId ? useAccountStore.getState().getAccountById(accountId) : null;
         const slot = account?.cookieSlot ?? 0;
-        const isActive = !accountId || accountId === get().activeAccountId;
         // The account is being signed out: a renewal now would only undo that.
         if (closingSlots.has(slot)) return null;
 
@@ -2259,6 +2261,12 @@ export const useAuthStore = create<AuthState>()(
             // scheduled renewal), so the server-side cache must be skipped.
             // Session restore passes allowCached to reuse a still-valid token.
             const res = await fetchSlotAccessToken(slot, { force: !options?.allowCached, remember: account?.rememberMe });
+
+            // Possibly a long wait for another window's renewal. A slot closing
+            // or an account gone by now says nothing about any session, and a
+            // refusal mustn't sign out whichever account is active by now.
+            if (closingSlots.has(slot) || (account && !useAccountStore.getState().getAccountById(account.id))) return null;
+            const isActive = !accountId || accountId === get().activeAccountId;
 
             if (!res.ok) {
               // Only a definitive 401 ends the session. Anything else (5xx
@@ -3353,10 +3361,9 @@ export const useAuthStore = create<AuthState>()(
       },
 
       startSharedSession: async (options) => {
-        sharedSessionWindow = true;
         set({ isLoading: true, client: null });
         const accountStore = useAccountStore.getState();
-        const answer = await requestWindowSession();
+        const answer = await requestWindowSession(options?.accountId ? { accountId: options.accountId } : {});
         const sessions = answer?.sessions ?? [];
 
         // No main window open: what the cookies still hold. A login made
@@ -3540,6 +3547,8 @@ useAuthStore.subscribe((state) => {
 // gone too, so leave for the login page instead of showing stale mail.
 if (typeof window !== 'undefined') {
   onSignedOutElsewhere(() => {
+    // A pop-out saves its typing first (components/popout/popout-shell.tsx).
+    if (isPopoutWindow()) return;
     if (useAuthStore.getState().isAuthenticated) navigateToLogin();
   });
 }

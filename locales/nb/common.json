@@ -6498,6 +6498,7 @@
     "message_gone_title": "Denne meldingen er borte",
     "message_gone_body": "Den ble slettet eller flyttet til en annen konto.",
     "message_moved": "Denne meldingen ble flyttet til en annen mappe.",
-    "message_moved_to": "Denne meldingen ble flyttet til {folder}."
+    "message_moved_to": "Denne meldingen ble flyttet til {folder}.",
+    "window_not_ready": "Det nye vinduet åpnet seg ikke i tide. Utkastet blir her."
   }
 }

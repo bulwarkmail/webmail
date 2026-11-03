@@ -6498,6 +6498,7 @@
     "message_gone_title": "Questo messaggio non c’è più",
     "message_gone_body": "È stato eliminato o spostato in un altro account.",
     "message_moved": "Questo messaggio è stato spostato in un’altra cartella.",
-    "message_moved_to": "Questo messaggio è stato spostato in {folder}."
+    "message_moved_to": "Questo messaggio è stato spostato in {folder}.",
+    "window_not_ready": "La nuova finestra non si è aperta in tempo. La bozza rimane qui."
   }
 }

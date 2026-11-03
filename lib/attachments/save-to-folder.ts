@@ -68,12 +68,53 @@ export function createUniqueNamer(fallback = 'attachment'): (raw: string) => str
   };
 }
 
-/** Characters no file system takes in a name, and path parts a sender could smuggle in. */
+/** Names Windows keeps for devices, with any extension: NUL.txt is NUL. */
+const RESERVED_STEM = /^(con|prn|aux|nul|clock\$|conin\$|conout\$|com[0-9¹²³]|lpt[0-9¹²³])$/i;
+/** Names and extensions the shell acts on, which browsers refuse to create. */
+const SHELL_NAMES = new Set(['desktop.ini', 'thumbs.db', 'autorun.inf']);
+const SHELL_EXTENSIONS = new Set(['.lnk', '.url', '.scf', '.local', '.pif', '.shb', '.cpl', '.inf']);
+/** A file system's limit is 255 bytes. Below it, leaving room for " (n)". */
+const MAX_NAME_BYTES = 240;
+
+function truncateName(name: string): string {
+  const encoder = new TextEncoder();
+  if (encoder.encode(name).length <= MAX_NAME_BYTES) return name;
+  const dot = name.lastIndexOf('.');
+  const ext = dot > 0 && encoder.encode(name.slice(dot)).length <= 32 ? name.slice(dot) : '';
+  let room = MAX_NAME_BYTES - encoder.encode(ext).length;
+  let stem = '';
+  // By code point, so a character is never cut in half.
+  for (const char of ext ? name.slice(0, dot) : name) {
+    room -= encoder.encode(char).length;
+    if (room < 0) break;
+    stem += char;
+  }
+  return stem.trimEnd() + ext;
+}
+
+/**
+ * A name the folder will take: no path parts a sender could smuggle in, no
+ * characters a file system refuses, and nothing Windows or the shell treats as
+ * special. Renamed, so the attachment is still saved.
+ */
 function safeFileName(raw: string, fallback: string): string {
   const leaf = raw.split(/[\\/]/).pop() ?? '';
   // eslint-disable-next-line no-control-regex
   const cleaned = leaf.replace(/[<>:"|?*\x00-\x1f]/g, '_').replace(/[. ]+$/, '').trim();
-  return cleaned && cleaned !== '.' && cleaned !== '..' ? cleaned : fallback;
+  if (!cleaned || cleaned === '.' || cleaned === '..') return fallback;
+  const lower = cleaned.toLowerCase();
+  const stem = lower.split('.')[0];
+  const dot = lower.lastIndexOf('.');
+  let safe = cleaned;
+  if (RESERVED_STEM.test(stem) || SHELL_NAMES.has(lower)) safe = `_${cleaned}`;
+  else if (dot > 0 && SHELL_EXTENSIONS.has(lower.slice(dot))) safe = `${cleaned}.txt`;
+  return truncateName(safe);
+}
+
+/** The folder or the browser refused this name, which says nothing about the next file. */
+function isNameRefused(error: unknown): boolean {
+  const kind = (error as { name?: unknown } | null)?.name;
+  return kind === 'TypeError' || kind === 'SecurityError';
 }
 
 async function existsInFolder(folder: FolderHandle, name: string): Promise<boolean> {
@@ -106,17 +147,17 @@ export interface FolderSaveResult {
   folder: string;
   total: number;
   saved: number;
-  /** Files that couldn't be read from the server; the rest still went. */
+  /** Files that couldn't be read from the server, or whose name was refused; the rest still went. */
   skipped: number;
   /** Why the run ended early, when it did. */
   stopped: 'policy' | 'write' | null;
 }
 
 /**
- * Writes the files one at a time. A file that can't be fetched is skipped,
- * like in the zip. A write that fails stops the run, because the next one
- * would fail the same way (disk full, permission gone), and the result says
- * how many made it. A file already in the folder is never overwritten.
+ * Writes the files one at a time. A file that can't be fetched or whose name is
+ * refused is skipped, like in the zip. A write that fails stops the run, because
+ * the next one would fail the same way (disk full, permission gone), and the
+ * result says how many made it. A file already in the folder is never overwritten.
  */
 export async function saveFilesToFolder(
   folder: FolderHandle,
@@ -158,10 +199,14 @@ export async function saveFilesToFolder(
       await writable.write(data);
       await writable.close();
       result.saved += 1;
-    } catch {
+    } catch (error) {
       await writable?.abort?.().catch(() => {});
       // getFileHandle created an empty file; don't leave it looking saved.
       if (name) await folder.removeEntry?.(name).catch(() => {});
+      if (isNameRefused(error)) {
+        result.skipped += 1;
+        continue;
+      }
       result.stopped = 'write';
       return result;
     }

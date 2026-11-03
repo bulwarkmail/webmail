@@ -6498,6 +6498,7 @@
     "message_gone_title": "Šī ziņojuma vairs nav",
     "message_gone_body": "Tas tika dzēsts vai pārvietots uz citu kontu.",
     "message_moved": "Šis ziņojums tika pārvietots uz citu mapi.",
-    "message_moved_to": "Šis ziņojums tika pārvietots uz {folder}."
+    "message_moved_to": "Šis ziņojums tika pārvietots uz {folder}.",
+    "window_not_ready": "Jaunais logs neatvērās laikus. Melnraksts paliek šeit."
   }
 }

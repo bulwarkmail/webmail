@@ -6498,6 +6498,7 @@
     "message_gone_title": "이 메시지는 더 이상 없습니다",
     "message_gone_body": "삭제되었거나 다른 계정으로 이동되었습니다.",
     "message_moved": "이 메시지는 다른 폴더로 이동되었습니다.",
-    "message_moved_to": "이 메시지는 {folder}(으)로 이동되었습니다."
+    "message_moved_to": "이 메시지는 {folder}(으)로 이동되었습니다.",
+    "window_not_ready": "새 창이 제때 열리지 않았습니다. 임시 보관 메일은 여기에 남아 있습니다."
   }
 }

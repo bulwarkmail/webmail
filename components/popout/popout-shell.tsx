@@ -1,18 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { useConfig } from "@/hooks/use-config";
 import { useAuthStore, SHARED_SESSION_ENDED_EVENT } from "@/stores/auth-store";
-import { toast } from "@/stores/toast-store";
 import { withBasePath } from "@/lib/browser-navigation";
 import { flushComposers } from "@/lib/compose-flush-registry";
-import { openPopoutChannel } from "@/lib/popout/channel";
+import { openPopoutChannel, requestWindowSession } from "@/lib/popout/channel";
 import { closePopoutWindow } from "@/lib/popout/window-role";
+import { onSignedOutElsewhere } from "@/lib/sign-out-cleanup";
 
 /** How long a closing pop-out waits for its composer to save, when the account went away elsewhere. */
 const CLOSE_FLUSH_MS = 3000;
+/** How long it waits to hear that another window still holds the login. */
+const STILL_HELD_MS = 800;
 
 /** The session gate and page frame of a pop-out window. Takes the session from the main window (lib/popout). */
 export function PopoutShell({ kind, accountId, children }: {
@@ -36,32 +38,60 @@ export function PopoutShell({ kind, accountId, children }: {
     };
   }, [accountId]);
 
-  // The account was signed out in the main window: save what can be saved, and go.
+  // The session ended elsewhere: save what can be saved, and go. A composer
+  // whose text didn't make it stays, as the only place that text still is.
+  const endSession = useCallback(async () => {
+    const flushed = await flushComposers(CLOSE_FLUSH_MS);
+    if (kind === "compose" && (flushed.failed > 0 || flushed.timedOut)) setStatus("no-session");
+    else closePopoutWindow();
+  }, [kind]);
+
   useEffect(() => {
     const channel = openPopoutChannel((message) => {
-      if (message.type !== "account-removed" || message.accountId !== useAuthStore.getState().activeAccountId) return;
-      void flushComposers(CLOSE_FLUSH_MS).finally(closePopoutWindow);
+      const active = useAuthStore.getState().activeAccountId;
+      if (message.type !== "account-removed" || message.accountId !== active) return;
+      // One tab dropping a login it couldn't restore says nothing about the
+      // tab that is signed in with it.
+      void requestWindowSession({ accountId: active }, STILL_HELD_MS).then((held) => {
+        if (!held?.sessions.some((session) => session.accountId === active)) void endSession();
+      });
     });
-    return () => channel?.close();
-  }, []);
+    const stopSignOut = onSignedOutElsewhere(() => void endSession());
+    return () => {
+      channel?.close();
+      stopSignOut();
+    };
+  }, [endSession]);
 
-  // Stays on screen: the text in a composer is still worth copying.
+  // The session can't be renewed and no main window is left to do it. A
+  // message stops showing; a composer stays, its text still worth copying.
   useEffect(() => {
-    const onEnded = () => toast.error(t("session_ended_title"), t("session_ended_body"));
+    const onEnded = () => setStatus("no-session");
     window.addEventListener(SHARED_SESSION_ENDED_EVENT, onEnded);
     return () => window.removeEventListener(SHARED_SESSION_ENDED_EVENT, onEnded);
-  }, [t]);
+  }, []);
+
+  const actions = (
+    <>
+      <Button onClick={() => window.location.replace(withBasePath("/"))}>{t("open_app")}</Button>
+      <Button variant="ghost" onClick={closePopoutWindow}>{t("close_window")}</Button>
+    </>
+  );
 
   return (
     <div data-popout-window={kind} data-popout-status={status} className="flex h-dvh flex-col overflow-hidden bg-background pt-[var(--app-top-inset)]">
-      {status === "ready" ? children : status === "loading" ? (
-        <PopoutSkeleton label={t("opening")} />
-      ) : (
-        <PopoutNotice title={t("session_ended_title")} body={t("session_ended_body")}>
-          <Button onClick={() => window.location.replace(withBasePath("/"))}>{t("open_app")}</Button>
-          <Button variant="ghost" onClick={closePopoutWindow}>{t("close_window")}</Button>
-        </PopoutNotice>
+      {status === "loading" && <PopoutSkeleton label={t("opening")} />}
+      {status === "no-session" && kind === "message" && (
+        <PopoutNotice title={t("session_ended_title")} body={t("session_ended_body")}>{actions}</PopoutNotice>
       )}
+      {status === "no-session" && kind === "compose" && (
+        <div role="alert" data-popout-session-ended="" className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border bg-muted px-4 py-2 text-sm text-foreground">
+          <span className="min-w-0 flex-1">{t("session_ended_title")}. {t("session_ended_body")}</span>
+          {actions}
+        </div>
+      )}
+      {/* One place in the tree, so a composer stays mounted, text and all, when the session ends. */}
+      {(status === "ready" || (status === "no-session" && kind === "compose")) && children}
     </div>
   );
 }

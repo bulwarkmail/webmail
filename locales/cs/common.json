@@ -6498,6 +6498,7 @@
     "message_gone_title": "Tato zpráva už tu není",
     "message_gone_body": "Byla smazána nebo přesunuta do jiného účtu.",
     "message_moved": "Tato zpráva byla přesunuta do jiné složky.",
-    "message_moved_to": "Tato zpráva byla přesunuta do {folder}."
+    "message_moved_to": "Tato zpráva byla přesunuta do {folder}.",
+    "window_not_ready": "Nové okno se neotevřelo včas. Koncept zůstává zde."
   }
 }

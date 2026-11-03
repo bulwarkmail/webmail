@@ -258,6 +258,10 @@ export interface ComposerDraftData {
    * next save/send rebuilds the draft without them - silent data loss (#849).
    */
   attachments?: Array<{ blobId: string; name?: string; type?: string; size: number; cid?: string; disposition?: string; sourceAccountId?: string }>;
+  /** The send options picked so far; absent, the defaults. Carried to another window. */
+  requestReadReceipt?: boolean;
+  requestDsn?: boolean;
+  requireTls?: boolean;
   /** When set, overrides the header From: and the envelope MAIL FROM, where the server allows it. */
   fromOverrideEmail?: string;
   fromOverrideName?: string;
@@ -292,7 +296,8 @@ export interface ComposerDraftData {
 
 /** The window a draft moves to; see EmailComposerProps.popOut. */
 export interface ComposerPopOut {
-  handOver(data: ComposerDraftData): void;
+  /** True once the composer is on screen there. Until then this one keeps the text. */
+  handOver(data: ComposerDraftData): Promise<boolean>;
   cancel(): void;
 }
 
@@ -378,7 +383,7 @@ interface EmailComposerProps {
     onDraftSaved?: () => void;
     /**
      * Hands a draft to another window to save as this one closes: a request
-     * started now wouldn't survive. False when no window can take it.
+     * started now wouldn't survive. False when that can't be done safely.
      */
     rescueDraft?: (draft: RescuedDraft) => boolean;
   };
@@ -1022,11 +1027,11 @@ export function EmailComposer({
     input.trim() ? [...chips, parseRecipient(input)] : chips;
   const [isDraggingChipOverCc, setIsDraggingChipOverCc] = useState(false);
   const [isDraggingChipOverBcc, setIsDraggingChipOverBcc] = useState(false);
-  const [requestReadReceipt, setRequestReadReceipt] = useState(requestReadReceiptDefault);
+  const [requestReadReceipt, setRequestReadReceipt] = useState(initialData?.requestReadReceipt ?? requestReadReceiptDefault);
   // SMTP submission options, offered only when the server advertises the
   // extension (RFC 8621 §1.3 submissionExtensions).
-  const [requestDsn, setRequestDsn] = useState(false);
-  const [requireTls, setRequireTls] = useState(false);
+  const [requestDsn, setRequestDsn] = useState(initialData?.requestDsn ?? false);
+  const [requireTls, setRequireTls] = useState(initialData?.requireTls ?? false);
   // Message priority (#970): normal writes no header at all.
   const [priority, setPriority] = useState<MessagePriority>(initialData?.priority ?? 'normal');
   const priorityRef = useRef(priority);
@@ -1830,6 +1835,9 @@ export function EmailComposer({
   if (priority !== initialPriorityRef.current) isDirtyRef.current = true;
   const initialLabelChoiceRef = useRef(classification.choice);
   if (classification.choice !== initialLabelChoiceRef.current) isDirtyRef.current = true;
+  // Text handed in that the server doesn't have yet is unsaved work, however
+  // little it differs from what this composer started with.
+  if (initialData?.unsaved && changeVersionRef.current !== savedVersionRef.current) isDirtyRef.current = true;
   if (uneditedRef.current) isDirtyRef.current = false;
   // Changes only the user makes, also without typing: a picked recipient, a
   // removed attachment, a priority. Handed-in files move the count they're
@@ -1896,6 +1904,7 @@ export function EmailComposer({
   }, [effectiveSessionKey]);
 
   const rescueRequestRef = useRef<() => RescuedDraft | null>(() => null);
+  const closedRef = useRef(false);
 
   // The composer as a host needs it to bring it back: after a remount, in
   // another window. Read through refs, so a handler set up once stays current.
@@ -1911,6 +1920,9 @@ export function EmailComposer({
     // none needs no save before an automatic sign-out.
     unsaved: !uneditedRef.current && (changeVersionRef.current !== savedVersionRef.current || saveFailedRef.current),
     ...(uneditedRef.current ? { unedited: true } : {}),
+    requestReadReceipt,
+    requestDsn,
+    requireTls,
   });
 
   // Auto-save state on unmount (when user navigates away without explicitly closing)
@@ -1936,17 +1948,34 @@ export function EmailComposer({
         }
         return;
       }
-      // Sent, discarded or saved and closed: the window closes with nothing to keep.
+      // This composer closed itself: nothing left to keep.
+      if (closedRef.current) return;
+      // Closing now could stop a send halfway.
+      if (isSendingRef.current) {
+        event.preventDefault();
+        return;
+      }
+      // Sent, discarded or saved and closed.
       if (explicitCloseRef.current || sentRef.current) return;
       if (!isDirtyRef.current) return;
       const state = snapshotStateRef.current();
       own.onUnloadState?.(state);
       if (!state.unsaved) return;
       // A request started while a window closes is dropped, so another window
-      // saves it. A plugin may change or stop what is saved, and only runs here.
-      if (own.rescueDraft && emailHooks.onBeforeDraftAutoSave.size === 0) {
+      // saves it, but not when:
+      // - a plugin may change or stop what is saved, as it only runs here (and
+      //   rescueDraft says no while plugins haven't started);
+      // - the last save failed or the browser is offline, so that window's
+      //   would likely fail too, with nobody looking;
+      // - a save is running: its new id is unknown, and two saves make two drafts.
+      const canHandOver = own.rescueDraft
+        && emailHooks.onBeforeDraftAutoSave.size === 0
+        && !saveFailedRef.current
+        && navigator.onLine !== false
+        && !inflightSaveRef.current;
+      if (canHandOver) {
         const draft = rescueRequestRef.current();
-        if (!draft || own.rescueDraft(draft)) return;
+        if (!draft || own.rescueDraft?.(draft)) return;
       }
       // Nobody can take it. The prompt keeps the window open: "stay" lets the
       // save run, and "leave" is the user's own choice.
@@ -2855,6 +2884,7 @@ export function EmailComposer({
         previousDraftAccountId: replaces ? draftAccountIdRef.current : undefined,
         classification: classificationRef.current.draftChoice,
       },
+      state: snapshotStateRef.current(),
     };
   };
 
@@ -4207,6 +4237,7 @@ export function EmailComposer({
   const afterCloseRef = useRef<(() => void) | null>(null);
 
   const emitClose = () => {
+    closedRef.current = true;
     onClose?.();
     const afterClose = afterCloseRef.current;
     afterCloseRef.current = null;
@@ -4321,15 +4352,22 @@ export function EmailComposer({
         return;
       }
       if (isDirtyRef.current && (changeVersionRef.current !== savedVersionRef.current || saveFailedRef.current)) {
-        // A failed save doesn't stop the move: the text goes along, marked unsaved.
+        // A failed save doesn't stop the move: the text goes along, marked
+        // unsaved, and this composer lets go only once it is on screen there.
         await saveDraftRef.current().catch(() => null);
       }
       const data = snapshotStateRef.current();
-      target.handOver({
+      const shown = await target.handOver({
         ...data,
         draftId: draftIdRef.current ?? lastDraftIdRef.current,
         draftLocalAccountId: draftLocalAccountIdRef.current,
       });
+      // Not on screen there, so this is still the only copy of the text.
+      if (!shown) {
+        target.cancel();
+        toast.error(tWindows('window_not_ready'));
+        return;
+      }
       explicitCloseRef.current = true;
       sendCancelledRef.current = true;
       emitClose();
@@ -4494,6 +4532,8 @@ export function EmailComposer({
     <div
       ref={setComposerRootEl}
       data-testid="email-composer"
+      // Edits made while the draft moves wouldn't move with it.
+      inert={isPoppingOut || undefined}
       className={cn("flex h-full bg-background relative", className)}
       onKeyDownCapture={handleComposerKeyDown}
       // Bubble phase, in the same batch as the field's own onChange. A state

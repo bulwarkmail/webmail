@@ -6498,6 +6498,7 @@
     "message_gone_title": "Seda kirja enam ei ole",
     "message_gone_body": "See kustutati või teisaldati teisele kontole.",
     "message_moved": "See kiri teisaldati teise kausta.",
-    "message_moved_to": "See kiri teisaldati kausta {folder}."
+    "message_moved_to": "See kiri teisaldati kausta {folder}.",
+    "window_not_ready": "Uus aken ei avanenud õigeks ajaks. Mustand jääb siia."
   }
 }

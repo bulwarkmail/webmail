@@ -24,6 +24,8 @@ import { accountSwitcher, neutralizeDevOverlay } from './helpers/app';
 test.setTimeout(180_000);
 
 const RUN = Date.now().toString(36);
+/** A server check every second: tighter polling gets a test account rate limited. */
+const POLL = [1000];
 const STANDALONE = `(() => {
   const real = window.matchMedia.bind(window);
   window.matchMedia = (query) => query.includes('display-mode: standalone')
@@ -412,7 +414,7 @@ test.describe('pop-out windows', () => {
     await expect(row(page, subject)).toHaveCount(0, { timeout: 30_000 });
     const alice = await jmapAs(ENT.alice);
     const trash = await alice.mailboxByRole('trash');
-    await expect.poll(async () => Object.keys((await alice.findEmailBySubject(subject))?.mailboxIds ?? {})).toEqual([trash!.id]);
+    await expect.poll(async () => Object.keys((await alice.findEmailBySubject(subject))?.mailboxIds ?? {}), { intervals: POLL }).toEqual([trash!.id]);
   });
 
   test('state follows across windows without a reload', async ({ browser }) => {
@@ -482,14 +484,14 @@ test.describe('a composer in its own window', () => {
     await expect(popup.locator('[data-testid="composer-to"]')).toContainText(ENT.bob);
     await expect(popup.locator('[data-testid="email-composer"] [contenteditable="true"]').first()).toContainText(`Body of ${subject}`);
     await expect(popup.locator('nav')).toHaveCount(0);
-    await expect.poll(async () => (await draftsCalled(subject)).length, { timeout: 15_000 }).toBe(1);
+    await expect.poll(async () => (await draftsCalled(subject)).length, { timeout: 15_000, intervals: POLL }).toBe(1);
     const [first] = await draftsCalled(subject);
     await shot(popup, 'pwa-windows-popout-composer');
 
     // Further edits replace that draft, they don't start another.
     await popup.locator('[data-testid="composer-subject"]').first().fill(`${subject} edited`);
-    await expect.poll(async () => (await draftsCalled(`${subject} edited`)).length, { timeout: 15_000 }).toBe(1);
-    await expect.poll(async () => (await draftsCalled(subject)).map((draft) => draft.id).includes(first.id), { timeout: 15_000 }).toBe(false);
+    await expect.poll(async () => (await draftsCalled(`${subject} edited`)).length, { timeout: 15_000, intervals: POLL }).toBe(1);
+    await expect.poll(async () => (await draftsCalled(subject)).map((draft) => draft.id).includes(first.id), { timeout: 15_000, intervals: POLL }).toBe(false);
 
     const closed = popup.waitForEvent('close');
     await popup.locator('[data-testid="composer-send"]').first().click();
@@ -497,7 +499,7 @@ test.describe('a composer in its own window', () => {
 
     const bob = await jmapAs(ENT.bob);
     await bob.waitForEmail(`${subject} edited`, { timeoutMs: 60_000 });
-    await expect.poll(async () => (await draftsCalled(`${subject} edited`)).length, { timeout: 20_000 }).toBe(0);
+    await expect.poll(async () => (await draftsCalled(`${subject} edited`)).length, { timeout: 20_000, intervals: POLL }).toBe(0);
     // The main window says it went, since the pop-out can't any more.
     await expect(toast(page, 'Email sent')).toBeVisible({ timeout: 30_000 });
     await page.context().close();
@@ -507,7 +509,7 @@ test.describe('a composer in its own window', () => {
     const subject = `Unsaved ${RUN}`;
     const page = await appPage(browser, STANDALONE);
     const popup = await popOutComposer(page, subject);
-    await expect.poll(async () => (await draftsCalled(subject)).length, { timeout: 15_000 }).toBe(1);
+    await expect.poll(async () => (await draftsCalled(subject)).length, { timeout: 15_000, intervals: POLL }).toBe(1);
     const typed = `${subject} typed`;
     await popup.locator('[data-testid="composer-subject"]').first().fill(typed);
     // Inside the 2 s of the autosave, so only the close can save it. No prompt: the main window takes it.
@@ -517,9 +519,9 @@ test.describe('a composer in its own window', () => {
     await popup.close({ runBeforeUnload: true });
     await closed;
     expect(prompted).toBe(false);
-    await expect.poll(async () => (await draftsCalled(typed)).length, { timeout: 20_000 }).toBe(1);
+    await expect.poll(async () => (await draftsCalled(typed)).length, { timeout: 20_000, intervals: POLL }).toBe(1);
     // It replaced the version the window started from.
-    await expect.poll(async () => (await draftsCalled(subject)).filter((draft) => draft.subject === subject).length, { timeout: 20_000 }).toBe(0);
+    await expect.poll(async () => (await draftsCalled(subject)).filter((draft) => draft.subject === subject).length, { timeout: 20_000, intervals: POLL }).toBe(0);
     await page.context().close();
   });
 
@@ -527,7 +529,7 @@ test.describe('a composer in its own window', () => {
     const subject = `Asked ${RUN}`;
     const page = await appPage(browser, STANDALONE);
     const popup = await popOutComposer(page, subject);
-    await expect.poll(async () => (await draftsCalled(subject)).length, { timeout: 15_000 }).toBe(1);
+    await expect.poll(async () => (await draftsCalled(subject)).length, { timeout: 15_000, intervals: POLL }).toBe(1);
     await page.close();
     const typed = `${subject} typed`;
     await popup.locator('[data-testid="composer-subject"]').first().fill(typed);
@@ -541,7 +543,7 @@ test.describe('a composer in its own window', () => {
     await popup.close({ runBeforeUnload: true });
     await asked;
     expect(popup.isClosed()).toBe(false);
-    await expect.poll(async () => (await draftsCalled(typed)).length, { timeout: 20_000 }).toBe(1);
+    await expect.poll(async () => (await draftsCalled(typed)).length, { timeout: 20_000, intervals: POLL }).toBe(1);
   });
 
   test('a blocked window leaves the composer where it is', async ({ browser }) => {
@@ -558,7 +560,104 @@ test.describe('a composer in its own window', () => {
   });
 });
 
+test.describe('what a window must not lose', () => {
+  test('text whose save fails in the main window lands in its "Continue draft" slot', async ({ browser }) => {
+    const subject = `Refused ${RUN}`;
+    const page = await appPage(browser, STANDALONE);
+    await page.keyboard.press('c');
+    await page.locator('[data-testid="email-composer"]').waitFor({ state: 'visible', timeout: 15_000 });
+    await page.locator('[data-testid="composer-subject"]').first().fill(subject);
+    const popup = await openPopout(page, () => page.locator('[data-testid="composer-open-in-window"]').first().click());
+    await expect(popup.locator('[data-testid="composer-subject"]').first()).toHaveValue(subject, { timeout: 60_000 });
+    await expect.poll(async () => (await draftsCalled(subject)).length, { timeout: 15_000, intervals: POLL }).toBe(1);
+    // Give the pop-out time to see the main window answer its ping.
+    await popup.waitForTimeout(500);
+    const typed = `${subject} typed`;
+    await popup.locator('[data-testid="composer-subject"]').first().fill(typed);
+    // The server stops taking saves, for the main window's rescue too.
+    await page.context().route('**/jmap/**', async (route) => {
+      if ((route.request().postData() ?? '').includes('Email/set')) await route.abort();
+      else await route.continue();
+    });
+    let prompted = false;
+    popup.on('dialog', (dialog) => { prompted = true; void dialog.accept(); });
+    const closed = popup.waitForEvent('close');
+    await popup.close({ runBeforeUnload: true });
+    await closed;
+    expect(prompted).toBe(false);
+    await expect(toast(page, /save/i)).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText('Continue draft').first()).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText(typed).first()).toBeVisible();
+    await page.context().unroute('**/jmap/**');
+    await page.context().close();
+  });
+
+  test('editing a draft from a message window opens a live composer, and only then closes', async ({ browser }) => {
+    const subject = `Edit ${RUN}`;
+    const alice = await jmapAs(ENT.alice);
+    const draftId = await alice.createDraft(subject, ENT.bob);
+    const page = await appPage(browser, STANDALONE);
+    const drafts = await alice.mailboxByRole('drafts');
+    await page.goto(`/mail/folder/${drafts!.id}`);
+    await accountSwitcher(page).waitFor({ state: 'visible', timeout: 60_000 });
+    await expect(row(page, subject)).toBeVisible({ timeout: 60_000 });
+    const message = await openPopout(page, async () => {
+      await row(page, subject).click({ button: 'right' });
+      await page.getByTestId('ctx-open-window').click();
+    });
+    await expect(message.locator('[data-popout-window="message"][data-popout-status="ready"]')).toBeVisible({ timeout: 60_000 });
+    const closed = message.waitForEvent('close');
+    const composer = await openPopout(message, async () => {
+      await message.getByRole('button', { name: /^Edit/ }).first().click();
+    });
+    await expect(composer.locator('[data-testid="composer-subject"]').first()).toHaveValue(subject, { timeout: 60_000 });
+    await closed;
+    // Live: it still saves over the same draft, with the window that opened it gone.
+    await composer.locator('[data-testid="composer-subject"]').first().fill(`${subject} edited`);
+    await expect.poll(async () => (await draftsCalled(`${subject} edited`)).length, { timeout: 20_000, intervals: POLL }).toBe(1);
+    await expect.poll(async () => (await draftsCalled(subject)).filter((draft) => draft.id === draftId).length, { timeout: 20_000, intervals: POLL }).toBe(0);
+    await page.context().close();
+  });
+});
+
+test.describe('the attachment bar', () => {
+  test('stays one row in a narrow pane, with both buttons in reach', async ({ browser }) => {
+    const subject = `Narrow ${RUN}`;
+    await messageWithAttachments(subject);
+    const page = await appPage(browser);
+    await stubDirectoryPicker(page);
+    await openInMain(page, subject);
+    const save = page.locator('[data-testid="attachments-save-to-folder"]').first();
+    await expect(save).toBeVisible({ timeout: 30_000 });
+    await page.setViewportSize({ width: 900, height: 900 });
+    const pane = page.locator('[data-testid="reader-attachments"]').first();
+    await expect(pane).toBeVisible();
+    const row = save.locator('xpath=..');
+    const rowBox = await row.boundingBox();
+    const saveBox = await save.boundingBox();
+    expect(rowBox!.height).toBeLessThan(48);
+    expect(saveBox!.x + saveBox!.width).toBeLessThanOrEqual(rowBox!.x + rowBox!.width + 1);
+    await expect(save).toHaveAttribute('aria-label', /folder/i);
+    await page.context().close();
+  });
+});
+
 test.describe('the desktop app\'s behaviour', () => {
+  test('plain-text mail can be selected, list rows can\'t', async ({ browser }) => {
+    const subject = `Selectable ${RUN}`;
+    await deliverToAlice(subject);
+    const page = await appPage(browser, BRIDGE);
+    await openInMain(page, subject);
+    const body = page.locator('[data-plugin-source="email-body"]').first();
+    await expect(body).toBeVisible({ timeout: 30_000 });
+    expect(await body.evaluate((el) => getComputedStyle(el).userSelect)).toBe('text');
+    expect(await row(page, subject).evaluate((el) => getComputedStyle(el).userSelect)).toBe('none');
+    // A real selection, the way a user would make one.
+    await body.click({ clickCount: 3 });
+    expect(await page.evaluate(() => window.getSelection()?.toString() ?? '')).toContain(`Body of ${subject}`);
+    await page.context().close();
+  });
+
   test('hangs on the bridge: a browser gets none of it', async ({ browser }) => {
     const plain = await appPage(browser);
     expect(await plain.locator('html').getAttribute('data-desktop')).toBeNull();

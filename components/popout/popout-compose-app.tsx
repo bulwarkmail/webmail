@@ -8,13 +8,14 @@ import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useAccountStore } from "@/stores/account-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
+import { usePluginStore } from "@/stores/plugin-store";
 import { toast } from "@/stores/toast-store";
 import { formatRejectedRecipients } from "@/lib/jmap/client";
 import { debug } from "@/lib/debug";
 import { composerSendOptions } from "@/lib/outgoing/composer-send-options";
 import { announceSent } from "@/lib/plugin-after-send";
-import { announceMailChanged, announceSentToMainWindow, watchMainWindow } from "@/lib/popout/channel";
-import { receiveComposeHandoff, rememberComposePayload } from "@/lib/popout/compose-handoff";
+import { announceMailChanged, announceSentToMainWindow, askRescuedDraftId, watchMainWindow, type RescuedDraft } from "@/lib/popout/channel";
+import { acknowledgeComposeHandoff, receiveComposeHandoff, rememberComposePayload, rememberedComposePayload, watchHandoffCancel } from "@/lib/popout/compose-handoff";
 import type { ComposePopoutPayload } from "@/lib/popout/compose-payload";
 import { closePopoutWindow } from "@/lib/popout/window-role";
 import { PopoutShell, PopoutSkeleton } from "./popout-shell";
@@ -26,6 +27,9 @@ type ComposerProps = React.ComponentProps<typeof EmailComposer>;
 type SendData = Parameters<NonNullable<ComposerProps["onSend"]>>[0];
 
 const EMPTY_PAYLOAD: ComposePopoutPayload = { mode: "compose" };
+
+/** How long a reloaded window waits to hear what became of the text it handed over on the way out. */
+const RESCUE_ANSWER_MS = 2000;
 
 function readLaunch(): { handoffId: string | null; accountId?: string } {
   if (typeof window === "undefined") return { handoffId: null };
@@ -128,8 +132,23 @@ function PopoutComposer({ payload, handoffId }: { payload: ComposePopoutPayload;
   const [mainWindow] = useState(watchMainWindow);
   useEffect(() => () => mainWindow.stop(), [mainWindow]);
 
+  // The window that opened this one lets go of its copy now. Not without a
+  // session: this one couldn't save or send the text.
+  useEffect(() => {
+    if (handoffId && client) acknowledgeComposeHandoff(handoffId);
+  }, [handoffId, client]);
+
   const ownWindow = useMemo(() => ({
-    rescueDraft: mainWindow.rescue,
+    rescueDraft: (draft: RescuedDraft) => {
+      // A plugin that hasn't started may yet have a say in what a draft holds,
+      // and it can only have it in this window's save.
+      if (!usePluginStore.getState().initialized) return false;
+      return mainWindow.rescue({
+        ...draft,
+        localAccountId: draft.localAccountId ?? useAuthStore.getState().activeAccountId ?? undefined,
+        rescueKey: handoffId ?? undefined,
+      });
+    },
     // A reload of this window starts from where the text is now.
     onUnloadState: (state: ComposerDraftData) => {
       if (handoffId) rememberComposePayload(handoffId, { ...payload, initialData: state, prefill: null });
@@ -168,14 +187,30 @@ export function PopoutComposeApp() {
   useEffect(() => {
     if (!handoffId) return;
     let cancelled = false;
-    void receiveComposeHandoff(handoffId).then((received) => {
+    const reloaded = rememberedComposePayload(handoffId) !== null;
+    void receiveComposeHandoff(handoffId).then(async (received) => {
+      if (!received) {
+        // Called off or never ready: the composer stayed where it was.
+        if (!cancelled) closePopoutWindow();
+        return;
+      }
+      // Reloaded: the text may have gone to a main window on the way out, under
+      // a new id. Saving under the old one would leave two drafts.
+      const draftId = reloaded && received.initialData ? await askRescuedDraftId(handoffId, RESCUE_ANSWER_MS) : null;
       if (cancelled) return;
-      // Called off or never ready: the composer stayed where it was.
-      if (received) setPayload(received);
-      else closePopoutWindow();
+      setPayload(draftId && received.initialData
+        ? { ...received, initialData: { ...received.initialData, draftId, draftAccountId: undefined, unsaved: false } }
+        : received);
+    });
+    // The opening window takes the draft back. Gone first, so that closing
+    // doesn't save a copy of what that window still has.
+    const stopWatching = watchHandoffCancel(handoffId, () => {
+      setPayload(null);
+      setTimeout(closePopoutWindow, 0);
     });
     return () => {
       cancelled = true;
+      stopWatching();
     };
   }, [handoffId]);
 

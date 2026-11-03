@@ -6498,6 +6498,7 @@
     "message_gone_title": "This message is gone",
     "message_gone_body": "It was deleted or moved to another account.",
     "message_moved": "This message was moved to another folder.",
-    "message_moved_to": "This message was moved to {folder}."
+    "message_moved_to": "This message was moved to {folder}.",
+    "window_not_ready": "The new window did not open in time. Your draft stays here."
   }
 }

@@ -6498,6 +6498,7 @@
     "message_gone_title": "這封郵件已不存在",
     "message_gone_body": "它已被刪除或移到其他帳戶。",
     "message_moved": "這封郵件已移到其他資料夾。",
-    "message_moved_to": "這封郵件已移到 {folder}。"
+    "message_moved_to": "這封郵件已移到 {folder}。",
+    "window_not_ready": "新視窗未能及時開啟。你的草稿仍保留在這裡。"
   }
 }

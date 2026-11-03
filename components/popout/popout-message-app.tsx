@@ -15,7 +15,7 @@ import { localizeMailboxName } from "@/lib/mailbox-label";
 import { announceMailChanged, openPopoutChannel } from "@/lib/popout/channel";
 import { openComposerWindow } from "@/lib/popout/open";
 import { closePopoutWindow } from "@/lib/popout/window-role";
-import { PopoutNotice, PopoutShell } from "./popout-shell";
+import { PopoutNotice, PopoutShell, PopoutSkeleton } from "./popout-shell";
 
 /** How often an open message checks that it is still there, without a main window to say so. */
 const CHECK_INTERVAL_MS = 60_000;
@@ -106,8 +106,18 @@ function PopoutMessage({ emailId, accountId, ownerAccountId }: { emailId: string
   const subjectInTitle = usePolicyStore((s) => s.loaded && s.isFeatureEnabled("tabTitleSubjectEnabled"));
   useDocumentTitle(subjectInTitle ? subject : null);
 
+  // Folders first: without them Delete has no Trash to move to, Archive has no
+  // button yet, and the toolbar moves under the pointer once they arrive.
+  const [foldersReady, setFoldersReady] = useState(mailboxes.length > 0);
   useEffect(() => {
-    if (client && mailboxes.length === 0) void useEmailStore.getState().fetchMailboxes(client);
+    if (!client) return;
+    let cancelled = false;
+    void Promise.resolve(useEmailStore.getState().fetchMailboxes(client)).catch(() => {}).finally(() => {
+      if (!cancelled) setFoldersReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
     // Once per client: an account without folders shouldn't ask forever.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client]);
@@ -133,13 +143,13 @@ function PopoutMessage({ emailId, accountId, ownerAccountId }: { emailId: string
   }, []);
 
   // Reply and forward open a composer window of their own.
-  const openCompose = useCallback((data: Omit<ProComposeTabData, "sessionId">) => {
+  const openCompose = useCallback(async (data: Omit<ProComposeTabData, "sessionId">) => {
     const opened = openComposerWindow(login);
     if (!opened) {
       toast.error(t("popup_blocked"));
-      return;
+      return false;
     }
-    opened.handOver({
+    const shown = await opened.handOver({
       mode: data.mode,
       replyTo: data.replyTo,
       initialDraftText: data.initialDraftText,
@@ -148,7 +158,14 @@ function PopoutMessage({ emailId, accountId, ownerAccountId }: { emailId: string
       sourceEmailId: data.sourceEmailId,
       sourceEmailSource: data.sourceEmailSource,
     });
+    if (!shown) {
+      opened.cancel();
+      toast.error(t("window_not_ready"));
+    }
+    return shown;
   }, [login, t]);
+
+  if (!foldersReady) return <PopoutSkeleton label={t("opening")} />;
 
   if (presence === "gone") {
     return (

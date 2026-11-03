@@ -152,6 +152,7 @@ import { onOpenEmail, type OpenEmailHandler, type OpenEmailOutcome } from "@/lib
 import { mailtoComposerDraft } from "./mailto-draft";
 import { useOpenEmailInWindow, usePopoutsAvailable } from "@/hooks/use-popouts-available";
 import { openComposerWindow } from "@/lib/popout/open";
+import { onRescuedDraft, takeRescuedDraft } from "@/lib/popout/rescued-drafts";
 import { getQuoteBodies } from "@/lib/email-composer-utils";
 import { emailHooks } from "@/lib/plugin-hooks";
 import { afterRequestDispatch } from "@/lib/after-request-dispatch";
@@ -2265,6 +2266,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   const popoutsOn = usePopoutsAvailable();
   const openEmailInWindow = useOpenEmailInWindow();
+  // Text from a closing pop-out that couldn't be saved: the "Continue draft"
+  // slot, once it is free.
+  useEffect(() => {
+    const adopt = () => {
+      if (pendingDraft || showComposer) return;
+      const draft = takeRescuedDraft();
+      if (draft) setPendingDraft(draft);
+    };
+    adopt();
+    return onRescuedDraft(adopt);
+  }, [pendingDraft, showComposer]);
   const composerPopOut = () => {
     const target = openComposerWindow(activeAccountId);
     if (!target) return null;

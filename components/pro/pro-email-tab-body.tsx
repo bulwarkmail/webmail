@@ -69,9 +69,10 @@ interface ProEmailViewProps {
   onLoaded?: (email: Email) => void;
   /**
    * Opens a reply, forward or draft somewhere else than a Pro tab: a pop-out
-   * window (components/popout) has no tabs.
+   * window (components/popout) has no tabs. Resolves true once it is on screen
+   * there: a draft leaves this view only then.
    */
-  onOpenCompose?: (data: Omit<ProComposeTabData, 'sessionId'>) => void;
+  onOpenCompose?: (data: Omit<ProComposeTabData, 'sessionId'>) => Promise<boolean>;
   /** Flags and folders as the server has them now, when the host tracks them (a pop-out). */
   liveState?: Pick<Email, 'keywords' | 'mailboxIds'> | null;
   /** This view changed the message's flags, for a host other windows should hear from. */
@@ -187,11 +188,13 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
   ) => {
     const open = (prefill: ComposePrefill | null) => {
       if (onOpenCompose) {
-        onOpenCompose({ ...data, prefill });
-      } else {
-        composerSessionIdRef.current += 1;
-        openComposeTabNow({ ...data, sessionId: composerSessionIdRef.current, prefill });
+        void onOpenCompose({ ...data, prefill }).then((shown) => {
+          if (shown) onOpened?.();
+        });
+        return;
       }
+      composerSessionIdRef.current += 1;
+      openComposeTabNow({ ...data, sessionId: composerSessionIdRef.current, prefill });
       onOpened?.();
     };
     if (emailHooks.onBeforeCompose.size === 0) {

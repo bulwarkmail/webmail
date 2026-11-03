@@ -9,6 +9,7 @@ import { useConfig } from "@/hooks/use-config";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { flushComposers } from "@/lib/compose-flush-registry";
 import { isPopoutPath } from "@/lib/popout/window-role";
+import { isStandaloneDisplayMode } from "@/lib/standalone-display";
 import { getPathPrefix } from "@/lib/browser-navigation";
 import { matchSurface, type AppSurface } from "@/lib/deep-links";
 import {
@@ -46,7 +47,6 @@ type LaunchParams = {
   targetURL?: string;
   files?: ReadonlyArray<{ kind?: string; getFile?: () => Promise<File> }>;
 };
-type StandaloneNavigator = Navigator & { standalone?: boolean };
 
 declare global {
   interface Window {
@@ -91,11 +91,6 @@ const OFFER_TEXT_LENGTH = 200;
 const OFFER_FILE_COUNT = 5;
 
 type ShareOffer = { subject: string; body: string; files: string[] };
-
-function isStandaloneDisplayMode() {
-  return window.matchMedia?.("(display-mode: standalone)").matches
-    || (navigator as StandaloneNavigator).standalone === true;
-}
 
 function openProtocolInNewTab(protocol: "mailto" | "webcal", raw: string): boolean {
   const url = `${getPathPrefix()}/protocol/${protocol}?url=${encodeURIComponent(raw)}&fallback=1`;

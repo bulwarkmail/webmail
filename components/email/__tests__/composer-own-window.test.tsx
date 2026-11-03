@@ -31,9 +31,12 @@ type Draft = { subject: string };
 const original = { auth: useAuthStore.getState(), identity: useIdentityStore.getState(), settings: useSettingsStore.getState() };
 let client: JMAPClient;
 let creations: Draft[];
+let rejectSave: boolean;
+let deferSave: boolean;
+let finishSave: (() => void) | undefined;
 
 beforeEach(async () => {
-  creations = [];
+  creations = []; rejectSave = false; deferSave = false; finishSave = undefined;
   vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({
     capabilities: { 'urn:ietf:params:jmap:core': {} },
     accounts: { owner: { name: 'me@example.test', isPersonal: true, accountCapabilities: {} } },
@@ -55,9 +58,12 @@ beforeEach(async () => {
         const created: Record<string, { id: string }> = {};
         for (const [key, draft] of Object.entries(args.create)) {
           creations.push(draft);
+          if (deferSave) await new Promise<void>((resolve) => { finishSave = resolve; });
           created[key] = { id: `saved-${creations.length}` };
         }
-        methodResponses.push([method, { created }, id]);
+        methodResponses.push([method, rejectSave
+          ? { notCreated: { draft: { type: 'serverFail', description: 'Synthetic refusal' } } }
+          : { created }, id]);
       } else if (method === 'Email/get') methodResponses.push([method, { list: (args.ids ?? []).map((draftId) => ({ id: draftId, attachments: [] })) }, id]);
       else if (method === 'Email/set') methodResponses.push([method, { destroyed: args.destroy ?? [] }, id]);
       else methodResponses.push([method, {}, id]);
@@ -93,11 +99,18 @@ function mount(props: Partial<Props>) {
 
 const subjectField = () => screen.getByPlaceholderText(en.email_composer.subject_placeholder);
 
-function target(): ComposerPopOut & { handed: ComposerDraftData[]; cancelled: number } {
+function target(shown = true): ComposerPopOut & { handed: ComposerDraftData[]; cancelled: number } {
   const handed: ComposerDraftData[] = [];
-  const window = { handed, cancelled: 0, handOver: (data: ComposerDraftData) => { handed.push(data); }, cancel: () => { window.cancelled += 1; } };
+  const window = {
+    handed,
+    cancelled: 0,
+    handOver: async (data: ComposerDraftData) => { handed.push(data); return shown; },
+    cancel: () => { window.cancelled += 1; },
+  };
   return window;
 }
+
+const DRAFT: ComposerDraftData = { to: '', cc: '', bcc: '', subject: 'Old', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', mode: 'compose', draftId: null };
 
 describe('"Open in new window" on a composer', () => {
   it('is not there without the host offering it: browsers stay as they are', () => {
@@ -143,6 +156,44 @@ describe('"Open in new window" on a composer', () => {
     await waitFor(() => expect(window.handed).toHaveLength(1));
     expect(window.handed[0].draftId).toBe('existing');
     expect(creations).toEqual([]);
+  });
+
+  it('keeps the composer and calls it off when the other window never shows it', async () => {
+    const window = target(false);
+    const onClose = vi.fn();
+    mount({ popOut: () => window, onClose });
+    fireEvent.change(subjectField(), { target: { value: 'Still here' } });
+    fireEvent.click(screen.getByTestId('composer-open-in-window'));
+    await waitFor(() => expect(window.cancelled).toBe(1));
+    expect(onClose).not.toHaveBeenCalled();
+    expect((subjectField() as HTMLInputElement).value).toBe('Still here');
+    expect(useToastStore.getState().toasts.map((toast) => toast.title)).toContain(en.pwaWindows.window_not_ready);
+  });
+
+  it('does not close here before the other window shows it, also after a failed save', async () => {
+    rejectSave = true;
+    let show: (shown: boolean) => void = () => {};
+    const handed: ComposerDraftData[] = [];
+    const onClose = vi.fn();
+    mount({
+      popOut: () => ({ cancel: vi.fn(), handOver: (data) => { handed.push(data); return new Promise((resolve) => { show = resolve; }); } }),
+      onClose,
+    });
+    fireEvent.change(subjectField(), { target: { value: 'Refused' } });
+    fireEvent.click(screen.getByTestId('composer-open-in-window'));
+    await waitFor(() => expect(handed).toHaveLength(1));
+    expect(handed[0].unsaved).toBe(true);
+    expect(onClose).not.toHaveBeenCalled();
+    show(true);
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+  });
+
+  it('takes the send options along', async () => {
+    const window = target();
+    mount({ popOut: () => window, initialData: { ...DRAFT, requestReadReceipt: true, requestDsn: true, requireTls: true } });
+    fireEvent.click(screen.getByTestId('composer-open-in-window'));
+    await waitFor(() => expect(window.handed).toHaveLength(1));
+    expect(window.handed[0]).toMatchObject({ requestReadReceipt: true, requestDsn: true, requireTls: true });
   });
 
   it('stays open and says why when the browser blocks the window', async () => {
@@ -200,6 +251,65 @@ describe('a composer that is all its window shows', () => {
     fireEvent.change(subjectField(), { target: { value: 'Nobody home' } });
     expect(unload().defaultPrevented).toBe(true);
     await waitFor(() => expect(creations.map((draft) => draft.subject)).toEqual(['Nobody home']));
+  });
+
+  it('does not hand it over after a failed save: that window would likely fail too, with nobody looking', async () => {
+    rejectSave = true;
+    const rescueDraft = vi.fn(() => true);
+    mount({ ownWindow: { rescueDraft } });
+    fireEvent.change(subjectField(), { target: { value: 'Server down' } });
+    await waitFor(() => expect(creations).toHaveLength(1), { timeout: 4000 });
+    await waitFor(() => expect(unload().defaultPrevented).toBe(true));
+    expect(rescueDraft).not.toHaveBeenCalled();
+  });
+
+  it('does not hand it over while the browser is offline', () => {
+    const onLine = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    const rescueDraft = vi.fn(() => true);
+    mount({ ownWindow: { rescueDraft } });
+    fireEvent.change(subjectField(), { target: { value: 'Wi-Fi gone' } });
+    expect(unload().defaultPrevented).toBe(true);
+    expect(rescueDraft).not.toHaveBeenCalled();
+    onLine.mockRestore();
+  });
+
+  it('does not hand it over with a save running: two saves would make two drafts', async () => {
+    deferSave = true;
+    const rescueDraft = vi.fn(() => true);
+    mount({ ownWindow: { rescueDraft } });
+    fireEvent.change(subjectField(), { target: { value: 'Saving' } });
+    await waitFor(() => expect(creations).toHaveLength(1), { timeout: 4000 });
+    expect(unload().defaultPrevented).toBe(true);
+    expect(rescueDraft).not.toHaveBeenCalled();
+    finishSave?.();
+  });
+
+  it('asks when the window closes during a send', async () => {
+    let finish: () => void = () => {};
+    const onSend = vi.fn(() => new Promise<void>((resolve) => { finish = resolve; }));
+    const onClose = vi.fn();
+    mount({
+      ownWindow: {}, onSend, onClose,
+      initialData: { ...DRAFT, to: 'them@example.test', subject: 'Going', body: '<p>Hello</p>' },
+    });
+    fireEvent.click(screen.getAllByTestId('composer-send')[0]);
+    await waitFor(() => expect(onSend).toHaveBeenCalled(), { timeout: 4000 });
+    expect(unload().defaultPrevented).toBe(true);
+    finish();
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+    expect(unload().defaultPrevented).toBe(false);
+  });
+
+  it('counts text handed in unsaved as unsaved: it asks, and saves it', async () => {
+    const rescueDraft = vi.fn(() => false);
+    mount({ ownWindow: { rescueDraft }, initialData: { ...DRAFT, subject: 'Handed in', unsaved: true } });
+    expect(unload().defaultPrevented).toBe(true);
+    await waitFor(() => expect(creations.map((draft) => draft.subject)).toEqual(['Handed in']));
+  });
+
+  it('saves text handed in unsaved by itself, untouched', async () => {
+    mount({ ownWindow: {}, initialData: { ...DRAFT, subject: 'Autosaved after the move', unsaved: true } });
+    await waitFor(() => expect(creations.map((draft) => draft.subject)).toEqual(['Autosaved after the move']), { timeout: 4000 });
   });
 
   it('keeps the draft to itself when a plugin has a say in what is saved', async () => {

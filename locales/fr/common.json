@@ -6498,6 +6498,7 @@
     "message_gone_title": "Ce message n’existe plus",
     "message_gone_body": "Il a été supprimé ou déplacé vers un autre compte.",
     "message_moved": "Ce message a été déplacé vers un autre dossier.",
-    "message_moved_to": "Ce message a été déplacé vers {folder}."
+    "message_moved_to": "Ce message a été déplacé vers {folder}.",
+    "window_not_ready": "La nouvelle fenêtre ne s’est pas ouverte à temps. Votre brouillon reste ici."
   }
 }

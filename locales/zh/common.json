@@ -6498,6 +6498,7 @@
     "message_gone_title": "这封邮件已不存在",
     "message_gone_body": "它已被删除或移动到其他账户。",
     "message_moved": "这封邮件已移动到其他文件夹。",
-    "message_moved_to": "这封邮件已移动到 {folder}。"
+    "message_moved_to": "这封邮件已移动到 {folder}。",
+    "window_not_ready": "新窗口未能及时打开。你的草稿仍保留在这里。"
   }
 }

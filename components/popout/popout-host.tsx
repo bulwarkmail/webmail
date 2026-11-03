@@ -2,22 +2,26 @@
 
 import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
+import { usePopoutsAvailable } from "@/hooks/use-popouts-available";
 import { useAccountStore } from "@/stores/account-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { toast } from "@/stores/toast-store";
-import { openPopoutChannel, type PopoutChannel, type PopoutSentNotice, type RescuedDraft, type SharedAccountSession } from "@/lib/popout/channel";
+import { newPopoutId, openPopoutChannel, type PopoutChannel, type PopoutMessage, type PopoutSentNotice, type RescuedDraft, type SharedAccountSession } from "@/lib/popout/channel";
+import { keepRescuedDraft } from "@/lib/popout/rescued-drafts";
+import { credentialFingerprint, sealFor } from "@/lib/popout/sealed";
 import { changesAnyType, subscribePushStateChanges } from "@/lib/push-events";
 
 /** At most this often: a pop-out's autosave reports every few seconds. */
 const REFRESH_THROTTLE_MS = 1500;
 /** What the list changing in this window waits for, so a burst tells pop-outs once. */
 const LIST_CHANGE_DEBOUNCE_MS = 400;
+/** How long the claim on a one-off job stays held: longer than a message takes to reach every window. */
+const CLAIM_HOLD_MS = 15_000;
+/** How long a window remembers which draft id a rescue became, for a reload of the pop-out. */
+const RESCUE_MEMORY_MS = 60_000;
 
-/** Held by one main window at a time, for what must happen once: a draft saved twice is two drafts. */
-export const POPOUT_LEADER_LOCK = "bulwark-popout-leader";
-
-/** The sessions this window can lend to a pop-out. Empty until it is signed in, and in the demo. */
+/** The sessions this window can lend. Empty until it is signed in, and in the demo. */
 function shareableSessions(): SharedAccountSession[] {
   const auth = useAuthStore.getState();
   if (!auth.isAuthenticated || auth.isDemoMode) return [];
@@ -38,42 +42,53 @@ function shareableSessions(): SharedAccountSession[] {
 }
 
 /**
+ * Runs `work` in one of the main windows, the first to claim `name`. Held on
+ * for a while afterwards, or a slower window would find it free. A browser
+ * releases it with the window, so no window keeps a lock for long (one held for
+ * life keeps a page out of the back/forward cache).
+ */
+function claimOnce(name: string, work: () => void | Promise<void>): void {
+  void navigator.locks?.request(name, { ifAvailable: true }, async (lock) => {
+    if (!lock) return;
+    await work();
+    await new Promise((resolve) => setTimeout(resolve, CLAIM_HOLD_MS));
+  }).catch(() => {});
+}
+
+/**
  * The main window's side of pop-outs: lends them its session and renews it
  * for them, passes on that mail changed, and takes over what a pop-out can't
- * say any more once it has closed. Every main window runs one; a pop-out takes
- * the first answer.
+ * say any more once it has closed. Only where pop-outs are on offer: an
+ * ordinary browser tab runs none of this.
  */
 export function PopoutHost() {
+  const available = usePopoutsAvailable();
   const t = useTranslations();
   const tRef = useRef(t);
   tRef.current = t;
 
   useEffect(() => {
+    if (!available) return;
     let channel: PopoutChannel | null = null;
+    const windowId = newPopoutId();
     let closing = false;
+    const rescues = new Map<string, Promise<string | null>>();
 
-    // The browser gives the lock to the next window when this one goes away.
-    let leader = false;
-    const stopLeading = new AbortController();
-    void navigator.locks?.request(POPOUT_LEADER_LOCK, { signal: stopLeading.signal }, () => {
-      leader = true;
-      return new Promise<void>((resolve) => stopLeading.signal.addEventListener("abort", () => resolve()));
-    }).catch(() => {});
-
-    const answerSessionRequest = async (requestId: string, accountId?: string, rejectedAuthHeader?: string) => {
+    const answerSessionRequest = async (message: Extract<PopoutMessage, { type: "session-request" }>) => {
+      const { accountId, rejectedFingerprint } = message;
       const auth = useAuthStore.getState();
+      // Only a window holding the login answers: the first answer has to be usable.
+      if (accountId && !shareableSessions().some((session) => session.accountId === accountId)) return;
       // The server refused what the pop-out holds. If that is what this window
       // holds too, renew it here, where the timers and the sign-out live.
-      if (accountId && rejectedAuthHeader && auth.getClientForAccount(accountId)?.getAuthHeader() === rejectedAuthHeader) {
-        await auth.refreshAccessToken({ accountId });
+      if (accountId && rejectedFingerprint) {
+        const current = auth.getClientForAccount(accountId)?.getAuthHeader();
+        if (current && await credentialFingerprint(current) === rejectedFingerprint) await auth.refreshAccessToken({ accountId });
       }
-      const sessions = shareableSessions().filter((session) => !accountId || session.accountId === accountId);
+      const sessions = shareableSessions();
       if (sessions.length === 0) return;
-      channel?.post({
-        type: "session-answer",
-        requestId,
-        answer: { activeAccountId: useAuthStore.getState().activeAccountId, sessions },
-      });
+      const sealed = await sealFor(message.publicKey, { activeAccountId: useAuthStore.getState().activeAccountId, sessions });
+      channel?.post({ type: "session-answer", requestId: message.requestId, sealed });
     };
 
     // List and counts, so read state and Drafts follow what a pop-out did.
@@ -102,37 +117,59 @@ export function PopoutHost() {
       refreshList();
     };
 
-    const saveRescuedDraft = async (draft: RescuedDraft) => {
+    const saveRescuedDraft = async (draft: RescuedDraft): Promise<string | null> => {
       const auth = useAuthStore.getState();
       const client = draft.localAccountId ? auth.getClientForAccount(draft.localAccountId) : auth.client;
       try {
         if (!client) throw new Error("No login to save through");
-        await client.createDraft(
+        const draftId = await client.createDraft(
           draft.to, draft.subject, draft.body, draft.cc, draft.bcc, draft.identityId, draft.fromEmail, draft.draftId,
           draft.attachments, draft.fromName, draft.htmlBody, draft.inReplyTo, draft.references, draft.options,
         );
         refreshList();
+        return draftId;
       } catch (error) {
+        // The text exists nowhere else now.
         console.error("Failed to save a closing window's draft:", error);
+        keepRescuedDraft(draft.state);
         toast.error(tRef.current("email_composer.save_failed"));
+        return null;
       }
+    };
+
+    const startRescue = (draft: RescuedDraft) => {
+      const claim = draft.rescueKey ?? newPopoutId();
+      claimOnce(`bulwark-popout-rescue:${claim}`, async () => {
+        const saved = saveRescuedDraft(draft);
+        if (draft.rescueKey) {
+          rescues.set(draft.rescueKey, saved);
+          setTimeout(() => rescues.delete(claim), RESCUE_MEMORY_MS);
+        }
+        await saved;
+      });
     };
 
     channel = openPopoutChannel((message) => {
       switch (message.type) {
         case "session-request":
-          void answerSessionRequest(message.requestId, message.accountId, message.rejectedAuthHeader);
+          void answerSessionRequest(message);
           break;
         case "sent":
-          if (!leader) break;
-          channel?.post({ type: "sent-ack", requestId: message.requestId });
-          takeOverSent(message.notice);
+          claimOnce(`bulwark-popout-sent:${message.requestId}`, () => {
+            channel?.post({ type: "sent-ack", requestId: message.requestId });
+            takeOverSent(message.notice);
+          });
           break;
         case "draft-rescue":
-          if (leader) void saveRescuedDraft(message.draft);
+          startRescue(message.draft);
           break;
+        case "rescue-query": {
+          const rescue = rescues.get(message.rescueKey);
+          if (rescue) void rescue.then((draftId) => channel?.post({ type: "rescue-answer", rescueKey: message.rescueKey, draftId }));
+          break;
+        }
         case "main-ping":
-          if (leader && !closing) channel?.post({ type: "main-pong" });
+          if (!closing) channel?.post({ type: "main-pong", windowId, accountIds: shareableSessions().map((session) => session.accountId) });
           break;
         case "mail-changed":
           refreshList();
@@ -158,12 +195,11 @@ export function PopoutHost() {
         if (!ids.has(account.id)) channel?.post({ type: "account-removed", accountId: account.id });
       }
     });
-    // Hearing "gone", a pop-out asks who else is there. This window may still
-    // run long enough to hear that, and must not answer: a draft handed to it
-    // now would be lost.
+    // Hearing a ping late in closing, this window must not answer: a draft
+    // handed to it now would be lost.
     const onPageHide = () => {
       closing = true;
-      if (leader) channel?.post({ type: "main-gone" });
+      channel?.post({ type: "main-gone", windowId });
     };
     const onPageShow = () => {
       closing = false;
@@ -173,7 +209,6 @@ export function PopoutHost() {
     return () => {
       window.removeEventListener("pagehide", onPageHide);
       window.removeEventListener("pageshow", onPageShow);
-      stopLeading.abort();
       stopPush();
       stopList();
       stopAccounts();
@@ -181,7 +216,7 @@ export function PopoutHost() {
       if (listTimer) clearTimeout(listTimer);
       channel?.close();
     };
-  }, []);
+  }, [available]);
 
   return null;
 }

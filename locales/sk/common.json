@@ -6498,6 +6498,7 @@
     "message_gone_title": "Táto správa tu už nie je",
     "message_gone_body": "Bola odstránená alebo presunutá do iného účtu.",
     "message_moved": "Táto správa bola presunutá do iného priečinka.",
-    "message_moved_to": "Táto správa bola presunutá do {folder}."
+    "message_moved_to": "Táto správa bola presunutá do {folder}.",
+    "window_not_ready": "Nové okno sa neotvorilo včas. Koncept zostáva tu."
   }
 }

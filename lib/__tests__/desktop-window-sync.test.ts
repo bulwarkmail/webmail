@@ -117,6 +117,19 @@ describe('the app-like behaviour', () => {
     expect(css).not.toMatch(/html\[data-desktop\]( body)?\s*\{[^}]*user-select: none/);
   });
 
+  it('matches list rows only, not the plain-text body that carries the same data attribute', () => {
+    // email-viewer.tsx and thread-conversation-view.tsx put data-email-id on the body.
+    for (const file of ['components/email/email-viewer.tsx', 'components/email/thread-conversation-view.tsx']) {
+      const source = readFileSync(join(process.cwd(), file), 'utf8').replace(/\r\n/g, '\n');
+      expect(source, file).toMatch(/data-plugin-source="email-body"\n\s*data-email-id=/);
+    }
+    expect(css).not.toContain('data-email-id');
+  });
+
+  it('keeps a plain-text body selectable wherever it sits', () => {
+    expect(css).toMatch(/\[data-plugin-source="email-body"\],\s*html\[data-desktop\] \[data-plugin-source="email-body"\] \*\s*\{\s*-webkit-user-select: text;\s*user-select: text;/);
+  });
+
   function runBoot() {
     new Function(desktopBootScript())();
   }

@@ -30,6 +30,7 @@ vi.mock('@/components/pro/pro-email-tab-body', () => ({
 vi.mock('../popout-shell', () => ({
   PopoutShell: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   PopoutNotice: ({ title, children }: { title: string; children: React.ReactNode }) => <div><h1>{title}</h1>{children}</div>,
+  PopoutSkeleton: () => <div data-testid="skeleton" />,
 }));
 vi.mock('@/hooks/use-document-title', () => ({ useDocumentTitle: vi.fn() }));
 
@@ -85,6 +86,25 @@ describe('PopoutMessageApp', () => {
     expect(view.clientAccountId).toBe('login-b');
     expect(view.accountId).toBe('group');
     expect(client.getSomeEmails).toHaveBeenCalledWith(['m/1'], 'group');
+  });
+
+  it('shows the message once the folders are in: Delete needs Trash, and the toolbar must not move', async () => {
+    let finish: () => void = () => {};
+    useEmailStore.setState({ mailboxes: [], fetchMailboxes: vi.fn(() => new Promise<void>((resolve) => { finish = resolve; })) as never });
+    render(<PopoutMessageApp id="m1" />);
+    await settle();
+    expect(screen.queryByTestId('message-view')).toBeNull();
+    expect(screen.getByTestId('skeleton')).toBeTruthy();
+    await act(async () => { finish(); });
+    await settle();
+    expect(screen.getByTestId('message-view')).toBeTruthy();
+  });
+
+  it('shows the message anyway when the folders cannot be fetched', async () => {
+    useEmailStore.setState({ mailboxes: [], fetchMailboxes: vi.fn(async () => { throw new Error('offline'); }) as never });
+    render(<PopoutMessageApp id="m1" />);
+    await settle();
+    expect(screen.getByTestId('message-view')).toBeTruthy();
   });
 
   it('puts the loaded message where delete, move, star and read look for it', async () => {

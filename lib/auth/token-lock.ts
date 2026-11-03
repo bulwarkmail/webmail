@@ -12,11 +12,22 @@
  */
 
 interface LockManagerLike {
-  request<T>(name: string, options: { signal?: AbortSignal }, callback: () => Promise<T>): Promise<T>;
+  request<T>(name: string, options: { signal?: AbortSignal; ifAvailable?: boolean }, callback: (lock: unknown) => T | Promise<T>): Promise<T>;
 }
 
 /** How long a renewal waits for another window's before going ahead. Above the route's own timeouts. */
 export const TOKEN_LOCK_WAIT_MS = 30_000;
+
+const NOT_HELD = Symbol('not held');
+
+export interface TokenLockTurn {
+  /**
+   * Another window held the lock first, so it may have renewed already. A
+   * renewal that was going to force one should take the cached token instead:
+   * an identity provider can refuse a second one this soon (Rauthy `nbf`, #552).
+   */
+  contended: boolean;
+}
 
 function lockManager(): LockManagerLike | null {
   const locks = typeof navigator !== 'undefined' ? (navigator as { locks?: LockManagerLike }).locks : undefined;
@@ -27,25 +38,41 @@ export function tokenLockName(slot: number): string {
   return `bulwark-token-refresh:${slot}`;
 }
 
-export async function withTokenLock<T>(slot: number, work: () => Promise<T>, waitMs: number = TOKEN_LOCK_WAIT_MS): Promise<T> {
+export async function withTokenLock<T>(
+  slot: number,
+  work: (turn: TokenLockTurn) => Promise<T>,
+  options: { waitMs?: number; signal?: AbortSignal } = {},
+): Promise<T> {
   const locks = lockManager();
-  if (!locks) return work();
+  if (!locks) return work({ contended: false });
+
+  const name = tokenLockName(slot);
+  let started = false;
+  const run = (contended: boolean) => {
+    started = true;
+    return work({ contended });
+  };
 
   const gaveUp = new AbortController();
-  const timer = setTimeout(() => gaveUp.abort(), waitMs);
-  let started = false;
+  const forwardAbort = () => gaveUp.abort();
+  options.signal?.addEventListener('abort', forwardAbort);
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    return await locks.request(tokenLockName(slot), { signal: gaveUp.signal }, () => {
-      started = true;
+    const first = await locks.request<T | typeof NOT_HELD>(name, { ifAvailable: true }, (lock) => (lock ? run(false) : NOT_HELD));
+    if (first !== NOT_HELD) return first as T;
+    timer = setTimeout(() => gaveUp.abort(), options.waitMs ?? TOKEN_LOCK_WAIT_MS);
+    return await locks.request<T>(name, { signal: gaveUp.signal }, () => {
       clearTimeout(timer);
-      return work();
+      return run(true);
     });
   } catch (error) {
-    // Only the lock itself failing runs the work: an error from the work
-    // (started) goes to the caller, who decides what it means.
-    if (started) throw error;
-    return work();
+    // An error from the work goes to the caller, who decides what it means. So
+    // does a caller calling it off (a sign-out). Only the lock itself failing,
+    // or the wait running out, runs the work.
+    if (started || options.signal?.aborted) throw error;
+    return run(true);
   } finally {
     clearTimeout(timer);
+    options.signal?.removeEventListener('abort', forwardAbort);
   }
 }

@@ -6,8 +6,18 @@ class FakeFolder implements FolderHandle {
   files = new Map<string, string>();
   failWriteOf: string | null = null;
   removed: string[] = [];
+  refused = new Set<string>();
 
   async getFileHandle(name: string, options?: { create?: boolean }) {
+    // What Windows and Chromium's File System Access refuse.
+    const stem = name.split('.')[0].toLowerCase();
+    if (/^(con|prn|aux|nul|com\d|lpt\d)$/.test(stem)
+      || /\.(lnk|url|scf|local)$/i.test(name)
+      || name.toLowerCase() === 'desktop.ini'
+      || new TextEncoder().encode(name).length > 255
+      || this.refused.has(name)) {
+      throw new TypeError(`Name is not allowed: ${name}`);
+    }
     if (!this.files.has(name)) {
       if (!options?.create) throw Object.assign(new Error('missing'), { name: 'NotFoundError' });
       this.files.set(name, '');
@@ -101,6 +111,43 @@ describe('saveFilesToFolder', () => {
     const folder = new FakeFolder();
     await saveFilesToFolder(folder, [item('../../evil.exe'), item('C:\\Windows\\win.ini'), item('a:b?.txt'), item('...')], always);
     expect([...folder.files.keys()]).toEqual(['evil.exe', 'win.ini', 'a_b_.txt', 'attachment']);
+  });
+});
+
+describe('names a file system or the shell keeps for itself', () => {
+  it('renames them, so the attachment is still saved', async () => {
+    const folder = new FakeFolder();
+    const names = ['CON', 'NUL.txt', 'com1.tar.gz', 'desktop.ini', 'x.lnk', 'x.url', 'x.scf', 'X.LNK'];
+    const result = await saveFilesToFolder(folder, names.map((name) => item(name)), always);
+    expect(result).toMatchObject({ saved: names.length, skipped: 0, stopped: null });
+    expect([...folder.files.keys()]).toEqual(['_CON', '_NUL.txt', '_com1.tar.gz', '_desktop.ini', 'x.lnk.txt', 'x.url.txt', 'x.scf.txt', 'X.LNK.txt']);
+  });
+
+  it('leaves names that only look like them', async () => {
+    const folder = new FakeFolder();
+    await saveFilesToFolder(folder, ['context.txt', 'console.log', 'nullable.ts', 'lnk.pdf'].map((name) => item(name)), always);
+    expect([...folder.files.keys()]).toEqual(['context.txt', 'console.log', 'nullable.ts', 'lnk.pdf']);
+  });
+
+  it('shortens a name over the limit, in bytes, keeping the extension and whole characters', async () => {
+    const folder = new FakeFolder();
+    const long = `${'ü'.repeat(200)}.pdf`;
+    const result = await saveFilesToFolder(folder, [item(long), item(long)], always);
+    expect(result.saved).toBe(2);
+    const [first, second] = [...folder.files.keys()];
+    expect(first.endsWith('.pdf')).toBe(true);
+    expect(first).not.toContain('\uFFFD');
+    expect(new TextEncoder().encode(first).length).toBeLessThanOrEqual(255);
+    expect(new TextEncoder().encode(second).length).toBeLessThanOrEqual(255);
+    expect(second.endsWith(' (1).pdf')).toBe(true);
+  });
+
+  it('skips one name the folder still refuses and goes on to the rest', async () => {
+    const folder = new FakeFolder();
+    folder.refused.add('odd.bin');
+    const result = await saveFilesToFolder(folder, [item('a.txt'), item('odd.bin'), item('c.txt')], always);
+    expect(result).toMatchObject({ saved: 2, skipped: 1, stopped: null });
+    expect([...folder.files.keys()]).toEqual(['a.txt', 'c.txt']);
   });
 });
 

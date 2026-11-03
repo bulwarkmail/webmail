@@ -6498,6 +6498,7 @@
     "message_gone_title": "このメッセージはもうありません",
     "message_gone_body": "削除されたか、別のアカウントに移動されました。",
     "message_moved": "このメッセージは別のフォルダーに移動されました。",
-    "message_moved_to": "このメッセージは {folder} に移動されました。"
+    "message_moved_to": "このメッセージは {folder} に移動されました。",
+    "window_not_ready": "新しいウィンドウが時間内に開きませんでした。下書きはここに残ります。"
   }
 }

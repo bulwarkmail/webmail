@@ -6498,6 +6498,7 @@
     "message_gone_title": "Bu ileti artık yok",
     "message_gone_body": "Silindi veya başka bir hesaba taşındı.",
     "message_moved": "Bu ileti başka bir klasöre taşındı.",
-    "message_moved_to": "Bu ileti {folder} klasörüne taşındı."
+    "message_moved_to": "Bu ileti {folder} klasörüne taşındı.",
+    "window_not_ready": "Yeni pencere zamanında açılmadı. Taslağınız burada kalıyor."
   }
 }

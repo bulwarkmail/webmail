@@ -6498,6 +6498,7 @@
     "message_gone_title": "Aquest missatge ja no hi és",
     "message_gone_body": "S’ha suprimit o s’ha mogut a un altre compte.",
     "message_moved": "Aquest missatge s’ha mogut a una altra carpeta.",
-    "message_moved_to": "Aquest missatge s’ha mogut a {folder}."
+    "message_moved_to": "Aquest missatge s’ha mogut a {folder}.",
+    "window_not_ready": "La finestra nova no s’ha obert a temps. L’esborrany es queda aquí."
   }
 }

@@ -3,12 +3,18 @@
  * BroadcastChannel, because a window opened by the desktop bridge has no
  * opener, and a pop-out outlives a reload of the window that opened it.
  *
- * Session answers carry the auth header. A channel reaches same-origin pages
- * only, and those can already ask PUT /api/auth/session for the credentials;
- * plugin frames of the untrusted tier have an opaque origin and aren't on it.
+ * Every same-origin page hears this channel, and that includes privileged
+ * plugin frames (untrusted ones have an opaque origin and don't). So no
+ * credential goes on it in the clear: session answers are sealed for the
+ * window that asked (lib/popout/sealed.ts), and a refused credential is named
+ * by its fingerprint. Draft text does go on it, as it does for the plugins that
+ * see drafts anyway.
  */
 
+import type { ComposerDraftData } from '@/components/email/email-composer';
+import type { MessagePriority } from '@/lib/message-priority';
 import type { ComposePopoutPayload } from './compose-payload';
+import { canSealSessions, createSessionOpener, credentialFingerprint, type SealedAnswer } from './sealed';
 
 export const POPOUT_CHANNEL = 'bulwark:popout-windows';
 
@@ -69,22 +75,29 @@ export interface RescuedDraft {
   htmlBody?: string;
   inReplyTo?: string[];
   references?: string[];
-  options?: { priority?: import('@/lib/message-priority').MessagePriority; previousDraftAccountId?: string; classification?: string | null };
+  options?: { priority?: MessagePriority; previousDraftAccountId?: string; classification?: string | null };
+  /** The composer's state: where the text goes when the save fails. */
+  state: ComposerDraftData;
+  /** For a reload of that window to ask which draft id came of it. */
+  rescueKey?: string;
 }
 
 export type PopoutMessage =
-  | { type: 'session-request'; requestId: string; accountId?: string; rejectedAuthHeader?: string }
-  | { type: 'session-answer'; requestId: string; answer: SharedSessionAnswer }
+  | { type: 'session-request'; requestId: string; publicKey: JsonWebKey; accountId?: string; rejectedFingerprint?: string }
+  | { type: 'session-answer'; requestId: string; sealed: SealedAnswer }
   | { type: 'handoff-request'; handoffId: string }
   | { type: 'handoff-answer'; handoffId: string; payload: ComposePopoutPayload | null }
+  | { type: 'handoff-rendered'; handoffId: string }
   | { type: 'sent'; requestId: string; notice: PopoutSentNotice }
   | { type: 'sent-ack'; requestId: string }
   | { type: 'mail-changed'; accountId: string | null }
   | { type: 'state-change' }
   | { type: 'draft-rescue'; draft: RescuedDraft }
+  | { type: 'rescue-query'; rescueKey: string }
+  | { type: 'rescue-answer'; rescueKey: string; draftId: string | null }
   | { type: 'main-ping' }
-  | { type: 'main-pong' }
-  | { type: 'main-gone' }
+  | { type: 'main-pong'; windowId: string; accountIds: string[] }
+  | { type: 'main-gone'; windowId: string }
   | { type: 'account-removed'; accountId: string };
 
 export interface PopoutChannel {
@@ -131,33 +144,43 @@ export { newId as newPopoutId };
 export const SESSION_ANSWER_MS = 3000;
 
 /**
- * The session of a window that is signed in, from any main window. With
- * `rejectedAuthHeader` the server just refused that credential: the main
+ * The session of a window that is signed in. With `accountId`, only a window
+ * holding that login answers, so the first answer is one that can be used.
+ * With `rejectedAuthHeader` the server just refused that credential: the main
  * window renews it first when it still holds the same one. Null when no main
  * window answers in time.
  */
-export function requestWindowSession(
+export async function requestWindowSession(
   options: { accountId?: string; rejectedAuthHeader?: string } = {},
   timeoutMs: number = SESSION_ANSWER_MS,
 ): Promise<SharedSessionAnswer | null> {
+  if (!canSealSessions()) return null;
+  const opener = await createSessionOpener();
+  const rejectedFingerprint = options.rejectedAuthHeader ? await credentialFingerprint(options.rejectedAuthHeader) : undefined;
   return new Promise((resolve) => {
     const requestId = newId();
     let timer: ReturnType<typeof setTimeout> | null = null;
-    const channel = openPopoutChannel((message) => {
-      if (message.type !== 'session-answer' || message.requestId !== requestId) return;
-      finish(message.answer);
-    });
     const finish = (answer: SharedSessionAnswer | null) => {
       if (timer) clearTimeout(timer);
       channel?.close();
       resolve(answer);
     };
+    const channel = openPopoutChannel((message) => {
+      if (message.type !== 'session-answer' || message.requestId !== requestId) return;
+      void opener.open<SharedSessionAnswer>(message.sealed).then(finish, () => finish(null));
+    });
     if (!channel) {
       resolve(null);
       return;
     }
     timer = setTimeout(() => finish(null), timeoutMs);
-    channel.post({ type: 'session-request', requestId, ...options });
+    channel.post({
+      type: 'session-request',
+      requestId,
+      publicKey: opener.publicKey,
+      ...(options.accountId ? { accountId: options.accountId } : {}),
+      ...(rejectedFingerprint ? { rejectedFingerprint } : {}),
+    });
   });
 }
 
@@ -190,31 +213,54 @@ export function announceMailChanged(accountId: string | null): void {
   channel?.close();
 }
 
+/**
+ * The draft id a closing window's text was saved under, for the same window
+ * after a reload, whose own copy still names the version that replaced. Null
+ * when no window saved anything for it.
+ */
+export function askRescuedDraftId(rescueKey: string, timeoutMs = 1500): Promise<string | null> {
+  return new Promise((resolve) => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const channel = openPopoutChannel((message) => {
+      if (message.type === 'rescue-answer' && message.rescueKey === rescueKey) finish(message.draftId);
+    });
+    const finish = (draftId: string | null) => {
+      if (timer) clearTimeout(timer);
+      channel?.close();
+      resolve(draftId);
+    };
+    if (!channel) {
+      resolve(null);
+      return;
+    }
+    timer = setTimeout(() => finish(null), timeoutMs);
+    channel.post({ type: 'rescue-query', rescueKey });
+  });
+}
+
 /** How often a pop-out checks that a main window is there, and how long an answer counts. */
 const MAIN_PING_MS = 4000;
 const MAIN_ALIVE_MS = 10_000;
 
 /**
- * Keeps track, synchronously, of whether a main window is open: a window
- * closing has no time to ask. Also hands a closing draft to it.
+ * Keeps track, synchronously, of which main windows are open and which logins
+ * they hold: a window closing has no time to ask. Also hands a closing draft to
+ * one that can save it.
  */
-export function watchMainWindow(): { alive(): boolean; rescue(draft: RescuedDraft): boolean; stop(): void } {
-  let lastSeen = 0;
+export function watchMainWindow(): { alive(accountId?: string): boolean; rescue(draft: RescuedDraft): boolean; stop(): void } {
+  const windows = new Map<string, { at: number; accountIds: string[] }>();
   const channel = openPopoutChannel((message) => {
-    if (message.type === 'main-pong') lastSeen = Date.now();
-    if (message.type === 'main-gone') {
-      lastSeen = 0;
-      // Another main window takes over, and answers this.
-      channel?.post({ type: 'main-ping' });
-    }
+    if (message.type === 'main-pong') windows.set(message.windowId, { at: Date.now(), accountIds: message.accountIds });
+    if (message.type === 'main-gone') windows.delete(message.windowId);
   });
   channel?.post({ type: 'main-ping' });
   const timer = setInterval(() => channel?.post({ type: 'main-ping' }), MAIN_PING_MS);
-  const alive = () => Date.now() - lastSeen < MAIN_ALIVE_MS;
+  const alive = (accountId?: string) => [...windows.values()].some((entry) =>
+    Date.now() - entry.at < MAIN_ALIVE_MS && (!accountId || entry.accountIds.includes(accountId)));
   return {
     alive,
     rescue(draft) {
-      if (!channel || !alive()) return false;
+      if (!channel || !alive(draft.localAccountId)) return false;
       channel.post({ type: 'draft-rescue', draft });
       return true;
     },

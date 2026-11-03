@@ -6498,6 +6498,7 @@
     "message_gone_title": "Ez az üzenet már nincs meg",
     "message_gone_body": "Törölték, vagy másik fiókba helyezték át.",
     "message_moved": "Ezt az üzenetet másik mappába helyezték át.",
-    "message_moved_to": "Ezt az üzenetet ide helyezték át: {folder}."
+    "message_moved_to": "Ezt az üzenetet ide helyezték át: {folder}.",
+    "window_not_ready": "Az új ablak nem nyílt meg időben. A piszkozat itt marad."
   }
 }

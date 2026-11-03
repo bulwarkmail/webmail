@@ -6498,6 +6498,7 @@
     "message_gone_title": "Denne besked er væk",
     "message_gone_body": "Den er slettet eller flyttet til en anden konto.",
     "message_moved": "Denne besked er flyttet til en anden mappe.",
-    "message_moved_to": "Denne besked er flyttet til {folder}."
+    "message_moved_to": "Denne besked er flyttet til {folder}.",
+    "window_not_ready": "Det nye vindue åbnede ikke i tide. Din kladde bliver her."
   }
 }

@@ -6498,6 +6498,7 @@
     "message_gone_title": "Esta mensagem já não existe",
     "message_gone_body": "Foi eliminada ou movida para outra conta.",
     "message_moved": "Esta mensagem foi movida para outra pasta.",
-    "message_moved_to": "Esta mensagem foi movida para {folder}."
+    "message_moved_to": "Esta mensagem foi movida para {folder}.",
+    "window_not_ready": "A nova janela não abriu a tempo. O seu rascunho fica aqui."
   }
 }

@@ -357,6 +357,25 @@ describe('Save all attachments to a folder', () => {
     expect(screen.getAllByTitle('Download all')[0]).toBeVisible();
   });
 
+  it('keeps one row in a narrow pane: with two buttons, just the icons there, and always a name', async () => {
+    stubPicker(async () => fakeFolder());
+    await openViewer();
+    const save = saveButton();
+    expect(save.getAttribute('aria-label')).toBe(en.pwaWindows.save_all_to_folder);
+    expect(save.querySelector('span')?.className).toContain('hidden @xl:inline');
+    const download = screen.getAllByTitle('Download all')[0];
+    expect(download.getAttribute('aria-label')).toBe('Download all');
+    expect(download.querySelector('span')?.className).toContain('hidden @xl:inline');
+    expect(screen.getAllByTestId('reader-attachments')[0].className).toContain('@container');
+  });
+
+  it('shows the zip button as it was where there is only that one', async () => {
+    await openViewer();
+    const download = screen.getAllByTitle('Download all')[0];
+    expect(download.querySelector('span')?.className ?? '').not.toContain('hidden');
+    expect(download.textContent).toContain('Download all');
+  });
+
   it('writes each attachment to the folder, names the folder, and starts no zip', async () => {
     const folder = fakeFolder();
     const picker = stubPicker(async () => folder);

@@ -6,7 +6,8 @@
  * UI chrome is listed one by one, instead of switching selection off for the
  * whole page and listing what may stay on: a message, a contact's details or
  * an event's notes must not stop being selectable because nobody thought of
- * them. Message bodies are in their own frame and aren't touched at all.
+ * them. An HTML message is in its own frame; a plain-text one is in the page,
+ * and the rule at the end keeps it selectable wherever it sits.
  */
 
 html[data-desktop],
@@ -34,7 +35,6 @@ html[data-desktop] :is(
   [role="tree"],
   [role="treeitem"],
   [role="row"],
-  [data-email-id],
   [data-composer-header],
   [data-mv-compose-titlebar],
   [data-window-title-bar]
@@ -61,4 +61,16 @@ html[data-desktop] :is(img, a, svg) {
 
 html[data-desktop] [draggable="true"] {
   -webkit-user-drag: element;
+}
+
+/* A plain-text message renders in the page, also inside rows and buttons. */
+html[data-desktop] [data-plugin-source="email-body"],
+html[data-desktop] [data-plugin-source="email-body"] * {
+  -webkit-user-select: text;
+  user-select: text;
+  cursor: text;
+}
+
+html[data-desktop] [data-plugin-source="email-body"] a {
+  cursor: pointer;
 }

@@ -7,6 +7,7 @@
 import { IS_LITE } from '@/lib/lite';
 import { isStandaloneDisplayMode } from '@/lib/standalone-display';
 import '@/lib/desktop/types';
+import { canSealSessions } from './sealed';
 
 export function hasDesktopWindows(): boolean {
   return typeof window !== 'undefined' && !!window.bulwarkDesktop?.windows;
@@ -16,8 +17,8 @@ export function hasDesktopWindows(): boolean {
 export function popoutsAvailable(): boolean {
   // Lite has no such route: a static export can't list every message id.
   if (IS_LITE || typeof window === 'undefined') return false;
-  // Sharing the session and renewing tokens safely across windows need both.
-  if (typeof BroadcastChannel === 'undefined' || !navigator.locks) return false;
+  // Sharing the session and renewing tokens safely across windows need these.
+  if (typeof BroadcastChannel === 'undefined' || !navigator.locks || !canSealSessions()) return false;
   if (hasDesktopWindows()) return true;
   if (!isStandaloneDisplayMode()) return false;
   // A home-screen app on a phone or tablet has no second window: window.open

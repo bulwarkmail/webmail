@@ -76,8 +76,8 @@ export function openMessageWindow(target: MessageWindowTarget): boolean {
 }
 
 export interface ComposerWindow {
-  /** Hands the draft over. The pop-out is waiting for it. */
-  handOver(payload: ComposePopoutPayload): void;
+  /** Hands the draft over. True once the composer is on screen there; until then the sender keeps its copy. */
+  handOver(payload: ComposePopoutPayload): Promise<boolean>;
   /** Calls it off: the pop-out closes. */
   cancel(): void;
 }

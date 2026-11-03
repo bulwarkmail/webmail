@@ -6498,6 +6498,7 @@
     "message_gone_title": "Acest mesaj nu mai există",
     "message_gone_body": "A fost șters sau mutat în alt cont.",
     "message_moved": "Acest mesaj a fost mutat în alt dosar.",
-    "message_moved_to": "Acest mesaj a fost mutat în {folder}."
+    "message_moved_to": "Acest mesaj a fost mutat în {folder}.",
+    "window_not_ready": "Fereastra nouă nu s-a deschis la timp. Ciorna rămâne aici."
   }
 }
