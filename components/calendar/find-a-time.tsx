@@ -245,6 +245,7 @@ export function FindATime({ attendees, start, end, onPick, savedWindow }: FindAT
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         data-testid="find-a-time-button"
+        className="gap-1.5"
       >
         <CalendarClock className="h-3.5 w-3.5" aria-hidden="true" />
         {t("suggest")}
