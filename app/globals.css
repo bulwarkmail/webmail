@@ -1321,13 +1321,10 @@ optgroup {
 /* The account popover: a wide card with a very round corner, rather
    than the narrow menu the rail and the sidebar switchers drop. */
 [data-interface-layout="mountain-view"] [data-mv-account-popover] {
-  width: var(--mv-popover-w);
+  width: min(var(--mv-popover-w), calc(100vw - 2rem));
   border-radius: var(--mv-popover-radius);
 }
 
-/* The advanced filters drop from the search field with a small gap and take
-   its corner, so the two read as one control. Position and width come from
-   the field's own box, measured by FilterPanelHost. */
 /* The compose window docks beside the side panel, not over it: over it, the
    window hides the panel's Close button and the rail's own buttons. The rail is
    3.5rem wide, an open panel 300px plus 8px of margin. */
@@ -1338,6 +1335,9 @@ optgroup {
   --mv-compose-end: 23.75rem;
 }
 
+/* The advanced filters drop from the search field with a small gap and take
+   its corner, so the two read as one control. Position and width come from
+   the field's own box, measured by FilterPanelHost. */
 [data-interface-layout="mountain-view"] [data-mv-filter-panel] {
   border-radius: var(--mv-search-radius);
 }

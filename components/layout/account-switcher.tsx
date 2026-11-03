@@ -539,7 +539,7 @@ export function AccountSwitcher({
                     className="w-full flex items-center gap-4 px-5 py-3 text-sm text-start hover:bg-muted transition-colors"
                     role="menuitem"
                   >
-                    <LogOut className="w-5 h-5 text-muted-foreground" />
+                    <LogOut className="w-5 h-5 shrink-0 text-muted-foreground" />
                     <span className="truncate">{t("sign_out_of", { account: displayEmail })}</span>
                   </button>
                 )}
