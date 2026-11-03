@@ -6622,5 +6622,14 @@
     "label_description": "Vonja vissza az engedélyét. A kiszolgálónak újra kérnie kell.",
     "revoke": "Visszavonás",
     "revoked": "Engedély visszavonva"
+  },
+  "desktop_policy": {
+    "server_refused": "A szervezete ezen az eszközön nem engedélyezi ezt a kiszolgálót.",
+    "plugin_refused": "A szervezete ezen az eszközön nem engedélyezi ezt a bővítményt, ezért nem fut. A beállításai és adatai megmaradnak.",
+    "install_refused": "A szervezete ezen az eszközön nem engedélyezi ezt a bővítményt.",
+    "plugins_label": "Bővítmények",
+    "plugins_off": "A szervezete ezen az eszközön kikapcsolta a bővítményeket.",
+    "plugins_allowlist": "A szervezete ezen az eszközön csak bizonyos bővítményeket engedélyez.",
+    "off": "Ki"
   }
 }

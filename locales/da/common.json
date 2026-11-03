@@ -6622,5 +6622,14 @@
     "label_description": "Træk din tilladelse tilbage. Serveren skal så spørge igen.",
     "revoke": "Træk tilbage",
     "revoked": "Tilladelsen er trukket tilbage"
+  },
+  "desktop_policy": {
+    "server_refused": "Din organisation tillader ikke denne server på denne enhed.",
+    "plugin_refused": "Din organisation tillader ikke dette plugin på denne enhed, så det kører ikke. Dets indstillinger og data bevares.",
+    "install_refused": "Din organisation tillader ikke dette plugin på denne enhed.",
+    "plugins_label": "Plugins",
+    "plugins_off": "Din organisation har slået plugins fra på denne enhed.",
+    "plugins_allowlist": "Din organisation tillader kun bestemte plugins på denne enhed.",
+    "off": "Fra"
   }
 }

@@ -6622,5 +6622,14 @@
     "label_description": "Retira el permís. El servidor ho haurà de tornar a demanar.",
     "revoke": "Retira",
     "revoked": "Permís retirat"
+  },
+  "desktop_policy": {
+    "server_refused": "La teva organització no permet aquest servidor en aquest dispositiu.",
+    "plugin_refused": "La teva organització no permet aquest connector en aquest dispositiu, per tant no s'executa. Se'n conserven la configuració i les dades.",
+    "install_refused": "La teva organització no permet aquest connector en aquest dispositiu.",
+    "plugins_label": "Connectors",
+    "plugins_off": "La teva organització ha desactivat els connectors en aquest dispositiu.",
+    "plugins_allowlist": "La teva organització només permet determinats connectors en aquest dispositiu.",
+    "off": "Desactivat"
   }
 }

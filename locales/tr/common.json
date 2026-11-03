@@ -6622,5 +6622,14 @@
     "label_description": "İzninizi geri alın. Sunucunun yeniden sorması gerekir.",
     "revoke": "Geri al",
     "revoked": "İzin geri alındı"
+  },
+  "desktop_policy": {
+    "server_refused": "Kuruluşunuz bu cihazda bu sunucuya izin vermiyor.",
+    "plugin_refused": "Kuruluşunuz bu cihazda bu eklentiye izin vermiyor, bu yüzden çalışmıyor. Ayarları ve verileri korunur.",
+    "install_refused": "Kuruluşunuz bu cihazda bu eklentiye izin vermiyor.",
+    "plugins_label": "Eklentiler",
+    "plugins_off": "Kuruluşunuz bu cihazda eklentileri kapattı.",
+    "plugins_allowlist": "Kuruluşunuz bu cihazda yalnızca belirli eklentilere izin veriyor.",
+    "off": "Kapalı"
   }
 }

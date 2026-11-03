@@ -18,6 +18,7 @@ import { parseJmapServers, resolveTrustedJmapUrl } from '@/lib/admin/jmap-server
 import { decryptPayload, encryptPayload } from '@/lib/auth/crypto';
 import { getSignInCookieOptions } from '@/lib/oauth/cookie-config';
 import { isPublicHttpUrl } from '@/lib/security/url-guard';
+import { mailServerRefusedByDevicePolicy } from '@/lib/desktop/server-policy';
 
 type CookieStore = Awaited<ReturnType<typeof cookies>>;
 
@@ -36,6 +37,11 @@ export function customUpstreamCookieName(slot: number): string {
 
 /** Null when the address isn't one the sign-in routes would accept right now. */
 export async function resolveCustomUpstream(serverUrl: unknown, clientId: unknown): Promise<CustomUpstream | null> {
+  if (mailServerRefusedByDevicePolicy(serverUrl)) return null;
+  return checkedUpstream(serverUrl, clientId);
+}
+
+async function checkedUpstream(serverUrl: unknown, clientId: unknown): Promise<CustomUpstream | null> {
   if (typeof serverUrl !== 'string' || !serverUrl || typeof clientId !== 'string' || !clientId) return null;
   await configManager.ensureLoaded();
   const servers = parseJmapServers(configManager.get<unknown>('jmapServers', []));
@@ -63,7 +69,9 @@ export async function readCustomUpstream(cookieStore: CookieStore, slot: number)
   } catch {
     return null;
   }
-  return payload ? resolveCustomUpstream(payload.s, payload.c) : null;
+  // Without the device's policy: a sign-out still has to revoke its token at a server
+  // that came off the list. A refresh checks the policy itself.
+  return payload ? checkedUpstream(payload.s, payload.c) : null;
 }
 
 export function clearCustomUpstream(cookieStore: CookieStore, slot: number): void {

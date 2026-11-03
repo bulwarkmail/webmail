@@ -102,6 +102,36 @@ function lastStatus() {
   return statuses[statuses.length - 1];
 }
 
+describe('loadSandboxedPlugin under the OS policy of the device', () => {
+  it('starts nothing the policy refuses: no frame, no download', async () => {
+    const { EMPTY_POLICY_LAYERS, resolvePolicies } = await import('../desktop/policy-schema');
+    const snapshot = (forcedMachine: Record<string, unknown>) => resolvePolicies({ ...EMPTY_POLICY_LAYERS, forcedMachine });
+    const bridgeWith = (current: ReturnType<typeof snapshot>) => ({ version: 1, platform: 'win32' as const, policy: { get: () => current, onChange: () => () => {} } });
+    window.bulwarkDesktop = bridgeWith(snapshot({ PluginsMode: 'allowlist', PluginAllowlist: ['other-plugin'] }));
+    mocks.getCode.mockResolvedValue(CODE);
+    try {
+      await loadSandboxedPlugin(plugin());
+      expect(lastStatus()).toMatchObject({ id: 'managed-plugin', status: 'error', error: 'device-policy' });
+      expect(mocks.createBackgroundInstance).not.toHaveBeenCalled();
+      expect(mocks.downloadManagedBundle).not.toHaveBeenCalled();
+      expect(mocks.getCode).not.toHaveBeenCalled();
+
+      window.bulwarkDesktop = bridgeWith(snapshot({ PluginsMode: 'allowlist', PluginAllowlist: ['managed-plugin'] }));
+      await loadSandboxedPlugin(plugin());
+      expect(lastStatus()).toMatchObject({ id: 'managed-plugin', status: 'running' });
+      unloadSandboxedPlugin('managed-plugin');
+
+      // The same id on a package of the user's own doesn't pass.
+      mocks.createBackgroundInstance.mockClear();
+      await loadSandboxedPlugin(plugin({ managed: false }));
+      expect(lastStatus()).toMatchObject({ id: 'managed-plugin', status: 'error', error: 'device-policy' });
+      expect(mocks.createBackgroundInstance).not.toHaveBeenCalled();
+    } finally {
+      window.bulwarkDesktop = undefined;
+    }
+  });
+});
+
 describe('loadSandboxedPlugin in the no-third-party mode (#903)', () => {
   it('refuses a plugin that declares network access and runs one that does not', async () => {
     const { setNoThirdPartyTraffic } = await import('../third-party-mode');

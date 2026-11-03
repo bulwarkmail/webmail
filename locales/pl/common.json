@@ -6622,5 +6622,14 @@
     "label_description": "Cofnij swoją zgodę. Serwer będzie musiał zapytać ponownie.",
     "revoke": "Cofnij",
     "revoked": "Zgoda została cofnięta"
+  },
+  "desktop_policy": {
+    "server_refused": "Twoja organizacja nie zezwala na ten serwer na tym urządzeniu.",
+    "plugin_refused": "Twoja organizacja nie zezwala na tę wtyczkę na tym urządzeniu, więc nie działa. Jej ustawienia i dane zostają zachowane.",
+    "install_refused": "Twoja organizacja nie zezwala na tę wtyczkę na tym urządzeniu.",
+    "plugins_label": "Wtyczki",
+    "plugins_off": "Twoja organizacja wyłączyła wtyczki na tym urządzeniu.",
+    "plugins_allowlist": "Twoja organizacja zezwala na tym urządzeniu tylko na wybrane wtyczki.",
+    "off": "Wyłączone"
   }
 }

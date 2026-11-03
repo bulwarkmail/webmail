@@ -6622,5 +6622,14 @@
     "label_description": "Retirez votre autorisation. Le serveur devra la redemander.",
     "revoke": "Retirer",
     "revoked": "Autorisation retirée"
+  },
+  "desktop_policy": {
+    "server_refused": "Votre organisation n'autorise pas ce serveur sur cet appareil.",
+    "plugin_refused": "Votre organisation n'autorise pas ce plugin sur cet appareil, il ne s'exécute donc pas. Ses réglages et ses données sont conservés.",
+    "install_refused": "Votre organisation n'autorise pas ce plugin sur cet appareil.",
+    "plugins_label": "Plugins",
+    "plugins_off": "Votre organisation a désactivé les plugins sur cet appareil.",
+    "plugins_allowlist": "Votre organisation n'autorise que certains plugins sur cet appareil.",
+    "off": "Désactivé"
   }
 }

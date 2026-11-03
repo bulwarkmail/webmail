@@ -6622,5 +6622,14 @@
     "label_description": "Odvolajte svoje povolenie. Server sa bude musieť opýtať znova.",
     "revoke": "Odvolať",
     "revoked": "Povolenie bolo odvolané"
+  },
+  "desktop_policy": {
+    "server_refused": "Vaša organizácia tento server na tomto zariadení nepovoľuje.",
+    "plugin_refused": "Vaša organizácia tento plugin na tomto zariadení nepovoľuje, preto nebeží. Jeho nastavenia a údaje zostávajú zachované.",
+    "install_refused": "Vaša organizácia tento plugin na tomto zariadení nepovoľuje.",
+    "plugins_label": "Pluginy",
+    "plugins_off": "Vaša organizácia na tomto zariadení vypla pluginy.",
+    "plugins_allowlist": "Vaša organizácia na tomto zariadení povoľuje len niektoré pluginy.",
+    "off": "Vypnuté"
   }
 }

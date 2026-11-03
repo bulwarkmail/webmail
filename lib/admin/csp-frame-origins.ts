@@ -13,6 +13,7 @@ import { getPluginRegistry } from './plugin-registry';
 import { sanitizeFrameOrigins } from '../extension-origins';
 import { isNoThirdPartyTrafficOn } from './third-party-mode';
 import { onSharedChange } from '@/lib/shared-store/changes';
+import { pluginRefusedByDevicePolicy } from '@/lib/desktop/server-policy';
 
 export {
   isValidFrameOrigin,
@@ -79,7 +80,7 @@ export async function getEnabledPluginFrameOrigins(): Promise<string[]> {
     const seen = new Set<string>();
     const out: string[] = [];
     for (const plugin of [...registry.plugins, ...devPlugins]) {
-      if (!plugin.enabled) continue;
+      if (!plugin.enabled || pluginRefusedByDevicePolicy(plugin.id)) continue;
       const origins = sanitizeFrameOrigins(plugin.frameOrigins);
       for (const o of origins) {
         const key = o.toLowerCase();

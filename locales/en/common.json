@@ -6622,5 +6622,14 @@
     "label_description": "Take back your permission. The server has to ask again.",
     "revoke": "Take back",
     "revoked": "Permission taken back"
+  },
+  "desktop_policy": {
+    "server_refused": "Your organisation doesn't allow this server on this device.",
+    "plugin_refused": "Your organisation doesn't allow this plugin on this device, so it doesn't run. Its settings and data are kept.",
+    "install_refused": "Your organisation doesn't allow this plugin on this device.",
+    "plugins_label": "Plugins",
+    "plugins_off": "Your organisation turned off plugins on this device.",
+    "plugins_allowlist": "Your organisation only allows certain plugins on this device.",
+    "off": "Off"
   }
 }

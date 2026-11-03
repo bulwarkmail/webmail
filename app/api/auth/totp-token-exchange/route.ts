@@ -18,6 +18,7 @@ import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-u
 import { writeSignInStamp } from '@/lib/auth/session-age';
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 import { isDesktopTrustedServer } from '@/lib/desktop/trusted-servers';
+import { devicePolicyServerRefusal } from '@/lib/desktop/server-policy';
 import { stalwartDefaultClientId } from '@/lib/auth/stalwart-password-login';
 import { writeCustomUpstream } from '@/lib/oauth/custom-upstream';
 
@@ -162,6 +163,9 @@ export async function POST(request: NextRequest) {
     const serverList = parseJmapServers(configManager.get<unknown>('jmapServers', []));
 
     let upstreamUrl: string;
+    const refusedByDevice = devicePolicyServerRefusal(serverUrl);
+    if (refusedByDevice) return refusedByDevice;
+
     let upstreamTrusted = true;
     let resolvedServerId: string | null = null;
     const requestedEntry = findServerById(serverList, requestedServerId);

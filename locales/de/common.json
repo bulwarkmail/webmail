@@ -6622,5 +6622,14 @@
     "label_description": "Nehmen Sie Ihre Erlaubnis zurück. Der Server muss dann erneut fragen.",
     "revoke": "Zurücknehmen",
     "revoked": "Erlaubnis zurückgenommen"
+  },
+  "desktop_policy": {
+    "server_refused": "Ihre Organisation erlaubt diesen Server auf diesem Gerät nicht.",
+    "plugin_refused": "Ihre Organisation erlaubt dieses Plugin auf diesem Gerät nicht, daher läuft es nicht. Seine Einstellungen und Daten bleiben erhalten.",
+    "install_refused": "Ihre Organisation erlaubt dieses Plugin auf diesem Gerät nicht.",
+    "plugins_label": "Plugins",
+    "plugins_off": "Ihre Organisation hat Plugins auf diesem Gerät ausgeschaltet.",
+    "plugins_allowlist": "Ihre Organisation erlaubt auf diesem Gerät nur bestimmte Plugins.",
+    "off": "Aus"
   }
 }

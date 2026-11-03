@@ -6622,5 +6622,14 @@
     "label_description": "Retrageți permisiunea. Serverul va trebui să ceară din nou.",
     "revoke": "Retrage",
     "revoked": "Permisiune retrasă"
+  },
+  "desktop_policy": {
+    "server_refused": "Organizația ta nu permite acest server pe acest dispozitiv.",
+    "plugin_refused": "Organizația ta nu permite acest plugin pe acest dispozitiv, așa că nu rulează. Setările și datele sale sunt păstrate.",
+    "install_refused": "Organizația ta nu permite acest plugin pe acest dispozitiv.",
+    "plugins_label": "Pluginuri",
+    "plugins_off": "Organizația ta a dezactivat pluginurile pe acest dispozitiv.",
+    "plugins_allowlist": "Organizația ta permite doar anumite pluginuri pe acest dispozitiv.",
+    "off": "Dezactivat"
   }
 }

@@ -6622,5 +6622,14 @@
     "label_description": "Ritira il tuo permesso. Il server dovrà chiederlo di nuovo.",
     "revoke": "Ritira",
     "revoked": "Permesso ritirato"
+  },
+  "desktop_policy": {
+    "server_refused": "La tua organizzazione non consente questo server su questo dispositivo.",
+    "plugin_refused": "La tua organizzazione non consente questo plugin su questo dispositivo, quindi non viene eseguito. Le sue impostazioni e i suoi dati restano conservati.",
+    "install_refused": "La tua organizzazione non consente questo plugin su questo dispositivo.",
+    "plugins_label": "Plugin",
+    "plugins_off": "La tua organizzazione ha disattivato i plugin su questo dispositivo.",
+    "plugins_allowlist": "La tua organizzazione consente solo alcuni plugin su questo dispositivo.",
+    "off": "Disattivato"
   }
 }

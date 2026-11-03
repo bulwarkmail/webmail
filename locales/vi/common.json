@@ -6634,5 +6634,14 @@
     "label_description": "Thu hồi quyền của bạn. Máy chủ sẽ phải hỏi lại.",
     "revoke": "Thu hồi",
     "revoked": "Đã thu hồi quyền"
+  },
+  "desktop_policy": {
+    "server_refused": "Tổ chức của bạn không cho phép máy chủ này trên thiết bị này.",
+    "plugin_refused": "Tổ chức của bạn không cho phép tiện ích này trên thiết bị này nên tiện ích không chạy. Cài đặt và dữ liệu của tiện ích vẫn được giữ lại.",
+    "install_refused": "Tổ chức của bạn không cho phép tiện ích này trên thiết bị này.",
+    "plugins_label": "Tiện ích",
+    "plugins_off": "Tổ chức của bạn đã tắt tiện ích trên thiết bị này.",
+    "plugins_allowlist": "Tổ chức của bạn chỉ cho phép một số tiện ích trên thiết bị này.",
+    "off": "Tắt"
   }
 }

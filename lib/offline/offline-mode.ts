@@ -40,6 +40,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
 import { usePolicyStore, whenPolicySettled } from '@/stores/policy-store';
 import { onBeforeSignOut, onFullSignOut } from '@/lib/sign-out-cleanup';
+import { accountRefusedByDesktopPolicy } from '@/lib/desktop/refused-accounts';
 import { generateMessageId } from '@/lib/jmap/client';
 import { isNetworkFailure, SendNotStartedError, setOfflineHooks, type OfflineClientRef, type OfflineHooks, type OfflineMethodCall, type OfflineResponse } from '@/lib/jmap/offline-hooks';
 import type { SendEmailResult } from '@/lib/jmap/types';
@@ -736,6 +737,9 @@ export function scheduleSync(account: string, delayMs = 2_000): void {
 const syncsRunning = new Set<string>();
 
 export async function runSync(account: string): Promise<void> {
+  // Stopped by the device's OS policy (stores/auth-store.ts): its data waits.
+  const entry = useAccountStore.getState().accounts.find((candidate) => candidate.id === account);
+  if (entry && accountRefusedByDesktopPolicy(entry)) return;
   if (syncsRunning.has(account) || !offlineActive(account)) return;
   const client = onlineClientFor(account);
   if (!client || isOfflineNow(client.getServerUrl())) return;

@@ -6622,5 +6622,14 @@
     "label_description": "收回你的许可。服务器需要重新询问。",
     "revoke": "收回",
     "revoked": "已收回许可"
+  },
+  "desktop_policy": {
+    "server_refused": "您的组织不允许在此设备上使用此服务器。",
+    "plugin_refused": "您的组织不允许在此设备上使用此插件，因此它不会运行。其设置和数据会保留。",
+    "install_refused": "您的组织不允许在此设备上使用此插件。",
+    "plugins_label": "插件",
+    "plugins_off": "您的组织已在此设备上关闭插件。",
+    "plugins_allowlist": "您的组织在此设备上只允许使用部分插件。",
+    "off": "关闭"
   }
 }

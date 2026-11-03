@@ -8,6 +8,7 @@ import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { loginClientAddress } from '@/lib/auth/client-address';
 import { reserveVerifyProbe, type BudgetRefund } from '@/lib/auth/verify-budget';
 import { isStoreUnavailable } from '@/lib/auth/store-unavailable';
+import { devicePolicyServerRefusal } from '@/lib/desktop/server-policy';
 
 /**
  * Server-side credential pre-check for the login form (#969): a password
@@ -57,6 +58,9 @@ export async function POST(request: NextRequest) {
     if (oauthEnabled && oauthOnly) {
       return respond('inconclusive');
     }
+
+    const refusedByDevice = devicePolicyServerRefusal(serverUrl);
+    if (refusedByDevice) return refusedByDevice;
 
     // Same upstream pinning as /api/auth/session: an unauthenticated caller
     // must not be able to point this route at arbitrary internal hosts.

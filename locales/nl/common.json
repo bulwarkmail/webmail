@@ -6622,5 +6622,14 @@
     "label_description": "Trek uw toestemming in. De server moet dan opnieuw vragen.",
     "revoke": "Intrekken",
     "revoked": "Toestemming ingetrokken"
+  },
+  "desktop_policy": {
+    "server_refused": "Je organisatie staat deze server niet toe op dit apparaat.",
+    "plugin_refused": "Je organisatie staat deze plug-in niet toe op dit apparaat, dus hij draait niet. De instellingen en gegevens blijven bewaard.",
+    "install_refused": "Je organisatie staat deze plug-in niet toe op dit apparaat.",
+    "plugins_label": "Plug-ins",
+    "plugins_off": "Je organisatie heeft plug-ins op dit apparaat uitgeschakeld.",
+    "plugins_allowlist": "Je organisatie staat op dit apparaat alleen bepaalde plug-ins toe.",
+    "off": "Uit"
   }
 }
