@@ -1022,6 +1022,7 @@
     "recipients_refused": "未发送：服务器拒绝了 {recipients}。",
     "recipients_partly_refused": "服务器拒绝了 {recipients}。其他收件人会收到此邮件。",
     "send_offline": "你似乎已离线。邮件仍保留在这里，恢复联网后请再次发送。",
+    "archive_after_reply_queued": "您恢复联网后邮件将会发出。原邮件仍保留在收件箱中。",
     "formatting": "格式",
     "send_recipients_rejected": "未发送：服务器拒绝了所有收件人。",
     "send_plugin_failed": "未发送：负责发送的插件失败或耗时过长。再次发送前，请先检查“已发送”文件夹。",
@@ -2067,6 +2068,10 @@
       "placeholder_warning": {
         "label": "占位符提醒",
         "description": "发送仍含有占位符（如 [TIME] 或 [您的姓名]）、空白模板字段或未完成文本（如 TODO 或 TBD）的邮件前请求确认。"
+      },
+      "archive_after_reply": {
+        "label": "回复后归档",
+        "description": "回复或转发收件箱中的邮件后，在您的邮件发出后将其归档。"
       },
       "recipient_mentions": {
         "label": "使用 @ 提及收件人",

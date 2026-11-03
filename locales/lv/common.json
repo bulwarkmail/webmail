@@ -1022,6 +1022,7 @@
     "recipients_refused": "Nav nosūtīts: serveris noraidīja {recipients}.",
     "recipients_partly_refused": "Serveris noraidīja {recipients}. Pārējie adresāti saņem ziņojumu.",
     "send_offline": "Šķiet, esat bezsaistē. Ziņojums joprojām ir šeit, nosūtiet to vēlreiz, kad būsiet tiešsaistē.",
+    "archive_after_reply_queued": "Ziņojums tiks nosūtīts, kad atkal būsiet tiešsaistē. Oriģināls paliek iesūtnē.",
     "formatting": "Formatējums",
     "send_recipients_rejected": "Nav nosūtīts — serveris noraidīja visus adresātus.",
     "send_plugin_failed": "Nav nosūtīts – spraudnis, kas veic sūtīšanu, kļūdījās vai strādāja pārāk ilgi. Pirms sūtīt vēlreiz, pārbaudiet mapi Nosūtītie.",
@@ -2067,6 +2068,10 @@
       "placeholder_warning": {
         "label": "Brīdinājums par vietturiem",
         "description": "Pieprasīt apstiprinājumu pirms tādas ziņas sūtīšanas, kurā vēl ir vietturi, piemēram, [TIME] vai [Jūsu vārds], tukši veidnes lauki vai nepabeigts teksts, piemēram, TODO vai TBD."
+      },
+      "archive_after_reply": {
+        "label": "Arhivēt pēc atbildes",
+        "description": "Kad atbildat uz iesūtnes ziņojumu vai to pārsūtāt, tas tiek arhivēts pēc jūsu ziņojuma nosūtīšanas."
       },
       "recipient_mentions": {
         "label": "Pieminēt saņēmējus ar @",

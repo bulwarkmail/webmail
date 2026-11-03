@@ -1021,6 +1021,7 @@
     "show_less": "Näita vähem",
     "send_failed": "Kirja saatmine ebaõnnestus",
     "send_offline": "Paistab, et oled võrgust väljas. Kiri on alles, saada see uuesti, kui oled taas ühenduses.",
+    "archive_after_reply_queued": "Kiri saadetakse, kui oled taas võrgus. Algne kiri jääb postkasti.",
     "send_timeout": "Server lakkas vastamast. Enne uuesti saatmist kontrolli oma saadetud kirjade kausta — sõnum võis siiski välja minna.",
     "submission_quota": "Serveris on selle konto kohta liiga palju saadetud kirjade kirjeid. Bulwark eemaldas need, mida sai; kui see kordub, palu administraatoril e-kirjade saatmise piirangut tõsta.",
     "submission_limit": "Server keeldus kirja saatmast, sest piirang on täis: {reason}",
@@ -2070,6 +2071,10 @@
       "placeholder_warning": {
         "label": "Kohatäidete hoiatus",
         "description": "Küsi kinnitust enne kirja saatmist, kus on veel kohatäiteid nagu [TIME] või [Teie nimi], tühje malliväljasid või pooleli teksti nagu TODO või TBD."
+      },
+      "archive_after_reply": {
+        "label": "Arhiveeri pärast vastamist",
+        "description": "Kui vastad postkastis olevale kirjale või edastad selle, arhiveeritakse see pärast sinu kirja saatmist."
       },
       "recipient_mentions": {
         "label": "Maini adressaate @-ga",

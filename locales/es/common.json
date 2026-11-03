@@ -1029,6 +1029,7 @@
     "recipients_refused": "No enviado: el servidor rechazó {recipients}.",
     "recipients_partly_refused": "El servidor rechazó {recipients}. Los demás destinatarios reciben el mensaje.",
     "send_offline": "Parece que no tienes conexión. El mensaje sigue aquí; vuelve a enviarlo cuando tengas conexión.",
+    "archive_after_reply_queued": "Tu mensaje se enviará cuando vuelvas a estar en línea. El original se queda en la bandeja de entrada.",
     "formatting": "Formato",
     "send_recipients_rejected": "No enviado: el servidor rechazó a todos los destinatarios.",
     "send_plugin_failed": "No enviado: un complemento que gestiona el envío falló o tardó demasiado. Revisa la carpeta Enviados antes de volver a enviarlo.",
@@ -2067,6 +2068,10 @@
       "placeholder_warning": {
         "label": "Aviso de marcadores",
         "description": "Pedir confirmación antes de enviar un mensaje que todavía tiene marcadores como [TIME] o [Tu nombre], campos de plantilla vacíos o texto sin terminar como TODO o TBD."
+      },
+      "archive_after_reply": {
+        "label": "Archivar después de responder",
+        "description": "Cuando respondes o reenvías un mensaje de la bandeja de entrada, se archiva una vez enviado tu mensaje."
       },
       "recipient_mentions": {
         "label": "Mencionar destinatarios con @",

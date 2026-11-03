@@ -258,6 +258,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.email_behavior.attachment_reminder.label' },
     { label: 'settings.email_behavior.empty_subject_warning.label' },
     { label: 'settings.email_behavior.placeholder_warning.label' },
+    { label: 'settings.email_behavior.archive_after_reply.label' },
     { label: 'settings.composing_page.sections.receipts' },
     { label: 'settings.email_behavior.request_read_receipt.label' },
     { label: 'settings.email_behavior.read_receipt_response.label' },
@@ -369,7 +370,10 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
 // Extra English keywords per tab so common search terms hit even when the
 // translation doesn't contain the literal word.
 /** Settings shown only while the admin has the Archive action on (#1257). */
-export const ARCHIVE_ACTION_SEARCH_PATHS: ReadonlySet<string> = new Set(['settings.email_behavior.archive_mode.label']);
+export const ARCHIVE_ACTION_SEARCH_PATHS: ReadonlySet<string> = new Set([
+  'settings.email_behavior.archive_mode.label',
+  'settings.email_behavior.archive_after_reply.label',
+]);
 
 export const tabKeywords: Record<Tab, string> = {
   account: 'profile email user signin signout reorder rearrange drag dropdown switcher multi-account identities from address signature plus addressing unified mailbox shared group',

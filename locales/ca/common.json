@@ -1025,6 +1025,7 @@
     "recipients_refused": "No s'ha enviat: el servidor ha rebutjat {recipients}.",
     "recipients_partly_refused": "El servidor ha rebutjat {recipients}. Els altres destinataris reben el missatge.",
     "send_offline": "Sembla que no tens connexió. El missatge continua aquí; torna a enviar-lo quan tornis a estar en línia.",
+    "archive_after_reply_queued": "El missatge s'enviarà quan torneu a estar en línia. L'original es queda a la safata d'entrada.",
     "formatting": "Format",
     "send_recipients_rejected": "No s'ha enviat: el servidor ha rebutjat tots els destinataris.",
     "send_plugin_failed": "No s'ha enviat: un connector que gestiona l'enviament ha fallat o ha trigat massa. Comprova la carpeta Enviats abans de tornar-ho a enviar.",
@@ -2070,6 +2071,10 @@
       "placeholder_warning": {
         "label": "Avís de marcadors",
         "description": "Demana confirmació abans d'enviar un missatge que encara té marcadors com [TIME] o [El teu nom], camps de plantilla buits o text inacabat com TODO o TBD."
+      },
+      "archive_after_reply": {
+        "label": "Arxiva després de respondre",
+        "description": "Quan responeu o reenvieu un missatge de la safata d'entrada, s'arxiva un cop enviat el vostre missatge."
       },
       "recipient_mentions": {
         "label": "Esmentar destinataris amb @",

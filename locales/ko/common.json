@@ -1022,6 +1022,7 @@
     "recipients_refused": "보내지 못했습니다: 서버가 {recipients}을(를) 거부했습니다.",
     "recipients_partly_refused": "서버가 {recipients}을(를) 거부했습니다. 다른 받는 사람에게는 메시지가 전달됩니다.",
     "send_offline": "오프라인 상태인 것 같습니다. 메시지는 그대로 있으니 다시 연결되면 보내세요.",
+    "archive_after_reply_queued": "다시 온라인이 되면 메일이 전송됩니다. 원본은 받은편지함에 남아 있습니다.",
     "formatting": "서식",
     "send_recipients_rejected": "보내지 못했습니다. 서버가 모든 수신자를 거부했습니다.",
     "send_plugin_failed": "보내지 않았습니다. 전송을 처리하는 플러그인이 실패했거나 너무 오래 걸렸습니다. 다시 보내기 전에 보낸 편지함을 확인하세요.",
@@ -2067,6 +2068,10 @@
       "placeholder_warning": {
         "label": "자리표시자 경고",
         "description": "[TIME]이나 [귀하의 이름] 같은 자리표시자, 비어 있는 템플릿 필드, TODO나 TBD 같은 미완성 텍스트가 남아 있는 메시지를 보내기 전에 확인을 요청합니다."
+      },
+      "archive_after_reply": {
+        "label": "답장 후 보관",
+        "description": "받은편지함의 메일에 답장하거나 전달하면 메일을 보낸 뒤 원본을 보관합니다."
       },
       "recipient_mentions": {
         "label": "@로 받는 사람 언급",

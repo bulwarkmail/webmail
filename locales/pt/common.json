@@ -1029,6 +1029,7 @@
     "recipients_refused": "Não enviado: o servidor recusou {recipients}.",
     "recipients_partly_refused": "O servidor recusou {recipients}. Os demais destinatários recebem a mensagem.",
     "send_offline": "Parece que você está offline. A mensagem continua aqui; envie novamente quando voltar a ficar online.",
+    "archive_after_reply_queued": "Sua mensagem será enviada quando você estiver online novamente. A original continua na Caixa de entrada.",
     "formatting": "Formatação",
     "send_recipients_rejected": "Não enviado: o servidor rejeitou todos os destinatários.",
     "send_plugin_failed": "Não enviado: um plugin que trata do envio falhou ou demorou demasiado. Verifique a pasta Enviados antes de enviar novamente.",
@@ -2067,6 +2068,10 @@
       "placeholder_warning": {
         "label": "Aviso de marcadores",
         "description": "Pedir confirmação antes de enviar uma mensagem que ainda tem marcadores como [TIME] ou [Seu nome], campos de modelo vazios ou texto inacabado como TODO ou TBD."
+      },
+      "archive_after_reply": {
+        "label": "Arquivar após responder",
+        "description": "Quando você responde ou encaminha uma mensagem da Caixa de entrada, ela é arquivada depois que sua mensagem é enviada."
       },
       "recipient_mentions": {
         "label": "Mencionar destinatários com @",

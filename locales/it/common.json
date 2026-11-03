@@ -1029,6 +1029,7 @@
     "recipients_refused": "Non inviato: il server ha rifiutato {recipients}.",
     "recipients_partly_refused": "Il server ha rifiutato {recipients}. Gli altri destinatari ricevono il messaggio.",
     "send_offline": "Sembra che tu sia offline. Il messaggio è ancora qui, invialo di nuovo quando torni online.",
+    "archive_after_reply_queued": "Il messaggio verrà inviato quando tornerai online. L'originale resta in Posta in arrivo.",
     "formatting": "Formattazione",
     "send_recipients_rejected": "Non inviato: il server ha rifiutato tutti i destinatari.",
     "send_plugin_failed": "Non inviato: un plugin che gestisce l'invio non è riuscito o ha impiegato troppo tempo. Controlla la cartella Inviati prima di inviare di nuovo.",
@@ -2067,6 +2068,10 @@
       "placeholder_warning": {
         "label": "Avviso segnaposto",
         "description": "Chiedi conferma prima di inviare un messaggio che contiene ancora segnaposto come [TIME] o [Il tuo nome], campi del modello vuoti o testo incompleto come TODO o TBD."
+      },
+      "archive_after_reply": {
+        "label": "Archivia dopo la risposta",
+        "description": "Quando rispondi a un messaggio in Posta in arrivo o lo inoltri, viene archiviato dopo l'invio del tuo messaggio."
       },
       "recipient_mentions": {
         "label": "Menziona i destinatari con @",

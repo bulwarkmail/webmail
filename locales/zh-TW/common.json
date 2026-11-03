@@ -1025,6 +1025,7 @@
     "recipients_refused": "未傳送：伺服器拒絕了 {recipients}。",
     "recipients_partly_refused": "伺服器拒絕了 {recipients}。其他收件者會收到此郵件。",
     "send_offline": "你似乎已離線。郵件仍保留在這裡，恢復連線後請再次寄出。",
+    "archive_after_reply_queued": "您恢復連線後郵件就會寄出。原始郵件仍會留在收件匣中。",
     "formatting": "格式",
     "send_recipients_rejected": "未傳送：伺服器拒絕了所有收件者。",
     "send_plugin_failed": "未傳送：負責傳送的外掛程式失敗或耗時過久。再次傳送前，請先檢查「寄件備份」資料夾。",
@@ -2070,6 +2071,10 @@
       "placeholder_warning": {
         "label": "預留位置提醒",
         "description": "傳送仍含有預留位置（如 [TIME] 或 [您的姓名]）、空白範本欄位或未完成文字（如 TODO 或 TBD）的郵件前請求確認。"
+      },
+      "archive_after_reply": {
+        "label": "回覆後封存",
+        "description": "回覆或轉寄收件匣中的郵件後，會在您的郵件寄出後將其封存。"
       },
       "recipient_mentions": {
         "label": "使用 @ 提及收件者",

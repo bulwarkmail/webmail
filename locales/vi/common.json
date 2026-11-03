@@ -1021,6 +1021,7 @@
     "show_less": "Thu gọn",
     "send_failed": "Gửi email thất bại",
     "send_offline": "Có vẻ như bạn đang ngoại tuyến. Thư vẫn ở đây; hãy gửi lại khi bạn kết nối mạng.",
+    "archive_after_reply_queued": "Thư của bạn sẽ được gửi khi bạn trực tuyến trở lại. Thư gốc vẫn ở trong Hộp thư đến.",
     "send_timeout": "Máy chủ ngừng phản hồi. Hãy kiểm tra thư mục Đã gửi trước khi gửi lại — thư có thể đã được gửi đi.",
     "submission_quota": "Máy chủ có quá nhiều bản ghi thư đã gửi cho tài khoản này. Bulwark đã xóa được một số bản ghi; nếu tình trạng này tiếp diễn, hãy yêu cầu quản trị viên tăng giới hạn gửi email.",
     "submission_limit": "Máy chủ từ chối gửi thư vì đã chạm giới hạn: {reason}",
@@ -2082,6 +2083,10 @@
       "placeholder_warning": {
         "label": "Cảnh báo chỗ trống",
         "description": "Yêu cầu xác nhận trước khi gửi thư còn chỗ trống như [TIME] hoặc [Your Name], trường mẫu chưa điền hoặc nội dung chưa hoàn tất như TODO hay TBD."
+      },
+      "archive_after_reply": {
+        "label": "Lưu trữ sau khi trả lời",
+        "description": "Khi bạn trả lời hoặc chuyển tiếp một thư trong Hộp thư đến, thư đó sẽ được lưu trữ sau khi thư của bạn được gửi."
       },
       "recipient_mentions": {
         "label": "Nhắc người nhận bằng @",

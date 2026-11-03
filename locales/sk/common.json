@@ -1025,6 +1025,7 @@
     "recipients_refused": "Neodoslané: server odmietol {recipients}.",
     "recipients_partly_refused": "Server odmietol {recipients}. Ostatní príjemcovia správu dostanú.",
     "send_offline": "Zdá sa, že ste offline. Správa tu zostáva, odošlite ju znova, keď budete online.",
+    "archive_after_reply_queued": "Správa sa odošle, keď budete znova online. Pôvodná správa zostane v doručenej pošte.",
     "formatting": "Formátovanie",
     "send_recipients_rejected": "Neodoslané – server odmietol všetkých príjemcov.",
     "send_plugin_failed": "Neodoslané – doplnok, ktorý zabezpečuje odoslanie, zlyhal alebo trval príliš dlho. Pred opätovným odoslaním skontrolujte priečinok Odoslané.",
@@ -2070,6 +2071,10 @@
       "placeholder_warning": {
         "label": "Upozornenie na zástupné texty",
         "description": "Pred odoslaním správy, ktorá ešte obsahuje zástupné texty ako [TIME] alebo [Vaše meno], prázdne polia šablóny alebo nedokončený text ako TODO či TBD, požiadať o potvrdenie."
+      },
+      "archive_after_reply": {
+        "label": "Po odpovedi archivovať",
+        "description": "Keď odpoviete na správu v doručenej pošte alebo ju prepošlete, po odoslaní vašej správy sa archivuje."
       },
       "recipient_mentions": {
         "label": "Spomínať príjemcov pomocou @",
