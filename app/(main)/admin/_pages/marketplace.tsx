@@ -300,7 +300,7 @@ export function MarketplacePage() {
         )}
 
         <div className="space-y-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             <div className={pillGroupClass}>
               {([['browse', 'Browse'], ['installed', `Installed${installedCount ? ` (${installedCount})` : ''}`]] as const).map(([v, label]) => (
                 <button key={v} type="button" onClick={() => setView(v)} aria-pressed={view === v} className={pillClass(view === v)}>
@@ -308,7 +308,7 @@ export function MarketplacePage() {
                 </button>
               ))}
             </div>
-            <div className="relative min-w-0 flex-1">
+            <div className="relative min-w-0 flex-1 sm:min-w-56">
               <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
