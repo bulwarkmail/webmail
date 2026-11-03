@@ -110,8 +110,7 @@ vi.mock('@/stores/settings-store', () => {
     typeof sel === 'function' ? sel(state) : state;
   hook.getState = () => state;
   hook.setState = (p: Partial<typeof state>) => Object.assign(state, p);
-  // The calendar store (reached through the assistant's host calls) registers its sync bridge on import.
-  return { useSettingsStore: hook, registerCalendarSubscriptionSyncBridge: () => {} };
+  return { useSettingsStore: hook };
 });
 
 vi.mock('@/stores/contact-store', () => {

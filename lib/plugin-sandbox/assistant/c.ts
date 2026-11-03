@@ -15,10 +15,8 @@ import { doVacationGet, doVacationSet } from '../host-api-settings';
 import { isPlainRecord, sessionClient } from '../host-api-input';
 import { NOT_MINE } from './not-mine';
 import { pluginHasPermission } from '../permissions';
-import { doCalendarDeleteWithUndo, doCalendarRespond, doCalendarUndoDelete } from './c.calendar';
 import { doFiltersCreate, doFiltersList, doFiltersUndo } from './c.filters';
 import { doEmailBatch, doEmailUndoBatch } from './c.batch';
-import { doDescribeSettings, doSetSettings, doUndoSettings } from './c.settings';
 import type { AreaHostFeaturesC, VacationForwardField } from './c.types';
 
 /** Method → permission, joined into PERM_PER_METHOD. */
@@ -75,12 +73,18 @@ async function doVacationSetGuarded(input: unknown): Promise<VacationView | null
   return doVacationSet(input);
 }
 
+// Loaded on first use: both reach the calendar store, which registers itself
+// with the settings store on import. host-features imports this file, and
+// every view that offers plugin slots imports host-features.
+const calendar = () => import('./c.calendar');
+const settings = () => import('./c.settings');
+
 /** Runs a method of this area; NOT_MINE for any other. */
 export async function dispatch(plugin: InstalledPlugin, method: string, args: unknown[]): Promise<unknown> {
   switch (method) {
-    case 'calendar.respond': return doCalendarRespond(args[0], args[1]);
-    case 'calendar.deleteEvent': return doCalendarDeleteWithUndo(plugin.id, args[0]);
-    case 'calendar.undoDelete': return doCalendarUndoDelete(plugin.id, args[0]);
+    case 'calendar.respond': return (await calendar()).doCalendarRespond(args[0], args[1]);
+    case 'calendar.deleteEvent': return (await calendar()).doCalendarDeleteWithUndo(plugin.id, args[0]);
+    case 'calendar.undoDelete': return (await calendar()).doCalendarUndoDelete(plugin.id, args[0]);
     case 'filters.list': return doFiltersList();
     case 'filters.create': return doFiltersCreate(plugin.id, args[0]);
     case 'filters.undo': return doFiltersUndo(plugin.id, args[0]);
@@ -88,9 +92,9 @@ export async function dispatch(plugin: InstalledPlugin, method: string, args: un
     case 'email.undoBatch': return doEmailUndoBatch(plugin.id, args[0]);
     case 'vacation.get': return doVacationGetWithForward();
     case 'vacation.set': return doVacationSetGuarded(args[0]);
-    case 'app.describeSettings': return doDescribeSettings(args[0]);
-    case 'app.setSettings': return doSetSettings(plugin.id, args[0]);
-    case 'app.undoSettings': return doUndoSettings(plugin.id, args[0]);
+    case 'app.describeSettings': return (await settings()).doDescribeSettings(args[0]);
+    case 'app.setSettings': return (await settings()).doSetSettings(plugin.id, args[0]);
+    case 'app.undoSettings': return (await settings()).doUndoSettings(plugin.id, args[0]);
     default: return NOT_MINE;
   }
 }
