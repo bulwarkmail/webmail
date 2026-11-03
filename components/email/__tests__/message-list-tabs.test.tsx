@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { MessageListTabs, useMessageListPanelProps } from '../message-list-tabs';
 import { useMessageListTabsStore } from '@/stores/message-list-tabs-store';
 import { useEmailStore } from '@/stores/email-store';
+import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
 import type { Mailbox } from '@/lib/jmap/types';
 
 // The category strip is a tablist in the user's language whose active tab
@@ -35,6 +36,7 @@ describe('MessageListTabs', () => {
       selectedMailbox: 'mb-inbox',
       selectedKeyword: null,
       searchQuery: '',
+      searchFilters: { ...DEFAULT_SEARCH_FILTERS },
       isUnifiedView: false,
     } as never);
   });
@@ -70,5 +72,12 @@ describe('MessageListTabs', () => {
     render(<Harness />);
     expect(screen.queryByRole('tablist')).toBeNull();
     expect(screen.queryByRole('tabpanel')).toBeNull();
+  });
+
+  // A tab click fetches the folder again, which threw away the filter search.
+  it('stays away during a search that only uses the filters', () => {
+    useEmailStore.setState({ searchFilters: { ...DEFAULT_SEARCH_FILTERS, from: 'bob' } } as never);
+    render(<Harness />);
+    expect(screen.queryByRole('tablist')).toBeNull();
   });
 });
