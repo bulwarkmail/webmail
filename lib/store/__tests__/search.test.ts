@@ -5,6 +5,7 @@ import { parseSearchSnippet, snippetFilterFor } from '@/lib/search-snippet';
 import { DEFAULT_SCOPE } from '../area';
 import { AccountEngine } from '../engine/account-engine';
 import { mailArea } from '../mail';
+import { bodyText, deleteEmail } from '../mail/records';
 import { FAKE_SESSION, FakeJmap } from './helpers/fake-jmap';
 import { openMemoryStore } from './helpers/node-adapter';
 
@@ -14,12 +15,12 @@ function withBody(value: string): Email {
   return { bodyValues: { 1: { value, isTruncated: false, isEncodingProblem: false } } };
 }
 
-async function storeWith(emails: Email[]) {
+async function storeWith(emails: Email[], db = openMemoryStore()) {
   const server = new FakeJmap();
   for (const email of emails) server.addEmail(email);
   const engine = new AccountEngine({
     account: 'a@fake.test',
-    db: openMemoryStore(),
+    db,
     session: FAKE_SESSION,
     transport: server,
     areas: [mailArea],
@@ -45,7 +46,19 @@ async function storeWith(emails: Email[]) {
       notFound: string[];
     };
   };
-  return { engine, query, snippets };
+  return { engine, query, snippets, db };
+}
+
+/** A store that records the statements it runs. */
+function recordingStore() {
+  const db = openMemoryStore();
+  const statements: string[] = [];
+  const run = db.run.bind(db);
+  db.run = (sql, params) => {
+    statements.push(sql);
+    return run(sql, params);
+  };
+  return { db, statements };
 }
 
 const alice = [{ name: 'Alice Adler', email: 'alice@example.org' }];
@@ -194,6 +207,140 @@ describe('matching', () => {
     for (let i = 0; i < 300; i += 1) emails.push({ subject: 'die Rechnung für die Firma' });
     const { query } = await storeWith(emails);
     expect((await query({ text: 'die' })).length).toBe(300);
+  });
+});
+
+describe('the split indexes', () => {
+  it('writes each index once for a message, with no delete when its body arrives', async () => {
+    const { db, statements } = recordingStore();
+    await storeWith([{ id: 'one', subject: 'Hallo', ...withBody('Inhalt') }], db);
+    const fts = statements.filter((sql) => sql.includes('email_fts'));
+    expect(fts.filter((sql) => sql.startsWith('DELETE'))).toEqual([]);
+    for (const table of ['email_fts_word', 'email_fts_tri', 'email_fts_body_word', 'email_fts_body_tri']) {
+      expect(fts.filter((sql) => sql.startsWith(`INSERT INTO ${table} `)).length, table).toBe(1);
+    }
+  });
+
+  it('touches the head row again only for a message with Bcc', async () => {
+    const { db, statements } = recordingStore();
+    const { query } = await storeWith([{ id: 'one', subject: 'Hallo', bcc: dave }], db);
+    const fts = statements.filter((sql) => sql.includes('email_fts'));
+    expect(fts.filter((sql) => sql.startsWith('DELETE FROM email_fts_word')).length).toBe(1);
+    expect(fts.filter((sql) => sql.startsWith('DELETE FROM email_fts_body'))).toEqual([]);
+    // Nothing of the head was lost in writing it again.
+    expect(await query({ subject: 'hallo' })).toEqual(['one']);
+    expect(await query({ bcc: 'dave' })).toEqual(['one']);
+  });
+
+  it('finds head fields only in the head and body text only in the body', async () => {
+    const { query } = await storeWith([
+      { id: 'in-subject', subject: 'Stromrechnung', ...withBody('nichts') },
+      { id: 'in-body', subject: 'Hallo', ...withBody('Die Stromrechnung') },
+      { id: 'from-word', subject: 'Hallo', from: [{ name: 'Stromrechnung', email: 'x@example.org' }], ...withBody('nichts') },
+    ]);
+    expect(await query({ text: 'rechnung' })).toEqual(['in-subject', 'in-body', 'from-word']);
+    expect(await query({ text: 'stromrechnung' })).toEqual(['in-subject', 'in-body', 'from-word']);
+    expect(await query({ subject: 'rechnung' })).toEqual(['in-subject']);
+    expect(await query({ body: 'rechnung' })).toEqual(['in-body']);
+    expect(await query({ from: 'rechnung' })).toEqual(['from-word']);
+  });
+
+  it('keeps each word of a search free to match in the head or the body', async () => {
+    const { query } = await storeWith([{ id: 'one', subject: 'Rechnung', ...withBody('Oktober') }, { id: 'two', subject: 'Rechnung' }]);
+    expect(await query({ text: 'rechnung oktober' })).toEqual(['one']);
+  });
+
+  it('caps the trigrams of a body at 32 KB and leaves its words to 200 KB', async () => {
+    const filler = 'fuellwort '.repeat(4000);
+    const { query } = await storeWith([
+      { id: 'early', subject: 'x', ...withBody('Stromrechnung am Anfang') },
+      { id: 'late', subject: 'x', ...withBody(`${filler} Gasrechnung am Ende`) },
+      { id: 'past', subject: 'x', ...withBody(`${filler.repeat(6)} Wasserrechnung`) },
+    ]);
+    expect(await query({ body: 'rechnung' })).toEqual(['early']);
+    // Past the trigram cap the whole word and its start are still found.
+    expect(await query({ body: 'gasrechnung' })).toEqual(['late']);
+    expect(await query({ body: 'gasrech*' })).toEqual(['late']);
+    // Past the word cap too: not indexed at all.
+    expect(await query({ body: 'wasserrechnung' })).toEqual([]);
+  });
+
+  it('removes a message from all four indexes', async () => {
+    const { db, query } = await storeWith([{ id: 'one', subject: 'Hallo', ...withBody('Inhalt') }]);
+    const jmap = String(db.get<{ jmap: string }>('SELECT jmap FROM email')?.jmap);
+    deleteEmail(db, jmap, 'one');
+    for (const table of ['email_fts_word', 'email_fts_tri']) expect(db.all(`SELECT rowid FROM ${table} WHERE ${table} MATCH ?`, ['"hallo"'])).toEqual([]);
+    for (const table of ['email_fts_body_word', 'email_fts_body_tri']) expect(db.all(`SELECT rowid FROM ${table} WHERE ${table} MATCH ?`, ['"inhalt"'])).toEqual([]);
+    expect(await query({ text: 'inhalt' })).toEqual([]);
+  });
+
+  it('sets the options for bulk writes', async () => {
+    const { db } = await storeWith([]);
+    const option = (table: string, key: string) => Number(db.get<{ v: number }>(`SELECT v FROM ${table}_config WHERE k = ?`, [key])?.v);
+    expect(option('email_fts_body_word', 'hashsize')).toBe(8 * 1024 * 1024);
+    expect(option('email_fts_body_tri', 'hashsize')).toBe(16 * 1024 * 1024);
+    for (const table of ['email_fts_word', 'email_fts_tri', 'email_fts_body_word', 'email_fts_body_tri']) {
+      expect(option(table, 'automerge'), table).toBe(8);
+    }
+  });
+});
+
+describe('bodyText', () => {
+  const html = (value: string) => ({
+    textBody: [],
+    htmlBody: [{ partId: '1', type: 'text/html' }],
+    bodyValues: { 1: { value } },
+  });
+  const MEGABYTE = 1_000_000;
+  const HOSTILE: Record<string, string> = {
+    'opening brackets': '<'.repeat(MEGABYTE),
+    'comment openers': '<!--'.repeat(MEGABYTE / 4),
+    'style openers': '<style'.repeat(MEGABYTE / 6),
+    'style tags': '<style>'.repeat(MEGABYTE / 7),
+    'head and script openers': '<head><script>'.repeat(MEGABYTE / 14),
+    'one long tag': `<${'a'.repeat(MEGABYTE)}`,
+    'ampersands': '&'.repeat(MEGABYTE),
+    'an endless entity': `&${'a'.repeat(MEGABYTE)}`,
+    'many entities': '&a'.repeat(MEGABYTE / 2),
+    'spaces': ' '.repeat(MEGABYTE),
+    'closed blocks': '<style>x</style>'.repeat(MEGABYTE / 16),
+  };
+
+  for (const [name, value] of Object.entries(HOSTILE)) {
+    it(`gets through a 1 MB body of ${name} fast`, () => {
+      const started = Date.now();
+      bodyText(html(value));
+      // Generous, to not be flaky. The quadratic version took 40 s on a sixth of this.
+      expect(Date.now() - started).toBeLessThan(5_000);
+    });
+  }
+
+  it('caps what it reads', () => {
+    expect(bodyText(html(`<p>${'x'.repeat(2 * MEGABYTE)}</p>`)).length).toBeLessThanOrEqual(MEGABYTE);
+    expect(bodyText({
+      textBody: [{ partId: '1', type: 'text/plain' }],
+      bodyValues: { 1: { value: 'y'.repeat(2 * MEGABYTE) } },
+    }).length).toBe(MEGABYTE);
+  });
+
+  it('still takes out tags, comments and blocks, whatever their case', () => {
+    expect(bodyText(html(
+      '<!-- a --><HEAD><title>b</title></HEAD><STYLE>c</style><script type="x">d</SCRIPT><header>kept</header><p>text</p><!-- e -->',
+    )).trim()).toBe('kept text');
+  });
+
+  it('leaves the text of a block that never closes', () => {
+    expect(bodyText(html('before <style>.a{} after')).trim()).toBe('before .a{} after');
+    expect(bodyText(html('before <!-- after')).trim()).toBe('before <!-- after');
+    // One kind left open doesn't stop the others being taken out.
+    expect(bodyText(html('<style>a <script>b</script> c')).trim()).toBe('a c');
+  });
+
+  it('does not take a property of Object for an entity', () => {
+    for (const name of ['constructor', 'toString', 'valueOf', 'hasOwnProperty']) {
+      expect(bodyText(html(`a &${name}; b`))).toBe(`a &${name}; b`);
+    }
+    expect(bodyText(html('Gr&uuml;&szlig;e &#252; &#xFC;'))).toBe('Grüße ü ü');
   });
 });
 
@@ -379,6 +526,24 @@ describe('SearchSnippet/get', () => {
     ]);
     expect(answer?.methodResponses[0]).toEqual(['error', expect.objectContaining({ type: 'invalidArguments' }), 'a']);
     expect(answer?.methodResponses[1]).toEqual(['error', expect.objectContaining({ type: 'requestTooLarge' }), 'b']);
+  });
+
+  it('caps the patterns one highlight can use, keeping it working', async () => {
+    const words = Array.from({ length: 512 }, (_, i) => `wort${String(i).padStart(3, '0')}`);
+    const { snippets } = await storeWith([{ id: 'one', subject: words.join(' ').slice(0, 1000) }]);
+    const conditions = Array.from({ length: 32 }, (_, i) => ({ subject: words.slice(i * 16, i * 16 + 16).join(' ') }));
+    const { list } = await snippets({ operator: 'AND', conditions }, ['one']);
+    const marks = (list[0].subject as string).split('<mark>').length - 1;
+    expect(marks).toBeGreaterThan(0);
+    // The subject holds about 125 of the words, so more than this would be uncapped.
+    expect(marks).toBeLessThanOrEqual(64);
+  });
+
+  it('caps how much of a subject it reads', async () => {
+    const { snippets } = await storeWith([{ id: 'one', subject: `foo ${'x'.repeat(100_000)}` }]);
+    const subject = (await snippets({ subject: 'foo' }, ['one'])).list[0].subject as string;
+    expect(subject.startsWith('<mark>foo</mark>')).toBe(true);
+    expect(subject.length).toBeLessThan(2_000);
   });
 
   it('survives hostile search terms', async () => {

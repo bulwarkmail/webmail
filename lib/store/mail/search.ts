@@ -24,7 +24,8 @@
  * filter. Past them the extra terms are ignored, which only widens the result,
  * so a pasted page of text still gets an answer and can't keep the worker busy.
  * A very common word costs one read of its list in each index, at most the size
- * of the account.
+ * of the account. Body text past 32 KB has no trigrams (see records.ts), so deep
+ * in a long mail only whole words and word starts are found.
  */
 
 import { MethodError, type MethodHandler } from '../area';
@@ -34,15 +35,16 @@ import { bodyText, INDEX_BODY_CHARS } from './records';
 export const TEXT_FIELDS = ['text', 'subject', 'from', 'to', 'cc', 'bcc', 'body'] as const;
 export type TextField = (typeof TEXT_FIELDS)[number];
 
-const COLUMNS: Record<TextField, string | null> = {
-  text: null,
+const HEAD_COLUMNS: Partial<Record<TextField, string>> = {
   subject: 'subject',
   from: 'from_addr',
   to: 'to_addr',
   cc: 'cc_addr',
   bcc: 'bcc_addr',
-  body: 'body',
 };
+
+const HEAD_TABLES = { word: 'email_fts_word', tri: 'email_fts_tri' };
+const BODY_TABLES = { word: 'email_fts_body_word', tri: 'email_fts_body_tri' };
 
 const MAX_INPUT_CHARS = 8192;
 const MAX_TERMS = 16;
@@ -52,6 +54,8 @@ const MIN_TRIGRAM_CHARS = 3;
 const MIN_PREFIX_CHARS = 2;
 const MIN_PLAIN_SPELLING_CHARS = 5;
 const MAX_SNIPPET_IDS = 500;
+const MAX_HIGHLIGHT_PATTERNS = 64;
+const MAX_SNIPPET_SUBJECT_CHARS = 1024;
 /** RFC 8621 §5: a preview is at most 255 octets. */
 const PREVIEW_BYTES = 255;
 const PREVIEW_CONTEXT_CHARS = 40;
@@ -132,16 +136,19 @@ function quote(term: string): string {
 export function textCondition(field: TextField, input: string): { sql: string; params: SqlValue[] } {
   const terms = parseTerms(input);
   if (terms.length === 0) return { sql: '0', params: [] };
-  const column = COLUMNS[field];
+  const column = HEAD_COLUMNS[field];
   const scope = column ? `${column} : ` : '';
+  const tables = field === 'text' ? [HEAD_TABLES, BODY_TABLES] : field === 'body' ? [BODY_TABLES] : [HEAD_TABLES];
   const conditions: string[] = [];
   const params: SqlValue[] = [];
   for (const term of terms) {
     const selects: string[] = [];
     for (const probe of probesFor(term)) {
-      const table = probe.index === 'word' ? 'email_fts_word' : 'email_fts_tri';
-      selects.push(`SELECT rowid FROM ${table} WHERE ${table} MATCH ?`);
-      params.push(`${scope}${quote(probe.text)}${probe.prefix ? '*' : ''}`);
+      for (const pair of tables) {
+        const table = pair[probe.index];
+        selects.push(`SELECT rowid FROM ${table} WHERE ${table} MATCH ?`);
+        params.push(`${scope}${quote(probe.text)}${probe.prefix ? '*' : ''}`);
+      }
     }
     conditions.push(`e.rowid IN (${selects.join(' UNION ')})`);
   }
@@ -261,7 +268,7 @@ function highlighter(terms: readonly Term[]): RegExp | null {
   }
   if (patterns.size === 0) return null;
   // Longest first, so a match isn't cut short by a shorter spelling of it.
-  return new RegExp([...patterns].sort((a, b) => b.length - a.length).join('|'), 'gu');
+  return new RegExp([...patterns].sort((a, b) => b.length - a.length).slice(0, MAX_HIGHLIGHT_PATTERNS).join('|'), 'gu');
 }
 
 /** The terms a snippet marks. Anything under NOT was searched to be absent, so it isn't marked. */
@@ -383,7 +390,9 @@ export const searchSnippetGet: MethodHandler = (ctx, args) => {
       continue;
     }
     const email = JSON.parse(row.json) as { subject?: unknown; preview?: unknown };
-    const subject = subjectPattern && typeof email.subject === 'string' ? markAll(email.subject, subjectPattern) : null;
+    const subject = subjectPattern && typeof email.subject === 'string'
+      ? markAll(email.subject.slice(0, MAX_SNIPPET_SUBJECT_CHARS), subjectPattern)
+      : null;
     let preview: string | null = null;
     if (bodyPattern) {
       const body = ctx.db.get<{ json: string }>('SELECT json FROM email_body WHERE email_rowid = ?', [row.rowid]);
