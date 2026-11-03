@@ -523,10 +523,14 @@ test('forbidding offline mode wipes the device at the next policy fetch and hide
   await setPolicy(browser, {
     scopes: [{ id: 'no-offline', label: 'No offline', match: { groups: [ENT.team] }, policy: { organisation: { devices: { noOffline: true } } } }],
   });
-  // The open tab fetches the policy again when it gets focus (at most once a minute).
+  // The open tab fetches the policy again when it gets focus (at most once a
+  // minute). The list paints from the device before the app's own fetches are
+  // done, so the minute may run from a little after loadedAt.
   await alice.waitForTimeout(Math.max(0, 62_000 - (Date.now() - loadedAt)));
-  await alice.evaluate(() => window.dispatchEvent(new Event('focus')));
-  await expect(alice.getByText('Your organisation turned off offline mode', { exact: false }).first()).toBeVisible({ timeout: 30_000 });
+  await expect(async () => {
+    await alice.evaluate(() => window.dispatchEvent(new Event('focus')));
+    await expect(alice.getByText('Your organisation turned off offline mode', { exact: false }).first()).toBeVisible({ timeout: 4_000 });
+  }).toPass({ timeout: 90_000 });
   await expect.poll(async () => (await offlineDatabase(alice)).accounts, { timeout: 20_000 }).toBe(0);
   await alice.goto('/settings/backup/offline');
   await expect(alice.getByTestId('offline-forbidden')).toBeVisible({ timeout: 30_000 });
