@@ -622,6 +622,14 @@ async function notifyAccount(accountId, emailIds, accountLabel) {
     return;
   }
 
+  // Email notifications off, or do not disturb on: a browser still wants a
+  // notification for the push, so one comes and goes with nothing on it.
+  if (!(await showPreference())) {
+    if (freshIds.length > 0) await writeNotifiedIds(accountId, notified.concat(freshIds));
+    await showWithoutAlert(groupTag);
+    return;
+  }
+
   // Best effort: ask the webmail to look up the email so we can build a useful
   // notification. With ids from the server we ask for exactly the newest of
   // them; otherwise the API falls back to the newest unread Inbox message. If
@@ -875,6 +883,18 @@ async function soundPreference() {
     const res = await cache.match(pushPreferencesKey());
     const prefs = res ? await res.json() : null;
     return !prefs || prefs.sound !== false;
+  } catch (_) {
+    return true;
+  }
+}
+
+/** The "Email notifications" switch and do not disturb, mirrored the same way. Nothing stored: show. */
+async function showPreference() {
+  try {
+    const cache = await caches.open(PUSH_STATE_CACHE);
+    const res = await cache.match(pushPreferencesKey());
+    const prefs = res ? await res.json() : null;
+    return !prefs || prefs.show !== false;
   } catch (_) {
     return true;
   }

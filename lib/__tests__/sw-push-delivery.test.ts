@@ -143,4 +143,34 @@ describe('what a notification counts', () => {
   });
 });
 
+describe('with notifications off or do not disturb on', () => {
+  it('announces nothing: shows and removes at once, without asking for the message', async () => {
+    const { push, shade, previews } = loadWorker(() => ({ unreadTotal: 1, slot: 0, email: mail('e1', 'Secret subject') }), { prefs: { sound: false, show: false } });
+    await push(delivery('a', 'e1'));
+    expect(shade.size).toBe(0);
+    expect(previews).toHaveLength(0);
+  });
+
+  it('does not bring the message up later when turned on again', async () => {
+    const off = loadWorker(() => ({ unreadTotal: 1, slot: 0, email: mail('e1') }), { prefs: { sound: false, show: false } });
+    await off.push(delivery('a', 'e1'));
+    const { push, shade } = off;
+    // Same store, now switched on: a redelivery stays quiet.
+    await push(delivery('a', 'e1'));
+    expect(shade.size).toBe(0);
+  });
+
+  it('keeps showing with only the sound off', async () => {
+    const { push, shade } = loadWorker(() => ({ unreadTotal: 1, slot: 0, email: mail('e1') }), { prefs: { sound: false, show: true } });
+    await push(delivery('a', 'e1'));
+    expect(shade.get('bulwark-mail:a')!.options).toMatchObject({ silent: true, renotify: false });
+  });
+
+  it('shows as before for prefs written by an older page', async () => {
+    const { push, shade } = loadWorker(() => ({ unreadTotal: 1, slot: 0, email: mail('e1') }), { prefs: { sound: true } });
+    await push(delivery('a', 'e1'));
+    expect(shade.size).toBe(1);
+  });
+});
+
 // -- end of cases --
