@@ -18,7 +18,7 @@ import { generateAccountId, MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { replaceWindowLocation, getPathPrefix, getLocaleFromPath, apiFetch } from '@/lib/browser-navigation';
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
-import { clearDesktopCrashFiles, clearKeystoreGrants } from '@/lib/desktop/keystore-grants';
+import { clearDesktopCertificateChoices, clearDesktopCrashFiles, clearKeystoreGrants } from '@/lib/desktop/keystore-grants';
 import { DESKTOP_CLIENT_ID_KEY } from '@/lib/desktop/browser-sign-in';
 import { isEmbedded, notifyParent } from '@/lib/iframe-bridge';
 import { snapshotAccount, restoreAccount, clearAllStores, evictAccount, evictAll, forgetAccountRows } from '@/lib/account-state-manager';
@@ -2544,6 +2544,7 @@ export const useAuthStore = create<AuthState>()(
         useSettingsStore.getState().disableSync();
 
         clearKeystoreGrants();
+        clearDesktopCertificateChoices();
         clearDesktopCrashFiles();
         void authHooks.onAfterLogout.emit({
           accountId: accountId ?? 'all',
@@ -2725,6 +2726,7 @@ export const useAuthStore = create<AuthState>()(
         }
 
         clearKeystoreGrants();
+        clearDesktopCertificateChoices();
         clearDesktopCrashFiles();
         void authHooks.onAfterLogout.emit({
           accountId: 'all'
@@ -3874,6 +3876,7 @@ useAuthStore.subscribe((state, prev) => {
   if (ready && !wasReady) void authHooks.onAuthReady.emit({ accountId: state.activeAccountId });
   if (state.activeAccountId && prev.activeAccountId && state.activeAccountId !== prev.activeAccountId) {
     clearKeystoreGrants();
+    clearDesktopCertificateChoices();
     clearDesktopCrashFiles();
     void authHooks.onAccountSwitch.emit({ accountId: state.activeAccountId, previousAccountId: prev.activeAccountId });
   }

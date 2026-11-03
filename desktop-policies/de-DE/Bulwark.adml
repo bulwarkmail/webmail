@@ -49,7 +49,7 @@
       <string id="QuickComposeShortcut">Globale Tastenkombination für neue Nachricht</string>
       <string id="QuickComposeShortcut_Explain">Die Tastenkombination, die von überall aus eine neue Nachricht öffnet, etwa CommandOrControl+Alt+N. Geben Sie off ein, um sie auszuschalten.</string>
       <string id="AuthServerAllowlist">Server für die integrierte Anmeldung</string>
-      <string id="AuthServerAllowlist_Explain">Die Server, die die Windows-Anmeldung (Kerberos, NTLM) verwenden dürfen, durch Kommas getrennt, etwa *.example.com. Wird beim Neustart der App wirksam.</string>
+      <string id="AuthServerAllowlist_Explain">Die Server, die die Windows-Anmeldung (Kerberos, NTLM) verwenden dürfen, durch Kommas getrennt, etwa *.example.com. Ein von der Liste entfernter Server erhält sie sofort nicht mehr. Ein neuer braucht einen Neustart der App.</string>
       <string id="AuthNegotiateDelegateAllowlist">Server für die delegierte Anmeldung</string>
       <string id="AuthNegotiateDelegateAllowlist_Explain">Die Server, an die die App Kerberos-Anmeldedaten delegieren darf, durch Kommas getrennt. Wird beim Neustart der App wirksam.</string>
       <string id="AutoSelectCertificateForUrls">Clientzertifikate automatisch wählen</string>

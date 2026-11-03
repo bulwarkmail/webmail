@@ -6927,6 +6927,14 @@
     "revoke": "Retira",
     "revoked": "Permís retirat"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} demana un certificat",
+    "picker_detail": "El servidor vol saber qui ets. El certificat que triïs només va a aquest servidor. Si no coneixes aquest servidor, no n'enviïs cap.",
+    "picker_issued": "Emès per {issuer}, vàlid fins al {date}",
+    "picker_remember": "Recorda-ho per a {host}",
+    "picker_none": "No enviïs cap certificat",
+    "picker_more": "Més certificats…"
+  },
   "desktopOs": {
     "section_title": "Aplicació d'escriptori",
     "section_description": "Com funciona l'aplicació amb l'ordinador.",

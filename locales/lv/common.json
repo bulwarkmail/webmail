@@ -6927,6 +6927,14 @@
     "revoke": "Atsaukt",
     "revoked": "Atļauja atsaukta"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} prasa sertifikātu",
+    "picker_detail": "Serveris vēlas zināt, kas jūs esat. Jūsu izvēlētais sertifikāts tiks nosūtīts tikai šim serverim. Ja nepazīstat šo serveri, nesūtiet to.",
+    "picker_issued": "Izdevējs: {issuer}, derīgs līdz {date}",
+    "picker_remember": "Atcerēties vietnei {host}",
+    "picker_none": "Nesūtīt sertifikātu",
+    "picker_more": "Vairāk sertifikātu…"
+  },
   "desktopOs": {
     "section_title": "Darbvirsmas lietotne",
     "section_description": "Kā lietotne darbojas ar jūsu datoru.",

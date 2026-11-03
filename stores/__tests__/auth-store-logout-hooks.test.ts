@@ -73,6 +73,46 @@ describe('sign-out with plugins', () => {
     });
   });
 
+  describe('client certificates chosen for servers', () => {
+    afterEach(() => { delete (window as { bulwarkDesktop?: unknown }).bulwarkDesktop; });
+    const withBridge = (clearChoices?: () => Promise<void>) => {
+      (window as { bulwarkDesktop?: unknown }).bulwarkDesktop = { version: 1, certificates: { clearChoices } };
+    };
+
+    it('are forgotten at sign-out', async () => {
+      const clearChoices = vi.fn().mockResolvedValue(undefined);
+      withBridge(clearChoices);
+      await useAuthStore.getState().logout();
+      expect(clearChoices).toHaveBeenCalledTimes(1);
+    });
+
+    it('when all accounts sign out', async () => {
+      const clearChoices = vi.fn().mockResolvedValue(undefined);
+      withBridge(clearChoices);
+      await useAuthStore.getState().logoutAll();
+      expect(clearChoices).toHaveBeenCalled();
+    });
+
+    it('and when switching to another account', () => {
+      const clearChoices = vi.fn().mockResolvedValue(undefined);
+      withBridge(clearChoices);
+      useAuthStore.setState({ isAuthenticated: true, activeAccountId: 'a1' });
+      expect(clearChoices).not.toHaveBeenCalled();
+      useAuthStore.setState({ activeAccountId: 'a2' });
+      expect(clearChoices).toHaveBeenCalledTimes(1);
+    });
+
+    it('signs out all the same on a shell without the call, or one that fails', async () => {
+      withBridge(undefined);
+      await useAuthStore.getState().logout();
+      expect(useAuthStore.getState().isAuthenticated).toBe(false);
+      useAuthStore.setState({ isAuthenticated: true });
+      withBridge(vi.fn().mockRejectedValue(new Error('gone')));
+      await useAuthStore.getState().logout();
+      expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    });
+  });
+
   describe('keys in the OS store', () => {
     afterEach(() => { delete (window as { bulwarkDesktop?: unknown }).bulwarkDesktop; });
     const withBridge = (clearGrants?: () => Promise<void>) => {

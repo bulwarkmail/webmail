@@ -6927,6 +6927,14 @@
     "revoke": "收回",
     "revoked": "已收回许可"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} 要求提供证书",
+    "picker_detail": "服务器想确认你的身份。你选择的证书只会发送到此服务器。如果你不认识此服务器，请不要发送。",
+    "picker_issued": "颁发者：{issuer}，有效期至 {date}",
+    "picker_remember": "为 {host} 记住此选择",
+    "picker_none": "不发送证书",
+    "picker_more": "更多证书…"
+  },
   "desktopOs": {
     "section_title": "桌面应用",
     "section_description": "应用如何与你的电脑配合。",

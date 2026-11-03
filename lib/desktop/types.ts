@@ -323,6 +323,11 @@ export interface DesktopKeystoreBridge {
   clearGrants?: () => Promise<void>;
 }
 
+export interface DesktopCertificatesBridge {
+  /** Forgets the client certificates chosen for servers, for the next account. Only narrows. */
+  clearChoices: () => Promise<void>;
+}
+
 export interface DesktopPolicyBridge {
   /** What's in force now. Synchronous: a page can read it in its first render. */
   get: () => PolicySnapshot;
@@ -623,6 +628,8 @@ export interface BulwarkDesktopBridge {
   auth?: DesktopAuthBridge;
   plugins?: DesktopPluginsBridge;
   keystore?: DesktopKeystoreBridge;
+  /** Absent on older shells. */
+  certificates?: DesktopCertificatesBridge;
   appLock?: DesktopAppLockBridge;
   localImport?: DesktopLocalImportBridge;
   privacy?: DesktopPrivacyBridge;

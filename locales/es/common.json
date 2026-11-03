@@ -6927,6 +6927,14 @@
     "revoke": "Retirar",
     "revoked": "Permiso retirado"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} pide un certificado",
+    "picker_detail": "El servidor quiere saber quién eres. El certificado que elijas solo se envía a este servidor. Si no conoces este servidor, no envíes ninguno.",
+    "picker_issued": "Emitido por {issuer}, válido hasta {date}",
+    "picker_remember": "Recordar para {host}",
+    "picker_none": "No enviar ningún certificado",
+    "picker_more": "Más certificados…"
+  },
   "desktopOs": {
     "section_title": "Aplicación de escritorio",
     "section_description": "Cómo funciona la aplicación con tu ordenador.",
