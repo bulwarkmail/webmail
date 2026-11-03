@@ -102,6 +102,37 @@ describe('Settings deep links on the phone', () => {
     expect(screen.getByText('appearance pane')).toBeTruthy();
   });
 
+  it('adds one history entry however often the window crosses the phone breakpoint', () => {
+    window.history.replaceState(null, '', '/settings');
+    media.desktop = true;
+    const { rerender } = render(<SettingsApp linkSegments={[]} />);
+    const push = vi.spyOn(window.history, 'pushState');
+    const resize = (desktop: boolean) => {
+      media.desktop = desktop;
+      rerender(<SettingsApp linkSegments={[]} />);
+    };
+
+    resize(false);
+    expect(push).toHaveBeenCalledTimes(1);
+    resize(true);
+    resize(false);
+    resize(true);
+    resize(false);
+    expect(push).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('appearance pane')).toBeTruthy();
+
+    // Back from the page lands on the list...
+    act(() => {
+      window.history.replaceState(null, '', '/settings');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    expect(screen.getByTestId('settings-tab-organize')).toBeTruthy();
+
+    // ...and a page opened from there has a Back of its own.
+    fireEvent.click(screen.getByTestId('settings-tab-organize'));
+    expect(push).toHaveBeenCalledTimes(2);
+  });
+
   it('opens a page at its top and keeps the place in the list', () => {
     window.history.replaceState(null, '', '/settings');
     render(<SettingsApp linkSegments={[]} />);

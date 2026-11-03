@@ -517,7 +517,12 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
         window.history.replaceState(window.history.state, '', listPath);
       }
     }
-    window.history.pushState({ __settingsSubmenu: true }, '');
+    // Once per open page: this runs again each time the window crosses the
+    // phone breakpoint, and the entry from the last crossing is still there.
+    // Back leaves that entry, so opening a page afterwards adds a new one.
+    if (!(window.history.state as { __settingsSubmenu?: boolean } | null)?.__settingsSubmenu) {
+      window.history.pushState({ __settingsSubmenu: true }, '');
+    }
 
     const handlePop = () => {
       setMobileShowContent(false);
