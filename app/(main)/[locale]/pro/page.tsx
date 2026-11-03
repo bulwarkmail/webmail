@@ -10,7 +10,7 @@ import { useSidebarApps } from "@/hooks/use-sidebar-apps";
 import { useAuthStore, redirectToLogin } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
-import { useDeviceDetection } from "@/hooks/use-media-query";
+import { atLeast, useDeviceDetection } from "@/hooks/use-media-query";
 import { EmbeddedContext } from "@/hooks/use-is-embedded";
 import { OrgAnnouncement } from "@/components/org/org-announcement";
 import { PaneSizeContext } from "@/hooks/use-pane-size";
@@ -32,7 +32,8 @@ import {
   type BodyDropTarget,
   type MailboxDragPayload,
 } from "@/components/pro/pro-shell-drop";
-import { useProTabStore, type ProTab, type ProTabKind, type ProPaneId, type ProSplitSide } from "@/stores/pro-tab-store";
+import { handOffComposeTab, useProTabStore, type ProTab, type ProTabKind, type ProPaneId, type ProSplitSide } from "@/stores/pro-tab-store";
+import { useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { getPathPrefix } from "@/lib/browser-navigation";
 import { onOpenEmail, proEmailTabOpener } from "@/lib/plugin-sandbox/open-email";
@@ -47,6 +48,8 @@ import { SettingsApp } from "@/components/settings/settings-app";
 import { ProComposeTabBody } from "@/components/pro/pro-compose-tab-body";
 import { ProEmailTabBody } from "@/components/pro/pro-email-tab-body";
 import { ProFolderTabBody } from "@/components/pro/pro-folder-tab-body";
+
+const DESKTOP_MIN_WIDTH = 1024;
 
 // Each surface renders the same component the standard routes do. Deep links
 // reach them through the handoff ProInterfaceRedirect parks (#733), not as
@@ -193,6 +196,7 @@ export default function ProHome() {
   const t = useTranslations();
   const { label: skeletonLabel } = useSkeletonLabels();
   const { isMobile, isTablet, isDesktop } = useDeviceDetection();
+  const router = useRouter();
 
   const [initialCheckDone, setInitialCheckDone] = useState(
     () => useAuthStore.getState().isAuthenticated && !!useAuthStore.getState().client
@@ -266,9 +270,21 @@ export default function ProHome() {
       const surface = kind === 'calendar' || kind === 'contacts' || kind === 'files' || kind === 'settings'
         ? `/${kind}`
         : '/';
-      window.location.replace(`${getPathPrefix()}${surface}`);
+      if (!proInterface) {
+        window.location.replace(`${getPathPrefix()}${surface}`);
+        return;
+      }
+      // The flags come from a store that a standard page may have left behind
+      // from before the window widened: arriving here from there is no reason
+      // to go straight back. The window itself says.
+      if (window.matchMedia(atLeast(DESKTOP_MIN_WIDTH)).matches) return;
+      // A narrower window (snapped to half a screen, say) is no reason to
+      // reload: compose tabs live in memory, and they come back when the window
+      // widens again. The one in front goes along to the standard composer.
+      if (kind === 'compose' && focusedId) handOffComposeTab(focusedId);
+      router.replace(surface);
     }
-  }, [initialCheckDone, isMobile, isTablet, proInterface]);
+  }, [initialCheckDone, isMobile, isTablet, proInterface, router]);
 
   const mainTabs = useMemo(() => tabs.filter((t) => t.paneId === 'main'), [tabs]);
   const splitTabs = useMemo(() => tabs.filter((t) => t.paneId === 'split'), [tabs]);

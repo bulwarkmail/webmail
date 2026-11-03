@@ -10,7 +10,9 @@ vi.mock('next-intl', () => ({
 }));
 
 const device = vi.hoisted(() => ({ isMobile: false, isTablet: false, isDesktop: true }));
-vi.mock('@/hooks/use-media-query', () => ({ useDeviceDetection: () => device }));
+vi.mock('@/hooks/use-media-query', () => ({ useDeviceDetection: () => device, atLeast: (px: number) => `(width >= ${px}px)` }));
+const routerReplace = vi.hoisted(() => vi.fn());
+vi.mock('@/i18n/navigation', () => ({ useRouter: () => ({ replace: routerReplace }) }));
 
 const auth = vi.hoisted(() => ({
   state: {
@@ -60,7 +62,7 @@ vi.mock('@/hooks/use-sidebar-apps', () => ({
 vi.mock('@/hooks/use-deep-link-url', () => ({ useDeepLinkUrl: () => {} }));
 const { default: ProHome } = await import('../page');
 const { useSettingsStore } = await import('@/stores/settings-store');
-const { useProTabStore } = await import('@/stores/pro-tab-store');
+const { useProTabStore, takeHandedOffComposeDraft } = await import('@/stores/pro-tab-store');
 const { PRO_TAB_DRAG_MIME } = await import('@/components/pro/pro-shell-drop');
 
 const replace = vi.fn();
@@ -112,6 +114,43 @@ describe('Pro page gate', () => {
     const shell = container.querySelector('[data-pro-shell]');
     expect(shell).not.toBeNull();
     expect(shell?.querySelector('[data-testid="mail-app"]')).not.toBeNull();
+  });
+
+  describe('when the device flags say the window is not desktop-wide', () => {
+    const setWindowWide = (matches: boolean) => {
+      window.matchMedia = vi.fn(() => ({ matches, addEventListener: () => {}, removeEventListener: () => {} })) as never;
+    };
+    const original = window.matchMedia;
+    afterEach(() => { window.matchMedia = original; });
+
+    beforeEach(() => {
+      auth.state.isAuthenticated = true;
+      auth.state.client = {};
+      Object.assign(device, { isMobile: false, isTablet: true, isDesktop: false });
+      const compose = { id: 'c1', kind: 'compose' as const, labelKey: '', closeable: true, paneId: 'main' as const, composeData: { sessionId: 1, mode: 'compose' as const, title: 'x', initialData: { subject: 'Typed', mode: 'compose' } as never } };
+      useProTabStore.setState({
+        tabs: [{ id: 'home-mail', kind: 'mail', labelKey: 'mail', closeable: false, paneId: 'main' }, compose],
+        activeTabId: 'c1', activeSplitTabId: null, focusedPaneId: 'main', splitOrientation: null, splitSide: 'right', readerTabId: null, loadedTabIds: ['home-mail', 'c1'],
+      });
+    });
+
+    it('goes to the standard page without a reload, taking the compose tab in front along', async () => {
+      setWindowWide(false);
+      render(<ProHome />);
+      await act(async () => {});
+      expect(routerReplace).toHaveBeenCalledWith('/');
+      expect(replace).not.toHaveBeenCalled();
+      expect(takeHandedOffComposeDraft()?.subject).toBe('Typed');
+      expect(useProTabStore.getState().tabs.some((t) => t.id === 'c1')).toBe(false);
+    });
+
+    it('stays when the window is wide and only the flags are behind', async () => {
+      setWindowWide(true);
+      render(<ProHome />);
+      await act(async () => {});
+      expect(routerReplace).not.toHaveBeenCalled();
+      expect(takeHandedOffComposeDraft()).toBeNull();
+    });
   });
 
   it('moves a tab dropped on a surface that stops every drop', async () => {

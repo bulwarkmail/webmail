@@ -58,7 +58,7 @@ import { useEffectiveMailLayout } from "@/hooks/use-effective-mail-layout";
 import { useContactStore } from "@/stores/contact-store";
 import { useIdentityStore } from "@/stores/identity-store";
 import { useUIStore, listPaneCssSize, SIDEBAR_MIN, SIDEBAR_MAX, EMAIL_LIST_MIN, EMAIL_LIST_MAX, EMAIL_LIST_HEIGHT_MIN, EMAIL_LIST_HEIGHT_MAX, READING_PANE_MIN_WIDTH, READING_PANE_MIN_HEIGHT, COMPOSER_PANE_MIN_HEIGHT } from "@/stores/ui-store";
-import { useDeviceDetection } from "@/hooks/use-media-query";
+import { atLeast, useDeviceDetection } from "@/hooks/use-media-query";
 import { usePaneSize } from "@/hooks/use-pane-size";
 import { usePaneId } from "@/hooks/use-pane-context";
 import { useKeyboardShortcuts, type GoToMailboxTarget } from "@/hooks/use-keyboard-shortcuts";
@@ -115,7 +115,7 @@ import { getDraftComposerBody } from '@/lib/email-body-selection';
 import { useSidebarApps } from "@/hooks/use-sidebar-apps";
 import { useIdentitySync } from "@/hooks/use-identity-sync";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
-import { useProTabStore } from "@/stores/pro-tab-store";
+import { takeHandedOffComposeDraft, useProTabStore } from "@/stores/pro-tab-store";
 import { useProMultiAccountMailboxes } from "@/hooks/use-pro-multi-account-mailboxes";
 import { FilePreviewModal } from "@/components/files/file-preview-modal";
 import { WopiEditor } from "@/components/files/wopi-editor";
@@ -1419,6 +1419,21 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // open will fire a fresh effect with new values.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEmbedded, showComposer]);
+
+  // The window narrowed below Pro's width with a compose tab in front: go on
+  // with its draft here. And the way back further down, in onSaveState.
+  useEffect(() => {
+    if (isEmbedded) return;
+    const draft = takeHandedOffComposeDraft();
+    if (!draft) return;
+    setComposerSessionId((id) => id + 1);
+    setPendingDraft(draft);
+    setComposerMode(draft.mode);
+    setShowComposer(true);
+    if (isMobile) setActiveView('viewer');
+    // Once, on arrival.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Check auth on mount – skip when already authenticated so that navigating
   // between routes doesn't retrigger checkAuth's transient `{ client: null,
@@ -4894,6 +4909,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           setComposerPrefill(null);
           if (suppressComposerStateSaveSessionRef.current === composerSessionId) {
             suppressComposerStateSaveSessionRef.current = null;
+            return;
+          }
+          // The window widened into Pro's width, which takes this page over:
+          // the draft goes on in a compose tab.
+          if (!isEmbedded && useSettingsStore.getState().proInterface && window.matchMedia(atLeast(1024)).matches) {
+            useProTabStore.getState().openComposeTab({
+              sessionId: composerSessionId + 1,
+              mode: data.mode,
+              replyTo: data.replyTo,
+              initialData: data,
+              title: data.subject?.trim() || t('email_composer.new_message'),
+            });
             return;
           }
           if (showComposerRef.current && composerSessionRef.current === composerSessionId) {

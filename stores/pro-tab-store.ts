@@ -236,6 +236,29 @@ export function registerProTabCloseInterceptor(id: string, fn: () => void): () =
   };
 }
 
+/**
+ * The compose tab that was in front when the window narrowed below Pro's
+ * width. The standard mail page picks its draft up when it mounts, so what the
+ * user was typing stays on screen. Module state like the handoff of a deep
+ * link: it has no business surviving a reload.
+ */
+let handedOffComposeTabId: string | null = null;
+
+export function handOffComposeTab(id: string): void {
+  handedOffComposeTabId = id;
+}
+
+/** The handed-off tab's draft, closing the tab. Null when there is none, or it was never edited. */
+export function takeHandedOffComposeDraft(): ComposerDraftData | null {
+  const id = handedOffComposeTabId;
+  handedOffComposeTabId = null;
+  if (!id) return null;
+  const { tabs, closeTab } = useProTabStore.getState();
+  const draft = tabs.find((tab) => tab.id === id)?.composeData?.initialData ?? null;
+  if (draft) closeTab(id);
+  return draft;
+}
+
 function makeId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
