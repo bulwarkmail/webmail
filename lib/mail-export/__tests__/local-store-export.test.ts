@@ -172,12 +172,15 @@ describe('an export from the local store', () => {
     expect([...(await zipEntries(bytes)).values()]).toEqual([server.files.get('raw-a')]);
   });
 
-  it('says it is because attachments are off when they are', async () => {
+  it('says it is because attachments are off when they are, and makes no empty file of nothing', async () => {
     const server = serverWith({ a: 'inbox', b: 'inbox' });
     const { store } = await storeOf(server, { ...SCOPE, attachments: false });
-    const { result } = await run(store, 'mbox', ['inbox']);
+    const { result, bytes } = await run(store, 'eml', ['inbox']);
+    expect(result.phase).toBe('done');
     expect(result.notKept).toEqual({ attachments_off: 2 });
     expect(result.exported).toBe(0);
+    expect(result.file).toBeUndefined();
+    expect(bytes.length).toBe(0);
   });
 
   it('fetches what isn\'t kept when online, one at a time or in a batch, and reads the rest from the store', async () => {

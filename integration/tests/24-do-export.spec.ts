@@ -224,7 +224,7 @@ test('with a save picker, it writes straight to the chosen file and no private f
   await page.evaluate(() => { delete (window as { showSaveFilePicker?: unknown }).showSaveFilePicker; });
 });
 
-test('with attachments off, offline counts every message and says why; the retry online writes them all', async () => {
+test('with attachments off it says offline why it can\'t; a connection lost during the run is counted; the retry writes them all', async () => {
   await context.setOffline(false);
   await page.getByTestId('offline-attachments').click();
   await expect(page.getByTestId('offline-attachments')).toHaveAttribute('aria-checked', 'false');
@@ -235,18 +235,35 @@ test('with attachments off, offline counts every message and says why; the retry
   await expect(page.getByTestId('local-export-kept')).toContainText(`0 of ${COUNT}`);
   await expect(page.getByTestId('local-export-missing')).toContainText(`offline: ${COUNT}`);
   await expect(page.getByTestId('local-export-reason')).toContainText('Keep attachments');
+  // Nothing could be written, so it doesn't offer to.
+  await expect(page.getByTestId('local-export-start')).toBeDisabled();
   await shot(page, 'd10-export-offline-missing');
+
+  // The browser says online, and the server goes as the export starts.
+  await context.setOffline(false);
+  await expect(page.getByTestId('local-export-start')).toBeEnabled({ timeout: 30_000 });
+  await context.route(`${new URL(JMAP_URL).origin}/**`, (route) => route.abort('internetdisconnected'));
+  let downloads = 0;
+  const counted = () => { downloads += 1; };
+  page.on('download', counted);
   await page.getByTestId('local-export-format-mbox').check();
-  const download = page.waitForEvent('download', { timeout: 60_000 });
   await page.getByTestId('local-export-start').click();
-  await download;
-  await expect(page.getByTestId('local-export-not-kept-attachments')).toContainText(`attachments aren't kept on this device: ${COUNT}`);
-  await expect(page.getByTestId('local-export-retry')).toBeDisabled();
-  await expect(page.getByTestId('local-export-retry-hint')).toHaveText("You can try again when you're online.");
+  await expect(page.getByTestId('local-export-not-kept-attachments')).toContainText(`attachments aren't kept on this device: ${COUNT}`, { timeout: 60_000 });
+  await expect(page.getByTestId('mail-export-status')).toContainText('Messages exported: 0');
+  // No empty file that looks like a backup.
+  await expect(page.getByTestId('mail-export-file')).toHaveCount(0);
+  await expect(page.getByTestId('mail-export-download')).toHaveCount(0);
+  page.off('download', counted);
+  expect(downloads).toBe(0);
   await shot(page, 'd10-export-not-kept');
 
+  await context.unroute(`${new URL(JMAP_URL).origin}/**`);
+  // The browser going off says so in the summary, and coming back opens the retry.
+  await context.setOffline(true);
+  await expect(page.getByTestId('local-export-retry')).toBeDisabled();
+  await expect(page.getByTestId('local-export-retry-hint')).toHaveText("You can try again when you're online.");
   await context.setOffline(false);
-  await expect(page.getByTestId('local-export-retry')).toBeEnabled({ timeout: 30_000 });
+  await expect(page.getByTestId('local-export-retry')).toBeEnabled({ timeout: 60_000 });
   await page.getByTestId('local-export-retry').click();
   // The same folder is still the one chosen.
   await expect(page.getByTestId('local-export-kept')).toContainText(`0 of ${COUNT}`, { timeout: 30_000 });

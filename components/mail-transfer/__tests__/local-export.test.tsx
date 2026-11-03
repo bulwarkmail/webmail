@@ -17,6 +17,7 @@ import { useAccountStore } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { isJobActive, openLocalExport, useMailTransferStore } from '@/stores/mail-transfer-store';
 import { usePolicyStore } from '@/stores/policy-store';
+import { toast } from '@/stores/toast-store';
 
 const FOLDERS = [
   { id: 'inbox', name: 'Inbox', role: 'inbox', sortOrder: 0 },
@@ -25,10 +26,10 @@ const FOLDERS = [
 const RAW = new TextEncoder().encode('Subject: x\r\n\r\nbody\r\n');
 
 /** A kept account where Inbox has 2 of 3 originals and Archive 1 of 1. */
-function fakeStore(overrides: { rawBlob?: (blobId: string) => unknown } = {}) {
+function fakeStore(overrides: { rawBlob?: (blobId: string) => unknown; status?: { total: number; kept: number } } = {}) {
   const area = vi.fn(async (_account: string, name: string, params?: { mailboxId?: string; blobId?: string }): Promise<unknown> => {
     if (name === 'mail.session') return { primaryAccounts: { 'urn:ietf:params:jmap:mail': 'jmap-a' } };
-    if (name === 'mail.rawStatus') return params?.mailboxId === 'inbox' ? { total: 3, kept: 2 } : { total: 1, kept: 1 };
+    if (name === 'mail.rawStatus') return overrides.status ?? (params?.mailboxId === 'inbox' ? { total: 3, kept: 2 } : { total: 1, kept: 1 });
     if (name === 'mail.rawBlob') return overrides.rawBlob ? overrides.rawBlob(params!.blobId!) : { ok: true, blob: new Blob([RAW]) };
     if (name === 'mail.rawKept') return [];
     return null;
@@ -141,6 +142,22 @@ describe('before an export starts', () => {
     expect(all.indeterminate).toBe(true);
     fireEvent.click(all);
     expect(boxes.every((box) => box.checked)).toBe(true);
+  });
+
+  it('can\'t start offline with no original of anything, and can as soon as the server is back', async () => {
+    setOnline(false);
+    setStoreBackend(fakeStore({ status: { total: 4, kept: 0 } }) as unknown as StoreBackend);
+    await openDialog();
+    expect((screen.getByTestId('local-export-start') as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByTestId('local-export-missing').textContent).toBe('missing_offline');
+    act(() => setOnline(true));
+    expect((screen.getByTestId('local-export-start') as HTMLButtonElement).disabled).toBe(false);
+    expect(screen.getByTestId('local-export-missing').textContent).toBe('missing_online');
+  });
+
+  it('puts the focus on the folders once they are read', async () => {
+    await openDialog();
+    expect(document.activeElement).toBe(screen.getByTestId('local-export-all'));
   });
 
   it('can\'t start with nothing chosen', async () => {
@@ -284,6 +301,9 @@ describe('what an export couldn\'t write', () => {
     await finishedJob();
     expect((useMailTransferStore.getState().job?.progress as ExportProgress).notKept).toEqual({ not_kept: 1 });
     expect(screen.getByTestId('local-export-not-kept-missing').textContent).toBe('not_kept_not_kept');
+    // Nothing was written: no file, and nothing to download again.
+    expect(screen.queryByTestId('mail-export-file')).toBeNull();
+    expect(screen.queryByTestId('mail-export-download')).toBeNull();
     expect(screen.queryByTestId('local-export-not-kept-attachments')).toBeNull();
     expect(screen.getByTestId('local-export-retry-hint').textContent).toBe('retry_offline');
     expect((screen.getByTestId('local-export-retry') as HTMLButtonElement).disabled).toBe(true);
@@ -304,6 +324,19 @@ describe('what an export couldn\'t write', () => {
     expect(useMailTransferStore.getState().job).toBeNull();
     expect(area).toHaveBeenCalledWith('acc', 'mail.rawStatus', expect.anything());
     expect(screen.getByTestId('local-export-missing').textContent).toBe('missing_online');
+  });
+
+  it('says the export stopped, not that a file is ready, when it ends hidden with nothing written', async () => {
+    setOnline(false);
+    notKept();
+    const warning = vi.spyOn(toast, 'warning');
+    const success = vi.spyOn(toast, 'success');
+    render(<MailTransferHost />);
+    await finishedJob();
+    expect(warning).toHaveBeenCalledWith('toast_stopped', expect.anything());
+    expect(success).not.toHaveBeenCalled();
+    warning.mockRestore();
+    success.mockRestore();
   });
 
   it('offers no retry when everything was written', async () => {

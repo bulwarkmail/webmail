@@ -366,8 +366,13 @@ export async function runExport(options: ExportOptions): Promise<ExportProgress>
     }
     // A cancel with nothing left to fetch must not close and hand out the file.
     if (signal.aborted) throw cancelled();
-    if (zip) await zip.finish();
-    progress.file = await sink.close();
+    if (progress.exported === 0 && progress.failed > 0) {
+      // Every message failed: an empty file would only look like a backup.
+      await sink.abort();
+    } else {
+      if (zip) await zip.finish();
+      progress.file = await sink.close();
+    }
     progress.phase = "done";
     progress.fraction = 1;
   } catch (error) {

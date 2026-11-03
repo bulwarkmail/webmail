@@ -94,8 +94,8 @@ export function MailTransferHost() {
     if (job.kind === "import") {
       if (phase === "done") toast.success(tImport("toast_done", { imported: job.progress.imported, failed: job.progress.failed }), { action });
       else toast.warning(tImport("toast_stopped"), { action });
-    } else if (phase === "done") {
-      toast.success(tExport("toast_done", { name: job.progress.file?.name ?? "" }), { action });
+    } else if (phase === "done" && job.progress.file) {
+      toast.success(tExport("toast_done", { name: job.progress.file.name }), { action });
     } else {
       toast.warning(tExport("toast_stopped"), { action });
     }

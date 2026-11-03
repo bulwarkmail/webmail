@@ -70,6 +70,7 @@ export function LocalExportDialog({ request }: { request: LocalExportRequest }) 
   const progress = job?.kind === "export" ? job.progress : null;
   const active = isJobActive(job);
   const stageButton = useRef<HTMLButtonElement>(null);
+  const allFolders = useRef<HTMLInputElement | null>(null);
   useFocusOnStage(stageButton, progress ? (active ? "running" : "ended") : "setup");
   const inSetup = !progress;
 
@@ -84,6 +85,12 @@ export function LocalExportDialog({ request }: { request: LocalExportRequest }) 
     );
     return () => { live = false; };
   }, [account, inSetup]);
+
+  // The dialog opens before the folders are read, with only its footer to focus.
+  const foldersShown = inSetup && loaded !== null;
+  useEffect(() => {
+    if (foldersShown) allFolders.current?.focus();
+  }, [foldersShown]);
 
   if (!visible) return null;
 
@@ -135,6 +142,8 @@ export function LocalExportDialog({ request }: { request: LocalExportRequest }) 
   const missing = total - kept;
   const single = chosen.length === 1;
   const attachmentsOff = !scopeForAccount(account).scope.attachments;
+  // Offline with no original of anything: the save picker would ask where to put nothing.
+  const nothingToWrite = total === 0 || (kept === 0 && !reachable);
 
   const onStart = async () => {
     if (!loaded || starting || chosen.length === 0) return;
@@ -176,7 +185,7 @@ export function LocalExportDialog({ request }: { request: LocalExportRequest }) 
       footer={(
         <>
           <Button variant="outline" onClick={() => close()}>{tExport("cancel")}</Button>
-          <Button onClick={() => void onStart()} disabled={starting || !loaded || total === 0} data-testid="local-export-start">{tExport("start")}</Button>
+          <Button onClick={() => void onStart()} disabled={starting || !loaded || nothingToWrite} data-testid="local-export-start">{tExport("start")}</Button>
         </>
       )}
     >
@@ -193,7 +202,10 @@ export function LocalExportDialog({ request }: { request: LocalExportRequest }) 
                 <input
                   type="checkbox"
                   checked={excluded.size === 0}
-                  ref={(input) => { if (input) input.indeterminate = excluded.size > 0 && excluded.size < rows.length; }}
+                  ref={(input) => {
+                    allFolders.current = input;
+                    if (input) input.indeterminate = excluded.size > 0 && excluded.size < rows.length;
+                  }}
                   onChange={(event) => setExcluded(event.target.checked ? new Set() : new Set(rows.map((row) => row.folder.mailboxId)))}
                   data-testid="local-export-all"
                 />
