@@ -5743,6 +5743,26 @@
       "no_drafts_mailbox": "No s'ha trobat la carpeta Esborranys."
     }
   },
+  "offlineConflicts": {
+    "title": "Canvis no aplicats",
+    "description": "Heu fet aquests canvis sense connexió. No s'han aplicat i el missatge queda tal com és al servidor.",
+    "changed": "Canviat en un altre dispositiu, el vostre canvi no s'ha aplicat",
+    "changed_delete": "Canviat en un altre dispositiu, no s'ha suprimit",
+    "gone": "Ja no és al servidor, el vostre canvi no s'ha aplicat",
+    "refused": "El servidor ha rebutjat aquest canvi: {reason}",
+    "dismiss": "Descarta",
+    "dismiss_label": "Descarta la nota sobre {subject}",
+    "banner": "Canvis no aplicats: {count}",
+    "toast": "Canvis fets sense connexió que no s'han aplicat: {count}. La safata de sortida indica quins.",
+    "storage_failed": "Aquest dispositiu no té més espai per al correu sense connexió. Allibereu espai o conserveu-ne menys a la configuració.",
+    "signout_changes_title": "Voleu tancar la sessió amb canvis sense desar?",
+    "signout_changes": "Canvis que encara no són al servidor: {count}. En tancar la sessió s'eliminen.",
+    "store_unavailable": "El correu sense connexió d'aquest dispositiu no es pot obrir ara. El correu no enviat es queda aquí i l'aplicació ho continua provant.",
+    "store_reset": "No s'ha pogut llegir el correu sense connexió d'aquest dispositiu, així que es torna a baixar. El que no s'havia enviat s'ha perdut.",
+    "legacy_stranded": "Aquest navegador no pot obrir el correu no enviat desat per una versió anterior. Actualitzar el navegador el pot recuperar.",
+    "store_private": "Les finestres privades no poden desar correu per fer-lo servir sense connexió.",
+    "server_not_answering": "El servidor de correu no respon. Torneu-ho a provar d'aquí a un moment."
+  },
   "deep_link": {
     "message_not_found": "Aquest missatge ja no està disponible.",
     "thread_not_found": "Aquesta conversa ja no està disponible.",

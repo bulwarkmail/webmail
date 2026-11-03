@@ -5,9 +5,8 @@ import { usePolicyStore } from '@/stores/policy-store';
 import { DEFAULT_ORGANISATION_POLICY } from '@/lib/admin/organisation-policy';
 import { handOffFiles, pendingHandoffs } from '@/lib/launch-handoff';
 import { disableOffline, enforcePolicy, wipeEverything } from '../offline-mode';
-import { forgetIndexes } from '../cache';
-import { forgetDeviceKey } from '../crypto';
-import { allowOfflineDbCreation, deleteOfflineDb } from '../db';
+import { setStoreBackend } from '@/lib/store/client/api';
+import { InProcessStore } from '@/lib/store/__tests__/helpers/in-process-store';
 import { useOfflineStore, writeEnabled } from '../state';
 
 // Offline mode's wipes take what was on its way into an account along.
@@ -18,10 +17,7 @@ function waiting() {
 }
 
 beforeEach(async () => {
-  forgetIndexes();
-  forgetDeviceKey();
-  await deleteOfflineDb();
-  allowOfflineDbCreation();
+  setStoreBackend(new InProcessStore());
   localStorage.clear();
   useOfflineStore.setState({ enabled: [], outbox: [], pendingChanges: 0, browserOffline: false, downServers: [], startedOffline: false });
   usePolicyStore.setState({ loaded: true, subject: null, subjectPending: false, policy: { ...usePolicyStore.getState().policy, organisation: DEFAULT_ORGANISATION_POLICY } } as never);
@@ -30,6 +26,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await wipeEverything();
+  setStoreBackend(null);
 });
 
 describe('offline wipes and handoffs', () => {

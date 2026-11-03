@@ -5743,6 +5743,26 @@
       "no_drafts_mailbox": "Ihr Ordner „Entwürfe“ wurde nicht gefunden."
     }
   },
+  "offlineConflicts": {
+    "title": "Nicht übernommene Änderungen",
+    "description": "Sie haben diese Änderungen offline gemacht. Sie wurden nicht übernommen, die Nachricht bleibt wie auf dem Server.",
+    "changed": "Auf einem anderen Gerät geändert, Ihre Änderung wurde nicht übernommen",
+    "changed_delete": "Auf einem anderen Gerät geändert, die Nachricht wurde nicht gelöscht",
+    "gone": "Nicht mehr auf dem Server, Ihre Änderung wurde nicht übernommen",
+    "refused": "Der Server hat diese Änderung abgelehnt: {reason}",
+    "dismiss": "Ausblenden",
+    "dismiss_label": "Hinweis zu {subject} ausblenden",
+    "banner": "Nicht übernommene Änderungen: {count}",
+    "toast": "Offline gemachte Änderungen wurden nicht übernommen: {count}. Welche, steht im Postausgang.",
+    "storage_failed": "Auf diesem Gerät ist kein Platz mehr für Offline-E-Mails. Geben Sie Speicher frei oder behalten Sie in den Einstellungen weniger.",
+    "signout_changes_title": "Mit nicht gespeicherten Änderungen abmelden?",
+    "signout_changes": "Änderungen, die noch nicht auf dem Server sind: {count}. Beim Abmelden werden sie gelöscht.",
+    "store_unavailable": "Die Offline-E-Mails auf diesem Gerät lassen sich gerade nicht öffnen. Nicht gesendete E-Mails bleiben hier, und die App versucht es weiter.",
+    "store_reset": "Die Offline-E-Mails auf diesem Gerät konnten nicht gelesen werden und werden neu heruntergeladen. Was hier noch nicht gesendet war, ist verloren.",
+    "legacy_stranded": "Dieser Browser kann nicht gesendete E-Mails einer früheren Version nicht öffnen. Ein Browser-Update kann sie zurückholen.",
+    "store_private": "Private Fenster können keine E-Mails für die Offline-Nutzung behalten.",
+    "server_not_answering": "Der Mailserver antwortet nicht. Versuchen Sie es gleich noch einmal."
+  },
   "deep_link": {
     "message_not_found": "Diese Nachricht ist nicht mehr verfügbar.",
     "thread_not_found": "Diese Unterhaltung ist nicht mehr verfügbar.",

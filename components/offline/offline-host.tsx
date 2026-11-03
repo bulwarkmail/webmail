@@ -6,8 +6,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import { addSignOutGate } from '@/lib/sign-out-cleanup';
 import { reloadToNewBuild } from '@/lib/app-update';
-import { confirmLoss, setOfflineNotifier, startOfflineMode, type OfflineNotice } from '@/lib/offline/offline-mode';
-import { useOfflineStore } from '@/lib/offline/state';
+import { confirmLoss, setOfflineNotifier, startOfflineMode, unsentCount, type OfflineNotice } from '@/lib/offline/offline-mode';
 import { toast } from '@/stores/toast-store';
 
 /**
@@ -20,6 +19,9 @@ export function OfflineHost() {
   const t = useTranslations('offline');
   const tRef = useRef(t);
   tRef.current = t;
+  const tConflicts = useTranslations('offlineConflicts');
+  const tConflictsRef = useRef(tConflicts);
+  tConflictsRef.current = tConflicts;
   const { dialogProps, confirm } = useConfirmDialog();
   const confirmRef = useRef(confirm);
   confirmRef.current = confirm;
@@ -45,6 +47,21 @@ export function OfflineHost() {
         case 'lost':
           toast.warning(tr('toast.lost', { subjects: notice.subjects.map((s) => s || tr('outbox.no_subject')).join(', ') }), { duration: 0 });
           break;
+        case 'conflict':
+          toast.warning(tConflictsRef.current('toast', { count: notice.count }));
+          break;
+        case 'storage-failed':
+          toast.warning(tConflictsRef.current('storage_failed'), { duration: 0 });
+          break;
+        case 'legacy-stranded':
+          toast.warning(tConflictsRef.current('legacy_stranded'), { duration: 0 });
+          break;
+        case 'store-reset':
+          toast.warning(tConflictsRef.current('store_reset'), { duration: 0 });
+          break;
+        case 'store-unavailable':
+          toast.warning(tConflictsRef.current('store_unavailable'), { duration: 0 });
+          break;
         case 'refused-delete':
           toast.warning(tr('toast.refused_delete'));
           break;
@@ -66,12 +83,16 @@ export function OfflineHost() {
     const stop = startOfflineMode();
     // Messages that would be lost: ask before a sign-out the user started.
     const removeGate = addSignOutGate(async (accountId) => {
-      const unsent = useOfflineStore.getState().outbox.filter((row) => accountId === 'all' || row.account === accountId).length;
-      if (unsent === 0) return true;
+      const { messages, changes } = await unsentCount(accountId);
+      if (messages === 0 && changes === 0) return true;
       const tr = tRef.current;
+      const trConflicts = tConflictsRef.current;
       const ok = await confirmRef.current({
-        title: tr('signout.title'),
-        message: tr('signout.message', { count: unsent }),
+        title: messages > 0 ? tr('signout.title') : trConflicts('signout_changes_title'),
+        message: [
+          ...(messages > 0 ? [tr('signout.message', { count: messages })] : []),
+          ...(changes > 0 ? [trConflicts('signout_changes', { count: changes })] : []),
+        ].join(' '),
         confirmText: tr('signout.confirm'),
         variant: 'destructive',
       });

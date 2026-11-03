@@ -12,11 +12,11 @@
  */
 
 import { runTransaction, type SqlRow, type SqlValue, type StorageAdapter } from '../storage';
+import { POOL_DIRECTORY } from '../worker/protocol';
 
 const VFS = 'multipleciphers-opfs-sahpool';
 const INIT_TIMEOUT_MS = 30_000;
 const REQUIRED_PAGE_SIZE = 8192;
-const POOL_DIRECTORY = '.bulwark-store';
 const INITIAL_CAPACITY = 16;
 /** A database and its journal, plus room for one more. */
 const SLOTS_PER_DATABASE = 3;
@@ -117,6 +117,10 @@ class WasmAdapter implements StorageAdapter {
   }
 }
 
+export function installMayPass(error: unknown): boolean {
+  return (error as Error)?.name !== 'SecurityError';
+}
+
 /** The module and the pool, once. Only the owner gets here. */
 export class WasmStorage {
   private constructor(private readonly sqlite3: any, private readonly pool: Pool) {}
@@ -141,6 +145,8 @@ export class WasmStorage {
         }) as Pool;
         return new WasmStorage(sqlite3, pool);
       } catch (error) {
+        // The browser won't allow it here at all, a private window: waiting won't help.
+        if (!installMayPass(error)) throw error;
         lastError = error;
         await new Promise((resolve) => setTimeout(resolve, 100 + attempt * 50));
       }

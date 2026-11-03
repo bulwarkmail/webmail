@@ -5743,6 +5743,26 @@
       "no_drafts_mailbox": "Fant ikke mappen Utkast."
     }
   },
+  "offlineConflicts": {
+    "title": "Endringer som ikke ble utført",
+    "description": "Du gjorde disse endringene uten nett. De ble ikke utført, og meldingen forblir som den er på serveren.",
+    "changed": "Endret på en annen enhet, endringen din ble ikke utført",
+    "changed_delete": "Endret på en annen enhet, den ble ikke slettet",
+    "gone": "Finnes ikke lenger på serveren, endringen din ble ikke utført",
+    "refused": "Serveren avviste denne endringen: {reason}",
+    "dismiss": "Lukk",
+    "dismiss_label": "Lukk merknaden om {subject}",
+    "banner": "Endringer som ikke ble utført: {count}",
+    "toast": "Endringer gjort uten nett som ikke ble utført: {count}. Utboksen viser hvilke.",
+    "storage_failed": "Denne enheten har ikke mer plass til e-post uten nett. Frigjør plass, eller behold mindre i innstillingene.",
+    "signout_changes_title": "Logge ut med endringer som ikke er lagret?",
+    "signout_changes": "Endringer som ennå ikke er på serveren: {count}. Når du logger ut, slettes de.",
+    "store_unavailable": "E-post uten nett på denne enheten kan ikke åpnes nå. Usendt e-post blir her, og appen fortsetter å prøve.",
+    "store_reset": "E-post uten nett på denne enheten kunne ikke leses og lastes derfor ned på nytt. Det som ikke var sendt, er borte.",
+    "legacy_stranded": "Denne nettleseren kan ikke åpne usendt e-post fra en tidligere versjon. En oppdatering av nettleseren kan hente den tilbake.",
+    "store_private": "Private vinduer kan ikke beholde e-post for bruk uten nett.",
+    "server_not_answering": "E-postserveren svarer ikke. Prøv igjen om litt."
+  },
   "deep_link": {
     "message_not_found": "Denne meldingen er ikke lenger tilgjengelig.",
     "thread_not_found": "Denne samtalen er ikke lenger tilgjengelig.",

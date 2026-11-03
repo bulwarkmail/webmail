@@ -5743,6 +5743,26 @@
       "no_drafts_mailbox": "Dosarul Ciorne nu a fost găsit."
     }
   },
+  "offlineConflicts": {
+    "title": "Modificări neaplicate",
+    "description": "Ați făcut aceste modificări offline. Nu au fost aplicate, iar mesajul rămâne așa cum este pe server.",
+    "changed": "Modificat pe alt dispozitiv, modificarea dvs. nu a fost aplicată",
+    "changed_delete": "Modificat pe alt dispozitiv, nu a fost șters",
+    "gone": "Nu mai este pe server, modificarea dvs. nu a fost aplicată",
+    "refused": "Serverul a refuzat această modificare: {reason}",
+    "dismiss": "Închide",
+    "dismiss_label": "Închide nota despre {subject}",
+    "banner": "Modificări neaplicate: {count}",
+    "toast": "Modificări făcute offline care nu au fost aplicate: {count}. Căsuța de trimitere arată care.",
+    "storage_failed": "Acest dispozitiv nu mai are loc pentru e-mailul offline. Eliberați spațiu sau păstrați mai puțin din setări.",
+    "signout_changes_title": "Vă deconectați cu modificări nesalvate?",
+    "signout_changes": "Modificări care nu sunt încă pe server: {count}. Deconectarea le șterge.",
+    "store_unavailable": "E-mailul offline de pe acest dispozitiv nu poate fi deschis acum. E-mailul netrimis rămâne aici, iar aplicația continuă să încerce.",
+    "store_reset": "E-mailul offline de pe acest dispozitiv nu a putut fi citit, așa că se descarcă din nou. Ce nu fusese trimis s-a pierdut.",
+    "legacy_stranded": "Acest browser nu poate deschide e-mailul netrimis păstrat de o versiune anterioară. Actualizarea browserului îl poate recupera.",
+    "store_private": "Ferestrele private nu pot păstra e-mailuri pentru utilizare offline.",
+    "server_not_answering": "Serverul de e-mail nu răspunde. Încercați din nou imediat."
+  },
   "deep_link": {
     "message_not_found": "Acest mesaj nu mai este disponibil.",
     "thread_not_found": "Această conversație nu mai este disponibilă.",
