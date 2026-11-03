@@ -450,12 +450,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // welcome pane, with no way back. With nothing to read, show the list.
   // A window narrowed to phone size with a message or the composer open keeps
   // showing it: on the list, the composer would be open with no way to reach it.
+  // Only as it narrows: a phone's list can sit on a message kept selected behind
+  // it, and coming back to Mail is no reason to open that again. A Mountain View
+  // cursor is not an open message either.
+  const wasMobileRef = useRef(isMobile);
   useEffect(() => {
+    const narrowed = isMobile && !wasMobileRef.current;
+    wasMobileRef.current = isMobile;
     if (!isMobile) return;
-    const hasContent = showComposer || !!useEmailStore.getState().selectedEmail;
+    const hasContent = showComposer || (!!useEmailStore.getState().selectedEmail && !cursorOnly);
     const view = useUIStore.getState().activeView;
     if (view === "viewer" && !hasContent) setActiveView("list");
-    else if (view === "list" && hasContent) setActiveView("viewer");
+    else if (view === "list" && hasContent && narrowed) setActiveView("viewer");
     // Only when the device class changes; opening and closing set the view themselves.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMobile, setActiveView]);
@@ -2069,6 +2075,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     }
   }, [isAuthenticated, client, mailboxes.length, emails, linkSegments, initialMailLoadDone, selectEmail]);
 
+  // The cursor only exists in Mountain View's desktop list. Narrower, the row it
+  // is on would open in the reading pane as if it had been picked.
+  useEffect(() => {
+    if (mvShell || !cursorOnly) return;
+    setCursorOnly(false);
+    selectEmail(null);
+  }, [mvShell, cursorOnly, selectEmail]);
+
   // Auto-fetch full email content when an email is auto-selected (e.g. after delete/archive)
   useEffect(() => {
     if (!selectedEmail || !client) return;
@@ -2127,8 +2141,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     }
 
     // A Mountain View cursor is not a read receipt: the mail is only marked once it is
-    // actually opened.
-    if (mvShell && cursorOnly) {
+    // actually opened. Leaving Mountain View's width drops the cursor below, so it
+    // still counts in the render that notices.
+    if (cursorOnly) {
       return;
     }
 

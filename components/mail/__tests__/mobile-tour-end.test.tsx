@@ -1,7 +1,7 @@
 import React, { Suspense, lazy } from 'react';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Mailbox } from '@/lib/jmap/types';
+import type { Email, Mailbox } from '@/lib/jmap/types';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useSettingsStore } from '@/stores/settings-store';
@@ -34,6 +34,10 @@ vi.mock('@/components/layout/navigation-rail', () => ({ NavigationRail: () => nu
 vi.mock('@/components/layout/calendar-event-notification-toaster', () => ({ CalendarEventNotificationToaster: () => null }));
 vi.mock('@/components/layout/share-notification-toaster', () => ({ ShareNotificationToaster: () => null }));
 vi.mock('@/components/layout/mobile-header', () => ({ MobileHeader: () => null }));
+vi.mock('@/components/layout/mv-top-bar', () => ({ MvTopBar: () => null }));
+vi.mock('@/components/layout/mv-side-panel', () => ({ MvSidePanel: () => null }));
+vi.mock('@/components/search/mv-search-form', () => ({ MvSearchForm: () => null }));
+vi.mock('@/components/email/email-viewer', () => ({ EmailViewer: () => <div>message viewer</div> }));
 vi.mock('@/components/email/message-list-tabs', () => ({ useMessageListPanelProps: (id: string) => ({ id }), MessageListTabs: () => null }));
 vi.mock('@/components/search/search-box', () => ({ SearchBox: () => null }));
 vi.mock('@/components/tour/tour-provider', () => ({ useTour: () => ({ activeTour: null, registerStep: vi.fn() }) }));
@@ -116,6 +120,55 @@ describe('Mail after the tour on a phone', () => {
     view.rerender(<MailApp />);
 
     expect(useUIStore.getState().activeView).toBe('viewer');
+  });
+
+  const unread = (id: string) => ({
+    id, threadId: `t-${id}`, subject: id, receivedAt: '2026-10-31T10:00:00Z', keywords: {}, mailboxIds: { inbox: true },
+  }) as unknown as Email;
+
+  it('keeps an open message in view when the window narrows to a phone', () => {
+    device.isMobile = false;
+    const message = unread('m1');
+    useEmailStore.setState({ emails: [message], selectedEmail: message, fetchEmailContent: vi.fn().mockResolvedValue(undefined) } as never);
+    const view = render(<MailApp />);
+    expect(useUIStore.getState().activeView).toBe('list');
+
+    device.isMobile = true;
+    view.rerender(<MailApp />);
+
+    expect(useUIStore.getState().activeView).toBe('viewer');
+  });
+
+  it('does not open a message left selected behind the list when Mail is entered again', () => {
+    const message = unread('m1');
+    useEmailStore.setState({ emails: [message], selectedEmail: message, fetchEmailContent: vi.fn().mockResolvedValue(undefined) } as never);
+    render(<MailApp />);
+    expect(useUIStore.getState().activeView).toBe('list');
+    expect(listHidden()).toBe(false);
+  });
+
+  it('drops the Mountain View cursor when the window narrows, unopened and still unread', async () => {
+    device.isMobile = false;
+    const first = unread('m1');
+    const markAsRead = vi.fn().mockResolvedValue(undefined);
+    useSettingsStore.setState({ interfaceLayout: 'mountain-view', mailLayout: 'focus', singleKeyShortcuts: true, markAsReadDelay: 0 } as never);
+    Object.assign(useAuthStore.getState().client as object, {
+      getThread: vi.fn(async (threadId: string) => ({ id: threadId, emailIds: [threadId.slice(2)] })),
+      getEmail: vi.fn(async (id: string) => ({ ...unread(id), bodyValues: {} })),
+    });
+    useEmailStore.setState({ emails: [first, unread('m2')], markAsRead } as never);
+    const view = render(<MailApp />);
+
+    act(() => { fireEvent.keyDown(window, { key: 'j' }); });
+    await waitFor(() => expect(useEmailStore.getState().selectedEmail?.id).toBe('m1'));
+    expect(markAsRead).not.toHaveBeenCalled();
+
+    device.isMobile = true;
+    view.rerender(<MailApp />);
+
+    await waitFor(() => expect(useEmailStore.getState().selectedEmail).toBeNull());
+    expect(useUIStore.getState().activeView).toBe('list');
+    expect(markAsRead).not.toHaveBeenCalled();
   });
 
   it('closes the composer the tour opened when the tour ends', async () => {
