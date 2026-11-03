@@ -129,6 +129,7 @@ export const SHARED_SETTINGS = [
   'markAsReadDelay', 'externalContentPolicy', 'attachmentPosition', 'mailAttachmentAction', 'emailAlwaysLightMode', 'returnToListAfterAction', 'plainTextFont',
   'deleteAction', 'archiveMode', 'permanentlyDeleteJunk', 'confirmBulkDelete',
   'sendDelaySeconds', 'sendConfirmation', 'defaultReplyMode', 'plainTextMode', 'signaturePosition', 'signatureSeparatorEnabled',
+  'signatureNewMailEnabled', 'signatureReplyForwardEnabled',
   'requestReadReceiptDefault', 'readReceiptResponse', 'autoSelectReplyIdentity',
   'showWeekNumbers', 'calendarWorkingDays', 'enableCalendarTasks', 'showBirthdayCalendar',
   'emailNotificationsEnabled', 'emailNotificationSound', 'calendarNotificationsEnabled',
