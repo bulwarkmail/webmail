@@ -383,10 +383,13 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
           )}
         </div>
       </div>
+      {/* Not in a block too narrow for it (several events at once): it broke over three lines of clipped text. */}
       {!event.showWithoutTime && durationMinutes >= 45 && (
-        <div className="opacity-85 text-[0.65625rem]">
-          {/* Start before end in a right-to-left layout too. */}
-          <bdi dir="ltr">{timeString}</bdi>
+        <div className="@container">
+          <div className="hidden @min-[4.25rem]:block opacity-85 text-[0.65625rem]">
+            {/* Start before end in a right-to-left layout too. */}
+            <bdi dir="ltr">{timeString}</bdi>
+          </div>
         </div>
       )}
       {visibleCalendarName && (
