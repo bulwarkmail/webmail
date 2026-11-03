@@ -11974,9 +11974,10 @@ export class JMAPClient implements IJMAPClient {
         ...(entry.receivedAt ? { receivedAt: entry.receivedAt } : {}),
       };
     });
+    // networkOnly: an import has to reach the server. Nothing on this device can answer for it.
     const response = await this.request([
       ['Email/import', { accountId: targetAccountId, emails }, '0'],
-    ], undefined, { transfer: true });
+    ], undefined, { transfer: true, networkOnly: true });
     const [name, result] = response.methodResponses?.[0] ?? [];
     if (name !== 'Email/import') {
       throw jmapError(`Email/import failed: ${result?.description || result?.type || 'unknown'}`, result);

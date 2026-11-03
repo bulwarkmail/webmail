@@ -325,6 +325,88 @@ export interface DesktopAppLockBridge {
   onLockRequest: (listener: () => void) => () => void;
 }
 
+export type DesktopLocalImportKind = 'mbox' | 'maildir' | 'pst';
+
+/** Something a scan found. The handle is all the page can ask for it by. */
+export interface DesktopLocalImportCandidate {
+  handle: string;
+  app: 'thunderbird' | 'outlook';
+  kind: DesktopLocalImportKind;
+  /** The Thunderbird profile's name, or "Outlook". */
+  group: string;
+  account?: string;
+  /** Where the mail goes: `Archives.sbd/2020` is ["Archives", "2020"]. Empty for a PST, which has its own. */
+  folder: string[];
+  name: string;
+  size: number;
+  lastModified: number;
+  /** Maildir only. */
+  messages?: number;
+}
+
+export interface DesktopLocalImportBook {
+  handle: string;
+  group: string;
+  name: string;
+  contacts: number;
+}
+
+export type DesktopLocalImportScanResult =
+  | {
+      ok: true;
+      candidates: DesktopLocalImportCandidate[];
+      books: DesktopLocalImportBook[];
+      /** Seen and not offered. */
+      refused: { name: string; reason: 'ost' | 'in-use' }[];
+      /** Thunderbird calendars seen, which aren't read. */
+      calendars: number;
+      thunderbirdRunning: boolean;
+      /** The search took too long and was stopped: this is what it found until then. */
+      incomplete?: boolean;
+    }
+  | { ok: false; reason: 'declined' | 'busy' | 'failed' };
+
+/** A file the user confirmed. `url` takes Range requests; a Maildir's messages are at `url/<position>`. */
+export interface DesktopLocalImportFile {
+  url: string;
+  name: string;
+  kind: DesktopLocalImportKind;
+  folder: string[];
+  size: number;
+  lastModified: number;
+  entrySizes?: number[];
+}
+
+export type DesktopLocalImportGrantResult =
+  | {
+      ok: true;
+      jobId: string;
+      files: DesktopLocalImportFile[];
+      /** Contacts of the confirmed address books, as vCard text. */
+      contacts: string[];
+      /** Names that couldn't be read after all. */
+      refused: string[];
+      thunderbirdRunning: boolean;
+    }
+  | { ok: false; reason: 'declined' | 'busy' | 'invalid'; refused?: string[] };
+
+export type DesktopLocalImportResumeResult =
+  | Extract<DesktopLocalImportGrantResult, { ok: true }>
+  /** `in-use`: none can be read right now, which may pass, so the job stays. `invalid`: they're gone, and so is the job. */
+  | { ok: false; reason: 'later' | 'stopped' | 'busy' | 'invalid' | 'in-use' | 'unknown'; refused?: string[] };
+
+/**
+ * Thunderbird and Outlook data on this computer. Each step that widens access asks the
+ * user natively in main: looking, reading the confirmed files, going on after a restart.
+ */
+export interface DesktopLocalImportBridge {
+  scan: () => Promise<DesktopLocalImportScanResult>;
+  grant: (handles: string[]) => Promise<DesktopLocalImportGrantResult>;
+  resume: (jobId: string) => Promise<DesktopLocalImportResumeResult>;
+  release: (jobId: string) => Promise<void>;
+  releaseAll: () => Promise<void>;
+}
+
 export interface DesktopOsSettings {
   /** Closing the main window leaves the app running in the tray. */
   closeToTray: boolean;
@@ -504,6 +586,7 @@ export interface BulwarkDesktopBridge {
   plugins?: DesktopPluginsBridge;
   keystore?: DesktopKeystoreBridge;
   appLock?: DesktopAppLockBridge;
+  localImport?: DesktopLocalImportBridge;
   privacy?: DesktopPrivacyBridge;
 }
 
