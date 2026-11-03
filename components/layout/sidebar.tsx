@@ -1960,13 +1960,13 @@ function SidebarImpl({
             data-tour="compose-button"
             className={cn(
               "flex items-center bg-[var(--mv-compose-bg)] text-[var(--mv-compose-fg)] hover:shadow-md transition-shadow",
-              isCollapsed ? "w-14 justify-center" : "gap-3 ps-4 pe-6"
+              isCollapsed ? "w-14 justify-center" : "max-w-full gap-[min(0.75rem,12px)] ps-[min(1rem,16px)] pe-[min(1.5rem,24px)]"
             )}
             title={t("compose_hint")}
             aria-label={t("compose")}
           >
             <Pencil className="w-6 h-6 flex-shrink-0" />
-            {!isCollapsed && <span className="text-sm font-medium">{t("compose")}</span>}
+            {!isCollapsed && <span className="min-w-0 truncate text-sm font-medium">{t("compose")}</span>}
           </button>
         </div>
       )}
