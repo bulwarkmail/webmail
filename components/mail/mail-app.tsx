@@ -3172,6 +3172,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         attachments: [payload.attachment],
         headers: labelSourceHeaders(email.headers),
         originalFrom: email.from,
+        // The login holding the message, whose blob this attachment is.
+        accountId: email.sourceClientAccountId ?? viewingAccountId ?? undefined,
       },
     });
     setComposerMode('forward');
