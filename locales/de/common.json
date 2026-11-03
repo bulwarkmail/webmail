@@ -6500,5 +6500,14 @@
     "message_moved": "Diese Nachricht wurde in einen anderen Ordner verschoben.",
     "message_moved_to": "Diese Nachricht wurde nach {folder} verschoben.",
     "window_not_ready": "Das neue Fenster wurde nicht rechtzeitig geöffnet. Ihr Entwurf bleibt hier."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Mit dem Browser anmelden",
+    "browser_waiting": "Schließen Sie die Anmeldung im Browser ab",
+    "browser_unavailable": "Dieser Server bietet keine Anmeldung über den Browser an. Verwenden Sie stattdessen Ihr Passwort.",
+    "browser_failed": "Die Anmeldung über den Browser hat nicht geklappt. Versuchen Sie es noch einmal.",
+    "server_needed": "Geben Sie zuerst die Adresse Ihres Servers ein.",
+    "server_declined": "Sie haben diesen Server nicht zugelassen, daher wurde nichts an ihn gesendet.",
+    "server_invalid": "Diese Serveradresse ist ungültig."
   }
 }

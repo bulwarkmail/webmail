@@ -6500,5 +6500,14 @@
     "message_moved": "이 메시지는 다른 폴더로 이동되었습니다.",
     "message_moved_to": "이 메시지는 {folder}(으)로 이동되었습니다.",
     "window_not_ready": "새 창이 제때 열리지 않았습니다. 임시 보관 메일은 여기에 남아 있습니다."
+  },
+  "desktop_sign_in": {
+    "browser_button": "브라우저로 로그인",
+    "browser_waiting": "브라우저에서 로그인을 마치세요",
+    "browser_unavailable": "이 서버는 브라우저 로그인을 지원하지 않습니다. 비밀번호를 사용하세요.",
+    "browser_failed": "브라우저 로그인에 실패했습니다. 다시 시도하세요.",
+    "server_needed": "먼저 서버 주소를 입력하세요.",
+    "server_declined": "이 서버를 허용하지 않아 아무것도 보내지 않았습니다.",
+    "server_invalid": "이 서버 주소는 올바르지 않습니다."
   }
 }

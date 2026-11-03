@@ -20,6 +20,7 @@
  */
 
 import { IS_LITE } from '@/lib/lite';
+import { desktopJmapBase } from '@/lib/desktop/jmap-route';
 import { devicesForAccount } from '@/lib/device-policy';
 import { accountSubjectPending, useAccountSubjects } from '@/lib/org/account-subjects';
 import { labelsPolicyFor } from '@/lib/outgoing/classification';
@@ -325,7 +326,7 @@ export function probeServer(serverUrl: string): Promise<boolean> {
   if (running) return running;
   const probe = (async () => {
     try {
-      await fetch(`${serverUrl.replace(/\/+$/, '')}/.well-known/jmap`, { mode: 'no-cors', cache: 'no-store', credentials: 'omit' });
+      await fetch(`${desktopJmapBase(serverUrl.replace(/\/+$/, ''))}/.well-known/jmap`, { mode: 'no-cors', cache: 'no-store', credentials: 'omit' });
       if (setServerDown(serverUrl, false)) scheduleFlushAll(500);
       return false;
     } catch {

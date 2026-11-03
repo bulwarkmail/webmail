@@ -1,8 +1,18 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { mainWindowStorage } from '@/lib/popout/window-role';
+import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
+import { forgetDesktopServer } from '@/lib/desktop/bridge';
 import { generateAccountId, generateAvatarColor, getMaxAccounts } from '@/lib/account-utils';
 import { authHooks } from '@/lib/plugin-hooks';
+
+function sameServerOrigin(a: string, b: string): boolean {
+  try {
+    return new URL(a).origin === new URL(b).origin;
+  } catch {
+    return a === b;
+  }
+}
 
 export interface AccountEntry {
   /** Unique key: `${username}@${serverHostname}` */
@@ -150,6 +160,7 @@ export const useAccountStore = create<AccountState>()(
 
       removeAccount: (accountId) => {
         if (!get().accounts.some((a) => a.id === accountId)) return;
+        const leaving = get().accounts.find((a) => a.id === accountId);
         set((s) => {
           const remaining = s.accounts.filter((a) => a.id !== accountId);
           const wasDefault = s.defaultAccountId === accountId;
@@ -174,6 +185,10 @@ export const useAccountStore = create<AccountState>()(
           };
         });
         void authHooks.onAccountRemove.emit({ accountId });
+        // The desktop app stops trusting a server its last account left.
+        if (IS_DESKTOP_BUILD && leaving && !get().accounts.some((a) => sameServerOrigin(a.serverUrl, leaving.serverUrl))) {
+          forgetDesktopServer(leaving.serverUrl, 'signed-out');
+        }
       },
 
       setActiveAccount: (accountId) => {

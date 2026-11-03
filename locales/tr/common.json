@@ -6500,5 +6500,14 @@
     "message_moved": "Bu ileti başka bir klasöre taşındı.",
     "message_moved_to": "Bu ileti {folder} klasörüne taşındı.",
     "window_not_ready": "Yeni pencere zamanında açılmadı. Taslağınız burada kalıyor."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Tarayıcıyla oturum aç",
+    "browser_waiting": "Oturum açmayı tarayıcınızda tamamlayın",
+    "browser_unavailable": "Bu sunucu tarayıcıyla oturum açmayı desteklemiyor. Parolanızı kullanın.",
+    "browser_failed": "Tarayıcıyla oturum açılamadı. Yeniden deneyin.",
+    "server_needed": "Önce sunucu adresini girin.",
+    "server_declined": "Bu sunucuya izin vermediniz, bu yüzden ona hiçbir şey gönderilmedi.",
+    "server_invalid": "Bu sunucu adresi geçerli değil."
   }
 }

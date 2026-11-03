@@ -6500,5 +6500,14 @@
     "message_moved": "Este mensaje se movió a otra carpeta.",
     "message_moved_to": "Este mensaje se movió a {folder}.",
     "window_not_ready": "La ventana nueva no se abrió a tiempo. Tu borrador se queda aquí."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Iniciar sesión con el navegador",
+    "browser_waiting": "Termina de iniciar sesión en el navegador",
+    "browser_unavailable": "Este servidor no permite iniciar sesión con el navegador. Usa tu contraseña.",
+    "browser_failed": "No se pudo iniciar sesión con el navegador. Inténtalo de nuevo.",
+    "server_needed": "Primero escribe la dirección del servidor.",
+    "server_declined": "No permitiste este servidor, así que no se le envió nada.",
+    "server_invalid": "Esta dirección de servidor no es válida."
   }
 }

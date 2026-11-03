@@ -6500,5 +6500,14 @@
     "message_moved": "Denne besked er flyttet til en anden mappe.",
     "message_moved_to": "Denne besked er flyttet til {folder}.",
     "window_not_ready": "Det nye vindue åbnede ikke i tide. Din kladde bliver her."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Log ind med din browser",
+    "browser_waiting": "Gør login færdigt i din browser",
+    "browser_unavailable": "Denne server tilbyder ikke login via browser. Brug din adgangskode i stedet.",
+    "browser_failed": "Login via browseren lykkedes ikke. Prøv igen.",
+    "server_needed": "Angiv først serverens adresse.",
+    "server_declined": "Du tillod ikke denne server, så der blev ikke sendt noget til den.",
+    "server_invalid": "Denne serveradresse er ikke gyldig."
   }
 }

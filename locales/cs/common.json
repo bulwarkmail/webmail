@@ -6500,5 +6500,14 @@
     "message_moved": "Tato zpráva byla přesunuta do jiné složky.",
     "message_moved_to": "Tato zpráva byla přesunuta do {folder}.",
     "window_not_ready": "Nové okno se neotevřelo včas. Koncept zůstává zde."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Přihlásit se v prohlížeči",
+    "browser_waiting": "Dokončete přihlášení v prohlížeči",
+    "browser_unavailable": "Tento server přihlášení přes prohlížeč nenabízí. Použijte heslo.",
+    "browser_failed": "Přihlášení přes prohlížeč se nezdařilo. Zkuste to znovu.",
+    "server_needed": "Nejdřív zadejte adresu serveru.",
+    "server_declined": "Tento server jste nepovolili, proto se na něj nic neodeslalo.",
+    "server_invalid": "Tato adresa serveru není platná."
   }
 }

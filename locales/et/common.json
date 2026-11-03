@@ -6500,5 +6500,14 @@
     "message_moved": "See kiri teisaldati teise kausta.",
     "message_moved_to": "See kiri teisaldati kausta {folder}.",
     "window_not_ready": "Uus aken ei avanenud õigeks ajaks. Mustand jääb siia."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Logi sisse brauseriga",
+    "browser_waiting": "Lõpeta sisselogimine brauseris",
+    "browser_unavailable": "See server ei paku brauseri kaudu sisselogimist. Kasuta parooli.",
+    "browser_failed": "Brauseri kaudu sisselogimine ei õnnestunud. Proovi uuesti.",
+    "server_needed": "Sisesta kõigepealt serveri aadress.",
+    "server_declined": "Sa ei lubanud seda serverit, nii et sellele ei saadetud midagi.",
+    "server_invalid": "See serveri aadress ei kehti."
   }
 }

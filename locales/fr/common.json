@@ -6500,5 +6500,14 @@
     "message_moved": "Ce message a été déplacé vers un autre dossier.",
     "message_moved_to": "Ce message a été déplacé vers {folder}.",
     "window_not_ready": "La nouvelle fenêtre ne s’est pas ouverte à temps. Votre brouillon reste ici."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Se connecter avec le navigateur",
+    "browser_waiting": "Terminez la connexion dans votre navigateur",
+    "browser_unavailable": "Ce serveur ne propose pas la connexion par navigateur. Utilisez votre mot de passe.",
+    "browser_failed": "La connexion par navigateur a échoué. Réessayez.",
+    "server_needed": "Saisissez d'abord l'adresse du serveur.",
+    "server_declined": "Vous n'avez pas autorisé ce serveur, donc rien ne lui a été envoyé.",
+    "server_invalid": "Cette adresse de serveur n'est pas valide."
   }
 }

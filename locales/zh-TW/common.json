@@ -6500,5 +6500,14 @@
     "message_moved": "這封郵件已移到其他資料夾。",
     "message_moved_to": "這封郵件已移到 {folder}。",
     "window_not_ready": "新視窗未能及時開啟。你的草稿仍保留在這裡。"
+  },
+  "desktop_sign_in": {
+    "browser_button": "使用瀏覽器登入",
+    "browser_waiting": "請在瀏覽器中完成登入",
+    "browser_unavailable": "此伺服器不支援透過瀏覽器登入。請使用密碼。",
+    "browser_failed": "無法透過瀏覽器登入。請再試一次。",
+    "server_needed": "請先輸入伺服器位址。",
+    "server_declined": "你沒有允許此伺服器,因此沒有傳送任何內容給它。",
+    "server_invalid": "此伺服器位址無效。"
   }
 }

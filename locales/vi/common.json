@@ -6512,5 +6512,14 @@
     "message_moved": "Thư này đã được chuyển sang thư mục khác.",
     "message_moved_to": "Thư này đã được chuyển đến {folder}.",
     "window_not_ready": "Cửa sổ mới không mở kịp. Bản nháp của bạn vẫn ở đây."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Đăng nhập bằng trình duyệt",
+    "browser_waiting": "Hoàn tất đăng nhập trong trình duyệt",
+    "browser_unavailable": "Máy chủ này không hỗ trợ đăng nhập qua trình duyệt. Hãy dùng mật khẩu.",
+    "browser_failed": "Không thể đăng nhập qua trình duyệt. Hãy thử lại.",
+    "server_needed": "Trước tiên hãy nhập địa chỉ máy chủ.",
+    "server_declined": "Bạn không cho phép máy chủ này nên không có gì được gửi đến đó.",
+    "server_invalid": "Địa chỉ máy chủ này không hợp lệ."
   }
 }

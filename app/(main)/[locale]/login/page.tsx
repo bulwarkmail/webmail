@@ -1,6 +1,9 @@
 "use client";
 
 import { Suspense, useState, useEffect, useRef, useCallback, useId } from "react";
+import { IS_DESKTOP_BUILD } from "@/lib/desktop/flag";
+import { forgetDesktopServer, getDesktopBridge } from "@/lib/desktop/bridge";
+import { browserSignInAvailable, runDesktopBrowserSignIn } from "@/lib/desktop/browser-sign-in";
 import { useRouter } from "@/i18n/navigation";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -185,6 +188,10 @@ function VersionBadge() {
 function LoginPageContent() {
   const router = useRouter();
   const t = useTranslations("login");
+  const tDesktop = useTranslations("desktop_sign_in");
+  // Only the desktop build sets these; a browser never shows them.
+  const [desktopNotice, setDesktopNotice] = useState<string | null>(null);
+  const [desktopWaiting, setDesktopWaiting] = useState(false);
   const tSessionLimits = useTranslations("session_limits");
   const tOffline = useTranslations("offline");
   const tTheme = useTranslations("settings.appearance.theme");
@@ -985,6 +992,38 @@ function LoginPageContent() {
     window.location.href = authUrl.toString();
   };
 
+  /** The desktop build: the server's own sign-in page in the system browser. */
+  // Spelled out, not IS_DESKTOP_BUILD: only this form keeps the route out of other
+  // builds' bundles, which Lite's check on API strings relies on.
+  const handleDesktopBrowserSignIn = async () => {
+    if (process.env.NEXT_PUBLIC_BULWARK_DESKTOP === '1') {
+      const target = jmapEndpoint.trim();
+      if (!target) {
+        setDesktopNotice(tDesktop("server_needed"));
+        return;
+      }
+      setDesktopNotice(null);
+      setDesktopWaiting(true);
+      const prefix = getPathPrefix(params.locale as string);
+      const outcome = await runDesktopBrowserSignIn({
+        serverUrl: target,
+        callbackPath: `${prefix}/${params.locale}/auth/callback`,
+        slot: useAccountStore.getState().getNextCookieSlot(),
+        remember: persistProviderSession,
+        addAccount: isAddAccountMode,
+      });
+      if (outcome.kind === "callback") {
+        window.location.href = outcome.callbackUrl;
+        return;
+      }
+      setDesktopWaiting(false);
+      forgetDesktopServer(target, "failed");
+      if (outcome.kind === "unavailable") setDesktopNotice(tDesktop("browser_unavailable"));
+      else if (outcome.kind === "declined") setDesktopNotice(tDesktop("server_declined"));
+      else if (outcome.kind === "failed") setDesktopNotice(tDesktop("browser_failed"));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -992,9 +1031,21 @@ function LoginPageContent() {
     // when the admin hasn't configured a server list.
     const effectiveServerUrl = selectedServer?.url
       || (allowCustomJmapEndpoint ? jmapEndpoint : serverUrl);
+    // A LAN or plain http server gets a native prompt first, and the app can
+    // reach it from then on. Without a yes, nothing is sent there.
+    if (IS_DESKTOP_BUILD) {
+      setDesktopNotice(null);
+      const prepared = await getDesktopBridge()?.servers?.prepare(effectiveServerUrl);
+      if (prepared && !prepared.ok) {
+        setDesktopNotice(prepared.reason === "invalid" ? tDesktop("server_invalid") : tDesktop("server_declined"));
+        return;
+      }
+    }
     if (signInWithToken) {
       if (await loginWithToken(effectiveServerUrl, accessToken, persistSession)) {
         router.push('/');
+      } else if (IS_DESKTOP_BUILD) {
+        forgetDesktopServer(effectiveServerUrl, 'failed');
       }
       return;
     }
@@ -1046,6 +1097,8 @@ function LoginPageContent() {
     } else if (isMobileHandoff) {
       // Stale payload should never feed into a later retry's redirect.
       mobileHandoffPayloadRef.current = null;
+    } else if (IS_DESKTOP_BUILD) {
+      forgetDesktopServer(effectiveServerUrl, 'failed');
     }
   };
 
@@ -1814,6 +1867,24 @@ function LoginPageContent() {
                   </>
                 )}
 
+                {process.env.NEXT_PUBLIC_BULWARK_DESKTOP === "1" && !hasServerList && browserSignInAvailable() && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="mt-3 w-full h-11 font-medium text-[0.9375rem] rounded-xl border-border/60 hover:bg-muted/50"
+                    onClick={handleDesktopBrowserSignIn}
+                    disabled={desktopWaiting || isLoading}
+                    data-testid="desktop-browser-sign-in"
+                  >
+                    {desktopWaiting ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : <LogIn className="w-4 h-4 me-2" />}
+                    {desktopWaiting ? tDesktop("browser_waiting") : tDesktop("browser_button")}
+                  </Button>
+                )}
+                {IS_DESKTOP_BUILD && desktopNotice && (
+                  <p role="alert" data-testid="desktop-notice" className="mt-2 text-sm text-warning leading-relaxed">
+                    {desktopNotice}
+                  </p>
+                )}
                 {((serverOauthEnabled && oauthDiscoveryDone && !oauthMetadata) || liteOAuthFailed) && (
                   <div className="mt-2 p-3 rounded-xl border border-warning/20 bg-warning/5 flex items-start gap-3">
                     <div className="w-10 h-10 rounded-full bg-warning/15 text-warning flex items-center justify-center flex-shrink-0 shadow-sm">

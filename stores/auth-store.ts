@@ -16,6 +16,9 @@ import { debug } from '@/lib/debug';
 import { setServerAuthIssue } from '@/lib/server-auth-status';
 import { generateAccountId, MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { replaceWindowLocation, getPathPrefix, getLocaleFromPath, apiFetch } from '@/lib/browser-navigation';
+import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
+import { getDesktopBridge } from '@/lib/desktop/bridge';
+import { DESKTOP_CLIENT_ID_KEY } from '@/lib/desktop/browser-sign-in';
 import { isEmbedded, notifyParent } from '@/lib/iframe-bridge';
 import { snapshotAccount, restoreAccount, clearAllStores, evictAccount, evictAll, forgetAccountRows } from '@/lib/account-state-manager';
 import { clearAllPluginStorage, clearPluginStorageForAccount } from '@/lib/plugin-sandbox/storage-scope';
@@ -479,6 +482,8 @@ async function exchangeOAuthCode(params: {
         slot,
         ...(serverId ? { server_id: serverId } : {}),
         remember,
+        // The desktop app signs in to a server only it knows about.
+        ...(IS_DESKTOP_BUILD ? { custom_server_url: serverUrl, client_id: sessionStorage.getItem(DESKTOP_CLIENT_ID_KEY) } : {}),
       }),
     }).then((res) => noteSessionAnswer(res, slot));
   }
@@ -1049,6 +1054,14 @@ function finishSignOut(endSessionUrl: string | null, userInitiated: boolean): vo
     }
   }
   if (endSessionUrl) {
+    // The desktop build signs in through the system browser, so the provider's
+    // session lives there. The window itself goes straight to the login page.
+    const desktopShell = IS_DESKTOP_BUILD ? getDesktopBridge()?.shell : undefined;
+    if (desktopShell) {
+      desktopShell.openExternal(endSessionUrl);
+      navigateToLogin();
+      return;
+    }
     leavingForProviderLogout = true;
     replaceWindowLocation(endSessionUrl);
     return;

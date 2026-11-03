@@ -6500,5 +6500,14 @@
     "message_moved": "Ta wiadomość została przeniesiona do innego folderu.",
     "message_moved_to": "Ta wiadomość została przeniesiona do {folder}.",
     "window_not_ready": "Nowe okno nie otworzyło się na czas. Twój szkic zostaje tutaj."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Zaloguj się w przeglądarce",
+    "browser_waiting": "Dokończ logowanie w przeglądarce",
+    "browser_unavailable": "Ten serwer nie oferuje logowania przez przeglądarkę. Użyj hasła.",
+    "browser_failed": "Logowanie przez przeglądarkę nie powiodło się. Spróbuj ponownie.",
+    "server_needed": "Najpierw wpisz adres serwera.",
+    "server_declined": "Ten serwer nie został dozwolony, więc nic do niego nie wysłano.",
+    "server_invalid": "Ten adres serwera jest nieprawidłowy."
   }
 }

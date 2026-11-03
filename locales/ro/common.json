@@ -6500,5 +6500,14 @@
     "message_moved": "Acest mesaj a fost mutat în alt dosar.",
     "message_moved_to": "Acest mesaj a fost mutat în {folder}.",
     "window_not_ready": "Fereastra nouă nu s-a deschis la timp. Ciorna rămâne aici."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Conectează-te cu browserul",
+    "browser_waiting": "Finalizează conectarea în browser",
+    "browser_unavailable": "Acest server nu oferă conectare prin browser. Folosește parola.",
+    "browser_failed": "Conectarea prin browser nu a reușit. Încearcă din nou.",
+    "server_needed": "Introdu mai întâi adresa serverului.",
+    "server_declined": "Nu ai permis acest server, așa că nu i s-a trimis nimic.",
+    "server_invalid": "Această adresă de server nu este validă."
   }
 }

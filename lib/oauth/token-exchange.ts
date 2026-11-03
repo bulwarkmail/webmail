@@ -8,6 +8,7 @@ import { configManager } from '@/lib/admin/config-manager';
 import { parseJmapServers, findServerById } from '@/lib/admin/jmap-servers';
 import { stalwartDefaultClientId } from '@/lib/auth/stalwart-password-login';
 import { getOauthResource } from '@/lib/oauth/tokens';
+import type { CustomUpstream } from '@/lib/oauth/custom-upstream';
 
 // Fallback OAuth client id used when no client is configured. The password+TOTP
 // login route mints tokens against the mail server's built-in OAuth with this
@@ -25,6 +26,12 @@ export interface ClientConfigOptions {
    * so a misconfiguration surfaces at login rather than as a broken session.
    */
   fallbackClientId?: string;
+  /**
+   * The server this token belongs to when it's in no configured list: the
+   * desktop app's accounts (lib/oauth/custom-upstream.ts). Wins over `serverId`
+   * and the global server, and the configured client secret is never sent to it.
+   */
+  upstream?: CustomUpstream | null;
 }
 
 function httpOrigin(url: string): string | null {
@@ -101,6 +108,10 @@ function discoveryBase(url: string): string {
 }
 
 export function getRequiredConfig(serverId?: string | null, options?: ClientConfigOptions) {
+  if (options?.upstream) {
+    const { clientId, serverUrl } = options.upstream;
+    return { clientId, serverUrl, discoveryUrl: discoveryBase(serverUrl), serverId: undefined, endSessionUrl: undefined, resource: undefined };
+  }
   const entry = getServerEntry(serverId);
 
   const globalClientId = configManager.get<string>('oauthClientId', '') || process.env.OAUTH_CLIENT_ID;
@@ -139,7 +150,8 @@ export function getRequiredConfig(serverId?: string | null, options?: ClientConf
  * with a client it registers itself (lib/auth/stalwart-password-login.ts),
  * whose id the refresh must present instead of the default one.
  */
-export async function defaultClientOptions(serverId?: string | null): Promise<ClientConfigOptions> {
+export async function defaultClientOptions(serverId?: string | null, upstream?: CustomUpstream | null): Promise<ClientConfigOptions> {
+  if (upstream) return { upstream };
   const { clientId, serverUrl } = getRequiredConfig(serverId, { fallbackClientId: DEFAULT_CLIENT_ID });
   if (clientId !== DEFAULT_CLIENT_ID) return { fallbackClientId: DEFAULT_CLIENT_ID };
   return { fallbackClientId: await stalwartDefaultClientId(serverUrl, DEFAULT_CLIENT_ID, true) };
@@ -177,7 +189,7 @@ export async function getMetadata(serverId?: string | null, options?: ClientConf
 export function buildOAuthParams(base: Record<string, string>, serverId?: string | null, options?: ClientConfigOptions): URLSearchParams {
   const { clientId } = getRequiredConfig(serverId, options);
   const params = new URLSearchParams({ ...base, client_id: clientId });
-  const secret = getClientSecret(serverId);
+  const secret = options?.upstream ? '' : getClientSecret(serverId);
   if (secret) {
     params.set('client_secret', secret);
   }
@@ -197,15 +209,16 @@ export async function exchangeCodeForTokens(
   codeVerifier: string,
   redirectUri: string,
   serverId?: string | null,
+  options?: ClientConfigOptions,
 ): Promise<TokenResult> {
-  const tokenEndpoint = await getTokenEndpoint(serverId);
+  const tokenEndpoint = await getTokenEndpoint(serverId, options);
 
   const params = buildOAuthParams({
     grant_type: 'authorization_code',
     code,
     redirect_uri: redirectUri,
     code_verifier: codeVerifier,
-  }, serverId);
+  }, serverId, options);
 
   // The body carries the code, the PKCE verifier and the client secret. The
   // endpoint was validated; a redirect would re-send all of it to a host

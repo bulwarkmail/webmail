@@ -6500,5 +6500,14 @@
     "message_moved": "Aquest missatge s’ha mogut a una altra carpeta.",
     "message_moved_to": "Aquest missatge s’ha mogut a {folder}.",
     "window_not_ready": "La finestra nova no s’ha obert a temps. L’esborrany es queda aquí."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Inicia la sessió amb el navegador",
+    "browser_waiting": "Acaba d'iniciar la sessió al navegador",
+    "browser_unavailable": "Aquest servidor no permet iniciar la sessió amb el navegador. Fes servir la contrasenya.",
+    "browser_failed": "No s'ha pogut iniciar la sessió amb el navegador. Torna-ho a provar.",
+    "server_needed": "Primer escriu l'adreça del servidor.",
+    "server_declined": "No has permès aquest servidor, així que no s'hi ha enviat res.",
+    "server_invalid": "Aquesta adreça de servidor no és vàlida."
   }
 }

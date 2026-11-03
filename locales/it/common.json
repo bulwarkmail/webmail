@@ -6500,5 +6500,14 @@
     "message_moved": "Questo messaggio è stato spostato in un’altra cartella.",
     "message_moved_to": "Questo messaggio è stato spostato in {folder}.",
     "window_not_ready": "La nuova finestra non si è aperta in tempo. La bozza rimane qui."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Accedi con il browser",
+    "browser_waiting": "Completa l'accesso nel browser",
+    "browser_unavailable": "Questo server non offre l'accesso tramite browser. Usa la password.",
+    "browser_failed": "L'accesso tramite browser non è riuscito. Riprova.",
+    "server_needed": "Inserisci prima l'indirizzo del server.",
+    "server_declined": "Non hai autorizzato questo server, quindi non gli è stato inviato nulla.",
+    "server_invalid": "Questo indirizzo del server non è valido."
   }
 }

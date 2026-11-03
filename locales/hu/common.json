@@ -6500,5 +6500,14 @@
     "message_moved": "Ezt az üzenetet másik mappába helyezték át.",
     "message_moved_to": "Ezt az üzenetet ide helyezték át: {folder}.",
     "window_not_ready": "Az új ablak nem nyílt meg időben. A piszkozat itt marad."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Bejelentkezés böngészővel",
+    "browser_waiting": "Fejezze be a bejelentkezést a böngészőben",
+    "browser_unavailable": "Ez a szerver nem kínál böngészős bejelentkezést. Használja a jelszavát.",
+    "browser_failed": "A böngészős bejelentkezés nem sikerült. Próbálja újra.",
+    "server_needed": "Először adja meg a szerver címét.",
+    "server_declined": "Nem engedélyezte ezt a szervert, ezért semmit sem küldtünk neki.",
+    "server_invalid": "Ez a szervercím nem érvényes."
   }
 }

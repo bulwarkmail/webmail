@@ -6500,5 +6500,14 @@
     "message_moved": "This message was moved to another folder.",
     "message_moved_to": "This message was moved to {folder}.",
     "window_not_ready": "The new window did not open in time. Your draft stays here."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Sign in with your browser",
+    "browser_waiting": "Finish signing in in your browser",
+    "browser_unavailable": "This server doesn't offer sign-in through a browser. Use your password instead.",
+    "browser_failed": "Signing in through your browser didn't work. Try again.",
+    "server_needed": "Enter your server's address first.",
+    "server_declined": "You didn't allow this server, so nothing was sent to it.",
+    "server_invalid": "This server address isn't valid."
   }
 }
