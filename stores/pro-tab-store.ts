@@ -65,6 +65,8 @@ export interface ProComposeTabData {
   initialData?: ComposerDraftData | null;
   /** Fields a plugin filled in through onBeforeCompose; dropped on the first state save. */
   prefill?: ComposePrefill | null;
+  /** Files from a share or a launch, attached when the composer opens. */
+  initialFiles?: File[] | null;
   sourceEmailId?: string | null;
   /** The login and account of that message, for its $answered / $forwarded flag. */
   sourceEmailSource?: EmailWriteSource | null;

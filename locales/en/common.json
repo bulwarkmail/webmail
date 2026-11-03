@@ -249,6 +249,28 @@
     "active_account": "Active",
     "switching_account": "Switching account..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "New message",
+    "shortcut_calendar": "Calendar",
+    "shortcut_contacts": "Contacts",
+    "unsupported_file": "{name} can't be opened here.",
+    "open_failed": "The file couldn't be opened. Try opening it again.",
+    "share_gone": "What you shared is no longer here. Please share it again.",
+    "share_files_lost": "The shared files couldn't be kept. Add them to the message again.",
+    "ics_needs_server": "Importing a calendar file needs a connection to the server. The import starts when you're back online.",
+    "contacts_need_server": "Importing contacts needs a connection to the server. Try again when you're back online.",
+    "share_confirm_title": "Start a new message?",
+    "share_confirm_message": "Another site or app wants to start a message. Nothing is uploaded or saved unless you agree.",
+    "share_confirm_subject": "Subject:",
+    "share_confirm_text": "Text:",
+    "share_confirm_files": "{count, plural, one {File:} other {Files:}}",
+    "share_confirm_accept": "Start message",
+    "share_confirm_decline": "Don't start",
+    "share_cut": "The shared text was too long and has been shortened.",
+    "handoff_expired": "Something you opened or shared waited too long and is gone. Please open or share it again.",
+    "compose_waiting": "Close this message to start the next one.",
+    "save_first_failed": "Your message couldn't be saved, so the file hasn't been opened. Save the message, then open the calendar or contacts."
+  },
   "sidebar_apps": {
     "modal_title": "Sidebar apps",
     "add_new": "Add app",

@@ -249,6 +249,28 @@
     "active_account": "Aktív",
     "switching_account": "Fiók váltása..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Új üzenet",
+    "shortcut_calendar": "Naptár",
+    "shortcut_contacts": "Névjegyek",
+    "unsupported_file": "A(z) {name} itt nem nyitható meg.",
+    "open_failed": "A fájlt nem sikerült megnyitni. Próbálja meg újra megnyitni.",
+    "share_gone": "Amit megosztott, már nincs itt. Kérjük, ossza meg újra.",
+    "share_files_lost": "A megosztott fájlokat nem sikerült megőrizni. Adja hozzá őket újra az üzenethez.",
+    "ics_needs_server": "A naptárfájl importálásához kapcsolat kell a szerverrel. Az importálás akkor indul el, amikor újra online lesz.",
+    "contacts_need_server": "A névjegyek importálásához kapcsolat kell a szerverrel. Próbálja újra, amikor ismét online lesz.",
+    "share_confirm_title": "Új üzenetet kezd?",
+    "share_confirm_message": "Egy másik webhely vagy alkalmazás üzenetet szeretne kezdeni. Az Ön beleegyezése nélkül semmi sem kerül feltöltésre vagy mentésre.",
+    "share_confirm_subject": "Tárgy:",
+    "share_confirm_text": "Szöveg:",
+    "share_confirm_files": "{count, plural, one {Fájl:} other {Fájlok:}}",
+    "share_confirm_accept": "Üzenet kezdése",
+    "share_confirm_decline": "Ne kezdje el",
+    "share_cut": "A megosztott szöveg túl hosszú volt, ezért rövidítettük.",
+    "handoff_expired": "Valami, amit megnyitott vagy megosztott, túl sokáig várakozott, és már nincs meg. Kérjük, nyissa meg vagy ossza meg újra.",
+    "compose_waiting": "Zárja be ezt az üzenetet a következő kezdéséhez.",
+    "save_first_failed": "Az üzenetet nem sikerült menteni, ezért a fájl nem nyílt meg. Mentse az üzenetet, majd nyissa meg a naptárat vagy a névjegyeket."
+  },
   "sidebar_apps": {
     "modal_title": "Oldalsáv alkalmazások",
     "add_new": "Alkalmazás hozzáadása",

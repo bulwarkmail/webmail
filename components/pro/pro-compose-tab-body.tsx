@@ -244,6 +244,7 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
           initialDraftText={data.initialDraftText}
           initialData={data.initialData}
           prefill={data.prefill}
+          initialFiles={data.initialFiles}
           sessionKey={`pro-${tabId}-${data.sessionId}`}
           sourceEmailId={data.sourceEmailId ?? undefined}
           composeFromAccountEmail={composeFromAccountEmail}
