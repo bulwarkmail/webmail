@@ -257,20 +257,28 @@ export async function PUT(request: NextRequest) {
     // The refresh token may have been minted by the password+TOTP login route,
     // which works without a configured OAuth client by falling back to the
     // default client id - refreshing must fall back the same way (#873).
-    const tokenEndpoint = await getTokenEndpoint(serverId, { fallbackClientId: DEFAULT_CLIENT_ID });
+    // Discovery or the token endpoint out of reach is an outage: the client
+    // waits it out. A 500 here would count toward signing the user out.
+    let tokenResponse: Response;
+    try {
+      const tokenEndpoint = await getTokenEndpoint(serverId, { fallbackClientId: DEFAULT_CLIENT_ID });
 
-    const params = buildOAuthParams({
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken,
-    }, serverId, await defaultClientOptions(serverId));
+      const params = buildOAuthParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+      }, serverId, await defaultClientOptions(serverId));
 
-    const tokenResponse = await observeUpstream('oauth', () => fetch(tokenEndpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params.toString(),
-      // See revokeRefreshToken: the body holds the refresh token.
-      redirect: 'error',
-    }));
+      tokenResponse = await observeUpstream('oauth', () => fetch(tokenEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString(),
+        // See revokeRefreshToken: the body holds the refresh token.
+        redirect: 'error',
+      }));
+    } catch (error) {
+      logger.warn('Token refresh: provider unreachable', { error: error instanceof Error ? error.message : 'Unknown error' });
+      return NextResponse.json({ error: 'Token endpoint unavailable' }, { status: 503 });
+    }
 
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();

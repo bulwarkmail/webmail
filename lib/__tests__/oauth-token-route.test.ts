@@ -166,7 +166,24 @@ describe('oauth token route - access token cache (#552)', () => {
 
     const { status } = await callPut();
 
-    expect(status).toBe(500);
+    expect(status).toBe(503);
+    expect(cookieStore.get('jmap_rt')).toBeTruthy();
+  });
+
+  it('answers 503 when the token endpoint is out of reach, which the client waits out', async () => {
+    cookieStore.set('jmap_rt', 'refresh-token');
+    fetchMock.mockRejectedValue(new TypeError('fetch failed'));
+    const { status } = await callPut({ force: 'true' });
+    expect(status).toBe(503);
+    expect(cookieStore.get('jmap_rt')).toBeTruthy();
+  });
+
+  it('answers 503 when discovery fails, also for a server it has no config for', async () => {
+    cookieStore.set('jmap_rt', 'refresh-token');
+    getTokenEndpoint.mockRejectedValue(new Error('OAuth misconfigured'));
+    const { status } = await callPut({ force: 'true' });
+    expect(status).toBe(503);
+    expect(fetchMock).not.toHaveBeenCalled();
     expect(cookieStore.get('jmap_rt')).toBeTruthy();
   });
 
