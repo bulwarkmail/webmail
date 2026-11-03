@@ -73,6 +73,14 @@ describe('batch functions with an explicit target', () => {
     expect(client.batchArchiveEmails).not.toHaveBeenCalled();
   });
 
+  it("files into an Archive someone else reads when the user pressed Archive, as the app's own button does", async () => {
+    const getMailboxShareWith = vi.fn(async (id: string) => (id === 'arch' ? { u2: { mayReadItems: true } } : null));
+    Object.assign(client, { supportsMailboxSharing: () => true, getMailboxShareWith });
+    await useEmailStore.getState().batchArchive(other, { emailIds: ['m1'], client, emails: [email('m1')], userArchive: true });
+    expect(client.batchArchiveEmails).toHaveBeenCalled();
+    expect(getMailboxShareWith).not.toHaveBeenCalled();
+  });
+
   it('tags the named messages through the target\'s client and skips those already tagged', async () => {
     const ok = await useEmailStore.getState().batchSetTag(other, 'work', true, {
       emailIds: ['m1', 'm2'], client, emails: [email('m1'), email('m2', { '$label:work': true })],

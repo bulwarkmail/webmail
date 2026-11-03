@@ -4,11 +4,13 @@ import { IncompleteDeleteError } from "./delete-error";
 import { downloadAllowed, saveBlobAs, type DownloadKind } from "@/lib/download-guard";
 import { ArchiveEmailsError } from "./archive-error";
 import { generateUUID } from '@/lib/utils';
+import { standInsIn, withRealIds, withStandInsBack } from './stand-in-ids';
 import type { Attachment, Email, Mailbox, MailboxRights, StateChange, AccountStates, CollectionChanges, ShareNotification, BusyPeriod, CalendarParticipantIdentity, CalendarEventNotification, Thread, Identity, EmailAddress, ContactCard, AddressBook, AddressBookRights, VacationResponse, Calendar, CalendarComponentType, CalendarRights, CalendarEvent, CalendarEventFilter, CalendarTask, CreateCalendarOptions, FileNode, FileNodeFilter, FileNodeRights, Principal, PrincipalAvailability, PrincipalListing, PushSubscription, EmailPushConfig, DeliveryStatus, EmailSubmission, RejectedRecipient, ScheduledEmail, SendEmailResult, SharedAccount } from "./types";
 import type { SieveScript, SieveCapabilities } from "./sieve-types";
 import type { BlobBatch, CalendarEventUpdateOptions, CalendarQueryOptions, FileNodeListings, IJMAPClient, KeywordDiscoveryResult, KeywordInfo, KeywordMigration, SearchEmailsResult, SearchRequestOptions, UploadedEmailImport, UploadedEmailImportResult } from "./client-interface";
 import { attachSearchSnippets, filterHasSnippetTerms, snippetFilterFor, type SearchSnippetResult } from "@/lib/search-snippet";
 import { textConditions, textFilter } from "./search-utils";
+import { filterHasTextTerms, LocalSearchMerge, mailboxesFitFilter } from "./search-merge";
 import { batched, batchedBySize, itemsPerRequest } from "./request-limits";
 import { keywordPointer, pointerToken } from "./patch-pointer";
 import { FirstTouchGate } from "./first-touch-gate";
@@ -1638,6 +1640,8 @@ export class JMAPClient implements IJMAPClient {
    * can be reached again (a reload signs in as usual).
    */
   private offlineOnly = false;
+  private readonly searchMerge = new LocalSearchMerge();
+  private readonly paletteSearchMerge = new LocalSearchMerge({ graceMs: 200 });
 
   constructor(serverUrl: string, username: string, password: string) {
     this.serverUrl = serverUrl.replace(/\/$/, '');
@@ -2214,9 +2218,30 @@ export class JMAPClient implements IJMAPClient {
     const offline = getOfflineHooks();
     if (this.offlineOnly || offline?.skipNetwork(this)) {
       const local = offline ? await offline.answer(this, methodCalls) : null;
-      if (local) return local as JMAPResponse;
+      if (local) {
+        this.lastAnswerFromDevice = true;
+        return local as JMAPResponse;
+      }
       throw new OfflineUnavailableError();
     }
+    // A stand-in id from an event created offline, still held by an open dialog
+    // or a list: the server knows it by its real id, or not yet at all.
+    const standIns = offline?.resolveStandIns ? standInsIn(methodCalls) : [];
+    let realIds: Record<string, string> | null = null;
+    if (standIns.length > 0) {
+      const resolved = await offline!.resolveStandIns!(this, standIns);
+      if (standIns.some((id) => !resolved[id])) {
+        const local = await offline!.answer(this, methodCalls);
+        if (local) {
+          this.lastAnswerFromDevice = true;
+          return local as JMAPResponse;
+        }
+        throw new OfflineUnavailableError();
+      }
+      realIds = resolved as Record<string, string>;
+      methodCalls = withRealIds(methodCalls, realIds);
+    }
+    const asAsked = (response: JMAPResponse) => (realIds ? withStandInsBack(response, realIds) : response);
     let answer: JMAPResponse;
     try {
       answer = await this.networkRequest(methodCalls, using, opts);
@@ -2225,15 +2250,25 @@ export class JMAPClient implements IJMAPClient {
       // headers looks the same to the browser and must stay an error.
       if (offline && isNetworkFailure(error) && await offline.serverGone(this)) {
         const local = await offline.answer(this, methodCalls);
-        if (local) return local as JMAPResponse;
+        if (local) {
+          this.lastAnswerFromDevice = true;
+          return asAsked(local as JMAPResponse);
+        }
       }
       throw error;
     }
+    this.lastAnswerFromDevice = false;
     if (offline) {
       offline.noteNetwork(this, true);
       if (!opts?.skipOfflineRecord) offline.record(this, methodCalls, answer);
     }
-    return answer;
+    return asAsked(answer);
+  }
+
+  private lastAnswerFromDevice = false;
+
+  answeredFromDevice(): boolean {
+    return this.lastAnswerFromDevice;
   }
 
   private async networkRequest(methodCalls: JMAPMethodCall[], using?: string[], opts?: { transfer?: boolean }): Promise<JMAPResponse> {
@@ -4411,61 +4446,144 @@ export class JMAPClient implements IJMAPClient {
   }
 
   async searchEmails(query: string, mailboxId?: string, accountId?: string, limit: number = 50, position: number = 0, options: SearchRequestOptions = {}): Promise<SearchEmailsResult> {
+    // The JMAP "text" filter searches from, to, cc, bcc, subject and body.
+    // Quoted phrases and `word*` prefixes go out as conditions of their
+    // own (see splitSearchText). inMailbox joins them in the same AND: a
+    // FilterOperator cannot also carry property keys.
+    const filter: Record<string, unknown> = mailboxId
+      ? { operator: "AND", conditions: [{ inMailbox: mailboxId }, ...textConditions(query)] }
+      : textFilter(query);
+    return this.searchWithLocal(filter, accountId, limit, position, options);
+  }
+
+  /**
+   * A search on the server, merged with what the local store finds (see
+   * search-merge.ts). Without a store for this client, or when the request
+   * would be answered on this device anyway, it's the server's answer alone.
+   */
+  private searchWithLocal(
+    filter: Record<string, unknown>,
+    accountId: string | undefined,
+    limit: number,
+    position: number,
+    options: SearchRequestOptions,
+  ): Promise<SearchEmailsResult> {
+    const server = (at: number) => this.serverSearch(filter, accountId, limit, at, options);
+    const hooks = getOfflineHooks();
+    const searchLocal = hooks?.searchLocal;
+    if (!searchLocal || this.offlineOnly || hooks.skipNetwork(this) || !filterHasTextTerms(filter)) {
+      return server(position);
+    }
+    const targetAccountId = accountId || this.accountId;
+    const merge = options.palette ? this.paletteSearchMerge : this.searchMerge;
+    return merge.run({
+      key: JSON.stringify([accountId ?? null, filter]),
+      limit,
+      position,
+      server,
+      local: async (at) => {
+        // No snippets here: excerpting every hit is the slow part, and most of
+        // them are the server's to show. See localSnippets.
+        const answer = await searchLocal.call(hooks, this, this.searchCalls(targetAccountId, filter, limit, at, true));
+        return answer ? this.searchResultFrom(answer as JMAPResponse, accountId, limit, at) : null;
+      },
+      verify: (rows) => this.currentSearchRows(rows, filter, accountId),
+      localSnippets: async (ids) => {
+        if (!filterHasSnippetTerms(filter)) return null;
+        const answer = await searchLocal.call(hooks, this, [
+          ["SearchSnippet/get", { accountId: targetAccountId, filter: snippetFilterFor(filter), emailIds: ids }, "snippets"],
+        ]);
+        return answer ? this.searchSnippetsFrom(answer as JMAPResponse) ?? null : null;
+      },
+      deferSnippets: options.deferSnippets,
+    });
+  }
+
+  /**
+   * The server's copies of rows only the local store found, without those it
+   * no longer has or has outside the filter's folders. The filter is checked
+   * before the ids get their shared-account namespace, since it has bare ones.
+   */
+  private async currentSearchRows(rows: Email[], filter: Record<string, unknown>, accountId: string | undefined): Promise<Email[]> {
+    const response = await this.request([
+      ["Email/get", {
+        accountId: accountId || this.accountId,
+        ids: rows.map((row) => row.id),
+        properties: [...EMAIL_LIST_PROPERTIES],
+      }, "0"],
+    ]);
+    const [name, result] = response.methodResponses?.[0] ?? [];
+    if (name !== "Email/get" || !result) throw new Error(methodErrorMessage(response, 'Failed to get emails'));
+    const list = applyListAuthenticationResults((result.list || []) as Email[])
+      .filter((email) => mailboxesFitFilter(filter, email.mailboxIds));
+    if (accountId && accountId !== this.accountId) namespaceMailboxIds(list, accountId);
+    return list;
+  }
+
+  private searchCalls(
+    targetAccountId: string,
+    filter: Record<string, unknown>,
+    limit: number,
+    position: number,
+    deferSnippets: boolean | undefined,
+  ): JMAPMethodCall[] {
+    // Searching all folders with no criteria yields an empty FilterCondition,
+    // which servers reject; omit the key entirely to mean "no filter".
+    const hasFilter = Object.keys(filter).length > 0;
+    return [
+      ["Email/query", {
+        accountId: targetAccountId,
+        ...(hasFilter ? { filter } : {}),
+        sort: [{ property: "receivedAt", isAscending: false }],
+        limit,
+        position,
+        calculateTotal: true,
+      }, "0"],
+      ["Email/get", {
+        accountId: targetAccountId,
+        "#ids": { resultOf: "0", name: "Email/query", path: "/ids" },
+        properties: [...EMAIL_LIST_PROPERTIES],
+      }, "1"],
+      ...(deferSnippets ? [] : [this.searchSnippetCall(targetAccountId, hasFilter ? filter : undefined)]),
+    ];
+  }
+
+  private searchResultFrom(response: JMAPResponse, accountId: string | undefined, limit: number, position: number): SearchEmailsResult {
+    assertQuerySucceeded(response, 'Search');
+
+    const queryResponse = response.methodResponses?.[0]?.[1];
+    const emails = applyListAuthenticationResults((response.methodResponses?.[1]?.[1]?.list || []) as Email[]);
+    emails.sort((a: Email, b: Email) =>
+      new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
+    );
+    const total = queryResponse?.total || 0;
+    const hasMore = computeHasMore(position, emails.length, total, limit);
+    attachSearchSnippets(emails, this.searchSnippetsFrom(response));
+
+    // Mirror getEmails: emails fetched from a delegated/shared account carry
+    // bare owner mailbox ids; namespace them to `${ownerId}:${id}` so they line
+    // up with the namespaced ids the store holds for shared mailboxes. The
+    // cross-account views (All mail / Unread / Starred) browse via
+    // advancedSearchEmails, so they need this too. (#281 V3)
+    if (accountId && accountId !== this.accountId) {
+      namespaceMailboxIds(emails, accountId);
+    }
+    return { emails, hasMore, total };
+  }
+
+  private async serverSearch(
+    filter: Record<string, unknown>,
+    accountId: string | undefined,
+    limit: number,
+    position: number,
+    options: SearchRequestOptions,
+  ): Promise<SearchEmailsResult> {
     try {
       const targetAccountId = accountId || this.accountId;
-
-      // The JMAP "text" filter searches from, to, cc, bcc, subject and body.
-      // Quoted phrases and `word*` prefixes go out as conditions of their
-      // own (see splitSearchText). inMailbox joins them in the same AND: a
-      // FilterOperator cannot also carry property keys.
-      let filter: Record<string, unknown>;
-      if (mailboxId) {
-        filter = {
-          operator: "AND",
-          conditions: [
-            { inMailbox: mailboxId },
-            ...textConditions(query),
-          ],
-        };
-      } else {
-        filter = textFilter(query);
-      }
-
-      const response = await this.request([
-        ["Email/query", {
-          accountId: targetAccountId,
-          filter,
-          sort: [{ property: "receivedAt", isAscending: false }],
-          limit,
-          position,
-          calculateTotal: true,
-        }, "0"],
-        ["Email/get", {
-          accountId: targetAccountId,
-          "#ids": { resultOf: "0", name: "Email/query", path: "/ids" },
-          properties: [...EMAIL_LIST_PROPERTIES],
-        }, "1"],
-        ...(options.deferSnippets ? [] : [this.searchSnippetCall(targetAccountId, filter)]),
-      ]);
-      assertQuerySucceeded(response, 'Search');
-
-      const queryResponse = response.methodResponses?.[0]?.[1];
-      const emails = applyListAuthenticationResults((response.methodResponses?.[1]?.[1]?.list || []) as Email[]);
-      emails.sort((a: Email, b: Email) =>
-        new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
-      );
-      const total = queryResponse?.total || 0;
-      const hasMore = computeHasMore(position, emails.length, total, limit);
-      attachSearchSnippets(emails, this.searchSnippetsFrom(response));
-
-      // Mirror getEmails: emails fetched from a delegated/shared account carry
-      // bare owner mailbox ids; namespace them to `${ownerId}:${id}` so they line
-      // up with the namespaced ids the store holds for shared mailboxes. (#281 V3)
-      if (accountId && accountId !== this.accountId) {
-        namespaceMailboxIds(emails, accountId);
-      }
-
-      return { emails, hasMore, total, ...this.deferredSnippets(options, targetAccountId, filter, emails) };
+      const hasFilter = Object.keys(filter).length > 0;
+      const response = await this.request(this.searchCalls(targetAccountId, filter, limit, position, options.deferSnippets));
+      const result = this.searchResultFrom(response, accountId, limit, position);
+      return { ...result, ...this.deferredSnippets(options, targetAccountId, hasFilter ? filter : undefined, result.emails) };
     } catch (error) {
       // Rethrow: an empty result would read as "No results found".
       console.error('Search failed:', error);
@@ -4537,52 +4655,7 @@ export class JMAPClient implements IJMAPClient {
     position: number = 0,
     options: SearchRequestOptions = {},
   ): Promise<SearchEmailsResult> {
-    try {
-      const targetAccountId = accountId || this.accountId;
-
-      // Searching all folders with no criteria yields an empty FilterCondition,
-      // which servers reject; omit the key entirely to mean "no filter".
-      const hasFilter = Object.keys(filter).length > 0;
-
-      const response = await this.request([
-        ["Email/query", {
-          accountId: targetAccountId,
-          ...(hasFilter ? { filter } : {}),
-          sort: [{ property: "receivedAt", isAscending: false }],
-          limit,
-          position,
-          calculateTotal: true,
-        }, "0"],
-        ["Email/get", {
-          accountId: targetAccountId,
-          "#ids": { resultOf: "0", name: "Email/query", path: "/ids" },
-          properties: [...EMAIL_LIST_PROPERTIES],
-        }, "1"],
-        ...(options.deferSnippets ? [] : [this.searchSnippetCall(targetAccountId, hasFilter ? filter : undefined)]),
-      ]);
-      assertQuerySucceeded(response, 'Search');
-
-      const queryResponse = response.methodResponses?.[0]?.[1];
-      const emails = applyListAuthenticationResults((response.methodResponses?.[1]?.[1]?.list || []) as Email[]);
-      emails.sort((a: Email, b: Email) =>
-        new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
-      );
-      const total = queryResponse?.total || 0;
-      const hasMore = computeHasMore(position, emails.length, total, limit);
-      attachSearchSnippets(emails, this.searchSnippetsFrom(response));
-
-      // Namespace shared/delegated-account mailbox ids (see searchEmails). The
-      // cross-account views (All mail / Unread / Starred) browse via this method,
-      // so without it shared emails would carry bare owner ids there. (#281 V3)
-      if (accountId && accountId !== this.accountId) {
-        namespaceMailboxIds(emails, accountId);
-      }
-
-      return { emails, hasMore, total, ...this.deferredSnippets(options, targetAccountId, hasFilter ? filter : undefined, emails) };
-    } catch (error) {
-      console.error('Advanced search failed:', error);
-      throw error;
-    }
+    return this.searchWithLocal(filter, accountId, limit, position, options);
   }
 
   async getEmailFields(
@@ -9437,6 +9510,8 @@ export class JMAPClient implements IJMAPClient {
     // Strip client-only shared fields before sending to JMAP
     const { originalId: _oi, baseEventId: _be, originalCalendarIds: _oc, accountId: _ai, accountName: _an, isShared: _is, ...cleanEvent } = event as CalendarEvent;
     cleanRecurrenceRules(cleanEvent as unknown as Record<string, unknown>);
+    // Chosen here, not by the server: if the answer is lost, this finds the event again.
+    cleanEvent.uid ||= generateUUID();
 
     debug.group('CalendarEvent/create', 'calendar');
     debug.log('calendar', 'CalendarEvent/create outgoing payload', {
@@ -9543,6 +9618,7 @@ export class JMAPClient implements IJMAPClient {
       for (const { event, index } of batch) {
         const { originalId: _oi, originalCalendarIds: _oc, accountId: _ai, accountName: _an, isShared: _is, ...clean } = event as CalendarEvent;
         cleanRecurrenceRules(clean as unknown as Record<string, unknown>);
+        clean.uid ||= generateUUID();
         createMap[`new-${index}`] = clean;
       }
 
@@ -9967,7 +10043,7 @@ export class JMAPClient implements IJMAPClient {
       accountId = resolved.accountId;
       taskData.calendarIds = resolved.calendarIds;
     }
-    const cleanTask = { ...completeBareTaskDates(taskData), '@type': 'Task' };
+    const cleanTask = { ...completeBareTaskDates(taskData), '@type': 'Task', uid: taskData.uid || generateUUID() };
 
     debug.group('CalendarTask/create', 'tasks');
     debug.log('tasks', 'CalendarTask/create accountId', accountId);

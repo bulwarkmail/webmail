@@ -214,7 +214,16 @@ function createChipDragPreview(label: string): HTMLElement {
 // inserts as a single chip and expands into its members on send.
 type SuggestionItem = { name: string; email: string; group?: { id: string; memberCount: number } };
 
+// Which `initialFiles` arrays are attached: a remount gets the same array.
+const attachedInitialFiles = new WeakSet<File[]>();
+
 export interface ComposerDraftData {
+  /**
+   * Handed in from outside (a share, the desktop app) and not touched yet.
+   * It is only where the composer starts: no draft on the server until the
+   * user's first real edit.
+   */
+  unedited?: boolean;
   to: string;
   cc: string;
   bcc: string;
@@ -390,6 +399,12 @@ interface EmailComposerProps {
   sessionKey?: string;
   /** Id of the message being replied to or forwarded, for onComposerOpen. */
   sourceEmailId?: string;
+  /**
+   * Files to attach when the composer opens, from a share or a launch (see
+   * lib/launch-handoff.ts). They go through the same checks as a picked file.
+   * Attached once per array, also when the composer remounts with it.
+   */
+  initialFiles?: File[] | null;
   mode?: 'compose' | 'reply' | 'replyAll' | 'forward';
   /**
    * Email of the mailbox/account the user is viewing when they start a new
@@ -524,6 +539,7 @@ export function EmailComposer({
   className,
   initialDraftText: initialDraftTextProp,
   initialData: initialDataProp,
+  initialFiles,
   prefill,
   sessionKey,
   sourceEmailId,
@@ -1793,6 +1809,16 @@ export function EmailComposer({
     }
     changeVersionRef.current += 1;
   }, [toStr, ccStr, bccStr, subject, body, attachments.length]);
+  // Handed-in text and files aren't the user's until they touch them. Nothing
+  // counts as dirty until then, so autosave, the page-close save and the flush
+  // before a sign-out all leave them alone.
+  const uneditedRef = useRef(initialData?.unedited === true);
+  const [firstEditSeen, setFirstEditSeen] = useState(false);
+  const markEdited = useCallback(() => {
+    if (!uneditedRef.current) return;
+    uneditedRef.current = false;
+    setFirstEditSeen(true);
+  }, []);
   const isDirtyRef = useRef(false);
   isDirtyRef.current = toStr !== initialValuesRef.current.to || ccStr !== initialValuesRef.current.cc ||
     bccStr !== initialValuesRef.current.bcc || subject !== initialValuesRef.current.subject ||
@@ -1804,6 +1830,19 @@ export function EmailComposer({
   if (priority !== initialPriorityRef.current) isDirtyRef.current = true;
   const initialLabelChoiceRef = useRef(classification.choice);
   if (classification.choice !== initialLabelChoiceRef.current) isDirtyRef.current = true;
+  if (uneditedRef.current) isDirtyRef.current = false;
+  // Changes only the user makes, also without typing: a picked recipient, a
+  // removed attachment, a priority. Handed-in files move the count they're
+  // compared with (addFiles). The body isn't here, a signature can change it;
+  // typing in it comes through the composer root's input events.
+  useEffect(() => {
+    if (!uneditedRef.current) return;
+    const start = initialValuesRef.current;
+    if (toStr !== start.to || ccStr !== start.cc || bccStr !== start.bcc || subject !== start.subject
+      || attachments.length !== start.attachmentCount || priority !== initialPriorityRef.current) {
+      markEdited();
+    }
+  }, [toStr, ccStr, bccStr, subject, attachments.length, priority, markEdited]);
   const firstLabelRunRef = useRef(true);
   useEffect(() => {
     if (firstLabelRunRef.current) {
@@ -1870,14 +1909,17 @@ export function EmailComposer({
     classification: classificationRef.current.draftChoice,
     // Edits the last save didn't cover; a minimised composer with
     // none needs no save before an automatic sign-out.
-    unsaved: changeVersionRef.current !== savedVersionRef.current || saveFailedRef.current,
+    unsaved: !uneditedRef.current && (changeVersionRef.current !== savedVersionRef.current || saveFailedRef.current),
+    ...(uneditedRef.current ? { unedited: true } : {}),
   });
 
   // Auto-save state on unmount (when user navigates away without explicitly closing)
   useEffect(() => {
     return () => {
       if (explicitCloseRef.current) return;
-      if (onSaveState && isDirtyRef.current) onSaveState(snapshotStateRef.current());
+      // Kept in the host's memory across a remount, handed-in or not. Only
+      // the server stays out of it.
+      if (onSaveState && (isDirtyRef.current || uneditedRef.current)) onSaveState(snapshotStateRef.current());
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -2353,7 +2395,7 @@ export function EmailComposer({
     return () => window.removeEventListener('keydown', handleTemplateKey);
   }, [templatesEnabled]);
 
-  const addFiles = useCallback(async (files: File[]) => {
+  const addFiles = useCallback(async (files: File[], opts?: { handedIn?: boolean }) => {
     if (!client || files.length === 0) return;
 
     // Let plugins veto each upload before it's queued.
@@ -2407,6 +2449,8 @@ export function EmailComposer({
         abortController: controller,
       };
     });
+    // Files handed in are where the composer starts, not an edit.
+    if (opts?.handedIn) initialValuesRef.current.attachmentCount += newAttachments.length;
     setAttachments(prev => [...prev, ...newAttachments]);
 
     for (let i = 0; i < files.length; i++) {
@@ -2519,6 +2563,12 @@ export function EmailComposer({
       }
     }
   }, [client, t]);
+
+  useEffect(() => {
+    if (!client || !initialFiles || initialFiles.length === 0 || attachedInitialFiles.has(initialFiles)) return;
+    attachedInitialFiles.add(initialFiles);
+    void addFiles(initialFiles, { handedIn: true });
+  }, [client, initialFiles, addFiles]);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files) return;
@@ -3026,7 +3076,7 @@ export function EmailComposer({
   // login page can say a draft wasn't saved.
   useEffect(() => registerComposeFlush(async () => {
     while (isSendingRef.current) await new Promise((resolve) => setTimeout(resolve, SEND_WAIT_POLL_MS));
-    if (sentRef.current) return;
+    if (sentRef.current || uneditedRef.current) return;
     const unsaved = changeVersionRef.current !== savedVersionRef.current || saveFailedRef.current;
     if (!unsaved) return;
     if (saveTimeoutRef.current) {
@@ -3379,7 +3429,7 @@ export function EmailComposer({
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps -- saveDraft reads current state when called, not when effect is set up
-  }, [toStr, ccStr, bccStr, subject, body, attachments, priority]);
+  }, [toStr, ccStr, bccStr, subject, body, attachments, priority, firstEditSeen]);
 
   useEffect(() => {
     return () => {
@@ -4446,6 +4496,13 @@ export function EmailComposer({
       data-testid="email-composer"
       className={cn("flex h-full bg-background relative", className)}
       onKeyDownCapture={handleComposerKeyDown}
+      // Bubble phase, in the same batch as the field's own onChange. A state
+      // change in the capture phase renders first and puts the old value back.
+      onInput={markEdited}
+      onChange={markEdited}
+      onPaste={markEdited}
+      onCut={markEdited}
+      onDrop={markEdited}
     >
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only" data-testid="composer-live-region">
         {liveMessage && <span key={liveMessage.n}>{liveMessage.text}</span>}

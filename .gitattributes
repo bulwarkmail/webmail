@@ -4,3 +4,5 @@
 .husky/* text eol=lf
 # Demo fixtures record exact byte sizes of these files; never normalise them.
 public/demo/** -text
+# Checked against pinned hashes by scripts/fetch-sqlite3mc.mjs; never normalise them.
+vendor/sqlite3mc/** -text

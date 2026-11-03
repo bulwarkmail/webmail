@@ -18,6 +18,7 @@
 import { idbAdd, idbDeleteAccount, idbGet, idbGetAll, idbGetAllByAccount, idbUpdate, idbWrite } from './db';
 import { openBytes, openJson, sealBytes, sealJson, type Sealed } from './crypto';
 import { generateUUID } from '@/lib/utils';
+import { requestOutboxSync } from '@/lib/pwa-notify/outbox-sync';
 
 export interface PatchItem {
   kind: 'patch';
@@ -104,11 +105,14 @@ interface SendPayload {
 export async function queuePatch(account: string, jmap: string, update: PatchItem['update']): Promise<void> {
   const item: PatchItem = { kind: 'patch', jmap, update };
   await idbAdd('queue', { account, kind: 'patch', createdAt: Date.now(), ...(await sealJson(item)) } satisfies QueueRecord);
+  requestOutboxSync();
 }
 
 export async function queueSend(account: string, summary: OutboxSummary, item: SendItem, fingerprint?: PolicyFingerprint): Promise<number> {
   const payload: SendPayload = { summary, item, fingerprint };
-  return Number(await idbAdd('queue', { account, kind: 'send', createdAt: Date.now(), status: 'waiting', ...(await sealJson(payload)) } satisfies QueueRecord));
+  const id = Number(await idbAdd('queue', { account, kind: 'send', createdAt: Date.now(), status: 'waiting', ...(await sealJson(payload)) } satisfies QueueRecord));
+  requestOutboxSync();
+  return id;
 }
 
 export interface QueuedPatch { id: number; account: string; item: PatchItem }

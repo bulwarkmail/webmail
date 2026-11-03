@@ -35,6 +35,7 @@ RUN rm -rf "app/api/dev-jmap" && \
       \( -name __tests__ -o -name "*.test.ts" -o -name "*.test.tsx" \) \
       -prune -exec rm -rf {} \; && \
     node scripts/build-pst-worker.mjs && \
+    node scripts/build-store-worker.mjs && \
     node scripts/build-plugin-sandbox.mjs && \
     npx next build --webpack && \
     node scripts/standalone-guard.mjs

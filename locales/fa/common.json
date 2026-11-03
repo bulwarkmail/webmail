@@ -249,6 +249,28 @@
     "active_account": "فعال",
     "switching_account": "در حال تعویض حساب..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "پیام جدید",
+    "shortcut_calendar": "تقویم",
+    "shortcut_contacts": "مخاطبان",
+    "unsupported_file": "{name} اینجا باز نمی‌شود.",
+    "open_failed": "فایل باز نشد. دوباره آن را باز کنید.",
+    "share_gone": "چیزی که هم‌رسانی کردید دیگر اینجا نیست. لطفاً دوباره آن را هم‌رسانی کنید.",
+    "share_files_lost": "فایل‌های هم‌رسانی‌شده نگه داشته نشدند. دوباره آن‌ها را به پیام اضافه کنید.",
+    "ics_needs_server": "وارد کردن فایل تقویم به اتصال به سرور نیاز دارد. وقتی دوباره آنلاین شوید، وارد کردن شروع می‌شود.",
+    "contacts_need_server": "وارد کردن مخاطبان به اتصال به سرور نیاز دارد. وقتی دوباره آنلاین شدید، دوباره امتحان کنید.",
+    "share_confirm_title": "پیام جدیدی شروع شود؟",
+    "share_confirm_message": "سایت یا برنامه دیگری می‌خواهد پیامی را شروع کند. تا موافقت نکنید چیزی بارگذاری یا ذخیره نمی‌شود.",
+    "share_confirm_subject": "موضوع:",
+    "share_confirm_text": "متن:",
+    "share_confirm_files": "{count, plural, one {فایل:} other {فایل‌ها:}}",
+    "share_confirm_accept": "شروع پیام",
+    "share_confirm_decline": "شروع نشود",
+    "share_cut": "متن هم‌رسانی‌شده خیلی طولانی بود و کوتاه شد.",
+    "handoff_expired": "چیزی که باز یا هم‌رسانی کردید بیش از حد منتظر ماند و دیگر نیست. لطفاً دوباره آن را باز یا هم‌رسانی کنید.",
+    "compose_waiting": "برای شروع پیام بعدی این پیام را ببندید.",
+    "save_first_failed": "پیام شما ذخیره نشد، بنابراین فایل باز نشد. پیام را ذخیره کنید و سپس تقویم یا مخاطبان را باز کنید."
+  },
   "sidebar_apps": {
     "modal_title": "برنامه‌های نوار کناری",
     "add_new": "افزودن برنامه",
@@ -4909,6 +4931,9 @@
     "mini_has_events": "رویداد دارد",
     "mini_week_number": "هفته {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "این تغییر به اتصال به سرور نیاز دارد. فعلاً فقط همین رویداد را تغییر دهید، یا پس از برقراری اتصال دوباره تلاش کنید."
+  },
   "calendar_event_notifications": {
     "someone": "کسی",
     "invited": "{name} شما را به «{title}» دعوت کرد",
@@ -6349,6 +6374,12 @@
     "easy_read": "متن آسان‌خوان",
     "sign_language": "زبان اشاره",
     "new_tab": "در زبانه‌ای تازه باز می‌شود"
+  },
+  "pwaNotify": {
+    "action_archive": "بایگانی",
+    "action_mark_read": "علامت‌گذاری خوانده شده",
+    "action_reply": "پاسخ",
+    "reply_placeholder": "پاسخ بنویسید"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "افزودن به تقویم",

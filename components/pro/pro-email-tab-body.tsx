@@ -28,6 +28,7 @@ import { labelSourceHeaders, reopenedLabelChoice } from '@/lib/outgoing/classifi
 import { useArchiveActionEnabled } from '@/lib/archive-gate';
 import { confirmMailRemoval } from '@/lib/mail-removal-confirm';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
+import { takeTabReply, useNotificationTabReply } from '@/lib/pwa-notify/tab-reply';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { saveQuickReplyDraft } from '@/lib/outgoing/quick-reply-envelope';
 import { canDownload } from '@/lib/device-policy';
@@ -282,6 +283,14 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       title: buildReplySubject(email.subject || t('email_composer.new_message'), t('email_composer.prefix.reply')),
     }, { source: email, body: draftText ?? '' });
   }, [email, openComposeTab, t, writeSource]);
+
+  // A notification's Reply, once this tab has the message (mail-app.tsx).
+  const pendingTabReply = useNotificationTabReply((s) => s.pending);
+  useEffect(() => {
+    if (!email || pendingTabReply?.emailId !== email.id) return;
+    const text = takeTabReply(email.id);
+    if (text !== null) handleReply(text);
+  }, [email, pendingTabReply, handleReply]);
 
   const handleReplyAll = useCallback(() => {
     if (!email) return;

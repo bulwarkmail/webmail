@@ -12,11 +12,16 @@ scripts/
 !scripts/lite/
 !scripts/build-plugin-sandbox.mjs
 !scripts/build-pst-worker.mjs
+!scripts/build-store-worker.mjs
+!scripts/fetch-sqlite3mc.mjs
 !scripts/healthcheck.mjs
 !scripts/sourcemaps.mjs
 !scripts/standalone-guard.mjs
 # Built in the image by scripts/build-plugin-sandbox.mjs
 public/plugin-sandbox-assets/
+# Built in the image by scripts/build-store-worker.mjs
+public/store-worker.js
+public/sqlite3mc/
 TODO.md
 *.md
 !README.md

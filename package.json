@@ -22,8 +22,8 @@
     "typescript"
   ],
   "scripts": {
-    "dev": "node scripts/build-pst-worker.mjs && node scripts/build-plugin-sandbox.mjs --watch -- next dev --turbopack",
-    "build": "node scripts/build-pst-worker.mjs && node scripts/build-plugin-sandbox.mjs && next build --turbopack && node scripts/standalone-guard.mjs",
+    "dev": "node scripts/build-pst-worker.mjs && node scripts/build-store-worker.mjs && node scripts/build-plugin-sandbox.mjs --watch -- next dev --turbopack",
+    "build": "node scripts/build-pst-worker.mjs && node scripts/build-store-worker.mjs && node scripts/build-plugin-sandbox.mjs && next build --turbopack && node scripts/standalone-guard.mjs",
     "build:lite": "node scripts/lite/build.mjs",
     "lite:serve": "node scripts/lite/serve.mjs out 4173",
     "test:lite-smoke": "playwright test -c scripts/lite/smoke/playwright.config.ts",

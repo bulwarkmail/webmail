@@ -51,6 +51,8 @@ export interface Email {
   // subject / body excerpt with the matched terms in <mark>, set on search
   // hits only. See lib/search-snippet.ts.
   searchSnippet?: { subject: string | null; preview: string | null };
+  /** A search row only the local store found. It's no sign of new mail, whatever its date (lib/jmap/search-merge.ts). */
+  foundLocally?: boolean;
   textBody?: EmailBodyPart[];
   htmlBody?: EmailBodyPart[];
   bodyValues?: Record<string, EmailBodyValue>;

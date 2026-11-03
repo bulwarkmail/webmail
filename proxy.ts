@@ -86,7 +86,7 @@ export const config = {
 // /en/mail/folder/inbox/statement.pdf a real signed-in page, and it rendered
 // without a CSP or any other security header (GHSA-xvjh-v9c6-qcvc). Only what
 // is genuinely static may skip locale routing and the headers.
-const STATIC_ASSET_PATTERN = /^\/[^/]+\.[^/]+$|^\/(?:branding|notification|demo|plugin-sandbox-assets)\//;
+const STATIC_ASSET_PATTERN = /^\/[^/]+\.[^/]+$|^\/(?:branding|notification|demo|plugin-sandbox-assets|sqlite3mc)\//;
 
 export function isStaticAssetPath(pathname: string): boolean {
   return STATIC_ASSET_PATTERN.test(pathname);

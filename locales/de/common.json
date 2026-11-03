@@ -249,6 +249,28 @@
     "active_account": "Aktiv",
     "switching_account": "Account wird gewechselt..."
   },
+  "pwaLaunch": {
+    "shortcut_new_message": "Neue Nachricht",
+    "shortcut_calendar": "Kalender",
+    "shortcut_contacts": "Kontakte",
+    "unsupported_file": "{name} kann hier nicht geöffnet werden.",
+    "open_failed": "Die Datei konnte nicht geöffnet werden. Öffnen Sie sie bitte noch einmal.",
+    "share_gone": "Das Geteilte ist nicht mehr vorhanden. Bitte teilen Sie es noch einmal.",
+    "share_files_lost": "Die geteilten Dateien konnten nicht aufbewahrt werden. Fügen Sie sie der Nachricht bitte noch einmal hinzu.",
+    "ics_needs_server": "Zum Importieren einer Kalenderdatei wird eine Verbindung zum Server gebraucht. Der Import beginnt, sobald Sie wieder online sind.",
+    "contacts_need_server": "Zum Importieren von Kontakten wird eine Verbindung zum Server gebraucht. Versuchen Sie es noch einmal, wenn Sie wieder online sind.",
+    "share_confirm_title": "Neue Nachricht beginnen?",
+    "share_confirm_message": "Eine andere Website oder App möchte eine Nachricht beginnen. Es wird nichts hochgeladen oder gespeichert, wenn Sie nicht zustimmen.",
+    "share_confirm_subject": "Betreff:",
+    "share_confirm_text": "Text:",
+    "share_confirm_files": "{count, plural, one {Datei:} other {Dateien:}}",
+    "share_confirm_accept": "Nachricht beginnen",
+    "share_confirm_decline": "Nicht beginnen",
+    "share_cut": "Der geteilte Text war zu lang und wurde gekürzt.",
+    "handoff_expired": "Etwas, das Sie geöffnet oder geteilt haben, hat zu lange gewartet und ist nicht mehr da. Bitte öffnen oder teilen Sie es noch einmal.",
+    "compose_waiting": "Schließen Sie diese Nachricht, um die nächste zu beginnen.",
+    "save_first_failed": "Ihre Nachricht konnte nicht gespeichert werden, deshalb wurde die Datei nicht geöffnet. Speichern Sie die Nachricht und öffnen Sie dann den Kalender oder die Kontakte."
+  },
   "sidebar_apps": {
     "modal_title": "Sidebar-Apps",
     "add_new": "App hinzufügen",
@@ -4909,6 +4931,9 @@
     "mini_has_events": "hat Termine",
     "mini_week_number": "Woche {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "Für diese Änderung ist eine Verbindung zum Server nötig. Ändern Sie vorerst nur diesen Termin, oder versuchen Sie es erneut, wenn Sie wieder online sind."
+  },
   "advanced_search": {
     "title": "Erweiterte Suche",
     "from": "Von",
@@ -6349,6 +6374,12 @@
     "easy_read": "Leichte Sprache",
     "sign_language": "Gebärdensprache",
     "new_tab": "öffnet in einem neuen Tab"
+  },
+  "pwaNotify": {
+    "action_archive": "Archivieren",
+    "action_mark_read": "Als gelesen markieren",
+    "action_reply": "Antworten",
+    "reply_placeholder": "Antwort schreiben"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "Zum Kalender hinzufügen",
