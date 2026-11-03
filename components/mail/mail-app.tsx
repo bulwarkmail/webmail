@@ -434,11 +434,16 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // in that pane don't: coming back to Mail after the tour opened the
   // composer (or after leaving any open composer) showed only the empty
   // welcome pane, with no way back. With nothing to read, show the list.
+  // A window narrowed to phone size with a message or the composer open keeps
+  // showing it: on the list, the composer would be open with no way to reach it.
   useEffect(() => {
     if (!isMobile) return;
-    if (useUIStore.getState().activeView === "viewer" && !useEmailStore.getState().selectedEmail) {
-      setActiveView("list");
-    }
+    const hasContent = showComposer || !!useEmailStore.getState().selectedEmail;
+    const view = useUIStore.getState().activeView;
+    if (view === "viewer" && !hasContent) setActiveView("list");
+    else if (view === "list" && hasContent) setActiveView("viewer");
+    // Only when the device class changes; opening and closing set the view themselves.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMobile, setActiveView]);
   const {
     emails,

@@ -45,8 +45,9 @@ vi.mock('@/hooks/use-pro-multi-account-identities', () => ({ useProMultiAccountI
 vi.mock('@/hooks/use-pro-multi-account-mailboxes', () => ({ useProMultiAccountMailboxes: () => {} }));
 vi.mock('@/hooks/use-wopi-status', () => ({ useWopiStatus: () => null, canWopiOpen: () => false }));
 vi.mock('@/hooks/use-browser-navigation', () => ({ useBrowserNavigation: () => {} }));
+const device = vi.hoisted(() => ({ isMobile: true }));
 vi.mock('@/hooks/use-media-query', () => ({
-  useDeviceDetection: () => ({ isMobile: true, isTablet: false, isDesktop: false }),
+  useDeviceDetection: () => ({ isMobile: device.isMobile, isTablet: false, isDesktop: !device.isMobile }),
   useMediaQuery: () => false,
   useIsDesktop: () => false,
 }));
@@ -88,6 +89,7 @@ beforeEach(() => {
   } as never);
 });
 afterEach(() => {
+  device.isMobile = true;
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
@@ -100,6 +102,20 @@ describe('Mail after the tour on a phone', () => {
     useUIStore.setState({ activeView: 'viewer' });
     render(<MailApp />);
     expect(listHidden()).toBe(false);
+  });
+
+  it('keeps an open composer in view when the window narrows to a phone', async () => {
+    device.isMobile = false;
+    useUIStore.setState({ activeView: 'list' });
+    const view = render(<MailApp />);
+    fireEvent.click(screen.getByRole('button', { name: 'sidebar.compose' }));
+    await screen.findByText('stub composer', {}, { timeout: 5000 });
+    expect(useUIStore.getState().activeView).toBe('list');
+
+    device.isMobile = true;
+    view.rerender(<MailApp />);
+
+    expect(useUIStore.getState().activeView).toBe('viewer');
   });
 
   it('closes the composer the tour opened when the tour ends', async () => {
