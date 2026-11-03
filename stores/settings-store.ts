@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { densityVarsFor } from '@/lib/density';
 import { persist } from 'zustand/middleware';
 import { useThemeStore } from './theme-store';
 import { useLocaleStore } from './locale-store';
@@ -9,7 +10,8 @@ import type { NotificationSoundChoice } from '@/lib/notification-sound';
 import { EMPTY_NOTIFICATION_MUTES, normalizeNotificationMutes, type NotificationMutes } from '@/lib/notification-mutes';
 import { apiFetch } from '@/lib/browser-navigation';
 import { writePushPreferences } from '@/lib/push-preferences';
-import { settingsHooks } from '@/lib/plugin-hooks';
+import { calendarHooks, settingsHooks } from '@/lib/plugin-hooks';
+import { BIRTHDAY_CALENDAR_ID } from '@/lib/birthday-calendar';
 import { generateAccountId } from '@/lib/account-utils';
 import { subscriptionOwnerFor } from '@/lib/calendar-subscription-sync';
 import type { FolderCountMode } from '@/lib/folder-counts';
@@ -252,12 +254,23 @@ const BOOKKEEPING_SETTING_KEYS = new Set<string>(['onboardingCompleted', 'tourCo
  * tells onSettingChange. With no interceptor registered the change applies
  * synchronously, so inputs bound to the store keep behaving as before.
  */
+/**
+ * Turning proofreading off, overall or for one plugin, stops text going to a
+ * plugin: no plugin may hold that up (onBeforeSettingChange).
+ */
+function stopsSendingText(key: string, value: unknown, previous: unknown): boolean {
+  if (key === 'proofreading') return value === false;
+  if (key !== 'proofreadingPlugins' || !value || typeof value !== 'object') return false;
+  const before = (previous && typeof previous === 'object' ? previous : {}) as Record<string, unknown>;
+  return Object.entries(value as Record<string, unknown>).some(([id, on]) => on === false && before[id] !== false);
+}
+
 function changePreference(key: string, value: unknown, previous: unknown, apply: () => void): void {
   const commit = () => {
     apply();
     void settingsHooks.onSettingChange.emit({ key, value, previous });
   };
-  if (settingsHooks.onBeforeSettingChange.size === 0) {
+  if (settingsHooks.onBeforeSettingChange.size === 0 || stopsSendingText(key, value, previous)) {
     commit();
     return;
   }
@@ -356,6 +369,20 @@ export type ProtocolOpenMode = 'active-session' | 'new-tab';
  * import.
  */
 const DEVICE_LOCAL_SETTING_KEYS = new Set<string>(['proInterface']);
+
+/** A map of plugin id → boolean, whatever came in (sync, import, storage). */
+function booleanRecord(value: unknown): Record<string, boolean> {
+  const out: Record<string, boolean> = {};
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return out;
+  for (const [k, v] of Object.entries(value)) {
+    if (typeof v === 'boolean' && k.length <= 200 && k !== '__proto__') out[k] = v;
+  }
+  return out;
+}
+
+export function isWritingLanguage(value: unknown): value is string {
+  return value === 'auto' || (typeof value === 'string' && /^[A-Za-z]{2,3}(-[A-Za-z0-9]{1,8}){0,3}$/.test(value));
+}
 
 /**
  * Settings that shape views spanning every logged-in account. They are synced
@@ -586,10 +613,24 @@ interface SettingsState extends AccessibilitySettings {
   autoSelectReplyIdentity: boolean;
   replyIdentityMatch: ReplyIdentityMatch; // With autoSelectReplyIdentity on: 'exact' = configured identities only, 'domain' = also same-domain catch-all addresses (rewrites From) #1000
   plainTextMode: boolean; // Send plain text only (no rich text editor)
+  /**
+   * Proofreading: checker plugins (compose:check) get what the user writes
+   * and underline mistakes. The admin may preset or lock it; the checker
+   * reads the policy itself when it runs (lib/proofreading/gate.ts).
+   */
+  proofreading: boolean;
+  /** The user's own on/off per checker plugin id, over `proofreading`. */
+  proofreadingPlugins: Record<string, boolean>;
+  /** Plugin ids whose "what is sent where" notice the user has seen. */
+  proofreadingNoticeSeen: Record<string, boolean>;
+  /** The language the user writes in: 'auto' or a BCP 47 tag (editor lang, checkers). */
+  writingLanguage: string;
   rtlEditingSupport: boolean; // Show a per-paragraph LTR/RTL direction control in the composer (Gmail-style)
   subAddressDelimiter: string; // Character separating user from tag (e.g. "user+tag@")
   sendDelaySeconds: SendDelaySeconds;
   signaturePosition: SignaturePosition; // Position of the signature relative to quoted text in replies/forwards
+  signatureNewMailEnabled: boolean; // Insert the signature automatically in new messages
+  signatureReplyForwardEnabled: boolean; // Insert the signature automatically in replies and forwards
   signatureSeparatorEnabled: boolean; // Prefix the signature with the RFC 3676 "-- " delimiter
   signatureDetails: SignatureDetails; // Title, department, phone, mobile for the organisation signature (lib/org-signature.ts)
   requestReadReceiptDefault: boolean; // Pre-check "request read receipt" in the composer
@@ -926,10 +967,18 @@ const DEFAULT_SETTINGS = {
   autoSelectReplyIdentity: false,
   replyIdentityMatch: 'domain' as ReplyIdentityMatch,
   plainTextMode: false,
+  proofreading: false,
+  proofreadingPlugins: {} as Record<string, boolean>,
+  proofreadingNoticeSeen: {} as Record<string, boolean>,
+  writingLanguage: 'auto',
   rtlEditingSupport: false,
   subAddressDelimiter: DEFAULT_SUB_ADDRESS_DELIMITER,
   sendDelaySeconds: 0 as SendDelaySeconds,
   signaturePosition: 'below_quote' as SignaturePosition,
+  // On, as before the toggles existed: saved settings and server copies
+  // from older builds lack these keys and fall back to this default.
+  signatureNewMailEnabled: true,
+  signatureReplyForwardEnabled: true,
   signatureSeparatorEnabled: true,
   signatureDetails: EMPTY_SIGNATURE_DETAILS,
   requestReadReceiptDefault: false,
@@ -1310,6 +1359,13 @@ export const useSettingsStore = create<SettingsState>()(
           applyInterfaceLayout(value as InterfaceLayout, get().density);
         }
 
+        // Notify calendar plugins (e.g. calendar-agenda) when the virtual birthday calendar is toggled or recolored
+        if (key === 'showBirthdayCalendar' || key === 'birthdayCalendarColor') {
+          void calendarHooks.onCalendarChange.emit({
+            calendarId: BIRTHDAY_CALENDAR_ID,
+            change: key === 'showBirthdayCalendar' && !value ? 'removed' : 'updated',
+          });
+        }
       };
 
       const buildExport = (opts?: { forSync?: boolean; subscriptionOwner?: string }): string => {
@@ -1361,10 +1417,16 @@ export const useSettingsStore = create<SettingsState>()(
           autoSelectReplyIdentity: state.autoSelectReplyIdentity,
           replyIdentityMatch: state.replyIdentityMatch,
           plainTextMode: state.plainTextMode,
+          proofreading: state.proofreading,
+          proofreadingPlugins: state.proofreadingPlugins,
+          proofreadingNoticeSeen: state.proofreadingNoticeSeen,
+          writingLanguage: state.writingLanguage,
           rtlEditingSupport: state.rtlEditingSupport,
           subAddressDelimiter: state.subAddressDelimiter,
           sendDelaySeconds: state.sendDelaySeconds,
           signaturePosition: state.signaturePosition,
+          signatureNewMailEnabled: state.signatureNewMailEnabled,
+          signatureReplyForwardEnabled: state.signatureReplyForwardEnabled,
           signatureSeparatorEnabled: state.signatureSeparatorEnabled,
           signatureDetails: state.signatureDetails,
           requestReadReceiptDefault: state.requestReadReceiptDefault,
@@ -1606,6 +1668,13 @@ export const useSettingsStore = create<SettingsState>()(
               // Per-account map (accountId -> identityId); ignore any legacy
               // global/non-record value rather than corrupting the map.
               if (key === 'preferredIdentityIds' && !isPlainRecord(settings[key])) {
+                return;
+              }
+              if (key === 'proofreadingPlugins' || key === 'proofreadingNoticeSeen') {
+                put(key, { [key]: booleanRecord(settings[key]) });
+                return;
+              }
+              if (key === 'writingLanguage' && !isWritingLanguage(settings[key])) {
                 return;
               }
               if (key === 'hiddenSharedMailAccounts' && !isPlainRecord(settings[key])) {
@@ -1988,6 +2057,9 @@ export const useSettingsStore = create<SettingsState>()(
             if (!isPlainRecord(state.preferredIdentityIds)) {
               state.preferredIdentityIds = {};
             }
+            state.proofreadingPlugins = booleanRecord(state.proofreadingPlugins);
+            state.proofreadingNoticeSeen = booleanRecord(state.proofreadingNoticeSeen);
+            if (!isWritingLanguage(state.writingLanguage)) state.writingLanguage = 'auto';
             if (!isPlainRecord(state.hiddenSharedMailAccounts)) {
               state.hiddenSharedMailAccounts = {};
             }
@@ -2160,63 +2232,9 @@ function applyAccessibility(state: { fontSize: FontSize } & AccessibilitySetting
   applyAccessibilityTo(document.documentElement, state);
 }
 
-type DensityVars = Record<string, string>;
-
-const DEFAULT_DENSITY: Record<Density, DensityVars> = {
-  'extra-compact': {
-    '--list-item-height': 'auto',
-    '--density-item-py': '2px',
-    '--density-item-gap': '6px',
-    '--density-header-py': '4px',
-    '--density-card-p': '8px',
-    '--density-sidebar-py': '0px',
-  },
-  compact: {
-    '--list-item-height': 'auto',
-    '--density-item-py': '4px',
-    '--density-item-gap': '8px',
-    '--density-header-py': '6px',
-    '--density-card-p': '10px',
-    '--density-sidebar-py': '1px',
-  },
-  regular: {
-    '--list-item-height': '48px',
-    '--density-item-py': '12px',
-    '--density-item-gap': '12px',
-    '--density-header-py': '12px',
-    '--density-card-p': '16px',
-    '--density-sidebar-py': '4px',
-  },
-  comfortable: {
-    '--list-item-height': '64px',
-    '--density-item-py': '16px',
-    '--density-item-gap': '16px',
-    '--density-header-py': '16px',
-    '--density-card-p': '20px',
-    '--density-sidebar-py': '6px',
-  },
-};
-
-/**
- * Mountain View's rows come in three rhythms - 32, 40 and 48 pixels - and the
- * app offers four densities. The four are laid over that scale: `compact`,
- * `regular` and `comfortable` land on the three exactly, and `extra-compact`
- * continues the series a step below, so every density still does something.
- *
- * Only the vertical rhythm is restated. Everything else a density touches -
- * gaps, card padding, the sidebar's own row padding - keeps its default value;
- * a navigation row is already pinned to 32px by the layout's own token.
- */
-const MOUNTAIN_VIEW_DENSITY: Record<Density, DensityVars> = {
-  'extra-compact': { ...DEFAULT_DENSITY['extra-compact'], '--list-item-height': '28px', '--density-item-py': '4px' },
-  compact: { ...DEFAULT_DENSITY.compact, '--list-item-height': '32px', '--density-item-py': '6px' },
-  regular: { ...DEFAULT_DENSITY.regular, '--list-item-height': '40px', '--density-item-py': '10px' },
-  comfortable: { ...DEFAULT_DENSITY.comfortable, '--list-item-height': '48px', '--density-item-py': '14px' },
-};
-
-export function densityVarsFor(density: Density, layout: InterfaceLayout): DensityVars {
-  return (layout === 'mountain-view' ? MOUNTAIN_VIEW_DENSITY : DEFAULT_DENSITY)[density];
-}
+// The tables live in lib/density.ts so the pre-paint boot script can use
+// the same values (app/(main)/layout.tsx).
+export { densityVarsFor };
 
 function applyDensity(density: Density, layout: InterfaceLayout) {
   if (typeof document === 'undefined') return;

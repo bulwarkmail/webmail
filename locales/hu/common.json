@@ -1953,6 +1953,14 @@
         "above_quote": "Idézett szöveg előtt",
         "below_quote": "Idézett szöveg után"
       },
+      "signature_new_mail": {
+        "label": "Aláírás új leveleknél",
+        "description": "Új levél írása esetén automatikusan beszúrja az aláírásodat. Kapcsold ki, ha minden új levél aláírás nélkül induljon."
+      },
+      "signature_reply_forward": {
+        "label": "Aláírás válaszoknál és továbbításnál",
+        "description": "Válasz vagy továbbítás esetén automatikusan hozzáfűzi az aláírásodat. Kapcsold ki, ha ezek aláírás nélkül mennek ki."
+      },
       "signature_separator": {
         "label": "Aláírás elválasztó",
         "description": "Aláírás előtagjaként a szabványos \"-- \" elválasztó sor (RFC 3676). Kapcsold ki, ha közvetlenül az üzenetből szeretnél az aláírásba folyni."
@@ -6050,6 +6058,10 @@
         "title": "Az éppen írt üzeneted módosítása",
         "body": "Szöveg cseréje vagy hozzáadása az üzenetben írás közben, amikor a bővítményt a szerkesztőben használod. Minden módosítás visszavonható, és továbbra is te döntöd el, elküldöd-e."
       },
+      "compose_check": {
+        "title": "Ellenőrizni, amit ír",
+        "body": "Gépelés közben olvassa, amit a szerkesztőben ír, és elküldheti az általa használt szolgáltatásnak. Csak ha a helyesírás-ellenőrzés be van kapcsolva, és semmit, amíg egy üzenet aláírásra vagy titkosításra van beállítva. Amit a bekapcsolása előtt írt, azt már ellenőrizhették."
+      },
       "email_forward": {
         "title": "Leveleid továbbítása",
         "body": "Üzeneteket továbbít a fiókodból a mellékleteikkel együtt, a szerkesztő megnyitása nélkül. Minden címre az első továbbítás előtt megkérdez."
@@ -6068,7 +6080,7 @@
       },
       "ui_tasks": {
         "title": "Tartalom a feladatok nézetében",
-        "body": "Saját szakaszokat jelenít meg egy feladat részleteiben és gombokat a feladatlistában."
+        "body": "Saját szakaszokat jelenít meg egy feladat részleteiben, gombokat a feladatlistában, és saját feladatlistát a Bulwark listája helyett."
       },
       "ui_files": {
         "title": "Tartalom a fájlok nézetében",
@@ -6367,6 +6379,77 @@
       "party_size": "Létszám: {count}",
       "added_from": "Hozzáadva egy {domain} által küldött levélből",
       "added_from_subject": "Hozzáadva a(z) {domain} által küldött „{subject}” levélből"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Helyesírás",
+      "grammar": "Nyelvtan",
+      "style": "Stílus",
+      "other": "Javaslat"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Nincs javaslat",
+      "suggestions": "Javaslatok",
+      "replace_with": "Csere erre: {text}",
+      "also": "Ezt is jelezte: {checker}",
+      "ignore": "Figyelmen kívül hagyás",
+      "add_to_dictionary": "Hozzáadás a szótárhoz",
+      "disable_rule": "Szabály kikapcsolása",
+      "changed": "A szöveg megváltozott. Várd meg a következő ellenőrzést."
+    },
+    "list_item": "{word}: {message} Javaslat: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Nincs helyesírási vagy nyelvtani hiba} one {# helyesírási vagy nyelvtani hiba} other {# helyesírási vagy nyelvtani hiba}}",
+    "status": {
+      "title": "Helyesírás-ellenőrzés",
+      "off": "Helyesírás-ellenőrzés kikapcsolva",
+      "paused": "Helyesírás-ellenőrzés szüneteltetve",
+      "rate_limited": "Ellenőrzés szüneteltetve",
+      "unavailable": "Az ellenőrzés nem érhető el",
+      "checking": "Ellenőrzés…",
+      "issues": "{count, plural, =0 {Nincs probléma} one {# probléma} other {# probléma}}"
+    },
+    "panel": {
+      "title": "Helyesírás-ellenőrzés",
+      "required": "A szervezeted előírja",
+      "check_message": "Üzenet ellenőrzése",
+      "notice": "Gépelés közben a beírt szöveg ellenőrzésre kerül ide: {checkers}. Az aláírásod és az idézett üzenet kimarad. Amíg egy üzenet aláírásra vagy titkosításra van beállítva, semmi nem megy el; amit a bekapcsolása előtt írtál, azt már ellenőrizhették.",
+      "turn_on": "Helyesírás-ellenőrzés bekapcsolása",
+      "paused_protected": "Amíg ez az üzenet aláírásra vagy titkosításra van beállítva, semmi nem kerül ellenőrzésre.",
+      "paused_unknown": "{plugin} úgy is aláírhat vagy titkosíthat üzeneteket, hogy az itt nem látszik, ezért amíg be van kapcsolva, semmi nem kerül ellenőrzésre.",
+      "rate_limited": "{checker} várakozást kért. Az ellenőrzés egy perc múlva folytatódik.",
+      "unavailable": "{checker} most nem tud ellenőrizni. Újra próbálkozik, amikor tovább gépelsz.",
+      "no_issues": "Nem található probléma.",
+      "list_label": "Problémák ebben az üzenetben",
+      "shortcuts": "Következő probléma: {next}. Előző: {previous}."
+    },
+    "notice": {
+      "on": "A helyesírás-ellenőrzés be van kapcsolva. Gépelés közben a beírt szöveg ellenőrzésre kerül ide: {checkers}, az aláírásod és az idézett üzenet nélkül. Amíg egy üzenet aláírásra vagy titkosításra van beállítva, semmi nem megy el; amit előtte írtál, azt már ellenőrizhették.",
+      "forced": "A szervezeted bekapcsolta a helyesírás-ellenőrzést. Gépelés közben a beírt szöveg ellenőrzésre kerül ide: {checkers}, az aláírásod és az idézett üzenet nélkül. Amíg egy üzenet aláírásra vagy titkosításra van beállítva, semmi nem megy el; amit előtte írtál, azt már ellenőrizhették.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Elküldöd megoldatlan problémákkal?",
+      "body": "{count, plural, one {# helyesírási vagy nyelvtani hiba} other {# helyesírási vagy nyelvtani hiba}} még megoldatlan ebben az üzenetben.",
+      "review": "Átnézés",
+      "send": "Küldés így is"
+    },
+    "settings": {
+      "title": "Helyesírás-ellenőrzés",
+      "description": "Írás közben aláhúzza a helyesírási és nyelvtani hibákat, és javaslatot ad a javításukra.",
+      "enable": "Helyesírás és nyelvtan ellenőrzése gépelés közben",
+      "enable_description": "A beírt szöveg a helyesírás-ellenőrző bővítményhez és az általa használt szolgáltatáshoz kerül, az aláírásod és az idézett üzenetek nélkül. Amíg egy üzenet aláírásra vagy titkosításra van beállítva, semmi nem megy el.",
+      "no_checker": "Nincs telepítve helyesírás-ellenőrző bővítmény. Kérd meg a rendszergazdát, hogy adjon hozzá egyet.",
+      "plugin_description": "Elküldi, amit írsz, ide: {plugin}.",
+      "writing_language": "Írás nyelve",
+      "writing_language_description": "Az a nyelv, amelyen általában írsz. A helyesírás-ellenőrzés és a böngésző helyesírás-ellenőrzője is ezt használja.",
+      "auto": "Automatikus felismerés"
+    },
+    "shortcuts": {
+      "next_issue": "Következő helyesírási vagy nyelvtani hiba",
+      "previous_issue": "Előző helyesírási vagy nyelvtani hiba"
     }
   }
 }

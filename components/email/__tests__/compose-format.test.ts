@@ -10,6 +10,8 @@ import {
 } from '../compose-format';
 import { SIGNATURE_BLOCK_MARKER, SIGNATURE_RANGE_MARKER, containsEmbeddedSignature } from '../signature-block';
 import { plainTextBodyHasSignature } from '@/lib/signature-utils';
+import { extractUserAuthoredText } from '@/lib/email-composer-utils';
+import { buildQuotedHtmlBlock } from '../quoted-html';
 
 const identity = { htmlSignature: '<b>Alice</b><br>Acme', textSignature: 'Alice\nAcme' };
 const count = (haystack: string, needle: string) => haystack.split(needle).length - 1;
@@ -46,8 +48,22 @@ describe('compose-format (#1022): HTML <-> plain text switch', () => {
 
     it('does not invent a signature for a body that had none (below-quote reply)', () => {
       const text = htmlComposeBodyToPlainText('<p>Thanks</p><blockquote>original</blockquote>', identity, { separator: true });
-      expect(text).toBe('Thanks\n\noriginal');
+      expect(text).toBe('Thanks\n\n> original');
       expect(plainTextBodyHasSignature(text, identity)).toBe(false);
+    });
+
+    it('keeps the quoted original of a rich reply marked with "> "', () => {
+      const html = `<p>Thanks</p><p>On Monday Bob wrote:</p>${buildQuotedHtmlBlock('<p>Line one<br>Line two</p><p>Para two</p>')}`;
+      const text = htmlComposeBodyToPlainText(html, identity, { separator: true });
+      expect(text).toBe('Thanks\n\nOn Monday Bob wrote:\n\n> Line one\n> Line two\n>\n> Para two');
+      // The attachment reminder and plugin edits only see the user's text.
+      expect(extractUserAuthoredText(text, { plainTextMode: true })).not.toContain('Line one');
+    });
+
+    it('keeps list markers and image alt text', () => {
+      const html = '<ul><li>apples</li><li>pears</li></ul><ol><li>first</li><li>second</li></ol><p><img src="x.png" alt="a bike"></p>';
+      const text = htmlComposeBodyToPlainText(html, identity, { separator: true, imageAlt: (alt) => `[Image: ${alt}]` });
+      expect(text).toBe('- apples\n- pears\n\n1. first\n2. second\n\n[Image: a bike]');
     });
 
     it('honours the separator setting', () => {
@@ -69,8 +85,25 @@ describe('compose-format (#1022): HTML <-> plain text switch', () => {
 
     it('keeps a body without signature signature-free', () => {
       const html = plainComposeBodyToHtml('Thanks\n\n> original', identity, { separator: true });
-      expect(html).toBe('<p>Thanks</p><p>&gt; original</p>');
+      expect(html).toBe('<p>Thanks</p><blockquote><p>original</p></blockquote>');
       expect(containsEmbeddedSignature(html)).toBe(false);
+    });
+
+    it('turns "> " lines back into a quote, one level per marker', () => {
+      const text = 'Thanks\n\nOn Monday Bob wrote:\n> Line one\n> Line two\n>\n> > older\nnot quoted';
+      expect(plainComposeBodyToHtml(text, identity, { separator: true })).toBe(
+        '<p>Thanks</p><p>On Monday Bob wrote:</p>'
+        + '<blockquote><p>Line one<br>Line two</p><blockquote><p>older</p></blockquote></blockquote>'
+        + '<p>not quoted</p>',
+      );
+    });
+
+    it('round-trips a quoted reply through plain text and back', () => {
+      const start = `<p>Thanks</p><p>On Monday Bob wrote:</p>${buildQuotedHtmlBlock('<p>Line one</p><blockquote><p>older</p></blockquote>')}`;
+      const text = htmlComposeBodyToPlainText(start, identity, { separator: true });
+      const back = plainComposeBodyToHtml(text, identity, { separator: true });
+      expect(back).toBe('<p>Thanks</p><p>On Monday Bob wrote:</p><blockquote><p>Line one</p><blockquote><p>older</p></blockquote></blockquote>');
+      expect(htmlComposeBodyToPlainText(back, identity, { separator: true })).toBe(text);
     });
 
     it('gives an untouched signature-only body an empty paragraph to type into', () => {

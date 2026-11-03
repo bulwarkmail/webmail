@@ -1950,6 +1950,14 @@
         "above_quote": "인용 텍스트 앞",
         "below_quote": "인용 텍스트 뒤"
       },
+      "signature_new_mail": {
+        "label": "새 메일 서명",
+        "description": "새 메일을 작성할 때 서명을 자동으로 삽입합니다. 끄면 서명 없이 새 메일을 시작합니다."
+      },
+      "signature_reply_forward": {
+        "label": "답장·전달 서명",
+        "description": "답장이나 전달할 때 서명을 자동으로 추가합니다. 끄면 서명 없이 보냅니다."
+      },
       "signature_separator": {
         "label": "서명 구분선",
         "description": "서명 앞에 표준 구분선 \"-- \" (RFC 3676)을 추가합니다. 본문에서 바로 서명으로 이어지길 원하면 해제하세요."
@@ -6050,6 +6058,10 @@
         "title": "작성 중인 메시지 변경",
         "body": "편집기에서 플러그인을 사용할 때 작성 중인 메시지의 텍스트를 바꾸거나 추가해요. 각 변경은 되돌릴 수 있고, 보낼지는 여전히 직접 결정해요."
       },
+      "compose_check": {
+        "title": "작성 내용 검사",
+        "body": "작성 창에서 입력하는 내용을 읽고, 사용하는 서비스로 보낼 수 있습니다. 교정이 켜져 있을 때만 보내며, 메시지가 서명 또는 암호화되도록 설정되어 있는 동안에는 아무것도 보내지 않습니다. 이 설정을 켜기 전에 작성한 텍스트는 이미 검사되었을 수 있습니다."
+      },
       "email_forward": {
         "title": "메일 전달",
         "body": "작성 창을 열지 않고 계정의 메시지를 첨부 파일과 함께 전달해요. 주소마다 처음 전달하기 전에 물어봐요."
@@ -6068,7 +6080,7 @@
       },
       "ui_tasks": {
         "title": "할 일 화면에 추가",
-        "body": "할 일 세부 정보에 자체 섹션을, 할 일 목록에 버튼을 표시해요."
+        "body": "할 일 세부 정보에 자체 섹션을, 할 일 목록에 버튼을 표시하고, Bulwark의 할 일 목록 대신 자체 목록을 표시해요."
       },
       "ui_files": {
         "title": "파일 화면에 추가",
@@ -6367,6 +6379,77 @@
       "party_size": "인원: {count}",
       "added_from": "{domain}에서 보낸 메일에서 추가함",
       "added_from_subject": "{domain}에서 보낸 메일 “{subject}”에서 추가함"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "맞춤법",
+      "grammar": "문법",
+      "style": "문체",
+      "other": "제안"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "제안 없음",
+      "suggestions": "제안",
+      "replace_with": "{text}(으)로 바꾸기",
+      "also": "{checker}도 지적함",
+      "ignore": "무시",
+      "add_to_dictionary": "사전에 추가",
+      "disable_rule": "이 규칙 끄기",
+      "changed": "텍스트가 바뀌었습니다. 다음 검사를 기다리세요."
+    },
+    "list_item": "{word}: {message} 제안: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {맞춤법 또는 문법 문제 없음} other {맞춤법 또는 문법 문제 #개}}",
+    "status": {
+      "title": "교정",
+      "off": "교정 꺼짐",
+      "paused": "교정 일시 중지됨",
+      "rate_limited": "검사 일시 중지됨",
+      "unavailable": "검사 사용 불가",
+      "checking": "검사 중…",
+      "issues": "{count, plural, =0 {문제 없음} other {문제 #개}}"
+    },
+    "panel": {
+      "title": "교정",
+      "required": "조직에서 필수로 지정함",
+      "check_message": "이 메시지 검사",
+      "notice": "입력하는 동안 작성한 텍스트가 검사를 위해 {checkers}(으)로 전송됩니다. 서명과 인용된 메시지는 제외됩니다. 메시지가 서명 또는 암호화되도록 설정되어 있는 동안에는 아무것도 전송되지 않지만, 이 설정을 켜기 전에 작성한 내용은 이미 검사되었을 수 있습니다.",
+      "turn_on": "교정 켜기",
+      "paused_protected": "이 메시지가 서명 또는 암호화되도록 설정되어 있는 동안에는 아무것도 검사하지 않습니다.",
+      "paused_unknown": "{plugin}은(는) 여기에 표시하지 않고 메시지에 서명하거나 메시지를 암호화할 수 있으므로, 켜져 있는 동안에는 아무것도 검사하지 않습니다.",
+      "rate_limited": "{checker}에서 잠시 기다려 달라고 요청했습니다. 1분 후에 검사를 다시 시작합니다.",
+      "unavailable": "{checker}에서 지금 검사할 수 없습니다. 계속 입력하면 다시 시도합니다.",
+      "no_issues": "문제가 없습니다.",
+      "list_label": "이 메시지의 문제",
+      "shortcuts": "다음 문제: {next}. 이전: {previous}."
+    },
+    "notice": {
+      "on": "교정이 켜져 있습니다. 입력하는 동안 작성한 텍스트가 서명과 인용된 메시지를 제외하고 검사를 위해 {checkers}(으)로 전송됩니다. 메시지가 서명 또는 암호화되도록 설정되어 있는 동안에는 아무것도 전송되지 않지만, 그 전에 작성한 내용은 이미 검사되었을 수 있습니다.",
+      "forced": "조직에서 교정을 켰습니다. 입력하는 동안 작성한 텍스트가 서명과 인용된 메시지를 제외하고 검사를 위해 {checkers}(으)로 전송됩니다. 메시지가 서명 또는 암호화되도록 설정되어 있는 동안에는 아무것도 전송되지 않지만, 그 전에 작성한 내용은 이미 검사되었을 수 있습니다.",
+      "ok": "확인"
+    },
+    "send_warning": {
+      "title": "해결되지 않은 문제가 있는데 보낼까요?",
+      "body": "이 메시지에 해결되지 않은 {count, plural, other {맞춤법 또는 문법 문제가 #개}} 남아 있습니다.",
+      "review": "검토",
+      "send": "그래도 보내기"
+    },
+    "settings": {
+      "title": "교정",
+      "description": "작성하는 동안 맞춤법과 문법 오류에 밑줄을 긋고 수정 제안을 보여줍니다.",
+      "enable": "입력하는 동안 맞춤법과 문법 검사",
+      "enable_description": "작성한 텍스트는 서명과 인용된 메시지를 제외하고 교정 추가 기능과 그 기능이 사용하는 서비스로 전송됩니다. 메시지가 서명 또는 암호화되도록 설정되어 있는 동안에는 아무것도 전송되지 않습니다.",
+      "no_checker": "설치된 교정 추가 기능이 없습니다. 관리자에게 추가를 요청하세요.",
+      "plugin_description": "작성한 내용을 {plugin}(으)로 보냅니다.",
+      "writing_language": "작성 언어",
+      "writing_language_description": "평소에 글을 쓰는 언어입니다. 교정과 브라우저의 맞춤법 검사에서 사용합니다.",
+      "auto": "자동 감지"
+    },
+    "shortcuts": {
+      "next_issue": "다음 맞춤법 또는 문법 문제",
+      "previous_issue": "이전 맞춤법 또는 문법 문제"
     }
   }
 }

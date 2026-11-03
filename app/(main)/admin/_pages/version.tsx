@@ -12,6 +12,7 @@ import {
 import { SettingsSection, SettingItem } from '@/components/settings/settings-section';
 import { Button } from '@/components/ui/button';
 import { AdminPageHeader } from '@/components/admin/page-header';
+import { AdminBodySkeleton } from '@/components/boot-skeleton/admin-skeleton';
 import { Badge, type BadgeTone } from '@/components/admin/badge';
 import { useAdminFeedback } from '@/components/admin/feedback';
 import { adminPageDef } from '@/lib/admin/admin-nav';
@@ -117,9 +118,7 @@ export function VersionPage() {
     return (
       <div>
         {header}
-        <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
-          <Loader2 className="me-2 h-4 w-4 animate-spin" /> Loading
-        </div>
+        <AdminBodySkeleton status="Loading" />
       </div>
     );
   }

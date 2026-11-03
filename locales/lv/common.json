@@ -1941,6 +1941,14 @@
         "above_quote": "Pirms citētā teksta",
         "below_quote": "Pēc citētā teksta"
       },
+      "signature_new_mail": {
+        "label": "Paraksts jaunajos e-pastos",
+        "description": "Rakstot jaunu vēstuli, automātiski ievieto jūsu parakstu. Izslēdziet, lai katra jauna vēstule sāktos bez tā."
+      },
+      "signature_reply_forward": {
+        "label": "Paraksts atbildēs un pārsūtījumos",
+        "description": "Atbildot vai pārsūtot vēstuli, automātiski pievieno jūsu parakstu. Izslēdziet, lai tās tiktu nosūtītas bez tā."
+      },
       "signature_separator": {
         "label": "Paraksta atdalītājs",
         "description": "Pirms paraksta pievienot standarta atdalītāju \"-- \" (RFC 3676). Izslēdziet, ja vēlaties pāriet no ziņojuma tieši uz parakstu."
@@ -6050,6 +6058,10 @@
         "title": "Mainīt ziņojumu, ko rakstāt",
         "body": "Aizstāt vai pievienot tekstu ziņojumā rakstīšanas laikā, kad izmantojat spraudni redaktorā. Katru izmaiņu var atsaukt, un jūs joprojām izlemjat, vai sūtīt."
       },
+      "compose_check": {
+        "title": "Pārbaudīt, ko rakstāt",
+        "body": "Rakstīšanas laikā lasa to, ko rakstāt redaktorā, un var to nosūtīt pakalpojumam, ko izmanto. Tikai tad, ja pārbaude ir ieslēgta, un nekas, kamēr ziņojums ir iestatīts parakstīšanai vai šifrēšanai. Teksts, ko uzrakstījāt pirms šī iestatījuma ieslēgšanas, jau var būt pārbaudīts."
+      },
       "email_forward": {
         "title": "Pārsūtīt jūsu pastu",
         "body": "Pārsūtīt vēstules no jūsu konta kopā ar pielikumiem, neatverot redaktoru. Pirms pirmās pārsūtīšanas uz katru adresi jums tiek jautāts."
@@ -6068,7 +6080,7 @@
       },
       "ui_tasks": {
         "title": "Papildināt uzdevumu skatu",
-        "body": "Rādīt savas sadaļas uzdevuma informācijā un pogas uzdevumu sarakstā."
+        "body": "Rādīt savas sadaļas uzdevuma informācijā, pogas uzdevumu sarakstā un savu uzdevumu sarakstu Bulwark saraksta vietā."
       },
       "ui_files": {
         "title": "Papildināt failu skatu",
@@ -6367,6 +6379,77 @@
       "party_size": "Personu skaits: {count}",
       "added_from": "Pievienots no {domain} e-pasta",
       "added_from_subject": "Pievienots no {domain} e-pasta “{subject}”"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Pareizrakstība",
+      "grammar": "Gramatika",
+      "style": "Stils",
+      "other": "Ieteikums"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Nav ieteikumu",
+      "suggestions": "Ieteikumi",
+      "replace_with": "Aizstāt ar {text}",
+      "also": "Arī no {checker}",
+      "ignore": "Ignorēt",
+      "add_to_dictionary": "Pievienot vārdnīcai",
+      "disable_rule": "Izslēgt šo noteikumu",
+      "changed": "Teksts ir mainījies. Pagaidiet nākamo pārbaudi."
+    },
+    "list_item": "{word}: {message} Ieteikums: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Nav pareizrakstības vai gramatikas kļūdu} zero {# pareizrakstības vai gramatikas kļūdu} one {# pareizrakstības vai gramatikas kļūda} other {# pareizrakstības vai gramatikas kļūdas}}",
+    "status": {
+      "title": "Teksta pārbaude",
+      "off": "Teksta pārbaude izslēgta",
+      "paused": "Teksta pārbaude apturēta",
+      "rate_limited": "Pārbaude apturēta",
+      "unavailable": "Pārbaude nav pieejama",
+      "checking": "Pārbauda…",
+      "issues": "{count, plural, =0 {Nav problēmu} zero {# problēmu} one {# problēma} other {# problēmas}}"
+    },
+    "panel": {
+      "title": "Teksta pārbaude",
+      "required": "Pieprasa jūsu organizācija",
+      "check_message": "Pārbaudīt šo ziņojumu",
+      "notice": "Kamēr rakstāt, jūsu teksts tiek nosūtīts pārbaudei uz {checkers}. Jūsu paraksts un citētais ziņojums netiek sūtīti. Kamēr ziņojums ir iestatīts parakstīšanai vai šifrēšanai, nekas netiek sūtīts; tas, ko uzrakstījāt pirms šī iestatījuma ieslēgšanas, jau var būt pārbaudīts.",
+      "turn_on": "Ieslēgt teksta pārbaudi",
+      "paused_protected": "Kamēr šis ziņojums ir iestatīts parakstīšanai vai šifrēšanai, nekas netiek pārbaudīts.",
+      "paused_unknown": "{plugin} var parakstīt vai šifrēt ziņojumus, to šeit nerādot, tāpēc, kamēr tas ir ieslēgts, nekas netiek pārbaudīts.",
+      "rate_limited": "{checker} lūdza pagaidīt. Pārbaude atsāksies pēc minūtes.",
+      "unavailable": "{checker} pašlaik nevar pārbaudīt. Tas mēģinās vēlreiz, kad turpināsiet rakstīt.",
+      "no_issues": "Problēmas nav atrastas.",
+      "list_label": "Problēmas šajā ziņojumā",
+      "shortcuts": "Nākamā problēma: {next}. Iepriekšējā: {previous}."
+    },
+    "notice": {
+      "on": "Teksta pārbaude ir ieslēgta. Kamēr rakstāt, jūsu teksts tiek nosūtīts pārbaudei uz {checkers}, bez jūsu paraksta un citētā ziņojuma. Kamēr ziņojums ir iestatīts parakstīšanai vai šifrēšanai, nekas netiek sūtīts; tas, ko uzrakstījāt pirms tam, jau var būt pārbaudīts.",
+      "forced": "Jūsu organizācija ieslēdza teksta pārbaudi. Kamēr rakstāt, jūsu teksts tiek nosūtīts pārbaudei uz {checkers}, bez jūsu paraksta un citētā ziņojuma. Kamēr ziņojums ir iestatīts parakstīšanai vai šifrēšanai, nekas netiek sūtīts; tas, ko uzrakstījāt pirms tam, jau var būt pārbaudīts.",
+      "ok": "Labi"
+    },
+    "send_warning": {
+      "title": "Sūtīt ar neatrisinātām problēmām?",
+      "body": "{count, plural, zero {Šajā ziņojumā joprojām ir # neatrisinātu pareizrakstības vai gramatikas kļūdu.} one {Šajā ziņojumā joprojām ir # neatrisināta pareizrakstības vai gramatikas kļūda.} other {Šajā ziņojumā joprojām ir # neatrisinātas pareizrakstības vai gramatikas kļūdas.}}",
+      "review": "Pārskatīt",
+      "send": "Sūtīt tik un tā"
+    },
+    "settings": {
+      "title": "Teksta pārbaude",
+      "description": "Rakstīšanas laikā pasvītro pareizrakstības un gramatikas kļūdas un iesaka labojumus.",
+      "enable": "Pārbaudīt pareizrakstību un gramatiku rakstīšanas laikā",
+      "enable_description": "Jūsu rakstītais teksts tiek nosūtīts teksta pārbaudes papildinājumam un pakalpojumam, ko tas izmanto, bez jūsu paraksta un citēto ziņojumu. Kamēr ziņojums ir iestatīts parakstīšanai vai šifrēšanai, nekas netiek sūtīts.",
+      "no_checker": "Nav instalēts neviens teksta pārbaudes papildinājums. Lūdziet administratoram to pievienot.",
+      "plugin_description": "Nosūta jūsu rakstīto uz {plugin}.",
+      "writing_language": "Rakstīšanas valoda",
+      "writing_language_description": "Valoda, kurā parasti rakstāt. To izmanto teksta pārbaude un pārlūka pareizrakstības pārbaude.",
+      "auto": "Noteikt automātiski"
+    },
+    "shortcuts": {
+      "next_issue": "Nākamā pareizrakstības vai gramatikas kļūda",
+      "previous_issue": "Iepriekšējā pareizrakstības vai gramatikas kļūda"
     }
   }
 }

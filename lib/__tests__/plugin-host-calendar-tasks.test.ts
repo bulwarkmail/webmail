@@ -7,6 +7,8 @@ import { useCalendarStore } from '@/stores/calendar-store';
 import { useTaskStore } from '@/stores/task-store';
 import { useIdentityStore } from '@/stores/identity-store';
 import { useSettingsStore } from '@/stores/settings-store';
+import { useContactStore } from '@/stores/contact-store';
+import { BIRTHDAY_CALENDAR_ID, BIRTHDAY_CALENDAR_COLOR } from '@/lib/birthday-calendar';
 import { calendarHooks, taskHooks } from '../plugin-hooks';
 
 vi.mock('@/stores/toast-store', () => ({
@@ -24,7 +26,9 @@ function plugin(perms: string[]): InstalledPlugin {
 }
 
 const READ = plugin(['calendar:read', 'tasks:read']);
+const READ_WITH_CONTACTS = plugin(['calendar:read', 'tasks:read', 'contacts:read']);
 const WRITE = plugin(['calendar:read', 'calendar:write', 'tasks:read', 'tasks:write']);
+const WRITE_WITH_CONTACTS = plugin(['calendar:read', 'calendar:write', 'tasks:read', 'tasks:write', 'contacts:read']);
 const NONE = plugin([]);
 
 const work = { id: 'cal-work', name: 'Work', color: '#f00', isVisible: true, isDefault: true, isTasksOnly: false } as Calendar;
@@ -73,7 +77,8 @@ beforeEach(() => {
     identities: [{ id: 'id1', name: 'Ann', email: 'ann@example.com' }] as never,
     preferredPrimaryId: null,
   });
-  useSettingsStore.setState({ timeZone: 'Europe/Berlin' } as never);
+  useSettingsStore.setState({ timeZone: 'Europe/Berlin', showBirthdayCalendar: false, birthdayCalendarColor: BIRTHDAY_CALENDAR_COLOR } as never);
+  useContactStore.setState({ contacts: [], contactsLoaded: true });
 });
 
 afterEach(() => {
@@ -81,6 +86,8 @@ afterEach(() => {
   useCalendarStore.setState({ calendars: [], events: [] });
   useTaskStore.setState({ tasks: [] });
   useIdentityStore.setState({ identities: [] });
+  useSettingsStore.setState({ showBirthdayCalendar: false });
+  useContactStore.setState({ contacts: [] });
   calendarHooks.onBeforeEventCreate.removePlugin('veto');
   taskHooks.onBeforeTaskDelete.removePlugin('veto');
 });
@@ -195,6 +202,115 @@ describe('api.calendar', () => {
     expect(client.deleteCalendarEvent).toHaveBeenCalledWith('e1', false, undefined);
     await expect(call(WRITE, 'calendar.deleteEvent', 'missing')).rejects.toThrow(/no event with id "missing"/);
     await expect(call(WRITE, 'calendar.updateEvent', 'e1', {})).rejects.toThrow(/patch is empty/);
+  });
+
+  // A plugin writes plain text; left labelled text/html, other clients would
+  // run its lines together.
+  it('labels a description written over an HTML one as plain text', async () => {
+    client.getCalendarEvent.mockResolvedValue(event({ description: '<p>Old</p>', descriptionContentType: 'text/html' }));
+    await call(WRITE, 'calendar.updateEvent', 'e1', { description: 'New\nlines' });
+    expect(client.updateCalendarEvent).toHaveBeenCalledWith('e1', expect.objectContaining({
+      description: 'New\nlines', descriptionContentType: 'text/plain',
+    }), false, undefined);
+  });
+
+  it('includes the virtual birthday calendar in listCalendars only when contacts:read is held and showBirthdayCalendar is enabled', async () => {
+    useSettingsStore.setState({ showBirthdayCalendar: true, birthdayCalendarColor: '#f59e0b' });
+    // Plugin without contacts:read does not see the birthday calendar
+    const calsWithoutContacts = await call(READ, 'calendar.listCalendars') as { id: string }[];
+    expect(calsWithoutContacts.some((c) => c.id === BIRTHDAY_CALENDAR_ID)).toBe(false);
+
+    // Plugin with contacts:read sees the birthday calendar
+    const cals = await call(READ_WITH_CONTACTS, 'calendar.listCalendars') as { id: string; name: string; color: string }[];
+    expect(cals).toEqual([
+      { id: 'cal-work', name: 'Work', color: '#f00', isVisible: true, isDefault: true, isTasksOnly: false },
+      { id: 'cal-todo', name: 'To do', color: '', isVisible: true, isDefault: false, isTasksOnly: true },
+      { id: BIRTHDAY_CALENDAR_ID, name: 'Birthdays', color: '#f59e0b', isVisible: true, isDefault: false, isTasksOnly: false },
+    ]);
+  });
+
+  it('returns contact birthdays in getEvents only when contacts:read is held and showBirthdayCalendar is enabled', async () => {
+    useSettingsStore.setState({ showBirthdayCalendar: true });
+    useContactStore.setState({
+      contacts: [
+        {
+          id: 'c1',
+          name: { full: 'Alice Smith' },
+          anniversaries: { b1: { kind: 'birth', date: '1990-05-15' } },
+        } as never,
+      ],
+    });
+
+    // Plugin without contacts:read does not see birthday events
+    const eventsWithoutContacts = await call(READ, 'calendar.getEvents', { from: '2026-05-01', to: '2026-06-01' }) as { id: string; calendarId: string }[];
+    expect(eventsWithoutContacts.some((e) => e.calendarId === BIRTHDAY_CALENDAR_ID)).toBe(false);
+
+    // Plugin with contacts:read sees birthday events
+    const events = await call(READ_WITH_CONTACTS, 'calendar.getEvents', { from: '2026-05-01', to: '2026-06-01' }) as {
+      id: string; title: string; calendarId: string; isAllDay: boolean; start: string;
+    }[];
+
+    const birthday = events.find((e) => e.calendarId === BIRTHDAY_CALENDAR_ID);
+    expect(birthday).toBeDefined();
+    expect(birthday).toEqual(expect.objectContaining({
+      id: 'birthday-c1-b1-2026',
+      title: '🎂 Alice Smith (36)',
+      calendarId: BIRTHDAY_CALENDAR_ID,
+      isAllDay: true,
+      start: '2026-05-15T00:00:00',
+    }));
+
+    // Respects date range bounds using same start/end as regular events
+    const beforeBirthday = await call(READ_WITH_CONTACTS, 'calendar.getEvents', {
+      from: '2026-05-01', to: '2026-05-10',
+    }) as { calendarId: string }[];
+    expect(beforeBirthday.some((e) => e.calendarId === BIRTHDAY_CALENDAR_ID)).toBe(false);
+
+    const afterBirthday = await call(READ_WITH_CONTACTS, 'calendar.getEvents', {
+      from: '2026-05-20', to: '2026-05-31',
+    }) as { calendarId: string }[];
+    expect(afterBirthday.some((e) => e.calendarId === BIRTHDAY_CALENDAR_ID)).toBe(false);
+
+    // The end is exclusive, as for regular events: a week ending at the
+    // birthday's midnight does not contain it.
+    const weekEndingOnBirthday = await call(READ_WITH_CONTACTS, 'calendar.getEvents', {
+      from: '2026-05-08', to: '2026-05-15',
+    }) as { calendarId: string }[];
+    expect(weekEndingOnBirthday.some((e) => e.calendarId === BIRTHDAY_CALENDAR_ID)).toBe(false);
+
+    // A birthday covers its whole day, so a range inside that day finds it.
+    const middayOnBirthday = await call(READ_WITH_CONTACTS, 'calendar.getEvents', {
+      from: '2026-05-15T10:00', to: '2026-05-15T12:00',
+    }) as { id: string }[];
+    expect(middayOnBirthday.map((e) => e.id)).toContain('birthday-c1-b1-2026');
+
+    // Respects calendarIds filtering
+    const onlyWork = await call(READ_WITH_CONTACTS, 'calendar.getEvents', {
+      from: '2026-05-01', to: '2026-06-01', calendarIds: ['cal-work'],
+    }) as { calendarId: string }[];
+    expect(onlyWork.some((e) => e.calendarId === BIRTHDAY_CALENDAR_ID)).toBe(false);
+
+    const onlyBirthdays = await call(READ_WITH_CONTACTS, 'calendar.getEvents', {
+      from: '2026-05-01', to: '2026-06-01', calendarIds: [BIRTHDAY_CALENDAR_ID],
+    }) as { calendarId: string }[];
+    expect(onlyBirthdays.every((e) => e.calendarId === BIRTHDAY_CALENDAR_ID)).toBe(true);
+
+    // Fetching a birthday event by ID requires contacts:read
+    expect(await call(READ, 'calendar.getEvent', 'birthday-c1-b1-2026')).toBeNull();
+    const single = await call(READ_WITH_CONTACTS, 'calendar.getEvent', 'birthday-c1-b1-2026');
+    expect(single).toEqual(expect.objectContaining({
+      id: 'birthday-c1-b1-2026',
+      title: '🎂 Alice Smith (36)',
+    }));
+
+    // Birthday events cannot be mutated
+    await expect(call(WRITE_WITH_CONTACTS, 'calendar.updateEvent', 'birthday-c1-b1-2026', { title: 'New' }))
+      .rejects.toThrow(/birthday events cannot be modified/);
+    await expect(call(WRITE_WITH_CONTACTS, 'calendar.deleteEvent', 'birthday-c1-b1-2026'))
+      .rejects.toThrow(/birthday events cannot be modified/);
+    await expect(call(WRITE_WITH_CONTACTS, 'calendar.createEvent', {
+      title: 'New', calendarId: BIRTHDAY_CALENDAR_ID, start: '2026-05-15T10:00', end: '2026-05-15T11:00',
+    })).rejects.toThrow(/no calendar with id "__birthday-calendar__"/);
   });
 });
 

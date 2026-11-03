@@ -20,6 +20,7 @@ const root = path.resolve(__dirname, '../..');
  */
 const OTHER_GATES: Record<string, { file: string; call: string }> = {
   'ui:keyboard': { file: 'lib/plugin-sandbox/loader.ts', call: "pluginHasPermission(plugin, 'ui:keyboard')" },
+  'compose:check': { file: 'lib/plugin-sandbox/host-api-checker.ts', call: "pluginHasPermission(plugin, 'compose:check')" },
 };
 
 /**
@@ -36,7 +37,10 @@ function gatedPermissions(): Map<string, string[]> {
     where.set(perm, [...(where.get(perm) ?? []), by]);
   };
   for (const [method, perm] of Object.entries(PERM_PER_METHOD)) add(perm, `method ${method}`);
-  for (const [hook, spec] of Object.entries(HOOK_CATALOG)) add(spec.permission, `hook ${hook}`);
+  for (const [hook, spec] of Object.entries(HOOK_CATALOG)) {
+    add(spec.permission, `hook ${hook}`);
+    if ('alsoPermission' in spec) add(spec.alsoPermission, `hook ${hook}`);
+  }
   for (const [slot, spec] of Object.entries(SLOT_CATALOG)) {
     for (const perm of spec.permissions) add(perm, `slot ${slot}`);
     if (spec.props === '*') continue;

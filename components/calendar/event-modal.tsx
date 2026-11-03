@@ -9,6 +9,7 @@ import { LinkifiedText } from "@/components/ui/linkified-text";
 import { X, Trash2, Users, CalendarDays, CopyPlus, Pencil, Clock, MapPin, Video, Repeat, Bell, AlignLeft, AlertTriangle, MoreVertical } from "@/components/icons";
 import { IconButton } from "@/components/ui/icon-button";
 import { findMeetingLink, locationAction, mapsUrl, primaryLocationName } from "@/lib/event-links";
+import { descriptionAsText, isHtmlDescription, plainDescriptionFields } from "@/lib/calendar-description";
 import { ParticipantStatusBadge } from "./rsvp-buttons";
 import { format, parseISO, addHours, isSameDay } from "date-fns";
 import type { CalendarEvent, Calendar, CalendarParticipant, CalendarEventAlert, CalendarRecurrenceRule } from "@/lib/jmap/types";
@@ -371,7 +372,9 @@ export function EventModal({
   };
 
   const [title, setTitle] = useState(event?.title || defaultTitle || "");
-  const [description, setDescription] = useState(event?.description || "");
+  // An HTML description is shown and edited as its text.
+  const eventDescription = useMemo(() => (event ? descriptionAsText(event) : ""), [event]);
+  const [description, setDescription] = useState(eventDescription);
   const [location, setLocation] = useState(
     event?.locations ? Object.values(event.locations)[0]?.name || "" : ""
   );
@@ -788,8 +791,11 @@ export function EventModal({
     // On an existing event the empty string is how a description gets cleared, but
     // sending it on creation writes a `DESCRIPTION:` with nothing after it — which
     // invitation e-mails then render as a "Description" heading over blank space.
-    if (trimmedDescription || event) {
-      data.description = trimmedDescription;
+    // An HTML description the user did not touch stays as it was; one they
+    // edited is saved as the plain text it now is.
+    const keepsHtml = !!event && isHtmlDescription(event) && trimmedDescription === eventDescription.trim();
+    if ((trimmedDescription || event) && !keepsHtml) {
+      Object.assign(data, plainDescriptionFields(event, trimmedDescription));
     }
 
     if (!event) {
@@ -938,7 +944,7 @@ export function EventModal({
       savingRef.current = false;
       setIsSaving(false);
     }
-  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, calendarId, calendars, recurrence, customRule, useDefaultAlerts, defaultAlerts, alertRows, preservedAlerts, attendees, initialAttendees, sendInvitations, currentUserEmails, userIsOrganizer, resolveContactName, event, onSave, isSaving, t]);
+  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, calendarId, calendars, recurrence, customRule, useDefaultAlerts, defaultAlerts, alertRows, preservedAlerts, attendees, initialAttendees, sendInvitations, currentUserEmails, userIsOrganizer, resolveContactName, event, eventDescription, onSave, isSaving, t]);
 
   // The user's own answer, and the owner's in a calendar shared with them
   // (lib/calendar-delegate.ts).
@@ -1189,11 +1195,11 @@ export function EventModal({
             )}
 
             {/* Description */}
-            {event.description && (
+            {eventDescription && (
               <div className="flex items-start gap-2.5">
                 <AlignLeft className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                 <p className="text-sm text-muted-foreground whitespace-pre-line break-words">
-                  <LinkifiedText text={event.description} />
+                  <LinkifiedText text={eventDescription} />
                 </p>
               </div>
             )}

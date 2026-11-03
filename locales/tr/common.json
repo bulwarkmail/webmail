@@ -1950,6 +1950,14 @@
         "above_quote": "Alıntılanan metinden önce",
         "below_quote": "Alıntılanan metinden sonra"
       },
+      "signature_new_mail": {
+        "label": "Yeni e-postalarda imza",
+        "description": "Yeni bir ileti yazarken imzanızı otomatik olarak ekler. Her yeni iletiye imzasız başlamak için kapatın."
+      },
+      "signature_reply_forward": {
+        "label": "Yanıtlarda ve iletmelerde imza",
+        "description": "Bir iletiyi yanıtlarken veya iletirken imzanızı otomatik olarak ekler. İmzasız göndermek için kapatın."
+      },
       "signature_separator": {
         "label": "İmza ayırıcı",
         "description": "İmzayı standart \"-- \" ayırıcı satırıyla başlat (RFC 3676). Mesajdan doğrudan imzaya geçmek istiyorsanız kapatın."
@@ -6050,6 +6058,10 @@
         "title": "Yazdığınız iletiyi değiştirme",
         "body": "Eklentiyi düzenleyicide kullandığınızda, yazarken iletide metni değiştirir veya ekler. Her değişikliği geri alabilirsiniz ve göndermeye yine siz karar verirsiniz."
       },
+      "compose_check": {
+        "title": "Yazdıklarınızı denetleme",
+        "body": "Düzenleyicide yazdıklarınızı siz yazarken okur ve kullandığı hizmete gönderebilir. Yalnızca yazım denetimi açıkken; bir ileti imzalanacak veya şifrelenecek şekilde ayarlıyken hiçbir şey gönderilmez. Bunu açmadan önce yazdıklarınız zaten denetlenmiş olabilir."
+      },
       "email_forward": {
         "title": "Postanızı iletme",
         "body": "Hesabınızdaki iletileri ekleriyle birlikte, düzenleyiciyi açmadan iletir. Her adrese ilk iletmeden önce size sorulur."
@@ -6068,7 +6080,7 @@
       },
       "ui_tasks": {
         "title": "Görevler görünümüne öğe ekleme",
-        "body": "Bir görevin ayrıntılarında kendi bölümlerini, görev listesinde düğmeler gösterme."
+        "body": "Bir görevin ayrıntılarında kendi bölümlerini, görev listesinde düğmeleri ve Bulwark'ın listesi yerine kendi görev listesini gösterme."
       },
       "ui_files": {
         "title": "Dosyalar görünümüne öğe ekleme",
@@ -6367,6 +6379,77 @@
       "party_size": "Kişi sayısı: {count}",
       "added_from": "{domain} adresinden gelen bir e-postadan eklendi",
       "added_from_subject": "{domain} adresinden gelen “{subject}” e-postasından eklendi"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Yazım",
+      "grammar": "Dil bilgisi",
+      "style": "Üslup",
+      "other": "Öneri"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Öneri yok",
+      "suggestions": "Öneriler",
+      "replace_with": "{text} ile değiştir",
+      "also": "Ayrıca {checker} tarafından",
+      "ignore": "Yoksay",
+      "add_to_dictionary": "Sözlüğe ekle",
+      "disable_rule": "Bu kuralı kapat",
+      "changed": "Metin değişti. Bir sonraki denetimi bekleyin."
+    },
+    "list_item": "{word}: {message} Öneri: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Yazım veya dil bilgisi hatası yok} one {# yazım veya dil bilgisi hatası} other {# yazım veya dil bilgisi hatası}}",
+    "status": {
+      "title": "Yazım denetimi",
+      "off": "Yazım denetimi kapalı",
+      "paused": "Yazım denetimi duraklatıldı",
+      "rate_limited": "Denetim duraklatıldı",
+      "unavailable": "Denetim kullanılamıyor",
+      "checking": "Denetleniyor…",
+      "issues": "{count, plural, =0 {Sorun yok} one {# sorun} other {# sorun}}"
+    },
+    "panel": {
+      "title": "Yazım denetimi",
+      "required": "Kuruluşunuz tarafından zorunlu tutuluyor",
+      "check_message": "Bu iletiyi denetle",
+      "notice": "Siz yazarken, yazdığınız metin denetlenmek üzere {checkers} hizmetine gider. İmzanız ve alıntılanan ileti dışarıda bırakılır. Bir ileti imzalanacak veya şifrelenecek şekilde ayarlıyken hiçbir şey gönderilmez; bunu açmadan önce yazdıklarınız zaten denetlenmiş olabilir.",
+      "turn_on": "Yazım denetimini aç",
+      "paused_protected": "Bu ileti imzalanacak veya şifrelenecek şekilde ayarlıyken hiçbir şey denetlenmez.",
+      "paused_unknown": "{plugin} iletileri burada göstermeden imzalayabilir veya şifreleyebilir, bu yüzden açıkken hiçbir şey denetlenmez.",
+      "rate_limited": "{checker} beklemenizi istedi. Denetim bir dakika içinde yeniden başlar.",
+      "unavailable": "{checker} şu anda denetleyemiyor. Yazmaya devam ettiğinizde yeniden dener.",
+      "no_issues": "Sorun bulunamadı.",
+      "list_label": "Bu iletideki sorunlar",
+      "shortcuts": "Sonraki sorun: {next}. Önceki: {previous}."
+    },
+    "notice": {
+      "on": "Yazım denetimi açık. Siz yazarken, yazdığınız metin imzanız ve alıntılanan ileti olmadan denetlenmek üzere {checkers} hizmetine gider. Bir ileti imzalanacak veya şifrelenecek şekilde ayarlıyken hiçbir şey gönderilmez; bundan önce yazdıklarınız zaten denetlenmiş olabilir.",
+      "forced": "Kuruluşunuz yazım denetimini açtı. Siz yazarken, yazdığınız metin imzanız ve alıntılanan ileti olmadan denetlenmek üzere {checkers} hizmetine gider. Bir ileti imzalanacak veya şifrelenecek şekilde ayarlıyken hiçbir şey gönderilmez; bundan önce yazdıklarınız zaten denetlenmiş olabilir.",
+      "ok": "Tamam"
+    },
+    "send_warning": {
+      "title": "Açık sorunlarla gönderilsin mi?",
+      "body": "Bu iletide hâlâ {count, plural, one {# yazım veya dil bilgisi hatası} other {# yazım veya dil bilgisi hatası}} var.",
+      "review": "Gözden geçir",
+      "send": "Yine de gönder"
+    },
+    "settings": {
+      "title": "Yazım denetimi",
+      "description": "Siz yazarken yazım ve dil bilgisi hatalarının altını çizer ve düzeltme önerileri sunar.",
+      "enable": "Yazarken yazım ve dil bilgisini denetle",
+      "enable_description": "Yazdığınız metin, imzanız ve alıntılanan iletiler olmadan yazım denetimi eklentisine ve onun kullandığı hizmete gider. Bir ileti imzalanacak veya şifrelenecek şekilde ayarlıyken hiçbir şey gönderilmez.",
+      "no_checker": "Yüklü bir yazım denetimi eklentisi yok. Yöneticinizden bir tane eklemesini isteyin.",
+      "plugin_description": "Yazdıklarınızı {plugin} eklentisine gönderir.",
+      "writing_language": "Yazma dili",
+      "writing_language_description": "Genellikle yazdığınız dil. Yazım denetimi ve tarayıcınızın yazım denetleyicisi bunu kullanır.",
+      "auto": "Otomatik algıla"
+    },
+    "shortcuts": {
+      "next_issue": "Sonraki yazım veya dil bilgisi hatası",
+      "previous_issue": "Önceki yazım veya dil bilgisi hatası"
     }
   }
 }

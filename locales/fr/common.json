@@ -1941,6 +1941,14 @@
         "above_quote": "Avant le texte cité",
         "below_quote": "Après le texte cité"
       },
+      "signature_new_mail": {
+        "label": "Signature sur les nouveaux messages",
+        "description": "Insère automatiquement votre signature lors de la rédaction d'un nouveau message. Désactivez pour rédiger sans signature."
+      },
+      "signature_reply_forward": {
+        "label": "Signature sur les réponses et transferts",
+        "description": "Ajoute automatiquement votre signature lors d'une réponse ou d'un transfert. Désactivez pour les envoyer sans signature."
+      },
       "signature_separator": {
         "label": "Délimiteur de signature",
         "description": "Préfixer la signature par la ligne de délimitation standard \"-- \" (RFC 3676). Désactivez si vous préférez enchaîner directement du message à la signature."
@@ -6050,6 +6058,10 @@
         "title": "Modifier le message que vous écrivez",
         "body": "Remplacer ou ajouter du texte dans un message pendant que vous l'écrivez, quand vous utilisez le plugin dans l'éditeur. Chaque modification peut être annulée, et c'est toujours vous qui décidez de l'envoyer."
       },
+      "compose_check": {
+        "title": "Vérifier ce que vous écrivez",
+        "body": "Lit ce que vous écrivez dans l'éditeur pendant la saisie et peut l'envoyer au service qu'il utilise. Seulement quand la correction est activée, et rien tant qu'un message doit être signé ou chiffré. Le texte écrit avant d'activer cette option a peut-être déjà été vérifié."
+      },
       "email_forward": {
         "title": "Transférer vos e-mails",
         "body": "Transférer des messages de votre compte avec leurs pièces jointes, sans ouvrir l'éditeur. Vous êtes consulté avant le premier transfert vers chaque adresse."
@@ -6068,7 +6080,7 @@
       },
       "ui_tasks": {
         "title": "Ajouter à l'affichage des tâches",
-        "body": "Afficher ses propres sections dans les détails d'une tâche et des boutons dans la liste des tâches."
+        "body": "Afficher ses propres sections dans les détails d'une tâche, des boutons dans la liste des tâches et sa propre liste de tâches à la place de celle de Bulwark."
       },
       "ui_files": {
         "title": "Ajouter à l'affichage des fichiers",
@@ -6367,6 +6379,77 @@
       "party_size": "Nombre de personnes : {count}",
       "added_from": "Ajouté depuis un e-mail de {domain}",
       "added_from_subject": "Ajouté depuis l’e-mail « {subject} » de {domain}"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Orthographe",
+      "grammar": "Grammaire",
+      "style": "Style",
+      "other": "Suggestion"
+    },
+    "popup": {
+      "label": "{kind} : {word}",
+      "no_suggestions": "Aucune suggestion",
+      "suggestions": "Suggestions",
+      "replace_with": "Remplacer par {text}",
+      "also": "Également signalé par {checker}",
+      "ignore": "Ignorer",
+      "add_to_dictionary": "Ajouter au dictionnaire",
+      "disable_rule": "Désactiver cette règle",
+      "changed": "Le texte a changé. Attendez la prochaine vérification."
+    },
+    "list_item": "{word} : {message} Suggestion : {suggestion}",
+    "list_item_no_suggestion": "{word} : {message}",
+    "announce_count": "{count, plural, =0 {Aucune faute d'orthographe ou de grammaire} one {# faute d'orthographe ou de grammaire} other {# fautes d'orthographe ou de grammaire}}",
+    "status": {
+      "title": "Correction",
+      "off": "Correction désactivée",
+      "paused": "Correction en pause",
+      "rate_limited": "Vérification en pause",
+      "unavailable": "Vérification indisponible",
+      "checking": "Vérification…",
+      "issues": "{count, plural, =0 {Aucun problème} one {# problème} other {# problèmes}}"
+    },
+    "panel": {
+      "title": "Correction",
+      "required": "Exigé par votre organisation",
+      "check_message": "Vérifier ce message",
+      "notice": "Pendant la saisie, le texte que vous écrivez est envoyé à {checkers} pour être vérifié. Votre signature et le message cité sont exclus. Rien n'est envoyé tant qu'un message doit être signé ou chiffré ; ce que vous avez écrit avant d'activer cette option a peut-être déjà été vérifié.",
+      "turn_on": "Activer la correction",
+      "paused_protected": "Rien n'est vérifié tant que ce message doit être signé ou chiffré.",
+      "paused_unknown": "{plugin} peut signer ou chiffrer des messages sans que cela s'affiche ici, donc rien n'est vérifié tant qu'il est actif.",
+      "rate_limited": "{checker} a demandé de patienter. La vérification reprend dans une minute.",
+      "unavailable": "{checker} ne peut pas vérifier pour le moment. Il réessaie quand vous continuez à écrire.",
+      "no_issues": "Aucun problème trouvé.",
+      "list_label": "Problèmes dans ce message",
+      "shortcuts": "Problème suivant : {next}. Précédent : {previous}."
+    },
+    "notice": {
+      "on": "La correction est activée. Pendant la saisie, le texte que vous écrivez est envoyé à {checkers} pour être vérifié, sans votre signature ni le message cité. Rien n'est envoyé tant qu'un message doit être signé ou chiffré ; ce que vous avez écrit avant a peut-être déjà été vérifié.",
+      "forced": "Votre organisation a activé la correction. Pendant la saisie, le texte que vous écrivez est envoyé à {checkers} pour être vérifié, sans votre signature ni le message cité. Rien n'est envoyé tant qu'un message doit être signé ou chiffré ; ce que vous avez écrit avant a peut-être déjà été vérifié.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Envoyer avec des problèmes non résolus ?",
+      "body": "{count, plural, one {# faute d'orthographe ou de grammaire reste} other {# fautes d'orthographe ou de grammaire restent}} à corriger dans ce message.",
+      "review": "Revoir",
+      "send": "Envoyer quand même"
+    },
+    "settings": {
+      "title": "Correction",
+      "description": "Souligner les fautes d'orthographe et de grammaire pendant que vous écrivez, avec des suggestions pour les corriger.",
+      "enable": "Vérifier l'orthographe et la grammaire pendant la saisie",
+      "enable_description": "Le texte que vous écrivez est envoyé à l'extension de correction et au service qu'elle utilise, sans votre signature ni les messages cités. Rien n'est envoyé tant qu'un message doit être signé ou chiffré.",
+      "no_checker": "Aucune extension de correction n'est installée. Demandez à votre administrateur d'en ajouter une.",
+      "plugin_description": "Envoie ce que vous écrivez à {plugin}.",
+      "writing_language": "Langue de rédaction",
+      "writing_language_description": "La langue dans laquelle vous écrivez le plus souvent. La correction et le correcteur orthographique de votre navigateur l'utilisent.",
+      "auto": "Détecter automatiquement"
+    },
+    "shortcuts": {
+      "next_issue": "Faute d'orthographe ou de grammaire suivante",
+      "previous_issue": "Faute d'orthographe ou de grammaire précédente"
     }
   }
 }

@@ -1953,6 +1953,14 @@
         "above_quote": "Abans del text citat",
         "below_quote": "Després del text citat"
       },
+      "signature_new_mail": {
+        "label": "Signatura als correus nous",
+        "description": "Insereix automàticament la teva signatura en redactar un missatge nou. Desactiva-ho per començar cada missatge nou sense ella."
+      },
+      "signature_reply_forward": {
+        "label": "Signatura en respostes i reenviaments",
+        "description": "Afegeix automàticament la teva signatura en respondre o reenviar un missatge. Desactiva-ho per enviar-los sense ella."
+      },
       "signature_separator": {
         "label": "Delimitador de la signatura",
         "description": "Prefixa la signatura amb la línia delimitadora estàndard «-- » (RFC 3676). Desactiveu-ho si preferiu passar directament del missatge a la signatura."
@@ -6050,6 +6058,10 @@
         "title": "Canviar el missatge que escriviu",
         "body": "Substituir o afegir text en un missatge mentre l'escriviu, quan feu servir el connector a l'editor. Podeu desfer cada canvi i continueu decidint si l'envieu."
       },
+      "compose_check": {
+        "title": "Revisar el que escriviu",
+        "body": "Llegeix el que escriviu a l'editor mentre teclegeu i ho pot enviar al servei que fa servir. Només quan la revisió està activada, i res mentre un missatge estigui configurat per signar-se o xifrar-se. El text que heu escrit abans d'activar-ho potser ja s'ha revisat."
+      },
       "email_forward": {
         "title": "Reenviar el vostre correu",
         "body": "Reenviar missatges del vostre compte amb els adjunts, sense obrir l'editor. Se us pregunta abans del primer reenviament a cada adreça."
@@ -6068,7 +6080,7 @@
       },
       "ui_tasks": {
         "title": "Afegir elements a la vista de tasques",
-        "body": "Mostrar seccions pròpies als detalls d'una tasca i botons a la llista de tasques."
+        "body": "Mostrar seccions pròpies als detalls d'una tasca, botons a la llista de tasques i una llista de tasques pròpia en lloc de la de Bulwark."
       },
       "ui_files": {
         "title": "Afegir elements a la vista de fitxers",
@@ -6367,6 +6379,77 @@
       "party_size": "Persones: {count}",
       "added_from": "Afegit des d’un correu de {domain}",
       "added_from_subject": "Afegit des del correu «{subject}» de {domain}"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Ortografia",
+      "grammar": "Gramàtica",
+      "style": "Estil",
+      "other": "Suggeriment"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "No hi ha suggeriments",
+      "suggestions": "Suggeriments",
+      "replace_with": "Substitueix per {text}",
+      "also": "També de {checker}",
+      "ignore": "Ignora",
+      "add_to_dictionary": "Afegeix al diccionari",
+      "disable_rule": "Desactiva aquesta regla",
+      "changed": "El text ha canviat. Espereu la propera revisió."
+    },
+    "list_item": "{word}: {message} Suggeriment: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {No hi ha errors d'ortografia ni de gramàtica} one {# error d'ortografia o de gramàtica} other {# errors d'ortografia o de gramàtica}}",
+    "status": {
+      "title": "Revisió",
+      "off": "Revisió desactivada",
+      "paused": "Revisió en pausa",
+      "rate_limited": "Comprovació en pausa",
+      "unavailable": "Comprovació no disponible",
+      "checking": "S'està comprovant…",
+      "issues": "{count, plural, =0 {Cap problema} one {# problema} other {# problemes}}"
+    },
+    "panel": {
+      "title": "Revisió",
+      "required": "Exigit per la vostra organització",
+      "check_message": "Revisa aquest missatge",
+      "notice": "Mentre escriviu, el text s'envia a {checkers} perquè el revisi. La vostra signatura i el missatge citat en queden fora. No s'envia res mentre un missatge estigui configurat per signar-se o xifrar-se; el que heu escrit abans d'activar-ho potser ja s'ha revisat.",
+      "turn_on": "Activa la revisió",
+      "paused_protected": "No es revisa res mentre aquest missatge estigui configurat per signar-se o xifrar-se.",
+      "paused_unknown": "{plugin} pot signar o xifrar missatges sense mostrar-ho aquí, així que no es revisa res mentre estigui activat.",
+      "rate_limited": "{checker} ha demanat esperar. La revisió es reprèn d'aquí a un minut.",
+      "unavailable": "{checker} no pot revisar ara mateix. Ho torna a provar quan continueu escrivint.",
+      "no_issues": "No s'ha trobat cap problema.",
+      "list_label": "Problemes en aquest missatge",
+      "shortcuts": "Problema següent: {next}. Anterior: {previous}."
+    },
+    "notice": {
+      "on": "La revisió està activada. Mentre escriviu, el text s'envia a {checkers} perquè el revisi, sense la vostra signatura ni el missatge citat. No s'envia res mentre un missatge estigui configurat per signar-se o xifrar-se; el que heu escrit abans potser ja s'ha revisat.",
+      "forced": "La vostra organització ha activat la revisió. Mentre escriviu, el text s'envia a {checkers} perquè el revisi, sense la vostra signatura ni el missatge citat. No s'envia res mentre un missatge estigui configurat per signar-se o xifrar-se; el que heu escrit abans potser ja s'ha revisat.",
+      "ok": "D'acord"
+    },
+    "send_warning": {
+      "title": "Voleu enviar-lo amb problemes pendents?",
+      "body": "{count, plural, one {Queda # error d'ortografia o de gramàtica} other {Queden # errors d'ortografia o de gramàtica}} per resoldre en aquest missatge.",
+      "review": "Revisa",
+      "send": "Envia igualment"
+    },
+    "settings": {
+      "title": "Revisió",
+      "description": "Subratlla els errors d'ortografia i de gramàtica mentre escriviu, amb suggeriments per corregir-los.",
+      "enable": "Revisa l'ortografia i la gramàtica mentre escric",
+      "enable_description": "El text que escriviu s'envia al complement de revisió i al servei que fa servir, sense la vostra signatura ni els missatges citats. No s'envia res mentre un missatge estigui configurat per signar-se o xifrar-se.",
+      "no_checker": "No hi ha cap complement de revisió instal·lat. Demaneu a l'administrador que n'afegeixi un.",
+      "plugin_description": "Envia el que escriviu a {plugin}.",
+      "writing_language": "Llengua d'escriptura",
+      "writing_language_description": "La llengua en què escriviu normalment. La fan servir la revisió i el corrector ortogràfic del navegador.",
+      "auto": "Detecta automàticament"
+    },
+    "shortcuts": {
+      "next_issue": "Error d'ortografia o de gramàtica següent",
+      "previous_issue": "Error d'ortografia o de gramàtica anterior"
     }
   }
 }

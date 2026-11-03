@@ -24,6 +24,8 @@ import {
   type DirectoryVersion,
 } from '@/lib/admin/marketplace-directory';
 import { MAX_PLUGIN_SIZE, MAX_THEME_SIZE } from '@/lib/plugin-types';
+import { productName } from '@/lib/product-name';
+import { withAppName } from '@/lib/settings-search';
 
 const MAX_PREVIEW_SOURCE_LEN = 100_000;
 
@@ -173,6 +175,7 @@ export async function GET(
     const installed = await installedExtensions();
     const state = installedStateOf(installed, slug, type);
     const history = await historyFor(type, slug);
+    const appName = productName(configManager.get<string>('appName'));
 
     return NextResponse.json(
       {
@@ -185,7 +188,8 @@ export async function GET(
           screenshots: detail.screenshots ?? [],
           themePreviews: detail.themePreviews ?? [],
           advisories: detail.advisories ?? [],
-          permissionDetails: detail.permissions ?? [],
+          // The directory ships the webmail's permission texts unfilled.
+          permissionDetails: (detail.permissions ?? []).map((p) => withAppName(p, appName) as typeof p),
           source: detail.source,
           createdAt: detail.createdAt ?? null,
           updatedAt: detail.updatedAt ?? null,

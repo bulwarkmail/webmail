@@ -1941,6 +1941,14 @@
         "above_quote": "Voor geciteerde tekst",
         "below_quote": "Na geciteerde tekst"
       },
+      "signature_new_mail": {
+        "label": "Handtekening bij nieuwe berichten",
+        "description": "Voegt je handtekening automatisch toe bij het opstellen van een nieuw bericht. Zet uit om elk nieuw bericht zonder te beginnen."
+      },
+      "signature_reply_forward": {
+        "label": "Handtekening bij antwoorden en doorsturen",
+        "description": "Voegt je handtekening automatisch toe bij antwoorden of doorsturen. Zet uit om ze zonder te versturen."
+      },
       "signature_separator": {
         "label": "Handtekening-scheider",
         "description": "De handtekening voorafgaan met de standaard scheidingsregel \"-- \" (RFC 3676). Zet uit als je liever direct van het bericht in de handtekening overgaat."
@@ -6050,6 +6058,10 @@
         "title": "Het bericht wijzigen dat je schrijft",
         "body": "Tekst in een bericht vervangen of toevoegen terwijl je het schrijft, als je de plug-in in de editor gebruikt. Je kunt elke wijziging ongedaan maken en je beslist nog steeds zelf of je het verstuurt."
       },
+      "compose_check": {
+        "title": "Controleren wat u schrijft",
+        "body": "Leest wat u in de editor schrijft terwijl u typt en kan het naar de dienst sturen die het gebruikt. Alleen als de controle aan staat, en niets zolang een bericht is ingesteld om te worden ondertekend of versleuteld. Tekst die u schreef voordat u dat aanzette, is mogelijk al gecontroleerd."
+      },
       "email_forward": {
         "title": "Je e-mail doorsturen",
         "body": "Berichten uit je account met hun bijlagen doorsturen, zonder de editor te openen. Voor de eerste keer doorsturen naar een adres wordt het je gevraagd."
@@ -6068,7 +6080,7 @@
       },
       "ui_tasks": {
         "title": "Toevoegen aan de takenweergave",
-        "body": "Eigen secties tonen in de details van een taak en knoppen in de takenlijst."
+        "body": "Eigen secties tonen in de details van een taak, knoppen in de takenlijst en een eigen takenlijst in plaats van die van Bulwark."
       },
       "ui_files": {
         "title": "Toevoegen aan de bestandenweergave",
@@ -6367,6 +6379,77 @@
       "party_size": "Aantal personen: {count}",
       "added_from": "Toegevoegd vanuit een e-mail van {domain}",
       "added_from_subject": "Toegevoegd vanuit de e-mail ‘{subject}’ van {domain}"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Spelling",
+      "grammar": "Grammatica",
+      "style": "Stijl",
+      "other": "Suggestie"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Geen suggesties",
+      "suggestions": "Suggesties",
+      "replace_with": "Vervangen door {text}",
+      "also": "Ook van {checker}",
+      "ignore": "Negeren",
+      "add_to_dictionary": "Toevoegen aan woordenboek",
+      "disable_rule": "Deze regel uitzetten",
+      "changed": "De tekst is gewijzigd. Wacht op de volgende controle."
+    },
+    "list_item": "{word}: {message} Suggestie: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Geen spel- of grammaticafouten} one {# spel- of grammaticafout} other {# spel- of grammaticafouten}}",
+    "status": {
+      "title": "Tekstcontrole",
+      "off": "Tekstcontrole uit",
+      "paused": "Tekstcontrole gepauzeerd",
+      "rate_limited": "Controle gepauzeerd",
+      "unavailable": "Controle niet beschikbaar",
+      "checking": "Controleren…",
+      "issues": "{count, plural, =0 {Geen problemen} one {# probleem} other {# problemen}}"
+    },
+    "panel": {
+      "title": "Tekstcontrole",
+      "required": "Verplicht gesteld door je organisatie",
+      "check_message": "Dit bericht controleren",
+      "notice": "Terwijl je typt, gaat de tekst die je schrijft naar {checkers} om te worden gecontroleerd. Je handtekening en het geciteerde bericht worden overgeslagen. Er wordt niets verstuurd zolang een bericht is ingesteld om te worden ondertekend of versleuteld; wat je schreef voordat je dat aanzette, is mogelijk al gecontroleerd.",
+      "turn_on": "Tekstcontrole aanzetten",
+      "paused_protected": "Er wordt niets gecontroleerd zolang dit bericht wordt ondertekend of versleuteld.",
+      "paused_unknown": "{plugin} kan berichten ondertekenen of versleutelen zonder dat hier te tonen, dus er wordt niets gecontroleerd zolang het aan staat.",
+      "rate_limited": "{checker} vroeg om te wachten. De controle start over een minuut opnieuw.",
+      "unavailable": "{checker} kan nu niet controleren. Het probeert het opnieuw als je verder typt.",
+      "no_issues": "Geen problemen gevonden.",
+      "list_label": "Problemen in dit bericht",
+      "shortcuts": "Volgend probleem: {next}. Vorige: {previous}."
+    },
+    "notice": {
+      "on": "Tekstcontrole staat aan. Terwijl je typt, gaat de tekst die je schrijft naar {checkers} om te worden gecontroleerd, zonder je handtekening of het geciteerde bericht. Er wordt niets verstuurd zolang een bericht is ingesteld om te worden ondertekend of versleuteld; wat je daarvoor schreef, is mogelijk al gecontroleerd.",
+      "forced": "Je organisatie heeft tekstcontrole aangezet. Terwijl je typt, gaat de tekst die je schrijft naar {checkers} om te worden gecontroleerd, zonder je handtekening of het geciteerde bericht. Er wordt niets verstuurd zolang een bericht is ingesteld om te worden ondertekend of versleuteld; wat je daarvoor schreef, is mogelijk al gecontroleerd.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Versturen met openstaande problemen?",
+      "body": "{count, plural, one {Er staat nog # spel- of grammaticafout} other {Er staan nog # spel- of grammaticafouten}} open in dit bericht.",
+      "review": "Bekijken",
+      "send": "Toch versturen"
+    },
+    "settings": {
+      "title": "Tekstcontrole",
+      "description": "Spel- en grammaticafouten onderstrepen terwijl je schrijft, met suggesties om ze te verbeteren.",
+      "enable": "Spelling en grammatica controleren terwijl ik typ",
+      "enable_description": "De tekst die je schrijft gaat naar de add-on voor tekstcontrole en de dienst die die gebruikt, zonder je handtekening of geciteerde berichten. Er wordt niets verstuurd zolang een bericht is ingesteld om te worden ondertekend of versleuteld.",
+      "no_checker": "Er is geen add-on voor tekstcontrole geïnstalleerd. Vraag je beheerder er een toe te voegen.",
+      "plugin_description": "Stuurt wat je schrijft naar {plugin}.",
+      "writing_language": "Schrijftaal",
+      "writing_language_description": "De taal waarin je meestal schrijft. De tekstcontrole en de spellingcontrole van je browser gebruiken die.",
+      "auto": "Automatisch herkennen"
+    },
+    "shortcuts": {
+      "next_issue": "Volgende spel- of grammaticafout",
+      "previous_issue": "Vorige spel- of grammaticafout"
     }
   }
 }

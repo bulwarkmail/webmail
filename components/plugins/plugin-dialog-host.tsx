@@ -9,11 +9,16 @@
 // They look like the app's own dialogs: a custom dialog (api.ui.openDialog)
 // is the filter editor's layout, with the plugin's buttons (kit
 // DialogButtons) drawn by the host in its footer; confirm, alert and prompt
-// are the app's ConfirmDialog and PromptDialog.
+// are the app's ConfirmDialog and PromptDialog. A custom dialog opened with
+// `anchor: 'trigger'` is a popover beside the control the user clicked
+// (dialog-anchor.ts), with a one-line header naming the plugin. `fill: true`
+// gives either form a fixed height the plugin's frame fills (a chat), so an
+// anchored, filled dialog is a tall popover beside the control.
 
-import React, { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { cancelForPlugin, head, overlay, resolveDialog, subscribe, type DialogRequest } from '@/lib/plugin-sandbox/host-dialog';
+import { placePopover, POPOVER_MARGIN, trackTriggers, type AnchorRect } from '@/lib/plugin-sandbox/dialog-anchor';
 import type { DialogButtonSpec } from '@/lib/plugin-sandbox/ui-kit/dialog-buttons';
 import { usePluginStore } from '@/stores/plugin-store';
 import { useFocusTrap } from '@/hooks/use-focus-trap';
@@ -42,6 +47,9 @@ export function PluginDialogHost(): React.JSX.Element | null {
   const base = useSyncExternalStore(subscribe, head, () => null);
   const top = useSyncExternalStore(subscribe, overlay, () => null);
   const t = useTranslations('plugins.dialog');
+
+  // What the user clicked last, for a dialog that opens beside it.
+  useEffect(() => trackTriggers(), []);
 
   // Say so when a plugin was turned off for failing; otherwise it just
   // stops working with no hint why.
@@ -184,12 +192,19 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
     },
   });
 
+  const anchor = current?.kind === 'custom' ? current.anchor : undefined;
+  const place = usePopoverPlace(anchor, panelRef);
+
   if (!current) return null;
 
   const name = pluginName ?? current.pluginId;
   const confirmLabel = current.confirmLabel ?? (current.kind === 'alert' ? t('ok') : current.kind === 'prompt' ? t('submit') : t('confirm'));
   const cancelLabel = current.cancelLabel ?? t('cancel');
   const custom = current.kind === 'custom';
+  const fill = custom && current.fill === true;
+  // A filled dialog is as tall as the visible window lets it be (a phone's
+  // keyboard takes its share), centred or as a popover alike.
+  const fillHeight = Math.min(640, Math.round(viewportHeight * 0.9) - 16);
 
   // Who is asking, under the title: plugins choose the title and message, so
   // the host names the plugin in a place the plugin can't change.
@@ -204,6 +219,78 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
       {renderMessage(current.message)}
     </p>
   ) : null;
+
+  const footer = buttons.length > 0 && (
+    <div className={cn('flex flex-wrap items-center justify-end gap-2 border-t border-border', anchor ? 'px-3 py-2' : 'px-6 py-4')} data-plugin-dialog-buttons="">
+      {buttons.map((b) => (
+        <Button
+          key={b.id}
+          type="button"
+          variant={DIALOG_BUTTON_VARIANT[b.variant ?? 'primary']}
+          size={anchor ? 'sm' : undefined}
+          disabled={b.disabled || b.busy}
+          aria-busy={b.busy || undefined}
+          className="gap-1.5"
+          onClick={() => pressButton(b.id)}
+        >
+          {b.busy ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <FooterIcon name={b.icon} />}
+          {b.label}
+        </Button>
+      ))}
+    </div>
+  );
+  const frame = (
+    <PluginIframeSlot
+      pluginId={current.pluginId}
+      slot={(current.slot ?? 'plugin-dialog') as SlotName}
+      extraProps={customProps}
+      fill={fill}
+    />
+  );
+
+  // Beside the control the user clicked: no backdrop, no big header. The
+  // plugin is still named in the host's own line, with the way to turn it
+  // off; a click outside or Escape closes it as the dialog's X does.
+  if (anchor) {
+    return (
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-hidden={layer === 'below' ? true : undefined}
+        className="fixed inset-0 z-[100000]"
+        onMouseDown={(e) => {
+          if (e.target === e.currentTarget) cancel();
+        }}
+        data-plugin-dialog-popover=""
+      >
+        <div
+          ref={panelRef}
+          className="absolute flex flex-col overflow-hidden rounded-lg border border-border bg-background text-foreground shadow-xl animate-in fade-in zoom-in-95 duration-150"
+          style={{
+            left: place?.left ?? 0,
+            top: place?.top ?? 0,
+            visibility: place ? undefined : 'hidden',
+            width: `min(${current.width ?? 560}px, calc(100vw - ${2 * POPOVER_MARGIN}px))`,
+            maxHeight: `calc(100vh - ${2 * POPOVER_MARGIN}px)`,
+            ...(fill ? { height: fillHeight } : {}),
+          }}
+          data-plugin-dialog={current.pluginId}
+        >
+          <div className="flex items-center gap-1 border-b border-border ps-3 pe-1 py-0.5">
+            <h2 id={titleId} className="sr-only">{current.title || name}</h2>
+            <p className="flex min-w-0 flex-1 items-center gap-1 text-xs text-muted-foreground" data-plugin-dialog-source="">
+              <Puzzle className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+              <span className="min-w-0 truncate">{t('from_plugin', { name })}</span>
+            </p>
+            <PluginDialogMenu name={name} onTurnOff={turnOff} compact />
+          </div>
+          <div className={cn('min-h-0 flex-1', fill ? 'flex flex-col overflow-hidden' : 'overflow-y-auto')}>{frame}</div>
+          {footer}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -221,9 +308,8 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
       <div
         ref={panelRef}
         className="flex w-full flex-col overflow-hidden rounded-lg border border-border bg-background text-foreground shadow-xl animate-in zoom-in-95 duration-200"
-        style={custom && current.fill
-          // As tall as the visible window lets it be (a phone's keyboard takes its share).
-          ? { maxWidth: current.width ?? 560, height: Math.min(640, Math.round(viewportHeight * 0.9) - 16) }
+        style={fill
+          ? { maxWidth: current.width ?? 560, height: fillHeight }
           : { maxWidth: custom ? (current.width ?? 560) : 448, maxHeight: '90vh' }}
         data-plugin-dialog={current.pluginId}
       >
@@ -244,33 +330,11 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
                 <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
-            <div className={cn('min-h-0 flex-1 px-6 py-4', current.fill ? 'flex flex-col overflow-hidden' : 'overflow-y-auto')}>
+            <div className={cn('min-h-0 flex-1 px-6 py-4', fill ? 'flex flex-col overflow-hidden' : 'overflow-y-auto')}>
               {message}
-              <PluginIframeSlot
-                pluginId={current.pluginId}
-                slot={(current.slot ?? 'plugin-dialog') as SlotName}
-                extraProps={customProps}
-                fill={current.fill === true}
-              />
+              {frame}
             </div>
-            {buttons.length > 0 && (
-              <div className="flex flex-wrap items-center justify-end gap-2 px-6 py-4 border-t border-border" data-plugin-dialog-buttons="">
-                {buttons.map((b) => (
-                  <Button
-                    key={b.id}
-                    type="button"
-                    variant={DIALOG_BUTTON_VARIANT[b.variant ?? 'primary']}
-                    disabled={b.disabled || b.busy}
-                    aria-busy={b.busy || undefined}
-                    className="gap-1.5"
-                    onClick={() => pressButton(b.id)}
-                  >
-                    {b.busy ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <FooterIcon name={b.icon} />}
-                    {b.label}
-                  </Button>
-                ))}
-              </div>
-            )}
+            {footer}
           </>
         ) : (
           <>
@@ -333,6 +397,37 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
   );
 }
 
+/**
+ * Where a popover dialog's panel stands: measured before it paints and again
+ * when its content (the plugin's frame) or the window changes size.
+ */
+function usePopoverPlace(anchor: AnchorRect | undefined, panelRef: React.RefObject<HTMLElement | null>): { left: number; top: number } | null {
+  const [place, setPlace] = useState<{ left: number; top: number } | null>(null);
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    if (!anchor || !panel) return;
+    const update = () => {
+      const r = panel.getBoundingClientRect();
+      const next = placePopover(
+        anchor,
+        { width: r.width, height: r.height },
+        { width: window.innerWidth, height: window.innerHeight },
+        document.documentElement.dir === 'rtl',
+      );
+      setPlace((p) => (p && p.left === next.left && p.top === next.top ? p : next));
+    };
+    update();
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
+    observer?.observe(panel);
+    window.addEventListener('resize', update);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', update);
+    };
+  }, [anchor, panelRef]);
+  return place;
+}
+
 /** A footer button's icon by name; unknown names show none. */
 /** The height of what the window shows now (the visual viewport, without a phone's keyboard), followed while `on`. */
 function useVisibleHeight(on: boolean): number {
@@ -355,7 +450,7 @@ function FooterIcon({ name }: { name?: string }) {
 }
 
 /** The "⋯" menu in a plugin dialog's header: the way out of a plugin that keeps asking. */
-function PluginDialogMenu({ name, onTurnOff }: { name: string; onTurnOff: () => void }) {
+function PluginDialogMenu({ name, onTurnOff, compact }: { name: string; onTurnOff: () => void; compact?: boolean }) {
   const t = useTranslations('plugins.dialog');
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -376,9 +471,9 @@ function PluginDialogMenu({ name, onTurnOff }: { name: string; onTurnOff: () => 
         aria-expanded={open}
         aria-label={t('plugin_menu', { name })}
         title={t('plugin_menu', { name })}
-        className={cn('p-1.5 rounded-md hover:bg-muted transition-colors duration-150 text-muted-foreground hover:text-foreground', open && 'bg-muted text-foreground')}
+        className={cn(compact ? 'p-1' : 'p-1.5', 'rounded-md hover:bg-muted transition-colors duration-150 text-muted-foreground hover:text-foreground', open && 'bg-muted text-foreground')}
       >
-        <MoreVertical className="w-5 h-5" />
+        <MoreVertical className={compact ? 'w-4 h-4' : 'w-5 h-5'} />
       </button>
       {open && (
         <div role="menu" className="absolute end-0 top-full z-10 mt-1 min-w-[200px] rounded-md border border-border bg-background py-1 shadow-lg">

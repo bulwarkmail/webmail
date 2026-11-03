@@ -15,6 +15,7 @@ import { lastingToastDuration } from '@/lib/toast-duration';
 import { startTitleAlert } from '@/lib/title-alert';
 import { getPathPrefix } from '@/lib/browser-navigation';
 import type { CalendarEvent } from '@/lib/jmap/types';
+import type { CalendarAlertView } from '@/lib/plugin-types';
 import { calendarHooks } from '@/lib/plugin-hooks';
 import { changesAnyType, subscribePushStateChanges } from '@/lib/push-events';
 
@@ -51,6 +52,23 @@ function reminderSoundOn(soundSetting: boolean): boolean {
  */
 function reminderTitleAlert(text: string): void {
   if (useSettingsStore.getState().visualAlerts) startTitleAlert(text);
+}
+
+/**
+ * Tells plugins a reminder fired, then shows it unless a plugin takes it
+ * over (onBeforeCalendarAlert returning false), as one that shows reminders
+ * itself does. onCalendarAlert fires either way. With no plugin asked, the
+ * reminder is shown at once.
+ */
+function remind(view: CalendarAlertView, show: () => void): void {
+  void calendarHooks.onCalendarAlert.emit(view);
+  if (calendarHooks.onBeforeCalendarAlert.size === 0) {
+    show();
+    return;
+  }
+  void calendarHooks.onBeforeCalendarAlert.intercept(view).then((allowed) => {
+    if (allowed) show();
+  });
 }
 
 export function useCalendarAlerts() {
@@ -95,19 +113,8 @@ export function useCalendarAlerts() {
         shownKeysRef.current.add(key);
         acknowledgeAlert(key, alert.fireTimeMs);
 
-        if (reminderSoundOn(calendarNotificationSound)) {
-          playNotificationSound(notificationSoundChoice);
-        }
-
         const diffMs = (alert.event.utcStart ? new Date(alert.event.utcStart).getTime() : parseISO(alert.event.start).getTime()) - now;
         const diffMin = Math.round(diffMs / 60000);
-
-        void calendarHooks.onCalendarAlert.emit({
-          id: alert.alertId,
-          eventId: alert.eventId,
-          eventTitle: alert.event.title || '',
-          triggerTime: new Date(alert.fireTimeMs).toISOString(),
-        });
 
         const timeLabel = diffMin <= 0
           ? t('alert_now')
@@ -117,18 +124,28 @@ export function useCalendarAlerts() {
           ? `${timeLabel} · ${alert.calendarName}`
           : timeLabel;
 
-        reminderTitleAlert(t('title_alert', { title: alert.event.title || t('alert_title') }));
-        addToast({
-          type: 'info',
-          title: alert.event.title || t('alert_title'),
-          message,
-          duration: reminderToastDuration(),
-          onClick: () => {
-            window.location.href = `${getPathPrefix(locale)}/${locale}/calendar`;
-          },
-          onDismiss: () => {
-            void calendarHooks.onCalendarAlertAcknowledge.emit({ alertId: alert.alertId, eventId: alert.eventId });
-          },
+        remind({
+          id: alert.alertId,
+          eventId: alert.eventId,
+          eventTitle: alert.event.title || '',
+          triggerTime: new Date(alert.fireTimeMs).toISOString(),
+        }, () => {
+          if (reminderSoundOn(calendarNotificationSound)) {
+            playNotificationSound(notificationSoundChoice);
+          }
+          reminderTitleAlert(t('title_alert', { title: alert.event.title || t('alert_title') }));
+          addToast({
+            type: 'info',
+            title: alert.event.title || t('alert_title'),
+            message,
+            duration: reminderToastDuration(),
+            onClick: () => {
+              window.location.href = `${getPathPrefix(locale)}/${locale}/calendar`;
+            },
+            onDismiss: () => {
+              void calendarHooks.onCalendarAlertAcknowledge.emit({ alertId: alert.alertId, eventId: alert.eventId });
+            },
+          });
         });
       }
 
@@ -142,23 +159,32 @@ export function useCalendarAlerts() {
           shownKeysRef.current.add(key);
           acknowledgeAlert(key, taskAlert.fireTimeMs);
 
-          if (reminderSoundOn(calendarNotificationSound)) {
-            playNotificationSound(notificationSoundChoice);
-          }
-
           const taskMsg = taskAlert.calendarName
             ? `${t('task_due')} · ${taskAlert.calendarName}`
             : t('task_due');
 
-          reminderTitleAlert(t('title_alert', { title: taskAlert.task.title || t('alert_title') }));
-          addToast({
-            type: 'info',
-            title: taskAlert.task.title || t('alert_title'),
-            message: taskMsg,
-            duration: reminderToastDuration(),
-            onClick: () => {
-              window.location.href = `${getPathPrefix(locale)}/${locale}/calendar`;
-            },
+          remind({
+            id: taskAlert.alertId,
+            taskId: taskAlert.taskId,
+            taskTitle: taskAlert.task.title || '',
+            triggerTime: new Date(taskAlert.fireTimeMs).toISOString(),
+          }, () => {
+            if (reminderSoundOn(calendarNotificationSound)) {
+              playNotificationSound(notificationSoundChoice);
+            }
+            reminderTitleAlert(t('title_alert', { title: taskAlert.task.title || t('alert_title') }));
+            addToast({
+              type: 'info',
+              title: taskAlert.task.title || t('alert_title'),
+              message: taskMsg,
+              duration: reminderToastDuration(),
+              onClick: () => {
+                window.location.href = `${getPathPrefix(locale)}/${locale}/calendar`;
+              },
+              onDismiss: () => {
+                void calendarHooks.onCalendarAlertAcknowledge.emit({ alertId: taskAlert.alertId, taskId: taskAlert.taskId });
+              },
+            });
           });
         }
       }

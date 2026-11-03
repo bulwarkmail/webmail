@@ -24,6 +24,8 @@ export const HIGH_RISK_PERMISSIONS: ReadonlySet<string> = new Set([
   'http:post',
   'filters:write',
   'http:proxy',
+  // Reads everything the user writes, as they write it, and may send it on.
+  'compose:check',
   // A plugin can point the reply-to of a sender address elsewhere, so
   // answers to the user's mail go to someone else.
   'identity:write',

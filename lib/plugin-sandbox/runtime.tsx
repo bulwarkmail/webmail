@@ -177,6 +177,50 @@ function applyHostFeatures(next: HostFeaturesView | undefined): void {
   }
 }
 const pendingCallbacks = new Map<string, { resolve: (v: unknown) => void; reject: (err: Error) => void }>();
+
+// ─── Text checkers (api.composer.registerChecker) ─────────────
+
+type CheckKindName = 'spelling' | 'grammar' | 'style' | 'other';
+/** What the host sends a checker. Segment text uses U+FFFC for inline objects. */
+interface CheckRequest {
+  composerId: string;
+  revision: string;
+  language: string;
+  full: boolean;
+  order: string[];
+  segments: { id: string; text: string }[];
+  objectReplacement: string;
+}
+interface CheckAnnotation {
+  segmentId: string;
+  offset: number;
+  length: number;
+  kind: CheckKindName;
+  message: string;
+  shortMessage?: string;
+  replacements?: string[];
+  ruleId?: string;
+  ruleLabel?: string;
+  id?: string;
+}
+type CheckResult = CheckAnnotation[] | { annotations?: CheckAnnotation[]; status?: 'ok' | 'unavailable' | 'paused'; message?: string; retryAfterMs?: number };
+interface CheckerDefinition {
+  id: string;
+  label: string;
+  kinds: CheckKindName[];
+  debounceMs?: number;
+  languages?: string[];
+  mode?: 'typing' | 'on-demand';
+  warnBeforeSend?: boolean;
+  check?: (request: CheckRequest) => CheckResult | Promise<CheckResult>;
+  onAction?: (event: { composerId: string; annotation: CheckAnnotation & { text: string }; action: 'ignore' | 'dictionary' | 'disable-rule' }) => unknown;
+}
+interface CheckerHandle {
+  id: string;
+  update: (patch: { label?: string; kinds?: CheckKindName[]; debounceMs?: number; warnBeforeSend?: boolean }) => Promise<true>;
+  recheck: () => Promise<true>;
+  dispose: () => Promise<void>;
+}
 const hookHandlers: Record<string, (...args: unknown[]) => unknown> = {};
 
 function sendToHost(msg: SandboxToHost, transfer?: Transferable[]): void {
@@ -653,6 +697,52 @@ function buildCoreApi(manifest: PluginManifest) {
       /** Attach a blob from jmap.uploadBlob. Needs email:blob-write. */
       attach: (composerId: string, file: { blobId: string; name: string; type?: string; size: number }) =>
         callApi('composer.attach', [composerId, file]) as Promise<boolean>,
+      /**
+       * Register a text checker (needs compose:check), from activate(). In
+       * every composer where the user (or the admin) turned proofreading on,
+       * the host calls `check` with the user's own text in paragraphs while
+       * they type, and draws what it returns as underlines. Never for a
+       * message that will be signed or encrypted. `onAction` hears Ignore,
+       * Add to dictionary and Turn off rule. Mode 'on-demand' gets no text
+       * while typing: use getCheckText and setAnnotations from a user action.
+       */
+      registerChecker: async (def: CheckerDefinition): Promise<CheckerHandle> => {
+        if (mode !== 'background') throw new Error('composer.registerChecker: register checkers from activate(), not from a slot');
+        if (!def || typeof def !== 'object') throw new Error('composer.registerChecker: needs an object');
+        const { check, onAction, ...data } = def;
+        if (data.mode !== 'on-demand' && typeof check !== 'function') throw new Error('composer.registerChecker: check must be a function');
+        if (check !== undefined && typeof check !== 'function') throw new Error('composer.registerChecker: check must be a function');
+        if (onAction !== undefined && typeof onAction !== 'function') throw new Error('composer.registerChecker: onAction must be a function');
+        const id = String(data.id);
+        const checkKey = `checker:${id}`;
+        const actionKey = `checker-action:${id}`;
+        // In place before the host knows the checker, so its first request finds them.
+        if (check) hookHandlers[checkKey] = check as (...args: unknown[]) => unknown; else delete hookHandlers[checkKey];
+        if (onAction) hookHandlers[actionKey] = onAction as (...args: unknown[]) => unknown; else delete hookHandlers[actionKey];
+        try {
+          await callApi('composer.registerChecker', [data]);
+        } catch (err) {
+          delete hookHandlers[checkKey];
+          delete hookHandlers[actionKey];
+          throw err;
+        }
+        return {
+          id,
+          update: (patch) => callApi('composer.updateChecker', [id, patch]) as Promise<true>,
+          recheck: () => callApi('composer.recheck', [id]) as Promise<true>,
+          dispose: async () => {
+            delete hookHandlers[checkKey];
+            delete hookHandlers[actionKey];
+            await callApi('composer.unregisterChecker', [id]);
+          },
+        };
+      },
+      /** The whole text of a composer the plugin was handed, request-shaped, for an on-demand check. Needs compose:check, or compose:read for an on-demand checker. */
+      getCheckText: (composerId: string, checkerId: string) =>
+        callApi('composer.getCheckText', [composerId, checkerId]) as Promise<CheckRequest>,
+      /** Results for a request from getCheckText; resolves to how many were kept. Needs compose:check, or compose:read for an on-demand checker. */
+      setAnnotations: (composerId: string, checkerId: string, revision: string, annotations: CheckAnnotation[]) =>
+        callApi('composer.setAnnotations', [composerId, checkerId, revision, annotations]) as Promise<number>,
     },
     toast: {
       /** Stay visible until dismissed or this frame closes; returns a frame-owned handle. */
@@ -690,8 +780,22 @@ function buildCoreApi(manifest: PluginManifest) {
        *  a multi-step form, etc.) rather than a toolbar/row-sized control.
        *  Resolves to whatever value the slot component passes to its
        *  `onResult` prop, or null if the user closes the dialog without
-       *  calling it. No timeout - it waits for the user. */
-      openDialog: (opts: { title?: string; slot: string; extraProps?: Record<string, unknown>; width?: number }) =>
+       *  calling it. No timeout - it waits for the user.
+       *
+       *  `anchor: 'trigger'` draws it as a popover next to what the user
+       *  activated last - an action button (message row, reader), the
+       *  place a menu was opened at for a menu entry, the flag whose toggle
+       *  a hook intercepted - when that was at most 2 s ago and no other
+       *  key was pressed since; else centred as without it. Meant for a
+       *  small menu of choices. The popover has a one-line header naming
+       *  the plugin, takes `width` as the dialog does and the content's
+       *  height, and closes on Escape or a click outside (null). Hosts
+       *  without it ignore the option.
+       *
+       *  `fill: true` gives the dialog (or the popover) a fixed height, as
+       *  tall as the window lets it be up to 640 px, and the plugin's root
+       *  fills it, for a chat whose input stays at the bottom. */
+      openDialog: (opts: { title?: string; slot: string; extraProps?: Record<string, unknown>; width?: number; anchor?: 'trigger'; fill?: boolean }) =>
         callApi('ui.openDialog', [opts], 0) as Promise<unknown>,
       /** Re-runs the onRenderEmailBody hook for the open message (e.g. after a
        *  crypto plugin unlocks a key) so its body re-renders without a reload. */
@@ -753,6 +857,24 @@ function buildCoreApi(manifest: PluginManifest) {
       openPage: (pageId: string, path?: string) =>
         callApi('ui.openPage', [pageId, path]) as Promise<boolean>,
       /**
+       * Moves this tab to a view of the calendar: 'month', 'week', 'day',
+       * 'agenda' (needs ui:calendar-action or calendar:read) or 'tasks', the
+       * task view (needs ui:tasks or tasks:read), which a plugin offering the
+       * calendar-task-view slot draws. Resolves to false when the app could
+       * not take it (not ready yet, or the user has tasks turned off). At
+       * most 10 a minute.
+       */
+      openCalendar: (options: { view: 'month' | 'week' | 'day' | 'agenda' | 'tasks' }) =>
+        callApi('ui.openCalendar', [options]) as Promise<boolean>,
+      /**
+       * Opens one of the user's tasks (an id from tasks.list) in Bulwark's
+       * task editor, as a click on it in the calendar's task list does: for
+       * a plugin drawing the task view (calendar-task-view). Resolves to
+       * false when the calendar is not on screen or has not loaded the task.
+       * Needs ui:tasks or tasks:read; at most 20 a minute.
+       */
+      openTask: (taskId: string) => callApi('ui.openTask', [taskId]) as Promise<boolean>,
+      /**
        * Opens a message in the reader of this tab, as a click on it in the
        * list does: in place on the mail page, in an email tab in the Pro
        * shell, else the tab loads the message's link (at most 5 times a
@@ -770,11 +892,22 @@ function buildCoreApi(manifest: PluginManifest) {
        */
       setSectionTitle: (title: string | null) => callApi('ui.setSectionTitle', [title]) as Promise<void>,
       /**
+       * The button and header of this plugin's `side-panel` slot, the panel
+       * beside the mail: a title (at most 40 characters, e.g. a translated
+       * "Upcoming for me") and a host icon by name (as for setPages). null
+       * goes back to the plugin's name and a puzzle piece. `rail: false`
+       * draws no button in the rail: the plugin opens the panel itself
+       * with openPanel / togglePanel('side-panel'), e.g. from a top bar
+       * action.
+       */
+      setSidePanel: (look: { title?: string; icon?: string; rail?: boolean } | null) => callApi('ui.setSidePanel', [look]) as Promise<void>,
+      /**
        * Open, close or toggle the panel this plugin's slot sits in:
        * 'composer-sidebar', 'composer-sidebar-right' (pass the composerId
-       * from the click context or the slot's props) or 'email-detail-sidebar'.
-       * Resolve to whether the panel is open afterwards, or null when no such
-       * panel is on screen (no composer or message open, or a phone), so the
+       * from the click context or the slot's props), 'email-detail-sidebar'
+       * or 'side-panel' (this plugin's panel beside the mail). Resolve to
+       * whether the panel is open afterwards, or null when no such panel is
+       * on screen (no composer or message open, or a phone), so the
        * plugin can fall back to a dialog. A panel opened this way gets a new
        * `focusRequest` prop, so the slot can focus its input.
        */

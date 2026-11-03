@@ -44,6 +44,7 @@ import {
   MoreVertical,
 } from "@/components/icons";
 import { cn, buildMailboxTree, MailboxNode } from "@/lib/utils";
+import { FOLDER_CHEVRON_SLOT, FOLDER_ROW_PX_BASE, FolderRowsSkeleton } from "@/components/boot-skeleton/mail-skeleton";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import {
   buildKeywordTree,
@@ -168,8 +169,8 @@ interface SidebarProps {
   onLoginSharedMailboxSelect?: (loginId: string, mailboxId: string) => void;
 }
 
-const ROW_PX_BASE = 8;
-const CHEVRON_SLOT = 20;
+const ROW_PX_BASE = FOLDER_ROW_PX_BASE;
+const CHEVRON_SLOT = FOLDER_CHEVRON_SLOT;
 const INDENT_STEP = 12;
 
 // Icons and colours follow the JMAP role only.
@@ -430,11 +431,20 @@ function SidebarRow({
   const longPress = useLongPress((point) => {
     if (rowRef.current && onContextMenu) onContextMenu(menuEventAt(rowRef.current, point));
   }, hasMenu);
+  // The whole row opens the folder, not just its button: the row's padding,
+  // the chevron slot and the space around the count were dead (#1501). The
+  // button stays the keyboard target; controls of their own keep their click.
+  const openFromRow = !isVirtual && onClick
+    ? (e: React.MouseEvent) => {
+        if (!(e.target as Element).closest('button, a, input, [role="button"]')) onClick();
+      }
+    : undefined;
 
   return (
     <div
       ref={rowRef}
       {...(dropHandlers || {})}
+      onClick={openFromRow}
       onContextMenu={onContextMenu}
       onTouchStart={hasMenu ? longPress.onTouchStart : undefined}
       onTouchMove={hasMenu ? longPress.onTouchMove : undefined}
@@ -452,6 +462,7 @@ function SidebarRow({
       className={cn(
         "group w-full flex items-center max-lg:min-h-[44px] text-sm transition-colors duration-150",
         isCollapsed ? "justify-center px-1" : "pe-2",
+        openFromRow && "cursor-pointer select-none",
         isVirtual
           ? "text-muted-foreground"
           : isSelected
@@ -2054,8 +2065,11 @@ function SidebarImpl({
                 {((expanded && !isCollapsed) || isCollapsed) && (
                   <>
                     {tree.length === 0 ? (
-                      <div className="px-4 py-2 text-sm text-muted-foreground">
-                        {!isCollapsed && t("loading_mailboxes")}
+                      // The page skeleton's folder rows, so nothing moves when the
+                      // folders arrive (components/boot-skeleton).
+                      <div data-testid="folders-loading">
+                        <span className="sr-only">{t("loading_mailboxes")}</span>
+                        {!isCollapsed && <FolderRowsSkeleton />}
                       </div>
                     ) : (
                       <>
@@ -2120,8 +2134,11 @@ function SidebarImpl({
             {(mvFoldersHeadless || (foldersExpanded && !isCollapsed) || isCollapsed) && (
               <>
                 {mailboxes.length === 0 ? (
-                  <div className="px-4 py-2 text-sm text-muted-foreground">
-                    {!isCollapsed && t("loading_mailboxes")}
+                  // The page skeleton's folder rows, so nothing moves when the
+                  // folders arrive (components/boot-skeleton).
+                  <div data-testid="folders-loading">
+                    <span className="sr-only">{t("loading_mailboxes")}</span>
+                    {!isCollapsed && <FolderRowsSkeleton />}
                   </div>
                 ) : (
                   <>

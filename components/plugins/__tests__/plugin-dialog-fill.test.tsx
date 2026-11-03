@@ -42,6 +42,16 @@ describe('a plugin dialog that fills', () => {
     act(() => resolveHead(null));
   });
 
+  it('fills a popover beside its trigger the same way', () => {
+    render(<PluginDialogHost />);
+    const anchor = { left: 100, top: 50, right: 124, bottom: 74 };
+    act(() => { void awaitCustomDialog({ pluginId: 'ai', title: 'AI assistant', message: '', slot: 'plugin-dialog', fill: true, anchor }); });
+    expect(document.querySelector('[data-plugin-dialog-popover]')).toBeTruthy();
+    expect(screen.getByTestId('custom-frame').dataset.fill).toBe('true');
+    expect(box().style.height).toBe('584px');
+    act(() => resolveHead(null));
+  });
+
   it('grows with its content as before without fill', () => {
     render(<PluginDialogHost />);
     act(() => { void awaitCustomDialog({ pluginId: 'ai', title: 'AI assistant', message: '', slot: 'plugin-dialog' }); });

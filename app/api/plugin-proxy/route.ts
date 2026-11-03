@@ -68,8 +68,13 @@ export async function POST(request: NextRequest) {
   if (thirdPartyOff) {
     const plugin = await getPlugin(pluginId);
     const spec = (plugin as { credentials?: Record<string, CredentialSpec> } | null)?.credentials?.[credentialId];
-    if (!credentialAllowedInMode(spec)) return thirdPartyRefusal('The plugin proxy');
-    if (!adminEnteredOrigin(spec, await getPluginConfig(pluginId), plugin?.configSchema)) return thirdPartyRefusal('The plugin proxy');
+    if (!credentialAllowedInMode(spec) || !adminEnteredOrigin(spec, await getPluginConfig(pluginId), plugin?.configSchema)) {
+      // Marked as the proxy's own refusal, like its other errors, so a
+      // plugin can tell it from the service answering 403.
+      const refused = thirdPartyRefusal('The plugin proxy');
+      refused.headers.set('x-bulwark-proxy-error', 'no-third-party-traffic');
+      return refused;
+    }
   }
   const capture = parseCapture(request.headers.get('x-bulwark-capture'));
   if (capture === null) {

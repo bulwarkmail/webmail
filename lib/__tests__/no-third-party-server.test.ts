@@ -267,6 +267,7 @@ describe('plugins', () => {
     await setMode(true, { features: { pluginsEnabled: true } });
     const res = await POST(new NextRequest('https://webmail.example/api/plugin-proxy?plugin=proxied&credential=main&url=https%3A%2F%2Fapi.vendor.example%2F', { method: 'POST' }));
     expect(res.status).toBe(403);
+    expect(res.headers.get('x-bulwark-proxy-error')).toBe('no-third-party-traffic');
     expect((await res.json()).code).toBe('no-third-party-traffic');
     expect(fetchMock).not.toHaveBeenCalled();
   });

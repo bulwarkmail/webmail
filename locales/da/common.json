@@ -1953,6 +1953,14 @@
         "above_quote": "Før citeret tekst",
         "below_quote": "Efter citeret tekst"
       },
+      "signature_new_mail": {
+        "label": "Signatur på nye e-mails",
+        "description": "Indsætter automatisk din signatur, når du skriver en ny besked. Slå fra for at starte hver ny besked uden."
+      },
+      "signature_reply_forward": {
+        "label": "Signatur på svar og videresendelser",
+        "description": "Tilføjer automatisk din signatur, når du svarer eller videresender. Slå fra for at sende dem uden."
+      },
       "signature_separator": {
         "label": "Signatur-afgrænser",
         "description": "Præfiksér signaturen med standard \"-- \"-afgrænserlinjen (RFC 3676). Slå fra, hvis du hellere vil gå direkte fra din besked til signaturen."
@@ -6050,6 +6058,10 @@
         "title": "Ændre den besked, du skriver",
         "body": "Erstatte eller tilføje tekst i en besked, mens du skriver den, når du bruger pluginet i editoren. Du kan fortryde hver ændring, og du bestemmer stadig, om den sendes."
       },
+      "compose_check": {
+        "title": "Tjekke det, du skriver",
+        "body": "Læser det, du skriver i editoren, mens du skriver, og kan sende det til den tjeneste, den bruger. Kun når korrekturen er slået til, og intet, så længe en besked er sat til at blive signeret eller krypteret. Tekst, du skrev, før du slog det til, kan allerede være tjekket."
+      },
       "email_forward": {
         "title": "Videresende din post",
         "body": "Videresende beskeder fra din konto med vedhæftninger uden at åbne editoren. Du bliver spurgt før første videresendelse til hver adresse."
@@ -6068,7 +6080,7 @@
       },
       "ui_tasks": {
         "title": "Tilføje til opgavevisningen",
-        "body": "Vise sine egne sektioner i en opgaves detaljer og knapper i opgavelisten."
+        "body": "Vise sine egne sektioner i en opgaves detaljer, knapper i opgavelisten og sin egen opgaveliste i stedet for Bulwarks."
       },
       "ui_files": {
         "title": "Tilføje til filvisningen",
@@ -6367,6 +6379,77 @@
       "party_size": "Antal personer: {count}",
       "added_from": "Tilføjet fra en mail fra {domain}",
       "added_from_subject": "Tilføjet fra mailen »{subject}« fra {domain}"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Stavning",
+      "grammar": "Grammatik",
+      "style": "Stil",
+      "other": "Forslag"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Ingen forslag",
+      "suggestions": "Forslag",
+      "replace_with": "Erstat med {text}",
+      "also": "Også fra {checker}",
+      "ignore": "Ignorér",
+      "add_to_dictionary": "Føj til ordbog",
+      "disable_rule": "Slå denne regel fra",
+      "changed": "Teksten er ændret. Vent på næste tjek."
+    },
+    "list_item": "{word}: {message} Forslag: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Ingen stave- eller grammatikfejl} one {# stave- eller grammatikfejl} other {# stave- eller grammatikfejl}}",
+    "status": {
+      "title": "Korrektur",
+      "off": "Korrektur slået fra",
+      "paused": "Korrektur sat på pause",
+      "rate_limited": "Tjek sat på pause",
+      "unavailable": "Tjek ikke tilgængeligt",
+      "checking": "Tjekker…",
+      "issues": "{count, plural, =0 {Ingen problemer} one {# problem} other {# problemer}}"
+    },
+    "panel": {
+      "title": "Korrektur",
+      "required": "Krævet af din organisation",
+      "check_message": "Tjek denne besked",
+      "notice": "Mens du skriver, sendes teksten til {checkers} for at blive tjekket. Din signatur og den citerede besked udelades. Der sendes intet, så længe en besked er sat til at blive signeret eller krypteret; det, du skrev, før du slog det til, kan allerede være tjekket.",
+      "turn_on": "Slå korrektur til",
+      "paused_protected": "Intet bliver tjekket, så længe denne besked er sat til at blive signeret eller krypteret.",
+      "paused_unknown": "{plugin} kan signere eller kryptere beskeder uden at vise det her, så intet bliver tjekket, mens den er slået til.",
+      "rate_limited": "{checker} bad om at vente. Tjekket starter igen om et minut.",
+      "unavailable": "{checker} kan ikke tjekke lige nu. Den prøver igen, når du skriver videre.",
+      "no_issues": "Ingen problemer fundet.",
+      "list_label": "Problemer i denne besked",
+      "shortcuts": "Næste problem: {next}. Forrige: {previous}."
+    },
+    "notice": {
+      "on": "Korrektur er slået til. Mens du skriver, sendes teksten til {checkers} for at blive tjekket, uden din signatur og den citerede besked. Der sendes intet, så længe en besked er sat til at blive signeret eller krypteret; det, du skrev før, kan allerede være tjekket.",
+      "forced": "Din organisation har slået korrektur til. Mens du skriver, sendes teksten til {checkers} for at blive tjekket, uden din signatur og den citerede besked. Der sendes intet, så længe en besked er sat til at blive signeret eller krypteret; det, du skrev før, kan allerede være tjekket.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Send med åbne problemer?",
+      "body": "{count, plural, one {# stave- eller grammatikfejl er stadig åben} other {# stave- eller grammatikfejl er stadig åbne}} i denne besked.",
+      "review": "Gennemgå",
+      "send": "Send alligevel"
+    },
+    "settings": {
+      "title": "Korrektur",
+      "description": "Understreg stave- og grammatikfejl, mens du skriver, med forslag til at rette dem.",
+      "enable": "Tjek stavning og grammatik, mens jeg skriver",
+      "enable_description": "Teksten, du skriver, sendes til korrekturtilføjelsen og den tjeneste, den bruger, uden din signatur og citerede beskeder. Der sendes intet, så længe en besked er sat til at blive signeret eller krypteret.",
+      "no_checker": "Der er ingen korrekturtilføjelse installeret. Bed din administrator om at tilføje en.",
+      "plugin_description": "Sender det, du skriver, til {plugin}.",
+      "writing_language": "Skrivesprog",
+      "writing_language_description": "Det sprog, du oftest skriver på. Korrekturen og din browsers stavekontrol bruger det.",
+      "auto": "Registrér automatisk"
+    },
+    "shortcuts": {
+      "next_issue": "Næste stave- eller grammatikfejl",
+      "previous_issue": "Forrige stave- eller grammatikfejl"
     }
   }
 }

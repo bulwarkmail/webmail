@@ -693,7 +693,7 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
             title="Permissions"
             description={manifestPerms.length === 0
               ? 'This plugin requests no permissions.'
-              : `What ${preview ? `v${preview.version}` : 'the plugin'} may do in each user's mailbox.`}
+              : `What ${ext.name}${preview ? ` ${preview.version}` : ''} may do in each user's mailbox.`}
           >
             {manifestPerms.length > 0 && (
               <ul className="space-y-1.5">

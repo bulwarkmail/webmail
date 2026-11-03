@@ -233,6 +233,7 @@ export {
   IconArrowsShuffle as Shuffle,
   IconDeviceMobile as Smartphone,
   IconSparkles as Sparkles,
+  IconTextSpellcheck as SpellCheck,
   IconSquare as Square,
   IconEdit as SquarePen,
   IconStar as Star,

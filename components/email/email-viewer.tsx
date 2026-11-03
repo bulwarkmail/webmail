@@ -117,6 +117,7 @@ import {
   Pencil,
   Paperclip,
 } from "@/components/icons";
+import { MailMessageSkeleton, MailMessageToolbarSkeleton } from "@/components/boot-skeleton/mail-skeleton";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import type { Attachment as PostalMimeAttachment } from 'postal-mime';
@@ -3665,9 +3666,12 @@ export function EmailViewer({
     // The body was sanitized with EMAIL_IFRAME_SANITIZE_CONFIG which permits
     // <style>. The print window has no iframe isolation, so re-sanitize with
     // the stricter config that forbids <style> before injecting into the DOM.
-    const printableBody = effectiveEmailContent.isHtml
-      ? sanitizeEmailHtml(effectiveEmailContent.html)
-      : effectiveEmailContent.html;
+    // A plain-text body is escaped text with its own newlines: it prints its
+    // trailing quote opened instead of behind the collapsed toggle.
+    const plainBody = !effectiveEmailContent.isHtml;
+    const printableBody = plainBody
+      ? effectiveEmailContent.html.replace(/<details>/g, '<details open>')
+      : sanitizeEmailHtml(effectiveEmailContent.html);
 
     const printWindow = openedWindow ?? window.open('', '_blank');
     if (!printWindow) return;
@@ -3692,6 +3696,9 @@ export function EmailViewer({
   .meta { font-size: 13px; color: #555; line-height: 1.6; }
   .meta strong { color: #000; }
   .body { font-size: 14px; line-height: 1.6; }
+  /* Plain text keeps its line breaks, as in the reader. */
+  .body.plain { white-space: pre-wrap; word-break: break-word; }
+  .body.plain summary { display: none !important; }
   /* Only force the cap on images that set no width of their own: an
      !important 100% also overrides a sender's inline max-width, and an
      image sized by max-width + max-height + width:100% then grows to
@@ -3713,7 +3720,7 @@ ${printWatermark ? printWatermark.html : ''}
     ${date ? `<div><strong>${escapeHtml(t('date'))}:</strong> ${escapeHtml(date)}</div>` : ''}
   </div>
 </div>
-<div class="body">${printableBody}</div>
+<div class="body${plainBody ? ' plain' : ''}">${printableBody}</div>
 </body></html>`);
     printWindow.document.close();
     printWindow.focus();
@@ -3928,12 +3935,14 @@ ${printWatermark ? printWatermark.html : ''}
     )}
   </>
   );
-  const shell = (content: React.ReactNode) => (
+  // `top` is the row above the message row; by default the one holding only
+  // the panel button (none without a panel or on a phone).
+  const shell = (content: React.ReactNode, top: React.ReactNode = toggleOnlyToolbar) => (
     <div
       ref={setViewerRootEl}
       className={cn("flex-1 flex flex-col h-full bg-background overflow-hidden relative", className)}
     >
-      {toggleOnlyToolbar}
+      {top}
       <div className="flex-1 min-h-0 flex flex-row overflow-hidden relative">
         {content}
         {sidePanel}
@@ -3942,53 +3951,21 @@ ${printWatermark ? printWatermark.html : ''}
     </div>
   );
 
-  // Show loading skeleton while email is being fetched
+  // Show loading skeleton while email is being fetched: the page skeleton's
+  // message pane, so a linked message keeps the shape it had before the app
+  // started.
+  // Its toolbar sits where the loaded reader puts its own: above the message
+  // row when lifted, so the row doesn't move when the message arrives. The
+  // panel button is real in it, at the end of the row as in the loaded one.
   if (isLoading && !email) {
+    const lifted = toolbarPosition === 'top' && liftToolbar;
     return shell(
-      <div className="flex-1 min-w-0 flex flex-col h-full bg-background overflow-hidden animate-in fade-in duration-200">
-        {/* Loading Header Skeleton - gentler animation */}
-        <div className="bg-background border-b border-border">
-          <div className="px-4 lg:px-6 py-3 lg:py-4">
-            <div className="flex items-start justify-between gap-2 lg:gap-4">
-              <div className="flex-1 min-w-0 space-y-2 lg:space-y-3">
-                <div className="h-6 lg:h-8 bg-muted/60 rounded-md w-3/4"></div>
-                <div className="flex items-center gap-2 lg:gap-3">
-                  <div className="h-3 lg:h-4 bg-muted/60 rounded w-24 lg:w-32"></div>
-                  <div className="h-3 lg:h-4 bg-muted/60 rounded w-16 lg:w-24"></div>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 lg:gap-2">
-                <div className="h-8 w-8 lg:w-20 bg-muted/60 rounded"></div>
-                <div className="h-8 w-8 bg-muted/60 rounded hidden lg:block"></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Loading Sender Info Skeleton */}
-          <div className="px-4 lg:px-6 pb-3 lg:pb-4">
-            <div className="flex items-start gap-3 lg:gap-4">
-              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-muted/60 rounded-full"></div>
-              <div className="flex-1 space-y-2">
-                <div className="h-4 bg-muted/60 rounded w-48"></div>
-                <div className="h-3 bg-muted/60 rounded w-64"></div>
-              </div>
-            </div>
-          </div>
+      <MailMessageSkeleton toolbar={!lifted} />,
+      lifted ? (
+        <div data-viewer-top-toolbar="full-width" className="flex-shrink-0">
+          <MailMessageToolbarSkeleton end={panelToggle} />
         </div>
-
-        {/* Loading Content Skeleton */}
-        <div className="flex-1 overflow-auto bg-muted/20">
-          <div className="px-6 pt-4 pb-6">
-            <div className="space-y-3">
-              <div className="h-4 bg-muted/60 rounded w-full"></div>
-              <div className="h-4 bg-muted/60 rounded w-5/6"></div>
-              <div className="h-4 bg-muted/60 rounded w-4/6"></div>
-              <div className="h-4 bg-muted/60 rounded w-full"></div>
-              <div className="h-4 bg-muted/60 rounded w-3/4"></div>
-            </div>
-          </div>
-        </div>
-      </div>
+      ) : toggleOnlyToolbar,
     );
   }
 

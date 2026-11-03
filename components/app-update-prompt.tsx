@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useConfig } from "@/hooks/use-config";
 import { productName } from "@/lib/product-name";
 import { isChunkLoadFailure, newerBuildId, reloadToNewBuild } from "@/lib/app-update";
-import { toast } from "@/stores/toast-store";
+import { toast, useToastStore } from "@/stores/toast-store";
 
 /** How often an open tab asks whether a new build was deployed. */
 export const UPDATE_CHECK_MS = 15 * 60 * 1000;
@@ -26,6 +26,7 @@ export function AppUpdatePrompt() {
 
   useEffect(() => {
     let shownFor: string | null = null;
+    let toastId: string | null = null;
     let lastCheck = 0;
     let checking = false;
     const check = async (force: boolean) => {
@@ -38,7 +39,10 @@ export function AppUpdatePrompt() {
         const id = await newerBuildId();
         if (!id || id === shownFor) return;
         shownFor = id;
-        toast.info(text.current.ready, {
+        // Reload loads whatever build is newest, so a toast for an older one
+        // still does the job. One per tab, however many builds go out.
+        if (toastId && useToastStore.getState().toasts.some((t) => t.id === toastId)) return;
+        toastId = toast.info(text.current.ready, {
           duration: 0,
           action: { label: text.current.reload, onClick: () => { void reloadToNewBuild(); } },
         });

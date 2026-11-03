@@ -107,10 +107,11 @@ import { PluginActions } from "@/components/plugins/plugin-actions";
 import { useAppCommands } from "@/lib/app-commands";
 import { MvSearchForm } from "@/components/search/mv-search-form";
 import { MvSidePanel } from "@/components/layout/mv-side-panel";
+import { PluginSidePanel } from "@/components/plugins/plugin-side-panels";
 import { MvListToolbar } from "@/components/email/mv-list-toolbar";
 import { SidebarAppsModal } from "@/components/layout/sidebar-apps-modal";
 import { InlineAppView } from "@/components/layout/inline-app-view";
-import { getDraftTextBody } from '@/lib/email-body-selection';
+import { getDraftComposerBody } from '@/lib/email-body-selection';
 import { useSidebarApps } from "@/hooks/use-sidebar-apps";
 import { useIdentitySync } from "@/hooks/use-identity-sync";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
@@ -176,6 +177,8 @@ import type { QuoteHeader } from "@/lib/plugin-types";
 import { initialLinkSearch, useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
 import { useMinimisedComposerFlush } from "@/hooks/use-minimised-composer-flush";
 import { quickReplyEnvelope, saveQuickReplyDraft } from "@/lib/outgoing/quick-reply-envelope";
+import { MailConversationSkeleton, MailSkeleton } from "@/components/boot-skeleton/mail-skeleton";
+import { useSkeletonLabels } from "@/components/boot-skeleton/use-skeleton-labels";
 
 export interface MailAppProps {
   /**
@@ -231,6 +234,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Static Lite build: the route params are empty, read the link from the URL.
   const linkSegments = useLiteLinkSegments('mail', routeSegments);
   const t = useTranslations();
+  // The page skeleton the gates below draw: the same one the server sent.
+  const skeletonLabels = useSkeletonLabels();
   const tNotifications = useTranslations('notifications');
   // The toasts' Undo after a delete to Trash, archive, move or spam report.
   const undo = undoLabels(tNotifications);
@@ -367,6 +372,15 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Mobile/tablet responsive hooks
   const { isMobile, isTablet } = useDeviceDetection();
   const isEmbedded = useIsEmbedded();
+  // A message or conversation link shows the reader from the first frame, as
+  // the page skeleton draws it, in its loading state until the link has been
+  // applied. Otherwise the focused layout and phones showed the list alone
+  // while the session came up and only then opened the reader.
+  const [deepLinkPane, setDeepLinkPane] = useState<'message' | 'thread' | null>(() => {
+    if (isEmbedded || typeof window === 'undefined') return null;
+    const link = parseMailPath(linkSegments ?? [], new URLSearchParams(initialLinkSearch('mail')));
+    return link?.kind === 'message' || link?.kind === 'thread' ? link.kind : null;
+  });
   /**
    * Mountain View's list cursor. `j` / `k` there move a highlight without
    * opening the conversation, marking it read or changing the URL - only
@@ -1796,7 +1810,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         ? await freshMailboxes(switchedFrom)
         : useEmailStore.getState().mailboxes;
       const state = useEmailStore.getState();
-      const mailboxId = resolveFolderRef(link.ref, mailboxes);
+      const mailboxId = resolveFolderRef(
+        link.ref,
+        mailboxes,
+        link.ownerAccountId === activeClient.getAccountId() ? undefined : link.ownerAccountId,
+      );
       if (!mailboxId) {
         toast.error(t('deep_link.folder_not_found'));
         return;
@@ -1948,7 +1966,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   useEffect(() => {
     if (deepLinkHandledRef.current) return;
     if (!isAuthenticated || !client) return;
-    if (mailboxes.length === 0) return;
+    if (mailboxes.length === 0) {
+      // The account has no folders to open the link in: stop holding the reader open for it.
+      if (initialMailLoadDone) setDeepLinkPane(null);
+      return;
+    }
     if (!initialMailLoadDone) return;
 
     const params = new URLSearchParams(initialSearchRef.current ?? window.location.search);
@@ -1960,6 +1982,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
     if (!link && !openLatestUnread) {
       deepLinkHandledRef.current = true;
+      setDeepLinkPane(null);
       return;
     }
 
@@ -1971,7 +1994,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     deepLinkHandledRef.current = true;
 
     if (link) {
-      void applyMailDeepLinkRef.current(link, { onLoad: true });
+      void applyMailDeepLinkRef.current(link, { onLoad: true }).finally(() => setDeepLinkPane(null));
       return;
     }
 
@@ -2445,17 +2468,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
     draft = await emailHooks.onBeforeEditDraft.transform(draft);
 
-    // Only the parts the server lists as the body: bodyValues also carries
-    // every text/* ATTACHMENT, which used to be joined in as the message.
-    const bodyText = getDraftTextBody(draft);
-    // A plain-text-only draft lists its text/plain part under htmlBody
-    // (RFC 8621 § 4.1.4 fallback) - only treat it as HTML when it really is.
-    const draftHtmlPart = draft.htmlBody?.[0];
-    const htmlBody = draftHtmlPart?.partId
-      && (!draftHtmlPart.type || draftHtmlPart.type.toLowerCase() === 'text/html')
-      && draft.bodyValues?.[draftHtmlPart.partId]
-      ? draft.bodyValues[draftHtmlPart.partId].value
-      : undefined;
+    const { body: draftBody, bodyText, plainTextMode: draftPlainTextMode } = getDraftComposerBody(draft);
 
     // Restore the identity the draft was composed with. Match the saved From
     // (name + address) against the same list the composer renders — the flat
@@ -2485,12 +2498,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       // Drafts saved before #1189 stored an empty subject as the composer's
       // "(No Subject)" placeholder; reopen those with an empty field.
       subject: draft.subject && draft.subject !== t('email_composer.no_subject') ? draft.subject : '',
-      body: htmlBody || bodyText,
-      // Re-open in the format the draft was written in: a text-only draft
-      // used to land raw in the rich-text editor (newlines collapsed) and an
-      // HTML draft raw in the plain-text textarea. Empty draft: the setting
-      // decides (#1022).
-      plainTextMode: htmlBody != null ? false : bodyText ? true : undefined,
+      body: draftBody,
+      // Re-open in the format the draft was written in (#1022).
+      plainTextMode: draftPlainTextMode,
       showCc: (draft.cc?.length || 0) > 0,
       showBcc: (draft.bcc?.length || 0) > 0,
       selectedIdentityId: matchedIdentityId,
@@ -4118,6 +4128,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       signatureIdentity,
       sendingIdentity,
       separator: settings.signatureSeparatorEnabled,
+      // The user's reply/forward signature toggle: off sends the bare text.
+      insertSignature: settings.signatureReplyForwardEnabled,
       to: recipients,
       fromEmail: headerFromEmail,
       identityId: sendingIdentity?.id,
@@ -4472,14 +4484,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   ], !isEmbedded);
 
   if (!initialCheckDone || authLoading || (!isAuthenticated || !client)) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground mx-auto"></div>
-          <p className="mt-4 text-sm text-muted-foreground">{t("common.loading")}</p>
-        </div>
-      </div>
-    );
+    return <MailSkeleton label={skeletonLabels.label} labels={skeletonLabels.labels} embedded={isEmbedded} />;
   }
 
   // Get current mailbox name for mobile header
@@ -4499,8 +4504,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     && (pendingDraft?.mode ?? composerMode) !== 'compose' && Boolean(selectedEmail);
   const floatingComposer = mvShell && showComposer && !isEmbedded && !mvInlineReply;
   const hasViewerContent = (showComposer && !floatingComposer) || Boolean(conversationThread)
-    || Boolean(selectedEmail && !(mvShell && cursorOnly));
-  const shouldCollapseListPane = (isTablet && !tabletListVisible && !readingPaneEmpty) || (!isMobile && isFocusedMailLayout && hasViewerContent);
+    || Boolean(selectedEmail && !(mvShell && cursorOnly)) || deepLinkPane !== null;
+  // A linked message on a phone opens over the list, as one picked there does.
+  const mobileView = deepLinkPane !== null && isMobile ? 'viewer' : activeView;
+  const shouldCollapseListPane = (isTablet && ((!tabletListVisible && !readingPaneEmpty) || deepLinkPane !== null)) || (!isMobile && isFocusedMailLayout && hasViewerContent);
   const shouldHideViewerPane = !isMobile && !hasViewerContent && isFocusedMailLayout;
   const shouldHideHorizontalViewerPane = isHorizontalMailLayout && !hasViewerContent;
 
@@ -4887,7 +4894,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   );
 
   if (!isAuthenticated) {
-    return null;
+    return <MailSkeleton label={skeletonLabels.label} labels={skeletonLabels.labels} embedded={isEmbedded} />;
   }
 
   return (
@@ -5087,7 +5094,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 : "h-full border-e border-border",
               // Mobile: full width, hidden when viewing email
               "max-md:flex-1 max-md:border-e-0 max-md:border-b-0",
-              isMobile && activeView !== "list" && "max-md:hidden",
+              isMobile && mobileView !== "list" && "max-md:hidden",
               // Pane-mobile (narrow Pro pane on a wide viewport): the
               // `max-md:` viewport classes above never apply, so mirror
               // them with pane-scoped equivalents.
@@ -5328,7 +5335,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 hideBatchToolbar={mvShell}
                 emails={activeEmails}
                 selectedEmailKey={selectedEmail ? emailKeyFor(selectedEmail) : undefined}
-                isLoading={activeIsLoading}
+                // Until the first page of the folder has arrived an empty list
+                // is not an empty folder: it draws its skeleton rows, not "no
+                // emails".
+                isLoading={activeIsLoading || (!initialMailLoadDone && activeEmails.length === 0)}
                 hasMore={activeHasMore}
                 isLoadingMoreItems={isScheduledView ? isLoadingScheduled && activeEmails.length > 0 : undefined}
                 isScheduledView={isScheduledView}
@@ -5518,7 +5528,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               // Mobile: full screen overlay when active
               "max-md:fixed max-md:inset-0 max-md:z-30",
               "max-md:h-full max-md:pt-[env(safe-area-inset-top)]",
-              isMobile && activeView !== "viewer" && "max-md:hidden",
+              isMobile && mobileView !== "viewer" && "max-md:hidden",
               // Tablet/Desktop: relative. Pane-mobile instead overlays the
               // pane (absolute within the relative content row above) - the
               // viewport `max-md:` classes never fire there, and `fixed`
@@ -5568,7 +5578,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               </button>
             )}
             {/* Mobile Conversation View - shown when thread is selected on mobile */}
-            {isMobile && conversationThread ? (
+            {isMobile && !conversationThread && deepLinkPane === 'thread' ? (
+              // A linked conversation on a phone, still loading: the shape the
+              // page skeleton gave it.
+              <div className="flex flex-col h-full bg-background" aria-busy="true">
+                <span role="status" className="sr-only">{t('threads.loading')}</span>
+                <MailConversationSkeleton />
+              </div>
+            ) : isMobile && conversationThread ? (
               <ThreadConversationView
                 thread={conversationThread}
                 emails={conversationEmails}
@@ -5623,7 +5640,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   <EmailViewer
                     email={selectedEmail}
                     blobSource={resolveEmailBlobContext(selectedEmail, client)}
-                    isLoading={isLoadingEmail}
+                    isLoading={isLoadingEmail || deepLinkPane !== null}
                     onReply={handleReply}
                     onReplyAll={handleReplyAll}
                     onForward={handleForward}
@@ -5749,7 +5766,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           </div>
 
           {/* Bottom Navigation - mobile and tablet (hidden when embedded) */}
-          {(isMobile || isTablet) && activeView !== "viewer" && !isEmbedded && (
+          {(isMobile || isTablet) && mobileView !== "viewer" && !isEmbedded && (
             <NavigationRail
               orientation="horizontal"
               onManageApps={handleManageApps}
@@ -5762,6 +5779,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         {/* Mountain View: Gmail's side panel - calendar, tasks and contacts
             next to the mail, with their icons down the right edge. */}
         {mvShell && !inlineApp && !fullscreenReading && <MvSidePanel />}
+        {/* The default layout: plugins' panels beside the mail (the
+            side-panel slot), with their buttons in a rail at the right edge.
+            Desktop only; Mountain View has them in its side panel. */}
+        {!mvShell && !isMobile && !isTablet && !isEmbedded && !inlineApp && !fullscreenReading && <PluginSidePanel />}
         </div>
 
         {/* Keyboard Shortcuts Modal */}

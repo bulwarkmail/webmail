@@ -33,6 +33,7 @@ import { formatDisplayHour, remapSegmentsToShownDays, resolveDisplayHours, resol
 import { groupTasksByDueDay } from "@/lib/calendar-tasks";
 import { eventOrganizer, getParticipantList, isDeclinedByUser } from "@/lib/calendar-participants";
 import { findMeetingLink, primaryLocationName } from "@/lib/event-links";
+import { descriptionAsText } from "@/lib/calendar-description";
 import {
   PRINT_LANE_MM,
   PRINT_PAGE_HEIGHT_MM,
@@ -699,6 +700,7 @@ export function EventPrintSheet({
 
   const location = primaryLocationName(event);
   const meeting = findMeetingLink(event);
+  const description = descriptionAsText(event);
   const participants = getParticipantList(event, { resolveName: resolveContactName });
   const organizer = eventOrganizer(event);
   const organizerName = organizer ? (organizer.name || resolveContactName(organizer.email) || "") : "";
@@ -754,10 +756,10 @@ export function EventPrintSheet({
         </section>
       )}
 
-      {event.description && (
+      {description && (
         <section className="pr-flow">
           <h2>{t("form.description")}</h2>
-          <p className="pr-text" dir="auto">{event.description}</p>
+          <p className="pr-text" dir="auto">{description}</p>
         </section>
       )}
     </article>

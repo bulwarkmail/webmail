@@ -6,7 +6,7 @@ import { useAccountStore } from '@/stores/account-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { DEFAULT_ORGANISATION_POLICY } from '@/lib/admin/organisation-policy';
 import { startOfflineMode, wipeEverything } from '../offline-mode';
-import { forgetIndexes, putEmails, putMisc, emailIndex } from '../cache';
+import { forgetIndexes, putEmails, putMisc, getMisc, emailIndex } from '../cache';
 import { forgetDeviceKey } from '../crypto';
 import { allowOfflineDbCreation, deleteOfflineDb } from '../db';
 import { useOfflineStore, writeEnabled } from '../state';
@@ -85,6 +85,98 @@ describe('falling back to the device', () => {
     expect(await client.getEmail('m1')).toBeNull();
     expect(useOfflineStore.getState().downServers).toEqual([]);
     stop();
+  });
+});
+
+describe('mailbox paging with the device cache', () => {
+  const mailboxes = Array.from({ length: 5 }, (_, i) => ({ id: `box-${i}`, name: `Folder ${i}`, parentId: null }));
+
+  function mailboxServer(failLaterPage = false) {
+    const positions: number[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
+      if (String(url).endsWith('/.well-known/jmap')) {
+        return new Response(JSON.stringify({
+          ...SESSION,
+          capabilities: { 'urn:ietf:params:jmap:core': { maxObjectsInGet: 2 } },
+        }), { status: 200 });
+      }
+      const { methodCalls } = JSON.parse(String(init?.body));
+      const query = methodCalls.find(([name]: [string]) => name === 'Mailbox/query');
+      const position = query?.[1].position ?? 0;
+      if (query) positions.push(position);
+      const page = mailboxes.slice(position, position + 2);
+      const methodResponses = methodCalls.map(([name, , id]: [string, unknown, string]) => {
+        if (name === 'Identity/get') return [name, { accountId: 'j1', list: [{ id: 'recording-barrier' }] }, id];
+        if (query && failLaterPage && position > 0) return ['error', { type: 'serverFail' }, id];
+        if (name === 'Mailbox/query') return [name, {
+          accountId: 'j1', queryState: 'query-state', position,
+          ids: page.map((box) => box.id), total: mailboxes.length,
+        }, id];
+        return [name, { accountId: 'j1', state: 'mailbox-state', list: page, notFound: [] }, id];
+      });
+      return new Response(JSON.stringify({ methodResponses }), { status: 200 });
+    }));
+    return positions;
+  }
+
+  // Identity recording shares the per-account queue with mailbox recording.
+  // Waiting for this marker also detects erroneous writes queued by failed pages.
+  async function recorded(client: JMAPClient) {
+    await client.getIdentities();
+    await vi.waitFor(async () => {
+      expect(await getMisc('acc', 'identities')).toEqual({ j1: [{ id: 'recording-barrier' }] });
+    });
+  }
+
+  it('returns a cached list larger than maxObjectsInGet without inventing a collection state', async () => {
+    mailboxServer();
+    const client = await connectedClient();
+    writeEnabled(['acc']);
+    const stop = startOfflineMode();
+    try {
+      await putMisc('acc', 'mailboxes', { j1: mailboxes });
+      vi.stubGlobal('navigator', { onLine: false });
+      const result = await client.getAllMailboxesWithState();
+      expect(result.mailboxes.map((box) => box.id)).toEqual(mailboxes.map((box) => box.id));
+      expect(result.states).toEqual({});
+      // Only session discovery touched the network; both query/get pages are local.
+      expect(fetch).toHaveBeenCalledTimes(1);
+    } finally {
+      stop();
+    }
+  });
+
+  it('records the complete live multi-page list rather than its final page', async () => {
+    const positions = mailboxServer();
+    const client = await connectedClient();
+    writeEnabled(['acc']);
+    const stop = startOfflineMode();
+    try {
+      const result = await client.getMailboxes();
+      expect(result.map((box) => box.id)).toEqual(mailboxes.map((box) => box.id));
+      expect(positions).toEqual([0, 2, 4]);
+      await recorded(client);
+      expect(await getMisc('acc', 'mailboxes')).toEqual({ j1: mailboxes });
+    } finally {
+      stop();
+    }
+  });
+
+  it('retains the previous complete cache when a later live page fails', async () => {
+    const positions = mailboxServer(true);
+    const client = await connectedClient();
+    writeEnabled(['acc']);
+    const stop = startOfflineMode();
+    const previous = [{ id: 'old', name: 'Previously cached', parentId: null }];
+    try {
+      await putMisc('acc', 'mailboxes', { j1: previous });
+      await expect(client.getMailboxes()).rejects.toThrow('Failed to load the complete mailbox list');
+      expect(positions).toEqual([0, 2]);
+      await recorded(client);
+      expect(await getMisc('acc', 'mailboxes')).toEqual({ j1: previous });
+    } finally {
+      stop();
+    }
   });
 });
 

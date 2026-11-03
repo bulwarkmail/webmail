@@ -159,6 +159,13 @@ export const useThemeStore = create<ThemeState>()(
           set({ activeThemeId: effectiveThemeId });
         }
 
+        // No theme in effect: drop the copy the boot script may have put back
+        // from the cache (lib/boot-skeleton/boot-script.ts, applyBootTheme).
+        if (!effectiveThemeId) {
+          removeThemeCSS();
+          removeThemeSkinCSS();
+        }
+
         // Apply active custom theme on boot
         if (effectiveThemeId) {
           const t = installedThemes.find(t => t.id === effectiveThemeId);

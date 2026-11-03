@@ -1,0 +1,11 @@
+{
+  "id": "it-proofreading-checker",
+  "name": "Test checker",
+  "version": "1.0.0",
+  "author": "Bulwark integration tests",
+  "description": "Flags \"dem Brief\" and \"teh\" without sending anything anywhere. For the proofreading integration spec only.",
+  "type": "hook",
+  "permissions": ["compose:check"],
+  "entrypoint": "index.js",
+  "minAppVersion": "1.19.0"
+}

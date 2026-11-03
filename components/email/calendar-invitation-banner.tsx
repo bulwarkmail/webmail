@@ -45,6 +45,7 @@ import { participantsAskedAgain } from '@/lib/calendar-participants';
 import { planCancellationRemoval, sameRecurrenceId, type CancellationRemoval } from '@/lib/calendar-cancellation';
 import { cn } from '@/lib/utils';
 import { getEventStartDate } from '@/lib/calendar-utils';
+import { descriptionAsText } from '@/lib/calendar-description';
 import { sanitizeColor } from '@/components/calendar/event-card';
 import { RecipientPopover } from './recipient-popover';
 import { useCalendarErrorMessage } from '@/hooks/use-calendar-error-message';
@@ -332,11 +333,13 @@ function buildInvitationChangeItems(
     });
   }
 
-  if ((currentEvent.description ?? '') !== (proposedEvent.description ?? '') && proposedEvent.description) {
+  const currentDescription = descriptionAsText(currentEvent);
+  const proposedDescription = descriptionAsText(proposedEvent);
+  if (currentDescription !== proposedDescription && proposedDescription) {
     changes.push({
       label: t('change_description'),
-      before: currentEvent.description || t('change_empty'),
-      after: proposedEvent.description,
+      before: currentDescription || t('change_empty'),
+      after: proposedDescription,
     });
   }
 

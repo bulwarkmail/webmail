@@ -31,8 +31,20 @@ export function hookPermission(hookName: string): Permission | null {
 }
 
 export function mayRegisterHook(plugin: InstalledPlugin, hookName: string): boolean {
-  const perm = hookPermission(hookName);
-  return perm !== null && pluginHasPermission(plugin, perm);
+  const spec = hookSpec(hookName);
+  if (!spec) return false;
+  return pluginHasPermission(plugin, spec.permission)
+    || (spec.alsoPermission !== undefined && pluginHasPermission(plugin, spec.alsoPermission));
+}
+
+/**
+ * Whether one call of a hook may reach `plugin`: always for a hook with one
+ * permission (registering checked it), else when the plugin holds the
+ * permission this call's payload needs (a task's reminder: tasks:read).
+ */
+export function mayReceiveHookCall(plugin: InstalledPlugin, hookName: string, args: unknown[]): boolean {
+  const needs = hookSpec(hookName)?.callPermission;
+  return needs === undefined || pluginHasPermission(plugin, needs(args[0]));
 }
 
 // ─── Slots ────────────────────────────────────────────────────

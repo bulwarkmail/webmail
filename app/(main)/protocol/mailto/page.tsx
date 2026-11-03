@@ -3,6 +3,14 @@ import { MailtoProtocolClient } from "@/components/protocol/mailto-protocol-clie
 
 export default async function MailtoProtocolPage() {
   const t = await getTranslations("protocol_handlers");
+  const tSidebar = await getTranslations("sidebar");
+  const labels = {
+    mail: tSidebar("mail"),
+    calendar: tSidebar("calendar"),
+    contacts: tSidebar("contacts"),
+    files: tSidebar("files"),
+    settings: tSidebar("settings"),
+  };
 
-  return <MailtoProtocolClient openingText={t("opening_mailto")} />;
+  return <MailtoProtocolClient openingText={t("opening_mailto")} labels={labels} />;
 }

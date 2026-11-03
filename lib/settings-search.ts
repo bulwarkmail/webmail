@@ -243,10 +243,15 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.email_behavior.recipient_mentions.label' },
     { label: 'settings.email_behavior.mention_adds_recipient.label' },
     { label: 'settings.email_behavior.rtl_editing.label', advanced: true },
+    { label: 'proofreading.settings.title' },
+    { label: 'proofreading.settings.enable' },
+    { label: 'proofreading.settings.writing_language' },
     { label: 'settings.composing_page.sections.replying' },
     { label: 'settings.email_behavior.quick_reply.label' },
     { label: 'settings.email_behavior.auto_select_reply_identity.label' },
     { label: 'settings.email_behavior.signature_position.label' },
+    { label: 'settings.email_behavior.signature_new_mail.label' },
+    { label: 'settings.email_behavior.signature_reply_forward.label' },
     { label: 'settings.email_behavior.signature_separator.label', advanced: true },
     { label: 'settings.composing_page.sections.sending' },
     { label: 'settings.email_behavior.send_delay.label' },
@@ -364,7 +369,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
 // Extra English keywords per tab so common search terms hit even when the
 // translation doesn't contain the literal word.
 /** Settings shown only while the admin has the Archive action on (#1257). */
-export const archiveActionSearchPaths: ReadonlySet<string> = new Set(['settings.email_behavior.archive_mode.label']);
+export const ARCHIVE_ACTION_SEARCH_PATHS: ReadonlySet<string> = new Set(['settings.email_behavior.archive_mode.label']);
 
 export const tabKeywords: Record<Tab, string> = {
   account: 'profile email user signin signout reorder rearrange drag dropdown switcher multi-account identities from address signature plus addressing unified mailbox shared group',

@@ -39,6 +39,9 @@ export const MAIL_SHORTCUTS = {
     { key: "Mod + Enter", description: "shortcuts.composer.send" },
     { key: "Mod + Shift + Enter", description: "shortcuts.composer.schedule_send" },
     { key: "t", description: "shortcuts.composer.template_picker" },
+    // Proofreading (components/email/proofreading); shown even without a checker.
+    { key: "Mod + '", description: "proofreading.shortcuts.next_issue" },
+    { key: "Mod + ;", description: "proofreading.shortcuts.previous_issue" },
   ],
 } as const;
 

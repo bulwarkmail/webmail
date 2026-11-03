@@ -1965,6 +1965,14 @@
         "above_quote": "Trước phần trích dẫn",
         "below_quote": "Sau phần trích dẫn"
       },
+      "signature_new_mail": {
+        "label": "Chữ ký trong thư mới",
+        "description": "Tự động chèn chữ ký của bạn khi soạn thư mới. Tắt nếu bạn muốn mỗi thư mới bắt đầu không có chữ ký."
+      },
+      "signature_reply_forward": {
+        "label": "Chữ ký khi trả lời và chuyển tiếp",
+        "description": "Tự động thêm chữ ký của bạn khi trả lời hoặc chuyển tiếp thư. Tắt nếu muốn gửi chúng không kèm chữ ký."
+      },
       "signature_separator": {
         "label": "Dấu phân cách chữ ký",
         "description": "Thêm dòng phân cách chuẩn \"-- \" trước chữ ký (RFC 3676). Tắt nếu bạn muốn nối thẳng nội dung thư với chữ ký."
@@ -6060,7 +6068,7 @@
       },
       "ui_tasks": {
         "title": "Thêm vào công việc",
-        "body": "Hiển thị các phần riêng của nó trong chi tiết công việc và các nút trong danh sách công việc."
+        "body": "Hiển thị các phần riêng của nó trong chi tiết công việc, các nút trong danh sách công việc và danh sách công việc riêng thay cho danh sách của Bulwark."
       },
       "ui_files": {
         "title": "Thêm vào tệp",
@@ -6089,6 +6097,10 @@
       "compose_write": {
         "title": "Thay đổi thư bạn đang soạn",
         "body": "Thay thế hoặc thêm văn bản vào thư khi bạn đang soạn và sử dụng plugin trong khung soạn thư. Bạn có thể hoàn tác từng thay đổi và vẫn là người quyết định có gửi thư hay không."
+      },
+      "compose_check": {
+        "title": "Kiểm tra những gì bạn viết",
+        "body": "Đọc những gì bạn viết trong trình soạn thảo khi bạn gõ và có thể gửi đến dịch vụ mà nó dùng. Chỉ khi bật soát lỗi, và không gửi gì khi thư được đặt để ký hoặc mã hóa. Văn bản bạn viết trước khi bật tùy chọn đó có thể đã được kiểm tra."
       },
       "email_forward": {
         "title": "Chuyển tiếp thư của bạn",
@@ -6379,6 +6391,77 @@
       "party_size": "Số người: {count}",
       "added_from": "Được thêm từ một thư của {domain}",
       "added_from_subject": "Được thêm từ thư “{subject}” của {domain}"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Chính tả",
+      "grammar": "Ngữ pháp",
+      "style": "Văn phong",
+      "other": "Gợi ý"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Không có gợi ý",
+      "suggestions": "Gợi ý",
+      "replace_with": "Thay bằng {text}",
+      "also": "{checker} cũng phát hiện",
+      "ignore": "Bỏ qua",
+      "add_to_dictionary": "Thêm vào từ điển",
+      "disable_rule": "Tắt quy tắc này",
+      "changed": "Văn bản đã thay đổi. Hãy chờ lần kiểm tra tiếp theo."
+    },
+    "list_item": "{word}: {message} Gợi ý: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Không có lỗi chính tả hay ngữ pháp} other {# lỗi chính tả hoặc ngữ pháp}}",
+    "status": {
+      "title": "Soát lỗi",
+      "off": "Đã tắt soát lỗi",
+      "paused": "Đã tạm dừng soát lỗi",
+      "rate_limited": "Đã tạm dừng kiểm tra",
+      "unavailable": "Không thể kiểm tra",
+      "checking": "Đang kiểm tra…",
+      "issues": "{count, plural, =0 {Không có vấn đề} other {# vấn đề}}"
+    },
+    "panel": {
+      "title": "Soát lỗi",
+      "required": "Tổ chức của bạn yêu cầu bật",
+      "check_message": "Kiểm tra thư này",
+      "notice": "Khi bạn gõ, văn bản bạn viết được gửi đến {checkers} để kiểm tra. Chữ ký của bạn và thư được trích dẫn không được gửi. Không có gì được gửi đi khi thư được đặt để ký hoặc mã hóa; những gì bạn viết trước khi bật tùy chọn đó có thể đã được kiểm tra.",
+      "turn_on": "Bật soát lỗi",
+      "paused_protected": "Không kiểm tra gì trong khi thư này được đặt để ký hoặc mã hóa.",
+      "paused_unknown": "{plugin} có thể ký hoặc mã hóa thư mà không hiển thị ở đây, nên không kiểm tra gì khi nó đang bật.",
+      "rate_limited": "{checker} yêu cầu chờ. Việc kiểm tra sẽ tiếp tục sau một phút.",
+      "unavailable": "{checker} hiện không thể kiểm tra. Nó sẽ thử lại khi bạn tiếp tục gõ.",
+      "no_issues": "Không tìm thấy vấn đề nào.",
+      "list_label": "Các vấn đề trong thư này",
+      "shortcuts": "Vấn đề tiếp theo: {next}. Trước đó: {previous}."
+    },
+    "notice": {
+      "on": "Soát lỗi đang bật. Khi bạn gõ, văn bản bạn viết được gửi đến {checkers} để kiểm tra, không kèm chữ ký của bạn và thư được trích dẫn. Không có gì được gửi đi khi thư được đặt để ký hoặc mã hóa; những gì bạn viết trước đó có thể đã được kiểm tra.",
+      "forced": "Tổ chức của bạn đã bật soát lỗi. Khi bạn gõ, văn bản bạn viết được gửi đến {checkers} để kiểm tra, không kèm chữ ký của bạn và thư được trích dẫn. Không có gì được gửi đi khi thư được đặt để ký hoặc mã hóa; những gì bạn viết trước đó có thể đã được kiểm tra.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Gửi khi vẫn còn vấn đề?",
+      "body": "Thư này vẫn còn {count, plural, other {# lỗi chính tả hoặc ngữ pháp}} chưa xử lý.",
+      "review": "Xem lại",
+      "send": "Vẫn gửi"
+    },
+    "settings": {
+      "title": "Soát lỗi",
+      "description": "Gạch dưới lỗi chính tả và ngữ pháp khi bạn viết, kèm gợi ý để sửa.",
+      "enable": "Kiểm tra chính tả và ngữ pháp khi tôi gõ",
+      "enable_description": "Văn bản bạn viết được gửi đến tiện ích bổ sung soát lỗi và dịch vụ mà nó dùng, không kèm chữ ký của bạn và thư được trích dẫn. Không có gì được gửi đi khi thư được đặt để ký hoặc mã hóa.",
+      "no_checker": "Chưa cài tiện ích bổ sung soát lỗi nào. Hãy nhờ quản trị viên thêm một tiện ích.",
+      "plugin_description": "Gửi những gì bạn viết đến {plugin}.",
+      "writing_language": "Ngôn ngữ viết",
+      "writing_language_description": "Ngôn ngữ bạn thường dùng để viết. Soát lỗi và trình kiểm tra chính tả của trình duyệt sẽ dùng ngôn ngữ này.",
+      "auto": "Tự động phát hiện"
+    },
+    "shortcuts": {
+      "next_issue": "Lỗi chính tả hoặc ngữ pháp tiếp theo",
+      "previous_issue": "Lỗi chính tả hoặc ngữ pháp trước đó"
     }
   }
 }

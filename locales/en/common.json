@@ -1953,6 +1953,14 @@
         "above_quote": "Before quoted text",
         "below_quote": "After quoted text"
       },
+      "signature_new_mail": {
+        "label": "Signature on new mail",
+        "description": "Automatically insert your signature when composing a new message. Turn off to start every new message without one."
+      },
+      "signature_reply_forward": {
+        "label": "Signature on replies & forwards",
+        "description": "Automatically append your signature when replying to or forwarding a message. Turn off to send them without one."
+      },
       "signature_separator": {
         "label": "Signature delimiter",
         "description": "Prefix the signature with the standard \"-- \" delimiter line (RFC 3676). Turn off if you'd rather flow straight from your message into the signature."
@@ -6048,7 +6056,7 @@
       },
       "ui_tasks": {
         "title": "Add to tasks",
-        "body": "Show its own sections in a task's details and buttons in the task list."
+        "body": "Show its own sections in a task's details, buttons in the task list, and its own task list in place of Bulwark's."
       },
       "ui_files": {
         "title": "Add to files",
@@ -6077,6 +6085,10 @@
       "compose_write": {
         "title": "Change the message you are writing",
         "body": "Replace or add text in a message while you write it, when you use the plugin in the composer. You can undo each change, and you still decide whether to send."
+      },
+      "compose_check": {
+        "title": "Check what you write",
+        "body": "Reads what you write in the composer while you type and may send it to the service it uses. Only where proofreading is on, and nothing while a message is set to be signed or encrypted. Text you wrote before you turned that on may already have been checked."
       },
       "email_forward": {
         "title": "Forward your mail",
@@ -6367,6 +6379,77 @@
       "party_size": "Party size: {count}",
       "added_from": "Added from a mail from {domain}",
       "added_from_subject": "Added from the mail “{subject}” from {domain}"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Spelling",
+      "grammar": "Grammar",
+      "style": "Style",
+      "other": "Suggestion"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "No suggestions",
+      "suggestions": "Suggestions",
+      "replace_with": "Replace with {text}",
+      "also": "Also from {checker}",
+      "ignore": "Ignore",
+      "add_to_dictionary": "Add to dictionary",
+      "disable_rule": "Turn off this rule",
+      "changed": "The text changed. Wait for the next check."
+    },
+    "list_item": "{word}: {message} Suggestion: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {No spelling or grammar issues} one {# spelling or grammar issue} other {# spelling or grammar issues}}",
+    "status": {
+      "title": "Proofreading",
+      "off": "Proofreading off",
+      "paused": "Proofreading paused",
+      "rate_limited": "Checking paused",
+      "unavailable": "Checking unavailable",
+      "checking": "Checking…",
+      "issues": "{count, plural, =0 {No issues} one {# issue} other {# issues}}"
+    },
+    "panel": {
+      "title": "Proofreading",
+      "required": "Required by your organisation",
+      "check_message": "Check this message",
+      "notice": "While you type, the text you write goes to {checkers} to be checked. Your signature and the quoted message are left out. Nothing is sent while a message is set to be signed or encrypted; what you wrote before turning that on may already have been checked.",
+      "turn_on": "Turn on proofreading",
+      "paused_protected": "Nothing is checked while this message is set to be signed or encrypted.",
+      "paused_unknown": "{plugin} can sign or encrypt messages without showing it here, so nothing is checked while it is on.",
+      "rate_limited": "{checker} asked to wait. Checking starts again in a minute.",
+      "unavailable": "{checker} can't check right now. It tries again when you keep typing.",
+      "no_issues": "No issues found.",
+      "list_label": "Issues in this message",
+      "shortcuts": "Next issue: {next}. Previous: {previous}."
+    },
+    "notice": {
+      "on": "Proofreading is on. While you type, the text you write goes to {checkers} to be checked, without your signature or the quoted message. Nothing is sent while a message is set to be signed or encrypted; what you wrote before that may already have been checked.",
+      "forced": "Your organisation turned on proofreading. While you type, the text you write goes to {checkers} to be checked, without your signature or the quoted message. Nothing is sent while a message is set to be signed or encrypted; what you wrote before that may already have been checked.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Send with open issues?",
+      "body": "{count, plural, one {# spelling or grammar issue is} other {# spelling or grammar issues are}} still open in this message.",
+      "review": "Review",
+      "send": "Send anyway"
+    },
+    "settings": {
+      "title": "Proofreading",
+      "description": "Underline spelling and grammar mistakes while you write, with suggestions to fix them.",
+      "enable": "Check spelling and grammar while I type",
+      "enable_description": "The text you write goes to the proofreading add-on and the service it uses, without your signature or quoted messages. Nothing is sent while a message is set to be signed or encrypted.",
+      "no_checker": "No proofreading add-on is installed. Ask your administrator to add one.",
+      "plugin_description": "Sends what you write to {plugin}.",
+      "writing_language": "Writing language",
+      "writing_language_description": "The language you usually write in. Proofreading and your browser's spell check use it.",
+      "auto": "Detect automatically"
+    },
+    "shortcuts": {
+      "next_issue": "Next spelling or grammar issue",
+      "previous_issue": "Previous spelling or grammar issue"
     }
   }
 }

@@ -1941,6 +1941,14 @@
         "above_quote": "Prima del testo citato",
         "below_quote": "Dopo il testo citato"
       },
+      "signature_new_mail": {
+        "label": "Firma sui nuovi messaggi",
+        "description": "Inserisce automaticamente la firma quando componi un nuovo messaggio. Disattiva per iniziare ogni nuovo messaggio senza."
+      },
+      "signature_reply_forward": {
+        "label": "Firma su risposte e inoltri",
+        "description": "Aggiunge automaticamente la firma quando rispondi o inoltri un messaggio. Disattiva per inviarli senza."
+      },
       "signature_separator": {
         "label": "Delimitatore firma",
         "description": "Anteporre alla firma la riga di delimitazione standard \"-- \" (RFC 3676). Disattiva se preferisci passare direttamente dal messaggio alla firma."
@@ -6050,6 +6058,10 @@
         "title": "Modificare il messaggio che stai scrivendo",
         "body": "Sostituire o aggiungere testo in un messaggio mentre lo scrivi, quando usi il plugin nell'editor. Puoi annullare ogni modifica e decidi sempre tu se inviarlo."
       },
+      "compose_check": {
+        "title": "Controllare ciò che scrivi",
+        "body": "Legge ciò che scrivi nell'editor mentre digiti e può inviarlo al servizio che usa. Solo quando la correzione è attiva, e nulla finché un messaggio è impostato per essere firmato o cifrato. Il testo scritto prima di attivarlo potrebbe essere già stato controllato."
+      },
       "email_forward": {
         "title": "Inoltrare la tua posta",
         "body": "Inoltrare messaggi dal tuo account con i loro allegati, senza aprire l'editor. Ti viene chiesto prima del primo inoltro a ciascun indirizzo."
@@ -6068,7 +6080,7 @@
       },
       "ui_tasks": {
         "title": "Aggiungere elementi alla vista attività",
-        "body": "Mostrare le proprie sezioni nei dettagli di un'attività e pulsanti nell'elenco delle attività."
+        "body": "Mostrare le proprie sezioni nei dettagli di un'attività, pulsanti nell'elenco delle attività e un proprio elenco delle attività al posto di quello di Bulwark."
       },
       "ui_files": {
         "title": "Aggiungere elementi alla vista file",
@@ -6367,6 +6379,77 @@
       "party_size": "Persone: {count}",
       "added_from": "Aggiunto da un’e-mail di {domain}",
       "added_from_subject": "Aggiunto dall’e-mail «{subject}» di {domain}"
+    }
+  },
+  "proofreading": {
+    "kind": {
+      "spelling": "Ortografia",
+      "grammar": "Grammatica",
+      "style": "Stile",
+      "other": "Suggerimento"
+    },
+    "popup": {
+      "label": "{kind}: {word}",
+      "no_suggestions": "Nessun suggerimento",
+      "suggestions": "Suggerimenti",
+      "replace_with": "Sostituisci con {text}",
+      "also": "Anche da {checker}",
+      "ignore": "Ignora",
+      "add_to_dictionary": "Aggiungi al dizionario",
+      "disable_rule": "Disattiva questa regola",
+      "changed": "Il testo è cambiato. Attendi il prossimo controllo."
+    },
+    "list_item": "{word}: {message} Suggerimento: {suggestion}",
+    "list_item_no_suggestion": "{word}: {message}",
+    "announce_count": "{count, plural, =0 {Nessun errore di ortografia o grammatica} one {# errore di ortografia o grammatica} other {# errori di ortografia o grammatica}}",
+    "status": {
+      "title": "Correzione",
+      "off": "Correzione disattivata",
+      "paused": "Correzione in pausa",
+      "rate_limited": "Controllo in pausa",
+      "unavailable": "Controllo non disponibile",
+      "checking": "Controllo in corso…",
+      "issues": "{count, plural, =0 {Nessun problema} one {# problema} other {# problemi}}"
+    },
+    "panel": {
+      "title": "Correzione",
+      "required": "Richiesto dalla tua organizzazione",
+      "check_message": "Controlla questo messaggio",
+      "notice": "Mentre digiti, il testo che scrivi viene inviato a {checkers} per il controllo. La tua firma e il messaggio citato sono esclusi. Non viene inviato nulla finché un messaggio è impostato per essere firmato o cifrato; ciò che hai scritto prima di attivarlo potrebbe essere già stato controllato.",
+      "turn_on": "Attiva la correzione",
+      "paused_protected": "Non viene controllato nulla finché questo messaggio è impostato per essere firmato o cifrato.",
+      "paused_unknown": "{plugin} può firmare o cifrare i messaggi senza mostrarlo qui, quindi non viene controllato nulla finché è attivo.",
+      "rate_limited": "{checker} ha chiesto di attendere. Il controllo riprende tra un minuto.",
+      "unavailable": "{checker} non può controllare in questo momento. Riprova quando continui a scrivere.",
+      "no_issues": "Nessun problema trovato.",
+      "list_label": "Problemi in questo messaggio",
+      "shortcuts": "Problema successivo: {next}. Precedente: {previous}."
+    },
+    "notice": {
+      "on": "La correzione è attiva. Mentre digiti, il testo che scrivi viene inviato a {checkers} per il controllo, senza la tua firma né il messaggio citato. Non viene inviato nulla finché un messaggio è impostato per essere firmato o cifrato; ciò che hai scritto prima potrebbe essere già stato controllato.",
+      "forced": "La tua organizzazione ha attivato la correzione. Mentre digiti, il testo che scrivi viene inviato a {checkers} per il controllo, senza la tua firma né il messaggio citato. Non viene inviato nulla finché un messaggio è impostato per essere firmato o cifrato; ciò che hai scritto prima potrebbe essere già stato controllato.",
+      "ok": "OK"
+    },
+    "send_warning": {
+      "title": "Inviare con problemi aperti?",
+      "body": "{count, plural, one {# errore di ortografia o grammatica è ancora aperto} other {# errori di ortografia o grammatica sono ancora aperti}} in questo messaggio.",
+      "review": "Rivedi",
+      "send": "Invia comunque"
+    },
+    "settings": {
+      "title": "Correzione",
+      "description": "Sottolinea gli errori di ortografia e grammatica mentre scrivi, con suggerimenti per correggerli.",
+      "enable": "Controlla ortografia e grammatica mentre digito",
+      "enable_description": "Il testo che scrivi viene inviato al componente aggiuntivo di correzione e al servizio che usa, senza la tua firma né i messaggi citati. Non viene inviato nulla finché un messaggio è impostato per essere firmato o cifrato.",
+      "no_checker": "Nessun componente aggiuntivo di correzione installato. Chiedi all'amministratore di aggiungerne uno.",
+      "plugin_description": "Invia ciò che scrivi a {plugin}.",
+      "writing_language": "Lingua di scrittura",
+      "writing_language_description": "La lingua in cui scrivi di solito. La usano la correzione e il controllo ortografico del browser.",
+      "auto": "Rileva automaticamente"
+    },
+    "shortcuts": {
+      "next_issue": "Errore di ortografia o grammatica successivo",
+      "previous_issue": "Errore di ortografia o grammatica precedente"
     }
   }
 }

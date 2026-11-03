@@ -5,6 +5,8 @@
 // at a time. Prompts collect one or more (optionally masked) text fields so a
 // plugin never has to fall back to the sandbox-blocked `window.prompt`.
 
+import type { AnchorRect } from './dialog-anchor';
+
 export type DialogKind = 'confirm' | 'alert' | 'prompt' | 'custom';
 
 export interface PromptField {
@@ -56,6 +58,12 @@ export interface DialogRequest {
   extraProps?: Record<string, unknown>;
   /** Optional width override in px for the dialog box (custom kind only). */
   width?: number;
+  /**
+   * Custom kind only: draw the dialog as a popover next to this place (the
+   * control whose activation led to it, see dialog-anchor.ts) instead of
+   * centred. Set by the host, never taken from the plugin.
+   */
+  anchor?: AnchorRect;
   /** Called when the dialog closes with its typed result (see DialogResult). */
   resolve: (result: unknown) => void;
 }
