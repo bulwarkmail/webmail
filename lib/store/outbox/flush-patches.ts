@@ -42,17 +42,26 @@ export type PatchOutcome =
 
 export interface PatchIo {
   request(calls: MethodCall[], using: string[]): Promise<JmapResponse>;
-  /** The server refused the request itself, for good: not an outage, and no use retrying. */
-  isRefusal(error: unknown): boolean;
 }
 
 const BATCH = 200;
 /** Method errors that mean "not now" rather than "no". */
 const RETRY_LATER = new Set(['serverUnavailable', 'serverFail', 'serverPartialFail', 'rateLimit', 'requestTooLarge']);
 
-function isLater(error: unknown, io: PatchIo): boolean {
+/**
+ * The server refused the request itself, for good: a JMAP problem document with
+ * a status that says so. `limit` is the parallel-request ceiling, which passes,
+ * and an error page says something about a proxy, not about this request.
+ */
+export function isRequestRefusal(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const problem = /^Request failed: (?:400|403|404|413|422)\b[\s\S]*?"type"\s*:\s*"urn:ietf:params:jmap:error:([A-Za-z]+)"/.exec(error.message);
+  return !!problem && problem[1] !== 'limit';
+}
+
+function isLater(error: unknown): boolean {
   if (error instanceof JmapMethodError) return RETRY_LATER.has(error.type);
-  return !io.isRefusal(error);
+  return !isRequestRefusal(error);
 }
 
 function conflict(row: PendingPatch, reason: ConflictReason, server?: EmailObject | null, detail?: string): PatchOutcome {
@@ -67,14 +76,36 @@ function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-async function flushBatch(io: PatchIo, jmap: string, rows: PendingPatch[]): Promise<PatchOutcome[]> {
+async function readRecords(io: PatchIo, jmap: string, rows: PendingPatch[]): Promise<Map<string, EmailObject>> {
   const read = await io.request([['Email/get', {
     accountId: jmap,
     ids: rows.map((row) => row.recordId),
     properties: EMAIL_LIST_PROPERTIES,
   }, 'g']], MAIL_USING);
   const [, got] = responseFor(read, 'g');
-  const current = new Map((got.list as EmailObject[]).map((email) => [email.id, email]));
+  return new Map((got.list as EmailObject[]).map((email) => [email.id, email]));
+}
+
+/**
+ * The whole batch was refused. The server's copy of each record goes with the
+ * conflict so that this device shows what's true again. When even that read is
+ * refused the record stays as it is here until the next sync.
+ */
+async function refusedOutcomes(io: PatchIo, jmap: string, rows: PendingPatch[], refusal: unknown): Promise<PatchOutcome[] | null> {
+  let current: Map<string, EmailObject> | null = null;
+  try {
+    current = await readRecords(io, jmap, rows);
+  } catch (error) {
+    if (isLater(error)) return null;
+  }
+  return rows.map((row) => {
+    if (current && !current.has(row.recordId)) return row.op === 'destroy' ? done(row) : conflict(row, 'gone', null);
+    return conflict(row, 'refused', current?.get(row.recordId), errorText(refusal));
+  });
+}
+
+async function flushBatch(io: PatchIo, jmap: string, rows: PendingPatch[]): Promise<PatchOutcome[]> {
+  const current = await readRecords(io, jmap, rows);
 
   const outcomes: PatchOutcome[] = [];
   const update: Record<string, Patch> = {};
@@ -129,12 +160,13 @@ export async function flushPatches(
   for (const [jmap, rows] of byAccount) {
     for (let i = 0; i < rows.length; i += BATCH) {
       const batch = rows.slice(i, i + BATCH);
-      let outcomes: PatchOutcome[];
+      let outcomes: PatchOutcome[] | null;
       try {
         outcomes = await flushBatch(io, jmap, batch);
       } catch (error) {
-        if (isLater(error, io)) return false;
-        outcomes = batch.map((row) => conflict(row, 'refused', undefined, errorText(error)));
+        if (isLater(error)) return false;
+        outcomes = await refusedOutcomes(io, jmap, batch, error);
+        if (!outcomes) return false;
       }
       await report(outcomes);
     }

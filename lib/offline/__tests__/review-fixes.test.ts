@@ -25,7 +25,7 @@ import {
   wipeEverything,
 } from '../offline-mode';
 import { flushQueue, settleStaleSends, SENDING_STALE_MS } from '../flush';
-import { claimForSending, holdFile, queueSend, readQueue } from '../queue';
+import { claimForSending, holdFile, LOCAL_BLOB_PREFIX, queueSend, readQueue, updateOutboxEntry } from '../queue';
 import { forgetLegacyMove } from '../migrate-legacy';
 import { consumeLost } from '../lost';
 import { getOutboxHooks } from '../outbox-hooks';
@@ -292,6 +292,66 @@ describe('11: starting from the device', () => {
     expect(await offlineSessionFor('acc', { withFolders: true })).toBeNull();
     await store.sync('acc');
     expect(await offlineSessionFor('acc', { withFolders: true })).toMatchObject({ primaryAccounts: { 'urn:ietf:params:jmap:mail': JMAP_ACCOUNT } });
+  });
+});
+
+describe('a send the server couldn\'t take right now', () => {
+  const statusAfter = async (error: Error) => {
+    writeEnabled(['acc']);
+    await queueSend('acc', { subject: 'Hello', to: [] }, { kind: 'email', args: [] });
+    const notify = vi.fn();
+    const retryLater = vi.fn();
+    const sendEmail = vi.fn(async () => { throw error; });
+    await flushQueue('acc', fakeClient('https://mail.example.org', { sendEmail }) as unknown as JMAPClient, { notify, allowed: () => true, retryLater });
+    const row = (await readQueue('acc')).outbox[0];
+    return { row, notify, retryLater };
+  };
+
+  it.each([
+    ['a rate limit', Object.assign(new Error('Rate limited by server'), { name: 'RateLimitError' })],
+    ['a login that needs renewing', new Error('Request failed: 401 - ')],
+    ['a store that went away', Object.assign(new Error('gone'), { name: 'StoreOwnerGoneError' })],
+    ['a full disk', Object.assign(new Error('full'), { name: 'QuotaExceededError' })],
+  ])('goes back to waiting, on a timer, after %s', async (_name, error) => {
+    const { row, notify, retryLater } = await statusAfter(error);
+    expect(row.status).toBe('waiting');
+    expect(retryLater).toHaveBeenCalled();
+    expect(notify).not.toHaveBeenCalled();
+  });
+
+  it.each(['Request failed: 500 - oops', 'Request failed: 501 - nope'])('is looked up after %s, which may have got through', async (message) => {
+    const { row, notify, retryLater } = await statusAfter(new Error(message));
+    expect(row.status).toBe('uncertain');
+    expect(retryLater).toHaveBeenCalled();
+    expect(notify).not.toHaveBeenCalled();
+  });
+
+  it('fails, for the user to see, on a refusal', async () => {
+    const { row, notify } = await statusAfter(new Error('Request failed: 400 - {"type":"urn:ietf:params:jmap:error:notRequest"}'));
+    expect(row.status).toBe('failed');
+    expect(notify).toHaveBeenCalledWith(expect.objectContaining({ kind: 'send-failed' }));
+  });
+
+  it('keeps the copy on the server through a wait', async () => {
+    writeEnabled(['acc']);
+    const id = await queueSend('acc', { subject: 'Hello', to: [] }, { kind: 'email', args: [] });
+    const [entry] = (await readQueue('acc')).outbox;
+    await updateOutboxEntry(entry, { status: 'waiting', copyId: 'copy-1' });
+    const sendEmail = vi.fn(async () => { throw new Error('Request failed: 429 - '); });
+    await flushQueue('acc', fakeClient('https://mail.example.org', { sendEmail }) as unknown as JMAPClient, { notify: vi.fn(), allowed: () => true });
+    const row = (await readQueue('acc')).outbox.find((candidate) => candidate.id === id);
+    expect(row).toMatchObject({ status: 'waiting', copyId: 'copy-1' });
+  });
+
+  it('doesn\'t send a stand-in for a file the upload held again', async () => {
+    writeEnabled(['acc']);
+    const { blobId } = await holdFile('acc', new File(['x'], 'x.txt', { type: 'text/plain' }), 'x.txt');
+    await queueSend('acc', { subject: 'Hello', to: [] }, { kind: 'email', args: [undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, [{ blobId, name: 'x.txt', type: 'text/plain', size: 1 }]] });
+    const sendEmail = vi.fn(async () => ({ scheduled: false, emailId: 'e', emailSubmissionId: 's' }));
+    const uploadBlob = vi.fn(async () => ({ blobId: `${LOCAL_BLOB_PREFIX}stand-in`, size: 1, type: 'text/plain' }));
+    await flushQueue('acc', fakeClient('https://mail.example.org', { sendEmail, uploadBlob }) as unknown as JMAPClient, { notify: vi.fn(), allowed: () => true });
+    expect(sendEmail).not.toHaveBeenCalled();
+    expect((await readQueue('acc')).outbox[0].status).toBe('waiting');
   });
 });
 

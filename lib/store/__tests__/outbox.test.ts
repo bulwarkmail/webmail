@@ -62,9 +62,8 @@ async function boxes() {
   return Object.fromEntries((answer?.methodResponses[0][1].list as Array<{ id: string; totalEmails: number; unreadEmails: number }>).map((box) => [box.id, [box.totalEmails, box.unreadEmails]]));
 }
 
-const io = (server: FakeJmapMail = t.server, isRefusal: (error: unknown) => boolean = () => false) => ({
+const io = (server: FakeJmapMail = t.server) => ({
   request: (calls: MethodCall[]) => server.request(calls),
-  isRefusal,
 });
 
 async function flush(ioOverride = io()) {
@@ -358,16 +357,54 @@ describe('when the server can\'t be reached during a flush', () => {
     expect(await pending()).toHaveLength(1);
   });
 
-  it('turns a request the server refuses for good into a conflict, not a stuck queue', async () => {
+  /** Refuses the Email/set with this answer, and reads go through. */
+  const refusingSet = (message: string) => ({
+    request: async (calls: MethodCall[]) => {
+      if (calls[0][0] === 'Email/set') throw new Error(message);
+      return t.server.request(calls);
+    },
+  });
+  const PROBLEM = 'Request failed: 400 - {"type":"urn:ietf:params:jmap:error:notRequest","status":400}';
+
+  it('turns a request the server refuses for good into a conflict, and shows what the server has', async () => {
     await update({ a: { 'keywords/$seen': true } });
-    const refusing = {
-      request: async () => { throw new Error('Request failed: 400 - bad'); },
-      isRefusal: (error: unknown) => /^Request failed: 400/.test((error as Error).message),
-    };
-    const { outcomes, finished } = await flush(refusing);
+    const { outcomes, finished } = await flush(refusingSet(PROBLEM));
     expect(finished).toBe(true);
     expect(outcomes[0]).toMatchObject({ outcome: 'conflict', reason: 'refused' });
     expect(await pending()).toEqual([]);
+    // The change is gone, and so is its effect here.
+    const answer = await t.engine.answer([['Email/get', { ids: ['a'], properties: ['keywords'] }, 'g']]);
+    expect(answer?.methodResponses[0][1].list[0].keywords).toEqual({});
+    expect((await read()).conflicts).toHaveLength(1);
+  });
+
+  it.each([
+    ['the parallel-request limit', 'Request failed: 400 - {"type":"urn:ietf:params:jmap:error:limit","limit":"maxConcurrentRequests"}'],
+    ['a proxy\'s error page', 'Request failed: 403 - <html>Forbidden</html>'],
+    ['a body that\'s no JMAP problem', 'Request failed: 413 - Payload too large'],
+    ['a server error', 'Request failed: 500 - oops'],
+  ])('keeps the change for later on %s', async (_name, message) => {
+    await update({ a: { 'keywords/$seen': true } });
+    const { outcomes, finished } = await flush(refusingSet(message));
+    expect(finished).toBe(false);
+    expect(outcomes).toEqual([]);
+    expect(await pending()).toHaveLength(1);
+    expect((await read()).conflicts).toEqual([]);
+  });
+
+  it('keeps the change for later when the read after a refusal fails', async () => {
+    await update({ a: { 'keywords/$seen': true } });
+    let calls = 0;
+    const { finished } = await flush({
+      request: async (batch: MethodCall[]) => {
+        calls += 1;
+        if (calls === 1) return t.server.request(batch);
+        if (batch[0][0] === 'Email/set') throw new Error(PROBLEM);
+        throw new TypeError('Failed to fetch');
+      },
+    });
+    expect(finished).toBe(false);
+    expect(await pending()).toHaveLength(1);
   });
 
   it('keeps a change made while the flush ran, and doesn\'t compare it with the state the flush caused', async () => {
