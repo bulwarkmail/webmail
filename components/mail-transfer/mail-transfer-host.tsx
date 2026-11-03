@@ -8,7 +8,7 @@ import { showTaskbarProgress } from "@/lib/desktop/taskbar-progress";
 import { onDeviceWipe } from "@/lib/offline/wipe-registry";
 import { onBeforeSignOut } from "@/lib/sign-out-cleanup";
 import { clearCheckpointsFor } from "@/lib/mail-import/checkpoints";
-import { sweepPrivateExports } from "@/lib/mail-export/sinks";
+import { dropExportFiles, sweepPrivateExports } from "@/lib/mail-export/sinks";
 import { useAuthStore } from "@/stores/auth-store";
 import { toast } from "@/stores/toast-store";
 import { MailImportDialog } from "./mail-import-dialog";
@@ -24,14 +24,25 @@ const SIGN_OUT_WAIT_MS = 1500;
  * browser. `all`: whoever's job it is. Another account's job goes on.
  */
 async function stopJobOf(accountId: string): Promise<void> {
+  // Finished exports waiting out their grace period, with the dialog long closed.
+  dropExportFiles(accountId);
   const store = useMailTransferStore.getState();
   const job = store.job;
   if (!job || !(accountId === "all" || !job.scope || job.scope === accountId)) return;
+  const forget = () => {
+    const now = useMailTransferStore.getState();
+    if (now.job?.controller === job.controller) now.close({ now: true });
+  };
   if (isJobActive(job)) {
     store.cancelJob("signout");
     await Promise.race([job.finished, new Promise((resolve) => setTimeout(resolve, SIGN_OUT_WAIT_MS))]);
+    // Still going after the wait: close() leaves a running job be, so it goes when it ends.
+    if (isJobActive(useMailTransferStore.getState().job)) {
+      void job.finished?.then(forget, forget);
+      return;
+    }
   }
-  useMailTransferStore.getState().close({ now: true });
+  forget();
 }
 
 /**

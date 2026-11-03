@@ -2,23 +2,29 @@ import { downloadAllowed, downloadAllowedQuietly } from "@/lib/download-guard";
 import { localExportClient } from "@/lib/mail-export/local-store-client";
 import { runExport, type ExportFolder, type ExportFormat } from "@/lib/mail-export/engine";
 import { guardedSink, type ExportSink } from "@/lib/mail-export/sinks";
+import { scopeDecided } from "@/lib/offline/offline-mode";
 import { isOfflineNow, useOfflineStore } from "@/lib/offline/state";
 import { getStore } from "@/lib/store/client/api";
 import type { StoreSession } from "@/lib/store/engine/transport";
 import { useAuthStore } from "@/stores/auth-store";
 import { useMailTransferStore } from "@/stores/mail-transfer-store";
 import { usePolicyStore } from "@/stores/policy-store";
+import { useAccountSubjects } from "@/lib/org/account-subjects";
 
 const MAIL_CAPABILITY = "urn:ietf:params:jmap:mail";
 
 /**
- * Whether the organisation lets this account export. Unlike a browser online, a
- * start offline may not have heard the organisation: not known means no.
+ * Whether the organisation has said what applies to this account, down to its
+ * groups. A start offline may not have heard it, and a group or domain scope may
+ * forbid what Everyone may do: not known means no.
  */
+export function localExportDecided(account: string): boolean {
+  return scopeDecided(account);
+}
+
+/** Whether the organisation lets this account export. */
 export function localExportAllowed(account: string): boolean {
-  const { loaded, partial, source } = usePolicyStore.getState();
-  if (!loaded || partial || source === "none" || source === "fallback") return false;
-  return downloadAllowedQuietly("export", account);
+  return localExportDecided(account) && downloadAllowedQuietly("export", account);
 }
 
 function clientOf(account: string) {
@@ -68,6 +74,10 @@ export function startLocalExport(input: StartLocalExportInput): boolean {
   const unwatchPolicy = usePolicyStore.subscribe(() => {
     if (!localExportAllowed(account)) controller.abort("policy");
   });
+  // What another account's groups turn out to be can say no as well.
+  const unwatchSubjects = useAccountSubjects.subscribe(() => {
+    if (!localExportAllowed(account)) controller.abort("policy");
+  });
   const unwatchOffline = useOfflineStore.subscribe((state) => {
     if (!state.enabled.includes(account)) controller.abort("offline-off");
   });
@@ -91,11 +101,13 @@ export function startLocalExport(input: StartLocalExportInput): boolean {
         sink: guardedSink(input.sink, () => localExportAllowed(account)),
         signal: controller.signal,
         requestsPerMinute: Infinity,
+        noEmptyFile: true,
         onProgress: (progress) => useMailTransferStore.getState().updateProgress(progress),
       });
       useMailTransferStore.getState().updateProgress(result);
     } finally {
       unwatchPolicy();
+      unwatchSubjects();
       unwatchOffline();
       ended();
     }

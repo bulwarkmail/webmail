@@ -5848,7 +5848,7 @@
     "settings_label": "Exporter le courrier conservé",
     "settings_description": "Enregistrez le courrier de cet appareil en fichiers mbox ou .eml. Cela fonctionne hors ligne.",
     "title": "Exporter le courrier conservé",
-    "description": "Enregistre ce que cet appareil conserve, à l'octet près. Le courrier plus ancien que la période choisie n'y figure pas. Pour tout enregistrer depuis le serveur, utilisez « Exporter tous les e-mails ».",
+    "description": "Enregistre les originaux que cet appareil conserve. Les fichiers .eml sont des copies exactes. Un fichier mbox ajoute les marques que son format exige et écrit l'état lu et suivi dans les en-têtes de chaque message, à la place de ceux qu'il avait. Le courrier plus ancien que la période choisie n'y figure pas. Pour tout enregistrer depuis le serveur, utilisez « Exporter tous les e-mails ».",
     "folders_label": "Dossiers",
     "all_folders": "Tous les dossiers",
     "folder_kept": "{kept} sur {total} ici",
@@ -5865,7 +5865,16 @@
     "retry": "Réessayer en ligne",
     "retry_online": "Vous êtes en ligne : ces messages peuvent venir du serveur.",
     "retry_offline": "Vous pourrez réessayer une fois en ligne.",
-    "settings_button": "Exporter…"
+    "settings_button": "Exporter…",
+    "message_failed": "Le serveur n'a pas fourni ce message.",
+    "failed_generic": "L'exportation s'est arrêtée à cause d'une erreur. Réessayez.",
+    "stopped_limit": "L'exportation s'est arrêtée à {limit}, le maximum que ce navigateur peut contenir. Choisissez moins de dossiers, ou utilisez Chromium, Firefox ou l'application de bureau.",
+    "over_limit": "Ce navigateur peut contenir au plus {limit}, et ce choix fait environ {size}. Choisissez moins de dossiers, ou utilisez Chromium, Firefox ou l'application de bureau.",
+    "no_room": "Cette exportation demande environ {size}, et ce navigateur dispose de {free}. Choisissez moins de dossiers ou libérez de l'espace.",
+    "stopped_no_room": "Le navigateur n'a plus de place pour l'exportation. Choisissez moins de dossiers ou libérez de l'espace.",
+    "stopped_offline_off": "L'exportation s'est arrêtée car ce compte ne conserve plus de courrier sur cet appareil.",
+    "policy_unknown": "Les règles de votre organisation pour ce compte ne sont pas encore connues, l'exportation reste donc désactivée pour l'instant.",
+    "leftover_file": "Le fichier {name} n'a pas pu être retiré de l'endroit où vous l'avez enregistré. Il est incomplet, vous pouvez le supprimer."
   },
   "deep_link": {
     "message_not_found": "Ce message n'est plus disponible.",

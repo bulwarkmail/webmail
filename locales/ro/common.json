@@ -5848,7 +5848,7 @@
     "settings_label": "Exportă mesajele păstrate",
     "settings_description": "Salvați mesajele de pe acest dispozitiv ca fișiere mbox sau .eml. Funcționează și offline.",
     "title": "Exportă mesajele păstrate",
-    "description": "Salvează ce păstrează acest dispozitiv, octet cu octet. Mesajele mai vechi decât perioada aleasă nu sunt incluse. Pentru a salva tot de pe server, folosiți „Exportă toate e-mailurile”.",
+    "description": "Salvează originalele păstrate pe acest dispozitiv. Fișierele .eml sunt copii exacte. Un fișier mbox adaugă marcajele cerute de format și scrie starea de citit și marcat în antetele fiecărui mesaj, în locul celor existente. Mesajele mai vechi decât perioada aleasă nu sunt incluse. Pentru a salva tot de pe server, folosiți „Exportă toate e-mailurile”.",
     "folders_label": "Dosare",
     "all_folders": "Toate dosarele",
     "folder_kept": "{kept} din {total} aici",
@@ -5865,7 +5865,16 @@
     "retry": "Încearcă din nou online",
     "retry_online": "Sunteți online acum, deci pot veni de pe server.",
     "retry_offline": "Puteți încerca din nou când sunteți online.",
-    "settings_button": "Exportă…"
+    "settings_button": "Exportă…",
+    "message_failed": "Serverul nu a livrat acest mesaj.",
+    "failed_generic": "Exportul s-a oprit din cauza unei erori. Încercați din nou.",
+    "stopped_limit": "Exportul s-a oprit la {limit}, maximul pe care îl poate păstra acest browser. Alegeți mai puține dosare sau folosiți Chromium, Firefox ori aplicația desktop.",
+    "over_limit": "Acest browser poate păstra cel mult {limit}, iar această alegere are aproximativ {size}. Alegeți mai puține dosare sau folosiți Chromium, Firefox ori aplicația desktop.",
+    "no_room": "Acest export are nevoie de aproximativ {size}, iar acest browser mai are {free}. Alegeți mai puține dosare sau eliberați spațiu.",
+    "stopped_no_room": "Browserul a rămas fără spațiu pentru export. Alegeți mai puține dosare sau eliberați spațiu.",
+    "stopped_offline_off": "Exportul s-a oprit deoarece acest cont nu mai păstrează mesaje pe acest dispozitiv.",
+    "policy_unknown": "Regulile organizației dvs. pentru acest cont nu se cunosc încă, așa că exportul rămâne oprit deocamdată.",
+    "leftover_file": "Fișierul {name} nu a putut fi eliminat din locul unde l-ați salvat. Este incomplet, îl puteți șterge."
   },
   "deep_link": {
     "message_not_found": "Acest mesaj nu mai este disponibil.",

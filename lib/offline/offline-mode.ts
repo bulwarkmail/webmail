@@ -1100,7 +1100,7 @@ export async function wipeEverything(): Promise<void> {
 }
 
 /** The organisation's word on this account, from the server or the last fetch. Defaults aren't its word. */
-function scopeDecided(account: string): boolean {
+export function scopeDecided(account: string): boolean {
   const { loaded, source, partial } = usePolicyStore.getState();
   // The public part a page gets before it's signed in has no caps and no scopes in it.
   return loaded && !partial && (source === 'server' || source === 'cache') && policyDecided(account);

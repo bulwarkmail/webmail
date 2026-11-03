@@ -5848,7 +5848,7 @@
     "settings_label": "Gespeicherte E-Mails exportieren",
     "settings_description": "Speichern Sie die E-Mails auf diesem Gerät als mbox- oder .eml-Dateien. Das geht auch offline.",
     "title": "Gespeicherte E-Mails exportieren",
-    "description": "Das speichert, was dieses Gerät aufbewahrt, Byte für Byte. E-Mails, die älter als der gewählte Zeitraum sind, fehlen darin. Um alles auf dem Server zu speichern, nutzen Sie „Alle E-Mails exportieren“.",
+    "description": "Das speichert die Originale, die dieses Gerät aufbewahrt. .eml-Dateien sind exakte Kopien. Eine mbox-Datei ergänzt die Markierungen, die ihr Format braucht, und schreibt den Gelesen- und Markiert-Status in die Kopfzeilen jeder Nachricht, anstelle vorhandener Angaben. E-Mails, die älter als der gewählte Zeitraum sind, fehlen darin. Um alles auf dem Server zu speichern, nutzen Sie „Alle E-Mails exportieren“.",
     "folders_label": "Ordner",
     "all_folders": "Alle Ordner",
     "folder_kept": "{kept} von {total} hier",
@@ -5865,7 +5865,16 @@
     "retry": "Online erneut versuchen",
     "retry_online": "Sie sind jetzt online, diese Nachrichten können also vom Server kommen.",
     "retry_offline": "Sie können es erneut versuchen, sobald Sie online sind.",
-    "settings_button": "Exportieren…"
+    "settings_button": "Exportieren…",
+    "message_failed": "Der Server hat diese Nachricht nicht geliefert.",
+    "failed_generic": "Der Export wurde wegen eines Fehlers beendet. Versuchen Sie es erneut.",
+    "stopped_limit": "Der Export wurde bei {limit} beendet, mehr kann dieser Browser nicht halten. Wählen Sie weniger Ordner aus, oder nutzen Sie Chromium, Firefox oder die Desktop-App.",
+    "over_limit": "Dieser Browser kann höchstens {limit} halten, und diese Auswahl hat etwa {size}. Wählen Sie weniger Ordner aus, oder nutzen Sie Chromium, Firefox oder die Desktop-App.",
+    "no_room": "Dieser Export braucht etwa {size}, und dieser Browser hat dafür noch {free} frei. Wählen Sie weniger Ordner aus, oder schaffen Sie Platz.",
+    "stopped_no_room": "Dem Browser ging der Platz für den Export aus. Wählen Sie weniger Ordner aus, oder schaffen Sie Platz.",
+    "stopped_offline_off": "Der Export wurde beendet, weil dieses Konto keine E-Mails mehr auf diesem Gerät aufbewahrt.",
+    "policy_unknown": "Die Regeln Ihrer Organisation für dieses Konto sind noch nicht bekannt, daher bleibt der Export vorerst aus.",
+    "leftover_file": "Die Datei {name} konnte nicht vom Speicherort entfernt werden. Sie ist unvollständig, Sie können sie löschen."
   },
   "deep_link": {
     "message_not_found": "Diese Nachricht ist nicht mehr verfügbar.",

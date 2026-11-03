@@ -5848,7 +5848,7 @@
     "settings_label": "Export kept mail",
     "settings_description": "Save the mail on this device as mbox or .eml files. This works offline.",
     "title": "Export kept mail",
-    "description": "This saves what this device keeps, byte for byte. Mail older than the period you chose isn't in it. To save everything on the server, use “Export all mail”.",
+    "description": "This saves the originals this device keeps. .eml files are exact copies. An mbox file adds the markings its format needs and writes read and flag state into each message's headers, in place of any it had. Mail older than the period you chose isn't in it. To save everything on the server, use “Export all mail”.",
     "folders_label": "Folders",
     "all_folders": "All folders",
     "folder_kept": "{kept} of {total} here",
@@ -5865,7 +5865,16 @@
     "retry": "Try again online",
     "retry_online": "You're online now, so these can come from the server.",
     "retry_offline": "You can try again when you're online.",
-    "settings_button": "Export…"
+    "settings_button": "Export…",
+    "message_failed": "The server didn't give this message.",
+    "failed_generic": "The export stopped because of an error. Try again.",
+    "stopped_limit": "The export stopped at {limit}, the most this browser can hold. Choose fewer folders, or use Chromium, Firefox or the desktop app.",
+    "over_limit": "This browser can hold at most {limit}, and this choice is about {size}. Choose fewer folders, or use Chromium, Firefox or the desktop app.",
+    "no_room": "This export needs about {size}, and this browser has {free} left for it. Choose fewer folders or free up space.",
+    "stopped_no_room": "The browser ran out of room for the export. Choose fewer folders or free up space.",
+    "stopped_offline_off": "The export stopped because this account no longer keeps mail on this device.",
+    "policy_unknown": "Your organisation's rules for this account aren't known yet, so exporting stays off for now.",
+    "leftover_file": "The file {name} couldn't be removed from where you saved it. It's incomplete, so you can delete it."
   },
   "deep_link": {
     "message_not_found": "This message is no longer available.",

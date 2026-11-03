@@ -5848,7 +5848,7 @@
     "settings_label": "导出已保存的邮件",
     "settings_description": "将此设备上的邮件保存为 mbox 或 .eml 文件。离线时也可使用。",
     "title": "导出已保存的邮件",
-    "description": "按原样保存此设备保留的内容。早于所选时间范围的邮件不包含在内。要保存服务器上的全部内容,请使用“导出所有邮件”。",
+    "description": "保存此设备保留的原件。.eml 文件是完全相同的副本。mbox 文件会加上其格式需要的标记,并把已读和标记状态写入每封邮件的邮件头,替换原有内容。早于所选时间范围的邮件不包含在内。要保存服务器上的全部内容,请使用“导出所有邮件”。",
     "folders_label": "文件夹",
     "all_folders": "所有文件夹",
     "folder_kept": "此处 {kept} / {total}",
@@ -5865,7 +5865,16 @@
     "retry": "联网后重试",
     "retry_online": "现在已联网,可以从服务器获取。",
     "retry_offline": "联网后可以重试。",
-    "settings_button": "导出…"
+    "settings_button": "导出…",
+    "message_failed": "服务器没有提供这封邮件。",
+    "failed_generic": "导出因错误而停止。请重试。",
+    "stopped_limit": "导出在 {limit} 处停止,这是此浏览器能容纳的上限。请选择较少的文件夹,或使用 Chromium、Firefox 或桌面应用。",
+    "over_limit": "此浏览器最多能容纳 {limit},而此选择约为 {size}。请选择较少的文件夹,或使用 Chromium、Firefox 或桌面应用。",
+    "no_room": "此次导出约需 {size},而此浏览器还剩 {free}。请选择较少的文件夹或释放空间。",
+    "stopped_no_room": "浏览器没有足够空间完成导出。请选择较少的文件夹或释放空间。",
+    "stopped_offline_off": "导出已停止,因为此账户不再在此设备上保留邮件。",
+    "policy_unknown": "尚不清楚贵组织对此账户的规则,因此导出暂时关闭。",
+    "leftover_file": "无法从保存位置移除文件 {name}。它不完整,您可以将其删除。"
   },
   "deep_link": {
     "message_not_found": "此邮件已不可用。",

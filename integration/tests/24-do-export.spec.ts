@@ -1,16 +1,22 @@
 /**
- * Export of the local store, through the real UI, as ent-dave, against a VM 106
+ * Export of the local store, through the real UI, as dso-export, against a VM 106
  * Stalwart: a folder written with the browser offline is the bytes the server has,
  * the private files never hold readable mail, what has no original here is counted
  * and can be tried again online, and "No export" holds.
  *
- * Run with desktop-offline-rig/run-spec.sh. Works in its own folder and deletes it
- * with its mail at the end.
+ * An account of its own: other specs running at the same time work in the ent-*
+ * accounts, and folders of this one went missing there mid-run. Check or create it
+ * on the VM first (~/desktop-offline/dso_export_provision.py), then run
+ * desktop-offline-rig/run-spec.sh with IT_DSO_PASSWORD from the vault item
+ * "Stalwart test – dso-* throwaway accounts". Works in its own folder and deletes
+ * it with its mail at the end.
  */
 import { test, expect, type Browser, type BrowserContext, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { ENT, ENT_PASSWORD, adminContext, jmapAs, requireEntEnv, shot, userPage, withPolicy } from './helpers/ent';
+import { adminContext, contextOptions, requireEntEnv, shot, withPolicy } from './helpers/ent';
+import { accountSwitcher, neutralizeDevOverlay } from './helpers/app';
 import { JMAP_URL } from './helpers/config';
+import { JmapClient } from './helpers/jmap';
 import { listZipEntries, readZipEntry } from '../../lib/mail-import/zip-reader';
 import { MboxSplitter } from '../../lib/mail-import/mbox';
 import { withoutStateHeaders } from '../../lib/mail-import/mbox-status';
@@ -19,14 +25,18 @@ requireEntEnv();
 test.describe.configure({ mode: 'serial' });
 test.setTimeout(300_000);
 
-const USER = ENT.dave;
+const USER = 'dso-export@example.org';
+const PASSWORD = process.env.IT_DSO_PASSWORD ?? '';
+if (!PASSWORD) throw new Error('Set IT_DSO_PASSWORD, and check the account on the VM first: see the top of this file');
 const STAMP = `D10-${Date.now().toString(36)}`;
 const FOLDER = `${STAMP}-folder`;
 const SECRET = `Secret${STAMP.replace(/\W/g, '')}`;
 const COUNT = 3;
 const DEVICES_OFF = { noDownloads: false, noExport: false, noPrint: false, noInstallPrompt: false, pushWithoutContent: false, watermark: false, noOffline: false };
 
-const auth = () => 'Basic ' + Buffer.from(`${USER}:${ENT_PASSWORD}`).toString('base64');
+const auth = () => 'Basic ' + Buffer.from(`${USER}:${PASSWORD}`).toString('base64');
+let jmap: Promise<JmapClient> | null = null;
+const account = () => (jmap ??= JmapClient.connect(USER, PASSWORD));
 
 /** Bytes a rebuilt message wouldn't have: a Latin-1 byte, a bare LF, odd spacing, signature-like headers, mbox traps. */
 function rawMessage(n: number): Buffer {
@@ -42,7 +52,7 @@ const blobIds: string[] = [];
 const originals: Buffer[] = [];
 
 test.beforeAll(async () => {
-  const client = await jmapAs(USER);
+  const client = await account();
   mailbox = await client.createMailbox(FOLDER);
   for (let n = 1; n <= COUNT; n += 1) {
     const up = await fetch(`${JMAP_URL}/jmap/upload/${client.accountId}/`, { method: 'POST', headers: { Authorization: auth(), 'Content-Type': 'message/rfc822' }, body: rawMessage(n) });
@@ -60,7 +70,7 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  const client = await jmapAs(USER);
+  const client = await account();
   await client.request([['Mailbox/set', { accountId: client.accountId, destroy: [mailbox], onDestroyRemoveEmails: true }, '0']]).catch(() => {});
 });
 
@@ -83,6 +93,17 @@ let context: BrowserContext;
 async function settings(target: Page): Promise<void> {
   await target.goto('/settings/backup/offline');
   await expect(target.getByTestId('offline-switch')).toBeVisible({ timeout: 30_000 });
+}
+
+/** A page load with no network: the app shell from the service worker, the rest from the device. */
+async function startOffline(): Promise<void> {
+  await page.reload();
+  await expect(page.getByTestId('offline-banner')).toContainText("You're offline", { timeout: 60_000 });
+  // The shell can open Settings on its first page: from there through the menu, as a person would.
+  if (!(await page.getByTestId('offline-switch').waitFor({ state: 'visible', timeout: 5_000 }).then(() => true, () => false))) {
+    await page.getByText('Backup & reset', { exact: true }).first().click();
+  }
+  await expect(page.getByTestId('offline-switch')).toBeVisible({ timeout: 30_000 });
 }
 
 async function openDialog(): Promise<void> {
@@ -133,6 +154,21 @@ function expectOriginals(messages: Buffer[]): void {
   for (let i = 0; i < COUNT; i += 1) expect(messages[i].equals(originals[i]), `message ${i + 1} differs`).toBe(true);
 }
 
+/** What this run wrote to the private files, for looking inside it. */
+async function spoolBytes(): Promise<Buffer> {
+  const base64 = await page.evaluate(() => {
+    const writes = (window as unknown as { __spoolWrites: Uint8Array[] }).__spoolWrites;
+    let binary = '';
+    for (const write of writes) for (const byte of write) binary += String.fromCharCode(byte);
+    return btoa(binary);
+  });
+  return Buffer.from(base64, 'base64');
+}
+
+async function forgetSpoolWrites(): Promise<void> {
+  await page.evaluate(() => { (window as unknown as { __spoolWrites: Uint8Array[] }).__spoolWrites.length = 0; });
+}
+
 async function spoolReport(): Promise<{ left: string[]; bytes: number; readable: boolean }> {
   return page.evaluate(async (secret) => {
     const writes = (window as unknown as { __spoolWrites: Uint8Array[] }).__spoolWrites;
@@ -152,8 +188,14 @@ async function spoolReport(): Promise<{ left: string[]; bytes: number; readable:
 }
 
 test.beforeAll(async ({ browser }: { browser: Browser }) => {
-  page = await userPage(browser, USER);
-  context = page.context();
+  context = await browser.newContext(contextOptions());
+  page = await context.newPage();
+  await neutralizeDevOverlay(page);
+  await page.goto('/');
+  await page.fill('#username', USER);
+  await page.fill('#password', PASSWORD);
+  await page.click('button[type="submit"]');
+  await accountSwitcher(page).waitFor({ state: 'visible', timeout: 60_000 });
   await context.addInitScript(INIT);
   await settings(page);
   const toggle = page.getByTestId('offline-switch');
@@ -186,42 +228,72 @@ test('a folder exported offline as mbox is the bytes the server has, and the pri
 });
 
 test('the same folder as a ZIP of .eml files has the same bytes', async () => {
+  await forgetSpoolWrites();
   await openDialog();
   const zip = new Blob([new Uint8Array(await exported('eml'))]);
   const entries = await listZipEntries(zip);
   expect(entries.map((entry) => entry.name).every((name) => name.startsWith(`${FOLDER}/`) && name.endsWith('.eml'))).toBe(true);
   expectOriginals(await Promise.all(entries.map(async (entry) => Buffer.from(await readZipEntry(zip, entry)))));
   const report = await spoolReport();
-  expect(report.readable).toBe(false);
   expect(report.left).toEqual([]);
+  // Deflated mail wouldn't show up in a search for its text: it has to be no ZIP at all.
+  const spool = await spoolBytes();
+  expect(spool.length).toBeGreaterThan(0);
+  expect(spool.includes(Buffer.from('PK\x03\x04', 'latin1'))).toBe(false);
+  expect(spool.includes(Buffer.from(FOLDER))).toBe(false);
+  await expect(listZipEntries(new Blob([new Uint8Array(spool)]))).rejects.toThrow();
   await closeSummary();
 });
 
-test('with a save picker, it writes straight to the chosen file and no private file is used', async () => {
-  const before = (await spoolReport()).bytes;
-  await page.evaluate(() => {
-    const parts: Uint8Array[] = [];
-    (window as unknown as { __picked: Uint8Array[] }).__picked = parts;
-    (window as unknown as { showSaveFilePicker: unknown }).showSaveFilePicker = async () => ({
-      createWritable: async () => ({
-        write: async (data: Uint8Array) => { parts.push(data.slice()); },
-        close: async () => {},
-        abort: async () => {},
-      }),
-    });
-  });
+/**
+ * The picker's dialog is the only fake: what it answers is a real file handle, with
+ * a real writable and a real remove. `keepRemove: false` is a browser without remove.
+ */
+async function pickerAnswers(name: string, keepRemove = true): Promise<void> {
+  await page.evaluate(async ({ name: file, keepRemove: keep }) => {
+    const root = await navigator.storage.getDirectory();
+    const window_ = window as unknown as { showSaveFilePicker: unknown; __pickerClicks: number };
+    window_.__pickerClicks = 0;
+    window_.showSaveFilePicker = async () => {
+      // The real one refuses a call that lost the click.
+      if (!navigator.userActivation.isActive) throw new DOMException('Must be handling a user gesture', 'SecurityError');
+      window_.__pickerClicks += 1;
+      const handle = await root.getFileHandle(file, { create: true });
+      return keep ? handle : { name: handle.name, createWritable: () => handle.createWritable() };
+    };
+  }, { name, keepRemove });
+}
+
+async function pickedFile(name: string): Promise<Buffer | null> {
+  const base64 = await page.evaluate(async (file) => {
+    const root = await navigator.storage.getDirectory();
+    try {
+      const bytes = new Uint8Array(await (await (await root.getFileHandle(file)).getFile()).arrayBuffer());
+      let binary = '';
+      for (const byte of bytes) binary += String.fromCharCode(byte);
+      return btoa(binary);
+    } catch {
+      return null;
+    }
+  }, name);
+  return base64 === null ? null : Buffer.from(base64, 'base64');
+}
+
+async function noPicker(): Promise<void> {
+  await page.evaluate(() => { delete (window as { showSaveFilePicker?: unknown }).showSaveFilePicker; });
+}
+
+test('with a save picker, it writes straight to the chosen file, from the click, and no spool is left', async () => {
+  await pickerAnswers(`${STAMP}-picked.mbox`);
   await openDialog();
   await page.getByTestId('local-export-format-mbox').check();
   await page.getByTestId('local-export-start').click();
   await expect(page.getByTestId('mail-export-status')).toContainText(`Messages exported: ${COUNT}`);
-  const picked = await page.evaluate(() => {
-    const parts = (window as unknown as { __picked: Uint8Array[] }).__picked;
-    return parts.flatMap((part) => Array.from(part));
-  });
-  expectOriginals(mboxMessages(Buffer.from(picked)));
-  expect((await spoolReport()).bytes).toBe(before);
+  expect(await page.evaluate(() => (window as unknown as { __pickerClicks: number }).__pickerClicks)).toBe(1);
+  expectOriginals(mboxMessages((await pickedFile(`${STAMP}-picked.mbox`))!));
+  expect((await spoolReport()).left).toEqual([]);
   await closeSummary();
-  await page.evaluate(() => { delete (window as { showSaveFilePicker?: unknown }).showSaveFilePicker; });
+  await noPicker();
 });
 
 test('with attachments off it says offline why it can\'t; a connection lost during the run is counted; the retry writes them all', async () => {
@@ -242,7 +314,8 @@ test('with attachments off it says offline why it can\'t; a connection lost duri
   // The browser says online, and the server goes as the export starts.
   await context.setOffline(false);
   await expect(page.getByTestId('local-export-start')).toBeEnabled({ timeout: 30_000 });
-  await context.route(`${new URL(JMAP_URL).origin}/**`, (route) => route.abort('internetdisconnected'));
+  const SERVER = `${new URL(JMAP_URL).origin}/**`;
+  await context.route(SERVER, (route) => route.abort('internetdisconnected'));
   let downloads = 0;
   const counted = () => { downloads += 1; };
   page.on('download', counted);
@@ -257,7 +330,7 @@ test('with attachments off it says offline why it can\'t; a connection lost duri
   expect(downloads).toBe(0);
   await shot(page, 'd10-export-not-kept');
 
-  await context.unroute(`${new URL(JMAP_URL).origin}/**`);
+  await context.unroute(SERVER);
   // The browser going off says so in the summary, and coming back opens the retry.
   await context.setOffline(true);
   await expect(page.getByTestId('local-export-retry')).toBeDisabled();
@@ -271,6 +344,32 @@ test('with attachments off it says offline why it can\'t; a connection lost duri
   const again = await exported('mbox');
   expectOriginals(mboxMessages(again));
   await closeSummary();
+
+  // The same with a save picker: a run that wrote nothing takes the file the picker made with it.
+  const removed = `${STAMP}-removed.mbox`;
+  const stays = `${STAMP}-stays.mbox`;
+  for (const [file, keepRemove] of [[removed, true], [stays, false]] as const) {
+    await pickerAnswers(file, keepRemove);
+    await openDialog();
+    await page.getByTestId('local-export-format-mbox').check();
+    // The server goes once it has counted as reachable: offline with nothing here there's no Export to click.
+    await expect(page.getByTestId('local-export-start')).toBeEnabled({ timeout: 60_000 });
+    await context.route(SERVER, (route) => route.abort('internetdisconnected'));
+    await page.getByTestId('local-export-start').click();
+    await expect(page.getByTestId('local-export-not-kept-attachments')).toBeVisible({ timeout: 60_000 });
+    await context.unroute(SERVER);
+    if (keepRemove) {
+      expect(await pickedFile(file), 'the picked file is gone').toBeNull();
+      await expect(page.getByTestId('local-export-leftover')).toHaveCount(0);
+    } else {
+      await expect(page.getByTestId('local-export-leftover')).toContainText(file);
+      await shot(page, 'd10-export-leftover');
+    }
+    await context.setOffline(true);
+    await context.setOffline(false);
+    await closeSummary();
+  }
+  await noPicker();
 
   await page.getByTestId('offline-attachments').click();
   await expect(page.getByTestId('offline-attachments')).toHaveAttribute('aria-checked', 'true');
@@ -304,9 +403,12 @@ test('"No export" locks it, also once offline', async ({ browser }) => {
       await settings(page);
       await expect(page.getByTestId('local-export-open')).toBeDisabled({ timeout: 30_000 });
       await expect(page.getByText('Set by your organisation').first()).toBeVisible();
+      // A start with no network: all it has is the policy it kept from the last fetch.
       await context.setOffline(true);
-      await expect(page.getByTestId('local-export-open')).toBeDisabled();
+      await startOffline();
+      await expect(page.getByTestId('local-export-open')).toBeDisabled({ timeout: 30_000 });
       await expect(page.getByTestId('local-export-dialog')).toHaveCount(0);
+      await shot(page, 'd10-export-locked-offline-start');
       await context.setOffline(false);
     });
   } finally {
@@ -314,4 +416,13 @@ test('"No export" locks it, also once offline', async ({ browser }) => {
   }
   await settings(page);
   await expect(page.getByTestId('local-export-open')).toBeEnabled({ timeout: 30_000 });
+  // The other way round: a start with no network, allowed by the kept policy, exports.
+  await waitForOriginals(`${COUNT} of ${COUNT}`);
+  await context.setOffline(true);
+  await startOffline();
+  await expect(page.getByTestId('local-export-open')).toBeEnabled({ timeout: 60_000 });
+  await openDialog();
+  expectOriginals(mboxMessages(await exported('mbox')));
+  await closeSummary();
+  await context.setOffline(false);
 });

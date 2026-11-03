@@ -5848,7 +5848,7 @@
     "settings_label": "Eksporter lagret e-post",
     "settings_description": "Lagre e-posten på denne enheten som mbox- eller .eml-filer. Dette virker også frakoblet.",
     "title": "Eksporter lagret e-post",
-    "description": "Dette lagrer det enheten beholder, byte for byte. E-post eldre enn perioden du valgte, er ikke med. Bruk «Eksporter all e-post» for å lagre alt fra serveren.",
+    "description": "Dette lagrer originalene denne enheten beholder. .eml-filer er nøyaktige kopier. En mbox-fil legger til merkene formatet trenger, og skriver status for lest og flagget i hver meldings overskrifter, i stedet for dem den hadde. E-post eldre enn perioden du valgte, er ikke med. Bruk «Eksporter all e-post» for å lagre alt fra serveren.",
     "folders_label": "Mapper",
     "all_folders": "Alle mapper",
     "folder_kept": "{kept} av {total} her",
@@ -5865,7 +5865,16 @@
     "retry": "Prøv igjen tilkoblet",
     "retry_online": "Du er tilkoblet nå, så disse kan komme fra serveren.",
     "retry_offline": "Du kan prøve igjen når du er tilkoblet.",
-    "settings_button": "Eksporter…"
+    "settings_button": "Eksporter…",
+    "message_failed": "Serveren leverte ikke denne meldingen.",
+    "failed_generic": "Eksporten stoppet på grunn av en feil. Prøv igjen.",
+    "stopped_limit": "Eksporten stoppet ved {limit}, det meste denne nettleseren kan holde. Velg færre mapper, eller bruk Chromium, Firefox eller skrivebordsappen.",
+    "over_limit": "Denne nettleseren kan holde høyst {limit}, og dette valget er omtrent {size}. Velg færre mapper, eller bruk Chromium, Firefox eller skrivebordsappen.",
+    "no_room": "Denne eksporten trenger omtrent {size}, og denne nettleseren har {free} igjen. Velg færre mapper, eller frigjør plass.",
+    "stopped_no_room": "Nettleseren gikk tom for plass til eksporten. Velg færre mapper, eller frigjør plass.",
+    "stopped_offline_off": "Eksporten stoppet fordi denne kontoen ikke lenger beholder e-post på denne enheten.",
+    "policy_unknown": "Organisasjonens regler for denne kontoen er ikke kjent ennå, så eksport er av inntil videre.",
+    "leftover_file": "Filen {name} kunne ikke fjernes fra stedet du lagret den. Den er ufullstendig, så du kan slette den."
   },
   "deep_link": {
     "message_not_found": "Denne meldingen er ikke lenger tilgjengelig.",

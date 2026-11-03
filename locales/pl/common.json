@@ -5848,7 +5848,7 @@
     "settings_label": "Eksportuj zachowaną pocztę",
     "settings_description": "Zapisz pocztę z tego urządzenia jako pliki mbox lub .eml. Działa to też offline.",
     "title": "Eksportuj zachowaną pocztę",
-    "description": "Zapisuje to, co przechowuje to urządzenie, bajt w bajt. Poczty starszej niż wybrany okres tu nie ma. Aby zapisać wszystko z serwera, użyj opcji „Eksportuj całą pocztę”.",
+    "description": "Zapisuje oryginały przechowywane na tym urządzeniu. Pliki .eml są dokładnymi kopiami. Plik mbox dodaje oznaczenia wymagane przez ten format i zapisuje stan przeczytania i oflagowania w nagłówkach każdej wiadomości, zamiast dotychczasowych. Poczty starszej niż wybrany okres tu nie ma. Aby zapisać wszystko z serwera, użyj opcji „Eksportuj całą pocztę”.",
     "folders_label": "Foldery",
     "all_folders": "Wszystkie foldery",
     "folder_kept": "{kept} z {total} tutaj",
@@ -5865,7 +5865,16 @@
     "retry": "Spróbuj ponownie online",
     "retry_online": "Masz połączenie, więc mogą przyjść z serwera.",
     "retry_offline": "Spróbuj ponownie, gdy będziesz online.",
-    "settings_button": "Eksportuj…"
+    "settings_button": "Eksportuj…",
+    "message_failed": "Serwer nie dostarczył tej wiadomości.",
+    "failed_generic": "Eksport zatrzymał się z powodu błędu. Spróbuj ponownie.",
+    "stopped_limit": "Eksport zatrzymał się przy {limit}, to najwięcej, ile ta przeglądarka może pomieścić. Wybierz mniej folderów albo użyj Chromium, Firefoksa lub aplikacji na komputer.",
+    "over_limit": "Ta przeglądarka może pomieścić najwyżej {limit}, a ten wybór to około {size}. Wybierz mniej folderów albo użyj Chromium, Firefoksa lub aplikacji na komputer.",
+    "no_room": "Ten eksport wymaga około {size}, a ta przeglądarka ma do dyspozycji {free}. Wybierz mniej folderów lub zwolnij miejsce.",
+    "stopped_no_room": "W przeglądarce zabrakło miejsca na eksport. Wybierz mniej folderów lub zwolnij miejsce.",
+    "stopped_offline_off": "Eksport zatrzymał się, bo to konto nie przechowuje już poczty na tym urządzeniu.",
+    "policy_unknown": "Zasady Twojej organizacji dla tego konta nie są jeszcze znane, więc eksport pozostaje na razie wyłączony.",
+    "leftover_file": "Nie udało się usunąć pliku {name} z miejsca zapisu. Jest niekompletny, możesz go usunąć."
   },
   "deep_link": {
     "message_not_found": "Ta wiadomość nie jest już dostępna.",

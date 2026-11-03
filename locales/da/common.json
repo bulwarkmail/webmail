@@ -5848,7 +5848,7 @@
     "settings_label": "Eksportér gemt post",
     "settings_description": "Gem posten på denne enhed som mbox- eller .eml-filer. Det virker også offline.",
     "title": "Eksportér gemt post",
-    "description": "Dette gemmer det, enheden opbevarer, byte for byte. Post, der er ældre end den valgte periode, er ikke med. Brug “Eksportér al mail” for at gemme alt fra serveren.",
+    "description": "Dette gemmer de originaler, enheden opbevarer. .eml-filer er nøjagtige kopier. En mbox-fil tilføjer de markeringer, formatet kræver, og skriver status for læst og markeret i hver beskeds overskrifter i stedet for dem, den havde. Post, der er ældre end den valgte periode, er ikke med. Brug “Eksportér al mail” for at gemme alt fra serveren.",
     "folders_label": "Mapper",
     "all_folders": "Alle mapper",
     "folder_kept": "{kept} af {total} her",
@@ -5865,7 +5865,16 @@
     "retry": "Prøv igen online",
     "retry_online": "Du er online nu, så de kan komme fra serveren.",
     "retry_offline": "Du kan prøve igen, når du er online.",
-    "settings_button": "Eksportér…"
+    "settings_button": "Eksportér…",
+    "message_failed": "Serveren leverede ikke denne besked.",
+    "failed_generic": "Eksporten stoppede på grund af en fejl. Prøv igen.",
+    "stopped_limit": "Eksporten stoppede ved {limit}, det meste denne browser kan rumme. Vælg færre mapper, eller brug Chromium, Firefox eller skrivebordsappen.",
+    "over_limit": "Denne browser kan højst rumme {limit}, og dette valg fylder cirka {size}. Vælg færre mapper, eller brug Chromium, Firefox eller skrivebordsappen.",
+    "no_room": "Denne eksport kræver cirka {size}, og denne browser har {free} tilbage. Vælg færre mapper, eller frigør plads.",
+    "stopped_no_room": "Browseren løb tør for plads til eksporten. Vælg færre mapper, eller frigør plads.",
+    "stopped_offline_off": "Eksporten stoppede, fordi denne konto ikke længere gemmer post på denne enhed.",
+    "policy_unknown": "Din organisations regler for denne konto kendes endnu ikke, så eksport er slået fra indtil videre.",
+    "leftover_file": "Filen {name} kunne ikke fjernes fra det sted, du gemte den. Den er ufuldstændig, så du kan slette den."
   },
   "deep_link": {
     "message_not_found": "Denne besked er ikke længere tilgængelig.",

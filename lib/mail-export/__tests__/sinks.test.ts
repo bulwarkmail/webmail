@@ -1,6 +1,8 @@
 // @vitest-environment node
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { canWritePrivateFile, downloadGraceMs, guardedSink, openExportSink, privateFileSink, sweepPrivateExports, ExportForbiddenError, type ExportFile, type ExportSink } from '@/lib/mail-export/sinks';
+import { blobHeldInMemory, canWritePrivateFile, downloadGraceMs, dropExportFiles, guardedSink, memorySink, openExportSink, pickSaveFile, privateFileSink, spoolLimit, sweepPrivateExports, ExportForbiddenError, ExportTooLargeError, SPOOL_MEMORY_LIMIT, type ExportFile, type ExportSink } from '@/lib/mail-export/sinks';
+import { ZipWriter } from '@/lib/mail-export/zip-writer';
+import { useMailTransferStore } from '@/stores/mail-transfer-store';
 
 /** A tiny origin private file system: one directory of files. */
 function fakeOpfs() {
@@ -163,6 +165,60 @@ describe('privateFileSink', () => {
     expect(opfs.files.size).toBe(0);
   });
 
+  it('never lets a ZIP through readable either, where a search for the text would find nothing', async () => {
+    const { opfs, handed } = setUp();
+    const sink = (await privateFileSink('a.zip', 'application/zip'))!;
+    const zip = new ZipWriter((chunk) => sink.write(chunk));
+    await zip.addFile('Inbox/1.eml', MAIL, new Date());
+    await zip.finish();
+    await sink.close();
+    const asZip = (await import('@/lib/mail-import/zip-reader')).listZipEntries;
+    expect(asText(opfs.written)).not.toContain('PK\x03\x04');
+    expect(asText(opfs.written)).not.toContain('Inbox/1.eml');
+    await expect(asZip(new Blob(opfs.written as BlobPart[]))).rejects.toThrow();
+    expect((await asZip(handed[0])).map((entry) => entry.name)).toEqual(['Inbox/1.eml']);
+  });
+
+  it('downloads nothing when stopped while the spool is being opened, and leaves no Blob', async () => {
+    const { opfs, handed } = setUp();
+    const sink = (await privateFileSink('a.mbox', 'application/mbox'))!;
+    // Three pieces: a large spool must stop where it is, not be opened to the end first.
+    for (let i = 0; i < 3; i += 1) await sink.write(new Uint8Array(1 << 20));
+    expect(opfs.written.length).toBe(3);
+    const controller = new AbortController();
+    const decrypt = crypto.subtle.decrypt.bind(crypto.subtle);
+    const spy = vi.spyOn(crypto.subtle, 'decrypt').mockImplementation(async (...args) => {
+      controller.abort();
+      return decrypt(...args);
+    });
+    await expect(sink.close(controller.signal)).rejects.toMatchObject({ name: 'AbortError' });
+    // A stream reads one piece ahead at most before it hears the abort.
+    expect(spy.mock.calls.length).toBeLessThan(3);
+    spy.mockRestore();
+    expect(handed).toEqual([]);
+    await sink.abort();
+    expect(opfs.files.size).toBe(0);
+  });
+
+  it('downloads nothing when stopped just as the Blob is ready', async () => {
+    const { handed } = setUp();
+    const sink = (await privateFileSink('a.mbox', 'application/mbox'))!;
+    await sink.write(MAIL);
+    const controller = new AbortController();
+    vi.stubGlobal('Response', class { blob() { controller.abort(); return Promise.resolve(new Blob(['x'])); } });
+    await expect(sink.close(controller.signal)).rejects.toMatchObject({ name: 'AbortError' });
+    expect(handed).toEqual([]);
+  });
+
+  it('stops at its limit while writing, and the spool goes', async () => {
+    const { opfs } = setUp();
+    const sink = (await privateFileSink('a.mbox', 'application/mbox', 10))!;
+    await sink.write(new Uint8Array(10));
+    await expect(sink.write(new Uint8Array(1))).rejects.toBeInstanceOf(ExportTooLargeError);
+    await sink.abort();
+    expect(opfs.files.size).toBe(0);
+  });
+
   it('a crash leaves only sealed bytes, which the sweep at the next start deletes', async () => {
     const { opfs } = setUp();
     const sink = (await privateFileSink('a.mbox', 'application/mbox'))!;
@@ -174,6 +230,126 @@ describe('privateFileSink', () => {
     // The tab that held the file is gone: its lock is free again.
     await sweepPrivateExports();
     expect(opfs.files.size).toBe(0);
+  });
+});
+
+describe('where the final Blob sits in memory', () => {
+  const AGENTS: [string, string, boolean][] = [
+    ['Safari', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15', true],
+    ['Chrome on iOS, which is WebKit', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/130.0 Mobile/15E148 Safari/604.1', true],
+    ['Firefox on iOS, which is WebKit', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/130.0 Mobile/15E148 Safari/605.1.15', true],
+    ['Chrome', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', false],
+    ['Edge', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0', false],
+    ['Firefox', 'Mozilla/5.0 (Windows NT 10.0; rv:148.0) Gecko/20100101 Firefox/148.0', false],
+    ['the desktop app', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Electron/40.0.0 Safari/537.36', false],
+  ];
+
+  it.each(AGENTS)('%s', (_name, userAgent, inMemory) => {
+    vi.stubGlobal('navigator', { userAgent });
+    expect(blobHeldInMemory()).toBe(inMemory);
+    expect(spoolLimit()).toBe(inMemory ? SPOOL_MEMORY_LIMIT : Infinity);
+  });
+
+  it('a spool on such an engine takes the cap by default', async () => {
+    const opfs = fakeOpfs();
+    vi.stubGlobal('navigator', { userAgent: AGENTS[0][1], storage: { getDirectory: async () => opfs.root }, locks: fakeLocks(new Set()) });
+    const sink = (await privateFileSink('a.mbox', 'application/mbox'))!;
+    // Nothing this size is allocated: the check is on the length it is told.
+    const huge = { length: SPOOL_MEMORY_LIMIT + 1 } as Uint8Array;
+    await expect(sink.write(huge)).rejects.toMatchObject({ name: 'ExportTooLargeError', limit: SPOOL_MEMORY_LIMIT });
+  });
+});
+
+describe('a finished export held for its download', () => {
+  function stubUrls() {
+    // What earlier tests left held.
+    dropExportFiles('all');
+    const revoke = vi.fn();
+    let n = 0;
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL: () => `blob:${++n}`, revokeObjectURL: revoke }));
+    return revoke;
+  }
+
+  async function finished(scope: string) {
+    useMailTransferStore.setState({ job: { kind: 'export', scope, controller: new AbortController(), progress: { phase: 'running', exported: 0, failed: 0, failures: [], total: 0, fraction: 0 } } });
+    const sink = memorySink('a.mbox', 'application/mbox');
+    await sink.write(new Uint8Array(3));
+    const file = await sink.close();
+    useMailTransferStore.setState({ job: null });
+    return file;
+  }
+
+  it('goes at a sign-out of its account while it waits out the grace period, with the dialog closed', async () => {
+    const revoke = stubUrls();
+    vi.useFakeTimers();
+    const file = await finished('acc');
+    void file.discard();
+    expect(revoke).not.toHaveBeenCalled();
+    dropExportFiles('someone-else');
+    expect(revoke).not.toHaveBeenCalled();
+    dropExportFiles('acc');
+    expect(revoke).toHaveBeenCalledTimes(1);
+    // Nothing to do when the wait ends.
+    await vi.advanceTimersByTimeAsync(downloadGraceMs(3));
+    expect(revoke).toHaveBeenCalledTimes(1);
+  });
+
+  it('goes when everything goes', async () => {
+    const revoke = stubUrls();
+    await finished('acc');
+    const opfs = fakeOpfs();
+    vi.stubGlobal('navigator', { storage: { getDirectory: async () => opfs.root } });
+    await sweepPrivateExports({ force: true });
+    expect(revoke).toHaveBeenCalledTimes(1);
+  });
+
+  it('can\'t be downloaded once it has gone', async () => {
+    stubUrls();
+    const anchors: string[] = [];
+    vi.stubGlobal('document', { createElement: () => ({ click() { anchors.push('clicked'); }, remove() {} }), body: { appendChild() {} } });
+    const file = await finished('acc');
+    expect(anchors).toEqual(['clicked']);
+    dropExportFiles('acc');
+    file.download?.();
+    expect(anchors).toEqual(['clicked']);
+  });
+});
+
+describe('the file the user picked', () => {
+  function picked(handle: Record<string, unknown>) {
+    const writable = { write: vi.fn(async () => {}), close: vi.fn(async () => {}), abort: vi.fn(async () => {}) };
+    vi.stubGlobal('window', { showSaveFilePicker: async () => ({ createWritable: async () => writable, ...handle }) });
+    return writable;
+  }
+
+  it('is removed on an abort where the browser can', async () => {
+    const remove = vi.fn(async () => {});
+    const writable = picked({ remove });
+    const sink = await pickSaveFile('a.mbox', 'application/mbox', '.mbox');
+    expect(await sink.abort()).toEqual({});
+    expect(writable.abort).toHaveBeenCalled();
+    expect(remove).toHaveBeenCalled();
+  });
+
+  it('says so where it can\'t be removed', async () => {
+    picked({});
+    expect(await (await pickSaveFile('a.mbox', 'application/mbox', '.mbox')).abort()).toEqual({ leftover: 'a.mbox' });
+    picked({ remove: async () => { throw new Error('no'); } });
+    expect(await (await pickSaveFile('a.mbox', 'application/mbox', '.mbox')).abort()).toEqual({ leftover: 'a.mbox' });
+  });
+
+  it('names the file as the person named it', async () => {
+    picked({ name: 'my backup.mbox' });
+    expect(await (await pickSaveFile('a.mbox', 'application/mbox', '.mbox')).abort()).toEqual({ leftover: 'my backup.mbox' });
+  });
+
+  it('isn\'t finished when stopped first', async () => {
+    const writable = picked({});
+    const sink = await pickSaveFile('a.mbox', 'application/mbox', '.mbox');
+    const controller = new AbortController();
+    controller.abort();
+    await expect(sink.close(controller.signal)).rejects.toMatchObject({ name: 'AbortError' });
+    expect(writable.close).not.toHaveBeenCalled();
   });
 });
 

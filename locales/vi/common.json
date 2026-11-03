@@ -5860,7 +5860,7 @@
     "settings_label": "Xuất thư đã lưu",
     "settings_description": "Lưu thư trên thiết bị này thành tệp mbox hoặc .eml. Hoạt động cả khi ngoại tuyến.",
     "title": "Xuất thư đã lưu",
-    "description": "Lưu đúng nguyên bản những gì thiết bị này giữ. Thư cũ hơn khoảng thời gian bạn chọn không có trong đó. Để lưu mọi thứ trên máy chủ, hãy dùng “Xuất toàn bộ thư”.",
+    "description": "Lưu các bản gốc mà thiết bị này giữ. Tệp .eml là bản sao chính xác. Tệp mbox thêm các dấu mà định dạng của nó cần và ghi trạng thái đã đọc và gắn cờ vào tiêu đề của mỗi thư, thay cho giá trị cũ. Thư cũ hơn khoảng thời gian bạn chọn không có trong đó. Để lưu mọi thứ trên máy chủ, hãy dùng “Xuất toàn bộ thư”.",
     "folders_label": "Thư mục",
     "all_folders": "Tất cả thư mục",
     "folder_kept": "Ở đây {kept}/{total}",
@@ -5877,7 +5877,16 @@
     "retry": "Thử lại khi trực tuyến",
     "retry_online": "Bạn đang trực tuyến nên có thể lấy từ máy chủ.",
     "retry_offline": "Bạn có thể thử lại khi trực tuyến.",
-    "settings_button": "Xuất…"
+    "settings_button": "Xuất…",
+    "message_failed": "Máy chủ không trả về thư này.",
+    "failed_generic": "Việc xuất đã dừng do lỗi. Hãy thử lại.",
+    "stopped_limit": "Việc xuất đã dừng ở {limit}, mức tối đa trình duyệt này có thể giữ. Hãy chọn ít thư mục hơn, hoặc dùng Chromium, Firefox hay ứng dụng máy tính.",
+    "over_limit": "Trình duyệt này giữ được tối đa {limit}, còn lựa chọn này khoảng {size}. Hãy chọn ít thư mục hơn, hoặc dùng Chromium, Firefox hay ứng dụng máy tính.",
+    "no_room": "Lần xuất này cần khoảng {size}, còn trình duyệt này còn {free}. Hãy chọn ít thư mục hơn hoặc giải phóng dung lượng.",
+    "stopped_no_room": "Trình duyệt đã hết chỗ cho việc xuất. Hãy chọn ít thư mục hơn hoặc giải phóng dung lượng.",
+    "stopped_offline_off": "Việc xuất đã dừng vì tài khoản này không còn giữ thư trên thiết bị này.",
+    "policy_unknown": "Chưa biết quy tắc của tổ chức bạn cho tài khoản này, nên việc xuất tạm thời tắt.",
+    "leftover_file": "Không thể xóa tệp {name} khỏi nơi bạn đã lưu. Tệp chưa hoàn chỉnh, bạn có thể xóa nó."
   },
   "deep_link": {
     "message_not_found": "Thư này không còn nữa.",

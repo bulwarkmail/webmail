@@ -4,24 +4,29 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { folderTree, safeName, type ExportFolder, type ExportFormat } from "@/lib/mail-export/engine";
-import { openExportSink } from "@/lib/mail-export/sinks";
+import { downloadAllowed } from "@/lib/download-guard";
+import { folderTree, safeName, type ExportFolder, type ExportFormat, type ExportProgress } from "@/lib/mail-export/engine";
+import { MEMORY_EXPORT_LIMIT, openExportSink, spoolLimit } from "@/lib/mail-export/sinks";
 import { scopeForAccount } from "@/lib/offline/offline-mode";
 import { useOfflineStore } from "@/lib/offline/state";
 import { getStore } from "@/lib/store/client/api";
+import { formatFileSize } from "@/lib/utils";
 import { useAccountStore } from "@/stores/account-store";
 import { isJobActive, useMailTransferStore, type LocalExportRequest } from "@/stores/mail-transfer-store";
 import { ExportProgressBody, saveMode } from "./mail-export-dialog";
-import { localExportAllowed, localExportReachable, localExportReader, primaryJmapAccount, startLocalExport } from "./start-local-export";
+import { localExportAllowed, localExportDecided, localExportReachable, localExportReader, primaryJmapAccount, startLocalExport } from "./start-local-export";
 import { useFocusOnStage } from "./transfer-progress";
 
 interface FolderRow {
   folder: ExportFolder;
   total: number;
   kept: number;
+  bytes: number;
+  keptBytes: number;
 }
 
-type Loaded = { jmap: string; rows: FolderRow[] };
+/** `free`: what the browser says is left for this site; null where it doesn't say. */
+type Loaded = { jmap: string; rows: FolderRow[]; free: number | null };
 
 function today(): string {
   return new Date().toISOString().slice(0, 10);
@@ -34,10 +39,22 @@ async function readFolders(account: string): Promise<Loaded> {
   const folders = folderTree(await localExportReader(account, jmap).getMailboxes());
   const rows: FolderRow[] = [];
   for (const folder of folders) {
-    const status = await getStore().area<{ total: number; kept: number }>(account, "mail.rawStatus", { jmap, mailboxId: folder.mailboxId });
-    rows.push({ folder, ...status });
+    const params = { jmap, mailboxId: folder.mailboxId };
+    const status = await getStore().area<{ total: number; kept: number }>(account, "mail.rawStatus", params);
+    const size = await getStore().area<{ bytes: number; keptBytes: number }>(account, "mail.rawSize", params);
+    rows.push({ folder, ...status, ...size });
   }
-  return { jmap, rows };
+  return { jmap, rows, free: await freeRoom() };
+}
+
+async function freeRoom(): Promise<number | null> {
+  try {
+    const estimate = await navigator.storage?.estimate?.();
+    if (typeof estimate?.quota !== "number") return null;
+    return Math.max(0, estimate.quota - (estimate.usage ?? 0));
+  } catch {
+    return null;
+  }
 }
 
 /** Settings > Backup & reset > Offline > Export kept mail: from the local store, also with no server. */
@@ -66,11 +83,13 @@ export function LocalExportDialog({ request }: { request: LocalExportRequest }) 
   const [excluded, setExcluded] = useState<ReadonlySet<string>>(new Set());
   const [format, setFormat] = useState<ExportFormat>("mbox");
   const [starting, setStarting] = useState(false);
+  const [refused, setRefused] = useState<string | null>(null);
   const mode = saveMode();
   const progress = job?.kind === "export" ? job.progress : null;
   const active = isJobActive(job);
   const stageButton = useRef<HTMLButtonElement>(null);
   const allFolders = useRef<HTMLInputElement | null>(null);
+  const knownFolders = useRef<ReadonlySet<string>>(new Set());
   useFocusOnStage(stageButton, progress ? (active ? "running" : "ended") : "setup");
   const inSetup = !progress;
 
@@ -80,7 +99,16 @@ export function LocalExportDialog({ request }: { request: LocalExportRequest }) 
     let live = true;
     setLoadFailed(false);
     readFolders(account).then(
-      (result) => { if (live) setLoaded(result); },
+      (result) => {
+        if (!live) return;
+        // A folder that turned up since isn't one the person chose: after a try online
+        // only "All folders" takes it in.
+        const ids = result.rows.map((row) => row.folder.mailboxId);
+        const known = knownFolders.current;
+        knownFolders.current = new Set(ids);
+        setExcluded((was) => (was.size === 0 ? was : new Set([...was, ...ids.filter((folderId) => !known.has(folderId))])));
+        setLoaded(result);
+      },
       () => { if (live) setLoadFailed(true); },
     );
     return () => { live = false; };
@@ -92,12 +120,27 @@ export function LocalExportDialog({ request }: { request: LocalExportRequest }) 
     if (foldersShown) allFolders.current?.focus();
   }, [foldersShown]);
 
+  /** Why a run stopped, in the user's language, whatever the error said. */
+  function stopMessage(run: ExportProgress): string {
+    if (run.errorCode === "ExportForbiddenError" || !localExportAllowed(account)) return tPolicy("export_blocked");
+    if (run.errorCode === "ExportTooLargeError") return t("stopped_limit", { limit: formatFileSize(run.errorLimit ?? 0) });
+    if (run.errorCode === "QuotaExceededError") return t("stopped_no_room");
+    return t("failed_generic");
+  }
+
   if (!visible) return null;
 
   if (progress) {
     const notKept = progress.notKept;
     const notKeptCount = (notKept?.attachments_off ?? 0) + (notKept?.not_kept ?? 0);
-    const blocked = progress.phase === "failed" && !localExportAllowed(account);
+    const reason: unknown = job?.controller.signal.reason;
+    const leftover = progress.leftover;
+    const shown: ExportProgress = {
+      ...progress,
+      // Nothing from a server or a browser reaches the user in English.
+      failures: progress.failures.map((failure) => ({ ...failure, reason: t("message_failed") })),
+      ...(progress.phase === "failed" ? { error: stopMessage(progress) } : {}),
+    };
     return (
       <Dialog
         isOpen
@@ -123,7 +166,11 @@ export function LocalExportDialog({ request }: { request: LocalExportRequest }) 
           </>
         )}
       >
-        <ExportProgressBody progress={blocked ? { ...progress, error: tPolicy("export_blocked") } : progress} t={tExport} locale={locale} statusId={`${id}-status`} />
+        <ExportProgressBody progress={shown} t={tExport} locale={locale} statusId={`${id}-status`} />
+        {progress.phase === "cancelled" && reason === "policy" && <p className="mt-4 text-sm text-destructive" role="alert" data-testid="local-export-stop-reason">{tPolicy("export_blocked")}</p>}
+        {progress.phase === "cancelled" && reason === "offline-off" && <p className="mt-4 text-sm text-destructive" role="alert" data-testid="local-export-stop-reason">{t("stopped_offline_off")}</p>}
+        {progress.phase === "done" && progress.exported === 0 && progress.failed === 0 && <p className="mt-4 text-sm text-foreground" data-testid="local-export-wrote-nothing">{t("nothing_kept")}</p>}
+        {leftover && <p className="mt-4 text-sm text-destructive break-words" role="alert" data-testid="local-export-leftover">{t("leftover_file", { name: leftover })}</p>}
         {notKeptCount > 0 && (
           <div className="mt-4 space-y-1 text-sm text-foreground" data-testid="local-export-not-kept">
             {!!notKept?.attachments_off && <p data-testid="local-export-not-kept-attachments">{t("not_kept_attachments_off", { count: notKept.attachments_off })}</p>}
@@ -144,9 +191,22 @@ export function LocalExportDialog({ request }: { request: LocalExportRequest }) 
   const attachmentsOff = !scopeForAccount(account).scope.attachments;
   // Offline with no original of anything: the save picker would ask where to put nothing.
   const nothingToWrite = total === 0 || (kept === 0 && !reachable);
+  // What the run will need, against what this browser can give it. Asked up front: a
+  // tab killed with no message after hours is the outcome to avoid.
+  const needed = chosen.reduce((sum, row) => sum + (reachable ? row.bytes : row.keptBytes), 0);
+  const limit = mode === "memory" ? MEMORY_EXPORT_LIMIT : mode === "download" ? spoolLimit() : Infinity;
+  const overLimit = needed > limit;
+  const noRoom = mode === "download" && loaded?.free != null && needed > loaded.free;
 
   const onStart = async () => {
     if (!loaded || starting || chosen.length === 0) return;
+    // Before the picker, with nothing awaited, so the click still counts for it.
+    if (!localExportAllowed(account)) {
+      setRefused(localExportDecided(account) ? tPolicy("export_blocked") : t("policy_unknown"));
+      downloadAllowed("export", account);
+      return;
+    }
+    setRefused(null);
     const zip = !single || format === "eml";
     const base = single
       ? safeName(chosen[0].folder.path[chosen[0].folder.path.length - 1] ?? "", "mail")
@@ -185,7 +245,7 @@ export function LocalExportDialog({ request }: { request: LocalExportRequest }) 
       footer={(
         <>
           <Button variant="outline" onClick={() => close()}>{tExport("cancel")}</Button>
-          <Button onClick={() => void onStart()} disabled={starting || !loaded || nothingToWrite} data-testid="local-export-start">{tExport("start")}</Button>
+          <Button onClick={() => void onStart()} disabled={starting || !loaded || nothingToWrite || overLimit || noRoom} data-testid="local-export-start">{tExport("start")}</Button>
         </>
       )}
     >
@@ -267,6 +327,9 @@ export function LocalExportDialog({ request }: { request: LocalExportRequest }) 
               {missing > 0 && !reachable && (
                 <p className="text-xs text-muted-foreground" data-testid="local-export-reason">{attachmentsOff ? t("reason_attachments_off") : t("reason_not_kept")}</p>
               )}
+              {overLimit && <p className="font-medium text-destructive" data-testid="local-export-over-limit">{t("over_limit", { limit: formatFileSize(limit), size: formatFileSize(needed) })}</p>}
+              {noRoom && !overLimit && <p className="font-medium text-destructive" data-testid="local-export-no-room">{t("no_room", { size: formatFileSize(needed), free: formatFileSize(loaded?.free ?? 0) })}</p>}
+              {refused && <p className="font-medium text-destructive" data-testid="local-export-refused">{refused}</p>}
             </div>
             <p className="text-xs text-muted-foreground">{tExport(`save_${mode}`)}</p>
           </>

@@ -5848,7 +5848,7 @@
     "settings_label": "Eksportēt saglabāto pastu",
     "settings_description": "Saglabājiet šīs ierīces pastu kā mbox vai .eml failus. Darbojas arī bezsaistē.",
     "title": "Eksportēt saglabāto pastu",
-    "description": "Saglabā to, ko glabā šī ierīce, baitu pa baitam. Pasta, kas vecāks par izvēlēto periodu, tajā nav. Lai saglabātu visu no servera, izmantojiet “Eksportēt visu pastu”.",
+    "description": "Saglabā oriģinālus, ko glabā šī ierīce. .eml faili ir precīzas kopijas. mbox fails pievieno formātam vajadzīgās atzīmes un ieraksta izlasīts un atzīmēts statusu katra ziņojuma galvenēs iepriekšējo vietā. Pasta, kas vecāks par izvēlēto periodu, tajā nav. Lai saglabātu visu no servera, izmantojiet “Eksportēt visu pastu”.",
     "folders_label": "Mapes",
     "all_folders": "Visas mapes",
     "folder_kept": "Šeit: {kept} no {total}",
@@ -5865,7 +5865,16 @@
     "retry": "Mēģināt vēlreiz tiešsaistē",
     "retry_online": "Tagad esat tiešsaistē, tāpēc tie var nākt no servera.",
     "retry_offline": "Varat mēģināt vēlreiz, kad būsiet tiešsaistē.",
-    "settings_button": "Eksportēt…"
+    "settings_button": "Eksportēt…",
+    "message_failed": "Serveris nedeva šo ziņojumu.",
+    "failed_generic": "Eksports apstājās kļūdas dēļ. Mēģiniet vēlreiz.",
+    "stopped_limit": "Eksports apstājās pie {limit}, vairāk šī pārlūkprogramma nevar turēt. Izvēlieties mazāk mapju vai izmantojiet Chromium, Firefox vai datora lietotni.",
+    "over_limit": "Šī pārlūkprogramma var turēt ne vairāk kā {limit}, un šī izvēle ir aptuveni {size}. Izvēlieties mazāk mapju vai izmantojiet Chromium, Firefox vai datora lietotni.",
+    "no_room": "Šim eksportam vajag aptuveni {size}, un šai pārlūkprogrammai ir pieejami {free}. Izvēlieties mazāk mapju vai atbrīvojiet vietu.",
+    "stopped_no_room": "Pārlūkprogrammai eksportam pietrūka vietas. Izvēlieties mazāk mapju vai atbrīvojiet vietu.",
+    "stopped_offline_off": "Eksports apstājās, jo šis konts vairs neglabā pastu šajā ierīcē.",
+    "policy_unknown": "Jūsu organizācijas noteikumi šim kontam vēl nav zināmi, tāpēc eksports pagaidām ir izslēgts.",
+    "leftover_file": "Failu {name} neizdevās noņemt no saglabāšanas vietas. Tas ir nepilnīgs, varat to izdzēst."
   },
   "deep_link": {
     "message_not_found": "Šī ziņa vairs nav pieejama.",

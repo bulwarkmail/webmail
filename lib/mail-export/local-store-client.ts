@@ -60,8 +60,31 @@ export function localExportClient({ account, jmap, store, online, gate = network
     const calls: MethodCall[] = [[name, { accountId: jmap, ...args }, '0']];
     const answer = await store.answer(account, calls);
     const [method, result] = answer?.methodResponses?.[0] ?? [];
-    if (!answer || method === 'error') throw new Error(String((result as { description?: string; type?: string } | undefined)?.description ?? (result as { type?: string } | undefined)?.type ?? `${name} got no answer`));
+    if (!answer || method === 'error') {
+      const refusal = result as { description?: string; type?: string } | undefined;
+      // A request whose only call is refused comes back as no answer at all.
+      throw Object.assign(new Error(String(refusal?.description ?? refusal?.type ?? `${name} got no answer`)), { refusal: refusal?.type ?? 'serverUnavailable' });
+    }
     return result as T;
+  };
+
+  /**
+   * A folder with nothing in it refuses while a full listing runs: the store can't
+   * tell empty from not listed yet. To an export that's an empty folder, so what's
+   * kept in the other folders still goes out. Only when the store's own count says
+   * it holds nothing: any other refusal must not pass for an empty folder, or the
+   * person gets a file that's missing mail and no word about it.
+   */
+  const queryIds = async (args: Record<string, unknown>): Promise<string[]> => {
+    try {
+      return (await call<{ ids: string[] }>('Email/query', args)).ids;
+    } catch (error) {
+      if ((error as { refusal?: string }).refusal !== 'serverUnavailable') throw error;
+      const mailboxId = (args.filter as { inMailbox?: string } | undefined)?.inMailbox;
+      const { total } = await store.area<{ total: number }>(account, 'mail.rawStatus', { jmap, mailboxId });
+      if (total === 0) return [];
+      throw error;
+    }
   };
 
   const fetchBlobForTransfer = async (blobId: string, _accountId: string | undefined, signal?: AbortSignal): Promise<Uint8Array> => {
@@ -90,7 +113,7 @@ export function localExportClient({ account, jmap, store, online, gate = network
     queryEmailFields: async (filter, properties, _accountId, limit = Number.MAX_SAFE_INTEGER) => {
       const emails: Record<string, unknown>[] = [];
       for (let position = 0; emails.length < limit;) {
-        const { ids } = await call<{ ids: string[] }>('Email/query', {
+        const ids = await queryIds({
           filter,
           sort: [{ property: 'receivedAt', isAscending: false }],
           position,

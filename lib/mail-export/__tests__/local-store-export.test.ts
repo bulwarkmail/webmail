@@ -66,9 +66,10 @@ function serverWith(ids: Record<string, string>): Server {
 }
 
 async function storeOf(server: Server, scope: StoreScope = SCOPE, areas = [mailArea]) {
+  const db = openMemoryStore();
   const engine = new AccountEngine({
     account: 'acc',
-    db: openMemoryStore(),
+    db,
     session: FAKE_SESSION,
     transport: server,
     areas,
@@ -79,6 +80,7 @@ async function storeOf(server: Server, scope: StoreScope = SCOPE, areas = [mailA
   await engine.requestSync();
   return {
     engine,
+    db,
     store: {
       answer: (_account: string, calls: MethodCall[]) => engine.answer(calls),
       area: <T>(_account: string, name: string, params?: unknown) => engine.areaCall(name, params) as Promise<T>,
@@ -154,6 +156,71 @@ describe('an export from the local store', () => {
     expect(messages).toHaveLength(2);
     expect(messages[0]).toEqual(server.files.get('raw-a'));
     expect(messages[1]).toEqual(server.files.get('raw-b'));
+  });
+
+  it('keeps the exact bytes in an .eml, and in an mbox puts the store\'s state in place of the state headers it had', async () => {
+    const headers = 'Status: O\r\nX-Status: F\r\nX-Keywords: oldword\r\nX-Mozilla-Status: 0009\r\nX-Mozilla-Status2: 00800000\r\nX-Mozilla-Keys: oldkey\r\n';
+    const rest = 'From: a@example.org\r\nSubject: Stateful\r\n\r\nStatus: in the body stays\r\n';
+    const data = enc.encode(`${headers}${rest}`);
+    const server = new Server({ mailboxes: [{ id: 'inbox', name: 'Inbox', role: 'inbox' }] });
+    server.files.set('raw-s', data);
+    server.addEmail({ id: 's', blobId: 'raw-s', size: data.length, subject: 'Stateful', keywords: { $seen: true }, mailboxIds: { inbox: true } });
+    const { store } = await storeOf(server);
+    const eml = await run(store, 'eml', ['inbox']);
+    expect([...(await zipEntries(eml.bytes)).values()]).toEqual([data]);
+    const mbox = await run(store, 'mbox', ['inbox']);
+    const text = Buffer.from(mbox.bytes).toString('latin1');
+    expect(text).toContain('Status: RO\r\n');
+    for (const gone of ['X-Status: F', 'oldword', 'oldkey', 'X-Mozilla-Status']) expect(text).not.toContain(gone);
+    expect(text).toContain('Status: in the body stays');
+    expect(Buffer.from(mboxMessages(mbox.bytes)[0]).toString('latin1')).toBe(rest);
+  });
+
+  it('writes what\'s kept while a full listing runs, when an empty folder refuses to answer', async () => {
+    const server = serverWith({ a: 'inbox', b: 'inbox' });
+    const { store, db } = await storeOf(server);
+    // As during a first sync or after a lost state: the store can\'t tell empty from not listed yet.
+    db.run("UPDATE sync_state SET state = NULL WHERE type = 'Email'");
+    expect(await store.answer('acc', [['Email/query', { accountId: JMAP_ACCOUNT, filter: { inMailbox: 'archive' } }, '0']])).toBeNull();
+    const { result, bytes } = await run(store, 'eml', ['inbox', 'archive']);
+    expect(result.phase).toBe('done');
+    expect(result.exported).toBe(2);
+    expect([...(await zipEntries(bytes)).keys()].filter((name) => name.endsWith('.eml'))).toHaveLength(2);
+  });
+
+  it('stops, rather than pass off a refusal as an empty folder, when the store says the folder has mail', async () => {
+    const server = serverWith({ a: 'inbox', b: 'inbox' });
+    const { store } = await storeOf(server);
+    const refusing = { ...store, answer: async () => null };
+    const { sink } = collecting();
+    const result = await runExport({
+      client: localExportClient({ account: 'acc', jmap: JMAP_ACCOUNT, store: refusing, online: () => null }),
+      accountId: JMAP_ACCOUNT,
+      folders: [{ mailboxId: 'inbox', path: ['inbox'] }],
+      format: 'mbox',
+      sink,
+      signal: new AbortController().signal,
+      requestsPerMinute: Infinity,
+      sleep: async () => {},
+      onProgress: () => {},
+    });
+    expect(result.phase).toBe('failed');
+    expect(result.file).toBeUndefined();
+  });
+
+  it('says how large an export is and how much of it is here', async () => {
+    const server = serverWith({ a: 'inbox', b: 'inbox', c: 'archive' });
+    server.gone.add('raw-b');
+    const { store } = await storeOf(server);
+    const size = (id: string) => server.files.get(id)!.length;
+    expect(await store.area('acc', 'mail.rawSize', { jmap: JMAP_ACCOUNT, mailboxId: 'inbox' })).toEqual({ bytes: size('raw-a') + size('raw-b'), keptBytes: size('raw-a') });
+    expect(await store.area('acc', 'mail.rawSize', { jmap: JMAP_ACCOUNT, mailboxId: 'archive' })).toEqual({ bytes: size('raw-c'), keptBytes: size('raw-c') });
+  });
+
+  it('says nothing is here with attachments off', async () => {
+    const server = serverWith({ a: 'inbox' });
+    const { store } = await storeOf(server, { ...SCOPE, attachments: false });
+    expect(await store.area('acc', 'mail.rawSize', { jmap: JMAP_ACCOUNT, mailboxId: 'inbox' })).toEqual({ bytes: server.files.get('raw-a')!.length, keptBytes: 0 });
   });
 
   it('counts what it has no original for by reason, and still writes the rest', async () => {

@@ -5848,7 +5848,7 @@
     "settings_label": "Saklanan postayı dışa aktar",
     "settings_description": "Bu cihazdaki postayı mbox veya .eml dosyası olarak kaydedin. Çevrimdışı da çalışır.",
     "title": "Saklanan postayı dışa aktar",
-    "description": "Bu cihazın sakladıklarını bayt bayt kaydeder. Seçtiğiniz süreden eski postalar buna dahil değildir. Sunucudaki her şeyi kaydetmek için “Tüm e-postaları dışa aktar” seçeneğini kullanın.",
+    "description": "Bu cihazın sakladığı orijinalleri kaydeder. .eml dosyaları birebir kopyalardır. mbox dosyası, biçiminin gerektirdiği işaretleri ekler ve okundu ile bayraklı durumunu her iletinin üst bilgilerine, var olanların yerine yazar. Seçtiğiniz süreden eski postalar buna dahil değildir. Sunucudaki her şeyi kaydetmek için “Tüm e-postaları dışa aktar” seçeneğini kullanın.",
     "folders_label": "Klasörler",
     "all_folders": "Tüm klasörler",
     "folder_kept": "Burada: {kept} / {total}",
@@ -5865,7 +5865,16 @@
     "retry": "Çevrimiçi yeniden dene",
     "retry_online": "Artık çevrimiçisiniz, bunlar sunucudan gelebilir.",
     "retry_offline": "Çevrimiçi olduğunuzda yeniden deneyebilirsiniz.",
-    "settings_button": "Dışa aktar…"
+    "settings_button": "Dışa aktar…",
+    "message_failed": "Sunucu bu iletiyi vermedi.",
+    "failed_generic": "Dışa aktarma bir hata nedeniyle durdu. Yeniden deneyin.",
+    "stopped_limit": "Dışa aktarma {limit} boyutunda durdu; bu tarayıcı daha fazlasını tutamaz. Daha az klasör seçin veya Chromium, Firefox ya da masaüstü uygulamasını kullanın.",
+    "over_limit": "Bu tarayıcı en fazla {limit} tutabilir, bu seçim ise yaklaşık {size}. Daha az klasör seçin veya Chromium, Firefox ya da masaüstü uygulamasını kullanın.",
+    "no_room": "Bu dışa aktarma yaklaşık {size} gerektiriyor, bu tarayıcıda ise {free} kaldı. Daha az klasör seçin veya yer açın.",
+    "stopped_no_room": "Tarayıcıda dışa aktarma için yer kalmadı. Daha az klasör seçin veya yer açın.",
+    "stopped_offline_off": "Dışa aktarma durdu çünkü bu hesap artık bu cihazda posta saklamıyor.",
+    "policy_unknown": "Kuruluşunuzun bu hesap için kuralları henüz bilinmiyor, bu nedenle dışa aktarma şimdilik kapalı.",
+    "leftover_file": "{name} dosyası kaydettiğiniz yerden kaldırılamadı. Eksik olduğu için silebilirsiniz."
   },
   "deep_link": {
     "message_not_found": "Bu ileti artık kullanılamıyor.",

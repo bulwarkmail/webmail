@@ -5848,7 +5848,7 @@
     "settings_label": "Exportar correio guardado",
     "settings_description": "Guarde o correio deste dispositivo em ficheiros mbox ou .eml. Funciona sem ligação.",
     "title": "Exportar correio guardado",
-    "description": "Guarda o que este dispositivo conserva, byte a byte. O correio mais antigo do que o período escolhido não está incluído. Para guardar tudo do servidor, use “Exportar todos os e-mails”.",
+    "description": "Guarda os originais que este dispositivo conserva. Os ficheiros .eml são cópias exatas. Um ficheiro mbox acrescenta as marcas que o seu formato exige e escreve o estado de lido e assinalado nos cabeçalhos de cada mensagem, em vez dos que tinha. O correio mais antigo do que o período escolhido não está incluído. Para guardar tudo do servidor, use “Exportar todos os e-mails”.",
     "folders_label": "Pastas",
     "all_folders": "Todas as pastas",
     "folder_kept": "{kept} de {total} aqui",
@@ -5865,7 +5865,16 @@
     "retry": "Tentar de novo com ligação",
     "retry_online": "Já tem ligação, por isso estas podem vir do servidor.",
     "retry_offline": "Pode tentar de novo quando tiver ligação.",
-    "settings_button": "Exportar…"
+    "settings_button": "Exportar…",
+    "message_failed": "O servidor não entregou esta mensagem.",
+    "failed_generic": "A exportação parou devido a um erro. Tente de novo.",
+    "stopped_limit": "A exportação parou em {limit}, o máximo que este navegador consegue conter. Escolha menos pastas ou use o Chromium, o Firefox ou a aplicação de ambiente de trabalho.",
+    "over_limit": "Este navegador consegue conter no máximo {limit}, e esta escolha tem cerca de {size}. Escolha menos pastas ou use o Chromium, o Firefox ou a aplicação de ambiente de trabalho.",
+    "no_room": "Esta exportação precisa de cerca de {size}, e este navegador tem {free} disponíveis. Escolha menos pastas ou liberte espaço.",
+    "stopped_no_room": "O navegador ficou sem espaço para a exportação. Escolha menos pastas ou liberte espaço.",
+    "stopped_offline_off": "A exportação parou porque esta conta já não guarda correio neste dispositivo.",
+    "policy_unknown": "As regras da sua organização para esta conta ainda não são conhecidas, por isso a exportação fica desativada por agora.",
+    "leftover_file": "Não foi possível remover o ficheiro {name} do local onde o guardou. Está incompleto, pode apagá-lo."
   },
   "deep_link": {
     "message_not_found": "Esta mensagem não está mais disponível.",

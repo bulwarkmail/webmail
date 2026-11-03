@@ -5848,7 +5848,7 @@
     "settings_label": "Hoitud kirjade eksport",
     "settings_description": "Salvestage selle seadme kirjad mbox- või .eml-failidena. See töötab ka võrguühenduseta.",
     "title": "Hoitud kirjade eksport",
-    "description": "Salvestab selle, mida seade hoiab, baidi täpsusega. Valitud ajavahemikust vanemaid kirju selles pole. Kõige salvestamiseks serverist kasutage valikut „Ekspordi kõik kirjad”.",
+    "description": "Salvestab originaalid, mida see seade hoiab. .eml-failid on täpsed koopiad. mbox-fail lisab vormingu nõutud märgid ja kirjutab loetud ja märgistatud oleku iga kirja päistesse senise asemele. Valitud ajavahemikust vanemaid kirju selles pole. Kõige salvestamiseks serverist kasutage valikut „Ekspordi kõik kirjad”.",
     "folders_label": "Kaustad",
     "all_folders": "Kõik kaustad",
     "folder_kept": "Siin: {kept} / {total}",
@@ -5865,7 +5865,16 @@
     "retry": "Proovi uuesti võrgus",
     "retry_online": "Olete nüüd võrgus, nii et need võivad tulla serverist.",
     "retry_offline": "Proovige uuesti, kui olete võrgus.",
-    "settings_button": "Ekspordi…"
+    "settings_button": "Ekspordi…",
+    "message_failed": "Server ei andnud seda kirja.",
+    "failed_generic": "Eksport peatus vea tõttu. Proovige uuesti.",
+    "stopped_limit": "Eksport peatus piiril {limit}, rohkem see brauser ei mahuta. Valige vähem kaustu või kasutage Chromiumi, Firefoxi või töölauarakendust.",
+    "over_limit": "See brauser mahutab kuni {limit}, see valik on umbes {size}. Valige vähem kaustu või kasutage Chromiumi, Firefoxi või töölauarakendust.",
+    "no_room": "See eksport vajab umbes {size}, brauseril on selleks {free}. Valige vähem kaustu või vabastage ruumi.",
+    "stopped_no_room": "Brauseril sai ekspordi jaoks ruum otsa. Valige vähem kaustu või vabastage ruumi.",
+    "stopped_offline_off": "Eksport peatus, sest see konto ei hoia enam selles seadmes kirju.",
+    "policy_unknown": "Teie organisatsiooni reeglid selle konto kohta pole veel teada, seega on eksport praegu väljas.",
+    "leftover_file": "Faili {name} ei saanud salvestuskohast eemaldada. See on poolik, võite selle kustutada."
   },
   "deep_link": {
     "message_not_found": "See sõnum ei ole enam saadaval.",

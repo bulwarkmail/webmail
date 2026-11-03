@@ -55,6 +55,12 @@ export interface ExportProgress {
   pausedUntil?: number;
   file?: ExportFile;
   error?: string;
+  /** What stopped it, as the error's name: a dialog says this in the user's language. */
+  errorCode?: string;
+  /** The limit an ExportTooLargeError ran into, in bytes. */
+  errorLimit?: number;
+  /** A file in the place the user picked that couldn't be removed after a run that wrote nothing whole. */
+  leftover?: string;
 }
 
 /** What an export reads through: the real client, or lib/mail-export/local-store-client.ts. */
@@ -71,6 +77,8 @@ export interface ExportOptions {
   now?: () => number;
   sleep?: (ms: number, signal: AbortSignal) => Promise<void>;
   reportEveryMs?: number;
+  /** No file when nothing was written, also when nothing failed: the person chose mail, not an empty file. */
+  noEmptyFile?: boolean;
   /**
    * Requests per minute the export allows itself (the server's limit is 1000 for
    * everything). Infinity for a client that keeps to the limit itself.
@@ -94,6 +102,10 @@ const BATCH_BYTES = 4 * 1024 * 1024;
 const BATCH_COUNT = 100;
 const MAX_FAILURES_LISTED = 20;
 const RETRY_DELAYS_MS = [500, 2000, 5000];
+
+function leftoverOf(aborted: { leftover?: string } | void | undefined): string | undefined {
+  return aborted ? aborted.leftover : undefined;
+}
 
 function isAbort(error: unknown): boolean {
   return (error as { name?: string } | null)?.name === "AbortError";
@@ -366,23 +378,31 @@ export async function runExport(options: ExportOptions): Promise<ExportProgress>
     }
     // A cancel with nothing left to fetch must not close and hand out the file.
     if (signal.aborted) throw cancelled();
-    if (progress.exported === 0 && progress.failed > 0) {
+    if (progress.exported === 0 && (progress.failed > 0 || options.noEmptyFile)) {
       // Every message failed: an empty file would only look like a backup.
-      await sink.abort();
+      progress.leftover = leftoverOf(await sink.abort());
     } else {
       if (zip) await zip.finish();
-      progress.file = await sink.close();
+      const file = await sink.close(signal);
+      // Stopped while the file was being finished: it goes, and nobody gets to download it.
+      if (signal.aborted) {
+        await file.discard(true).catch(() => {});
+        throw cancelled();
+      }
+      progress.file = file;
     }
     progress.phase = "done";
     progress.fraction = 1;
   } catch (error) {
-    await sink.abort().catch(() => {});
+    progress.leftover = leftoverOf(await sink.abort().catch(() => undefined));
     progress.pausedUntil = undefined;
     if (isAbort(error) || signal.aborted) {
       progress.phase = "cancelled";
     } else {
       progress.phase = "failed";
       progress.error = error instanceof Error ? error.message : String(error);
+      progress.errorCode = (error as { name?: string } | null)?.name;
+      progress.errorLimit = (error as { limit?: number } | null)?.limit;
     }
   }
   report(true);

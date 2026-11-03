@@ -5848,7 +5848,7 @@
     "settings_label": "匯出已保存的郵件",
     "settings_description": "將此裝置上的郵件儲存為 mbox 或 .eml 檔案。離線時也可使用。",
     "title": "匯出已保存的郵件",
-    "description": "依原樣儲存此裝置保留的內容。早於所選期間的郵件不包含在內。要儲存伺服器上的全部內容,請使用「匯出所有郵件」。",
+    "description": "儲存此裝置保留的原件。.eml 檔案是完全相同的副本。mbox 檔案會加上其格式需要的標記,並把已讀和標幟狀態寫入每封郵件的標頭,取代原有內容。早於所選期間的郵件不包含在內。要儲存伺服器上的全部內容,請使用「匯出所有郵件」。",
     "folders_label": "資料夾",
     "all_folders": "所有資料夾",
     "folder_kept": "此處 {kept} / {total}",
@@ -5865,7 +5865,16 @@
     "retry": "連線後重試",
     "retry_online": "現在已連線,可以從伺服器取得。",
     "retry_offline": "連線後可以重試。",
-    "settings_button": "匯出…"
+    "settings_button": "匯出…",
+    "message_failed": "伺服器沒有提供這封郵件。",
+    "failed_generic": "匯出因錯誤而停止。請重試。",
+    "stopped_limit": "匯出在 {limit} 處停止,這是此瀏覽器能容納的上限。請選擇較少的資料夾,或使用 Chromium、Firefox 或桌面應用程式。",
+    "over_limit": "此瀏覽器最多能容納 {limit},而此選擇約為 {size}。請選擇較少的資料夾,或使用 Chromium、Firefox 或桌面應用程式。",
+    "no_room": "此次匯出約需 {size},而此瀏覽器還剩 {free}。請選擇較少的資料夾或釋放空間。",
+    "stopped_no_room": "瀏覽器沒有足夠空間完成匯出。請選擇較少的資料夾或釋放空間。",
+    "stopped_offline_off": "匯出已停止,因為此帳號不再於此裝置上保留郵件。",
+    "policy_unknown": "尚不清楚貴組織對此帳號的規則,因此匯出暫時關閉。",
+    "leftover_file": "無法從儲存位置移除檔案 {name}。它不完整,您可以將其刪除。"
   },
   "deep_link": {
     "message_not_found": "已無法使用此郵件。",

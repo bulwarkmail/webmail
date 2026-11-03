@@ -5848,7 +5848,7 @@
     "settings_label": "Exportovať uloženú poštu",
     "settings_description": "Uložte poštu z tohto zariadenia ako súbory mbox alebo .eml. Funguje to aj offline.",
     "title": "Exportovať uloženú poštu",
-    "description": "Uloží to, čo toto zariadenie uchováva, bajt po bajte. Pošta staršia ako zvolené obdobie v tom nie je. Ak chcete uložiť všetko zo servera, použite „Exportovať všetku poštu“.",
+    "description": "Uloží originály, ktoré toto zariadenie uchováva. Súbory .eml sú presné kópie. Súbor mbox pridá značky, ktoré jeho formát vyžaduje, a zapíše stav prečítania a označenia do hlavičiek každej správy namiesto tých, ktoré mala. Pošta staršia ako zvolené obdobie v tom nie je. Ak chcete uložiť všetko zo servera, použite „Exportovať všetku poštu“.",
     "folders_label": "Priečinky",
     "all_folders": "Všetky priečinky",
     "folder_kept": "{kept} z {total} tu",
@@ -5865,7 +5865,16 @@
     "retry": "Skúsiť znova online",
     "retry_online": "Ste online, takže môžu prísť zo servera.",
     "retry_offline": "Môžete to skúsiť znova, keď budete online.",
-    "settings_button": "Exportovať…"
+    "settings_button": "Exportovať…",
+    "message_failed": "Server túto správu nedodal.",
+    "failed_generic": "Export sa zastavil pre chybu. Skúste to znova.",
+    "stopped_limit": "Export sa zastavil na {limit}, čo je najviac, čo tento prehliadač pojme. Vyberte menej priečinkov alebo použite Chromium, Firefox či desktopovú aplikáciu.",
+    "over_limit": "Tento prehliadač pojme najviac {limit} a tento výber má asi {size}. Vyberte menej priečinkov alebo použite Chromium, Firefox či desktopovú aplikáciu.",
+    "no_room": "Tento export potrebuje asi {size} a tento prehliadač má k dispozícii {free}. Vyberte menej priečinkov alebo uvoľnite miesto.",
+    "stopped_no_room": "Prehliadaču došlo miesto na export. Vyberte menej priečinkov alebo uvoľnite miesto.",
+    "stopped_offline_off": "Export sa zastavil, pretože tento účet už na tomto zariadení poštu neuchováva.",
+    "policy_unknown": "Pravidlá vašej organizácie pre tento účet zatiaľ nie sú známe, preto export zatiaľ zostáva vypnutý.",
+    "leftover_file": "Súbor {name} sa nepodarilo odstrániť z miesta, kam ste ho uložili. Je neúplný, môžete ho vymazať."
   },
   "deep_link": {
     "message_not_found": "Táto správa už nie je dostupná.",
