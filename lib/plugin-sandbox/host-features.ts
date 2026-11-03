@@ -9,6 +9,7 @@
 // plugin id, one switch at a time.
 
 import { usePolicyStore } from '@/stores/policy-store';
+import { useAuthStore } from '@/stores/auth-store';
 import { noThirdPartyTraffic, subscribeThirdPartyMode } from '@/lib/third-party-mode';
 import type { HostFeaturesView, InstalledPlugin } from '../plugin-types';
 import type { OrganisationPolicy } from '@/lib/admin/organisation-policy';
@@ -79,4 +80,6 @@ export function watchHostFeatures(onChange: (features: HostFeaturesView) => void
   usePolicyStore.subscribe(check);
   // The mode is known once the config has been read, and an admin may turn it on later.
   subscribeThirdPartyMode(check);
+  // Flags that depend on the server (Files) change with the signed-in session.
+  useAuthStore.subscribe((state, previous) => { if (state.client !== previous.client) check(); });
 }

@@ -5872,11 +5872,11 @@
       },
       "files_read": {
         "title": "Dosyalarınızı okuma",
-        "body": "Hesabınızda saklanan dosyalara göz atma ve onları açma."
+        "body": "Hesabınızdaki dosyaları bulma, açma ve okuma."
       },
       "files_write": {
         "title": "Dosyalarınızı değiştirme",
-        "body": "Hesabınızdaki dosyaları yükleme, yeniden adlandırma, taşıma ve silme."
+        "body": "Hesabınızdaki dosyaları kaydetme, oluşturma, yeniden adlandırma ve taşıma; bir dosyanın silinmesini engelleme."
       },
       "identity_read": {
         "title": "Gönderen adreslerinizi görme",

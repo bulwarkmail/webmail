@@ -46,6 +46,11 @@ export interface ComposerHandle {
   replaceSelection(html: string, text: string, opts: { below: boolean }): boolean;
   /** Attach a blob the plugin uploaded, through the composer's usual checks. */
   attach(file: ComposerAttachment): Promise<boolean>;
+  /**
+   * Attach a file from the user's Files (host only, api.files.attach), with
+   * the login whose Files hold it, through the same checks.
+   */
+  attachFile?(file: ComposerAttachment & { sourceAccountId?: string }): Promise<boolean>;
 }
 
 const handles = new Map<string, ComposerHandle>();

@@ -555,6 +555,8 @@ export function resourceToView(r: FileResource, path: string): FileResourceView 
     parentId: r.parentId,
     name: r.name,
     type: r.isDirectory ? 'd' : r.contentType,
+    // A symlink has no blob either: the kind says it isn't a folder.
+    nodeType: r.isDirectory ? 'directory' : r.isSymlink ? 'symlink' : 'file',
     blobId: r.isDirectory ? null : r.blobId,
     size: r.contentLength,
     created: r.lastModified,

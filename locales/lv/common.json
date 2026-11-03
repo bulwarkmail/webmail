@@ -5872,11 +5872,11 @@
       },
       "files_read": {
         "title": "Lasīt jūsu failus",
-        "body": "Pārlūkot un atvērt jūsu kontā glabātos failus."
+        "body": "Atrast, atvērt un lasīt jūsu konta failus."
       },
       "files_write": {
         "title": "Mainīt jūsu failus",
-        "body": "Augšupielādēt, pārdēvēt, pārvietot un dzēst failus jūsu kontā."
+        "body": "Saglabāt, izveidot, pārdēvēt un pārvietot failus jūsu kontā un neļaut dzēst failu."
       },
       "identity_read": {
         "title": "Redzēt jūsu sūtītāja adreses",

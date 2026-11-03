@@ -5872,11 +5872,11 @@
       },
       "files_read": {
         "title": "Citirea fișierelor",
-        "body": "Răsfoiește și deschide fișierele stocate în contul dvs."
+        "body": "Găsește, deschide și citește fișierele din contul dvs."
       },
       "files_write": {
         "title": "Modificarea fișierelor",
-        "body": "Încarcă, redenumește, mută și șterge fișiere din contul dvs."
+        "body": "Salvează, creează, redenumește și mută fișiere în contul dvs. și poate împiedica ștergerea unui fișier."
       },
       "identity_read": {
         "title": "Vizualizarea identităților de expediere",

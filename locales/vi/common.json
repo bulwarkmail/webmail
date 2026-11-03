@@ -5884,11 +5884,11 @@
       },
       "files_read": {
         "title": "Đọc tệp của bạn",
-        "body": "Duyệt và mở các tệp được lưu trữ trong tài khoản của bạn."
+        "body": "Tìm, mở và đọc các tệp trong tài khoản của bạn."
       },
       "files_write": {
         "title": "Thay đổi tệp của bạn",
-        "body": "Tải lên, đổi tên, di chuyển và xóa các tệp trong tài khoản của bạn."
+        "body": "Lưu, tạo, đổi tên và di chuyển tệp trong tài khoản của bạn, đồng thời ngăn xóa một tệp."
       },
       "identity_read": {
         "title": "Xem địa chỉ người gửi của bạn",

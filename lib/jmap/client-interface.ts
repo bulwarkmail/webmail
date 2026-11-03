@@ -700,6 +700,12 @@ export interface IJMAPClient {
    */
   copyBlobs(fromAccountId: string, blobIds: string[], toAccountId: string): Promise<Record<string, string>>;
   updateFileNode(id: string, updates: Partial<Pick<FileNode, 'name' | 'parentId'>>): Promise<void>;
+  /**
+   * Point a file at new content (a blob already uploaded): same node, same
+   * name and place, new blob. The server stamps `modified`. Throws when
+   * refused.
+   */
+  replaceFileNodeBlob(id: string, blobId: string): Promise<void>;
   updateFileNodes(updates: Record<string, Partial<Pick<FileNode, 'name' | 'parentId'>>>): Promise<{ updated: string[]; notUpdated: Record<string, string> }>;
   destroyFileNodes(ids: string[]): Promise<{ destroyed: string[]; notDestroyed: string[] }>;
   copyFileNode(id: string, newName: string, parentId: string | null, listings?: FileNodeListings): Promise<FileNode>;

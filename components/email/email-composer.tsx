@@ -2525,7 +2525,9 @@ export function EmailComposer({
   // offers "attach from there". No `file` is set, matching the existing
   // draft-part hydration path above (a blobId-only attachment is already a
   // supported shape, just never previously reachable from a plugin).
-  const handlePluginAttachmentAdd = useCallback(async (raw: PluginAttachmentUpload): Promise<boolean> => {
+  // `sourceAccountId` (host only, api.files.attach): the login whose Files
+  // hold the blob, so a draft sent from another login copies it over first.
+  const handlePluginAttachmentAdd = useCallback(async (raw: PluginAttachmentUpload, sourceAccountId?: string): Promise<boolean> => {
     // The values come from a plugin: check them, and run the same intercept
     // and size limit every other way of attaching a file goes through.
     const upload = normalizePluginAttachment(raw);
@@ -2543,7 +2545,7 @@ export function EmailComposer({
       toast.error(t('attachments_total_too_large', { max: formatFileSize(maxTotal) }));
       return false;
     }
-    setAttachments(prev => [...prev, upload]);
+    setAttachments(prev => [...prev, sourceAccountId ? { ...upload, sourceAccountId } : upload]);
     return true;
   }, [composerClient, t]);
   // Stable props, so a re-render of the composer doesn't post them to the
@@ -3085,6 +3087,7 @@ export function EmailComposer({
         return !!editor && replaceEditorSelection(editor, html, { below });
       },
       attach: (file) => pluginAttachRef.current(file as PluginAttachmentUpload),
+      attachFile: ({ sourceAccountId, ...file }) => pluginAttachRef.current(file as PluginAttachmentUpload, sourceAccountId),
     });
     setPluginComposerId(id);
     return unregister;
@@ -3221,7 +3224,8 @@ export function EmailComposer({
   );
   // A cloud picker attaches files, or puts share links in the text.
   const pluginAttachmentSourceProps = useMemo(
-    () => ({ onAttach: handlePluginAttachmentAdd, insertText: pluginInsertText, composerId: pluginComposerId }),
+    // One argument only: the login of a blob is the host's to say (attachFile).
+    () => ({ onAttach: (raw: PluginAttachmentUpload) => handlePluginAttachmentAdd(raw), insertText: pluginInsertText, composerId: pluginComposerId }),
     [handlePluginAttachmentAdd, pluginInsertText, pluginComposerId],
   );
   const pluginComposerIdRef = useRef(pluginComposerId);

@@ -5872,11 +5872,11 @@
       },
       "files_read": {
         "title": "Fájljaid olvasása",
-        "body": "Böngészi és megnyitja a fiókodban tárolt fájlokat."
+        "body": "Megkeresi, megnyitja és elolvassa a fiókodban lévő fájlokat."
       },
       "files_write": {
         "title": "Fájljaid módosítása",
-        "body": "Fájlokat tölt fel, nevez át, helyez át és töröl a fiókodban."
+        "body": "Fájlokat ment, hoz létre, nevez át és helyez át a fiókodban, és megakadályozhatja egy fájl törlését."
       },
       "identity_read": {
         "title": "Küldő azonosságaid megtekintése",

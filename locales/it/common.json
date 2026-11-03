@@ -5872,11 +5872,11 @@
       },
       "files_read": {
         "title": "Leggere i tuoi file",
-        "body": "Sfogliare e aprire i file salvati nel tuo account."
+        "body": "Cercare, aprire e leggere i file del tuo account."
       },
       "files_write": {
         "title": "Modificare i tuoi file",
-        "body": "Caricare, rinominare, spostare ed eliminare file nel tuo account."
+        "body": "Salvare, creare, rinominare e spostare file nel tuo account e impedire che un file venga eliminato."
       },
       "identity_read": {
         "title": "Vedere i tuoi indirizzi mittente",

@@ -406,4 +406,27 @@ describe('plugins editing the message being written', () => {
     cleanup();
     expect(composerHandle(id)).toBeNull();
   });
+
+  // api.files.attach: a file from the user's Files keeps the login that
+  // holds it, so a draft written from another login copies it over before
+  // it is sent (rehomeForeignBlobs) and reads go to its owner.
+  it('attaches a Files file with the login that holds it', async () => {
+    const fetchB = vi.fn(async () => ({ type: 'text/plain', size: 1, arrayBuffer: async () => new Uint8Array([7]).buffer }));
+    const previous = useAuthStore.getState();
+    const oldGetClient = previous.getClientForAccount;
+    useAuthStore.setState({ getClientForAccount: (id: string) => (id === 'login-b' ? { fetchBlob: fetchB } : null) as never });
+    try {
+      const { handle } = await renderComposer();
+      let ok = false;
+      await act(async () => { ok = await handle.attachFile!({ blobId: 'F1', name: 'notes.md', type: 'text/markdown', size: 1, sourceAccountId: 'login-b' }); });
+      expect(ok).toBe(true);
+      expect(await screen.findByText('notes.md')).toBeTruthy();
+      const [attached] = handle.readMetadata!().attachments;
+      await handle.readAttachment!(attached.id);
+      expect(fetchB).toHaveBeenCalledWith('F1', 'notes.md', 'text/markdown');
+    } finally {
+      cleanup();
+      useAuthStore.setState({ getClientForAccount: oldGetClient });
+    }
+  });
 });

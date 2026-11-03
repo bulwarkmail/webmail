@@ -5872,11 +5872,11 @@
       },
       "files_read": {
         "title": "Odczyt plików",
-        "body": "Przegląda i otwiera pliki zapisane na Twoim koncie."
+        "body": "Wyszukiwanie, otwieranie i czytanie plików na Twoim koncie."
       },
       "files_write": {
         "title": "Zmiana plików",
-        "body": "Przesyła, zmienia nazwy, przenosi i usuwa pliki na Twoim koncie."
+        "body": "Zapisywanie, tworzenie, zmiana nazw i przenoszenie plików na Twoim koncie oraz blokowanie usunięcia pliku."
       },
       "identity_read": {
         "title": "Podgląd tożsamości nadawcy",

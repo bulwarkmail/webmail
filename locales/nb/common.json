@@ -5872,11 +5872,11 @@
       },
       "files_read": {
         "title": "Lese filene dine",
-        "body": "Bla gjennom og åpne filene som er lagret på kontoen din."
+        "body": "Finne, åpne og lese filene på kontoen din."
       },
       "files_write": {
         "title": "Endre filene dine",
-        "body": "Laste opp, gi nytt navn til, flytte og slette filer på kontoen din."
+        "body": "Lagre, opprette, gi nytt navn til og flytte filer på kontoen din, og hindre at en fil blir slettet."
       },
       "identity_read": {
         "title": "Se avsenderidentitetene dine",
