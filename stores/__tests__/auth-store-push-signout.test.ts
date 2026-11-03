@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const endWebPushForSignOut = vi.hoisted(() => vi.fn(async () => {}));
-vi.mock('@/lib/web-push', async (original) => ({ ...(await original<typeof import('@/lib/web-push')>()), endWebPushForSignOut }));
+const dropAllWebPushRegistrations = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock('@/lib/web-push', async (original) => ({ ...(await original<typeof import('@/lib/web-push')>()), endWebPushForSignOut, dropAllWebPushRegistrations }));
 
 import { setClientForTests, useAuthStore } from '../auth-store';
 import { useAccountStore } from '../account-store';
@@ -76,6 +77,13 @@ describe('signing out ends the login\'s push registration', () => {
     useAuthStore.setState({ client, isAuthenticated: true, activeAccountId: null, isDemoMode: false });
     await useAuthStore.getState().logout();
     expect(useAuthStore.getState().client).toBeNull();
+  });
+
+  it('signing out of everything also covers logins with no connection', async () => {
+    dropAllWebPushRegistrations.mockClear();
+    useAuthStore.setState({ isDemoMode: false });
+    await useAuthStore.getState().logoutAll();
+    expect(dropAllWebPushRegistrations).toHaveBeenCalledTimes(1);
   });
 
   it('not in demo mode', async () => {

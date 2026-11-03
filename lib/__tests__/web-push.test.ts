@@ -6,6 +6,7 @@ import { RateLimitError, RequestTimeoutError } from '@/lib/jmap/client';
 import {
   buildEmailPushConfig,
   disableWebPush,
+  dropAllWebPushRegistrations,
   enableWebPush,
   endWebPushForSignOut,
   isWebPushEnabled,
@@ -1989,6 +1990,33 @@ describe('endWebPushForSignOut', () => {
     await endWebPushForSignOut(client);
 
     expect(browserSub.unsubscribe).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('dropAllWebPushRegistrations', () => {
+  it('takes down every login this browser registered, connected or not, and calls no relay it did not use', async () => {
+    const { browserSub } = installPushBrowser();
+    localStorage.setItem('bulwark.push.subscriptionId.v1.a', 'x');
+    localStorage.setItem('bulwark.push.deviceClientId.v1.a', 'device-a');
+    localStorage.setItem('bulwark.push.relayBase.v1.a', RELAY);
+    localStorage.setItem('bulwark.push.subscriptionId.v1.b', 'y');
+    localStorage.setItem('bulwark.push.deviceClientId.v1.b', 'device-b');
+    const calls = installFetch({});
+
+    await dropAllWebPushRegistrations();
+
+    expect(calls).toEqual([{ url: `${RELAY}/api/push/register/device-a`, method: 'DELETE' }]);
+    expect(localStorage.getItem('bulwark.push.subscriptionId.v1.a')).toBeNull();
+    expect(localStorage.getItem('bulwark.push.subscriptionId.v1.b')).toBeNull();
+    expect(browserSub.unsubscribe).toHaveBeenCalledTimes(1);
+  });
+
+  it('does nothing with nothing registered', async () => {
+    const { browserSub } = installPushBrowser();
+    const calls = installFetch({});
+    await dropAllWebPushRegistrations();
+    expect(calls).toEqual([]);
+    expect(browserSub.unsubscribe).not.toHaveBeenCalled();
   });
 });
 

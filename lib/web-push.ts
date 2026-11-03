@@ -1119,6 +1119,34 @@ export async function endWebPushForSignOut(client: IJMAPClient): Promise<void> {
   await disableWebPush({ client, relayBaseUrl }).catch(() => undefined);
 }
 
+/**
+ * Nobody stays signed in here. A login without a connection can't reach its mail
+ * server, but the relay needs no login: without the record its pings go nowhere.
+ * Whatever is left of the keys goes, so nothing keeps the browser subscription.
+ */
+export async function dropAllWebPushRegistrations(): Promise<void> {
+  if (typeof localStorage === 'undefined') return;
+  const accounts: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key?.startsWith(SUBSCRIPTION_ID_PREFIX)) accounts.push(key.slice(SUBSCRIPTION_ID_PREFIX.length));
+  }
+  if (accounts.length === 0) return;
+  for (const accountId of accounts) {
+    const relay = localStorage.getItem(relayBaseKey(accountId));
+    const device = localStorage.getItem(deviceClientIdKey(accountId));
+    if (relay && device) await dropRelayRecord(relay, device);
+    localStorage.removeItem(subscriptionIdKey(accountId));
+    localStorage.removeItem(relayBaseKey(accountId));
+    localStorage.removeItem(endpointKey(accountId));
+    await forgetRelayRegistration(accountId);
+  }
+  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
+  const registration = await navigator.serviceWorker.getRegistration(SW_SCOPE).catch(() => null);
+  const sub = await registration?.pushManager.getSubscription().catch(() => null);
+  await sub?.unsubscribe().catch(() => undefined);
+}
+
 export interface PushDevice {
   // The JMAP PushSubscription id - what you destroy to revoke it.
   id: string;
