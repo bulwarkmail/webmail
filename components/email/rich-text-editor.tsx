@@ -24,7 +24,7 @@ import { TableRow } from "@tiptap/extension-table-row";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { ReplyQuoteCollapse } from "@/components/email/reply-quote-collapse";
-import { QuotedHtml, serializeEditorContent } from "@/components/email/quoted-html";
+import { QuotedHtml, restoreCaretAfterContentSync, serializeEditorContent } from "@/components/email/quoted-html";
 import { keepLoadedParagraphSpacing, paragraphStyleWithoutSpacing, trailingParagraphBreakRule } from "@/components/email/paragraph-breaks";
 import { SignatureBlock } from "@/components/email/signature-block";
 import { styledBlockAttributes } from "@/components/email/styled-block-attributes";
@@ -614,7 +614,9 @@ export function RichTextEditor({
     if (!editor) return;
     const loaded = keepLoadedParagraphSpacing(content);
     if (loaded !== serializeEditorContent(editor)) {
+      const caret = editor.state.selection.from;
       editor.commands.setContent(loaded, { emitUpdate: false });
+      restoreCaretAfterContentSync(editor, caret);
     }
   }, [content, editor]);
 
