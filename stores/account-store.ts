@@ -5,6 +5,17 @@ import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 import { forgetDesktopServer } from '@/lib/desktop/bridge';
 import { generateAccountId, generateAvatarColor, getMaxAccounts } from '@/lib/account-utils';
 import { authHooks } from '@/lib/plugin-hooks';
+import { clearEvicted, markEvicted } from '@/lib/offline/state';
+
+export type AccountRemovalReason = 'explicit' | 'evicted';
+
+const removalListeners = new Set<(accountId: string, reason: AccountRemovalReason) => void>();
+
+/** Told before an account leaves the registry, and why. */
+export function onAccountRemoved(listener: (accountId: string, reason: AccountRemovalReason) => void): () => void {
+  removalListeners.add(listener);
+  return () => removalListeners.delete(listener);
+}
 
 function sameServerOrigin(a: string, b: string): boolean {
   try {
@@ -85,7 +96,11 @@ interface AccountState {
   defaultAccountId: string | null;
 
   addAccount: (entry: Omit<AccountEntry, 'id' | 'cookieSlot' | 'avatarColor'>) => string;
-  removeAccount: (accountId: string) => void;
+  /**
+   * `reason`: 'explicit' when someone signed the account out or removed it, its
+   * offline data goes with it; 'evicted' when the app dropped it by itself.
+   */
+  removeAccount: (accountId: string, reason?: AccountRemovalReason) => void;
   setActiveAccount: (accountId: string) => void;
   setDefaultAccount: (accountId: string) => void;
   getDefaultAccount: () => AccountEntry | null;
@@ -108,6 +123,7 @@ export const useAccountStore = create<AccountState>()(
         const state = get();
 
         const id = generateAccountId(entry.username, entry.serverUrl);
+        clearEvicted(id);
         if (state.accounts.some((a) => a.id === id)) {
           // Already exists - update mutable fields and return existing id
           set((s) => ({
@@ -158,9 +174,11 @@ export const useAccountStore = create<AccountState>()(
         return id;
       },
 
-      removeAccount: (accountId) => {
+      removeAccount: (accountId, reason = 'explicit') => {
         if (!get().accounts.some((a) => a.id === accountId)) return;
         const leaving = get().accounts.find((a) => a.id === accountId);
+        if (reason === 'evicted') markEvicted(accountId);
+        for (const listener of [...removalListeners]) listener(accountId, reason);
         set((s) => {
           const remaining = s.accounts.filter((a) => a.id !== accountId);
           const wasDefault = s.defaultAccountId === accountId;

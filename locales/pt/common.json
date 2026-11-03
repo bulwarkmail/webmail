@@ -5743,6 +5743,26 @@
       "no_drafts_mailbox": "Não foi possível encontrar a pasta Rascunhos."
     }
   },
+  "offlineConflicts": {
+    "title": "Alterações não aplicadas",
+    "description": "Fez estas alterações offline. Não foram aplicadas e a mensagem fica como está no servidor.",
+    "changed": "Alterada noutro dispositivo, a sua alteração não foi aplicada",
+    "changed_delete": "Alterada noutro dispositivo, não foi eliminada",
+    "gone": "Já não está no servidor, a sua alteração não foi aplicada",
+    "refused": "O servidor recusou esta alteração: {reason}",
+    "dismiss": "Dispensar",
+    "dismiss_label": "Dispensar a nota sobre {subject}",
+    "banner": "Alterações não aplicadas: {count}",
+    "toast": "Alterações feitas offline não aplicadas: {count}. A caixa de saída mostra quais.",
+    "storage_failed": "Este dispositivo não tem espaço para o correio offline. Liberte espaço ou guarde menos nas definições.",
+    "signout_changes_title": "Terminar sessão com alterações não guardadas?",
+    "signout_changes": "Alterações ainda não enviadas para o servidor: {count}. Terminar sessão elimina-as.",
+    "store_unavailable": "O correio offline deste dispositivo não pode ser aberto agora. O correio por enviar fica aqui e a aplicação continua a tentar.",
+    "store_reset": "Não foi possível ler o correio offline deste dispositivo, por isso está a ser transferido de novo. O que estava por enviar perdeu-se.",
+    "legacy_stranded": "Este navegador não consegue abrir o correio por enviar guardado por uma versão anterior. Atualizar o navegador pode recuperá-lo.",
+    "store_private": "As janelas privadas não podem guardar correio para uso offline.",
+    "server_not_answering": "O servidor de correio não está a responder. Tente novamente daqui a pouco."
+  },
   "deep_link": {
     "message_not_found": "Esta mensagem não está mais disponível.",
     "thread_not_found": "Esta conversa não está mais disponível.",

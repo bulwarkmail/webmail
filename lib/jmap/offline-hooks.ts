@@ -1,7 +1,7 @@
 /**
  * Where the JMAP client hands over to offline mode (#523, lib/offline/).
- * The client knows nothing about the cache: it asks these hooks whether to
- * skip the network, gives them what the server answered, and asks them for
+ * The client knows nothing about the local store: it asks these hooks whether
+ * to skip the network, gives them what the server answered, and asks them for
  * an answer when the network is gone. Nothing is registered while offline
  * mode is off for every account, so the client then behaves as before.
  *
@@ -22,6 +22,8 @@ export interface OfflineClientRef {
   getServerUrl(): string;
   getUsername(): string;
   getAccountId(): string;
+  /** Answers from this device only: a local copy on screen at a start. */
+  isOfflineOnly?(): boolean;
 }
 
 export interface OfflineHooks {
@@ -36,9 +38,11 @@ export interface OfflineHooks {
   /**
    * After a request failed on the network: whether the server can't be
    * reached at all (then the device answers), or it only refused that
-   * request (then it stays an error).
+   * request (then it stays an error). `error` is what the request failed with.
    */
-  serverGone(client: OfflineClientRef): Promise<boolean>;
+  serverGone(client: OfflineClientRef, error?: unknown): Promise<boolean>;
+  /** The server pushed new states, for the local store to catch up. */
+  stateChange?(client: OfflineClientRef, change: { changed?: Record<string, Record<string, string>> }): void;
   /** A blob kept on the device, or null. */
   blob(client: OfflineClientRef, blobId: string, accountId: string): Promise<Blob | null>;
   /** A blob the server sent, for the cache. */
@@ -57,6 +61,8 @@ export interface OfflineHooks {
    * ids as they are.
    */
   resolveStandIns?(client: OfflineClientRef, ids: string[]): Promise<Record<string, string | null>>;
+  /** The user opened this file: the local store keeps recently opened files. */
+  fileOpened?(client: OfflineClientRef, accountId: string, id: string): void;
 }
 
 const KEY = '__bulwarkOfflineHooks';
@@ -71,11 +77,22 @@ export function getOfflineHooks(): OfflineHooks | null {
   return (globalThis as HookGlobal)[KEY] ?? null;
 }
 
-/** The network refused the request (not an HTTP error): offline, DNS, a dropped connection. */
+/**
+ * The server can't be talked to: offline, DNS, a dropped connection, a request
+ * that hung until its deadline, a proxy answering for a server that's down.
+ * Not an answer from the server itself.
+ */
 export function isNetworkFailure(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
-  if (error.name === 'OfflineUnavailableError') return true;
+  if (error.name === 'OfflineUnavailableError' || error.name === 'RequestTimeoutError' || error.name === 'GatewayError') return true;
   return error.name === 'TypeError' && /fetch|network|load failed|internet/i.test(error.message);
+}
+
+/** The connection is fine and a proxy answered: the mail server behind it is what's gone. */
+export function isServerOutage(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  if (error.name === 'GatewayError') return true;
+  return error.name === 'SendNotStartedError' && (error as SendNotStartedError).cause instanceof Error && ((error as SendNotStartedError).cause as Error).name === 'GatewayError';
 }
 
 /** Thrown for a request the device can't answer while the server can't be reached. */

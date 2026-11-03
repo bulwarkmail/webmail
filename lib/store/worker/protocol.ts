@@ -5,6 +5,8 @@ import type { JmapResponse, MethodCall, StoreSession } from '../engine/transport
 
 export const RPC_CHANNEL = 'bulwark-store-rpc';
 export const OWNER_LOCK = 'bulwark-store-owner';
+/** The OPFS folder of the database pool. The page can delete it without loading wasm. */
+export const POOL_DIRECTORY = '.bulwark-store';
 
 export interface OpenAccountParams {
   account: string;
@@ -14,7 +16,8 @@ export interface OpenAccountParams {
   keyHex: string;
   session: StoreSession | null;
   scope: StoreScope;
-  invertedKeywordSort: boolean;
+  /** Null when this tab's client hasn't probed it: the stored answer stays. */
+  invertedKeywordSort: boolean | null;
   /** The page's current Authorization header. */
   auth: string | null;
 }
@@ -28,6 +31,8 @@ export interface StoreRpc {
   status(params: { account: string }): StoreStatus | null;
   /** A non-JMAP call into an area of the store. */
   area(params: { account: string; name: string; params: unknown }): unknown;
+  /** Closes an account and deletes its file. The name holds no account data. */
+  removeAccount(params: { account: string; file: string }): boolean;
 }
 
 export interface StoreStatus {
@@ -52,21 +57,27 @@ export type RpcReply = {
   to: string;
   result?: unknown;
   error?: string;
+  errorName?: string;
 };
 
 export type ChannelMessage =
   | RpcRequest
   | RpcReply
   | { kind: 'event'; event: StoreEvent }
-  | { kind: 'owner-changed'; owner: string | null };
+  | { kind: 'owner-changed'; owner: string | null }
+  // A tab started after the owner announced itself asks.
+  | { kind: 'who-owns' }
+  // Everyone signed out: every tab stops its worker, so the pool can go.
+  | { kind: 'shutdown' };
 
 /** From this tab's page to its own worker, never on the channel. */
 export type PageToWorker =
   | { kind: 'init'; clientId: string; moduleUrl: string }
   | { kind: 'open'; id: string; params: OpenAccountParams }
   | { kind: 'close-account'; id: string; account: string }
-  | { kind: 'remove-account'; id: string; account: string; file: string }
+  | { kind: 'prune-files'; id: string; keep: string[] }
   | { kind: 'set-auth'; account: string; auth: string | null }
+  | { kind: 'set-inverted'; account: string; inverted: boolean }
   | { kind: 'set-session'; account: string; session: StoreSession }
   | { kind: 'set-scope'; account: string; scope: StoreScope }
   | { kind: 'release'; id: string };

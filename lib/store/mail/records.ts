@@ -2,6 +2,18 @@
 
 import type { StorageAdapter } from '../storage';
 
+/**
+ * How keywords compare, measured on both Stalwart versions: the IMAP system
+ * flags fold to lower case, every other keyword is case-sensitive, so `Tag` and
+ * `tag` are two keywords and one message can carry both.
+ */
+const SYSTEM_KEYWORDS = new Set(['$seen', '$flagged', '$answered', '$draft', '$forwarded', '$mdnsent', '$junk', '$notjunk', '$phishing', '$recent', '$deleted']);
+
+export function keywordKey(keyword: string): string {
+  const lower = keyword.toLowerCase();
+  return SYSTEM_KEYWORDS.has(lower) ? lower : keyword;
+}
+
 export const MAIL_USING = ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:mail'];
 
 export const EMAIL_LIST_PROPERTIES = [
@@ -80,9 +92,17 @@ export function upsertEmail(db: StorageAdapter, jmap: string, email: EmailObject
     if (on) db.run('INSERT INTO email_mailbox (email_rowid, jmap, mailbox_id, received_at) VALUES (?, ?, ?, ?)', [rowid, jmap, box, receivedAt]);
   }
   for (const [keyword, on] of Object.entries((email.keywords ?? {}) as Record<string, boolean>)) {
-    if (on) db.run('INSERT INTO email_keyword (email_rowid, keyword) VALUES (?, ?)', [rowid, keyword.toLowerCase()]);
+    if (on) db.run('INSERT OR IGNORE INTO email_keyword (email_rowid, keyword) VALUES (?, ?)', [rowid, keywordKey(keyword)]);
   }
   return rowid;
+}
+
+export function putBlob(db: StorageAdapter, jmap: string, blobId: string, type: string | null, data: Uint8Array, at: number): void {
+  db.run(
+    `INSERT INTO blob (jmap, blob_id, type, size, at, data) VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT (jmap, blob_id) DO UPDATE SET type = excluded.type, size = excluded.size, at = excluded.at, data = excluded.data`,
+    [jmap, blobId, type, data.byteLength, at, data],
+  );
 }
 
 export function deleteEmail(db: StorageAdapter, jmap: string, id: string): void {
@@ -94,6 +114,7 @@ export function deleteEmail(db: StorageAdapter, jmap: string, id: string): void 
 export function deleteEmailRow(db: StorageAdapter, rowid: number): void {
   deleteHeadIndex(db, rowid);
   deleteBodyIndex(db, rowid);
+  forgetParts(db, rowid);
   // Explicit rather than ON DELETE CASCADE: foreign keys stay off for bulk speed.
   db.run('DELETE FROM email_mailbox WHERE email_rowid = ?', [rowid]);
   db.run('DELETE FROM email_keyword WHERE email_rowid = ?', [rowid]);
@@ -211,11 +232,37 @@ export function indexEmail(db: StorageAdapter, rowid: number, email: Record<stri
   indexBody(db, rowid, body);
 }
 
+/** A message's files go with it, unless another kept message has the same one. */
+function forgetParts(db: StorageAdapter, rowid: number): void {
+  const parts = db.all<{ jmap: string; blob_id: string }>('SELECT jmap, blob_id FROM email_part WHERE email_rowid = ?', [rowid]);
+  db.run('DELETE FROM email_part WHERE email_rowid = ?', [rowid]);
+  for (const part of parts) {
+    db.run(
+      'DELETE FROM blob WHERE jmap = ? AND blob_id = ? AND NOT EXISTS (SELECT 1 FROM email_part p WHERE p.jmap = ? AND p.blob_id = ?)',
+      [part.jmap, part.blob_id, part.jmap, part.blob_id],
+    );
+  }
+}
+
+function rememberParts(db: StorageAdapter, rowid: number, attachments: unknown): void {
+  const row = db.get<{ jmap: string; received_at: number }>('SELECT jmap, received_at FROM email WHERE rowid = ?', [rowid]);
+  if (!row || !Array.isArray(attachments)) return;
+  for (const part of attachments as Array<{ blobId?: unknown; size?: unknown; type?: unknown; name?: unknown }>) {
+    if (typeof part.blobId !== 'string') continue;
+    db.run(
+      `INSERT INTO email_part (jmap, blob_id, email_rowid, received_at, size, type, name) VALUES (?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT (jmap, blob_id, email_rowid) DO NOTHING`,
+      [row.jmap, part.blobId, rowid, row.received_at, typeof part.size === 'number' ? part.size : 0, typeof part.type === 'string' ? part.type : null, typeof part.name === 'string' ? part.name : null],
+    );
+  }
+}
+
 export function storeBody(db: StorageAdapter, rowid: number, listJson: string, full: Record<string, unknown>): void {
   const list = JSON.parse(listJson) as Record<string, unknown>;
   const body: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(full)) if (!(key in list)) body[key] = value;
   const hadBody = Number(db.get<{ body_state: number }>('SELECT body_state FROM email WHERE rowid = ?', [rowid])?.body_state) === 1;
+  rememberParts(db, rowid, body.attachments);
   db.run('INSERT INTO email_body (email_rowid, json) VALUES (?, ?) ON CONFLICT (email_rowid) DO UPDATE SET json = excluded.json', [rowid, JSON.stringify(body)]);
   db.run('UPDATE email SET body_state = 1 WHERE rowid = ?', [rowid]);
   // A first body is one insert. Only a body stored again has an old row to replace.

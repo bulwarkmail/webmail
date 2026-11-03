@@ -10,7 +10,7 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import {
   LITE_PENDING_PATH_KEY, STALWART_EXCLUDED_FILES, STALWART_MAX_BUNDLE_BYTES, STALWART_SAFE_BUNDLE_BYTES, STALWART_ZIP_NAME,
-  collectApiStrings, collectZipEntries, discoverBuiltLocales, flightTextRowsWithNeedles, inlineScriptHashes, isMainModule, listZipEntries, parseLiteTarget, resolveRepoRoot, stalwartEntryProblems, stalwartZipEntryProblems, unexpectedApiStrings,
+  collectApiStrings, collectZipEntries, discoverBuiltLocales, flightTextRowsWithNeedles, inlineScriptHashes, isMainModule, listZipEntries, parseLiteTarget, resolveRepoRoot, stalwartEntryProblems, stalwartZipEntryProblems, unexpectedApiStrings, unexpectedEngineFiles,
 } from "./lib.mjs";
 
 const repoRoot = resolveRepoRoot(import.meta.url);
@@ -82,6 +82,10 @@ export function verifyExport({ root = repoRoot, target, safeBundleBytes = STALWA
   const apiStrings = collectApiStrings(join(outDir, "_next", "static"));
   const unexpected = unexpectedApiStrings(apiStrings);
   for (const s of unexpected) problems.push(`client chunk references undocumented server endpoint ${s} (add an IS_LITE gate or document it in scripts/lite/lib.mjs)`);
+
+  if (existsSync(outDir)) {
+    for (const file of unexpectedEngineFiles(collectZipEntries(outDir).map(({ name }) => name))) problems.push(`out/${file} is the local store's engine, which Lite must not ship`);
+  }
 
   let zipBytes = 0;
   if (resolvedTarget === "stalwart") {

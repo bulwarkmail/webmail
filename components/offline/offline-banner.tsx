@@ -24,9 +24,11 @@ export function OfflineBanner() {
   const browserOffline = useOfflineStore((s) => s.browserOffline || s.startedOffline);
   const serverDown = useOfflineStore((s) => !!server && s.downServers.includes(serverKey(server)));
   const waiting = useOfflineStore((s) => s.outbox.length);
+  const conflicts = useOfflineStore((s) => s.conflicts.length);
+  const tConflicts = useTranslations('offlineConflicts');
   const [open, setOpen] = useState(false);
   const offline = browserOffline || serverDown;
-  if (IS_LITE || !active || (!offline && waiting === 0 && !open)) return null;
+  if (IS_LITE || !active || (!offline && waiting === 0 && conflicts === 0 && !open)) return null;
   return (
     <>
       <div
@@ -48,6 +50,17 @@ export function OfflineBanner() {
             className="min-h-11 rounded-md px-1 font-medium underline underline-offset-2 hover:bg-foreground/5 sm:min-h-0"
           >
             {t('banner.outbox', { count: waiting })}
+          </button>
+        )}
+        {conflicts > 0 && (
+          <button
+            type="button"
+            data-testid="offline-banner-conflicts"
+            aria-haspopup="dialog"
+            onClick={() => setOpen(true)}
+            className="min-h-11 rounded-md px-1 font-medium underline underline-offset-2 hover:bg-foreground/5 sm:min-h-0"
+          >
+            {tConflicts('banner', { count: conflicts })}
           </button>
         )}
       </div>
