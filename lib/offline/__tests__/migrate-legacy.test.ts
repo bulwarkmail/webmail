@@ -4,7 +4,9 @@ import { setStoreBackend } from '@/lib/store/client/api';
 import { InProcessStore } from '@/lib/store/__tests__/helpers/in-process-store';
 import { forgetLegacyMove, LEGACY_DB_NAME, moveLegacyOutbox } from '../migrate-legacy';
 import { readQueue } from '../queue';
-import { useOfflineStore } from '../state';
+import { DEFAULT_ORGANISATION_POLICY } from '@/lib/admin/organisation-policy';
+import { effectiveScope, platformDefault, userChoiceFor } from '../scope';
+import { OFFLINE_SCOPE_KEY, useOfflineStore, writeChoice } from '../state';
 
 /** The old database, exactly as lib/offline/db.ts laid it out. */
 const STORES = ['keys', 'emails', 'bodies', 'blobs', 'misc', 'ledger', 'queue', 'uploads'];
@@ -72,7 +74,8 @@ beforeEach(async () => {
   store = new InProcessStore();
   setStoreBackend(store);
   forgetLegacyMove();
-  useOfflineStore.setState({ enabled: ['acc'] });
+  localStorage.clear();
+  useOfflineStore.setState({ enabled: ['acc'], choices: {} });
   await new Promise<void>((resolve) => {
     const request = indexedDB.deleteDatabase(LEGACY_DB_NAME);
     request.onsuccess = () => resolve();
@@ -170,6 +173,23 @@ describe('moving the old outbox into the store', () => {
     await seedOld();
     await moveLegacyOutbox();
     expect(await store.area('acc', 'mail.session')).toMatchObject({ apiUrl: 'https://old/jmap' });
+  });
+
+  it('keeps the account on, with the 30 days it had, and writes that down as its choice', async () => {
+    await seedOld();
+    await moveLegacyOutbox();
+    const state = useOfflineStore.getState();
+    expect(state.enabled).toContain('acc');
+    expect(state.choices.acc).toMatchObject({ on: true, days: 30 });
+    expect(JSON.parse(localStorage.getItem(OFFLINE_SCOPE_KEY)!).acc.days).toBe(30);
+    expect(effectiveScope('acc', userChoiceFor('acc'), DEFAULT_ORGANISATION_POLICY.devices, platformDefault()).scope.days).toBe(30);
+  });
+
+  it('never takes a window the user already picked', async () => {
+    await seedOld();
+    writeChoice('acc', { on: true, days: 365 });
+    await moveLegacyOutbox();
+    expect(useOfflineStore.getState().choices.acc.days).toBe(365);
   });
 
   it('never creates the old database when it isn\'t there', async () => {

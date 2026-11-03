@@ -196,6 +196,17 @@ describe('api.host.features.keystore', () => {
   });
 });
 
+describe('api.host.features.blockExternalContent', () => {
+  it('is there for a plugin that takes over rendering', () => {
+    expect(snapshotHostFeatures(plugin({ permissions: ['email:render-takeover'] })).blockExternalContent).toBe(true);
+  });
+
+  it('is absent for any other, and without a plugin', () => {
+    expect(snapshotHostFeatures(plugin({ permissions: ['email:read'] }))).not.toHaveProperty('blockExternalContent');
+    expect(snapshotHostFeatures()).not.toHaveProperty('blockExternalContent');
+  });
+});
+
 describe('the manifest', () => {
   const BASE = { id: 'keystore-test', name: 'P', version: '1.0.0', author: 'a', description: 'd', type: 'hook' };
 

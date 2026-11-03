@@ -286,8 +286,12 @@ export class FakeJmap implements JmapTransport {
     return { methodResponses: done };
   }
 
-  async download(): Promise<Uint8Array> {
+  async download(_jmap: string, _blobId: string, _type: string, _name: string): Promise<Uint8Array> {
     return new Uint8Array();
+  }
+
+  async downloadStream(jmap: string, blobId: string, type: string, name: string, sink: (part: Uint8Array) => void): Promise<void> {
+    sink(await this.download(jmap, blobId, type, name));
   }
 
   async upload(): Promise<{ blobId: string; type: string; size: number }> {

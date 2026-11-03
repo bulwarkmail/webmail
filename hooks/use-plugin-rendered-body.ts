@@ -13,9 +13,34 @@ export interface PluginRenderedBody {
   text: string | null;
   /** blob: URLs for the decrypted inline parts, keyed by Content-ID without brackets. */
   cidUrls: Record<string, string>;
+  /** The plugin can't vouch for this body: external content stays off, whatever the settings allow. */
+  blockExternal: boolean;
 }
 
-const EMPTY: PluginRenderedBody = { html: null, text: null, cidUrls: {} };
+const EMPTY: PluginRenderedBody = { html: null, text: null, cidUrls: {}, blockExternal: false };
+
+/**
+ * What onRenderEmailBody gets to see, for its effect's dependencies. A render can be a
+ * key operation (a smart card's PIN dialog, and two cancels in a row lock the key), so
+ * it runs once per message, not per object: mark-read replaces the object and changes
+ * only keywords. The list row and then the full message do differ here: a row has no
+ * headers or body structure, which is what a plugin recognises its mail by. A plugin
+ * that wants to render again for another reason has api.ui.rerenderEmail.
+ */
+export function pluginRenderKey(email: Email | null | undefined): string | null {
+  if (!email) return null;
+  const contentType = email.headers?.['content-type'] ?? email.headers?.['Content-Type'] ?? '';
+  const bodyLengths = Object.values(email.bodyValues ?? {}).map((part) => part.value?.length ?? 0);
+  return JSON.stringify([
+    email.sourceClientAccountId ?? '',
+    email.id,
+    email.blobId ?? '',
+    contentType,
+    email.bodyStructure ? 1 : 0,
+    email.bodyValues ? bodyLengths : null,
+    email.attachments?.length ?? null,
+  ]);
+}
 
 function dataUrlToBytes(dataUrl: string): Uint8Array | null {
   try {
@@ -39,7 +64,8 @@ function dataUrlToBytes(dataUrl: string): Uint8Array | null {
  * Asks the onRenderEmailBody hook for a replacement body, the way the single
  * reader does, so a message a PGP or S/MIME plugin decrypts also shows
  * decrypted inside a conversation (#902). Re-runs when a plugin calls
- * api.ui.rerenderEmail, e.g. after the user unlocked a key.
+ * api.ui.rerenderEmail, e.g. after the user unlocked a key, and not when only the
+ * object changes (see pluginRenderKey).
  */
 export function usePluginRenderedBody(email: Email): PluginRenderedBody {
   const [body, setBody] = useState<PluginRenderedBody>(EMPTY);
@@ -79,6 +105,7 @@ export function usePluginRenderedBody(email: Email): PluginRenderedBody {
           text?: string;
           attachments?: Array<{ name?: string; type?: string; dataUrl?: string; cid?: string }>;
           handledBy?: string;
+          blockExternalContent?: boolean;
         };
         if (cancelled) return;
         if (!result || !result.handledBy) {
@@ -100,6 +127,7 @@ export function usePluginRenderedBody(email: Email): PluginRenderedBody {
           html: typeof result.html === 'string' && result.html ? result.html : null,
           text: typeof result.text === 'string' && result.text ? result.text : null,
           cidUrls,
+          blockExternal: result.blockExternalContent === true,
         });
       } catch (err) {
         if (cancelled) return;
@@ -112,7 +140,9 @@ export function usePluginRenderedBody(email: Email): PluginRenderedBody {
       cancelled = true;
       objectUrls.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [email, nonce]);
+    // The latest message is read inside; see pluginRenderKey for what should run this again.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pluginRenderKey(email), nonce]);
 
   return body;
 }

@@ -5,14 +5,15 @@
  * configureStore, so the worker bundle stays free of them.
  */
 
-import { DEFAULT_SCOPE, type StoreEvent, type StoreScope } from '../area';
+import type { StoreEvent, StoreScope } from '../area';
 import type { JmapResponse, MethodCall, StoreSession } from '../engine/transport';
-import { forgetAccountKey, getAccountRecord, knownStoreFiles, listAccountRecords, openAccountKey, type StoreKeyLayerMissingError, type WrapLayer } from './keys';
+import { forgetAccountKey, getAccountRecord, knownStoreFiles, listAccountRecords, openAccountKey, STORE_OPENED_KEY, type StoreKeyLayerMissingError, type WrapLayer } from './keys';
 import { StoreClient } from './store-client';
 
 export interface StoreAccountInputs {
   session: StoreSession | null;
   auth: string | null;
+  /** Left out while the organisation's policy isn't known: the store keeps the last one. */
   scope?: StoreScope;
   invertedKeywordSort: boolean | null;
 }
@@ -25,6 +26,11 @@ export interface StorePageHooks {
   onEvent(event: StoreEvent): void;
   /** Wrap layers on top of the WebCrypto one (desktop keychain, app lock). */
   keyLayers?(): readonly WrapLayer[];
+  /**
+   * This tab just took over the store. Resolves when it has heard the
+   * organisation's policy since: until then it sends no scope, which may be old.
+   */
+  ownerTaken?(): Promise<void>;
   /** An account this device kept mail for has an empty store now: its key or its file went. */
   onStoreLost?(account: string): void;
   /** This tab became the owner and has no lock key: the app lock has to ask again. */
@@ -40,6 +46,8 @@ export interface StoreBackend {
   refresh(account: string): void;
   answer(account: string, calls: MethodCall[]): Promise<JmapResponse | null>;
   area<T = unknown>(account: string, name: string, params?: unknown): Promise<T>;
+  /** What the store may keep. A tightened scope prunes at once, also without a network. */
+  setScope(account: string, scope: StoreScope): Promise<void>;
   sync(account: string): Promise<void>;
   noteStateChange(account: string, changed: Record<string, Record<string, string>>): Promise<void>;
   setOnline(online: boolean): Promise<void>;
@@ -69,11 +77,7 @@ export class StoreLockedError extends Error {
 const OPEN_RETRIES = 25;
 const OPEN_RETRY_MS = 200;
 
-/**
- * localStorage: accounts that have had a store here. Holds nothing but the
- * account's id, and it outlives what a browser may clear of the rest.
- */
-export const STORE_OPENED_KEY = 'bulwark-store-opened';
+export { STORE_OPENED_KEY };
 
 function readOpenedAccounts(): string[] {
   try {
@@ -104,10 +108,10 @@ class PageStore implements StoreBackend {
    * can start the open again, and the second try finds the key the first one made.
    */
   private readonly keyJustMade = new Set<string>();
-  /** What the owner's engine was last told to keep. */
-  private readonly sentScope = new Map<string, string>();
   private locked = false;
   private ownerReady: (() => void) | null = null;
+  /** False from taking over the store until this tab has heard the policy again. */
+  private scopeCurrent = true;
 
   constructor(private readonly hooks: () => StorePageHooks | null) {}
 
@@ -124,11 +128,22 @@ class PageStore implements StoreBackend {
       buildId: process.env.NEXT_PUBLIC_BUILD_ID,
       onEvent: (event) => {
         if (event.type === 'error' && event.area === 'store' && !event.account) this.broken = true;
+        // Another tab cleared it: what this tab remembers opening is gone.
+        if (event.type === 'removed') this.opening.delete(event.account);
         this.hooks()?.onEvent(event);
       },
       onOwner: () => {
         this.ownerReady?.();
         this.opening.clear();
+        const hooks = this.hooks();
+        if (hooks?.ownerTaken) {
+          this.scopeCurrent = false;
+          const heard = () => {
+            this.scopeCurrent = true;
+            for (const account of this.wanted.keys()) this.refresh(account);
+          };
+          void hooks.ownerTaken().then(heard, heard);
+        }
         for (const account of this.wanted.keys()) void this.openHere(account).catch(() => {});
       },
       onNeedAuth: (account) => {
@@ -145,7 +160,7 @@ class PageStore implements StoreBackend {
 
   private reset(): void {
     this.client = null;
-    this.sentScope.clear();
+    this.scopeCurrent = true;
     this.wanted.clear();
     this.opening.clear();
     this.broken = false;
@@ -171,13 +186,12 @@ class PageStore implements StoreBackend {
       // The old file, if the key alone went, can never be read again.
       if (this.keyJustMade.has(account)) await client.pruneFiles(await knownStoreFiles()).catch(() => {});
       const inputs = this.hooks()?.inputs(account) ?? { session: null, auth: null, invertedKeywordSort: null };
-      if (inputs.scope) this.sentScope.set(account, JSON.stringify(inputs.scope));
       const opened = await client.openAccount({
         account,
         file: record.file,
         keyHex,
         session: inputs.session ?? this.wanted.get(account) ?? null,
-        scope: inputs.scope ?? DEFAULT_SCOPE,
+        scope: this.scopeCurrent ? inputs.scope : undefined,
         invertedKeywordSort: inputs.invertedKeywordSort,
         auth: inputs.auth,
       });
@@ -197,7 +211,6 @@ class PageStore implements StoreBackend {
     const client = this.client;
     this.client = null;
     this.opening.clear();
-    this.sentScope.clear();
     this.keyJustMade.clear();
     if (!client) return;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -244,12 +257,8 @@ class PageStore implements StoreBackend {
     if (!inputs) return;
     if (inputs.session) client.setSession(account, inputs.session);
     client.setAuth(account, inputs.auth);
-    // Only a real change: setting it starts over what a full disk made the store give up on.
-    const scope = inputs.scope ? JSON.stringify(inputs.scope) : null;
-    if (inputs.scope && scope !== this.sentScope.get(account)) {
-      if (this.sentScope.has(account)) client.setScope(account, inputs.scope);
-      this.sentScope.set(account, scope!);
-    }
+    // The engine drops one that's no change.
+    if (inputs.scope && this.scopeCurrent) void client.setScope(account, inputs.scope).catch(() => {});
     if (inputs.invertedKeywordSort !== null) client.setInvertedKeywordSort(account, inputs.invertedKeywordSort);
   }
 
@@ -274,6 +283,10 @@ class PageStore implements StoreBackend {
 
   area<T = unknown>(account: string, name: string, params?: unknown): Promise<T> {
     return this.whenOpen(account, (client) => client.area<T>(account, name, params));
+  }
+
+  setScope(account: string, scope: StoreScope): Promise<void> {
+    return this.whenOpen(account, (client) => client.setScope(account, scope));
   }
 
   sync(account: string): Promise<void> {

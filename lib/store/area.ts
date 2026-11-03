@@ -19,6 +19,11 @@ export interface StoreScope {
   /** The largest attachment kept, and the total for all of them. */
   maxAttachmentBytes: number;
   maxTotalBytes: number;
+  /**
+   * The organisation's cap on one file, when it set one. Unlike
+   * `maxAttachmentBytes`, which is also the user's own choice, a pin obeys it.
+   */
+  orgMaxFileBytes?: number | null;
 }
 
 export const DEFAULT_SCOPE: StoreScope = {
@@ -30,6 +35,27 @@ export const DEFAULT_SCOPE: StoreScope = {
 
 /** The `area` of an error event for a write that failed: a full disk, the browser's quota. */
 export const STORAGE_ERROR_AREA = 'storage';
+
+/** The scope changed, or a day passed and the window moved. `previous` is null on a store that never applied one. */
+export interface ScopeChange {
+  previous: StoreScope | null;
+  next: StoreScope;
+}
+
+export type StoragePartName = 'mail' | 'attachments' | 'calendar' | 'contacts' | 'files';
+
+/** One line of what an account's file holds. */
+export interface StoreUsagePart {
+  part: StoragePartName;
+  bytes: number;
+  items: number;
+}
+
+/** `store.usage`: what the file holds. `mail` gets what the other parts don't account for. */
+export interface StoreUsage {
+  bytes: number;
+  parts: StoreUsagePart[];
+}
 
 export interface SyncStateRow {
   state: string | null;
@@ -46,7 +72,9 @@ export type StoreEvent =
   | { type: 'synced'; account: string; at: number }
   | { type: 'changed'; account: string; collections: string[] }
   | { type: 'created'; account: string; jmap: string; collection: string; ids: string[] }
-  | { type: 'error'; account: string; area: string; message: string };
+  | { type: 'error'; account: string; area: string; message: string }
+  /** Its file and key are gone, whichever tab asked: opening it again makes a new one. */
+  | { type: 'removed'; account: string };
 
 export interface StoreContext {
   account: string;
@@ -57,6 +85,12 @@ export interface StoreContext {
   emit(event: StoreEvent): void;
   /** Records of one type as this device shows them: see RecordOverlay. */
   overlay<T extends { id: string }>(jmap: string, type: string, records: T[]): T[];
+  /** Attachments and files the other areas keep: `scope.maxTotalBytes` is for all of them together. */
+  keptByOthers(area: string): number;
+  /** Records of one type another area needs to stay, whatever the window says. */
+  sparedRecords(jmap: string, type: string): string[];
+  /** Starts a sync pass, or one more after the running pass. Resolves when they're done. */
+  requestSync(): Promise<void>;
 }
 
 /**
@@ -129,6 +163,18 @@ export interface StoreArea {
   syncers: readonly Syncer[];
   calls?: Readonly<Record<string, AreaCall>>;
   overlay?: RecordOverlay;
+  /**
+   * Brings what's kept in line with the scope. Runs without the network and may
+   * be interrupted: it runs again until it has finished, so it must be safe to
+   * repeat. Whatever is fetched back goes through the next sync pass.
+   */
+  applyScope?: (ctx: SyncContext, change: ScopeChange) => void | Promise<void>;
+  /** For the storage page. */
+  usage?: (ctx: Pick<StoreContext, 'db'>) => StoreUsagePart[];
+  /** Attachments and file contents it holds: what counts towards `scope.maxTotalBytes`. */
+  keptBytes?: (ctx: Pick<StoreContext, 'db'>) => number;
+  /** Records it needs, stored by another area, that no window may take away. */
+  spares?: (ctx: Pick<StoreContext, 'db'>, jmap: string, type: string) => string[];
   /** At start and when the scope changes: a tighter policy applies at once, not at the next sync. */
   scopeChanged?(ctx: StoreContext): void;
 }

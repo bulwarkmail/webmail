@@ -431,6 +431,57 @@ describe('the page\'s store', () => {
     store.stop();
   });
 
+  it('opens an account again once another tab removed it', async () => {
+    allowEngine();
+    const store = getStore();
+    await store.ensureOpen('a@x');
+    const worker = FakeWorker.all[0];
+    worker.becomeOwner();
+    await vi.waitFor(() => expect(worker.posted.filter((m) => m.kind === 'open')).toHaveLength(1));
+    await store.ensureOpen('a@x');
+    expect(worker.posted.filter((m) => m.kind === 'open')).toHaveLength(1);
+
+    worker.onmessage?.({ data: { kind: 'event', event: { type: 'removed', account: 'a@x' } } } as MessageEvent);
+    await store.ensureOpen('a@x');
+    await vi.waitFor(() => expect(worker.posted.filter((m) => m.kind === 'open')).toHaveLength(2));
+    store.stop();
+  });
+
+  it('sends the scope at every refresh once it has heard the policy, and none before', async () => {
+    let hear: () => void = () => {};
+    configureStore({
+      inputs: () => ({ session: FAKE_SESSION, auth: 'Basic x', scope: { days: 7, attachments: true, maxAttachmentBytes: 1, maxTotalBytes: 1 }, invertedKeywordSort: true }),
+      refreshAuth: async () => null,
+      onEvent: () => {},
+      ownerTaken: () => new Promise<void>((resolve) => { hear = resolve; }),
+    });
+    const store = getStore();
+    await store.ensureOpen('a@x');
+    const worker = FakeWorker.all[0];
+    const owner = new FakeChannel('bulwark-store-rpc');
+    const sent: string[] = [];
+    owner.onmessage = (event) => {
+      const message = event.data as { kind: string; id: string; from: string; method: string };
+      if (message.kind === 'who-owns') owner.postMessage({ kind: 'owner-changed', owner: 'worker' });
+      if (message.kind !== 'rpc') return;
+      sent.push(message.method);
+      owner.postMessage({ kind: 'reply', id: message.id, to: message.from });
+    };
+    worker.becomeOwner();
+    await vi.waitFor(() => expect(worker.posted.some((m) => m.kind === 'open')).toBe(true));
+    const open = worker.posted.find((m) => m.kind === 'open') as { params: { scope?: unknown } };
+    expect(open.params.scope).toBeUndefined();
+    store.refresh('a@x');
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(sent).toEqual([]);
+
+    hear();
+    await vi.waitFor(() => expect(sent).toEqual(['setScope']));
+    store.refresh('a@x');
+    await vi.waitFor(() => expect(sent).toEqual(['setScope', 'setScope']));
+    store.stop();
+  });
+
   it('stops waiting when the engine couldn\'t start in this browser', async () => {
     allowEngine();
     const store = getStore();

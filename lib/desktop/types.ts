@@ -7,6 +7,8 @@
  * `version`; adding a member doesn't.
  */
 
+import type { PolicySnapshot } from './policy-schema';
+
 export const DESKTOP_BRIDGE_VERSION = 1;
 
 export type DesktopWindowType = 'main' | 'message' | 'composer' | 'settings';
@@ -148,7 +150,7 @@ export interface DesktopClipboardBridge {
 
 export type DesktopServerPrepareResult =
   | { ok: true; approved: boolean }
-  | { ok: false; reason: 'declined' | 'invalid' };
+  | { ok: false; reason: 'declined' | 'invalid' | 'policy' };
 
 export interface DesktopServersBridge {
   /**
@@ -270,6 +272,14 @@ export interface DesktopKeystoreBridge {
   accessState: () => Promise<DesktopKeystoreAccessState>;
   /** Takes back a stored yes and this session's grants. Only ever narrows. */
   revokeAccess: () => Promise<void>;
+  /** Takes back this session's grants, for the next account. Absent on older shells. */
+  clearGrants?: () => Promise<void>;
+}
+
+export interface DesktopPolicyBridge {
+  /** What's in force now. Synchronous: a page can read it in its first render. */
+  get: () => PolicySnapshot;
+  onChange: (listener: (snapshot: PolicySnapshot) => void) => () => void;
 }
 
 export type DesktopOsUnlockKind = 'hello' | 'touchid';
@@ -312,6 +322,7 @@ export interface BulwarkDesktopBridge {
   dialogs?: DesktopDialogsBridge;
   clipboard?: DesktopClipboardBridge;
   lifecycle?: DesktopLifecycleBridge;
+  policy?: DesktopPolicyBridge;
   servers?: DesktopServersBridge;
   auth?: DesktopAuthBridge;
   plugins?: DesktopPluginsBridge;

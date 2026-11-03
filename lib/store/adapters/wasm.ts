@@ -165,8 +165,10 @@ export class WasmStorage {
       db.exec(`PRAGMA key = "raw:${keyHex}"`);
       try {
         db.selectValue('SELECT count(*) FROM sqlite_master');
-      } catch {
-        throw new StoreKeyError();
+      } catch (error) {
+        // Only "this isn't a database": a passing read error must not read as a lost file.
+        if (error instanceof Error && /NOTADB|not a database/i.test(error.message)) throw new StoreKeyError();
+        throw error;
       }
       const pageSize = Number(db.selectValue('PRAGMA page_size'));
       if (pageSize !== REQUIRED_PAGE_SIZE) throw new Error(`Refusing an unsafe page size: ${pageSize}`);

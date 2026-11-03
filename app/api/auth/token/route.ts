@@ -42,6 +42,7 @@ import {
 } from '@/lib/auth/session-age';
 import { clearStalwartAuthContextInStore, readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
 import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
+import { devicePolicyServerRefusal } from '@/lib/desktop/server-policy';
 import {
   clearCustomUpstream,
   readCustomUpstream,
@@ -277,6 +278,10 @@ export async function PUT(request: NextRequest) {
     // waits it out. A 500 here would count toward signing the user out.
     let tokenResponse: Response;
     const upstream = IS_DESKTOP_BUILD ? await readCustomUpstream(cookieStore, slot) : null;
+    // The device's OS policy refuses this server for now. The cookies stay, so the
+    // account comes back with no sign-in if the policy does.
+    const refusedByDevice = upstream ? devicePolicyServerRefusal(upstream.serverUrl) : null;
+    if (refusedByDevice) return refusedByDevice;
     try {
       const tokenEndpoint = await getTokenEndpoint(serverId, upstream ? { upstream } : { fallbackClientId: DEFAULT_CLIENT_ID });
 

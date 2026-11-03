@@ -284,10 +284,6 @@ export class StoreClient {
     this.post({ kind: 'set-session', account, session });
   }
 
-  setScope(account: string, scope: StoreScope): void {
-    this.post({ kind: 'set-scope', account, scope });
-  }
-
   setInvertedKeywordSort(account: string, inverted: boolean): void {
     this.post({ kind: 'set-inverted', account, inverted });
   }
@@ -330,6 +326,10 @@ export class StoreClient {
 
   sync(account: string): Promise<void> {
     return this.rpc('sync', { account }, SYNC_TIMEOUT_MS);
+  }
+
+  setScope(account: string, scope: StoreScope): Promise<void> {
+    return this.rpc('setScope', { account, scope });
   }
 
   removeAccount(account: string, file: string): Promise<boolean> {
