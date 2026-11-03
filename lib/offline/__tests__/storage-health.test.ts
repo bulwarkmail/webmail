@@ -2,6 +2,7 @@ import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_ORGANISATION_POLICY } from '@/lib/admin/organisation-policy';
 import { purgeSignedOutData } from '@/lib/sign-out-cleanup';
+import { consumeLost } from '../lost';
 import { configureStore, getStore, setStoreBackend } from '@/lib/store/client/api';
 import { deleteKeyDatabase, getAccountRecord, openAccountKey } from '@/lib/store/client/keys';
 import { FAKE_SESSION } from '@/lib/store/__tests__/helpers/fake-jmap';
@@ -371,6 +372,23 @@ describe('removing an account', () => {
     expect(localStorage.getItem(OFFLINE_SCOPE_KEY)).toBeNull();
     expect(localStorage.getItem(OFFLINE_HEALTH_KEY)).toBeNull();
   });
+
+  it('doesn\'t hold a wipe back for a store that never answers, and names what it last saw', async () => {
+    const removeEntry = vi.fn(async () => {});
+    setStorage({ getDirectory: async () => ({ removeEntry }), persist: async () => true });
+    await openAccountKey('acc');
+    writeEnabled(['acc']);
+    useOfflineStore.setState({ outbox: [{ account: 'acc', subject: 'Still waiting' }] as never });
+    consumeLost();
+
+    // No worker here says it owns the store, and no other tab does either.
+    const started = Date.now();
+    await wipeAccount('acc');
+
+    expect(Date.now() - started).toBeLessThan(10_000);
+    expect(removeEntry).toHaveBeenCalledWith('.bulwark-store', { recursive: true });
+    expect(consumeLost()).toEqual(['Still waiting']);
+  }, 30_000);
 
   it('wipeEverything leaves nothing either', async () => {
     const removeEntry = vi.fn(async () => {});
