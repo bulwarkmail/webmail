@@ -603,7 +603,9 @@ async function handlePush(event) {
   const withNewMail = emailIds.length > 0 || !changed
     ? []
     : Object.keys(changed).filter((id) => changed[id] && typeof changed[id] === "object" && "EmailDelivery" in changed[id]);
-  for (const accountId of withNewMail.length > 0 ? withNewMail : [named]) {
+  // Side by side: each has its own preview deadline, and Safari wants the
+  // notifications within 30 s of the push.
+  await Promise.all((withNewMail.length > 0 ? withNewMail : [named]).map(async (accountId) => {
     try {
       await notifyAccount(accountId, emailIds, accountLabel);
     } catch (_) {
@@ -617,7 +619,7 @@ async function handlePush(event) {
         data: { kind: "mail-list", accountId },
       });
     }
-  }
+  }));
 }
 
 async function notifyAccount(accountId, emailIds, accountLabel) {
@@ -1000,6 +1002,18 @@ async function readRelayRegistrations() {
   }
 }
 
+/** No-third-party mode may have come on since the page left a relay here. Unknown counts as no. */
+async function mayCallRelays() {
+  try {
+    const res = await fetch(`${BASE_PATH}/api/config`, { cache: "no-store" });
+    if (!res.ok) return false;
+    const config = await res.json();
+    return config.noThirdPartyTraffic !== true;
+  } catch (_) {
+    return false;
+  }
+}
+
 function applicationServerKeyOf(base64Url) {
   const padded = base64Url + "=".repeat((4 - (base64Url.length % 4)) % 4);
   const raw = atob(padded.replace(/-/g, "+").replace(/_/g, "/"));
@@ -1031,7 +1045,7 @@ async function handlePushSubscriptionChange(event) {
       }
     }
   }
-  if (subscription && registrations && typeof subscription.toJSON === "function") {
+  if (subscription && registrations && typeof subscription.toJSON === "function" && (await mayCallRelays())) {
     const json = subscription.toJSON();
     for (const entry of Object.values(registrations.entries)) {
       try {
