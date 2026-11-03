@@ -425,6 +425,17 @@ describe('reader surfaces in the phone conversation view', () => {
   });
 });
 
+describe('quick reply', () => {
+  it('scrolls its buttons into view when it takes the focus', () => {
+    const scroll = vi.fn();
+    Element.prototype.scrollIntoView = scroll;
+    useSettingsStore.setState({ quickReplyEnabled: true });
+    const { container } = viewer(textMail('Hola'), { onQuickReply: vi.fn() });
+    fireEvent.focus(container.querySelector('textarea')!);
+    expect(scroll).toHaveBeenCalledWith({ block: 'nearest' });
+  });
+});
+
 describe('recipients row', () => {
   it('says how many recipients are left out, in the phone row as in the desktop one', () => {
     const to = ['a', 'b', 'c', 'd'].map((n) => ({ name: n, email: `${n}@example.com` }));

@@ -1613,6 +1613,11 @@ export function EmailViewer({
   const [quickReplyText, setQuickReplyText] = useState("");
   const quickReplyRef = useRef<HTMLTextAreaElement>(null);
   const [isQuickReplyFocused, setIsQuickReplyFocused] = useState(false);
+  const quickReplyBoxRef = useRef<HTMLDivElement>(null);
+  // Focused, the box grows by its buttons: bring them up, they'd sit below the fold.
+  useEffect(() => {
+    if (isQuickReplyFocused) quickReplyBoxRef.current?.scrollIntoView?.({ block: 'nearest' });
+  }, [isQuickReplyFocused]);
   const [isSendingQuickReply, setIsSendingQuickReply] = useState(false);
   /** The recipients and identity the quick reply would be sent with. */
   const quickMetadata = (): ComposerMetadata => {
@@ -5937,7 +5942,7 @@ ${printWatermark ? printWatermark.html : ''}
           )}
 
           {/* Quick Reply Section - hidden for drafts and while loading a new email */}
-          {showQuickReply && (<div className="bg-background border-t border-border px-6 mt-auto" style={{ paddingBlock: 'var(--density-header-py)' }}>
+          {showQuickReply && (<div ref={quickReplyBoxRef} className="bg-background border-t border-border px-6 mt-auto max-sm:scroll-mb-16" style={{ paddingBlock: 'var(--density-header-py)' }}>
             <div className="flex items-start" style={{ gap: 'var(--density-item-gap)' }}>
               <div className="flex-shrink-0">
                 <Avatar
