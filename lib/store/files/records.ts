@@ -29,6 +29,12 @@ export function writeNode(db: StorageAdapter, jmap: string, node: WireNode, gen:
      ON CONFLICT (jmap, id) DO UPDATE SET parent_id = excluded.parent_id, name = excluded.name, kind = excluded.kind,
        size = excluded.size, json = excluded.json, gen = excluded.gen,
        keep_error = CASE WHEN blob_id IS excluded.blob_id THEN keep_error END,
+       keep_failures = CASE WHEN blob_id IS excluded.blob_id THEN keep_failures ELSE 0 END,
+       stale_blob_id = CASE
+         WHEN blob_id IS excluded.blob_id THEN stale_blob_id
+         WHEN EXISTS (SELECT 1 FROM file_blob b WHERE b.jmap = file_node.jmap AND b.blob_id = file_node.blob_id AND b.complete = 1) THEN blob_id
+         ELSE stale_blob_id
+       END,
        blob_id = excluded.blob_id`,
     [
       jmap,

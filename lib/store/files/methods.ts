@@ -12,10 +12,14 @@ function jmapOf(ctx: MethodContext, args: Record<string, unknown>): string {
   return (args.accountId as string | undefined) ?? ctx.session.primaryAccounts[FILES_CAPABILITY] ?? ctx.defaultJmap;
 }
 
-/** The last state from the server. Throws when the list was never read, so an empty answer always means empty. */
+/**
+ * The last state from the server. Throws until a first full pass finished, so
+ * an answer never passes off part of a tree as the whole. A later resync
+ * (phase `list`) goes on answering from the copy it's refreshing.
+ */
 function syncedState(ctx: MethodContext, jmap: string): string | null {
   const row = ctx.db.get<{ state: string | null; phase: string | null }>("SELECT state, phase FROM sync_state WHERE jmap = ? AND type = 'FileNode'", [jmap]);
-  if (!row || (!row.state && !row.phase)) throw new MethodError('serverUnavailable', 'Files not kept yet');
+  if (!row || (!row.state && row.phase !== 'list')) throw new MethodError('serverUnavailable', 'Files not kept yet');
   return row.state;
 }
 

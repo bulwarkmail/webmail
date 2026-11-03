@@ -108,4 +108,6 @@ export interface StoreArea {
   methods: Readonly<Record<string, MethodHandler>>;
   syncers: readonly Syncer[];
   calls?: Readonly<Record<string, AreaCall>>;
+  /** At start and when the scope changes: a tighter policy applies at once, not at the next sync. */
+  scopeChanged?(ctx: StoreContext): void;
 }

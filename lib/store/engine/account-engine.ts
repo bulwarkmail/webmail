@@ -34,6 +34,7 @@ export class AccountEngine {
   private scope: StoreScope;
   private readonly transport: JmapTransport;
   private readonly syncers: readonly Syncer[];
+  private readonly areas: readonly StoreArea[];
   private readonly methods: ReadonlyMap<string, MethodHandler>;
   private readonly calls = new Map<string, AreaCall>();
   private readonly emitter: (event: StoreEvent) => void;
@@ -51,6 +52,7 @@ export class AccountEngine {
     this.session = options.session;
     this.scope = options.scope;
     this.transport = options.transport;
+    this.areas = options.areas;
     this.syncers = options.areas.flatMap((area) => area.syncers);
     this.methods = buildMethodTable(options.areas);
     for (const area of options.areas) {
@@ -65,6 +67,12 @@ export class AccountEngine {
     this.invertedKeywordSort = options.invertedKeywordSort ?? false;
     migrate(this.db, [...CORE_MIGRATIONS, ...options.areas.flatMap((area) => area.migrations)]);
     metaSet(this.db, 'session', JSON.stringify(options.session));
+    this.applyScope();
+  }
+
+  private applyScope(): void {
+    const ctx = this.storeContext();
+    for (const area of this.areas) area.scopeChanged?.(ctx);
   }
 
   /** The session kept from the last time, for a start without a network. */
@@ -82,6 +90,7 @@ export class AccountEngine {
   setScope(scope: StoreScope): void {
     this.scope = scope;
     metaSet(this.db, 'scope', JSON.stringify(scope));
+    this.applyScope();
   }
 
   setInvertedKeywordSort(inverted: boolean): void {
@@ -188,11 +197,15 @@ export class AccountEngine {
   }
 
   private syncContext(): SyncContext {
+    const scope = () => this.scope;
     return {
       account: this.account,
       db: this.db,
       session: this.session,
-      scope: this.scope,
+      // A pass can take long, and a tighter policy applies to the rest of it.
+      get scope() {
+        return scope();
+      },
       transport: this.transport,
       now: this.now,
       emit: this.emitter,
@@ -240,6 +253,8 @@ export class AccountEngine {
   /** Stops syncing and waits for the current batch. The database stays open for the caller to close. */
   async close(): Promise<void> {
     this.closed = true;
+    // A large download could otherwise hold up removing the account.
+    this.transport.abort?.();
     await this.running?.catch(() => {});
   }
 }

@@ -6,30 +6,32 @@
  * 0.16 silently stops at maxObjectsInGet and 1.0 refuses a larger account with
  * requestTooLarge. Past that, ids come from paging FileNode/query. Before
  * 0.16.6 that query leaves out folders, so parents still unknown afterwards are
- * read by id. The cursor is in sync_state, so a reload continues.
+ * read by id. The cursor is in sync_state, so a reload continues. Query pages
+ * go from the last node read (`anchor`): a position moves when an earlier node
+ * is deleted, and a skipped node would be swept at the end.
  */
 
 import type { SyncContext, Syncer } from '../area';
 import { runChangesLoop } from '../engine/changes';
+import { requestLimits } from '../engine/limits';
 import { JmapMethodError, responseFor, type MethodCall } from '../engine/transport';
 import { dropOrphanBlobs, fetchKeptFiles } from './keep';
 import { FILE_NODE_PROPERTIES, FILES_CAPABILITY, FILES_USING, removeNode, writeNode, type WireNode } from './records';
 
-const MAX_GET = 500;
-const GETS_PER_REQUEST = 8;
+const MOST_GETS_PER_REQUEST = 8;
 const QUERY_PAGE = 5000;
 
 function getBatch(ctx: SyncContext): number {
-  const core = ctx.session.capabilities['urn:ietf:params:jmap:core'] as { maxObjectsInGet?: number } | undefined;
-  return Math.min(MAX_GET, core?.maxObjectsInGet || MAX_GET);
+  return requestLimits(ctx.session).maxObjectsInGet;
 }
 
 async function fetchNodes(ctx: SyncContext, jmap: string, ids: string[]): Promise<WireNode[]> {
   const size = getBatch(ctx);
+  const perRequest = Math.min(MOST_GETS_PER_REQUEST, requestLimits(ctx.session).maxCallsInRequest);
   const nodes: WireNode[] = [];
   for (let at = 0; at < ids.length;) {
     const calls: MethodCall[] = [];
-    for (let i = 0; i < GETS_PER_REQUEST && at < ids.length; i += 1, at += size) {
+    for (let i = 0; i < perRequest && at < ids.length; i += 1, at += size) {
       calls.push(['FileNode/get', { accountId: jmap, ids: ids.slice(at, at + size), properties: FILE_NODE_PROPERTIES }, `g${i}`]);
     }
     const response = await ctx.transport.request(calls, FILES_USING);
@@ -38,14 +40,16 @@ async function fetchNodes(ctx: SyncContext, jmap: string, ids: string[]): Promis
   return nodes;
 }
 
-interface ListCursor { step: 'all' | 'query' | 'parents'; position: number; gen: number; captured: string }
+interface ListCursor { step: 'all' | 'query' | 'parents'; position: number; anchor: string | null; gen: number; captured: string }
 
 async function startFullList(ctx: SyncContext, jmap: string): Promise<ListCursor> {
   const response = await ctx.transport.request([['FileNode/get', { accountId: jmap, ids: [], properties: ['id'] }, 's']], FILES_USING);
   const captured = String(responseFor(response, 's')[1].state);
   const gen = Number(ctx.db.get<{ gen: number | null }>('SELECT MAX(gen) AS gen FROM file_node WHERE jmap = ?', [jmap])?.gen ?? 0) + 1;
-  const cursor: ListCursor = { step: 'all', position: 0, gen, captured };
-  ctx.db.transaction(() => ctx.setSyncState(jmap, 'FileNode', { state: null, phase: 'list', cursor: { ...cursor } }));
+  const cursor: ListCursor = { step: 'all', position: 0, anchor: null, gen, captured };
+  // Answers wait for the end of a first pass (phase `first`). A resync has an older copy to give.
+  const phase = ctx.syncState(jmap, 'FileNode').state ? 'list' : 'first';
+  ctx.db.transaction(() => ctx.setSyncState(jmap, 'FileNode', { state: null, phase, cursor: { ...cursor } }));
   return cursor;
 }
 
@@ -76,12 +80,24 @@ async function runFullList(ctx: SyncContext, jmap: string, start: ListCursor): P
 
   while (cursor.step === 'query') {
     if (ctx.stopped()) return false;
-    const response = await ctx.transport.request([['FileNode/query', { accountId: jmap, filter: {}, position: cursor.position, limit: QUERY_PAGE, calculateTotal: true }, 'q']], FILES_USING);
-    const [, query] = responseFor(response, 'q');
-    const ids = query.ids as string[];
+    const from = cursor.anchor === null ? { position: 0 } : { anchor: cursor.anchor, anchorOffset: 1 };
+    const response = await ctx.transport.request([['FileNode/query', { accountId: jmap, filter: {}, ...from, limit: QUERY_PAGE, calculateTotal: true }, 'q']], FILES_USING);
+    let query: { ids: string[]; position?: number; total?: number };
+    try {
+      [, query] = responseFor(response, 'q');
+    } catch (error) {
+      if (!(error instanceof JmapMethodError && error.type === 'anchorNotFound')) throw error;
+      // The node it went from is gone. Going through again costs requests, not nodes.
+      cursor.anchor = null;
+      cursor.position = 0;
+      saveStep(ctx, jmap, [], cursor);
+      continue;
+    }
+    const ids = query.ids;
     const missing = ids.filter((id) => Number(ctx.db.get<{ gen: number }>('SELECT gen FROM file_node WHERE jmap = ? AND id = ?', [jmap, id])?.gen ?? -1) < cursor.gen);
     const nodes = await fetchNodes(ctx, jmap, missing);
-    cursor.position += ids.length;
+    cursor.position = Number(query.position ?? 0) + ids.length;
+    if (ids.length > 0) cursor.anchor = ids[ids.length - 1];
     // The server may clamp the limit, so only an empty page or the total ends this.
     if (ids.length === 0 || (typeof query.total === 'number' && cursor.position >= query.total)) cursor.step = 'parents';
     saveStep(ctx, jmap, nodes, cursor);
@@ -140,7 +156,7 @@ export const filesSyncer: Syncer = {
   capability: FILES_CAPABILITY,
   async run(ctx, jmap) {
     const row = ctx.syncState(jmap, 'FileNode');
-    let cursor = row.phase === 'list' ? row.cursor as unknown as ListCursor : null;
+    let cursor = row.phase === 'list' || row.phase === 'first' ? row.cursor as unknown as ListCursor : null;
     if (!cursor && !row.state) cursor = await startFullList(ctx, jmap);
     if (!cursor && row.state) {
       const outcome = await syncDelta(ctx, jmap, row.state, row.target);
@@ -154,7 +170,8 @@ export const filesSyncer: Syncer = {
       if (after.state && (await syncDelta(ctx, jmap, after.state, after.target)) === 'stopped') return;
     }
     if (ctx.stopped()) return;
-    ctx.db.transaction(() => dropOrphanBlobs(ctx.db));
     await fetchKeptFiles(ctx, jmap);
+    // After the fetching: a file's old content stays until the new one is in.
+    ctx.db.transaction(() => dropOrphanBlobs(ctx.db));
   },
 };
