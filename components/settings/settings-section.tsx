@@ -280,7 +280,7 @@ export function SettingItem({ label, description, children, locked, advanced, ne
       </div>
       <SettingLabelContext.Provider value={labelId}>
         {/* The admin's value stays readable; inert keeps mouse and keyboard off it. */}
-        <div ref={controlsRef} className={cn("flex-shrink-0", locked && "opacity-60")} inert={locked || undefined}>{children}</div>
+        <div ref={controlsRef} className={cn("flex-shrink-0 min-w-0 max-w-full sm:max-w-[70%]", locked && "opacity-60")} inert={locked || undefined}>{children}</div>
       </SettingLabelContext.Provider>
     </div>
   );
@@ -338,7 +338,7 @@ interface RadioGroupProps {
 export function RadioGroup({ value, onChange, options }: RadioGroupProps) {
   const labelledBy = useContext(SettingLabelContext);
   return (
-    <div className="flex gap-1.5" role="group" aria-labelledby={labelledBy}>
+    <div className="flex flex-wrap gap-1.5" role="group" aria-labelledby={labelledBy}>
       {options.map((option) => (
         <button
           key={option.value}
@@ -379,7 +379,7 @@ export function Select({ value, onChange, options, disabled, className, ariaLabe
       aria-labelledby={ariaLabel ? undefined : labelledBy}
       dir="auto"
       className={cn(
-        "px-3 py-1.5 text-sm rounded-md bg-muted border border-border text-foreground focus:outline-hidden transition-colors duration-150 pointer-coarse:min-h-11",
+        "max-w-full px-3 py-1.5 text-sm rounded-md bg-muted border border-border text-foreground focus:outline-hidden transition-colors duration-150 pointer-coarse:min-h-11",
         disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-muted-foreground",
         className
       )}
