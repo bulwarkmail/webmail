@@ -775,8 +775,21 @@ async function refreshSubscriptionExpires(
 // verifying. Tabs take turns, in every browser that has Web Locks. Whoever comes
 // second finds the first one's work and only refreshes it.
 function oneTabAtATime<T>(run: () => Promise<T>): Promise<T> {
+  const limited = () => withinPushSetupLimit(run);
   const locks = typeof navigator !== 'undefined' ? navigator.locks : undefined;
-  return locks ? locks.request('bulwark-web-push', run) as Promise<T> : run();
+  return locks ? locks.request('bulwark-web-push', limited) as Promise<T> : limited();
+}
+
+// A worker that never gets ready or a subscribe() that never answers would hold up
+// every tab and every login, for good. Verification alone can take 80 s.
+const PUSH_SETUP_LIMIT_MS = 120_000;
+
+function withinPushSetupLimit<T>(run: () => Promise<T>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const limit = new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(() => reject(new WebPushStepError('verification-timeout', 'Push setup took too long')), PUSH_SETUP_LIMIT_MS);
+  });
+  return Promise.race([run(), limit]).finally(() => clearTimeout(timer));
 }
 
 export async function enableWebPush(
@@ -1018,12 +1031,13 @@ async function dropRelayRecord(relayBaseUrl: string, deviceClientId: string): Pr
 // a later page load won't bring push back. But a server or relay that couldn't be
 // told keeps pinging this browser for days, so the caller hears about it at the end.
 export function disableWebPush(params: DisableWebPushParams): Promise<void> {
-  return oneTabAtATime(() => disableWebPushForThisTab(params));
+  // Read now: a client signing out loses it while this waits its turn.
+  const accountId = params.client.getAccountId();
+  return oneTabAtATime(() => disableWebPushForThisTab(params, accountId));
 }
 
-async function disableWebPushForThisTab(params: DisableWebPushParams): Promise<void> {
+async function disableWebPushForThisTab(params: DisableWebPushParams, accountId: string): Promise<void> {
   const relayBaseUrl = (params.relayBaseUrl ?? DEFAULT_RELAY_BASE_URL).replace(/\/+$/, '');
-  const accountId = params.client.getAccountId();
 
   const subIdKey = subscriptionIdKey(accountId);
   const devIdKey = deviceClientIdKey(accountId);
