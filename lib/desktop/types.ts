@@ -324,8 +324,16 @@ export interface DesktopKeystoreBridge {
 }
 
 export interface DesktopCertificatesBridge {
-  /** Forgets the client certificates chosen for servers, for the next account. Only narrows. */
-  clearChoices: () => Promise<void>;
+  /**
+   * Forgets client certificates chosen for servers. `account`: those chosen while that account was
+   * active, at its own sign-out. `last`: all of them, and what the app keeps of them in memory, at
+   * the sign-out that leaves nobody. Only narrows.
+   */
+  clearChoices: (scope: { account?: string; last?: boolean }) => Promise<void>;
+  /** The account a choice made from now on belongs to. */
+  setAccount: (account: string | null) => Promise<void>;
+  /** The app's connections were closed: a request under way will never settle by itself. */
+  onConnectionsReset: (listener: () => void) => () => void;
 }
 
 export interface DesktopPolicyBridge {

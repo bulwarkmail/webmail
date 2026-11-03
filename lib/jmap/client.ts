@@ -1,5 +1,6 @@
 import { recordJmapCall, reportJmapFailure } from "@/lib/error-reporting/client";
 import { getDesktopBridge } from '@/lib/desktop/bridge';
+import { onConnectionsReset } from '@/lib/desktop/connections-reset';
 import { desktopJmapBase, desktopJmapOrigin, isDesktopProxiedServer, withDesktopBlobType } from '@/lib/desktop/jmap-route';
 import { advertisesMailboxMetadata, bulwarkEntries, escapeMetadataPathSegment, MAX_METADATA_ENTRY_BYTES, METADATA_CAPABILITY, MetadataPatchError, MetadataRefusedError, MetadataTooLargeError, MetadataUnsupportedError, metadataValueBytes, namespaceFor } from "./bulwark-metadata";
 import { IncompleteDeleteError } from "./delete-error";
@@ -1855,14 +1856,23 @@ export class JMAPClient implements IJMAPClient {
     // "we gave up" from "the caller cancelled", and callers must be able to tell
     // those apart (a cancelled send is not a failed send).
     let timedOut = false;
-    const timer = setTimeout(() => {
+    const giveUp = () => {
       timedOut = true;
-      controller.abort();
-    }, timeoutMs);
+      // The reason goes on to a body still being read after this returned.
+      controller.abort(new RequestTimeoutError(timeoutMs));
+    };
+    const timer = setTimeout(giveUp, timeoutMs);
+    // The desktop app closed its connections, so this will never settle by itself. It's what a
+    // deadline running out means: the request may have reached the server, only the answer is
+    // lost, and it isn't replayed (authenticatedFetch).
+    const stopWatching = onConnectionsReset(giveUp);
 
     try {
-      return await fetch(url, { ...withJmapCredentials(init), headers, signal: controller.signal });
+      const response = await fetch(url, { ...withJmapCredentials(init), headers, signal: controller.signal });
+      if (stopWatching) setTimeout(stopWatching, timeoutMs);
+      return response;
     } catch (error) {
+      stopWatching?.();
       if (timedOut) throw new RequestTimeoutError(timeoutMs);
       throw error;
     } finally {
@@ -6363,6 +6373,7 @@ export class JMAPClient implements IJMAPClient {
       const cleanup = () => {
         clearTimeout(timer);
         signal?.removeEventListener('abort', onAbort);
+        stopWatchingConnections?.();
         xhr.onload = xhr.onerror = xhr.onabort = xhr.ontimeout = null;
         xhr.upload.onprogress = null;
       };
@@ -6379,6 +6390,7 @@ export class JMAPClient implements IJMAPClient {
       };
       const onAbort = () => abortWith(new DOMException('Upload aborted', 'AbortError'));
       const onTimeout = () => abortWith(new RequestTimeoutError(JMAPClient.TRANSFER_TIMEOUT_MS));
+      const stopWatchingConnections = onConnectionsReset(onTimeout);
       const resetWatchdog = () => {
         clearTimeout(timer);
         // XHR uses this budget for inactivity, unlike fetch's deadline until
@@ -11670,6 +11682,8 @@ export class JMAPClient implements IJMAPClient {
    * Checking on the way back in makes the recovery immediate rather than
    * leaving the app on a socket that will never deliver another byte.
    */
+  private stopWatchingConnections: (() => void) | null = null;
+
   private recycleStaleSSE(): void {
     if (this.intentionallyDisconnected) return;
     if (!this.sseAbortController) return;
@@ -11704,6 +11718,14 @@ export class JMAPClient implements IJMAPClient {
         }
       };
       window.addEventListener('online', this.onlineHandler);
+      // A stream under way when the desktop app closes its connections would stay silent.
+      this.stopWatchingConnections = onConnectionsReset(() => {
+        if (this.intentionallyDisconnected || !this.sseAbortController) return;
+        this.stopSSEPingMonitor();
+        this.sseAbortController.abort();
+        this.sseAbortController = null;
+        this.scheduleSSEReconnect();
+      });
     }
   }
 
@@ -11716,6 +11738,8 @@ export class JMAPClient implements IJMAPClient {
       window.removeEventListener('online', this.onlineHandler);
       this.onlineHandler = null;
     }
+    this.stopWatchingConnections?.();
+    this.stopWatchingConnections = null;
   }
 
   onConnectionChange(callback: (connected: boolean) => void): void {
