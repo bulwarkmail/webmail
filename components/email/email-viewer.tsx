@@ -5054,7 +5054,7 @@ ${printWatermark ? printWatermark.html : ''}
                 )}
                 <button
                   onClick={() => setShowFullHeaders(!showFullHeaders)}
-                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ms-1"
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ms-1 whitespace-nowrap"
                 >
                   {showFullHeaders ? (
                     <>
@@ -5176,7 +5176,7 @@ ${printWatermark ? printWatermark.html : ''}
                 )}
                 <button
                   onClick={() => setShowFullHeaders(!showFullHeaders)}
-                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ms-1"
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors ms-1 whitespace-nowrap"
                 >
                   {showFullHeaders ? (
                     <>
@@ -6072,7 +6072,7 @@ ${printWatermark ? printWatermark.html : ''}
             onClick={onNavigatePrev}
             disabled={!onNavigatePrev}
             className={cn(
-              "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] transition-colors duration-150",
+              "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] min-w-0 transition-colors duration-150",
               onNavigatePrev ? "text-muted-foreground active:text-foreground" : "text-muted-foreground/30"
             )}
             aria-label={t('tooltips.previous')}
@@ -6083,7 +6083,7 @@ ${printWatermark ? printWatermark.html : ''}
           {isDraft && onEditDraft ? (
             <button
               onClick={() => onEditDraft()}
-              className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] text-primary active:text-primary/80 transition-colors duration-150"
+              className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] min-w-0 text-primary active:text-primary/80 transition-colors duration-150"
               aria-label={t('tooltips.edit_draft')}
             >
               <Pencil className="w-5 h-5" />
@@ -6093,21 +6093,21 @@ ${printWatermark ? printWatermark.html : ''}
           <>
           <button
             onClick={() => onReply?.()}
-            className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] text-muted-foreground active:text-foreground transition-colors duration-150"
+            className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] min-w-0 text-muted-foreground active:text-foreground transition-colors duration-150"
           >
             <Reply className="w-5 h-5" />
             <span className="text-[0.625rem] font-medium leading-tight truncate max-w-full">{t('reply')}</span>
           </button>
           <button
             onClick={onReplyAll}
-            className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] text-muted-foreground active:text-foreground transition-colors duration-150"
+            className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] min-w-0 text-muted-foreground active:text-foreground transition-colors duration-150"
           >
             <ReplyAll className="w-5 h-5" />
             <span className="text-[0.625rem] font-medium leading-tight truncate max-w-full">{t('reply_all')}</span>
           </button>
           <button
             onClick={onForward}
-            className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] text-muted-foreground active:text-foreground transition-colors duration-150"
+            className="flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] min-w-0 text-muted-foreground active:text-foreground transition-colors duration-150"
           >
             <Forward className="w-5 h-5" />
             <span className="text-[0.625rem] font-medium leading-tight truncate max-w-full">{t('forward')}</span>
@@ -6117,7 +6117,7 @@ ${printWatermark ? printWatermark.html : ''}
             onClick={onNavigateNext}
             disabled={!onNavigateNext}
             className={cn(
-              "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] transition-colors duration-150",
+              "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px] min-w-0 transition-colors duration-150",
               onNavigateNext ? "text-muted-foreground active:text-foreground" : "text-muted-foreground/30"
             )}
             aria-label={t('tooltips.next')}
