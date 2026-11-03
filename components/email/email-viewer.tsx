@@ -4746,7 +4746,8 @@ ${printWatermark ? printWatermark.html : ''}
       )}>
         {/* Mountain View lines the subject up with the sender's name below it. */}
         <div className={cn("px-4 lg:px-6", mvViewer && "lg:ps-[80px] pt-3 pb-1")} style={mvViewer ? undefined : { paddingBlock: 'var(--density-header-py)' }}>
-          <div className="flex items-start justify-between gap-2 lg:gap-4">
+          {/* In a narrow pane the date takes its own line instead of squeezing the subject to a column. */}
+          <div className="flex flex-wrap items-start justify-between gap-x-2 gap-y-1 lg:gap-x-4">
             {/* Back button (for below-subject mode on tablet) */}
             {toolbarPosition === 'below-subject' && (isMobile || (isTablet && !tabletListVisible) || (isFocusedMailLayout && !isMobile)) && onBack && (
               <Button
@@ -4759,7 +4760,7 @@ ${printWatermark ? printWatermark.html : ''}
                 <ArrowLeft className="w-5 h-5" />
               </Button>
             )}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-[min(100%,16rem)]">
               <div className="flex items-start gap-2">
                 {/* h2 under the app's h1 ("Inbox – Mail"); the reader's
                     blocks below are h3 and h4, so no level is skipped. */}
