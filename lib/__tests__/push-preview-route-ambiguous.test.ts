@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeAll, describe, it, expect, vi, beforeEach } from 'vitest';
 
 // The push names only the JMAP account id, and ids repeat: Stalwart numbers
 // accounts alike on every install, and a group account is listed in the
@@ -92,6 +92,12 @@ async function callRoute(accountId: string, login?: string) {
 }
 
 const mailCalls = () => fetchJmapServer.mock.calls.filter(([url]) => !url.endsWith('/.well-known/jmap'));
+
+// The route's first import can take longer than a test's limit on a busy machine,
+// and a test that times out keeps running into the next one's state.
+beforeAll(async () => {
+  await import('@/app/api/push/preview/route');
+}, 60_000);
 
 describe('push preview after the browser was closed', () => {
   it('reads the login from the remembered session when the context cookie is gone', async () => {
