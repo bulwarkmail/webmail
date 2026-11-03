@@ -30,6 +30,7 @@ import { AppUpdatePrompt } from "@/components/app-update-prompt";
 import { OfflineHost } from "@/components/offline/offline-host";
 import { DeviceWipeHost } from "@/components/offline/device-wipe-host";
 import { NotificationActionsHost } from "@/components/providers/notification-actions-host";
+import { DesktopOsHost } from "@/components/desktop/desktop-os-host";
 import { DevicePolicyHost } from "@/components/device/device-policy-host";
 import { PushNotificationPrompt } from "@/components/push-notification-prompt";
 import { AccountArchiveRestorePrompt } from "@/components/account-archive-prompt";
@@ -89,6 +90,7 @@ export default async function LocaleLayout({
                   <MainWindowOnly>
                     <ImpersonationReconciler />
                     <PushBindingsHost />
+                    <DesktopOsHost />
                     <FreeBusyAutoShare />
                     {!IS_LITE && <PopoutHost />}
                   </MainWindowOnly>

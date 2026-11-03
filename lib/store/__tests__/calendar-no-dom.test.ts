@@ -22,7 +22,7 @@ async function inputsOf(entry: string): Promise<string[]> {
 }
 
 describe('what the worker pulls in', () => {
-  for (const entry of ['lib/store/calendar/index.ts', 'lib/store/calendar/reminders.ts']) {
+  for (const entry of ['lib/store/calendar/index.ts', 'lib/store/calendar/reminders.ts', 'lib/store/reminders/index.ts']) {
     it(`${entry} reaches no UI code`, async () => {
       const inputs = await inputsOf(entry);
       expect(inputs.length).toBeGreaterThan(3);

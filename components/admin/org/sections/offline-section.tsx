@@ -50,7 +50,7 @@ const describeCap = (value: number, unit: string) => (value > 0 ? `${value} ${un
 export function OfflineSection({ draft }: { draft: OrgPolicyDraft }) {
   const forbid = draft.orgValue('devices', 'noOffline');
   const noAttachments = draft.orgValue('devices', 'noOfflineAttachments');
-  const wipeOnRefused = draft.orgValue('devices', 'wipeOnRefusedLogin');
+  const wipeOnRefused = draft.orgValue('devices', 'wipeOnForcedSignOut');
   return (
     <SettingsSection
       id="offline"
@@ -107,12 +107,12 @@ export function OfflineSection({ draft }: { draft: OrgPolicyDraft }) {
         </div>
       </SettingItem>
       <SettingItem
-        label="Delete a device's mail as soon as the server refuses its login"
-        description="Off: the device signs out and hides what it keeps, unsent messages included, until someone signs in with the new password, or for 30 days. That's what a password changed on another device needs. On: it's deleted right away, unsent messages included, and only that account's. A wipe you ask for below is immediate either way."
+        label="Delete a device's mail as soon as it's signed out with nobody asking"
+        description="That's when the server refuses its login, or the idle or session limit runs out. Off: the device signs out and hides what it keeps, unsent messages included, until the next sign-in, or for 30 days. That's what a password changed on another device needs. On: it's deleted right away, unsent messages included, and only that account's. A wipe you ask for below is immediate either way."
       >
         <div className="flex flex-col items-start gap-1 sm:items-end">
-          <ToggleSwitch checked={wipeOnRefused.value} onChange={(v) => draft.setOrgValue('devices', 'wipeOnRefusedLogin', v)} testId="org-devices-wipeOnRefusedLogin" />
-          <InheritNote draft={draft} own={wipeOnRefused.own} everyone={wipeOnRefused.everyone ? 'on' : 'off'} onReset={() => draft.clearOrgValue('devices', 'wipeOnRefusedLogin')} />
+          <ToggleSwitch checked={wipeOnRefused.value} onChange={(v) => draft.setOrgValue('devices', 'wipeOnForcedSignOut', v)} testId="org-devices-wipeOnForcedSignOut" />
+          <InheritNote draft={draft} own={wipeOnRefused.own} everyone={wipeOnRefused.everyone ? 'on' : 'off'} onReset={() => draft.clearOrgValue('devices', 'wipeOnForcedSignOut')} />
         </div>
       </SettingItem>
       <p className="pt-2 text-xs text-muted-foreground">
@@ -120,8 +120,8 @@ export function OfflineSection({ draft }: { draft: OrgPolicyDraft }) {
         with calendar, contacts and files, encrypted on the device. That protects against someone copying its files, not
         against someone using the unlocked browser or app. The limits above can only lower what people pick: where several
         scopes apply, the lowest value counts, so a scope can&apos;t raise what another one lowered. The app holds itself to
-        them when it fetches the policy; the server can&apos;t check what is on a device. Every sign-out, the automatic one
-        after inactivity included, deletes everything. With several accounts signed in, each account follows its own settings.
+        them when it fetches the policy; the server can&apos;t check what is on a device. A sign-out someone asks for deletes everything.
+        One that nobody asked for hides it, as the switch above says. With several accounts signed in, each account follows its own settings.
         Bulwark Lite reads the same policy but has no offline mode.{' '}
         <a href={DOCS_URL} target="_blank" rel="noopener noreferrer" className="font-medium underline underline-offset-2">
           How offline mode works

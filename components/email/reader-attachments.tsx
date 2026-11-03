@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type DragEvent, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronDown, ChevronUp, Download, FolderInput, Loader2, Paperclip } from "@/components/icons";
+import { ChevronDown, ChevronUp, Copy, Download, FolderInput, Loader2, Paperclip } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuItem } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
@@ -11,6 +11,7 @@ import { IconButton } from "@/components/ui/icon-button";
 import { getAttachmentDisplayName } from "@/lib/attachment-name";
 import { cn, formatFileSize } from "@/lib/utils";
 import { noMediaSavingProps } from "@/lib/device-frame";
+import { toast } from "@/stores/toast-store";
 import { attachmentIcon } from "./attachment-chips";
 
 export interface ReaderAttachmentItem {
@@ -29,6 +30,8 @@ export interface AttachmentDragProps {
   onPointerEnter: () => void;
   onDragStart: (e: DragEvent<HTMLDivElement>) => void;
   onDragEnd: (e: DragEvent<HTMLDivElement>) => void;
+  /** The desktop app only. */
+  onCopyAsFile?: () => Promise<boolean>;
 }
 
 /** Past this many tiles the bar shows one row less and a "Show N more" tile. */
@@ -173,6 +176,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
             </IconButton>
           )}
           {pluginMenu?.(attachment)}
+          {!downloadsOff && drag.onCopyAsFile && <CopyAsFileButton copy={drag.onCopyAsFile} />}
           {!downloadsOff && (
           <IconButton
             label={t("download_named", { name })}
@@ -243,6 +247,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
             </IconButton>
           )}
           {pluginMenu?.(attachment)}
+          {!downloadsOff && drag.onCopyAsFile && <CopyAsFileButton copy={drag.onCopyAsFile} />}
           {!downloadsOff && (
             <IconButton label={t("download_named", { name })} title={t("download")} onClick={() => onDownload(attachment)}>
               <Download className="h-4 w-4" />
@@ -359,6 +364,25 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
  * The image itself when there is a thumbnail, else the file type's icon over
  * its extension, in the type's colour.
  */
+/** The desktop app's "Copy as file", for pasting the attachment into Explorer or Finder. */
+function CopyAsFileButton({ copy }: { copy: () => Promise<boolean> }) {
+  const t = useTranslations("desktopOs");
+  return (
+    <IconButton
+      label={t("copy_as_file")}
+      className="text-muted-foreground hover:text-foreground"
+      onClick={() => {
+        void copy().then((ok) => {
+          if (ok) toast.success(t("copied"));
+          else toast.error(t("copy_failed"));
+        }, () => toast.error(t("copy_failed")));
+      }}
+    >
+      <Copy className="h-4 w-4" />
+    </IconButton>
+  );
+}
+
 function AttachmentThumb({ attachment, url, label }: { attachment: ReaderAttachmentItem; url?: string; label: string }) {
   if (url) {
     return <img src={url} alt="" loading="lazy" className="h-12 w-12 shrink-0 rounded-md bg-muted object-cover" />;

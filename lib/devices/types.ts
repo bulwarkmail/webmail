@@ -3,8 +3,12 @@
  * admin and what a device says about its own wipe. No secrets, no store.
  */
 
-/** Who asked for a wipe. `rejected`: the server refused the stored login for good. */
-export const WIPE_REASONS = ['admin', 'user', 'rejected'] as const;
+/**
+ * Who asked for a wipe. `rejected`: the server refused the stored login, and
+ * `session`: the idle or session limit ran out, both where the organisation asks
+ * for deletion at once.
+ */
+export const WIPE_REASONS = ['admin', 'user', 'rejected', 'session'] as const;
 export type WipeReason = (typeof WIPE_REASONS)[number];
 
 export interface DeviceView {

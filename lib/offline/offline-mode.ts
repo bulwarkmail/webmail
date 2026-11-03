@@ -31,6 +31,7 @@ import { labelsPolicyFor } from '@/lib/outgoing/classification';
 import { getSendGuardSource, guardState, guardsSending } from '@/lib/plugin-send-guards';
 import { emitPushStateChange } from '@/lib/push-events';
 import { requestOutboxSync } from '@/lib/pwa-notify/outbox-sync';
+import { emitStoreEvent } from '@/lib/offline/store-events';
 import { STORAGE_ERROR_AREA, type StoreScope, type StoreUsage } from '@/lib/store/area';
 import type { DraftError } from '@/lib/store/drafts/pending';
 import { configureStore, getStore, type StorePageHooks } from '@/lib/store/client/api';
@@ -94,6 +95,8 @@ import { LEGACY_DB_NAME, moveLegacyOutbox, strandedLegacyMessages } from './migr
 import { deleteShellCaches, tellServiceWorker } from './shell';
 import { rememberLost } from './lost';
 import { forgetEvictedSecrets } from './evicted-secrets';
+import { clearDesktopSurfaces } from '@/lib/desktop/bridge';
+import { addSleepHandler, reportStoreCreatedMail } from '@/lib/desktop/system-events';
 
 export type OfflineNotice =
   | { kind: 'queued'; subject: string }
@@ -256,6 +259,11 @@ const storeHooks: StorePageHooks = {
     void refreshQueueState();
   },
   onEvent(event) {
+    emitStoreEvent(event);
+    if (event.type === 'created' && event.collection === 'Email') {
+      const client = onlineClientFor(event.account);
+      if (client) reportStoreCreatedMail(client, event.jmap, event.ids);
+    }
     if (event.type === 'synced') {
       useOfflineStore.setState((s) => {
         const { [event.account]: _full, ...storageFull } = s.storageFull;
@@ -1076,6 +1084,7 @@ async function nameLost(scope: string, stillSignedIn: boolean): Promise<void> {
 }
 
 export async function wipeAccount(account: string): Promise<void> {
+  clearDesktopSurfaces();
   const timer = syncTimers.get(account);
   if (timer) clearTimeout(timer);
   syncTimers.delete(account);
@@ -1111,6 +1120,7 @@ export async function wipeAccount(account: string): Promise<void> {
 
 /** Nothing of offline mode stays on this device. */
 export async function wipeEverything(): Promise<void> {
+  clearDesktopSurfaces();
   for (const timer of syncTimers.values()) clearTimeout(timer);
   syncTimers.clear();
   writeEnabled([]);
@@ -1132,7 +1142,7 @@ export async function wipeEverything(): Promise<void> {
 }
 
 /** The organisation's word on this account, from the server or the last fetch. Defaults aren't its word. */
-function scopeDecided(account: string): boolean {
+export function scopeDecided(account: string): boolean {
   const { loaded, source, partial } = usePolicyStore.getState();
   // The public part a page gets before it's signed in has no caps and no scopes in it.
   return loaded && !partial && (source === 'server' || source === 'cache') && policyDecided(account);
@@ -1253,6 +1263,11 @@ export function startOfflineMode(): () => void {
     window.removeEventListener('online', onOnline);
     window.removeEventListener('offline', onOffline);
   });
+
+  // The desktop app going to sleep. Waking comes with the two events above and below.
+  cleanups.push(addSleepHandler(() => {
+    void getStore().setOnline(false).catch(() => {});
+  }));
 
   // Back in front: catch up now rather than at the next interval.
   const onVisible = () => {

@@ -13,7 +13,9 @@ import { attachmentCapOptions, maxAttachmentMb, windowOptions } from '@/lib/offl
 import { isOfflineNow, useOfflineStore } from '@/lib/offline/state';
 import { minutesLeft, progressWorthShowing, type SyncProgress } from '@/lib/offline/sync-progress';
 import { devicesForAccount } from '@/lib/device-policy';
+import { localExportAllowed } from '@/components/mail-transfer/start-local-export';
 import { useAccountStore } from '@/stores/account-store';
+import { openLocalExport } from '@/stores/mail-transfer-store';
 import { KeptFiles } from './kept-files';
 
 const MB = 1024 * 1024;
@@ -65,6 +67,7 @@ function useUnsent(account: string) {
 export function AccountStorage({ account, primary, heading }: { account: string; primary: boolean; heading: string | null }) {
   const t = useTranslations('offline.settings');
   const tStorage = useTranslations('offlineStorage');
+  const tExport = useTranslations('offlineExport');
   const format = useFormatter();
   const enabled = useOfflineStore((s) => s.enabled.includes(account));
   const usage = useOfflineStore((s) => s.usage[account]);
@@ -220,6 +223,9 @@ export function AccountStorage({ account, primary, heading }: { account: string;
             </SettingItem>
           )}
           <KeptFiles account={account} />
+          <SettingItem label={tExport('settings_label')} description={tExport('settings_description')} locked={!localExportAllowed(account)}>
+            <Button variant="outline" size="sm" disabled={!localExportAllowed(account)} onClick={() => openLocalExport(account)} data-testid={testId('local-export-open')}>{tExport('settings_button')}</Button>
+          </SettingItem>
           <SettingItem label={tStorage('clear_label')} description={cantClear ? tStorage('clear_needs_connection') : tStorage('clear_description')}>
             <Button variant="outline" size="sm" disabled={cantClear} onClick={askClear} data-testid={testId('offline-clear')}>{tStorage('clear_button')}</Button>
           </SettingItem>

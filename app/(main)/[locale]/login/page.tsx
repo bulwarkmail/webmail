@@ -1520,9 +1520,10 @@ function LoginPageContent() {
             )}
             {refusedWaiting.map((wait) => {
               const date = new Date(wait.until).toLocaleDateString(String(params?.locale ?? "en"), { dateStyle: "medium" });
+              const prefix = wait.kind === "session" ? "session_waiting" : "refused_waiting";
               return (
                 <div key={wait.until} className="mb-5 p-3 rounded-xl border border-warning/30 bg-warning/5 text-sm text-foreground" role="status" data-testid="login-refused-waiting">
-                  {wait.unsent === null ? tOfflineWipe("refused_waiting_unknown", { date }) : tOfflineWipe("refused_waiting", { count: wait.unsent, date })}
+                  {wait.unsent === null ? tOfflineWipe(`${prefix}_unknown`, { date }) : tOfflineWipe(prefix, { count: wait.unsent, date })}
                 </div>
               );
             })}

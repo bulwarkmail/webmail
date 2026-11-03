@@ -18,7 +18,7 @@ vi.mock('@/lib/admin/session', async (original) => ({
   getClientIP: () => client.ip,
 }));
 
-import { POST as checkIn, REGISTER_PER_HOUR } from '../route';
+import { POST as checkIn } from '../route';
 import { POST as wiped } from '../wiped/route';
 import { GET as adminList, POST as adminAct } from '../../admin/devices/route';
 import * as registry from '@/lib/devices/registry';
@@ -120,12 +120,12 @@ describe('POST /api/devices', () => {
   it('holds new rows to a much lower limit per address than check-ins, and a 429 changes nothing', async () => {
     creds.value = { accountName: 'alice@example.org', serverUrl: 'https://mail.example.org' };
     const statuses: number[] = [];
-    for (let i = 0; i <= REGISTER_PER_HOUR; i += 1) {
+    for (let i = 0; i <= registry.REGISTER_PER_HOUR; i += 1) {
       statuses.push((await checkIn(request('/api/devices', { platform: 'x', appVersion: '1' }))).status);
     }
-    expect(statuses.slice(0, REGISTER_PER_HOUR).every((status) => status === 200)).toBe(true);
+    expect(statuses.slice(0, registry.REGISTER_PER_HOUR).every((status) => status === 200)).toBe(true);
     expect(statuses.at(-1)).toBe(429);
-    expect((await registry.listDevices()).total).toBe(REGISTER_PER_HOUR);
+    expect((await registry.listDevices()).total).toBe(registry.REGISTER_PER_HOUR);
 
     // A device that's already registered still hears about its wipe.
     const [{ id }] = (await registry.listDevices()).devices;

@@ -76,6 +76,54 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+describe('the 24-hour fetch', () => {
+  it('fires the occurrence of a series the server answered with its master', async () => {
+    const now = Date.now();
+    const occurrenceStart = new Date(now + 5 * 60_000);
+    const stamp = (date: Date) => {
+      const pad = (value: number) => String(value).padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:00`;
+    };
+    // The same weekday and time, years ago: only the expansion finds today's.
+    const first = new Date(occurrenceStart.getTime() - 52 * 7 * 24 * 3_600_000);
+    const master = {
+      id: 'series',
+      uid: 'uid-series',
+      title: 'Weekly',
+      start: stamp(first),
+      duration: 'PT30M',
+      calendarIds: { c1: true },
+      useDefaultAlerts: false,
+      recurrenceRules: [{ '@type': 'RecurrenceRule', frequency: 'weekly' }],
+      alerts: {
+        a1: { '@type': 'Alert', action: 'display', trigger: { '@type': 'OffsetTrigger', offset: '-PT6M', relativeTo: 'start' } },
+      },
+    } as unknown as CalendarEvent;
+    useCalendarStore.setState({ events: [], calendars: [], supportsCalendar: true });
+    useAuthStore.setState({ isAuthenticated: true, client: { queryCalendarEvents: vi.fn(async () => [master]) } as never });
+
+    renderHook(() => useCalendarAlerts());
+
+    await waitFor(() => expect(useToastStore.getState().toasts.map((toast) => toast.title)).toEqual(['Weekly']));
+  });
+});
+
+describe('two tabs', () => {
+  it('rings in one, also when an id changed between the two', async () => {
+    const synthetic = { ...event, id: 'synthetic-2' } as CalendarEvent;
+    renderHook(() => useCalendarAlerts());
+    await waitFor(() => expect(useToastStore.getState().toasts).toHaveLength(1));
+
+    // The other tab has the same reminder under the id the server gives it now.
+    useCalendarStore.setState({ events: [synthetic] });
+    renderHook(() => useCalendarAlerts());
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 700));
+    });
+    expect(useToastStore.getState().toasts).toHaveLength(1);
+  });
+});
+
 describe('reminder hooks', () => {
   it('reports a fired reminder once, and its dismissal when the user closes it', async () => {
     const fired = vi.fn();

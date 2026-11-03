@@ -148,6 +148,7 @@ import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
 import { canDownload } from "@/lib/device-policy";
 import { consumePendingMailto, subscribeToPendingMailto } from "@/lib/protocol-handlers/session";
 import { setNotificationReplyOpener } from "@/lib/pwa-notify/page-actions";
+import { setMailLinkOpener } from "@/lib/desktop/mail-links";
 import { requestTabReply } from "@/lib/pwa-notify/tab-reply";
 import { consumePendingReplyText } from "@/lib/pwa-notify/worker-state";
 import { pendingHandoffs, subscribeHandoff, takeHandoff, type Handoff } from "@/lib/launch-handoff";
@@ -2951,6 +2952,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       // A live composer's text goes through its own "Save or discard?" first.
       const requestClose = composerRequestCloseRef.current;
       if (composerOpenRef.current && requestClose) requestClose(open);
+      else open();
+    });
+  }, []);
+
+  // The desktop app's tray, jump list and toasts, like any other permalink. A live
+  // composer's text goes through its own "Save or discard?" first.
+  useEffect(() => {
+    return setMailLinkOpener((link, options) => {
+      const open = () => void applyMailDeepLinkRef.current(link, options);
+      const requestClose = composerRequestCloseRef.current;
+      if (link.kind === 'message' && link.reply && composerOpenRef.current && requestClose) requestClose(open);
       else open();
     });
   }, []);

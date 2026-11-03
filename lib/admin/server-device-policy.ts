@@ -93,7 +93,7 @@ export const ALL_DEVICE_LIMITS: ServerDevicePolicy = {
   ...Object.fromEntries(
     Object.entries(DEFAULT_ORGANISATION_POLICY.devices).map(([key, off]) => [key, typeof off === 'number' ? 1 : true]),
   ),
-  wipeOnRefusedLogin: false,
+  wipeOnForcedSignOut: false,
 } as ServerDevicePolicy;
 
 /**

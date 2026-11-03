@@ -288,8 +288,10 @@ async function settleCheck(): Promise<void> {
   lockedFromNow();
 }
 
+/** Main's gate, and the OS integration's own state: tray, jump list and toasts (the shell's os-hub.ts). */
 function tellDesktopLocked(): void {
   desktopControls()?.lock();
+  getDesktopBridge()?.os?.setLocked(true);
 }
 
 /** The service worker shows push notifications with no page around. Kept across its restarts. */

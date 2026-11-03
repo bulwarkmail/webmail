@@ -508,6 +508,23 @@ describe('the desktop app', () => {
     expect(isAppLockedNow()).toBe(false);
   });
 
+  it('tells the OS integration when it locks, and its check says so until the unlock', async () => {
+    bridge();
+    const setLocked = vi.fn();
+    (window as unknown as { bulwarkDesktop: Record<string, unknown> }).bulwarkDesktop.os = { setLocked };
+    await enableAppLock(PIN);
+    expect(setLocked).not.toHaveBeenCalled();
+    await lockedAndReloaded();
+    expect(setLocked).toHaveBeenCalledWith(true);
+    setLocked.mockClear();
+    asNewDocument();
+    expect(setLocked, 'a new page behind the lock says so at once').toHaveBeenCalledWith(true);
+    expect(isAppLocked()).toBe(true);
+    await unlockWithPin(PIN);
+    // What components/desktop/desktop-os-host.tsx tells main as the app starts.
+    expect(isAppLocked()).toBe(false);
+  });
+
   it('a page takes the two calls a frame must not reach once, before any frame runs', async () => {
     const appLock = bridge();
     bootAppLock();

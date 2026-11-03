@@ -169,6 +169,31 @@ export function rawBlob(ctx: Pick<StoreContext, 'db' | 'scope'>, jmap: string, b
   return { ok: true, type: RAW_TYPE, size: kept.size, blob: new Blob([kept.blob], { type: RAW_TYPE }) };
 }
 
+/** Which of these whole messages are here, so an online export asks the server only for the rest. */
+export function rawKept(ctx: Pick<StoreContext, 'db' | 'scope'>, jmap: string, blobIds: readonly string[]): string[] {
+  if (!ctx.scope.attachments || blobIds.length === 0) return [];
+  const marks = blobIds.map(() => '?').join(', ');
+  return ctx.db.all<{ blob_id: string }>(
+    `SELECT DISTINCT p.blob_id FROM email_part p JOIN blob b ON b.jmap = p.jmap AND b.blob_id = p.blob_id
+     WHERE p.jmap = ? AND p.raw = 1 AND p.blob_id IN (${marks})`,
+    [jmap, ...blobIds],
+  ).map((row) => String(row.blob_id));
+}
+
+/** How large the originals of a folder are, and the part of that kept here: what an export will need room for. */
+export function rawSize(ctx: Pick<StoreContext, 'db' | 'scope'>, jmap: string, mailboxId?: string): { bytes: number; keptBytes: number } {
+  const inFolder = mailboxId ? 'JOIN email_mailbox m ON m.email_rowid = e.rowid AND m.mailbox_id = ?' : '';
+  const row = ctx.db.get<{ bytes: number | null; kept: number | null }>(
+    `SELECT SUM(p.size) AS bytes, SUM(CASE WHEN b.blob_id IS NULL THEN 0 ELSE p.size END) AS kept
+     FROM email e ${inFolder}
+     JOIN email_part p ON p.email_rowid = e.rowid AND p.raw = 1
+     LEFT JOIN blob b ON b.jmap = p.jmap AND b.blob_id = p.blob_id
+     WHERE e.jmap = ?`,
+    mailboxId ? [mailboxId, jmap] : [jmap],
+  );
+  return { bytes: Number(row?.bytes ?? 0), keptBytes: ctx.scope.attachments ? Number(row?.kept ?? 0) : 0 };
+}
+
 /** How many messages (of one folder, or all) an export could write right now. */
 export function rawStatus(ctx: Pick<StoreContext, 'db' | 'scope'>, jmap: string, mailboxId?: string): { total: number; kept: number } {
   const inFolder = mailboxId ? 'JOIN email_mailbox m ON m.email_rowid = e.rowid AND m.mailbox_id = ?' : '';

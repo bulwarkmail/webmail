@@ -530,14 +530,14 @@ describe('check-ins while running', () => {
 
 /** What the auth store does around the hook. */
 function refuse(account = ALICE, certain = true): void {
-  wipeState.markLoginRefused(account, certain);
+  wipeState.markLoginRefused(account, { certain });
   rejected.noteCredentialsRejected(account, certain);
   useAccountStore.getState().removeAccount(account, 'evicted');
 }
 
 async function policyAsksForDeletion(): Promise<void> {
   const { usePolicyStore } = await import('@/stores/policy-store');
-  const policy = { organisation: { devices: { wipeOnRefusedLogin: true } } };
+  const policy = { organisation: { devices: { wipeOnForcedSignOut: true } } };
   usePolicyStore.setState({ policy, rawPolicy: policy, subject: null, loaded: true, source: 'server', partial: false, resolveFor: () => policy } as never);
 }
 
@@ -579,7 +579,7 @@ describe('a refused login (lib/offline/credentials-rejected.ts)', () => {
 
     // What the sign-in page says, in numbers only.
     const [wait] = wipeState.refusedWaits();
-    expect(wait).toEqual({ unsent: 1, until: expect.any(Number) });
+    expect(wait).toEqual({ unsent: 1, until: expect.any(Number), kind: 'refused' });
     expect(wait.until).toBeGreaterThanOrEqual(at + state.EVICTED_KEEP_MS);
     expect(wait.until).toBeLessThanOrEqual(at + state.EVICTED_KEEP_MS + 60_000);
     expect(JSON.stringify({ ...localStorage })).not.toContain('"Unsent"');
@@ -765,15 +765,16 @@ describe('a refused login (lib/offline/credentials-rejected.ts)', () => {
       expect(state.useOfflineStore.getState().enabled).toEqual([ALICE]);
     });
 
-    it('the session limit stays out of it: no hook, and the data waits', async () => {
+    it('the session limit hides too, as what it is, not as a refusal', async () => {
       wipe.registerDeviceWipe();
       token(() => json(401, { error: 'session_expired', maxHours: 8 }));
       await useAuthStore.getState().refreshAccessToken({ accountId: ALICE });
-      expect(heard).toEqual([]);
+      expect(heard).toEqual([ALICE]);
       await vi.waitFor(() => expect(state.isEvicted(ALICE)).toBe(true));
+      await vi.waitFor(() => expect(useAccountStore.getState().getAccountById(ALICE)).toBeUndefined());
       expect(purge.files).toBe(0);
       expect(store.removed).toEqual([]);
-      expect(wipeState.readRefusedLogins()).toEqual({});
+      expect(wipeState.readRefusedLogins()[ALICE]).toMatchObject({ kind: 'session' });
     });
   });
 });
@@ -1227,5 +1228,129 @@ describe('what else goes with a wipe', () => {
     for (const key of ACCOUNT_KEYS) expect([key, localStorage.getItem(key)]).toEqual([key, 'x']);
     expect(closed).toEqual([]);
     expect(unsubscribed).toBe(0);
+  });
+});
+
+describe('the session timers', () => {
+  const timerSignOut = () => useAuthStore.getState().logoutAll({ endProviderSession: false, keepLocalData: true, sessionLimit: true });
+
+  it('leave the outbox whole, and a sign-in brings it back', async () => {
+    await queue.queueSend(ALICE, { subject: 'Unsent', to: [] }, { kind: 'email', args: [] });
+    wipe.registerDeviceWipe();
+    const lost = await import('../lost');
+    const at = Date.now();
+    await timerSignOut();
+
+    expect(useAccountStore.getState().accounts).toEqual([]);
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    expect(state.isEvicted(ALICE)).toBe(true);
+    expect(state.visibleAccounts()).toEqual([]);
+    expect(purge.files).toBe(0);
+    expect(store.removed).toEqual([]);
+    expect(state.useOfflineStore.getState().enabled).toEqual([ALICE]);
+    expect(lost.consumeLost()).toEqual([]);
+    await vi.waitFor(() => expect(wipeState.refusedWaits()).toEqual([{ unsent: 1, until: expect.any(Number), kind: 'session' }]));
+
+    const offline = await import('../offline-mode');
+    await offline.sweepAccountsGone(at + 14 * DAY);
+    expect(purge.files).toBe(0);
+
+    useAccountStore.getState().addAccount(entry(ALICE, 0) as never);
+    expect(state.visibleAccounts()).toEqual([ALICE]);
+    expect((await queue.readQueue(ALICE)).outbox.map((row) => row.summary.subject)).toEqual(['Unsent']);
+    expect(wipeState.refusedWaits()).toEqual([]);
+    await wipe.sweepRefusedLogins();
+    expect(wipeState.readRefusedLogins()).toEqual({});
+  });
+
+  it('with no sign-in for 30 days it goes', async () => {
+    await queue.queueSend(ALICE, { subject: 'Unsent', to: [] }, { kind: 'email', args: [] });
+    wipe.registerDeviceWipe();
+    const at = Date.now();
+    await timerSignOut();
+    const offline = await import('../offline-mode');
+    await offline.sweepAccountsGone(at + 31 * DAY);
+    expect(purge.files).toBeGreaterThan(0);
+  });
+
+  it('keep S/MIME and OpenPGP keys and the row: an admin can still reach the device', async () => {
+    await openDb('smime-plugin-store');
+    wipe.registerDeviceWipe();
+    await timerSignOut();
+    expect(await databases()).toContain('smime-plugin-store');
+    expect((await keys.getDeviceRecord(ALICE))?.id).toBe(ROW);
+    expect(sent.filter((call) => call.url.endsWith('/wiped'))).toEqual([]);
+  });
+
+  it('with the organisation asking for deletion, it goes at once, only that account\'s, named as the session limit', async () => {
+    await policyAsksForDeletion();
+    respond = (url) => (url.endsWith('/wiped') ? json(200, { ok: true }) : noWipe());
+    await openDb('smime-plugin-store');
+    wipe.registerDeviceWipe();
+    await timerSignOut();
+    await vi.waitFor(() => expect(sent.find((call) => call.url.endsWith('/wiped'))?.body).toMatchObject({ reason: 'session', id: ROW }));
+    await vi.waitFor(() => expect(wipeState.readPendingWipes()).toEqual({}));
+    expect(state.useOfflineStore.getState().enabled).toEqual([]);
+    expect(await databases()).toContain('smime-plugin-store');
+  });
+
+  it('a sign-out the user asks for still deletes', async () => {
+    await queue.queueSend(ALICE, { subject: 'Unsent', to: [] }, { kind: 'email', args: [] });
+    await useAuthStore.getState().logoutAll({ endProviderSession: false });
+    expect(state.isEvicted(ALICE)).toBe(false);
+    await vi.waitFor(() => expect(purge.files).toBeGreaterThan(0));
+    expect(wipeState.readRefusedLogins()).toEqual({});
+  });
+});
+
+describe('a refused account with another still signed in', () => {
+  beforeEach(async () => {
+    useAccountStore.setState({ accounts: [entry(ALICE, 0), entry(BOB, 1)] } as never);
+    state.writeEnabled([ALICE, BOB]);
+    await keys.openAccountKey(BOB);
+    await queue.queueSend(BOB, { subject: 'Unsent', to: [] }, { kind: 'email', args: [] });
+  });
+
+  /** What the auth store writes down, with who was there to read it. */
+  function refuseBob(): void {
+    wipeState.markLoginRefused(BOB, { certain: true, seenBy: [ALICE], label: BOB, username: 'bob' });
+    rejected.noteCredentialsRejected(BOB, true);
+    useAccountStore.getState().removeAccount(BOB, 'evicted');
+  }
+
+  it('is there for the one who was signed in beside it, with its count and date', async () => {
+    wipe.registerDeviceWipe();
+    const at = Date.now();
+    refuseBob();
+    await vi.waitFor(() => expect(wipeState.siblingWaits(ALICE)[0]?.unsent).toBe(1));
+    const [wait] = wipeState.siblingWaits(ALICE);
+    expect(wait).toMatchObject({ label: BOB, username: 'bob', kind: 'refused' });
+    expect(wait.until).toBeGreaterThanOrEqual(at + state.EVICTED_KEEP_MS);
+  });
+
+  it('isn\'t for anyone who signs in here later, and goes when the account is back', async () => {
+    wipe.registerDeviceWipe();
+    refuseBob();
+    await vi.waitFor(() => expect(wipeState.siblingWaits(ALICE)).toHaveLength(1));
+    expect(wipeState.siblingWaits('someone-else')).toEqual([]);
+    useAccountStore.getState().addAccount(entry(BOB, 1) as never);
+    expect(wipeState.siblingWaits(ALICE)).toEqual([]);
+  });
+
+  it('says so once, when the count is known', async () => {
+    wipe.registerDeviceWipe();
+    expect(wipeState.takeSiblingToasts(ALICE)).toEqual([]);
+    refuseBob();
+    expect(wipeState.takeSiblingToasts(ALICE)).toEqual([]);
+    await vi.waitFor(() => expect(wipeState.siblingWaits(ALICE)[0]?.unsent).toBe(1));
+    expect(wipeState.takeSiblingToasts(ALICE)).toEqual([expect.objectContaining({ label: BOB, unsent: 1 })]);
+    expect(wipeState.takeSiblingToasts(ALICE)).toEqual([]);
+  });
+
+  it('says so with no number when the store can\'t give one', async () => {
+    store.failArea = () => true;
+    wipe.registerDeviceWipe();
+    refuseBob();
+    await vi.waitFor(() => expect(wipeState.takeSiblingToasts(ALICE)).toEqual([expect.objectContaining({ unsent: null })]));
   });
 });

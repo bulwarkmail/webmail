@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { useDevicePolicy, useStrictestDevices } from '@/hooks/use-device-policy';
-import { DOWNLOAD_BLOCKED_EVENT, type DownloadKind } from '@/lib/download-guard';
+import { DOWNLOAD_BLOCKED_EVENT, downloadAllowed, type DownloadKind } from '@/lib/download-guard';
 // Installs the download guard (lib/download-guard.ts) for every page.
 import '@/lib/device-policy';
 import { useMailTransferStore } from '@/stores/mail-transfer-store';
@@ -48,6 +48,8 @@ export function DevicePolicyHost() {
     if (store.job?.kind !== 'export') return;
     const job = store.job;
     store.cancelJob('policy');
+    // This closes the dialog too, which would otherwise be gone with no reason given.
+    downloadAllowed('export', null);
     // The private file goes at once, once the job has stopped: nothing may download it any more.
     const discard = () => {
       if (useMailTransferStore.getState().job?.controller === job.controller) useMailTransferStore.getState().close({ now: true });

@@ -6,7 +6,9 @@ import { SettingsSection, SettingItem, ToggleSwitch } from './settings-section';
 import { LanguageSettings } from './language-settings';
 import { AppLockSettings } from './app-lock-settings';
 import { DesktopKeystoreSettings } from './desktop-keystore-settings';
+import { DesktopTelemetrySettings } from './desktop-telemetry-settings';
 import { ProtocolHandlerSettings } from './protocol-handler-settings';
+import { DesktopOsSettings } from './desktop-os-settings';
 import { useTour } from '@/components/tour/tour-provider';
 import { Button } from '@/components/ui/button';
 import { PlayCircle } from '@/components/icons';
@@ -29,8 +31,11 @@ export function GeneralSettings({ supportsCalendar }: { supportsCalendar: boolea
 
       <AppLockSettings />
 
+      <DesktopOsSettings />
+
       {!IS_LITE && <ProtocolHandlerSettings supportsCalendar={supportsCalendar} />}
       <DesktopKeystoreSettings />
+      <DesktopTelemetrySettings />
 
       <DesktopWindowSettings />
       <SettingsSection id="tour" title={tTour('settings_section')}>

@@ -174,6 +174,7 @@ import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { noteOpenDraft } from "@/lib/desktop/window-restore";
 import type { RescuedDraft } from "@/lib/popout/channel";
 import { toUnicodeEmail } from "@/lib/idn";
+import { setComposerFileTarget } from "@/lib/desktop/window-files";
 
 /**
  * Derives the text/plain alternative from the composer's HTML body, preserving
@@ -2711,6 +2712,12 @@ export function EmailComposer({
   const pluginToolbarOffers = usePluginSlotOffers('composer-toolbar');
   // The plugin side panels fold when the composer gets too narrow for them.
   const [composerRootEl, setComposerRootEl] = useState<HTMLDivElement | null>(null);
+
+  // The desktop app: files dropped or pasted anywhere on the window come here, if this one's on screen.
+  useEffect(() => setComposerFileTarget(
+    (files) => void addFiles(files),
+    () => !!composerRootEl?.isConnected && composerRootEl.getClientRects().length > 0,
+  ), [addFiles, composerRootEl]);
   // The id plugins know this composer by (registered below, with the handle).
   const [pluginComposerId, setPluginComposerId] = useState<string | null>(null);
   const pluginSidebars = useComposerSidebars(composerRootEl, pluginComposerId);
