@@ -8,6 +8,7 @@ import { Badge } from '@/components/admin/badge';
 import { EmptyState } from '@/components/admin/empty-state';
 import { inputClass } from '@/components/admin/config-items';
 import type { AuditEntry } from '@/lib/admin/types';
+import { formatAuditDetail } from '@/lib/admin/audit-format';
 import { adminPageDef } from '@/lib/admin/admin-nav';
 import { apiFetch } from '@/lib/browser-navigation';
 import { cn } from '@/lib/utils';
@@ -63,6 +64,14 @@ export function LogsPage() {
               <option value="config.update">Config Update</option>
               <option value="config.revert">Config Revert</option>
               <option value="policy.update">Policy Update</option>
+              <option value="plugin.install">Plugin Install</option>
+              <option value="plugin.update">Plugin Update</option>
+              <option value="plugin.rollback">Plugin Rollback</option>
+              <option value="plugin.delete">Plugin Removal</option>
+              <option value="theme.install">Theme Install</option>
+              <option value="theme.update">Theme Update</option>
+              <option value="theme.rollback">Theme Rollback</option>
+              <option value="theme.delete">Theme Removal</option>
             </select>
             <Button type="button" variant="outline" size="sm" className="gap-2" onClick={fetchLogs} disabled={loading}>
               <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin [animation-direction:reverse]')} />
@@ -84,7 +93,7 @@ export function LogsPage() {
         />
       ) : (
         <>
-          <div className="sm:hidden space-y-2">
+          <div className="md:hidden space-y-2">
             {entries.map((entry, i) => (
               <div key={i} className="rounded-lg border border-border p-3 space-y-1.5">
                 <div className="flex items-center justify-between gap-2">
@@ -94,7 +103,7 @@ export function LogsPage() {
                   </span>
                 </div>
                 <div className="text-xs text-foreground break-words">
-                  {formatDetail(entry.detail)}
+                  {formatAuditDetail(entry.detail) || '-'}
                 </div>
                 <div className="text-[0.6875rem] text-muted-foreground font-mono">
                   {entry.ip}
@@ -103,7 +112,7 @@ export function LogsPage() {
             ))}
           </div>
 
-          <div className="hidden sm:block rounded-lg border border-border overflow-x-auto">
+          <div className="hidden md:block rounded-lg border border-border overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
@@ -122,11 +131,12 @@ export function LogsPage() {
                     <td className="px-4 py-2">
                       <Badge className="font-mono text-xs">{entry.action}</Badge>
                     </td>
-                    <td className="px-4 py-2 text-xs text-foreground max-w-xs truncate">
-                      {formatDetail(entry.detail)}
+                    <td className="w-full max-w-0 truncate px-4 py-2 text-xs text-foreground" title={formatAuditDetail(entry.detail)}>
+                      {formatAuditDetail(entry.detail) || '-'}
                     </td>
                     <td className="px-4 py-2 text-xs text-muted-foreground font-mono">
-                      {entry.ip}
+                      {/* A fixed width, so a full IPv6 address wraps instead of pushing the table wide. */}
+                      <div className="w-28 break-all">{entry.ip}</div>
                     </td>
                   </tr>
                 ))}
@@ -153,15 +163,4 @@ export function LogsPage() {
       )}
     </div>
   );
-}
-
-function formatDetail(detail: Record<string, unknown>): string {
-  if (!detail || Object.keys(detail).length === 0) return '-';
-  if (detail.reason) return String(detail.reason);
-  if (detail.key) return `${detail.key}: ${JSON.stringify(detail.old)} → ${JSON.stringify(detail.new)}`;
-  if (detail.changes && Array.isArray(detail.changes)) {
-    return detail.changes.map((c: Record<string, unknown>) => `${c.key}`).join(', ');
-  }
-  if (detail.restrictionCount !== undefined) return `${detail.restrictionCount} restriction(s)`;
-  return JSON.stringify(detail).slice(0, 100);
 }
