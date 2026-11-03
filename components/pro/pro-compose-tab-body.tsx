@@ -201,12 +201,11 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
   }, [updateComposeDraft, updateTabTitle, t]);
 
   // On first mount, ensure the tab title matches whatever subject we were
-  // initialised with (replies start with "Re: …", forwards with "Fwd: …").
+  // initialised with. The opener's title already says "Re: …" or "Fwd: …" for
+  // a reply or forward. replyTo is no source for it: the mail tab fills that
+  // in from the selected message for a new message too.
   useEffect(() => {
-    const initialSubject = data.initialData?.subject?.trim()
-      ?? data.replyTo?.subject
-      ?? '';
-    const title = initialSubject || t('email_composer.new_message');
+    const title = data.initialData?.subject?.trim() || data.title || t('email_composer.new_message');
     updateTabTitle(tabIdRef.current, title);
     // Run once on mount only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
