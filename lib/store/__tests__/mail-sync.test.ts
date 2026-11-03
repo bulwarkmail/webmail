@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { mkdtempSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { DEFAULT_SCOPE, type StoreEvent } from '../area';
+import { DEFAULT_SCOPE, type StoreContext, type StoreEvent } from '../area';
 import { AccountEngine } from '../engine/account-engine';
 import { runChangesLoop } from '../engine/changes';
 import { TransportError, type MethodCall } from '../engine/transport';
@@ -317,6 +317,33 @@ describe('when the server is busy or gone', () => {
     expect(events.filter((e) => e.type === 'created')).toEqual([
       { type: 'created', account: 'a@fake.test', jmap: JMAP_ACCOUNT, collection: 'Email', ids: ['fresh'] },
     ]);
+  });
+});
+
+describe('calls into an area', () => {
+  const noteArea = {
+    name: 'note',
+    migrations: [{ id: 9999, name: 'note', sql: 'CREATE TABLE note (id INTEGER PRIMARY KEY, text TEXT)' }],
+    methods: {},
+    syncers: [],
+    calls: {
+      'note.add': (ctx: StoreContext, params: { text: string }) => ctx.db.run('INSERT INTO note (text) VALUES (?)', [params.text]).lastInsertRowid,
+    },
+  };
+
+  it('reaches the area and runs its migration', async () => {
+    const engine = new AccountEngine({
+      account: 'a@fake.test', db: openMemoryStore(), session: FAKE_SESSION, transport: new FakeJmap(), areas: [mailArea, noteArea], scope: EVERYTHING,
+    });
+    expect(await engine.areaCall('note.add', { text: 'hello' })).toBe(1);
+    await expect(engine.areaCall('note.nothing', {})).rejects.toThrow('Unknown store call');
+  });
+
+  it('refuses two areas defining the same name', () => {
+    expect(() => new AccountEngine({
+      account: 'a@fake.test', db: openMemoryStore(), session: FAKE_SESSION, transport: new FakeJmap(),
+      areas: [noteArea, { ...noteArea, name: 'other', migrations: [] }], scope: EVERYTHING,
+    })).toThrow('Two store areas define note.add');
   });
 });
 

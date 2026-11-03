@@ -4,7 +4,7 @@
  * the UI. Nothing here touches the DOM, so tests run it on node:sqlite.
  */
 
-import { MethodError, type MethodHandler, type StoreArea, type StoreEvent, type StoreScope, type SyncContext, type SyncStateRow, type Syncer } from '../area';
+import { MethodError, type AreaCall, type MethodHandler, type StoreArea, type StoreContext, type StoreEvent, type StoreScope, type SyncContext, type SyncStateRow, type Syncer } from '../area';
 import { migrate, type StorageAdapter } from '../storage';
 import { answerRequest, buildMethodTable } from './responder';
 import { TransportError, type JmapResponse, type JmapTransport, type MethodCall, type StoreSession } from './transport';
@@ -35,6 +35,7 @@ export class AccountEngine {
   private readonly transport: JmapTransport;
   private readonly syncers: readonly Syncer[];
   private readonly methods: ReadonlyMap<string, MethodHandler>;
+  private readonly calls = new Map<string, AreaCall>();
   private readonly emitter: (event: StoreEvent) => void;
   private readonly now: () => number;
   private readonly sleep: (ms: number) => Promise<void>;
@@ -52,6 +53,12 @@ export class AccountEngine {
     this.transport = options.transport;
     this.syncers = options.areas.flatMap((area) => area.syncers);
     this.methods = buildMethodTable(options.areas);
+    for (const area of options.areas) {
+      for (const [name, call] of Object.entries(area.calls ?? {})) {
+        if (this.calls.has(name)) throw new Error(`Two store areas define ${name}`);
+        this.calls.set(name, call);
+      }
+    }
     this.emitter = options.emit ?? (() => {});
     this.now = options.now ?? Date.now;
     this.sleep = options.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
@@ -195,18 +202,31 @@ export class AccountEngine {
     };
   }
 
+  private storeContext(): StoreContext {
+    return {
+      account: this.account,
+      db: this.db,
+      session: this.session,
+      scope: this.scope,
+      now: this.now,
+      emit: this.emitter,
+    };
+  }
+
+  /** A non-JMAP call into one of the areas. */
+  async areaCall(name: string, params: unknown): Promise<unknown> {
+    const call = this.calls.get(name);
+    if (!call) throw new Error(`Unknown store call ${name}`);
+    return call(this.storeContext(), params as never);
+  }
+
   /** An answer from the device. Null when nothing in the request could be answered. */
   async answer(calls: MethodCall[]): Promise<JmapResponse | null> {
     if (this.closed) throw new MethodError('serverUnavailable', 'The local store is closed');
     const primary = this.session.primaryAccounts['urn:ietf:params:jmap:mail'] ?? Object.keys(this.session.accounts)[0];
     return answerRequest(
       {
-        account: this.account,
-        db: this.db,
-        session: this.session,
-        scope: this.scope,
-        now: this.now,
-        emit: this.emitter,
+        ...this.storeContext(),
         defaultJmap: primary,
         invertedKeywordSort: this.invertedKeywordSort,
       },

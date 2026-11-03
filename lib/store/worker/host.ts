@@ -149,6 +149,12 @@ export class StoreHost {
         const { account } = params as Parameters<StoreRpc['status']>[0];
         return this.status(account);
       }
+      case 'area': {
+        const { account, name, params: callParams } = params as Parameters<StoreRpc['area']>[0];
+        const open = this.accounts.get(account);
+        if (!open) throw new Error('The local store is not open for this account');
+        return open.engine.areaCall(name, callParams);
+      }
       default:
         throw new Error(`Unknown store call ${String(method)}`);
     }

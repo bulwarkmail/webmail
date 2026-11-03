@@ -258,4 +258,8 @@ export class StoreClient {
   status(account: string): Promise<StoreStatus | null> {
     return this.rpc('status', { account });
   }
+
+  area<T = unknown>(account: string, name: string, params?: unknown): Promise<T> {
+    return this.rpc('area', { account, name, params }) as Promise<T>;
+  }
 }

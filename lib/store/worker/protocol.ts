@@ -26,6 +26,8 @@ export interface StoreRpc {
   noteStateChange(params: { account: string; changed: Record<string, Record<string, string>> }): void;
   setOnline(params: { online: boolean }): void;
   status(params: { account: string }): StoreStatus | null;
+  /** A non-JMAP call into an area of the store. */
+  area(params: { account: string; name: string; params: unknown }): unknown;
 }
 
 export interface StoreStatus {

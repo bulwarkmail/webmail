@@ -93,9 +93,17 @@ export interface MethodContext extends StoreContext {
 
 export type MethodHandler = (ctx: MethodContext, args: Record<string, unknown>, call: MethodCall) => MethodResult | Promise<MethodResult>;
 
+/**
+ * A call from the page that isn't JMAP: outbox rows, usage, clearing. Reached
+ * from any tab with `store.area(account, 'outbox.list', params)`. Names are
+ * unique across areas and start with the area's name.
+ */
+export type AreaCall = (ctx: StoreContext, params: never) => unknown | Promise<unknown>;
+
 export interface StoreArea {
   name: string;
   migrations: readonly Migration[];
   methods: Readonly<Record<string, MethodHandler>>;
   syncers: readonly Syncer[];
+  calls?: Readonly<Record<string, AreaCall>>;
 }
