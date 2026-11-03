@@ -153,7 +153,8 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
               )}
             </div>
           </div>
-          <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap">
+          {/* May not grow past the pane: in a narrow one the buttons at the end were pushed out of reach. */}
+          <div className="flex items-center gap-1.5 max-w-full flex-wrap">
             {email && onCompose && (
               <Button variant="outline" size="xs" onClick={onCompose} className="gap-1.5 touch-manipulation">
                 <Send />
@@ -169,11 +170,19 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
                 {t("context_menu.call")}
               </a>
             )}
-            <Button variant="outline" size="xs" onClick={onEdit} className="gap-1.5 touch-manipulation">
-              <Pencil />
-              {t("form.edit_title")}
-            </Button>
-            {onPrint && (
+            {/* A phone's row has no room for this label: the ⋮ fell onto a line of its own. */}
+            {isMobile ? (
+              <ToolbarButton label={t("form.edit_title")} onClick={onEdit} className="touch-manipulation">
+                <Pencil />
+              </ToolbarButton>
+            ) : (
+              <Button variant="outline" size="xs" onClick={onEdit} className="gap-1.5 touch-manipulation">
+                <Pencil />
+                {t("form.edit_title")}
+              </Button>
+            )}
+            {/* On a phone it stays in the ⋮, which has Print too. */}
+            {onPrint && !isMobile && (
               <ToolbarButton label={tCommon("print")} onClick={onPrint} className="touch-manipulation">
                 <Printer />
               </ToolbarButton>
