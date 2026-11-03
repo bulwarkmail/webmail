@@ -58,7 +58,7 @@ import { useEffectiveMailLayout } from "@/hooks/use-effective-mail-layout";
 import { useContactStore } from "@/stores/contact-store";
 import { useIdentityStore } from "@/stores/identity-store";
 import { useUIStore, listPaneCssSize, SIDEBAR_MIN, SIDEBAR_MAX, EMAIL_LIST_MIN, EMAIL_LIST_MAX, EMAIL_LIST_HEIGHT_MIN, EMAIL_LIST_HEIGHT_MAX, READING_PANE_MIN_WIDTH, READING_PANE_MIN_HEIGHT, COMPOSER_PANE_MIN_HEIGHT } from "@/stores/ui-store";
-import { atLeast, useDeviceDetection } from "@/hooks/use-media-query";
+import { atLeast, useDeviceDetection, useMediaQuery } from "@/hooks/use-media-query";
 import { usePaneSize } from "@/hooks/use-pane-size";
 import { useIsFocusedProTab, usePaneId } from "@/hooks/use-pane-context";
 import { useKeyboardShortcuts, type GoToMailboxTarget } from "@/hooks/use-keyboard-shortcuts";
@@ -386,6 +386,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   // Mobile/tablet responsive hooks
   const { isMobile, isTablet } = useDeviceDetection();
+  const isShortWindow = useMediaQuery('(max-height: 32rem)');
   const isEmbedded = useIsEmbedded();
   // A message or conversation link shows the reader from the first frame, as
   // the page skeleton draws it, in its loading state until the link has been
@@ -4616,6 +4617,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const mobileView = deepLinkPane !== null && isMobile ? 'viewer' : activeView;
   const shouldCollapseListPane = (isTablet && ((!tabletListVisible && !readingPaneEmpty) || deepLinkPane !== null)) || (!isMobile && isFocusedMailLayout && hasViewerContent);
   const shouldHideViewerPane = !isMobile && !hasViewerContent && isFocusedMailLayout;
+  // A phone on its side counts as a tablet, which keeps the bottom bar. In a window
+  // this short the bar takes a sixth of it and leaves a few lines, so it goes where
+  // a phone held upright hides it too: over a composer, or a message filling the
+  // window. With the list beside the message it is the only way to the other apps.
+  const shortWindowHidesTabBar = isShortWindow && ((showComposer && !floatingComposer) || (hasViewerContent && shouldCollapseListPane));
   const shouldHideHorizontalViewerPane = isHorizontalMailLayout && !hasViewerContent;
 
   // Handle email selection with mobile view switching
@@ -5903,7 +5909,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           </div>
 
           {/* Bottom Navigation - mobile and tablet (hidden when embedded) */}
-          {(isMobile || isTablet) && mobileView !== "viewer" && !isEmbedded && (
+          {(isMobile || isTablet) && mobileView !== "viewer" && !shortWindowHidesTabBar && !isEmbedded && (
             <NavigationRail
               orientation="horizontal"
               onManageApps={handleManageApps}
