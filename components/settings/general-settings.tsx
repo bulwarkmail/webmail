@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, ToggleSwitch } from './settings-section';
 import { LanguageSettings } from './language-settings';
+import { AppLockSettings } from './app-lock-settings';
 import { DesktopKeystoreSettings } from './desktop-keystore-settings';
 import { ProtocolHandlerSettings } from './protocol-handler-settings';
 import { useTour } from '@/components/tour/tour-provider';
@@ -25,6 +26,8 @@ export function GeneralSettings({ supportsCalendar }: { supportsCalendar: boolea
   return (
     <div className="space-y-8">
       <LanguageSettings />
+
+      <AppLockSettings />
 
       {!IS_LITE && <ProtocolHandlerSettings supportsCalendar={supportsCalendar} />}
       <DesktopKeystoreSettings />

@@ -10,7 +10,9 @@
  * waits at most `timeoutMs` for all of them together.
  */
 
+import type { ComposerDraftData } from '@/components/email/email-composer';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
+import type { OpenDraft } from '@/lib/desktop/window-restore';
 
 export type ComposeFlush = () => Promise<void>;
 
@@ -103,8 +105,33 @@ export async function flushComposers(timeoutMs: number): Promise<FlushResult> {
   return { total: pending.length, settled, failed, timedOut };
 }
 
+/** What an open composer holds, for the app lock: where its text is, and the text if it's nowhere else. */
+export interface ComposeSnapshot {
+  /** In its own window, whose address has to say what comes back after the lock. */
+  ownWindow: boolean;
+  /** The composer's state, when it has anything worth keeping. */
+  state(): ComposerDraftData | null;
+  /** The saved draft it's on. */
+  draft(): OpenDraft | null;
+}
+
+const snapshots = new Map<number, ComposeSnapshot>();
+
+export function registerComposeSnapshot(snapshot: ComposeSnapshot): () => void {
+  const id = nextId++;
+  snapshots.set(id, snapshot);
+  return () => {
+    snapshots.delete(id);
+  };
+}
+
+export function composeSnapshots(): ComposeSnapshot[] {
+  return [...snapshots.values()];
+}
+
 /** Test helper: forget every registration. */
 export function resetComposeFlushRegistry(): void {
   flushes.clear();
   waiters.clear();
+  snapshots.clear();
 }

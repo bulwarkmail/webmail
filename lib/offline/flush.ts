@@ -26,6 +26,7 @@
  *   (a label now required, a send check now required) is held for the user.
  */
 
+import { isAppLockedNow } from '@/lib/app-lock/state';
 import type { JMAPClient } from '@/lib/jmap/client';
 import { isNetworkFailure } from '@/lib/jmap/offline-hooks';
 import type { SendEmailResult } from '@/lib/jmap/types';
@@ -363,6 +364,8 @@ async function flushLocked(account: string, client: JMAPClient, deps: FlushDeps,
         continue;
       }
       // Another tab took it, or it was deleted meanwhile.
+      // Locked: the rest goes after the unlock, when the app starts again.
+      if (isAppLockedNow()) return;
       if (!(await claimForSending(account, entry.id))) continue;
       let result: SendEmailResult;
       try {

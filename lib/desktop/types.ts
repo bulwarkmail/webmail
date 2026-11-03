@@ -272,6 +272,35 @@ export interface DesktopKeystoreBridge {
   revokeAccess: () => Promise<void>;
 }
 
+export type DesktopOsUnlockKind = 'hello' | 'touchid';
+
+/**
+ * App lock in the desktop app. Main holds whether it's locked, and nothing a page says can
+ * lift that: `prove` needs what only a real unlock gives, Windows Hello and Touch ID run in
+ * main, and `forget` asks natively while locked. A same-origin plugin frame can reach all
+ * of this through `parent`, so that has to hold on a call alone.
+ */
+export interface DesktopAppLockBridge {
+  status: () => Promise<{ locked: boolean; enrolled: boolean; os: DesktopOsUnlockKind | null; osEnrolled: boolean }>;
+  /** Locks. Anyone may: it only ever makes things more locked. */
+  lock: () => void;
+  /** Sets up the proof. False when one exists. */
+  enroll: (proof: Uint8Array) => Promise<boolean>;
+  /** Lifts the lock when the proof is the right one. */
+  prove: (proof: Uint8Array) => Promise<boolean>;
+  /** The lock goes off for good. */
+  disable: (proof: Uint8Array) => Promise<boolean>;
+  /** The PIN is lost, or everyone signed out. While locked, main asks the user natively. */
+  forget: () => Promise<boolean>;
+  /** Asks Windows Hello or Touch ID, then keeps the key in the OS's encrypted storage. */
+  osEnroll: (proof: Uint8Array, lockKey: Uint8Array) => Promise<boolean>;
+  osRemove: () => Promise<void>;
+  /** Only while locked. Main asks, and after a yes lifts its lock and hands over the key. */
+  osUnlock: () => Promise<{ ok: true; key: Uint8Array } | { ok: false; reason: 'unavailable' | 'denied' | 'failed' | 'not-locked' }>;
+  /** The screen locked, or "Lock now" in the menu or tray. Returns the unsubscribe. */
+  onLockRequest: (listener: () => void) => () => void;
+}
+
 export interface BulwarkDesktopBridge {
   version: number;
   platform: 'win32' | 'darwin' | 'linux';
@@ -287,6 +316,7 @@ export interface BulwarkDesktopBridge {
   auth?: DesktopAuthBridge;
   plugins?: DesktopPluginsBridge;
   keystore?: DesktopKeystoreBridge;
+  appLock?: DesktopAppLockBridge;
 }
 
 declare global {

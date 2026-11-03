@@ -25,6 +25,8 @@ import "../globals.css";
 import "../print.css";
 import "../desktop.css";
 import { desktopBootScript } from "@/lib/desktop/boot";
+import { appLockBootScript } from "@/lib/app-lock/state";
+import "../app-lock.css";
 
 // This layout renders <html> and sits ABOVE the [locale] segment, so
 // next-intl's getLocale() returns the default locale here - emitting
@@ -312,6 +314,7 @@ export default async function RootLayout({
             __html: `
               (function() {${IS_LITE ? liteLocaleBootstrap() : ""}
                 ${desktopBootScript()}
+                ${IS_LITE ? "" : appLockBootScript()}
                 try {
                   const stored = localStorage.getItem('theme-storage');
                   const theme = stored ? JSON.parse(stored).state.theme : 'system';

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
+import { isAppLockedNow } from "@/lib/app-lock/state";
 import { usePopoutsAvailable } from "@/hooks/use-popouts-available";
 import { useAccountStore } from "@/stores/account-store";
 import { useAuthStore } from "@/stores/auth-store";
@@ -76,6 +77,8 @@ export function PopoutHost() {
 
     const answerSessionRequest = async (message: Extract<PopoutMessage, { type: "session-request" }>) => {
       const { accountId, rejectedFingerprint } = message;
+      // Locked: nobody gets a credential, whatever they ask.
+      if (isAppLockedNow()) return;
       const auth = useAuthStore.getState();
       // Only a window holding the login answers: the first answer has to be usable.
       if (accountId && !shareableSessions().some((session) => session.accountId === accountId)) return;
@@ -86,7 +89,7 @@ export function PopoutHost() {
         if (current && await credentialFingerprint(current) === rejectedFingerprint) await auth.refreshAccessToken({ accountId });
       }
       const sessions = shareableSessions();
-      if (sessions.length === 0) return;
+      if (sessions.length === 0 || isAppLockedNow()) return;
       const sealed = await sealFor(message.publicKey, { activeAccountId: useAuthStore.getState().activeAccountId, sessions });
       channel?.post({ type: "session-answer", requestId: message.requestId, sealed });
     };

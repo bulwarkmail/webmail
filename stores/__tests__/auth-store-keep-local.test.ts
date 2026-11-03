@@ -222,4 +222,17 @@ describe('a login without "remember me"', () => {
     await vi.waitFor(() => expect(purge.files).toBeGreaterThan(0));
     expect(lost.consumeLost()).toEqual(['Unsent']);
   });
+
+  it('keeps its data when the reload was the app lock\'s: it has to sign in again, and loses nothing', async () => {
+    localStorage.setItem('bulwark-app-lock', JSON.stringify({ on: true, locked: false }));
+    useAccountStore.setState({ accounts: [{ ...entry(ALICE, 0), rememberMe: false }] } as never);
+    tokenAnswers(() => answer(200));
+    await useAuthStore.getState().checkAuth();
+    expect(useAccountStore.getState().getAccountById(ALICE)).toBeUndefined();
+    expect(state.isEvicted(ALICE)).toBe(true);
+    offline.startOfflineMode();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(purge.files).toBe(0);
+    expect(lost.consumeLost()).toEqual([]);
+  });
 });

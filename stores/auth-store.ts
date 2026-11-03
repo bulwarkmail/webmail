@@ -22,6 +22,7 @@ import { DESKTOP_CLIENT_ID_KEY } from '@/lib/desktop/browser-sign-in';
 import { isEmbedded, notifyParent } from '@/lib/iframe-bridge';
 import { snapshotAccount, restoreAccount, clearAllStores, evictAccount, evictAll, forgetAccountRows } from '@/lib/account-state-manager';
 import { clearAllPluginStorage, clearPluginStorageForAccount } from '@/lib/plugin-sandbox/storage-scope';
+import { isAppLockedNow, isAppLockOn } from '@/lib/app-lock/state';
 import { broadcastSignOut, onSignedOutElsewhere, passSignOutGates, purgeSignedOutData, runBeforeSignOut, type SignOutCleanupOptions } from '@/lib/sign-out-cleanup';
 import { forgetPrincipals } from '@/lib/delegation/known-principals';
 import { useSearchHistoryStore } from './search-history-store';
@@ -2967,7 +2968,9 @@ export const useAuthStore = create<AuthState>()(
               forgottenAccounts += 1;
               evictAccount(account.id);
               // The user's choice on what may be a shared computer: its local data goes too.
-              accountStore.removeAccount(account.id, 'explicit');
+              // Not when the app lock is on: its reload ended this page, not the session, so
+              // the mail and the outbox wait for the next sign-in.
+              accountStore.removeAccount(account.id, isAppLockOn() ? 'evicted' : 'explicit');
               if (account.authMode === 'oauth') void clearSlotCredentials(account.cookieSlot, true);
               return;
             }
@@ -3484,6 +3487,8 @@ export const useAuthStore = create<AuthState>()(
       },
 
       startSharedSession: async (options) => {
+        // Locked: not from another window, and not from the cookies either.
+        if (isAppLockedNow()) return 'no-session';
         set({ isLoading: true, client: null });
         const accountStore = useAccountStore.getState();
         const answer = await requestWindowSession(options?.accountId ? { accountId: options.accountId } : {});

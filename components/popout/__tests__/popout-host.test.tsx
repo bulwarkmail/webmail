@@ -1,6 +1,7 @@
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FakeBroadcastChannel } from '@/lib/__tests__/fixtures/fake-broadcast-channel';
+import { setLockedHere } from '@/lib/app-lock/state';
 import { openPopoutChannel, requestWindowSession, watchMainWindow, askRescuedDraftId, type PopoutMessage, type RescuedDraft } from '@/lib/popout/channel';
 import { takeRescuedDraft } from '@/lib/popout/rescued-drafts';
 import { createSessionOpener } from '@/lib/popout/sealed';
@@ -119,6 +120,30 @@ describe('PopoutHost', () => {
       sessions: [{ accountId: 'alice', authHeader: 'Bearer main', authMode: 'oauth' }],
     });
     expect(JSON.stringify(heard)).not.toContain('Bearer main');
+  });
+
+  it('gives no credentials while the app is locked, also to a pop-out that never heard of the lock', async () => {
+    render(<PopoutHost />);
+    await settle();
+    setLockedHere(true);
+    const channel = openPopoutChannel(() => {});
+    const opener = await createSessionOpener();
+    channel?.post({ type: 'session-request', requestId: 'r1', publicKey: opener.publicKey });
+    await settle();
+    channel?.close();
+    expect(answers()).toEqual([]);
+    await expect(requestWindowSession({}, 100)).resolves.toBeNull();
+    setLockedHere(false);
+    await expect(requestWindowSession({}, 2000)).resolves.toMatchObject({ activeAccountId: 'alice' });
+  });
+
+  it('a locked pop-out takes no session from the cookies either', async () => {
+    setLockedHere(true);
+    try {
+      await expect(useAuthStore.getState().startSharedSession({})).resolves.toBe('no-session');
+    } finally {
+      setLockedHere(false);
+    }
   });
 
   it('says nothing while it has no session to lend, so a pop-out goes on to the cookies', async () => {

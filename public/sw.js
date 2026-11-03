@@ -506,6 +506,10 @@ self.addEventListener("message", (event) => {
     event.waitUntil(recordClientLogins(event.source && event.source.id, data.logins));
     return;
   }
+  if (data.type === "app-lock") {
+    event.waitUntil(writeAppLockState(data.state));
+    return;
+  }
   if (data.type === "offline-shell") {
     // The switch is kept before the event ends. The shell's files are
     // fetched without holding the event open: a worker busy with an event
@@ -614,7 +618,9 @@ async function handlePush(event) {
   // a generic "New mail" so the user still sees something.
   let preview = null;
   let previewOk = false;
-  try {
+  // Locked: not a word about the message, so it isn't even looked up.
+  const lockHidesContent = await appLockHidesContent();
+  if (!lockHidesContent) try {
     const query = new URLSearchParams();
     if (accountId) query.set("accountId", accountId);
     if (freshIds.length > 0) query.set("emailId", freshIds[freshIds.length - 1]);
@@ -776,6 +782,49 @@ async function showWithoutAlert(groupTag) {
 // and is not extended by the silent ones, so a steady trickle still rings
 // every so often.
 const QUIET_WINDOW_MS = 30_000;
+
+// ---- App lock: while locked a notification says nothing about the message ----
+
+function appLockStateKey() {
+  return `${self.location.origin}${BASE_PATH}/__push-state/app-lock`;
+}
+
+async function writeAppLockState(state) {
+  const cache = await caches.open(PUSH_STATE_CACHE);
+  await cache.put(appLockStateKey(), new Response(JSON.stringify({ state }), { headers: { "Content-Type": "application/json" } }));
+  if (state === "locked") await closeMailNotifications();
+}
+
+/** What's on screen from before the lock names senders and subjects. */
+async function closeMailNotifications() {
+  try {
+    const shown = await self.registration.getNotifications();
+    for (const notification of shown) {
+      if (typeof notification.tag === "string" && notification.tag.startsWith("bulwark-mail:")) notification.close();
+    }
+  } catch (_) {
+    // Nothing more a worker can do.
+  }
+}
+
+/**
+ * The page says "locked" when it locks. It can't say so when the browser just closes, so
+ * "unlocked" only counts with a window open: the key is in a window's memory or nowhere.
+ */
+async function appLockHidesContent() {
+  try {
+    const cache = await caches.open(PUSH_STATE_CACHE);
+    const res = await cache.match(appLockStateKey());
+    const stored = res ? await res.json() : null;
+    if (!stored || stored.state === "off") return false;
+    if (stored.state !== "unlocked") return true;
+    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    return windows.length === 0;
+  } catch (_) {
+    // Can't tell: a generic notification loses little.
+    return true;
+  }
+}
 
 function lastAlertKey() {
   return `${self.location.origin}${BASE_PATH}/__push-state/last-alert`;
@@ -1362,6 +1411,8 @@ async function postNotificationAction(action, data) {
 
 /** True when the action is done and nothing has to open. */
 async function runNotificationAction(action, data, reply, allClients) {
+  // An old notification's button doesn't act on mail while the app is locked.
+  if (await appLockHidesContent()) return false;
   const text = action === "reply" && typeof reply === "string" ? reply.trim() : "";
   const { result, client } = await askOpenClients({
     kind: "notification-action",

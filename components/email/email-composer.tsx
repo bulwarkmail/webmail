@@ -168,7 +168,8 @@ import type { Editor } from "@tiptap/react";
 import { htmlToPlainText as htmlToPlainTextShared } from "@/lib/html-to-text";
 import { fileStorage } from "@/lib/plugin-storage";
 import { usePolicyStore } from "@/stores/policy-store";
-import { registerComposeFlush } from "@/lib/compose-flush-registry";
+import { isAppLockedNow } from "@/lib/app-lock/state";
+import { registerComposeFlush, registerComposeSnapshot } from "@/lib/compose-flush-registry";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { noteOpenDraft } from "@/lib/desktop/window-restore";
 import type { RescuedDraft } from "@/lib/popout/channel";
@@ -1958,6 +1959,8 @@ export function EmailComposer({
   ownWindowRef.current = ownWindow;
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      // The lock saved what it could and is on its way to the lock screen: no prompt, and no copy of the text.
+      if (isAppLockedNow()) return;
       const own = ownWindowRef.current;
       if (!own) {
         if (isDirtyRef.current) {
@@ -3140,6 +3143,15 @@ export function EmailComposer({
     }
     await saveDraftRef.current();
     if (saveFailedRef.current) throw new Error('The draft was not saved');
+  }), []);
+
+  // Where this composer's text is, for the app lock.
+  useEffect(() => registerComposeSnapshot({
+    ownWindow: !!ownWindowRef.current,
+    state: () => (sentRef.current || uneditedRef.current ? null : snapshotStateRef.current()),
+    draft: () => (draftIdRef.current && !sentRef.current
+      ? { draftId: draftIdRef.current, localAccountId: draftLocalAccountIdRef.current, ownerAccountId: draftAccountIdRef.current }
+      : null),
   }), []);
 
   // The draft as plugins see it: onDraftChange, the frames above and below

@@ -1,3 +1,4 @@
+import { forgetAppLockAtSignOut } from '@/lib/app-lock/sign-out';
 import { fileStorage } from '@/lib/plugin-storage';
 import { clearHandoffs } from '@/lib/launch-handoff';
 import { clearAllCheckpoints } from '@/lib/mail-import/checkpoints';
@@ -136,6 +137,8 @@ export function purgeSignedOutData(options: SignOutCleanupOptions = {}): void {
     }
     forgetOfflineShell();
   }
+  // With no store left, the app lock has nothing to guard, and a next person shouldn't meet it.
+  if (!options.keepLocalStore) forgetAppLockAtSignOut();
   // Files and links on their way into a draft or an import.
   clearHandoffs();
   for (const cleanup of signedOutCleanups) {
