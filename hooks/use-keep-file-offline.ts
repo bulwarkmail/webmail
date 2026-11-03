@@ -30,7 +30,7 @@ export function useKeepFileOffline(client: IJMAPClient | null | undefined) {
   const t = useTranslations('offlineStorage');
   const account = useAuthStore((s) => s.activeAccountId);
   const { active, pinned, pin, unpin } = useKeptFiles(account);
-  const own = client?.getAccountId() ?? '';
+  const own = client?.getAccountId?.() ?? '';
 
   const keptOffline = useMemo(() => new Set(pinned.map((file) => (file.jmap === own ? file.id : `${file.jmap}:${file.id}`))), [pinned, own]);
 

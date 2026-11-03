@@ -368,7 +368,7 @@ describe('what a sign-out would delete', () => {
   });
 
   it('answers with the last known count when the store hangs', async () => {
-    useOfflineStore.setState({ outbox: [{ id: 1, account: 'acc', createdAt: 1, subject: 'A', to: [], status: 'waiting' }] as never, pendingChanges: 2 });
+    useOfflineStore.setState({ outbox: [{ id: 1, account: 'acc', createdAt: 1, subject: 'A', to: [], status: 'waiting' }] as never, changesBy: { acc: 2 } });
     const hung: Array<(error: Error) => void> = [];
     vi.spyOn(store, 'area').mockImplementation(() => new Promise((_resolve, reject) => { hung.push(reject); }));
     expect(await unsentCount('acc', 10)).toEqual({ messages: 1, changes: 2 });

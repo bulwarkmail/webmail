@@ -426,6 +426,7 @@ describe('wiping offline data', () => {
     useAuthStore.setState({ client: client as never, activeAccountId: 'acc' });
     writeEnabled(['acc']);
     stop = startOfflineMode();
+    usePolicyStore.getState().setPolicySubject({ email: 'alice@example.org', groups: [] });
     usePolicyStore.setState({ policy: { ...usePolicyStore.getState().policy, organisation: { ...DEFAULT_ORGANISATION_POLICY, devices: { ...DEFAULT_ORGANISATION_POLICY.devices, noOffline: true } } } });
     enforcePolicy();
     await vi.waitFor(async () => expect(useOfflineStore.getState().enabled).toEqual([]));
