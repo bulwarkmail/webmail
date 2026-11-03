@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const offline = vi.hoisted(() => ({
@@ -311,10 +311,11 @@ describe('in the desktop app', () => {
 
   it('says what the risk is there, and only there', () => {
     render(<OfflineSettings />);
-    expect(screen.queryByTestId('offline-desktop-warning')).toBeNull();
+    expect(screen.getByTestId('offline-warning').textContent).toBe('warning');
+    cleanup();
     (window as { bulwarkDesktop?: unknown }).bulwarkDesktop = { version: 1 };
     render(<OfflineSettings />);
-    expect(screen.getByTestId('offline-desktop-warning').textContent).toBe('warning_desktop');
+    expect(screen.getAllByTestId('offline-warning').map((node) => node.textContent)).toEqual(['warning_desktop']);
   });
 });
 

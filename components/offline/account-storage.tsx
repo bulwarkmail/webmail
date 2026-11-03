@@ -7,7 +7,6 @@ import { SettingItem, Select, ToggleSwitch } from '@/components/settings/setting
 import { OrgLockedNote } from '@/components/settings/org-locked-note';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { isDesktopApp } from '@/lib/desktop/bridge';
 import { formatFileSize } from '@/lib/utils';
 import { chooseScope, clearAccount, disableOffline, dismissStoreReset, enableOffline, scopeForAccount, unsentCount } from '@/lib/offline/offline-mode';
 import { attachmentCapOptions, maxAttachmentMb, windowOptions } from '@/lib/offline/scope';
@@ -144,7 +143,6 @@ export function AccountStorage({ account, primary, heading }: { account: string;
           }}
         />
       </SettingItem>
-      {isDesktopApp() && <p className="text-xs text-muted-foreground" data-testid={testId('offline-desktop-warning')}>{tStorage('warning_desktop')}</p>}
       {storeReset && (
         <div className="my-2 flex flex-col gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-200 sm:flex-row sm:items-center sm:justify-between" role="alert" data-testid="offline-evicted">
           <p className="min-w-0">
