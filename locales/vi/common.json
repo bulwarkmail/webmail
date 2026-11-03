@@ -5740,7 +5740,8 @@
     "dismiss": "Đóng",
     "dismiss_label": "Đóng ghi chú về {subject}",
     "banner": "Các thay đổi chưa được áp dụng: {count}",
-    "toast": "Thay đổi khi ngoại tuyến chưa được áp dụng: {count}. Hộp thư đi cho biết là những thay đổi nào."
+    "toast": "Thay đổi khi ngoại tuyến chưa được áp dụng: {count}. Hộp thư đi cho biết là những thay đổi nào.",
+    "storage_failed": "Thiết bị này không còn chỗ cho thư ngoại tuyến. Hãy giải phóng dung lượng hoặc giữ ít hơn trong Cài đặt."
   },
   "deep_link": {
     "message_not_found": "Thư này không còn nữa.",

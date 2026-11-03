@@ -5728,7 +5728,8 @@
     "dismiss": "Sulge",
     "dismiss_label": "Sulge märkus teemal {subject}",
     "banner": "Rakendamata muudatused: {count}",
-    "toast": "Võrguühenduseta tehtud rakendamata muudatused: {count}. Väljundkaust näitab, millised."
+    "toast": "Võrguühenduseta tehtud rakendamata muudatused: {count}. Väljundkaust näitab, millised.",
+    "storage_failed": "Selles seadmes pole enam ruumi võrguühenduseta kirjade jaoks. Vabastage ruumi või hoidke seadetes vähem."
   },
   "deep_link": {
     "message_not_found": "See sõnum ei ole enam saadaval.",

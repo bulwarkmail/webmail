@@ -5728,7 +5728,8 @@
     "dismiss": "Dispensar",
     "dismiss_label": "Dispensar a nota sobre {subject}",
     "banner": "Alterações não aplicadas: {count}",
-    "toast": "Alterações feitas offline não aplicadas: {count}. A caixa de saída mostra quais."
+    "toast": "Alterações feitas offline não aplicadas: {count}. A caixa de saída mostra quais.",
+    "storage_failed": "Este dispositivo não tem espaço para o correio offline. Liberte espaço ou guarde menos nas definições."
   },
   "deep_link": {
     "message_not_found": "Esta mensagem não está mais disponível.",

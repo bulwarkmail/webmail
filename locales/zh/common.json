@@ -5728,7 +5728,8 @@
     "dismiss": "关闭",
     "dismiss_label": "关闭关于 {subject} 的提示",
     "banner": "未应用的更改：{count}",
-    "toast": "离线时的更改未被应用：{count} 项。可在发件箱中查看。"
+    "toast": "离线时的更改未被应用：{count} 项。可在发件箱中查看。",
+    "storage_failed": "此设备已没有空间存放离线邮件。请释放空间，或在设置中减少保留的内容。"
   },
   "deep_link": {
     "message_not_found": "此邮件已不可用。",

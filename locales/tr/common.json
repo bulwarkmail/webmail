@@ -5728,7 +5728,8 @@
     "dismiss": "Kapat",
     "dismiss_label": "{subject} ile ilgili notu kapat",
     "banner": "Uygulanmayan değişiklikler: {count}",
-    "toast": "Çevrimdışı yapılan ve uygulanmayan değişiklikler: {count}. Giden kutusu hangileri olduğunu gösterir."
+    "toast": "Çevrimdışı yapılan ve uygulanmayan değişiklikler: {count}. Giden kutusu hangileri olduğunu gösterir.",
+    "storage_failed": "Bu cihazda çevrimdışı e-posta için yer kalmadı. Yer açın veya Ayarlar'dan daha azını saklayın."
   },
   "deep_link": {
     "message_not_found": "Bu ileti artık kullanılamıyor.",

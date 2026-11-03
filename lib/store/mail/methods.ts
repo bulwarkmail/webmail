@@ -30,12 +30,16 @@ function likeTerm(value: unknown): string {
 
 /**
  * `drivenBy` is the folder the query already starts from: repeating that
- * condition would look the membership up again for every row.
+ * condition would look the membership up again for every row. With a folder row
+ * (`d`) at hand, conditions read it instead of the message's own row, which
+ * saves reading the message at all when nothing else needs it.
  */
-function filterSql(filter: Filter, jmap: string, drivenBy: string | null = null): Sql {
+function filterSql(filter: Filter, jmap: string, drivenBy: string | null = null, folderRow = drivenBy !== null): Sql {
+  const rowid = folderRow ? 'd.email_rowid' : 'e.rowid';
+  const receivedAt = folderRow ? 'd.received_at' : 'e.received_at';
   if (typeof filter.operator === 'string') {
     const conditions = Array.isArray(filter.conditions) ? filter.conditions as Filter[] : [];
-    const parts = conditions.map((c) => filterSql(c, jmap, filter.operator === 'AND' ? drivenBy : null));
+    const parts = conditions.map((c) => filterSql(c, jmap, filter.operator === 'AND' ? drivenBy : null, folderRow));
     const params = parts.flatMap((p) => p.params);
     const joined = (joiner: string) => parts.map((p) => `(${p.sql})`).join(joiner);
     if (filter.operator === 'AND') return { sql: parts.length ? joined(' AND ') : '1', params };
@@ -49,29 +53,29 @@ function filterSql(filter: Filter, jmap: string, drivenBy: string | null = null)
     switch (key) {
       case 'inMailbox':
         if (value === drivenBy) break;
-        conditions.push('EXISTS (SELECT 1 FROM email_mailbox m WHERE m.email_rowid = e.rowid AND m.mailbox_id = ?)');
+        conditions.push(`EXISTS (SELECT 1 FROM email_mailbox m WHERE m.email_rowid = ${rowid} AND m.mailbox_id = ?)`);
         params.push(String(value));
         break;
       case 'inMailboxOtherThan': {
         const ids = (value as string[]).map(String);
-        conditions.push(`EXISTS (SELECT 1 FROM email_mailbox m WHERE m.email_rowid = e.rowid AND m.mailbox_id NOT IN (${ids.map(() => '?').join(',') || "''"}))`);
+        conditions.push(`EXISTS (SELECT 1 FROM email_mailbox m WHERE m.email_rowid = ${rowid} AND m.mailbox_id NOT IN (${ids.map(() => '?').join(',') || "''"}))`);
         params.push(...ids);
         break;
       }
       case 'hasKeyword':
-        conditions.push('EXISTS (SELECT 1 FROM email_keyword k WHERE k.email_rowid = e.rowid AND k.keyword = ?)');
+        conditions.push(`EXISTS (SELECT 1 FROM email_keyword k WHERE k.email_rowid = ${rowid} AND k.keyword = ?)`);
         params.push(String(value).toLowerCase());
         break;
       case 'notKeyword':
-        conditions.push('NOT EXISTS (SELECT 1 FROM email_keyword k WHERE k.email_rowid = e.rowid AND k.keyword = ?)');
+        conditions.push(`NOT EXISTS (SELECT 1 FROM email_keyword k WHERE k.email_rowid = ${rowid} AND k.keyword = ?)`);
         params.push(String(value).toLowerCase());
         break;
       case 'after':
-        conditions.push('e.received_at >= ?');
+        conditions.push(`${receivedAt} >= ?`);
         params.push(Date.parse(String(value)) || 0);
         break;
       case 'before':
-        conditions.push('e.received_at < ?');
+        conditions.push(`${receivedAt} < ?`);
         params.push(Date.parse(String(value)) || 0);
         break;
       case 'minSize':
@@ -175,6 +179,121 @@ function drivingMailbox(filter: Filter | undefined): string | null {
   return null;
 }
 
+/** One step of a "pinned first" or "unread first" order. */
+interface KeywordLevel { keyword: string; first: boolean }
+
+/** A keyword this rare is read off its own index, then sorted. Commoner ones are checked along the folder. */
+const RARE_KEYWORD_ROWS = 5000;
+const MAX_KEYWORD_LEVELS = 4;
+
+/**
+ * The keyword comparators of an order that goes on newest first, which is what
+ * the pinned and unread-first lists send. Null for any other order.
+ */
+function keywordLevels(ctx: MethodContext, sort: Comparator[]): KeywordLevel[] | null {
+  const levels: KeywordLevel[] = [];
+  let next = 0;
+  for (; sort[next]?.property === 'hasKeyword'; next += 1) {
+    const ascending = sort[next].isAscending !== false;
+    levels.push({ keyword: String(sort[next].keyword ?? '').toLowerCase(), first: ctx.invertedKeywordSort ? ascending : !ascending });
+  }
+  if (levels.length === 0 || levels.length > MAX_KEYWORD_LEVELS) return null;
+  return isNewestFirst(sort.slice(next)) ? levels : null;
+}
+
+/**
+ * A page of an order by keywords and then date, without sorting the folder: the
+ * order splits into groups (pinned, then the rest), and each group is read in
+ * date order off the folder's index until the page is full.
+ */
+function keywordOrderedPage(
+  ctx: MethodContext,
+  jmap: string,
+  box: string | null,
+  where: Sql,
+  levels: readonly KeywordLevel[],
+  position: number,
+  limit: number,
+): string[] {
+  const rowid = box ? 'd.email_rowid' : 'e.rowid';
+  const rows = new Map<string, number>();
+  const rowsOf = (keyword: string): number => {
+    let n = rows.get(keyword);
+    if (n === undefined) {
+      n = Number(ctx.db.get<{ n: number }>('SELECT COUNT(*) AS n FROM email_keyword INDEXED BY email_keyword_lookup WHERE keyword = ?', [keyword])?.n ?? 0);
+      rows.set(keyword, n);
+    }
+    return n;
+  };
+
+  const groupQuery = (group: ReadonlyArray<{ keyword: string; has: boolean }>) => {
+    const rare = group
+      .filter((level) => level.has && rowsOf(level.keyword) <= RARE_KEYWORD_ROWS)
+      .sort((a, b) => rowsOf(a.keyword) - rowsOf(b.keyword))[0];
+    const checked = group.filter((level) => level !== rare);
+    const sql = [
+      `${box ? 'd.jmap = ?' : 'e.jmap = ?'}${box && !rare ? ' AND d.mailbox_id = ?' : ''}`,
+      ...checked.map((level) => `${level.has ? '' : 'NOT '}EXISTS (SELECT 1 FROM email_keyword c WHERE c.email_rowid = ${rowid} AND c.keyword = ?)`),
+      `(${where.sql})`,
+    ].join(' AND ');
+    let head: string;
+    const params: SqlValue[] = [];
+    if (rare) {
+      head = box
+        ? 'email_keyword r INDEXED BY email_keyword_lookup CROSS JOIN email_mailbox d ON d.email_rowid = r.email_rowid AND d.mailbox_id = ?'
+        : 'email_keyword r INDEXED BY email_keyword_lookup';
+      if (box) params.push(box);
+    } else {
+      head = box ? 'email_mailbox d INDEXED BY email_mailbox_list' : '';
+    }
+    const emailJoin = !box
+      ? (rare ? ' CROSS JOIN email e ON e.rowid = r.email_rowid' : 'email e')
+      : ' CROSS JOIN email e ON e.rowid = d.email_rowid';
+    const after: SqlValue[] = [jmap, ...(box && !rare ? [box] : []), ...checked.map((level) => level.keyword), ...where.params];
+    const rareCondition = rare ? 'r.keyword = ? AND ' : '';
+    const allParams = [...params, ...(rare ? [rare.keyword] : []), ...after];
+    return {
+      // The message's own row is read only for what goes out, or if a condition needs it.
+      countFrom: box && !/\be\./.test(where.sql) ? head : `${head}${emailJoin}`,
+      from: `${head}${emailJoin}`,
+      where: `${rareCondition}${sql}`,
+      params: allParams,
+      order: box ? 'd.received_at DESC, d.email_rowid DESC' : 'e.received_at DESC, e.rowid DESC',
+    };
+  };
+
+  const groups = levels.reduce<Array<Array<{ keyword: string; has: boolean }>>>(
+    (all, level) => all.flatMap((group) => [
+      [...group, { keyword: level.keyword, has: level.first }],
+      [...group, { keyword: level.keyword, has: !level.first }],
+    ]),
+    [[]],
+  );
+
+  const ids: string[] = [];
+  let skip = position;
+  let need = limit;
+  for (const group of groups) {
+    if (need === 0) break;
+    const query = groupQuery(group);
+    if (skip > 0) {
+      const inGroup = Number(ctx.db.get<{ n: number }>(`SELECT COUNT(*) AS n FROM ${query.countFrom} WHERE ${query.where}`, query.params)?.n ?? 0);
+      if (inGroup <= skip) {
+        skip -= inGroup;
+        continue;
+      }
+    }
+    const found = ctx.db.all<{ id: string }>(
+      `SELECT e.id FROM ${query.from} WHERE ${query.where} ORDER BY ${query.order} LIMIT ? OFFSET ?`,
+      [...query.params, need, skip],
+    );
+    for (const row of found) ids.push(String(row.id));
+    skip = 0;
+    if (need > 0) need -= found.length;
+  }
+  return ids;
+}
+
 const emailQuery: MethodHandler = (ctx, args) => {
   const jmap = jmapOf(ctx, args);
   const filter = (args.filter ?? undefined) as Filter | undefined;
@@ -182,7 +301,11 @@ const emailQuery: MethodHandler = (ctx, args) => {
   const box = drivingMailbox(filter);
   const where = filter ? filterSql(filter, jmap, box) : { sql: '1', params: [] };
   const sort = (args.sort as Comparator[]) ?? [];
-  const order: Sql = !isNewestFirst(sort)
+  const collapse = Boolean(args.collapseThreads);
+  const levels = collapse ? null : keywordLevels(ctx, sort);
+  const order: Sql = levels
+    ? { sql: '', params: [] }
+    : !isNewestFirst(sort)
     ? orderSql(ctx, sort)
     : { sql: box ? 'd.received_at DESC, d.email_rowid DESC' : 'e.received_at DESC, e.rowid DESC', params: [] };
   // Starting from the folder's own index keeps small folders fast in a large account.
@@ -194,12 +317,13 @@ const emailQuery: MethodHandler = (ctx, args) => {
     : { sql: 'e.jmap = ?', params: [jmap] as SqlValue[] };
   const position = Math.max(0, Number(args.position ?? 0));
   const limit = typeof args.limit === 'number' && args.limit > 0 ? args.limit : -1;
-  const collapse = Boolean(args.collapseThreads);
   const group = collapse ? 'GROUP BY COALESCE(e.thread_id, e.id)' : '';
-  const ids = ctx.db.all<{ id: string }>(
-    `SELECT e.id FROM ${from} WHERE ${base.sql} AND (${where.sql}) ${group} ORDER BY ${order.sql} LIMIT ? OFFSET ?`,
-    [...base.params, ...where.params, ...order.params, limit, position],
-  ).map((row) => String(row.id));
+  const ids = levels
+    ? keywordOrderedPage(ctx, jmap, box, where, levels, position, limit)
+    : ctx.db.all<{ id: string }>(
+      `SELECT e.id FROM ${from} WHERE ${base.sql} AND (${where.sql}) ${group} ORDER BY ${order.sql} LIMIT ? OFFSET ?`,
+      [...base.params, ...where.params, ...order.params, limit, position],
+    ).map((row) => String(row.id));
   // Stalwart's queryState is the Email state. Absent until the first sync, as allowed.
   const queryState = lastState(ctx, jmap, 'Email');
   const result: MethodResult = {
@@ -211,8 +335,9 @@ const emailQuery: MethodHandler = (ctx, args) => {
   };
   if (args.calculateTotal) {
     const count = collapse ? 'COUNT(DISTINCT COALESCE(e.thread_id, e.id))' : 'COUNT(*)';
-    // A plain folder counts from its index alone, without reading a message.
-    const countFrom = box && !collapse && where.sql === '1' ? 'email_mailbox d INDEXED BY email_mailbox_list' : from;
+    // In a folder, what needs nothing of the message itself counts off the
+    // folder's index and the keyword rows, without reading a message.
+    const countFrom = box && !collapse && !/\be\./.test(where.sql) ? 'email_mailbox d INDEXED BY email_mailbox_list' : from;
     result.total = Number(ctx.db.get<{ n: number }>(
       `SELECT ${count} AS n FROM ${countFrom} WHERE ${base.sql} AND (${where.sql})`,
       [...base.params, ...where.params],

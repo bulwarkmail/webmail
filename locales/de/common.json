@@ -5728,7 +5728,8 @@
     "dismiss": "Ausblenden",
     "dismiss_label": "Hinweis zu {subject} ausblenden",
     "banner": "Nicht übernommene Änderungen: {count}",
-    "toast": "Offline gemachte Änderungen wurden nicht übernommen: {count}. Welche, steht im Postausgang."
+    "toast": "Offline gemachte Änderungen wurden nicht übernommen: {count}. Welche, steht im Postausgang.",
+    "storage_failed": "Auf diesem Gerät ist kein Platz mehr für Offline-E-Mails. Geben Sie Speicher frei oder behalten Sie in den Einstellungen weniger."
   },
   "deep_link": {
     "message_not_found": "Diese Nachricht ist nicht mehr verfügbar.",

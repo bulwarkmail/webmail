@@ -5728,7 +5728,8 @@
     "dismiss": "Zavrieť",
     "dismiss_label": "Zavrieť poznámku o {subject}",
     "banner": "Nepoužité zmeny: {count}",
-    "toast": "Nepoužité zmeny urobené offline: {count}. Ktoré to sú, ukazuje pošta na odoslanie."
+    "toast": "Nepoužité zmeny urobené offline: {count}. Ktoré to sú, ukazuje pošta na odoslanie.",
+    "storage_failed": "V tomto zariadení už nie je miesto na poštu offline. Uvoľnite miesto alebo v nastaveniach ponechajte menej."
   },
   "deep_link": {
     "message_not_found": "Táto správa už nie je dostupná.",

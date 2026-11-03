@@ -5728,7 +5728,8 @@
     "dismiss": "Zavřít",
     "dismiss_label": "Zavřít poznámku o {subject}",
     "banner": "Nepoužité změny: {count}",
-    "toast": "Nepoužité změny provedené offline: {count}. Které to jsou, ukazuje pošta k odeslání."
+    "toast": "Nepoužité změny provedené offline: {count}. Které to jsou, ukazuje pošta k odeslání.",
+    "storage_failed": "Na tomto zařízení už není místo pro poštu offline. Uvolněte místo nebo v nastavení ponechte méně."
   },
   "deep_link": {
     "message_not_found": "Tato zpráva už není dostupná.",

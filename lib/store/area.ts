@@ -28,6 +28,9 @@ export const DEFAULT_SCOPE: StoreScope = {
   maxTotalBytes: 2 * 1024 * 1024 * 1024,
 };
 
+/** The `area` of an error event for a write that failed: a full disk, the browser's quota. */
+export const STORAGE_ERROR_AREA = 'storage';
+
 export interface SyncStateRow {
   state: string | null;
   /** The newest state the server told us about, to know when a run is caught up. */

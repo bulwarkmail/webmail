@@ -5728,7 +5728,8 @@
     "dismiss": "Aizvērt",
     "dismiss_label": "Aizvērt piezīmi par {subject}",
     "banner": "Nepiemērotās izmaiņas: {count}",
-    "toast": "Bezsaistē veiktās nepiemērotās izmaiņas: {count}. Izsūtne parāda, kuras."
+    "toast": "Bezsaistē veiktās nepiemērotās izmaiņas: {count}. Izsūtne parāda, kuras.",
+    "storage_failed": "Šajā ierīcē vairs nav vietas bezsaistes pastam. Atbrīvojiet vietu vai iestatījumos glabājiet mazāk."
   },
   "deep_link": {
     "message_not_found": "Šī ziņa vairs nav pieejama.",

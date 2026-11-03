@@ -5728,7 +5728,8 @@
     "dismiss": "Descartar",
     "dismiss_label": "Descartar la nota sobre {subject}",
     "banner": "Cambios no aplicados: {count}",
-    "toast": "Cambios hechos sin conexión que no se aplicaron: {count}. La bandeja de salida indica cuáles."
+    "toast": "Cambios hechos sin conexión que no se aplicaron: {count}. La bandeja de salida indica cuáles.",
+    "storage_failed": "Este dispositivo no tiene espacio para el correo sin conexión. Libera espacio o guarda menos en Ajustes."
   },
   "deep_link": {
     "message_not_found": "Este mensaje ya no está disponible.",

@@ -5728,7 +5728,8 @@
     "dismiss": "Odrzuć",
     "dismiss_label": "Odrzuć uwagę o {subject}",
     "banner": "Niezastosowane zmiany: {count}",
-    "toast": "Niezastosowane zmiany wprowadzone offline: {count}. Skrzynka nadawcza pokazuje które."
+    "toast": "Niezastosowane zmiany wprowadzone offline: {count}. Skrzynka nadawcza pokazuje które.",
+    "storage_failed": "Na tym urządzeniu nie ma już miejsca na pocztę offline. Zwolnij miejsce lub zachowuj mniej w ustawieniach."
   },
   "deep_link": {
     "message_not_found": "Ta wiadomość nie jest już dostępna.",

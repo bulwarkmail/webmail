@@ -5728,7 +5728,8 @@
     "dismiss": "Descarta",
     "dismiss_label": "Descarta la nota sobre {subject}",
     "banner": "Canvis no aplicats: {count}",
-    "toast": "Canvis fets sense connexió que no s'han aplicat: {count}. La safata de sortida indica quins."
+    "toast": "Canvis fets sense connexió que no s'han aplicat: {count}. La safata de sortida indica quins.",
+    "storage_failed": "Aquest dispositiu no té més espai per al correu sense connexió. Allibereu espai o conserveu-ne menys a la configuració."
   },
   "deep_link": {
     "message_not_found": "Aquest missatge ja no està disponible.",

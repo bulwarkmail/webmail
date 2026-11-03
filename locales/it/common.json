@@ -5728,7 +5728,8 @@
     "dismiss": "Ignora",
     "dismiss_label": "Ignora la nota su {subject}",
     "banner": "Modifiche non applicate: {count}",
-    "toast": "Modifiche fatte offline non applicate: {count}. La posta in uscita indica quali."
+    "toast": "Modifiche fatte offline non applicate: {count}. La posta in uscita indica quali.",
+    "storage_failed": "Questo dispositivo non ha più spazio per la posta offline. Libera spazio o conservane meno nelle impostazioni."
   },
   "deep_link": {
     "message_not_found": "Questo messaggio non è più disponibile.",

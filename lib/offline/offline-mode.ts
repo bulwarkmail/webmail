@@ -26,6 +26,7 @@ import { accountSubjectPending, useAccountSubjects } from '@/lib/org/account-sub
 import { labelsPolicyFor } from '@/lib/outgoing/classification';
 import { getSendGuardSource, guardState, guardsSending } from '@/lib/plugin-send-guards';
 import { requestOutboxSync } from '@/lib/pwa-notify/outbox-sync';
+import { STORAGE_ERROR_AREA } from '@/lib/store/area';
 import { configureStore, getStore, type StorePageHooks } from '@/lib/store/client/api';
 import { purgeStoreFiles } from '@/lib/store/client/purge';
 import type { StoreSession } from '@/lib/store/engine/transport';
@@ -62,6 +63,7 @@ export type OfflineNotice =
   | { kind: 'held'; subject: string }
   | { kind: 'lost'; subjects: string[] }
   | { kind: 'conflict'; count: number }
+  | { kind: 'storage-failed' }
   | { kind: 'refused-delete' }
   | { kind: 'refused-other' }
   | { kind: 'forbidden' }
@@ -131,6 +133,10 @@ function onlineClientFor(account: string) {
 
 // ---- The store's way to this tab ----
 
+/** A full disk stays full: once in a while is enough to say so. */
+const STORAGE_NOTICE_MS = 30 * 60_000;
+let lastStorageNotice = 0;
+
 const storeHooks: StorePageHooks = {
   inputs(account) {
     const client = onlineClientFor(account);
@@ -151,6 +157,12 @@ const storeHooks: StorePageHooks = {
     if (event.type === 'synced') {
       useOfflineStore.setState((s) => ({ lastSyncedAt: { ...s.lastSyncedAt, [event.account]: event.at } }));
       void refreshUsage();
+    }
+    if (event.type === 'error' && event.area === STORAGE_ERROR_AREA) {
+      const now = Date.now();
+      if (now - lastStorageNotice < STORAGE_NOTICE_MS) return;
+      lastStorageNotice = now;
+      notify({ kind: 'storage-failed' });
     }
   },
 };

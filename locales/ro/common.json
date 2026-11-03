@@ -5728,7 +5728,8 @@
     "dismiss": "Închide",
     "dismiss_label": "Închide nota despre {subject}",
     "banner": "Modificări neaplicate: {count}",
-    "toast": "Modificări făcute offline care nu au fost aplicate: {count}. Căsuța de trimitere arată care."
+    "toast": "Modificări făcute offline care nu au fost aplicate: {count}. Căsuța de trimitere arată care.",
+    "storage_failed": "Acest dispozitiv nu mai are loc pentru e-mailul offline. Eliberați spațiu sau păstrați mai puțin din setări."
   },
   "deep_link": {
     "message_not_found": "Acest mesaj nu mai este disponibil.",

@@ -5728,7 +5728,8 @@
     "dismiss": "Lukk",
     "dismiss_label": "Lukk merknaden om {subject}",
     "banner": "Endringer som ikke ble utført: {count}",
-    "toast": "Endringer gjort uten nett som ikke ble utført: {count}. Utboksen viser hvilke."
+    "toast": "Endringer gjort uten nett som ikke ble utført: {count}. Utboksen viser hvilke.",
+    "storage_failed": "Denne enheten har ikke mer plass til e-post uten nett. Frigjør plass, eller behold mindre i innstillingene."
   },
   "deep_link": {
     "message_not_found": "Denne meldingen er ikke lenger tilgjengelig.",

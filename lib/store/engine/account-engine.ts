@@ -4,8 +4,8 @@
  * the UI. Nothing here touches the DOM, so tests run it on node:sqlite.
  */
 
-import { MethodError, type AreaCall, type MethodHandler, type RecordOverlay, type StoreArea, type StoreContext, type StoreEvent, type StoreScope, type SyncContext, type SyncStateRow, type Syncer } from '../area';
-import { migrate, type StorageAdapter } from '../storage';
+import { MethodError, STORAGE_ERROR_AREA, type AreaCall, type MethodHandler, type RecordOverlay, type StoreArea, type StoreContext, type StoreEvent, type StoreScope, type SyncContext, type SyncStateRow, type Syncer } from '../area';
+import { isStorageFailure, migrate, type StorageAdapter } from '../storage';
 import { answerRequest, buildMethodTable } from './responder';
 import { TransportError, type JmapResponse, type JmapTransport, type MethodCall, type StoreSession } from './transport';
 import { CORE_MIGRATIONS, metaGet, metaSet } from './core-schema';
@@ -26,6 +26,9 @@ export interface AccountEngineOptions {
 
 const RATE_RETRIES = 5;
 const RATE_BACKOFF_MS = 2_000;
+/** After a failed write: the first wait, and the longest. */
+const STORAGE_BACKOFF_MS = 60_000;
+const STORAGE_BACKOFF_MAX_MS = 60 * 60_000;
 
 export class AccountEngine {
   readonly account: string;
@@ -45,6 +48,9 @@ export class AccountEngine {
   private online = true;
   private running: Promise<void> | null = null;
   private again = false;
+  /** A write failed (full disk, quota): no sync before this time, however much the server pushes. */
+  private storageBlockedUntil = 0;
+  private storageFailures = 0;
 
   constructor(options: AccountEngineOptions) {
     this.account = options.account;
@@ -85,6 +91,8 @@ export class AccountEngine {
 
   setScope(scope: StoreScope): void {
     this.scope = scope;
+    // The user may just have made room by keeping less.
+    this.storageBlockedUntil = 0;
     metaSet(this.db, 'scope', JSON.stringify(scope));
   }
 
@@ -139,7 +147,7 @@ export class AccountEngine {
 
   /** Starts a run, or asks the running one to go again when it's done. */
   requestSync(): Promise<void> {
-    if (this.closed) return Promise.resolve();
+    if (this.closed || this.now() < this.storageBlockedUntil) return Promise.resolve();
     if (this.running) {
       this.again = true;
       return this.running;
@@ -154,7 +162,7 @@ export class AccountEngine {
     do {
       this.again = false;
       await this.runOnce();
-    } while (this.again && !this.closed && this.online);
+    } while (this.again && !this.closed && this.online && this.now() >= this.storageBlockedUntil);
   }
 
   private async runOnce(): Promise<void> {
@@ -169,6 +177,7 @@ export class AccountEngine {
         if (!(await this.runSyncer(ctx, syncer, jmap))) return;
       }
     }
+    this.storageFailures = 0;
     if (!this.closed && this.online) this.emitter({ type: 'synced', account: this.account, at: this.now() });
   }
 
@@ -186,6 +195,11 @@ export class AccountEngine {
             continue;
           }
         }
+        // The others would fail on the same disk: the run ends, and sync waits.
+        if (isStorageFailure(error)) {
+          this.noteStorageFailure(error);
+          return false;
+        }
         // One part failing doesn't hold up the others. It runs again next time.
         this.emitter({
           type: 'error',
@@ -196,6 +210,18 @@ export class AccountEngine {
         return true;
       }
     }
+  }
+
+  private noteStorageFailure(error: unknown): void {
+    this.storageFailures += 1;
+    const wait = Math.min(STORAGE_BACKOFF_MS * 2 ** (this.storageFailures - 1), STORAGE_BACKOFF_MAX_MS);
+    this.storageBlockedUntil = this.now() + wait;
+    this.emitter({
+      type: 'error',
+      account: this.account,
+      area: STORAGE_ERROR_AREA,
+      message: error instanceof Error ? error.message : String(error),
+    });
   }
 
   private syncContext(): SyncContext {
@@ -230,22 +256,32 @@ export class AccountEngine {
   async areaCall(name: string, params: unknown): Promise<unknown> {
     const call = this.calls.get(name);
     if (!call) throw new Error(`Unknown store call ${name}`);
-    return call(this.storeContext(), params as never);
+    try {
+      return await call(this.storeContext(), params as never);
+    } catch (error) {
+      if (isStorageFailure(error)) this.noteStorageFailure(error);
+      throw error;
+    }
   }
 
   /** An answer from the device. Null when nothing in the request could be answered. */
   async answer(calls: MethodCall[]): Promise<JmapResponse | null> {
     if (this.closed) throw new MethodError('serverUnavailable', 'The local store is closed');
     const primary = this.session.primaryAccounts['urn:ietf:params:jmap:mail'] ?? Object.keys(this.session.accounts)[0];
-    return answerRequest(
-      {
-        ...this.storeContext(),
-        defaultJmap: primary,
-        invertedKeywordSort: this.invertedKeywordSort,
-      },
-      this.methods,
-      calls,
-    );
+    try {
+      return await answerRequest(
+        {
+          ...this.storeContext(),
+          defaultJmap: primary,
+          invertedKeywordSort: this.invertedKeywordSort,
+        },
+        this.methods,
+        calls,
+      );
+    } catch (error) {
+      if (isStorageFailure(error)) this.noteStorageFailure(error);
+      throw error;
+    }
   }
 
   /** Stops syncing and waits for the current batch. The database stays open for the caller to close. */

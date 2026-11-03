@@ -5728,7 +5728,8 @@
     "dismiss": "Afvis",
     "dismiss_label": "Afvis noten om {subject}",
     "banner": "Ændringer, der ikke blev gennemført: {count}",
-    "toast": "Ændringer lavet offline, der ikke blev gennemført: {count}. Udbakken viser hvilke."
+    "toast": "Ændringer lavet offline, der ikke blev gennemført: {count}. Udbakken viser hvilke.",
+    "storage_failed": "Denne enhed har ikke mere plads til offlinemail. Frigør plads, eller behold mindre i indstillingerne."
   },
   "deep_link": {
     "message_not_found": "Denne besked er ikke længere tilgængelig.",

@@ -5728,7 +5728,8 @@
     "dismiss": "Ignorer",
     "dismiss_label": "Ignorer la note sur {subject}",
     "banner": "Modifications non appliquées : {count}",
-    "toast": "Des modifications faites hors ligne n'ont pas été appliquées : {count}. La boîte d'envoi indique lesquelles."
+    "toast": "Des modifications faites hors ligne n'ont pas été appliquées : {count}. La boîte d'envoi indique lesquelles.",
+    "storage_failed": "Cet appareil n'a plus de place pour le courrier hors ligne. Libérez de l'espace ou conservez moins dans les paramètres."
   },
   "deep_link": {
     "message_not_found": "Ce message n'est plus disponible.",

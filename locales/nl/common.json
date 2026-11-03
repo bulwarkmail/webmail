@@ -5728,7 +5728,8 @@
     "dismiss": "Sluiten",
     "dismiss_label": "Melding over {subject} sluiten",
     "banner": "Niet doorgevoerde wijzigingen: {count}",
-    "toast": "Offline gemaakte wijzigingen niet doorgevoerd: {count}. Het Postvak UIT laat zien welke."
+    "toast": "Offline gemaakte wijzigingen niet doorgevoerd: {count}. Het Postvak UIT laat zien welke.",
+    "storage_failed": "Dit apparaat heeft geen ruimte meer voor offline mail. Maak ruimte vrij of bewaar minder via Instellingen."
   },
   "deep_link": {
     "message_not_found": "Dit bericht is niet meer beschikbaar.",

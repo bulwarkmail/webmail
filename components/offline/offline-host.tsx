@@ -51,6 +51,9 @@ export function OfflineHost() {
         case 'conflict':
           toast.warning(tConflictsRef.current('toast', { count: notice.count }));
           break;
+        case 'storage-failed':
+          toast.warning(tConflictsRef.current('storage_failed'), { duration: 0 });
+          break;
         case 'refused-delete':
           toast.warning(tr('toast.refused_delete'));
           break;

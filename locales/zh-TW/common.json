@@ -5728,7 +5728,8 @@
     "dismiss": "關閉",
     "dismiss_label": "關閉關於 {subject} 的提示",
     "banner": "未套用的變更：{count}",
-    "toast": "離線時的變更未被套用：{count} 項。可在寄件匣中查看。"
+    "toast": "離線時的變更未被套用：{count} 項。可在寄件匣中查看。",
+    "storage_failed": "此裝置已沒有空間存放離線郵件。請釋出空間，或在設定中減少保留的內容。"
   },
   "deep_link": {
     "message_not_found": "已無法使用此郵件。",

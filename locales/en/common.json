@@ -5728,7 +5728,8 @@
     "dismiss": "Dismiss",
     "dismiss_label": "Dismiss the note about {subject}",
     "banner": "Changes that didn't go through: {count}",
-    "toast": "Changes you made offline weren't applied: {count}. The outbox shows which."
+    "toast": "Changes you made offline weren't applied: {count}. The outbox shows which.",
+    "storage_failed": "This device has no room left for offline mail. Free up space, or keep less in Settings."
   },
   "deep_link": {
     "message_not_found": "This message is no longer available.",

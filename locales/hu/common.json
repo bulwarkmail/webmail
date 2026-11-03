@@ -5728,7 +5728,8 @@
     "dismiss": "Bezárás",
     "dismiss_label": "A(z) {subject} megjegyzésének bezárása",
     "banner": "Nem alkalmazott módosítások: {count}",
-    "toast": "Offline végzett, nem alkalmazott módosítások: {count}. A postázandók mappa mutatja, melyek."
+    "toast": "Offline végzett, nem alkalmazott módosítások: {count}. A postázandók mappa mutatja, melyek.",
+    "storage_failed": "Ezen az eszközön nincs több hely az offline leveleknek. Szabadítson fel helyet, vagy tartson meg kevesebbet a beállításokban."
   },
   "deep_link": {
     "message_not_found": "Ez az üzenet már nem érhető el.",
