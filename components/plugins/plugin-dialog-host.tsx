@@ -160,6 +160,9 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') {
         e.preventDefault();
+        // This closes the dialog and nothing else: an event popover behind it
+        // listens for Escape on the window.
+        e.stopPropagation();
         cancel();
       } else if (e.key === 'Enter' && (current?.kind === 'confirm' || current?.kind === 'alert')) {
         // For prompts, Enter is handled by the form (so it respects required
