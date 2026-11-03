@@ -7,6 +7,7 @@ import {
   buildEmailPushConfig,
   disableWebPush,
   enableWebPush,
+  endWebPushForSignOut,
   isWebPushEnabled,
   listPushDevices,
   mailAccountsWithoutPush,
@@ -1721,6 +1722,57 @@ describe('disableWebPush', () => {
       url: `${RELAY}/api/push/register/${THIS_DEVICE}`,
       method: 'DELETE',
     });
+  });
+});
+
+describe('endWebPushForSignOut', () => {
+  it('takes everything down for a login with push on, using the relay it registered with', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-mine');
+    localStorage.setItem(RELAY_BASE_KEY, RELAY);
+    const client = makeClient([sub('push-mine', THIS_DEVICE)]);
+    const calls = installFetch({});
+
+    await endWebPushForSignOut(client);
+
+    expect(client.destroyed).toEqual(['push-mine']);
+    expect(calls).toEqual([{ url: `${RELAY}/api/push/register/${THIS_DEVICE}`, method: 'DELETE' }]);
+    expect(localStorage.getItem(SUB_KEY)).toBeNull();
+  });
+
+  it('does nothing and calls nobody for a login without push', async () => {
+    const client = makeClient([]);
+    const calls = installFetch({});
+
+    await endWebPushForSignOut(client);
+
+    expect(calls).toEqual([]);
+    expect(client.listPushSubscriptions).not.toHaveBeenCalled();
+  });
+
+  it('never throws: signing out goes on', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-mine');
+    localStorage.setItem(RELAY_BASE_KEY, RELAY);
+    const client = makeClient([sub('push-mine', THIS_DEVICE)]);
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new TypeError('offline'); }));
+    (client.destroyPushSubscription as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('offline'));
+
+    await expect(endWebPushForSignOut(client)).resolves.toBeUndefined();
+    expect(localStorage.getItem(SUB_KEY)).toBeNull();
+  });
+
+  it('forgets the key material with nobody left', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-mine');
+    localStorage.setItem(RELAY_BASE_KEY, RELAY);
+    const { browserSub } = installPushBrowser();
+    const client = makeClient([sub('push-mine', THIS_DEVICE)]);
+    installFetch({});
+
+    await endWebPushForSignOut(client);
+
+    expect(browserSub.unsubscribe).toHaveBeenCalledTimes(1);
   });
 });
 
