@@ -672,6 +672,48 @@ describe('resyncWebPush when the relay changed (#903)', () => {
     expect(client.destroyed).toContain('push-old');
   });
 
+  it('leaves no record on the relay it moved away from', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-old');
+    localStorage.setItem(RELAY_BASE_KEY, 'https://old-relay.example');
+    const client = makeClient([sub('push-old', THIS_DEVICE)]);
+    const calls = installFetch({});
+
+    expect(await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false })).toBe(true);
+
+    expect(calls).toContainEqual({ url: `https://old-relay.example/api/push/register/${THIS_DEVICE}`, method: 'DELETE' });
+    expect(calls).not.toContainEqual({ url: `${RELAY}/api/push/register/${THIS_DEVICE}`, method: 'DELETE' });
+    expect(localStorage.getItem(RELAY_BASE_KEY)).toBe(RELAY);
+    expect(client.destroyed).toEqual(['push-old']);
+  });
+
+  it('keeps the old relay until the new subscription is verified', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-old');
+    localStorage.setItem(RELAY_BASE_KEY, 'https://old-relay.example');
+    const client = makeClient([sub('push-old', THIS_DEVICE)]);
+    const calls = installFetch({});
+    (client.verifyPushSubscription as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('nope'));
+
+    await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(calls.some((c) => c.method === 'DELETE')).toBe(false);
+    expect(localStorage.getItem(RELAY_BASE_KEY)).toBe('https://old-relay.example');
+  });
+
+  it('does not contact the built-in relay to clean up when third-party traffic is off', async () => {
+    setNoThirdPartyTraffic(true);
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-old');
+    localStorage.setItem(RELAY_BASE_KEY, DEFAULT_RELAY_BASE_URL);
+    const client = makeClient([sub('push-old', THIS_DEVICE)]);
+    const calls = installFetch({});
+
+    await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(calls.filter((c) => c.url.startsWith(DEFAULT_RELAY_BASE_URL))).toEqual([]);
+  });
+
   it('re-registers inside the daily limit when the admin switched relays, and only once', async () => {
     localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
     localStorage.setItem(SUB_KEY, 'push-old');
@@ -1554,6 +1596,18 @@ describe('disableWebPush', () => {
     await disableWebPush({ client, relayBaseUrl: RELAY });
 
     expect(localStorage.getItem(REFUSED_KEY)).toBeNull();
+  });
+
+  it('drops the record on the relay it was registered with, not only the current one', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'push-tracked');
+    localStorage.setItem(RELAY_BASE_KEY, 'https://old-relay.example');
+    const client = makeClient([sub('push-tracked', THIS_DEVICE)]);
+    const calls = installFetch({});
+
+    await disableWebPush({ client, relayBaseUrl: RELAY });
+
+    expect(calls).toContainEqual({ url: `https://old-relay.example/api/push/register/${THIS_DEVICE}`, method: 'DELETE' });
   });
 
   it('drops the relay registration for this device', async () => {
