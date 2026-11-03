@@ -6739,5 +6739,30 @@
     "plugins_off": "Sinu organisatsioon on selles seadmes pistikprogrammid välja lülitanud.",
     "plugins_allowlist": "Sinu organisatsioon lubab selles seadmes ainult teatud pistikprogramme.",
     "off": "Väljas"
+  },
+  "desktopTelemetry": {
+    "section_title": "Kasutusandmed ja kokkujooksmise aruanded",
+    "section_description": "Mõlemad on välja lülitatud, kuni need sisse lülitate, ja kummalgi on oma lüliti.",
+    "telemetry_label": "Saada kasutusandmed",
+    "telemetry_description": "Kord päevas: juhuslik ID, rakenduse versioon, Node'i versioon, teie operatsioonisüsteem, kui kaua rakendus on töötanud ja kuidas see ühendub. Oma meiliserveri puhul ka see, millised funktsioonid on sees, kontode ligikaudne arv ning pistikprogrammide ja kujunduste arv. Mitte kunagi kirju, aadresse ega serverinimesid.",
+    "crash_label": "Saada kokkujooksmise aruanded",
+    "crash_description": "Rakenduse vead saadetakse koos juhusliku ID, rakenduse enda koodi failinimede ja lühikeste puhastatud teadetega. Kui rakendus ise kokku jookseb, jääb kokkujooksmise fail sellesse arvutisse ja lahkub sealt ainult siis, kui selle saadate.",
+    "crash_memory": "Kokkujooksmise fail on koopia osast rakenduse mälust kokkujooksmise hetkel. Bulwark eemaldab leitud kasutajanimed, aadressid ja sisselogimislubad, kuid kokkujooksmise fail võib siiski sisaldada teie kirjade teksti.",
+    "instance_note": "Bulwarki serveris otsustab selle administraator eraldi, mida lehed talle teatavad.",
+    "forced_off": "Teie organisatsioon on selle välja lülitanud.",
+    "url_label": "Kuhu kokkujooksmise failid lähevad",
+    "url_description": "Https-aadress, mis võtab kokkujooksmise faili vastu. Bulwarkil pole oma aadressi.",
+    "url_invalid": "Sisestage täielik https-aadress.",
+    "url_save": "Salvesta",
+    "files_label": "Kokkujooksmise failid selles arvutis",
+    "files_description": "Bulwark hoiab alles uusimad ja kustutab kuust vanemad.",
+    "files_empty": "Kokkujooksmise faile pole.",
+    "file_size": "{size} KB",
+    "send": "Saada kokkujooksmise aruanne…",
+    "delete_all": "Kustuta kõik",
+    "sent": "Kokkujooksmise aruanne saadetud.",
+    "send_no_consent": "Lülitage esmalt kokkujooksmise aruanded sisse.",
+    "send_no_url": "Aadressi pole määratud, seega pole seda kuhugi saata. Sisestage see ülal.",
+    "send_failed": "Kokkujooksmise aruannet ei õnnestunud saata."
   }
 }

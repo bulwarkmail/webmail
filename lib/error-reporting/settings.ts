@@ -2,6 +2,7 @@ import { configManager } from '@/lib/admin/config-manager';
 import { parseDsn } from './envelope';
 import { metricsEnabled } from '@/lib/metrics';
 import { effectiveErrorsConsent } from '@/lib/telemetry/state';
+import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
 import type { ClientSettings } from './client';
 
 /**
@@ -32,7 +33,8 @@ export function parseEnvironment(value: unknown): string {
 export function errorReportingSettings(): ErrorReportingSettings {
   const raw = configManager.get<string>('errorReportingDsn', '');
   return {
-    dsn: parseDsn(raw) ? raw.trim() : '',
+    // A desktop user has no admin, so a config file can't name somewhere to send errors.
+    dsn: !IS_DESKTOP_BUILD && parseDsn(raw) ? raw.trim() : '',
     sampleRate: parseSampleRate(configManager.get<string>('errorReportingSampleRate', '1')),
     environment: parseEnvironment(configManager.get<string>('errorReportingEnvironment', 'production')),
   };
@@ -45,6 +47,8 @@ export function errorReportingSettings(): ErrorReportingSettings {
  */
 export async function shouldCollectErrors(): Promise<boolean> {
   await configManager.ensureLoaded();
+  // The desktop user's own yes, and nothing else.
+  if (IS_DESKTOP_BUILD) return (await effectiveErrorsConsent()).consent !== 'off';
   if (errorReportingSettings().dsn || metricsEnabled()) return true;
   return (await effectiveErrorsConsent()).consent !== 'off';
 }

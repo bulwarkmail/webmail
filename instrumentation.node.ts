@@ -134,6 +134,9 @@ migrateLegacyAdminLayout()
       { name: "telemetry-errors", start: instantErrors.startInstantErrors, stop: instantErrors.stopInstantErrors },
       { name: "version-check", start: versionCheck.startScheduler, stop: versionCheck.stopScheduler },
     ]);
+    if (process.env.NEXT_PUBLIC_BULWARK_DESKTOP === "1") {
+      (await import("./lib/desktop/server-links")).installDesktopServerLinks();
+    }
   })
   .catch((err) => {
     logger.warn("Admin dashboard init skipped", { error: err instanceof Error ? err.message : String(err) });

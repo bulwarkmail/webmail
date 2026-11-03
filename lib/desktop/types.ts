@@ -315,6 +315,43 @@ export interface DesktopOsBridge {
   openDefaultAppSettings: () => Promise<DesktopOsDefaultAppStatus>;
 }
 
+export interface DesktopPrivacyState {
+  /** `forcedOff`: a policy says no, so `on` is false and the user can't change it. */
+  telemetry: { on: boolean; forcedOff: boolean };
+  /** `uploadUrl` is where "Send crash report" goes. Empty: nowhere, and the action says so. */
+  crashReports: { on: boolean; forcedOff: boolean; uploadUrl: string };
+}
+
+export interface DesktopCrashFile {
+  /** Opaque: the only values `sendCrash` accepts. */
+  id: string;
+  /** Milliseconds since 1970. */
+  createdAt: number;
+  bytes: number;
+}
+
+export type DesktopCrashSendResult =
+  | { ok: true }
+  | { ok: false; reason: 'no-consent' | 'no-url' | 'not-found' | 'cancelled' | 'failed' };
+
+/**
+ * Telemetry and crash reports, each with its own consent, both off until the user says
+ * yes. A same-origin plugin can reach this, so saying yes and sending a crash file both
+ * ask in a native dialog that names where it goes.
+ */
+export interface DesktopPrivacyBridge {
+  get: () => Promise<DesktopPrivacyState>;
+  setTelemetry: (on: boolean) => Promise<DesktopPrivacyState>;
+  setCrashReports: (on: boolean) => Promise<DesktopPrivacyState>;
+  /** https, or http on this computer. Empty clears it. */
+  setCrashUploadUrl: (url: string) => Promise<{ ok: boolean; state: DesktopPrivacyState }>;
+  listCrashes: () => Promise<DesktopCrashFile[]>;
+  sendCrash: (id: string) => Promise<DesktopCrashSendResult>;
+  deleteCrashes: () => Promise<void>;
+  /** Also fires when a policy changes. Returns the unsubscribe. */
+  onChange: (listener: (state: DesktopPrivacyState) => void) => () => void;
+}
+
 export interface BulwarkDesktopBridge {
   version: number;
   platform: 'win32' | 'darwin' | 'linux';
@@ -330,6 +367,7 @@ export interface BulwarkDesktopBridge {
   auth?: DesktopAuthBridge;
   plugins?: DesktopPluginsBridge;
   keystore?: DesktopKeystoreBridge;
+  privacy?: DesktopPrivacyBridge;
 }
 
 declare global {

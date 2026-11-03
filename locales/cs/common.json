@@ -6739,5 +6739,30 @@
     "plugins_off": "Vaše organizace na tomto zařízení vypnula pluginy.",
     "plugins_allowlist": "Vaše organizace na tomto zařízení povoluje jen některé pluginy.",
     "off": "Vypnuto"
+  },
+  "desktopTelemetry": {
+    "section_title": "Údaje o používání a hlášení o pádech",
+    "section_description": "Obojí je vypnuté, dokud to nezapnete, a každé má vlastní přepínač.",
+    "telemetry_label": "Odesílat údaje o používání",
+    "telemetry_description": "Jednou denně: náhodné ID, verze aplikace, verze Node, váš operační systém, jak dlouho aplikace běží a jak se připojuje. U vlastního poštovního serveru také zapnuté funkce, přibližný počet účtů a počet pluginů a motivů. Nikdy pošta, adresy ani názvy serverů.",
+    "crash_label": "Odesílat hlášení o pádech",
+    "crash_description": "Chyby v aplikaci se odesílají s náhodným ID, názvy souborů z kódu aplikace a krátkými, očištěnými zprávami. Když spadne sama aplikace, soubor o pádu zůstane v tomto počítači a odejde jen tehdy, když ho odešlete.",
+    "crash_memory": "Soubor o pádu je kopie části paměti aplikace v okamžiku pádu. Bulwark odstraní uživatelská jména, adresy a přihlašovací tokeny, které najde, ale soubor o pádu může přesto obsahovat text vaší pošty.",
+    "instance_note": "Na serveru Bulwark rozhoduje jeho správce zvlášť o tom, co mu stránky hlásí.",
+    "forced_off": "Vaše organizace to vypnula.",
+    "url_label": "Kam jdou soubory o pádu",
+    "url_description": "Adresa https, která přijímá soubor o pádu. Bulwark žádnou nemá.",
+    "url_invalid": "Zadejte úplnou adresu https.",
+    "url_save": "Uložit",
+    "files_label": "Soubory o pádu v tomto počítači",
+    "files_description": "Bulwark ponechá ty nejnovější a smaže ty starší než měsíc.",
+    "files_empty": "Žádné soubory o pádu.",
+    "file_size": "{size} KB",
+    "send": "Odeslat hlášení o pádu…",
+    "delete_all": "Smazat vše",
+    "sent": "Hlášení o pádu odesláno.",
+    "send_no_consent": "Nejprve zapněte hlášení o pádech.",
+    "send_no_url": "Není nastavena žádná adresa, takže to nejde kam odeslat. Zadejte ji výše.",
+    "send_failed": "Hlášení o pádu se nepodařilo odeslat."
   }
 }

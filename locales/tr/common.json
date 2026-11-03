@@ -6739,5 +6739,30 @@
     "plugins_off": "Kuruluşunuz bu cihazda eklentileri kapattı.",
     "plugins_allowlist": "Kuruluşunuz bu cihazda yalnızca belirli eklentilere izin veriyor.",
     "off": "Kapalı"
+  },
+  "desktopTelemetry": {
+    "section_title": "Kullanım bilgileri ve kilitlenme raporları",
+    "section_description": "İkisi de siz açana kadar kapalıdır ve her birinin kendi anahtarı vardır.",
+    "telemetry_label": "Kullanım bilgilerini gönder",
+    "telemetry_description": "Günde bir kez: rastgele bir kimlik, uygulama sürümü, Node sürümü, işletim sisteminiz, uygulamanın ne kadar süredir çalıştığı ve nasıl bağlandığı. Kendi posta sunucunuzda ayrıca hangi özelliklerin açık olduğu, yaklaşık hesap sayısı ve kaç eklenti ile temanız olduğu. Asla e-posta, adres veya sunucu adı gönderilmez.",
+    "crash_label": "Kilitlenme raporlarını gönder",
+    "crash_description": "Uygulamadaki hatalar rastgele bir kimlik, uygulamanın kendi kodundaki dosya adları ve kısa, temizlenmiş iletilerle gönderilir. Uygulamanın kendisi kilitlenirse bir kilitlenme dosyası bu bilgisayarda kalır ve yalnızca siz gönderirseniz çıkar.",
+    "crash_memory": "Kilitlenme dosyası, kilitlenme anında uygulama belleğinin bir bölümünün kopyasıdır. Bulwark bulduğu kullanıcı adlarını, adresleri ve oturum açma belirteçlerini kaldırır ancak kilitlenme dosyası yine de e-postalarınızın metnini içerebilir.",
+    "instance_note": "Bir Bulwark sunucusunda, sayfaların ona ne bildireceğine yöneticisi ayrıca karar verir.",
+    "forced_off": "Kuruluşunuz bunu kapattı.",
+    "url_label": "Kilitlenme dosyalarının gideceği yer",
+    "url_description": "Kilitlenme dosyasını alan https adresi. Bulwark bir adresle gelmez.",
+    "url_invalid": "Tam bir https adresi girin.",
+    "url_save": "Kaydet",
+    "files_label": "Bu bilgisayardaki kilitlenme dosyaları",
+    "files_description": "Bulwark en yenileri saklar ve bir aydan eski olanları siler.",
+    "files_empty": "Kilitlenme dosyası yok.",
+    "file_size": "{size} KB",
+    "send": "Kilitlenme raporunu gönder…",
+    "delete_all": "Tümünü sil",
+    "sent": "Kilitlenme raporu gönderildi.",
+    "send_no_consent": "Önce kilitlenme raporlarını açın.",
+    "send_no_url": "Adres ayarlanmadı, bu yüzden gönderilecek yer yok. Yukarıya bir adres girin.",
+    "send_failed": "Kilitlenme raporu gönderilemedi."
   }
 }

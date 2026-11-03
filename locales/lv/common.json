@@ -6739,5 +6739,30 @@
     "plugins_off": "Jūsu organizācija šajā ierīcē ir izslēgusi spraudņus.",
     "plugins_allowlist": "Jūsu organizācija šajā ierīcē atļauj tikai noteiktus spraudņus.",
     "off": "Izslēgts"
+  },
+  "desktopTelemetry": {
+    "section_title": "Lietošanas dati un avāriju atskaites",
+    "section_description": "Abi ir izslēgti, līdz tos ieslēdzat, un katram ir savs slēdzis.",
+    "telemetry_label": "Sūtīt lietošanas datus",
+    "telemetry_description": "Reizi dienā: nejaušs ID, lietotnes versija, Node versija, jūsu operētājsistēma, cik ilgi lietotne darbojas un kā tā savienojas. Ar savu pasta serveri arī tas, kuras funkcijas ir ieslēgtas, aptuvens kontu skaits un cik spraudņu un motīvu jums ir. Nekad vēstules, adreses vai serveru nosaukumi.",
+    "crash_label": "Sūtīt avāriju atskaites",
+    "crash_description": "Lietotnes kļūdas tiek sūtītas ar nejaušu ID, failu nosaukumiem no pašas lietotnes koda un īsiem, attīrītiem ziņojumiem. Ja avarē pati lietotne, avārijas fails paliek šajā datorā un to atstāj tikai tad, ja to nosūtāt.",
+    "crash_memory": "Avārijas fails ir daļas lietotnes atmiņas kopija avārijas brīdī. Bulwark noņem atrastos lietotājvārdus, adreses un pierakstīšanās marķierus, bet avārijas failā joprojām var būt jūsu vēstuļu teksts.",
+    "instance_note": "Bulwark serverī tā administrators atsevišķi izlemj, ko lapas tam ziņo.",
+    "forced_off": "Jūsu organizācija to ir izslēgusi.",
+    "url_label": "Kurp nonāk avārijas faili",
+    "url_description": "Https adrese, kas saņem avārijas failu. Bulwark tādu nenodrošina.",
+    "url_invalid": "Ievadiet pilnu https adresi.",
+    "url_save": "Saglabāt",
+    "files_label": "Avārijas faili šajā datorā",
+    "files_description": "Bulwark patur jaunākos un dzēš tos, kas vecāki par mēnesi.",
+    "files_empty": "Nav avārijas failu.",
+    "file_size": "{size} KB",
+    "send": "Sūtīt avārijas atskaiti…",
+    "delete_all": "Dzēst visus",
+    "sent": "Avārijas atskaite nosūtīta.",
+    "send_no_consent": "Vispirms ieslēdziet avāriju atskaites.",
+    "send_no_url": "Adrese nav iestatīta, tāpēc to nav kur sūtīt. Ievadiet to augstāk.",
+    "send_failed": "Avārijas atskaiti neizdevās nosūtīt."
   }
 }

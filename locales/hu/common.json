@@ -6739,5 +6739,30 @@
     "plugins_off": "A szervezete ezen az eszközön kikapcsolta a bővítményeket.",
     "plugins_allowlist": "A szervezete ezen az eszközön csak bizonyos bővítményeket engedélyez.",
     "off": "Ki"
+  },
+  "desktopTelemetry": {
+    "section_title": "Használati adatok és összeomlási jelentések",
+    "section_description": "Mindkettő ki van kapcsolva, amíg be nem kapcsolja, és mindegyiknek saját kapcsolója van.",
+    "telemetry_label": "Használati adatok küldése",
+    "telemetry_description": "Naponta egyszer: egy véletlenszerű azonosító, az alkalmazás verziója, a Node verziója, az operációs rendszer, az alkalmazás futási ideje és a kapcsolódás módja. Saját levelezőszervernél azt is, mely funkciók vannak bekapcsolva, a fiókok hozzávetőleges számát, valamint a bővítmények és témák számát. Soha nem küld leveleket, címeket vagy szerverneveket.",
+    "crash_label": "Összeomlási jelentések küldése",
+    "crash_description": "Az alkalmazás hibái egy véletlenszerű azonosítóval, az alkalmazás saját kódjának fájlneveivel és rövid, megtisztított üzenetekkel mennek ki. Ha maga az alkalmazás omlik össze, egy összeomlási fájl marad ezen a számítógépen, és csak akkor kerül ki, ha elküldi.",
+    "crash_memory": "Az összeomlási fájl az alkalmazás memóriájának egy részéről készült másolat az összeomlás pillanatából. A Bulwark eltávolítja a talált felhasználóneveket, címeket és bejelentkezési tokeneket, de az összeomlási fájl így is tartalmazhatja a levelei szövegét.",
+    "instance_note": "Bulwark-szerveren annak rendszergazdája külön dönt arról, mit jelentenek neki az oldalak.",
+    "forced_off": "A szervezete ezt kikapcsolta.",
+    "url_label": "Hová kerülnek az összeomlási fájlok",
+    "url_description": "A https-cím, amely fogadja az összeomlási fájlt. A Bulwark nem ad ilyet.",
+    "url_invalid": "Adjon meg egy teljes https-címet.",
+    "url_save": "Mentés",
+    "files_label": "Összeomlási fájlok ezen a számítógépen",
+    "files_description": "A Bulwark megtartja a legújabbakat, és törli az egy hónapnál régebbieket.",
+    "files_empty": "Nincsenek összeomlási fájlok.",
+    "file_size": "{size} KB",
+    "send": "Összeomlási jelentés küldése…",
+    "delete_all": "Összes törlése",
+    "sent": "Összeomlási jelentés elküldve.",
+    "send_no_consent": "Először kapcsolja be az összeomlási jelentéseket.",
+    "send_no_url": "Nincs megadva cím, így nincs hová küldeni. Adjon meg egyet fent.",
+    "send_failed": "Az összeomlási jelentést nem sikerült elküldeni."
   }
 }

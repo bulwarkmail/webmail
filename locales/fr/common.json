@@ -6739,5 +6739,30 @@
     "plugins_off": "Votre organisation a désactivé les plugins sur cet appareil.",
     "plugins_allowlist": "Votre organisation n'autorise que certains plugins sur cet appareil.",
     "off": "Désactivé"
+  },
+  "desktopTelemetry": {
+    "section_title": "Données d'utilisation et rapports de plantage",
+    "section_description": "Les deux restent désactivés tant que vous ne les activez pas, et chacun a son propre interrupteur.",
+    "telemetry_label": "Envoyer les données d'utilisation",
+    "telemetry_description": "Une fois par jour : un identifiant aléatoire, la version de l'application, la version de Node, votre système d'exploitation, depuis combien de temps l'application tourne et son mode de connexion. Avec votre propre serveur de messagerie, aussi les fonctions activées, un nombre approximatif de comptes et le nombre de plugins et de thèmes. Jamais de messages, d'adresses ni de noms de serveur.",
+    "crash_label": "Envoyer les rapports de plantage",
+    "crash_description": "Les erreurs de l'application partent avec un identifiant aléatoire, les noms de fichiers du code de l'application et de courts messages nettoyés. Si l'application elle-même plante, un fichier de plantage reste sur cet ordinateur et n'en sort que si vous l'envoyez.",
+    "crash_memory": "Un fichier de plantage est une copie d'une partie de la mémoire de l'application au moment du plantage. Bulwark retire les noms d'utilisateur, les adresses et les jetons de connexion qu'il trouve, mais un fichier de plantage peut quand même contenir le texte de vos messages.",
+    "instance_note": "Sur un serveur Bulwark, son administrateur décide séparément de ce que ses pages lui signalent.",
+    "forced_off": "Votre organisation a désactivé cette option.",
+    "url_label": "Destination des fichiers de plantage",
+    "url_description": "L'adresse https qui reçoit un fichier de plantage. Bulwark n'en fournit aucune.",
+    "url_invalid": "Saisissez une adresse https complète.",
+    "url_save": "Enregistrer",
+    "files_label": "Fichiers de plantage sur cet ordinateur",
+    "files_description": "Bulwark garde les plus récents et supprime ceux de plus d'un mois.",
+    "files_empty": "Aucun fichier de plantage.",
+    "file_size": "{size} Ko",
+    "send": "Envoyer le rapport de plantage…",
+    "delete_all": "Tout supprimer",
+    "sent": "Rapport de plantage envoyé.",
+    "send_no_consent": "Activez d'abord les rapports de plantage.",
+    "send_no_url": "Aucune adresse n'est définie, il n'y a donc nulle part où envoyer ce rapport. Saisissez-en une ci-dessus.",
+    "send_failed": "Le rapport de plantage n'a pas pu être envoyé."
   }
 }

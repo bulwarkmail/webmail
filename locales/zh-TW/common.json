@@ -6739,5 +6739,30 @@
     "plugins_off": "您的組織已在此裝置上關閉外掛程式。",
     "plugins_allowlist": "您的組織在此裝置上只允許使用部分外掛程式。",
     "off": "關閉"
+  },
+  "desktopTelemetry": {
+    "section_title": "使用資訊與當機報告",
+    "section_description": "兩者在您開啟前都維持關閉，且各有獨立的開關。",
+    "telemetry_label": "傳送使用資訊",
+    "telemetry_description": "每天一次：一個隨機 ID、應用程式版本、Node 版本、您的作業系統、應用程式已執行多久以及連線方式。使用自己的郵件伺服器時，還包括已開啟的功能、大致的帳號數量以及外掛和主題的數量。絕不傳送郵件、地址或伺服器名稱。",
+    "crash_label": "傳送當機報告",
+    "crash_description": "應用程式中的錯誤會連同一個隨機 ID、應用程式本身程式碼的檔案名稱和經過清理的簡短訊息一起傳送。如果應用程式本身當機，當機檔案會留在這台電腦上，只有您傳送時才會離開。",
+    "crash_memory": "當機檔案是當機時應用程式部分記憶體的副本。Bulwark 會移除它找到的使用者名稱、地址和登入權杖，但當機檔案仍可能包含您郵件的文字。",
+    "instance_note": "在 Bulwark 伺服器上，頁面向伺服器回報哪些內容由該伺服器的管理員另行決定。",
+    "forced_off": "您的組織已關閉此功能。",
+    "url_label": "當機檔案的去向",
+    "url_description": "接收當機檔案的 https 地址。Bulwark 沒有預設地址。",
+    "url_invalid": "請輸入完整的 https 地址。",
+    "url_save": "儲存",
+    "files_label": "這台電腦上的當機檔案",
+    "files_description": "Bulwark 保留最新的檔案，並刪除超過一個月的檔案。",
+    "files_empty": "沒有當機檔案。",
+    "file_size": "{size} KB",
+    "send": "傳送當機報告…",
+    "delete_all": "全部刪除",
+    "sent": "當機報告已傳送。",
+    "send_no_consent": "請先開啟當機報告。",
+    "send_no_url": "未設定地址，因此無處傳送。請在上方輸入一個。",
+    "send_failed": "無法傳送當機報告。"
   }
 }

@@ -6739,5 +6739,30 @@
     "plugins_off": "Organizația ta a dezactivat pluginurile pe acest dispozitiv.",
     "plugins_allowlist": "Organizația ta permite doar anumite pluginuri pe acest dispozitiv.",
     "off": "Dezactivat"
+  },
+  "desktopTelemetry": {
+    "section_title": "Date de utilizare și rapoarte de blocare",
+    "section_description": "Ambele sunt oprite până le porniți și fiecare are propriul comutator.",
+    "telemetry_label": "Trimite date de utilizare",
+    "telemetry_description": "O dată pe zi: un ID aleatoriu, versiunea aplicației, versiunea Node, sistemul de operare, de cât timp rulează aplicația și cum se conectează. Cu propriul server de e-mail, și ce funcții sunt pornite, un număr aproximativ de conturi și câte pluginuri și teme aveți. Niciodată e-mailuri, adrese sau nume de servere.",
+    "crash_label": "Trimite rapoarte de blocare",
+    "crash_description": "Erorile din aplicație pleacă cu un ID aleatoriu, nume de fișiere din codul aplicației și mesaje scurte, curățate. Dacă aplicația însăși se blochează, un fișier de blocare rămâne pe acest computer și pleacă doar dacă îl trimiteți.",
+    "crash_memory": "Un fișier de blocare este o copie a unei părți din memoria aplicației din momentul blocării. Bulwark elimină numele de utilizator, adresele și tokenurile de autentificare pe care le găsește, dar un fișier de blocare poate conține totuși textul e-mailurilor dvs.",
+    "instance_note": "Pe un server Bulwark, administratorul acestuia decide separat ce îi raportează paginile.",
+    "forced_off": "Organizația dvs. a oprit această opțiune.",
+    "url_label": "Unde ajung fișierele de blocare",
+    "url_description": "Adresa https care primește un fișier de blocare. Bulwark nu vine cu una.",
+    "url_invalid": "Introduceți o adresă https completă.",
+    "url_save": "Salvează",
+    "files_label": "Fișiere de blocare pe acest computer",
+    "files_description": "Bulwark le păstrează pe cele mai noi și le șterge pe cele mai vechi de o lună.",
+    "files_empty": "Nu există fișiere de blocare.",
+    "file_size": "{size} KB",
+    "send": "Trimite raportul de blocare…",
+    "delete_all": "Șterge tot",
+    "sent": "Raport de blocare trimis.",
+    "send_no_consent": "Porniți mai întâi rapoartele de blocare.",
+    "send_no_url": "Nu este setată nicio adresă, deci nu există unde să fie trimis. Introduceți una mai sus.",
+    "send_failed": "Raportul de blocare nu a putut fi trimis."
   }
 }

@@ -6751,5 +6751,30 @@
     "plugins_off": "Tổ chức của bạn đã tắt tiện ích trên thiết bị này.",
     "plugins_allowlist": "Tổ chức của bạn chỉ cho phép một số tiện ích trên thiết bị này.",
     "off": "Tắt"
+  },
+  "desktopTelemetry": {
+    "section_title": "Thông tin sử dụng và báo cáo sự cố",
+    "section_description": "Cả hai đều tắt cho đến khi bạn bật, và mỗi mục có công tắc riêng.",
+    "telemetry_label": "Gửi thông tin sử dụng",
+    "telemetry_description": "Mỗi ngày một lần: một ID ngẫu nhiên, phiên bản ứng dụng, phiên bản Node, hệ điều hành của bạn, ứng dụng đã chạy bao lâu và cách nó kết nối. Với máy chủ thư riêng, còn có các tính năng đang bật, số tài khoản ước tính và số tiện ích cùng chủ đề bạn có. Không bao giờ gửi thư, địa chỉ hay tên máy chủ.",
+    "crash_label": "Gửi báo cáo sự cố",
+    "crash_description": "Lỗi trong ứng dụng được gửi kèm một ID ngẫu nhiên, tên tệp từ mã của chính ứng dụng và thông báo ngắn đã được làm sạch. Nếu chính ứng dụng gặp sự cố, một tệp sự cố sẽ ở lại trên máy tính này và chỉ rời đi khi bạn gửi.",
+    "crash_memory": "Tệp sự cố là bản sao một phần bộ nhớ của ứng dụng khi gặp sự cố. Bulwark xóa tên người dùng, địa chỉ và mã đăng nhập mà nó tìm thấy, nhưng tệp sự cố vẫn có thể chứa nội dung thư của bạn.",
+    "instance_note": "Trên máy chủ Bulwark, quản trị viên của máy chủ đó quyết định riêng những gì các trang báo cáo về.",
+    "forced_off": "Tổ chức của bạn đã tắt mục này.",
+    "url_label": "Nơi nhận tệp sự cố",
+    "url_description": "Địa chỉ https nhận tệp sự cố. Bulwark không có sẵn địa chỉ nào.",
+    "url_invalid": "Nhập địa chỉ https đầy đủ.",
+    "url_save": "Lưu",
+    "files_label": "Tệp sự cố trên máy tính này",
+    "files_description": "Bulwark giữ các tệp mới nhất và xóa các tệp cũ hơn một tháng.",
+    "files_empty": "Không có tệp sự cố.",
+    "file_size": "{size} KB",
+    "send": "Gửi báo cáo sự cố…",
+    "delete_all": "Xóa tất cả",
+    "sent": "Đã gửi báo cáo sự cố.",
+    "send_no_consent": "Hãy bật báo cáo sự cố trước.",
+    "send_no_url": "Chưa đặt địa chỉ nên không có nơi để gửi. Hãy nhập một địa chỉ ở trên.",
+    "send_failed": "Không thể gửi báo cáo sự cố."
   }
 }

@@ -33,6 +33,46 @@ describe('sign-out with plugins', () => {
     expect(after).toHaveBeenCalledWith({ accountId: 'all' });
   });
 
+  describe('crash files, which can hold the mail of whoever was signed in', () => {
+    afterEach(() => { delete (window as { bulwarkDesktop?: unknown }).bulwarkDesktop; });
+    const withBridge = (deleteCrashes?: () => Promise<void>) => {
+      (window as { bulwarkDesktop?: unknown }).bulwarkDesktop = { version: 1, platform: 'win32', privacy: { deleteCrashes } };
+    };
+
+    it('go at sign-out', async () => {
+      const deleteCrashes = vi.fn().mockResolvedValue(undefined);
+      withBridge(deleteCrashes);
+      await useAuthStore.getState().logout();
+      expect(deleteCrashes).toHaveBeenCalledTimes(1);
+    });
+
+    it('go when all accounts sign out', async () => {
+      const deleteCrashes = vi.fn().mockResolvedValue(undefined);
+      withBridge(deleteCrashes);
+      await useAuthStore.getState().logoutAll();
+      expect(deleteCrashes).toHaveBeenCalled();
+    });
+
+    it('go when switching to another account, and not before', () => {
+      const deleteCrashes = vi.fn().mockResolvedValue(undefined);
+      withBridge(deleteCrashes);
+      useAuthStore.setState({ isAuthenticated: true, activeAccountId: 'a1' });
+      expect(deleteCrashes).not.toHaveBeenCalled();
+      useAuthStore.setState({ activeAccountId: 'a2' });
+      expect(deleteCrashes).toHaveBeenCalledTimes(1);
+    });
+
+    it('signing out works all the same on a shell without the call, or one that fails', async () => {
+      withBridge(undefined);
+      await useAuthStore.getState().logout();
+      expect(useAuthStore.getState().isAuthenticated).toBe(false);
+      useAuthStore.setState({ isAuthenticated: true });
+      withBridge(vi.fn().mockRejectedValue(new Error('gone')));
+      await useAuthStore.getState().logout();
+      expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    });
+  });
+
   describe('keys in the OS store', () => {
     afterEach(() => { delete (window as { bulwarkDesktop?: unknown }).bulwarkDesktop; });
     const withBridge = (clearGrants?: () => Promise<void>) => {

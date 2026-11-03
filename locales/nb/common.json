@@ -6739,5 +6739,30 @@
     "plugins_off": "Organisasjonen din har slått av programtillegg på denne enheten.",
     "plugins_allowlist": "Organisasjonen din tillater bare bestemte programtillegg på denne enheten.",
     "off": "Av"
+  },
+  "desktopTelemetry": {
+    "section_title": "Bruksdata og krasjrapporter",
+    "section_description": "Begge er av til du slår dem på, og hver har sin egen bryter.",
+    "telemetry_label": "Send bruksdata",
+    "telemetry_description": "Én gang om dagen: en tilfeldig ID, appversjonen, Node-versjonen, operativsystemet ditt, hvor lenge appen har kjørt og hvordan den kobler til. Med egen e-postserver også hvilke funksjoner som er på, et omtrentlig antall kontoer og hvor mange programtillegg og temaer du har. Aldri e-post, adresser eller servernavn.",
+    "crash_label": "Send krasjrapporter",
+    "crash_description": "Feil i appen sendes med en tilfeldig ID, filnavn fra appens egen kode og korte, rensede meldinger. Hvis selve appen krasjer, blir en krasjfil liggende på denne datamaskinen og forlater den bare hvis du sender den.",
+    "crash_memory": "En krasjfil er en kopi av en del av appens minne da den krasjet. Bulwark fjerner brukernavn, adresser og påloggingstokener det finner, men en krasjfil kan likevel inneholde teksten i e-posten din.",
+    "instance_note": "På en Bulwark-server bestemmer administratoren separat hva sidene rapporterer til den.",
+    "forced_off": "Organisasjonen din har slått av dette.",
+    "url_label": "Hvor krasjfiler sendes",
+    "url_description": "Https-adressen som mottar en krasjfil. Bulwark har ingen med.",
+    "url_invalid": "Skriv inn en fullstendig https-adresse.",
+    "url_save": "Lagre",
+    "files_label": "Krasjfiler på denne datamaskinen",
+    "files_description": "Bulwark beholder de nyeste og sletter dem som er eldre enn en måned.",
+    "files_empty": "Ingen krasjfiler.",
+    "file_size": "{size} KB",
+    "send": "Send krasjrapport…",
+    "delete_all": "Slett alle",
+    "sent": "Krasjrapport sendt.",
+    "send_no_consent": "Slå på krasjrapporter først.",
+    "send_no_url": "Ingen adresse er angitt, så den kan ikke sendes noe sted. Skriv inn en ovenfor.",
+    "send_failed": "Krasjrapporten kunne ikke sendes."
   }
 }

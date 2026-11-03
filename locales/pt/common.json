@@ -6739,5 +6739,30 @@
     "plugins_off": "A sua organização desativou os plugins neste dispositivo.",
     "plugins_allowlist": "A sua organização só permite determinados plugins neste dispositivo.",
     "off": "Desativado"
+  },
+  "desktopTelemetry": {
+    "section_title": "Dados de utilização e relatórios de falhas",
+    "section_description": "Ambos ficam desligados até os ligar, e cada um tem o seu próprio interruptor.",
+    "telemetry_label": "Enviar dados de utilização",
+    "telemetry_description": "Uma vez por dia: um ID aleatório, a versão da aplicação, a versão do Node, o seu sistema operativo, há quanto tempo a aplicação está a correr e como se liga. Com o seu próprio servidor de correio, também que funções estão ativas, um número aproximado de contas e quantos plugins e temas tem. Nunca mensagens, endereços ou nomes de servidor.",
+    "crash_label": "Enviar relatórios de falhas",
+    "crash_description": "Os erros da aplicação são enviados com um ID aleatório, nomes de ficheiros do próprio código da aplicação e mensagens curtas e limpas. Se a própria aplicação falhar, um ficheiro de falha fica neste computador e só sai se o enviar.",
+    "crash_memory": "Um ficheiro de falha é uma cópia de parte da memória da aplicação no momento da falha. O Bulwark remove os nomes de utilizador, endereços e tokens de início de sessão que encontra, mas um ficheiro de falha pode ainda conter o texto das suas mensagens.",
+    "instance_note": "Num servidor Bulwark, o seu administrador decide separadamente o que as páginas lhe comunicam.",
+    "forced_off": "A sua organização desligou esta opção.",
+    "url_label": "Destino dos ficheiros de falha",
+    "url_description": "O endereço https que recebe um ficheiro de falha. O Bulwark não inclui nenhum.",
+    "url_invalid": "Introduza um endereço https completo.",
+    "url_save": "Guardar",
+    "files_label": "Ficheiros de falha neste computador",
+    "files_description": "O Bulwark mantém os mais recentes e elimina os que têm mais de um mês.",
+    "files_empty": "Sem ficheiros de falha.",
+    "file_size": "{size} KB",
+    "send": "Enviar relatório de falha…",
+    "delete_all": "Eliminar tudo",
+    "sent": "Relatório de falha enviado.",
+    "send_no_consent": "Ligue primeiro os relatórios de falhas.",
+    "send_no_url": "Não há nenhum endereço definido, por isso não há para onde enviar. Introduza um acima.",
+    "send_failed": "Não foi possível enviar o relatório de falha."
   }
 }

@@ -6739,5 +6739,30 @@
     "plugins_off": "Je organisatie heeft plug-ins op dit apparaat uitgeschakeld.",
     "plugins_allowlist": "Je organisatie staat op dit apparaat alleen bepaalde plug-ins toe.",
     "off": "Uit"
+  },
+  "desktopTelemetry": {
+    "section_title": "Gebruiksgegevens en crashrapporten",
+    "section_description": "Beide staan uit totdat je ze aanzet, en elk heeft een eigen schakelaar.",
+    "telemetry_label": "Gebruiksgegevens verzenden",
+    "telemetry_description": "Eén keer per dag: een willekeurige ID, de appversie, de Node-versie, je besturingssysteem, hoe lang de app al draait en hoe hij verbinding maakt. Met je eigen mailserver ook welke functies aan staan, een ruw aantal accounts en hoeveel plug-ins en thema's je hebt. Nooit e-mail, adressen of servernamen.",
+    "crash_label": "Crashrapporten verzenden",
+    "crash_description": "Fouten in de app gaan mee met een willekeurige ID, bestandsnamen uit de eigen code van de app en korte, opgeschoonde meldingen. Als de app zelf crasht, blijft er een crashbestand op deze computer staan dat alleen weggaat als jij het verzendt.",
+    "crash_memory": "Een crashbestand is een kopie van een deel van het geheugen van de app op het moment van de crash. Bulwark verwijdert gebruikersnamen, adressen en aanmeldtokens die het vindt, maar een crashbestand kan nog steeds de tekst van je e-mail bevatten.",
+    "instance_note": "Op een Bulwark-server bepaalt de beheerder daarvan apart wat de pagina's aan die server melden.",
+    "forced_off": "Je organisatie heeft dit uitgezet.",
+    "url_label": "Bestemming van crashbestanden",
+    "url_description": "Het https-adres dat een crashbestand ontvangt. Bulwark heeft er zelf geen.",
+    "url_invalid": "Vul een volledig https-adres in.",
+    "url_save": "Opslaan",
+    "files_label": "Crashbestanden op deze computer",
+    "files_description": "Bulwark bewaart de nieuwste en verwijdert bestanden die ouder zijn dan een maand.",
+    "files_empty": "Geen crashbestanden.",
+    "file_size": "{size} KB",
+    "send": "Crashrapport verzenden…",
+    "delete_all": "Alles verwijderen",
+    "sent": "Crashrapport verzonden.",
+    "send_no_consent": "Zet eerst crashrapporten aan.",
+    "send_no_url": "Er is geen adres ingesteld, dus dit kan nergens heen. Vul hierboven een adres in.",
+    "send_failed": "Het crashrapport kon niet worden verzonden."
   }
 }
