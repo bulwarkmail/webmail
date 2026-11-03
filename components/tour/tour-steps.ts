@@ -1,8 +1,5 @@
 import type { ProAppTabKind } from "@/stores/pro-tab-store";
 
-/** The one route of the Pro shell. */
-export const PRO_ROUTE = "/pro";
-
 export interface TourStep {
   id: string;
   target: string;
@@ -63,9 +60,8 @@ export function proTabOfTourStep(step: Pick<TourStep, "page" | "target">): ProAp
   return page === "calendar" || page === "contacts" || page === "files" || page === "settings" ? page : "mail";
 }
 
-/** Whether the user is in the app the step is about. Under Pro the provider opens its tab. */
+/** Whether the user is in the app the step is about. */
 export function isTourStepOnPage(step: Pick<TourStep, "page">, pathname: string): boolean {
-  if (pathname === PRO_ROUTE) return true;
   const page = step.page && step.page !== "/" ? step.page : null;
   if (!page) return pathname === "/" || pathname === "" || pathname === "/mail" || pathname.startsWith("/mail/");
   return pathname === page || pathname.startsWith(page + "/");

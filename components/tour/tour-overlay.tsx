@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { isEditableEventTarget } from "@/lib/keyboard";
 import { isDocumentRTL } from "@/i18n/direction";
 import { findTourTarget, isTourStepOnPage } from "./tour-steps";
+import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import { usePathname } from "@/i18n/navigation";
 import { useIsMobile } from "@/hooks/use-media-query";
 import { prefersReducedMotion, scrollBehavior } from "@/lib/reduced-motion";
@@ -103,7 +104,9 @@ export function TourOverlay() {
   // while Files loads): look for the target only once the step's app is up.
   const pathname = usePathname();
   const onPageRef = useRef(true);
-  onPageRef.current = !step || isTourStepOnPage(step, pathname);
+  // Under Pro the step's tab is opened by the provider, on the shell's one route.
+  const proActive = useProInterfaceActive();
+  onPageRef.current = !step || proActive || isTourStepOnPage(step, pathname);
 
   const [targetRect, setTargetRect] = useState<Rect | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null);

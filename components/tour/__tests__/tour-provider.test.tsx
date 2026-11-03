@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const env = vi.hoisted(() => ({
   phone: true,
+  proActive: false,
   pathname: '/mail/folder/inbox',
   push: vi.fn(),
   command: vi.fn(),
@@ -19,6 +20,7 @@ vi.mock('@/hooks/use-media-query', () => ({
   useIsMobile: () => env.phone,
 }));
 vi.mock('@/lib/app-commands', () => ({ requestAppCommand: env.command }));
+vi.mock('@/components/pro/pro-interface-redirect', () => ({ useProInterfaceActive: () => env.proActive }));
 vi.mock('../tour-overlay', () => ({ TourOverlay: () => null }));
 vi.mock('@/stores/auth-store', () => ({
   useAuthStore: (sel: (s: unknown) => unknown) => sel({ isDemoMode: true, client: { supportsContacts: () => true } }),
@@ -38,7 +40,7 @@ vi.mock('@/stores/settings-store', () => ({
 }));
 
 const { TourProvider, useTour } = await import('../tour-provider');
-const { getTourSteps, isTourStepOnPage, proTabOfTourStep } = await import('../tour-steps');
+const { getTourSteps, proTabOfTourStep } = await import('../tour-steps');
 const { useProTabStore } = await import('@/stores/pro-tab-store');
 
 let api: ReturnType<typeof useTour>;
@@ -51,6 +53,7 @@ const probe = () => screen.getByTestId('probe').textContent;
 
 beforeEach(() => {
   env.phone = true;
+  env.proActive = false;
   env.pathname = '/mail/folder/inbox';
   env.push.mockClear();
   env.command.mockClear();
@@ -149,7 +152,9 @@ describe('tour under the Pro shell', () => {
 
   beforeEach(() => {
     env.phone = false;
-    env.pathname = '/pro';
+    env.proActive = true;
+    // Not /pro: the address the focused tab wrote can reach the router.
+    env.pathname = '/calendar/month/2026-11-03';
     useProTabStore.setState({ tabs: [{ id: 'home-mail', kind: 'mail', labelKey: 'mail', closeable: false, paneId: 'main' }], activeTabId: 'home-mail', activeSplitTabId: null, focusedPaneId: 'main', loadedTabIds: ['home-mail'] });
   });
 
@@ -162,11 +167,6 @@ describe('tour under the Pro shell', () => {
     };
     expect(focused()).toBe('calendar');
     expect(env.push).not.toHaveBeenCalled();
-  });
-
-  it('counts a step as on its page there', () => {
-    expect(isTourStepOnPage({ page: '/calendar' }, '/pro')).toBe(true);
-    expect(isTourStepOnPage({ page: '/calendar' }, '/settings')).toBe(false);
   });
 
   it('leaves the composer step in the compose tab it just opened', () => {
