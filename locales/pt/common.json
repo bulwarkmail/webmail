@@ -6958,6 +6958,19 @@
     "copy_failed": "Não foi possível copiar o ficheiro.",
     "reply_lost": "Não foi possível guardar a resposta escrita. Abra a mensagem e responda a partir dela."
   },
+  "desktopQuickCompose": {
+    "label": "Escrita rápida",
+    "menu": "Escrita rápida",
+    "description": "{keys} abre uma janela pequena para uma nova mensagem, a partir de qualquer outra aplicação.",
+    "description_off": "Abre uma janela pequena para uma nova mensagem, a partir de qualquer outra aplicação.",
+    "taken": "Outra aplicação está a usar {keys}, por isso aqui não faz nada. Escolha outras teclas ou feche essa aplicação.",
+    "change": "Alterar as teclas: {keys}",
+    "recording": "Prima as teclas…",
+    "recording_hint": "Mantenha premidas duas de Ctrl, Alt, Shift ou a tecla do sistema e prima uma letra ou um número. Esc cancela.",
+    "back_to_main": "Mover para a janela principal",
+    "back_busy": "A janela principal já tem uma mensagem aberta. Feche-a e tente de novo.",
+    "back_no_answer": "A janela principal não respondeu. A sua mensagem fica aqui."
+  },
   "desktopReminders": {
     "generic_title": "Lembrete",
     "snooze": "Adiar {count} min",

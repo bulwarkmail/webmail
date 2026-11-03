@@ -6958,6 +6958,19 @@
     "copy_failed": "Nie udało się skopiować pliku.",
     "reply_lost": "Nie udało się zachować wpisanej odpowiedzi. Otwórz wiadomość i odpowiedz w niej."
   },
+  "desktopQuickCompose": {
+    "label": "Szybka wiadomość",
+    "menu": "Szybka wiadomość",
+    "description": "{keys} otwiera małe okno nowej wiadomości z dowolnej innej aplikacji.",
+    "description_off": "Otwiera małe okno nowej wiadomości z dowolnej innej aplikacji.",
+    "taken": "Inna aplikacja używa {keys}, więc tutaj nic się nie dzieje. Wybierz inne klawisze lub zamknij tę aplikację.",
+    "change": "Zmień klawisze: {keys}",
+    "recording": "Naciśnij klawisze…",
+    "recording_hint": "Przytrzymaj dwa z klawiszy Ctrl, Alt, Shift lub klawisz systemowy i naciśnij literę albo cyfrę. Esc anuluje.",
+    "back_to_main": "Przenieś do głównego okna",
+    "back_busy": "W głównym oknie jest już otwarta wiadomość. Zamknij ją i spróbuj ponownie.",
+    "back_no_answer": "Główne okno nie odpowiedziało. Wiadomość zostaje tutaj."
+  },
   "desktopReminders": {
     "generic_title": "Przypomnienie",
     "snooze": "Odłóż o {count} min",

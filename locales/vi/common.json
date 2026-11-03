@@ -6970,6 +6970,19 @@
     "copy_failed": "Không thể sao chép tệp.",
     "reply_lost": "Không thể giữ câu trả lời bạn đã nhập. Hãy mở thư và trả lời ở đó."
   },
+  "desktopQuickCompose": {
+    "label": "Soạn nhanh",
+    "menu": "Soạn nhanh",
+    "description": "{keys} mở một cửa sổ nhỏ để viết thư mới, từ bất kỳ ứng dụng nào khác.",
+    "description_off": "Mở một cửa sổ nhỏ để viết thư mới, từ bất kỳ ứng dụng nào khác.",
+    "taken": "Một ứng dụng khác đang dùng {keys}, nên phím tắt này không có tác dụng ở đây. Hãy chọn phím khác hoặc đóng ứng dụng đó.",
+    "change": "Đổi phím: {keys}",
+    "recording": "Nhấn các phím…",
+    "recording_hint": "Giữ hai trong số Ctrl, Alt, Shift hoặc phím hệ thống, rồi nhấn một chữ cái hoặc chữ số. Esc để hủy.",
+    "back_to_main": "Chuyển sang cửa sổ chính",
+    "back_busy": "Cửa sổ chính đang mở một thư. Hãy đóng thư đó rồi thử lại.",
+    "back_no_answer": "Cửa sổ chính không phản hồi. Thư của bạn vẫn ở đây."
+  },
   "desktopReminders": {
     "generic_title": "Lời nhắc",
     "snooze": "Báo lại sau {count} phút",

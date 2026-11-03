@@ -6958,6 +6958,19 @@
     "copy_failed": "The file could not be copied.",
     "reply_lost": "Your typed reply could not be kept. Open the message and reply there."
   },
+  "desktopQuickCompose": {
+    "label": "Quick compose",
+    "menu": "Quick compose",
+    "description": "{keys} opens a small window for a new message, from any other app.",
+    "description_off": "Opens a small window for a new message, from any other app.",
+    "taken": "Another app is using {keys}, so it does nothing here. Pick other keys, or close that app.",
+    "change": "Change the keys: {keys}",
+    "recording": "Press the keys…",
+    "recording_hint": "Hold two of Ctrl, Alt, Shift or the system key, and press a letter or number. Esc cancels.",
+    "back_to_main": "Move to the main window",
+    "back_busy": "The main window already has a message open. Close that one, then try again.",
+    "back_no_answer": "The main window did not answer. Your message stays here."
+  },
   "desktopReminders": {
     "generic_title": "Reminder",
     "snooze": "Snooze {count} min",

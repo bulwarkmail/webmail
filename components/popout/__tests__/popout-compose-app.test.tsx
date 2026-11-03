@@ -311,3 +311,97 @@ describe('PopoutComposeApp', () => {
     main.close();
   });
 });
+
+describe('back into the main window', () => {
+  const focus = vi.fn();
+
+  beforeEach(() => {
+    focus.mockClear();
+    window.history.replaceState(null, '', '/en/popout/compose');
+  });
+
+  afterEach(() => {
+    window.bulwarkDesktop = undefined;
+  });
+
+  /** A main window that holds these logins, and answers a move as told. */
+  function mainWindowAnswers(status: 'shown' | 'busy' | null, accountIds = ['alice']) {
+    const channel = openPopoutChannel((message) => {
+      if (message.type === 'main-ping') channel?.post({ type: 'main-pong', windowId: 'main', accountIds });
+      if (message.type === 'composer-return' && status) channel?.post({ type: 'composer-return-answer', returnId: message.returnId, status });
+    })!;
+    return channel;
+  }
+
+  const openComposer = async () => {
+    render(<PopoutComposeApp />);
+    await settle();
+    return composer as unknown as {
+      popOut?: () => { handOver: (state: object) => Promise<boolean>; notShownMessage: () => string };
+      popOutToMainLabel?: string;
+    };
+  };
+
+  it('is offered while a main window holds the login', async () => {
+    window.bulwarkDesktop = { version: 1, platform: 'win32', windows: { focus } } as never;
+    const main = mainWindowAnswers('shown');
+    const props = await openComposer();
+    await waitFor(() => expect((composer as unknown as { popOut?: unknown }).popOut).toBeTruthy());
+    expect((composer as unknown as { popOutToMainLabel: string }).popOutToMainLabel).toBe('back_to_main');
+    expect(props).toBeTruthy();
+    main.close();
+  });
+
+  it('is not offered with no main window, or one holding another login', async () => {
+    window.bulwarkDesktop = { version: 1, platform: 'win32', windows: { focus } } as never;
+    await openComposer();
+    await settle(250);
+    expect((composer as unknown as { popOut?: unknown }).popOut).toBeUndefined();
+    cleanup();
+    const main = mainWindowAnswers('shown', ['bob']);
+    await openComposer();
+    await settle(250);
+    expect((composer as unknown as { popOut?: unknown }).popOut).toBeUndefined();
+    main.close();
+  });
+
+  it('is not offered in a browser, which behaves as it did', async () => {
+    const main = mainWindowAnswers('shown');
+    await openComposer();
+    await settle(250);
+    expect((composer as unknown as { popOut?: unknown }).popOut).toBeUndefined();
+    main.close();
+  });
+
+  it('hands over what the composer holds, and brings the main window up once it is there', async () => {
+    window.bulwarkDesktop = { version: 1, platform: 'win32', windows: { focus } } as never;
+    const main = mainWindowAnswers('shown');
+    await openComposer();
+    await waitFor(() => expect((composer as unknown as { popOut?: unknown }).popOut).toBeTruthy());
+    const target = (composer as unknown as { popOut: () => { handOver: (state: object) => Promise<boolean> } }).popOut();
+    const state = { mode: 'reply', subject: 'Back', draftId: 'd9', draftLocalAccountId: 'carol' };
+    await act(async () => {
+      await expect(target.handOver(state)).resolves.toBe(true);
+    });
+    const sent = heard.find((message) => message.type === 'composer-return') as Extract<PopoutMessage, { type: 'composer-return' }>;
+    expect(sent.payload).toMatchObject({ mode: 'reply', initialData: state });
+    // The draft's own login, which isn't always the window's.
+    expect(sent.accountId).toBe('carol');
+    expect(focus).toHaveBeenCalledOnce();
+    main.close();
+  });
+
+  it('a busy main window keeps the text here, says why, and stays out of sight', async () => {
+    window.bulwarkDesktop = { version: 1, platform: 'win32', windows: { focus } } as never;
+    const main = mainWindowAnswers('busy');
+    await openComposer();
+    await waitFor(() => expect((composer as unknown as { popOut?: unknown }).popOut).toBeTruthy());
+    const target = (composer as unknown as { popOut: () => { handOver: (state: object) => Promise<boolean>; notShownMessage: () => string } }).popOut();
+    await act(async () => {
+      await expect(target.handOver({ mode: 'compose' })).resolves.toBe(false);
+    });
+    expect(target.notShownMessage()).toBe('back_busy');
+    expect(focus).not.toHaveBeenCalled();
+    main.close();
+  });
+});

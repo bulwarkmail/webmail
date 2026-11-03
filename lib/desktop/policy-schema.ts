@@ -825,7 +825,7 @@ export const POLICY_CONSUMERS: Record<PolicyKey, PolicyConsumer> = {
   AppLockTimeoutMinutes: { repo: 'webmail', file: 'lib/app-lock/policy.ts' },
   TelemetryAllowed: { repo: 'shell', file: 'src/main/features/privacy.ts' },
   CrashReportsAllowed: { repo: 'shell', file: 'src/main/features/privacy.ts' },
-  QuickComposeShortcut: { pendingConsumer: 'step 7, quick compose' },
+  QuickComposeShortcut: { repo: 'shell', file: 'src/main/features/os-quick-compose.ts' },
   AutoSelectCertificateForUrls: { pendingConsumer: 'step 7, client certificates' },
   KeystoreAllowedOrigins: { repo: 'shell', file: 'src/main/features/policies.ts' },
 };

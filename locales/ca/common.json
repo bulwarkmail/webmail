@@ -6958,6 +6958,19 @@
     "copy_failed": "No s'ha pogut copiar el fitxer.",
     "reply_lost": "No s'ha pogut conservar la resposta que heu escrit. Obriu el missatge i responeu des d'allà."
   },
+  "desktopQuickCompose": {
+    "label": "Redacció ràpida",
+    "menu": "Redacció ràpida",
+    "description": "{keys} obre una finestra petita per a un missatge nou, des de qualsevol altra aplicació.",
+    "description_off": "Obre una finestra petita per a un missatge nou, des de qualsevol altra aplicació.",
+    "taken": "Una altra aplicació fa servir {keys}, així que aquí no fa res. Tria altres tecles o tanca aquella aplicació.",
+    "change": "Canvia les tecles: {keys}",
+    "recording": "Prem les tecles…",
+    "recording_hint": "Mantén premudes dues de Ctrl, Alt, Maj o la tecla del sistema, i prem una lletra o un número. Esc cancel·la.",
+    "back_to_main": "Mou a la finestra principal",
+    "back_busy": "La finestra principal ja té un missatge obert. Tanca'l i torna-ho a provar.",
+    "back_no_answer": "La finestra principal no ha respost. El teu missatge es queda aquí."
+  },
   "desktopReminders": {
     "generic_title": "Recordatori",
     "snooze": "Posposa {count} min",

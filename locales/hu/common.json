@@ -6958,6 +6958,19 @@
     "copy_failed": "A fájlt nem sikerült másolni.",
     "reply_lost": "A beírt válasz nem maradt meg. Nyissa meg az üzenetet, és válaszoljon ott."
   },
+  "desktopQuickCompose": {
+    "label": "Gyors levélírás",
+    "menu": "Gyors levélírás",
+    "description": "A(z) {keys} kis ablakot nyit egy új üzenethez, bármely másik alkalmazásból.",
+    "description_off": "Kis ablakot nyit egy új üzenethez, bármely másik alkalmazásból.",
+    "taken": "A(z) {keys} billentyűket egy másik alkalmazás használja, így itt nem történik semmi. Válasszon más billentyűket, vagy zárja be azt az alkalmazást.",
+    "change": "Billentyűk módosítása: {keys}",
+    "recording": "Nyomja meg a billentyűket…",
+    "recording_hint": "Tartson lenyomva kettőt a Ctrl, Alt, Shift vagy a rendszerbillentyű közül, és nyomjon meg egy betűt vagy számot. Az Esc megszakítja.",
+    "back_to_main": "Áthelyezés a főablakba",
+    "back_busy": "A főablakban már nyitva van egy üzenet. Zárja be, majd próbálja újra.",
+    "back_no_answer": "A főablak nem válaszolt. Az üzenet itt marad."
+  },
   "desktopReminders": {
     "generic_title": "Emlékeztető",
     "snooze": "Halasztás {count} perccel",

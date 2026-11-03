@@ -6958,6 +6958,19 @@
     "copy_failed": "Soubor se nepodařilo zkopírovat.",
     "reply_lost": "Napsanou odpověď se nepodařilo zachovat. Otevřete zprávu a odpovězte v ní."
   },
+  "desktopQuickCompose": {
+    "label": "Rychlá zpráva",
+    "menu": "Rychlá zpráva",
+    "description": "{keys} otevře malé okno pro novou zprávu z jakékoli jiné aplikace.",
+    "description_off": "Otevře malé okno pro novou zprávu z jakékoli jiné aplikace.",
+    "taken": "{keys} používá jiná aplikace, takže tady nic neudělá. Vyberte jiné klávesy nebo tu aplikaci zavřete.",
+    "change": "Změnit klávesy: {keys}",
+    "recording": "Stiskněte klávesy…",
+    "recording_hint": "Podržte dvě z kláves Ctrl, Alt, Shift nebo systémovou klávesu a stiskněte písmeno nebo číslici. Esc zruší.",
+    "back_to_main": "Přesunout do hlavního okna",
+    "back_busy": "V hlavním okně je už otevřená zpráva. Zavřete ji a zkuste to znovu.",
+    "back_no_answer": "Hlavní okno neodpovědělo. Vaše zpráva zůstává tady."
+  },
   "desktopReminders": {
     "generic_title": "Připomenutí",
     "snooze": "Odložit o {count} min",

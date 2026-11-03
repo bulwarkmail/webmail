@@ -159,6 +159,7 @@ import { mailtoComposerDraft } from "./mailto-draft";
 import { useOpenEmailInWindow, usePopoutsAvailable } from "@/hooks/use-popouts-available";
 import { openComposerWindow } from "@/lib/popout/open";
 import { onRescuedDraft, takeRescuedDraft } from "@/lib/popout/rescued-drafts";
+import { answerWhenComposerOpens, onReturnedComposer, takeReturnedComposer } from "@/lib/popout/return-to-main";
 import { getQuoteBodies } from "@/lib/email-composer-utils";
 import { emailHooks } from "@/lib/plugin-hooks";
 import { afterRequestDispatch } from "@/lib/after-request-dispatch";
@@ -1770,6 +1771,31 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     return subscribeHandoff('compose', openNext);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, client, proTakingOver, routeOutsideDraft, withComposeGate, isMobile, composerInUse, handoffSettled]);
+
+  // A composer coming back from its own window. It has saved, and keeps its copy until
+  // the composer is open here. One already open holds someone's text, so that says no.
+  useEffect(() => {
+    if (!isAuthenticated || !client || proTakingOver) return;
+    const adopt = () => {
+      const returned = takeReturnedComposer();
+      if (!returned) return;
+      if (composerInUseRef.current) {
+        returned.answer('busy');
+        return;
+      }
+      const { payload } = returned;
+      answerWhenComposerOpens(returned);
+      setComposerSessionId((id) => id + 1);
+      setHandedOffSource({ session: composerSessionId + 1, emailId: payload.sourceEmailId ?? undefined, source: payload.sourceEmailSource ?? undefined });
+      setPendingDraft(payload.initialData ?? null);
+      setComposerMode(payload.initialData?.mode ?? payload.mode);
+      setShowComposer(true);
+      if (isMobile) setActiveView('viewer');
+    };
+    adopt();
+    return onReturnedComposer(adopt);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, client, proTakingOver, isMobile, composerSessionId]);
 
   useEffect(() => {
     if (!isAuthenticated || !client) return;

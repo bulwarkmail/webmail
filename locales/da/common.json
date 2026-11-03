@@ -6958,6 +6958,19 @@
     "copy_failed": "Filen kunne ikke kopieres.",
     "reply_lost": "Dit skrevne svar kunne ikke gemmes. Åbn beskeden, og svar der."
   },
+  "desktopQuickCompose": {
+    "label": "Hurtig skrivning",
+    "menu": "Hurtig skrivning",
+    "description": "{keys} åbner et lille vindue til en ny besked, fra enhver anden app.",
+    "description_off": "Åbner et lille vindue til en ny besked, fra enhver anden app.",
+    "taken": "En anden app bruger {keys}, så her sker der ikke noget. Vælg andre taster, eller luk den app.",
+    "change": "Skift tasterne: {keys}",
+    "recording": "Tryk på tasterne…",
+    "recording_hint": "Hold to af Ctrl, Alt, Shift eller systemtasten nede, og tryk på et bogstav eller tal. Esc annullerer.",
+    "back_to_main": "Flyt til hovedvinduet",
+    "back_busy": "Hovedvinduet har allerede en besked åben. Luk den, og prøv igen.",
+    "back_no_answer": "Hovedvinduet svarede ikke. Din besked bliver her."
+  },
   "desktopReminders": {
     "generic_title": "Påmindelse",
     "snooze": "Udsæt {count} min.",

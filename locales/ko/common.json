@@ -6958,6 +6958,19 @@
     "copy_failed": "파일을 복사할 수 없습니다.",
     "reply_lost": "입력한 답장을 유지할 수 없습니다. 메시지를 열어 답장하세요."
   },
+  "desktopQuickCompose": {
+    "label": "빠른 작성",
+    "menu": "빠른 작성",
+    "description": "{keys}를 누르면 다른 앱에서도 새 메시지용 작은 창이 열립니다.",
+    "description_off": "다른 앱에서도 새 메시지용 작은 창을 엽니다.",
+    "taken": "다른 앱이 {keys}를 사용 중이라 여기서는 작동하지 않습니다. 다른 키를 고르거나 그 앱을 닫으세요.",
+    "change": "키 변경: {keys}",
+    "recording": "키를 누르세요…",
+    "recording_hint": "Ctrl, Alt, Shift, 시스템 키 중 두 개를 누른 채 문자나 숫자를 누르세요. Esc를 누르면 취소됩니다.",
+    "back_to_main": "기본 창으로 이동",
+    "back_busy": "기본 창에 이미 열린 메시지가 있습니다. 그 메시지를 닫고 다시 시도하세요.",
+    "back_no_answer": "기본 창이 응답하지 않았습니다. 메시지는 여기에 그대로 있습니다."
+  },
   "desktopReminders": {
     "generic_title": "알림",
     "snooze": "{count}분 후 다시 알림",

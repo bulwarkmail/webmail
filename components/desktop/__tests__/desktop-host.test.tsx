@@ -9,6 +9,7 @@ import { useToastStore } from '@/stores/toast-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useLocaleStore } from '@/stores/locale-store';
 import { useOfflineStore } from '@/lib/offline/state';
+import { offerReturnedComposer, takeReturnedComposer } from '@/lib/popout/return-to-main';
 
 const push = vi.fn();
 vi.mock('@/i18n/navigation', () => ({ useRouter: () => ({ push }) }));
@@ -42,6 +43,7 @@ function fakeBridge() {
     setState: vi.fn(),
     setLanguages: vi.fn(),
     sessionReady: vi.fn(),
+    sessionEnded: vi.fn(),
     setRestoreEnabled: vi.fn(),
     setTheme: vi.fn(),
     openExternal: vi.fn(),
@@ -55,7 +57,7 @@ function fakeBridge() {
     shell: { openExternal: parts.openExternal, setLanguages: parts.setLanguages },
     spellcheck: { missing: async () => [], onMissing: (listener: (language: string) => void) => { missing = listener; return () => {}; }, allowDownload: parts.allowDownload },
     clipboard: { copyFile: async () => true, clearFiles: parts.clearFiles },
-    windows: { sessionReady: parts.sessionReady, setRestoreEnabled: parts.setRestoreEnabled },
+    windows: { sessionReady: parts.sessionReady, sessionEnded: parts.sessionEnded, setRestoreEnabled: parts.setRestoreEnabled },
     theme: { set: parts.setTheme, system: async () => ({ dark: false, highContrast: false }) },
     lifecycle: { onFlushRequest: (handler: () => Promise<unknown>) => { flush = handler; return () => {}; } },
   };
@@ -309,5 +311,29 @@ describe('DesktopHost', () => {
     act(() => useOfflineStore.setState({ outbox: [{ id: 1 }, { id: 2 }] } as never));
     await expect(shell.flush()).resolves.toEqual({ unsent: 2 });
     act(() => useOfflineStore.setState({ outbox: [] } as never));
+  });
+});
+
+describe('quick compose and the way back', () => {
+  afterEach(() => {
+    takeReturnedComposer();
+  });
+
+  it('tells the shell when nobody is signed in any more, so a shortcut goes to the sign-in', async () => {
+    const shell = fakeBridge();
+    useAuthStore.setState({ isAuthenticated: true });
+    render(<DesktopHost />);
+    await waitFor(() => expect(shell.sessionReady).toHaveBeenCalled());
+    expect(shell.sessionEnded).not.toHaveBeenCalled();
+    act(() => useAuthStore.setState({ isAuthenticated: false }));
+    await waitFor(() => expect(shell.sessionEnded).toHaveBeenCalledOnce());
+  });
+
+  it('goes to the mail page for a composer coming back, with none on screen', async () => {
+    fakeBridge();
+    render(<DesktopHost />);
+    push.mockClear();
+    offerReturnedComposer({ returnId: 'r1', payload: { mode: 'compose' }, answer: () => {} });
+    expect(push).toHaveBeenCalledWith('/');
   });
 });

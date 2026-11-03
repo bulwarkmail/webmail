@@ -6958,6 +6958,19 @@
     "copy_failed": "No se pudo copiar el archivo.",
     "reply_lost": "No se pudo conservar la respuesta que escribiste. Abre el mensaje y responde desde allí."
   },
+  "desktopQuickCompose": {
+    "label": "Redacción rápida",
+    "menu": "Redacción rápida",
+    "description": "{keys} abre una ventana pequeña para un mensaje nuevo, desde cualquier otra aplicación.",
+    "description_off": "Abre una ventana pequeña para un mensaje nuevo, desde cualquier otra aplicación.",
+    "taken": "Otra aplicación está usando {keys}, así que aquí no hace nada. Elige otras teclas o cierra esa aplicación.",
+    "change": "Cambiar las teclas: {keys}",
+    "recording": "Pulsa las teclas…",
+    "recording_hint": "Mantén pulsadas dos de Ctrl, Alt, Mayús o la tecla del sistema, y pulsa una letra o un número. Esc cancela.",
+    "back_to_main": "Mover a la ventana principal",
+    "back_busy": "La ventana principal ya tiene un mensaje abierto. Ciérralo y vuelve a intentarlo.",
+    "back_no_answer": "La ventana principal no respondió. Tu mensaje se queda aquí."
+  },
   "desktopReminders": {
     "generic_title": "Recordatorio",
     "snooze": "Posponer {count} min",

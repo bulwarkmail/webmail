@@ -6958,6 +6958,19 @@
     "copy_failed": "Fișierul nu a putut fi copiat.",
     "reply_lost": "Răspunsul scris nu a putut fi păstrat. Deschide mesajul și răspunde de acolo."
   },
+  "desktopQuickCompose": {
+    "label": "Scriere rapidă",
+    "menu": "Scriere rapidă",
+    "description": "{keys} deschide o fereastră mică pentru un mesaj nou, din orice altă aplicație.",
+    "description_off": "Deschide o fereastră mică pentru un mesaj nou, din orice altă aplicație.",
+    "taken": "Altă aplicație folosește {keys}, așa că aici nu face nimic. Alege alte taste sau închide aplicația respectivă.",
+    "change": "Schimbă tastele: {keys}",
+    "recording": "Apasă tastele…",
+    "recording_hint": "Ține apăsate două dintre Ctrl, Alt, Shift sau tasta de sistem și apasă o literă sau o cifră. Esc anulează.",
+    "back_to_main": "Mută în fereastra principală",
+    "back_busy": "Fereastra principală are deja un mesaj deschis. Închide-l și încearcă din nou.",
+    "back_no_answer": "Fereastra principală nu a răspuns. Mesajul rămâne aici."
+  },
   "desktopReminders": {
     "generic_title": "Memento",
     "snooze": "Amână {count} min",

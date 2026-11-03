@@ -17,7 +17,10 @@ import { announceSent } from "@/lib/plugin-after-send";
 import { announceMailChanged, announceSentToMainWindow, askRescuedDraftId, watchMainWindow, type RescuedDraft } from "@/lib/popout/channel";
 import { acknowledgeComposeHandoff, receiveComposeHandoff, rememberComposePayload, rememberedComposePayload, watchHandoffCancel } from "@/lib/popout/compose-handoff";
 import type { ComposePopoutPayload } from "@/lib/popout/compose-payload";
+import { returnComposerToMain, type ReturnResult } from "@/lib/popout/return-to-main";
 import { closePopoutWindow } from "@/lib/popout/window-role";
+import { hasDesktopWindows } from "@/lib/popout/support";
+import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { Button } from "@/components/ui/button";
 import { composerDataFromDraft, isRestorableDraft } from "@/lib/draft-composer-data";
 import { noteOpenDraft } from "@/lib/desktop/window-restore";
@@ -35,6 +38,9 @@ type ComposerProps = React.ComponentProps<typeof EmailComposer>;
 type SendData = Parameters<NonNullable<ComposerProps["onSend"]>>[0];
 
 const EMPTY_PAYLOAD: ComposePopoutPayload = { mode: "compose" };
+
+/** How often the window looks whether a main window holding its login is still there. */
+const MAIN_CHECK_MS = 1000;
 
 /** How long a reloaded window waits to hear what became of the text it handed over on the way out. */
 const RESCUE_ANSWER_MS = 2000;
@@ -164,6 +170,7 @@ function RestoredDraft({ draftId, accountId, ownerAccountId, onReady }: {
 /** The composer alone, in its own window: sending, autosave and discard go through the shared stores, as in a Pro tab. */
 function PopoutComposer({ payload, handoffId }: { payload: ComposePopoutPayload; handoffId: string | null }) {
   const t = useTranslations();
+  const tQuick = useTranslations("desktopQuickCompose");
   const client = useAuthStore((s) => s.client);
   const [sessionKey] = useState(() => `popout-${handoffId ?? Date.now().toString(36)}`);
 
@@ -256,6 +263,32 @@ function PopoutComposer({ payload, handoffId }: { payload: ComposePopoutPayload;
   const [mainWindow] = useState(watchMainWindow);
   useEffect(() => () => mainWindow.stop(), [mainWindow]);
 
+  // The way back into the main window, in the desktop app, while one holds this login.
+  const [mainHoldsLogin, setMainHoldsLogin] = useState(false);
+  useEffect(() => {
+    if (!hasDesktopWindows()) return;
+    const check = () => setMainHoldsLogin(mainWindow.alive(useAuthStore.getState().activeAccountId ?? undefined));
+    check();
+    const timer = setInterval(check, MAIN_CHECK_MS);
+    return () => clearInterval(timer);
+  }, [mainWindow]);
+
+  const backToMain = useCallback(() => {
+    let result: ReturnResult = "no-answer";
+    return {
+      cancel: () => {},
+      notShownMessage: () => tQuick(result === "busy" ? "back_busy" : "back_no_answer"),
+      handOver: async (state: ComposerDraftData) => {
+        result = await returnComposerToMain(
+          { ...payload, mode: state.mode, replyTo: state.replyTo, initialData: state, initialDraftText: undefined, prefill: null },
+          state.draftLocalAccountId ?? useAuthStore.getState().activeAccountId,
+        );
+        if (result === "shown") getDesktopBridge()?.windows?.focus?.();
+        return result === "shown";
+      },
+    };
+  }, [payload, tQuick]);
+
   // The window that opened this one lets go of its copy now. Not without a
   // session: this one couldn't save or send the text.
   useEffect(() => {
@@ -304,6 +337,8 @@ function PopoutComposer({ payload, handoffId }: { payload: ComposePopoutPayload;
         onClose={handleClose}
         onDiscardDraft={handleDiscardDraft}
         ownWindow={ownWindow}
+        popOut={mainHoldsLogin ? backToMain : undefined}
+        popOutToMainLabel={mainHoldsLogin ? tQuick("back_to_main") : undefined}
         className="min-h-0 flex-1"
       />
     </ErrorBoundary>

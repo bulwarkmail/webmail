@@ -318,6 +318,8 @@ export interface ComposerPopOut {
   /** True once the composer is on screen there. Until then this one keeps the text. */
   handOver(data: ComposerDraftData): Promise<boolean>;
   cancel(): void;
+  /** What to say when handOver answered false, if not that the new window was late. */
+  notShownMessage?: () => string;
 }
 
 interface EmailComposerProps {
@@ -390,6 +392,8 @@ interface EmailComposerProps {
    * hands the draft over under the same draft id, and closes here.
    */
   popOut?: () => ComposerPopOut | null;
+  /** The move goes back to the main window: the button says that, and shows at any width. */
+  popOutToMainLabel?: string;
   /**
    * This composer is all a window shows (lib/popout). It closes itself once a
    * message has gone. Closing the window with unsaved text hands the draft to
@@ -561,6 +565,7 @@ export function EmailComposer({
   onDiscardDraft,
   onSaveState,
   popOut,
+  popOutToMainLabel,
   ownWindow,
   onSubjectChange,
   className,
@@ -4447,7 +4452,7 @@ export function EmailComposer({
       // Not on screen there, so this is still the only copy of the text.
       if (!shown) {
         target.cancel();
-        toast.error(tWindows('window_not_ready'));
+        toast.error(target.notShownMessage?.() ?? tWindows('window_not_ready'));
         return;
       }
       explicitCloseRef.current = true;
@@ -4464,12 +4469,12 @@ export function EmailComposer({
       type="button"
       onClick={(event) => { event.stopPropagation(); void handlePopOut(); }}
       disabled={isPoppingOut || isSending}
-      className={className}
-      aria-label={tWindows('open_in_window')}
-      title={tWindows('open_in_window')}
-      data-testid="composer-open-in-window"
+      className={popOutToMainLabel ? className.replace("hidden md:grid", "grid") : className}
+      aria-label={popOutToMainLabel ?? tWindows('open_in_window')}
+      title={popOutToMainLabel ?? tWindows('open_in_window')}
+      data-testid={popOutToMainLabel ? "composer-back-to-main" : "composer-open-in-window"}
     >
-      <ExternalLink className={iconClassName} />
+      {popOutToMainLabel ? <Minimize2 className={iconClassName} /> : <ExternalLink className={iconClassName} />}
     </button>
   );
 
