@@ -37,6 +37,7 @@ export class AccountEngine {
   private scope: StoreScope;
   private readonly transport: JmapTransport;
   private readonly syncers: readonly Syncer[];
+  private readonly areas: readonly StoreArea[];
   private readonly methods: ReadonlyMap<string, MethodHandler>;
   private readonly calls = new Map<string, AreaCall>();
   private readonly overlays: readonly RecordOverlay[];
@@ -58,7 +59,9 @@ export class AccountEngine {
     this.session = options.session;
     this.scope = options.scope;
     this.transport = options.transport;
-    this.syncers = options.areas.flatMap((area) => area.syncers);
+    this.areas = options.areas;
+    const syncers = options.areas.flatMap((area) => area.syncers);
+    this.syncers = [...syncers.filter((syncer) => !syncer.low), ...syncers.filter((syncer) => syncer.low)];
     this.methods = buildMethodTable(options.areas);
     this.overlays = options.areas.flatMap((area) => (area.overlay ? [area.overlay] : []));
     for (const area of options.areas) {
@@ -75,6 +78,12 @@ export class AccountEngine {
     // An offline start has no way to probe the server, so the last answer stays.
     this.invertedKeywordSort = options.invertedKeywordSort ?? metaGet(this.db, 'inverted_keyword_sort') === '1';
     if (options.invertedKeywordSort !== undefined) metaSet(this.db, 'inverted_keyword_sort', options.invertedKeywordSort ? '1' : '0');
+    this.applyScope();
+  }
+
+  private applyScope(): void {
+    const ctx = this.storeContext();
+    for (const area of this.areas) area.scopeChanged?.(ctx);
   }
 
   /** The session kept from the last time, for a start without a network. */
@@ -94,6 +103,7 @@ export class AccountEngine {
     // The user may just have made room by keeping less.
     this.storageBlockedUntil = 0;
     metaSet(this.db, 'scope', JSON.stringify(scope));
+    this.applyScope();
   }
 
   setInvertedKeywordSort(inverted: boolean): void {
@@ -225,15 +235,21 @@ export class AccountEngine {
   }
 
   private syncContext(): SyncContext {
+    const scope = () => this.scope;
     return {
       account: this.account,
       db: this.db,
       session: this.session,
-      scope: this.scope,
+      // A pass can take long, and a tighter policy applies to the rest of it.
+      get scope() {
+        return scope();
+      },
       transport: this.transport,
       now: this.now,
       emit: this.emitter,
       stopped: () => this.closed || !this.online,
+      syncWanted: () => this.again,
+      pause: this.sleep,
       syncState: (jmap, type) => this.syncState(jmap, type),
       setSyncState: (jmap, type, row) => this.setSyncState(jmap, type, row),
       overlay: (jmap, type, records) => this.overlay(jmap, type, records),
@@ -287,6 +303,8 @@ export class AccountEngine {
   /** Stops syncing and waits for the current batch. The database stays open for the caller to close. */
   async close(): Promise<void> {
     this.closed = true;
+    // A large download could otherwise hold up removing the account.
+    this.transport.abort?.();
     await this.running?.catch(() => {});
   }
 }

@@ -29,7 +29,7 @@ export function OfflineSettings() {
   const usage = useOfflineStore((s) => s.usageBytes);
   const syncing = useOfflineStore((s) => !!account && s.syncing.includes(account));
   const lastSynced = useOfflineStore((s) => (account ? s.lastSyncedAt[account] : undefined));
-  const unsent = useOfflineStore((s) => s.outbox.filter((row) => row.account === account).length);
+  const unsent = useOfflineStore((s) => [...s.outbox, ...s.localDrafts].filter((row) => row.account === account).length);
   const blocked = useOfflineStore((s) => s.storageBlocked);
   const tNotes = useTranslations('offlineConflicts');
   const [confirmOff, setConfirmOff] = useState(false);

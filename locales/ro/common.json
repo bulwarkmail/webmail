@@ -5763,6 +5763,26 @@
     "store_private": "Ferestrele private nu pot păstra e-mailuri pentru utilizare offline.",
     "server_not_answering": "Serverul de e-mail nu răspunde. Încercați din nou imediat."
   },
+  "offlineDrafts": {
+    "title": "Ciorne pe acest dispozitiv",
+    "description": "Aceste ciorne sunt salvate pe acest dispozitiv. Ajung singure pe server imediat ce poate fi contactat.",
+    "saved_on_device": "Salvat pe acest dispozitiv",
+    "status_waiting": "Se așteaptă serverul",
+    "status_sending": "Se salvează pe server",
+    "status_uncertain": "Se verifică dacă a ajuns pe server",
+    "status_refused": "Serverul a refuzat această ciornă: {error}",
+    "file_missing": "Un fișier atașat nu mai este pe acest dispozitiv",
+    "open": "Deschide",
+    "open_label": "Deschide {subject}",
+    "retry": "Încearcă din nou",
+    "retry_label": "Încearcă din nou: {subject}",
+    "toast_refused": "Ciorna {subject} nu a putut fi salvată pe server. Rămâne pe acest dispozitiv.",
+    "toast_conflict": "Ciorna {subject} a fost modificată pe alt dispozitiv. Ambele versiuni sunt păstrate.",
+    "conflict_changed": "Modificată pe alt dispozitiv. Ambele versiuni sunt în Ciorne.",
+    "conflict_gone": "Modificată sau eliminată pe alt dispozitiv. Versiunea dvs. este în Ciorne.",
+    "banner_refused": "Ciorne refuzate de server: {count}",
+    "banner_waiting": "Ciorne care așteaptă serverul: {count}"
+  },
   "deep_link": {
     "message_not_found": "Acest mesaj nu mai este disponibil.",
     "thread_not_found": "Această conversație nu mai este disponibilă.",

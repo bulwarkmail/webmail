@@ -10,14 +10,13 @@
 import type { SyncContext, Syncer } from '../area';
 import { deleteObject, putObject } from '../engine/core-schema';
 import { runChangesLoop } from '../engine/changes';
-import { JmapMethodError, responseFor, TransportError, type MethodCall } from '../engine/transport';
+import { JmapMethodError, responseFor, type MethodCall } from '../engine/transport';
 import {
   deleteEmail,
   deleteEmailRow,
   EMAIL_BODY_PROPERTIES,
   EMAIL_LIST_PROPERTIES,
   MAIL_USING,
-  putBlob,
   storeBody,
   upsertEmail,
   type EmailObject,
@@ -113,7 +112,8 @@ async function startFullList(ctx: SyncContext, jmap: string): Promise<ListCursor
 async function sweepUnseen(ctx: SyncContext, jmap: string, gen: number): Promise<boolean> {
   for (;;) {
     if (ctx.stopped()) return false;
-    const unseen = ctx.db.all<{ rowid: number; id: string }>('SELECT rowid, id FROM email WHERE jmap = ? AND gen < ? LIMIT ?', [jmap, gen, PAGE]);
+    // A draft saved on this device isn't on the server yet: it has no say in this.
+    const unseen = ctx.db.all<{ rowid: number; id: string }>("SELECT rowid, id FROM email WHERE jmap = ? AND gen < ? AND id NOT LIKE 'local-%' LIMIT ?", [jmap, gen, PAGE]);
     if (unseen.length === 0) return true;
     const response = await ctx.transport.request([['Email/get', {
       accountId: jmap,
@@ -349,49 +349,6 @@ async function backfillBodies(ctx: SyncContext, jmap: string): Promise<void> {
   }
 }
 
-// ---- Attachments ----
-
-/**
- * The files of kept messages, newest first, within what the user chose: one
- * at a time, each in its own transaction, so a reload loses at most one.
- */
-async function fetchAttachments(ctx: SyncContext, jmap: string): Promise<void> {
-  if (!ctx.scope.attachments) return;
-  let used = Number(ctx.db.get<{ n: number | null }>('SELECT SUM(size) AS n FROM blob')?.n ?? 0);
-  for (;;) {
-    if (ctx.stopped()) return;
-    const parts = ctx.db.all<{ blob_id: string; size: number; type: string | null; name: string | null; received_at: number }>(
-      `SELECT p.blob_id, p.size, p.type, p.name, p.received_at FROM email_part p
-       WHERE p.jmap = ? AND p.refused = 0 AND p.size <= ?
-         AND NOT EXISTS (SELECT 1 FROM blob b WHERE b.jmap = p.jmap AND b.blob_id = p.blob_id)
-       ORDER BY p.received_at DESC LIMIT 20`,
-      [jmap, ctx.scope.maxAttachmentBytes],
-    );
-    if (parts.length === 0) return;
-    for (const part of parts) {
-      if (ctx.stopped()) return;
-      const blobId = String(part.blob_id);
-      if (used + Number(part.size) > ctx.scope.maxTotalBytes) return;
-      let data: Uint8Array;
-      try {
-        data = await ctx.transport.download(jmap, blobId, part.type ?? 'application/octet-stream', part.name ?? 'attachment');
-      } catch (error) {
-        // Only what says this file won't come. Anything else, like a 500 or a 429, is tried at the next sync.
-        if (error instanceof TransportError && error.kind === 'http' && PERMANENT_DOWNLOAD_STATUSES.has(error.status ?? 0)) {
-          ctx.db.run('UPDATE email_part SET refused = 1 WHERE jmap = ? AND blob_id = ?', [jmap, blobId]);
-          continue;
-        }
-        if (error instanceof TransportError && error.kind === 'http') return;
-        throw error;
-      }
-      putBlob(ctx.db, jmap, blobId, part.type, data, Number(part.received_at));
-      used += data.byteLength;
-    }
-  }
-}
-
-const PERMANENT_DOWNLOAD_STATUSES = new Set([403, 404, 410]);
-
 // ---- Identities and quotas ----
 
 const IDENTITY_USING = ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:mail', 'urn:ietf:params:jmap:submission'];
@@ -481,7 +438,5 @@ export const mailSyncer: Syncer = {
     await syncThreads(ctx, jmap);
     if (ctx.stopped()) return;
     await backfillBodies(ctx, jmap);
-    if (ctx.stopped()) return;
-    await fetchAttachments(ctx, jmap);
   },
 };

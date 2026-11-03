@@ -90,6 +90,8 @@ import { FilePickerDialog } from "@/components/files/file-picker-dialog";
 import { DirectoryPickerDialog } from "@/components/contacts/directory-picker-dialog";
 import type { DirectoryEntry } from "@/stores/contact-store";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
+import { isStandInId } from "@/lib/jmap/stand-in-ids";
+import { noteDraftReplacedElsewhere } from "@/lib/offline/queue";
 import type { FileNode } from "@/lib/jmap/types";
 import { useContactStore, getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 import { renderTemplateWithPlugins, notifyTemplateApplied } from "@/stores/template-store";
@@ -560,6 +562,7 @@ export function EmailComposer({
   const tViewer = useTranslations('email_viewer');
   const tClassification = useTranslations('classification');
   const tProofreading = useTranslations('proofreading');
+  const tOfflineDrafts = useTranslations('offlineDrafts');
   const tOffline = useTranslations('offline');
   const tOfflineNotes = useTranslations('offlineConflicts');
   const tSendGuards = useTranslations('send_guards');
@@ -1050,6 +1053,8 @@ export function EmailComposer({
   const [draftLocalAccountId, setDraftLocalAccountId] = useState<string | undefined>(initialData?.draftLocalAccountId);
   const draftLocalAccountIdRef = useRef<string | undefined>(initialData?.draftLocalAccountId);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  // The last save stayed on this device: the server wasn't there.
+  const [savedOnDevice, setSavedOnDevice] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const saveCloseAttemptRef = useRef<{ cancelled: boolean; saving: boolean } | null>(null);
   const [isSavingAndClosing, setIsSavingAndClosing] = useState(false);
@@ -2998,7 +3003,12 @@ export function EmailComposer({
         { priority, accountId: draftAccountId, previousDraftAccountId: replacedElsewhere ? undefined : previousDraftAccountId, classification: classificationRef.current.draftChoice },
       );
       if (replacedElsewhere) {
-        await removeDraftVersion(savedDraft.draftId!, previousDraftLogin, previousDraftAccountId);
+        if (isStandInId(savedDraftId) && savingLogin) {
+          // The new version is only on this device: the old one stays until it's up.
+          await noteDraftReplacedElsewhere(savingLogin, savedDraftId, { login: previousDraftLogin!, jmap: previousDraftAccountId, id: savedDraft.draftId! });
+        } else {
+          await removeDraftVersion(savedDraft.draftId!, previousDraftLogin, previousDraftAccountId);
+        }
       }
 
       // Update the ref synchronously so a queued save sees the new id and
@@ -3050,6 +3060,7 @@ export function EmailComposer({
         }
       }
 
+      setSavedOnDevice(isStandInId(savedDraftId));
       setSaveStatus('saved');
       saveFailedRef.current = false;
       lastDraftIdRef.current = savedDraftId;
@@ -4671,7 +4682,7 @@ export function EmailComposer({
             {saveStatus === 'saved' && (
               <div className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
                 <Check className="w-3 h-3" />
-                <span className="hidden md:inline">{t('draft_saved')}</span>
+                <span className="hidden md:inline">{savedOnDevice ? tOfflineDrafts('saved_on_device') : t('draft_saved')}</span>
               </div>
             )}
             {saveStatus === 'error' && (

@@ -5763,6 +5763,26 @@
     "store_private": "Les fenêtres privées ne peuvent pas conserver le courrier pour une utilisation hors ligne.",
     "server_not_answering": "Le serveur de messagerie ne répond pas. Réessayez dans un instant."
   },
+  "offlineDrafts": {
+    "title": "Brouillons sur cet appareil",
+    "description": "Ces brouillons sont enregistrés sur cet appareil. Ils partent seuls vers le serveur dès qu'il est joignable.",
+    "saved_on_device": "Enregistré sur cet appareil",
+    "status_waiting": "En attente du serveur",
+    "status_sending": "Enregistrement sur le serveur",
+    "status_uncertain": "Vérification de son arrivée sur le serveur",
+    "status_refused": "Le serveur a refusé ce brouillon : {error}",
+    "file_missing": "Un fichier joint n'est plus sur cet appareil",
+    "open": "Ouvrir",
+    "open_label": "Ouvrir {subject}",
+    "retry": "Réessayer",
+    "retry_label": "Réessayer {subject}",
+    "toast_refused": "Le brouillon {subject} n'a pas pu être enregistré sur le serveur. Il reste sur cet appareil.",
+    "toast_conflict": "Le brouillon {subject} a été modifié sur un autre appareil. Les deux versions sont conservées.",
+    "conflict_changed": "Modifié sur un autre appareil. Les deux versions sont dans Brouillons.",
+    "conflict_gone": "Modifié ou supprimé sur un autre appareil. Votre version est dans Brouillons.",
+    "banner_refused": "Brouillons refusés par le serveur : {count}",
+    "banner_waiting": "Brouillons en attente du serveur : {count}"
+  },
   "deep_link": {
     "message_not_found": "Ce message n'est plus disponible.",
     "thread_not_found": "Cette conversation n'est plus disponible.",

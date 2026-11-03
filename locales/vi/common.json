@@ -5775,6 +5775,26 @@
     "store_private": "Cửa sổ riêng tư không thể giữ thư để dùng ngoại tuyến.",
     "server_not_answering": "Máy chủ thư không phản hồi. Hãy thử lại sau giây lát."
   },
+  "offlineDrafts": {
+    "title": "Bản nháp trên thiết bị này",
+    "description": "Các bản nháp này được lưu trên thiết bị này. Chúng sẽ tự chuyển lên máy chủ ngay khi kết nối được.",
+    "saved_on_device": "Đã lưu trên thiết bị này",
+    "status_waiting": "Đang chờ máy chủ",
+    "status_sending": "Đang lưu lên máy chủ",
+    "status_uncertain": "Đang kiểm tra xem đã đến máy chủ chưa",
+    "status_refused": "Máy chủ đã từ chối bản nháp này: {error}",
+    "file_missing": "Một tệp đính kèm không còn trên thiết bị này",
+    "open": "Mở",
+    "open_label": "Mở {subject}",
+    "retry": "Thử lại",
+    "retry_label": "Thử lại {subject}",
+    "toast_refused": "Không thể lưu bản nháp {subject} lên máy chủ. Bản nháp vẫn ở trên thiết bị này.",
+    "toast_conflict": "Bản nháp {subject} đã được thay đổi trên thiết bị khác. Cả hai phiên bản đều được giữ lại.",
+    "conflict_changed": "Đã thay đổi trên thiết bị khác. Cả hai phiên bản đều ở trong Bản nháp.",
+    "conflict_gone": "Đã thay đổi hoặc xóa trên thiết bị khác. Phiên bản của bạn ở trong Bản nháp.",
+    "banner_refused": "Bản nháp bị máy chủ từ chối: {count}",
+    "banner_waiting": "Bản nháp đang chờ máy chủ: {count}"
+  },
   "deep_link": {
     "message_not_found": "Thư này không còn nữa.",
     "thread_not_found": "Cuộc trò chuyện này không còn tồn tại nữa.",

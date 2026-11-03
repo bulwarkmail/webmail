@@ -5763,6 +5763,26 @@
     "store_private": "Private vinduer kan ikke beholde e-post for bruk uten nett.",
     "server_not_answering": "E-postserveren svarer ikke. Prøv igjen om litt."
   },
+  "offlineDrafts": {
+    "title": "Utkast på denne enheten",
+    "description": "Disse utkastene er lagret på denne enheten. De går til serveren av seg selv så snart den kan nås.",
+    "saved_on_device": "Lagret på denne enheten",
+    "status_waiting": "Venter på serveren",
+    "status_sending": "Lagrer på serveren",
+    "status_uncertain": "Sjekker om det nådde serveren",
+    "status_refused": "Serveren avviste dette utkastet: {error}",
+    "file_missing": "En vedlagt fil er ikke lenger på denne enheten",
+    "open": "Åpne",
+    "open_label": "Åpne {subject}",
+    "retry": "Prøv igjen",
+    "retry_label": "Prøv {subject} igjen",
+    "toast_refused": "Utkastet {subject} kunne ikke lagres på serveren. Det blir på denne enheten.",
+    "toast_conflict": "Utkastet {subject} ble endret på en annen enhet. Begge versjonene beholdes.",
+    "conflict_changed": "Endret på en annen enhet. Begge versjonene ligger i Utkast.",
+    "conflict_gone": "Endret eller fjernet på en annen enhet. Din versjon ligger i Utkast.",
+    "banner_refused": "Utkast avvist av serveren: {count}",
+    "banner_waiting": "Utkast som venter på serveren: {count}"
+  },
   "deep_link": {
     "message_not_found": "Denne meldingen er ikke lenger tilgjengelig.",
     "thread_not_found": "Denne samtalen er ikke lenger tilgjengelig.",

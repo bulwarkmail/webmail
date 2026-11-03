@@ -5763,6 +5763,26 @@
     "store_private": "プライベートウィンドウではオフライン用にメールを保存できません。",
     "server_not_answering": "メールサーバーが応答していません。少ししてからもう一度お試しください。"
   },
+  "offlineDrafts": {
+    "title": "このデバイスの下書き",
+    "description": "これらの下書きはこのデバイスに保存されています。サーバーに接続できるようになると自動で送られます。",
+    "saved_on_device": "このデバイスに保存しました",
+    "status_waiting": "サーバーを待っています",
+    "status_sending": "サーバーに保存しています",
+    "status_uncertain": "サーバーに届いたか確認しています",
+    "status_refused": "サーバーがこの下書きを拒否しました: {error}",
+    "file_missing": "添付ファイルがこのデバイスにありません",
+    "open": "開く",
+    "open_label": "{subject} を開く",
+    "retry": "再試行",
+    "retry_label": "{subject} を再試行",
+    "toast_refused": "下書き {subject} をサーバーに保存できませんでした。このデバイスに残ります。",
+    "toast_conflict": "下書き {subject} は別のデバイスで変更されました。両方のバージョンを残します。",
+    "conflict_changed": "別のデバイスで変更されました。両方のバージョンが下書きにあります。",
+    "conflict_gone": "別のデバイスで変更または削除されました。あなたのバージョンは下書きにあります。",
+    "banner_refused": "サーバーが拒否した下書き: {count}",
+    "banner_waiting": "サーバーを待っている下書き: {count}"
+  },
   "deep_link": {
     "message_not_found": "このメッセージは利用できなくなりました。",
     "thread_not_found": "この会話は利用できなくなりました。",

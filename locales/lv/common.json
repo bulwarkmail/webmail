@@ -5763,6 +5763,26 @@
     "store_private": "Privātie logi nevar glabāt pastu lietošanai bezsaistē.",
     "server_not_answering": "Pasta serveris neatbild. Mēģiniet vēlreiz pēc brīža."
   },
+  "offlineDrafts": {
+    "title": "Melnraksti šajā ierīcē",
+    "description": "Šie melnraksti ir saglabāti šajā ierīcē. Tie paši nonāks serverī, tiklīdz tas būs sasniedzams.",
+    "saved_on_device": "Saglabāts šajā ierīcē",
+    "status_waiting": "Gaida serveri",
+    "status_sending": "Saglabā serverī",
+    "status_uncertain": "Pārbauda, vai tas sasniedza serveri",
+    "status_refused": "Serveris noraidīja šo melnrakstu: {error}",
+    "file_missing": "Pievienotais fails vairs nav šajā ierīcē",
+    "open": "Atvērt",
+    "open_label": "Atvērt {subject}",
+    "retry": "Mēģināt vēlreiz",
+    "retry_label": "Mēģināt vēlreiz: {subject}",
+    "toast_refused": "Melnrakstu {subject} neizdevās saglabāt serverī. Tas paliek šajā ierīcē.",
+    "toast_conflict": "Melnraksts {subject} tika mainīts citā ierīcē. Abas versijas tiek saglabātas.",
+    "conflict_changed": "Mainīts citā ierīcē. Abas versijas ir mapē Melnraksti.",
+    "conflict_gone": "Mainīts vai noņemts citā ierīcē. Jūsu versija ir mapē Melnraksti.",
+    "banner_refused": "Servera noraidītie melnraksti: {count}",
+    "banner_waiting": "Melnraksti, kas gaida serveri: {count}"
+  },
   "deep_link": {
     "message_not_found": "Šī ziņa vairs nav pieejama.",
     "thread_not_found": "Šī sarakste vairs nav pieejama.",

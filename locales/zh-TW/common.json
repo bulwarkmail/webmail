@@ -5763,6 +5763,26 @@
     "store_private": "私密視窗無法保留供離線使用的郵件。",
     "server_not_answering": "郵件伺服器沒有回應。請稍後再試。"
   },
+  "offlineDrafts": {
+    "title": "此裝置上的草稿",
+    "description": "這些草稿儲存在此裝置上。一旦能連線到伺服器，就會自動上傳。",
+    "saved_on_device": "已儲存在此裝置上",
+    "status_waiting": "正在等待伺服器",
+    "status_sending": "正在儲存到伺服器",
+    "status_uncertain": "正在檢查是否已到達伺服器",
+    "status_refused": "伺服器拒絕了此草稿：{error}",
+    "file_missing": "附件已不在此裝置上",
+    "open": "開啟",
+    "open_label": "開啟 {subject}",
+    "retry": "重試",
+    "retry_label": "重試 {subject}",
+    "toast_refused": "草稿 {subject} 無法儲存到伺服器。它仍保留在此裝置上。",
+    "toast_conflict": "草稿 {subject} 已在其他裝置上變更。兩個版本都會保留。",
+    "conflict_changed": "已在其他裝置上變更。兩個版本都在草稿中。",
+    "conflict_gone": "已在其他裝置上變更或刪除。您的版本在草稿中。",
+    "banner_refused": "伺服器拒絕的草稿：{count}",
+    "banner_waiting": "等待伺服器的草稿：{count}"
+  },
   "deep_link": {
     "message_not_found": "已無法使用此郵件。",
     "thread_not_found": "已無法使用此對話串。",

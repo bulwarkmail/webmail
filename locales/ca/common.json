@@ -5763,6 +5763,26 @@
     "store_private": "Les finestres privades no poden desar correu per fer-lo servir sense connexió.",
     "server_not_answering": "El servidor de correu no respon. Torneu-ho a provar d'aquí a un moment."
   },
+  "offlineDrafts": {
+    "title": "Esborranys en aquest dispositiu",
+    "description": "Aquests esborranys estan desats en aquest dispositiu. Aniran al servidor sols tan bon punt s'hi pugui connectar.",
+    "saved_on_device": "Desat en aquest dispositiu",
+    "status_waiting": "Esperant el servidor",
+    "status_sending": "Desant al servidor",
+    "status_uncertain": "Comprovant si ha arribat al servidor",
+    "status_refused": "El servidor ha rebutjat aquest esborrany: {error}",
+    "file_missing": "Un fitxer adjunt ja no és en aquest dispositiu",
+    "open": "Obre",
+    "open_label": "Obre {subject}",
+    "retry": "Torna-ho a provar",
+    "retry_label": "Torna a provar {subject}",
+    "toast_refused": "L'esborrany {subject} no s'ha pogut desar al servidor. Es queda en aquest dispositiu.",
+    "toast_conflict": "L'esborrany {subject} s'ha canviat en un altre dispositiu. Es conserven les dues versions.",
+    "conflict_changed": "Canviat en un altre dispositiu. Les dues versions són a Esborranys.",
+    "conflict_gone": "Canviat o eliminat en un altre dispositiu. La vostra versió és a Esborranys.",
+    "banner_refused": "Esborranys rebutjats pel servidor: {count}",
+    "banner_waiting": "Esborranys que esperen el servidor: {count}"
+  },
   "deep_link": {
     "message_not_found": "Aquest missatge ja no està disponible.",
     "thread_not_found": "Aquesta conversa ja no està disponible.",

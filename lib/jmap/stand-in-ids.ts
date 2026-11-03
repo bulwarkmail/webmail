@@ -1,7 +1,8 @@
 /**
- * Stand-in ids: what the local store hands out for an event created offline.
+ * Stand-in ids: what the local store hands out for an event or a draft created
+ * offline.
  *
- * A page can hold one long after the event reached the server: an open dialog,
+ * A page can hold one long after the record reached the server: an open dialog,
  * a list not refetched yet, a plugin. So the client swaps them for the real ids
  * on the way to the network, and swaps them back in the answer, because callers
  * look up the outcome under the id they asked about.
@@ -19,14 +20,17 @@ export function newStandInId(): string {
   return `${STAND_IN_PREFIX}${crypto.randomUUID()}`;
 }
 
+const SET_METHODS = new Set(['CalendarEvent/set', 'Email/set']);
+const GET_METHODS = new Set(['CalendarEvent/get', 'Email/get']);
+
 /** The stand-in ids a request names. */
 export function standInsIn(calls: readonly OfflineMethodCall[]): string[] {
   const found = new Set<string>();
   for (const [name, args] of calls) {
-    if (name === 'CalendarEvent/set') {
+    if (SET_METHODS.has(name)) {
       for (const id of Object.keys((args.update ?? {}) as object)) if (isStandInId(id)) found.add(id);
       for (const id of (args.destroy ?? []) as string[]) if (isStandInId(id)) found.add(id);
-    } else if (name === 'CalendarEvent/get') {
+    } else if (GET_METHODS.has(name)) {
       for (const id of (args.ids ?? []) as string[]) if (isStandInId(id)) found.add(id);
     }
   }
@@ -42,13 +46,13 @@ export function withRealIds<T extends OfflineMethodCall>(calls: readonly T[], re
   const rename = (id: string) => real[id] ?? id;
   return calls.map((call) => {
     const [name, args, callId] = call;
-    if (name === 'CalendarEvent/set') {
+    if (SET_METHODS.has(name)) {
       const next = { ...args };
       if (args.update) next.update = renamedKeys(args.update as Record<string, unknown>, rename);
       if (args.destroy) next.destroy = (args.destroy as string[]).map(rename);
       return [name, next, callId] as unknown as T;
     }
-    if (name === 'CalendarEvent/get' && args.ids) {
+    if (GET_METHODS.has(name) && args.ids) {
       return [name, { ...args, ids: (args.ids as string[]).map(rename) }, callId] as unknown as T;
     }
     return call;
@@ -62,7 +66,7 @@ export function withStandInsBack<T extends OfflineResponse>(response: T, real: R
   return {
     ...response,
     methodResponses: response.methodResponses.map(([name, result, callId]) => {
-      if (name !== 'CalendarEvent/set' && name !== 'CalendarEvent/get') return [name, result, callId];
+      if (!SET_METHODS.has(name) && !GET_METHODS.has(name)) return [name, result, callId];
       const next = { ...result };
       for (const key of ['updated', 'notUpdated', 'notDestroyed']) {
         if (next[key]) next[key] = renamedKeys(next[key], rename);

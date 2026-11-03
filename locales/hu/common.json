@@ -5763,6 +5763,26 @@
     "store_private": "A privát ablakok nem tudnak leveleket megőrizni offline használatra.",
     "server_not_answering": "A levelezőszerver nem válaszol. Próbálja újra egy pillanat múlva."
   },
+  "offlineDrafts": {
+    "title": "Piszkozatok ezen az eszközön",
+    "description": "Ezek a piszkozatok ezen az eszközön vannak mentve. Maguktól a szerverre kerülnek, amint az elérhető.",
+    "saved_on_device": "Mentve ezen az eszközön",
+    "status_waiting": "Várakozás a szerverre",
+    "status_sending": "Mentés a szerverre",
+    "status_uncertain": "Annak ellenőrzése, hogy elérte-e a szervert",
+    "status_refused": "A szerver elutasította ezt a piszkozatot: {error}",
+    "file_missing": "Egy csatolt fájl már nincs ezen az eszközön",
+    "open": "Megnyitás",
+    "open_label": "{subject} megnyitása",
+    "retry": "Újra",
+    "retry_label": "{subject} újrapróbálása",
+    "toast_refused": "A(z) {subject} piszkozatot nem sikerült a szerverre menteni. Ezen az eszközön marad.",
+    "toast_conflict": "A(z) {subject} piszkozat egy másik eszközön módosult. Mindkét változat megmarad.",
+    "conflict_changed": "Másik eszközön módosult. Mindkét változat a Piszkozatok között van.",
+    "conflict_gone": "Másik eszközön módosult vagy törlődött. Az Ön változata a Piszkozatok között van.",
+    "banner_refused": "A szerver által elutasított piszkozatok: {count}",
+    "banner_waiting": "A szerverre váró piszkozatok: {count}"
+  },
   "deep_link": {
     "message_not_found": "Ez az üzenet már nem érhető el.",
     "thread_not_found": "Ez a beszélgetés már nem érhető el.",
