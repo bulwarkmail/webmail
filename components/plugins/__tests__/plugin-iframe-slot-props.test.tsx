@@ -52,6 +52,13 @@ describe('PluginIframeSlot', () => {
     expect(wrapper.style.flex).toBe('1 1 0%');
   });
 
+  it('keeps a filling frame at its minimum height when it is given one', async () => {
+    activePlugin = plugin(['ui:composer-sidebar']);
+    const { container } = render(<PluginIframeSlot pluginId="p1" slot="composer-sidebar-right" extraProps={{}} fill minFillHeight={280} />);
+    await waitFor(() => expect(createSlotInstance).toHaveBeenCalled());
+    expect((container.querySelector('[data-plugin-iframe-slot]') as HTMLElement).style.minHeight).toBe('280px');
+  });
+
   it('mounts a banner-only plugin without the opened message', async () => {
     activePlugin = plugin(['ui:email-banner']);
     render(<PluginIframeSlot pluginId="p1" slot="email-banner" extraProps={{ email: EMAIL }} />);

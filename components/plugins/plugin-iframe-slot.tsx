@@ -25,6 +25,8 @@ interface Props {
   extraProps?: Record<string, unknown>;
   /** The frame fills its panel and scrolls inside, instead of growing with its content. */
   fill?: boolean;
+  /** With `fill`: the height the frame keeps however little room its panel has. */
+  minFillHeight?: number;
   /**
    * Told whether the frame is up: false when the plugin's shouldShow says no
    * or its frame fails to start, true once it has started. For a slot that
@@ -45,7 +47,7 @@ interface FloatingDropdownState {
   ariaLabel?: string;
 }
 
-export function PluginIframeSlot({ pluginId, slot, extraProps, fill = false, onShownChange }: Props) {
+export function PluginIframeSlot({ pluginId, slot, extraProps, fill = false, minFillHeight, onShownChange }: Props) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<SandboxInstance | null>(null);
   const onShownChangeRef = useRef(onShownChange);
@@ -189,7 +191,7 @@ export function PluginIframeSlot({ pluginId, slot, extraProps, fill = false, onS
         ref={wrapperRef}
         style={inline
           ? { display: 'inline-block', verticalAlign: 'middle', height, width: width ?? 0, maxWidth: '100%', overflow: 'hidden' }
-          : fill ? { flex: '1 1 0%', minHeight: 0 } : { height, minHeight: height }}
+          : fill ? { flex: '1 1 0%', minHeight: minFillHeight ?? 0 } : { height, minHeight: height }}
         data-plugin-iframe-slot={`${pluginId}:${slot}`}
         data-plugin-iframe-fill={fill || undefined}
       />
