@@ -462,8 +462,10 @@ describe('sends', () => {
 
   it('doesn\'t call a try that never started an attempt', async () => {
     const id = await t.engine.areaCall('outbox.queueSend', { summary, item }) as number;
-    await t.engine.areaCall('outbox.claim', { id });
-    await t.engine.areaCall('outbox.update', { id, status: 'waiting' });
+    for (let i = 0; i < 2; i += 1) {
+      await t.engine.areaCall('outbox.claim', { id });
+      await t.engine.areaCall('outbox.update', { id, status: 'waiting' });
+    }
     expect((await read()).entries[0].firstAttemptAt).toBeUndefined();
   });
 

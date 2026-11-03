@@ -460,6 +460,19 @@ describe('a send the server couldn\'t take right now', () => {
     expect(row).toMatchObject({ status: 'waiting', copyId: 'copy-1' });
   });
 
+  it('doesn\'t hand an online send a stand-in for a file the upload held again', async () => {
+    writeEnabled(['acc']);
+    stop = startOfflineMode();
+    const { blobId } = await holdFile('acc', new File(['x'], 'x.txt', { type: 'text/plain' }), 'x.txt');
+    const client = fakeClient('https://mail.example.org', { uploadBlob: vi.fn(async () => ({ blobId: `${LOCAL_BLOB_PREFIX}stand-in`, size: 1, type: 'text/plain' })) });
+    useAuthStore.setState({ client: client as never, activeAccountId: 'acc', getClientForAccount: () => client } as never);
+    try {
+      await expect(getOutboxHooks()!.resolveHeldAttachments(client as never, [{ blobId }])).rejects.toMatchObject({ name: 'SendNotStartedError' });
+    } finally {
+      useAuthStore.setState({ getClientForAccount: useRealClient, client: null });
+    }
+  });
+
   it('doesn\'t send a stand-in for a file the upload held again', async () => {
     writeEnabled(['acc']);
     const { blobId } = await holdFile('acc', new File(['x'], 'x.txt', { type: 'text/plain' }), 'x.txt');
@@ -583,13 +596,16 @@ describe('a browser that can\'t run the store', () => {
     expect(await strandedLegacyMessages()).toBe(0);
   });
 
-  it('turns the switch off in a window that refuses the private file system', async () => {
-    writeEnabled([]);
+  it('turns the switch off in a window that refuses the private file system, and wipes nothing', async () => {
+    writeEnabled(['acc']);
     Object.defineProperty(window.navigator, 'storage', { configurable: true, value: { getDirectory: async () => { throw new DOMException('The operation is insecure.', 'SecurityError'); } } });
     try {
       stop = startOfflineMode();
       await vi.waitFor(() => expect(useOfflineStore.getState().storageBlocked).toBe(true));
       expect(offlineSupported()).toBe(false);
+      enforcePolicy();
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(useOfflineStore.getState().enabled).toEqual(['acc']);
     } finally {
       delete (window.navigator as { storage?: unknown }).storage;
       useOfflineStore.setState({ storageBlocked: false });

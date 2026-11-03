@@ -39,7 +39,7 @@ import { useEmailStore } from '@/stores/email-store';
 import { usePolicyStore, whenPolicySettled } from '@/stores/policy-store';
 import { onBeforeSignOut, onFullSignOut } from '@/lib/sign-out-cleanup';
 import { generateMessageId } from '@/lib/jmap/client';
-import { setOfflineHooks, type OfflineClientRef, type OfflineHooks, type OfflineMethodCall, type OfflineResponse } from '@/lib/jmap/offline-hooks';
+import { SendNotStartedError, setOfflineHooks, type OfflineClientRef, type OfflineHooks, type OfflineMethodCall, type OfflineResponse } from '@/lib/jmap/offline-hooks';
 import type { SendEmailResult } from '@/lib/jmap/types';
 import { setOutboxHooks, type OutboxHooks } from './outbox-hooks';
 import {
@@ -99,7 +99,8 @@ function hasIndexedDb(): boolean {
 
 /** Offline mode is possible here at all: not in Lite, with what the store needs. */
 export function offlineSupported(): boolean {
-  if (IS_LITE || !hasIndexedDb() || useOfflineStore.getState().storageBlocked) return false;
+  if (IS_LITE || !hasIndexedDb()) return false;
+  if (useOfflineStore.getState().storageBlocked) return false;
   try {
     return typeof crypto !== 'undefined' && !!crypto.subtle && getStore().supported();
   } catch {
@@ -457,6 +458,8 @@ const outbox: OutboxHooks = {
       const file = await heldFile(account, attachment.blobId);
       if (!file) throw Object.assign(new Error('A file attached offline is no longer on this device'), { name: 'OfflineFileMissingError' });
       const { blobId } = await real.uploadBlob(file);
+      // The server went away just now, and offline mode held the file again.
+      if (isLocalBlobId(blobId)) throw new SendNotStartedError();
       out.push({ ...attachment, blobId });
     }
     return out;
@@ -814,7 +817,9 @@ export function enforcePolicy(): void {
   if (!loaded) return;
   for (const account of useOfflineStore.getState().enabled) {
     if (!policyDecided(account)) continue;
-    if (!offlineAllowed(account)) {
+    // What the organisation says, not whether this window can open the store:
+    // a blocked store says nothing against the data in it.
+    if (devicesForAccount(account).noOffline) {
       // Whoever is here now wasn't signed in to a dropped account.
       const someoneElses = isEvicted(account);
       clearHandoffs();
