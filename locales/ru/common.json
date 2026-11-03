@@ -4909,6 +4909,9 @@
     "mini_has_events": "есть события",
     "mini_week_number": "Неделя {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "Для этого изменения нужно подключение к серверу. Пока измените только это событие или повторите попытку, когда снова будете в сети."
+  },
   "advanced_search": {
     "title": "Расширенный поиск",
     "from": "От",
@@ -6362,6 +6365,12 @@
     "easy_read": "Простой язык",
     "sign_language": "Жестовый язык",
     "new_tab": "открывается в новой вкладке"
+  },
+  "pwaNotify": {
+    "action_archive": "Архивировать",
+    "action_mark_read": "Отметить прочитанным",
+    "action_reply": "Ответить",
+    "reply_placeholder": "Напишите ответ"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "Добавить в календарь",

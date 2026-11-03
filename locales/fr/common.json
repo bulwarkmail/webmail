@@ -4909,6 +4909,9 @@
     "mini_has_events": "a des événements",
     "mini_week_number": "Semaine {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "Cette modification nécessite une connexion au serveur. Modifiez seulement cet événement pour l'instant, ou réessayez une fois de nouveau en ligne."
+  },
   "advanced_search": {
     "title": "Recherche avancée",
     "from": "De",
@@ -6362,6 +6365,12 @@
     "easy_read": "Facile à lire",
     "sign_language": "Langue des signes",
     "new_tab": "s'ouvre dans un nouvel onglet"
+  },
+  "pwaNotify": {
+    "action_archive": "Archiver",
+    "action_mark_read": "Marquer comme lu",
+    "action_reply": "Répondre",
+    "reply_placeholder": "Écrire une réponse"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "Ajouter au calendrier",

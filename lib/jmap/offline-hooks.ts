@@ -40,7 +40,7 @@ export interface OfflineHooks {
    */
   serverGone(client: OfflineClientRef, error?: unknown): Promise<boolean>;
   /** The server pushed new states, for the local store to catch up. */
-  stateChange(client: OfflineClientRef, change: { changed?: Record<string, Record<string, string>> }): void;
+  stateChange?(client: OfflineClientRef, change: { changed?: Record<string, Record<string, string>> }): void;
   /** A blob kept on the device, or null. */
   blob(client: OfflineClientRef, blobId: string, accountId: string): Promise<Blob | null>;
   /** A blob the server sent, for the cache. */
@@ -53,6 +53,14 @@ export interface OfflineHooks {
    * Left out when there is no store, and searches then go to the server alone.
    */
   searchLocal?(client: OfflineClientRef, methodCalls: OfflineMethodCall[]): Promise<OfflineResponse | null>;
+  /**
+   * Real ids for stand-in ids the page still holds (lib/jmap/stand-in-ids.ts), or
+   * null for one that hasn't reached the server yet. Without it the client sends
+   * ids as they are.
+   */
+  resolveStandIns?(client: OfflineClientRef, ids: string[]): Promise<Record<string, string | null>>;
+  /** The user opened this file: the local store keeps recently opened files. */
+  fileOpened?(client: OfflineClientRef, accountId: string, id: string): void;
 }
 
 const KEY = '__bulwarkOfflineHooks';

@@ -4909,6 +4909,9 @@
     "mini_has_events": "ir notikumi",
     "mini_week_number": "{week}. nedēļa"
   },
+  "calendar_offline": {
+    "split_needs_server": "Šīm izmaiņām nepieciešams savienojums ar serveri. Pagaidām mainiet tikai šo notikumu vai mēģiniet vēlreiz, kad būsiet tiešsaistē."
+  },
   "advanced_search": {
     "title": "Izvērstā meklēšana",
     "from": "No",
@@ -6362,6 +6365,12 @@
     "easy_read": "Vieglā valoda",
     "sign_language": "Zīmju valoda",
     "new_tab": "atveras jaunā cilnē"
+  },
+  "pwaNotify": {
+    "action_archive": "Arhivēt",
+    "action_mark_read": "Atzīmēt kā izlasītu",
+    "action_reply": "Atbildēt",
+    "reply_placeholder": "Rakstiet atbildi"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "Pievienot kalendāram",

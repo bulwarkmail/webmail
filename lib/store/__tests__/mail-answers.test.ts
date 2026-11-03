@@ -283,7 +283,7 @@ describe('the rest of the mail methods', () => {
     expect(response?.methodResponses[1]).toEqual(['error', expect.objectContaining({ type: 'cannotCalculateChanges' }), 'm']);
   });
 
-  it('gives a per-call error for SearchSnippet/get and keeps the search', async () => {
+  it('answers a search with its snippets in one request', async () => {
     const server = new FakeJmapMail();
     server.addEmail({ subject: 'Findme' });
     const { engine } = engineFor(server);
@@ -293,7 +293,7 @@ describe('the rest of the mail methods', () => {
       ['SearchSnippet/get', { filter: { text: 'findme' }, '#emailIds': { resultOf: '0', name: 'Email/query', path: '/ids' } }, 'snippets'],
     ]);
     expect(response?.methodResponses[0][1].ids).toHaveLength(1);
-    expect(response?.methodResponses[1][0]).toBe('error');
+    expect(response?.methodResponses[1][0]).toBe('SearchSnippet/get');
   });
 
   it('counts keywords for Keyword/get', async () => {

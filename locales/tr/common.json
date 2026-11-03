@@ -4909,6 +4909,9 @@
     "mini_has_events": "etkinlik var",
     "mini_week_number": "{week}. hafta"
   },
+  "calendar_offline": {
+    "split_needs_server": "Bu değişiklik için sunucu bağlantısı gerekir. Şimdilik yalnızca bu etkinliği değiştirin veya yeniden çevrimiçi olduğunuzda tekrar deneyin."
+  },
   "calendar_event_notifications": {
     "someone": "Birisi",
     "invited": "{name} sizi \"{title}\" etkinliğine davet etti",
@@ -6362,6 +6365,12 @@
     "easy_read": "Kolay okunur",
     "sign_language": "İşaret dili",
     "new_tab": "yeni sekmede açılır"
+  },
+  "pwaNotify": {
+    "action_archive": "Arşivle",
+    "action_mark_read": "Okundu olarak işaretle",
+    "action_reply": "Yanıtla",
+    "reply_placeholder": "Yanıt yazın"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "Takvime ekle",

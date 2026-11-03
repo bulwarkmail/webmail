@@ -340,10 +340,22 @@ self.addEventListener("pushsubscriptionchange", (event) => {
   event.waitUntil(handlePushSubscriptionChange(event));
 });
 
+// Background Sync, thin: this worker has no login and can't reach the outbox,
+// so it tells the open tabs to flush theirs. With no tab open, the next one
+// flushes when it starts.
+self.addEventListener("sync", (event) => {
+  if (event.tag !== OUTBOX_SYNC_TAG) return;
+  event.waitUntil(tellClientsToFlushOutbox());
+});
+
 self.addEventListener("message", (event) => {
   const data = event.data || {};
   if (data.type === "client-build") {
     event.waitUntil(recordClientBuild(event.source && event.source.id, data.buildId).then(deleteStaleShellCaches));
+    return;
+  }
+  if (data.type === "client-logins") {
+    event.waitUntil(recordClientLogins(event.source && event.source.id, data.logins));
     return;
   }
   if (data.type === "offline-shell") {
@@ -489,6 +501,9 @@ async function handlePush(event) {
   // The login (cookie slot) that owns this account, so the click opens the
   // message there and not in whichever account happens to be active.
   const slot = preview && Number.isInteger(preview.slot) ? preview.slot : undefined;
+  // Which login that slot held when the message came: an action on this
+  // notification must not land on whoever signed into the slot since.
+  const login = preview && typeof preview.login === "string" ? preview.login : undefined;
 
   // Push subscription is scoped to EmailDelivery, but stragglers from the
   // older broader-types subscription, marking-as-read races and verification
@@ -524,7 +539,7 @@ async function handlePush(event) {
     // (Organisation > Devices): the route sent neither.
     title = accountLabel ? `New mail (${accountLabel})` : "New mail";
     body = unreadTotal > 1 ? `${unreadTotal} unread messages` : "You have new mail";
-    if (unreadTotal <= 1) data = { kind: "email", emailId: email.id, threadId: email.threadId, accountId, slot };
+    if (unreadTotal <= 1) data = { kind: "email", emailId: email.id, threadId: email.threadId, accountId, slot, login };
   } else if (email) {
     const sender = email.from && email.from[0];
     const senderName = (sender && sender.name) || (sender && sender.email) || "New mail";
@@ -537,7 +552,7 @@ async function handlePush(event) {
       body += "\n" + (more === 1 ? "+1 more message" : `+${more} more messages`);
     } else {
       // Exactly one unread: deep-link straight to that message on click.
-      data = { kind: "email", emailId: email.id, threadId: email.threadId, accountId, slot };
+      data = { kind: "email", emailId: email.id, threadId: email.threadId, accountId, slot, login };
     }
   } else {
     title = accountLabel ? `New mail (${accountLabel})` : "New mail";
@@ -546,7 +561,7 @@ async function handlePush(event) {
 
   // With the sound setting off, nothing rings and no quiet window starts.
   const audible = (await soundPreference()) && !(await withinQuietWindow(accountId));
-  await self.registration.showNotification(title, {
+  await showWithActions(title, {
     body,
     // Shared per-account tag: each new push replaces the account's single
     // notification rather than adding another.
@@ -590,7 +605,7 @@ async function showWithoutAlert(groupTag) {
   try {
     const existing = (await self.registration.getNotifications({ tag: groupTag }))[0];
     if (existing) {
-      await self.registration.showNotification(existing.title, {
+      await showWithActions(existing.title, {
         ...options,
         body: existing.body,
         data: existing.data,
@@ -735,7 +750,7 @@ async function handleNotificationClick(event) {
     return handleMailtoFocusNotificationClick();
   }
 
-  const targetUrl = buildClickUrl(data);
+  let targetUrl = buildClickUrl(data);
 
   const allClients = await self.clients.matchAll({
     type: "window",
@@ -749,6 +764,14 @@ async function handleNotificationClick(event) {
     } catch (_) {
       // Closed or detached client - ignore.
     }
+  }
+
+  // A button on the notification. When it can't be done from here, the click
+  // carries on below and opens the message, like a click on the body.
+  const action = notificationActionOf(event, data);
+  if (action) {
+    if (await runNotificationAction(action, data, event.reply, allClients)) return;
+    if (action === "reply") targetUrl = buildClickUrl(data, true);
   }
 
   for (const client of allClients) {
@@ -923,11 +946,12 @@ function getReusableClientScore(state) {
   return 3;
 }
 
-function buildClickUrl(data) {
+function buildClickUrl(data, reply) {
   if (!data) return `${BASE_PATH}/`;
   const params = new URLSearchParams();
   if (Number.isInteger(data.slot)) params.set("slot", String(data.slot));
   if (typeof data.accountId === "string" && data.accountId) params.set("owner", data.accountId);
+  if (reply) params.set("reply", "1");
   // Not params.size: Safari before 17 (iOS 16.4+ web push) lacks it.
   const qs = params.toString();
   const targetQuery = qs ? `?${qs}` : "";
@@ -943,4 +967,293 @@ function buildClickUrl(data) {
   // the user on the latest unread message in their Inbox rather than just the
   // app shell, so the click still feels purposeful.
   return `${BASE_PATH}/?openLatestUnread=1`;
+}
+
+// ---- Notification actions: Archive, Mark read, Reply ----
+//
+// A worker has no login. An open tab has one, so it goes first. With none, a
+// same-origin route acts with the login's context cookie (app/api/push/action).
+// That cookie goes with the browser session and holds a token only a page
+// refreshes, so the route can fail; the message then opens in the app.
+
+const NOTIFICATION_ACTIONS = ["archive", "mark-read", "reply"];
+// How long a tab has to take an action. A frozen tab doesn't answer. A tab that
+// holds the notification's login gets longer, since a busy page may still run
+// the action with its plugins; if it stays silent, the message opens and the
+// route isn't tried, which would go round them.
+const CLIENT_TAKE_MS = 1_000;
+const LOGIN_HOLDER_TAKE_MS = 3_000;
+const CLIENTS_TAKE_TOTAL_MS = 4_000;
+// How long a tab that took it has before this worker stops waiting for the outcome.
+const CLIENT_RESULT_MS = 5_000;
+const ACTION_ROUTE_DEADLINE_MS = 4_500;
+// All of the above stay inside the 10 s a browser allows openWindow and focus
+// after a notification click, so the fallback can still open the message.
+
+const OUTBOX_SYNC_TAG = "bulwark-outbox";
+
+function notificationActionPrefsKey() {
+  return `${self.location.origin}${BASE_PATH}/__push-state/actions`;
+}
+
+function pendingReplyKey() {
+  return `${self.location.origin}${BASE_PATH}/__push-state/pending-reply`;
+}
+
+function clientLoginsKey() {
+  return `${self.location.origin}${BASE_PATH}/__push-state/client-logins`;
+}
+
+async function readClientLogins() {
+  try {
+    const cache = await caches.open(PUSH_STATE_CACHE);
+    const res = await cache.match(clientLoginsKey());
+    const map = res ? await res.json() : null;
+    return map && typeof map === "object" ? map : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+/** Notes which logins an open tab holds, and forgets tabs that are gone. Kept across worker restarts. */
+async function recordClientLogins(clientId, logins) {
+  if (!clientId || !Array.isArray(logins)) return;
+  try {
+    const open = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    const openIds = new Set(open.map((c) => c.id));
+    const known = await readClientLogins();
+    const next = {};
+    for (const [id, held] of Object.entries(known)) if (openIds.has(id)) next[id] = held;
+    next[clientId] = logins.filter((login) => typeof login === "string");
+    const cache = await caches.open(PUSH_STATE_CACHE);
+    await cache.put(clientLoginsKey(), new Response(JSON.stringify(next), { headers: { "Content-Type": "application/json" } }));
+  } catch (_) {
+    // Such a tab counts as not holding the login.
+  }
+}
+
+/**
+ * What the page mirrors into this store (lib/pwa-notify/worker-state.ts): the
+ * labels in the user's language, Archive on or off, how Archive files mail,
+ * and whether an enabled plugin may veto these actions. Nothing stored: no
+ * Archive button, since the admin may have turned it off, and no route, since
+ * a plugin may be there.
+ */
+async function readNotificationActionPrefs() {
+  let stored = null;
+  try {
+    const cache = await caches.open(PUSH_STATE_CACHE);
+    const res = await cache.match(notificationActionPrefsKey());
+    stored = res ? await res.json() : null;
+  } catch (_) {
+    stored = null;
+  }
+  const labels = (stored && stored.labels) || {};
+  return {
+    archiveEnabled: !!stored && stored.archiveEnabled === true,
+    archiveMode: stored && typeof stored.archiveMode === "string" ? stored.archiveMode : "single",
+    pluginsMayVeto: !stored || stored.pluginsMayVeto !== false,
+    labels: {
+      archive: labels.archive || "Archive",
+      markRead: labels.markRead || "Mark as read",
+      reply: labels.reply || "Reply",
+      replyPlaceholder: labels.replyPlaceholder || "Write a reply",
+    },
+  };
+}
+
+function maxNotificationActions() {
+  if (typeof Notification === "undefined") return 0;
+  return Number.isInteger(Notification.maxActions) ? Notification.maxActions : 0;
+}
+
+function inlineReplySupported() {
+  return typeof NotificationEvent !== "undefined" && "reply" in NotificationEvent.prototype;
+}
+
+/** The buttons for a notification. Only one message, with its login known, gets any. */
+async function notificationActions(data) {
+  if (!data || data.kind !== "email" || !data.emailId || !data.accountId || !data.login) return [];
+  const max = maxNotificationActions();
+  if (max < 1) return [];
+  const prefs = await readNotificationActionPrefs();
+  const offered = {
+    "mark-read": { action: "mark-read", title: prefs.labels.markRead },
+    reply: inlineReplySupported()
+      ? { action: "reply", title: prefs.labels.reply, type: "text", placeholder: prefs.labels.replyPlaceholder }
+      : { action: "reply", title: prefs.labels.reply },
+  };
+  if (prefs.archiveEnabled) offered.archive = { action: "archive", title: prefs.labels.archive };
+  // Chromium allows two. Mark read goes first then: opening the message does
+  // that too, and nothing else on the toast archives or starts a reply.
+  const kept = ["archive", "reply", "mark-read"].filter((name) => offered[name]).slice(0, max);
+  return NOTIFICATION_ACTIONS.filter((name) => kept.includes(name)).map((name) => offered[name]);
+}
+
+/** A notification must show, whatever a browser thinks of its buttons. */
+async function showWithActions(title, options) {
+  const actions = await notificationActions(options.data);
+  if (actions.length > 0) {
+    try {
+      await self.registration.showNotification(title, { ...options, actions });
+      return;
+    } catch (_) {
+      // Shown without buttons below.
+    }
+  }
+  await self.registration.showNotification(title, options);
+}
+
+function notificationActionOf(event, data) {
+  if (!NOTIFICATION_ACTIONS.includes(event.action)) return null;
+  return data.kind === "email" && data.emailId && data.accountId ? event.action : null;
+}
+
+/** Asks one tab. Resolves "done", "failed" (it tried), "declined" (it didn't take it) or "silent" (no answer). */
+function askClient(client, message, takeMs) {
+  return new Promise((resolve) => {
+    if (typeof MessageChannel !== "function") {
+      resolve("declined");
+      return;
+    }
+    const channel = new MessageChannel();
+    let timer = null;
+    const finish = (result) => {
+      clearTimeout(timer);
+      channel.port1.onmessage = null;
+      resolve(result);
+    };
+    timer = setTimeout(() => finish("silent"), takeMs);
+    channel.port1.onmessage = (answer) => {
+      const status = answer.data && answer.data.status;
+      if (status === "accepted") {
+        // It's on it. A slow server shouldn't send the action round twice.
+        clearTimeout(timer);
+        timer = setTimeout(() => finish("done"), CLIENT_RESULT_MS);
+        return;
+      }
+      finish(status === "done" || status === "failed" ? status : "declined");
+    };
+    try {
+      client.postMessage(message, [channel.port2]);
+    } catch (_) {
+      finish("declined");
+    }
+  });
+}
+
+/** The first open tab that takes the action, the one in front first. */
+async function askOpenClients(message, allClients) {
+  const score = (client) => (client.focused ? 0 : client.visibilityState === "visible" ? 1 : 2);
+  const ordered = allClients
+    .filter((client) => !client.frameType || client.frameType === "top-level")
+    .sort((a, b) => score(a) - score(b));
+  const held = await readClientLogins();
+  const holdsLogin = (client) => Array.isArray(held[client.id]) && held[client.id].includes(message.login);
+  const giveUpAt = Date.now() + CLIENTS_TAKE_TOTAL_MS;
+  let silentHolder = false;
+  for (const client of ordered) {
+    if (Date.now() >= giveUpAt) {
+      silentHolder = silentHolder || holdsLogin(client);
+      continue;
+    }
+    const holder = holdsLogin(client);
+    const result = await askClient(client, message, holder ? LOGIN_HOLDER_TAKE_MS : CLIENT_TAKE_MS);
+    if (result === "silent") silentHolder = silentHolder || holder;
+    else if (result !== "declined") return { result, client };
+  }
+  // A silent tab with this login may have plugins that would stop the action.
+  return { result: silentHolder ? "failed" : "declined", client: null };
+}
+
+/** Keeps a typed reply for the page the click is about to open; it's not for a URL. */
+async function keepPendingReply(emailId, text) {
+  try {
+    const cache = await caches.open(PUSH_STATE_CACHE);
+    await cache.put(
+      pendingReplyKey(),
+      new Response(JSON.stringify({ emailId, text, at: Date.now() }), {
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+  } catch (_) {
+    // The composer opens empty.
+  }
+}
+
+async function postNotificationAction(action, data) {
+  const prefs = await readNotificationActionPrefs();
+  if (action === "archive" && !prefs.archiveEnabled) return false;
+  // Plugins run in pages. One that may stop or watch this action can't from
+  // the route, so the app opens instead.
+  if (prefs.pluginsMayVeto) return false;
+  const body = { action, accountId: data.accountId, emailId: data.emailId, login: data.login };
+  if (action === "archive") {
+    body.archiveMode = prefs.archiveMode;
+    // Year and month folders go by the date the user sees.
+    if (typeof Intl !== "undefined") body.timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  }
+  const controller = typeof AbortController === "function" ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), ACTION_ROUTE_DEADLINE_MS) : null;
+  try {
+    const res = await fetch(`${BASE_PATH}/api/push/action`, {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      ...(controller ? { signal: controller.signal } : {}),
+    });
+    return res.ok;
+  } catch (_) {
+    return false;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+/** True when the action is done and nothing has to open. */
+async function runNotificationAction(action, data, reply, allClients) {
+  const text = action === "reply" && typeof reply === "string" ? reply.trim() : "";
+  const { result, client } = await askOpenClients({
+    kind: "notification-action",
+    action,
+    emailId: data.emailId,
+    threadId: data.threadId,
+    accountId: data.accountId,
+    slot: data.slot,
+    login: data.login,
+    // A frozen tab that thaws later must not act on a click long since handled.
+    at: Date.now(),
+    ...(text ? { text } : {}),
+  }, allClients);
+  if (result === "done") {
+    if (action === "reply" && "focus" in client) {
+      try {
+        await client.focus();
+      } catch (_) {
+        // The composer is open in that tab; focusing can be blocked by the browser.
+      }
+    }
+    return true;
+  }
+  if (action === "reply") {
+    if (text) await keepPendingReply(data.emailId, text);
+    return false;
+  }
+  // A tab with this login tried and failed, or stayed silent: the route won't
+  // do better and would go round its plugins.
+  if (result === "failed") return false;
+  return postNotificationAction(action, data);
+}
+
+async function tellClientsToFlushOutbox() {
+  const allClients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+  for (const client of allClients) {
+    try {
+      client.postMessage({ kind: "outbox-flush" });
+    } catch (_) {
+      // Closed or detached client - ignore.
+    }
+  }
 }

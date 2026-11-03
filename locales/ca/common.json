@@ -4909,6 +4909,9 @@
     "mini_has_events": "té esdeveniments",
     "mini_week_number": "Setmana {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "Aquest canvi necessita connexió amb el servidor. Canvia només aquest esdeveniment de moment, o torna-ho a provar quan tornis a estar connectat."
+  },
   "calendar_event_notifications": {
     "someone": "Algú",
     "invited": "{name} t'ha convidat a \"{title}\"",
@@ -6362,6 +6365,12 @@
     "easy_read": "Lectura fàcil",
     "sign_language": "Llengua de signes",
     "new_tab": "s'obre en una pestanya nova"
+  },
+  "pwaNotify": {
+    "action_archive": "Arxiva",
+    "action_mark_read": "Marca com a llegit",
+    "action_reply": "Respon",
+    "reply_placeholder": "Escriu una resposta"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "Afegeix al calendari",

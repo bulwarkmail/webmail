@@ -14,6 +14,7 @@ import { forwardedClientHeaders, loginClientAddress } from '@/lib/auth/client-ad
 import { DisallowedUrlError } from '@/lib/security/url-guard';
 import { UPSTREAM_JSON_MAX_BYTES, UpstreamBodyTooLargeError, readJsonCapped } from '@/lib/security/capped-body';
 import { serverDevicePolicy } from '@/lib/admin/server-device-policy';
+import { loginFingerprint } from '@/lib/pwa-notify/login-fingerprint';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -359,6 +360,9 @@ export async function GET(request: NextRequest) {
       unreadTotal,
       ...(redacted ? { redacted: true } : {}),
       ...(target.slot !== undefined ? { slot: target.slot } : {}),
+      // For the notification's buttons, which must not land on whoever signs
+      // into this slot later (app/api/push/action).
+      ...(target.slot !== undefined && email ? { login: await loginFingerprint(target.serverUrl, target.username) } : {}),
     }, {
       headers: {
         // SW already gates on its own logic - don't let push events get

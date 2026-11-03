@@ -4909,6 +4909,9 @@
     "mini_has_events": "má udalosti",
     "mini_week_number": "Týždeň {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "Táto zmena vyžaduje pripojenie k serveru. Zatiaľ zmeňte iba túto udalosť alebo to skúste znova, keď budete online."
+  },
   "calendar_event_notifications": {
     "someone": "Niekto",
     "invited": "{name} vás pozval(a) na „{title}“",
@@ -6362,6 +6365,12 @@
     "easy_read": "Ľahké čítanie",
     "sign_language": "Posunkový jazyk",
     "new_tab": "otvorí sa na novej karte"
+  },
+  "pwaNotify": {
+    "action_archive": "Archivovať",
+    "action_mark_read": "Označiť ako prečítané",
+    "action_reply": "Odpovedať",
+    "reply_placeholder": "Napíšte odpoveď"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "Pridať do kalendára",

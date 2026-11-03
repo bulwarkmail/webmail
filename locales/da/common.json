@@ -4909,6 +4909,9 @@
     "mini_has_events": "har begivenheder",
     "mini_week_number": "Uge {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "Denne ændring kræver forbindelse til serveren. Ret kun denne begivenhed for nu, eller prøv igen, når du er online."
+  },
   "calendar_event_notifications": {
     "someone": "Nogen",
     "invited": "{name} har inviteret dig til \"{title}\"",
@@ -6362,6 +6365,12 @@
     "easy_read": "Let læst",
     "sign_language": "Tegnsprog",
     "new_tab": "åbner i en ny fane"
+  },
+  "pwaNotify": {
+    "action_archive": "Arkivér",
+    "action_mark_read": "Markér som læst",
+    "action_reply": "Svar",
+    "reply_placeholder": "Skriv et svar"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "Tilføj til kalender",

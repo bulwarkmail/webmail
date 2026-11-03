@@ -155,6 +155,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   // The server's reason for a refused change, where the user can act on it.
   const describeError = useCalendarErrorMessage();
   const tSidebar = useTranslations("sidebar");
+  const tOffline = useTranslations("calendar_offline");
   useDocumentTitle(tSidebar("calendar"));
   const skeletonLabels = useSkeletonLabels();
   const tWebcalAction = useTranslations("calendar.webcal_action");
@@ -1446,9 +1447,13 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         debug.error("Failed to refresh calendar after scope operation");
       }
     } catch (error) {
+      if (error instanceof Error && error.name === "SeriesSplitNeedsServerError") {
+        toast.error(tOffline("split_needs_server"));
+        return;
+      }
       toast.error(describeError(error, t(type === "delete" ? "notifications.event_delete_error" : "notifications.event_error")));
     }
-  }, [client, pendingScopeAction, updateEvent, deleteEvent, createEvent, findMasterEvent, currentUserEmails, resolveContactName, refetchCurrentRange, submitRsvp, describeError, t]);
+  }, [client, pendingScopeAction, updateEvent, deleteEvent, createEvent, findMasterEvent, currentUserEmails, resolveContactName, refetchCurrentRange, submitRsvp, describeError, t, tOffline]);
 
   // A drag or resize. A series asks which occurrences it covers, as the
   // editor does; one event moves at once and can be moved back.

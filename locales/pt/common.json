@@ -4909,6 +4909,9 @@
     "mini_has_events": "tem eventos",
     "mini_week_number": "Semana {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "Esta alteração precisa de ligação ao servidor. Altere apenas este evento por agora, ou tente de novo quando voltar a estar online."
+  },
   "advanced_search": {
     "title": "Pesquisa avançada",
     "from": "De",
@@ -6362,6 +6365,12 @@
     "easy_read": "Leitura fácil",
     "sign_language": "Língua de sinais",
     "new_tab": "abre em uma nova aba"
+  },
+  "pwaNotify": {
+    "action_archive": "Arquivar",
+    "action_mark_read": "Marcar como lido",
+    "action_reply": "Responder",
+    "reply_placeholder": "Escreva uma resposta"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "Adicionar ao calendário",

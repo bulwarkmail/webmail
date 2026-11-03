@@ -4909,6 +4909,9 @@
     "mini_has_events": "رویداد دارد",
     "mini_week_number": "هفته {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "این تغییر به اتصال به سرور نیاز دارد. فعلاً فقط همین رویداد را تغییر دهید، یا پس از برقراری اتصال دوباره تلاش کنید."
+  },
   "calendar_event_notifications": {
     "someone": "کسی",
     "invited": "{name} شما را به «{title}» دعوت کرد",
@@ -6362,6 +6365,12 @@
     "easy_read": "متن آسان‌خوان",
     "sign_language": "زبان اشاره",
     "new_tab": "در زبانه‌ای تازه باز می‌شود"
+  },
+  "pwaNotify": {
+    "action_archive": "بایگانی",
+    "action_mark_read": "علامت‌گذاری خوانده شده",
+    "action_reply": "پاسخ",
+    "reply_placeholder": "پاسخ بنویسید"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "افزودن به تقویم",

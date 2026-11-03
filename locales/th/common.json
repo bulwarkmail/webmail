@@ -4105,6 +4105,9 @@
     "mini_has_events": "มีกิจกรรม",
     "mini_week_number": "สัปดาห์ที่ {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "การเปลี่ยนแปลงนี้ต้องเชื่อมต่อกับเซิร์ฟเวอร์ ตอนนี้เปลี่ยนเฉพาะกิจกรรมนี้ หรือลองอีกครั้งเมื่อกลับมาออนไลน์"
+  },
   "settings": {
     "title": "การตั้งค่า",
     "org_locked": "กำหนดโดยองค์กรของคุณ",
@@ -6370,6 +6373,12 @@
     "easy_read": "ภาษาที่อ่านง่าย",
     "sign_language": "ภาษามือ",
     "new_tab": "เปิดในแท็บใหม่"
+  },
+  "pwaNotify": {
+    "action_archive": "เก็บถาวร",
+    "action_mark_read": "ทำเครื่องหมายว่าอ่านแล้ว",
+    "action_reply": "ตอบกลับ",
+    "reply_placeholder": "เขียนคำตอบ"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "เพิ่มลงในปฏิทิน",

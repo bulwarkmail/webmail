@@ -4909,6 +4909,9 @@
     "mini_has_events": "har hendelser",
     "mini_week_number": "Uke {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "Denne endringen krever tilkobling til serveren. Endre bare denne hendelsen for nå, eller prøv igjen når du er tilkoblet."
+  },
   "calendar_event_notifications": {
     "someone": "Noen",
     "invited": "{name} har invitert deg til «{title}»",
@@ -6362,6 +6365,12 @@
     "easy_read": "Lettlest",
     "sign_language": "Tegnspråk",
     "new_tab": "åpnes i en ny fane"
+  },
+  "pwaNotify": {
+    "action_archive": "Arkiver",
+    "action_mark_read": "Merk som lest",
+    "action_reply": "Svar",
+    "reply_placeholder": "Skriv et svar"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "Legg til i kalenderen",

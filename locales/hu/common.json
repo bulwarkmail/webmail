@@ -4909,6 +4909,9 @@
     "mini_has_events": "vannak események",
     "mini_week_number": "{week}. hét"
   },
+  "calendar_offline": {
+    "split_needs_server": "Ehhez a módosításhoz kapcsolat kell a kiszolgálóval. Egyelőre csak ezt az eseményt módosítsa, vagy próbálja újra, ha ismét online lesz."
+  },
   "calendar_event_notifications": {
     "someone": "Valaki",
     "invited": "{name} meghívott a(z) „{title}” eseményre",
@@ -6362,6 +6365,12 @@
     "easy_read": "Könnyen érthető",
     "sign_language": "Jelnyelv",
     "new_tab": "új lapon nyílik meg"
+  },
+  "pwaNotify": {
+    "action_archive": "Archiválás",
+    "action_mark_read": "Megjelölés olvasottként",
+    "action_reply": "Válasz",
+    "reply_placeholder": "Válasz írása"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "Hozzáadás a naptárhoz",

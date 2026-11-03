@@ -4909,6 +4909,9 @@
     "mini_has_events": "일정 있음",
     "mini_week_number": "{week}주차"
   },
+  "calendar_offline": {
+    "split_needs_server": "이 변경에는 서버 연결이 필요합니다. 지금은 이 일정만 변경하거나 다시 온라인이 되면 다시 시도하세요."
+  },
   "advanced_search": {
     "title": "상세 검색",
     "from": "보낸 사람",
@@ -6362,6 +6365,12 @@
     "easy_read": "쉬운 글",
     "sign_language": "수어",
     "new_tab": "새 탭에서 열림"
+  },
+  "pwaNotify": {
+    "action_archive": "보관",
+    "action_mark_read": "읽은 상태로 표시",
+    "action_reply": "답장",
+    "reply_placeholder": "답장 쓰기"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "캘린더에 추가",

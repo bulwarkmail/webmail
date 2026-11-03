@@ -4909,6 +4909,9 @@
     "mini_has_events": "فيه أحداث",
     "mini_week_number": "الأسبوع {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "يحتاج هذا التغيير إلى اتصال بالخادم. غيّر هذا الحدث فقط الآن، أو حاول مرة أخرى عند عودة الاتصال."
+  },
   "calendar_event_notifications": {
     "someone": "شخص ما",
     "invited": "دعاك {name} إلى \"{title}\"",
@@ -6362,6 +6365,12 @@
     "easy_read": "قراءة سهلة",
     "sign_language": "لغة الإشارة",
     "new_tab": "يُفتح في علامة تبويب جديدة"
+  },
+  "pwaNotify": {
+    "action_archive": "أرشفة",
+    "action_mark_read": "تمييز كمقروءة",
+    "action_reply": "رد",
+    "reply_placeholder": "اكتب ردًا"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "إضافة إلى التقويم",

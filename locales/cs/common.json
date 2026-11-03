@@ -4909,6 +4909,9 @@
     "mini_has_events": "má události",
     "mini_week_number": "Týden {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "Tato změna vyžaduje připojení k serveru. Prozatím změňte jen tuto událost, nebo to zkuste znovu po obnovení připojení."
+  },
   "advanced_search": {
     "title": "Pokročilé hledání",
     "from": "Od",
@@ -6362,6 +6365,12 @@
     "easy_read": "Snadné čtení",
     "sign_language": "Znakový jazyk",
     "new_tab": "otevře se na nové kartě"
+  },
+  "pwaNotify": {
+    "action_archive": "Archivovat",
+    "action_mark_read": "Označit jako přečtené",
+    "action_reply": "Odpovědět",
+    "reply_placeholder": "Napište odpověď"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "Přidat do kalendáře",

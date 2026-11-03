@@ -94,6 +94,11 @@ export interface SearchRequestOptions {
    * where the list must not wait for the highlighting.
    */
   deferSnippets?: boolean;
+  /**
+   * For the search palette. It searches on every few keystrokes, so it keeps its
+   * paging apart from the mail list's, and waits less for the local store.
+   */
+  palette?: boolean;
 }
 
 export interface SearchEmailsResult {
@@ -635,6 +640,8 @@ export interface IJMAPClient {
     options?: CalendarEventUpdateOptions,
   ): Promise<void>;
   deleteCalendarEvent(eventId: string, sendSchedulingMessages?: boolean, targetAccountId?: string): Promise<void>;
+  /** Whether the last request was answered from this device instead of the server. */
+  answeredFromDevice?(): boolean;
   batchDeleteCalendarEvents(eventIds: string[], targetAccountId?: string): Promise<{ destroyed: string[]; notDestroyed: Record<string, { type?: string; description?: string }> }>;
   queryCalendarEvents(filter: CalendarEventFilter, sort?: Array<{ property: string; isAscending: boolean }>, limit?: number, targetAccountId?: string, options?: CalendarQueryOptions): Promise<CalendarEvent[]>;
   queryAllCalendarEvents(filter: CalendarEventFilter, sort?: Array<{ property: string; isAscending: boolean }>, limit?: number, options?: CalendarQueryOptions): Promise<CalendarEvent[]>;

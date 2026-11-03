@@ -4909,6 +4909,9 @@
     "mini_has_events": "有事件",
     "mini_week_number": "第 {week} 周"
   },
+  "calendar_offline": {
+    "split_needs_server": "此更改需要连接到服务器。请暂时只更改此日程，或在恢复联网后重试。"
+  },
   "advanced_search": {
     "title": "高级搜索",
     "from": "发件人",
@@ -6362,6 +6365,12 @@
     "easy_read": "易读版",
     "sign_language": "手语",
     "new_tab": "在新标签页中打开"
+  },
+  "pwaNotify": {
+    "action_archive": "归档",
+    "action_mark_read": "标记为已读",
+    "action_reply": "回复",
+    "reply_placeholder": "撰写回复"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "添加到日历",

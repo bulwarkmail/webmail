@@ -142,6 +142,9 @@ import { usePluginStore } from "@/stores/plugin-store";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
 import { canDownload } from "@/lib/device-policy";
 import { consumePendingMailto, subscribeToPendingMailto } from "@/lib/protocol-handlers/session";
+import { setNotificationReplyOpener } from "@/lib/pwa-notify/page-actions";
+import { requestTabReply } from "@/lib/pwa-notify/tab-reply";
+import { consumePendingReplyText } from "@/lib/pwa-notify/worker-state";
 import { INTERNAL_MAILTO_EVENT, type ParsedMailto } from "@/lib/protocol-handlers/mailto";
 import { PLUGIN_REPLY_EVENT, type PluginReplyRequest } from "@/lib/plugin-sandbox/host-api-compose";
 import { onOpenEmail, type OpenEmailHandler, type OpenEmailOutcome } from "@/lib/plugin-sandbox/open-email";
@@ -171,7 +174,7 @@ import {
   resolveFolderRef,
   type MailDeepLink,
 } from "@/lib/deep-links";
-import { consumePendingDeepLink, subscribePendingDeepLink } from "@/lib/deep-link-handoff";
+import { consumePendingDeepLinkEntry, subscribePendingDeepLink } from "@/lib/deep-link-handoff";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import type { QuoteHeader } from "@/lib/plugin-types";
 import { initialLinkSearch, useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
@@ -257,6 +260,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const [showComposer, setShowComposer] = useState(false);
   const [composerMode, setComposerMode] = useState<'compose' | 'reply' | 'replyAll' | 'forward'>('compose');
   const [composerDraftText, setComposerDraftText] = useState("");
+  // A notification's Reply, waiting for its message to be the open one.
+  const [pendingNotificationReply, setPendingNotificationReply] = useState<{ emailId: string; text: string } | null>(null);
   const [pendingDraft, setPendingDraft] = useState<ComposerDraftData | null>(null);
   const [composerSessionId, setComposerSessionId] = useState(0);
   // Fields a plugin filled in through onBeforeCompose for the composer about
@@ -1768,7 +1773,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
     }
   };
-  const applyMailDeepLink = async (link: MailDeepLink, opts?: { onLoad?: boolean }) => {
+  const applyMailDeepLink = async (link: MailDeepLink, opts?: { onLoad?: boolean; replyText?: string }) => {
     // The folder list before an account switch, if one happened: until the
     // new mailbox's folders arrive the store still holds these (or nothing).
     let switchedFrom: Mailbox[] | null = null;
@@ -1842,6 +1847,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         // A shared account's message is fetched from that account through
         // the active login (#1351).
         const loginId = link.ownerAccountId ? useAuthStore.getState().activeAccountId ?? undefined : undefined;
+        // A notification's Reply: the tab opens its composer once it has the message.
+        if (link.reply) requestTabReply(link.id, opts?.replyText ?? await consumePendingReplyText(link.id));
         useProTabStore.getState().openEmailTab({
           accountId: link.ownerAccountId ?? '',
           ...(loginId ? { clientAccountId: loginId } : {}),
@@ -1867,6 +1874,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         }
         if (isMobile) setActiveView('viewer');
         if (isTablet) setTabletListVisible(false);
+        if (link.reply) {
+          // A notification's Reply. The branch above may have skipped
+          // selecting, and the reply has to wait for the message to be open.
+          selectEmail(email);
+          setPendingNotificationReply({ emailId: email.id, text: opts?.replyText ?? await consumePendingReplyText(email.id) });
+        }
       } finally {
         setLoadingEmail(false);
       }
@@ -1921,8 +1934,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // briefly and must not steal the link parked for the Pro one.
   useEffect(() => {
     if (!isEmbedded) return;
-    return subscribePendingDeepLink('mail', (segments) => {
-      const link = parseMailPath(segments, new URLSearchParams(window.location.search));
+    return subscribePendingDeepLink('mail', (segments, search) => {
+      const link = parseMailPath(segments, new URLSearchParams(search ?? window.location.search));
       if (link) void applyMailDeepLinkRef.current(link);
     });
   }, [isEmbedded]);
@@ -1973,10 +1986,13 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     }
     if (!initialMailLoadDone) return;
 
+    // Inside the Pro shell the route is /pro, so the link arrives through the
+    // handoff the redirect parked it in rather than as route params. Its query
+    // comes with it: the address bar may have none left by the first render.
+    const parked = linkSegments ? null : consumePendingDeepLinkEntry('mail');
+    if (parked?.search) initialSearchRef.current = parked.search;
     const params = new URLSearchParams(initialSearchRef.current ?? window.location.search);
-    // Inside the Pro shell the route is /pro, so the segments arrive through
-    // the handoff the redirect parked them in rather than as route params.
-    const segments = linkSegments ?? consumePendingDeepLink('mail') ?? [];
+    const segments = linkSegments ?? parked?.segments ?? [];
     const link = parseMailPath(segments, params);
     const openLatestUnread = params.get('openLatestUnread') === '1';
 
@@ -2762,6 +2778,29 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     };
     window.addEventListener(PLUGIN_REPLY_EVENT, onPluginReply);
     return () => window.removeEventListener(PLUGIN_REPLY_EVENT, onPluginReply);
+  }, []);
+
+  // A notification's Reply, from a `?reply=1` link or from the service worker
+  // when this tab is open. Both come through applyMailDeepLink and end here,
+  // once the message is the open one.
+  useEffect(() => {
+    if (!pendingNotificationReply || selectedEmail?.id !== pendingNotificationReply.emailId) return;
+    setPendingNotificationReply(null);
+    void pluginReplyRef.current.handleReply(pendingNotificationReply.text);
+  }, [pendingNotificationReply, selectedEmail?.id]);
+  const composerOpenRef = useRef(showComposer);
+  composerOpenRef.current = showComposer;
+  useEffect(() => {
+    return setNotificationReplyOpener(({ emailId, accountId, slot, text }) => {
+      const open = () => void applyMailDeepLinkRef.current(
+        { kind: 'message', id: emailId, slot, ownerAccountId: accountId, reply: true },
+        { replyText: text ?? '' },
+      );
+      // A live composer's text goes through its own "Save or discard?" first.
+      const requestClose = composerRequestCloseRef.current;
+      if (composerOpenRef.current && requestClose) requestClose(open);
+      else open();
+    });
   }, []);
 
   // A plugin opening a message (api.ui.openEmail), as a click on a search

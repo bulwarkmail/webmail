@@ -4909,6 +4909,9 @@
     "mini_has_events": "イベントあり",
     "mini_week_number": "第{week}週"
   },
+  "calendar_offline": {
+    "split_needs_server": "この変更にはサーバーへの接続が必要です。今はこの予定だけを変更するか、オンラインに戻ってからもう一度お試しください。"
+  },
   "advanced_search": {
     "title": "詳細検索",
     "from": "差出人",
@@ -6362,6 +6365,12 @@
     "easy_read": "わかりやすい版",
     "sign_language": "手話",
     "new_tab": "新しいタブで開きます"
+  },
+  "pwaNotify": {
+    "action_archive": "アーカイブ",
+    "action_mark_read": "既読にする",
+    "action_reply": "返信",
+    "reply_placeholder": "返信を入力"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "カレンダーに追加",

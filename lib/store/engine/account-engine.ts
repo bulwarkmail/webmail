@@ -257,7 +257,7 @@ export class AccountEngine {
     const call = this.calls.get(name);
     if (!call) throw new Error(`Unknown store call ${name}`);
     try {
-      return await call(this.storeContext(), params as never);
+      return await call(this.syncContext(), params as never);
     } catch (error) {
       if (isStorageFailure(error)) this.noteStorageFailure(error);
       throw error;

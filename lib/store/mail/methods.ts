@@ -8,13 +8,11 @@ import { MethodError, type MethodContext, type MethodHandler, type MethodResult 
 import { listObjects } from '../engine/core-schema';
 import type { SqlValue } from '../storage';
 import { headerValue, parseHeaderProperty, type RawHeader } from './headers';
-import { textCondition, type TextField } from './search';
+import { limitTextConditions, searchSnippetGet, textCondition, TEXT_FIELDS, type TextField } from './search';
 
 type Filter = Record<string, unknown>;
 
 interface Sql { sql: string; params: SqlValue[] }
-
-const TEXT_FIELDS: readonly TextField[] = ['text', 'subject', 'from', 'to', 'body'];
 
 function jmapOf(ctx: MethodContext, args: Record<string, unknown>): string {
   return (args.accountId as string | undefined) ?? ctx.defaultJmap;
@@ -92,14 +90,6 @@ function filterSql(filter: Filter, jmap: string, drivenBy: string | null = null,
       case 'id':
         conditions.push(`e.id IN (${(value as string[]).map(() => '?').join(',') || "''"})`);
         params.push(...(value as string[]).map(String));
-        break;
-      case 'cc':
-        conditions.push("EXISTS (SELECT 1 FROM json_each(e.json, '$.cc') a WHERE a.value LIKE ? ESCAPE '\\')");
-        params.push(likeTerm(value));
-        break;
-      case 'bcc':
-        conditions.push("EXISTS (SELECT 1 FROM email_body b, json_each(b.json, '$.bcc') a WHERE b.email_rowid = e.rowid AND a.value LIKE ? ESCAPE '\\')");
-        params.push(likeTerm(value));
         break;
       case 'header': {
         // Stalwart finds nothing for this on either version, plugins may still
@@ -296,7 +286,7 @@ function keywordOrderedPage(
 
 const emailQuery: MethodHandler = (ctx, args) => {
   const jmap = jmapOf(ctx, args);
-  const filter = (args.filter ?? undefined) as Filter | undefined;
+  const filter = limitTextConditions((args.filter ?? undefined) as Filter | undefined);
   if (args.anchor !== undefined) throw new MethodError('unsupportedFilter', 'anchor needs the server');
   const box = drivingMailbox(filter);
   const where = filter ? filterSql(filter, jmap, box) : { sql: '1', params: [] };
@@ -544,4 +534,5 @@ export const MAIL_METHODS: Readonly<Record<string, MethodHandler>> = {
   'Identity/get': (ctx, args) => objectGet(ctx, args, 'Identity', 'Identities'),
   'Quota/get': (ctx, args) => objectGet(ctx, args, 'Quota', 'Quotas'),
   'Keyword/get': keywordGet,
+  'SearchSnippet/get': searchSnippetGet,
 };

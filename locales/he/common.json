@@ -4828,6 +4828,9 @@
     "mini_has_events": "יש אירועים",
     "mini_week_number": "שבוע {week}"
   },
+  "calendar_offline": {
+    "split_needs_server": "שינוי זה דורש חיבור לשרת. שנו כרגע רק את האירוע הזה, או נסו שוב כשהחיבור יחזור."
+  },
   "advanced_search": {
     "title": "חיפוש מתקדם",
     "from": "מ",
@@ -6363,6 +6366,12 @@
     "easy_read": "שפה פשוטה",
     "sign_language": "שפת סימנים",
     "new_tab": "נפתח בכרטיסייה חדשה"
+  },
+  "pwaNotify": {
+    "action_archive": "ארכיון",
+    "action_mark_read": "סמן כנקרא",
+    "action_reply": "השב",
+    "reply_placeholder": "כתיבת תשובה"
   },
   "structured_mail_calendar": {
     "add_to_calendar": "הוסף ליומן",
