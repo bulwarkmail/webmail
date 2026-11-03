@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { ArrowLeft, ChevronRight, KeyRound, LogOut, Search, Shield, X } from '@/components/icons';
@@ -62,6 +63,15 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
   const [pendingApprovals, setPendingApprovals] = useState(0);
   const [pendingSection, setPendingSection] = useState<{ page: AdminPageId; id: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  // The two layouts are different trees, so a page drawn inside them would be
+  // remounted when the window crosses the breakpoint (a tablet turned round)
+  // and lose what the admin had typed. It lives in one element instead, which
+  // moves into whichever layout is showing. The portal comes after the layout
+  // so the element is in the document before the page's effects run.
+  const [pageHost] = useState(() => (typeof document === 'undefined' ? null : document.createElement('div')));
+  const pageSlot = useCallback((slot: HTMLDivElement | null) => {
+    if (slot && pageHost) slot.appendChild(pageHost);
+  }, [pageHost]);
 
   const onChangePassword = pathname === '/admin/change-password';
   const activePage: AdminPageId | null = location.page ?? (isDesktop && !onChangePassword ? 'dashboard' : null);
@@ -257,8 +267,10 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
     );
   }
 
+  const showIndex = location.page === null && !onChangePassword;
+  const page = pageHost && (isDesktop || !showIndex) ? createPortal(children, pageHost) : null;
+
   if (!isDesktop) {
-    const showIndex = location.page === null && !onChangePassword;
     const title = onChangePassword ? 'Change password' : activeDef?.label ?? 'Admin';
     const backHref = location.detail ? adminPath(location.page) : '/admin';
     return (
@@ -346,7 +358,7 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
             ) : (
               <div className="p-4 pb-6">
                 {readOnlyBanner}
-                {children}
+                <div ref={pageSlot} />
               </div>
             )}
           </div>
@@ -355,6 +367,7 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
 
           <NavigationRail orientation="horizontal" adminActive />
         </div>
+        {page}
       </AdminShellContext.Provider>
     );
   }
@@ -445,12 +458,13 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
           <div ref={scrollRef} className="flex-1 overflow-y-auto">
             <div className="mx-auto max-w-3xl px-6 py-6">
               {readOnlyBanner}
-              {children}
+              <div ref={pageSlot} />
             </div>
           </div>
           <div ref={setSaveBarHost} className="shrink-0" />
         </main>
       </div>
+      {page}
     </AdminShellContext.Provider>
   );
 }
