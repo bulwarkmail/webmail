@@ -9,7 +9,7 @@ const SW_SOURCE = readFileSync(join(process.cwd(), 'public', 'sw.js'), 'utf8');
 type Preview = Record<string, unknown> | null;
 type Shown = { title: string; body?: unknown; data?: Record<string, unknown>; tag: string; options: Record<string, unknown>; close: () => void };
 
-function loadWorker(preview: (url: URL) => Preview, extra: { clients?: unknown[]; globals?: Record<string, unknown>; prefs?: unknown; quiet?: Record<string, boolean>; openWindow?: (url: string) => Promise<unknown> } = {}) {
+function loadWorker(preview: (url: URL) => Preview, extra: { clients?: unknown[]; globals?: Record<string, unknown>; prefs?: unknown; quiet?: Record<string, boolean>; openWindow?: (url: string) => Promise<unknown>; registration?: Record<string, unknown> } = {}) {
   const listeners = new Map<string, (event: unknown) => void>();
   const shade = new Map<string, Shown>();
   const previews: URL[] = [];
@@ -27,6 +27,7 @@ function loadWorker(preview: (url: URL) => Preview, extra: { clients?: unknown[]
         shade.set(tag, { title, body: options.body, data: options.data as Record<string, unknown>, tag, options, close: () => shade.delete(tag) });
       },
       getNotifications: async (filter?: { tag?: string }) => [...shade.values()].filter((n) => !filter?.tag || n.tag === filter.tag),
+      ...extra.registration,
     },
   };
   const caches = {
@@ -258,6 +259,39 @@ describe('which window a click uses', () => {
     await clickOn(w);
     expect(popout.navigate).not.toHaveBeenCalled();
     expect(openWindow).toHaveBeenCalledWith('/mail/message/e1?slot=0&owner=a');
+  });
+});
+
+describe('nothing new to say', () => {
+  it('removes only what it showed itself', async () => {
+    const { push, shade } = loadWorker(() => ({ unreadTotal: 0, email: null }));
+    await push({ kind: 'jmap-state-change', accountId: 'a', changed: { a: { EmailDelivery: 's' } } });
+    expect(shade.size).toBe(0);
+  });
+
+  it('still shows something when the browser cannot list its notifications', async () => {
+    const shown: string[] = [];
+    const w = loadWorker(() => ({ unreadTotal: 0, email: null }), {
+      registration: {
+        showNotification: async (title: string) => { shown.push(title); },
+        getNotifications: async () => { throw new Error('nope'); },
+      },
+    });
+    await w.push({ kind: 'jmap-state-change', accountId: 'a', changed: { a: { EmailDelivery: 's' } } });
+    expect(shown).toHaveLength(1);
+  });
+
+  it('uses its own tag, so it can never replace a real notification', async () => {
+    const tags: string[] = [];
+    const w = loadWorker(() => ({ unreadTotal: 0, email: null }), {
+      registration: {
+        showNotification: async (_title: string, options: { tag: string }) => { tags.push(options.tag); },
+        getNotifications: async () => [],
+      },
+    });
+    await w.push({ kind: 'jmap-state-change', accountId: 'a', changed: { a: { EmailDelivery: 's' } } });
+    expect(tags).toHaveLength(1);
+    expect(tags[0]).not.toBe('bulwark-mail:a');
   });
 });
 

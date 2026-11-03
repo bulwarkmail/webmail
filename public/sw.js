@@ -803,24 +803,32 @@ const PREVIEW_DEADLINE_MS = 10_000;
  */
 async function showWithoutAlert(groupTag) {
   const options = {
-    tag: groupTag,
     icon: `${BASE_PATH}/api/pwa-icon/192`,
     badge: `${BASE_PATH}/api/pwa-icon/192`,
     renotify: false,
     silent: true,
   };
+  let existing = null;
   try {
-    const existing = (await self.registration.getNotifications({ tag: groupTag }))[0];
+    existing = (await self.registration.getNotifications({ tag: groupTag }))[0] || null;
+  } catch (_) {
+    // Can't tell: treated as none on screen.
+  }
+  try {
     if (existing) {
       await showWithActions(existing.title, {
         ...options,
+        tag: groupTag,
         body: existing.body,
         data: existing.data,
       });
       return;
     }
-    await self.registration.showNotification("New mail", { ...options, data: { kind: "mail-list" } });
-    const shown = await self.registration.getNotifications({ tag: groupTag });
+    // Under a tag of its own: a real notification for this account that comes in
+    // at the same moment must neither be replaced by this nor closed with it.
+    const emptyTag = `${groupTag}:nothing-new`;
+    await self.registration.showNotification("New mail", { ...options, tag: emptyTag, data: { kind: "mail-list" } });
+    const shown = await self.registration.getNotifications({ tag: emptyTag });
     for (const notification of shown) notification.close();
   } catch (_) {
     // Nothing more a worker can do.
