@@ -5779,6 +5779,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     onMarkAsSpam={() => handleMarkAsSpam()}
                     onUndoSpam={() => handleUndoSpam()}
                     onMarkAsRead={async (emailId, read, opts) => {
+                      // The viewer stays mounted behind Mountain View's list and
+                      // counts the row under the cursor as opened. It isn't yet.
+                      if (opts?.automatic && cursorOnly) return;
                       if (client) {
                         const emailKey = selectedEmail?.id === emailId ? emailKeyFor(selectedEmail) : undefined;
                         // Asked for (not on opening): Ctrl+Z can put it back.

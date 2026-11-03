@@ -37,7 +37,22 @@ vi.mock('@/components/layout/mobile-header', () => ({ MobileHeader: () => null }
 vi.mock('@/components/layout/mv-top-bar', () => ({ MvTopBar: () => null }));
 vi.mock('@/components/layout/mv-side-panel', () => ({ MvSidePanel: () => null }));
 vi.mock('@/components/search/mv-search-form', () => ({ MvSearchForm: () => null }));
-vi.mock('@/components/email/email-viewer', () => ({ EmailViewer: () => <div>message viewer</div> }));
+// As the real one, it marks the message it is given as read, mounted or not.
+vi.mock('@/components/email/email-viewer', async () => {
+  const { useEffect } = await import('react');
+  return {
+    EmailViewer: ({ email, onMarkAsRead }: {
+      email?: { id: string } | null;
+      onMarkAsRead?: (id: string, read: boolean, opts?: { automatic?: boolean }) => void;
+    }) => {
+      useEffect(() => {
+        if (email) onMarkAsRead?.(email.id, true, { automatic: true });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [email?.id]);
+      return <div>message viewer</div>;
+    },
+  };
+});
 vi.mock('@/components/email/message-list-tabs', () => ({ useMessageListPanelProps: (id: string) => ({ id }), MessageListTabs: () => null }));
 vi.mock('@/components/search/search-box', () => ({ SearchBox: () => null }));
 vi.mock('@/components/tour/tour-provider', () => ({ useTour: () => ({ activeTour: null, registerStep: vi.fn() }) }));
@@ -161,6 +176,7 @@ describe('Mail after the tour on a phone', () => {
 
     act(() => { fireEvent.keyDown(window, { key: 'j' }); });
     await waitFor(() => expect(useEmailStore.getState().selectedEmail?.id).toBe('m1'));
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
     expect(markAsRead).not.toHaveBeenCalled();
 
     device.isMobile = true;
