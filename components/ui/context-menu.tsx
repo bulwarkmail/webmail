@@ -582,7 +582,7 @@ export function ContextMenuItem({
           <span className="block text-xs text-muted-foreground">{hint}</span>
         </span>
       ) : (
-        <span className="flex-1">{label}</span>
+        <span className="flex-1 min-w-0 [overflow-wrap:anywhere]">{label}</span>
       )}
       {/* Key hints mean nothing without a keyboard: hidden on touch (R8). */}
       {shortcut && (
@@ -720,7 +720,7 @@ export function ContextMenuSubMenu({
             data-submenu-panel=""
             aria-label={label}
             onPlaced={onPanelPlaced}
-            className="min-w-[180px] bg-background rounded-md shadow-lg border border-border"
+            className="min-w-[180px] max-w-[min(20rem,calc(100vw-20px))] bg-background rounded-md shadow-lg border border-border"
             role="menu"
           >
             <div className="py-1 max-h-[min(300px,calc(100vh-40px))] overflow-y-auto">
