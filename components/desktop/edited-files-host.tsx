@@ -147,7 +147,8 @@ export function EditedFilesHost() {
     <section
       aria-label={t("offers_label")}
       data-testid="edited-files"
-      className="fixed bottom-4 end-4 z-50 flex max-h-[60vh] w-[22rem] max-w-[calc(100vw-2rem)] flex-col gap-2 overflow-y-auto"
+      // The toasts have the other corner, and one is up right when this appears.
+      className="fixed bottom-4 start-[4.75rem] z-50 flex max-h-[60vh] w-[22rem] max-w-[calc(100vw-6rem)] flex-col gap-2 overflow-y-auto"
     >
       {offers.map((session) => {
         const source = parseEditSource(session.source);
