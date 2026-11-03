@@ -1,0 +1,173 @@
+/**
+ * The per-account database keys, as the page sees them.
+ *
+ * Each account's database has a random 32-byte key. It is only ever stored
+ * wrapped: AES-GCM with a non-extractable key that lives in IndexedDB, then
+ * any extra layers on top (the desktop app's OS keychain, app lock). Forgetting
+ * the record makes the file unreadable even if deleting it failed.
+ */
+
+const DB_NAME = 'bulwark-store';
+const DB_VERSION = 1;
+const KEYS = 'keys';
+const ACCOUNTS = 'accounts';
+const WRAP_ID = 'wrap';
+
+export interface WrapLayer {
+  /** A name for the layer: 'safeStorage', 'pin', 'prf'. */
+  name: string;
+  wrap(data: Uint8Array): Promise<Uint8Array>;
+  unwrap(data: Uint8Array): Promise<Uint8Array>;
+}
+
+export interface AccountRecord {
+  account: string;
+  /** `/a<hex>.db`. */
+  file: string;
+  iv: Uint8Array;
+  wrapped: Uint8Array;
+  /** Layers applied after the WebCrypto wrap, innermost first. */
+  layers: string[];
+  createdAt: number;
+}
+
+function promisify<T>(request: IDBRequest<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function openDb(): Promise<IDBDatabase> {
+  const request = indexedDB.open(DB_NAME, DB_VERSION);
+  request.onupgradeneeded = () => {
+    const db = request.result;
+    if (!db.objectStoreNames.contains(KEYS)) db.createObjectStore(KEYS, { keyPath: 'id' });
+    if (!db.objectStoreNames.contains(ACCOUNTS)) db.createObjectStore(ACCOUNTS, { keyPath: 'account' });
+  };
+  return promisify(request);
+}
+
+async function withDb<T>(fn: (db: IDBDatabase) => Promise<T>): Promise<T> {
+  const db = await openDb();
+  try {
+    return await fn(db);
+  } finally {
+    db.close();
+  }
+}
+
+async function wrapKey(db: IDBDatabase): Promise<CryptoKey> {
+  const read = db.transaction(KEYS, 'readonly').objectStore(KEYS).get(WRAP_ID);
+  const existing = await promisify(read) as { key: CryptoKey } | undefined;
+  if (existing) return existing.key;
+  const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+  const tx = db.transaction(KEYS, 'readwrite');
+  const store = tx.objectStore(KEYS);
+  // Another tab may have got there first: keep theirs.
+  const raced = await promisify(store.get(WRAP_ID)) as { key: CryptoKey } | undefined;
+  if (raced) return raced.key;
+  await promisify(store.put({ id: WRAP_ID, key }));
+  return key;
+}
+
+function toHex(bytes: Uint8Array): string {
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+function asBuffer(bytes: Uint8Array): ArrayBuffer {
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+}
+
+export function newStoreFileName(): string {
+  return `/a${toHex(crypto.getRandomValues(new Uint8Array(8)))}.db`;
+}
+
+export async function getAccountRecord(account: string): Promise<AccountRecord | null> {
+  return withDb(async (db) => {
+    const found = await promisify(db.transaction(ACCOUNTS, 'readonly').objectStore(ACCOUNTS).get(account)) as AccountRecord | undefined;
+    return found ?? null;
+  });
+}
+
+export async function listAccountRecords(): Promise<AccountRecord[]> {
+  return withDb((db) => promisify(db.transaction(ACCOUNTS, 'readonly').objectStore(ACCOUNTS).getAll()) as Promise<AccountRecord[]>);
+}
+
+/** The account's key in hex, created on first use. Returns the record too, for the file name. */
+export async function openAccountKey(account: string, layers: readonly WrapLayer[] = []): Promise<{ keyHex: string; record: AccountRecord }> {
+  return withDb(async (db) => {
+    const wrapping = await wrapKey(db);
+    const found = await promisify(db.transaction(ACCOUNTS, 'readonly').objectStore(ACCOUNTS).get(account)) as AccountRecord | undefined;
+    if (found) {
+      let data = found.wrapped;
+      for (const name of [...found.layers].reverse()) {
+        const layer = layers.find((candidate) => candidate.name === name);
+        if (!layer) throw new StoreKeyLayerMissingError(name);
+        data = await layer.unwrap(data);
+      }
+      const raw = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: asBuffer(found.iv) }, wrapping, asBuffer(data)));
+      const keyHex = toHex(raw);
+      raw.fill(0);
+      return { keyHex, record: found };
+    }
+    const raw = crypto.getRandomValues(new Uint8Array(32));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    let wrapped = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, wrapping, raw));
+    for (const layer of layers) wrapped = new Uint8Array(await layer.wrap(wrapped));
+    const record: AccountRecord = {
+      account,
+      file: newStoreFileName(),
+      iv,
+      wrapped,
+      layers: layers.map((layer) => layer.name),
+      createdAt: Date.now(),
+    };
+    await promisify(db.transaction(ACCOUNTS, 'readwrite').objectStore(ACCOUNTS).put(record));
+    const keyHex = toHex(raw);
+    raw.fill(0);
+    return { keyHex, record };
+  });
+}
+
+/** Adds or removes wrap layers without touching the database key. */
+export async function rewrapAccountKey(
+  account: string,
+  from: readonly WrapLayer[],
+  to: readonly WrapLayer[],
+): Promise<void> {
+  await withDb(async (db) => {
+    const found = await promisify(db.transaction(ACCOUNTS, 'readonly').objectStore(ACCOUNTS).get(account)) as AccountRecord | undefined;
+    if (!found) return;
+    let data = found.wrapped;
+    for (const name of [...found.layers].reverse()) {
+      const layer = from.find((candidate) => candidate.name === name);
+      if (!layer) throw new StoreKeyLayerMissingError(name);
+      data = await layer.unwrap(data);
+    }
+    for (const layer of to) data = new Uint8Array(await layer.wrap(data));
+    const record: AccountRecord = { ...found, wrapped: data, layers: to.map((layer) => layer.name) };
+    await promisify(db.transaction(ACCOUNTS, 'readwrite').objectStore(ACCOUNTS).put(record));
+  });
+}
+
+/** Forgets the account's key. The database file can't be read after this. */
+export async function forgetAccountKey(account: string): Promise<void> {
+  await withDb((db) => promisify(db.transaction(ACCOUNTS, 'readwrite').objectStore(ACCOUNTS).delete(account)).then(() => undefined));
+}
+
+export class StoreKeyLayerMissingError extends Error {
+  constructor(readonly layer: string) {
+    super(`The key needs the ${layer} layer`);
+    this.name = 'StoreKeyLayerMissingError';
+  }
+}
+
+/** Deletes every key at sign-out. Works with no worker running, on any page. */
+export function deleteKeyDatabase(): void {
+  try {
+    indexedDB.deleteDatabase(DB_NAME);
+  } catch {
+    // Private mode or similar: nothing was stored either.
+  }
+}

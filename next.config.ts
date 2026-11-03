@@ -140,6 +140,11 @@ const nextConfig: NextConfig = {
                 { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
               ],
             },
+            {
+              // The local store's database engine, in a folder named after its version.
+              source: "/sqlite3mc/:path*",
+              headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+            },
             // The upload routes proxy.ts's matcher leaves out, with the
             // headers it sets on every other API response.
             ...["/api/webdav", "/api/plugin-proxy", "/api/wopi/files/:fileId/contents"].map((source) => ({

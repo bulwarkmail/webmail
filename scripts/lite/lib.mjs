@@ -43,6 +43,9 @@ export const LITE_REMOVED_PATHS = [
   "app/(main)/protocol",
   "e2e",
   "integration",
+  // The local store: Lite has no offline mode. A dev checkout may hold these.
+  "public/store-worker.js",
+  "public/sqlite3mc",
 ];
 
 /** Test trees are pruned too: they import the routes removed above. */
