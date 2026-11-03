@@ -50,6 +50,8 @@ describe('the scan', () => {
         'const sessions = new Map<string, number>();',
         'let counter = 0;',
         'const queue: string[] = [];',
+        'export const NONE = [] as const;',
+        'const later = [] as string[];',
         "const budget = createFailureBudget({ name: 'x' });",
         "const pattern = new RegExp('x');",
         'function f() {',
@@ -59,7 +61,7 @@ describe('the scan', () => {
         "(globalThis as any)[KEY] ??= new Map();",
       ].join('\n'));
       const names = findStateSites(dir, file).map((s) => s.name);
-      expect(names).toEqual(['sessions', 'counter', 'queue', 'budget', 'globalThis:KEY']);
+      expect(names).toEqual(['sessions', 'counter', 'queue', 'later', 'budget', 'globalThis:KEY']);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
