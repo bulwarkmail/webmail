@@ -3,13 +3,11 @@
 import { MethodError, type MethodContext, type MethodHandler, type MethodResult } from '../area';
 import { listObjects } from '../engine/core-schema';
 import type { SqlValue } from '../storage';
-import { textCondition, type TextField } from './search';
+import { limitTextConditions, searchSnippetGet, textCondition, TEXT_FIELDS, type TextField } from './search';
 
 type Filter = Record<string, unknown>;
 
 interface Sql { sql: string; params: SqlValue[] }
-
-const TEXT_FIELDS: readonly TextField[] = ['text', 'subject', 'from', 'to', 'body'];
 
 function jmapOf(ctx: MethodContext, args: Record<string, unknown>): string {
   return (args.accountId as string | undefined) ?? ctx.defaultJmap;
@@ -83,7 +81,7 @@ function filterSql(filter: Filter, jmap: string, drivenBy: string | null = null)
           params.push(...text.params);
           break;
         }
-        // cc, bcc, header and the thread keyword filters: the server's job.
+        // header and the thread keyword filters: the server's job.
         throw new MethodError('unsupportedFilter', `${key} isn't available offline`);
     }
   }
@@ -146,7 +144,7 @@ function drivingMailbox(filter: Filter | undefined): string | null {
 
 const emailQuery: MethodHandler = (ctx, args) => {
   const jmap = jmapOf(ctx, args);
-  const filter = (args.filter ?? undefined) as Filter | undefined;
+  const filter = limitTextConditions((args.filter ?? undefined) as Filter | undefined);
   if (args.anchor !== undefined) throw new MethodError('unsupportedFilter', 'anchor needs the server');
   const box = drivingMailbox(filter);
   const where = filter ? filterSql(filter, jmap, box) : { sql: '1', params: [] };
@@ -289,4 +287,5 @@ export const MAIL_METHODS: Readonly<Record<string, MethodHandler>> = {
   'Thread/get': threadGet,
   'Mailbox/get': mailboxGet,
   'Mailbox/query': mailboxQuery,
+  'SearchSnippet/get': searchSnippetGet,
 };

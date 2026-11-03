@@ -94,6 +94,11 @@ export interface SearchRequestOptions {
    * where the list must not wait for the highlighting.
    */
   deferSnippets?: boolean;
+  /**
+   * For the search palette. It searches on every few keystrokes, so it keeps its
+   * paging apart from the mail list's, and waits less for the local store.
+   */
+  palette?: boolean;
 }
 
 export interface SearchEmailsResult {
