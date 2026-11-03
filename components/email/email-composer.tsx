@@ -4496,7 +4496,7 @@ export function EmailComposer({
       <div ref={composerFieldsRef} className="shrink-0 space-y-0 border-b">
           {/* From field */}
           <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50">
-            <span className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('from')}:</span>
+            <span className="text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap">{t('from')}:</span>
             <div className={cn("flex-1 flex items-center gap-1 min-w-0", fromOverrideEnabled && "flex-wrap")}>
               {fromOverrideEnabled ? (
                 // Both fields need room to type in: on a narrow composer they take a
@@ -4627,7 +4627,7 @@ export function EmailComposer({
 
           {/* To field */}
           <div data-testid="composer-to" className={cn("flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative", shakeField === 'to' && "animate-shake")}>
-            <span id={fieldLabelId('to')} className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('to')}:</span>
+            <span id={fieldLabelId('to')} className="text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap">{t('to')}:</span>
             <RecipientChipInput
               labelId={fieldLabelId('to')}
               chips={to}
@@ -4729,7 +4729,7 @@ export function EmailComposer({
           {/* Cc field */}
           {showCc && (
             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative">
-              <span id={fieldLabelId('cc')} className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('cc_label')}</span>
+              <span id={fieldLabelId('cc')} className="text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap">{t('cc_label')}</span>
               <RecipientChipInput
                 labelId={fieldLabelId('cc')}
                 chips={cc}
@@ -4760,7 +4760,7 @@ export function EmailComposer({
           {/* Bcc field */}
           {showBcc && (
             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative">
-              <span id={fieldLabelId('bcc')} className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('bcc_label')}</span>
+              <span id={fieldLabelId('bcc')} className="text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap">{t('bcc_label')}</span>
               <RecipientChipInput
                 labelId={fieldLabelId('bcc')}
                 chips={bcc}
@@ -4790,7 +4790,7 @@ export function EmailComposer({
 
           {/* Subject field */}
           <div className="flex flex-wrap items-center gap-2 px-4 py-2.5">
-            <label htmlFor={`${fieldIdBase}-subject`} className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('subject_label')}</label>
+            <label htmlFor={`${fieldIdBase}-subject`} className="text-sm text-muted-foreground min-w-12 md:min-w-16 shrink-0 whitespace-nowrap">{t('subject_label')}</label>
             <Input
               id={`${fieldIdBase}-subject`}
               ref={subjectInputRef}
