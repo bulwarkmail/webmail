@@ -5610,7 +5610,12 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   setSearchMailboxId: (mailboxId) => {
-    set({ searchMailboxId: mailboxId, searchScopeFollowsFolder: false });
+    // Another scope lists other mail once a search is running (see setSearchQuery).
+    set((state) => ({
+      searchMailboxId: mailboxId,
+      searchScopeFollowsFolder: false,
+      ...(mailboxId !== state.searchMailboxId && (state.searchQuery.trim() || !isFilterEmpty(state.searchFilters)) ? NO_SELECTION() : {}),
+    }));
   },
 
   // The unread badge filters its own folder. The default scope searches

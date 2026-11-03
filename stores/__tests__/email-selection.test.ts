@@ -63,6 +63,23 @@ describe('email-store selection', () => {
       expect(ticked()).toBe(1);
     });
 
+    it('drops them when the folder searched in changes', () => {
+      useEmailStore.getState().setSearchMailboxId('archive');
+      expect(ticked()).toBe(0);
+    });
+
+    it('keeps them when the same folder searched in is set again', () => {
+      useEmailStore.setState({ searchMailboxId: 'archive' });
+      useEmailStore.getState().setSearchMailboxId('archive');
+      expect(ticked()).toBe(1);
+    });
+
+    it('keeps them when the folder searched in changes with no search running: the list stays', () => {
+      useEmailStore.setState({ searchQuery: '' });
+      useEmailStore.getState().setSearchMailboxId('archive');
+      expect(ticked()).toBe(1);
+    });
+
     it('drops them when a filter changes or the filters are cleared', () => {
       useEmailStore.getState().setSearchFilters({ isUnread: true });
       expect(ticked()).toBe(0);
