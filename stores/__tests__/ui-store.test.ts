@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useUIStore } from '../ui-store';
+import { useUIStore, listPaneCssSize } from '../ui-store';
 
 describe('ui-store', () => {
   beforeEach(() => {
@@ -15,6 +15,16 @@ describe('ui-store', () => {
       sidebarCollapsed: false,
     });
     localStorage.clear();
+  });
+
+  describe('listPaneCssSize', () => {
+    it('keeps the saved size only while the reading pane keeps its minimum', () => {
+      expect(listPaneCssSize(600, 240, 320)).toBe('clamp(240px, calc(100% - 320px), 600px)');
+    });
+
+    it('never puts the lower limit above a saved size smaller than it', () => {
+      expect(listPaneCssSize(220, 240, 320)).toBe('clamp(220px, calc(100% - 320px), 220px)');
+    });
   });
 
   describe('setSidebarWidth', () => {

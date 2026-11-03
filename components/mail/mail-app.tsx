@@ -57,7 +57,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { useEffectiveMailLayout } from "@/hooks/use-effective-mail-layout";
 import { useContactStore } from "@/stores/contact-store";
 import { useIdentityStore } from "@/stores/identity-store";
-import { useUIStore, SIDEBAR_MIN, SIDEBAR_MAX, EMAIL_LIST_MIN, EMAIL_LIST_MAX, EMAIL_LIST_HEIGHT_MIN, EMAIL_LIST_HEIGHT_MAX } from "@/stores/ui-store";
+import { useUIStore, listPaneCssSize, SIDEBAR_MIN, SIDEBAR_MAX, EMAIL_LIST_MIN, EMAIL_LIST_MAX, EMAIL_LIST_HEIGHT_MIN, EMAIL_LIST_HEIGHT_MAX, READING_PANE_MIN_WIDTH, READING_PANE_MIN_HEIGHT } from "@/stores/ui-store";
 import { useDeviceDetection } from "@/hooks/use-media-query";
 import { usePaneSize } from "@/hooks/use-pane-size";
 import { usePaneId } from "@/hooks/use-pane-context";
@@ -283,6 +283,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Column resize state (disable transitions during drag)
   const [isResizing, setIsResizing] = useState(false);
   const dragStartWidth = useRef(0);
+  const listPaneRef = useRef<HTMLElement>(null);
   // Mobile conversation view state
   const [conversationBlobSource, setConversationBlobSource] = useState<EmailBlobContext | undefined>();
   const conversationOpenSeqRef = useRef(0);
@@ -5086,6 +5087,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           <div className={cn("relative flex flex-1 min-h-0", isHorizontalMailLayout && "md:flex-col")}>
           {/* Email List - full width on mobile, fixed width/height on tablet/desktop */}
           <section
+            ref={listPaneRef}
             aria-labelledby={listHeadingId}
             className={cn(
               "relative flex flex-col bg-background min-w-0",
@@ -5113,8 +5115,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               isMobile
                 ? undefined
                 : isHorizontalMailLayout
-                  ? (!shouldHideHorizontalViewerPane ? { height: emailListHeight } : undefined)
-                  : (!shouldCollapseListPane && !shouldHideViewerPane ? { width: clampEmailListWidth(emailListWidth) } : undefined)
+                  ? (!shouldHideHorizontalViewerPane ? { height: listPaneCssSize(emailListHeight, EMAIL_LIST_HEIGHT_MIN, READING_PANE_MIN_HEIGHT) } : undefined)
+                  : (!shouldCollapseListPane && !shouldHideViewerPane ? { width: listPaneCssSize(clampEmailListWidth(emailListWidth), EMAIL_LIST_MIN, READING_PANE_MIN_WIDTH) } : undefined)
             }
           >
             <h2 id={listHeadingId} className="sr-only">{t('shell.message_list')}</h2>
@@ -5498,7 +5500,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               value={emailListWidth}
               min={EMAIL_LIST_MIN}
               max={EMAIL_LIST_MAX}
-              onResizeStart={() => { dragStartWidth.current = emailListWidth; setIsResizing(true); }}
+              onResizeStart={() => { dragStartWidth.current = listPaneRef.current?.getBoundingClientRect().width ?? emailListWidth; setIsResizing(true); }}
               onResize={(delta) => setEmailListWidth(dragStartWidth.current + delta)}
               onResizeEnd={() => { setIsResizing(false); persistColumnWidths(); }}
               onDoubleClick={resetEmailListWidth}
@@ -5511,7 +5513,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               value={emailListHeight}
               min={EMAIL_LIST_HEIGHT_MIN}
               max={EMAIL_LIST_HEIGHT_MAX}
-              onResizeStart={() => { dragStartWidth.current = emailListHeight; setIsResizing(true); }}
+              onResizeStart={() => { dragStartWidth.current = listPaneRef.current?.getBoundingClientRect().height ?? emailListHeight; setIsResizing(true); }}
               onResize={(delta) => setEmailListHeight(dragStartWidth.current + delta)}
               onResizeEnd={() => { setIsResizing(false); persistColumnWidths(); }}
               onDoubleClick={resetEmailListHeight}

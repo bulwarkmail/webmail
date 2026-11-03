@@ -16,6 +16,18 @@ const EMAIL_LIST_DEFAULT = 384;
 export const EMAIL_LIST_HEIGHT_MIN = 160;
 export const EMAIL_LIST_HEIGHT_MAX = 800;
 const EMAIL_LIST_HEIGHT_DEFAULT = 320;
+// What the reading pane keeps of the window, whatever size the list was dragged to
+export const READING_PANE_MIN_WIDTH = 320;
+export const READING_PANE_MIN_HEIGHT = 240;
+
+/**
+ * The list pane's CSS size: the size the user dragged it to, as long as that
+ * leaves the reading pane its minimum. Saved sizes outlive the window they were
+ * set in, and a smaller window would squeeze the reading pane down to nothing.
+ */
+export function listPaneCssSize(saved: number, min: number, readingPaneMin: number): string {
+  return `clamp(${Math.min(saved, min)}px, calc(100% - ${readingPaneMin}px), ${saved}px)`;
+}
 
 interface UIState {
   // Mobile view state
