@@ -162,10 +162,18 @@ function heldFile(ctx: StoreContext, params: { blobId: string }): { name: string
   return row ? { name: row.name ?? 'attachment', type: row.type ?? 'application/octet-stream', data: row.data } : null;
 }
 
+const heldFileSources: Array<(ctx: StoreContext) => Iterable<string>> = [];
+
+/** Another area's records that hold files by their local id, which dropOrphans must leave alone. */
+export function addHeldFileSource(source: (ctx: StoreContext) => Iterable<string>): void {
+  heldFileSources.push(source);
+}
+
 /** Files held for no entry (attached offline to a message that was then discarded). SEAM: the drafts agent keeps its drafts' files here too. */
 function dropOrphans(ctx: StoreContext, params: { olderThan: number }): number {
   return ctx.db.transaction(() => {
     const needed = new Set(ctx.db.all<OutboxRow>('SELECT * FROM outbox').flatMap((row) => heldBlobIds(toEntry(row).item)));
+    for (const source of heldFileSources) for (const id of source(ctx)) needed.add(id);
     let dropped = 0;
     for (const row of ctx.db.all<{ local_id: string }>('SELECT local_id FROM upload WHERE created_at < ?', [params.olderThan])) {
       if (needed.has(String(row.local_id))) continue;

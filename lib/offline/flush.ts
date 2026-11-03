@@ -176,6 +176,23 @@ export async function flushQueue(account: string, client: JMAPClient, deps: Flus
   await run();
 }
 
+/** A file attached offline to something that was then discarded goes after this long. */
+export const ORPHAN_FILE_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+const ORPHAN_CHECK_MS = 24 * 60 * 60 * 1000;
+const orphansCheckedAt = new Map<string, number>();
+
+async function dropOrphanFiles(account: string): Promise<void> {
+  const now = Date.now();
+  if (now - (orphansCheckedAt.get(account) ?? 0) < ORPHAN_CHECK_MS) return;
+  orphansCheckedAt.set(account, now);
+  await getStore().area(account, 'outbox.dropOrphans', { olderThan: now - ORPHAN_FILE_AGE_MS }).catch(() => {});
+}
+
+/** Tests only. */
+export function forgetOrphanCheck(): void {
+  orphansCheckedAt.clear();
+}
+
 /** Marks sends of closed tabs uncertain (they may have gone out). */
 export async function settleStaleSends(account?: string, now = Date.now()): Promise<void> {
   const accounts = account ? [account] : visibleAccounts();
@@ -320,6 +337,7 @@ async function flushLocked(account: string, client: JMAPClient, deps: FlushDeps)
     }
     if (stillOffline() || !deps.allowed()) return;
     await sendPatches(account, client, deps, null);
+    await dropOrphanFiles(account);
   } finally {
     flushing.delete(account);
   }
