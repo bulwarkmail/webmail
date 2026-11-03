@@ -155,7 +155,9 @@ export class StoreHost {
   async removeAccount(account: string, file: string): Promise<boolean> {
     await this.closeAccount(account);
     this.synced.delete(account);
-    return this.options.storage.remove(file);
+    const removed = this.options.storage.remove(file);
+    this.options.emit({ type: 'removed', account });
+    return removed;
   }
 
   async closeAll(): Promise<void> {

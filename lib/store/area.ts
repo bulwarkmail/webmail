@@ -67,7 +67,9 @@ export type StoreEvent =
   | { type: 'synced'; account: string; at: number }
   | { type: 'changed'; account: string; collections: string[] }
   | { type: 'created'; account: string; jmap: string; collection: string; ids: string[] }
-  | { type: 'error'; account: string; area: string; message: string };
+  | { type: 'error'; account: string; area: string; message: string }
+  /** Its file and key are gone, whichever tab asked: opening it again makes a new one. */
+  | { type: 'removed'; account: string };
 
 export interface StoreContext {
   account: string;

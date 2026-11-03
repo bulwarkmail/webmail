@@ -17,10 +17,11 @@ import {
   registerOfflineHooks,
   scopeForAccount,
   setOfflineNotifier,
+  startOfflineMode,
   wipeEverything,
   type OfflineNotice,
 } from '../offline-mode';
-import { useOfflineStore, writeEnabled } from '../state';
+import { OFFLINE_HEALTH_KEY, useOfflineStore, writeEnabled, writeHealth } from '../state';
 
 const NOW = Date.now();
 const iso = (daysAgo: number) => new Date(NOW - daysAgo * 86_400_000).toISOString();
@@ -152,6 +153,21 @@ describe('clearing an account', () => {
     expect(useOfflineStore.getState().health.acc?.opened).toBe(false);
     // It isn't read as a browser clearing the store at the next open.
     expect(notices.filter((n) => n.kind === 'evicted')).toEqual([]);
+  });
+});
+
+describe('clearing in another tab', () => {
+  it('opens the new store here, in case this tab owns it', async () => {
+    writeEnabled(['acc']);
+    writeHealth('acc', { opened: true });
+    const stop = startOfflineMode();
+    const ensureOpen = vi.spyOn(store, 'ensureOpen');
+    ensureOpen.mockClear();
+    localStorage.setItem(OFFLINE_HEALTH_KEY, JSON.stringify({ acc: { opened: false, pending: 0 } }));
+    window.dispatchEvent(new StorageEvent('storage', { key: OFFLINE_HEALTH_KEY }));
+    expect(ensureOpen).toHaveBeenCalledWith('acc');
+    expect(useOfflineStore.getState().health.acc.opened).toBe(false);
+    stop();
   });
 });
 

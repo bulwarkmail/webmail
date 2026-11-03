@@ -1066,7 +1066,15 @@ export function startOfflineMode(): () => void {
   // switched on there has to be opened here if this tab owns the store.
   const onStorage = (event: StorageEvent) => {
     if (event.key === OFFLINE_CHOICES_KEY || event.key === null) useOfflineStore.setState({ choices: readStoredChoices() });
-    if (event.key === OFFLINE_HEALTH_KEY || event.key === null) useOfflineStore.setState({ health: readStoredHealth() });
+    if (event.key === OFFLINE_HEALTH_KEY || event.key === null) {
+      const before = useOfflineStore.getState().health;
+      const health = readStoredHealth();
+      useOfflineStore.setState({ health });
+      // Another tab cleared an account that stays on: if this tab owns the store, it opens the new one.
+      for (const id of useOfflineStore.getState().enabled) {
+        if (before[id]?.opened && health[id]?.opened === false) void getStore().ensureOpen(id).catch(() => {});
+      }
+    }
     if (event.key !== OFFLINE_ACCOUNTS_KEY && event.key !== null) return;
     const next = readEnabledFrom(event.key === null ? null : event.newValue);
     const before = useOfflineStore.getState().enabled;

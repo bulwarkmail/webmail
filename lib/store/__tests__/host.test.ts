@@ -98,6 +98,18 @@ describe('files with no key', () => {
   });
 });
 
+describe('removing an account', () => {
+  it('tells every tab, once the file is gone', async () => {
+    const storage = new FakeStorage();
+    const events: unknown[] = [];
+    const running = new StoreHost({ areas: [mailArea], storage, emit: (event) => events.push({ event, file: storage.files().length }), needAuth: () => {} });
+    await running.openAccount(params('/a1.db'));
+    events.length = 0;
+    await running.removeAccount('a', '/a1.db');
+    expect(events).toContainEqual({ event: { type: 'removed', account: 'a' }, file: 0 });
+  });
+});
+
 describe('a scope from another tab', () => {
   it('reaches the engine over the channel call', async () => {
     const storage = new FakeStorage();

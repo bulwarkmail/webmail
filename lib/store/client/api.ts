@@ -75,6 +75,8 @@ class PageStore implements StoreBackend {
       buildId: process.env.NEXT_PUBLIC_BUILD_ID,
       onEvent: (event) => {
         if (event.type === 'error' && event.area === 'store' && !event.account) this.broken = true;
+        // Another tab cleared it: what this tab remembers opening is gone.
+        if (event.type === 'removed') this.opening.delete(event.account);
         this.hooks()?.onEvent(event);
       },
       onOwner: () => {
