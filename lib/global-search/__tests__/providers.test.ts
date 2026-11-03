@@ -163,7 +163,7 @@ describe('mail provider', () => {
     const result = await mailProvider.remote(parseSearchQuery('zebra'), account('login-a'), { limit: 25, signal });
     expect(buildUnifiedAccountClients).toHaveBeenCalledWith({ includeGroup: true, scopeToClientAccountId: 'login-a' });
     // The stub login has no trash/junk role folders, so no exclusion is added.
-    expect(advancedSearchEmails).toHaveBeenCalledWith({ text: 'zebra' }, undefined, 25, 0);
+    expect(advancedSearchEmails).toHaveBeenCalledWith({ text: 'zebra' }, undefined, 25, 0, { palette: true });
     expect(result.hasMore).toBe(true);
     expect(result.hits[0]).toMatchObject({
       id: 'm9', localAccountId: 'login-a', jmapAccountId: 'jmap-a', source: 'remote', subtitle: 'Inbox',

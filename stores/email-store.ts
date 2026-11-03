@@ -7054,6 +7054,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         !selectedKeyword &&
         mailbox?.role === 'inbox' &&
         !currentEmails.some(e => e.id === newFirst.id) &&
+        !newFirst.foundLocally &&
         (!keepOpenThread || insertedCount > 0)
       ) {
         notifyNewInboxMail(client, mailbox, newFirst, get);

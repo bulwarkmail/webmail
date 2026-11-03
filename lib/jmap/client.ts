@@ -9,7 +9,7 @@ import type { SieveScript, SieveCapabilities } from "./sieve-types";
 import type { BlobBatch, CalendarEventUpdateOptions, CalendarQueryOptions, FileNodeListings, IJMAPClient, KeywordDiscoveryResult, KeywordInfo, KeywordMigration, SearchEmailsResult, SearchRequestOptions, UploadedEmailImport, UploadedEmailImportResult } from "./client-interface";
 import { attachSearchSnippets, filterHasSnippetTerms, snippetFilterFor, type SearchSnippetResult } from "@/lib/search-snippet";
 import { textConditions, textFilter } from "./search-utils";
-import { filterHasTextTerms, LocalSearchMerge } from "./search-merge";
+import { filterHasTextTerms, LocalSearchMerge, mailboxesFitFilter } from "./search-merge";
 import { batched, batchedBySize, itemsPerRequest } from "./request-limits";
 import { keywordPointer, pointerToken } from "./patch-pointer";
 import { FirstTouchGate } from "./first-touch-gate";
@@ -1640,6 +1640,7 @@ export class JMAPClient implements IJMAPClient {
    */
   private offlineOnly = false;
   private readonly searchMerge = new LocalSearchMerge();
+  private readonly paletteSearchMerge = new LocalSearchMerge({ graceMs: 200 });
 
   constructor(serverUrl: string, username: string, password: string) {
     this.serverUrl = serverUrl.replace(/\/$/, '');
@@ -4422,17 +4423,50 @@ export class JMAPClient implements IJMAPClient {
     if (!searchLocal || this.offlineOnly || hooks.skipNetwork(this) || !filterHasTextTerms(filter)) {
       return server(position);
     }
-    return this.searchMerge.run({
+    const targetAccountId = accountId || this.accountId;
+    const merge = options.palette ? this.paletteSearchMerge : this.searchMerge;
+    return merge.run({
       key: JSON.stringify([accountId ?? null, filter]),
       limit,
       position,
       server,
       local: async (at) => {
-        const targetAccountId = accountId || this.accountId;
-        const answer = await searchLocal.call(hooks, this, this.searchCalls(targetAccountId, filter, limit, at, false));
+        // No snippets here: excerpting every hit is the slow part, and most of
+        // them are the server's to show. See localSnippets.
+        const answer = await searchLocal.call(hooks, this, this.searchCalls(targetAccountId, filter, limit, at, true));
         return answer ? this.searchResultFrom(answer as JMAPResponse, accountId, limit, at) : null;
       },
+      verify: (rows) => this.currentSearchRows(rows, filter, accountId),
+      localSnippets: async (ids) => {
+        if (!filterHasSnippetTerms(filter)) return null;
+        const answer = await searchLocal.call(hooks, this, [
+          ["SearchSnippet/get", { accountId: targetAccountId, filter: snippetFilterFor(filter), emailIds: ids }, "snippets"],
+        ]);
+        return answer ? this.searchSnippetsFrom(answer as JMAPResponse) ?? null : null;
+      },
+      deferSnippets: options.deferSnippets,
     });
+  }
+
+  /**
+   * The server's copies of rows only the local store found, without those it
+   * no longer has or has outside the filter's folders. The filter is checked
+   * before the ids get their shared-account namespace, since it has bare ones.
+   */
+  private async currentSearchRows(rows: Email[], filter: Record<string, unknown>, accountId: string | undefined): Promise<Email[]> {
+    const response = await this.request([
+      ["Email/get", {
+        accountId: accountId || this.accountId,
+        ids: rows.map((row) => row.id),
+        properties: [...EMAIL_LIST_PROPERTIES],
+      }, "0"],
+    ]);
+    const [name, result] = response.methodResponses?.[0] ?? [];
+    if (name !== "Email/get" || !result) throw new Error(methodErrorMessage(response, 'Failed to get emails'));
+    const list = applyListAuthenticationResults((result.list || []) as Email[])
+      .filter((email) => mailboxesFitFilter(filter, email.mailboxIds));
+    if (accountId && accountId !== this.accountId) namespaceMailboxIds(list, accountId);
+    return list;
   }
 
   private searchCalls(
