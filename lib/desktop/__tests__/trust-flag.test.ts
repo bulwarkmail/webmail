@@ -70,14 +70,14 @@ describe('the trusted set, desktop build', () => {
 
 describe('the flag is fixed at build time', () => {
   /** Compiles lib/desktop/flag.ts the way next.config.ts `env` does and runs it. */
-  async function flagOfBuild(buildEnv: NodeJS.ProcessEnv, runtimeEnv: NodeJS.ProcessEnv): Promise<boolean> {
+  async function flagOfBuild(buildEnv: Record<string, string>, runtimeEnv: Record<string, string>): Promise<boolean> {
     const result = await build({
       entryPoints: [path.join(ROOT, 'lib/desktop/flag.ts')],
       bundle: true,
       write: false,
       format: 'cjs',
       platform: 'node',
-      define: { 'process.env.NEXT_PUBLIC_BULWARK_DESKTOP': JSON.stringify(desktopBuildFlag(buildEnv)) },
+      define: { 'process.env.NEXT_PUBLIC_BULWARK_DESKTOP': JSON.stringify(desktopBuildFlag(buildEnv as unknown as NodeJS.ProcessEnv)) },
     });
     const run = new Function('module', 'exports', 'process', result.outputFiles[0].text);
     const module = { exports: {} as { IS_DESKTOP_BUILD?: boolean } };
@@ -96,7 +96,7 @@ describe('the flag is fixed at build time', () => {
   it('next.config.ts always inlines the flag, so an unset one is no runtime read', () => {
     const config = readFileSync(path.join(ROOT, 'next.config.ts'), 'utf8');
     expect(config).toMatch(/NEXT_PUBLIC_BULWARK_DESKTOP: desktopBuildFlag\(\)/);
-    expect(desktopBuildFlag({})).toBe('');
+    expect(desktopBuildFlag({} as unknown as NodeJS.ProcessEnv)).toBe('');
   });
 
   it('flag.ts reads the variable in the one form the compiler replaces', () => {
