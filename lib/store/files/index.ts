@@ -12,6 +12,7 @@ export const filesArea: StoreArea = {
   methods: FILE_METHODS,
   syncers: [filesSyncer],
   applyScope: applyFilesScope,
+  scopeChanged: applyFilesScope,
   usage: filesUsage,
   keptBytes: (ctx) => filesUsage(ctx)[0].bytes,
   calls: {

@@ -54,6 +54,9 @@ async function call(engine: AccountEngine, name: string, args: Record<string, un
 
 const ref = (id: string, jmap = JMAP_ACCOUNT) => ({ jmap, id });
 
+const bytesOf = async (kept: unknown): Promise<Uint8Array> => new Uint8Array(await (kept as { blob: Blob }).blob.arrayBuffer());
+const keptIn = (db: StorageAdapter, blobId: string, scope: StoreScope = DEFAULT_SCOPE) => fileBlob({ db, scope }, JMAP_ACCOUNT, blobId);
+
 function names(rows: Array<{ name?: unknown }>): unknown[] {
   return rows.map((row) => row.name).sort();
 }
@@ -110,7 +113,7 @@ describe('file metadata sync', () => {
     server.calls.length = 0;
     await rig.engine.requestSync();
     expect(Number(rig.db.get<{ n: number }>('SELECT COUNT(*) AS n FROM file_node')?.n)).toBe(6000);
-    expect(server.calls.find(([n]) => n === 'FileNode/query')?.[1].position).toBe(5000);
+    expect(server.calls.find(([n, a]) => n === 'FileNode/query' && a.accountId === JMAP_ACCOUNT)?.[1].anchor).toBeTruthy();
     expect(server.calls.filter(([n, a]) => n === 'FileNode/get' && a.ids === null && a.accountId === JMAP_ACCOUNT)).toHaveLength(0);
   });
 
@@ -157,6 +160,60 @@ describe('file answers', () => {
   it('says so instead of an empty list when nothing was read yet', async () => {
     const { engine } = rigFor(new FakeFiles());
     expect(await engine.answer([['FileNode/get', { accountId: JMAP_ACCOUNT, ids: null }, '0']])).toBeNull();
+  });
+
+  it('answers serverUnavailable until the first full pass is done', async () => {
+    const server = new FakeFiles({ getAll: 'refuse' });
+    for (let i = 0; i < 6000; i += 1) server.addFile(`f${i}`);
+    const rig = rigFor(server);
+    let requests = 0;
+    server.beforeRequest = () => {
+      requests += 1;
+      if (requests === 6) server.offline = true;
+    };
+    await rig.engine.requestSync();
+    expect(Number(rig.db.get<{ n: number }>('SELECT COUNT(*) AS n FROM file_node')?.n)).toBe(5000);
+    expect(await rig.engine.answer([['FileNode/get', { accountId: JMAP_ACCOUNT, ids: null }, '0']])).toBeNull();
+    expect(await rig.engine.answer([['FileNode/query', { accountId: JMAP_ACCOUNT, filter: {} }, '0']])).toBeNull();
+    server.offline = false;
+    server.beforeRequest = null;
+    await rig.engine.requestSync();
+    expect((await call(rig.engine, 'FileNode/query', { filter: {}, calculateTotal: true })).total).toBe(6000);
+  });
+
+  it('goes on answering from the old copy while a later resync runs', async () => {
+    const server = new FakeFiles({ getAll: 'refuse' });
+    for (let i = 0; i < 6000; i += 1) server.addFile(`f${i}`);
+    const { db, engine } = await synced(server);
+    db.run("UPDATE sync_state SET state = 'bad state!' WHERE type = 'FileNode'");
+    let requests = 0;
+    server.beforeRequest = () => {
+      requests += 1;
+      if (requests === 3) server.offline = true;
+    };
+    await engine.requestSync();
+    expect((await call(engine, 'FileNode/query', { filter: {}, calculateTotal: true })).total).toBe(6000);
+  });
+
+  it('does not skip a node when an earlier one is deleted between pages, and starts over if the anchor goes', async () => {
+    for (const victim of [0, 4999]) {
+      const server = new FakeFiles({ getAll: 'refuse' });
+      const files = Array.from({ length: 6000 }, (_, i) => server.addFile(`f${i}`));
+      const rig = rigFor(server);
+      let queries = 0;
+      const original = server.request.bind(server);
+      server.request = async (calls) => {
+        if (calls.some(([name, args]) => name === 'FileNode/query' && args.accountId === JMAP_ACCOUNT)) {
+          queries += 1;
+          if (queries === 2) server.removeNode(files[victim].id);
+        }
+        return original(calls);
+      };
+      await rig.engine.requestSync();
+      const kept = new Set(rig.db.all<{ id: string }>('SELECT id FROM file_node').map((r) => r.id));
+      expect(kept.size).toBe(5999);
+      expect(kept.has(files[victim].id)).toBe(false);
+    }
   });
 
   it('gives the last server state and only asked-for properties', async () => {
@@ -234,8 +291,8 @@ describe('pinned files', () => {
     const read = await engine.areaCall('files.read', ref(file.id)) as any;
     expect(read.name).toBe('big.bin');
     expect(read.type).toBe('text/plain');
-    expect(Buffer.compare(read.data, content)).toBe(0);
-    expect(Buffer.compare(fileBlob({ db }, JMAP_ACCOUNT, file.blobId as string)?.data as Uint8Array, content)).toBe(0);
+    expect(Buffer.compare(await bytesOf(read), content)).toBe(0);
+    expect(Buffer.compare(await bytesOf(keptIn(db, file.blobId as string)), content)).toBe(0);
     expect(await engine.areaCall('files.blob', { jmap: JMAP_ACCOUNT, blobId: file.blobId })).toMatchObject({ size: content.length });
     // Already kept: not fetched again.
     await engine.requestSync();
@@ -260,7 +317,7 @@ describe('pinned files', () => {
     const file = server.addFile('a.txt');
     const { db, engine } = await synced(server);
     expect(await engine.areaCall('files.read', ref(file.id))).toBeNull();
-    expect(fileBlob({ db }, JMAP_ACCOUNT, file.blobId as string)).toBeNull();
+    expect(keptIn(db, file.blobId as string)).toBeNull();
   });
 
   it('refuses to pin a folder or an unknown id', async () => {
@@ -436,15 +493,219 @@ describe('pinned files', () => {
     expect((await engine.areaCall('files.kept', undefined) as any).files[0].error).toBe('tooLarge');
   });
 
+  it('stops a download at the limit when the size is missing or wrong', async () => {
+    const server = new FakeFiles();
+    server.partBytes = 10;
+    const noSize = server.addFile('noSize', null, new Uint8Array(1000), { size: null });
+    const wrong = server.addFile('wrong', null, new Uint8Array(1000), { size: 1 });
+    const { db, engine } = await synced(server, { maxAttachmentBytes: 50 });
+    await engine.areaCall('files.noteOpened', ref(noSize.id));
+    await engine.areaCall('files.noteOpened', ref(wrong.id));
+    await engine.requestSync();
+    expect(server.delivered.get(noSize.blobId as string)).toBeLessThanOrEqual(60);
+    expect(server.delivered.get(wrong.blobId as string)).toBeLessThanOrEqual(60);
+    expect(Number(db.get<{ n: number }>('SELECT COUNT(*) AS n FROM file_blob_chunk')?.n)).toBe(0);
+    expect(Number(db.get<{ n: number }>('SELECT COUNT(*) AS n FROM file_blob')?.n)).toBe(0);
+    // Noted, so the next pass doesn't start it again.
+    const count = server.downloads.length;
+    await engine.requestSync();
+    expect(server.downloads).toHaveLength(count);
+  });
+
+  it('stops a pinned download at the total limit too', async () => {
+    const server = new FakeFiles();
+    server.partBytes = 10;
+    const big = server.addFile('big', null, new Uint8Array(1000), { size: null });
+    const { engine } = await synced(server, { maxTotalBytes: 100 });
+    await engine.areaCall('files.pin', ref(big.id));
+    await engine.requestSync();
+    expect(server.delivered.get(big.blobId as string)).toBeLessThanOrEqual(110);
+    expect((await engine.areaCall('files.kept', undefined) as any).files[0]).toMatchObject({ kept: false, error: 'overLimit' });
+  });
+
+  it('stops a pinned download at the organisation limit, whatever the size says', async () => {
+    const server = new FakeFiles();
+    server.partBytes = 10;
+    const big = server.addFile('big', null, new Uint8Array(1000), { size: null });
+    const { engine } = await synced(server, { orgMaxFileBytes: 50 });
+    await engine.areaCall('files.pin', ref(big.id));
+    await engine.requestSync();
+    expect(server.delivered.get(big.blobId as string)).toBeLessThanOrEqual(60);
+    expect((await engine.areaCall('files.kept', undefined) as any).files[0]).toMatchObject({ kept: false, error: 'tooLarge' });
+  });
+
+  it('writes a download in pieces and gives nothing out until it is complete', async () => {
+    const server = new FakeFiles();
+    const file = server.addFile('big', null, new Uint8Array(3 * 1024 * 1024).fill(7));
+    const { db, engine } = await synced(server);
+    await engine.areaCall('files.pin', ref(file.id));
+    const seen: number[] = [];
+    let readDuring: unknown = 'not read';
+    server.onPart = () => {
+      seen.push(Number(db.get<{ n: number }>('SELECT COUNT(*) AS n FROM file_blob_chunk')?.n));
+      readDuring = keptIn(db, file.blobId as string);
+    };
+    await engine.requestSync();
+    expect(Math.max(...seen)).toBeGreaterThanOrEqual(2);
+    expect(readDuring).toBeNull();
+    expect((await bytesOf(keptIn(db, file.blobId as string))).length).toBe(3 * 1024 * 1024);
+  });
+
+  it('leaves no pieces behind after a broken download, and gives none out', async () => {
+    const server = new FakeFiles();
+    const file = server.addFile('big', null, new Uint8Array(3 * 1024 * 1024).fill(7));
+    // Twice, since the pin itself starts a pass and the sync below asks for another.
+    server.failMidBody.set(file.blobId as string, { after: 2 * 1024 * 1024, times: 2 });
+    const { db, engine, clock } = await synced(server);
+    await engine.areaCall('files.pin', ref(file.id));
+    await engine.requestSync();
+    expect(server.failMidBody.get(file.blobId as string)?.times).toBe(0);
+    expect(await engine.areaCall('files.read', ref(file.id))).toBeNull();
+    expect(Number(db.get<{ n: number }>('SELECT COUNT(*) AS n FROM file_blob_chunk')?.n)).toBe(0);
+    clock.at += 60 * 60 * 1000;
+    await engine.requestSync();
+    expect((await bytesOf(await engine.areaCall('files.read', ref(file.id)))).length).toBe(3 * 1024 * 1024);
+  });
+
+  it('clears the pieces a closed app left behind', async () => {
+    const server = new FakeFiles();
+    const file = server.addFile('a');
+    const { db, engine } = await synced(server);
+    db.run('INSERT INTO file_blob (jmap, blob_id, type, size, kept_at, complete) VALUES (?, ?, ?, 0, 0, 0)', [JMAP_ACCOUNT, 'unfinished', 'x']);
+    db.run('INSERT INTO file_blob_chunk (jmap, blob_id, seq, data) VALUES (?, ?, 0, ?)', [JMAP_ACCOUNT, 'unfinished', new Uint8Array(5)]);
+    expect(keptIn(db, 'unfinished')).toBeNull();
+    await engine.areaCall('files.pin', ref(file.id));
+    await engine.requestSync();
+    expect(Number(db.get<{ n: number }>("SELECT COUNT(*) AS n FROM file_blob_chunk WHERE blob_id = 'unfinished'")?.n)).toBe(0);
+    expect(Number(db.get<{ n: number }>("SELECT COUNT(*) AS n FROM file_blob WHERE blob_id = 'unfinished'")?.n)).toBe(0);
+  });
+
+  it('marks a file that keeps breaking and gets on with the others', async () => {
+    const server = new FakeFiles();
+    const bad = server.addFile('bad', null, new Uint8Array(100));
+    const good = server.addFile('good', null, 10);
+    server.partBytes = 10;
+    server.failMidBody.set(bad.blobId as string, { after: 50, times: 3 });
+    const rig = await synced(server);
+    await rig.engine.areaCall('files.pin', ref(bad.id));
+    await rig.engine.areaCall('files.pin', ref(good.id));
+    await rig.engine.requestSync();
+    expect(await rig.engine.areaCall('files.read', ref(good.id))).not.toBeNull();
+    const badRow = async () => (await rig.engine.areaCall('files.kept', undefined) as any).files.find((f: { name: string }) => f.name === 'bad');
+    expect(await badRow()).toMatchObject({ kept: false, error: 'download' });
+    // Failed files go last, and the second failure starts a wait.
+    await rig.engine.requestSync();
+    const tries = server.downloads.filter((d) => d.blobId === bad.blobId).length;
+    await rig.engine.requestSync();
+    expect(server.downloads.filter((d) => d.blobId === bad.blobId)).toHaveLength(tries);
+    rig.clock.at += 60 * 60 * 1000;
+    await rig.engine.requestSync();
+    rig.clock.at += 2 * 60 * 60 * 1000;
+    await rig.engine.requestSync();
+    expect(await rig.engine.areaCall('files.read', ref(bad.id))).not.toBeNull();
+    expect(await badRow()).toMatchObject({ kept: true, error: null });
+  });
+
+  it('keeps the old copy of a pinned file until the new one is stored', async () => {
+    const server = new FakeFiles();
+    const file = server.addFile('a.txt', null, new Uint8Array([1, 2, 3]));
+    const { db, engine } = await synced(server);
+    await engine.areaCall('files.pin', ref(file.id));
+    await engine.requestSync();
+    const old = file.blobId as string;
+    const fresh = server.replaceContent(file.id, new Uint8Array([9, 9]));
+    server.failMidBody.set(fresh, { after: 0, times: 1 });
+    await engine.requestSync();
+    // The new one didn't arrive: what's asked for by its new id is the last copy, marked as old.
+    expect([...await bytesOf(keptIn(db, old))]).toEqual([1, 2, 3]);
+    const stale = await engine.areaCall('files.read', ref(file.id)) as any;
+    expect([...await bytesOf(stale)]).toEqual([1, 2, 3]);
+    expect(stale.stale).toBe(true);
+    expect(keptIn(db, fresh)).toMatchObject({ stale: true });
+    await engine.requestSync();
+    expect(keptIn(db, old)).toBeNull();
+    const current = await engine.areaCall('files.read', ref(file.id)) as any;
+    expect([...await bytesOf(current)]).toEqual([9, 9]);
+    expect(current.stale).toBe(false);
+  });
+
+  it('drops pins newest first when a policy lowers the limit, as soon as it changes', async () => {
+    const server = new FakeFiles();
+    const a = server.addFile('a', null, 60);
+    const b = server.addFile('b', null, 60);
+    const c = server.addFile('c', null, 30);
+    const rig = await synced(server);
+    for (const file of [a, b, c]) {
+      rig.clock.at += 1000;
+      await rig.engine.areaCall('files.pin', ref(file.id));
+      await rig.engine.requestSync();
+    }
+    rig.engine.setScope({ ...DEFAULT_SCOPE, maxTotalBytes: 100 });
+    const status = await rig.engine.areaCall('files.kept', undefined) as any;
+    const row = (name: string) => status.files.find((f: { name: string }) => f.name === name);
+    expect(row('a')).toMatchObject({ kept: true, pinned: true });
+    expect(row('b')).toMatchObject({ kept: false, pinned: true, error: 'overLimit' });
+    expect(row('c')).toMatchObject({ kept: true, pinned: true });
+    expect(status.bytes).toBe(90);
+    const count = server.downloads.length;
+    await rig.engine.requestSync();
+    expect(server.downloads).toHaveLength(count);
+
+    rig.engine.setScope(DEFAULT_SCOPE);
+    await rig.engine.requestSync();
+    expect((await rig.engine.areaCall('files.kept', undefined) as any).bytes).toBe(150);
+  });
+
+  it('applies a tighter policy at start too, before any sync', async () => {
+    const server = new FakeFiles();
+    const file = server.addFile('a');
+    const rig = await synced(server);
+    await rig.engine.areaCall('files.pin', ref(file.id));
+    await rig.engine.requestSync();
+    await rig.engine.close();
+    server.offline = true;
+    new AccountEngine({ account: 'a@fake.test', db: rig.db, session: FILES_SESSION, transport: server, areas: [filesArea], scope: { ...DEFAULT_SCOPE, attachments: false }, sleep: async () => {} });
+    expect(Number(rig.db.get<{ n: number }>('SELECT COUNT(*) AS n FROM file_blob_chunk')?.n)).toBe(0);
+  });
+
+  it('refuses kept contents with attachments off, and drops them when the scope changes', async () => {
+    const server = new FakeFiles();
+    const file = server.addFile('a');
+    const rig = await synced(server);
+    await rig.engine.areaCall('files.pin', ref(file.id));
+    await rig.engine.requestSync();
+    const off = { ...DEFAULT_SCOPE, attachments: false };
+    expect(keptIn(rig.db, file.blobId as string, off)).toBeNull();
+    expect(keptIn(rig.db, file.blobId as string)).not.toBeNull();
+    rig.engine.setScope(off);
+    expect(await rig.engine.areaCall('files.read', ref(file.id))).toBeNull();
+    expect(Number(rig.db.get<{ n: number }>('SELECT COUNT(*) AS n FROM file_blob_chunk')?.n)).toBe(0);
+    expect((await rig.engine.areaCall('files.kept', undefined) as any).files[0]).toMatchObject({ kept: false, error: 'notAllowed' });
+  });
+
+  it('lets a close end a download at once', async () => {
+    const server = new FakeFiles();
+    const file = server.addFile('a');
+    const { engine } = await synced(server);
+    await engine.areaCall('files.pin', ref(file.id));
+    server.hangDownloads = true;
+    const pass = engine.requestSync();
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(server.downloading).toBe(1);
+    const closed = await Promise.race([engine.close().then(() => 'closed'), new Promise((resolve) => setTimeout(() => resolve('still waiting'), 200))]);
+    expect(closed).toBe('closed');
+    await pass;
+  });
+
   it('does not store a file unpinned while it was downloading', async () => {
     const server = new FakeFiles();
     const file = server.addFile('a');
     const { engine } = await synced(server);
     await engine.areaCall('files.pin', ref(file.id));
-    const original = server.download.bind(server);
-    server.download = async (jmap, blobId) => {
+    const original = server.downloadStream.bind(server);
+    server.downloadStream = async (jmap, blobId, type, name, sink) => {
       await engine.areaCall('files.unpin', ref(file.id));
-      return original(jmap, blobId);
+      return original(jmap, blobId, type, name, sink);
     };
     await engine.requestSync();
     expect(server.downloads).toHaveLength(1);
@@ -477,9 +738,9 @@ describe('pinned files', () => {
     const old = file.blobId as string;
     const fresh = server.replaceContent(file.id, new Uint8Array([9, 9]));
     await engine.requestSync();
-    expect(fileBlob({ db }, JMAP_ACCOUNT, old)).toBeNull();
-    expect([...(fileBlob({ db }, JMAP_ACCOUNT, fresh)?.data ?? [])]).toEqual([9, 9]);
-    expect(Array.from((await engine.areaCall('files.read', ref(file.id)) as any).data)).toEqual([9, 9]);
+    expect(keptIn(db, old)).toBeNull();
+    expect([...await bytesOf(keptIn(db, fresh))]).toEqual([9, 9]);
+    expect([...await bytesOf(await engine.areaCall('files.read', ref(file.id)))]).toEqual([9, 9]);
   });
 
   it('drops the content when the file is removed on the server, unless another node shares it', async () => {
@@ -493,10 +754,10 @@ describe('pinned files', () => {
     expect(server.downloads).toHaveLength(1);
     server.removeNode(a.id);
     await engine.requestSync();
-    expect(fileBlob({ db }, JMAP_ACCOUNT, 'shared-blob')).not.toBeNull();
+    expect(keptIn(db, 'shared-blob')).not.toBeNull();
     server.removeNode(b.id);
     await engine.requestSync();
-    expect(fileBlob({ db }, JMAP_ACCOUNT, 'shared-blob')).toBeNull();
+    expect(keptIn(db, 'shared-blob')).toBeNull();
     expect(Number(db.get<{ n: number }>('SELECT COUNT(*) AS n FROM file_blob_chunk')?.n)).toBe(0);
   });
 
@@ -521,8 +782,8 @@ describe('pinned files', () => {
     const file = server.addFile('a');
     const rig = await synced(server);
     await rig.engine.areaCall('files.pin', ref(file.id));
-    const original = server.download.bind(server);
-    server.download = async () => {
+    const original = server.downloadStream.bind(server);
+    server.downloadStream = async () => {
       throw new TransportError('network', 'Failed to fetch');
     };
     const syncedBefore = rig.events.filter((e) => e.type === 'synced').length;
@@ -531,7 +792,7 @@ describe('pinned files', () => {
     expect(rig.events.filter((e) => e.type === 'synced').length).toBe(syncedBefore);
     expect((await rig.engine.areaCall('files.kept', undefined) as any).files[0]).toMatchObject({ kept: false, error: null });
 
-    server.download = original;
+    server.downloadStream = original;
     await rig.engine.requestSync();
     expect(await rig.engine.areaCall('files.read', ref(file.id))).not.toBeNull();
   });
@@ -601,11 +862,11 @@ describe('recently opened files', () => {
     const file = server.addFile('new', null, 10);
     const rig = await synced(server, { maxTotalBytes: 2 * FILE_CACHE_CAP_BYTES });
     // As if an older file already took all of it: only the row counts here.
-    rig.db.run('INSERT INTO file_blob (jmap, blob_id, type, size, kept_at) VALUES (?, ?, ?, ?, ?)', [JMAP_ACCOUNT, 'huge', 'x', FILE_CACHE_CAP_BYTES, NOW - 1000]);
+    rig.db.run('INSERT INTO file_blob (jmap, blob_id, type, size, kept_at, complete) VALUES (?, ?, ?, ?, ?, 1)', [JMAP_ACCOUNT, 'huge', 'x', FILE_CACHE_CAP_BYTES, NOW - 1000]);
     rig.db.run("INSERT INTO file_node (jmap, id, name, kind, blob_id, size, json, opened_at) VALUES (?, 'hugenode', 'huge', 'file', 'huge', ?, '{}', ?)", [JMAP_ACCOUNT, FILE_CACHE_CAP_BYTES, NOW - 1000]);
     await rig.engine.areaCall('files.noteOpened', ref(file.id));
     await rig.engine.requestSync();
-    expect(fileBlob({ db: rig.db }, JMAP_ACCOUNT, 'huge')).toBeNull();
+    expect(keptIn(rig.db, 'huge')).toBeNull();
     expect(await rig.engine.areaCall('files.read', ref(file.id))).not.toBeNull();
     expect((await rig.engine.areaCall('files.kept', undefined) as any).capBytes).toBe(FILE_CACHE_CAP_BYTES);
   });
@@ -621,7 +882,8 @@ describe('recently opened files', () => {
     await rig.engine.requestSync();
     expect(await rig.engine.areaCall('files.read', ref(b.id))).not.toBeNull();
     expect(await rig.engine.areaCall('files.read', ref(a.id))).toBeNull();
-    expect(server.downloads.map((d) => d.blobId)).toEqual([b.blobId, a.blobId]);
+    // It can see that from the sizes, so it doesn't even download it.
+    expect(server.downloads.map((d) => d.blobId)).toEqual([b.blobId]);
     const count = server.downloads.length;
     await rig.engine.requestSync();
     expect(server.downloads).toHaveLength(count);

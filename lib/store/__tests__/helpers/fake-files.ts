@@ -59,6 +59,17 @@ export class FakeFiles extends FakeJmap {
   readonly downloads: Array<{ jmap: string; blobId: string }> = [];
   downloading = 0;
   mostAtOnce = 0;
+  /** How a body arrives. */
+  partBytes = 256 * 1024;
+  /** Blob ids whose body breaks after this many bytes, with how many more times it should. */
+  readonly failMidBody = new Map<string, { after: number; times: number }>();
+  /** Bytes each blob's body actually delivered, last time. */
+  readonly delivered = new Map<string, number>();
+  /** Called after each part of a body, to look at the store meanwhile. */
+  onPart: ((blobId: string) => void) | null = null;
+  /** Set to make a download hang until the transport is aborted. */
+  hangDownloads = false;
+  private readonly hanging = new Set<() => void>();
 
   constructor(options: FakeFilesOptions = {}) {
     super();
@@ -162,7 +173,12 @@ export class FakeFiles extends FakeJmap {
         let list = [...account.nodes.values()];
         if (this.options.queryOmitsFolders) list = list.filter((n) => n.blobId !== null);
         if (filter.parentId) list = list.filter((n) => n.parentId === filter.parentId);
-        const position = Number(args.position ?? 0);
+        let position = Number(args.position ?? 0);
+        if (args.anchor !== undefined) {
+          const at = list.findIndex((n) => n.id === args.anchor);
+          if (at < 0) throw Object.assign(new Error('anchorNotFound'), { jmapError: 'anchorNotFound' });
+          position = at + Number(args.anchorOffset ?? 0);
+        }
         const limit = Math.min(Number(args.limit ?? 5000) || 5000, 5000);
         return {
           accountId: args.accountId,
@@ -178,15 +194,37 @@ export class FakeFiles extends FakeJmap {
     }
   }
 
-  override async download(jmap: string, blobId: string): Promise<Uint8Array> {
+  abort(): void {
+    for (const stop of this.hanging) stop();
+  }
+
+  override async downloadStream(jmap: string, blobId: string, _type: string, _name: string, sink: (part: Uint8Array) => void): Promise<void> {
     if (this.offline) throw new TransportError('network', 'Failed to fetch');
     this.downloads.push({ jmap, blobId });
     this.downloading += 1;
     this.mostAtOnce = Math.max(this.mostAtOnce, this.downloading);
-    await Promise.resolve();
-    this.downloading -= 1;
-    const data = this.blobs.get(blobId);
-    if (!data) throw new TransportError('http', 'Download failed: 404', 404);
-    return data;
+    try {
+      if (this.hangDownloads) {
+        await new Promise<void>((resolve) => this.hanging.add(resolve));
+        throw new TransportError('network', 'Aborted');
+      }
+      const data = this.blobs.get(blobId);
+      if (!data) throw new TransportError('http', 'Download failed: 404', 404);
+      const failure = this.failMidBody.get(blobId);
+      this.delivered.set(blobId, 0);
+      for (let at = 0; at < data.length; at += this.partBytes) {
+        await Promise.resolve();
+        if (failure && failure.times > 0 && at >= failure.after) {
+          failure.times -= 1;
+          throw new TransportError('network', 'Connection reset', undefined, undefined, undefined, true);
+        }
+        const part = data.subarray(at, at + this.partBytes);
+        this.delivered.set(blobId, at + part.length);
+        sink(part);
+        this.onPart?.(blobId);
+      }
+    } finally {
+      this.downloading -= 1;
+    }
   }
 }
