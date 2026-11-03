@@ -213,6 +213,43 @@ export interface DesktopPluginsBridge {
   install: (slug: string, version?: string) => Promise<DesktopPluginInstallResult>;
 }
 
+export type DesktopUpdateChannel = 'stable' | 'beta';
+
+export interface DesktopUpdateState {
+  /** The running version. */
+  version: string;
+  channel: DesktopUpdateChannel;
+  /** Set by the `UpdateChannel` policy. */
+  channelLocked: boolean;
+  /** False when the `AutoUpdate` policy turned updates off. */
+  allowed: boolean;
+  /** `install`: replaces itself. `notify`: an MSI, deb, rpm or unsigned macOS, says a version exists. `none`: a development run. */
+  ability: 'install' | 'notify' | 'none';
+  /** Windows, and not the per-user installer: an MSI, whose updates come the way it did. */
+  perMachine: boolean;
+  /**
+   * `available`: a newer version, for `notify` installs. `older-available`: on stable, with
+   * a beta running, and the newest stable is older than it. `off`: the policy.
+   */
+  status: 'idle' | 'checking' | 'up-to-date' | 'downloading' | 'ready' | 'available' | 'older-available' | 'error' | 'off';
+  /** The version the status is about. */
+  target?: string;
+  percent?: number;
+}
+
+export interface DesktopUpdatesBridge {
+  state: () => Promise<DesktopUpdateState>;
+  check: () => Promise<DesktopUpdateState>;
+  /** Going to beta asks natively first. A locked channel stays as it is. */
+  setChannel: (channel: DesktopUpdateChannel) => Promise<DesktopUpdateState>;
+  /** Beta to stable, with a native question that says what it means. */
+  installOlder: () => Promise<DesktopUpdateState>;
+  /** Saves drafts through the normal quit, then installs. Nothing happens unless an update is ready. */
+  restart: () => void;
+  openDownload: () => void;
+  onChanged: (listener: (state: DesktopUpdateState) => void) => () => void;
+}
+
 export type DesktopKeystoreHash = 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512';
 
 export interface DesktopKeystoreCertificate {
@@ -579,6 +616,7 @@ export interface BulwarkDesktopBridge {
   spellcheck?: DesktopSpellcheckBridge;
   clipboard?: DesktopClipboardBridge;
   lifecycle?: DesktopLifecycleBridge;
+  updates?: DesktopUpdatesBridge;
   os?: DesktopOsBridge;
   policy?: DesktopPolicyBridge;
   servers?: DesktopServersBridge;
