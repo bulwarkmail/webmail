@@ -122,10 +122,9 @@ export interface JoinLink {
 }
 
 /**
- * The address to offer as Join: web links only, with no user name in them, since
- * `https://meet.google.com@evil.example` goes to evil.example. An app scheme can start
- * anything on the machine (ms-msdt:, search-ms:, smb:), and this comes from whoever sent
- * the invitation.
+ * The address to offer as Join: web links only, with no user name in them, since what
+ * comes before an @ only looks like the host. An app scheme can start anything on the
+ * machine (ms-msdt:, search-ms:, smb:), and this comes from whoever sent the invitation.
  */
 export function joinLinkFrom(uri: string): JoinLink | null {
   let parsed: URL;
