@@ -313,6 +313,16 @@ describe('removing an account', () => {
 });
 
 describe('a full sign-out', () => {
+  it('that keeps the local store for a new sign-in keeps what was chosen for it too', () => {
+    writeEnabled(['acc']);
+    writeChoice('acc', { days: 30 });
+    writeHealth('acc', { pending: 2 });
+    purgeSignedOutData({ keepLocalStore: true });
+    expect(JSON.parse(localStorage.getItem(OFFLINE_SCOPE_KEY)!).acc.days).toBe(30);
+    expect(JSON.parse(localStorage.getItem(OFFLINE_HEALTH_KEY)!).acc.pending).toBe(2);
+    expect(useOfflineStore.getState().choices.acc.days).toBe(30);
+  });
+
   it('deletes the files, every key and what was stored about them', async () => {
     const removeEntry = vi.fn(async () => {});
     setStorage({ getDirectory: async () => ({ removeEntry }) });
