@@ -815,6 +815,46 @@ describe('an endpoint the push service gave up on', () => {
   });
 });
 
+describe('a subscription id the server gave to another device', () => {
+  // Stalwart hands out the lowest free id: this browser's subscription expired,
+  // and the phone that registered next got the same id.
+  it('creates its own instead of taking over the other device\'s', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'b');
+    const client = makeClient([sub('b', OTHER_DEVICE)]);
+    installFetch({ [OTHER_DEVICE]: true });
+
+    await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(client.updatePushSubscription).not.toHaveBeenCalled();
+    expect(client.createPushSubscription).toHaveBeenCalledTimes(1);
+    expect(client.destroyed).toEqual([]);
+    expect(localStorage.getItem(SUB_KEY)).toBe('push-new');
+  });
+
+  it('leaves it alone when turning off', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'b');
+    const client = makeClient([sub('b', OTHER_DEVICE)]);
+    installFetch({});
+
+    await disableWebPush({ client, relayBaseUrl: RELAY });
+
+    expect(client.destroyed).toEqual([]);
+  });
+
+  it('leaves it alone on Re-register', async () => {
+    localStorage.setItem(DEVICE_KEY, THIS_DEVICE);
+    localStorage.setItem(SUB_KEY, 'b');
+    const client = makeClient([sub('b', OTHER_DEVICE)]);
+    installFetch({ [OTHER_DEVICE]: true });
+
+    await enableWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false, forceRecreate: true });
+
+    expect(client.destroyed).toEqual([]);
+  });
+});
+
 describe('resyncWebPush when the relay changed (#903)', () => {
   afterEach(() => setNoThirdPartyTraffic(false));
 
