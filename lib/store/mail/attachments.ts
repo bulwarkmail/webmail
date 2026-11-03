@@ -23,6 +23,8 @@ import { BLOB_CHUNK_BYTES, dropBlob, putBlob } from './records';
 
 /** Keeps well under the server's 1000 requests a minute, which the user's own clicks count against too. */
 const PACE_MS = 200;
+/** There's one raw message per message, and nothing waits for them. */
+const RAW_PACE_MS = 1000;
 const PAGE = 20;
 /**
  * Parts in a row that don't fit before a pass stops looking. Each check reads the
@@ -311,7 +313,7 @@ async function fetchKept(ctx: SyncContext, jmap: string): Promise<void> {
       if (outcome === 'skipped') passed += 1;
       done += 1;
       ctx.emit({ type: 'progress', account: ctx.account, area: 'mail', phase: 'attachments', done, total: null });
-      await ctx.pause(PACE_MS);
+      await ctx.pause(part.raw ? RAW_PACE_MS : PACE_MS);
     }
   }
 }

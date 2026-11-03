@@ -462,6 +462,25 @@ describe('raw messages come last', () => {
   });
 });
 
+describe('the pace', () => {
+  it('is slower for raw messages than for files', async () => {
+    const server = new Files();
+    withFile(server, 'm', 'b-1', 3, 1, { blobId: 'raw-m', size: 3 });
+    const waits: number[] = [];
+    const engine = new AccountEngine({
+      account: 'a@fake.test',
+      db: openMemoryStore(),
+      session: FAKE_SESSION,
+      transport: server,
+      areas: [mailArea],
+      scope: SCOPE,
+      sleep: async (ms) => { waits.push(ms); },
+    });
+    await engine.requestSync();
+    expect(waits).toEqual([200, 1000]);
+  });
+});
+
 describe('what a server error means', () => {
   it('doesn\'t give up on a file for a passing error, and stops for this pass', async () => {
     const server = new Files();

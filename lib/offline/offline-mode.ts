@@ -81,11 +81,23 @@ export type OfflineNotice =
   | { kind: 'forbidden' }
   | { kind: 'back-online-reload' };
 
-let notify: (notice: OfflineNotice) => void = () => {};
+let notifier: ((notice: OfflineNotice) => void) | null = null;
+/**
+ * The store opens at a start from the local copy, before the host component has
+ * mounted. What it has to say by then, like "this store couldn't be read", waits.
+ */
+const earlyNotices: OfflineNotice[] = [];
+const MOST_EARLY_NOTICES = 10;
+
+function notify(notice: OfflineNotice): void {
+  if (notifier) notifier(notice);
+  else if (earlyNotices.length < MOST_EARLY_NOTICES) earlyNotices.push(notice);
+}
 
 /** Where the notices go (the host component turns them into toasts). */
 export function setOfflineNotifier(fn: (notice: OfflineNotice) => void): void {
-  notify = fn;
+  notifier = fn;
+  for (const notice of earlyNotices.splice(0)) fn(notice);
 }
 
 export function offlineNotify(notice: OfflineNotice): void {

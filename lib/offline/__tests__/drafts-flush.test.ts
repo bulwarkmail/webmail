@@ -9,7 +9,7 @@ import { FakeJmapDrafts } from '@/lib/store/__tests__/helpers/fake-drafts';
 import { JMAP_ACCOUNT } from '@/lib/store/__tests__/helpers/fake-jmap';
 import { InProcessStore } from '@/lib/store/__tests__/helpers/in-process-store';
 import { consumeLost } from '../lost';
-import { refreshQueueState, startOfflineMode, unsentCount, wipeAccount, wipeEverything } from '../offline-mode';
+import { offlineNotify, refreshQueueState, setOfflineNotifier, startOfflineMode, unsentCount, wipeAccount, wipeEverything } from '../offline-mode';
 import { flushQueue, forgetOrphanCheck } from '../flush';
 import { heldFile, holdFile, noteDraftReplacedElsewhere, queueSend, readLocalDrafts, retryLocalDraft } from '../queue';
 import { forgetLegacyMove } from '../migrate-legacy';
@@ -184,6 +184,28 @@ describe('flushQueue and drafts', () => {
     await flushQueue('acc', client as unknown as JMAPClient, { notify: vi.fn(), allowed: () => true });
     clock.mockRestore();
     expect(await heldFile('acc', orphan.blobId)).toBeNull();
+  });
+});
+
+describe('a notice before the host is there', () => {
+  it('waits for it, and comes once', async () => {
+    vi.resetModules();
+    const fresh = await import('../offline-mode');
+    fresh.offlineNotify({ kind: 'store-reset' });
+    const show = vi.fn();
+    fresh.setOfflineNotifier(show);
+    expect(show).toHaveBeenCalledTimes(1);
+    expect(show).toHaveBeenCalledWith({ kind: 'store-reset' });
+    fresh.setOfflineNotifier(vi.fn());
+    expect(show).toHaveBeenCalledTimes(1);
+    vi.resetModules();
+  });
+
+  it('goes straight to a host that\'s there', () => {
+    const show = vi.fn();
+    setOfflineNotifier(show);
+    offlineNotify({ kind: 'store-reset' });
+    expect(show).toHaveBeenCalledTimes(1);
   });
 });
 
