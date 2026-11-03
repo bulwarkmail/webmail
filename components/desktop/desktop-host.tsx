@@ -118,7 +118,7 @@ export function DesktopHost() {
   // Menus and spellcheck follow the interface.
   useEffect(() => {
     const ui = uiLocale || document.documentElement.lang;
-    if (ui) setDesktopInterfaceLanguage(ui, shellLabels(tRef.current as unknown as (key: string) => string));
+    if (ui) setDesktopInterfaceLanguage(ui, shellLabels(tRef.current as unknown as (key: string, values?: Record<string, string>) => string));
   }, [uiLocale]);
 
   // What the user writes in, whichever composer asks for it too.

@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { shellLabels } from '../languages';
 import { updateLabels } from '../update-labels';
 
 const en = JSON.parse(readFileSync(path.join(process.cwd(), 'locales/en/common.json'), 'utf8')).desktop_updates as Record<string, string>;
@@ -15,5 +16,12 @@ describe('the updater text the shell gets', () => {
     expect(labels.updateOlderDetail).toContain('{current}');
     expect(labels.updateOlderDetail).toContain('{target}');
     expect(Object.values(labels).every((text) => typeof text === 'string' && text.length > 0)).toBe(true);
+  });
+
+  it('goes out with the labels of the menus', () => {
+    const labels = shellLabels((key) => key);
+    expect(labels.menuRestartToUpdate).toBe('desktop_updates.shell_restart');
+    expect(labels.updateReadyTitle).toBe('desktop_updates.shell_ready_title');
+    expect(labels.menuFile).toBe('desktopUi.menu.file');
   });
 });

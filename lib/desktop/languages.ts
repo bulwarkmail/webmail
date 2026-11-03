@@ -5,6 +5,7 @@
  */
 
 import { getDesktopBridge } from './bridge';
+import { updateLabels } from './update-labels';
 
 let ui = '';
 let labels: Record<string, string> | undefined;
@@ -34,8 +35,9 @@ export function noteComposerLanguage(key: string, language: string | null): void
 }
 
 /** The shell's text in the interface language, by its keys in src/main/strings.ts. */
-export function shellLabels(t: (key: string) => string): Record<string, string> {
+export function shellLabels(t: (key: string, values?: Record<string, string>) => string): Record<string, string> {
   return {
+    ...updateLabels(t),
     menuFile: t('desktopUi.menu.file'),
     menuEdit: t('desktopUi.menu.edit'),
     menuView: t('desktopUi.menu.view'),
