@@ -3,21 +3,27 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FakeCaches, loadWorker } from './sw-harness';
 import {
   HANDOFF_CACHE,
+  HANDOFF_MAX_BYTES,
+  HANDOFF_MAX_ENTRIES,
   HANDOFF_TTL_MS,
   adoptStoredHandoff,
   clearHandoffs,
+  discardStoredHandoff,
+  expireHandoffs,
   handOffDraft,
   handOffFiles,
   handOffLaunchFiles,
   handOffNewMessage,
   kindForFile,
   parseLaunchLanding,
+  peekStoredHandoff,
   pendingHandoffs,
   restoreStoredHandoffs,
   shareDraft,
   shortcutFromTargetUrl,
   stripLandingParams,
   subscribeHandoff,
+  subscribeHandoffLost,
   takeHandoff,
 } from '../launch-handoff';
 
@@ -25,7 +31,9 @@ import {
 
 const file = (name: string, type = '', body = 'x') => new File([body], name, { type });
 const handle = (f: File) => ({ kind: 'file', getFile: async () => f });
-const settle = () => new Promise((r) => setTimeout(r, 0));
+// Sealing runs on Web Crypto's thread pool.
+const settle = () => new Promise((r) => setTimeout(r, 60));
+const whenStored = () => vi.waitFor(() => expect(sessionStorage.getItem('bulwark:launch-handoffs')).not.toBeNull(), { timeout: 5000 });
 
 function memoryStorage() {
   const backing = new Map<string, string>();
@@ -163,7 +171,7 @@ describe('across a page load', () => {
 
   it('brings back a file that waited for a sign-in, with its name and type', async () => {
     handOffFiles([file('a.ics', 'text/calendar', 'BEGIN:VCALENDAR')], 'calendar');
-    await settle();
+    await whenStored();
     await newPage();
     expect(takeHandoff('calendar')).toBeNull();
 
@@ -176,9 +184,9 @@ describe('across a page load', () => {
 
   it('removes the stored copy once it is taken', async () => {
     handOffFiles([file('a.ics')], 'calendar');
-    await settle();
+    await whenStored();
     const store = await caches.open(HANDOFF_CACHE);
-    expect((await store.keys()).length).toBe(2);
+    expect((await store.keys()).length).toBe(3);
 
     takeHandoff('calendar');
     await settle();
@@ -195,29 +203,104 @@ describe('across a page load', () => {
 
   it("leaves another window's handoff alone", async () => {
     handOffFiles([file('a.ics')], 'calendar');
-    await settle();
+    await whenStored();
     await newPage();
     // Another window: its own sessionStorage, the same cache.
     vi.stubGlobal('sessionStorage', memoryStorage());
     await restoreStoredHandoffs();
     expect(takeHandoff('calendar')).toBeNull();
-    expect((await (await caches.open(HANDOFF_CACHE)).keys()).length).toBe(2);
+    expect((await (await caches.open(HANDOFF_CACHE)).keys()).length).toBe(3);
+  });
+
+  it('keeps no readable bytes, name or text at rest', async () => {
+    handOffDraft({ subject: 'Secret subject', body: 'Secret text', files: [file('secret-name.txt', 'text/plain', 'secret bytes')] });
+    await whenStored();
+    const store = await caches.open(HANDOFF_CACHE);
+    const keys = await store.keys();
+    expect(keys.length).toBeGreaterThanOrEqual(3);
+    for (const key of keys) {
+      const stored = await (await store.match(key))!.text();
+      for (const secret of ['Secret subject', 'Secret text', 'secret-name', 'secret bytes']) expect(stored).not.toContain(secret);
+    }
+  });
+
+  it('cannot read it once the tab with the key is gone', async () => {
+    handOffFiles([file('a.ics')], 'calendar');
+    await whenStored();
+    await newPage();
+    vi.stubGlobal('sessionStorage', memoryStorage());
+    const store = await caches.open(HANDOFF_CACHE);
+    const metaKey = (await store.keys()).find((key) => key.url.endsWith('/meta'))!.url;
+    const id = metaKey.split('/').slice(-2)[0];
+    expect(await adoptStoredHandoff(id)).toBe(false);
+    expect(await adoptStoredHandoff(id, 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')).toBe(false);
+  });
+
+  it('says so when a stored handoff of this tab is gone after the reload', async () => {
+    const losses: string[] = [];
+    const off = subscribeHandoffLost((loss) => losses.push(loss));
+    handOffFiles([file('a.ics')], 'calendar');
+    await whenStored();
+    await newPage();
+    await caches.delete(HANDOFF_CACHE);
+    await restoreStoredHandoffs();
+    expect(losses).toEqual(['expired']);
+    expect(sessionStorage.getItem('bulwark:launch-handoffs')).toBeNull();
+    off();
+  });
+
+  it('says so when a stored file is missing, and delivers the rest', async () => {
+    const losses: string[] = [];
+    const off = subscribeHandoffLost((loss) => losses.push(loss));
+    handOffDraft({ subject: 'S', files: [file('one.txt'), file('two.txt')] });
+    await whenStored();
+    await newPage();
+    const store = await caches.open(HANDOFF_CACHE);
+    const first = (await store.keys()).find((key) => key.url.endsWith('/0'))!;
+    await store.delete(first);
+    await restoreStoredHandoffs();
+    expect(losses).toEqual(['missing']);
+    expect(takeHandoff('compose')?.files.map((f) => f.name)).toEqual(['two.txt']);
+    off();
+  });
+
+  it('keeps no more than the limit, oldest out first', async () => {
+    const created: string[] = [];
+    for (let n = 0; n < HANDOFF_MAX_ENTRIES + 2; n += 1) {
+      const name = `f${n}.ics`;
+      handOffFiles([file(name)], 'calendar');
+      created.push(name);
+      await settle();
+      await settle();
+    }
+    const store = await caches.open(HANDOFF_CACHE);
+    const metas = (await store.keys()).filter((key) => key.url.endsWith('/meta'));
+    expect(metas.length).toBeLessThanOrEqual(HANDOFF_MAX_ENTRIES);
+  });
+
+  it('does not store what is over the byte limit, and keeps it in memory', async () => {
+    const big = file('big.ics');
+    Object.defineProperty(big, 'size', { value: HANDOFF_MAX_BYTES + 1 });
+    handOffFiles([big], 'calendar');
+    await settle();
+    expect(await caches.has(HANDOFF_CACHE)).toBe(false);
+    expect(takeHandoff('calendar')?.files).toEqual([big]);
   });
 
   it('sweeps what nobody took, and keeps what is recent', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     handOffFiles([file('old.ics')], 'calendar');
-    await settle();
+    await whenStored();
     await newPage();
     vi.stubGlobal('sessionStorage', memoryStorage());
     vi.advanceTimersByTime(HANDOFF_TTL_MS + 1);
     handOffFiles([file('new.vcf')], 'contacts');
-    await settle();
+    await whenStored();
 
     await restoreStoredHandoffs();
     const store = await caches.open(HANDOFF_CACHE);
     const urls = (await store.keys()).map((key) => key.url);
-    expect(urls).toHaveLength(2);
+    expect(urls).toHaveLength(3);
     const meta = await store.match(urls.find((url) => url.endsWith('/meta'))!);
     expect(((await meta!.json()) as { kind: string }).kind).toBe('contacts');
   });
@@ -245,10 +328,47 @@ describe('across a page load', () => {
   });
 });
 
+describe('while the page stays open', () => {
+  it('drops what waited too long on a timer, and says so', async () => {
+    vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] });
+    const losses: string[] = [];
+    const off = subscribeHandoffLost((loss) => losses.push(loss));
+    handOffFiles([file('a.eml')], 'eml');
+    await vi.advanceTimersByTimeAsync(HANDOFF_TTL_MS + 2000);
+    expect(pendingHandoffs()).toEqual([]);
+    expect(losses).toEqual(['expired']);
+    off();
+  });
+
+  it('says so when a taker finds only an expired handoff', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const losses: string[] = [];
+    const off = subscribeHandoffLost((loss) => losses.push(loss));
+    handOffFiles([file('a.eml')], 'eml');
+    vi.advanceTimersByTime(HANDOFF_TTL_MS + 1);
+    expect(takeHandoff('eml')).toBeNull();
+    expect(losses).toEqual(['expired']);
+    off();
+  });
+
+  it('keeps what is still in time', async () => {
+    handOffFiles([file('a.eml')], 'eml');
+    await expireHandoffs();
+    expect(pendingHandoffs()).toHaveLength(1);
+  });
+
+  it('leaves the second of two drafts queued until it is taken', () => {
+    handOffDraft({ subject: 'first' });
+    handOffDraft({ subject: 'second' });
+    expect(takeHandoff('compose')?.subject).toBe('first');
+    expect(pendingHandoffs().map((h) => h.subject)).toEqual(['second']);
+  });
+});
+
 describe('sign-out', () => {
   it('forgets what is waiting, in memory and stored', async () => {
     handOffFiles([file('a.ics')], 'calendar');
-    await settle();
+    await whenStored();
     clearHandoffs();
     await settle();
     expect(pendingHandoffs()).toEqual([]);
@@ -266,12 +386,18 @@ describe('what the service worker stored', () => {
     form.set('text', 'Look at this');
     form.set('url', 'https://example.org/page');
     form.append('files', file('photo.png', 'image/png', 'bytes'));
-    const answer = await worker.request({ url: 'https://mail.example.com/protocol/share', method: 'POST', mode: 'navigate', formData: async () => form } as never);
-    const landing = parseLaunchLanding(new URL(answer!.headers.get('location')!).search);
+    const answer = await worker.request({ url: 'https://mail.example.com/protocol/share', method: 'POST', mode: 'navigate', destination: 'document', formData: async () => form } as never);
+    const location = new URL(answer!.headers.get('location')!);
+    const landing = parseLaunchLanding(location.search, location.hash);
     expect(landing?.type).toBe('stored');
-    const { id } = landing as { id: string };
+    const { id, key } = landing as { id: string; key: string };
 
-    expect(await adoptStoredHandoff(id)).toBe(true);
+    // Without the key from the address it can't be read; asking shows what it is.
+    expect(await peekStoredHandoff(id, '')).toBeNull();
+    expect(await peekStoredHandoff(id, key)).toEqual({ subject: 'A link', body: 'Look at this\n\nhttps://example.org/page', files: ['photo.png'] });
+    expect(pendingHandoffs()).toEqual([]);
+
+    expect(await adoptStoredHandoff(id, key)).toBe(true);
     const handoff = takeHandoff('compose');
     expect(handoff).toMatchObject({ subject: 'A link', body: 'Look at this\n\nhttps://example.org/page' });
     expect(handoff?.files[0].name).toBe('photo.png');
@@ -283,13 +409,37 @@ describe('what the service worker stored', () => {
   });
 
   it('is gone when the id names nothing', async () => {
-    expect(await adoptStoredHandoff('11111111-2222')).toBe(false);
+    expect(await adoptStoredHandoff('11111111-2222', 'AAAA')).toBe(false);
+    expect(await peekStoredHandoff('11111111-2222', 'AAAA')).toBeNull();
+  });
+
+  it('goes when the user refuses it', async () => {
+    const worker = loadWorker({ buildId: 'a', caches, clients: [] });
+    const form = new FormData();
+    form.append('files', file('photo.png'));
+    const answer = await worker.request({ url: 'https://mail.example.com/protocol/share', method: 'POST', mode: 'navigate', destination: 'document', formData: async () => form } as never);
+    const location = new URL(answer!.headers.get('location')!);
+    const { id, key } = parseLaunchLanding(location.search, location.hash) as { id: string; key: string };
+    await discardStoredHandoff(id);
+    expect((await (await caches.open(HANDOFF_CACHE)).keys()).length).toBe(0);
+    expect(await peekStoredHandoff(id, key)).toBeNull();
+  });
+
+  it('cleans control characters out of names and text, as for a mailto: link', async () => {
+    const worker = loadWorker({ buildId: 'a', caches, clients: [] });
+    const form = new FormData();
+    form.set('title', 'Hi\r\nBcc: evil@example.org');
+    form.append('files', file('a\u202Egnp.exe'));
+    const answer = await worker.request({ url: 'https://mail.example.com/protocol/share', method: 'POST', mode: 'navigate', destination: 'document', formData: async () => form } as never);
+    const location = new URL(answer!.headers.get('location')!);
+    const { id, key } = parseLaunchLanding(location.search, location.hash) as { id: string; key: string };
+    expect(await peekStoredHandoff(id, key)).toMatchObject({ subject: 'HiBcc: evil@example.org', files: ['agnp.exe'] });
   });
 
   it('is gone when it is too old', async () => {
     const store = await caches.open(HANDOFF_CACHE);
-    await store.put('/__bulwark/handoff/old/meta', new Response(JSON.stringify({ kind: 'compose', createdAt: Date.now() - HANDOFF_TTL_MS - 1, files: [] })));
-    expect(await adoptStoredHandoff('old')).toBe(false);
+    await store.put('/__bulwark/handoff/old/meta', new Response(JSON.stringify({ kind: 'compose', createdAt: Date.now() - HANDOFF_TTL_MS - 1, bytes: 0 })));
+    expect(await adoptStoredHandoff('old', 'AAAA')).toBe(false);
     expect((await store.keys()).length).toBe(0);
   });
 });
@@ -306,25 +456,55 @@ describe('text of a share', () => {
   it('copes with only a link', () => {
     expect(shareDraft({ url: 'https://a.example' })).toEqual({ subject: '', body: 'https://a.example' });
   });
+
+  it('strips control characters from the subject, so no header can be planted', () => {
+    expect(shareDraft({ title: 'Hi\r\nBcc: evil@example.org' }).subject).toBe('HiBcc: evil@example.org');
+  });
+
+  it('keeps line breaks in the body and drops other control characters', () => {
+    expect(shareDraft({ text: 'one\r\ntwo\u0000\u0007' }).body).toBe('one\ntwo');
+  });
+
+  it('applies the limits of a mailto: link', () => {
+    const draft = shareDraft({ title: 'x'.repeat(2000), text: 'y'.repeat(100_000), url: 'https://a.example' });
+    expect(draft.subject).toHaveLength(998);
+    expect(draft.body).toHaveLength(64 * 1024);
+  });
+
+  it('applies them to a draft handed in directly as well', () => {
+    handOffDraft({ subject: 'a\r\nb', body: 'y'.repeat(100_000) });
+    const handoff = takeHandoff('compose');
+    expect(handoff?.subject).toBe('ab');
+    expect(handoff?.body).toHaveLength(64 * 1024);
+  });
 });
 
 describe('the address a launch lands on', () => {
   it.each([
-    ['?compose=1', { type: 'new-message' }],
-    ['?share=abc-123', { type: 'stored', id: 'abc-123' }],
-    ['?share=unavailable&share_title=T&share_text=B&share_files=1', { type: 'inline', subject: 'T', body: 'B', filesLost: true }],
-    ['?share=unavailable&share_url=https%3A%2F%2Fa.example', { type: 'inline', subject: '', body: 'https://a.example', filesLost: false }],
-    ['?share=..%2F..%2Fetc', null],
-    ['?compose=0', null],
-    ['?openLatestUnread=1', null],
-    ['', null],
-  ])('%s', (search, expected) => {
-    expect(parseLaunchLanding(search)).toEqual(expected);
+    ['?compose=1', '', { type: 'new-message' }],
+    ['', '#share=abc-123&key=k1', { type: 'stored', id: 'abc-123', key: 'k1' }],
+    ['', '#share=unavailable&share_title=T&share_text=B&share_files=1', { type: 'inline', subject: 'T', body: 'B', filesLost: true, cut: false }],
+    ['', '#share=unavailable&share_url=https%3A%2F%2Fa.example&share_cut=1', { type: 'inline', subject: '', body: 'https://a.example', filesLost: false, cut: true }],
+    ['', '#share=..%2F..%2Fetc', null],
+    // Shared text stays out of the query, which reaches logs.
+    ['?share=unavailable&share_text=x', '', null],
+    ['?compose=0', '', null],
+    ['?openLatestUnread=1', '#x', null],
+    ['', '', null],
+  ])('%s %s', (search, hash, expected) => {
+    expect(parseLaunchLanding(search, hash)).toEqual(expected);
+  });
+
+  it('cleans text that came in the address', () => {
+    const landing = parseLaunchLanding('', '#share=unavailable&share_title=Hi%0D%0ABcc%3A%20evil');
+    expect(landing).toMatchObject({ subject: 'HiBcc: evil' });
   });
 
   it('leaves only what is not about the launch', () => {
-    expect(stripLandingParams('?compose=1')).toBe('');
-    expect(stripLandingParams('?share=unavailable&share_text=x&slot=2')).toBe('?slot=2');
+    expect(stripLandingParams('?compose=1', '')).toEqual({ search: '', hash: '' });
+    expect(stripLandingParams('?slot=2', '#share=unavailable&share_text=x')).toEqual({ search: '?slot=2', hash: '' });
+    expect(stripLandingParams('?compose=1&slot=2', '#section')).toEqual({ search: '?slot=2', hash: '#section' });
+    expect(stripLandingParams('', '#share=a&key=b')).toEqual({ search: '', hash: '' });
   });
 });
 

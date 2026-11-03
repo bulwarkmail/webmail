@@ -160,7 +160,9 @@ describe('share route without a service worker', () => {
     expect(res.status).toBe(303);
     const landing = new URL(res.headers.get('location')!, 'https://x.example');
     expect(landing.pathname).toBe('/');
-    expect(Object.fromEntries(landing.searchParams)).toEqual({ share: 'unavailable', share_title: 'T', share_text: 'B', share_url: 'https://example.org/' });
+    // In the fragment: it never reaches an access log.
+    expect(landing.search).toBe('');
+    expect(Object.fromEntries(new URLSearchParams(landing.hash.slice(1)))).toEqual({ share: 'unavailable', share_title: 'T', share_text: 'B', share_url: 'https://example.org/' });
   });
 
   it('says files were lost', async () => {
@@ -169,7 +171,7 @@ describe('share route without a service worker', () => {
     form.set('text', 'B');
     form.append('files', new File(['x'], 'a.png'));
     const res = await POST(post(form, '500'));
-    expect(new URL(res.headers.get('location')!, 'https://x.example').searchParams.get('share_files')).toBe('1');
+    expect(res.headers.get('location')).toContain('share_files=1');
   });
 
   it('does not read a large upload into memory', async () => {
@@ -180,15 +182,34 @@ describe('share route without a service worker', () => {
     const request = { headers: new Headers({ 'content-length': String(50 * 1024 * 1024) }), formData: spy } as unknown as Request;
     const res = await POST(request);
     expect(spy).not.toHaveBeenCalled();
-    expect(new URL(res.headers.get('location')!, 'https://x.example').searchParams.get('share_files')).toBe('1');
+    expect(res.headers.get('location')).toContain('share_files=1');
   });
 
-  it('keeps the address short', async () => {
+  it.each([
+    ['Latin', 'x'],
+    ['Japanese, 9 encoded bytes each', 'あ'],
+    ['emoji, whole characters only', '😀'],
+  ])('keeps the address short and says it cut: %s', async (_name, character) => {
     const { POST } = await route();
     const form = new FormData();
-    form.set('text', 'x'.repeat(100_000));
+    form.set('text', character.repeat(3000));
+    form.set('title', character.repeat(3000));
+    form.set('url', character.repeat(3000));
     const res = await POST(post(form, '100000'));
-    expect(res.headers.get('location')!.length).toBeLessThan(4200);
+    const location = res.headers.get('location')!;
+    expect(location.length).toBeLessThan(4000);
+    const fragment = new URLSearchParams(new URL(location, 'https://x.example').hash.slice(1));
+    expect(fragment.get('share_cut')).toBe('1');
+    // Decodes cleanly: no half a character at the end.
+    expect(fragment.get('share_text')!.endsWith(character)).toBe(true);
+  });
+
+  it('does not say it cut what fits', async () => {
+    const { POST } = await route();
+    const form = new FormData();
+    form.set('text', 'あ'.repeat(100));
+    const res = await POST(post(form, '1000'));
+    expect(res.headers.get('location')).not.toContain('share_cut');
   });
 
   it('honours the subpath', async () => {

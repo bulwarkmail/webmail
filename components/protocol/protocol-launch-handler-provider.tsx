@@ -1,23 +1,29 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useConfig } from "@/hooks/use-config";
+import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
+import { flushComposers } from "@/lib/compose-flush-registry";
 import { getPathPrefix } from "@/lib/browser-navigation";
 import { matchSurface, type AppSurface } from "@/lib/deep-links";
 import {
   adoptStoredHandoff,
+  discardStoredHandoff,
   handOffDraft,
   handOffLaunchFiles,
   handOffNewMessage,
   parseLaunchLanding,
+  peekStoredHandoff,
   pendingHandoffs,
   restoreStoredHandoffs,
   shortcutFromTargetUrl,
   stripLandingParams,
   subscribeHandoff,
+  subscribeHandoffLost,
   type HandoffKind,
 } from "@/lib/launch-handoff";
 import { productName } from "@/lib/product-name";
@@ -77,6 +83,14 @@ const HANDOFF_TARGET: Partial<Record<HandoffKind, { surface: AppSurface; path: s
   contacts: { surface: "contacts", path: "/contacts" },
 };
 
+/** How long a launch waits for an open composer to save before it leaves the page. */
+const FLUSH_BEFORE_LEAVING_MS = 5000;
+/** How much of a share the question shows. */
+const OFFER_TEXT_LENGTH = 200;
+const OFFER_FILE_COUNT = 5;
+
+type ShareOffer = { subject: string; body: string; files: string[] };
+
 function isStandaloneDisplayMode() {
   return window.matchMedia?.("(display-mode: standalone)").matches
     || (navigator as StandaloneNavigator).standalone === true;
@@ -101,31 +115,78 @@ export function ProtocolLaunchHandlerProvider({ children }: ProtocolLaunchHandle
   const pathname = usePathname();
   const tLaunch = useTranslations("pwaLaunch");
   const sentToTarget = useRef(new Set<string>());
+  const { dialogProps, confirm } = useConfirmDialog();
+  const [offer, setOffer] = useState<ShareOffer | null>(null);
+
+  // Anyone can POST to the share target or link to a landing address, and
+  // Chromium's link capturing can bring a cross-site form POST into an
+  // installed app's window, so nothing tells a real share from a planted one.
+  // Nothing goes into an account until the user says yes.
+  const askAboutShare = useCallback(async (shared: ShareOffer) => {
+    setOffer(shared);
+    const agreed = await confirm({
+      title: tLaunch("share_confirm_title"),
+      message: tLaunch("share_confirm_message"),
+      confirmText: tLaunch("share_confirm_accept"),
+      cancelText: tLaunch("share_confirm_decline"),
+    });
+    setOffer(null);
+    return agreed;
+  }, [confirm, tLaunch]);
 
   // What the page's own address asks for: a shortcut's new message, or what
   // was shared. Once: it leaves the address before anything else happens.
   useEffect(() => {
-    const landing = parseLaunchLanding(window.location.search);
+    const stopLossNotes = subscribeHandoffLost((loss) => {
+      toast.error(tLaunch(loss === "missing" ? "share_files_lost" : "handoff_expired"));
+    });
+    const { search, hash, pathname: path } = window.location;
+    const landing = parseLaunchLanding(search, hash);
     if (landing) {
-      window.history.replaceState(
-        window.history.state,
-        "",
-        window.location.pathname + stripLandingParams(window.location.search) + window.location.hash,
-      );
+      const left = stripLandingParams(search, hash);
+      window.history.replaceState(window.history.state, "", path + left.search + left.hash);
     }
     if (landing?.type === "new-message") {
       handOffNewMessage();
     } else if (landing?.type === "inline") {
-      if (landing.subject || landing.body) handOffDraft({ subject: landing.subject, body: landing.body });
-      if (landing.filesLost) toast.error(tLaunch("share_files_lost"));
+      void (async () => {
+        const { subject, body } = landing;
+        if ((subject || body) && !(await askAboutShare({ subject, body, files: [] }))) return;
+        if (subject || body) handOffDraft({ subject, body });
+        if (landing.filesLost) toast.error(tLaunch("share_files_lost"));
+        if (landing.cut) toast.info(tLaunch("share_cut"));
+      })();
     } else if (landing?.type === "stored") {
-      void adoptStoredHandoff(landing.id).then((found) => {
-        if (!found) toast.error(tLaunch("share_gone"));
-      });
+      void (async () => {
+        const shared = await peekStoredHandoff(landing.id, landing.key);
+        if (!shared) {
+          await discardStoredHandoff(landing.id);
+          toast.error(tLaunch("share_gone"));
+          return;
+        }
+        if (!(await askAboutShare(shared))) {
+          await discardStoredHandoff(landing.id);
+          return;
+        }
+        if (!(await adoptStoredHandoff(landing.id, landing.key))) toast.error(tLaunch("share_gone"));
+      })();
     }
     void restoreStoredHandoffs();
+    return stopLossNotes;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Leaving the mail page ends an open composer, and its autosave waits 2
+  // seconds: what was just typed is saved first. If it can't be, stay. A file
+  // keeps waiting and opens once the user goes to that page.
+  const leaveFor = useCallback(async (path: "/" | "/calendar" | "/contacts") => {
+    const result = await flushComposers(FLUSH_BEFORE_LEAVING_MS);
+    if (result.failed > 0 || result.timedOut) {
+      toast.error(tLaunch("save_first_failed"));
+      return;
+    }
+    router.push(path);
+  }, [router, tLaunch]);
 
   // Takes a handoff to the page that handles it, once each: on arrival, or
   // when the sign-in it had to wait for is done.
@@ -136,13 +197,13 @@ export function ProtocolLaunchHandlerProvider({ children }: ProtocolLaunchHandle
         const target = HANDOFF_TARGET[handoff.kind];
         if (!target || sentToTarget.current.has(handoff.id)) continue;
         sentToTarget.current.add(handoff.id);
-        if (matchSurface(pathname)?.surface !== target.surface) router.push(target.path);
+        if (matchSurface(pathname)?.surface !== target.surface) void leaveFor(target.path as "/" | "/calendar" | "/contacts");
         return;
       }
     };
     goToTarget();
     return subscribeHandoff("any", goToTarget);
-  }, [pathname, router]);
+  }, [pathname, leaveFor]);
 
   useEffect(() => {
     if (pathname.startsWith("/protocol/")) return;
@@ -177,7 +238,7 @@ export function ProtocolLaunchHandlerProvider({ children }: ProtocolLaunchHandle
       if (!launch) {
         const shortcut = shortcutFromTargetUrl(launchParams.targetURL, window.location.origin);
         if (shortcut === "new-message") handOffNewMessage();
-        else if (shortcut && matchSurface(pathname)?.surface !== shortcut) router.push(`/${shortcut}`);
+        else if (shortcut && matchSurface(pathname)?.surface !== shortcut) void leaveFor(`/${shortcut}`);
         return;
       }
 
@@ -213,12 +274,23 @@ export function ProtocolLaunchHandlerProvider({ children }: ProtocolLaunchHandle
       notifyPendingWebcal();
       if (pathname !== "/calendar") router.push("/calendar");
     });
-  }, [pathname, router, tLaunch]);
+  }, [pathname, router, tLaunch, leaveFor]);
 
+  const offeredFiles = offer?.files ?? [];
   return (
     <>
       {children}
       <LaunchFileHost />
+      <ConfirmDialog
+        {...dialogProps}
+        details={offer && (
+          <dl className="space-y-1 break-words text-sm" data-testid="share-confirm-details">
+            {offer.subject && <div><dt className="inline font-medium">{tLaunch("share_confirm_subject")} </dt><dd className="inline">{offer.subject}</dd></div>}
+            {offer.body && <div><dt className="inline font-medium">{tLaunch("share_confirm_text")} </dt><dd className="inline">{offer.body.slice(0, OFFER_TEXT_LENGTH)}</dd></div>}
+            {offeredFiles.length > 0 && <div><dt className="inline font-medium">{tLaunch("share_confirm_files", { count: offeredFiles.length })} </dt><dd className="inline">{offeredFiles.slice(0, OFFER_FILE_COUNT).join(", ")}{offeredFiles.length > OFFER_FILE_COUNT ? ", …" : ""}</dd></div>}
+          </dl>
+        )}
+      />
     </>
   );
 }

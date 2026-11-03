@@ -62,7 +62,7 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(Promise.all([self.clients.claim(), deleteStaleShellCaches()]));
+  event.waitUntil(Promise.all([self.clients.claim(), deleteStaleShellCaches(), sweepHandoffsOnActivate()]));
 });
 
 // ---- Offline mode (#523): the app shell ----
@@ -315,18 +315,92 @@ async function deleteStaleShellCaches() {
 //
 // The manifest's share_target POSTs here. Files can't travel through a
 // redirect, so they wait in the Cache API until the page takes them (same
-// layout as lib/launch-handoff.ts, which also removes them). Without a worker
-// the POST reaches app/(main)/protocol/share/route.ts.
+// layout and limits as lib/launch-handoff.ts, which also removes them). Any
+// site can POST here, signed in or not, and the worker can't tell who did: the
+// page asks the user. So what is kept is limited, and sealed with a key that
+// only the landing address's fragment knows. A browser without share_target
+// gets the same question. Without a worker the POST reaches
+// app/(main)/protocol/share/route.ts.
 const HANDOFF_CACHE = "bulwark-launch-handoff-v1";
+const HANDOFF_TTL_MS = 15 * 60 * 1000;
+const HANDOFF_MAX_ENTRIES = 5;
+const HANDOFF_MAX_BYTES = 100 * 1024 * 1024;
 
 function isShareTarget(request) {
-  if (request.method !== "POST" || request.mode !== "navigate") return false;
+  // A document only: a hidden frame doesn't get to store anything.
+  if (request.method !== "POST" || request.mode !== "navigate" || request.destination !== "document") return false;
   const url = new URL(request.url);
   return url.origin === self.location.origin && url.pathname.replace(/\/+$/, "") === BASE_PATH + "/protocol/share";
 }
 
+/** Drops what is too old and, when `incomingBytes` wants in, the oldest entries in the way. */
+async function sweepHandoffs(cache, incomingBytes) {
+  const keys = await cache.keys();
+  const pathOf = (key) => new URL(key.url, self.location.origin).pathname;
+  const entries = [];
+  for (const key of keys) {
+    const path = pathOf(key);
+    if (!path.endsWith("/meta")) continue;
+    const response = await cache.match(key);
+    const meta = response ? await response.json().catch(() => null) : null;
+    entries.push({ prefix: path.slice(0, -"meta".length), createdAt: (meta && meta.createdAt) || 0, bytes: (meta && meta.bytes) || 0 });
+  }
+  entries.sort((a, b) => a.createdAt - b.createdAt);
+  let total = entries.reduce((sum, entry) => sum + entry.bytes, 0);
+  while (entries.length > 0) {
+    const tooOld = Date.now() - entries[0].createdAt > HANDOFF_TTL_MS;
+    const inTheWay = incomingBytes !== null && (entries.length >= HANDOFF_MAX_ENTRIES || total + incomingBytes > HANDOFF_MAX_BYTES);
+    if (!tooOld && !inTheWay) break;
+    const oldest = entries.shift();
+    total -= oldest.bytes;
+    const own = keys.filter((key) => pathOf(key).startsWith(oldest.prefix));
+    // The list last: this sweep goes by it.
+    await Promise.all(own.filter((key) => !pathOf(key).endsWith("/meta")).map((key) => cache.delete(key)));
+    await cache.delete(oldest.prefix + "meta");
+  }
+}
+
+async function sweepHandoffsOnActivate() {
+  try {
+    if (typeof caches === "undefined" || !(await caches.has(HANDOFF_CACHE))) return;
+    await sweepHandoffs(await caches.open(HANDOFF_CACHE), null);
+  } catch (_) {
+    // Tried again at the next share.
+  }
+}
+
+/** A 12-byte IV, then the AES-GCM ciphertext. */
+async function sealHandoff(key, data) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const body = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, data));
+  const sealed = new Uint8Array(iv.length + body.length);
+  sealed.set(iv);
+  sealed.set(body, iv.length);
+  return sealed;
+}
+
+/** As much of `value` as takes up to `budget` bytes once encoded, as in the server's fallback. */
+function fitEncoded(value, budget, flags) {
+  let used = 0;
+  let out = "";
+  for (const character of value) {
+    try {
+      used += encodeURIComponent(character).length;
+    } catch (_) {
+      continue;
+    }
+    if (used > budget) {
+      flags.cut = true;
+      return out;
+    }
+    out += character;
+  }
+  return out;
+}
+
 async function receiveShare(request) {
-  const land = (params) => Response.redirect(self.location.origin + BASE_PATH + "/?" + new URLSearchParams(params), 303);
+  // In the fragment: it stays out of access logs, and the key out of the server's sight.
+  const land = (params) => Response.redirect(self.location.origin + BASE_PATH + "/#" + new URLSearchParams(params), 303);
   let form;
   try {
     form = await request.formData();
@@ -341,22 +415,37 @@ async function receiveShare(request) {
   const files = form.getAll("files").filter((file) => typeof file !== "string" && file.size > 0);
   const id = crypto.randomUUID();
   const prefix = "/__bulwark/handoff/" + id + "/";
+  const bytes = files.reduce((sum, file) => sum + file.size, 0);
   let cache = null;
   try {
+    if (bytes > HANDOFF_MAX_BYTES) throw new Error("too large");
     cache = await caches.open(HANDOFF_CACHE);
-    const list = files.map((file) => ({ name: file.name, type: file.type }));
-    await cache.put(prefix + "meta", new Response(JSON.stringify({ kind: "compose", createdAt: Date.now(), ...shared, files: list })));
-    await Promise.all(files.map((file, index) => cache.put(prefix + index, new Response(file))));
-    return land({ share: id });
+    await sweepHandoffs(cache, bytes);
+    const key = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt"]);
+    const rawKey = new Uint8Array(await crypto.subtle.exportKey("raw", key));
+    const contents = JSON.stringify({ ...shared, files: files.map((file) => ({ name: file.name, type: file.type })) });
+    // The list first: the sweep goes by it.
+    await cache.put(prefix + "meta", new Response(JSON.stringify({ kind: "compose", createdAt: Date.now(), bytes })));
+    await cache.put(prefix + "sealed", new Response(await sealHandoff(key, new TextEncoder().encode(contents))));
+    for (let index = 0; index < files.length; index += 1) {
+      await cache.put(prefix + index, new Response(await sealHandoff(key, await files[index].arrayBuffer())));
+    }
+    const encodedKey = btoa(String.fromCharCode(...rawKey)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    return land({ share: id, key: encodedKey });
   } catch (_) {
     // No room for the files. The text can still come along in the address.
-    if (cache) await Promise.all([...files.map((_file, index) => cache.delete(prefix + index)), cache.delete(prefix + "meta")]).catch(() => {});
+    if (cache) await Promise.all([...files.map((_file, index) => cache.delete(prefix + index)), cache.delete(prefix + "sealed"), cache.delete(prefix + "meta")]).catch(() => {});
+    const flags = { cut: false };
+    const title = fitEncoded(shared.title, 400, flags);
+    const text = fitEncoded(shared.text, 1800, flags);
+    const link = fitEncoded(shared.url, 1000, flags);
     return land({
       share: "unavailable",
-      share_title: shared.title.slice(0, 300),
-      share_text: shared.text.slice(0, 4000),
-      share_url: shared.url.slice(0, 2000),
+      share_title: title,
+      share_text: text,
+      share_url: link,
       ...(files.length > 0 ? { share_files: "1" } : {}),
+      ...(flags.cut ? { share_cut: "1" } : {}),
     });
   }
 }

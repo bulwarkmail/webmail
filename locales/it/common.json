@@ -258,7 +258,18 @@
     "share_gone": "Ciò che hai condiviso non è più disponibile. Condividilo di nuovo.",
     "share_files_lost": "Non è stato possibile conservare i file condivisi. Aggiungili di nuovo al messaggio.",
     "ics_needs_server": "Per importare un file di calendario serve una connessione al server. L'importazione inizierà quando tornerai online.",
-    "contacts_need_server": "Per importare i contatti serve una connessione al server. Riprova quando tornerai online."
+    "contacts_need_server": "Per importare i contatti serve una connessione al server. Riprova quando tornerai online.",
+    "share_confirm_title": "Iniziare un nuovo messaggio?",
+    "share_confirm_message": "Un altro sito o app vuole iniziare un messaggio. Non viene caricato o salvato nulla senza il tuo consenso.",
+    "share_confirm_subject": "Oggetto:",
+    "share_confirm_text": "Testo:",
+    "share_confirm_files": "{count, plural, one {File:} other {File:}}",
+    "share_confirm_accept": "Inizia messaggio",
+    "share_confirm_decline": "Non iniziare",
+    "share_cut": "Il testo condiviso era troppo lungo ed è stato accorciato.",
+    "handoff_expired": "Qualcosa che hai aperto o condiviso ha atteso troppo a lungo e non c'è più. Aprilo o condividilo di nuovo.",
+    "compose_waiting": "Chiudi questo messaggio per iniziare il successivo.",
+    "save_first_failed": "Non è stato possibile salvare il messaggio, quindi il file non è stato aperto. Salva il messaggio, poi apri il calendario o i contatti."
   },
   "sidebar_apps": {
     "modal_title": "App della barra laterale",

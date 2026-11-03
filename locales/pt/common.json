@@ -258,7 +258,18 @@
     "share_gone": "O que partilhou já não está aqui. Partilhe novamente.",
     "share_files_lost": "Não foi possível guardar os ficheiros partilhados. Adicione-os novamente à mensagem.",
     "ics_needs_server": "Importar um ficheiro de calendário precisa de uma ligação ao servidor. A importação começa quando voltar a estar online.",
-    "contacts_need_server": "Importar contactos precisa de uma ligação ao servidor. Tente novamente quando voltar a estar online."
+    "contacts_need_server": "Importar contactos precisa de uma ligação ao servidor. Tente novamente quando voltar a estar online.",
+    "share_confirm_title": "Começar uma nova mensagem?",
+    "share_confirm_message": "Outro site ou aplicação quer começar uma mensagem. Nada é carregado ou guardado sem o seu acordo.",
+    "share_confirm_subject": "Assunto:",
+    "share_confirm_text": "Texto:",
+    "share_confirm_files": "{count, plural, one {Ficheiro:} other {Ficheiros:}}",
+    "share_confirm_accept": "Começar mensagem",
+    "share_confirm_decline": "Não começar",
+    "share_cut": "O texto partilhado era demasiado longo e foi encurtado.",
+    "handoff_expired": "Algo que abriu ou partilhou esperou demasiado tempo e já não está disponível. Abra ou partilhe novamente.",
+    "compose_waiting": "Feche esta mensagem para começar a seguinte.",
+    "save_first_failed": "Não foi possível guardar a mensagem, por isso o ficheiro não foi aberto. Guarde a mensagem e depois abra o calendário ou os contactos."
   },
   "sidebar_apps": {
     "modal_title": "Apps da barra lateral",

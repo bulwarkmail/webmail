@@ -258,7 +258,18 @@
     "share_gone": "See, mida jagasid, pole enam siin. Jaga seda palun uuesti.",
     "share_files_lost": "Jagatud faile ei saanud alles hoida. Lisa need kirjale uuesti.",
     "ics_needs_server": "Kalendrifaili importimiseks on vaja ühendust serveriga. Import algab, kui oled jälle võrgus.",
-    "contacts_need_server": "Kontaktide importimiseks on vaja ühendust serveriga. Proovi uuesti, kui oled jälle võrgus."
+    "contacts_need_server": "Kontaktide importimiseks on vaja ühendust serveriga. Proovi uuesti, kui oled jälle võrgus.",
+    "share_confirm_title": "Kas alustada uut kirja?",
+    "share_confirm_message": "Teine sait või rakendus soovib kirja alustada. Ilma sinu nõusolekuta ei laadita ega salvestata midagi.",
+    "share_confirm_subject": "Teema:",
+    "share_confirm_text": "Tekst:",
+    "share_confirm_files": "{count, plural, one {Fail:} other {Failid:}}",
+    "share_confirm_accept": "Alusta kirja",
+    "share_confirm_decline": "Ära alusta",
+    "share_cut": "Jagatud tekst oli liiga pikk ja seda lühendati.",
+    "handoff_expired": "Midagi, mille avasid või jagasid, ootas liiga kaua ja seda pole enam. Ava või jaga see uuesti.",
+    "compose_waiting": "Järgmise alustamiseks sulge see kiri.",
+    "save_first_failed": "Kirja ei saanud salvestada, seega faili ei avatud. Salvesta kiri ja ava siis kalender või kontaktid."
   },
   "sidebar_apps": {
     "modal_title": "Külgriba rakendused",

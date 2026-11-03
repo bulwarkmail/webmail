@@ -241,6 +241,68 @@ describe('files handed to a new composer (a share, a launch)', () => {
 
   const uploading = () => filesClient({ uploadBlob: vi.fn(() => new Promise(() => {})), getMaxSizeUpload: () => 0 });
 
+  const handedIn = (extra: Record<string, unknown> = {}) => ({
+    to: '', cc: '', bcc: '', subject: 'Shared subject', body: 'Shared text', showCc: false, showBcc: false,
+    selectedIdentityId: null, subAddressTag: '', mode: 'compose', draftId: null, unedited: true, ...extra,
+  }) as never;
+  const settled = (client: Record<string, unknown>) => ({
+    ...client,
+    uploadBlob: vi.fn(async () => ({ blobId: 'blob-shared', size: 1, type: 'text/plain' })),
+    getMaxSizeUpload: () => 0,
+  });
+
+  it('saves no draft from handed-in text and files until the first real edit', async () => {
+    const client = settled(filesClient()) as unknown as ReturnType<typeof filesClient>;
+    useAuthStore.setState({ client: client as never });
+    vi.useFakeTimers();
+    render(<EmailComposer onClose={vi.fn()} initialData={handedIn()} initialFiles={[new File(['x'], 'shared.pdf')]} />);
+    await act(async () => { await vi.advanceTimersByTimeAsync(5000); });
+    expect(screen.getByText('shared.pdf')).toBeInTheDocument();
+    expect(client.createDraft).not.toHaveBeenCalled();
+
+    // Closing the page doesn't save it either.
+    await act(async () => { window.dispatchEvent(new Event('beforeunload')); await vi.advanceTimersByTimeAsync(100); });
+    expect(client.createDraft).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByPlaceholderText(/subject/i), { target: { value: 'Shared subject, edited' } });
+    await act(async () => { await vi.advanceTimersByTimeAsync(2500); });
+    expect(client.createDraft).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+
+  it('closes without asking while nothing is the user\'s own', async () => {
+    const onClose = vi.fn();
+    useAuthStore.setState({ client: settled(filesClient()) as never });
+    const ref = { current: null as ((afterClose?: () => void) => void) | null };
+    render(<EmailComposer onClose={onClose} requestCloseRef={ref} initialData={handedIn()} initialFiles={[new File(['x'], 'shared.pdf')]} />);
+    await screen.findByText('shared.pdf');
+    await act(async () => { ref.current?.(); });
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('counts a removed attachment as an edit', async () => {
+    const client = settled(filesClient()) as unknown as ReturnType<typeof filesClient>;
+    useAuthStore.setState({ client: client as never });
+    vi.useFakeTimers();
+    render(<EmailComposer onClose={vi.fn()} initialData={handedIn()} initialFiles={[new File(['x'], 'shared.pdf')]} />);
+    await act(async () => { await vi.advanceTimersByTimeAsync(100); });
+    const chip = screen.getByText('shared.pdf').closest('[data-testid], div')!.parentElement!;
+    const remove = chip.querySelector('button[aria-label]') ?? chip.querySelector('button');
+    fireEvent.click(remove!);
+    await act(async () => { await vi.advanceTimersByTimeAsync(2500); });
+    expect(client.createDraft).toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it('hands its unedited state back to a remount, without asking to save', async () => {
+    useAuthStore.setState({ client: settled(filesClient()) as never });
+    const onSaveState = vi.fn();
+    const view = render(<EmailComposer onClose={vi.fn()} onSaveState={onSaveState} initialData={handedIn()} initialFiles={[new File(['x'], 'shared.pdf')]} />);
+    await screen.findByText('shared.pdf');
+    view.unmount();
+    expect(onSaveState).toHaveBeenCalledWith(expect.objectContaining({ unedited: true, unsaved: false, subject: 'Shared subject' }));
+  });
+
   it('attaches them when it opens', async () => {
     useAuthStore.setState({ client: uploading() as never });
     render(<EmailComposer onClose={vi.fn()} initialFiles={[new File(['x'], 'shared.pdf', { type: 'application/pdf' })]} />);

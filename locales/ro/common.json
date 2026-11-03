@@ -258,7 +258,18 @@
     "share_gone": "Ce ați partajat nu mai este aici. Partajați din nou.",
     "share_files_lost": "Fișierele partajate nu au putut fi păstrate. Adăugați-le din nou la mesaj.",
     "ics_needs_server": "Importul unui fișier de calendar are nevoie de conexiune la server. Importul începe când reveniți online.",
-    "contacts_need_server": "Importul contactelor are nevoie de conexiune la server. Încercați din nou când reveniți online."
+    "contacts_need_server": "Importul contactelor are nevoie de conexiune la server. Încercați din nou când reveniți online.",
+    "share_confirm_title": "Începeți un mesaj nou?",
+    "share_confirm_message": "Alt site sau altă aplicație vrea să înceapă un mesaj. Nu se încarcă și nu se salvează nimic fără acordul dvs.",
+    "share_confirm_subject": "Subiect:",
+    "share_confirm_text": "Text:",
+    "share_confirm_files": "{count, plural, one {Fișier:} few {Fișiere:} other {Fișiere:}}",
+    "share_confirm_accept": "Începeți mesajul",
+    "share_confirm_decline": "Nu începeți",
+    "share_cut": "Textul partajat era prea lung și a fost scurtat.",
+    "handoff_expired": "Ceva ce ați deschis sau partajat a așteptat prea mult și nu mai este disponibil. Deschideți sau partajați din nou.",
+    "compose_waiting": "Închideți acest mesaj pentru a-l începe pe următorul.",
+    "save_first_failed": "Mesajul nu a putut fi salvat, așa că fișierul nu a fost deschis. Salvați mesajul, apoi deschideți calendarul sau contactele."
   },
   "sidebar_apps": {
     "modal_title": "Aplicații din bara laterală",

@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FakeCaches } from '@/lib/__tests__/sw-harness';
@@ -10,6 +10,11 @@ const hoisted = vi.hoisted(() => ({
   push: vi.fn(),
   pathname: { current: '/' },
   toastError: vi.fn(),
+  toastInfo: vi.fn(),
+  flushComposers: vi.fn(async () => ({ total: 0, settled: 0, failed: 0, timedOut: false })),
+  peek: vi.fn(),
+  adopt: vi.fn(),
+  discard: vi.fn(async () => {}),
   savePendingMailto: vi.fn(),
   protocolOpenMode: 'active-session',
 }));
@@ -19,7 +24,14 @@ vi.mock('@/i18n/navigation', () => ({
   usePathname: () => hoisted.pathname.current,
 }));
 vi.mock('@/hooks/use-config', () => ({ useConfig: () => ({ appName: 'Bulwark' }) }));
-vi.mock('@/stores/toast-store', () => ({ toast: { error: hoisted.toastError, info: vi.fn(), success: vi.fn() } }));
+vi.mock('@/stores/toast-store', () => ({ toast: { error: hoisted.toastError, info: hoisted.toastInfo, success: vi.fn() } }));
+vi.mock('@/lib/compose-flush-registry', () => ({ flushComposers: hoisted.flushComposers }));
+vi.mock('@/lib/launch-handoff', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/launch-handoff')>()),
+  peekStoredHandoff: hoisted.peek,
+  adoptStoredHandoff: hoisted.adopt,
+  discardStoredHandoff: hoisted.discard,
+}));
 vi.mock('@/stores/settings-store', () => ({
   useSettingsStore: Object.assign(() => undefined, { getState: () => ({ protocolOpenMode: hoisted.protocolOpenMode }) }),
 }));
@@ -50,7 +62,7 @@ vi.mock('@/components/files/file-preview-modal', () => ({
   },
 }));
 
-const { clearHandoffs, pendingHandoffs, takeHandoff } = await import('@/lib/launch-handoff');
+const { clearHandoffs, handOffFiles, pendingHandoffs, takeHandoff, HANDOFF_TTL_MS } = await import('@/lib/launch-handoff');
 const { setDownloadGuard } = await import('@/lib/download-guard');
 const { ProtocolLaunchHandlerProvider } = await import('../protocol-launch-handler-provider');
 
@@ -70,6 +82,12 @@ beforeEach(() => {
   setConsumer.mockClear();
   hoisted.push.mockClear();
   hoisted.toastError.mockClear();
+  hoisted.toastInfo.mockClear();
+  hoisted.flushComposers.mockReset();
+  hoisted.flushComposers.mockResolvedValue({ total: 0, settled: 0, failed: 0, timedOut: false });
+  hoisted.peek.mockReset();
+  hoisted.adopt.mockReset();
+  hoisted.discard.mockClear();
   hoisted.savePendingMailto.mockClear();
   hoisted.pathname.current = '/';
   hoisted.protocolOpenMode = 'active-session';
@@ -212,6 +230,7 @@ describe('launches that are not files', () => {
   it('goes to the calendar from its shortcut in an open window', async () => {
     mount();
     consumer!({ targetURL: `${window.location.origin}/calendar` });
+    await flush();
     expect(hoisted.push).toHaveBeenCalledWith('/calendar');
   });
 
@@ -238,6 +257,51 @@ describe('launches that are not files', () => {
   });
 });
 
+describe('leaving a composer for a launched file', () => {
+  it('saves what was typed first, then goes', async () => {
+    const order: string[] = [];
+    hoisted.flushComposers.mockImplementation(async () => { order.push('flush'); return { total: 1, settled: 1, failed: 0, timedOut: false }; });
+    hoisted.push.mockImplementation(() => { order.push('push'); });
+    mount();
+    consumer!({ files: [handle('people.vcf')] });
+    await flush();
+    expect(order).toEqual(['flush', 'push']);
+    hoisted.push.mockReset();
+  });
+
+  it.each([
+    ['the server refused the save', { total: 1, settled: 1, failed: 1, timedOut: false }],
+    ['the save took too long', { total: 1, settled: 0, failed: 0, timedOut: true }],
+  ])('stays when %s, with the file still waiting', async (_name, result) => {
+    hoisted.flushComposers.mockResolvedValue(result);
+    mount();
+    consumer!({ files: [handle('people.vcf')] });
+    await flush();
+    expect(hoisted.push).not.toHaveBeenCalled();
+    expect(hoisted.toastError).toHaveBeenCalledWith('save_first_failed');
+    expect(pendingHandoffs().map((h) => h.kind)).toEqual(['contacts']);
+  });
+
+  it('does not save for a .eml, which leaves nothing', async () => {
+    mount();
+    consumer!({ files: [handle('note.eml')] });
+    await screen.findByTestId('eml-viewer');
+    expect(hoisted.flushComposers).not.toHaveBeenCalled();
+  });
+});
+
+describe('a handoff that goes without arriving', () => {
+  it('says so', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    mount();
+    handOffFiles([new File(['x'], 'a.ics')], 'calendar');
+    vi.advanceTimersByTime(HANDOFF_TTL_MS + 1);
+    takeHandoff('calendar');
+    vi.useRealTimers();
+    expect(hoisted.toastError).toHaveBeenCalledWith('handoff_expired');
+  });
+});
+
 describe('the address a launch lands on', () => {
   it('opens a new message once and removes the parameter', async () => {
     window.history.replaceState(null, '', '/?compose=1&slot=2#x');
@@ -256,21 +320,100 @@ describe('the address a launch lands on', () => {
     expect(takeHandoff('compose')).not.toBeNull();
     expect(takeHandoff('compose')).toBeNull();
   });
+});
 
-  it('turns text in the address into a draft and says the files were lost', async () => {
-    window.history.replaceState(null, '', '/?share=unavailable&share_title=T&share_text=B&share_files=1');
+describe('a share from an address anyone can make', () => {
+  const dialogText = () => screen.getByTestId('share-confirm-details').textContent ?? '';
+  const agree = () => fireEvent.click(screen.getByRole('button', { name: 'share_confirm_accept' }));
+  const refuse = () => fireEvent.click(screen.getByRole('button', { name: 'share_confirm_decline' }));
+
+  it('asks about text in the address, and starts nothing before the answer', async () => {
+    window.history.replaceState(null, '', '/#share=unavailable&share_title=T&share_text=B&share_files=1&share_cut=1');
     mount();
-    expect(window.location.search).toBe('');
+    expect(window.location.hash).toBe('');
+    await screen.findByText('share_confirm_message');
+    expect(dialogText()).toContain('T');
+    expect(pendingHandoffs()).toEqual([]);
+    expect(hoisted.push).not.toHaveBeenCalled();
+
+    agree();
+    await flush();
     expect(takeHandoff('compose')).toMatchObject({ subject: 'T', body: 'B' });
     expect(hoisted.toastError).toHaveBeenCalledWith('share_files_lost');
+    expect(hoisted.toastInfo).toHaveBeenCalledWith('share_cut');
+  });
+
+  it('starts nothing when refused', async () => {
+    window.history.replaceState(null, '', '/#share=unavailable&share_text=B');
+    mount();
+    await screen.findByText('share_confirm_message');
+    refuse();
+    await flush();
+    expect(pendingHandoffs()).toEqual([]);
+  });
+
+  it('only reports lost files when there was no text to ask about', async () => {
+    window.history.replaceState(null, '', '/#share=unavailable&share_files=1');
+    mount();
+    await flush();
+    expect(screen.queryByText('share_confirm_message')).toBeNull();
+    expect(hoisted.toastError).toHaveBeenCalledWith('share_files_lost');
+    expect(pendingHandoffs()).toEqual([]);
+  });
+
+  it('ignores it in the query, which reaches logs and any link', async () => {
+    window.history.replaceState(null, '', '/?share=unavailable&share_text=B');
+    mount();
+    await flush();
+    expect(screen.queryByText('share_confirm_message')).toBeNull();
+    expect(pendingHandoffs()).toEqual([]);
+  });
+
+  it('asks about a stored share, naming the files, before anything is taken in', async () => {
+    hoisted.peek.mockResolvedValue({ subject: 'S', body: '', files: ['invoice.exe'] });
+    hoisted.adopt.mockResolvedValue(true);
+    window.history.replaceState(null, '', '/#share=abc&key=k1');
+    mount();
+    expect(window.location.hash).toBe('');
+    await screen.findByText('share_confirm_message');
+    expect(hoisted.peek).toHaveBeenCalledWith('abc', 'k1');
+    expect(dialogText()).toContain('invoice.exe');
+    expect(hoisted.adopt).not.toHaveBeenCalledWith('abc', 'k1');
+
+    agree();
+    await waitFor(() => expect(hoisted.adopt).toHaveBeenCalledWith('abc', 'k1'));
+    expect(hoisted.discard).not.toHaveBeenCalled();
+  });
+
+  it('asks in an installed-app window as well: link capturing can bring a POST there', async () => {
+    const original = window.matchMedia;
+    window.matchMedia = ((query: string) => ({ matches: query.includes('standalone'), media: query, addEventListener: () => {}, removeEventListener: () => {} })) as never;
+    hoisted.peek.mockResolvedValue({ subject: 'S', body: '', files: [] });
+    window.history.replaceState(null, '', '/#share=abc&key=k1');
+    mount();
+    await screen.findByText('share_confirm_message');
+    expect(hoisted.adopt).not.toHaveBeenCalledWith('abc', 'k1');
+    window.matchMedia = original;
+  });
+
+  it('drops a stored share when refused', async () => {
+    hoisted.peek.mockResolvedValue({ subject: 'S', body: '', files: ['invoice.exe'] });
+    window.history.replaceState(null, '', '/#share=abc&key=k1');
+    mount();
+    await screen.findByText('share_confirm_message');
+    refuse();
+    await waitFor(() => expect(hoisted.discard).toHaveBeenCalledWith('abc'));
+    expect(hoisted.adopt).not.toHaveBeenCalledWith('abc', 'k1');
   });
 
   it('says so when what was shared is gone', async () => {
-    window.history.replaceState(null, '', '/?share=abc');
+    hoisted.peek.mockResolvedValue(null);
+    window.history.replaceState(null, '', '/#share=abc&key=k1');
     mount();
-    expect(window.location.search).toBe('');
+    expect(window.location.hash).toBe('');
     await flush();
     expect(hoisted.toastError).toHaveBeenCalledWith('share_gone');
+    expect(screen.queryByText('share_confirm_message')).toBeNull();
   });
 });
 

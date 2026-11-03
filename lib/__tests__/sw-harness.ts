@@ -39,7 +39,7 @@ export function loadWorker(opts: { buildId: string; caches: FakeCaches; clients:
     clients: { claim: async () => {}, matchAll: async () => opts.clients },
     registration: { showNotification: async () => {}, getNotifications: async () => [] },
   };
-  const context = vm.createContext({ self, caches: opts.caches, fetch: opts.fetch ?? (async () => { throw new TypeError('offline'); }), URL, URLSearchParams, Request, Response, Headers, Date, console, AbortController, setTimeout, clearTimeout, crypto: globalThis.crypto });
+  const context = vm.createContext({ self, caches: opts.caches, fetch: opts.fetch ?? (async () => { throw new TypeError('offline'); }), URL, URLSearchParams, Request, Response, Headers, Date, console, AbortController, setTimeout, clearTimeout, crypto: globalThis.crypto, TextEncoder, btoa });
   vm.runInContext(SW_SOURCE, context);
   async function dispatch(type: string, event: Record<string, unknown> = {}) {
     const waits: Promise<unknown>[] = [];

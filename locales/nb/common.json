@@ -258,7 +258,18 @@
     "share_gone": "Det du delte, er ikke her lenger. Del det på nytt.",
     "share_files_lost": "De delte filene kunne ikke tas vare på. Legg dem til i meldingen på nytt.",
     "ics_needs_server": "Import av en kalenderfil krever tilkobling til serveren. Importen starter når du er på nett igjen.",
-    "contacts_need_server": "Import av kontakter krever tilkobling til serveren. Prøv igjen når du er på nett igjen."
+    "contacts_need_server": "Import av kontakter krever tilkobling til serveren. Prøv igjen når du er på nett igjen.",
+    "share_confirm_title": "Vil du starte en ny melding?",
+    "share_confirm_message": "Et annet nettsted eller en annen app vil starte en melding. Ingenting lastes opp eller lagres uten at du godtar det.",
+    "share_confirm_subject": "Emne:",
+    "share_confirm_text": "Tekst:",
+    "share_confirm_files": "{count, plural, one {Fil:} other {Filer:}}",
+    "share_confirm_accept": "Start melding",
+    "share_confirm_decline": "Ikke start",
+    "share_cut": "Den delte teksten var for lang og er forkortet.",
+    "handoff_expired": "Noe du åpnet eller delte, ventet for lenge og er borte. Åpne eller del det på nytt.",
+    "compose_waiting": "Lukk denne meldingen for å starte den neste.",
+    "save_first_failed": "Meldingen kunne ikke lagres, så filen er ikke åpnet. Lagre meldingen, og åpne deretter kalenderen eller kontaktene."
   },
   "sidebar_apps": {
     "modal_title": "Apper i sidefeltet",
