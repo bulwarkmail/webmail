@@ -5743,6 +5743,46 @@
       "no_drafts_mailbox": "No s'ha trobat la carpeta Esborranys."
     }
   },
+  "offlineConflicts": {
+    "title": "Canvis no aplicats",
+    "description": "Heu fet aquests canvis sense connexió. No s'han aplicat i el missatge queda tal com és al servidor.",
+    "changed": "Canviat en un altre dispositiu, el vostre canvi no s'ha aplicat",
+    "changed_delete": "Canviat en un altre dispositiu, no s'ha suprimit",
+    "gone": "Ja no és al servidor, el vostre canvi no s'ha aplicat",
+    "refused": "El servidor ha rebutjat aquest canvi: {reason}",
+    "dismiss": "Descarta",
+    "dismiss_label": "Descarta la nota sobre {subject}",
+    "banner": "Canvis no aplicats: {count}",
+    "toast": "Canvis fets sense connexió que no s'han aplicat: {count}. La safata de sortida indica quins.",
+    "storage_failed": "Aquest dispositiu no té més espai per al correu sense connexió. Allibereu espai o conserveu-ne menys a la configuració.",
+    "signout_changes_title": "Voleu tancar la sessió amb canvis sense desar?",
+    "signout_changes": "Canvis que encara no són al servidor: {count}. En tancar la sessió s'eliminen.",
+    "store_unavailable": "El correu sense connexió d'aquest dispositiu no es pot obrir ara. El correu no enviat es queda aquí i l'aplicació ho continua provant.",
+    "store_reset": "No s'ha pogut llegir el correu sense connexió d'aquest dispositiu, així que es torna a baixar. El que no s'havia enviat s'ha perdut.",
+    "legacy_stranded": "Aquest navegador no pot obrir el correu no enviat desat per una versió anterior. Actualitzar el navegador el pot recuperar.",
+    "store_private": "Les finestres privades no poden desar correu per fer-lo servir sense connexió.",
+    "server_not_answering": "El servidor de correu no respon. Torneu-ho a provar d'aquí a un moment."
+  },
+  "offlineDrafts": {
+    "title": "Esborranys en aquest dispositiu",
+    "description": "Aquests esborranys estan desats en aquest dispositiu. Aniran al servidor sols tan bon punt s'hi pugui connectar.",
+    "saved_on_device": "Desat en aquest dispositiu",
+    "status_waiting": "Esperant el servidor",
+    "status_sending": "Desant al servidor",
+    "status_uncertain": "Comprovant si ha arribat al servidor",
+    "status_refused": "El servidor ha rebutjat aquest esborrany: {error}",
+    "file_missing": "Un fitxer adjunt ja no és en aquest dispositiu",
+    "open": "Obre",
+    "open_label": "Obre {subject}",
+    "retry": "Torna-ho a provar",
+    "retry_label": "Torna a provar {subject}",
+    "toast_refused": "L'esborrany {subject} no s'ha pogut desar al servidor. Es queda en aquest dispositiu.",
+    "toast_conflict": "L'esborrany {subject} s'ha canviat en un altre dispositiu. Es conserven les dues versions.",
+    "conflict_changed": "Canviat en un altre dispositiu. Les dues versions són a Esborranys.",
+    "conflict_gone": "Canviat o eliminat en un altre dispositiu. La vostra versió és a Esborranys.",
+    "banner_refused": "Esborranys rebutjats pel servidor: {count}",
+    "banner_waiting": "Esborranys que esperen el servidor: {count}"
+  },
   "deep_link": {
     "message_not_found": "Aquest missatge ja no està disponible.",
     "thread_not_found": "Aquesta conversa ja no està disponible.",
@@ -5858,6 +5898,10 @@
       "crypto_full": {
         "title": "Accés complet a aquesta aplicació",
         "body": "S'executa amb els mateixos drets que el mateix webmail. Pot llegir tot el vostre correu i les claus desades i actuar en nom vostre. Permeteu-ho només als connectors en què confieu plenament."
+      },
+      "keystore": {
+        "title": "Utilitzar els certificats d'aquest ordinador",
+        "body": "Demana signar i desxifrar missatges amb certificats d'aquest ordinador o d'una targeta intel·ligent. L'aplicació us ho pregunta abans. El connector no rep mai la clau privada, però mentre ho permeteu pot signar en nom vostre i llegir el que desxifra."
       },
       "email_raw_send": {
         "title": "Enviar missatges que ha creat ell mateix",
@@ -6524,5 +6568,13 @@
     "server_needed": "Primer escriu l'adreça del servidor.",
     "server_declined": "No has permès aquest servidor, així que no s'hi ha enviat res.",
     "server_invalid": "Aquesta adreça de servidor no és vàlida."
+  },
+  "desktop_keystore": {
+    "title": "Certificats d'aquest ordinador",
+    "description": "Aquest servidor pot demanar utilitzar els vostres certificats i targetes intel·ligents. Tot i així, se us preguntarà abans d'utilitzar cada certificat.",
+    "label": "Accés d'aquest servidor",
+    "label_description": "Retira el permís. El servidor ho haurà de tornar a demanar.",
+    "revoke": "Retira",
+    "revoked": "Permís retirat"
   }
 }

@@ -5743,6 +5743,46 @@
       "no_drafts_mailbox": "Ihr Ordner „Entwürfe“ wurde nicht gefunden."
     }
   },
+  "offlineConflicts": {
+    "title": "Nicht übernommene Änderungen",
+    "description": "Sie haben diese Änderungen offline gemacht. Sie wurden nicht übernommen, die Nachricht bleibt wie auf dem Server.",
+    "changed": "Auf einem anderen Gerät geändert, Ihre Änderung wurde nicht übernommen",
+    "changed_delete": "Auf einem anderen Gerät geändert, die Nachricht wurde nicht gelöscht",
+    "gone": "Nicht mehr auf dem Server, Ihre Änderung wurde nicht übernommen",
+    "refused": "Der Server hat diese Änderung abgelehnt: {reason}",
+    "dismiss": "Ausblenden",
+    "dismiss_label": "Hinweis zu {subject} ausblenden",
+    "banner": "Nicht übernommene Änderungen: {count}",
+    "toast": "Offline gemachte Änderungen wurden nicht übernommen: {count}. Welche, steht im Postausgang.",
+    "storage_failed": "Auf diesem Gerät ist kein Platz mehr für Offline-E-Mails. Geben Sie Speicher frei oder behalten Sie in den Einstellungen weniger.",
+    "signout_changes_title": "Mit nicht gespeicherten Änderungen abmelden?",
+    "signout_changes": "Änderungen, die noch nicht auf dem Server sind: {count}. Beim Abmelden werden sie gelöscht.",
+    "store_unavailable": "Die Offline-E-Mails auf diesem Gerät lassen sich gerade nicht öffnen. Nicht gesendete E-Mails bleiben hier, und die App versucht es weiter.",
+    "store_reset": "Die Offline-E-Mails auf diesem Gerät konnten nicht gelesen werden und werden neu heruntergeladen. Was hier noch nicht gesendet war, ist verloren.",
+    "legacy_stranded": "Dieser Browser kann nicht gesendete E-Mails einer früheren Version nicht öffnen. Ein Browser-Update kann sie zurückholen.",
+    "store_private": "Private Fenster können keine E-Mails für die Offline-Nutzung behalten.",
+    "server_not_answering": "Der Mailserver antwortet nicht. Versuchen Sie es gleich noch einmal."
+  },
+  "offlineDrafts": {
+    "title": "Entwürfe auf diesem Gerät",
+    "description": "Diese Entwürfe sind auf diesem Gerät gespeichert. Sie gehen von selbst an den Server, sobald er erreichbar ist.",
+    "saved_on_device": "Auf diesem Gerät gespeichert",
+    "status_waiting": "Wartet auf den Server",
+    "status_sending": "Wird auf dem Server gespeichert",
+    "status_uncertain": "Es wird geprüft, ob er den Server erreicht hat",
+    "status_refused": "Der Server hat diesen Entwurf abgelehnt: {error}",
+    "file_missing": "Eine angehängte Datei ist nicht mehr auf diesem Gerät",
+    "open": "Öffnen",
+    "open_label": "{subject} öffnen",
+    "retry": "Erneut versuchen",
+    "retry_label": "{subject} erneut versuchen",
+    "toast_refused": "Der Entwurf {subject} konnte nicht auf dem Server gespeichert werden. Er bleibt auf diesem Gerät.",
+    "toast_conflict": "Der Entwurf {subject} wurde auf einem anderen Gerät geändert. Beide Fassungen bleiben erhalten.",
+    "conflict_changed": "Auf einem anderen Gerät geändert. Beide Fassungen liegen in den Entwürfen.",
+    "conflict_gone": "Auf einem anderen Gerät geändert oder entfernt. Ihre Fassung liegt in den Entwürfen.",
+    "banner_refused": "Vom Server abgelehnte Entwürfe: {count}",
+    "banner_waiting": "Entwürfe warten auf den Server: {count}"
+  },
   "deep_link": {
     "message_not_found": "Diese Nachricht ist nicht mehr verfügbar.",
     "thread_not_found": "Diese Unterhaltung ist nicht mehr verfügbar.",
@@ -5858,6 +5898,10 @@
       "crypto_full": {
         "title": "Vollzugriff auf diese App",
         "body": "Läuft mit denselben Rechten wie das Webmail selbst. Es kann alle Ihre E-Mails und gespeicherten Schlüssel lesen und in Ihrem Namen handeln. Erlauben Sie das nur Plugins, denen Sie voll vertrauen."
+      },
+      "keystore": {
+        "title": "Zertifikate auf diesem Computer verwenden",
+        "body": "Bittet darum, Nachrichten mit Zertifikaten auf diesem Computer oder einer Smartcard zu signieren und zu entschlüsseln. Die App fragt Sie vorher. Das Plugin erhält nie den privaten Schlüssel, kann aber, solange Sie es zulassen, in Ihrem Namen signieren und lesen, was es entschlüsselt."
       },
       "email_raw_send": {
         "title": "Selbst erstellte Nachrichten senden",
@@ -6524,5 +6568,13 @@
     "server_needed": "Geben Sie zuerst die Adresse Ihres Servers ein.",
     "server_declined": "Sie haben diesen Server nicht zugelassen, daher wurde nichts an ihn gesendet.",
     "server_invalid": "Diese Serveradresse ist ungültig."
+  },
+  "desktop_keystore": {
+    "title": "Zertifikate auf diesem Computer",
+    "description": "Dieser Server darf darum bitten, Ihre Zertifikate und Smartcards zu verwenden. Vor der Verwendung eines Zertifikats werden Sie trotzdem gefragt.",
+    "label": "Zugriff für diesen Server",
+    "label_description": "Nehmen Sie Ihre Erlaubnis zurück. Der Server muss dann erneut fragen.",
+    "revoke": "Zurücknehmen",
+    "revoked": "Erlaubnis zurückgenommen"
   }
 }

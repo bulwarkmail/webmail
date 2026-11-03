@@ -499,8 +499,8 @@ export interface IJMAPClient {
     humanText?: string;
   }): Promise<void>;
 
-  sendRawEmail(blob: Blob, identityId: string, sentMailboxId: string, draftMailboxId?: string, delayedUntil?: string, envelopeRecipients?: string[]): Promise<SendEmailResult>;
-  submitRawEmail(blob: Blob, identityId: string, delayedUntil?: string, envelopeRecipients?: string[]): Promise<SendEmailResult>;
+  sendRawEmail(blob: Blob, identityId: string, sentMailboxId: string, draftMailboxId?: string, delayedUntil?: string, envelopeRecipients?: string[], existingCopyId?: string): Promise<SendEmailResult>;
+  submitRawEmail(blob: Blob, identityId: string, delayedUntil?: string, envelopeRecipients?: string[], existingCopyId?: string): Promise<SendEmailResult>;
   getScheduledEmails(limit?: number, position?: number): Promise<{ emails: ScheduledEmail[]; hasMore: boolean; total: number; totalByAccount?: Record<string, number>; nextPosition: number }>;
   /** Cancels a pending submission, then destroys its record. */
   cancelEmailSubmission(submissionId: string, accountId?: string): Promise<void>;
@@ -553,6 +553,7 @@ export interface IJMAPClient {
           accountId?: string;
           onProgress?: (loaded: number, total: number) => void;
           signal?: AbortSignal;
+          noHold?: boolean;
         },
   ): Promise<{ blobId: string; size: number; type: string }>;
   getBlobDownloadUrl(blobId: string, name?: string, type?: string, accountId?: string): string;

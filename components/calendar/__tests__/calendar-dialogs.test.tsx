@@ -79,6 +79,7 @@ describe('import preview', () => {
     const parsing = {
       getAccountId: () => 'acct',
       getCalendarsAccountId: () => 'acct',
+      getServerUrl: () => 'https://mail.example.com',
       uploadBlob: vi.fn().mockResolvedValue({ blobId: 'b1' }),
       parseCalendarEvents: vi.fn().mockResolvedValue([weekly]),
     } as unknown as IJMAPClient;

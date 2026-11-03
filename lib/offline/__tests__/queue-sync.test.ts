@@ -1,35 +1,53 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { queuePatch, queueSend } from '../queue';
+import 'fake-indexeddb/auto';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { setStoreBackend } from '@/lib/store/client/api';
+import { InProcessStore } from '@/lib/store/__tests__/helpers/in-process-store';
+import { getOfflineHooks } from '@/lib/jmap/offline-hooks';
+import { usePolicyStore } from '@/stores/policy-store';
+import { useAccountStore } from '@/stores/account-store';
+import { DEFAULT_ORGANISATION_POLICY } from '@/lib/admin/organisation-policy';
+import { queueSend, readQueue } from '../queue';
+import { registerOfflineHooks } from '../offline-mode';
+import { writeEnabled } from '../state';
 
-// Whatever goes into the queue asks for a Background Sync, once it's stored.
+// Whatever goes into the outbox asks for a Background Sync, once it's stored.
 
-const requestOutboxSync = vi.fn();
-const stored: unknown[] = [];
-vi.mock('@/lib/pwa-notify/outbox-sync', () => ({ requestOutboxSync: () => requestOutboxSync(stored.length) }));
-vi.mock('../db', () => ({
-  idbAdd: vi.fn(async (_store: string, record: unknown) => { stored.push(record); return stored.length; }),
-  idbDeleteAccount: vi.fn(), idbGet: vi.fn(), idbGetAll: vi.fn(), idbGetAllByAccount: vi.fn(), idbUpdate: vi.fn(), idbWrite: vi.fn(),
-}));
-vi.mock('../crypto', () => ({
-  sealJson: vi.fn(async () => ({ iv: 'i', data: 'd' })),
-  openJson: vi.fn(), openBytes: vi.fn(), sealBytes: vi.fn(),
-}));
+const seen = vi.hoisted(() => ({ calls: 0, onCall: (() => {}) as () => void }));
+vi.mock('@/lib/pwa-notify/outbox-sync', () => ({ requestOutboxSync: () => { seen.calls += 1; seen.onCall(); } }));
+
+let store: InProcessStore;
 
 beforeEach(() => {
-  stored.length = 0;
-  requestOutboxSync.mockClear();
+  store = new InProcessStore();
+  setStoreBackend(store);
+  seen.calls = 0;
+  seen.onCall = () => {};
+  usePolicyStore.setState({ loaded: true, subject: null, policy: { ...usePolicyStore.getState().policy, organisation: DEFAULT_ORGANISATION_POLICY } });
+  useAccountStore.setState({ accounts: [{ id: 'acc', serverUrl: 'https://mail.example.org', username: 'alice@example.org' } as never] });
 });
 
-describe('the offline queue', () => {
-  it('asks for a sync after storing a change', async () => {
-    await queuePatch('acc', 'jmap', {} as never);
-    expect(requestOutboxSync).toHaveBeenCalledTimes(1);
-    expect(requestOutboxSync).toHaveBeenCalledWith(1);
+afterEach(() => {
+  setStoreBackend(null);
+  writeEnabled([]);
+});
+
+describe('the outbox', () => {
+  it('asks for a sync after storing a message, and still returns its id', async () => {
+    let storedWhenAsked = -1;
+    seen.onCall = () => { void readQueue('acc').then(({ outbox }) => { storedWhenAsked = outbox.length; }); };
+    const id = await queueSend('acc', { subject: 'S', to: [] }, { kind: 'email', args: [] });
+    expect(id).toBe(1);
+    expect(seen.calls).toBe(1);
+    await vi.waitFor(() => expect(storedWhenAsked).toBe(1));
   });
 
-  it('asks for a sync after storing a message, and still returns its id', async () => {
-    const id = await queueSend('acc', {} as never, {} as never);
-    expect(id).toBe(1);
-    expect(requestOutboxSync).toHaveBeenCalledWith(1);
+  it('asks for a sync after keeping a change the client made, not after a read', async () => {
+    writeEnabled(['acc']);
+    registerOfflineHooks();
+    const client = { getServerUrl: () => 'https://mail.example.org', getUsername: () => 'alice@example.org', getAccountId: () => 'acc1' };
+    await getOfflineHooks()?.answer(client, [['Email/set', { update: { m: { 'keywords/$seen': true } } }, '0']]);
+    expect(seen.calls).toBe(1);
+    await getOfflineHooks()?.answer(client, [['Email/get', { ids: [] }, '0']]);
+    expect(seen.calls).toBe(1);
   });
 });

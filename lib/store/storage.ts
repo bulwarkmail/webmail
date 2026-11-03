@@ -52,6 +52,16 @@ export function runTransaction<T>(
   }
 }
 
+/**
+ * The disk is full, the browser's quota ran out, the file can't be written.
+ * Trying again right away can't help, and each try costs network and power.
+ */
+export function isStorageFailure(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  if (error.name === 'QuotaExceededError') return true;
+  return /SQLITE_FULL|SQLITE_IOERR|SQLITE_CANTOPEN|disk is full|disk I\/O error|QuotaExceeded|No space left/i.test(error.message);
+}
+
 export interface Migration {
   /** Unique, ascending. Ranges per area are listed in lib/store/area.ts. */
   id: number;

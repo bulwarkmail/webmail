@@ -9,7 +9,7 @@
 import { WasmStorage } from '../adapters/wasm';
 import { STORE_AREAS } from '../areas';
 import { RPC_CHANNEL, OWNER_LOCK, type ChannelMessage, type PageToWorker, type WorkerToPage } from './protocol';
-import { StoreHost } from './host';
+import { StoreHost, storeFilesToPrune } from './host';
 
 const scope = self as unknown as {
   postMessage(message: WorkerToPage): void;
@@ -56,6 +56,10 @@ async function becomeOwner(): Promise<void> {
   channel = new BroadcastChannel(RPC_CHANNEL);
   channel.onmessage = async (event: MessageEvent<ChannelMessage>) => {
     const message = event.data;
+    if (message.kind === 'who-owns') {
+      channel?.postMessage({ kind: 'owner-changed', owner: clientId } satisfies ChannelMessage);
+      return;
+    }
     if (message.kind !== 'rpc') return;
     try {
       const result = await requireHost().call(message.method, message.params);
@@ -66,6 +70,7 @@ async function becomeOwner(): Promise<void> {
         id: message.id,
         to: message.from,
         error: error instanceof Error ? error.message : String(error),
+        errorName: error instanceof Error ? error.name : undefined,
       } satisfies ChannelMessage);
     }
   };
@@ -105,7 +110,14 @@ scope.addEventListener('message', async (event) => {
       break;
     case 'open':
       try {
-        await requireHost().openAccount(message.params);
+        reply(message.id, await requireHost().openAccount(message.params));
+      } catch (error) {
+        replyError(message.id, error);
+      }
+      break;
+    case 'prune-files':
+      try {
+        for (const file of storeFilesToPrune(storage?.files() ?? [], message.keep)) storage?.remove(file);
         reply(message.id);
       } catch (error) {
         replyError(message.id, error);
@@ -119,13 +131,6 @@ scope.addEventListener('message', async (event) => {
         replyError(message.id, error);
       }
       break;
-    case 'remove-account':
-      try {
-        reply(message.id, await requireHost().removeAccount(message.account, message.file));
-      } catch (error) {
-        replyError(message.id, error);
-      }
-      break;
     case 'set-auth':
       host?.setAuth(message.account, message.auth);
       break;
@@ -134,6 +139,9 @@ scope.addEventListener('message', async (event) => {
       break;
     case 'set-scope':
       host?.setScope(message.account, message.scope);
+      break;
+    case 'set-inverted':
+      host?.setInvertedKeywordSort(message.account, message.inverted);
       break;
     case 'release':
       try {

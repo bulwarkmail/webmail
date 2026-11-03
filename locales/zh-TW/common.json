@@ -5743,6 +5743,46 @@
       "no_drafts_mailbox": "找不到「草稿」資料夾。"
     }
   },
+  "offlineConflicts": {
+    "title": "未套用的變更",
+    "description": "這些變更是您離線時做的。它們沒有被套用，郵件維持伺服器上的狀態。",
+    "changed": "已在其他裝置上變更，您的變更未被套用",
+    "changed_delete": "已在其他裝置上變更，未被刪除",
+    "gone": "伺服器上已沒有此郵件，您的變更未被套用",
+    "refused": "伺服器拒絕了此變更：{reason}",
+    "dismiss": "關閉",
+    "dismiss_label": "關閉關於 {subject} 的提示",
+    "banner": "未套用的變更：{count}",
+    "toast": "離線時的變更未被套用：{count} 項。可在寄件匣中查看。",
+    "storage_failed": "此裝置已沒有空間存放離線郵件。請釋出空間，或在設定中減少保留的內容。",
+    "signout_changes_title": "要在有未儲存變更時登出嗎？",
+    "signout_changes": "尚未到達伺服器的變更：{count} 項。登出會刪除它們。",
+    "store_unavailable": "目前無法開啟此裝置上的離線郵件。未傳送的郵件仍保留在這裡，應用程式會繼續嘗試。",
+    "store_reset": "無法讀取此裝置上的離線郵件，正在重新下載。未傳送的內容已遺失。",
+    "legacy_stranded": "此瀏覽器無法開啟舊版本保存的未傳送郵件。更新瀏覽器可能會找回它們。",
+    "store_private": "私密視窗無法保留供離線使用的郵件。",
+    "server_not_answering": "郵件伺服器沒有回應。請稍後再試。"
+  },
+  "offlineDrafts": {
+    "title": "此裝置上的草稿",
+    "description": "這些草稿儲存在此裝置上。一旦能連線到伺服器，就會自動上傳。",
+    "saved_on_device": "已儲存在此裝置上",
+    "status_waiting": "正在等待伺服器",
+    "status_sending": "正在儲存到伺服器",
+    "status_uncertain": "正在檢查是否已到達伺服器",
+    "status_refused": "伺服器拒絕了此草稿：{error}",
+    "file_missing": "附件已不在此裝置上",
+    "open": "開啟",
+    "open_label": "開啟 {subject}",
+    "retry": "重試",
+    "retry_label": "重試 {subject}",
+    "toast_refused": "草稿 {subject} 無法儲存到伺服器。它仍保留在此裝置上。",
+    "toast_conflict": "草稿 {subject} 已在其他裝置上變更。兩個版本都會保留。",
+    "conflict_changed": "已在其他裝置上變更。兩個版本都在草稿中。",
+    "conflict_gone": "已在其他裝置上變更或刪除。您的版本在草稿中。",
+    "banner_refused": "伺服器拒絕的草稿：{count}",
+    "banner_waiting": "等待伺服器的草稿：{count}"
+  },
   "deep_link": {
     "message_not_found": "已無法使用此郵件。",
     "thread_not_found": "已無法使用此對話串。",
@@ -5858,6 +5898,10 @@
       "crypto_full": {
         "title": "完整存取此應用程式",
         "body": "以與網頁郵件本身相同的權限執行。它可以讀取您所有的郵件和已儲存的金鑰，並代表您執行動作。請只對您完全信任的外掛程式允許。"
+      },
+      "keystore": {
+        "title": "使用這台電腦上的憑證",
+        "body": "要求使用這台電腦或智慧卡上的憑證為郵件簽署及解密。應用程式會先詢問你。外掛程式絕不會取得私密金鑰，但在你允許期間，它可以用你的名義簽署，並讀取它解密的內容。"
       },
       "email_raw_send": {
         "title": "傳送它自行建立的郵件",
@@ -6524,5 +6568,13 @@
     "server_needed": "請先輸入伺服器位址。",
     "server_declined": "你沒有允許此伺服器,因此沒有傳送任何內容給它。",
     "server_invalid": "此伺服器位址無效。"
+  },
+  "desktop_keystore": {
+    "title": "這台電腦上的憑證",
+    "description": "此伺服器可以要求使用你的憑證和智慧卡。每次使用憑證前仍會詢問你。",
+    "label": "此伺服器的存取權",
+    "label_description": "收回你的許可。伺服器需要重新詢問。",
+    "revoke": "收回",
+    "revoked": "已收回許可"
   }
 }

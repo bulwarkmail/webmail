@@ -5743,6 +5743,46 @@
       "no_drafts_mailbox": "Your Drafts folder couldn't be found."
     }
   },
+  "offlineConflicts": {
+    "title": "Changes that didn't go through",
+    "description": "You made these changes offline. They weren't applied, and the message stays as it is on the server.",
+    "changed": "Changed on another device, so your change wasn't applied",
+    "changed_delete": "Changed on another device, so it wasn't deleted",
+    "gone": "No longer on the server, so your change wasn't applied",
+    "refused": "The server refused this change: {reason}",
+    "dismiss": "Dismiss",
+    "dismiss_label": "Dismiss the note about {subject}",
+    "banner": "Changes that didn't go through: {count}",
+    "toast": "Changes you made offline weren't applied: {count}. The outbox shows which.",
+    "storage_failed": "This device has no room left for offline mail. Free up space, or keep less in Settings.",
+    "signout_changes_title": "Sign out with unsaved changes?",
+    "signout_changes": "Changes not yet on the server: {count}. Signing out deletes them.",
+    "store_unavailable": "Offline mail on this device can't be opened right now. Unsent mail stays here, and the app keeps trying.",
+    "store_reset": "Offline mail on this device couldn't be read, so it's being downloaded again. Anything unsent that was kept here is gone.",
+    "legacy_stranded": "This browser can't open unsent mail kept by an earlier version. Updating the browser may bring it back.",
+    "store_private": "Private windows can't keep mail for offline use.",
+    "server_not_answering": "The mail server isn't answering. Try again in a moment."
+  },
+  "offlineDrafts": {
+    "title": "Drafts on this device",
+    "description": "These drafts are saved on this device. They go to the server by themselves once it can be reached.",
+    "saved_on_device": "Saved on this device",
+    "status_waiting": "Waiting for the server",
+    "status_sending": "Saving to the server",
+    "status_uncertain": "Checking whether it reached the server",
+    "status_refused": "The server refused this draft: {error}",
+    "file_missing": "A file attached to it is no longer on this device",
+    "open": "Open",
+    "open_label": "Open {subject}",
+    "retry": "Try again",
+    "retry_label": "Try {subject} again",
+    "toast_refused": "The draft {subject} couldn't be saved on the server. It stays on this device.",
+    "toast_conflict": "The draft {subject} was changed on another device. Both versions are kept.",
+    "conflict_changed": "Changed on another device. Both versions are in Drafts.",
+    "conflict_gone": "Changed or removed on another device. Your version is in Drafts.",
+    "banner_refused": "Drafts the server refused: {count}",
+    "banner_waiting": "Drafts waiting for the server: {count}"
+  },
   "deep_link": {
     "message_not_found": "This message is no longer available.",
     "thread_not_found": "This conversation is no longer available.",
@@ -5858,6 +5898,10 @@
       "crypto_full": {
         "title": "Full access to this app",
         "body": "Runs with the same rights as the webmail itself. It can read all your mail and stored keys and act for you. Only allow this for plugins you fully trust."
+      },
+      "keystore": {
+        "title": "Use certificates on this computer",
+        "body": "Ask to sign and decrypt messages with certificates on this computer or a smart card. The app asks you first. The plugin never gets the private key, but while you allow it, it can sign in your name and read what it decrypts."
       },
       "email_raw_send": {
         "title": "Send messages it built itself",
@@ -6524,5 +6568,13 @@
     "server_needed": "Enter your server's address first.",
     "server_declined": "You didn't allow this server, so nothing was sent to it.",
     "server_invalid": "This server address isn't valid."
+  },
+  "desktop_keystore": {
+    "title": "Certificates on this computer",
+    "description": "This server may ask to use your certificates and smart cards. You are still asked before each certificate is used.",
+    "label": "Access for this server",
+    "label_description": "Take back your permission. The server has to ask again.",
+    "revoke": "Take back",
+    "revoked": "Permission taken back"
   }
 }

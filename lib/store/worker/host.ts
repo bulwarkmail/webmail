@@ -9,6 +9,11 @@ import { FetchTransport, type StoreSession } from '../engine/transport';
 import type { StorageAdapter } from '../storage';
 import type { OpenAccountParams, StoreRpc, StoreStatus } from './protocol';
 
+/** Files in the pool that belong to no key. A name that isn't a store file's is left alone. */
+export function storeFilesToPrune(files: readonly string[], keep: readonly string[]): string[] {
+  return files.filter((file) => /^\/a[0-9a-f]+\.db$/.test(file) && !keep.includes(file));
+}
+
 export interface HostStorage {
   open(file: string, keyHex: string): Promise<StorageAdapter>;
   remove(file: string): boolean;
@@ -30,6 +35,13 @@ export interface StoreHostOptions {
   needAuth(account: string): void;
 }
 
+/** The owner hasn't opened this account yet. The caller may try again shortly. */
+function accountClosed(): Error {
+  const error = new Error('The local store is not open for this account');
+  error.name = 'StoreAccountClosedError';
+  return error;
+}
+
 export class StoreHost {
   private readonly accounts = new Map<string, OpenAccount>();
   private online = true;
@@ -37,17 +49,18 @@ export class StoreHost {
 
   constructor(private readonly options: StoreHostOptions) {}
 
-  async openAccount(params: OpenAccountParams): Promise<void> {
+  async openAccount(params: OpenAccountParams): Promise<{ created: boolean }> {
     const existing = this.accounts.get(params.account);
     if (existing) {
       if (params.session) this.setSession(params.account, params.session);
       this.setAuth(params.account, params.auth);
       existing.engine.setScope(params.scope);
-      existing.engine.setInvertedKeywordSort(params.invertedKeywordSort);
+      if (params.invertedKeywordSort !== null) existing.engine.setInvertedKeywordSort(params.invertedKeywordSort);
       void existing.engine.requestSync();
-      return;
+      return { created: false };
     }
     const db = await this.options.storage.open(params.file, params.keyHex);
+    const created = !db.get("SELECT 1 AS yes FROM sqlite_master WHERE name = 'schema_migration'");
     const session = params.session ?? AccountEngine.storedSession(db);
     if (!session) {
       db.close();
@@ -69,7 +82,7 @@ export class StoreHost {
       transport,
       areas: this.options.areas,
       scope: params.scope,
-      invertedKeywordSort: params.invertedKeywordSort,
+      invertedKeywordSort: params.invertedKeywordSort ?? undefined,
       emit: (event) => {
         if (event.type === 'synced') this.synced.set(event.account, event.at);
         this.options.emit(event);
@@ -78,6 +91,7 @@ export class StoreHost {
     account.engine.setOnline(this.online);
     this.accounts.set(params.account, account);
     void account.engine.requestSync();
+    return { created };
   }
 
   setAuth(account: string, auth: string | null): void {
@@ -99,6 +113,10 @@ export class StoreHost {
     if (!open) return;
     open.engine.setScope(scope);
     void open.engine.requestSync();
+  }
+
+  setInvertedKeywordSort(account: string, inverted: boolean): void {
+    this.accounts.get(account)?.engine.setInvertedKeywordSort(inverted);
   }
 
   async closeAccount(account: string): Promise<void> {
@@ -126,7 +144,7 @@ export class StoreHost {
       case 'answer': {
         const { account, calls } = params as Parameters<StoreRpc['answer']>[0];
         const open = this.accounts.get(account);
-        if (!open) throw new Error('The local store is not open for this account');
+        if (!open) throw accountClosed();
         return open.engine.answer(calls);
       }
       case 'sync': {
@@ -152,8 +170,12 @@ export class StoreHost {
       case 'area': {
         const { account, name, params: callParams } = params as Parameters<StoreRpc['area']>[0];
         const open = this.accounts.get(account);
-        if (!open) throw new Error('The local store is not open for this account');
+        if (!open) throw accountClosed();
         return open.engine.areaCall(name, callParams);
+      }
+      case 'removeAccount': {
+        const { account, file } = params as Parameters<StoreRpc['removeAccount']>[0];
+        return this.removeAccount(account, file);
       }
       default:
         throw new Error(`Unknown store call ${String(method)}`);

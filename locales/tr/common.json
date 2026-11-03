@@ -5743,6 +5743,46 @@
       "no_drafts_mailbox": "Taslaklar klasörü bulunamadı."
     }
   },
+  "offlineConflicts": {
+    "title": "Uygulanmayan değişiklikler",
+    "description": "Bu değişiklikleri çevrimdışıyken yaptınız. Uygulanmadı ve ileti sunucudaki haliyle kalıyor.",
+    "changed": "Başka bir cihazda değiştirildi, değişikliğiniz uygulanmadı",
+    "changed_delete": "Başka bir cihazda değiştirildi, silinmedi",
+    "gone": "Artık sunucuda yok, değişikliğiniz uygulanmadı",
+    "refused": "Sunucu bu değişikliği reddetti: {reason}",
+    "dismiss": "Kapat",
+    "dismiss_label": "{subject} ile ilgili notu kapat",
+    "banner": "Uygulanmayan değişiklikler: {count}",
+    "toast": "Çevrimdışı yapılan ve uygulanmayan değişiklikler: {count}. Giden kutusu hangileri olduğunu gösterir.",
+    "storage_failed": "Bu cihazda çevrimdışı e-posta için yer kalmadı. Yer açın veya Ayarlar'dan daha azını saklayın.",
+    "signout_changes_title": "Kaydedilmemiş değişikliklerle oturum kapatılsın mı?",
+    "signout_changes": "Henüz sunucuda olmayan değişiklikler: {count}. Oturumu kapatmak bunları siler.",
+    "store_unavailable": "Bu cihazdaki çevrimdışı e-postalar şu anda açılamıyor. Gönderilmemiş e-postalar burada kalır ve uygulama denemeye devam eder.",
+    "store_reset": "Bu cihazdaki çevrimdışı e-postalar okunamadı, bu yüzden yeniden indiriliyor. Gönderilmemiş olanlar kayboldu.",
+    "legacy_stranded": "Bu tarayıcı, önceki bir sürümün sakladığı gönderilmemiş e-postaları açamıyor. Tarayıcıyı güncellemek bunları geri getirebilir.",
+    "store_private": "Gizli pencereler e-postaları çevrimdışı kullanım için saklayamaz.",
+    "server_not_answering": "E-posta sunucusu yanıt vermiyor. Birazdan yeniden deneyin."
+  },
+  "offlineDrafts": {
+    "title": "Bu cihazdaki taslaklar",
+    "description": "Bu taslaklar bu cihaza kaydedildi. Sunucuya ulaşılır ulaşılmaz kendiliğinden gönderilir.",
+    "saved_on_device": "Bu cihaza kaydedildi",
+    "status_waiting": "Sunucu bekleniyor",
+    "status_sending": "Sunucuya kaydediliyor",
+    "status_uncertain": "Sunucuya ulaşıp ulaşmadığı denetleniyor",
+    "status_refused": "Sunucu bu taslağı reddetti: {error}",
+    "file_missing": "Ekli bir dosya artık bu cihazda değil",
+    "open": "Aç",
+    "open_label": "{subject} öğesini aç",
+    "retry": "Yeniden dene",
+    "retry_label": "{subject} için yeniden dene",
+    "toast_refused": "{subject} taslağı sunucuya kaydedilemedi. Bu cihazda kalıyor.",
+    "toast_conflict": "{subject} taslağı başka bir cihazda değiştirildi. İki sürüm de saklanıyor.",
+    "conflict_changed": "Başka bir cihazda değiştirildi. İki sürüm de Taslaklar'da.",
+    "conflict_gone": "Başka bir cihazda değiştirildi veya kaldırıldı. Sizin sürümünüz Taslaklar'da.",
+    "banner_refused": "Sunucunun reddettiği taslaklar: {count}",
+    "banner_waiting": "Sunucuyu bekleyen taslaklar: {count}"
+  },
   "deep_link": {
     "message_not_found": "Bu ileti artık kullanılamıyor.",
     "thread_not_found": "Bu sohbet artık kullanılamıyor.",
@@ -5858,6 +5898,10 @@
       "crypto_full": {
         "title": "Bu uygulamaya tam erişim",
         "body": "Webmail'in kendisiyle aynı haklarla çalışır. Tüm e-postalarınızı ve kayıtlı anahtarlarınızı okuyabilir, sizin adınıza işlem yapabilir. Buna yalnızca tamamen güvendiğiniz eklentiler için izin verin."
+      },
+      "keystore": {
+        "title": "Bu bilgisayardaki sertifikaları kullan",
+        "body": "Bu bilgisayardaki veya akıllı karttaki sertifikalarla iletileri imzalamak ve şifresini çözmek ister. Uygulama önce size sorar. Eklenti özel anahtarı asla almaz, ancak siz izin verdiğiniz sürece adınıza imzalayabilir ve şifresini çözdüğünü okuyabilir."
       },
       "email_raw_send": {
         "title": "Kendi oluşturduğu iletileri gönderme",
@@ -6524,5 +6568,13 @@
     "server_needed": "Önce sunucu adresini girin.",
     "server_declined": "Bu sunucuya izin vermediniz, bu yüzden ona hiçbir şey gönderilmedi.",
     "server_invalid": "Bu sunucu adresi geçerli değil."
+  },
+  "desktop_keystore": {
+    "title": "Bu bilgisayardaki sertifikalar",
+    "description": "Bu sunucu, sertifikalarınızı ve akıllı kartlarınızı kullanmak isteyebilir. Her sertifika kullanılmadan önce yine de size sorulur.",
+    "label": "Bu sunucunun erişimi",
+    "label_description": "İzninizi geri alın. Sunucunun yeniden sorması gerekir.",
+    "revoke": "Geri al",
+    "revoked": "İzin geri alındı"
   }
 }

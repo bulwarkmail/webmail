@@ -5743,6 +5743,46 @@
       "no_drafts_mailbox": "Votre dossier Brouillons est introuvable."
     }
   },
+  "offlineConflicts": {
+    "title": "Modifications non appliquées",
+    "description": "Vous avez fait ces modifications hors ligne. Elles n'ont pas été appliquées et le message reste tel qu'il est sur le serveur.",
+    "changed": "Modifié sur un autre appareil, votre modification n'a pas été appliquée",
+    "changed_delete": "Modifié sur un autre appareil, le message n'a pas été supprimé",
+    "gone": "N'est plus sur le serveur, votre modification n'a pas été appliquée",
+    "refused": "Le serveur a refusé cette modification : {reason}",
+    "dismiss": "Ignorer",
+    "dismiss_label": "Ignorer la note sur {subject}",
+    "banner": "Modifications non appliquées : {count}",
+    "toast": "Des modifications faites hors ligne n'ont pas été appliquées : {count}. La boîte d'envoi indique lesquelles.",
+    "storage_failed": "Cet appareil n'a plus de place pour le courrier hors ligne. Libérez de l'espace ou conservez moins dans les paramètres.",
+    "signout_changes_title": "Se déconnecter avec des modifications non enregistrées ?",
+    "signout_changes": "Modifications pas encore sur le serveur : {count}. La déconnexion les supprime.",
+    "store_unavailable": "Le courrier hors ligne de cet appareil ne peut pas être ouvert pour le moment. Les messages non envoyés restent ici et l'application continue d'essayer.",
+    "store_reset": "Le courrier hors ligne de cet appareil n'a pas pu être lu : il est de nouveau téléchargé. Ce qui n'était pas envoyé est perdu.",
+    "legacy_stranded": "Ce navigateur ne peut pas ouvrir les messages non envoyés conservés par une version précédente. Le mettre à jour peut les récupérer.",
+    "store_private": "Les fenêtres privées ne peuvent pas conserver le courrier pour une utilisation hors ligne.",
+    "server_not_answering": "Le serveur de messagerie ne répond pas. Réessayez dans un instant."
+  },
+  "offlineDrafts": {
+    "title": "Brouillons sur cet appareil",
+    "description": "Ces brouillons sont enregistrés sur cet appareil. Ils partent seuls vers le serveur dès qu'il est joignable.",
+    "saved_on_device": "Enregistré sur cet appareil",
+    "status_waiting": "En attente du serveur",
+    "status_sending": "Enregistrement sur le serveur",
+    "status_uncertain": "Vérification de son arrivée sur le serveur",
+    "status_refused": "Le serveur a refusé ce brouillon : {error}",
+    "file_missing": "Un fichier joint n'est plus sur cet appareil",
+    "open": "Ouvrir",
+    "open_label": "Ouvrir {subject}",
+    "retry": "Réessayer",
+    "retry_label": "Réessayer {subject}",
+    "toast_refused": "Le brouillon {subject} n'a pas pu être enregistré sur le serveur. Il reste sur cet appareil.",
+    "toast_conflict": "Le brouillon {subject} a été modifié sur un autre appareil. Les deux versions sont conservées.",
+    "conflict_changed": "Modifié sur un autre appareil. Les deux versions sont dans Brouillons.",
+    "conflict_gone": "Modifié ou supprimé sur un autre appareil. Votre version est dans Brouillons.",
+    "banner_refused": "Brouillons refusés par le serveur : {count}",
+    "banner_waiting": "Brouillons en attente du serveur : {count}"
+  },
   "deep_link": {
     "message_not_found": "Ce message n'est plus disponible.",
     "thread_not_found": "Cette conversation n'est plus disponible.",
@@ -5858,6 +5898,10 @@
       "crypto_full": {
         "title": "Accès complet à cette application",
         "body": "S'exécute avec les mêmes droits que le webmail lui-même. Il peut lire tous vos e-mails et vos clés enregistrées, et agir en votre nom. N'autorisez ceci que pour des plugins en qui vous avez entièrement confiance."
+      },
+      "keystore": {
+        "title": "Utiliser les certificats de cet ordinateur",
+        "body": "Demande à signer et déchiffrer des messages avec les certificats de cet ordinateur ou d'une carte à puce. L'application vous pose d'abord la question. Le plugin ne reçoit jamais la clé privée, mais tant que vous l'autorisez, il peut signer en votre nom et lire ce qu'il déchiffre."
       },
       "email_raw_send": {
         "title": "Envoyer des messages qu'il a lui-même créés",
@@ -6524,5 +6568,13 @@
     "server_needed": "Saisissez d'abord l'adresse du serveur.",
     "server_declined": "Vous n'avez pas autorisé ce serveur, donc rien ne lui a été envoyé.",
     "server_invalid": "Cette adresse de serveur n'est pas valide."
+  },
+  "desktop_keystore": {
+    "title": "Certificats de cet ordinateur",
+    "description": "Ce serveur peut demander à utiliser vos certificats et cartes à puce. La question vous est quand même posée avant l'utilisation de chaque certificat.",
+    "label": "Accès de ce serveur",
+    "label_description": "Retirez votre autorisation. Le serveur devra la redemander.",
+    "revoke": "Retirer",
+    "revoked": "Autorisation retirée"
   }
 }

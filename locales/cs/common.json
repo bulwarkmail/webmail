@@ -5743,6 +5743,46 @@
       "no_drafts_mailbox": "Složka Koncepty nebyla nalezena."
     }
   },
+  "offlineConflicts": {
+    "title": "Nepoužité změny",
+    "description": "Tyto změny jste provedli offline. Nebyly použity a zpráva zůstává tak, jak je na serveru.",
+    "changed": "Změněno na jiném zařízení, vaše změna nebyla použita",
+    "changed_delete": "Změněno na jiném zařízení, zpráva nebyla smazána",
+    "gone": "Už není na serveru, vaše změna nebyla použita",
+    "refused": "Server tuto změnu odmítl: {reason}",
+    "dismiss": "Zavřít",
+    "dismiss_label": "Zavřít poznámku o {subject}",
+    "banner": "Nepoužité změny: {count}",
+    "toast": "Nepoužité změny provedené offline: {count}. Které to jsou, ukazuje pošta k odeslání.",
+    "storage_failed": "Na tomto zařízení už není místo pro poštu offline. Uvolněte místo nebo v nastavení ponechte méně.",
+    "signout_changes_title": "Odhlásit se s neuloženými změnami?",
+    "signout_changes": "Změny, které ještě nejsou na serveru: {count}. Odhlášení je smaže.",
+    "store_unavailable": "Poštu offline na tomto zařízení teď nelze otevřít. Neodeslaná pošta tu zůstává a aplikace to dál zkouší.",
+    "store_reset": "Poštu offline na tomto zařízení se nepodařilo přečíst, proto se stahuje znovu. Co nebylo odesláno, je pryč.",
+    "legacy_stranded": "Tento prohlížeč neotevře neodeslanou poštu uloženou starší verzí. Aktualizace prohlížeče ji může vrátit.",
+    "store_private": "Soukromá okna nemohou uchovávat poštu pro použití offline.",
+    "server_not_answering": "Poštovní server neodpovídá. Zkuste to za chvíli znovu."
+  },
+  "offlineDrafts": {
+    "title": "Koncepty v tomto zařízení",
+    "description": "Tyto koncepty jsou uložené v tomto zařízení. Na server se odešlou samy, jakmile bude dostupný.",
+    "saved_on_device": "Uloženo v tomto zařízení",
+    "status_waiting": "Čeká na server",
+    "status_sending": "Ukládá se na server",
+    "status_uncertain": "Ověřuje se, zda dorazil na server",
+    "status_refused": "Server tento koncept odmítl: {error}",
+    "file_missing": "Přiložený soubor už v tomto zařízení není",
+    "open": "Otevřít",
+    "open_label": "Otevřít {subject}",
+    "retry": "Zkusit znovu",
+    "retry_label": "Zkusit znovu: {subject}",
+    "toast_refused": "Koncept {subject} se nepodařilo uložit na server. Zůstává v tomto zařízení.",
+    "toast_conflict": "Koncept {subject} byl změněn v jiném zařízení. Obě verze zůstávají zachovány.",
+    "conflict_changed": "Změněno v jiném zařízení. Obě verze jsou v Konceptech.",
+    "conflict_gone": "Změněno nebo odstraněno v jiném zařízení. Vaše verze je v Konceptech.",
+    "banner_refused": "Koncepty odmítnuté serverem: {count}",
+    "banner_waiting": "Koncepty čekající na server: {count}"
+  },
   "deep_link": {
     "message_not_found": "Tato zpráva už není dostupná.",
     "thread_not_found": "Tato konverzace už není dostupná.",
@@ -5858,6 +5898,10 @@
       "crypto_full": {
         "title": "Plný přístup k této aplikaci",
         "body": "Běží se stejnými právy jako samotný webmail. Může číst veškerou vaši poštu a uložené klíče a jednat vaším jménem. Povolte to jen pluginům, kterým plně důvěřujete."
+      },
+      "keystore": {
+        "title": "Používat certifikáty v tomto počítači",
+        "body": "Žádá o podepisování a dešifrování zpráv pomocí certifikátů v tomto počítači nebo na čipové kartě. Aplikace se vás nejprve zeptá. Plugin nikdy nedostane soukromý klíč, ale dokud to povolíte, může podepisovat vaším jménem a číst, co dešifruje."
       },
       "email_raw_send": {
         "title": "Odesílat zprávy, které sám vytvořil",
@@ -6524,5 +6568,13 @@
     "server_needed": "Nejdřív zadejte adresu serveru.",
     "server_declined": "Tento server jste nepovolili, proto se na něj nic neodeslalo.",
     "server_invalid": "Tato adresa serveru není platná."
+  },
+  "desktop_keystore": {
+    "title": "Certifikáty v tomto počítači",
+    "description": "Tento server může žádat o použití vašich certifikátů a čipových karet. Před použitím každého certifikátu se vás přesto zeptáme.",
+    "label": "Přístup tohoto serveru",
+    "label_description": "Odvolejte své povolení. Server se bude muset zeptat znovu.",
+    "revoke": "Odvolat",
+    "revoked": "Povolení bylo odvoláno"
   }
 }

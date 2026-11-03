@@ -5743,6 +5743,46 @@
       "no_drafts_mailbox": "Impossibile trovare la cartella Bozze."
     }
   },
+  "offlineConflicts": {
+    "title": "Modifiche non applicate",
+    "description": "Hai fatto queste modifiche offline. Non sono state applicate e il messaggio resta com'è sul server.",
+    "changed": "Modificato su un altro dispositivo, la tua modifica non è stata applicata",
+    "changed_delete": "Modificato su un altro dispositivo, non è stato eliminato",
+    "gone": "Non è più sul server, la tua modifica non è stata applicata",
+    "refused": "Il server ha rifiutato questa modifica: {reason}",
+    "dismiss": "Ignora",
+    "dismiss_label": "Ignora la nota su {subject}",
+    "banner": "Modifiche non applicate: {count}",
+    "toast": "Modifiche fatte offline non applicate: {count}. La posta in uscita indica quali.",
+    "storage_failed": "Questo dispositivo non ha più spazio per la posta offline. Libera spazio o conservane meno nelle impostazioni.",
+    "signout_changes_title": "Uscire con modifiche non salvate?",
+    "signout_changes": "Modifiche non ancora sul server: {count}. Uscendo vengono eliminate.",
+    "store_unavailable": "La posta offline di questo dispositivo non si può aprire ora. La posta non inviata resta qui e l'app continua a provare.",
+    "store_reset": "Non è stato possibile leggere la posta offline di questo dispositivo, quindi viene scaricata di nuovo. Ciò che non era stato inviato è perso.",
+    "legacy_stranded": "Questo browser non può aprire la posta non inviata conservata da una versione precedente. Aggiornare il browser può recuperarla.",
+    "store_private": "Le finestre private non possono conservare la posta per l'uso offline.",
+    "server_not_answering": "Il server di posta non risponde. Riprova tra un momento."
+  },
+  "offlineDrafts": {
+    "title": "Bozze su questo dispositivo",
+    "description": "Queste bozze sono salvate su questo dispositivo. Passano da sole al server appena è raggiungibile.",
+    "saved_on_device": "Salvata su questo dispositivo",
+    "status_waiting": "In attesa del server",
+    "status_sending": "Salvataggio sul server",
+    "status_uncertain": "Verifica dell'arrivo sul server",
+    "status_refused": "Il server ha rifiutato questa bozza: {error}",
+    "file_missing": "Un file allegato non è più su questo dispositivo",
+    "open": "Apri",
+    "open_label": "Apri {subject}",
+    "retry": "Riprova",
+    "retry_label": "Riprova {subject}",
+    "toast_refused": "Non è stato possibile salvare la bozza {subject} sul server. Resta su questo dispositivo.",
+    "toast_conflict": "La bozza {subject} è stata modificata su un altro dispositivo. Vengono conservate entrambe le versioni.",
+    "conflict_changed": "Modificata su un altro dispositivo. Entrambe le versioni sono in Bozze.",
+    "conflict_gone": "Modificata o rimossa su un altro dispositivo. La tua versione è in Bozze.",
+    "banner_refused": "Bozze rifiutate dal server: {count}",
+    "banner_waiting": "Bozze in attesa del server: {count}"
+  },
   "deep_link": {
     "message_not_found": "Questo messaggio non è più disponibile.",
     "thread_not_found": "Questa conversazione non è più disponibile.",
@@ -5858,6 +5898,10 @@
       "crypto_full": {
         "title": "Accesso completo a questa app",
         "body": "Funziona con gli stessi diritti della webmail stessa. Può leggere tutta la tua posta e le chiavi salvate e agire per conto tuo. Consentilo solo ai plugin di cui ti fidi completamente."
+      },
+      "keystore": {
+        "title": "Usare i certificati di questo computer",
+        "body": "Chiede di firmare e decifrare i messaggi con i certificati di questo computer o di una smart card. L'app te lo chiede prima. Il plugin non riceve mai la chiave privata, ma finché lo consenti può firmare a tuo nome e leggere ciò che decifra."
       },
       "email_raw_send": {
         "title": "Inviare messaggi creati da sé",
@@ -6524,5 +6568,13 @@
     "server_needed": "Inserisci prima l'indirizzo del server.",
     "server_declined": "Non hai autorizzato questo server, quindi non gli è stato inviato nulla.",
     "server_invalid": "Questo indirizzo del server non è valido."
+  },
+  "desktop_keystore": {
+    "title": "Certificati di questo computer",
+    "description": "Questo server può chiedere di usare i tuoi certificati e le tue smart card. Ti verrà comunque chiesto prima di usare ogni certificato.",
+    "label": "Accesso di questo server",
+    "label_description": "Ritira il tuo permesso. Il server dovrà chiederlo di nuovo.",
+    "revoke": "Ritira",
+    "revoked": "Permesso ritirato"
   }
 }

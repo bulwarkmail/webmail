@@ -38,6 +38,72 @@ describe('email boot snapshot', { timeout: 30_000 }, () => {
   });
 });
 
+// With the local store on, mail doesn't go to localStorage in plain text too.
+describe('email boot snapshot for an account in the local store', { timeout: 30_000 }, () => {
+  const STATE = { mailboxes: MAILBOXES, selectedMailbox: 'inbox', emails: [{ id: 'e1', mailboxIds: { inbox: true } }] };
+
+  async function fresh(account: string) {
+    vi.useFakeTimers();
+    persistSession(account);
+    vi.resetModules();
+    const { useEmailStore } = await import('@/stores/email-store');
+    const offline = await import('@/lib/offline/state');
+    return { useEmailStore, offline };
+  }
+
+  afterEach(() => vi.useRealTimers());
+
+  it('isn\'t written', async () => {
+    const { useEmailStore, offline } = await fresh('alice@mail.example');
+    offline.useOfflineStore.setState({ enabled: ['alice@mail.example'] });
+    useEmailStore.setState(STATE as never);
+    await vi.advanceTimersByTimeAsync(1500);
+    expect(localStorage.getItem('email-snapshot')).toBeNull();
+  });
+
+  it('is written for an account outside it', async () => {
+    const { useEmailStore, offline } = await fresh('alice@mail.example');
+    offline.useOfflineStore.setState({ enabled: ['bob@mail.example'] });
+    useEmailStore.setState(STATE as never);
+    await vi.advanceTimersByTimeAsync(1500);
+    expect(JSON.parse(localStorage.getItem('email-snapshot') ?? '{}').account).toBe('alice@mail.example');
+  });
+
+  it('goes only when that account\'s store can take over', async () => {
+    const { offline } = await fresh('alice@mail.example');
+    localStorage.setItem('email-snapshot', JSON.stringify({ v: 3, account: 'alice@mail.example', mailboxes: MAILBOXES }));
+    offline.forgetMailSnapshot('bob@mail.example');
+    expect(localStorage.getItem('email-snapshot')).not.toBeNull();
+    offline.forgetMailSnapshot('alice@mail.example');
+    expect(localStorage.getItem('email-snapshot')).toBeNull();
+  });
+});
+
+// A client's late answer doesn't land on the client that replaced it.
+describe('a list answer from a client that was replaced', { timeout: 30_000 }, () => {
+  it('is dropped', async () => {
+    persistSession('alice@mail.example');
+    vi.resetModules();
+    const { useEmailStore } = await import('@/stores/email-store');
+    const { useAuthStore } = await import('@/stores/auth-store');
+    const rows = [{ id: 'stale', mailboxIds: { inbox: true } }];
+    let answer: (value: unknown) => void = () => {};
+    const local = {
+      getAccountId: () => 'acc',
+      getEmails: vi.fn(() => new Promise((resolve) => { answer = resolve; })),
+      getThreadEmailCounts: vi.fn(async () => ({})),
+    };
+    useAuthStore.setState({ client: local as never, activeAccountId: 'alice@mail.example' });
+    useEmailStore.setState({ mailboxes: MAILBOXES as never, selectedMailbox: 'inbox', emails: [] });
+    const fetching = useEmailStore.getState().fetchEmails(local as never, 'inbox');
+    await vi.waitFor(() => expect(local.getEmails).toHaveBeenCalled());
+    useAuthStore.setState({ client: { getAccountId: () => 'acc' } as never });
+    answer({ emails: rows, hasMore: false, total: 1, state: 's1' });
+    await fetching;
+    expect(useEmailStore.getState().emails).toEqual([]);
+  });
+});
+
 // The snapshot keeps the last plain folder that was open; a session that
 // ended in a unified view left Trash there, and every visit to "/" opened it.
 describe('email boot snapshot folder', { timeout: 30_000 }, () => {

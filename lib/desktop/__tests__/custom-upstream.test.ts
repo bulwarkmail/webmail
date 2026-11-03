@@ -221,11 +221,11 @@ describe('in a server build', () => {
     expect(calls[0].url).toBe(`${CONFIGURED}/auth/token`);
   });
 
-  it('still answers 500 on an unexpected failure', async () => {
+  it('answers 503 when the provider cannot be reached, so the client waits it out', async () => {
     cookieStore.set('jmap_rt', 'refresh-1');
     stubUpstream();
     const { PUT } = await loadRoute();
     const res = (await PUT(request('PUT', { force: 'true' }) as Parameters<typeof PUT>[0])) as unknown as { status: number };
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(503);
   });
 });

@@ -28,6 +28,9 @@ export const DEFAULT_SCOPE: StoreScope = {
   maxTotalBytes: 2 * 1024 * 1024 * 1024,
 };
 
+/** The `area` of an error event for a write that failed: a full disk, the browser's quota. */
+export const STORAGE_ERROR_AREA = 'storage';
+
 export interface SyncStateRow {
   state: string | null;
   /** The newest state the server told us about, to know when a run is caught up. */
@@ -52,12 +55,26 @@ export interface StoreContext {
   scope: StoreScope;
   now(): number;
   emit(event: StoreEvent): void;
+  /** Records of one type as this device shows them: see RecordOverlay. */
+  overlay<T extends { id: string }>(jmap: string, type: string, records: T[]): T[];
 }
+
+/**
+ * What an area changes about records another area stores: the outbox lays
+ * changes that wait for the server over what the server sent. Runs inside the
+ * caller's transaction. Returns the records to use; a record left out is one
+ * this device already treats as gone.
+ */
+export type RecordOverlay = (ctx: Pick<StoreContext, 'db' | 'now'>, jmap: string, type: string, records: Array<{ id: string }>) => Array<{ id: string }>;
 
 export interface SyncContext extends StoreContext {
   transport: JmapTransport;
   /** True once the engine is closing or lost the network: stop at the next batch. */
   stopped(): boolean;
+  /** A newer pass was asked for. Work that can wait stops, and the next pass carries on with it. */
+  syncWanted(): boolean;
+  /** Waits, to stay polite to the server. */
+  pause(ms: number): Promise<void>;
   syncState(jmap: string, type: string): SyncStateRow;
   /** Call inside the transaction that writes the data, so the two can't disagree. */
   setSyncState(jmap: string, type: string, row: Partial<SyncStateRow>): void;
@@ -68,6 +85,8 @@ export interface Syncer {
   name: string;
   /** The JMAP capability an account must advertise for this to run for it. */
   capability: string;
+  /** Runs after every other syncer of the pass, for work that can wait. */
+  low?: boolean;
   /** Runs one pass for one JMAP account. Must be safe to stop between batches and start again. */
   run(ctx: SyncContext, jmap: string): Promise<void>;
 }
@@ -89,6 +108,8 @@ export interface MethodContext extends StoreContext {
   invertedKeywordSort: boolean;
   /** Earlier responses in this request, for creation-id references. */
   createdIds: Map<string, string>;
+  /** The whole request this call came in. */
+  calls: readonly MethodCall[];
 }
 
 export type MethodHandler = (ctx: MethodContext, args: Record<string, unknown>, call: MethodCall) => MethodResult | Promise<MethodResult>;
@@ -107,4 +128,7 @@ export interface StoreArea {
   methods: Readonly<Record<string, MethodHandler>>;
   syncers: readonly Syncer[];
   calls?: Readonly<Record<string, AreaCall>>;
+  overlay?: RecordOverlay;
+  /** At start and when the scope changes: a tighter policy applies at once, not at the next sync. */
+  scopeChanged?(ctx: StoreContext): void;
 }

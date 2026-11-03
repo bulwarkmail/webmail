@@ -11,6 +11,8 @@ export const calendarArea: StoreArea = {
   syncers: [calendarSyncer],
   calls: {
     'calendar.flush': (ctx) => flushCalendar(ctx),
+    /** Edits the server hasn't got, for the question before a sign-out. */
+    'calendar.pending': (ctx) => Number(ctx.db.get<{ n: number }>('SELECT COUNT(*) AS n FROM calendar_pending')?.n ?? 0),
     'calendar.conflicts': (ctx) => listConflicts(ctx.db),
     'calendar.resolveStandIns': (ctx, params: { ids: string[] }) => resolveStandIns(ctx.db, params.ids),
     'calendar.dismissConflict': (ctx, params: { id: number }) => {

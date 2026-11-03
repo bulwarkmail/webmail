@@ -5743,6 +5743,46 @@
       "no_drafts_mailbox": "Mappen Kladder blev ikke fundet."
     }
   },
+  "offlineConflicts": {
+    "title": "Ændringer, der ikke blev gennemført",
+    "description": "Du lavede disse ændringer offline. De blev ikke gennemført, og beskeden forbliver, som den er på serveren.",
+    "changed": "Ændret på en anden enhed, din ændring blev ikke gennemført",
+    "changed_delete": "Ændret på en anden enhed, den blev ikke slettet",
+    "gone": "Findes ikke længere på serveren, din ændring blev ikke gennemført",
+    "refused": "Serveren afviste denne ændring: {reason}",
+    "dismiss": "Afvis",
+    "dismiss_label": "Afvis noten om {subject}",
+    "banner": "Ændringer, der ikke blev gennemført: {count}",
+    "toast": "Ændringer lavet offline, der ikke blev gennemført: {count}. Udbakken viser hvilke.",
+    "storage_failed": "Denne enhed har ikke mere plads til offlinemail. Frigør plads, eller behold mindre i indstillingerne.",
+    "signout_changes_title": "Log ud med ændringer, der ikke er gemt?",
+    "signout_changes": "Ændringer, der endnu ikke er på serveren: {count}. Når du logger ud, slettes de.",
+    "store_unavailable": "Offlinemail på denne enhed kan ikke åbnes lige nu. Ikke-sendt mail bliver her, og appen bliver ved med at prøve.",
+    "store_reset": "Offlinemail på denne enhed kunne ikke læses og hentes derfor igen. Det, der ikke var sendt, er væk.",
+    "legacy_stranded": "Denne browser kan ikke åbne ikke-sendt mail fra en tidligere version. En opdatering af browseren kan hente den tilbage.",
+    "store_private": "Private vinduer kan ikke gemme mail til brug offline.",
+    "server_not_answering": "Mailserveren svarer ikke. Prøv igen om lidt."
+  },
+  "offlineDrafts": {
+    "title": "Kladder på denne enhed",
+    "description": "Disse kladder er gemt på denne enhed. De sendes selv til serveren, så snart den kan nås.",
+    "saved_on_device": "Gemt på denne enhed",
+    "status_waiting": "Venter på serveren",
+    "status_sending": "Gemmer på serveren",
+    "status_uncertain": "Tjekker, om den nåede serveren",
+    "status_refused": "Serveren afviste denne kladde: {error}",
+    "file_missing": "En vedhæftet fil er ikke længere på denne enhed",
+    "open": "Åbn",
+    "open_label": "Åbn {subject}",
+    "retry": "Prøv igen",
+    "retry_label": "Prøv {subject} igen",
+    "toast_refused": "Kladden {subject} kunne ikke gemmes på serveren. Den bliver på denne enhed.",
+    "toast_conflict": "Kladden {subject} blev ændret på en anden enhed. Begge versioner beholdes.",
+    "conflict_changed": "Ændret på en anden enhed. Begge versioner ligger i Kladder.",
+    "conflict_gone": "Ændret eller fjernet på en anden enhed. Din version ligger i Kladder.",
+    "banner_refused": "Kladder afvist af serveren: {count}",
+    "banner_waiting": "Kladder, der venter på serveren: {count}"
+  },
   "deep_link": {
     "message_not_found": "Denne besked er ikke længere tilgængelig.",
     "thread_not_found": "Denne samtale er ikke længere tilgængelig.",
@@ -5858,6 +5898,10 @@
       "crypto_full": {
         "title": "Fuld adgang til denne app",
         "body": "Kører med de samme rettigheder som selve webmailen. Det kan læse alle dine e-mails og gemte nøgler og handle på dine vegne. Tillad det kun for plugins, du stoler fuldt ud på."
+      },
+      "keystore": {
+        "title": "Brug certifikater på denne computer",
+        "body": "Beder om at signere og dekryptere beskeder med certifikater på denne computer eller et chipkort. Appen spørger dig først. Pluginnet får aldrig den private nøgle, men så længe du tillader det, kan det signere i dit navn og læse det, det dekrypterer."
       },
       "email_raw_send": {
         "title": "Sende beskeder, det selv har lavet",
@@ -6524,5 +6568,13 @@
     "server_needed": "Angiv først serverens adresse.",
     "server_declined": "Du tillod ikke denne server, så der blev ikke sendt noget til den.",
     "server_invalid": "Denne serveradresse er ikke gyldig."
+  },
+  "desktop_keystore": {
+    "title": "Certifikater på denne computer",
+    "description": "Denne server kan bede om at bruge dine certifikater og chipkort. Du bliver stadig spurgt, før hvert certifikat bruges.",
+    "label": "Adgang for denne server",
+    "label_description": "Træk din tilladelse tilbage. Serveren skal så spørge igen.",
+    "revoke": "Træk tilbage",
+    "revoked": "Tilladelsen er trukket tilbage"
   }
 }

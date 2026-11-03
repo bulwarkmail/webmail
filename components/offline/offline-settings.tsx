@@ -29,7 +29,9 @@ export function OfflineSettings() {
   const usage = useOfflineStore((s) => s.usageBytes);
   const syncing = useOfflineStore((s) => !!account && s.syncing.includes(account));
   const lastSynced = useOfflineStore((s) => (account ? s.lastSyncedAt[account] : undefined));
-  const unsent = useOfflineStore((s) => s.outbox.filter((row) => row.account === account).length);
+  const unsent = useOfflineStore((s) => [...s.outbox, ...s.localDrafts].filter((row) => row.account === account).length);
+  const blocked = useOfflineStore((s) => s.storageBlocked);
+  const tNotes = useTranslations('offlineConflicts');
   const [confirmOff, setConfirmOff] = useState(false);
 
   if (IS_LITE) return null;
@@ -42,7 +44,9 @@ export function OfflineSettings() {
 
   return (
     <SettingsSection id="offline" title={t('title')} description={t('description')}>
-      {!offlineSupported() ? (
+      {blocked ? (
+        <p className="text-sm text-muted-foreground" data-testid="offline-private">{tNotes('store_private')}</p>
+      ) : !offlineSupported() ? (
         <p className="text-sm text-muted-foreground" data-testid="offline-unsupported">{t('unsupported')}</p>
       ) : !allowed ? (
         <div className="py-3" data-testid="offline-forbidden">

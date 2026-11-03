@@ -5743,6 +5743,46 @@
       "no_drafts_mailbox": "Dosarul Ciorne nu a fost găsit."
     }
   },
+  "offlineConflicts": {
+    "title": "Modificări neaplicate",
+    "description": "Ați făcut aceste modificări offline. Nu au fost aplicate, iar mesajul rămâne așa cum este pe server.",
+    "changed": "Modificat pe alt dispozitiv, modificarea dvs. nu a fost aplicată",
+    "changed_delete": "Modificat pe alt dispozitiv, nu a fost șters",
+    "gone": "Nu mai este pe server, modificarea dvs. nu a fost aplicată",
+    "refused": "Serverul a refuzat această modificare: {reason}",
+    "dismiss": "Închide",
+    "dismiss_label": "Închide nota despre {subject}",
+    "banner": "Modificări neaplicate: {count}",
+    "toast": "Modificări făcute offline care nu au fost aplicate: {count}. Căsuța de trimitere arată care.",
+    "storage_failed": "Acest dispozitiv nu mai are loc pentru e-mailul offline. Eliberați spațiu sau păstrați mai puțin din setări.",
+    "signout_changes_title": "Vă deconectați cu modificări nesalvate?",
+    "signout_changes": "Modificări care nu sunt încă pe server: {count}. Deconectarea le șterge.",
+    "store_unavailable": "E-mailul offline de pe acest dispozitiv nu poate fi deschis acum. E-mailul netrimis rămâne aici, iar aplicația continuă să încerce.",
+    "store_reset": "E-mailul offline de pe acest dispozitiv nu a putut fi citit, așa că se descarcă din nou. Ce nu fusese trimis s-a pierdut.",
+    "legacy_stranded": "Acest browser nu poate deschide e-mailul netrimis păstrat de o versiune anterioară. Actualizarea browserului îl poate recupera.",
+    "store_private": "Ferestrele private nu pot păstra e-mailuri pentru utilizare offline.",
+    "server_not_answering": "Serverul de e-mail nu răspunde. Încercați din nou imediat."
+  },
+  "offlineDrafts": {
+    "title": "Ciorne pe acest dispozitiv",
+    "description": "Aceste ciorne sunt salvate pe acest dispozitiv. Ajung singure pe server imediat ce poate fi contactat.",
+    "saved_on_device": "Salvat pe acest dispozitiv",
+    "status_waiting": "Se așteaptă serverul",
+    "status_sending": "Se salvează pe server",
+    "status_uncertain": "Se verifică dacă a ajuns pe server",
+    "status_refused": "Serverul a refuzat această ciornă: {error}",
+    "file_missing": "Un fișier atașat nu mai este pe acest dispozitiv",
+    "open": "Deschide",
+    "open_label": "Deschide {subject}",
+    "retry": "Încearcă din nou",
+    "retry_label": "Încearcă din nou: {subject}",
+    "toast_refused": "Ciorna {subject} nu a putut fi salvată pe server. Rămâne pe acest dispozitiv.",
+    "toast_conflict": "Ciorna {subject} a fost modificată pe alt dispozitiv. Ambele versiuni sunt păstrate.",
+    "conflict_changed": "Modificată pe alt dispozitiv. Ambele versiuni sunt în Ciorne.",
+    "conflict_gone": "Modificată sau eliminată pe alt dispozitiv. Versiunea dvs. este în Ciorne.",
+    "banner_refused": "Ciorne refuzate de server: {count}",
+    "banner_waiting": "Ciorne care așteaptă serverul: {count}"
+  },
   "deep_link": {
     "message_not_found": "Acest mesaj nu mai este disponibil.",
     "thread_not_found": "Această conversație nu mai este disponibilă.",
@@ -5858,6 +5898,10 @@
       "crypto_full": {
         "title": "Acces complet la această aplicație",
         "body": "Rulează cu aceleași drepturi ca webmailul însuși. Poate citi toate e-mailurile și cheile stocate și poate acționa în numele dvs. Permiteți acest lucru doar pluginurilor în care aveți încredere deplină."
+      },
+      "keystore": {
+        "title": "Folosește certificatele de pe acest computer",
+        "body": "Cere să semneze și să decripteze mesaje cu certificate de pe acest computer sau de pe un smart card. Aplicația vă întreabă mai întâi. Pluginul nu primește niciodată cheia privată, dar cât timp permiteți poate semna în numele dvs. și poate citi ce decriptează."
       },
       "email_raw_send": {
         "title": "Trimiterea mesajelor create de el însuși",
@@ -6524,5 +6568,13 @@
     "server_needed": "Introdu mai întâi adresa serverului.",
     "server_declined": "Nu ai permis acest server, așa că nu i s-a trimis nimic.",
     "server_invalid": "Această adresă de server nu este validă."
+  },
+  "desktop_keystore": {
+    "title": "Certificate de pe acest computer",
+    "description": "Acest server poate cere să vă folosească certificatele și smart cardurile. Veți fi întrebat în continuare înainte de folosirea fiecărui certificat.",
+    "label": "Accesul acestui server",
+    "label_description": "Retrageți permisiunea. Serverul va trebui să ceară din nou.",
+    "revoke": "Retrage",
+    "revoked": "Permisiune retrasă"
   }
 }
