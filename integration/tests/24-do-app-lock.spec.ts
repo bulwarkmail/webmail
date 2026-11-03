@@ -515,9 +515,16 @@ test('a forgotten PIN offline: the cookie that stays signs nobody in, then or wh
   await lockNow(page);
   await context.setOffline(true);
   await forgetPin(page);
-  // No network, so no way to delete an HttpOnly cookie, and the shell went with the rest.
-  await page.waitForURL((url) => !url.pathname.includes('/settings'), { timeout: 60_000 });
+  // No network, so no way to delete an HttpOnly cookie, and the shell went with the rest:
+  // the way to the login page ends at the browser's own error until the network is back.
+  await page.waitForURL((url) => !url.pathname.includes('/settings'), { timeout: 60_000 })
+    .catch((error: Error) => expect(error.message).toContain('ERR_INTERNET_DISCONNECTED'));
+  // The old page is gone only once the error page is up: until then it could still reach the network.
+  await expect.poll(() => page.url(), { timeout: 30_000 }).toContain('chrome-error');
   expect((await context.cookies()).some((cookie) => SESSION_COOKIE.test(cookie.name))).toBe(true);
+  const stored = (await context.storageState()).origins.flatMap((origin) => origin.localStorage).map((entry) => entry.name);
+  expect(stored).toContain('bulwark-cookies-to-clear');
+  expect(stored).not.toContain('bulwark-app-lock');
   const asked: string[] = [];
   context.on('request', (request) => {
     if (/\/api\/auth\/session/.test(request.url())) asked.push(request.method());
@@ -561,7 +568,8 @@ test('a server answering 5xx: the lock holds on the page, and the reload comes w
   await expect(page.locator('body')).not.toContainText('Lock now');
   await context.unroute('**/settings/general*');
   await page.evaluate(() => window.dispatchEvent(new Event('online')));
-  await expect.poll(() => page.evaluate(() => (window as unknown as { __before?: string }).__before), { timeout: 30_000 }).toBeUndefined();
+  // The reload can come in the middle of a look.
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __before?: string }).__before).catch(() => 'reloading'), { timeout: 30_000 }).toBeUndefined();
   await expect(lockForm(page)).toBeVisible({ timeout: 30_000 });
   await context.close();
 });
