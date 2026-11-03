@@ -137,7 +137,7 @@ async function flush(): Promise<Run & { finished: boolean }> {
 /** And what the flush left in the usual queue: the old versions go here. */
 async function flushQueue(): Promise<boolean> {
   const pending = await t.engine.areaCall('outbox.pendingPatches', {}) as PendingPatch[];
-  return flushPatches({ request: (calls) => t.server.request(calls), isRefusal: () => false }, pending, async (outcomes: PatchOutcome[]) => {
+  return flushPatches({ request: (calls) => t.server.request(calls) }, pending, async (outcomes: PatchOutcome[]) => {
     await t.engine.areaCall('outbox.patchResults', { outcomes });
   });
 }

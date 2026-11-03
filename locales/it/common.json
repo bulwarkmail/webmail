@@ -5754,7 +5754,14 @@
     "dismiss_label": "Ignora la nota su {subject}",
     "banner": "Modifiche non applicate: {count}",
     "toast": "Modifiche fatte offline non applicate: {count}. La posta in uscita indica quali.",
-    "storage_failed": "Questo dispositivo non ha più spazio per la posta offline. Libera spazio o conservane meno nelle impostazioni."
+    "storage_failed": "Questo dispositivo non ha più spazio per la posta offline. Libera spazio o conservane meno nelle impostazioni.",
+    "signout_changes_title": "Uscire con modifiche non salvate?",
+    "signout_changes": "Modifiche non ancora sul server: {count}. Uscendo vengono eliminate.",
+    "store_unavailable": "La posta offline di questo dispositivo non si può aprire ora. La posta non inviata resta qui e l'app continua a provare.",
+    "store_reset": "Non è stato possibile leggere la posta offline di questo dispositivo, quindi viene scaricata di nuovo. Ciò che non era stato inviato è perso.",
+    "legacy_stranded": "Questo browser non può aprire la posta non inviata conservata da una versione precedente. Aggiornare il browser può recuperarla.",
+    "store_private": "Le finestre private non possono conservare la posta per l'uso offline.",
+    "server_not_answering": "Il server di posta non risponde. Riprova tra un momento."
   },
   "offlineDrafts": {
     "title": "Bozze su questo dispositivo",
@@ -6515,5 +6522,32 @@
       "next_issue": "Errore di ortografia o grammatica successivo",
       "previous_issue": "Errore di ortografia o grammatica precedente"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Apri in una nuova finestra",
+    "save_all_to_folder": "Salva tutto in una cartella…",
+    "saved_all": "{count, plural, one {# allegato salvato in {folder}.} other {# allegati salvati in {folder}.}}",
+    "saved_partial": "{saved} allegati su {total} salvati in {folder}.",
+    "save_failed": "Impossibile salvare gli allegati in {folder}.",
+    "popup_blocked": "Il browser ha bloccato la nuova finestra. Consenti i pop-up per questo sito e riprova.",
+    "opening": "Apertura…",
+    "session_ended_title": "Hai effettuato la disconnessione in questa finestra",
+    "session_ended_body": "Apri l’app e accedi, poi riapri questa finestra.",
+    "open_app": "Apri l’app",
+    "close_window": "Chiudi finestra",
+    "message_gone_title": "Questo messaggio non c’è più",
+    "message_gone_body": "È stato eliminato o spostato in un altro account.",
+    "message_moved": "Questo messaggio è stato spostato in un’altra cartella.",
+    "message_moved_to": "Questo messaggio è stato spostato in {folder}.",
+    "window_not_ready": "La nuova finestra non si è aperta in tempo. La bozza rimane qui."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Accedi con il browser",
+    "browser_waiting": "Completa l'accesso nel browser",
+    "browser_unavailable": "Questo server non offre l'accesso tramite browser. Usa la password.",
+    "browser_failed": "L'accesso tramite browser non è riuscito. Riprova.",
+    "server_needed": "Inserisci prima l'indirizzo del server.",
+    "server_declined": "Non hai autorizzato questo server, quindi non gli è stato inviato nulla.",
+    "server_invalid": "Questo indirizzo del server non è valido."
   }
 }

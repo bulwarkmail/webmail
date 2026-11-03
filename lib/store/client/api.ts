@@ -7,7 +7,7 @@
 
 import { DEFAULT_SCOPE, type StoreEvent, type StoreScope } from '../area';
 import type { JmapResponse, MethodCall, StoreSession } from '../engine/transport';
-import { forgetAccountKey, getAccountRecord, openAccountKey, type WrapLayer } from './keys';
+import { forgetAccountKey, getAccountRecord, knownStoreFiles, openAccountKey, type WrapLayer } from './keys';
 import { StoreClient } from './store-client';
 
 export interface StoreAccountInputs {
@@ -25,6 +25,8 @@ export interface StorePageHooks {
   onEvent(event: StoreEvent): void;
   /** Wrap layers on top of the WebCrypto one (desktop keychain, app lock). */
   keyLayers?(): readonly WrapLayer[];
+  /** An account this device kept mail for has an empty store now: its key or its file went. */
+  onStoreLost?(account: string): void;
 }
 
 /** What lib/offline uses. A seam, so its tests run the real engine on node:sqlite. */
@@ -49,12 +51,38 @@ export interface StoreBackend {
 const OPEN_RETRIES = 25;
 const OPEN_RETRY_MS = 200;
 
+/**
+ * localStorage: accounts that have had a store here. Holds nothing but the
+ * account's id, and it outlives what a browser may clear of the rest.
+ */
+export const STORE_OPENED_KEY = 'bulwark-store-opened';
+
+function readOpenedAccounts(): string[] {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(STORE_OPENED_KEY) ?? '[]') as unknown;
+    return Array.isArray(parsed) ? parsed as string[] : [];
+  } catch {
+    return [];
+  }
+}
+
+function rememberOpened(account: string, opened: boolean): void {
+  try {
+    const others = readOpenedAccounts().filter((id) => id !== account);
+    localStorage.setItem(STORE_OPENED_KEY, JSON.stringify(opened ? [...others, account] : others));
+  } catch {
+    // Without it a lost store goes unnoticed, and the store still works.
+  }
+}
+
 class PageStore implements StoreBackend {
   private client: StoreClient | null = null;
   private readonly wanted = new Map<string, StoreSession | null>();
   private readonly opening = new Map<string, Promise<void>>();
   /** The engine can't start in this browser: don't keep every caller waiting for an owner. */
   private broken = false;
+  /** What the owner's engine was last told to keep. */
+  private readonly sentScope = new Map<string, string>();
 
   constructor(private readonly hooks: () => StorePageHooks | null) {}
 
@@ -90,6 +118,7 @@ class PageStore implements StoreBackend {
 
   private reset(): void {
     this.client = null;
+    this.sentScope.clear();
     this.wanted.clear();
     this.opening.clear();
     this.broken = false;
@@ -101,9 +130,12 @@ class PageStore implements StoreBackend {
     if (running) return running;
     const run = (async () => {
       const client = this.started();
-      const { keyHex, record } = await openAccountKey(account, this.hooks()?.keyLayers?.() ?? []);
+      const { keyHex, record, fresh } = await openAccountKey(account, this.hooks()?.keyLayers?.() ?? []);
+      // The old file, if the key alone went, can never be read again.
+      if (fresh) await client.pruneFiles(await knownStoreFiles()).catch(() => {});
       const inputs = this.hooks()?.inputs(account) ?? { session: null, auth: null, invertedKeywordSort: null };
-      await client.openAccount({
+      if (inputs.scope) this.sentScope.set(account, JSON.stringify(inputs.scope));
+      const opened = await client.openAccount({
         account,
         file: record.file,
         keyHex,
@@ -112,6 +144,10 @@ class PageStore implements StoreBackend {
         invertedKeywordSort: inputs.invertedKeywordSort,
         auth: inputs.auth,
       });
+      if (fresh || opened?.created) {
+        if (readOpenedAccounts().includes(account)) this.hooks()?.onStoreLost?.(account);
+      }
+      rememberOpened(account, true);
     })();
     this.opening.set(account, run);
     run.catch(() => this.opening.delete(account));
@@ -132,6 +168,12 @@ class PageStore implements StoreBackend {
     if (!inputs) return;
     if (inputs.session) client.setSession(account, inputs.session);
     client.setAuth(account, inputs.auth);
+    // Only a real change: setting it starts over what a full disk made the store give up on.
+    const scope = inputs.scope ? JSON.stringify(inputs.scope) : null;
+    if (inputs.scope && scope !== this.sentScope.get(account)) {
+      if (this.sentScope.has(account)) client.setScope(account, inputs.scope);
+      this.sentScope.set(account, scope!);
+    }
     if (inputs.invertedKeywordSort !== null) client.setInvertedKeywordSort(account, inputs.invertedKeywordSort);
   }
 
@@ -173,6 +215,7 @@ class PageStore implements StoreBackend {
   async remove(account: string): Promise<void> {
     const record = await getAccountRecord(account);
     await forgetAccountKey(account);
+    rememberOpened(account, false);
     this.wanted.delete(account);
     this.opening.delete(account);
     if (record && !this.broken) await this.started().removeAccount(account, record.file);

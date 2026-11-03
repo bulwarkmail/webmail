@@ -35,6 +35,17 @@ beforeEach(() => {
 });
 
 describe('Settings > Offline', () => {
+  it('says so in a private window, with no switch to turn on', () => {
+    useOfflineStore.setState({ storageBlocked: true });
+    try {
+      render(<OfflineSettings />);
+      expect(screen.getByTestId('offline-private')).toBeTruthy();
+      expect(screen.queryByTestId('offline-switch')).toBeNull();
+    } finally {
+      useOfflineStore.setState({ storageBlocked: false });
+    }
+  });
+
   it('is off until the user turns it on in this browser', () => {
     render(<OfflineSettings />);
     const toggle = screen.getByTestId('offline-switch');

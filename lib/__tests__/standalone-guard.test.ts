@@ -31,6 +31,53 @@ afterEach(() => {
   while (temps.length) rmSync(temps.pop()!, { recursive: true, force: true });
 });
 
+describe('the desktop trust path', () => {
+  it('fails a server build that still holds it', () => {
+    const dir = tempDir();
+    put(dir, 'server.js');
+    put(dir, '.next/server/chunks/123.js', 'holder[Symbol.for("bulwark.desktop.trustedJmapOrigins")]');
+    expect(guardStandalone(dir, { desktopBuild: false })).toEqual(['.next/server/chunks/123.js (desktop trust path in a server build)']);
+  });
+
+  it('fails a server build that still reads the flag at runtime', () => {
+    const dir = tempDir();
+    put(dir, 'server.js');
+    put(dir, '.next/server/chunks/9.js', 'let a="1"===process.env.NEXT_PUBLIC_BULWARK_DESKTOP');
+    expect(guardStandalone(dir, { desktopBuild: false })).toHaveLength(1);
+  });
+
+  it('passes a server build whose server.js holds the config, with the name as a JSON key', () => {
+    const dir = tempDir();
+    put(dir, 'server.js', 'const nextConfig = {"env":{"NEXT_PUBLIC_BULWARK_LITE":"","NEXT_PUBLIC_BULWARK_DESKTOP":""}}');
+    expect(guardStandalone(dir, { desktopBuild: false })).toEqual([]);
+  });
+
+  it('fails the bracket form of the read too', () => {
+    const dir = tempDir();
+    put(dir, 'server.js');
+    put(dir, '.next/server/chunks/9.js', 'let a=process.env["NEXT_PUBLIC_BULWARK_DESKTOP"]');
+    expect(guardStandalone(dir, { desktopBuild: false })).toHaveLength(1);
+  });
+
+  it('passes the desktop build itself', () => {
+    const dir = tempDir();
+    put(dir, 'server.js');
+    put(dir, '.next/server/chunks/123.js', 'holder[Symbol.for("bulwark.desktop.trustedJmapOrigins")]');
+    expect(guardStandalone(dir, { desktopBuild: true })).toEqual([]);
+  });
+
+  it('fails the command line check on a server build', () => {
+    const dir = tempDir();
+    put(dir, 'server.js');
+    put(dir, '.next/server/chunks/123.js', 'bulwark.desktop.trustedJmapOrigins');
+    const env = { ...process.env };
+    delete env.NEXT_PUBLIC_BULWARK_DESKTOP;
+    const run = spawnSync(process.execPath, [SCRIPT, dir], { encoding: 'utf8', env });
+    expect(run.status).toBe(1);
+    expect(run.stderr).toContain('desktop trust path');
+  });
+});
+
 describe('standalone guard check', () => {
   it('fails the build on a planted signing key', () => {
     const dir = tempDir();

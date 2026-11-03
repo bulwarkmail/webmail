@@ -5754,7 +5754,14 @@
     "dismiss_label": "Zavřít poznámku o {subject}",
     "banner": "Nepoužité změny: {count}",
     "toast": "Nepoužité změny provedené offline: {count}. Které to jsou, ukazuje pošta k odeslání.",
-    "storage_failed": "Na tomto zařízení už není místo pro poštu offline. Uvolněte místo nebo v nastavení ponechte méně."
+    "storage_failed": "Na tomto zařízení už není místo pro poštu offline. Uvolněte místo nebo v nastavení ponechte méně.",
+    "signout_changes_title": "Odhlásit se s neuloženými změnami?",
+    "signout_changes": "Změny, které ještě nejsou na serveru: {count}. Odhlášení je smaže.",
+    "store_unavailable": "Poštu offline na tomto zařízení teď nelze otevřít. Neodeslaná pošta tu zůstává a aplikace to dál zkouší.",
+    "store_reset": "Poštu offline na tomto zařízení se nepodařilo přečíst, proto se stahuje znovu. Co nebylo odesláno, je pryč.",
+    "legacy_stranded": "Tento prohlížeč neotevře neodeslanou poštu uloženou starší verzí. Aktualizace prohlížeče ji může vrátit.",
+    "store_private": "Soukromá okna nemohou uchovávat poštu pro použití offline.",
+    "server_not_answering": "Poštovní server neodpovídá. Zkuste to za chvíli znovu."
   },
   "offlineDrafts": {
     "title": "Koncepty v tomto zařízení",
@@ -6515,5 +6522,32 @@
       "next_issue": "Další pravopisná nebo gramatická chyba",
       "previous_issue": "Předchozí pravopisná nebo gramatická chyba"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Otevřít v novém okně",
+    "save_all_to_folder": "Uložit vše do složky…",
+    "saved_all": "{count, plural, one {# příloha uložena do {folder}.} few {# přílohy uloženy do {folder}.} other {# příloh uloženo do {folder}.}}",
+    "saved_partial": "Uloženo {saved} z {total} příloh do {folder}.",
+    "save_failed": "Přílohy se nepodařilo uložit do {folder}.",
+    "popup_blocked": "Prohlížeč nové okno zablokoval. Povolte vyskakovací okna pro tento web a zkuste to znovu.",
+    "opening": "Otevírání…",
+    "session_ended_title": "V tomto okně jste odhlášeni",
+    "session_ended_body": "Otevřete aplikaci, přihlaste se a potom toto okno otevřete znovu.",
+    "open_app": "Otevřít aplikaci",
+    "close_window": "Zavřít okno",
+    "message_gone_title": "Tato zpráva už tu není",
+    "message_gone_body": "Byla smazána nebo přesunuta do jiného účtu.",
+    "message_moved": "Tato zpráva byla přesunuta do jiné složky.",
+    "message_moved_to": "Tato zpráva byla přesunuta do {folder}.",
+    "window_not_ready": "Nové okno se neotevřelo včas. Koncept zůstává zde."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Přihlásit se v prohlížeči",
+    "browser_waiting": "Dokončete přihlášení v prohlížeči",
+    "browser_unavailable": "Tento server přihlášení přes prohlížeč nenabízí. Použijte heslo.",
+    "browser_failed": "Přihlášení přes prohlížeč se nezdařilo. Zkuste to znovu.",
+    "server_needed": "Nejdřív zadejte adresu serveru.",
+    "server_declined": "Tento server jste nepovolili, proto se na něj nic neodeslalo.",
+    "server_invalid": "Tato adresa serveru není platná."
   }
 }

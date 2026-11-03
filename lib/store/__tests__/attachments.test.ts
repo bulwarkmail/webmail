@@ -462,6 +462,40 @@ describe('raw messages come last', () => {
   });
 });
 
+describe('what a server error means', () => {
+  it('doesn\'t give up on a file for a passing error, and stops for this pass', async () => {
+    const server = new Files();
+    withFile(server, 'new', 'b-new', 3, 20);
+    withFile(server, 'old', 'b-old', 3, 1);
+    server.onDownload = (blobId) => {
+      if (blobId === 'b-new') throw new TransportError('http', 'Busy', 500);
+    };
+    const { engine, db } = engineFor(server);
+    await engine.requestSync();
+    expect(server.downloads).toEqual(['b-new']);
+    expect(db.get<{ refused: number }>("SELECT refused FROM email_part WHERE blob_id = 'b-new'")?.refused).toBe(0);
+    server.onDownload = null;
+    await engine.requestSync();
+    expect(await kept(engine, 'b-new')).not.toBeNull();
+    expect(await kept(engine, 'b-old')).not.toBeNull();
+  });
+
+  it('gives up on one the server says won\'t come, and goes on', async () => {
+    for (const status of [403, 404, 410]) {
+      const server = new Files();
+      withFile(server, 'new', 'b-new', 3, 20);
+      withFile(server, 'old', 'b-old', 3, 1);
+      server.onDownload = (blobId) => {
+        if (blobId === 'b-new') throw new TransportError('http', 'No', status);
+      };
+      const { engine, db } = engineFor(server);
+      await engine.requestSync();
+      expect(db.get<{ refused: number }>("SELECT refused FROM email_part WHERE blob_id = 'b-new'")?.refused).toBe(1);
+      expect(await kept(engine, 'b-old')).not.toBeNull();
+    }
+  });
+});
+
 describe('a transfer that breaks', () => {
   it('doesn\'t end the pass: the next file still comes, and this one is tried again', async () => {
     const server = new Files();

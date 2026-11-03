@@ -2163,7 +2163,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   );
 
   return (
-    <div className={cn("flex flex-col overflow-hidden pt-[env(safe-area-inset-top)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
+    <div className={cn("flex flex-col overflow-hidden pt-[var(--app-top-inset)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
       {!isEmbedded && <SkipLink>{tShell("skip_to_content")}</SkipLink>}
       <AppTopBannerSlot />
       {refreshIndicator}
@@ -2221,7 +2221,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               "border-e border-border bg-secondary flex flex-col overflow-hidden flex-shrink-0",
               !isResizing && "transition-[width] duration-300",
               isNarrow && cn(
-                "absolute inset-y-0 start-0 z-50 w-72 pt-[env(safe-area-inset-top)]",
+                "absolute inset-y-0 start-0 z-50 w-72 pt-[var(--app-top-inset)]",
                 "transform transition-transform duration-300 ease-in-out",
                 !narrowSidebarOpen && "-translate-x-full rtl:translate-x-full"
               )
@@ -2556,7 +2556,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           role="dialog"
           aria-modal="true"
           aria-label={editTask ? t("tasks.edit") : t("tasks.create")}
-          className={isPaneScoped ? "absolute inset-0 z-40 flex flex-col bg-background" : "fixed inset-0 z-50 flex flex-col bg-background"}
+          className={isPaneScoped ? "absolute inset-0 z-40 flex flex-col bg-background" : "fixed inset-0 z-50 flex flex-col bg-background pt-[var(--titlebar-inset)]"}
         >
           <TaskModal
             key={editTask?.id ?? 'new-task'}

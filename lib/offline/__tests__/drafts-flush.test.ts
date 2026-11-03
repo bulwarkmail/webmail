@@ -9,8 +9,8 @@ import { FakeJmapDrafts } from '@/lib/store/__tests__/helpers/fake-drafts';
 import { JMAP_ACCOUNT } from '@/lib/store/__tests__/helpers/fake-jmap';
 import { InProcessStore } from '@/lib/store/__tests__/helpers/in-process-store';
 import { consumeLost } from '../lost';
-import { refreshQueueState, startOfflineMode, wipeAccount, wipeEverything } from '../offline-mode';
-import { flushQueue } from '../flush';
+import { refreshQueueState, startOfflineMode, unsentCount, wipeAccount, wipeEverything } from '../offline-mode';
+import { flushQueue, forgetOrphanCheck } from '../flush';
 import { heldFile, holdFile, noteDraftReplacedElsewhere, queueSend, readLocalDrafts, retryLocalDraft } from '../queue';
 import { forgetLegacyMove } from '../migrate-legacy';
 import { useOfflineStore, writeEnabled } from '../state';
@@ -64,6 +64,7 @@ beforeEach(async () => {
   store = new InProcessStore(server);
   setStoreBackend(store);
   forgetLegacyMove();
+  forgetOrphanCheck();
   localStorage.clear();
   useOfflineStore.setState({ enabled: [], outbox: [], pendingChanges: 0, conflicts: [], localDrafts: [], browserOffline: false, downServers: [], startedOffline: false });
   usePolicyStore.setState({ loaded: true, subject: null, policy: { ...usePolicyStore.getState().policy, organisation: DEFAULT_ORGANISATION_POLICY } });
@@ -183,6 +184,19 @@ describe('flushQueue and drafts', () => {
     await flushQueue('acc', client as unknown as JMAPClient, { notify: vi.fn(), allowed: () => true });
     clock.mockRestore();
     expect(await heldFile('acc', orphan.blobId)).toBeNull();
+  });
+});
+
+describe('what a sign-out asks about', () => {
+  it('counts a draft only on this device', async () => {
+    await saveOffline('Only here');
+    expect(await unsentCount('acc')).toMatchObject({ messages: 1 });
+  });
+
+  it('counts a draft a waiting send names once, as that send', async () => {
+    const id = await saveOffline('Being sent');
+    await queueSend('acc', { subject: 'Being sent', to: [] }, { kind: 'email', args: [['b@example.org'], 'Being sent', 'x', undefined, undefined, 'i', 'alice@example.org', id] });
+    expect(await unsentCount('acc')).toMatchObject({ messages: 1 });
   });
 });
 

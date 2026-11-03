@@ -42,6 +42,7 @@ import {
   inlineScriptHashes,
   installStalwartFetchShim,
   isReservedStalwartSegment,
+  LITE_REMOVED_PATHS,
   listZipEntries,
   makeBuildId,
   normalizeBasePath,
@@ -59,7 +60,6 @@ import {
   stalwartRewriteIndex,
   stalwartZipEntryProblems,
   unexpectedEngineFiles,
-  LITE_REMOVED_PATHS,
   unexpectedApiStrings,
   withScriptHashCsp,
 } from '../../scripts/lite/lib.mjs';
@@ -381,6 +381,8 @@ describe('prepare / postbuild / verify against a fake checkout', () => {
       expect(plan).toContain('proxy.ts');
       expect(plan).toContain('app/api');
       expect(plan).toContain('app/(main)/admin');
+      // A static export can't list every message id; Lite doesn't offer pop-outs.
+      expect(LITE_REMOVED_PATHS).toContain('app/(main)/[locale]/popout');
       expect(plan).not.toContain('app/(main)/[locale]/mail/[[...segments]]/page.tsx');
       expect(plan).not.toContain('scripts/lite/smoke/lite.spec.ts');
     } finally {

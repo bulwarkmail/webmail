@@ -62,7 +62,9 @@ export interface StoredOutboxEntry {
   summary: OutboxSummary;
   status: OutboxStatus;
   sendingSince?: number;
+  /** When the first try that may have reached the server began. */
   firstAttemptAt?: number;
+  lastAttemptAt?: number;
   error?: OutboxError;
   item: SendItem;
   fingerprint?: PolicyFingerprint;

@@ -8,6 +8,7 @@ import { MethodError, type MethodContext, type MethodHandler, type MethodResult 
 import { listObjects } from '../engine/core-schema';
 import type { SqlValue } from '../storage';
 import { headerValue, parseHeaderProperty, type RawHeader } from './headers';
+import { keywordKey } from './records';
 import { limitTextConditions, searchSnippetGet, textCondition, TEXT_FIELDS, type TextField } from './search';
 
 type Filter = Record<string, unknown>;
@@ -62,11 +63,11 @@ function filterSql(filter: Filter, jmap: string, drivenBy: string | null = null,
       }
       case 'hasKeyword':
         conditions.push(`EXISTS (SELECT 1 FROM email_keyword k WHERE k.email_rowid = ${rowid} AND k.keyword = ?)`);
-        params.push(String(value).toLowerCase());
+        params.push(keywordKey(String(value)));
         break;
       case 'notKeyword':
         conditions.push(`NOT EXISTS (SELECT 1 FROM email_keyword k WHERE k.email_rowid = ${rowid} AND k.keyword = ?)`);
-        params.push(String(value).toLowerCase());
+        params.push(keywordKey(String(value)));
         break;
       case 'after':
         conditions.push(`${receivedAt} >= ?`);
@@ -145,7 +146,7 @@ function orderSql(ctx: MethodContext, sort: Comparator[]): Sql {
         // stored answer has to read it the way that server would.
         if (ctx.invertedKeywordSort) ascending = !ascending;
         parts.push(`EXISTS (SELECT 1 FROM email_keyword s WHERE s.email_rowid = e.rowid AND s.keyword = ?) ${ascending ? 'ASC' : 'DESC'}`);
-        params.push(String(level.keyword ?? '').toLowerCase());
+        params.push(keywordKey(String(level.keyword ?? '')));
         break;
       }
       default:
@@ -185,7 +186,7 @@ function keywordLevels(ctx: MethodContext, sort: Comparator[]): KeywordLevel[] |
   let next = 0;
   for (; sort[next]?.property === 'hasKeyword'; next += 1) {
     const ascending = sort[next].isAscending !== false;
-    levels.push({ keyword: String(sort[next].keyword ?? '').toLowerCase(), first: ctx.invertedKeywordSort ? ascending : !ascending });
+    levels.push({ keyword: keywordKey(String(sort[next].keyword ?? '')), first: ctx.invertedKeywordSort ? ascending : !ascending });
   }
   if (levels.length === 0 || levels.length > MAX_KEYWORD_LEVELS) return null;
   return isNewestFirst(sort.slice(next)) ? levels : null;
@@ -316,6 +317,9 @@ const emailQuery: MethodHandler = (ctx, args) => {
     ).map((row) => String(row.id));
   // Stalwart's queryState is the Email state. Absent until the first sync, as allowed.
   const queryState = lastState(ctx, jmap, 'Email');
+  // Nothing here doesn't mean nothing there: an empty folder of a first sync
+  // that hasn't finished mustn't paint over what's on screen.
+  if (ids.length === 0 && position === 0 && !queryState) throw new MethodError('serverUnavailable', 'Mail not kept yet');
   const result: MethodResult = {
     accountId: jmap,
     canCalculateChanges: false,
@@ -512,7 +516,7 @@ const keywordGet: MethodHandler = (ctx, args) => {
   const counts = new Map(rows.map((row) => [String(row.keyword), { id: String(row.keyword), total: Number(row.total), unread: Number(row.unread) }]));
   const wanted = Array.isArray(args.ids) ? args.ids as string[] : null;
   const list = wanted
-    ? wanted.map((id) => ({ ...(counts.get(id.toLowerCase()) ?? { total: 0, unread: 0 }), id }))
+    ? wanted.map((id) => ({ ...(counts.get(keywordKey(id)) ?? { total: 0, unread: 0 }), id }))
     : [...counts.values()];
   return {
     accountId: jmap,

@@ -10,19 +10,43 @@
  * waits at most `timeoutMs` for all of them together.
  */
 
+import { getDesktopBridge } from '@/lib/desktop/bridge';
+
 export type ComposeFlush = () => Promise<void>;
+
+/** Less than the desktop shell waits for a closing window. */
+const DESKTOP_FLUSH_MS = 3000;
 
 let nextId = 1;
 const flushes = new Map<number, ComposeFlush>();
 const waiters = new Set<(flush: ComposeFlush) => void>();
+
+let stopDesktopFlush: (() => void) | null = null;
+
+/**
+ * In the desktop app, closing a window or quitting saves the open drafts first. The
+ * shell only waits while a composer is here, so a window without one closes at once.
+ */
+function syncDesktopFlush(): void {
+  if (flushes.size === 0) {
+    stopDesktopFlush?.();
+    stopDesktopFlush = null;
+    return;
+  }
+  if (stopDesktopFlush) return;
+  const lifecycle = getDesktopBridge()?.lifecycle;
+  if (lifecycle) stopDesktopFlush = lifecycle.onFlushRequest(() => flushComposers(DESKTOP_FLUSH_MS));
+}
 
 /** Register a composer's flush; returns the unregister function. */
 export function registerComposeFlush(flush: ComposeFlush): () => void {
   const id = nextId++;
   flushes.set(id, flush);
   for (const waiter of [...waiters]) waiter(flush);
+  syncDesktopFlush();
   return () => {
     flushes.delete(id);
+    syncDesktopFlush();
   };
 }
 

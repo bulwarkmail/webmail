@@ -36,25 +36,40 @@ const SIGNED_OUT_STORAGE_KEYS = [
   // Offline mode's "Keep mail on this device" (lib/offline/state.ts): the
   // next person signing in here starts with it off.
   'bulwark-offline-accounts',
+  // Which accounts' data waits for a new sign-in, and until when.
+  'bulwark-offline-evicted',
+  'bulwark-store-opened',
 ];
 
+const LOCAL_STORE_KEYS = new Set(['bulwark-offline-accounts', 'bulwark-offline-evicted', 'bulwark-store-opened']);
+
 const SIGNED_OUT_SIGNAL = 'bulwark:signed-out';
+export { SIGNED_OUT_SIGNAL as SIGNED_OUT_KEY };
 
 // Stores the auth store can't import (they import it) clear themselves here.
-const signedOutCleanups = new Set<() => void>();
+const signedOutCleanups = new Set<(options: SignOutCleanupOptions) => void>();
+
+export interface SignOutCleanupOptions {
+  /**
+   * Keep the local store and its keys. For a sign-out the app decided on
+   * because it couldn't confirm the login (an outage, an unknown refusal), or
+   * when an account that was dropped that way still has data here.
+   */
+  keepLocalStore?: boolean;
+}
 
 /** Run `cleanup` when everyone signs out in this tab. */
-export function onFullSignOut(cleanup: () => void): void {
+export function onFullSignOut(cleanup: (options: SignOutCleanupOptions) => void): void {
   signedOutCleanups.add(cleanup);
 }
 
 // Work that has to reach the server before an account signs out (changes
 // still queued for it). The auth store waits for it within its sign-out
 // budget, next to the plugins' onBeforeLogout.
-const beforeSignOutTasks = new Set<(accountId: string) => Promise<void>>();
+const beforeSignOutTasks = new Set<(accountId: string, options: SignOutCleanupOptions) => Promise<void>>();
 
 /** Run `task` before an account signs out; `accountId` is 'all' when every account does. */
-export function onBeforeSignOut(task: (accountId: string) => Promise<void>): () => void {
+export function onBeforeSignOut(task: (accountId: string, options: SignOutCleanupOptions) => Promise<void>): () => void {
   beforeSignOutTasks.add(task);
   return () => beforeSignOutTasks.delete(task);
 }
@@ -81,14 +96,15 @@ export async function passSignOutGates(accountId: string): Promise<boolean> {
   return true;
 }
 
-export async function runBeforeSignOut(accountId: string): Promise<void> {
-  await Promise.all([...beforeSignOutTasks].map((task) => task(accountId).catch(() => {})));
+export async function runBeforeSignOut(accountId: string, options: SignOutCleanupOptions = {}): Promise<void> {
+  await Promise.all([...beforeSignOutTasks].map((task) => task(accountId, options).catch(() => {})));
 }
 
 /** Remove the accounts' leftovers from browser storage. */
-export function purgeSignedOutData(): void {
+export function purgeSignedOutData(options: SignOutCleanupOptions = {}): void {
   if (typeof window === 'undefined') return;
   for (const key of SIGNED_OUT_STORAGE_KEYS) {
+    if (options.keepLocalStore && LOCAL_STORE_KEYS.has(key)) continue;
     try {
       window.localStorage.removeItem(key);
     } catch {
@@ -111,18 +127,20 @@ export function purgeSignedOutData(): void {
   // Offline mode (#523): the local store with the mail and the outbox, the keys
   // it was encrypted with, and the app shell the service worker kept. Also the
   // database of older versions, in case it wasn't moved yet.
-  void purgeStoreFiles();
-  try {
-    window.indexedDB?.deleteDatabase('bulwark-offline');
-  } catch {
-    /* storage unavailable */
+  if (!options.keepLocalStore) {
+    void purgeStoreFiles();
+    try {
+      window.indexedDB?.deleteDatabase('bulwark-offline');
+    } catch {
+      /* storage unavailable */
+    }
+    forgetOfflineShell();
   }
-  forgetOfflineShell();
   // Files and links on their way into a draft or an import.
   clearHandoffs();
   for (const cleanup of signedOutCleanups) {
     try {
-      cleanup();
+      cleanup(options);
     } catch {
       /* one store failing must not keep the others' data */
     }

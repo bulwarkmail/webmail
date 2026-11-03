@@ -2,6 +2,18 @@
 
 import type { StorageAdapter } from '../storage';
 
+/**
+ * How keywords compare, measured on both Stalwart versions: the IMAP system
+ * flags fold to lower case, every other keyword is case-sensitive, so `Tag` and
+ * `tag` are two keywords and one message can carry both.
+ */
+const SYSTEM_KEYWORDS = new Set(['$seen', '$flagged', '$answered', '$draft', '$forwarded', '$mdnsent', '$junk', '$notjunk', '$phishing', '$recent', '$deleted']);
+
+export function keywordKey(keyword: string): string {
+  const lower = keyword.toLowerCase();
+  return SYSTEM_KEYWORDS.has(lower) ? lower : keyword;
+}
+
 export const MAIL_USING = ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:mail'];
 
 export const EMAIL_LIST_PROPERTIES = [
@@ -80,7 +92,7 @@ export function upsertEmail(db: StorageAdapter, jmap: string, email: EmailObject
     if (on) db.run('INSERT INTO email_mailbox (email_rowid, jmap, mailbox_id, received_at) VALUES (?, ?, ?, ?)', [rowid, jmap, box, receivedAt]);
   }
   for (const [keyword, on] of Object.entries((email.keywords ?? {}) as Record<string, boolean>)) {
-    if (on) db.run('INSERT INTO email_keyword (email_rowid, keyword) VALUES (?, ?)', [rowid, keyword.toLowerCase()]);
+    if (on) db.run('INSERT OR IGNORE INTO email_keyword (email_rowid, keyword) VALUES (?, ?)', [rowid, keywordKey(keyword)]);
   }
   return rowid;
 }

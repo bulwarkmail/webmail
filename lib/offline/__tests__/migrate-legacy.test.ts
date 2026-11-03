@@ -84,6 +84,22 @@ afterEach(() => {
 });
 
 describe('moving the old outbox into the store', () => {
+  it('gives a sender written "Name <address>" a Message-ID with a clean domain', async () => {
+    await seedOld();
+    const db = await new Promise<IDBDatabase>((resolve) => {
+      const request = indexedDB.open(LEGACY_DB_NAME);
+      request.onsuccess = () => resolve(request.result);
+    });
+    await put(db, 'queue', {
+      id: 20, account: 'acc', kind: 'send', createdAt: 20, status: 'waiting',
+      ...(await seal({ summary: { subject: 'Named', to: [] }, item: { kind: 'email', args: [[], 'Named', 'x', null, null, 'i', 'Alice <a@example.org>'] } })),
+    });
+    db.close();
+    await moveLegacyOutbox();
+    const named = (await readQueue('acc')).outbox.find((entry) => entry.summary.subject === 'Named');
+    expect(named?.messageId).toMatch(/@example\.org$/);
+  });
+
   it('moves everything that can\'t be fetched again, then deletes the old database', async () => {
     await seedOld();
     await moveLegacyOutbox();

@@ -25,6 +25,7 @@ import {
   Tag,
   ShieldAlert,
   ShieldCheck,
+  ExternalLink,
   CalendarClock,
   CalendarX,
   Paperclip,
@@ -65,6 +66,7 @@ export type MessageActionKey =
   | "spam"
   | "report_phishing"
   | "find_from_sender"
+  | "open_window"
   | "export"
   | "print"
   | "view_source"
@@ -115,6 +117,8 @@ export interface MessageActionOptions {
   onRescheduleScheduled?: () => void;
   onCancelScheduledForEdit?: () => void;
   onCancelScheduledSend?: () => void;
+  /** Opens the message in its own window (installed app, desktop app). */
+  onOpenInWindow?: () => void;
   /** Save the message as .eml. */
   onExport?: () => void;
   onPrint?: () => void;
@@ -149,6 +153,7 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
   const tViewer = useTranslations("email_viewer");
   const tDeepLink = useTranslations("deep_link");
   const tPhishing = useTranslations("phishing_report");
+  const tWindows = useTranslations("pwaWindows");
   const copyLink = useCopyLink();
   const archiveEnabled = useArchiveActionEnabled();
   const mountainView = useSettingsStore((state) => state.interfaceLayout === "mountain-view");
@@ -264,6 +269,7 @@ export function useMessageActionList(o: MessageActionOptions): MessageActionEntr
       : [];
     // Download/Export, Print, View source (R6: after Copy, before the end).
     const file = [
+      ...(o.onOpenInWindow ? [item("open_window", ExternalLink, tWindows("open_in_window"), o.onOpenInWindow, { testId: "ctx-open-window" })] : []),
       ...(o.onExport ? [item("export", Download, tViewer("export_email"), o.onExport, { disabled: !email.blobId, testId: "ctx-export" })] : []),
       ...(o.onPrint ? [item("print", Printer, tViewer("print"), o.onPrint, { testId: "ctx-print" })] : []),
       ...(o.onViewSource ? [item("view_source", Code, tViewer("view_source"), o.onViewSource, { disabled: !email.blobId, testId: "ctx-view-source" })] : []),

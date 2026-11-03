@@ -18,6 +18,7 @@
 import { existsSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { DESKTOP_FLAG_READ, DESKTOP_TRUST_MARKER, desktopBuildFlag } from './desktop-build-flag.mjs';
 
 /** Top-level project entries the running server needs. Traces drop the rest. */
 const TRACE_ALLOWED = new Set(['node_modules', '.next', 'public', 'locales', 'package.json', 'VERSION']);
@@ -141,10 +142,35 @@ export function removeCopiedEnvFiles(standaloneDir) {
   return removed;
 }
 
+/**
+ * Server bundles that still hold the desktop app's trust path. A server build
+ * compiles it away (lib/desktop/flag.ts); finding it means the flag leaked into
+ * this build or stopped being inlined, and a visitor could reach private hosts.
+ */
+export function findDesktopTrustPath(standaloneDir) {
+  const found = [];
+  const visit = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name !== 'node_modules') visit(full);
+      } else if (entry.name.endsWith('.js')) {
+        const text = readFileSync(full, 'utf8');
+        if (text.includes(DESKTOP_TRUST_MARKER) || DESKTOP_FLAG_READ.test(text)) {
+          found.push(`${toPosix(path.relative(standaloneDir, full))} (desktop trust path in a server build)`);
+        }
+      }
+    }
+  };
+  visit(standaloneDir);
+  return found.sort();
+}
+
 /** Cleans and checks a standalone tree. Returns what is still wrong with it. */
-export function guardStandalone(standaloneDir) {
+export function guardStandalone(standaloneDir, { desktopBuild = desktopBuildFlag() === '1' } = {}) {
   removeCopiedEnvFiles(standaloneDir);
-  return findForbidden(standaloneDir);
+  const forbidden = findForbidden(standaloneDir);
+  return desktopBuild ? forbidden : [...forbidden, ...findDesktopTrustPath(standaloneDir)];
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

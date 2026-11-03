@@ -5754,7 +5754,14 @@
     "dismiss_label": "Lukk merknaden om {subject}",
     "banner": "Endringer som ikke ble utført: {count}",
     "toast": "Endringer gjort uten nett som ikke ble utført: {count}. Utboksen viser hvilke.",
-    "storage_failed": "Denne enheten har ikke mer plass til e-post uten nett. Frigjør plass, eller behold mindre i innstillingene."
+    "storage_failed": "Denne enheten har ikke mer plass til e-post uten nett. Frigjør plass, eller behold mindre i innstillingene.",
+    "signout_changes_title": "Logge ut med endringer som ikke er lagret?",
+    "signout_changes": "Endringer som ennå ikke er på serveren: {count}. Når du logger ut, slettes de.",
+    "store_unavailable": "E-post uten nett på denne enheten kan ikke åpnes nå. Usendt e-post blir her, og appen fortsetter å prøve.",
+    "store_reset": "E-post uten nett på denne enheten kunne ikke leses og lastes derfor ned på nytt. Det som ikke var sendt, er borte.",
+    "legacy_stranded": "Denne nettleseren kan ikke åpne usendt e-post fra en tidligere versjon. En oppdatering av nettleseren kan hente den tilbake.",
+    "store_private": "Private vinduer kan ikke beholde e-post for bruk uten nett.",
+    "server_not_answering": "E-postserveren svarer ikke. Prøv igjen om litt."
   },
   "offlineDrafts": {
     "title": "Utkast på denne enheten",
@@ -6515,5 +6522,32 @@
       "next_issue": "Neste stave- eller grammatikkfeil",
       "previous_issue": "Forrige stave- eller grammatikkfeil"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Åpne i nytt vindu",
+    "save_all_to_folder": "Lagre alle i en mappe…",
+    "saved_all": "{count, plural, one {# vedlegg lagret i {folder}.} other {# vedlegg lagret i {folder}.}}",
+    "saved_partial": "{saved} av {total} vedlegg lagret i {folder}.",
+    "save_failed": "Kunne ikke lagre vedleggene i {folder}.",
+    "popup_blocked": "Nettleseren blokkerte det nye vinduet. Tillat popup-vinduer for dette nettstedet og prøv igjen.",
+    "opening": "Åpner…",
+    "session_ended_title": "Du er logget ut i dette vinduet",
+    "session_ended_body": "Åpne appen og logg inn, og åpne deretter dette vinduet på nytt.",
+    "open_app": "Åpne appen",
+    "close_window": "Lukk vindu",
+    "message_gone_title": "Denne meldingen er borte",
+    "message_gone_body": "Den ble slettet eller flyttet til en annen konto.",
+    "message_moved": "Denne meldingen ble flyttet til en annen mappe.",
+    "message_moved_to": "Denne meldingen ble flyttet til {folder}.",
+    "window_not_ready": "Det nye vinduet åpnet seg ikke i tide. Utkastet blir her."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Logg på med nettleseren",
+    "browser_waiting": "Fullfør påloggingen i nettleseren",
+    "browser_unavailable": "Denne serveren tilbyr ikke pålogging via nettleser. Bruk passordet ditt.",
+    "browser_failed": "Pålogging via nettleseren mislyktes. Prøv igjen.",
+    "server_needed": "Skriv inn serveradressen først.",
+    "server_declined": "Du tillot ikke denne serveren, så ingenting ble sendt til den.",
+    "server_invalid": "Denne serveradressen er ikke gyldig."
   }
 }

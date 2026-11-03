@@ -509,7 +509,7 @@ export default function ProHome() {
   return (
     <EmbeddedContext.Provider value={true}>
       {/* data-pro-shell: a page skeleton inside a pane draws its own frame, not the Pro one. */}
-      <div data-pro-shell="" className="flex flex-col h-dvh bg-background overflow-hidden pt-[env(safe-area-inset-top)]">
+      <div data-pro-shell="" className="flex flex-col h-dvh bg-background overflow-hidden pt-[var(--app-top-inset)]">
         {/* Once for the whole shell: email and folder tabs have no app strip, and split panes would show it twice. */}
         <OrgAnnouncement />
         <div className="flex flex-1 overflow-hidden">

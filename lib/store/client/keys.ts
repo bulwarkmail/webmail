@@ -83,6 +83,14 @@ export function newStoreFileName(): string {
   return `/a${toHex(crypto.getRandomValues(new Uint8Array(8)))}.db`;
 }
 
+/** The file of every account with a key. Any other file in the pool can't be read by anyone. */
+export async function knownStoreFiles(): Promise<string[]> {
+  return withDb(async (db) => {
+    const records = await promisify(db.transaction(ACCOUNTS, 'readonly').objectStore(ACCOUNTS).getAll()) as AccountRecord[];
+    return records.map((record) => record.file);
+  });
+}
+
 export async function getAccountRecord(account: string): Promise<AccountRecord | null> {
   return withDb(async (db) => {
     const found = await promisify(db.transaction(ACCOUNTS, 'readonly').objectStore(ACCOUNTS).get(account)) as AccountRecord | undefined;
@@ -95,7 +103,7 @@ export async function listAccountRecords(): Promise<AccountRecord[]> {
 }
 
 /** The account's key in hex, created on first use. Returns the record too, for the file name. */
-export async function openAccountKey(account: string, layers: readonly WrapLayer[] = []): Promise<{ keyHex: string; record: AccountRecord }> {
+export async function openAccountKey(account: string, layers: readonly WrapLayer[] = []): Promise<{ keyHex: string; record: AccountRecord; fresh: boolean }> {
   return withDb(async (db) => {
     const wrapping = await wrapKey(db);
     const found = await promisify(db.transaction(ACCOUNTS, 'readonly').objectStore(ACCOUNTS).get(account)) as AccountRecord | undefined;
@@ -109,7 +117,7 @@ export async function openAccountKey(account: string, layers: readonly WrapLayer
       const raw = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: asBuffer(found.iv) }, wrapping, asBuffer(data)));
       const keyHex = toHex(raw);
       raw.fill(0);
-      return { keyHex, record: found };
+      return { keyHex, record: found, fresh: false };
     }
     const raw = crypto.getRandomValues(new Uint8Array(32));
     const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -126,7 +134,7 @@ export async function openAccountKey(account: string, layers: readonly WrapLayer
     await promisify(db.transaction(ACCOUNTS, 'readwrite').objectStore(ACCOUNTS).put(record));
     const keyHex = toHex(raw);
     raw.fill(0);
-    return { keyHex, record };
+    return { keyHex, record, fresh: true };
   });
 }
 

@@ -22,6 +22,8 @@ export interface OfflineClientRef {
   getServerUrl(): string;
   getUsername(): string;
   getAccountId(): string;
+  /** Answers from this device only: a local copy on screen at a start. */
+  isOfflineOnly?(): boolean;
 }
 
 export interface OfflineHooks {
@@ -93,6 +95,13 @@ export function isNetworkFailure(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
   if (error.name === 'OfflineUnavailableError' || error.name === 'RequestTimeoutError' || error.name === 'GatewayError') return true;
   return error.name === 'TypeError' && /fetch|network|load failed|internet/i.test(error.message);
+}
+
+/** The connection is fine and a proxy answered: the mail server behind it is what's gone. */
+export function isServerOutage(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  if (error.name === 'GatewayError') return true;
+  return error.name === 'SendNotStartedError' && (error as SendNotStartedError).cause instanceof Error && ((error as SendNotStartedError).cause as Error).name === 'GatewayError';
 }
 
 /** Thrown for a request the device can't answer while the server can't be reached. */

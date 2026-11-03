@@ -5754,7 +5754,14 @@
     "dismiss_label": "Dispensar a nota sobre {subject}",
     "banner": "Alterações não aplicadas: {count}",
     "toast": "Alterações feitas offline não aplicadas: {count}. A caixa de saída mostra quais.",
-    "storage_failed": "Este dispositivo não tem espaço para o correio offline. Liberte espaço ou guarde menos nas definições."
+    "storage_failed": "Este dispositivo não tem espaço para o correio offline. Liberte espaço ou guarde menos nas definições.",
+    "signout_changes_title": "Terminar sessão com alterações não guardadas?",
+    "signout_changes": "Alterações ainda não enviadas para o servidor: {count}. Terminar sessão elimina-as.",
+    "store_unavailable": "O correio offline deste dispositivo não pode ser aberto agora. O correio por enviar fica aqui e a aplicação continua a tentar.",
+    "store_reset": "Não foi possível ler o correio offline deste dispositivo, por isso está a ser transferido de novo. O que estava por enviar perdeu-se.",
+    "legacy_stranded": "Este navegador não consegue abrir o correio por enviar guardado por uma versão anterior. Atualizar o navegador pode recuperá-lo.",
+    "store_private": "As janelas privadas não podem guardar correio para uso offline.",
+    "server_not_answering": "O servidor de correio não está a responder. Tente novamente daqui a pouco."
   },
   "offlineDrafts": {
     "title": "Rascunhos neste dispositivo",
@@ -6515,5 +6522,32 @@
       "next_issue": "Próximo erro de ortografia ou gramática",
       "previous_issue": "Erro de ortografia ou gramática anterior"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Abrir em nova janela",
+    "save_all_to_folder": "Guardar tudo numa pasta…",
+    "saved_all": "{count, plural, one {# anexo guardado em {folder}.} other {# anexos guardados em {folder}.}}",
+    "saved_partial": "{saved} de {total} anexos guardados em {folder}.",
+    "save_failed": "Não foi possível guardar os anexos em {folder}.",
+    "popup_blocked": "O navegador bloqueou a nova janela. Permita pop-ups para este site e tente novamente.",
+    "opening": "A abrir…",
+    "session_ended_title": "Terminou a sessão nesta janela",
+    "session_ended_body": "Abra a aplicação e inicie sessão, depois abra esta janela novamente.",
+    "open_app": "Abrir a aplicação",
+    "close_window": "Fechar janela",
+    "message_gone_title": "Esta mensagem já não existe",
+    "message_gone_body": "Foi eliminada ou movida para outra conta.",
+    "message_moved": "Esta mensagem foi movida para outra pasta.",
+    "message_moved_to": "Esta mensagem foi movida para {folder}.",
+    "window_not_ready": "A nova janela não abriu a tempo. O seu rascunho fica aqui."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Entrar com o navegador",
+    "browser_waiting": "Termine de entrar no navegador",
+    "browser_unavailable": "Este servidor não oferece entrada pelo navegador. Use sua senha.",
+    "browser_failed": "Não foi possível entrar pelo navegador. Tente novamente.",
+    "server_needed": "Digite primeiro o endereço do servidor.",
+    "server_declined": "Você não permitiu este servidor, então nada foi enviado a ele.",
+    "server_invalid": "Este endereço de servidor não é válido."
   }
 }

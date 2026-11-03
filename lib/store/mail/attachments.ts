@@ -30,6 +30,8 @@ const PAGE = 20;
  */
 const MOST_PASSED_IN_A_ROW = 50;
 const PINNED = '$pinned';
+/** What says a file won't come. Anything else, like a 500, is tried at the next sync. */
+const PERMANENT_DOWNLOAD_STATUSES = new Set([403, 404, 410]);
 const RAW_TYPE = 'message/rfc822';
 
 class DownloadStopped extends Error {}
@@ -245,6 +247,7 @@ async function fetchOne(ctx: SyncContext, jmap: string, part: Part): Promise<Fet
       return 'skipped';
     }
     if (error instanceof TransportError && error.kind === 'http') {
+      if (!PERMANENT_DOWNLOAD_STATUSES.has(error.status ?? 0)) return 'stopped';
       refuse(db, jmap, blobId);
       return 'skipped';
     }

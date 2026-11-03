@@ -52,6 +52,8 @@ interface ReaderAttachmentsProps<T extends ReaderAttachmentItem> {
   onOpen: (attachment: T) => void;
   onDownload: (attachment: T) => void;
   onDownloadAll: () => void;
+  /** "Save all to a folder": left out where the browser can't ask for one. */
+  onSaveAllToFolder?: () => void;
   downloadingAll: boolean;
   /**
    * The account's device policy turned downloads off (Organisation >
@@ -91,6 +93,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
   onOpen,
   onDownload,
   onDownloadAll,
+  onSaveAllToFolder,
   downloadingAll,
   downloadsOff = false,
   onSaveToFiles,
@@ -101,6 +104,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
   const t = useTranslations("email_viewer");
   const tFiles = useTranslations("files");
   const tDevice = useTranslations("device_policy");
+  const tWindows = useTranslations("pwaWindows");
   // Opens nothing: no preview, and downloads are off.
   const locked = (attachment: T) => downloadsOff && !opensPreview(attachment);
   const openLabel = (attachment: T, name: string) =>
@@ -238,7 +242,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
   const draw = layout === "cards" ? card : tile;
 
   return (
-    <section aria-label={t("attachments")} className={cn("flex flex-col gap-3", className)} data-testid="reader-attachments" data-layout={layout} {...noMediaSavingProps(downloadsOff)}>
+    <section aria-label={t("attachments")} className={cn("@container flex flex-col gap-3", className)} data-testid="reader-attachments" data-layout={layout} {...noMediaSavingProps(downloadsOff)}>
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
           <Paperclip className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -258,10 +262,27 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
             onClick={onDownloadAll}
             disabled={downloadingAll}
             title={t("download_all")}
-            className="shrink-0 gap-1.5 disabled:cursor-wait"
+            aria-label={t("download_all")}
+            className="shrink-0 gap-1.5 whitespace-nowrap disabled:cursor-wait"
           >
             {downloadingAll ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            {t("download_all")}
+            {/* Just the icon in a narrow pane, so the row stays one row. */}
+            <span className={onSaveAllToFolder ? "hidden @xl:inline" : undefined}>{t("download_all")}</span>
+          </Button>
+        )}
+        {attachments.length > 1 && !downloadsOff && onSaveAllToFolder && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onSaveAllToFolder}
+            disabled={downloadingAll}
+            title={tWindows("save_all_to_folder")}
+            aria-label={tWindows("save_all_to_folder")}
+            className="shrink-0 gap-1.5 whitespace-nowrap disabled:cursor-wait"
+            data-testid="attachments-save-to-folder"
+          >
+            <FolderInput className="h-4 w-4" />
+            <span className="hidden @xl:inline">{tWindows("save_all_to_folder")}</span>
           </Button>
         )}
       </div>

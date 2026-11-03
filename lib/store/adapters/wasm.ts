@@ -117,6 +117,10 @@ class WasmAdapter implements StorageAdapter {
   }
 }
 
+export function installMayPass(error: unknown): boolean {
+  return (error as Error)?.name !== 'SecurityError';
+}
+
 /** The module and the pool, once. Only the owner gets here. */
 export class WasmStorage {
   private constructor(private readonly sqlite3: any, private readonly pool: Pool) {}
@@ -141,6 +145,8 @@ export class WasmStorage {
         }) as Pool;
         return new WasmStorage(sqlite3, pool);
       } catch (error) {
+        // The browser won't allow it here at all, a private window: waiting won't help.
+        if (!installMayPass(error)) throw error;
         lastError = error;
         await new Promise((resolve) => setTimeout(resolve, 100 + attempt * 50));
       }

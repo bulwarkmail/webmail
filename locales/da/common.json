@@ -5754,7 +5754,14 @@
     "dismiss_label": "Afvis noten om {subject}",
     "banner": "Ændringer, der ikke blev gennemført: {count}",
     "toast": "Ændringer lavet offline, der ikke blev gennemført: {count}. Udbakken viser hvilke.",
-    "storage_failed": "Denne enhed har ikke mere plads til offlinemail. Frigør plads, eller behold mindre i indstillingerne."
+    "storage_failed": "Denne enhed har ikke mere plads til offlinemail. Frigør plads, eller behold mindre i indstillingerne.",
+    "signout_changes_title": "Log ud med ændringer, der ikke er gemt?",
+    "signout_changes": "Ændringer, der endnu ikke er på serveren: {count}. Når du logger ud, slettes de.",
+    "store_unavailable": "Offlinemail på denne enhed kan ikke åbnes lige nu. Ikke-sendt mail bliver her, og appen bliver ved med at prøve.",
+    "store_reset": "Offlinemail på denne enhed kunne ikke læses og hentes derfor igen. Det, der ikke var sendt, er væk.",
+    "legacy_stranded": "Denne browser kan ikke åbne ikke-sendt mail fra en tidligere version. En opdatering af browseren kan hente den tilbage.",
+    "store_private": "Private vinduer kan ikke gemme mail til brug offline.",
+    "server_not_answering": "Mailserveren svarer ikke. Prøv igen om lidt."
   },
   "offlineDrafts": {
     "title": "Kladder på denne enhed",
@@ -6515,5 +6522,32 @@
       "next_issue": "Næste stave- eller grammatikfejl",
       "previous_issue": "Forrige stave- eller grammatikfejl"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Åbn i nyt vindue",
+    "save_all_to_folder": "Gem alle i en mappe…",
+    "saved_all": "{count, plural, one {# vedhæftet fil gemt i {folder}.} other {# vedhæftede filer gemt i {folder}.}}",
+    "saved_partial": "{saved} af {total} vedhæftede filer gemt i {folder}.",
+    "save_failed": "De vedhæftede filer kunne ikke gemmes i {folder}.",
+    "popup_blocked": "Browseren blokerede det nye vindue. Tillad pop op-vinduer for dette websted, og prøv igen.",
+    "opening": "Åbner…",
+    "session_ended_title": "Du er logget ud i dette vindue",
+    "session_ended_body": "Åbn appen og log ind, og åbn derefter dette vindue igen.",
+    "open_app": "Åbn appen",
+    "close_window": "Luk vindue",
+    "message_gone_title": "Denne besked er væk",
+    "message_gone_body": "Den er slettet eller flyttet til en anden konto.",
+    "message_moved": "Denne besked er flyttet til en anden mappe.",
+    "message_moved_to": "Denne besked er flyttet til {folder}.",
+    "window_not_ready": "Det nye vindue åbnede ikke i tide. Din kladde bliver her."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Log ind med din browser",
+    "browser_waiting": "Gør login færdigt i din browser",
+    "browser_unavailable": "Denne server tilbyder ikke login via browser. Brug din adgangskode i stedet.",
+    "browser_failed": "Login via browseren lykkedes ikke. Prøv igen.",
+    "server_needed": "Angiv først serverens adresse.",
+    "server_declined": "Du tillod ikke denne server, så der blev ikke sendt noget til den.",
+    "server_invalid": "Denne serveradresse er ikke gyldig."
   }
 }

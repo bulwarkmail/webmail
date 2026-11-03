@@ -28,6 +28,7 @@ interface OutboxRow {
   status: string;
   sending_since: number | null;
   first_attempt_at: number | null;
+  last_attempt_at: number | null;
   payload: string;
   summary: string;
   message_id: string | null;
@@ -47,6 +48,7 @@ function toEntry(row: OutboxRow): StoredOutboxEntry {
     ...(payload.fingerprint ? { fingerprint: payload.fingerprint } : {}),
     ...(row.sending_since ? { sendingSince: Number(row.sending_since) } : {}),
     ...(row.first_attempt_at ? { firstAttemptAt: Number(row.first_attempt_at) } : {}),
+    ...(row.last_attempt_at ? { lastAttemptAt: Number(row.last_attempt_at) } : {}),
     ...(row.error ? { error: JSON.parse(row.error) as OutboxError } : {}),
     ...(row.message_id ? { messageId: row.message_id } : {}),
     ...(row.copy_id ? { copyId: row.copy_id } : {}),
@@ -102,7 +104,7 @@ function read(ctx: StoreContext): { patches: number; entries: StoredOutboxEntry[
 function claim(ctx: StoreContext, params: { id: number }): boolean {
   const now = ctx.now();
   return ctx.db.run(
-    `UPDATE outbox SET status = 'sending', sending_since = ?, first_attempt_at = COALESCE(first_attempt_at, ?) WHERE id = ? AND status = 'waiting'`,
+    `UPDATE outbox SET status = 'sending', sending_since = ?, last_attempt_at = ? WHERE id = ? AND status = 'waiting'`,
     [now, now, params.id],
   ).changes === 1;
 }
@@ -111,11 +113,14 @@ function claim(ctx: StoreContext, params: { id: number }): boolean {
 function update(ctx: StoreContext, params: { id: number; status: OutboxStatus; error?: OutboxError; copyId?: string | null }): void {
   ctx.db.run(
     `UPDATE outbox SET status = ?, error = ?, sending_since = NULL,
+       first_attempt_at = CASE WHEN ? THEN COALESCE(first_attempt_at, last_attempt_at) ELSE first_attempt_at END,
        copy_id = CASE WHEN ? THEN ? ELSE copy_id END
      WHERE id = ?`,
     [
       params.status,
       params.error ? JSON.stringify(params.error) : null,
+      // A try that may have reached the server is what a later lookup has to cover.
+      params.status === 'uncertain' ? 1 : 0,
       params.copyId === undefined ? 0 : 1,
       params.copyId ?? null,
       params.id,
@@ -126,7 +131,8 @@ function update(ctx: StoreContext, params: { id: number; status: OutboxStatus; e
 /** A send a closed tab left behind may have gone out. */
 function settleStale(ctx: StoreContext, params: { before: number }): number {
   return ctx.db.run(
-    `UPDATE outbox SET status = 'uncertain', sending_since = NULL WHERE status = 'sending' AND COALESCE(sending_since, 0) < ?`,
+    `UPDATE outbox SET status = 'uncertain', sending_since = NULL, first_attempt_at = COALESCE(first_attempt_at, last_attempt_at)
+     WHERE status = 'sending' AND COALESCE(sending_since, 0) < ?`,
     [params.before],
   ).changes;
 }

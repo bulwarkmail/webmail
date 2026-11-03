@@ -5754,7 +5754,14 @@
     "dismiss_label": "Descartar la nota sobre {subject}",
     "banner": "Cambios no aplicados: {count}",
     "toast": "Cambios hechos sin conexión que no se aplicaron: {count}. La bandeja de salida indica cuáles.",
-    "storage_failed": "Este dispositivo no tiene espacio para el correo sin conexión. Libera espacio o guarda menos en Ajustes."
+    "storage_failed": "Este dispositivo no tiene espacio para el correo sin conexión. Libera espacio o guarda menos en Ajustes.",
+    "signout_changes_title": "¿Cerrar sesión con cambios sin guardar?",
+    "signout_changes": "Cambios que aún no están en el servidor: {count}. Al cerrar sesión se eliminan.",
+    "store_unavailable": "El correo sin conexión de este dispositivo no se puede abrir ahora. El correo sin enviar sigue aquí y la aplicación sigue intentándolo.",
+    "store_reset": "No se pudo leer el correo sin conexión de este dispositivo, así que se está descargando de nuevo. Lo que estaba sin enviar se ha perdido.",
+    "legacy_stranded": "Este navegador no puede abrir el correo sin enviar guardado por una versión anterior. Actualizar el navegador puede recuperarlo.",
+    "store_private": "Las ventanas privadas no pueden guardar correo para usarlo sin conexión.",
+    "server_not_answering": "El servidor de correo no responde. Inténtalo de nuevo en un momento."
   },
   "offlineDrafts": {
     "title": "Borradores en este dispositivo",
@@ -6515,5 +6522,32 @@
       "next_issue": "Siguiente error de ortografía o gramática",
       "previous_issue": "Anterior error de ortografía o gramática"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Abrir en una ventana nueva",
+    "save_all_to_folder": "Guardar todo en una carpeta…",
+    "saved_all": "{count, plural, one {Se guardó # adjunto en {folder}.} other {Se guardaron # adjuntos en {folder}.}}",
+    "saved_partial": "Se guardaron {saved} de {total} adjuntos en {folder}.",
+    "save_failed": "No se pudieron guardar los adjuntos en {folder}.",
+    "popup_blocked": "El navegador bloqueó la ventana nueva. Permite las ventanas emergentes para este sitio e inténtalo de nuevo.",
+    "opening": "Abriendo…",
+    "session_ended_title": "Has cerrado sesión en esta ventana",
+    "session_ended_body": "Abre la aplicación e inicia sesión, y luego vuelve a abrir esta ventana.",
+    "open_app": "Abrir la aplicación",
+    "close_window": "Cerrar ventana",
+    "message_gone_title": "Este mensaje ya no está",
+    "message_gone_body": "Se eliminó o se movió a otra cuenta.",
+    "message_moved": "Este mensaje se movió a otra carpeta.",
+    "message_moved_to": "Este mensaje se movió a {folder}.",
+    "window_not_ready": "La ventana nueva no se abrió a tiempo. Tu borrador se queda aquí."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Iniciar sesión con el navegador",
+    "browser_waiting": "Termina de iniciar sesión en el navegador",
+    "browser_unavailable": "Este servidor no permite iniciar sesión con el navegador. Usa tu contraseña.",
+    "browser_failed": "No se pudo iniciar sesión con el navegador. Inténtalo de nuevo.",
+    "server_needed": "Primero escribe la dirección del servidor.",
+    "server_declined": "No permitiste este servidor, así que no se le envió nada.",
+    "server_invalid": "Esta dirección de servidor no es válida."
   }
 }

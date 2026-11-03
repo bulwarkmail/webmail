@@ -7,11 +7,15 @@ const offline = vi.hoisted(() => ({
   order: [] as string[],
   session: { apiUrl: 'x' } as unknown,
   gone: false,
+  ready: true,
+  // A local copy with no identities kept answers an empty list.
+  localIdentities: Promise.resolve([]) as Promise<unknown[]>,
+  releaseLocal: () => {},
 }));
 
 vi.mock('@/lib/offline/offline-mode', () => ({
   registerOfflineHooks: () => { offline.order.push('hooks'); },
-  offlineSessionFor: async () => offline.session,
+  offlineSessionFor: async (_account: string, options?: { withFolders?: boolean }) => (options?.withFolders && !offline.ready ? null : offline.session),
   serverUnreachable: async () => offline.gone,
   markStartedOffline: () => { offline.order.push('startedOffline'); },
 }));
@@ -33,7 +37,9 @@ vi.mock('@/lib/jmap/client', () => {
     async connect() { offline.order.push('connect'); await connectGate; }
     getSessionUsername() { return this.username; }
     getUsername() { return this.username; }
-    async getIdentities() { return [{ id: 'a', email: this.username, name: this.username, mayDelete: false }]; }
+    async getIdentities() {
+      return this.offlineOnly ? offline.localIdentities : [{ id: 'a', email: this.username, name: this.username, mayDelete: false }];
+    }
     getAuthHeader() { return 'Basic eA=='; }
     onConnectionChange() {}
     onRateLimit() {}
@@ -88,11 +94,13 @@ beforeEach(async () => {
   offline.order.length = 0;
   offline.session = { apiUrl: 'x' };
   offline.gone = false;
+  offline.ready = true;
+  offline.localIdentities = Promise.resolve([]);
   connectGate = Promise.resolve();
   sessionAnswer = goodSession;
   useAccountStore.setState({ accounts: [ACCOUNT] as never, activeAccountId: ACCOUNT.id, defaultAccountId: ACCOUNT.id });
   useOfflineStore.setState({ enabled: [ACCOUNT.id], startedOffline: false });
-  useAuthStore.setState({ client: null, isAuthenticated: false, activeAccountId: ACCOUNT.id });
+  useAuthStore.setState({ client: null, isAuthenticated: false, activeAccountId: ACCOUNT.id, identities: [], primaryIdentity: null });
 });
 
 type ClientLike = { isOfflineOnly(): boolean };
@@ -128,6 +136,23 @@ it('stays on the local copy when the server can\'t be reached', async () => {
   expect(useAccountStore.getState().getAccountById(ACCOUNT.id)).toBeTruthy();
 });
 
+it('stays on the local copy, and says so, when the server answers a start with a 5xx or 429', async () => {
+  for (const status of [502, 429]) {
+    ACCOUNT = makeAccount();
+    offline.order.length = 0;
+    useAccountStore.setState({ accounts: [ACCOUNT] as never, activeAccountId: ACCOUNT.id, defaultAccountId: ACCOUNT.id });
+    useOfflineStore.setState({ enabled: [ACCOUNT.id] });
+    useAuthStore.setState({ client: null, isAuthenticated: false, activeAccountId: ACCOUNT.id });
+    sessionAnswer = () => new Response('{}', { status });
+    // The probe passes: the server itself is there.
+    offline.gone = false;
+    await useAuthStore.getState().checkAuth();
+    await vi.waitFor(() => expect(offline.order).toContain('startedOffline'));
+    expect(current()?.isOfflineOnly()).toBe(true);
+    expect(useAccountStore.getState().getAccountById(ACCOUNT.id)).toBeTruthy();
+  }
+});
+
 it('goes the usual way when the store has no copy', async () => {
   offline.session = null;
   await useAuthStore.getState().checkAuth();
@@ -140,6 +165,41 @@ it('doesn\'t touch the store for an account without it', async () => {
   await useAuthStore.getState().checkAuth();
   expect(offline.order).toEqual(['connect']);
   expect(current()?.isOfflineOnly()).toBe(false);
+});
+
+it('goes the usual way while the store has no folders yet', async () => {
+  offline.ready = false;
+  await useAuthStore.getState().checkAuth();
+  expect(offline.order).not.toContain('local client');
+  expect(current()?.isOfflineOnly()).toBe(false);
+});
+
+it('still starts on an empty store when the server can\'t be reached', async () => {
+  offline.ready = false;
+  offline.gone = true;
+  sessionAnswer = () => new Response('{}', { status: 503 });
+  await useAuthStore.getState().checkAuth();
+  await vi.waitFor(() => expect(current()?.isOfflineOnly()).toBe(true));
+});
+
+it('fills the From list from the server after the swap, when the local copy had none', async () => {
+  let open: () => void = () => {};
+  connectGate = new Promise((resolve) => { open = resolve; });
+  await useAuthStore.getState().checkAuth();
+  await vi.waitFor(() => expect(current()?.isOfflineOnly()).toBe(true));
+  expect(useAuthStore.getState().identities).toEqual([]);
+  open();
+  await vi.waitFor(() => expect(useAuthStore.getState().identities.map((identity) => identity.email)).toEqual([ACCOUNT.username]));
+  expect(useAuthStore.getState().primaryIdentity?.email).toBe(ACCOUNT.username);
+});
+
+it('doesn\'t let a late local answer overwrite the server\'s From list', async () => {
+  offline.localIdentities = new Promise((resolve) => { offline.releaseLocal = () => resolve([{ id: 'old', email: 'stale@x.test', name: 'Stale', mayDelete: false }]); });
+  await useAuthStore.getState().checkAuth();
+  await vi.waitFor(() => expect(useAuthStore.getState().identities.map((identity) => identity.email)).toEqual([ACCOUNT.username]));
+  offline.releaseLocal();
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  expect(useAuthStore.getState().identities.map((identity) => identity.email)).toEqual([ACCOUNT.username]);
 });
 
 it('leaves the login path to a refused account, and keeps its data', async () => {

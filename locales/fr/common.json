@@ -5754,7 +5754,14 @@
     "dismiss_label": "Ignorer la note sur {subject}",
     "banner": "Modifications non appliquées : {count}",
     "toast": "Des modifications faites hors ligne n'ont pas été appliquées : {count}. La boîte d'envoi indique lesquelles.",
-    "storage_failed": "Cet appareil n'a plus de place pour le courrier hors ligne. Libérez de l'espace ou conservez moins dans les paramètres."
+    "storage_failed": "Cet appareil n'a plus de place pour le courrier hors ligne. Libérez de l'espace ou conservez moins dans les paramètres.",
+    "signout_changes_title": "Se déconnecter avec des modifications non enregistrées ?",
+    "signout_changes": "Modifications pas encore sur le serveur : {count}. La déconnexion les supprime.",
+    "store_unavailable": "Le courrier hors ligne de cet appareil ne peut pas être ouvert pour le moment. Les messages non envoyés restent ici et l'application continue d'essayer.",
+    "store_reset": "Le courrier hors ligne de cet appareil n'a pas pu être lu : il est de nouveau téléchargé. Ce qui n'était pas envoyé est perdu.",
+    "legacy_stranded": "Ce navigateur ne peut pas ouvrir les messages non envoyés conservés par une version précédente. Le mettre à jour peut les récupérer.",
+    "store_private": "Les fenêtres privées ne peuvent pas conserver le courrier pour une utilisation hors ligne.",
+    "server_not_answering": "Le serveur de messagerie ne répond pas. Réessayez dans un instant."
   },
   "offlineDrafts": {
     "title": "Brouillons sur cet appareil",
@@ -6515,5 +6522,32 @@
       "next_issue": "Faute d'orthographe ou de grammaire suivante",
       "previous_issue": "Faute d'orthographe ou de grammaire précédente"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Ouvrir dans une nouvelle fenêtre",
+    "save_all_to_folder": "Tout enregistrer dans un dossier…",
+    "saved_all": "{count, plural, one {# pièce jointe enregistrée dans {folder}.} other {# pièces jointes enregistrées dans {folder}.}}",
+    "saved_partial": "{saved} pièces jointes sur {total} enregistrées dans {folder}.",
+    "save_failed": "Impossible d’enregistrer les pièces jointes dans {folder}.",
+    "popup_blocked": "Le navigateur a bloqué la nouvelle fenêtre. Autorisez les fenêtres pop-up pour ce site et réessayez.",
+    "opening": "Ouverture…",
+    "session_ended_title": "Vous êtes déconnecté dans cette fenêtre",
+    "session_ended_body": "Ouvrez l’application et connectez-vous, puis rouvrez cette fenêtre.",
+    "open_app": "Ouvrir l’application",
+    "close_window": "Fermer la fenêtre",
+    "message_gone_title": "Ce message n’existe plus",
+    "message_gone_body": "Il a été supprimé ou déplacé vers un autre compte.",
+    "message_moved": "Ce message a été déplacé vers un autre dossier.",
+    "message_moved_to": "Ce message a été déplacé vers {folder}.",
+    "window_not_ready": "La nouvelle fenêtre ne s’est pas ouverte à temps. Votre brouillon reste ici."
+  },
+  "desktop_sign_in": {
+    "browser_button": "Se connecter avec le navigateur",
+    "browser_waiting": "Terminez la connexion dans votre navigateur",
+    "browser_unavailable": "Ce serveur ne propose pas la connexion par navigateur. Utilisez votre mot de passe.",
+    "browser_failed": "La connexion par navigateur a échoué. Réessayez.",
+    "server_needed": "Saisissez d'abord l'adresse du serveur.",
+    "server_declined": "Vous n'avez pas autorisé ce serveur, donc rien ne lui a été envoyé.",
+    "server_invalid": "Cette adresse de serveur n'est pas valide."
   }
 }

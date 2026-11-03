@@ -164,6 +164,46 @@ async function offlineDatabaseExists(page: Page): Promise<boolean> {
   });
 }
 
+/**
+ * The store's files as bytes, with no worker holding them: which of `needles`
+ * occur in them. Goes to a same-origin file without scripts first, so that
+ * leaving the app ends the owner.
+ */
+async function rawStoreFiles(page: Page, needles: string[]): Promise<{ bytes: number; found: string[] }> {
+  await page.goto(new URL('/sw.js', page.url()).href);
+  return page.evaluate(async (wanted) => {
+    const read = async (dir: FileSystemDirectoryHandle): Promise<string[]> => {
+      const parts: string[] = [];
+      for await (const handle of (dir as unknown as { values(): AsyncIterable<FileSystemHandle> }).values()) {
+        if (handle.kind === 'directory') parts.push(...await read(handle as FileSystemDirectoryHandle));
+        else parts.push(new TextDecoder('latin1').decode(await (await (handle as FileSystemFileHandle).getFile()).arrayBuffer()));
+      }
+      return parts;
+    };
+    const root = await navigator.storage.getDirectory();
+    const files = await read(await root.getDirectoryHandle('.bulwark-store'));
+    return {
+      bytes: files.reduce((sum, file) => sum + file.length, 0),
+      found: wanted.filter((needle) => files.some((file) => file.includes(needle))),
+    };
+  }, needles);
+}
+
+/** The file of the account's store, from the key database. */
+async function storeFileName(page: Page): Promise<string> {
+  return page.evaluate(() => new Promise<string>((resolve, reject) => {
+    const open = indexedDB.open('bulwark-store');
+    open.onerror = () => reject(open.error);
+    open.onsuccess = () => {
+      const all = open.result.transaction('accounts').objectStore('accounts').getAll();
+      all.onsuccess = () => {
+        open.result.close();
+        resolve((all.result as Array<{ file: string }>)[0].file);
+      };
+    };
+  }));
+}
+
 /** The accounts the local store holds a key for. Their mail is in encrypted files nothing here can read. */
 async function offlineDatabase(page: Page): Promise<{ exists: boolean; accounts: number }> {
   return page.evaluate(async () => {
@@ -239,6 +279,45 @@ test('with the browser offline, kept mail opens, also after a reload without a n
   // Back online: a reload signs in as usual.
   await page.context().setOffline(false);
   await expect(page.getByText('You’re online again', { exact: false }).or(page.getByText("You're online again", { exact: false })).first()).toBeVisible({ timeout: 30_000 });
+  await page.context().close();
+});
+
+test('the files on the device hold no readable mail, and a store whose key went starts over', async ({ browser }) => {
+  const subject = `Offline encrypted ${RUN}`;
+  const secret = `Secret body ${RUN}`;
+  await deliverAndWait(subject, secret);
+  const page = await userPage(browser, ENT.alice);
+  await enableOffline(page);
+  await toMail(page);
+  await expect.poll(async () => (await offlineDatabase(page)).accounts, { timeout: 30_000 }).toBeGreaterThan(0);
+  await openMessage(page, subject);
+  await expect(body(page)).toContainText(secret, { timeout: 20_000 });
+  // Long enough for the store to have the message and its text on disk.
+  await page.waitForTimeout(5_000);
+  const file = await storeFileName(page);
+
+  const raw = await rawStoreFiles(page, [subject, secret, 'SQLite format 3', file]);
+  expect(raw.bytes).toBeGreaterThan(100_000);
+  // The name of the file is the one thing here in the clear: the search works.
+  expect(raw.found).toEqual([file]);
+
+  // The browser clears the key database and leaves the files.
+  await page.evaluate(() => new Promise<void>((resolve) => {
+    const request = indexedDB.deleteDatabase('bulwark-store');
+    request.onsuccess = () => resolve();
+    request.onerror = () => resolve();
+    request.onblocked = () => resolve();
+  }));
+  await page.goto(new URL('/', page.url()).href);
+  // Once on screen and once for screen readers.
+  await expect(page.locator('p', { hasText: "couldn't be read" }).first()).toBeVisible({ timeout: 60_000 });
+  await toMail(page);
+  await expect(page.locator('[data-testid="email-list-item"]', { hasText: subject }).first()).toBeVisible({ timeout: 60_000 });
+  await expect.poll(async () => (await offlineDatabase(page)).accounts, { timeout: 30_000 }).toBeGreaterThan(0);
+  const newFile = await storeFileName(page);
+  expect(newFile).not.toBe(file);
+  const after = await rawStoreFiles(page, [file, newFile]);
+  expect(after.found).toEqual([newFile]);
   await page.context().close();
 });
 
@@ -400,8 +479,8 @@ test('emptying the Trash offline shows at once and reaches the server once back 
   await page.context().close();
 });
 
-test('a send whose response got lost goes out once', async ({ browser }) => {
-  const subject = `Offline lost response ${RUN}`;
+/** A send taken from the outbox gets no answer. `arrives` is what reached the server of it. */
+async function loseResponse(browser: Browser, subject: string, arrives: (body: { methodCalls: Array<[string, unknown, string]> }) => void) {
   const page = await userPage(browser, ENT.alice);
   await enableOffline(page);
   await toMail(page);
@@ -417,9 +496,12 @@ test('a send whose response got lost goes out once', async ({ browser }) => {
   let lost = 0;
   await context.unroute(origin);
   await context.route(origin, async (route) => {
-    if (lost === 0 && (route.request().postData() ?? '').includes('EmailSubmission/set')) {
+    const sent = route.request().postData() ?? '';
+    if (lost === 0 && sent.includes('EmailSubmission/set')) {
       lost += 1;
-      await route.fetch();
+      const body = JSON.parse(sent);
+      arrives(body);
+      await route.fetch({ postData: JSON.stringify(body) });
       await route.abort('connectionreset');
       return;
     }
@@ -434,6 +516,16 @@ test('a send whose response got lost goes out once', async ({ browser }) => {
   expect(copies).toHaveLength(1);
   expect(copies[0].keywords.$draft).toBeFalsy();
   await context.close();
+}
+
+test('a send whose response got lost goes out once', async ({ browser }) => {
+  await loseResponse(browser, `Offline lost response ${RUN}`, () => {});
+});
+
+test('a send of which only the draft arrived is submitted, and goes out once', async ({ browser }) => {
+  await loseResponse(browser, `Offline lost submission ${RUN}`, (body) => {
+    body.methodCalls = body.methodCalls.filter(([name]) => name === 'Email/set');
+  });
 });
 
 interface ServerDraft { id: string; subject: string; blobId: string; attachments: Array<{ blobId: string; name: string; size: number }> }

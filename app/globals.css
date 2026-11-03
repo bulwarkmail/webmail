@@ -568,6 +568,25 @@ optgroup {
 
 /* Mobile Responsive Utilities */
 
+/*
+ * The top of the page in an installed app without a native title bar. 0
+ * without one: then --app-top-inset is exactly env(safe-area-inset-top), what
+ * the page roots used before. env() and not the display-mode media query,
+ * which is false in Electron with titleBarOverlay. Set at the root, so it
+ * holds from the first paint, for the boot skeletons too;
+ * lib/window-controls-overlay.ts keeps it up to date afterwards.
+ */
+:root {
+  --titlebar-inset: env(titlebar-area-height, 0px);
+  --app-top-inset: max(env(safe-area-inset-top), var(--titlebar-inset));
+}
+
+/* components/layout/window-title-bar.tsx: what the window is dragged by. */
+.window-title-bar {
+  app-region: drag;
+  -webkit-app-region: drag;
+}
+
 /* Safe area insets for notched devices (iPhone X+, etc.) */
 .safe-area-inset-top {
   padding-top: env(safe-area-inset-top);

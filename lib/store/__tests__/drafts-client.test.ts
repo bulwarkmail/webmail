@@ -141,7 +141,7 @@ async function flushAll(): Promise<void> {
     onSent: () => {},
   });
   const pending = await engine.areaCall('outbox.pendingPatches', {}) as PendingPatch[];
-  await flushPatches({ request: (calls) => server.request(calls), isRefusal: () => false }, pending, async (outcomes: PatchOutcome[]) => {
+  await flushPatches({ request: (calls) => server.request(calls) }, pending, async (outcomes: PatchOutcome[]) => {
     await engine.areaCall('outbox.patchResults', { outcomes });
   });
 }

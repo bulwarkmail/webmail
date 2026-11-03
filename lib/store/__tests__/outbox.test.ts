@@ -34,7 +34,7 @@ function setup() {
     transport: server,
     areas: [mailArea, outboxArea],
     scope: { ...DEFAULT_SCOPE, days: null },
-    now: () => NOW,
+    now: () => clock,
     sleep: async () => {},
   });
   return { server, db, engine };
@@ -43,6 +43,7 @@ function setup() {
 let t: ReturnType<typeof setup>;
 
 beforeEach(async () => {
+  clock = NOW;
   t = setup();
   await t.engine.requestSync();
 });
@@ -57,14 +58,15 @@ async function local(id: string) {
   return answer?.methodResponses[0][1].list[0];
 }
 
+let clock = NOW;
+
 async function boxes() {
   const answer = await t.engine.answer([['Mailbox/get', {}, 'm']]);
   return Object.fromEntries((answer?.methodResponses[0][1].list as Array<{ id: string; totalEmails: number; unreadEmails: number }>).map((box) => [box.id, [box.totalEmails, box.unreadEmails]]));
 }
 
-const io = (server: FakeJmapMail = t.server, isRefusal: (error: unknown) => boolean = () => false) => ({
+const io = (server: FakeJmapMail = t.server) => ({
   request: (calls: MethodCall[]) => server.request(calls),
-  isRefusal,
 });
 
 async function flush(ioOverride = io()) {
@@ -319,9 +321,18 @@ describe('conflicts', () => {
     expect((await local('a'))?.subject).toBe('Aye');
   });
 
-  it('compares per property, ignoring case in keyword names', () => {
-    const base = { keywords: { '$Label:A': true }, mailboxIds: { x: true } };
-    expect(patchConflicts({ 'keywords/$label:a': null }, base, { keywords: { '$label:a': true }, mailboxIds: { x: true } })).toBe(false);
+  it('compares per property, keywords the way the server does', () => {
+    const base = { keywords: { '$SEEN': true, '$label:A': true }, mailboxIds: { x: true } };
+    // System flags fold.
+    expect(patchConflicts({ 'keywords/$seen': null }, base, { keywords: { $seen: true, '$label:A': true }, mailboxIds: { x: true } })).toBe(false);
+    // Custom keywords are case-sensitive: the server now has another one.
+    expect(patchConflicts({ 'keywords/$label:A': null }, base, { keywords: { '$label:a': true }, mailboxIds: { x: true } })).toBe(false);
+    expect(patchConflicts({ 'keywords/$label:a': true }, { keywords: {}, mailboxIds: {} }, { keywords: { '$label:A': true }, mailboxIds: {} })).toBe(false);
+    expect(patchConflicts({ 'keywords/$label:A': true }, { keywords: { '$label:A': true }, mailboxIds: {} }, { keywords: { '$label:a': true }, mailboxIds: {} })).toBe(true);
+  });
+
+  it('compares per property', () => {
+    const base = { keywords: { '$label:a': true }, mailboxIds: { x: true } };
     expect(patchConflicts({ 'keywords/$seen': true }, base, { keywords: {}, mailboxIds: { x: true } })).toBe(false);
     expect(patchConflicts({ keywords: { $seen: true } }, base, { keywords: {}, mailboxIds: { x: true } })).toBe(true);
     expect(patchConflicts({ keywords: { $seen: true } }, base, { keywords: { $seen: true }, mailboxIds: { x: true } })).toBe(false);
@@ -349,16 +360,54 @@ describe('when the server can\'t be reached during a flush', () => {
     expect(await pending()).toHaveLength(1);
   });
 
-  it('turns a request the server refuses for good into a conflict, not a stuck queue', async () => {
+  /** Refuses the Email/set with this answer, and reads go through. */
+  const refusingSet = (message: string) => ({
+    request: async (calls: MethodCall[]) => {
+      if (calls[0][0] === 'Email/set') throw new Error(message);
+      return t.server.request(calls);
+    },
+  });
+  const PROBLEM = 'Request failed: 400 - {"type":"urn:ietf:params:jmap:error:notRequest","status":400}';
+
+  it('turns a request the server refuses for good into a conflict, and shows what the server has', async () => {
     await update({ a: { 'keywords/$seen': true } });
-    const refusing = {
-      request: async () => { throw new Error('Request failed: 400 - bad'); },
-      isRefusal: (error: unknown) => /^Request failed: 400/.test((error as Error).message),
-    };
-    const { outcomes, finished } = await flush(refusing);
+    const { outcomes, finished } = await flush(refusingSet(PROBLEM));
     expect(finished).toBe(true);
     expect(outcomes[0]).toMatchObject({ outcome: 'conflict', reason: 'refused' });
     expect(await pending()).toEqual([]);
+    // The change is gone, and so is its effect here.
+    const answer = await t.engine.answer([['Email/get', { ids: ['a'], properties: ['keywords'] }, 'g']]);
+    expect(answer?.methodResponses[0][1].list[0].keywords).toEqual({});
+    expect((await read()).conflicts).toHaveLength(1);
+  });
+
+  it.each([
+    ['the parallel-request limit', 'Request failed: 400 - {"type":"urn:ietf:params:jmap:error:limit","limit":"maxConcurrentRequests"}'],
+    ['a proxy\'s error page', 'Request failed: 403 - <html>Forbidden</html>'],
+    ['a body that\'s no JMAP problem', 'Request failed: 413 - Payload too large'],
+    ['a server error', 'Request failed: 500 - oops'],
+  ])('keeps the change for later on %s', async (_name, message) => {
+    await update({ a: { 'keywords/$seen': true } });
+    const { outcomes, finished } = await flush(refusingSet(message));
+    expect(finished).toBe(false);
+    expect(outcomes).toEqual([]);
+    expect(await pending()).toHaveLength(1);
+    expect((await read()).conflicts).toEqual([]);
+  });
+
+  it('keeps the change for later when the read after a refusal fails', async () => {
+    await update({ a: { 'keywords/$seen': true } });
+    let calls = 0;
+    const { finished } = await flush({
+      request: async (batch: MethodCall[]) => {
+        calls += 1;
+        if (calls === 1) return t.server.request(batch);
+        if (batch[0][0] === 'Email/set') throw new Error(PROBLEM);
+        throw new TypeError('Failed to fetch');
+      },
+    });
+    expect(finished).toBe(false);
+    expect(await pending()).toHaveLength(1);
   });
 
   it('keeps a change made while the flush ran, and doesn\'t compare it with the state the flush caused', async () => {
@@ -384,7 +433,7 @@ describe('sends', () => {
     expect(await t.engine.areaCall('outbox.claim', { id })).toBe(true);
     expect(await t.engine.areaCall('outbox.claim', { id })).toBe(false);
     const entry = (await read()).entries[0];
-    expect(entry).toMatchObject({ status: 'sending', sendingSince: NOW, firstAttemptAt: NOW, messageId: 'fixed@example.org', item });
+    expect(entry).toMatchObject({ status: 'sending', sendingSince: NOW, lastAttemptAt: NOW, messageId: 'fixed@example.org', item });
   });
 
   it('marks what a closed tab left behind uncertain', async () => {
@@ -393,15 +442,30 @@ describe('sends', () => {
     await t.engine.areaCall('outbox.settleStale', { before: NOW });
     expect((await read()).entries[0].status).toBe('sending');
     await t.engine.areaCall('outbox.settleStale', { before: NOW + 1 });
-    expect((await read()).entries[0].status).toBe('uncertain');
+    expect((await read()).entries[0]).toMatchObject({ status: 'uncertain', firstAttemptAt: NOW });
   });
 
   it('keeps the first attempt time across retries, so the lookup covers the first copy', async () => {
     const id = await t.engine.areaCall('outbox.queueSend', { summary, item }) as number;
     await t.engine.areaCall('outbox.claim', { id });
+    await t.engine.areaCall('outbox.update', { id, status: 'uncertain' });
+    expect((await read()).entries[0].firstAttemptAt).toBe(NOW);
+    clock = NOW + 60_000;
     await t.engine.areaCall('outbox.update', { id, status: 'waiting' });
     await t.engine.areaCall('outbox.claim', { id });
-    expect((await read()).entries[0].firstAttemptAt).toBe(NOW);
+    await t.engine.areaCall('outbox.update', { id, status: 'uncertain' });
+    const entry = (await read()).entries[0];
+    expect(entry.firstAttemptAt).toBe(NOW);
+    expect(entry.lastAttemptAt).toBe(NOW + 60_000);
+  });
+
+  it('doesn\'t call a try that never started an attempt', async () => {
+    const id = await t.engine.areaCall('outbox.queueSend', { summary, item }) as number;
+    for (let i = 0; i < 2; i += 1) {
+      await t.engine.areaCall('outbox.claim', { id });
+      await t.engine.areaCall('outbox.update', { id, status: 'waiting' });
+    }
+    expect((await read()).entries[0].firstAttemptAt).toBeUndefined();
   });
 
   it('keeps order across changes and sends, and a later merge moves a change later', async () => {

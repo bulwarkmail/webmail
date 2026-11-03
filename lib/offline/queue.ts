@@ -10,7 +10,7 @@ import { requestOutboxSync } from '@/lib/pwa-notify/outbox-sync';
 import { getStore } from '@/lib/store/client/api';
 import type { LocalDraftSummary } from '@/lib/store/drafts/calls';
 import type { ConflictSummary, OutboxError, OutboxStatus, OutboxSummary, PolicyFingerprint, SendItem, StoredConflict, StoredOutboxEntry } from '@/lib/store/outbox/items';
-import { useOfflineStore } from './state';
+import { visibleAccounts } from './state';
 
 export { LOCAL_BLOB_PREFIX, heldBlobIds, isLocalBlobId } from '@/lib/store/outbox/items';
 export type { EmailSendItem, OutboxError, OutboxStatus, OutboxSummary, PolicyFingerprint, RawSendItem, SendItem } from '@/lib/store/outbox/items';
@@ -40,10 +40,15 @@ interface StoredQueue {
 }
 
 /** Everything waiting for one account (or every account with it on), oldest first. */
-export async function readQueue(account?: string): Promise<{ patches: number; outbox: OutboxEntry[]; conflicts: ConflictEntry[] }> {
-  const accounts = account ? [account] : useOfflineStore.getState().enabled;
-  const read = await Promise.all(accounts.map(async (id) => ({ id, queue: await getStore().area<StoredQueue>(id, 'outbox.read') })));
+export async function readQueue(account?: string): Promise<{ failed: string[]; patches: number; outbox: OutboxEntry[]; conflicts: ConflictEntry[] }> {
+  const accounts = account ? [account] : visibleAccounts();
+  const settled = await Promise.allSettled(accounts.map(async (id) => ({ id, queue: await getStore().area<StoredQueue>(id, 'outbox.read') })));
+  const read = settled.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []));
+  const failed = accounts.filter((_, index) => settled[index].status === 'rejected');
+  // Nothing could be read: that isn't an empty queue.
+  if (read.length === 0 && failed.length > 0) throw (settled[0] as PromiseRejectedResult).reason;
   return {
+    failed,
     patches: read.reduce((sum, { queue }) => sum + queue.patches, 0),
     outbox: read.flatMap(({ id, queue }) => queue.entries.map((entry) => ({ ...entry, account: id }))),
     conflicts: read.flatMap(({ id, queue }) => queue.conflicts.map((conflict) => ({
@@ -79,9 +84,10 @@ export interface LocalDraftRow extends LocalDraftSummary {
 
 /** Drafts that are only on this device, oldest first. */
 export async function readLocalDrafts(account?: string): Promise<LocalDraftRow[]> {
-  const accounts = account ? [account] : useOfflineStore.getState().enabled;
-  const read = await Promise.all(accounts.map(async (id) => ((await getStore().area<LocalDraftSummary[] | undefined>(id, 'drafts.list')) ?? []).map((row) => ({ ...row, account: id }))));
-  return read.flat();
+  const accounts = account ? [account] : visibleAccounts();
+  // An account in trouble is what readQueue reports. Its drafts are still there.
+  const settled = await Promise.allSettled(accounts.map(async (id) => ((await getStore().area<LocalDraftSummary[] | undefined>(id, 'drafts.list')) ?? []).map((row) => ({ ...row, account: id }))));
+  return settled.flatMap((result) => (result.status === 'fulfilled' ? result.value : []));
 }
 
 /** An old version in another login: removed through it once the draft here is on the server. */

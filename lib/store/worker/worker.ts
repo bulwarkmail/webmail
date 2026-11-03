@@ -9,7 +9,7 @@
 import { WasmStorage } from '../adapters/wasm';
 import { STORE_AREAS } from '../areas';
 import { RPC_CHANNEL, OWNER_LOCK, type ChannelMessage, type PageToWorker, type WorkerToPage } from './protocol';
-import { StoreHost } from './host';
+import { StoreHost, storeFilesToPrune } from './host';
 
 const scope = self as unknown as {
   postMessage(message: WorkerToPage): void;
@@ -110,7 +110,14 @@ scope.addEventListener('message', async (event) => {
       break;
     case 'open':
       try {
-        await requireHost().openAccount(message.params);
+        reply(message.id, await requireHost().openAccount(message.params));
+      } catch (error) {
+        replyError(message.id, error);
+      }
+      break;
+    case 'prune-files':
+      try {
+        for (const file of storeFilesToPrune(storage?.files() ?? [], message.keep)) storage?.remove(file);
         reply(message.id);
       } catch (error) {
         replyError(message.id, error);

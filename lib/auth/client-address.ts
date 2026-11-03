@@ -1,5 +1,7 @@
 import { BlockList, isIP } from 'node:net';
 import { getClientIP } from '@/lib/admin/session';
+import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
+import { desktopLoginBudgetKey } from '@/lib/desktop/login-budget';
 
 /** Addresses that name no client: loopback and unspecified. */
 const NOT_A_CLIENT = new BlockList();
@@ -39,7 +41,11 @@ export function forwardedClientHeaders(clientIp: string | undefined): Record<str
   return { 'X-Forwarded-For': clientIp };
 }
 
-/** The client address of `request` as the sign-in routes forward and budget it. */
-export function loginClientAddress(request: Request): string {
+/**
+ * The client address of `request` as the sign-in routes forward and budget it.
+ * The desktop build has one client, so there it counts per mail server instead.
+ */
+export function loginClientAddress(request: Request, serverUrl?: unknown): string {
+  if (IS_DESKTOP_BUILD) return desktopLoginBudgetKey(serverUrl);
   return getClientIP(request);
 }

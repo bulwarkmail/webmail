@@ -19,17 +19,25 @@ import {
   confirmLoss,
   enforcePolicy,
   offlineSessionFor,
+  offlineSupported,
   pluginsNotRunning,
+  refreshQueueState,
+  setOfflineNotifier,
   startOfflineMode,
   stricterNow,
+  unsentCount,
   wipeEverything,
 } from '../offline-mode';
-import { flushQueue, settleStaleSends, SENDING_STALE_MS } from '../flush';
-import { claimForSending, holdFile, queueSend, readQueue } from '../queue';
-import { forgetLegacyMove } from '../migrate-legacy';
+import { flushQueue, forgetOrphanCheck, LOOKUP_WAIT_MS, ORPHAN_FILE_AGE_MS, settleStaleSends, SENDING_STALE_MS } from '../flush';
+import { installMayPass } from '@/lib/store/adapters/wasm';
+import { isServerOutage, SendNotStartedError } from '@/lib/jmap/offline-hooks';
+import { claimForSending, holdFile, LOCAL_BLOB_PREFIX, queueSend, readQueue, updateOutboxEntry } from '../queue';
+import { forgetLegacyMove, strandedLegacyMessages } from '../migrate-legacy';
 import { consumeLost } from '../lost';
+import { getOutboxHooks } from '../outbox-hooks';
 import { shellFiles } from '../shell';
-import { isOfflineNow, OFFLINE_ACCOUNTS_KEY, setServerDown, useOfflineStore, writeEnabled } from '../state';
+import { DEFAULT_SCOPE } from '@/lib/store/area';
+import { isOfflineNow, OFFLINE_ACCOUNTS_KEY, OFFLINE_EVICTED_KEY, OFFLINE_SCOPE_KEY, offlineScopeFor, setServerDown, useOfflineStore, writeEnabled } from '../state';
 
 function fakeClient(server = 'https://mail.example.org', overrides: Record<string, unknown> = {}) {
   return {
@@ -56,6 +64,7 @@ function setOnline(online: boolean) {
 }
 
 let stop: () => void = () => {};
+const useRealClient = useAuthStore.getState().getClientForAccount;
 let store: InProcessStore;
 
 beforeEach(async () => {
@@ -282,6 +291,385 @@ describe('11: starting from the device', () => {
   it('hands out the session kept with the account', async () => {
     writeEnabled(['acc']);
     expect(await offlineSessionFor('acc')).toMatchObject({ primaryAccounts: { 'urn:ietf:params:jmap:mail': JMAP_ACCOUNT } });
+  });
+
+  it('gives up on a policy fetch that never answers', async () => {
+    writeEnabled(['acc']);
+    usePolicyStore.setState({ loaded: false, fetching: false, source: 'none' });
+    vi.useFakeTimers();
+    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})));
+    try {
+      const session = offlineSessionFor('acc');
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(await session).toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+      vi.useRealTimers();
+    }
+  });
+
+  it('doesn\'t wait for the old database to finish moving', async () => {
+    writeEnabled(['acc']);
+    forgetLegacyMove();
+    const legacy = indexedDB.open;
+    vi.spyOn(indexedDB, 'open').mockImplementation(((name: string, version?: number) => {
+      // A database that never opens.
+      if (name === 'bulwark-offline') return { result: null } as never;
+      return legacy.call(indexedDB, name, version);
+    }) as never);
+    vi.useFakeTimers();
+    try {
+      const session = offlineSessionFor('acc');
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(await session).toMatchObject({ primaryAccounts: { 'urn:ietf:params:jmap:mail': JMAP_ACCOUNT } });
+    } finally {
+      vi.useRealTimers();
+      vi.restoreAllMocks();
+    }
+  });
+
+  it('doesn\'t offer a quick start before the store has its folders', async () => {
+    store = new InProcessStore(new FakeJmapMail());
+    setStoreBackend(store);
+    writeEnabled(['acc']);
+    expect(await offlineSessionFor('acc', { withFolders: true })).toBeNull();
+    await store.sync('acc');
+    expect(await offlineSessionFor('acc', { withFolders: true })).toMatchObject({ primaryAccounts: { 'urn:ietf:params:jmap:mail': JMAP_ACCOUNT } });
+  });
+});
+
+describe('what a sign-out would delete', () => {
+  beforeEach(() => writeEnabled(['acc', 'other']));
+
+  const addCalendarEdit = async (account: string) => {
+    await store.ensureOpen(account);
+    store.dbs.get(account)!.run("INSERT INTO calendar_pending (jmap, record_id, kind, patch, queued_at) VALUES ('j1', 'ev', 'update', '{}', 1)");
+  };
+
+  it('counts the queue itself, not what the screen last saw', async () => {
+    await queueSend('acc', { subject: 'A', to: [] }, { kind: 'email', args: [] });
+    await queueSend('other', { subject: 'B', to: [] }, { kind: 'email', args: [] });
+    expect(useOfflineStore.getState().outbox).toEqual([]);
+    expect(await unsentCount('acc')).toEqual({ messages: 1, changes: 0 });
+    expect(await unsentCount('all')).toEqual({ messages: 2, changes: 0 });
+  });
+
+  it('counts changes and calendar edits, for the account asked about', async () => {
+    await addCalendarEdit('acc');
+    await store.area('acc', 'outbox.queueSend', { summary: { subject: 'A', to: [] }, item: { kind: 'email', args: [] } });
+    expect(await unsentCount('other')).toEqual({ messages: 0, changes: 0 });
+    expect(await unsentCount('acc')).toEqual({ messages: 1, changes: 1 });
+  });
+
+  it('counts an area that isn\'t here as nothing', async () => {
+    store.failArea = (name) => name === 'contacts.pending';
+    await addCalendarEdit('acc');
+    expect((await unsentCount('acc')).changes).toBe(1);
+  });
+
+  it('answers with the last known count when the store hangs', async () => {
+    useOfflineStore.setState({ outbox: [{ id: 1, account: 'acc', createdAt: 1, subject: 'A', to: [], status: 'waiting' }] as never, pendingChanges: 2 });
+    const hung: Array<(error: Error) => void> = [];
+    vi.spyOn(store, 'area').mockImplementation(() => new Promise((_resolve, reject) => { hung.push(reject); }));
+    expect(await unsentCount('acc', 10)).toEqual({ messages: 1, changes: 2 });
+    for (const reject of hung) reject(new Error('Gone'));
+  });
+
+  it('doesn\'t count another signed-out account\'s waiting mail', async () => {
+    await queueSend('other', { subject: 'B', to: [] }, { kind: 'email', args: [] });
+    localStorage.setItem(OFFLINE_EVICTED_KEY, JSON.stringify({ other: Date.now() }));
+    expect(await unsentCount('all')).toEqual({ messages: 0, changes: 0 });
+  });
+});
+
+describe('a store that won\'t open', () => {
+  beforeEach(() => writeEnabled(['acc', 'other']));
+
+  it('holds up no other account, and keeps what it last showed', async () => {
+    await queueSend('acc', { subject: 'A', to: [] }, { kind: 'email', args: [] });
+    await queueSend('other', { subject: 'B', to: [] }, { kind: 'email', args: [] });
+    await refreshQueueState();
+    const area = store.area.bind(store);
+    vi.spyOn(store, 'area').mockImplementation(((account: string, name: string, params: unknown) => (account === 'other' ? Promise.reject(new Error('The local store could not start')) : area(account, name, params))) as never);
+    const notify = vi.fn();
+    setOfflineNotifier(notify);
+    await refreshQueueState();
+    expect(useOfflineStore.getState().outbox.map((row) => row.subject).sort()).toEqual(['A', 'B']);
+    expect(notify).toHaveBeenCalledWith({ kind: 'store-unavailable' });
+    // Not again right away.
+    notify.mockClear();
+    await refreshQueueState();
+    expect(notify).not.toHaveBeenCalled();
+  });
+
+  it('doesn\'t call an unreadable queue empty', async () => {
+    await queueSend('acc', { subject: 'A', to: [] }, { kind: 'email', args: [] });
+    await refreshQueueState();
+    vi.spyOn(store, 'area').mockRejectedValue(new Error('The local store could not start'));
+    await refreshQueueState();
+    expect(useOfflineStore.getState().outbox.map((row) => row.subject)).toEqual(['A']);
+    await expect(readQueue()).rejects.toThrow('could not start');
+  });
+});
+
+describe('a send the server couldn\'t take right now', () => {
+  const statusAfter = async (error: Error) => {
+    writeEnabled(['acc']);
+    await queueSend('acc', { subject: 'Hello', to: [] }, { kind: 'email', args: [] });
+    const notify = vi.fn();
+    const retryLater = vi.fn();
+    const sendEmail = vi.fn(async () => { throw error; });
+    await flushQueue('acc', fakeClient('https://mail.example.org', { sendEmail }) as unknown as JMAPClient, { notify, allowed: () => true, retryLater });
+    const row = (await readQueue('acc')).outbox[0];
+    return { row, notify, retryLater };
+  };
+
+  it.each([
+    ['a rate limit', Object.assign(new Error('Rate limited by server'), { name: 'RateLimitError' })],
+    ['a login that needs renewing', new Error('Request failed: 401 - ')],
+    ['a store that went away', Object.assign(new Error('gone'), { name: 'StoreOwnerGoneError' })],
+    ['a full disk', Object.assign(new Error('full'), { name: 'QuotaExceededError' })],
+  ])('goes back to waiting, on a timer, after %s', async (_name, error) => {
+    const { row, notify, retryLater } = await statusAfter(error);
+    expect(row.status).toBe('waiting');
+    expect(retryLater).toHaveBeenCalled();
+    expect(notify).not.toHaveBeenCalled();
+  });
+
+  it.each(['Request failed: 500 - oops', 'Request failed: 501 - nope'])('is looked up after %s, which may have got through', async (message) => {
+    const { row, notify, retryLater } = await statusAfter(new Error(message));
+    expect(row.status).toBe('uncertain');
+    expect(retryLater).toHaveBeenCalled();
+    expect(notify).not.toHaveBeenCalled();
+  });
+
+  it('fails, for the user to see, on a refusal', async () => {
+    const { row, notify } = await statusAfter(new Error('Request failed: 400 - {"type":"urn:ietf:params:jmap:error:notRequest"}'));
+    expect(row.status).toBe('failed');
+    expect(notify).toHaveBeenCalledWith(expect.objectContaining({ kind: 'send-failed' }));
+  });
+
+  it('keeps the copy on the server through a wait', async () => {
+    writeEnabled(['acc']);
+    const id = await queueSend('acc', { subject: 'Hello', to: [] }, { kind: 'email', args: [] });
+    const [entry] = (await readQueue('acc')).outbox;
+    await updateOutboxEntry(entry, { status: 'waiting', copyId: 'copy-1' });
+    const sendEmail = vi.fn(async () => { throw new Error('Request failed: 429 - '); });
+    await flushQueue('acc', fakeClient('https://mail.example.org', { sendEmail }) as unknown as JMAPClient, { notify: vi.fn(), allowed: () => true });
+    const row = (await readQueue('acc')).outbox.find((candidate) => candidate.id === id);
+    expect(row).toMatchObject({ status: 'waiting', copyId: 'copy-1' });
+  });
+
+  it('doesn\'t hand an online send a stand-in for a file the upload held again', async () => {
+    writeEnabled(['acc']);
+    stop = startOfflineMode();
+    const { blobId } = await holdFile('acc', new File(['x'], 'x.txt', { type: 'text/plain' }), 'x.txt');
+    const client = fakeClient('https://mail.example.org', { uploadBlob: vi.fn(async () => ({ blobId: `${LOCAL_BLOB_PREFIX}stand-in`, size: 1, type: 'text/plain' })) });
+    useAuthStore.setState({ client: client as never, activeAccountId: 'acc', getClientForAccount: () => client } as never);
+    try {
+      await expect(getOutboxHooks()!.resolveHeldAttachments(client as never, [{ blobId }])).rejects.toMatchObject({ name: 'SendNotStartedError' });
+    } finally {
+      useAuthStore.setState({ getClientForAccount: useRealClient, client: null });
+    }
+  });
+
+  it('doesn\'t send a stand-in for a file the upload held again', async () => {
+    writeEnabled(['acc']);
+    const { blobId } = await holdFile('acc', new File(['x'], 'x.txt', { type: 'text/plain' }), 'x.txt');
+    await queueSend('acc', { subject: 'Hello', to: [] }, { kind: 'email', args: [undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, [{ blobId, name: 'x.txt', type: 'text/plain', size: 1 }]] });
+    const sendEmail = vi.fn(async () => ({ scheduled: false, emailId: 'e', emailSubmissionId: 's' }));
+    const uploadBlob = vi.fn(async () => ({ blobId: `${LOCAL_BLOB_PREFIX}stand-in`, size: 1, type: 'text/plain' }));
+    await flushQueue('acc', fakeClient('https://mail.example.org', { sendEmail, uploadBlob }) as unknown as JMAPClient, { notify: vi.fn(), allowed: () => true });
+    expect(sendEmail).not.toHaveBeenCalled();
+    expect((await readQueue('acc')).outbox[0].status).toBe('waiting');
+  });
+});
+
+describe('waiting mail after a normal start', () => {
+  const realFetchPolicy = usePolicyStore.getState().fetchPolicy;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    // rawPolicy: what the policy is worked out from again when the subject changes.
+    usePolicyStore.setState({ fetchPolicy: vi.fn(async () => {}), source: 'server', rawPolicy: usePolicyStore.getState().policy } as never);
+    useOfflineStore.setState({ downServers: [] });
+    writeEnabled(['acc']);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    usePolicyStore.setState({ fetchPolicy: realFetchPolicy });
+    useOfflineStore.setState({ downServers: [] });
+  });
+
+  it('goes when the client becomes real after the flush at the start', async () => {
+    await queueSend('acc', { subject: 'Hello', to: [] }, { kind: 'email', args: [] });
+    stop = startOfflineMode();
+    // The flush at the start finds no client yet.
+    await vi.advanceTimersByTimeAsync(5_000);
+    const client = fakeClient();
+    useAuthStore.setState({ getClientForAccount: () => client, client: client as never } as never);
+    try {
+      await vi.advanceTimersByTimeAsync(1_500);
+      expect(client.sendEmail).toHaveBeenCalledTimes(1);
+    } finally {
+      useAuthStore.setState({ getClientForAccount: useRealClient, client: null });
+    }
+  });
+
+  it('comes back to a send a closed tab left behind', async () => {
+    const id = await queueSend('acc', { subject: 'Hello', to: [] }, { kind: 'email', args: [] });
+    await claimForSending('acc', id);
+    stop = startOfflineMode();
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect((await readQueue('acc')).outbox[0].status).toBe('sending');
+    await vi.advanceTimersByTimeAsync(SENDING_STALE_MS);
+    expect((await readQueue('acc')).outbox[0].status).toBe('uncertain');
+  });
+
+  it('asks a server that was down, on an interval, and flushes when it answers', async () => {
+    const fetcher = vi.fn(async (_url: string) => new Response(null, { status: 200 }));
+    vi.stubGlobal('fetch', fetcher);
+    try {
+      stop = startOfflineMode();
+      await vi.advanceTimersByTimeAsync(5_000);
+      setServerDown('https://mail.example.org', true);
+      await vi.advanceTimersByTimeAsync(30_000);
+      expect(fetcher.mock.calls.map(([url]) => String(url))).toContain('https://mail.example.org/.well-known/jmap');
+      expect(isOfflineNow('https://mail.example.org')).toBe(false);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe('old files', () => {
+  it('go after a flush, once a day, not a file that\'s still recent', async () => {
+    forgetOrphanCheck();
+    writeEnabled(['acc']);
+    const { blobId } = await holdFile('acc', new File(['x'], 'x.txt', { type: 'text/plain' }), 'x.txt');
+    const client = fakeClient() as unknown as JMAPClient;
+    const flush = () => flushQueue('acc', client, { notify: vi.fn(), allowed: () => true });
+    await flush();
+    expect(await store.area('acc', 'outbox.heldFile', { blobId })).not.toBeNull();
+
+    const area = vi.spyOn(store, 'area');
+    await flush();
+    expect(area.mock.calls.some(([, name]) => name === 'outbox.dropOrphans')).toBe(false);
+
+    const later = Date.now() + ORPHAN_FILE_AGE_MS + 1000;
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(later);
+    try {
+      await flush();
+      expect(area.mock.calls.some(([, name]) => name === 'outbox.dropOrphans')).toBe(true);
+      expect(await store.area('acc', 'outbox.heldFile', { blobId })).toBeNull();
+    } finally {
+      clock.mockRestore();
+      area.mockRestore();
+    }
+  });
+});
+
+describe('a browser that can\'t run the store', () => {
+  it('says so when the old database holds unsent mail', async () => {
+    await new Promise<void>((resolve) => {
+      const request = indexedDB.open('bulwark-offline', 1);
+      request.onupgradeneeded = () => { request.result.createObjectStore('queue', { keyPath: 'id' }); };
+      request.onsuccess = () => {
+        const put = request.result.transaction('queue', 'readwrite').objectStore('queue');
+        put.put({ id: 1, kind: 'patch' });
+        put.put({ id: 2, kind: 'send' });
+        put.transaction.oncomplete = () => { request.result.close(); resolve(); };
+      };
+    });
+    expect(await strandedLegacyMessages()).toBe(1);
+    store.isSupported = false;
+    const notify = vi.fn();
+    setOfflineNotifier(notify);
+    stop = startOfflineMode();
+    await vi.waitFor(() => expect(notify).toHaveBeenCalledWith({ kind: 'legacy-stranded' }));
+    store.isSupported = true;
+    await new Promise<void>((resolve) => {
+      const remove = indexedDB.deleteDatabase('bulwark-offline');
+      remove.onsuccess = () => resolve();
+    });
+    expect(await strandedLegacyMessages()).toBe(0);
+  });
+
+  it('turns the switch off in a window that refuses the private file system, and wipes nothing', async () => {
+    writeEnabled(['acc']);
+    Object.defineProperty(window.navigator, 'storage', { configurable: true, value: { getDirectory: async () => { throw new DOMException('The operation is insecure.', 'SecurityError'); } } });
+    try {
+      stop = startOfflineMode();
+      await vi.waitFor(() => expect(useOfflineStore.getState().storageBlocked).toBe(true));
+      expect(offlineSupported()).toBe(false);
+      enforcePolicy();
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(useOfflineStore.getState().enabled).toEqual(['acc']);
+    } finally {
+      delete (window.navigator as { storage?: unknown }).storage;
+      useOfflineStore.setState({ storageBlocked: false });
+    }
+  });
+
+  it('doesn\'t retry the install where the browser refuses it', () => {
+    expect(installMayPass(new DOMException('The operation is insecure.', 'SecurityError'))).toBe(false);
+    expect(installMayPass(new DOMException('Handle is busy', 'NoModificationAllowedError'))).toBe(true);
+  });
+});
+
+describe('the wording of an outage', () => {
+  it('tells a proxy with no server behind it from a missing connection', () => {
+    const gateway = Object.assign(new Error('Request failed: 502'), { name: 'GatewayError' });
+    expect(isServerOutage(gateway)).toBe(true);
+    expect(isServerOutage(new SendNotStartedError(gateway))).toBe(true);
+    expect(isServerOutage(new SendNotStartedError(new TypeError('Failed to fetch')))).toBe(false);
+    expect(isServerOutage(new TypeError('Failed to fetch'))).toBe(false);
+  });
+});
+
+describe('looking up a send that may have gone', () => {
+  it('waits until about 30 seconds after the last try', async () => {
+    writeEnabled(['acc']);
+    const id = await queueSend('acc', { subject: 'Hello', to: [] }, { kind: 'email', args: [] }, undefined, 'fixed@example.org');
+    await claimForSending('acc', id);
+    await updateOutboxEntry({ account: 'acc', id }, { status: 'uncertain' });
+    const requestNetworkOnly = vi.fn(async () => { throw new TypeError('Failed to fetch'); });
+    const client = fakeClient('https://mail.example.org', { requestNetworkOnly, resolveSendAccountId: async () => 'j1', submissionAccountFor: () => 'j1' }) as unknown as JMAPClient;
+    const retryLater = vi.fn();
+    await flushQueue('acc', client, { notify: vi.fn(), allowed: () => true, retryLater });
+    expect(requestNetworkOnly).not.toHaveBeenCalled();
+    expect(retryLater).toHaveBeenCalled();
+    const later = Date.now() + LOOKUP_WAIT_MS + 1000;
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(later);
+    try {
+      await flushQueue('acc', client, { notify: vi.fn(), allowed: () => true, retryLater });
+      expect(requestNetworkOnly).toHaveBeenCalled();
+    } finally {
+      clock.mockRestore();
+    }
+  });
+});
+
+describe('what the store is told to keep', () => {
+  it('follows what the account chose, on top of the defaults', () => {
+    expect(offlineScopeFor('acc')).toEqual(DEFAULT_SCOPE);
+    localStorage.setItem(OFFLINE_SCOPE_KEY, JSON.stringify({ acc: { attachments: false, days: 7 } }));
+    expect(offlineScopeFor('acc')).toEqual({ ...DEFAULT_SCOPE, attachments: false, days: 7 });
+    expect(offlineScopeFor('other')).toEqual(DEFAULT_SCOPE);
+  });
+});
+
+describe('a send on the local copy', () => {
+  it('queues, before the swap too, while the probes say the server is up', () => {
+    writeEnabled(['acc']);
+    stop = startOfflineMode();
+    useAuthStore.setState({ client: fakeClient('https://mail.example.org', { isOfflineOnly: () => true }) as never });
+    const client = useAuthStore.getState().client as never;
+    expect(isOfflineNow('https://mail.example.org')).toBe(false);
+    expect(getOutboxHooks()?.shouldQueue(client)).toBe(true);
+    useAuthStore.setState({ client: fakeClient() as never });
+    expect(getOutboxHooks()?.shouldQueue(useAuthStore.getState().client as never)).toBe(false);
   });
 });
 

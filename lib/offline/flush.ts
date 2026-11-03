@@ -11,9 +11,10 @@
  * - A message is sent as it was finished at Send (queue.ts); files attached
  *   offline are uploaded first. A hold for undo-send that has passed is
  *   dropped, so the message goes at once.
- * - Only a failure before the submission request (SendNotStartedError, a
- *   file upload on a dead network) puts a message back to waiting. A send
- *   whose connection broke after that is marked uncertain. A refusal by the
+ * - A failure before the submission request (SendNotStartedError, a file
+ *   upload on a dead network), a rate limit, a login that needs renewing and
+ *   trouble with this device's store put a message back to waiting. A send whose
+ *   connection broke, or that got a 5xx, is marked uncertain. A refusal by the
  *   server is marked failed, with the reason.
  * - An uncertain message is looked up when the server is back, by the
  *   Message-ID fixed when it was queued (lib/store/outbox/dedupe.ts): it's
@@ -33,9 +34,10 @@ import { useAuthStore } from '@/stores/auth-store';
 import type { DraftElsewhere } from '@/lib/store/drafts/calls';
 import { getStore } from '@/lib/store/client/api';
 import { flushDrafts, type DraftFlushIo } from '@/lib/store/drafts/flush';
+import { isStorageFailure } from '@/lib/store/storage';
 import type { MethodCall } from '@/lib/store/engine/transport';
 import { decideRetry, type LookupIo, type RetryDecision } from '@/lib/store/outbox/dedupe';
-import { flushPatches, type PatchIo, type PatchOutcome, type PendingPatch } from '@/lib/store/outbox/flush-patches';
+import { flushPatches, isRequestRefusal, type PatchIo, type PatchOutcome, type PendingPatch } from '@/lib/store/outbox/flush-patches';
 import {
   claimForSending,
   heldFile,
@@ -46,7 +48,7 @@ import {
   type OutboxEntry,
   type OutboxError,
 } from './queue';
-import { useOfflineStore } from './state';
+import { visibleAccounts } from './state';
 import type { OfflineNotice } from './offline-mode';
 
 export interface FlushDeps {
@@ -62,14 +64,11 @@ export interface FlushDeps {
   onDraftSent?: () => void;
 }
 
+/** A message that just went may not show in a lookup yet, which would send it twice. */
+export const LOOKUP_WAIT_MS = 30_000;
+
 /** A send is taken for at most this long before a closed tab's send counts as uncertain. */
 export const SENDING_STALE_MS = 60_000;
-
-/**
- * How long a held file stays once nothing names it. An open composer may still
- * show it after its draft went up or was replaced.
- */
-const HELD_FILE_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
 
 const flushing = new Set<string>();
 
@@ -82,6 +81,23 @@ class OutboxPrepError extends Error {
     super(code);
     this.name = 'OutboxPrepError';
   }
+}
+
+/**
+ * Not the server's word about this message: it's rate limiting, the login needs
+ * renewing, or this device's store is in the way. The next try goes as usual.
+ */
+function waitsForNextTry(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  if (error.name === 'RateLimitError' || error.name === 'StoreOwnerGoneError' || error.name === 'StoreKeyError') return true;
+  if (isStorageFailure(error)) return true;
+  return /^Request failed: (401|408|429)\b/.test(error.message);
+}
+
+/** A server error can come after the message went through: looked up before it goes again. */
+function mayHaveArrived(error: unknown): boolean {
+  if (isNetworkFailure(error)) return true;
+  return error instanceof Error && (error.name === 'SendUnconfirmedError' || /^Request failed: 5\d\d\b/.test(error.message));
 }
 
 function notStartedError(message: string): Error {
@@ -101,12 +117,16 @@ function notStarted(error: unknown): boolean {
 async function uploadHeld(account: string, client: JMAPClient, blobId: string): Promise<string> {
   const file = await heldFile(account, blobId);
   if (!file) throw new OutboxPrepError('file_missing');
+  let uploaded: string;
   try {
-    return (await client.uploadBlob(file, { noHold: true })).blobId;
+    uploaded = (await client.uploadBlob(file, { noHold: true })).blobId;
   } catch (error) {
     if (isNetworkFailure(error)) throw notStartedError('upload failed');
     throw error;
   }
+  // The server went away just now, and offline mode held the file again.
+  if (isLocalBlobId(uploaded)) throw notStartedError('upload held');
+  return uploaded;
 }
 
 async function sendEntry(account: string, client: JMAPClient, entry: OutboxEntry): Promise<SendEmailResult> {
@@ -162,15 +182,28 @@ export async function flushQueue(account: string, client: JMAPClient, deps: Flus
   await run();
 }
 
-/** Marks sends of closed tabs uncertain (they may have gone out). */
-export async function settleStaleSends(account?: string, now = Date.now()): Promise<void> {
-  const accounts = account ? [account] : useOfflineStore.getState().enabled;
-  await Promise.all(accounts.map((id) => getStore().area(id, 'outbox.settleStale', { before: now - SENDING_STALE_MS })));
+/** A file attached offline to something that was then discarded goes after this long. */
+export const ORPHAN_FILE_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+const ORPHAN_CHECK_MS = 24 * 60 * 60 * 1000;
+const orphansCheckedAt = new Map<string, number>();
+
+async function dropOrphanFiles(account: string): Promise<void> {
+  const now = Date.now();
+  if (now - (orphansCheckedAt.get(account) ?? 0) < ORPHAN_CHECK_MS) return;
+  orphansCheckedAt.set(account, now);
+  await getStore().area(account, 'outbox.dropOrphans', { olderThan: now - ORPHAN_FILE_AGE_MS }).catch(() => {});
 }
 
-/** The server refused the request itself: more tries won't change that. Outages and auth wait instead. */
-function isRequestRefusal(error: unknown): boolean {
-  return error instanceof Error && /^(Request failed|Failed to upload file): (400|403|404|413|422)\b/.test(error.message);
+/** Tests only. */
+export function forgetOrphanCheck(): void {
+  orphansCheckedAt.clear();
+}
+
+/** Marks sends of closed tabs uncertain (they may have gone out). */
+export async function settleStaleSends(account?: string, now = Date.now()): Promise<void> {
+  const accounts = account ? [account] : visibleAccounts();
+  // One account's store in trouble doesn't hold up another's.
+  await Promise.allSettled(accounts.map((id) => getStore().area(id, 'outbox.settleStale', { before: now - SENDING_STALE_MS })));
 }
 
 /** The drafts saved on this device. False when the run stopped on an outage. */
@@ -190,7 +223,8 @@ function sendDrafts(account: string, client: JMAPClient, deps: FlushDeps, locked
       const file = await heldFile(account, blobId);
       return file ? (await client.uploadBlob(file, { accountId: jmap, noHold: true })).blobId : null;
     },
-    isRefusal: isRequestRefusal,
+    // An upload's refusal has no JMAP problem document, only its status.
+    isRefusal: (error) => isRequestRefusal(error) || (error instanceof Error && /^Failed to upload file: (400|403|404|413|422)\b/.test(error.message)),
     onRefused: (subject, error) => deps.notify({ kind: 'draft-refused', subject, error }),
     onConflict: (subject) => deps.notify({ kind: 'draft-conflict', subject }),
     onSent: () => deps.onDraftSent?.(),
@@ -224,7 +258,6 @@ async function sendPatches(account: string, client: JMAPClient, deps: FlushDeps,
   if (pending.length === 0) return true;
   const io: PatchIo = {
     request: (calls: MethodCall[], using: string[]) => client.requestNetworkOnly(calls, using),
-    isRefusal: isRequestRefusal,
   };
   return flushPatches(io, pending, async (outcomes: PatchOutcome[]) => {
     const conflicts = await getStore().area<number>(account, 'outbox.patchResults', { outcomes });
@@ -270,6 +303,10 @@ async function settleUncertain(account: string, client: JMAPClient, deps: FlushD
   for (const entry of outbox) {
     if (entry.status !== 'uncertain') continue;
     if (stillOffline() || !deps.allowed()) return false;
+    if (entry.lastAttemptAt && Date.now() - entry.lastAttemptAt < LOOKUP_WAIT_MS) {
+      deps.retryLater?.();
+      continue;
+    }
     let decision: RetryDecision;
     try {
       decision = await lookUp(client, entry);
@@ -342,8 +379,13 @@ async function flushLocked(account: string, client: JMAPClient, deps: FlushDeps,
           deps.notify({ kind: 'send-failed', subject: entry.summary.subject, error: { code } });
           continue;
         }
-        if (isNetworkFailure(error) || (error instanceof Error && error.name === 'SendUnconfirmedError')) {
-          // It may have reached the server: looked up before it goes again.
+        if (waitsForNextTry(error)) {
+          // Nothing the user can do about it, and the copy on the server stays useful.
+          await updateOutboxEntry(entry, { status: 'waiting' });
+          deps.retryLater?.();
+          return;
+        }
+        if (mayHaveArrived(error)) {
           await updateOutboxEntry(entry, { status: 'uncertain' });
           deps.retryLater?.();
           return;
@@ -361,7 +403,7 @@ async function flushLocked(account: string, client: JMAPClient, deps: FlushDeps,
     }
     if (stillOffline() || !deps.allowed()) return;
     await sendPatches(account, client, deps, null);
-    await getStore().area(account, 'outbox.dropOrphans', { olderThan: Date.now() - HELD_FILE_GRACE_MS });
+    await dropOrphanFiles(account);
   } finally {
     flushing.delete(account);
   }
