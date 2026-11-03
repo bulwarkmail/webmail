@@ -20,6 +20,7 @@ import {
 import { webPushErrorKey } from '@/lib/web-push-errors';
 import { DEFAULT_RELAY_BASE_URL } from '@/lib/push-relays';
 import { setNoThirdPartyTraffic } from '@/lib/third-party-mode';
+import { keepRelayRegistration } from '@/lib/pwa-notify/worker-state';
 
 const RELAY = 'https://relay.example';
 const RELAY_BASE_KEY = `bulwark.push.relayBase.v1.${'acct-1'}`;
@@ -277,7 +278,7 @@ function installFetch(activeByDevice: Record<string, boolean | 'unknown'>) {
     if (url.includes('/api/push/active/')) {
       const device = url.split('/api/push/active/')[1];
       const state = activeByDevice[device];
-      if (state === undefined || state === 'unknown') return json({ error: 'Unknown' }, 404);
+      if (state === undefined || state === 'unknown') return json({ error: 'Unknown subscription' }, 404);
       return json({ active: state });
     }
     return json({});
@@ -761,6 +762,53 @@ describe('an endpoint the push service gave up on', () => {
 
     expect(browserSub.unsubscribe).toHaveBeenCalledTimes(1);
     expect(registration.pushManager.subscribe).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not take a relay that lacks the route for one that lost the record', async () => {
+    const { browserSub } = installPushBrowser();
+    const client = registered();
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      const json = (body: unknown, status = 200) => ({ ok: status < 300, status, json: async () => body }) as Response;
+      if (url.includes('/api/push/active/')) return json({ error: 'Not found' }, 404);
+      return url.endsWith('/vapid-public-key') ? json({ publicKey: 'QUJD' }) : json({});
+    }));
+
+    await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    expect(browserSub.unsubscribe).not.toHaveBeenCalled();
+  });
+
+  it('moves the other logins to the new endpoint, connected or not', async () => {
+    const { registration } = installPushBrowser();
+    const moved = { endpoint: 'https://fcm.example/moved', options: { applicationServerKey: new Uint8Array([65, 66, 67]).buffer }, getKey: () => new Uint8Array([1, 2, 3]).buffer, unsubscribe: vi.fn(async () => true) };
+    (registration.pushManager.subscribe as ReturnType<typeof vi.fn>).mockResolvedValue(moved);
+    const stored = new Map<string, string>();
+    vi.stubGlobal('caches', {
+      open: async () => ({
+        match: async (key: string) => (stored.has(key) ? new Response(stored.get(key)) : undefined),
+        put: async (key: string, res: Response) => { stored.set(key, await res.text()); },
+      }),
+    });
+    await keepRelayRegistration('other-login', { relay: 'https://relay-of-other.example', subscriptionId: 'device-other', accountLabel: 'o@example.org' }, 'QUJD');
+    const client = registered();
+    const bodies: Array<{ url: string; body: { subscriptionId: string; subscription: { endpoint: string }; accountLabel?: string } }> = [];
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      const json = (body: unknown, status = 200) => ({ ok: status < 300, status, json: async () => body }) as Response;
+      if (url.endsWith('/vapid-public-key')) return json({ publicKey: 'QUJD' });
+      if (url.includes('/api/push/active/')) return json({ error: 'Unknown subscription' }, 404);
+      if (url.endsWith('/api/push/register/web')) bodies.push({ url, body: JSON.parse(String(init?.body)) });
+      return json({});
+    }));
+
+    await resyncWebPush({ client, relayBaseUrl: RELAY, inboxOnly: false });
+
+    const other = bodies.find((b) => b.body.subscriptionId === 'device-other');
+    expect(other?.url).toBe('https://relay-of-other.example/api/push/register/web');
+    expect(other?.body.subscription.endpoint).toBe('https://fcm.example/moved');
+    expect(other?.body.accountLabel).toBe('o@example.org');
+    expect(bodies.filter((b) => b.body.subscriptionId === THIS_DEVICE)).toHaveLength(1);
   });
 
   it('keeps the subscription while the relay knows the record', async () => {
