@@ -2650,12 +2650,6 @@ export function EmailComposer({
     resetDragTimeout();
   }, [resetDragTimeout]);
 
-  // The desktop app: files dropped or pasted anywhere on the window come here, if this one's on screen.
-  useEffect(() => setComposerFileTarget(
-    (files) => void addFiles(files),
-    () => !!composerRootEl?.isConnected && composerRootEl.getClientRects().length > 0,
-  ), [addFiles, composerRootEl]);
-
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -2705,6 +2699,12 @@ export function EmailComposer({
   const pluginToolbarOffers = usePluginSlotOffers('composer-toolbar');
   // The plugin side panels fold when the composer gets too narrow for them.
   const [composerRootEl, setComposerRootEl] = useState<HTMLDivElement | null>(null);
+
+  // The desktop app: files dropped or pasted anywhere on the window come here, if this one's on screen.
+  useEffect(() => setComposerFileTarget(
+    (files) => void addFiles(files),
+    () => !!composerRootEl?.isConnected && composerRootEl.getClientRects().length > 0,
+  ), [addFiles, composerRootEl]);
   // The id plugins know this composer by (registered below, with the handle).
   const [pluginComposerId, setPluginComposerId] = useState<string | null>(null);
   const pluginSidebars = useComposerSidebars(composerRootEl, pluginComposerId);
