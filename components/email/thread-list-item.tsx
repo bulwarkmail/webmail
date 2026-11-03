@@ -310,10 +310,10 @@ function describeAccount(label: string | undefined, account: AccountEntry | unde
  * aggregate "All …" views (All Mail / unified / cross-account) where rows come
  * from different folders. `email.sourceFolder` is stamped at fetch time.
  */
-function SourceFolderTag({ name }: { name: string }) {
+function SourceFolderTag({ name, tight }: { name: string; tight?: boolean }) {
   return (
     <span
-      className="inline-flex max-w-[8rem] shrink-0 items-center gap-1 truncate rounded-full border border-border bg-muted/40 px-1.5 py-0.5 text-[0.6875rem] text-muted-foreground"
+      className={cn("inline-flex shrink-0 items-center gap-1 truncate rounded-full border border-border bg-muted/40 px-1.5 py-0.5 text-[0.6875rem] text-muted-foreground", tight ? "max-w-[4.5rem]" : "max-w-[8rem]")}
       title={name}
     >
       <Folder className="h-3 w-3 shrink-0" />
@@ -451,7 +451,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     const formatAddress = useOwnDomainAddress();
     const tagScope = useEmailTagScope(email);
     const { sortTagIds, tagColor } = useKeywordFormat(tagScope);
-    const { variant: tagVariant, placement: tagPlacement } = useTagDisplay();
+    const { variant: tagVariant, placement: tagPlacement, tight: senderLineTight } = useTagDisplay();
     const tintListRowsByTag = useSettingsStore((state) => state.tintListRowsByTag);
     const tintListRowsByAccount = useSettingsStore((state) => state.tintListRowsByAccount);
     // The tint replaces the dot, and the dot can be switched off on its own (#912).
@@ -845,7 +845,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     </>
                   )}
                   {showPaperclip && <StatusIcon icon={Paperclip} label={tStatus('has_attachment')} className="w-3.5 h-3.5 text-muted-foreground" />}
-                  {showSourceFolder && <SourceFolderTag name={email.sourceFolder!} />}
+                  {showSourceFolder && <SourceFolderTag name={email.sourceFolder!} tight={senderLineTight} />}
                   {scheduledSendLabel ? (
                     <span
                       className={cn("inline-flex max-w-[11rem] shrink-0 items-center gap-1 truncate rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-xs font-medium tabular-nums text-sky-700 dark:text-sky-300", columns && "max-w-28")}
@@ -894,7 +894,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     {tagPlacement === 'sender' && tagIds.length > 0 && (
                       <span className={TAG_GROUP_CLASS}>
                         {tagIds.map((id) => (
-                          <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} />
+                          <TagBadge key={id} tagId={id} variant={senderLineTight && (showSourceFolder || tagIds.length > 1) ? 'dot' : tagVariant} scope={tagScope} />
                         ))}
                       </span>
                   )}
@@ -923,7 +923,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                    {showSourceFolder && <SourceFolderTag name={email.sourceFolder!} />}
+                    {showSourceFolder && <SourceFolderTag name={email.sourceFolder!} tight={senderLineTight} />}
                     {scheduledSendLabel ? (
                       <span
                         className="inline-flex max-w-[11rem] shrink-0 items-center gap-1 truncate rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[0.6875rem] font-medium tabular-nums text-sky-700 dark:text-sky-300"
@@ -1181,7 +1181,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
 
     const tagScope = useEmailTagScope(latestEmail);
     const { sortTagIds, tagColor } = useKeywordFormat(tagScope);
-    const { variant: tagVariant, placement: tagPlacement } = useTagDisplay();
+    const { variant: tagVariant, placement: tagPlacement, tight: senderLineTight } = useTagDisplay();
     const tintListRowsByTag = useSettingsStore((state) => state.tintListRowsByTag);
     const tintListRowsByAccount = useSettingsStore((state) => state.tintListRowsByAccount);
     // The tint replaces the dot, and the dot can be switched off on its own (#912).
@@ -1616,7 +1616,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       </>
                     )}
                     {hasAttachment && <StatusIcon icon={Paperclip} label={tStatus('has_attachment')} className="w-3.5 h-3.5 text-muted-foreground" />}
-                    {showSourceFolder && <SourceFolderTag name={latestEmail.sourceFolder!} />}
+                    {showSourceFolder && <SourceFolderTag name={latestEmail.sourceFolder!} tight={senderLineTight} />}
                     {scheduledSendLabel ? (
                       <span
                         className={cn("inline-flex max-w-[11rem] shrink-0 items-center gap-1 truncate rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-xs font-medium tabular-nums text-sky-700 dark:text-sky-300", columns && "max-w-28")}
@@ -1674,7 +1674,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                           title={t('messages_tooltip', { count: emailCount })}
                         />
                         {tagPlacement === 'sender' && tagIds.map((id) => (
-                          <TagBadge key={id} tagId={id} variant={tagVariant} scope={tagScope} />
+                          <TagBadge key={id} tagId={id} variant={senderLineTight && (showSourceFolder || tagIds.length > 1) ? 'dot' : tagVariant} scope={tagScope} />
                         ))}
                       </span>
                       <div className="flex items-center gap-1.5">
@@ -1702,7 +1702,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
-                      {showSourceFolder && <SourceFolderTag name={latestEmail.sourceFolder!} />}
+                      {showSourceFolder && <SourceFolderTag name={latestEmail.sourceFolder!} tight={senderLineTight} />}
                       {scheduledSendLabel ? (
                         <span
                           className="inline-flex max-w-[11rem] shrink-0 items-center gap-1 truncate rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[0.6875rem] font-medium tabular-nums text-sky-700 dark:text-sky-300"
