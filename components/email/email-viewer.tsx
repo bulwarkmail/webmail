@@ -4060,6 +4060,10 @@ ${printWatermark ? printWatermark.html : ''}
       ref={setViewerRootEl}
       className={cn("flex-1 flex flex-col h-full bg-background overflow-hidden relative", className)}
     >
+      {/* The loaded reader's print copy. Its place has to stay taken: with the
+          row one child further along, React starts the row, and the side
+          panel's frame in it, over with every message. */}
+      {null}
       {top}
       <div className="flex-1 min-h-0 flex flex-row overflow-hidden relative">
         {content}
