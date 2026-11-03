@@ -44,6 +44,16 @@ describe('the committed templates', () => {
   });
 });
 
+describe('the desktop repo', () => {
+  // Only in a checkout with repos/desktop next to the code. CI's desktop repo has no webmail beside it.
+  const copy = path.join(process.cwd(), 'repos', 'desktop', 'src', 'shared', 'policy-schema.ts');
+
+  it.runIf(existsSync(copy))('holds the same schema: run node scripts/generate-desktop-policies.mjs --shell repos/desktop', () => {
+    const text = (file: string) => readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
+    expect(text(copy)).toBe(text(path.join(process.cwd(), 'lib', 'desktop', 'policy-schema.ts')));
+  });
+});
+
 describe('the ADMX', () => {
   const doc = parseXml(generateAdmx());
   const root = doc.documentElement;
