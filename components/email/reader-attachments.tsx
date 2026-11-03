@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, type DragEvent, type ReactNode } from "react";
+import { useEffect, useState, type DragEvent, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronDown, ChevronUp, Copy, Download, FolderInput, Loader2, Paperclip } from "@/components/icons";
 import { Button } from "@/components/ui/button";
+import { ContextMenu, ContextMenuItem } from "@/components/ui/context-menu";
+import { useContextMenu } from "@/hooks/use-context-menu";
+import { nativeMenusAvailable } from "@/lib/desktop/native-menu";
 import { IconButton } from "@/components/ui/icon-button";
 import { getAttachmentDisplayName } from "@/lib/attachment-name";
 import { cn, formatFileSize } from "@/lib/utils";
@@ -50,6 +53,11 @@ interface ReaderAttachmentsProps<T extends ReaderAttachmentItem> {
   layout?: ReaderAttachmentLayout;
   /** Object URLs of image attachments, keyed by attachment id. */
   thumbUrls: Record<string, string>;
+  /**
+   * Copies the file to the clipboard. Comes with the right-click menu the desktop app
+   * has on an attachment; a browser has its own menu there and never gets this one.
+   */
+  onCopyFile?: (attachment: T) => void;
   /** Whether a click on the attachment previews it instead of downloading it. */
   opensPreview: (attachment: T) => boolean;
   onOpen: (attachment: T) => void;
@@ -97,6 +105,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
   onDownload,
   onDownloadAll,
   onSaveAllToFolder,
+  onCopyFile,
   downloadingAll,
   downloadsOff = false,
   onSaveToFiles,
@@ -108,6 +117,11 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
   const tFiles = useTranslations("files");
   const tDevice = useTranslations("device_policy");
   const tWindows = useTranslations("pwaWindows");
+  const tDesktop = useTranslations("desktopUi.attachment");
+  const menu = useContextMenu<T>();
+  const [desktopMenu, setDesktopMenu] = useState(false);
+  useEffect(() => setDesktopMenu(nativeMenusAvailable()), []);
+  const menuTarget = menu.contextMenu.data;
   // Opens nothing: no preview, and downloads are off.
   const locked = (attachment: T) => downloadsOff && !opensPreview(attachment);
   const openLabel = (attachment: T, name: string) =>
@@ -297,7 +311,7 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
         layout === "cards" ? "grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-3" : "grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-2",
       )}>
         {shown.map((attachment) => (
-          <div key={attachment.id} className="flex min-w-0 flex-col gap-1">
+          <div key={attachment.id} className="flex min-w-0 flex-col gap-1" onContextMenu={desktopMenu ? (event) => menu.openContextMenu(event, attachment) : undefined}>
             {renderItem
               ? renderItem(attachment, (drag) => draw(attachment, drag))
               : draw(attachment, NO_DRAG)}
@@ -329,6 +343,19 @@ export function ReaderAttachments<T extends ReaderAttachmentItem>({
           </button>
         )}
       </div>
+      {desktopMenu && menuTarget && (
+        <ContextMenu ref={menu.menuRef} isOpen={menu.contextMenu.isOpen} position={menu.contextMenu.position} onClose={menu.closeContextMenu}>
+          {!locked(menuTarget) && (
+            <ContextMenuItem label={tDesktop("open")} onClick={() => { menu.closeContextMenu(); onOpen(menuTarget); }} />
+          )}
+          {!downloadsOff && (
+            <ContextMenuItem label={tDesktop("save_as")} onClick={() => { menu.closeContextMenu(); onDownload(menuTarget); }} />
+          )}
+          {!downloadsOff && onCopyFile && (
+            <ContextMenuItem label={tDesktop("copy")} onClick={() => { menu.closeContextMenu(); onCopyFile(menuTarget); }} />
+          )}
+        </ContextMenu>
+      )}
     </section>
   );
 }

@@ -271,6 +271,14 @@ describe('viewer send failures', () => {
       useAuthStore.setState({ client: null, identities: [] } as never);
     });
 
+    it('a message opened from a link sends none by itself', async () => {
+      render(<EmailViewer email={makeEmail({ headers: MDN_HEADERS })} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" noAutomaticActions />);
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      });
+      expect(sendReadReceipt).not.toHaveBeenCalled();
+    });
+
     it('tries once per opening, not once per refresh, when the quota is full on Stalwart 1.0', async () => {
       const props = { mailboxes, selectedMailbox: 'inbox', currentMailboxRole: 'inbox' };
       const { rerender } = render(<EmailViewer email={makeEmail({ headers: MDN_HEADERS })} {...props} />);

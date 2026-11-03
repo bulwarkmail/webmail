@@ -12,6 +12,7 @@ import { useTour } from '@/components/tour/tour-provider';
 import { Button } from '@/components/ui/button';
 import { PlayCircle } from '@/components/icons';
 import { IS_LITE } from '@/lib/lite';
+import { DesktopWindowSettings } from './desktop-window-settings';
 
 /**
  * The General page: language and time, which links the browser hands to
@@ -33,6 +34,7 @@ export function GeneralSettings({ supportsCalendar }: { supportsCalendar: boolea
       <DesktopKeystoreSettings />
       <DesktopTelemetrySettings />
 
+      <DesktopWindowSettings />
       <SettingsSection id="tour" title={tTour('settings_section')}>
         <SettingItem label={tTour('restart_title')} description={tTour('restart_desc')}>
           <Button

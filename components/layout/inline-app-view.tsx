@@ -20,7 +20,7 @@ export function InlineAppView({ apps, activeAppId, onClose, className }: InlineA
   return (
     <div className={cn('flex flex-col h-full bg-background', className)}>
       {/* Header bar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-secondary/50 flex-shrink-0">
+      <div data-window-top-row="" className="flex items-center justify-between px-4 py-2 border-b border-border bg-secondary/50 flex-shrink-0">
         <h3 className="text-sm font-medium truncate">{activeApp?.name}</h3>
         <IconButton label={tCommon("close")} onClick={onClose} className="text-muted-foreground">
           <X />

@@ -34,6 +34,8 @@ function TabStripSkeleton() {
   return (
     <div
       aria-hidden="true"
+      data-pane-strip=""
+      data-window-row-right=""
       className="relative flex items-stretch h-9 bg-secondary px-1 overflow-hidden flex-shrink-0"
       style={STRIP_BORDER}
     >

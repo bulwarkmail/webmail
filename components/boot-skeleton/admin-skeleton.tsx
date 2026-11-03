@@ -227,6 +227,9 @@ export function AdminSkeleton({ label, page, backLabel, searchLabel, labels, cla
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col">
+          <div data-window-only="" data-window-row-right="" className="h-14 box-content shrink-0 items-center border-b border-border px-6">
+            <TextLine className="text-sm" w="6rem" />
+          </div>
           <div className="flex-1 overflow-hidden">
             <div className="mx-auto max-w-3xl px-6 py-6">
               <AdminContentSkeleton page={page} />

@@ -176,7 +176,7 @@ function ToolbarSkeleton({ text }: { text?: CalendarSkeletonText }) {
   const views = text?.views;
   return (
     <>
-      <div className="hidden md:flex items-center gap-1 px-3 h-14 box-content border-b border-border flex-shrink-0">
+      <div data-window-row-right="" className="hidden md:flex items-center gap-1 px-3 h-14 box-content border-b border-border flex-shrink-0">
         <ToolbarIcon className="me-1">
           <Menu />
         </ToolbarIcon>

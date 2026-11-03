@@ -75,6 +75,14 @@ describe('EmailViewer mark as read', () => {
     await waitFor(() => expect(onMarkAsRead).toHaveBeenCalledWith('e1', true, { automatic: true }));
   });
 
+  it('a message opened from a link stays unread until the user says', async () => {
+    useSettingsStore.setState({ markAsReadDelay: 0 });
+    const onMarkAsRead = vi.fn();
+    render(<EmailViewer email={unread} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onMarkAsRead={onMarkAsRead} noAutomaticActions />);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(onMarkAsRead).not.toHaveBeenCalled();
+  });
+
   it("passes the toolbar button on as the user's own change", () => {
     useSettingsStore.setState({ markAsReadDelay: -1 });
     const onMarkAsRead = vi.fn();

@@ -199,7 +199,7 @@ function FilesSidebarSkeleton() {
 function FilesHeaderSkeleton({ picker }: { picker: boolean }) {
   const on = "bg-primary/10 text-primary";
   return (
-    <div className="flex items-center gap-1 px-3 h-14 box-content border-b border-border min-w-0 flex-shrink-0">
+    <div data-window-row-right="" className="flex items-center gap-1 px-3 h-14 box-content border-b border-border min-w-0 flex-shrink-0">
       {picker ? null : <ToolIcon icon={Menu} className="lg:hidden" />}
       <div className="flex-1 min-w-0 flex items-center text-sm">
         <span className="flex items-center px-1.5 py-1 h-7">

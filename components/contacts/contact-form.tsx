@@ -704,7 +704,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
     // The app checks the fields itself and says what is wrong inline; the
     // browser's own bubble covered that message.
     <form onSubmit={handleSubmit} noValidate className="flex flex-col h-full bg-background">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
+      <div data-window-top-row="" className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
         <h2 className="text-lg font-semibold">
           {isEditing ? t("edit_title") : t("create_title")}
         </h2>

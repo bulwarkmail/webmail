@@ -4,6 +4,7 @@ import { ThemeProvider } from '@/components/providers/theme-provider';
 import { TourProvider } from '@/components/tour/tour-provider';
 import { defaultLocale } from '@/i18n/routing';
 import { AdminLayoutClient } from './_layout-client';
+import { WindowMenuBar } from '@/components/layout/window-menu-bar';
 
 /**
  * /admin sits outside the [locale] tree, so it loads the message catalog
@@ -25,6 +26,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <IntlProvider locale={locale} messages={messages}>
       <ThemeProvider>
         <TourProvider>
+          <WindowMenuBar />
           <AdminLayoutClient>{children}</AdminLayoutClient>
         </TourProvider>
       </ThemeProvider>

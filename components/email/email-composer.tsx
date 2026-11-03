@@ -169,6 +169,9 @@ import { htmlToPlainText as htmlToPlainTextShared } from "@/lib/html-to-text";
 import { fileStorage } from "@/lib/plugin-storage";
 import { usePolicyStore } from "@/stores/policy-store";
 import { registerComposeFlush } from "@/lib/compose-flush-registry";
+import { getDesktopBridge } from "@/lib/desktop/bridge";
+import { noteComposerLanguage } from "@/lib/desktop/languages";
+import { noteOpenDraft } from "@/lib/desktop/window-restore";
 import type { RescuedDraft } from "@/lib/popout/channel";
 import { toUnicodeEmail } from "@/lib/idn";
 import { setComposerFileTarget } from "@/lib/desktop/window-files";
@@ -384,7 +387,7 @@ interface EmailComposerProps {
     /** The state as the window unloads, for a reload to start from. */
     onUnloadState?: (data: ComposerDraftData) => void;
     /** A save reached the server, for other windows showing the Drafts folder. */
-    onDraftSaved?: () => void;
+    onDraftSaved?: (draftId: string) => void;
     /**
      * Hands a draft to another window to save as this one closes: a request
      * started now wouldn't survive. False when that can't be done safely.
@@ -1944,6 +1947,14 @@ export function EmailComposer({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // A composer that comes back with the app: a draft it opened on counts from the start.
+  // Gone with the composer: sent, discarded or closed.
+  useEffect(() => {
+    if (draftIdRef.current) noteOpenDraft(effectiveSessionKey, { draftId: draftIdRef.current, localAccountId: draftLocalAccountIdRef.current ?? useAuthStore.getState().activeAccountId, ownerAccountId: draftAccountIdRef.current });
+    return () => noteOpenDraft(effectiveSessionKey, null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveSessionKey]);
+
   // Auto-save draft to server on page close (best-effort)
   const ownWindowRef = useRef(ownWindow);
   ownWindowRef.current = ownWindow;
@@ -3024,6 +3035,8 @@ export function EmailComposer({
       draftIdRef.current = savedDraftId;
       draftAccountIdRef.current = draftAccountId;
       draftLocalAccountIdRef.current = savingLogin;
+      // Before a save's promise settles: quitting waits for it, then keeps this list.
+      noteOpenDraft(effectiveSessionKey, { draftId: savedDraftId, localAccountId: savingLogin ?? useAuthStore.getState().activeAccountId, ownerAccountId: draftAccountId });
       setDraftId(savedDraftId);
       setDraftAccountId(draftAccountId);
       setDraftLocalAccountId(savingLogin);
@@ -3104,7 +3117,7 @@ export function EmailComposer({
       // Only the save the user asked for is read out: autosave would say it
       // every minute, and the save before sending is followed by "Sent".
       if (opts.announce && id && !saveFailedRef.current) announceStatus(t('draft_saved'));
-      if (id && !saveFailedRef.current) ownWindowRef.current?.onDraftSaved?.();
+      if (id && !saveFailedRef.current) ownWindowRef.current?.onDraftSaved?.(id);
       return id;
     })();
     inflightSaveRef.current = promise;
@@ -3367,6 +3380,11 @@ export function EmailComposer({
   const uiLocale = useLocale();
   const writingLanguage = useSettingsStore((s) => s.writingLanguage);
   const textLang = writingLanguage && writingLanguage !== 'auto' ? writingLanguage : uiLocale;
+  // The desktop app's spellcheck follows what's being written.
+  useEffect(() => {
+    noteComposerLanguage(effectiveSessionKey, textLang);
+    return () => noteComposerLanguage(effectiveSessionKey, null);
+  }, [effectiveSessionKey, textLang]);
   const proofreading = useProofreading({
     composerId: pluginComposerId,
     sessionKey: effectiveSessionKey,
@@ -4440,6 +4458,29 @@ export function EmailComposer({
     emitClose();
   };
 
+  /** The question before closing or discarding: the OS's own in the desktop app. */
+  const openCloseDialog = (kind: 'discard' | 'close') => {
+    const dialogs = getDesktopBridge()?.dialogs;
+    if (!dialogs) {
+      setCloseDialogKind(kind);
+      setShowCloseDialog(true);
+      return;
+    }
+    const discarding = kind === 'discard';
+    const buttons = discarding ? [t('discard'), t('cancel')] : [tCommon('save'), t('discard'), t('cancel')];
+    void dialogs.confirm({
+      type: 'warning',
+      message: discarding ? t('discard_draft_title') : t('close_draft_title'),
+      detail: discarding ? t('discard_draft_message') : t('close_draft_message'),
+      buttons,
+      defaultId: discarding ? 1 : 0,
+    }).then((choice) => {
+      if (buttons[choice] === t('discard')) handleDiscardAndClose();
+      else if (!discarding && choice === 0) void handleSaveDraftAndClose();
+      else afterCloseRef.current = null;
+    });
+  };
+
   // Discard deletes the draft, also one that has no unsaved changes, such as
   // a scheduled message reopened with "Cancel and edit". It used to share the
   // X button's path, which closed such a composer and kept the draft.
@@ -4451,8 +4492,7 @@ export function EmailComposer({
       return;
     }
     afterCloseRef.current = null;
-    setCloseDialogKind('discard');
-    setShowCloseDialog(true);
+    openCloseDialog('discard');
   };
 
   const handleClose = (afterClose?: () => void) => {
@@ -4464,8 +4504,7 @@ export function EmailComposer({
       && !saveFailedRef.current
       && !attachmentsRef.current.some(att => att.uploading || att.error);
     if (isDirtyRef.current && !savedAlready) {
-      setCloseDialogKind('close');
-      setShowCloseDialog(true);
+      openCloseDialog('close');
     } else {
       cleanClose();
     }
@@ -4751,6 +4790,7 @@ export function EmailComposer({
           className="-me-2 max-md:order-first max-md:me-0 max-md:-ms-2 max-md:h-11 max-md:w-11"
           label={tCommon('close')}
           data-testid="composer-close"
+          data-own-window-close={ownWindow ? "" : undefined}
         >
           <X className="w-5 h-5 md:w-4 md:h-4" />
         </IconButton>

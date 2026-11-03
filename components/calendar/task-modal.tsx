@@ -222,7 +222,7 @@ export function TaskModal({
       onKeyDown={handleKeyDown}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+      <div data-window-top-row="" className="flex items-center justify-between px-4 py-3 border-b border-border">
         <h2 id={`${id}-heading`} className="text-sm font-semibold">
           {isEdit ? t("tasks.edit") : t("tasks.create")}
         </h2>

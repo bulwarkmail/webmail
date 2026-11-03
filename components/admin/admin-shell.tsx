@@ -442,6 +442,10 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
         </aside>
 
         <main className="flex min-w-0 flex-1 flex-col">
+          {/* Only for the window's controls: the sidebar says which page is open. */}
+          <div data-window-only="" aria-hidden="true" className="h-14 box-content shrink-0 items-center border-b border-border px-6 text-sm font-semibold">
+            <span className="truncate">{pageName ?? 'Admin'}</span>
+          </div>
           <div ref={scrollRef} className="flex-1 overflow-y-auto">
             <div className="mx-auto max-w-3xl px-6 py-6">
               {readOnlyBanner}

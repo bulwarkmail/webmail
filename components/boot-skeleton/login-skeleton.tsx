@@ -65,7 +65,7 @@ export function LoginSkeleton({ label, accessibilityButton = false, className }:
       )}
     >
       {/* The theme menu button: its icon, and the theme's name from sm up. */}
-      <div aria-hidden="true" className="absolute top-5 end-5">
+      <div aria-hidden="true" data-window-beside-controls="" className="absolute top-5 end-5">
         <span className="flex items-center gap-2 px-3 py-2 rounded-xl border text-sm bg-background/60 border-border/50">
           <Block className="w-4 h-4 rounded" />
           <TextLine className="hidden sm:block w-11" w="100%" />
