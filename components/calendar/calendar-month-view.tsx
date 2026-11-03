@@ -117,7 +117,7 @@ export function CalendarMonthView({
   // into full entries via "Show time in month view" (#666).
   const showChips = !isMobile || showTimeInMonthView;
   const textScale = FONT_SIZE_SCALE[useSettingsStore((state) => state.fontSize)] ?? 1;
-  const { overlayTop, rowHeight, chipHeight, baseRowMinHeight } = monthGridMetrics(isMobile, textScale);
+  const { overlayTop, rowHeight, chipHeight, baseRowMinHeight } = monthGridMetrics(Boolean(isMobile), textScale);
   const {
     dayHeaderKeys,
     getMonthGridDays,
