@@ -14,6 +14,7 @@ import { VAULT_COLLECTION } from '@/lib/plugin-secrets/vault';
 import { ARCHIVE_COLLECTION } from '@/lib/account-archive-storage';
 import { TELEMETRY_COLLECTION } from '@/lib/telemetry/state';
 import { VERSION_CHECK_COLLECTION } from '@/lib/version-check/state';
+import { DEVICES_COLLECTION } from '@/lib/devices/registry';
 
 // An existing single instance's settings, plugin credentials, archives,
 // telemetry and update-check state go into an empty shared store once, as
@@ -43,9 +44,12 @@ beforeEach(() => {
   vi.stubEnv('PLUGIN_SECRETS_DIR', path.join(data, 'plugin-secrets'));
   vi.stubEnv('TELEMETRY_DATA_DIR', path.join(data, 'telemetry'));
   vi.stubEnv('VERSION_CHECK_DATA_DIR', path.join(data, 'version-check'));
+  vi.stubEnv('ADMIN_STATE_DIR', path.join(data, 'admin-state'));
   for (const dir of ['settings/account-archives', 'plugin-secrets', 'telemetry', 'version-check']) {
     mkdirSync(path.join(data, dir), { recursive: true });
   }
+  mkdirSync(path.join(data, 'admin-state', 'devices', hash('f')), { recursive: true });
+  writeFileSync(path.join(data, 'admin-state', 'devices', hash('f'), `${'0'.repeat(32)}.json`), '{"user":"a"}');
   writeFileSync(path.join(data, 'settings', `${hash('a')}.enc`), Buffer.from([1, 2, 3, 4]));
   writeFileSync(path.join(data, 'settings', `${hash('b')}.enc`), Buffer.from([5, 6]));
   writeFileSync(path.join(data, 'settings', `${hash('c')}.enc.tmp`), 'half written');
@@ -78,10 +82,10 @@ describe('importing part data', () => {
     const before = snapshot(data);
 
     expect(await runAll()).toEqual({
-      settings: 2, 'plugin-secrets': 1, 'account-archives': 1, telemetry: 3, 'version-check': 1,
+      settings: 2, 'plugin-secrets': 1, 'account-archives': 1, telemetry: 3, 'version-check': 1, devices: 1,
     });
     expect(await runAll()).toEqual({
-      settings: 0, 'plugin-secrets': 0, 'account-archives': 0, telemetry: 0, 'version-check': 0,
+      settings: 0, 'plugin-secrets': 0, 'account-archives': 0, telemetry: 0, 'version-check': 0, devices: 0,
     });
     expect(snapshot(data)).toEqual(before);
 
@@ -92,6 +96,7 @@ describe('importing part data', () => {
     expect((await store.collection('account-archives', ARCHIVE_COLLECTION).get(hash('d')))?.data.toString()).toBe('{"version":1}');
     expect((await store.collection('telemetry', TELEMETRY_COLLECTION).list()).sort()).toEqual(['.telemetry-id', 'logins.json', 'state.json']);
     expect((await store.collection('version-check', VERSION_CHECK_COLLECTION).get('state.json'))?.data.toString()).toBe('{"status":null}');
+    expect((await store.collection('devices', DEVICES_COLLECTION).get(`${hash('f')}/${'0'.repeat(32)}`))?.data.toString()).toBe('{"user":"a"}');
   });
 
   it('keeps what the store already holds', async () => {

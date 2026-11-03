@@ -38,13 +38,17 @@ const SIGNED_OUT_STORAGE_KEYS = [
   'bulwark-offline-accounts',
   // Which accounts' data waits for a new sign-in, and until when.
   'bulwark-offline-evicted',
+  'bulwark-offline-evicted-owners',
   'bulwark-store-opened',
   // What each account chose to keep, and what's known about its store.
   'bulwark-offline-scope',
   'bulwark-offline-health',
 ];
 
-const LOCAL_STORE_KEYS = new Set(['bulwark-offline-accounts', 'bulwark-offline-evicted', 'bulwark-store-opened', 'bulwark-offline-scope', 'bulwark-offline-health']);
+const LOCAL_STORE_KEYS = new Set(['bulwark-offline-accounts', 'bulwark-offline-evicted', 'bulwark-offline-evicted-owners', 'bulwark-store-opened', 'bulwark-offline-scope', 'bulwark-offline-health']);
+
+/** What's the accounts' but isn't the local store's: a wipe of one account that leaves others signed in takes these too. */
+export const ACCOUNT_STORAGE_KEYS = SIGNED_OUT_STORAGE_KEYS.filter((key) => !LOCAL_STORE_KEYS.has(key));
 
 const SIGNED_OUT_SIGNAL = 'bulwark:signed-out';
 export { SIGNED_OUT_SIGNAL as SIGNED_OUT_KEY };
@@ -131,7 +135,7 @@ export function purgeSignedOutData(options: SignOutCleanupOptions = {}): void {
   // it was encrypted with, and the app shell the service worker kept. Also the
   // database of older versions, in case it wasn't moved yet.
   if (!options.keepLocalStore) {
-    void purgeStoreFiles();
+    void purgeStoreFiles().catch(() => {});
     try {
       window.indexedDB?.deleteDatabase('bulwark-offline');
     } catch {

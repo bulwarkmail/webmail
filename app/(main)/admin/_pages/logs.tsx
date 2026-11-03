@@ -63,6 +63,10 @@ export function LogsPage() {
               <option value="config.update">Config Update</option>
               <option value="config.revert">Config Revert</option>
               <option value="policy.update">Policy Update</option>
+              <option value="device.wipe.request">Device Wipe Requested</option>
+              <option value="device.wipe.confirm">Device Wipe Confirmed</option>
+              <option value="device.wipe.cancel">Device Wipe Cancelled</option>
+              <option value="device.forget">Device Forgotten</option>
             </select>
             <Button type="button" variant="outline" size="sm" className="gap-2" onClick={fetchLogs} disabled={loading}>
               <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin [animation-direction:reverse]')} />

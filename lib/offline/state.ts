@@ -254,6 +254,29 @@ export function clearEvicted(account: string): void {
   writeEvicted(evicted);
 }
 
+/** localStorage: who a dropped account was, only in the desktop app: its plugin secrets are on this device's server, under this. */
+export const OFFLINE_EVICTED_OWNERS_KEY = 'bulwark-offline-evicted-owners';
+
+export interface EvictedOwner {
+  username: string;
+  serverUrl: string;
+}
+
+export function readEvictedOwners(): Record<string, EvictedOwner> {
+  return readRecord<EvictedOwner>(OFFLINE_EVICTED_OWNERS_KEY);
+}
+
+export function rememberEvictedOwner(account: string, owner: EvictedOwner): void {
+  writeRecord(OFFLINE_EVICTED_OWNERS_KEY, { ...readEvictedOwners(), [account]: { username: owner.username, serverUrl: owner.serverUrl } });
+}
+
+export function dropEvictedOwner(account: string): void {
+  const owners = readEvictedOwners();
+  if (!(account in owners)) return;
+  delete owners[account];
+  writeRecord(OFFLINE_EVICTED_OWNERS_KEY, owners);
+}
+
 export function isEvicted(account: string): boolean {
   return account in readEvicted();
 }

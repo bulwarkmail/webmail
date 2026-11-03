@@ -217,6 +217,11 @@ export function setUserCredentialSecret(
   });
 }
 
+/** Everything this user connected, for every plugin. */
+export async function deleteAllUserCredentials(user: VaultUser): Promise<void> {
+  await collection().delete(userKey(user));
+}
+
 /** Remove one credential, or all of a plugin's when credentialId is omitted. */
 export function deleteUserCredentials(user: VaultUser, pluginId: string, credentialId?: string): Promise<void> {
   return modify(user, (data) => {
