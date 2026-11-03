@@ -328,10 +328,11 @@ export function CalendarMonthView({
   }, []);
 
   const handleCellDrop = useCallback(async (e: DragEvent<HTMLDivElement>, day: Date) => {
-    e.preventDefault();
-    setDropDayKey(null);
+    // Anything else (a Pro tab or message moving to this pane) is not ours.
     const json = e.dataTransfer.getData("application/x-calendar-event");
     if (!json) return;
+    e.preventDefault();
+    setDropDayKey(null);
     try {
       const data = JSON.parse(json);
       const originalStart = parseISO(data.originalStart);
