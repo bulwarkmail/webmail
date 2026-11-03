@@ -61,6 +61,7 @@ import { Mailbox } from "@/lib/jmap/types";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useLongPress } from "@/hooks/use-long-press";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { usePaneSize } from "@/hooks/use-pane-size";
 import { IconButton } from "@/components/ui/icon-button";
 import { MailboxContextMenu, type MailboxContextTarget, type MailboxNotificationActions } from "./mailbox-context-menu";
 import { useAccountStore } from '@/stores/account-store';
@@ -1166,7 +1167,12 @@ function SidebarImpl({
   // list behind it.
   const [railHovered, setRailHovered] = useState(false);
   const hoverExpanded = mvShell && sidebarCollapsed && railHovered;
-  const isCollapsed = sidebarCollapsed && !hoverExpanded;
+  // The rail is a desktop thing. Below that the sidebar is a drawer, opened to
+  // read the folder names, whatever the collapse button last said on a wider window.
+  const paneWidth = usePaneSize();
+  const narrowWindow = useMediaQuery('(width < 64rem)');
+  const isDrawer = paneWidth !== null ? paneWidth < 1024 : narrowWindow;
+  const isCollapsed = sidebarCollapsed && !hoverExpanded && !isDrawer;
   const { primaryIdentity: _primaryIdentity, activeAccountId } = useAuthStore(useShallow((state) => ({ primaryIdentity: state.primaryIdentity, activeAccountId: state.activeAccountId })));
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [expandedTags, setExpandedTags] = useState<Set<string>>(new Set());
