@@ -52,6 +52,8 @@ export interface StoreContext {
   scope: StoreScope;
   now(): number;
   emit(event: StoreEvent): void;
+  /** Starts a sync pass, or one more after the running pass. Resolves when they're done. */
+  requestSync(): Promise<void>;
 }
 
 export interface SyncContext extends StoreContext {

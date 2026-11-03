@@ -196,6 +196,7 @@ export class AccountEngine {
       transport: this.transport,
       now: this.now,
       emit: this.emitter,
+      requestSync: () => this.requestSync(),
       stopped: () => this.closed || !this.online,
       syncState: (jmap, type) => this.syncState(jmap, type),
       setSyncState: (jmap, type, row) => this.setSyncState(jmap, type, row),
@@ -210,6 +211,7 @@ export class AccountEngine {
       scope: this.scope,
       now: this.now,
       emit: this.emitter,
+      requestSync: () => this.requestSync(),
     };
   }
 

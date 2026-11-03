@@ -25,7 +25,7 @@ type ChangeKind = 'created' | 'updated' | 'destroyed';
 
 interface Log { kind: ChangeKind; id: string }
 
-class Collection {
+export class Collection {
   log: Log[] = [];
   /** Below this log position, states are refused as truncated. */
   truncatedBelow = 0;
@@ -169,7 +169,7 @@ export class FakeJmap implements JmapTransport {
     return list.map((e) => e.id);
   }
 
-  private handle(name: string, args: Record<string, unknown>): Record<string, unknown> {
+  protected handle(name: string, args: Record<string, unknown>): Record<string, unknown> {
     switch (name) {
       case 'Mailbox/get': {
         const ids = args.ids as string[] | null;
@@ -275,7 +275,7 @@ export class FakeJmap implements JmapTransport {
     return { methodResponses: done };
   }
 
-  async download(): Promise<Uint8Array> {
+  async download(_jmap: string, _blobId: string, _type: string, _name: string): Promise<Uint8Array> {
     return new Uint8Array();
   }
 
