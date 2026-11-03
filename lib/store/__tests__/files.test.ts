@@ -523,6 +523,17 @@ describe('pinned files', () => {
     expect((await engine.areaCall('files.kept', undefined) as any).files[0]).toMatchObject({ kept: false, error: 'overLimit' });
   });
 
+  it('stops a pinned download at the organisation limit, whatever the size says', async () => {
+    const server = new FakeFiles();
+    server.partBytes = 10;
+    const big = server.addFile('big', null, new Uint8Array(1000), { size: null });
+    const { engine } = await synced(server, { orgMaxFileBytes: 50 });
+    await engine.areaCall('files.pin', ref(big.id));
+    await engine.requestSync();
+    expect(server.delivered.get(big.blobId as string)).toBeLessThanOrEqual(60);
+    expect((await engine.areaCall('files.kept', undefined) as any).files[0]).toMatchObject({ kept: false, error: 'tooLarge' });
+  });
+
   it('writes a download in pieces and gives nothing out until it is complete', async () => {
     const server = new FakeFiles();
     const file = server.addFile('big', null, new Uint8Array(3 * 1024 * 1024).fill(7));
