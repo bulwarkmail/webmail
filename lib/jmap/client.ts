@@ -9,6 +9,7 @@ import type { SieveScript, SieveCapabilities } from "./sieve-types";
 import type { BlobBatch, CalendarEventUpdateOptions, CalendarQueryOptions, FileNodeListings, IJMAPClient, KeywordDiscoveryResult, KeywordInfo, KeywordMigration, SearchEmailsResult, SearchRequestOptions, UploadedEmailImport, UploadedEmailImportResult } from "./client-interface";
 import { attachSearchSnippets, filterHasSnippetTerms, snippetFilterFor, type SearchSnippetResult } from "@/lib/search-snippet";
 import { textConditions, textFilter } from "./search-utils";
+import { filterHasTextTerms, LocalSearchMerge } from "./search-merge";
 import { batched, batchedBySize, itemsPerRequest } from "./request-limits";
 import { keywordPointer, pointerToken } from "./patch-pointer";
 import { FirstTouchGate } from "./first-touch-gate";
@@ -1638,6 +1639,7 @@ export class JMAPClient implements IJMAPClient {
    * can be reached again (a reload signs in as usual).
    */
   private offlineOnly = false;
+  private readonly searchMerge = new LocalSearchMerge();
 
   constructor(serverUrl: string, username: string, password: string) {
     this.serverUrl = serverUrl.replace(/\/$/, '');
@@ -4392,61 +4394,111 @@ export class JMAPClient implements IJMAPClient {
   }
 
   async searchEmails(query: string, mailboxId?: string, accountId?: string, limit: number = 50, position: number = 0, options: SearchRequestOptions = {}): Promise<SearchEmailsResult> {
+    // The JMAP "text" filter searches from, to, cc, bcc, subject and body.
+    // Quoted phrases and `word*` prefixes go out as conditions of their
+    // own (see splitSearchText). inMailbox joins them in the same AND: a
+    // FilterOperator cannot also carry property keys.
+    const filter: Record<string, unknown> = mailboxId
+      ? { operator: "AND", conditions: [{ inMailbox: mailboxId }, ...textConditions(query)] }
+      : textFilter(query);
+    return this.searchWithLocal(filter, accountId, limit, position, options);
+  }
+
+  /**
+   * A search on the server, merged with what the local store finds (see
+   * search-merge.ts). Without a store for this client, or when the request
+   * would be answered on this device anyway, it's the server's answer alone.
+   */
+  private searchWithLocal(
+    filter: Record<string, unknown>,
+    accountId: string | undefined,
+    limit: number,
+    position: number,
+    options: SearchRequestOptions,
+  ): Promise<SearchEmailsResult> {
+    const server = (at: number) => this.serverSearch(filter, accountId, limit, at, options);
+    const hooks = getOfflineHooks();
+    const searchLocal = hooks?.searchLocal;
+    if (!searchLocal || this.offlineOnly || hooks.skipNetwork(this) || !filterHasTextTerms(filter)) {
+      return server(position);
+    }
+    return this.searchMerge.run({
+      key: JSON.stringify([accountId ?? null, filter]),
+      limit,
+      position,
+      server,
+      local: async (at) => {
+        const targetAccountId = accountId || this.accountId;
+        const answer = await searchLocal.call(hooks, this, this.searchCalls(targetAccountId, filter, limit, at, false));
+        return answer ? this.searchResultFrom(answer as JMAPResponse, accountId, limit, at) : null;
+      },
+    });
+  }
+
+  private searchCalls(
+    targetAccountId: string,
+    filter: Record<string, unknown>,
+    limit: number,
+    position: number,
+    deferSnippets: boolean | undefined,
+  ): JMAPMethodCall[] {
+    // Searching all folders with no criteria yields an empty FilterCondition,
+    // which servers reject; omit the key entirely to mean "no filter".
+    const hasFilter = Object.keys(filter).length > 0;
+    return [
+      ["Email/query", {
+        accountId: targetAccountId,
+        ...(hasFilter ? { filter } : {}),
+        sort: [{ property: "receivedAt", isAscending: false }],
+        limit,
+        position,
+        calculateTotal: true,
+      }, "0"],
+      ["Email/get", {
+        accountId: targetAccountId,
+        "#ids": { resultOf: "0", name: "Email/query", path: "/ids" },
+        properties: [...EMAIL_LIST_PROPERTIES],
+      }, "1"],
+      ...(deferSnippets ? [] : [this.searchSnippetCall(targetAccountId, hasFilter ? filter : undefined)]),
+    ];
+  }
+
+  private searchResultFrom(response: JMAPResponse, accountId: string | undefined, limit: number, position: number): SearchEmailsResult {
+    assertQuerySucceeded(response, 'Search');
+
+    const queryResponse = response.methodResponses?.[0]?.[1];
+    const emails = applyListAuthenticationResults((response.methodResponses?.[1]?.[1]?.list || []) as Email[]);
+    emails.sort((a: Email, b: Email) =>
+      new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
+    );
+    const total = queryResponse?.total || 0;
+    const hasMore = computeHasMore(position, emails.length, total, limit);
+    attachSearchSnippets(emails, this.searchSnippetsFrom(response));
+
+    // Mirror getEmails: emails fetched from a delegated/shared account carry
+    // bare owner mailbox ids; namespace them to `${ownerId}:${id}` so they line
+    // up with the namespaced ids the store holds for shared mailboxes. The
+    // cross-account views (All mail / Unread / Starred) browse via
+    // advancedSearchEmails, so they need this too. (#281 V3)
+    if (accountId && accountId !== this.accountId) {
+      namespaceMailboxIds(emails, accountId);
+    }
+    return { emails, hasMore, total };
+  }
+
+  private async serverSearch(
+    filter: Record<string, unknown>,
+    accountId: string | undefined,
+    limit: number,
+    position: number,
+    options: SearchRequestOptions,
+  ): Promise<SearchEmailsResult> {
     try {
       const targetAccountId = accountId || this.accountId;
-
-      // The JMAP "text" filter searches from, to, cc, bcc, subject and body.
-      // Quoted phrases and `word*` prefixes go out as conditions of their
-      // own (see splitSearchText). inMailbox joins them in the same AND: a
-      // FilterOperator cannot also carry property keys.
-      let filter: Record<string, unknown>;
-      if (mailboxId) {
-        filter = {
-          operator: "AND",
-          conditions: [
-            { inMailbox: mailboxId },
-            ...textConditions(query),
-          ],
-        };
-      } else {
-        filter = textFilter(query);
-      }
-
-      const response = await this.request([
-        ["Email/query", {
-          accountId: targetAccountId,
-          filter,
-          sort: [{ property: "receivedAt", isAscending: false }],
-          limit,
-          position,
-          calculateTotal: true,
-        }, "0"],
-        ["Email/get", {
-          accountId: targetAccountId,
-          "#ids": { resultOf: "0", name: "Email/query", path: "/ids" },
-          properties: [...EMAIL_LIST_PROPERTIES],
-        }, "1"],
-        ...(options.deferSnippets ? [] : [this.searchSnippetCall(targetAccountId, filter)]),
-      ]);
-      assertQuerySucceeded(response, 'Search');
-
-      const queryResponse = response.methodResponses?.[0]?.[1];
-      const emails = applyListAuthenticationResults((response.methodResponses?.[1]?.[1]?.list || []) as Email[]);
-      emails.sort((a: Email, b: Email) =>
-        new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
-      );
-      const total = queryResponse?.total || 0;
-      const hasMore = computeHasMore(position, emails.length, total, limit);
-      attachSearchSnippets(emails, this.searchSnippetsFrom(response));
-
-      // Mirror getEmails: emails fetched from a delegated/shared account carry
-      // bare owner mailbox ids; namespace them to `${ownerId}:${id}` so they line
-      // up with the namespaced ids the store holds for shared mailboxes. (#281 V3)
-      if (accountId && accountId !== this.accountId) {
-        namespaceMailboxIds(emails, accountId);
-      }
-
-      return { emails, hasMore, total, ...this.deferredSnippets(options, targetAccountId, filter, emails) };
+      const hasFilter = Object.keys(filter).length > 0;
+      const response = await this.request(this.searchCalls(targetAccountId, filter, limit, position, options.deferSnippets));
+      const result = this.searchResultFrom(response, accountId, limit, position);
+      return { ...result, ...this.deferredSnippets(options, targetAccountId, hasFilter ? filter : undefined, result.emails) };
     } catch (error) {
       // Rethrow: an empty result would read as "No results found".
       console.error('Search failed:', error);
@@ -4518,52 +4570,7 @@ export class JMAPClient implements IJMAPClient {
     position: number = 0,
     options: SearchRequestOptions = {},
   ): Promise<SearchEmailsResult> {
-    try {
-      const targetAccountId = accountId || this.accountId;
-
-      // Searching all folders with no criteria yields an empty FilterCondition,
-      // which servers reject; omit the key entirely to mean "no filter".
-      const hasFilter = Object.keys(filter).length > 0;
-
-      const response = await this.request([
-        ["Email/query", {
-          accountId: targetAccountId,
-          ...(hasFilter ? { filter } : {}),
-          sort: [{ property: "receivedAt", isAscending: false }],
-          limit,
-          position,
-          calculateTotal: true,
-        }, "0"],
-        ["Email/get", {
-          accountId: targetAccountId,
-          "#ids": { resultOf: "0", name: "Email/query", path: "/ids" },
-          properties: [...EMAIL_LIST_PROPERTIES],
-        }, "1"],
-        ...(options.deferSnippets ? [] : [this.searchSnippetCall(targetAccountId, hasFilter ? filter : undefined)]),
-      ]);
-      assertQuerySucceeded(response, 'Search');
-
-      const queryResponse = response.methodResponses?.[0]?.[1];
-      const emails = applyListAuthenticationResults((response.methodResponses?.[1]?.[1]?.list || []) as Email[]);
-      emails.sort((a: Email, b: Email) =>
-        new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
-      );
-      const total = queryResponse?.total || 0;
-      const hasMore = computeHasMore(position, emails.length, total, limit);
-      attachSearchSnippets(emails, this.searchSnippetsFrom(response));
-
-      // Namespace shared/delegated-account mailbox ids (see searchEmails). The
-      // cross-account views (All mail / Unread / Starred) browse via this method,
-      // so without it shared emails would carry bare owner ids there. (#281 V3)
-      if (accountId && accountId !== this.accountId) {
-        namespaceMailboxIds(emails, accountId);
-      }
-
-      return { emails, hasMore, total, ...this.deferredSnippets(options, targetAccountId, hasFilter ? filter : undefined, emails) };
-    } catch (error) {
-      console.error('Advanced search failed:', error);
-      throw error;
-    }
+    return this.searchWithLocal(filter, accountId, limit, position, options);
   }
 
   async getEmailFields(
