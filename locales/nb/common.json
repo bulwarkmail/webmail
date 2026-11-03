@@ -5859,6 +5859,10 @@
         "title": "Full tilgang til denne appen",
         "body": "Kjører med de samme rettighetene som selve webmailen. Det kan lese all e-posten din og lagrede nøkler og handle på dine vegne. Tillat dette bare for tillegg du stoler fullt på."
       },
+      "keystore": {
+        "title": "Bruk sertifikater på denne datamaskinen",
+        "body": "Signer og dekrypter meldinger med sertifikater i datamaskinens sertifikatlager eller på et smartkort. Den private nøkkelen blir værende der. Systemet kan be om PIN-koden din."
+      },
       "email_raw_send": {
         "title": "Sende meldinger det har laget selv",
         "body": "Sende ferdige meldinger, for eksempel signerte eller krypterte, fra kontoen din."

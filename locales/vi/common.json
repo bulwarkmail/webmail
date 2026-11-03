@@ -5871,6 +5871,10 @@
         "title": "Toàn quyền truy cập vào ứng dụng này",
         "body": "Chạy với các quyền tương tự như chính webmail. Nó có thể đọc tất cả thư và các khóa được lưu trữ của bạn và hành động thay bạn. Chỉ cho phép điều này đối với các plugin mà bạn hoàn toàn tin tưởng."
       },
+      "keystore": {
+        "title": "Dùng chứng chỉ trên máy tính này",
+        "body": "Ký và giải mã thư bằng chứng chỉ trong kho chứng chỉ của máy tính này hoặc trên thẻ thông minh. Khóa riêng vẫn nằm ở đó. Hệ thống có thể yêu cầu mã PIN của bạn."
+      },
       "email_raw_send": {
         "title": "Gửi thư nó tự tạo",
         "body": "Gửi thư hoàn chỉnh, ví dụ như thư đã ký hoặc mã hóa, từ tài khoản của bạn."

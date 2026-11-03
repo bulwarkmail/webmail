@@ -5859,6 +5859,10 @@
         "title": "Täielik juurdepääs sellele rakendusele",
         "body": "Töötab samade õigustega kui veebimeil ise. See saab lugeda kogu sinu posti ja salvestatud võtmeid ning tegutseda sinu nimel. Luba see ainult pistikprogrammidele, mida täielikult usaldad."
       },
+      "keystore": {
+        "title": "Kasuta selle arvuti sertifikaate",
+        "body": "Allkirjastab ja dekrüpteerib sõnumeid selle arvuti sertifikaadihoidlas või kiipkaardil olevate sertifikaatidega. Privaatvõti jääb sinna. Süsteem võib küsida teie PIN-koodi."
+      },
       "email_raw_send": {
         "title": "Saada ise koostatud kirju",
         "body": "Saata sinu kontolt täielikke kirju, näiteks allkirjastatud või krüpteeritud."

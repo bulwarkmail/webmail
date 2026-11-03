@@ -5859,6 +5859,10 @@
         "title": "Acceso total a esta aplicación",
         "body": "Se ejecuta con los mismos derechos que el propio webmail. Puede leer todo tu correo y tus claves guardadas y actuar en tu nombre. Permítelo solo en complementos en los que confíes plenamente."
       },
+      "keystore": {
+        "title": "Usar certificados de este ordenador",
+        "body": "Firma y descifra mensajes con certificados del almacén de certificados de este ordenador o de una tarjeta inteligente. La clave privada se queda allí. El sistema puede pedirle su PIN."
+      },
       "email_raw_send": {
         "title": "Enviar mensajes que creó él mismo",
         "body": "Enviar mensajes completos, por ejemplo firmados o cifrados, desde tu cuenta."

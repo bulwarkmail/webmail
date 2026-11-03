@@ -5859,6 +5859,10 @@
         "title": "Bu uygulamaya tam erişim",
         "body": "Webmail'in kendisiyle aynı haklarla çalışır. Tüm e-postalarınızı ve kayıtlı anahtarlarınızı okuyabilir, sizin adınıza işlem yapabilir. Buna yalnızca tamamen güvendiğiniz eklentiler için izin verin."
       },
+      "keystore": {
+        "title": "Bu bilgisayardaki sertifikaları kullan",
+        "body": "İletileri bu bilgisayarın sertifika deposundaki veya akıllı karttaki sertifikalarla imzalar ve şifresini çözer. Özel anahtar orada kalır. Sistem PIN kodunuzu isteyebilir."
+      },
       "email_raw_send": {
         "title": "Kendi oluşturduğu iletileri gönderme",
         "body": "Hesabınızdan imzalı veya şifreli iletiler gibi eksiksiz iletiler gönderme."

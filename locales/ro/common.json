@@ -5859,6 +5859,10 @@
         "title": "Acces complet la această aplicație",
         "body": "Rulează cu aceleași drepturi ca webmailul însuși. Poate citi toate e-mailurile și cheile stocate și poate acționa în numele dvs. Permiteți acest lucru doar pluginurilor în care aveți încredere deplină."
       },
+      "keystore": {
+        "title": "Folosește certificatele de pe acest computer",
+        "body": "Semnează și decriptează mesaje cu certificatele din depozitul de certificate al acestui computer sau de pe un smart card. Cheia privată rămâne acolo. Sistemul vă poate cere codul PIN."
+      },
       "email_raw_send": {
         "title": "Trimiterea mesajelor create de el însuși",
         "body": "Trimite mesaje complete, de exemplu semnate sau criptate, din contul dvs."

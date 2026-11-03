@@ -5859,6 +5859,10 @@
         "title": "Teljes hozzáférés az alkalmazáshoz",
         "body": "Ugyanazokkal a jogokkal fut, mint maga a webmail. Olvashatja az összes leveledet és tárolt kulcsodat, és a nevedben járhat el. Csak olyan bővítménynek engedélyezd, amelyben teljesen megbízol."
       },
+      "keystore": {
+        "title": "A számítógépen lévő tanúsítványok használata",
+        "body": "Üzenetek aláírása és visszafejtése a számítógép tanúsítványtárolójában vagy intelligens kártyán lévő tanúsítványokkal. A titkos kulcs ott marad. A rendszer kérheti a PIN-kódját."
+      },
       "email_raw_send": {
         "title": "Saját maga által összeállított üzenetek küldése",
         "body": "Teljes üzeneteket küld a fiókodból, például aláírt vagy titkosított üzeneteket."

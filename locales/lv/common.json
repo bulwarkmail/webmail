@@ -5859,6 +5859,10 @@
         "title": "Pilna piekļuve lietotnei",
         "body": "Darbojas ar tādām pašām tiesībām kā pats webmail. Var lasīt visu jūsu pastu un saglabātās atslēgas un rīkoties jūsu vārdā. Atļaujiet to tikai spraudņiem, kuriem pilnībā uzticaties."
       },
+      "keystore": {
+        "title": "Izmantot šī datora sertifikātus",
+        "body": "Paraksta un atšifrē ziņojumus ar sertifikātiem, kas atrodas šī datora sertifikātu krātuvē vai viedkartē. Privātā atslēga paliek tur. Sistēma var prasīt jūsu PIN kodu."
+      },
       "email_raw_send": {
         "title": "Sūtīt paša izveidotas vēstules",
         "body": "Sūtīt no jūsu konta pilnīgas vēstules, piemēram, parakstītas vai šifrētas."

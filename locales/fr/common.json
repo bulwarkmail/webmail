@@ -5859,6 +5859,10 @@
         "title": "Accès complet à cette application",
         "body": "S'exécute avec les mêmes droits que le webmail lui-même. Il peut lire tous vos e-mails et vos clés enregistrées, et agir en votre nom. N'autorisez ceci que pour des plugins en qui vous avez entièrement confiance."
       },
+      "keystore": {
+        "title": "Utiliser les certificats de cet ordinateur",
+        "body": "Signe et déchiffre des messages avec les certificats du magasin de certificats de cet ordinateur ou d'une carte à puce. La clé privée y reste. Le système peut vous demander votre code PIN."
+      },
       "email_raw_send": {
         "title": "Envoyer des messages qu'il a lui-même créés",
         "body": "Envoyer des messages complets, par exemple signés ou chiffrés, depuis votre compte."

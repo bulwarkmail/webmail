@@ -5859,6 +5859,10 @@
         "title": "Volledige toegang tot deze app",
         "body": "Draait met dezelfde rechten als de webmail zelf. Hij kan al je e-mail en opgeslagen sleutels lezen en namens jou handelen. Sta dit alleen toe voor plug-ins die je volledig vertrouwt."
       },
+      "keystore": {
+        "title": "Certificaten op deze computer gebruiken",
+        "body": "Ondertekent en ontsleutelt berichten met certificaten uit het certificaatarchief van deze computer of van een smartcard. De privésleutel blijft daar. Het systeem kan om uw pincode vragen."
+      },
       "email_raw_send": {
         "title": "Zelf samengestelde berichten verzenden",
         "body": "Volledige berichten, bijvoorbeeld ondertekende of versleutelde, vanaf je account verzenden."

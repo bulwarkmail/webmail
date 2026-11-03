@@ -5859,6 +5859,10 @@
         "title": "Accés complet a aquesta aplicació",
         "body": "S'executa amb els mateixos drets que el mateix webmail. Pot llegir tot el vostre correu i les claus desades i actuar en nom vostre. Permeteu-ho només als connectors en què confieu plenament."
       },
+      "keystore": {
+        "title": "Utilitzar els certificats d'aquest ordinador",
+        "body": "Signa i desxifra missatges amb certificats del magatzem de certificats d'aquest ordinador o d'una targeta intel·ligent. La clau privada es queda allà. El sistema us pot demanar el PIN."
+      },
       "email_raw_send": {
         "title": "Enviar missatges que ha creat ell mateix",
         "body": "Enviar missatges complets, per exemple signats o xifrats, des del vostre compte."

@@ -5859,6 +5859,10 @@
         "title": "Pełny dostęp do aplikacji",
         "body": "Działa z tymi samymi uprawnieniami co sam webmail. Może czytać całą Twoją pocztę i zapisane klucze oraz działać w Twoim imieniu. Zezwalaj na to tylko wtyczkom, którym w pełni ufasz."
       },
+      "keystore": {
+        "title": "Używanie certyfikatów z tego komputera",
+        "body": "Podpisuje i odszyfrowuje wiadomości certyfikatami z magazynu certyfikatów tego komputera lub z karty inteligentnej. Klucz prywatny tam pozostaje. System może poprosić o kod PIN."
+      },
       "email_raw_send": {
         "title": "Wysyłanie wiadomości utworzonych przez wtyczkę",
         "body": "Wysyła z Twojego konta kompletne wiadomości, na przykład podpisane lub zaszyfrowane."

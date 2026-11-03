@@ -5859,6 +5859,10 @@
         "title": "Acesso total a este aplicativo",
         "body": "É executado com os mesmos direitos do próprio webmail. Pode ler todos os seus e-mails e chaves armazenadas e agir em seu nome. Só permita isto para plugins em que você confia totalmente."
       },
+      "keystore": {
+        "title": "Usar certificados deste computador",
+        "body": "Assina e desencripta mensagens com certificados do repositório de certificados deste computador ou de um cartão inteligente. A chave privada fica lá. O sistema pode pedir o seu PIN."
+      },
       "email_raw_send": {
         "title": "Enviar mensagens criadas por ele mesmo",
         "body": "Enviar mensagens completas, por exemplo assinadas ou criptografadas, a partir da sua conta."

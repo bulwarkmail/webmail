@@ -5859,6 +5859,10 @@
         "title": "Vollzugriff auf diese App",
         "body": "Läuft mit denselben Rechten wie das Webmail selbst. Es kann alle Ihre E-Mails und gespeicherten Schlüssel lesen und in Ihrem Namen handeln. Erlauben Sie das nur Plugins, denen Sie voll vertrauen."
       },
+      "keystore": {
+        "title": "Zertifikate auf diesem Computer verwenden",
+        "body": "Nachrichten mit Zertifikaten aus dem Zertifikatspeicher dieses Computers oder von einer Smartcard signieren und entschlüsseln. Der private Schlüssel bleibt dort. Das System fragt eventuell nach Ihrer PIN."
+      },
       "email_raw_send": {
         "title": "Selbst erstellte Nachrichten senden",
         "body": "Vollständige Nachrichten, zum Beispiel signierte oder verschlüsselte, von Ihrem Konto senden."

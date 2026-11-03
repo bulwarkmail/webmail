@@ -5859,6 +5859,10 @@
         "title": "Fuld adgang til denne app",
         "body": "Kører med de samme rettigheder som selve webmailen. Det kan læse alle dine e-mails og gemte nøgler og handle på dine vegne. Tillad det kun for plugins, du stoler fuldt ud på."
       },
+      "keystore": {
+        "title": "Brug certifikater på denne computer",
+        "body": "Signer og dekrypter beskeder med certifikater i computerens certifikatlager eller på et chipkort. Den private nøgle bliver, hvor den er. Systemet kan bede om din pinkode."
+      },
       "email_raw_send": {
         "title": "Sende beskeder, det selv har lavet",
         "body": "Sende færdige beskeder, f.eks. signerede eller krypterede, fra din konto."

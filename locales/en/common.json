@@ -5859,6 +5859,10 @@
         "title": "Full access to this app",
         "body": "Runs with the same rights as the webmail itself. It can read all your mail and stored keys and act for you. Only allow this for plugins you fully trust."
       },
+      "keystore": {
+        "title": "Use certificates on this computer",
+        "body": "Sign and decrypt messages with certificates in this computer's certificate store or on a smart card. The private key stays there. Your system may ask for your PIN."
+      },
       "email_raw_send": {
         "title": "Send messages it built itself",
         "body": "Send complete messages, for example signed or encrypted ones, from your account."

@@ -5859,6 +5859,10 @@
         "title": "Accesso completo a questa app",
         "body": "Funziona con gli stessi diritti della webmail stessa. Può leggere tutta la tua posta e le chiavi salvate e agire per conto tuo. Consentilo solo ai plugin di cui ti fidi completamente."
       },
+      "keystore": {
+        "title": "Usare i certificati di questo computer",
+        "body": "Firma e decifra i messaggi con i certificati nell'archivio certificati di questo computer o su una smart card. La chiave privata resta lì. Il sistema può chiedere il PIN."
+      },
       "email_raw_send": {
         "title": "Inviare messaggi creati da sé",
         "body": "Inviare messaggi completi, ad esempio firmati o cifrati, dal tuo account."

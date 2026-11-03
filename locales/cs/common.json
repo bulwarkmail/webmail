@@ -5859,6 +5859,10 @@
         "title": "Plný přístup k této aplikaci",
         "body": "Běží se stejnými právy jako samotný webmail. Může číst veškerou vaši poštu a uložené klíče a jednat vaším jménem. Povolte to jen pluginům, kterým plně důvěřujete."
       },
+      "keystore": {
+        "title": "Používat certifikáty v tomto počítači",
+        "body": "Podepisuje a dešifruje zprávy pomocí certifikátů v úložišti certifikátů tohoto počítače nebo na čipové kartě. Soukromý klíč zůstává tam. Systém si může vyžádat váš PIN."
+      },
       "email_raw_send": {
         "title": "Odesílat zprávy, které sám vytvořil",
         "body": "Odesílá z vašeho účtu kompletní zprávy, například podepsané nebo šifrované."
