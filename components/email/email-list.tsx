@@ -1150,9 +1150,9 @@ export function EmailList({
 
       {/* Empty Folder Banner for Junk/Trash */}
       {isEmptyableFolder && emails.length > 0 && !hasSelection && (
-        <div className="px-4 py-2 border-b border-border bg-muted/30 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <AlertTriangle className="w-4 h-4" />
+        <div className="px-4 py-2 border-b border-border bg-muted/30 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0 text-sm text-muted-foreground">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>{currentMailbox?.role === 'junk' ? t('empty_folder.junk_hint') : t('empty_folder.trash_hint')}</span>
           </div>
           <Button
@@ -1160,7 +1160,7 @@ export function EmailList({
             size="sm"
             onClick={handleEmptyFolder}
             disabled={isProcessing}
-            className="text-destructive border-destructive/30 hover:bg-destructive/10 text-xs"
+            className="shrink-0 whitespace-nowrap text-destructive border-destructive/30 hover:bg-destructive/10 text-xs"
           >
             {isProcessing ? (
               <Loader2 className="w-3 h-3 animate-spin me-1" />
