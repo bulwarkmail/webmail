@@ -280,7 +280,7 @@ export function SettingItem({ label, description, children, locked, advanced, ne
       </div>
       <SettingLabelContext.Provider value={labelId}>
         {/* The admin's value stays readable; inert keeps mouse and keyboard off it. */}
-        <div ref={controlsRef} className={cn("flex-shrink-0 min-w-0 max-w-full sm:max-w-[70%]", locked && "opacity-60")} inert={locked || undefined}>{children}</div>
+        <div ref={controlsRef} className={cn("flex-shrink-0 min-w-0 max-w-full sm:max-w-[70%] wrap-anywhere", locked && "opacity-60")} inert={locked || undefined}>{children}</div>
       </SettingLabelContext.Provider>
     </div>
   );
