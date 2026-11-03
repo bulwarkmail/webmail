@@ -14,6 +14,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { movedEventUpdates } from "@/lib/calendar-participants";
 import { useSettingsStore, type MonthTimedEventStyle } from "@/stores/settings-store";
+import { FONT_SIZE_SCALE } from "@/lib/accessibility-settings";
 import type { PendingEventPreview } from "./event-modal";
 import { toast } from "@/stores/toast-store";
 import { useCalendarLocale } from "@/hooks/use-calendar-locale";
@@ -61,6 +62,22 @@ interface CalendarMonthViewProps extends ScrollWindowViewProps {
   onMoveEvent?: MoveEventHandler;
 }
 
+/**
+ * The month grid's rows are positioned in pixels, so they follow the text size
+ * by hand: at a fixed height large text was cut off and ran into the day number.
+ */
+export function monthGridMetrics(isMobile: boolean, textScale: number) {
+  const scale = Math.max(1, textScale);
+  const overlayTop = Math.round((isMobile ? 34 : 30) * scale);
+  // 24px chips with a mouse (WCAG 2.5.8); touch screens show dots.
+  const rowHeight = Math.round((isMobile ? 18 : 26) * scale);
+  const chipHeight = rowHeight - 2;
+  // A wide-screen week row fits at least three entries and the "N more"
+  // link, so a short window (1280x720) does not cut every day to one.
+  const baseRowMinHeight = isMobile ? 52 : overlayTop + 4 + 8 + 4 * rowHeight;
+  return { overlayTop, rowHeight, chipHeight, baseRowMinHeight };
+}
+
 export function CalendarMonthView({
   selectedDate,
   focus,
@@ -99,13 +116,8 @@ export function CalendarMonthView({
   // On mobile the month view collapses events to dots unless the user opted
   // into full entries via "Show time in month view" (#666).
   const showChips = !isMobile || showTimeInMonthView;
-  const overlayTop = isMobile ? 34 : 30;
-  // 24px chips with a mouse (WCAG 2.5.8); touch screens show dots.
-  const rowHeight = isMobile ? 18 : 26;
-  const chipHeight = rowHeight - 2;
-  // A wide-screen week row fits at least three entries and the "N more"
-  // link, so a short window (1280x720) does not cut every day to one.
-  const baseRowMinHeight = isMobile ? 52 : overlayTop + 4 + 8 + 4 * rowHeight;
+  const textScale = FONT_SIZE_SCALE[useSettingsStore((state) => state.fontSize)] ?? 1;
+  const { overlayTop, rowHeight, chipHeight, baseRowMinHeight } = monthGridMetrics(isMobile, textScale);
   const {
     dayHeaderKeys,
     getMonthGridDays,
