@@ -104,7 +104,15 @@ export function watchTitlebarArea(listener: (area: TitlebarArea | null) => void)
   if (!current) return () => {};
   const onChange = () => listener(readTitlebarArea());
   current.addEventListener('geometrychange', onChange);
-  return () => current.removeEventListener('geometrychange', onChange);
+  // Electron sends geometrychange before the page has its new width, so the
+  // controls' share (width minus the strip) came out of the old width: 393 px
+  // at 1024, 361 at 800, the toolbar folding with room to spare (mail-p2-16).
+  // The resize that follows has the new width.
+  window.addEventListener('resize', onChange);
+  return () => {
+    current.removeEventListener('geometrychange', onChange);
+    window.removeEventListener('resize', onChange);
+  };
 }
 
 const ROW_CANDIDATES = '[data-window-top-row], [data-composer-header], header, div.h-14, div.min-h-14, div.h-12, div.h-16, div.min-h-16';
