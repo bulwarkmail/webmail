@@ -3910,7 +3910,14 @@
     "scheduled_for": "已安排在 {when} 发送",
     "sending": "正在发送…",
     "sent": "已发送",
-    "view": "查看"
+    "view": "查看",
+    "picker_button": "从联系人添加",
+    "picker_title": "添加收件人",
+    "tab_contacts": "联系人",
+    "tab_directory": "通讯录目录",
+    "contacts_empty_title": "还没有联系人",
+    "contacts_empty_hint": "你在联系人中保存的人会显示在这里。",
+    "contacts_no_match": "没有符合搜索的联系人"
   },
   "org_templates": {
     "section_personal": "我的模板",

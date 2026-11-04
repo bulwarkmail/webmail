@@ -3910,7 +3910,14 @@
     "scheduled_for": "{when}-д илгээхээр товлосон",
     "sending": "Илгээж байна…",
     "sent": "Илгээгдлээ",
-    "view": "Харах"
+    "view": "Харах",
+    "picker_button": "Харилцагчдаас нэмэх",
+    "picker_title": "Хүлээн авагч нэмэх",
+    "tab_contacts": "Харилцагчид",
+    "tab_directory": "Лавлах",
+    "contacts_empty_title": "Одоогоор харилцагч алга",
+    "contacts_empty_hint": "Харилцагчдад хадгалсан хүмүүс энд харагдана.",
+    "contacts_no_match": "Хайлтад тохирох харилцагч алга"
   },
   "org_templates": {
     "section_personal": "Миний загварууд",

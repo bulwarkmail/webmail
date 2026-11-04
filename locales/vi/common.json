@@ -3922,7 +3922,14 @@
     "scheduled_for": "Đã lên lịch gửi lúc {when}",
     "sending": "Đang gửi…",
     "sent": "Đã gửi",
-    "view": "Xem"
+    "view": "Xem",
+    "picker_button": "Thêm từ danh bạ",
+    "picker_title": "Thêm người nhận",
+    "tab_contacts": "Danh bạ",
+    "tab_directory": "Danh bạ tổ chức",
+    "contacts_empty_title": "Chưa có liên hệ nào",
+    "contacts_empty_hint": "Những người bạn lưu trong Danh bạ sẽ hiện ở đây.",
+    "contacts_no_match": "Không có liên hệ nào khớp với tìm kiếm"
   },
   "org_templates": {
     "section_personal": "Mẫu của tôi",

@@ -3910,7 +3910,14 @@
     "scheduled_for": "Programmato per {when}",
     "sending": "Invio in corso…",
     "sent": "Inviato",
-    "view": "Visualizza"
+    "view": "Visualizza",
+    "picker_button": "Aggiungi dai contatti",
+    "picker_title": "Aggiungi destinatari",
+    "tab_contacts": "Contatti",
+    "tab_directory": "Rubrica aziendale",
+    "contacts_empty_title": "Ancora nessun contatto",
+    "contacts_empty_hint": "Le persone salvate in Contatti compaiono qui.",
+    "contacts_no_match": "Nessun contatto corrisponde alla ricerca"
   },
   "org_templates": {
     "section_personal": "I miei modelli",

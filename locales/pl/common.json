@@ -3910,7 +3910,14 @@
     "scheduled_for": "Zaplanowano na {when}",
     "sending": "Wysyłanie…",
     "sent": "Wysłano",
-    "view": "Pokaż"
+    "view": "Pokaż",
+    "picker_button": "Dodaj z kontaktów",
+    "picker_title": "Dodaj odbiorców",
+    "tab_contacts": "Kontakty",
+    "tab_directory": "Katalog",
+    "contacts_empty_title": "Brak kontaktów",
+    "contacts_empty_hint": "Tutaj pojawią się osoby zapisane w Kontaktach.",
+    "contacts_no_match": "Żaden kontakt nie pasuje do wyszukiwania"
   },
   "org_templates": {
     "section_personal": "Moje szablony",

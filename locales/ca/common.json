@@ -3910,7 +3910,14 @@
     "scheduled_for": "Programat per a {when}",
     "sending": "S'està enviant…",
     "sent": "Enviat",
-    "view": "Mostra"
+    "view": "Mostra",
+    "picker_button": "Afegeix des dels contactes",
+    "picker_title": "Afegeix destinataris",
+    "tab_contacts": "Contactes",
+    "tab_directory": "Directori",
+    "contacts_empty_title": "Encara no hi ha contactes",
+    "contacts_empty_hint": "Aquí apareixen les persones que deses a Contactes.",
+    "contacts_no_match": "Cap contacte coincideix amb la cerca"
   },
   "org_templates": {
     "section_personal": "Les meves plantilles",

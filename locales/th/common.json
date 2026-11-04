@@ -1161,7 +1161,14 @@
     "scheduled_for": "ตั้งเวลาส่งไว้ที่ {when}",
     "sending": "กำลังส่ง…",
     "sent": "ส่งแล้ว",
-    "view": "ดู"
+    "view": "ดู",
+    "picker_button": "เพิ่มจากผู้ติดต่อ",
+    "picker_title": "เพิ่มผู้รับ",
+    "tab_contacts": "ผู้ติดต่อ",
+    "tab_directory": "ไดเรกทอรีกลาง",
+    "contacts_empty_title": "ยังไม่มีผู้ติดต่อ",
+    "contacts_empty_hint": "คนที่คุณบันทึกไว้ในผู้ติดต่อจะแสดงที่นี่",
+    "contacts_no_match": "ไม่มีผู้ติดต่อที่ตรงกับการค้นหา"
   },
   "org_templates": {
     "section_personal": "แม่แบบของฉัน",

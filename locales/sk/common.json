@@ -3910,7 +3910,14 @@
     "scheduled_for": "Naplánované na {when}",
     "sending": "Odosielanie…",
     "sent": "Odoslané",
-    "view": "Zobraziť"
+    "view": "Zobraziť",
+    "picker_button": "Pridať z kontaktov",
+    "picker_title": "Pridať príjemcov",
+    "tab_contacts": "Kontakty",
+    "tab_directory": "Adresár organizácie",
+    "contacts_empty_title": "Zatiaľ žiadne kontakty",
+    "contacts_empty_hint": "Tu sa zobrazia ľudia, ktorých uložíte do Kontaktov.",
+    "contacts_no_match": "Vyhľadávaniu nezodpovedá žiadny kontakt"
   },
   "org_templates": {
     "section_personal": "Moje šablóny",

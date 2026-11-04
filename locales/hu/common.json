@@ -3910,7 +3910,14 @@
     "scheduled_for": "Ütemezve: {when}",
     "sending": "Küldés…",
     "sent": "Elküldve",
-    "view": "Megtekintés"
+    "view": "Megtekintés",
+    "picker_button": "Hozzáadás a névjegyekből",
+    "picker_title": "Címzettek hozzáadása",
+    "tab_contacts": "Névjegyek",
+    "tab_directory": "Címtár",
+    "contacts_empty_title": "Még nincsenek névjegyek",
+    "contacts_empty_hint": "A névjegyekbe mentett személyek itt jelennek meg.",
+    "contacts_no_match": "Egy névjegy sem felel meg a keresésnek"
   },
   "org_templates": {
     "section_personal": "Saját sablonok",

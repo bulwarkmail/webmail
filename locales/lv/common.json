@@ -3910,7 +3910,14 @@
     "scheduled_for": "Ieplānots: {when}",
     "sending": "Sūta…",
     "sent": "Nosūtīts",
-    "view": "Skatīt"
+    "view": "Skatīt",
+    "picker_button": "Pievienot no kontaktiem",
+    "picker_title": "Pievienot saņēmējus",
+    "tab_contacts": "Kontakti",
+    "tab_directory": "Katalogs",
+    "contacts_empty_title": "Vēl nav kontaktu",
+    "contacts_empty_hint": "Šeit redzami cilvēki, kurus saglabājat kontaktos.",
+    "contacts_no_match": "Meklēšanai neatbilst neviens kontakts"
   },
   "org_templates": {
     "section_personal": "Manas veidnes",

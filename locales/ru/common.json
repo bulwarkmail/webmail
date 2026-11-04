@@ -3910,7 +3910,14 @@
     "scheduled_for": "Запланировано на {when}",
     "sending": "Отправка…",
     "sent": "Отправлено",
-    "view": "Открыть"
+    "view": "Открыть",
+    "picker_button": "Добавить из контактов",
+    "picker_title": "Добавить получателей",
+    "tab_contacts": "Контакты",
+    "tab_directory": "Справочник",
+    "contacts_empty_title": "Контактов пока нет",
+    "contacts_empty_hint": "Здесь появятся люди, которых вы сохраните в контактах.",
+    "contacts_no_match": "Нет контактов, подходящих под запрос"
   },
   "org_templates": {
     "section_personal": "Мои шаблоны",

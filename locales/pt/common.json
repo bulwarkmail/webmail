@@ -3910,7 +3910,14 @@
     "scheduled_for": "Agendado para {when}",
     "sending": "Enviando…",
     "sent": "Enviado",
-    "view": "Ver"
+    "view": "Ver",
+    "picker_button": "Adicionar dos contatos",
+    "picker_title": "Adicionar destinatários",
+    "tab_contacts": "Contatos",
+    "tab_directory": "Diretório",
+    "contacts_empty_title": "Nenhum contato ainda",
+    "contacts_empty_hint": "As pessoas que você salvar em Contatos aparecem aqui.",
+    "contacts_no_match": "Nenhum contato corresponde à sua pesquisa"
   },
   "org_templates": {
     "section_personal": "Meus modelos",

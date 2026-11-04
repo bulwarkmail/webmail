@@ -3910,7 +3910,14 @@
     "scheduled_for": "Ajastatud: {when}",
     "sending": "Saatmine…",
     "sent": "Saadetud",
-    "view": "Vaata"
+    "view": "Vaata",
+    "picker_button": "Lisa kontaktidest",
+    "picker_title": "Lisa saajaid",
+    "tab_contacts": "Kontaktid",
+    "tab_directory": "Kataloog",
+    "contacts_empty_title": "Kontakte veel pole",
+    "contacts_empty_hint": "Siin kuvatakse inimesed, kelle salvestate kontaktidesse.",
+    "contacts_no_match": "Otsingule ei vasta ükski kontakt"
   },
   "org_templates": {
     "section_personal": "Minu mallid",

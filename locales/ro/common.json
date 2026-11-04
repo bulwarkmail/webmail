@@ -3910,7 +3910,14 @@
     "scheduled_for": "Programat pentru {when}",
     "sending": "Se trimite…",
     "sent": "Trimis",
-    "view": "Vezi"
+    "view": "Vezi",
+    "picker_button": "Adaugă din contacte",
+    "picker_title": "Adaugă destinatari",
+    "tab_contacts": "Contacte",
+    "tab_directory": "Director",
+    "contacts_empty_title": "Încă nu există contacte",
+    "contacts_empty_hint": "Aici apar persoanele pe care le salvați în Contacte.",
+    "contacts_no_match": "Niciun contact nu corespunde căutării"
   },
   "org_templates": {
     "section_personal": "Șabloanele mele",

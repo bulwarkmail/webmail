@@ -1775,6 +1775,9 @@ export function EmailComposer({
   // Whether a Sent mailbox is known so the on-demand server search is worth
   // offering (falls back to hiding the "search the server" row otherwise).
   const canSearchServer = useContactStore((s) => s.sentMailboxId != null);
+  // The recipient picker: the user's contacts, and the server's directory.
+  const hasContacts = useContactStore((s) => (s.contacts?.length ?? 0) > 0);
+  const tSend = useTranslations('compose_send');
   const addToTrustedSendersBook = useContactStore((s) => s.addToTrustedSendersBook);
   const addTrustedSender = useSettingsStore((s) => s.addTrustedSender);
   const trustedSendersAddressBook = useSettingsStore((s) => s.trustedSendersAddressBook);
@@ -5091,15 +5094,15 @@ export function EmailComposer({
               onMoveChip={handleMoveChip}
             />
             <div className="flex gap-0.5 shrink-0">
-              {activeClient?.supportsPrincipals?.() && (
+              {(hasContacts || activeClient?.supportsPrincipals?.()) && (
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowDirectoryPicker(true)}
                   className="h-7 w-7 p-0"
-                  title={t('select_from_directory')}
-                  aria-label={t('select_from_directory')}
+                  title={tSend('picker_button')}
+                  aria-label={tSend('picker_button')}
                   data-testid="composer-directory-picker"
                 >
                   <BookUser className="w-4 h-4" />

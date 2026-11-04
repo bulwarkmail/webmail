@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import React from 'react';
 import type { Editor } from '@tiptap/core';
 import { useAuthStore } from '@/stores/auth-store';
+import { useContactStore } from '@/stores/contact-store';
 import { EmailComposer } from '../email-composer';
 import { useSettingsStore } from '@/stores/settings-store';
 
@@ -544,6 +545,22 @@ describe('composer with the @ recipient list', () => {
     // fireEvent returns false when the handler stopped the key's default action.
     expect(fireEvent.keyDown(to, { key: 'Backspace' })).toBe(false);
     expect(to.value).toBe('Sarah Kim <sarah@example.com>');
+  });
+
+  // compose-17: the button was there only with a server directory, so
+  // contacts alone were never offered.
+  it('offers the recipient picker for the contacts when the server has no directory', async () => {
+    const contactState = (useContactStore as unknown as { getState: () => { contacts: unknown[] } }).getState();
+    contactState.contacts = [{ id: 'c1', name: { full: 'Zoe Fischer' }, emails: { e: { address: 'zoe@example.com' } } }];
+    try {
+      await renderComposer();
+      const button = screen.getByTestId('composer-directory-picker');
+      expect(button).toHaveAccessibleName('picker_button');
+      fireEvent.click(button);
+      expect(screen.getByRole('dialog', { name: 'directory' })).toBeInTheDocument();
+    } finally {
+      contactState.contacts = [];
+    }
   });
 
   // The directory picker is drawn inside the composer itself, not portaled.

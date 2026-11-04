@@ -3807,7 +3807,14 @@
     "scheduled_for": "מתוזמן ל-{when}",
     "sending": "שולח…",
     "sent": "נשלח",
-    "view": "הצג"
+    "view": "הצג",
+    "picker_button": "הוסף מאנשי הקשר",
+    "picker_title": "הוספת נמענים",
+    "tab_contacts": "אנשי קשר",
+    "tab_directory": "ספרייה",
+    "contacts_empty_title": "אין עדיין אנשי קשר",
+    "contacts_empty_hint": "אנשים שתשמרו באנשי הקשר יופיעו כאן.",
+    "contacts_no_match": "אין איש קשר שתואם לחיפוש"
   },
   "org_templates": {
     "section_personal": "התבניות שלי",

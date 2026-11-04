@@ -3910,7 +3910,14 @@
     "scheduled_for": "مجدولة في {when}",
     "sending": "جارٍ الإرسال…",
     "sent": "تم الإرسال",
-    "view": "عرض"
+    "view": "عرض",
+    "picker_button": "إضافة من جهات الاتصال",
+    "picker_title": "إضافة مستلمين",
+    "tab_contacts": "جهات الاتصال",
+    "tab_directory": "الدليل",
+    "contacts_empty_title": "لا توجد جهات اتصال بعد",
+    "contacts_empty_hint": "يظهر هنا الأشخاص الذين تحفظهم في جهات الاتصال.",
+    "contacts_no_match": "لا توجد جهة اتصال تطابق بحثك"
   },
   "org_templates": {
     "section_personal": "قوالبي",

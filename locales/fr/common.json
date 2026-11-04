@@ -3910,7 +3910,14 @@
     "scheduled_for": "Programmé pour {when}",
     "sending": "Envoi…",
     "sent": "Envoyé",
-    "view": "Afficher"
+    "view": "Afficher",
+    "picker_button": "Ajouter depuis les contacts",
+    "picker_title": "Ajouter des destinataires",
+    "tab_contacts": "Contacts",
+    "tab_directory": "Annuaire",
+    "contacts_empty_title": "Aucun contact pour l'instant",
+    "contacts_empty_hint": "Les personnes enregistrées dans Contacts s'affichent ici.",
+    "contacts_no_match": "Aucun contact ne correspond à votre recherche"
   },
   "org_templates": {
     "section_personal": "Mes modèles",
