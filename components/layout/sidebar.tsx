@@ -169,6 +169,12 @@ interface SidebarProps {
    *  to that login and opens it, since shared mail is reached through the
    *  active login. */
   onLoginSharedMailboxSelect?: (loginId: string, mailboxId: string) => void;
+  /**
+   * The folded column's tree is open over the page as a drawer (default
+   * layout): called with a function that closes it, and with null once it is
+   * closed. The caller dims the page behind it.
+   */
+  onDrawerChange?: (close: (() => void) | null) => void;
 }
 
 const ROW_PX_BASE = FOLDER_ROW_PX_BASE;
@@ -176,6 +182,32 @@ const CHEVRON_SLOT = FOLDER_CHEVRON_SLOT;
 const INDENT_STEP = 12;
 /** How long the pointer rests on the folded column before the tree floats out. */
 const RAIL_HOVER_DELAY_MS = 350;
+/**
+ * The header's collapse and close buttons: muted, with the grey hover of the
+ * other icon buttons in the sidebar. The ghost button's accent hover is a
+ * strong blue in the dark theme, and a drawer that opens under the pointer
+ * showed it as if the button were switched on.
+ */
+const SIDEBAR_HEAD_BUTTON = "text-muted-foreground hover:bg-muted hover:text-foreground";
+
+/** Keeps Tab and Shift+Tab inside `root`, wrapping at either end. */
+function trapTab(e: React.KeyboardEvent, root: HTMLElement | null) {
+  if (!root) return;
+  const focusable = Array.from(root.querySelectorAll<HTMLElement>(
+    'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]'
+  )).filter((el) => el.getAttribute('tabindex') !== '-1' && !el.closest('[inert]'));
+  if (focusable.length === 0) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  const active = document.activeElement;
+  if (e.shiftKey && (active === first || active === root)) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && active === last) {
+    e.preventDefault();
+    first.focus();
+  }
+}
 
 // Icons and colours follow the JMAP role only.
 const getIconForMailbox = (role?: string, hasChildren?: boolean, isExpanded?: boolean, id?: string) => {
@@ -1201,6 +1233,7 @@ function SidebarImpl({
   accountSharedMailboxes,
   onLoginSharedMailboxSelect,
   mvShell = false,
+  onDrawerChange,
 }: SidebarProps) {
   const router = useRouter();
   // The rail is a desktop thing. Below that the sidebar is a drawer, opened to
@@ -1224,6 +1257,12 @@ function SidebarImpl({
   const allFoldersRef = useRef<HTMLButtonElement>(null);
   const hoverExpanded = sidebarCollapsed && !isDrawer && (railHovered || railOpen);
   const isCollapsed = sidebarCollapsed && !hoverExpanded && !isDrawer;
+  // Outside Mountain View the floated tree is a drawer, as in Outlook and
+  // Thunderbird: from the window's start edge, over the app rail and the
+  // folded column, with the page dimmed behind it (the caller draws that).
+  // Floating beside the rail with nothing behind it, it looked like a second
+  // sidebar cut into the list. Mountain View keeps Gmail's peek beside its rail.
+  const isFolderDrawer = hoverExpanded && !mvShell;
   const closeRailPeek = useCallback(() => {
     if (railHoverTimer.current) clearTimeout(railHoverTimer.current);
     railHoverTimer.current = null;
@@ -1231,6 +1270,49 @@ function SidebarImpl({
     setRailOpen(false);
   }, []);
   useEffect(() => () => { if (railHoverTimer.current) clearTimeout(railHoverTimer.current); }, []);
+  // Unfolded or turned into the phone drawer meanwhile: nothing floats any more.
+  useEffect(() => {
+    if (!sidebarCollapsed || isDrawer) closeRailPeek();
+  }, [sidebarCollapsed, isDrawer, closeRailPeek]);
+  const onDrawerChangeRef = useRef(onDrawerChange);
+  useEffect(() => { onDrawerChangeRef.current = onDrawerChange; });
+  useEffect(() => {
+    if (!isFolderDrawer) return;
+    onDrawerChangeRef.current?.(closeRailPeek);
+    return () => onDrawerChangeRef.current?.(null);
+  }, [isFolderDrawer, closeRailPeek]);
+  // Opened from All folders, the drawer gives the focus back there however it
+  // closes: Escape, the collapse button, a pick, a press on the dimmed page.
+  const railWasOpen = useRef(false);
+  useEffect(() => {
+    if (railOpen) { railWasOpen.current = true; return; }
+    if (!railWasOpen.current) return;
+    railWasOpen.current = false;
+    // A frame later: a press on the scrim closes it on pointerdown, and the
+    // press itself then drops the focus to the page.
+    const frame = requestAnimationFrame(() => {
+      const active = document.activeElement;
+      if (active && active !== document.body && !rootRef.current?.contains(active)) return;
+      allFoldersRef.current?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [railOpen]);
+  // The pointer resting on the folders floats the tree out; on the header
+  // (expand, compose) it doesn't, so the expand button can still be clicked.
+  const armRailHover = useCallback((target: EventTarget | null) => {
+    if (!hoverOpens()) return;
+    if (mvShell) { setRailHovered(true); return; }
+    if (target instanceof Element && target.closest('[data-sidebar-head]')) {
+      if (railHoverTimer.current) clearTimeout(railHoverTimer.current);
+      railHoverTimer.current = null;
+      return;
+    }
+    if (railHoverTimer.current) return;
+    railHoverTimer.current = setTimeout(() => {
+      railHoverTimer.current = null;
+      setRailHovered(true);
+    }, RAIL_HOVER_DELAY_MS);
+  }, [mvShell]);
   const { primaryIdentity: _primaryIdentity, activeAccountId } = useAuthStore(useShallow((state) => ({ primaryIdentity: state.primaryIdentity, activeAccountId: state.activeAccountId })));
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [expandedTags, setExpandedTags] = useState<Set<string>>(new Set());
@@ -1349,6 +1431,9 @@ function SidebarImpl({
       ?? root?.querySelector<HTMLElement>('nav button:not([disabled])');
     target?.focus();
     const onPointerDown = (e: PointerEvent) => {
+      // The scrim behind the drawer closes it on its own click: gone at the
+      // press, it would let that click through to the message under it.
+      if (e.target instanceof Element && e.target.closest('[data-drawer-scrim]')) return;
       if (root && !root.contains(e.target as Node)) closeRailPeek();
     };
     document.addEventListener('pointerdown', onPointerDown, true);
@@ -1982,18 +2067,19 @@ function SidebarImpl({
     <div
       ref={rootRef}
       // The peek of the collapsed rail; not with hover opening turned off.
-      onMouseEnter={sidebarCollapsed && !isDrawer ? () => {
-        if (!hoverOpens()) return;
-        if (mvShell) { setRailHovered(true); return; }
-        if (railHoverTimer.current) clearTimeout(railHoverTimer.current);
-        railHoverTimer.current = setTimeout(() => setRailHovered(true), RAIL_HOVER_DELAY_MS);
-      } : undefined}
+      onMouseEnter={sidebarCollapsed && !isDrawer ? (e) => armRailHover(e.target) : undefined}
+      onMouseMove={sidebarCollapsed && !isDrawer && !mvShell && !railHovered ? (e) => armRailHover(e.target) : undefined}
       onMouseLeave={sidebarCollapsed && !isDrawer ? () => {
         if (railHoverTimer.current) clearTimeout(railHoverTimer.current);
         railHoverTimer.current = null;
         setRailHovered(false);
       } : undefined}
       onKeyDown={railOpen || railHovered ? (e) => {
+        // Opened from All folders, the drawer keeps the focus until it closes.
+        if (e.key === 'Tab' && railOpen && !mvShell) {
+          trapTab(e, rootRef.current);
+          return;
+        }
         if (e.key !== 'Escape' || e.defaultPrevented) return;
         e.preventDefault();
         const hadFocus = rootRef.current?.contains(document.activeElement);
@@ -2005,7 +2091,8 @@ function SidebarImpl({
         if (next && !e.currentTarget.contains(next)) closeRailPeek();
       } : undefined}
       data-mv-rail-peek={hoverExpanded && mvShell ? "" : undefined}
-      data-folder-peek={hoverExpanded && !mvShell ? "" : undefined}
+      data-folder-peek={isFolderDrawer ? "" : undefined}
+      data-folder-drawer={isFolderDrawer ? "" : undefined}
       className={cn(
         "relative flex flex-col h-full border-e transition-all duration-300 overflow-hidden",
         // Mountain View's navigation sits on the canvas, with no rule between
@@ -2014,11 +2101,18 @@ function SidebarImpl({
         "max-desk:w-full",
         // Mountain View's collapsed column is 72px (--mv-rail-w), wide enough
         // for its round compose button; the default layout's rail is 48px.
-        isCollapsed && !mvShell ? "desk:w-12" : hoverExpanded && !mvShell ? "desk:w-64" : "desk:w-full",
+        isCollapsed && !mvShell ? "desk:w-12" : isFolderDrawer ? "desk:w-72" : "desk:w-full",
         // Floats out of the rail's own column rather than widening it, so the
         // message list underneath never moves while the pointer passes over.
         // Width comes from --mv-rail-peek-w, keyed on data-mv-rail-peek.
-        hoverExpanded && "desk:absolute desk:inset-y-0 desk:start-0 desk:z-40 desk:shadow-xl",
+        hoverExpanded && mvShell && "desk:absolute desk:inset-y-0 desk:start-0 desk:z-40 desk:shadow-xl",
+        // The drawer: at the window's start edge, from under the top bar and
+        // the window's controls (--drawer-top) to the bottom; in a Pro pane, at
+        // the pane's. At its full width at once: grown from the folded
+        // column's 48px at the edge, it would leave the pointer that opened it
+        // outside, which closes it again.
+        isFolderDrawer && "transition-none shadow-xl z-50",
+        isFolderDrawer && (isEmbedded ? "absolute inset-y-0 start-0" : "fixed start-0 bottom-0 top-[var(--drawer-top)] h-auto"),
         className
       )}
     >
@@ -2027,13 +2121,13 @@ function SidebarImpl({
       {!isEmbedded && !mvShell && (
         // Border lives on the wrapper (outside the h-14 box) so the bar's total
         // height matches the search/reply toolbars, which border-b their wrapper too.
-        <div className="border-b border-border">
+        <div className="border-b border-border" data-sidebar-head="">
           <div className={cn("flex items-center h-14", isCollapsed ? "justify-center px-2" : "gap-1 px-2")}>
             <Button
               variant="ghost"
               size="icon"
               onClick={onSidebarClose}
-              className="desk:hidden h-9 w-9 flex-shrink-0"
+              className={cn("desk:hidden h-9 w-9 flex-shrink-0", SIDEBAR_HEAD_BUTTON)}
               aria-label={t("close")}
             >
               <X className="w-5 h-5" />
@@ -2042,11 +2136,15 @@ function SidebarImpl({
             <Button
               variant="ghost"
               size="icon"
-              onClick={toggleSidebarCollapsed}
-              className="hidden desk:flex h-8 w-8 flex-shrink-0"
+              // In the drawer it closes the drawer, as the phone's X does;
+              // docking the folders is the folded column's expand button.
+              onClick={isFolderDrawer ? closeRailPeek : toggleSidebarCollapsed}
+              className={cn("hidden desk:flex h-8 w-8 flex-shrink-0", SIDEBAR_HEAD_BUTTON)}
+              data-testid="sidebar-collapse"
               title={isCollapsed ? t("expand_tooltip") : t("collapse_tooltip")}
             >
-              {isCollapsed ? <ChevronsRight className="w-4 h-4" /> : <ChevronsLeft className="w-4 h-4" />}
+              {/* The arrows point the way the column goes: mirrored in RTL, where it sits at the right. */}
+              {isCollapsed ? <ChevronsRight className="w-4 h-4 rtl:-scale-x-100" /> : <ChevronsLeft className="w-4 h-4 rtl:-scale-x-100" />}
             </Button>
 
             {/* The account switcher heads the folders by default, with the
