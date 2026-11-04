@@ -338,15 +338,14 @@ export const ROW_MENU_KEYS: ReadonlySet<MessageActionKey> = new Set<MessageActio
 ]);
 
 /**
- * "More actions", in groups with a line between: forwarding, links, copying and rules,
- * marks, then save, print and source. Keys not named here (a host's own entries) go
- * before the last group.
+ * "More actions", in groups with a line between: forwarding, links, filing and marks,
+ * then save, print and source. Keys not named here (a host's own entries) go before
+ * the last group.
  */
 const MORE_GROUPS: MessageActionKey[][] = [
   ["forward_as_attachment"],
   ["copy_message_link", "copy_conversation_link"],
-  ["copy_to_account", "rules", "remove_from_folder"],
-  ["pin", "report_phishing", "find_from_sender"],
+  ["copy_to_account", "rules", "remove_from_folder", "pin", "report_phishing", "find_from_sender"],
   ["export", "print", "view_source"],
 ];
 
