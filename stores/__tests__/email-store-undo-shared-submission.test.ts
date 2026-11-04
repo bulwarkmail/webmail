@@ -18,6 +18,7 @@ const GROUP = 'acc-team';
 function makeClient(): IJMAPClient {
   return {
     getAccountId: () => PRIMARY,
+    pruneEmailSubmissions: vi.fn().mockResolvedValue(undefined),
     cancelEmailSubmission: vi.fn().mockResolvedValue(undefined),
     restoreEmailToDraft: vi.fn().mockResolvedValue(undefined),
     getEmail: vi.fn().mockResolvedValue({ id: 'e1' }),

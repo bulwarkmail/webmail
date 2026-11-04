@@ -254,7 +254,7 @@ describe('JMAPClient.rescheduleEmailSubmission (#1308)', () => {
    * turn; 'reject' means the server refuses it with invalidProperties on
    * emailId, like a server that allows one active submission per Email.
    */
-  function scriptServer(client: JMAPClient, opts: { cancel?: 'ok' | 'fail'; creates: Array<'ok' | 'reject'> }) {
+  function scriptServer(client: JMAPClient, opts: { cancel?: 'ok' | 'fail'; status?: 'pending' | 'canceled' | 'final'; creates: Array<'ok' | 'reject' | 'timeout' | 'missingId'> }) {
     enableDelayedSend(client);
     vi.spyOn(client, 'getMailboxes').mockResolvedValue([
       { id: 'mb-drafts', name: 'Drafts', role: 'drafts' },
@@ -273,7 +273,7 @@ describe('JMAPClient.rescheduleEmailSubmission (#1308)', () => {
         if (method === 'EmailSubmission/get') {
           // Only the properties asked for, as the servers answer.
           const wanted = (args.properties as string[] | undefined) ?? ['identityId', 'sendAt', 'envelope'];
-          const record: Record<string, unknown> = { id: 'sub-old', identityId: 'identity-1', sendAt: originalSendAt, envelope: { rcptTo: [{ email: 'rcpt@example.com' }] } };
+          const record: Record<string, unknown> = { id: 'sub-old', undoStatus: opts.status ?? 'pending', identityId: 'identity-1', sendAt: originalSendAt, envelope: { rcptTo: [{ email: 'rcpt@example.com' }] } };
           return { methodResponses: [[method, { list: [Object.fromEntries(Object.entries(record).filter(([key]) => key === 'id' || wanted.includes(key)))] }, '0']] };
         }
         if (method === 'EmailSubmission/set' && args.update) {
@@ -286,6 +286,8 @@ describe('JMAPClient.rescheduleEmailSubmission (#1308)', () => {
         }
         if (method === 'EmailSubmission/set' && args.create) {
           const outcome = opts.creates[createCount++];
+          if (outcome === 'timeout') throw new TypeError('Connection lost after request');
+          if (outcome === 'missingId') return { methodResponses: [[method, {}, '0']] };
           if (outcome === 'reject') {
             return { methodResponses: [[method, { notCreated: { replacement: { type: 'invalidProperties', properties: ['emailId'] } } }, '0']] };
           }
@@ -362,6 +364,49 @@ describe('JMAPClient.rescheduleEmailSubmission (#1308)', () => {
     expect(holdFor).toBeGreaterThan(ORIGINAL_SEND_AT_MS / 1000 - 60);
     expect(holdFor).toBeLessThanOrEqual(ORIGINAL_SEND_AT_MS / 1000);
     expect(creates[1].onSuccessUpdateEmail?.['#replacement']).toEqual({ mailboxIds: { 'mb-sent': true }, 'keywords/$draft': null });
+    expect(calls.some(c => c.method === 'Email/set')).toBe(false);
+  });
+
+  it.each(['canceled', 'final'] as const)('does not replace a stale %s submission', async status => {
+    const client = createClient();
+    const { submissionSets } = scriptServer(client, { status, creates: ['ok'] });
+    await expect(client.rescheduleEmailSubmission('sub-old', 'email-1', 'identity-1', inTenMinutes()))
+      .rejects.toThrow(/already sent|no longer scheduled/);
+    expect(submissionSets()).toHaveLength(0);
+  });
+
+  it('coalesces concurrent replacements for the same account and submission', async () => {
+    const client = createClient();
+    const { submissionSets } = scriptServer(client, { creates: ['ok', 'ok'] });
+    const results = await Promise.all([1, 2].map(() =>
+      client.rescheduleEmailSubmission('sub-old', 'email-1', 'identity-1', inTenMinutes(), 'account-1')));
+    expect(results[0].emailSubmissionId).toBe(results[1].emailSubmissionId);
+    expect(submissionSets().filter(c => c.args.create)).toHaveLength(1);
+  });
+
+  it('keeps coincident submission ids in different accounts independent', async () => {
+    const client = createClient();
+    const { submissionSets } = scriptServer(client, { creates: ['ok', 'ok'] });
+    await Promise.all(['account-1', 'account-2'].map(account =>
+      client.rescheduleEmailSubmission('sub-old', 'email-1', 'identity-1', inTenMinutes(), account)));
+    expect(submissionSets().filter(c => c.args.create).map(c => c.args.accountId)).toEqual(['account-1', 'account-2']);
+  });
+
+  it.each(['timeout', 'missingId'] as const)('does not submit again after an ambiguous %s create', async outcome => {
+    const client = createClient();
+    const { calls, submissionSets } = scriptServer(client, { creates: [outcome, 'ok'] });
+    await expect(client.rescheduleEmailSubmission('sub-old', 'email-1', 'identity-1', inTenMinutes()))
+      .rejects.toThrow('unconfirmed');
+    expect(submissionSets().filter(c => c.args.create)).toHaveLength(1);
+    expect(calls.some(c => c.method === 'Email/set')).toBe(false);
+  });
+
+  it('does not move an email to Drafts when restoring its old schedule is unconfirmed', async () => {
+    const client = createClient();
+    const { calls, submissionSets } = scriptServer(client, { creates: ['reject', 'timeout'] });
+    await expect(client.rescheduleEmailSubmission('sub-old', 'email-1', 'identity-1', inTenMinutes()))
+      .rejects.toThrow('unconfirmed');
+    expect(submissionSets().filter(c => c.args.create)).toHaveLength(2);
     expect(calls.some(c => c.method === 'Email/set')).toBe(false);
   });
 
