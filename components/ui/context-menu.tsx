@@ -18,7 +18,8 @@ import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { ChevronRight } from "@/components/icons";
 import { useTranslations } from "next-intl";
-import { nativeMenusAvailable, readSettledMenu, showNativeMenu } from "@/lib/desktop/native-menu";
+import { estimateNativeMenuWidth, nativeMenuPoint, nativeMenusAvailable, readSettledMenu, showNativeMenu } from "@/lib/desktop/native-menu";
+import { placeMenu } from "@/lib/menu-placement";
 import { toast } from "@/stores/toast-store";
 
 interface Position {
@@ -282,8 +283,11 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
         }
         const { anchor: at } = positionRef.current;
         // From a right-click it opens at the pointer, which the OS knows best.
+        // From a button: under it, lined up with the edge the HTML menu would
+        // use. The hidden copy is as wide as its widest submenu row, not as the
+        // native menu, so the native menu's own width is estimated.
         const place = at
-          ? { x: at.align === "end" ? Math.max(0, at.right - root.getBoundingClientRect().width) : at.left, y: at.bottom + ANCHOR_GAP }
+          ? nativeMenuPoint(at, estimateNativeMenuWidth(read.items), getComputedStyle(root).direction === "rtl", ANCHOR_GAP)
           : undefined;
         const outcome = await showNativeMenu(read, root, place, tDesktopRef.current("from_plugins"));
         if (cancelled) return;
@@ -322,32 +326,16 @@ export const ContextMenu = forwardRef<HTMLDivElement, ContextMenuProps>(
 
       const clamp = () => {
         const rect = node.getBoundingClientRect();
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-
-        let x = position.x;
-        let y = position.y;
-
-        if (anchor) {
-          // Under the anchor, lined up with its start edge (end edge for
-          // align="end"); above it when there is no room below.
-          const rtl = getComputedStyle(node).direction === "rtl";
-          const alignEnd = (anchor.align === "end") !== rtl;
-          x = alignEnd ? anchor.right - rect.width : anchor.left;
-          y = anchor.bottom + ANCHOR_GAP;
-          if (y + rect.height > vh - VIEWPORT_MARGIN && anchor.top - ANCHOR_GAP - rect.height >= VIEWPORT_MARGIN) {
-            y = anchor.top - ANCHOR_GAP - rect.height;
-          }
-        }
-
-        if (x + rect.width > vw - VIEWPORT_MARGIN) {
-          x = vw - rect.width - VIEWPORT_MARGIN;
-        }
-        if (y + rect.height > vh - VIEWPORT_MARGIN) {
-          y = vh - rect.height - VIEWPORT_MARGIN;
-        }
-        x = Math.max(VIEWPORT_MARGIN, x);
-        y = Math.max(VIEWPORT_MARGIN, y);
+        // Next to the button it opened from, or at the pointer (lib/menu-placement.ts).
+        const { x, y } = placeMenu({
+          point: { x: position.x, y: position.y },
+          anchor,
+          size: { width: rect.width, height: rect.height },
+          viewport: { width: window.innerWidth, height: window.innerHeight },
+          rtl: getComputedStyle(node).direction === "rtl",
+          margin: VIEWPORT_MARGIN,
+          gap: ANCHOR_GAP,
+        });
 
         setAdjustedPosition((prev) => (prev && prev.x === x && prev.y === y ? prev : { x, y }));
       };
@@ -574,7 +562,10 @@ interface ContextMenuItemProps {
   onClick: () => void;
   disabled?: boolean;
   destructive?: boolean;
+  /** The key that does the same, shown apart from the label. */
   shortcut?: string;
+  /** A count at the end of the row, e.g. unread notifications. Not a key. */
+  badge?: string;
   /** Stable hook for integration tests (not user-visible). */
   testId?: string;
   /** Tooltip, e.g. the address behind a display name. */
@@ -590,6 +581,7 @@ export function ContextMenuItem({
   disabled = false,
   destructive = false,
   shortcut,
+  badge,
   testId,
   title,
   hint,
@@ -636,11 +628,38 @@ export function ContextMenuItem({
       ) : (
         <span className="flex-1 min-w-0 [overflow-wrap:anywhere]" data-menu-label="">{label}</span>
       )}
-      {/* Key hints mean nothing without a keyboard: hidden on touch (R8). */}
-      {shortcut && (
-        <span className="text-xs text-muted-foreground ms-auto pointer-coarse:hidden">{shortcut}</span>
-      )}
+      {shortcut && <MenuShortcut keys={shortcut} />}
+      {badge && <MenuBadge text={badge} />}
     </button>
+  );
+}
+
+/**
+ * The key that does what a menu row does, at the row's end, muted, as a keycap. The
+ * desktop app's native menu shows it as the item's accelerator, apart from the label
+ * (lib/desktop/native-menu.ts reads `data-menu-shortcut`). Key hints mean nothing
+ * without a keyboard: hidden on touch (R8).
+ */
+export function MenuShortcut({ keys, className }: { keys: string; className?: string }) {
+  return (
+    <kbd
+      data-menu-shortcut=""
+      className={cn(
+        "ms-auto shrink-0 rounded border border-border px-1.5 font-sans text-[0.6875rem] leading-4 text-muted-foreground pointer-coarse:hidden",
+        className
+      )}
+    >
+      {keys}
+    </kbd>
+  );
+}
+
+/** A count at a row's end ("3" unread). Not a key: a native menu puts it after the label. */
+export function MenuBadge({ text }: { text: string }) {
+  return (
+    <span data-menu-badge="" className="ms-auto shrink-0 text-xs tabular-nums text-muted-foreground">
+      {text}
+    </span>
   );
 }
 

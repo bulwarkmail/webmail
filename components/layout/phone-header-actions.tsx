@@ -92,7 +92,7 @@ export function PhoneHeaderMenu({ menuItems }: PhoneHeaderMenuProps) {
           <ContextMenuItem
             icon={Bell}
             label={tNotifications("title")}
-            shortcut={unread > 0 ? formatBadgeCount(unread) : undefined}
+            badge={unread > 0 ? formatBadgeCount(unread) : undefined}
             onClick={() => { close(); setShowNotifications(true); }}
           />
           <ContextMenuItem

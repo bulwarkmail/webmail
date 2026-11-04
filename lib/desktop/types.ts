@@ -84,6 +84,11 @@ export interface DesktopNativeMenuItem {
   type?: 'normal' | 'separator' | 'checkbox' | 'radio';
   enabled?: boolean;
   checked?: boolean;
+  /**
+   * The key the page answers for this item, in Electron's accelerator syntax ("D",
+   * "Shift+I", "Ctrl+X"). Only shown, apart from the label: never registered.
+   */
+  accelerator?: string;
   submenu?: DesktopNativeMenuItem[];
 }
 

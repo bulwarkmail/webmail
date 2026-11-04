@@ -160,7 +160,7 @@ export function PluginActions({ surface, context, variant = 'buttons', mailboxRo
             label={action.label}
             title={action.pluginName}
             destructive={action.danger}
-            shortcut={action.badge ? badgeText(action.badge) : undefined}
+            badge={action.badge ? badgeText(action.badge) : undefined}
             onClick={() => { void run(action); }}
           />
         ))}
