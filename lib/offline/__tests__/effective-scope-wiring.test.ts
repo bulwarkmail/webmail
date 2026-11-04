@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_ORGANISATION_POLICY } from '@/lib/admin/organisation-policy';
+import { EMPTY_POLICY_LAYERS, resolvePolicies } from '@/lib/desktop/policy-schema';
 import { getOfflineHooks, setOfflineHooks } from '@/lib/jmap/offline-hooks';
 import { setStoreBackend } from '@/lib/store/client/api';
 import { FakeJmap } from '@/lib/store/__tests__/helpers/fake-jmap';
@@ -14,6 +15,8 @@ import {
   disableOffline,
   enableOffline,
   enforcePolicy,
+  offlineActive,
+  offlineAllowed,
   refreshQueueState,
   refreshUsage,
   registerOfflineHooks,
@@ -60,6 +63,34 @@ afterEach(async () => {
   setOfflineNotifier(() => {});
   await wipeEverything();
   setStoreBackend(null);
+});
+
+describe('OfflineEnabled from the desktop app\'s OS policy', () => {
+  function forced(value: unknown): void {
+    const snapshot = resolvePolicies({ ...EMPTY_POLICY_LAYERS, forcedMachine: { OfflineEnabled: value } });
+    (window as unknown as { bulwarkDesktop: unknown }).bulwarkDesktop = { version: 1, platform: 'win32', mode: 'standalone', policy: { get: () => snapshot, onChange: () => () => {} } };
+  }
+
+  it('a value that makes no sense stops keeping mail and deletes nothing', async () => {
+    await enableOffline('acc');
+    expect(useOfflineStore.getState().enabled).toEqual(['acc']);
+
+    forced('yes');
+    expect(offlineAllowed('acc')).toBe(false);
+    enforcePolicy();
+    await vi.waitFor(() => expect(offlineActive('acc')).toBe(false));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(useOfflineStore.getState().enabled).toEqual(['acc']);
+    expect(notices.map((notice) => notice.kind)).not.toContain('forbidden');
+  });
+
+  it('forced off does delete', async () => {
+    await enableOffline('acc');
+    forced(0);
+    enforcePolicy();
+    await vi.waitFor(() => expect(useOfflineStore.getState().enabled).toEqual([]));
+    expect(notices.map((notice) => notice.kind)).toContain('forbidden');
+  });
 });
 
 describe('at page load, before the subject is known', () => {

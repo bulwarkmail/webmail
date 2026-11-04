@@ -25,7 +25,7 @@ import { useEmailStore } from "@/stores/email-store";
 import { useLocaleStore } from "@/stores/locale-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useThemeStore } from "@/stores/theme-store";
-import { toast } from "@/stores/toast-store";
+import { showFirstStartNotice } from "@/lib/first-start-notices";
 import { openMailImport } from "@/stores/mail-transfer-store";
 
 /** The part of the app a path shows, for the menus: Calendar has its own View lines, and no Message menu. */
@@ -94,13 +94,13 @@ export function DesktopHost() {
         routerRef.current.push("/contacts");
       },
       "file.import": () => openMailImport(),
-      // One way to Settings: in the main window, as the rail's button opens them.
-      "file.settings": () => routerRef.current.push("/settings"),
       "go.inbox": () => routerRef.current.push("/"),
       "go.mail": () => routerRef.current.push("/"),
       "go.calendar": () => routerRef.current.push("/calendar"),
       "go.contacts": () => routerRef.current.push("/contacts"),
       "go.files": () => routerRef.current.push("/files"),
+      // Help > Settings: a page of this window, as the rail's gear opens it.
+      "go.settings": () => routerRef.current.push("/settings"),
       "help.shortcuts": () => openKeyboardShortcuts(),
     };
     return menu.onCommand((id) => {
@@ -167,9 +167,10 @@ export function DesktopHost() {
     noteComposerLanguage("settings", writingLanguage && writingLanguage !== "auto" ? writingLanguage : null);
   }, [writingLanguage]);
 
-  // A language with no checker in the OS needs a dictionary from Google: the composer
-  // asks once, and never in no-third-party mode. Until a yes, the shell has nowhere to
-  // fetch from at all.
+  // A language with no checker in the OS needs a dictionary from Google: once a composer
+  // is open, a first-start notice asks, never in no-third-party mode, and not again once
+  // closed. Until a yes, the shell has nowhere to fetch from at all. Windows never asks:
+  // it checks spelling itself (the shell's context-menu.ts).
   useEffect(() => {
     const spellcheck = getDesktopBridge()?.spellcheck;
     if (!spellcheck) return;
@@ -179,8 +180,6 @@ export function DesktopHost() {
       const [language] = waiting;
       if (!language || !composerIsOpen() || !dictionaryDownloadAllowed()) return;
       if (readDesktopPrefs().dictionaryDownload !== "ask") return;
-      // Asked once, whatever comes of it.
-      setDesktopPref("dictionaryDownload", "no");
       const translate = tRef.current;
       let name = language;
       try {
@@ -188,14 +187,19 @@ export function DesktopHost() {
       } catch {
         // The tag itself will do.
       }
-      toast.info(translate("desktopUi.spellcheck.offer", { language: name }), {
-        duration: 0,
+      showFirstStartNotice({
+        id: "dictionary-download",
+        text: translate("desktopUi.spellcheck.offer", { language: name }),
         action: {
           label: translate("desktopUi.spellcheck.download"),
           onClick: () => {
             setDesktopPref("dictionaryDownload", "yes");
             if (dictionaryDownloadAllowed()) spellcheck.allowDownload();
           },
+        },
+        // Closed without a yes: asked once, not again.
+        onClose: () => {
+          if (readDesktopPrefs().dictionaryDownload === "ask") setDesktopPref("dictionaryDownload", "no");
         },
       });
     };

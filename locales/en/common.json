@@ -6748,7 +6748,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Windows",
+      "title": "App windows",
       "double_click_label": "Open messages in a new window on double-click",
       "double_click_description": "A single click still opens the message next to the list.",
       "restore_label": "Reopen windows at start",

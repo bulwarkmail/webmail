@@ -61,7 +61,7 @@
       <string id="BrowserSignIn">Offer sign-in through the browser</string>
       <string id="BrowserSignIn_Explain">When enabled or not configured, the login page offers &quot;Sign in with your browser&quot;, so people can use their password manager, passkeys and your single sign-on there. When disabled, the button is gone and the app refuses the flow. The form in the app stays, unless the server only allows OAuth.</string>
       <string id="WipeOfflineData">Delete mail kept on the device</string>
-      <string id="WipeOfflineData_Explain">Set this to a new value, such as today&apos;s date, to delete everything the app keeps on the device for every server and account: mail, keys, and sign-ins, so people sign in again. Each value deletes once: the app remembers the ones it has acted on, so it stays safe to leave a value in place. Use a new value to delete again.</string>
+      <string id="WipeOfflineData_Explain">Set this to a new value, such as today&apos;s date, to delete everything the app keeps on the device for every server and account: mail, keys, and sign-ins, so people sign in again. Each value deletes once: the app remembers the ones it has acted on, so it stays safe to leave a value in place. Use a new value to delete again. That memory is in the user&apos;s own profile, so someone who edits it can skip a wipe they know is coming: this cleans up a device, it doesn&apos;t take data from the person using it.</string>
     </stringTable>
     <presentationTable>
       <presentation id="InstanceUrl"><textBox refId="InstanceUrl_Value"><label>Address of the Bulwark server</label></textBox></presentation>

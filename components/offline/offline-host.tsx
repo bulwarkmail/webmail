@@ -9,6 +9,7 @@ import { addSignOutGate } from '@/lib/sign-out-cleanup';
 import { reloadToNewBuild } from '@/lib/app-update';
 import { buildSettingsPath } from '@/lib/deep-links';
 import { confirmLoss, setOfflineNotifier, startOfflineMode, unsentCount, type OfflineNotice } from '@/lib/offline/offline-mode';
+import { showFirstStartNotice } from '@/lib/first-start-notices';
 import { toast } from '@/stores/toast-store';
 
 /**
@@ -77,7 +78,8 @@ export function OfflineHost() {
           toast.warning(tStorageRef.current('storage_full_title'), { message: tStorageRef.current('storage_full_text'), duration: 0, action: openStorage });
           break;
         case 'default-on':
-          toast.info(tStorageRef.current('default_on'), { duration: 0, action: openStorage });
+          // A first-start notice, not a toast: it stays until closed, and covers nothing.
+          showFirstStartNotice({ id: 'offline-default-on', text: tStorageRef.current('default_on'), action: openStorage });
           break;
         case 'legacy-stranded':
           toast.warning(tConflictsRef.current('legacy_stranded'), { duration: 0 });

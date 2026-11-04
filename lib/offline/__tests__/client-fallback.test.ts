@@ -8,7 +8,7 @@ import { DEFAULT_ORGANISATION_POLICY } from '@/lib/admin/organisation-policy';
 import { setStoreBackend } from '@/lib/store/client/api';
 import { FakeJmapMail } from '@/lib/store/__tests__/helpers/fake-jmap-mail';
 import { InProcessStore } from '@/lib/store/__tests__/helpers/in-process-store';
-import { startOfflineMode, wipeEverything } from '../offline-mode';
+import { setOfflineNotifier, startOfflineMode, wipeEverything } from '../offline-mode';
 import { forgetLegacyMove } from '../migrate-legacy';
 import { useOfflineStore, writeEnabled } from '../state';
 
@@ -288,6 +288,30 @@ describe('what the store answers and is told', () => {
     useAccountStore.setState({ accounts: [] });
     useAuthStore.setState({ client: null, activeAccountId: null });
     expect(await getOfflineHooks()?.searchLocal?.(client, [['Email/query', {}, '0']])).toBeNull();
+    stop();
+  });
+});
+
+describe('saying a connection is needed', () => {
+  it('not while online with the server answering, as at a start with a draft waiting', async () => {
+    const { client, stop } = await ready();
+    const { getOfflineHooks } = await import('@/lib/jmap/offline-hooks');
+    const notices: { kind: string }[] = [];
+    setOfflineNotifier((notice) => notices.push(notice));
+    await getOfflineHooks()?.answer(client, [['Identity/set', { create: { x: { email: 'a@example.org' } } }, '0']]);
+    expect(notices.filter((n) => n.kind.startsWith('refused'))).toEqual([]);
+    stop();
+  });
+
+  it('when offline, once', async () => {
+    const { client, stop } = await ready();
+    const { getOfflineHooks } = await import('@/lib/jmap/offline-hooks');
+    const notices: { kind: string }[] = [];
+    setOfflineNotifier((notice) => notices.push(notice));
+    await offline(async () => {
+      await getOfflineHooks()?.answer(client, [['Identity/set', { create: { x: { email: 'a@example.org' } } }, '0']]);
+    });
+    expect(notices.filter((n) => n.kind === 'refused-other')).toHaveLength(1);
     stop();
   });
 });

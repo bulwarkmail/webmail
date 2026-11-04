@@ -16,6 +16,7 @@ import { ReaderAttachments, type AttachmentDragProps } from "./reader-attachment
 import { editAccountOf, useEditAttachment } from "@/hooks/use-edit-attachment";
 import { ReaderViewDialog } from "./reader-view-dialog";
 import { MessagePrint, type MessagePrintFields } from "./message-print";
+import { useInvitationPrint } from "@/lib/print/invitation-print";
 import { usePrintListener, usePrinting } from "@/components/print/print-root";
 import { ReadingMask } from "./reading-mask";
 import { collectReferencedCids, isEmbeddedInBody, isReportPart, normalizeCid, rewriteCidReferences } from "@/lib/attachment-visibility";
@@ -3792,6 +3793,7 @@ export function EmailViewer({
         ? effectiveEmailContent.html.replace(/<details>/g, '<details open>')
         : sanitizeEmailHtml(effectiveEmailContent.html),
       plain,
+      invitation: invitationPrint,
     };
   };
 
@@ -3889,6 +3891,8 @@ ${printWatermark ? printWatermark.html : ''}
     () => printing && !!viewerRootEl && isShownOnScreen(viewerRootEl),
     [printing, viewerRootEl],
   );
+  // An invitation's when and where, from its card.
+  const invitationPrint = useInvitationPrint(email?.id);
   const printCopyFields = printShown && !devices.noPrint && !isLoading && !!email?.bodyValues
     ? messagePrintFields()
     : null;
