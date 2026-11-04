@@ -16,6 +16,18 @@ import { PrincipalsRequestError } from '@/lib/jmap/principals-error';
 import { PartialAccountsError, partialAccounts, withFailedAccountsKept } from '@/lib/jmap/partial-accounts';
 import type { Principal } from '@/lib/jmap/types';
 import { currentStoreEpoch } from '@/lib/store-epoch';
+import { planGroupMoves, type MergePlan } from '@/lib/contacts/merge';
+
+/** What a merge changed, to put it back with Undo. */
+export interface MergeUndo {
+  keepId: string;
+  /** The kept card's values before, for each property the merge changed (undefined: it had none). */
+  before: Partial<ContactCard>;
+  /** The merged cards as they were; their photos as data: URIs, since their blobs go with them. */
+  others: ContactCard[];
+  /** The groups' members before the merge. */
+  groups: Array<{ groupId: string; members: Record<string, boolean> }>;
+}
 
 /** A contact that is about to be created, projected for plugins (no id yet). */
 function draftContactView(contact: Partial<ContactCard>) {
@@ -481,7 +493,12 @@ interface ContactStore {
   /** Put a category on contacts, e.g. to undo removing it. */
   addKeyword: (client: IJMAPClient | null, keyword: string, contactIds: string[]) => Promise<void>;
 
-  importContacts: (client: IJMAPClient | null, contacts: ContactCard[]) => Promise<number>;
+  /** Into `addressBookId` when given, else where the server files new cards. */
+  importContacts: (client: IJMAPClient | null, contacts: ContactCard[], addressBookId?: string) => Promise<number>;
+  /** Merges the plan's cards into its kept card (lib/contacts/merge.ts); null when a plugin stopped it. */
+  mergeContacts: (client: IJMAPClient | null, plan: MergePlan) => Promise<MergeUndo | null>;
+  /** Puts a merge back: the merged cards (with new ids), their groups, the kept card's old values. */
+  undoMergeContacts: (client: IJMAPClient | null, undo: MergeUndo) => Promise<boolean>;
 
   // Trusted senders address book
   loadTrustedSendersBook: (client: IJMAPClient) => Promise<void>;
@@ -1629,22 +1646,46 @@ export const useContactStore = create<ContactStore>()(
         return get().trustedSenderEmails.includes(normalizedEmail);
       },
 
-      importContacts: async (client, contacts) => {
+      importContacts: async (client, contacts, targetBookId) => {
         const { supportsSync } = get();
         let imported = 0;
         // The book the cards landed in, as the server filed the first one.
         let addressBookId = '';
+        const book = targetBookId ? get().addressBooks.find(b => b.id === targetBookId) : undefined;
+        // The chosen book as the server knows it, and the login and account it belongs to.
+        const target = book ? resolveRawAddressBookIds({ [book.id]: true }, get().addressBooks) : undefined;
 
         for (const contact of contacts) {
           try {
             let added: ContactCard;
-            if (client && supportsSync) {
+            if (client && supportsSync && book && target) {
+              const { id: _id, ...data } = contact;
+              const sharedAccountId = target.sharedAccountId;
+              const created = await resolveAccountClient(client, target.localAccountId)
+                .createContact({ ...data, addressBookIds: target.addressBookIds }, sharedAccountId);
+              // Under the ids the listings give it, as createContact keeps it.
+              added = sharedAccountId
+                ? {
+                  ...created,
+                  id: `${sharedAccountId}:${created.id}`,
+                  originalId: created.id,
+                  accountId: sharedAccountId,
+                  accountName: book.accountName,
+                  isShared: true,
+                  addressBookIds: Object.fromEntries(
+                    Object.entries(created.addressBookIds ?? {}).map(([bookId, v]) => [`${sharedAccountId}:${bookId}`, v]),
+                  ),
+                }
+                : created;
+              if (target.localAccountId) added = prefixContactsWithLocalAccount([added], target.localAccountId)[0];
+            } else if (client && supportsSync) {
               const { id: _id, ...data } = contact;
               added = await client.createContact(data);
             } else {
               added = {
                 ...contact,
                 id: `local-${generateUUID()}`,
+                ...(book ? { addressBookIds: { [book.id]: true } } : {}),
               };
             }
             set((state) => ({ contacts: [...state.contacts, added] }));
@@ -1660,6 +1701,94 @@ export const useContactStore = create<ContactStore>()(
           notifyBirthdayCalendarIfEnabled();
         }
         return imported;
+      },
+
+      mergeContacts: async (client, plan) => {
+        const sync = !!client && get().supportsSync;
+        const { keep, others, patch } = plan;
+        const before: Partial<ContactCard> = {};
+        for (const key of Object.keys(patch) as Array<keyof ContactCard>) {
+          (before as Record<string, unknown>)[key] = keep[key];
+        }
+        // The kept card first: if that fails, nothing is deleted.
+        if (Object.keys(patch).length > 0) {
+          const updated = sync
+            ? await get().updateContact(client!, keep.id, patch)
+            : await get().updateLocalContact(keep.id, patch);
+          if (!updated) return null;
+        }
+        const groups: MergeUndo['groups'] = [];
+        const moves = planGroupMoves(get().contacts.filter(c => c.kind === 'group'), keep, others);
+        for (const { group, members } of moves) {
+          if (sync) {
+            const accountId = group.isShared ? group.accountId : undefined;
+            await resolveAccountClient(client!, group.localAccountId)
+              .updateContact(group.originalId || group.id, { members }, accountId);
+          }
+          groups.push({ groupId: group.id, members: { ...(group.members ?? {}) } });
+          set((state) => ({
+            contacts: state.contacts.map(c => c.id === group.id ? { ...c, members } : c),
+          }));
+          void contactHooks.onContactGroupMemberChange.emit({ groupId: group.id, added: [keep.id], removed: others.map(o => o.id) });
+        }
+        await get().bulkDeleteContacts(sync ? client : null, others.map(o => o.id));
+        return { keepId: keep.id, before, others, groups };
+      },
+
+      undoMergeContacts: async (client, undo) => {
+        const sync = !!client && get().supportsSync;
+        let ok = true;
+        for (const card of undo.others) {
+          try {
+            let created: boolean;
+            if (sync) {
+              const { id: _id, originalId: _originalId, created: _created, updated: _updated, ...data } = card;
+              // A photo still only in a blob went with the card.
+              const media = card.media
+                ? Object.fromEntries(Object.entries(card.media).filter(([, m]) => !!m?.uri))
+                : undefined;
+              created = await get().createContact(client!, {
+                ...data,
+                media: media && Object.keys(media).length > 0 ? media : undefined,
+              });
+            } else {
+              created = await get().addLocalContact(card);
+            }
+            if (!created) ok = false;
+          } catch (error) {
+            console.error('Failed to restore a merged contact:', error);
+            ok = false;
+          }
+        }
+        for (const { groupId, members } of undo.groups) {
+          const group = get().contacts.find(c => c.id === groupId);
+          if (!group) continue;
+          try {
+            if (sync) {
+              const accountId = group.isShared ? group.accountId : undefined;
+              await resolveAccountClient(client!, group.localAccountId)
+                .updateContact(group.originalId || group.id, { members }, accountId);
+            }
+            set((state) => ({
+              contacts: state.contacts.map(c => c.id === groupId ? { ...c, members } : c),
+            }));
+          } catch (error) {
+            console.error('Failed to restore group members:', error);
+            ok = false;
+          }
+        }
+        if (Object.keys(undo.before).length > 0) {
+          try {
+            const restored = sync
+              ? await get().updateContact(client!, undo.keepId, undo.before)
+              : await get().updateLocalContact(undo.keepId, undo.before);
+            if (!restored) ok = false;
+          } catch (error) {
+            console.error('Failed to restore the kept contact:', error);
+            ok = false;
+          }
+        }
+        return ok;
       },
     });
     },

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defaultZone, fileDropZones, filesWithinLimits, kindForType, MAX_ZONES, type DropFiles, type DropPlace } from '../zones';
+import { defaultZone, fileDropZones, filesWithinLimits, kindForName, kindForType, MAX_ZONES, type DropFiles, type DropPlace } from '../zones';
 
 const place = (patch: Partial<DropPlace> = {}): DropPlace => ({
   composer: false,
@@ -42,6 +42,14 @@ describe('the file drop zones', () => {
     expect(ids(drag(['calendar']), place())).toEqual(['calendar', 'new-message', 'upload']);
     expect(ids(drag(['contacts']), place())).toEqual(['contacts', 'new-message', 'upload']);
     expect(ids(drag(['eml']), place({ importFolder: 'Inbox' }))).toEqual(['open-eml', 'import-eml', 'new-message', 'upload']);
+  });
+
+  it('add contacts for one .csv on the Contacts screen only', () => {
+    expect(kindForName({ name: 'Outlook-Kontakte.CSV' })).toBe('csv');
+    expect(kindForType('text/csv')).toBe('csv');
+    expect(ids(drag(['csv']), place({ contactsScreen: true }))).toEqual(['contacts', 'new-message', 'upload']);
+    expect(ids(drag(['csv']), place())).toEqual(['new-message', 'upload']);
+    expect(ids(drag(['csv', 'csv']), place({ contactsScreen: true }))).toEqual(['new-message', 'upload']);
   });
 
   it('offer nothing special for a mix or for a calendar the account does not have', () => {

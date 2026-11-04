@@ -27,7 +27,8 @@ interface ContactDetailProps {
   onEdit: () => void;
   onDelete: () => void;
   onAddToGroup?: () => void;
-  onDuplicate?: () => void;
+  /** "Merge with…" in the ⋮. */
+  onMergeWith?: () => void;
   /** Move to another address book; undefined where there is none to move to. */
   onMoveTo?: () => void;
   /** Compose an email to this contact in the app (no OS mailto handoff). */
@@ -78,7 +79,7 @@ function getCompletedYears(dateInput: AnniversaryDate): number | null {
 }
 
 
-export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDuplicate, onMoveTo, onCompose, onPrint, isMobile, className, readOnly = false }: ContactDetailProps) {
+export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onMergeWith, onMoveTo, onCompose, onPrint, isMobile, className, readOnly = false }: ContactDetailProps) {
   const t = useTranslations("contacts");
   const tRoot = useTranslations();
   const tCommon = useTranslations("common");
@@ -218,7 +219,7 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
                 onCompose={onCompose}
                 onDelete={onDelete}
                 onAddToGroup={onAddToGroup}
-                onDuplicate={onDuplicate}
+                onMergeWith={onMergeWith}
                 onMoveTo={onMoveTo}
               />
             )}
