@@ -655,6 +655,8 @@ export interface BulwarkDesktopBridge {
   /** Absent on older shells. */
   certificates?: DesktopCertificatesBridge;
   appLock?: DesktopAppLockBridge;
+  /** Absent on an older shell. */
+  httpCache?: { clear: () => Promise<void> };
   localImport?: DesktopLocalImportBridge;
   privacy?: DesktopPrivacyBridge;
 }

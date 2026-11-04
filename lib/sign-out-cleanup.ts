@@ -2,7 +2,7 @@ import { forgetAppLockAtSignOut } from '@/lib/app-lock/sign-out';
 import { fileStorage } from '@/lib/plugin-storage';
 import { clearHandoffs } from '@/lib/launch-handoff';
 import { clearAllCheckpoints } from '@/lib/mail-import/checkpoints';
-import { clearDesktopSurfaces } from '@/lib/desktop/bridge';
+import { clearDesktopSurfaces, getDesktopBridge } from '@/lib/desktop/bridge';
 import { sweepPrivateExports } from '@/lib/mail-export/sinks';
 import { purgeStoreFiles } from '@/lib/store/client/purge';
 
@@ -153,6 +153,9 @@ export function purgeSignedOutData(options: SignOutCleanupOptions = {}): void {
   // Files and links on their way into a draft or an import.
   clearHandoffs();
   clearDesktopSurfaces();
+  // Nothing new goes in the HTTP cache, but a profile from an older version has mail in it.
+  // A browser gives a page no way to empty it.
+  void getDesktopBridge()?.httpCache?.clear().catch(() => {});
   for (const cleanup of signedOutCleanups) {
     try {
       cleanup(options);
