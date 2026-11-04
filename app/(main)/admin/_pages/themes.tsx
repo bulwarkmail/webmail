@@ -198,7 +198,7 @@ export function ThemesPage() {
     setSavingPolicy(false);
     setMessage(errors.length > 0
       ? { type: 'error', text: `Couldn't save everything. ${errors.join('; ')}` }
-      : { type: 'success', text: 'Themes saved. Users see the change on their next login.' });
+      : { type: 'success', text: 'Themes saved. Users get the change when they next open or reload Bulwark.' });
   }
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -419,7 +419,7 @@ export function ThemesPage() {
         onSave={() => void save()}
         onDiscard={() => { setPolicy(savedPolicy); setEnabledDraft({}); }}
         saveLabel="Save"
-        note="Users see the change on their next login"
+        note="Users get the change when they next open or reload Bulwark"
       />
     </div>
   );

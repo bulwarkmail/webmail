@@ -219,7 +219,7 @@ export function VersionPage() {
             </span>
           </SettingItem>
           {data.disabledByNoThirdPartyTraffic && (
-            <SettingItem label="Off: no third-party traffic" description="NO_THIRD_PARTY_TRAFFIC is on, so this server never asks the version endpoint. See Organisation > Security.">
+            <SettingItem label="Off: no third-party traffic" description="NO_THIRD_PARTY_TRAFFIC is on, so this server never asks the version endpoint. See Users > Security.">
               <span className="text-sm font-medium text-amber-600 dark:text-amber-400">Yes</span>
             </SettingItem>
           )}

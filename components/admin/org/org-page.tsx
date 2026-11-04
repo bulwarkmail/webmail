@@ -171,7 +171,7 @@ export function OrgPage({ pageId, draft, children, scoped = true }: {
         onSave={() => void draft.save()}
         onDiscard={draft.discard}
         saveLabel="Save"
-        note="Users get the change the next time Bulwark loads"
+        note="Users get the change within 15 minutes"
       />
     </div>
   );
