@@ -5679,12 +5679,13 @@ export function EmailComposer({
               </p>
             )}
             <div
-              // Every file shows, wrapping. Past about two rows the list
-              // scrolls by itself: it sits outside the body's scroller and
-              // can't shrink, and a few dozen files pushed Send off the
-              // bottom. Files still uploading or failed come first, so their
-              // progress and errors are never out of sight.
-              className="flex flex-wrap gap-2 max-h-[5.25rem] overflow-y-auto overscroll-contain"
+              // Every file shows, wrapping. Past four rows (two in a short
+              // window) the list scrolls by itself: it sits outside the
+              // body's scroller and can't shrink, and a few dozen files pushed
+              // Send off the bottom. The height is whole rows of 2rem chips
+              // with 0.5rem gaps, so no chip is cut in half (compose-p2-11);
+              // the line above says how many there are. Failed files first.
+              className="flex flex-wrap gap-2 max-h-[4.5rem] [@media(min-height:700px)]:max-h-[9.5rem] overflow-y-auto overscroll-contain [scrollbar-gutter:stable]"
               data-testid="composer-attachments"
             >
               {attachmentsForDisplay(attachments).map(({ att, index }) => {
