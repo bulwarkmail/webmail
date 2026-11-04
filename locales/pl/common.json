@@ -5234,6 +5234,13 @@
     "caldav_shared_by": "Udostępnia {name}:",
     "freebusy_description": "Osoby, którym udostępniasz, widzą, kiedy jesteś zajęty, ale nie widzą Twoich wydarzeń. Korzysta z tego funkcja proponowania terminów."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Lista",
+    "task_list_not_in_calendar": "{name} (lista zadań, niewidoczna w kalendarzu)",
+    "copy_to_account": "Kopiuj do {address}",
+    "copied_to_account": "Skopiowano do {address}",
+    "delete_original": "Usuń oryginał"
+  },
   "calendar_offline": {
     "split_needs_server": "Ta zmiana wymaga połączenia z serwerem. Na razie zmień tylko to wydarzenie albo spróbuj ponownie, gdy wrócisz do trybu online."
   },
@@ -5254,6 +5261,12 @@
     "answered_accepted_nodate": "Zaakceptowano.",
     "answered_declined_nodate": "Odrzucono.",
     "answered_tentative_nodate": "Odpowiedziano „może”."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "Powtarza się: {rule}",
+    "declined_dates": "Odrzucono {dates}.",
+    "declined_many": "Odrzucono {count} spotkań z tej serii.",
+    "answers_series": "Twoja odpowiedź dotyczy wszystkich spotkań z serii."
   },
   "advanced_search": {
     "title": "Wyszukiwanie zaawansowane",
@@ -5546,6 +5559,26 @@
     "send_message": "Wyślij wiadomość",
     "share_mail_subject": "Udostępniłem Ci {name}",
     "share_mail_body": "Cześć,\n\nUdostępniłem Ci „{name}”. Możesz to otworzyć tutaj:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Dodaj wszystko do kalendarza",
+    "zone_contacts_all": "Dodaj wszystko do kontaktów",
+    "save_to_files": "Zapisz w Plikach",
+    "saved": "Zapisano {name} w Plikach.",
+    "saved_copy": "Zapisano w Plikach jako {name}.",
+    "save_failed": "Nie udało się zapisać {name} w Plikach.",
+    "changed_on_server": "{name} zmieniono w Plikach po tym, jak go otworzono.",
+    "gone_on_server": "{name} nie ma już w Plikach.",
+    "keep_both": "Zachowaj oba",
+    "replace": "Zastąp",
+    "cancel": "Anuluj",
+    "save_as_new": "Zapisz jako nowy plik",
+    "import_to_mail": "Importuj do folderu poczty…",
+    "import_to_mail_title": "Importuj do folderu poczty",
+    "imported_to_mail": "Zaimportowano do {folder}.",
+    "import_to_mail_failed": "Nie udało się zaimportować {name}.",
+    "import_contacts": "Importuj do kontaktów…",
+    "add_to_calendar": "Dodaj do kalendarza…"
   },
   "smime": {
     "your_certificates": "Twoje certyfikaty",
@@ -7555,6 +7588,18 @@
     "import_mail": "Poczta…",
     "import_calendar": "Kalendarz…",
     "import_contacts": "Kontakty…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Odśwież",
+    "menu_today": "Dzisiaj",
+    "menu_next_period": "Następny okres",
+    "menu_previous_period": "Poprzedni okres",
+    "account_scope_label": "Wyświetlane: {address}. Przełącz konto",
+    "account_scope_menu": "Przełącz konto",
+    "merge_links": "Linki",
+    "merge_photo": "Zdjęcie",
+    "merge_kept": "Zostaje",
+    "import_show": "Pokaż"
   },
   "desktopEdit": {
     "edit": "Edytuj",

@@ -5234,6 +5234,13 @@
     "caldav_shared_by": "Compartido por {name}:",
     "freebusy_description": "Quien reciba lo compartido ve cuándo estás ocupado, no qué eventos tienes. «Sugerir horarios» lo usa."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Lista",
+    "task_list_not_in_calendar": "{name} (lista de tareas, no se muestra en el calendario)",
+    "copy_to_account": "Copiar a {address}",
+    "copied_to_account": "Copiado a {address}",
+    "delete_original": "Eliminar el original"
+  },
   "calendar_offline": {
     "split_needs_server": "Este cambio necesita conexión con el servidor. Cambia solo este evento por ahora o inténtalo de nuevo cuando vuelvas a tener conexión."
   },
@@ -5254,6 +5261,12 @@
     "answered_accepted_nodate": "Aceptaste.",
     "answered_declined_nodate": "Rechazaste.",
     "answered_tentative_nodate": "Respondiste quizás."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "Se repite: {rule}",
+    "declined_dates": "Rechazaste el {dates}.",
+    "declined_many": "Rechazaste {count} reuniones de esta serie.",
+    "answers_series": "Tu respuesta vale para todas las reuniones de la serie."
   },
   "advanced_search": {
     "title": "Búsqueda avanzada",
@@ -5546,6 +5559,26 @@
     "send_message": "Enviar un mensaje",
     "share_mail_subject": "He compartido {name} contigo",
     "share_mail_body": "Hola:\n\nHe compartido «{name}» contigo. Puedes abrirlo aquí:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Añadir todo al calendario",
+    "zone_contacts_all": "Añadir todo a contactos",
+    "save_to_files": "Guardar en Archivos",
+    "saved": "{name} se guardó en Archivos.",
+    "saved_copy": "Guardado en Archivos como {name}.",
+    "save_failed": "No se pudo guardar {name} en Archivos.",
+    "changed_on_server": "{name} cambió en Archivos después de que lo abrieras.",
+    "gone_on_server": "{name} ya no está en Archivos.",
+    "keep_both": "Conservar ambos",
+    "replace": "Reemplazar",
+    "cancel": "Cancelar",
+    "save_as_new": "Guardar como archivo nuevo",
+    "import_to_mail": "Importar a una carpeta de correo…",
+    "import_to_mail_title": "Importar a una carpeta de correo",
+    "imported_to_mail": "Importado en {folder}.",
+    "import_to_mail_failed": "No se pudo importar {name}.",
+    "import_contacts": "Importar a contactos…",
+    "add_to_calendar": "Añadir al calendario…"
   },
   "smime": {
     "your_certificates": "Tus certificados",
@@ -7555,6 +7588,18 @@
     "import_mail": "Correo…",
     "import_calendar": "Calendario…",
     "import_contacts": "Contactos…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Actualizar",
+    "menu_today": "Hoy",
+    "menu_next_period": "Periodo siguiente",
+    "menu_previous_period": "Periodo anterior",
+    "account_scope_label": "Se muestra {address}. Cambiar de cuenta",
+    "account_scope_menu": "Cambiar de cuenta",
+    "merge_links": "Enlaces",
+    "merge_photo": "Foto",
+    "merge_kept": "Se conserva",
+    "import_show": "Mostrar"
   },
   "desktopEdit": {
     "edit": "Editar",

@@ -88,7 +88,11 @@ export function useContextMenu<T>(): UseContextMenuReturn<T> {
   }, []);
 
   const openContextMenuFrom = useCallback((element: HTMLElement, data: T, align: "start" | "end" = "start") => {
-    setContextMenu({ isOpen: true, position: anchorPosition(element, align), data });
+    const position = anchorPosition(element, align);
+    // Focus goes back to it, and the row it's in stays marked while the menu is open.
+    position.trigger = focusReturnTarget(element);
+    position.opener = element.closest<HTMLElement>("[data-menu-row]") ?? element;
+    setContextMenu({ isOpen: true, position, data });
   }, []);
 
   const closeContextMenu = useCallback(() => {

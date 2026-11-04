@@ -322,7 +322,8 @@ describe('ContactsApp', () => {
       const preview = await screen.findByTestId('merge-preview');
       expect(within(preview).getByText('anna@example.net')).toBeInTheDocument();
       expect(within(preview).getByText('anna@home.example.net')).toBeInTheDocument();
-      expect(within(preview).getByText('Hauptstraße 1, Berlin')).toBeInTheDocument();
+      // One line per address line, as the card shows it (pim-p2-14); getByText joins the lines with a space.
+      expect(within(preview).getByText('Hauptstraße 1 Berlin')).toBeInTheDocument();
       expect(within(preview).getByText('Club')).toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: 'merge' }));
 

@@ -465,6 +465,33 @@ describe('CalendarInvitationBanner', () => {
     expect(screen.getByRole('heading', { name: 'Planning Session' })).toBeInTheDocument();
   });
 
+  // pim-p2-2: "Add to calendar" offered the account's task list, where the
+  // event would be stored but never shown, and other logins' calendars.
+  it('adds to the one calendar that shows events, never a task list or another login', async () => {
+    const before = mocks.calendarState.calendars;
+    mocks.calendarState.calendars = [
+      { id: 'cal-1', name: 'Primary', color: '#2563eb', isDefault: true },
+      { id: 'todo', name: 'To-do', color: '#16a34a', isDefault: false, isTasksOnly: true },
+      { id: 'other', name: 'Other login', color: '#dc2626', isDefault: true, localAccountId: 'login-b' },
+    ] as never;
+    try {
+      mocks.calendarState.importEvents.mockResolvedValue(1);
+      mocks.clientMock.parseCalendarEvents.mockResolvedValue([
+        { uid: 'uid-tl', title: 'Target check', start: '2026-03-22T13:00:00Z', participants: {
+          attendee: { '@type': 'Participant', email: 'user@example.com', roles: { attendee: true }, participationStatus: 'needs-action' },
+        } },
+      ]);
+      render(<CalendarInvitationBanner email={makeEmail({ id: 'email-tl' })} />);
+      await screen.findByRole('heading', { name: 'Target check' });
+      fireEvent.click(screen.getByText('Add to calendar'));
+      await waitFor(() => expect(mocks.calendarState.importEvents).toHaveBeenCalledTimes(1));
+      expect(JSON.stringify(mocks.calendarState.importEvents.mock.calls[0])).toContain('cal-1');
+      expect(screen.queryByText('To-do')).toBeNull();
+    } finally {
+      mocks.calendarState.calendars = before;
+    }
+  });
+
   it('does not show RSVP actions when the current user is the organizer', async () => {
     mocks.clientMock.parseCalendarEvents.mockResolvedValue([
       {

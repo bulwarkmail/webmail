@@ -928,6 +928,12 @@ interface CalendarStore {
    */
   hiddenTaskListIds: string[];
   toggleTaskListVisibility: (calendarId: string) => void;
+  /**
+   * The calendar a new event last went into, per local account ('' with one
+   * account): new events, quick create and imports preselect it (pim-p2-4).
+   */
+  lastEventCalendarIds: Record<string, string>;
+  rememberEventCalendar: (calendar: { id: string; localAccountId?: string }) => void;
   setSelectedEventId: (id: string | null) => void;
   clearState: () => void;
 
@@ -960,6 +966,7 @@ const initialState = {
   calendarSelectionChosen: false,
   knownCalendarIds: null as string[] | null,
   hiddenTaskListIds: [] as string[],
+  lastEventCalendarIds: {} as Record<string, string>,
   accountClients: null as CalendarAccountClient[] | null,
   accountClientsActiveId: null as string | null,
   selectedEventId: null as string | null,
@@ -1809,6 +1816,12 @@ export const useCalendarStore = create<CalendarStore>()(
         }));
       },
 
+      rememberEventCalendar: (calendar) => {
+        const key = calendar.localAccountId ?? '';
+        if (get().lastEventCalendarIds[key] === calendar.id) return;
+        set((state) => ({ lastEventCalendarIds: { ...state.lastEventCalendarIds, [key]: calendar.id } }));
+      },
+
       setSelectedEventId: (id) => set({ selectedEventId: id }),
 
       // iCal subscriptions
@@ -2185,11 +2198,14 @@ export const useCalendarStore = create<CalendarStore>()(
         // here would lose them from localStorage on every switch.
         const preservedSubs = get().icalSubscriptions;
         const preservedTombstones = get().deletedSubscriptionIds;
+        // Keyed by account, so a switch keeps each account's last pick.
+        const preservedPicks = get().lastEventCalendarIds;
         set({
           ...initialState,
           selectedDate: displayNow(),
           icalSubscriptions: preservedSubs,
           deletedSubscriptionIds: preservedTombstones,
+          lastEventCalendarIds: preservedPicks,
         });
         import('./calendar-notification-store').then(({ useCalendarNotificationStore }) => {
           useCalendarNotificationStore.getState().clearAll();
@@ -2208,6 +2224,9 @@ export const useCalendarStore = create<CalendarStore>()(
           ...mergedState,
           selectedDate: displayNow(),
           viewMode: getSafeCalendarViewMode(mergedState.viewMode),
+          lastEventCalendarIds: mergedState.lastEventCalendarIds && typeof mergedState.lastEventCalendarIds === 'object' && !Array.isArray(mergedState.lastEventCalendarIds)
+            ? mergedState.lastEventCalendarIds
+            : {},
         };
       },
       partialize: (state) => ({
@@ -2215,6 +2234,7 @@ export const useCalendarStore = create<CalendarStore>()(
         calendarSelectionChosen: state.calendarSelectionChosen,
         knownCalendarIds: state.knownCalendarIds,
         hiddenTaskListIds: state.hiddenTaskListIds,
+        lastEventCalendarIds: state.lastEventCalendarIds,
         viewMode: state.viewMode,
         icalSubscriptions: state.icalSubscriptions,
         deletedSubscriptionIds: state.deletedSubscriptionIds,

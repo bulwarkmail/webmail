@@ -12,6 +12,7 @@ import { useCalendarStore } from "@/stores/calendar-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useTaskStore } from "@/stores/task-store";
 import { useAccountStore } from "@/stores/account-store";
+import { accountAddress } from "@/lib/calendar-targets";
 import { BIRTHDAY_CALENDAR_ID } from "@/lib/birthday-calendar";
 import { sharedCalendarColorKey } from "@/lib/shared-calendar-colors";
 import { toast } from "@/stores/toast-store";
@@ -20,9 +21,8 @@ import { useContextMenu } from "@/hooks/use-context-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
-import { taskListsOf } from "@/components/calendar/task-list-view";
+import { isTaskOverdue, taskListsOf } from "@/components/calendar/task-list-view";
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
-import { displayNow } from "@/lib/timezone";
 import { readableTextOn } from "@/lib/color-transform";
 import { shareRecipientNames, useShareRecipientLabels } from "@/hooks/use-share-recipient-labels";
 import { useCvdColor } from "@/hooks/use-cvd-color";
@@ -124,10 +124,8 @@ export function CalendarSidebarPanel({
   const setViewMode = useCalendarStore((s) => s.setViewMode);
 
   const pendingTaskCount = useMemo(() => tasks.filter(t => t.progress !== 'completed' && t.progress !== 'cancelled').length, [tasks]);
-  const overdueTaskCount = useMemo(() => {
-    const now = displayNow();
-    return tasks.filter(t => t.progress !== 'completed' && t.progress !== 'cancelled' && t.due && new Date(t.due) < now).length;
-  }, [tasks]);
+  // The same rule as the task list's Overdue filter (pim-p2-12).
+  const overdueTaskCount = useMemo(() => tasks.filter(isTaskOverdue).length, [tasks]);
 
   const { contextMenu, openContextMenu, openContextMenuFrom, closeContextMenu, menuRef } = useContextMenu<Calendar>();
 
@@ -209,13 +207,15 @@ export function CalendarSidebarPanel({
       list.push(cal);
       byAccount.set(key, list);
     }
-    const ordered: { key: string; label: string; split: AccountCalendarSplit }[] = [];
+    const ordered: { key: string; label: string; name: string; split: AccountCalendarSplit }[] = [];
     // Active account first.
     if (activeLocalAccountId && byAccount.has(activeLocalAccountId)) {
       const acct = localAccounts.find(a => a.id === activeLocalAccountId);
       ordered.push({
         key: activeLocalAccountId,
-        label: acct?.label || acct?.email || acct?.username || activeLocalAccountId,
+        // By address (pim-p2-3): two accounts of one person share a name.
+        label: accountAddress(acct) || activeLocalAccountId,
+        name: acct?.displayName || acct?.label || '',
         split: splitAccountCalendars(byAccount.get(activeLocalAccountId)!),
       });
       byAccount.delete(activeLocalAccountId);
@@ -225,7 +225,8 @@ export function CalendarSidebarPanel({
       if (!byAccount.has(acct.id)) continue;
       ordered.push({
         key: acct.id,
-        label: acct.label || acct.email || acct.username,
+        label: accountAddress(acct),
+        name: acct.displayName || acct.label || '',
         split: splitAccountCalendars(byAccount.get(acct.id)!),
       });
       byAccount.delete(acct.id);
@@ -235,7 +236,7 @@ export function CalendarSidebarPanel({
       const fallbackLabel = key === '__other__'
         ? t('my_calendars')
         : list[0]?.accountName || key;
-      ordered.push({ key, label: fallbackLabel, split: splitAccountCalendars(list) });
+      ordered.push({ key, label: fallbackLabel, name: '', split: splitAccountCalendars(list) });
     }
     return ordered;
   }, [multiAccountMode, eventCalendars, localAccounts, activeLocalAccountId, t]);
@@ -295,7 +296,7 @@ export function CalendarSidebarPanel({
   const taskLists = useMemo(() => (inTasksView ? taskListsOf(calendars, tasks) : []), [inTasksView, calendars, tasks]);
   const accountLabel = (localAccountId: string) => {
     const acct = localAccounts.find(a => a.id === localAccountId);
-    return acct?.label || acct?.email || acct?.username || localAccountId;
+    return accountAddress(acct) || localAccountId;
   };
   const taskListGroups = useMemo(() => {
     if (!multiAccountMode) return [{ key: '__all__', label: '', lists: taskLists }];
@@ -615,7 +616,7 @@ export function CalendarSidebarPanel({
                     <ChevronRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                   )}
                   <User className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                  <span className="text-xs font-semibold text-foreground/90 truncate" title={group.label}>
+                  <span className="text-xs font-semibold text-foreground/90 truncate" title={group.name && group.name !== group.label ? `${group.name} <${group.label}>` : group.label} data-testid="calendar-account-group">
                     {group.label}
                   </span>
                   {isActive && onCreateCalendar && (

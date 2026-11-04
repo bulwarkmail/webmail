@@ -38,6 +38,12 @@ export interface DropPlace {
   files: boolean;
   /** On the Files screen, the folder in view, when files can go there. */
   filesFolder: string | null;
+  /**
+   * The Files screen is on view and takes files where it is. With no composer open a drop
+   * there uploads to the folder in view (or the folder row it lands on) without asking,
+   * as Explorer and Finder do; the choices are for the other screens.
+   */
+  onFiles?: boolean;
   calendar: boolean;
   contacts: boolean;
   /** The Contacts screen is open: a CSV dropped there is a contacts import. */
@@ -61,6 +67,8 @@ export type FileDropNote =
 
 export interface FileDropZone {
   id: FileDropZoneId;
+  /** Calendar and contacts: several files, all added in one import ("Add all to calendar"). */
+  several?: boolean;
   /** Names the folder for `upload` on the Files screen and for `import-eml`. */
   folder?: string;
   note?: FileDropNote;
@@ -116,6 +124,11 @@ function serverOnly(place: DropPlace, zone: FileDropZone): FileDropZone {
 export function fileDropZones(files: DropFiles, place: DropPlace): FileDropZone[] {
   const kind = sharedKind(files);
   const one = files.count === 1;
+  // Files dropped or pasted on the Files screen go up into the folder in view, no question.
+  if (filesTakeDropsAsIs(place)) {
+    const note: FileDropNote | undefined = place.maxUploadBytes > 0 ? { key: 'note_limit_file', size: place.maxUploadBytes } : undefined;
+    return [serverOnly(place, { id: 'upload', ...(place.filesFolder ? { folder: place.filesFolder } : {}), ...(note ? { note } : {}) })];
+  }
   const main: FileDropZone[] = [];
   if (place.composer) main.push({ id: 'attach-here', ...mailNote(place) });
   if (!place.popout) main.push({ id: 'new-message', ...mailNote(place) });
@@ -131,8 +144,9 @@ export function fileDropZones(files: DropFiles, place: DropPlace): FileDropZone[
   if (!place.popout) {
     if (kind === 'eml' && one) special.push({ id: 'open-eml' });
     if (kind === 'eml' && place.importFolder) special.push(serverOnly(place, { id: 'import-eml', folder: place.importFolder }));
-    if (kind === 'calendar' && one && place.calendar) special.push({ id: 'calendar' });
-    if (kind === 'contacts' && one && place.contacts) special.push({ id: 'contacts' });
+    // Several at once go into one import list (pim-p2-10).
+    if (kind === 'calendar' && place.calendar) special.push({ id: 'calendar', ...(one || files.count === null ? {} : { several: true }) });
+    if (kind === 'contacts' && place.contacts) special.push({ id: 'contacts', ...(one || files.count === null ? {} : { several: true }) });
     if (kind === 'csv' && one && place.contacts && place.contactsScreen) special.push({ id: 'contacts' });
   }
 
@@ -141,6 +155,11 @@ export function fileDropZones(files: DropFiles, place: DropPlace): FileDropZone[
   const attachHere = main.filter((zone) => zone.id === 'attach-here');
   const rest = main.filter((zone) => zone.id !== 'attach-here');
   return [...attachHere, ...kept, ...rest];
+}
+
+/** The Files screen takes a drop as it is: on view, a folder that takes files, no composer open, not a pop-out. */
+export function filesTakeDropsAsIs(place: Pick<DropPlace, 'onFiles' | 'composer' | 'popout' | 'files'>): boolean {
+  return !!place.onFiles && place.files && !place.composer && !place.popout;
 }
 
 /** What the files may still do, once they're in hand: those too big for the zone stay out. */

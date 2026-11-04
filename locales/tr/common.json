@@ -5234,6 +5234,13 @@
     "caldav_shared_by": "Paylaşan: {name}",
     "freebusy_description": "Paylaştığınız kişiler ne zaman meşgul olduğunuzu görür, etkinliklerinizi görmez. Saat öner bunu kullanır."
   },
+  "ux_p2_pim_cal": {
+    "task_list_label": "Liste",
+    "task_list_not_in_calendar": "{name} (görev listesi, takvimde gösterilmez)",
+    "copy_to_account": "{address} hesabına kopyala",
+    "copied_to_account": "{address} hesabına kopyalandı",
+    "delete_original": "Orijinali sil"
+  },
   "calendar_offline": {
     "split_needs_server": "Bu değişiklik için sunucu bağlantısı gerekir. Şimdilik yalnızca bu etkinliği değiştirin veya yeniden çevrimiçi olduğunuzda tekrar deneyin."
   },
@@ -5254,6 +5261,12 @@
     "answered_accepted_nodate": "Kabul ettiniz.",
     "answered_declined_nodate": "Reddettiniz.",
     "answered_tentative_nodate": "Belki dediniz."
+  },
+  "ux_p2_pim_calx": {
+    "repeats": "Tekrarlanır: {rule}",
+    "declined_dates": "{dates} toplantısını reddettiniz.",
+    "declined_many": "Bu serideki {count} toplantıyı reddettiniz.",
+    "answers_series": "Yanıtınız serideki tüm toplantılar için geçerlidir."
   },
   "calendar_event_notifications": {
     "someone": "Birisi",
@@ -5808,6 +5821,26 @@
     "send_message": "Mesaj gönder",
     "share_mail_subject": "{name} dosyasını seninle paylaştım",
     "share_mail_body": "Merhaba,\n\n\"{name}\" dosyasını seninle paylaştım. Buradan açabilirsin:\n{link}"
+  },
+  "ux_p2_pim_files": {
+    "zone_calendar_all": "Tümünü takvime ekle",
+    "zone_contacts_all": "Tümünü kişilere ekle",
+    "save_to_files": "Dosyalar'a kaydet",
+    "saved": "{name}, Dosyalar'a kaydedildi.",
+    "saved_copy": "Dosyalar'a {name} olarak kaydedildi.",
+    "save_failed": "{name}, Dosyalar'a kaydedilemedi.",
+    "changed_on_server": "{name}, siz açtıktan sonra Dosyalar'da değiştirildi.",
+    "gone_on_server": "{name} artık Dosyalar'da yok.",
+    "keep_both": "İkisini de tut",
+    "replace": "Değiştir",
+    "cancel": "İptal",
+    "save_as_new": "Yeni dosya olarak kaydet",
+    "import_to_mail": "Bir posta klasörüne aktar…",
+    "import_to_mail_title": "Bir posta klasörüne aktar",
+    "imported_to_mail": "{folder} klasörüne aktarıldı.",
+    "import_to_mail_failed": "{name} aktarılamadı.",
+    "import_contacts": "Kişilere aktar…",
+    "add_to_calendar": "Takvime ekle…"
   },
   "smime": {
     "your_certificates": "Sertifikalarınız",
@@ -7555,6 +7588,18 @@
     "import_mail": "E-posta…",
     "import_calendar": "Takvim…",
     "import_contacts": "Kişiler…"
+  },
+  "ux_p2_pim_cm": {
+    "menu_refresh": "Yenile",
+    "menu_today": "Bugün",
+    "menu_next_period": "Sonraki dönem",
+    "menu_previous_period": "Önceki dönem",
+    "account_scope_label": "{address} gösteriliyor. Hesap değiştir",
+    "account_scope_menu": "Hesap değiştir",
+    "merge_links": "Bağlantılar",
+    "merge_photo": "Fotoğraf",
+    "merge_kept": "Korunur",
+    "import_show": "Göster"
   },
   "desktopEdit": {
     "edit": "Düzenle",

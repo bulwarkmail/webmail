@@ -2,6 +2,7 @@ import type { Email, Attachment, CalendarEvent, CalendarParticipant, EmailBodyPa
 import { normalizeCalendarEventLike } from '@/lib/calendar-event-normalization';
 import { hasAlignedAuthenticationPass } from '@/lib/email-headers';
 import { fromWallClock, getTimeZoneOffsetMs, isValidTimeZone, parseLocalDateTime, type WallClock } from '@/lib/timezone';
+import { applyOverridePatch } from '@/lib/recurrence-instances';
 
 export type InvitationMethod =
   | 'publish'
@@ -797,6 +798,35 @@ export function invitationAnsweredAt(
  * user's identities, primary first: an invite may be addressed to an alias
  * identity rather than the primary address (#1283).
  */
+/**
+ * An invitation to a series is answered as a series: the answer is the series'
+ * own, and occurrences answered no on their own are listed apart (pim-p2-8).
+ * The card said "You declined" for a weekly meeting when one week was declined,
+ * read from whichever occurrence the calendar held first. `master` is the
+ * series as stored, with its recurrenceOverrides; `declined` holds the
+ * recurrence ids (wall clock in the event's zone), oldest first.
+ */
+export function seriesAnswers(
+  master: Partial<CalendarEvent>,
+  emails: readonly string[],
+): { status: string | null; declined: string[] } {
+  const own = findParticipantByEmails(master, emails);
+  const status = own?.participant.participationStatus ?? null;
+  const declined: string[] = [];
+  for (const [recurrenceId, patch] of Object.entries(master.recurrenceOverrides ?? {})) {
+    if (!patch || typeof patch !== 'object' || (patch as { excluded?: unknown }).excluded === true) continue;
+    const occurrence = applyOverridePatch(master, patch as Record<string, unknown>);
+    const mine = findParticipantByEmails(occurrence, emails);
+    if (mine?.participant.participationStatus === 'declined' && status !== 'declined') declined.push(recurrenceId);
+  }
+  return { status, declined: declined.sort() };
+}
+
+/** Whether a parsed invitation is for a whole series, not one occurrence of it. */
+export function isSeriesInvitation(event: Partial<CalendarEvent> | null | undefined): boolean {
+  return !!event?.recurrenceRules?.length && !event.recurrenceId;
+}
+
 export function findParticipantByEmails(
   event: Partial<CalendarEvent>,
   emails: readonly string[]
