@@ -898,6 +898,18 @@
     "new_folder_title": "สร้างโฟลเดอร์ใหม่",
     "new_subfolder_title": "สร้างโฟลเดอร์ย่อยใหม่"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, other {เก็บถาวร # การสนทนาแล้ว}}",
+    "conversations_to_trash": "{count, plural, other {ย้าย # การสนทนาไปถังขยะแล้ว}}",
+    "conversations_deleted": "{count, plural, other {ลบ # การสนทนาแล้ว}}",
+    "conversations_moved_to": "{count, plural, other {ย้าย # การสนทนาไปยัง {mailbox} แล้ว}}",
+    "conversations_moved": "{count, plural, other {ย้าย # การสนทนาแล้ว}}",
+    "select_all_in_folder": "{count, plural, other {เลือกการสนทนาทั้งหมด # รายการใน {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, other {เลือกอีเมลทั้งหมด # ฉบับใน {folder}}}",
+    "select_all_conversations": "{count, plural, other {เลือกการสนทนาทั้งหมด # รายการ}}",
+    "select_all_emails": "{count, plural, other {เลือกอีเมลทั้งหมด # ฉบับ}}",
+    "selecting_all": "กำลังเลือก…"
+  },
   "shared_tags": {
     "title": "ป้ายกำกับที่แชร์",
     "description": "ป้ายกำกับของกล่องจดหมายกลุ่มของคุณ ทุกคนในกลุ่มจะเห็นชื่อและสีเดียวกันบนอีเมลของกลุ่ม",

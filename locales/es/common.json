@@ -427,6 +427,18 @@
     "new_folder_title": "Nueva carpeta",
     "new_subfolder_title": "Nueva subcarpeta"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# conversación archivada} other {# conversaciones archivadas}}",
+    "conversations_to_trash": "{count, plural, one {# conversación movida a la papelera} other {# conversaciones movidas a la papelera}}",
+    "conversations_deleted": "{count, plural, one {# conversación eliminada} other {# conversaciones eliminadas}}",
+    "conversations_moved_to": "{count, plural, one {# conversación movida a {mailbox}} other {# conversaciones movidas a {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# conversación movida} other {# conversaciones movidas}}",
+    "select_all_in_folder": "{count, plural, one {Seleccionar la # conversación de {folder}} other {Seleccionar las # conversaciones de {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Seleccionar el # correo de {folder}} other {Seleccionar los # correos de {folder}}}",
+    "select_all_conversations": "{count, plural, one {Seleccionar la # conversación} other {Seleccionar las # conversaciones}}",
+    "select_all_emails": "{count, plural, one {Seleccionar el # correo} other {Seleccionar los # correos}}",
+    "selecting_all": "Seleccionando…"
+  },
   "shared_tags": {
     "title": "Etiquetas compartidas",
     "description": "Etiquetas de tus buzones de grupo. Todos en el grupo ven los mismos nombres y colores en su correo.",

@@ -427,6 +427,18 @@
     "new_folder_title": "Thư mục mới",
     "new_subfolder_title": "Thư mục con mới"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, other {Đã lưu trữ # cuộc trò chuyện}}",
+    "conversations_to_trash": "{count, plural, other {Đã chuyển # cuộc trò chuyện vào thùng rác}}",
+    "conversations_deleted": "{count, plural, other {Đã xóa # cuộc trò chuyện}}",
+    "conversations_moved_to": "{count, plural, other {Đã chuyển # cuộc trò chuyện tới {mailbox}}}",
+    "conversations_moved": "{count, plural, other {Đã chuyển # cuộc trò chuyện}}",
+    "select_all_in_folder": "{count, plural, other {Chọn tất cả # cuộc trò chuyện trong {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, other {Chọn tất cả # email trong {folder}}}",
+    "select_all_conversations": "{count, plural, other {Chọn tất cả # cuộc trò chuyện}}",
+    "select_all_emails": "{count, plural, other {Chọn tất cả # email}}",
+    "selecting_all": "Đang chọn…"
+  },
   "shared_tags": {
     "title": "Thẻ được chia sẻ",
     "description": "Thẻ của hộp thư nhóm của bạn. Mọi người trong nhóm đều nhìn thấy tên và màu sắc giống nhau trên thư của nhóm.",

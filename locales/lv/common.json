@@ -427,6 +427,18 @@
     "new_folder_title": "Jauna mape",
     "new_subfolder_title": "Jauna apakšmape"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, zero {# sarunas arhivētas} one {# saruna arhivēta} other {# sarunas arhivētas}}",
+    "conversations_to_trash": "{count, plural, zero {# sarunas pārvietotas uz atkritni} one {# saruna pārvietota uz atkritni} other {# sarunas pārvietotas uz atkritni}}",
+    "conversations_deleted": "{count, plural, zero {# sarunas izdzēstas} one {# saruna izdzēsta} other {# sarunas izdzēstas}}",
+    "conversations_moved_to": "{count, plural, zero {# sarunas pārvietotas uz {mailbox}} one {# saruna pārvietota uz {mailbox}} other {# sarunas pārvietotas uz {mailbox}}}",
+    "conversations_moved": "{count, plural, zero {# sarunas pārvietotas} one {# saruna pārvietota} other {# sarunas pārvietotas}}",
+    "select_all_in_folder": "{count, plural, zero {Atlasīt visas # sarunas mapē {folder}} one {Atlasīt # sarunu mapē {folder}} other {Atlasīt visas # sarunas mapē {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, zero {Atlasīt visas # vēstules mapē {folder}} one {Atlasīt # vēstuli mapē {folder}} other {Atlasīt visas # vēstules mapē {folder}}}",
+    "select_all_conversations": "{count, plural, zero {Atlasīt visas # sarunas} one {Atlasīt # sarunu} other {Atlasīt visas # sarunas}}",
+    "select_all_emails": "{count, plural, zero {Atlasīt visas # vēstules} one {Atlasīt # vēstuli} other {Atlasīt visas # vēstules}}",
+    "selecting_all": "Atlasa…"
+  },
   "shared_tags": {
     "title": "Kopīgotie tagi",
     "description": "Jūsu grupu pastkastu tagi. Visi grupā redz vienādus nosaukumus un krāsas pie tās vēstulēm.",

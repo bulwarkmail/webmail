@@ -427,6 +427,18 @@
     "new_folder_title": "Carpeta nova",
     "new_subfolder_title": "Subcarpeta nova"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# conversa arxivada} other {# converses arxivades}}",
+    "conversations_to_trash": "{count, plural, one {# conversa moguda a la Paperera} other {# converses mogudes a la Paperera}}",
+    "conversations_deleted": "{count, plural, one {# conversa suprimida} other {# converses suprimides}}",
+    "conversations_moved_to": "{count, plural, one {# conversa moguda a {mailbox}} other {# converses mogudes a {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# conversa moguda} other {# converses mogudes}}",
+    "select_all_in_folder": "{count, plural, one {Selecciona la # conversa de {folder}} other {Selecciona les # converses de {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Selecciona el # correu de {folder}} other {Selecciona els # correus de {folder}}}",
+    "select_all_conversations": "{count, plural, one {Selecciona la # conversa} other {Selecciona les # converses}}",
+    "select_all_emails": "{count, plural, one {Selecciona el # correu} other {Selecciona els # correus}}",
+    "selecting_all": "S'està seleccionant…"
+  },
   "shared_tags": {
     "title": "Etiquetes compartides",
     "description": "Etiquetes de les vostres bústies de grup. Tothom del grup veu els mateixos noms i colors al seu correu.",

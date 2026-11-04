@@ -427,6 +427,18 @@
     "new_folder_title": "Nuova cartella",
     "new_subfolder_title": "Nuova sottocartella"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# conversazione archiviata} other {# conversazioni archiviate}}",
+    "conversations_to_trash": "{count, plural, one {# conversazione spostata nel cestino} other {# conversazioni spostate nel cestino}}",
+    "conversations_deleted": "{count, plural, one {# conversazione eliminata} other {# conversazioni eliminate}}",
+    "conversations_moved_to": "{count, plural, one {# conversazione spostata in {mailbox}} other {# conversazioni spostate in {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# conversazione spostata} other {# conversazioni spostate}}",
+    "select_all_in_folder": "{count, plural, one {Seleziona la # conversazione in {folder}} other {Seleziona tutte le # conversazioni in {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Seleziona il # messaggio in {folder}} other {Seleziona tutti i # messaggi in {folder}}}",
+    "select_all_conversations": "{count, plural, one {Seleziona la # conversazione} other {Seleziona tutte le # conversazioni}}",
+    "select_all_emails": "{count, plural, one {Seleziona il # messaggio} other {Seleziona tutti i # messaggi}}",
+    "selecting_all": "Selezione in corso…"
+  },
   "shared_tags": {
     "title": "Etichette condivise",
     "description": "Etichette delle tue caselle di gruppo. Tutti nel gruppo vedono gli stessi nomi e colori sulla sua posta.",

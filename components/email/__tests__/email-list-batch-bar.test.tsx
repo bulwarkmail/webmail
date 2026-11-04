@@ -47,6 +47,15 @@ describe('selection bar', () => {
     await waitFor(() => expect(batchMarkAsSpam).toHaveBeenCalledWith(expect.anything(), ['one', 'two']));
   });
 
+  it('counts conversations in its toasts, as its title does (mail-18)', async () => {
+    const { toast } = await import('@/stores/toast-store');
+    const batchArchive = vi.fn().mockResolvedValue(true);
+    useEmailStore.setState({ batchArchive });
+    render(<EmailList emails={useEmailStore.getState().emails} />);
+    fireEvent.click(screen.getByTestId('batch-archive'));
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('mail_p2_list.conversations_archived', expect.anything()));
+  });
+
   it('opens the selection’s menu from ⋮, with Move to and Forward as attachments', () => {
     render(<EmailList emails={useEmailStore.getState().emails} />);
     fireEvent.click(screen.getByTestId('batch-more'));

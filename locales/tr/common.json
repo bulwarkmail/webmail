@@ -427,6 +427,18 @@
     "new_folder_title": "Yeni klasör",
     "new_subfolder_title": "Yeni alt klasör"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# konuşma arşivlendi} other {# konuşma arşivlendi}}",
+    "conversations_to_trash": "{count, plural, one {# konuşma Çöp Kutusuna taşındı} other {# konuşma Çöp Kutusuna taşındı}}",
+    "conversations_deleted": "{count, plural, one {# konuşma silindi} other {# konuşma silindi}}",
+    "conversations_moved_to": "{count, plural, one {# konuşma {mailbox} klasörüne taşındı} other {# konuşma {mailbox} klasörüne taşındı}}",
+    "conversations_moved": "{count, plural, one {# konuşma taşındı} other {# konuşma taşındı}}",
+    "select_all_in_folder": "{count, plural, one {{folder} klasöründeki # konuşmayı seç} other {{folder} klasöründeki # konuşmanın tümünü seç}}",
+    "select_all_emails_in_folder": "{count, plural, one {{folder} klasöründeki # e-postayı seç} other {{folder} klasöründeki # e-postanın tümünü seç}}",
+    "select_all_conversations": "{count, plural, one {# konuşmayı seç} other {# konuşmanın tümünü seç}}",
+    "select_all_emails": "{count, plural, one {# e-postayı seç} other {# e-postanın tümünü seç}}",
+    "selecting_all": "Seçiliyor…"
+  },
   "shared_tags": {
     "title": "Paylaşılan etiketler",
     "description": "Grup posta kutularınızın etiketleri. Gruptaki herkes iletilerinde aynı adları ve renkleri görür.",

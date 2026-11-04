@@ -427,6 +427,18 @@
     "new_folder_title": "Новая папка",
     "new_subfolder_title": "Новая вложенная папка"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# беседа перемещена в архив} few {# беседы перемещены в архив} many {# бесед перемещено в архив} other {# беседы перемещено в архив}}",
+    "conversations_to_trash": "{count, plural, one {# беседа перемещена в корзину} few {# беседы перемещены в корзину} many {# бесед перемещено в корзину} other {# беседы перемещено в корзину}}",
+    "conversations_deleted": "{count, plural, one {# беседа удалена} few {# беседы удалены} many {# бесед удалено} other {# беседы удалено}}",
+    "conversations_moved_to": "{count, plural, one {# беседа перемещена в {mailbox}} few {# беседы перемещены в {mailbox}} many {# бесед перемещено в {mailbox}} other {# беседы перемещено в {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# беседа перемещена} few {# беседы перемещены} many {# бесед перемещено} other {# беседы перемещено}}",
+    "select_all_in_folder": "{count, plural, one {Выбрать # беседу в папке {folder}} few {Выбрать все # беседы в папке {folder}} many {Выбрать все # бесед в папке {folder}} other {Выбрать все # беседы в папке {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Выбрать # письмо в папке {folder}} few {Выбрать все # письма в папке {folder}} many {Выбрать все # писем в папке {folder}} other {Выбрать все # письма в папке {folder}}}",
+    "select_all_conversations": "{count, plural, one {Выбрать # беседу} few {Выбрать все # беседы} many {Выбрать все # бесед} other {Выбрать все # беседы}}",
+    "select_all_emails": "{count, plural, one {Выбрать # письмо} few {Выбрать все # письма} many {Выбрать все # писем} other {Выбрать все # письма}}",
+    "selecting_all": "Выбор…"
+  },
   "shared_tags": {
     "title": "Общие теги",
     "description": "Теги ваших групповых ящиков. Все в группе видят одинаковые названия и цвета у её писем.",

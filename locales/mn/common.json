@@ -427,6 +427,18 @@
     "new_folder_title": "Шинэ хавтас",
     "new_subfolder_title": "Шинэ дэд хавтас"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# харилцан яриаг архивласан} other {# харилцан яриаг архивласан}}",
+    "conversations_to_trash": "{count, plural, one {# харилцан яриаг хогийн сав руу зөөсөн} other {# харилцан яриаг хогийн сав руу зөөсөн}}",
+    "conversations_deleted": "{count, plural, one {# харилцан яриаг устгасан} other {# харилцан яриаг устгасан}}",
+    "conversations_moved_to": "{count, plural, one {# харилцан яриаг {mailbox} руу зөөсөн} other {# харилцан яриаг {mailbox} руу зөөсөн}}",
+    "conversations_moved": "{count, plural, one {# харилцан яриаг зөөсөн} other {# харилцан яриаг зөөсөн}}",
+    "select_all_in_folder": "{count, plural, one {{folder} доторх # харилцан яриаг сонгох} other {{folder} доторх бүх # харилцан яриаг сонгох}}",
+    "select_all_emails_in_folder": "{count, plural, one {{folder} доторх # имэйлийг сонгох} other {{folder} доторх бүх # имэйлийг сонгох}}",
+    "select_all_conversations": "{count, plural, one {# харилцан яриаг сонгох} other {Бүх # харилцан яриаг сонгох}}",
+    "select_all_emails": "{count, plural, one {# имэйлийг сонгох} other {Бүх # имэйлийг сонгох}}",
+    "selecting_all": "Сонгож байна…"
+  },
   "shared_tags": {
     "title": "Хуваалцсан тагууд",
     "description": "Таны бүлгийн шуудангийн хайрцгуудын тагууд. Бүлгийн бүх гишүүн түүний захидлууд дээр ижил нэр, өнгийг хардаг.",

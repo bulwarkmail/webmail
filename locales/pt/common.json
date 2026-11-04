@@ -427,6 +427,18 @@
     "new_folder_title": "Nova pasta",
     "new_subfolder_title": "Nova subpasta"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# conversa arquivada} other {# conversas arquivadas}}",
+    "conversations_to_trash": "{count, plural, one {# conversa movida para a lixeira} other {# conversas movidas para a lixeira}}",
+    "conversations_deleted": "{count, plural, one {# conversa excluída} other {# conversas excluídas}}",
+    "conversations_moved_to": "{count, plural, one {# conversa movida para {mailbox}} other {# conversas movidas para {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# conversa movida} other {# conversas movidas}}",
+    "select_all_in_folder": "{count, plural, one {Selecionar a # conversa em {folder}} other {Selecionar todas as # conversas em {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Selecionar o # e-mail em {folder}} other {Selecionar todos os # e-mails em {folder}}}",
+    "select_all_conversations": "{count, plural, one {Selecionar a # conversa} other {Selecionar todas as # conversas}}",
+    "select_all_emails": "{count, plural, one {Selecionar o # e-mail} other {Selecionar todos os # e-mails}}",
+    "selecting_all": "Selecionando…"
+  },
   "shared_tags": {
     "title": "Etiquetas compartilhadas",
     "description": "Etiquetas das suas caixas de grupo. Todos no grupo veem os mesmos nomes e cores nos e-mails dela.",

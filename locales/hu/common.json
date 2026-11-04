@@ -427,6 +427,18 @@
     "new_folder_title": "Új mappa",
     "new_subfolder_title": "Új almappa"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# beszélgetés archiválva} other {# beszélgetés archiválva}}",
+    "conversations_to_trash": "{count, plural, one {# beszélgetés áthelyezve a kukába} other {# beszélgetés áthelyezve a kukába}}",
+    "conversations_deleted": "{count, plural, one {# beszélgetés törölve} other {# beszélgetés törölve}}",
+    "conversations_moved_to": "{count, plural, one {# beszélgetés áthelyezve ide: {mailbox}} other {# beszélgetés áthelyezve ide: {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# beszélgetés áthelyezve} other {# beszélgetés áthelyezve}}",
+    "select_all_in_folder": "{count, plural, one {A(z) # beszélgetés kijelölése itt: {folder}} other {Mind a(z) # beszélgetés kijelölése itt: {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {A(z) # e-mail kijelölése itt: {folder}} other {Mind a(z) # e-mail kijelölése itt: {folder}}}",
+    "select_all_conversations": "{count, plural, one {A(z) # beszélgetés kijelölése} other {Mind a(z) # beszélgetés kijelölése}}",
+    "select_all_emails": "{count, plural, one {A(z) # e-mail kijelölése} other {Mind a(z) # e-mail kijelölése}}",
+    "selecting_all": "Kijelölés…"
+  },
   "shared_tags": {
     "title": "Megosztott címkék",
     "description": "A csoportos postafiókjaid címkéi. A csoportban mindenki ugyanazokat a neveket és színeket látja a leveleken.",

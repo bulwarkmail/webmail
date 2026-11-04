@@ -427,6 +427,18 @@
     "new_folder_title": "Uus kaust",
     "new_subfolder_title": "Uus alamkaust"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# vestlus arhiveeritud} other {# vestlust arhiveeritud}}",
+    "conversations_to_trash": "{count, plural, one {# vestlus liigutati prügikasti} other {# vestlust liigutati prügikasti}}",
+    "conversations_deleted": "{count, plural, one {# vestlus kustutatud} other {# vestlust kustutatud}}",
+    "conversations_moved_to": "{count, plural, one {# vestlus liigutati kausta {mailbox}} other {# vestlust liigutati kausta {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# vestlus liigutatud} other {# vestlust liigutatud}}",
+    "select_all_in_folder": "{count, plural, one {Vali # vestlus kaustas {folder}} other {Vali kõik # vestlust kaustas {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Vali # e-kiri kaustas {folder}} other {Vali kõik # e-kirja kaustas {folder}}}",
+    "select_all_conversations": "{count, plural, one {Vali # vestlus} other {Vali kõik # vestlust}}",
+    "select_all_emails": "{count, plural, one {Vali # e-kiri} other {Vali kõik # e-kirja}}",
+    "selecting_all": "Valimine…"
+  },
   "shared_tags": {
     "title": "Jagatud sildid",
     "description": "Sinu grupipostkastide sildid. Kõik grupis näevad selle kirjadel samu nimesid ja värve.",

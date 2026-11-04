@@ -7,12 +7,19 @@ import { announceMovedToMainWindow, type PopoutMovedNotice } from './channel';
 type MoveKind = PopoutMovedNotice['kind'];
 type Translate = (key: string, values?: Record<string, string>) => string;
 
-/** The toast's title for each kind, in the `notifications` namespace. */
-const TITLE_KEY: Record<MoveKind, string> = {
-  archive: 'email_archived',
-  delete: 'email_deleted',
-  move: 'email_moved',
-};
+/**
+ * The toast's title for each kind, the main window's words (mail-18):
+ * "Archived", "Moved to Trash", and "Email deleted" only for a delete for
+ * good, which has nothing to restore.
+ */
+function titleKey(kind: MoveKind, hasRestore: boolean): string {
+  if (kind === 'archive') return 'mail_list_extra.archived';
+  if (kind === 'delete') return hasRestore ? 'mail_list_extra.moved_to_trash' : 'notifications.email_deleted';
+  return 'notifications.email_moved';
+}
+
+/** `t` of the `notifications` namespace, for the Undo labels. */
+const notificationsOf = (t: Translate): Translate => (key, values) => t(`notifications.${key}`, values);
 
 /** A move this window made, with logins in place of clients, so another window can undo it. */
 export function movedNotice(kind: MoveKind, batches: EmailRestoreBatch[] | null): PopoutMovedNotice {
@@ -50,11 +57,11 @@ export async function offerMoveUndo(
   inOwnWindow: boolean,
 ): Promise<void> {
   if (inOwnWindow && (await announceMovedToMainWindow(movedNotice(kind, restore)))) return;
-  toastWithUndo(t(TITLE_KEY[kind]), undoMoveAction(client, restore, undoLabels(t)));
+  toastWithUndo(t(titleKey(kind, !!restore?.length)), undoMoveAction(client, restore, undoLabels(notificationsOf(t))));
 }
 
-/** The main window's side of offerMoveUndo. `t` is of the `notifications` namespace. */
+/** The main window's side of offerMoveUndo. `t` is the root translator, as there. */
 export function takeOverMoved(notice: PopoutMovedNotice, t: Translate): void {
   const batches = restoreBatchesFromNotice(notice);
-  toastWithUndo(t(TITLE_KEY[notice.kind]), undoMoveAction(useAuthStore.getState().client, batches, undoLabels(t)));
+  toastWithUndo(t(titleKey(notice.kind, notice.batches.length > 0)), undoMoveAction(useAuthStore.getState().client, batches, undoLabels(notificationsOf(t))));
 }

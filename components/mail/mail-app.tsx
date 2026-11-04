@@ -50,6 +50,7 @@ import { formatRejectedRecipients, RescheduleRestoredError } from "@/lib/jmap/cl
 import { subscribePushStateChanges } from "@/lib/push-events";
 import { createMailPushListener } from "@/lib/mail-push-listener";
 import { keywordRestorePoints, markSelectionReadWithUndo, recordQuietUndo, runBatchEmailAction, toastWithUndo, undoKeywordAction, undoLabels, undoMoveAction } from "@/lib/email-action-toast";
+import { batchToastTitle, selectionRowCount } from "@/lib/selection-toast";
 import { MailboxShareDialog } from "@/components/layout/mailbox-share-dialog";
 import { ShareNotificationToaster } from "@/components/layout/share-notification-toaster";
 import { CalendarEventNotificationToaster } from "@/components/layout/calendar-event-notification-toaster";
@@ -1065,9 +1066,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       if (shortcutsTargetSelection && client) {
         const count = selectedEmailKeys.size;
         if (!(await confirmMailRemoval('archive', count, confirmDialog, tRemove))) return;
+        // Counted as the selection bar counts: conversations (mail-18).
+        const rows = selectionRowCount(resolveSelectedEmails(useEmailStore.getState()), count, disableThreading);
         const restore = restoreBatchesForSelection(client);
         await runBatchEmailAction(() => batchArchive(client), {
-          success: t('notifications.emails_archived', { count }),
+          success: batchToastTitle(t, 'archive', rows, disableThreading),
           undo: undoMoveAction(client, restore, undo),
           error: t('notifications.error_archiving'),
           describeError: (error) => error instanceof ArchiveMailboxNotFoundError
@@ -1104,10 +1107,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         } else if (!(await confirmMailRemoval('delete', selectedEmailKeys.size, confirmDialog, tRemove))) {
           return;
         }
-        const count = selectedEmailKeys.size;
+        const rows = selectionRowCount(resolveSelectedEmails(useEmailStore.getState()), selectedEmailKeys.size, disableThreading);
         const restore = permanent ? null : restoreBatchesForSelection(client);
         await runBatchEmailAction(() => batchDelete(client, permanent), {
-          success: t('notifications.emails_deleted', { count }),
+          success: batchToastTitle(t, permanent ? 'delete' : 'trash', rows, disableThreading),
           error: t('notifications.error_deleting'),
           undo: undoMoveAction(client, restore, undo),
         });
@@ -1286,7 +1289,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [activeEmails, selectedEmail, client, selectedMailbox, isMobile, selectedEmailKeys, mailboxes, isScheduledView, mvShell, cursorOnly, showCrossStarred, isUnifiedView, unifiedRole, archiveActionEnabled, deepLinkPane]);
+  }), [activeEmails, selectedEmail, client, selectedMailbox, isMobile, selectedEmailKeys, mailboxes, isScheduledView, mvShell, cursorOnly, showCrossStarred, isUnifiedView, unifiedRole, archiveActionEnabled, deepLinkPane, disableThreading]);
 
   // Initialize keyboard shortcuts
   // Mountain View keeps the ticked rows while a message is read (#1231). The

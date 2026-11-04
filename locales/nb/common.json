@@ -427,6 +427,18 @@
     "new_folder_title": "Ny mappe",
     "new_subfolder_title": "Ny undermappe"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# samtale arkivert} other {# samtaler arkivert}}",
+    "conversations_to_trash": "{count, plural, one {# samtale flyttet til papirkurven} other {# samtaler flyttet til papirkurven}}",
+    "conversations_deleted": "{count, plural, one {# samtale slettet} other {# samtaler slettet}}",
+    "conversations_moved_to": "{count, plural, one {# samtale flyttet til {mailbox}} other {# samtaler flyttet til {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# samtale flyttet} other {# samtaler flyttet}}",
+    "select_all_in_folder": "{count, plural, one {Velg den # samtalen i {folder}} other {Velg alle # samtaler i {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Velg den # e-posten i {folder}} other {Velg alle # e-poster i {folder}}}",
+    "select_all_conversations": "{count, plural, one {Velg den # samtalen} other {Velg alle # samtaler}}",
+    "select_all_emails": "{count, plural, one {Velg den # e-posten} other {Velg alle # e-poster}}",
+    "selecting_all": "Velger…"
+  },
   "shared_tags": {
     "title": "Delte etiketter",
     "description": "Etiketter i gruppepostkassene dine. Alle i gruppen ser de samme navnene og fargene på e-posten der.",

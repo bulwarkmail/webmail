@@ -427,6 +427,18 @@
     "new_folder_title": "新建文件夹",
     "new_subfolder_title": "新建子文件夹"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, other {已归档 # 个会话}}",
+    "conversations_to_trash": "{count, plural, other {已将 # 个会话移至已删除}}",
+    "conversations_deleted": "{count, plural, other {已删除 # 个会话}}",
+    "conversations_moved_to": "{count, plural, other {已将 # 个会话移至 {mailbox}}}",
+    "conversations_moved": "{count, plural, other {已移动 # 个会话}}",
+    "select_all_in_folder": "{count, plural, other {选择 {folder} 中的全部 # 个会话}}",
+    "select_all_emails_in_folder": "{count, plural, other {选择 {folder} 中的全部 # 封邮件}}",
+    "select_all_conversations": "{count, plural, other {选择全部 # 个会话}}",
+    "select_all_emails": "{count, plural, other {选择全部 # 封邮件}}",
+    "selecting_all": "正在选择…"
+  },
   "shared_tags": {
     "title": "共享标签",
     "description": "您的群组邮箱的标签。群组中的每个人在其邮件上看到的名称和颜色都相同。",

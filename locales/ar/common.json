@@ -427,6 +427,18 @@
     "new_folder_title": "مجلد جديد",
     "new_subfolder_title": "مجلد فرعي جديد"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {تمت أرشفة محادثة واحدة} two {تمت أرشفة محادثتين} few {تمت أرشفة # محادثات} many {تمت أرشفة # محادثة} other {تمت أرشفة # محادثة}}",
+    "conversations_to_trash": "{count, plural, one {تم نقل محادثة واحدة إلى المهملات} two {تم نقل محادثتين إلى المهملات} few {تم نقل # محادثات إلى المهملات} many {تم نقل # محادثة إلى المهملات} other {تم نقل # محادثة إلى المهملات}}",
+    "conversations_deleted": "{count, plural, one {تم حذف محادثة واحدة} two {تم حذف محادثتين} few {تم حذف # محادثات} many {تم حذف # محادثة} other {تم حذف # محادثة}}",
+    "conversations_moved_to": "{count, plural, one {تم نقل محادثة واحدة إلى {mailbox}} two {تم نقل محادثتين إلى {mailbox}} few {تم نقل # محادثات إلى {mailbox}} many {تم نقل # محادثة إلى {mailbox}} other {تم نقل # محادثة إلى {mailbox}}}",
+    "conversations_moved": "{count, plural, one {تم نقل محادثة واحدة} two {تم نقل محادثتين} few {تم نقل # محادثات} many {تم نقل # محادثة} other {تم نقل # محادثة}}",
+    "select_all_in_folder": "{count, plural, one {تحديد المحادثة في {folder}} two {تحديد المحادثتين في {folder}} few {تحديد كل المحادثات الـ # في {folder}} many {تحديد كل المحادثات الـ # في {folder}} other {تحديد كل المحادثات الـ # في {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {تحديد الرسالة في {folder}} two {تحديد الرسالتين في {folder}} few {تحديد كل الرسائل الـ # في {folder}} many {تحديد كل الرسائل الـ # في {folder}} other {تحديد كل الرسائل الـ # في {folder}}}",
+    "select_all_conversations": "{count, plural, one {تحديد المحادثة} two {تحديد المحادثتين} few {تحديد كل المحادثات الـ #} many {تحديد كل المحادثات الـ #} other {تحديد كل المحادثات الـ #}}",
+    "select_all_emails": "{count, plural, one {تحديد الرسالة} two {تحديد الرسالتين} few {تحديد كل الرسائل الـ #} many {تحديد كل الرسائل الـ #} other {تحديد كل الرسائل الـ #}}",
+    "selecting_all": "جارٍ التحديد…"
+  },
   "shared_tags": {
     "title": "الوسوم المشتركة",
     "description": "وسوم صناديق البريد الجماعية الخاصة بك. يرى كل من في المجموعة الأسماء والألوان نفسها على رسائلها.",

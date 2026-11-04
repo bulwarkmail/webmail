@@ -370,6 +370,18 @@
     "new_folder_title": "תיקייה חדשה",
     "new_subfolder_title": "תת־תיקייה חדשה"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {שיחה אחת הועברה לארכיון} two {שתי שיחות הועברו לארכיון} other {# שיחות הועברו לארכיון}}",
+    "conversations_to_trash": "{count, plural, one {שיחה אחת הועברה לאשפה} two {שתי שיחות הועברו לאשפה} other {# שיחות הועברו לאשפה}}",
+    "conversations_deleted": "{count, plural, one {שיחה אחת נמחקה} two {שתי שיחות נמחקו} other {# שיחות נמחקו}}",
+    "conversations_moved_to": "{count, plural, one {שיחה אחת הועברה אל {mailbox}} two {שתי שיחות הועברו אל {mailbox}} other {# שיחות הועברו אל {mailbox}}}",
+    "conversations_moved": "{count, plural, one {שיחה אחת הועברה} two {שתי שיחות הועברו} other {# שיחות הועברו}}",
+    "select_all_in_folder": "{count, plural, one {בחירת השיחה בתיקייה {folder}} two {בחירת שתי השיחות בתיקייה {folder}} other {בחירת כל # השיחות בתיקייה {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {בחירת ההודעה בתיקייה {folder}} two {בחירת שתי ההודעות בתיקייה {folder}} other {בחירת כל # ההודעות בתיקייה {folder}}}",
+    "select_all_conversations": "{count, plural, one {בחירת השיחה} two {בחירת שתי השיחות} other {בחירת כל # השיחות}}",
+    "select_all_emails": "{count, plural, one {בחירת ההודעה} two {בחירת שתי ההודעות} other {בחירת כל # ההודעות}}",
+    "selecting_all": "הבחירה מתבצעת…"
+  },
   "shared_tags": {
     "title": "תגים משותפים",
     "description": "התגים של תיבות הדואר הקבוצתיות שלך. כל חברי הקבוצה רואים את אותם שמות וצבעים בדואר שלה.",

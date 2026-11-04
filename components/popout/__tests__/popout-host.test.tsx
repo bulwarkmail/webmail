@@ -514,7 +514,8 @@ describe('a move a message window made', () => {
     });
     expect(taken).toBe(true);
     const toasts = useToastStore.getState().toasts;
-    expect(toasts.map((toast) => toast.title)).toEqual(['notifications.email_archived']);
+    // The main window's own word for it (mail-18).
+    expect(toasts.map((toast) => toast.title)).toEqual(['mail_list_extra.archived']);
     expect(toasts[0].action?.label).toBe('notifications.undo');
     expect(undoHistory()).toHaveLength(1);
     await act(async () => {

@@ -427,6 +427,18 @@
     "new_folder_title": "Нова папка",
     "new_subfolder_title": "Нова вкладена папка"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# розмову заархівовано} few {# розмови заархівовано} many {# розмов заархівовано} other {# розмови заархівовано}}",
+    "conversations_to_trash": "{count, plural, one {# розмову переміщено до кошика} few {# розмови переміщено до кошика} many {# розмов переміщено до кошика} other {# розмови переміщено до кошика}}",
+    "conversations_deleted": "{count, plural, one {# розмову видалено} few {# розмови видалено} many {# розмов видалено} other {# розмови видалено}}",
+    "conversations_moved_to": "{count, plural, one {# розмову переміщено до {mailbox}} few {# розмови переміщено до {mailbox}} many {# розмов переміщено до {mailbox}} other {# розмови переміщено до {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# розмову переміщено} few {# розмови переміщено} many {# розмов переміщено} other {# розмови переміщено}}",
+    "select_all_in_folder": "{count, plural, one {Вибрати # розмову в папці {folder}} few {Вибрати всі # розмови в папці {folder}} many {Вибрати всі # розмов у папці {folder}} other {Вибрати всі # розмови в папці {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Вибрати # лист у папці {folder}} few {Вибрати всі # листи в папці {folder}} many {Вибрати всі # листів у папці {folder}} other {Вибрати всі # листа в папці {folder}}}",
+    "select_all_conversations": "{count, plural, one {Вибрати # розмову} few {Вибрати всі # розмови} many {Вибрати всі # розмов} other {Вибрати всі # розмови}}",
+    "select_all_emails": "{count, plural, one {Вибрати # лист} few {Вибрати всі # листи} many {Вибрати всі # листів} other {Вибрати всі # листа}}",
+    "selecting_all": "Вибір…"
+  },
   "shared_tags": {
     "title": "Спільні теги",
     "description": "Теги ваших групових скриньок. Усі в групі бачать однакові назви й кольори на її листах.",

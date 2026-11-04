@@ -427,6 +427,18 @@
     "new_folder_title": "New folder",
     "new_subfolder_title": "New subfolder"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# conversation archived} other {# conversations archived}}",
+    "conversations_to_trash": "{count, plural, one {# conversation moved to Trash} other {# conversations moved to Trash}}",
+    "conversations_deleted": "{count, plural, one {# conversation deleted} other {# conversations deleted}}",
+    "conversations_moved_to": "{count, plural, one {# conversation moved to {mailbox}} other {# conversations moved to {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# conversation moved} other {# conversations moved}}",
+    "select_all_in_folder": "{count, plural, one {Select the # conversation in {folder}} other {Select all # conversations in {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Select the # email in {folder}} other {Select all # emails in {folder}}}",
+    "select_all_conversations": "{count, plural, one {Select the # conversation} other {Select all # conversations}}",
+    "select_all_emails": "{count, plural, one {Select the # email} other {Select all # emails}}",
+    "selecting_all": "Selecting…"
+  },
   "shared_tags": {
     "title": "Shared tags",
     "description": "Tags of your group mailboxes. Everyone in the group sees the same names and colors on its mail.",

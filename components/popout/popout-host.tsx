@@ -171,7 +171,7 @@ export function PopoutHost() {
           // Undo for what a message window archived, deleted or moved: it has closed.
           claimOnce(`bulwark-popout-moved:${message.requestId}`, () => {
             channel?.post({ type: "moved-ack", requestId: message.requestId });
-            takeOverMoved(message.notice, (key, values) => tRef.current(`notifications.${key}`, values));
+            takeOverMoved(message.notice, (key, values) => tRef.current(key, values));
             refreshList();
           });
           break;

@@ -427,6 +427,18 @@
     "new_folder_title": "新しいフォルダー",
     "new_subfolder_title": "新しいサブフォルダー"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, other {#件の会話をアーカイブしました}}",
+    "conversations_to_trash": "{count, plural, other {#件の会話をゴミ箱に移動しました}}",
+    "conversations_deleted": "{count, plural, other {#件の会話を削除しました}}",
+    "conversations_moved_to": "{count, plural, other {#件の会話を{mailbox}に移動しました}}",
+    "conversations_moved": "{count, plural, other {#件の会話を移動しました}}",
+    "select_all_in_folder": "{count, plural, other {{folder}の#件の会話をすべて選択}}",
+    "select_all_emails_in_folder": "{count, plural, other {{folder}の#件のメールをすべて選択}}",
+    "select_all_conversations": "{count, plural, other {#件の会話をすべて選択}}",
+    "select_all_emails": "{count, plural, other {#件のメールをすべて選択}}",
+    "selecting_all": "選択しています…"
+  },
   "shared_tags": {
     "title": "共有タグ",
     "description": "グループメールボックスのタグです。グループの全員が、そのメールに同じ名前と色のタグを見ることができます。",

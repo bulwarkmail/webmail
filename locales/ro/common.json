@@ -427,6 +427,18 @@
     "new_folder_title": "Dosar nou",
     "new_subfolder_title": "Subfolder nou"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# conversație arhivată} few {# conversații arhivate} other {# de conversații arhivate}}",
+    "conversations_to_trash": "{count, plural, one {# conversație mutată în coșul de gunoi} few {# conversații mutate în coșul de gunoi} other {# de conversații mutate în coșul de gunoi}}",
+    "conversations_deleted": "{count, plural, one {# conversație ștearsă} few {# conversații șterse} other {# de conversații șterse}}",
+    "conversations_moved_to": "{count, plural, one {# conversație mutată în {mailbox}} few {# conversații mutate în {mailbox}} other {# de conversații mutate în {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# conversație mutată} few {# conversații mutate} other {# de conversații mutate}}",
+    "select_all_in_folder": "{count, plural, one {Selectează # conversație din {folder}} few {Selectează toate cele # conversații din {folder}} other {Selectează toate cele # de conversații din {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Selectează # e-mail din {folder}} few {Selectează toate cele # e-mailuri din {folder}} other {Selectează toate cele # de e-mailuri din {folder}}}",
+    "select_all_conversations": "{count, plural, one {Selectează # conversație} few {Selectează toate cele # conversații} other {Selectează toate cele # de conversații}}",
+    "select_all_emails": "{count, plural, one {Selectează # e-mail} few {Selectează toate cele # e-mailuri} other {Selectează toate cele # de e-mailuri}}",
+    "selecting_all": "Se selectează…"
+  },
   "shared_tags": {
     "title": "Etichete partajate",
     "description": "Etichetele căsuțelor dvs. de grup. Toți membrii grupului văd aceleași nume și culori pe mesajele lui.",

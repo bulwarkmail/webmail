@@ -427,6 +427,18 @@
     "new_folder_title": "Nouveau dossier",
     "new_subfolder_title": "Nouveau sous-dossier"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# conversation archivée} other {# conversations archivées}}",
+    "conversations_to_trash": "{count, plural, one {# conversation déplacée dans la corbeille} other {# conversations déplacées dans la corbeille}}",
+    "conversations_deleted": "{count, plural, one {# conversation supprimée} other {# conversations supprimées}}",
+    "conversations_moved_to": "{count, plural, one {# conversation déplacée vers {mailbox}} other {# conversations déplacées vers {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# conversation déplacée} other {# conversations déplacées}}",
+    "select_all_in_folder": "{count, plural, one {Sélectionner la # conversation de {folder}} other {Sélectionner les # conversations de {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Sélectionner le # e-mail de {folder}} other {Sélectionner les # e-mails de {folder}}}",
+    "select_all_conversations": "{count, plural, one {Sélectionner la # conversation} other {Sélectionner les # conversations}}",
+    "select_all_emails": "{count, plural, one {Sélectionner le # e-mail} other {Sélectionner les # e-mails}}",
+    "selecting_all": "Sélection…"
+  },
   "shared_tags": {
     "title": "Étiquettes partagées",
     "description": "Les étiquettes de vos boîtes aux lettres de groupe. Tous les membres du groupe voient les mêmes noms et couleurs sur ses messages.",

@@ -427,6 +427,18 @@
     "new_folder_title": "Nový priečinok",
     "new_subfolder_title": "Nový podpriečinok"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# konverzácia archivovaná} few {# konverzácie archivované} many {# konverzácií archivovaných} other {# konverzácií archivovaných}}",
+    "conversations_to_trash": "{count, plural, one {# konverzácia presunutá do koša} few {# konverzácie presunuté do koša} many {# konverzácií presunutých do koša} other {# konverzácií presunutých do koša}}",
+    "conversations_deleted": "{count, plural, one {# konverzácia odstránená} few {# konverzácie odstránené} many {# konverzácií odstránených} other {# konverzácií odstránených}}",
+    "conversations_moved_to": "{count, plural, one {# konverzácia presunutá do {mailbox}} few {# konverzácie presunuté do {mailbox}} many {# konverzácií presunutých do {mailbox}} other {# konverzácií presunutých do {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# konverzácia presunutá} few {# konverzácie presunuté} many {# konverzácií presunutých} other {# konverzácií presunutých}}",
+    "select_all_in_folder": "{count, plural, one {Vybrať # konverzáciu v priečinku {folder}} few {Vybrať všetky # konverzácie v priečinku {folder}} many {Vybrať všetkých # konverzácií v priečinku {folder}} other {Vybrať všetkých # konverzácií v priečinku {folder}}}",
+    "select_all_emails_in_folder": "{count, plural, one {Vybrať # e-mail v priečinku {folder}} few {Vybrať všetky # e-maily v priečinku {folder}} many {Vybrať všetkých # e-mailov v priečinku {folder}} other {Vybrať všetkých # e-mailov v priečinku {folder}}}",
+    "select_all_conversations": "{count, plural, one {Vybrať # konverzáciu} few {Vybrať všetky # konverzácie} many {Vybrať všetkých # konverzácií} other {Vybrať všetkých # konverzácií}}",
+    "select_all_emails": "{count, plural, one {Vybrať # e-mail} few {Vybrať všetky # e-maily} many {Vybrať všetkých # e-mailov} other {Vybrať všetkých # e-mailov}}",
+    "selecting_all": "Vyberá sa…"
+  },
   "shared_tags": {
     "title": "Zdieľané štítky",
     "description": "Štítky vašich skupinových schránok. Všetci v skupine vidia pri jej pošte rovnaké názvy a farby.",

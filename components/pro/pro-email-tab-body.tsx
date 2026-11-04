@@ -392,14 +392,14 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     try {
       // false: not deleted (a plugin stopped it), so the tab stays open.
       if (await deleteEmail(client, email.id)) {
-        await offerMoveUndo('delete', client, restore, tNotifications, isPopoutWindow());
+        await offerMoveUndo('delete', client, restore, t, isPopoutWindow());
         onClose();
       }
     } catch (err) {
       console.error('Delete failed:', err);
       toast.error(tNotifications('error_deleting'));
     }
-  }, [client, email, mailboxes, deleteEmail, onClose, tNotifications, confirmDialog, tRemove]);
+  }, [client, email, mailboxes, deleteEmail, onClose, t, tNotifications, confirmDialog, tRemove]);
 
   const handleArchive = useCallback(async () => {
     if (!client || !email) return;
@@ -409,12 +409,12 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     const restore = restoreBatchesFor([email], client);
     try {
       if (!(await moveToMailbox(client, email.id, archiveMb.id, emailKeyFor(email)))) return;
-      await offerMoveUndo('archive', client, restore, tNotifications, isPopoutWindow());
+      await offerMoveUndo('archive', client, restore, t, isPopoutWindow());
       onClose();
     } catch (err) {
       console.error('Archive failed:', err);
     }
-  }, [client, email, mailboxes, moveToMailbox, onClose, tNotifications, confirmDialog, tRemove]);
+  }, [client, email, mailboxes, moveToMailbox, onClose, t, confirmDialog, tRemove]);
 
   const handleToggleStar = useCallback(async () => {
     if (!client || !email) return;
@@ -510,13 +510,13 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     const restore = restoreBatchesFor([email], client);
     try {
       if (await moveToMailbox(client, email.id, mailboxId, emailKeyFor(email))) {
-        await offerMoveUndo('move', client, restore, tNotifications, isPopoutWindow());
+        await offerMoveUndo('move', client, restore, t, isPopoutWindow());
         onClose();
       }
     } catch (err) {
       console.error('Move failed:', err);
     }
-  }, [client, email, moveToMailbox, onClose, tNotifications]);
+  }, [client, email, moveToMailbox, onClose, t]);
 
   // This view's message answers the same keys as a message in the mail tab,
   // while its tab is the one in front. c comes from the mail page, as on any tab.

@@ -25,6 +25,7 @@ import { usePhishingReport } from "@/hooks/use-phishing-report";
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
+import { batchToastTitle, selectionRowCount } from "@/lib/selection-toast";
 import { Spinner } from "@/components/ui/spinner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useArchiveActionEnabled } from "@/lib/archive-gate";
@@ -206,6 +207,7 @@ export function EmailList({
   const tViewer = useTranslations('email_viewer');
   const tSidebar = useTranslations('sidebar');
   const tListExtra = useTranslations('mail_list_extra');
+  const tRoot = useTranslations();
   const tUnread = useTranslations('account_unread');
   const mountainViewList = useSettingsStore((state) => state.interfaceLayout === 'mountain-view');
   const isDesktopPane = useIsDesktop();
@@ -571,6 +573,9 @@ export function EmailList({
     () => (hasSelection ? resolveSelectedEmails({ emails, threadEmailsCache, selectedEmailKeys }) : []),
     [hasSelection, emails, threadEmailsCache, selectedEmailKeys],
   );
+  // The rows the selection covers: what the bar, the pane and the toasts
+  // count (mail-18). A conversation row ticks all its loaded messages.
+  const selectionRows = selectionRowCount(selectedEmailsForRemoval, selectedEmailKeys.size, disableThreading);
   // Report phishing for the selection, one report per message (enterprise pack).
   const selectionPhishing = usePhishingReport(selectedEmailsForRemoval, effectiveMailboxRole);
   const tPhishing = useTranslations('phishing_report');
@@ -680,11 +685,11 @@ export function EmailList({
     if (!client || isProcessing) return;
     if (!(await confirmMailRemoval('archive', selectedEmailKeys.size, confirmDialog, tRemove))) return;
     setIsProcessing(true);
-    const count = selectedEmailKeys.size;
+    const rows = selectionRows;
     const restore = restoreBatchesForSelection(client);
     try {
       await runBatchEmailAction(() => batchArchive(client), {
-        success: tNotifications('emails_archived', { count }),
+        success: batchToastTitle(tRoot, 'archive', rows, disableThreading),
         error: tNotifications('error_archiving'),
         describeError: (error) => error instanceof ArchiveMailboxNotFoundError
           ? tViewer('archive_mailbox_not_found')
@@ -699,7 +704,7 @@ export function EmailList({
   const handleBatchMoveToMailbox = async (mailboxId: string) => {
     if (!client || isProcessing) return;
     setIsProcessing(true);
-    const count = selectedEmailKeys.size;
+    const rows = selectionRows;
     // Undo puts the messages back; those a mixed-account list moved to
     // another account move back the same way (the receipts).
     const restore = restoreBatchesForSelection(client);
@@ -707,10 +712,8 @@ export function EmailList({
     try {
       const destination = mailboxes.find((m) => m.id === mailboxId);
       await runBatchEmailAction(() => batchMoveToMailbox(client, mailboxId, undefined, receipts), {
-        // "3 emails moved to Family" (mail-18).
-        success: destination
-          ? tListExtra('moved_count_to', { count, mailbox: getMailboxPath(destination, mailboxes) })
-          : tNotifications('emails_moved', { count }),
+        // "3 conversations moved to Family" (mail-18).
+        success: batchToastTitle(tRoot, 'move', rows, disableThreading, destination ? getMailboxPath(destination, mailboxes) : undefined),
         error: tNotifications('move_failed'),
         undo: undoMoveAction(client, restore, undo, receipts),
       });
@@ -744,11 +747,11 @@ export function EmailList({
     }
 
     setIsProcessing(true);
-    const count = selectedEmailKeys.size;
+    const rows = selectionRows;
     const restore = isInTrash ? null : restoreBatchesForSelection(client);
     try {
       await runBatchEmailAction(() => batchDelete(client, isInTrash), {
-        success: tNotifications('emails_deleted', { count }),
+        success: batchToastTitle(tRoot, isInTrash ? 'delete' : 'trash', rows, disableThreading),
         error: tNotifications('error_deleting'),
         undo: undoMoveAction(client, restore, undo),
       });
@@ -827,7 +830,7 @@ export function EmailList({
   // shows them, or emails when conversations are off.
   const selectionTitle = disableThreading
     ? t('batch_actions.selected_messages', { count: selectedEmailKeys.size })
-    : tListExtra('selected_conversations', { count: selectedEmailKeys.size });
+    : tListExtra('selected_conversations', { count: selectionRows });
 
   const currentMailbox = mailboxes.find(m => m.id === selectedMailbox);
   const isEmptyableFolder = currentMailbox?.role === 'trash' || currentMailbox?.role === 'junk';
@@ -1115,7 +1118,7 @@ export function EmailList({
           <div className="flex items-center gap-2 min-w-0 animate-in fade-in slide-in-from-left-3 duration-300">
             {/* "5 conversations": the bar is narrow beside its buttons. */}
             <span className="text-sm font-medium text-foreground whitespace-nowrap truncate" title={selectionTitle}>
-              {disableThreading ? selectionTitle : tListExtra('conversation_count', { count: selectedEmailKeys.size })}
+              {disableThreading ? selectionTitle : tListExtra('conversation_count', { count: selectionRows })}
             </span>
           </div>
           <div className={cn("flex items-center flex-shrink-0 animate-in fade-in slide-in-from-right-3 duration-300", batchNarrow ? "gap-0" : "gap-0.5")}>

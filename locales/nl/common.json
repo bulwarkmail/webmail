@@ -427,6 +427,18 @@
     "new_folder_title": "Nieuwe map",
     "new_subfolder_title": "Nieuwe submap"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# gesprek gearchiveerd} other {# gesprekken gearchiveerd}}",
+    "conversations_to_trash": "{count, plural, one {# gesprek naar de prullenbak verplaatst} other {# gesprekken naar de prullenbak verplaatst}}",
+    "conversations_deleted": "{count, plural, one {# gesprek verwijderd} other {# gesprekken verwijderd}}",
+    "conversations_moved_to": "{count, plural, one {# gesprek verplaatst naar {mailbox}} other {# gesprekken verplaatst naar {mailbox}}}",
+    "conversations_moved": "{count, plural, one {# gesprek verplaatst} other {# gesprekken verplaatst}}",
+    "select_all_in_folder": "{count, plural, one {Het # gesprek in {folder} selecteren} other {Alle # gesprekken in {folder} selecteren}}",
+    "select_all_emails_in_folder": "{count, plural, one {De # e-mail in {folder} selecteren} other {Alle # e-mails in {folder} selecteren}}",
+    "select_all_conversations": "{count, plural, one {Het # gesprek selecteren} other {Alle # gesprekken selecteren}}",
+    "select_all_emails": "{count, plural, one {De # e-mail selecteren} other {Alle # e-mails selecteren}}",
+    "selecting_all": "Selecteren…"
+  },
   "shared_tags": {
     "title": "Gedeelde labels",
     "description": "Labels van je groepspostvakken. Iedereen in de groep ziet dezelfde namen en kleuren bij de e-mail ervan.",

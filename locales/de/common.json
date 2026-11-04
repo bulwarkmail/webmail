@@ -427,6 +427,18 @@
     "new_folder_title": "Neuer Ordner",
     "new_subfolder_title": "Neuer Unterordner"
   },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# Unterhaltung archiviert} other {# Unterhaltungen archiviert}}",
+    "conversations_to_trash": "{count, plural, one {# Unterhaltung in den Papierkorb verschoben} other {# Unterhaltungen in den Papierkorb verschoben}}",
+    "conversations_deleted": "{count, plural, one {# Unterhaltung gelöscht} other {# Unterhaltungen gelöscht}}",
+    "conversations_moved_to": "{count, plural, one {# Unterhaltung nach {mailbox} verschoben} other {# Unterhaltungen nach {mailbox} verschoben}}",
+    "conversations_moved": "{count, plural, one {# Unterhaltung verschoben} other {# Unterhaltungen verschoben}}",
+    "select_all_in_folder": "{count, plural, one {Die # Unterhaltung in {folder} auswählen} other {Alle # Unterhaltungen in {folder} auswählen}}",
+    "select_all_emails_in_folder": "{count, plural, one {Die # E-Mail in {folder} auswählen} other {Alle # E-Mails in {folder} auswählen}}",
+    "select_all_conversations": "{count, plural, one {Die # Unterhaltung auswählen} other {Alle # Unterhaltungen auswählen}}",
+    "select_all_emails": "{count, plural, one {Die # E-Mail auswählen} other {Alle # E-Mails auswählen}}",
+    "selecting_all": "Wird ausgewählt…"
+  },
   "shared_tags": {
     "title": "Geteilte Labels",
     "description": "Labels Ihrer Gruppenpostfächer. Alle in der Gruppe sehen dieselben Namen und Farben an ihren Nachrichten.",
