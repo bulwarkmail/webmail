@@ -826,8 +826,12 @@ export function FileBrowser({
     return Math.max(1, tops.filter((top) => top === tops[0]).length);
   }, [focusedName]);
 
-  // Edit > Search files in the desktop app's menus.
-  useDesktopCommands({ "edit.search": () => searchInputRef.current?.focus() }, { "edit.search": !accountPickerMode });
+  // Edit > Search files in the desktop app's menus, and File > New folder… and Upload files… (pim-p3-18).
+  useDesktopCommands({
+    "edit.search": () => searchInputRef.current?.focus(),
+    "file.newFolder": () => { if (canCreate) setShowNewFolder(true); },
+    "file.uploadFiles": () => { if (canCreate) fileInputRef.current?.click(); },
+  }, { "edit.search": !accountPickerMode, "file.newFolder": canCreate, "file.uploadFiles": canCreate });
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

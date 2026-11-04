@@ -7,7 +7,7 @@ import {
   ChevronRight, ChevronUp, Clipboard, Copy, Download, ExternalLink, FileText, FolderInput, Forward, Inbox, Info, Keyboard,
   Lock, LogOut, Mail, MailOpen, Maximize2, Minus, Paperclip, PanelRight, Printer, RefreshCw, Reply, ReplyAll, Save, Scissors,
   Search, Send, Settings, ShieldAlert, SquarePen, Star, Trash2, Undo, Redo, Upload, UserPlus, Users, Folder, ZoomIn, ZoomOut,
-  Server, RotateCcw, LayoutGrid, LayoutList, LayoutTemplate, Zap, Power,
+  Server, RotateCcw, LayoutGrid, LayoutList, LayoutTemplate, Zap, Power, FolderPlus,
 } from "@/components/icons";
 import { CONTEXT_MENU_PANEL_CLASS, MenuShortcut } from "@/components/ui/context-menu";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
@@ -40,6 +40,7 @@ type Glyph = React.ComponentType<{ className?: string }>;
  */
 const MENU_BAR_ICONS: Record<string, Glyph> = {
   "file.newMessage": SquarePen, "file.newEvent": CalendarPlus, "file.newTask": CheckSquare, "file.newContact": UserPlus,
+  "file.newFolder": FolderPlus, "file.uploadFiles": Upload,
   "file.quickCompose": Zap, "file.newWindow": ExternalLink, "file.print": Printer, "file.savePdf": Download,
   "file.import": Upload, "file.importMenu": Upload, "file.importCalendar": Calendar, "file.importContacts": Users,
   "file.settings": Settings, "app.settings": Settings, "file.switchMode": Server, "file.lock": Lock, "file.close": Minus,
