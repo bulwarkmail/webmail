@@ -168,6 +168,13 @@ function entriesToSave<E extends { key?: string }, V>(
   return out;
 }
 
+/** A row the card had and the user left as it was. */
+function isUntouchedRow<E extends { key?: string }>(row: E, initialRows: E[], original: Record<string, unknown> | undefined): boolean {
+  if (!row.key || original?.[row.key] === undefined) return false;
+  const before = initialRows.find(r => r.key === row.key);
+  return !!before && JSON.stringify(before) === JSON.stringify(row);
+}
+
 /** `contexts` for a row: the card's own when the select wasn't changed. */
 function contextsToSave(context: string, previous: Record<string, boolean> | undefined, before: { context: string } | undefined): Record<string, boolean> | undefined {
   if (before && before.context === context) return previous;
@@ -684,7 +691,10 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
     // one is rebuilt in its country's order ("Hauptstraße" + "1", then
     // postcode and city), keeping the parts the form doesn't show.
     const addressesMap = entriesToSave<AddressEntry, ContactAddress>(
-      addresses.filter(a => a.street.trim() || a.locality.trim() || a.region.trim() || a.postcode.trim() || a.country.trim()),
+      // An address the form can't show (only `full` text, a PO box) has empty
+      // rows here; untouched, it stays.
+      addresses.filter(a => a.street.trim() || a.locality.trim() || a.region.trim() || a.postcode.trim() || a.country.trim()
+        || isUntouchedRow(a, initialRows.addresses, contact?.addresses)),
       initialRows.addresses, contact?.addresses, "a",
       (row, previous, before) => {
         const { components: previousComponents, full: _full, fullAddress: _fullAddress, street: _s, locality: _l, region: _r, postcode: _p, country: _c, ...kept } = previous ?? {};

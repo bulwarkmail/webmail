@@ -654,6 +654,21 @@ describe('ContactForm keeps what was not edited', () => {
     expect('emails' in data).toBe(false);
   });
 
+  // An address with only parts the form has no field for shows as empty rows.
+  // Editing another address dropped it from the save.
+  it('keeps an address the form cannot show when another address is edited', async () => {
+    const box = { components: [{ kind: 'postOfficeBox', value: 'Postfach 12 34' }], contexts: { work: true } };
+    const textOnly = { full: 'c/o Example GmbH, somewhere' };
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(<ContactForm contact={{ ...card, addresses: { home, office, box, textOnly } as ContactCard['addresses'] }} onSave={onSave} onCancel={vi.fn()} />);
+    fireEvent.change(screen.getByDisplayValue('62701'), { target: { value: '62702' } });
+    fireEvent.submit(screen.getByText('save').closest('form')!);
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    const data = onSave.mock.calls[0][0] as Partial<ContactCard>;
+    expect(data.addresses!.box).toBe(box);
+    expect(data.addresses!.textOnly).toBe(textOnly);
+  });
+
   it('saves an edited German address in German order and keeps the parts the form does not show', async () => {
     const data = await save(() => fireEvent.change(screen.getByDisplayValue('Hauptstraße 1'), { target: { value: 'Hauptstraße 12a' } }));
     const saved = data.addresses!.home;
