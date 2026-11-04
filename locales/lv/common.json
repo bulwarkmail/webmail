@@ -1658,6 +1658,10 @@
         "label": "Slēpt kontu pārslēdzēju sānu joslā",
         "description": "Slēpt kontu izvēli sānu joslas augšpusē. Kontus joprojām varēsiet pārslēgt navigācijas joslā apakšā."
       },
+      "sidebar_account_switcher": {
+        "label": "Kontu pārslēdzējs sānu joslas augšpusē",
+        "description": "Rāda kontu pārslēdzēju virs mapēm un apaļo pogu Rakstīt virs ziņojumu saraksta. Izslēdziet, lai poga Rakstīt būtu virs mapēm."
+      },
       "show_rail_account_list": {
         "label": "Rādīt kontu avatarus navigācijas joslā",
         "description": "Rādīt kontu apļus navigācijas joslas apakšā ātrai pārslēgšanai."

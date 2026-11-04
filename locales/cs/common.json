@@ -1658,6 +1658,10 @@
         "label": "Skrýt přepínač účtů v postranním panelu",
         "description": "Skryje výběr účtu v horní části postranního panelu. Stále můžete přepínat účty pomocí spodního navigačního panelu."
       },
+      "sidebar_account_switcher": {
+        "label": "Přepínač účtů nahoře v postranním panelu",
+        "description": "Zobrazí přepínač účtů nad složkami a kulaté tlačítko Napsat nad seznamem zpráv. Po vypnutí bude tlačítko Napsat nad složkami."
+      },
       "show_rail_account_list": {
         "label": "Zobrazovat avatary účtů v navigačním panelu",
         "description": "Zobrazovat samostatné ikony účtů ve spodní části navigačního panelu pro rychlé přepínání, s tlačítkem odhlášení níže."

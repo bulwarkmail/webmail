@@ -32,10 +32,15 @@ vi.mock('@/components/email/email-composer', () => ({
     </button>
   ),
 }));
-// On a desktop Compose sits at the head of the folder sidebar (mail-13).
-vi.mock('@/components/layout/sidebar', () => ({
-  Sidebar: ({ onCompose }: { onCompose?: () => void }) => <button type="button" onClick={onCompose}>sidebar.compose</button>,
-}));
+// With sidebarAccountSwitcher off, Compose sits at the head of the folder
+// sidebar on a desktop (mail-13); by default it is the round button.
+vi.mock('@/components/layout/sidebar', async () => {
+  const { useSettingsStore: settings } = await import('@/stores/settings-store');
+  return {
+    Sidebar: ({ onCompose }: { onCompose?: () => void }) =>
+      settings((s) => s.sidebarAccountSwitcher) ? null : <button type="button" onClick={onCompose}>sidebar.compose</button>,
+  };
+});
 vi.mock('@/components/layout/navigation-rail', () => ({ NavigationRail: () => null }));
 vi.mock('@/components/layout/calendar-event-notification-toaster', () => ({ CalendarEventNotificationToaster: () => null }));
 vi.mock('@/components/layout/share-notification-toaster', () => ({ ShareNotificationToaster: () => null }));
