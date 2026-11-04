@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import { useAuthStore } from '@/stores/auth-store';
@@ -10,20 +10,29 @@ import { useThemeStore } from '@/stores/theme-store';
 import { useUIStore } from '@/stores/ui-store';
 import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
 
-// A phone on its side: the bottom bar takes a sixth of the window, so it goes
-// over what fills the window. It stays wherever the list shows, or there is no
-// way left to the other apps.
+// A window between the phone and the full desktop (a half-screen window, a
+// laptop at 150 %) is a compact desktop: the app rail at the side, the folder
+// sidebar folded to its icons, and no phone tab bar (usability test
+// 2026-11-04, mail-28 and settings-16).
 
-const device = vi.hoisted(() => ({ current: { isMobile: false, isTablet: true, isDesktop: false }, short: true }));
-
-vi.mock('@/hooks/use-media-query', () => ({
-  useDeviceDetection: () => device.current,
-  useMediaQuery: (query: string) => query.includes('max-height') && device.short,
-  useIsDesktop: () => false,
+const device = vi.hoisted(() => ({
+  current: { isMobile: false, isCompact: true, isDesktop: true },
+  splitFits: true,
 }));
-vi.mock('@/components/layout/navigation-rail', () => ({ NavigationRail: () => <nav>tab bar</nav> }));
+
+vi.mock('@/hooks/use-media-query', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/hooks/use-media-query')>()),
+  useDeviceDetection: () => device.current,
+  useMediaQuery: () => false,
+  useIsDesktop: () => device.current.isDesktop,
+  useIsMobile: () => device.current.isMobile,
+}));
+vi.mock('@/hooks/use-split-panes-fit', () => ({ useSplitPanesFit: () => device.splitFits }));
+vi.mock('@/components/layout/navigation-rail', () => ({
+  NavigationRail: ({ orientation = 'vertical' }: { orientation?: string }) => <nav data-rail={orientation}>rail</nav>,
+}));
 vi.mock('@/components/layout/sidebar', () => ({
-  Sidebar: ({ onCompose }: { onCompose: () => void }) => <button onClick={onCompose}>stub compose</button>,
+  Sidebar: () => <button>stub folders</button>,
 }));
 vi.mock('@/components/email/email-composer', () => ({ EmailComposer: () => <p>stub composer</p> }));
 vi.mock('@/components/email/email-viewer', () => ({ EmailViewer: () => <div>message viewer</div> }));
@@ -33,6 +42,7 @@ vi.mock('@/components/layout/calendar-event-notification-toaster', () => ({ Cale
 vi.mock('@/components/layout/share-notification-toaster', () => ({ ShareNotificationToaster: () => null }));
 vi.mock('@/components/layout/mobile-header', () => ({ MobileHeader: () => null }));
 vi.mock('@/components/layout/mv-side-panel', () => ({ MvSidePanel: () => null }));
+vi.mock('@/components/plugins/plugin-side-panels', () => ({ PluginSidePanel: () => null }));
 vi.mock('@/components/email/message-list-tabs', () => ({ useMessageListPanelProps: (id: string) => ({ id }), MessageListTabs: () => null }));
 vi.mock('@/components/search/search-box', () => ({ SearchBox: () => null }));
 vi.mock('@/components/tour/tour-provider', () => ({ useTour: () => ({ activeTour: null, registerStep: vi.fn() }) }));
@@ -52,9 +62,13 @@ const { MailApp } = await import('../mail-app');
 const inbox = { id: 'inbox', name: 'Inbox', role: 'inbox', totalEmails: 1, unreadEmails: 0 } as Mailbox;
 const message = { id: 'm1', threadId: 't-m1', subject: 'm1', receivedAt: '2026-10-31T10:00:00Z', keywords: { $seen: true }, mailboxIds: { inbox: true } } as unknown as Email;
 
+const compact = { isMobile: false, isCompact: true, isDesktop: true };
+const full = { isMobile: false, isCompact: false, isDesktop: true };
+const phone = { isMobile: true, isCompact: false, isDesktop: false };
+
 beforeEach(() => {
-  device.current = { isMobile: false, isTablet: true, isDesktop: false };
-  device.short = true;
+  device.current = compact;
+  device.splitFits = true;
   vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Unexpected network request')));
   vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
   usePluginStore.setState({ initializePlugins: vi.fn().mockResolvedValue(undefined) });
@@ -68,8 +82,12 @@ beforeEach(() => {
     getClientForAccount: () => client as never,
     getAllConnectedClients: () => new Map([['login-a', client]]) as never,
   });
-  useSettingsStore.setState({ enableUnifiedMailbox: false, interfaceLayout: 'default', mailLayout: 'split' } as never);
-  useUIStore.setState({ activeView: 'list', tabletListVisible: true, sidebarOpen: false });
+  useSettingsStore.setState({ enableUnifiedMailbox: false, interfaceLayout: 'default', mailLayout: 'split', simpleMode: false } as never);
+  useUIStore.setState({
+    activeView: 'list', sidebarOpen: false, sidebarWidth: 256,
+    sidebarCollapsed: false, compactSidebarExpanded: false,
+    isMobile: false, isCompact: true, isDesktop: true,
+  });
   useEmailStore.setState({
     emails: [message], selectedEmail: null, selectedMailbox: 'inbox', selectedKeyword: null, mailboxes: [inbox],
     viewingAccountId: null, accountMailboxes: {}, isUnifiedView: false, unifiedRole: null,
@@ -88,42 +106,60 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const tabBar = () => screen.queryByText('tab bar');
+/** The element holding the folder sidebar (the one with its width). */
+const folders = () => screen.getByText('stub folders').closest<HTMLElement>('[id]')!;
+const rails = () => Array.from(document.querySelectorAll<HTMLElement>('[data-rail]')).map((el) => el.dataset.rail);
+const listPane = (c: HTMLElement) => c.querySelector<HTMLElement>('section[aria-labelledby]')!;
 
-describe('the bottom bar in a short window', () => {
-  it('stays with the list beside an open message', () => {
-    useEmailStore.setState({ selectedEmail: message } as never);
+describe('the compact desktop', () => {
+  it('has the app rail at the side and no phone tab bar', () => {
     render(<MailApp />);
-    expect(tabBar()).not.toBeNull();
+    expect(rails()).toEqual(['vertical']);
   });
 
-  it('goes when the message fills the window', () => {
-    useUIStore.setState({ tabletListVisible: false });
-    useEmailStore.setState({ selectedEmail: message } as never);
+  it('folds the folder sidebar to its icons, in the flow', () => {
     render(<MailApp />);
-    expect(tabBar()).toBeNull();
+    expect(folders().style.width).toBe('48px');
+    expect(folders().hasAttribute('inert')).toBe(false);
   });
 
-  it('goes over a composer, and comes back without one', async () => {
+  it('opens the folders at their width when asked, without touching the full desktop choice', () => {
+    useUIStore.getState().toggleSidebarCollapsed();
     render(<MailApp />);
-    expect(tabBar()).not.toBeNull();
-    fireEvent.click(screen.getByText('stub compose'));
-    await screen.findByText('stub composer', {}, { timeout: 5000 });
-    expect(tabBar()).toBeNull();
+    expect(folders().style.width).toBe('256px');
+    expect(useUIStore.getState().sidebarCollapsed).toBe(false);
   });
 
-  it('stays in a tall window whatever is open', () => {
-    device.short = false;
-    useUIStore.setState({ tabletListVisible: false });
+  it('opens a message in the list\'s place when the window is too narrow for both', () => {
+    device.splitFits = false;
     useEmailStore.setState({ selectedEmail: message } as never);
-    render(<MailApp />);
-    expect(tabBar()).not.toBeNull();
+    const { container } = render(<MailApp />);
+    expect(listPane(container).hasAttribute('inert')).toBe(true);
   });
 
-  it('stays on a phone\'s list with a message kept selected behind it', () => {
-    device.current = { isMobile: true, isTablet: false, isDesktop: false };
+  it('keeps the list beside the message where both fit', () => {
     useEmailStore.setState({ selectedEmail: message } as never);
+    const { container } = render(<MailApp />);
+    expect(listPane(container).hasAttribute('inert')).toBe(false);
+  });
+});
+
+describe('the full desktop', () => {
+  it('keeps the folders at their width', () => {
+    device.current = full;
+    useUIStore.setState({ isCompact: false });
     render(<MailApp />);
-    expect(tabBar()).not.toBeNull();
+    expect(folders().style.width).toBe('256px');
+    expect(rails()).toEqual(['vertical']);
+  });
+});
+
+describe('the phone', () => {
+  it('keeps the tab bar and the folders in a closed drawer', () => {
+    device.current = phone;
+    useUIStore.setState({ isMobile: true, isCompact: false, isDesktop: false });
+    render(<MailApp />);
+    expect(rails()).toEqual(['horizontal']);
+    expect(folders().hasAttribute('inert')).toBe(true);
   });
 });

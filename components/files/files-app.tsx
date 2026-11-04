@@ -8,7 +8,8 @@ import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useAuthStore, redirectToLogin, saveRedirectAfterLogin } from '@/stores/auth-store';
 import { useAccountStore } from "@/stores/account-store";
 import { useEmailStore } from "@/stores/email-store";
-import { useFileStore, deletesToTrash, isSharedLocation, linkedPreviewResource, resourceServerRef, resourceToView, type UploadReport } from "@/stores/file-store";
+import { useFileStore, deletesToTrash, isSharedFilesPage, isSharedLocation, linkedPreviewResource, resourceServerRef, resourceToView, type UploadReport } from "@/stores/file-store";
+import { hasQueuedFilesUpload, setFilesDropTarget, subscribeQueuedFilesUpload, takeQueuedFilesUpload } from "@/lib/file-drop/files-target";
 import { isTrashLocation } from "@/lib/files-trash";
 import { fileErrorKind, isPartialCopy } from "@/lib/file-errors";
 import { toast } from "@/stores/toast-store";
@@ -805,6 +806,37 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     useFileStore.setState({ supportsFiles: null });
   }, [getClientForAccount]);
 
+  // The file drop overlay: "Upload to <folder>" while this screen is on view in a folder
+  // that takes files, and what was dropped elsewhere for Files once one is listed.
+  const dropRootRef = useRef<HTMLDivElement>(null);
+  const canTakeDrops = supportsFiles === true && !isAccountPicker && !isSharedFilesPage(currentParentId) && !isTrashLocation(currentParentId);
+  const dropUploadRef = useRef({ files: handleUploadFiles, folder: handleUploadFolder });
+  dropUploadRef.current = { files: handleUploadFiles, folder: handleUploadFolder };
+  useEffect(() => {
+    if (!canTakeDrops) return;
+    const folder = currentPath === "/" ? null : currentPath.split("/").filter(Boolean).pop() ?? null;
+    return setFilesDropTarget({
+      folder,
+      take: ({ files, asFolder }) => void (asFolder ? dropUploadRef.current.folder(files) : dropUploadRef.current.files(files)),
+      visible: () => !!dropRootRef.current?.isConnected && dropRootRef.current.getClientRects().length > 0,
+    });
+  }, [canTakeDrops, currentPath]);
+  useEffect(() => {
+    if (supportsFiles !== true || isLoading || !storeClient || isAccountPicker) return;
+    const take = () => {
+      if (!hasQueuedFilesUpload()) return;
+      // In the trash or the list of shared drives: to the top of Files first.
+      if (!canTakeDrops) {
+        void navigate(null);
+        return;
+      }
+      const upload = takeQueuedFilesUpload();
+      if (upload) void (upload.asFolder ? dropUploadRef.current.folder(upload.files) : dropUploadRef.current.files(upload.files));
+    };
+    take();
+    return subscribeQueuedFilesUpload(take);
+  }, [supportsFiles, isLoading, storeClient, isAccountPicker, canTakeDrops, navigate]);
+
   // Until the session is restored: the page skeleton the server drew.
   if (!isAuthenticated) {
     return isEmbedded
@@ -813,7 +845,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   }
 
   return (
-    <div className={cn("flex flex-col overflow-hidden pt-[var(--app-top-inset)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
+    <div ref={dropRootRef} className={cn("flex flex-col overflow-hidden pt-[var(--app-top-inset)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
       {!isEmbedded && <SkipLink>{tShell("skip_to_content")}</SkipLink>}
       <AppTopBannerSlot />
       {refreshIndicator}

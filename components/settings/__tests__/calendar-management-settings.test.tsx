@@ -69,6 +69,8 @@ describe('CalendarManagementSettings CalDAV fallback address', () => {
 
     render(<CalendarManagementSettings />);
 
+    // The address waits behind "Use in other apps" (usability pass 2026-11-04).
+    fireEvent.click(await screen.findByTestId('calendar-use-in-other-apps'));
     const url = await screen.findByText('https://host.example/stalwart/.well-known/caldav');
     // Left to right in Arabic too: the start of the address stays in view.
     expect(url).toHaveAttribute('dir', 'ltr');
@@ -88,6 +90,7 @@ describe('CalendarManagementSettings CalDAV fallback address', () => {
 
     render(<CalendarManagementSettings />);
 
+    fireEvent.click(await screen.findByTestId('calendar-use-in-other-apps'));
     await screen.findByText('https://host.example/.well-known/caldav');
     expect(screen.getAllByText('https://host.example/.well-known/caldav')).toHaveLength(1);
     vi.restoreAllMocks();

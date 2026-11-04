@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useMessages, useTranslations } from "next-intl";
 import { useStrictestDevices } from "@/hooks/use-device-policy";
-import { useRouter } from "@/i18n/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { openKeyboardShortcuts, parkAppCommand, requestAppCommand, type AppCommand } from "@/lib/app-commands";
 import { onComposerOpened, composerIsOpen } from "@/lib/compose-flush-registry";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
@@ -19,13 +19,22 @@ import { useOfflineStore } from "@/lib/offline/state";
 import { openNewComposerWindow } from "@/lib/popout/open";
 import { onReturnedComposerElsewhere } from "@/lib/popout/return-to-main";
 import { isPopoutWindow } from "@/lib/popout/window-role";
+import { parkMailSearch, requestMailSearch } from "@/lib/mail-search-request";
 import { onBeforeSignOut, onFullSignOut } from "@/lib/sign-out-cleanup";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { useLocaleStore } from "@/stores/locale-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useThemeStore } from "@/stores/theme-store";
-import { toast } from "@/stores/toast-store";
+import { showFirstStartNotice } from "@/lib/first-start-notices";
+import { openMailImport } from "@/stores/mail-transfer-store";
+
+/** The part of the app a path shows, for the menus: Calendar has its own View lines, and no Message menu. */
+export function desktopSectionOf(pathname: string): "mail" | "calendar" | "contacts" | "files" | "settings" {
+  const first = pathname.split("/").filter(Boolean)[0] ?? "";
+  if (first === "calendar" || first === "contacts" || first === "files" || first === "settings") return first;
+  return "mail";
+}
 
 /**
  * The webmail's side of what every desktop window needs: runs menu commands nothing
@@ -35,6 +44,7 @@ import { toast } from "@/stores/toast-store";
  */
 export function DesktopHost() {
   const router = useRouter();
+  const pathname = usePathname();
   const routerRef = useRef(router);
   routerRef.current = router;
   const t = useTranslations();
@@ -45,6 +55,8 @@ export function DesktopHost() {
   const singleKeys = useSettingsStore((s) => s.singleKeyShortcuts);
   const writingLanguage = useSettingsStore((s) => s.writingLanguage);
   const uiLocale = useLocaleStore((s) => s.locale);
+  const activeLocale = useLocale();
+  const messages = useMessages();
   const strictest = useStrictestDevices();
   const { restoreWindows } = useDesktopPrefs();
   const theme = useThemeStore((s) => s.theme);
@@ -66,11 +78,30 @@ export function DesktopHost() {
         else toMail("compose");
       },
       "edit.search": () => toMail("search"),
+      // The other apps' New items, run once that app is on screen.
+      "file.newEvent": () => {
+        if (requestAppCommand("new-event")) return;
+        parkAppCommand("new-event");
+        routerRef.current.push("/calendar");
+      },
+      "file.newTask": () => {
+        if (requestAppCommand("new-task")) return;
+        parkAppCommand("new-task");
+        routerRef.current.push("/calendar");
+      },
+      "file.newContact": () => {
+        if (requestAppCommand("new-contact")) return;
+        parkAppCommand("new-contact");
+        routerRef.current.push("/contacts");
+      },
+      "file.import": () => openMailImport(),
       "go.inbox": () => routerRef.current.push("/"),
       "go.mail": () => routerRef.current.push("/"),
       "go.calendar": () => routerRef.current.push("/calendar"),
       "go.contacts": () => routerRef.current.push("/contacts"),
       "go.files": () => routerRef.current.push("/files"),
+      // Help > Settings: a page of this window, as the rail's gear opens it.
+      "go.settings": () => routerRef.current.push("/settings"),
       "help.shortcuts": () => openKeyboardShortcuts(),
     };
     return menu.onCommand((id) => {
@@ -89,6 +120,22 @@ export function DesktopHost() {
         }
         return;
       }
+      // Search mail for the text selected under a right-click.
+      if (id.startsWith("mail.searchText:")) {
+        try {
+          const text = JSON.parse(id.slice("mail.searchText:".length)) as unknown;
+          if (typeof text === "string" && text.trim()) {
+            const request = { text: text.trim() };
+            if (!requestMailSearch(request)) {
+              parkMailSearch(request);
+              routerRef.current.push("/");
+            }
+          }
+        } catch {
+          // Only the shell sends this, and it sends JSON.
+        }
+        return;
+      }
       if (!runDesktopCommand(id)) fallback[id]?.();
     });
   }, []);
@@ -99,13 +146,21 @@ export function DesktopHost() {
     const canPrint = canPrintAnywhere();
     const signedIn = isAuthenticated;
     const popout = isPopoutWindow();
+    const section = desktopSectionOf(pathname ?? "/");
     setDesktopBaseState({
       "link.check": true,
+      "mail.searchText": signedIn && !popout,
       "shortcuts.singleKeys": singleKeys,
       "policy.download": canDownloadAnywhere(),
       "file.print": canPrint,
       "file.savePdf": canPrint,
       "file.newMessage": signedIn,
+      "file.newEvent": signedIn,
+      "file.newTask": signedIn,
+      "file.newContact": signedIn,
+      "file.import": signedIn && !popout,
+      "file.settings": signedIn,
+      [`section.${section}`]: true,
       "edit.search": signedIn && !popout,
       "go.inbox": signedIn,
       "go.mail": signedIn,
@@ -114,22 +169,26 @@ export function DesktopHost() {
       "go.files": signedIn,
       "help.shortcuts": true,
     });
-  }, [isAuthenticated, singleKeys, strictest]);
+  }, [isAuthenticated, singleKeys, strictest, pathname]);
 
-  // Menus and spellcheck follow the interface.
+  // Menus, the tray and spellcheck follow the interface: the language its text is in now,
+  // with that text. The stored choice isn't it: on the first render the catalog can still
+  // be the one the server picked from the OS language, and the chosen one lands a render
+  // later. Going by the choice alone left the menus in the OS language for good.
   useEffect(() => {
-    const ui = uiLocale || document.documentElement.lang;
+    const ui = activeLocale || uiLocale || document.documentElement.lang;
     if (ui) setDesktopInterfaceLanguage(ui, shellLabels(tRef.current as unknown as Parameters<typeof shellLabels>[0]));
-  }, [uiLocale]);
+  }, [activeLocale, uiLocale, messages]);
 
   // What the user writes in, whichever composer asks for it too.
   useEffect(() => {
     noteComposerLanguage("settings", writingLanguage && writingLanguage !== "auto" ? writingLanguage : null);
   }, [writingLanguage]);
 
-  // A language with no checker in the OS needs a dictionary from Google: the composer
-  // asks once, and never in no-third-party mode. Until a yes, the shell has nowhere to
-  // fetch from at all.
+  // A language with no checker in the OS needs a dictionary from Google: once a composer
+  // is open, a first-start notice asks, never in no-third-party mode, and not again once
+  // closed. Until a yes, the shell has nowhere to fetch from at all. Windows never asks:
+  // it checks spelling itself (the shell's context-menu.ts).
   useEffect(() => {
     const spellcheck = getDesktopBridge()?.spellcheck;
     if (!spellcheck) return;
@@ -139,8 +198,6 @@ export function DesktopHost() {
       const [language] = waiting;
       if (!language || !composerIsOpen() || !dictionaryDownloadAllowed()) return;
       if (readDesktopPrefs().dictionaryDownload !== "ask") return;
-      // Asked once, whatever comes of it.
-      setDesktopPref("dictionaryDownload", "no");
       const translate = tRef.current;
       let name = language;
       try {
@@ -148,14 +205,19 @@ export function DesktopHost() {
       } catch {
         // The tag itself will do.
       }
-      toast.info(translate("desktopUi.spellcheck.offer", { language: name }), {
-        duration: 0,
+      showFirstStartNotice({
+        id: "dictionary-download",
+        text: translate("desktopUi.spellcheck.offer", { language: name }),
         action: {
           label: translate("desktopUi.spellcheck.download"),
           onClick: () => {
             setDesktopPref("dictionaryDownload", "yes");
             if (dictionaryDownloadAllowed()) spellcheck.allowDownload();
           },
+        },
+        // Closed without a yes: asked once, not again.
+        onClose: () => {
+          if (readDesktopPrefs().dictionaryDownload === "ask") setDesktopPref("dictionaryDownload", "no");
         },
       });
     };

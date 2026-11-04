@@ -83,8 +83,10 @@ export function devicesForAccount(subject: DeviceSubject): DevicePolicy {
   const accountSubject = subjectForAccount(accountId);
   const policy = accountSubject === store.subject ? store.policy : store.resolveFor(accountSubject);
   const devices = devicesOf(policy);
-  // The desktop app's OS policy says the same thing as the organisation's switch.
-  return desktopOfflinePolicy().forced === false ? { ...devices, noOffline: true } : devices;
+  // The desktop app's OS policy says the same thing as the organisation's switch. Not a
+  // value that makes no sense: noOffline wipes, and offlineAllowed asks about that one itself.
+  const offline = desktopOfflinePolicy();
+  return offline.forced === false && !offline.invalid ? { ...devices, noOffline: true } : devices;
 }
 
 /** What applies to anyone, with no account's groups: for data of an account nobody here is signed in to. */

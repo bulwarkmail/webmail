@@ -6,13 +6,23 @@ import { readDesktopPrefs, resetDesktopPrefsCache, setDesktopPref } from '@/lib/
 import { resetDesktopLanguages } from '@/lib/desktop/languages';
 import { registerComposeFlush, resetComposeFlushRegistry } from '@/lib/compose-flush-registry';
 import { useToastStore } from '@/stores/toast-store';
+import { closeFirstStartNotice, firstStartNoticesWaiting, resetFirstStartNotices } from '@/lib/first-start-notices';
 import { useAuthStore } from '@/stores/auth-store';
 import { useLocaleStore } from '@/stores/locale-store';
 import { useOfflineStore } from '@/lib/offline/state';
 import { offerReturnedComposer, takeReturnedComposer } from '@/lib/popout/return-to-main';
 
 const push = vi.fn();
-vi.mock('@/i18n/navigation', () => ({ useRouter: () => ({ push }) }));
+const route = vi.hoisted(() => ({ pathname: '/' }));
+vi.mock('@/i18n/navigation', () => ({ useRouter: () => ({ push }), usePathname: () => route.pathname }));
+
+// The catalog on screen: its language, and text that says which one it came from.
+const intl = vi.hoisted(() => ({ locale: 'en', prefix: '', messages: {} as object }));
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => `${intl.prefix}${key}`,
+  useLocale: () => intl.locale,
+  useMessages: () => intl.messages,
+}));
 
 const canPrint = vi.fn(() => true);
 const canDownload = vi.fn(() => true);
@@ -68,6 +78,8 @@ function fakeBridge() {
 const original = useAuthStore.getState();
 
 beforeEach(() => {
+  route.pathname = '/';
+  Object.assign(intl, { locale: 'en', prefix: '', messages: {} });
   push.mockClear();
   resolveExternalLink.mockClear();
   resolveExternalLink.mockImplementation(async (ctx) => ctx.href);
@@ -97,6 +109,33 @@ describe('DesktopHost', () => {
     expect(() => render(<DesktopHost />)).not.toThrow();
   });
 
+  it('File > New event, task and contact open that app with its editor; Settings opens in this window', async () => {
+    const { peekParkedAppCommand } = await import('@/lib/app-commands');
+    const shell = fakeBridge();
+    render(<DesktopHost />);
+    shell.run('file.newEvent');
+    expect(push).toHaveBeenLastCalledWith('/calendar');
+    expect(peekParkedAppCommand()).toBe('new-event');
+    shell.run('file.newTask');
+    expect(push).toHaveBeenLastCalledWith('/calendar');
+    expect(peekParkedAppCommand()).toBe('new-task');
+    shell.run('file.newContact');
+    expect(push).toHaveBeenLastCalledWith('/contacts');
+    expect(peekParkedAppCommand()).toBe('new-contact');
+    shell.run('go.settings');
+    expect(push).toHaveBeenLastCalledWith('/settings');
+  });
+
+  it('tells the menus which part of the app is on screen, and offers the New lines once signed in', async () => {
+    route.pathname = '/calendar';
+    const shell = fakeBridge();
+    render(<DesktopHost />);
+    await waitFor(() => expect(shell.setState).toHaveBeenCalled());
+    const state = shell.setState.mock.lastCall![0];
+    expect(state).toMatchObject({ 'section.calendar': true, 'file.newEvent': true, 'file.newContact': true, 'file.settings': true, 'file.import': true });
+    expect(state['section.mail']).toBeUndefined();
+  });
+
   it('runs a command from what\'s on the page first', () => {
     const shell = fakeBridge();
     render(<DesktopHost />);
@@ -114,6 +153,13 @@ describe('DesktopHost', () => {
     expect(push).toHaveBeenLastCalledWith('/calendar');
     shell.run('go.contacts');
     expect(push).toHaveBeenLastCalledWith('/contacts');
+  });
+
+  it('Help > Settings opens settings as a page of this window', () => {
+    const shell = fakeBridge();
+    render(<DesktopHost />);
+    shell.run('go.settings');
+    expect(push).toHaveBeenLastCalledWith('/settings');
   });
 
   it('a link to a folder goes through the router, encoded', () => {
@@ -170,9 +216,24 @@ describe('DesktopHost', () => {
   it('says which languages are in use', async () => {
     const shell = fakeBridge();
     act(() => useLocaleStore.setState({ locale: 'de' }));
+    intl.locale = 'de';
     render(<DesktopHost />);
     await waitFor(() => expect(shell.setLanguages).toHaveBeenCalled());
     expect(shell.setLanguages.mock.lastCall![0]).toMatchObject({ ui: 'de' });
+  });
+
+  it('follows the text on screen, not only the stored choice', async () => {
+    const shell = fakeBridge();
+    // English chosen, but the first render still has the catalog the server picked from the OS.
+    act(() => useLocaleStore.setState({ locale: 'en' }));
+    Object.assign(intl, { locale: 'de', prefix: 'de:', messages: { de: true } });
+    const view = render(<DesktopHost />);
+    await waitFor(() => expect(shell.setLanguages).toHaveBeenCalled());
+    // The chosen catalog lands a render later.
+    Object.assign(intl, { locale: 'en', prefix: 'en:', messages: { en: true } });
+    view.rerender(<DesktopHost />);
+    await waitFor(() => expect(shell.setLanguages.mock.lastCall![0].labels.menuFile).toBe('en:desktopUi.menu.file'));
+    expect(shell.setLanguages.mock.lastCall![0]).toMatchObject({ ui: 'en' });
   });
 
   describe('Open Link in a native menu', () => {
@@ -220,6 +281,42 @@ describe('DesktopHost', () => {
     });
   });
 
+  // mail-25: "Search mail for '…'" on selected text in the native menu.
+  describe('Search mail for selected text', () => {
+    const searchFor = (text: string) => `mail.searchText:${JSON.stringify(text)}`;
+
+    it('runs on the mail page', async () => {
+      const shell = fakeBridge();
+      render(<DesktopHost />);
+      const heard: unknown[] = [];
+      const listen = (e: Event) => { e.preventDefault(); heard.push((e as CustomEvent).detail); };
+      window.addEventListener('bulwark:mail-search', listen);
+      try {
+        shell.run(searchFor('  quarterly report \n'));
+      } finally {
+        window.removeEventListener('bulwark:mail-search', listen);
+      }
+      expect(heard).toEqual([{ text: 'quarterly report' }]);
+      expect(push).not.toHaveBeenCalled();
+    });
+
+    it('goes to Mail first from another app', async () => {
+      const shell = fakeBridge();
+      render(<DesktopHost />);
+      shell.run(searchFor('report'));
+      expect(push).toHaveBeenCalledWith('/');
+    });
+
+    it('is on offer to the shell when signed in, with its label in the interface language', async () => {
+      const shell = fakeBridge();
+      render(<DesktopHost />);
+      await waitFor(() => expect(shell.setState).toHaveBeenCalled());
+      expect(shell.setState.mock.lastCall![0]).toMatchObject({ 'mail.searchText': true });
+      await waitFor(() => expect(shell.setLanguages).toHaveBeenCalled());
+      expect(shell.setLanguages.mock.lastCall![0].labels.contextSearchMail).toBe('desktop_mail.context_search_mail');
+    });
+  });
+
   it('hands the shell its menus in the interface language', async () => {
     const shell = fakeBridge();
     act(() => useLocaleStore.setState({ locale: 'fr' }));
@@ -233,8 +330,10 @@ describe('DesktopHost', () => {
   });
 
   describe('a language with no checker in the OS', () => {
+    beforeEach(() => resetFirstStartNotices());
     afterEach(() => resetComposeFlushRegistry());
-    const toasts = () => useToastStore.getState().toasts;
+    // A first-start notice above the message list, not a toast over the composer.
+    const toasts = () => firstStartNoticesWaiting();
 
     it('the composer asks once, and only a yes opens the downloads', async () => {
       useToastStore.setState({ toasts: [] });
@@ -246,10 +345,29 @@ describe('DesktopHost', () => {
       expect(toasts()).toHaveLength(0);
       const stop = registerComposeFlush(async () => {});
       await waitFor(() => expect(toasts()).toHaveLength(1));
+      expect(useToastStore.getState().toasts).toHaveLength(0);
       expect(shell.allowDownload).not.toHaveBeenCalled();
       act(() => toasts()[0].action!.onClick());
       expect(shell.allowDownload).toHaveBeenCalledTimes(1);
       expect(readDesktopPrefs().dictionaryDownload).toBe('yes');
+      stop();
+    });
+
+    it("closing it says no, and it doesn't come back", async () => {
+      const shell = fakeBridge();
+      render(<DesktopHost />);
+      await act(async () => {});
+      const stop = registerComposeFlush(async () => {});
+      shell.missing('nl-NL');
+      await waitFor(() => expect(toasts()).toHaveLength(1));
+      // Only asked: nothing decided until the user closes it.
+      expect(readDesktopPrefs().dictionaryDownload).toBe('ask');
+      act(() => closeFirstStartNotice(toasts()[0].id));
+      expect(readDesktopPrefs().dictionaryDownload).toBe('no');
+      shell.missing('fr-FR');
+      await act(async () => {});
+      expect(toasts()).toHaveLength(0);
+      expect(shell.allowDownload).not.toHaveBeenCalled();
       stop();
     });
 

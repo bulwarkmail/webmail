@@ -67,7 +67,7 @@ const conversation = () => [
 
 describe('ThreadListItem folder chip in search results (#1172)', () => {
   beforeEach(() => {
-    useUIStore.setState({ isMobile: false, isTablet: false, isDesktop: true });
+    useUIStore.setState({ isMobile: false, isCompact: false, isDesktop: true });
     useSettingsStore.setState({
       emailKeywords: [...DEFAULT_KEYWORDS],
       showPreview: false,
@@ -93,6 +93,14 @@ describe('ThreadListItem folder chip in search results (#1172)', () => {
       useEmailStore.setState({ searchQuery: 'invoice', searchMailboxId: '' });
       renderThread(emails());
       expect(screen.getByTitle('Archive')).toBeTruthy();
+    });
+
+    // Usability test 2026-11-04, mail-14: the chip said the server's "Sent Items".
+    it('names a folder with a role the way the sidebar does', () => {
+      useEmailStore.setState({ searchQuery: 'invoice', searchMailboxId: '' });
+      renderThread(emails().map((e) => ({ ...e, sourceFolder: 'Sent Items', sourceFolderRole: 'sent' })));
+      expect(screen.getByTitle('mailboxes.sent')).toBeTruthy();
+      expect(screen.queryByTitle('Sent Items')).toBeNull();
     });
 
     it('shows the folder when the search covers all folders', () => {
@@ -157,7 +165,7 @@ describe('ThreadListItem sender line in a narrow list', () => {
   };
 
   beforeEach(() => {
-    useUIStore.setState({ isMobile: true, isTablet: false, isDesktop: false });
+    useUIStore.setState({ isMobile: true, isCompact: false, isDesktop: false });
     useSettingsStore.setState({ emailKeywords: [...DEFAULT_KEYWORDS], showPreview: false, mailLayout: 'split', interfaceLayout: 'default', showColorNames: false });
     useEmailStore.setState({ selectedEmailKeys: new Set<string>(), selectedMailbox: 'inbox', isUnifiedView: false, selectedKeyword: null, searchQuery: '', searchFilters: { ...DEFAULT_SEARCH_FILTERS }, searchMailboxId: 'archive' });
   });

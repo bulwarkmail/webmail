@@ -51,7 +51,7 @@ describe('admin skeleton', () => {
   it('draws the page list with its real names and the open page current', () => {
     const container = dom(renderToString(<AdminSkeleton page="branding" label="Loading" />));
     const text = container.textContent ?? '';
-    for (const name of ['Overview', 'Server', 'Branding', 'Organisation', 'Extensions', 'System', 'Audit log']) {
+    for (const name of ['Overview', 'Server', 'Branding', 'Users', 'Features and settings', 'Extensions', 'System', 'Audit log']) {
       expect(text).toContain(name);
     }
     const current = [...container.querySelectorAll('.bg-accent')].map((el) => el.textContent);
@@ -61,7 +61,7 @@ describe('admin skeleton', () => {
   it('shows the phone list at /admin and the page below it', () => {
     const index = dom(renderToString(<AdminSkeleton page={null} />));
     const detail = dom(renderToString(<AdminSkeleton page="logs" />));
-    const phone = (c: HTMLElement) => c.querySelector('.lg\\:hidden')!;
+    const phone = (c: HTMLElement) => c.querySelector('.desk\\:hidden')!;
     // Index: the list (with its chevrons) is shown, the page column hidden.
     expect(phone(index).querySelector('.p-4')!.className).toContain('hidden');
     expect(phone(detail).querySelector('.p-4')!.className).not.toContain('hidden');

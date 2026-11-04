@@ -32,7 +32,10 @@ vi.mock('@/components/email/email-composer', () => ({
     </button>
   ),
 }));
-vi.mock('@/components/layout/sidebar', () => ({ Sidebar: () => null }));
+// On a desktop Compose sits at the head of the folder sidebar (mail-13).
+vi.mock('@/components/layout/sidebar', () => ({
+  Sidebar: ({ onCompose }: { onCompose?: () => void }) => <button type="button" onClick={onCompose}>sidebar.compose</button>,
+}));
 vi.mock('@/components/layout/navigation-rail', () => ({ NavigationRail: () => null }));
 vi.mock('@/components/layout/calendar-event-notification-toaster', () => ({ CalendarEventNotificationToaster: () => null }));
 vi.mock('@/components/layout/share-notification-toaster', () => ({ ShareNotificationToaster: () => null }));

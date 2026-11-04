@@ -29,7 +29,10 @@ vi.mock('@/components/email/email-composer', () => ({
     return <p>stub composer</p>;
   },
 }));
-vi.mock('@/components/layout/sidebar', () => ({ Sidebar: () => null }));
+// On a desktop Compose sits at the head of the folder sidebar (mail-13).
+vi.mock('@/components/layout/sidebar', () => ({
+  Sidebar: ({ onCompose }: { onCompose?: () => void }) => (device.isMobile ? null : <button type="button" onClick={onCompose}>sidebar.compose</button>),
+}));
 vi.mock('@/components/layout/navigation-rail', () => ({ NavigationRail: () => null }));
 vi.mock('@/components/layout/calendar-event-notification-toaster', () => ({ CalendarEventNotificationToaster: () => null }));
 vi.mock('@/components/layout/share-notification-toaster', () => ({ ShareNotificationToaster: () => null }));
@@ -64,9 +67,9 @@ vi.mock('@/hooks/use-pro-multi-account-identities', () => ({ useProMultiAccountI
 vi.mock('@/hooks/use-pro-multi-account-mailboxes', () => ({ useProMultiAccountMailboxes: () => {} }));
 vi.mock('@/hooks/use-wopi-status', () => ({ useWopiStatus: () => null, canWopiOpen: () => false }));
 vi.mock('@/hooks/use-browser-navigation', () => ({ useBrowserNavigation: () => {} }));
-const device = vi.hoisted(() => ({ isMobile: true }));
+const device = vi.hoisted(() => ({ isMobile: true, isCompact: false }));
 vi.mock('@/hooks/use-media-query', () => ({
-  useDeviceDetection: () => ({ isMobile: device.isMobile, isTablet: false, isDesktop: !device.isMobile }),
+  useDeviceDetection: () => ({ isMobile: device.isMobile, isCompact: device.isCompact, isDesktop: !device.isMobile }),
   useMediaQuery: () => false,
   useIsDesktop: () => false,
 }));
@@ -109,18 +112,43 @@ beforeEach(() => {
 });
 afterEach(() => {
   device.isMobile = true;
+  device.isCompact = false;
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
 
-/** On a phone only one of list and reading pane shows; the other gets max-md:hidden. */
-const listHidden = () => screen.getByText('message list').closest('.max-md\\:hidden') !== null;
+/** On a phone only one of list and reading pane shows; the other gets max-desk:hidden. */
+const listHidden = () => screen.getByText('message list').closest('.max-desk\\:hidden') !== null;
 
 describe('Mail after the tour on a phone', () => {
   it('shows the list when it opens with the reader left on and nothing to read', () => {
     useUIStore.setState({ activeView: 'viewer' });
     render(<MailApp />);
     expect(listHidden()).toBe(false);
+  });
+
+  // Usability test 2026-11-04, mail-13: on a desktop the round button sat on
+  // the list's rows; Compose is at the head of the folder sidebar there.
+  it('draws the round Compose button on a phone, not on a desktop', () => {
+    const view = render(<MailApp />);
+    expect(document.querySelectorAll('[data-tour="compose-button"]')).toHaveLength(1);
+
+    device.isMobile = false;
+    view.rerender(<MailApp />);
+    expect(document.querySelector('[data-tour="compose-button"]')).toBeNull();
+  });
+
+  // mail-27 kept the tablet from drawing the header's ⋮ and the list's ⋮ one
+  // above the other. The tablet widths are a compact desktop now, which has
+  // no phone header: the list's ⋮ is the only one there.
+  it('draws the list ⋮ on a desktop, compact or full', () => {
+    device.isMobile = false;
+    const view = render(<MailApp />);
+    expect(screen.queryByTestId('mail-folder-menu')).not.toBeNull();
+
+    device.isCompact = true;
+    view.rerender(<MailApp />);
+    expect(screen.queryByTestId('mail-folder-menu')).not.toBeNull();
   });
 
   it('keeps an open composer in view when the window narrows to a phone', async () => {

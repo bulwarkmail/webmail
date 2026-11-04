@@ -81,7 +81,9 @@ export async function readSummary(locale: string | undefined, now = Date.now()):
     const next = nextEventOf(events, now);
     if (next) nextEvent = { title: next.title ?? '', when: formatEventTime(eventStart(next), now, locale) };
   }
-  return { unread, recent, nextEvent };
+  // The tray lists one account's inbox: with more than one, it says whose.
+  const several = useAccountStore.getState().accounts.length > 1;
+  return { unread, recent, nextEvent, ...(several && entry.username ? { account: entry.username } : {}) };
 }
 
 /** Keeps main's copy current: when the unread count moves, and now and then for the next event. */

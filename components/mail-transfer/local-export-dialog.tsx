@@ -57,7 +57,7 @@ async function freeRoom(): Promise<number | null> {
   }
 }
 
-/** Settings > Backup & reset > Offline > Export kept mail: from the local store, also with no server. */
+/** Settings > Offline > Export kept mail: from the local store, also with no server. */
 export function LocalExportDialog({ request }: { request: LocalExportRequest }) {
   const t = useTranslations("offlineExport");
   const tExport = useTranslations("mail_export");

@@ -176,7 +176,7 @@ function ToolbarSkeleton({ text }: { text?: CalendarSkeletonText }) {
   const views = text?.views;
   return (
     <>
-      <div data-window-row-right="" className="hidden md:flex items-center gap-1 px-3 h-14 box-content border-b border-border flex-shrink-0">
+      <div data-window-row-right="" className="hidden desk:flex items-center gap-1 px-3 h-14 box-content border-b border-border flex-shrink-0">
         <ToolbarIcon className="me-1">
           <Menu />
         </ToolbarIcon>
@@ -222,7 +222,7 @@ function ToolbarSkeleton({ text }: { text?: CalendarSkeletonText }) {
         </OutlineButton>
       </div>
 
-      <div className="md:hidden border-b border-border">
+      <div className="desk:hidden border-b border-border">
         <div className="flex flex-col gap-1 px-2 py-2">
           <div className="flex flex-wrap items-center gap-1">
             <PhoneIcon className="-ms-1">
@@ -607,7 +607,7 @@ export function CalendarSkeletonBody({ embedded = false, text }: { embedded?: bo
               <CalendarViewSkeleton text={text} />
             </div>
             {/* The floating create button of a phone. */}
-            <span className="md:hidden absolute bottom-4 end-4 z-40 flex items-center justify-center h-14 w-14 rounded-full shadow-lg bg-primary text-primary-foreground">
+            <span className="desk:hidden absolute bottom-4 end-4 z-40 flex items-center justify-center h-14 w-14 rounded-full shadow-lg bg-primary text-primary-foreground">
               <Plus className="h-6 w-6" />
             </span>
           </div>
@@ -624,10 +624,9 @@ export function CalendarSkeleton({ label, labels, text }: CalendarSkeletonProps)
       surface="calendar"
       label={label}
       labels={labels}
-      railBelow="md"
       active="calendar"
       mvMenu={false}
-      rowClassName="lg:mv:mb-4 lg:mv:mx-4 lg:mv:rounded-[var(--mv-card-radius)] lg:mv:bg-background"
+      rowClassName="desk:mv:mb-4 desk:mv:mx-4 desk:mv:rounded-[var(--mv-card-radius)] desk:mv:bg-background"
     >
       <CalendarSkeletonBody text={text} />
     </AppShellSkeleton>

@@ -1,7 +1,7 @@
 /**
  * The mail page as a skeleton: folder sidebar, message list and reading pane,
- * in each layout the app has (split, horizontal, focus, Mountain View, tablet,
- * phone). Class lists follow the real components (components/mail/mail-app.tsx,
+ * in each layout the app has (split, horizontal, focus, Mountain View, the
+ * compact desktop, phone). Class lists follow the real components (components/mail/mail-app.tsx,
  * components/layout/sidebar.tsx, components/layout/mobile-header.tsx,
  * components/email/thread-list-item.tsx, components/email/email-viewer.tsx),
  * so the page fills in over it without anything moving.
@@ -23,6 +23,7 @@ import {
   ReplyAll,
   ChevronDown,
   ChevronsLeft,
+  ChevronsRight,
   Filter,
   Mail,
   Menu,
@@ -78,17 +79,17 @@ export function FolderRowsSkeleton({ count = 7 }: { count?: number }) {
       {repeat(count, (i) => (
         <div
           className={cn(
-            "w-full flex items-center max-lg:min-h-[44px] text-sm pe-2 border-s-2 border-transparent",
+            "w-full flex items-center tap:min-h-[44px] text-sm pe-2 border-s-2 border-transparent",
             "mv:min-h-[var(--mv-nav-row-h)] mv:me-3 mv:pe-4 mv:border-s-0",
           )}
           style={{ paddingBlock: "var(--density-sidebar-py)" }}
         >
-          <span className="flex-shrink-0" style={{ width: FOLDER_ROW_PX_BASE + FOLDER_CHEVRON_SLOT }} />
-          <span className="flex items-center gap-2 mv:gap-[18px] min-w-0 flex-1">
+          <span className="flex-shrink-0 desk:max-lg:hidden" style={{ width: FOLDER_ROW_PX_BASE + FOLDER_CHEVRON_SLOT }} />
+          <span className="flex items-center gap-2 mv:gap-[18px] min-w-0 flex-1 desk:max-lg:justify-center">
             <span className="flex items-center justify-center flex-shrink-0 w-4 h-4 mv:w-5 mv:h-5">
               <Block className="w-full h-full rounded" />
             </span>
-            <TextLine className="flex-1" w={textWidth(i, 35, 30)} />
+            <TextLine className="flex-1 desk:max-lg:hidden" w={textWidth(i, 35, 30)} />
           </span>
         </div>
       ))}
@@ -118,17 +119,19 @@ function SidebarSkeleton({ embedded }: { embedded: boolean }) {
         "relative flex flex-col h-full border-e overflow-hidden bg-secondary border-border",
         // Dark themes draw the panel in the shapes' own colour: lift them off it.
         "sk-lift-dark",
-        !embedded && "lg:mv:bg-[var(--mv-canvas)] lg:mv:border-transparent",
+        !embedded && "desk:mv:bg-[var(--mv-canvas)] desk:mv:border-transparent",
       )}
     >
       {/* Header: collapse button and account switcher. Hidden in a Pro pane and under Mountain View. */}
       {!embedded && (
-        <div className="border-b border-border lg:mv:hidden">
-          <div className="flex items-center h-14 gap-1 px-2">
-            <span className="hidden lg:flex items-center justify-center h-8 w-8 flex-shrink-0 text-muted-foreground">
-              <ChevronsLeft className="w-4 h-4" />
+        <div className="border-b border-border desk:mv:hidden">
+          <div className="flex items-center h-14 gap-1 px-2 desk:max-lg:justify-center">
+            <span className="hidden desk:flex items-center justify-center h-8 w-8 flex-shrink-0 text-muted-foreground">
+              <ChevronsLeft className="w-4 h-4 desk:max-lg:hidden" />
+              {/* A compact desktop folds the sidebar to its icons (sidebarFolded). */}
+              <ChevronsRight className="w-4 h-4 hidden desk:max-lg:block" />
             </span>
-            <span className="flex flex-1 min-w-0 items-center gap-2 px-2 py-1.5">
+            <span className="flex flex-1 min-w-0 items-center gap-2 px-2 py-1.5 desk:max-lg:hidden">
               <Circle className="w-9 h-9" />
               <span className="min-w-0 flex-1">
                 <TextLine className="text-sm" w="70%" />
@@ -137,20 +140,24 @@ function SidebarSkeleton({ embedded }: { embedded: boolean }) {
               <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
             </span>
           </div>
+          {/* The folded sidebar's Compose button. */}
+          <div className="hidden desk:max-lg:flex justify-center pb-2">
+            <Block className="w-10 h-10 rounded-md" />
+          </div>
         </div>
       )}
       {/* Mountain View: the Compose button heads the navigation. */}
       {!embedded && (
-        <div className="hidden lg:mv:block pt-2 pb-3 px-3">
+        <div className="hidden desk:mv:block pt-2 pb-3 px-3">
           <span className="flex w-fit items-center gap-3 ps-4 pe-6 h-[var(--mv-compose-h,56px)] rounded-2xl bg-[var(--mv-compose-bg)] text-[var(--mv-compose-fg)]">
             <Pencil className="w-6 h-6 flex-shrink-0" />
-            <TextLine className="text-sm w-14" w="100%" />
+            <TextLine className="text-sm w-14 desk:max-lg:hidden" w="100%" />
           </span>
         </div>
       )}
       <div className="flex-1 overflow-hidden">
         {/* Mountain View lists the folders without a heading. */}
-        <FolderSectionHeaderSkeleton className={embedded ? undefined : "lg:mv:hidden"} />
+        <FolderSectionHeaderSkeleton className={cn("desk:max-lg:hidden", !embedded && "desk:mv:hidden")} />
         <FolderRowsSkeleton />
       </div>
     </div>
@@ -181,6 +188,12 @@ function previewClass(o: RowOptions): string | null {
   return o.preview === false || o.density === "compact" || o.density === "extra-compact" ? null : "";
 }
 
+/** Classes for the preview's second line, which only comfortable rows have (mail-15). */
+function secondPreviewLineClass(o: RowOptions): string | null {
+  if (o.density === undefined) return "boot-one-preview-line:hidden";
+  return o.density === "comfortable" ? "" : null;
+}
+
 /*
  * The rows below are drawn dozens of times, so they use the short classes in
  * app/boot-skeleton.css (mail section) for what every row repeats: sk-mrow
@@ -202,8 +215,9 @@ function L({ className, w }: { className?: string; w: string }) {
 function StackedRow({ i, o }: { i: number; o: RowOptions }) {
   const avatar = avatarClass(o);
   const preview = previewClass(o);
+  const secondLine = secondPreviewLineClass(o);
   return (
-    <div className="sk-mrow max-md:mv:border-b-transparent">
+    <div className="sk-mrow max-desk:mv:border-b-transparent">
       <div className="sk-mcell sk-mcell-min">
         {avatar !== null && (
           <span className={cn("sk-mav", avatar)}>
@@ -219,8 +233,10 @@ function StackedRow({ i, o }: { i: number; o: RowOptions }) {
           {preview !== null && (
             <span className={cn("block", preview)}>
               {/* Mountain View's phone rows keep the preview to one line, beside a 32px star. */}
-              <L className="text-sm leading-relaxed max-md:mv:h-8" w="95%" />
-              <L className="text-sm leading-relaxed max-md:mv:hidden" w={textWidth(i + 5, 45, 40)} />
+              <L className="text-sm leading-relaxed max-desk:mv:h-8" w="95%" />
+              {secondLine !== null && (
+                <L className={cn("text-sm leading-relaxed max-desk:mv:hidden", secondLine)} w={textWidth(i + 5, 45, 40)} />
+              )}
             </span>
           )}
         </span>
@@ -297,13 +313,13 @@ export function MailListRowsSkeleton({
   }
   return (
     <div aria-hidden="true" className={className}>
-      <div className="md:boot-focus:hidden lg:boot-horizontal:hidden md:mv:hidden">
+      <div className="desk:boot-focus:hidden desk:boot-horizontal:hidden desk:mv:hidden">
         {repeat(ROWS.stacked, (i) => <StackedRow i={i} o={o} />)}
       </div>
-      <div className="hidden md:boot-std:boot-focus:block lg:boot-std:boot-horizontal:block">
+      <div className="hidden desk:boot-std:boot-focus:block desk:boot-std:boot-horizontal:block">
         {repeat(ROWS["one-line"], (i) => <OneLineRow i={i} o={o} />)}
       </div>
-      <div className="hidden md:mv:block">{repeat(ROWS.mv, (i) => <MvRow i={i} />)}</div>
+      <div className="hidden desk:mv:block">{repeat(ROWS.mv, (i) => <MvRow i={i} />)}</div>
     </div>
   );
 }
@@ -313,8 +329,8 @@ function ListToolbarSkeleton({ embedded }: { embedded: boolean }) {
   const icon = "flex items-center justify-center h-8 w-8 shrink-0 text-muted-foreground";
   const round = "grid place-items-center w-10 h-10 rounded-full shrink-0 text-muted-foreground";
   return (
-    <div className="border-b border-border bg-background max-md:hidden">
-      <div className={cn("px-3 h-14 flex items-center", !embedded && "lg:mv:hidden")}>
+    <div className="border-b border-border bg-background max-desk:hidden">
+      <div className={cn("px-3 h-14 flex items-center", !embedded && "desk:mv:hidden")}>
         <div className="flex items-center gap-1 w-full">
           <span className={icon}>
             <Square className="w-4 h-4" />
@@ -338,7 +354,7 @@ function ListToolbarSkeleton({ embedded }: { embedded: boolean }) {
       </div>
       {/* Mountain View's list toolbar (MvListToolbar). */}
       {!embedded && (
-        <div className="hidden lg:mv:flex items-center gap-1 h-12 ps-[5px] pe-2 shrink-0">
+        <div className="hidden desk:mv:flex items-center gap-1 h-12 ps-[5px] pe-2 shrink-0">
           <span className={round}>
             <Square className="w-[18px] h-[18px]" />
           </span>
@@ -364,7 +380,7 @@ function MobileHeaderSkeleton() {
   return (
     <div
       className={cn(
-        "lg:hidden flex items-center justify-between h-14 shrink-0",
+        "desk:hidden flex items-center justify-between h-14 shrink-0",
         "border-b border-border bg-background px-4",
         "mv:mx-2 mv:mt-2 mv:mb-1 mv:rounded-full mv:border-0 mv:bg-muted mv:px-2 mv:shadow-sm",
         // Mountain View's pill is the shapes' own colour: lift them off it.
@@ -375,9 +391,9 @@ function MobileHeaderSkeleton() {
         <span className="flex items-center justify-center h-11 w-11">
           <Menu className="h-5 w-5" />
         </span>
-        <TextLine className="max-md:hidden w-28 font-semibold text-lg" w="100%" bar="h-4" />
+        <TextLine className="max-desk:hidden w-28 font-semibold text-lg" w="100%" bar="h-4" />
       </span>
-      <span className="md:hidden flex-1 min-w-0 h-10 flex items-center gap-2 rounded-full pe-1 mx-1 bg-muted ps-3 mv:mx-0 mv:bg-transparent mv:ps-2 text-muted-foreground sk-lift">
+      <span className="desk:hidden flex-1 min-w-0 h-10 flex items-center gap-2 rounded-full pe-1 mx-1 bg-muted ps-3 mv:mx-0 mv:bg-transparent mv:ps-2 text-muted-foreground sk-lift">
         <Search className="h-4 w-4 flex-shrink-0" />
         <TextLine className="flex-1 text-sm" w="7rem" />
       </span>
@@ -426,8 +442,8 @@ export function MailMessageToolbarSkeleton({ end }: { end?: ReactNode } = {}) {
         </div>
         <div className="max-sm:hidden flex items-center justify-between gap-2 w-full">
           <div className="flex items-center gap-2">
-            {/* Back to the list, where the reader has the list's place (tablet, focus). */}
-            <span className="hidden md:max-lg:flex md:boot-focus:flex items-center justify-center h-9 w-9 -ms-1 flex-shrink-0">
+            {/* Back to the list, where the reader has the list's place (focus, or a window too narrow for two panes). */}
+            <span className="hidden desk:boot-onepane:flex items-center justify-center h-9 w-9 -ms-1 flex-shrink-0">
               <ArrowLeft className="w-5 h-5" />
             </span>
             <Block className={button} />
@@ -437,7 +453,7 @@ export function MailMessageToolbarSkeleton({ end }: { end?: ReactNode } = {}) {
           <div className="flex items-center gap-2">
             <Block className={button} />
             <Block className={button} />
-            <Block className={cn(button, "max-md:hidden")} />
+            <Block className={cn(button, "max-desk:hidden")} />
             <Block className="h-8 w-8 rounded-md" />
             {end}
           </div>
@@ -578,7 +594,7 @@ function ReaderFrame({ children }: { children: ReactNode }) {
 /** Mountain View's side panel rail (MvSidePanel): calendar and contacts. */
 function MvSidePanelSkeleton() {
   return (
-    <div aria-hidden="true" className="hidden lg:mv:flex boot-no-mv-side:hidden w-14 shrink-0 flex-col items-center gap-2 pt-3">
+    <div aria-hidden="true" className="hidden desk:mv:flex boot-no-mv-side:hidden w-14 shrink-0 flex-col items-center gap-2 pt-3">
       <span className="grid h-10 w-10 place-items-center rounded-full boot-no-calendar:hidden">
         <CalendarEvent className="h-5 w-5 text-[#1a73e8]" />
       </span>
@@ -600,10 +616,11 @@ function MvSidePanelSkeleton() {
 export function MailSkeletonBody({ embedded = false }: { embedded?: boolean }) {
   return (
     <>
-      {/* Folders: in the flow on a desktop, a closed drawer below that. */}
+      {/* Folders: in the flow on a desktop (folded to icons on a compact one),
+          a closed drawer on a phone. */}
       <div
         aria-hidden="true"
-        className="flex-shrink-0 h-full max-lg:hidden"
+        className="flex-shrink-0 h-full max-desk:hidden max-lg:w-12! max-lg:mv:w-[72px]!"
         style={{ width: "var(--boot-mail-sidebar-w, 256px)" }}
       >
         <SidebarSkeleton embedded={embedded} />
@@ -612,59 +629,61 @@ export function MailSkeletonBody({ embedded = false }: { embedded?: boolean }) {
       <div
         className={cn(
           "flex flex-col flex-1 min-w-0 h-full",
-          !embedded && "lg:mv:h-auto lg:mv:mb-4 lg:mv:me-4 lg:mv:rounded-[var(--mv-card-radius)] lg:mv:bg-background lg:mv:overflow-hidden",
+          !embedded && "desk:mv:h-auto desk:mv:mb-4 desk:mv:me-4 desk:mv:rounded-[var(--mv-card-radius)] desk:mv:bg-background desk:mv:overflow-hidden",
         )}
       >
-        <div className={cn("relative flex flex-1 min-h-0", !embedded && "lg:boot-horizontal:flex-col")}>
+        <div className={cn("relative flex flex-1 min-h-0", !embedded && "desk:boot-horizontal:flex-col")}>
           {/* The message list. */}
           <div
             className={cn(
               "relative flex flex-col bg-background min-w-0 h-full border-e border-border",
-              // Phones and tablets give an open message the whole width.
-              "max-md:flex-1 max-md:border-e-0 max-lg:boot-open:hidden",
-              "md:flex-shrink-0 md:shadow-sm md:w-[var(--boot-mail-list-w,384px)]",
-              embedded && "md:max-w-[max(220px,55%)]",
-              // Focus: the list takes the width while nothing is open and makes way for the reader.
-              "md:boot-focus:w-auto md:boot-focus:flex-1 md:boot-focus:border-e-0 md:boot-focus:boot-open:hidden",
+              // Phones give an open message the whole width.
+              "max-desk:flex-1 max-desk:border-e-0 max-desk:boot-open:hidden",
+              "desk:flex-shrink-0 desk:shadow-sm desk:w-[var(--boot-mail-list-w,384px)]",
+              embedded && "desk:max-w-[max(220px,55%)]",
+              // Focus (and split in a window too narrow for two panes): the
+              // list takes the width while nothing is open and makes way for the reader.
+              "desk:boot-onepane:w-auto desk:boot-onepane:flex-1 desk:boot-onepane:border-e-0 desk:boot-onepane:boot-open:hidden",
               // Horizontal (desktop only): the list on top, full width.
               !embedded && [
-                "lg:boot-horizontal:w-full lg:boot-horizontal:h-auto lg:boot-horizontal:border-e-0 lg:boot-horizontal:shadow-none",
-                "lg:boot-horizontal:flex-1 lg:boot-horizontal:min-h-0",
-                "lg:boot-horizontal:boot-open:flex-none lg:boot-horizontal:boot-open:h-[var(--boot-mail-list-h,320px)]",
-                "lg:boot-horizontal:boot-open:shadow-[0_8px_12px_-6px_rgba(0,0,0,0.18)] dark:lg:boot-horizontal:boot-open:shadow-[0_8px_14px_-6px_rgba(0,0,0,0.55)]",
+                "desk:boot-horizontal:w-full desk:boot-horizontal:h-auto desk:boot-horizontal:border-e-0 desk:boot-horizontal:shadow-none",
+                "desk:boot-horizontal:flex-1 desk:boot-horizontal:min-h-0",
+                "desk:boot-horizontal:boot-open:flex-none desk:boot-horizontal:boot-open:h-[var(--boot-mail-list-h,320px)]",
+                "desk:boot-horizontal:boot-open:shadow-[0_8px_12px_-6px_rgba(0,0,0,0.18)] dark:desk:boot-horizontal:boot-open:shadow-[0_8px_14px_-6px_rgba(0,0,0,0.55)]",
               ],
             )}
           >
             {!embedded && <MobileHeaderSkeleton />}
             <ListToolbarSkeleton embedded={embedded} />
             <div className="flex-1 min-h-0 flex flex-col">
-              <div className={cn("flex-1 overflow-hidden bg-background relative pb-20", !embedded && "lg:mv:pb-0")}>
+              <div className={cn("flex-1 overflow-hidden bg-background relative pb-20", !embedded && "desk:mv:pb-0")}>
                 <MailListRowsSkeleton />
               </div>
             </div>
             {/* The round Compose button (Mountain View's sits in its navigation). */}
             <Circle
               className={cn(
-                "absolute z-40 shadow-lg bottom-4 end-4 h-12 w-12 max-md:h-14 max-md:w-14",
-                "max-md:mv:w-36 max-md:mv:rounded-2xl",
-                !embedded && "lg:mv:hidden",
+                "absolute z-40 shadow-lg bottom-4 end-4 h-12 w-12 max-desk:h-14 max-desk:w-14",
+                "max-desk:mv:w-36 max-desk:mv:rounded-2xl",
+                // A desktop has Compose in the folder sidebar; a Pro pane keeps the round one.
+                !embedded && "desk:hidden",
               )}
             />
           </div>
           {/* The reading pane. */}
           <div
             className={cn(
-              "flex flex-col bg-background flex-1 min-w-0 h-full md:relative",
-              "max-md:hidden max-md:boot-open:flex",
-              "md:boot-focus:hidden md:boot-focus:boot-open:flex",
-              !embedded && "lg:boot-horizontal:hidden lg:boot-horizontal:boot-open:flex lg:boot-horizontal:h-auto lg:boot-horizontal:min-h-0",
+              "flex flex-col bg-background flex-1 min-w-0 h-full desk:relative",
+              "max-desk:hidden max-desk:boot-open:flex",
+              "desk:boot-onepane:hidden desk:boot-onepane:boot-open:flex",
+              !embedded && "desk:boot-horizontal:hidden desk:boot-horizontal:boot-open:flex desk:boot-horizontal:h-auto desk:boot-horizontal:min-h-0",
             )}
           >
             <ReaderFrame>
               <EmptyReaderSkeleton className="boot-open:hidden" />
               {/* A conversation link opens the conversation view on a phone, its newest message elsewhere. */}
-              <MailMessageSkeleton className="hidden boot-open:flex max-md:boot-thread:hidden" />
-              <MailConversationSkeleton className="hidden max-md:boot-thread:flex" />
+              <MailMessageSkeleton className="hidden boot-open:flex max-desk:boot-thread:hidden" />
+              <MailConversationSkeleton className="hidden max-desk:boot-thread:flex" />
             </ReaderFrame>
           </div>
         </div>
@@ -691,10 +710,9 @@ export function MailSkeleton({ label, labels, embedded = false }: MailSkeletonPr
       surface="mail"
       label={label}
       labels={labels}
-      railBelow="lg"
       active="mail"
       mvSearch
-      bottomBarClassName="max-md:boot-open:hidden"
+      bottomBarClassName="max-desk:boot-open:hidden"
     >
       <MailSkeletonBody />
     </AppShellSkeleton>

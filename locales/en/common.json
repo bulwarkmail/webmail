@@ -6,9 +6,6 @@
     "username_placeholder": "user@example.com",
     "password_label": "Password",
     "password_placeholder": "Enter your password",
-    "jmap_endpoint_label": "JMAP Server",
-    "jmap_endpoint_placeholder": "https://mail.example.com",
-    "jmap_endpoint_cors_hint": "The server must allow CORS requests from this domain.",
     "jmap_server_label": "Server",
     "jmap_server_auto_picked": "Server selected from your email domain.",
     "sign_in": "Sign in",
@@ -29,7 +26,7 @@
     },
     "show_password": "Show password",
     "hide_password": "Hide password",
-    "totp_toggle": "I have a 2FA code",
+    "totp_toggle": "I have a code from my authenticator app",
     "token_toggle": "Sign in with an access token",
     "password_toggle": "Sign in with a password",
     "token_label": "Access token",
@@ -48,7 +45,7 @@
     "dismiss": "Dismiss",
     "or": "or",
     "sign_in_sso": "Sign in with SSO",
-    "add_account_title": "Add Account",
+    "add_account_title": "Add account",
     "add_account_subtitle": "Sign in with another account",
     "subtitle": "Sign in to your account",
     "version": {
@@ -126,7 +123,7 @@
     "sign_out_of": "Sign out of {account}",
     "sign_out_all": "Sign out of all accounts",
     "add_account": "Add account",
-    "set_as_default": "Set as default",
+    "set_as_default": "Open this account at start",
     "switch_account": "Switch account",
     "contacts": "Contacts",
     "calendar": "Calendar",
@@ -215,22 +212,30 @@
     "mv_storage_used": "{percent}% of {total} used",
     "accessibility": "Accessibility"
   },
+  "account_unread": {
+    "others": "Unread in other accounts: {count}",
+    "badge_all_accounts": {
+      "label": "Count unread mail in all accounts",
+      "description": "The number on the tab, the app icon and the tray adds up the inboxes of every signed-in account."
+    },
+    "empty_hint": "You can empty the {folder} folder to permanently remove all messages."
+  },
   "protocol_handlers": {
     "title": "Default apps",
-    "description": "Choose whether email and calendar links open in {appName}. Technically, {appName} registers as a protocol handler for mailto: and webcal: links.",
+    "description": "Choose whether email and calendar links open in {appName}.",
     "unsupported": "This browser or connection does not support manual protocol-handler registration. You may still be able to use the installed PWA via browser or OS settings.",
-    "mailto_label": "Email links",
-    "mailto_description": "Open mailto: links in {appName} with a prefilled composer.",
-    "protocol_open_mode_label": "When opening protocol links",
+    "mailto_label": "Open email links in {appName}",
+    "mailto_description": "Clicking an email address on a website starts a new message in {appName}.",
+    "protocol_open_mode_label": "How links open",
     "protocol_open_mode_description": "Choose whether {appName} opens mailto: and webcal: links in a new tab or reuses an open session. The active-session option needs notification permission so you can click a fallback notification to bring {appName} to the front if the browser blocks focus.",
     "protocol_open_mode_active_session": "Open in active session if possible",
     "protocol_open_mode_new_tab": "Always open a new tab",
     "focus_notification_title": "Open {appName}",
     "focus_notification_body": "The link was opened in {appName}. Click to bring the window to the front.",
-    "webcal_label": "Calendar links",
-    "webcal_description": "Open webcal: links in {appName} with a prefilled calendar subscription dialog.",
-    "register_mailto": "Register email app",
-    "register_webcal": "Register calendar app",
+    "webcal_label": "Open calendar links in {appName}",
+    "webcal_description": "Clicking a calendar link on a website adds the calendar in {appName}.",
+    "register_mailto": "Use {appName} for email links",
+    "register_webcal": "Use {appName} for calendar links",
     "mailto_registered": "Email handler registration requested",
     "webcal_registered": "Calendar handler registration requested",
     "registration_failed": "Protocol handler registration failed",
@@ -410,6 +415,17 @@
       "next": "Next page",
       "position": "{more, select, yes {Page {page} of {pages} or more} other {Page {page} of {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# conversation selected} other {# conversations selected}}",
+    "search_count": "{conversations, plural, one {# conversation} other {# conversations}} ({messages, plural, one {# message} other {# messages}})",
+    "conversation_count": "{count, plural, one {# conversation} other {# conversations}}",
+    "archived": "Archived",
+    "moved_to_trash": "Moved to Trash",
+    "moved_to": "Moved to {mailbox}",
+    "moved_count_to": "{count, plural, one {# email moved to {mailbox}} other {# emails moved to {mailbox}}}",
+    "new_folder_title": "New folder",
+    "new_subfolder_title": "New subfolder"
   },
   "shared_tags": {
     "title": "Shared tags",
@@ -893,6 +909,11 @@
     "read_aloud_stop": "Stop reading",
     "reader_view": "Reader view"
   },
+  "reader_actions": {
+    "restore": "Restore",
+    "restore_to": "Move back to {folder}",
+    "delete_forever": "Delete forever"
+  },
   "external_mail": {
     "sender_label": "External",
     "sender_tooltip": "From {domain}, outside your organisation",
@@ -1345,6 +1366,30 @@
     "apply": "Use this text",
     "apply_hint": "Replaces the subject and text below."
   },
+  "uxs_vacation": {
+    "default_subject": "Out of office",
+    "default_message": "Thank you for your email. I'm out of the office and will reply when I'm back.",
+    "write_message_first": "Write a message first. Without one, people would get an empty reply.",
+    "enter_address_first": "Enter the address to forward to first.",
+    "message_title": "Your reply",
+    "message_label": "Message",
+    "message_description": "What people get when they write to you. You can use formatting and links.",
+    "from_label": "From (optional)",
+    "from_description": "Leave it empty to start right away.",
+    "until_label": "Until (optional)",
+    "until_description": "Leave it empty to keep replying until you turn it off.",
+    "audience_all": "Everyone",
+    "audience_internal": "Only my organisation ({domains})",
+    "audience_external": "Only people outside my organisation",
+    "signature_label": "Signature",
+    "signature_plain_label": "Signature (plain text)",
+    "signature_plain_description": "You write plain text only (Composing), so your signature is plain text too.",
+    "edit_as_html": "Edit as HTML",
+    "edit_formatted": "Back to the formatting editor",
+    "html_source_label": "Signature as HTML",
+    "signature_size": "{bytes} of {max} bytes used",
+    "signature_too_long": "Too long for the server ({bytes} of {max} bytes). Make it shorter."
+  },
   "retention_notice": {
     "line": "Messages here are deleted {count, plural, one {# day} other {# days}} after they were moved here."
   },
@@ -1537,8 +1582,8 @@
       "title": "Appearance",
       "description": "Customize the look and feel of your webmail",
       "theme": {
-        "label": "Theme",
-        "description": "Choose your preferred color scheme",
+        "label": "Light or dark",
+        "description": "System follows your device's setting",
         "light": "Light",
         "dark": "Dark",
         "system": "System"
@@ -1566,7 +1611,7 @@
         "label": "Interface layout",
         "description": "Where search, navigation and toolbars sit",
         "default": "Default",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Search bar on top, apps on the left"
       },
       "animations": {
         "label": "Enable animations",
@@ -1610,7 +1655,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Colorful sidebar icons",
-        "description": "Tint folder and tag icons by type (blue Inbox, red Junk, green Sent, etc.). Disable for a monochrome sidebar."
+        "description": "Give folder and tag icons colors (blue Inbox, red Spam, green Sent and so on). Turn this off for gray icons."
       },
       "tint_list_rows": {
         "label": "Tint list rows by tag color",
@@ -1622,7 +1667,7 @@
       },
       "favicon_unread_badge": {
         "label": "Unread count on the tab and app icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, and on the installed app icon where supported, so new mail is visible when the tab is not focused. Disable to keep both icons unbadged."
+        "description": "So you see new mail while you work in another tab or app."
       },
       "show_shared_mail_accounts": {
         "label": "Show shared mail accounts",
@@ -1673,7 +1718,7 @@
     },
     "keywords": {
       "title": "Email tags",
-      "description": "Define tags to organize your emails. These are stored as JMAP keywords on the server.",
+      "description": "Make tags to sort your messages. The tags are saved with your messages on the server.",
       "add_keyword": "New tag",
       "label_field": "Display name",
       "label_placeholder": "e.g. Work, Personal, Urgent",
@@ -1708,8 +1753,8 @@
         "hide": "Hide"
       },
       "unrecognized": {
-        "title": "Recover tags from the server",
-        "description": "Tag names and colors are stored in this browser, but the tags themselves live on your messages as JMAP keywords. Scan your mail for keywords no tag here explains, then add them back.",
+        "title": "Find tags on your messages that are missing here",
+        "description": "This browser keeps the names and colors of your tags. The tags themselves are saved on your messages. Search your mail for tags that are missing here and add them again.",
         "scan": "Scan for tags",
         "rescan": "Scan again",
         "scanning": "Scanning… {scanned} of {total} messages",
@@ -1730,7 +1775,7 @@
         "relax": "Relax"
       },
       "push": {
-        "title": "Background notifications",
+        "title": "Notifications when {appName} is closed",
         "description": "Receive system notifications for new mail when this site is closed. Delivered via the Bulwark push relay; the relay never sees mail content.",
         "relay_label": "Push relay",
         "relay_desc": "The server that delivers your notifications. Choose from the relays your administrator offers.",
@@ -1742,7 +1787,7 @@
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "Background notifications aren't available in the demo.",
         "status_busy": "Working…",
-        "enable": "Enable",
+        "enable": "Turn on for this device",
         "reenable": "Re-register",
         "disable": "Disable",
         "confirm_disable_title": "Disable background notifications?",
@@ -1787,17 +1832,17 @@
         "result_disabled": "Notifications disabled for {count} accounts."
       },
       "sound_selection": {
-        "title": "Notification sound",
+        "title": "Sound",
         "description": "Choose which sound to play for notifications",
-        "choose": "Sound",
+        "choose": "Tone",
         "choose_desc": "Select a notification tone and click the speaker icon to preview it"
       },
       "email": {
-        "title": "Email notifications",
+        "title": "New mail",
         "description": "Configure notifications for incoming emails",
         "enabled": "Email notifications",
         "enabled_desc": "Show notifications when new emails arrive",
-        "sound": "Notification sound",
+        "sound": "Sound for new mail",
         "sound_desc": "Play an audio alert when new emails arrive",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1807,7 +1852,7 @@
         "description": "Configure notifications for calendar events",
         "enabled": "Event notifications",
         "enabled_desc": "Show alerts for upcoming calendar events",
-        "sound": "Notification sound",
+        "sound": "Sound for reminders",
         "sound_desc": "Play an audio alert for calendar reminders"
       }
     },
@@ -1846,7 +1891,7 @@
       },
       "first_day": {
         "label": "First day of week",
-        "description": "Start week on Sunday or Monday",
+        "description": "First day of the week in calendars",
         "sunday": "Sunday",
         "monday": "Monday"
       },
@@ -1936,13 +1981,13 @@
       },
       "mail_layout": {
         "label": "Mail layout",
-        "description": "Choose between the classic split reading pane, a Gmail-style focused reading flow, or a Zimbra-style bottom reading pane.",
+        "description": "Where the message list and the open message go on the screen.",
         "split": "Split pane",
-        "split_description": "Keep the message list and reading pane visible side by side.",
+        "split_description": "List and message side by side",
         "focus": "Focused list",
-        "focus_description": "Show one line per message and open mail full-width while keeping the folder sidebar visible.",
+        "focus_description": "List, then the message full width",
         "horizontal": "Reading pane at bottom",
-        "horizontal_description": "Show the message list on top and open the selected message in a reading pane below it."
+        "horizontal_description": "Message below the list"
       },
       "list_columns": {
         "label": "Show the list as columns",
@@ -1967,7 +2012,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Reply from the address it was sent to",
-        "description": "When replying, send from the address the message was originally sent to. Your configured identities always match; whether other addresses on your domains count too (catch-all) is set by “Received Address Matching” below."
+        "description": "When replying, send from the address the message was originally sent to."
       },
       "reply_identity_match": {
         "label": "Received address matching",
@@ -2191,8 +2236,8 @@
         "title": "Logged-in accounts",
         "description": "Drag to reorder how accounts appear in the account dropdown",
         "active": "Currently active account",
-        "default_badge": "Default account",
-        "set_default": "Set as default",
+        "default_badge": "Opens at start",
+        "set_default": "Open this account at start",
         "switch_to": "Switch to this account",
         "move_up": "Move up",
         "move_down": "Move down",
@@ -2279,7 +2324,7 @@
       },
       "totp": {
         "section_title": "Two-factor authentication",
-        "label": "TOTP authentication",
+        "label": "Two-step sign-in",
         "description": "Add an extra layer of security with a time-based one-time password",
         "active": "Enabled",
         "inactive": "Disabled",
@@ -2375,12 +2420,12 @@
         "delete_message": "{name} is removed from the server."
       },
       "email_client": {
-        "title": "Email client setup",
-        "description": "Use these credentials to configure your desktop or mobile email client (Thunderbird, Apple Mail, Outlook, etc.)",
-        "jmap_username_label": "JMAP username",
+        "title": "Use your mail in other apps",
+        "description": "Thunderbird, Apple Mail, Outlook and phone mail apps can use these settings.",
+        "jmap_username_label": "User name",
         "copy": "Copy",
         "copied": "Copied",
-        "password_instructions": "Use your JMAP username above along with an app password to sign in to your email client. Create an app password in the section below if you haven't already."
+        "password_instructions": "For the password, use an app password, not your normal one. You can create one in the section below."
       },
       "link_device": {
         "title": "Link the mobile app",
@@ -2615,7 +2660,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "Reload contacts, calendars and folders from the server. You stay signed in.",
         "button": "Refresh",
         "confirm_title": "Refresh cached data?"
       },
@@ -2628,12 +2673,12 @@
       },
       "export_settings": {
         "label": "Export settings",
-        "description": "Download your settings as JSON",
+        "description": "Download a copy of your settings",
         "button": "Export"
       },
       "import_settings": {
         "label": "Import settings",
-        "description": "Upload settings from JSON file",
+        "description": "Restore settings from a file",
         "button": "Import"
       },
       "about": {
@@ -2684,8 +2729,8 @@
       "manage_description": "Add, edit, or remove custom apps from your sidebar"
     },
     "contacts": {
-      "title": "Contacts",
-      "description": "Import and export your contacts",
+      "title": "Contact list",
+      "description": "How contacts are listed, and contact files to import or export",
       "group_by_letter_label": "Group by first letter",
       "group_by_letter_description": "Show alphabetical section headers in the contact list",
       "sort_by_last_name_label": "Sort by last name",
@@ -2780,15 +2825,15 @@
       "not_supported": "Your mail server does not support email filters.",
       "rule_name": "Rule name",
       "rule_name_placeholder": "e.g., Sort newsletters",
-      "match_all": "Match ALL conditions",
-      "match_any": "Match ANY condition",
+      "match_all": "Match all conditions",
+      "match_any": "Match any condition",
       "conditions": "Conditions",
       "add_condition": "Add condition",
       "actions": "Actions",
       "add_action": "Add action",
       "remove_condition": "Remove condition",
       "remove_action": "Remove action",
-      "stop_processing": "Stop processing subsequent rules",
+      "stop_processing": "Don't apply later rules",
       "include_spam": "Also move messages marked as spam",
       "attachment_type_placeholder": "e.g. pdf, doc, jpg",
       "value_placeholder_multi": "Value (multiple separated by commas)",
@@ -2830,7 +2875,7 @@
         "discard": "Discard (delete silently)",
         "reject": "Reject with message",
         "keep": "Keep in inbox",
-        "stop": "Stop processing"
+        "stop": "Don't apply later rules"
       },
       "move_to_folder": "Select folder",
       "copy_to_folder": "Select folder",
@@ -2974,7 +3019,7 @@
         "description": "Configure how files and folders are displayed"
       },
       "default_view": {
-        "label": "Default view",
+        "label": "Show files as",
         "description": "Choose between grid and list layout",
         "list": "List",
         "grid": "Grid"
@@ -3170,10 +3215,6 @@
         "label": "Reading mask",
         "description": "Dims everything in a message except a few lines around the pointer, to help you keep your place."
       },
-      "plain_language": {
-        "label": "Plain language",
-        "description": "Simpler wording for settings and error messages, and short explanations of technical terms. Available in English and German."
-      },
       "contrast": {
         "label": "Contrast",
         "description": "More contrast makes text, borders and the focus outline darker or lighter on any theme, and underlines links. System follows your device.",
@@ -3365,6 +3406,81 @@
         "description": "The voice that reads messages aloud. The list shows the voices your browser has for the interface language.",
         "default": "Browser default"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Offline",
+      "privacy": "Privacy",
+      "about": "About"
+    },
+    "search": {
+      "signature": "signature email signature sign-off footer",
+      "sign_out": "sign out log out logout log off sign off",
+      "app_lock": "PIN lock code passcode lock screen",
+      "text_size": "font size bigger text larger text zoom",
+      "vacation": "autoreply auto-reply automatic reply out of office away vacation holiday",
+      "two_factor": "2FA two-factor two-step MFA OTP authenticator one-time code",
+      "encryption": "S/MIME smime PGP OpenPGP encryption certificate",
+      "password": "password change password new password",
+      "offline": "offline without connection no internet download mail storage sync",
+      "wipe": "remove erase wipe device data",
+      "outbox": "outbox unsent waiting queued",
+      "remote_content": "remote images external content tracking pixels trusted senders",
+      "push": "push relay background notifications",
+      "version": "version update about source code GitHub license"
+    },
+    "privacy": {
+      "push_title": "Notifications",
+      "push_link": {
+        "label": "Relay for notifications",
+        "description": "Notifications while the app is closed go through a push relay, which never sees your mail. You choose it on the Notifications page.",
+        "button": "Notifications"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Remote images and trusted senders",
+      "receipts_label": "Read receipts",
+      "senders_label": "Sender pictures",
+      "description": "These settings are on the Privacy page.",
+      "button": "Privacy"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Density and toolbar labels",
+        "description": "How close together list rows are, and whether toolbar buttons show their names, is set on the Appearance page."
+      },
+      "light_mode": {
+        "label": "Light background for messages",
+        "description": "Showing messages on a light background in dark mode is set on the Reading page."
+      },
+      "calendar": {
+        "label": "Event previews in the calendar",
+        "description": "Whether pointing at an event shows its details is set on the Calendar page."
+      },
+      "list": {
+        "label": "Conversations and preview lines",
+        "description": "Grouping by conversation and the preview line under each message are set on the Message list page."
+      },
+      "reading": {
+        "label": "Marking mail as read",
+        "description": "When a message counts as read, and where you go after deleting or moving it, is set on the Reading page."
+      },
+      "send_warnings_description": "Undo send, and the warnings about a missing subject, a forgotten attachment or placeholder text.",
+      "bulk_delete": {
+        "label": "Asking before deleting several messages",
+        "description": "This is set on the Message list page."
+      },
+      "sounds": {
+        "label": "Sounds and the unread badge",
+        "description": "Notification sounds and the unread count on the tab are set on the Notifications page."
+      }
+    },
+    "about": {
+      "title": "About {appName}"
+    },
+    "sign_out": {
+      "description": "Sign out of this account on this device."
     }
   },
   "setup": {
@@ -3648,6 +3764,13 @@
     },
     "find_emails_from": "Find emails from {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Find a folder",
+    "recent": "Recent",
+    "no_match": "No folder matches",
+    "choose_folder": "Choose folder…",
+    "current_folder": "Already in {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Mark folder as read",
     "mark_folder_tree_read": "Mark folder & subfolders as read",
@@ -3694,6 +3817,10 @@
     "delete_with_contents_title": "Folder is not empty",
     "delete_with_contents_message": "The folder \"{name}\" still contains {count, plural, one {1 message} other {# messages}}. Delete the folder and all of its messages? This cannot be undone.",
     "delete_with_contents_confirm": "Delete folder and messages"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Manage accounts…",
+    "apply_to_existing": "{count, plural, one {Apply to # existing message in {folder}} other {Apply to # existing messages in {folder}}}"
   },
   "shortcuts": {
     "title": "Keyboard shortcuts",
@@ -3765,6 +3892,10 @@
     "messages_count": "{count, plural, one {# message} other {# messages}}",
     "expand_named": "Expand conversation: {subject}",
     "collapse_named": "Collapse conversation: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Show # older message} other {Show # older messages}}",
+    "return_to_list_follows_layout": "Until you change it, this follows the layout: off when the list and the message are side by side, on otherwise."
   },
   "identities": {
     "modal_title": "Manage sending identities",
@@ -4352,6 +4483,28 @@
       "menu": "Open the contact's menu"
     }
   },
+  "uxs_wording": {
+    "more_options": "More options",
+    "use_in_other_apps": "Use in other apps",
+    "default_address_book": "Contacts",
+    "default_calendar": "Calendar",
+    "preview_documents": "Documents",
+    "preview_photos": "Photos",
+    "sample_subject": "Notes from Zoë's café meeting",
+    "mail_apps": {
+      "imap": "Incoming mail (IMAP)",
+      "smtp": "Outgoing mail (SMTP)",
+      "caldav": "Calendars (CalDAV)",
+      "carddav": "Contacts (CardDAV)",
+      "port_security": "Port {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "No encryption",
+      "copy_label": "Copy {name}",
+      "loading": "Reading the settings from your mail server…",
+      "not_found": "Your mail server didn't share its server names for other apps. Ask your administrator for them."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Calendars: {names}",
@@ -4595,7 +4748,7 @@
       "hide_non_working_days_desc": "Leave the days you don't work out of the week view. Their events still show in the month, day and agenda views.",
       "working_days": "Working days",
       "title": "Calendar settings",
-      "default_view": "Default view",
+      "default_view": "Calendar opens in",
       "week_starts_on": "Week starts on",
       "time_format": "Time format",
       "default_calendar": "Default calendar",
@@ -4606,7 +4759,7 @@
       "notifications_enabled_desc": "Show alerts for upcoming calendar events",
       "notification_sound": "Notification sound",
       "notification_sound_desc": "Play a sound for calendar alerts",
-      "invitation_parsing": "Parse email invitations",
+      "invitation_parsing": "Show invitations from mail",
       "invitation_parsing_desc": "Detect calendar invitations in email attachments and show calendar actions",
       "show_time_in_month_view": "Show time in month view",
       "show_time_in_month_view_desc": "Display event times in the month calendar view. On small screens this shows full event entries instead of dots.",
@@ -4621,7 +4774,7 @@
       "show_week_numbers_desc": "Display week numbers in the mini-calendar",
       "calendar_free_scroll": "Free scrolling",
       "calendar_free_scroll_desc": "Scroll continuously through months, weeks and days instead of one period at a time",
-      "enable_tasks": "Enable tasks",
+      "enable_tasks": "Tasks",
       "enable_tasks_desc": "Show a tasks view in the calendar for managing to-dos",
       "show_tasks_on_calendar": "Show tasks on calendar",
       "show_tasks_on_calendar_desc": "Display tasks on the month, week and day calendar views",
@@ -4802,8 +4955,8 @@
       "error_update": "Couldn't update calendar",
       "error_delete": "Couldn't delete calendar",
       "caldav_url": "CalDAV URL",
-      "copy_url": "Copy CalDAV URL",
-      "url_copied": "CalDAV URL copied to clipboard",
+      "copy_url": "Copy address for other apps",
+      "url_copied": "Address copied",
       "share": "Share calendar…",
       "new_event_in_calendar": "New event in this calendar",
       "shared_with": "Shared with {names}",
@@ -4823,8 +4976,8 @@
       "default_alerts_updated": "Default reminders updated"
     },
     "subscription": {
-      "title": "iCal subscription",
-      "section_title": "iCal subscriptions",
+      "title": "Subscribe to a calendar",
+      "section_title": "Subscribed calendars",
       "description": "Subscribe to an external iCalendar feed. Events will be synced automatically into their own calendar. Supports https:// and webcal:// URLs.",
       "url_label": "Calendar URL",
       "url_placeholder": "https://example.com/calendar.ics or webcal://...",
@@ -5911,7 +6064,7 @@
     "clear_confirm_unsent": "{count, plural, one {# message that was not sent is lost.} other {# messages that were not sent are lost.}}",
     "clear_confirm": "Clear",
     "persist_refused": "This browser may delete the kept mail when space runs low. Installing the app usually stops that.",
-    "persist_retry": "Ask again",
+    "persist_retry": "Ask the browser to keep it",
     "safari_hint": "Safari deletes a site's data after 7 days without a visit. Add Bulwark to your Home Screen or Dock to keep your mail on this device.",
     "evicted": "The browser deleted the mail kept on this device. It's downloading again.",
     "evicted_lost": "{count, plural, one {# unsent message or change was lost.} other {# unsent messages or changes were lost.}}",
@@ -6456,6 +6609,9 @@
   "top_bar": {
     "more": "More options"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Hide offline notice"
+  },
   "shell": {
     "resize": "Resize",
     "update_available": "Update available",
@@ -6500,6 +6656,19 @@
     "group_plugins": "Plugins",
     "group_account": "Account",
     "switch_to": "Switch to {account}"
+  },
+  "menuAudit": {
+    "offline_header": "You're offline. Some actions need a connection.",
+    "files_new_folder": "New folder…",
+    "files_new_file": "New file…",
+    "files_new_text_file": "New text file…",
+    "files_upload_files": "Upload files…",
+    "files_upload_folder": "Upload folder…",
+    "files_share": "Share…",
+    "files_share_button": "Share",
+    "contacts_add_to_group": "Add to group…",
+    "contacts_bulk_add_to_group": "Add to group…",
+    "schedule_send": "Schedule send…"
   },
   "notification_center": {
     "title": "Notifications",
@@ -6763,7 +6932,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Windows",
+      "title": "App windows",
       "double_click_label": "Open messages in a new window on double-click",
       "double_click_description": "A single click still opens the message next to the list.",
       "restore_label": "Reopen windows at start",
@@ -6856,13 +7025,33 @@
       "close": "Close"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "Search mail for \"{text}\""
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Always show the menu bar",
+    "always_show_description": "Otherwise it shows when you press Alt.",
+    "exit": "Exit",
+    "tray_pause": "Pause notifications",
+    "tray_pause_hour": "For 1 hour",
+    "tray_pause_tomorrow": "Until tomorrow",
+    "tray_resume": "Turn notifications back on",
+    "tray_open": "Open Bulwark",
+    "tray_quit": "Quit Bulwark",
+    "tray_exit": "Exit Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Save draft",
+    "attach_files": "Attach files…",
+    "shortcut_apps": "Go to Mail, Calendar, Contacts or Files"
+  },
   "appLock": {
     "section_title": "App lock",
     "section_desc": "Asks for a PIN after a time without use, in every window and tab. While it's locked, the app can't read the mail stored on this device until someone enters the PIN.",
     "enable_label": "Lock with a PIN",
-    "enable_desc": "Off by default. The PIN stays on this device.",
+    "enable_desc": "The PIN stays on this device.",
     "protects_desc": "What this protects against: the PIN keeps someone at this device out of the app. The mail stored here gets a new key when you turn the lock on or change the PIN, which can take a moment. It can't stop a program running on this computer, a browser extension you installed, or someone who copies the app's files and has time to try many PINs, so a longer PIN is worth it. In the desktop app, trying PINs also takes your login on this computer. Your account on the server isn't affected.",
-    "enable_body": "Choose a PIN. You need it each time the app locks, and after a reload or a new start.",
+    "enable_body": "You need it each time the app locks and after a restart.",
     "set_pin_title": "Choose a PIN",
     "change_pin": "Change PIN…",
     "change_pin_title": "Change the PIN",
@@ -6924,6 +7113,19 @@
     "blocked_seconds": "Too many tries. Try again in {count, plural, one {# second} other {# seconds}}.",
     "blocked_minutes": "Too many tries. Try again in {count, plural, one {# minute} other {# minutes}}."
   },
+  "uxs_general": {
+    "time_zone_common": "Common time zones",
+    "time_zone_all": "All time zones",
+    "time_zone_search": "Search time zones",
+    "time_zone_no_match": "No time zone found",
+    "time_zone_desktop_description": "Show the times of mail and appointments in this time zone. If you don't choose one, your computer's time zone is used.",
+    "app_lock_desc_desktop": "Asks for a PIN after a time without use, in every window. While it's locked, the app can't read the mail stored on this device until someone enters the PIN.",
+    "app_lock_timeout_desc_desktop": "Time without use in any window.",
+    "app_lock_now_desc_desktop": "Locks all windows at once.",
+    "app_lock_protects_toggle": "What does this protect?",
+    "app_lock_timeout_hours": "{count, plural, one {# hour} other {# hours}}",
+    "desktop_attention_title": "On this computer"
+  },
   "desktop_sign_in": {
     "server_needed": "Enter your server's address first.",
     "server_declined": "You didn't allow this server, so nothing was sent to it.",
@@ -6958,6 +7160,21 @@
     "declined": "You said no in your browser, so nothing was signed in.",
     "too_many": "Too many sign-in attempts from this network. Wait a few minutes and try again.",
     "page_declined": "Nothing was handed over. You can close this tab."
+  },
+  "uxs_login": {
+    "theme_button": "Light or dark",
+    "server_label": "Mail server",
+    "server_placeholder": "mail.example.com",
+    "server_looking": "Looking for your mail server…",
+    "server_found": "Mail server: {server}",
+    "server_change": "Change",
+    "server_not_found": "We couldn't find the mail server for this address. Enter it here, for example mail.example.com.",
+    "server_needed": "Enter the address of your mail server.",
+    "server_invalid": "This isn't a server address. Type it like mail.example.com.",
+    "email_needed": "Enter your email address first.",
+    "trouble": "Having trouble?",
+    "trouble_cors": "Your mail server has to allow sign-ins from this website. If signing in fails, ask whoever runs your mail server to allow it.",
+    "provider_unsupported": "{provider} doesn't offer JMAP, the way Bulwark talks to mail servers, so Bulwark can't connect to it directly yet."
   },
   "desktop_updates": {
     "title": "Updates",
@@ -7104,6 +7321,44 @@
     "types_character": "These keys type a character on your keyboard, and it would stop working in every app. Try other keys.",
     "reserved": "Your system or most apps use these keys. Try other keys."
   },
+  "desktopDevTools": {
+    "section_title": "Troubleshooting",
+    "label": "Developer tools ({shortcut})",
+    "description": "Lets {shortcut} and F12 open developer tools for the window you are in. Turns off again when the app locks.",
+    "forced_off": "Turned off by your organisation.",
+    "locked": "Unlock the app to change this.",
+    "menu_toggle": "Toggle developer tools"
+  },
+  "fileDrop": {
+    "overlay_label": "Drop files",
+    "overlay_title": "Where should the files go?",
+    "overlay_hint": "Drop outside the choices or press Esc to cancel.",
+    "files_unknown": "Files",
+    "files_summary": "{count, plural, one {# file} other {# files}}",
+    "files_summary_size": "{count, plural, one {# file} other {# files}}, {size}",
+    "zone_attach_here": "Attach to this message",
+    "zone_insert_inline": "Insert into the message",
+    "zone_new_message": "Attach to a new message",
+    "zone_upload_files": "Upload to Files",
+    "zone_upload_folder": "Upload to {folder}",
+    "zone_calendar": "Add to calendar",
+    "zone_contacts": "Add to contacts",
+    "zone_open_eml": "Open message",
+    "zone_import_eml": "Import into {folder}",
+    "note_limit_message": "Up to {size} per message",
+    "note_limit_file": "Up to {size} per file",
+    "note_kept_offline": "Kept on this device until you're online",
+    "note_needs_connection": "Needs a connection",
+    "announce": "{files, plural, =0 {Files} one {# file} other {# files}} dragged in. Choices: {choices}.",
+    "choose_title": "{count, plural, one {Where should this file go?} other {Where should these files go?}}",
+    "save_first_failed": "The open message could not be saved, so the app stayed where it was.",
+    "import_done": "{count, plural, one {# message imported into {folder}.} other {# messages imported into {folder}.}}",
+    "import_failed": "{name} could not be imported.",
+    "too_large_file": "{name} is too large. The limit is {max} per file.",
+    "too_large_message": "These files are too large for one message. The limit is {max}.",
+    "folders_left_out": "Folders can only go to Files, so they were left out.",
+    "nothing_here": "These files can't be used here."
+  },
   "desktopReminders": {
     "generic_title": "Reminder",
     "snooze": "Snooze {count} min",
@@ -7133,7 +7388,7 @@
     "section_title": "Usage info and crash reports",
     "section_description": "Both are off until you turn them on, and each has its own switch.",
     "telemetry_label": "Send usage info",
-    "telemetry_description": "Once a day: a random ID, the app version, the Node version, your operating system, how long the app has been running and how it connects. With your own mail server, also which features are on, a rough number of accounts and how many plugins and themes you have. Never mail, addresses or server names.",
+    "telemetry_description": "Once a day: a random ID, the app's version numbers, your operating system, how long the app has been running and how it connects. With your own mail server, also which features are on, a rough number of accounts and how many plugins and themes you have. Never mail, addresses or server names.",
     "crash_label": "Send crash reports",
     "crash_description": "Errors in the app go out with a random ID, file names from the app's own code and short, cleaned-up messages. If the app itself crashes, a crash file stays on this computer and only leaves when you send it.",
     "crash_memory": "A crash file is a copy of part of the app's memory when it crashed. Bulwark removes user names, addresses and sign-in tokens it can find, but a crash file can still contain the text of your mail.",

@@ -160,7 +160,7 @@ export function PluginActions({ surface, context, variant = 'buttons', mailboxRo
             label={action.label}
             title={action.pluginName}
             destructive={action.danger}
-            shortcut={action.badge ? badgeText(action.badge) : undefined}
+            badge={action.badge ? badgeText(action.badge) : undefined}
             onClick={() => { void run(action); }}
           />
         ))}
@@ -195,7 +195,7 @@ export function PluginActions({ surface, context, variant = 'buttons', mailboxRo
             )}
           >
             <Icon className="h-4 w-4 flex-shrink-0" />
-            {!compact && <span className="whitespace-nowrap">{action.label}</span>}
+            {!compact && <span data-toolbar-label="" className="whitespace-nowrap">{action.label}</span>}
             {/* The count as the search's filter button draws its own. */}
             {action.badge ? (
               <span

@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { EmailViewer } from "@/components/email/email-viewer";
+import { MoveToDialog } from "@/components/email/move-to-dialog";
 import { ErrorBoundary, EmailViewerErrorFallback } from "@/components/error";
 import { useAuthStore } from "@/stores/auth-store";
-import { useEmailStore, resolveEmailBlobContext, type EmailBlobContext, type EmailWriteSource } from "@/stores/email-store";
+import { useEmailStore, resolveEmailBlobContext, bulkDeleteIsPermanent, restoreBatchesFor, type EmailBlobContext, type EmailWriteSource } from "@/stores/email-store";
 import { useIdentityStore } from "@/stores/identity-store";
 import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-identities";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
@@ -39,6 +40,7 @@ import { useOpenEmailInWindow } from '@/hooks/use-popouts-available';
 import { isFilePreviewable } from '@/lib/file-preview';
 import { useDesktopCommands } from '@/lib/desktop/commands';
 import { isPopoutWindow } from '@/lib/popout/window-role';
+import { offerMoveUndo } from '@/lib/popout/moved-undo';
 import dynamic from 'next/dynamic';
 
 // Only needed when the device policy turns downloads off.
@@ -384,23 +386,30 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
   const handleDelete = useCallback(async () => {
     if (!client || !email) return;
     if (!(await confirmMailRemoval('delete', 1, confirmDialog, tRemove))) return;
+    // Where it was, for Undo; a delete for good has none.
+    const { selectedMailbox } = useEmailStore.getState();
+    const restore = bulkDeleteIsPermanent(mailboxes.find((m) => m.id === selectedMailbox)) ? null : restoreBatchesFor([email], client);
     try {
       // false: not deleted (a plugin stopped it), so the tab stays open.
-      if (await deleteEmail(client, email.id)) onClose();
+      if (await deleteEmail(client, email.id)) {
+        await offerMoveUndo('delete', client, restore, tNotifications, isPopoutWindow());
+        onClose();
+      }
     } catch (err) {
       console.error('Delete failed:', err);
       toast.error(tNotifications('error_deleting'));
     }
-  }, [client, email, deleteEmail, onClose, tNotifications, confirmDialog, tRemove]);
+  }, [client, email, mailboxes, deleteEmail, onClose, tNotifications, confirmDialog, tRemove]);
 
   const handleArchive = useCallback(async () => {
     if (!client || !email) return;
     const archiveMb = mailboxes.find((m) => m.role === 'archive');
     if (!archiveMb) return;
     if (!(await confirmMailRemoval('archive', 1, confirmDialog, tRemove))) return;
+    const restore = restoreBatchesFor([email], client);
     try {
       if (!(await moveToMailbox(client, email.id, archiveMb.id, emailKeyFor(email)))) return;
-      toast.success(tNotifications('email_archived'));
+      await offerMoveUndo('archive', client, restore, tNotifications, isPopoutWindow());
       onClose();
     } catch (err) {
       console.error('Archive failed:', err);
@@ -472,6 +481,8 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
   // In a pop-out this message is all there is, so the menu bar's Message menu means it.
   const inOwnWindow = typeof window !== 'undefined' && isPopoutWindow();
   const seen = !!email?.keywords?.$seen;
+  // Message > Move to… in a pop-out: the same folder list the command palette opens.
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   useDesktopCommands({
     'message.reply': () => handleReply(),
     'message.replyAll': handleReplyAll,
@@ -481,6 +492,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     'message.star': () => void handleToggleStar(),
     'message.archive': archiveActionEnabled ? () => void handleArchive() : undefined,
     'message.delete': () => void handleDelete(),
+    'message.move': () => { if (email) setMoveDialogOpen(true); },
   }, {
     'message.reply': !!email,
     'message.replyAll': !!email,
@@ -490,16 +502,21 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     'message.star': !!email,
     'message.archive': !!email && archiveActionEnabled,
     'message.delete': !!email,
+    'message.move': !!email,
   }, inOwnWindow);
 
   const handleMoveToMailbox = useCallback(async (mailboxId: string) => {
     if (!client || !email) return;
+    const restore = restoreBatchesFor([email], client);
     try {
-      if (await moveToMailbox(client, email.id, mailboxId, emailKeyFor(email))) onClose();
+      if (await moveToMailbox(client, email.id, mailboxId, emailKeyFor(email))) {
+        await offerMoveUndo('move', client, restore, tNotifications, isPopoutWindow());
+        onClose();
+      }
     } catch (err) {
       console.error('Move failed:', err);
     }
-  }, [client, email, moveToMailbox, onClose]);
+  }, [client, email, moveToMailbox, onClose, tNotifications]);
 
   // This view's message answers the same keys as a message in the mail tab,
   // while its tab is the one in front. c comes from the mail page, as on any tab.
@@ -642,6 +659,15 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
         />
       </ErrorBoundary>
       <ConfirmDialog {...confirmDialogProps} />
+      {inOwnWindow && (
+        <MoveToDialog
+          emails={moveDialogOpen && email ? [email] : []}
+          mailboxes={mailboxes}
+          selectedMailbox=""
+          onClose={() => setMoveDialogOpen(false)}
+          onMove={(mailboxId) => void handleMoveToMailbox(mailboxId)}
+        />
+      )}
       {preview && (
         <FilePreviewModal
           name={preview.name}

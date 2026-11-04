@@ -30,7 +30,7 @@ const EMAIL = { id: 'm1', mailboxIds: { inbox: true }, keywords: {} } as unknown
 
 beforeEach(() => {
   clearAllHooks();
-  useUIStore.setState({ activeView: 'list', sidebarOpen: false, sidebarCollapsed: false, isMobile: true, isTablet: false, isDesktop: false });
+  useUIStore.setState({ activeView: 'list', sidebarOpen: false, sidebarCollapsed: false, isMobile: true, isCompact: false, isDesktop: false });
 });
 
 describe('layout hooks', () => {
@@ -45,11 +45,13 @@ describe('layout hooks', () => {
     useUIStore.getState().setSidebarCollapsed(true);
     useUIStore.getState().setDeviceType(false, false, true);
     useUIStore.getState().setDeviceType(false, false, true);
+    // A compact desktop is "tablet" to plugins.
+    useUIStore.getState().setDeviceType(false, true, true);
 
     expect(view).toHaveBeenCalledWith({ view: 'viewer' });
     expect(toggle).toHaveBeenCalledWith({ open: true });
     expect(collapse).toHaveBeenCalledWith({ collapsed: true });
-    expect(device.mock.calls).toEqual([[{ deviceType: 'desktop' }]]);
+    expect(device.mock.calls).toEqual([[{ deviceType: 'desktop' }], [{ deviceType: 'tablet' }]]);
   });
 
   it('reports Back on the phone', () => {

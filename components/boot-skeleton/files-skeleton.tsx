@@ -221,7 +221,7 @@ function FilesHeaderSkeleton({ picker }: { picker: boolean }) {
           </span>
           <ToolIcon icon={RefreshCw} className="hidden md:grid" />
           <ToolIcon icon={PanelRight} className="boot-files-details:bg-primary/10 boot-files-details:text-primary" />
-          <PhoneActionsSkeleton className="flex md:hidden" />
+          <PhoneActionsSkeleton className="flex desk:hidden" />
         </div>
       )}
     </div>
@@ -349,7 +349,6 @@ export function FilesSkeleton({ label, labels }: FilesSkeletonProps) {
       surface="files"
       label={label}
       labels={labels}
-      railBelow="md"
       active="files"
       mvMenu={false}
       rowClassName={MV_CARD_ROW}

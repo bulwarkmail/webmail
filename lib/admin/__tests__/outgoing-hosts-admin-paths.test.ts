@@ -8,7 +8,7 @@ import { OUTGOING_HOSTS } from '../outgoing-hosts-registry';
 
 const HEADINGS: Record<string, AdminPageGroup> = {
   Admin: 'top',
-  Organisation: 'organisation',
+  Users: 'organisation',
   Extensions: 'extensions',
   System: 'system',
 };
@@ -20,7 +20,7 @@ describe('admin directions in the outgoing-hosts registry', () => {
     const problems: string[] = [];
     let found = 0;
     for (const { id, text } of texts) {
-      for (const m of text.matchAll(/\b(Admin|Organisation|Extensions|System) > /g)) {
+      for (const m of text.matchAll(/\b(Admin|Users|Extensions|System) > /g)) {
         found++;
         const rest = text.slice(m.index! + m[0].length);
         const page = ADMIN_PAGES.find((p) => rest.startsWith(p.label));

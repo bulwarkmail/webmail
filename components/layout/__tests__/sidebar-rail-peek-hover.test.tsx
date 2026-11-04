@@ -54,7 +54,7 @@ describe('Mountain View rail peek', () => {
   it('shows folder names in the drawer of a narrow window, even when collapsed on a wider one', () => {
     const matchMedia = window.matchMedia;
     window.matchMedia = ((query: string) => ({
-      matches: query.includes('64rem'), media: query, addEventListener() {}, removeEventListener() {},
+      matches: query === '(width < 37.5rem)', media: query, addEventListener() {}, removeEventListener() {},
     })) as never;
     try {
       render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" />);

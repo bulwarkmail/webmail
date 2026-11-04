@@ -46,7 +46,7 @@ import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { useIsFocusedProTab } from "@/hooks/use-pane-context";
 import { useProMultiAccountContacts } from "@/hooks/use-pro-multi-account-contacts";
 import { ResizeHandle } from "@/components/layout/resize-handle";
-import { useIsDesktop, useIsMobile } from "@/hooks/use-media-query";
+import { useIsFullDesktop, useIsMobile } from "@/hooks/use-media-query";
 import { useRefreshGesture } from "@/hooks/use-refresh-gesture";
 import type { ContactCard, AddressBook, AddressBookRights } from "@/lib/jmap/types";
 import { ShareCollectionDialog } from "@/components/settings/share-collection-dialog";
@@ -60,6 +60,7 @@ import { useDocumentTitle } from "@/hooks/use-document-title";
 import { ContactsSkeleton, ContactsSkeletonBody } from "@/components/boot-skeleton/contacts-skeleton";
 import { useSkeletonLabels } from "@/components/boot-skeleton/use-skeleton-labels";
 import { useRegisterCommands } from "@/lib/command-registry";
+import { useAppCommands } from "@/lib/app-commands";
 import { useCloseOnBack } from "@/hooks/use-close-on-back";
 import { useLeaveGuard } from "@/lib/leave-guard";
 import { useDeleteCategory } from "@/hooks/use-delete-category";
@@ -174,7 +175,8 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   const hasFetched = useRef(false);
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
   const isMobile = useIsMobile();
-  const isDesktop = useIsDesktop();
+  // Below the full desktop the sidebar opens over the page.
+  const isFullDesktop = useIsFullDesktop();
   const locale = useLocale();
   usePrintListener();
   const printing = usePrinting();
@@ -190,7 +192,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   const intentAppliedRef = useRef(false);
   // Narrow pane (Pro split or small window): the categories sidebar collapses
   // into a burger-toggled overlay.
-  const isNarrow = !isDesktop;
+  const isNarrow = !isFullDesktop;
   const [narrowSidebarOpen, setNarrowSidebarOpen] = useState(false);
   useEffect(() => { if (!isNarrow) setNarrowSidebarOpen(false); }, [isNarrow]);
   // A new view (a form, a group, a contact) replaces whatever the drawer was for.
@@ -487,6 +489,9 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   // Address books contacts can be moved to; "Move to…" needs a second one.
   const writableBooks = useMemo(() => addressBooks.filter((b) => b.myRights?.mayWrite !== false), [addressBooks]);
   const canMoveContacts = !!client && supportsSync && writableBooks.length > 1;
+  // A contact in an address book shared read-only can't be changed: its menus leave out Edit, Move and Delete.
+  const isContactReadOnly = useCallback((contact: ContactCard) => Object.entries(contact.addressBookIds ?? {})
+    .some(([id, inBook]) => inBook && addressBooks.find((b) => b.id === id)?.myRights?.mayWrite === false), [addressBooks]);
   const handleMoveContacts = useCallback((ids: string[]) => {
     if (ids.length > 0) setMovingContactIds(ids);
   }, []);
@@ -965,6 +970,9 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
     }
   };
 
+  // File > New contact in the desktop app's menus, from any app.
+  useAppCommands({ "new-contact": () => guard(handleCreateNew)() }, contactsEnabled);
+
   // The command palette's Contacts group (Ctrl/⌘+K).
   useRegisterCommands(tSidebar("contacts"), [
     { id: "new-contact", label: t("create_new"), icon: UserPlus, run: () => guard(handleCreateNew)() },
@@ -1144,6 +1152,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
             onMoveTo={selectedContact && canMoveContacts ? () => handleMoveContacts([selectedContact.id]) : undefined}
             onPrint={selectedContact && !printOff ? () => { void printContact(selectedContact); } : undefined}
             isMobile={isMobile}
+            readOnly={selectedContact ? isContactReadOnly(selectedContact) : false}
           />
         );
     }
@@ -1398,6 +1407,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
                 ) : (
                 <ContactList
                   contacts={displayedContacts}
+                  isContactReadOnly={isContactReadOnly}
                   selectedContactId={selectedContactId}
                   searchQuery={searchQuery}
                   onSearchChange={setSearchQuery}

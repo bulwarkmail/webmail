@@ -84,6 +84,11 @@ export interface DesktopNativeMenuItem {
   type?: 'normal' | 'separator' | 'checkbox' | 'radio';
   enabled?: boolean;
   checked?: boolean;
+  /**
+   * The key the page answers for this item, in Electron's accelerator syntax ("D",
+   * "Shift+I", "Ctrl+X"). Only shown, apart from the label: never registered.
+   */
+  accelerator?: string;
   submenu?: DesktopNativeMenuItem[];
 }
 
@@ -95,9 +100,31 @@ export interface DesktopMenuBarEntry {
 }
 
 export interface DesktopMenuBarEvent {
+  /** The bar has the keys: Alt was pressed. With `pinned` it shows either way. */
   visible: boolean;
   /** Open this menu right away: Alt plus its letter. */
   open?: string;
+  /** "Always show the menu bar". */
+  pinned?: boolean;
+}
+
+/** One line of a menu the page draws as the menu bar's. */
+export interface DesktopMenuBarItem {
+  /** Its place in the app menu: handed back with its text when it's picked. */
+  key: string;
+  label: string;
+  type: 'normal' | 'checkbox' | 'radio' | 'separator' | 'submenu';
+  enabled: boolean;
+  checked?: boolean;
+  /** As Electron writes it: `CmdOrCtrl+N`. */
+  accelerator?: string;
+  /** Where in `label` the letter for it is. */
+  mnemonic?: number;
+  items?: DesktopMenuBarItem[];
+}
+
+export interface DesktopMenuBarMenu extends DesktopMenuBarEntry {
+  items: DesktopMenuBarItem[];
 }
 
 /** What a page answers when asked to save before a window goes. */
@@ -124,6 +151,14 @@ export interface DesktopMenuBridge {
     /** Opens that menu natively, at page coordinates. */
     open: (id: string, at: { x: number; y: number }) => void;
     onEvent: (listener: (event: DesktopMenuBarEvent) => void) => () => void;
+    /** Every menu, with what's enabled and ticked in this window now. An older shell has none. */
+    menus?: () => Promise<DesktopMenuBarMenu[]>;
+    /** Runs a line of `menus`, by its key and text. */
+    run?: (key: string, label: string) => void;
+    /** The room the bar takes now (CSS pixels, 0 when gone), and whether it has the keys. */
+    report?: (report: { height: number; active: boolean }) => void;
+    /** "Always show the menu bar", in every window. */
+    setPinned?: (pinned: boolean) => void;
   };
 }
 
@@ -569,7 +604,8 @@ export type DesktopOsCommand =
   | { type: 'open-mailbox'; mailboxId: string }
   | { type: 'mailto'; url: string }
   | { type: 'webcal'; url: string }
-  | { type: 'files'; reason: 'open' | 'attach'; files: DesktopOsFile[]; failed: string[] }
+  /** `ask`: opened with the app, so the user picks between a new message and Files. Without it, attach. */
+  | { type: 'files'; reason: 'open' | 'attach'; files: DesktopOsFile[]; failed: string[]; ask?: boolean }
   | { type: 'notification'; action: string; context: string; reply?: string };
 
 export interface DesktopOsNotification {
@@ -610,6 +646,8 @@ export interface DesktopOsSummary {
   /** Newest conversations, whether read or not, for the jump list. */
   recent: DesktopOsTrayMessage[];
   nextEvent: { title: string; when: string } | null;
+  /** The account `unread` is from, when more than one is signed in. */
+  account?: string;
 }
 
 export type DesktopOsPowerEvent = 'suspend' | 'resume' | 'lock-screen' | 'unlock-screen';
@@ -691,6 +729,23 @@ export interface DesktopPrivacyBridge {
   deleteCrashes: () => Promise<void>;
   /** Also fires when a policy changes. Returns the unsubscribe. */
   onChange: (listener: (state: DesktopPrivacyState) => void) => () => void;
+}
+
+/** `forcedOff`: the DeveloperToolsAvailability policy says no. `locked`: the app lock is on, so nothing changes. */
+export interface DesktopDevToolsState {
+  on: boolean;
+  forcedOff: boolean;
+  locked: boolean;
+}
+
+/**
+ * Chromium's developer tools on Ctrl+Shift+I and F12, off by default. Main keeps the switch.
+ * Turning it on takes a real click and a native warning; the app lock turns it off again.
+ */
+export interface DesktopDevToolsBridge {
+  get: () => Promise<DesktopDevToolsState>;
+  set: (on: boolean) => Promise<DesktopDevToolsState>;
+  onChange: (listener: (state: DesktopDevToolsState) => void) => () => void;
 }
 
 /** An attachment copied to a private folder and open in its default program. */
@@ -813,6 +868,8 @@ export interface BulwarkDesktopBridge {
   localImport?: DesktopLocalImportBridge;
   privacy?: DesktopPrivacyBridge;
   edit?: DesktopEditBridge;
+  /** Absent on older shells. */
+  devTools?: DesktopDevToolsBridge;
 }
 
 declare global {

@@ -763,6 +763,7 @@ interface SettingsState extends AccessibilitySettings {
   senderFavicons: boolean;
   showAvatarsInJunk: boolean; // Show profile images/favicons in the junk folder
   faviconUnreadBadge: boolean; // Badge the browser-tab icon with the inbox unread count
+  unreadBadgeAllAccounts: boolean; // That badge (and the desktop tray) counts every signed-in account's inbox, not only the open one
 
   // Sidebar
   colorfulSidebarIcons: boolean; // Tint folder icons by role (inbox blue, junk red, etc.)
@@ -1071,6 +1072,7 @@ const DEFAULT_SETTINGS = {
   senderFavicons: true,
   showAvatarsInJunk: false,
   faviconUnreadBadge: true,
+  unreadBadgeAllAccounts: true,
 
   // Sidebar
   colorfulSidebarIcons: true,
@@ -1486,6 +1488,7 @@ export const useSettingsStore = create<SettingsState>()(
           senderFavicons: state.senderFavicons,
           showAvatarsInJunk: state.showAvatarsInJunk,
           faviconUnreadBadge: state.faviconUnreadBadge,
+          unreadBadgeAllAccounts: state.unreadBadgeAllAccounts,
           colorfulSidebarIcons: state.colorfulSidebarIcons,
           tintListRowsByTag: state.tintListRowsByTag,
           tintListRowsByAccount: state.tintListRowsByAccount,
@@ -2107,6 +2110,8 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
           state.protocolOpenMode = state.protocolMailtoOpenMode;
         }
         delete state.protocolMailtoOpenMode;
+        // Plain wording became the only wording: the switch is gone.
+        delete state.plainLanguage;
         // Never read: drafts save 2 s after the last change.
         delete state.autoSaveDraftInterval;
         // v4: `dateFormat` was repurposed from 'regional'|'iso'|'custom' to

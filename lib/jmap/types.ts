@@ -97,6 +97,8 @@ export interface Email {
   // views (All Mail, unified, cross-account) so the list can show where each
   // message lives. Transient/client-only, not part of the JMAP object.
   sourceFolder?: string;
+  // Role of that folder, so the list names it as the sidebar does ("Sent", not "Sent Items").
+  sourceFolderRole?: string;
   // Client-only scheduled-send metadata, populated from EmailSubmission/query.
   scheduledSendAt?: string;
   emailSubmissionId?: string;

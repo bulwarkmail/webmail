@@ -171,7 +171,6 @@ const ENTRIES: SettingSchemaEntry[] = [
   bool('showToolbarLabels', 'appearance', `${AP}toolbar_labels.label`),
   bool('colorfulSidebarIcons', 'appearance', `${AP}colorful_sidebar_icons.label`),
   bool('showFolderTotalCount', 'appearance', `${AP}show_folder_total_count.label`),
-  bool('hideAccountSwitcher', 'appearance', `${AP}hide_account_switcher.label`),
   bool('showRailAccountList', 'appearance', `${AP}show_rail_account_list.label`),
   bool('proInterface', 'appearance', `${AP}pro_interface.label`),
   bool('enableUnifiedMailbox', 'appearance', `${AP}unified_mailbox.label`),
@@ -215,8 +214,8 @@ const ENTRIES: SettingSchemaEntry[] = [
   bool('tintListRowsByTag', 'message_list', `${AP}tint_list_rows.label`),
   bool('showVerificationCodes', 'message_list', `${EB}show_verification_codes.label`),
   // Both make the server fetch the sender's domain: the assistant may only switch them off.
-  bool('senderFavicons', 'message_list', 'settings.advanced.sender_favicons.label', { thirdParty: true, only: false }),
-  bool('showAvatarsInJunk', 'message_list', 'settings.advanced.show_avatars_in_junk.label', { thirdParty: true, only: false }),
+  bool('senderFavicons', 'privacy', 'settings.advanced.sender_favicons.label', { thirdParty: true, only: false }),
+  bool('showAvatarsInJunk', 'privacy', 'settings.advanced.show_avatars_in_junk.label', { thirdParty: true, only: false }),
   entry('hoverActions', 'message_list', `${EB}hover_actions.label`, {
     type: 'list',
     options: HOVER_ACTION_IDS.map(([value, labelKey]) => ({
@@ -295,9 +294,9 @@ const ENTRIES: SettingSchemaEntry[] = [
     { type: 'words', max: 50, maxLength: 40, lowercase: true }),
   bool('emptySubjectWarningEnabled', 'composing', `${EB}empty_subject_warning.label`),
   bool('placeholderWarningEnabled', 'composing', `${EB}placeholder_warning.label`),
-  bool('requestReadReceiptDefault', 'composing', `${EB}request_read_receipt.label`),
+  bool('requestReadReceiptDefault', 'privacy', `${EB}request_read_receipt.label`),
   // No "always": that sends a receipt mail by itself.
-  choice('readReceiptResponse', 'composing', `${EB}read_receipt_response.label`,
+  choice('readReceiptResponse', 'privacy', `${EB}read_receipt_response.label`,
     opts(`${EB}read_receipt_response.`, ['ask', 'never'])),
 
   // --- Notifications ---
@@ -306,6 +305,7 @@ const ENTRIES: SettingSchemaEntry[] = [
   choice('notificationSoundChoice', 'notifications', `${NO}sound_selection.choose`, opts(`${NO}sounds.`, NOTIFICATION_SOUND_IDS)),
   bool('pushNotifyInboxOnly', 'notifications', `${NO}email.inbox_only`),
   bool('faviconUnreadBadge', 'notifications', `${AP}favicon_unread_badge.label`),
+  bool('unreadBadgeAllAccounts', 'notifications', 'account_unread.badge_all_accounts.label'),
   bool('calendarNotificationsEnabled', 'notifications', `${NO}calendar.enabled`),
   bool('calendarNotificationSound', 'notifications', `${NO}calendar.sound`),
   bool('doNotDisturb', 'accessibility', `${A}do_not_disturb.label`),
@@ -356,7 +356,6 @@ const ENTRIES: SettingSchemaEntry[] = [
   choice('paragraphSpacing', 'accessibility', `${A}paragraph_spacing.label`, opts(`${A}spacing.`, allowed('paragraphSpacing'))),
   choice('readingWidth', 'accessibility', `${A}reading_width.label`, opts(`${A}reading_width.`, allowed('readingWidth'))),
   bool('readingMask', 'accessibility', `${A}reading_mask.label`),
-  bool('plainLanguage', 'accessibility', `${A}plain_language.label`),
   choice('contrast', 'accessibility', `${A}contrast.label`, [
     { value: 'system', label: `${A}system` },
     { value: 'more', label: `${A}contrast.more` },
@@ -418,8 +417,9 @@ export const DENIED_SETTINGS: readonly string[] = [
   'externalContentPolicy', 'trustedSenders', 'trustedSendersAddressBook',
   // Free text that ends up in file names or in every sent mail.
   'emailDownloadTemplate', 'attachmentDownloadTemplate', 'bundleDownloadTemplate', 'signatureDetails',
-  // Never read by the app (defaultReplyMode), or on the account page (the delimiter).
-  'defaultReplyMode', 'subAddressDelimiter',
+  // Never read by the app (defaultReplyMode, hideAccountSwitcher: the sidebar's
+  // switcher it hid is gone), or on the account page (the delimiter).
+  'defaultReplyMode', 'hideAccountSwitcher', 'subAddressDelimiter',
   // Sends push metadata to another server.
   'pushRelayUrl',
   // Turning proofreading on sends what the user writes to a checker plugin.

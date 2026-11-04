@@ -24,6 +24,10 @@ import { supportsRegex } from "@/lib/sieve/regex";
 import { formatDateTime } from "@/lib/utils";
 import { useVacationStore } from "@/stores/vacation-store";
 import { useManagedAccountStore } from "@/stores/managed-account-store";
+import { offerRuleOnFolder } from "@/lib/filters/quick-rule-flow";
+import { resolveMailboxRuleTarget } from "@/lib/filters/quick-rule-target";
+import { retroactiveSupport } from "@/lib/filters/retroactive";
+import { localizeMailboxName } from "@/lib/mailbox-label";
 import {
   Plus,
   GripVertical,
@@ -209,6 +213,12 @@ export function VisualRuleSummary({ rule }: { rule: FilterRule }) {
 export function FilterSettings() {
   const t = useTranslations("settings.filters");
   const tNotifications = useTranslations("notifications");
+  const tMenu = useTranslations("context_menu");
+  const tSidebar = useTranslations("sidebar");
+  const tFolders = useTranslations("uxs_folders");
+  // The raw script editor is for people who asked for the advanced settings,
+  // unless the script is one only it can edit.
+  const showAdvanced = useSettingsStore((s) => s.showAdvancedSettings);
   const { client } = useAuthStore();
   const storeMailboxes = useEmailStore((s) => s.mailboxes);
   const fetchMailboxes = useEmailStore((s) => s.fetchMailboxes);
@@ -391,10 +401,27 @@ export function FilterSettings() {
         } catch {
           useFilterStore.setState({ rules: previousRules });
           toast.error(tNotifications("filters_save_failed"));
+          return;
+        }
+        // A new rule only sees new mail. Offer to sort what is already in the
+        // Inbox, as Gmail's "Also apply to matching conversations" does.
+        if (!editingRule && isPrimaryAccount && retroactiveSupport(rule).ok) {
+          const inbox = storeMailboxes.find((m) => m.role === "inbox" && !m.isShared);
+          const target = inbox ? resolveMailboxRuleTarget(inbox) : null;
+          if (inbox && target && target.client === client) {
+            const folder = localizeMailboxName(inbox.role, inbox.name, (k) => tSidebar(`mailboxes.${k}`));
+            void offerRuleOnFolder(
+              target,
+              rule,
+              inbox.id,
+              { notifications: tNotifications, filters: t, menu: tMenu },
+              (count) => tFolders("apply_to_existing", { count, folder }),
+            );
+          }
         }
       }
     },
-    [editingRule, updateRule, addRule, rules, client, saveFilters, tNotifications]
+    [editingRule, updateRule, addRule, rules, client, saveFilters, tNotifications, isPrimaryAccount, storeMailboxes, tSidebar, t, tMenu, tFolders]
   );
 
   const handleSaveSieve = useCallback(
@@ -752,16 +779,20 @@ export function FilterSettings() {
               {t("add_rule")}
             </Button>
           )}
-          <Button
-            variant="outline"
-            size="sm"
-            data-search-label={t("raw_editor")}
-            onClick={() => setShowSieveEditor(true)}
-          >
-            <Code className="w-4 h-4 me-1" />
-            {t("raw_editor")}
-          </Button>
-          <TermInfo id="sieve" />
+          {(showAdvanced || isOpaque) && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                data-search-label={t("raw_editor")}
+                onClick={() => setShowSieveEditor(true)}
+              >
+                <Code className="w-4 h-4 me-1" />
+                {t("raw_editor")}
+              </Button>
+              <TermInfo id="sieve" />
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-3">

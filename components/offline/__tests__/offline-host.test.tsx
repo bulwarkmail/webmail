@@ -7,7 +7,9 @@ import { useOfflineStore, writeEnabled } from '@/lib/offline/state';
 import { passSignOutGates } from '@/lib/sign-out-cleanup';
 import { setStoreBackend } from '@/lib/store/client/api';
 import { InProcessStore } from '@/lib/store/__tests__/helpers/in-process-store';
-import { wipeEverything } from '@/lib/offline/offline-mode';
+import { offlineNotify, wipeEverything } from '@/lib/offline/offline-mode';
+import { firstStartNoticesWaiting, resetFirstStartNotices } from '@/lib/first-start-notices';
+import { useToastStore } from '@/stores/toast-store';
 import { useAccountStore } from '@/stores/account-store';
 
 let store: InProcessStore;
@@ -51,5 +53,17 @@ describe('the question before a sign-out', () => {
     render(<OfflineHost />);
     expect(await passSignOutGates('acc')).toBe(true);
     expect(screen.queryByRole('button', { name: /signout\.confirm/ })).toBeNull();
+  });
+});
+
+describe('the notice that the desktop app keeps mail on this device', () => {
+  it('is a first-start notice above the list, not a toast that covers the composer', () => {
+    resetFirstStartNotices();
+    useToastStore.setState({ toasts: [] });
+    render(<OfflineHost />);
+    offlineNotify({ kind: 'default-on' });
+    expect(useToastStore.getState().toasts).toHaveLength(0);
+    expect(firstStartNoticesWaiting().map((n) => n.text)).toEqual(['default_on']);
+    expect(firstStartNoticesWaiting()[0].action?.label).toBe('open_settings');
   });
 });

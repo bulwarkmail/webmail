@@ -6,13 +6,11 @@ import { useSettingsStore } from '@/stores/settings-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { SettingsSection, SettingItem, RadioGroup, Select, ToggleSwitch } from './settings-section';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, Keyboard, Volume2 } from '@/components/icons';
-import { IS_LITE } from '@/lib/lite';
-import { useNoThirdPartyTraffic } from '@/hooks/use-third-party-mode';
+import { ChevronRight, Keyboard } from '@/components/icons';
+import { useAuthStore } from '@/stores/auth-store';
 import { openKeyboardShortcuts } from '@/lib/app-commands';
 import { voicesForLocale } from '@/lib/read-aloud';
 import { useSpeechVoices } from '@/hooks/use-read-aloud';
-import { NOTIFICATION_SOUNDS, playNotificationSound, type NotificationSoundChoice } from '@/lib/notification-sound';
 import {
   ACCESSIBILITY_KEYS,
   FONT_SIZES,
@@ -32,7 +30,6 @@ import {
 } from '@/lib/accessibility-presets';
 import { AccessibilityPresetPreview } from './accessibility-preset-preview';
 import { FONT_SIZES as COMPOSE_FONT_SIZES } from '@/components/email/font-size';
-import type { Density, SendDelaySeconds } from '@/stores/settings-store';
 
 type SettingKey = Parameters<ReturnType<typeof useSettingsStore.getState>['updateSetting']>[0];
 
@@ -54,21 +51,19 @@ function LinkButton({ label, onClick }: { label: string; onClick: () => void }) 
 }
 
 /**
- * Settings > Accessibility: presets on top, then the options by topic. Rows
- * that are also everyday preferences (conversation view, undo send, sounds…)
- * are the same setting shown on their own page too, not a copy.
+ * Settings > Accessibility: presets on top, then the options by topic. Only
+ * settings about access live here; everyday preferences that help too
+ * (density, conversation view, undo send, sounds…) stay on their own page,
+ * and a link row in the matching section leads there. One setting, one place.
  */
 export function AccessibilitySettings() {
   const t = useTranslations('settings.accessibility');
   const tRoot = useTranslations();
-  const tEmail = useTranslations('settings.email_behavior');
-  const tAppearance = useTranslations('settings.appearance');
-  const tNotifications = useTranslations('settings.notifications');
-  const tCalendar = useTranslations('calendar.settings');
+  const tLinks = useTranslations('uxs_structure.a11y_links');
   const settings = useSettingsStore();
   const { updateSetting, resetSettings } = settings;
-  const { isSettingLocked, isSettingHidden, getRestriction } = usePolicyStore();
-  const faviconsAllowed = !useNoThirdPartyTraffic();
+  const { isSettingLocked, isSettingHidden, getRestriction, isFeatureEnabled } = usePolicyStore();
+  const calendarShown = (useAuthStore((s) => s.client)?.supportsCalendars() ?? false) && isFeatureEnabled('calendarEnabled');
   const [applied, setApplied] = useState<{ id: AccessibilityPresetId; changes: PresetChange[] } | null>(null);
   const [resetDone, setResetDone] = useState(false);
   const locale = useLocale();
@@ -268,25 +263,8 @@ export function AccessibilitySettings() {
         <SettingItem label={t('reading_mask.label')} description={t('reading_mask.description')}>
           <ToggleSwitch checked={settings.readingMask} onChange={(checked) => set('readingMask', checked)} />
         </SettingItem>
-        <SettingItem label={t('plain_language.label')} description={t('plain_language.description')}>
-          <ToggleSwitch checked={settings.plainLanguage} onChange={(checked) => set('plainLanguage', checked)} />
-        </SettingItem>
-        {!isSettingHidden('density') && (
-          <SettingItem label={tAppearance('list_density.label')} description={tAppearance('list_density.description')} locked={isSettingLocked('density')}>
-            <Select
-              value={settings.density}
-              onChange={(value) => set('density', value as Density)}
-              options={[
-                { value: 'extra-compact', label: tAppearance('list_density.extra_compact') },
-                { value: 'compact', label: tAppearance('list_density.compact') },
-                { value: 'regular', label: tAppearance('list_density.regular') },
-                { value: 'comfortable', label: tAppearance('list_density.comfortable') },
-              ]}
-            />
-          </SettingItem>
-        )}
-        <SettingItem label={tAppearance('toolbar_labels.label')} description={tAppearance('toolbar_labels.description')}>
-          <ToggleSwitch checked={settings.showToolbarLabels} onChange={(checked) => set('showToolbarLabels', checked)} />
+        <SettingItem label={tLinks('text.label')} description={tLinks('text.description')}>
+          <LinkButton label={tRoot('settings.tabs.appearance')} onClick={() => goToSettings('appearance', 'text')} />
         </SettingItem>
       </SettingsSection>
 
@@ -314,11 +292,11 @@ export function AccessibilitySettings() {
         <SettingItem label={t('cvd_palette.label')} description={t('cvd_palette.description')}>
           <ToggleSwitch checked={settings.colorBlindPalette} onChange={(checked) => set('colorBlindPalette', checked)} />
         </SettingItem>
-        <SettingItem label={tEmail('always_light_mode.label')} description={tEmail('always_light_mode.description')}>
-          <ToggleSwitch checked={settings.emailAlwaysLightMode} onChange={(checked) => set('emailAlwaysLightMode', checked)} />
-        </SettingItem>
         <SettingItem label={t('theme_link.label')} description={t('theme_link.description')}>
           <LinkButton label={t('theme_link.button')} onClick={() => goToSettings('appearance', 'theme')} />
+        </SettingItem>
+        <SettingItem label={tLinks('light_mode.label')} description={tLinks('light_mode.description')}>
+          <LinkButton label={tRoot('settings.tabs.reading')} onClick={() => goToSettings('reading', 'display')} />
         </SettingItem>
       </SettingsSection>
 
@@ -369,19 +347,6 @@ export function AccessibilitySettings() {
         <SettingItem label={t('open_on_hover.label')} description={t('open_on_hover.description')}>
           <ToggleSwitch checked={settings.openOnHover} onChange={(checked) => set('openOnHover', checked)} />
         </SettingItem>
-        <SettingItem label={tCalendar('hover_preview')} description={tCalendar('hover_preview_desc')}>
-          <Select
-            value={settings.calendarHoverPreview}
-            onChange={(value) => set('calendarHoverPreview', value)}
-            options={[
-              { value: 'instant', label: tCalendar('hover_preview_instant') },
-              { value: 'delay-500ms', label: tCalendar('hover_preview_delay_500ms') },
-              { value: 'delay-1s', label: tCalendar('hover_preview_delay_1s') },
-              { value: 'delay-2s', label: tCalendar('hover_preview_delay_2s') },
-              { value: 'off', label: tCalendar('hover_preview_off') },
-            ]}
-          />
-        </SettingItem>
         <SettingItem label={t('row_action_button.label')} description={t('row_action_button.description')}>
           <ToggleSwitch checked={settings.showRowActionButton} onChange={(checked) => set('showRowActionButton', checked)} />
         </SettingItem>
@@ -391,6 +356,11 @@ export function AccessibilitySettings() {
         <SettingItem label={t('row_actions_link.label')} description={t('row_actions_link.description')}>
           <LinkButton label={t('row_actions_link.button')} onClick={() => goToSettings('message_list', 'actions')} />
         </SettingItem>
+        {calendarShown && (
+          <SettingItem label={tLinks('calendar.label')} description={tLinks('calendar.description')}>
+            <LinkButton label={tRoot('settings.tabs.calendar')} onClick={() => goToSettings('calendar')} />
+          </SettingItem>
+        )}
       </SettingsSection>
 
       <SettingsSection id="mail" title={t('sections.mail')}>
@@ -474,35 +444,11 @@ export function AccessibilitySettings() {
             ]}
           />
         </SettingItem>
-        <SettingItem label={tEmail('group_conversations.label')} description={tEmail('group_conversations.description')}>
-          <ToggleSwitch checked={!settings.disableThreading} onChange={(checked) => set('disableThreading', !checked)} />
+        <SettingItem label={tLinks('list.label')} description={tLinks('list.description')}>
+          <LinkButton label={tRoot('settings.tabs.message_list')} onClick={() => goToSettings('message_list', 'display')} />
         </SettingItem>
-        {!isSettingHidden('showPreview') && (
-          <SettingItem label={tEmail('show_preview.label')} description={tEmail('show_preview.description')} locked={isSettingLocked('showPreview')}>
-            <ToggleSwitch checked={settings.showPreview} onChange={(checked) => set('showPreview', checked)} />
-          </SettingItem>
-        )}
-        {!IS_LITE && faviconsAllowed && (
-          <SettingItem label={tRoot('settings.advanced.sender_favicons.label')} description={tRoot('settings.advanced.sender_favicons.description')}>
-            <ToggleSwitch checked={settings.senderFavicons} onChange={(checked) => set('senderFavicons', checked)} />
-          </SettingItem>
-        )}
-        {!isSettingHidden('markAsReadDelay') && (
-          <SettingItem label={tEmail('mark_read.label')} description={tEmail('mark_read.description')} locked={isSettingLocked('markAsReadDelay')}>
-            <Select
-              value={settings.markAsReadDelay.toString()}
-              onChange={(value) => set('markAsReadDelay', parseInt(value))}
-              options={[
-                { value: '0', label: tEmail('mark_read.instant') },
-                { value: '3000', label: tEmail('mark_read.delay_3s') },
-                { value: '5000', label: tEmail('mark_read.delay_5s') },
-                { value: '-1', label: tEmail('mark_read.never') },
-              ]}
-            />
-          </SettingItem>
-        )}
-        <SettingItem label={tEmail('return_to_list_after_action.label')} description={tEmail('return_to_list_after_action.description')}>
-          <ToggleSwitch checked={settings.returnToListAfterAction} onChange={(checked) => set('returnToListAfterAction', checked)} />
+        <SettingItem label={tLinks('reading.label')} description={tLinks('reading.description')}>
+          <LinkButton label={tRoot('settings.tabs.reading')} onClick={() => goToSettings('reading', 'opening')} />
         </SettingItem>
       </SettingsSection>
 
@@ -512,18 +458,6 @@ export function AccessibilitySettings() {
             value={String(settings.toastDuration)}
             onChange={(value) => set('toastDuration', Number(value))}
             options={toastOptions}
-          />
-        </SettingItem>
-        <SettingItem label={tEmail('send_delay.label')} description={tEmail('send_delay.description')}>
-          <Select
-            value={String(settings.sendDelaySeconds)}
-            onChange={(value) => set('sendDelaySeconds', Number(value) as SendDelaySeconds)}
-            options={[
-              { value: '0', label: tEmail('send_delay.off') },
-              { value: '10', label: tEmail('send_delay.seconds', { seconds: 10 }) },
-              { value: '30', label: tEmail('send_delay.seconds', { seconds: 30 }) },
-              { value: '60', label: tEmail('send_delay.seconds', { seconds: 60 }) },
-            ]}
           />
         </SettingItem>
         {!isSettingHidden('sendConfirmation') && (
@@ -537,49 +471,17 @@ export function AccessibilitySettings() {
         <SettingItem label={t('confirm_archive.label')} description={t('confirm_archive.description')}>
           <ToggleSwitch checked={settings.confirmArchive} onChange={(checked) => set('confirmArchive', checked)} />
         </SettingItem>
-        <SettingItem label={tEmail('confirm_bulk_delete.label')} description={tEmail('confirm_bulk_delete.description')}>
-          <ToggleSwitch checked={settings.confirmBulkDelete} onChange={(checked) => set('confirmBulkDelete', checked)} />
-        </SettingItem>
-        <SettingItem label={t('send_warnings_link.label')} description={t('send_warnings_link.description')}>
+        <SettingItem label={t('send_warnings_link.label')} description={tLinks('send_warnings_description')}>
           <LinkButton label={t('send_warnings_link.button')} onClick={() => goToSettings('composing', 'sending')} />
+        </SettingItem>
+        <SettingItem label={tLinks('bulk_delete.label')} description={tLinks('bulk_delete.description')}>
+          <LinkButton label={tRoot('settings.tabs.message_list')} onClick={() => goToSettings('message_list', 'delete')} />
         </SettingItem>
       </SettingsSection>
 
       <SettingsSection id="alerts" title={t('sections.alerts')}>
         <SettingItem label={t('visual_alerts.label')} description={t('visual_alerts.description')}>
           <ToggleSwitch checked={settings.visualAlerts} onChange={(checked) => set('visualAlerts', checked)} />
-        </SettingItem>
-        <SettingItem label={tNotifications('email.sound')} description={tNotifications('email.sound_desc')}>
-          <ToggleSwitch checked={settings.emailNotificationSound} onChange={(checked) => set('emailNotificationSound', checked)} />
-        </SettingItem>
-        <SettingItem label={tNotifications('calendar.sound')} description={tNotifications('calendar.sound_desc')}>
-          <ToggleSwitch checked={settings.calendarNotificationSound} onChange={(checked) => set('calendarNotificationSound', checked)} />
-        </SettingItem>
-        <SettingItem label={tNotifications('sound_selection.choose')} description={tNotifications('sound_selection.choose_desc')}>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => playNotificationSound(settings.notificationSoundChoice)}
-              aria-label={tNotifications('test_sound')}
-              title={tNotifications('test_sound')}
-            >
-              <Volume2 className="w-4 h-4" />
-            </Button>
-            <Select
-              value={settings.notificationSoundChoice}
-              onChange={(value) => {
-                const choice = value as NotificationSoundChoice;
-                set('notificationSoundChoice', choice);
-                playNotificationSound(choice);
-              }}
-              options={NOTIFICATION_SOUNDS.map((s) => ({ value: s.id, label: tNotifications(`sounds.${s.id}`) }))}
-            />
-          </div>
-        </SettingItem>
-        <SettingItem label={tAppearance('favicon_unread_badge.label')} description={tAppearance('favicon_unread_badge.description')}>
-          <ToggleSwitch checked={settings.faviconUnreadBadge} onChange={(checked) => set('faviconUnreadBadge', checked)} />
         </SettingItem>
         <SettingItem label={t('unread_counts.label')} description={t('unread_counts.description')}>
           <RadioGroup
@@ -594,6 +496,9 @@ export function AccessibilitySettings() {
         </SettingItem>
         <SettingItem label={t('do_not_disturb.label')} description={t('do_not_disturb.description')}>
           <ToggleSwitch checked={settings.doNotDisturb} onChange={(checked) => set('doNotDisturb', checked)} />
+        </SettingItem>
+        <SettingItem label={tLinks('sounds.label')} description={tLinks('sounds.description')}>
+          <LinkButton label={tRoot('settings.tabs.notifications')} onClick={() => goToSettings('notifications', 'sound')} />
         </SettingItem>
       </SettingsSection>
 

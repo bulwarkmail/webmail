@@ -168,6 +168,16 @@ describe('what it takes', () => {
     expect(line.querySelector('progress')?.getAttribute('max')).toBe('5000');
   });
 
+  // settings-26 (2026-11-04): "Saving your mail on this device…" stood above
+  // the progress line, which said the same thing again.
+  it('says a large sync is running once, in the progress line', () => {
+    const now = Date.now();
+    useOfflineStore.setState({ syncing: ['acc'], progress: { acc: { area: 'mail', phase: 'bodies', done: 500, total: 5000, startedAt: now, startedDone: 0, at: now } } });
+    render(<OfflineSettings />);
+    expect(screen.getByTestId('offline-progress')).toBeTruthy();
+    expect(document.body.textContent).not.toContain('syncing');
+  });
+
   it('keeps a small catch-up quiet', () => {
     const now = Date.now();
     useOfflineStore.setState({ syncing: ['acc'], progress: { acc: { area: 'mail', phase: 'bodies', done: 1, total: 3, startedAt: now, startedDone: 0, at: now } } });

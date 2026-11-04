@@ -7,7 +7,7 @@ import {
   FilePlus, CopyPlus, AlertCircle, FolderUp, Share2, SquarePen, Eye, FolderOpen,
   RefreshCw, Star, StarOff, Plus, CheckSquare, File, RotateCcw, FolderInput,
 } from "@/components/icons";
-import { useIsDesktop, useIsMobile, useMediaQuery } from "@/hooks/use-media-query";
+import { useIsFullDesktop, useIsMobile, useMediaQuery } from "@/hooks/use-media-query";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useKeepFileOffline } from "@/hooks/use-keep-file-offline";
 import { useRegisterCommands } from "@/lib/command-registry";
@@ -222,7 +222,9 @@ export function FileBrowser({
   onShare,
 }: FileBrowserProps) {
   const t = useTranslations("files");
-  const newFileLabel = newFileFormats.length > 0 ? t("new_file") : t("new_text_file");
+  const tMenu = useTranslations("menuAudit");
+  // Menu entries that open a dialog end in "…".
+  const newFileLabel = newFileFormats.length > 0 ? tMenu("files_new_file") : tMenu("files_new_text_file");
   const fileNameRules = useMemo(() => client?.getFileNameRules?.() ?? null, [client]);
   const validateFileName = useCallback((name: string) => {
     const problem = fileNameProblem(name, fileNameRules);
@@ -270,8 +272,9 @@ export function FileBrowser({
   }), [settings.showIcons, settings.coloredIcons, settings.showThumbnails]);
 
   // ---- Layout ----------------------------------------------------------------
-  const isDesktop = useIsDesktop();
-  const isNarrow = !isDesktop;
+  // Below the full desktop the sidebar opens over the page.
+  const isFullDesktop = useIsFullDesktop();
+  const isNarrow = !isFullDesktop;
   const isMobile = useIsMobile();
   const touch = useMediaQuery("(pointer: coarse)") && isMobile;
   const [narrowSidebarOpen, setNarrowSidebarOpen] = useState(false);
@@ -951,7 +954,7 @@ export function FileBrowser({
         )}
         {(canShare(resource) || (resource.isDirectory && !resource.isShared)) && <ContextMenuSeparator />}
         {canShare(resource) && (
-          <ContextMenuItem icon={Share2} label={t("share")} onClick={() => { closeMenu(); setShareTargetId(resource.id); }} />
+          <ContextMenuItem icon={Share2} label={tMenu("files_share")} onClick={() => { closeMenu(); setShareTargetId(resource.id); }} />
         )}
         {resource.isDirectory && !resource.isShared && (
           <ContextMenuItem
@@ -992,10 +995,10 @@ export function FileBrowser({
 
   const newItems = (
     <>
-      <ContextMenuItem icon={Upload} label={t("upload_files")} onClick={() => { closeMenu(); fileInputRef.current?.click(); }} />
-      <ContextMenuItem icon={FolderUp} label={t("upload_folder")} onClick={() => { closeMenu(); folderInputRef.current?.click(); }} />
+      <ContextMenuItem icon={Upload} label={tMenu("files_upload_files")} onClick={() => { closeMenu(); fileInputRef.current?.click(); }} />
+      <ContextMenuItem icon={FolderUp} label={tMenu("files_upload_folder")} onClick={() => { closeMenu(); folderInputRef.current?.click(); }} />
       <ContextMenuSeparator />
-      <ContextMenuItem icon={FolderPlus} label={t("new_folder")} onClick={() => { closeMenu(); setShowNewFolder(true); }} />
+      <ContextMenuItem icon={FolderPlus} label={tMenu("files_new_folder")} onClick={() => { closeMenu(); setShowNewFolder(true); }} />
       <ContextMenuItem icon={FilePlus} label={newFileLabel} onClick={() => { closeMenu(); setShowNewTextFile(true); }} />
     </>
   );
@@ -1035,9 +1038,9 @@ export function FileBrowser({
   const tShell = useTranslations("shell");
   const isEmbedded = useIsEmbedded();
   useRegisterCommands(tSidebar("files"), [
-    { id: "upload-files", label: t("upload_files"), icon: Upload, run: () => fileInputRef.current?.click(), when: () => canCreate },
-    { id: "upload-folder", label: t("upload_folder"), icon: FolderUp, run: () => folderInputRef.current?.click(), when: () => canCreate },
-    { id: "new-folder", label: t("new_folder"), icon: FolderPlus, run: () => setShowNewFolder(true), when: () => canCreate },
+    { id: "upload-files", label: tMenu("files_upload_files"), icon: Upload, run: () => fileInputRef.current?.click(), when: () => canCreate },
+    { id: "upload-folder", label: tMenu("files_upload_folder"), icon: FolderUp, run: () => folderInputRef.current?.click(), when: () => canCreate },
+    { id: "new-folder", label: tMenu("files_new_folder"), icon: FolderPlus, run: () => setShowNewFolder(true), when: () => canCreate },
     { id: "new-text-file", label: newFileLabel, icon: FilePlus, run: () => setShowNewTextFile(true), when: () => canCreate },
     { id: "trash", label: t("trash"), icon: Trash2, run: () => onNavigate(TRASH_PATH, TRASH_LOCATION), when: () => !inTrash && !accountPickerMode },
     { id: "empty-trash", label: t("empty_trash"), icon: Trash2, run: () => onEmptyTrash?.(), when: () => inTrash && trashCount > 0 && !!onEmptyTrash },

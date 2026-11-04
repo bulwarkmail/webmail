@@ -174,6 +174,22 @@ export function accountRowText(
   return { title: name, subtitle: address };
 }
 
+/**
+ * The name an account's avatar takes its initials from. Usually the account's
+ * name. When another account has the same name, both would show the same two
+ * letters, so the initials come from the address instead: its local part split
+ * at dots, dashes, underscores and plus signs ("dso-ux-mail-b" gives "DB",
+ * "dso-ux-mail" gives "DM").
+ */
+export function accountAvatarName(account: NamedAccount, accounts: NamedAccount[]): string {
+  const name = account.displayName || account.label;
+  const { title, subtitle } = accountRowText(account, accounts);
+  if (subtitle !== null || title !== (account.email || account.username)) return name;
+  const local = title.split('@')[0] ?? title;
+  const words = local.split(/[.\-_+]+/).filter(Boolean);
+  return words.length > 0 ? words.join(' ') : name || title;
+}
+
 /** Minimal shape needed to order accounts (structural — avoids importing AccountEntry). */
 export interface OrderableAccount {
   id: string;

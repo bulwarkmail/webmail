@@ -150,6 +150,23 @@ describe('the offline banner', () => {
     expect(screen.getByTestId('offline-outbox-row').textContent).toContain('Quarterly');
   });
 
+  it('can be hidden, and comes back when what it says changes', async () => {
+    const { OfflineBanner } = await import('../offline-banner');
+    sessionStorage.clear();
+    useOfflineStore.setState({ enabled: ['acc'], browserOffline: true, outbox: [] });
+    const { unmount } = render(<OfflineBanner />);
+    fireEvent.click(screen.getByRole('button', { name: 'hide_offline_notice' }));
+    expect(screen.queryByTestId('offline-banner')).toBeNull();
+    // Another page of the app, the same state: still hidden.
+    unmount();
+    render(<OfflineBanner />);
+    expect(screen.queryByTestId('offline-banner')).toBeNull();
+    // A message now waits: that's news.
+    act(() => useOfflineStore.setState({ outbox: [{ id: 2, account: 'acc', createdAt: Date.now(), subject: 'Later', to: ['b@example.org'], status: 'waiting' }] }));
+    expect(screen.getByTestId('offline-banner')).toBeInTheDocument();
+    sessionStorage.clear();
+  });
+
   it('stays away for an account that doesn\'t keep mail here', async () => {
     const { OfflineBanner } = await import('../offline-banner');
     useOfflineStore.setState({ enabled: [], browserOffline: true, outbox: [] });

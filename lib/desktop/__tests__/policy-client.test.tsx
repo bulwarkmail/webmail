@@ -116,6 +116,13 @@ describe('in the app', () => {
     expect(devicesForAccount('some-account').noOffline).toBe(false);
   }, 60_000);
 
+  it('a forced value that makes no sense keeps offline off without forbidding it, which would wipe', async () => {
+    setBridgePolicy(snapshotOf({ OfflineEnabled: 'yes' }));
+    expect(desktopOfflinePolicy()).toEqual({ forced: false, fallback: null, invalid: true });
+    const { devicesForAccount } = await import('@/lib/device-policy');
+    expect(devicesForAccount('some-account').noOffline).toBe(false);
+  }, 60_000);
+
   it('the hook settles on a bridge that copies what it returns, as contextBridge does', async () => {
     setBridgePolicy(snapshotOf({ PluginsMode: 'off' }));
     window.bulwarkDesktop!.policy!.get = () => JSON.parse(JSON.stringify(current));

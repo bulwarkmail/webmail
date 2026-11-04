@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useCallback, useMemo, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { sortFolderTree } from "@/lib/move-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, X } from "@/components/icons";
@@ -27,6 +28,7 @@ import { hasPeriod, isPeriodBoundary } from "@/lib/sieve/period";
 import { fromWallClock, getEffectiveTimeZone, getWallClock } from "@/lib/timezone";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
+import { localizeMailboxName } from "@/lib/mailbox-label";
 
 interface FilterRuleModalProps {
   rule?: FilterRule;
@@ -90,9 +92,31 @@ function comparatorsFor(field: FilterConditionField, regex: boolean): FilterComp
   return regex && REGEX_FIELDS.has(field) ? [...base, "regex"] : base;
 }
 
+// "Stop processing" is not offered as an action: the "Don't apply later
+// rules" checkbox does the same, and two ways to say it confused people.
 const ALL_ACTION_TYPES: FilterActionType[] = [
-  "move", "copy", "forward", "mark_read", "star", "add_label", "discard", "reject", "keep", "stop",
+  "move", "copy", "forward", "mark_read", "star", "add_label", "discard", "reject", "keep",
 ];
+
+// Mail never needs filing into these: Drafts and Sent hold what the user
+// writes, Scheduled what waits to be sent.
+const NON_TARGET_ROLES = new Set(["drafts", "sent", "scheduled"]);
+
+/**
+ * A rule saved with the old "Stop processing" action opens with that action
+ * folded into the checkbox, so it keeps working and can be saved again. What
+ * came after the stop never ran, so it goes; a rule that did nothing before
+ * it keeps the message in the inbox, as it did.
+ */
+export function foldStopAction(actions: FilterAction[], stopProcessing: boolean): {
+  actions: FilterAction[];
+  stopProcessing: boolean;
+} {
+  const stopAt = actions.findIndex((a) => a.type === "stop");
+  if (stopAt === -1) return { actions, stopProcessing };
+  const before = actions.slice(0, stopAt);
+  return { actions: before.length > 0 ? before : [{ type: "keep" }], stopProcessing: true };
+}
 
 const ACTIONS_WITH_VALUE = new Set<FilterActionType>(["move", "copy", "forward", "reject", "add_label"]);
 const ACTIONS_WITH_MAILBOX = new Set<FilterActionType>(["move", "copy"]);
@@ -184,8 +208,13 @@ export function FilterRuleModal({
   onClose,
 }: FilterRuleModalProps) {
   const t = useTranslations("settings.filters");
+  const tSidebar = useTranslations("sidebar");
   const isEdit = !!rule;
   const emailKeywords = useSettingsStore((state) => state.emailKeywords);
+  // Regular expressions are for people who asked for the advanced settings;
+  // a rule that already uses one keeps its comparator either way.
+  const showAdvanced = useSettingsStore((state) => state.showAdvancedSettings);
+  const regexOffered = regexSupported && showAdvanced;
   const { tagName } = useKeywordFormat();
 
   const start = rule ?? initialRule;
@@ -194,10 +223,11 @@ export function FilterRuleModal({
   const [conditions, setConditions] = useState<FilterCondition[]>(
     start?.conditions.length ? [...start.conditions] : [makeEmptyCondition()]
   );
+  const [folded] = useState(() => foldStopAction(start?.actions ?? [], start?.stopProcessing ?? false));
   const [actions, setActions] = useState<FilterAction[]>(
-    start?.actions.length ? [...start.actions] : [makeEmptyAction()]
+    folded.actions.length ? [...folded.actions] : [makeEmptyAction()]
   );
-  const [stopProcessing, setStopProcessing] = useState(start?.stopProcessing ?? false);
+  const [stopProcessing, setStopProcessing] = useState(folded.stopProcessing);
   const [includeSpam, setIncludeSpam] = useState(start?.includeSpam ?? false);
   const [usedSuggestions, setUsedSuggestions] = useState<ReadonlySet<string>>(new Set());
   const [applyToExisting, setApplyToExisting] = useState(false);
@@ -221,8 +251,10 @@ export function FilterRuleModal({
   }, [confirmDiscard, dirty, onClose]);
   const nameRef = useRef<HTMLInputElement>(null);
 
+  // The folder list in the order every Move list has (lib/move-menu.ts).
+  const locale = useLocale();
   const { hierarchicalMailboxes, mailboxPathMap } = useMemo(() => {
-    const tree = buildMailboxTree(mailboxes.filter((mb) => !mb.isShared));
+    const tree = sortFolderTree(buildMailboxTree(mailboxes.filter((mb) => !mb.isShared)), locale);
     const pathMap = new Map<string, string>();
     const buildPaths = (nodes: MailboxNode[], parentPath = "") => {
       for (const node of nodes) {
@@ -236,7 +268,7 @@ export function FilterRuleModal({
     };
     buildPaths(tree);
     return { hierarchicalMailboxes: flattenMailboxTree(tree), mailboxPathMap: pathMap };
-  }, [mailboxes]);
+  }, [mailboxes, locale]);
 
   // Rules saved before folder ids were stored only carry the path; resolve it
   // so the select shows the folder and the next save adds the id.
@@ -420,7 +452,7 @@ export function FilterRuleModal({
         // with e.g. (field=attachment, comparator=contains) — invalid for the
         // Sieve generator. Each field has its own valid comparator set.
         if (updates.field && updates.field !== c.field) {
-          const allowed = comparatorsFor(updates.field, regexSupported);
+          const allowed = comparatorsFor(updates.field, regexOffered);
           if (!allowed.includes(c.comparator)) {
             updated.comparator = allowed[0];
           }
@@ -605,7 +637,7 @@ export function FilterRuleModal({
                       className={selectClass}
                       aria-label={t("comparators.contains")}
                     >
-                      {comparatorsFor(condition.field, regexSupported || condition.comparator === "regex").map((c) => (
+                      {comparatorsFor(condition.field, regexOffered || condition.comparator === "regex").map((c) => (
                         <option key={c} value={c}>
                           {t(`comparators.${c}`)}
                         </option>
@@ -740,11 +772,14 @@ export function FilterRuleModal({
                       >
                         <option value="">{t("move_to_folder")}</option>
                         {missing && <option value={selectedId}>{action.value}</option>}
-                        {hierarchicalMailboxes.map((mb) => (
-                          <option key={mb.id} value={mb.id}>
-                            {"\u00A0".repeat(mb.depth * 3)}{mb.name}
-                          </option>
-                        ))}
+                        {hierarchicalMailboxes
+                          .filter((mb) => !NON_TARGET_ROLES.has(mb.role ?? "") || mb.id === selectedId)
+                          .map((mb) => (
+                            <option key={mb.id} value={mb.id}>
+                              {"\u00A0".repeat(mb.depth * 3)}
+                              {localizeMailboxName(mb.role, mb.name, (k) => tSidebar(`mailboxes.${k}`))}
+                            </option>
+                          ))}
                       </select>
                     );
                   })()}

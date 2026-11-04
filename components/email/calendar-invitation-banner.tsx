@@ -20,6 +20,7 @@ import {
   ChevronUp,
 } from '@/components/icons';
 import { useTranslations, useLocale } from 'next-intl';
+import { InvitationPrintSync } from '@/lib/print/invitation-print';
 import { useRouter } from '@/i18n/navigation';
 import { isDocumentRTL } from '@/i18n/direction';
 import { useAuthStore } from '@/stores/auth-store';
@@ -963,6 +964,21 @@ export function CalendarInvitationBanner({ email }: CalendarInvitationBannerProp
       tabIndex={isCollapsed ? 0 : undefined}
       aria-expanded={isCollapsed ? false : undefined}
     >
+      {/* When and where, for the printout of this message: its print copy has no card. */}
+      {summary && (
+        <InvitationPrintSync
+          emailId={email.id}
+          print={{
+            heading: bannerTitle,
+            rows: ([
+              [t('change_title'), summary.title ?? ''],
+              [t('change_time'), summary.start ? formatSchedule(summary) : ''],
+              [t('change_location'), summary.location ?? ''],
+              [t('organizer_label'), summary.organizer ? (summary.organizerEmail && summary.organizerEmail !== summary.organizer ? `${summary.organizer} <${summary.organizerEmail}>` : summary.organizer) : ''],
+            ] as Array<[string, string]>).filter(([, value]) => value),
+          }}
+        />
+      )}
       {/* Avatar-style icon */}
       <div className={cn(
         "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm",

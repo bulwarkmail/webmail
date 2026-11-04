@@ -117,6 +117,7 @@ export async function POST(request: NextRequest) {
       entrypoint: manifest.entrypoint,
       enabled: existing?.enabled ?? true,
       ...(existing?.forceEnabled !== undefined ? { forceEnabled: existing.forceEnabled } : {}),
+      ...(existing?.defaultOff ? { defaultOff: true } : {}),
       ...(manifest.configSchema ? { configSchema: manifest.configSchema } : {}),
       ...(manifest.settingsSchema ? { settingsSchema: manifest.settingsSchema } : {}),
       ...(manifest.locales ? { locales: manifest.locales } : {}),
@@ -147,7 +148,9 @@ export async function POST(request: NextRequest) {
 
 /**
  * PATCH /api/admin/plugins - Update plugin metadata (enable/disable)
- * Body: { id: string, enabled: boolean }
+ * Body: { id: string, enabled?: boolean, forceEnabled?: boolean, defaultOff?: boolean }
+ * `defaultOff` decides what users get while they haven't chosen: off when
+ * true, on otherwise. `forceEnabled` keeps it on for everyone.
  */
 export async function PATCH(request: NextRequest) {
   try {
@@ -155,13 +158,13 @@ export async function PATCH(request: NextRequest) {
     if ('error' in result) return result.error;
 
     const ip = getClientIP(request);
-    const { id, enabled, forceEnabled } = await request.json();
+    const { id, enabled, forceEnabled, defaultOff } = await request.json();
 
     if (!id || typeof id !== 'string') {
       return NextResponse.json({ error: 'Missing plugin id' }, { status: 400 });
     }
-    if (typeof enabled !== 'boolean' && typeof forceEnabled !== 'boolean') {
-      return NextResponse.json({ error: 'enabled or forceEnabled must be a boolean' }, { status: 400 });
+    if (typeof enabled !== 'boolean' && typeof forceEnabled !== 'boolean' && typeof defaultOff !== 'boolean') {
+      return NextResponse.json({ error: 'enabled, forceEnabled or defaultOff must be a boolean' }, { status: 400 });
     }
 
     // Turning one off stays possible: the policy only stops what would run.
@@ -170,9 +173,10 @@ export async function PATCH(request: NextRequest) {
       if (refused) return refused;
     }
 
-    const updates: { enabled?: boolean; forceEnabled?: boolean } = {};
+    const updates: { enabled?: boolean; forceEnabled?: boolean; defaultOff?: boolean } = {};
     if (typeof enabled === 'boolean') updates.enabled = enabled;
     if (typeof forceEnabled === 'boolean') updates.forceEnabled = forceEnabled;
+    if (typeof defaultOff === 'boolean') updates.defaultOff = defaultOff;
 
     const { updatePluginMeta } = await import('@/lib/admin/plugin-registry');
     let updated = await updatePluginMeta(id, updates);

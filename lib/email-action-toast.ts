@@ -166,13 +166,14 @@ export async function setSelectionTagWithUndo(
  *
  * `receipts` (filled while the move runs) name the messages it took to
  * another account: Undo moves those back, the same way, into the folders
- * their restore points name (undoMove).
+ * their restore points name (undoMove). `onUndone` runs once they are back.
  */
 export function undoMoveAction(
   client: IJMAPClient | null | undefined,
   batches: EmailRestoreBatch[] | null | undefined,
   labels: UndoLabels,
   receipts?: CrossAccountMoveReceipt[],
+  onUndone?: () => void,
 ): UndoToastAction | undefined {
   if (!client || !batches || !batches.some(b => b.points.length > 0)) return undefined;
   return {
@@ -183,6 +184,7 @@ export function undoMoveAction(
         try {
           await useEmailStore.getState().undoMove(client, batches, receipts ?? []);
           toast.success(labels.done);
+          onUndone?.();
         } catch (error) {
           console.error("Failed to undo:", error);
           toast.error(labels.failed);

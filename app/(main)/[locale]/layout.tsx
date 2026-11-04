@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { AppLockGate } from "@/components/app-lock/app-lock-gate";
 import { IntlProvider } from "@/components/providers/intl-provider";
+import { addPlainLanguage } from "@/i18n/plain-language";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { CalendarAlertProvider } from "@/components/providers/calendar-alert-provider";
 import { PushBindingsHost } from "@/components/providers/push-bindings-host";
@@ -31,6 +32,7 @@ import { OfflineHost } from "@/components/offline/offline-host";
 import { DeviceWipeHost } from "@/components/offline/device-wipe-host";
 import { NotificationActionsHost } from "@/components/providers/notification-actions-host";
 import { DesktopOsHost } from "@/components/desktop/desktop-os-host";
+import { FileDropHost } from "@/components/file-drop/file-drop-host";
 import { EditedFilesHost } from "@/components/desktop/edited-files-host";
 import { DevicePolicyHost } from "@/components/device/device-policy-host";
 import { PushNotificationPrompt } from "@/components/push-notification-prompt";
@@ -77,6 +79,7 @@ export default async function LocaleLayout({
     } catch {
       notFound();
     }
+    messages = await addPlainLanguage(locale, messages);
   }
 
   return (
@@ -103,6 +106,7 @@ export default async function LocaleLayout({
                   <SessionTimeoutGuard />
                   <AccountTemplateSync />
                   {children}
+                  <FileDropHost />
                   <PluginDialogHost />
                   <ExternalRecipientConfirmHost />
                   <PhishingReportHost />

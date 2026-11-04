@@ -91,7 +91,10 @@ function cachedDateFormat(locale: string, options: Intl.DateTimeFormatOptions): 
  *   - `smart` (default) — locale-aware, age-bucketed:
  *       today        → time only           ("15:31" or "3:31 PM")
  *       last 7 days  → short weekday+time  ("Fr 15:31", "Fri 3:31 PM")
- *       older        → full locale date    ("28.04.2026", "04/28/2026")
+ *       this year    → day and month       ("28. Apr.", "Apr 28"), as Gmail
+ *                      and Outlook do; a numeric date when a date order is
+ *                      picked in the region settings
+ *       older        → full locale date    ("28.04.2025", "04/28/2025")
  *       With `listStyle: 'mountain-view'` the buckets are Gmail's instead:
  *       today → time, this year → "Oct 10", older → "10/10/25".
  *   - `relative` — legacy en-US relative format ("1h ago", "2d ago").
@@ -198,6 +201,12 @@ export function formatDate(
       .format(d)
       .replace(/\.$/, "");
     return `${weekday} ${timeStr}`;
+  }
+
+  // Earlier this year: "Oct 24" rather than "10/24/2026" (mail-16). A date
+  // order picked in the region settings keeps its numeric dates.
+  if (dWall.year === nowWall.year && (dateLocale ?? "auto") === "auto") {
+    return cachedDateFormat(uiLocale, { timeZone, month: "short", day: "numeric" }).format(d);
   }
 
   return cachedDateFormat(numericLocale, {

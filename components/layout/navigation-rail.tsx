@@ -19,7 +19,7 @@ import { useResolvedSidebarApps } from "@/hooks/use-resolved-sidebar-apps";
 import { useAuthStore } from "@/stores/auth-store";
 import { useAccountStore } from "@/stores/account-store";
 import { useUpdateStore, selectHasUpdate } from "@/stores/update-store";
-import { getMaxAccounts } from "@/lib/account-utils";
+import { accountAvatarName, getMaxAccounts } from "@/lib/account-utils";
 import { isDocumentRTL } from "@/i18n/direction";
 import { cn, formatFileSize } from "@/lib/utils";
 import { quotaLevel, type StorageQuota } from "@/lib/quota";
@@ -658,7 +658,7 @@ export function NavigationRail({
             className={cn(
               "relative flex items-center gap-2.5 rounded-md transition-colors duration-150 cursor-pointer",
               collapsed ? "justify-center w-10 h-10" : "px-2.5 text-sm",
-              "max-lg:min-h-[44px]",
+              "tap:min-h-[44px]",
               "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
             title={collapsed ? tGlobalSearch("title") : undefined}
@@ -682,7 +682,7 @@ export function NavigationRail({
                 collapsed
                   ? "justify-center w-10 h-10"
                   : "px-2.5 text-sm",
-                "max-lg:min-h-[44px]",
+                "tap:min-h-[44px]",
                 isActive
                   ? "bg-primary/10 text-primary font-medium"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -726,7 +726,7 @@ export function NavigationRail({
                 collapsed
                   ? "justify-center w-10 h-10"
                   : "px-2.5 text-sm",
-                "max-lg:min-h-[44px]",
+                "tap:min-h-[44px]",
                 isActive
                   ? "bg-primary/10 text-primary font-medium"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -772,7 +772,7 @@ export function NavigationRail({
                 collapsed
                   ? "justify-center w-10 h-10"
                   : "px-2.5 text-sm",
-                "max-lg:min-h-[44px]",
+                "tap:min-h-[44px]",
                 isActive
                   ? "bg-primary/10 text-primary font-medium"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -795,7 +795,7 @@ export function NavigationRail({
               collapsed
                 ? "justify-center w-10 h-10"
                 : "px-2.5 text-sm",
-              "max-lg:min-h-[44px]",
+              "tap:min-h-[44px]",
               "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
             title={collapsed ? t("add_app") : undefined}
@@ -925,7 +925,7 @@ export function NavigationRail({
                   title={`${toUnicodeEmail(account.displayName || account.label)} (${toUnicodeEmail(account.email || account.username)})`}
                 >
                   <Avatar
-                    name={account.displayName || account.label}
+                    name={accountAvatarName(account, accounts)}
                     email={account.email || account.username}
                     size="sm"
                     disableFavicon

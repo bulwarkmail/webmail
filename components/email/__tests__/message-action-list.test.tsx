@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, act, within } from '@testing-library/react';
+import { render, renderHook, screen, fireEvent, act, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 
@@ -28,6 +28,7 @@ const { EmailViewer } = await import('../email-viewer');
 const { EmailContextMenu } = await import('../email-context-menu');
 const { usePrintRequestStore, requestPrint } = await import('@/hooks/use-message-file-actions');
 const { emailKeyFor } = await import('@/lib/thread-utils');
+const { useMessageActionList } = await import('../message-actions');
 
 const email = {
   id: 'e1',
@@ -112,14 +113,50 @@ describe("the reader's ⋮ on a desktop", () => {
     renderViewer({ onTogglePinned });
     fireEvent.click(screen.getByRole('button', { name: 'more_actions' }));
     const menu = screen.getByRole('menu', { name: 'more_actions' });
-    for (const id of ['ctx-star', 'ctx-move-to', 'ctx-tag', 'ctx-export', 'ctx-print', 'ctx-view-source']) {
+    for (const id of ['ctx-move-to', 'ctx-tag', 'ctx-export', 'ctx-print', 'ctx-view-source']) {
       expect(within(menu).getByTestId(id)).toBeTruthy();
     }
-    // Delete is on the toolbar already.
+    // Delete is on the toolbar already, and the star by the subject.
     expect(within(menu).queryByTestId('ctx-delete')).toBeNull();
+    expect(within(menu).queryByTestId('ctx-star')).toBeNull();
     fireEvent.click(within(menu).getByRole('menuitem', { name: 'pin' }));
     expect(onTogglePinned).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('menu', { name: 'more_actions' })).toBeNull();
+  });
+});
+
+describe("the reader's ⋮ in groups", () => {
+  it("has the message's actions only, in groups", () => {
+    renderViewer({ onTogglePinned: vi.fn(), onShowShortcuts: vi.fn() } as never);
+    fireEvent.click(screen.getByRole('button', { name: 'more_actions' }));
+    const menu = screen.getByRole('menu', { name: 'more_actions' });
+    const rows = Array.from(menu.querySelectorAll<HTMLElement>('[role="menuitem"], [role="separator"]'))
+      .map((row) => (row.getAttribute('role') === 'separator' ? '|' : row.querySelector('[data-menu-label]')?.textContent ?? ''));
+    // No app-level entries: Import is in the folder's menu, Settings and the
+    // palette, the shortcuts behind ?. Answer; file away; mark; spam; link;
+    // how it shows; save.
+    expect(rows).toEqual([
+      'reply', 'reply_all', 'forward', 'forward_as_attachment', '|',
+      'archive', '|',
+      'move_to', '|',
+      'mark_unread', 'pin', 'tag', '|',
+      'mark_as_spam', '|',
+      'copy_message', 'copy_conversation', '|',
+      'reader_view', '|',
+      'export_email', 'print', 'view_source',
+    ]);
+  });
+
+  it('puts how the reader shows the message in a group before Export, Print and View source', () => {
+    const { result } = renderHook(() => useMessageActionList({
+      email,
+      onExport: () => {},
+      onPrint: () => {},
+      views: [{ kind: 'item', key: 'extra:reader_view', icon: () => null, label: 'reader_view', run: () => {} }],
+      extras: [{ kind: 'item', key: 'extra:other', icon: () => null, label: 'other', run: () => {} }],
+    }));
+    const labels = result.current.map((entry) => (entry.kind === 'separator' ? '|' : entry.label));
+    expect(labels.slice(-7)).toEqual(['|', 'reader_view', '|', 'export_email', 'print', '|', 'other']);
   });
 });
 
@@ -149,7 +186,9 @@ describe("the phone's More panel", () => {
     const panel = screen.getByRole('menu', { name: 'more_actions' });
     const pin = within(panel).getByTestId('panel-pin');
     expect(pin.className).toContain('min-h-[44px]');
-    for (const id of ['panel-star', 'panel-export', 'panel-print', 'panel-view_source', 'panel-copy_message_link']) {
+    // The star is by the subject, on the phone too.
+    expect(within(panel).queryByTestId('panel-star')).toBeNull();
+    for (const id of ['panel-export', 'panel-print', 'panel-view_source', 'panel-copy_message_link']) {
       expect(within(panel).getByTestId(id)).toBeTruthy();
     }
     fireEvent.click(pin);

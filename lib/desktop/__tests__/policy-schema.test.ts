@@ -5,6 +5,7 @@ import {
   DEFAULT_POLICY_SNAPSHOT,
   EMPTY_POLICY_LAYERS,
   POLICY_KEYS,
+  policyProblems,
   POLICY_CONSUMERS,
   POLICY_MAX_LIST_ITEMS,
   POLICY_SCHEMA,
@@ -31,12 +32,29 @@ describe('the schema', () => {
       'PluginsMode', 'PluginAllowlist', 'OfflineEnabled', 'AppLockRequired', 'AppLockTimeoutMinutes', 'TelemetryAllowed',
       'CrashReportsAllowed', 'QuickComposeShortcut', 'AuthServerAllowlist', 'AuthNegotiateDelegateAllowlist',
       'AutoSelectCertificateForUrls', 'KeystoreEnabled', 'KeystoreAllowedOrigins', 'BrowserSignIn', 'WipeOfflineData',
+      'OpenWithEnabled', 'DeveloperToolsAvailability',
     ]);
     for (const key of POLICY_KEYS) {
       const { title, description } = POLICY_SCHEMA[key];
       expect(title.en && title.de && description.en && description.de, key).toBeTruthy();
       expect(description.en, key).not.toBe(description.de);
     }
+  });
+});
+
+describe('developer tools and Open with', () => {
+  it("takes Chrome values for developer tools, forced only, and a value nobody can read locks them off", () => {
+    expect(resolvePolicies(layers({ forcedMachine: { DeveloperToolsAvailability: 2 } })).DeveloperToolsAvailability).toMatchObject({ value: 2, locked: true });
+    expect(resolvePolicies(layers({ recommendedMachine: { DeveloperToolsAvailability: 2 } })).DeveloperToolsAvailability).toMatchObject({ value: null, locked: false });
+    // Not 0 or 1: the shell reads a locked entry that isn't an explicit yes as off.
+    expect(resolvePolicies(layers({ forcedUser: { DeveloperToolsAvailability: 7 } })).DeveloperToolsAvailability).toMatchObject({ value: null, locked: true });
+  });
+
+  it('turn Open with off only by force, and a value nobody can read leaves it off', () => {
+    expect(resolvePolicies(layers({})).OpenWithEnabled).toMatchObject({ value: true, locked: false });
+    expect(resolvePolicies(layers({ recommendedUser: { OpenWithEnabled: 0 } })).OpenWithEnabled).toMatchObject({ value: true, locked: false });
+    expect(resolvePolicies(layers({ forcedMachine: { OpenWithEnabled: 0 } })).OpenWithEnabled).toMatchObject({ value: false, locked: true });
+    expect(resolvePolicies(layers({ forcedMachine: { OpenWithEnabled: 'maybe' } })).OpenWithEnabled).toMatchObject({ value: false, locked: true });
   });
 });
 
@@ -133,9 +151,9 @@ describe('hostile values fail closed', () => {
     expect(entry.raw!.length).toBeLessThanOrEqual(201);
   });
 
-  it('an out of range timeout falls to no value, not to a huge one', () => {
+  it('an out of range timeout falls to the shortest, not to a huge one or the user\'s own', () => {
     const entry = resolvePolicies(layers({ forcedMachine: { AppLockTimeoutMinutes: 999999 } })).AppLockTimeoutMinutes;
-    expect(entry).toMatchObject({ value: null, invalid: 'out_of_range' });
+    expect(entry).toMatchObject({ value: 1, invalid: 'out_of_range' });
   });
 });
 
@@ -322,6 +340,26 @@ describe('KeystoreAllowedOrigins', () => {
   });
 });
 
+describe('what a recommendation can do', () => {
+  it.each(['AppLockRequired', 'TelemetryAllowed', 'CrashReportsAllowed', 'AutoUpdate'] as const)('%s: nothing, and the templates do not offer one', (key) => {
+    expect(POLICY_SCHEMA[key].forcedOnly).toBe(true);
+    expect(resolvePolicies({ ...EMPTY_POLICY_LAYERS, recommendedMachine: { [key]: 0 } })[key]).toMatchObject({ source: 'default', locked: false });
+    expect(resolvePolicies({ ...EMPTY_POLICY_LAYERS, forcedMachine: { [key]: 0 } })[key]).toMatchObject({ value: false, locked: true });
+  });
+});
+
+describe('values that fail open', () => {
+  it('a lock timeout nobody can read is the shortest there is', () => {
+    expect(resolvePolicies({ ...EMPTY_POLICY_LAYERS, forcedMachine: { AppLockTimeoutMinutes: '99999' } }).AppLockTimeoutMinutes).toMatchObject({ value: 1, locked: true, invalid: 'out_of_range' });
+  });
+
+  it('a wipe code too long to use is named as invalid', () => {
+    const snapshot = resolvePolicies({ ...EMPTY_POLICY_LAYERS, forcedMachine: { WipeOfflineData: 'w'.repeat(200) } });
+    expect(snapshot.WipeOfflineData).toMatchObject({ value: null, invalid: 'too_long' });
+    expect(policyProblems(snapshot).map((problem) => problem.key)).toEqual(['WipeOfflineData']);
+  });
+});
+
 describe('every key has someone acting on it', () => {
   it('names a consumer or who owes one', () => {
     for (const key of POLICY_KEYS) {
@@ -338,9 +376,7 @@ describe('every key has someone acting on it', () => {
     }
   });
 
-  // The coordinator flips this when step 7 is done: then no key may be waiting.
-  const ALL_WIRED = false;
-  it.runIf(ALL_WIRED)('nobody is waiting any more', () => {
+  it('nobody is waiting any more', () => {
     expect(POLICY_KEYS.filter((key) => 'pendingConsumer' in POLICY_CONSUMERS[key])).toEqual([]);
   });
 });

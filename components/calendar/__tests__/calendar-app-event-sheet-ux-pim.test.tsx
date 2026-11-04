@@ -13,6 +13,7 @@ import { useTaskStore } from '@/stores/task-store';
 vi.mock('@/hooks/use-media-query', () => ({
   useIsMobile: () => false,
   useIsDesktop: () => true,
+  useIsFullDesktop: () => true,
   useIsTablet: () => false,
   useMediaQuery: () => false,
 }));
