@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Search, BookUser, Trash2, Users, Download, X, UserPlus, CheckSquare, Square, Filter, Mail, Phone, Image as ImageIcon, RotateCcw, Menu, ArrowDownAZ, Loader2, FolderInput, Upload, Printer } from "@/components/icons";
+import { Search, BookUser, Trash2, Users, Download, X, UserPlus, CheckSquare, Square, Filter, Mail, Phone, Image as ImageIcon, RotateCcw, Menu, ArrowDownAZ, Loader2, FolderInput, Upload, Printer, Merge } from "@/components/icons";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -21,6 +21,7 @@ import { getContactDisplayName, getContactSortName, hasContactPhoto } from "@/st
 import { useSettingsStore } from "@/stores/settings-store";
 import { isAppShortcutBlocked } from "@/lib/keyboard";
 import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
+import { useDesktopCommands } from "@/lib/desktop/commands";
 import { ContactRowsSkeleton } from "@/components/boot-skeleton/contacts-skeleton";
 
 type TriState = boolean | null;
@@ -126,7 +127,12 @@ interface ContactListProps {
   onAddContactToGroup: (id: string) => void;
   /** Opens the app's composer to the contact. */
   onComposeContact?: (contact: ContactCard) => void;
-  onDuplicateContact?: (contact: ContactCard) => void;
+  /** "Merge with…" for one contact. */
+  onMergeContact?: (contact: ContactCard) => void;
+  /** Two or more ticked: merge them. */
+  onBulkMerge?: () => void;
+  /** A line over the list, e.g. "Possible duplicates (2)". */
+  banner?: React.ReactNode;
   /** Move contacts to another address book; undefined where there is none. */
   onMoveContacts?: (ids: string[]) => void;
   /** Show a burger button at the start that opens the (overlay) categories sidebar. */
@@ -165,7 +171,9 @@ export function ContactList({
   onDeleteContact,
   onAddContactToGroup,
   onComposeContact,
-  onDuplicateContact,
+  onMergeContact,
+  onBulkMerge,
+  banner,
   onMoveContacts,
   onMenuClick,
   phoneMenuItems,
@@ -176,6 +184,8 @@ export function ContactList({
   printTitle,
 }: ContactListProps) {
   const t = useTranslations("contacts");
+  const tx = useTranslations("ux_pim_contact");
+  const tMerge = useTranslations("ux_pim_cimport");
   const tCommon = useTranslations("common");
   const locale = useLocale();
   const density = useSettingsStore((state) => state.density);
@@ -389,6 +399,8 @@ export function ContactList({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+  // Edit > Search contacts in the desktop app's menus.
+  useDesktopCommands({ "edit.search": () => searchRef.current?.focus() }, { "edit.search": true });
 
   return (
     <div className={cn("flex flex-col h-full", className)}>
@@ -621,6 +633,12 @@ export function ContactList({
               <span className="hidden @md:inline">{t("address_books.move_to")}</span>
             </Button>
           )}
+          {onBulkMerge && selectedContactIds.size > 1 && (
+            <Button variant="ghost" size="xs" onClick={onBulkMerge} aria-label={tMerge("merge_selected")} title={tMerge("merge_selected")} className="shrink-0">
+              <Merge className="w-3.5 h-3.5 @md:me-1" />
+              <span className="hidden @md:inline">{tMerge("merge_selected")}</span>
+            </Button>
+          )}
           <Button variant="ghost" size="xs" onClick={onBulkExport} disabled={exporting} aria-busy={exporting} aria-label={t("bulk.export")} title={t("bulk.export")} className="shrink-0">
             {exporting
               ? <Loader2 className="w-3.5 h-3.5 @md:me-1 animate-spin" />
@@ -644,6 +662,8 @@ export function ContactList({
           </IconButton>
         </div>
       )}
+
+      {!hasSelection && banner}
 
       {/* Contact list */}
       <div
@@ -697,7 +717,7 @@ export function ContactList({
                   {onImport && (
                     <Button variant="outline" size="sm" onClick={onImport}>
                       <Upload className="w-4 h-4 me-1.5" />
-                      {t("import.title")}
+                      {tx("import_menu")}
                     </Button>
                   )}
                 </>
@@ -714,6 +734,7 @@ export function ContactList({
                 isChecked={selectedContactIds.has(contact.id)}
                 hasSelection={hasSelection}
                 isFocused={contact.id === cursorId}
+                isMenuTarget={contextMenu.isOpen && contextMenu.data?.id === contact.id}
                 onFocus={() => setFocusedId(contact.id)}
                 density={density}
                 selectedContactIds={selectedContactIds}
@@ -785,12 +806,13 @@ export function ContactList({
           onDelete={() => onDeleteContact(contextMenu.data!)}
           onAddToGroup={() => onAddContactToGroup(contextMenu.data!.id)}
           onCompose={onComposeContact ? () => onComposeContact(contextMenu.data!) : undefined}
-          onDuplicate={onDuplicateContact ? () => onDuplicateContact(contextMenu.data!) : undefined}
+          onMergeWith={onMergeContact ? () => onMergeContact(contextMenu.data!) : undefined}
           onMoveTo={onMoveContacts ? () => onMoveContacts([contextMenu.data!.id]) : undefined}
           onBatchMoveTo={onMoveContacts ? () => onMoveContacts([...selectedContactIds]) : undefined}
           onBatchExport={onBulkExport}
           onBatchAddToGroup={onBulkAddToGroup}
           onBatchDelete={onBulkDelete}
+          onBatchMerge={onBulkMerge}
           readOnly={isContactReadOnly?.(contextMenu.data) ?? false}
         />
       )}

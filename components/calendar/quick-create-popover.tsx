@@ -34,6 +34,9 @@ interface QuickCreatePopoverProps {
 }
 
 const WIDTH = 340;
+// Wider for a calendar name that needs it ("Stalwart Calendar
+// (someone@example.org)" was cut off at 340 px, pim-21).
+const MAX_WIDTH = 480;
 const GAP = 8;
 const MARGIN = 12;
 
@@ -41,14 +44,14 @@ const MARGIN = 12;
 // popover sits beside it, or under it when neither side has room.
 const PLACEHOLDER_SELECTOR = "[data-pending-preview]";
 
-function computePosition(anchor: DOMRect | null, height: number): { top: number; left: number } {
+export function computePosition(anchor: DOMRect | null, height: number, width = WIDTH): { top: number; left: number } {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  if (!anchor) return { top: Math.max(MARGIN, (vh - height) / 2), left: Math.max(MARGIN, (vw - WIDTH) / 2) };
+  if (!anchor) return { top: Math.max(MARGIN, (vh - height) / 2), left: Math.max(MARGIN, (vw - width) / 2) };
   const clampTop = (top: number) => Math.min(Math.max(MARGIN, top), vh - height - MARGIN);
-  const clampLeft = (left: number) => Math.min(Math.max(MARGIN, left), vw - WIDTH - MARGIN);
-  if (anchor.right + GAP + WIDTH + MARGIN <= vw) return { top: clampTop(anchor.top), left: anchor.right + GAP };
-  if (anchor.left - GAP - WIDTH >= MARGIN) return { top: clampTop(anchor.top), left: anchor.left - GAP - WIDTH };
+  const clampLeft = (left: number) => Math.min(Math.max(MARGIN, left), vw - width - MARGIN);
+  if (anchor.right + GAP + width + MARGIN <= vw) return { top: clampTop(anchor.top), left: anchor.right + GAP };
+  if (anchor.left - GAP - width >= MARGIN) return { top: clampTop(anchor.top), left: anchor.left - GAP - width };
   if (anchor.bottom + GAP + height + MARGIN <= vh) return { top: anchor.bottom + GAP, left: clampLeft(anchor.left) };
   return { top: Math.max(MARGIN, anchor.top - GAP - height), left: clampLeft(anchor.left) };
 }
@@ -85,7 +88,7 @@ export function QuickCreatePopover({
       const node = ref.current;
       if (!node) return;
       const anchor = document.querySelector(PLACEHOLDER_SELECTOR)?.getBoundingClientRect() ?? null;
-      setPosition(computePosition(anchor, node.offsetHeight));
+      setPosition(computePosition(anchor, node.offsetHeight, node.offsetWidth));
     };
     place();
     const frame = requestAnimationFrame(place);
@@ -160,7 +163,9 @@ export function QuickCreatePopover({
       aria-label={t("quick_create.aria_label")}
       className="fixed z-[60] bg-background border border-border rounded-lg shadow-xl"
       style={{
-        width: WIDTH,
+        width: "max-content",
+        minWidth: WIDTH,
+        maxWidth: `min(${MAX_WIDTH}px, calc(100vw - ${2 * MARGIN}px))`,
         top: position?.top ?? -9999,
         left: position?.left ?? -9999,
         visibility: position ? "visible" : "hidden",
@@ -200,6 +205,7 @@ export function QuickCreatePopover({
                 value={draft.calendarId}
                 onChange={(e) => onChange({ ...draft, calendarId: e.target.value })}
                 aria-label={t("form.calendar_select")}
+                title={calendars.find((c) => c.id === draft.calendarId)?.name}
                 className="flex-1 min-w-0 rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-hidden"
               >
                 {calendars.map((c) => (

@@ -92,7 +92,9 @@ describe('deleting a calendar and clearing its events', () => {
 
   it('confirms a delete in a dialog, not an inline strip', async () => {
     render(<CalendarManagementSettings />);
-    fireEvent.click(screen.getByTitle('delete'));
+    // Delete and clear live in the row's ⋮ since pim-20.
+    fireEvent.click(screen.getByRole('button', { name: 'row_actions' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'delete_calendar' }));
     expect(confirmDialog().getByText('delete_title')).toBeTruthy();
     fireEvent.click(confirmDialog().getByRole('button', { name: 'delete' }));
     await waitFor(() => expect(removeCalendar).toHaveBeenCalledWith(expect.anything(), 'work'));
@@ -100,7 +102,8 @@ describe('deleting a calendar and clearing its events', () => {
 
   it('confirms clearing the events in a dialog', async () => {
     render(<CalendarManagementSettings />);
-    fireEvent.click(screen.getByTitle('clear_events'));
+    fireEvent.click(screen.getByRole('button', { name: 'row_actions' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'clear_all_events' }));
     expect(confirmDialog().getByText('clear_title')).toBeTruthy();
     fireEvent.click(confirmDialog().getByRole('button', { name: 'clear_events' }));
     await waitFor(() => expect(clearCalendarEvents).toHaveBeenCalledWith(expect.anything(), 'work'));

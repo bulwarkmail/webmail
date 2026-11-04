@@ -18,7 +18,9 @@ import { toast } from "@/stores/toast-store";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator, ContextMenuSubMenu } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
+import { taskListsOf } from "@/components/calendar/task-list-view";
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { displayNow } from "@/lib/timezone";
 import { readableTextOn } from "@/lib/color-transform";
@@ -95,6 +97,7 @@ export function CalendarSidebarPanel({
 }: CalendarSidebarPanelProps) {
   const shownName = useCollectionNames();
   const t = useTranslations("calendar");
+  const tUx = useTranslations("ux_pim_calendar");
   const paint = useCvdColor();
   const tSub = useTranslations("calendar.subscription");
   const tMgmt = useTranslations("calendar.management");
@@ -109,6 +112,11 @@ export function CalendarSidebarPanel({
   const refreshICalSubscription = useCalendarStore((s) => s.refreshICalSubscription);
   const removeICalSubscription = useCalendarStore((s) => s.removeICalSubscription);
   const setDefaultCalendar = useCalendarStore((s) => s.setDefaultCalendar);
+  const updateCalendar = useCalendarStore((s) => s.updateCalendar);
+  const viewMode = useCalendarStore((s) => s.viewMode);
+  const hiddenTaskListIds = useCalendarStore((s) => s.hiddenTaskListIds);
+  const toggleTaskListVisibility = useCalendarStore((s) => s.toggleTaskListVisibility);
+  const [renaming, setRenaming] = useState<Calendar | null>(null);
   const timeFormat = useSettingsStore((s) => s.timeFormat);
   const sharedCalendarColors = useSettingsStore((s) => s.sharedCalendarColors);
   const enableCalendarTasks = useSettingsStore((s) => s.enableCalendarTasks);
@@ -270,6 +278,35 @@ export function CalendarSidebarPanel({
     }
   };
 
+  const handleRename = async (cal: Calendar, name: string) => {
+    if (!client || !name || name === cal.name) return;
+    try {
+      await updateCalendar(client, cal.id, { name });
+      toast.success(tMgmt('calendar_updated'));
+    } catch {
+      toast.error(tMgmt('error_update'));
+    }
+  };
+
+  // The tasks view lists task lists, each with its own tick (pim-1): a
+  // task-only list never shows in the grid, so the grid's selection can't
+  // say which tasks to list.
+  const inTasksView = enableCalendarTasks && viewMode === 'tasks';
+  const taskLists = useMemo(() => (inTasksView ? taskListsOf(calendars, tasks) : []), [inTasksView, calendars, tasks]);
+  const accountLabel = (localAccountId: string) => {
+    const acct = localAccounts.find(a => a.id === localAccountId);
+    return acct?.label || acct?.email || acct?.username || localAccountId;
+  };
+  const taskListGroups = useMemo(() => {
+    if (!multiAccountMode) return [{ key: '__all__', label: '', lists: taskLists }];
+    const groups = new Map<string, Calendar[]>();
+    for (const cal of taskLists) {
+      const key = cal.localAccountId || '__other__';
+      groups.set(key, [...(groups.get(key) ?? []), cal]);
+    }
+    return Array.from(groups.entries()).map(([key, lists]) => ({ key, label: key === '__other__' ? '' : key, lists }));
+  }, [multiAccountMode, taskLists]);
+
   const handleSetDefault = async (calendarId: string) => {
     if (!client) return;
     try {
@@ -282,8 +319,9 @@ export function CalendarSidebarPanel({
 
   if (calendars.length === 0 && !onSubscribe) return null;
 
-  const renderCalendarItem = (cal: Calendar) => {
-    const isVisible = selectedCalendarIds.includes(cal.id);
+  const renderCalendarItem = (cal: Calendar, asTaskList = false) => {
+    const isVisible = asTaskList ? !hiddenTaskListIds.includes(cal.id) : selectedCalendarIds.includes(cal.id);
+    const onToggle = asTaskList ? () => toggleTaskListVisibility(cal.id) : () => onToggleVisibility(cal.id);
     const color = paint(cal.color || "#3b82f6");
     // A company calendar can only be shown or hidden: no menu.
     const hasMenu = cal.isCompany ? false : isSubscriptionCalendar(cal.id) ? !!client : true;
@@ -291,7 +329,7 @@ export function CalendarSidebarPanel({
     return (
       <div key={cal.id} className="relative group/cal">
         <button
-          onClick={() => onToggleVisibility(cal.id)}
+          onClick={onToggle}
           onContextMenu={hasMenu ? (e) => openContextMenu(e, cal) : undefined}
           {...(hasMenu ? {
             onTouchStart: (e: React.TouchEvent<HTMLButtonElement>) => { pressedRef.current = { calendar: cal, element: e.currentTarget }; longPress.onTouchStart(e); },
@@ -301,7 +339,7 @@ export function CalendarSidebarPanel({
           } : {})}
           role="checkbox"
           aria-checked={isVisible}
-          data-testid="calendar-item"
+          data-testid={asTaskList ? "task-list-item" : "calendar-item"}
           data-calendar-name={cal.name}
           data-account={cal.accountName ?? ''}
           data-visible={isVisible}
@@ -402,7 +440,9 @@ export function CalendarSidebarPanel({
     }
 
     const isBirthday = cal.id === BIRTHDAY_CALENDAR_ID;
-    const canCreate = onCreateEvent && !isBirthday && cal.myRights?.mayWriteOwn !== false;
+    const canCreate = onCreateEvent && !isBirthday && !cal.isTasksOnly && cal.myRights?.mayWriteOwn !== false;
+    // The owner names a calendar: a sharee renaming it would rename it for everyone (pim-20).
+    const canRename = !!client && !isBirthday && !cal.isShared;
     const canShare = onShareCalendar && cal.myRights?.mayShare && !cal.isShared;
     const canSetDefault = !!client && !isBirthday && !cal.isShared && !cal.isDefault;
     const canChangeColor = !!onColorChange;
@@ -410,7 +450,7 @@ export function CalendarSidebarPanel({
     const canResetColor = !!onResetColor && hasColorOverride;
     const canClear = onClearCalendar && !isBirthday && cal.myRights?.mayDelete !== false;
     const canDelete = onDeleteCalendar && !isBirthday && !cal.isDefault && !cal.isShared;
-    const showSeparator = (canCreate || canShare || canSetDefault || canChangeColor || canResetColor) && (canClear || canDelete);
+    const showSeparator = (canCreate || canRename || canShare || canSetDefault || canChangeColor || canResetColor) && (canClear || canDelete);
     const color = cal.color || "#3b82f6";
 
     return (
@@ -420,6 +460,13 @@ export function CalendarSidebarPanel({
             icon={Plus}
             label={tMgmt('new_event_in_calendar')}
             onClick={() => { closeContextMenu(); onCreateEvent(cal); }}
+          />
+        )}
+        {canRename && (
+          <ContextMenuItem
+            icon={Pencil}
+            label={tUx('rename_calendar')}
+            onClick={() => { closeContextMenu(); setRenaming(cal); }}
           />
         )}
         {canShare && (
@@ -458,14 +505,14 @@ export function CalendarSidebarPanel({
         {canClear && (
           <ContextMenuItem
             icon={Eraser}
-            label={tMgmt('clear_events')}
+            label={tUx('clear_all_events')}
             onClick={() => { closeContextMenu(); onClearCalendar(cal); }}
           />
         )}
         {canDelete && (
           <ContextMenuItem
             icon={Trash2}
-            label={tMgmt('delete')}
+            label={tUx('delete_calendar')}
             onClick={() => { closeContextMenu(); onDeleteCalendar(cal); }}
             destructive
           />
@@ -511,7 +558,7 @@ export function CalendarSidebarPanel({
       {renderSectionHeader(key, label, onAdd)}
       {!collapsedAccountGroups.has(key) && (
         <div>
-          {list.map(renderCalendarItem)}
+          {list.map((cal) => renderCalendarItem(cal))}
         </div>
       )}
     </div>
@@ -535,7 +582,22 @@ export function CalendarSidebarPanel({
           )}
         </button>
       )}
-      {multiAccountMode && localAccountGroups.length > 0 ? (
+      {inTasksView ? (
+        <div data-testid="task-lists-section">
+          {renderSectionHeader('__task_lists__', tUx('task_lists'))}
+          {!collapsedAccountGroups.has('__task_lists__') && taskListGroups.map((group) => (
+            <div key={group.key} className={cn(group.label && "mt-1")}>
+              {group.label && (
+                <div className="ps-5 pe-3 py-0.5 text-[0.6875rem] font-medium text-muted-foreground flex items-center gap-1">
+                  <User className="w-3 h-3" aria-hidden="true" />
+                  <span className="truncate">{accountLabel(group.label)}</span>
+                </div>
+              )}
+              {group.lists.map((cal) => renderCalendarItem(cal, true))}
+            </div>
+          ))}
+        </div>
+      ) : multiAccountMode && localAccountGroups.length > 0 ? (
         <>
           {localAccountGroups.map((group, idx) => {
             const expanded = !collapsedAccountGroups.has(group.key);
@@ -583,7 +645,7 @@ export function CalendarSidebarPanel({
                           {t('my_calendars')}
                         </div>
                         <div>
-                          {owned.map(renderCalendarItem)}
+                          {owned.map((cal) => renderCalendarItem(cal))}
                         </div>
                       </div>
                     )}
@@ -594,7 +656,7 @@ export function CalendarSidebarPanel({
                           {sg.label}
                         </div>
                         <div>
-                          {sg.calendars.map(renderCalendarItem)}
+                          {sg.calendars.map((cal) => renderCalendarItem(cal))}
                         </div>
                       </div>
                     ))}
@@ -629,7 +691,7 @@ export function CalendarSidebarPanel({
                     {group.accountName}
                   </div>
                   <div>
-                    {group.calendars.map(renderCalendarItem)}
+                    {group.calendars.map((cal) => renderCalendarItem(cal))}
                   </div>
                 </div>
               ))}
@@ -640,6 +702,16 @@ export function CalendarSidebarPanel({
 
       {renderCalendarMenu()}
       <ConfirmDialog {...confirmDialogProps} />
+      <PromptDialog
+        isOpen={!!renaming}
+        onClose={() => setRenaming(null)}
+        onSubmit={(name) => { const cal = renaming; setRenaming(null); if (cal) void handleRename(cal, name.trim()); }}
+        title={tUx('rename_title')}
+        placeholder={tMgmt('name_placeholder')}
+        defaultValue={renaming?.name ?? ''}
+        confirmText={tUx('rename_confirm')}
+        validate={(value) => (value.trim() ? null : tUx('rename_empty'))}
+      />
     </div>
   );
 }

@@ -1022,7 +1022,10 @@ const DEFAULT_SETTINGS = {
   hiddenCompanyCalendars: [] as string[],
 
   // Calendar Tasks
-  enableCalendarTasks: false,
+  // On: tasks show where the server has calendars (pim-8). Both Stalwarts
+  // keep tasks as CalendarEvent objects of @type Task, with no capability
+  // of their own to check.
+  enableCalendarTasks: true,
   showTasksOnCalendar: true,
 
   // Contact Birthday Calendar
@@ -1645,6 +1648,7 @@ export const useSettingsStore = create<SettingsState>()(
           migrateAnimationsSetting(settings);
           migrateNotificationSoundDefault(settings);
           migrateTintListRowsDefault(settings);
+          migrateCalendarTasksDefault(settings);
           migrateUndoSendDefault(settings);
           migrateAttachmentPosition(settings);
 
@@ -2085,6 +2089,8 @@ export const useSettingsStore = create<SettingsState>()(
             if (!Array.isArray(state.explicitSettings)) {
               state.explicitSettings = [];
             }
+            // Stored before tasks were on by default; no version step of its own.
+            migrateCalendarTasksDefault(state as unknown as Record<string, unknown>);
             state.notificationMutes = normalizeNotificationMutes(state.notificationMutes);
             state.messageListOrder = sanitizeSortLevels(state.messageListOrder);
             if (state.messageListOrderScope !== 'inbox' && state.messageListOrderScope !== 'all') {
@@ -2175,6 +2181,7 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
         // taken as chosen below.
         migrateNotificationSoundDefault(state);
         migrateTintListRowsDefault(state);
+        migrateCalendarTasksDefault(state);
         migrateUndoSendDefault(state);
         // The old default must not be taken as chosen below either.
         migrateAttachmentPosition(state);
@@ -2250,6 +2257,18 @@ export function migrateUndoSendDefault(state: Record<string, unknown>): void {
   if (state.sendDelaySeconds !== 0) return;
   const chosen = Array.isArray(state.explicitSettings) && state.explicitSettings.includes('sendDelaySeconds');
   if (!chosen) state.sendDelaySeconds = 5;
+}
+
+/**
+ * Tasks are on by default (pim-8). Off that the user never chose was only
+ * the old default and turns on; off they chose stays off. Imports and
+ * server copies from older builds still carry the old default and go
+ * through this too.
+ */
+export function migrateCalendarTasksDefault(state: Record<string, unknown>): void {
+  if (state.enableCalendarTasks !== false) return;
+  const chosen = Array.isArray(state.explicitSettings) && state.explicitSettings.includes('enableCalendarTasks');
+  if (!chosen) state.enableCalendarTasks = true;
 }
 
 // Helper functions to apply settings to DOM

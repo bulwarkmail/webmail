@@ -10,7 +10,7 @@ import { useLongPress } from "@/hooks/use-long-press";
 import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/lib/utils";
 import type { ContactCard, AddressBook } from "@/lib/jmap/types";
-import { getContactDisplayName } from "@/stores/contact-store";
+import { getContactDisplayName, TRUSTED_SENDERS_BOOK_NAME } from "@/stores/contact-store";
 import { useAccountStore } from "@/stores/account-store";
 import { useCollectionNames } from "@/hooks/use-collection-names";
 
@@ -91,10 +91,18 @@ function saveCollapsed(state: Record<string, boolean>) {
   } catch { /* ignore */ }
 }
 
+/**
+ * The app's own "Trusted Senders" book: the senders whose images load, kept
+ * and managed in Settings, not a list of people. The sidebar leaves it out.
+ */
+export function isTrustedSendersBook(book: AddressBook): boolean {
+  return !book.isShared && book.name === TRUSTED_SENDERS_BOOK_NAME;
+}
+
 export function ContactsSidebar({
   groups,
   individuals,
-  addressBooks,
+  addressBooks: allAddressBooks,
   activeCategory,
   onSelectCategory,
   onCreateGroup,
@@ -119,7 +127,9 @@ export function ContactsSidebar({
 }: ContactsSidebarProps) {
   const shownName = useCollectionNames();
   const t = useTranslations("contacts");
+  const tx = useTranslations("ux_pim_contact");
   const router = useRouter();
+  const addressBooks = useMemo(() => allAddressBooks.filter(b => !isTrustedSendersBook(b)), [allAddressBooks]);
   const { contextMenu: groupContextMenu, openContextMenu: openGroupContextMenu, openContextMenuFrom: openGroupMenuFrom, closeContextMenu: closeGroupContextMenu, menuRef: groupMenuRef } = useContextMenu<ContactCard>();
   const { contextMenu: bookContextMenu, openContextMenu: openBookContextMenu, openContextMenuFrom: openBookMenuFrom, closeContextMenu: closeBookContextMenu, menuRef: bookMenuRef } = useContextMenu<AddressBook>();
   const hasBookMenu = !!(onRenameAddressBook || onShareAddressBook || onSetDefaultAddressBook || onCreateContactInBook || onDeleteAddressBook);
@@ -291,12 +301,12 @@ export function ContactsSidebar({
             <ContextMenuItem icon={UserPlus} label={t("create_new")} onClick={() => { newMenu.closeContextMenu(); onCreateContact(); }} />
             <ContextMenuItem icon={UsersRound} label={t("groups.create")} onClick={() => { newMenu.closeContextMenu(); onCreateGroup(); }} />
             {onCreateAddressBook && (
-              <ContextMenuItem icon={BookPlus} label={t("address_books.create")} onClick={() => { newMenu.closeContextMenu(); onCreateAddressBook(); }} />
+              <ContextMenuItem icon={BookPlus} label={tx("new_address_book_menu")} onClick={() => { newMenu.closeContextMenu(); onCreateAddressBook(); }} />
             )}
             {onImport && (
               <>
                 <ContextMenuSeparator />
-                <ContextMenuItem icon={Upload} label={t("import.title")} onClick={() => { newMenu.closeContextMenu(); onImport(); }} />
+                <ContextMenuItem icon={Upload} label={tx("import_menu")} onClick={() => { newMenu.closeContextMenu(); onImport(); }} />
               </>
             )}
           </ContextMenu>

@@ -6,7 +6,7 @@ import { Suspense, useState, useEffect, useCallback, useRef, useMemo } from "rea
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
-import { ArrowLeft, Users, UsersRound, AlertTriangle, Plus, UserPlus, Upload, BookPlus, Printer } from "@/components/icons";
+import { ArrowLeft, Users, UsersRound, AlertTriangle, Plus, UserPlus, Upload, BookPlus, Printer, Merge } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { ContextMenuItem } from "@/components/ui/context-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -18,6 +18,9 @@ import { ContactGroupForm } from "@/components/contacts/contact-group-form";
 import { ContactGroupDetail } from "@/components/contacts/contact-group-detail";
 import { ContactsSidebar, type ContactCategory } from "@/components/contacts/contacts-sidebar";
 import { ContactImportDialog } from "@/components/contacts/contact-import-dialog";
+import { ContactMergeDialog } from "@/components/contacts/contact-merge-dialog";
+import { ContactDuplicatesView } from "@/components/contacts/contact-duplicates-view";
+import { findDuplicateGroups, ownerKey, type MergePlan } from "@/lib/contacts/merge";
 import { AddressBookPickerDialog } from "@/components/contacts/address-book-picker-dialog";
 import { DirectoryBrowser, directoryKey, filterDirectory } from "@/components/contacts/directory-browser";
 import { DirectoryEntryDetail } from "@/components/contacts/directory-entry-detail";
@@ -87,7 +90,8 @@ type View =
   | "group-create"
   | "group-edit"
   | "bulk-add-to-group"
-  | "directory-detail";
+  | "directory-detail"
+  | "duplicates";
 
 export interface ContactsAppProps {
   /** Path segments after `/contacts` (`['<contactId>', 'edit']`). */
@@ -103,8 +107,10 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   // Organisation > Devices > No printing: no Print buttons (Ctrl+P prints a note).
   const printOff = useStrictestDevices().noPrint;
   const tSidebar = useTranslations("sidebar");
+  const tUxContact = useTranslations("ux_pim_contact");
   const tCommon = useTranslations("common");
   const tShell = useTranslations("shell");
+  const tMerge = useTranslations("ux_pim_cimport");
   useDocumentTitle(tSidebar("contacts"));
   const contactsEnabled = usePolicyStore((s) => s.isFeatureEnabled('contactsEnabled'));
   const { client, isAuthenticated, logout, checkAuth, isLoading: authLoading } = useAuthStore();
@@ -149,11 +155,16 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
     setDefaultAddressBook,
     renameKeyword,
     importContacts,
+    mergeContacts,
+    undoMergeContacts,
   } = useContactStore();
 
   const [view, setView] = useState<View>("list");
   const [activeCategory, setActiveCategory] = useState<ContactCategory>("all");
   const [showImportDialog, setShowImportDialog] = useState(false);
+  // "Merge…" (two or more cards) and "Merge with…" (one card, the other picked in the dialog).
+  const [mergeCards, setMergeCards] = useState<ContactCard[] | null>(null);
+  const [mergePickFor, setMergePickFor] = useState<ContactCard | null>(null);
   const [renamingAddressBook, setRenamingAddressBook] = useState<AddressBook | null>(null);
   const [creatingAddressBook, setCreatingAddressBook] = useState(false);
   const [sharingAddressBookId, setSharingAddressBookId] = useState<string | null>(null);
@@ -581,12 +592,15 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
     }
   }, [client, createAddressBook, refreshAddressBooks, t]);
 
-  const handleImportContacts = useCallback(async (importedContacts: ContactCard[]) => {
+  const handleImportContacts = useCallback(async (importedContacts: ContactCard[], addressBookId?: string) => {
     return importContacts(
       supportsSync && client ? client : null,
-      importedContacts
+      importedContacts,
+      addressBookId,
     );
   }, [supportsSync, client, importContacts]);
+  // "Import into" starts at the address book on screen.
+  const openBookId = typeof activeCategory === "object" && "addressBookId" in activeCategory ? activeCategory.addressBookId : undefined;
 
   const handleSelectContact = (id: string) => {
     setSelectedContact(id);
@@ -687,37 +701,69 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
     setView("detail");
   }, [setSelectedContact]);
 
-  const handleDuplicateContact = useCallback(async (source: ContactCard) => {
-    const { id: _id, uid: _uid, created: _created, updated: _updated, ...rest } = source;
-    void _id; void _uid; void _created; void _updated;
-    const data: Partial<ContactCard> = JSON.parse(JSON.stringify(rest));
-    if (supportsSync && client && source.media) {
-      // A blobId names the bytes embedded in the source card; the copy gets
-      // the bytes themselves.
-      data.media = await inlineContactMedia(source.media, {
-        client: getContactPhotoClient(source.localAccountId),
-        accountId: source.accountId,
-        localAccountId: source.localAccountId,
-      }, "keep");
-    }
-    let created: boolean;
-    try {
-      created = supportsSync && client
-        ? await createContact(client, data)
-        : await addLocalContact({
-          id: `local-${generateUUID()}`,
-          addressBookIds: data.addressBookIds || {},
-          ...data,
-        });
-    } catch (error) {
-      console.error("Failed to duplicate contact:", error);
-      toast.error(t("toast.error_create"));
+  // Likely duplicates among the cards that can be changed, for "Possible duplicates (n)".
+  const duplicateGroups = useMemo(
+    () => findDuplicateGroups(individuals.filter((c) => !isContactReadOnly(c))),
+    [individuals, isContactReadOnly],
+  );
+  const mergeable = useCallback((cards: ContactCard[]) => cards.length > 1
+    && cards.every((c) => c.kind !== "group" && !isContactReadOnly(c))
+    && new Set(cards.map(ownerKey)).size === 1, [isContactReadOnly]);
+  const handleMergeCards = useCallback((cards: ContactCard[]) => {
+    if (!mergeable(cards)) {
+      toast.error(tMerge("merge_not_possible"));
       return;
     }
-    if (!created) return;
-    toast.success(t("toast.created"));
-    showNewestContact();
-  }, [supportsSync, client, createContact, addLocalContact, t, showNewestContact]);
+    setMergeCards(cards);
+  }, [mergeable, tMerge]);
+  const handleBulkMerge = () => handleMergeCards(contacts.filter((c) => selectedContactIds.has(c.id)));
+
+  const runMerge = useCallback(async (plan: MergePlan): Promise<boolean> => {
+    const sync = supportsSync && !!client;
+    try {
+      let { others, patch } = plan;
+      if (sync) {
+        // Photos still in blobs go with their cards: the merged card and Undo get the bytes.
+        const source = (card: ContactCard) => ({
+          client: getContactPhotoClient(card.localAccountId),
+          accountId: card.accountId,
+          localAccountId: card.localAccountId,
+        });
+        others = await Promise.all(others.map(async (card) => card.media
+          ? { ...card, media: await inlineContactMedia(card.media, source(card), "drop") }
+          : card));
+        if (patch.media) {
+          const own = plan.keep.media ?? {};
+          const added = Object.fromEntries(Object.entries(patch.media).filter(([key]) => !(key in own)));
+          patch = { ...patch, media: { ...own, ...(await inlineContactMedia(added, source(plan.keep), "drop")) } };
+        }
+      }
+      const undo = await mergeContacts(sync ? client : null, { ...plan, others, patch });
+      if (!undo) return false;
+      // From "Possible duplicates" the list stays, for the next set.
+      if (view !== "duplicates") {
+        setSelectedContact(plan.keep.id);
+        setView("detail");
+      }
+      // Not every card went: say so, and still offer Undo for what changed.
+      (undo.incomplete ? toast.error : toast.success)(tMerge(undo.incomplete ? "merge_failed" : "merged"), {
+        action: {
+          label: tMerge("undo"),
+          onClick: () => {
+            void undoMergeContacts(sync ? client : null, undo).then((ok) => {
+              if (ok) toast.info(tMerge("undone"));
+              else toast.error(tMerge("undo_failed"));
+            });
+          },
+        },
+      });
+      return true;
+    } catch (error) {
+      console.error("Failed to merge contacts:", error);
+      toast.error(tMerge("merge_failed"));
+      return false;
+    }
+  }, [supportsSync, client, mergeContacts, undoMergeContacts, setSelectedContact, tMerge, view]);
 
   const handleSaveNew = useCallback(async (data: Partial<ContactCard>, options?: ContactSaveOptions) => {
     const created = supportsSync && client
@@ -973,12 +1019,13 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   };
 
   // File > New contact in the desktop app's menus, from any app.
-  useAppCommands({ "new-contact": () => guard(handleCreateNew)() }, contactsEnabled);
+  useAppCommands({ "new-contact": () => guard(handleCreateNew)(), "import-contacts": () => setShowImportDialog(true) }, contactsEnabled);
 
   // The command palette's Contacts group (Ctrl/⌘+K).
   useRegisterCommands(tSidebar("contacts"), [
     { id: "new-contact", label: t("create_new"), icon: UserPlus, run: () => guard(handleCreateNew)() },
     { id: "import", label: t("import.title"), icon: Upload, run: () => setShowImportDialog(true) },
+    { id: "find-duplicates", label: tMerge("find_duplicates"), icon: Merge, run: () => guard(() => setView("duplicates"))() },
     { id: "new-group", label: t("groups.create"), icon: UsersRound, run: () => guard(handleCreateGroup)() },
     { id: "new-address-book", label: t("address_books.create"), icon: BookPlus, run: () => setCreatingAddressBook(true), when: () => !!client },
   ], contactsEnabled);
@@ -1078,6 +1125,16 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
           />
         );
 
+      case "duplicates":
+        return (
+          <ContactDuplicatesView
+            groups={duplicateGroups}
+            addressBooks={addressBooks}
+            onMerge={handleMergeCards}
+            onOpen={(id) => { setSelectedContact(id); setView("detail"); }}
+          />
+        );
+
       case "bulk-add-to-group":
         return (
           <div className="flex flex-col h-full">
@@ -1146,9 +1203,9 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
                 ? () => handleAddContactToGroup(selectedContact.id)
                 : undefined
             }
-            onDuplicate={
+            onMergeWith={
               selectedContact
-                ? () => void handleDuplicateContact(selectedContact)
+                ? () => setMergePickFor(selectedContact)
                 : undefined
             }
             onMoveTo={selectedContact && canMoveContacts ? () => handleMoveContacts([selectedContact.id]) : undefined}
@@ -1410,7 +1467,8 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
                 <ContactList
                   contacts={displayedContacts}
                   isContactReadOnly={isContactReadOnly}
-                  selectedContactId={selectedContactId}
+                  // A group's page opens no member: none is marked in the list (#pim-18).
+                  selectedContactId={view === "group-detail" || view === "group-edit" ? null : selectedContactId}
                   searchQuery={searchQuery}
                   onSearchChange={setSearchQuery}
                   onSelectContact={guard(handleSelectContact)}
@@ -1428,7 +1486,18 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
                   onDeleteContact={handleDeleteContact}
                   onAddContactToGroup={guard(handleAddContactToGroup)}
                   onComposeContact={handleComposeContact}
-                  onDuplicateContact={(contact) => void handleDuplicateContact(contact)}
+                  onMergeContact={(contact) => setMergePickFor(contact)}
+                  onBulkMerge={handleBulkMerge}
+                  banner={duplicateGroups.length > 0 && view !== "duplicates" ? (
+                    <button
+                      type="button"
+                      onClick={guard(() => setView("duplicates"))}
+                      className="w-full flex items-center gap-2 px-4 py-1.5 border-b border-border text-start text-xs font-medium text-primary hover:bg-muted transition-colors"
+                    >
+                      <Merge className="w-3.5 h-3.5" />
+                      {tMerge("possible_duplicates", { count: duplicateGroups.length })}
+                    </button>
+                  ) : undefined}
                   onMoveContacts={canMoveContacts ? handleMoveContacts : undefined}
                   onMenuClick={isNarrow ? () => setNarrowSidebarOpen(true) : undefined}
                   emptyView={activeCategory !== "all"}
@@ -1437,7 +1506,8 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
                     // On the phone these are otherwise only in the drawer's "+".
                     <>
                       <ContextMenuItem icon={UsersRound} label={t("groups.create")} onClick={() => { close(); guard(handleCreateGroup)(); }} />
-                      <ContextMenuItem icon={Upload} label={t("import.title")} onClick={() => { close(); setShowImportDialog(true); }} />
+                      <ContextMenuItem icon={Upload} label={tUxContact("import_menu")} onClick={() => { close(); setShowImportDialog(true); }} />
+                      <ContextMenuItem icon={Merge} label={tMerge("find_duplicates")} onClick={() => { close(); guard(() => setView("duplicates"))(); }} />
                       {!printOff && <ContextMenuItem icon={Printer} label={tCommon("print")} onClick={() => { close(); void requestPrint({ kind: "contact-list" }); }} />}
                     </>
                   )}
@@ -1605,6 +1675,8 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
           onImport={handleImportContacts}
           initialFile={launchedFile.file}
           onClose={launchedFile.done}
+          addressBooks={supportsSync ? writableBooks : []}
+          defaultAddressBookId={openBookId}
         />
       )}
       {showImportDialog && (
@@ -1612,6 +1684,19 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
           existingContacts={contacts}
           onImport={handleImportContacts}
           onClose={() => setShowImportDialog(false)}
+          addressBooks={supportsSync ? writableBooks : []}
+          defaultAddressBookId={openBookId}
+        />
+      )}
+      {(mergeCards || mergePickFor) && (
+        <ContactMergeDialog
+          cards={mergeCards ?? undefined}
+          pickFor={mergePickFor ?? undefined}
+          candidates={mergePickFor ? individuals.filter((c) => c.id !== mergePickFor.id && !isContactReadOnly(c) && ownerKey(c) === ownerKey(mergePickFor)) : undefined}
+          suggested={mergePickFor ? (duplicateGroups.find((g) => g.some((c) => c.id === mergePickFor.id)) ?? []).filter((c) => c.id !== mergePickFor.id) : undefined}
+          groups={groups}
+          onMerge={runMerge}
+          onClose={() => { setMergeCards(null); setMergePickFor(null); }}
         />
       )}
       {sharingAddressBookId && client && (() => {

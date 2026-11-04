@@ -122,6 +122,7 @@ vi.mock('next-intl', () => ({
       decline: 'Decline',
       select_calendar: 'Select calendar',
       participant_limit: 'The server allows at most {max} participants per event.',
+      answered_accepted: 'You accepted on {date}.',
     };
 
     let message = strings[key] ?? key;
@@ -132,6 +133,7 @@ vi.mock('next-intl', () => ({
     }
     return message;
   },
+  useLocale: () => 'en-US',
   useFormatter: () => ({
     dateTime: (date: Date) => date.toISOString(),
   }),
@@ -387,6 +389,46 @@ describe('CalendarInvitationBanner', () => {
 
     expect(mocks.calendarState.setSelectedDate).toHaveBeenCalledTimes(1);
     expect(mocks.pushMock).toHaveBeenCalledWith('/calendar');
+  });
+
+  // pim-23: an answered invitation kept asking "Respond to let the
+  // organizer know"; it now says what the user answered, and when.
+  it('says when the user accepted instead of asking for an answer', async () => {
+    const participants = {
+      attendee: { '@type': 'Participant', email: 'user@example.com', name: 'User', roles: { attendee: true }, participationStatus: 'accepted' },
+    };
+    mocks.calendarState.events = [
+      { id: 'event-1', uid: 'uid-1', start: '2026-03-20T09:00:00Z', updated: '2026-03-18T12:00:00Z', participants },
+    ];
+    mocks.clientMock.parseCalendarEvents.mockResolvedValue([
+      { uid: 'uid-1', title: 'Team Sync', start: '2026-03-20T09:00:00Z', participants },
+    ]);
+
+    render(<CalendarInvitationBanner email={makeEmail()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('You accepted on Wed, Mar 18.')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('request_info')).not.toBeInTheDocument();
+  });
+
+  it('still asks for an answer while the invitation is unanswered', async () => {
+    const participants = {
+      attendee: { '@type': 'Participant', email: 'user@example.com', name: 'User', roles: { attendee: true }, participationStatus: 'needs-action' },
+    };
+    mocks.calendarState.events = [
+      { id: 'event-1', uid: 'uid-1', start: '2026-03-20T09:00:00Z', updated: '2026-03-18T12:00:00Z', participants },
+    ];
+    mocks.clientMock.parseCalendarEvents.mockResolvedValue([
+      { uid: 'uid-1', title: 'Team Sync', start: '2026-03-20T09:00:00Z', participants },
+    ]);
+
+    render(<CalendarInvitationBanner email={makeEmail()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('request_info')).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/^You accepted/)).not.toBeInTheDocument();
   });
 
   it('keeps the invitation summary visible after importing', async () => {

@@ -107,11 +107,14 @@ export function CalendarEditForm({
   onSave,
   onCancel,
   isLoading,
+  extraActions,
 }: {
   initial?: { name: string; color: string };
   onSave: (data: { name: string; color: string; components?: CalendarComponentType[] }) => void;
   onCancel: () => void;
   isLoading: boolean;
+  /** More of the calendar's settings, under the colour (pim-20). */
+  extraActions?: React.ReactNode;
 }) {
   const t = useTranslations('calendar.management');
   const [name, setName] = useState(initial?.name || '');
@@ -159,6 +162,8 @@ export function CalendarEditForm({
       {!initial && (
         <CalendarKindPicker value={kind} onChange={setKind} disabled={isLoading} />
       )}
+
+      {extraActions && <div className="flex flex-wrap items-center gap-2">{extraActions}</div>}
 
       <div className="flex items-center gap-2 pt-1">
         <button
@@ -271,6 +276,7 @@ export function CalendarDefaultAlertsForm({
 
 export function CalendarManagementSettings() {
   const t = useTranslations('calendar.management');
+  const tUx = useTranslations('ux_pim_calendar');
   const tWording = useTranslations('uxs_wording');
   const calName = (cal: { name: string }) => collectionDisplayName(cal.name, 'calendar', tWording('default_calendar'));
   const { client, serverUrl, username } = useAuthStore();
@@ -294,9 +300,9 @@ export function CalendarManagementSettings() {
   const [clearingId, setClearingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [colorPickerId, setColorPickerId] = useState<string | null>(null);
-  // The calendar whose CalDAV address is open under "Use in other apps".
-  const [shownUrlId, setShownUrlId] = useState<string | null>(null);
   const [sharingId, setSharingId] = useState<string | null>(null);
+  // The account's CalDAV addresses wait behind "Use in other apps".
+  const [caldavShown, setCaldavShown] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<typeof icalSubscriptions[0] | null>(null);
@@ -570,6 +576,16 @@ export function CalendarManagementSettings() {
     return discoveredCalDavUrls[accountKey] || wellKnownCalDavUrl;
   };
 
+  // The CalDAV address is the account's, the same for each of its
+  // calendars: once per account, not under every calendar (pim-26).
+  const caldavAddresses: Array<{ url: string; owner: string | null }> = [];
+  for (const cal of listedCalendars) {
+    const url = buildCalDavUrl(cal.id);
+    if (!url || caldavAddresses.some((a) => a.url === url)) continue;
+    caldavAddresses.push({ url, owner: cal.isShared ? (cal.accountName || cal.accountId || null) : null });
+  }
+  caldavAddresses.sort((a, b) => Number(!!a.owner) - Number(!!b.owner));
+
   const handleCopyUrl = async (url: string) => {
     try {
       await navigator.clipboard.writeText(url);
@@ -588,22 +604,17 @@ export function CalendarManagementSettings() {
     }
   };
 
-  // One action list per calendar (R6): the row's icons on wider screens, the
-  // ⋮ and right-click menu everywhere.
+  // Each row shows one "Edit…" (name, colour, then reminders and sharing
+  // from there) and a ⋮ with the rest; right-click opens the same menu.
+  // Seven icons on hover hid what they did (pim-20).
+  const canEditAlerts = (cal: Calendar) => !cal.isShared;
+  const canShareCalendar = (cal: Calendar) => !!cal.myRights?.mayShare && !cal.isShared && !isSubscriptionCalendar(cal.id);
   const calendarActions = (cal: Calendar) => {
     const actions: Array<{ id: string; label: string; icon: typeof Pencil; run: () => void; destructive?: boolean }> = [
-      { id: 'edit', label: t('edit'), icon: Pencil, run: () => setEditingId(cal.id) },
+      { id: 'clear', label: tUx('clear_all_events'), icon: Eraser, run: () => setClearingId(cal.id), destructive: true },
     ];
-    // The owner's defaults; a sharee can't write the calendar.
-    if (!cal.isShared) {
-      actions.push({ id: 'alerts', label: t('default_alerts'), icon: Bell, run: () => setAlertsEditingId(cal.id) });
-    }
-    if (cal.myRights?.mayShare && !cal.isShared && !isSubscriptionCalendar(cal.id)) {
-      actions.push({ id: 'share', label: t('share'), icon: Users, run: () => setSharingId(cal.id) });
-    }
-    actions.push({ id: 'clear', label: t('clear_events'), icon: Eraser, run: () => setClearingId(cal.id) });
     if (!cal.isDefault) {
-      actions.push({ id: 'delete', label: t('delete'), icon: Trash2, run: () => setDeletingId(cal.id), destructive: true });
+      actions.push({ id: 'delete', label: tUx('delete_calendar'), icon: Trash2, run: () => setDeletingId(cal.id), destructive: true });
     }
     return actions;
   };
@@ -616,18 +627,11 @@ export function CalendarManagementSettings() {
     const orderIndex = siblings.indexOf(cal);
     const previousId = siblings[orderIndex - 1]?.id;
     const nextId = siblings[orderIndex + 1]?.id;
-    const buildUrl = buildCalDavUrl(cal.id);
-    const actions = calendarActions(cal);
-    const plain = actions.filter((a) => !a.destructive);
-    const destructive = actions.filter((a) => a.destructive);
+    const destructive = calendarActions(cal);
     return (
       <ContextMenu ref={menuRef} isOpen={contextMenu.isOpen} position={contextMenu.position} onClose={closeContextMenu}>
-        {plain.map((a) => (
-          <ContextMenuItem key={a.id} icon={a.icon} label={a.label} onClick={run(a.run)} />
-        ))}
-        {buildUrl && (
-          <ContextMenuItem icon={Copy} label={t('copy_url')} onClick={run(() => handleCopyUrl(buildUrl))} />
-        )}
+        <ContextMenuItem icon={Pencil} label={tUx('edit_calendar')} onClick={run(() => setEditingId(cal.id))} />
+        {/* Without a mouse there is no drag: the order changes from here. */}
         {siblings.length > 1 && (
           <>
             <ContextMenuSeparator />
@@ -635,9 +639,9 @@ export function CalendarManagementSettings() {
             <ContextMenuItem icon={ArrowDown} label={t('move_down')} disabled={!nextId} onClick={run(() => void handleMove(cal.id, nextId))} />
           </>
         )}
-        {destructive.length > 0 && <ContextMenuSeparator />}
+        <ContextMenuSeparator />
         {destructive.map((a) => (
-          <ContextMenuItem key={a.id} icon={a.icon} label={a.label} destructive onClick={run(a.run)} />
+          <ContextMenuItem key={a.id} icon={a.icon} label={a.label} destructive={a.id === 'delete'} onClick={run(a.run)} />
         ))}
       </ContextMenu>
     );
@@ -651,12 +655,11 @@ export function CalendarManagementSettings() {
           const color = (cal.isShared && sharedCalendarColors[sharedCalendarColorKey(cal)]) || cal.color || '#3b82f6';
           // Up and down step over the neighbours of the same account.
           const siblings = cal.isShared ? [] : orderableCalendars.filter(c => calendarAccountKey(c) === calendarAccountKey(cal));
-          const orderIndex = siblings.indexOf(cal);
           const isOrderable = siblings.length > 1;
-          const previousId = siblings[orderIndex - 1]?.id;
-          const nextId = siblings[orderIndex + 1]?.id;
 
           if (editingId === cal.id) {
+            const alerts = canEditAlerts(cal);
+            const share = canShareCalendar(cal);
             return (
               <CalendarEditForm
                 key={cal.id}
@@ -665,6 +668,30 @@ export function CalendarManagementSettings() {
                 onSave={(data) => handleUpdate(cal.id, { ...data, name: data.name === calName(cal) ? cal.name : data.name }, color)}
                 onCancel={() => setEditingId(null)}
                 isLoading={isLoading}
+                extraActions={alerts || share ? (
+                  <>
+                    {alerts && (
+                      <button
+                        type="button"
+                        onClick={() => { setEditingId(null); setAlertsEditingId(cal.id); }}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-md border border-border hover:bg-muted"
+                      >
+                        <Bell className="w-3.5 h-3.5" aria-hidden="true" />
+                        {tUx('default_alerts_open')}
+                      </button>
+                    )}
+                    {share && (
+                      <button
+                        type="button"
+                        onClick={() => setSharingId(cal.id)}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-md border border-border hover:bg-muted"
+                      >
+                        <Users className="w-3.5 h-3.5" aria-hidden="true" />
+                        {tUx('share_open')}
+                      </button>
+                    )}
+                  </>
+                ) : undefined}
               />
             );
           }
@@ -707,7 +734,7 @@ export function CalendarManagementSettings() {
               )}
             >
               {isOrderable && (
-                // No HTML drag and drop on touch screens: the arrows do it there.
+                // No HTML drag and drop on touch screens: the ⋮ moves it there.
                 <GripVertical className="w-4 h-4 -me-1.5 text-muted-foreground/60 cursor-grab flex-shrink-0 pointer-coarse:hidden" aria-hidden="true" />
               )}
               {/* Color swatch - clickable to change color */}
@@ -742,44 +769,7 @@ export function CalendarManagementSettings() {
               <CalendarIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
 
               <div className="flex-1 min-w-0">
-                <span className="text-sm font-medium truncate block" title={calName(cal)} dir="auto">{calName(cal)}</span>
-                {(() => {
-                  const caldavUrl = buildCalDavUrl(cal.id);
-                  if (!caldavUrl) return null;
-                  if (shownUrlId !== cal.id) {
-                    return (
-                      <button
-                        type="button"
-                        aria-expanded={false}
-                        data-testid="calendar-use-in-other-apps"
-                        onClick={(e) => { e.stopPropagation(); setShownUrlId(cal.id); }}
-                        className="mt-0.5 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                      >
-                        <Link className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
-                        {tWording('use_in_other_apps')}
-                      </button>
-                    );
-                  }
-                  return (
-                    <div className="flex items-center gap-1 mt-0.5">
-                      <Link className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                      {/* An address reads left to right in Arabic too, cut at its end. */}
-                      <span dir="ltr" className="text-xs text-muted-foreground truncate" title={caldavUrl}>
-                        {caldavUrl}
-                      </span>
-                      <IconButton
-                        label={t('copy_url')}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCopyUrl(caldavUrl);
-                        }}
-                        className="-my-1.5 hidden sm:inline-flex flex-shrink-0 text-muted-foreground"
-                      >
-                        <Copy className="w-3.5 h-3.5" />
-                      </IconButton>
-                    </div>
-                  );
-                })()}
+                <span id={`calendar-name-${cal.id}`} className="text-sm font-medium truncate block" title={calName(cal)} dir="auto">{calName(cal)}</span>
               </div>
 
               {cal.isDefault && (
@@ -808,45 +798,24 @@ export function CalendarManagementSettings() {
                 );
               })()}
 
-              {/* Phone: seven icons next to the name left it a letter or two
-                  and pushed the Default badge over the copy button, so the
-                  row actions sit behind a ⋮ there, as for folders. */}
+              <button
+                type="button"
+                onClick={() => setEditingId(cal.id)}
+                aria-describedby={`calendar-name-${cal.id}`}
+                className={cn(
+                  "flex-shrink-0 px-2.5 py-1 text-xs rounded-md border border-border text-foreground hover:bg-muted",
+                  TOUCH_HIT_AREA,
+                )}
+              >
+                {tUx('edit_calendar')}
+              </button>
               <IconButton
                 label={t('row_actions', { name: calName(cal) })}
-                className="sm:hidden flex-shrink-0 text-muted-foreground"
+                className="flex-shrink-0 text-muted-foreground"
                 onClick={(e) => openContextMenuFrom(e.currentTarget, cal, 'end')}
               >
                 <MoreVertical />
               </IconButton>
-
-              {/* Shown for touch too: there is no hover, and no HTML drag and drop. */}
-              {isOrderable && (
-                <div className="hidden sm:flex items-center gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100 transition-opacity">
-                  <IconButton label={t('move_up')} onClick={() => handleMove(cal.id, previousId)} disabled={!previousId} className="text-muted-foreground">
-                    <ArrowUp />
-                  </IconButton>
-                  <IconButton label={t('move_down')} onClick={() => handleMove(cal.id, nextId)} disabled={!nextId} className="text-muted-foreground">
-                    <ArrowDown />
-                  </IconButton>
-                </div>
-              )}
-
-              <div className="hidden sm:flex items-center gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100 transition-opacity">
-                {calendarActions(cal).map((action) => (
-                  <IconButton
-                    key={action.id}
-                    label={action.label}
-                    onClick={action.run}
-                    className={cn(
-                      "text-muted-foreground",
-                      action.destructive && "hover:text-destructive hover:bg-destructive/10",
-                      action.id === 'clear' && "hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-400",
-                    )}
-                  >
-                    <action.icon />
-                  </IconButton>
-                ))}
-              </div>
             </div>
           );
         })}
@@ -895,6 +864,40 @@ export function CalendarManagementSettings() {
           </div>
         )}
       </div>
+
+      {caldavAddresses.length > 0 && (
+        <div className="mt-4 space-y-1.5" data-testid="caldav-addresses">
+          <h4 className="text-sm font-medium text-foreground">{tUx('caldav_title')}</h4>
+          <p className="text-xs text-muted-foreground">{tUx('caldav_hint')}</p>
+          {!caldavShown && (
+            <button
+              type="button"
+              aria-expanded={false}
+              data-testid="calendar-use-in-other-apps"
+              onClick={() => setCaldavShown(true)}
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <Link className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
+              {tWording('use_in_other_apps')}
+            </button>
+          )}
+          {caldavShown && caldavAddresses.map(({ url, owner }) => (
+            <div key={url} className="flex items-center gap-1.5 min-w-0">
+              <Link className="w-3 h-3 text-muted-foreground flex-shrink-0" aria-hidden="true" />
+              {owner && <span className="text-xs text-muted-foreground flex-shrink-0">{tUx('caldav_shared_by', { name: owner })}</span>}
+              {/* An address reads left to right in Arabic too, cut at its end. */}
+              <span dir="ltr" className="text-xs text-muted-foreground truncate" title={url}>{url}</span>
+              <IconButton
+                label={t('copy_url')}
+                onClick={() => handleCopyUrl(url)}
+                className="-my-1.5 flex-shrink-0 text-muted-foreground"
+              >
+                <Copy className="w-3.5 h-3.5" />
+              </IconButton>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* iCal Subscriptions */}
       {icalSubscriptions.length > 0 && (
