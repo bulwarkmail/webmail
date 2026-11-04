@@ -348,6 +348,32 @@ describe('the window controls over the app', () => {
     expect(root.hasAttribute(CONTROLS_ATTRIBUTE)).toBe(false);
     expect(rightInset()).toBe('');
   });
+
+  describe('when the window changes size in one step', () => {
+    const startWidth = window.innerWidth;
+    const setWidth = (width: number) => Object.defineProperty(window, 'innerWidth', { value: width, configurable: true, writable: true });
+    afterEach(() => setWidth(startWidth));
+
+    // As Chromium does it: geometrychange with the new rect while the page still has
+    // its old width, then the page takes the new width and fires resize.
+    const resizeTo = (fake: EventTarget, width: number) => act(() => {
+      (fake as unknown as { getTitlebarAreaRect: () => object }).getTitlebarAreaRect = () => ({ x: 0, y: 0, width: width - 137, height: 56 });
+      fake.dispatchEvent(new Event('geometrychange'));
+      setWidth(width);
+      window.dispatchEvent(new Event('resize'));
+    });
+
+    it('keeps the room for the controls after a maximise, a restore, a snap and a shrink', () => {
+      setWidth(1366);
+      const fake = overlayAt(0, 1366 - 137);
+      render(<WindowControlsHost />);
+      expect(rightInset()).toBe('137px');
+      for (const width of [2048, 1366, 1024, 640, 1920]) {
+        resizeTo(fake, width);
+        expect(rightInset(), `at ${width} px`).toBe('137px');
+      }
+    });
+  });
 });
 
 describe('which rows hold the controls', () => {
