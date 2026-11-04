@@ -160,10 +160,10 @@ describe('MvListToolbar overflow menu', () => {
     render(<MvListToolbar loadedCount={1} onRefresh={() => {}} onEmptyFolder={() => {}} />);
     open();
 
-    expect(screen.queryByText('empty_folder')).toBeNull();
+    for (const label of ['empty_folder', 'empty_trash', 'empty_spam']) expect(screen.queryByText(label)).toBeNull();
   });
 
-  it('offers it in the bin', () => {
+  it('offers it in the bin, as Empty Trash', () => {
     useEmailStore.setState({
       mailboxes: [mailbox('trash', 'Trash', 'trash')],
       selectedMailbox: 'trash',
@@ -172,7 +172,7 @@ describe('MvListToolbar overflow menu', () => {
     render(<MvListToolbar loadedCount={1} onRefresh={() => {}} onEmptyFolder={onEmptyFolder} />);
     open();
 
-    fireEvent.click(screen.getByText('empty_folder'));
+    fireEvent.click(screen.getByText('empty_trash'));
     expect(onEmptyFolder).toHaveBeenCalledOnce();
   });
 });

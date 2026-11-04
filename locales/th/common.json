@@ -1029,6 +1029,13 @@
     "delete_with_contents_message": "โฟลเดอร์ “{name}” ยังมีข้อความอยู่ {count, plural, other {# ข้อความ}} ต้องการลบโฟลเดอร์และข้อความทั้งหมดภายในหรือไม่? การดำเนินการนี้ไม่สามารถยกเลิกได้",
     "delete_with_contents_confirm": "ลบโฟลเดอร์และข้อความทั้งหมด"
   },
+  "mail_p2_folders": {
+    "all_folders": "โฟลเดอร์ทั้งหมด",
+    "empty_trash": "ล้างถังขยะ",
+    "empty_spam": "ล้างสแปม",
+    "empty_trash_confirm": "ลบข้อความ {count, plural, other {ทั้ง # ฉบับ}} ในถังขยะอย่างถาวรไหม ย้อนกลับไม่ได้",
+    "empty_spam_confirm": "ลบข้อความ {count, plural, other {ทั้ง # ฉบับ}} ในสแปมอย่างถาวรไหม ย้อนกลับไม่ได้"
+  },
   "uxs_folders": {
     "manage_accounts": "จัดการบัญชี…",
     "apply_to_existing": "{count, plural, other {นำไปใช้กับข้อความเดิม # ฉบับใน {folder}}}"

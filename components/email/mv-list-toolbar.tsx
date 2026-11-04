@@ -116,6 +116,7 @@ export function MvListToolbar({
   const tBatch = useTranslations("email_list.batch_actions");
   const archiveActionEnabled = useArchiveActionEnabled();
   const tFolder = useTranslations("mailbox_context_menu");
+  const tP2 = useTranslations("mail_p2_folders");
   const tMenu = useTranslations("context_menu");
   const tSidebar = useTranslations("sidebar");
   const tCommon = useTranslations("common");
@@ -430,7 +431,7 @@ export function MvListToolbar({
                 <ContextMenuSeparator />
                 <ContextMenuItem
                   icon={FolderX}
-                  label={tFolder("empty_folder")}
+                  label={isInTrash ? tP2("empty_trash") : tP2("empty_spam")}
                   destructive
                   onClick={() => {
                     closeMenu();

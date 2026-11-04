@@ -3833,6 +3833,13 @@
     "delete_with_contents_message": "\"{name}\" klasöründe hâlâ {count} ileti var. Klasör ve tüm iletileri silinsin mi? Bu işlem geri alınamaz.",
     "delete_with_contents_confirm": "Klasörü ve iletileri sil"
   },
+  "mail_p2_folders": {
+    "all_folders": "Tüm klasörler",
+    "empty_trash": "Çöp Kutusunu boşalt",
+    "empty_spam": "Spam klasörünü boşalt",
+    "empty_trash_confirm": "Çöp Kutusundaki {count, plural, one {ileti} other {# iletinin tümü}} kalıcı olarak silinsin mi? Bu geri alınamaz.",
+    "empty_spam_confirm": "Spam klasöründeki {count, plural, one {ileti} other {# iletinin tümü}} kalıcı olarak silinsin mi? Bu geri alınamaz."
+  },
   "uxs_folders": {
     "manage_accounts": "Hesapları yönet…",
     "apply_to_existing": "{count, plural, one {{folder} içindeki # mevcut iletiye uygula} other {{folder} içindeki # mevcut iletiye uygula}}"

@@ -3833,6 +3833,13 @@
     "create": "Crea",
     "rename_confirm": "Rinomina"
   },
+  "mail_p2_folders": {
+    "all_folders": "Tutte le cartelle",
+    "empty_trash": "Svuota cestino",
+    "empty_spam": "Svuota spam",
+    "empty_trash_confirm": "Eliminare per sempre {count, plural, one {il messaggio} other {tutti i # messaggi}} nel cestino? Non si può annullare.",
+    "empty_spam_confirm": "Eliminare per sempre {count, plural, one {il messaggio} other {tutti i # messaggi}} nello spam? Non si può annullare."
+  },
   "uxs_folders": {
     "manage_accounts": "Gestisci account…",
     "apply_to_existing": "{count, plural, one {Applica a # messaggio esistente in {folder}} other {Applica a # messaggi esistenti in {folder}}}"

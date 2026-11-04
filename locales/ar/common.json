@@ -3833,6 +3833,13 @@
     "delete_with_contents_message": "لا يزال المجلد \"{name}\" يحتوي على {count, plural, one {رسالة واحدة} other {# رسائل}}. هل تريد حذف المجلد وكل رسائله؟ لا يمكن التراجع عن هذا.",
     "delete_with_contents_confirm": "حذف المجلد والرسائل"
   },
+  "mail_p2_folders": {
+    "all_folders": "كل المجلدات",
+    "empty_trash": "إفراغ المهملات",
+    "empty_spam": "إفراغ البريد العشوائي",
+    "empty_trash_confirm": "حذف {count, plural, zero {الرسائل} one {الرسالة} two {الرسالتين} few {كل الرسائل الـ#} many {كل الرسائل الـ#} other {كل الرسائل الـ#}} في المهملات نهائيًا؟ لا يمكن التراجع عن ذلك.",
+    "empty_spam_confirm": "حذف {count, plural, zero {الرسائل} one {الرسالة} two {الرسالتين} few {كل الرسائل الـ#} many {كل الرسائل الـ#} other {كل الرسائل الـ#}} في البريد العشوائي نهائيًا؟ لا يمكن التراجع عن ذلك."
+  },
   "uxs_folders": {
     "manage_accounts": "إدارة الحسابات…",
     "apply_to_existing": "{count, plural, one {تطبيق على رسالة موجودة واحدة في {folder}} other {تطبيق على # رسائل موجودة في {folder}}}"

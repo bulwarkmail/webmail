@@ -3833,6 +3833,13 @@
     "create": "Utwórz",
     "rename_confirm": "Zmień nazwę"
   },
+  "mail_p2_folders": {
+    "all_folders": "Wszystkie foldery",
+    "empty_trash": "Opróżnij kosz",
+    "empty_spam": "Opróżnij spam",
+    "empty_trash_confirm": "Trwale usunąć {count, plural, one {wiadomość} few {wszystkie # wiadomości} many {wszystkie # wiadomości} other {wszystkie # wiadomości}} z kosza? Nie można tego cofnąć.",
+    "empty_spam_confirm": "Trwale usunąć {count, plural, one {wiadomość} few {wszystkie # wiadomości} many {wszystkie # wiadomości} other {wszystkie # wiadomości}} ze spamu? Nie można tego cofnąć."
+  },
   "uxs_folders": {
     "manage_accounts": "Zarządzaj kontami…",
     "apply_to_existing": "{count, plural, one {Zastosuj do # istniejącej wiadomości w folderze {folder}} few {Zastosuj do # istniejących wiadomości w folderze {folder}} many {Zastosuj do # istniejących wiadomości w folderze {folder}} other {Zastosuj do # istniejącej wiadomości w folderze {folder}}}"

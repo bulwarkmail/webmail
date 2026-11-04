@@ -3833,6 +3833,13 @@
     "create": "Створити",
     "rename_confirm": "Перейменувати"
   },
+  "mail_p2_folders": {
+    "all_folders": "Усі папки",
+    "empty_trash": "Очистити кошик",
+    "empty_spam": "Очистити спам",
+    "empty_trash_confirm": "Видалити {count, plural, =1 {лист} one {усі # лист} few {усі # листи} many {усі # листів} other {усі # листа}} в кошику назавжди? Це не можна скасувати.",
+    "empty_spam_confirm": "Видалити {count, plural, =1 {лист} one {усі # лист} few {усі # листи} many {усі # листів} other {усі # листа}} у спамі назавжди? Це не можна скасувати."
+  },
   "uxs_folders": {
     "manage_accounts": "Керувати обліковими записами…",
     "apply_to_existing": "{count, plural, one {Застосувати до # наявного листа в теці {folder}} few {Застосувати до # наявних листів у теці {folder}} many {Застосувати до # наявних листів у теці {folder}} other {Застосувати до # наявного листа в теці {folder}}}"

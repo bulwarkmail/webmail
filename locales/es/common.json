@@ -3833,6 +3833,13 @@
     "create": "Crear",
     "rename_confirm": "Renombrar"
   },
+  "mail_p2_folders": {
+    "all_folders": "Todas las carpetas",
+    "empty_trash": "Vaciar papelera",
+    "empty_spam": "Vaciar spam",
+    "empty_trash_confirm": "¿Eliminar para siempre {count, plural, one {el mensaje} other {los # mensajes}} de la papelera? No se puede deshacer.",
+    "empty_spam_confirm": "¿Eliminar para siempre {count, plural, one {el mensaje} other {los # mensajes}} de spam? No se puede deshacer."
+  },
   "uxs_folders": {
     "manage_accounts": "Gestionar cuentas…",
     "apply_to_existing": "{count, plural, one {Aplicar a # mensaje existente en {folder}} other {Aplicar a # mensajes existentes en {folder}}}"

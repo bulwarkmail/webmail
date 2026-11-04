@@ -3833,6 +3833,13 @@
     "delete_with_contents_message": "La carpeta \"{name}\" encara conté {count, plural, one {1 missatge} other {# missatges}}. Vols suprimir la carpeta i tots els seus missatges? No es pot desfer.",
     "delete_with_contents_confirm": "Suprimeix la carpeta i els missatges"
   },
+  "mail_p2_folders": {
+    "all_folders": "Totes les carpetes",
+    "empty_trash": "Buida la paperera",
+    "empty_spam": "Buida el correu brossa",
+    "empty_trash_confirm": "Vols suprimir per sempre {count, plural, one {el missatge} other {els # missatges}} de la paperera? No es pot desfer.",
+    "empty_spam_confirm": "Vols suprimir per sempre {count, plural, one {el missatge} other {els # missatges}} del correu brossa? No es pot desfer."
+  },
   "uxs_folders": {
     "manage_accounts": "Gestiona els comptes…",
     "apply_to_existing": "{count, plural, one {Aplica a # missatge existent de {folder}} other {Aplica a # missatges existents de {folder}}}"

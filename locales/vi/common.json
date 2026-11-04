@@ -3845,6 +3845,13 @@
     "delete_with_contents_message": "Thư mục \"{name}\" vẫn chứa {count, plural, one {1 thư} other {# thư}}. Xóa thư mục và tất cả thư của nó? Điều này không thể hoàn tác được.",
     "delete_with_contents_confirm": "Xóa thư mục và thư"
   },
+  "mail_p2_folders": {
+    "all_folders": "Tất cả thư mục",
+    "empty_trash": "Dọn sạch Thùng rác",
+    "empty_spam": "Dọn sạch Thư rác",
+    "empty_trash_confirm": "Xóa vĩnh viễn {count, plural, other {tất cả # thư}} trong Thùng rác? Không thể hoàn tác.",
+    "empty_spam_confirm": "Xóa vĩnh viễn {count, plural, other {tất cả # thư}} trong Thư rác? Không thể hoàn tác."
+  },
   "uxs_folders": {
     "manage_accounts": "Quản lý tài khoản…",
     "apply_to_existing": "{count, plural, one {Áp dụng cho # thư hiện có trong {folder}} other {Áp dụng cho # thư hiện có trong {folder}}}"

@@ -3833,6 +3833,13 @@
     "delete_with_contents_message": "Mappen \"{name}\" indeholder stadig {count, plural, one {1 besked} other {# beskeder}}. Slet mappen og alle dens beskeder? Dette kan ikke fortrydes.",
     "delete_with_contents_confirm": "Slet mappe og beskeder"
   },
+  "mail_p2_folders": {
+    "all_folders": "Alle mapper",
+    "empty_trash": "Tøm papirkurven",
+    "empty_spam": "Tøm spam",
+    "empty_trash_confirm": "Slet {count, plural, one {beskeden} other {alle # beskeder}} i papirkurven for altid? Det kan ikke fortrydes.",
+    "empty_spam_confirm": "Slet {count, plural, one {beskeden} other {alle # beskeder}} i spam for altid? Det kan ikke fortrydes."
+  },
   "uxs_folders": {
     "manage_accounts": "Administrer konti…",
     "apply_to_existing": "{count, plural, one {Anvend på # eksisterende besked i {folder}} other {Anvend på # eksisterende beskeder i {folder}}}"

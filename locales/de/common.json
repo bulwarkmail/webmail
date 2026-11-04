@@ -3833,6 +3833,13 @@
     "delete_with_contents_message": "Der Ordner „{name}“ enthält noch {count, plural, one {1 Nachricht} other {# Nachrichten}}. Ordner samt allen Nachrichten löschen? Das kann nicht rückgängig gemacht werden.",
     "delete_with_contents_confirm": "Ordner und Nachrichten löschen"
   },
+  "mail_p2_folders": {
+    "all_folders": "Alle Ordner",
+    "empty_trash": "Papierkorb leeren",
+    "empty_spam": "Spam leeren",
+    "empty_trash_confirm": "{count, plural, one {Die Nachricht} other {Alle # Nachrichten}} im Papierkorb endgültig löschen? Das lässt sich nicht rückgängig machen.",
+    "empty_spam_confirm": "{count, plural, one {Die Nachricht} other {Alle # Nachrichten}} im Spam endgültig löschen? Das lässt sich nicht rückgängig machen."
+  },
   "uxs_folders": {
     "manage_accounts": "Konten verwalten…",
     "apply_to_existing": "{count, plural, one {Auf # vorhandene Nachricht in {folder} anwenden} other {Auf # vorhandene Nachrichten in {folder} anwenden}}"

@@ -96,6 +96,7 @@ import {
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ScheduleSendDialog } from "@/components/email/schedule-send-dialog";
 import { MailFolderMenu, MailFolderMenuItems } from "@/components/email/mail-list-menus";
+import { emptyFolderPrompt } from "@/lib/empty-folder-text";
 import { ContextMenuItem } from "@/components/ui/context-menu";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { DragDropProvider } from "@/contexts/drag-drop-context";
@@ -4072,12 +4073,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const mailbox = mailboxes.find(mb => mb.id === mailboxId);
     if (!mailbox) return;
 
+    // "Empty Trash", with how many messages go (p2-14).
+    const prompt = emptyFolderPrompt(mailbox, emptyFolderMovesToTrash(mailbox));
     const confirmed = await confirmDialog({
-      title: tCtxMenu('email_list.empty_folder.confirm_title'),
-      message: emptyFolderMovesToTrash(mailbox)
-        ? tCtxMenu('email_list.empty_folder.confirm_message_trash')
-        : tCtxMenu('email_list.empty_folder.confirm_message'),
-      confirmText: tCtxMenu('email_list.empty_folder.confirm_button'),
+      title: tCtxMenu(prompt.title),
+      message: tCtxMenu(prompt.message, prompt.values),
+      confirmText: tCtxMenu(prompt.confirm),
       variant: "destructive",
     });
     if (!confirmed) return;
@@ -5605,6 +5606,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     onMarkFolderRead={selectedMailbox && selectedFolderHasUnread ? () => handleMarkFolderRead(selectedMailbox) : undefined}
                     onMarkAllFoldersRead={handleMarkAllFoldersRead}
                     onEmptyFolder={folderIsEmptyable && selectedMailbox ? () => void handleEmptyFolderFromContextMenu(selectedMailbox) : undefined}
+                    folderRole={conversationRole}
                     onPicked={close}
                   />
                 </>

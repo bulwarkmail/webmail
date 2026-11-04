@@ -3833,6 +3833,13 @@
     "delete_with_contents_message": "Dosarul „{name}” încă mai conține {count, plural, one {1 mesaj} other {# mesaje}}. Ștergi dosarul și toate mesajele sale? Acțiunea nu poate fi anulată.",
     "delete_with_contents_confirm": "Șterge dosarul și mesajele"
   },
+  "mail_p2_folders": {
+    "all_folders": "Toate dosarele",
+    "empty_trash": "Golește coșul de gunoi",
+    "empty_spam": "Golește spamul",
+    "empty_trash_confirm": "Ștergeți definitiv {count, plural, one {mesajul} few {toate cele # mesaje} other {toate cele # de mesaje}} din coșul de gunoi? Nu se poate anula.",
+    "empty_spam_confirm": "Ștergeți definitiv {count, plural, one {mesajul} few {toate cele # mesaje} other {toate cele # de mesaje}} din spam? Nu se poate anula."
+  },
   "uxs_folders": {
     "manage_accounts": "Gestionați conturile…",
     "apply_to_existing": "{count, plural, one {Aplicați la # mesaj existent din {folder}} few {Aplicați la # mesaje existente din {folder}} other {Aplicați la # de mesaje existente din {folder}}}"

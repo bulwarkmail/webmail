@@ -3833,6 +3833,13 @@
     "delete_with_contents_message": "資料夾「{name}」中仍有 {count} 封郵件。要刪除該資料夾及其所有郵件嗎？此操作無法復原。",
     "delete_with_contents_confirm": "刪除資料夾和郵件"
   },
+  "mail_p2_folders": {
+    "all_folders": "所有信件匣",
+    "empty_trash": "清空垃圾桶",
+    "empty_spam": "清空垃圾郵件",
+    "empty_trash_confirm": "要永久刪除垃圾桶中的{count, plural, other {全部 # 封郵件}}嗎？此動作無法復原。",
+    "empty_spam_confirm": "要永久刪除垃圾郵件中的{count, plural, other {全部 # 封郵件}}嗎？此動作無法復原。"
+  },
   "uxs_folders": {
     "manage_accounts": "管理帳號…",
     "apply_to_existing": "{count, plural, other {套用到{folder}中的 # 封既有郵件}}"

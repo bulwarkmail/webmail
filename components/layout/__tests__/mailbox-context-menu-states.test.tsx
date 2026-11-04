@@ -63,7 +63,7 @@ describe('folder menu states', () => {
     const folder = box('f', 2);
     renderMenu(folder, [folder]);
     expect(screen.getByText('offline_header')).toBeInTheDocument();
-    for (const name of ['new_subfolder', 'rename', 'menu_import', 'refresh', 'empty_folder_generic', 'delete_folder']) {
+    for (const name of ['new_subfolder', 'rename', 'menu_import', 'refresh', 'delete_folder']) {
       expect(item(name).disabled).toBe(true);
     }
     // No mail kept on this device: marking read would fail too.

@@ -3833,6 +3833,13 @@
     "delete_with_contents_message": "A(z) „{name}” mappa még {count, plural, one {1 üzenetet} other {# üzenetet}} tartalmaz. Törlöd a mappát az összes üzenetével együtt? Ez nem vonható vissza.",
     "delete_with_contents_confirm": "Mappa és üzenetek törlése"
   },
+  "mail_p2_folders": {
+    "all_folders": "Összes mappa",
+    "empty_trash": "Kuka ürítése",
+    "empty_spam": "Spam ürítése",
+    "empty_trash_confirm": "Véglegesen törli {count, plural, one {az üzenetet} other {mind a # üzenetet}} a kukából? Ez nem vonható vissza.",
+    "empty_spam_confirm": "Véglegesen törli {count, plural, one {az üzenetet} other {mind a # üzenetet}} a spamből? Ez nem vonható vissza."
+  },
   "uxs_folders": {
     "manage_accounts": "Fiókok kezelése…",
     "apply_to_existing": "{count, plural, one {Alkalmazás # meglévő üzenetre itt: {folder}} other {Alkalmazás # meglévő üzenetre itt: {folder}}}"
