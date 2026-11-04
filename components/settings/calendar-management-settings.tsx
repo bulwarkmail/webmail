@@ -18,6 +18,7 @@ import { alertsToRows, rowsToAlerts, type AlertRow } from '@/lib/calendar-alerts
 import { ShareCollectionDialog } from './share-collection-dialog';
 import type { CalendarRights } from '@/lib/jmap/types';
 import { cn, formatDateTime, redactUrlCredentials } from '@/lib/utils';
+import { collectionDisplayName } from '@/lib/default-collection-name';
 import { ICalImportModal } from '@/components/calendar/ical-import-modal';
 import { ICalSubscriptionModal } from '@/components/calendar/ical-subscription-modal';
 import { useSettingsStore } from '@/stores/settings-store';
@@ -198,6 +199,7 @@ export function CalendarDefaultAlertsForm({
   isLoading: boolean;
 }) {
   const t = useTranslations('calendar.management');
+  const tWording = useTranslations('uxs_wording');
   // Alerts the rows can't show are written back unchanged.
   const [timed] = useState(() => alertsToRows(calendar.defaultAlertsWithTime));
   const [allDay] = useState(() => alertsToRows(calendar.defaultAlertsWithoutTime));
@@ -219,7 +221,7 @@ export function CalendarDefaultAlertsForm({
   return (
     <div className="space-y-3 p-3 rounded-md border border-primary/30 bg-accent/30">
       <div>
-        <h4 className="text-sm font-medium">{t('default_alerts_title', { name: calendar.name })}</h4>
+        <h4 className="text-sm font-medium">{t('default_alerts_title', { name: collectionDisplayName(calendar.name, 'calendar', tWording('default_calendar')) })}</h4>
         <p className="text-xs text-muted-foreground mt-0.5">{t('default_alerts_hint')}</p>
       </div>
 
@@ -269,6 +271,8 @@ export function CalendarDefaultAlertsForm({
 
 export function CalendarManagementSettings() {
   const t = useTranslations('calendar.management');
+  const tWording = useTranslations('uxs_wording');
+  const calName = (cal: { name: string }) => collectionDisplayName(cal.name, 'calendar', tWording('default_calendar'));
   const { client, serverUrl, username } = useAuthStore();
   const managedAccountId = useManagedAccountStore((s) => s.managedAccountId);
   const { calendars, updateCalendar, reorderCalendars, shareCalendar, createCalendar, removeCalendar, clearCalendarEvents, fetchCalendars, icalSubscriptions: allSubs, removeICalSubscription, refreshICalSubscription, isSubscriptionCalendar } = useCalendarStore();
@@ -290,6 +294,8 @@ export function CalendarManagementSettings() {
   const [clearingId, setClearingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [colorPickerId, setColorPickerId] = useState<string | null>(null);
+  // The calendar whose CalDAV address is open under "Use in other apps".
+  const [shownUrlId, setShownUrlId] = useState<string | null>(null);
   const [sharingId, setSharingId] = useState<string | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
@@ -654,8 +660,9 @@ export function CalendarManagementSettings() {
             return (
               <CalendarEditForm
                 key={cal.id}
-                initial={{ name: cal.name, color }}
-                onSave={(data) => handleUpdate(cal.id, data, color)}
+                initial={{ name: calName(cal), color }}
+                // Saved unchanged, the shown name keeps the server's own.
+                onSave={(data) => handleUpdate(cal.id, { ...data, name: data.name === calName(cal) ? cal.name : data.name }, color)}
                 onCancel={() => setEditingId(null)}
                 isLoading={isLoading}
               />
@@ -735,10 +742,24 @@ export function CalendarManagementSettings() {
               <CalendarIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
 
               <div className="flex-1 min-w-0">
-                <span className="text-sm font-medium truncate block" title={cal.name} dir="auto">{cal.name}</span>
+                <span className="text-sm font-medium truncate block" title={calName(cal)} dir="auto">{calName(cal)}</span>
                 {(() => {
                   const caldavUrl = buildCalDavUrl(cal.id);
                   if (!caldavUrl) return null;
+                  if (shownUrlId !== cal.id) {
+                    return (
+                      <button
+                        type="button"
+                        aria-expanded={false}
+                        data-testid="calendar-use-in-other-apps"
+                        onClick={(e) => { e.stopPropagation(); setShownUrlId(cal.id); }}
+                        className="mt-0.5 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        <Link className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
+                        {tWording('use_in_other_apps')}
+                      </button>
+                    );
+                  }
                   return (
                     <div className="flex items-center gap-1 mt-0.5">
                       <Link className="w-3 h-3 text-muted-foreground flex-shrink-0" />
@@ -791,7 +812,7 @@ export function CalendarManagementSettings() {
                   and pushed the Default badge over the copy button, so the
                   row actions sit behind a ⋮ there, as for folders. */}
               <IconButton
-                label={t('row_actions', { name: cal.name })}
+                label={t('row_actions', { name: calName(cal) })}
                 className="sm:hidden flex-shrink-0 text-muted-foreground"
                 onClick={(e) => openContextMenuFrom(e.currentTarget, cal, 'end')}
               >
@@ -943,7 +964,7 @@ export function CalendarManagementSettings() {
         onClose={() => setDeletingId(null)}
         onConfirm={() => { if (deletingId) void handleDelete(deletingId); }}
         title={tConfirm('delete_title')}
-        message={t('confirm_delete', { name: calendars.find((cal) => cal.id === deletingId)?.name ?? '' })}
+        message={t('confirm_delete', { name: calName(calendars.find((cal) => cal.id === deletingId) ?? { name: '' }) })}
         confirmText={t('delete')}
         variant="destructive"
       />
@@ -952,7 +973,7 @@ export function CalendarManagementSettings() {
         onClose={() => setClearingId(null)}
         onConfirm={() => { if (clearingId) void handleClear(clearingId); }}
         title={tConfirm('clear_title')}
-        message={t('confirm_clear', { name: calendars.find((cal) => cal.id === clearingId)?.name ?? '' })}
+        message={t('confirm_clear', { name: calName(calendars.find((cal) => cal.id === clearingId) ?? { name: '' }) })}
         confirmText={t('clear_events')}
         variant="destructive"
       />
@@ -996,7 +1017,7 @@ export function CalendarManagementSettings() {
           <ShareCollectionDialog
             client={client}
             kind="calendar"
-            collectionName={cal.name}
+            collectionName={calName(cal)}
             shareWith={cal.shareWith}
             ownAccountId={client.getAccountId()}
             onShare={async (principalId, rights) => {
