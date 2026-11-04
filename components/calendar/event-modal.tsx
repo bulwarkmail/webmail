@@ -1327,7 +1327,7 @@ export function EventModal({
         )}
 
         {/* Action Bar */}
-        <div className="px-6 py-3 border-t border-border flex-shrink-0 flex items-center justify-between gap-2">
+        <div data-toast-avoid="bottom" className="px-6 py-3 border-t border-border flex-shrink-0 flex items-center justify-between gap-2">
           <div className="flex items-center gap-1">
             {onDelete && canEditBody && (
               <IconButton label={t("events.delete")} onClick={() => onDelete(event.id, hasParticipants || undefined)} className="text-destructive hover:text-destructive">
@@ -1721,7 +1721,7 @@ export function EventModal({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 px-6 py-4 border-t border-border flex-shrink-0">
+      <div data-toast-avoid="bottom" className="flex items-center gap-2 px-6 py-4 border-t border-border flex-shrink-0">
         {isEdit && onDelete && (
           <IconButton size="icon" label={t("events.delete")} onClick={() => onDelete(event!.id, hasParticipants || undefined)} className="text-destructive hover:text-destructive">
             <Trash2 className="w-4 h-4" />

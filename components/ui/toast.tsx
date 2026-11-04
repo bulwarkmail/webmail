@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { TOUCH_HIT_AREA } from "@/components/ui/button";
 import { useContextMenuOpen } from "@/components/ui/context-menu";
 import { useMediaQuery, narrowerThan } from "@/hooks/use-media-query";
+import { computeToastPlacement, stackWouldCoverFocus, TOAST_AVOID_BOTTOM, TOAST_AVOID_END, TOAST_EDGE } from "@/lib/toast-placement";
 
 export type ToastType = "success" | "error" | "info" | "warning";
 
@@ -62,6 +63,8 @@ interface ToastProps {
   onClose: (id: string) => void;
   /** Kept out of sight for now (a menu is open over it): the countdown waits. */
   held?: boolean;
+  /** The pointer is on the stack: counts as hovering every toast in it. */
+  stackHovered?: boolean;
   /** The toast goes away with the keyboard focus in it: put the focus back. */
   onFocusLost?: () => void;
 }
@@ -105,7 +108,7 @@ const progressBarStyles = {
 // A sideways swipe this far (px) on a touch screen dismisses the toast.
 const SWIPE_DISMISS_DISTANCE = 72;
 
-export function ToastItem({ toast, onClose, held = false, onFocusLost }: ToastProps) {
+export function ToastItem({ toast, onClose, held = false, stackHovered = false, onFocusLost }: ToastProps) {
   const tCommon = useTranslations("common");
   const Icon = icons[toast.type];
   const [exiting, setExiting] = useState(false);
@@ -150,7 +153,7 @@ export function ToastItem({ toast, onClose, held = false, onFocusLost }: ToastPr
   }, [toast, dismiss]);
 
   const canPause = toast.pauseOnHover !== false;
-  const waiting = paused || held || (canPause && (hovered || focused));
+  const waiting = paused || held || (canPause && (hovered || focused || stackHovered));
   useEffect(() => {
     if (!toast.duration || toast.duration <= 0 || isProgress) return;
 
@@ -361,37 +364,120 @@ export function ToastItem({ toast, onClose, held = false, onFocusLost }: ToastPr
 }
 
 /**
- * True when the toast stack, in its usual place at the bottom, hides at
- * least half of the element that has the focus: a button or a field. A
- * large element it only overlaps at a corner (the composer's text, the
- * quick reply box) stays usable, and moving the stack to the top for it put
- * the toasts over the composer's close button and the reader's toolbar. The
- * stack's own box is measured where it is now; while it sits at the top,
- * its bottom place is worked out from the gap it left there
- * (data-bottom-gap).
+ * Keeps the stack where lib/toast-placement puts it, while toasts are up: at
+ * the bottom end corner above what is docked at the bottom on screen now,
+ * beside a sheet at the window's end, and at the top end corner while it
+ * would cover the focused element (WCAG 2.4.11; not on a phone, where the
+ * top is the header with Back and the message actions, #1472). Measured
+ * again in the frame after anything on the page changes, scrolls or
+ * resizes, and when the focus moves or the focused element goes. It stays
+ * put while the pointer is on or near it, so an Undo doesn't move away from
+ * the pointer heading for it.
  */
-export function stackWouldCoverFocus(stack: HTMLElement | null): boolean {
-  if (!stack) return false;
-  const focused = document.activeElement as HTMLElement | null;
-  if (!focused || focused === document.body || stack.contains(focused)) return false;
-  const box = stack.getBoundingClientRect();
-  if (box.height === 0) return false;
-  let top = box.top;
-  let bottom = box.bottom;
-  if (stack.dataset.dodging) {
-    const gap = Number(stack.dataset.bottomGap || 20);
-    bottom = window.innerHeight - gap;
-    top = bottom - box.height;
-  } else {
-    stack.dataset.bottomGap = String(Math.max(0, window.innerHeight - box.bottom));
-  }
-  const f = focused.getBoundingClientRect();
-  const overlapWidth = Math.min(f.right, box.right) - Math.max(f.left, box.left);
-  const overlapHeight = Math.min(f.bottom, bottom) - Math.max(f.top, top);
-  if (overlapWidth <= 0 || overlapHeight <= 0) return false;
-  const area = Math.max(f.width, 0) * Math.max(f.height, 0);
-  return area === 0 || overlapWidth * overlapHeight >= area / 2;
+function useToastPlacement(
+  containerRef: React.RefObject<HTMLDivElement | null>,
+  active: boolean,
+  phone: boolean,
+): void {
+  useLayoutEffect(() => {
+    const stack = containerRef.current;
+    if (!active || !stack) return;
+    let frame = 0;
+    let pointer: { x: number; y: number } | null = null;
+    const near = () => {
+      if (!pointer || phone) return false;
+      const r = stack.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) return false;
+      const m = POINTER_HOLD_MARGIN;
+      return pointer.x >= r.left - m && pointer.x <= r.right + m && pointer.y >= r.top - m && pointer.y <= r.bottom + m;
+    };
+    const apply = (force = false) => {
+      frame = 0;
+      if (!force && near()) return;
+      const rtl = getComputedStyle(stack).direction === "rtl";
+      const place = computeToastPlacement(stack, { phone, rtl });
+      const dodge = !phone && stackWouldCoverFocus(stack, place, rtl);
+      const set = (prop: "bottom" | "top" | "insetInlineEnd", value: string) => {
+        if (stack.style[prop] !== value) stack.style[prop] = value;
+      };
+      set("bottom", dodge ? "auto" : `${place.bottom}px`);
+      set("top", dodge ? `${TOAST_EDGE}px` : "");
+      set("insetInlineEnd", place.end === null ? "" : `${place.end}px`);
+      if (dodge) {
+        if (stack.dataset.dodging === undefined) stack.dataset.dodging = "true";
+      } else if (stack.dataset.dodging !== undefined) {
+        delete stack.dataset.dodging;
+      }
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(() => apply());
+    };
+    // Before the first paint: a new toast appears in its place.
+    apply(true);
+
+    // Something docked resized without a change in the page (a field growing).
+    const watched = new Set<Element>();
+    const sizes = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(schedule);
+    const watch = () => {
+      if (!sizes) return;
+      const now = new Set(document.querySelectorAll(`${TOAST_AVOID_BOTTOM}, ${TOAST_AVOID_END}`));
+      for (const el of watched) if (!now.has(el)) { sizes.unobserve(el); watched.delete(el); }
+      for (const el of now) if (!watched.has(el)) { sizes.observe(el); watched.add(el); }
+    };
+    watch();
+    // The page changed: a box opened, closed or grew, a route rendered another
+    // page. Changes inside the stack itself (its own toasts) don't count.
+    const mutations = new MutationObserver((records) => {
+      if (!records.some((r) => !stack.contains(r.target))) return;
+      watch();
+      schedule();
+    });
+    mutations.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["class", "style", "hidden", "open", "data-toast-avoid", "data-end-sheet"],
+    });
+
+    const onPointer = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse" && e.pointerType !== "pen") return;
+      const wasNear = near();
+      pointer = { x: e.clientX, y: e.clientY };
+      // Leaving: catch up on what changed meanwhile.
+      if (wasNear && !near()) schedule();
+    };
+    const onPointerOut = (e: PointerEvent) => {
+      if (e.relatedTarget) return;
+      pointer = null;
+      schedule();
+    };
+    // Focus moved, or the focused element went (no focusin then).
+    document.addEventListener("focusin", schedule);
+    document.addEventListener("focusout", schedule);
+    document.addEventListener("scroll", schedule, { capture: true, passive: true });
+    document.addEventListener("transitionend", schedule, true);
+    document.addEventListener("animationend", schedule, true);
+    document.addEventListener("pointermove", onPointer, { passive: true });
+    document.addEventListener("pointerout", onPointerOut);
+    window.addEventListener("resize", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      mutations.disconnect();
+      sizes?.disconnect();
+      document.removeEventListener("focusin", schedule);
+      document.removeEventListener("focusout", schedule);
+      document.removeEventListener("scroll", schedule, { capture: true });
+      document.removeEventListener("transitionend", schedule, true);
+      document.removeEventListener("animationend", schedule, true);
+      document.removeEventListener("pointermove", onPointer);
+      document.removeEventListener("pointerout", onPointerOut);
+      window.removeEventListener("resize", schedule);
+    };
+  }, [containerRef, active, phone]);
 }
+
+/** How close (px) the mouse has to be for the stack to hold still. */
+const POINTER_HOLD_MARGIN = 48;
 
 export function ToastContainer({ toasts, onClose }: { toasts: Toast[]; onClose: (id: string) => void }) {
   const tCenter = useTranslations("notification_center");
@@ -405,38 +491,19 @@ export function ToastContainer({ toasts, onClose }: { toasts: Toast[]; onClose: 
   const containerRef = useRef<HTMLDivElement>(null);
   // Where the focus was before the shortcut moved it into a toast.
   const returnFocusRef = useRef<HTMLElement | null>(null);
-  // The stack moves to the top corner while it would cover the element that
-  // has the keyboard focus (WCAG 2.4.11): a Save button at the foot of the
-  // event editor sat right under it. Not on a phone: there the top of the
-  // screen is the header with Back and the message actions, which an Undo
-  // toast covered after a delete (#1472), and the stack already rides above
-  // the bottom bars.
-  const [dodge, setDodge] = useState(false);
+  // The pointer is on the stack: every countdown waits, so no toast goes
+  // and none moves under the pointer.
+  const [stackHovered, setStackHovered] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const hasToasts = toasts.length > 0;
-  useLayoutEffect(() => {
-    if (!hasToasts || phone) {
-      setDodge(false);
-      return;
-    }
-    let frame = 0;
-    const check = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => setDodge(stackWouldCoverFocus(containerRef.current)));
-    };
-    check();
-    document.addEventListener("focusin", check);
-    window.addEventListener("resize", check);
-    return () => {
-      cancelAnimationFrame(frame);
-      document.removeEventListener("focusin", check);
-      window.removeEventListener("resize", check);
-    };
-  }, [hasToasts, toasts.length, phone]);
+  useToastPlacement(containerRef, mounted && hasToasts, phone);
+  useEffect(() => {
+    if (!hasToasts) setStackHovered(false);
+  }, [hasToasts]);
   useEffect(() => {
     if (!hasToasts) return;
     const onKeyDown = (e: KeyboardEvent) => {
@@ -471,22 +538,13 @@ export function ToastContainer({ toasts, onClose }: { toasts: Toast[]; onClose: 
   return createPortal(
     <div
       className={cn(
-        // Newest at the bottom, at the end corner (bottom left in RTL);
-        // lifted over a registered bottom bar (a form's Save/Cancel footer)
-        // and over an open composer's footer.
-        "fixed bottom-[max(1.25rem,calc(var(--bottom-controls-height,0px)+0.75rem))] end-5 z-[99999] flex flex-col gap-2.5 [html[data-composer-open]_&]:bottom-20",
-        // And over the reader's quick reply box (compose-p2-17).
-        "[html:has([data-quick-reply-box])_&]:bottom-[calc(var(--quick-reply-height,5rem)+0.75rem)]",
-        // Phone: full width with 12px margins, above the bottom controls
-        // (the tab bar, or whichever bar registered with useBottomControls).
-        "max-sm:inset-x-3 max-sm:bottom-[calc(var(--bottom-controls-height,3.75rem)+0.75rem)]",
-        "max-sm:[html[data-composer-open]_&]:bottom-[max(5rem,calc(var(--bottom-controls-height,3.75rem)+0.75rem))]",
-        "max-sm:[html:has([data-quick-reply-box])_&]:bottom-[calc(var(--quick-reply-height,5rem)+0.75rem)]",
-        // Out of the way of the focused element: the top end corner.
-        dodge && "top-5 bottom-auto!",
+        // Newest at the bottom, at the end corner (bottom left in RTL). The
+        // exact place comes from useToastPlacement; these are the defaults.
+        "fixed bottom-5 end-5 z-[99999] flex flex-col gap-2.5",
+        // Phone: full width with 12px margins.
+        "max-sm:inset-x-3 max-sm:bottom-3",
         held && "invisible"
       )}
-      data-dodging={dodge || undefined}
       // Not a live region: the toast store reads each toast out through
       // lib/announce (errors assertively). A labelled region while toasts
       // are up, so screen reader users can find them.
@@ -495,10 +553,12 @@ export function ToastContainer({ toasts, onClose }: { toasts: Toast[]; onClose: 
       role={toasts.length > 0 ? "region" : undefined}
       aria-label={toasts.length > 0 ? tCenter("title") : undefined}
       style={{ pointerEvents: "none" }}
+      onPointerOver={(e) => { if (e.pointerType === "mouse") setStackHovered(true); }}
+      onPointerLeave={() => setStackHovered(false)}
     >
       {toasts.map((toast) => (
         <div key={toast.id} style={{ pointerEvents: "auto" }}>
-          <ToastItem toast={toast} onClose={onClose} held={held} onFocusLost={returnFocus} />
+          <ToastItem toast={toast} onClose={onClose} held={held} stackHovered={stackHovered} onFocusLost={returnFocus} />
         </div>
       ))}
     </div>,

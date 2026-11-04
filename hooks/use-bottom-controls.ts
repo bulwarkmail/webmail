@@ -7,7 +7,9 @@ import { useEffect, useState } from 'react';
  * bar and a viewer's action bar, on any screen an editor's Save/Cancel
  * footer. While any is on screen,
  * `--bottom-controls-height` on <html> says how far from the bottom of the
- * window the topmost of them reaches, and toasts sit above it.
+ * window the topmost of them reaches, for what floats above them (the
+ * install and push prompts). Each is also marked data-toast-avoid="bottom",
+ * so the toasts keep clear of it (lib/toast-placement).
  */
 const bars = new Set<HTMLElement>();
 let frame = 0;
@@ -44,6 +46,7 @@ export function useBottomControls(active = true): (el: HTMLElement | null) => vo
   useEffect(() => {
     if (!el || !active) return;
     bars.add(el);
+    el.setAttribute('data-toast-avoid', 'bottom');
     update();
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(schedule);
     observer?.observe(el);
@@ -52,6 +55,7 @@ export function useBottomControls(active = true): (el: HTMLElement | null) => vo
       observer?.disconnect();
       window.removeEventListener('resize', schedule);
       bars.delete(el);
+      el.removeAttribute('data-toast-avoid');
       update();
     };
   }, [el, active]);
