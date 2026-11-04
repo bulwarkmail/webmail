@@ -108,6 +108,21 @@ describe('selection bar: Move, read state and the reading pane', () => {
   });
 });
 
+describe('the reading pane for a selection (mail-p2-15)', () => {
+  it('names its buttons in words, while the bar beside the list keeps icons', () => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    render(<EmailList emails={useEmailStore.getState().emails} selectionPaneHost={host} />);
+    const pane = host.querySelector('[data-testid="selection-pane"]') as HTMLElement;
+    for (const id of ['archive', 'delete', 'move', 'mark-read', 'tag']) {
+      const button = pane.querySelector(`[data-testid="pane-batch-${id}"]`) as HTMLElement;
+      expect(button.textContent?.trim()).toBe(button.getAttribute('aria-label'));
+    }
+    expect(screen.getByTestId('batch-archive').textContent).toBe('');
+    host.remove();
+  });
+});
+
 describe('selection bar and rows from the keyboard', () => {
   it('keeps the collapsed bar out of the Tab order', () => {
     useEmailStore.setState({ selectedEmailKeys: new Set() });

@@ -776,11 +776,17 @@ export function EmailList({
   // reading pane. The pane's copies get their own test ids.
   const selectionButtons = (where: 'bar' | 'pane') => {
     const testId = (id: string) => (where === 'bar' ? id : `pane-${id}`);
+    // The pane has room: its buttons say what they do (mail-p2-15). The
+    // bar beside the list stays icons with tooltips.
+    const labelled = where === 'pane';
+    const shape = labelled ? { size: 'sm' as const, title: '', className: 'gap-1.5' } : {};
+    const name = (label: string) => (labelled ? <span data-selection-label="">{label}</span> : null);
     return (
       <>
         {archiveActionEnabled && effectiveMailboxRole !== 'archive' && (
-          <IconButton label={tContextMenu('archive')} onClick={() => void handleBatchArchive()} disabled={isProcessing} data-testid={testId('batch-archive')}>
+          <IconButton label={tContextMenu('archive')} onClick={() => void handleBatchArchive()} disabled={isProcessing} data-testid={testId('batch-archive')} {...shape}>
             <Archive />
+            {name(tContextMenu('archive'))}
           </IconButton>
         )}
         <IconButton
@@ -788,9 +794,11 @@ export function EmailList({
           onClick={handleBatchDelete}
           disabled={isProcessing}
           data-testid={testId('batch-delete')}
-          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+          {...shape}
+          className={cn("text-destructive hover:text-destructive hover:bg-destructive/10", labelled && "gap-1.5")}
         >
           <Trash2 />
+          {name(t('batch_actions.delete'))}
         </IconButton>
         {!moveMenuIsEmpty(selectionMoveModel) && (
           <IconButton
@@ -800,8 +808,10 @@ export function EmailList({
             onClick={(e) => moveMenu.openContextMenuFrom(e.currentTarget, null, 'end')}
             disabled={isProcessing}
             data-testid={testId('batch-move')}
+            {...shape}
           >
             <FolderInput />
+            {name(tContextMenu('move_to'))}
           </IconButton>
         )}
         <IconButton
@@ -809,10 +819,13 @@ export function EmailList({
           onClick={() => handleBatchMarkAsRead(selectionHasUnread)}
           disabled={isProcessing}
           data-testid={testId('batch-mark-read')}
+          {...shape}
         >
           {selectionHasUnread ? <MailOpen /> : <Mail />}
+          {name(selectionHasUnread ? t('batch_actions.mark_read') : t('batch_actions.mark_unread'))}
         </IconButton>
         <BatchTagButton
+          showLabel={labelled}
           key={hasSelection ? 'selection' : 'none'}
           title={tContextMenu('tag')}
           selectedIds={selectionTags.all}
@@ -1433,7 +1446,7 @@ export function EmailList({
             <CheckSquare className="w-10 h-10 text-muted-foreground" />
           </div>
           <h2 className="text-xl font-semibold text-foreground mb-4">{selectionTitle}</h2>
-          <div className="flex items-center justify-center gap-1">
+          <div className="flex flex-wrap items-center justify-center gap-1">
             {selectionButtons('pane')}
             <IconButton
               label={t('batch_actions.more')}
