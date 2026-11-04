@@ -1233,6 +1233,21 @@
       "plain_text": "[Görsel: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Taslak silindi",
+    "undo": "Geri al",
+    "discard_draft": "Taslağı sil",
+    "save_failed_close": "Taslak kaydedilemedi. Yeniden deneyin ya da silin.",
+    "try_again": "Yeniden dene",
+    "add_description": "Açıklama ekle",
+    "attachments_summary": "Ekler: {count}, {size}",
+    "from_sub_address": "Alt adres kullan…",
+    "from_edit_sender": "Göndereni düzenle…",
+    "shortcut_insert_link": "Bağlantı ekle",
+    "shortcut_save_draft": "Taslağı kaydet",
+    "shortcut_show_cc": "Bilgiyi göster",
+    "shortcut_show_bcc": "Gizli bilgiyi göster"
+  },
   "confirm_dialog": {
     "confirm": "Onayla",
     "cancel": "İptal"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Düzenlemeye dön",
+    "send_anyway": "Yine de gönder",
+    "warnings_title": "Bu ileti yine de gönderilsin mi?",
+    "warning_subject": "Konu yok",
+    "warning_text": "Metin yok",
+    "warning_attachment": "\"{keyword}\" geçiyor ama hiç dosya eklenmemiş",
+    "warning_placeholders": "Alıcıların göreceği yer tutucu metin:",
+    "warning_proofreading": "Açık yazım veya dilbilgisi sorunları: {count}",
+    "empty_text_title": "Metin olmadan gönderilsin mi?",
+    "empty_text_message": "Bu iletide metin ve ek yok. Yine de gönderilsin mi?",
+    "scheduled_for": "{when} için zamanlandı",
+    "sending": "Gönderiliyor…",
+    "sent": "Gönderildi",
+    "view": "Görüntüle",
+    "picker_button": "Kişilerden ekle",
+    "picker_title": "Alıcı ekle",
+    "tab_contacts": "Kişiler",
+    "tab_directory": "Dizin",
+    "contacts_empty_title": "Henüz kişi yok",
+    "contacts_empty_hint": "Kişiler'e kaydettiğiniz kişiler burada görünür.",
+    "contacts_no_match": "Aramanızla eşleşen kişi yok",
+    "template_name": "Şablon adı",
+    "template_edit_details": "Ayrıntıları düzenle…"
+  },
   "org_templates": {
     "section_personal": "Şablonlarım",
     "section_organisation": "Kuruluş",
@@ -6537,6 +6577,24 @@
     "not_running": "Gönderilmedi. Kuruluşunuzun zorunlu tuttuğu bir denetim şu anda çalışmıyor. Biraz sonra yeniden deneyin.",
     "stopped_working": "Gönderilmedi. Kuruluşunuzun zorunlu tuttuğu bir denetim çalışmayı durdurdu. Sayfayı yeniden yükleyin. İşe yaramazsa yöneticinize bildirin."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Göndermeyi geri al",
+      "description": "Gönder'e bastıktan sonra iletiyi geri almanız için birkaç saniye verir."
+    },
+    "reply_from_received": {
+      "label": "Yanıt Adresini Otomatik Seç",
+      "description": "Postanın gönderildiği adresten yanıtlayın. Birden çok adresiniz varsa kullanışlıdır."
+    },
+    "require_tls": "Yalnızca güvenli bağlantı üzerinden teslim et",
+    "require_tls_hint": "İletinin kendisi şifrelenmez. Bir sunucu TLS kullanamazsa geri döner.",
+    "encrypt": "Şifrele…",
+    "encrypt_hint": "S/MIME veya PGP eklentisi gerekir. Ayarlar'ı açar.",
+    "quick_reply_to": "Yanıtla: {names}…",
+    "open_full_editor": "Tam düzenleyicide aç",
+    "forward_to_label": "Kime",
+    "forward_cc_label": "Cc"
+  },
   "plugin_list": {
     "filters": "Filtreler",
     "remove_filter": "{label} filtresini kaldır"
@@ -7282,6 +7340,14 @@
     "back_no_answer": "Ana pencere yanıt vermedi. İletiniz burada kalıyor.",
     "types_character": "Bu tuşlar klavyenizde bir karakter yazar ve bu karakter hiçbir uygulamada çalışmaz olur. Başka tuşlar deneyin.",
     "reserved": "Bu tuşları sisteminiz veya çoğu uygulama kullanıyor. Başka tuşlar deneyin."
+  },
+  "compose_windows": {
+    "more_formatting": "Daha fazla biçimlendirme",
+    "offline": "Çevrimdışı",
+    "offline_hint": "Göndermek için bağlantı gerekir.",
+    "offline_hint_outbox": "Şimdi gönderdikleriniz giden kutusunda bekler ve yeniden çevrimiçi olduğunuzda gönderilir.",
+    "offline_send_saved": "Çevrimdışısınız. İleti Taslaklar'a kaydedildi.",
+    "offline_send_unsaved": "Çevrimdışısınız. İleti burada kalır ve yeniden çevrimiçi olduğunuzda Taslaklar'a kaydedilir."
   },
   "desktopDevTools": {
     "section_title": "Sorun giderme",

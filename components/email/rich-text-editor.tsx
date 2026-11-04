@@ -70,7 +70,55 @@ import {
   Rows3,
   Columns3,
   ImageIcon,
+  Ellipsis,
 } from "@/components/icons";
+
+/**
+ * Groups of the formatting toolbar that move behind "More formatting" when one
+ * row is too narrow for all of them, the least used first. Each with its
+ * buttons and the separators that go with it.
+ */
+const FOLDABLE_GROUPS = [
+  { id: "history", buttons: 3, separators: 2 },
+  { id: "align", buttons: 3, separators: 1 },
+  { id: "headings", buttons: 2, separators: 1 },
+  { id: "table", buttons: 1, separators: 0 },
+  { id: "blocks", buttons: 2, separators: 0 },
+] as const;
+type FoldableGroup = (typeof FOLDABLE_GROUPS)[number]["id"];
+/**
+ * Always in the row: font size, bold, italic, underline, strikethrough, the
+ * two colours, the lists, link, an image's description and More (12), with
+ * their 3 separators.
+ */
+const FIXED_TOOLBAR = { buttons: 12, separators: 3 };
+
+/**
+ * How many of FOLDABLE_GROUPS go behind "More formatting" for one row of
+ * `width` px. 0 for a toolbar that isn't laid out (hidden, or not measured).
+ */
+export function formattingFoldCount(width: number, sizes: { button: number; gap: number; separator: number; directionButton?: boolean }): number {
+  if (!(width > 0)) return 0;
+  const span = (buttons: number, separators: number) => buttons * (sizes.button + sizes.gap) + separators * (sizes.separator + sizes.gap);
+  const groups = FOLDABLE_GROUPS.map((group) => span(group.buttons + (group.id === "align" && sizes.directionButton ? 1 : 0), group.separators));
+  let needed = span(FIXED_TOOLBAR.buttons, FIXED_TOOLBAR.separators) + groups.reduce((sum, group) => sum + group, 0);
+  // All of it fits without the More button.
+  if (needed - (sizes.button + sizes.gap) <= width + 1) return 0;
+  for (let count = 1; count <= groups.length; count++) {
+    needed -= groups[count - 1];
+    if (needed <= width + 1) return count;
+  }
+  return groups.length;
+}
+
+/** The toolbar's inner width and the sizes of what is in it, in px. */
+function measureFormattingToolbar(toolbar: HTMLElement, directionButton: boolean): number {
+  const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  const style = getComputedStyle(toolbar);
+  const width = toolbar.clientWidth - (parseFloat(style.paddingLeft) || 0) - (parseFloat(style.paddingRight) || 0);
+  const button = toolbar.querySelector<HTMLElement>(":scope > [data-toolbar-item], :scope > div > [data-toolbar-item]")?.offsetWidth || 1.75 * rem;
+  return formattingFoldCount(width, { button, gap: 0.125 * rem, separator: 1 + 0.25 * rem, directionButton });
+}
 
 export interface InlineImageUpload {
   src: string;
@@ -440,6 +488,7 @@ export function RichTextEditor({
 }: RichTextEditorProps) {
   const rtlEditingSupport = useSettingsStore((st) => st.rtlEditingSupport);
   const tComposer = useTranslations("email_composer");
+  const tUx = useTranslations("compose_ux");
   const tQuote = useTranslations("email_viewer");
   const onImageUploadRef = React.useRef(onImageUpload);
   onImageUploadRef.current = onImageUpload;
@@ -464,6 +513,8 @@ export function RichTextEditor({
   // Images waiting for a description, one dialog at a time: a new image is
   // found by its src (it has no alt yet), an existing one by its position.
   const [altQueue, setAltQueue] = useState<AltRequest[]>([]);
+  // Insert link, for the key handler set up with the editor.
+  const addLinkRef = useRef<(() => void) | null>(null);
 
   const editor = useEditor({
     extensions: [
@@ -490,6 +541,7 @@ export function RichTextEditor({
       ResizableImage.configure({
         onEditAlt: (pos: number) => setAltQueue((queue) => [...queue, { pos }]),
         editAltLabel: tComposer("image_alt.edit"),
+        addAltLabel: tUx("add_description"),
       }),
       Placeholder.configure({
         placeholder,
@@ -565,6 +617,12 @@ export function RichTextEditor({
           event.preventDefault();
           return true;
         }
+        // Ctrl+K inserts a link, as in Gmail, Outlook and Word.
+        if ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey && event.key.toLowerCase() === "k" && addLinkRef.current) {
+          event.preventDefault();
+          addLinkRef.current();
+          return true;
+        }
         return false;
       },
       handleDrop: (view, event) => {
@@ -584,11 +642,11 @@ export function RichTextEditor({
             if (result) {
               const { state } = view;
               const pos = view.posAtCoords({ left: event.clientX, top: event.clientY });
-              // No alt yet (never the file name): the user is asked next.
+              // No alt yet (never the file name).
               const node = state.schema.nodes.image.create({ src: result.src, alt: null, cid: result.cid });
               const tr = state.tr.insert(pos?.pos ?? state.selection.anchor, node);
               view.dispatch(tr);
-              setAltQueue((queue) => [...queue, { src: result.src }]);
+              // No dialog: the image offers "Add description" itself.
             }
           });
         }
@@ -607,7 +665,7 @@ export function RichTextEditor({
               const node = state.schema.nodes.image.create({ src: result.src, alt: null, cid: result.cid });
               const tr = state.tr.replaceSelectionWith(node);
               view.dispatch(tr);
-              setAltQueue((queue) => [...queue, { src: result.src }]);
+              // No dialog: the image offers "Add description" itself.
             }
           });
         }
@@ -694,6 +752,7 @@ export function RichTextEditor({
     const { from, to } = editor.state.selection;
     setLinkDialog({ href: previousUrl ?? "", from, to });
   }, [editor]);
+  addLinkRef.current = addLink;
   const applyLink = useCallback((url: string) => {
     if (!editor || !linkDialog) return;
     editor
@@ -716,6 +775,7 @@ export function RichTextEditor({
   }, [editor, linkDialog]);
 
   const tToolbar = useTranslations("email_composer.toolbar");
+  const tWindows = useTranslations("compose_windows");
   const tCommon = useTranslations("common");
   const [tableMenuOpen, setTableMenuOpen] = useState(false);
   const tableWrapperRef = useRef<HTMLDivElement>(null);
@@ -734,11 +794,13 @@ export function RichTextEditor({
   // focus last keeps it, the arrows, Home and End move inside.
   const toolbarRef = useRef<HTMLDivElement>(null);
   const rovingItemRef = useRef<string | null>(null);
+  // Buttons in the "More formatting" panel are the panel's, with its own keys.
+  const inRow = (el: HTMLElement) => !el.closest("[data-toolbar-more-panel]");
   const toolbarItems = () =>
     Array.from(toolbarRef.current?.querySelectorAll<HTMLButtonElement>("[data-toolbar-item]") ?? [])
-      .filter((el) => !el.disabled);
+      .filter((el) => !el.disabled && inRow(el));
   const syncToolbarTabStops = (focus?: HTMLButtonElement) => {
-    const all = Array.from(toolbarRef.current?.querySelectorAll<HTMLButtonElement>("[data-toolbar-item]") ?? []);
+    const all = Array.from(toolbarRef.current?.querySelectorAll<HTMLButtonElement>("[data-toolbar-item]") ?? []).filter(inRow);
     const enabled = all.filter((el) => !el.disabled);
     const current = focus ?? enabled.find((el) => el.dataset.toolbarItem === rovingItemRef.current) ?? enabled[0];
     if (current) rovingItemRef.current = current.dataset.toolbarItem ?? null;
@@ -756,6 +818,36 @@ export function RichTextEditor({
     stop?.focus();
     return !!stop && document.activeElement === stop;
   };
+
+  // One row: what doesn't fit goes behind "More formatting" (a wrapped
+  // second row took the body's room in a narrow composer).
+  const [foldCount, setFoldCount] = useState(0);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreButtonRef = useRef<HTMLButtonElement>(null);
+  const moreWrapperRef = useRef<HTMLDivElement>(null);
+  const hasEditor = !!editor;
+  useLayoutEffect(() => {
+    const toolbar = toolbarRef.current;
+    if (!toolbar) return;
+    const measure = () => setFoldCount(measureFormattingToolbar(toolbar, !!rtlEditingSupport));
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      measure();
+      setMoreOpen(false);
+    });
+    observer.observe(toolbar);
+    return () => observer.disconnect();
+  }, [hasEditor, rtlEditingSupport]);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (moreWrapperRef.current && !moreWrapperRef.current.contains(e.target as Node)) setMoreOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [moreOpen]);
 
   useEffect(() => {
     if (!fontSizeMenuOpen) return;
@@ -816,6 +908,15 @@ export function RichTextEditor({
   const altTarget = findAltTarget(editor, altRequest);
   const imageSelected = editor.isActive("image");
 
+  // A group that doesn't fit renders in the "More formatting" panel instead, in row order.
+  const folded = new Set<FoldableGroup>(FOLDABLE_GROUPS.slice(0, foldCount).map((group) => group.id));
+  const overflow: React.ReactNode[] = [];
+  const place = (group: FoldableGroup, node: React.ReactNode) => {
+    if (!folded.has(group)) return node;
+    overflow.push(<React.Fragment key={group}>{node}</React.Fragment>);
+    return null;
+  };
+
   const onToolbarKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
     // Keys inside a popover are the popover's.
@@ -836,7 +937,7 @@ export function RichTextEditor({
   };
   const onToolbarFocus = (e: React.FocusEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
-    if (target instanceof HTMLButtonElement && target.hasAttribute("data-toolbar-item")) syncToolbarTabStops(target);
+    if (target instanceof HTMLButtonElement && target.hasAttribute("data-toolbar-item") && inRow(target)) syncToolbarTabStops(target);
   };
 
   const renderPalette = (current: string | null, apply: (color: string) => void, removeLabel: string, remove: () => void) => (
@@ -1101,6 +1202,7 @@ export function RichTextEditor({
 
         <ToolbarSeparator />
 
+        {place("headings", <>
         <ToolbarButton
           item="heading-1"
           pressed={editor.isActive("heading", { level: 1 })}
@@ -1119,6 +1221,7 @@ export function RichTextEditor({
         </ToolbarButton>
 
         <ToolbarSeparator />
+        </>)}
 
         <ToolbarButton
           item="bullet-list"
@@ -1136,6 +1239,7 @@ export function RichTextEditor({
         >
           <ListOrdered className="w-4 h-4" />
         </ToolbarButton>
+        {place("blocks", <>
         <ToolbarButton
           item="quote"
           pressed={editor.isActive("blockquote")}
@@ -1152,9 +1256,11 @@ export function RichTextEditor({
         >
           <Code className="w-4 h-4" />
         </ToolbarButton>
+        </>)}
 
         <ToolbarSeparator />
 
+        {place("align", <>
         <ToolbarButton
           item="align-left"
           pressed={editor.isActive({ textAlign: "left" })}
@@ -1198,6 +1304,7 @@ export function RichTextEditor({
         )}
 
         <ToolbarSeparator />
+        </>)}
 
         <ToolbarButton
           item="link"
@@ -1222,7 +1329,7 @@ export function RichTextEditor({
           </ToolbarButton>
         )}
 
-        <div ref={tableWrapperRef} className="relative">
+        {place("table", <div ref={tableWrapperRef} className="relative">
           <ToolbarButton
             ref={tableButtonRef}
             item="table"
@@ -1274,8 +1381,9 @@ export function RichTextEditor({
               </ToolbarPopover>
             )
           )}
-        </div>
+        </div>)}
 
+        {place("history", <>
         <ToolbarSeparator />
 
         <ToolbarButton
@@ -1304,6 +1412,35 @@ export function RichTextEditor({
         >
           <Redo className="w-4 h-4" />
         </ToolbarButton>
+        </>)}
+
+        {overflow.length > 0 && (
+          <div ref={moreWrapperRef} className="relative">
+            <ToolbarButton
+              ref={moreButtonRef}
+              item="more-formatting"
+              popup="dialog"
+              expanded={moreOpen}
+              onClick={() => setMoreOpen((v) => !v)}
+              title={tWindows("more_formatting")}
+            >
+              <Ellipsis className="w-4 h-4" />
+            </ToolbarButton>
+            {moreOpen && (
+              <ToolbarPopover
+                label={tWindows("more_formatting")}
+                role="dialog"
+                triggerRef={moreButtonRef}
+                onClose={() => setMoreOpen(false)}
+                className="p-1 flex w-max max-w-[16rem] flex-wrap items-center gap-0.5"
+              >
+                <div data-toolbar-more-panel="" className="contents">
+                  {overflow}
+                </div>
+              </ToolbarPopover>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Editor */}

@@ -11,7 +11,10 @@ vi.mock('@/components/email/rich-text-editor', () => ({
 }));
 
 vi.mock('@/components/plugins/plugin-slot', () => ({ PluginSlot: () => null }));
-vi.mock('@/components/identity/sub-address-helper', () => ({ SubAddressHelper: () => null }));
+vi.mock('@/components/identity/sub-address-helper', () => ({
+  SubAddressHelper: ({ open, hideTrigger }: { open?: boolean; hideTrigger?: boolean }) =>
+    open ? <div role="dialog">sub-address popover</div> : hideTrigger ? null : <button type="button">sub-address button</button>,
+}));
 vi.mock('@/components/templates/template-picker', () => ({ TemplatePicker: () => null }));
 vi.mock('@/components/templates/template-form', () => ({ TemplateForm: () => null }));
 vi.mock('@/components/files/file-preview-modal', () => ({ FilePreviewModal: () => null }));
@@ -268,17 +271,46 @@ describe('composer From override envelope (#1009)', () => {
       expect(sent.envelopeMailFrom).toBeUndefined();
     });
 
-    it('offers no Custom button', () => {
+    it('offers no Edit sender', () => {
       render(<EmailComposer />);
-      expect(screen.queryByText('from_override.toggle_off')).not.toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: 'from_edit_sender' })).not.toBeInTheDocument();
     });
 
-    // Control: the button is there with the gate on, so the test above is not
+    // Control: the entry is there with the gate on, so the test above is not
     // passing on a renamed label.
-    it('offers the Custom button with the gate on', () => {
+    it('offers Edit sender with the gate on', () => {
       setCustomFrom(true);
       render(<EmailComposer />);
-      expect(screen.getByText('from_override.toggle_off')).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'from_edit_sender' })).toBeInTheDocument();
     });
+  });
+});
+
+// compose-20: the rare sender options live at the end of the From list, not
+// as buttons on every message.
+describe('the From list', () => {
+  const from = () => screen.getByTestId('composer-from') as HTMLSelectElement;
+
+  it('has no sub-address or Override button in the row', () => {
+    render(<EmailComposer />);
+    expect(screen.queryByText('sub-address button')).not.toBeInTheDocument();
+    expect(screen.queryByText('from_override.toggle_off')).not.toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'from_sub_address' })).toBeInTheDocument();
+  });
+
+  it('opens the sub-address popover from the list and keeps the identity', () => {
+    render(<EmailComposer />);
+    const before = from().value;
+    fireEvent.change(from(), { target: { value: '__sub_address' } });
+    expect(screen.getByRole('dialog')).toHaveTextContent('sub-address popover');
+    expect(from().value).toBe(before);
+  });
+
+  it('turns From into fields to edit from the list, with a way back', () => {
+    render(<EmailComposer />);
+    fireEvent.change(from(), { target: { value: '__edit_sender' } });
+    expect(screen.getByLabelText('from_override.email_label')).toHaveValue('me@example.com');
+    fireEvent.click(screen.getByText('from_override.toggle_on'));
+    expect(screen.queryByLabelText('from_override.email_label')).not.toBeInTheDocument();
   });
 });

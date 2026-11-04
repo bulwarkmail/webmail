@@ -1233,6 +1233,21 @@
       "plain_text": "[Image : {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Brouillon supprimé",
+    "undo": "Annuler",
+    "discard_draft": "Supprimer le brouillon",
+    "save_failed_close": "Le brouillon n'a pas pu être enregistré. Réessayez ou supprimez-le.",
+    "try_again": "Réessayer",
+    "add_description": "Ajouter une description",
+    "attachments_summary": "Pièces jointes : {count}, {size}",
+    "from_sub_address": "Utiliser une sous-adresse…",
+    "from_edit_sender": "Modifier l'expéditeur…",
+    "shortcut_insert_link": "Insérer un lien",
+    "shortcut_save_draft": "Enregistrer le brouillon",
+    "shortcut_show_cc": "Afficher Cc",
+    "shortcut_show_bcc": "Afficher Cci"
+  },
   "confirm_dialog": {
     "confirm": "Confirmer",
     "cancel": "Annuler"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Retour à l'édition",
+    "send_anyway": "Envoyer quand même",
+    "warnings_title": "Envoyer ce message quand même ?",
+    "warning_subject": "Pas d'objet",
+    "warning_text": "Pas de texte",
+    "warning_attachment": "Mentionne « {keyword} », mais aucun fichier n'est joint",
+    "warning_placeholders": "Texte de remplacement que les destinataires verront :",
+    "warning_proofreading": "Fautes d'orthographe ou de grammaire restantes : {count}",
+    "empty_text_title": "Envoyer sans texte ?",
+    "empty_text_message": "Ce message n'a ni texte ni pièce jointe. L'envoyer quand même ?",
+    "scheduled_for": "Programmé pour {when}",
+    "sending": "Envoi…",
+    "sent": "Envoyé",
+    "view": "Afficher",
+    "picker_button": "Ajouter depuis les contacts",
+    "picker_title": "Ajouter des destinataires",
+    "tab_contacts": "Contacts",
+    "tab_directory": "Annuaire",
+    "contacts_empty_title": "Aucun contact pour l'instant",
+    "contacts_empty_hint": "Les personnes enregistrées dans Contacts s'affichent ici.",
+    "contacts_no_match": "Aucun contact ne correspond à votre recherche",
+    "template_name": "Nom du modèle",
+    "template_edit_details": "Modifier les détails…"
+  },
   "org_templates": {
     "section_personal": "Mes modèles",
     "section_organisation": "Organisation",
@@ -6537,6 +6577,24 @@
     "not_running": "Non envoyé. Une vérification exigée par votre organisation ne fonctionne pas. Réessayez dans un instant.",
     "stopped_working": "Non envoyé. Une vérification exigée par votre organisation ne fonctionne plus. Rechargez la page. Si cela ne suffit pas, prévenez votre administrateur."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Annuler l'envoi",
+      "description": "Vous laisse quelques secondes pour reprendre un message après avoir cliqué sur Envoyer."
+    },
+    "reply_from_received": {
+      "label": "Sélection automatique de l'adresse de réponse",
+      "description": "Répondre depuis l'adresse à laquelle le message a été envoyé. Utile si vous avez plusieurs adresses."
+    },
+    "require_tls": "Livrer uniquement par une connexion sécurisée",
+    "require_tls_hint": "Le message lui-même n'est pas chiffré. Il est renvoyé si un serveur ne peut pas utiliser TLS.",
+    "encrypt": "Chiffrer…",
+    "encrypt_hint": "Nécessite une extension S/MIME ou PGP. Ouvre les Paramètres.",
+    "quick_reply_to": "Répondre à {names}…",
+    "open_full_editor": "Ouvrir l'éditeur complet",
+    "forward_to_label": "À",
+    "forward_cc_label": "Cc"
+  },
   "plugin_list": {
     "filters": "Filtres",
     "remove_filter": "Retirer le filtre {label}"
@@ -7282,6 +7340,14 @@
     "back_no_answer": "La fenêtre principale n'a pas répondu. Votre message reste ici.",
     "types_character": "Ces touches produisent un caractère sur votre clavier, et il ne fonctionnerait plus dans aucune application. Essayez d'autres touches.",
     "reserved": "Votre système ou la plupart des applications utilisent ces touches. Essayez d'autres touches."
+  },
+  "compose_windows": {
+    "more_formatting": "Plus de mise en forme",
+    "offline": "Hors ligne",
+    "offline_hint": "L'envoi nécessite une connexion.",
+    "offline_hint_outbox": "Ce que vous envoyez maintenant attend dans la boîte d'envoi et part dès que vous êtes de nouveau en ligne.",
+    "offline_send_saved": "Vous êtes hors ligne. Le message est enregistré dans les Brouillons.",
+    "offline_send_unsaved": "Vous êtes hors ligne. Le message reste ici et sera enregistré dans les Brouillons dès que vous serez de nouveau en ligne."
   },
   "desktopDevTools": {
     "section_title": "Dépannage",

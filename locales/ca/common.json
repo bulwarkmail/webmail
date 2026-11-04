@@ -1233,6 +1233,21 @@
       "plain_text": "[Imatge: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Esborrany descartat",
+    "undo": "Desfés",
+    "discard_draft": "Descarta l'esborrany",
+    "save_failed_close": "No s'ha pogut desar l'esborrany. Torneu-ho a provar o descarteu-lo.",
+    "try_again": "Torna-ho a provar",
+    "add_description": "Afegeix una descripció",
+    "attachments_summary": "Adjunts: {count}, {size}",
+    "from_sub_address": "Fes servir una subadreça…",
+    "from_edit_sender": "Edita el remitent…",
+    "shortcut_insert_link": "Insereix un enllaç",
+    "shortcut_save_draft": "Desa l'esborrany",
+    "shortcut_show_cc": "Mostra Cc",
+    "shortcut_show_bcc": "Mostra Cco"
+  },
   "confirm_dialog": {
     "confirm": "Confirma",
     "cancel": "Cancel·la"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Torna a l'edició",
+    "send_anyway": "Envia igualment",
+    "warnings_title": "Vols enviar aquest missatge igualment?",
+    "warning_subject": "Sense assumpte",
+    "warning_text": "Sense text",
+    "warning_attachment": "Esmenta «{keyword}», però no hi ha cap fitxer adjunt",
+    "warning_placeholders": "Text de mostra que veuran els destinataris:",
+    "warning_proofreading": "Errors d'ortografia o gramàtica pendents: {count}",
+    "empty_text_title": "Vols enviar-lo sense text?",
+    "empty_text_message": "Aquest missatge no té text ni cap fitxer adjunt. Vols enviar-lo igualment?",
+    "scheduled_for": "Programat per a {when}",
+    "sending": "S'està enviant…",
+    "sent": "Enviat",
+    "view": "Mostra",
+    "picker_button": "Afegeix des dels contactes",
+    "picker_title": "Afegeix destinataris",
+    "tab_contacts": "Contactes",
+    "tab_directory": "Directori",
+    "contacts_empty_title": "Encara no hi ha contactes",
+    "contacts_empty_hint": "Aquí apareixen les persones que deses a Contactes.",
+    "contacts_no_match": "Cap contacte coincideix amb la cerca",
+    "template_name": "Nom de la plantilla",
+    "template_edit_details": "Edita els detalls…"
+  },
   "org_templates": {
     "section_personal": "Les meves plantilles",
     "section_organisation": "Organització",
@@ -6537,6 +6577,24 @@
     "not_running": "No s'ha enviat. Una comprovació que exigeix la vostra organització no s'està executant. Torneu-ho a provar d'aquí a un moment.",
     "stopped_working": "No s'ha enviat. Una comprovació que exigeix la vostra organització ha deixat de funcionar. Torneu a carregar la pàgina. Si no ho soluciona, aviseu l'administrador."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Desfés l'enviament",
+      "description": "Us dona uns segons per recuperar un missatge després de prémer Envia."
+    },
+    "reply_from_received": {
+      "label": "Respon des de l'adreça de recepció",
+      "description": "Respon des de l'adreça a la qual es va enviar el correu. Útil si teniu diverses adreces."
+    },
+    "require_tls": "Lliura només per una connexió segura",
+    "require_tls_hint": "El missatge en si no està xifrat. Es retorna si un servidor no pot fer servir TLS.",
+    "encrypt": "Xifra…",
+    "encrypt_hint": "Cal un complement S/MIME o PGP. Obre la configuració.",
+    "quick_reply_to": "Respon a {names}…",
+    "open_full_editor": "Obre l'editor complet",
+    "forward_to_label": "Per a",
+    "forward_cc_label": "CC"
+  },
   "plugin_list": {
     "filters": "Filtres",
     "remove_filter": "Treu el filtre {label}"
@@ -7282,6 +7340,14 @@
     "back_no_answer": "La finestra principal no ha respost. El teu missatge es queda aquí.",
     "types_character": "Aquestes tecles escriuen un caràcter al teu teclat, i deixaria de funcionar a totes les aplicacions. Prova altres tecles.",
     "reserved": "El sistema o la majoria d'aplicacions fan servir aquestes tecles. Prova altres tecles."
+  },
+  "compose_windows": {
+    "more_formatting": "Més format",
+    "offline": "Sense connexió",
+    "offline_hint": "Per enviar cal connexió.",
+    "offline_hint_outbox": "El que envieu ara espera a la safata de sortida i s'envia quan torneu a tenir connexió.",
+    "offline_send_saved": "No teniu connexió. El missatge està desat a Esborranys.",
+    "offline_send_unsaved": "No teniu connexió. El missatge es queda aquí i es desa a Esborranys quan torneu a tenir connexió."
   },
   "desktopDevTools": {
     "section_title": "Resolució de problemes",

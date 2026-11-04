@@ -1233,6 +1233,21 @@
       "plain_text": "[Bild: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Entwurf verworfen",
+    "undo": "Rückgängig",
+    "discard_draft": "Entwurf verwerfen",
+    "save_failed_close": "Der Entwurf konnte nicht gespeichert werden. Versuchen Sie es erneut oder verwerfen Sie ihn.",
+    "try_again": "Erneut versuchen",
+    "add_description": "Beschreibung hinzufügen",
+    "attachments_summary": "Anhänge: {count}, {size}",
+    "from_sub_address": "Unteradresse verwenden…",
+    "from_edit_sender": "Absender bearbeiten…",
+    "shortcut_insert_link": "Link einfügen",
+    "shortcut_save_draft": "Entwurf speichern",
+    "shortcut_show_cc": "Cc anzeigen",
+    "shortcut_show_bcc": "Bcc anzeigen"
+  },
   "confirm_dialog": {
     "confirm": "Bestätigen",
     "cancel": "Abbrechen"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Zurück zur Bearbeitung",
+    "send_anyway": "Trotzdem senden",
+    "warnings_title": "Diese Nachricht trotzdem senden?",
+    "warning_subject": "Kein Betreff",
+    "warning_text": "Kein Text",
+    "warning_attachment": "Erwähnt „{keyword}“, aber keine Datei ist angehängt",
+    "warning_placeholders": "Platzhaltertext, den die Empfänger sehen:",
+    "warning_proofreading": "Offene Rechtschreib- oder Grammatikfehler: {count}",
+    "empty_text_title": "Ohne Text senden?",
+    "empty_text_message": "Diese Nachricht hat keinen Text und keinen Anhang. Trotzdem senden?",
+    "scheduled_for": "Geplant für {when}",
+    "sending": "Wird gesendet…",
+    "sent": "Gesendet",
+    "view": "Anzeigen",
+    "picker_button": "Aus Kontakten hinzufügen",
+    "picker_title": "Empfänger hinzufügen",
+    "tab_contacts": "Kontakte",
+    "tab_directory": "Verzeichnis",
+    "contacts_empty_title": "Noch keine Kontakte",
+    "contacts_empty_hint": "Personen, die Sie in Kontakten speichern, erscheinen hier.",
+    "contacts_no_match": "Kein Kontakt passt zu Ihrer Suche",
+    "template_name": "Name der Vorlage",
+    "template_edit_details": "Details bearbeiten…"
+  },
   "org_templates": {
     "section_personal": "Meine Vorlagen",
     "section_organisation": "Organisation",
@@ -6537,6 +6577,24 @@
     "not_running": "Nicht gesendet. Eine Prüfung, die Ihre Organisation vorschreibt, läuft gerade nicht. Versuchen Sie es gleich noch einmal.",
     "stopped_working": "Nicht gesendet. Eine Prüfung, die Ihre Organisation vorschreibt, funktioniert nicht mehr. Laden Sie die Seite neu. Wenn das nicht hilft, wenden Sie sich an Ihre Administration."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Senden rückgängig machen",
+      "description": "Gibt Ihnen ein paar Sekunden, um eine Nachricht nach dem Klick auf Senden zurückzuholen."
+    },
+    "reply_from_received": {
+      "label": "Antwortadresse automatisch wählen",
+      "description": "Die Antwort geht von der Adresse aus, an die die E-Mail ging. Nützlich, wenn Sie mehrere Adressen haben."
+    },
+    "require_tls": "Nur über eine sichere Verbindung zustellen",
+    "require_tls_hint": "Die Nachricht selbst wird nicht verschlüsselt. Sie kommt zurück, wenn ein Server kein TLS nutzen kann.",
+    "encrypt": "Verschlüsseln…",
+    "encrypt_hint": "Dafür brauchen Sie eine S/MIME- oder PGP-Erweiterung. Öffnet die Einstellungen.",
+    "quick_reply_to": "Antwort an {names}…",
+    "open_full_editor": "Im vollen Editor öffnen",
+    "forward_to_label": "An",
+    "forward_cc_label": "Cc"
+  },
   "plugin_list": {
     "filters": "Filter",
     "remove_filter": "Filter {label} entfernen"
@@ -7282,6 +7340,14 @@
     "back_no_answer": "Das Hauptfenster hat nicht geantwortet. Ihre Nachricht bleibt hier.",
     "types_character": "Diese Tasten erzeugen auf Ihrer Tastatur ein Zeichen, das dann in keiner App mehr funktionieren würde. Versuchen Sie andere Tasten.",
     "reserved": "Ihr System oder die meisten Apps verwenden diese Tasten. Versuchen Sie andere Tasten."
+  },
+  "compose_windows": {
+    "more_formatting": "Weitere Formatierung",
+    "offline": "Offline",
+    "offline_hint": "Zum Senden ist eine Verbindung nötig.",
+    "offline_hint_outbox": "Was Sie jetzt senden, wartet im Postausgang und wird gesendet, sobald Sie wieder online sind.",
+    "offline_send_saved": "Sie sind offline. Die Nachricht ist in den Entwürfen gespeichert.",
+    "offline_send_unsaved": "Sie sind offline. Die Nachricht bleibt hier und wird in den Entwürfen gespeichert, sobald Sie wieder online sind."
   },
   "desktopDevTools": {
     "section_title": "Fehlerbehebung",

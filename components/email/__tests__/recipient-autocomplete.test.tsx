@@ -243,7 +243,7 @@ describe('recipient autocomplete', () => {
 
     fireEvent.keyDown(input, { key: 'Enter' });
 
-    expect(screen.getByText('User B (userb@example.org)')).toBeInTheDocument();
+    expect(screen.getByTitle('User B <userb@example.org>')).toBeInTheDocument();
     expect(screen.queryByText('user')).not.toBeInTheDocument();
   });
 
@@ -255,7 +255,7 @@ describe('recipient autocomplete', () => {
 
     fireEvent.keyDown(input, { key: 'Tab' });
 
-    expect(screen.getByText('User C (userc@example.org)')).toBeInTheDocument();
+    expect(screen.getByTitle('User C <userc@example.org>')).toBeInTheDocument();
   });
 
   it('keeps a complete typed address that no suggestion matches exactly', async () => {
@@ -268,7 +268,7 @@ describe('recipient autocomplete', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
 
     expect(screen.getByText('userb@example.or')).toBeInTheDocument();
-    expect(screen.queryByText('User B (userb@example.org)')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('User B <userb@example.org>')).not.toBeInTheDocument();
   });
 
   it('starts the arrow keys from the highlighted suggestion', async () => {
@@ -280,6 +280,6 @@ describe('recipient autocomplete', () => {
     fireEvent.keyDown(input, { key: 'ArrowDown' });
     fireEvent.keyDown(input, { key: 'Enter' });
 
-    expect(screen.getByText('User C (userc@example.org)')).toBeInTheDocument();
+    expect(screen.getByTitle('User C <userc@example.org>')).toBeInTheDocument();
   });
 });

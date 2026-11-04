@@ -1233,6 +1233,21 @@
       "plain_text": "[Imagem: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Rascunho descartado",
+    "undo": "Desfazer",
+    "discard_draft": "Descartar rascunho",
+    "save_failed_close": "Não foi possível guardar o rascunho. Tente novamente ou descarte-o.",
+    "try_again": "Tentar novamente",
+    "add_description": "Adicionar descrição",
+    "attachments_summary": "Anexos: {count}, {size}",
+    "from_sub_address": "Usar um subendereço…",
+    "from_edit_sender": "Editar remetente…",
+    "shortcut_insert_link": "Inserir ligação",
+    "shortcut_save_draft": "Guardar rascunho",
+    "shortcut_show_cc": "Mostrar Cc",
+    "shortcut_show_bcc": "Mostrar Bcc"
+  },
   "confirm_dialog": {
     "confirm": "Confirmar",
     "cancel": "Cancelar"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Voltar à edição",
+    "send_anyway": "Enviar mesmo assim",
+    "warnings_title": "Enviar esta mensagem mesmo assim?",
+    "warning_subject": "Sem assunto",
+    "warning_text": "Sem texto",
+    "warning_attachment": "Menciona \"{keyword}\", mas nenhum arquivo foi anexado",
+    "warning_placeholders": "Texto de espaço reservado que os destinatários verão:",
+    "warning_proofreading": "Erros de ortografia ou gramática em aberto: {count}",
+    "empty_text_title": "Enviar sem texto?",
+    "empty_text_message": "Esta mensagem não tem texto nem anexo. Enviar mesmo assim?",
+    "scheduled_for": "Agendado para {when}",
+    "sending": "Enviando…",
+    "sent": "Enviado",
+    "view": "Ver",
+    "picker_button": "Adicionar dos contatos",
+    "picker_title": "Adicionar destinatários",
+    "tab_contacts": "Contatos",
+    "tab_directory": "Diretório",
+    "contacts_empty_title": "Nenhum contato ainda",
+    "contacts_empty_hint": "As pessoas que você salvar em Contatos aparecem aqui.",
+    "contacts_no_match": "Nenhum contato corresponde à sua pesquisa",
+    "template_name": "Nome do modelo",
+    "template_edit_details": "Editar detalhes…"
+  },
   "org_templates": {
     "section_personal": "Meus modelos",
     "section_organisation": "Organização",
@@ -6537,6 +6577,24 @@
     "not_running": "Não enviado. Uma verificação exigida pela sua organização não está em execução. Tente novamente daqui a pouco.",
     "stopped_working": "Não enviado. Uma verificação exigida pela sua organização deixou de funcionar. Recarregue a página. Se não resolver, avise o administrador."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Desfazer envio",
+      "description": "Dá alguns segundos para você recuperar uma mensagem depois de clicar em Enviar."
+    },
+    "reply_from_received": {
+      "label": "Selecionar automaticamente o endereço de resposta",
+      "description": "Responder do endereço para o qual o e-mail foi enviado. Útil se você tiver vários endereços."
+    },
+    "require_tls": "Entregar só por uma conexão segura",
+    "require_tls_hint": "A mensagem em si não é cifrada. Ela volta se um servidor não puder usar TLS.",
+    "encrypt": "Cifrar…",
+    "encrypt_hint": "Precisa de um extra S/MIME ou PGP. Abre as Configurações.",
+    "quick_reply_to": "Responder a {names}…",
+    "open_full_editor": "Abrir no editor completo",
+    "forward_to_label": "Para",
+    "forward_cc_label": "Cc"
+  },
   "plugin_list": {
     "filters": "Filtros",
     "remove_filter": "Remover o filtro {label}"
@@ -7282,6 +7340,14 @@
     "back_no_answer": "A janela principal não respondeu. A sua mensagem fica aqui.",
     "types_character": "Estas teclas escrevem um carácter no seu teclado, e ele deixaria de funcionar em todas as aplicações. Experimente outras teclas.",
     "reserved": "O seu sistema ou a maioria das aplicações usam estas teclas. Experimente outras teclas."
+  },
+  "compose_windows": {
+    "more_formatting": "Mais formatação",
+    "offline": "Offline",
+    "offline_hint": "Enviar precisa de ligação.",
+    "offline_hint_outbox": "O que enviar agora espera na caixa de saída e é enviado quando voltar a estar online.",
+    "offline_send_saved": "Está offline. A mensagem está guardada em Rascunhos.",
+    "offline_send_unsaved": "Está offline. A mensagem fica aqui e é guardada em Rascunhos quando voltar a estar online."
   },
   "desktopDevTools": {
     "section_title": "Resolução de problemas",

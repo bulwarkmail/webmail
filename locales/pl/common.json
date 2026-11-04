@@ -1233,6 +1233,21 @@
       "plain_text": "[Obraz: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Wersja robocza odrzucona",
+    "undo": "Cofnij",
+    "discard_draft": "Odrzuć wersję roboczą",
+    "save_failed_close": "Nie udało się zapisać wersji roboczej. Spróbuj ponownie lub ją odrzuć.",
+    "try_again": "Spróbuj ponownie",
+    "add_description": "Dodaj opis",
+    "attachments_summary": "Załączniki: {count}, {size}",
+    "from_sub_address": "Użyj podadresu…",
+    "from_edit_sender": "Edytuj nadawcę…",
+    "shortcut_insert_link": "Wstaw link",
+    "shortcut_save_draft": "Zapisz wersję roboczą",
+    "shortcut_show_cc": "Pokaż DW",
+    "shortcut_show_bcc": "Pokaż UDW"
+  },
   "confirm_dialog": {
     "confirm": "Potwierdź",
     "cancel": "Anuluj"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Wróć do edycji",
+    "send_anyway": "Wyślij mimo to",
+    "warnings_title": "Wysłać tę wiadomość mimo to?",
+    "warning_subject": "Brak tematu",
+    "warning_text": "Brak treści",
+    "warning_attachment": "Wspomina „{keyword}”, ale nie dołączono pliku",
+    "warning_placeholders": "Tekst zastępczy, który zobaczą odbiorcy:",
+    "warning_proofreading": "Nierozwiązane błędy pisowni lub gramatyki: {count}",
+    "empty_text_title": "Wysłać bez treści?",
+    "empty_text_message": "Ta wiadomość nie ma treści ani załącznika. Wysłać ją mimo to?",
+    "scheduled_for": "Zaplanowano na {when}",
+    "sending": "Wysyłanie…",
+    "sent": "Wysłano",
+    "view": "Pokaż",
+    "picker_button": "Dodaj z kontaktów",
+    "picker_title": "Dodaj odbiorców",
+    "tab_contacts": "Kontakty",
+    "tab_directory": "Katalog",
+    "contacts_empty_title": "Brak kontaktów",
+    "contacts_empty_hint": "Tutaj pojawią się osoby zapisane w Kontaktach.",
+    "contacts_no_match": "Żaden kontakt nie pasuje do wyszukiwania",
+    "template_name": "Nazwa szablonu",
+    "template_edit_details": "Edytuj szczegóły…"
+  },
   "org_templates": {
     "section_personal": "Moje szablony",
     "section_organisation": "Organizacja",
@@ -6537,6 +6577,24 @@
     "not_running": "Nie wysłano. Kontrola wymagana przez Twoją organizację nie działa. Spróbuj ponownie za chwilę.",
     "stopped_working": "Nie wysłano. Kontrola wymagana przez Twoją organizację przestała działać. Odśwież stronę. Jeśli to nie pomoże, zgłoś to administratorowi."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Cofnij wysyłkę",
+      "description": "Daje kilka sekund na wycofanie wiadomości po naciśnięciu Wyślij."
+    },
+    "reply_from_received": {
+      "label": "Automatycznie wybieraj adres odpowiedzi",
+      "description": "Odpowiadaj z adresu, na który wysłano wiadomość. Przydatne, jeśli masz kilka adresów."
+    },
+    "require_tls": "Doręczaj tylko przez bezpieczne połączenie",
+    "require_tls_hint": "Sama wiadomość nie jest szyfrowana. Zostanie zwrócona, jeśli serwer nie może użyć TLS.",
+    "encrypt": "Zaszyfruj…",
+    "encrypt_hint": "Wymaga dodatku S/MIME lub PGP. Otwiera Ustawienia.",
+    "quick_reply_to": "Odpowiedź do: {names}…",
+    "open_full_editor": "Otwórz w pełnym edytorze",
+    "forward_to_label": "Do",
+    "forward_cc_label": "DW"
+  },
   "plugin_list": {
     "filters": "Filtry",
     "remove_filter": "Usuń filtr {label}"
@@ -7282,6 +7340,14 @@
     "back_no_answer": "Główne okno nie odpowiedziało. Wiadomość zostaje tutaj.",
     "types_character": "Te klawisze wpisują znak na Twojej klawiaturze i przestałby on działać we wszystkich aplikacjach. Wypróbuj inne klawisze.",
     "reserved": "Te klawisze są używane przez system lub większość aplikacji. Wypróbuj inne klawisze."
+  },
+  "compose_windows": {
+    "more_formatting": "Więcej formatowania",
+    "offline": "Offline",
+    "offline_hint": "Do wysłania potrzebne jest połączenie.",
+    "offline_hint_outbox": "To, co teraz wyślesz, czeka w skrzynce nadawczej i wyjdzie, gdy wrócisz do sieci.",
+    "offline_send_saved": "Jesteś offline. Wiadomość jest zapisana w Szkicach.",
+    "offline_send_unsaved": "Jesteś offline. Wiadomość zostaje tutaj i zostanie zapisana w Szkicach, gdy wrócisz do sieci."
   },
   "desktopDevTools": {
     "section_title": "Rozwiązywanie problemów",

@@ -1233,6 +1233,21 @@
       "plain_text": "[Attēls: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Melnraksts atmests",
+    "undo": "Atsaukt",
+    "discard_draft": "Atmest melnrakstu",
+    "save_failed_close": "Melnrakstu neizdevās saglabāt. Mēģiniet vēlreiz vai atmetiet to.",
+    "try_again": "Mēģināt vēlreiz",
+    "add_description": "Pievienot aprakstu",
+    "attachments_summary": "Pielikumi: {count}, {size}",
+    "from_sub_address": "Izmantot apakšadresi…",
+    "from_edit_sender": "Rediģēt sūtītāju…",
+    "shortcut_insert_link": "Ievietot saiti",
+    "shortcut_save_draft": "Saglabāt melnrakstu",
+    "shortcut_show_cc": "Rādīt kopiju",
+    "shortcut_show_bcc": "Rādīt diskrēto kopiju"
+  },
   "confirm_dialog": {
     "confirm": "Apstiprināt",
     "cancel": "Atcelt"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Atpakaļ pie rediģēšanas",
+    "send_anyway": "Sūtīt tik un tā",
+    "warnings_title": "Vai tomēr sūtīt šo vēstuli?",
+    "warning_subject": "Nav temata",
+    "warning_text": "Nav teksta",
+    "warning_attachment": "Piemin “{keyword}”, bet neviens fails nav pievienots",
+    "warning_placeholders": "Vietturu teksts, ko redzēs saņēmēji:",
+    "warning_proofreading": "Neatrisinātas pareizrakstības vai gramatikas kļūdas: {count}",
+    "empty_text_title": "Sūtīt bez teksta?",
+    "empty_text_message": "Šai vēstulei nav ne teksta, ne pielikuma. Vai tomēr to sūtīt?",
+    "scheduled_for": "Ieplānots: {when}",
+    "sending": "Sūta…",
+    "sent": "Nosūtīts",
+    "view": "Skatīt",
+    "picker_button": "Pievienot no kontaktiem",
+    "picker_title": "Pievienot saņēmējus",
+    "tab_contacts": "Kontakti",
+    "tab_directory": "Katalogs",
+    "contacts_empty_title": "Vēl nav kontaktu",
+    "contacts_empty_hint": "Šeit redzami cilvēki, kurus saglabājat kontaktos.",
+    "contacts_no_match": "Meklēšanai neatbilst neviens kontakts",
+    "template_name": "Veidnes nosaukums",
+    "template_edit_details": "Rediģēt detaļas…"
+  },
   "org_templates": {
     "section_personal": "Manas veidnes",
     "section_organisation": "Organizācija",
@@ -6537,6 +6577,24 @@
     "not_running": "Nav nosūtīts. Jūsu organizācijas pieprasītā pārbaude pašlaik nedarbojas. Mēģiniet vēlreiz pēc brīža.",
     "stopped_working": "Nav nosūtīts. Jūsu organizācijas pieprasītā pārbaude vairs nedarbojas. Pārlādējiet lapu. Ja tas nepalīdz, sazinieties ar administratoru."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Atsaukt sūtīšanu",
+      "description": "Dod jums dažas sekundes, lai pēc Sūtīt nospiešanas paņemtu ziņojumu atpakaļ."
+    },
+    "reply_from_received": {
+      "label": "Automātiski izvēlēties atbildes adresi",
+      "description": "Atbildēt no adreses, uz kuru vēstule tika nosūtīta. Noder, ja jums ir vairākas adreses."
+    },
+    "require_tls": "Piegādāt tikai pa drošu savienojumu",
+    "require_tls_hint": "Pats ziņojums nav šifrēts. Tas tiek atgriezts, ja serveris nevar izmantot TLS.",
+    "encrypt": "Šifrēt…",
+    "encrypt_hint": "Nepieciešams S/MIME vai PGP papildinājums. Atver iestatījumus.",
+    "quick_reply_to": "Atbilde: {names}…",
+    "open_full_editor": "Atvērt pilnajā redaktorā",
+    "forward_to_label": "Kam",
+    "forward_cc_label": "Kopija"
+  },
   "plugin_list": {
     "filters": "Filtri",
     "remove_filter": "Noņemt filtru {label}"
@@ -7282,6 +7340,14 @@
     "back_no_answer": "Galvenais logs neatbildēja. Jūsu ziņa paliek šeit.",
     "types_character": "Šie taustiņi jūsu tastatūrā raksta rakstzīmi, kas pārstātu darboties visās lietotnēs. Izmēģiniet citus taustiņus.",
     "reserved": "Šos taustiņus izmanto sistēma vai lielākā daļa lietotņu. Izmēģiniet citus taustiņus."
+  },
+  "compose_windows": {
+    "more_formatting": "Vairāk formatēšanas",
+    "offline": "Bezsaistē",
+    "offline_hint": "Sūtīšanai vajadzīgs savienojums.",
+    "offline_hint_outbox": "Ko sūtāt tagad, gaida izsūtnē un tiek nosūtīts, kad atkal esat tiešsaistē.",
+    "offline_send_saved": "Jūs esat bezsaistē. Ziņojums ir saglabāts melnrakstos.",
+    "offline_send_unsaved": "Jūs esat bezsaistē. Ziņojums paliek šeit un tiks saglabāts melnrakstos, kad atkal būsiet tiešsaistē."
   },
   "desktopDevTools": {
     "section_title": "Problēmu novēršana",

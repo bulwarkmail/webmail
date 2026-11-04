@@ -4,6 +4,7 @@ import { FakeBroadcastChannel } from '@/lib/__tests__/fixtures/fake-broadcast-ch
 import { openPopoutChannel, type PopoutMessage, type RescuedDraft } from '@/lib/popout/channel';
 import { createComposeHandoff, rememberComposePayload, rememberedComposePayload } from '@/lib/popout/compose-handoff';
 import { useAuthStore } from '@/stores/auth-store';
+import { useEmailStore } from '@/stores/email-store';
 import { useIdentityStore } from '@/stores/identity-store';
 import { usePluginStore } from '@/stores/plugin-store';
 import { emailHooks } from '@/lib/plugin-hooks';
@@ -545,5 +546,92 @@ describe('after this page crashed', () => {
     await waitFor(() => expect(screen.getByTestId('composer')).toBeTruthy(), { timeout: 5000 });
     act(() => (composer as unknown as { ownWindow: { onDraftSaved: (id: string, where: object) => void } }).ownWindow.onDraftSaved('d3', {}));
     expect(rememberedComposePayload('h2')).toBeNull();
+  });
+});
+
+describe('a send held for undo', () => {
+  const closeSelf = vi.fn();
+  const MAILBOXES = [{ id: 'mDrafts', role: 'drafts' }, { id: 'mSent', role: 'sent' }];
+  const startDraft = {
+    id: 'd0', subject: 'Before sending', to: [{ email: 'a@example.org' }], cc: [], bcc: [], from: [{ name: 'Me', email: 'me@example.org' }],
+    keywords: { $draft: true }, mailboxIds: { mDrafts: true },
+    bodyValues: { t: { value: 'Text' } }, textBody: [{ partId: 't', type: 'text/plain' }], htmlBody: [], attachments: [],
+  };
+  const restoredDraft = {
+    id: 'e1', subject: 'Back again', to: [{ email: 'a@example.org' }], cc: [], bcc: [], from: [{ name: 'Me', email: 'me@example.org' }],
+    keywords: { $draft: true }, mailboxIds: { mDrafts: true },
+    bodyValues: { t: { value: 'Text' } }, textBody: [{ partId: 't', type: 'text/plain' }], htmlBody: [], attachments: [],
+  };
+  let originalEmail: ReturnType<typeof useEmailStore.getState>;
+  let sendAt: string;
+  let cancelUndoSend: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    closeSelf.mockClear();
+    originalEmail = useEmailStore.getState();
+    window.bulwarkDesktop = { version: 1, platform: 'win32', windows: { closeSelf, setRestore: vi.fn() } } as never;
+    useIdentityStore.setState({ identities: [{ id: 'id-1', email: 'me@example.org', name: 'Me' }] } as never);
+    identityMocks.multi = { enabled: false, allIdentities: [], groups: [] };
+    const client = { getEmail: vi.fn(async (id: string) => (id === 'e1' ? restoredDraft : startDraft)), getMailboxes: vi.fn(async () => MAILBOXES) };
+    useAuthStore.setState({ client: client as never, getClientForAccount: (id: string) => (id === 'alice' ? client : undefined) } as never);
+    cancelUndoSend = vi.fn(async () => restoredDraft);
+    useEmailStore.setState({
+      sendEmail: vi.fn(async () => {
+        useEmailStore.setState({ pendingUndoSend: { submissionId: 'sub1', emailId: 'e1', identityId: 'id-1', sendAt, isSmime: false } });
+        return { scheduled: true, emailSubmissionId: 'sub1', emailId: 'e1', sendAt };
+      }),
+      cancelUndoSend,
+    } as never);
+  });
+
+  afterEach(() => {
+    useEmailStore.setState(originalEmail);
+    window.bulwarkDesktop = undefined;
+  });
+
+  type Sending = { onSend: (data: object) => Promise<unknown>; onClose: () => void };
+  const DATA = { to: ['a@example.org'], cc: [], bcc: [], subject: 'Hi', body: 'Text', localAccountId: 'alice' };
+
+  /** Opens the window, sends from it and lets the composer close, as it does after a send. */
+  async function sendFromWindow(seconds: number) {
+    sendAt = new Date(Date.now() + seconds * 1000).toISOString();
+    window.history.replaceState(null, '', '/en/popout/compose?draft=d0&account=alice');
+    render(<PopoutComposeApp />);
+    await waitFor(() => expect(screen.getByTestId('composer').textContent).toBe('Before sending'));
+    const props = composer as unknown as Sending;
+    await act(async () => { await props.onSend(DATA); });
+    act(() => props.onClose());
+  }
+
+  it('stays open with "Sending in" and Undo, and does not hand the undo to the main window', async () => {
+    await sendFromWindow(5);
+    expect(screen.getByTestId('popout-sending').textContent).toContain('sending_in');
+    expect(screen.getByRole('button', { name: 'undo_send' })).toBeInTheDocument();
+    expect(closeSelf).not.toHaveBeenCalled();
+    const sent = heard.find((message) => message.type === 'sent') as Extract<PopoutMessage, { type: 'sent' }> | undefined;
+    expect(sent?.notice.pendingUndoSend ?? null).toBeNull();
+  });
+
+  it('closes once the undo time is over', async () => {
+    await sendFromWindow(1.2);
+    expect(closeSelf).not.toHaveBeenCalled();
+    await waitFor(() => expect(closeSelf).toHaveBeenCalled(), { timeout: 4000 });
+  });
+
+  it('Undo takes the send back and opens the message again in this window', async () => {
+    await sendFromWindow(30);
+    fireEvent.click(screen.getByRole('button', { name: 'undo_send' }));
+    await waitFor(() => expect(cancelUndoSend).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ submissionId: 'sub1', localAccountId: 'alice' })));
+    await waitFor(() => expect(screen.getByTestId('composer').textContent).toBe('Back again'));
+    expect(closeSelf).not.toHaveBeenCalled();
+    expect(new URLSearchParams(window.location.search).get('draft')).toBe('e1');
+  });
+
+  it('a message scheduled for later still goes to the main window, and the window closes', async () => {
+    await sendFromWindow(3600);
+    expect(screen.queryByTestId('popout-sending')).toBeNull();
+    expect(closeSelf).toHaveBeenCalled();
+    const sent = heard.find((message) => message.type === 'sent') as Extract<PopoutMessage, { type: 'sent' }> | undefined;
+    expect(sent?.notice.pendingUndoSend?.submissionId).toBe('sub1');
   });
 });

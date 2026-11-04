@@ -1233,6 +1233,21 @@
       "plain_text": "[Obrázok: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Koncept zahodený",
+    "undo": "Späť",
+    "discard_draft": "Zahodiť koncept",
+    "save_failed_close": "Koncept sa nepodarilo uložiť. Skúste to znova alebo ho zahoďte.",
+    "try_again": "Skúsiť znova",
+    "add_description": "Pridať popis",
+    "attachments_summary": "Prílohy: {count}, {size}",
+    "from_sub_address": "Použiť podadresu…",
+    "from_edit_sender": "Upraviť odosielateľa…",
+    "shortcut_insert_link": "Vložiť odkaz",
+    "shortcut_save_draft": "Uložiť koncept",
+    "shortcut_show_cc": "Zobraziť kópiu",
+    "shortcut_show_bcc": "Zobraziť skrytú kópiu"
+  },
   "confirm_dialog": {
     "confirm": "Potvrdiť",
     "cancel": "Zrušiť"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Späť na úpravu",
+    "send_anyway": "Odoslať aj tak",
+    "warnings_title": "Odoslať túto správu aj tak?",
+    "warning_subject": "Bez predmetu",
+    "warning_text": "Bez textu",
+    "warning_attachment": "Spomína „{keyword}“, ale nie je pripojený žiadny súbor",
+    "warning_placeholders": "Zástupný text, ktorý uvidia príjemcovia:",
+    "warning_proofreading": "Neopravené pravopisné alebo gramatické chyby: {count}",
+    "empty_text_title": "Odoslať bez textu?",
+    "empty_text_message": "Táto správa nemá text ani prílohu. Odoslať ju aj tak?",
+    "scheduled_for": "Naplánované na {when}",
+    "sending": "Odosielanie…",
+    "sent": "Odoslané",
+    "view": "Zobraziť",
+    "picker_button": "Pridať z kontaktov",
+    "picker_title": "Pridať príjemcov",
+    "tab_contacts": "Kontakty",
+    "tab_directory": "Adresár organizácie",
+    "contacts_empty_title": "Zatiaľ žiadne kontakty",
+    "contacts_empty_hint": "Tu sa zobrazia ľudia, ktorých uložíte do Kontaktov.",
+    "contacts_no_match": "Vyhľadávaniu nezodpovedá žiadny kontakt",
+    "template_name": "Názov šablóny",
+    "template_edit_details": "Upraviť podrobnosti…"
+  },
   "org_templates": {
     "section_personal": "Moje šablóny",
     "section_organisation": "Organizácia",
@@ -6537,6 +6577,24 @@
     "not_running": "Neodoslané. Kontrola, ktorú vyžaduje vaša organizácia, práve nebeží. Skúste to o chvíľu znova.",
     "stopped_working": "Neodoslané. Kontrola, ktorú vyžaduje vaša organizácia, prestala fungovať. Načítajte stránku znova. Ak to nepomôže, obráťte sa na správcu."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Vrátiť odoslanie",
+      "description": "Dáva vám niekoľko sekúnd na to, aby ste správu po stlačení Odoslať vzali späť."
+    },
+    "reply_from_received": {
+      "label": "Odpovedať z prijatej adresy",
+      "description": "Odpovedať z adresy, na ktorú prišla správa. Hodí sa, ak máte viac adries."
+    },
+    "require_tls": "Doručiť len cez zabezpečené spojenie",
+    "require_tls_hint": "Samotná správa nie je šifrovaná. Vráti sa, ak server nemôže použiť TLS.",
+    "encrypt": "Šifrovať…",
+    "encrypt_hint": "Vyžaduje doplnok S/MIME alebo PGP. Otvorí Nastavenia.",
+    "quick_reply_to": "Odpoveď pre {names}…",
+    "open_full_editor": "Otvoriť v plnom editore",
+    "forward_to_label": "Komu",
+    "forward_cc_label": "Kópia"
+  },
   "plugin_list": {
     "filters": "Filtre",
     "remove_filter": "Odstrániť filter {label}"
@@ -7282,6 +7340,14 @@
     "back_no_answer": "Hlavné okno neodpovedalo. Vaša správa zostáva tu.",
     "types_character": "Tieto klávesy na vašej klávesnici píšu znak, ktorý by potom nefungoval v žiadnej aplikácii. Skúste iné klávesy.",
     "reserved": "Tieto klávesy používa systém alebo väčšina aplikácií. Skúste iné klávesy."
+  },
+  "compose_windows": {
+    "more_formatting": "Ďalšie formátovanie",
+    "offline": "Offline",
+    "offline_hint": "Na odoslanie treba pripojenie.",
+    "offline_hint_outbox": "Čo teraz odošlete, počká medzi správami na odoslanie a odíde, keď budete znova online.",
+    "offline_send_saved": "Ste offline. Správa je uložená v Konceptoch.",
+    "offline_send_unsaved": "Ste offline. Správa tu zostane a uloží sa do Konceptov, keď budete znova online."
   },
   "desktopDevTools": {
     "section_title": "Riešenie problémov",

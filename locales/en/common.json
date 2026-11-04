@@ -1233,6 +1233,21 @@
       "plain_text": "[Image: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Draft discarded",
+    "undo": "Undo",
+    "discard_draft": "Discard draft",
+    "save_failed_close": "The draft could not be saved. Try again, or discard it.",
+    "try_again": "Try again",
+    "add_description": "Add description",
+    "attachments_summary": "Attachments: {count}, {size}",
+    "from_sub_address": "Use a sub-address…",
+    "from_edit_sender": "Edit sender…",
+    "shortcut_insert_link": "Insert link",
+    "shortcut_save_draft": "Save draft",
+    "shortcut_show_cc": "Show Cc",
+    "shortcut_show_bcc": "Show Bcc"
+  },
   "confirm_dialog": {
     "confirm": "Confirm",
     "cancel": "Cancel"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Back to editing",
+    "send_anyway": "Send anyway",
+    "warnings_title": "Send this message anyway?",
+    "warning_subject": "No subject",
+    "warning_text": "No text",
+    "warning_attachment": "Mentions \"{keyword}\", but no file is attached",
+    "warning_placeholders": "Placeholder text that recipients will see:",
+    "warning_proofreading": "Open spelling or grammar issues: {count}",
+    "empty_text_title": "Send without text?",
+    "empty_text_message": "This message has no text and no attachment. Send it anyway?",
+    "scheduled_for": "Scheduled for {when}",
+    "sending": "Sending…",
+    "sent": "Sent",
+    "view": "View",
+    "picker_button": "Add from contacts",
+    "picker_title": "Add recipients",
+    "tab_contacts": "Contacts",
+    "tab_directory": "Directory",
+    "contacts_empty_title": "No contacts yet",
+    "contacts_empty_hint": "People you save in Contacts show up here.",
+    "contacts_no_match": "No contact matches your search",
+    "template_name": "Template name",
+    "template_edit_details": "Edit details…"
+  },
   "org_templates": {
     "section_personal": "My templates",
     "section_organisation": "Organisation",
@@ -6537,6 +6577,24 @@
     "not_running": "Not sent. A check your organisation requires isn't running. Try again in a moment.",
     "stopped_working": "Not sent. A check your organisation requires has stopped working. Reload the page. If that doesn't help, tell your administrator."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Undo send",
+      "description": "Gives you a few seconds to take a message back after you press Send."
+    },
+    "reply_from_received": {
+      "label": "Reply from the address it was sent to",
+      "description": "Reply from the address the mail was sent to. Useful if you have several addresses."
+    },
+    "require_tls": "Only deliver over a secure connection",
+    "require_tls_hint": "The message itself isn't encrypted. It bounces if a server can't use TLS.",
+    "encrypt": "Encrypt…",
+    "encrypt_hint": "Needs an S/MIME or PGP add-on. Opens Settings.",
+    "quick_reply_to": "Reply to {names}…",
+    "open_full_editor": "Open full editor",
+    "forward_to_label": "To",
+    "forward_cc_label": "Cc"
+  },
   "plugin_list": {
     "filters": "Filters",
     "remove_filter": "Remove filter {label}"
@@ -7282,6 +7340,14 @@
     "back_no_answer": "The main window did not answer. Your message stays here.",
     "types_character": "These keys type a character on your keyboard, and it would stop working in every app. Try other keys.",
     "reserved": "Your system or most apps use these keys. Try other keys."
+  },
+  "compose_windows": {
+    "more_formatting": "More formatting",
+    "offline": "Offline",
+    "offline_hint": "Sending needs a connection.",
+    "offline_hint_outbox": "What you send now waits in the outbox and goes out when you're back online.",
+    "offline_send_saved": "You're offline. The message is saved in Drafts.",
+    "offline_send_unsaved": "You're offline. The message stays here and is saved in Drafts when you're back online."
   },
   "desktopDevTools": {
     "section_title": "Troubleshooting",

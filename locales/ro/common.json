@@ -1233,6 +1233,21 @@
       "plain_text": "[Imagine: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Ciornă renunțată",
+    "undo": "Anulează",
+    "discard_draft": "Renunță la ciornă",
+    "save_failed_close": "Ciorna nu a putut fi salvată. Încercați din nou sau renunțați la ea.",
+    "try_again": "Încearcă din nou",
+    "add_description": "Adaugă o descriere",
+    "attachments_summary": "Atașamente: {count}, {size}",
+    "from_sub_address": "Folosește o subadresă…",
+    "from_edit_sender": "Editează expeditorul…",
+    "shortcut_insert_link": "Inserează un link",
+    "shortcut_save_draft": "Salvează ciorna",
+    "shortcut_show_cc": "Afișează Cc",
+    "shortcut_show_bcc": "Afișează Bcc"
+  },
   "confirm_dialog": {
     "confirm": "Confirmare",
     "cancel": "Anulează"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Înapoi la editare",
+    "send_anyway": "Trimite oricum",
+    "warnings_title": "Trimiteți totuși acest mesaj?",
+    "warning_subject": "Fără subiect",
+    "warning_text": "Fără text",
+    "warning_attachment": "Menționează „{keyword}”, dar niciun fișier nu este atașat",
+    "warning_placeholders": "Text substituent pe care îl vor vedea destinatarii:",
+    "warning_proofreading": "Greșeli de ortografie sau gramatică nerezolvate: {count}",
+    "empty_text_title": "Trimiteți fără text?",
+    "empty_text_message": "Acest mesaj nu are text și nici atașament. Îl trimiteți totuși?",
+    "scheduled_for": "Programat pentru {when}",
+    "sending": "Se trimite…",
+    "sent": "Trimis",
+    "view": "Vezi",
+    "picker_button": "Adaugă din contacte",
+    "picker_title": "Adaugă destinatari",
+    "tab_contacts": "Contacte",
+    "tab_directory": "Director",
+    "contacts_empty_title": "Încă nu există contacte",
+    "contacts_empty_hint": "Aici apar persoanele pe care le salvați în Contacte.",
+    "contacts_no_match": "Niciun contact nu corespunde căutării",
+    "template_name": "Numele șablonului",
+    "template_edit_details": "Editează detaliile…"
+  },
   "org_templates": {
     "section_personal": "Șabloanele mele",
     "section_organisation": "Organizație",
@@ -6537,6 +6577,24 @@
     "not_running": "Nu a fost trimis. O verificare cerută de organizația ta nu rulează. Încearcă din nou peste o clipă.",
     "stopped_working": "Nu a fost trimis. O verificare cerută de organizația ta nu mai funcționează. Reîncarcă pagina. Dacă nu ajută, anunță administratorul."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Anulează trimiterea",
+      "description": "Îți oferă câteva secunde să retragi un mesaj după ce apeși Trimite."
+    },
+    "reply_from_received": {
+      "label": "Răspunde de la adresa de la care a fost primit mesajul",
+      "description": "Răspunde de la adresa la care a fost trimis e-mailul. Util dacă ai mai multe adrese."
+    },
+    "require_tls": "Livrează doar printr-o conexiune sigură",
+    "require_tls_hint": "Mesajul în sine nu este criptat. Este returnat dacă un server nu poate folosi TLS.",
+    "encrypt": "Criptează…",
+    "encrypt_hint": "Necesită un supliment S/MIME sau PGP. Deschide Setările.",
+    "quick_reply_to": "Răspuns către {names}…",
+    "open_full_editor": "Deschide în editorul complet",
+    "forward_to_label": "Către",
+    "forward_cc_label": "Cc"
+  },
   "plugin_list": {
     "filters": "Filtre",
     "remove_filter": "Eliminați filtrul {label}"
@@ -7282,6 +7340,14 @@
     "back_no_answer": "Fereastra principală nu a răspuns. Mesajul rămâne aici.",
     "types_character": "Aceste taste scriu un caracter pe tastatura ta, iar el n-ar mai funcționa în nicio aplicație. Încearcă alte taste.",
     "reserved": "Sistemul sau majoritatea aplicațiilor folosesc aceste taste. Încearcă alte taste."
+  },
+  "compose_windows": {
+    "more_formatting": "Mai multe opțiuni de formatare",
+    "offline": "Offline",
+    "offline_hint": "Pentru trimitere e nevoie de conexiune.",
+    "offline_hint_outbox": "Ce trimiteți acum așteaptă în Mesaje de trimis și pleacă atunci când sunteți din nou online.",
+    "offline_send_saved": "Sunteți offline. Mesajul este salvat în Ciorne.",
+    "offline_send_unsaved": "Sunteți offline. Mesajul rămâne aici și este salvat în Ciorne când sunteți din nou online."
   },
   "desktopDevTools": {
     "section_title": "Depanare",

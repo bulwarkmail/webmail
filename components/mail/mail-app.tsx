@@ -42,8 +42,10 @@ import { findDraftIdentityIdForLogin, listRowSource, resolveDraftSource, type Dr
 import { useRemoveFromFolder } from "@/hooks/use-remove-from-folder";
 import { groupSearchScopeFolders, SEARCH_SCOPE_ALL_FOLDERS } from "@/lib/search-scope-folders";
 import { toast } from "@/stores/toast-store";
+import { discardWithUndo } from "@/lib/compose/draft-close-toast";
 import { cancelFailureToast, partlyRefusedWarning, rescheduleFailureToast, rescheduledToast } from "@/lib/send-failure-message";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
+import { startSendProgress } from "@/lib/outgoing/send-progress-toast";
 import { formatRejectedRecipients, RescheduleRestoredError } from "@/lib/jmap/client";
 import { subscribePushStateChanges } from "@/lib/push-events";
 import { createMailPushListener } from "@/lib/mail-push-listener";
@@ -269,6 +271,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // "Confirm before deleting / archiving" (lib/mail-removal-confirm).
   const tRemove = useTranslations('email_list.confirm_remove');
   const tCommon = useTranslations('common');
+  const tComposeUx = useTranslations('compose_ux');
+  const tComposeWords = useTranslations('compose_words');
   const appName = productName(useConfig().appName);
   const tQuote = useTranslations('quote_header');
   const tComposer = useTranslations('email_composer');
@@ -299,6 +303,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const composerSessionRef = useRef(composerSessionId);
   composerSessionRef.current = composerSessionId;
   const composerHostRef = useRef('pane');
+  // The compose session docked under its message (dockedReply).
+  const dockedSessionRef = useRef<number | null>(null);
   const showComposerRef = useRef(showComposer);
   showComposerRef.current = showComposer;
   // Fields a plugin filled in through onBeforeCompose for the composer about
@@ -2605,6 +2611,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // the user's message without so much as a toast (#702).
     let submitted = false;
 
+    // The composer closes at once and "Sending…" shows meanwhile. A send that
+    // fails comes back through onSendFailed, which opens the composer again.
+    setShowComposer(false);
+    setPendingDraft(null);
+    if (isMobile && !useEmailStore.getState().selectedEmail) setActiveView('list');
+    const progress = startSendProgress({
+      sending: t('compose_send.sending'),
+      sent: t('compose_send.sent'),
+      view: t('compose_send.view'),
+    });
+
     try {
       const effectiveMode = pendingDraft?.mode ?? composerMode;
       const originalEmailId = answeredEmailId;
@@ -2612,7 +2629,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       const result = await sendEmail(sendClient, data.to, data.subject, data.body, data.cc, data.bcc, data.identityId, data.fromEmail, data.draftId, data.fromName, data.htmlBody, data.attachments, data.inReplyTo, data.references, data.delayedUntil, data.envelopeMailFrom, composerSendOptions(data));
       submitted = true;
       announceSent(result, data);
-      setShowComposer(false);
+      // "Sent" with View. A delayed or scheduled send gets the undo toast, and
+      // a filing error, a refused recipient or the offline outbox say so themselves.
+      if (result.scheduled || result.filingError || result.rejectedRecipients?.length || result.queued) {
+        progress.dismiss();
+      } else {
+        const sentId = result.emailId;
+        const ownerAccountId = result.emailAccountId && result.emailAccountId !== sendClient.getAccountId() ? result.emailAccountId : undefined;
+        progress.sent(sentId && sendClient === client
+          ? () => void applyMailDeepLinkRef.current({ kind: 'message', id: sentId, ownerAccountId })
+          : undefined);
+      }
       // Sending an edited draft destroys it server-side - and every autosave
       // before that already replaced it under a fresh id (createDraft is a
       // destroy+create). If the email on display is the draft this session
@@ -2697,11 +2724,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         return;
       }
 
-      // Delayed sends get the undo toast instead; a filing error or a refused
-      // recipient already warned.
-      // A message kept in the offline outbox said so itself (#523).
-      if (!result.filingError && !result.rejectedRecipients?.length && !result.queued) toast.success(t('notifications.email_sent'));
-
       // Refresh the current mailbox to update the UI
       if (!isScheduledView) {
         await refreshCurrentMailbox(client);
@@ -2709,6 +2731,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
     } catch (error) {
       console.error("Failed to send email:", error);
+      if (submitted) progress.sent();
+      else progress.dismiss();
       // Post-send bookkeeping - refreshing Sent, flagging the original as
       // answered, re-reading the thread - is cosmetic once the mail is out.
       if (!submitted) throw error;
@@ -2779,6 +2803,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           fromLabel: tQuote('from_label'),
           dateLabel: tQuote('date_label'),
           subjectLabel: tQuote('subject_label'),
+          // A forward says who the message went to, as Gmail and Outlook do.
+          toLabel: tComposeWords('forward_to_label'),
+          ccLabel: tComposeWords('forward_cc_label'),
         },
       });
       setComposerQuoteHeader(header);
@@ -2786,7 +2813,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       console.warn('[quote-header] plugin transform failed; using default', err);
       setComposerQuoteHeader(null);
     }
-  }, [tCommon, tQuote]);
+  }, [tCommon, tQuote, tComposeWords]);
 
   // Force a clean composer remount on every fresh entry point so prior
   // compose state can't bleed into the new session (#329 C). The composer is
@@ -2999,9 +3026,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       ? Math.max(remainingMs - 1000, 1000)
       : Math.max(sendDelaySeconds, 8) * 1000;
 
+    // A message scheduled for later says when it goes, and offers Cancel
+    // where a send-delay window offers Undo send.
     toast.success(isUndoWindow
       ? t('email_viewer.sending_in', { seconds: Math.round(remainingMs / 1000) })
-      : t('email_viewer.scheduled_send_created'), {
+      : t('compose_send.scheduled_for', { when: formatScheduledSendAt(pending.sendAt, useSettingsStore.getState().timeFormat) }), {
       duration: undoDurationMs,
       pauseOnHover: false,
       secondaryAction: (pending.emailId && pending.identityId)
@@ -3043,7 +3072,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           }
         : undefined,
       action: {
-        label: t('email_viewer.undo_send'),
+        label: isUndoWindow ? t('email_viewer.undo_send') : tCommon('cancel'),
         onClick: () => {
           if (!undoClient) return refuseSignedOut();
           void (async () => {
@@ -4535,7 +4564,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     let delayedUntil: string | undefined;
     if (sendDelaySeconds > 0) {
       if (!client.hasDelayedSend()) {
-        const confirmed = await confirmDialog({
+        // As in the composer: only a delay the user picked asks.
+        const confirmed = !useSettingsStore.getState().explicitSettings.includes('sendDelaySeconds') || await confirmDialog({
           title: t('email_composer.send_delay_unsupported_title'),
           message: t('email_composer.send_delay_unsupported_confirm'),
           confirmText: t('email_composer.send'),
@@ -4886,7 +4916,16 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const mvInlineReply = mvShell && showComposer && !isEmbedded && !mvReplyPoppedOut
     && (pendingDraft?.mode ?? composerMode) !== 'compose' && Boolean(selectedEmail);
   const floatingComposer = mvShell && showComposer && !isEmbedded && !mvInlineReply;
-  const composerHost = floatingComposer ? 'window' : mvInlineReply ? 'inline' : 'pane';
+  // Elsewhere on a computer a reply or forward docks under the message it
+  // answers, which stays readable above it, as in Gmail and Outlook. Not
+  // for a draft being edited: that message is the draft itself.
+  // Decided as it opens and kept for the session: moving it would mount it
+  // anew when the message goes away (another folder opened meanwhile).
+  const dockCandidate = !mvShell && !isMobile && showComposer && !isEmbedded && !floatingComposer
+    && (pendingDraft?.mode ?? composerMode) !== 'compose';
+  if (dockCandidate && selectedEmail && !selectedEmail.keywords?.$draft) dockedSessionRef.current = composerSessionId;
+  const dockedReply = dockCandidate && dockedSessionRef.current === composerSessionId;
+  const composerHost = floatingComposer ? 'window' : mvInlineReply ? 'inline' : dockedReply ? 'dock' : 'pane';
   composerHostRef.current = composerHost;
   const hasViewerContent = (showComposer && !floatingComposer) || Boolean(conversationThread)
     || Boolean(selectedEmail && !(mvShell && cursorOnly)) || deepLinkPane !== null;
@@ -4915,11 +4954,13 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (!client || !email) return new Error('the mail page is not ready');
     setCursorOnly(false);
 
-    // If composing, suspend the composer (unmount will trigger onSaveState).
-    // Mountain View's compose window stays open while other mail is read,
-    // as Gmail's does. (#1229)
+    // If composing, close the composer the way its X does: it keeps the
+    // draft and says so. Mountain View's compose window stays open while
+    // other mail is read, as Gmail's does. (#1229)
     if (showComposer && !floatingComposer) {
-      setShowComposer(false);
+      const requestClose = composerRequestCloseRef.current;
+      if (requestClose) requestClose();
+      else setShowComposer(false);
     }
 
     // Find the list-level email for metadata (accountId, scheduled flags, etc.).
@@ -5266,6 +5307,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           setPendingDraft(null);
           setComposerPrefill(null);
           return outcome;
+        }}
+        onSendFailed={(state) => {
+          setPendingDraft(state);
+          setShowComposer(true);
+          if (isMobile) setActiveView('viewer');
         }}
         onScheduledSendCreated={async () => {
           if (client) {
@@ -5959,40 +6005,45 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             {/* Inline Composer - shown in viewer pane.
                 In Pro/embedded mode the composer is hoisted into its own
                 Pro tab (see the effect below), so we never render it inline. */}
-            {(showComposer && !isEmbedded && !floatingComposer && !mvInlineReply) ? composerNode : (
+            {(showComposer && !isEmbedded && !floatingComposer && !mvInlineReply && !dockedReply) ? composerNode : (
             <>
             {/* Pending draft banner */}
-            {pendingDraft && (
-              <button
-                onClick={() => {
-                  setShowComposer(true);
-                  if (isMobile) setActiveView('viewer');
-                }}
-                className="flex items-center gap-3 px-4 py-2.5 bg-primary/10 border-b border-primary/20 hover:bg-primary/15 transition-colors cursor-pointer w-full text-start"
-              >
-                <PenSquare className="w-4 h-4 text-primary shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-medium text-primary">{t('email_composer.continue_draft')}</span>
-                  {pendingDraft.subject && (
-                    <span className="text-xs text-muted-foreground ms-2 truncate">{pendingDraft.subject}</span>
-                  )}
-                </div>
-                <X
-                  className="w-4 h-4 text-muted-foreground hover:text-foreground shrink-0"
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    const confirmed = await confirmDialog({
-                      title: t('email_composer.discard_draft_title'),
-                      message: t('email_composer.discard_draft_confirm'),
-                      confirmText: t('email_composer.discard'),
-                      variant: "destructive",
-                    });
-                    if (confirmed) {
-                      setPendingDraft(null);
-                    }
+            {pendingDraft && !dockedReply && (
+              <div className="flex items-center bg-primary/10 border-b border-primary/20" data-testid="continue-draft-bar">
+                <button
+                  onClick={() => {
+                    setShowComposer(true);
+                    if (isMobile) setActiveView('viewer');
                   }}
-                />
-              </button>
+                  className="flex flex-1 min-w-0 items-center gap-3 ps-4 pe-2 py-2.5 hover:bg-primary/15 transition-colors cursor-pointer text-start"
+                >
+                  <PenSquare className="w-4 h-4 text-primary shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium text-primary">{t('email_composer.continue_draft')}</span>
+                    {pendingDraft.subject && (
+                      <span className="text-xs text-muted-foreground ms-2 truncate">{pendingDraft.subject}</span>
+                    )}
+                  </div>
+                </button>
+                {/* Its own button, so the keyboard reaches it. Deletes the saved
+                    draft too, with Undo instead of a question. */}
+                <button
+                  type="button"
+                  aria-label={tComposeUx('discard_draft')}
+                  title={tComposeUx('discard_draft')}
+                  data-testid="continue-draft-discard"
+                  onClick={() => {
+                    const draft = pendingDraft;
+                    setPendingDraft(null);
+                    discardWithUndo(() => {
+                      if (draft.draftId) void handleDiscardDraft(draft.draftId, { accountId: draft.draftAccountId, localAccountId: draft.draftLocalAccountId });
+                    }, { discarded: tComposeUx('draft_discarded'), undo: tComposeUx('undo') }, () => setPendingDraft(draft));
+                  }}
+                  className="grid h-9 w-9 shrink-0 place-items-center me-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-primary/15 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             )}
             {/* Mobile Conversation View - shown when thread is selected on mobile */}
             {isMobile && !conversationThread && deepLinkPane === 'thread' ? (
@@ -6132,6 +6183,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                       await handleConversationReplyAll(full ?? e);
                     } : undefined}
                     mvInlineComposer={mvInlineReply ? <MvComposeInline onPopOut={handleMvPopOut}>{composerNode}</MvComposeInline> : undefined}
+                    replyComposerOpen={dockedReply}
                     onToggleFullscreen={!isEmbedded && !isMobile ? () => setFullscreenReading((v) => !v) : undefined}
                     onOpenInWindow={!isEmbedded && !isMobile && openEmailInWindow && selectedEmail ? () => openEmailInWindow(selectedEmail) : undefined}
                     isFullscreen={fullscreenReading}
@@ -6184,6 +6236,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   />
                 </ErrorBoundary>
               </>
+            )}
+            {dockedReply && (
+              <div className="flex basis-[62%] min-h-[18rem] shrink-0 flex-col border-t border-border" data-reply-dock="">
+                {composerNode}
+              </div>
             )}
             </>
             )}

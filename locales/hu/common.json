@@ -1233,6 +1233,21 @@
       "plain_text": "[Kép: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Piszkozat elvetve",
+    "undo": "Visszavonás",
+    "discard_draft": "Piszkozat elvetése",
+    "save_failed_close": "A piszkozatot nem sikerült menteni. Próbálja újra, vagy vesse el.",
+    "try_again": "Újra",
+    "add_description": "Leírás hozzáadása",
+    "attachments_summary": "Mellékletek: {count}, {size}",
+    "from_sub_address": "Alcím használata…",
+    "from_edit_sender": "Feladó szerkesztése…",
+    "shortcut_insert_link": "Hivatkozás beszúrása",
+    "shortcut_save_draft": "Piszkozat mentése",
+    "shortcut_show_cc": "Másolat megjelenítése",
+    "shortcut_show_bcc": "Titkos másolat megjelenítése"
+  },
   "confirm_dialog": {
     "confirm": "Megerősítés",
     "cancel": "Mégse"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Vissza a szerkesztéshez",
+    "send_anyway": "Küldés így is",
+    "warnings_title": "Elküldi így is ezt az üzenetet?",
+    "warning_subject": "Nincs tárgy",
+    "warning_text": "Nincs szöveg",
+    "warning_attachment": "Említi ezt: „{keyword}”, de nincs csatolt fájl",
+    "warning_placeholders": "Helykitöltő szöveg, amelyet a címzettek látni fognak:",
+    "warning_proofreading": "Nyitott helyesírási vagy nyelvtani hibák: {count}",
+    "empty_text_title": "Küldés szöveg nélkül?",
+    "empty_text_message": "Ennek az üzenetnek nincs szövege és melléklete. Elküldi így is?",
+    "scheduled_for": "Ütemezve: {when}",
+    "sending": "Küldés…",
+    "sent": "Elküldve",
+    "view": "Megtekintés",
+    "picker_button": "Hozzáadás a névjegyekből",
+    "picker_title": "Címzettek hozzáadása",
+    "tab_contacts": "Névjegyek",
+    "tab_directory": "Címtár",
+    "contacts_empty_title": "Még nincsenek névjegyek",
+    "contacts_empty_hint": "A névjegyekbe mentett személyek itt jelennek meg.",
+    "contacts_no_match": "Egy névjegy sem felel meg a keresésnek",
+    "template_name": "Sablon neve",
+    "template_edit_details": "Részletek szerkesztése…"
+  },
   "org_templates": {
     "section_personal": "Saját sablonok",
     "section_organisation": "Szervezet",
@@ -6537,6 +6577,24 @@
     "not_running": "Nincs elküldve. Egy, a szervezete által előírt ellenőrzés most nem fut. Próbálja újra egy pillanat múlva.",
     "stopped_working": "Nincs elküldve. Egy, a szervezete által előírt ellenőrzés leállt. Töltse be újra az oldalt. Ha ez nem segít, szóljon a rendszergazdának."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Küldés visszavonása",
+      "description": "A Küldés megnyomása után néhány másodpercet ad az üzenet visszavonására."
+    },
+    "reply_from_received": {
+      "label": "Válasz a fogadott címről",
+      "description": "Válasz arról a címről, amelyre a levél érkezett. Hasznos, ha több címe van."
+    },
+    "require_tls": "Kézbesítés csak biztonságos kapcsolaton át",
+    "require_tls_hint": "Maga az üzenet nincs titkosítva. Visszapattan, ha egy szerver nem tud TLS-t használni.",
+    "encrypt": "Titkosítás…",
+    "encrypt_hint": "S/MIME vagy PGP bővítmény kell hozzá. Megnyitja a Beállításokat.",
+    "quick_reply_to": "Válasz neki: {names}…",
+    "open_full_editor": "Megnyitás a teljes szerkesztőben",
+    "forward_to_label": "Címzett",
+    "forward_cc_label": "Másolat"
+  },
   "plugin_list": {
     "filters": "Szűrők",
     "remove_filter": "{label} szűrő eltávolítása"
@@ -7282,6 +7340,14 @@
     "back_no_answer": "A főablak nem válaszolt. Az üzenet itt marad.",
     "types_character": "Ezek a billentyűk karaktert írnak az Ön billentyűzetén, amely többé egyik alkalmazásban sem működne. Próbáljon más billentyűket.",
     "reserved": "Ezeket a billentyűket a rendszer vagy a legtöbb alkalmazás használja. Próbáljon más billentyűket."
+  },
+  "compose_windows": {
+    "more_formatting": "További formázás",
+    "offline": "Offline",
+    "offline_hint": "A küldéshez kapcsolat kell.",
+    "offline_hint_outbox": "Amit most elküld, a postázandók között vár, és elmegy, amint újra online lesz.",
+    "offline_send_saved": "Offline állapotban van. Az üzenet a Piszkozatok között van mentve.",
+    "offline_send_unsaved": "Offline állapotban van. Az üzenet itt marad, és a Piszkozatok közé kerül, amint újra online lesz."
   },
   "desktopDevTools": {
     "section_title": "Hibaelhárítás",

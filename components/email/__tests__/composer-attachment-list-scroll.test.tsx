@@ -218,21 +218,20 @@ const DRAFT = {
   attachments: ATTACHMENTS,
 };
 
-/** The wrapping flex row that holds every chip and the expand button. */
+/** The wrapping flex row that holds every chip. */
 function chipRow() {
-  return screen.getByText('invoice-0.pdf').closest('[class*="flex-wrap"]') as HTMLElement;
+  return screen.getByTestId('composer-attachments');
 }
 
 /**
  * The attachment row is a shrink-0 sibling of the body's scroll container,
  * so whatever height it takes is taken from the composer and from nothing
- * else. Collapsed that is three chips. Expanded it is one row per two
- * attachments, and with a few dozen files it grew past the bottom of the
- * composer: the send toolbar was pushed off-screen and no ancestor
- * scrolled, so neither the rest of the list nor Send could be reached.
- * Expanding therefore has to bound the row and scroll it itself.
+ * else. With a few dozen files it grew past the bottom of the composer: the
+ * send toolbar was pushed off-screen and no ancestor scrolled. It used to
+ * show three chips and "+N", which hid the fourth file's upload. Now every
+ * chip shows, wrapping, and the row is bounded and scrolls itself.
  */
-describe('expanded attachment list', () => {
+describe('attachment list', () => {
   beforeEach(() => {
     observers.length = 0;
     vi.stubGlobal('ResizeObserver', ResizeObserverStub);
@@ -242,39 +241,27 @@ describe('expanded attachment list', () => {
     vi.unstubAllGlobals();
   });
 
-  it('does not scroll while collapsed', () => {
+  it('shows every attachment, with no counter to expand', () => {
     render(<EmailComposer initialData={DRAFT} />);
 
-    expect(chipRow().className).not.toContain('overflow-y-auto');
+    expect(screen.getByText('invoice-3.pdf')).toBeInTheDocument();
+    expect(screen.getByText('invoice-11.pdf')).toBeInTheDocument();
+    expect(screen.queryByText(`+${ATTACHMENTS.length - 3}`)).toBeNull();
   });
 
-  it('shows only the first three attachments and a counter for the rest', () => {
+  it('caps its height and scrolls itself', () => {
     render(<EmailComposer initialData={DRAFT} />);
-
-    expect(screen.getByText('invoice-2.pdf')).toBeInTheDocument();
-    expect(screen.queryByText('invoice-3.pdf')).not.toBeInTheDocument();
-    expect(screen.getByText(`+${ATTACHMENTS.length - 3}`)).toBeInTheDocument();
-  });
-
-  it('caps its height and scrolls once expanded', () => {
-    render(<EmailComposer initialData={DRAFT} />);
-
-    fireEvent.click(screen.getByText(`+${ATTACHMENTS.length - 3}`));
 
     const row = chipRow();
-    expect(screen.getByText('invoice-11.pdf')).toBeInTheDocument();
     expect(row.className).toContain('overflow-y-auto');
     // Bounded, or the row grows with the attachment count again and takes
     // the send toolbar off the bottom of the composer with it.
     expect(row.className).toContain('max-h-[');
   });
 
-  it('stops scrolling again when collapsed back', () => {
+  it('says how many files and how much they weigh', () => {
     render(<EmailComposer initialData={DRAFT} />);
 
-    fireEvent.click(screen.getByText(`+${ATTACHMENTS.length - 3}`));
-    fireEvent.click(screen.getByText('show_less'));
-
-    expect(chipRow().className).not.toContain('overflow-y-auto');
+    expect(screen.getByTestId('composer-attachments-summary')).toHaveTextContent('attachments_summary');
   });
 });

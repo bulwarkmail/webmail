@@ -1233,6 +1233,21 @@
       "plain_text": "[Billede: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Kladde kasseret",
+    "undo": "Fortryd",
+    "discard_draft": "Kassér kladde",
+    "save_failed_close": "Kladden kunne ikke gemmes. Prøv igen, eller kassér den.",
+    "try_again": "Prøv igen",
+    "add_description": "Tilføj beskrivelse",
+    "attachments_summary": "Vedhæftede filer: {count}, {size}",
+    "from_sub_address": "Brug en underadresse…",
+    "from_edit_sender": "Rediger afsender…",
+    "shortcut_insert_link": "Indsæt link",
+    "shortcut_save_draft": "Gem kladde",
+    "shortcut_show_cc": "Vis Cc",
+    "shortcut_show_bcc": "Vis Bcc"
+  },
   "confirm_dialog": {
     "confirm": "Bekræft",
     "cancel": "Annuller"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Tilbage til redigering",
+    "send_anyway": "Send alligevel",
+    "warnings_title": "Send denne besked alligevel?",
+    "warning_subject": "Intet emne",
+    "warning_text": "Ingen tekst",
+    "warning_attachment": "Nævner \"{keyword}\", men ingen fil er vedhæftet",
+    "warning_placeholders": "Pladsholdertekst, som modtagerne vil se:",
+    "warning_proofreading": "Åbne stave- eller grammatikfejl: {count}",
+    "empty_text_title": "Send uden tekst?",
+    "empty_text_message": "Denne besked har ingen tekst og ingen vedhæftet fil. Send den alligevel?",
+    "scheduled_for": "Planlagt til {when}",
+    "sending": "Sender…",
+    "sent": "Sendt",
+    "view": "Vis",
+    "picker_button": "Tilføj fra kontakter",
+    "picker_title": "Tilføj modtagere",
+    "tab_contacts": "Kontakter",
+    "tab_directory": "Adressefortegnelse",
+    "contacts_empty_title": "Ingen kontakter endnu",
+    "contacts_empty_hint": "Personer, du gemmer i Kontakter, vises her.",
+    "contacts_no_match": "Ingen kontakter matcher din søgning",
+    "template_name": "Skabelonens navn",
+    "template_edit_details": "Rediger detaljer…"
+  },
   "org_templates": {
     "section_personal": "Mine skabeloner",
     "section_organisation": "Organisation",
@@ -6537,6 +6577,24 @@
     "not_running": "Ikke sendt. En kontrol, som din organisation kræver, kører ikke. Prøv igen om et øjeblik.",
     "stopped_working": "Ikke sendt. En kontrol, som din organisation kræver, virker ikke længere. Genindlæs siden. Hvis det ikke hjælper, så kontakt din administrator."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Fortryd afsendelse",
+      "description": "Giver dig et par sekunder til at tage en besked tilbage, efter du har trykket på Send."
+    },
+    "reply_from_received": {
+      "label": "Svar fra modtaget adresse",
+      "description": "Svar fra den adresse, mailen blev sendt til. Nyttigt, hvis du har flere adresser."
+    },
+    "require_tls": "Lever kun via en sikker forbindelse",
+    "require_tls_hint": "Selve beskeden er ikke krypteret. Den sendes retur, hvis en server ikke kan bruge TLS.",
+    "encrypt": "Krypter…",
+    "encrypt_hint": "Kræver en S/MIME- eller PGP-tilføjelse. Åbner Indstillinger.",
+    "quick_reply_to": "Svar til {names}…",
+    "open_full_editor": "Åbn fuld editor",
+    "forward_to_label": "Til",
+    "forward_cc_label": "Cc"
+  },
   "plugin_list": {
     "filters": "Filtre",
     "remove_filter": "Fjern filteret {label}"
@@ -7282,6 +7340,14 @@
     "back_no_answer": "Hovedvinduet svarede ikke. Din besked bliver her.",
     "types_character": "Disse taster skriver et tegn på dit tastatur, og det ville holde op med at virke i alle apps. Prøv andre taster.",
     "reserved": "Dit system eller de fleste apps bruger disse taster. Prøv andre taster."
+  },
+  "compose_windows": {
+    "more_formatting": "Mere formatering",
+    "offline": "Offline",
+    "offline_hint": "Det kræver forbindelse at sende.",
+    "offline_hint_outbox": "Det, du sender nu, venter i udbakken og sendes, når du er online igen.",
+    "offline_send_saved": "Du er offline. Beskeden er gemt i Kladder.",
+    "offline_send_unsaved": "Du er offline. Beskeden bliver her og gemmes i Kladder, når du er online igen."
   },
   "desktopDevTools": {
     "section_title": "Fejlfinding",

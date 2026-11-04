@@ -1233,6 +1233,21 @@
       "plain_text": "[Pilt: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Mustand loobutud",
+    "undo": "Võta tagasi",
+    "discard_draft": "Loobu mustandist",
+    "save_failed_close": "Mustandit ei saanud salvestada. Proovige uuesti või loobuge sellest.",
+    "try_again": "Proovi uuesti",
+    "add_description": "Lisa kirjeldus",
+    "attachments_summary": "Manused: {count}, {size}",
+    "from_sub_address": "Kasuta alamaadressi…",
+    "from_edit_sender": "Muuda saatjat…",
+    "shortcut_insert_link": "Lisa link",
+    "shortcut_save_draft": "Salvesta mustand",
+    "shortcut_show_cc": "Näita koopiat",
+    "shortcut_show_bcc": "Näita pimekoopiat"
+  },
   "confirm_dialog": {
     "confirm": "Kinnita",
     "cancel": "Tühista"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Tagasi muutmise juurde",
+    "send_anyway": "Saada ikkagi",
+    "warnings_title": "Kas saata see kiri ikkagi?",
+    "warning_subject": "Teema puudub",
+    "warning_text": "Tekst puudub",
+    "warning_attachment": "Mainib sõna „{keyword}“, kuid ühtegi faili pole lisatud",
+    "warning_placeholders": "Kohatäitetekst, mida saajad näevad:",
+    "warning_proofreading": "Lahendamata õigekirja- või grammatikavead: {count}",
+    "empty_text_title": "Kas saata ilma tekstita?",
+    "empty_text_message": "Selles kirjas pole teksti ega manust. Kas saata see ikkagi?",
+    "scheduled_for": "Ajastatud: {when}",
+    "sending": "Saatmine…",
+    "sent": "Saadetud",
+    "view": "Vaata",
+    "picker_button": "Lisa kontaktidest",
+    "picker_title": "Lisa saajaid",
+    "tab_contacts": "Kontaktid",
+    "tab_directory": "Kataloog",
+    "contacts_empty_title": "Kontakte veel pole",
+    "contacts_empty_hint": "Siin kuvatakse inimesed, kelle salvestate kontaktidesse.",
+    "contacts_no_match": "Otsingule ei vasta ükski kontakt",
+    "template_name": "Malli nimi",
+    "template_edit_details": "Muuda üksikasju…"
+  },
   "org_templates": {
     "section_personal": "Minu mallid",
     "section_organisation": "Organisatsioon",
@@ -6537,6 +6577,24 @@
     "not_running": "Ei saadetud. Teie organisatsiooni nõutud kontroll praegu ei tööta. Proovige hetke pärast uuesti.",
     "stopped_working": "Ei saadetud. Teie organisatsiooni nõutud kontroll ei tööta enam. Laadige leht uuesti. Kui see ei aita, teatage administraatorile."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Saatmise tühistamine",
+      "description": "Annab sulle pärast Saada vajutamist mõne sekundi, et kiri tagasi võtta."
+    },
+    "reply_from_received": {
+      "label": "Vasta kirja saanud aadressilt",
+      "description": "Vasta aadressilt, kuhu kiri saadeti. Kasulik, kui sul on mitu aadressi."
+    },
+    "require_tls": "Toimeta kohale ainult turvalise ühenduse kaudu",
+    "require_tls_hint": "Kiri ise ei ole krüpteeritud. See tuleb tagasi, kui server ei saa TLS-i kasutada.",
+    "encrypt": "Krüpteeri…",
+    "encrypt_hint": "Vajab S/MIME või PGP lisa. Avab seaded.",
+    "quick_reply_to": "Vastus saajale {names}…",
+    "open_full_editor": "Ava täielik redaktor",
+    "forward_to_label": "Saajale",
+    "forward_cc_label": "Koopia"
+  },
   "plugin_list": {
     "filters": "Filtrid",
     "remove_filter": "Eemalda filter {label}"
@@ -7282,6 +7340,14 @@
     "back_no_answer": "Põhiaken ei vastanud. Teie kiri jääb siia.",
     "types_character": "Need klahvid kirjutavad teie klaviatuuril märgi, mis lakkaks kõigis rakendustes töötamast. Proovige teisi klahve.",
     "reserved": "Neid klahve kasutab süsteem või enamik rakendusi. Proovige teisi klahve."
+  },
+  "compose_windows": {
+    "more_formatting": "Rohkem vormindust",
+    "offline": "Võrguta",
+    "offline_hint": "Saatmiseks on vaja ühendust.",
+    "offline_hint_outbox": "Mida praegu saadad, ootab väljuvate kirjade kastis ja läheb teele, kui oled jälle võrgus.",
+    "offline_send_saved": "Oled võrguta. Kiri on salvestatud mustanditesse.",
+    "offline_send_unsaved": "Oled võrguta. Kiri jääb siia ja salvestatakse mustanditesse, kui oled jälle võrgus."
   },
   "desktopDevTools": {
     "section_title": "Tõrkeotsing",

@@ -208,6 +208,25 @@ describe('toasts and the focused element', () => {
     expect(toastContainer()).not.toHaveAttribute('data-dodging');
   });
 
+  // With the focus in the composer's text or the quick reply box, "Email
+  // sent" and "Sending in 5 seconds" moved to the top and covered the
+  // composer's close button and the reader's toolbar. A large field the
+  // stack only overlaps at a corner keeps the toasts at the bottom.
+  it('stays at the bottom over a corner of a large focused field', () => {
+    const h = window.innerHeight;
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.hasAttribute('data-toast-container')) return rect(h - 100, 600, 360, 80);
+      if (this.id === 'body') return rect(h - 400, 300, 700, 360);
+      return rect(10, 10, 80, 36);
+    });
+    render(<><Toasts /><textarea id="body" /></>);
+    act(() => { (document.getElementById('body') as HTMLElement).focus(); });
+    act(() => { toast.success('Email sent'); });
+    act(() => { vi.advanceTimersByTime(20); });
+    expect(toastContainer()).not.toHaveAttribute('data-dodging');
+    expect(toastContainer()).not.toHaveClass('top-5');
+  });
+
   // On a phone the top of the screen is the header with Back and the message
   // actions; an Undo toast that moved there blocked them. (#1472)
   it('stays at the bottom on a phone, clear of the header', () => {

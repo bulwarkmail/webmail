@@ -1176,6 +1176,21 @@
       "plain_text": "[תמונה: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "הטיוטה נמחקה",
+    "undo": "ביטול",
+    "discard_draft": "מחיקת הטיוטה",
+    "save_failed_close": "לא ניתן היה לשמור את הטיוטה. נסו שוב או מחקו אותה.",
+    "try_again": "ניסיון נוסף",
+    "add_description": "הוספת תיאור",
+    "attachments_summary": "קבצים מצורפים: {count}, {size}",
+    "from_sub_address": "שימוש בכתובת משנה…",
+    "from_edit_sender": "עריכת השולח…",
+    "shortcut_insert_link": "הוספת קישור",
+    "shortcut_save_draft": "שמירת טיוטה",
+    "shortcut_show_cc": "הצגת עותק",
+    "shortcut_show_bcc": "הצגת עותק מוסתר"
+  },
   "confirm_dialog": {
     "confirm": "אשר",
     "cancel": "לְבַטֵל"
@@ -3920,6 +3935,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "חזור לעריכה",
+    "send_anyway": "שלח בכל זאת",
+    "warnings_title": "לשלוח את ההודעה בכל זאת?",
+    "warning_subject": "אין נושא",
+    "warning_text": "אין טקסט",
+    "warning_attachment": "מוזכר \"{keyword}\", אבל לא צורף קובץ",
+    "warning_placeholders": "טקסט ממלא מקום שהנמענים יראו:",
+    "warning_proofreading": "שגיאות כתיב או דקדוק פתוחות: {count}",
+    "empty_text_title": "לשלוח ללא טקסט?",
+    "empty_text_message": "להודעה הזו אין טקסט ואין קובץ מצורף. לשלוח אותה בכל זאת?",
+    "scheduled_for": "מתוזמן ל-{when}",
+    "sending": "שולח…",
+    "sent": "נשלח",
+    "view": "הצג",
+    "picker_button": "הוסף מאנשי הקשר",
+    "picker_title": "הוספת נמענים",
+    "tab_contacts": "אנשי קשר",
+    "tab_directory": "ספרייה",
+    "contacts_empty_title": "אין עדיין אנשי קשר",
+    "contacts_empty_hint": "אנשים שתשמרו באנשי הקשר יופיעו כאן.",
+    "contacts_no_match": "אין איש קשר שתואם לחיפוש",
+    "template_name": "שם התבנית",
+    "template_edit_details": "עריכת פרטים…"
+  },
   "org_templates": {
     "section_personal": "התבניות שלי",
     "section_organisation": "ארגון",
@@ -6538,6 +6578,24 @@
     "not_running": "לא נשלח. בדיקה שהארגון שלך מחייב לא פועלת כרגע. נסו שוב בעוד רגע.",
     "stopped_working": "לא נשלח. בדיקה שהארגון שלך מחייב הפסיקה לפעול. טענו את הדף מחדש. אם זה לא עוזר, פנו למנהל המערכת."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "ביטול שליחה",
+      "description": "נותן לך כמה שניות להחזיר הודעה אחרי שלחצת על שלח."
+    },
+    "reply_from_received": {
+      "label": "בחירה אוטומטית בכתובת תשובה",
+      "description": "השב מהכתובת שאליה נשלח הדואר. שימושי אם יש לך כמה כתובות."
+    },
+    "require_tls": "מסירה רק דרך חיבור מאובטח",
+    "require_tls_hint": "ההודעה עצמה אינה מוצפנת. היא תוחזר אם שרת לא יכול להשתמש ב-TLS.",
+    "encrypt": "הצפנה…",
+    "encrypt_hint": "דורש תוסף S/MIME או PGP. פותח את ההגדרות.",
+    "quick_reply_to": "תשובה אל {names}…",
+    "open_full_editor": "פתיחה בעורך המלא",
+    "forward_to_label": "אל",
+    "forward_cc_label": "עותק"
+  },
   "plugin_list": {
     "filters": "מסננים",
     "remove_filter": "הסר את המסנן {label}"
@@ -7283,6 +7341,14 @@
     "back_no_answer": "החלון הראשי לא ענה. ההודעה שלכם נשארת כאן.",
     "types_character": "המקשים האלה מקלידים תו במקלדת שלכם, והוא יפסיק לעבוד בכל האפליקציות. נסו מקשים אחרים.",
     "reserved": "המערכת או רוב האפליקציות משתמשות במקשים האלה. נסו מקשים אחרים."
+  },
+  "compose_windows": {
+    "more_formatting": "עוד עיצוב",
+    "offline": "אין חיבור",
+    "offline_hint": "כדי לשלוח צריך חיבור.",
+    "offline_hint_outbox": "מה ששולחים עכשיו ממתין בתיבת הדואר היוצא ונשלח כשחוזרים לרשת.",
+    "offline_send_saved": "אין חיבור. ההודעה שמורה בטיוטות.",
+    "offline_send_unsaved": "אין חיבור. ההודעה נשארת כאן ותישמר בטיוטות כשתחזרו לרשת."
   },
   "desktopDevTools": {
     "section_title": "פתרון בעיות",

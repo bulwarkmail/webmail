@@ -41,6 +41,27 @@ function sameIdSet(a: Set<string>, b: Set<string>): boolean {
 /** One compose-autocomplete suggestion: a person, or a contact group. */
 type RecipientSuggestion = { name: string; email: string; group?: { id: string; memberCount: number } };
 
+/** How many suggestions the compose autocomplete offers. */
+const MAX_SUGGESTIONS = 10;
+
+/**
+ * How well `query` (lowercase) matches any of `texts`: 0 at the start of a
+ * word ("an" in "Anna" or "an@x"), 1 inside a word ("an" in "Daniel"),
+ * -1 not at all. Word starts come first in the suggestions.
+ */
+function matchRank(query: string, ...texts: (string | undefined)[]): number {
+  let rank = -1;
+  for (const text of texts) {
+    if (!text) continue;
+    const lower = text.toLowerCase();
+    for (let at = lower.indexOf(query); at !== -1; at = lower.indexOf(query, at + 1)) {
+      if (at === 0 || !/[\p{L}\p{N}]/u.test(lower[at - 1])) return 0;
+      rank = 1;
+    }
+  }
+  return rank;
+}
+
 /**
  * Reduces every suggestion to a clean display name plus a bare address and
  * collapses the ones that resolve to the same address.
@@ -925,17 +946,26 @@ export const useContactStore = create<ContactStore>()(
 
         const lower = query.toLowerCase();
         const results: RecipientSuggestion[] = [];
+        // Every match is collected and ranked: a word that starts with the
+        // query ("an": Anna, an@x) before one that only contains it
+        // (Daniel), each kind in the order contacts, directory, recent.
+        const ranks = new Map<RecipientSuggestion, number>();
+        const add = (suggestion: RecipientSuggestion, rank: number) => {
+          results.push(suggestion);
+          ranks.set(suggestion, rank);
+        };
 
         for (const contact of contacts) {
           if (contact.kind === 'group') {
             // Suggest the group itself as a single entry (Outlook-style);
             // the composer turns it into one chip carrying the members.
             const groupName = getContactDisplayName(contact);
-            if (groupName && groupName.toLowerCase().includes(lower)) {
+            const rank = matchRank(lower, groupName);
+            if (rank >= 0) {
               const memberCount = get().getGroupMembers(contact.id)
                 .filter(m => getContactPrimaryEmail(m).trim()).length;
               if (memberCount > 0) {
-                results.push({ name: groupName, email: '', group: { id: contact.id, memberCount } });
+                add({ name: groupName, email: '', group: { id: contact.id, memberCount } }, rank);
               }
             }
             continue;
@@ -946,15 +976,9 @@ export const useContactStore = create<ContactStore>()(
 
           for (const emailEntry of emails) {
             if (!emailEntry.address) continue;
-            if (
-              name.toLowerCase().includes(lower) ||
-              emailEntry.address.toLowerCase().includes(lower)
-            ) {
-              results.push({ name, email: emailEntry.address });
-            }
+            const rank = matchRank(lower, name, emailEntry.address);
+            if (rank >= 0) add({ name, email: emailEntry.address }, rank);
           }
-
-          if (results.length >= 10) break;
         }
 
         // Augment with directory principals (other users on the server, RFC 9670).
@@ -963,7 +987,6 @@ export const useContactStore = create<ContactStore>()(
         if (directoryPrincipals.length > 0) {
           const seen = new Set(results.map(r => r.email.toLowerCase()));
           for (const p of directoryPrincipals) {
-            if (results.length >= 10) break;
             const addr = p.email.toLowerCase();
             if (seen.has(addr)) {
               const betterName = p.description || p.name;
@@ -975,10 +998,11 @@ export const useContactStore = create<ContactStore>()(
               }
               continue;
             }
-            if (p.name.toLowerCase().includes(lower) || addr.includes(lower) || (p.description && p.description.toLowerCase().includes(lower))) {
+            const rank = matchRank(lower, p.name, addr, p.description);
+            if (rank >= 0) {
               const displayName = p.description || p.name;
               const name = displayName !== p.email ? displayName : '';
-              results.push({ name, email: p.email });
+              add({ name, email: p.email }, rank);
               seen.add(addr);
             }
           }
@@ -990,20 +1014,22 @@ export const useContactStore = create<ContactStore>()(
         // duplicates). These carry the display name from the message, so match
         // on name or address.
         const { recentRecipients } = get();
-        if (recentRecipients.length > 0 && results.length < 10) {
+        if (recentRecipients.length > 0) {
           const seenRecent = new Set(results.map(r => r.email.toLowerCase()));
           for (const rec of recentRecipients) {
-            if (results.length >= 10) break;
             const addr = rec.email.toLowerCase();
             if (seenRecent.has(addr)) continue;
-            if (addr.includes(lower) || (rec.name && rec.name.toLowerCase().includes(lower))) {
-              results.push({ name: rec.name, email: rec.email });
+            const rank = matchRank(lower, addr, rec.name);
+            if (rank >= 0) {
+              add({ name: rec.name, email: rec.email }, rank);
               seenRecent.add(addr);
             }
           }
         }
 
-        return normalizeSuggestions(results);
+        // Array.prototype.sort is stable, so each rank keeps the order above.
+        const ranked = [...results].sort((a, b) => (ranks.get(a) ?? 1) - (ranks.get(b) ?? 1));
+        return normalizeSuggestions(ranked).slice(0, MAX_SUGGESTIONS);
       },
 
       getGroups: () => {

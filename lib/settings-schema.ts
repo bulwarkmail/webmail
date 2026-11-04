@@ -271,7 +271,7 @@ const ENTRIES: SettingSchemaEntry[] = [
     opts(`${EB}mention_adds_recipient.`, ['to', 'cc', 'off'])),
   bool('rtlEditingSupport', 'composing', `${EB}rtl_editing.label`),
   bool('quickReplyEnabled', 'composing', `${EB}quick_reply.label`),
-  bool('autoSelectReplyIdentity', 'composing', `${EB}auto_select_reply_identity.label`),
+  bool('autoSelectReplyIdentity', 'composing', 'compose_words.reply_from_received.label'),
   // The page shows it only while the composer may rewrite From.
   choice('replyIdentityMatch', 'composing', `${EB}reply_identity_match.label`,
     opts(`${EB}reply_identity_match.`, ['exact', 'domain']), { gate: 'customFromEnabled' }),
@@ -280,12 +280,12 @@ const ENTRIES: SettingSchemaEntry[] = [
   bool('signatureNewMailEnabled', 'composing', `${EB}signature_new_mail.label`),
   bool('signatureReplyForwardEnabled', 'composing', `${EB}signature_reply_forward.label`),
   bool('signatureSeparatorEnabled', 'composing', `${EB}signature_separator.label`),
-  // 10/30/60 read "{seconds} seconds" (send_delay.seconds): formatted.
-  choice('sendDelaySeconds', 'composing', `${EB}send_delay.label`, [
+  // 5/10/30 read "{seconds} seconds" (send_delay.seconds): formatted.
+  choice('sendDelaySeconds', 'composing', 'compose_words.undo_send.label', [
     { value: 0, label: `${EB}send_delay.off` },
+    { value: 5, label: null },
     { value: 10, label: null },
     { value: 30, label: null },
-    { value: 60, label: null },
   ]),
   bool('sendConfirmation', 'accessibility', `${A}confirm_send.label`),
   bool('attachmentReminderEnabled', 'composing', `${EB}attachment_reminder.label`),

@@ -22,6 +22,11 @@ interface SubAddressHelperProps {
   recipientEmails: string[];
   onSelectTag: (tag: string) => void;
   disabled?: boolean;
+  /** Opened from elsewhere (the composer's From list) instead of its own button. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** No button of its own: the host opens it. */
+  hideTrigger?: boolean;
 }
 
 export function SubAddressHelper({
@@ -29,9 +34,17 @@ export function SubAddressHelper({
   recipientEmails,
   onSelectTag,
   disabled = false,
+  open,
+  onOpenChange,
+  hideTrigger = false,
 }: SubAddressHelperProps) {
   const t = useTranslations('identities.sub_address');
-  const [isOpen, setIsOpen] = useState(false);
+  const [ownOpen, setOwnOpen] = useState(false);
+  const isOpen = open ?? ownOpen;
+  const setIsOpen = (next: boolean) => {
+    if (open === undefined) setOwnOpen(next);
+    onOpenChange?.(next);
+  };
   const [tag, setTag] = useState('');
   const [error, setError] = useState<string | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -128,18 +141,20 @@ export function SubAddressHelper({
   return (
     <div className="relative">
       {/* Trigger Button */}
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onClick={() => setIsOpen(!isOpen)}
-        disabled={disabled}
-        title={t('button_tooltip')}
-        className="h-8 px-2"
-      >
-        <Plus className="w-4 h-4 me-1" />
-        <Tag className="w-4 h-4" />
-      </Button>
+      {!hideTrigger && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsOpen(!isOpen)}
+          disabled={disabled}
+          title={t('button_tooltip')}
+          className="h-8 px-2"
+        >
+          <Plus className="w-4 h-4 me-1" />
+          <Tag className="w-4 h-4" />
+        </Button>
+      )}
 
       {/* Popover */}
       {isOpen && (
