@@ -190,7 +190,65 @@ export interface DesktopDialogsBridge {
     defaultId?: number;
     type?: 'none' | 'info' | 'warning' | 'question';
   }) => Promise<number>;
+  /**
+   * A short question in a window of the app's own, modal to this one and drawn like the
+   * in-page dialog (lib/desktop/dialog-window.ts). One at a time per page; the next waits.
+   * Absent on older shells.
+   */
+  show?: (request: DesktopDialogWindowRequest) => Promise<DesktopDialogWindowAnswer>;
+  /** Takes back a question asked with `show`, showing or waiting. */
+  cancel?: (id: string) => void;
 }
+
+/** Plain text throughout: the shell sets textContent only. */
+export interface DesktopDialogWindowRequest {
+  /** The page's own name for it, for `cancel`. */
+  id: string;
+  title: string;
+  /** The text under the title, in runs; `bold` runs are drawn bold. */
+  message?: { text: string; bold?: boolean }[];
+  /** "From the plugin …": who is asking, when it isn't the app. Drawn under the title. */
+  source?: string;
+  /** The warning sign of a destructive confirm. */
+  icon?: 'warning';
+  /** In the order they stand, start to end. At most four. */
+  buttons: { label: string; variant?: 'primary' | 'secondary' | 'destructive' }[];
+  /** The button Enter takes and the focus starts on. */
+  defaultIndex?: number;
+  /** The ⋮ menu at the top end: a plugin's options. */
+  menu?: { label: string; items: { id: string; label: string; destructive?: boolean }[] };
+  theme?: DesktopDialogWindowTheme;
+  lang?: string;
+  dir?: 'ltr' | 'rtl';
+}
+
+export interface DesktopDialogWindowTheme {
+  dark?: boolean;
+  /** #rrggbb[aa] or rgb(a)(); anything else is dropped by the shell. */
+  colours?: Partial<Record<DesktopDialogWindowColour, string>>;
+  font?: string;
+  fontSize?: number;
+  radius?: number;
+  radiusSmall?: number;
+}
+
+export type DesktopDialogWindowColour =
+  | 'background'
+  | 'foreground'
+  | 'muted'
+  | 'mutedForeground'
+  | 'border'
+  | 'input'
+  | 'primary'
+  | 'primaryForeground'
+  | 'destructive'
+  | 'destructiveForeground'
+  | 'accent'
+  | 'accentForeground'
+  | 'ring';
+
+/** A button by its index, a menu item by its id. Null: closed without an answer (Escape, Alt+F4, the page went). */
+export type DesktopDialogWindowAnswer = { button: number } | { menu: string } | null;
 
 export interface DesktopClipboardBridge {
   /** Puts a file on the clipboard, for pasting into a folder. False when that didn't work. */
