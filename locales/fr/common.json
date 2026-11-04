@@ -6417,6 +6417,9 @@
   "top_bar": {
     "more": "Plus d'options"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Masquer l'avis hors ligne"
+  },
   "shell": {
     "resize": "Redimensionner",
     "update_available": "Mise à jour disponible",

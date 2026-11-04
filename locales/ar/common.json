@@ -6417,6 +6417,9 @@
   "top_bar": {
     "more": "خيارات أخرى"
   },
+  "windowChrome": {
+    "hide_offline_notice": "إخفاء إشعار عدم الاتصال"
+  },
   "shell": {
     "resize": "تغيير الحجم",
     "update_available": "يتوفر تحديث",

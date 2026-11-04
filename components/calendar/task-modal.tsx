@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo, useId } from "react";
+import { useCloseBesideControls } from "@/hooks/use-close-beside-controls";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,6 +62,9 @@ export function TaskModal({
 }: TaskModalProps) {
   const t = useTranslations("calendar");
   const tCommon = useTranslations("common");
+  // The header's close goes to its start when the window's own close is at its end.
+  const [header, setHeader] = useState<HTMLDivElement | null>(null);
+  const closeFirst = useCloseBesideControls(header);
   const id = useId();
   const isEdit = !!task;
   const titleRef = useRef<HTMLInputElement>(null);
@@ -212,6 +216,12 @@ export function TaskModal({
     }
   }, [requestClose, handleSave]);
 
+  const close = (
+    <IconButton label={tCommon("close")} onClick={requestClose}>
+      <X />
+    </IconButton>
+  );
+
   return (
     // The desktop side panel is a dialog named by its title, like the event
     // editor; on a phone the full-screen wrapper around it is.
@@ -222,13 +232,12 @@ export function TaskModal({
       onKeyDown={handleKeyDown}
     >
       {/* Header */}
-      <div data-window-top-row="" className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <h2 id={`${id}-heading`} className="text-sm font-semibold">
+      <div ref={setHeader} data-window-top-row="" className="flex items-center gap-2 px-4 py-3 border-b border-border">
+        {closeFirst && close}
+        <h2 id={`${id}-heading`} className="min-w-0 flex-1 text-sm font-semibold">
           {isEdit ? t("tasks.edit") : t("tasks.create")}
         </h2>
-        <IconButton label={tCommon("close")} onClick={requestClose} data-pane-close="">
-          <X />
-        </IconButton>
+        {!closeFirst && close}
       </div>
 
       {/* Body */}

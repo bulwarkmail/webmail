@@ -6417,6 +6417,9 @@
   "top_bar": {
     "more": "گزینه‌های بیشتر"
   },
+  "windowChrome": {
+    "hide_offline_notice": "پنهان کردن اعلان آفلاین"
+  },
   "shell": {
     "resize": "تغییر اندازه",
     "update_available": "به‌روزرسانی موجود است",

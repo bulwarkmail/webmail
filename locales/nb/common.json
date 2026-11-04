@@ -6417,6 +6417,9 @@
   "top_bar": {
     "more": "Flere alternativer"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Skjul frakoblet-melding"
+  },
   "shell": {
     "resize": "Endre størrelse",
     "update_available": "Oppdatering tilgjengelig",

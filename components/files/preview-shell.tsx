@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight, Download, X } from "@/components/icons";
 import { IconButton } from "@/components/ui/icon-button";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
+import { useCloseBesideControls } from "@/hooks/use-close-beside-controls";
 
 export interface PreviewNeighbours {
   /** The previous and next previewable file of the folder, if any. */
@@ -36,6 +37,14 @@ export function PreviewShell({ name, onClose, onDownload, actions, neighbours, c
   // Tab stays in the preview and the focus goes back to the file that was
   // opened when it closes. Escape is the listener below.
   const shellRef = useFocusTrap({ isActive: true, restoreFocus: true });
+  // Its own close goes to the bar's start when the window's close is at its end.
+  const [bar, setBar] = useState<HTMLDivElement | null>(null);
+  const closeFirst = useCloseBesideControls(bar);
+  const close = (
+    <IconButton label={t("close_preview")} onClick={onClose} className="shrink-0">
+      <X />
+    </IconButton>
+  );
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -82,10 +91,12 @@ export function PreviewShell({ name, onClose, onDownload, actions, neighbours, c
       {/* Full-screen under `viewport-fit=cover`: the bar pads itself out of
           the iOS status bar (#936). The insets are physical, so pl/pr. */}
       <div
+        ref={setBar}
         data-window-top-row=""
         className="flex items-center justify-between gap-2 pl-[calc(1rem+env(safe-area-inset-left))] pr-[calc(1rem+env(safe-area-inset-right))] pt-[calc(0.75rem+var(--app-top-inset))] pb-3 bg-background/90 backdrop-blur border-b border-border"
         onClick={(e) => e.stopPropagation()}
       >
+        {closeFirst && close}
         <h3 className="text-sm font-medium truncate" title={name}>{name}</h3>
         <div className="flex items-center gap-1 shrink-0 ms-auto">
           {neighbours && (
@@ -105,10 +116,7 @@ export function PreviewShell({ name, onClose, onDownload, actions, neighbours, c
             </IconButton>
           )}
         </div>
-        {/* Its own child of the bar, so it can move to the bar's other end beside the window's controls. */}
-        <IconButton label={t("close_preview")} onClick={onClose} className="shrink-0 -ms-1" data-pane-close="">
-          <X />
-        </IconButton>
+        {!closeFirst && close}
       </div>
       {children}
     </div>

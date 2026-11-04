@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { ROW_ATTRIBUTE, ROW_RIGHT_ATTRIBUTE, markWindowRows } from '@/lib/window-controls-overlay';
+import { CLOSE_MOVES_ATTRIBUTE, PANE_HEAD_ATTRIBUTE, ROW_ATTRIBUTE, ROW_RIGHT_ATTRIBUTE, markWindowRows } from '@/lib/window-controls-overlay';
 
 /** The controls take the right 138px of the window, 56px high. */
 const AREA = { x: 0, y: 0, width: 1024 - 138, height: 56 };
@@ -67,14 +67,42 @@ describe('rows under the window\'s controls', () => {
 
 const read = (file: string) => readFileSync(join(process.cwd(), file), 'utf8');
 
-describe('a pane\'s close next to the window\'s', () => {
-  it('moves to the other end of the row, on the side away from the controls', () => {
-    const css = read('app/globals.css');
-    expect(css).toMatch(/html\[data-window-controls\]:not\(\[dir="rtl"\]\) \[data-window-row-right\] > \[data-pane-close\]/);
-    expect(css).toMatch(/html\[data-window-controls\]\[dir="rtl"\] \[data-window-row-left\] > \[data-pane-close\]/);
+describe("a close at the end of a row beside the window's", () => {
+  it('is marked on a top row whose end has the controls', () => {
+    const toolbar = row();
+    box(toolbar, 0, 56);
+    markWindowRows(AREA);
+    expect(toolbar.hasAttribute(CLOSE_MOVES_ATTRIBUTE)).toBe(true);
   });
 
-  it('is marked on every pane that can end up at the window\'s top right', () => {
+  it("isn't, right to left, where the row ends at the left and the controls are at the right", () => {
+    document.documentElement.dir = 'rtl';
+    try {
+      const toolbar = row();
+      box(toolbar, 0, 56);
+      markWindowRows(AREA);
+      expect(toolbar.hasAttribute(ROW_RIGHT_ATTRIBUTE)).toBe(true);
+      expect(toolbar.hasAttribute(CLOSE_MOVES_ATTRIBUTE)).toBe(false);
+    } finally {
+      document.documentElement.dir = '';
+    }
+  });
+
+  it("is marked on a side panel's head right under the controls, and not further down", () => {
+    const head = document.createElement('div');
+    head.setAttribute(PANE_HEAD_ATTRIBUTE, '');
+    document.body.appendChild(head);
+    box(head, 60, 40, 700, 1000);
+    markWindowRows(AREA);
+    expect(head.hasAttribute(CLOSE_MOVES_ATTRIBUTE)).toBe(true);
+    // No room is made in it: it's below the controls.
+    expect(head.hasAttribute(ROW_RIGHT_ATTRIBUTE)).toBe(false);
+    box(head, 200, 40, 700, 1000);
+    markWindowRows(AREA);
+    expect(head.hasAttribute(CLOSE_MOVES_ATTRIBUTE)).toBe(false);
+  });
+
+  it("is asked by every pane that can end up at the window's top right", () => {
     for (const file of [
       'components/email/email-composer.tsx',
       'components/layout/inline-app-view.tsx',
@@ -82,12 +110,24 @@ describe('a pane\'s close next to the window\'s', () => {
       'components/files/preview-shell.tsx',
       'components/calendar/task-modal.tsx',
       'components/contacts/contact-form.tsx',
+      'components/offline/offline-banner.tsx',
+      'components/org/org-announcement.tsx',
+      'components/plugins/plugin-side-panels.tsx',
+      'components/layout/mv-side-panel.tsx',
     ]) {
-      expect(read(file), file).toContain('data-pane-close');
+      expect(read(file), file).toContain('useCloseBesideControls(');
     }
   });
+});
 
+describe('notices at the top', () => {
   it('toasts that step out of the way stay below the controls', () => {
     expect(read('app/globals.css')).toMatch(/html\[data-window-controls\] \[data-toast-container\]\[data-dodging\]\s*\{[^}]*--titlebar-row-height/);
+  });
+
+  it("the offline bar and the organisation's notice are rows that make room for the controls", () => {
+    for (const file of ['components/offline/offline-banner.tsx', 'components/org/org-announcement.tsx']) {
+      expect(read(file), file).toContain('data-window-top-row=""');
+    }
   });
 });

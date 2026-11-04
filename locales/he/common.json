@@ -6418,6 +6418,9 @@
   "top_bar": {
     "more": "אפשרויות נוספות"
   },
+  "windowChrome": {
+    "hide_offline_notice": "הסתרת ההודעה על מצב לא מקוון"
+  },
   "shell": {
     "resize": "שינוי גודל",
     "update_available": "יש עדכון",

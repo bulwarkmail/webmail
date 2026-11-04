@@ -6417,6 +6417,9 @@
   "top_bar": {
     "more": "Citas iespējas"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Paslēpt bezsaistes paziņojumu"
+  },
   "shell": {
     "resize": "Mainīt izmēru",
     "update_available": "Pieejams atjauninājums",

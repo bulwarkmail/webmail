@@ -6417,6 +6417,9 @@
   "top_bar": {
     "more": "Rohkem valikuid"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Peida võrguühenduseta teade"
+  },
   "shell": {
     "resize": "Muuda suurust",
     "update_available": "Saadaval on värskendus",

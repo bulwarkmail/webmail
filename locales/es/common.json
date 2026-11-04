@@ -6417,6 +6417,9 @@
   "top_bar": {
     "more": "Más opciones"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Ocultar aviso de sin conexión"
+  },
   "shell": {
     "resize": "Cambiar tamaño",
     "update_available": "Actualización disponible",

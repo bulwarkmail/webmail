@@ -6417,6 +6417,9 @@
   "top_bar": {
     "more": "Més opcions"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Amaga l'avís de fora de línia"
+  },
   "shell": {
     "resize": "Canvia la mida",
     "update_available": "Hi ha una actualització",

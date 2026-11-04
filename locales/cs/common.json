@@ -6417,6 +6417,9 @@
   "top_bar": {
     "more": "Další možnosti"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Skrýt upozornění na režim offline"
+  },
   "shell": {
     "resize": "Změnit velikost",
     "update_available": "Je k dispozici aktualizace",

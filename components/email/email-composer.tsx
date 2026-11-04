@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useCloseBesideControls } from "@/hooks/use-close-beside-controls";
 import { useMvComposeWindow } from "@/components/email/mv-compose-context";
 import { useLocale, useTranslations } from "next-intl";
 import { isServerOutage } from "@/lib/jmap/offline-hooks";
@@ -2002,6 +2003,10 @@ export function EmailComposer({
     return () => noteOpenDraft(effectiveSessionKey, null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveSessionKey]);
+
+  // The header's close goes to its start when the window's own close is at its end.
+  const [composerHeader, setComposerHeader] = useState<HTMLDivElement | null>(null);
+  const closeBesideControls = useCloseBesideControls(composerHeader);
 
   // Auto-save draft to server on page close (best-effort)
   const ownWindowRef = useRef(ownWindow);
@@ -4516,6 +4521,21 @@ export function EmailComposer({
     }
   };
 
+  // Close at the top end (R4). On a phone it moves to the start, as the phone's
+  // mail apps have it, with Send at the end. Beside the window's own close it
+  // goes to the start too.
+  const composerCloseButton = (
+    <IconButton
+      onClick={() => handleClose()}
+      className={cn(closeBesideControls ? "-ms-2" : "-me-2", "max-md:order-first max-md:me-0 max-md:-ms-2 max-md:h-11 max-md:w-11")}
+      label={tCommon('close')}
+      data-testid="composer-close"
+      data-own-window-close={ownWindow ? "" : undefined}
+    >
+      <X className="w-5 h-5 md:w-4 md:h-4" />
+    </IconButton>
+  );
+
   const popOutButton = (className: string, iconClassName: string) => popOut && (
     <button
       type="button"
@@ -4816,7 +4836,8 @@ export function EmailComposer({
           </button>
         </div>
       ) : (
-      <div className="flex items-center gap-3 px-4 py-2 md:py-0 md:h-14 border-b bg-background shrink-0" data-composer-header="">
+      <div ref={setComposerHeader} className="flex items-center gap-3 px-4 py-2 md:py-0 md:h-14 border-b bg-background shrink-0" data-composer-header="">
+        {closeBesideControls && composerCloseButton}
         {/* The left panel's button at the start, the right one's at the end: where each panel is. */}
         {leftPanelToggle && <div className="hidden md:flex -ms-2">{leftPanelToggle}</div>}
         <div className="flex-1 min-w-0 flex items-center gap-3">
@@ -4888,18 +4909,7 @@ export function EmailComposer({
         )}
         {rightPanelToggle}
         {popOutButton("hidden md:grid h-8 w-8 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground", "w-4 h-4")}
-        {/* Close at the top end (R4). On a phone it moves to the start, as
-            the phone's mail apps have it, with Send at the end. */}
-        <IconButton
-          onClick={() => handleClose()}
-          className="-me-2 max-md:order-first max-md:me-0 max-md:-ms-2 max-md:h-11 max-md:w-11"
-          label={tCommon('close')}
-          data-testid="composer-close"
-          data-own-window-close={ownWindow ? "" : undefined}
-          data-pane-close=""
-        >
-          <X className="w-5 h-5 md:w-4 md:h-4" />
-        </IconButton>
+        {!closeBesideControls && composerCloseButton}
       </div>
       )}
 

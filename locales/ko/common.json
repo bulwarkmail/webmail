@@ -6417,6 +6417,9 @@
   "top_bar": {
     "more": "추가 옵션"
   },
+  "windowChrome": {
+    "hide_offline_notice": "오프라인 알림 숨기기"
+  },
   "shell": {
     "resize": "크기 조정",
     "update_available": "업데이트가 있습니다",
