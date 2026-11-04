@@ -5272,6 +5272,12 @@
     "declined_many": "Odmítli jste {count} schůzek této série.",
     "answers_series": "Vaše odpověď platí pro všechny schůzky série."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "do {time}",
+    "week_all_days": "Zobrazit celý týden",
+    "week_days_short": "{count, plural, one {# den} few {# dny} many {# dne} other {# dní}}",
+    "print": "Tisk…"
+  },
   "advanced_search": {
     "title": "Pokročilé hledání",
     "from": "Od",

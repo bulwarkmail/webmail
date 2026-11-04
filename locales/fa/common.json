@@ -5272,6 +5272,12 @@
     "declined_many": "{count} جلسه از این سری را رد کردید.",
     "answers_series": "پاسخ شما برای همهٔ جلسه‌های این سری است."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "تا {time}",
+    "week_all_days": "نمایش کل هفته",
+    "week_days_short": "{count, plural, one {# روز} other {# روز}}",
+    "print": "چاپ…"
+  },
   "calendar_event_notifications": {
     "someone": "کسی",
     "invited": "{name} شما را به «{title}» دعوت کرد",

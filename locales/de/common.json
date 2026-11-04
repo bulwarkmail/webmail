@@ -4439,7 +4439,7 @@
       "categories_hint": "Tippen zum Suchen oder Hinzufügen",
       "category_add": "Hinzufügen",
       "note": "Notizen",
-      "note_placeholder": "Notiz hinzufügen...",
+      "note_placeholder": "Notiz hinzufügen…",
       "gender": "Geschlecht",
       "gender_sex": "Geschlecht",
       "gender_male": "Männlich",
@@ -4701,7 +4701,7 @@
       "new_task": "Neue Aufgabe"
     },
     "detail": {
-      "add_note": "Notiz hinzufügen...",
+      "add_note": "Notiz hinzufügen…",
       "save_note": "Speichern",
       "note_saved": "Notiz hinzugefügt",
       "open_link": "Link öffnen",
@@ -4971,8 +4971,8 @@
       "title_alert": "Erinnerung: {title}"
     },
     "status": {
-      "loading_calendars": "Kalender werden geladen...",
-      "loading_events": "Termine werden geladen...",
+      "loading_calendars": "Kalender werden geladen…",
+      "loading_events": "Termine werden geladen…",
       "events_load_failed": "Termine konnten nicht geladen werden. Der Kalender ist möglicherweise nicht aktuell.",
       "tasks_load_failed": "Aufgaben konnten nicht geladen werden. Die Liste ist möglicherweise nicht aktuell.",
       "retry": "Erneut versuchen"
@@ -4998,14 +4998,14 @@
       "fetch": "Abrufen",
       "invalid_url": "Bitte geben Sie eine gültige URL ein",
       "url_fetch_failed": "Kalender konnte nicht von der URL abgerufen werden",
-      "parsing": "Kalenderdatei wird analysiert...",
+      "parsing": "Kalenderdatei wird analysiert…",
       "parsed_events": "{count, plural, one {# Termin gefunden} other {# Termine gefunden}}",
       "no_events": "Keine Termine in der Datei gefunden",
       "select_all": "Alle auswählen",
       "deselect_all": "Alle abwählen",
       "target_calendar": "In Kalender importieren",
       "import_button": "Auswahl importieren",
-      "importing": "Termine werden importiert...",
+      "importing": "Termine werden importiert…",
       "success": "{count, plural, one {# Termin importiert} other {# Termine importiert}}",
       "error": "Kalender konnte nicht importiert werden",
       "file_too_large": "Datei überschreitet das 10-MB-Limit",
@@ -5090,9 +5090,9 @@
       "interval_360": "Alle 6 Stunden",
       "interval_1440": "Jeden Tag",
       "subscribe": "Abonnieren",
-      "subscribing": "Abonniere...",
+      "subscribing": "Abonniere…",
       "save": "Änderungen speichern",
-      "saving": "Speichert...",
+      "saving": "Speichert…",
       "edit": "Bearbeiten",
       "edit_title": "Abonnement bearbeiten",
       "updated": "\"{name}\" aktualisiert",
@@ -5122,7 +5122,7 @@
       "create": "Neue Aufgabe",
       "edit": "Aufgabe bearbeiten",
       "title_placeholder": "Aufgabentitel",
-      "description_placeholder": "Beschreibung hinzufügen...",
+      "description_placeholder": "Beschreibung hinzufügen…",
       "due_date": "Fälligkeitsdatum",
       "include_time": "Uhrzeit einbeziehen",
       "priority": "Priorität",
@@ -5147,7 +5147,7 @@
       "delete": "Löschen",
       "cancel": "Abbrechen",
       "save": "Speichern",
-      "quick_add_placeholder": "Aufgabe hinzufügen...",
+      "quick_add_placeholder": "Aufgabe hinzufügen…",
       "due_today": "Heute fällig",
       "due_tomorrow": "Morgen fällig",
       "overdue": "Überfällig"
@@ -5271,6 +5271,12 @@
     "declined_dates": "Sie haben am {dates} abgesagt.",
     "declined_many": "Sie haben {count} Termine dieser Serie abgesagt.",
     "answers_series": "Ihre Antwort gilt für alle Termine der Serie."
+  },
+  "ux_p3_pim_cal": {
+    "agenda_until": "bis {time}",
+    "week_all_days": "Ganze Woche anzeigen",
+    "week_days_short": "{count, plural, one {# Tag} other {# Tage}}",
+    "print": "Drucken…"
   },
   "advanced_search": {
     "title": "Erweiterte Suche",

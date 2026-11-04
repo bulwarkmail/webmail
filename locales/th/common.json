@@ -4705,6 +4705,12 @@
     "declined_many": "คุณปฏิเสธ {count} การประชุมในชุดนี้",
     "answers_series": "คำตอบของคุณใช้กับทุกการประชุมในชุดนี้"
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "จนถึง {time}",
+    "week_all_days": "แสดงทั้งสัปดาห์",
+    "week_days_short": "{count, plural, other {# วัน}}",
+    "print": "พิมพ์…"
+  },
   "settings": {
     "title": "การตั้งค่า",
     "org_locked": "กำหนดโดยองค์กรของคุณ",

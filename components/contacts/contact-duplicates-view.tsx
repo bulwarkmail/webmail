@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { AddressBook, ContactCard } from "@/lib/jmap/types";
 import { getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 interface ContactDuplicatesViewProps {
   groups: ContactCard[][];
@@ -17,9 +18,11 @@ interface ContactDuplicatesViewProps {
 /** "Possible duplicates": cards with the same name, address or phone, each set with its own Merge. */
 export function ContactDuplicatesView({ groups, addressBooks, onMerge, onOpen }: ContactDuplicatesViewProps) {
   const t = useTranslations("ux_pim_cimport");
+  const shownName = useCollectionNames();
   const bookNames = (card: ContactCard) => Object.keys(card.addressBookIds ?? {})
     .filter((id) => card.addressBookIds[id])
-    .map((id) => addressBooks.find((b) => b.id === id)?.name)
+    .map((id) => addressBooks.find((b) => b.id === id))
+    .map((book) => (book ? shownName.addressBook(book) : null))
     .filter(Boolean)
     .join(", ");
 

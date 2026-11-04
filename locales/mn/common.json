@@ -5272,6 +5272,12 @@
     "declined_many": "Та энэ цувралын {count} уулзалтаас татгалзсан.",
     "answers_series": "Таны хариу цувралын бүх уулзалтад хамаарна."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "{time} хүртэл",
+    "week_all_days": "Бүх долоо хоногийг харуулах",
+    "week_days_short": "{count, plural, one {# өдөр} other {# өдөр}}",
+    "print": "Хэвлэх…"
+  },
   "calendar_event_notifications": {
     "someone": "Хэн нэгэн",
     "invited": "{name} таныг \"{title}\"-д урилаа",

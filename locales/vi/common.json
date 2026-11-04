@@ -5284,6 +5284,12 @@
     "declined_many": "Bạn đã từ chối {count} cuộc họp trong chuỗi này.",
     "answers_series": "Câu trả lời của bạn áp dụng cho mọi cuộc họp trong chuỗi."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "đến {time}",
+    "week_all_days": "Hiện cả tuần",
+    "week_days_short": "{count, plural, other {# ngày}}",
+    "print": "In…"
+  },
   "calendar_event_notifications": {
     "someone": "Ai đó",
     "invited": "{name} đã mời bạn tham gia \"{title}\"",

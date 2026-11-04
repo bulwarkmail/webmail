@@ -5272,6 +5272,12 @@
     "declined_many": "U hebt {count} afspraken van deze reeks afgeslagen.",
     "answers_series": "Uw antwoord geldt voor alle afspraken in de reeks."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "tot {time}",
+    "week_all_days": "Hele week tonen",
+    "week_days_short": "{count, plural, one {# dag} other {# dagen}}",
+    "print": "Afdrukken…"
+  },
   "advanced_search": {
     "title": "Geavanceerd zoeken",
     "from": "Van",

@@ -5272,6 +5272,12 @@
     "declined_many": "Rechazaste {count} reuniones de esta serie.",
     "answers_series": "Tu respuesta vale para todas las reuniones de la serie."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "hasta las {time}",
+    "week_all_days": "Mostrar toda la semana",
+    "week_days_short": "{count, plural, one {# día} other {# días}}",
+    "print": "Imprimir…"
+  },
   "advanced_search": {
     "title": "Búsqueda avanzada",
     "from": "De",

@@ -5272,6 +5272,12 @@
     "declined_many": "Ați refuzat {count} întâlniri din această serie.",
     "answers_series": "Răspunsul dvs. este pentru toate întâlnirile din serie."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "până la {time}",
+    "week_all_days": "Afișează toată săptămâna",
+    "week_days_short": "{count, plural, one {# zi} few {# zile} other {# de zile}}",
+    "print": "Imprimare…"
+  },
   "calendar_event_notifications": {
     "someone": "Cineva",
     "invited": "{name} te-a invitat la „{title}”",

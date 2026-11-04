@@ -597,8 +597,9 @@ describe('CalendarApp task feedback', () => {
 
 describe('CalendarApp quick editor', () => {
   // Usability report 2026-11-04: Save stayed off until a title was typed.
-  // Google Calendar saves "(No title)"; so does the quick editor now.
-  it('saves an event without a title as "(No title)"', async () => {
+  // Google Calendar saves it without one and shows "(No title)" (pim-p3-12:
+  // an empty title, not the words, goes to the server).
+  it('saves an event without a title, shown as "(No title)"', async () => {
     renderApp();
     fireEvent.click(slots()[3]);
     const quick = await screen.findByRole('dialog', { name: 'quick_create.aria_label' }, { timeout: 2000 });
@@ -606,7 +607,7 @@ describe('CalendarApp quick editor', () => {
     expect(save).toBeEnabled();
     fireEvent.click(save);
     await waitFor(() => expect(store.createEvent).toHaveBeenCalledTimes(1));
-    expect(store.createEvent.mock.calls[0][1]).toMatchObject({ title: 'events.no_title', showWithoutTime: false });
+    expect(store.createEvent.mock.calls[0][1]).toMatchObject({ title: '', showWithoutTime: false });
   });
 });
 
@@ -645,13 +646,13 @@ describe('CalendarApp creating in the month view', () => {
     const quick = await screen.findByRole('dialog', { name: 'quick_create.aria_label' });
     expect(within(quick).getByText('events.all_day')).toBeInTheDocument();
     expect(within(quick).getByText(/Oct 15 2026.* – .*Oct 20 2026/)).toBeInTheDocument();
-    // No title needed: it saves as "(No title)".
+    // No title needed: it saves without one.
     const save = within(quick).getByRole('button', { name: 'form.save' });
     expect(save).toBeEnabled();
     fireEvent.click(save);
     await waitFor(() => expect(store.createEvent).toHaveBeenCalledTimes(1));
     expect(store.createEvent.mock.calls[0][1]).toMatchObject({
-      title: 'events.no_title', start: '2026-10-15T00:00:00', duration: 'P6D', showWithoutTime: true, calendarIds: { cal: true },
+      title: '', start: '2026-10-15T00:00:00', duration: 'P6D', showWithoutTime: true, calendarIds: { cal: true },
     });
   });
 

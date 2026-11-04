@@ -142,6 +142,11 @@ type PendingScopeAction =
   | { type: "delete"; event: CalendarEvent; sendScheduling?: boolean; fromEditor?: boolean }
   | { type: "rsvp"; event: CalendarEvent; participantId: string; status: CalendarParticipant["participationStatus"]; sentBy?: string };
 
+/** How long a sideways scroll rests on a day before that day becomes the selection. */
+const VISIBLE_DATE_SETTLE_MS = 300;
+/** How long a just-created event stays marked. */
+const JUST_SAVED_MARK_MS = 3000;
+
 function isRecurringEvent(event: CalendarEvent): boolean {
   return (event.recurrenceRules?.length ?? 0) > 0 || event.recurrenceId != null;
 }
@@ -271,6 +276,15 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const [miniMonth, setMiniMonth] = useState(() => displayNow());
   const [pendingScopeAction, setPendingScopeAction] = useState<PendingScopeAction | null>(null);
   const [detailEvent, setDetailEvent] = useState<CalendarEvent | null>(null);
+  // The event created last keeps the top row of its week in Month, so a full
+  // day doesn't hide it, and is marked for a moment so it can be found
+  // (pim-p3-3).
+  const [justSaved, setJustSaved] = useState<{ id: string; marked: boolean } | null>(null);
+  useEffect(() => {
+    if (!justSaved?.marked) return;
+    const timer = setTimeout(() => setJustSaved((prev) => (prev ? { ...prev, marked: false } : prev)), JUST_SAVED_MARK_MS);
+    return () => clearTimeout(timer);
+  }, [justSaved]);
   const [detailAnchorRect, setDetailAnchorRect] = useState<DOMRect | null>(null);
   // A clicked event's card stays until closed; a hover preview goes when
   // the pointer leaves. Held in a ref too for the hover timers.
@@ -532,12 +546,31 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const extendWindowEnd = useCallback(() => extendScrollWindow("after"), [extendScrollWindow]);
 
   // The views report the day they show as the user scrolls; the title and
-  // the mini calendar follow it, the selection does not.
+  // the mini calendar follow it. In Month and Agenda the selection stays.
+  // Day and Week scroll sideways (a trackpad swipe, a horizontal wheel):
+  // once that rests on a day the selection moves there as with the arrows,
+  // so the address and the mini calendar's marked day follow and a reload
+  // or Back comes back to it (pim-p3-9).
+  const settleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleVisibleDateChange = useCallback((date: Date) => {
     // Hidden for printing, a view scrolls on its own; the copy keeps the dates on screen.
     if (usePrintStore.getState().printing) return;
     setVisibleDate(date);
     setMiniMonth(date);
+    if (settleTimerRef.current !== null) clearTimeout(settleTimerRef.current);
+    settleTimerRef.current = null;
+    if (normalizedViewMode !== "day" && normalizedViewMode !== "week") return;
+    const mode = normalizedViewMode;
+    settleTimerRef.current = setTimeout(() => {
+      settleTimerRef.current = null;
+      const offset = differenceInCalendarDays(useCalendarStore.getState().selectedDate, date);
+      // In Week the selected day may stay where it is while it's on screen.
+      if (mode === "day" ? offset === 0 : offset >= 0 && offset < 7) return;
+      setSelectedDate(date);
+    }, VISIBLE_DATE_SETTLE_MS);
+  }, [normalizedViewMode, setSelectedDate]);
+  useEffect(() => () => {
+    if (settleTimerRef.current !== null) clearTimeout(settleTimerRef.current);
   }, []);
   useEffect(() => {
     setVisibleDate(null);
@@ -704,9 +737,12 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     setViewMode("month");
   }, [setViewMode]);
 
+  // The mini calendar's arrows page only the mini calendar, as in Outlook,
+  // Google and Apple Calendar: look at next month, then pick a day there,
+  // without losing the week on screen (pim-p3-4). Picking a day moves the view.
   const handleMiniMonthChange = useCallback((date: Date) => {
-    jumpTo(date);
-  }, [jumpTo]);
+    setMiniMonth(date);
+  }, []);
 
   // Runs `then` at once, or, while an editor holds unsaved changes, after
   // the user agreed to drop them: a click elsewhere in the calendar must
@@ -858,6 +894,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       openEditModal(event);
       return;
     }
+    // The panel already shows it: no card on top of it for the same event (pim-p3-8).
+    if (showEventModal && editEvent?.id === event.id) {
+      closeDetail();
+      return;
+    }
     if (hoverTimerRef.current) { clearTimeout(hoverTimerRef.current); hoverTimerRef.current = null; }
     setQuickDraft(null);
     detailPinnedRef.current = true;
@@ -867,7 +908,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     // A click opens the event's card; the hover preview does not count as
     // opening it. The editor reports its own opens (event-modal).
     void calendarHooks.onCalendarEventOpen.emit(eventToView(event));
-  }, [isMobile, closeDetail, openEditModal]);
+  }, [isMobile, closeDetail, openEditModal, showEventModal, editEvent]);
 
   const {
     contextMenu: eventContextMenu,
@@ -1050,6 +1091,25 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     }),
   );
 
+  // Closing the event panel or editor goes back to the grid with the event
+  // focused, when the focus would otherwise fall to the page: the card's
+  // Edit button it came from is gone (pim-p3-8).
+  const closeEventEditor = useCallback(() => {
+    const closedId = editEvent?.id ?? null;
+    setShowEventModal(false);
+    setEditEvent(null);
+    setCopySource(null);
+    setPendingPreview(null);
+    setDefaultCalendarIdForCreate(undefined);
+    setDefaultModalAllDay(false);
+    if (!closedId) return;
+    requestAnimationFrame(() => {
+      const active = document.activeElement;
+      if (active && active !== document.body && active.isConnected) return;
+      document.querySelector<HTMLElement>(`[data-event-id="${CSS.escape(closedId)}"]`)?.focus();
+    });
+  }, [editEvent]);
+
   const handleEditFromDetail = useCallback(() => {
     if (detailEvent) {
       const ev = detailEvent;
@@ -1196,6 +1256,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           const picked = pickedId ? useCalendarStore.getState().calendars.find((c) => c.id === pickedId) : undefined;
           if (picked) rememberEventCalendar(picked);
           focusCalendarOnEvent(created);
+          setJustSaved({ id: created.id, marked: true });
           if (sendSchedulingMessages) {
             toast.success(t("notifications.invitation_sent"));
           } else {
@@ -1302,9 +1363,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const handleQuickCreateSave = useCallback(async () => {
     if (!quickDraft) return;
     const { start, end, calendarId, allDay } = quickDraft;
-    // Saving without a title is allowed, as in Google Calendar: the event
-    // is called "(No title)" in the user's language.
-    const title = quickDraft.title.trim() || t("events.no_title");
+    // Saving without a title is allowed, as in Google Calendar. The title
+    // stays empty on the server, and only the screen says "(No title)", in
+    // each reader's language: other apps and attendees saw the words
+    // (pim-p3-12).
+    const title = quickDraft.title.trim();
     if (allDay) {
       setQuickDraft(null);
       // Every day from the first to the last one picked (a drag in the month view).
@@ -1342,7 +1405,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       freeBusyStatus: "busy",
       privacy: "public",
     });
-  }, [quickDraft, handleSaveEvent, t]);
+  }, [quickDraft, handleSaveEvent]);
 
   // While the quick editor is open its placeholder takes the preview slot.
   const gridPreview = useMemo<PendingEventPreview | null>(() => {
@@ -2012,6 +2075,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
               currentUserEmails={currentUserEmails}
               canEditEvent={canEditEvent}
               selectedEventId={selectedEventId}
+              recentEventId={justSaved?.id ?? null}
+              highlightEventId={justSaved?.marked ? justSaved.id : null}
               onMoveEvent={handleMoveEvent}
             />
           );
@@ -2458,7 +2523,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
                 onRsvp={handleRsvp}
                 onMore={editEvent ? (anchor) => openEventContextMenuFrom(anchor, editEvent, "end") : undefined}
                 onDirtyChange={setEventEditorDirty}
-                onClose={() => { setShowEventModal(false); setEditEvent(null); setCopySource(null); setPendingPreview(null); setDefaultCalendarIdForCreate(undefined); setDefaultModalAllDay(false); }}
+                onClose={closeEventEditor}
                 onPreviewChange={setPendingPreview}
                 currentUserEmails={userEmailsFor(editEvent ?? copySource)}
                 isSubscriptionCalendar={isSubscriptionCalendar}
@@ -2630,7 +2695,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           onRsvp={handleRsvp}
           onMore={editEvent ? (anchor) => openEventContextMenuFrom(anchor, editEvent, "end") : undefined}
           onDirtyChange={setEventEditorDirty}
-          onClose={() => { setShowEventModal(false); setEditEvent(null); setCopySource(null); setDefaultCalendarIdForCreate(undefined); setDefaultModalAllDay(false); }}
+          onClose={closeEventEditor}
           currentUserEmails={userEmailsFor(editEvent ?? copySource)}
           isSubscriptionCalendar={isSubscriptionCalendar}
           maxParticipants={maxParticipants}

@@ -5272,6 +5272,12 @@
     "declined_many": "您已拒絕此系列中的 {count} 場會議。",
     "answers_series": "您的回覆適用於此系列的所有會議。"
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "至 {time}",
+    "week_all_days": "顯示整週",
+    "week_days_short": "{count, plural, other {#天}}",
+    "print": "列印…"
+  },
   "calendar_event_notifications": {
     "someone": "有人",
     "invited": "{name} 邀請您參加「{title}」",

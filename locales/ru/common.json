@@ -5272,6 +5272,12 @@
     "declined_many": "Вы отклонили встреч этой серии: {count}.",
     "answers_series": "Ваш ответ относится ко всем встречам серии."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "до {time}",
+    "week_all_days": "Показать всю неделю",
+    "week_days_short": "{count, plural, one {# день} few {# дня} many {# дней} other {# дня}}",
+    "print": "Печать…"
+  },
   "advanced_search": {
     "title": "Расширенный поиск",
     "from": "От",

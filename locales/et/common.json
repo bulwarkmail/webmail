@@ -5272,6 +5272,12 @@
     "declined_many": "Lükkasite tagasi {count} selle sarja kohtumist.",
     "answers_series": "Teie vastus kehtib sarja kõigile kohtumistele."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "kuni {time}",
+    "week_all_days": "Näita kogu nädalat",
+    "week_days_short": "{count, plural, one {# päev} other {# päeva}}",
+    "print": "Prindi…"
+  },
   "calendar_event_notifications": {
     "someone": "Keegi",
     "invited": "{name} kutsus sind sündmusele \"{title}\"",

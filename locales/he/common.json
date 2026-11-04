@@ -5157,6 +5157,12 @@
     "declined_many": "דחית {count} פגישות בסדרה הזו.",
     "answers_series": "התשובה שלך חלה על כל הפגישות בסדרה."
   },
+  "ux_p3_pim_cal": {
+    "agenda_until": "עד {time}",
+    "week_all_days": "הצגת השבוע כולו",
+    "week_days_short": "{count, plural, one {יום אחד} two {יומיים} other {# ימים}}",
+    "print": "הדפסה…"
+  },
   "advanced_search": {
     "title": "חיפוש מתקדם",
     "from": "מ",

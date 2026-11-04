@@ -16,6 +16,7 @@ import { readableTextOn } from "@/lib/color-transform";
 import { useLongPress } from "@/hooks/use-long-press";
 import { useCvdColor } from "@/hooks/use-cvd-color";
 import { endEventDragGrab, startEventDragGrab } from "@/lib/calendar/event-drag-grab";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 interface EventCardProps {
   event: CalendarEvent;
@@ -161,6 +162,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
   const t = useTranslations("calendar");
   const tEvent = useTranslations("ux_pim_event");
   const tGrid = useTranslations("ux_pim_grid");
+  const shownName = useCollectionNames();
   // The addresses of the login the event is in (pim-12, pim-9).
   const userEmails = useEventUserEmails(currentUserEmails ?? [])(event);
   const [isBeingDragged, setIsBeingDragged] = useState(false);
@@ -175,7 +177,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
   const showColorNames = useSettingsStore((state) => state.showColorNames);
   const timeFmt = timeFormat === "12h" ? "h:mm a" : "HH:mm";
 
-  const calendarName = calendar?.name || "";
+  const calendarName = calendar ? shownName.calendar(calendar) : "";
   const visibleCalendarName = showColorNames && calendarName ? calendarName : null;
   const durationMinutes = parseDuration(event.duration);
   const endTime = getEventEndDate(event);
@@ -336,6 +338,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
         aria-label={ariaLabel}
         tabIndex={tabbable ? undefined : -1}
         {...dragProps}
+        data-event-id={event.id}
         data-reply-state={replyState ?? undefined}
         className={cn(
           "flex items-center w-full text-start text-xs font-medium px-1.5 py-0.5 rounded-xs truncate",
@@ -377,6 +380,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
           aria-label={ariaLabel}
           tabIndex={tabbable ? undefined : -1}
           {...dragProps}
+          data-event-id={event.id}
           data-timed-style={textStyle}
           className={cn(
             "w-full h-full text-start rounded-xs px-1.5 py-0.5 text-xs overflow-hidden",
@@ -416,6 +420,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
         aria-label={ariaLabel}
         tabIndex={tabbable ? undefined : -1}
         {...dragProps}
+        data-event-id={event.id}
         data-reply-state={replyState ?? undefined}
         className={cn(
           "w-full h-full text-start rounded-xs px-1.5 py-0.5 text-xs overflow-hidden",
@@ -457,6 +462,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
       aria-label={ariaLabel}
       tabIndex={tabbable ? undefined : -1}
       {...dragProps}
+      data-event-id={event.id}
       data-calendar-event
       data-reply-state={replyState ?? undefined}
       data-continues-before={continuesBefore || undefined}
