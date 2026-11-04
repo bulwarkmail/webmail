@@ -103,3 +103,10 @@ describe('reader toolbar in the Inbox', () => {
   });
 });
 
+describe('reader header', () => {
+  it('shows no message size (the details have it)', async () => {
+    render(<EmailViewer email={{ ...message('inbox'), size: 2150 } as Email} isLoading={false} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" />);
+    await act(async () => { await new Promise((r) => setTimeout(r, 10)); });
+    expect(document.body.textContent).not.toContain('2.1 KB');
+  });
+});

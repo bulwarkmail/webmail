@@ -5055,16 +5055,12 @@ ${printWatermark ? printWatermark.html : ''}
               </div>
             )}
             {/* Date/time on the right of subject row - hidden on mobile, shown next to sender.
-                Mountain View puts it on the sender's row instead, and shows no size. */}
+                Mountain View puts it on the sender's row instead. The size is
+                in the details. */}
             <div className={cn("hidden flex-shrink-0 text-end", !mvViewer && "sm:block")}>
               <span className="text-xs lg:text-sm text-muted-foreground whitespace-nowrap">
                 {formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
               </span>
-              {email.size > 0 && (
-                <div className="text-xs text-muted-foreground">
-                  <bdi>{formatFileSize(email.size)}</bdi>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -5415,18 +5411,13 @@ ${printWatermark ? printWatermark.html : ''}
                 </button>
               </div>
             </div>
-            {/* Date/time + size on the right (mobile) */}
+            {/* Date/time on the right (mobile); the size is in the details */}
             <div className="sm:hidden flex-shrink-0 text-end ms-2">
               <span className="text-xs text-muted-foreground whitespace-nowrap">
                 {mvMobileViewer
                   ? formatDate(emailDisplayDate(email))
                   : formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
               </span>
-              {email.size > 0 && !mvMobileViewer && (
-                <div className="text-xs text-muted-foreground">
-                  <bdi>{formatFileSize(email.size)}</bdi>
-                </div>
-              )}
             </div>
             {/* Mountain View phone: reply from the top of the message, not
                 only from the row under a long body (#1475). */}
