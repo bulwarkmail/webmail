@@ -1153,14 +1153,15 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         const permanent = bulkDeleteIsPermanent(currentMailbox);
         if (shouldConfirmBulkDelete(currentMailbox)) {
           const confirmed = await confirmDialog({
+            // One wording for a delete for good (mail-p3-5).
             title: permanent
-              ? t('email_list.permanent_delete_confirm_batch_title')
+              ? t('mail_p3_actions.delete_forever_batch_title', { count: selectedEmailKeys.size })
               : t('email_list.batch_actions.delete_confirm_title'),
             message: permanent
-              ? t('email_list.permanent_delete_confirm_batch_message', { count: selectedEmailKeys.size })
+              ? t('mail_p3_actions.delete_forever_batch_message', { count: selectedEmailKeys.size })
               : t('email_list.batch_actions.delete_confirm_message', { count: selectedEmailKeys.size }),
             confirmText: permanent
-              ? t('email_list.permanent_delete')
+              ? t('reader_actions.delete_forever')
               : t('email_list.batch_actions.delete'),
             variant: "destructive",
           });
@@ -3794,9 +3795,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
     if (permanent) {
       const confirmed = await confirmDialog({
-        title: t('email_list.permanent_delete_confirm_title'),
-        message: t('email_list.permanent_delete_confirm_message'),
-        confirmText: t('email_list.permanent_delete'),
+        title: t('mail_p3_actions.delete_forever_title'),
+        message: t('mail_p3_actions.delete_forever_message'),
+        confirmText: t('reader_actions.delete_forever'),
         variant: "destructive",
       });
       if (!confirmed) return;

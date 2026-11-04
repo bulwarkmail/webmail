@@ -136,8 +136,8 @@ describe('Delete forever in a message window from Trash', () => {
     await waitFor(() => expect(calls.order).toEqual(['deleted', 'offer:delete', 'closed']));
     expect(asked.questions).toHaveLength(1);
     expect(asked.questions[0]).toMatchObject({
-      title: 'email_list.permanent_delete_confirm_title',
-      confirmText: 'email_list.permanent_delete',
+      title: 'mail_p3_actions.delete_forever_title',
+      confirmText: 'reader_actions.delete_forever',
       variant: 'destructive',
     });
     // forceDelete: the store destroys it instead of moving it to Trash.

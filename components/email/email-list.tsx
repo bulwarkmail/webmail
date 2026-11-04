@@ -26,6 +26,7 @@ import { MoveFolderList, moveMenuIsEmpty, useMoveMenu } from "./move-target-list
 import { useChooseMoveFolder } from "./move-to-dialog";
 import { resolveMoveOwnerAccountId } from "@/lib/move-targets";
 import { getMailboxPath } from "@/lib/utils";
+import { emptyFolderLabelKey, emptyFolderPrompt } from "@/lib/empty-folder-text";
 import { usePhishingReport } from "@/hooks/use-phishing-report";
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
@@ -759,14 +760,15 @@ export function EmailList({
 
     if (shouldConfirmBulkDelete(currentMailbox)) {
       const confirmed = await confirmDialog({
+        // One wording for a delete for good (mail-p3-5).
         title: isInTrash
-          ? t('permanent_delete_confirm_batch_title')
+          ? tRoot('mail_p3_actions.delete_forever_batch_title', { count: selectedEmailKeys.size })
           : t('batch_actions.delete_confirm_title'),
         message: isInTrash
-          ? t('permanent_delete_confirm_batch_message', { count: selectedEmailKeys.size })
+          ? tRoot('mail_p3_actions.delete_forever_batch_message', { count: selectedEmailKeys.size })
           : t('batch_actions.delete_confirm_message', { count: selectedEmailKeys.size }),
         confirmText: isInTrash
-          ? t('permanent_delete')
+          ? tRoot('reader_actions.delete_forever')
           : t('batch_actions.delete'),
         variant: "destructive",
       });
@@ -938,10 +940,12 @@ export function EmailList({
   const handleEmptyFolder = async () => {
     if (!client || isProcessing || !currentMailbox) return;
 
+    // "Empty Trash" / "Empty Spam" with the count, as the folder menu asks (mail-p3-5).
+    const prompt = emptyFolderPrompt(currentMailbox, false);
     const confirmed = await confirmDialog({
-      title: t('empty_folder.confirm_title'),
-      message: t('empty_folder.confirm_message'),
-      confirmText: t('empty_folder.confirm_button'),
+      title: tRoot(prompt.title),
+      message: tRoot(prompt.message, prompt.values),
+      confirmText: tRoot(prompt.confirm),
       variant: "destructive",
     });
     if (!confirmed) return;
@@ -1360,7 +1364,7 @@ export function EmailList({
             ) : (
               <Trash2 className="w-3 h-3 me-1" />
             )}
-            {t('empty_folder.button')}
+            {tRoot(emptyFolderLabelKey(currentMailbox?.role) ?? 'email_list.empty_folder.button')}
           </Button>
         </div>
       )}

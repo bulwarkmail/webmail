@@ -166,7 +166,8 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
   const t = useTranslations();
   const tNotifications = useTranslations('notifications');
   const tRemove = useTranslations('email_list.confirm_remove');
-  const tList = useTranslations('email_list');
+  const tP3 = useTranslations('mail_p3_actions');
+  const tActions = useTranslations('reader_actions');
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
   const archiveActionEnabled = useArchiveActionEnabled();
 
@@ -424,9 +425,9 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     const permanent = bulkDeleteIsPermanent(current);
     if (permanent) {
       const confirmed = await confirmDialog({
-        title: tList('permanent_delete_confirm_title'),
-        message: tList('permanent_delete_confirm_message'),
-        confirmText: tList('permanent_delete'),
+        title: tP3('delete_forever_title'),
+        message: tP3('delete_forever_message'),
+        confirmText: tActions('delete_forever'),
         variant: 'destructive',
       });
       if (!confirmed) return;
@@ -445,7 +446,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
       console.error('Delete failed:', err);
       toast.error(tNotifications('error_deleting'));
     }
-  }, [client, email, mailboxes, deleteEmail, onClose, t, tNotifications, tList, confirmDialog, tRemove]);
+  }, [client, email, mailboxes, deleteEmail, onClose, t, tNotifications, tP3, tActions, confirmDialog, tRemove]);
 
   const handleArchive = useCallback(async () => {
     if (!client || !email) return;
