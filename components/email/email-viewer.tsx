@@ -304,6 +304,11 @@ interface EmailViewerProps {
   mvInlineComposer?: React.ReactNode;
   /** A reply or forward to this message is open under it: no quick reply box as well. */
   replyComposerOpen?: boolean;
+  /**
+   * A reply to this message saved as a draft (compose-p2-6): shown under it,
+   * marked Draft, with Edit and Discard, in place of the quick reply box.
+   */
+  replyDraft?: { preview?: string; onEdit: () => void; onDiscard: () => void } | null;
   onEditDraft?: () => void;
   onCancelScheduledForEdit?: () => void;
   /** Stop a scheduled message from going out; it goes back to Drafts. */
@@ -1376,6 +1381,7 @@ export function EmailViewer({
   onReplyAllConversationEmail,
   mvInlineComposer,
   replyComposerOpen,
+  replyDraft,
   onEditDraft,
   onCancelScheduledForEdit,
   onCancelScheduledSend,
@@ -1400,6 +1406,7 @@ export function EmailViewer({
   const tWindows = useTranslations('pwaWindows');
   const tComposer = useTranslations('email_composer');
   const tWords = useTranslations('compose_words');
+  const tList = useTranslations('email_list');
   const tNotifications = useTranslations('notifications');
   const tCommon = useTranslations('common');
   const tFiles = useTranslations('files');
@@ -3514,7 +3521,8 @@ export function EmailViewer({
   const latestSrcDocRef = useRef<string | null>(null);
   const iframeReady = iframeReadyFor !== null && iframeReadyFor === emailIframeSrcDoc;
   // Not on spam: a reply confirms the address to the sender.
-  const showQuickReply = !!email && quickReplyEnabled && !mvReplyRow && !replyComposerOpen && !isDraft && !isScheduled && !isBodyLoading && !isInJunkFolder
+  const showReplyDraft = !!email && !!replyDraft && !mvReplyRow && !replyComposerOpen && !isDraft && !isScheduled;
+  const showQuickReply = !!email && quickReplyEnabled && !mvReplyRow && !replyComposerOpen && !showReplyDraft && !isDraft && !isScheduled && !isBodyLoading && !isInJunkFolder
     && (!effectiveEmailContent.isHtml || iframeReady);
   // Toasts sit above the quick reply box, as above a composer's footer
   // (compose-p2-17): its height for toast.tsx, as it grows when focused.
@@ -6202,6 +6210,29 @@ ${printWatermark ? printWatermark.html : ''}
                 <Forward className="w-4 h-4" />
                 {t('forward')}
               </Button>
+            </div>
+          )}
+
+          {/* The reply already started on this message, as Gmail shows it. */}
+          {showReplyDraft && replyDraft && (
+            <div data-testid="reply-draft" className="bg-background border-t border-border px-6 mt-auto" style={{ paddingBlock: 'var(--density-header-py)' }}>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-border bg-muted/30 px-3 py-2">
+                <span className="inline-flex items-center gap-1.5 text-sm font-medium text-destructive shrink-0">
+                  <File className="w-4 h-4" />
+                  {tList('draft')}
+                </span>
+                <span dir="auto" className="min-w-0 flex-1 truncate text-sm text-muted-foreground">{replyDraft.preview}</span>
+                <span className="flex shrink-0 gap-2">
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={replyDraft.onEdit} data-testid="reply-draft-edit">
+                    <Pencil className="w-4 h-4" />
+                    {t('edit_draft')}
+                  </Button>
+                  <Button variant="ghost" size="sm" className="gap-1.5" onClick={replyDraft.onDiscard} data-testid="reply-draft-discard">
+                    <Trash2 className="w-4 h-4" />
+                    {tComposer('discard')}
+                  </Button>
+                </span>
+              </div>
             </div>
           )}
 
