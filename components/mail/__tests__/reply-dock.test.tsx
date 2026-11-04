@@ -9,15 +9,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const { ReplyDock, dockLayout } = await import('../reply-dock');
 
-function renderInPane(height: number, readerTop = 110) {
+function renderInPane(height: number, readerTop = 110, bodyTop?: number) {
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
     if (this.hasAttribute('data-pane')) return { top: 0, height, width: 800, left: 0, right: 800, bottom: height, x: 0, y: 0, toJSON() {} } as DOMRect;
     if (this.hasAttribute('data-reader-scroll')) return { top: readerTop, height: 0, width: 800, left: 0, right: 800, bottom: readerTop, x: 0, y: readerTop, toJSON() {} } as DOMRect;
+    if (this.hasAttribute('data-reader-body') && bodyTop !== undefined) return { top: bodyTop, height: 400, width: 800, left: 0, right: 800, bottom: bodyTop + 400, x: 0, y: bodyTop, toJSON() {} } as DOMRect;
     return { top: 0, height: 0, width: 0, left: 0, right: 0, bottom: 0, x: 0, y: 0, toJSON() {} } as DOMRect;
   });
   return render(
     <div data-pane="">
-      <div data-reader-scroll="" />
+      <div data-reader-scroll=""><div>{bodyTop !== undefined && <div data-reader-body="" />}</div></div>
       <ReplyDock><textarea aria-label="reply text" /></ReplyDock>
     </div>,
   );
@@ -54,5 +55,23 @@ describe('the reply dock', () => {
   it('chooses by the pane height', () => {
     expect(dockLayout(699).mode).toBe('takeover');
     expect(dockLayout(700)).toEqual({ mode: 'share', maxHeight: 350 });
+  });
+
+  // compose-p3-7: the desktop app at 1366×768 and 125 % (a pane of about
+  // 770 px) docked at half the pane, and a message with two attachments
+  // showed its sender and its cards above the reply, none of its text.
+  it('keeps some of the message’s text above the reply, counting the attachment cards', () => {
+    // Toolbar and subject 110 px, sender and two attachment cards to 380 px.
+    const { container } = renderInPane(770, 110, 380);
+    const dock = container.querySelector('[data-reply-dock]') as HTMLElement;
+    expect(dock.getAttribute('data-dock-mode')).toBe('share');
+    // 770 - 380 - 100 px of text.
+    expect(dock.style.maxHeight).toBe('290px');
+  });
+
+  it('takes the pane when the cards leave no room for both', () => {
+    expect(dockLayout(770, 500)).toEqual({ mode: 'takeover' });
+    // A short header leaves half the pane as before.
+    expect(dockLayout(770, 200)).toEqual({ mode: 'share', maxHeight: 385 });
   });
 });

@@ -992,7 +992,7 @@
     "cc": "Хуулбар",
     "bcc": "Нууц хуулбар",
     "subject": "Сэдэв",
-    "body_placeholder": "Мессеж бичнэ үү...",
+    "body_placeholder": "Мессеж бичнэ үү…",
     "send": "Илгээх",
     "cancel": "Цуцлах",
     "attach": "Хавсаргах",
@@ -1049,10 +1049,10 @@
       "email_placeholder": "user@example.com",
       "envelope_notice": "Хэрэв таны сервер энэ хаягийг дугтуйн илгээгчээр хүлээн авахгүй бол оронд нь {identity} ашиглагдах бөгөөд хүлээн авагчид үүнийг Return-Path гарчигт харж болно."
     },
-    "save_as_template": "Загвар болгон хадгалах",
+    "save_as_template": "Загвар болгон хадгалах…",
     "attach_from_device": "Энэ төхөөрөмжөөс байршуулах",
     "templates_menu": "Загварууд",
-    "insert_template": "Загвар оруулах",
+    "insert_template": "Загвар оруулах…",
     "options": "Тохиргоо",
     "option_plain_text": "Энгийн текст",
     "option_plain_text_hint": "Форматгүй илгээх",
@@ -7812,6 +7812,10 @@
     "missing": "\"{name}\" байхгүй болсон байна.",
     "too_large": "\"{name}\" {max}-аас том тул хавсаргах боломжгүй.",
     "failed": "\"{name}\"-г хавсаргаж чадсангүй. Дахин оролдоно уу."
+  },
+  "composeRecentLimit": {
+    "too_large": "Хэт том",
+    "too_large_hint": "Серверийн хүлээн авах хэмжээнээс ({max}) их"
   },
   "compose_windows": {
     "more_formatting": "Бусад хэлбэржүүлэлт",

@@ -936,7 +936,7 @@
     "cc": "עותק",
     "bcc": "עותק מוסתר",
     "subject": "נושא",
-    "body_placeholder": "כתוב את הודעתך...",
+    "body_placeholder": "כתוב את הודעתך…",
     "send": "שלח",
     "cancel": "ביטול",
     "attach": "צרף",
@@ -972,10 +972,10 @@
       "to": "אל:{recipients}"
     },
     "remove_sub_address": "הסר כתובת משנה",
-    "save_as_template": "שמור כתבנית",
+    "save_as_template": "שמור כתבנית…",
     "attach_from_device": "העלאה מהמכשיר הזה",
     "templates_menu": "תבניות",
-    "insert_template": "הוספת תבנית",
+    "insert_template": "הוספת תבנית…",
     "options": "אפשרויות",
     "option_plain_text": "טקסט פשוט",
     "option_plain_text_hint": "שליחה ללא עיצוב",
@@ -7813,6 +7813,10 @@
     "missing": "\"{name}\" כבר לא קיים.",
     "too_large": "\"{name}\" גדול מ־{max} ולא ניתן לצרף אותו.",
     "failed": "לא ניתן היה לצרף את \"{name}\". נסו שוב."
+  },
+  "composeRecentLimit": {
+    "too_large": "גדול מדי",
+    "too_large_hint": "גדול ממה שהשרת מקבל ({max})"
   },
   "compose_windows": {
     "more_formatting": "עוד עיצוב",

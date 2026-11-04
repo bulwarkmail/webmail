@@ -989,10 +989,10 @@
     "forward_message": "Inoltra",
     "from": "Da",
     "to": "A",
-    "cc": "CC",
+    "cc": "Cc",
     "bcc": "CCN",
     "subject": "Oggetto",
-    "body_placeholder": "Scrivi il tuo messaggio...",
+    "body_placeholder": "Scrivi il tuo messaggio…",
     "send": "Invia",
     "cancel": "Annulla",
     "attach": "Allega",
@@ -1046,10 +1046,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Se il tuo server non accetta questo indirizzo come mittente della busta, viene usato {identity} al suo posto, e i destinatari possono vederlo nell'intestazione Return-Path."
     },
-    "save_as_template": "Salva come modello",
+    "save_as_template": "Salva come modello…",
     "attach_from_device": "Carica da questo dispositivo",
     "templates_menu": "Modelli",
-    "insert_template": "Inserisci modello",
+    "insert_template": "Inserisci modello…",
     "options": "Opzioni",
     "option_plain_text": "Testo semplice",
     "option_plain_text_hint": "Invia senza formattazione",
@@ -7812,6 +7812,10 @@
     "missing": "\"{name}\" non esiste più.",
     "too_large": "\"{name}\" supera {max} e non può essere allegato.",
     "failed": "Impossibile allegare \"{name}\". Riprova."
+  },
+  "composeRecentLimit": {
+    "too_large": "Troppo grande",
+    "too_large_hint": "Più grande di quanto accetta il server ({max})"
   },
   "compose_windows": {
     "more_formatting": "Altre opzioni di formattazione",

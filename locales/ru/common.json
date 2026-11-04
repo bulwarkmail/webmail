@@ -992,7 +992,7 @@
     "cc": "Копия",
     "bcc": "Скрытая копия",
     "subject": "Тема",
-    "body_placeholder": "Напишите сообщение...",
+    "body_placeholder": "Напишите сообщение…",
     "send": "Отправить",
     "cancel": "Отмена",
     "attach": "Прикрепить",
@@ -1046,10 +1046,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Если ваш сервер не принимает этот адрес как отправителя конверта, вместо него используется {identity}, и получатели увидят его в заголовке Return-Path."
     },
-    "save_as_template": "Сохранить как шаблон",
+    "save_as_template": "Сохранить как шаблон…",
     "attach_from_device": "Загрузить с этого устройства",
     "templates_menu": "Шаблоны",
-    "insert_template": "Вставить шаблон",
+    "insert_template": "Вставить шаблон…",
     "options": "Параметры",
     "option_plain_text": "Обычный текст",
     "option_plain_text_hint": "Отправить без форматирования",
@@ -7812,6 +7812,10 @@
     "missing": "«{name}» больше не существует.",
     "too_large": "«{name}» больше {max}, его нельзя прикрепить.",
     "failed": "Не удалось прикрепить «{name}». Попробуйте ещё раз."
+  },
+  "composeRecentLimit": {
+    "too_large": "Слишком большой",
+    "too_large_hint": "Больше, чем принимает сервер ({max})"
   },
   "compose_windows": {
     "more_formatting": "Дополнительное форматирование",

@@ -989,10 +989,10 @@
     "forward_message": "転送",
     "from": "送信元",
     "to": "宛先",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "件名",
-    "body_placeholder": "メッセージを入力...",
+    "body_placeholder": "メッセージを入力…",
     "send": "送信",
     "cancel": "キャンセル",
     "attach": "添付",
@@ -1046,10 +1046,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "サーバーがこのアドレスをエンベロープ送信者として受け付けない場合は、代わりに {identity} が使われ、受信者は Return-Path ヘッダーでそのアドレスを確認できます。"
     },
-    "save_as_template": "テンプレートとして保存",
+    "save_as_template": "テンプレートとして保存…",
     "attach_from_device": "このデバイスからアップロード",
     "templates_menu": "テンプレート",
-    "insert_template": "テンプレートを挿入",
+    "insert_template": "テンプレートを挿入…",
     "options": "オプション",
     "option_plain_text": "プレーンテキスト",
     "option_plain_text_hint": "書式なしで送信",
@@ -7812,6 +7812,10 @@
     "missing": "「{name}」はもうありません。",
     "too_large": "「{name}」は {max} を超えているため添付できません。",
     "failed": "「{name}」を添付できませんでした。もう一度お試しください。"
+  },
+  "composeRecentLimit": {
+    "too_large": "大きすぎます",
+    "too_large_hint": "サーバーが受け付けるサイズ（{max}）を超えています"
   },
   "compose_windows": {
     "more_formatting": "その他の書式",

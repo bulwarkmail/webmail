@@ -992,7 +992,7 @@
     "cc": "رونوشت",
     "bcc": "رونوشت مخفی",
     "subject": "موضوع",
-    "body_placeholder": "پیام خود را بنویسید...",
+    "body_placeholder": "پیام خود را بنویسید…",
     "send": "ارسال",
     "cancel": "انصراف",
     "attach": "پیوست",
@@ -1049,10 +1049,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "اگر سرور شما این آدرس را به‌عنوان فرستندهٔ پاکت نپذیرد، به‌جای آن {identity} استفاده می‌شود و گیرندگان می‌توانند آن را در سرآیند Return-Path ببینند."
     },
-    "save_as_template": "ذخیره به عنوان قالب",
+    "save_as_template": "ذخیره به عنوان قالب…",
     "attach_from_device": "بارگذاری از این دستگاه",
     "templates_menu": "قالب‌ها",
-    "insert_template": "درج قالب",
+    "insert_template": "درج قالب…",
     "options": "گزینه‌ها",
     "option_plain_text": "متن ساده",
     "option_plain_text_hint": "ارسال بدون قالب‌بندی",
@@ -7812,6 +7812,10 @@
     "missing": "«{name}» دیگر وجود ندارد.",
     "too_large": "«{name}» بزرگ‌تر از {max} است و نمی‌توان آن را پیوست کرد.",
     "failed": "پیوست «{name}» ممکن نشد. دوباره امتحان کنید."
+  },
+  "composeRecentLimit": {
+    "too_large": "خیلی بزرگ",
+    "too_large_hint": "بزرگ‌تر از حدی که سرور می‌پذیرد ({max})"
   },
   "compose_windows": {
     "more_formatting": "قالب‌بندی بیشتر",

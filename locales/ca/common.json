@@ -989,10 +989,10 @@
     "forward_message": "Reenvia",
     "from": "De",
     "to": "Per a",
-    "cc": "CC",
+    "cc": "Cc",
     "bcc": "CCO",
     "subject": "Assumpte",
-    "body_placeholder": "Escriviu el vostre missatge...",
+    "body_placeholder": "Escriviu el vostre missatge…",
     "send": "Envia",
     "cancel": "Cancel·la",
     "attach": "Adjunta",
@@ -1049,10 +1049,10 @@
       "email_placeholder": "alias@exemple.com",
       "envelope_notice": "Si el vostre servidor no accepta aquesta adreça com a remitent del sobre, s'hi fa servir {identity}, i els destinataris la poden veure a la capçalera Return-Path."
     },
-    "save_as_template": "Desa com a plantilla",
+    "save_as_template": "Desa com a plantilla…",
     "attach_from_device": "Puja des d'aquest dispositiu",
     "templates_menu": "Plantilles",
-    "insert_template": "Insereix una plantilla",
+    "insert_template": "Insereix una plantilla…",
     "options": "Opcions",
     "option_plain_text": "Text pla",
     "option_plain_text_hint": "Envia sense format",
@@ -7812,6 +7812,10 @@
     "missing": "«{name}» ja no hi és.",
     "too_large": "«{name}» supera {max} i no es pot adjuntar.",
     "failed": "No s'ha pogut adjuntar «{name}». Torneu-ho a provar."
+  },
+  "composeRecentLimit": {
+    "too_large": "Massa gran",
+    "too_large_hint": "Més gran del que accepta el servidor ({max})"
   },
   "compose_windows": {
     "more_formatting": "Més format",

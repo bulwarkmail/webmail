@@ -989,10 +989,10 @@
     "forward_message": "Chuyển tiếp",
     "from": "Người gửi",
     "to": "Người nhận",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "Tiêu đề",
-    "body_placeholder": "Viết nội dung thư...",
+    "body_placeholder": "Viết nội dung thư…",
     "formatting": "Định dạng",
     "send": "Gửi",
     "cancel": "Hủy",
@@ -1050,10 +1050,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Nếu máy chủ không chấp nhận địa chỉ này làm địa chỉ người gửi trong phong bì SMTP, địa chỉ {identity} sẽ được dùng thay thế; người nhận có thể thấy địa chỉ đó trong tiêu đề Return-Path."
     },
-    "save_as_template": "Lưu làm mẫu",
+    "save_as_template": "Lưu làm mẫu…",
     "attach_from_device": "Tải lên từ thiết bị này",
     "templates_menu": "Mẫu",
-    "insert_template": "Chèn mẫu",
+    "insert_template": "Chèn mẫu…",
     "options": "Tùy chọn",
     "option_plain_text": "Văn bản thuần",
     "option_plain_text_hint": "Gửi không kèm định dạng",
@@ -7824,6 +7824,10 @@
     "missing": "\"{name}\" không còn nữa.",
     "too_large": "\"{name}\" lớn hơn {max} nên không thể đính kèm.",
     "failed": "Không thể đính kèm \"{name}\". Hãy thử lại."
+  },
+  "composeRecentLimit": {
+    "too_large": "Quá lớn",
+    "too_large_hint": "Lớn hơn mức máy chủ nhận ({max})"
   },
   "compose_windows": {
     "more_formatting": "Thêm định dạng",

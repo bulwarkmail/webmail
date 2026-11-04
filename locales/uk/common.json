@@ -989,10 +989,10 @@
     "forward_message": "Переслати",
     "from": "Від",
     "to": "до",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "Тема",
-    "body_placeholder": "Напишіть своє повідомлення...",
+    "body_placeholder": "Напишіть своє повідомлення…",
     "send": "Надіслати",
     "cancel": "Скасувати",
     "attach": "Прикріпити",
@@ -1046,10 +1046,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Якщо ваш сервер не приймає цю адресу як відправника конверта, замість неї використовується {identity}, і одержувачі бачитимуть її в заголовку Return-Path."
     },
-    "save_as_template": "Зберегти як шаблон",
+    "save_as_template": "Зберегти як шаблон…",
     "attach_from_device": "Завантажити з цього пристрою",
     "templates_menu": "Шаблони",
-    "insert_template": "Вставити шаблон",
+    "insert_template": "Вставити шаблон…",
     "options": "Параметри",
     "option_plain_text": "Звичайний текст",
     "option_plain_text_hint": "Надіслати без форматування",
@@ -7812,6 +7812,10 @@
     "missing": "«{name}» більше не існує.",
     "too_large": "«{name}» більший за {max}, його не можна прикріпити.",
     "failed": "Не вдалося прикріпити «{name}». Спробуйте ще раз."
+  },
+  "composeRecentLimit": {
+    "too_large": "Завеликий",
+    "too_large_hint": "Більший, ніж приймає сервер ({max})"
   },
   "compose_windows": {
     "more_formatting": "Додаткове форматування",

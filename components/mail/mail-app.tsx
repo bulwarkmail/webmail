@@ -59,7 +59,7 @@ import { discardWithUndo } from "@/lib/compose/draft-close-toast";
 import { findReplyDraft, threadDrafts } from "@/lib/reply-drafts";
 import { cancelFailureToast, partlyRefusedWarning, rescheduleFailureToast, rescheduledToast } from "@/lib/send-failure-message";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
-import { runUndoSendCountdown, startSendProgress, UNDO_TOAST_SLACK_MS } from "@/lib/outgoing/send-progress-toast";
+import { runUndoSendCountdown, startSendProgress, UNDO_TOAST_SLACK_MS, undoEndsAt } from "@/lib/outgoing/send-progress-toast";
 import { formatRejectedRecipients, RescheduleRestoredError } from "@/lib/jmap/client";
 import { subscribePushStateChanges } from "@/lib/push-events";
 import { createMailPushListener } from "@/lib/mail-push-listener";
@@ -89,7 +89,8 @@ import { useDesktopCommands } from "@/lib/desktop/commands";
 import { useDesktopPrefs } from "@/lib/desktop/preferences";
 import { hasDesktopWindows, popoutsAvailable } from "@/lib/popout/support";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
-import { composerDataFromDraft } from "@/lib/draft-composer-data";
+import { composerDataFromDraft, withReplyAllRecipients } from "@/lib/draft-composer-data";
+import { ownReplyAddresses } from "@/lib/reply-recipients";
 import { useUndoShortcut } from "@/hooks/use-undo-shortcut";
 import { archiveInboxTarget } from "@/lib/archive-inbox";
 import { confirmMailRemoval } from "@/lib/mail-removal-confirm";
@@ -156,6 +157,7 @@ import { WopiEditor } from "@/components/files/wopi-editor";
 import { useWopiStatus, canWopiOpen } from "@/hooks/use-wopi-status";
 import { isFilePreviewable } from "@/lib/file-preview";
 import { prepareQuickReply, type QuickReplyQuestion } from "@/lib/outgoing/quick-reply";
+import { undoDelayUntil } from "@/lib/outgoing/undo-delay";
 import { composerSendOptions } from "@/lib/outgoing/composer-send-options";
 import { isPhishingMarked } from "@/lib/phishing-links";
 import { phishingMarkedNow } from "@/hooks/use-phishing-report";
@@ -412,6 +414,20 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // closed or a draft went.
   const [replyDraft, setReplyDraft] = useState<{ emailId: string; draft: Email; source: DraftSource } | null>(null);
   const [replyDraftScan, setReplyDraftScan] = useState<{ emailId: string; n: number } | null>(null);
+  // Drafts the composer's bin discarded while their Undo is offered. They are
+  // still on the server, but neither the card nor Reply offers them; the card
+  // used to come back as the composer closed and stay after the delete
+  // (compose-p3-2).
+  const [discardingDraftIds, setDiscardingDraftIds] = useState<ReadonlySet<string>>(() => new Set());
+  const discardingDraftIdsRef = useRef(discardingDraftIds);
+  discardingDraftIdsRef.current = discardingDraftIds;
+  const noteDiscardingDraft = (draftId: string) => setDiscardingDraftIds((prev) => new Set(prev).add(draftId));
+  const forgetDiscardingDraft = (draftId: string) => setDiscardingDraftIds((prev) => {
+    if (!prev.has(draftId)) return prev;
+    const next = new Set(prev);
+    next.delete(draftId);
+    return next;
+  });
   const conversationDraftsRef = useRef<{ threadId: string; emailId: string; drafts: Email[] } | null>(null);
   const [conversationEmails, setConversationEmails] = useState<Email[]>([]);
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
@@ -2996,7 +3012,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Reply on a message with a reply draft opens that draft (compose-p2-6).
   // After a composer closed (it may have saved that very draft under a new
   // id) the drafts are read fresh.
-  const resumeReplyDraft = async (open: Email | null, composerWasOpen: boolean): Promise<boolean> => {
+  const resumeReplyDraft = async (open: Email | null, composerWasOpen: boolean, mode: 'reply' | 'replyAll' = 'reply'): Promise<boolean> => {
     if (!client || !open || open.keywords?.$draft || mvShell || isScheduledView) return false;
     let found = replyDraft?.emailId === open.id ? replyDraft : null;
     // A phone's conversation holds its drafts in full.
@@ -3013,14 +3029,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         source: { accountId, localAccountId: clientAccountId ?? activeAccountId ?? undefined },
       } : null;
     }
-    if (!found) return false;
-    await handleEditDraft(found.draft, found.source, { underMessage: true });
+    if (!found || discardingDraftIdsRef.current.has(found.draft.id)) return false;
+    await handleEditDraft(found.draft, found.source, { underMessage: true, replyAllTo: mode === 'replyAll' ? open : undefined });
     return true;
   };
 
   const handleReply = async (draftText?: string) => {
     const composerWasOpen = showComposer;
     await closeOpenComposer();
+    // Only a string is text to start with: a click event handed on by a
+    // button skipped the reply draft (compose-p3-3).
+    if (typeof draftText !== 'string') draftText = undefined;
     if (!draftText && await resumeReplyDraft(selectedEmail, composerWasOpen)) return;
     if (selectedEmail) {
       const formerSelected = { ...selectedEmail };
@@ -3055,7 +3074,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
    */
   // `underMessage`: a reply draft resumed from the message it answers docks
   // under that message, as a new reply does (compose-p2-6).
-  const handleEditDraft = async (email?: Email, source?: DraftSource, { underMessage = false }: { underMessage?: boolean } = {}) => {
+  const handleEditDraft = async (email?: Email, source?: DraftSource, { underMessage = false, replyAllTo }: { underMessage?: boolean; replyAllTo?: Email } = {}) => {
     if (!client) return;
     const draftCandidate = email && typeof email === 'object' && typeof email.id === 'string'
       ? email
@@ -3107,12 +3126,21 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     const nextSession = composerSessionRef.current + 1;
     setComposerSessionId(nextSession);
     setResumedReplySession(underMessage ? nextSession : null);
-    setPendingDraft(composerDataFromDraft(draft, {
+    const opened = composerDataFromDraft(draft, {
       accountId,
       localAccountId,
       identities: composerIdentities,
       noSubject: t('email_composer.no_subject'),
-    }));
+    });
+    // Reply all on the message the draft answers: its other recipients join.
+    setPendingDraft(replyAllTo
+      ? withReplyAllRecipients(opened, {
+          from: replyAllTo.from ?? undefined,
+          replyToAddresses: replyAllTo.replyTo ?? undefined,
+          to: replyAllTo.to ?? undefined,
+          cc: replyAllTo.cc ?? undefined,
+        }, ownReplyAddresses(composerIdentities.map((i) => i.email), [draftClient.getUsername?.()]))
+      : opened);
     setComposerMode('compose');
     setShowComposer(true);
     if (isMobile) setActiveView('viewer');
@@ -3190,10 +3218,19 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (restored === undefined) return;
     // The store closed it in the reader; on a phone the list comes back.
     if (wasOpen && isMobile) handleMobileBack();
-    toast.success(
-      tViewer('send_cancelled'),
-      t('notifications.moved_to_mailbox', { mailbox: t('sidebar.mailboxes.drafts') }),
-    );
+    // Where it went, with Open, as Gmail's "Send cancelled" (compose-p3-10).
+    toast.success(t('notifications.moved_to_mailbox', { mailbox: t('sidebar.mailboxes.drafts') }), {
+      message: tViewer('send_cancelled'),
+      action: restored ? {
+        label: t('offlineDrafts.open'),
+        onClick: () => {
+          void handleEditDraft(restored, {
+            accountId: email.scheduledAccountId,
+            localAccountId: email.sourceClientAccountId ?? activeAccountId ?? undefined,
+          }).catch(reportDraftOpenFailure);
+        },
+      } : undefined,
+    });
   };
 
   // A send in its Undo window (mail-p2-8): what waits until it really goes
@@ -3278,19 +3315,21 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // Undo: without this, the draft's next save would run through the new
     // active login and remove its old version by id in the wrong account.
     const undoLogin = pending.localAccountId ?? useAuthStore.getState().activeAccountId ?? undefined;
-    // A send-delay window (seconds away) closes the toast a second before the
-    // server releases the message, so Undo is never offered once it is too
-    // late. A message scheduled for later keeps the toast up a short while.
-    const remainingMs = Date.parse(pending.sendAt) - Date.now();
+    // A send-delay window (seconds away) offers Undo for the whole delay from
+    // now, and the server holds the message a moment longer, so Undo is never
+    // offered once it is too late (undoEndsAt). A message scheduled for later
+    // keeps the toast up a short while.
+    const shownAt = Date.now();
+    const remainingMs = Date.parse(pending.sendAt) - shownAt;
     const isUndoWindow = Number.isFinite(remainingMs) && remainingMs <= 120_000;
     const undoDurationMs = isUndoWindow
-      ? Math.max(remainingMs - 1000, 1000)
+      ? Math.max(undoEndsAt(Date.parse(pending.sendAt), shownAt, sendDelaySeconds) - shownAt, 1000)
       : Math.max(sendDelaySeconds, 8) * 1000;
 
     // A message scheduled for later says when it goes, and offers Cancel
     // where a send-delay window offers Undo send.
     const undoToastId = toast.success(isUndoWindow
-      ? t('email_viewer.sending_in', { seconds: Math.round(remainingMs / 1000) })
+      ? t('email_viewer.sending_in', { seconds: Math.ceil(undoDurationMs / 1000) })
       : t('compose_send.scheduled_for', { when: formatScheduledSendAt(pending.sendAt, useSettingsStore.getState().timeFormat) }), {
       // An undo window turns into "Sent" as Undo ends (runUndoSendCountdown).
       duration: isUndoWindow ? undoDurationMs + UNDO_TOAST_SLACK_MS : undoDurationMs,
@@ -3378,7 +3417,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       const ownerAccountId = pending.submissionAccountId && pending.submissionAccountId !== client.getAccountId() ? pending.submissionAccountId : undefined;
       runUndoSendCountdown(undoToastId, {
         sendAt: Date.parse(pending.sendAt),
-        undoEndsAt: Date.now() + undoDurationMs,
+        undoEndsAt: shownAt + undoDurationMs,
         maxSeconds: sendDelaySeconds,
         sendingIn: (seconds) => t('email_viewer.sending_in', { seconds }),
         sent: t('compose_send.sent'),
@@ -3394,11 +3433,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         clearPendingUndoSend();
       }
     }, undoDurationMs);
-    // Once the server has released the message, the Scheduled count in the
-    // sidebar no longer includes it. Not cleared with the effect: clearing the
-    // pending undo above re-runs this effect before the release.
+    // Not scheduled mail: Scheduled leaves it out, and asks again once the
+    // server let it go (compose-p3-9). Not undone with the effect: clearing
+    // the pending undo above re-runs this effect before the release.
     if (isUndoWindow) {
-      setTimeout(() => { void refreshScheduledMetadata(client); }, remainingMs + 3000);
+      useEmailStore.getState().noteUndoHold(client, pending.submissionId, pending.sendAt);
     }
 
     return () => clearTimeout(timer);
@@ -3408,7 +3447,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const handleReplyAll = async (draftText?: string) => {
     const composerWasOpen = showComposer;
     await closeOpenComposer();
-    if (!draftText && await resumeReplyDraft(selectedEmail, composerWasOpen)) return;
+    // Only a string is text to start with: the reader's Reply all handed on
+    // its click event, which skipped the reply draft (compose-p3-3).
+    if (typeof draftText !== 'string') draftText = undefined;
+    if (!draftText && await resumeReplyDraft(selectedEmail, composerWasOpen, 'replyAll')) return;
     if (selectedEmail) {
       const formerSelected = { ...selectedEmail };
       const enrichedEmail = await emailHooks.onBeforeComposeOpenToReplyAll.transform(selectedEmail);
@@ -4902,7 +4944,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         });
         if (!confirmed) return false;
       } else {
-        delayedUntil = new Date(Date.now() + sendDelaySeconds * 1000).toISOString();
+        delayedUntil = undoDelayUntil(sendDelaySeconds);
       }
     }
 
@@ -5656,7 +5698,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const handleConversationReplyAll = async (email: Email) => {
     const composerWasOpen = showComposer;
     await closeOpenComposer();
-    if (await resumeReplyDraft(email, composerWasOpen)) return;
+    if (await resumeReplyDraft(email, composerWasOpen, 'replyAll')) return;
     email = await emailHooks.onBeforeComposeOpenToReplyAll.transform(email);
     selectEmail(email);
     await prepareComposerQuoteHeader(email, 'replyAll');
@@ -5835,12 +5877,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         }}
         requestCloseRef={composerRequestCloseRef}
         onDiscardDraft={(draftId, draft) => {
-          handleDiscardDraft(draftId, draft);
+          // Once it is gone, the card under its message goes too (compose-p3-2).
+          void handleDiscardDraft(draftId, draft).finally(() => {
+            forgetDiscardingDraft(draftId);
+            scanReplyDrafts();
+          });
           // The bin and the toasts' Discard delete once their Undo is over,
           // when another composer may be open: its draft stays.
           if (composerSessionRef.current === composerSessionId) setPendingDraft(null);
         }}
+        onDiscardStarted={noteDiscardingDraft}
         onRestoreDiscarded={(data) => {
+          if (data.draftId) forgetDiscardingDraft(data.draftId);
           void closeOpenComposer().then(() => {
             startFreshComposerSession();
             setPendingDraft(data);
@@ -6711,7 +6759,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     } : undefined}
                     mvInlineComposer={mvInlineReply ? <MvComposeInline onPopOut={handleMvPopOut}>{composerNode}</MvComposeInline> : undefined}
                     replyComposerOpen={dockedReply}
-                    replyDraft={replyDraft && selectedEmail && replyDraft.emailId === selectedEmail.id ? {
+                    replyDraft={replyDraft && selectedEmail && replyDraft.emailId === selectedEmail.id && !discardingDraftIds.has(replyDraft.draft.id) ? {
                       preview: replyDraft.draft.preview,
                       onEdit: () => void handleEditDraft(replyDraft.draft, replyDraft.source, { underMessage: true }).catch(reportDraftOpenFailure),
                       onDiscard: discardReplyDraft,

@@ -989,10 +989,10 @@
     "forward_message": "Reenviar",
     "from": "De",
     "to": "Para",
-    "cc": "CC",
+    "cc": "Cc",
     "bcc": "CCO",
     "subject": "Asunto",
-    "body_placeholder": "Escriba su mensaje...",
+    "body_placeholder": "Escriba su mensaje…",
     "send": "Enviar",
     "cancel": "Cancelar",
     "attach": "Adjuntar",
@@ -1046,10 +1046,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Si tu servidor no acepta esta dirección como remitente del sobre, se usa {identity} en su lugar, y los destinatarios pueden verla en el encabezado Return-Path."
     },
-    "save_as_template": "Guardar como plantilla",
+    "save_as_template": "Guardar como plantilla…",
     "attach_from_device": "Subir desde este dispositivo",
     "templates_menu": "Plantillas",
-    "insert_template": "Insertar plantilla",
+    "insert_template": "Insertar plantilla…",
     "options": "Opciones",
     "option_plain_text": "Texto sin formato",
     "option_plain_text_hint": "Enviar sin formato",
@@ -7812,6 +7812,10 @@
     "missing": "\"{name}\" ya no existe.",
     "too_large": "\"{name}\" supera {max} y no se puede adjuntar.",
     "failed": "No se pudo adjuntar \"{name}\". Inténtalo de nuevo."
+  },
+  "composeRecentLimit": {
+    "too_large": "Demasiado grande",
+    "too_large_hint": "Más grande de lo que acepta el servidor ({max})"
   },
   "compose_windows": {
     "more_formatting": "Más formato",

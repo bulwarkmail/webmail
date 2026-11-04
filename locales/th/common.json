@@ -1450,10 +1450,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "หากเซิร์ฟเวอร์ไม่ยอมรับที่อยู่นี้เป็น envelope sender ระบบจะใช้ {identity} แทน และผู้รับสามารถดูได้ในส่วนหัว Return-Path"
     },
-    "save_as_template": "บันทึกเป็นแม่แบบข้อความ",
+    "save_as_template": "บันทึกเป็นแม่แบบข้อความ…",
     "attach_from_device": "อัปโหลดจากอุปกรณ์นี้",
     "templates_menu": "แม่แบบข้อความ",
-    "insert_template": "แทรกแม่แบบ",
+    "insert_template": "แทรกแม่แบบ…",
     "options": "ตัวเลือก",
     "option_plain_text": "ข้อความธรรมดา (Plain text)",
     "option_plain_text_hint": "ส่งโดยไม่มีการจัดรูปแบบ",
@@ -1637,7 +1637,7 @@
     "attach": "แนบไฟล์",
     "attach_files": "ไฟล์",
     "attach_photos": "รูปภาพและวิดีโอ",
-    "body_placeholder": "เขียนข้อความของคุณที่นี่...",
+    "body_placeholder": "เขียนข้อความของคุณที่นี่…",
     "cancel": "ยกเลิก",
     "formatting": "การจัดรูปแบบ",
     "forward_message": "ส่งต่อ",
@@ -7820,6 +7820,10 @@
     "missing": "“{name}” ไม่มีอยู่แล้ว",
     "too_large": "“{name}” มีขนาดใหญ่กว่า {max} จึงแนบไม่ได้",
     "failed": "แนบ “{name}” ไม่สำเร็จ ลองอีกครั้ง"
+  },
+  "composeRecentLimit": {
+    "too_large": "ใหญ่เกินไป",
+    "too_large_hint": "ใหญ่กว่าที่เซิร์ฟเวอร์รับได้ ({max})"
   },
   "compose_windows": {
     "more_formatting": "การจัดรูปแบบเพิ่มเติม",

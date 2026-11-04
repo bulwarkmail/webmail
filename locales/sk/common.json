@@ -992,7 +992,7 @@
     "cc": "Kópia",
     "bcc": "Skrytá kópia",
     "subject": "Predmet",
-    "body_placeholder": "Napíšte správu...",
+    "body_placeholder": "Napíšte správu…",
     "send": "Odoslať",
     "cancel": "Zrušiť",
     "attach": "Priložiť",
@@ -1049,10 +1049,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Ak váš server túto adresu neprijme ako odosielateľa obálky, použije sa namiesto nej {identity} a príjemcovia ju uvidia v hlavičke Return-Path."
     },
-    "save_as_template": "Uložiť ako šablónu",
+    "save_as_template": "Uložiť ako šablónu…",
     "attach_from_device": "Nahrať z tohto zariadenia",
     "templates_menu": "Šablóny",
-    "insert_template": "Vložiť šablónu",
+    "insert_template": "Vložiť šablónu…",
     "options": "Možnosti",
     "option_plain_text": "Obyčajný text",
     "option_plain_text_hint": "Odoslať bez formátovania",
@@ -7812,6 +7812,10 @@
     "missing": "„{name}“ už neexistuje.",
     "too_large": "„{name}“ je väčší ako {max} a nedá sa priložiť.",
     "failed": "„{name}“ sa nepodarilo priložiť. Skúste to znova."
+  },
+  "composeRecentLimit": {
+    "too_large": "Príliš veľký",
+    "too_large_hint": "Väčší, než server prijme ({max})"
   },
   "compose_windows": {
     "more_formatting": "Ďalšie formátovanie",
