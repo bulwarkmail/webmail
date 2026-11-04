@@ -3727,11 +3727,38 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // was open in the reading pane. Phones stay in the list.
   const reopenEmailRef = useRef<((email: Email) => Promise<unknown>) | null>(null);
   const reopenAfterUndo = (email: Email) => {
-    const { selectedEmail: open } = useEmailStore.getState();
+    const { selectedEmail: open, emails: rows } = useEmailStore.getState();
     if (isMobile || !open || emailKeyFor(open) !== emailKeyFor(email)) return undefined;
     const key = emailKeyFor(email);
+    // What was unread before the action: the message opened in its place gets
+    // marked read by opening, and Undo leaves it for the one put back, so it
+    // gets its unread mark back (mail-p3-6).
+    const unreadBefore = new Set(rows.filter((e) => !e.keywords?.$seen).map(emailKeyFor));
+    const actionClient = client;
+    // The message the action opens next; one the user picks after it keeps its mark.
+    let opened: string | null = null;
+    const stopWatching = useEmailStore.subscribe((state, prev) => {
+      if (state.selectedEmail === prev.selectedEmail || !state.selectedEmail) return;
+      const next = emailKeyFor(state.selectedEmail);
+      if (next === key) return;
+      opened = next;
+      stopWatching();
+    });
+    setTimeout(stopWatching, 60_000);
     return () => {
-      const restored = useEmailStore.getState().emails.find((e) => emailKeyFor(e) === key);
+      stopWatching();
+      const state = useEmailStore.getState();
+      const shown = state.selectedEmail;
+      if (actionClient && shown && opened !== null && emailKeyFor(shown) === opened) {
+        const thread = threadKeyFor(shown);
+        for (const e of state.emails) {
+          if (threadKeyFor(e) !== thread || !e.keywords?.$seen || !unreadBefore.has(emailKeyFor(e))) continue;
+          void state.markAsRead(actionClient, e.id, false, emailKeyFor(e)).catch((error) => {
+            debug.error('Failed to mark unread again after Undo:', error);
+          });
+        }
+      }
+      const restored = state.emails.find((e) => emailKeyFor(e) === key);
       if (restored) void reopenEmailRef.current?.(restored);
     };
   };
