@@ -303,6 +303,8 @@ interface EmailViewerProps {
   /** Mountain View: reply to one message of the conversation. */
   onReplyConversationEmail?: (email: Email) => void;
   onReplyAllConversationEmail?: (email: Email) => void;
+  /** Forward on a message of the conversation. */
+  onForwardConversationEmail?: (email: Email) => void;
   /** Mountain View: a reply being written in place, shown under the conversation instead of the reply buttons. */
   mvInlineComposer?: React.ReactNode;
   /** A reply or forward to this message is open under it: no quick reply box as well. */
@@ -785,10 +787,68 @@ function mvSenderDate(date: Date | string, timeFormat: '12h' | '24h'): string {
 }
 
 /**
+ * The date on a conversation message in the default layout: the time today,
+ * "Oct 21, 13:40" this year, "Oct 21, 2025" before. The full date is on hover.
+ */
+export function conversationShortDate(date: Date | string, timeFormat: '12h' | '24h', now: Date = new Date()): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const zone = getEffectiveTimeZone();
+  const day = Number.isNaN(d.getTime()) ? null : getWallClock(d, zone);
+  const today = getWallClock(now, zone);
+  if (day && day.year === today.year && day.month === today.month && day.day === today.day) return formatDateTime(d, timeFormat);
+  if (day && day.year === today.year) return formatDateTime(d, timeFormat, { month: 'short', day: 'numeric' });
+  return formatDateTime(d, timeFormat, { year: 'numeric', month: 'short', day: 'numeric', dateOnly: true });
+}
+
+function conversationFullDate(date: Date | string, timeFormat: '12h' | '24h'): string {
+  return formatDateTime(date, timeFormat, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+/**
+ * The date on a conversation message's sender line: Mountain View keeps
+ * Gmail's "Oct 21, 2026, 13:40 (14 days ago)", the phone the list's date, the
+ * default layout the short date. Every style has the full date on hover.
+ */
+/**
+ * How a conversation opens around the open message (mail-p2-4): its unread
+ * messages unfolded, as Gmail does, and the newest one too, also when it is
+ * your own reply. The open message folds when a newer one is shown and it had
+ * been read already. Drafts and messages still waiting to be sent are never
+ * "the newest".
+ */
+export function conversationOpenPlan(conversation: Email[], openId: string): { expanded: string[]; foldOpen: boolean; newestId: string | null } {
+  const expanded = conversation.filter((e) => e.id !== openId && !e.keywords?.$seen).map((e) => e.id);
+  const open = conversation.find((e) => e.id === openId);
+  const candidates = conversation.filter((e) => !e.keywords?.$draft && !e.isScheduled);
+  const newest = candidates[candidates.length - 1];
+  if (!open || !newest || newest.id === openId) return { expanded, foldOpen: false, newestId: null };
+  if (!expanded.includes(newest.id)) expanded.push(newest.id);
+  return { expanded, foldOpen: !!open.keywords?.$seen, newestId: newest.id };
+}
+
+/** A button's tooltip with the key the menus and the shortcut help show (mail-p2-13). */
+function useKeyTip() {
+  const shortcut = useMessageActionShortcut();
+  return (label: string, action: MessageActionKey) => {
+    const key = shortcut(action);
+    return key ? `${label} (${key})` : label;
+  };
+}
+
+function ConversationDate({ date, timeFormat, variant, className }: { date: string; timeFormat: '12h' | '24h'; variant: 'mv' | 'list' | 'short'; className?: string }) {
+  const shown = variant === 'mv' ? mvSenderDate(date, timeFormat) : variant === 'list' ? formatDate(date) : conversationShortDate(date, timeFormat);
+  return (
+    <time dateTime={date} title={conversationFullDate(date, timeFormat)} className={cn("text-xs text-muted-foreground whitespace-nowrap", className ?? "ms-auto ps-2")} data-conversation-date="">
+      {shown}
+    </time>
+  );
+}
+
+/**
  * One message of a Mountain View conversation, folded to its sender, date and
  * snippet. Clicking it unfolds the message in place.
  */
-function MvConversationCard({ email, onOpen, timeFormat, compact }: { email: Email; onOpen?: (email: Email) => void; timeFormat: '12h' | '24h'; compact?: boolean }) {
+function MvConversationCard({ email, onOpen, timeFormat, compact, shortDates }: { email: Email; onOpen?: (email: Email) => void; timeFormat: '12h' | '24h'; compact?: boolean; shortDates?: boolean }) {
   const tSidebar = useTranslations('sidebar');
   const sender = email.from?.[0];
   const senderWarning = useSenderWarning(email);
@@ -813,9 +873,7 @@ function MvConversationCard({ email, onOpen, timeFormat, compact }: { email: Ema
               {email.scheduledSendAt ? formatScheduledSendAt(email.scheduledSendAt, timeFormat) : tSidebar('scheduled')}
             </span>
           )}
-          <span className="ms-auto ps-2 text-xs text-muted-foreground whitespace-nowrap">
-            {compact ? formatDate(emailDisplayDate(email)) : mvSenderDate(emailDisplayDate(email), timeFormat)}
-          </span>
+          <ConversationDate date={emailDisplayDate(email)} timeFormat={timeFormat} variant={compact ? 'list' : shortDates ? 'short' : 'mv'} />
         </span>
         <span className="block text-sm text-muted-foreground truncate">{cleanPreview(email.preview)}</span>
       </span>
@@ -875,22 +933,28 @@ export function MvExpandedConversationCard({
   onMarkRead,
   onReply,
   onReplyAll,
+  onForward,
   onDownloadAttachment,
   blobSource,
   compact,
+  shortDates,
 }: {
   email: Email;
   timeFormat: '12h' | '24h';
   compact?: boolean;
+  /** The default layout's short date instead of Gmail's long one. */
+  shortDates?: boolean;
   onCollapse: (email: Email) => void;
   onLoadBody?: (email: Email) => void;
   onMarkRead?: (email: Email) => void;
   onReply?: (email: Email) => void;
   onReplyAll?: (email: Email) => void;
+  onForward?: (email: Email) => void;
   onDownloadAttachment?: ConversationAttachmentHandler;
   blobSource?: EmailBlobContext;
 }) {
   const t = useTranslations('email_viewer');
+  const keyTip = useKeyTip();
   const tSidebar = useTranslations('sidebar');
   const externalContent = useConversationExternalContent();
   const sender = email.from?.[0];
@@ -943,9 +1007,7 @@ export function MvExpandedConversationCard({
             <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
             <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} className="self-center" />
             <ReceivedLabelChip email={email} className="self-center" />
-            <span className="ms-auto ps-2 text-xs text-muted-foreground whitespace-nowrap">
-              {compact ? formatDate(emailDisplayDate(email)) : mvSenderDate(emailDisplayDate(email), timeFormat)}
-            </span>
+            <ConversationDate date={emailDisplayDate(email)} timeFormat={timeFormat} variant={compact ? 'list' : shortDates ? 'short' : 'mv'} />
           </span>
           <button
             type="button"
@@ -962,14 +1024,14 @@ export function MvExpandedConversationCard({
             {showDetails ? <ChevronUp className="w-3 h-3 flex-shrink-0" /> : <ChevronDown className="w-3 h-3 flex-shrink-0" />}
           </button>
         </span>
-        {(onReply || onReplyAll) && !email.keywords?.$draft && !email.isScheduled && (
+        {(onReply || onReplyAll || onForward) && !email.keywords?.$draft && !email.isScheduled && (
           <span className="flex items-center gap-1 -my-2 -me-2 flex-shrink-0" data-mv-conversation-actions="">
             {onReply && (
               <button
                 type="button"
                 onClick={() => onReply(email)}
                 className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                title={t('tooltips.reply')}
+                title={keyTip(t('reply'), 'reply')}
                 aria-label={t('reply')}
               >
                 <Reply className="w-5 h-5" />
@@ -980,10 +1042,21 @@ export function MvExpandedConversationCard({
                 type="button"
                 onClick={() => onReplyAll(email)}
                 className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                title={t('tooltips.reply_all')}
+                title={keyTip(t('reply_all'), 'reply_all')}
                 aria-label={t('reply_all')}
               >
                 <ReplyAll className="w-5 h-5" />
+              </button>
+            )}
+            {onForward && (
+              <button
+                type="button"
+                onClick={() => onForward(email)}
+                className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                title={keyTip(t('forward'), 'forward')}
+                aria-label={t('forward')}
+              >
+                <Forward className="w-5 h-5" />
               </button>
             )}
           </span>
@@ -1025,9 +1098,10 @@ export function MvExpandedConversationCard({
  * run of folded messages before it shows only its first and last message
  * around a count, as Gmail does, and the count unfolds the rest.
  */
-export function MvConversationRun({ emails, onOpen, timeFormat, collapseLongRun, expandedIds, renderExpanded, compact }: {
+export function MvConversationRun({ emails, onOpen, timeFormat, collapseLongRun, expandedIds, renderExpanded, compact, shortDates }: {
   emails: Email[];
   compact?: boolean;
+  shortDates?: boolean;
   /** A folded message was clicked. */
   onOpen?: (email: Email) => void;
   timeFormat: '12h' | '24h';
@@ -1041,7 +1115,7 @@ export function MvConversationRun({ emails, onOpen, timeFormat, collapseLongRun,
   const isExpanded = (e: Email) => !!renderExpanded && !!expandedIds?.has(e.id);
   const renderOne = (e: Email) => isExpanded(e)
     ? <Fragment key={e.id}>{renderExpanded!(e)}</Fragment>
-    : <MvConversationCard key={e.id} email={e} onOpen={onOpen} timeFormat={timeFormat} compact={compact} />;
+    : <MvConversationCard key={e.id} email={e} onOpen={onOpen} timeFormat={timeFormat} compact={compact} shortDates={shortDates} />;
   const middle = emails.slice(1, -1);
   if (!collapseLongRun || showAll || emails.length <= 3 || middle.some(isExpanded)) {
     return <>{emails.map(renderOne)}</>;
@@ -1377,6 +1451,7 @@ export function EmailViewer({
   onMarkConversationEmailRead,
   onReplyConversationEmail,
   onReplyAllConversationEmail,
+  onForwardConversationEmail,
   mvInlineComposer,
   replyComposerOpen,
   onEditDraft,
@@ -1539,6 +1614,11 @@ export function EmailViewer({
   const mvExpandedIdsRef = useRef(mvExpandedIds);
   mvExpandedIdsRef.current = mvExpandedIds;
   const mvExpandedThreadRef = useRef<string | null>(null);
+  // The open message folds too, but only inside a conversation.
+  const [mvOpenCollapsed, setMvOpenCollapsed] = useState(false);
+  useEffect(() => setMvOpenCollapsed(false), [email?.id]);
+  // The newest message to unfold and scroll to once the conversation is drawn.
+  const [mvNewestToShow, setMvNewestToShow] = useState<string | null>(null);
   useEffect(() => {
     if (!mvConversation || mvConversation.length === 0 || !email) {
       mvExpandedThreadRef.current = null;
@@ -1547,8 +1627,25 @@ export function EmailViewer({
     const key = mvConversation[0].threadId;
     if (mvExpandedThreadRef.current === key) return;
     mvExpandedThreadRef.current = key;
-    setMvExpandedIds(new Set(mvConversation.filter((e) => e.id !== email.id && !e.keywords?.$seen).map((e) => e.id)));
+    const plan = conversationOpenPlan(mvConversation, email.id);
+    setMvExpandedIds(new Set(plan.expanded));
+    if (plan.foldOpen) setMvOpenCollapsed(true);
+    setMvNewestToShow(plan.newestId);
   }, [mvConversation, email]);
+  useEffect(() => {
+    if (!mvNewestToShow) return;
+    const target = mvNewestToShow;
+    setMvNewestToShow(null);
+    const frame = requestAnimationFrame(() => {
+      const card = document.querySelector<HTMLElement>(`[data-mv-conversation-expanded][data-email-id="${CSS.escape(target)}"]`);
+      const pane = card?.closest<HTMLElement>('[data-reader-scroll]');
+      if (!card || !pane) return;
+      // Bring the newest message's start into view when it's below the fold.
+      const cardTop = card.getBoundingClientRect().top - pane.getBoundingClientRect().top;
+      if (cardTop > pane.clientHeight - 96) pane.scrollTop += cardTop - 8;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [mvNewestToShow]);
   const toggleMvExpanded = useCallback((target: Email) => {
     emitThreadExpand(target.threadId, [target], !mvExpandedIdsRef.current.has(target.id));
     setMvExpandedIds((prev) => {
@@ -1558,10 +1655,11 @@ export function EmailViewer({
       return next;
     });
   }, []);
-  // The open message folds too, but only inside a conversation.
-  const [mvOpenCollapsed, setMvOpenCollapsed] = useState(false);
-  useEffect(() => setMvOpenCollapsed(false), [email?.id]);
   const mvOpenFolded = mvOpenIndex >= 0 && mvOpenCollapsed;
+  // The default layout's conversation (not Mountain View): the open message
+  // gets the same header as the others, with its date and its reply actions
+  // on the sender's line, and the subject line no date (mail-p2-4).
+  const inConversation = mvOpenIndex >= 0 && !mvViewer;
   // Folding or unfolding the open message of a conversation, told to plugins
   // like any other conversation message (onThreadExpand).
   const setMvOpenFolded = (folded: boolean) => {
@@ -1581,6 +1679,8 @@ export function EmailViewer({
       onMarkRead={onMarkConversationEmailRead}
       onReply={onReplyConversationEmail}
       onReplyAll={onReplyAllConversationEmail}
+      onForward={onForwardConversationEmail}
+      shortDates={!mvViewer}
       blobSource={target.sourceClientAccountId || target.sourceAccountId
         ? resolveEmailBlobContext(target, client)
         : blobSource ?? resolveEmailBlobContext(target, client)}
@@ -5112,7 +5212,7 @@ ${printWatermark ? printWatermark.html : ''}
             {/* Date/time on the right of subject row - hidden on mobile, shown next to sender.
                 Mountain View puts it on the sender's row instead. The size is
                 in the details. */}
-            <div className={cn("hidden flex-shrink-0 text-end", !mvViewer && "sm:block")}>
+            <div className={cn("hidden flex-shrink-0 text-end", !mvViewer && !inConversation && "sm:block")}>
               <span className="text-xs lg:text-sm text-muted-foreground whitespace-nowrap">
                 {formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
               </span>
@@ -5135,7 +5235,7 @@ ${printWatermark ? printWatermark.html : ''}
       {/* Email Content Area. Mountain View reads the conversation on one plain
           sheet, so the reply buttons under the message sit on the page colour
           rather than on a tinted strip. */}
-      <div className={cn("flex-1 overflow-auto overscroll-contain", mvViewer || mvMobileViewer ? "bg-background" : "bg-muted/30", isMobile && !mvMobileViewer && "pb-[calc(3.25rem+env(safe-area-inset-bottom)/2)] sm:pb-0")}>
+      <div data-reader-scroll="" className={cn("flex-1 overflow-auto overscroll-contain", mvViewer || mvMobileViewer ? "bg-background" : "bg-muted/30", isMobile && !mvMobileViewer && "pb-[calc(3.25rem+env(safe-area-inset-bottom)/2)] sm:pb-0")}>
       <div className="min-h-full flex flex-col">
 
       {/* Above the messages of the open conversation. */}
@@ -5146,14 +5246,14 @@ ${printWatermark ? printWatermark.html : ''}
       {/* Mountain View: the conversation's earlier messages, folded. */}
       {mvBefore.length > 0 && (
         <div className="bg-background" data-mv-conversation-before="">
-          <MvConversationRun emails={mvBefore} onOpen={toggleMvExpanded} expandedIds={mvExpandedIds} renderExpanded={renderMvExpanded} timeFormat={timeFormat} compact={mvMobileViewer} collapseLongRun />
+          <MvConversationRun emails={mvBefore} onOpen={toggleMvExpanded} expandedIds={mvExpandedIds} renderExpanded={renderMvExpanded} timeFormat={timeFormat} compact={mvMobileViewer} shortDates={!mvViewer} collapseLongRun />
         </div>
       )}
 
       {/* Mountain View: the open message folded like the rest of the conversation. */}
       {mvOpenFolded && email ? (
         <div className="bg-background" data-mv-open-folded="">
-          <MvConversationCard email={email} onOpen={() => setMvOpenFolded(false)} timeFormat={timeFormat} compact={mvMobileViewer} />
+          <MvConversationCard email={email} onOpen={() => setMvOpenFolded(false)} timeFormat={timeFormat} compact={mvMobileViewer} shortDates={!mvViewer} />
         </div>
       ) : mvAwaitingConversation ? (
         <div className={cn("flex items-start py-3 animate-pulse", mvMobileViewer ? "gap-3 px-4" : "gap-4 px-6")} data-mv-conversation-pending="">
@@ -5213,6 +5313,9 @@ ${printWatermark ? printWatermark.html : ''}
                     {mvViewer && sender?.email && sender?.name && (
                       <span className="text-xs text-muted-foreground truncate">&lt;{sender.email}&gt;</span>
                     )}
+                    {inConversation && sender?.email && sender?.name && (
+                      <span className="text-xs text-muted-foreground truncate min-w-0">&lt;<AddressText name={sender.name} email={sender.email} onViewContact={handleViewContactSidebar} />&gt;</span>
+                    )}
                     <BrandVerifiedBadge domain={brandIndicatorDomain(email)} />
                     <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} />
                     <ReceivedLabelChip email={email} />
@@ -5230,12 +5333,12 @@ ${printWatermark ? printWatermark.html : ''}
                         }}
                       />
                     )}
-                    {mvViewer && (
+                    {(mvViewer || inConversation) && (
                       <span className="ms-auto ps-2 flex items-center gap-1 -my-2 -me-2" data-mv-sender-actions="">
-                        <span className="text-xs text-muted-foreground whitespace-nowrap me-1" data-mv-sender-date="">
-                          {mvSenderDate(emailDisplayDate(email), timeFormat)}
+                        <span className="me-1" data-mv-sender-date="">
+                          <ConversationDate date={emailDisplayDate(email)} timeFormat={timeFormat} variant={mvViewer ? 'mv' : 'short'} className="" />
                         </span>
-                        <button
+                        {mvViewer && (<button
                           type="button"
                           onClick={onToggleStar}
                           className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
@@ -5244,13 +5347,13 @@ ${printWatermark ? printWatermark.html : ''}
                           aria-pressed={!!isStarred}
                         >
                           <Star className={cn("w-5 h-5", isStarred && "fill-amber-400 text-amber-400")} />
-                        </button>
+                        </button>)}
                         {!isDraft && !isScheduled && (
                           <button
                             type="button"
                             onClick={() => onReply?.()}
                             className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                            title={t('tooltips.reply')}
+                            title={withShortcut(t('reply'), 'reply')}
                             aria-label={t('reply')}
                           >
                             <Reply className="w-5 h-5" />
@@ -5261,17 +5364,28 @@ ${printWatermark ? printWatermark.html : ''}
                             type="button"
                             onClick={onReplyAll}
                             className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                            title={t('tooltips.reply_all')}
+                            title={withShortcut(t('reply_all'), 'reply_all')}
                             aria-label={t('reply_all')}
                           >
                             <ReplyAll className="w-5 h-5" />
                           </button>
                         )}
+                        {inConversation && !isDraft && !isScheduled && onForward && (
+                          <button
+                            type="button"
+                            onClick={() => onForward()}
+                            className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                            title={withShortcut(t('forward'), 'forward')}
+                            aria-label={t('forward')}
+                          >
+                            <Forward className="w-5 h-5" />
+                          </button>
+                        )}
                       </span>
                     )}
                   </div>
-                  {/* Email address under name (on the name's line under Mountain View) */}
-                  {!mvViewer && sender?.email && sender?.name && (
+                  {/* Email address under name (on the name's line under Mountain View and in a conversation) */}
+                  {!mvViewer && !inConversation && sender?.email && sender?.name && (
                     <div className="text-sm text-muted-foreground mt-0.5 truncate"><AddressText name={sender.name} email={sender.email} onViewContact={handleViewContactSidebar} /></div>
                   )}
                 </div>
@@ -5482,7 +5596,7 @@ ${printWatermark ? printWatermark.html : ''}
                   type="button"
                   onClick={() => onReply?.()}
                   className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                  title={t('tooltips.reply')}
+                  title={withShortcut(t('reply'), 'reply')}
                   aria-label={t('reply')}
                 >
                   <Reply className="w-5 h-5" />
@@ -5492,7 +5606,7 @@ ${printWatermark ? printWatermark.html : ''}
                     type="button"
                     onClick={onReplyAll}
                     className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                    title={t('tooltips.reply_all')}
+                    title={withShortcut(t('reply_all'), 'reply_all')}
                     aria-label={t('reply_all')}
                   >
                     <ReplyAll className="w-5 h-5" />
@@ -6180,7 +6294,7 @@ ${printWatermark ? printWatermark.html : ''}
           {/* Mountain View: the conversation's later messages, folded. */}
           {mvAfter.length > 0 && (
             <div className="mt-4 border-b border-border bg-background" data-mv-conversation-after="">
-              <MvConversationRun emails={mvAfter} onOpen={toggleMvExpanded} expandedIds={mvExpandedIds} renderExpanded={renderMvExpanded} timeFormat={timeFormat} compact={mvMobileViewer} />
+              <MvConversationRun emails={mvAfter} onOpen={toggleMvExpanded} expandedIds={mvExpandedIds} renderExpanded={renderMvExpanded} timeFormat={timeFormat} compact={mvMobileViewer} shortDates={!mvViewer} />
             </div>
           )}
 

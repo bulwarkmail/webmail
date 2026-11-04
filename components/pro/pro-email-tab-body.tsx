@@ -347,16 +347,20 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
   const conversationView = !!conversation && !disableThreading;
   const viewConversation = useViewConversation({ enabled: conversationView, email, source: blobSource, onChanged: onMailChanged });
 
-  const handleForward = useCallback(() => {
-    if (!email) return;
+  const forwardMessage = useCallback((target: Email) => {
     openComposeTab({
       mode: 'forward',
-      replyTo: buildReplyContext(email, writeSource),
-      sourceEmailId: email.id,
+      replyTo: buildReplyContext(target, writeSource),
+      sourceEmailId: target.id,
       sourceEmailSource: writeSource,
-      title: buildForwardSubject(email.subject || t('email_composer.new_message'), t('email_composer.prefix.forward')),
-    }, { source: email });
-  }, [email, openComposeTab, t, writeSource]);
+      title: buildForwardSubject(target.subject || t('email_composer.new_message'), t('email_composer.prefix.forward')),
+    }, { source: target });
+  }, [openComposeTab, t, writeSource]);
+
+  const handleForward = useCallback(() => {
+    if (!email) return;
+    forwardMessage(email);
+  }, [email, forwardMessage]);
 
   // Mirrors handleForward, but attaches the original as a message/rfc822
   // file instead of quoting it inline - see lib/forward-as-attachment.ts.
@@ -672,6 +676,10 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
           onReplyAllConversationEmail={conversationView ? async (e) => {
             const full = e.bodyValues ? e : await viewConversation.loadBody(e);
             replyAllToMessage(full ?? e);
+          } : undefined}
+          onForwardConversationEmail={conversationView ? async (e) => {
+            const full = e.bodyValues ? e : await viewConversation.loadBody(e);
+            forwardMessage(full ?? e);
           } : undefined}
           blobSource={blobSource}
           isLoading={isLoading}
