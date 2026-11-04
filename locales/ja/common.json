@@ -217,20 +217,20 @@
   },
   "protocol_handlers": {
     "title": "既定のアプリ",
-    "description": "メールとカレンダーのリンクを {appName} で開くかどうかを選択します。技術的には、{appName} は mailto: と webcal: リンクのプロトコル ハンドラーとして登録されます。",
+    "description": "メールとカレンダーのリンクを {appName} で開くかどうかを選びます。",
     "unsupported": "このブラウザーまたは接続では、プロトコル ハンドラーの手動登録がサポートされていません。インストール済みの PWA は、ブラウザーまたはシステム設定から使用できる場合があります。",
-    "mailto_label": "メールリンク",
-    "mailto_description": "mailto: リンクを、入力済みの作成画面で {appName} に開きます。",
-    "protocol_open_mode_label": "プロトコルリンクを開くとき",
+    "mailto_label": "メールのリンクを {appName} で開く",
+    "mailto_description": "ウェブサイトのメールアドレスをクリックすると、{appName} で新しいメッセージを作成します。",
+    "protocol_open_mode_label": "リンクの開き方",
     "protocol_open_mode_description": "{appName} が mailto: と webcal: のリンクを新しいタブで開くか、開いているセッションを再利用するかを選択します。アクティブなセッションのオプションでは通知の許可が必要です。ブラウザーがフォーカスをブロックした場合に、代替通知をクリックして {appName} を前面に表示できます。",
     "protocol_open_mode_active_session": "可能な場合はアクティブなセッションで開く",
     "protocol_open_mode_new_tab": "常に新しいタブを開く",
     "focus_notification_title": "{appName} を開く",
     "focus_notification_body": "リンクは {appName} で開かれました。クリックするとウィンドウを前面に表示します。",
-    "webcal_label": "カレンダーリンク",
-    "webcal_description": "webcal: リンクを、入力済みのカレンダー購読ダイアログで {appName} に開きます。",
-    "register_mailto": "メールアプリを登録",
-    "register_webcal": "カレンダーアプリを登録",
+    "webcal_label": "カレンダーのリンクを {appName} で開く",
+    "webcal_description": "ウェブサイトのカレンダーリンクをクリックすると、{appName} にカレンダーを追加します。",
+    "register_mailto": "メールのリンクに {appName} を使う",
+    "register_webcal": "カレンダーのリンクに {appName} を使う",
     "mailto_registered": "メール ハンドラーの登録を要求しました",
     "webcal_registered": "カレンダー ハンドラーの登録を要求しました",
     "registration_failed": "プロトコル ハンドラーの登録に失敗しました",
@@ -1619,7 +1619,7 @@
       },
       "favicon_unread_badge": {
         "label": "Unread Count on Tab Icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+        "description": "別のタブやアプリで作業中でも新着メールに気付けます。"
       },
       "show_shared_mail_accounts": {
         "label": "共有メールアカウントを表示",
@@ -1739,9 +1739,9 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "通知音",
+        "title": "音",
         "description": "通知に使用する音を選択",
-        "choose": "サウンド",
+        "choose": "音色",
         "choose_desc": "通知音を選択し、スピーカーアイコンをクリックしてプレビュー"
       },
       "email": {
@@ -1749,7 +1749,7 @@
         "description": "受信メールの通知を設定",
         "enabled": "メール通知",
         "enabled_desc": "新しいメールが届いたときに通知を表示",
-        "sound": "通知音",
+        "sound": "新着メールの音",
         "sound_desc": "新しいメールが届いたときに音を鳴らす",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1759,7 +1759,7 @@
         "description": "カレンダーイベントの通知を設定",
         "enabled": "イベント通知",
         "enabled_desc": "今後のカレンダーイベントのアラートを表示",
-        "sound": "通知音",
+        "sound": "リマインダーの音",
         "sound_desc": "カレンダーリマインダーの音を鳴らす"
       },
       "push": {
@@ -1767,7 +1767,7 @@
         "confirm_disable_title": "バックグラウンド通知を無効にしますか？",
         "description": "このサイトが閉じているときに新着メールのシステム通知を受信します。Bulwark プッシュリレー経由で配信され、リレーがメール内容を見ることはありません。",
         "disable": "無効化",
-        "enable": "有効化",
+        "enable": "このデバイスでオンにする",
         "dismiss_aria": "通知プロンプトを閉じる",
         "ios_hint": "iOS では、最初にサイトをホーム画面にインストールしてください。Safari はインストールされた PWA にのみ Web Push を配信します。",
         "reenable": "再登録",
@@ -1781,7 +1781,7 @@
         "status_unsupported": "このブラウザは Web Push をサポートしていません",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "デモではバックグラウンド通知を利用できません。",
-        "title": "バックグラウンド通知",
+        "title": "{appName} を閉じているときの通知",
         "devices_title": "登録済みのデバイス",
         "devices_desc": "このアカウントのバックグラウンド通知を受け取るよう登録されているデバイスの一覧です。取り消すと、そのデバイスはすぐに受信を停止します。",
         "devices_loading": "登録済みのデバイスを読み込んでいます…",
@@ -1843,7 +1843,7 @@
       },
       "first_day": {
         "label": "週の開始日",
-        "description": "日曜日または月曜日から開始",
+        "description": "カレンダーの週の始まり",
         "sunday": "日曜日",
         "monday": "月曜日"
       },
@@ -6721,7 +6721,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "ウィンドウ",
+      "title": "アプリのウィンドウ",
       "double_click_label": "ダブルクリックでメッセージを新しいウィンドウで開く",
       "double_click_description": "シングルクリックでは、これまでどおりリストの横に開きます。",
       "restore_label": "起動時にウィンドウを再び開く",
@@ -6818,9 +6818,9 @@
     "section_title": "アプリのロック",
     "section_desc": "しばらく使わないと、すべてのウィンドウとタブで PIN を求めます。ロック中は、誰かが PIN を入力するまで、アプリはこのデバイスに保存されたメールを読めません。",
     "enable_label": "PIN でロック",
-    "enable_desc": "既定ではオフです。PIN はこのデバイスにだけ保存されます。",
+    "enable_desc": "PIN はこのデバイスにだけ保存されます。",
     "protects_desc": "保護の対象: PIN は、このデバイスの前にいる人をアプリに入れません。ここに保存されたメールは、ロックをオンにしたとき、または PIN を変更したときに新しい鍵に変わります。少し時間がかかることがあります。このコンピューターで動くプログラム、インストールしたブラウザー拡張機能、アプリのファイルをコピーして多くの PIN を試す時間がある人は止められないため、長めの PIN をお勧めします。デスクトップアプリでは、PIN を試すのにこのコンピューターへのログインも必要です。サーバー上のアカウントには影響しません。",
-    "enable_body": "PIN を選んでください。アプリがロックされるたび、また再読み込みや再起動の後に必要です。",
+    "enable_body": "アプリがロックされるたびと、再起動の後に必要です。",
     "set_pin_title": "PIN を選択",
     "change_pin": "PIN を変更…",
     "change_pin_title": "PIN を変更",
@@ -6881,6 +6881,19 @@
     "timeout_option": "{count, plural, other {# 分}}",
     "blocked_seconds": "試行回数が多すぎます。{count, plural, other {# 秒}}後にもう一度お試しください。",
     "blocked_minutes": "試行回数が多すぎます。{count, plural, other {# 分}}後にもう一度お試しください。"
+  },
+  "uxs_general": {
+    "time_zone_common": "よく使うタイムゾーン",
+    "time_zone_all": "すべてのタイムゾーン",
+    "time_zone_search": "タイムゾーンを検索",
+    "time_zone_no_match": "タイムゾーンが見つかりません",
+    "time_zone_desktop_description": "メールと予定の時刻をこのタイムゾーンで表示します。選ばない場合は、コンピューターのタイムゾーンを使います。",
+    "app_lock_desc_desktop": "しばらく使わないと、すべてのウィンドウで PIN を求めます。ロック中は、誰かが PIN を入力するまで、アプリはこのデバイスに保存されたメールを読めません。",
+    "app_lock_timeout_desc_desktop": "どのウィンドウでも使っていない時間です。",
+    "app_lock_now_desc_desktop": "すべてのウィンドウをすぐにロックします。",
+    "app_lock_protects_toggle": "何から守るのですか？",
+    "app_lock_timeout_hours": "{count, plural, other {#時間}}",
+    "desktop_attention_title": "このコンピューター"
   },
   "desktop_sign_in": {
     "server_needed": "先にサーバーのアドレスを入力してください。",
@@ -7091,7 +7104,7 @@
     "section_title": "利用情報とクラッシュレポート",
     "section_description": "どちらもオンにするまでオフのままで、それぞれに専用のスイッチがあります。",
     "telemetry_label": "利用情報を送信",
-    "telemetry_description": "1日に1回、ランダムなID、アプリのバージョン、Node のバージョン、OS、アプリの稼働時間、接続方法を送信します。自分のメールサーバーを使う場合は、有効な機能、おおよそのアカウント数、プラグインとテーマの数も送信します。メール、アドレス、サーバー名は送信しません。",
+    "telemetry_description": "1日に1回、ランダムなID、アプリのバージョン番号、OS、アプリの稼働時間、接続方法を送信します。自分のメールサーバーを使う場合は、有効な機能、おおよそのアカウント数、プラグインとテーマの数も送信します。メール、アドレス、サーバー名は送信しません。",
     "crash_label": "クラッシュレポートを送信",
     "crash_description": "アプリのエラーは、ランダムなID、アプリ自身のコードのファイル名、整理された短いメッセージとともに送信されます。アプリ自体がクラッシュした場合、クラッシュファイルはこのコンピューターに残り、あなたが送信したときだけ外に出ます。",
     "crash_memory": "クラッシュファイルはクラッシュ時のアプリのメモリの一部のコピーです。Bulwark は見つけたユーザー名、アドレス、サインイントークンを削除しますが、クラッシュファイルにはメールの本文が残っていることがあります。",

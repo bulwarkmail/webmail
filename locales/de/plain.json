@@ -185,7 +185,6 @@
         "description": "Zeigen, wie viele E-Mails ein Ordner oder Label insgesamt hat, neben der Zahl der ungelesenen."
       },
       "favicon_unread_badge": {
-        "description": "Die Zahl der ungelesenen E-Mails auf dem Browser-Tab und dem App-Symbol zeigen. So sehen Sie neue E-Mails, auch wenn Sie gerade einen anderen Tab nutzen."
       },
       "show_shared_mail_accounts": {
         "description": "Die Ordner von Postfächern, die andere mit Ihnen teilen, in der Ordnerliste unter „Geteilt“ zeigen. Schalten Sie das aus, um alle auszublenden, oder blenden Sie unten einzelne Konten aus. Kalender und Kontakte bleiben."

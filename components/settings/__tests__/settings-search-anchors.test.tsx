@@ -33,7 +33,7 @@ const { useEmailStore } = await import('@/stores/email-store');
 const { useAccountStore } = await import('@/stores/account-store');
 const { TourProvider } = await import('@/components/tour/tour-provider');
 const { AdvancedSettingsProvider } = await import('../settings-section');
-const { tabSearchEntries, getByPath } = await import('@/lib/settings-search');
+const { tabSearchEntries, getByPath, withAppName } = await import('@/lib/settings-search');
 const pages = {
   account: (await import('../account-settings')).AccountSettings,
   general: (await import('../general-settings')).GeneralSettings,
@@ -140,7 +140,8 @@ describe('settings search index', () => {
     const problems: string[] = [];
     for (const [tab, entries] of Object.entries(tabSearchEntries)) {
       for (const entry of entries) {
-        const text = getByPath(en, entry.label) as string;
+        // Rows that name the app show the stock name, as the index does.
+        const text = withAppName(getByPath(en, entry.label), 'Bulwark') as string;
         const variant = out[entry.when ?? 'base'];
         const parts = TAB_PAGES[tab].map((page) => variant[page]);
         const errors = parts.filter((part) => part.error).map((part) => part.error);

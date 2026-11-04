@@ -217,20 +217,20 @@
   },
   "protocol_handlers": {
     "title": "Vaikerakendused",
-    "description": "Vali, kas e-posti ja kalendri lingid avanevad rakenduses {appName}. Tehniliselt registreerib {appName} end mailto: ja webcal: linkide protokollikäsitlejana.",
+    "description": "Valige, kas meili- ja kalendrilingid avanevad rakenduses {appName}.",
     "unsupported": "See brauser või ühendus ei toeta protokollikäsitleja käsitsi registreerimist. Paigaldatud PWA-d saad siiski kasutada brauseri või operatsioonisüsteemi seadete kaudu.",
-    "mailto_label": "E-posti lingid",
-    "mailto_description": "Ava mailto: lingid rakenduses {appName} koos eeltäidetud kirja koostamise aknaga.",
-    "protocol_open_mode_label": "Protokollilinkide avamisel",
+    "mailto_label": "Ava meililingid rakenduses {appName}",
+    "mailto_description": "Veebisaidil meiliaadressil klõpsamine alustab rakenduses {appName} uut kirja.",
+    "protocol_open_mode_label": "Kuidas lingid avanevad",
     "protocol_open_mode_description": "Vali, kas {appName} avab mailto: ja webcal: lingid uuel vahekaardil või kasutab olemasolevat sessiooni. Aktiivse sessiooni valik vajab teavituste õigust, et saaksid vajadusel klõpsata varuteavitusel, mis toob rakenduse {appName} esiplaanile, kui brauser blokeerib fookuse liikumise.",
     "protocol_open_mode_active_session": "Ava võimalusel aktiivses sessioonis",
     "protocol_open_mode_new_tab": "Ava alati uuel vahekaardil",
     "focus_notification_title": "Ava {appName}",
     "focus_notification_body": "Link avati rakenduses {appName}. Klõpsa, et tuua aken esiplaanile.",
-    "webcal_label": "Kalendri lingid",
-    "webcal_description": "Ava webcal: lingid rakenduses {appName} koos eeltäidetud kalendri tellimise dialoogiga.",
-    "register_mailto": "Registreeri e-posti rakendus",
-    "register_webcal": "Registreeri kalendrirakendus",
+    "webcal_label": "Ava kalendrilingid rakenduses {appName}",
+    "webcal_description": "Veebisaidil kalendrilingil klõpsamine lisab kalendri rakendusse {appName}.",
+    "register_mailto": "Kasuta meililinkide jaoks rakendust {appName}",
+    "register_webcal": "Kasuta kalendrilinkide jaoks rakendust {appName}",
     "mailto_registered": "E-posti käsitleja registreerimist taotleti",
     "webcal_registered": "Kalendri käsitleja registreerimist taotleti",
     "registration_failed": "Protokollikäsitleja registreerimine ebaõnnestus",
@@ -1622,7 +1622,7 @@
       },
       "favicon_unread_badge": {
         "label": "Lugemata arv vahekaardi ja rakenduse ikoonil",
-        "description": "Näita saabunud kirjade lugemata arvu märgisena brauseri vahekaardi ikoonil ja toetuse korral ka paigaldatud rakenduse ikoonil, et uued kirjad oleksid näha ka siis, kui vahekaart pole fookuses. Lülita välja, et mõlemad ikoonid jääksid märgiseta."
+        "description": "Nii näete uut kirja ka siis, kui töötate teisel vahekaardil või teises rakenduses."
       },
       "show_shared_mail_accounts": {
         "label": "Näita jagatud meilikontosid",
@@ -1730,7 +1730,7 @@
         "relax": "Rahulik"
       },
       "push": {
-        "title": "Taustateavitused",
+        "title": "Teavitused, kui {appName} on suletud",
         "description": "Saa süsteemseid teavitusi uutest kirjadest ka siis, kui see sait on suletud. Edastatakse Bulwarki push-releele; relee ei näe kirjade sisu kunagi.",
         "relay_label": "Push-relee",
         "relay_desc": "Server, mis edastab su teavitusi. Vali administraatori pakutavate releede hulgast.",
@@ -1742,7 +1742,7 @@
         "status_lite": "Veebi-tõukemärguanded pole Bulwark Lite'is saadaval; need vajavad Bulwarki serverit.",
         "status_demo": "Taustateavitused pole demos saadaval.",
         "status_busy": "Töötleb…",
-        "enable": "Luba",
+        "enable": "Lülita selles seadmes sisse",
         "reenable": "Registreeri uuesti",
         "disable": "Keela",
         "confirm_disable_title": "Kas keelata taustateavitused?",
@@ -1787,9 +1787,9 @@
         "result_disabled": "Märguanded keelatud {count} kontole."
       },
       "sound_selection": {
-        "title": "Teavitusheli",
+        "title": "Heli",
         "description": "Vali, milline heli teavituste puhul mängitakse",
-        "choose": "Heli",
+        "choose": "Toon",
         "choose_desc": "Vali teavitusheli ja kliki eelvaate kuulamiseks kõlariikoonil"
       },
       "email": {
@@ -1797,7 +1797,7 @@
         "description": "Seadista saabuvate kirjade teavitused",
         "enabled": "E-kirja teavitused",
         "enabled_desc": "Kuva teavitus uue kirja saabumisel",
-        "sound": "Teavitusheli",
+        "sound": "Heli uue kirja korral",
         "sound_desc": "Mängi helimärguanne uue kirja saabumisel",
         "inbox_only": "Ainult saabunud kirjad",
         "inbox_only_desc": "Teavita ainult kirjadest, mis jõuavad saabunud kirjade kausta; jäta vahele kirjad, mille filter liigitab mujale"
@@ -1807,7 +1807,7 @@
         "description": "Seadista kalendrisündmuste teavitused",
         "enabled": "Sündmuste teavitused",
         "enabled_desc": "Kuva märguanded eelseisvate kalendrisündmuste kohta",
-        "sound": "Teavitusheli",
+        "sound": "Heli meeldetuletuste korral",
         "sound_desc": "Mängi helimärguanne kalendri meeldetuletuste puhul"
       }
     },
@@ -1846,7 +1846,7 @@
       },
       "first_day": {
         "label": "Nädala esimene päev",
-        "description": "Alusta nädalat pühapäeval või esmaspäeval",
+        "description": "Nädala esimene päev kalendrites",
         "sunday": "Pühapäev",
         "monday": "Esmaspäev"
       },
@@ -6721,7 +6721,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Aknad",
+      "title": "Rakenduse aknad",
       "double_click_label": "Ava kirjad topeltklõpsuga uues aknas",
       "double_click_description": "Üks klõps avab kirja endiselt loendi kõrval.",
       "restore_label": "Ava aknad käivitamisel uuesti",
@@ -6818,9 +6818,9 @@
     "section_title": "Rakenduse lukk",
     "section_desc": "Küsib pärast kasutuseta aega PIN-koodi igas aknas ja vahekaardil. Lukus olles ei saa rakendus selles seadmes hoitavat kirja lugeda enne, kui keegi PIN-koodi sisestab.",
     "enable_label": "Lukusta PIN-koodiga",
-    "enable_desc": "Vaikimisi väljas. PIN-kood jääb sellesse seadmesse.",
+    "enable_desc": "PIN-kood jääb sellesse seadmesse.",
     "protects_desc": "Mille eest see kaitseb: PIN-kood hoiab selle seadme juures oleva inimese rakendusest eemal. Siin hoitavad kirjad saavad uue võtme, kui lülitad luku sisse või muudad PIN-koodi, ja see võib veidi aega võtta. See ei peata selles arvutis töötavat programmi, sinu paigaldatud brauserilaiendit ega kedagi, kes kopeerib rakenduse failid ja kellel on aega proovida palju PIN-koode, seega tasub kasutada pikemat PIN-koodi. Töölauarakenduses on PIN-koodide proovimiseks vaja ka sinu sisselogimist selles arvutis. Sinu kontot serveris see ei mõjuta.",
-    "enable_body": "Valige PIN-kood. Seda on vaja iga kord, kui rakendus lukustub, ja pärast uuesti laadimist või käivitamist.",
+    "enable_body": "Seda on vaja iga kord, kui rakendus lukustub, ja pärast taaskäivitust.",
     "set_pin_title": "Valige PIN-kood",
     "change_pin": "Muuda PIN-koodi…",
     "change_pin_title": "Muuda PIN-koodi",
@@ -6881,6 +6881,19 @@
     "timeout_option": "{count, plural, one {# minuti} other {# minuti}}",
     "blocked_seconds": "Liiga palju katseid. Proovige uuesti {count, plural, one {# sekundi} other {# sekundi}} pärast.",
     "blocked_minutes": "Liiga palju katseid. Proovige uuesti {count, plural, one {# minuti} other {# minuti}} pärast."
+  },
+  "uxs_general": {
+    "time_zone_common": "Levinud ajavööndid",
+    "time_zone_all": "Kõik ajavööndid",
+    "time_zone_search": "Otsi ajavööndit",
+    "time_zone_no_match": "Ajavööndit ei leitud",
+    "time_zone_desktop_description": "Näita kirjade ja kohtumiste aegu selles ajavööndis. Kui te ühtegi ei vali, kasutatakse teie arvuti ajavööndit.",
+    "app_lock_desc_desktop": "Küsib pärast kasutuseta aega PIN-koodi igas aknas. Lukus olles ei saa rakendus selles seadmes hoitavat kirja lugeda enne, kui keegi PIN-koodi sisestab.",
+    "app_lock_timeout_desc_desktop": "Kasutamata aeg mis tahes aknas.",
+    "app_lock_now_desc_desktop": "Lukustab kõik aknad korraga.",
+    "app_lock_protects_toggle": "Mille eest see kaitseb?",
+    "app_lock_timeout_hours": "{count, plural, one {# tund} other {# tundi}}",
+    "desktop_attention_title": "Selles arvutis"
   },
   "desktop_sign_in": {
     "server_needed": "Sisesta kõigepealt serveri aadress.",
@@ -7091,7 +7104,7 @@
     "section_title": "Kasutusandmed ja kokkujooksmise aruanded",
     "section_description": "Mõlemad on välja lülitatud, kuni need sisse lülitate, ja kummalgi on oma lüliti.",
     "telemetry_label": "Saada kasutusandmed",
-    "telemetry_description": "Kord päevas: juhuslik ID, rakenduse versioon, Node'i versioon, teie operatsioonisüsteem, kui kaua rakendus on töötanud ja kuidas see ühendub. Oma meiliserveri puhul ka see, millised funktsioonid on sees, kontode ligikaudne arv ning pistikprogrammide ja kujunduste arv. Mitte kunagi kirju, aadresse ega serverinimesid.",
+    "telemetry_description": "Kord päevas: juhuslik ID, rakenduse versiooninumbrid, teie operatsioonisüsteem, kui kaua rakendus on töötanud ja kuidas see ühendub. Oma meiliserveri puhul ka see, millised funktsioonid on sees, kontode ligikaudne arv ning pistikprogrammide ja kujunduste arv. Mitte kunagi kirju, aadresse ega serverinimesid.",
     "crash_label": "Saada kokkujooksmise aruanded",
     "crash_description": "Rakenduse vead saadetakse koos juhusliku ID, rakenduse enda koodi failinimede ja lühikeste puhastatud teadetega. Kui rakendus ise kokku jookseb, jääb kokkujooksmise fail sellesse arvutisse ja lahkub sealt ainult siis, kui selle saadate.",
     "crash_memory": "Kokkujooksmise fail on koopia osast rakenduse mälust kokkujooksmise hetkel. Bulwark eemaldab leitud kasutajanimed, aadressid ja sisselogimislubad, kuid kokkujooksmise fail võib siiski sisaldada teie kirjade teksti.",

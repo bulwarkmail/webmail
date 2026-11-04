@@ -217,20 +217,20 @@
   },
   "protocol_handlers": {
     "title": "Default apps",
-    "description": "Choose whether email and calendar links open in {appName}. Technically, {appName} registers as a protocol handler for mailto: and webcal: links.",
+    "description": "Choose whether email and calendar links open in {appName}.",
     "unsupported": "This browser or connection does not support manual protocol-handler registration. You may still be able to use the installed PWA via browser or OS settings.",
-    "mailto_label": "Email links",
-    "mailto_description": "Open mailto: links in {appName} with a prefilled composer.",
-    "protocol_open_mode_label": "When opening protocol links",
+    "mailto_label": "Open email links in {appName}",
+    "mailto_description": "Clicking an email address on a website starts a new message in {appName}.",
+    "protocol_open_mode_label": "How links open",
     "protocol_open_mode_description": "Choose whether {appName} opens mailto: and webcal: links in a new tab or reuses an open session. The active-session option needs notification permission so you can click a fallback notification to bring {appName} to the front if the browser blocks focus.",
     "protocol_open_mode_active_session": "Open in active session if possible",
     "protocol_open_mode_new_tab": "Always open a new tab",
     "focus_notification_title": "Open {appName}",
     "focus_notification_body": "The link was opened in {appName}. Click to bring the window to the front.",
-    "webcal_label": "Calendar links",
-    "webcal_description": "Open webcal: links in {appName} with a prefilled calendar subscription dialog.",
-    "register_mailto": "Register email app",
-    "register_webcal": "Register calendar app",
+    "webcal_label": "Open calendar links in {appName}",
+    "webcal_description": "Clicking a calendar link on a website adds the calendar in {appName}.",
+    "register_mailto": "Use {appName} for email links",
+    "register_webcal": "Use {appName} for calendar links",
     "mailto_registered": "Email handler registration requested",
     "webcal_registered": "Calendar handler registration requested",
     "registration_failed": "Protocol handler registration failed",
@@ -1622,7 +1622,7 @@
       },
       "favicon_unread_badge": {
         "label": "Unread count on the tab and app icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, and on the installed app icon where supported, so new mail is visible when the tab is not focused. Disable to keep both icons unbadged."
+        "description": "So you see new mail while you work in another tab or app."
       },
       "show_shared_mail_accounts": {
         "label": "Show shared mail accounts",
@@ -1730,7 +1730,7 @@
         "relax": "Relax"
       },
       "push": {
-        "title": "Background notifications",
+        "title": "Notifications when {appName} is closed",
         "description": "Receive system notifications for new mail when this site is closed. Delivered via the Bulwark push relay; the relay never sees mail content.",
         "relay_label": "Push relay",
         "relay_desc": "The server that delivers your notifications. Choose from the relays your administrator offers.",
@@ -1742,7 +1742,7 @@
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "Background notifications aren't available in the demo.",
         "status_busy": "Working…",
-        "enable": "Enable",
+        "enable": "Turn on for this device",
         "reenable": "Re-register",
         "disable": "Disable",
         "confirm_disable_title": "Disable background notifications?",
@@ -1787,9 +1787,9 @@
         "result_disabled": "Notifications disabled for {count} accounts."
       },
       "sound_selection": {
-        "title": "Notification sound",
+        "title": "Sound",
         "description": "Choose which sound to play for notifications",
-        "choose": "Sound",
+        "choose": "Tone",
         "choose_desc": "Select a notification tone and click the speaker icon to preview it"
       },
       "email": {
@@ -1797,7 +1797,7 @@
         "description": "Configure notifications for incoming emails",
         "enabled": "Email notifications",
         "enabled_desc": "Show notifications when new emails arrive",
-        "sound": "Notification sound",
+        "sound": "Sound for new mail",
         "sound_desc": "Play an audio alert when new emails arrive",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1807,7 +1807,7 @@
         "description": "Configure notifications for calendar events",
         "enabled": "Event notifications",
         "enabled_desc": "Show alerts for upcoming calendar events",
-        "sound": "Notification sound",
+        "sound": "Sound for reminders",
         "sound_desc": "Play an audio alert for calendar reminders"
       }
     },
@@ -1846,7 +1846,7 @@
       },
       "first_day": {
         "label": "First day of week",
-        "description": "Start week on Sunday or Monday",
+        "description": "First day of the week in calendars",
         "sunday": "Sunday",
         "monday": "Monday"
       },
@@ -6721,7 +6721,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Windows",
+      "title": "App windows",
       "double_click_label": "Open messages in a new window on double-click",
       "double_click_description": "A single click still opens the message next to the list.",
       "restore_label": "Reopen windows at start",
@@ -6818,9 +6818,9 @@
     "section_title": "App lock",
     "section_desc": "Asks for a PIN after a time without use, in every window and tab. While it's locked, the app can't read the mail stored on this device until someone enters the PIN.",
     "enable_label": "Lock with a PIN",
-    "enable_desc": "Off by default. The PIN stays on this device.",
+    "enable_desc": "The PIN stays on this device.",
     "protects_desc": "What this protects against: the PIN keeps someone at this device out of the app. The mail stored here gets a new key when you turn the lock on or change the PIN, which can take a moment. It can't stop a program running on this computer, a browser extension you installed, or someone who copies the app's files and has time to try many PINs, so a longer PIN is worth it. In the desktop app, trying PINs also takes your login on this computer. Your account on the server isn't affected.",
-    "enable_body": "Choose a PIN. You need it each time the app locks, and after a reload or a new start.",
+    "enable_body": "You need it each time the app locks and after a restart.",
     "set_pin_title": "Choose a PIN",
     "change_pin": "Change PIN…",
     "change_pin_title": "Change the PIN",
@@ -6881,6 +6881,19 @@
     "timeout_option": "{count, plural, one {# minute} other {# minutes}}",
     "blocked_seconds": "Too many tries. Try again in {count, plural, one {# second} other {# seconds}}.",
     "blocked_minutes": "Too many tries. Try again in {count, plural, one {# minute} other {# minutes}}."
+  },
+  "uxs_general": {
+    "time_zone_common": "Common time zones",
+    "time_zone_all": "All time zones",
+    "time_zone_search": "Search time zones",
+    "time_zone_no_match": "No time zone found",
+    "time_zone_desktop_description": "Show the times of mail and appointments in this time zone. If you don't choose one, your computer's time zone is used.",
+    "app_lock_desc_desktop": "Asks for a PIN after a time without use, in every window. While it's locked, the app can't read the mail stored on this device until someone enters the PIN.",
+    "app_lock_timeout_desc_desktop": "Time without use in any window.",
+    "app_lock_now_desc_desktop": "Locks all windows at once.",
+    "app_lock_protects_toggle": "What does this protect?",
+    "app_lock_timeout_hours": "{count, plural, one {# hour} other {# hours}}",
+    "desktop_attention_title": "On this computer"
   },
   "desktop_sign_in": {
     "server_needed": "Enter your server's address first.",
@@ -7091,7 +7104,7 @@
     "section_title": "Usage info and crash reports",
     "section_description": "Both are off until you turn them on, and each has its own switch.",
     "telemetry_label": "Send usage info",
-    "telemetry_description": "Once a day: a random ID, the app version, the Node version, your operating system, how long the app has been running and how it connects. With your own mail server, also which features are on, a rough number of accounts and how many plugins and themes you have. Never mail, addresses or server names.",
+    "telemetry_description": "Once a day: a random ID, the app's version numbers, your operating system, how long the app has been running and how it connects. With your own mail server, also which features are on, a rough number of accounts and how many plugins and themes you have. Never mail, addresses or server names.",
     "crash_label": "Send crash reports",
     "crash_description": "Errors in the app go out with a random ID, file names from the app's own code and short, cleaned-up messages. If the app itself crashes, a crash file stays on this computer and only leaves when you send it.",
     "crash_memory": "A crash file is a copy of part of the app's memory when it crashed. Bulwark removes user names, addresses and sign-in tokens it can find, but a crash file can still contain the text of your mail.",

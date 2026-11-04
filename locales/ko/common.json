@@ -217,20 +217,20 @@
   },
   "protocol_handlers": {
     "title": "기본 앱",
-    "description": "이메일 및 캘린더 링크를 {appName}에서 열지 선택하세요. 기술적으로 {appName}은(는) mailto: 및 webcal: 링크의 프로토콜 핸들러로 등록됩니다.",
+    "description": "메일과 캘린더 링크를 {appName}에서 열지 선택합니다.",
     "unsupported": "이 브라우저 또는 연결은 수동 프로토콜 핸들러 등록을 지원하지 않습니다. 설치된 PWA는 브라우저 또는 시스템 설정을 통해 사용할 수 있을 수 있습니다.",
-    "mailto_label": "이메일 링크",
-    "mailto_description": "mailto: 링크를 {appName}의 미리 채워진 작성 창에서 엽니다.",
-    "protocol_open_mode_label": "프로토콜 링크를 열 때",
+    "mailto_label": "메일 링크를 {appName}에서 열기",
+    "mailto_description": "웹사이트에서 메일 주소를 클릭하면 {appName}에서 새 메시지를 시작합니다.",
+    "protocol_open_mode_label": "링크 여는 방식",
     "protocol_open_mode_description": "{appName}이(가) mailto: 및 webcal: 링크를 새 탭에서 열지, 열린 세션을 재사용할지 선택하세요. 활성 세션 옵션은 브라우저가 포커스를 차단할 때 {appName}을(를) 앞으로 가져오기 위한 대체 알림을 클릭할 수 있도록 알림 권한이 필요합니다.",
     "protocol_open_mode_active_session": "가능하면 활성 세션에서 열기",
     "protocol_open_mode_new_tab": "항상 새 탭 열기",
     "focus_notification_title": "{appName} 열기",
     "focus_notification_body": "링크가 {appName}에서 열렸습니다. 창을 앞으로 가져오려면 클릭하세요.",
-    "webcal_label": "캘린더 링크",
-    "webcal_description": "webcal: 링크를 {appName}의 미리 채워진 캘린더 구독 대화상자에서 엽니다.",
-    "register_mailto": "이메일 앱 등록",
-    "register_webcal": "캘린더 앱 등록",
+    "webcal_label": "캘린더 링크를 {appName}에서 열기",
+    "webcal_description": "웹사이트에서 캘린더 링크를 클릭하면 {appName}에 캘린더를 추가합니다.",
+    "register_mailto": "메일 링크에 {appName} 사용",
+    "register_webcal": "캘린더 링크에 {appName} 사용",
     "mailto_registered": "이메일 핸들러 등록을 요청했습니다",
     "webcal_registered": "캘린더 핸들러 등록을 요청했습니다",
     "registration_failed": "프로토콜 핸들러 등록에 실패했습니다",
@@ -1619,7 +1619,7 @@
       },
       "favicon_unread_badge": {
         "label": "Unread Count on Tab Icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+        "description": "다른 탭이나 앱에서 작업하는 동안에도 새 메일을 볼 수 있습니다."
       },
       "show_shared_mail_accounts": {
         "label": "공유 메일 계정 표시",
@@ -1739,7 +1739,7 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "알림음",
+        "title": "소리",
         "description": "알림이 올 때 재생할 소리를 선택해 주세요",
         "choose": "알림음",
         "choose_desc": "알림음을 선택하고 스피커 아이콘을 눌러 미리 들어보세요"
@@ -1749,7 +1749,7 @@
         "description": "새 이메일이 올 때의 알림을 설정해요",
         "enabled": "이메일 알림",
         "enabled_desc": "새 이메일이 도착하면 알림을 보여줘요",
-        "sound": "알림음",
+        "sound": "새 메일 소리",
         "sound_desc": "새 이메일이 도착하면 소리로 알려줘요",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1759,7 +1759,7 @@
         "description": "캘린더 일정 알림을 설정해요",
         "enabled": "일정 알림",
         "enabled_desc": "다가오는 일정에 대한 알림을 보여줘요",
-        "sound": "알림음",
+        "sound": "알림 소리",
         "sound_desc": "일정 알림이 올 때 소리로 알려줘요"
       },
       "push": {
@@ -1767,7 +1767,7 @@
         "confirm_disable_title": "백그라운드 알림을 비활성화하시겠습니까?",
         "description": "이 사이트가 닫혀 있을 때 새 메일에 대한 시스템 알림을 받습니다. Bulwark 푸시 릴레이를 통해 전달되며, 릴레이는 메일 내용을 절대 보지 않습니다.",
         "disable": "비활성화",
-        "enable": "활성화",
+        "enable": "이 기기에서 켜기",
         "dismiss_aria": "알림 프롬프트 닫기",
         "ios_hint": "iOS에서는 먼저 사이트를 홈 화면에 설치하세요. Safari는 설치된 PWA에만 Web Push를 전달합니다.",
         "reenable": "다시 등록",
@@ -1781,7 +1781,7 @@
         "status_unsupported": "이 브라우저는 Web Push를 지원하지 않습니다",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "데모에서는 백그라운드 알림을 사용할 수 없습니다.",
-        "title": "백그라운드 알림",
+        "title": "{appName}이(가) 닫혀 있을 때의 알림",
         "devices_title": "등록된 기기",
         "devices_desc": "이 계정의 백그라운드 알림을 받도록 등록된 모든 기기입니다. 해지하면 해당 기기는 즉시 수신을 멈추니다.",
         "devices_loading": "등록된 기기를 불러오는 중…",
@@ -1843,7 +1843,7 @@
       },
       "first_day": {
         "label": "한 주의 시작",
-        "description": "일주일이 일요일부터 시작할지 월요일부터 시작할지 설정해요",
+        "description": "캘린더에서 한 주의 첫날",
         "sunday": "일요일",
         "monday": "월요일"
       },
@@ -6721,7 +6721,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "창",
+      "title": "앱 창",
       "double_click_label": "두 번 클릭하면 메시지를 새 창에서 열기",
       "double_click_description": "한 번 클릭하면 지금처럼 목록 옆에 메시지가 열립니다.",
       "restore_label": "시작할 때 창 다시 열기",
@@ -6818,9 +6818,9 @@
     "section_title": "앱 잠금",
     "section_desc": "일정 시간 사용하지 않으면 모든 창과 탭에서 PIN을 요청합니다. 잠겨 있는 동안 앱은 누군가 PIN을 입력할 때까지 이 기기에 저장된 메일을 읽을 수 없습니다.",
     "enable_label": "PIN으로 잠금",
-    "enable_desc": "기본적으로 꺼져 있습니다. PIN은 이 기기에만 남습니다.",
+    "enable_desc": "PIN은 이 기기에만 남습니다.",
     "protects_desc": "보호 대상: PIN은 이 기기 앞에 있는 사람이 앱에 들어오지 못하게 합니다. 여기에 저장된 메일은 잠금을 켜거나 PIN을 변경할 때 새 키를 받으며, 잠시 걸릴 수 있습니다. 이 컴퓨터에서 실행되는 프로그램, 설치한 브라우저 확장 프로그램, 앱 파일을 복사해 많은 PIN을 시도할 시간이 있는 사람은 막을 수 없으므로 더 긴 PIN이 좋습니다. 데스크톱 앱에서는 PIN을 시도하려면 이 컴퓨터의 로그인도 필요합니다. 서버의 계정에는 영향이 없습니다.",
-    "enable_body": "PIN을 선택하세요. 앱이 잠길 때마다, 그리고 다시 로드하거나 새로 시작한 후에 필요합니다.",
+    "enable_body": "앱이 잠길 때마다, 그리고 다시 시작한 후에 필요합니다.",
     "set_pin_title": "PIN 선택",
     "change_pin": "PIN 변경…",
     "change_pin_title": "PIN 변경",
@@ -6881,6 +6881,19 @@
     "timeout_option": "{count, plural, other {#분}}",
     "blocked_seconds": "시도 횟수가 너무 많습니다. {count, plural, other {#초}} 후에 다시 시도하세요.",
     "blocked_minutes": "시도 횟수가 너무 많습니다. {count, plural, other {#분}} 후에 다시 시도하세요."
+  },
+  "uxs_general": {
+    "time_zone_common": "자주 쓰는 시간대",
+    "time_zone_all": "모든 시간대",
+    "time_zone_search": "시간대 검색",
+    "time_zone_no_match": "시간대를 찾을 수 없습니다",
+    "time_zone_desktop_description": "메일과 일정 시간을 이 시간대로 표시합니다. 선택하지 않으면 컴퓨터의 시간대를 사용합니다.",
+    "app_lock_desc_desktop": "일정 시간 사용하지 않으면 모든 창에서 PIN을 요청합니다. 잠겨 있는 동안 앱은 누군가 PIN을 입력할 때까지 이 기기에 저장된 메일을 읽을 수 없습니다.",
+    "app_lock_timeout_desc_desktop": "어느 창에서도 사용하지 않은 시간입니다.",
+    "app_lock_now_desc_desktop": "모든 창을 즉시 잠급니다.",
+    "app_lock_protects_toggle": "무엇으로부터 보호하나요?",
+    "app_lock_timeout_hours": "{count, plural, other {#시간}}",
+    "desktop_attention_title": "이 컴퓨터에서"
   },
   "desktop_sign_in": {
     "server_needed": "먼저 서버 주소를 입력하세요.",
@@ -7091,7 +7104,7 @@
     "section_title": "사용 정보 및 충돌 보고서",
     "section_description": "둘 다 켤 때까지 꺼져 있으며, 각각 별도의 스위치가 있습니다.",
     "telemetry_label": "사용 정보 보내기",
-    "telemetry_description": "하루에 한 번: 임의의 ID, 앱 버전, Node 버전, 운영 체제, 앱 실행 시간, 앱의 연결 방식을 보냅니다. 자체 메일 서버를 쓰면 켜진 기능, 대략적인 계정 수, 플러그인과 테마 수도 보냅니다. 메일, 주소, 서버 이름은 절대 보내지 않습니다.",
+    "telemetry_description": "하루에 한 번: 임의의 ID, 앱의 버전 번호, 운영 체제, 앱 실행 시간, 앱의 연결 방식을 보냅니다. 자체 메일 서버를 쓰면 켜진 기능, 대략적인 계정 수, 플러그인과 테마 수도 보냅니다. 메일, 주소, 서버 이름은 절대 보내지 않습니다.",
     "crash_label": "충돌 보고서 보내기",
     "crash_description": "앱 오류는 임의의 ID, 앱 자체 코드의 파일 이름, 정리된 짧은 메시지와 함께 전송됩니다. 앱 자체가 충돌하면 충돌 파일이 이 컴퓨터에 남고, 직접 보낼 때만 밖으로 나갑니다.",
     "crash_memory": "충돌 파일은 충돌 당시 앱 메모리 일부의 복사본입니다. Bulwark는 찾아낸 사용자 이름, 주소, 로그인 토큰을 제거하지만 충돌 파일에 메일 본문이 남아 있을 수 있습니다.",

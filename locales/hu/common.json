@@ -217,20 +217,20 @@
   },
   "protocol_handlers": {
     "title": "Alapértelmezett alkalmazások",
-    "description": "Válaszd ki, hogy az e-mail és naptár hivatkozások a(z) {appName} alkalmazásban nyíljanak meg. Technikailag a(z) {appName} protokollkezelőként regisztrálja magát a mailto: és webcal: hivatkozásokhoz.",
+    "description": "Válassza ki, hogy az e-mail- és naptárhivatkozások a(z) {appName} alkalmazásban nyíljanak-e meg.",
     "unsupported": "Ez a böngésző vagy kapcsolat nem támogatja a kézi protokollkezelő regisztrációt. Lehetőség lehet a telepített PWA használatára a böngésző vagy operációs rendszer beállításain keresztül.",
-    "mailto_label": "E-mail hivatkozások",
-    "mailto_description": "Mailto: hivatkozások megnyitása a(z) {appName} alkalmazásban egy előre kitöltött szerkesztővel.",
-    "protocol_open_mode_label": "Protokoll hivatkozások megnyitásakor",
+    "mailto_label": "E-mail-hivatkozások megnyitása itt: {appName}",
+    "mailto_description": "Ha egy weboldalon e-mail-címre kattint, új üzenet indul itt: {appName}.",
+    "protocol_open_mode_label": "Hivatkozások megnyitása",
     "protocol_open_mode_description": "Válaszd ki, hogy a(z) {appName} a mailto: és webcal: hivatkozásokat új lapon vagy a meglévő munkamenetben nyissa meg. Az aktív munkamenet opcióhoz értesítési engedély szükséges, hogy egy értesítésre kattintva előtérbe hozd a(z) {appName} alkalmazást, ha a böngésző blokkolja a fókuszt.",
     "protocol_open_mode_active_session": "Megnyitás aktív munkamenetben, ha lehetséges",
     "protocol_open_mode_new_tab": "Mindig új lapon nyisson",
     "focus_notification_title": "{appName} megnyitása",
     "focus_notification_body": "A hivatkozás megnyílt a(z) {appName} alkalmazásban. Kattints az ablak előtérbe hozásához.",
-    "webcal_label": "Naptár hivatkozások",
-    "webcal_description": "Webcal: hivatkozások megnyitása a(z) {appName} alkalmazásban egy előre kitöltött naptárfeliratkozási párbeszédpanellel.",
-    "register_mailto": "E-mail alkalmazás regisztrálása",
-    "register_webcal": "Naptár alkalmazás regisztrálása",
+    "webcal_label": "Naptárhivatkozások megnyitása itt: {appName}",
+    "webcal_description": "Ha egy weboldalon naptárhivatkozásra kattint, a naptár bekerül ide: {appName}.",
+    "register_mailto": "{appName} használata e-mail-hivatkozásokhoz",
+    "register_webcal": "{appName} használata naptárhivatkozásokhoz",
     "mailto_registered": "E-mail kezelő regisztráció kérve",
     "webcal_registered": "Naptár kezelő regisztráció kérve",
     "registration_failed": "Protokollkezelő regisztráció sikertelen",
@@ -1622,7 +1622,7 @@
       },
       "favicon_unread_badge": {
         "label": "Unread Count on Tab Icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+        "description": "Így akkor is látja az új levelet, ha egy másik lapon vagy alkalmazásban dolgozik."
       },
       "show_shared_mail_accounts": {
         "label": "Megosztott levelezőfiókok megjelenítése",
@@ -1730,7 +1730,7 @@
         "relax": "Pihenés"
       },
       "push": {
-        "title": "Háttérértesítések",
+        "title": "Értesítések, amikor a(z) {appName} be van zárva",
         "description": "Rendszerértesítések fogadása új levelekről, amikor ez az oldal be van zárva. A Bulwark push relén keresztül kézbesítve; a relay soha nem látja a levél tartalmát.",
         "relay_label": "Push relé",
         "relay_desc": "Alapértelmezés szerint a tárolt Bulwark relay. Csak akkor módosítsd, ha sajátot üzemeltetsz.",
@@ -1742,7 +1742,7 @@
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "A háttérértesítések nem érhetők el a bemutatóban.",
         "status_busy": "Munka...",
-        "enable": "Engedélyezés",
+        "enable": "Bekapcsolás ezen az eszközön",
         "reenable": "Újraregisztráció",
         "disable": "Letiltás",
         "confirm_disable_title": "Háttérértesítések letiltása?",
@@ -1787,9 +1787,9 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "Értesítési hang",
+        "title": "Hang",
         "description": "Válaszd ki az értesítésekhez használt hangot",
-        "choose": "Hang",
+        "choose": "Hangjelzés",
         "choose_desc": "Válassz ki egy értesítési hangot, és kattints a hangszóró ikonra az előnézethez"
       },
       "email": {
@@ -1797,7 +1797,7 @@
         "description": "Értesítések beállítása a beérkező e-mailekhez",
         "enabled": "E-mail értesítések",
         "enabled_desc": "Értesítések megjelenítése új e-mailek érkezésekor",
-        "sound": "Értesítési hang",
+        "sound": "Hang új levélnél",
         "sound_desc": "Hangjelzés lejátszása új e-mailek érkezésekor",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1807,7 +1807,7 @@
         "description": "Értesítések beállítása a naptári eseményekhez",
         "enabled": "Esemény értesítések",
         "enabled_desc": "Figyelmeztetések megjelenítése a közelgő naptári eseményekhez",
-        "sound": "Értesítési hang",
+        "sound": "Hang emlékeztetőknél",
         "sound_desc": "Hangjelzés lejátszása naptári emlékeztetőkhöz"
       }
     },
@@ -1846,7 +1846,7 @@
       },
       "first_day": {
         "label": "Hét első napja",
-        "description": "Hét kezdése vasárnappal vagy hétfővel",
+        "description": "A hét első napja a naptárakban",
         "sunday": "Vasárnap",
         "monday": "Hétfő"
       },
@@ -6721,7 +6721,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Ablakok",
+      "title": "Az alkalmazás ablakai",
       "double_click_label": "Üzenetek megnyitása új ablakban dupla kattintással",
       "double_click_description": "Egy kattintás továbbra is a lista mellett nyitja meg az üzenetet.",
       "restore_label": "Ablakok újranyitása indításkor",
@@ -6818,9 +6818,9 @@
     "section_title": "Alkalmazászár",
     "section_desc": "Egy idő után minden ablakban és lapon PIN-kódot kér. Zárolt állapotban az alkalmazás nem tudja olvasni az eszközön tárolt leveleket, amíg valaki meg nem adja a PIN-kódot.",
     "enable_label": "Zárolás PIN-kóddal",
-    "enable_desc": "Alapból ki van kapcsolva. A PIN-kód ezen az eszközön marad.",
+    "enable_desc": "A PIN-kód ezen az eszközön marad.",
     "protects_desc": "Mi ellen véd: a PIN-kód kint tartja az alkalmazásból azt, aki ennél az eszköznél van. Az itt tárolt levelek új kulcsot kapnak, amikor bekapcsolja a zárolást vagy módosítja a PIN-kódot, ami eltarthat egy ideig. Nem tudja megállítani a számítógépen futó programot, az Ön által telepített böngészőbővítményt, sem azt, aki lemásolja az alkalmazás fájljait, és van ideje sok PIN-kódot kipróbálni, ezért érdemes hosszabb PIN-kódot választani. Az asztali alkalmazásban a PIN-kódok kipróbálásához az Ön bejelentkezése is kell ezen a számítógépen. A kiszolgálón lévő fiókját ez nem érinti.",
-    "enable_body": "Válasszon PIN-kódot. Minden zároláskor, valamint újratöltés vagy új indítás után szükség lesz rá.",
+    "enable_body": "Minden zároláskor és újraindítás után szükség lesz rá.",
     "set_pin_title": "PIN-kód választása",
     "change_pin": "PIN-kód módosítása…",
     "change_pin_title": "A PIN-kód módosítása",
@@ -6881,6 +6881,19 @@
     "timeout_option": "{count, plural, one {# perc} other {# perc}}",
     "blocked_seconds": "Túl sok próbálkozás. Próbálja újra {count, plural, one {# másodperc} other {# másodperc}} múlva.",
     "blocked_minutes": "Túl sok próbálkozás. Próbálja újra {count, plural, one {# perc} other {# perc}} múlva."
+  },
+  "uxs_general": {
+    "time_zone_common": "Gyakori időzónák",
+    "time_zone_all": "Minden időzóna",
+    "time_zone_search": "Időzóna keresése",
+    "time_zone_no_match": "Nincs ilyen időzóna",
+    "time_zone_desktop_description": "A levelek és találkozók időpontjai ebben az időzónában jelennek meg. Ha nem választ, a számítógép időzónája érvényes.",
+    "app_lock_desc_desktop": "Egy idő után minden ablakban PIN-kódot kér. Zárolt állapotban az alkalmazás nem tudja olvasni az eszközön tárolt leveleket, amíg valaki meg nem adja a PIN-kódot.",
+    "app_lock_timeout_desc_desktop": "Használat nélküli idő bármelyik ablakban.",
+    "app_lock_now_desc_desktop": "Azonnal zárolja az összes ablakot.",
+    "app_lock_protects_toggle": "Mi ellen véd ez?",
+    "app_lock_timeout_hours": "{count, plural, one {# óra} other {# óra}}",
+    "desktop_attention_title": "Ezen a számítógépen"
   },
   "desktop_sign_in": {
     "server_needed": "Először adja meg a szerver címét.",
@@ -7091,7 +7104,7 @@
     "section_title": "Használati adatok és összeomlási jelentések",
     "section_description": "Mindkettő ki van kapcsolva, amíg be nem kapcsolja, és mindegyiknek saját kapcsolója van.",
     "telemetry_label": "Használati adatok küldése",
-    "telemetry_description": "Naponta egyszer: egy véletlenszerű azonosító, az alkalmazás verziója, a Node verziója, az operációs rendszer, az alkalmazás futási ideje és a kapcsolódás módja. Saját levelezőszervernél azt is, mely funkciók vannak bekapcsolva, a fiókok hozzávetőleges számát, valamint a bővítmények és témák számát. Soha nem küld leveleket, címeket vagy szerverneveket.",
+    "telemetry_description": "Naponta egyszer: egy véletlenszerű azonosító, az alkalmazás verziószámai, az operációs rendszer, az alkalmazás futási ideje és a kapcsolódás módja. Saját levelezőszervernél azt is, mely funkciók vannak bekapcsolva, a fiókok hozzávetőleges számát, valamint a bővítmények és témák számát. Soha nem küld leveleket, címeket vagy szerverneveket.",
     "crash_label": "Összeomlási jelentések küldése",
     "crash_description": "Az alkalmazás hibái egy véletlenszerű azonosítóval, az alkalmazás saját kódjának fájlneveivel és rövid, megtisztított üzenetekkel mennek ki. Ha maga az alkalmazás omlik össze, egy összeomlási fájl marad ezen a számítógépen, és csak akkor kerül ki, ha elküldi.",
     "crash_memory": "Az összeomlási fájl az alkalmazás memóriájának egy részéről készült másolat az összeomlás pillanatából. A Bulwark eltávolítja a talált felhasználóneveket, címeket és bejelentkezési tokeneket, de az összeomlási fájl így is tartalmazhatja a levelei szövegét.",

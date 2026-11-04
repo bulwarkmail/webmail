@@ -217,20 +217,20 @@
   },
   "protocol_handlers": {
     "title": "Aplikacje domyślne",
-    "description": "Wybierz, czy linki e-mail i kalendarza mają otwierać się w {appName}. Technicznie {appName} rejestruje się jako obsługa protokołu dla linków mailto: i webcal:.",
+    "description": "Wybierz, czy linki do poczty i kalendarza mają się otwierać w {appName}.",
     "unsupported": "Ta przeglądarka lub to połączenie nie obsługuje ręcznej rejestracji obsługi protokołu. Nadal możesz mieć możliwość użycia zainstalowanej aplikacji PWA w ustawieniach przeglądarki lub systemu.",
-    "mailto_label": "Linki e-mail",
-    "mailto_description": "Otwiera linki mailto: w {appName} z wstępnie wypełnionym edytorem wiadomości.",
-    "protocol_open_mode_label": "Podczas otwierania linków protokołu",
+    "mailto_label": "Otwieraj linki e-mail w {appName}",
+    "mailto_description": "Kliknięcie adresu e-mail na stronie zaczyna nową wiadomość w {appName}.",
+    "protocol_open_mode_label": "Jak otwierają się linki",
     "protocol_open_mode_description": "Wybierz, czy {appName} ma otwierać linki mailto: i webcal: w nowej karcie, czy ponownie używać otwartej sesji. Opcja aktywnej sesji wymaga uprawnienia do powiadomień, aby można było kliknąć powiadomienie awaryjne i przenieść {appName} na pierwszy plan, jeśli przeglądarka blokuje fokus.",
     "protocol_open_mode_active_session": "Jeśli to możliwe, otwórz w aktywnej sesji",
     "protocol_open_mode_new_tab": "Zawsze otwieraj nową kartę",
     "focus_notification_title": "Otwórz {appName}",
     "focus_notification_body": "Link został otwarty w {appName}. Kliknij, aby przenieść okno na pierwszy plan.",
-    "webcal_label": "Linki kalendarza",
-    "webcal_description": "Otwiera linki webcal: w {appName} z wstępnie wypełnionym oknem subskrypcji kalendarza.",
-    "register_mailto": "Zarejestruj aplikację e-mail",
-    "register_webcal": "Zarejestruj aplikację kalendarza",
+    "webcal_label": "Otwieraj linki kalendarza w {appName}",
+    "webcal_description": "Kliknięcie linku kalendarza na stronie dodaje kalendarz w {appName}.",
+    "register_mailto": "Używaj {appName} do linków e-mail",
+    "register_webcal": "Używaj {appName} do linków kalendarza",
     "mailto_registered": "Zażądano rejestracji obsługi e-mail",
     "webcal_registered": "Zażądano rejestracji obsługi kalendarza",
     "registration_failed": "Rejestracja obsługi protokołu nie powiodła się",
@@ -1619,7 +1619,7 @@
       },
       "favicon_unread_badge": {
         "label": "Unread Count on Tab Icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+        "description": "Dzięki temu widzisz nową pocztę, gdy pracujesz w innej karcie lub aplikacji."
       },
       "show_shared_mail_accounts": {
         "label": "Pokaż udostępnione konta pocztowe",
@@ -1739,9 +1739,9 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "Dźwięk powiadomienia",
+        "title": "Dźwięk",
         "description": "Wybierz dźwięk odtwarzany dla powiadomień",
-        "choose": "Dźwięk",
+        "choose": "Ton",
         "choose_desc": "Wybierz ton powiadomienia i kliknij ikonę głośnika, aby go odsłuchać"
       },
       "email": {
@@ -1749,7 +1749,7 @@
         "description": "Skonfiguruj powiadomienia dla przychodzących wiadomości e-mail",
         "enabled": "Powiadomienia e-mail",
         "enabled_desc": "Pokazuj powiadomienia po nadejściu nowych wiadomości e-mail",
-        "sound": "Dźwięk powiadomienia",
+        "sound": "Dźwięk nowej poczty",
         "sound_desc": "Odtwarzaj sygnał dźwiękowy po nadejściu nowych wiadomości e-mail",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1759,7 +1759,7 @@
         "description": "Skonfiguruj powiadomienia dla wydarzeń kalendarza",
         "enabled": "Powiadomienia o wydarzeniach",
         "enabled_desc": "Pokazuj alerty o nadchodzących wydarzeniach kalendarza",
-        "sound": "Dźwięk powiadomienia",
+        "sound": "Dźwięk przypomnień",
         "sound_desc": "Odtwarzaj sygnał dźwiękowy dla przypomnień kalendarza"
       },
       "push": {
@@ -1767,7 +1767,7 @@
         "confirm_disable_title": "Wyłączyć powiadomienia w tle?",
         "description": "Otrzymuj powiadomienia systemowe o nowych wiadomościach, gdy ta strona jest zamknięta. Dostarczane przez przekaźnik push Bulwark; przekaźnik nigdy nie widzi treści wiadomości.",
         "disable": "Wyłącz",
-        "enable": "Włącz",
+        "enable": "Włącz na tym urządzeniu",
         "dismiss_aria": "Zamknij monit powiadomień",
         "ios_hint": "W systemie iOS najpierw zainstaluj stronę na ekranie głównym – Safari dostarcza Web Push tylko zainstalowanym PWA.",
         "reenable": "Zarejestruj ponownie",
@@ -1781,7 +1781,7 @@
         "status_unsupported": "Ta przeglądarka nie obsługuje Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "Powiadomienia w tle nie są dostępne w wersji demonstracyjnej.",
-        "title": "Powiadomienia w tle",
+        "title": "Powiadomienia, gdy {appName} jest zamknięty",
         "devices_title": "Zarejestrowane urządzenia",
         "devices_desc": "Wszystkie urządzenia zarejestrowane do odbioru powiadomień w tle dla tego konta. Unieważnienie natychmiast wstrzymuje ich odbiór.",
         "devices_loading": "Wczytywanie zarejestrowanych urządzeń…",
@@ -1843,7 +1843,7 @@
       },
       "first_day": {
         "label": "Pierwszy dzień tygodnia",
-        "description": "Rozpocznij tydzień w niedzielę lub poniedziałek",
+        "description": "Pierwszy dzień tygodnia w kalendarzach",
         "sunday": "Niedziela",
         "monday": "Poniedziałek"
       },
@@ -6721,7 +6721,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Okna",
+      "title": "Okna aplikacji",
       "double_click_label": "Otwieraj wiadomości w nowym oknie po dwukrotnym kliknięciu",
       "double_click_description": "Pojedyncze kliknięcie nadal otwiera wiadomość obok listy.",
       "restore_label": "Otwieraj okna ponownie przy starcie",
@@ -6818,9 +6818,9 @@
     "section_title": "Blokada aplikacji",
     "section_desc": "Prosi o PIN po pewnym czasie bezczynności, w każdym oknie i na każdej karcie. Gdy jest zablokowana, aplikacja nie może czytać poczty zapisanej na tym urządzeniu, dopóki ktoś nie poda PIN-u.",
     "enable_label": "Blokuj kodem PIN",
-    "enable_desc": "Domyślnie wyłączone. PIN pozostaje na tym urządzeniu.",
+    "enable_desc": "PIN pozostaje na tym urządzeniu.",
     "protects_desc": "Przed czym to chroni: PIN nie wpuszcza do aplikacji kogoś przy tym urządzeniu. Zapisana tu poczta dostaje nowy klucz, gdy włączysz blokadę lub zmienisz PIN, co może chwilę potrwać. Nie zatrzyma to programu działającego na tym komputerze, zainstalowanego przez Ciebie rozszerzenia przeglądarki ani kogoś, kto skopiuje pliki aplikacji i ma czas wypróbować wiele PIN-ów, więc warto użyć dłuższego PIN-u. W aplikacji komputerowej próbowanie PIN-ów wymaga też Twojego logowania na tym komputerze. Nie ma to wpływu na Twoje konto na serwerze.",
-    "enable_body": "Wybierz PIN. Będzie potrzebny za każdym razem, gdy aplikacja się zablokuje, oraz po przeładowaniu lub ponownym uruchomieniu.",
+    "enable_body": "Będzie potrzebny za każdym razem, gdy aplikacja się zablokuje, i po ponownym uruchomieniu.",
     "set_pin_title": "Wybierz PIN",
     "change_pin": "Zmień PIN…",
     "change_pin_title": "Zmień PIN",
@@ -6881,6 +6881,19 @@
     "timeout_option": "{count, plural, one {# minuta} few {# minuty} many {# minut} other {# minuty}}",
     "blocked_seconds": "Zbyt wiele prób. Spróbuj za {count, plural, one {# sekundę} few {# sekundy} many {# sekund} other {# sekundy}}.",
     "blocked_minutes": "Zbyt wiele prób. Spróbuj za {count, plural, one {# minutę} few {# minuty} many {# minut} other {# minuty}}."
+  },
+  "uxs_general": {
+    "time_zone_common": "Popularne strefy czasowe",
+    "time_zone_all": "Wszystkie strefy czasowe",
+    "time_zone_search": "Szukaj strefy czasowej",
+    "time_zone_no_match": "Nie znaleziono strefy czasowej",
+    "time_zone_desktop_description": "Pokazuj godziny poczty i spotkań w tej strefie czasowej. Jeśli nie wybierzesz żadnej, używana jest strefa czasowa komputera.",
+    "app_lock_desc_desktop": "Prosi o PIN po pewnym czasie bezczynności, w każdym oknie. Gdy jest zablokowana, aplikacja nie może czytać poczty zapisanej na tym urządzeniu, dopóki ktoś nie poda PIN-u.",
+    "app_lock_timeout_desc_desktop": "Czas bez użycia w dowolnym oknie.",
+    "app_lock_now_desc_desktop": "Blokuje od razu wszystkie okna.",
+    "app_lock_protects_toggle": "Przed czym to chroni?",
+    "app_lock_timeout_hours": "{count, plural, one {# godzina} few {# godziny} many {# godzin} other {# godziny}}",
+    "desktop_attention_title": "Na tym komputerze"
   },
   "desktop_sign_in": {
     "server_needed": "Najpierw wpisz adres serwera.",
@@ -7091,7 +7104,7 @@
     "section_title": "Dane o użyciu i raporty o awariach",
     "section_description": "Oba są wyłączone, dopóki ich nie włączysz, a każdy ma własny przełącznik.",
     "telemetry_label": "Wysyłaj dane o użyciu",
-    "telemetry_description": "Raz dziennie: losowy identyfikator, wersja aplikacji, wersja Node, system operacyjny, jak długo działa aplikacja i jak się łączy. Przy własnym serwerze poczty także włączone funkcje, przybliżona liczba kont oraz liczba wtyczek i motywów. Nigdy poczta, adresy ani nazwy serwerów.",
+    "telemetry_description": "Raz dziennie: losowy identyfikator, numery wersji aplikacji, system operacyjny, jak długo działa aplikacja i jak się łączy. Przy własnym serwerze poczty także włączone funkcje, przybliżona liczba kont oraz liczba wtyczek i motywów. Nigdy poczta, adresy ani nazwy serwerów.",
     "crash_label": "Wysyłaj raporty o awariach",
     "crash_description": "Błędy aplikacji są wysyłane z losowym identyfikatorem, nazwami plików z kodu samej aplikacji i krótkimi, oczyszczonymi komunikatami. Jeśli sama aplikacja ulegnie awarii, plik awarii zostaje na tym komputerze i opuszcza go tylko wtedy, gdy go wyślesz.",
     "crash_memory": "Plik awarii to kopia części pamięci aplikacji z chwili awarii. Bulwark usuwa nazwy użytkowników, adresy i tokeny logowania, które znajdzie, ale plik awarii nadal może zawierać tekst Twojej poczty.",

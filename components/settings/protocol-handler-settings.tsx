@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { useConfig } from "@/hooks/use-config";
+import { useIsDesktopApp } from "@/hooks/use-is-desktop-app";
 import { getPathPrefix } from "@/lib/browser-navigation";
 import { productName } from "@/lib/product-name";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -41,6 +42,9 @@ export function ProtocolHandlerSettings({ supportsCalendar }: ProtocolHandlerSet
   const protocolOpenMode = useSettingsStore((state) => state.protocolOpenMode);
   const updateSetting = useSettingsStore((state) => state.updateSetting);
   const [supported, setSupported] = useState(false);
+  // The desktop app opens mail links itself ("Default mail app" under Desktop
+  // app); the browser's handler registration means nothing there.
+  const desktop = useIsDesktopApp();
 
   useEffect(() => {
     setSupported(canRegisterProtocolHandler());
@@ -71,10 +75,12 @@ export function ProtocolHandlerSettings({ supportsCalendar }: ProtocolHandlerSet
   const renderRegistrationControl = (protocol: Protocol) => {
     return (
       <Button size="sm" onClick={() => handleRegister(protocol)} disabled={!supported}>
-        {protocol === "mailto" ? t("register_mailto") : t("register_webcal")}
+        {protocol === "mailto" ? t("register_mailto", { appName }) : t("register_webcal", { appName })}
       </Button>
     );
   };
+
+  if (desktop) return null;
 
   return (
     <SettingsSection id="links" title={t("title")} description={t("description", { appName })}>
@@ -84,12 +90,12 @@ export function ProtocolHandlerSettings({ supportsCalendar }: ProtocolHandlerSet
         </div>
       )}
 
-      <SettingItem label={t("mailto_label")} description={t("mailto_description", { appName })}>
+      <SettingItem label={t("mailto_label", { appName })} description={t("mailto_description", { appName })}>
         {renderRegistrationControl("mailto")}
       </SettingItem>
 
       {supportsCalendar && (
-        <SettingItem label={t("webcal_label")} description={t("webcal_description", { appName })}>
+        <SettingItem label={t("webcal_label", { appName })} description={t("webcal_description", { appName })}>
           {renderRegistrationControl("webcal")}
         </SettingItem>
       )}

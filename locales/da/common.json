@@ -217,20 +217,20 @@
   },
   "protocol_handlers": {
     "title": "Standardapps",
-    "description": "Vælg om e-mail- og kalenderlinks åbnes i {appName}. Teknisk set registrerer {appName} sig som protokolhåndtering for mailto:- og webcal:-links.",
+    "description": "Vælg, om mail- og kalenderlinks åbnes i {appName}.",
     "unsupported": "Denne browser eller forbindelse understøtter ikke manuel registrering af protokolhåndtering. Du kan muligvis stadig bruge den installerede PWA via browser- eller OS-indstillinger.",
-    "mailto_label": "E-mail-links",
-    "mailto_description": "Åbn mailto:-links i {appName} med et forudfyldt skrivevindue.",
-    "protocol_open_mode_label": "Ved åbning af protokollinks",
+    "mailto_label": "Åbn maillinks i {appName}",
+    "mailto_description": "Et klik på en mailadresse på et websted starter en ny besked i {appName}.",
+    "protocol_open_mode_label": "Sådan åbnes links",
     "protocol_open_mode_description": "Vælg om {appName} åbner mailto:- og webcal:-links i en ny fane eller genbruger en åben session. Indstillingen \\\"aktiv session\\\" kræver notifikationstilladelse, så du kan klikke på en nødnotifikation for at bringe {appName} frem, hvis browseren blokerer fokus.",
     "protocol_open_mode_active_session": "Åbn i aktiv session hvis muligt",
     "protocol_open_mode_new_tab": "Åbn altid ny fane",
     "focus_notification_title": "Åbn {appName}",
     "focus_notification_body": "Linket blev åbnet i {appName}. Klik for at bringe vinduet frem.",
-    "webcal_label": "Kalenderlinks",
-    "webcal_description": "Åbn webcal:-links i {appName} med en forudfyldt kalenderabonnementsdialog.",
-    "register_mailto": "Registrer e-mail-app",
-    "register_webcal": "Registrer kalender-app",
+    "webcal_label": "Åbn kalenderlinks i {appName}",
+    "webcal_description": "Et klik på et kalenderlink på et websted tilføjer kalenderen i {appName}.",
+    "register_mailto": "Brug {appName} til maillinks",
+    "register_webcal": "Brug {appName} til kalenderlinks",
     "mailto_registered": "Registrering af e-mail-håndtering anmodet",
     "webcal_registered": "Registrering af kalenderhåndtering anmodet",
     "registration_failed": "Registrering af protokolhåndtering mislykkedes",
@@ -1622,7 +1622,7 @@
       },
       "favicon_unread_badge": {
         "label": "Unread Count on Tab Icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+        "description": "Så du ser ny mail, mens du arbejder i en anden fane eller app."
       },
       "show_shared_mail_accounts": {
         "label": "Vis delte mailkonti",
@@ -1730,7 +1730,7 @@
         "relax": "Afslapning"
       },
       "push": {
-        "title": "Baggrundsnotifikationer",
+        "title": "Notifikationer, når {appName} er lukket",
         "description": "Modtag systemnotifikationer for ny mail, når dette site er lukket. Leveres via Bulwark push-relæet; relæet ser aldrig mail-indhold.",
         "relay_label": "Push-relæ",
         "relay_desc": "Som standard det hosted Bulwark-relæ. Ændr kun, hvis du selv-host'er.",
@@ -1742,7 +1742,7 @@
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "Baggrundsnotifikationer er ikke tilgængelige i demoen.",
         "status_busy": "Arbejder…",
-        "enable": "Aktivér",
+        "enable": "Slå til på denne enhed",
         "reenable": "Genregistrér",
         "disable": "Deaktivér",
         "confirm_disable_title": "Deaktivér baggrundsnotifikationer?",
@@ -1787,9 +1787,9 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "Notifikationslyd",
+        "title": "Lyd",
         "description": "Vælg hvilken lyd der skal afspilles for notifikationer",
-        "choose": "Lyd",
+        "choose": "Tone",
         "choose_desc": "Vælg en notifikationstone og klik på højttalerikonet for at forhåndsvise den"
       },
       "email": {
@@ -1797,7 +1797,7 @@
         "description": "Konfigurér notifikationer for indkommende e-mails",
         "enabled": "E-mail-notifikationer",
         "enabled_desc": "Vis notifikationer, når nye e-mails ankommer",
-        "sound": "Notifikationslyd",
+        "sound": "Lyd ved ny mail",
         "sound_desc": "Afspil en lydadvarsel, når nye e-mails ankommer",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1807,7 +1807,7 @@
         "description": "Konfigurér notifikationer for kalenderbegivenheder",
         "enabled": "Begivenhedsnotifikationer",
         "enabled_desc": "Vis alarmer for kommende kalenderbegivenheder",
-        "sound": "Notifikationslyd",
+        "sound": "Lyd ved påmindelser",
         "sound_desc": "Afspil en lyd for kalenderpåmindelser"
       }
     },
@@ -1846,7 +1846,7 @@
       },
       "first_day": {
         "label": "Første ugedag",
-        "description": "Start ugen på søndag eller mandag",
+        "description": "Ugens første dag i kalendere",
         "sunday": "Søndag",
         "monday": "Mandag"
       },
@@ -6721,7 +6721,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Vinduer",
+      "title": "Appens vinduer",
       "double_click_label": "Åbn beskeder i et nyt vindue ved dobbeltklik",
       "double_click_description": "Et enkelt klik åbner stadig beskeden ved siden af listen.",
       "restore_label": "Åbn vinduer igen ved start",
@@ -6818,9 +6818,9 @@
     "section_title": "Applås",
     "section_desc": "Beder om en pinkode efter et stykke tid uden brug, i alle vinduer og faner. Mens den er låst, kan appen ikke læse den mail, der er gemt på denne enhed, før nogen indtaster pinkoden.",
     "enable_label": "Lås med en pinkode",
-    "enable_desc": "Slået fra som standard. Pinkoden bliver på denne enhed.",
+    "enable_desc": "Pinkoden bliver på denne enhed.",
     "protects_desc": "Det beskytter den mod: Pinkoden holder personer ved denne enhed ude af appen. Mailen, der er gemt her, får en ny nøgle, når du slår låsen til eller ændrer pinkoden, hvilket kan tage et øjeblik. Den kan ikke stoppe et program, der kører på denne computer, en browserudvidelse, du har installeret, eller en person, der kopierer appens filer og har tid til at prøve mange pinkoder, så en længere pinkode er det værd. I desktop-appen kræver det også dit login på denne computer at prøve pinkoder. Din konto på serveren påvirkes ikke.",
-    "enable_body": "Vælg en pinkode. Du skal bruge den, hver gang appen låser, og efter en genindlæsning eller ny start.",
+    "enable_body": "Du skal bruge den, hver gang appen låser, og efter en genstart.",
     "set_pin_title": "Vælg en pinkode",
     "change_pin": "Skift pinkode…",
     "change_pin_title": "Skift pinkoden",
@@ -6881,6 +6881,19 @@
     "timeout_option": "{count, plural, one {# minut} other {# minutter}}",
     "blocked_seconds": "For mange forsøg. Prøv igen om {count, plural, one {# sekund} other {# sekunder}}.",
     "blocked_minutes": "For mange forsøg. Prøv igen om {count, plural, one {# minut} other {# minutter}}."
+  },
+  "uxs_general": {
+    "time_zone_common": "Almindelige tidszoner",
+    "time_zone_all": "Alle tidszoner",
+    "time_zone_search": "Søg i tidszoner",
+    "time_zone_no_match": "Ingen tidszone fundet",
+    "time_zone_desktop_description": "Vis tidspunkter for mail og aftaler i denne tidszone. Hvis du ikke vælger en, bruges din computers tidszone.",
+    "app_lock_desc_desktop": "Beder om en pinkode efter et stykke tid uden brug, i alle vinduer. Mens den er låst, kan appen ikke læse den mail, der er gemt på denne enhed, før nogen indtaster pinkoden.",
+    "app_lock_timeout_desc_desktop": "Tid uden brug i et vindue.",
+    "app_lock_now_desc_desktop": "Låser alle vinduer med det samme.",
+    "app_lock_protects_toggle": "Hvad beskytter det mod?",
+    "app_lock_timeout_hours": "{count, plural, one {# time} other {# timer}}",
+    "desktop_attention_title": "På denne computer"
   },
   "desktop_sign_in": {
     "server_needed": "Angiv først serverens adresse.",
@@ -7091,7 +7104,7 @@
     "section_title": "Brugsdata og nedbrudsrapporter",
     "section_description": "Begge er slået fra, indtil du slår dem til, og hver har sin egen kontakt.",
     "telemetry_label": "Send brugsdata",
-    "telemetry_description": "Én gang om dagen: et tilfældigt id, appens version, Node-versionen, dit styresystem, hvor længe appen har kørt, og hvordan den forbinder. Med din egen mailserver også hvilke funktioner der er slået til, et omtrentligt antal konti og hvor mange plugins og temaer du har. Aldrig mails, adresser eller servernavne.",
+    "telemetry_description": "Én gang om dagen: et tilfældigt id, appens versionsnumre, dit styresystem, hvor længe appen har kørt, og hvordan den forbinder. Med din egen mailserver også hvilke funktioner der er slået til, et omtrentligt antal konti og hvor mange plugins og temaer du har. Aldrig mails, adresser eller servernavne.",
     "crash_label": "Send nedbrudsrapporter",
     "crash_description": "Fejl i appen sendes med et tilfældigt id, filnavne fra appens egen kode og korte, rensede beskeder. Hvis selve appen går ned, bliver en nedbrudsfil på denne computer og forlader den kun, hvis du sender den.",
     "crash_memory": "En nedbrudsfil er en kopi af en del af appens hukommelse, da den gik ned. Bulwark fjerner de brugernavne, adresser og login-tokens, det finder, men en nedbrudsfil kan stadig indeholde teksten fra dine mails.",

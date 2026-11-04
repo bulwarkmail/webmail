@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { useLocaleStore } from '@/stores/locale-store';
@@ -8,33 +8,18 @@ import { useSettingsStore } from '@/stores/settings-store';
 import type { DateFormat, DateLocale, TimeFormat, FirstDayOfWeek } from '@/stores/settings-store';
 import { formatDate } from '@/lib/utils';
 import { getEffectiveLocale } from '@/i18n/detect-locale';
-import { AUTO_TIME_ZONE, getBrowserTimeZone, getEffectiveTimeZone, listTimeZones } from '@/lib/timezone';
+import { getEffectiveTimeZone } from '@/lib/timezone';
+import { useIsDesktopApp } from '@/hooks/use-is-desktop-app';
 import { SettingsSection, SettingItem, Select, RadioGroup } from './settings-section';
+import { TimeZonePicker } from './time-zone-picker';
 
 export function LanguageSettings() {
   const t = useTranslations('settings.language_region');
   const tDays = useTranslations('calendar.days');
+  const tGeneral = useTranslations('uxs_general');
+  const desktop = useIsDesktopApp();
 
   const { dateFormat, dateLocale, timeFormat, firstDayOfWeek, timeZone, updateSetting } = useSettingsStore();
-
-  // Browser zone + zone list are read after mount: SSR has no browser, and a
-  // server/client mismatch in the option list would trip hydration.
-  const [browserTimeZone, setBrowserTimeZone] = useState('UTC');
-  const [timeZones, setTimeZones] = useState<string[]>([]);
-  useEffect(() => {
-    setBrowserTimeZone(getBrowserTimeZone());
-    setTimeZones(listTimeZones());
-  }, []);
-
-  const timeZoneOptions = useMemo(() => {
-    const options = [{ value: AUTO_TIME_ZONE, label: t('time_zone.auto', { zone: browserTimeZone }) }];
-    // A zone synced from another browser (newer tz database) may be missing
-    // from this runtime's list; keep it selectable rather than snapping the
-    // <select> to the first entry.
-    const zones = timeZone !== AUTO_TIME_ZONE && !timeZones.includes(timeZone) ? [...timeZones, timeZone].sort() : timeZones;
-    for (const zone of zones) options.push({ value: zone, label: zone.replace(/_/g, ' ') });
-    return options;
-  }, [t, browserTimeZone, timeZones, timeZone]);
 
   // Subscribe to locale changes so the preview re-renders on language switch
   // (formatDate reads it via getState() and would otherwise stay stale).
@@ -154,14 +139,12 @@ export function LanguageSettings() {
         />
       </SettingItem>
 
-      <SettingItem label={t('time_zone.label')} description={t('time_zone.description')}>
+      <SettingItem
+        label={t('time_zone.label')}
+        description={desktop ? tGeneral('time_zone_desktop_description') : t('time_zone.description')}
+      >
         <div className="flex flex-col items-end gap-2">
-          <Select
-            value={timeZone}
-            onChange={(value) => updateSetting('timeZone', value)}
-            options={timeZoneOptions}
-            className="max-w-[16rem]"
-          />
+          <TimeZonePicker value={timeZone} onChange={(value) => updateSetting('timeZone', value)} />
           {timeZonePreview && (
             <div className="text-xs text-muted-foreground text-end font-mono">
               <span className="opacity-70">{t('time_zone.preview_now')} </span>

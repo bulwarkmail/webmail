@@ -217,20 +217,20 @@
   },
   "protocol_handlers": {
     "title": "Standard-Apps",
-    "description": "Legen Sie fest, ob E-Mail- und Kalender-Links in {appName} geöffnet werden. Technisch registriert sich {appName} dafür als Protokoll-Handler für mailto: und webcal:.",
+    "description": "Wählen Sie, ob E-Mail- und Kalenderlinks in {appName} geöffnet werden.",
     "unsupported": "Dieser Browser oder diese Verbindung unterstützt die manuelle Registrierung von Protokoll-Handlern nicht. Möglicherweise können Sie die installierte PWA trotzdem über Browser- oder Systemeinstellungen verwenden.",
-    "mailto_label": "E-Mail-Links",
-    "mailto_description": "Öffnet mailto:-Links in {appName} mit vorausgefülltem Editor.",
-    "protocol_open_mode_label": "Beim Öffnen von Protokoll-Links",
+    "mailto_label": "E-Mail-Links in {appName} öffnen",
+    "mailto_description": "Ein Klick auf eine E-Mail-Adresse auf einer Website beginnt eine neue Nachricht in {appName}.",
+    "protocol_open_mode_label": "Wie Links geöffnet werden",
     "protocol_open_mode_description": "Legen Sie fest, ob {appName} mailto:- und webcal:-Links immer in einem neuen Tab öffnet oder eine offene Sitzung wiederverwendet. Für die aktive Sitzung benötigt {appName} Benachrichtigungen, damit Sie das Fenster per Klick in den Vordergrund holen können, falls der Browser den Fokus blockiert.",
     "protocol_open_mode_active_session": "Wenn möglich in aktiver Sitzung öffnen",
     "protocol_open_mode_new_tab": "Immer neuen Tab öffnen",
     "focus_notification_title": "{appName} öffnen",
     "focus_notification_body": "Der Link wurde in {appName} geöffnet. Klicken Sie hier, um das Fenster in den Vordergrund zu holen.",
-    "webcal_label": "Kalender-Links",
-    "webcal_description": "Öffnet webcal:-Links in {appName} mit vorausgefülltem Kalender-Abo-Dialog.",
-    "register_mailto": "Als E-Mail-App registrieren",
-    "register_webcal": "Als Kalender-App registrieren",
+    "webcal_label": "Kalenderlinks in {appName} öffnen",
+    "webcal_description": "Ein Klick auf einen Kalenderlink auf einer Website fügt den Kalender in {appName} hinzu.",
+    "register_mailto": "{appName} für E-Mail-Links verwenden",
+    "register_webcal": "{appName} für Kalenderlinks verwenden",
     "mailto_registered": "Registrierung als E-Mail-Handler angefordert",
     "webcal_registered": "Registrierung als Kalender-Handler angefordert",
     "registration_failed": "Protokoll-Handler konnte nicht registriert werden",
@@ -1619,7 +1619,7 @@
       },
       "favicon_unread_badge": {
         "label": "Anzahl ungelesener Nachrichten am Tab-Symbol",
-        "description": "Die Anzahl ungelesener Nachrichten im Posteingang als Abzeichen am Browser-Tab-Symbol anzeigen, damit neue E-Mails auch bei nicht fokussiertem Tab sichtbar sind. Deaktivieren Sie diese Option, um das Symbol ohne Abzeichen anzuzeigen."
+        "description": "So sehen Sie neue Mail, während Sie in einem anderen Tab oder einer anderen App arbeiten."
       },
       "show_shared_mail_accounts": {
         "label": "Geteilte E-Mail-Konten anzeigen",
@@ -1739,9 +1739,9 @@
           "result_disabled": "Benachrichtigungen für {count} Konten deaktiviert."
         },
       "sound_selection": {
-        "title": "Benachrichtigungston",
+        "title": "Ton",
         "description": "Wählen Sie den Ton für Benachrichtigungen",
-        "choose": "Ton",
+        "choose": "Klang",
         "choose_desc": "Wählen Sie einen Benachrichtigungston und klicken Sie auf das Lautsprechersymbol zur Vorschau"
       },
       "email": {
@@ -1749,7 +1749,7 @@
         "description": "Benachrichtigungen für eingehende E-Mails konfigurieren",
         "enabled": "E-Mail-Benachrichtigungen",
         "enabled_desc": "Benachrichtigungen anzeigen, wenn neue E-Mails eintreffen",
-        "sound": "Benachrichtigungston",
+        "sound": "Ton bei neuer Mail",
         "sound_desc": "Einen Ton abspielen, wenn neue E-Mails eintreffen",
         "inbox_only": "Nur Posteingang",
         "inbox_only_desc": "Nur bei E-Mails benachrichtigen, die im Posteingang landen; E-Mails, die ein Filter in einen anderen Ordner verschiebt, auslassen"
@@ -1759,7 +1759,7 @@
         "description": "Benachrichtigungen für Kalendertermine konfigurieren",
         "enabled": "Terminbenachrichtigungen",
         "enabled_desc": "Erinnerungen für bevorstehende Kalendertermine anzeigen",
-        "sound": "Benachrichtigungston",
+        "sound": "Ton bei Erinnerungen",
         "sound_desc": "Einen Ton für Kalendererinnerungen abspielen"
       },
       "push": {
@@ -1767,7 +1767,7 @@
         "confirm_disable_title": "Hintergrundbenachrichtigungen deaktivieren?",
         "description": "Systembenachrichtigungen für neue E-Mails empfangen, wenn diese Seite geschlossen ist. Zustellung über das Bulwark Push-Relay; das Relay sieht niemals E-Mail-Inhalte.",
         "disable": "Deaktivieren",
-        "enable": "Aktivieren",
+        "enable": "Auf diesem Gerät einschalten",
         "dismiss_aria": "Benachrichtigungshinweis schließen",
         "ios_hint": "Installieren Sie die Seite unter iOS zuerst auf dem Startbildschirm – Safari liefert Web Push nur an installierte PWAs.",
         "reenable": "Neu registrieren",
@@ -1781,7 +1781,7 @@
         "status_unsupported": "Dieser Browser unterstützt Web Push nicht",
         "status_lite": "Web Push ist in Bulwark Lite nicht verfügbar; es benötigt den Bulwark-Server.",
         "status_demo": "Hintergrundbenachrichtigungen sind in der Demo nicht verfügbar.",
-        "title": "Hintergrundbenachrichtigungen",
+        "title": "Benachrichtigungen, wenn {appName} geschlossen ist",
         "devices_title": "Registrierte Geräte",
         "devices_desc": "Alle Geräte, die Hintergrundbenachrichtigungen für dieses Konto erhalten. Wird eines widerrufen, empfängt es sofort keine mehr.",
         "devices_loading": "Registrierte Geräte werden geladen…",
@@ -1843,7 +1843,7 @@
       },
       "first_day": {
         "label": "Erster Tag der Woche",
-        "description": "Woche am Sonntag oder Montag beginnen",
+        "description": "Erster Tag der Woche in Kalendern",
         "sunday": "Sonntag",
         "monday": "Montag"
       },
@@ -6721,7 +6721,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Fenster",
+      "title": "Fenster der App",
       "double_click_label": "Nachrichten per Doppelklick in einem neuen Fenster öffnen",
       "double_click_description": "Ein einfacher Klick öffnet die Nachricht weiterhin neben der Liste.",
       "restore_label": "Fenster beim Start wieder öffnen",
@@ -6818,9 +6818,9 @@
     "section_title": "App-Sperre",
     "section_desc": "Fragt nach einer Zeit ohne Nutzung in jedem Fenster und Tab nach einer PIN. Solange gesperrt ist, kann die App die auf diesem Gerät gespeicherte Mail nicht lesen, bis jemand die PIN eingibt.",
     "enable_label": "Mit PIN sperren",
-    "enable_desc": "Standardmäßig aus. Die PIN bleibt auf diesem Gerät.",
+    "enable_desc": "Die PIN bleibt auf diesem Gerät.",
     "protects_desc": "Wovor das schützt: Die PIN hält Personen an diesem Gerät aus der App heraus. Die hier gespeicherte Mail bekommt einen neuen Schlüssel, wenn Sie die Sperre einschalten oder die PIN ändern. Das kann einen Moment dauern. Nicht verhindern kann sie ein Programm auf diesem Computer, eine von Ihnen installierte Browsererweiterung oder jemanden, der die Dateien der App kopiert und Zeit hat, viele PINs zu probieren. Eine längere PIN lohnt sich also. In der Desktop-App braucht das Probieren von PINs zusätzlich Ihre Anmeldung an diesem Computer. Ihr Konto auf dem Server ist davon nicht betroffen.",
-    "enable_body": "Wählen Sie eine PIN. Sie brauchen sie jedes Mal, wenn die App sperrt, und nach einem Neuladen oder Neustart.",
+    "enable_body": "Sie brauchen sie jedes Mal, wenn die App sperrt, und nach einem Neustart.",
     "set_pin_title": "PIN wählen",
     "change_pin": "PIN ändern…",
     "change_pin_title": "PIN ändern",
@@ -6881,6 +6881,19 @@
     "timeout_option": "{count, plural, one {# Minute} other {# Minuten}}",
     "blocked_seconds": "Zu viele Versuche. Versuchen Sie es in {count, plural, one {# Sekunde} other {# Sekunden}} noch einmal.",
     "blocked_minutes": "Zu viele Versuche. Versuchen Sie es in {count, plural, one {# Minute} other {# Minuten}} noch einmal."
+  },
+  "uxs_general": {
+    "time_zone_common": "Häufige Zeitzonen",
+    "time_zone_all": "Alle Zeitzonen",
+    "time_zone_search": "Zeitzonen suchen",
+    "time_zone_no_match": "Keine Zeitzone gefunden",
+    "time_zone_desktop_description": "Zeiten von E-Mails und Terminen in dieser Zeitzone zeigen. Wenn Sie keine wählen, gilt die Zeitzone Ihres Computers.",
+    "app_lock_desc_desktop": "Fragt nach einer Zeit ohne Nutzung in jedem Fenster nach einer PIN. Solange gesperrt ist, kann die App die auf diesem Gerät gespeicherte Mail nicht lesen, bis jemand die PIN eingibt.",
+    "app_lock_timeout_desc_desktop": "Zeit ohne Nutzung in irgendeinem Fenster.",
+    "app_lock_now_desc_desktop": "Sperrt alle Fenster sofort.",
+    "app_lock_protects_toggle": "Wovor schützt das?",
+    "app_lock_timeout_hours": "{count, plural, one {# Stunde} other {# Stunden}}",
+    "desktop_attention_title": "Auf diesem Computer"
   },
   "desktop_sign_in": {
     "server_needed": "Geben Sie zuerst die Adresse Ihres Servers ein.",
@@ -7091,7 +7104,7 @@
     "section_title": "Nutzungsdaten und Absturzberichte",
     "section_description": "Beides bleibt aus, bis Sie es einschalten, und jedes hat einen eigenen Schalter.",
     "telemetry_label": "Nutzungsdaten senden",
-    "telemetry_description": "Einmal am Tag: eine zufällige ID, die App-Version, die Node-Version, Ihr Betriebssystem, wie lange die App schon läuft und die Art der Verbindung. Bei einem eigenen Mailserver auch, welche Funktionen aktiv sind, eine ungefähre Zahl der Konten und wie viele Plugins und Designs Sie haben. Niemals E-Mails, Adressen oder Servernamen.",
+    "telemetry_description": "Einmal am Tag: eine zufällige ID, die Versionsnummern der App, Ihr Betriebssystem, wie lange die App schon läuft und die Art der Verbindung. Bei einem eigenen Mailserver auch, welche Funktionen aktiv sind, eine ungefähre Zahl der Konten und wie viele Plugins und Designs Sie haben. Niemals E-Mails, Adressen oder Servernamen.",
     "crash_label": "Absturzberichte senden",
     "crash_description": "Fehler in der App werden mit einer zufälligen ID, Dateinamen aus dem eigenen Code der App und kurzen, bereinigten Meldungen gesendet. Stürzt die App selbst ab, bleibt eine Absturzdatei auf diesem Computer und verlässt ihn nur, wenn Sie sie senden.",
     "crash_memory": "Eine Absturzdatei ist eine Kopie eines Teils des Arbeitsspeichers der App beim Absturz. Bulwark entfernt Benutzernamen, Adressen und Anmeldetokens, die es findet, aber eine Absturzdatei kann trotzdem den Text Ihrer E-Mails enthalten.",

@@ -217,20 +217,20 @@
   },
   "protocol_handlers": {
     "title": "Aplicacions predeterminades",
-    "description": "Trieu si els enllaços de correu i calendari s'obren al {appName}. Tècnicament, el {appName} es registra com a gestor de protocol per als enllaços mailto: i webcal:.",
+    "description": "Trieu si els enllaços de correu i de calendari s'obren a {appName}.",
     "unsupported": "Aquest navegador o connexió no admet el registre manual de gestors de protocol. És possible que encara pugueu utilitzar la PWA instal·lada des de la configuració del navegador o del sistema operatiu.",
-    "mailto_label": "Enllaços de correu",
-    "mailto_description": "Obre els enllaços mailto: al {appName} amb el redactor emplenat prèviament.",
-    "protocol_open_mode_label": "En obrir enllaços de protocol",
+    "mailto_label": "Obre els enllaços de correu a {appName}",
+    "mailto_description": "En fer clic en una adreça de correu d'un lloc web, comença un missatge nou a {appName}.",
+    "protocol_open_mode_label": "Com s'obren els enllaços",
     "protocol_open_mode_description": "Trieu si el {appName} obre els enllaços mailto: i webcal: en una pestanya nova o reutilitza una sessió oberta. L'opció de sessió activa necessita permís de notificacions perquè pugueu prémer una notificació alternativa per portar el {appName} al davant si el navegador bloqueja el focus.",
     "protocol_open_mode_active_session": "Obre en la sessió activa si és possible",
     "protocol_open_mode_new_tab": "Obre sempre una pestanya nova",
     "focus_notification_title": "Obre el {appName}",
     "focus_notification_body": "L'enllaç s'ha obert al {appName}. Feu clic per portar la finestra al davant.",
-    "webcal_label": "Enllaços de calendari",
-    "webcal_description": "Obre els enllaços webcal: al {appName} amb el diàleg de subscripció al calendari emplenat prèviament.",
-    "register_mailto": "Registra com a aplicació de correu",
-    "register_webcal": "Registra com a aplicació de calendari",
+    "webcal_label": "Obre els enllaços de calendari a {appName}",
+    "webcal_description": "En fer clic en un enllaç de calendari d'un lloc web, s'afegeix el calendari a {appName}.",
+    "register_mailto": "Usa {appName} per als enllaços de correu",
+    "register_webcal": "Usa {appName} per als enllaços de calendari",
     "mailto_registered": "S'ha sol·licitat el registre del gestor de correu",
     "webcal_registered": "S'ha sol·licitat el registre del gestor de calendari",
     "registration_failed": "No s'ha pogut registrar el gestor de protocol",
@@ -1622,7 +1622,7 @@
       },
       "favicon_unread_badge": {
         "label": "Nombre de no llegits a la icona de la pestanya",
-        "description": "Mostra el nombre de no llegits de la safata d'entrada com a distintiu a la icona de la pestanya del navegador, perquè el correu nou sigui visible encara que la pestanya no tingui el focus. Desactiveu-ho per mantenir la icona sense distintiu."
+        "description": "Així veieu el correu nou mentre treballeu en una altra pestanya o aplicació."
       },
       "show_shared_mail_accounts": {
         "label": "Mostra els comptes de correu compartits",
@@ -1730,7 +1730,7 @@
         "relax": "Relaxant"
       },
       "push": {
-        "title": "Notificacions en segon pla",
+        "title": "Notificacions quan {appName} està tancat",
         "description": "Rebeu notificacions del sistema per al correu nou quan aquest lloc estigui tancat. S'entreguen mitjançant el repetidor push del Bulwark; el repetidor mai no veu el contingut del correu.",
         "relay_label": "Repetidor push",
         "relay_desc": "Per defecte utilitza el repetidor allotjat del Bulwark. Canvieu-ho només si allotgeu el vostre propi servidor.",
@@ -1742,7 +1742,7 @@
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "Les notificacions en segon pla no estan disponibles a la demo.",
         "status_busy": "Treballant…",
-        "enable": "Activa",
+        "enable": "Activa en aquest dispositiu",
         "reenable": "Torna a registrar",
         "disable": "Desactiva",
         "confirm_disable_title": "Voleu desactivar les notificacions en segon pla?",
@@ -1787,9 +1787,9 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "So de notificació",
+        "title": "So",
         "description": "Trieu quin so es reprodueix per a les notificacions",
-        "choose": "So",
+        "choose": "To",
         "choose_desc": "Seleccioneu un to de notificació i feu clic a la icona de l'altaveu per escoltar-lo"
       },
       "email": {
@@ -1797,7 +1797,7 @@
         "description": "Configureu les notificacions per als correus entrants",
         "enabled": "Notificacions de correu",
         "enabled_desc": "Mostra notificacions quan arribin correus nous",
-        "sound": "So de notificació",
+        "sound": "So per al correu nou",
         "sound_desc": "Reprodueix un avís sonor quan arribin correus nous",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1807,7 +1807,7 @@
         "description": "Configureu les notificacions per als esdeveniments del calendari",
         "enabled": "Notificacions d'esdeveniments",
         "enabled_desc": "Mostra avisos per als esdeveniments propers del calendari",
-        "sound": "So de notificació",
+        "sound": "So per als recordatoris",
         "sound_desc": "Reprodueix un avís sonor per als recordatoris del calendari"
       }
     },
@@ -1846,7 +1846,7 @@
       },
       "first_day": {
         "label": "Primer dia de la setmana",
-        "description": "Comença la setmana en diumenge o dilluns",
+        "description": "Primer dia de la setmana als calendaris",
         "sunday": "Diumenge",
         "monday": "Dilluns"
       },
@@ -6721,7 +6721,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Finestres",
+      "title": "Finestres de l'aplicació",
       "double_click_label": "Obre els missatges en una finestra nova amb doble clic",
       "double_click_description": "Un sol clic continua obrint el missatge al costat de la llista.",
       "restore_label": "Torna a obrir les finestres en iniciar",
@@ -6818,9 +6818,9 @@
     "section_title": "Bloqueig de l'app",
     "section_desc": "Demana un PIN després d'un temps sense ús, a cada finestra i pestanya. Mentre està bloquejada, l'aplicació no pot llegir el correu desat en aquest dispositiu fins que algú introdueixi el PIN.",
     "enable_label": "Bloqueja amb un PIN",
-    "enable_desc": "Desactivat per defecte. El PIN es queda en aquest dispositiu.",
+    "enable_desc": "El PIN es queda en aquest dispositiu.",
     "protects_desc": "De què protegeix: el PIN impedeix que algú davant d'aquest dispositiu entri a l'aplicació. El correu desat aquí rep una clau nova quan activeu el bloqueig o canvieu el PIN, cosa que pot trigar una estona. No pot aturar un programa que s'executi en aquest ordinador, una extensió del navegador que hàgiu instal·lat ni algú que copiï els fitxers de l'aplicació i tingui temps de provar molts PIN, així que val la pena un PIN més llarg. A l'aplicació d'escriptori, provar PIN també requereix la vostra sessió en aquest ordinador. El vostre compte al servidor no es veu afectat.",
-    "enable_body": "Trieu un PIN. El necessitareu cada vegada que l'app es bloquegi, i després de recarregar o tornar a iniciar.",
+    "enable_body": "El necessitareu cada vegada que l'app es bloquegi i després de reiniciar.",
     "set_pin_title": "Trieu un PIN",
     "change_pin": "Canvia el PIN…",
     "change_pin_title": "Canvia el PIN",
@@ -6881,6 +6881,19 @@
     "timeout_option": "{count, plural, one {# minut} other {# minuts}}",
     "blocked_seconds": "Massa intents. Torneu-ho a provar d'aquí a {count, plural, one {# segon} other {# segons}}.",
     "blocked_minutes": "Massa intents. Torneu-ho a provar d'aquí a {count, plural, one {# minut} other {# minuts}}."
+  },
+  "uxs_general": {
+    "time_zone_common": "Zones horàries habituals",
+    "time_zone_all": "Totes les zones horàries",
+    "time_zone_search": "Cerca zones horàries",
+    "time_zone_no_match": "No s'ha trobat cap zona horària",
+    "time_zone_desktop_description": "Mostra les hores del correu i de les cites en aquesta zona horària. Si no en trieu cap, s'usa la zona horària de l'ordinador.",
+    "app_lock_desc_desktop": "Demana un PIN després d'un temps sense ús, a cada finestra. Mentre està bloquejada, l'aplicació no pot llegir el correu desat en aquest dispositiu fins que algú introdueixi el PIN.",
+    "app_lock_timeout_desc_desktop": "Temps sense ús en qualsevol finestra.",
+    "app_lock_now_desc_desktop": "Bloqueja totes les finestres de cop.",
+    "app_lock_protects_toggle": "De què protegeix això?",
+    "app_lock_timeout_hours": "{count, plural, one {# hora} other {# hores}}",
+    "desktop_attention_title": "En aquest ordinador"
   },
   "desktop_sign_in": {
     "server_needed": "Primer escriu l'adreça del servidor.",
@@ -7091,7 +7104,7 @@
     "section_title": "Dades d'ús i informes d'errors greus",
     "section_description": "Tots dos estan desactivats fins que els activis, i cadascun té el seu interruptor.",
     "telemetry_label": "Envia dades d'ús",
-    "telemetry_description": "Un cop al dia: un identificador aleatori, la versió de l'aplicació, la versió de Node, el teu sistema operatiu, quant de temps fa que funciona l'aplicació i com es connecta. Amb un servidor de correu propi, també quines funcions estan actives, un nombre aproximat de comptes i quants connectors i temes tens. Mai correus, adreces ni noms de servidor.",
+    "telemetry_description": "Un cop al dia: un identificador aleatori, els números de versió de l'aplicació, el teu sistema operatiu, quant de temps fa que funciona l'aplicació i com es connecta. Amb un servidor de correu propi, també quines funcions estan actives, un nombre aproximat de comptes i quants connectors i temes tens. Mai correus, adreces ni noms de servidor.",
     "crash_label": "Envia informes d'errors greus",
     "crash_description": "Els errors de l'aplicació s'envien amb un identificador aleatori, noms de fitxer del codi de l'aplicació i missatges curts i nets. Si la mateixa aplicació es tanca per un error, un fitxer d'error queda en aquest ordinador i només en surt si l'envies.",
     "crash_memory": "Un fitxer d'error és una còpia d'una part de la memòria de l'aplicació en el moment de l'error. Bulwark elimina els noms d'usuari, les adreces i els testimonis d'inici de sessió que troba, però un fitxer d'error encara pot contenir el text dels teus correus.",

@@ -217,20 +217,20 @@
   },
   "protocol_handlers": {
     "title": "Varsayılan uygulamalar",
-    "description": "E-posta ve takvim bağlantılarının {appName} uygulamasında açılıp açılmayacağını seçin. Teknik olarak {appName}, mailto: ve webcal: bağlantıları için protokol işleyicisi olarak kaydolur.",
+    "description": "E-posta ve takvim bağlantılarının {appName} içinde açılıp açılmayacağını seçin.",
     "unsupported": "Bu tarayıcı veya bağlantı manuel protokol işleyicisi kaydını desteklemiyor. Yüklü PWA'yı yine de tarayıcı veya işletim sistemi ayarlarından kullanabilirsiniz.",
-    "mailto_label": "E-posta bağlantıları",
-    "mailto_description": "mailto: bağlantılarını {appName} uygulamasında önceden doldurulmuş düzenleyiciyle açın.",
-    "protocol_open_mode_label": "Protokol bağlantıları açılırken",
+    "mailto_label": "E-posta bağlantılarını {appName} içinde aç",
+    "mailto_description": "Bir web sitesindeki e-posta adresine tıklamak {appName} içinde yeni bir ileti başlatır.",
+    "protocol_open_mode_label": "Bağlantılar nasıl açılır",
     "protocol_open_mode_description": "{appName} uygulamasının mailto: ve webcal: bağlantılarını yeni bir sekmede açmasını mı yoksa açık bir oturumu yeniden kullanmasını mı istediğinizi seçin. Etkin oturum seçeneği, tarayıcı odağı engellerse {appName} uygulamasını öne getirmek için yedek bildirime tıklayabilmeniz amacıyla bildirim izni gerektirir.",
     "protocol_open_mode_active_session": "Mümkünse etkin oturumda aç",
     "protocol_open_mode_new_tab": "Her zaman yeni sekme aç",
     "focus_notification_title": "{appName} uygulamasını aç",
     "focus_notification_body": "Bağlantı {appName} uygulamasında açıldı. Pencereyi öne getirmek için tıklayın.",
-    "webcal_label": "Takvim bağlantıları",
-    "webcal_description": "webcal: bağlantılarını {appName} uygulamasında önceden doldurulmuş takvim aboneliği penceresiyle açın.",
-    "register_mailto": "E-posta uygulaması olarak kaydet",
-    "register_webcal": "Takvim uygulaması olarak kaydet",
+    "webcal_label": "Takvim bağlantılarını {appName} içinde aç",
+    "webcal_description": "Bir web sitesindeki takvim bağlantısına tıklamak takvimi {appName} içine ekler.",
+    "register_mailto": "E-posta bağlantıları için {appName} kullan",
+    "register_webcal": "Takvim bağlantıları için {appName} kullan",
     "mailto_registered": "E-posta işleyicisi kaydı istendi",
     "webcal_registered": "Takvim işleyicisi kaydı istendi",
     "registration_failed": "Protokol işleyicisi kaydı başarısız oldu",
@@ -1619,7 +1619,7 @@
       },
       "favicon_unread_badge": {
         "label": "Unread Count on Tab Icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+        "description": "Başka bir sekmede veya uygulamada çalışırken de yeni postayı görmeniz için."
       },
       "show_shared_mail_accounts": {
         "label": "Paylaşılan posta hesaplarını göster",
@@ -1739,9 +1739,9 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "Bildirim Sesi",
+        "title": "Ses",
         "description": "Bildirimler için hangi sesin çalınacağını seçin",
-        "choose": "Ses",
+        "choose": "Ton",
         "choose_desc": "Bir bildirim tonu seçin ve önizlemek için hoparlör simgesine tıklayın"
       },
       "email": {
@@ -1749,7 +1749,7 @@
         "description": "Gelen e-postalar için bildirimleri yapılandırın",
         "enabled": "E-posta bildirimleri",
         "enabled_desc": "Yeni e-postalar geldiğinde bildirim göster",
-        "sound": "Bildirim sesi",
+        "sound": "Yeni posta sesi",
         "sound_desc": "Yeni e-postalar geldiğinde sesli uyarı çal",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1759,7 +1759,7 @@
         "description": "Takvim etkinlikleri için bildirimleri yapılandırın",
         "enabled": "Etkinlik bildirimleri",
         "enabled_desc": "Yaklaşan takvim etkinlikleri için uyarılar göster",
-        "sound": "Bildirim sesi",
+        "sound": "Anımsatıcı sesi",
         "sound_desc": "Takvim hatırlatıcıları için sesli uyarı çal"
       },
       "push": {
@@ -1767,7 +1767,7 @@
         "confirm_disable_title": "Arka plan bildirimleri devre dışı bırakılsın mı?",
         "description": "Bu site kapalıyken yeni postalar için sistem bildirimleri alın. Bulwark push röle aracılığıyla iletilir; röle posta içeriğini asla görmez.",
         "disable": "Devre dışı bırak",
-        "enable": "Etkinleştir",
+        "enable": "Bu cihazda aç",
         "dismiss_aria": "Bildirim istemini kapat",
         "ios_hint": "iOS'ta önce siteyi ana ekranınıza yükleyin – Safari Web Push'u yalnızca yüklü PWA'lara teslim eder.",
         "reenable": "Yeniden kaydet",
@@ -1781,7 +1781,7 @@
         "status_unsupported": "Bu tarayıcı Web Push'u desteklemiyor",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "Arka plan bildirimleri demoda kullanılamaz.",
-        "title": "Arka plan bildirimleri",
+        "title": "{appName} kapalıyken bildirimler",
         "devices_title": "Kayıtlı cihazlar",
         "devices_desc": "Bu hesap için arka plan bildirimleri almak üzere kayıtlı tüm cihazlar. Birini iptal ettiğinizde o cihaz bildirimleri hemen almayı bırakır.",
         "devices_loading": "Kayıtlı cihazlar yükleniyor…",
@@ -1843,7 +1843,7 @@
       },
       "first_day": {
         "label": "Haftanın İlk Günü",
-        "description": "Haftayı Pazar veya Pazartesi başlat",
+        "description": "Takvimlerde haftanın ilk günü",
         "sunday": "Pazar",
         "monday": "Pazartesi"
       },
@@ -6721,7 +6721,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Pencereler",
+      "title": "Uygulama pencereleri",
       "double_click_label": "İletileri çift tıklamayla yeni pencerede aç",
       "double_click_description": "Tek tıklama iletiyi yine listenin yanında açar.",
       "restore_label": "Başlangıçta pencereleri yeniden aç",
@@ -6818,9 +6818,9 @@
     "section_title": "Uygulama kilidi",
     "section_desc": "Bir süre kullanılmadığında her pencerede ve sekmede PIN ister. Kilitliyken uygulama, biri PIN'i girene kadar bu cihazda saklanan postayı okuyamaz.",
     "enable_label": "PIN ile kilitle",
-    "enable_desc": "Varsayılan olarak kapalı. PIN bu cihazda kalır.",
+    "enable_desc": "PIN bu cihazda kalır.",
     "protects_desc": "Neye karşı korur: PIN, bu cihazın başındaki birini uygulamanın dışında tutar. Burada saklanan posta, kilidi açtığınızda veya PIN'i değiştirdiğinizde yeni bir anahtar alır; bu biraz sürebilir. Bu bilgisayarda çalışan bir programı, yüklediğiniz bir tarayıcı uzantısını veya uygulamanın dosyalarını kopyalayıp çok sayıda PIN deneyecek zamanı olan birini durduramaz, bu yüzden daha uzun bir PIN'e değer. Masaüstü uygulamasında PIN denemek için bu bilgisayardaki oturumunuz da gerekir. Sunucudaki hesabınız bundan etkilenmez.",
-    "enable_body": "Bir PIN seçin. Uygulama her kilitlendiğinde ve yeniden yükleme ya da yeni başlatma sonrasında gerekir.",
+    "enable_body": "Uygulama her kilitlendiğinde ve yeniden başlattıktan sonra gerekir.",
     "set_pin_title": "PIN seçin",
     "change_pin": "PIN'i değiştir…",
     "change_pin_title": "PIN'i değiştir",
@@ -6881,6 +6881,19 @@
     "timeout_option": "{count, plural, one {# dakika} other {# dakika}}",
     "blocked_seconds": "Çok fazla deneme. {count, plural, one {# saniye} other {# saniye}} sonra yeniden deneyin.",
     "blocked_minutes": "Çok fazla deneme. {count, plural, one {# dakika} other {# dakika}} sonra yeniden deneyin."
+  },
+  "uxs_general": {
+    "time_zone_common": "Sık kullanılan saat dilimleri",
+    "time_zone_all": "Tüm saat dilimleri",
+    "time_zone_search": "Saat dilimi ara",
+    "time_zone_no_match": "Saat dilimi bulunamadı",
+    "time_zone_desktop_description": "Posta ve randevu saatlerini bu saat diliminde göster. Seçmezseniz bilgisayarınızın saat dilimi kullanılır.",
+    "app_lock_desc_desktop": "Bir süre kullanılmadığında her pencerede PIN ister. Kilitliyken uygulama, biri PIN'i girene kadar bu cihazda saklanan postayı okuyamaz.",
+    "app_lock_timeout_desc_desktop": "Herhangi bir pencerede kullanılmayan süre.",
+    "app_lock_now_desc_desktop": "Tüm pencereleri hemen kilitler.",
+    "app_lock_protects_toggle": "Bu neye karşı korur?",
+    "app_lock_timeout_hours": "{count, plural, one {# saat} other {# saat}}",
+    "desktop_attention_title": "Bu bilgisayarda"
   },
   "desktop_sign_in": {
     "server_needed": "Önce sunucu adresini girin.",
@@ -7091,7 +7104,7 @@
     "section_title": "Kullanım bilgileri ve kilitlenme raporları",
     "section_description": "İkisi de siz açana kadar kapalıdır ve her birinin kendi anahtarı vardır.",
     "telemetry_label": "Kullanım bilgilerini gönder",
-    "telemetry_description": "Günde bir kez: rastgele bir kimlik, uygulama sürümü, Node sürümü, işletim sisteminiz, uygulamanın ne kadar süredir çalıştığı ve nasıl bağlandığı. Kendi posta sunucunuzda ayrıca hangi özelliklerin açık olduğu, yaklaşık hesap sayısı ve kaç eklenti ile temanız olduğu. Asla e-posta, adres veya sunucu adı gönderilmez.",
+    "telemetry_description": "Günde bir kez: rastgele bir kimlik, uygulamanın sürüm numaraları, işletim sisteminiz, uygulamanın ne kadar süredir çalıştığı ve nasıl bağlandığı. Kendi posta sunucunuzda ayrıca hangi özelliklerin açık olduğu, yaklaşık hesap sayısı ve kaç eklenti ile temanız olduğu. Asla e-posta, adres veya sunucu adı gönderilmez.",
     "crash_label": "Kilitlenme raporlarını gönder",
     "crash_description": "Uygulamadaki hatalar rastgele bir kimlik, uygulamanın kendi kodundaki dosya adları ve kısa, temizlenmiş iletilerle gönderilir. Uygulamanın kendisi kilitlenirse bir kilitlenme dosyası bu bilgisayarda kalır ve yalnızca siz gönderirseniz çıkar.",
     "crash_memory": "Kilitlenme dosyası, kilitlenme anında uygulama belleğinin bir bölümünün kopyasıdır. Bulwark bulduğu kullanıcı adlarını, adresleri ve oturum açma belirteçlerini kaldırır ancak kilitlenme dosyası yine de e-postalarınızın metnini içerebilir.",

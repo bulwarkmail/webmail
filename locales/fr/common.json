@@ -217,20 +217,20 @@
   },
   "protocol_handlers": {
     "title": "Applications par défaut",
-    "description": "Choisissez si les liens d'e-mail et de calendrier s'ouvrent dans {appName}. Techniquement, {appName} s'enregistre comme gestionnaire de protocole pour les liens mailto: et webcal:.",
+    "description": "Choisissez si les liens d'e-mail et de calendrier s'ouvrent dans {appName}.",
     "unsupported": "Ce navigateur ou cette connexion ne prend pas en charge l'enregistrement manuel des gestionnaires de protocole. Vous pourrez peut-être quand même utiliser la PWA installée via les paramètres du navigateur ou du système.",
-    "mailto_label": "Liens e-mail",
-    "mailto_description": "Ouvre les liens mailto: dans {appName} avec un éditeur prérempli.",
-    "protocol_open_mode_label": "À l’ouverture des liens de protocole",
+    "mailto_label": "Ouvrir les liens d'e-mail dans {appName}",
+    "mailto_description": "Un clic sur une adresse e-mail sur un site web commence un nouveau message dans {appName}.",
+    "protocol_open_mode_label": "Ouverture des liens",
     "protocol_open_mode_description": "Choisissez si {appName} ouvre les liens mailto: et webcal: dans un nouvel onglet ou réutilise une session ouverte. L’option de session active nécessite l’autorisation des notifications afin que vous puissiez cliquer sur une notification de secours pour ramener {appName} au premier plan si le navigateur bloque le focus.",
     "protocol_open_mode_active_session": "Ouvrir dans la session active si possible",
     "protocol_open_mode_new_tab": "Toujours ouvrir un nouvel onglet",
     "focus_notification_title": "Ouvrir {appName}",
     "focus_notification_body": "Le lien a été ouvert dans {appName}. Cliquez pour ramener la fenêtre au premier plan.",
-    "webcal_label": "Liens de calendrier",
-    "webcal_description": "Ouvre les liens webcal: dans {appName} avec une boîte de dialogue d'abonnement au calendrier préremplie.",
-    "register_mailto": "Enregistrer l'application e-mail",
-    "register_webcal": "Enregistrer l'application de calendrier",
+    "webcal_label": "Ouvrir les liens de calendrier dans {appName}",
+    "webcal_description": "Un clic sur un lien de calendrier sur un site web ajoute le calendrier dans {appName}.",
+    "register_mailto": "Utiliser {appName} pour les liens d'e-mail",
+    "register_webcal": "Utiliser {appName} pour les liens de calendrier",
     "mailto_registered": "Enregistrement du gestionnaire d'e-mail demandé",
     "webcal_registered": "Enregistrement du gestionnaire de calendrier demandé",
     "registration_failed": "Échec de l'enregistrement du gestionnaire de protocole",
@@ -1619,7 +1619,7 @@
       },
       "favicon_unread_badge": {
         "label": "Nombre de non-lu sur l'icône de l'onglet",
-        "description": "Afficher le nombre de messages non lus de la boîte de réception sous forme de badge sur l’icône de l’onglet du navigateur, afin que les nouveaux messages restent visibles lorsque l’onglet n’est pas actif. Désactiver cette option pour ne pas afficher de badge sur l’icône."
+        "description": "Pour voir les nouveaux messages pendant que vous travaillez dans un autre onglet ou une autre application."
       },
       "show_shared_mail_accounts": {
         "label": "Afficher les comptes de messagerie partagés",
@@ -1739,9 +1739,9 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "Son de notification",
+        "title": "Son",
         "description": "Choisissez le son à jouer pour les notifications",
-        "choose": "Son",
+        "choose": "Tonalité",
         "choose_desc": "Sélectionnez une sonnerie et cliquez sur l'icône du haut-parleur pour l'écouter"
       },
       "email": {
@@ -1749,7 +1749,7 @@
         "description": "Configurer les notifications pour les e-mails entrants",
         "enabled": "Notifications par e-mail",
         "enabled_desc": "Afficher des notifications à l'arrivée de nouveaux e-mails",
-        "sound": "Son de notification",
+        "sound": "Son pour les nouveaux messages",
         "sound_desc": "Jouer un son à l'arrivée de nouveaux e-mails",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1759,7 +1759,7 @@
         "description": "Configurer les notifications pour les événements du calendrier",
         "enabled": "Notifications d'événements",
         "enabled_desc": "Afficher des alertes pour les événements à venir",
-        "sound": "Son de notification",
+        "sound": "Son pour les rappels",
         "sound_desc": "Jouer un son pour les rappels de calendrier"
       },
       "push": {
@@ -1767,7 +1767,7 @@
         "confirm_disable_title": "Désactiver les notifications en arrière-plan ?",
         "description": "Recevez des notifications système pour les nouveaux courriers quand ce site est fermé. Livré via le relais push Bulwark ; le relais ne voit jamais le contenu des courriers.",
         "disable": "Désactiver",
-        "enable": "Activer",
+        "enable": "Activer sur cet appareil",
         "dismiss_aria": "Fermer l'invite de notifications",
         "ios_hint": "Sur iOS, installez d'abord le site sur l'écran d'accueil – Safari ne livre Web Push qu'aux PWA installées.",
         "reenable": "Réenregistrer",
@@ -1781,7 +1781,7 @@
         "status_unsupported": "Ce navigateur ne prend pas en charge Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "Les notifications en arrière-plan ne sont pas disponibles dans la démo.",
-        "title": "Notifications en arrière-plan",
+        "title": "Notifications quand {appName} est fermé",
         "devices_title": "Appareils enregistrés",
         "devices_desc": "Tous les appareils enregistrés pour recevoir les notifications en arrière-plan de ce compte. Révoquer un appareil l’empêche immédiatement d’en recevoir.",
         "devices_loading": "Chargement des appareils enregistrés…",
@@ -1843,7 +1843,7 @@
       },
       "first_day": {
         "label": "Premier jour de la semaine",
-        "description": "Commencer la semaine le dimanche ou le lundi",
+        "description": "Premier jour de la semaine dans les calendriers",
         "sunday": "Dimanche",
         "monday": "Lundi"
       },
@@ -6721,7 +6721,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Fenêtres",
+      "title": "Fenêtres de l'application",
       "double_click_label": "Ouvrir les messages dans une nouvelle fenêtre par double-clic",
       "double_click_description": "Un simple clic ouvre toujours le message à côté de la liste.",
       "restore_label": "Rouvrir les fenêtres au démarrage",
@@ -6818,9 +6818,9 @@
     "section_title": "Verrouillage de l'app",
     "section_desc": "Demande un code PIN après un temps sans utilisation, dans chaque fenêtre et onglet. Tant que c'est verrouillé, l'application ne peut pas lire les messages stockés sur cet appareil avant la saisie du code PIN.",
     "enable_label": "Verrouiller avec un code PIN",
-    "enable_desc": "Désactivé par défaut. Le code PIN reste sur cet appareil.",
+    "enable_desc": "Le code PIN reste sur cet appareil.",
     "protects_desc": "Contre quoi cela protège : le code PIN empêche une personne devant cet appareil d'entrer dans l'application. Les messages stockés ici reçoivent une nouvelle clé quand vous activez le verrouillage ou changez le code PIN, ce qui peut prendre un moment. Cela ne peut pas arrêter un programme exécuté sur cet ordinateur, une extension de navigateur que vous avez installée, ni quelqu'un qui copie les fichiers de l'application et a le temps d'essayer de nombreux codes : un code plus long est donc utile. Dans l'application de bureau, essayer des codes demande aussi votre session sur cet ordinateur. Votre compte sur le serveur n'est pas concerné.",
-    "enable_body": "Choisissez un code PIN. Il vous sera demandé à chaque verrouillage, et après un rechargement ou un nouveau démarrage.",
+    "enable_body": "Il vous sera demandé à chaque verrouillage de l'application et après un redémarrage.",
     "set_pin_title": "Choisir un code PIN",
     "change_pin": "Changer le code PIN…",
     "change_pin_title": "Changer le code PIN",
@@ -6881,6 +6881,19 @@
     "timeout_option": "{count, plural, one {# minute} other {# minutes}}",
     "blocked_seconds": "Trop d'essais. Réessayez dans {count, plural, one {# seconde} other {# secondes}}.",
     "blocked_minutes": "Trop d'essais. Réessayez dans {count, plural, one {# minute} other {# minutes}}."
+  },
+  "uxs_general": {
+    "time_zone_common": "Fuseaux horaires courants",
+    "time_zone_all": "Tous les fuseaux horaires",
+    "time_zone_search": "Rechercher un fuseau horaire",
+    "time_zone_no_match": "Aucun fuseau horaire trouvé",
+    "time_zone_desktop_description": "Afficher les heures des messages et des rendez-vous dans ce fuseau horaire. Si vous n'en choisissez aucun, celui de votre ordinateur est utilisé.",
+    "app_lock_desc_desktop": "Demande un code PIN après un temps sans utilisation, dans chaque fenêtre. Tant que c'est verrouillé, l'application ne peut pas lire les messages stockés sur cet appareil avant la saisie du code PIN.",
+    "app_lock_timeout_desc_desktop": "Temps sans utilisation dans une fenêtre.",
+    "app_lock_now_desc_desktop": "Verrouille toutes les fenêtres immédiatement.",
+    "app_lock_protects_toggle": "Contre quoi cela protège-t-il ?",
+    "app_lock_timeout_hours": "{count, plural, one {# heure} other {# heures}}",
+    "desktop_attention_title": "Sur cet ordinateur"
   },
   "desktop_sign_in": {
     "server_needed": "Saisissez d'abord l'adresse du serveur.",
@@ -7091,7 +7104,7 @@
     "section_title": "Données d'utilisation et rapports de plantage",
     "section_description": "Les deux restent désactivés tant que vous ne les activez pas, et chacun a son propre interrupteur.",
     "telemetry_label": "Envoyer les données d'utilisation",
-    "telemetry_description": "Une fois par jour : un identifiant aléatoire, la version de l'application, la version de Node, votre système d'exploitation, depuis combien de temps l'application tourne et son mode de connexion. Avec votre propre serveur de messagerie, aussi les fonctions activées, un nombre approximatif de comptes et le nombre de plugins et de thèmes. Jamais de messages, d'adresses ni de noms de serveur.",
+    "telemetry_description": "Une fois par jour : un identifiant aléatoire, les numéros de version de l'application, votre système d'exploitation, depuis combien de temps l'application tourne et son mode de connexion. Avec votre propre serveur de messagerie, aussi les fonctions activées, un nombre approximatif de comptes et le nombre de plugins et de thèmes. Jamais de messages, d'adresses ni de noms de serveur.",
     "crash_label": "Envoyer les rapports de plantage",
     "crash_description": "Les erreurs de l'application partent avec un identifiant aléatoire, les noms de fichiers du code de l'application et de courts messages nettoyés. Si l'application elle-même plante, un fichier de plantage reste sur cet ordinateur et n'en sort que si vous l'envoyez.",
     "crash_memory": "Un fichier de plantage est une copie d'une partie de la mémoire de l'application au moment du plantage. Bulwark retire les noms d'utilisateur, les adresses et les jetons de connexion qu'il trouve, mais un fichier de plantage peut quand même contenir le texte de vos messages.",

@@ -217,20 +217,20 @@
   },
   "protocol_handlers": {
     "title": "Noklusējuma lietotnes",
-    "description": "Izvēlieties, vai e-pasta un kalendāra saites atvērt {appName}. Tehniski {appName} reģistrējas kā protokola apstrādātājs mailto: un webcal: saitēm.",
+    "description": "Izvēlieties, vai e-pasta un kalendāra saites atvērt {appName}.",
     "unsupported": "Šī pārlūkprogramma vai savienojums neatbalsta manuālu protokola apstrādātāja reģistrāciju. Iespējams, instalēto PWA joprojām var izmantot pārlūkprogrammas vai sistēmas iestatījumos.",
-    "mailto_label": "E-pasta saites",
-    "mailto_description": "Atver mailto: saites {appName} ar iepriekš aizpildītu ziņojuma redaktoru.",
-    "protocol_open_mode_label": "Atverot protokola saites",
+    "mailto_label": "Atvērt e-pasta saites {appName}",
+    "mailto_description": "Noklikšķinot uz e-pasta adreses tīmekļa vietnē, {appName} sāk jaunu ziņojumu.",
+    "protocol_open_mode_label": "Kā atveras saites",
     "protocol_open_mode_description": "Izvēlieties, vai {appName} atver mailto: un webcal: saites jaunā cilnē vai atkārtoti izmanto atvērtu sesiju. Aktīvās sesijas opcijai nepieciešama paziņojumu atļauja, lai jūs varētu noklikšķināt uz rezerves paziņojuma un izcelt {appName} priekšplānā, ja pārlūkprogramma bloķē fokusu.",
     "protocol_open_mode_active_session": "Ja iespējams, atvērt aktīvajā sesijā",
     "protocol_open_mode_new_tab": "Vienmēr atvērt jaunu cilni",
     "focus_notification_title": "Atvērt {appName}",
     "focus_notification_body": "Saite tika atvērta {appName}. Noklikšķiniet, lai izceltu logu priekšplānā.",
-    "webcal_label": "Kalendāra saites",
-    "webcal_description": "Atver webcal: saites {appName} ar iepriekš aizpildītu kalendāra abonēšanas dialogu.",
-    "register_mailto": "Reģistrēt e-pasta lietotni",
-    "register_webcal": "Reģistrēt kalendāra lietotni",
+    "webcal_label": "Atvērt kalendāra saites {appName}",
+    "webcal_description": "Noklikšķinot uz kalendāra saites tīmekļa vietnē, kalendārs tiek pievienots {appName}.",
+    "register_mailto": "Izmantot {appName} e-pasta saitēm",
+    "register_webcal": "Izmantot {appName} kalendāra saitēm",
     "mailto_registered": "E-pasta apstrādātāja reģistrācija pieprasīta",
     "webcal_registered": "Kalendāra apstrādātāja reģistrācija pieprasīta",
     "registration_failed": "Protokola apstrādātāja reģistrācija neizdevās",
@@ -1619,7 +1619,7 @@
       },
       "favicon_unread_badge": {
         "label": "Unread Count on Tab Icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+        "description": "Lai jūs redzētu jaunu pastu, strādājot citā cilnē vai lietotnē."
       },
       "show_shared_mail_accounts": {
         "label": "Rādīt koplietotos pasta kontus",
@@ -1739,9 +1739,9 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "Paziņojuma skaņa",
+        "title": "Skaņa",
         "description": "Izvēlieties skaņu paziņojumiem",
-        "choose": "Skaņa",
+        "choose": "Tonis",
         "choose_desc": "Izvēlieties paziņojuma skaņu un nospiediet skaļruņa ikonu, lai to noklausītos"
       },
       "email": {
@@ -1749,7 +1749,7 @@
         "description": "Iestatiet paziņojumus par ienākošajām vēstulēm",
         "enabled": "E-pasta paziņojumi",
         "enabled_desc": "Rādīt paziņojumus, saņemot jaunas vēstules",
-        "sound": "Paziņojuma skaņa",
+        "sound": "Skaņa jaunam pastam",
         "sound_desc": "Atskaņot skaņas signālu, saņemot jaunas vēstules",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1759,7 +1759,7 @@
         "description": "Iestatiet paziņojumus par kalendāra pasākumiem",
         "enabled": "Pasākumu paziņojumi",
         "enabled_desc": "Rādīt brīdinājumus par gaidāmajiem kalendāra pasākumiem",
-        "sound": "Paziņojuma skaņa",
+        "sound": "Skaņa atgādinājumiem",
         "sound_desc": "Atskaņot skaņas signālu kalendāra atgādinājumiem"
       },
       "push": {
@@ -1767,7 +1767,7 @@
         "confirm_disable_title": "Atspējot fona paziņojumus?",
         "description": "Saņem sistēmas paziņojumus par jaunu pastu, kad šī vietne ir aizvērta. Piegādāts caur Bulwark push releju; relejs nekad neredz pasta saturu.",
         "disable": "Atspējot",
-        "enable": "Iespējot",
+        "enable": "Ieslēgt šajā ierīcē",
         "dismiss_aria": "Aizvērt paziņojumu uzaicinājumu",
         "ios_hint": "Operētājsistēmā iOS vispirms instalējiet vietni sākuma ekrānā – Safari piegādā Web Push tikai instalētajām PWA.",
         "reenable": "Reģistrēt vēlreiz",
@@ -1781,7 +1781,7 @@
         "status_unsupported": "Šī pārlūkprogramma neatbalsta Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
         "status_demo": "Fona paziņojumi demonstrācijā nav pieejami.",
-        "title": "Fona paziņojumi",
+        "title": "Paziņojumi, kad {appName} ir aizvērta",
         "devices_title": "Reģistrētās ierīces",
         "devices_desc": "Visas ierīces, kas reģistrētas šī konta fona paziņojumu saņemšanai. Atsaucot ierīci, tā nekavējoties pārstāj tās saņemt.",
         "devices_loading": "Notiek reģistrēto ierīču ielāde…",
@@ -1843,7 +1843,7 @@
       },
       "first_day": {
         "label": "Nedēļas pirmā diena",
-        "description": "Sākt nedēļu ar svētdienu vai pirmdienu",
+        "description": "Nedēļas pirmā diena kalendāros",
         "sunday": "Svētdiena",
         "monday": "Pirmdiena"
       },
@@ -6721,7 +6721,7 @@
   },
   "desktopUi": {
     "settings": {
-      "title": "Logi",
+      "title": "Lietotnes logi",
       "double_click_label": "Atvērt ziņojumus jaunā logā ar dubultklikšķi",
       "double_click_description": "Viens klikšķis joprojām atver ziņojumu blakus sarakstam.",
       "restore_label": "Startējot atkal atvērt logus",
@@ -6818,9 +6818,9 @@
     "section_title": "Lietotnes bloķēšana",
     "section_desc": "Pēc neizmantošanas laika prasa PIN katrā logā un cilnē. Kamēr ir bloķēts, lietotne nevar lasīt šajā ierīcē glabāto pastu, līdz kāds ievada PIN.",
     "enable_label": "Bloķēt ar PIN kodu",
-    "enable_desc": "Pēc noklusējuma izslēgts. PIN kods paliek šajā ierīcē.",
+    "enable_desc": "PIN kods paliek šajā ierīcē.",
     "protects_desc": "No kā tas aizsargā: PIN neielaiž lietotnē to, kurš ir pie šīs ierīces. Šeit glabātais pasts saņem jaunu atslēgu, kad ieslēdzat bloķēšanu vai maināt PIN, un tas var aizņemt brīdi. Tas nevar apturēt programmu, kas darbojas šajā datorā, jūsu instalētu pārlūka paplašinājumu vai kādu, kurš nokopē lietotnes failus un kuram ir laiks izmēģināt daudzus PIN, tāpēc garāks PIN ir tā vērts. Darbvirsmas lietotnē PIN izmēģināšanai vajag arī jūsu pieteikšanos šajā datorā. Jūsu konts serverī netiek ietekmēts.",
-    "enable_body": "Izvēlieties PIN kodu. Tas būs vajadzīgs katru reizi, kad lietotne bloķējas, un pēc pārlādes vai jaunas palaišanas.",
+    "enable_body": "Tas būs vajadzīgs katru reizi, kad lietotne bloķējas, un pēc restartēšanas.",
     "set_pin_title": "Izvēlieties PIN kodu",
     "change_pin": "Mainīt PIN kodu…",
     "change_pin_title": "Mainīt PIN kodu",
@@ -6881,6 +6881,19 @@
     "timeout_option": "{count, plural, zero {# minūtes} one {# minūtes} other {# minūtēm}}",
     "blocked_seconds": "Pārāk daudz mēģinājumu. Mēģiniet vēlreiz pēc {count, plural, zero {# sekundēm} one {# sekundes} other {# sekundēm}}.",
     "blocked_minutes": "Pārāk daudz mēģinājumu. Mēģiniet vēlreiz pēc {count, plural, zero {# minūtēm} one {# minūtes} other {# minūtēm}}."
+  },
+  "uxs_general": {
+    "time_zone_common": "Bieži izmantotās laika joslas",
+    "time_zone_all": "Visas laika joslas",
+    "time_zone_search": "Meklēt laika joslu",
+    "time_zone_no_match": "Laika josla nav atrasta",
+    "time_zone_desktop_description": "Rādīt pasta un tikšanos laikus šajā laika joslā. Ja neizvēlaties nevienu, tiek izmantota datora laika josla.",
+    "app_lock_desc_desktop": "Pēc neizmantošanas laika prasa PIN katrā logā. Kamēr ir bloķēts, lietotne nevar lasīt šajā ierīcē glabāto pastu, līdz kāds ievada PIN.",
+    "app_lock_timeout_desc_desktop": "Laiks bez lietošanas jebkurā logā.",
+    "app_lock_now_desc_desktop": "Uzreiz bloķē visus logus.",
+    "app_lock_protects_toggle": "No kā tas aizsargā?",
+    "app_lock_timeout_hours": "{count, plural, zero {# stundu} one {# stunda} other {# stundas}}",
+    "desktop_attention_title": "Šajā datorā"
   },
   "desktop_sign_in": {
     "server_needed": "Vispirms ievadiet servera adresi.",
@@ -7091,7 +7104,7 @@
     "section_title": "Lietošanas dati un avāriju atskaites",
     "section_description": "Abi ir izslēgti, līdz tos ieslēdzat, un katram ir savs slēdzis.",
     "telemetry_label": "Sūtīt lietošanas datus",
-    "telemetry_description": "Reizi dienā: nejaušs ID, lietotnes versija, Node versija, jūsu operētājsistēma, cik ilgi lietotne darbojas un kā tā savienojas. Ar savu pasta serveri arī tas, kuras funkcijas ir ieslēgtas, aptuvens kontu skaits un cik spraudņu un motīvu jums ir. Nekad vēstules, adreses vai serveru nosaukumi.",
+    "telemetry_description": "Reizi dienā: nejaušs ID, lietotnes versiju numuri, jūsu operētājsistēma, cik ilgi lietotne darbojas un kā tā savienojas. Ar savu pasta serveri arī tas, kuras funkcijas ir ieslēgtas, aptuvens kontu skaits un cik spraudņu un motīvu jums ir. Nekad vēstules, adreses vai serveru nosaukumi.",
     "crash_label": "Sūtīt avāriju atskaites",
     "crash_description": "Lietotnes kļūdas tiek sūtītas ar nejaušu ID, failu nosaukumiem no pašas lietotnes koda un īsiem, attīrītiem ziņojumiem. Ja avarē pati lietotne, avārijas fails paliek šajā datorā un to atstāj tikai tad, ja to nosūtāt.",
     "crash_memory": "Avārijas fails ir daļas lietotnes atmiņas kopija avārijas brīdī. Bulwark noņem atrastos lietotājvārdus, adreses un pierakstīšanās marķierus, bet avārijas failā joprojām var būt jūsu vēstuļu teksts.",

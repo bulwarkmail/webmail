@@ -186,7 +186,6 @@
         "description": "Hiển thị tổng số thư trong thư mục hoặc thẻ bên cạnh số thư chưa đọc."
       },
       "favicon_unread_badge": {
-        "description": "Hiển thị số thư chưa đọc trên tab trình duyệt và biểu tượng ứng dụng. Nhờ đó, bạn biết có thư mới ngay cả khi đang dùng tab khác."
       },
       "show_shared_mail_accounts": {
         "description": "Hiển thị thư mục của các hộp thư được chia sẻ với bạn trong mục Đã chia sẻ của danh sách thư mục. Tắt để ẩn tất cả hoặc ẩn từng tài khoản bên dưới. Lịch và danh bạ của các tài khoản đó vẫn được giữ lại."
