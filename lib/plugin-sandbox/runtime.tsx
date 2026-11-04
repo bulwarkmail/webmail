@@ -291,8 +291,10 @@ function openActivityPort(): MessagePort | null {
  *    is never a host.
  *  - `location.origin` is the URL origin even when this iframe runs with an
  *    opaque origin (sandbox="allow-scripts"), and the host page is served
- *    from that same origin: the bridge loads a same-origin path and the route
- *    CSP pins `frame-ancestors 'self'`.
+ *    from that same origin: the bridge loads a same-origin path. The route
+ *    CSP's frame-ancestors also admits the portals the operator lets frame
+ *    the mail UI (#1533), so the origin check on every message is what keeps
+ *    a portal that frames this route directly from driving it.
  *
  * Pinning the first sender instead (pre-fix) let any website window.open()
  * the route, post its own `init` before a real host could, and run its code

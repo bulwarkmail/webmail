@@ -21,13 +21,19 @@ vi.mock('next/dynamic', () => ({ default: (load: () => Promise<React.ComponentTy
     return <Suspense fallback={null}><Component {...props} /></Suspense>;
   };
 } }));
-type ViewerProps = { mvConversation?: { id: string }[]; conversationPane?: boolean };
+type ViewerProps = { email?: { id: string } | null; mvConversation?: { id: string }[]; mvConversationPending?: boolean; conversationPane?: boolean };
+// What the reader was drawn with, render by render: message, conversation, waiting.
+const readerDraws = vi.hoisted(() => [] as string[]);
 vi.mock('@/components/email/email-viewer', () => ({
-  EmailViewer: ({ mvConversation, conversationPane }: ViewerProps) => (
-    <div data-testid="reader" data-pane={conversationPane ? 'conversation' : 'message'}>
-      {mvConversation ? mvConversation.map((e) => e.id).join(',') : 'no conversation'}
-    </div>
-  ),
+  EmailViewer: ({ email, mvConversation, mvConversationPending, conversationPane }: ViewerProps) => {
+    const conversation = mvConversation ? mvConversation.map((e) => e.id).join(',') : 'no conversation';
+    readerDraws.push(`${email?.id ?? '-'} ${conversation}${mvConversationPending ? ' waiting' : ''}`);
+    return (
+      <div data-testid="reader" data-pane={conversationPane ? 'conversation' : 'message'}>
+        {conversation}
+      </div>
+    );
+  },
 }));
 vi.mock('@/components/email/email-composer', () => ({ EmailComposer: () => null }));
 vi.mock('@/components/layout/sidebar', () => ({ Sidebar: () => null }));
@@ -124,6 +130,7 @@ beforeEach(() => {
     fetchEmailContent,
   } as never);
   opened = [];
+  readerDraws.length = 0;
   unsubscribe = useEmailStore.subscribe((state, prev) => {
     if (state.selectedEmail !== prev.selectedEmail) opened.push(state.selectedEmail?.id ?? null);
   });
@@ -153,6 +160,35 @@ describe('The reading pane in the default layout', () => {
     const reader = await screen.findByTestId('reader', {}, { timeout: 5000 });
     expect(reader).toHaveAttribute('data-pane', 'conversation');
     await waitFor(() => expect(reader).toHaveTextContent('m0,m1'));
+  });
+
+  it('opens a message with its conversation at once, in one draw', async () => {
+    useEmailStore.setState({ selectedEmail: inbox()[1], listRows: null } as never);
+    render(<MailApp />);
+    const reader = await screen.findByTestId('reader', {}, { timeout: 5000 });
+    await waitFor(() => expect(reader).toHaveTextContent('no conversation'));
+    readerDraws.length = 0;
+    await press('k');
+    await waitFor(() => expect(selectedId()).toBe('m1'));
+    await waitFor(() => expect(reader).toHaveTextContent('m0,m1'));
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
+    // The open brought the conversation with the message; fetching it again
+    // after the open drew the whole mail view once more.
+    expect(readerDraws.filter((draw) => draw.startsWith('m1 '))).toEqual(['m1 m0,m1']);
+  });
+
+  it('shows a linked message with its conversation, not alone first', async () => {
+    useEmailStore.setState({ selectedEmail: null } as never);
+    fetchEmailContent.mockImplementation(async (_client: unknown, id: string, _owner?: string, options?: { select?: boolean }) => {
+      const email = { ...inbox().find((e) => e.id === id)!, bodyValues: {} };
+      if (options?.select !== false) useEmailStore.setState({ selectedEmail: email } as never);
+      return email;
+    });
+    render(<MailApp linkSegments={['message', 'm1']} />);
+    const reader = await screen.findByTestId('reader', {}, { timeout: 5000 });
+    await waitFor(() => expect(reader).toHaveTextContent('m0,m1'), { timeout: 5000 });
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
+    expect(readerDraws.filter((draw) => draw.startsWith('m1 ') && draw !== 'm1 m0,m1')).toEqual([]);
   });
 
   it('shows the message alone with "Show emails as individual messages"', async () => {

@@ -1658,6 +1658,10 @@
         "label": "Kenar Çubuğu Hesap Değiştiriciyi Gizle",
         "description": "Klasör kenar çubuğunun üstündeki hesap seçiciyi gizleyin. Yine de alt gezinme çubuğundan hesap değiştirebilirsiniz."
       },
+      "sidebar_account_switcher": {
+        "label": "Kenar çubuğunun üstünde hesap değiştirici",
+        "description": "Hesap değiştiriciyi klasörlerin üstünde, yuvarlak Yeni E-posta düğmesini ise ileti listesinin üzerinde gösterir. Kapatırsanız Yeni E-posta bunun yerine klasörlerin üstünde yer alır."
+      },
       "show_rail_account_list": {
         "label": "Gezinme Çubuğunda Hesap Avatarlarını Göster",
         "description": "Hızlı geçiş için gezinme çubuğunun altında ayrı hesap dairelerini ve altında oturumu kapat düğmesini görüntüleyin."

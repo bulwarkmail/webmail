@@ -102,11 +102,15 @@ describe('the folded column\'s drawer (default layout)', () => {
     expect(inDrawer).toBe(docked);
   });
 
-  it('mirrors the collapse arrows in RTL, where the drawer comes from the right', () => {
+  // RTL: globals.css mirrors the chevrons icons; a flip of their own as well would turn them back.
+  it('leaves the collapse arrows to the global RTL mirror, where the drawer comes from the right', () => {
+    const arrow = () => screen.getByTestId('sidebar-collapse').querySelector('svg')!.getAttribute('class') ?? '';
     render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" />);
-    expect(screen.getByTestId('sidebar-collapse').querySelector('svg')!.getAttribute('class')).toContain('rtl:-scale-x-100');
+    expect(arrow()).toMatch(/tabler-icon-chevrons-(left|right)/);
+    expect(arrow()).not.toMatch(/rtl:/);
     openFromAllFolders();
-    expect(screen.getByTestId('sidebar-collapse').querySelector('svg')!.getAttribute('class')).toContain('rtl:-scale-x-100');
+    expect(arrow()).toMatch(/tabler-icon-chevrons-(left|right)/);
+    expect(arrow()).not.toMatch(/rtl:/);
   });
 
   it('keeps Tab and Shift+Tab inside while open', () => {

@@ -1658,6 +1658,10 @@
         "label": "Ocultar selector de cuentas de la barra lateral",
         "description": "Ocultar el selector de cuentas en la parte superior de la barra lateral de carpetas. Aún puede cambiar de cuenta desde la barra de navegación inferior."
       },
+      "sidebar_account_switcher": {
+        "label": "Selector de cuentas en la parte superior de la barra lateral",
+        "description": "Muestra el selector de cuentas encima de las carpetas y el botón redondo Redactar sobre la lista de mensajes. Desactívelo para poner Redactar encima de las carpetas."
+      },
       "show_rail_account_list": {
         "label": "Mostrar avatares de cuentas en la barra de navegación",
         "description": "Mostrar círculos de cuentas individuales en la parte inferior de la barra de navegación para un cambio rápido, con un botón de cerrar sesión debajo."

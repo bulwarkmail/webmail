@@ -148,11 +148,11 @@ describe('onThreadExpand in the conversation view', () => {
         onBack={() => {}}
       />,
     );
-    // The newest card starts unfolded, the older read one folded.
-    const olderHeader = screen.getAllByText('Alice').at(-1)!;
+    // Oldest first: the older read card on top, folded; the newest below it, unfolded.
+    const olderHeader = screen.getAllByText('Alice')[0];
     fireEvent.click(olderHeader);
     expect(handler).toHaveBeenLastCalledWith({ threadId: 't1', emailIds: ['old'], expanded: true });
-    fireEvent.click(screen.getAllByText('Alice').at(-1)!);
+    fireEvent.click(screen.getAllByText('Alice')[0]);
     expect(handler).toHaveBeenLastCalledWith({ threadId: 't1', emailIds: ['old'], expanded: false });
     expect(handler).toHaveBeenCalledTimes(2);
   });

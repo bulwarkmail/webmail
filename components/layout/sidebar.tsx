@@ -85,6 +85,7 @@ import { trashAndJunkIds } from "@/lib/unified-mailbox";
 import { toast } from "@/stores/toast-store";
 import { toastWithUndo, undoLabels, undoMoveAction } from "@/lib/email-action-toast";
 import { debug } from "@/lib/debug";
+import { AccountSwitcher } from "./account-switcher";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { buildSettingsPath, SCHEDULED_MAILBOX_ID, scopedScheduledMailboxId } from "@/lib/deep-links";
 import { useTour } from "@/components/tour/tour-provider";
@@ -1374,6 +1375,7 @@ function SidebarImpl({
   const selectedKeywordAccountId = useEmailStore(s => s.selectedKeywordAccountId);
   const personalSelectedKeyword = selectedKeywordAccountId ? null : selectedKeyword;
   const isEmbedded = useIsEmbedded();
+  const sidebarAccountSwitcher = useSettingsStore(s => s.sidebarAccountSwitcher);
   const enableUnifiedMailbox = useSettingsStore(s => s.enableUnifiedMailbox);
   const includeGroupInUnified = useSettingsStore(s => s.includeGroupInUnified);
   const showSharedMailAccounts = useSettingsStore(s => s.showSharedMailAccounts);
@@ -2141,16 +2143,20 @@ function SidebarImpl({
               data-testid="sidebar-collapse"
               title={isCollapsed ? t("expand_tooltip") : t("collapse_tooltip")}
             >
-              {/* The arrows point the way the column goes: mirrored in RTL, where it sits at the right. */}
-              {isCollapsed ? <ChevronsRight className="w-4 h-4 rtl:-scale-x-100" /> : <ChevronsLeft className="w-4 h-4 rtl:-scale-x-100" />}
+              {/* The arrows point the way the column goes; the app's global RTL mirror turns them in RTL. */}
+              {isCollapsed ? <ChevronsRight className="w-4 h-4" /> : <ChevronsLeft className="w-4 h-4" />}
             </Button>
 
-            {/* Compose at the head of the folders on a desktop, as in Gmail
-                and Outlook; the round button over the list stays for phones
-                and tablets, where this pane is a drawer. The account switcher
-                that sat here was a second one beside the rail's avatar, which
-                every app shows (usability test 2026-11-04, mail-13, mail-27). */}
-            {!isCollapsed && !isDrawer && onCompose && (
+            {/* The account switcher heads the folders by default, with the
+                round Compose button over the list. With the setting off a
+                desktop puts Compose here instead, as in Gmail and Outlook,
+                and the rail's avatar is the one account switcher (usability
+                test 2026-11-04, mail-13, mail-27); phones and tablets keep
+                the round button, since this pane is a drawer there. */}
+            {!isCollapsed && sidebarAccountSwitcher && (
+              <AccountSwitcher variant="expanded" className="flex-1" />
+            )}
+            {!isCollapsed && !sidebarAccountSwitcher && !isDrawer && onCompose && (
               <Button
                 onClick={onCompose}
                 className="flex-1 min-w-0 h-9 justify-start gap-2 px-3"
@@ -2163,7 +2169,7 @@ function SidebarImpl({
               </Button>
             )}
           </div>
-          {isCollapsed && !isDrawer && onCompose && (
+          {isCollapsed && !sidebarAccountSwitcher && !isDrawer && onCompose && (
             <div className="flex justify-center pb-2">
               <IconButton
                 onClick={onCompose}

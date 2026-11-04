@@ -1661,6 +1661,10 @@
         "label": "Peida külgriba kontovahetaja",
         "description": "Peida kontovaliku menüü kaustade külgriba ülaosast. Kontosid saab endiselt vahetada alumiselt navigeerimisribalt."
       },
+      "sidebar_account_switcher": {
+        "label": "Kontovahetaja külgriba ülaosas",
+        "description": "Näita kontovahetajat kaustade kohal ja ümmargust nuppu Koosta kirjade loendi kohal. Lülita see välja, et nupp Koosta oleks hoopis kaustade kohal."
+      },
       "show_rail_account_list": {
         "label": "Näita kontode avatare navigeerimisribal",
         "description": "Kuva navigeerimisriba allosas eraldi kontoringid kiireks vahetamiseks ning nende all väljalogimise nupp."

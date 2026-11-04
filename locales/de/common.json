@@ -1658,6 +1658,10 @@
         "label": "Kontoumschalter in der Seitenleiste ausblenden",
         "description": "Den Kontowähler oben in der Ordner-Seitenleiste ausblenden. Sie können weiterhin über die untere Navigationsleiste zwischen Konten wechseln."
       },
+      "sidebar_account_switcher": {
+        "label": "Kontoumschalter oben in der Seitenleiste",
+        "description": "Zeigt den Kontoumschalter über den Ordnern und die runde Schaltfläche „Verfassen“ über der Nachrichtenliste. Ausgeschaltet steht „Verfassen“ stattdessen über den Ordnern."
+      },
       "show_rail_account_list": {
         "label": "Konto-Avatare in der Navigationsleiste anzeigen",
         "description": "Individuelle Kontokreise am unteren Rand der Navigationsleiste für schnelles Umschalten anzeigen, mit einer Abmelde-Schaltfläche darunter."
