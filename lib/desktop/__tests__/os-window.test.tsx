@@ -490,6 +490,18 @@ describe('the summary', () => {
       expect(summary.unread).toEqual([expect.objectContaining({ emailId: 'e1', accountId: 'acc', sender: 'Alice', subject: 'Lunch?' })]);
       expect(JSON.parse(summary.unread[0].context!)).toMatchObject({ emailId: 'e1', slot: 3 });
       expect(getEmails).toHaveBeenCalledWith('in', undefined, 5, 0, undefined, false, { notKeyword: '$seen' });
+      // One account: no need to say whose.
+      expect(summary.account).toBeUndefined();
+    });
+
+    it('with two accounts it names the one the unread mail is from', async () => {
+      const { useAccountStore } = await import('@/stores/account-store');
+      useAccountStore.setState({ accounts: [
+        { id: 'alice@one', cookieSlot: 3, serverUrl: 'https://one.example', username: 'alice@example.org' },
+        { id: 'bob@two', cookieSlot: 4, serverUrl: 'https://two.example', username: 'bob@example.org' },
+      ] as never });
+      const { readSummary } = await import('../os-summary');
+      expect((await readSummary('en')).account).toBe('alice@example.org');
     });
 
     it('before the policy is known it is empty', async () => {
