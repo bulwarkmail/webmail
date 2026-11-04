@@ -313,6 +313,18 @@ optgroup {
   background-color: var(--color-muted-foreground);
 }
 
+/* The folded folder column (components/layout/sidebar.tsx) leaves its 48px
+   to the icons: a 4px scrollbar, in a gutter kept on both sides. */
+:root:not([data-native-scrollbars="on"]) [data-folder-rail]::-webkit-scrollbar {
+  width: 4px;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  :root:not([data-native-scrollbars="on"]) [data-folder-rail] {
+    scrollbar-width: thin;
+  }
+}
+
 /* Enhanced Email Content Styling */
 
 .email-content-wrapper {
@@ -617,14 +629,26 @@ optgroup {
   --titlebar-right-inset: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw));
   --titlebar-left-inset: env(titlebar-area-x, 0px);
   --titlebar-row-height: env(titlebar-area-height, 0px);
-  /* Where a drawer from the window's edge starts (the folder drawer): under
-     the top bar, and under the window's controls when they are over the page. */
+  /* Where a drawer from the window's edge starts (Mail's folders, the
+     Calendar, Contacts and Files sidebars): under the top bar, and under the
+     window's controls when they are over the page. */
   --drawer-top: max(var(--app-top-inset), var(--titlebar-row-height));
 }
 
 /* A skeleton's row that will hold the controls has them from the first frame. */
 html[data-window-controls] [data-window-row-right] {
   padding-right: calc(var(--titlebar-right-inset) + 0.5rem) !important;
+}
+
+/*
+ * The composer's header runs over its plugin panels. The head above the panel at the
+ * window's right takes that room inside itself, so it stays as wide as the panel and
+ * its Hide button stays at the panel's edge, with its window buttons left of the controls.
+ */
+html[data-window-controls]:not([dir="rtl"]) [data-window-row-right] > [data-composer-panel-head="right"],
+html[data-window-controls][dir="rtl"] [data-window-row-right] > [data-composer-panel-head="left"] {
+  margin-right: calc(-1 * (var(--titlebar-right-inset) + 0.5rem));
+  padding-right: calc(var(--titlebar-right-inset) + 0.5rem);
 }
 
 /* Something floating at the top end of a page with no row: next to the controls, lined up. */

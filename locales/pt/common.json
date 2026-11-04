@@ -7673,6 +7673,10 @@
     "offline_send_saved": "Está offline. A mensagem está guardada em Rascunhos.",
     "offline_send_unsaved": "Está offline. A mensagem fica aqui e é guardada em Rascunhos quando voltar a estar online."
   },
+  "composer_panel": {
+    "show_panel": "Mostrar {name}",
+    "hide_panel": "Ocultar {name}"
+  },
   "desktopDevTools": {
     "section_title": "Resolução de problemas",
     "label": "Ferramentas de programador ({shortcut})",

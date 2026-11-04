@@ -1,20 +1,25 @@
 "use client";
 
 // The composer-sidebar and composer-sidebar-right plugin panels. Each has a
-// width the user can drag (kept across composers) and a button in the
-// composer's header that shows and hides it (the left panel's at the start,
-// the right one's at the end, like the reader's). Folded, a panel takes no
-// room at all. When the composer is too narrow for an open panel next to
-// it, the panel folds by itself (right first); opening it anyway lays it
-// over the composer instead of squeezing the message into a column nobody
-// can write in. Laid over, it stays between the composer's header and its
-// bottom bar: the panel's own button, Close and Send stay in reach.
+// width the user can drag (kept across composers). The composer's header
+// runs across the whole composer, panels included, so its window buttons
+// (Full screen, Pop out, Close) stay at the far end of it, as Outlook and
+// Gmail have them. The part of that row above an open panel is the
+// panel's head: it holds "Hide <panel>", at the panel's inner edge. A
+// folded panel takes no room at all, and a "Show <panel>" button in the
+// header brings it back (the left panel's at the start, the right one's
+// before the window buttons). When the composer is too narrow for an open
+// panel next to it, the panel folds by itself (right first); opening it
+// anyway lays it over the composer instead of squeezing the message into a
+// column nobody can write in. Laid over, it stays between the header and
+// the bottom bar: Hide, Close and Send stay in reach.
 
-import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { useTranslations } from "next-intl";
 import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from "@/components/icons";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { usePluginSlotOffers } from "@/hooks/use-plugin-slot-offers";
+import { get as getActivePlugin } from "@/lib/plugin-sandbox/registry";
 import { onPanelRequest, type PanelRequest } from "@/lib/plugin-sandbox/panel-requests";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { cn } from "@/lib/utils";
@@ -196,37 +201,120 @@ export function useComposerSidebars(root: HTMLElement | null, composerId: string
     }
   };
 
-  return { modes, open, close, toggle, focusRequests, widths, setSideWidth };
+  // What the panels are called in their Show and Hide buttons: their plugins' names.
+  const nameOf = (offers: readonly { pluginId: string }[]) =>
+    offers.map((o) => getActivePlugin(o.pluginId)?.plugin.name).filter((n): n is string => !!n).join(", ") || null;
+  const names: Record<ComposerSidebarSide, string | null> = { left: nameOf(leftOffers), right: nameOf(rightOffers) };
+
+  return { modes, open, close, toggle, focusRequests, widths, setSideWidth, names };
 }
 
-/** The button in the composer's header that shows and hides one panel (none on phones). */
-export function ComposerPanelToggle({
-  side,
-  mode,
-  onToggle,
-  className,
-}: {
+/** Open beside the composer or over it: on screen, with a head in the header row. */
+export function isPanelOpen(mode: ComposerSidebarMode | null): boolean {
+  return mode === "docked" || mode === "overlay";
+}
+
+/** The Show or Hide button of one panel. */
+function PanelButton({ side, open, name, onToggle, className }: {
   side: ComposerSidebarSide;
-  mode: ComposerSidebarMode | null;
+  open: boolean;
+  name: string | null;
   onToggle: () => void;
   className?: string;
 }) {
-  const t = useTranslations("email_viewer");
-  if (!mode) return null;
-  const isOpen = mode !== "folded";
-  const Icon = side === "left" ? (isOpen ? PanelLeftClose : PanelLeftOpen) : (isOpen ? PanelRightClose : PanelRightOpen);
+  const t = useTranslations("composer_panel");
+  const tViewer = useTranslations("email_viewer");
+  const label = name
+    ? t(open ? "hide_panel" : "show_panel", { name })
+    : tViewer(open ? "plugin_panel_hide" : "plugin_panel_show");
+  const Icon = side === "left" ? (open ? PanelLeftClose : PanelLeftOpen) : (open ? PanelRightClose : PanelRightOpen);
   return (
     <button
       type="button"
       onClick={(e) => { e.stopPropagation(); onToggle(); }}
       className={cn("hidden md:grid h-8 w-8 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground", className)}
-      title={t(isOpen ? "plugin_panel_hide" : "plugin_panel_show")}
-      aria-label={t(isOpen ? "plugin_panel_hide" : "plugin_panel_show")}
-      aria-pressed={isOpen}
+      title={label}
+      aria-label={label}
+      aria-expanded={open}
       data-composer-panel-toggle={side}
+      data-composer-panel-hide={open ? side : undefined}
     >
       <Icon className="h-4 w-4 rtl:-scale-x-100" />
     </button>
+  );
+}
+
+/**
+ * The button in the composer's header that brings a folded panel back (none
+ * on phones). An open panel's Hide button is in its head instead
+ * (ComposerPanelHead).
+ */
+export function ComposerPanelToggle({
+  side,
+  mode,
+  name = null,
+  onToggle,
+  className,
+}: {
+  side: ComposerSidebarSide;
+  mode: ComposerSidebarMode | null;
+  name?: string | null;
+  onToggle: () => void;
+  className?: string;
+}) {
+  if (mode !== "folded") return null;
+  return <PanelButton side={side} open={false} name={name} onToggle={onToggle} className={className} />;
+}
+
+/**
+ * The part of the composer's header row above an open panel, as wide as the
+ * panel: its Hide button at the panel's inner edge, and for the right panel
+ * whatever else ends the row (the window buttons, Close last), so they stay
+ * at the far end of the composer. On phones there are no panels, and no head.
+ */
+export function ComposerPanelHead({
+  side,
+  mode,
+  width = COMPOSER_SIDEBAR_WIDTH,
+  name = null,
+  onToggle,
+  className,
+  childrenClassName,
+  children,
+}: {
+  side: ComposerSidebarSide;
+  mode: ComposerSidebarMode | null;
+  width?: number;
+  name?: string | null;
+  onToggle: () => void;
+  /** Padding of the row it is part of. */
+  className?: string;
+  /** The gap between what it holds besides Hide, as in the row it is part of. */
+  childrenClassName?: string;
+  children?: ReactNode;
+}) {
+  if (!isPanelOpen(mode)) return null;
+  const hide = <PanelButton side={side} open name={name} onToggle={onToggle} />;
+  return (
+    <div
+      className={cn(
+        // Below md, where panels aren't shown, only what it holds besides Hide
+        // shows, at the end of the row (one laid over a composer that got narrower).
+        "contents md:flex shrink-0 items-center self-stretch border-border",
+        side === "left" ? "border-e" : "border-s",
+        className,
+      )}
+      // At least the panel's width, so Hide sits at the panel's edge; more when
+      // the buttons need it (a narrow panel in the desktop app, beside its controls).
+      style={{ minWidth: width }}
+      data-composer-panel-head={side}
+    >
+      {side === "right" && hide}
+      <div className="hidden md:block flex-1" />
+      {/* No gap of the head's own around Hide and the space: a 260 px panel in the desktop app has just enough room for the buttons. */}
+      {children && <div className={cn("contents md:flex items-center", childrenClassName)}>{children}</div>}
+      {side === "left" && hide}
+    </div>
   );
 }
 
