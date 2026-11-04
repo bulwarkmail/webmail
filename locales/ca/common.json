@@ -4483,6 +4483,10 @@
       "menu": "Obre el menú del contacte"
     }
   },
+  "ux_pim_contact": {
+    "context_private": "Casa",
+    "phone_voice": "Telèfon"
+  },
   "uxs_wording": {
     "more_options": "Més opcions",
     "use_in_other_apps": "Fes-ho servir en altres aplicacions",

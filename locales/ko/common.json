@@ -4483,6 +4483,10 @@
     "open_categories": "카테고리 열기",
     "row_actions": "{name} 작업"
   },
+  "ux_pim_contact": {
+    "context_private": "집",
+    "phone_voice": "전화"
+  },
   "uxs_wording": {
     "more_options": "옵션 더 보기",
     "use_in_other_apps": "다른 앱에서 사용",

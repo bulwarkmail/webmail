@@ -220,6 +220,7 @@ function Select({ value, onChange, children, className, id, "aria-label": ariaLa
 
 export function ContactForm({ contact, addressBooks, allKeywords, defaultAddressBookId, prefill, onSave, onCancel, loadCurrentMedia, onDirtyChange }: ContactFormProps) {
   const t = useTranslations("contacts.form");
+  const tx = useTranslations("ux_pim_contact");
   const isEditing = !!contact;
   // The header's close goes to its start when the window's own close is at its end.
   const [header, setHeader] = useState<HTMLDivElement | null>(null);
@@ -916,7 +917,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                     >
                       <option value="">-</option>
                       <option value="work">{t("context_work")}</option>
-                      <option value="private">{t("context_private")}</option>
+                      <option value="private">{tx("context_private")}</option>
                     </Select>
                     {emails.length > 1 && (
                       <IconButton label={t("remove_entry")} onClick={() => setEmails(emails.filter((_, j) => j !== i))} className="shrink-0">
@@ -966,7 +967,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                     aria-label={t("phone_type")}
                   >
                     <option value="">{t("phone_type")}</option>
-                    <option value="voice">{t("phone_voice")}</option>
+                    <option value="voice">{tx("phone_voice")}</option>
                     <option value="mobile">{t("phone_cell")}</option>
                     <option value="fax">{t("phone_fax")}</option>
                     <option value="pager">{t("phone_pager")}</option>
@@ -984,7 +985,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                   >
                     <option value="">-</option>
                     <option value="work">{t("context_work")}</option>
-                    <option value="private">{t("context_private")}</option>
+                    <option value="private">{tx("context_private")}</option>
                   </Select>
                   <IconButton label={t("remove_entry")} onClick={() => setPhones(phones.filter((_, j) => j !== i))} className="shrink-0">
                     <X />
@@ -1046,7 +1047,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                     >
                       <option value="">-</option>
                       <option value="work">{t("context_work")}</option>
-                      <option value="private">{t("context_private")}</option>
+                      <option value="private">{tx("context_private")}</option>
                     </Select>
                   </div>
                 </div>

@@ -4495,6 +4495,10 @@
       "menu": "Mở menu của liên hệ"
     }
   },
+  "ux_pim_contact": {
+    "context_private": "Nhà riêng",
+    "phone_voice": "Điện thoại"
+  },
   "uxs_wording": {
     "more_options": "Tùy chọn khác",
     "use_in_other_apps": "Dùng trong ứng dụng khác",

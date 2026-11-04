@@ -40,14 +40,15 @@ interface ContactDetailProps {
 }
 
 // Contexts and phone features the contact form offers, shown with the same
-// labels here. Anything else (custom vCard types) is shown as stored.
+// labels here. Anything else (custom vCard types) is shown as stored. The
+// standard's "private" reads "Home" and "voice" reads "Phone" (#pim-19).
 const CONTEXT_LABEL_KEYS: Record<string, string> = {
   work: "form.context_work",
-  private: "form.context_private",
+  private: "ux_pim_contact.context_private",
 };
 
 const PHONE_FEATURE_LABEL_KEYS: Record<string, string> = {
-  voice: "form.phone_voice",
+  voice: "ux_pim_contact.phone_voice",
   cell: "form.phone_cell",
   mobile: "form.phone_cell",
   fax: "form.phone_fax",
@@ -78,12 +79,14 @@ function getCompletedYears(dateInput: AnniversaryDate): number | null {
 
 export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDuplicate, onMoveTo, onCompose, onPrint, isMobile, className, readOnly = false }: ContactDetailProps) {
   const t = useTranslations("contacts");
+  const tRoot = useTranslations();
   const tCommon = useTranslations("common");
   const locale = useLocale();
   // The ⋮ shows the contact's menu, the one right-click shows in the list (R6).
   const moreMenu = useContextMenu<ContactCard>();
-  const contextLabel = (key: string) => (CONTEXT_LABEL_KEYS[key] ? t(CONTEXT_LABEL_KEYS[key]) : key);
-  const featureLabel = (key: string) => (PHONE_FEATURE_LABEL_KEYS[key] ? t(PHONE_FEATURE_LABEL_KEYS[key]) : key);
+  const label = (labelKey: string) => (labelKey.startsWith("ux_pim_contact.") ? tRoot(labelKey) : t(labelKey));
+  const contextLabel = (key: string) => (CONTEXT_LABEL_KEYS[key] ? label(CONTEXT_LABEL_KEYS[key]) : key);
+  const featureLabel = (key: string) => (PHONE_FEATURE_LABEL_KEYS[key] ? label(PHONE_FEATURE_LABEL_KEYS[key]) : key);
 
   const cryptoKeys = contact?.cryptoKeys ? Object.values(contact.cryptoKeys) : [];
   const hasCryptoKeysSlotOffers = usePluginSlotOffers('contact-cryptokeys').length > 0;

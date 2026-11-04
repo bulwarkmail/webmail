@@ -4483,6 +4483,10 @@
     "open_categories": "Abrir categorias",
     "row_actions": "Ações para {name}"
   },
+  "ux_pim_contact": {
+    "context_private": "Casa",
+    "phone_voice": "Telefone"
+  },
   "uxs_wording": {
     "more_options": "Mais opções",
     "use_in_other_apps": "Usar noutras aplicações",

@@ -4483,6 +4483,10 @@
     "open_categories": "Открыть категории",
     "row_actions": "Действия для {name}"
   },
+  "ux_pim_contact": {
+    "context_private": "Домашний",
+    "phone_voice": "Телефон"
+  },
   "uxs_wording": {
     "more_options": "Другие параметры",
     "use_in_other_apps": "Использовать в других приложениях",

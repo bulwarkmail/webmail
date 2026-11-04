@@ -3821,6 +3821,10 @@
       "menu": "เปิดเมนูของผู้ติดต่อ"
     }
   },
+  "ux_pim_contact": {
+    "context_private": "บ้าน",
+    "phone_voice": "โทรศัพท์"
+  },
   "uxs_wording": {
     "more_options": "ตัวเลือกเพิ่มเติม",
     "use_in_other_apps": "ใช้ในแอปอื่น",

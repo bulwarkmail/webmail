@@ -4483,6 +4483,10 @@
     "open_categories": "Atvērt kategorijas",
     "row_actions": "Darbības: {name}"
   },
+  "ux_pim_contact": {
+    "context_private": "Mājas",
+    "phone_voice": "Tālrunis"
+  },
   "uxs_wording": {
     "more_options": "Vairāk iespēju",
     "use_in_other_apps": "Lietot citās lietotnēs",
