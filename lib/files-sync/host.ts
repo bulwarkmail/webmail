@@ -444,6 +444,7 @@ export class FilesSyncHost {
 
   /** Main is removing the drives (the policy said off): what waits goes up first, as far as it can. */
   private async flushForPolicy(requestId: string, accounts: string[]): Promise<void> {
+    this.deps.controls.drive?.flushed?.(requestId, 'working');
     try {
       for (const account of accounts) {
         const root = this.engine.roots.find((entry) => entry.kind === 'drive' && entry.account === account);

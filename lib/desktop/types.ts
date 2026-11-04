@@ -1164,9 +1164,12 @@ export interface FilesDriveControls {
    * disconnects, the folder stays. `wipe` and `refused` delete everything, nothing is copied.
    */
   disable: (account: string, reason: 'user' | 'signed-out' | 'suspended' | 'wipe' | 'refused') => Promise<FilesDriveDisableResult | void>;
-  /** Main is about to remove these accounts' drives (the policy): upload what waits, then `flushed`. */
+  /**
+   * Main is about to remove these accounts' drives (the policy): say `working` at once, upload
+   * what waits, then `flushed` without a phase. A page that says nothing isn't waited for long.
+   */
   onFlush?: (listener: (request: { requestId: string; accounts: string[] }) => void) => () => void;
-  flushed?: (requestId: string) => void;
+  flushed?: (requestId: string, phase?: 'working') => void;
   /** Opens the folder files that weren't uploaded went to last. False when there's none. */
   openRescue?: () => Promise<boolean>;
   /** "Always keep on this device" (`pinned`) and "Free up space" (`unpinned`), as Explorer sets them. Absent in older shells. */

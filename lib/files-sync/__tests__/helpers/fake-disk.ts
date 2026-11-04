@@ -483,8 +483,8 @@ export class FakeDisk implements FilesControls {
         disk.flushListeners.add(listener);
         return () => disk.flushListeners.delete(listener);
       },
-      flushed: (requestId) => {
-        disk.flushed.push(requestId);
+      flushed: (requestId, phase) => {
+        disk.flushed.push(phase ? `${requestId} ${phase}` : requestId);
       },
       openRescue: async () => {
         record('openRescue');

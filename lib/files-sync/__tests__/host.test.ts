@@ -234,7 +234,7 @@ describe('the host', () => {
     await settle(r.host);
     r.disk.write('drive-a1', 'last minute.txt', 'up it goes');
     for (const listener of r.disk.flushListeners) listener({ requestId: 'q1', accounts: ['a1'] });
-    await expect.poll(() => r.disk.flushed).toEqual(['q1']);
+    await expect.poll(() => r.disk.flushed).toEqual(['q1 working', 'q1']);
     expect(r.server.content(r.server.find('last minute.txt')!.id)).toBe('up it goes');
     r.host.stop();
   });
