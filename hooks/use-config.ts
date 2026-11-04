@@ -15,6 +15,7 @@ export interface ConfigData {
   jmapServerUrl: string;
   oauthEnabled: boolean;
   oauthOnly: boolean;
+  oauthPasswordFallbackEnabled: boolean;
   oauthClientId: string;
   oauthIssuerUrl: string;
   oauthScopes: string;
@@ -175,6 +176,7 @@ export function useConfig(): AppConfig {
     jmapServerUrl: configCache?.jmapServerUrl || '',
     oauthEnabled: configCache?.oauthEnabled || false,
     oauthOnly: configCache?.oauthOnly || false,
+    oauthPasswordFallbackEnabled: configCache?.oauthPasswordFallbackEnabled || false,
     oauthClientId: configCache?.oauthClientId || '',
     oauthIssuerUrl: configCache?.oauthIssuerUrl || '',
     oauthScopes: configCache?.oauthScopes || '',
@@ -229,6 +231,7 @@ export function useConfig(): AppConfig {
         jmapServerUrl: configCache.jmapServerUrl,
         oauthEnabled: configCache.oauthEnabled,
         oauthOnly: configCache.oauthOnly,
+        oauthPasswordFallbackEnabled: configCache.oauthPasswordFallbackEnabled,
         oauthClientId: configCache.oauthClientId,
         oauthIssuerUrl: configCache.oauthIssuerUrl,
         oauthScopes: configCache.oauthScopes,
@@ -284,6 +287,7 @@ export function useConfig(): AppConfig {
           jmapServerUrl: data.jmapServerUrl,
           oauthEnabled: data.oauthEnabled,
           oauthOnly: data.oauthOnly,
+          oauthPasswordFallbackEnabled: data.oauthPasswordFallbackEnabled,
           oauthClientId: data.oauthClientId,
           oauthIssuerUrl: data.oauthIssuerUrl,
           oauthScopes: data.oauthScopes,

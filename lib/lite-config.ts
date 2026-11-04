@@ -15,6 +15,7 @@ import { sanitizeRestrictions, sanitizeScopes } from '@/lib/admin/policy-scopes'
 export const LITE_FORCED_FLAGS = {
   oauthEnabled: false,
   oauthOnly: false,
+  oauthPasswordFallbackEnabled: false,
   autoSsoEnabled: false,
   settingsSyncEnabled: false,
   stalwartFeaturesEnabled: false,
