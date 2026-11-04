@@ -175,6 +175,7 @@ import { usePolicyStore } from "@/stores/policy-store";
 import { isAppLockedNow } from "@/lib/app-lock/state";
 import { registerComposeFlush, registerComposeSnapshot } from "@/lib/compose-flush-registry";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
+import { useDesktopCommands } from "@/lib/desktop/commands";
 import { noteComposerLanguage } from "@/lib/desktop/languages";
 import { noteOpenDraft } from "@/lib/desktop/window-restore";
 import type { RescuedDraft } from "@/lib/popout/channel";
@@ -4693,6 +4694,18 @@ export function EmailComposer({
       if (!e.repeat && composerClient?.hasDelayedSend()) openScheduleDialog();
     }
   };
+
+  // The desktop app's Message menu while this composer is open: the same handlers as
+  // its buttons and keys (lib/desktop/commands.ts). Nothing in a browser.
+  useDesktopCommands({
+    'compose.send': () => { if (!isSavingAndClosing) void handleSend(); },
+    'compose.saveDraft': () => { void saveDraft({ announce: true }); },
+    'compose.attach': () => fileInputRef.current?.click(),
+  }, {
+    'compose.send': !!canSend && !isSending && !isSavingAndClosing,
+    'compose.saveDraft': !isSavingAndClosing,
+    'compose.attach': !isSavingAndClosing,
+  });
 
   return (
     <div

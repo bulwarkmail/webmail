@@ -6842,6 +6842,11 @@
     "tray_quit": "Sair do Bulwark",
     "tray_exit": "Sair do Bulwark"
   },
+  "desktopMenus": {
+    "save_draft": "Salvar rascunho",
+    "attach_files": "Anexar arquivos…",
+    "shortcut_apps": "Ir para E-mail, Calendário, Contatos ou Arquivos"
+  },
   "appLock": {
     "section_title": "Bloqueio da app",
     "section_desc": "Pede um PIN após um tempo sem uso, em todas as janelas e separadores. Enquanto está bloqueada, o correio neste dispositivo fica cifrado e a app não tem a chave.",

@@ -6842,6 +6842,11 @@
     "tray_quit": "Kilépés a Bulwarkból",
     "tray_exit": "Kilépés a Bulwarkból"
   },
+  "desktopMenus": {
+    "save_draft": "Piszkozat mentése",
+    "attach_files": "Fájlok csatolása…",
+    "shortcut_apps": "Ugrás a Levelekre, a Naptárra, a Névjegyekre vagy a Fájlokra"
+  },
   "appLock": {
     "section_title": "Alkalmazászár",
     "section_desc": "Használat nélküli idő után PIN-kódot kér, minden ablakban és lapon. Amíg zárolva van, az eszközön lévő levelek titkosítva maradnak, és az alkalmazásnak nincs hozzájuk kulcsa.",

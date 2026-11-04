@@ -6842,6 +6842,11 @@
     "tray_quit": "結束 Bulwark",
     "tray_exit": "結束 Bulwark"
   },
+  "desktopMenus": {
+    "save_draft": "儲存草稿",
+    "attach_files": "附加檔案…",
+    "shortcut_apps": "前往郵件、行事曆、聯絡人或檔案"
+  },
   "appLock": {
     "section_title": "應用程式鎖定",
     "section_desc": "一段時間未使用後,在每個視窗和分頁中要求輸入 PIN。鎖定期間,此裝置上的郵件保持加密,應用程式沒有金鑰。",

@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useLocale, useMessages, useTranslations } from "next-intl";
 import { useStrictestDevices } from "@/hooks/use-device-policy";
-import { useRouter } from "@/i18n/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { openKeyboardShortcuts, parkAppCommand, requestAppCommand, type AppCommand } from "@/lib/app-commands";
 import { onComposerOpened, composerIsOpen } from "@/lib/compose-flush-registry";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
@@ -26,6 +26,14 @@ import { useLocaleStore } from "@/stores/locale-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useThemeStore } from "@/stores/theme-store";
 import { toast } from "@/stores/toast-store";
+import { openMailImport } from "@/stores/mail-transfer-store";
+
+/** The part of the app a path shows, for the menus: Calendar has its own View lines, and no Message menu. */
+export function desktopSectionOf(pathname: string): "mail" | "calendar" | "contacts" | "files" | "settings" {
+  const first = pathname.split("/").filter(Boolean)[0] ?? "";
+  if (first === "calendar" || first === "contacts" || first === "files" || first === "settings") return first;
+  return "mail";
+}
 
 /**
  * The webmail's side of what every desktop window needs: runs menu commands nothing
@@ -35,6 +43,7 @@ import { toast } from "@/stores/toast-store";
  */
 export function DesktopHost() {
   const router = useRouter();
+  const pathname = usePathname();
   const routerRef = useRef(router);
   routerRef.current = router;
   const t = useTranslations();
@@ -68,6 +77,25 @@ export function DesktopHost() {
         else toMail("compose");
       },
       "edit.search": () => toMail("search"),
+      // The other apps' New items, run once that app is on screen.
+      "file.newEvent": () => {
+        if (requestAppCommand("new-event")) return;
+        parkAppCommand("new-event");
+        routerRef.current.push("/calendar");
+      },
+      "file.newTask": () => {
+        if (requestAppCommand("new-task")) return;
+        parkAppCommand("new-task");
+        routerRef.current.push("/calendar");
+      },
+      "file.newContact": () => {
+        if (requestAppCommand("new-contact")) return;
+        parkAppCommand("new-contact");
+        routerRef.current.push("/contacts");
+      },
+      "file.import": () => openMailImport(),
+      // One way to Settings: in the main window, as the rail's button opens them.
+      "file.settings": () => routerRef.current.push("/settings"),
       "go.inbox": () => routerRef.current.push("/"),
       "go.mail": () => routerRef.current.push("/"),
       "go.calendar": () => routerRef.current.push("/calendar"),
@@ -101,6 +129,7 @@ export function DesktopHost() {
     const canPrint = canPrintAnywhere();
     const signedIn = isAuthenticated;
     const popout = isPopoutWindow();
+    const section = desktopSectionOf(pathname ?? "/");
     setDesktopBaseState({
       "link.check": true,
       "shortcuts.singleKeys": singleKeys,
@@ -108,6 +137,12 @@ export function DesktopHost() {
       "file.print": canPrint,
       "file.savePdf": canPrint,
       "file.newMessage": signedIn,
+      "file.newEvent": signedIn,
+      "file.newTask": signedIn,
+      "file.newContact": signedIn,
+      "file.import": signedIn && !popout,
+      "file.settings": signedIn,
+      [`section.${section}`]: true,
       "edit.search": signedIn && !popout,
       "go.inbox": signedIn,
       "go.mail": signedIn,
@@ -116,7 +151,7 @@ export function DesktopHost() {
       "go.files": signedIn,
       "help.shortcuts": true,
     });
-  }, [isAuthenticated, singleKeys, strictest]);
+  }, [isAuthenticated, singleKeys, strictest, pathname]);
 
   // Menus, the tray and spellcheck follow the interface: the language its text is in now,
   // with that text. The stored choice isn't it: on the first render the catalog can still

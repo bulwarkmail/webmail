@@ -6842,6 +6842,11 @@
     "tray_quit": "Bulwark 종료",
     "tray_exit": "Bulwark 종료"
   },
+  "desktopMenus": {
+    "save_draft": "임시 저장",
+    "attach_files": "파일 첨부…",
+    "shortcut_apps": "메일, 캘린더, 연락처, 파일로 이동"
+  },
   "appLock": {
     "section_title": "앱 잠금",
     "section_desc": "일정 시간 사용하지 않으면 모든 창과 탭에서 PIN을 요청합니다. 잠겨 있는 동안 이 기기의 메일은 암호화된 상태로 유지되며 앱에는 키가 없습니다.",

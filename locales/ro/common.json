@@ -6842,6 +6842,11 @@
     "tray_quit": "Închide Bulwark",
     "tray_exit": "Ieșire din Bulwark"
   },
+  "desktopMenus": {
+    "save_draft": "Salvează ciorna",
+    "attach_files": "Atașează fișiere…",
+    "shortcut_apps": "Mergi la E-mail, Calendar, Contacte sau Fișiere"
+  },
   "appLock": {
     "section_title": "Blocarea aplicației",
     "section_desc": "Cere un PIN după un timp fără utilizare, în fiecare fereastră și filă. Cât timp e blocată, e-mailurile de pe acest dispozitiv rămân criptate și aplicația nu are cheia lor.",

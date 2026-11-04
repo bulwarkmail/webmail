@@ -6842,6 +6842,11 @@
     "tray_quit": "Surt de Bulwark",
     "tray_exit": "Surt de Bulwark"
   },
+  "desktopMenus": {
+    "save_draft": "Desa l'esborrany",
+    "attach_files": "Adjunta fitxers…",
+    "shortcut_apps": "Ves a Correu, Calendari, Contactes o Fitxers"
+  },
   "appLock": {
     "section_title": "Bloqueig de l'app",
     "section_desc": "Demana un PIN després d'un temps sense ús, a cada finestra i pestanya. Mentre està bloquejada, el correu d'aquest dispositiu continua xifrat i l'app no en té la clau.",

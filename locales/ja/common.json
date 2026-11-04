@@ -6842,6 +6842,11 @@
     "tray_quit": "Bulwark を終了",
     "tray_exit": "Bulwark を終了"
   },
+  "desktopMenus": {
+    "save_draft": "下書きを保存",
+    "attach_files": "ファイルを添付…",
+    "shortcut_apps": "メール、カレンダー、連絡先、ファイルに移動"
+  },
   "appLock": {
     "section_title": "アプリのロック",
     "section_desc": "一定時間使わないと、すべてのウィンドウとタブで PIN を求めます。ロック中、このデバイスのメールは暗号化されたままで、アプリには鍵がありません。",

@@ -6854,6 +6854,11 @@
     "tray_quit": "Thoát Bulwark",
     "tray_exit": "Thoát Bulwark"
   },
+  "desktopMenus": {
+    "save_draft": "Lưu bản nháp",
+    "attach_files": "Đính kèm tệp…",
+    "shortcut_apps": "Đi tới Thư, Lịch, Danh bạ hoặc Tệp"
+  },
   "appLock": {
     "section_title": "Khóa ứng dụng",
     "section_desc": "Yêu cầu mã PIN sau một thời gian không dùng, trong mọi cửa sổ và thẻ. Khi đang khóa, thư trên thiết bị này vẫn được mã hóa và ứng dụng không có khóa của chúng.",

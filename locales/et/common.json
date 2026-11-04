@@ -6842,6 +6842,11 @@
     "tray_quit": "Sulge Bulwark",
     "tray_exit": "Välju Bulwarkist"
   },
+  "desktopMenus": {
+    "save_draft": "Salvesta mustand",
+    "attach_files": "Lisa failid…",
+    "shortcut_apps": "Mine e-posti, kalendrisse, kontaktidesse või failidesse"
+  },
   "appLock": {
     "section_title": "Rakenduse lukk",
     "section_desc": "Küsib pärast kasutamata aega PIN-koodi, igas aknas ja vahekaardil. Lukus olles jääb selle seadme e-post krüpteerituks ja rakendusel pole selle võtit.",

@@ -6842,6 +6842,11 @@
     "tray_quit": "Afslut Bulwark",
     "tray_exit": "Afslut Bulwark"
   },
+  "desktopMenus": {
+    "save_draft": "Gem kladde",
+    "attach_files": "Vedhæft filer…",
+    "shortcut_apps": "Gå til Mail, Kalender, Kontakter eller Filer"
+  },
   "appLock": {
     "section_title": "Applås",
     "section_desc": "Beder om en pinkode efter en tid uden brug, i alle vinduer og faner. Mens den er låst, forbliver mail på denne enhed krypteret, og appen har ingen nøgle til den.",

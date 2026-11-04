@@ -6842,6 +6842,11 @@
     "tray_quit": "Avslutt Bulwark",
     "tray_exit": "Avslutt Bulwark"
   },
+  "desktopMenus": {
+    "save_draft": "Lagre utkast",
+    "attach_files": "Legg ved filer…",
+    "shortcut_apps": "Gå til E-post, Kalender, Kontakter eller Filer"
+  },
   "appLock": {
     "section_title": "Applås",
     "section_desc": "Ber om en PIN-kode etter en tid uten bruk, i alle vinduer og faner. Mens den er låst, forblir e-post på denne enheten kryptert, og appen har ingen nøkkel til den.",

@@ -6842,6 +6842,11 @@
     "tray_quit": "Zakończ Bulwark",
     "tray_exit": "Zakończ Bulwark"
   },
+  "desktopMenus": {
+    "save_draft": "Zapisz wersję roboczą",
+    "attach_files": "Załącz pliki…",
+    "shortcut_apps": "Przejdź do Poczty, Kalendarza, Kontaktów lub Plików"
+  },
   "appLock": {
     "section_title": "Blokada aplikacji",
     "section_desc": "Prosi o PIN po czasie bezczynności, w każdym oknie i na każdej karcie. Gdy aplikacja jest zablokowana, poczta na tym urządzeniu pozostaje zaszyfrowana, a aplikacja nie ma do niej klucza.",

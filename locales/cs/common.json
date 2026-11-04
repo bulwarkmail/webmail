@@ -6842,6 +6842,11 @@
     "tray_quit": "Ukončit Bulwark",
     "tray_exit": "Ukončit Bulwark"
   },
+  "desktopMenus": {
+    "save_draft": "Uložit koncept",
+    "attach_files": "Přiložit soubory…",
+    "shortcut_apps": "Přejít na Poštu, Kalendář, Kontakty nebo Soubory"
+  },
   "appLock": {
     "section_title": "Zámek aplikace",
     "section_desc": "Po čase bez použití žádá o PIN, v každém okně a na každé kartě. Dokud je zamčeno, zůstává pošta na tomto zařízení zašifrovaná a aplikace k ní nemá klíč.",

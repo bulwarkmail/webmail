@@ -6842,6 +6842,11 @@
     "tray_quit": "Quitter Bulwark",
     "tray_exit": "Quitter Bulwark"
   },
+  "desktopMenus": {
+    "save_draft": "Enregistrer le brouillon",
+    "attach_files": "Joindre des fichiers…",
+    "shortcut_apps": "Aller à Mail, Calendrier, Contacts ou Fichiers"
+  },
   "appLock": {
     "section_title": "Verrouillage de l'app",
     "section_desc": "Demande un code PIN après un temps sans utilisation, dans chaque fenêtre et onglet. Tant que l'app est verrouillée, les e-mails sur cet appareil restent chiffrés et l'app n'a pas de clé pour les lire.",

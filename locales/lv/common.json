@@ -6842,6 +6842,11 @@
     "tray_quit": "Aizvērt Bulwark",
     "tray_exit": "Iziet no Bulwark"
   },
+  "desktopMenus": {
+    "save_draft": "Saglabāt melnrakstu",
+    "attach_files": "Pievienot failus…",
+    "shortcut_apps": "Pāriet uz pastu, kalendāru, kontaktiem vai failiem"
+  },
   "appLock": {
     "section_title": "Lietotnes bloķēšana",
     "section_desc": "Pēc laika bez lietošanas prasa PIN kodu katrā logā un cilnē. Kamēr lietotne ir bloķēta, e-pasts šajā ierīcē paliek šifrēts, un lietotnei nav tā atslēgas.",

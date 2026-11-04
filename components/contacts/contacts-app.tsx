@@ -60,6 +60,7 @@ import { useDocumentTitle } from "@/hooks/use-document-title";
 import { ContactsSkeleton, ContactsSkeletonBody } from "@/components/boot-skeleton/contacts-skeleton";
 import { useSkeletonLabels } from "@/components/boot-skeleton/use-skeleton-labels";
 import { useRegisterCommands } from "@/lib/command-registry";
+import { useAppCommands } from "@/lib/app-commands";
 import { useCloseOnBack } from "@/hooks/use-close-on-back";
 import { useLeaveGuard } from "@/lib/leave-guard";
 import { useDeleteCategory } from "@/hooks/use-delete-category";
@@ -967,6 +968,9 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
       clearSelection();
     }
   };
+
+  // File > New contact in the desktop app's menus, from any app.
+  useAppCommands({ "new-contact": () => guard(handleCreateNew)() }, contactsEnabled);
 
   // The command palette's Contacts group (Ctrl/⌘+K).
   useRegisterCommands(tSidebar("contacts"), [

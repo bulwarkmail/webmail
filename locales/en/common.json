@@ -6842,6 +6842,11 @@
     "tray_quit": "Quit Bulwark",
     "tray_exit": "Exit Bulwark"
   },
+  "desktopMenus": {
+    "save_draft": "Save draft",
+    "attach_files": "Attach files…",
+    "shortcut_apps": "Go to Mail, Calendar, Contacts or Files"
+  },
   "appLock": {
     "section_title": "App lock",
     "section_desc": "Asks for a PIN after a time without use, in every window and tab. While it's locked, mail on this device stays encrypted and the app has no key for it.",

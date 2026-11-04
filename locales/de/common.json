@@ -6842,6 +6842,11 @@
     "tray_quit": "Bulwark beenden",
     "tray_exit": "Bulwark beenden"
   },
+  "desktopMenus": {
+    "save_draft": "Entwurf speichern",
+    "attach_files": "Dateien anhängen…",
+    "shortcut_apps": "Zu E-Mail, Kalender, Kontakten oder Dateien wechseln"
+  },
   "appLock": {
     "section_title": "App-Sperre",
     "section_desc": "Fragt nach einer Zeit ohne Nutzung in jedem Fenster und Tab nach einer PIN. Solange gesperrt ist, bleiben E-Mails auf diesem Gerät verschlüsselt und die App hat keinen Schlüssel dafür.",

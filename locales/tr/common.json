@@ -6842,6 +6842,11 @@
     "tray_quit": "Bulwark'tan çık",
     "tray_exit": "Bulwark'tan çık"
   },
+  "desktopMenus": {
+    "save_draft": "Taslağı kaydet",
+    "attach_files": "Dosya ekle…",
+    "shortcut_apps": "Posta, Takvim, Kişiler veya Dosyalar'a git"
+  },
   "appLock": {
     "section_title": "Uygulama kilidi",
     "section_desc": "Bir süre kullanılmadığında her pencerede ve sekmede PIN ister. Kilitliyken bu cihazdaki e-postalar şifreli kalır ve uygulamada anahtarı olmaz.",

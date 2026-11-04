@@ -12,7 +12,8 @@ import { useOfflineStore } from '@/lib/offline/state';
 import { offerReturnedComposer, takeReturnedComposer } from '@/lib/popout/return-to-main';
 
 const push = vi.fn();
-vi.mock('@/i18n/navigation', () => ({ useRouter: () => ({ push }) }));
+const route = vi.hoisted(() => ({ pathname: '/' }));
+vi.mock('@/i18n/navigation', () => ({ useRouter: () => ({ push }), usePathname: () => route.pathname }));
 
 // The catalog on screen: its language, and text that says which one it came from.
 const intl = vi.hoisted(() => ({ locale: 'en', prefix: '', messages: {} as object }));
@@ -76,6 +77,7 @@ function fakeBridge() {
 const original = useAuthStore.getState();
 
 beforeEach(() => {
+  route.pathname = '/';
   Object.assign(intl, { locale: 'en', prefix: '', messages: {} });
   push.mockClear();
   resolveExternalLink.mockClear();
@@ -104,6 +106,33 @@ afterEach(() => {
 describe('DesktopHost', () => {
   it('does nothing in a browser', () => {
     expect(() => render(<DesktopHost />)).not.toThrow();
+  });
+
+  it('File > New event, task and contact open that app with its editor; Settings opens in this window', async () => {
+    const { peekParkedAppCommand } = await import('@/lib/app-commands');
+    const shell = fakeBridge();
+    render(<DesktopHost />);
+    shell.run('file.newEvent');
+    expect(push).toHaveBeenLastCalledWith('/calendar');
+    expect(peekParkedAppCommand()).toBe('new-event');
+    shell.run('file.newTask');
+    expect(push).toHaveBeenLastCalledWith('/calendar');
+    expect(peekParkedAppCommand()).toBe('new-task');
+    shell.run('file.newContact');
+    expect(push).toHaveBeenLastCalledWith('/contacts');
+    expect(peekParkedAppCommand()).toBe('new-contact');
+    shell.run('file.settings');
+    expect(push).toHaveBeenLastCalledWith('/settings');
+  });
+
+  it('tells the menus which part of the app is on screen, and offers the New lines once signed in', async () => {
+    route.pathname = '/calendar';
+    const shell = fakeBridge();
+    render(<DesktopHost />);
+    await waitFor(() => expect(shell.setState).toHaveBeenCalled());
+    const state = shell.setState.mock.lastCall![0];
+    expect(state).toMatchObject({ 'section.calendar': true, 'file.newEvent': true, 'file.newContact': true, 'file.settings': true, 'file.import': true });
+    expect(state['section.mail']).toBeUndefined();
   });
 
   it('runs a command from what\'s on the page first', () => {
