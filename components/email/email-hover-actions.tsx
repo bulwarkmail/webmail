@@ -102,6 +102,9 @@ const CORNER_CLASSES = {
 
 /** Roughly the picker's height; used to flip it above the row near the viewport bottom. */
 
+/** How far the inline strip keeps off the row's edges: the width of the row's outline. */
+const STRIP_INSET = "var(--focus-ring-width, 2px)";
+
 export function EmailHoverActions({
   email,
   backgroundClassName = "bg-muted",
@@ -299,8 +302,13 @@ export function EmailHoverActions({
   }
 
   return (
+    // Inset by the focus ring's width: the row's own outline (keyboard focus,
+    // menu open) stays drawn around the strip instead of fading out under its
+    // edge, which in dark mode read as a lighter strip on the blue (mail-p3-14).
     <div
-      className={cn("absolute end-0 top-0 z-10 items-center", pinToFirstLine ? "h-10" : "bottom-0", visibilityClass)}
+      className={cn("absolute z-10 items-center", pinToFirstLine && "h-10", visibilityClass)}
+      style={{ insetInlineEnd: STRIP_INSET, top: STRIP_INSET, bottom: pinToFirstLine ? undefined : STRIP_INSET }}
+      data-hover-strip=""
     >
       <div
         className={cn(
