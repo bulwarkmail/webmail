@@ -45,6 +45,17 @@ describe('pim-19: standard words read as people say them', () => {
   });
 });
 
+describe('pim-21: a long name in the contact header', () => {
+  it('wraps to two lines and shows the whole name on hover', () => {
+    const long = { ...anna, name: { full: 'Maximiliane Alexandra Friederike von Hohenzollern-Sigmaringen-Wittelsbach' } };
+    render(<ContactDetail contact={long} onEdit={vi.fn()} onDelete={vi.fn()} />);
+    const heading = screen.getByRole('heading', { level: 2 });
+    expect(heading).toHaveAttribute('title', long.name.full);
+    expect(heading.className).toContain('line-clamp-2');
+    expect(heading.className).not.toMatch(/\btruncate\b/);
+  });
+});
+
 describe('pim-26: the contact editor keeps rare fields under "More fields"', () => {
   it('collapses Gender, Calendar, Online services and Personal info when none has a value', () => {
     render(<ContactForm contact={anna} onSave={vi.fn()} onCancel={vi.fn()} />);

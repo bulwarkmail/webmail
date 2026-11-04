@@ -151,7 +151,8 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
           <div className={cn("flex items-center gap-4 min-w-0 flex-1", !isMobile && "basis-60")}>
             <Avatar name={name} email={email} contactPhoto={photo} size={isMobile ? "md" : "lg"} />
             <div className="min-w-0 flex-1">
-              <h2 className={cn("font-semibold truncate", isMobile ? "text-lg" : "text-xl")}>{name || "-"}</h2>
+              {/* A long name takes two lines, then ends in "…" with the whole name on hover. */}
+              <h2 title={name || undefined} className={cn("font-semibold line-clamp-2 break-words", isMobile ? "text-lg" : "text-xl")}>{name || "-"}</h2>
               {hasNickname && (
                 <p className="text-sm text-muted-foreground truncate">&ldquo;{nicknames.map(n => n.name).join(", ")}&rdquo;</p>
               )}
