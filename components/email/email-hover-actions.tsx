@@ -5,7 +5,9 @@ import { Email } from "@/lib/jmap/types";
 import { useSettingsStore } from "@/stores/settings-store";
 import type { HoverAction } from "@/stores/settings-store";
 import { cn } from "@/lib/utils";
-import { Trash2, Star, Mail, MailOpen, Archive, Tag, ShieldAlert, ShieldCheck } from "@/components/icons";
+import { Trash2, Star, Mail, MailOpen, Archive, Inbox, Tag, ShieldAlert, ShieldCheck } from "@/components/icons";
+import { useEmailStore } from "@/stores/email-store";
+import { archiveInboxTarget } from "@/lib/archive-inbox";
 import { useArchiveActionEnabled, withoutArchiveIfOff } from "@/lib/archive-gate";
 import { useTranslations } from "next-intl";
 import { useIsMobile } from "@/hooks/use-media-query";
@@ -164,6 +166,10 @@ export function EmailHoverActions({
   const hoverActionsCorner = useSettingsStore((state) => state.hoverActionsCorner);
   // The words the row's menu uses for the same actions (R10).
   const t = useTranslations("context_menu");
+  const tP3 = useTranslations("mail_p3_actions");
+  // In Archive the archive button brings mail back to the Inbox, as the row
+  // menu's entry in its place does (mail-p3-4).
+  const archiveMovesToInbox = useEmailStore((state) => !!archiveInboxTarget(state.mailboxes, state.selectedMailbox));
   const isMobile = useIsMobile();
   // Buttons plugins add to the row (message-row-actions), after the app's own.
   const pluginTarget = useMessageActionTarget(email);
@@ -235,11 +241,14 @@ export function EmailHoverActions({
         ? Star
         : isNotSpam
           ? ShieldCheck
-          : Icon;
+          : actionId === "archive" && archiveMovesToInbox
+            ? Inbox
+            : Icon;
     const title = isNotSpam ? t("not_spam")
       : actionId === "markRead" ? t(isUnread ? "mark_read" : "mark_unread")
       : actionId === "star" ? t(isStarred ? "unstar" : "star")
       : actionId === "spam" ? t("mark_as_spam")
+      : actionId === "archive" && archiveMovesToInbox ? tP3("move_to_inbox")
       : t(config.titleKey);
     const className = isNotSpam
       ? "hover:text-foreground"

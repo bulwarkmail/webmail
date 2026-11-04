@@ -12,6 +12,12 @@ import { archiveInboxTarget } from '@/lib/archive-inbox';
 vi.mock('@/hooks/use-media-query', () => ({
   useDeviceDetection: () => ({ isMobile: false, isTablet: false, isDesktop: true }),
   useMediaQuery: () => false,
+  useIsMobile: () => false,
+}));
+vi.mock('@/components/plugins/plugin-actions', () => ({
+  PluginActions: () => null,
+  usePluginActions: () => [],
+  useMessageActionTarget: () => ({ accountKind: 'personal', keywords: [] }),
 }));
 vi.mock('@/components/tour/tour-provider', () => ({
   useTour: () => ({ activeTour: null, startTour: vi.fn(), endTour: vi.fn(), registerStep: vi.fn() }),
@@ -28,6 +34,8 @@ vi.stubGlobal('ResizeObserver', NoopResizeObserver);
 
 const { EmailViewer } = await import('../email-viewer');
 const { EmailContextMenu } = await import('../email-context-menu');
+const { EmailHoverActions } = await import('../email-hover-actions');
+const { useEmailStore } = await import('@/stores/email-store');
 
 const mailboxes = [
   { id: 'inbox', name: 'Inbox', role: 'inbox', parentId: null, myRights: { mayAddItems: true } },
@@ -121,5 +129,20 @@ describe('row menu in Archive', () => {
     fireEvent.click(screen.getByTestId('ctx-move-to-inbox'));
     expect(onMoveToMailbox).toHaveBeenCalledWith('inbox');
     expect(onArchive).not.toHaveBeenCalled();
+  });
+});
+
+describe('row hover actions in Archive', () => {
+  it('name the archive button Move to Inbox there, and Archive elsewhere', () => {
+    useSettingsStore.setState({ hoverActions: ['archive', 'delete'], interfaceLayout: 'default', hoverActionsMode: 'inline' } as never);
+    useEmailStore.setState({ mailboxes, selectedMailbox: 'archive' });
+    const onArchive = vi.fn();
+    const { unmount } = render(<EmailHoverActions email={message('archive')} onArchive={onArchive} onDelete={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: 'move_to_inbox' }));
+    expect(onArchive).toHaveBeenCalled();
+    unmount();
+    useEmailStore.setState({ selectedMailbox: 'clients' });
+    render(<EmailHoverActions email={message('clients')} onArchive={onArchive} onDelete={() => {}} />);
+    expect(screen.getByRole('button', { name: 'archive' })).toBeTruthy();
   });
 });
