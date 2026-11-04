@@ -182,7 +182,7 @@ describe('ContactsApp', () => {
   it('starts a new group with the contact when "Add to group" finds no group to add to', () => {
     renderContacts();
     fireEvent.contextMenu(screen.getByText('Alice Smith'));
-    fireEvent.click(screen.getByText('context_menu.add_to_group'));
+    fireEvent.click(screen.getByText('contacts_add_to_group'));
     expect(screen.getByText('groups.members_label (1)')).toBeInTheDocument();
   });
 
@@ -190,9 +190,25 @@ describe('ContactsApp', () => {
     const team: ContactCard = { id: 'g-team', kind: 'group', addressBookIds: {}, name: { full: 'Team' }, members: {} };
     renderContacts([alice, bob, team]);
     fireEvent.contextMenu(screen.getByText('Bob Jones'));
-    fireEvent.click(screen.getByText('context_menu.add_to_group'));
+    fireEvent.click(screen.getByText('contacts_add_to_group'));
     fireEvent.click(screen.getByText('bulk.new_group'));
     expect(screen.getByText('groups.members_label (1)')).toBeInTheDocument();
+  });
+
+  it('offers no Edit, Move or Delete for a contact in an address book shared read-only', () => {
+    const shared = { ...alice, addressBookIds: { 'ab-shared': true } };
+    renderContacts([shared, bob]);
+    act(() => {
+      useContactStore.setState({ addressBooks: [{ id: 'ab-shared', name: 'Team', myRights: { mayRead: true, mayWrite: false } }] as never });
+    });
+    fireEvent.contextMenu(screen.getByText('Alice Smith'));
+    expect(screen.queryByRole('menuitem', { name: 'context_menu.edit' })).toBeNull();
+    expect(screen.queryByRole('menuitem', { name: /context_menu.delete/ })).toBeNull();
+    expect(screen.getByRole('menuitem', { name: 'context_menu.export_vcard' })).toBeInTheDocument();
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
+
+    fireEvent.contextMenu(screen.getByText('Bob Jones'));
+    expect(screen.getByRole('menuitem', { name: 'context_menu.edit' })).toBeInTheDocument();
   });
 
   it('imports in a real dialog that Escape closes', () => {

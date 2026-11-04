@@ -105,6 +105,8 @@ function ToggleChip({ icon, label, value, onClick }: { icon: React.ReactNode; la
 
 interface ContactListProps {
   contacts: ContactCard[];
+  /** A contact in an address book shared read-only: its menu has no Edit, Move or Delete. */
+  isContactReadOnly?: (contact: ContactCard) => boolean;
   selectedContactId: string | null;
   searchQuery: string;
   onSearchChange: (query: string) => void;
@@ -144,6 +146,7 @@ interface ContactListProps {
 
 export function ContactList({
   contacts,
+  isContactReadOnly,
   selectedContactId,
   searchQuery,
   onSearchChange,
@@ -788,6 +791,7 @@ export function ContactList({
           onBatchExport={onBulkExport}
           onBatchAddToGroup={onBulkAddToGroup}
           onBatchDelete={onBulkDelete}
+          readOnly={isContactReadOnly?.(contextMenu.data) ?? false}
         />
       )}
     </div>
