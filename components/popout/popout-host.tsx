@@ -24,6 +24,10 @@ const LIST_CHANGE_DEBOUNCE_MS = 400;
 const CLAIM_HOLD_MS = 15_000;
 /** How long a window remembers which draft id a rescue became, for a reload of the pop-out. */
 const RESCUE_MEMORY_MS = 60_000;
+/** The Scheduled count is asked again this long after the server let a held send go. */
+const RELEASE_REFRESH_MS = 3000;
+/** Longer holds are messages scheduled for later, which stay in the count. */
+const UNDO_HOLD_MS = 120_000;
 
 /** The sessions this window can lend. Empty until it is signed in, and in the demo. */
 function shareableSessions(): SharedAccountSession[] {
@@ -112,8 +116,26 @@ export function PopoutHost() {
       }, REFRESH_THROTTLE_MS);
     };
 
+    // The Scheduled count holds a send while the server holds it. Nothing
+    // reports the release (compose-p2-13): ask again once it is out.
+    const releaseTimers = new Set<ReturnType<typeof setTimeout>>();
+    const refreshScheduled = () => {
+      const client = useAuthStore.getState().client;
+      if (client) void useEmailStore.getState().refreshScheduledMetadata(client);
+    };
+    const refreshScheduledAfter = (releasesAt: string) => {
+      const wait = Date.parse(releasesAt) - Date.now();
+      if (!Number.isFinite(wait) || wait > UNDO_HOLD_MS) return;
+      const timer = setTimeout(() => {
+        releaseTimers.delete(timer);
+        refreshScheduled();
+      }, Math.max(0, wait) + RELEASE_REFRESH_MS);
+      releaseTimers.add(timer);
+    };
+
     const takeOverSent = (notice: PopoutSentNotice) => {
       const translate = tRef.current;
+      if (notice.releasesAt) refreshScheduledAfter(notice.releasesAt);
       if (notice.filingError) toast.warning(translate("email_composer.send_filing_warning"));
       if (notice.rejectedRecipients) {
         toast.warning(translate("email_composer.send_some_recipients_rejected"), { message: notice.rejectedRecipients, duration: 15000 });
@@ -272,6 +294,7 @@ export function PopoutHost() {
       stopAccounts();
       if (refreshTimer) clearTimeout(refreshTimer);
       if (listTimer) clearTimeout(listTimer);
+      for (const timer of releaseTimers) clearTimeout(timer);
       channel?.close();
     };
   }, [available]);

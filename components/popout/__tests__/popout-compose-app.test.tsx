@@ -610,6 +610,8 @@ describe('a send held for undo', () => {
     expect(closeSelf).not.toHaveBeenCalled();
     const sent = heard.find((message) => message.type === 'sent') as Extract<PopoutMessage, { type: 'sent' }> | undefined;
     expect(sent?.notice.pendingUndoSend ?? null).toBeNull();
+    // compose-p2-13: the main window asks for the Scheduled count again then.
+    expect(sent?.notice.releasesAt).toBe(sendAt);
   });
 
   it('closes once the undo time is over', async () => {

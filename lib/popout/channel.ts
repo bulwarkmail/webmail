@@ -53,6 +53,8 @@ export interface PopoutSentNotice {
     localAccountId?: string;
     submissionAccountId?: string;
   } | null;
+  /** A send held for undo in the pop-out itself: when the server lets it go. */
+  releasesAt?: string;
 }
 
 /**
