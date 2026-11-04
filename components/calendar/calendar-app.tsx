@@ -1365,7 +1365,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     // One event: asked here, from every place Delete is offered (R3). A
     // series gets the scope question above instead.
     const title = eventToDelete?.title || t("events.no_title");
-    const cancels = !!sendSchedulingMessages && !!eventToDelete && userOrganizes(eventToDelete, currentUserEmails);
+    const cancels = !!sendSchedulingMessages && !!eventToDelete && userOrganizes(eventToDelete, userEmailsFor(eventToDelete));
     const ok = await confirmAction({
       title: t("delete_dialog.event_title"),
       message: cancels
@@ -1385,7 +1385,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     } catch (error) {
       toast.error(describeError(error, t("notifications.event_delete_error")));
     }
-  }, [client, deleteEvent, events, editEvent, showEventModal, confirmAction, currentUserEmails, describeError, t]);
+  }, [client, deleteEvent, events, editEvent, showEventModal, confirmAction, userEmailsFor, describeError, t]);
 
   const submitRsvp = useCallback(async (
     eventId: string,
@@ -1430,7 +1430,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
           updates,
           editor,
           sendScheduling,
-          userEmails: currentUserEmails,
+          userEmails: userEmailsFor(event),
           resolveName: resolveContactName,
         }, { client, updateEvent, createEvent, findMasterEvent });
         done = saved !== "stopped";
@@ -1445,7 +1445,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         const deleted = await deleteOccurrence(scope, {
           event,
           sendScheduling,
-          userEmails: currentUserEmails,
+          userEmails: userEmailsFor(event),
         }, { client, updateEvent, deleteEvent, findMasterEvent });
         done = deleted !== "stopped";
         if (!deleted) {
@@ -1468,7 +1468,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       }
       toast.error(describeError(error, t(type === "delete" ? "notifications.event_delete_error" : "notifications.event_error")));
     }
-  }, [client, pendingScopeAction, updateEvent, deleteEvent, createEvent, findMasterEvent, currentUserEmails, resolveContactName, refetchCurrentRange, submitRsvp, describeError, t, tOffline]);
+  }, [client, pendingScopeAction, updateEvent, deleteEvent, createEvent, findMasterEvent, userEmailsFor, resolveContactName, refetchCurrentRange, submitRsvp, describeError, t, tOffline]);
 
   // A drag or resize. A series asks which occurrences it covers, as the
   // editor does; one event moves at once and can be moved back.
@@ -2688,7 +2688,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         isOpen={!!pendingScopeAction}
         actionType={pendingScopeAction?.type || "edit"}
         note={pendingScopeAction?.type === "delete" && pendingScopeAction.sendScheduling
-          && userOrganizes(pendingScopeAction.event, currentUserEmails)
+          && userOrganizes(pendingScopeAction.event, userEmailsFor(pendingScopeAction.event))
           ? t("participants.cancel_notification")
           : undefined}
         eventTitle={pendingScopeAction?.event.title || t("events.no_title")}

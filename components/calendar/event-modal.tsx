@@ -447,9 +447,16 @@ export function EventModal({
 
   // Calendars offered as create/move targets: writable, non-subscription, plus
   // the event's current calendar so an in-place edit never blanks the select.
+  // An existing event moves only within its own login: the update goes to
+  // that login's server, which doesn't know another login's calendar ids.
+  const eventLogin = useMemo(() => {
+    const primary = event?.calendarIds ? getPrimaryCalendarId(event) : undefined;
+    return primary ? { known: true, login: calendars.find(c => c.id === primary)?.localAccountId } : { known: false, login: undefined };
+  }, [event, calendars]);
   const selectableCalendars = useMemo(
-    () => calendars.filter(c => canCreateEventsIn(c, isSubscriptionCalendar) || c.id === calendarId),
-    [calendars, isSubscriptionCalendar, calendarId]
+    () => calendars.filter(c => (canCreateEventsIn(c, isSubscriptionCalendar) || c.id === calendarId)
+      && (!eventLogin.known || c.localAccountId === eventLogin.login)),
+    [calendars, isSubscriptionCalendar, calendarId, eventLogin]
   );
   const [recurrence, setRecurrence] = useState<RecurrenceOption>(() => {
     if (!event?.recurrenceRules?.length) return "none";
