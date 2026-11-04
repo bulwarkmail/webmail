@@ -319,6 +319,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'calendar.subscription.title' },
   ],
   contacts: [
+    { label: 'settings.contacts.title' },
     { label: 'settings.contacts.group_by_letter_label' },
     { label: 'settings.contacts.sort_by_last_name_label' },
     { label: 'settings.contacts.show_directory_label' },
