@@ -22,6 +22,16 @@ const source = (file: string) => readFileSync(path.join(ROOT, file), 'utf8');
 const classesOf = (el: Element) => el.getAttribute('class')!.split(/\s+/).filter((c) => c !== 'bk').sort();
 
 describe('plugin UI kit components', () => {
+  it('starts a long LinkButton\'s lines at its icon, as a paragraph, not centred as a button would', () => {
+    // The AI assistant's examples in its panel ("Decline the invitation politely and suggest next month instead").
+    render(<kit.LinkButton icon="arrow-right">Decline the invitation politely and suggest next month instead</kit.LinkButton>);
+    const link = screen.getByRole('button');
+    expect(link.className).toMatch(/(^|\s)text-start(\s|$)/);
+    // The icon stays beside the first line rather than the middle of the text.
+    expect(link.className).toMatch(/(^|\s)items-start(\s|$)/);
+    expect(link.querySelector('svg')!.getAttribute('class')).toContain('mt-');
+  });
+
   it('renders the app\'s own Button and Input', () => {
     render(<>
       <kit.Button variant="secondary" size="sm">Cancel</kit.Button>

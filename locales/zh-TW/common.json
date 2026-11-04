@@ -7771,6 +7771,14 @@
     "types_character": "這些鍵在您的鍵盤上會輸入一個字元，占用後該字元在所有應用程式中都無法輸入。請試試其他按鍵。",
     "reserved": "系統或大多數應用程式正在使用這些鍵。請試試其他按鍵。"
   },
+  "desktopAttachRecent": {
+    "heading": "最近的檔案",
+    "browse": "瀏覽這部電腦…",
+    "from_files": "從檔案…",
+    "missing": "「{name}」已不存在。",
+    "too_large": "「{name}」超過 {max}，無法附加。",
+    "failed": "無法附加「{name}」。請再試一次。"
+  },
   "compose_windows": {
     "more_formatting": "更多格式",
     "offline": "離線",
@@ -7778,6 +7786,10 @@
     "offline_hint_outbox": "你現在寄出的郵件會在寄件匣中等待，恢復連線後送出。",
     "offline_send_saved": "你已離線。郵件已儲存在草稿中。",
     "offline_send_unsaved": "你已離線。郵件會留在這裡，恢復連線後儲存到草稿。"
+  },
+  "composer_panel": {
+    "show_panel": "顯示{name}",
+    "hide_panel": "隱藏{name}"
   },
   "desktopDevTools": {
     "section_title": "疑難排解",

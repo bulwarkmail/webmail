@@ -7771,6 +7771,14 @@
     "types_character": "Estas teclas escrevem um carácter no seu teclado, e ele deixaria de funcionar em todas as aplicações. Experimente outras teclas.",
     "reserved": "O seu sistema ou a maioria das aplicações usam estas teclas. Experimente outras teclas."
   },
+  "desktopAttachRecent": {
+    "heading": "Arquivos recentes",
+    "browse": "Procurar neste computador…",
+    "from_files": "De Arquivos…",
+    "missing": "\"{name}\" não existe mais.",
+    "too_large": "\"{name}\" é maior que {max} e não pode ser anexado.",
+    "failed": "Não foi possível anexar \"{name}\". Tente novamente."
+  },
   "compose_windows": {
     "more_formatting": "Mais formatação",
     "offline": "Offline",
@@ -7778,6 +7786,10 @@
     "offline_hint_outbox": "O que enviar agora espera na caixa de saída e é enviado quando voltar a estar online.",
     "offline_send_saved": "Está offline. A mensagem está guardada em Rascunhos.",
     "offline_send_unsaved": "Está offline. A mensagem fica aqui e é guardada em Rascunhos quando voltar a estar online."
+  },
+  "composer_panel": {
+    "show_panel": "Mostrar {name}",
+    "hide_panel": "Ocultar {name}"
   },
   "desktopDevTools": {
     "section_title": "Resolução de problemas",

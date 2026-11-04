@@ -7771,6 +7771,14 @@
     "types_character": "Ces touches produisent un caractère sur votre clavier, et il ne fonctionnerait plus dans aucune application. Essayez d'autres touches.",
     "reserved": "Votre système ou la plupart des applications utilisent ces touches. Essayez d'autres touches."
   },
+  "desktopAttachRecent": {
+    "heading": "Fichiers récents",
+    "browse": "Parcourir cet ordinateur…",
+    "from_files": "Depuis Fichiers…",
+    "missing": "« {name} » n'existe plus.",
+    "too_large": "« {name} » dépasse {max} et ne peut pas être joint.",
+    "failed": "Impossible de joindre « {name} ». Réessayez."
+  },
   "compose_windows": {
     "more_formatting": "Plus de mise en forme",
     "offline": "Hors ligne",
@@ -7778,6 +7786,10 @@
     "offline_hint_outbox": "Ce que vous envoyez maintenant attend dans la boîte d'envoi et part dès que vous êtes de nouveau en ligne.",
     "offline_send_saved": "Vous êtes hors ligne. Le message est enregistré dans les Brouillons.",
     "offline_send_unsaved": "Vous êtes hors ligne. Le message reste ici et sera enregistré dans les Brouillons dès que vous serez de nouveau en ligne."
+  },
+  "composer_panel": {
+    "show_panel": "Afficher {name}",
+    "hide_panel": "Masquer {name}"
   },
   "desktopDevTools": {
     "section_title": "Dépannage",

@@ -49,6 +49,7 @@ import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { useIsFocusedProTab } from "@/hooks/use-pane-context";
 import { useProMultiAccountContacts } from "@/hooks/use-pro-multi-account-contacts";
 import { ResizeHandle } from "@/components/layout/resize-handle";
+import { EdgeDrawer } from "@/components/layout/edge-drawer";
 import { useIsFullDesktop, useIsMobile } from "@/hooks/use-media-query";
 import { useRefreshGesture } from "@/hooks/use-refresh-gesture";
 import type { ContactCard, AddressBook, AddressBookRights } from "@/lib/jmap/types";
@@ -210,6 +211,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   // into a burger-toggled overlay.
   const isNarrow = !isFullDesktop;
   const [narrowSidebarOpen, setNarrowSidebarOpen] = useState(false);
+  const closeNarrowSidebar = useCallback(() => setNarrowSidebarOpen(false), []);
   useEffect(() => { if (!isNarrow) setNarrowSidebarOpen(false); }, [isNarrow]);
   // A new view (a form, a group, a contact) replaces whatever the drawer was for.
   useEffect(() => { setNarrowSidebarOpen(false); }, [view]);
@@ -1285,6 +1287,60 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
     }
   })();
 
+  // The categories: beside the list on the full desktop, a drawer below it.
+  const contactsSidebar = (
+    <ContactsSidebar
+      groups={groups}
+      individuals={individuals}
+      addressBooks={addressBooks}
+      activeCategory={activeCategory}
+      onSelectCategory={guard(handleSelectCategory)}
+      onCreateGroup={fromDrawer(guard(handleCreateGroup))}
+      onCreateContact={fromDrawer(guard(handleCreateNew))}
+      onCreateAddressBook={client ? fromDrawer(() => setCreatingAddressBook(true)) : undefined}
+      onImport={fromDrawer(() => setShowImportDialog(true))}
+      onEditGroup={fromDrawer(guard(handleEditGroupFromSidebar))}
+      onDeleteGroup={fromDrawer(handleDeleteGroupFromSidebar)}
+      onComposeGroup={fromDrawer(handleComposeGroupFromSidebar)}
+      onDropContacts={handleDropContacts}
+      onDropContactsToCategory={handleDropContactsToCategory}
+      onRenameAddressBook={client ? fromDrawer((book: AddressBook) => setRenamingAddressBook(book)) : undefined}
+      onShareAddressBook={client ? fromDrawer((book: AddressBook) => setSharingAddressBookId(book.id)) : undefined}
+      onSetDefaultAddressBook={client ? fromDrawer(async (book: AddressBook) => {
+        try {
+          await setDefaultAddressBook(client, book);
+          toast.success(t("address_books.default_updated"));
+        } catch {
+          toast.error(t("address_books.set_default_failed"));
+        }
+      }) : undefined}
+      onCreateContactInBook={fromDrawer(guard((book: AddressBook) => {
+        setDefaultBookIdForCreate(book.id);
+        setSelectedContact(null);
+        setView("create");
+      }))}
+      onDeleteAddressBook={client ? fromDrawer(async (book: AddressBook) => {
+        const ok = await confirmDialog({
+          title: t("address_books.delete_title"),
+          message: t("address_books.confirm_delete", { name: shownName.addressBook(book) }),
+          variant: "destructive",
+          confirmText: t("address_books.delete"),
+        });
+        if (!ok) return;
+        try {
+          await removeAddressBook(client, book);
+          toast.success(t("address_books.deleted"));
+        } catch {
+          toast.error(t("address_books.delete_failed"));
+        }
+      }) : undefined}
+      onRenameKeyword={fromDrawer((kw: string) => setRenamingKeyword(kw))}
+      onDeleteKeyword={fromDrawer((kw: string) => void handleDeleteKeyword(kw))}
+      directoryCount={showDirectory ? directoryPrincipals.length : undefined}
+      multiAccountMode={multiAccountEnabled && accountClients.length > 1}
+    />
+  );
+
   const mobileBackToList = () => {
     if (returnToEmail) {
       setReturnToEmail(false);
@@ -1331,105 +1387,49 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
         {inlineApp && (
           <InlineAppView apps={loadedApps} activeAppId={inlineApp!.id} onClose={closeInlineApp} />
         )}
-        {/* Clips the closed drawer, so it never sits over the nav rail. */}
+        {/* Holds the drawer in a Pro pane and clips it there when closed. */}
         <div className={cn("relative flex flex-1 min-h-0 overflow-hidden", inlineApp && "hidden")}>
-          {/* Narrow-pane backdrop for the overlay categories sidebar */}
-          {isNarrow && narrowSidebarOpen && (
-            <div
-              className={cn(
-                "inset-0 bg-black/50 z-40",
-                isEmbedded ? "absolute" : "fixed"
-              )}
-              onClick={() => setNarrowSidebarOpen(false)}
-            />
+          {/* Panel 1: the categories. Below the full desktop a drawer from the
+              window's edge, over the app rail, as Mail's folders. */}
+          {showListPanel && isNarrow && (
+            <EdgeDrawer
+              open={narrowSidebarOpen}
+              onClose={closeNarrowSidebar}
+              contained={isEmbedded || mvShell}
+              data-testid="contacts-sidebar-drawer"
+              data-pane="sidebar"
+              className="border-e border-border bg-background"
+            >
+              {contactsSidebar}
+            </EdgeDrawer>
           )}
-          {/* Panel 1: Categories sidebar (in-flow on desktop, overlay on narrow) */}
-          {showListPanel && (!isMobile || isNarrow) && (
-                <>
-                  <div
-                    data-testid={isNarrow ? "contacts-sidebar-drawer" : undefined}
-                    data-pane="sidebar"
-                    className={cn(
-                      "border-e border-border flex flex-col flex-shrink-0 bg-background",
-                      !isSidebarResizing && "transition-[width] duration-300",
-                      isNarrow && cn(
-                        "absolute inset-y-0 start-0 z-50 w-72 pt-[var(--app-top-inset)]",
-                        "transform transition-[transform,visibility] duration-300 ease-in-out",
-                        !narrowSidebarOpen && "invisible -translate-x-full rtl:translate-x-full"
-                      )
-                    )}
-                    // Closed, the drawer is out of reach: no clicks, no Tab stops.
-                    inert={isNarrow && !narrowSidebarOpen}
-                    style={isNarrow ? undefined : { width: `${sidebarWidth}px` }}
-                  >
-                    <ContactsSidebar
-                      groups={groups}
-                      individuals={individuals}
-                      addressBooks={addressBooks}
-                      activeCategory={activeCategory}
-                      onSelectCategory={guard(handleSelectCategory)}
-                      onCreateGroup={fromDrawer(guard(handleCreateGroup))}
-                      onCreateContact={fromDrawer(guard(handleCreateNew))}
-                      onCreateAddressBook={client ? fromDrawer(() => setCreatingAddressBook(true)) : undefined}
-                      onImport={fromDrawer(() => setShowImportDialog(true))}
-                      onEditGroup={fromDrawer(guard(handleEditGroupFromSidebar))}
-                      onDeleteGroup={fromDrawer(handleDeleteGroupFromSidebar)}
-                      onComposeGroup={fromDrawer(handleComposeGroupFromSidebar)}
-                      onDropContacts={handleDropContacts}
-                      onDropContactsToCategory={handleDropContactsToCategory}
-                      onRenameAddressBook={client ? fromDrawer((book: AddressBook) => setRenamingAddressBook(book)) : undefined}
-                      onShareAddressBook={client ? fromDrawer((book: AddressBook) => setSharingAddressBookId(book.id)) : undefined}
-                      onSetDefaultAddressBook={client ? fromDrawer(async (book: AddressBook) => {
-                        try {
-                          await setDefaultAddressBook(client, book);
-                          toast.success(t("address_books.default_updated"));
-                        } catch {
-                          toast.error(t("address_books.set_default_failed"));
-                        }
-                      }) : undefined}
-                      onCreateContactInBook={fromDrawer(guard((book: AddressBook) => {
-                        setDefaultBookIdForCreate(book.id);
-                        setSelectedContact(null);
-                        setView("create");
-                      }))}
-                      onDeleteAddressBook={client ? fromDrawer(async (book: AddressBook) => {
-                        const ok = await confirmDialog({
-                          title: t("address_books.delete_title"),
-                          message: t("address_books.confirm_delete", { name: shownName.addressBook(book) }),
-                          variant: "destructive",
-                          confirmText: t("address_books.delete"),
-                        });
-                        if (!ok) return;
-                        try {
-                          await removeAddressBook(client, book);
-                          toast.success(t("address_books.deleted"));
-                        } catch {
-                          toast.error(t("address_books.delete_failed"));
-                        }
-                      }) : undefined}
-                      onRenameKeyword={fromDrawer((kw: string) => setRenamingKeyword(kw))}
-                      onDeleteKeyword={fromDrawer((kw: string) => void handleDeleteKeyword(kw))}
-                      directoryCount={showDirectory ? directoryPrincipals.length : undefined}
-                      multiAccountMode={multiAccountEnabled && accountClients.length > 1}
-                    />
-                  </div>
-                  {!isNarrow && (
-                    <ResizeHandle
-                      pane="sidebar"
-                      value={sidebarWidth}
-                      min={180}
-                      max={400}
-                      onResizeStart={() => { sidebarDragStartWidth.current = sidebarWidth; setIsSidebarResizing(true); }}
-                      onResize={(delta) => setSidebarWidth(Math.max(180, Math.min(400, sidebarDragStartWidth.current + delta)))}
-                      onResizeEnd={() => {
-                        setIsSidebarResizing(false);
-                        localStorage.setItem("contacts-sidebar-width", String(sidebarWidth));
-                      }}
-                      onDoubleClick={() => { setSidebarWidth(256); localStorage.setItem("contacts-sidebar-width", "256"); }}
-                    />
-                  )}
-                </>
-              )}
+          {showListPanel && !isNarrow && !isMobile && (
+            <>
+              <div
+                data-pane="sidebar"
+                className={cn(
+                  "border-e border-border flex flex-col flex-shrink-0 bg-background",
+                  !isSidebarResizing && "transition-[width] duration-300",
+                )}
+                style={{ width: `${sidebarWidth}px` }}
+              >
+                {contactsSidebar}
+              </div>
+              <ResizeHandle
+                pane="sidebar"
+                value={sidebarWidth}
+                min={180}
+                max={400}
+                onResizeStart={() => { sidebarDragStartWidth.current = sidebarWidth; setIsSidebarResizing(true); }}
+                onResize={(delta) => setSidebarWidth(Math.max(180, Math.min(400, sidebarDragStartWidth.current + delta)))}
+                onResizeEnd={() => {
+                  setIsSidebarResizing(false);
+                  localStorage.setItem("contacts-sidebar-width", String(sidebarWidth));
+                }}
+                onDoubleClick={() => { setSidebarWidth(256); localStorage.setItem("contacts-sidebar-width", "256"); }}
+              />
+            </>
+          )}
 
           {/* The list and the contact: the main content, after the sidebar. */}
           <AppMain

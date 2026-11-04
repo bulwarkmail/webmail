@@ -32,6 +32,8 @@ import { INTERNAL_DRAG_TYPE, isInternalDrag, readDraggedNames } from "@/componen
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { AppMain } from "@/components/layout/app-landmarks";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
+import { useMountainViewShell } from "@/hooks/use-mountain-view-shell";
+import { EdgeDrawer } from "@/components/layout/edge-drawer";
 import { getDroppedFilesAndFolders } from "@/lib/webdav/drop-utils";
 import { getFilePreviewKind } from "@/lib/file-preview";
 import type { FileAppAction } from "@/lib/files-app-actions";
@@ -299,6 +301,7 @@ export function FileBrowser({
   const isMobile = useIsMobile();
   const touch = useMediaQuery("(pointer: coarse)") && isMobile;
   const [narrowSidebarOpen, setNarrowSidebarOpen] = useState(false);
+  const closeNarrowSidebar = useCallback(() => setNarrowSidebarOpen(false), []);
   useEffect(() => { if (!isNarrow) setNarrowSidebarOpen(false); }, [isNarrow]);
   useEffect(() => { setNarrowSidebarOpen(false); }, [currentPath]);
   // Anything picked in the drawer closes it (R7).
@@ -845,6 +848,8 @@ export function FileBrowser({
         return;
       }
       if (e.key === "Escape") {
+        // The folder drawer is the innermost layer; it closes itself (R8).
+        if (narrowSidebarOpen) return;
         // The details panel over the list closes first (innermost layer, R8).
         if (showDetails && isNarrow) toggleDetails(false);
         else if (searchQuery) setSearchQuery("");
@@ -907,7 +912,7 @@ export function FileBrowser({
     return () => window.removeEventListener("keydown", handler);
   }, [
     showNewFolder, showNewTextFile, renameTarget, renameFolder, shareTargetId, moveTarget, accountPickerMode, selectedList, singleSelected, inTrash,
-    showDetails, isNarrow, toggleDetails,
+    showDetails, isNarrow, toggleDetails, narrowSidebarOpen,
     selectAllVisible, onCopy, onCut, onPaste, clipboard, searchQuery, onClearSelection, deleteNames, openResource,
     focusedName, onToggleSelect, currentPath, navigateUp, viewMode, gridColumns, moveFocus, displayResources,
   ]);
@@ -1109,6 +1114,8 @@ export function FileBrowser({
   const tSidebar = useTranslations("sidebar");
   const tShell = useTranslations("shell");
   const isEmbedded = useIsEmbedded();
+  // Mountain View's card holds the drawer, under its top bar.
+  const mvShell = useMountainViewShell(isEmbedded);
   useRegisterCommands(tSidebar("files"), [
     { id: "upload-files", label: tMenu("files_upload_files"), icon: Upload, run: () => fileInputRef.current?.click(), when: () => canCreate },
     { id: "upload-folder", label: tMenu("files_upload_folder"), icon: FolderUp, run: () => folderInputRef.current?.click(), when: () => canCreate },
@@ -1314,26 +1321,21 @@ export function FileBrowser({
   } : null;
 
   return (
-    // Clips the closed drawer, so it never sits over the nav rail.
+    // Holds the drawer in a Pro pane and clips it there when closed.
     <div className="relative flex flex-1 min-h-0 overflow-hidden">
-      {/* Folder sidebar: in flow on desktop, a drawer on narrow panes */}
-      {sidebar && isNarrow && narrowSidebarOpen && (
-        <div className="absolute inset-0 bg-black/50 z-40" onClick={() => setNarrowSidebarOpen(false)} />
-      )}
+      {/* Folder sidebar: in flow on the full desktop; below it a drawer from
+          the window's edge, over the app rail, as Mail's folders. */}
       {sidebar && (isNarrow ? (
-        <div
+        <EdgeDrawer
+          open={narrowSidebarOpen}
+          onClose={closeNarrowSidebar}
+          contained={isEmbedded || mvShell}
           data-testid="files-sidebar-drawer"
           data-pane="sidebar"
-          className={cn(
-            "absolute inset-y-0 start-0 z-50 w-72 border-e border-border",
-            "transform transition-[transform,visibility] duration-300 ease-in-out",
-            !narrowSidebarOpen && "invisible -translate-x-full rtl:translate-x-full",
-          )}
-          // Closed, the drawer is out of reach: no clicks, no Tab stops.
-          inert={!narrowSidebarOpen}
+          className="border-e border-border"
         >
           {sidebar}
-        </div>
+        </EdgeDrawer>
       ) : (
         <>
           <div

@@ -7771,6 +7771,14 @@
     "types_character": "Šie taustiņi jūsu tastatūrā raksta rakstzīmi, kas pārstātu darboties visās lietotnēs. Izmēģiniet citus taustiņus.",
     "reserved": "Šos taustiņus izmanto sistēma vai lielākā daļa lietotņu. Izmēģiniet citus taustiņus."
   },
+  "desktopAttachRecent": {
+    "heading": "Nesen izmantotie faili",
+    "browse": "Pārlūkot šo datoru…",
+    "from_files": "No Failiem…",
+    "missing": "“{name}” vairs nav pieejams.",
+    "too_large": "“{name}” ir lielāks par {max}, un to nevar pievienot.",
+    "failed": "Neizdevās pievienot “{name}”. Mēģiniet vēlreiz."
+  },
   "compose_windows": {
     "more_formatting": "Vairāk formatēšanas",
     "offline": "Bezsaistē",
@@ -7778,6 +7786,10 @@
     "offline_hint_outbox": "Ko sūtāt tagad, gaida izsūtnē un tiek nosūtīts, kad atkal esat tiešsaistē.",
     "offline_send_saved": "Jūs esat bezsaistē. Ziņojums ir saglabāts melnrakstos.",
     "offline_send_unsaved": "Jūs esat bezsaistē. Ziņojums paliek šeit un tiks saglabāts melnrakstos, kad atkal būsiet tiešsaistē."
+  },
+  "composer_panel": {
+    "show_panel": "Rādīt {name}",
+    "hide_panel": "Paslēpt {name}"
   },
   "desktopDevTools": {
     "section_title": "Problēmu novēršana",

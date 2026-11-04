@@ -7771,6 +7771,14 @@
     "types_character": "These keys type a character on your keyboard, and it would stop working in every app. Try other keys.",
     "reserved": "Your system or most apps use these keys. Try other keys."
   },
+  "desktopAttachRecent": {
+    "heading": "Recent files",
+    "browse": "Browse this computer…",
+    "from_files": "From Files…",
+    "missing": "\"{name}\" isn't there any more.",
+    "too_large": "\"{name}\" is larger than {max} and can't be attached.",
+    "failed": "\"{name}\" couldn't be attached. Try again."
+  },
   "compose_windows": {
     "more_formatting": "More formatting",
     "offline": "Offline",
@@ -7778,6 +7786,10 @@
     "offline_hint_outbox": "What you send now waits in the outbox and goes out when you're back online.",
     "offline_send_saved": "You're offline. The message is saved in Drafts.",
     "offline_send_unsaved": "You're offline. The message stays here and is saved in Drafts when you're back online."
+  },
+  "composer_panel": {
+    "show_panel": "Show {name}",
+    "hide_panel": "Hide {name}"
   },
   "desktopDevTools": {
     "section_title": "Troubleshooting",

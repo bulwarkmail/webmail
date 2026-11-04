@@ -7771,6 +7771,14 @@
     "types_character": "Aceste taste scriu un caracter pe tastatura ta, iar el n-ar mai funcționa în nicio aplicație. Încearcă alte taste.",
     "reserved": "Sistemul sau majoritatea aplicațiilor folosesc aceste taste. Încearcă alte taste."
   },
+  "desktopAttachRecent": {
+    "heading": "Fișiere recente",
+    "browse": "Răsfoiește acest computer…",
+    "from_files": "Din Fișiere…",
+    "missing": "„{name}” nu mai există.",
+    "too_large": "„{name}” depășește {max} și nu poate fi atașat.",
+    "failed": "„{name}” nu a putut fi atașat. Încearcă din nou."
+  },
   "compose_windows": {
     "more_formatting": "Mai multe opțiuni de formatare",
     "offline": "Offline",
@@ -7778,6 +7786,10 @@
     "offline_hint_outbox": "Ce trimiteți acum așteaptă în Mesaje de trimis și pleacă atunci când sunteți din nou online.",
     "offline_send_saved": "Sunteți offline. Mesajul este salvat în Ciorne.",
     "offline_send_unsaved": "Sunteți offline. Mesajul rămâne aici și este salvat în Ciorne când sunteți din nou online."
+  },
+  "composer_panel": {
+    "show_panel": "Afișează {name}",
+    "hide_panel": "Ascunde {name}"
   },
   "desktopDevTools": {
     "section_title": "Depanare",

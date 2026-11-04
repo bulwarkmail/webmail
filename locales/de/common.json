@@ -7771,6 +7771,14 @@
     "types_character": "Diese Tasten erzeugen auf Ihrer Tastatur ein Zeichen, das dann in keiner App mehr funktionieren würde. Versuchen Sie andere Tasten.",
     "reserved": "Ihr System oder die meisten Apps verwenden diese Tasten. Versuchen Sie andere Tasten."
   },
+  "desktopAttachRecent": {
+    "heading": "Zuletzt verwendete Dateien",
+    "browse": "Diesen Computer durchsuchen…",
+    "from_files": "Aus Dateien…",
+    "missing": "\"{name}\" ist nicht mehr vorhanden.",
+    "too_large": "\"{name}\" ist größer als {max} und kann nicht angehängt werden.",
+    "failed": "\"{name}\" konnte nicht angehängt werden. Versuchen Sie es erneut."
+  },
   "compose_windows": {
     "more_formatting": "Weitere Formatierung",
     "offline": "Offline",
@@ -7778,6 +7786,10 @@
     "offline_hint_outbox": "Was Sie jetzt senden, wartet im Postausgang und wird gesendet, sobald Sie wieder online sind.",
     "offline_send_saved": "Sie sind offline. Die Nachricht ist in den Entwürfen gespeichert.",
     "offline_send_unsaved": "Sie sind offline. Die Nachricht bleibt hier und wird in den Entwürfen gespeichert, sobald Sie wieder online sind."
+  },
+  "composer_panel": {
+    "show_panel": "{name} einblenden",
+    "hide_panel": "{name} ausblenden"
   },
   "desktopDevTools": {
     "section_title": "Fehlerbehebung",

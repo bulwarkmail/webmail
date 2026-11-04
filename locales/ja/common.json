@@ -7771,6 +7771,14 @@
     "types_character": "このキーはお使いのキーボードで文字を入力します。割り当てると、すべてのアプリでその文字を入力できなくなります。別のキーをお試しください。",
     "reserved": "このキーはシステムまたは多くのアプリが使用しています。別のキーをお試しください。"
   },
+  "desktopAttachRecent": {
+    "heading": "最近使ったファイル",
+    "browse": "このコンピューターを参照…",
+    "from_files": "ファイルから…",
+    "missing": "「{name}」はもうありません。",
+    "too_large": "「{name}」は {max} を超えているため添付できません。",
+    "failed": "「{name}」を添付できませんでした。もう一度お試しください。"
+  },
   "compose_windows": {
     "more_formatting": "その他の書式",
     "offline": "オフライン",
@@ -7778,6 +7786,10 @@
     "offline_hint_outbox": "今送信したものは送信トレイで待機し、オンラインに戻ると送信されます。",
     "offline_send_saved": "オフラインです。メッセージは下書きに保存されています。",
     "offline_send_unsaved": "オフラインです。メッセージはここに残り、オンラインに戻ると下書きに保存されます。"
+  },
+  "composer_panel": {
+    "show_panel": "{name}を表示",
+    "hide_panel": "{name}を非表示"
   },
   "desktopDevTools": {
     "section_title": "トラブルシューティング",

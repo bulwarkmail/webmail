@@ -79,7 +79,8 @@ import { useContactStore } from "@/stores/contact-store";
 import { useIdentityStore } from "@/stores/identity-store";
 import { useUIStore, sidebarFolded, listPaneCssSize, SIDEBAR_MIN, SIDEBAR_MAX, EMAIL_LIST_MIN, EMAIL_LIST_MAX, EMAIL_LIST_HEIGHT_MIN, EMAIL_LIST_HEIGHT_MAX, READING_PANE_MIN_WIDTH, READING_PANE_MIN_HEIGHT, COMPOSER_PANE_MIN_HEIGHT } from "@/stores/ui-store";
 import { atLeast, PHONE_BELOW, useDeviceDetection } from "@/hooks/use-media-query";
-import { useFocusTrap } from "@/hooks/use-focus-trap";
+import { useEdgeDrawer } from "@/hooks/use-edge-drawer";
+import { DrawerScrim } from "@/components/layout/edge-drawer";
 import { usePaneSize } from "@/hooks/use-pane-size";
 import { useIsFocusedProTab, usePaneId } from "@/hooks/use-pane-context";
 import { useKeyboardShortcuts, type GoToMailboxTarget } from "@/hooks/use-keyboard-shortcuts";
@@ -2621,29 +2622,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Pro can mount two mail panes at once, so the sidebar id must be per-instance.
   const sidebarId = useId();
   const listHeadingId = useId();
-  // The phone drawer keeps Tab inside until it closes, and Escape closes it.
+  // The phone drawer keeps Tab inside until it closes, Escape closes it, and
+  // the focus goes back to the toggle however it closes (Escape, X, a pick,
+  // the scrim), unless it has moved on to something outside the drawer. The
+  // toggle lives in whichever MobileHeader the current view renders, so it is
+  // looked up inside this app instance when the one that opened it is gone.
   const phoneDrawerOpen = isMobile && sidebarOpen;
-  const sidebarContainerRef = useFocusTrap({
-    isActive: phoneDrawerOpen,
-    onEscape: () => setSidebarOpen(false),
-    restoreFocus: false,
+  const closeSidebarDrawer = useCallback(() => setSidebarOpen(false), [setSidebarOpen]);
+  const sidebarContainerRef = useEdgeDrawer({
+    open: phoneDrawerOpen,
+    onClose: closeSidebarDrawer,
+    returnFocus: () => appRootRef.current?.querySelector<HTMLElement>('[data-sidebar-toggle]'),
   });
-  const sidebarWasOpen = useRef(false);
-  useEffect(() => {
-    if (phoneDrawerOpen) {
-      sidebarWasOpen.current = true;
-      return;
-    }
-    if (!sidebarWasOpen.current) return;
-    sidebarWasOpen.current = false;
-    // Back to the toggle however it closed (Escape, X, a pick, the scrim),
-    // unless the focus has moved on to something outside the drawer. The
-    // toggle lives in whichever MobileHeader the current view renders, so
-    // look it up inside this app instance rather than threading a ref through.
-    const active = document.activeElement;
-    if (active && active !== document.body && !sidebarContainerRef.current?.contains(active)) return;
-    appRootRef.current?.querySelector<HTMLElement>('[data-sidebar-toggle]')?.focus();
-  }, [phoneDrawerOpen, sidebarContainerRef]);
   // The folded column's tree open over the page as a drawer (Sidebar's
   // onDrawerChange): the function that closes it, for the scrim.
   const [closeFolderDrawer, setCloseFolderDrawer] = useState<(() => void) | null>(null);
@@ -5890,20 +5880,13 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             scope to the pane via `absolute` so the backdrop stays inside
             the pane instead of covering the whole window. */}
         {((isMobile && sidebarOpen) || closeFolderDrawer) && !inlineApp && (
-          <div
-            aria-hidden="true"
+          <DrawerScrim
             data-testid="folder-drawer-scrim"
-            data-drawer-scrim=""
-            className={cn(
-              "inset-0 bg-black/50 z-40",
-              // The folded column's drawer opens on a desktop, so only the
-              // phone's scrim goes with the phone layout.
-              isEmbedded ? "absolute" : cn("fixed", !closeFolderDrawer && "desk:hidden")
-            )}
-            onClick={() => {
-              if (closeFolderDrawer) closeFolderDrawer();
-              else setSidebarOpen(false);
-            }}
+            contained={isEmbedded}
+            // The folded column's drawer opens on a desktop, so only the
+            // phone's scrim goes with the phone layout.
+            className={!isEmbedded && !closeFolderDrawer ? "desk:hidden" : undefined}
+            onClose={closeFolderDrawer ?? closeSidebarDrawer}
           />
         )}
 

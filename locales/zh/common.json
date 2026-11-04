@@ -7771,6 +7771,14 @@
     "types_character": "这些键在您的键盘上会输入一个字符，占用后该字符在所有应用中都无法输入。请试试其他按键。",
     "reserved": "系统或大多数应用在使用这些键。请试试其他按键。"
   },
+  "desktopAttachRecent": {
+    "heading": "最近的文件",
+    "browse": "浏览此电脑…",
+    "from_files": "从文件…",
+    "missing": "“{name}”已不存在。",
+    "too_large": "“{name}”超过 {max}，无法添加为附件。",
+    "failed": "无法将“{name}”添加为附件。请重试。"
+  },
   "compose_windows": {
     "more_formatting": "更多格式",
     "offline": "离线",
@@ -7778,6 +7786,10 @@
     "offline_hint_outbox": "你现在发送的邮件会在发件箱中等待，恢复联网后发出。",
     "offline_send_saved": "你已离线。邮件已保存在草稿中。",
     "offline_send_unsaved": "你已离线。邮件会留在这里，恢复联网后保存到草稿。"
+  },
+  "composer_panel": {
+    "show_panel": "显示{name}",
+    "hide_panel": "隐藏{name}"
   },
   "desktopDevTools": {
     "section_title": "故障排除",

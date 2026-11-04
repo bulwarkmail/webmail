@@ -15,6 +15,7 @@ import {
   jmapServerAllowed,
   parseCertificateRule,
   parseInstanceUrl,
+  pagePolicySnapshot,
   parsePolicyValue,
   parseServerPattern,
   pluginAllowedByPolicy,
@@ -32,7 +33,7 @@ describe('the schema', () => {
       'PluginsMode', 'PluginAllowlist', 'OfflineEnabled', 'AppLockRequired', 'AppLockTimeoutMinutes', 'TelemetryAllowed',
       'CrashReportsAllowed', 'QuickComposeShortcut', 'AuthServerAllowlist', 'AuthNegotiateDelegateAllowlist',
       'AutoSelectCertificateForUrls', 'KeystoreEnabled', 'KeystoreAllowedOrigins', 'BrowserSignIn', 'WipeOfflineData',
-      'OpenWithEnabled', 'DeveloperToolsAvailability', 'FilesDriveEnabled', 'FilesFolderSyncEnabled', 'FilesDriveLetter',
+      'OpenWithEnabled', 'DeveloperToolsAvailability', 'RecentFilesInAttach', 'FilesDriveEnabled', 'FilesFolderSyncEnabled', 'FilesDriveLetter',
     ]);
     for (const key of POLICY_KEYS) {
       const { title, description } = POLICY_SCHEMA[key];
@@ -56,9 +57,25 @@ describe('developer tools and Open with', () => {
     expect(resolvePolicies(layers({ forcedMachine: { OpenWithEnabled: 0 } })).OpenWithEnabled).toMatchObject({ value: false, locked: true });
     expect(resolvePolicies(layers({ forcedMachine: { OpenWithEnabled: 'maybe' } })).OpenWithEnabled).toMatchObject({ value: false, locked: true });
   });
+
+  it('hide recent files in the Attach menu only by force, and a value nobody can read hides them', () => {
+    expect(resolvePolicies(layers({})).RecentFilesInAttach).toMatchObject({ value: true, locked: false });
+    expect(resolvePolicies(layers({ recommendedMachine: { RecentFilesInAttach: 0 } })).RecentFilesInAttach).toMatchObject({ value: true, locked: false });
+    expect(resolvePolicies(layers({ forcedUser: { RecentFilesInAttach: 0 } })).RecentFilesInAttach).toMatchObject({ value: false, locked: true });
+    expect(resolvePolicies(layers({ forcedMachine: { RecentFilesInAttach: 'yes please' } })).RecentFilesInAttach).toMatchObject({ value: false, locked: true });
+  });
 });
 
 describe('Files on this computer', () => {
+  it('tells the page the drive and folder sync are forced off, so it can show the lock', () => {
+    const forced = resolvePolicies(layers({ forcedMachine: { FilesDriveEnabled: 0, FilesFolderSyncEnabled: 0, FilesDriveLetter: 'R' } }));
+    const page = pagePolicySnapshot(forced);
+    expect(page.FilesDriveEnabled).toMatchObject({ value: false, locked: true });
+    expect(page.FilesFolderSyncEnabled).toMatchObject({ value: false, locked: true });
+    // The letter comes from main with the drive's state.
+    expect(page.FilesDriveLetter).toMatchObject({ value: null, locked: false });
+  });
+
   it('turn the drive and folder sync off only by force, and a value nobody can read leaves them off', () => {
     for (const key of ['FilesDriveEnabled', 'FilesFolderSyncEnabled'] as const) {
       expect(resolvePolicies(layers({}))[key]).toMatchObject({ value: true, locked: false });

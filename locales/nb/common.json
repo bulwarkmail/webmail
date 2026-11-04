@@ -7771,6 +7771,14 @@
     "types_character": "Disse tastene skriver et tegn på tastaturet ditt, og det ville slutte å virke i alle apper. Prøv andre taster.",
     "reserved": "Systemet ditt eller de fleste apper bruker disse tastene. Prøv andre taster."
   },
+  "desktopAttachRecent": {
+    "heading": "Nylige filer",
+    "browse": "Bla gjennom denne datamaskinen…",
+    "from_files": "Fra Filer…",
+    "missing": "«{name}» finnes ikke lenger.",
+    "too_large": "«{name}» er større enn {max} og kan ikke legges ved.",
+    "failed": "Kunne ikke legge ved «{name}». Prøv igjen."
+  },
   "compose_windows": {
     "more_formatting": "Mer formatering",
     "offline": "Frakoblet",
@@ -7778,6 +7786,10 @@
     "offline_hint_outbox": "Det du sender nå, venter i utboksen og sendes når du er på nett igjen.",
     "offline_send_saved": "Du er frakoblet. Meldingen er lagret i Utkast.",
     "offline_send_unsaved": "Du er frakoblet. Meldingen blir her og lagres i Utkast når du er på nett igjen."
+  },
+  "composer_panel": {
+    "show_panel": "Vis {name}",
+    "hide_panel": "Skjul {name}"
   },
   "desktopDevTools": {
     "section_title": "Feilsøking",
