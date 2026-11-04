@@ -338,23 +338,46 @@ describe('buildSuggestions', () => {
     to: [{ name: 'Me', email: 'ME@acme.com' }],
     cc: [],
   } as unknown as Email;
+  // The account's sign-in address; alias@me.org is a second identity.
+  const main = new Set(['me@acme.com']);
 
-  it('offers subject, own address, List-Id and domain', () => {
-    const suggestions = buildSuggestions(anchor, subjectFor([from('anna@acme.com')], 'news.acme.com'), own, t);
-    expect(suggestions.map(s => s.id)).toEqual(['subject', 'to', 'list', 'domain']);
-    // A comma would split a plain value into a list in the editor.
-    expect(suggestions[0].condition).toEqual({ field: 'subject', comparator: 'contains', value: ['Weekly report, March'] });
-    expect(suggestions[1].condition).toEqual({ field: 'to', comparator: 'address_is', value: 'me@acme.com' });
-    expect(suggestions[2].condition).toEqual({ field: 'header', headerName: 'List-Id', comparator: 'contains', value: 'news.acme.com' });
-    const domain = suggestions[3];
+  // mail-p3-9: the sender and domain first, then the subject; no "To me".
+  it('offers sender, domain, subject and List-Id, and no To for mail to the account itself', () => {
+    const suggestions = buildSuggestions(anchor, subjectFor([from('anna@acme.com')], 'news.acme.com'), own, main, t);
+    expect(suggestions.map(s => s.id)).toEqual(['sender', 'domain', 'subject', 'list']);
+    const [sender, domain, subject, list] = suggestions;
+    expect(sender.label).toBe('anna@acme.com');
+    expect(sender.condition).toEqual({ field: 'from', comparator: 'address_is', value: 'anna@acme.com' });
+    expect(sender.replaces?.({ field: 'from', comparator: 'domain_is', value: 'acme.com' })).toBe(true);
     expect(domain.condition).toEqual({ field: 'from', comparator: 'domain_is', value: 'acme.com' });
     expect(domain.replaces?.({ field: 'from', comparator: 'address_is', value: 'x' })).toBe(true);
+    // A comma would split a plain value into a list in the editor.
+    expect(subject.condition).toEqual({ field: 'subject', comparator: 'contains', value: ['Weekly report, March'] });
+    expect(list.condition).toEqual({ field: 'header', headerName: 'List-Id', comparator: 'contains', value: 'news.acme.com' });
   });
 
-  it('uses Cc when that is where the user was, and skips what is missing', () => {
+  it('offers To for mail to an alias of the account', () => {
+    const toAlias = { ...anchor, to: [{ email: 'Alias@me.org' }] } as unknown as Email;
+    const suggestions = buildSuggestions(toAlias, subjectFor([from('anna@acme.com')]), own, main, t);
+    expect(suggestions.at(-1)).toMatchObject({ id: 'to', condition: { field: 'to', comparator: 'address_is', value: 'alias@me.org' } });
+  });
+
+  it('uses Cc when that is where the alias was, and skips what is missing', () => {
     const cc = { subject: '', to: [{ email: 'x@y.org' }], cc: [{ email: 'alias@me.org' }] } as unknown as Email;
-    const suggestions = buildSuggestions(cc, subjectFor([]), own, t);
+    const suggestions = buildSuggestions(cc, subjectFor([]), own, main, t);
     expect(suggestions.map(s => s.id)).toEqual(['to']);
-    expect(suggestions[0].condition.field).toBe('cc');
+    expect(suggestions[0].condition).toEqual({ field: 'cc', comparator: 'address_is', value: 'alias@me.org' });
+  });
+
+  it('offers the list or group address the mail went to when none of the user addresses is in To or Cc', () => {
+    const viaList = { subject: 'Hi', to: [{ email: 'Team@acme.com' }], cc: [] } as unknown as Email;
+    const suggestions = buildSuggestions(viaList, subjectFor([from('anna@acme.com')]), own, main, t);
+    expect(suggestions.at(-1)).toMatchObject({ id: 'to', condition: { field: 'to', value: 'team@acme.com' } });
+  });
+
+  it('names several senders by their count', () => {
+    const suggestions = buildSuggestions(anchor, subjectFor([from('anna@acme.com'), from('bob@b.org')]), own, main, t);
+    expect(suggestions[0]).toMatchObject({ id: 'sender', label: 'quick_rule_names.senders count=2' });
+    expect(suggestions.map(s => s.id)).not.toContain('domain');
   });
 });

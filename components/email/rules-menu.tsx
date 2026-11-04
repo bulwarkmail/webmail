@@ -49,7 +49,7 @@ import {
   type RulesMenuAvailability,
 } from "@/lib/filters/quick-rules";
 import {
-  getOwnAddresses,
+  getRuleAccountAddresses,
   knownListId,
   loadListIds,
   resolveMailboxRuleTarget,
@@ -153,7 +153,10 @@ function useRulesModel(anchor: Email, senderEmails: Email[], target: QuickRuleTa
   const emailKeywords = useSettingsStore((s) => s.emailKeywords);
   const status = useFiltersStatus(target);
 
-  const own = useMemo(() => getOwnAddresses(), []);
+  // Only this account's own addresses: mail from another account the user
+  // is signed in to is someone else's here (mail-p3-9).
+  const addresses = useMemo(() => getRuleAccountAddresses(target), [target]);
+  const own = addresses.own;
   const senders = useMemo(() => collectSenders(senderEmails, own), [senderEmails, own]);
 
   // Rows carry no headers, so the List-Id is asked for when the menu opens.
@@ -209,7 +212,7 @@ function useRulesModel(anchor: Email, senderEmails: Email[], target: QuickRuleTa
       mode: "prefill",
       target,
       rule: buildPrefillRule(subject, text.filters, generateUUID()),
-      suggestions: buildSuggestions(source, subject, own, text.filters),
+      suggestions: buildSuggestions(source, subject, own, addresses.main, text.filters),
       sourceMailboxId,
     });
   };
