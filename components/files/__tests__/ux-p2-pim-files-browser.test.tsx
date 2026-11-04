@@ -113,3 +113,55 @@ describe('the ⋮ of a row opens its menu beside the button, never over it (pim-
     expect(document.querySelector('[data-resource="budget.xlsx"]')?.closest('[data-menu-opener]') ?? document.querySelector('[data-menu-opener]')).toBeTruthy();
   });
 });
+
+const filesTransfer = (files: File[]) => ({
+  types: ['Files'],
+  files,
+  items: [],
+  dropEffect: 'none',
+  effectAllowed: 'all',
+  getData: () => '',
+  setData: () => {},
+});
+
+describe('files from outside dropped on Files (pim-p2-6)', () => {
+  it('go into the folder whose row they land on', async () => {
+    const h = renderBrowser();
+    const file = new File(['x'], 'report.pdf', { type: 'application/pdf' });
+    const row = document.querySelector<HTMLElement>('[data-resource="Documents"]')!;
+    fireEvent.dragOver(row, { dataTransfer: filesTransfer([file]) });
+    fireEvent.drop(row, { dataTransfer: filesTransfer([file]) });
+    await vi.waitFor(() => expect(h.onUploadFiles).toHaveBeenCalledTimes(1));
+    expect(h.onUploadFiles).toHaveBeenCalledWith([file], expect.objectContaining({ id: 'd', name: 'Documents' }));
+  });
+
+  it('go into the folder in view when they land on a file or the list', async () => {
+    const h = renderBrowser();
+    const file = new File(['x'], 'report.pdf', { type: 'application/pdf' });
+    const row = document.querySelector<HTMLElement>('[data-resource="notes.txt"]')!;
+    fireEvent.drop(row, { dataTransfer: filesTransfer([file]) });
+    await vi.waitFor(() => expect(h.onUploadFiles).toHaveBeenCalledTimes(1));
+    expect((h.onUploadFiles.mock.calls[0] as unknown[])[1]).toBeUndefined();
+  });
+});
+
+describe('files the app knows (pim-p2-7)', () => {
+  it('opens a saved message in the preview, as a mail', () => {
+    const eml = res('m', 'forwarded.eml', { contentType: 'message/rfc822' });
+    const h = renderBrowser({}, [docs, notes, eml]);
+    fireEvent.doubleClick(screen.getByTitle('forwarded.eml'));
+    expect(h.onPreviewFile).toHaveBeenCalledWith('forwarded.eml');
+    expect(h.onShowFileInfo).not.toHaveBeenCalled();
+  });
+
+  it('puts the app action in the item menu', () => {
+    const csv = res('c', 'contacts-export.csv', { contentType: 'text/csv' });
+    const onRun = vi.fn();
+    renderBrowser({ appActionFor: (r) => (r.name.endsWith('.csv') ? { kind: 'import-contacts', label: 'import_contacts', onRun } : null) }, [docs, notes, csv]);
+    fireEvent.contextMenu(screen.getByTitle('contacts-export.csv'));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'import_contacts' }));
+    expect(onRun).toHaveBeenCalledTimes(1);
+    fireEvent.contextMenu(screen.getByTitle('notes.txt'));
+    expect(screen.queryByRole('menuitem', { name: 'import_contacts' })).toBeNull();
+  });
+});
