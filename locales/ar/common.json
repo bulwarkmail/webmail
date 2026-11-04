@@ -6396,7 +6396,9 @@
     "require_tls": "التسليم عبر اتصال آمن فقط",
     "require_tls_hint": "الرسالة نفسها غير مشفّرة. تُرَد إذا لم يتمكن خادم من استخدام TLS.",
     "encrypt": "تشفير…",
-    "encrypt_hint": "يتطلب إضافة S/MIME أو PGP. يفتح الإعدادات."
+    "encrypt_hint": "يتطلب إضافة S/MIME أو PGP. يفتح الإعدادات.",
+    "quick_reply_to": "الرد على {names}…",
+    "open_full_editor": "فتح المحرر الكامل"
   },
   "plugin_list": {
     "filters": "المرشحات",

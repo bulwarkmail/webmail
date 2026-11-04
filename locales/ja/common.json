@@ -6396,7 +6396,9 @@
     "require_tls": "安全な接続でのみ配信",
     "require_tls_hint": "メッセージ自体は暗号化されません。サーバーが TLS を使えない場合は返送されます。",
     "encrypt": "暗号化…",
-    "encrypt_hint": "S/MIME または PGP のアドオンが必要です。設定を開きます。"
+    "encrypt_hint": "S/MIME または PGP のアドオンが必要です。設定を開きます。",
+    "quick_reply_to": "{names} に返信…",
+    "open_full_editor": "フルエディターで開く"
   },
   "plugin_list": {
     "filters": "フィルター",

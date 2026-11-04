@@ -46,7 +46,7 @@ import { onPanelRequest } from "@/lib/plugin-sandbox/panel-requests";
 import { PluginPanelToggle, panelLabelOf, panelShortcutOf } from "@/components/plugins/app-side-panel";
 import type { ComposerMetadata } from "@/lib/plugin-sandbox/composer-registry";
 import { QuickReplyPluginActions } from "./quick-reply-plugin-actions";
-import { quickReplyEnvelope } from "@/lib/outgoing/quick-reply-envelope";
+import { quickReplyEnvelope, quickReplyRecipients } from "@/lib/outgoing/quick-reply-envelope";
 import { formatFileSize, cn, formatDate, formatDateTime, formatRelativeAgo, generateUUID, cleanPreview, type MailboxNode } from "@/lib/utils";
 import { getEffectiveTimeZone, getWallClock } from "@/lib/timezone";
 import { itemsToHide } from "@/lib/toolbar-overflow";
@@ -1363,6 +1363,7 @@ export function EmailViewer({
   const archiveActionEnabled = useArchiveActionEnabled();
   const tWindows = useTranslations('pwaWindows');
   const tComposer = useTranslations('email_composer');
+  const tWords = useTranslations('compose_words');
   const tNotifications = useTranslations('notifications');
   const tImport = useTranslations('mail_import');
   const tCommon = useTranslations('common');
@@ -1648,6 +1649,13 @@ export function EmailViewer({
     if (isQuickReplyFocused) quickReplyBoxRef.current?.scrollIntoView?.({ block: 'nearest' });
   }, [isQuickReplyFocused]);
   const [isSendingQuickReply, setIsSendingQuickReply] = useState(false);
+  // "Reply to Ben Carter…": who the quick reply goes to, by name.
+  const quickReplyNames = email
+    ? quickReplyRecipients(email, identities).map((r) => r.name || r.email).join(', ')
+    : '';
+  const quickReplyPlaceholder = quickReplyNames
+    ? tWords('quick_reply_to', { names: quickReplyNames })
+    : t('quick_reply_placeholder');
   /** The recipients and identity the quick reply would be sent with. */
   const quickMetadata = (): ComposerMetadata => {
     if (!email) return { subject: '', to: [], attachments: [] };
@@ -6096,7 +6104,7 @@ ${printWatermark ? printWatermark.html : ''}
                         void handleSendQuickReply();
                       }
                     }}
-                    placeholder={t('quick_reply_placeholder')}
+                    placeholder={quickReplyPlaceholder}
                     className={cn(
                       "w-full px-3 py-2 text-sm border border-border bg-background text-foreground rounded-lg",
                       "hover:border-accent focus:border-primary focus:outline-hidden transition-all",
@@ -6108,10 +6116,7 @@ ${printWatermark ? printWatermark.html : ''}
 
                   {/* Action buttons - show when focused or has text */}
                   {(isQuickReplyFocused || quickReplyText) && (
-                    <div className="flex flex-wrap items-center justify-between gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                      <div className="text-xs text-muted-foreground">
-                        {t('characters_count', { count: quickReplyText.length })}
-                      </div>
+                    <div className="flex flex-wrap items-center justify-end gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
                       <div className="flex flex-wrap items-center gap-2 min-w-0">
                         <Button
                           variant="ghost"
@@ -6134,9 +6139,10 @@ ${printWatermark ? printWatermark.html : ''}
                           }}
                           disabled={isSendingQuickReply}
                           className="text-muted-foreground"
+                          data-testid="quick-reply-full-editor"
                         >
-                          <MoreVertical className="w-4 h-4 me-1" />
-                          {t('more_options')}
+                          <Maximize2 className="w-4 h-4 me-1" />
+                          {tWords('open_full_editor')}
                         </Button>
                         <QuickReplyPluginActions
                           key={JSON.stringify([email.id, activeAccountId, email.sourceClientAccountId, email.sourceAccountId])}

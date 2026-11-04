@@ -6396,7 +6396,9 @@
     "require_tls": "仅通过安全连接投递",
     "require_tls_hint": "邮件本身不会加密。如果服务器无法使用 TLS，邮件会被退回。",
     "encrypt": "加密…",
-    "encrypt_hint": "需要 S/MIME 或 PGP 附加组件。将打开设置。"
+    "encrypt_hint": "需要 S/MIME 或 PGP 附加组件。将打开设置。",
+    "quick_reply_to": "回复 {names}…",
+    "open_full_editor": "在完整编辑器中打开"
   },
   "plugin_list": {
     "filters": "筛选",

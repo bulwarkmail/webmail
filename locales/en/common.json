@@ -6396,7 +6396,9 @@
     "require_tls": "Only deliver over a secure connection",
     "require_tls_hint": "The message itself isn't encrypted. It bounces if a server can't use TLS.",
     "encrypt": "Encrypt…",
-    "encrypt_hint": "Needs an S/MIME or PGP add-on. Opens Settings."
+    "encrypt_hint": "Needs an S/MIME or PGP add-on. Opens Settings.",
+    "quick_reply_to": "Reply to {names}…",
+    "open_full_editor": "Open full editor"
   },
   "plugin_list": {
     "filters": "Filters",

@@ -42,7 +42,7 @@ beforeEach(() => clearAllHooks());
 async function typeAndSend(onQuickReply: (body: string) => Promise<boolean | void>) {
   render(<EmailViewer email={message} isLoading={false} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onQuickReply={onQuickReply} />);
   await act(async () => { await new Promise((r) => setTimeout(r, 10)); });
-  const box = screen.getByPlaceholderText('quick_reply_placeholder') as HTMLTextAreaElement;
+  const box = screen.getByPlaceholderText('quick_reply_to') as HTMLTextAreaElement;
   fireEvent.focus(box);
   fireEvent.change(box, { target: { value: 'My answer' } });
   fireEvent.click(screen.getByRole('button', { name: 'send' }));
@@ -77,7 +77,7 @@ describe('automatic sign-out while the external recipient question is open', () 
     render(<EmailViewer email={message} isLoading={false} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox"
       onQuickReply={onQuickReply} onSaveQuickReplyDraft={onSaveQuickReplyDraft} />);
     await act(async () => { await new Promise((r) => setTimeout(r, 10)); });
-    const box = screen.getByPlaceholderText('quick_reply_placeholder') as HTMLTextAreaElement;
+    const box = screen.getByPlaceholderText('quick_reply_to') as HTMLTextAreaElement;
     fireEvent.focus(box);
     fireEvent.change(box, { target: { value: 'My answer' } });
     fireEvent.click(screen.getByRole('button', { name: 'send' }));

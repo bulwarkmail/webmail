@@ -6396,7 +6396,9 @@
     "require_tls": "Doručit jen přes zabezpečené spojení",
     "require_tls_hint": "Samotná zpráva šifrovaná není. Vrátí se, pokud server nemůže použít TLS.",
     "encrypt": "Šifrovat…",
-    "encrypt_hint": "Vyžaduje doplněk S/MIME nebo PGP. Otevře Nastavení."
+    "encrypt_hint": "Vyžaduje doplněk S/MIME nebo PGP. Otevře Nastavení.",
+    "quick_reply_to": "Odpověď pro {names}…",
+    "open_full_editor": "Otevřít v plném editoru"
   },
   "plugin_list": {
     "filters": "Filtry",

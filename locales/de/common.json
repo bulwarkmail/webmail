@@ -6396,7 +6396,9 @@
     "require_tls": "Nur über eine sichere Verbindung zustellen",
     "require_tls_hint": "Die Nachricht selbst wird nicht verschlüsselt. Sie kommt zurück, wenn ein Server kein TLS nutzen kann.",
     "encrypt": "Verschlüsseln…",
-    "encrypt_hint": "Dafür brauchen Sie eine S/MIME- oder PGP-Erweiterung. Öffnet die Einstellungen."
+    "encrypt_hint": "Dafür brauchen Sie eine S/MIME- oder PGP-Erweiterung. Öffnet die Einstellungen.",
+    "quick_reply_to": "Antwort an {names}…",
+    "open_full_editor": "Im vollen Editor öffnen"
   },
   "plugin_list": {
     "filters": "Filter",

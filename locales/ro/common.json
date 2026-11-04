@@ -6396,7 +6396,9 @@
     "require_tls": "Livrează doar printr-o conexiune sigură",
     "require_tls_hint": "Mesajul în sine nu este criptat. Este returnat dacă un server nu poate folosi TLS.",
     "encrypt": "Criptează…",
-    "encrypt_hint": "Necesită un supliment S/MIME sau PGP. Deschide Setările."
+    "encrypt_hint": "Necesită un supliment S/MIME sau PGP. Deschide Setările.",
+    "quick_reply_to": "Răspuns către {names}…",
+    "open_full_editor": "Deschide în editorul complet"
   },
   "plugin_list": {
     "filters": "Filtre",

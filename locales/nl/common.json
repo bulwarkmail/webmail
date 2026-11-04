@@ -6396,7 +6396,9 @@
     "require_tls": "Alleen via een beveiligde verbinding bezorgen",
     "require_tls_hint": "Het bericht zelf is niet versleuteld. Het komt terug als een server geen TLS kan gebruiken.",
     "encrypt": "Versleutelen…",
-    "encrypt_hint": "Vereist een S/MIME- of PGP-add-on. Opent Instellingen."
+    "encrypt_hint": "Vereist een S/MIME- of PGP-add-on. Opent Instellingen.",
+    "quick_reply_to": "Antwoord aan {names}…",
+    "open_full_editor": "Openen in volledige editor"
   },
   "plugin_list": {
     "filters": "Filters",

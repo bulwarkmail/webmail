@@ -6396,7 +6396,9 @@
     "require_tls": "보안 연결로만 배달",
     "require_tls_hint": "메시지 자체는 암호화되지 않습니다. 서버가 TLS를 사용할 수 없으면 반송됩니다.",
     "encrypt": "암호화…",
-    "encrypt_hint": "S/MIME 또는 PGP 추가 기능이 필요합니다. 설정을 엽니다."
+    "encrypt_hint": "S/MIME 또는 PGP 추가 기능이 필요합니다. 설정을 엽니다.",
+    "quick_reply_to": "{names}에게 답장…",
+    "open_full_editor": "전체 편집기에서 열기"
   },
   "plugin_list": {
     "filters": "필터",

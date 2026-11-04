@@ -6396,7 +6396,9 @@
     "require_tls": "Lever bare over en sikker tilkobling",
     "require_tls_hint": "Selve meldingen er ikke kryptert. Den sendes i retur hvis en server ikke kan bruke TLS.",
     "encrypt": "Krypter…",
-    "encrypt_hint": "Krever et S/MIME- eller PGP-tillegg. Åpner Innstillinger."
+    "encrypt_hint": "Krever et S/MIME- eller PGP-tillegg. Åpner Innstillinger.",
+    "quick_reply_to": "Svar til {names}…",
+    "open_full_editor": "Åpne i full redigering"
   },
   "plugin_list": {
     "filters": "Filtre",

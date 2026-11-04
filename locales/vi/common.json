@@ -6408,7 +6408,9 @@
     "require_tls": "Chỉ gửi qua kết nối an toàn",
     "require_tls_hint": "Bản thân thư không được mã hóa. Thư sẽ bị trả lại nếu máy chủ không dùng được TLS.",
     "encrypt": "Mã hóa…",
-    "encrypt_hint": "Cần tiện ích S/MIME hoặc PGP. Mở Cài đặt."
+    "encrypt_hint": "Cần tiện ích S/MIME hoặc PGP. Mở Cài đặt.",
+    "quick_reply_to": "Trả lời {names}…",
+    "open_full_editor": "Mở trong trình soạn thảo đầy đủ"
   },
   "plugin_list": {
     "filters": "Bộ lọc",

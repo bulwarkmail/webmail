@@ -6396,7 +6396,9 @@
     "require_tls": "Lliura només per una connexió segura",
     "require_tls_hint": "El missatge en si no està xifrat. Es retorna si un servidor no pot fer servir TLS.",
     "encrypt": "Xifra…",
-    "encrypt_hint": "Cal un complement S/MIME o PGP. Obre la configuració."
+    "encrypt_hint": "Cal un complement S/MIME o PGP. Obre la configuració.",
+    "quick_reply_to": "Respon a {names}…",
+    "open_full_editor": "Obre l'editor complet"
   },
   "plugin_list": {
     "filters": "Filtres",

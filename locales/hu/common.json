@@ -6396,7 +6396,9 @@
     "require_tls": "Kézbesítés csak biztonságos kapcsolaton át",
     "require_tls_hint": "Maga az üzenet nincs titkosítva. Visszapattan, ha egy szerver nem tud TLS-t használni.",
     "encrypt": "Titkosítás…",
-    "encrypt_hint": "S/MIME vagy PGP bővítmény kell hozzá. Megnyitja a Beállításokat."
+    "encrypt_hint": "S/MIME vagy PGP bővítmény kell hozzá. Megnyitja a Beállításokat.",
+    "quick_reply_to": "Válasz neki: {names}…",
+    "open_full_editor": "Megnyitás a teljes szerkesztőben"
   },
   "plugin_list": {
     "filters": "Szűrők",

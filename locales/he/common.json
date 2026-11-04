@@ -6397,7 +6397,9 @@
     "require_tls": "מסירה רק דרך חיבור מאובטח",
     "require_tls_hint": "ההודעה עצמה אינה מוצפנת. היא תוחזר אם שרת לא יכול להשתמש ב-TLS.",
     "encrypt": "הצפנה…",
-    "encrypt_hint": "דורש תוסף S/MIME או PGP. פותח את ההגדרות."
+    "encrypt_hint": "דורש תוסף S/MIME או PGP. פותח את ההגדרות.",
+    "quick_reply_to": "תשובה אל {names}…",
+    "open_full_editor": "פתיחה בעורך המלא"
   },
   "plugin_list": {
     "filters": "מסננים",

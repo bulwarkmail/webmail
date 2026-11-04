@@ -6396,7 +6396,9 @@
     "require_tls": "Entregar solo por una conexión segura",
     "require_tls_hint": "El mensaje en sí no se cifra. Se devuelve si un servidor no puede usar TLS.",
     "encrypt": "Cifrar…",
-    "encrypt_hint": "Necesita un complemento S/MIME o PGP. Abre la Configuración."
+    "encrypt_hint": "Necesita un complemento S/MIME o PGP. Abre la Configuración.",
+    "quick_reply_to": "Responder a {names}…",
+    "open_full_editor": "Abrir el editor completo"
   },
   "plugin_list": {
     "filters": "Filtros",

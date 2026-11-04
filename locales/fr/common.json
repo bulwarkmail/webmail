@@ -6396,7 +6396,9 @@
     "require_tls": "Livrer uniquement par une connexion sécurisée",
     "require_tls_hint": "Le message lui-même n'est pas chiffré. Il est renvoyé si un serveur ne peut pas utiliser TLS.",
     "encrypt": "Chiffrer…",
-    "encrypt_hint": "Nécessite une extension S/MIME ou PGP. Ouvre les Paramètres."
+    "encrypt_hint": "Nécessite une extension S/MIME ou PGP. Ouvre les Paramètres.",
+    "quick_reply_to": "Répondre à {names}…",
+    "open_full_editor": "Ouvrir l'éditeur complet"
   },
   "plugin_list": {
     "filters": "Filtres",

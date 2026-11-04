@@ -6396,7 +6396,9 @@
     "require_tls": "Doręczaj tylko przez bezpieczne połączenie",
     "require_tls_hint": "Sama wiadomość nie jest szyfrowana. Zostanie zwrócona, jeśli serwer nie może użyć TLS.",
     "encrypt": "Zaszyfruj…",
-    "encrypt_hint": "Wymaga dodatku S/MIME lub PGP. Otwiera Ustawienia."
+    "encrypt_hint": "Wymaga dodatku S/MIME lub PGP. Otwiera Ustawienia.",
+    "quick_reply_to": "Odpowiedź do: {names}…",
+    "open_full_editor": "Otwórz w pełnym edytorze"
   },
   "plugin_list": {
     "filters": "Filtry",

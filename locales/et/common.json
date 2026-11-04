@@ -6396,7 +6396,9 @@
     "require_tls": "Toimeta kohale ainult turvalise ühenduse kaudu",
     "require_tls_hint": "Kiri ise ei ole krüpteeritud. See tuleb tagasi, kui server ei saa TLS-i kasutada.",
     "encrypt": "Krüpteeri…",
-    "encrypt_hint": "Vajab S/MIME või PGP lisa. Avab seaded."
+    "encrypt_hint": "Vajab S/MIME või PGP lisa. Avab seaded.",
+    "quick_reply_to": "Vastus saajale {names}…",
+    "open_full_editor": "Ava täielik redaktor"
   },
   "plugin_list": {
     "filters": "Filtrid",
