@@ -7665,6 +7665,14 @@
     "types_character": "Ces touches produisent un caractère sur votre clavier, et il ne fonctionnerait plus dans aucune application. Essayez d'autres touches.",
     "reserved": "Votre système ou la plupart des applications utilisent ces touches. Essayez d'autres touches."
   },
+  "desktopAttachRecent": {
+    "heading": "Fichiers récents",
+    "browse": "Parcourir cet ordinateur…",
+    "from_files": "Depuis Fichiers…",
+    "missing": "« {name} » n'existe plus.",
+    "too_large": "« {name} » dépasse {max} et ne peut pas être joint.",
+    "failed": "Impossible de joindre « {name} ». Réessayez."
+  },
   "compose_windows": {
     "more_formatting": "Plus de mise en forme",
     "offline": "Hors ligne",

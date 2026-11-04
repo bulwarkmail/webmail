@@ -188,7 +188,11 @@ import { fileStorage } from "@/lib/plugin-storage";
 import { usePolicyStore } from "@/stores/policy-store";
 import { isAppLockedNow } from "@/lib/app-lock/state";
 import { registerComposeFlush, registerComposeSnapshot } from "@/lib/compose-flush-registry";
-import { getDesktopBridge } from "@/lib/desktop/bridge";
+import { getDesktopBridge, isDesktopApp } from "@/lib/desktop/bridge";
+import { useDesktopPolicy } from "@/lib/desktop/policy";
+import { readRecentFile, RECENT_FILE_MAX_BYTES, recentFilesOffered } from "@/lib/desktop/recent-files";
+import type { DesktopRecentFile } from "@/lib/desktop/types";
+import { RecentFilesMenuSection } from "@/components/email/recent-files-menu-section";
 import { useDesktopCommands } from "@/lib/desktop/commands";
 import { noteComposerLanguage } from "@/lib/desktop/languages";
 import { noteOpenDraft } from "@/lib/desktop/window-restore";
@@ -650,6 +654,7 @@ export function EmailComposer({
   const tEdit = useTranslations('desktopEdit');
   const tOfflineDrafts = useTranslations('offlineDrafts');
   const tOffline = useTranslations('offline');
+  const tRecent = useTranslations('desktopAttachRecent');
   const tOfflineNotes = useTranslations('offlineConflicts');
   const tSendGuards = useTranslations('send_guards');
   const tWords = useTranslations('compose_words');
@@ -2777,6 +2782,21 @@ export function EmailComposer({
     attachedInitialFiles.add(initialFiles);
     void addFiles(initialFiles, { handedIn: true });
   }, [client, initialFiles, addFiles]);
+
+  // The Attach menu's recent files, in the desktop app (lib/desktop/recent-files.ts). The
+  // shell reads the file; from there it's a file like one from the file dialog.
+  const desktopPolicy = useDesktopPolicy();
+  const recentOffered = recentFilesOffered(desktopPolicy);
+  const attachRecentFile = useCallback(async (file: DesktopRecentFile) => {
+    const result = await readRecentFile(file.id);
+    if (result.ok) {
+      await addFiles([result.file]);
+      return;
+    }
+    if (result.reason === 'missing') toast.error(tRecent('missing', { name: file.name }));
+    else if (result.reason === 'too-large') toast.error(tRecent('too_large', { name: file.name, max: formatFileSize(RECENT_FILE_MAX_BYTES) }));
+    else if (result.reason === 'failed') toast.error(tRecent('failed', { name: file.name }));
+  }, [addFiles, tRecent]);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files) return;
@@ -5890,14 +5910,19 @@ export function EmailComposer({
               className="hidden"
               accept="*/*"
             />
-            {(filesEnabled && composerClient?.supportsFiles?.()) || hasAttachMenuActions ? (
+            {recentOffered || (filesEnabled && composerClient?.supportsFiles?.()) || hasAttachMenuActions ? (
               <ComposerToolbarMenu icon={Paperclip} label={t('attach')} testId="composer-attach-menu">
                 {(close) => <>
+                  {/* As Outlook's: the recent files first, one click attaches one and closes. */}
+                  {recentOffered && (
+                    <RecentFilesMenuSection onPick={(file) => { close(); void attachRecentFile(file); }} />
+                  )}
                   <ComposerToolbarMenuItem
                     icon={Upload}
                     onSelect={() => { close(); fileInputRef.current?.click(); }}
+                    testId="composer-attach-from-device"
                   >
-                    {t('attach_from_device')}
+                    {isDesktopApp() ? tRecent('browse') : t('attach_from_device')}
                   </ComposerToolbarMenuItem>
                   {filesEnabled && composerClient?.supportsFiles?.() && (
                     <ComposerToolbarMenuItem
@@ -5905,7 +5930,7 @@ export function EmailComposer({
                       onSelect={() => { close(); setFilesPicker({ client: composerClient, accountId: composerAccountId }); }}
                       testId="composer-attach-from-files"
                     >
-                      {t('attach_from_files')}
+                      {isDesktopApp() ? tRecent('from_files') : t('attach_from_files')}
                     </ComposerToolbarMenuItem>
                   )}
                   <ComposerPluginMenuItems surface="composer-attach-menu" context={composerActionContext} onSelect={close} separator />

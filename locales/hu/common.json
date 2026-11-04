@@ -7665,6 +7665,14 @@
     "types_character": "Ezek a billentyűk karaktert írnak az Ön billentyűzetén, amely többé egyik alkalmazásban sem működne. Próbáljon más billentyűket.",
     "reserved": "Ezeket a billentyűket a rendszer vagy a legtöbb alkalmazás használja. Próbáljon más billentyűket."
   },
+  "desktopAttachRecent": {
+    "heading": "Legutóbbi fájlok",
+    "browse": "A számítógép tallózása…",
+    "from_files": "A Fájlokból…",
+    "missing": "A(z) „{name}” már nem létezik.",
+    "too_large": "A(z) „{name}” nagyobb, mint {max}, ezért nem csatolható.",
+    "failed": "A(z) „{name}” csatolása nem sikerült. Próbálja újra."
+  },
   "compose_windows": {
     "more_formatting": "További formázás",
     "offline": "Offline",

@@ -7665,6 +7665,14 @@
     "types_character": "Need klahvid kirjutavad teie klaviatuuril märgi, mis lakkaks kõigis rakendustes töötamast. Proovige teisi klahve.",
     "reserved": "Neid klahve kasutab süsteem või enamik rakendusi. Proovige teisi klahve."
   },
+  "desktopAttachRecent": {
+    "heading": "Viimati kasutatud failid",
+    "browse": "Sirvi seda arvutit…",
+    "from_files": "Failidest…",
+    "missing": "„{name}” pole enam olemas.",
+    "too_large": "„{name}” on suurem kui {max} ja seda ei saa lisada.",
+    "failed": "Faili „{name}” ei saanud lisada. Proovi uuesti."
+  },
   "compose_windows": {
     "more_formatting": "Rohkem vormindust",
     "offline": "Võrguta",

@@ -7665,6 +7665,14 @@
     "types_character": "這些鍵在您的鍵盤上會輸入一個字元，占用後該字元在所有應用程式中都無法輸入。請試試其他按鍵。",
     "reserved": "系統或大多數應用程式正在使用這些鍵。請試試其他按鍵。"
   },
+  "desktopAttachRecent": {
+    "heading": "最近的檔案",
+    "browse": "瀏覽這部電腦…",
+    "from_files": "從檔案…",
+    "missing": "「{name}」已不存在。",
+    "too_large": "「{name}」超過 {max}，無法附加。",
+    "failed": "無法附加「{name}」。請再試一次。"
+  },
   "compose_windows": {
     "more_formatting": "更多格式",
     "offline": "離線",

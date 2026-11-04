@@ -7665,6 +7665,14 @@
     "types_character": "Šie taustiņi jūsu tastatūrā raksta rakstzīmi, kas pārstātu darboties visās lietotnēs. Izmēģiniet citus taustiņus.",
     "reserved": "Šos taustiņus izmanto sistēma vai lielākā daļa lietotņu. Izmēģiniet citus taustiņus."
   },
+  "desktopAttachRecent": {
+    "heading": "Nesen izmantotie faili",
+    "browse": "Pārlūkot šo datoru…",
+    "from_files": "No Failiem…",
+    "missing": "“{name}” vairs nav pieejams.",
+    "too_large": "“{name}” ir lielāks par {max}, un to nevar pievienot.",
+    "failed": "Neizdevās pievienot “{name}”. Mēģiniet vēlreiz."
+  },
   "compose_windows": {
     "more_formatting": "Vairāk formatēšanas",
     "offline": "Bezsaistē",

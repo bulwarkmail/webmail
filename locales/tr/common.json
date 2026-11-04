@@ -7665,6 +7665,14 @@
     "types_character": "Bu tuşlar klavyenizde bir karakter yazar ve bu karakter hiçbir uygulamada çalışmaz olur. Başka tuşlar deneyin.",
     "reserved": "Bu tuşları sisteminiz veya çoğu uygulama kullanıyor. Başka tuşlar deneyin."
   },
+  "desktopAttachRecent": {
+    "heading": "Son dosyalar",
+    "browse": "Bu bilgisayara göz at…",
+    "from_files": "Dosyalar'dan…",
+    "missing": "\"{name}\" artık yok.",
+    "too_large": "\"{name}\" {max} boyutundan büyük ve eklenemez.",
+    "failed": "\"{name}\" eklenemedi. Yeniden deneyin."
+  },
   "compose_windows": {
     "more_formatting": "Daha fazla biçimlendirme",
     "offline": "Çevrimdışı",

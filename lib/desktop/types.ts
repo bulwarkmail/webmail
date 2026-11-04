@@ -752,6 +752,39 @@ export interface DesktopDevToolsBridge {
   onChange: (listener: (state: DesktopDevToolsState) => void) => () => void;
 }
 
+/** One of the user's recently used files, as the Attach menu shows it. Nothing more of it reaches the page. */
+export interface DesktopRecentFile {
+  /** Opaque. `attach` takes it, from the window that listed it, until that window lists again. */
+  id: string;
+  name: string;
+  /** The folder it's in, for display. */
+  folder: string;
+  /** The whole path, for a tooltip. */
+  path: string;
+  /** When it was last used, in milliseconds since 1970. */
+  usedAt: number;
+  /** A small icon as a data: URL, when the OS gave one in time. */
+  icon?: string;
+}
+
+/** `gesture`: no click or key press just now. `policy`: RecentFilesInAttach is off. */
+export type DesktopRecentFilesResult =
+  | { ok: true; files: DesktopRecentFile[] }
+  | { ok: false; reason: 'policy' | 'locked' | 'gesture' };
+
+export type DesktopRecentFileAttachResult =
+  | { ok: true; file: DesktopOsFile }
+  | { ok: false; reason: 'policy' | 'locked' | 'gesture' | 'unknown' | 'missing' | 'too-large' | 'failed' };
+
+/**
+ * The files the OS says were used last, for the composer's Attach menu. Main wants a click
+ * or key press of its own for each call, reads only a file it just listed, and never logs.
+ */
+export interface DesktopRecentFilesBridge {
+  list: () => Promise<DesktopRecentFilesResult>;
+  attach: (id: string) => Promise<DesktopRecentFileAttachResult>;
+}
+
 /** An attachment copied to a private folder and open in its default program. */
 export interface DesktopEditSession {
   id: string;
@@ -874,6 +907,8 @@ export interface BulwarkDesktopBridge {
   edit?: DesktopEditBridge;
   /** Absent on older shells. */
   devTools?: DesktopDevToolsBridge;
+  /** Absent on older shells. */
+  recentFiles?: DesktopRecentFilesBridge;
 }
 
 declare global {

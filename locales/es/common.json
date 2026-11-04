@@ -7665,6 +7665,14 @@
     "types_character": "Estas teclas escriben un carácter en tu teclado, y dejaría de funcionar en todas las aplicaciones. Prueba otras teclas.",
     "reserved": "Tu sistema o la mayoría de las aplicaciones usan estas teclas. Prueba otras teclas."
   },
+  "desktopAttachRecent": {
+    "heading": "Archivos recientes",
+    "browse": "Examinar este equipo…",
+    "from_files": "Desde Archivos…",
+    "missing": "\"{name}\" ya no existe.",
+    "too_large": "\"{name}\" supera {max} y no se puede adjuntar.",
+    "failed": "No se pudo adjuntar \"{name}\". Inténtalo de nuevo."
+  },
   "compose_windows": {
     "more_formatting": "Más formato",
     "offline": "Sin conexión",

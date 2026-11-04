@@ -32,7 +32,7 @@ describe('the schema', () => {
       'PluginsMode', 'PluginAllowlist', 'OfflineEnabled', 'AppLockRequired', 'AppLockTimeoutMinutes', 'TelemetryAllowed',
       'CrashReportsAllowed', 'QuickComposeShortcut', 'AuthServerAllowlist', 'AuthNegotiateDelegateAllowlist',
       'AutoSelectCertificateForUrls', 'KeystoreEnabled', 'KeystoreAllowedOrigins', 'BrowserSignIn', 'WipeOfflineData',
-      'OpenWithEnabled', 'DeveloperToolsAvailability',
+      'OpenWithEnabled', 'DeveloperToolsAvailability', 'RecentFilesInAttach',
     ]);
     for (const key of POLICY_KEYS) {
       const { title, description } = POLICY_SCHEMA[key];
@@ -55,6 +55,13 @@ describe('developer tools and Open with', () => {
     expect(resolvePolicies(layers({ recommendedUser: { OpenWithEnabled: 0 } })).OpenWithEnabled).toMatchObject({ value: true, locked: false });
     expect(resolvePolicies(layers({ forcedMachine: { OpenWithEnabled: 0 } })).OpenWithEnabled).toMatchObject({ value: false, locked: true });
     expect(resolvePolicies(layers({ forcedMachine: { OpenWithEnabled: 'maybe' } })).OpenWithEnabled).toMatchObject({ value: false, locked: true });
+  });
+
+  it('hide recent files in the Attach menu only by force, and a value nobody can read hides them', () => {
+    expect(resolvePolicies(layers({})).RecentFilesInAttach).toMatchObject({ value: true, locked: false });
+    expect(resolvePolicies(layers({ recommendedMachine: { RecentFilesInAttach: 0 } })).RecentFilesInAttach).toMatchObject({ value: true, locked: false });
+    expect(resolvePolicies(layers({ forcedUser: { RecentFilesInAttach: 0 } })).RecentFilesInAttach).toMatchObject({ value: false, locked: true });
+    expect(resolvePolicies(layers({ forcedMachine: { RecentFilesInAttach: 'yes please' } })).RecentFilesInAttach).toMatchObject({ value: false, locked: true });
   });
 });
 
