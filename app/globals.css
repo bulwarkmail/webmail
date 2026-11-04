@@ -1663,6 +1663,14 @@ html[data-window-controls-left] [data-window-rail] {
   outline-offset: -2px;
 }
 
+/* Right to left, a row's hover actions sit at its left end, where an English
+   subject starts: its text keeps clear of them while they show, by the strip's
+   width (set by components/email/email-hover-actions.tsx) and the room the
+   strip keeps off the edge, instead of lying under them (mail-p3-10). */
+html[dir="rtl"] [data-menu-row][data-hover-actions-shown] > [data-row-text] {
+  padding-inline-end: calc(var(--row-actions-w, 0px) + var(--focus-ring-width, 2px));
+}
+
 /* A menu opened under the pointer: the item there isn't hovered until the pointer moves. */
 [data-pointer-unarmed] :is([role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"]):hover {
   background-color: transparent;
