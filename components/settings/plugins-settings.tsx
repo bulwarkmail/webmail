@@ -15,6 +15,8 @@ import { PluginPermissionList } from '@/components/plugins/plugin-permission-lis
 import type { InstalledPlugin, PluginStatus, SettingFieldSchema } from '@/lib/plugin-types';
 import { effectiveSettings } from '@/lib/plugin-settings';
 import { PLUGIN_REFUSED_ERROR } from '@/lib/outgoing-hosts';
+import { PLUGIN_POLICY_REFUSED_ERROR, pluginUploadsAllowedByDesktopPolicy, useDesktopPolicy } from '@/lib/desktop/policy';
+import { OrgLockedNote } from './org-locked-note';
 import { lookup } from '@/lib/plugin-sandbox/plugin-i18n';
 import { forgetCredentials, listConnectedAccounts, type ConnectedAccount } from '@/lib/plugin-sandbox/connect-dialog';
 import { forwardApprovals, revokeForwardApproval } from '@/lib/plugin-sandbox/forward-approvals';
@@ -35,6 +37,8 @@ export function PluginsSettings() {
   const { plugins, installPlugin, uninstallPlugin, enablePlugin, disablePlugin, updatePluginSettings, initializePlugins, initialized } = usePluginStore();
   const { isFeatureEnabled, isPluginForceEnabled, fetchPolicy, loaded } = usePolicyStore();
   const { demoMode } = useConfig();
+  const tDevicePolicyPage = useTranslations('desktop_policy');
+  const devicePolicy = useDesktopPolicy();
   const [expandedPlugin, setExpandedPlugin] = useState<string | null>(null);
   const [installing, setInstalling] = useState(false);
   const [installError, setInstallError] = useState<string | null>(null);
@@ -64,7 +68,7 @@ export function PluginsSettings() {
     return null;
   }
 
-  const uploadsAllowed = isFeatureEnabled('pluginsUploadEnabled') && !demoMode;
+  const uploadsAllowed = isFeatureEnabled('pluginsUploadEnabled') && !demoMode && pluginUploadsAllowedByDesktopPolicy(devicePolicy);
   const requireApproval = isFeatureEnabled('requirePluginApproval');
 
   const handleToggle = async (plugin: InstalledPlugin) => {
@@ -97,7 +101,8 @@ export function PluginsSettings() {
       const result = await installPlugin(file);
       if (!result.success) {
         setInstallError(
-          result.reason === 'uploads-disabled' ? t('install_uploads_off')
+          result.reason === 'device-policy' ? tDevicePolicyPage('install_refused')
+            : result.reason === 'uploads-disabled' ? t('install_uploads_off')
             : result.reason === 'managed-id' ? t('install_managed_id')
             : t('install_invalid', { details: result.error ?? '' }),
         );
@@ -118,6 +123,14 @@ export function PluginsSettings() {
       title={t('title')}
       description={demoMode ? t('description_demo') : uploadsAllowed ? t('description_uploads') : t('description')}
     >
+      {devicePolicy.PluginsMode.locked && devicePolicy.PluginsMode.value !== 'allowed' && (
+        <div className="py-2" data-testid="plugins-device-policy">
+          <p className="text-sm text-muted-foreground">
+            {tDevicePolicyPage(devicePolicy.PluginsMode.value === 'off' ? 'plugins_off' : 'plugins_allowlist')}
+          </p>
+          <OrgLockedNote className="mt-1" />
+        </div>
+      )}
       {uploadsAllowed && (
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -216,12 +229,14 @@ interface PluginCardProps {
 function PluginCard({ plugin, isExpanded, isForceEnabled, controlsDisabled, onToggleExpand, onToggle, onRemove, onUpdateSettings }: PluginCardProps) {
   const t = useTranslations('plugins.settings');
   const tThirdParty = useTranslations('third_party');
+  const tDevicePolicy = useTranslations('desktop_policy');
   const locale = useLocale();
   const isManaged = Boolean(plugin.managed);
   const awaiting = !isManaged && plugin.approvalStatus === 'pending';
   const denied = !isManaged && plugin.approvalStatus === 'denied';
   const errorText = plugin.error
-    ? plugin.error === PLUGIN_REFUSED_ERROR ? tThirdParty('plugin_refused')
+    ? plugin.error === PLUGIN_POLICY_REFUSED_ERROR ? tDevicePolicy('plugin_refused')
+      : plugin.error === PLUGIN_REFUSED_ERROR ? tThirdParty('plugin_refused')
       : ERROR_CODES.has(plugin.error) ? t(`error_${plugin.error.replace(/-/g, '_')}`) : plugin.error
     : null;
 
@@ -242,9 +257,12 @@ function PluginCard({ plugin, isExpanded, isForceEnabled, controlsDisabled, onTo
         >
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="truncate text-sm font-medium text-foreground">{plugin.name}</span>
-            <span className={cn('rounded-full px-1.5 py-0.5 text-[0.625rem] font-medium', STATUS_COLORS[plugin.status])}>
-              {t(`status_${plugin.status}`)}
-            </span>
+            {/* The switch says on or off; only a problem gets a word of its own. */}
+            {plugin.status === 'error' && (
+              <span className={cn('rounded-full px-1.5 py-0.5 text-[0.625rem] font-medium', STATUS_COLORS.error)}>
+                {t('status_error')}
+              </span>
+            )}
             {isForceEnabled && (
               <span className="flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[0.625rem] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                 <Lock className="h-2.5 w-2.5" /> {t('badge_forced')}
@@ -264,6 +282,9 @@ function PluginCard({ plugin, isExpanded, isForceEnabled, controlsDisabled, onTo
               </span>
             )}
           </div>
+          {plugin.description && (
+            <p data-testid="plugin-description" className="mt-0.5 line-clamp-2 text-xs text-foreground/80">{plugin.description}</p>
+          )}
           <div className="mt-0.5 flex items-center gap-2">
             <span className="truncate text-xs text-muted-foreground">{plugin.author}</span>
             <span className="text-xs text-muted-foreground">v{plugin.version}</span>
@@ -284,8 +305,6 @@ function PluginCard({ plugin, isExpanded, isForceEnabled, controlsDisabled, onTo
         <div className="space-y-3 border-t border-border p-3">
           {isForceEnabled && <p className="text-xs text-amber-600 dark:text-amber-400">{t('forced_note')}</p>}
 
-          {plugin.description && <p className="text-xs text-muted-foreground">{plugin.description}</p>}
-
           {errorText && (
             <div className="flex items-start gap-2 rounded bg-destructive/10 p-2 text-xs text-destructive">
               <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
@@ -294,7 +313,7 @@ function PluginCard({ plugin, isExpanded, isForceEnabled, controlsDisabled, onTo
           )}
 
           <div>
-            <span className="text-xs font-medium text-foreground">
+            <span className="block text-xs font-medium text-foreground">
               {isManaged ? t('permissions_managed') : t('permissions')}
             </span>
             <div className="mt-1.5">
@@ -309,7 +328,7 @@ function PluginCard({ plugin, isExpanded, isForceEnabled, controlsDisabled, onTo
 
           {plugin.settingsSchema && Object.keys(plugin.settingsSchema).length > 0 && (
             <div className="space-y-2">
-              <span className="text-xs font-medium text-foreground">{t('settings')}</span>
+              <span className="block text-xs font-medium text-foreground">{t('settings')}</span>
               {Object.entries(plugin.settingsSchema).map(([key, schema]) => (
                 <PluginSettingField
                   key={key}
@@ -441,8 +460,8 @@ function PluginSettingField({ fieldKey, schema: raw, value, onChange, translate 
     case 'boolean':
       return (
         <div data-search-label={schema.label} className="flex items-center justify-between gap-3">
-          <div>
-            <span className="text-xs text-foreground">{schema.label}</span>
+          <div className="flex-1 min-w-0">
+            <span className="block text-xs text-foreground">{schema.label}</span>
             {schema.description && <p className="text-[0.625rem] text-muted-foreground">{schema.description}</p>}
           </div>
           <ToggleSwitch checked={value as boolean} onChange={(v) => onChange(v)} ariaLabel={schema.label} />
@@ -451,16 +470,16 @@ function PluginSettingField({ fieldKey, schema: raw, value, onChange, translate 
 
     case 'select':
       return (
-        <div data-search-label={schema.label} className="flex items-center justify-between gap-3">
-          <div>
-            <label htmlFor={inputId} className="text-xs text-foreground">{schema.label}</label>
+        <div data-search-label={schema.label} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <div className="flex-1 min-w-40">
+            <label htmlFor={inputId} className="block text-xs text-foreground">{schema.label}</label>
             {schema.description && <p className="text-[0.625rem] text-muted-foreground">{schema.description}</p>}
           </div>
           <select
             id={inputId}
             value={String(value)}
             onChange={(e) => onChange(e.target.value)}
-            className="rounded border border-border bg-background px-2 py-1 text-xs text-foreground"
+            className="max-w-full rounded border border-border bg-background px-2 py-1 text-xs text-foreground"
           >
             {(Array.isArray(schema.options) ? schema.options : []).map(opt => (
               <option key={opt} value={opt}>{translate(opt)}</option>
@@ -472,7 +491,7 @@ function PluginSettingField({ fieldKey, schema: raw, value, onChange, translate 
     case 'string':
       return (
         <div data-search-label={schema.label}>
-          <label htmlFor={inputId} className="text-xs text-foreground">{schema.label}</label>
+          <label htmlFor={inputId} className="block text-xs text-foreground">{schema.label}</label>
           {schema.description && <p className="text-[0.625rem] text-muted-foreground">{schema.description}</p>}
           <input
             id={inputId}
@@ -486,9 +505,9 @@ function PluginSettingField({ fieldKey, schema: raw, value, onChange, translate 
 
     case 'number':
       return (
-        <div data-search-label={schema.label} className="flex items-center justify-between gap-3">
-          <div>
-            <label htmlFor={inputId} className="text-xs text-foreground">{schema.label}</label>
+        <div data-search-label={schema.label} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <div className="flex-1 min-w-40">
+            <label htmlFor={inputId} className="block text-xs text-foreground">{schema.label}</label>
             {schema.description && <p className="text-[0.625rem] text-muted-foreground">{schema.description}</p>}
           </div>
           <input

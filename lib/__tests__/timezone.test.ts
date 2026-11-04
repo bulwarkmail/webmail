@@ -239,4 +239,15 @@ describe('mail timestamp formatting honours the override', () => {
     expect(formatDate(older, { dateFormat: 'full', dateLocale: 'iso' })).toContain('15:31');
     expect(useSettingsStore.getState()).toMatchObject({ dateFormat: 'smart', dateLocale: 'en-US' });
   });
+
+  // mail-16: search results and older rows read "May 1", not "05/01/2026".
+  it('formatDate shows day and month for earlier this year when the date order follows the language', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-01T16:00:00Z'));
+    useSettingsStore.setState({ dateFormat: 'smart', dateLocale: 'auto', timeZone: 'UTC' });
+
+    expect(formatDate(new Date('2026-05-01T15:31:00Z'))).toBe('May 1');
+    // Another year keeps the numeric date.
+    expect(formatDate(new Date('2025-10-10T14:05:00Z'))).toBe('10/10/2025');
+  });
 });

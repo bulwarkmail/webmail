@@ -1,9 +1,10 @@
 import { logger } from '@/lib/logger';
 import { readErrors, utcDay } from '@/lib/error-reporting/aggregate';
-import { effectiveConsent, effectiveErrorsConsent, endpointEnabled, getInstanceId } from './state';
+import { IS_DESKTOP_BUILD } from '@/lib/desktop/flag';
+import { effectiveConsent, effectiveErrorsConsent, endpointEnabled, getInstanceId, telemetryEndpoint } from './state';
 import { errorsForDay } from './payload';
 import { fetchTelemetryTarget, resolveEndpointAllowed } from './endpoint-guard';
-import { DEFAULT_ENDPOINT, errorsEndpointFor, type TelemetryErrorBatch } from './types';
+import { errorsEndpointFor, type TelemetryErrorBatch } from './types';
 
 /**
  * Instant error counts. With the error-count consent on "instant", the
@@ -45,7 +46,7 @@ async function tick(now: number): Promise<void> {
     return;
   }
   const { state: stored } = await effectiveConsent();
-  const endpoint = stored.endpoint ?? DEFAULT_ENDPOINT;
+  const endpoint = telemetryEndpoint(stored);
   if (!endpointEnabled(endpoint)) return;
   let target: string;
   try {
@@ -81,7 +82,9 @@ async function tick(now: number): Promise<void> {
   if (!res.ok) {
     // Not marked as sent: the next tick tries them again.
     logger.warn('telemetry: instant error counts rejected', { status: res.status });
-    return;
+    // A 4xx from the collector stays a 4xx. A desktop app, often a beta on a collector
+    // that doesn't know its version yet, shouldn't knock on the door every minute.
+    if (!IS_DESKTOP_BUILD || res.status < 400 || res.status >= 500 || res.status === 429) return;
   }
   for (const error of changed) s.sent.set(`${error.fingerprint}|${error.version}`, error.count);
 }

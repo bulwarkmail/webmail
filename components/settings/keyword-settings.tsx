@@ -28,12 +28,10 @@ import {
   getParentKeywordId,
   hasChildKeywords,
   isKeywordDescendant,
-  keywordLevels,
   type KeywordNode,
   MAX_KEYWORD_ID_LENGTH,
 } from "@/lib/keyword-nesting";
-import { formatKeyword, keywordRenderings } from "@/lib/keyword-format";
-import { useShortenedText } from "@/hooks/use-shortened-text";
+import { formatKeyword } from "@/lib/keyword-format";
 import { TagBadge } from "@/components/email/tag-badge";
 
 /** Lighter, base and darker shade of each hue, one row per shade. */
@@ -70,7 +68,6 @@ export function KeywordColorPicker({
 function KeywordRow({
   keyword,
   keywords,
-  nestedTags,
   onEdit,
   onDelete,
   onVisibilityChange,
@@ -86,7 +83,6 @@ function KeywordRow({
 }: {
   keyword: KeywordDefinition;
   keywords: KeywordDefinition[];
-  nestedTags: boolean;
   onEdit: () => void;
   onDelete: () => void;
   onVisibilityChange: (visibility: KeywordVisibility) => void;
@@ -103,10 +99,9 @@ function KeywordRow({
   const t = useTranslations("settings.keywords");
   const hasChildren = hasChildKeywords(keyword.id, keywords);
   const tagLabel = keyword.label || keyword.id;
-  // Measured with the prefix attached, since that is what occupies the column.
-  const keywordCandidates = (nestedTags ? keywordRenderings(keywordLevels(keyword.id)) : [keyword.id])
-    .map((rendering) => KEYWORD_PREFIX + rendering);
-  const [keywordRef, shortenedKeyword] = useShortenedText(keywordCandidates);
+  // The keyword the server stores is a detail for people who asked for the
+  // advanced settings: a tooltip on the tag, not a line of its own.
+  const showAdvanced = useSettingsStore((s) => s.showAdvancedSettings);
   const visibilityOptions = [
     { value: "show", label: t("visibility.show") },
     { value: "unread", label: t("visibility.unread") },
@@ -121,22 +116,19 @@ function KeywordRow({
       onDrop={onDrop}
       onDragEnd={onDragEnd}
       className={cn(
-        "flex items-center gap-3 py-2.5 px-3 rounded-md border bg-background group transition-opacity",
+        "flex flex-wrap items-center gap-x-3 gap-y-2 py-2.5 px-3 rounded-md border bg-background group transition-opacity sm:flex-nowrap",
         isDragging ? "opacity-40" : "opacity-100",
         isDragOver ? "border-primary" : "border-border"
       )}
     >
-      <GripVertical className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-50 cursor-grab" />
-      <div className="flex min-w-0 flex-1">
+      <GripVertical className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-50 cursor-grab max-sm:hidden" />
+      {/* On a phone the name gets a line of its own, the controls wrap under it. */}
+      <div
+        className="flex min-w-0 flex-1 max-sm:basis-full"
+        title={showAdvanced ? KEYWORD_PREFIX + keyword.id : undefined}
+      >
         <TagBadge tagId={keyword.id} variant="badge" className="text-xs" />
       </div>
-      <span
-        ref={keywordRef}
-        className="hidden md:block min-w-0 max-w-52 truncate text-xs text-muted-foreground font-mono"
-        title={KEYWORD_PREFIX + keyword.id}
-      >
-        {shortenedKeyword}
-      </span>
       <Select
         value={getKeywordVisibility(keyword)}
         onChange={(value) => onVisibilityChange(value as KeywordVisibility)}
@@ -708,7 +700,6 @@ export function KeywordSettings() {
               key={keyword.id}
               keyword={keyword}
               keywords={emailKeywords}
-              nestedTags={nestedTags}
               onEdit={() => {
                 setEditingId(keyword.id);
                 setIsAdding(false);

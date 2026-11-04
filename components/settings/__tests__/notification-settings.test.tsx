@@ -1,6 +1,6 @@
 import { fireEvent, render, waitFor } from '@testing-library/react';
 import { act } from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { afterEach, describe, it, expect, vi, beforeEach } from 'vitest';
 import { NotificationSettings } from '../notification-settings';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useAuthStore } from '@/stores/auth-store';
@@ -137,6 +137,25 @@ describe('NotificationSettings - pushNotifyInboxOnly', () => {
   });
 });
 
+describe('NotificationSettings - demo mode', () => {
+  beforeEach(() => {
+    useAuthStore.setState({ client: fakeClient, username: 'me@example.com', isDemoMode: true });
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    useAuthStore.setState({ isDemoMode: false });
+  });
+
+  it('says push is not available and offers no switch that would call the relay', async () => {
+    const { findByText, getAllByRole } = render(<NotificationSettings />);
+    await findByText('push.status_demo');
+    const pushSwitch = getAllByRole('switch').find((el) => (el as HTMLButtonElement).disabled);
+    expect(pushSwitch).toBeTruthy();
+    expect(webPush.enableWebPush).not.toHaveBeenCalled();
+  });
+});
+
 describe('NotificationSettings - mailboxes shared by ACL', () => {
   const mailbox = (id: string, accountId: string, isShared: boolean) =>
     ({ id, originalId: id, name: id, accountId, isShared }) as unknown as Mailbox;
@@ -235,5 +254,65 @@ describe('NotificationSettings - push errors', () => {
     const text = await enableAndFail(new Error('Relay register failed: 502'));
 
     expect(text).toBe('Relay register failed: 502');
+  });
+});
+
+describe('NotificationSettings - the unread count in the desktop app', () => {
+  beforeEach(() => {
+    useSettingsStore.setState({ emailNotificationsEnabled: true });
+    useAuthStore.setState({ client: fakeClient, username: 'me@example.com' });
+    usePolicyStore.setState({ ...usePolicyStore.getState(), policy: {}, isSettingLocked: () => false, isSettingHidden: () => false } as never);
+  });
+  afterEach(() => {
+    delete (window as unknown as { bulwarkDesktop?: unknown }).bulwarkDesktop;
+  });
+
+  it('speaks of the taskbar icon there, not of a tab', async () => {
+    (window as unknown as { bulwarkDesktop: unknown }).bulwarkDesktop = { version: 1, platform: 'win32' };
+    const { findByText, queryByText } = render(<NotificationSettings />);
+    await findByText('unread_badge_label');
+    expect(queryByText('favicon_unread_badge.label')).toBeNull();
+  });
+
+  it('keeps the tab in a browser', async () => {
+    const { findByText } = render(<NotificationSettings />);
+    await findByText('favicon_unread_badge.label');
+  });
+});
+
+// settings-p2-17 (2026-11-04): with several accounts the page had one switch
+// for the account on screen and, below it, a checklist with bulk buttons.
+describe('NotificationSettings - several accounts', () => {
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const { useAccountStore } = await import('@/stores/account-store');
+    const clients: Record<string, unknown> = { a: fakeClient, b: { getAccountId: () => 'acct-2' } };
+    useAccountStore.setState({
+      accounts: [
+        { id: 'a', username: 'a', email: 'a@example.com', displayName: 'Alice', isConnected: true },
+        { id: 'b', username: 'b', email: 'b@example.com', displayName: 'Bob', isConnected: true },
+      ] as never,
+    });
+    useAuthStore.setState({ client: fakeClient, username: 'a@example.com', isDemoMode: false, getClientForAccount: ((id: string) => clients[id]) as never });
+    usePolicyStore.setState({
+      ...usePolicyStore.getState(),
+      policy: {},
+      isSettingLocked: () => false,
+      isSettingHidden: () => false,
+    } as never);
+  });
+
+  afterEach(async () => {
+    const { useAccountStore } = await import('@/stores/account-store');
+    useAccountStore.setState({ accounts: [] });
+  });
+
+  it('has one switch per account instead of the switch for this account and a checklist', async () => {
+    const { findByRole, queryByText, queryByRole } = render(<NotificationSettings />);
+    expect(await findByRole('switch', { name: 'Alice (a@example.com)' })).toBeTruthy();
+    expect(await findByRole('switch', { name: 'Bob (b@example.com)' })).toBeTruthy();
+    expect(queryByText('push.enable')).toBeNull();
+    expect(queryByText('select_all')).toBeNull();
+    expect(queryByRole('checkbox')).toBeNull();
   });
 });

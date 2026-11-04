@@ -195,7 +195,7 @@ function EffectivePolicy({ draft }: { draft: OrgPolicyDraft }) {
                   {rows.map(([path, source]) => (
                     <tr key={path} className="border-t border-border">
                       <td className="px-3 py-1.5 font-mono text-xs break-all">{path}</td>
-                      <td className="px-3 py-1.5 font-mono text-xs break-all">{formatValue(valueAt(resolved.policy as unknown as Record<string, unknown>, path))}</td>
+                      <td className="px-3 py-1.5 font-mono text-xs break-all"><div className="min-w-[5ch]">{formatValue(valueAt(resolved.policy as unknown as Record<string, unknown>, path))}</div></td>
                       <td className="px-3 py-1.5 text-xs">{sourceLabel(source, draft.scopes)}</td>
                     </tr>
                   ))}

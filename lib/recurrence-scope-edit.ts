@@ -62,6 +62,8 @@ export interface EventEditorState {
   when: EventWhen;
   /** The user changed the recurrence rule: a series then happens on other days. */
   ruleChanged?: boolean;
+  /** The user picked another time zone: the times in the editor are on that zone's clock. */
+  timeZoneChanged?: boolean;
 }
 
 /**
@@ -264,7 +266,12 @@ function seriesWhen(
   master: CalendarEvent,
   updates: Partial<CalendarEvent>,
   when: EventWhen,
+  timeZoneChanged = false,
 ): SeriesWhen {
+  const newZone = timeZoneChanged && !when.allDay && !master.showWithoutTime && updates.timeZone !== undefined
+    ? updates.timeZone
+    : undefined;
+  if (newZone !== undefined) return seriesInZone(occurrence, master, updates, when, newZone);
   if (!changesWhen(occurrence, when)) return {};
   const result: SeriesWhen = {};
   const allDayChanged = !!master.showWithoutTime !== when.allDay;
@@ -292,6 +299,33 @@ function seriesWhen(
   if (allDayChanged) {
     result.showWithoutTime = when.allDay;
     result.timeZone = updates.timeZone ?? null;
+  }
+  return result;
+}
+
+/**
+ * When the series happens after the editor put one of its occurrences on
+ * another zone's clock: its start keeps its place on the clock, moved by as
+ * much as the occurrence moved from its old zone's clock to the new one's
+ * (10:00 in New York, made 10:00 in Tokyo, keeps the series at 10:00 in
+ * Tokyo), in the new zone. The keys of its overrides stay, as they are on
+ * the series' clock.
+ */
+function seriesInZone(
+  occurrence: CalendarEvent,
+  master: CalendarEvent,
+  updates: Partial<CalendarEvent>,
+  when: EventWhen,
+  newZone: string | null,
+): SeriesWhen {
+  const oldZone = master.timeZone && isValidTimeZone(master.timeZone) ? master.timeZone : null;
+  const from = getEventStartDate(occurrence);
+  const before = oldZone ? zonedMinutesMs(from, oldZone) : wallClockMinutesMs(from);
+  const after = newZone && isValidTimeZone(newZone) ? zonedMinutesMs(when.start, newZone) : wallClockMinutesMs(when.start);
+  const result: SeriesWhen = { timeZone: newZone };
+  if (after !== before) result.start = shiftLocalDateTime(master.start, after - before);
+  if (parseDurationSeconds(updates.duration) !== parseDurationSeconds(occurrence.duration ?? master.duration)) {
+    result.duration = updates.duration;
   }
   return result;
 }
@@ -542,7 +576,7 @@ export function seriesUpdatesFromOccurrence(
 ): Partial<CalendarEvent> {
   const changes = changedEditorFields(occurrence, updates, editor);
   const series: Partial<CalendarEvent> = { ...changes };
-  const when = seriesWhen(occurrence, master, updates, editor.when);
+  const when = seriesWhen(occurrence, master, updates, editor.when, editor.timeZoneChanged);
   Object.assign(series, when);
   const rescheduled = Object.keys(when).length > 0 || !!editor.ruleChanged;
   const participants = seriesParticipants(master, editor, { ...context, rescheduled });
@@ -644,6 +678,19 @@ function raisesSequences(series: Partial<CalendarEvent>, master: CalendarEvent, 
  * said why itself).
  */
 export type OccurrenceOutcome = boolean | 'stopped';
+
+/**
+ * "This and all following" splits a series: ends the old one, creates the rest as
+ * a new one. Queued on a device these are two writes the server takes or refuses
+ * apart, with no one there to put the series back when only one goes through, so
+ * it waits for the server.
+ */
+export class SeriesSplitNeedsServerError extends Error {
+  constructor() {
+    super('Splitting a series needs the server');
+    this.name = 'SeriesSplitNeedsServerError';
+  }
+}
 
 /** The store actions resolve to false when a plugin stopped the write. */
 function stopped(result: boolean | void): boolean {
@@ -914,7 +961,7 @@ export function followingSeriesData(
   Object.assign(data, changed);
   data.recurrenceRules = ruleChanged && editorRules !== undefined ? editorRules : remainingRules(originalRules, master.start, splitKey);
   if (editor) {
-    Object.assign(data, seriesWhen(occurrence, { ...master, start: splitKey }, updates, editor.when));
+    Object.assign(data, seriesWhen(occurrence, { ...master, start: splitKey }, updates, editor.when, editor.timeZoneChanged));
     data.start ??= splitKey;
     for (const key of ['participants', 'organizerCalendarAddress'] as const) {
       if (updates[key] !== undefined) (data as Record<string, unknown>)[key] = updates[key];
@@ -1035,6 +1082,11 @@ export async function saveOccurrenceEdit(
       // From the first occurrence on is the whole series; ended before its
       // first occurrence, the series would be left with none.
       if (isFirstOccurrence(event, master)) return saveOccurrenceEdit('all', edit, actions);
+      if (client.answeredFromDevice) {
+        // Whether the server is there right now: the last answer may be minutes old.
+        await client.getCalendarEvent(master.originalId ?? master.id, master.accountId);
+        if (client.answeredFromDevice()) throw new SeriesSplitNeedsServerError();
+      }
       const truncated = await truncateSeries(master, event, actions, { sendScheduling, userEmails: edit.userEmails });
       if (!truncated) return 'stopped';
       const { restore, announced, removed } = truncated;

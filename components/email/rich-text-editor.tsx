@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useCallback, useLayoutEffect, useState, useRef } from "react";
+import { popoverFitHeight, popoverShift } from "@/lib/popover-shift";
 import { createPortal } from "react-dom";
 import { useEditor, useEditorState, EditorContent, type Editor } from "@tiptap/react";
 import type { SuggestionProps } from "@tiptap/suggestion";
@@ -23,7 +24,7 @@ import { TableRow } from "@tiptap/extension-table-row";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { ReplyQuoteCollapse } from "@/components/email/reply-quote-collapse";
-import { QuotedHtml, serializeEditorContent } from "@/components/email/quoted-html";
+import { QuotedHtml, restoreCaretAfterContentSync, serializeEditorContent } from "@/components/email/quoted-html";
 import { keepLoadedParagraphSpacing, paragraphStyleWithoutSpacing, trailingParagraphBreakRule } from "@/components/email/paragraph-breaks";
 import { SignatureBlock } from "@/components/email/signature-block";
 import { styledBlockAttributes } from "@/components/email/styled-block-attributes";
@@ -31,7 +32,8 @@ import { RecipientMention, RecipientMentionList, type RecipientMentionListHandle
 import { MentionChipCard, setMentionRecipients } from "@/components/email/mention-chip";
 import { mentionSuggestions, type MentionCandidate, type MentionContact } from "@/lib/recipient-mentions";
 import { cn } from "@/lib/utils";
-import { PromptDialog } from "@/components/ui/prompt-dialog";
+import { getMarkRange } from "@tiptap/core";
+import { LinkDialog } from "@/components/email/link-dialog";
 import { ImageAltDialog } from "@/components/email/image-alt-dialog";
 
 /** A typed address without a scheme ("example.com") becomes a web link. */
@@ -69,7 +71,55 @@ import {
   Rows3,
   Columns3,
   ImageIcon,
+  Ellipsis,
 } from "@/components/icons";
+
+/**
+ * Groups of the formatting toolbar that move behind "More formatting" when one
+ * row is too narrow for all of them, the least used first. Each with its
+ * buttons and the separators that go with it.
+ */
+const FOLDABLE_GROUPS = [
+  { id: "history", buttons: 3, separators: 2 },
+  { id: "align", buttons: 3, separators: 1 },
+  { id: "headings", buttons: 2, separators: 1 },
+  { id: "table", buttons: 1, separators: 0 },
+  { id: "blocks", buttons: 2, separators: 0 },
+] as const;
+type FoldableGroup = (typeof FOLDABLE_GROUPS)[number]["id"];
+/**
+ * Always in the row: font size, bold, italic, underline, strikethrough, the
+ * two colours, the lists, link, an image's description and More (12), with
+ * their 3 separators.
+ */
+const FIXED_TOOLBAR = { buttons: 12, separators: 3 };
+
+/**
+ * How many of FOLDABLE_GROUPS go behind "More formatting" for one row of
+ * `width` px. 0 for a toolbar that isn't laid out (hidden, or not measured).
+ */
+export function formattingFoldCount(width: number, sizes: { button: number; gap: number; separator: number; directionButton?: boolean }): number {
+  if (!(width > 0)) return 0;
+  const span = (buttons: number, separators: number) => buttons * (sizes.button + sizes.gap) + separators * (sizes.separator + sizes.gap);
+  const groups = FOLDABLE_GROUPS.map((group) => span(group.buttons + (group.id === "align" && sizes.directionButton ? 1 : 0), group.separators));
+  let needed = span(FIXED_TOOLBAR.buttons, FIXED_TOOLBAR.separators) + groups.reduce((sum, group) => sum + group, 0);
+  // All of it fits without the More button.
+  if (needed - (sizes.button + sizes.gap) <= width + 1) return 0;
+  for (let count = 1; count <= groups.length; count++) {
+    needed -= groups[count - 1];
+    if (needed <= width + 1) return count;
+  }
+  return groups.length;
+}
+
+/** The toolbar's inner width and the sizes of what is in it, in px. */
+function measureFormattingToolbar(toolbar: HTMLElement, directionButton: boolean): number {
+  const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  const style = getComputedStyle(toolbar);
+  const width = toolbar.clientWidth - (parseFloat(style.paddingLeft) || 0) - (parseFloat(style.paddingRight) || 0);
+  const button = toolbar.querySelector<HTMLElement>(":scope > [data-toolbar-item], :scope > div > [data-toolbar-item]")?.offsetWidth || 1.75 * rem;
+  return formattingFoldCount(width, { button, gap: 0.125 * rem, separator: 1 + 0.25 * rem, directionButton });
+}
 
 export interface InlineImageUpload {
   src: string;
@@ -129,6 +179,11 @@ interface RichTextEditorProps {
    * away entirely.
    */
   toolbarPlacement?: 'top' | 'bottom' | 'hidden';
+  /**
+   * "short" keeps bold, italic, underline, the lists and link: enough for a
+   * few lines such as an out-of-office reply. "full" is the composer's.
+   */
+  toolbar?: 'full' | 'short';
   /** The editing area's accessible name ("Message"). */
   ariaLabel?: string;
   /** The body failed validation: exposed as aria-invalid on the editing area. */
@@ -152,7 +207,7 @@ interface RichTextEditorProps {
 export function editorA11yAttributes({ ariaLabel, ariaInvalid, ariaDescribedBy, defaultTextStyle, spellcheck = true, lang }: Pick<RichTextEditorProps, 'ariaLabel' | 'ariaInvalid' | 'ariaDescribedBy' | 'defaultTextStyle' | 'spellcheck' | 'lang'>): Record<string, string> {
   const style = defaultTextStyle ? composeTextStyleCss(defaultTextStyle) : "";
   return {
-    class: "tiptap min-h-[100px] px-4 py-3 text-sm text-foreground",
+    class: "tiptap focus-inset min-h-[100px] px-4 py-3 text-sm text-foreground",
     ...(style ? { style } : {}),
     role: "textbox",
     "aria-multiline": "true",
@@ -237,6 +292,36 @@ function ToolbarPopover({
     const list = items();
     const checked = list.find((el) => el.getAttribute("aria-checked") === "true");
     (checked ?? list[0])?.focus();
+  }, []);
+
+  // Anchored to its button, it would run off a narrow composer's edge.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const toolbar = el?.closest('[role="toolbar"]');
+    if (!el || !toolbar) return;
+    const box = toolbar.getBoundingClientRect();
+    const shift = popoverShift(el.getBoundingClientRect(), {
+      left: Math.max(box.left, 0),
+      right: Math.min(box.right, window.innerWidth),
+    });
+    if (shift !== 0) el.style.transform = `translateX(${shift}px)`;
+    // Too tall for the room under its button (a short window, 150 % zoom): above
+    // it when there's more room there, and scrolling inside either way.
+    const trigger = triggerRef.current?.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
+    const fit = trigger ? popoverFitHeight({ top: rect.top, height: rect.height }, trigger, window.innerHeight) : null;
+    if (fit) {
+      if (fit.above) {
+        el.style.top = "auto";
+        el.style.bottom = "100%";
+        el.style.marginTop = "0";
+        el.style.marginBottom = "0.25rem";
+      }
+      el.style.maxHeight = `${fit.maxHeight}px`;
+      el.style.overflowY = "auto";
+    }
+    // triggerRef is a ref: it doesn't change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const close = (returnFocus: boolean) => {
@@ -399,6 +484,7 @@ export function RichTextEditor({
   onMentionAdd,
   collapseToolbarOnMobile = false,
   toolbarPlacement = 'top',
+  toolbar = 'full',
   ariaLabel,
   ariaInvalid,
   ariaDescribedBy,
@@ -409,6 +495,7 @@ export function RichTextEditor({
 }: RichTextEditorProps) {
   const rtlEditingSupport = useSettingsStore((st) => st.rtlEditingSupport);
   const tComposer = useTranslations("email_composer");
+  const tUx = useTranslations("compose_ux");
   const tQuote = useTranslations("email_viewer");
   const onImageUploadRef = React.useRef(onImageUpload);
   onImageUploadRef.current = onImageUpload;
@@ -433,6 +520,8 @@ export function RichTextEditor({
   // Images waiting for a description, one dialog at a time: a new image is
   // found by its src (it has no alt yet), an existing one by its position.
   const [altQueue, setAltQueue] = useState<AltRequest[]>([]);
+  // Insert link, for the key handler set up with the editor.
+  const addLinkRef = useRef<(() => void) | null>(null);
 
   const editor = useEditor({
     extensions: [
@@ -459,6 +548,7 @@ export function RichTextEditor({
       ResizableImage.configure({
         onEditAlt: (pos: number) => setAltQueue((queue) => [...queue, { pos }]),
         editAltLabel: tComposer("image_alt.edit"),
+        addAltLabel: tUx("add_description"),
       }),
       Placeholder.configure({
         placeholder,
@@ -534,6 +624,12 @@ export function RichTextEditor({
           event.preventDefault();
           return true;
         }
+        // Ctrl+K inserts a link, as in Gmail, Outlook and Word.
+        if ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey && event.key.toLowerCase() === "k" && addLinkRef.current) {
+          event.preventDefault();
+          addLinkRef.current();
+          return true;
+        }
         return false;
       },
       handleDrop: (view, event) => {
@@ -553,11 +649,11 @@ export function RichTextEditor({
             if (result) {
               const { state } = view;
               const pos = view.posAtCoords({ left: event.clientX, top: event.clientY });
-              // No alt yet (never the file name): the user is asked next.
+              // No alt yet (never the file name).
               const node = state.schema.nodes.image.create({ src: result.src, alt: null, cid: result.cid });
               const tr = state.tr.insert(pos?.pos ?? state.selection.anchor, node);
               view.dispatch(tr);
-              setAltQueue((queue) => [...queue, { src: result.src }]);
+              // No dialog: the image offers "Add description" itself.
             }
           });
         }
@@ -576,7 +672,7 @@ export function RichTextEditor({
               const node = state.schema.nodes.image.create({ src: result.src, alt: null, cid: result.cid });
               const tr = state.tr.replaceSelectionWith(node);
               view.dispatch(tr);
-              setAltQueue((queue) => [...queue, { src: result.src }]);
+              // No dialog: the image offers "Add description" itself.
             }
           });
         }
@@ -600,7 +696,9 @@ export function RichTextEditor({
     if (!editor) return;
     const loaded = keepLoadedParagraphSpacing(content);
     if (loaded !== serializeEditorContent(editor)) {
+      const caret = editor.state.selection.from;
       editor.commands.setContent(loaded, { emitUpdate: false });
+      restoreCaretAfterContentSync(editor, caret);
     }
   }, [content, editor]);
 
@@ -650,25 +748,43 @@ export function RichTextEditor({
     if (editor) setMentionRecipients(editor, mentionCandidates ? mentionCandidates.map((c) => c.email) : null);
   }, [editor, mentionCandidates]);
 
-  // Insert link asks for the address in the app's own dialog; on a link it
-  // starts from the current address and offers "Remove link".
-  // The selection is kept from when the dialog opened: the dialog takes the
-  // focus, and with it the editor's selection.
-  const [linkDialog, setLinkDialog] = useState<{ href: string; from: number; to: number } | null>(null);
+  // Insert link asks for the text and the address in the app's own dialog
+  // (compose-p2-7); on a link it starts from the link's text and address and
+  // offers "Remove link". The range is kept from when the dialog opened: the
+  // dialog takes the focus, and with it the editor's selection.
+  const [linkDialog, setLinkDialog] = useState<{ href: string; text: string; from: number; to: number } | null>(null);
   const addLink = useCallback(() => {
     if (!editor) return;
     const previousUrl = editor.getAttributes("link").href as string | undefined;
-    const { from, to } = editor.state.selection;
-    setLinkDialog({ href: previousUrl ?? "", from, to });
+    let { from, to } = editor.state.selection;
+    // The caret in a link edits the whole link.
+    const linkType = editor.schema.marks.link;
+    if (previousUrl && from === to && linkType) {
+      const range = getMarkRange(editor.state.doc.resolve(from), linkType);
+      if (range) ({ from, to } = range);
+    }
+    const text = editor.state.doc.textBetween(from, to, " ");
+    setLinkDialog({ href: previousUrl ?? "", text, from, to });
   }, [editor]);
-  const applyLink = useCallback((url: string) => {
+  addLinkRef.current = addLink;
+  const applyLink = useCallback(({ text, href }: { text: string; href: string }) => {
     if (!editor || !linkDialog) return;
-    editor
-      .chain()
-      .focus()
-      .setTextSelection({ from: linkDialog.from, to: linkDialog.to })
+    const label = text.trim() ? text : href;
+    const { from, to } = linkDialog;
+    const chain = editor.chain().focus();
+    if (from === to || label !== linkDialog.text) {
+      // Nothing selected, or the text changed: the text goes in as the link.
+      chain
+        .insertContentAt({ from, to }, { type: "text", text: label, marks: [{ type: "link", attrs: { href } }] })
+        .setTextSelection(from + label.length)
+        .unsetMark("link")
+        .run();
+      return;
+    }
+    chain
+      .setTextSelection({ from, to })
       .extendMarkRange("link")
-      .setLink({ href: url })
+      .setLink({ href })
       .run();
   }, [editor, linkDialog]);
   const removeLink = useCallback(() => {
@@ -683,7 +799,7 @@ export function RichTextEditor({
   }, [editor, linkDialog]);
 
   const tToolbar = useTranslations("email_composer.toolbar");
-  const tCommon = useTranslations("common");
+  const tWindows = useTranslations("compose_windows");
   const [tableMenuOpen, setTableMenuOpen] = useState(false);
   const tableWrapperRef = useRef<HTMLDivElement>(null);
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
@@ -701,11 +817,13 @@ export function RichTextEditor({
   // focus last keeps it, the arrows, Home and End move inside.
   const toolbarRef = useRef<HTMLDivElement>(null);
   const rovingItemRef = useRef<string | null>(null);
+  // Buttons in the "More formatting" panel are the panel's, with its own keys.
+  const inRow = (el: HTMLElement) => !el.closest("[data-toolbar-more-panel]");
   const toolbarItems = () =>
     Array.from(toolbarRef.current?.querySelectorAll<HTMLButtonElement>("[data-toolbar-item]") ?? [])
-      .filter((el) => !el.disabled);
+      .filter((el) => !el.disabled && inRow(el));
   const syncToolbarTabStops = (focus?: HTMLButtonElement) => {
-    const all = Array.from(toolbarRef.current?.querySelectorAll<HTMLButtonElement>("[data-toolbar-item]") ?? []);
+    const all = Array.from(toolbarRef.current?.querySelectorAll<HTMLButtonElement>("[data-toolbar-item]") ?? []).filter(inRow);
     const enabled = all.filter((el) => !el.disabled);
     const current = focus ?? enabled.find((el) => el.dataset.toolbarItem === rovingItemRef.current) ?? enabled[0];
     if (current) rovingItemRef.current = current.dataset.toolbarItem ?? null;
@@ -723,6 +841,36 @@ export function RichTextEditor({
     stop?.focus();
     return !!stop && document.activeElement === stop;
   };
+
+  // One row: what doesn't fit goes behind "More formatting" (a wrapped
+  // second row took the body's room in a narrow composer).
+  const [foldCount, setFoldCount] = useState(0);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreButtonRef = useRef<HTMLButtonElement>(null);
+  const moreWrapperRef = useRef<HTMLDivElement>(null);
+  const hasEditor = !!editor;
+  useLayoutEffect(() => {
+    const toolbar = toolbarRef.current;
+    if (!toolbar) return;
+    const measure = () => setFoldCount(measureFormattingToolbar(toolbar, !!rtlEditingSupport));
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      measure();
+      setMoreOpen(false);
+    });
+    observer.observe(toolbar);
+    return () => observer.disconnect();
+  }, [hasEditor, rtlEditingSupport]);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (moreWrapperRef.current && !moreWrapperRef.current.contains(e.target as Node)) setMoreOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [moreOpen]);
 
   useEffect(() => {
     if (!fontSizeMenuOpen) return;
@@ -783,6 +931,17 @@ export function RichTextEditor({
   const altTarget = findAltTarget(editor, altRequest);
   const imageSelected = editor.isActive("image");
 
+  // A group that doesn't fit renders in the "More formatting" panel instead, in row order.
+  const folded = new Set<FoldableGroup>(FOLDABLE_GROUPS.slice(0, foldCount).map((group) => group.id));
+  const overflow: React.ReactNode[] = [];
+  const short = toolbar === 'short';
+  const place = (group: FoldableGroup, node: React.ReactNode) => {
+    if (short) return null;
+    if (!folded.has(group)) return node;
+    overflow.push(<React.Fragment key={group}>{node}</React.Fragment>);
+    return null;
+  };
+
   const onToolbarKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
     // Keys inside a popover are the popover's.
@@ -803,7 +962,7 @@ export function RichTextEditor({
   };
   const onToolbarFocus = (e: React.FocusEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
-    if (target instanceof HTMLButtonElement && target.hasAttribute("data-toolbar-item")) syncToolbarTabStops(target);
+    if (target instanceof HTMLButtonElement && target.hasAttribute("data-toolbar-item") && inRow(target)) syncToolbarTabStops(target);
   };
 
   const renderPalette = (current: string | null, apply: (color: string) => void, removeLabel: string, remove: () => void) => (
@@ -882,6 +1041,7 @@ export function RichTextEditor({
       >
         {/* Font size - two baseline-aligned A's read as "size" at a glance;
             once a size is chosen the button shows that number instead. */}
+        {!short && <>
         <div ref={fontSizeWrapperRef} className="relative">
           <ToolbarButton
             ref={fontSizeButtonRef}
@@ -947,6 +1107,7 @@ export function RichTextEditor({
         </div>
 
         <ToolbarSeparator />
+        </>}
 
         <ToolbarButton
           item="bold"
@@ -972,6 +1133,7 @@ export function RichTextEditor({
         >
           <UnderlineIcon className="w-4 h-4" />
         </ToolbarButton>
+        {!short && <>
         <ToolbarButton
           item="strike"
           pressed={editor.isActive("strike")}
@@ -1065,9 +1227,11 @@ export function RichTextEditor({
             </ToolbarPopover>
           )}
         </div>
+        </>}
 
         <ToolbarSeparator />
 
+        {place("headings", <>
         <ToolbarButton
           item="heading-1"
           pressed={editor.isActive("heading", { level: 1 })}
@@ -1086,6 +1250,7 @@ export function RichTextEditor({
         </ToolbarButton>
 
         <ToolbarSeparator />
+        </>)}
 
         <ToolbarButton
           item="bullet-list"
@@ -1103,6 +1268,7 @@ export function RichTextEditor({
         >
           <ListOrdered className="w-4 h-4" />
         </ToolbarButton>
+        {place("blocks", <>
         <ToolbarButton
           item="quote"
           pressed={editor.isActive("blockquote")}
@@ -1119,9 +1285,11 @@ export function RichTextEditor({
         >
           <Code className="w-4 h-4" />
         </ToolbarButton>
+        </>)}
 
         <ToolbarSeparator />
 
+        {place("align", <>
         <ToolbarButton
           item="align-left"
           pressed={editor.isActive({ textAlign: "left" })}
@@ -1165,6 +1333,7 @@ export function RichTextEditor({
         )}
 
         <ToolbarSeparator />
+        </>)}
 
         <ToolbarButton
           item="link"
@@ -1189,7 +1358,7 @@ export function RichTextEditor({
           </ToolbarButton>
         )}
 
-        <div ref={tableWrapperRef} className="relative">
+        {place("table", <div ref={tableWrapperRef} className="relative">
           <ToolbarButton
             ref={tableButtonRef}
             item="table"
@@ -1241,8 +1410,9 @@ export function RichTextEditor({
               </ToolbarPopover>
             )
           )}
-        </div>
+        </div>)}
 
+        {place("history", <>
         <ToolbarSeparator />
 
         <ToolbarButton
@@ -1271,6 +1441,35 @@ export function RichTextEditor({
         >
           <Redo className="w-4 h-4" />
         </ToolbarButton>
+        </>)}
+
+        {overflow.length > 0 && (
+          <div ref={moreWrapperRef} className="relative">
+            <ToolbarButton
+              ref={moreButtonRef}
+              item="more-formatting"
+              popup="dialog"
+              expanded={moreOpen}
+              onClick={() => setMoreOpen((v) => !v)}
+              title={tWindows("more_formatting")}
+            >
+              <Ellipsis className="w-4 h-4" />
+            </ToolbarButton>
+            {moreOpen && (
+              <ToolbarPopover
+                label={tWindows("more_formatting")}
+                role="dialog"
+                triggerRef={moreButtonRef}
+                onClose={() => setMoreOpen(false)}
+                className="p-1 flex w-max max-w-[16rem] flex-wrap items-center gap-0.5"
+              >
+                <div data-toolbar-more-panel="" className="contents">
+                  {overflow}
+                </div>
+              </ToolbarPopover>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Editor */}
@@ -1295,16 +1494,13 @@ export function RichTextEditor({
         document.body
       )}
 
-      <PromptDialog
+      <LinkDialog
         isOpen={!!linkDialog}
         onClose={() => setLinkDialog(null)}
-        title={linkDialog?.href ? tToolbar("edit_link") : tToolbar("insert_link")}
-        placeholder={tToolbar("link_address")}
-        defaultValue={linkDialog?.href ?? ""}
-        confirmText={tCommon("save")}
-        validate={(value) => (/\s/.test(value) ? tToolbar("link_invalid") : null)}
-        onSubmit={(value) => applyLink(withLinkScheme(value))}
-        extraAction={linkDialog?.href ? { label: tToolbar("remove_link"), onClick: removeLink } : undefined}
+        defaultText={linkDialog?.text ?? ""}
+        defaultHref={linkDialog?.href ?? ""}
+        onSubmit={({ text, href }) => applyLink({ text, href: withLinkScheme(href) })}
+        onRemove={linkDialog?.href ? removeLink : undefined}
       />
 
       <ImageAltDialog

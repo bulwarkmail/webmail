@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, act, within } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import React from 'react';
 import { EmailComposer } from '../email-composer';
@@ -226,9 +226,8 @@ describe('re-opened reply draft', () => {
     render(<EmailComposer initialData={REOPENED_REPLY} requestCloseRef={requestCloseRef} onClose={vi.fn()} />);
     fireEvent.change(screen.getByDisplayValue('Re: Plans'), { target: { value: 'Re: Plans, edited' } });
 
+    // Closing saves the draft; no question unless the save fails.
     act(() => requestCloseRef.current!(vi.fn()));
-    const dialog = await screen.findByRole('alertdialog');
-    fireEvent.click(within(dialog).getByText('save'));
 
     await waitFor(() => expect(createDraft).toHaveBeenCalled());
     const args = createDraft.mock.calls[0];

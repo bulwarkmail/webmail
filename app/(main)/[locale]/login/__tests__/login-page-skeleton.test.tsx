@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { act } from 'react';
 import { render } from '@testing-library/react';
+import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -61,6 +62,29 @@ describe('login page while the config loads', () => {
     expect(region!.getAttribute('aria-busy')).toBe('true');
     expect(container.querySelector('[role="status"]')?.textContent).toBe('loading');
     expect(container.querySelector('.animate-spin')).toBeNull();
+  });
+
+  it('hydrates the server\'s skeleton when the config arrived first, and then draws the form', async () => {
+    // The page's Suspense boundary hydrates after the app around it, which fetches the config.
+    config.loading = true;
+    const html = renderToString(<LoginPage />);
+    config.loading = false;
+    const box = document.createElement('div');
+    box.innerHTML = html;
+    document.body.appendChild(box);
+    const fromServer = box.querySelector('[data-boot-skeleton="login"]');
+    expect(fromServer).not.toBeNull();
+    const recoverable: unknown[] = [];
+    const root = hydrateRoot(box, <LoginPage />, { onRecoverableError: (error) => { recoverable.push(error); } });
+    try {
+      await act(async () => {});
+      expect(recoverable).toEqual([]);
+      expect(box.querySelector('[data-boot-skeleton="login"]')).toBeNull();
+      expect(box.querySelector('#username')).not.toBeNull();
+    } finally {
+      await act(async () => root.unmount());
+      box.remove();
+    }
   });
 
   it('draws the sign-in button\'s place while the provider is looked up, not a spinner', () => {

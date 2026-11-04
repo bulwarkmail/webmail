@@ -52,7 +52,7 @@ export function TrashRecoveryLink({ mailbox, notice }: { mailbox: Mailbox | unde
       {notice ? (
         <span className="min-w-0" data-testid="retention-notice">{notice}</span>
       ) : (
-        <span className="min-w-0 truncate">{t("trash_hint")}</span>
+        <span className="min-w-0">{t("trash_hint")}</span>
       )}
       <button
         type="button"

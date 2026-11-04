@@ -5,6 +5,7 @@ import type { SieveCapabilities } from '@/lib/jmap/sieve-types';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useFilterStore } from '@/stores/filter-store';
+import { useSettingsStore } from '@/stores/settings-store';
 import { FilterSettings } from '../filter-settings';
 
 // The real settings page and its dialogs, against what happens in the
@@ -27,6 +28,7 @@ const initial = {
   auth: useAuthStore.getState(),
   email: useEmailStore.getState(),
   filter: useFilterStore.getState(),
+  settings: useSettingsStore.getState(),
 };
 
 beforeEach(() => {
@@ -49,6 +51,7 @@ afterEach(() => {
   useAuthStore.setState(initial.auth, true);
   useEmailStore.setState(initial.email, true);
   useFilterStore.setState(initial.filter, true);
+  useSettingsStore.setState(initial.settings, true);
 });
 
 function typeNewRule() {
@@ -75,6 +78,8 @@ describe('typing in a dialog on the filter page while things happen in the backg
   });
 
   it('keeps the focus in the Sieve editor through the connection check', () => {
+    // The raw editor is an advanced tool (settings-13).
+    useSettingsStore.setState({ showAdvancedSettings: true });
     render(<FilterSettings />);
     fireEvent.click(screen.getByText('raw_editor'));
     const script = screen.getByLabelText('script_content');
@@ -92,6 +97,7 @@ describe('typing in a dialog on the filter page while things happen in the backg
   });
 
   it('keeps the Sieve editor and what was typed through a reload of the filters', () => {
+    useSettingsStore.setState({ showAdvancedSettings: true });
     render(<FilterSettings />);
     fireEvent.click(screen.getByText('raw_editor'));
     fireEvent.change(screen.getByLabelText('script_content'), { target: { value: 'keep;' } });

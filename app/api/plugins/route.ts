@@ -7,6 +7,7 @@ import { logger } from '@/lib/logger';
 import { storeUnavailableResponse } from '@/lib/admin/store-unavailable-response';
 import { isNoThirdPartyTrafficOn } from '@/lib/admin/third-party-mode';
 import { pluginAllowedInMode } from '@/lib/outgoing-hosts';
+import { pluginRefusedByDevicePolicy } from '@/lib/desktop/server-policy';
 
 /**
  * GET /api/plugins - Public endpoint for clients to discover server-managed plugins & themes
@@ -60,12 +61,20 @@ export async function GET(request: NextRequest) {
       // and during pending policy saves; OR'ing here unifies the signal so
       // the client's auto-enable path triggers consistently.
       forceEnabled: p.forceEnabled || policyForceEnabledIds.has(p.id),
+      // What a user who hasn't chosen gets: on unless the admin picked
+      // "Off until users turn it on".
+      defaultOn: !('defaultOff' in p && p.defaultOff === true),
       // Content hash + updatedAt let clients detect re-uploads even when
       // the manifest version is unchanged.
       bundleHash: p.bundleHash,
       updatedAt: p.updatedAt,
       // Marks plugins loaded from PLUGIN_DEV_DIR. Surface in UI as a badge.
       dev: p.dev,
+      // The device's OS policy refuses this plugin. It stays on the list: a plugin
+      // missing from the list counts as removed by the admin, and the client then
+      // deletes its bundle, its data and its connected accounts. Tightening a policy
+      // must not destroy anything, and loosening it again brings all of it back.
+      ...(pluginRefusedByDevicePolicy(p.id) ? { refused: true } : {}),
       // Surface so clients can enforce api.http.fetch origin allowlists.
       httpOrigins: p.httpOrigins,
       // Surface so clients can enforce api.http.post path allowlists.

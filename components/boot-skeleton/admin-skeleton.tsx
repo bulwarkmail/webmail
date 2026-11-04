@@ -93,12 +93,12 @@ export function AdminContentSkeleton({ page, status }: { page?: AdminPageId | nu
             <div className="min-w-0">
               {def && page !== undefined ? (
                 <>
-                  <span className="hidden lg:block text-xl font-semibold text-foreground leading-tight">{def.label}</span>
+                  <span className="hidden desk:block text-xl font-semibold text-foreground leading-tight">{def.label}</span>
                   <span className="block text-sm text-muted-foreground mt-1">{def.description}</span>
                 </>
               ) : (
                 <>
-                  <TextLine className="text-xl font-semibold leading-tight hidden lg:block" w="10rem" />
+                  <TextLine className="text-xl font-semibold leading-tight hidden desk:block" w="10rem" />
                   <TextLine className="text-sm mt-1" w="22rem" />
                 </>
               )}
@@ -171,10 +171,10 @@ export function AdminSkeleton({ label, page, backLabel, searchLabel, labels, cla
     <SkeletonRegion
       surface="admin"
       label={label}
-      className={cn("h-dvh bg-background pt-[env(safe-area-inset-top)]", className)}
+      className={cn("h-dvh bg-background pt-[var(--app-top-inset)]", className)}
     >
       {/* Desktop */}
-      <div className="hidden lg:flex h-full">
+      <div className="hidden desk:flex h-full">
         <RailSkeleton active="admin" className="flex" />
 
         <div aria-hidden="true" className="flex w-64 shrink-0 flex-col border-e border-border bg-secondary">
@@ -227,6 +227,9 @@ export function AdminSkeleton({ label, page, backLabel, searchLabel, labels, cla
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col">
+          <div data-window-only="" data-window-row-right="" className="h-14 box-content shrink-0 items-center border-b border-border px-6">
+            <TextLine className="text-sm" w="6rem" />
+          </div>
           <div className="flex-1 overflow-hidden">
             <div className="mx-auto max-w-3xl px-6 py-6">
               <AdminContentSkeleton page={page} />
@@ -236,7 +239,7 @@ export function AdminSkeleton({ label, page, backLabel, searchLabel, labels, cla
       </div>
 
       {/* Phone and tablet */}
-      <div className="flex lg:hidden h-full flex-col">
+      <div className="flex desk:hidden h-full flex-col">
         <div aria-hidden="true" className="flex h-14 shrink-0 items-center gap-1 border-b border-border bg-background px-2">
           <span className="flex h-10 w-10 items-center justify-center rounded-md text-foreground">
             <ArrowLeft className="h-5 w-5" />

@@ -1,4 +1,4 @@
-import { act, render } from '@testing-library/react';
+import { act, fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Until the session is up the Pro page draws the same skeleton the server
@@ -9,8 +9,10 @@ vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => (key === 'common.loading' ? 'Loading…' : key),
 }));
 
-const device = vi.hoisted(() => ({ isMobile: false, isTablet: false, isDesktop: true }));
-vi.mock('@/hooks/use-media-query', () => ({ useDeviceDetection: () => device }));
+const device = vi.hoisted(() => ({ isMobile: false, isCompact: false, isDesktop: true }));
+vi.mock('@/hooks/use-media-query', () => ({ useDeviceDetection: () => device, atLeast: (px: number) => `(width >= ${px}px)`, PHONE_BELOW: 600 }));
+const routerReplace = vi.hoisted(() => vi.fn());
+vi.mock('@/i18n/navigation', () => ({ useRouter: () => ({ replace: routerReplace }) }));
 
 const auth = vi.hoisted(() => ({
   state: {
@@ -60,6 +62,8 @@ vi.mock('@/hooks/use-sidebar-apps', () => ({
 vi.mock('@/hooks/use-deep-link-url', () => ({ useDeepLinkUrl: () => {} }));
 const { default: ProHome } = await import('../page');
 const { useSettingsStore } = await import('@/stores/settings-store');
+const { useProTabStore, takeHandedOffComposeDraft } = await import('@/stores/pro-tab-store');
+const { EMAIL_IDS_DRAG_MIME, PRO_TAB_DRAG_MIME } = await import('@/components/pro/pro-shell-drop');
 
 const replace = vi.fn();
 
@@ -68,7 +72,7 @@ beforeEach(() => {
   auth.state.client = null;
   auth.state.isLoading = false;
   useSettingsStore.setState({ proInterface: true });
-  Object.assign(device, { isMobile: false, isTablet: false, isDesktop: true });
+  Object.assign(device, { isMobile: false, isCompact: false, isDesktop: true });
   Object.defineProperty(window, 'location', {
     configurable: true,
     value: { ...window.location, replace, pathname: '/pro', search: '' },
@@ -94,11 +98,23 @@ describe('Pro page gate', () => {
   it('keeps the skeleton up, not a blank page, below desktop width', async () => {
     auth.state.isAuthenticated = true;
     auth.state.client = {};
-    Object.assign(device, { isMobile: false, isTablet: true, isDesktop: false });
+    Object.assign(device, { isMobile: true, isCompact: false, isDesktop: false });
     const { container } = render(<ProHome />);
     await act(async () => {});
     expect(container.querySelector('[data-boot-skeleton="pro"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="mail-app"]')).toBeNull();
+  });
+
+  // A half-screen window or a laptop at 150 % is a compact desktop, which
+  // keeps the Pro shell (usability test 2026-11-04, mail-28).
+  it('runs on a compact desktop', async () => {
+    auth.state.isAuthenticated = true;
+    auth.state.client = {};
+    Object.assign(device, { isMobile: false, isCompact: true, isDesktop: true });
+    const { container } = render(<ProHome />);
+    await act(async () => {});
+    expect(container.querySelector('[data-pro-shell] [data-testid="mail-app"]')).not.toBeNull();
+    expect(routerReplace).not.toHaveBeenCalled();
   });
 
   it('marks the loaded shell so a skeleton inside a pane keeps its own frame', async () => {
@@ -110,5 +126,115 @@ describe('Pro page gate', () => {
     const shell = container.querySelector('[data-pro-shell]');
     expect(shell).not.toBeNull();
     expect(shell?.querySelector('[data-testid="mail-app"]')).not.toBeNull();
+  });
+
+  describe('when the device flags say the window is not desktop-wide', () => {
+    const setWindowWide = (matches: boolean) => {
+      window.matchMedia = vi.fn(() => ({ matches, addEventListener: () => {}, removeEventListener: () => {} })) as never;
+    };
+    const original = window.matchMedia;
+    afterEach(() => { window.matchMedia = original; });
+
+    beforeEach(() => {
+      auth.state.isAuthenticated = true;
+      auth.state.client = {};
+      Object.assign(device, { isMobile: true, isCompact: false, isDesktop: false });
+      const compose = { id: 'c1', kind: 'compose' as const, labelKey: '', closeable: true, paneId: 'main' as const, composeData: { sessionId: 1, mode: 'compose' as const, title: 'x', initialData: { subject: 'Typed', mode: 'compose' } as never } };
+      useProTabStore.setState({
+        tabs: [{ id: 'home-mail', kind: 'mail', labelKey: 'mail', closeable: false, paneId: 'main' }, compose],
+        activeTabId: 'c1', activeSplitTabId: null, focusedPaneId: 'main', splitOrientation: null, splitSide: 'right', readerTabId: null, loadedTabIds: ['home-mail', 'c1'],
+      });
+    });
+
+    it('goes to the standard page without a reload, taking the compose tab in front along', async () => {
+      setWindowWide(false);
+      render(<ProHome />);
+      await act(async () => {});
+      expect(routerReplace).toHaveBeenCalledWith('/');
+      expect(replace).not.toHaveBeenCalled();
+      expect(takeHandedOffComposeDraft()?.draft.subject).toBe('Typed');
+      expect(useProTabStore.getState().tabs.some((t) => t.id === 'c1')).toBe(false);
+    });
+
+    it('stays when the window is wide and only the flags are behind', async () => {
+      setWindowWide(true);
+      render(<ProHome />);
+      await act(async () => {});
+      expect(routerReplace).not.toHaveBeenCalled();
+      expect(takeHandedOffComposeDraft()).toBeNull();
+    });
+
+    it('stays in a window as wide as a compact desktop (800px)', async () => {
+      window.matchMedia = vi.fn((query: string) => {
+        const px = Number(/\(width >= (\d+)px\)/.exec(query)?.[1] ?? NaN);
+        return { matches: 800 >= px, addEventListener: () => {}, removeEventListener: () => {} };
+      }) as never;
+      render(<ProHome />);
+      await act(async () => {});
+      expect(routerReplace).not.toHaveBeenCalled();
+    });
+  });
+
+  it('moves a tab dropped on a surface that stops every drop', async () => {
+    auth.state.isAuthenticated = true;
+    auth.state.client = {};
+    const main = { id: 'home-mail', kind: 'mail' as const, labelKey: 'mail', closeable: false, paneId: 'main' as const };
+    const other = { id: 'cal', kind: 'calendar' as const, labelKey: 'calendar', closeable: true, paneId: 'main' as const };
+    const split = { id: 'files', kind: 'files' as const, labelKey: 'files', closeable: true, paneId: 'split' as const };
+    useProTabStore.setState({
+      tabs: [main, other, split], activeTabId: main.id, activeSplitTabId: split.id, focusedPaneId: 'main',
+      splitOrientation: 'vertical', splitSide: 'right', readerTabId: null, loadedTabIds: ['home-mail', 'cal', 'files'],
+    });
+    const { container } = render(<ProHome />);
+    await act(async () => {});
+    const surface = container.querySelector('[data-testid="mail-app"]')!;
+    for (const type of ['dragover', 'drop']) {
+      surface.addEventListener(type, (e) => { e.preventDefault(); e.stopPropagation(); });
+    }
+    const dataTransfer = { types: [PRO_TAB_DRAG_MIME], getData: () => 'cal', dropEffect: '' };
+    // No layout in jsdom: the position resolves to the right half, the split.
+    fireEvent.dragOver(surface, { dataTransfer });
+    fireEvent.drop(surface, { dataTransfer });
+    expect(useProTabStore.getState().tabs.find((t) => t.id === 'cal')?.paneId).toBe('split');
+  });
+
+  it('stops a message row dropped where it can go nowhere, so no field takes its subject', async () => {
+    auth.state.isAuthenticated = true;
+    auth.state.client = {};
+    const main = { id: 'home-mail', kind: 'mail' as const, labelKey: 'mail', closeable: false, paneId: 'main' as const };
+    useProTabStore.setState({
+      tabs: [main], activeTabId: main.id, activeSplitTabId: null, focusedPaneId: 'main',
+      splitOrientation: null, splitSide: 'right', readerTabId: null, loadedTabIds: ['home-mail'],
+    });
+    const { container } = render(<ProHome />);
+    await act(async () => {});
+    const surface = container.querySelector('[data-testid="mail-app"]')!;
+    const dataTransfer = { types: [EMAIL_IDS_DRAG_MIME, 'text/plain'], getData: () => '["m1"]', dropEffect: '' };
+    // No layout in jsdom: the position resolves to the middle, not a split edge.
+    const notPrevented = fireEvent.drop(surface, { dataTransfer });
+    expect(notPrevented).toBe(false);
+    expect(useProTabStore.getState().tabs).toHaveLength(1);
+  });
+
+  it('leaves a tab dropped on a tab strip to the strip', async () => {
+    auth.state.isAuthenticated = true;
+    auth.state.client = {};
+    const main = { id: 'home-mail', kind: 'mail' as const, labelKey: 'mail', closeable: false, paneId: 'main' as const };
+    const other = { id: 'cal', kind: 'calendar' as const, labelKey: 'calendar', closeable: true, paneId: 'main' as const };
+    const split = { id: 'files', kind: 'files' as const, labelKey: 'files', closeable: true, paneId: 'split' as const };
+    useProTabStore.setState({
+      tabs: [main, other, split], activeTabId: main.id, activeSplitTabId: split.id, focusedPaneId: 'main',
+      splitOrientation: 'vertical', splitSide: 'right', readerTabId: null, loadedTabIds: ['home-mail', 'cal', 'files'],
+    });
+    const { container } = render(<ProHome />);
+    await act(async () => {});
+    const strip = container.querySelector('[role="tablist"]')!;
+    strip.setAttribute('data-pane-strip', 'main');
+    const seen = vi.fn((e: Event) => { e.preventDefault(); });
+    strip.addEventListener('drop', seen);
+    const dataTransfer = { types: [PRO_TAB_DRAG_MIME], getData: () => 'cal', dropEffect: '' };
+    fireEvent.drop(strip, { dataTransfer });
+    expect(seen).toHaveBeenCalled();
+    expect(useProTabStore.getState().tabs.find((t) => t.id === 'cal')?.paneId).toBe('main');
   });
 });

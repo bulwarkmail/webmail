@@ -4,6 +4,13 @@ import { hookSpec } from '../plugin-hook-catalog';
 import { slotSpec } from '../plugin-slot-catalog';
 
 /**
+ * What an admin's install doesn't settle. These reach things on the user's own computer that
+ * the admin has no say over, so the user is asked even for a plugin the admin put there, and
+ * also when an update adds one to it.
+ */
+export const ALWAYS_ASK_USER: ReadonlySet<string> = new Set(['keystore']);
+
+/**
  * Whether `plugin` may use `perm`: the manifest must declare it, and an
  * admin must have installed the plugin (managed) or the user must have
  * granted it in the consent dialog. Implicit permissions always pass.
@@ -14,7 +21,7 @@ export function pluginHasPermission(plugin: InstalledPlugin, perm: Permission): 
   // Defense-in-depth: even if the manifest declares a permission, the host
   // refuses it unless an admin has marked the plugin as managed, or the user
   // has explicitly granted it via the consent dialog.
-  if (plugin.managed) return true;
+  if (plugin.managed && !ALWAYS_ASK_USER.has(perm)) return true;
   return (plugin.grantedPermissions ?? []).includes(perm);
 }
 
@@ -61,7 +68,8 @@ export function slotPropsFor(
   slot: SlotName,
   props: Record<string, unknown>,
 ): Record<string, unknown> {
-  const allowed = slotSpec(slot)?.props;
+  const spec = slotSpec(slot);
+  const allowed = spec?.props;
   if (allowed === '*') return props;
   if (!allowed) return {};
   const out: Record<string, unknown> = {};
@@ -69,7 +77,23 @@ export function slotPropsFor(
     if (!Object.prototype.hasOwnProperty.call(allowed, key)) continue;
     const perm = allowed[key];
     if (perm && !pluginHasPermission(plugin, perm)) continue;
-    out[key] = value;
+    const fields = spec?.fields?.[key];
+    out[key] = fields ? fieldsFor(plugin, fields, value) : value;
+  }
+  return out;
+}
+
+// A prop made of parts with their own permissions (the app-side-panel's
+// context: an event, a contact, files): only the parts the plugin may see,
+// and none the catalogue doesn't name.
+function fieldsFor(plugin: InstalledPlugin, fields: Record<string, Permission | null>, value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  const out: Record<string, unknown> = {};
+  for (const [field, part] of Object.entries(value as Record<string, unknown>)) {
+    if (!Object.prototype.hasOwnProperty.call(fields, field)) continue;
+    const perm = fields[field];
+    if (perm && !pluginHasPermission(plugin, perm)) continue;
+    out[field] = part;
   }
   return out;
 }

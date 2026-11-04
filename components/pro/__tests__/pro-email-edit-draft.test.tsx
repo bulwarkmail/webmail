@@ -1,6 +1,7 @@
-import { render, waitFor } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
+import { ProTabFocusContext } from '@/hooks/use-pane-context';
 
 /**
  * "Edit draft" on a message in a Pro folder or email tab. A draft in a group or
@@ -25,6 +26,20 @@ vi.mock('@/components/error', () => ({
 }));
 
 vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key }));
+
+// A message window: the Message menu's Move to… opens the folder list there.
+const popout = vi.hoisted(() => ({ value: false }));
+vi.mock('@/lib/popout/window-role', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/lib/popout/window-role')>(),
+  isPopoutWindow: () => popout.value,
+}));
+const moveDialog = vi.hoisted(() => ({ current: null as { emails: unknown[] } | null }));
+vi.mock('@/components/email/move-to-dialog', () => ({
+  MoveToDialog: (props: { emails: unknown[] }) => {
+    moveDialog.current = props;
+    return null;
+  },
+}));
 vi.mock('@/stores/toast-store', () => ({ toast: { error: () => {}, success: () => {} } }));
 const multiAccount = vi.hoisted(() => ({
   value: { enabled: false, groups: [] as unknown[], allIdentities: [] as Array<{ id: string; email: string; name: string }> },
@@ -78,6 +93,7 @@ vi.mock('@/stores/pro-tab-store', () => ({
 }));
 
 import { ProEmailView } from '../pro-email-tab-body';
+import { resetDesktopCommands, runDesktopCommand } from '@/lib/desktop/commands';
 
 const DRAFT = {
   id: 'eaaaaab',
@@ -136,11 +152,47 @@ describe('Pro email view - editing a draft', () => {
     expect(initialData).toMatchObject({ draftId: 'eaaaaab', draftAccountId: 'c' });
   });
 
+  describe('in a window of its own', () => {
+    async function editIn({ onOpenCompose, onClose }: { onOpenCompose: () => Promise<boolean>; onClose: () => void }) {
+      const client = { getEmail: vi.fn().mockResolvedValue(DRAFT), getUsername: () => 'userb@example.org', getAccountId: () => 'e' };
+      render(<ProEmailView emailId="d1" client={client as never} onOpenCompose={onOpenCompose} onClose={onClose} />);
+      await waitFor(() => expect(viewerProps.current?.email).toBeTruthy());
+      (viewerProps.current!.onEditDraft as () => void)();
+    }
+
+    it('leaves the message window only once the draft is on screen in the other, or it would take the draft with it', async () => {
+      let show: (shown: boolean) => void = () => {};
+      const onClose = vi.fn();
+      const onOpenCompose = vi.fn(() => new Promise<boolean>((resolve) => { show = resolve; }));
+      await editIn({ onOpenCompose, onClose });
+      await waitFor(() => expect(onOpenCompose).toHaveBeenCalledTimes(1));
+      expect(onClose).not.toHaveBeenCalled();
+      show(true);
+      await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+    });
+
+    it('stays when the draft did not make it', async () => {
+      const onClose = vi.fn();
+      const onOpenCompose = vi.fn(async () => false);
+      await editIn({ onOpenCompose, onClose });
+      await waitFor(() => expect(onOpenCompose).toHaveBeenCalledTimes(1));
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      expect(onClose).not.toHaveBeenCalled();
+      expect(openComposeTab).not.toHaveBeenCalled();
+    });
+  });
+
   it('opens an own draft without an account, as before', async () => {
     const initialData = await openAndEdit(undefined);
 
     expect(initialData.draftId).toBe('eaaaaab');
     expect(initialData.draftAccountId).toBeUndefined();
+  });
+
+  // The ticks in the main list are another view's: the tab's side panel doesn't get them.
+  it('gives the side panel of an email tab no list selection', async () => {
+    await openAndEdit(undefined);
+    expect(viewerProps.current?.withListSelection).toBe(false);
   });
 
   // Pro shell with the 0.16.23 login active and the 1.0 login's Drafts
@@ -235,5 +287,59 @@ describe('Pro email view - replying and forwarding', () => {
     (viewerProps.current!.onReply as () => void)();
 
     expect(openComposeTab.mock.calls[0][0].sourceEmailSource).toEqual({ clientAccountId: 'userb@v016', accountId: undefined });
+  });
+});
+
+describe('Pro email view - keyboard', () => {
+  const client = { getEmail: vi.fn().mockResolvedValue(DRAFT), getUsername: () => 'userb@example.org', getAccountId: () => 'e' };
+  const press = (key: string, code: string) => document.dispatchEvent(new KeyboardEvent('keydown', { key, code, bubbles: true }));
+
+  beforeEach(() => {
+    viewerProps.current = null;
+    openComposeTab.mockClear();
+  });
+
+  it('replies on r while its tab is in front', async () => {
+    render(
+      <ProTabFocusContext.Provider value={true}>
+        <ProEmailView emailId="eaaaaab" client={client as never} clientAccountId="userb@v10" onClose={vi.fn()} />
+      </ProTabFocusContext.Provider>,
+    );
+    await waitFor(() => expect(viewerProps.current?.email).toBeTruthy());
+    press('r', 'KeyR');
+    expect(openComposeTab).toHaveBeenCalledTimes(1);
+    expect(openComposeTab.mock.calls[0][0]).toMatchObject({ mode: 'reply', sourceEmailId: 'eaaaaab' });
+  });
+
+  it('does nothing on r in a tab behind others', async () => {
+    render(
+      <ProTabFocusContext.Provider value={false}>
+        <ProEmailView emailId="eaaaaab" client={client as never} clientAccountId="userb@v10" onClose={vi.fn()} />
+      </ProTabFocusContext.Provider>,
+    );
+    await waitFor(() => expect(viewerProps.current?.email).toBeTruthy());
+    press('r', 'KeyR');
+    expect(openComposeTab).not.toHaveBeenCalled();
+  });
+});
+
+describe('Message > Move to… in a message window', () => {
+  it('opens the folder list for the message on screen', async () => {
+    popout.value = true;
+    window.bulwarkDesktop = { version: 1, platform: 'win32', menu: { setState: vi.fn() } } as never;
+    try {
+      const client = { getEmail: vi.fn().mockResolvedValue(DRAFT), getUsername: () => 'userb@example.org', getAccountId: () => 'e' };
+      render(<ProEmailView emailId="eaaaaab" client={client as never} onClose={vi.fn()} />);
+      await waitFor(() => expect(viewerProps.current?.email).toBeTruthy());
+      expect(moveDialog.current?.emails ?? []).toEqual([]);
+      act(() => {
+        expect(runDesktopCommand('message.move')).toBe(true);
+      });
+      await waitFor(() => expect(moveDialog.current?.emails?.[0]).toMatchObject({ id: 'eaaaaab' }));
+    } finally {
+      popout.value = false;
+      window.bulwarkDesktop = undefined;
+      resetDesktopCommands();
+    }
   });
 });

@@ -12,7 +12,8 @@ import { getCookieOptions } from '@/lib/oauth/cookie-config';
 import { hasSessionSecret } from '@/lib/auth/session-secret';
 import { configManager } from '@/lib/admin/config-manager';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
-import { isMobileCodeChallenge, mobileHandoffTarget } from '@/lib/auth/mobile-handoff';
+import { desktopHandoffTarget, isMobileCodeChallenge, mobileHandoffTarget } from '@/lib/auth/mobile-handoff';
+import { desktopHandoffEnabled } from '@/lib/auth/desktop-handoff-server';
 
 const SSO_PENDING_COOKIE = 'sso_pending';
 const SSO_PENDING_MAX_AGE = 300; // 5 minutes
@@ -55,6 +56,7 @@ export async function POST(request: NextRequest) {
       purpose: rawPurpose,
       slot: rawSlot,
       remember,
+      fresh_login: freshLogin,
     } = await request.json();
 
     // `reauth` drives the step-up flow for device pairing: it forces a fresh
@@ -72,8 +74,17 @@ export async function POST(request: NextRequest) {
         : null;
     const mobileState =
       typeof rawMobileState === 'string' && rawMobileState ? rawMobileState : null;
-    if (mobileRedirectUri && !mobileHandoffTarget(mobileRedirectUri)) {
+    if (mobileRedirectUri && !mobileHandoffTarget(mobileRedirectUri) && !desktopHandoffTarget(mobileRedirectUri)) {
       return NextResponse.json({ error: 'Invalid mobile_redirect_uri' }, { status: 400 });
+    }
+    // The desktop app's listener only ever gets a code. Without a challenge there'd be
+    // tokens in the answer, on the way to a link.
+    if (mobileRedirectUri && desktopHandoffTarget(mobileRedirectUri) && !isMobileCodeChallenge(rawMobileCodeChallenge)) {
+      return NextResponse.json({ error: 'Invalid mobile_code_challenge' }, { status: 400 });
+    }
+    // The admin turned the desktop app's sign-in off here (a terminal server, say).
+    if (mobileRedirectUri && desktopHandoffTarget(mobileRedirectUri) && !desktopHandoffEnabled()) {
+      return NextResponse.json({ error: 'disabled' }, { status: 403 });
     }
     // An app build that sends a PKCE challenge gets a one-time code instead
     // of the tokens (lib/auth/handoff-store.ts). A malformed one is refused
@@ -178,7 +189,9 @@ export async function POST(request: NextRequest) {
     // depends on the IdP supporting this OIDC param. Deliberately no max_age=0:
     // some IdPs (Authelia) re-evaluate max_age at the consent step and loop
     // back to login forever, and nothing on our side reads auth_time.
-    if (isReauth) {
+    // The same after a forgotten app lock PIN: the provider's session outlived it, and
+    // someone at the device shouldn't walk back in through it (lib/app-lock/sign-out.ts).
+    if (isReauth || freshLogin === true) {
       authUrl.searchParams.set('prompt', 'login');
     }
 

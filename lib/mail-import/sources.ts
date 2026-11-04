@@ -10,7 +10,7 @@ import { listZipEntries, readZipEntry, streamZipEntry } from "./zip-reader";
  * piece so a large file never has to fit in memory.
  */
 
-export type ImportFormat = "eml" | "zip" | "mbox" | "pst";
+export type ImportFormat = "eml" | "zip" | "mbox" | "pst" | "maildir";
 
 export type SkipReason =
   /** Larger than the server takes (maxSizeUpload). */
@@ -28,7 +28,9 @@ export type SkipReason =
   /** PST items after a broken one in the same folder, which pst-extractor can't reach. */
   | "unreadable"
   /** Imported by an earlier run of the same import. */
-  | "resumed";
+  | "resumed"
+  /** The same message into the same folder was imported before, by any run. */
+  | "duplicate";
 
 export interface ImportMessage {
   kind: "message";
@@ -54,7 +56,15 @@ export interface ImportSkip {
   label?: string;
 }
 
-export type ImportItem = ImportMessage | ImportSkip;
+/** Couldn't be read now, which may pass: a failure, and the next run tries it again. */
+export interface ImportReadFailure {
+  kind: "failed";
+  index: number;
+  label: string;
+  reason: string;
+}
+
+export type ImportItem = ImportMessage | ImportSkip | ImportReadFailure;
 
 export interface SourceOptions {
   /** Messages larger than this are skipped as too_large without reading them in. */
@@ -231,9 +241,78 @@ async function* fileChunks(file: Blob, onProgress?: (fraction: number) => void):
   }
 }
 
-export async function* mboxSource(file: File, options: SourceOptions): ItemSource {
+/** `folder`: where a file with no folders of its own belongs, as a Thunderbird folder does. */
+export async function* mboxSource(file: File, options: SourceOptions, folder: string[] = []): ItemSource {
   // Reads run ahead in 1 MB pieces; the messages handed over say how far the import really is.
-  yield* mboxFromChunks(fileChunks(file), [], options, 0, () => {}, (offset) => options.onProgress?.(offset / Math.max(1, file.size)));
+  yield* mboxFromChunks(fileChunks(file), folder, options, 0, () => {}, (offset) => options.onProgress?.(offset / Math.max(1, file.size)));
+  options.onProgress?.(1);
+}
+
+/** A Maildir folder: messages by position, in an order that stays the same between runs. */
+export interface MaildirFile {
+  name: string;
+  size: number;
+  lastModified: number;
+  entrySizes: number[];
+  /** Null when the message has gone since the folder was listed. */
+  readEntry(index: number): Promise<Uint8Array | null>;
+}
+
+function maildirItem(bytes: Uint8Array, index: number, folder: string[]): ImportItem {
+  // Thunderbird writes its `From - <date>` line into Maildir messages too.
+  let body = bytes;
+  let fromLine = "";
+  if (String.fromCharCode(...bytes.subarray(0, 5)) === "From ") {
+    const end = bytes.indexOf(0x0a);
+    if (end >= 0) {
+      fromLine = new TextDecoder("latin1").decode(bytes.subarray(0, end)).trim();
+      body = bytes.subarray(end + 1);
+    }
+  }
+  const headers = readHeaderBlock([body]);
+  const state = mboxState(headers);
+  const subject = subjectOf(headers);
+  if (state.expunged) return { kind: "skipped", index, reason: "deleted", label: subject };
+  const parts = withoutStateHeaders([body]);
+  return {
+    kind: "message",
+    index,
+    folder,
+    data: new Blob(parts as BlobPart[], { type: MIME }),
+    size: parts.reduce((n, p) => n + p.length, 0),
+    keywords: state.keywords,
+    receivedAt: arrivalTime(fromLine, headers),
+    label: subject,
+  };
+}
+
+export async function* maildirSource(file: MaildirFile, options: SourceOptions, folder: string[] = []): ItemSource {
+  const count = file.entrySizes.length;
+  options.onTotal?.(count);
+  let doneBytes = 0;
+  for (let index = 0; index < count; index++) {
+    throwIfAborted(options.signal);
+    const size = file.entrySizes[index];
+    if (isResumed(options, index)) {
+      yield { kind: "skipped", index, reason: "resumed" };
+    } else if (size > options.maxMessageBytes) {
+      yield { kind: "skipped", index, reason: "too_large", label: String(index + 1) };
+    } else {
+      let bytes: Uint8Array | null = null;
+      let failure: string | null = null;
+      try {
+        bytes = await file.readEntry(index);
+      } catch (error) {
+        if ((error as { name?: string } | null)?.name === "AbortError") throw error;
+        failure = error instanceof Error ? error.message : String(error);
+      }
+      // Null is the file saying it has really gone. Anything else must not move the import past it.
+      if (failure !== null) yield { kind: "failed", index, label: `${file.name} #${index + 1}`, reason: failure };
+      else yield bytes ? maildirItem(bytes, index, folder) : { kind: "skipped", index, reason: "deleted" };
+    }
+    doneBytes += size;
+    options.onProgress?.(doneBytes / Math.max(1, file.size));
+  }
   options.onProgress?.(1);
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useSelectedLayoutSegment } from "next/navigation";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useIsDesktop } from "@/hooks/use-media-query";
@@ -53,7 +54,10 @@ export function ProInterfaceRedirect() {
   const proInterface = useSettingsStore((s) => s.proInterface);
   const isDesktop = useIsDesktop();
   const { label } = useSkeletonLabels();
-  const takingOver = proInterface && isDesktop && matchSurface(pathname) !== null;
+  // Browser Back onto a URL the shell wrote by hand: the path says Calendar
+  // but the route is still /pro, with the shell mounted. Nothing to cover.
+  const shellIsUp = useSelectedLayoutSegment() === 'pro';
+  const takingOver = proInterface && isDesktop && !shellIsUp && matchSurface(pathname) !== null;
 
   useEffect(() => {
     if (!proInterface || !isDesktop) return;
@@ -76,7 +80,7 @@ export function ProInterfaceRedirect() {
 
   if (!takingOver) return null;
   return (
-    <div className="fixed inset-0 z-50" data-pro-takeover="">
+    <div className="fixed inset-0 z-50 pt-[var(--titlebar-inset)]" data-pro-takeover="">
       <ProSkeleton label={label} />
     </div>
   );

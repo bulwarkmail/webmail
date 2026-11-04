@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useMemo, useCallback, useRef, useEffect, useId } from "react";
-import { useTranslations } from "next-intl";
-import { X, Plus, ChevronDown, ChevronRight, User, Building, MapPin, Globe, Cake, Heart, Tag, StickyNote, Mail, Phone, Calendar, UserCircle, Book, Camera, Trash2 } from "@/components/icons";
+import { useCloseBesideControls } from "@/hooks/use-close-beside-controls";
+import { useLocale, useTranslations } from "next-intl";
+import { X, Plus, ChevronDown, ChevronRight, User, Building, MapPin, Globe, Cake, Heart, Tag, StickyNote, Mail, Phone, Calendar, UserCircle, Book, Camera, Trash2, MoreHorizontal } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
@@ -10,38 +11,48 @@ import { Avatar } from "@/components/ui/avatar";
 import { findContactPhotoEntry, getContactPhotoRef, type ContactPhotoRef } from "@/stores/contact-store";
 import type { ContactSaveOptions } from "@/lib/contact-media";
 import { cn } from "@/lib/utils";
+import { addressStyle, addressToParts, countryCodeFromName, partsToComponents, type AddressStyle } from "@/lib/address-format";
 import { useBottomControls } from "@/hooks/use-bottom-controls";
 import type { ContactCard, ContactOnlineService, ContactAnniversary, ContactPersonalInfo, AddressBook, AnniversaryDate, PartialDate, ContactAddress, ContactMedia } from "@/lib/jmap/types";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
+// Each row of a list field keeps the `key` of the card's entry it was read
+// from, so Save can send an entry the user didn't touch back unchanged.
 interface EmailEntry {
+  key?: string;
   address: string;
   context: "work" | "private" | "";
 }
 
 interface PhoneEntry {
+  key?: string;
   number: string;
   context: "work" | "private" | "";
   feature: "voice" | "mobile" | "fax" | "pager" | "video" | "text" | "";
 }
 
 interface OnlineServiceEntry {
+  key?: string;
   uri: string;
   service: string;
   label: string;
 }
 
 interface AnniversaryEntry {
+  key?: string;
   date: string;
   kind: "birth" | "death" | "wedding" | "other";
 }
 
 interface PersonalInfoEntry {
+  key?: string;
   value: string;
   kind: "expertise" | "hobby" | "interest" | "other";
   level: "high" | "medium" | "low" | "";
 }
 
 interface AddressEntry {
+  key?: string;
   street: string;
   locality: string;
   region: string;
@@ -122,6 +133,69 @@ function mediaForPhotoEdit(
   for (const [key, entry] of Object.entries(base)) media[key] = key === photoKey ? photo : entry;
   media[photoKey] = photo;
   return { media, photoKey };
+}
+
+/**
+ * The map to save for a list field (emails, phones, addresses...). A row the
+ * user didn't touch goes back exactly as the card had it, under its key. An
+ * edited row is built on the card's entry (`previous`), so properties the
+ * form doesn't show stay; a new row gets a key no other entry uses.
+ */
+function entriesToSave<E extends { key?: string }, V>(
+  rows: E[],
+  initialRows: E[],
+  original: Record<string, V> | undefined,
+  prefix: string,
+  build: (row: E, previous: V | undefined, before: E | undefined) => V,
+): Record<string, V> {
+  const out: Record<string, V> = {};
+  const taken = new Set(rows.map(r => r.key).filter((k): k is string => !!k && !!original?.[k]));
+  let n = 0;
+  const freshKey = () => {
+    let key = `${prefix}${n++}`;
+    while (taken.has(key)) key = `${prefix}${n++}`;
+    taken.add(key);
+    return key;
+  };
+  for (const row of rows) {
+    const previous = row.key ? original?.[row.key] : undefined;
+    const before = previous !== undefined ? initialRows.find(r => r.key === row.key) : undefined;
+    if (previous !== undefined && before && JSON.stringify(before) === JSON.stringify(row)) {
+      out[row.key!] = previous;
+    } else {
+      out[previous !== undefined ? row.key! : freshKey()] = build(row, previous, before);
+    }
+  }
+  return out;
+}
+
+/** A row the card had and the user left as it was. */
+function isUntouchedRow<E extends { key?: string }>(row: E, initialRows: E[], original: Record<string, unknown> | undefined): boolean {
+  if (!row.key || original?.[row.key] === undefined) return false;
+  const before = initialRows.find(r => r.key === row.key);
+  return !!before && JSON.stringify(before) === JSON.stringify(row);
+}
+
+/** `contexts` for a row: the card's own when the select wasn't changed. */
+function contextsToSave(context: string, previous: Record<string, boolean> | undefined, before: { context: string } | undefined): Record<string, boolean> | undefined {
+  if (before && before.context === context) return previous;
+  return context ? { [context]: true } : undefined;
+}
+
+/** A card's first entry of a map with one field changed, the others kept; undefined when none is left. */
+function firstEntryToSave<V extends object>(original: Record<string, V> | undefined, fallbackKey: string, value: V | null): Record<string, V> | undefined {
+  const entries = Object.entries(original ?? {});
+  const [firstKey, first] = entries[0] ?? [fallbackKey, undefined];
+  const rest = entries.slice(1);
+  const out: Record<string, V> = {};
+  if (value) out[firstKey] = { ...(first ?? {}), ...value } as V;
+  for (const [k, v] of rest) out[k] = v;
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
+/** Drops keys whose value is undefined, so a built entry has no empty properties. */
+function compact<T extends object>(obj: T): T {
+  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined)) as T;
 }
 
 function FormSection({ icon: Icon, title, children, collapsible, defaultOpen = true }: {
@@ -218,8 +292,14 @@ function Select({ value, onChange, children, className, id, "aria-label": ariaLa
 }
 
 export function ContactForm({ contact, addressBooks, allKeywords, defaultAddressBookId, prefill, onSave, onCancel, loadCurrentMedia, onDirtyChange }: ContactFormProps) {
+  const shownName = useCollectionNames();
   const t = useTranslations("contacts.form");
+  const tx = useTranslations("ux_pim_contact");
+  const locale = useLocale();
   const isEditing = !!contact;
+  // The header's close goes to its start when the window's own close is at its end.
+  const [header, setHeader] = useState<HTMLDivElement | null>(null);
+  const closeFirst = useCloseBesideControls(header);
   // Ids that tie each visible label to its field.
   const fieldIdBase = useId();
   const fieldId = (key: string) => `${fieldIdBase}-${key}`;
@@ -278,25 +358,12 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
     return pd;
   }
 
-  // Extract flat address fields from RFC 9553 components format
-  function addressToFlat(a: ContactAddress): AddressEntry {
-    if (a.components && a.components.length > 0) {
-      const findComp = (kind: string) => a.components!.filter(c => c.kind === kind).map(c => c.value).join(' ');
-      return {
-        street: findComp('name') || findComp('number') ? [findComp('number'), findComp('name')].filter(Boolean).join(' ') : '',
-        locality: findComp('locality'),
-        region: findComp('region'),
-        postcode: findComp('postcode'),
-        country: findComp('country'),
-        context: a.contexts?.work ? 'work' : a.contexts?.private ? 'private' : '',
-      };
-    }
+  // The form's fields for an address: street name and house number in one
+  // field, in the order of the address's country ("Hauptstraße 1").
+  function addressToFlat(key: string, a: ContactAddress): AddressEntry {
     return {
-      street: a.street || '',
-      locality: a.locality || '',
-      region: a.region || '',
-      postcode: a.postcode || '',
-      country: a.country || '',
+      key,
+      ...addressToParts(a, locale),
       context: a.contexts?.work ? 'work' : a.contexts?.private ? 'private' : '',
     };
   }
@@ -313,7 +380,8 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
 
   const [emails, setEmails] = useState<EmailEntry[]>(() => {
     if (contact?.emails) {
-      return Object.values(contact.emails).map(e => ({
+      return Object.entries(contact.emails).map(([key, e]) => ({
+        key,
         address: e.address,
         context: e.contexts?.work ? "work" : e.contexts?.private ? "private" : "",
       }));
@@ -323,7 +391,8 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
 
   const [phones, setPhones] = useState<PhoneEntry[]>(() => {
     if (contact?.phones) {
-      return Object.values(contact.phones).map(p => ({
+      return Object.entries(contact.phones).map(([key, p]) => ({
+        key,
         number: p.number,
         context: p.contexts?.work ? "work" : p.contexts?.private ? "private" : "",
         // RFC 9553 calls it "mobile"; cards saved by older versions of this form say "cell".
@@ -367,14 +436,15 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
 
   const [addresses, setAddresses] = useState<AddressEntry[]>(() => {
     if (contact?.addresses) {
-      return Object.values(contact.addresses).map(a => addressToFlat(a));
+      return Object.entries(contact.addresses).map(([key, a]) => addressToFlat(key, a));
     }
     return [];
   });
 
   const [onlineServices, setOnlineServices] = useState<OnlineServiceEntry[]>(() => {
     if (contact?.onlineServices) {
-      return Object.values(contact.onlineServices).map(s => ({
+      return Object.entries(contact.onlineServices).map(([key, s]) => ({
+        key,
         uri: s.uri,
         service: s.service || "",
         label: s.label || "",
@@ -385,7 +455,8 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
 
   const [anniversaries, setAnniversaries] = useState<AnniversaryEntry[]>(() => {
     if (contact?.anniversaries) {
-      return Object.values(contact.anniversaries).map(a => ({
+      return Object.entries(contact.anniversaries).map(([key, a]) => ({
+        key,
         date: anniversaryDateToString(a.date),
         kind: a.kind,
       }));
@@ -395,7 +466,8 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
 
   const [personalInfoEntries, setPersonalInfoEntries] = useState<PersonalInfoEntry[]>(() => {
     if (contact?.personalInfo) {
-      return Object.values(contact.personalInfo).map(p => ({
+      return Object.entries(contact.personalInfo).map(([key, p]) => ({
+        key,
         value: p.value,
         kind: p.kind,
         level: p.level || "",
@@ -470,9 +542,37 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
     keywordsStr, categoryDraft, note, genderSex, genderIdentity, calendarUri, schedulingUri, freeBusyUri, selectedBookId,
   ]);
   const [initialFields] = useState(fields);
+
+  // What each card property is built from. Saving an existing card sends only
+  // the properties whose fields changed, so the rest stay exactly as stored,
+  // structured address parts included (#pim-4).
+  const personNamed = !!(givenName.trim() || surname.trim());
+  const propertyFields: Record<string, unknown> = {
+    name: [prefix, givenName, additionalName, surname, suffix, isOrg, isOrg || !personNamed ? organization : ""],
+    nicknames: nickname,
+    emails,
+    phones,
+    titles: [jobTitle, role],
+    organizations: [organization, department],
+    addresses,
+    onlineServices,
+    anniversaries,
+    personalInfo: personalInfoEntries,
+    keywords: [keywordsStr, categoryDraft],
+    notes: note,
+    speakToAs: [genderSex, genderIdentity],
+    calendarUri: [calendarUri, freeBusyUri],
+    freeBusyUri: [calendarUri, freeBusyUri],
+    schedulingUri,
+    addressBookIds: selectedBookId,
+  };
+  const [initialPropertyFields] = useState(() => JSON.stringify(propertyFields));
+  const [initialRows] = useState(() => ({ emails, phones, addresses, onlineServices, anniversaries, personalInfoEntries, department }));
   const dirty = fields !== initialFields || photoEdit.kind !== "unchanged";
   useEffect(() => { onDirtyChange?.(dirty); }, [dirty, onDirtyChange]);
   const footerRef = useBottomControls();
+  const [hasMoreFields] = useState(() => onlineServices.length > 0 || personalInfoEntries.length > 0
+    || !!(genderSex || genderIdentity) || !!(calendarUri || schedulingUri || freeBusyUri));
 
   const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -540,27 +640,21 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
       }
     }
 
-    const emailsMap: Record<string, { address: string; contexts?: Record<string, boolean> }> = {};
-    validEmails.forEach((entry, i) => {
-      const obj: { address: string; contexts?: Record<string, boolean> } = { address: entry.address.trim() };
-      if (entry.context) {
-        obj.contexts = { [entry.context]: true };
-      }
-      emailsMap[`e${i}`] = obj;
-    });
+    type Email = NonNullable<ContactCard["emails"]>[string];
+    type PhoneValue = NonNullable<ContactCard["phones"]>[string];
+    const emailsMap = entriesToSave<EmailEntry, Email>(validEmails, initialRows.emails, contact?.emails, "e", (row, previous, before) => compact({
+      ...previous,
+      address: row.address.trim(),
+      contexts: contextsToSave(row.context, previous?.contexts, before),
+    }));
 
     const validPhones = phones.filter(p => p.number.trim());
-    const phonesMap: Record<string, { number: string; contexts?: Record<string, boolean>; features?: Record<string, boolean> }> = {};
-    validPhones.forEach((entry, i) => {
-      const obj: { number: string; contexts?: Record<string, boolean>; features?: Record<string, boolean> } = { number: entry.number.trim() };
-      if (entry.context) {
-        obj.contexts = { [entry.context]: true };
-      }
-      if (entry.feature) {
-        obj.features = { [entry.feature]: true };
-      }
-      phonesMap[`p${i}`] = obj;
-    });
+    const phonesMap = entriesToSave<PhoneEntry, PhoneValue>(validPhones, initialRows.phones, contact?.phones, "p", (row, previous, before) => compact({
+      ...previous,
+      number: row.number.trim(),
+      contexts: contextsToSave(row.context, previous?.contexts, before),
+      features: before && before.feature === row.feature ? previous?.features : row.feature ? { [row.feature]: true } : undefined,
+    }));
 
     // Emit JSContact-standard kinds (RFC 9553) so the JMAP server stores them losslessly.
     const nameComponents = [];
@@ -590,41 +684,61 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
     if (jobTitle.trim()) titlesMap["t0"] = { name: jobTitle.trim(), kind: "title" };
     if (role.trim()) titlesMap["t1"] = { name: role.trim(), kind: "role" };
 
-    const orgUnits = department.trim() ? [{ name: department.trim() }] : undefined;
+    const firstOrg = Object.values(contact?.organizations ?? {})[0];
+    const orgUnits = firstOrg && department === initialRows.department
+      ? firstOrg.units
+      : department.trim() ? [{ name: department.trim() }] : undefined;
 
-    const addressesMap: Record<string, ContactCard["addresses"] extends Record<string, infer V> ? V : never> = {};
-    addresses.filter(a => a.street.trim() || a.locality.trim() || a.country.trim()).forEach((a, i) => {
-      const components: Array<{ kind: string; value: string }> = [];
-      if (a.street.trim()) components.push({ kind: "name", value: a.street.trim() });
-      if (a.locality.trim()) components.push({ kind: "locality", value: a.locality.trim() });
-      if (a.region.trim()) components.push({ kind: "region", value: a.region.trim() });
-      if (a.postcode.trim()) components.push({ kind: "postcode", value: a.postcode.trim() });
-      if (a.country.trim()) components.push({ kind: "country", value: a.country.trim() });
-      const obj: Record<string, unknown> = { components, isOrdered: true, defaultSeparator: ", " };
-      if (a.context) obj.contexts = { [a.context]: true };
-      // @ts-expect-error - dynamic build
-      addressesMap[`a${i}`] = obj;
-    });
+    // An address the user didn't touch goes back as the card had it. An edited
+    // one is rebuilt in its country's order ("Hauptstraße" + "1", then
+    // postcode and city), keeping the parts the form doesn't show.
+    const addressesMap = entriesToSave<AddressEntry, ContactAddress>(
+      // An address the form can't show (only `full` text, a PO box) has empty
+      // rows here; untouched, it stays.
+      addresses.filter(a => a.street.trim() || a.locality.trim() || a.region.trim() || a.postcode.trim() || a.country.trim()
+        || isUntouchedRow(a, initialRows.addresses, contact?.addresses)),
+      initialRows.addresses, contact?.addresses, "a",
+      (row, previous, before) => {
+        const { components: previousComponents, full: _full, fullAddress: _fullAddress, street: _s, locality: _l, region: _r, postcode: _p, country: _c, ...kept } = previous ?? {};
+        void _full; void _fullAddress; void _s; void _l; void _r; void _p; void _c;
+        const countryCode = before && before.country === row.country
+          ? previous?.countryCode
+          : countryCodeFromName(row.country) ?? undefined;
+        return compact({
+          ...kept,
+          components: partsToComponents(row, previousComponents ?? [], locale, countryCode),
+          isOrdered: true,
+          defaultSeparator: previous?.defaultSeparator ?? ", ",
+          countryCode,
+          contexts: contextsToSave(row.context, previous?.contexts, before),
+        });
+      },
+    );
 
-    const onlineServicesMap: Record<string, ContactOnlineService> = {};
-    onlineServices.filter(s => s.uri.trim()).forEach((s, i) => {
-      const obj: ContactOnlineService = { uri: s.uri.trim() };
-      if (s.service.trim()) obj.service = s.service.trim();
-      if (s.label.trim()) obj.label = s.label.trim();
-      onlineServicesMap[`os${i}`] = obj;
-    });
+    const onlineServicesMap = entriesToSave<OnlineServiceEntry, ContactOnlineService>(
+      onlineServices.filter(s => s.uri.trim()), initialRows.onlineServices, contact?.onlineServices, "os",
+      (row, previous) => compact({
+        ...previous,
+        uri: row.uri.trim(),
+        service: row.service.trim() || undefined,
+        label: row.label.trim() || undefined,
+      }),
+    );
 
-    const anniversariesMap: Record<string, ContactAnniversary> = {};
-    anniversaries.filter(a => a.date.trim()).forEach((a, i) => {
-      anniversariesMap[`an${i}`] = { date: stringToPartialDate(a.date.trim()), kind: a.kind };
-    });
+    const anniversariesMap = entriesToSave<AnniversaryEntry, ContactAnniversary>(
+      anniversaries.filter(a => a.date.trim()), initialRows.anniversaries, contact?.anniversaries, "an",
+      (row, previous) => ({ ...previous, date: stringToPartialDate(row.date.trim()), kind: row.kind }),
+    );
 
-    const personalInfoMap: Record<string, ContactPersonalInfo> = {};
-    personalInfoEntries.filter(p => p.value.trim()).forEach((p, i) => {
-      const obj: ContactPersonalInfo = { value: p.value.trim(), kind: p.kind };
-      if (p.level) obj.level = p.level as "high" | "medium" | "low";
-      personalInfoMap[`pi${i}`] = obj;
-    });
+    const personalInfoMap = entriesToSave<PersonalInfoEntry, ContactPersonalInfo>(
+      personalInfoEntries.filter(p => p.value.trim()), initialRows.personalInfoEntries, contact?.personalInfo, "pi",
+      (row, previous) => compact({
+        ...previous,
+        value: row.value.trim(),
+        kind: row.kind,
+        level: (row.level || undefined) as ContactPersonalInfo["level"],
+      }),
+    );
 
     const keywordsMap: Record<string, boolean> = {};
     keywordsStr.split(",").map(k => k.trim()).filter(Boolean).forEach(k => {
@@ -644,21 +758,18 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
     const data: Partial<ContactCard> = {
       name: nameValue,
       ...(kindValue ? { kind: kindValue } : {}),
-      nicknames: nickname.trim() ? { n0: { name: nickname.trim() } } : undefined,
+      // The form edits the first nickname, note and organization; others stay.
+      nicknames: firstEntryToSave(contact?.nicknames, "n0", nickname.trim() ? { name: nickname.trim() } : null),
       emails: Object.keys(emailsMap).length > 0 ? emailsMap : undefined,
       phones: Object.keys(phonesMap).length > 0 ? phonesMap : undefined,
       titles: Object.keys(titlesMap).length > 0 ? titlesMap : undefined,
-      organizations: orgName
-        ? { o0: { name: orgName, units: orgUnits } }
-        : undefined,
+      organizations: firstEntryToSave(contact?.organizations, "o0", orgName ? { name: orgName, units: orgUnits } : null),
       addresses: Object.keys(addressesMap).length > 0 ? addressesMap : undefined,
       onlineServices: Object.keys(onlineServicesMap).length > 0 ? onlineServicesMap : undefined,
       anniversaries: Object.keys(anniversariesMap).length > 0 ? anniversariesMap : undefined,
       personalInfo: Object.keys(personalInfoMap).length > 0 ? personalInfoMap : undefined,
       keywords: Object.keys(keywordsMap).length > 0 ? keywordsMap : undefined,
-      notes: note.trim()
-        ? { n0: { note: note.trim() } }
-        : undefined,
+      notes: firstEntryToSave(contact?.notes, "n0", note.trim() ? { note: note.trim() } : null),
       speakToAs: (genderSex.trim() || genderIdentity.trim())
         ? {
             grammaticalGender: genderSex.trim() || undefined,
@@ -670,6 +781,15 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
       freeBusyUri: freeBusyUri.trim() || undefined,
       ...(selectedBookId ? { addressBookIds: { [selectedBookId]: true } } : {}),
     };
+
+    // An existing card gets only what changed: every property left out stays
+    // on the server exactly as it is.
+    if (contact) {
+      const before = JSON.parse(initialPropertyFields) as Record<string, unknown>;
+      for (const [property, value] of Object.entries(propertyFields)) {
+        if (JSON.stringify(value) === JSON.stringify(before[property])) delete data[property as keyof ContactCard];
+      }
+    }
 
     setIsSaving(true);
     try {
@@ -700,17 +820,22 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
   const previewName = (isOrg ? "" : [givenName, surname].filter(Boolean).join(" ").trim()) || organization.trim();
   const previewEmail = emails.find(e => e.address.trim())?.address.trim() || "";
 
+  const close = (
+    <IconButton label={t("close")} onClick={onCancel}>
+      <X />
+    </IconButton>
+  );
+
   return (
     // The app checks the fields itself and says what is wrong inline; the
     // browser's own bubble covered that message.
     <form onSubmit={handleSubmit} noValidate className="flex flex-col h-full bg-background">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
-        <h2 className="text-lg font-semibold">
+      <div ref={setHeader} data-window-top-row="" className="flex items-center gap-2 px-6 py-4 border-b border-border flex-shrink-0">
+        {closeFirst && close}
+        <h2 className="min-w-0 flex-1 text-lg font-semibold">
           {isEditing ? t("edit_title") : t("create_title")}
         </h2>
-        <IconButton label={t("close")} onClick={onCancel}>
-          <X />
-        </IconButton>
+        {!closeFirst && close}
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -786,7 +911,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                 {addressBooks.map((book) => (
                   <option key={book.id} value={book.id}>
                     {/* A shared book says whose it is, unless its name already does. */}
-                    {book.isShared && book.accountName && !book.name.includes(book.accountName) ? `${book.name} (${book.accountName})` : book.name}
+                    {book.isShared && book.accountName && !shownName.addressBook(book).includes(book.accountName) ? `${shownName.addressBook(book)} (${book.accountName})` : shownName.addressBook(book)}
                   </option>
                 ))}
               </select>
@@ -873,10 +998,10 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
 
           {/* Email */}
           <FormSection icon={Mail} title={t("email")}>
-            <div className="space-y-2">
+            <div className="space-y-2 @container">
               {emails.map((entry, i) => (
                 <div key={i}>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap @md:flex-nowrap items-center gap-2">
                     <Input
                       type="email"
                       inputMode="email"
@@ -894,7 +1019,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                       aria-label={t("email")}
                       aria-invalid={emailErrors[i] ? true : undefined}
                       aria-describedby={emailErrors[i] ? fieldId(`email-error-${i}`) : undefined}
-                      className={cn("flex-1", emailErrors[i] && "border-destructive focus-visible:border-destructive")}
+                      className={cn("grow basis-full @md:basis-0", emailErrors[i] && "border-destructive focus-visible:border-destructive")}
                     />
                     <Select
                       value={entry.context}
@@ -907,7 +1032,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                     >
                       <option value="">-</option>
                       <option value="work">{t("context_work")}</option>
-                      <option value="private">{t("context_private")}</option>
+                      <option value="private">{tx("context_private")}</option>
                     </Select>
                     {emails.length > 1 && (
                       <IconButton label={t("remove_entry")} onClick={() => setEmails(emails.filter((_, j) => j !== i))} className="shrink-0">
@@ -929,9 +1054,10 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
 
           {/* Phone */}
           <FormSection icon={Phone} title={t("phone")}>
-            <div className="space-y-2">
+            <div className="space-y-2 @container">
+              {/* In a narrow pane the number takes a line of its own: beside the two selects it was cut to two digits. */}
               {phones.map((entry, i) => (
-                <div key={i} className="flex items-center gap-2">
+                <div key={i} className="flex flex-wrap @md:flex-nowrap items-center gap-2">
                   <Input
                     type="tel"
                     inputMode="tel"
@@ -943,7 +1069,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                     }}
                     placeholder={t("phone_placeholder")}
                     aria-label={t("phone")}
-                    className="flex-1"
+                    className="grow basis-full @md:basis-0"
                   />
                   <Select
                     value={entry.feature}
@@ -952,11 +1078,11 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                       next[i] = { ...next[i], feature: e.target.value as PhoneEntry["feature"] };
                       setPhones(next);
                     }}
-                    className="w-[5.5rem]"
+                    className="w-28"
                     aria-label={t("phone_type")}
                   >
                     <option value="">{t("phone_type")}</option>
-                    <option value="voice">{t("phone_voice")}</option>
+                    <option value="voice">{tx("phone_voice")}</option>
                     <option value="mobile">{t("phone_cell")}</option>
                     <option value="fax">{t("phone_fax")}</option>
                     <option value="pager">{t("phone_pager")}</option>
@@ -974,7 +1100,7 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
                   >
                     <option value="">-</option>
                     <option value="work">{t("context_work")}</option>
-                    <option value="private">{t("context_private")}</option>
+                    <option value="private">{tx("context_private")}</option>
                   </Select>
                   <IconButton label={t("remove_entry")} onClick={() => setPhones(phones.filter((_, j) => j !== i))} className="shrink-0">
                     <X />
@@ -1016,65 +1142,64 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
           {/* Addresses */}
           <FormSection icon={MapPin} title={t("addresses")} collapsible defaultOpen={addresses.length > 0}>
             <div className="space-y-3">
-              {addresses.map((addr, i) => (
-                <div key={i} className="rounded-md border border-border/60 bg-muted/20 p-3 space-y-2 relative">
-                  <IconButton label={t("remove_entry")} onClick={() => setAddresses(addresses.filter((_, j) => j !== i))} className="absolute top-1 end-1">
-                    <X />
-                  </IconButton>
-                  <Input value={addr.street} onChange={(e) => { const n = [...addresses]; n[i] = { ...n[i], street: e.target.value }; setAddresses(n); }} placeholder={t("street")} aria-label={t("street")} />
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input value={addr.locality} onChange={(e) => { const n = [...addresses]; n[i] = { ...n[i], locality: e.target.value }; setAddresses(n); }} placeholder={t("city")} aria-label={t("city")} />
-                    <Input value={addr.region} onChange={(e) => { const n = [...addresses]; n[i] = { ...n[i], region: e.target.value }; setAddresses(n); }} placeholder={t("region")} aria-label={t("region")} />
+              {addresses.map((addr, i) => {
+                const set = (name: keyof Omit<AddressEntry, "key">) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+                  const n = [...addresses];
+                  n[i] = { ...n[i], [name]: e.target.value };
+                  setAddresses(n);
+                };
+                const original = addr.key ? contact?.addresses?.[addr.key] : undefined;
+                const initialCountry = addr.key ? initialRows.addresses.find(a => a.key === addr.key)?.country : undefined;
+                const style: AddressStyle = addressStyle(addr.country, initialCountry === addr.country ? original?.countryCode : null, locale);
+                const field = (name: "locality" | "region" | "postcode", label: string, className?: string) => (
+                  <Input key={name} value={addr[name]} onChange={set(name)} placeholder={label} aria-label={label} className={className} />
+                );
+                const country = <Input key="country" value={addr.country} onChange={set("country")} placeholder={t("country")} aria-label={t("country")} />;
+                const context = (
+                  <Select key="context" value={addr.context} onChange={set("context")} aria-label={t("context_label")}>
+                    <option value="">-</option>
+                    <option value="work">{t("context_work")}</option>
+                    <option value="private">{tx("context_private")}</option>
+                  </Select>
+                );
+                return (
+                  <div key={addr.key ?? `new-${i}`} data-address-layout={style.town} className="rounded-md border border-border/60 bg-muted/20 p-3 space-y-2 relative">
+                    <IconButton label={t("remove_entry")} onClick={() => setAddresses(addresses.filter((_, j) => j !== i))} className="absolute top-1 end-1">
+                      <X />
+                    </IconButton>
+                    {/* Street and house number in one field, in the order the country writes them. */}
+                    <Input value={addr.street} onChange={set("street")} placeholder={t("street")} aria-label={t("street")} className="pe-10" />
+                    {style.town === "postcode-city" ? (
+                      <>
+                        <div className="grid grid-cols-3 gap-2">
+                          {field("postcode", t("postcode"))}
+                          {field("locality", t("city"), "col-span-2")}
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          {field("region", t("region"))}
+                          {country}
+                          {context}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-2 gap-2">
+                          {field("locality", t("city"))}
+                          {field("region", t("region"))}
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          {field("postcode", t("postcode"))}
+                          {country}
+                          {context}
+                        </div>
+                      </>
+                    )}
                   </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Input value={addr.postcode} onChange={(e) => { const n = [...addresses]; n[i] = { ...n[i], postcode: e.target.value }; setAddresses(n); }} placeholder={t("postcode")} aria-label={t("postcode")} />
-                    <Input value={addr.country} onChange={(e) => { const n = [...addresses]; n[i] = { ...n[i], country: e.target.value }; setAddresses(n); }} placeholder={t("country")} aria-label={t("country")} />
-                    <Select
-                      value={addr.context}
-                      onChange={(e) => { const n = [...addresses]; n[i] = { ...n[i], context: e.target.value as AddressEntry["context"] }; setAddresses(n); }}
-                      aria-label={t("context_label")}
-                    >
-                      <option value="">-</option>
-                      <option value="work">{t("context_work")}</option>
-                      <option value="private">{t("context_private")}</option>
-                    </Select>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               <Button type="button" variant="ghost" size="sm" onClick={() => setAddresses([...addresses, { street: "", locality: "", region: "", postcode: "", country: "", context: "" }])} className="text-xs">
                 <Plus className="w-3 h-3 me-1" />
                 {t("add_address")}
-              </Button>
-            </div>
-          </FormSection>
-
-          {/* Online Services */}
-          <FormSection icon={Globe} title={t("online_services")} collapsible defaultOpen={onlineServices.length > 0}>
-            <div className="space-y-2">
-              {onlineServices.map((svc, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <Input
-                    value={svc.uri}
-                    onChange={(e) => { const n = [...onlineServices]; n[i] = { ...n[i], uri: e.target.value }; setOnlineServices(n); }}
-                    placeholder={t("url_placeholder")}
-                    aria-label={t("online_service_url")}
-                    className="flex-1"
-                  />
-                  <Input
-                    value={svc.service}
-                    onChange={(e) => { const n = [...onlineServices]; n[i] = { ...n[i], service: e.target.value }; setOnlineServices(n); }}
-                    placeholder={t("service_placeholder")}
-                    aria-label={t("service_placeholder")}
-                    className="w-24"
-                  />
-                  <IconButton label={t("remove_entry")} onClick={() => setOnlineServices(onlineServices.filter((_, j) => j !== i))} className="shrink-0">
-                    <X />
-                  </IconButton>
-                </div>
-              ))}
-              <Button type="button" variant="ghost" size="sm" onClick={() => setOnlineServices([...onlineServices, { uri: "", service: "", label: "" }])} className="text-xs">
-                <Plus className="w-3 h-3 me-1" />
-                {t("add_online_service")}
               </Button>
             </div>
           </FormSection>
@@ -1113,50 +1238,6 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
             </div>
           </FormSection>
 
-          {/* Personal Info */}
-          <FormSection icon={Heart} title={t("personal_info")} collapsible defaultOpen={personalInfoEntries.length > 0}>
-            <div className="space-y-2">
-              {personalInfoEntries.map((pi, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <Input
-                    value={pi.value}
-                    onChange={(e) => { const n = [...personalInfoEntries]; n[i] = { ...n[i], value: e.target.value }; setPersonalInfoEntries(n); }}
-                    placeholder={t("personal_info_placeholder")}
-                    aria-label={t("personal_info")}
-                    className="flex-1"
-                  />
-                  <Select
-                    value={pi.kind}
-                    onChange={(e) => { const n = [...personalInfoEntries]; n[i] = { ...n[i], kind: e.target.value as PersonalInfoEntry["kind"] }; setPersonalInfoEntries(n); }}
-                    aria-label={t("personal_info_kind")}
-                  >
-                    <option value="expertise">{t("personal_expertise")}</option>
-                    <option value="hobby">{t("personal_hobby")}</option>
-                    <option value="interest">{t("personal_interest")}</option>
-                    <option value="other">{t("personal_other")}</option>
-                  </Select>
-                  <Select
-                    value={pi.level}
-                    onChange={(e) => { const n = [...personalInfoEntries]; n[i] = { ...n[i], level: e.target.value as PersonalInfoEntry["level"] }; setPersonalInfoEntries(n); }}
-                    aria-label={t("level")}
-                  >
-                    <option value="">{t("level")}</option>
-                    <option value="high">{t("level_high")}</option>
-                    <option value="medium">{t("level_medium")}</option>
-                    <option value="low">{t("level_low")}</option>
-                  </Select>
-                  <IconButton label={t("remove_entry")} onClick={() => setPersonalInfoEntries(personalInfoEntries.filter((_, j) => j !== i))} className="shrink-0">
-                    <X />
-                  </IconButton>
-                </div>
-              ))}
-              <Button type="button" variant="ghost" size="sm" onClick={() => setPersonalInfoEntries([...personalInfoEntries, { value: "", kind: "hobby", level: "" }])} className="text-xs">
-                <Plus className="w-3 h-3 me-1" />
-                {t("add_personal_info")}
-              </Button>
-            </div>
-          </FormSection>
-
           {/* Categories */}
           <FormSection icon={Tag} title={t("categories")} collapsible defaultOpen={!!keywordsStr}>
             <CategoryComboBox
@@ -1171,45 +1252,6 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
             />
           </FormSection>
 
-          {/* Gender */}
-          <FormSection icon={UserCircle} title={t("gender")} collapsible defaultOpen={!!(genderSex || genderIdentity)}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <label htmlFor={fieldId("gender_sex")} className="text-xs text-muted-foreground mb-1 block">{t("gender_sex")}</label>
-                <Select id={fieldId("gender_sex")} value={genderSex} onChange={(e) => setGenderSex(e.target.value)} className="w-full">
-                  <option value="">-</option>
-                  <option value="masculine">{t("gender_male")}</option>
-                  <option value="feminine">{t("gender_female")}</option>
-                  <option value="other">{t("gender_other")}</option>
-                  <option value="none">{t("gender_none")}</option>
-                  <option value="unknown">{t("gender_unknown")}</option>
-                </Select>
-              </div>
-              <div>
-                <label htmlFor={fieldId("gender_identity")} className="text-xs text-muted-foreground mb-1 block">{t("gender_identity")}</label>
-                <Input id={fieldId("gender_identity")} value={genderIdentity} onChange={(e) => setGenderIdentity(e.target.value)} placeholder={t("gender_identity_placeholder")} />
-              </div>
-            </div>
-          </FormSection>
-
-          {/* Calendar */}
-          <FormSection icon={Calendar} title={t("calendar")} collapsible defaultOpen={!!(calendarUri || schedulingUri || freeBusyUri)}>
-            <div className="space-y-3">
-              <div>
-                <label htmlFor={fieldId("calendar_uri")} className="text-xs text-muted-foreground mb-1 block">{t("calendar_uri")}</label>
-                <Input id={fieldId("calendar_uri")} value={calendarUri} onChange={(e) => setCalendarUri(e.target.value)} placeholder="https://..." />
-              </div>
-              <div>
-                <label htmlFor={fieldId("scheduling_uri")} className="text-xs text-muted-foreground mb-1 block">{t("scheduling_uri")}</label>
-                <Input id={fieldId("scheduling_uri")} value={schedulingUri} onChange={(e) => setSchedulingUri(e.target.value)} placeholder="https://..." />
-              </div>
-              <div>
-                <label htmlFor={fieldId("freebusy_uri")} className="text-xs text-muted-foreground mb-1 block">{t("freebusy_uri")}</label>
-                <Input id={fieldId("freebusy_uri")} value={freeBusyUri} onChange={(e) => setFreeBusyUri(e.target.value)} placeholder="https://..." />
-              </div>
-            </div>
-          </FormSection>
-
           {/* Notes */}
           <FormSection icon={StickyNote} title={t("note")} collapsible defaultOpen={!!note}>
             <textarea
@@ -1219,6 +1261,125 @@ export function ContactForm({ contact, addressBooks, allKeywords, defaultAddress
               aria-label={t("note")}
               className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-y outline-none"
             />
+          </FormSection>
+
+          {/* Fields most cards don't use, collapsed unless one has a value. */}
+          <FormSection icon={MoreHorizontal} title={tx("more_fields")} collapsible defaultOpen={hasMoreFields}>
+            <div className="divide-y divide-border/60 -my-5">
+            {/* Online Services */}
+            <FormSection icon={Globe} title={t("online_services")}>
+              <div className="space-y-2">
+                {onlineServices.map((svc, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <Input
+                      value={svc.uri}
+                      onChange={(e) => { const n = [...onlineServices]; n[i] = { ...n[i], uri: e.target.value }; setOnlineServices(n); }}
+                      placeholder={t("url_placeholder")}
+                      aria-label={t("online_service_url")}
+                      className="flex-1"
+                    />
+                    <Input
+                      value={svc.service}
+                      onChange={(e) => { const n = [...onlineServices]; n[i] = { ...n[i], service: e.target.value }; setOnlineServices(n); }}
+                      placeholder={t("service_placeholder")}
+                      aria-label={t("service_placeholder")}
+                      className="w-24"
+                    />
+                    <IconButton label={t("remove_entry")} onClick={() => setOnlineServices(onlineServices.filter((_, j) => j !== i))} className="shrink-0">
+                      <X />
+                    </IconButton>
+                  </div>
+                ))}
+                <Button type="button" variant="ghost" size="sm" onClick={() => setOnlineServices([...onlineServices, { uri: "", service: "", label: "" }])} className="text-xs">
+                  <Plus className="w-3 h-3 me-1" />
+                  {t("add_online_service")}
+                </Button>
+              </div>
+            </FormSection>
+
+            {/* Personal Info */}
+            <FormSection icon={Heart} title={t("personal_info")}>
+              <div className="space-y-2">
+                {personalInfoEntries.map((pi, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <Input
+                      value={pi.value}
+                      onChange={(e) => { const n = [...personalInfoEntries]; n[i] = { ...n[i], value: e.target.value }; setPersonalInfoEntries(n); }}
+                      placeholder={t("personal_info_placeholder")}
+                      aria-label={t("personal_info")}
+                      className="flex-1"
+                    />
+                    <Select
+                      value={pi.kind}
+                      onChange={(e) => { const n = [...personalInfoEntries]; n[i] = { ...n[i], kind: e.target.value as PersonalInfoEntry["kind"] }; setPersonalInfoEntries(n); }}
+                      aria-label={t("personal_info_kind")}
+                    >
+                      <option value="expertise">{t("personal_expertise")}</option>
+                      <option value="hobby">{t("personal_hobby")}</option>
+                      <option value="interest">{t("personal_interest")}</option>
+                      <option value="other">{t("personal_other")}</option>
+                    </Select>
+                    <Select
+                      value={pi.level}
+                      onChange={(e) => { const n = [...personalInfoEntries]; n[i] = { ...n[i], level: e.target.value as PersonalInfoEntry["level"] }; setPersonalInfoEntries(n); }}
+                      aria-label={t("level")}
+                    >
+                      <option value="">{t("level")}</option>
+                      <option value="high">{t("level_high")}</option>
+                      <option value="medium">{t("level_medium")}</option>
+                      <option value="low">{t("level_low")}</option>
+                    </Select>
+                    <IconButton label={t("remove_entry")} onClick={() => setPersonalInfoEntries(personalInfoEntries.filter((_, j) => j !== i))} className="shrink-0">
+                      <X />
+                    </IconButton>
+                  </div>
+                ))}
+                <Button type="button" variant="ghost" size="sm" onClick={() => setPersonalInfoEntries([...personalInfoEntries, { value: "", kind: "hobby", level: "" }])} className="text-xs">
+                  <Plus className="w-3 h-3 me-1" />
+                  {t("add_personal_info")}
+                </Button>
+              </div>
+            </FormSection>
+
+            {/* Gender */}
+            <FormSection icon={UserCircle} title={t("gender")}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor={fieldId("gender_sex")} className="text-xs text-muted-foreground mb-1 block">{t("gender_sex")}</label>
+                  <Select id={fieldId("gender_sex")} value={genderSex} onChange={(e) => setGenderSex(e.target.value)} className="w-full">
+                    <option value="">-</option>
+                    <option value="masculine">{t("gender_male")}</option>
+                    <option value="feminine">{t("gender_female")}</option>
+                    <option value="other">{t("gender_other")}</option>
+                    <option value="none">{t("gender_none")}</option>
+                    <option value="unknown">{t("gender_unknown")}</option>
+                  </Select>
+                </div>
+                <div>
+                  <label htmlFor={fieldId("gender_identity")} className="text-xs text-muted-foreground mb-1 block">{t("gender_identity")}</label>
+                  <Input id={fieldId("gender_identity")} value={genderIdentity} onChange={(e) => setGenderIdentity(e.target.value)} placeholder={t("gender_identity_placeholder")} />
+                </div>
+              </div>
+            </FormSection>
+
+            {/* Calendar */}
+            <FormSection icon={Calendar} title={t("calendar")}>
+              <div className="space-y-3">
+                <div>
+                  <label htmlFor={fieldId("calendar_uri")} className="text-xs text-muted-foreground mb-1 block">{t("calendar_uri")}</label>
+                  <Input id={fieldId("calendar_uri")} value={calendarUri} onChange={(e) => setCalendarUri(e.target.value)} placeholder="https://..." />
+                </div>
+                <div>
+                  <label htmlFor={fieldId("scheduling_uri")} className="text-xs text-muted-foreground mb-1 block">{t("scheduling_uri")}</label>
+                  <Input id={fieldId("scheduling_uri")} value={schedulingUri} onChange={(e) => setSchedulingUri(e.target.value)} placeholder="https://..." />
+                </div>
+                <div>
+                  <label htmlFor={fieldId("freebusy_uri")} className="text-xs text-muted-foreground mb-1 block">{t("freebusy_uri")}</label>
+                  <Input id={fieldId("freebusy_uri")} value={freeBusyUri} onChange={(e) => setFreeBusyUri(e.target.value)} placeholder="https://..." />
+                </div>
+              </div>
+            </FormSection>
+            </div>
           </FormSection>
 
           </div>

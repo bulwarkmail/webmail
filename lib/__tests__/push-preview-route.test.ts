@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { endlessResponse } from './helpers/endless-body';
+import { loginFingerprint } from '@/lib/pwa-notify/login-fingerprint';
 
 vi.mock('next/server', () => ({
   NextResponse: {
@@ -112,6 +113,11 @@ describe('push preview route account resolution', () => {
     expect(mailboxQuery?.methodCalls[0][1].accountId).toBe('g');
   });
 
+  it('names the login for a message, as the action route knows it', async () => {
+    const { body } = await callRoute('a');
+    expect(body.login).toBe(await loginFingerprint('https://mail.example.com', undefined));
+  });
+
   it('names the login (cookie slot) the account belongs to', async () => {
     // The worker only knows the JMAP account id, which can repeat across
     // servers; the click must open the message in this login.
@@ -186,7 +192,7 @@ describe('push preview JMAP failures', () => {
         ['Email/get', { list: [{ id: 'd', threadId: 'td' }] }, 'delivered'],
       ] }));
     expect(await callRoute('a', 'd')).toEqual({
-      status: 200, body: { email: { id: 'd', threadId: 'td' }, unreadTotal: 1, slot: 0 },
+      status: 200, body: { email: { id: 'd', threadId: 'td' }, unreadTotal: 1, slot: 0, login: expect.any(String) },
     });
   });
 });
@@ -202,7 +208,7 @@ it('previews a delivered message outside an empty Inbox', async () => {
       ['Email/get', { list: [{ id: 'filed', threadId: 't2' }] }, 'delivered'],
     ] }));
   expect(await callRoute('a', 'filed')).toEqual({
-    status: 200, body: { email: { id: 'filed', threadId: 't2' }, unreadTotal: 1, slot: 0 },
+    status: 200, body: { email: { id: 'filed', threadId: 't2' }, unreadTotal: 1, slot: 0, login: expect.any(String) },
   });
 });
 

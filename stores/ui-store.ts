@@ -16,18 +16,32 @@ const EMAIL_LIST_DEFAULT = 384;
 export const EMAIL_LIST_HEIGHT_MIN = 160;
 export const EMAIL_LIST_HEIGHT_MAX = 800;
 const EMAIL_LIST_HEIGHT_DEFAULT = 320;
+// What the reading pane keeps of the window, whatever size the list was dragged to
+export const READING_PANE_MIN_WIDTH = 320;
+export const READING_PANE_MIN_HEIGHT = 240;
+// A composer below the list needs room for its fields and some of the body. In
+// rem because those fields grow with the text size.
+export const COMPOSER_PANE_MIN_HEIGHT = '30rem';
+
+/**
+ * The list pane's CSS size: the size the user dragged it to, as long as that
+ * leaves the reading pane its minimum. Saved sizes outlive the window they were
+ * set in, and a smaller window would squeeze the reading pane down to nothing.
+ */
+export function listPaneCssSize(saved: number, min: number, readingPaneMin: number | string): string {
+  const reserved = typeof readingPaneMin === 'number' ? `${readingPaneMin}px` : readingPaneMin;
+  return `clamp(${Math.min(saved, min)}px, calc(100% - ${reserved}), ${saved}px)`;
+}
 
 interface UIState {
   // Mobile view state
   activeView: ActiveView;
   sidebarOpen: boolean;
 
-  // Tablet list visibility (auto-hide when email selected)
-  tabletListVisible: boolean;
-
-  // Device detection (hydrated client-side)
+  // Device detection (hydrated client-side), see classifyWidth in
+  // hooks/use-media-query: phone, compact desktop, desktop.
   isMobile: boolean;
-  isTablet: boolean;
+  isCompact: boolean;
   isDesktop: boolean;
 
   // Resizable column widths (desktop only)
@@ -37,6 +51,10 @@ interface UIState {
 
   // Sidebar collapsed state (desktop)
   sidebarCollapsed: boolean;
+  // A compact desktop shows the folder sidebar as icons until it is opened;
+  // this is whether it was, for this session. The full desktop's choice
+  // (sidebarCollapsed) stays as it was.
+  compactSidebarExpanded: boolean;
 
   // Open composers and expanded quick replies. Floating cards such as the
   // PWA install prompt stay hidden while any is open and toasts lift clear,
@@ -47,8 +65,7 @@ interface UIState {
   setActiveView: (view: ActiveView) => void;
   setSidebarOpen: (open: boolean) => void;
   toggleSidebar: () => void;
-  setTabletListVisible: (visible: boolean) => void;
-  setDeviceType: (isMobile: boolean, isTablet: boolean, isDesktop: boolean) => void;
+  setDeviceType: (isMobile: boolean, isCompact: boolean, isDesktop: boolean) => void;
   setSidebarWidth: (width: number) => void;
   setEmailListWidth: (width: number) => void;
   setEmailListHeight: (height: number) => void;
@@ -57,6 +74,7 @@ interface UIState {
   resetEmailListHeight: () => void;
   persistColumnWidths: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
+  /** Folds or unfolds the folder sidebar in the layout drawn now (compact or full). */
   toggleSidebarCollapsed: () => void;
   beginComposing: () => void;
   endComposing: () => void;
@@ -73,14 +91,14 @@ export const useUIStore = create<UIState>((set, get) => ({
   // Initial state (SSR-safe defaults)
   activeView: "list",
   sidebarOpen: false,
-  tabletListVisible: true,
   isMobile: false,
-  isTablet: false,
+  isCompact: false,
   isDesktop: true,
   sidebarWidth: SIDEBAR_DEFAULT,
   emailListWidth: EMAIL_LIST_DEFAULT,
   emailListHeight: EMAIL_LIST_HEIGHT_DEFAULT,
   sidebarCollapsed: false,
+  compactSidebarExpanded: false,
   composingCount: 0,
 
   // Actions
@@ -90,10 +108,8 @@ export const useUIStore = create<UIState>((set, get) => ({
 
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
 
-  setTabletListVisible: (visible) => set({ tabletListVisible: visible }),
-
-  setDeviceType: (isMobile, isTablet, isDesktop) =>
-    set({ isMobile, isTablet, isDesktop }),
+  setDeviceType: (isMobile, isCompact, isDesktop) =>
+    set({ isMobile, isCompact, isDesktop }),
 
   setSidebarWidth: (width) =>
     set({ sidebarWidth: Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, width)) }),
@@ -140,7 +156,9 @@ export const useUIStore = create<UIState>((set, get) => ({
   },
 
   setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
-  toggleSidebarCollapsed: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+  toggleSidebarCollapsed: () => set((state) => (state.isCompact
+    ? { compactSidebarExpanded: !state.compactSidebarExpanded }
+    : { sidebarCollapsed: !state.sidebarCollapsed })),
   beginComposing: () => set((state) => ({ composingCount: state.composingCount + 1 })),
   endComposing: () => set((state) => ({ composingCount: Math.max(0, state.composingCount - 1) })),
 
@@ -195,8 +213,22 @@ function reportColumnWidths(widths: ColumnWidths): void {
   }
 }
 
-function deviceType(s: Pick<UIState, "isMobile" | "isTablet">): "mobile" | "tablet" | "desktop" {
-  return s.isMobile ? "mobile" : s.isTablet ? "tablet" : "desktop";
+/**
+ * The folder sidebar shows only its icons: on a compact desktop until opened,
+ * on the full desktop when the user folded it. `isCompact` is the pane's own
+ * class inside a Pro pane.
+ */
+export function sidebarFolded(s: Pick<UIState, "isCompact" | "sidebarCollapsed" | "compactSidebarExpanded">, isCompact = s.isCompact): boolean {
+  return isCompact ? !s.compactSidebarExpanded : s.sidebarCollapsed;
+}
+
+/**
+ * The device type plugins see. The compact desktop keeps the name "tablet":
+ * it covers the widths that were the tablet layout, and a plugin uses it to
+ * draw something narrower than on the full desktop.
+ */
+export function pluginDeviceType(s: Pick<UIState, "isMobile" | "isCompact">): "mobile" | "tablet" | "desktop" {
+  return s.isMobile ? "mobile" : s.isCompact ? "tablet" : "desktop";
 }
 
 // Mirrored on <html> for CSS: toasts lift clear of Send (see toast.tsx).
@@ -215,5 +247,5 @@ useUIStore.subscribe((state, prev) => {
   if (state.activeView !== prev.activeView) void uiHooks.onViewChange.emit({ view: state.activeView });
   if (state.sidebarOpen !== prev.sidebarOpen) void uiHooks.onSidebarToggle.emit({ open: state.sidebarOpen });
   if (state.sidebarCollapsed !== prev.sidebarCollapsed) void uiHooks.onSidebarCollapse.emit({ collapsed: state.sidebarCollapsed });
-  if (deviceType(state) !== deviceType(prev)) void uiHooks.onDeviceTypeChange.emit({ deviceType: deviceType(state) });
+  if (pluginDeviceType(state) !== pluginDeviceType(prev)) void uiHooks.onDeviceTypeChange.emit({ deviceType: pluginDeviceType(state) });
 });

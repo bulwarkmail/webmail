@@ -21,7 +21,13 @@ describe('enterprise sections: defaults and sanitising', () => {
     expect(org.phishingReport).toEqual({ address: '', format: 'forward' });
     expect(org.labels).toEqual({ list: [], defaultId: '', required: false, extraHeader: '' });
     expect(org.announcement.text).toEqual({});
-    expect(Object.values(org.devices).every((v) => v === false)).toBe(true);
+    // The caps are numbers, and 0 is no cap. Spelled out, so a new key has to say its default.
+    expect(org.devices).toEqual({
+      noDownloads: false, noExport: false, noPrint: false, noInstallPrompt: false,
+      pushWithoutContent: false, watermark: false, noOffline: false,
+      offlineMaxDays: 0, noOfflineAttachments: false, offlineMaxAttachmentMb: 0, offlineMaxTotalMb: 0,
+      wipeOnForcedSignOut: false,
+    });
     expect(org.calendars).toEqual({ feeds: [], freeBusyGroup: '' });
     expect(org.retention).toEqual({ trashDays: 0, junkDays: 0 });
   });

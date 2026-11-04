@@ -341,7 +341,7 @@ export function applyOverridePatch<T extends Partial<CalendarEvent>>(event: T, p
  * replaces whatever the entry patches beneath it, and one beneath a value the
  * entry sets goes into that value.
  */
-function mergeOverrideEntry(entry: Record<string, unknown>, updates: Record<string, unknown>): Record<string, unknown> {
+export function mergeOverrideEntry(entry: Record<string, unknown>, updates: Record<string, unknown>): Record<string, unknown> {
   const merged = { ...entry };
   for (const [key, value] of Object.entries(updates)) {
     for (const existing of Object.keys(merged)) {

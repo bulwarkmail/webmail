@@ -5,7 +5,7 @@ import { Paperclip, Download } from "@/components/icons";
 import { saveBlobAs } from "@/lib/download-guard";
 import { emailIframeCsp, sanitizeEmailBodyForIframe } from "@/lib/email-sanitization";
 import { turnOffLinks } from "@/lib/phishing-links";
-import { getEffectiveTimeZone } from "@/lib/timezone";
+import { formatDateTime } from "@/lib/utils";
 import { stripBidiControls } from "@/lib/bidi";
 import { isFilePreviewable } from "@/lib/file-preview";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -66,6 +66,7 @@ export function EmlPreview({ message, onOpenAttachment, linksOff, downloadsOff =
   const remoteBlockedByOrg = useRemoteContentHeldBackAnywhere();
   const blockRemote = useSettingsStore((state) => state.externalContentPolicy) !== "allow" || remoteBlockedByOrg;
   const tFiles = useTranslations("files");
+  const timeFormat = useSettingsStore((state) => state.timeFormat);
 
   // dir="auto" on a wrapper we control lets the first strong character pick
   // the direction, matching the main viewer.
@@ -74,11 +75,14 @@ export function EmlPreview({ message, onOpenAttachment, linksOff, downloadsOff =
       ? turnOffLinks(sanitizeEmailBodyForIframe(message.html, blockRemote).html, { title: tPhishing("link_off"), note: tPhishing("link_off_note") })
       : sanitizeEmailBodyForIframe(message.html, blockRemote).html}</div>`
     : message.text
-      ? `<pre dir="auto" style="white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,monospace;margin:0;padding:8px">${escapeHtml(message.text)}</pre>`
+      ? `<div dir="auto" style="white-space:pre-wrap;word-break:break-word;margin:0;padding:8px">${escapeHtml(message.text)}</div>`
       : "";
+  // The reader's font (.email-content), for a plain-text body and as the
+  // default under an HTML one.
+  const bodyStyle = `<style>body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:0.9375rem;line-height:1.6;color:#1a1a1a}</style>`;
   // The strict CSP is the network backstop for whatever the DOM walk misses.
   const bodyDoc = body
-    ? `<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${emailIframeCsp(blockRemote)}"><meta name="referrer" content="no-referrer"></head><body>${body}</body></html>`
+    ? `<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${emailIframeCsp(blockRemote)}"><meta name="referrer" content="no-referrer">${bodyStyle}</head><body>${body}</body></html>`
     : "";
 
   const downloadAttachment = (att: EmlAttachment) => {
@@ -102,7 +106,7 @@ export function EmlPreview({ message, onOpenAttachment, linksOff, downloadsOff =
           <div><span className="font-medium text-foreground">{t("to")}: </span><bdi>{message.to.map(formatAddress).join(", ")}</bdi></div>
         )}
         {message.date && (
-          <div><span className="font-medium text-foreground">{t("date")}: </span>{new Date(message.date).toLocaleString(undefined, { timeZone: getEffectiveTimeZone() })}</div>
+          <div><span className="font-medium text-foreground">{t("date")}: </span>{formatDateTime(message.date, timeFormat, { weekday: "short", year: "numeric", month: "short", day: "numeric" })}</div>
         )}
       </div>
       {bodyDoc && (

@@ -11,7 +11,9 @@
 // DialogButtons) drawn by the host in its footer; confirm, alert and prompt
 // are the app's ConfirmDialog and PromptDialog. A custom dialog opened with
 // `anchor: 'trigger'` is a popover beside the control the user clicked
-// (dialog-anchor.ts), with a one-line header naming the plugin.
+// (dialog-anchor.ts), with a one-line header naming the plugin. `fill: true`
+// gives either form a fixed height the plugin's frame fills (a chat), so an
+// anchored, filled dialog is a tall popover beside the control.
 
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
@@ -124,6 +126,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
   // Footer buttons of a custom dialog: the plugin declares them, the host
   // draws them and passes each click back as `dialogButtonClick` ({ id, n }).
   const [buttons, setButtons] = useState<DialogButtonSpec[]>([]);
+  const viewportHeight = useVisibleHeight(current?.kind === 'custom' && current.fill === true);
   const [buttonClick, setButtonClick] = useState<{ id: string; n: number }>({ id: '', n: 0 });
   const setDialogButtons = useCallback((value: unknown) => { setButtons(readDialogButtons(value)); }, []);
   const pressButton = (id: string) => setButtonClick((c) => ({ id, n: c.n + 1 }));
@@ -157,12 +160,18 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') {
         e.preventDefault();
+        // This closes the dialog and nothing else: an event popover behind it
+        // listens for Escape on the window.
+        e.stopPropagation();
         cancel();
       } else if (e.key === 'Enter' && (current?.kind === 'confirm' || current?.kind === 'alert')) {
         // For prompts, Enter is handled by the form (so it respects required
         // validation and works from within an input); confirm/alert accept.
         // Custom dialogs resolve only via their own onResult callback or the
         // host's X/Escape - an Enter press has no defined meaning for them.
+        // On a button Enter is that button's: Cancel must not answer yes. And
+        // a destructive confirm only says yes from its own button.
+        if ((e.target as Element | null)?.closest?.('button') || current.danger) return;
         e.preventDefault();
         resolveThis(true);
       }
@@ -198,7 +207,14 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
   const confirmLabel = current.confirmLabel ?? (current.kind === 'alert' ? t('ok') : current.kind === 'prompt' ? t('submit') : t('confirm'));
   const cancelLabel = current.cancelLabel ?? t('cancel');
   const custom = current.kind === 'custom';
+  const fill = custom && current.fill === true;
+  // A filled dialog is as tall as the visible window lets it be (a phone's
+  // keyboard takes its share), centred or as a popover alike.
+  const fillHeight = Math.min(640, Math.round(viewportHeight * 0.9) - 16);
 
+  // Plugins choose the title, however long: it scrolls within its own part of
+  // the dialog, so it can't push the line below and the buttons out of it.
+  const titleClass = 'max-h-[30vh] overflow-y-auto text-lg font-semibold text-foreground [overflow-wrap:anywhere]';
   // Who is asking, under the title: plugins choose the title and message, so
   // the host names the plugin in a place the plugin can't change.
   const attribution = (
@@ -237,6 +253,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
       pluginId={current.pluginId}
       slot={(current.slot ?? 'plugin-dialog') as SlotName}
       extraProps={customProps}
+      fill={fill}
     />
   );
 
@@ -265,6 +282,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
             visibility: place ? undefined : 'hidden',
             width: `min(${current.width ?? 560}px, calc(100vw - ${2 * POPOVER_MARGIN}px))`,
             maxHeight: `calc(100vh - ${2 * POPOVER_MARGIN}px)`,
+            ...(fill ? { height: fillHeight } : {}),
           }}
           data-plugin-dialog={current.pluginId}
         >
@@ -276,7 +294,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
             </p>
             <PluginDialogMenu name={name} onTurnOff={turnOff} compact />
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto">{frame}</div>
+          <div className={cn('min-h-0 flex-1', fill ? 'flex flex-col overflow-hidden' : 'overflow-y-auto')}>{frame}</div>
           {footer}
         </div>
       </div>
@@ -299,14 +317,16 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
       <div
         ref={panelRef}
         className="flex w-full flex-col overflow-hidden rounded-lg border border-border bg-background text-foreground shadow-xl animate-in zoom-in-95 duration-200"
-        style={{ maxWidth: custom ? (current.width ?? 560) : 448, maxHeight: '90vh' }}
+        style={fill
+          ? { maxWidth: current.width ?? 560, height: fillHeight }
+          : { maxWidth: custom ? (current.width ?? 560) : 448, maxHeight: '90vh' }}
         data-plugin-dialog={current.pluginId}
       >
         {custom ? (
           <>
             <div className="flex items-start gap-1 px-6 py-4 border-b border-border">
               <div className="min-w-0 flex-1 pe-2">
-                <h2 id={titleId} className="text-lg font-semibold text-foreground [overflow-wrap:anywhere]">{current.title}</h2>
+                <h2 id={titleId} className={titleClass}>{current.title}</h2>
                 {attribution}
               </div>
               <PluginDialogMenu name={name} onTurnOff={turnOff} />
@@ -319,7 +339,7 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
                 <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+            <div className={cn('min-h-0 flex-1 px-6 py-4', fill ? 'flex flex-col overflow-hidden' : 'overflow-y-auto')}>
               {message}
               {frame}
             </div>
@@ -327,17 +347,20 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
           </>
         ) : (
           <>
-            <div className="flex items-start gap-1 px-6 pt-6">
+            <div className="flex shrink-0 items-start gap-1 px-6 pt-6">
               <div className="min-w-0 flex-1 pe-2">
-                <h2 id={titleId} className="text-lg font-semibold text-foreground [overflow-wrap:anywhere]">{current.title}</h2>
+                <h2 id={titleId} className={titleClass}>{current.title}</h2>
                 {attribution}
               </div>
               <PluginDialogMenu name={name} onTurnOff={turnOff} />
             </div>
-            <div className="px-6 pt-3 pb-6">
-              {message}
-              {isPrompt ? (
-                <form onSubmit={(e) => { e.preventDefault(); submitPrompt(); }}>
+            {/* A long message scrolls here, under the title and over the buttons.
+                The panel itself clips: the focus on a button would scroll the
+                title away for good. A stop for Tab, so the arrow keys can scroll it. */}
+            {isPrompt ? (
+              <form onSubmit={(e) => { e.preventDefault(); submitPrompt(); }} className="flex min-h-0 flex-1 flex-col">
+                <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-3" tabIndex={message ? 0 : undefined}>
+                  {message}
                   <div className="mb-6 flex flex-col gap-4">
                     {fields.map((f) => (
                       <label key={f.name} className="block">
@@ -358,13 +381,16 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
                       <p className="rounded-md bg-warning/10 px-3 py-2 text-xs text-foreground">{t('password_note', { name })}</p>
                     )}
                   </div>
-                  <div className="flex items-center justify-end gap-3">
-                    <Button type="button" variant="outline" onClick={cancel}>{cancelLabel}</Button>
-                    <Button type="submit" disabled={!canSubmit}>{confirmLabel}</Button>
-                  </div>
-                </form>
-              ) : (
-                <div className={cn('flex items-center justify-end gap-3', !current.message && 'mt-3')}>
+                </div>
+                <div className="flex shrink-0 items-center justify-end gap-3 px-6 pb-6">
+                  <Button type="button" variant="outline" onClick={cancel}>{cancelLabel}</Button>
+                  <Button type="submit" disabled={!canSubmit}>{confirmLabel}</Button>
+                </div>
+              </form>
+            ) : (
+              <>
+                <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-3" tabIndex={message ? 0 : undefined}>{message}</div>
+                <div className={cn('flex shrink-0 items-center justify-end gap-3 px-6 pb-6', !current.message && 'mt-3')}>
                   {current.kind === 'confirm' && (
                     <Button ref={cancelButtonRef} type="button" variant="outline" onClick={cancel}>{cancelLabel}</Button>
                   )}
@@ -377,8 +403,8 @@ function PluginDialogView({ current, layer }: { current: DialogRequest; layer: '
                     {confirmLabel}
                   </Button>
                 </div>
-              )}
-            </div>
+              </>
+            )}
           </>
         )}
       </div>
@@ -418,6 +444,21 @@ function usePopoverPlace(anchor: AnchorRect | undefined, panelRef: React.RefObje
 }
 
 /** A footer button's icon by name; unknown names show none. */
+/** The height of what the window shows now (the visual viewport, without a phone's keyboard), followed while `on`. */
+function useVisibleHeight(on: boolean): number {
+  const read = () => (typeof window === 'undefined' ? 800 : Math.round(window.visualViewport?.height ?? window.innerHeight));
+  const [height, setHeight] = useState(read);
+  useEffect(() => {
+    if (!on || typeof window === 'undefined') return;
+    const update = () => setHeight(read());
+    update();
+    const target = window.visualViewport ?? window;
+    target.addEventListener('resize', update);
+    return () => target.removeEventListener('resize', update);
+  }, [on]);
+  return height;
+}
+
 function FooterIcon({ name }: { name?: string }) {
   const Glyph = name ? iconForName(name) : null;
   return Glyph ? <Glyph className="w-4 h-4" aria-hidden="true" /> : null;

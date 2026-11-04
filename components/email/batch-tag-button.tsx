@@ -25,6 +25,8 @@ export function BatchTagButton({
   active,
   disabled,
   scope = null,
+  testId = "batch-tag",
+  showLabel = false,
 }: {
   title: string;
   /** Tags every selected message carries. */
@@ -37,6 +39,10 @@ export function BatchTagButton({
   disabled?: boolean;
   /** The account of the whole selection (commonTagScope); null: the user's own tags. */
   scope?: TagScope | null;
+  /** The reading pane's copy has its own (mail-10). */
+  testId?: string;
+  /** Name the button in words beside the icon, as the reading pane does (mail-p2-15). */
+  showLabel?: boolean;
 }) {
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -83,7 +89,7 @@ export function BatchTagButton({
       <IconButton
         ref={buttonRef}
         label={title}
-        data-testid="batch-tag"
+        data-testid={testId}
         onClick={(event) => {
           const rect = event.currentTarget.getBoundingClientRect();
           setPos((open) =>
@@ -98,8 +104,10 @@ export function BatchTagButton({
         aria-haspopup="menu"
         aria-expanded={isOpen}
         disabled={disabled}
+        {...(showLabel ? { size: "sm" as const, title: "", className: "gap-1.5" } : {})}
       >
         <Tag />
+        {showLabel && <span data-selection-label="">{title}</span>}
       </IconButton>
       {isOpen &&
         createPortal(

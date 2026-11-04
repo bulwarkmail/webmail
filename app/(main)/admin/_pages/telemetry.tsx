@@ -5,6 +5,7 @@ import { Loader2, Send, ExternalLink } from '@/components/icons';
 import { SettingsSection, SettingItem, ToggleSwitch } from '@/components/settings/settings-section';
 import { Button } from '@/components/ui/button';
 import { AdminPageHeader } from '@/components/admin/page-header';
+import { EmptyState } from '@/components/admin/empty-state';
 import { AdminBodySkeleton } from '@/components/boot-skeleton/admin-skeleton';
 import { AdminSaveBar } from '@/components/admin/save-bar';
 import { useAdminFeedback } from '@/components/admin/feedback';
@@ -146,6 +147,18 @@ export function TelemetryPage() {
 
   const header = <AdminPageHeader title={PAGE.label} description={PAGE.description} />;
 
+  if (!loading && !status) {
+    return (
+      <div>
+        {header}
+        <EmptyState
+          title="Could not load the usage stats"
+          action={<Button type="button" size="sm" onClick={() => void refresh()}>Retry</Button>}
+        />
+      </div>
+    );
+  }
+
   if (loading || !status) {
     return (
       <div>
@@ -184,7 +197,7 @@ export function TelemetryPage() {
     status.consent === 'on' && status.endpoint && 'Heartbeats are enabled. Thanks for helping us improve!',
     status.consent === 'on' && !status.endpoint && 'Heartbeats are on, but none are sent because the collector URL is empty.',
     status.consent === 'off' && 'Heartbeats are off (default).',
-    noThirdParty && 'Locked off: no third-party traffic is on (Organisation > Security).',
+    noThirdParty && 'Locked off: no third-party traffic is on (Users > Security).',
     envOverridden && !noThirdParty && 'Locked by the BULWARK_TELEMETRY env var.',
   ].filter(Boolean).join(' ');
 

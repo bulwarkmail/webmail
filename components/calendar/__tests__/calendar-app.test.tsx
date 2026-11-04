@@ -15,7 +15,9 @@ import { DEFAULT_ORGANISATION_POLICY } from '@/lib/admin/organisation-policy';
 const media = vi.hoisted(() => ({ mobile: false, desktop: true }));
 vi.mock('@/hooks/use-media-query', () => ({
   useIsMobile: () => media.mobile,
-  useIsDesktop: () => media.desktop,
+  useIsDesktop: () => !media.mobile,
+  // `desktop` is the full desktop: below it the sidebar opens over the page.
+  useIsFullDesktop: () => media.desktop,
   useIsTablet: () => !media.mobile && !media.desktop,
   useMediaQuery: () => false,
 }));
@@ -777,7 +779,7 @@ describe('CalendarApp view menu', () => {
 
 describe('CalendarApp long names', () => {
   it('shows the full name of a cut-off calendar on hover', () => {
-    const long = { ...calendars[0], name: 'Stalwart Calendar (usera@internal.bulwarkmail.org)' };
+    const long = { ...calendars[0], name: 'Quarterly planning with the regional sales team (usera@internal.bulwarkmail.org)' };
     useCalendarStore.setState({ calendars: [long] } as never);
     renderApp();
     expect(screen.getByTestId('calendar-item').querySelector('[title]')).toHaveAttribute('title', long.name);

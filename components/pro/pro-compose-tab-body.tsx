@@ -15,6 +15,8 @@ import { threadKeyFor } from "@/lib/thread-utils";
 import { formatRejectedRecipients } from "@/lib/jmap/client";
 import { announceSent } from "@/lib/plugin-after-send";
 import { composerSendOptions } from "@/lib/outgoing/composer-send-options";
+import { usePopoutsAvailable } from "@/hooks/use-popouts-available";
+import { openComposerWindow } from "@/lib/popout/open";
 
 interface ProComposeTabBodyProps {
   tabId: string;
@@ -195,22 +197,17 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
 
   const handleSaveState = useCallback((state: ComposerDraftData) => {
     updateComposeDraft(tabIdRef.current, state);
-    // Keep the tab title in sync with the working subject.
-    const subject = state.subject?.trim() || t('email_composer.new_message');
-    updateTabTitle(tabIdRef.current, subject);
-  }, [updateComposeDraft, updateTabTitle, t]);
+  }, [updateComposeDraft]);
 
-  // On first mount, ensure the tab title matches whatever subject we were
-  // initialised with (replies start with "Re: …", forwards with "Fwd: …").
-  useEffect(() => {
-    const initialSubject = data.initialData?.subject?.trim()
-      ?? data.replyTo?.subject
-      ?? '';
-    const title = initialSubject || t('email_composer.new_message');
-    updateTabTitle(tabIdRef.current, title);
-    // Run once on mount only.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // The tab's title is the subject as it is typed, so several open compose
+  // tabs can be told apart. replyTo is no source for it: the mail tab fills
+  // that in from the selected message for a new message too.
+  const newMessageTitle = t('email_composer.new_message');
+  const handleSubjectChange = useCallback((subject: string) => {
+    updateTabTitle(tabIdRef.current, subject.trim() || newMessageTitle);
+  }, [updateTabTitle, newMessageTitle]);
+
+  const popoutsOn = usePopoutsAvailable();
 
   // Mirrors the standard shell (see the same prop in `components/mail/mail-app.tsx`).
   // Without it `mode === 'compose'` resolves `findComposeIdentityId(identities,
@@ -234,6 +231,22 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
     );
   });
 
+  const popOut = useCallback(() => {
+    const target = openComposerWindow(useAuthStore.getState().activeAccountId);
+    if (!target) return null;
+    return {
+      cancel: target.cancel,
+      handOver: (state: ComposerDraftData) => target.handOver({
+        mode: state.mode,
+        replyTo: state.replyTo,
+        initialData: state,
+        sourceEmailId: data.sourceEmailId,
+        sourceEmailSource: data.sourceEmailSource,
+        composeFromAccountEmail,
+      }),
+    };
+  }, [composeFromAccountEmail, data.sourceEmailId, data.sourceEmailSource]);
+
   return (
     <div className="flex h-full w-full flex-col bg-background">
       <ErrorBoundary fallback={ComposerErrorFallback}>
@@ -244,6 +257,7 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
           initialDraftText={data.initialDraftText}
           initialData={data.initialData}
           prefill={data.prefill}
+          initialFiles={data.initialFiles}
           sessionKey={`pro-${tabId}-${data.sessionId}`}
           sourceEmailId={data.sourceEmailId ?? undefined}
           composeFromAccountEmail={composeFromAccountEmail}
@@ -253,6 +267,8 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
           requestCloseRef={requestCloseRef}
           onDiscardDraft={handleDiscardDraft}
           onSaveState={handleSaveState}
+          popOut={popoutsOn ? popOut : undefined}
+          onSubjectChange={handleSubjectChange}
           className="flex-1"
         />
       </ErrorBoundary>

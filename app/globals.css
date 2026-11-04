@@ -8,6 +8,27 @@
 /* The app's font stack replaces Tailwind's default --font-sans, so the
    font-sans utility and body use the same stack, and a theme's
    typography.fontSans (compiled to --font-sans on :root) restyles both. */
+/* The layout breakpoint (PHONE_BELOW in hooks/use-media-query.ts): below
+   37.5rem (600px) the phone layout, from there up the desktop layout, compact
+   up to lg. `desk:` and `max-desk:` decide what is drawn (rail or bottom bar,
+   sidebar in the flow or as a drawer, panes side by side or one at a time);
+   md: and lg: stay for spacing and type sizes. */
+@theme {
+  --breakpoint-desk: 37.5rem;
+}
+
+/* Rows and buttons sized for a finger (44px): on phones, and on touch screens
+   below the full desktop, which get the compact desktop layout. A mouse in a
+   narrow window keeps the desktop's row heights. */
+@custom-variant tap {
+  @media (width < 37.5rem) {
+    @slot;
+  }
+  @media (width < 64rem) and (pointer: coarse) {
+    @slot;
+  }
+}
+
 @theme {
   --font-sans:
     -apple-system,
@@ -90,13 +111,13 @@
   --density-card-p: 16px;
   --density-sidebar-py: 4px;
 
-  /* Minimum height of a tappable list row below the lg breakpoint, where
-   * folder rows use max-lg:min-h-[44px]. Plugin frames get it as a variable
-   * because their own viewport is the frame, not the page. */
+  /* Minimum height of a tappable list row where folder rows use
+   * tap:min-h-[44px]. Plugin frames get it as a variable because their own
+   * viewport is the frame, not the page. */
   --touch-row-min-h: 0px;
 }
 
-@media (width < 64rem) {
+@media (width < 37.5rem), (width < 64rem) and (pointer: coarse) {
   :root {
     --touch-row-min-h: 44px;
   }
@@ -190,6 +211,12 @@
 @layer base {
   * {
     border-color: var(--color-border);
+  }
+
+  /* A placeholder or value too long for a narrow field ends in "…" instead of
+     stopping mid-word ("Termine durchs"), so it's clear there's more. */
+  input {
+    text-overflow: ellipsis;
   }
 }
 
@@ -566,7 +593,173 @@ optgroup {
   animation: toast-exit 0.28s cubic-bezier(0.06, 0.71, 0.55, 1) forwards;
 }
 
+/* The reader toolbar with no room for its labels: icons only, the names stay in the tooltips.
+   "secondary" first keeps the names of Reply, Archive, Delete and Move (mail-p2-15). */
+[data-toolbar-compact="secondary"] [data-toolbar-label]:not([data-toolbar-label="primary"]),
+[data-toolbar-compact="all"] [data-toolbar-label] {
+  display: none !important;
+}
+
 /* Mobile Responsive Utilities */
+
+/*
+ * An installed app or the desktop app with no native title bar. No row is kept
+ * for it: --titlebar-inset is 0, and the app's columns run to the top of the
+ * window. The window's controls sit in the top row of the column beneath them,
+ * which leaves them their room. env() and not the display-mode media query,
+ * which is false in Electron with titleBarOverlay. Set at the root, so it holds
+ * from the first paint, for the boot skeletons too;
+ * lib/window-controls-overlay.ts keeps it exact afterwards, and marks the rows.
+ */
+:root {
+  --titlebar-inset: 0px;
+  --app-top-inset: env(safe-area-inset-top, 0px);
+  --titlebar-right-inset: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw));
+  --titlebar-left-inset: env(titlebar-area-x, 0px);
+  --titlebar-row-height: env(titlebar-area-height, 0px);
+}
+
+/* A skeleton's row that will hold the controls has them from the first frame. */
+html[data-window-controls] [data-window-row-right] {
+  padding-right: calc(var(--titlebar-right-inset) + 0.5rem) !important;
+}
+
+/* Something floating at the top end of a page with no row: next to the controls, lined up. */
+html[data-window-controls]:not([dir="rtl"]) [data-window-beside-controls] {
+  right: calc(var(--titlebar-right-inset) + 0.5rem);
+  top: calc(var(--titlebar-row-height) / 2 - 1.25rem);
+}
+
+/* A column docked at the window's end starts below the controls, level with its neighbours' rows. */
+html[data-window-controls]:not([data-interface-layout="mountain-view"]) [data-window-end-column] {
+  padding-top: var(--titlebar-row-height);
+}
+
+/* A composer that is its own window closes with the window's button, one row over. */
+html[data-window-controls] [data-own-window-close] {
+  display: none;
+}
+
+/* Toasts that step out of the focus's way go to the top end corner: below the controls there. */
+html[data-window-controls] [data-toast-container][data-dodging] {
+  top: calc(var(--titlebar-row-height) + 0.75rem) !important;
+}
+
+/* A top row is at least as tall as the controls, so they don't hang over what's below it. */
+html[data-window-controls] [data-window-row] {
+  min-height: var(--titlebar-row-height);
+}
+
+/*
+ * Mountain View's bar is the top row there, and lines up with the controls by being as
+ * tall. An installed PWA's controls are shorter than what's in that bar.
+ */
+html[data-window-controls] [data-mv-topbar] {
+  height: max(var(--titlebar-row-height), 3.5rem);
+}
+
+/* Pro's tab strip is the top row there: as tall as the controls, its tabs along the bottom edge. */
+html[data-window-controls] [data-pane-strip] {
+  height: max(var(--titlebar-row-height), 2.25rem);
+  align-items: flex-end;
+}
+
+html[data-window-controls] [data-window-row-left] {
+  padding-left: calc(var(--titlebar-left-inset) + 0.5rem) !important;
+}
+
+/*
+ * The desktop app's menu bar while it takes its row (components/layout/window-menu-bar.tsx).
+ * The app moves down under it, a page that fills the window starts below it, and the
+ * window's controls sit in the bar's row, so no column below makes room for them.
+ */
+html[data-menu-bar] {
+  --menu-bar-height: 2rem;
+  --app-top-inset: calc(env(safe-area-inset-top, 0px) + var(--menu-bar-height));
+  --titlebar-inset: var(--menu-bar-height);
+}
+
+html[data-menu-bar][data-window-controls] [data-window-end-column] {
+  padding-top: 0;
+}
+
+/*
+ * The empty parts of the app's top rows are what the window is dragged by, and a
+ * double-click there maximises. Anything to click stays clickable, and so does
+ * whatever floats over a row: a region's drag wins over what's painted above it.
+ *
+ * Under the rows lies the band the controls have, invisible and first in the page, so
+ * a page with no row of its own (the login, an error) can still be moved. Everything
+ * later in the page cuts its own shape out of it.
+ */
+html[data-window-controls] body::before {
+  content: "";
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  height: var(--titlebar-row-height);
+  pointer-events: none;
+  app-region: drag;
+  -webkit-app-region: drag;
+}
+
+html[data-window-controls] :is([data-window-row], [data-window-rail]) {
+  app-region: drag;
+  -webkit-app-region: drag;
+}
+
+/* A row that's only there to hold the controls: the settings page's name, for one. */
+[data-window-only] {
+  display: none !important;
+}
+
+html[data-window-controls]:not([data-interface-layout="mountain-view"]) [data-window-only] {
+  display: flex !important;
+}
+
+html[data-window-controls] :is(
+  a,
+  button,
+  input,
+  label,
+  select,
+  summary,
+  textarea,
+  [contenteditable="true"],
+  [role="button"],
+  iframe,
+  [role="checkbox"],
+  [role="combobox"],
+  [role="link"],
+  [role="menu"],
+  [role="menuitem"],
+  [role="option"],
+  [role="searchbox"],
+  [role="switch"],
+  [role="tab"],
+  [role="treeitem"],
+  [tabindex]:not([tabindex="-1"]),
+  [draggable="true"]
+) {
+  app-region: no-drag;
+  -webkit-app-region: no-drag;
+}
+
+html[data-window-controls] :is(.fixed, [role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], [role="tooltip"]) {
+  app-region: no-drag;
+  -webkit-app-region: no-drag;
+}
+
+/* A dialog's own top row, when it fills the window, is a row like any other. */
+html[data-window-controls] :is(.fixed, [role="dialog"]) [data-window-row] {
+  app-region: drag;
+  -webkit-app-region: drag;
+}
+
+/* macOS: the traffic lights sit at the top of the rail, with room there only. */
+html[data-window-controls-left] [data-window-rail] {
+  padding-top: var(--titlebar-row-height);
+}
 
 /* Safe area insets for notched devices (iPhone X+, etc.) */
 .safe-area-inset-top {
@@ -1165,6 +1358,39 @@ optgroup {
   inset-inline-end: 3.25rem;
 }
 
+/* Large text in a narrow window leaves the field little width, less than these
+   paddings add up to: the input then stuck out under the bell, with the filter
+   button on top of the magnifier. Here the text gets what the magnifier had. */
+[data-interface-layout="mountain-view"] .mv-topbar-search {
+  container-type: inline-size;
+}
+@container (max-width: 16rem) {
+  [data-interface-layout="mountain-view"] .mv-topbar input[data-search-input] {
+    padding-inline-start: 0.75rem;
+    padding-inline-end: 2.75rem;
+  }
+  [data-interface-layout="mountain-view"] .mv-topbar-search > div > form > div > svg {
+    display: none;
+  }
+  /* Typed text stops at the clear button, and the / key cap makes way for the
+     placeholder. */
+  [data-interface-layout="mountain-view"] .mv-topbar input[data-search-input]:not(:placeholder-shown) {
+    padding-inline-end: 5rem;
+  }
+  [data-interface-layout="mountain-view"] .mv-topbar-search > div > form > div > div kbd {
+    display: none;
+  }
+}
+/* No room left for both: the text goes first. */
+@container (max-width: 9rem) {
+  [data-interface-layout="mountain-view"] .mv-topbar input[data-search-input]:not(:placeholder-shown) {
+    padding-inline-end: 2.75rem;
+  }
+  [data-interface-layout="mountain-view"] .mv-topbar-search > div > form > div > div {
+    display: none;
+  }
+}
+
 /* The magnifier sits on the field's baseline grid, one 48px hit area in. */
 [data-interface-layout="mountain-view"] .mv-topbar-search > div > form > div > svg {
   inset-inline-start: 1rem;
@@ -1321,8 +1547,19 @@ optgroup {
 /* The account popover: a wide card with a very round corner, rather
    than the narrow menu the rail and the sidebar switchers drop. */
 [data-interface-layout="mountain-view"] [data-mv-account-popover] {
-  width: var(--mv-popover-w);
+  width: min(var(--mv-popover-w), calc(100vw - 2rem));
   border-radius: var(--mv-popover-radius);
+}
+
+/* The compose window docks beside the side panel, not over it: over it, the
+   window hides the panel's Close button and the rail's own buttons. The rail is
+   3.5rem wide, which grows with the text size, an open panel a fixed 300px plus
+   8px of margin, which doesn't. */
+[data-interface-layout="mountain-view"]:has([data-mv-side-rail]) {
+  --mv-compose-end: 4.5rem;
+}
+[data-interface-layout="mountain-view"]:has([data-mv-side-panel], [data-plugin-side-panel]) {
+  --mv-compose-end: calc(3.5rem + 308px + 1rem);
 }
 
 /* The advanced filters drop from the search field with a small gap and take
@@ -1334,10 +1571,21 @@ optgroup {
 
 /* The collapsed rail's hover peek. Only on desktop: below that breakpoint the
    sidebar is already a drawer, opened by a tap rather than by a pointer that
-   does not exist. The width beats Tailwind's own `lg:w-full` on specificity,
+   does not exist. The width beats Tailwind's own `desk:w-full` on specificity,
    which is what keeps the floating panel from filling the 72px column. */
-@media (min-width: 1024px) {
+@media (width >= 37.5rem) {
   [data-interface-layout="mountain-view"] [data-mv-rail-peek] {
     width: var(--mv-rail-peek-w);
   }
+}
+
+/* A list row while its right-click menu is open (components/ui/context-menu.tsx). */
+[data-menu-row][data-menu-opener] {
+  outline: 2px solid var(--color-ring);
+  outline-offset: -2px;
+}
+
+/* A menu opened under the pointer: the item there isn't hovered until the pointer moves. */
+[data-pointer-unarmed] :is([role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"]):hover {
+  background-color: transparent;
 }

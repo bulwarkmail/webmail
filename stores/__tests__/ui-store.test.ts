@@ -1,20 +1,34 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useUIStore } from '../ui-store';
+import { useUIStore, listPaneCssSize, sidebarFolded, pluginDeviceType, COMPOSER_PANE_MIN_HEIGHT } from '../ui-store';
+import { drawnMailLayout } from '@/hooks/use-effective-mail-layout';
 
 describe('ui-store', () => {
   beforeEach(() => {
     useUIStore.setState({
       activeView: 'list',
       sidebarOpen: false,
-      tabletListVisible: true,
       isMobile: false,
-      isTablet: false,
+      isCompact: false,
       isDesktop: true,
       sidebarWidth: 256,
       emailListWidth: 384,
       sidebarCollapsed: false,
     });
     localStorage.clear();
+  });
+
+  describe('listPaneCssSize', () => {
+    it('keeps the saved size only while the reading pane keeps its minimum', () => {
+      expect(listPaneCssSize(600, 240, 320)).toBe('clamp(240px, calc(100% - 320px), 600px)');
+    });
+
+    it('never puts the lower limit above a saved size smaller than it', () => {
+      expect(listPaneCssSize(220, 240, 320)).toBe('clamp(220px, calc(100% - 320px), 220px)');
+    });
+
+    it('reserves a text-relative height for a composer below the list', () => {
+      expect(listPaneCssSize(320, 160, COMPOSER_PANE_MIN_HEIGHT)).toBe('clamp(160px, calc(100% - 30rem), 320px)');
+    });
   });
 
   describe('setSidebarWidth', () => {
@@ -108,6 +122,51 @@ describe('ui-store', () => {
     it('should set collapsed directly', () => {
       useUIStore.getState().setSidebarCollapsed(true);
       expect(useUIStore.getState().sidebarCollapsed).toBe(true);
+    });
+  });
+
+  // A compact desktop (600-1024px) folds the folders to icons until opened,
+  // and leaves the full desktop's own choice alone.
+  describe('the folder sidebar on a compact desktop', () => {
+    beforeEach(() => {
+      useUIStore.setState({ isMobile: false, isCompact: true, isDesktop: true, compactSidebarExpanded: false });
+    });
+
+    it('starts folded, whatever the full desktop chose', () => {
+      expect(sidebarFolded(useUIStore.getState())).toBe(true);
+      useUIStore.setState({ isCompact: false });
+      expect(sidebarFolded(useUIStore.getState())).toBe(false);
+    });
+
+    it('opens and folds again with the toggle, without changing the full desktop choice', () => {
+      useUIStore.getState().toggleSidebarCollapsed();
+      expect(sidebarFolded(useUIStore.getState())).toBe(false);
+      expect(useUIStore.getState().sidebarCollapsed).toBe(false);
+      useUIStore.getState().toggleSidebarCollapsed();
+      expect(sidebarFolded(useUIStore.getState())).toBe(true);
+      expect(useUIStore.getState().sidebarCollapsed).toBe(false);
+    });
+
+    it('follows a Pro pane\'s own class when given', () => {
+      useUIStore.setState({ isCompact: false, sidebarCollapsed: false });
+      expect(sidebarFolded(useUIStore.getState(), true)).toBe(true);
+    });
+  });
+
+  describe('pluginDeviceType', () => {
+    it('calls the compact desktop a tablet', () => {
+      expect(pluginDeviceType({ isMobile: true, isCompact: false })).toBe('mobile');
+      expect(pluginDeviceType({ isMobile: false, isCompact: true })).toBe('tablet');
+      expect(pluginDeviceType({ isMobile: false, isCompact: false })).toBe('desktop');
+    });
+  });
+
+  describe('drawnMailLayout', () => {
+    it('opens messages in the list\'s place when two panes do not fit', () => {
+      expect(drawnMailLayout('split', false)).toBe('focus');
+      expect(drawnMailLayout('split', true)).toBe('split');
+      expect(drawnMailLayout('horizontal', false)).toBe('horizontal');
+      expect(drawnMailLayout('focus', true)).toBe('focus');
     });
   });
 });

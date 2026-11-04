@@ -18,7 +18,7 @@ describe('mail skeleton', () => {
     const bar = tabs[tabs.length - 1]?.parentElement as HTMLElement;
     expect(bar.querySelector('svg')).not.toBeNull();
     expect(bar).toBeTruthy();
-    expect(bar.className.split(' ')).toContain('max-md:boot-open:hidden');
+    expect(bar.className.split(' ')).toContain('max-desk:boot-open:hidden');
   });
 
   it('draws only the body inside a Pro pane: no frame, no sidebar header', () => {
@@ -30,14 +30,16 @@ describe('mail skeleton', () => {
     expect(pane.querySelector('.lg\\:mv\\:hidden.border-b')).toBeNull();
   });
 
+  // Regular rows have a one-line preview, comfortable ones two (mail-15).
   it.each([
     ['extra-compact', 0, 0],
     ['compact', 16, 0],
     ['regular', 16, 16],
-  ] as const)('draws %s stacked rows with %i avatars and %i previews', (density, avatars, previews) => {
+    ['comfortable', 16, 32],
+  ] as const)('draws %s stacked rows with %i avatars and %i preview lines', (density, avatars, previewLines) => {
     const rows = html(<MailListRowsSkeleton shape="stacked" density={density} preview />);
     expect(rows.querySelectorAll('.w-10.h-10').length).toBe(avatars);
-    expect(rows.querySelectorAll('.leading-relaxed').length).toBe(previews * 2);
+    expect(rows.querySelectorAll('.leading-relaxed').length).toBe(previewLines);
   });
 
   it('leaves the preview out when previews are turned off', () => {
@@ -49,6 +51,7 @@ describe('mail skeleton', () => {
     const rows = html(<MailListRowsSkeleton />);
     expect(rows.querySelector('.boot-density-xc\\:hidden')).not.toBeNull();
     expect(rows.querySelector('.boot-dense\\:hidden')).not.toBeNull();
-    expect(rows.querySelector('.md\\:mv\\:block')).not.toBeNull();
+    expect(rows.querySelector('.boot-one-preview-line\\:hidden')).not.toBeNull();
+    expect(rows.querySelector('.desk\\:mv\\:block')).not.toBeNull();
   });
 });

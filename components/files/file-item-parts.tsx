@@ -203,6 +203,34 @@ export function readDraggedNames(e: React.DragEvent): string[] {
   }
 }
 
+/**
+ * A file name split for cutting in the middle: the start gives way, the end
+ * stays, so "IMG_20250611_1003.png" reads "IMG_20250…1003.png" and the
+ * extension and the part that tells similar names apart stay in view. Short
+ * names and folders' names (no extension) keep a shorter tail.
+ */
+export function splitNameForMiddleCut(name: string): { head: string; tail: string } {
+  const dot = name.lastIndexOf(".");
+  const ext = dot > 0 && name.length - dot <= 10 ? name.slice(dot) : "";
+  const tailLength = Math.min(ext.length + 4, Math.floor(name.length / 2));
+  if (name.length < 12 || tailLength <= 0) return { head: name, tail: "" };
+  return { head: name.slice(0, name.length - tailLength), tail: name.slice(name.length - tailLength) };
+}
+
+/**
+ * A name cut in the middle when there is no room (pim-21). The whole name is
+ * the title; screen readers read it as one text.
+ */
+export function MiddleCutName({ name, title, className }: { name: string; title?: string; className?: string }) {
+  const { head, tail } = splitNameForMiddleCut(name);
+  return (
+    <span className={cn("flex min-w-0", className)} title={title ?? name} dir="auto">
+      <span className="truncate whitespace-pre">{head}</span>
+      {tail && <span className="shrink-0 whitespace-pre">{tail}</span>}
+    </span>
+  );
+}
+
 /** Open a shared context menu as a dropdown under a button. */
 export function anchorEvent(el: HTMLElement, align: "start" | "end" = "start"): React.MouseEvent {
   const rect = el.getBoundingClientRect();

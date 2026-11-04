@@ -1,6 +1,12 @@
 "use client";
 
-import { Suspense, useState, useEffect, useRef, useCallback, useId } from "react";
+import { freshLoginRequired } from "@/lib/app-lock/sign-out";
+import { Suspense, useState, useEffect, useRef, useCallback, useId, useMemo, useSyncExternalStore } from "react";
+import { IS_DESKTOP_BUILD } from "@/lib/desktop/flag";
+import { forgetDesktopServer, getDesktopBridge } from "@/lib/desktop/bridge";
+import { customServerAllowedByDesktopPolicy, jmapServerAllowedByDesktopPolicy, useDesktopPolicy } from "@/lib/desktop/policy";
+import { accountRefusedByDesktopPolicy } from "@/lib/desktop/refused-accounts";
+import { browserSignInAvailable, cancelBrowserSignIn, runDesktopBrowserSignIn, runInstanceBrowserSignIn, type DesktopBrowserSignInOutcome } from "@/lib/desktop/browser-sign-in";
 import { useRouter } from "@/i18n/navigation";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -9,6 +15,8 @@ import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { useAuthStore, consumeSignedOut, SESSION_EXPIRED_DRAFTS_UNSAVED_KEY } from "@/stores/auth-store";
 import { consumeLost } from "@/lib/offline/lost";
+import { consumeWipeNote, onRefusedLoginsChanged, refusedWaits, type RefusedWait, type WipeNote } from "@/lib/devices/wipe-state";
+import { wipeNoteText } from "@/components/offline/device-wipe-host";
 import { useAccountStore } from "@/stores/account-store";
 import { useThemeStore } from "@/stores/theme-store";
 import { usePolicyStore } from "@/stores/policy-store";
@@ -35,9 +43,11 @@ import {
 } from "@/lib/auth/lite-oauth";
 import { toAsciiDomain } from "@/lib/idn";
 import { usePrefetchMailView } from "@/hooks/use-prefetch-mail-view";
-import { buildMobileHandoffUrl, mobileCodeChallenge, mobileHandoffTarget, signedInLoginAction } from "@/lib/auth/mobile-handoff";
-import { requestMobileHandoffCodeUrl } from "@/lib/auth/mobile-handoff-client";
+import { buildMobileHandoffCodeUrl, buildMobileHandoffUrl, desktopHandoffDeclineUrl, desktopHandoffPort, desktopHandoffTarget, mobileCodeChallenge, mobileHandoffTarget, signedInLoginAction } from "@/lib/auth/mobile-handoff";
+import { checkDesktopSignIn, parkDesktopSignIn, requestMobileHandoffCodeUrl } from "@/lib/auth/mobile-handoff-client";
 import { MobileHandoffConsent } from "@/components/auth/mobile-handoff-consent";
+import { LoginServerField, requestServerDiscovery, type ServerFieldError } from "@/components/auth/login-server-field";
+import { emailDomain, normalizeServerInput, serverHostLabel, unsupportedProvider } from "@/lib/auth/mail-server-address";
 import { HelpLinks } from "@/components/layout/help-links";
 import { LoginSkeleton } from "@/components/boot-skeleton/login-skeleton";
 import { Block } from "@/components/boot-skeleton/kit";
@@ -185,12 +195,32 @@ function VersionBadge() {
 function LoginPageContent() {
   const router = useRouter();
   const t = useTranslations("login");
+  const tDesktop = useTranslations("desktop_sign_in");
+  const tBrowser = useTranslations("desktop_browser_sign_in");
+  const tDesktopPolicy = useTranslations("desktop_policy");
+  const desktopPolicy = useDesktopPolicy();
+  // Only the desktop build sets these; a browser never shows them.
+  const [desktopNotice, setDesktopNotice] = useState<string | null>(null);
+  const [desktopWaiting, setDesktopWaiting] = useState(false);
+  // Leaving the page ends a sign-in it's waiting for: the verifier goes with it.
+  useEffect(() => () => cancelBrowserSignIn(), []);
   const tSessionLimits = useTranslations("session_limits");
   const tOffline = useTranslations("offline");
+  const tOfflineWipe = useTranslations("offlineWipe");
   const tTheme = useTranslations("settings.appearance.theme");
+  const tLogin = useTranslations("uxs_login");
   const params = useParams();
   const searchParams = useSearchParams();
   const isAddAccountMode = searchParams.get("mode") === "add-account";
+  const [desktopPolicyNotice, setDesktopPolicyNotice] = useState<string | null>(null);
+  // Whichever way someone got here: every account they have is on a server the device's
+  // OS policy refuses for now. They wait, and come back when it's allowed again.
+  useEffect(() => {
+    const stored = useAccountStore.getState().accounts;
+    if (stored.length > 0 && stored.every((account) => accountRefusedByDesktopPolicy(account, desktopPolicy))) {
+      setDesktopPolicyNotice(tDesktopPolicy("server_refused"));
+    }
+  }, [desktopPolicy, tDesktopPolicy]);
 
   // When the mobile app launches the webmail in a browser tab it tacks on
   // these params. We grab them once at mount and stash them in a ref so any
@@ -206,9 +236,16 @@ function LoginPageContent() {
   // server to park the sign-in on and keeps handing over in the fragment.
   const rawMobileCodeChallenge = IS_LITE ? "" : searchParams.get("mobile_code_challenge") ?? "";
   const mobileChallenge = mobileCodeChallenge(rawMobileCodeChallenge);
-  const mobileRedirectUri = rawMobileCodeChallenge && !mobileChallenge
+  // The desktop app's loopback listener is the other target, only ever with a code and a
+  // state, and the desktop build itself has no hand-off routes (lib/desktop/blocked-routes.ts).
+  const { desktopBrowserSignIn: desktopSignInEnabled } = useConfig();
+  const desktopTarget = !IS_DESKTOP_BUILD && desktopSignInEnabled && mobileChallenge && rawMobileState
+    ? desktopHandoffTarget(searchParams.get("mobile_redirect_uri"))
+    : "";
+  const isDesktopHandoff = Boolean(desktopTarget);
+  const mobileRedirectUri = desktopTarget || (rawMobileCodeChallenge && !mobileChallenge
     ? ""
-    : mobileHandoffTarget(searchParams.get("mobile_redirect_uri"));
+    : mobileHandoffTarget(searchParams.get("mobile_redirect_uri")));
   const mobileState = mobileRedirectUri ? rawMobileState : "";
   const isMobileHandoff = Boolean(mobileRedirectUri);
   const [pendingHandoff, setPendingHandoff] = useState<{
@@ -221,7 +258,14 @@ function LoginPageContent() {
   usePrefetchMailView(!isMobileHandoff);
   const { login, loginWithToken, loginDemo, isLoading, error, clearError, isAuthenticated } = useAuthStore();
   const { theme, setTheme, initializeTheme } = useThemeStore(useShallow((s) => ({ theme: s.theme, setTheme: s.setTheme, initializeTheme: s.initializeTheme })));
-  const { appName, jmapServerUrl: configuredServerUrl, oauthEnabled, oauthOnly, oauthClientId: globalOauthClientId, oauthIssuerUrl: globalOauthIssuerUrl, oauthScopes, oauthResource, rememberMeEnabled, devMode, demoMode, loginLogoLightUrl, loginLogoDarkUrl, loginCompanyName, loginImprintUrl, loginPrivacyPolicyUrl, loginWebsiteUrl, loginUsernamePlaceholder, loginLogoMaxHeight, loginLogoMaxWidth, loginShowHeading, loginShowSubtitle, loginShowTotp, loginShowTokenLogin, loginShowRememberMe, loginShowVersion, isLoading: configLoading, error: configError, autoSsoEnabled, embeddedMode: _embeddedMode, allowCustomJmapEndpoint, jmapServers, jmapServerAutoPickByDomain } = useConfig();
+  const { appName, jmapServerUrl: configuredServerUrl, oauthEnabled, oauthOnly, oauthClientId: globalOauthClientId, oauthIssuerUrl: globalOauthIssuerUrl, oauthScopes, oauthResource, rememberMeEnabled, devMode, demoMode, loginLogoLightUrl, loginLogoDarkUrl, loginCompanyName, loginImprintUrl, loginPrivacyPolicyUrl, loginWebsiteUrl, loginUsernamePlaceholder, loginLogoMaxHeight, loginLogoMaxWidth, loginShowHeading, loginShowSubtitle, loginShowTotp, loginShowTokenLogin, loginShowRememberMe, loginShowVersion, isLoading: configLoading, error: configError, autoSsoEnabled, embeddedMode: _embeddedMode, allowCustomJmapEndpoint: configAllowsCustomEndpoint, jmapServers: configuredServers, jmapServerAutoPickByDomain } = useConfig();
+  // The device's OS policy narrows what the server offers. A forced Bulwark server hides
+  // the field for a server of one's own, unless that field is the only way to sign in there.
+  const allowCustomJmapEndpoint = configAllowsCustomEndpoint && (customServerAllowedByDesktopPolicy(desktopPolicy) || !configuredServerUrl);
+  const jmapServers = useMemo(
+    () => (desktopPolicy.AllowedJmapServers.value ? configuredServers.filter((s) => jmapServerAllowedByDesktopPolicy(s.url, desktopPolicy)) : configuredServers),
+    [configuredServers, desktopPolicy],
+  );
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
   const colorModeLocked = usePolicyStore((s) => s.getColorModePolicy().locked);
 
@@ -258,6 +302,33 @@ function LoginPageContent() {
   // with OAuth even while OAuth is off globally: a Gmail bridge next to a
   // password server.
   const serverOauthEnabled = oauthEnabled || offersOwnOAuth(selectedServer);
+  // A server of one's own (custom endpoint, the desktop app's standalone mode): the
+  // email address comes first and the server is looked up from its domain (JMAP
+  // well-known, SRV, then the admin's default). The field for it only opens when
+  // nothing was found or the user wants another one. Lite has no server to ask
+  // and keeps the field open.
+  const customServerMode = !hasServerList && allowCustomJmapEndpoint;
+  const canLookUpServer = customServerMode && !IS_LITE;
+  const [serverEditing, setServerEditing] = useState(false);
+  // Change on a found server: another one is wanted, nothing failed.
+  const [serverChanging, setServerChanging] = useState(false);
+  // Asks for focus in the server field once it is on screen (the field mounts in the next render).
+  const [serverFocusRequest, setServerFocusRequest] = useState(0);
+  const [serverLookup, setServerLookup] = useState<{ domain: string; status: "looking" | "found" | "failed"; url: string | null } | null>(null);
+  const [serverError, setServerError] = useState<ServerFieldError>(null);
+  const [emailNeeded, setEmailNeeded] = useState(false);
+  const serverInputRef = useRef<HTMLInputElement>(null);
+  const serverLookups = useRef(new Map<string, Promise<string | null>>());
+  const typedDomain = canLookUpServer ? emailDomain(formData.username) : "";
+  const unsupportedMailProvider = typedDomain ? unsupportedProvider(typedDomain) : null;
+  const lookupForAddress = serverLookup && serverLookup.domain === typedDomain ? serverLookup : null;
+  // What the lookup found, else the admin's default once it found nothing (or for
+  // a user name with no domain to look up).
+  const autoServer = lookupForAddress?.status === "found"
+    ? lookupForAddress.url
+    : configuredServerUrl && (lookupForAddress?.status === "failed" || (!typedDomain && formData.username.trim() !== ""))
+      ? configuredServerUrl
+      : null;
   const [totpCode, setTotpCode] = useState("");
   const [showTotpField, setShowTotpField] = useState(false);
   // Access-token sign-in (Bearer auth) in place of username and password.
@@ -265,6 +336,15 @@ function LoginPageContent() {
   const [tokenMode, setTokenMode] = useState(false);
   const [accessToken, setAccessToken] = useState("");
   const signInWithToken = tokenMode && loginShowTokenLogin && !isMobileHandoff;
+  const serverFieldOpen = customServerMode && (
+    !canLookUpServer
+    || serverEditing
+    || signInWithToken
+    || unsupportedMailProvider !== null
+    || (lookupForAddress?.status === "failed" && !configuredServerUrl)
+  );
+  /** The server a sign-in goes to right now, in custom-server mode; null when there is none yet. */
+  const customServer = serverFieldOpen ? normalizeServerInput(jmapEndpoint) : autoServer;
   const [rememberMe, setRememberMe] = useState(false);
   // Lite (no server session): "remember me" needs Stalwart's token login on the
   // target server. Probe it once per URL and hide the box when it is missing;
@@ -275,8 +355,16 @@ function LoginPageContent() {
   const [sessionEnd, setSessionEnd] = useState<SessionEndReason | null>(null);
   // Offline outbox messages a sign-out deleted unsent (#523), named once.
   const [outboxLost, setOutboxLost] = useState<string[]>([]);
+  // Unsent mail a wipe took with it: how many, never which.
+  const [wipeLost, setWipeLost] = useState<WipeNote | null>(null);
+  // Unsent mail that waits for a new password: how many and until when, never which.
+  const [refusedWaiting, setRefusedWaiting] = useState<RefusedWait[]>([]);
   useEffect(() => {
     setOutboxLost(consumeLost());
+    setWipeLost(consumeWipeNote());
+    const read = () => setRefusedWaiting(refusedWaits());
+    read();
+    return onRefusedLoginsChanged(read);
   }, []);
   const [expiredDraftsUnsaved, setExpiredDraftsUnsaved] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -316,6 +404,7 @@ function LoginPageContent() {
   const justRemovedSuggestion = useRef(false);
   const totpInputRef = useRef<HTMLInputElement>(null);
   const tokenInputRef = useRef<HTMLInputElement>(null);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
   const prevError = useRef<string | null>(null);
   const themeMenuRef = useRef<HTMLDivElement>(null);
   const themeButtonRef = useRef<HTMLButtonElement>(null);
@@ -335,7 +424,7 @@ function LoginPageContent() {
 
   const probeTarget = hasServerList
     ? selectedServer?.url ?? ""
-    : (allowCustomJmapEndpoint ? jmapEndpoint : serverUrl) || "";
+    : (allowCustomJmapEndpoint ? normalizeServerInput(jmapEndpoint) : serverUrl) || "";
   useEffect(() => {
     if (!IS_LITE || !probeTarget) return;
     let cancelled = false;
@@ -353,7 +442,8 @@ function LoginPageContent() {
   const canRememberSession = rememberMeEnabled && (!IS_LITE || liteTokenLoginSupported !== false);
   // Sign-ins are remembered without asking unless the admin offers the box
   // (LOGIN_SHOW_REMEMBER_ME).
-  const showRememberMe = canRememberSession && loginShowRememberMe;
+  // Not in the browser the desktop app opened: nothing stays in this browser to remember.
+  const showRememberMe = canRememberSession && loginShowRememberMe && !isDesktopHandoff;
   const persistSession = canRememberSession && (!loginShowRememberMe || rememberMe);
   // A provider sign-in follows the box whenever it is shown, the automatic
   // one included (it starts unticked), and is remembered otherwise. Lite
@@ -396,10 +486,74 @@ function LoginPageContent() {
   }, [pageTitle, serverUrl]);
 
   useEffect(() => {
+    if (customServerMode) return;
     if (serverUrl && !jmapEndpoint) {
       setJmapEndpoint(serverUrl);
     }
-  }, [serverUrl, jmapEndpoint]);
+  }, [serverUrl, jmapEndpoint, customServerMode]);
+
+  /** One lookup per domain while the page is open. */
+  const lookUpServer = useCallback((domain: string, address: string): Promise<string | null> => {
+    let pending = serverLookups.current.get(domain);
+    if (!pending) {
+      pending = requestServerDiscovery(address);
+      serverLookups.current.set(domain, pending);
+    }
+    return pending;
+  }, []);
+
+  // Look the server up once the address is complete, after a pause in typing.
+  const typedAddress = formData.username.trim();
+  useEffect(() => {
+    if (!typedDomain || unsupportedMailProvider || serverLookup?.domain === typedDomain) return;
+    const timer = setTimeout(() => {
+      setServerLookup({ domain: typedDomain, status: "looking", url: null });
+      lookUpServer(typedDomain, typedAddress).then((url) => {
+        setServerLookup((current) => (current?.domain === typedDomain ? { domain: typedDomain, status: url ? "found" : "failed", url } : current));
+      });
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [typedDomain, typedAddress, unsupportedMailProvider, serverLookup?.domain, lookUpServer]);
+
+  useEffect(() => {
+    if (serverFocusRequest) serverInputRef.current?.focus();
+  }, [serverFocusRequest]);
+
+  // The field opens by itself when the lookup found nothing, usually after the user
+  // already left the address field. Focus goes there, unless they are typing elsewhere.
+  const serverFieldOpenedByLookup = canLookUpServer && lookupForAddress?.status === "failed" && !configuredServerUrl && !unsupportedMailProvider;
+  useEffect(() => {
+    if (!serverFieldOpenedByLookup) return;
+    const active = document.activeElement;
+    if (active && active.id === "username") return;
+    if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) {
+      if (!(active.id === "password" && !active.value)) return;
+    }
+    serverInputRef.current?.focus();
+  }, [serverFieldOpenedByLookup, typedDomain]);
+
+  /**
+   * The server to sign in to in custom-server mode, looked up now if need be.
+   * Null after it opened the field and said what is missing there.
+   */
+  const resolveCustomServer = async (): Promise<string | null> => {
+    setServerError(null);
+    if (!serverFieldOpen) {
+      if (typedDomain) {
+        const url = await lookUpServer(typedDomain, typedAddress);
+        setServerLookup({ domain: typedDomain, status: url ? "found" : "failed", url });
+        if (url) return url;
+      }
+      if (configuredServerUrl && (typedDomain || typedAddress)) return configuredServerUrl;
+    } else {
+      const typed = normalizeServerInput(jmapEndpoint);
+      if (typed) return typed;
+    }
+    setServerEditing(true);
+    setServerError(serverFieldOpen && jmapEndpoint.trim() ? "invalid" : "needed");
+    setServerFocusRequest((n) => n + 1);
+    return null;
+  };
 
   // Initialize selected server when the server list arrives. Picks the first
   // entry; the auto-pick effect below may override based on the email domain.
@@ -448,6 +602,19 @@ function LoginPageContent() {
       return () => clearTimeout(timer);
     }
     prevError.current = error;
+  }, [error]);
+
+  // A wrong password or token: focus that field with its text selected, ready to type again.
+  useEffect(() => {
+    if (error === "invalid_credentials" && !totpBlamed) {
+      passwordInputRef.current?.focus();
+      passwordInputRef.current?.select();
+    } else if (error === "invalid_token") {
+      tokenInputRef.current?.focus();
+      tokenInputRef.current?.select();
+    }
+    // Only on a new error, not when the code field changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [error]);
 
   // Auto-show and focus TOTP field when server requires it
@@ -612,6 +779,11 @@ function LoginPageContent() {
   const signedOutOnPurpose = useRef<boolean | null>(null);
 
   const startServerSideSso = useCallback(async () => {
+    // The device's OS policy, as for a password: nothing starts towards a refused server.
+    if (serverUrl && !jmapServerAllowedByDesktopPolicy(serverUrl, desktopPolicy)) {
+      setDesktopPolicyNotice(tDesktopPolicy("server_refused"));
+      return;
+    }
     setOauthLoading(true);
     try {
       const prefix = getPathPrefix(params.locale as string);
@@ -635,6 +807,8 @@ function LoginPageContent() {
           locale: params.locale,
           server_id: selectedServer?.id,
           remember: persistProviderSession,
+          // In the browser the desktop app opened, its word counts: the flag is in the app.
+          ...(freshLoginRequired() || (isDesktopHandoff && searchParams.get("fresh_login") === "1") ? { fresh_login: true } : {}),
           ...(isMobileHandoff
             ? {
                 mobile_redirect_uri: mobileRedirectUri,
@@ -647,6 +821,8 @@ function LoginPageContent() {
 
       if (!res.ok) {
         setOauthLoading(false);
+        // The app is waiting on this tab, so it can't just stay quiet here.
+        if (isDesktopHandoff) setHandoffError("server_error");
         return;
       }
 
@@ -668,7 +844,7 @@ function LoginPageContent() {
     } catch {
       setOauthLoading(false);
     }
-  }, [params.locale, selectedServer?.id, persistProviderSession, isMobileHandoff, mobileRedirectUri, mobileState, mobileChallenge]);
+  }, [params.locale, selectedServer?.id, serverUrl, desktopPolicy, tDesktopPolicy, persistProviderSession, isMobileHandoff, isDesktopHandoff, searchParams, mobileRedirectUri, mobileState, mobileChallenge]);
 
   useEffect(() => {
     // After signing out, show the login page rather than signing straight
@@ -701,8 +877,12 @@ function LoginPageContent() {
   }, [setTheme]);
 
   // The server HTML, and every visit until /api/config answers: the card's
-  // shape, the same one signed-out visitors of the app pages get first.
-  if (configLoading) {
+  // shape, the same one signed-out visitors of the app pages get first. Also
+  // the pass that hydrates that HTML, however far the config has got: this
+  // page's Suspense boundary hydrates after the app around it, which may have
+  // fetched the config by then, and drawing the form would throw the HTML away.
+  const hydrating = useSyncExternalStore(neverChanges, notHydrating, isHydrating);
+  if (configLoading || hydrating) {
     return <LoginSkeleton label={t("loading")} />;
   }
 
@@ -777,6 +957,7 @@ function LoginPageContent() {
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, username: e.target.value });
+    setEmailNeeded(false);
   };
 
   const handleUsernameFocus = () => {
@@ -888,6 +1069,7 @@ function LoginPageContent() {
     if (isAddAccountMode) {
       authUrl.searchParams.set("prompt", "select_account");
     }
+    if (freshLoginRequired()) authUrl.searchParams.set("prompt", "login");
 
     window.location.href = authUrl.toString();
   };
@@ -898,6 +1080,11 @@ function LoginPageContent() {
    * whichever server is selected so that "Sign in with Google" is one tap.
    */
   const handleOAuthLogin = async (target?: PublicJmapServerEntry) => {
+    const oauthTarget = (target ?? selectedServer)?.url || (allowCustomJmapEndpoint ? customServer || configuredServerUrl : configuredServerUrl);
+    if (oauthTarget && !jmapServerAllowedByDesktopPolicy(oauthTarget, desktopPolicy)) {
+      setDesktopPolicyNotice(tDesktopPolicy("server_refused"));
+      return;
+    }
     if (LITE_OAUTH_AVAILABLE && !target) {
       await startLiteOAuth(probeTarget);
       return;
@@ -942,7 +1129,7 @@ function LoginPageContent() {
     // Resolve the JMAP URL to send to the callback. Server-list entries win
     // over the custom-endpoint input, which wins over the global server URL.
     const oauthServerUrl = server?.url
-      || (allowCustomJmapEndpoint ? jmapEndpoint : configuredServerUrl);
+      || (allowCustomJmapEndpoint ? customServer || configuredServerUrl : configuredServerUrl);
 
     sessionStorage.setItem("oauth_code_verifier", verifier);
     sessionStorage.setItem("oauth_state", state);
@@ -981,20 +1168,192 @@ function LoginPageContent() {
     if (isAddAccountMode) {
       authUrl.searchParams.set("prompt", "select_account");
     }
+    if (freshLoginRequired()) authUrl.searchParams.set("prompt", "login");
 
     window.location.href = authUrl.toString();
   };
+
+  /** What the user sees when a browser sign-in ends without one. Cancelling says nothing. */
+  const showBrowserSignInOutcome = (outcome: DesktopBrowserSignInOutcome) => {
+    setDesktopWaiting(false);
+    if (outcome.kind === "policy") setDesktopPolicyNotice(tDesktopPolicy("server_refused"));
+    else if (outcome.kind === "denied") setDesktopNotice(tBrowser("declined"));
+    else if (outcome.kind === "declined") setDesktopNotice(tDesktop("server_declined"));
+    else if (outcome.kind === "invalid") setDesktopNotice(tDesktop("server_invalid"));
+    else if (outcome.kind === "timeout") setDesktopNotice(tBrowser("timed_out"));
+    else if (outcome.kind === "no_browser") setDesktopNotice(tBrowser("no_browser"));
+    else if (outcome.kind === "failed") setDesktopNotice(tBrowser("failed"));
+  };
+
+  /** The server's or the instance's own sign-in page in the system browser. */
+  const handleBrowserSignIn = async () => {
+    setDesktopNotice(null);
+    setDesktopPolicyNotice(null);
+    // Spelled out, not IS_DESKTOP_BUILD: only this form keeps the route out of other
+    // builds' bundles, which Lite's check on API strings relies on.
+    if (process.env.NEXT_PUBLIC_BULWARK_DESKTOP === '1') {
+      let target = jmapEndpoint.trim();
+      if (customServerMode) {
+        // The address first: the server is found from it. A server typed by hand needs none.
+        if (!typedAddress && !serverFieldOpen) {
+          setEmailNeeded(true);
+          inputRef.current?.focus();
+          return;
+        }
+        const resolved = await resolveCustomServer();
+        if (!resolved) return;
+        target = resolved;
+      } else if (!target) {
+        setDesktopNotice(tDesktop("server_needed"));
+        return;
+      }
+      if (!jmapServerAllowedByDesktopPolicy(target, desktopPolicy)) {
+        setDesktopPolicyNotice(tDesktopPolicy("server_refused"));
+        return;
+      }
+      setDesktopWaiting(true);
+      const outcome = await runDesktopBrowserSignIn({
+        serverUrl: target,
+        slot: useAccountStore.getState().getNextCookieSlot(),
+        remember: persistProviderSession,
+        addAccount: isAddAccountMode,
+        fresh: freshLoginRequired(),
+        redeem: (server, code, verifier, redirectUri) => useAuthStore.getState().loginWithOAuth(server, code, verifier, redirectUri),
+        tryPassword: async ({ username, password, totp }) => {
+          if (await useAuthStore.getState().login(target, username, password, totp, persistSession)) {
+            if (!rememberMeEnabled || persistSession) saveUsername(username);
+            return { ok: true };
+          }
+          const failed = useAuthStore.getState().error;
+          return { ok: false, error: failed === "invalid_credentials" || failed === "totp_required" ? failed : "other" };
+        },
+      });
+      if (outcome.kind === "signed-in") {
+        setDesktopWaiting(false);
+        router.push('/');
+        return;
+      }
+      forgetDesktopServer(target, "failed");
+      showBrowserSignInOutcome(outcome);
+      return;
+    }
+    // A server the device's OS policy refuses, where it's known up front. With a list of
+    // servers the browser picks, and the redeem below is what checks.
+    if (!hasServerList && serverUrl && !jmapServerAllowedByDesktopPolicy(serverUrl, desktopPolicy)) {
+      setDesktopPolicyNotice(tDesktopPolicy("server_refused"));
+      return;
+    }
+    setDesktopWaiting(true);
+    const outcome = await runInstanceBrowserSignIn({
+      base: `${window.location.origin}${getPathPrefix(params.locale as string)}`,
+      locale: params.locale as string,
+      fresh: freshLoginRequired(),
+    });
+    if (outcome.kind !== "code") {
+      showBrowserSignInOutcome(outcome);
+      return;
+    }
+    const redeemed = await useAuthStore.getState().loginWithDesktopHandoff(outcome.code, outcome.verifier, {
+      remember: persistProviderSession,
+      rememberPassword: persistSession,
+      allowedServers: desktopPolicy.AllowedJmapServers.value,
+      // The same rule as the field for a server of one's own on this page.
+      customServersAllowed: customServerAllowedByDesktopPolicy(desktopPolicy) || !configuredServerUrl,
+    });
+    setDesktopWaiting(false);
+    if (redeemed === "ok") router.push('/');
+    else if (redeemed === "blocked") setDesktopPolicyNotice(tDesktopPolicy("server_refused"));
+    else setDesktopNotice(tBrowser("failed"));
+  };
+
+  const browserSignInShown = browserSignInAvailable() && desktopSignInEnabled;
+  // Once a password (or token) is typed, "Sign in" is what the user means: it becomes the
+  // main button and "Sign in with your browser" the other way.
+  const formSignInPreferred = signInWithToken ? accessToken.trim() !== "" : formData.password !== "";
+  const browserSignInPrimary = browserSignInShown && !formSignInPreferred;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Server-list entries always win - `allowCustomJmapEndpoint` is only honored
     // when the admin hasn't configured a server list.
-    const effectiveServerUrl = selectedServer?.url
+    let effectiveServerUrl = selectedServer?.url
       || (allowCustomJmapEndpoint ? jmapEndpoint : serverUrl);
+    if (customServerMode) {
+      const resolved = await resolveCustomServer();
+      if (!resolved) return;
+      effectiveServerUrl = resolved;
+    }
+    // The desktop app opened this page in the user's browser. Nothing leaves this page until
+    // the user says yes: the password is only checked, and a two-factor code can't be, as it
+    // works once. This browser gets no session of its own out of any of it.
+    if (isDesktopHandoff) {
+      const failed = (reason: string) => {
+        useAuthStore.setState({
+          isLoading: false,
+          error: reason === "invalid_credentials" || reason === "totp_required" ? reason : reason === "too_many_attempts" ? null : "server_error",
+        });
+        setDesktopNotice(reason === "too_many_attempts" ? tBrowser("too_many") : null);
+      };
+      const { username, password } = formData;
+      const totp = totpCode || undefined;
+      useAuthStore.setState({ isLoading: true, error: null });
+      setHandoffError(null);
+      setDesktopNotice(null);
+      if (!totp) {
+        const checked = await checkDesktopSignIn({ serverUrl: effectiveServerUrl, serverId: selectedServer?.id, username, password });
+        if ("error" in checked) {
+          failed(checked.error);
+          return;
+        }
+      }
+      useAuthStore.setState({ isLoading: false });
+      const prefix = getPathPrefix(params.locale as string);
+      setPendingHandoff({
+        url: null,
+        resolveUrl: async () => {
+          const parked = await parkDesktopSignIn({
+            challenge: mobileChallenge,
+            state: mobileState,
+            serverUrl: effectiveServerUrl,
+            serverId: selectedServer?.id,
+            username,
+            password,
+            totp,
+            redirectUri: `${window.location.origin}${prefix}/${params.locale}/auth/callback`,
+          });
+          if ("error" in parked) {
+            failed(parked.error);
+            return null;
+          }
+          return buildMobileHandoffCodeUrl(mobileRedirectUri, parked.code, mobileState);
+        },
+        username,
+      });
+      return;
+    }
+    // The device's OS policy, also on an instance: nothing is sent to a server it refuses.
+    setDesktopPolicyNotice(null);
+    if (!jmapServerAllowedByDesktopPolicy(effectiveServerUrl, desktopPolicy)) {
+      setDesktopPolicyNotice(tDesktopPolicy("server_refused"));
+      return;
+    }
+    // A LAN or plain http server gets a native prompt first, and the app can
+    // reach it from then on. Without a yes, nothing is sent there.
+    if (IS_DESKTOP_BUILD) {
+      setDesktopNotice(null);
+      const prepared = await getDesktopBridge()?.servers?.prepare(effectiveServerUrl);
+      if (prepared && !prepared.ok) {
+        if (prepared.reason === "policy") setDesktopPolicyNotice(tDesktopPolicy("server_refused"));
+        else setDesktopNotice(prepared.reason === "invalid" ? tDesktop("server_invalid") : tDesktop("server_declined"));
+        return;
+      }
+    }
     if (signInWithToken) {
       if (await loginWithToken(effectiveServerUrl, accessToken, persistSession)) {
         router.push('/');
+      } else if (IS_DESKTOP_BUILD) {
+        forgetDesktopServer(effectiveServerUrl, 'failed');
       }
       return;
     }
@@ -1046,6 +1405,8 @@ function LoginPageContent() {
     } else if (isMobileHandoff) {
       // Stale payload should never feed into a later retry's redirect.
       mobileHandoffPayloadRef.current = null;
+    } else if (IS_DESKTOP_BUILD) {
+      forgetDesktopServer(effectiveServerUrl, 'failed');
     }
   };
 
@@ -1077,6 +1438,8 @@ function LoginPageContent() {
   };
 
   const currentThemeOption = THEME_OPTIONS.find(o => o.value === theme) || THEME_OPTIONS[2];
+  // "Webmail" is the default name, not a brand: the heading then says what the page is for.
+  const brandedAppName = appName && appName !== "Webmail" ? appName : "";
   const CurrentThemeIcon = currentThemeOption.icon;
 
   // Server picker (when admin has configured a server list). Rendered by both
@@ -1084,6 +1447,62 @@ function LoginPageContent() {
   // has to pick which one SSO targets before the button starts the flow, since
   // the selection drives OAuth discovery and the server_id sent to the callback
   // (issue #799).
+  // In the app: the main way in, above the form, which stays as the other choice.
+  const browserSignInOption = browserSignInShown && (
+    <div className="space-y-3">
+      <Button
+        type="button"
+        variant={browserSignInPrimary ? undefined : "outline"}
+        className={browserSignInPrimary
+          ? "w-full h-11 font-medium text-[0.9375rem] bg-primary hover:bg-primary/90 transition-all duration-200 rounded-xl shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/20"
+          : "w-full h-11 font-medium text-[0.9375rem] rounded-xl border-border/60 hover:bg-muted/50"}
+        onClick={handleBrowserSignIn}
+        disabled={desktopWaiting || isLoading}
+        data-testid="desktop-browser-sign-in"
+      >
+        {desktopWaiting ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : <LogIn className="w-4 h-4 me-2" />}
+        {desktopWaiting ? tBrowser("waiting") : tBrowser("button")}
+      </Button>
+      {desktopWaiting && (
+        <p role="status" data-testid="desktop-browser-waiting" className="text-center text-xs text-muted-foreground leading-relaxed">
+          {tBrowser("waiting_hint")}{" "}
+          <button
+            type="button"
+            className="underline hover:text-foreground"
+            data-testid="desktop-browser-cancel"
+            onClick={() => {
+              cancelBrowserSignIn();
+              setDesktopWaiting(false);
+            }}
+          >
+            {tBrowser("cancel")}
+          </button>
+        </p>
+      )}
+      <div className="relative py-1">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-border/60" />
+        </div>
+        <div className="relative flex justify-center text-xs">
+          <span className="bg-background/80 px-3 text-muted-foreground">{tBrowser("or_here")}</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // The desktop app's sign-in, in the browser: says what this page is for.
+  const desktopHandoffBanner = isDesktopHandoff && (
+    <p data-testid="desktop-handoff-banner" className="mb-4 text-center text-sm text-muted-foreground leading-relaxed">
+      {tBrowser("handoff_banner")}
+    </p>
+  );
+
+  const desktopPolicyAlert = desktopPolicyNotice && (
+    <p role="alert" data-testid="desktop-policy-notice" className="mt-2 text-sm text-warning leading-relaxed">
+      {desktopPolicyNotice}
+    </p>
+  );
+
   const serverPicker = hasServerList && jmapServers.length > 1 ? (
     <div className="space-y-1.5">
       <label htmlFor="jmap-server-select" className="block text-sm font-medium text-foreground">
@@ -1101,7 +1520,7 @@ function LoginPageContent() {
         ))}
       </select>
       {domainAutoLocked && (
-        <p className="text-[0.6875rem] text-muted-foreground leading-snug">
+        <p className="text-xs text-muted-foreground leading-snug">
           {t("jmap_server_auto_picked")}
         </p>
       )}
@@ -1153,25 +1572,26 @@ function LoginPageContent() {
   // Demo-only mode: show only a large demo login button
   if (demoMode && !isAddAccountMode) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-muted/10 to-muted/30 relative px-4">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-muted/10 to-muted/30 relative px-4 py-16">
         {/* Theme toggle, hidden while the theme policy locks the mode (#1280) */}
-        <div className="absolute top-5 end-5" ref={themeMenuRef} hidden={colorModeLocked} suppressHydrationWarning>
+        <div data-window-beside-controls="" className="absolute top-5 end-5" ref={themeMenuRef} hidden={colorModeLocked} suppressHydrationWarning>
           <button
             type="button"
             ref={themeButtonRef}
             onClick={() => setShowThemeMenu(!showThemeMenu)}
             className={cn(
-              "flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition-all duration-200",
+              "flex items-center justify-center w-9 h-9 rounded-xl border text-sm transition-all duration-200",
               showThemeMenu
                 ? "bg-secondary border-border text-foreground shadow-md"
                 : "bg-background/60 backdrop-blur-sm border-border/50 text-muted-foreground hover:text-foreground hover:bg-secondary/80 hover:border-border"
             )}
-            aria-label={`${tTheme("label")}: ${tTheme(currentThemeOption.label)}`}
+            aria-label={`${tLogin("theme_button")}: ${tTheme(currentThemeOption.label)}`}
+            title={tLogin("theme_button")}
             aria-expanded={showThemeMenu}
             aria-haspopup="menu"
+            data-testid="login-theme-button"
           >
-            <CurrentThemeIcon className="w-4 h-4" />
-            <span className="hidden sm:inline" suppressHydrationWarning>{tTheme(currentThemeOption.label)}</span>
+            <CurrentThemeIcon className="w-4 h-4" aria-hidden="true" />
           </button>
 
           {showThemeMenu && (
@@ -1306,38 +1726,43 @@ function LoginPageContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-muted/10 to-muted/30 relative px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-muted/10 to-muted/30 relative px-4 py-16">
       <MobileHandoffConsent
         url={pendingHandoff?.url ?? null}
         resolveUrl={pendingHandoff?.resolveUrl ?? null}
         username={pendingHandoff?.username ?? ""}
+        desktopPort={isDesktopHandoff ? desktopHandoffPort(desktopTarget) : undefined}
         onCancel={() => {
           setPendingHandoff(null);
-          router.push('/');
+          // Ends the flow at the app, which isn't left waiting. Nothing was parked.
+          if (isDesktopHandoff) window.location.replace(desktopHandoffDeclineUrl(desktopTarget, mobileState));
+          else router.push('/');
         }}
         onError={() => {
           setPendingHandoff(null);
-          setHandoffError("server_error");
+          // The desktop's answer has said what went wrong, on the form.
+          if (!isDesktopHandoff) setHandoffError("server_error");
         }}
       />
       {/* Theme toggle - top right, dropdown style; hidden while the theme policy locks the mode (#1280) */}
-      <div className="absolute top-5 end-5" ref={themeMenuRef} hidden={colorModeLocked} suppressHydrationWarning>
+      <div data-window-beside-controls="" className="absolute top-5 end-5" ref={themeMenuRef} hidden={colorModeLocked} suppressHydrationWarning>
         <button
           type="button"
           ref={themeButtonRef}
           onClick={() => setShowThemeMenu(!showThemeMenu)}
           className={cn(
-            "flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition-all duration-200",
+            "flex items-center justify-center w-9 h-9 rounded-xl border text-sm transition-all duration-200",
             showThemeMenu
               ? "bg-secondary border-border text-foreground shadow-md"
               : "bg-background/60 backdrop-blur-sm border-border/50 text-muted-foreground hover:text-foreground hover:bg-secondary/80 hover:border-border"
           )}
-          aria-label={`${tTheme("label")}: ${tTheme(currentThemeOption.label)}`}
+          aria-label={`${tLogin("theme_button")}: ${tTheme(currentThemeOption.label)}`}
+          title={tLogin("theme_button")}
           aria-expanded={showThemeMenu}
           aria-haspopup="menu"
+          data-testid="login-theme-button"
         >
-          <CurrentThemeIcon className="w-4 h-4" />
-          <span className="hidden sm:inline" suppressHydrationWarning>{tTheme(currentThemeOption.label)}</span>
+          <CurrentThemeIcon className="w-4 h-4" aria-hidden="true" />
         </button>
 
         {showThemeMenu && (
@@ -1390,10 +1815,11 @@ function LoginPageContent() {
             </div>
             {loginShowHeading && (
               <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-                {isAddAccountMode ? t("add_account_title") : appName}
+                {isAddAccountMode ? t("add_account_title") : brandedAppName || t("sign_in")}
               </h1>
             )}
-            {loginShowSubtitle && (
+            {/* Under a heading that already says "Sign in" the subtitle would say it twice. */}
+            {loginShowSubtitle && (isAddAccountMode || brandedAppName || !loginShowHeading) && (
               <p className="text-sm text-muted-foreground mt-1.5">
                 {isAddAccountMode ? t("add_account_subtitle") : t("subtitle")}
               </p>
@@ -1402,6 +1828,20 @@ function LoginPageContent() {
 
           {/* Form section */}
           <div className="px-8 pb-8">
+            {wipeLost !== null && (
+              <div className="mb-5 p-3 rounded-xl border border-warning/30 bg-warning/5 text-sm text-foreground" role="status" data-testid="device-wipe-note">
+                {wipeNoteText(wipeLost, tOfflineWipe)}
+              </div>
+            )}
+            {refusedWaiting.map((wait) => {
+              const date = new Date(wait.until).toLocaleDateString(String(params?.locale ?? "en"), { dateStyle: "medium" });
+              const prefix = wait.kind === "session" ? "session_waiting" : "refused_waiting";
+              return (
+                <div key={wait.until} className="mb-5 p-3 rounded-xl border border-warning/30 bg-warning/5 text-sm text-foreground" role="status" data-testid="login-refused-waiting">
+                  {wait.unsent === null ? tOfflineWipe(`${prefix}_unknown`, { date }) : tOfflineWipe(prefix, { count: wait.unsent, date })}
+                </div>
+              );
+            })}
             {outboxLost.length > 0 && (
               <div className="mb-5 p-3 rounded-xl border border-warning/30 bg-warning/5 text-sm text-foreground [overflow-wrap:anywhere]" role="status" data-testid="session-outbox-lost">
                 {tOffline("signout.lost", { subjects: outboxLost.map((s) => s || tOffline("outbox.no_subject")).join(", ") })}
@@ -1469,6 +1909,8 @@ function LoginPageContent() {
               </div>
             )}
 
+            {desktopHandoffBanner}
+
             {/* Dev Mode: One-click login */}
             {devMode ? (
               <div className="space-y-4">
@@ -1498,11 +1940,16 @@ function LoginPageContent() {
               /* OAuth-only mode: server picker (if any) plus the SSO button */
               <div className="space-y-4">
                 {serverPicker}
+                {desktopPolicyAlert}
                 {oauthMetadata && showRememberMe && rememberMeBox}
+                {browserSignInOption}
                 {oauthMetadata ? (
                   <Button
                     type="button"
-                    className="w-full h-11 font-medium text-[0.9375rem] bg-primary hover:bg-primary/90 transition-all duration-200 rounded-xl shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/20"
+                    variant={browserSignInShown ? "outline" : undefined}
+                    className={browserSignInShown
+                      ? "w-full h-11 font-medium text-[0.9375rem] rounded-xl border-border/60 hover:bg-muted/50"
+                      : "w-full h-11 font-medium text-[0.9375rem] bg-primary hover:bg-primary/90 transition-all duration-200 rounded-xl shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/20"}
                     onClick={() => handleOAuthLogin()}
                     disabled={oauthLoading}
                   >
@@ -1533,32 +1980,19 @@ function LoginPageContent() {
                   // Where the sign-in button goes once the provider answers.
                   <Block className="w-full h-11 rounded-xl" />
                 )}
+                {desktopNotice && (
+                  <p role="alert" data-testid="desktop-notice" className="mt-2 text-sm text-warning leading-relaxed">
+                    {desktopNotice}
+                  </p>
+                )}
               </div>
             ) : (
               /* Login Form */
               <form onSubmit={handleSubmit} className="space-y-5">
                 <fieldset disabled={isLoading} className="space-y-4">
                   {serverPicker}
-                  {/* JMAP Endpoint field (only when no server list and custom endpoints are allowed) */}
-                  {!hasServerList && allowCustomJmapEndpoint && (
-                    <div className="space-y-1.5">
-                      <label htmlFor="jmap-endpoint" className="block text-sm font-medium text-foreground">
-                        {t("jmap_endpoint_label")}
-                      </label>
-                      <Input
-                        id="jmap-endpoint"
-                        type="url"
-                        value={jmapEndpoint}
-                        onChange={(e) => setJmapEndpoint(e.target.value)}
-                        className="h-11 px-3.5 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200"
-                        placeholder={t("jmap_endpoint_placeholder")}
-                        required
-                      />
-                      <p className="text-[0.6875rem] text-muted-foreground leading-snug">
-                        {t("jmap_endpoint_cors_hint")}
-                      </p>
-                    </div>
-                  )}
+
+                  {!customServerMode && browserSignInOption}
 
                   {/* Username field. The access token names the account, so
                       token sign-in has none. */}
@@ -1638,7 +2072,39 @@ function LoginPageContent() {
                         </>
                       )}
                     </div>
+                    {emailNeeded && (
+                      <p role="alert" data-testid="login-email-needed" className="text-xs text-destructive leading-snug">
+                        {tLogin("email_needed")}
+                      </p>
+                    )}
                   </div>
+
+                  {customServerMode && (
+                    <LoginServerField
+                      ref={serverInputRef}
+                      lookup={canLookUpServer ? lookupForAddress?.status ?? "idle" : "idle"}
+                      server={autoServer}
+                      editing={serverFieldOpen}
+                      value={jmapEndpoint}
+                      onChange={(value) => {
+                        setJmapEndpoint(value);
+                        setServerEditing(true);
+                        setServerError(null);
+                      }}
+                      onEdit={() => {
+                        setJmapEndpoint(autoServer ? serverHostLabel(autoServer) : "");
+                        setServerEditing(true);
+                        setServerChanging(true);
+                        setServerFocusRequest((n) => n + 1);
+                      }}
+                      changing={serverChanging}
+                      provider={unsupportedMailProvider}
+                      error={serverError}
+                      showTrouble={!IS_DESKTOP_BUILD}
+                    />
+                  )}
+
+                  {customServerMode && browserSignInOption}
 
                   {/* Password field. Hidden for an account that signs in at an
                       external provider (Lite on Stalwart): the submit button is
@@ -1649,11 +2115,12 @@ function LoginPageContent() {
                     </label>
                     <div className="relative">
                       <Input
+                        ref={passwordInputRef}
                         id="password"
                         type={showPassword ? "text" : "password"}
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="h-11 px-3.5 pe-11 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200"
+                        className="h-11 px-3.5 pe-11 bg-muted/40 border-border/60 rounded-xl focus:bg-background focus:border-primary/50 transition-all duration-200 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20"
                         placeholder={t("password_placeholder")}
                         required={!liteSsoRequired && !signInWithToken}
                         autoComplete="current-password"
@@ -1698,7 +2165,7 @@ function LoginPageContent() {
                         data-lpignore="true"
                         {...errorProps(tokenBlamed)}
                       />
-                      <p className="text-[0.6875rem] text-muted-foreground leading-snug">
+                      <p className="text-xs text-muted-foreground leading-snug">
                         {t("token_hint")}
                       </p>
                     </div>
@@ -1746,20 +2213,31 @@ function LoginPageContent() {
                     </div>
                   )}
 
-                  {loginShowTokenLogin && !isMobileHandoff && !liteSsoRequired && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        clearError();
-                        setTokenMode(!signInWithToken);
-                        setTimeout(() => (signInWithToken ? inputRef : tokenInputRef).current?.focus(), 50);
-                      }}
-                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <KeyRound className="w-3.5 h-3.5" />
-                      {signInWithToken ? t("password_toggle") : t("token_toggle")}
-                    </button>
-                  )}
+                  {loginShowTokenLogin && !isMobileHandoff && !liteSsoRequired && (() => {
+                    const tokenToggle = (
+                      <button
+                        type="button"
+                        data-testid="login-token-toggle"
+                        onClick={() => {
+                          clearError();
+                          setTokenMode(!signInWithToken);
+                          setTimeout(() => (signInWithToken ? inputRef : tokenInputRef).current?.focus(), 50);
+                        }}
+                        className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <KeyRound className="w-3.5 h-3.5" />
+                        {signInWithToken ? t("password_toggle") : t("token_toggle")}
+                      </button>
+                    );
+                    // Few people have a token: the way back to the password stays in sight,
+                    // the way to a token waits behind "Other ways to sign in".
+                    return signInWithToken ? tokenToggle : (
+                      <details className="text-xs text-muted-foreground" data-testid="login-other-ways">
+                        <summary className="cursor-pointer hover:text-foreground w-fit">{tLogin("other_ways")}</summary>
+                        <div className="mt-2 ps-1">{tokenToggle}</div>
+                      </details>
+                    );
+                  })()}
 
                   {/* Remember me, for the password and the SSO buttons below */}
                   {showRememberMe && rememberMeBox}
@@ -1767,7 +2245,11 @@ function LoginPageContent() {
 
                 <Button
                   type="submit"
-                  className="w-full h-11 font-medium text-[0.9375rem] bg-primary hover:bg-primary/90 transition-all duration-200 rounded-xl shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/20"
+                  data-testid="login-submit"
+                  variant={browserSignInPrimary ? "outline" : undefined}
+                  className={browserSignInPrimary
+                    ? "w-full h-11 font-medium text-[0.9375rem] rounded-xl border-border/60 hover:bg-muted/50"
+                    : "w-full h-11 font-medium text-[0.9375rem] bg-primary hover:bg-primary/90 transition-all duration-200 rounded-xl shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/20"}
                   disabled={isLoading || (liteSsoRequired && oauthLoading)}
                 >
                   {isLoading || (liteSsoRequired && oauthLoading) ? (
@@ -1814,6 +2296,12 @@ function LoginPageContent() {
                   </>
                 )}
 
+                {desktopPolicyAlert}
+                {desktopNotice && (
+                  <p role="alert" data-testid="desktop-notice" className="mt-2 text-sm text-warning leading-relaxed">
+                    {desktopNotice}
+                  </p>
+                )}
                 {((serverOauthEnabled && oauthDiscoveryDone && !oauthMetadata) || liteOAuthFailed) && (
                   <div className="mt-2 p-3 rounded-xl border border-warning/20 bg-warning/5 flex items-start gap-3">
                     <div className="w-10 h-10 rounded-full bg-warning/15 text-warning flex items-center justify-center flex-shrink-0 shadow-sm">
@@ -1920,6 +2408,10 @@ function LoginPageContent() {
     </div>
   );
 }
+
+const neverChanges = () => () => {};
+const notHydrating = () => false;
+const isHydrating = () => true;
 
 // useSearchParams() above must sit under a Suspense boundary for the route to
 // prerender (the static Lite build); at runtime the boundary never suspends.

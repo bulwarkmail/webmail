@@ -91,7 +91,10 @@ function cachedDateFormat(locale: string, options: Intl.DateTimeFormatOptions): 
  *   - `smart` (default) — locale-aware, age-bucketed:
  *       today        → time only           ("15:31" or "3:31 PM")
  *       last 7 days  → short weekday+time  ("Fr 15:31", "Fri 3:31 PM")
- *       older        → full locale date    ("28.04.2026", "04/28/2026")
+ *       this year    → day and month       ("28. Apr.", "Apr 28"), as Gmail
+ *                      and Outlook do; a numeric date when a date order is
+ *                      picked in the region settings
+ *       older        → full locale date    ("28.04.2025", "04/28/2025")
  *       With `listStyle: 'mountain-view'` the buckets are Gmail's instead:
  *       today → time, this year → "Oct 10", older → "10/10/25".
  *   - `relative` — legacy en-US relative format ("1h ago", "2d ago").
@@ -190,14 +193,25 @@ export function formatDate(
     return cachedDateFormat(numericLocale, { timeZone, year: "2-digit", month: "numeric", day: "numeric" }).format(d);
   }
 
-  const daysAgo = Math.floor((now.getTime() - d.getTime()) / 86400000);
-  if (daysAgo < 7) {
+  // Count calendar days in the display zone, not 24-hour periods: a mail
+  // from last Wednesday must never read "Wed" on a Wednesday (mail-p2-10).
+  // The weekday only names the last six days; older mail gets its date.
+  const daysAgo = Math.round(
+    (Date.UTC(nowWall.year, nowWall.month - 1, nowWall.day) - Date.UTC(dWall.year, dWall.month - 1, dWall.day)) / 86400000,
+  );
+  if (daysAgo >= 0 && daysAgo < 7) {
     // German Intl outputs "Fr." with a trailing dot for `weekday: 'short'`;
     // strip it so the result reads cleanly next to the time.
     const weekday = cachedDateFormat(uiLocale, { timeZone, weekday: "short" })
       .format(d)
       .replace(/\.$/, "");
     return `${weekday} ${timeStr}`;
+  }
+
+  // Earlier this year: "Oct 24" rather than "10/24/2026" (mail-16). A date
+  // order picked in the region settings keeps its numeric dates.
+  if (dWall.year === nowWall.year && (dateLocale ?? "auto") === "auto") {
+    return cachedDateFormat(uiLocale, { timeZone, month: "short", day: "numeric" }).format(d);
   }
 
   return cachedDateFormat(numericLocale, {

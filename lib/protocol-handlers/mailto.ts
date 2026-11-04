@@ -19,6 +19,11 @@ export interface ParsedMailto {
    * written from the account in use, without asking which one.
    */
   inApp?: boolean;
+  /**
+   * Handed over by the OS in the desktop app: a link clicked in another program. It
+   * opens in a compose window of its own, and the main window stays where it was.
+   */
+  fromOs?: boolean;
 }
 
 const MAX_RECIPIENTS = 200;
@@ -37,6 +42,16 @@ function stripBodyControlChars(value: string): string {
   return value
     .replace(/\r\n?/g, "\n")
     .replace(CONTROL_CHARS_EXCEPT_LINE_BREAKS, "");
+}
+
+/** A subject from outside the app: no control characters, no longer than a mail header allows. */
+export function cleanMailtoSubject(value: string): string {
+  return stripControlChars(value).slice(0, MAX_SUBJECT_LENGTH);
+}
+
+/** A body from outside the app: line breaks kept, other control characters gone, limited in length. */
+export function cleanMailtoBody(value: string): string {
+  return stripBodyControlChars(value).slice(0, MAX_BODY_LENGTH);
 }
 
 function splitRecipients(value: string): string[] {
@@ -125,8 +140,8 @@ export function parseMailto(raw: string): ParsedMailto | null {
     to,
     cc,
     bcc,
-    subject: stripControlChars(getQueryValue(searchParams, "subject")).slice(0, MAX_SUBJECT_LENGTH),
-    body: stripBodyControlChars(getQueryValue(searchParams, "body")).slice(0, MAX_BODY_LENGTH),
+    subject: cleanMailtoSubject(getQueryValue(searchParams, "subject")),
+    body: cleanMailtoBody(getQueryValue(searchParams, "body")),
   };
 }
 

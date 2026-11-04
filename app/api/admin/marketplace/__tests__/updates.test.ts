@@ -17,7 +17,7 @@ vi.mock('@/lib/admin/config-manager', () => ({
 vi.mock('@/lib/admin/plugin-registry', () => ({
   getPluginRegistry: vi.fn(async () => ({
     plugins: [
-      { id: 'quick-reply', name: 'Quick Reply', version: '1.2.0', enabled: true, source: { kind: 'marketplace', slug: 'quick-reply', directoryUrl: 'https://extensions.test' } },
+      { id: 'quick-reply', name: 'Quick Reply', version: '1.2.0', permissions: ['email:read'], enabled: true, source: { kind: 'marketplace', slug: 'quick-reply', directoryUrl: 'https://extensions.test' } },
       { id: 'house-plugin', name: 'House', version: '0.1.0', enabled: true, source: { kind: 'upload' } },
       // Installed before the source was recorded: still asked about.
       { id: 'old-install', name: 'Old', version: '3.0.0', enabled: false },
@@ -34,6 +34,21 @@ import { GET } from '../updates/route';
 afterEach(() => vi.unstubAllGlobals());
 
 describe('GET /api/admin/marketplace/updates', () => {
+  it('says which permissions each update adds', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => Response.json({
+      data: {
+        updates: [
+          { slug: 'quick-reply', currentVersion: '1.2.0', version: '1.3.0', channel: 'stable', changelog: null, permissions: ['email:read', 'keystore'] },
+          { slug: 'old-install', currentVersion: '3.0.0', version: '3.1.0', channel: 'stable', changelog: null },
+        ],
+        yanked: [], deprecated: [], suspended: [], advisories: [], unknown: [],
+      },
+    })));
+    const body = await (await GET(new NextRequest('http://localhost/api/admin/marketplace/updates'))).json();
+    expect(body.updates[0].addedPermissions).toEqual(['keystore']);
+    expect(body.updates[1].addedPermissions).toEqual([]);
+  });
+
   it('asks the directory about the marketplace installs only, on the configured channel', async () => {
     let posted: { url: string; body: unknown } | null = null;
     vi.stubGlobal('fetch', vi.fn(async (url: string, init: RequestInit) => {

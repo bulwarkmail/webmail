@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import {
   ArrowUpCircle,
   Download,
@@ -28,6 +28,7 @@ import { apiFetch } from '@/lib/browser-navigation';
 import { compareVersions, isVersionSatisfied } from '@/lib/version-compare';
 import type { MarketplaceListing } from '@/lib/admin/marketplace-directory';
 import { adminPath } from '@/lib/admin/admin-nav';
+import { declaredPermissions, HIGH_RISK_PERMISSIONS } from '@/lib/plugin-sandbox/permission-text';
 import { cn } from '@/lib/utils';
 import { SettingsSection } from '@/components/settings/settings-section';
 import { Button } from '@/components/ui/button';
@@ -38,8 +39,11 @@ import { Badge } from '@/components/admin/badge';
 import { ScreenshotGallery } from '@/components/admin/screenshot-gallery';
 import { useAdminFeedback } from '@/components/admin/feedback';
 import { installVersion } from './marketplace';
+import { offerToTurnOnPlugins, turnOnNote, type TurnOnOutcome } from './turn-on-plugins';
+import { pluginTypeLabel } from './plugin-type-label';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
+import { scrollBehavior } from '@/lib/reduced-motion';
 import { ChangelogBadges, ChangelogEntries, ChangelogNotes, type ChangelogFlags } from '@/components/admin/changelog';
 import { versionsBetween } from '@/lib/admin/changelog-range';
 
@@ -96,6 +100,8 @@ interface PreviewData {
   requestedVersionMissing: string | null;
   bundle: {
     manifest: Record<string, unknown> | null;
+    /** What this version asks for that the installed one doesn't. */
+    addedPermissions?: string[];
     source: { name: string; content: string; truncated: boolean } | null;
     size: number;
     error: string | null;
@@ -136,6 +142,7 @@ const smallButtonClass = 'h-8 gap-1 text-xs';
 
 export function MarketplaceDetailPage({ slug }: { slug: string }) {
   const { dialogProps: confirmProps, confirm } = useConfirmDialog();
+  const pageRef = useRef<HTMLDivElement>(null);
 
   const [data, setData] = useState<PreviewData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -184,6 +191,9 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
     window.history.replaceState(null, '', url.toString());
     setSelected(version);
     setMessage(null);
+    // What a pick changes is at the top: the notices and the install button.
+    // From a row of the versions table it would all happen out of sight.
+    pageRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
   }
 
   async function handleInstall(version: string) {
@@ -199,11 +209,12 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
     }
     const warnings = result.warnings.length ? ` (${result.warnings.length} warning${result.warnings.length === 1 ? '' : 's'})` : '';
     const signed = result.signature === 'verified' ? ', signed by the directory' : '';
+    const outcome: TurnOnOutcome = !isUpdate && data.extension.type === 'plugin' ? await offerToTurnOnPlugins(confirm) : 'already-on';
     setMessage({
       type: 'success',
       text: isUpdate
         ? `"${data.extension.name}" is now v${version}${signed}${warnings}`
-        : `"${data.extension.name}" installed (v${version})${signed}${warnings}`,
+        : `"${data.extension.name}" installed (v${version})${signed}${warnings}.${turnOnNote(outcome)}`,
     });
     fetchPreview(selected ?? null);
   }
@@ -302,8 +313,10 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
   const bundle = data.bundle;
   const preview = data.preview;
   const isPlugin = ext.type === 'plugin';
-  const manifestPerms = (bundle.manifest?.permissions as string[] | undefined) || preview && ext.versions.find((v) => v.version === preview.version)?.permissions || ext.permissions || [];
+  // Optional permissions are granted like the others, so they count here too.
+  const manifestPerms = bundle.manifest ? declaredPermissions(bundle.manifest) : (preview && ext.versions.find((v) => v.version === preview.version)?.permissions) || ext.permissions || [];
   const permissionText = new Map(ext.permissionDetails.map((p) => [p.id, p]));
+  const addedPermissions = new Set(bundle.addedPermissions ?? []);
   const frameOrigins = (bundle.manifest?.frameOrigins as string[] | undefined) || [];
   const settingsSchema = bundle.manifest?.settingsSchema as Record<string, { type: string; label: string; description?: string; default?: unknown }> | undefined;
 
@@ -342,7 +355,7 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
   const updateAvailable = data.installed && !!ext.latest && !!data.installedVersion && compareVersions(ext.latest.version, data.installedVersion) > 0;
 
   return (
-    <div>
+    <div ref={pageRef}>
       <AdminPageHeader
         back={BACK}
         leading={(
@@ -374,7 +387,7 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
         )}
         description={(
           <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <Badge tone={isPlugin ? 'info' : 'accent'}>{isPlugin ? (ext.pluginType || 'plugin') : 'theme'}</Badge>
+            <Badge tone={isPlugin ? 'info' : 'accent'}>{isPlugin ? pluginTypeLabel(ext.pluginType) : 'Theme'}</Badge>
             {ext.author && (
               <span className="inline-flex items-center gap-1">
                 by {ext.author.displayName}
@@ -559,8 +572,9 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
           title="Versions"
           description="Every published version. Versions this server still has a copy of can be put back without the directory."
         >
-          <div className="overflow-x-auto rounded-lg border border-border">
-            <table className="w-full text-sm">
+          {/* relative: the header's sr-only text is absolute, and only a positioned scroller clips it. Left free, it widens a phone's layout viewport and every dialog goes with it. */}
+          <div className="relative overflow-x-auto rounded-lg border border-border">
+            <table className="w-full min-w-[40rem] text-sm">
               <thead>
                 <tr className="border-b border-border">
                   <th className={thClass}>Version</th>
@@ -699,7 +713,7 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
               <ul className="space-y-1.5">
                 {manifestPerms.map(perm => {
                   const text = permissionText.get(perm);
-                  const risky = text?.highRisk || RISKY_PERMISSIONS.has(perm);
+                  const risky = text?.highRisk || RISKY_PERMISSIONS.has(perm) || HIGH_RISK_PERMISSIONS.has(perm);
                   return (
                     <li
                       key={perm}
@@ -715,6 +729,7 @@ export function MarketplaceDetailPage({ slug }: { slug: string }) {
                         <div className="flex flex-wrap items-center gap-2">
                           {text && <span className="font-medium">{text.title}</span>}
                           <code className="font-mono text-xs opacity-80">{perm}</code>
+                          {addedPermissions.has(perm) && <Badge tone="warning">New in this version</Badge>}
                         </div>
                         {text?.body && <p className="mt-0.5 text-xs opacity-90">{text.body}</p>}
                       </div>

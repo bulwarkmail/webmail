@@ -8,6 +8,7 @@ import { playNotificationSound } from "@/lib/notification-sound";
 import { announce } from "@/lib/announce";
 import { startTitleAlert } from "@/lib/title-alert";
 import { debug } from "@/lib/debug";
+import { desktopPlaysMailSound } from "@/lib/desktop/mail-notifications";
 
 /**
  * Mail that arrives within this time is told about once ("3 new messages"),
@@ -51,7 +52,8 @@ export function useNewMailAlerts(): void {
       const s = useSettingsStore.getState();
       if (s.doNotDisturb) return;
       if (batchTimer === null) {
-        if (s.emailNotificationsEnabled && s.emailNotificationSound) {
+        // The desktop app sounds it with the notification, in Do Not Disturb not at all.
+        if (s.emailNotificationsEnabled && s.emailNotificationSound && !desktopPlaysMailSound()) {
           playNotificationSound(s.notificationSoundChoice);
         }
         batchTimer = setTimeout(flush, NEW_MAIL_BATCH_MS);

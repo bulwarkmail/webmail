@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 
 // Organisation > Classification: presets, the list editor, default and
 // required, the extra header, the VS-NfD warning, and a scope that has its
@@ -95,12 +95,17 @@ describe('Classification section', () => {
 
   it('stores the extra header name only when it is a header Bulwark doesn’t write', async () => {
     await renderSection();
-    const field = screen.getByTestId('org-labels-extra-header');
-    fireEvent.change(field, { target: { value: 'Sensitivity' } });
-    expect(screen.getAllByRole('alert').some((el) => el.textContent?.includes('Bulwark writes this one itself'))).toBe(true);
+    const field = () => screen.getByTestId('org-labels-extra-header');
+    // The page-wide live region also has role=alert: look next to the field.
+    const fieldAlert = () => within(field().parentElement!).queryByRole('alert');
+    fireEvent.change(field(), { target: { value: 'Sensitivity' } });
+    await waitFor(() => expect(field()).toHaveAttribute('aria-invalid', 'true'));
+    expect(fieldAlert()?.textContent).toContain('Bulwark writes this one itself');
     expect(latest!.orgValue('labels', 'extraHeader').value).toBe('');
-    fireEvent.change(field, { target: { value: 'X-Classification' } });
-    expect(latest!.orgValue('labels', 'extraHeader').value).toBe('X-Classification');
+    fireEvent.change(field(), { target: { value: 'X-Classification' } });
+    await waitFor(() => expect(latest!.orgValue('labels', 'extraHeader').value).toBe('X-Classification'));
+    expect(field()).not.toHaveAttribute('aria-invalid');
+    expect(fieldAlert()).toBeNull();
   });
 
   it('gives a scope its own scheme as a whole, and back', async () => {

@@ -22,7 +22,7 @@ const signedIn = () =>
 
 function desktop(matches: boolean) {
   window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-    matches: matches && query.includes('64rem'),
+    matches: matches && query.includes('37.5rem'),
     media: query,
     addEventListener: () => {},
     removeEventListener: () => {},

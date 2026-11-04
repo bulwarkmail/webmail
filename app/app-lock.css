@@ -1,0 +1,9 @@
+/*
+ * While the app lock is on and it isn't known yet to be unlocked, nothing under the
+ * lock screen shows, from the first frame. The inline script in app/(main)/layout.tsx
+ * sets the attribute before the first paint, and lib/app-lock/controller.ts takes it away.
+ * The window's drag strip stays: it shows the app's name and nothing else.
+ */
+html[data-app-locked] body > *:not([data-app-lock-overlay]):not(.window-title-bar) {
+  visibility: hidden !important;
+}

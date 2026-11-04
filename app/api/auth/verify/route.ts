@@ -5,9 +5,10 @@ import { configManager } from '@/lib/admin/config-manager';
 import { isPublicHttpUrl } from '@/lib/security/url-guard';
 import { parseJmapServers, resolveTrustedJmapUrl } from '@/lib/admin/jmap-servers';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
-import { getClientIP } from '@/lib/admin/session';
+import { loginClientAddress } from '@/lib/auth/client-address';
 import { reserveVerifyProbe, type BudgetRefund } from '@/lib/auth/verify-budget';
 import { isStoreUnavailable } from '@/lib/auth/store-unavailable';
+import { devicePolicyServerRefusal } from '@/lib/desktop/server-policy';
 
 /**
  * Server-side credential pre-check for the login form (#969): a password
@@ -58,6 +59,9 @@ export async function POST(request: NextRequest) {
       return respond('inconclusive');
     }
 
+    const refusedByDevice = devicePolicyServerRefusal(serverUrl);
+    if (refusedByDevice) return refusedByDevice;
+
     // Same upstream pinning as /api/auth/session: an unauthenticated caller
     // must not be able to point this route at arbitrary internal hosts.
     const configuredServerUrl =
@@ -83,7 +87,7 @@ export async function POST(request: NextRequest) {
 
     // Wrong passwords tried from here count against this server's address
     // upstream; over budget the browser probes the JMAP server itself.
-    const clientIp = getClientIP(request);
+    const clientIp = loginClientAddress(request, upstreamUrl);
     let refund: BudgetRefund | null;
     try {
       refund = await reserveVerifyProbe(clientIp);

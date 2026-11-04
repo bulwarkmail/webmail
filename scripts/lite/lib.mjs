@@ -41,9 +41,20 @@ export const LITE_REMOVED_PATHS = [
   "app/(main)/[...rest]",
   "app/(main)/[locale]/[...rest]",
   "app/(main)/protocol",
+  "app/(main)/[locale]/popout",
   "e2e",
   "integration",
+  // The local store: Lite has no offline mode. A dev checkout may hold these.
+  "public/store-worker.js",
+  "public/sqlite3mc",
 ];
+
+/** The local store's engine in an export: Lite has no offline mode, and must not ship or load it. */
+export function unexpectedEngineFiles(files) {
+  return files
+    .map((file) => file.replace(/\\/g, "/"))
+    .filter((file) => /(^|\/)store-worker\.js$/.test(file) || /(^|\/)sqlite3mc\//.test(file) || /(^|\/)sqlite3\.(wasm|mjs)$/.test(file));
+}
 
 /** Test trees are pruned too: they import the routes removed above. */
 export const LITE_TEST_DIR_NAME = "__tests__";
@@ -89,6 +100,8 @@ export const LITE_API_STRING_ALLOWLIST = [
   "/api/plugin-secrets",
   // stores/settings-store.ts - settingsSyncEnabled is pinned off.
   "/api/settings",
+  // lib/devices/client.ts - offline mode and its wipes aren't in Lite (no OfflineHost, IS_LITE guards in the auth store).
+  "/api/devices",
   // Stalwart's own account discovery (lib/auth/lite-oauth.ts), not a route of this app.
   "/api/discover",
   // OAuth / SSO / pairing - Lite discovers and redeems codes in the browser
@@ -105,9 +118,16 @@ export const LITE_API_STRING_ALLOWLIST = [
   // the fragment.
   "/api/auth/handoff/create",
   "/api/auth/handoff/confirm",
+  // The desktop app's sign-in on an instance: no bridge in a browser, and IS_LITE guards.
+  "/api/auth/desktop-handoff/check",
+  "/api/auth/desktop-handoff/discard",
+  "/api/auth/desktop-handoff/park",
+  "/api/auth/desktop-handoff/redeem",
   "/api/auth/totp-token-exchange",
   "/api/auth/session",
   "/api/auth/verify",
+  // The sign-in form's mail server lookup: the login page skips it in Lite (IS_LITE).
+  "/api/auth/discover-server",
   "/api/auth/stalwart-context",
   "/api/account/stalwart/jmap",
   // Admin shield probe - skipped in Lite (components/layout/navigation-rail.tsx).

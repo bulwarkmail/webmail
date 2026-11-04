@@ -184,7 +184,7 @@ describe('session timeout guard', () => {
     await advance(500);
 
     expect(order).toEqual(['draft saved', 'signed out']);
-    expect(logoutAll).toHaveBeenCalledWith({ endProviderSession: false });
+    expect(logoutAll).toHaveBeenCalledWith({ endProviderSession: false, keepLocalData: true, sessionLimit: true });
     expect(consumeSessionEnd()).toEqual({ kind: 'idle', minutes: 1 });
   });
 
@@ -196,7 +196,7 @@ describe('session timeout guard', () => {
     await advance(DRAFT_FLUSH_TIMEOUT_MS - 1);
     expect(logoutAll).not.toHaveBeenCalled();
     await advance(1);
-    expect(logoutAll).toHaveBeenCalledWith({ endProviderSession: false });
+    expect(logoutAll).toHaveBeenCalledWith({ endProviderSession: false, keepLocalData: true, sessionLimit: true });
   });
 
   it('uses the strictest of the signed-in accounts', async () => {
@@ -258,7 +258,7 @@ describe('session timeout guard', () => {
     expect(screen.queryByText('max_title')).toBeNull();
     await advance(60 * SECOND);
     await advance(0);
-    expect(logoutAll).toHaveBeenCalledWith({ endProviderSession: false });
+    expect(logoutAll).toHaveBeenCalledWith({ endProviderSession: false, keepLocalData: true, sessionLimit: true });
     expect(consumeSessionEnd()).toEqual({ kind: 'max', hours: 1 });
   });
 
@@ -276,7 +276,7 @@ describe('session timeout guard', () => {
     fireEvent.pointerDown(window);
     await advance(0);
 
-    expect(logoutAll).toHaveBeenCalledWith({ endProviderSession: false });
+    expect(logoutAll).toHaveBeenCalledWith({ endProviderSession: false, keepLocalData: true, sessionLimit: true });
     expect(consumeSessionEnd()).toEqual({ kind: 'idle', minutes: 1 });
   });
 
@@ -319,7 +319,7 @@ describe('session timeout guard', () => {
       // Later in the body than the overlay, so it paints on top at a higher z-index too.
       expect(overlay.compareDocumentPosition(warning) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       await advance(30 * SECOND);
-      expect(logoutAll).toHaveBeenCalledWith({ endProviderSession: false });
+      expect(logoutAll).toHaveBeenCalledWith({ endProviderSession: false, keepLocalData: true, sessionLimit: true });
     } finally {
       overlay.remove();
       hasFocus.mockRestore();

@@ -29,9 +29,7 @@ export interface QuickReplyEnvelope {
 export function quickReplyEnvelope(email: ReplySource, identities: Identity[]): QuickReplyEnvelope {
   const ownIdentityEmails = identities.map((i) => i.email).filter(Boolean);
   const replySource = { from: email.from, replyToAddresses: email.replyTo, to: email.to, cc: email.cc };
-  const recipients = buildReplyRecipients(replySource, 'reply', ownIdentityEmails).to
-    .map((r) => r.email)
-    .filter((address): address is string => Boolean(address));
+  const recipients = quickReplyRecipients(email, identities).map((r) => r.email);
   const primaryIdentity = identities[0];
   const selfSentIdentityId = isSelfSent(replySource, ownIdentityEmails)
     ? findDraftIdentityId(identities, email.from?.[0])
@@ -44,6 +42,18 @@ export function quickReplyEnvelope(email: ReplySource, identities: Identity[]): 
   });
   const sendingIdentity = (sendingIdentityId ? identities.find((i) => i.id === sendingIdentityId) : undefined) || primaryIdentity;
   return { recipients, sendingIdentity, primaryIdentity };
+}
+
+/**
+ * The people a quick reply goes to, with their names, by the same rules as
+ * quickReplyEnvelope: for the box's "Reply to Ben Carter…" placeholder.
+ */
+export function quickReplyRecipients(email: ReplySource, identities: Identity[]): { name?: string; email: string }[] {
+  const ownIdentityEmails = identities.map((i) => i.email).filter(Boolean);
+  const replySource = { from: email.from, replyToAddresses: email.replyTo, to: email.to, cc: email.cc };
+  return buildReplyRecipients(replySource, 'reply', ownIdentityEmails).to
+    .filter((r): r is typeof r & { email: string } => Boolean(r.email))
+    .map((r) => ({ name: r.name || undefined, email: r.email }));
 }
 
 /**

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { ArrowLeft, ChevronRight, KeyRound, LogOut, Search, Shield, X } from '@/components/icons';
@@ -62,6 +63,16 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
   const [pendingApprovals, setPendingApprovals] = useState(0);
   const [pendingSection, setPendingSection] = useState<{ page: AdminPageId; id: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+  // The two layouts are different trees, so a page drawn inside them would be
+  // remounted when the window crosses the breakpoint (a tablet turned round)
+  // and lose what the admin had typed. It lives in one element instead, which
+  // moves into whichever layout is showing. The portal comes after the layout
+  // so the element is in the document before the page's effects run.
+  const [pageHost] = useState(() => (typeof document === 'undefined' ? null : document.createElement('div')));
+  const pageSlot = useCallback((slot: HTMLDivElement | null) => {
+    if (slot && pageHost) slot.appendChild(pageHost);
+  }, [pageHost]);
 
   const onChangePassword = pathname === '/admin/change-password';
   const activePage: AdminPageId | null = location.page ?? (isDesktop && !onChangePassword ? 'dashboard' : null);
@@ -94,6 +105,12 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 0 });
   }, [scrollKey]);
+
+  // A page opened from a link or a reload can be far down the list, under its
+  // fold on a laptop: bring its entry into view.
+  useEffect(() => {
+    navRef.current?.querySelector('[aria-current="page"]')?.scrollIntoView?.({ block: 'nearest' });
+  }, [activePage, isDesktop, hydrated]);
 
   // A section picked from the search scrolls into view once its page has
   // rendered it; pages fetch first, so retry for a moment.
@@ -257,13 +274,15 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
     );
   }
 
+  const showIndex = location.page === null && !onChangePassword;
+  const page = pageHost && (isDesktop || !showIndex) ? createPortal(children, pageHost) : null;
+
   if (!isDesktop) {
-    const showIndex = location.page === null && !onChangePassword;
     const title = onChangePassword ? 'Change password' : activeDef?.label ?? 'Admin';
     const backHref = location.detail ? adminPath(location.page) : '/admin';
     return (
       <AdminShellContext.Provider value={contextValue}>
-        <div className="flex h-dvh flex-col bg-background pt-[env(safe-area-inset-top)]">
+        <div className="flex h-dvh flex-col bg-background pt-[var(--app-top-inset)]">
           <div className="flex h-14 shrink-0 items-center gap-1 border-b border-border bg-background px-2">
             {showIndex ? (
               <a
@@ -346,7 +365,7 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
             ) : (
               <div className="p-4 pb-6">
                 {readOnlyBanner}
-                {children}
+                <div ref={pageSlot} />
               </div>
             )}
           </div>
@@ -355,13 +374,14 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
 
           <NavigationRail orientation="horizontal" adminActive />
         </div>
+        {page}
       </AdminShellContext.Provider>
     );
   }
 
   return (
     <AdminShellContext.Provider value={contextValue}>
-      <div className="flex h-dvh bg-background pt-[env(safe-area-inset-top)]">
+      <div className="flex h-dvh bg-background pt-[var(--app-top-inset)]">
         {/* The same rail as mail and settings, with Admin as the current app. */}
         <div className="flex w-14 shrink-0 flex-col bg-secondary" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
           <NavigationRail collapsed adminActive />
@@ -383,7 +403,7 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
 
           <div className="flex-1 overflow-y-auto py-2">
             <div className="px-3 pb-1 pt-1">{searchBox}</div>
-            <nav className="space-y-0.5 px-2" aria-label={tShell('admin_pages')}>
+            <nav ref={navRef} className="space-y-0.5 px-2" aria-label={tShell('admin_pages')}>
               {groups.length === 0 && noResults}
               {groups.map((group, groupIndex) => (
                 <div key={group.group}>
@@ -442,15 +462,20 @@ export function AdminShell({ authenticated, isStalwartAutoLogin, configReadOnly,
         </aside>
 
         <main className="flex min-w-0 flex-1 flex-col">
+          {/* Only for the window's controls: the sidebar says which page is open. */}
+          <div data-window-only="" aria-hidden="true" className="h-14 box-content shrink-0 items-center border-b border-border px-6 text-sm font-semibold">
+            <span className="truncate">{pageName ?? 'Admin'}</span>
+          </div>
           <div ref={scrollRef} className="flex-1 overflow-y-auto">
             <div className="mx-auto max-w-3xl px-6 py-6">
               {readOnlyBanner}
-              {children}
+              <div ref={pageSlot} />
             </div>
           </div>
           <div ref={setSaveBarHost} className="shrink-0" />
         </main>
       </div>
+      {page}
     </AdminShellContext.Provider>
   );
 }

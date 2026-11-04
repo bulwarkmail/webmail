@@ -14,6 +14,8 @@ export type { RegionalSnapshot };
 import { withBasePath } from '../browser-navigation';
 import { snapshotHostTheme, type ThemeSnapshot } from './host-theme';
 import { snapshotHostFeatures, watchHostFeatures } from './host-features';
+import { assistantFeatures } from './assistant';
+import { keystoreFeature } from './host-api-keystore';
 import { effectiveSettings } from '../plugin-settings';
 import { clampSlotHeight, clampSlotWidth, isInlineSlot, MAX_INLINE_SLOT_WIDTH } from './slot-layout';
 import { resolveDateLocale } from '../utils';
@@ -257,7 +259,8 @@ function pushThemeToFrames(): void {
 /** Every frame hears about a Bulwark feature that replaces plugins turning on or off. */
 function pushHostFeaturesToFrames(features: HostFeaturesView): void {
   for (const instance of liveInstances) {
-    try { instance.setHostFeatures(features); } catch { /* one broken iframe must not stop the rest */ }
+    // Some of the assistant's flags depend on the plugin's grants (host-features.ts).
+    try { instance.setHostFeatures({ ...features, ...instance.ownHostFeatures() }); } catch { /* one broken iframe must not stop the rest */ }
   }
 }
 
@@ -549,6 +552,15 @@ export class SandboxInstance {
         return;
       }
 
+      case 'frame-escape': {
+        // Only for a dialog's own frame: elsewhere Escape in a frame means
+        // nothing to the host, and shouldn't close the message around it.
+        if (this.iframe.closest('[data-plugin-dialog], [data-plugin-dialog-popover]')) {
+          this.iframe.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+        }
+        return;
+      }
+
       case 'slot-resize': {
         // The iframe has no intrinsic height - sync it to the content height
         // the sandbox reported, otherwise the wrapper reserves space but the
@@ -676,6 +688,11 @@ export class SandboxInstance {
   }
 
   /** Push what api.host.features says now; before init it goes into the init payload. */
+  /** The flags of api.host.features that depend on this plugin. */
+  ownHostFeatures(): Partial<HostFeaturesView> {
+    return { ...assistantFeatures(this.plugin), ...keystoreFeature(this.plugin) };
+  }
+
   setHostFeatures(features: HostFeaturesView): void {
     if (this.destroyed) return;
     if (this.pendingInit) {
@@ -786,7 +803,7 @@ export function createBackgroundInstance(opts: BackgroundOptions): SandboxInstan
     code: opts.code,
     locale: opts.locale,
     regional: opts.regional ?? snapshotRegionalSettings(opts.locale),
-    hostFeatures: snapshotHostFeatures(),
+    hostFeatures: snapshotHostFeatures(opts.plugin),
   };
   return new SandboxInstance(
     opts.plugin,
@@ -816,7 +833,7 @@ export function createSlotInstance(opts: SlotOptions): SandboxInstance {
     locale: opts.locale,
     regional: opts.regional ?? snapshotRegionalSettings(opts.locale),
     theme: snapshotHostTheme(),
-    hostFeatures: snapshotHostFeatures(),
+    hostFeatures: snapshotHostFeatures(opts.plugin),
   };
   return new SandboxInstance(opts.plugin, payload, opts.hostContainer, opts.onResize, opts.onFloatingDropdown);
 }

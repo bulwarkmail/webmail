@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import { ReaderAttachments, splitFileName, type ReaderAttachmentItem } from '../reader-attachments';
 
 // The reader's attachment bar: equal tiles that keep the extension in view,
@@ -23,6 +23,65 @@ function renderBar(attachments: ReaderAttachmentItem[], overrides: Partial<Param
   render(<ReaderAttachments {...props} />);
   return props;
 }
+
+describe('the right-click menu in the desktop app', () => {
+  afterEach(() => {
+    window.bulwarkDesktop = undefined;
+    cleanup();
+  });
+
+  const openMenu = async (popupAnswer: (items: { id?: string; label?: string }[]) => string | null, overrides: Partial<Parameters<typeof ReaderAttachments>[0]> = {}) => {
+    const popup = vi.fn(async (items: { id?: string; label?: string }[]) => popupAnswer(items));
+    window.bulwarkDesktop = { version: 1, platform: 'win32', menu: { setState: () => {}, popup } } as never;
+    const props = renderBar([file('1', 'report.pdf')], { onCopyFile: vi.fn(), ...overrides });
+    fireEvent.contextMenu(await screen.findByTestId('attachment'), { clientX: 5, clientY: 5 });
+    await waitFor(() => expect(popup).toHaveBeenCalled());
+    return { props, popup };
+  };
+
+  it('has Open, Save as and Copy, natively', async () => {
+    const { popup } = await openMenu(() => null);
+    expect(popup.mock.calls[0][0].map((item) => item.label)).toEqual(['open', 'save_as', 'copy']);
+  });
+
+  it.each([['open', 'onOpen'], ['save_as', 'onDownload'], ['copy', 'onCopyFile']] as const)('%s runs the action', async (label, handler) => {
+    const { props } = await openMenu((items) => items.find((item) => item.label === label)!.id!);
+    await waitFor(() => expect((props as unknown as Record<string, ReturnType<typeof vi.fn>>)[handler]).toHaveBeenCalledTimes(1));
+    expect((props as unknown as Record<string, ReturnType<typeof vi.fn>>)[handler].mock.calls[0][0]).toMatchObject({ id: '1' });
+  });
+
+  it('with downloads off there\'s nothing to save or copy', async () => {
+    const { popup } = await openMenu(() => null, { downloadsOff: true, opensPreview: () => true });
+    expect(popup.mock.calls[0][0].map((item) => item.label)).toEqual(['open']);
+  });
+
+  it('Edit shows when the file can be edited and runs the action', async () => {
+    const onEdit = vi.fn();
+    const { props, popup } = await openMenu((items) => items.find((i) => i.label === 'edit')?.id ?? null, { onEdit, canEdit: () => true });
+    const labels = popup.mock.calls[0][0].flatMap((i: { label?: string }) => (i.label ? [i.label] : []));
+    expect(labels).toEqual(['open', 'save_as', 'edit', 'copy']);
+    await waitFor(() => expect(onEdit).toHaveBeenCalledWith(props.attachments[0]));
+  });
+
+  it('Edit stays out for a file it cannot take', async () => {
+    const { popup } = await openMenu(() => null, { onEdit: vi.fn(), canEdit: () => false });
+    expect(popup.mock.calls[0][0].map((i: { label?: string }) => i.label)).not.toContain('edit');
+  });
+
+  it('Edit stays out with downloads off, whatever else says yes', async () => {
+    const { popup } = await openMenu(() => null, { onEdit: vi.fn(), canEdit: () => true, downloadsOff: true });
+    expect(popup.mock.calls[0][0].map((i: { label?: string }) => i.label)).not.toContain('edit');
+  });
+
+  it('a browser keeps its own menu', async () => {
+    window.bulwarkDesktop = undefined;
+    renderBar([file('1', 'report.pdf')], { onCopyFile: vi.fn() });
+    const event = fireEvent.contextMenu(await screen.findByTestId('attachment'));
+    // Not prevented: the browser's menu shows, and no HTML one opens.
+    expect(event).toBe(true);
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
+});
 
 describe('splitFileName', () => {
   it('splits off a short extension', () => {

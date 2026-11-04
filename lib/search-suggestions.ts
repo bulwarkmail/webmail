@@ -65,6 +65,35 @@ export function buildSearchSuggestions(
   return suggestions;
 }
 
+/**
+ * Senders of the messages already loaded whose name or address contains the
+ * query, for when the address book knows nobody who matches (mail-16). An
+ * account without contacts otherwise offers nothing while typing.
+ */
+export function listSenderMatches(
+  emails: ReadonlyArray<{ from?: ReadonlyArray<{ name?: string | null; email?: string | null }> | null }>,
+  query: string,
+  limit = MAX_CONTACT_SUGGESTIONS,
+): ContactSuggestion[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const found: ContactSuggestion[] = [];
+  const seen = new Set<string>();
+  for (const email of emails) {
+    const sender = email.from?.[0];
+    const address = sender?.email?.trim();
+    if (!address) continue;
+    const key = address.toLowerCase();
+    if (seen.has(key)) continue;
+    const name = sender?.name?.trim() ?? "";
+    if (!key.includes(q) && !name.toLowerCase().includes(q)) continue;
+    seen.add(key);
+    found.push({ name, email: address });
+    if (found.length >= limit) break;
+  }
+  return found;
+}
+
 export interface HighlightSegment {
   text: string;
   match: boolean;

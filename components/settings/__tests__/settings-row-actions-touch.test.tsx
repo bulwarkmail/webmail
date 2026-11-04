@@ -50,7 +50,12 @@ describe('settings row actions on touch and keyboard', () => {
       icalSubscriptions: [],
     } as never);
     render(<CalendarManagementSettings />);
-    expectReachable(screen.getByTitle('edit'));
+    // No hover icons since pim-20: Edit… and the ⋮ are always shown.
+    for (const name of ['edit_calendar', 'row_actions']) {
+      const button = screen.getByRole('button', { name });
+      expect(button.className).not.toContain('opacity-0');
+      expect((button.parentElement as HTMLElement).className).not.toContain('opacity-0');
+    }
   });
 
   it('address books', () => {

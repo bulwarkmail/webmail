@@ -13,7 +13,7 @@
 
 import { PSTFile } from "pst-extractor";
 import { Buffer } from "buffer";
-import { registerPstFile } from "./shims/fs";
+import { rangeBacking, registerPstFile } from "./shims/fs";
 import { walkPst, type PstItem } from "./items";
 
 interface WorkerScope {
@@ -37,10 +37,10 @@ function errorCode(error: unknown): string {
 }
 
 scope.onmessage = (event: MessageEvent) => {
-  const data = event.data as { type: string; file?: File; skipBefore?: number; skipAlso?: number[]; maxMessageBytes?: number; count?: number };
+  const data = event.data as { type: string; file?: File; range?: { url: string; size: number }; skipBefore?: number; skipAlso?: number[]; maxMessageBytes?: number; count?: number };
   try {
-    if (data.type === "open" && data.file) {
-      registerPstFile("import.pst", data.file);
+    if (data.type === "open" && (data.file || data.range)) {
+      registerPstFile("import.pst", data.range ? rangeBacking(data.range.url, data.range.size) : data.file!);
       pst = new PSTFile("import.pst") as unknown as { close(): void };
       const walk = walkPst(pst, { skipBefore: data.skipBefore ?? 0, skipAlso: new Set(data.skipAlso ?? []), maxMessageBytes: data.maxMessageBytes ?? Number.POSITIVE_INFINITY });
       items = walk.items;

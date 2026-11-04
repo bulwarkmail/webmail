@@ -16,7 +16,7 @@ import { useUpdateStore } from '@/stores/update-store';
 
 function setDesktop(desktop: boolean) {
   window.matchMedia = vi.fn((query: string) => ({
-    matches: desktop && query === '(width >= 64rem)',
+    matches: desktop && query === '(width >= 37.5rem)',
     media: query,
     addEventListener: () => {},
     removeEventListener: () => {},

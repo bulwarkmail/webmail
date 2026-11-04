@@ -44,8 +44,7 @@ describe('identity signature editor and the organisation signature', () => {
     const locked = screen.getByTestId('identity-locked-signature');
     expect(locked.innerHTML).toContain('Alice<br>Phone: +49 1');
     expect(locked.querySelector('[data-org-locked]')).not.toBeNull();
-    expect(screen.queryByLabelText('text_signature_label')).toBeNull();
-    expect(screen.queryByLabelText('html_signature_label')).toBeNull();
+    expect(screen.queryByText('signature_label')).toBeNull();
 
     // Saving leaves the identity's own signature as it is.
     fireEvent.submit(locked.closest('form')!);
@@ -58,13 +57,13 @@ describe('identity signature editor and the organisation signature', () => {
     setPolicy({ hidden: true });
     render(<IdentityForm identity={ALICE} onSave={vi.fn()} onCancel={() => {}} />);
     expect(screen.queryByTestId('identity-locked-signature')).toBeNull();
-    expect(screen.queryByLabelText('text_signature_label')).toBeNull();
+    expect(screen.queryByText('signature_label')).toBeNull();
   });
 
-  it('keeps the editors, with a hint, when not restricted', () => {
+  it('keeps the editor, with a hint, when not restricted', () => {
     setPolicy();
     render(<IdentityForm identity={ALICE} onSave={vi.fn()} onCancel={() => {}} />);
-    expect(screen.getByLabelText('text_signature_label')).toBeInTheDocument();
+    expect(screen.getByText('signature_label')).toBeInTheDocument();
     expect(screen.getByTestId('identity-org-signature-default')).toHaveTextContent('identity_default');
     expect(screen.queryByTestId('identity-locked-signature')).toBeNull();
   });

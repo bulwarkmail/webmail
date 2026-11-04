@@ -102,3 +102,22 @@ describe('POST /api/errors', () => {
     expect((await POST(post('not json'))).status).toBe(400);
   });
 });
+
+describe('a desktop app\'s version', () => {
+  it.each(['0.3.0-beta.1+desktop', '1.20.0+desktop', '1.20.0-rc.2'])('keeps %s', async (version) => {
+    config.errorReportingDsn = DSN;
+    const res = await POST(post({ name: 'TypeError', frames: [], version }));
+    expect(res.status).toBe(204);
+    await flushErrors();
+    const day = (await readErrors())[utcDay()] ?? {};
+    expect(Object.values(day).map((entry) => entry.version)).toContain(version);
+  });
+
+  it.each(['1.20.0+a+b', '1.20.0-beta/../x', 'not a version'])('falls back to the server\'s for %s', async (version) => {
+    config.errorReportingDsn = DSN;
+    await POST(post({ name: 'RangeError', frames: [], version }));
+    await flushErrors();
+    const day = (await readErrors())[utcDay()] ?? {};
+    expect(Object.values(day).map((entry) => entry.version)).not.toContain(version);
+  });
+});

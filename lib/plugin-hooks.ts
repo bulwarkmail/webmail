@@ -71,6 +71,13 @@ const INTERCEPT_TIMEOUT_MS = 60_000;
 // counted them toward auto-disable.
 const BLOB_UPLOAD_TIMEOUT_MS = 15 * 60_000;
 
+/**
+ * The longest a hook may stay waiting on a dialog or an OS prompt, from its start. A
+ * person answers well within this. A plugin whose dialog is never answered, or a call the
+ * OS never finishes, must not hold mail rendering or a send forever.
+ */
+const HELD_HOOK_DEADLINE_MS = 10 * 60_000;
+
 class HookTimeoutError extends Error {}
 
 /** Tells the hook timer when a plugin is waiting on the user. */
@@ -97,20 +104,30 @@ function withTimeout<T>(pluginId: string, promise: T | Promise<T>, ms: number = 
   if (!(promise instanceof Promise)) return Promise.resolve(promise);
   return new Promise<T>((resolve, reject) => {
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let deadline: ReturnType<typeof setTimeout> | undefined;
     let stopWaiting: (() => void) | undefined;
+    const started = Date.now();
     const arm = () => {
       stopWaiting = undefined;
       timer = setTimeout(expire, ms);
     };
     const expire = () => {
       if (dialogGate?.hasOpenDialog(pluginId)) {
+        // One deadline from the start, however often holds come and go. A bus with a
+        // longer budget of its own has at least that.
+        deadline ??= setTimeout(() => {
+          settle();
+          reject(new HookTimeoutError(`Hook still waiting on the user after ${Date.now() - started}ms`));
+        }, Math.max(0, started + Math.max(HELD_HOOK_DEADLINE_MS, ms) - Date.now()));
         stopWaiting = dialogGate.whenDialogsClosed(pluginId, arm);
         return;
       }
+      clearTimeout(deadline);
       reject(new HookTimeoutError(`Hook timed out after ${ms}ms`));
     };
     const settle = () => {
       clearTimeout(timer);
+      clearTimeout(deadline);
       stopWaiting?.();
     };
     arm();

@@ -139,7 +139,7 @@ export function ThirdPartySection({ draft }: { draft: OrgPolicyDraft }) {
           {on && relays.length === 0 && (
             <ConfigNote>
               Push notifications now need a relay you run yourself. Add one under{' '}
-              <AdminLink href="/admin/policy" className="underline underline-offset-2">User policy &gt; Push relays</AdminLink>;
+              <AdminLink href="/admin/policy" className="underline underline-offset-2">Features and settings &gt; Push relays</AdminLink>;
               until then users get new mail only while Bulwark is open.
             </ConfigNote>
           )}

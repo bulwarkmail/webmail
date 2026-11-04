@@ -23,6 +23,22 @@ const QUOTED_REMOTE_ALLOWED_ATTR = "data-quoted-remote";
 // Atom blocks typing must never replace just because they were left selected.
 const ATOM_BLOCKS = new Set(["quotedHtml", "signatureBlock"]);
 
+/**
+ * Replacing the editor's content throws the caret to where the old selection
+ * maps to: the quote as a node, where the next key typed replaces the whole
+ * quote, or the line below it. There is no focus event for the guard below to
+ * catch: a reply's inline images finish loading while the caret already waits
+ * in the body. It goes back to where it was, or to the start if that is gone.
+ */
+export function restoreCaretAfterContentSync(editor: Editor, caret: number): void {
+  const { doc } = editor.state;
+  const near = Selection.near(doc.resolve(Math.min(caret, doc.content.size)));
+  const target = near instanceof TextSelection ? near : Selection.atStart(doc);
+  if (target instanceof TextSelection && !target.eq(editor.state.selection)) {
+    editor.view.dispatch(editor.state.tr.setSelection(target));
+  }
+}
+
 // Reusable style for the quote bar when quoting email text (like in a reply).
 const QUOTE_BAR_STYLE =
   "border-left:2px solid #c5c5c5;padding-left:12px;margin-top:8px;";

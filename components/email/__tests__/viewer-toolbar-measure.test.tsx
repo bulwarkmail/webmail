@@ -50,7 +50,11 @@ let widthReads = 0;
 beforeEach(() => {
   clearAllHooks();
   widthReads = 0;
-  vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(() => { widthReads++; return 40; });
+  // A width read in the toolbar: its groups' (every measuring pass) and its
+  // items' (only a pass that has to hide some).
+  const inToolbar = (el: HTMLElement) => !!el.closest('[class*="@container/reader-toolbar"]');
+  vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(function (this: HTMLElement) { if (inToolbar(this)) widthReads++; return 40; });
+  vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockImplementation(function (this: HTMLElement) { if (inToolbar(this)) widthReads++; return 0; });
 });
 afterEach(() => vi.restoreAllMocks());
 

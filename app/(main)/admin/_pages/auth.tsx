@@ -59,8 +59,13 @@ export function AuthPage() {
 
   async function fetchConfig() {
     setLoading(true);
-    const res = await apiFetch('/api/admin/config');
-    if (res.ok) setConfig(await res.json());
+    try {
+      const res = await apiFetch('/api/admin/config');
+      if (!res.ok) throw new Error();
+      setConfig(await res.json());
+    } catch {
+      setMessage({ type: 'error', text: 'Could not load the settings' });
+    }
     setLoading(false);
   }
 
@@ -209,7 +214,7 @@ export function AuthPage() {
           </>
         }
       >
-        <div className="space-y-4">
+        <div className="mt-4 space-y-4 [overflow-wrap:anywhere]">
           <div>
             <label htmlFor="setup-origin" className="block text-xs font-medium text-foreground mb-1">
               Webmail origin
@@ -277,7 +282,7 @@ export function AuthPage() {
             <div className="flex flex-col items-start gap-1 sm:items-end">
               <Button type="button" size="sm" className="gap-2" onClick={openSetupDialog} disabled={setupRunning || configReadOnly || setupSignIn?.signedIn === false}>
                 {setupRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                {setupRunning ? 'Configuring…' : 'Set up automagically'}
+                {setupRunning ? 'Configuring…' : 'Set up with Stalwart'}
               </Button>
               {configReadOnly && (
                 <p className="text-xs text-destructive">
@@ -333,7 +338,7 @@ export function AuthPage() {
         </SettingsSection>
 
         <SettingsSection id="session" title="Session and security">
-          <ConfigSelectItem label="Cookie SameSite" configKey="cookieSameSite" value={currentValue('cookieSameSite') as string} source={config.cookieSameSite?.source} options={['lax', 'strict', 'none']} onChange={handleChange} onRevert={handleRevert} />
+          <ConfigSelectItem label="Cookie SameSite" description="When the browser sends the sign-in cookies with requests from other sites. Lax suits most setups; None is needed when Bulwark is embedded in another site, and Strict blocks links into Bulwark from elsewhere." configKey="cookieSameSite" value={currentValue('cookieSameSite') as string} source={config.cookieSameSite?.source} options={['lax', 'strict', 'none']} onChange={handleChange} onRevert={handleRevert} />
           <ConfigTextItem label="Allowed frame ancestors" configKey="allowedFrameAncestors" value={currentValue('allowedFrameAncestors') as string} source={config.allowedFrameAncestors?.source} onChange={handleChange} onRevert={handleRevert} placeholder="'none' or https://..." wide />
           <ConfigTextItem label="Parent origin" description="For embedded mode communication" configKey="parentOrigin" value={currentValue('parentOrigin') as string} source={config.parentOrigin?.source} onChange={handleChange} onRevert={handleRevert} />
         </SettingsSection>

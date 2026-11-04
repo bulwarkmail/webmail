@@ -121,7 +121,11 @@ export type PayloadPurpose =
   /** A pairing grant or code record in the shared store (lib/auth/pairing-store.ts). */
   | 'pairing-store'
   /** A parked mobile hand-off sign-in in the shared store (lib/auth/handoff-store.ts). */
-  | 'handoff-store';
+  | 'handoff-store'
+  /** Which server a desktop account's refresh token belongs to (lib/oauth/custom-upstream.ts). */
+  | 'custom-upstream'
+  /** Proof of an earlier session, for wiping a dropped account's plugin secrets (lib/plugin-secrets/wipe-proof.ts). */
+  | 'plugin-wipe-proof';
 
 /**
  * Whether a blob minted before purposes were bound may be re-admitted for
@@ -145,6 +149,8 @@ const LEGACY_PAYLOAD_MARKERS: Record<PayloadPurpose, (payload: Record<string, un
   'session-age': () => false,
   'pairing-store': () => false,
   'handoff-store': () => false,
+  'custom-upstream': () => false,
+  'plugin-wipe-proof': () => false,
 };
 
 export function encryptPayload(payload: Record<string, unknown>, purpose: PayloadPurpose): string {

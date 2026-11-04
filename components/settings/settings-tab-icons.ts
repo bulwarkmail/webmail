@@ -18,6 +18,9 @@ import {
   Database,
   Users,
   RotateCcw,
+  CloudOff,
+  EyeOff,
+  Info,
   type AppIcon,
 } from '@/components/icons';
 import type { SettingsSearchTab } from '@/lib/settings-search';
@@ -46,7 +49,10 @@ export const SETTINGS_TAB_ICONS: Record<SettingsSearchTab, AppIcon> = {
   contacts: BookUser,
   files: HardDrive,
   addons: Puzzle,
+  offline: CloudOff,
+  privacy: EyeOff,
   backup: Database,
+  about: Info,
 };
 
 export type SettingsTabGroup = 'top' | 'mail' | 'apps' | 'bottom';
@@ -58,8 +64,8 @@ export type SettingsTabGroup = 'top' | 'mail' | 'apps' | 'bottom';
  * from the last session's hints.
  */
 export const SETTINGS_NAV_GROUPS: readonly { group: SettingsTabGroup; tabs: readonly SettingsSearchTab[] }[] = [
-  { group: 'top', tabs: ['account', 'security', 'sharing', 'notifications', 'general', 'appearance', 'accessibility'] },
+  { group: 'top', tabs: ['account', 'security', 'privacy', 'sharing', 'notifications', 'general', 'offline', 'appearance', 'accessibility'] },
   { group: 'mail', tabs: ['message_list', 'reading', 'composing', 'organize', 'filters', 'vacation', 'recovery'] },
   { group: 'apps', tabs: ['calendar', 'contacts', 'files', 'addons'] },
-  { group: 'bottom', tabs: ['backup'] },
+  { group: 'bottom', tabs: ['backup', 'about'] },
 ];

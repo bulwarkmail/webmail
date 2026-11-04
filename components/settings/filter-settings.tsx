@@ -1,7 +1,7 @@
 "use client";
 
 import { MoveButtons } from "@/components/ui/move-buttons";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { SettingsSection, ToggleSwitch } from "./settings-section";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,9 @@ import { supportsRegex } from "@/lib/sieve/regex";
 import { formatDateTime } from "@/lib/utils";
 import { useVacationStore } from "@/stores/vacation-store";
 import { useManagedAccountStore } from "@/stores/managed-account-store";
+import { planOnServer, runRuleOnFolder } from "@/lib/filters/quick-rule-flow";
+import { resolveMailboxRuleTarget } from "@/lib/filters/quick-rule-target";
+import { localizeMailboxName } from "@/lib/mailbox-label";
 import {
   Plus,
   GripVertical,
@@ -105,7 +108,7 @@ export function RuleSummary({ rule }: { rule: FilterRule }) {
         ))}
         {extra}
       </span>
-      <span className="mx-1 opacity-50">→</span>
+      {" "}<span className="mx-0.5 opacity-50">→</span>{" "}
       <span className="inline">
         {actions.map((act, i) => (
           <span key={i}>
@@ -209,6 +212,11 @@ export function VisualRuleSummary({ rule }: { rule: FilterRule }) {
 export function FilterSettings() {
   const t = useTranslations("settings.filters");
   const tNotifications = useTranslations("notifications");
+  const tMenu = useTranslations("context_menu");
+  const tSidebar = useTranslations("sidebar");
+  // The raw script editor is for people who asked for the advanced settings,
+  // unless the script is one only it can edit.
+  const showAdvanced = useSettingsStore((s) => s.showAdvancedSettings);
   const { client } = useAuthStore();
   const storeMailboxes = useEmailStore((s) => s.mailboxes);
   const fetchMailboxes = useEmailStore((s) => s.fetchMailboxes);
@@ -374,8 +382,24 @@ export function FilterSettings() {
     [client, deleteRule, saveFilters, tNotifications]
   );
 
+  // A rule only sees new mail. Its dialog offers to sort what is already in
+  // the Inbox too, as Gmail's "Also apply filter to matching conversations"
+  // does: for the user's own account, where the Inbox can be searched.
+  const inboxOffer = useMemo(() => {
+    if (!isPrimaryAccount || !client) return null;
+    const inbox = storeMailboxes.find((m) => m.role === "inbox" && !m.isShared);
+    const target = inbox ? resolveMailboxRuleTarget(inbox) : null;
+    if (!inbox || !target || target.client !== client) return null;
+    const folder = localizeMailboxName(inbox.role, inbox.name, (k) => tSidebar(`mailboxes.${k}`));
+    return { inbox, target, folder };
+  }, [isPrimaryAccount, client, storeMailboxes, tSidebar]);
+  const countInInbox = useCallback(async (rule: FilterRule) => {
+    if (!inboxOffer) return 0;
+    return (await planOnServer(inboxOffer.target, rule, inboxOffer.inbox.id)).ids.length;
+  }, [inboxOffer]);
+
   const handleSaveRule = useCallback(
-    async (rule: FilterRule) => {
+    async (rule: FilterRule, options?: { applyToExisting: boolean }) => {
       const previousRules = [...rules];
       if (editingRule) {
         updateRule(rule.id, rule);
@@ -391,10 +415,21 @@ export function FilterSettings() {
         } catch {
           useFilterStore.setState({ rules: previousRules });
           toast.error(tNotifications("filters_save_failed"));
+          return;
+        }
+        // The box in the dialog: run the saved rule over the Inbox now.
+        if (options?.applyToExisting && inboxOffer) {
+          void runRuleOnFolder(
+            inboxOffer.target,
+            rule,
+            inboxOffer.inbox.id,
+            inboxOffer.folder,
+            { notifications: tNotifications, filters: t, menu: tMenu },
+          );
         }
       }
     },
-    [editingRule, updateRule, addRule, rules, client, saveFilters, tNotifications]
+    [editingRule, updateRule, addRule, rules, client, saveFilters, tNotifications, inboxOffer, t, tMenu]
   );
 
   const handleSaveSieve = useCallback(
@@ -666,7 +701,7 @@ export function FilterSettings() {
                   onDragOver={(e) => handleDragOver(e, index)}
                   onDrop={(e) => handleDrop(e, index)}
                   onDragEnd={handleDragEnd}
-                  className={`flex items-start gap-3 p-3 rounded-md border transition-colors ${
+                  className={`flex flex-wrap items-start gap-x-3 gap-y-1 p-3 rounded-md border transition-colors sm:flex-nowrap ${
                     dragOverIndex === index
                       ? "border-primary bg-primary/5"
                       : "border-border hover:bg-muted/50"
@@ -687,8 +722,9 @@ export function FilterSettings() {
                     />
                   </div>
 
+                  {/* On a phone the name and summary get a line of their own, under the controls. */}
                   <div
-                    className="flex-1 min-w-0 cursor-pointer"
+                    className="flex-1 min-w-0 cursor-pointer max-sm:order-last max-sm:basis-full"
                     onClick={() => {
                       setEditingRule(rule);
                       setShowRuleModal(true);
@@ -719,6 +755,7 @@ export function FilterSettings() {
                     count={rules.length}
                     name={rule.name}
                     onMove={(from, to) => void moveRule(from, to)}
+                    className="max-sm:ms-auto"
                   />
                   <IconButton
                     label={t("delete_rule")}
@@ -734,8 +771,8 @@ export function FilterSettings() {
         )}
       </SettingsSection>
 
-      <div className="flex items-center justify-between">
-        <div className="flex gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {!isOpaque && (
             <Button
               variant="outline"
@@ -750,16 +787,20 @@ export function FilterSettings() {
               {t("add_rule")}
             </Button>
           )}
-          <Button
-            variant="outline"
-            size="sm"
-            data-search-label={t("raw_editor")}
-            onClick={() => setShowSieveEditor(true)}
-          >
-            <Code className="w-4 h-4 me-1" />
-            {t("raw_editor")}
-          </Button>
-          <TermInfo id="sieve" />
+          {(showAdvanced || isOpaque) && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                data-search-label={t("raw_editor")}
+                onClick={() => setShowSieveEditor(true)}
+              >
+                <Code className="w-4 h-4 me-1" />
+                {t("raw_editor")}
+              </Button>
+              <TermInfo id="sieve" />
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-3">
@@ -771,11 +812,11 @@ export function FilterSettings() {
           )}
           {!isOpaque && rules.length > 0 && (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">{t("expanded_view")}</span>
+              <span className="text-xs text-muted-foreground">{t("show_rule_details")}</span>
               <ToggleSwitch
                 checked={expandedFilterView}
                 onChange={(v) => updateSetting("expandedFilterView", v)}
-                ariaLabel={t("expanded_view")}
+                ariaLabel={t("show_rule_details")}
               />
             </div>
           )}
@@ -791,6 +832,9 @@ export function FilterSettings() {
           regexSupported={supportsRegex(sieveCapabilities?.sieveExtensions)}
           forwardsBefore={forwardsOfEdited.before}
           forwardsAfter={forwardsOfEdited.after}
+          offerApplyToExisting={!!inboxOffer}
+          applyExistingFolder={inboxOffer?.folder}
+          countExisting={inboxOffer ? countInInbox : undefined}
           onSave={handleSaveRule}
           onClose={() => {
             setShowRuleModal(false);

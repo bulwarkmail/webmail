@@ -67,3 +67,26 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+  # The build the release tarball and a manual install use, with its guard at
+  # the end. Docker and the Lite images build another way (webpack, export), so
+  # nothing else would notice this one breaking before a release does.
+  standalone-build:
+    name: Standalone build and guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build

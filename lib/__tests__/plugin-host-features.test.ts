@@ -17,6 +17,10 @@ import {
   isSlotHandedOver,
   snapshotHostFeatures,
 } from '@/lib/plugin-sandbox/host-features';
+import { assistantFeatures } from '@/lib/plugin-sandbox/assistant';
+
+/** The AI assistant's flags (lib/plugin-sandbox/assistant) come on top, as `plugin` sees them; their own tests check them. */
+const withAssistant = (core: Record<string, boolean>, plugin?: never) => ({ ...core, ...assistantFeatures(plugin) });
 
 function setExternalMail(patch: Partial<typeof DEFAULT_ORGANISATION_POLICY.externalMail>) {
   usePolicyStore.setState({
@@ -31,11 +35,11 @@ beforeEach(() => setExternalMail({}));
 
 describe('snapshotHostFeatures', () => {
   it('has one flag per switch', () => {
-    expect(snapshotHostFeatures()).toEqual({ externalSenderLabel: false, externalRecipientWarning: false, noThirdPartyTraffic: false });
+    expect(snapshotHostFeatures()).toEqual(withAssistant({ externalSenderLabel: false, externalRecipientWarning: false, noThirdPartyTraffic: false }));
     setExternalMail({ senderLabel: true });
-    expect(snapshotHostFeatures()).toEqual({ externalSenderLabel: true, externalRecipientWarning: false, noThirdPartyTraffic: false });
+    expect(snapshotHostFeatures()).toEqual(withAssistant({ externalSenderLabel: true, externalRecipientWarning: false, noThirdPartyTraffic: false }));
     setExternalMail({ recipientWarning: true });
-    expect(snapshotHostFeatures()).toEqual({ externalSenderLabel: false, externalRecipientWarning: true, noThirdPartyTraffic: false });
+    expect(snapshotHostFeatures()).toEqual(withAssistant({ externalSenderLabel: false, externalRecipientWarning: true, noThirdPartyTraffic: false }));
   });
 
   // A link check switches Google Safe Browsing off in the mode instead of
@@ -81,21 +85,21 @@ describe('host bridge', () => {
     const plugin = { id: 'p', name: 'P', version: '1.0.0', permissions: [], settings: {}, settingsSchema: {} } as never;
     const instance = createBackgroundInstance({ plugin, tier: 'privileged', code: '', locale: 'en' });
     const pending = (instance as unknown as { pendingInit: { hostFeatures?: unknown } | null }).pendingInit;
-    expect(pending?.hostFeatures).toEqual({ externalSenderLabel: true, externalRecipientWarning: false, noThirdPartyTraffic: false });
+    expect(pending?.hostFeatures).toEqual(withAssistant({ externalSenderLabel: true, externalRecipientWarning: false, noThirdPartyTraffic: false }, plugin));
 
     // Before init has gone out a change lands in the payload ...
     setExternalMail({});
-    expect(pending?.hostFeatures).toEqual({ externalSenderLabel: false, externalRecipientWarning: false, noThirdPartyTraffic: false });
+    expect(pending?.hostFeatures).toEqual(withAssistant({ externalSenderLabel: false, externalRecipientWarning: false, noThirdPartyTraffic: false }, plugin));
 
     // ... after it, as a host-change message.
     const sent: unknown[] = [];
     (instance as unknown as { pendingInit: unknown }).pendingInit = null;
     (instance as unknown as { send: (m: unknown) => void }).send = (m) => sent.push(m);
     setExternalMail({ recipientWarning: true });
-    expect(sent).toEqual([{ type: 'host-change', features: { externalSenderLabel: false, externalRecipientWarning: true, noThirdPartyTraffic: false } }]);
+    expect(sent).toEqual([{ type: 'host-change', features: withAssistant({ externalSenderLabel: false, externalRecipientWarning: true, noThirdPartyTraffic: false }, plugin) }]);
     // The admin turns third-party traffic off: running plugins hear it.
     setNoThirdPartyTraffic(true);
-    expect(sent[1]).toEqual({ type: 'host-change', features: { externalSenderLabel: false, externalRecipientWarning: true, noThirdPartyTraffic: true } });
+    expect(sent[1]).toEqual({ type: 'host-change', features: withAssistant({ externalSenderLabel: false, externalRecipientWarning: true, noThirdPartyTraffic: true }, plugin) });
     setNoThirdPartyTraffic(false);
     instance.destroy();
   }, 30_000);
@@ -161,5 +165,17 @@ describe('api.host in the sandbox runtime', () => {
     expect(kept.externalSenderLabel).toBe(true);
     expect((kept as { noThirdPartyTraffic?: boolean }).noThirdPartyTraffic).toBe(true);
     expect(changes).toEqual([{ externalSenderLabel: true, externalRecipientWarning: false, noThirdPartyTraffic: true }]);
+
+    // The assistant's flags (lib/plugin-sandbox/assistant) reach the plugin too.
+    expect((kept as { sidePanel?: boolean }).sidePanel).toBeUndefined();
+    post(hostWindow, HOST_ORIGIN, { type: 'host-change', features: { externalSenderLabel: true, externalRecipientWarning: false, noThirdPartyTraffic: true, sidePanel: true } });
+    expect((kept as { sidePanel?: boolean }).sidePanel).toBe(true);
+    post(hostWindow, HOST_ORIGIN, { type: 'host-change', features: { externalSenderLabel: true, externalRecipientWarning: false, noThirdPartyTraffic: true, sidePanel: 'yes' } });
+    expect((kept as { sidePanel?: boolean }).sidePanel).toBe(false);
+    // A flag the host no longer names turns off instead of keeping its old value.
+    post(hostWindow, HOST_ORIGIN, { type: 'host-change', features: { externalSenderLabel: true, externalRecipientWarning: false, noThirdPartyTraffic: true, sidePanel: true } });
+    expect((kept as { sidePanel?: boolean }).sidePanel).toBe(true);
+    post(hostWindow, HOST_ORIGIN, { type: 'host-change', features: { externalSenderLabel: true, externalRecipientWarning: false, noThirdPartyTraffic: true } });
+    expect((kept as { sidePanel?: boolean }).sidePanel).toBe(false);
   }, 30_000);
 });

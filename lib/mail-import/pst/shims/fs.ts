@@ -2,7 +2,9 @@
  * `fs` for pst-extractor inside the PST worker: random access into a File
  * without loading it whole. pst-extractor only calls openSync, readSync and
  * closeSync. Reads go through FileReaderSync (workers only) in 64 KB pages
- * with a small cache, since the library reads a few bytes at a time.
+ * with a small cache, since the library reads a few bytes at a time. A file
+ * the desktop app reads from disk has no Blob: there the pages come through a
+ * synchronous XHR with a Range header, which a worker may still do.
  *
  * Register the file first: `registerPstFile(name, file)`.
  */
@@ -12,12 +14,43 @@ declare const FileReaderSync: { new (): { readAsArrayBuffer(blob: Blob): ArrayBu
 const PAGE = 64 * 1024;
 const MAX_PAGES = 128; // 8 MB
 
-const files = new Map<string, Blob>();
-const open = new Map<number, { file: Blob; pages: Map<number, Uint8Array> }>();
+/** Where the pages come from. */
+export interface PstBacking {
+  size: number;
+  read(start: number, end: number): Uint8Array;
+}
+
+const files = new Map<string, PstBacking>();
+const open = new Map<number, { file: PstBacking; pages: Map<number, Uint8Array> }>();
 let nextFd = 3;
 
-export function registerPstFile(name: string, file: Blob): void {
-  files.set(name, file);
+function blobBacking(blob: Blob): PstBacking {
+  return {
+    size: blob.size,
+    read: (start, end) => new Uint8Array(new FileReaderSync().readAsArrayBuffer(blob.slice(start, end))),
+  };
+}
+
+/** A file behind a URL that answers Range requests. */
+export function rangeBacking(url: string, size: number): PstBacking {
+  return {
+    size,
+    read(start, end) {
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", url, false);
+      xhr.responseType = "arraybuffer";
+      xhr.setRequestHeader("Range", `bytes=${start}-${end - 1}`);
+      xhr.send();
+      const bytes = xhr.status === 206 ? new Uint8Array(xhr.response as ArrayBuffer) : null;
+      // A short answer would be read as data further on, so it counts as a failure here.
+      if (!bytes || bytes.length !== end - start) throw new Error(`read failed: ${xhr.status}`);
+      return bytes;
+    },
+  };
+}
+
+export function registerPstFile(name: string, file: Blob | PstBacking): void {
+  files.set(name, "read" in file ? file : blobBacking(file));
 }
 
 export function openSync(name: string): number {
@@ -28,7 +61,7 @@ export function openSync(name: string): number {
   return fd;
 }
 
-function page(entry: { file: Blob; pages: Map<number, Uint8Array> }, index: number): Uint8Array {
+function page(entry: { file: PstBacking; pages: Map<number, Uint8Array> }, index: number): Uint8Array {
   let bytes = entry.pages.get(index);
   if (bytes) {
     // Most recently used goes last.
@@ -37,7 +70,7 @@ function page(entry: { file: Blob; pages: Map<number, Uint8Array> }, index: numb
     return bytes;
   }
   const start = index * PAGE;
-  bytes = new Uint8Array(new FileReaderSync().readAsArrayBuffer(entry.file.slice(start, Math.min(entry.file.size, start + PAGE))));
+  bytes = entry.file.read(start, Math.min(entry.file.size, start + PAGE));
   entry.pages.set(index, bytes);
   if (entry.pages.size > MAX_PAGES) entry.pages.delete(entry.pages.keys().next().value as number);
   return bytes;

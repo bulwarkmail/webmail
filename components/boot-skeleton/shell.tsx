@@ -70,7 +70,7 @@ export function RailSkeleton({
 }) {
   const item = (on: boolean) =>
     cn(
-      "relative flex items-center justify-center w-10 h-10 rounded-md max-lg:min-h-[44px]",
+      "relative flex items-center justify-center w-10 h-10 rounded-md tap:min-h-[44px]",
       on ? "bg-primary/10 text-primary" : "text-muted-foreground",
     );
   const footerItem = "flex items-center justify-center w-10 h-10 rounded-md";
@@ -125,7 +125,7 @@ export function RailSkeleton({
 }
 
 /**
- * The phone/tablet bottom bar (NavigationRail horizontal). `className` decides
+ * The phone bottom bar (NavigationRail horizontal). `className` decides
  * at which widths it shows.
  */
 export function BottomBarSkeleton({
@@ -239,11 +239,6 @@ interface AppShellSkeletonProps {
   label?: string;
   /** Rail item drawn as current. */
   active?: RailApp;
-  /**
-   * Below which width the vertical rail gives way to the bottom bar: mail and
-   * settings switch at 64rem, calendar, contacts, files and plugin pages at 48rem.
-   */
-  railBelow: "md" | "lg";
   labels?: RailLabels;
   /** Whether the Mountain View top bar holds the search field (mail does). */
   mvSearch?: boolean;
@@ -251,7 +246,7 @@ interface AppShellSkeletonProps {
   mvMenu?: boolean;
   /** Extra classes for the row under the top bar (Mountain View card margins etc.). */
   rowClassName?: string;
-  /** Extra classes for the phone/tablet bottom bar, e.g. to hide it while a message is open. */
+  /** Extra classes for the phone bottom bar, e.g. to hide it while a message is open. */
   bottomBarClassName?: string;
   children: ReactNode;
 }
@@ -273,7 +268,6 @@ export function AppShellSkeleton({
   surface,
   label,
   active,
-  railBelow,
   labels,
   mvSearch = false,
   mvMenu = true,
@@ -294,21 +288,15 @@ export function AppShellSkeleton({
       <SkeletonRegion
         surface={surface}
         label={label}
-        className="flex flex-col overflow-hidden pt-[env(safe-area-inset-top)] h-dvh bg-background lg:mv:bg-[var(--mv-canvas)] boot-out:hidden boot-pro-frame:hidden"
+        className="flex flex-col overflow-hidden pt-[var(--app-top-inset)] h-dvh bg-background desk:mv:bg-[var(--mv-canvas)] boot-out:hidden boot-pro-frame:hidden"
       >
-        <MvTopBarSkeleton search={mvSearch} menu={mvMenu} className="hidden lg:mv:flex" />
+        <MvTopBarSkeleton search={mvSearch} menu={mvMenu} className="hidden desk:mv:flex" />
+        {/* The rail from the phone breakpoint up (PHONE_BELOW), the bottom bar below it. */}
         <div className={cn("flex flex-1 min-h-0 overflow-hidden", rowClassName)}>
-          <RailSkeleton
-            active={active}
-            className={railBelow === "lg" ? "hidden lg:flex lg:mv:hidden" : "hidden md:flex lg:mv:hidden"}
-          />
+          <RailSkeleton active={active} className="hidden desk:flex desk:mv:hidden" />
           {children}
         </div>
-        <BottomBarSkeleton
-          active={active}
-          labels={labels}
-          className={cn(railBelow === "lg" ? "flex lg:hidden" : "flex md:hidden", bottomBarClassName)}
-        />
+        <BottomBarSkeleton active={active} labels={labels} className={cn("flex desk:hidden", bottomBarClassName)} />
       </SkeletonRegion>
     </>
   );

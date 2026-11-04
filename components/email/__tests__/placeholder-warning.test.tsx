@@ -235,6 +235,7 @@ describe('composer placeholder warning', () => {
       placeholderWarningEnabled: true,
       attachmentReminderEnabled: false,
       attachmentReminderKeywords: [],
+      sendConfirmation: false,
     } as never);
   });
 
@@ -293,33 +294,36 @@ describe('composer placeholder warning', () => {
     expect(onSend).not.toHaveBeenCalled();
   });
 
-  it('does not ask again after Send anyway and a trip back to add an attachment', async () => {
-    useSettingsStore.setState({ attachmentReminderEnabled: true, attachmentReminderKeywords: ['see you'] } as never);
-    const onSend = vi.fn();
-    render(<EmailComposer initialData={DRAFT_WITH_PLACEHOLDER} onSend={onSend} />);
-
+  // Send anyway, then "Send this message?" answered with Cancel: the
+  // placeholders were confirmed, the message is still here.
+  const confirmThenCancel = async () => {
     fireEvent.click(sendButton());
     fireEvent.click(await screen.findByText('placeholder_warning.send_anyway'));
-    // The body says "See you", so the attachment reminder stops the send.
-    fireEvent.click(await screen.findByText('forgot_attachment.back'));
-    await waitFor(() => expect(screen.queryByText('forgot_attachment.title')).not.toBeInTheDocument());
+    const confirm = await screen.findByRole('alertdialog');
+    expect(confirm).toHaveTextContent('send_confirm.title');
+    fireEvent.click(within(confirm).getByRole('button', { name: 'cancel' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+  };
+
+  it('does not ask again after Send anyway and a cancelled send', async () => {
+    useSettingsStore.setState({ sendConfirmation: true } as never);
+    const onSend = vi.fn();
+    render(<EmailComposer initialData={DRAFT_WITH_PLACEHOLDER} onSend={onSend} />);
+    await confirmThenCancel();
 
     fireEvent.click(sendButton());
 
-    expect(await screen.findByText('forgot_attachment.title')).toBeInTheDocument();
+    const dialog = await screen.findByRole('alertdialog');
+    expect(dialog).toHaveTextContent('send_confirm.title');
     expect(screen.queryByText('placeholder_warning.title')).not.toBeInTheDocument();
     expect(onSend).not.toHaveBeenCalled();
   });
 
   it('asks again when a new placeholder shows up', async () => {
-    useSettingsStore.setState({ attachmentReminderEnabled: true, attachmentReminderKeywords: ['see you'] } as never);
+    useSettingsStore.setState({ sendConfirmation: true } as never);
     const onSend = vi.fn();
     render(<EmailComposer initialData={DRAFT_WITH_PLACEHOLDER} onSend={onSend} />);
-
-    fireEvent.click(sendButton());
-    fireEvent.click(await screen.findByText('placeholder_warning.send_anyway'));
-    fireEvent.click(await screen.findByText('forgot_attachment.back'));
-    await waitFor(() => expect(screen.queryByText('forgot_attachment.title')).not.toBeInTheDocument());
+    await confirmThenCancel();
 
     fireEvent.change(screen.getByDisplayValue('Lunch'), { target: { value: 'Lunch with {{name}}' } });
     fireEvent.click(sendButton());
@@ -328,6 +332,26 @@ describe('composer placeholder warning', () => {
     expect(within(dialog).getByText('placeholder_warning.title')).toBeInTheDocument();
     expect(within(dialog).getByText('{{name}}')).toBeInTheDocument();
     expect(onSend).not.toHaveBeenCalled();
+  });
+
+  // compose-27: one question for everything the checks found.
+  it('lists the placeholders and the missing attachment in one dialog', async () => {
+    useSettingsStore.setState({ attachmentReminderEnabled: true, attachmentReminderKeywords: ['see you'] } as never);
+    const onSend = vi.fn();
+    render(<EmailComposer initialData={DRAFT_WITH_PLACEHOLDER} onSend={onSend} />);
+
+    fireEvent.click(sendButton());
+
+    const dialog = await screen.findByRole('alertdialog');
+    expect(dialog).toHaveTextContent('warnings_title');
+    expect(dialog).toHaveTextContent('warning_placeholders');
+    expect(dialog).toHaveTextContent('warning_attachment');
+    expect(within(dialog).getByText('[TIME]')).toBeInTheDocument();
+
+    fireEvent.click(within(dialog).getByText('send_anyway'));
+
+    await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1));
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
   });
 
   it('ignores placeholders in quoted text and in the signature', async () => {

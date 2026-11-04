@@ -2,25 +2,29 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useSettingsStore } from '@/stores/settings-store';
+import { useSettingsStore, undoSendOptions } from '@/stores/settings-store';
 import type { MentionAddsRecipientTo, ReplyIdentityMatch, SendDelaySeconds } from '@/stores/settings-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
 import { TemplateSettings } from './template-settings';
 import { ProofreadingSettings } from './proofreading-settings';
-import { Button } from '@/components/ui/button';
-import { X, ChevronRight } from '@/components/icons';
+import { PrivacyLinkRow } from './privacy-settings';
+import { SignaturesSection } from './signatures-section';
+import { X } from '@/components/icons';
 
 /**
  * The Composing page: the editor, replying, what happens before a send,
- * read receipts, templates (their own tab before) and a pointer to where
- * signatures live, since people look for them here.
+ * templates (their own tab before), the signature of each address, and a
+ * pointer to where read receipts live, since people look for them here.
  */
 export function ComposingSettings() {
   const t = useTranslations('settings.email_behavior');
   const tPage = useTranslations('settings.composing_page');
+  const tWords = useTranslations('compose_words');
   const templatesEnabled = usePolicyStore((s) => s.isFeatureEnabled('templatesEnabled'));
+  // The admin panel can lock or hide these three (restriction-keys.ts).
+  const { isSettingLocked, isSettingHidden } = usePolicyStore();
   const [newKeyword, setNewKeyword] = useState('');
 
   const {
@@ -40,8 +44,6 @@ export function ComposingSettings() {
     signatureNewMailEnabled,
     signatureReplyForwardEnabled,
     signatureSeparatorEnabled,
-    requestReadReceiptDefault,
-    readReceiptResponse,
     updateSetting,
   } = useSettingsStore();
   const { client } = useAuthStore();
@@ -52,12 +54,14 @@ export function ComposingSettings() {
   return (
     <div className="space-y-8">
       <SettingsSection id="editor" title={tPage('title')} description={tPage('description')}>
-        <SettingItem label={t('plain_text_mode.label')} description={t('plain_text_mode.description')}>
+        {!isSettingHidden('plainTextMode') && (
+        <SettingItem label={t('plain_text_mode.label')} description={t('plain_text_mode.description')} locked={isSettingLocked('plainTextMode')}>
           <ToggleSwitch
             checked={plainTextMode}
             onChange={(checked) => updateSetting('plainTextMode', checked)}
           />
         </SettingItem>
+        )}
 
         <SettingItem label={t('recipient_mentions.label')} description={t('recipient_mentions.description')}>
           <ToggleSwitch
@@ -98,15 +102,17 @@ export function ComposingSettings() {
           />
         </SettingItem>
 
-        <SettingItem label={t('auto_select_reply_identity.label')} description={t('auto_select_reply_identity.description')}>
+        {!isSettingHidden('autoSelectReplyIdentity') && (
+        <SettingItem label={tWords('reply_from_received.label')} description={tWords('reply_from_received.description')} locked={isSettingLocked('autoSelectReplyIdentity')}>
           <ToggleSwitch
             checked={autoSelectReplyIdentity}
             onChange={(checked) => updateSetting('autoSelectReplyIdentity', checked)}
           />
         </SettingItem>
+        )}
 
-        {autoSelectReplyIdentity && customFromEnabled && (
-          <SettingItem nested label={t('reply_identity_match.label')} description={t('reply_identity_match.description')}>
+        {autoSelectReplyIdentity && customFromEnabled && !isSettingHidden('replyIdentityMatch') && (
+          <SettingItem nested label={t('reply_identity_match.label')} description={t('reply_identity_match.description')} locked={isSettingLocked('replyIdentityMatch')}>
             <Select
               value={replyIdentityMatch}
               onChange={(value) => updateSetting('replyIdentityMatch', value as ReplyIdentityMatch)}
@@ -152,17 +158,15 @@ export function ComposingSettings() {
       </SettingsSection>
 
       <SettingsSection id="sending" title={tPage('sections.sending')}>
-        <SettingItem label={t('send_delay.label')} description={t('send_delay.description')}>
+        <SettingItem label={tWords('undo_send.label')} description={tWords('undo_send.description')}>
           <div className="flex flex-col items-end gap-1">
             <Select
               value={String(sendDelaySeconds)}
               onChange={(value) => updateSetting('sendDelaySeconds', Number(value) as SendDelaySeconds)}
-              options={[
-                { value: '0', label: t('send_delay.off') },
-                { value: '10', label: t('send_delay.seconds', { seconds: 10 }) },
-                { value: '30', label: t('send_delay.seconds', { seconds: 30 }) },
-                { value: '60', label: t('send_delay.seconds', { seconds: 60 }) },
-              ]}
+              options={undoSendOptions(sendDelaySeconds).map((seconds) => ({
+                value: String(seconds),
+                label: seconds === 0 ? t('send_delay.off') : t('send_delay.seconds', { seconds }),
+              }))}
             />
             {sendDelaySeconds > 0 && !delayedSendSupported && (
               <p className="max-w-64 text-end text-xs text-amber-600 dark:text-amber-400">{t('send_delay.unsupported')}</p>
@@ -240,43 +244,13 @@ export function ComposingSettings() {
             onChange={(checked) => updateSetting('placeholderWarningEnabled', checked)}
           />
         </SettingItem>
-      </SettingsSection>
 
-      <SettingsSection id="receipts" title={tPage('sections.receipts')}>
-        <SettingItem label={t('request_read_receipt.label')} description={t('request_read_receipt.description')}>
-          <ToggleSwitch
-            checked={requestReadReceiptDefault}
-            onChange={(checked) => updateSetting('requestReadReceiptDefault', checked)}
-          />
-        </SettingItem>
-
-        <SettingItem label={t('read_receipt_response.label')} description={t('read_receipt_response.description')}>
-          <Select
-            value={readReceiptResponse}
-            onChange={(value) => updateSetting('readReceiptResponse', value as 'ask' | 'always' | 'never')}
-            options={[
-              { value: 'ask', label: t('read_receipt_response.ask') },
-              { value: 'always', label: t('read_receipt_response.always') },
-              { value: 'never', label: t('read_receipt_response.never') },
-            ]}
-          />
-        </SettingItem>
+        <PrivacyLinkRow topic="receipts" />
       </SettingsSection>
 
       {templatesEnabled && <TemplateSettings />}
 
-      <SettingsSection id="signatures" title={t('signatures_link.label')}>
-        <SettingItem label={t('signatures_link.label')} description={t('signatures_link.description')}>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.dispatchEvent(new CustomEvent('settings-tab-change', { detail: { tab: 'account', section: 'addresses' } }))}
-          >
-            {t('signatures_link.button')}
-            <ChevronRight className="w-4 h-4 ms-1" />
-          </Button>
-        </SettingItem>
-      </SettingsSection>
+      <SignaturesSection />
     </div>
   );
 }

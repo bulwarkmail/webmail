@@ -222,9 +222,11 @@ export function MvTopBar({
         </Link>
       </div>
 
-      {/* Search: left-anchored and capped, not centred */}
+      {/* Search: left-anchored and capped, not centred. It takes the free width
+          before the spacer gets any; shared equally, it stayed half as wide as
+          it could be, which at large text left no room for its own icons. */}
       {search && (
-        <div className="mv-topbar-search relative flex items-center gap-1 flex-1 min-w-0 max-w-[720px]">
+        <div className="mv-topbar-search relative flex items-center gap-1 flex-1 grow-[9999] min-w-0 max-w-[720px]">
           <SearchBox
             value={search.query}
             onChange={search.onQueryChange}

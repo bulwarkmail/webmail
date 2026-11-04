@@ -13,7 +13,7 @@ import path from 'node:path';
  * - top-level `const x = new Something(`, except constructors of values that
  *   can't change (RegExp, URL, TextEncoder/TextDecoder, Intl.*, Error types);
  * - top-level `const x = []` / `{}` / `new Map()`… (empty containers, which
- *   only exist to be filled);
+ *   only exist to be filled; `[] as const` is a readonly tuple and can't be);
  * - top-level `const x = createSomethingBudget|Cache|Store|Limiter(`;
  * - any `globalThis` access that stores something (`??=`, `= new`, `[KEY] =`).
  *
@@ -130,7 +130,7 @@ export function findStateSites(root: string, file: string): StateSite[] {
       // SCREAMING_CASE tables built once from a literal list are constants by convention.
       const constantTable = /^[A-Z][A-Z0-9_]*$/.test(name) && /^new (Set|Map)(<.*?>)?\(\s*\S/.test(value) && !/^new (Set|Map)(<.*?>)?\(\s*\)/.test(value);
       const isNew = /^new\s/.test(value) && !IMMUTABLE_CONSTRUCTORS.test(value) && !constantTable;
-      const isEmpty = /^(\[\s*\]|\{\s*\})\s*(as\s.+)?;?$/.test(value);
+      const isEmpty = /^(\[\s*\]|\{\s*\})\s*(as\s.+)?;?$/.test(value) && !/^(\[\s*\]|\{\s*\})\s*as\s+const\s*;?$/.test(value);
       const isFactory = /^create\w*(Budget|Cache|Store|Limiter|Queue)\s*[(<]/.test(value);
       if (isNew || isEmpty || isFactory) sites.push({ file: rel, name, line: i + 1, text: raw.trim() });
       return;

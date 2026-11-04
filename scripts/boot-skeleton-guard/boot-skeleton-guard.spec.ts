@@ -116,6 +116,19 @@ test.describe("server HTML without JavaScript", () => {
     });
   }
 
+  // React moves a big finished Suspense boundary out of the shell, into a hidden
+  // <div> a script reveals later: a frame or up to 300 ms with no skeleton at all.
+  // The cases above only see that when the reveal loses the race with the load
+  // event, so this reads the bytes.
+  for (const path of ["/en", "/en/mail/folder/inbox", "/en/calendar/week/2026-11-04", "/en/contacts", "/en/files/Documents", "/en/settings", "/en/pro", "/en/login"]) {
+    test(`${path}: the skeleton is in the page, not in a segment a script reveals`, async ({ request }) => {
+      const html = await (await request.get(path)).text();
+      const skeleton = html.indexOf("data-boot-skeleton=");
+      expect(skeleton, "a skeleton in the HTML").toBeGreaterThan(-1);
+      expect(html.slice(0, skeleton), "a hidden segment before the skeleton").not.toMatch(/<div hidden id="S:/);
+    });
+  }
+
   test("a visitor with nothing stored sees the login card's shape", async ({ browser }) => {
     for (const path of ["/en/mail/folder/inbox", "/en/calendar/week/2026-11-04", "/en/settings"]) {
       const context = await browser.newContext();
@@ -170,6 +183,25 @@ async function waitLoaded(page: Page) {
   }, null, { timeout: 60_000, polling: 100 }).catch(() => {});
   await page.waitForTimeout(1500);
 }
+
+// A failed hydration throws the skeleton away and draws the page again, which is what
+// the skeleton is there to avoid. The login page's own boundary hydrates after the app
+// around it, so a few loads, as it depends on what got there first.
+test("the login page hydrates what the server sent", async ({ browser }) => {
+  const errors: string[] = [];
+  for (let i = 0; i < 4; i++) {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    const note = (text: string) => { if (/hydrat|#418|#423|#425/i.test(text)) errors.push(text.slice(0, 200)); };
+    page.on("pageerror", (e) => note(e.message));
+    page.on("console", (m) => { if (m.type() === "error") note(m.text()); });
+    await page.goto("/en/login");
+    await page.getByRole("button", { name: /^sign in$/i }).first().waitFor({ timeout: 60_000 });
+    await page.waitForTimeout(500);
+    await context.close();
+  }
+  expect(errors).toEqual([]);
+});
 
 test("layout shift from navigation to the loaded page stays at or under 0.01", async ({ browser }) => {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });

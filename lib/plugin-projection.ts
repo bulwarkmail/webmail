@@ -12,6 +12,8 @@ import type {
 import type { EmailTemplate } from '@/lib/template-types';
 import { generateEmailSource } from '@/lib/email-source';
 import { isServerSetKeyword } from '@/lib/jmap/server-keywords';
+import { fileNodeKind } from '@/lib/jmap/filenode-kind';
+import { attachmentExtras, cidAltTexts } from '@/lib/plugin-sandbox/assistant/b.projection';
 import { htmlToPlainText } from '@/lib/html-to-text';
 
 // Resolve a message's plain-text body from its JMAP body parts. Plugins that
@@ -45,6 +47,7 @@ export function plainTextFromEmail(email: Email): string {
  * carry it, others only the caller knows (see EmailReadView.accountId).
  */
 export function emailToReadView(email: Email, accountId = email.sourceAccountId): EmailReadView {
+  const alts = cidAltTexts(email);
   return {
     id: email.id,
     ...(accountId ? { accountId } : {}),
@@ -66,6 +69,7 @@ export function emailToReadView(email: Email, accountId = email.sourceAccountId)
         type: part.type || 'application/octet-stream',
         size: part.size || 0,
         inline: part.disposition === 'inline' || !!part.cid,
+        ...attachmentExtras(part, alts),
       })),
     preview: email.preview || '',
     text: plainTextFromEmail(email),
@@ -188,8 +192,12 @@ export function taskToView(task: CalendarTask): TaskView {
   };
 }
 
+/**
+ * A FileNode as plugins see it. Folder or file by fileNodeKind (Stalwart
+ * 1.0's symlinks have no blob either, but hold nothing: they count as files).
+ */
 export function fileToView(node: FileNode, path = ''): FileResourceView {
-  const isDir = node.type === 'd' || node.blobId === null;
+  const isDir = fileNodeKind(node) === 'directory';
   return {
     id: node.id,
     name: node.name,

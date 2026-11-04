@@ -34,6 +34,8 @@ function TabStripSkeleton() {
   return (
     <div
       aria-hidden="true"
+      data-pane-strip=""
+      data-window-row-right=""
       className="relative flex items-stretch h-9 bg-secondary px-1 overflow-hidden flex-shrink-0"
       style={STRIP_BORDER}
     >
@@ -109,7 +111,7 @@ export function ProFrameSkeleton({
     <SkeletonRegion
       surface="pro"
       label={label}
-      className={cn("flex flex-col h-dvh bg-background overflow-hidden pt-[env(safe-area-inset-top)]", className)}
+      className={cn("flex flex-col h-dvh bg-background overflow-hidden pt-[var(--app-top-inset)]", className)}
     >
       <div data-pro-shell="" className="flex flex-1 overflow-hidden">
         <RailSkeleton search className="flex" />

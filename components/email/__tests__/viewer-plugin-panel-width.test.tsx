@@ -57,14 +57,14 @@ describe('plugin detail panel and narrow messages', () => {
     renderViewer();
 
     expect(screen.queryByTestId('slot-email-detail-sidebar')).not.toBeInTheDocument();
-    expect(screen.getByLabelText('plugin_panel_show')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'plugin_panel', pressed: false })).toBeInTheDocument();
   });
 
   it('opens anyway when the user asks', () => {
     reportWidth = 640;
     renderViewer();
 
-    act(() => { fireEvent.click(screen.getByLabelText('plugin_panel_show')); });
+    act(() => { fireEvent.click(screen.getByRole('button', { name: 'plugin_panel', pressed: false })); });
 
     expect(screen.getByTestId('slot-email-detail-sidebar')).toBeInTheDocument();
   });

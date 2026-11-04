@@ -45,6 +45,7 @@ function byFolderThenName(a: FileNode, b: FileNode): number {
 export function FilePickerDialog({ client, onClose, onPick }: FilePickerDialogProps) {
   const t = useTranslations("files");
   const tComposer = useTranslations("email_composer");
+  const tCommon = useTranslations("common");
   const [nodes, setNodes] = useState<FileNode[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -245,7 +246,7 @@ export function FilePickerDialog({ client, onClose, onPick }: FilePickerDialogPr
           <button
             type="button"
             onClick={onClose}
-            aria-label={t("cancel")}
+            aria-label={tCommon("close")}
             className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
           >
             <X className="w-4 h-4" />

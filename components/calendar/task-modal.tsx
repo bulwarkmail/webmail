@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo, useId } from "react";
+import { useCloseBesideControls } from "@/hooks/use-close-beside-controls";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,8 @@ import { taskToView } from "@/lib/plugin-projection";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { canCreateEventsIn } from "@/lib/calendar-editability";
+import { useCollectionNames } from "@/hooks/use-collection-names";
+import { defaultTaskList } from "@/components/calendar/task-list-view";
 
 interface TaskModalProps {
   task?: CalendarTask | null;
@@ -59,8 +62,13 @@ export function TaskModal({
   isMobile = false,
   isSubscriptionCalendar,
 }: TaskModalProps) {
+  const shownName = useCollectionNames();
   const t = useTranslations("calendar");
+  const tUx = useTranslations("ux_pim_calendar");
   const tCommon = useTranslations("common");
+  // The header's close goes to its start when the window's own close is at its end.
+  const [header, setHeader] = useState<HTMLDivElement | null>(null);
+  const closeFirst = useCloseBesideControls(header);
   const id = useId();
   const isEdit = !!task;
   const titleRef = useRef<HTMLInputElement>(null);
@@ -70,7 +78,8 @@ export function TaskModal({
   // The calendars a task can go into: not read-only ones (Birthdays,
   // feeds), the same rule as the event editor.
   const writableCalendars = calendars.filter((c) => canCreateEventsIn(c, isSubscriptionCalendar));
-  const defaultCalendarId = writableCalendars[0]?.id ?? calendars[0]?.id ?? "";
+  // A new task goes to the first task-only list (pim-8).
+  const defaultCalendarId = defaultTaskList(writableCalendars)?.id ?? calendars[0]?.id ?? "";
 
   const [title, setTitle] = useState(task?.title ?? "");
   const [description, setDescription] = useState(task?.description ?? "");
@@ -212,6 +221,12 @@ export function TaskModal({
     }
   }, [requestClose, handleSave]);
 
+  const close = (
+    <IconButton label={tCommon("close")} onClick={requestClose}>
+      <X />
+    </IconButton>
+  );
+
   return (
     // The desktop side panel is a dialog named by its title, like the event
     // editor; on a phone the full-screen wrapper around it is.
@@ -222,13 +237,12 @@ export function TaskModal({
       onKeyDown={handleKeyDown}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <h2 id={`${id}-heading`} className="text-sm font-semibold">
+      <div ref={setHeader} data-window-top-row="" className="flex items-center gap-2 px-4 py-3 border-b border-border">
+        {closeFirst && close}
+        <h2 id={`${id}-heading`} className="min-w-0 flex-1 text-sm font-semibold">
           {isEdit ? t("tasks.edit") : t("tasks.create")}
         </h2>
-        <IconButton label={tCommon("close")} onClick={requestClose}>
-          <X />
-        </IconButton>
+        {!closeFirst && close}
       </div>
 
       {/* Body */}
@@ -320,8 +334,9 @@ export function TaskModal({
             onChange={(e) => setProgress(e.target.value as CalendarTask["progress"])}
             className="rounded-md border border-input bg-background px-3 py-1.5 text-sm w-full"
           >
-            <option value="needs-action">{t("tasks.progress_needs_action")}</option>
-            <option value="in-process">{t("tasks.progress_in_process")}</option>
+            {/* Plain words; the stored values stay the standard's (pim-19). */}
+            <option value="needs-action">{tUx("task_status_not_started")}</option>
+            <option value="in-process">{tUx("task_status_in_progress")}</option>
             <option value="completed">{t("tasks.progress_completed")}</option>
             <option value="cancelled">{t("tasks.progress_cancelled")}</option>
           </select>
@@ -340,7 +355,7 @@ export function TaskModal({
               className="rounded-md border border-input bg-background px-3 py-1.5 text-sm w-full"
             >
               {calendarOptions.map((cal) => (
-                <option key={cal.id} value={cal.id}>{cal.name}</option>
+                <option key={cal.id} value={cal.id}>{shownName.calendar(cal)}</option>
               ))}
             </select>
           </div>

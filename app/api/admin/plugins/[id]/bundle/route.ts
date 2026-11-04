@@ -4,6 +4,7 @@ import { getDevPlugin, readDevBundle } from '@/lib/admin/plugin-dev';
 import { signBytes } from '@/lib/admin/plugin-signing';
 import { canSeeInstanceDetails } from '@/lib/auth/instance-details';
 import { storeUnavailableResponse } from '@/lib/admin/store-unavailable-response';
+import { devicePolicyPluginRefusal } from '@/lib/desktop/server-policy';
 
 async function safeSign(code: string): Promise<string | null> {
   try { return await signBytes(code); } catch { return null; }
@@ -31,6 +32,9 @@ export async function GET(
     if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(id)) {
       return NextResponse.json({ error: 'Invalid plugin ID' }, { status: 400 });
     }
+
+    const refused = devicePolicyPluginRefusal(id);
+    if (refused) return refused;
 
     // Dev plugins are read (and optionally bundled) straight from disk and
     // served with no caching so every refresh picks up the latest source.

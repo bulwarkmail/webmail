@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { FilterPanelHost } from '../filter-panel-host';
+import { FilterPanelHost, filterPanelBox } from '../filter-panel-host';
 
 // Mountain View moves the filter button into the global top bar. The panel
 // follows it there, given an anchor; without one it stays in the flow of the
@@ -34,6 +34,17 @@ describe('FilterPanelHost', () => {
     expect(Number.parseInt(panel.style.top, 10)).toBeGreaterThanOrEqual(56);
 
     anchor.remove();
+  });
+
+  it('stays wide enough for its fields when the search field is narrow', () => {
+    // The field is 286px wide at 1024: a panel that size cut the date fields to "dd".
+    expect(filterPanelBox({ left: 165, right: 451, bottom: 56, width: 286 }, 1024, false)).toEqual({ top: 60, left: 165, width: 480 });
+  });
+
+  it('grows towards the trailing side in RTL and stays on screen', () => {
+    expect(filterPanelBox({ left: 573, right: 859, bottom: 56, width: 286 }, 1024, true)).toEqual({ top: 60, left: 379, width: 480 });
+    expect(filterPanelBox({ left: 700, right: 986, bottom: 56, width: 286 }, 1024, false).left).toBe(536);
+    expect(filterPanelBox({ left: 20, right: 300, bottom: 56, width: 280 }, 400, false)).toEqual({ top: 60, left: 8, width: 384 });
   });
 
   it('draws it at the end of <body>, above the sidebar column and not inside the top bar', () => {

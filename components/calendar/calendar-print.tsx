@@ -4,7 +4,7 @@ import { useMemo, type CSSProperties } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { addDays, format, isSameDay, parseISO } from "date-fns";
 import type { Calendar, CalendarEvent, CalendarTask } from "@/lib/jmap/types";
-import type { CalendarViewMode } from "@/stores/calendar-store";
+import { useCalendarStore, type CalendarViewMode } from "@/stores/calendar-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useCalendarLocale } from "@/hooks/use-calendar-locale";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
@@ -46,6 +46,7 @@ import {
   type AgendaDay,
 } from "@/lib/calendar-print";
 import type { TaskViewFilter } from "@/stores/task-store";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 type TimeFormat = "12h" | "24h";
 
@@ -94,10 +95,13 @@ function useTimeFormatter(timeFormat: TimeFormat) {
 
 /** The calendar page's print copy. */
 export function CalendarPrint(props: CalendarPrintProps) {
+  const shownName = useCollectionNames();
   const t = useTranslations("calendar");
   const locale = useLocale();
   const { formatMonthYear, formatWeekRange, formatFullDate } = useCalendarLocale();
   const { content, viewMode } = props;
+  // The tasks view's own lists, as the list on screen (pim-1).
+  const hiddenTaskListIds = useCalendarStore((s) => s.hiddenTaskListIds);
 
   const calendarMap = useMemo(() => new Map(props.calendars.map((c) => [c.id, c])), [props.calendars]);
 
@@ -118,7 +122,7 @@ export function CalendarPrint(props: CalendarPrintProps) {
   const meta = (
     <p className="pr-meta">
       {props.shownCalendars.length > 0 && (
-        <span>{t("print.calendars", { names: props.shownCalendars.map((c) => c.name).join(", ") })}</span>
+        <span>{t("print.calendars", { names: props.shownCalendars.map((c) => shownName.calendar(c)).join(", ") })}</span>
       )}
       {props.shownCalendars.length > 0 && <span className="pr-meta-sep" aria-hidden>·</span>}
       <span>{t("print.time_zone", { zone: formatPrintTimeZone(props.timeZone, locale, props.periodDate) })}</span>
@@ -211,7 +215,7 @@ export function CalendarPrint(props: CalendarPrintProps) {
         <PrintRoot orientation="portrait" title={title}>
           {header(title)}
           <TaskListPrint
-            tasks={filterTasksForList(props.tasks, props.selectedCalendarIds, props.taskFilter)}
+            tasks={filterTasksForList(props.tasks, hiddenTaskListIds, props.taskFilter)}
             calendars={props.calendars}
             timeFormat={props.timeFormat}
           />
@@ -632,6 +636,7 @@ function priorityKey(priority: number): string | null {
 }
 
 function TaskListPrint({ tasks, calendars, timeFormat }: { tasks: CalendarTask[]; calendars: Calendar[]; timeFormat: TimeFormat }) {
+  const shownName = useCollectionNames();
   const t = useTranslations("calendar");
   const intlFormatter = useDisplayDateFormatter();
   if (tasks.length === 0) return <p className="pr-empty">{t("tasks.no_tasks")}</p>;
@@ -659,7 +664,7 @@ function TaskListPrint({ tasks, calendars, timeFormat }: { tasks: CalendarTask[]
             <span className="pr-checkbox" aria-hidden>{done ? "✓" : ""}</span>
             <div>
               <div className="pr-task-title"><bdi>{task.title || t("tasks.no_title")}</bdi></div>
-              {calendar && <div className="pr-task-meta"><bdi>{calendar.name}</bdi></div>}
+              {calendar && <div className="pr-task-meta"><bdi>{shownName.calendar(calendar)}</bdi></div>}
             </div>
             <div className="pr-task-meta">{dueLabel}</div>
             <div className="pr-task-meta">{priority ? t(priority) : ""}</div>
@@ -680,9 +685,11 @@ export function EventPrintSheet({
   timeFormat: TimeFormat;
   timeZone: string;
 }) {
+  const shownName = useCollectionNames();
   const t = useTranslations("calendar");
   const locale = useLocale();
   const formatEventDate = useFormatEventDate();
+  const { formatDateRangeLabel } = useCalendarLocale();
   const formatTime = useTimeFormatter(timeFormat);
   const resolveContactName = useContactNameResolver();
 
@@ -690,12 +697,19 @@ export function EventPrintSheet({
   const end = getEventEndDate(event);
   const displayEnd = getEventDisplayEndDate(event);
   const multiDay = !isSameDay(start, displayEnd);
+  // Several days as the language writes a range (pim-13).
+  const dayParts: Intl.DateTimeFormatOptions = { weekday: "short", day: "numeric", month: "short", year: "numeric" };
   const when = event.showWithoutTime
     ? multiDay
-      ? `${formatEventDate(start)} – ${formatEventDate(displayEnd)} · ${t("events.all_day")}`
+      ? `${formatDateRangeLabel(start, displayEnd, dayParts)} · ${t("events.all_day")}`
       : `${formatEventDate(start)} · ${t("events.all_day")}`
     : multiDay
-      ? `${formatEventDate(start)} ${formatTime(start)} – ${formatEventDate(end)} ${formatTime(end)}`
+      ? formatDateRangeLabel(start, end, {
+        ...dayParts,
+        hour: "numeric",
+        minute: "2-digit",
+        ...(timeFormat === "12h" ? { hour12: true } : { hourCycle: "h23" as const }),
+      })
       : `${formatEventDate(start)} · ${formatTime(start)} – ${formatTime(end)}`;
 
   const location = primaryLocationName(event);
@@ -730,7 +744,7 @@ export function EventPrintSheet({
           {meeting && (<><dt>{t("print.meeting")}</dt><dd><bdi>{meeting.uri}</bdi></dd></>)}
           {recurrence && (<><dt>{t("print.repeats")}</dt><dd>{recurrence}</dd></>)}
           {alerts && (<><dt>{t("tasks.alert")}</dt><dd>{alerts}</dd></>)}
-          {calendar && (<><dt>{t("tasks.calendar")}</dt><dd><bdi>{calendar.name}</bdi></dd></>)}
+          {calendar && (<><dt>{t("tasks.calendar")}</dt><dd><bdi>{shownName.calendar(calendar)}</bdi></dd></>)}
           {organizer && (
             <>
               <dt>{t("participants.organizer")}</dt>

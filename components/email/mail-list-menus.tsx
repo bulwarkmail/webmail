@@ -11,6 +11,7 @@ import { usePolicyStore } from "@/stores/policy-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { isDefaultOrder, sanitizeSortLevels, type SortLevel } from "@/lib/message-list-order";
+import { emptyFolderLabelKey } from "@/lib/empty-folder-text";
 
 /** The orders the list header offers; Settings has the full editor. */
 export const SORT_CHOICES = [
@@ -185,6 +186,7 @@ export const MailFolderMenu = memo(function MailFolderMenu({
           onMarkFolderRead={onMarkFolderRead}
           onMarkAllFoldersRead={onMarkAllFoldersRead}
           onEmptyFolder={onEmptyFolder}
+          folderRole={folderRole}
           onPicked={menu.closeContextMenu}
         />
       </ContextMenu>
@@ -197,14 +199,18 @@ export function MailFolderMenuItems({
   onMarkFolderRead,
   onMarkAllFoldersRead,
   onEmptyFolder,
+  folderRole,
   onPicked,
 }: {
   onMarkFolderRead?: () => void;
   onMarkAllFoldersRead?: () => void;
   onEmptyFolder?: () => void;
+  /** Names the entry "Empty Trash" or "Empty Spam". */
+  folderRole?: string | null;
   onPicked: () => void;
 }) {
   const tFolder = useTranslations("mailbox_context_menu");
+  const tRoot = useTranslations();
   return (
     <>
       <ContextMenuItem
@@ -225,8 +231,9 @@ export function MailFolderMenuItems({
           <ContextMenuSeparator />
           <ContextMenuItem
             icon={FolderX}
-            label={tFolder("empty_folder")}
+            label={tRoot(emptyFolderLabelKey(folderRole) ?? "mailbox_context_menu.empty_folder")}
             destructive
+            testId="mail-empty-folder"
             onClick={() => { onPicked(); onEmptyFolder(); }}
           />
         </>

@@ -6,9 +6,6 @@
     "username_placeholder": "kullanici@example.com",
     "password_label": "Şifre",
     "password_placeholder": "Şifrenizi girin",
-    "jmap_endpoint_label": "JMAP Sunucusu",
-    "jmap_endpoint_placeholder": "https://mail.example.com",
-    "jmap_endpoint_cors_hint": "Sunucu, bu etki alanından gelen CORS isteklerine izin vermelidir.",
     "jmap_server_label": "Sunucu",
     "jmap_server_auto_picked": "Sunucu, e-posta etki alanınıza göre seçildi.",
     "sign_in": "Giriş yap",
@@ -29,7 +26,7 @@
     },
     "show_password": "Şifreyi göster",
     "hide_password": "Şifreyi gizle",
-    "totp_toggle": "2FA kodum var",
+    "totp_toggle": "Kimlik doğrulama uygulamamdan bir kodum var",
     "token_toggle": "Erişim belirteciyle giriş yap",
     "password_toggle": "Şifreyle giriş yap",
     "token_label": "Erişim belirteci",
@@ -48,7 +45,7 @@
     "dismiss": "Kapat",
     "or": "veya",
     "sign_in_sso": "SSO ile giriş yap",
-    "add_account_title": "Hesap Ekle",
+    "add_account_title": "Hesap ekle",
     "add_account_subtitle": "Başka bir hesapla giriş yap",
     "subtitle": "Hesabınızda oturum açın",
     "version": {
@@ -126,7 +123,7 @@
     "sign_out_of": "{account} hesabından çıkış yap",
     "sign_out_all": "Tüm hesaplardan çıkış yap",
     "add_account": "Hesap ekle",
-    "set_as_default": "Varsayılan olarak ayarla",
+    "set_as_default": "Bu hesabı başlangıçta aç",
     "switch_account": "Hesap değiştir",
     "contacts": "Kişiler",
     "calendar": "Takvim",
@@ -177,6 +174,7 @@
     },
     "clear_search": "Aramayı temizle",
     "vacation_active": "Tatil otomatik yanıtı aktif",
+    "vacation_turn_off": "Kapat",
     "demo_banner": "Demo Modu",
     "demo_reset": "Sıfırla",
     "demo_tour": "Tur",
@@ -215,22 +213,30 @@
     "mv_storage_used": "{total} alanın %{percent} kadarı kullanıldı",
     "accessibility": "Erişilebilirlik"
   },
+  "account_unread": {
+    "others": "Diğer hesaplarda okunmamış: {count}",
+    "badge_all_accounts": {
+      "label": "Tüm hesaplardaki okunmamış postaları say",
+      "description": "Sekmedeki, uygulama simgesindeki ve sistem tepsisindeki sayı, oturum açılmış tüm hesapların gelen kutularını toplar."
+    },
+    "empty_hint": "Tüm iletileri kalıcı olarak kaldırmak için {folder} klasörünü boşaltabilirsiniz."
+  },
   "protocol_handlers": {
     "title": "Varsayılan uygulamalar",
-    "description": "E-posta ve takvim bağlantılarının {appName} uygulamasında açılıp açılmayacağını seçin. Teknik olarak {appName}, mailto: ve webcal: bağlantıları için protokol işleyicisi olarak kaydolur.",
+    "description": "E-posta ve takvim bağlantılarının {appName} içinde açılıp açılmayacağını seçin.",
     "unsupported": "Bu tarayıcı veya bağlantı manuel protokol işleyicisi kaydını desteklemiyor. Yüklü PWA'yı yine de tarayıcı veya işletim sistemi ayarlarından kullanabilirsiniz.",
-    "mailto_label": "E-posta bağlantıları",
-    "mailto_description": "mailto: bağlantılarını {appName} uygulamasında önceden doldurulmuş düzenleyiciyle açın.",
-    "protocol_open_mode_label": "Protokol bağlantıları açılırken",
+    "mailto_label": "E-posta bağlantılarını {appName} içinde aç",
+    "mailto_description": "Bir web sitesindeki e-posta adresine tıklamak {appName} içinde yeni bir ileti başlatır.",
+    "protocol_open_mode_label": "Bağlantılar nasıl açılır",
     "protocol_open_mode_description": "{appName} uygulamasının mailto: ve webcal: bağlantılarını yeni bir sekmede açmasını mı yoksa açık bir oturumu yeniden kullanmasını mı istediğinizi seçin. Etkin oturum seçeneği, tarayıcı odağı engellerse {appName} uygulamasını öne getirmek için yedek bildirime tıklayabilmeniz amacıyla bildirim izni gerektirir.",
     "protocol_open_mode_active_session": "Mümkünse etkin oturumda aç",
     "protocol_open_mode_new_tab": "Her zaman yeni sekme aç",
     "focus_notification_title": "{appName} uygulamasını aç",
     "focus_notification_body": "Bağlantı {appName} uygulamasında açıldı. Pencereyi öne getirmek için tıklayın.",
-    "webcal_label": "Takvim bağlantıları",
-    "webcal_description": "webcal: bağlantılarını {appName} uygulamasında önceden doldurulmuş takvim aboneliği penceresiyle açın.",
-    "register_mailto": "E-posta uygulaması olarak kaydet",
-    "register_webcal": "Takvim uygulaması olarak kaydet",
+    "webcal_label": "Takvim bağlantılarını {appName} içinde aç",
+    "webcal_description": "Bir web sitesindeki takvim bağlantısına tıklamak takvimi {appName} içine ekler.",
+    "register_mailto": "E-posta bağlantıları için {appName} kullan",
+    "register_webcal": "Takvim bağlantıları için {appName} kullan",
     "mailto_registered": "E-posta işleyicisi kaydı istendi",
     "webcal_registered": "Takvim işleyicisi kaydı istendi",
     "registration_failed": "Protokol işleyicisi kaydı başarısız oldu",
@@ -240,7 +246,6 @@
     "select_account_title": "Hesap seç",
     "select_mailto_account": "Bu e-posta bağlantısını hangi hesabın açacağını seçin.",
     "select_webcal_account": "Bu takvim bağlantısını hangi hesabın açacağını seçin.",
-    "select_account_note": "Bu seçim yalnızca bu protokol bağlantısı için geçerlidir.",
     "detail_to": "Kime",
     "detail_subject": "Konu",
     "detail_no_subject": "Konu yok",
@@ -248,6 +253,28 @@
     "detail_source": "Kaynak",
     "active_account": "Etkin",
     "switching_account": "Hesap değiştiriliyor..."
+  },
+  "pwaLaunch": {
+    "shortcut_new_message": "Yeni ileti",
+    "shortcut_calendar": "Takvim",
+    "shortcut_contacts": "Kişiler",
+    "unsupported_file": "{name} burada açılamıyor.",
+    "open_failed": "Dosya açılamadı. Yeniden açmayı deneyin.",
+    "share_gone": "Paylaştığınız içerik artık burada değil. Lütfen yeniden paylaşın.",
+    "share_files_lost": "Paylaşılan dosyalar saklanamadı. Onları iletiye yeniden ekleyin.",
+    "ics_needs_server": "Takvim dosyasını içe aktarmak için sunucu bağlantısı gerekir. İçe aktarma, yeniden çevrimiçi olduğunuzda başlar.",
+    "contacts_need_server": "Kişileri içe aktarmak için sunucu bağlantısı gerekir. Yeniden çevrimiçi olduğunuzda tekrar deneyin.",
+    "share_confirm_title": "Yeni bir ileti başlatılsın mı?",
+    "share_confirm_message": "Başka bir site veya uygulama ileti başlatmak istiyor. Siz kabul etmedikçe hiçbir şey yüklenmez veya kaydedilmez.",
+    "share_confirm_subject": "Konu:",
+    "share_confirm_text": "Metin:",
+    "share_confirm_files": "{count, plural, one {Dosya:} other {Dosyalar:}}",
+    "share_confirm_accept": "İletiyi başlat",
+    "share_confirm_decline": "Başlatma",
+    "share_cut": "Paylaşılan metin çok uzundu ve kısaltıldı.",
+    "handoff_expired": "Açtığınız veya paylaştığınız bir şey çok uzun süre bekledi ve artık yok. Lütfen yeniden açın veya paylaşın.",
+    "compose_waiting": "Sonrakini başlatmak için bu iletiyi kapatın.",
+    "save_first_failed": "İletiniz kaydedilemedi, bu yüzden dosya açılmadı. İletiyi kaydedin, ardından takvimi veya kişileri açın."
   },
   "sidebar_apps": {
     "modal_title": "Kenar çubuğu uygulamaları",
@@ -388,6 +415,29 @@
       "next": "Sonraki sayfa",
       "position": "{more, select, yes {Sayfa {page} / {pages} veya daha fazla} other {Sayfa {page} / {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# konuşma seçildi} other {# konuşma seçildi}}",
+    "search_count": "{conversations, plural, one {# konuşma} other {# konuşma}} ({messages, plural, one {# ileti} other {# ileti}})",
+    "conversation_count": "{count, plural, one {# konuşma} other {# konuşma}}",
+    "archived": "Arşivlendi",
+    "moved_to_trash": "Çöp Kutusuna taşındı",
+    "moved_to": "{mailbox} klasörüne taşındı",
+    "moved_count_to": "{count, plural, one {# e-posta {mailbox} klasörüne taşındı} other {# e-posta {mailbox} klasörüne taşındı}}",
+    "new_folder_title": "Yeni klasör",
+    "new_subfolder_title": "Yeni alt klasör"
+  },
+  "mail_p2_list": {
+    "conversations_archived": "{count, plural, one {# konuşma arşivlendi} other {# konuşma arşivlendi}}",
+    "conversations_to_trash": "{count, plural, one {# konuşma Çöp Kutusuna taşındı} other {# konuşma Çöp Kutusuna taşındı}}",
+    "conversations_deleted": "{count, plural, one {# konuşma silindi} other {# konuşma silindi}}",
+    "conversations_moved_to": "{count, plural, one {# konuşma {mailbox} klasörüne taşındı} other {# konuşma {mailbox} klasörüne taşındı}}",
+    "conversations_moved": "{count, plural, one {# konuşma taşındı} other {# konuşma taşındı}}",
+    "select_all_in_folder": "{count, plural, one {{folder} klasöründeki # konuşmayı seç} other {{folder} klasöründeki # konuşmanın tümünü seç}}",
+    "select_all_emails_in_folder": "{count, plural, one {{folder} klasöründeki # e-postayı seç} other {{folder} klasöründeki # e-postanın tümünü seç}}",
+    "select_all_conversations": "{count, plural, one {# konuşmayı seç} other {# konuşmanın tümünü seç}}",
+    "select_all_emails": "{count, plural, one {# e-postayı seç} other {# e-postanın tümünü seç}}",
+    "selecting_all": "Seçiliyor…"
   },
   "shared_tags": {
     "title": "Paylaşılan etiketler",
@@ -843,6 +893,7 @@
     "mv_position": "{index} / {total}",
     "plugin_panel_show": "Eklenti panelini göster",
     "plugin_panel_hide": "Eklenti panelini gizle",
+    "plugin_panel": "Eklenti paneli",
     "copy": "Kopyala",
     "contact_added": "Kişi eklendi",
     "save_to_files": {
@@ -869,6 +920,11 @@
     "read_aloud_resume": "Devam et",
     "read_aloud_stop": "Okumayı durdur",
     "reader_view": "Okuma görünümü"
+  },
+  "reader_actions": {
+    "restore": "Geri yükle",
+    "restore_to": "{folder} klasörüne geri taşı",
+    "delete_forever": "Kalıcı olarak sil"
   },
   "external_mail": {
     "sender_label": "Harici",
@@ -1025,7 +1081,7 @@
     "recipients_partly_refused": "Sunucu şu alıcıları reddetti: {recipients}. Diğer alıcılar iletiyi alır.",
     "send_offline": "Çevrimdışı görünüyorsunuz. İleti hâlâ burada; yeniden çevrimiçi olduğunuzda tekrar gönderin.",
     "formatting": "Biçimlendirme",
-    "send_recipients_rejected": "Gönderilmedi - sunucu tüm alıcıları reddetti.",
+    "send_recipients_rejected": "Gönderilmedi: sunucu tüm alıcıları reddetti.",
     "send_plugin_failed": "Gönderilmedi - gönderimi üstlenen bir eklenti başarısız oldu ya da çok uzun sürdü. Yeniden göndermeden önce Gönderilenler klasörünü kontrol edin.",
     "send_some_recipients_rejected": "Gönderildi, ancak bu alıcılara değil - sunucu onları reddetti.",
     "continue_draft": "Taslağa devam et",
@@ -1068,7 +1124,7 @@
       "unfinished": []
     },
     "schedule_send": "Göndermeyi zamanla",
-    "schedule_send_description": "Sunucunun bu iletiyi ne zaman göndereceğini seçin.",
+    "schedule_send_description": "Ne zaman gönderileceğini seçin.",
     "schedule_preset": {
       "this_morning": "Bu sabah",
       "this_afternoon": "Bu öğleden sonra",
@@ -1119,6 +1175,7 @@
       "edit_link": "Bağlantıyı düzenle",
       "remove_link": "Bağlantıyı kaldır",
       "link_address": "Bağlantı adresi",
+      "link_text": "Metin",
       "link_invalid": "Adres boşluk içeremez",
       "table": "Tablo",
       "clear_formatting": "Biçimlendirmeyi temizle",
@@ -1188,6 +1245,21 @@
       "edit": "Görsel açıklamasını düzenle",
       "plain_text": "[Görsel: {alt}]"
     }
+  },
+  "compose_ux": {
+    "draft_discarded": "Taslak silindi",
+    "undo": "Geri al",
+    "discard_draft": "Taslağı sil",
+    "save_failed_close": "Taslak kaydedilemedi. Yeniden deneyin ya da silin.",
+    "try_again": "Yeniden dene",
+    "add_description": "Açıklama ekle",
+    "attachments_summary": "Ekler: {count}, {size}",
+    "from_sub_address": "Alt adres kullan…",
+    "from_edit_sender": "Göndereni düzenle…",
+    "shortcut_insert_link": "Bağlantı ekle",
+    "shortcut_save_draft": "Taslağı kaydet",
+    "shortcut_show_cc": "Bilgiyi göster",
+    "shortcut_show_bcc": "Gizli bilgiyi göster"
   },
   "confirm_dialog": {
     "confirm": "Onayla",
@@ -1321,6 +1393,32 @@
     "deputy_name_missing": "Önce vekilinizin adını girin.",
     "apply": "Bu metni kullan",
     "apply_hint": "Aşağıdaki konu ve metnin yerine geçer."
+  },
+  "uxs_vacation": {
+    "default_subject": "Ofis dışında",
+    "default_message": "E-postanız için teşekkürler. Şu an ofis dışındayım, döndüğümde yanıt vereceğim.",
+    "write_message_first": "Önce bir ileti yazın. İleti olmadan insanlar boş bir yanıt alır.",
+    "enter_address_first": "Önce iletilecek adresi girin.",
+    "message_title": "Yanıtınız",
+    "message_label": "İleti",
+    "message_description": "Size yazan kişilerin alacağı metin. Biçimlendirme ve bağlantı kullanabilirsiniz.",
+    "from_label": "Başlangıç (isteğe bağlı)",
+    "from_description": "Hemen başlamak için boş bırakın.",
+    "until_label": "Bitiş (isteğe bağlı)",
+    "until_description": "Siz kapatana kadar yanıt vermeye devam etmek için boş bırakın.",
+    "from_placeholder": "Hemen",
+    "until_placeholder": "Siz kapatana kadar",
+    "audience_all": "Herkese",
+    "audience_internal": "Yalnızca kuruluşuma ({domains})",
+    "audience_external": "Yalnızca kuruluşum dışındakilere",
+    "signature_label": "İmza",
+    "signature_plain_label": "İmza (düz metin)",
+    "signature_plain_description": "Yalnızca düz metin yazıyorsunuz (Yazma), bu yüzden imzanız da düz metin.",
+    "edit_as_html": "HTML olarak düzenle",
+    "edit_formatted": "Biçimlendirme düzenleyicisine dön",
+    "html_source_label": "HTML imza",
+    "signature_size": "{max} bayttan {bytes} bayt kullanıldı",
+    "signature_too_long": "Sunucu için çok uzun ({max} bayttan {bytes} bayt). Kısaltın."
   },
   "retention_notice": {
     "line": "Buradaki iletiler buraya taşındıktan {count, plural, one {# gün} other {# gün}} sonra silinir."
@@ -1511,8 +1609,8 @@
       "title": "Görünüm",
       "description": "Web postanızın görünümünü özelleştirin",
       "theme": {
-        "label": "Tema",
-        "description": "Tercih ettiğiniz renk şemasını seçin",
+        "label": "Açık veya koyu",
+        "description": "Sistem, cihazınızın ayarını izler",
         "light": "Açık",
         "dark": "Koyu",
         "system": "Sistem"
@@ -1540,7 +1638,7 @@
         "label": "Arayüz düzeni",
         "description": "Arama, gezinme ve araç çubuklarının konumu",
         "default": "Varsayılan",
-        "mountain_view": "Mountain View"
+        "mountain_view": "Arama üstte, uygulamalar solda"
       },
       "animations": {
         "label": "Animasyonları Etkinleştir",
@@ -1584,7 +1682,7 @@
       },
       "colorful_sidebar_icons": {
         "label": "Renkli Kenar Çubuğu Simgeleri",
-        "description": "Klasör ve etiket simgelerini türe göre renklendir (mavi Gelen Kutusu, kırmızı İstem Dışı vb.). Tek renkli kenar çubuğu için kapatın."
+        "description": "Klasör ve etiket simgelerini türe göre renklendir (Gelen Kutusu mavi, Spam kırmızı, Gönderilenler yeşil vb.). Gri simgeler için kapatın."
       },
       "tint_list_rows": {
         "label": "Tint List Rows by Tag Color",
@@ -1596,7 +1694,7 @@
       },
       "favicon_unread_badge": {
         "label": "Unread Count on Tab Icon",
-        "description": "Show the inbox unread count as a badge on the browser tab icon, so new mail is visible when the tab is not focused. Disable to keep the icon unbadged."
+        "description": "Başka bir sekmede veya uygulamada çalışırken de yeni postayı görmeniz için."
       },
       "show_shared_mail_accounts": {
         "label": "Paylaşılan posta hesaplarını göster",
@@ -1647,7 +1745,7 @@
     },
     "keywords": {
       "title": "E-posta Etiketleri",
-      "description": "E-postalarınızı renklerle düzenlemek için etiketler tanımlayın. Bunlar sunucuda JMAP anahtar sözcükleri olarak saklanır.",
+      "description": "İletilerinizi düzenlemek için etiketler oluşturun. Etiketler iletilerinizle birlikte sunucuda saklanır.",
       "add_keyword": "Etiket Ekle",
       "label_field": "Görünen Ad",
       "label_placeholder": "ör. İş, Kişisel, Acil",
@@ -1682,8 +1780,8 @@
         "hide": "Gizle"
       },
       "unrecognized": {
-        "title": "Etiketleri sunucudan kurtar",
-        "description": "Etiket adları ve renkleri bu tarayıcıda saklanır, ancak etiketlerin kendisi JMAP anahtar sözcükleri olarak e-postalarınızda bulunur. Burada karşılığı olmayan anahtar sözcükler için postanızı tarayın ve bunları geri ekleyin.",
+        "title": "İletilerinizde olup burada eksik olan etiketleri bul",
+        "description": "Bu tarayıcı etiketlerinizin adlarını ve renklerini saklar. Etiketlerin kendisi iletilerinizde saklanır. Postanızda burada eksik olan etiketleri arayın ve yeniden ekleyin.",
         "scan": "Etiketleri tara",
         "rescan": "Yeniden tara",
         "scanning": "Taranıyor… {total} e-postadan {scanned} tanesi",
@@ -1716,17 +1814,17 @@
           "result_disabled": "Notifications disabled for {count} accounts."
         },
       "sound_selection": {
-        "title": "Bildirim Sesi",
+        "title": "Ses",
         "description": "Bildirimler için hangi sesin çalınacağını seçin",
-        "choose": "Ses",
+        "choose": "Ton",
         "choose_desc": "Bir bildirim tonu seçin ve önizlemek için hoparlör simgesine tıklayın"
       },
       "email": {
-        "title": "E-posta Bildirimleri",
+        "title": "Yeni e-posta",
         "description": "Gelen e-postalar için bildirimleri yapılandırın",
         "enabled": "E-posta bildirimleri",
         "enabled_desc": "Yeni e-postalar geldiğinde bildirim göster",
-        "sound": "Bildirim sesi",
+        "sound": "Yeni posta sesi",
         "sound_desc": "Yeni e-postalar geldiğinde sesli uyarı çal",
         "inbox_only": "Inbox only",
         "inbox_only_desc": "Only notify for mail that lands in the Inbox; skip mail a filter files into another folder"
@@ -1736,7 +1834,7 @@
         "description": "Takvim etkinlikleri için bildirimleri yapılandırın",
         "enabled": "Etkinlik bildirimleri",
         "enabled_desc": "Yaklaşan takvim etkinlikleri için uyarılar göster",
-        "sound": "Bildirim sesi",
+        "sound": "Anımsatıcı sesi",
         "sound_desc": "Takvim hatırlatıcıları için sesli uyarı çal"
       },
       "push": {
@@ -1744,7 +1842,7 @@
         "confirm_disable_title": "Arka plan bildirimleri devre dışı bırakılsın mı?",
         "description": "Bu site kapalıyken yeni postalar için sistem bildirimleri alın. Bulwark push röle aracılığıyla iletilir; röle posta içeriğini asla görmez.",
         "disable": "Devre dışı bırak",
-        "enable": "Etkinleştir",
+        "enable": "Bu cihazda aç",
         "dismiss_aria": "Bildirim istemini kapat",
         "ios_hint": "iOS'ta önce siteyi ana ekranınıza yükleyin – Safari Web Push'u yalnızca yüklü PWA'lara teslim eder.",
         "reenable": "Yeniden kaydet",
@@ -1757,7 +1855,8 @@
         "status_inactive": "Bu cihazda etkinleştirilmedi",
         "status_unsupported": "Bu tarayıcı Web Push'u desteklemiyor",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
-        "title": "Arka plan bildirimleri",
+        "status_demo": "Arka plan bildirimleri demoda kullanılamaz.",
+        "title": "{appName} kapalıyken bildirimler",
         "devices_title": "Kayıtlı cihazlar",
         "devices_desc": "Bu hesap için arka plan bildirimleri almak üzere kayıtlı tüm cihazlar. Birini iptal ettiğinizde o cihaz bildirimleri hemen almayı bırakır.",
         "devices_loading": "Kayıtlı cihazlar yükleniyor…",
@@ -1776,7 +1875,12 @@
         "confirm_revoke_message_this": "Bu cihaz arka plan bildirimlerini almayı hemen bırakacak.",
         "shared_mailboxes_no_push": "Başkalarının sizinle paylaştığı posta kutuları arka plan bildirimi göndermez.",
         "error_forbidden": "Posta sunucusu bu hesap için arka plan bildirimlerine izin vermiyor.",
-        "error_over_quota": "Bu hesabın posta sunucusunda çok fazla push kaydı var (sınır genellikle 15'tir). Artık kullanmadığınız cihazları bildirim ayarlarından iptal edip yeniden deneyin."
+        "error_over_quota": "Bu hesabın posta sunucusunda çok fazla push kaydı var (sınır genellikle 15'tir). Artık kullanmadığınız cihazları bildirim ayarlarından iptal edip yeniden deneyin.",
+        "error_blocked": "Bu site için bildirimler engellendi. Tarayıcınızın site ayarlarından izin verin ve yeniden deneyin.",
+        "error_not_granted": "Bildirimlere izin verilmedi, bu yüzden anlık bildirim kapalı kalıyor.",
+        "error_verification_timeout": "Posta sunucusu bu cihazı zamanında onaylamadı, bu yüzden anlık bildirim kapalı kalıyor. Bir dakika sonra yeniden deneyin.",
+        "error_relay": "Anlık bildirim aktarıcısına şu anda ulaşılamıyor, bu yüzden anlık bildirim kapalı kalıyor. Daha sonra yeniden deneyin.",
+        "error_teardown": "Anlık bildirim bu tarayıcıda kapatıldı, ancak posta sunucusuna veya aktarıcıya ulaşılamadı. Bildirimler birkaç gün daha gelebilir. Daha erken durdurmak için yeniden çevrimiçi olduğunuzda gelişmiş ayarları açın ve bu cihazı Kayıtlı cihazlar bölümünden iptal edin."
       }
     },
     "language_region": {
@@ -1814,7 +1918,7 @@
       },
       "first_day": {
         "label": "Haftanın İlk Günü",
-        "description": "Haftayı Pazar veya Pazartesi başlat",
+        "description": "Takvimlerde haftanın ilk günü",
         "sunday": "Pazar",
         "monday": "Pazartesi"
       },
@@ -1904,13 +2008,13 @@
       },
       "mail_layout": {
         "label": "Posta Düzeni",
-        "description": "Klasik bölünmüş okuma bölmesi ile Gmail tarzı odaklı okuma akışı arasında seçin.",
+        "description": "İleti listesi ile açık iletinin ekranda nerede durduğu.",
         "split": "Bölünmüş bölme",
-        "split_description": "İleti listesi ve okuma bölmesini yan yana görünür tutun.",
+        "split_description": "Liste ve ileti yan yana",
         "focus": "Odaklı liste",
-        "focus_description": "İleti başına bir satır gösterin ve klasör kenar çubuğu görünürken postayı tam genişlikte açın.",
+        "focus_description": "Önce liste, sonra tam genişlikte ileti",
         "horizontal": "Okuma bölmesi altta",
-        "horizontal_description": "Mesaj listesini üstte gösterin ve seçilen mesajı altındaki okuma bölmesinde açın."
+        "horizontal_description": "İleti listenin altında"
       },
       "list_columns": {
         "label": "Listeyi sütunlar halinde göster",
@@ -1935,7 +2039,7 @@
       },
       "auto_select_reply_identity": {
         "label": "Yanıt Adresini Otomatik Seç",
-        "description": "Yanıtlarken, Kimden adresini iletiyi başlangıçta alan kimliğe otomatik olarak değiştir"
+        "description": "Yanıtlarken, iletinin gönderildiği adresten gönder."
       },
       "reply_identity_match": {
         "label": "Alıcı adresi eşleştirme",
@@ -2159,8 +2263,8 @@
         "title": "Oturum açılmış hesaplar",
         "description": "Hesapların hesap menüsünde görüntülenme sırasını değiştirmek için sürükleyin",
         "active": "Şu anda etkin hesap",
-        "default_badge": "Varsayılan hesap",
-        "set_default": "Varsayılan olarak ayarla",
+        "default_badge": "Başlangıçta açılır",
+        "set_default": "Bu hesabı başlangıçta aç",
         "switch_to": "Bu hesaba geç",
         "move_up": "Yukarı taşı",
         "move_down": "Aşağı taşı",
@@ -2243,7 +2347,7 @@
       },
       "totp": {
         "section_title": "İki Faktörlü Kimlik Doğrulama",
-        "label": "TOTP Kimlik Doğrulama",
+        "label": "İki adımlı oturum açma",
         "description": "Zamana dayalı tek kullanımlık parola ile ekstra bir güvenlik katmanı ekleyin",
         "active": "Etkin",
         "inactive": "Devre dışı",
@@ -2323,12 +2427,12 @@
         "enabled_success": "Bekleme süresi şifrelemesi etkinleştirildi"
       },
       "email_client": {
-        "title": "E-posta İstemcisi Kurulumu",
-        "description": "Masaüstü veya mobil e-posta istemcinizi (Thunderbird, Apple Mail, Outlook vb.) yapılandırmak için bu kimlik bilgilerini kullanın",
-        "jmap_username_label": "JMAP Kullanıcı Adı",
+        "title": "Postanızı başka uygulamalarda kullanın",
+        "description": "Thunderbird, Apple Mail, Outlook ve telefondaki posta uygulamaları bu ayarları kullanabilir.",
+        "jmap_username_label": "Kullanıcı adı",
         "copy": "Kopyala",
         "copied": "Kopyalandı",
-        "password_instructions": "E-posta istemcinizde oturum açmak için yukarıdaki JMAP kullanıcı adı ile bir uygulama parolasını birlikte kullanın. Henüz oluşturmadıysanız aşağıdaki bölümden bir uygulama parolası oluşturun."
+        "password_instructions": "Parola olarak normal parolanızı değil, bir uygulama parolası kullanın. Bu sayfanın aşağısında oluşturabilirsiniz."
       },
       "link_device": {
         "title": "Mobil uygulamayı bağla",
@@ -2579,7 +2683,7 @@
       },
       "refresh_cache": {
         "label": "Refresh cached data",
-        "description": "Reload contacts, calendars, and folders from the server. Keeps your accounts and sessions — fixes a stale or wrong view without signing out.",
+        "description": "Kişileri, takvimleri ve klasörleri sunucudan yeniden yükleyin. Oturumunuz açık kalır.",
         "button": "Refresh",
         "confirm_title": "Önbellekteki veriler yenilensin mi?"
       },
@@ -2592,12 +2696,12 @@
       },
       "export_settings": {
         "label": "Ayarları Dışa Aktar",
-        "description": "Ayarlarınızı JSON olarak indirin",
+        "description": "Ayarlarınızın bir kopyasını indirin",
         "button": "Dışa Aktar"
       },
       "import_settings": {
         "label": "Ayarları İçe Aktar",
-        "description": "JSON dosyasından ayarları yükle",
+        "description": "Ayarları bir dosyadan geri yükleyin",
         "button": "İçe Aktar"
       },
       "about": {
@@ -2648,8 +2752,8 @@
       "manage_description": "Kenar çubuğunuzdan özel uygulamalar ekleyin, düzenleyin veya kaldırın"
     },
     "contacts": {
-      "title": "Kişiler",
-      "description": "Kişilerinizi içe ve dışa aktarın",
+      "title": "Kişi listesi",
+      "description": "Kişilerin nasıl listelendiği ve içe ya da dışa aktarılacak kişi dosyaları",
       "group_by_letter_label": "İlk harfe göre grupla",
       "sort_by_last_name_label": "Soyada göre sırala",
       "sort_by_last_name_description": "Aile üyeleri bir arada görünsün diye kişi listesini soyada göre sıralar",
@@ -2744,15 +2848,15 @@
       "not_supported": "Posta sunucunuz e-posta filtrelerini desteklemiyor.",
       "rule_name": "Kural Adı",
       "rule_name_placeholder": "ör. Bültenleri sırala",
-      "match_all": "TÜM koşullarla eşleş",
-      "match_any": "HERHANGİ bir koşulla eşleş",
+      "match_all": "Tüm koşullarla eşleş",
+      "match_any": "Herhangi bir koşulla eşleş",
       "conditions": "Koşullar",
       "add_condition": "Koşul Ekle",
       "actions": "İşlemler",
       "add_action": "İşlem Ekle",
       "remove_condition": "Koşulu kaldır",
       "remove_action": "Eylemi kaldır",
-      "stop_processing": "Sonraki kuralları işlemeyi durdur",
+      "stop_processing": "Sonraki kuralları uygulama",
       "include_spam": "İstenmeyen olarak işaretlenen iletileri de taşı",
       "attachment_type_placeholder": "örn. pdf, doc, jpg",
       "value_placeholder_multi": "Değer (birden fazla virgülle ayrılır)",
@@ -2794,7 +2898,7 @@
         "discard": "At (sessizce sil)",
         "reject": "İletiyle reddet",
         "keep": "Gelen kutusunda tut",
-        "stop": "İşlemeyi durdur"
+        "stop": "Sonraki kuralları uygulama"
       },
       "move_to_folder": "Klasör seçin",
       "copy_to_folder": "Klasör seçin",
@@ -2817,6 +2921,7 @@
       "open_sieve_editor": "Ham Sieve düzenleyicisini aç",
       "fetch_error": "Filtreler yüklenemedi",
       "expanded_view": "Genişletilmiş görünüm",
+      "show_rule_details": "Her kuralın koşullarını ve işlemlerini göster",
       "expanded_view_description": "Filtre kurallarını ayrıntılı koşul ve işlem bloklarıyla göster",
       "if": "Eğer",
       "then": "O zaman",
@@ -2895,6 +3000,9 @@
       "validation_period_empty": "Dönem için bir başlangıç veya bitiş tarihi girin",
       "validation_period_invalid": "Dönem için saatiyle birlikte geçerli bir tarih girin veya alanı boş bırakın",
       "apply_existing_period": "Dönemi olan bir kural yalnızca o dönemde gelen iletilere uygulanır, bu nedenle mevcut iletilere uygulanamaz.",
+      "apply_existing_in": "{folder} içindeki mevcut iletilere de uygula",
+      "apply_existing_count": "{count, plural, one {{folder} içindeki # mevcut iletiye de uygula} other {{folder} içindeki # mevcut iletiye de uygula}}",
+      "apply_existing_none": "{folder} içinde bu kurala uyan ileti henüz yok.",
       "period_status_scheduled": "planlandı",
       "period_status_active": "etkin",
       "period_status_expired": "süresi doldu"
@@ -2938,7 +3046,7 @@
         "description": "Dosya ve klasörlerin nasıl görüntüleneceğini yapılandırın"
       },
       "default_view": {
-        "label": "Varsayılan Görünüm",
+        "label": "Dosyaları şöyle göster",
         "description": "Izgara ve liste düzeni arasında seçin",
         "list": "Liste",
         "grid": "Izgara"
@@ -3141,10 +3249,6 @@
         "label": "Okuma maskesi",
         "description": "İletide işaretçinin çevresindeki birkaç satır dışındaki her şeyi karartır, böylece okuduğunuz yeri kaybetmezsiniz."
       },
-      "plain_language": {
-        "label": "Sade dil",
-        "description": "Ayarlarda ve hata iletilerinde daha basit ifadeler ve teknik terimler için kısa açıklamalar. İngilizce ve Almanca dillerinde kullanılabilir."
-      },
       "contrast": {
         "label": "Karşıtlık",
         "description": "Daha fazla karşıtlık, her temada metni, kenarlıkları ve odak çerçevesini daha koyu ya da daha açık yapar ve bağlantıların altını çizer. Sistem, cihazınızı izler.",
@@ -3336,6 +3440,123 @@
         "description": "İletileri sesli okuyan ses. Liste, tarayıcınızda arayüz dili için bulunan sesleri gösterir.",
         "default": "Tarayıcı varsayılanı"
       }
+    }
+  },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Çevrimdışı",
+      "privacy": "Gizlilik",
+      "about": "Hakkında"
+    },
+    "search": {
+      "signature": "imza e-posta imzası alt bilgi",
+      "sign_out": "oturumu kapat çıkış yap logout",
+      "app_lock": "PIN kilit kod kilit ekranı",
+      "text_size": "yazı tipi boyutu büyük metin yakınlaştır zoom",
+      "vacation": "otomatik yanıt ofis dışında uzakta tatil izin autoreply",
+      "two_factor": "2FA iki faktörlü iki adımlı MFA OTP doğrulayıcı tek kullanımlık kod",
+      "encryption": "S/MIME smime PGP OpenPGP şifreleme sertifika",
+      "password": "parola şifre parolayı değiştir yeni parola",
+      "offline": "çevrimdışı bağlantısız internetsiz indir depolama eşitleme",
+      "wipe": "kaldır sil temizle cihaz veriler",
+      "outbox": "giden kutusu gönderilmemiş bekleyen kuyruk",
+      "remote_content": "uzak resimler harici içerik izleme pikseller güvenilir gönderenler",
+      "push": "push aktarıcı arka plan bildirimler",
+      "version": "sürüm güncelleme hakkında kaynak kodu GitHub lisans"
+    },
+    "privacy": {
+      "push_title": "Bildirimler",
+      "push_link": {
+        "label": "Bildirim aktarıcısı",
+        "description": "Uygulama kapalıyken gelen bildirimler, e-postanızı asla görmeyen bir push aktarıcısından geçer. Bunu Bildirimler sayfasında seçersiniz.",
+        "button": "Bildirimler"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Uzak resimler ve güvenilir gönderenler",
+      "receipts_label": "Okundu bilgileri",
+      "senders_label": "Gönderen resimleri",
+      "description": "Bu ayarlar Gizlilik sayfasındadır.",
+      "button": "Gizlilik"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Yoğunluk ve düğme etiketleri",
+        "description": "Liste satırlarının ne kadar sık olduğu ve düğmelerin adını gösterip göstermediği Görünüm sayfasında ayarlanır."
+      },
+      "light_mode": {
+        "label": "İletiler için açık arka plan",
+        "description": "Koyu modda iletilerin açık arka planda gösterilmesi Okuma sayfasında ayarlanır."
+      },
+      "calendar": {
+        "label": "Takvimde etkinlik önizlemesi",
+        "description": "Bir etkinliğin üzerine gelince ayrıntılarının görünüp görünmeyeceği Takvim sayfasında ayarlanır."
+      },
+      "list": {
+        "label": "Konuşmalar ve önizleme satırları",
+        "description": "Konuşmaya göre gruplama ve her iletinin altındaki önizleme satırı İleti listesi sayfasında ayarlanır."
+      },
+      "reading": {
+        "label": "Okundu olarak işaretleme",
+        "description": "Bir iletinin ne zaman okunmuş sayılacağı ve silip taşıdıktan sonra nereye gideceğiniz Okuma sayfasında ayarlanır."
+      },
+      "send_warnings_description": "Göndermeyi geri alma ve eksik konu, unutulan ek veya yer tutucu metin uyarıları.",
+      "bulk_delete": {
+        "label": "Birden çok iletiyi silmeden önce sor",
+        "description": "Bu, İleti listesi sayfasında ayarlanır."
+      },
+      "sounds": {
+        "label": "Sesler ve okunmamış sayacı",
+        "description": "Bildirim sesleri ve sekmedeki okunmamış sayısı Bildirimler sayfasında ayarlanır."
+      }
+    },
+    "about": {
+      "title": "{appName} hakkında"
+    },
+    "sign_out": {
+      "description": "Bu cihazda bu hesabın oturumunu kapatın."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "sistem tepsisi bildirim alanı arka plan tepsiye küçült tray",
+      "autostart": "otomatik başlatma başlangıç Windows ile başlat oturum açınca",
+      "default_app": "varsayılan posta uygulaması varsayılan e-posta programı mailto e-posta bağlantıları",
+      "menu_bar": "menü çubuğu menüler Alt tuşu Dosya Düzen Görünüm",
+      "updates": "güncellemeler güncelleme yeni sürüm beta kanal",
+      "devtools": "geliştirici araçları devtools konsol incele F12 hata ayıklama",
+      "taskbar": "görev çubuğu yanıp sönme Dock dikkat",
+      "quiet_hours": "sessiz saatler rahatsız etmeyin sessiz gece",
+      "telemetry": "kullanım bilgisi telemetri istatistik analiz",
+      "crash": "çökme raporları hata raporları çökme",
+      "threads": "ileti dizileri konuşmalar gruplama threads",
+      "block_images": "resimleri engelle dış resimler resimleri yükle",
+      "dark_mode": "karanlık mod açık mod gece modu dark mode",
+      "timezone": "saat dilimi timezone",
+      "reading_pane": "okuma bölmesi önizleme bölmesi bölünmüş görünüm",
+      "week_start": "hafta başlangıcı ilk gün pazartesi pazar",
+      "empty_trash": "çöp kutusunu boşalt çöp kutusu silinen öğeler",
+      "do_not_disturb": "sessiz saatler sessize al sessizlik"
+    },
+    "desktop_notifications": {
+      "title": "Bu bilgisayarda",
+      "closed_label": "Pencere kapalıyken",
+      "closed_description": "{appName} çalıştığı sürece yeni postaları bildirir. Pencereyi kapattıktan sonra sistem tepsisinde çalışmaya devam etmesi için bunu {page} bölümünde açın."
+    },
+    "push_unsupported": "Bu tarayıcı, web sitesi kapalıyken bildirim gösteremez.",
+    "backup_description_app": "Diğer cihazlarınızda da aynı ayarları kullanın.",
+    "sender_favicons": {
+      "label": "Şirket web sitelerinden resimler",
+      "description": "İş göndericileri için profil resmi olarak web sitesi simgelerini göster"
+    },
+    "privacy_push": {
+      "label": "Bildirim aktarıcısı",
+      "description": "{appName} kapalıyken gelen bildirimler, e-postanızı asla görmeyen bir push aktarıcısından geçer. Bunları {page} sayfasında açıp kapatırsınız."
+    },
+    "reset": {
+      "message": "Tüm ayarları başlangıçtaki hâline döndürür. Postalarınız, filtreleriniz, otomatik yanıtınız ve imzalarınız olduğu gibi kalır.",
+      "sync_on": "Diğer cihazlarınız aynı ayarları kullanıyor, bu yüzden onlar da değişir.",
+      "sync_off": "Diğer cihazlarınız kendi ayarlarını korur."
     }
   },
   "setup": {
@@ -3619,6 +3840,13 @@
     },
     "find_emails_from": "{name} adlı kişiden gelen e-postaları bul"
   },
+  "menuMove": {
+    "filter_placeholder": "Klasör bul",
+    "recent": "Son kullanılanlar",
+    "no_match": "Eşleşen klasör yok",
+    "choose_folder": "Klasör seç…",
+    "current_folder": "Zaten {folder} içinde"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Klasörü okundu olarak işaretle",
     "mark_folder_tree_read": "Klasörü ve alt klasörleri okundu olarak işaretle",
@@ -3665,6 +3893,19 @@
     "delete_with_contents_title": "Klasör boş değil",
     "delete_with_contents_message": "\"{name}\" klasöründe hâlâ {count} ileti var. Klasör ve tüm iletileri silinsin mi? Bu işlem geri alınamaz.",
     "delete_with_contents_confirm": "Klasörü ve iletileri sil"
+  },
+  "mail_p2_folders": {
+    "all_folders": "Tüm klasörler",
+    "empty_trash": "Çöp Kutusunu boşalt",
+    "empty_spam": "Spam klasörünü boşalt",
+    "empty_trash_confirm": "Çöp Kutusundaki {count, plural, one {ileti} other {# iletinin tümü}} kalıcı olarak silinsin mi? Bu geri alınamaz.",
+    "empty_spam_confirm": "Spam klasöründeki {count, plural, one {ileti} other {# iletinin tümü}} kalıcı olarak silinsin mi? Bu geri alınamaz.",
+    "title_all_accounts": "{name} ({count}, tüm hesaplarda {total})",
+    "title_all_accounts_only": "{name} (tüm hesaplarda {total})"
+  },
+  "uxs_folders": {
+    "manage_accounts": "Hesapları yönet…",
+    "apply_to_existing": "{count, plural, one {{folder} içindeki # mevcut iletiye uygula} other {{folder} içindeki # mevcut iletiye uygula}}"
   },
   "shortcuts": {
     "title": "Klavye kısayolları",
@@ -3736,6 +3977,14 @@
     "messages_count": "{count, plural, one {# ileti} other {# ileti}}",
     "expand_named": "Konuşmayı genişlet: {subject}",
     "collapse_named": "Konuşmayı daralt: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {# eski iletiyi göster} other {# eski iletiyi göster}}",
+    "return_to_list_follows_layout": "Siz değiştirene kadar bu ayar düzene göre belirlenir: liste ve ileti yan yanaysa kapalı, değilse açık."
+  },
+  "mail_p2_conv": {
+    "show_message": "İletiyi göster",
+    "back_to_reply": "Yanıtınıza dönün"
   },
   "identities": {
     "modal_title": "Gönderme Kimliklerini Yönet",
@@ -3866,6 +4115,34 @@
         "next": "Okuyucudan ne istediğinizi ve ne zamana kadar istediğinizi yazın."
       }
     }
+  },
+  "compose_send": {
+    "back": "Düzenlemeye dön",
+    "send_anyway": "Yine de gönder",
+    "warnings_title": "Bu ileti yine de gönderilsin mi?",
+    "warning_subject": "Konu yok",
+    "warning_text": "Metin yok",
+    "warning_attachment": "\"{keyword}\" geçiyor ama hiç dosya eklenmemiş",
+    "warning_placeholders": "Alıcıların göreceği yer tutucu metin:",
+    "warning_proofreading": "Açık yazım veya dilbilgisi sorunları: {count}",
+    "empty_text_title": "Metin olmadan gönderilsin mi?",
+    "empty_text_message": "Bu iletide metin ve ek yok. Yine de gönderilsin mi?",
+    "scheduled_for": "{when} için zamanlandı",
+    "sending": "Gönderiliyor…",
+    "sent": "Gönderildi",
+    "view": "Görüntüle",
+    "template_saved": "Şablon kaydedildi",
+    "schedule_anyway": "Yine de zamanla",
+    "schedule_warnings_title": "Bu ileti yine de zamanlansın mı?",
+    "picker_button": "Kişilerden ekle",
+    "picker_title": "Alıcı ekle",
+    "tab_contacts": "Kişiler",
+    "tab_directory": "Dizin",
+    "contacts_empty_title": "Henüz kişi yok",
+    "contacts_empty_hint": "Kişiler'e kaydettiğiniz kişiler burada görünür.",
+    "contacts_no_match": "Aramanızla eşleşen kişi yok",
+    "template_name": "Şablon adı",
+    "template_edit_details": "Ayrıntıları düzenle…"
   },
   "org_templates": {
     "section_personal": "Şablonlarım",
@@ -4323,6 +4600,35 @@
     "open_categories": "Kategorileri aç",
     "row_actions": "{name} için işlemler"
   },
+  "ux_pim_contact": {
+    "context_private": "Ev",
+    "phone_voice": "Telefon",
+    "more_fields": "Diğer alanlar",
+    "import_menu": "Kişileri İçe Aktar…",
+    "new_address_book_menu": "Yeni adres defteri…"
+  },
+  "uxs_wording": {
+    "more_options": "Diğer seçenekler",
+    "use_in_other_apps": "Başka uygulamalarda kullan",
+    "default_address_book": "Kişiler",
+    "default_calendar": "Takvim",
+    "preview_documents": "Belgeler",
+    "preview_photos": "Fotoğraflar",
+    "sample_subject": "Kafedeki toplantıdan notlar",
+    "mail_apps": {
+      "imap": "Gelen posta (IMAP)",
+      "smtp": "Giden posta (SMTP)",
+      "caldav": "Takvimler (CalDAV)",
+      "carddav": "Kişiler (CardDAV)",
+      "port_security": "Bağlantı noktası {port}, {security}",
+      "security_ssl": "SSL/TLS",
+      "security_starttls": "STARTTLS",
+      "security_none": "Şifreleme yok",
+      "copy_label": "{name} kopyala",
+      "loading": "Ayarlar posta sunucusundan okunuyor…",
+      "not_found": "Posta sunucunuz diğer uygulamalar için sunucu adlarını bildirmedi. Bunları yöneticinize sorun."
+    }
+  },
   "calendar": {
     "print": {
       "calendars": "Takvimler: {names}",
@@ -4566,7 +4872,7 @@
       "hide_non_working_days_desc": "Çalışmadığınız günleri hafta görünümünden çıkar. Bu günlerin etkinlikleri ay, gün ve ajanda görünümlerinde görünmeye devam eder.",
       "working_days": "Çalışma günleri",
       "title": "Takvim ayarları",
-      "default_view": "Varsayılan görünüm",
+      "default_view": "Takvim şu görünümde açılır",
       "week_starts_on": "Hafta başlangıcı",
       "time_format": "Saat biçimi",
       "default_calendar": "Varsayılan takvim",
@@ -4577,7 +4883,7 @@
       "notifications_enabled_desc": "Yaklaşan takvim etkinlikleri için uyarılar göster",
       "notification_sound": "Bildirim sesi",
       "notification_sound_desc": "Takvim uyarıları için ses çal",
-      "invitation_parsing": "E-posta davetlerini ayrıştır",
+      "invitation_parsing": "Postadaki davetleri göster",
       "invitation_parsing_desc": "E-posta eklerindeki takvim davetlerini algıla ve takvim işlemlerini göster",
       "show_time_in_month_view": "Ay görünümünde saati göster",
       "show_time_in_month_view_desc": "Aylık takvim görünümünde etkinlik saatlerini görüntüle",
@@ -4592,7 +4898,7 @@
       "show_week_numbers_desc": "Mini takvimde hafta numaralarını görüntüle",
       "calendar_free_scroll": "Serbest kaydırma",
       "calendar_free_scroll_desc": "Tek seferde bir dönem yerine aylar, haftalar ve günler arasında kesintisiz kaydırın",
-      "enable_tasks": "Görevleri etkinleştir",
+      "enable_tasks": "Görevler",
       "enable_tasks_desc": "Yapılacaklar listesini yönetmek için takvimde görev görünümü göster",
       "show_tasks_on_calendar": "Görevleri takvimde göster",
       "show_tasks_on_calendar_desc": "Görevleri ay, hafta ve gün takvim görünümlerinde görüntüle",
@@ -4770,8 +5076,8 @@
       "error_update": "Takvim güncellenemedi",
       "error_delete": "Takvim silinemedi",
       "caldav_url": "CalDAV URL'si",
-      "copy_url": "CalDAV URL'sini kopyala",
-      "url_copied": "CalDAV URL'si panoya kopyalandı",
+      "copy_url": "Başka uygulamalar için adresi kopyala",
+      "url_copied": "Adres kopyalandı",
       "share": "Takvimi paylaş…",
       "new_event_in_calendar": "Bu takvimde yeni etkinlik",
       "shared_with": "Paylaşılan kişiler: {names}",
@@ -4791,8 +5097,8 @@
       "default_alerts_updated": "Varsayılan hatırlatıcılar güncellendi"
     },
     "subscription": {
-      "title": "iCal Aboneliği",
-      "section_title": "iCal Abonelikleri",
+      "title": "Bir takvime abone ol",
+      "section_title": "Abone olunan takvimler",
       "description": "Harici iCalendar akışına abone olun. Etkinlikler kendi takvimlerine otomatik olarak senkronize edilecek. https:// ve webcal:// URL'lerini destekler.",
       "url_label": "Takvim URL'si",
       "url_placeholder": "https://example.com/calendar.ics veya webcal://...",
@@ -4908,6 +5214,47 @@
     "mini_has_events": "etkinlik var",
     "mini_week_number": "{week}. hafta"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Görev listeleri",
+    "task_status_not_started": "Başlanmadı",
+    "task_status_in_progress": "Devam ediyor",
+    "quick_task_due": "Son tarih {date}",
+    "quick_task_due_remove": "“{words}” başlıkta kalsın",
+    "rename_calendar": "Yeniden adlandır…",
+    "rename_title": "Takvimi yeniden adlandır",
+    "rename_confirm": "Yeniden adlandır",
+    "rename_empty": "Bir ad girin.",
+    "edit_calendar": "Düzenle…",
+    "default_alerts_open": "Varsayılan hatırlatıcılar…",
+    "share_open": "Paylaş…",
+    "clear_all_events": "Tüm etkinlikleri temizle…",
+    "delete_calendar": "Sil…",
+    "caldav_title": "Diğer uygulamalar için adres (CalDAV)",
+    "caldav_hint": "Takvimlerinizi eşitlemek için bu adresi Thunderbird, Apple Takvim veya DAVx⁵ içine ekleyin.",
+    "caldav_shared_by": "Paylaşan: {name}",
+    "freebusy_description": "Paylaştığınız kişiler ne zaman meşgul olduğunuzu görür, etkinliklerinizi görmez. Saat öner bunu kullanır."
+  },
+  "calendar_offline": {
+    "split_needs_server": "Bu değişiklik için sunucu bağlantısı gerekir. Şimdilik yalnızca bu etkinliği değiştirin veya yeniden çevrimiçi olduğunuzda tekrar deneyin."
+  },
+  "ux_pim_event": {
+    "time_zone": "Saat dilimi",
+    "time_zone_line": "Saat dilimi: {zone}",
+    "your_time": "{times} sizin saatinizle",
+    "zone_times": "{times} {zone} ({local} sizin saatinizle)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Kabul edildi",
+    "status_declined": "Reddedildi",
+    "status_tentative": "Belki",
+    "status_needs_action": "Henüz yanıtlanmadı",
+    "status_delegated": "Devredildi",
+    "answered_accepted": "{date} tarihinde kabul ettiniz.",
+    "answered_declined": "{date} tarihinde reddettiniz.",
+    "answered_tentative": "{date} tarihinde belki dediniz.",
+    "answered_accepted_nodate": "Kabul ettiniz.",
+    "answered_declined_nodate": "Reddettiniz.",
+    "answered_tentative_nodate": "Belki dediniz."
+  },
   "calendar_event_notifications": {
     "someone": "Birisi",
     "invited": "{name} sizi \"{title}\" etkinliğine davet etti",
@@ -4917,6 +5264,11 @@
   },
   "company_calendars": {
     "section": "Kuruluş"
+  },
+  "ux_pim_grid": {
+    "search_short": "Ara",
+    "reply": "Yanıtla",
+    "reply_to_invitation": "Davete yanıt ver"
   },
   "vacation_calendar": {
     "label": "Takvimimi kapat",
@@ -4939,6 +5291,88 @@
     "group_label": "Grup",
     "title": "Müsaitlik",
     "description": "Gruptaki iş arkadaşlarınız ne zaman meşgul olduğunuzu görür, etkinliklerinizi görmez. Saat öner bunu kullanır."
+  },
+  "ux_pim_cimport": {
+    "file_hint": "Bir vCard veya CSV dosyası seçmek için tıklayın",
+    "file_types": "Örneğin Outlook veya Google Kişiler’den .vcf ya da .csv dosyaları",
+    "parse_error": "Dosya okunamadı",
+    "columns_title": "Sütunları eşleştirin",
+    "columns_hint": "{file} dosyasının her sütununun nereye gideceğini seçin. “İçe aktarma” olarak ayarlanan sütunlar atlanır.",
+    "column": "Sütun",
+    "sample": "Örnek",
+    "field": "Kişi alanı",
+    "skip": "İçe aktarma",
+    "no_columns": "En az bir sütun için bir alan seçin.",
+    "continue": "Devam",
+    "back": "Geri",
+    "import_into": "Şuraya aktar",
+    "group_name": "Ad",
+    "group_email": "E-posta",
+    "group_phone": "Telefon",
+    "group_org": "Kuruluş",
+    "group_adr_any": "Adres",
+    "group_adr_home": "Ev adresi",
+    "group_adr_work": "İş adresi",
+    "group_adr_other": "Diğer adres",
+    "group_more": "Diğer",
+    "address_field": "{group}: {part}",
+    "t_name_full": "Tam ad",
+    "t_name_given": "Ad",
+    "t_name_middle": "İkinci ad",
+    "t_name_surname": "Soyadı",
+    "t_name_prefix": "Unvan (Dr., Bayan)",
+    "t_name_suffix": "Sonek (Jr.)",
+    "t_nickname": "Takma ad",
+    "t_email": "E-posta",
+    "t_email_home": "E-posta (ev)",
+    "t_email_work": "E-posta (iş)",
+    "t_phone": "Telefon",
+    "t_phone_mobile": "Cep",
+    "t_phone_home": "Telefon (ev)",
+    "t_phone_work": "Telefon (iş)",
+    "t_phone_fax": "Faks",
+    "t_phone_fax_home": "Faks (ev)",
+    "t_phone_fax_work": "Faks (iş)",
+    "t_phone_pager": "Çağrı cihazı",
+    "t_org_name": "Şirket",
+    "t_org_unit": "Bölüm",
+    "t_org_title": "İş unvanı",
+    "t_street": "Sokak",
+    "t_pobox": "Posta kutusu",
+    "t_locality": "Şehir",
+    "t_region": "Eyalet veya bölge",
+    "t_postcode": "Posta kodu",
+    "t_country": "Ülke",
+    "t_web": "Web sitesi",
+    "t_birthday": "Doğum günü",
+    "t_anniversary": "Yıl dönümü",
+    "t_notes": "Notlar",
+    "t_categories": "Kategoriler",
+    "t_type": "Değerin türü (Ev, İş…)",
+    "merge_with": "Şununla birleştir…",
+    "merge_selected": "Birleştir…",
+    "find_duplicates": "Yinelenenleri bul",
+    "possible_duplicates": "Olası yinelenenler ({count})",
+    "duplicates_title": "Olası yinelenenler",
+    "duplicates_hint": "Aynı ada, e-posta adresine veya telefon numarasına sahip kişiler.",
+    "duplicates_none": "Olası yinelenen bulunamadı.",
+    "pick_title": "{name} kişisini şununla birleştir…",
+    "pick_search": "Kişilerde ara",
+    "pick_suggested": "Olası yinelenenler",
+    "pick_all": "Tüm kişiler",
+    "pick_none": "Birleştirilecek başka kişi yok.",
+    "preview_title": "Kişileri birleştir ({count})",
+    "preview_hint": "Bu kişiler, aşağıdakilerin hepsini içeren tek bir kart olur.",
+    "preview_deleted": "Alındı, ardından silindi: {names}",
+    "groups": "Gruplar",
+    "merge": "Birleştir",
+    "merging": "Birleştiriliyor…",
+    "merged": "Kişiler birleştirildi",
+    "merge_failed": "Kişiler birleştirilemedi.",
+    "merge_not_possible": "Bu kişiler birleştirilemez: farklı hesaplarda veya değiştiremediğiniz bir adres defterinde bulunuyorlar.",
+    "undo": "Geri al",
+    "undone": "Birleştirme geri alındı",
+    "undo_failed": "Birleştirme tamamen geri alınamadı."
   },
   "find_time": {
     "suggest": "Saat öner",
@@ -5142,7 +5576,7 @@
     "title": "Posta kutunuza hoş geldiniz",
     "tip_compose": "Yeni e-posta oluşturmak için c tuşuna basın",
     "tip_shortcuts": "Tüm klavye kısayollarını görmek için ? tuşuna basın",
-    "tip_sidebar": "Takvim, Kişiler ve Ayarlar'ı kenar çubuğu menüsünde bulabilirsiniz",
+    "tip_sidebar": "Takvim, Kişiler ve Ayarlar soldaki çubukta",
     "tip_settings": "Deneyiminizi Ayarlar'dan özelleştirin",
     "tip_compose_touch": "Yeni bir e-posta yazmak için kalem düğmesine dokunun",
     "tip_sidebar_touch": "Takvim, Kişiler ve Ayarlar alttaki çubukta",
@@ -5359,6 +5793,21 @@
     "previous_file": "Önceki dosya",
     "next_file": "Sonraki dosya",
     "loading": "Yükleniyor…"
+  },
+  "ux_pim_files": {
+    "conflict_title": "{name} zaten var.",
+    "conflict_file_hint": "Değiştir, yeni içeriği mevcut dosyaya koyar; paylaşımları korunur. İkisini de tut, numaralı bir kopya ekler.",
+    "conflict_folder_hint": "Değiştir, dosyaları mevcut klasöre ekler ve aynı adlı dosyaları değiştirir. İkisini de tut, numaralı ikinci bir klasör oluşturur.",
+    "replace": "Değiştir",
+    "keep_both": "İkisini de tut",
+    "skip": "Atla",
+    "apply_to_all": "{count, plural, other {Tüm # çakışma için bunu yap}}",
+    "no_preview": "Bu dosya türü için önizleme yok.",
+    "open_in_app": "Varsayılan uygulamada aç",
+    "shared_with": "{name} artık {person} ile paylaşılıyor.",
+    "send_message": "Mesaj gönder",
+    "share_mail_subject": "{name} dosyasını seninle paylaştım",
+    "share_mail_body": "Merhaba,\n\n\"{name}\" dosyasını seninle paylaştım. Buradan açabilirsin:\n{link}"
   },
   "smime": {
     "your_certificates": "Sertifikalarınız",
@@ -5606,6 +6055,48 @@
     "toast_stopped": "Dışa aktarım durdu.",
     "toast_show": "Göster"
   },
+  "desktopImport": {
+    "find": "Thunderbird ve Outlook verilerini bul…",
+    "find_hint": "Bu bilgisayarda olağan yerlerde arar. Bulwark önce size sorar.",
+    "scan_declined": "İzin vermediğiniz için arama yapılmadı.",
+    "scan_failed": "Arama çalışmadı. Yeniden deneyin.",
+    "read_declined": "İzin vermediğiniz için hiçbir dosya okunmadı.",
+    "read_failed": "Bu dosyalar artık okunamıyor. Yeniden arayın.",
+    "nothing_found": "Olağan yerlerde Thunderbird profili veya Outlook veri dosyası yok. Başka bir yerden dosya içe aktarmak için Dosya seç'i kullanın.",
+    "found_list": "Bu bilgisayarda bulunan posta verileri",
+    "outlook_files": "Outlook veri dosyaları",
+    "thunderbird_profile": "Thunderbird profili {name}",
+    "address_book": "{name} adres defteri",
+    "message_count": "{count, plural, one {# ileti} other {# ileti}}",
+    "contact_count": "{count, plural, one {# kişi} other {# kişi}}",
+    "confirm": "{count, plural, one {Bu öğeyi kullan…} other {Bu # öğeyi kullan…}}",
+    "back": "Geri",
+    "estimate": "{size} seçildi. Stalwart dahil birçok sunucu bir kullanıcıdan saatte yalnızca yaklaşık 1000 ileti veya 50 MB kabul eder, bu yüzden bu en az {time} sürer. Sınırda içe aktarma durur ve kendiliğinden devam eder. Arka planda çalışır ve yeniden başlatmadan sonra sürer.",
+    "duration_hours": "{count, plural, one {# saat} other {# saat}}",
+    "duration_days": "{count, plural, one {# gün} other {# gün}}",
+    "time_left": "Sunucunun yükleme sınırıyla en az {time} kaldı. Bu sırada çalışmaya devam edebilirsiniz.",
+    "thunderbird_running": "Thunderbird çalışıyor. Önce kapatın. İçe aktarma sırasında bir klasörü değiştirirse o klasör baştan başlar ve zaten aktarılan iletiler atlanır.",
+    "ost_refused": "Sunulmuyor: {names}. Outlook .ost dosyaları yalnızca bir posta kutusunun yerel kopyasıdır ve burada içe aktarılamaz. Bunun yerine Outlook'ta postayı bir .pst dosyasına aktarın.",
+    "calendars_left_out": "Thunderbird takvimleri içe aktarılmaz. Thunderbird'den .ics dosyası olarak dışa aktarıp takvime aktarın.",
+    "pst_items_left_out": "Outlook dosyalarından yalnızca posta aktarılır, kişiler ve takvimler aktarılmaz.",
+    "picked": "{count, plural, one {Bu bilgisayardan # klasör veya dosya} other {Bu bilgisayardan # klasör ve dosya}}",
+    "remove_picked": "Bu dosyaları kaldır",
+    "contacts_picked": "{count, plural, one {Thunderbird'den # kişi kişilerinize eklenecek.} other {Thunderbird'den # kişi kişilerinize eklenecek.}}",
+    "contacts_added": "{count, plural, one {Thunderbird'den # kişi eklendi.} other {Thunderbird'den # kişi eklendi.}}",
+    "contacts_failed": "Thunderbird'den bazı kişiler eklenemedi.",
+    "files_refused": "Artık okunamadıkları için atlandı: {names}",
+    "skip_seen": "Önceki bir içe aktarmanın aynı klasöre koyduğu iletileri atla",
+    "skip_duplicate": "{count, plural, one {# ileti daha önce içe aktarılmış} other {# ileti daha önce içe aktarılmış}}",
+    "file_unavailable": "Bir dosya değişti veya artık okunamıyor. Thunderbird'ü kapatıp yeniden içe aktarın. Zaten aktarılan iletiler atlanır.",
+    "resume_gone": "Bu bilgisayardan içe aktarma devam edemiyor, çünkü dosyaları yok.",
+    "pst_in_use": "{names}, Outlook açık tuttuğu sürece okunamaz. Outlook'u kapatıp yeniden arayın.",
+    "description": "Bu bilgisayarda posta bulun veya .eml, .zip, .mbox ya da Outlook .pst dosyaları seçin.",
+    "settings_description": "Postayı Thunderbird'den veya .eml, ZIP, mbox ya da Outlook .pst dosyalarından getirin.",
+    "resume_refused": "Şu anda okunamıyor: {names}. Geri kalanı sürer, bunlar bir sonraki başlatmada yeniden denenir.",
+    "resume_stop_trying": "Denemeyi bırak",
+    "resume_hand_picked": "Geri kalanını içe aktarmak için bu dosyaları yeniden seçin: {names}. Zaten aktarılan iletiler atlanır.",
+    "scan_incomplete": "Arama çok uzun sürdü ve durduruldu. O ana kadar bulduğu bunlar."
+  },
   "recover_deleted": {
     "tab": "Silinen öğeleri kurtar",
     "title": "Silinen öğeleri kurtar",
@@ -5716,6 +6207,176 @@
       "no_sent_mailbox": "Gönderilenler klasörü bulunamadı.",
       "no_drafts_mailbox": "Taslaklar klasörü bulunamadı."
     }
+  },
+  "offlineConflicts": {
+    "title": "Uygulanmayan değişiklikler",
+    "description": "Bu değişiklikleri çevrimdışıyken yaptınız. Uygulanmadı ve ileti sunucudaki haliyle kalıyor.",
+    "changed": "Başka bir cihazda değiştirildi, değişikliğiniz uygulanmadı",
+    "changed_delete": "Başka bir cihazda değiştirildi, silinmedi",
+    "gone": "Artık sunucuda yok, değişikliğiniz uygulanmadı",
+    "refused": "Sunucu bu değişikliği reddetti: {reason}",
+    "dismiss": "Kapat",
+    "dismiss_label": "{subject} ile ilgili notu kapat",
+    "banner": "Uygulanmayan değişiklikler: {count}",
+    "toast": "Çevrimdışı yapılan ve uygulanmayan değişiklikler: {count}. Giden kutusu hangileri olduğunu gösterir.",
+    "storage_failed": "Bu cihazda çevrimdışı e-posta için yer kalmadı. Yer açın veya Ayarlar'dan daha azını saklayın.",
+    "signout_changes_title": "Kaydedilmemiş değişikliklerle oturum kapatılsın mı?",
+    "signout_changes": "Henüz sunucuda olmayan değişiklikler: {count}. Oturumu kapatmak bunları siler.",
+    "store_unavailable": "Bu cihazdaki çevrimdışı e-postalar şu anda açılamıyor. Gönderilmemiş e-postalar burada kalır ve uygulama denemeye devam eder.",
+    "store_reset": "Bu cihazdaki çevrimdışı e-postalar okunamadı, bu yüzden yeniden indiriliyor. Gönderilmemiş olanlar kayboldu.",
+    "legacy_stranded": "Bu tarayıcı, önceki bir sürümün sakladığı gönderilmemiş e-postaları açamıyor. Tarayıcıyı güncellemek bunları geri getirebilir.",
+    "store_private": "Gizli pencereler e-postaları çevrimdışı kullanım için saklayamaz.",
+    "server_not_answering": "E-posta sunucusu yanıt vermiyor. Birazdan yeniden deneyin."
+  },
+  "offlineWipe": {
+    "note": "Kuruluşunuz bu hesabın verilerini bu cihazdan kaldırdı. Yeniden başlamak için oturum açın.",
+    "note_unsent": "Kuruluşunuz bu hesabın verilerini bu cihazdan kaldırdı. Silinen gönderilmemiş iletiler: {count}.",
+    "settings_title": "Bu cihazdan her şeyi kaldır",
+    "settings_description": "Bu bilgisayarı başkasına verdiğinizde veya kullanmayı bıraktığınızda. Sunucudaki postalarınız kalır.",
+    "settings_button": "Her şeyi kaldır…",
+    "settings_wiping": "Kaldırılıyor…",
+    "confirm_title": "Bu cihazdan her şey kaldırılsın mı?",
+    "confirm_message": "Bu işlem, bu uygulamanın buradaki tüm hesaplar için bu cihazda tuttuklarını siler. Sunucudaki postalarınıza dokunulmaz.",
+    "confirm_mail": "Burada tutulan postalar, takvimler, kişiler ve dosyalar",
+    "confirm_unsent": "Burada bekleyen gönderilmemiş iletiler: {count}. Kaybolacaklar.",
+    "confirm_keys": "S/MIME ve OpenPGP anahtarları. Yeniden kullanmak için kendi yedeğiniz gerekir.",
+    "confirm_plugins": "Eklentilerin burada sakladığı veriler",
+    "confirm_files": "Düzenlemek için açılan ekler ve eklenmeyi bekleyen dosyalar",
+    "confirm_accounts": "Tüm hesapların oturumu kapatılır",
+    "confirm_button": "Her şeyi kaldır",
+    "note_unknown": "Kuruluşunuz bu hesabın verilerini bu cihazdan kaldırdı. Gönderilmemiş iletiler de silinmiş olabilir.",
+    "refused_waiting": "Yeni parolanızı bekleyen gönderilmemiş iletiler: {count}. {date} tarihine kadar kalır.",
+    "refused_waiting_unknown": "Gönderilmemiş iletiler yeni parolanızı bekliyor olabilir. {date} tarihine kadar kalır.",
+    "confirm_unsent_unknown": "Burada gönderilmemiş iletiler bekliyor olabilir. Kaybolacaklar.",
+    "confirm_templates": "Bu cihazda kayıtlı e-posta şablonları",
+    "session_waiting": "Bir sonraki oturum açmanızı bekleyen gönderilmemiş iletiler: {count}. {date} tarihine kadar kalır.",
+    "session_waiting_unknown": "Gönderilmemiş iletiler bir sonraki oturum açmanızı bekliyor olabilir. {date} tarihine kadar kalır.",
+    "needs_sign_in": "Oturum açılması gerekiyor",
+    "switcher_waiting": "Gönderilmemiş iletiler: {count}. {date} tarihinde bu cihazdan silinecek.",
+    "switcher_kept": "Bu cihazdaki e-postalar {date} tarihinde silinecek.",
+    "sibling_waiting": "{name} oturumu kapatıldı. Gönderilmemiş iletiler: {count}. {date} tarihine kadar oturum açın, yoksa bu cihazdan silinecekler.",
+    "sibling_kept": "{name} oturumu kapatıldı. {date} tarihine kadar oturum açın, yoksa e-postalar bu cihazdan silinecek."
+  },
+  "offlineStorage": {
+    "keep_description": "E-postalarınızı, takviminizi, kişilerinizi ve seçtiğiniz dosyaları bu cihazda şifreli olarak tutar. Çevrimdışıyken e-postaları okuyabilir, işaretleyebilir ve taşıyabilirsiniz; yazdıklarınız giden kutusunda bekler. Oturumu kapatınca hepsi silinir.",
+    "window_label": "Ne kadar geriye tutulsun",
+    "window_description": "Daha eski e-postalar ve takvim etkinlikleri bu cihazdan kaldırılır. Bağlantınız olduğunda yine açabilirsiniz.",
+    "window_days": "{days, plural, one {# gün} other {# gün}}",
+    "window_year": "1 yıl",
+    "window_everything": "Hepsi",
+    "attachments_label": "Ekleri tut",
+    "attachments_description": "Tutulan iletilerin ekleri ve çevrimdışı tuttuğunuz dosyalar, toplam en fazla {total}. En eskiler önce silinir.",
+    "total_locked": "Kuruluşunuz en fazla {size} ek ve dosyaya izin veriyor.",
+    "attachment_cap_label": "Tutulacak en büyük ek",
+    "usage_mail": "İletiler ve arama dizini",
+    "usage_attachments": "Ekler",
+    "usage_calendar": "Takvim",
+    "usage_contacts": "Kişiler",
+    "usage_files": "Çevrimdışı tutulan dosyalar",
+    "usage_row": "{size} ({count, plural, one {# öğe} other {# öğe}})",
+    "progress_list": "İletiler listeleniyor",
+    "progress_bodies": "İletiler indiriliyor",
+    "progress_threads": "Konuşmalar sıralanıyor",
+    "progress_files": "Dosyalar indiriliyor",
+    "progress_other": "Veriler bu cihaza getiriliyor",
+    "progress_count": "{done} / {total}",
+    "progress_count_open": "şimdiye kadar {done}",
+    "progress_left": "yaklaşık {minutes, plural, one {# dakika} other {# dakika}} kaldı",
+    "clear_label": "Bu hesabı temizle",
+    "clear_description": "Bu cihazın bu hesap için tuttuğu her şeyi siler, sonra yeniden indirir.",
+    "clear_button": "Temizle…",
+    "clear_confirm_title": "Bu hesap bu cihazda temizlensin mi?",
+    "clear_confirm_message": "Bu cihazın {account} için tuttuğu her şey silinir ve yeniden indirilir. Sunucudaki e-postalarınız kalır.",
+    "clear_confirm_unsent": "{count, plural, one {# gönderilmemiş ileti kaybolacak.} other {# gönderilmemiş ileti kaybolacak.}}",
+    "clear_confirm": "Temizle",
+    "persist_refused": "Alan azaldığında bu tarayıcı tutulan e-postaları silebilir. Uygulamayı yüklemek genellikle bunu önler.",
+    "persist_retry": "Tarayıcıdan saklamasını iste",
+    "safari_hint": "Safari, 7 gün ziyaret edilmeyen bir sitenin verilerini siler. E-postalarınızı bu cihazda tutmak için Bulwark'ı Ana Ekran'a veya Dock'a ekleyin.",
+    "evicted": "Tarayıcı, bu cihazda tutulan e-postaları sildi. Yeniden indiriliyor.",
+    "evicted_lost": "{count, plural, one {# gönderilmemiş ileti veya değişiklik kayboldu.} other {# gönderilmemiş ileti veya değişiklik kayboldu.}}",
+    "evicted_dismiss": "Tamam",
+    "storage_full_title": "Cihaz depolama alanı dolu.",
+    "storage_full_text": "Bulwark artık buraya e-posta kaydetmiyor. Daha az e-posta tutun veya yer açmak için bu hesabı temizleyin.",
+    "open_settings": "Ayarları aç",
+    "default_on": "Bulwark, bağlantı olmadan da çalışması için e-postalarınızı bu cihazda tutar. Bunu Ayarlar'dan değiştirebilirsiniz.",
+    "conflict_calendar": "Takvim etkinliği",
+    "conflict_contacts": "Kişi",
+    "kept_files_title": "Çevrimdışı tutulan dosyalar",
+    "kept_state_kept": "Bu cihazda",
+    "kept_state_waiting": "İndirilmeyi bekliyor",
+    "kept_error_tooLarge": "Tutulamayacak kadar büyük",
+    "kept_error_overLimit": "Bu cihazın sınırını aşıyor",
+    "kept_error_notAllowed": "Kuruluşunuz dosyaların tutulmasına izin vermiyor",
+    "kept_error_download": "İndirilemedi",
+    "keep_offline": "Çevrimdışı tut",
+    "unpin": "Çevrimdışı tutmayı bırak",
+    "unpin_label": "{name} dosyasını çevrimdışı tutmayı bırak",
+    "warning_desktop": "Bu bilgisayarın kullanıcı hesabını kullanabilen herkes bu e-postaları okuyabilir. Disk şifrelemesini kullanın.",
+    "off_confirm_text": "Bu işlem, bu cihazın {account} için tuttuğu her şeyi siler. Sunucudaki e-postalarınız kalır.",
+    "unsent_changes": "{count, plural, one {Sunucuya ulaşmamış # değişiklik kaybolacak.} other {Sunucuya ulaşmamış # değişiklik kaybolacak.}}",
+    "clear_needs_connection": "Her şey yeniden indirileceği için bağlantı gerekir.",
+    "usage_label": "Bu cihazın tuttukları",
+    "pin_not_ready": "Bu dosya henüz bu cihazın listesinde değil. Biraz sonra yeniden deneyin."
+  },
+  "keyProtection": {
+    "browser_note": "Tarayıcıda bu postanın anahtarı, postayla aynı tarayıcı profilinde durur. Profil dosyalarını kopyalayan biri postayı okuyabilir, bu yüzden disk şifrelemesi kullanın.",
+    "no_secure_storage": "Bu bilgisayarda uygulamanın kullanabileceği güvenli bir anahtar deposu yok, bu yüzden bu postanın anahtarı diskte yalnızca gizlenmiş durumda. Disk şifrelemesi kullanın.",
+    "wrap_failed": "Bu bilgisayarın güvenli anahtar deposu bu postanın anahtarını kabul etmedi, bu yüzden anahtar olması gerektiği gibi korunmuyor. Uygulamayı yeniden başlatın ve disk şifrelemesi kullanın.",
+    "rekey_progress": "Bu cihazdaki posta yeniden şifreleniyor: %{percent}. Çalışmaya devam edebilirsiniz.",
+    "rekey_failed": "Bu cihazdaki postanın yeniden şifrelenmesi bitmedi, bu yüzden eski anahtar onu hâlâ açabilir. Uygulama bir sonraki başlangıçta yeniden dener.",
+    "reenroll_note": "Geçiş anahtarı ve sistem kilidi açma eski PIN'in anahtarını kullanıyordu, bu yüzden kaldırıldı. Kullanıyorsanız yeniden ayarlayın."
+  },
+  "offlineDrafts": {
+    "title": "Bu cihazdaki taslaklar",
+    "description": "Bu taslaklar bu cihaza kaydedildi. Sunucuya ulaşılır ulaşılmaz kendiliğinden gönderilir.",
+    "saved_on_device": "Bu cihaza kaydedildi",
+    "status_waiting": "Sunucu bekleniyor",
+    "status_sending": "Sunucuya kaydediliyor",
+    "status_uncertain": "Sunucuya ulaşıp ulaşmadığı denetleniyor",
+    "status_refused": "Sunucu bu taslağı reddetti: {error}",
+    "file_missing": "Ekli bir dosya artık bu cihazda değil",
+    "open": "Aç",
+    "open_label": "{subject} öğesini aç",
+    "retry": "Yeniden dene",
+    "retry_label": "{subject} için yeniden dene",
+    "toast_refused": "{subject} taslağı sunucuya kaydedilemedi. Bu cihazda kalıyor.",
+    "toast_conflict": "{subject} taslağı başka bir cihazda değiştirildi. İki sürüm de saklanıyor.",
+    "conflict_changed": "Başka bir cihazda değiştirildi. İki sürüm de Taslaklar'da.",
+    "conflict_gone": "Başka bir cihazda değiştirildi veya kaldırıldı. Sizin sürümünüz Taslaklar'da.",
+    "banner_refused": "Sunucunun reddettiği taslaklar: {count}",
+    "banner_waiting": "Sunucuyu bekleyen taslaklar: {count}"
+  },
+  "offlineExport": {
+    "settings_label": "Saklanan postayı dışa aktar",
+    "settings_description": "Bu cihazdaki postayı mbox veya .eml dosyası olarak kaydedin. Çevrimdışı da çalışır.",
+    "title": "Saklanan postayı dışa aktar",
+    "description": "Bu cihazın sakladığı orijinalleri kaydeder. .eml dosyaları birebir kopyalardır. mbox dosyası, biçiminin gerektirdiği işaretleri ekler ve okundu ile bayraklı durumunu her iletinin üst bilgilerine, var olanların yerine yazar. Seçtiğiniz süreden eski postalar buna dahil değildir. Sunucudaki her şeyi kaydetmek için “Tüm e-postaları dışa aktar” seçeneğini kullanın.",
+    "folders_label": "Klasörler",
+    "all_folders": "Tüm klasörler",
+    "folder_kept": "Burada: {kept} / {total}",
+    "loading": "Bu cihazdakiler okunuyor…",
+    "load_failed": "Bu cihazdaki posta okunamadı.",
+    "nothing_kept": "Bu cihazda henüz saklanan posta yok.",
+    "kept": "Bu cihazdaki orijinaller: {kept} / {total} ileti",
+    "missing_online": "Sunucudan indirilecek: {count}",
+    "missing_offline": "Çevrimdışıyken dışa aktarılamaz: {count}. Çevrimiçi olduğunuzda yeniden deneyebilirsiniz.",
+    "reason_attachments_off": "Orijinal iletiler yalnızca “Ekleri tut” açıkken saklanır.",
+    "reason_not_kept": "Orijinal iletiler en son indirilir, o da yalnızca yer varsa.",
+    "not_kept_attachments_off": "Bu cihazda ekler saklanmadığı için orijinal yok: {count}",
+    "not_kept_not_kept": "Bu cihazda henüz orijinal yok: {count}",
+    "retry": "Çevrimiçi yeniden dene",
+    "retry_online": "Artık çevrimiçisiniz, bunlar sunucudan gelebilir.",
+    "retry_offline": "Çevrimiçi olduğunuzda yeniden deneyebilirsiniz.",
+    "settings_button": "Dışa aktar…",
+    "message_failed": "Sunucu bu iletiyi vermedi.",
+    "failed_generic": "Dışa aktarma bir hata nedeniyle durdu. Yeniden deneyin.",
+    "stopped_limit": "Dışa aktarma {limit} boyutunda durdu; bu tarayıcı daha fazlasını tutamaz. Daha az klasör seçin veya Chromium, Firefox ya da masaüstü uygulamasını kullanın.",
+    "over_limit": "Bu tarayıcı en fazla {limit} tutabilir, bu seçim ise yaklaşık {size}. Daha az klasör seçin veya Chromium, Firefox ya da masaüstü uygulamasını kullanın.",
+    "no_room": "Bu dışa aktarma yaklaşık {size} gerektiriyor, bu tarayıcıda ise {free} kaldı. Daha az klasör seçin veya yer açın.",
+    "stopped_no_room": "Tarayıcıda dışa aktarma için yer kalmadı. Daha az klasör seçin veya yer açın.",
+    "stopped_offline_off": "Dışa aktarma durdu çünkü bu hesap artık bu cihazda posta saklamıyor.",
+    "policy_unknown": "Kuruluşunuzun bu hesap için kuralları henüz bilinmiyor, bu nedenle dışa aktarma şimdilik kapalı.",
+    "leftover_file": "{name} dosyası kaydettiğiniz yerden kaldırılamadı. Eksik olduğu için silebilirsiniz."
   },
   "deep_link": {
     "message_not_found": "Bu ileti artık kullanılamıyor.",
@@ -5833,13 +6494,17 @@
         "title": "Bu uygulamaya tam erişim",
         "body": "Webmail'in kendisiyle aynı haklarla çalışır. Tüm e-postalarınızı ve kayıtlı anahtarlarınızı okuyabilir, sizin adınıza işlem yapabilir. Buna yalnızca tamamen güvendiğiniz eklentiler için izin verin."
       },
+      "keystore": {
+        "title": "Bu bilgisayardaki sertifikaları kullan",
+        "body": "Bu bilgisayardaki veya akıllı karttaki sertifikalarla iletileri imzalamak ve şifresini çözmek ister. Uygulama önce size sorar. Eklenti özel anahtarı asla almaz, ancak siz izin verdiğiniz sürece adınıza imzalayabilir ve şifresini çözdüğünü okuyabilir."
+      },
       "email_raw_send": {
         "title": "Kendi oluşturduğu iletileri gönderme",
         "body": "Hesabınızdan imzalı veya şifreli iletiler gibi eksiksiz iletiler gönderme."
       },
       "email_blob_read": {
-        "title": "İletilerin ham içeriğini okuma",
-        "body": "İletilerinizin ve eklerinizin özgün verilerini ve eklediğiniz her dosyayı gönderilmeden önce okuma."
+        "title": "Ekleri ve ileti kaynağını okuma",
+        "body": "Ekleri (metinleri ve resimleri dahil) ve üzerinde çalıştığınız iletilerin tam kaynağını, ayrıca eklediğiniz her dosyayı gönderilmeden önce okuma."
       },
       "email_blob_write": {
         "title": "Göndermeden önce ekleri değiştirme",
@@ -5857,6 +6522,10 @@
         "title": "Takviminizi değiştirme",
         "body": "Etkinlik oluşturma, değiştirme ve silme."
       },
+      "calendar_respond": {
+        "title": "Davetleri yanıtlama",
+        "body": "Takvim davetlerini kabul etme veya reddetme. Yanıtınız organizatöre e-postayla gider."
+      },
       "contacts_read": {
         "title": "Kişilerinizi okuma",
         "body": "Adres defterlerinizde arama yapma ve onları okuma."
@@ -5867,11 +6536,11 @@
       },
       "files_read": {
         "title": "Dosyalarınızı okuma",
-        "body": "Hesabınızda saklanan dosyalara göz atma ve onları açma."
+        "body": "Hesabınızdaki dosyaları bulma, açma ve okuma."
       },
       "files_write": {
         "title": "Dosyalarınızı değiştirme",
-        "body": "Hesabınızdaki dosyaları yükleme, yeniden adlandırma, taşıma ve silme."
+        "body": "Hesabınızdaki dosyaları kaydetme, oluşturma, yeniden adlandırma ve taşıma; bir dosyanın silinmesini engelleme."
       },
       "identity_read": {
         "title": "Gönderen adreslerinizi görme",
@@ -5922,8 +6591,12 @@
         "body": "Tercihlerinizi ve etiket tanımlarınızı görme."
       },
       "settings_write": {
+        "title": "Etiketlerinizi değiştirme",
+        "body": "Etiketlerinizi ekleme, yeniden adlandırma ve sıralarını değiştirme, ayrıca ayarlarınızdaki değişiklikleri engelleme."
+      },
+      "settings_change": {
         "title": "Ayarlarınızı değiştirme",
-        "body": "Etiket ekleme, sıralarını değiştirme ve tercihlerinizi değiştirme."
+        "body": "Uygulamanın görünümünü ve çalışma şeklini değiştirme; örneğin tema, saat biçimi veya okuma bölmesi. Kuruluşunuzun belirlediği ayarlar olduğu gibi kalır."
       },
       "security_read": {
         "title": "Hesap güvenliğinizi görme",
@@ -5984,6 +6657,10 @@
       "ui_email_details": {
         "title": "İleti ayrıntılarına panel ekleme",
         "body": "Açık bir iletinin yanında veya altında kendi panelini gösterme."
+      },
+      "ui_side_panel": {
+        "title": "Diğer görünümlere panel ekleme",
+        "body": "Takvim, Kişiler, Dosyalar ve Ayarlar'ın yanında kendi panelini gösterme."
       },
       "ui_download_file": {
         "title": "Dosyaları cihazınıza kaydetme",
@@ -6124,6 +6801,24 @@
     "not_running": "Gönderilmedi. Kuruluşunuzun zorunlu tuttuğu bir denetim şu anda çalışmıyor. Biraz sonra yeniden deneyin.",
     "stopped_working": "Gönderilmedi. Kuruluşunuzun zorunlu tuttuğu bir denetim çalışmayı durdurdu. Sayfayı yeniden yükleyin. İşe yaramazsa yöneticinize bildirin."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Göndermeyi geri al",
+      "description": "Gönder'e bastıktan sonra iletiyi geri almanız için birkaç saniye verir."
+    },
+    "reply_from_received": {
+      "label": "Yanıt Adresini Otomatik Seç",
+      "description": "Postanın gönderildiği adresten yanıtlayın. Birden çok adresiniz varsa kullanışlıdır."
+    },
+    "require_tls": "Yalnızca güvenli bağlantı üzerinden teslim et",
+    "require_tls_hint": "İletinin kendisi şifrelenmez. Bir sunucu TLS kullanamazsa geri döner.",
+    "encrypt": "Şifrele…",
+    "encrypt_hint": "S/MIME veya PGP eklentisi gerekir. Ayarlar'ı açar.",
+    "quick_reply_to": "Yanıtla: {names}…",
+    "open_full_editor": "Tam düzenleyicide aç",
+    "forward_to_label": "Kime",
+    "forward_cc_label": "Cc"
+  },
   "plugin_list": {
     "filters": "Filtreler",
     "remove_filter": "{label} filtresini kaldır"
@@ -6157,6 +6852,9 @@
   },
   "top_bar": {
     "more": "Diğer seçenekler"
+  },
+  "windowChrome": {
+    "hide_offline_notice": "Çevrimdışı bildirimini gizle"
   },
   "shell": {
     "resize": "Yeniden boyutlandır",
@@ -6202,6 +6900,19 @@
     "group_plugins": "Eklentiler",
     "group_account": "Hesap",
     "switch_to": "{account} hesabına geç"
+  },
+  "menuAudit": {
+    "offline_header": "Çevrimdışısınız. Bazı işlemler bağlantı gerektirir.",
+    "files_new_folder": "Yeni Klasör…",
+    "files_new_file": "Yeni Dosya…",
+    "files_new_text_file": "Yeni Metin Dosyası…",
+    "files_upload_files": "Dosya Yükle…",
+    "files_upload_folder": "Klasör Yükle…",
+    "files_share": "Paylaş…",
+    "files_share_button": "Paylaş",
+    "contacts_add_to_group": "Gruba ekle…",
+    "contacts_bulk_add_to_group": "Gruba ekle…",
+    "schedule_send": "Göndermeyi zamanla…"
   },
   "notification_center": {
     "title": "Bildirimler",
@@ -6337,6 +7048,12 @@
     "sign_language": "İşaret dili",
     "new_tab": "yeni sekmede açılır"
   },
+  "pwaNotify": {
+    "action_archive": "Arşivle",
+    "action_mark_read": "Okundu olarak işaretle",
+    "action_reply": "Yanıtla",
+    "reply_placeholder": "Yanıt yazın"
+  },
   "structured_mail_calendar": {
     "add_to_calendar": "Takvime ekle",
     "update_in_calendar": "Takvimde güncelle",
@@ -6438,5 +7155,567 @@
       "next_issue": "Sonraki yazım veya dil bilgisi hatası",
       "previous_issue": "Önceki yazım veya dil bilgisi hatası"
     }
+  },
+  "pwaWindows": {
+    "open_in_window": "Yeni pencerede aç",
+    "save_all_to_folder": "Tümünü bir klasöre kaydet…",
+    "saved_all": "{count, plural, one {# ek {folder} klasörüne kaydedildi.} other {# ek {folder} klasörüne kaydedildi.}}",
+    "saved_partial": "{total} ekten {saved} tanesi {folder} klasörüne kaydedildi.",
+    "save_failed": "Ekler {folder} klasörüne kaydedilemedi.",
+    "popup_blocked": "Tarayıcı yeni pencereyi engelledi. Bu site için açılır pencerelere izin verip yeniden deneyin.",
+    "opening": "Açılıyor…",
+    "session_ended_title": "Bu pencerede oturumunuz kapalı",
+    "session_ended_body": "Uygulamayı açıp oturum açın, ardından bu pencereyi yeniden açın.",
+    "open_app": "Uygulamayı aç",
+    "close_window": "Pencereyi kapat",
+    "message_gone_title": "Bu ileti artık yok",
+    "message_gone_body": "Silindi veya başka bir hesaba taşındı.",
+    "message_moved": "Bu ileti başka bir klasöre taşındı.",
+    "message_moved_to": "Bu ileti {folder} klasörüne taşındı.",
+    "window_not_ready": "Yeni pencere zamanında açılmadı. Taslağınız burada kalıyor."
+  },
+  "desktopUi": {
+    "settings": {
+      "title": "Uygulama pencereleri",
+      "double_click_label": "İletileri çift tıklamayla yeni pencerede aç",
+      "double_click_description": "Tek tıklama iletiyi yine listenin yanında açar.",
+      "restore_label": "Başlangıçta pencereleri yeniden aç",
+      "restore_description": "Çıkarken açık olan ileti ve taslak pencereleri geri gelir."
+    },
+    "attachment": {
+      "open": "Aç",
+      "save_as": "Farklı kaydet…",
+      "copy": "Kopyala",
+      "copy_failed": "Dosya kopyalanamadı."
+    },
+    "menu": {
+      "file": "Dosya",
+      "edit": "Düzen",
+      "view": "Görünüm",
+      "message": "İleti",
+      "go": "Git",
+      "window": "Pencere",
+      "help": "Yardım",
+      "new_window": "Yeni Pencere",
+      "print": "Yazdır…",
+      "save_pdf": "PDF Olarak Kaydet…",
+      "switch_connection": "Bağlantıyı Değiştir…",
+      "close": "Kapat",
+      "quit": "Çık",
+      "undo": "Geri Al",
+      "redo": "Yinele",
+      "cut": "Kes",
+      "copy": "Kopyala",
+      "paste": "Yapıştır",
+      "select_all": "Tümünü Seç",
+      "search": "E-postalarda Ara",
+      "refresh": "Yeni E-postaları Denetle",
+      "reading_pane": "Okuma Bölmesi",
+      "pane_right": "Sağda",
+      "pane_below": "Listenin Altında",
+      "pane_off": "Kapalı",
+      "zoom_in": "Yakınlaştır",
+      "zoom_out": "Uzaklaştır",
+      "zoom_reset": "Gerçek Boyut",
+      "full_screen": "Tam Ekran",
+      "open_in_window": "Yeni Pencerede Aç",
+      "next_message": "Sonraki İleti",
+      "previous_message": "Önceki İleti",
+      "next_unread": "Sonraki Okunmamış İleti",
+      "mail": "E-posta",
+      "files": "Dosyalar",
+      "back": "Geri",
+      "forward": "İleri",
+      "minimize": "Küçült",
+      "next_window": "Sonraki Pencere",
+      "shortcuts": "Klavye Kısayolları",
+      "docs": "Belgeler",
+      "settings": "Ayarlar…",
+      "about": "Bulwark Hakkında",
+      "from_plugins": "Eklentilerden Daha Fazlası…",
+      "pick_gone": "Bu menü eskimişti. Yeniden açın ve bir kez daha deneyin.",
+      "bar_label": "Menü"
+    },
+    "context": {
+      "add_to_dictionary": "“{word}” sözcüğünü sözlüğe ekle",
+      "no_suggestions": "Öneri yok",
+      "open_link": "Bağlantıyı Aç",
+      "copy_link": "Bağlantıyı Kopyala",
+      "copy_address": "Adresi Kopyala",
+      "save_image": "Resmi Kaydet…",
+      "copy_image": "Resmi Kopyala"
+    },
+    "closing": {
+      "unsaved_title": "Bir taslak kaydedilemedi",
+      "unsaved_detail": "Şimdi kapatırsanız, son kayıttan beri yazdıklarınız kaybolur.",
+      "close_anyway": "Yine de kapat",
+      "unsent_title": "Bazı e-postalar henüz gönderilmedi",
+      "unsent_one": "Bir ileti gönderilmeyi bekliyor. Bulwark’ı bir sonraki açışınızda gönderilir.",
+      "unsent_many": "{count} ileti gönderilmeyi bekliyor. Bulwark’ı bir sonraki açışınızda gönderilir.",
+      "quit": "Çık",
+      "leave_title": "Kaydedilmemiş değişikliklerle ayrılınsın mı?",
+      "leave_detail": "Bu sayfada yaptığınız değişiklikler henüz kaydedilmedi.",
+      "leave": "Ayrıl",
+      "stay": "Kal"
+    },
+    "spellcheck": {
+      "offer": "{language} yazım denetimi için bir sözlük gerekir. Bulwark bunu Google’dan indirebilir. Metniniz gönderilmez.",
+      "download": "İndir"
+    },
+    "restore": {
+      "unavailable_title": "Bu taslak şu anda açılamıyor",
+      "unavailable_body": "Sunucuda, Taslaklar klasöründe güvende. Bağlantı geri geldiğinde yeniden deneyin.",
+      "try_again": "Yeniden dene",
+      "close": "Kapat"
+    }
+  },
+  "desktop_mail": {
+    "context_search_mail": "E-postalarda “{text}” ara"
+  },
+  "mail_p2_desk": {
+    "reader_offline": "Çevrimdışısınız. Bu iletiyi açmak için bağlantı gerekiyor.",
+    "reader_failed": "Bu ileti yüklenemedi.",
+    "retry": "Tekrar dene",
+    "action_offline": "Çevrimdışısınız. Bunun için bağlantı gerekiyor.",
+    "offline_bar": "Çevrimdışısınız. E-postaları okumak ve değiştirmek için bağlantı gerekiyor.",
+    "offline_default_on": "E-postalarınız bu cihazda saklanır, böylece çevrimdışıyken de okuyabilirsiniz."
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Menü çubuğunu her zaman göster",
+    "always_show_description": "Aksi halde Alt tuşuna basınca görünür.",
+    "exit": "Çıkış",
+    "tray_pause": "Bildirimleri duraklat",
+    "tray_pause_hour": "1 saat",
+    "tray_pause_tomorrow": "Yarına kadar",
+    "tray_resume": "Bildirimleri yeniden aç",
+    "tray_open": "Bulwark'ı aç",
+    "tray_quit": "Bulwark'tan çık",
+    "tray_exit": "Bulwark'tan çık"
+  },
+  "desktopMenus": {
+    "save_draft": "Taslağı kaydet",
+    "attach_files": "Dosya ekle…",
+    "shortcut_apps": "Posta, Takvim, Kişiler veya Dosyalar'a git"
+  },
+  "appLock": {
+    "section_title": "Uygulama kilidi",
+    "section_desc": "Bir süre kullanılmadığında her pencerede ve sekmede PIN ister. Kilitliyken uygulama, biri PIN'i girene kadar bu cihazda saklanan postayı okuyamaz.",
+    "enable_label": "PIN ile kilitle",
+    "enable_desc": "PIN bu cihazda kalır.",
+    "protects_desc": "Neye karşı korur: PIN, bu cihazın başındaki birini uygulamanın dışında tutar. Burada saklanan posta, kilidi açtığınızda veya PIN'i değiştirdiğinizde yeni bir anahtar alır; bu biraz sürebilir. Bu bilgisayarda çalışan bir programı, yüklediğiniz bir tarayıcı uzantısını veya uygulamanın dosyalarını kopyalayıp çok sayıda PIN deneyecek zamanı olan birini durduramaz, bu yüzden daha uzun bir PIN'e değer. Masaüstü uygulamasında PIN denemek için bu bilgisayardaki oturumunuz da gerekir. Sunucudaki hesabınız bundan etkilenmez.",
+    "enable_body": "Uygulama her kilitlendiğinde ve yeniden başlattıktan sonra gerekir.",
+    "set_pin_title": "PIN seçin",
+    "change_pin": "PIN'i değiştir…",
+    "change_pin_title": "PIN'i değiştir",
+    "pin_label": "PIN",
+    "pin_current": "Geçerli PIN",
+    "pin_new": "Yeni PIN",
+    "pin_repeat": "PIN'i tekrarlayın",
+    "pin_hint": "En az 6 karakter. Harfler de olur ve daha uzun bir PIN'i tahmin etmek daha zordur.",
+    "pin_obvious": "Bu PIN'i tahmin etmek çok kolay. Tekrarlardan, sıralı dizilerden ve yaygın seçimlerden kaçının.",
+    "pin_mismatch": "İki PIN aynı değil.",
+    "pin_recovery": "Unutursanız tek çözüm bu cihazdaki verileri kaldırıp yeniden oturum açmaktır. Sunucudaki e-postalarınız kalır. Bu cihazda hâlâ gönderilmeyi bekleyen iletiler kaybolur.",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "save_failed": "Olmadı. Yeniden deneyin.",
+    "timeout_label": "Şu süre sonra kilitle",
+    "timeout_desc": "Herhangi bir pencerede veya sekmede kullanılmayan süre.",
+    "lock_now": "Şimdi kilitle",
+    "lock_now_desc": "Tüm pencereleri ve sekmeleri hemen kilitler.",
+    "disable_title": "Uygulama kilidi kapatılsın mı?",
+    "disable_body": "Kapatmak için PIN'inizi girin.",
+    "disable_confirm": "Kapat",
+    "passkey_label": "Geçiş anahtarı",
+    "passkey_desc": "Anahtarı koruyabilen bir geçiş anahtarı veya güvenlik anahtarıyla açın. Hepsi koruyamaz ve PIN çalışmaya devam eder.",
+    "passkey_add": "Geçiş anahtarı ekle…",
+    "passkey_add_title": "Geçiş anahtarı ekle",
+    "passkey_remove": "Kaldır",
+    "passkey_added": "Geçiş anahtarı eklendi.",
+    "passkey_no_prf": "Bu geçiş anahtarı anahtarı koruyamaz. PIN'iniz çalışmaya devam eder.",
+    "passkey_failed": "Geçiş anahtarı çalışmadı. PIN'inizi girin.",
+    "use_passkey": "Geçiş anahtarı kullan",
+    "use_hello": "Windows Hello kullan",
+    "use_touchid": "Touch ID kullan",
+    "os_add": "Aç…",
+    "os_add_title": "{method} kullan",
+    "os_remove": "Kapat",
+    "os_desc": "{method}, uygulamanın yaptığı bir denetimdir. Onaydan sonra uygulama anahtarı bu bilgisayarın şifreli deposundan okur. Kullanıcı hesabınızda çalışan bir program onu orada {method} olmadan da okuyabilir, bu yüzden PIN daha çok korur. PIN çalışmaya devam eder.",
+    "os_failed": "Olmadı. PIN'inizi girin.",
+    "lock_title": "{app} kilitli",
+    "locking": "Kilitleniyor…",
+    "pin_prompt": "Devam etmek için PIN'inizi girin.",
+    "unlock": "Kilidi aç",
+    "unlocking": "Kilit açılıyor…",
+    "wrong_pin": "Bu PIN doğru değil.",
+    "unlock_failed": "Kilit açılamadı. Yeniden deneyin.",
+    "blocked_later": "Çok fazla deneme. Daha sonra yeniden deneyin.",
+    "forgot": "PIN'inizi mi unuttunuz?",
+    "forgot_title": "Yerel veriler kaldırılıp oturum kapatılsın mı?",
+    "forgot_body": "Unutulan PIN kurtarılamaz. Bu işlem bu cihazda tutulan e-postaları kaldırır ve yeniden oturum açabilmeniz için tüm hesapların oturumunu kapatır. Sunucudaki e-postalarınız kalır. Bu cihazda hâlâ gönderilmeyi bekleyen iletiler kaybolur.",
+    "forgot_provider": "Kuruluşunuzun giriş sayfasından oturum açtıysanız o oturum orada açık kalır. Buradaki bir sonraki oturum açma, mümkünse o sayfadan yeni bir giriş ister.",
+    "forgot_confirm": "Kaldır ve oturumu kapat",
+    "unlock_in_main": "Ana pencerede kilidi açın.",
+    "open_main": "Ana pencereye git",
+    "setup_required_title": "Kuruluşunuz uygulama kilidi istiyor",
+    "setup_required_body": "Bir PIN seçin. {app} kilitlendikten sonra açmak için gerekir.",
+    "draft_saved_notice": "Yazdıklarınız kilitlenmeden önce Taslaklar'a kaydedildi.",
+    "use_hello_name": "Windows Hello",
+    "use_touchid_name": "Touch ID",
+    "timeout_option": "{count, plural, one {# dakika} other {# dakika}}",
+    "blocked_seconds": "Çok fazla deneme. {count, plural, one {# saniye} other {# saniye}} sonra yeniden deneyin.",
+    "blocked_minutes": "Çok fazla deneme. {count, plural, one {# dakika} other {# dakika}} sonra yeniden deneyin."
+  },
+  "uxs_general": {
+    "time_zone_common": "Sık kullanılan saat dilimleri",
+    "time_zone_all": "Tüm saat dilimleri",
+    "time_zone_search": "Saat dilimi ara",
+    "time_zone_no_match": "Saat dilimi bulunamadı",
+    "time_zone_desktop_description": "Posta ve randevu saatlerini bu saat diliminde göster. Seçmezseniz bilgisayarınızın saat dilimi kullanılır.",
+    "app_lock_desc_desktop": "Bir süre kullanılmadığında her pencerede PIN ister. Kilitliyken uygulama, biri PIN'i girene kadar bu cihazda saklanan postayı okuyamaz.",
+    "app_lock_timeout_desc_desktop": "Herhangi bir pencerede kullanılmayan süre.",
+    "app_lock_now_desc_desktop": "Tüm pencereleri hemen kilitler.",
+    "app_lock_protects_toggle": "Bu neye karşı korur?",
+    "app_lock_timeout_hours": "{count, plural, one {# saat} other {# saat}}",
+    "desktop_attention_title": "Bu bilgisayarda"
+  },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Adınız",
+      "description": "Birine e-posta gönderdiğinizde bu adı adresinizin yanında görür.",
+      "saved": "Adınız kaydedildi.",
+      "error": "Adınız kaydedilemedi. Yeniden deneyin."
+    },
+    "addresses": {
+      "description": "Gönderebileceğiniz adresler; her birinin kendi adı ve imzası var.",
+      "label": "Adresleriniz",
+      "count": "{count, plural, =0 {Henüz adres yok} one {# adres} other {# adres}}",
+      "manage": "Adresleri düzenle…",
+      "modal_title": "E-posta adresleriniz",
+      "add": "Adres ekle",
+      "edit": "Adresi düzenle",
+      "added": "Adres eklendi.",
+      "saved": "Adres kaydedildi.",
+      "deleted": "Adres silindi.",
+      "delete_title": "Bu adres silinsin mi?"
+    },
+    "signatures": {
+      "title": "İmzalar",
+      "description": "Yazdığınız iletilerin sonuna eklenir. Her adresin kendi imzası vardır.",
+      "saved": "İmza kaydedildi.",
+      "error": "İmza kaydedilemedi. Yeniden deneyin.",
+      "no_addresses": "Henüz gönderebileceğiniz bir adres yok."
+    },
+    "search": {
+      "addresses": "kimlik kimlikler takma ad gönderen gönderen adresi kimden adresi identity alias sender",
+      "signatures": "imza e-posta imzası alt bilgi kimlik gönderen kimden adresi signature",
+      "your_name": "görünen ad tam ad gönderen adı display name"
+    }
+  },
+  "desktop_sign_in": {
+    "server_needed": "Önce sunucu adresini girin.",
+    "server_declined": "Bu sunucuya izin vermediniz, bu yüzden ona hiçbir şey gönderilmedi.",
+    "server_invalid": "Bu sunucu adresi geçerli değil."
+  },
+  "desktop_browser_sign_in": {
+    "button": "Tarayıcınızla oturum açın…",
+    "waiting": "Tarayıcınız bekleniyor…",
+    "waiting_hint": "Oturum açmayı orada tamamlayın. Parola yöneticiniz tarayıcınızda çalışır.",
+    "cancel": "İptal",
+    "or_here": "veya burada oturum açın",
+    "timed_out": "Tarayıcıda oturum açma çok uzun sürdü. Yeniden deneyin.",
+    "no_browser": "Bulwark tarayıcınızı açamadı. Yeniden deneyin veya burada oturum açın.",
+    "failed": "Tarayıcınız üzerinden oturum açılamadı. Yeniden deneyin.",
+    "handoff_banner": "Bu bilgisayardaki bir program bu oturum açmayı Bulwark uygulaması için istedi. Bu tarayıcı Bulwark’ta oturum kapalı kalır. Bunu siz başlatmadıysanız bu sekmeyi kapatın.",
+    "consent_title": "Bulwark uygulamasında oturum açılsın mı?",
+    "consent_description": "Bu bilgisayardaki bir program, {port} bağlantı noktasında, {username} için oturum açma bilgisini istiyor. Yalnızca buradaki Bulwark uygulamasında az önce \"Tarayıcınızla oturum açın…\" düğmesine bastıysanız devam edin. Basmadıysanız biri hesabınıza girmeye çalışıyor olabilir: Şimdi değil seçeneğini seçin.",
+    "consent_confirm": "Uygulamada oturum aç",
+    "consent_cancel": "Şimdi değil",
+    "page_done": "Bu sekmeyi kapatıp Bulwark’a dönebilirsiniz.",
+    "page_failed": "Oturum açılamadı. Bulwark’a dönün ve yeniden deneyin.",
+    "page_link_used": "Bu bağlantı yalnızca bir kez çalışır. Bulwark’a dönün ve yeniden başlayın.",
+    "page_title": "{server} için oturum açın",
+    "page_intro": "Bu sayfa bu bilgisayardaki Bulwark uygulamasından geliyor. Parolanız {server} sunucusuna gider, başka hiçbir yere gitmez.",
+    "page_username": "E-posta adresi veya kullanıcı adı",
+    "page_password": "Parola",
+    "page_code": "İki aşamalı kod",
+    "page_submit": "Oturum aç",
+    "page_wrong_password": "Sunucu bu kullanıcı adını ve parolayı kabul etmedi.",
+    "page_code_needed": "Bu hesap ayrıca iki aşamalı kod istiyor. Parolanızı ve kodu yeniden girin.",
+    "page_no_answer": "Bulwark oturum açamadı. Sunucunun erişilebilir olduğunu denetleyin ve yeniden deneyin.",
+    "declined": "Tarayıcınızda hayır dediniz, bu yüzden oturum açılmadı.",
+    "too_many": "Bu ağdan çok fazla oturum açma denemesi yapıldı. Birkaç dakika bekleyip yeniden deneyin.",
+    "page_declined": "Hiçbir şey aktarılmadı. Bu sekmeyi kapatabilirsiniz."
+  },
+  "uxs_login": {
+    "theme_button": "Açık veya koyu",
+    "server_label": "Posta sunucusu",
+    "server_placeholder": "mail.example.com",
+    "server_looking": "Posta sunucunuz aranıyor…",
+    "server_found": "Posta sunucusu: {server}",
+    "server_change": "Değiştir",
+    "server_change_hint": "Başka bir sunucu adresi yazın.",
+    "server_not_found": "Bu adresin posta sunucusunu bulamadık. Buraya girin, örneğin mail.example.com.",
+    "server_needed": "Posta sunucunuzun adresini girin.",
+    "server_invalid": "Bu bir sunucu adresi değil. mail.example.com gibi yazın.",
+    "email_needed": "Önce e-posta adresinizi girin.",
+    "other_ways": "Diğer oturum açma yolları",
+    "trouble": "Sorun mu var?",
+    "trouble_cors": "Posta sunucunuzun bu web sitesinden oturum açmaya izin vermesi gerekir. Oturum açılamazsa posta sunucunuzu yöneten kişiden buna izin vermesini isteyin.",
+    "provider_unsupported": "{provider}, Bulwark'ın posta sunucularıyla konuştuğu yol olan JMAP'i sunmuyor, bu yüzden Bulwark henüz ona doğrudan bağlanamıyor."
+  },
+  "desktop_updates": {
+    "title": "Güncellemeler",
+    "version_label": "Bulwark {version}",
+    "status_idle": "Bulwark güncellemeleri kendisi arar.",
+    "status_checking": "Güncellemeler aranıyor…",
+    "status_up_to_date": "En son sürüme sahipsiniz.",
+    "status_downloading": "{version} sürümü indiriliyor…",
+    "status_ready": "{version} sürümü hazır. Bir sonraki çıkışta yüklenir veya şimdi yeniden başlatın.",
+    "status_available": "{version} sürümü kullanılabilir.",
+    "status_available_per_machine": "{version} sürümü kullanılabilir. Bulwark bu bilgisayardaki herkes için yüklü, bu yüzden güncellemeleri bir yönetici yükler.",
+    "status_older": "Beta sürümünü kullanıyorsunuz. Kararlı {version} sürümü daha eski, bu yüzden Bulwark kararlı sürüm yetişene kadar bu sürümde kalır.",
+    "status_error": "Güncellemeler aranamadı. Bulwark daha sonra yeniden deneyecek.",
+    "status_off": "Kuruluşunuz uygulama içi güncellemeleri kapattı.",
+    "check": "Şimdi ara",
+    "restart": "Güncellemek için yeniden başlat",
+    "download": "İndir",
+    "install_older": "Eski sürümü yükle…",
+    "channel_label": "Güncelleme kanalı",
+    "channel_description": "Beta sürümleri daha erken gelir ve daha fazla sorun içerebilir.",
+    "channel_stable": "Kararlı",
+    "channel_beta": "Beta",
+    "shell_restart": "Güncellemek için yeniden başlat",
+    "shell_check": "Güncellemeleri denetle…",
+    "shell_available": "Bulwark {version} kullanılabilir",
+    "shell_ready_title": "Bulwark güncellenmeye hazır",
+    "shell_ready_body": "{version} sürümü bir sonraki çıkışta yüklenir. Şimdi yeniden başlatmak için tıklayın. Taslaklarınız önce kaydedilir.",
+    "shell_available_title": "Bulwark’ın yeni bir sürümü var",
+    "shell_none_title": "Bulwark güncel",
+    "shell_none_detail": "{version} sürümüne sahipsiniz.",
+    "shell_failed_title": "Bulwark güncellemeleri denetleyemedi",
+    "shell_failed_detail": "Bağlantınızı kontrol edip daha sonra yeniden deneyin. Hiçbir şey değişmedi.",
+    "shell_beta_title": "Beta sürümlerine geçilsin mi?",
+    "shell_beta_detail": "Yeni sürümleri daha erken alırsınız ve daha fazla sorun içerebilirler. Geri dönmek için eski bir kararlı sürüm yüklersiniz veya kararlı sürümün yetişmesini beklersiniz.",
+    "shell_beta_confirm": "Betaya geç",
+    "shell_older_title": "Bulwark {version} sürümüne dönülsün mü?",
+    "shell_older_detail": "Beta {current} sürümündesiniz. Kararlı {target} daha eski ve betanın bu bilgisayara kaydettiklerini okuyamayabilir. Postanız sunucuda kalır, ancak çevrimdışı saklanan posta yeniden indirilebilir ve gönderilmemiş değişiklikler kaybolabilir. Beklerseniz kararlı sürüm yetişir ve bu adım olmadan geçersiniz.",
+    "shell_older_confirm": "Eski sürümü yükle"
+  },
+  "desktop_keystore": {
+    "title": "Bu bilgisayardaki sertifikalar",
+    "description": "Bu sunucu, sertifikalarınızı ve akıllı kartlarınızı kullanmak isteyebilir. Her sertifika kullanılmadan önce yine de size sorulur.",
+    "label": "Bu sunucunun erişimi",
+    "label_description": "İzninizi geri alın. Sunucunun yeniden sorması gerekir.",
+    "revoke": "Geri al",
+    "revoked": "İzin geri alındı"
+  },
+  "desktop_certificates": {
+    "picker_title": "{host} bir sertifika istiyor",
+    "picker_detail": "Sunucu kim olduğunuzu bilmek istiyor. Seçtiğiniz sertifika yalnızca bu sunucuya gider. Bu sunucuyu tanımıyorsanız göndermeyin.",
+    "picker_issued": "Veren: {issuer}, geçerlilik: {date} tarihine kadar",
+    "picker_remember": "{host} için hatırla",
+    "picker_none": "Sertifika gönderme",
+    "picker_more": "Daha fazla sertifika…"
+  },
+  "desktopOs": {
+    "section_title": "Masaüstü uygulaması",
+    "section_description": "Uygulamanın bilgisayarınızla nasıl çalıştığı.",
+    "close_to_tray_label": "Kapatınca sistem tepsisinde çalışmaya devam et",
+    "close_to_tray_description": "Pencereyi kapattıktan sonra da yeni postalar ve anımsatıcılar gelmeye devam eder.",
+    "start_at_login_label": "Bilgisayarda oturum açınca başlat",
+    "start_at_login_description": "Oturum açtığınızda uygulama kendiliğinden başlar.",
+    "start_minimized_label": "Sistem tepsisinde başlat",
+    "start_minimized_description": "Oturum açarken pencere açılmaz. Sistem tepsisindeki simgeyle açın.",
+    "attention_label": "Yeni postada görev çubuğunu yanıp söndür",
+    "attention_mac_label": "Yeni postada Dock simgesini zıplat",
+    "attention_description": "Yalnızca uygulama önde değilken.",
+    "quiet_hours_label": "Sessiz saatler",
+    "quiet_hours_description": "Bu saatlerde bildirim ve ses yok. Postalar gelmeye devam eder.",
+    "quiet_hours_from": "Başlangıç",
+    "quiet_hours_to": "bitiş",
+    "show_shortcut_label": "Uygulamayı klavye kısayoluyla göster",
+    "show_shortcut_description": "{keys} uygulamayı başka herhangi bir uygulamadan öne getirir.",
+    "show_shortcut_taken": "{keys} başka bir uygulama tarafından kullanılıyor. O uygulamayı kapatın ya da bunu kapatıp yeniden açın.",
+    "default_app_label": "Varsayılan posta uygulaması",
+    "default_app_description": "Posta bağlantılarını ve .eml, .ics, .vcf dosyalarını bu uygulamayla aç.",
+    "default_app_is_default": "Posta bağlantılarınızı bu uygulama açıyor.",
+    "default_app_button": "Varsayılan uygulamayı seç…",
+    "new_mail": "Yeni posta",
+    "no_subject": "(konu yok)",
+    "action_delete": "Sil",
+    "copy_as_file": "Dosya olarak kopyala",
+    "copied": "Dosya kopyalandı. Bir klasöre yapıştırabilirsiniz.",
+    "copy_failed": "Dosya kopyalanamadı.",
+    "reply_lost": "Yazdığınız yanıt korunamadı. İletiyi açıp oradan yanıtlayın."
+  },
+  "ux_pim_menu": {
+    "search_contacts": "Kişilerde ara",
+    "search_files": "Dosyalarda ara",
+    "import": "İçe aktar",
+    "import_mail": "E-posta…",
+    "import_calendar": "Takvim…",
+    "import_contacts": "Kişiler…"
+  },
+  "desktopEdit": {
+    "edit": "Düzenle",
+    "edit_named": "{name} dosyasını düzenle",
+    "opened": "{name} kendi programında açık. Değişikliklerinizi orada kaydedin, ardından bunlarla ne yapılacağı size sorulur.",
+    "offers_label": "Düzenlenen ekler",
+    "changed_title": "{name} değişti",
+    "changed_body": "Başka bir programda değişiklik kaydettiniz. Bunlarla ne yapılsın?",
+    "reply": "Bir yanıta ekle",
+    "new_message": "Yeni bir iletiye ekle",
+    "open_draft": "Taslağı aç",
+    "save_copy": "Kopya kaydet…",
+    "discard": "Değişikliklerden vazgeç…",
+    "discard_title": "{name} üzerindeki değişikliklerden vazgeçilsin mi?",
+    "discard_detail": "Düzenlenen kopya silinir. Asıl ek değişmez.",
+    "discard_confirm": "Vazgeç",
+    "cancel": "İptal",
+    "update": "Eki güncelle",
+    "no_app": "Bu bilgisayardaki hiçbir program bu dosyayı açamıyor.",
+    "blocked_type": "Bu dosya türü düzenlemek için açılamaz, çünkü program olarak çalışabilir.",
+    "blocked_policy": "Kuruluşunuz bu cihaza ek kaydedilmesine izin vermiyor.",
+    "removed_policy": "Kuruluşunuz artık buna izin vermiyor, bu yüzden {name} dosyasının düzenlenen kopyası silindi.",
+    "too_large": "Bu dosya düzenlemek için açılamayacak kadar büyük.",
+    "too_many": "Düzenlemek için çok fazla dosya açık. Önce bazılarını bitirin.",
+    "failed": "Dosya düzenlemek için açılamadı.",
+    "read_busy": "{name} hâlâ başka bir program tarafından kullanılıyor. Orada kapatıp yeniden deneyin.",
+    "read_failed": "{name} dosyasının düzenlenen kopyası okunamadı.",
+    "send_stale_title": "{name} dosyasında bu iletide olmayan değişiklikler var",
+    "send_stale_detail": "Şimdi gönderirseniz ileti eski sürümle gider. Değişiklikleriniz, ne yapacağınıza karar verene kadar en fazla 30 gün bu bilgisayarda kalır.",
+    "send_stale_send": "Yine de gönder",
+    "send_stale_back": "Geri dön",
+    "signout_title": "Oturum kapatılıp değişiklikler silinsin mi?",
+    "signout_confirm": "Oturumu kapat",
+    "lock_note": "Düzenle ile açtığınız dosyalar uygulama kilitliyken kendi programlarında açık kalır ve bu bilgisayarda okunabilir olmayı sürdürür. Yenileri kilidi açana kadar açılamaz.",
+    "changed_title_hidden": "Düzenlenen bir ek kaydedildi",
+    "last_chance": "30 gündür kullanılmadı. Bu kopya yarın silinecek.",
+    "held_named": "{names}: hâlâ başka bir programda açık, bu yüzden kopya henüz silinemiyor. Orada kapatırsanız silinir.",
+    "held_unnamed": "Bir ekin kopyası hâlâ başka bir programda açık ve henüz silinemiyor. Orada kapatırsanız silinir.",
+    "removed_policy_held": "Kuruluşunuz artık buna izin vermiyor. {name} hâlâ başka bir programda açık, bu yüzden kopya ancak orada kapatınca silinebilir.",
+    "removed_policy_hidden": "Kuruluşunuz artık ekleri düzenlemeye izin vermiyor, bu yüzden düzenlenen bir kopya kaldırıldı.",
+    "outside_note": "O programın kurtarma dosyalarını ve son dosyalar listesini bu uygulama temizleyemez.",
+    "clear_title": "Düzenlenen ekler silinsin mi?",
+    "clear_confirm": "Sil",
+    "signout_changed": "Henüz eklenmedi veya kaydedilmedi, şimdi siliniyor: {names}.",
+    "signout_held": "Hâlâ başka bir programda açık, bu yüzden ancak orada kapatınca silinir: {names}."
+  },
+  "desktopQuickCompose": {
+    "label": "Hızlı ileti",
+    "menu": "Hızlı ileti",
+    "description": "{keys}, başka herhangi bir uygulamadan yeni ileti için küçük bir pencere açar.",
+    "description_off": "Başka herhangi bir uygulamadan yeni ileti için küçük bir pencere açar.",
+    "taken": "{keys} başka bir uygulama tarafından kullanılıyor, bu yüzden burada bir şey yapmaz. Başka tuşlar seçin veya o uygulamayı kapatın.",
+    "change": "Tuşları değiştir: {keys}",
+    "recording": "Tuşlara basın…",
+    "recording_hint": "Ctrl (Mac'te Cmd) ile Alt veya Shift tuşunu basılı tutun ve bir harfe, rakama, Enter'a ya da işlev tuşuna basın. Esc iptal eder.",
+    "back_to_main": "Ana pencereye taşı",
+    "back_busy": "Ana pencerede zaten açık bir ileti var. Onu kapatın ve yeniden deneyin.",
+    "back_no_answer": "Ana pencere yanıt vermedi. İletiniz burada kalıyor.",
+    "types_character": "Bu tuşlar klavyenizde bir karakter yazar ve bu karakter hiçbir uygulamada çalışmaz olur. Başka tuşlar deneyin.",
+    "reserved": "Bu tuşları sisteminiz veya çoğu uygulama kullanıyor. Başka tuşlar deneyin."
+  },
+  "compose_windows": {
+    "more_formatting": "Daha fazla biçimlendirme",
+    "offline": "Çevrimdışı",
+    "offline_hint": "Göndermek için bağlantı gerekir.",
+    "offline_hint_outbox": "Şimdi gönderdikleriniz giden kutusunda bekler ve yeniden çevrimiçi olduğunuzda gönderilir.",
+    "offline_send_saved": "Çevrimdışısınız. İleti Taslaklar'a kaydedildi.",
+    "offline_send_unsaved": "Çevrimdışısınız. İleti burada kalır ve yeniden çevrimiçi olduğunuzda Taslaklar'a kaydedilir."
+  },
+  "desktopDevTools": {
+    "section_title": "Sorun giderme",
+    "label": "Geliştirici araçları ({shortcut})",
+    "description": "{shortcut} ve F12 ile bulunduğunuz pencere için geliştirici araçları açılır. Uygulama kilitlenince yeniden kapanır.",
+    "forced_off": "Kuruluşunuz tarafından kapatıldı.",
+    "locked": "Bunu değiştirmek için uygulamanın kilidini açın.",
+    "menu_toggle": "Geliştirici araçlarını göster veya gizle"
+  },
+  "fileDrop": {
+    "overlay_label": "Dosyaları bırakın",
+    "overlay_title": "Dosyalar nereye gitsin?",
+    "overlay_hint": "İptal etmek için seçeneklerin dışına bırakın veya Esc tuşuna basın.",
+    "files_unknown": "Dosyalar",
+    "files_summary": "{count, plural, one {# dosya} other {# dosya}}",
+    "files_summary_size": "{count, plural, one {# dosya} other {# dosya}}, {size}",
+    "zone_attach_here": "Bu iletiye ekle",
+    "zone_insert_inline": "İleti metnine ekle",
+    "zone_new_message": "Yeni bir iletiye ekle",
+    "zone_upload_files": "Dosyalar'a yükle",
+    "zone_upload_folder": "{folder} klasörüne yükle",
+    "zone_calendar": "Takvime ekle",
+    "zone_contacts": "Kişilere ekle",
+    "zone_open_eml": "İletiyi aç",
+    "zone_import_eml": "{folder} klasörüne içe aktar",
+    "note_limit_message": "İleti başına en fazla {size}",
+    "note_limit_file": "Dosya başına en fazla {size}",
+    "note_kept_offline": "Tekrar çevrimiçi olana kadar bu cihazda kalır",
+    "note_needs_connection": "Bağlantı gerekir",
+    "announce": "{files, plural, =0 {Dosyalar} one {# dosya} other {# dosya}} sürüklendi. Seçenekler: {choices}.",
+    "choose_title": "{count, plural, one {Bu dosya nereye gitsin?} other {Bu dosyalar nereye gitsin?}}",
+    "save_first_failed": "Açık ileti kaydedilemedi, bu yüzden uygulama olduğu yerde kaldı.",
+    "import_done": "{count, plural, one {# ileti {folder} klasörüne aktarıldı.} other {# ileti {folder} klasörüne aktarıldı.}}",
+    "import_failed": "{name} içe aktarılamadı.",
+    "too_large_file": "{name} çok büyük. Sınır dosya başına {max}.",
+    "too_large_message": "Bu dosyalar tek bir ileti için çok büyük. Sınır {max}.",
+    "folders_left_out": "Klasörler yalnızca Dosyalar'a gidebilir, bu yüzden dışarıda bırakıldı.",
+    "nothing_here": "Bu dosyalar burada kullanılamaz."
+  },
+  "desktopReminders": {
+    "generic_title": "Anımsatıcı",
+    "snooze": "{count} dk ertele",
+    "snooze_short": "{count} dk",
+    "open": "Aç",
+    "join": "Katıl",
+    "missed_title": "{count, plural, one {Kaçırılan # anımsatıcı} other {Kaçırılan # anımsatıcı}}",
+    "missed_more": "ve {count} tane daha",
+    "missed_show": "Göster",
+    "missed_dialog_title": "Kaçırılan anımsatıcılar",
+    "missed_dialog_description": "Uygulama kapalıyken, bilgisayar uykudayken veya bildirimler duraklatılmışken zamanı geldi.",
+    "open_calendar": "Takvimi aç",
+    "done": "Bitti",
+    "join_host": "Katıl ({host})",
+    "join_named": "Katıl: {title}"
+  },
+  "desktop_policy": {
+    "server_refused": "Kuruluşunuz bu cihazda bu sunucuya izin vermiyor.",
+    "plugin_refused": "Kuruluşunuz bu cihazda bu eklentiye izin vermiyor, bu yüzden çalışmıyor. Ayarları ve verileri korunur.",
+    "install_refused": "Kuruluşunuz bu cihazda bu eklentiye izin vermiyor.",
+    "plugins_label": "Eklentiler",
+    "plugins_off": "Kuruluşunuz bu cihazda eklentileri kapattı.",
+    "plugins_allowlist": "Kuruluşunuz bu cihazda yalnızca belirli eklentilere izin veriyor.",
+    "off": "Kapalı"
+  },
+  "desktopTelemetry": {
+    "section_title": "Kullanım bilgileri ve kilitlenme raporları",
+    "section_description": "İkisi de siz açana kadar kapalıdır ve her birinin kendi anahtarı vardır.",
+    "telemetry_label": "Kullanım bilgilerini gönder",
+    "telemetry_description": "Günde bir kez: rastgele bir kimlik, uygulamanın sürüm numaraları, işletim sisteminiz, uygulamanın ne kadar süredir çalıştığı ve nasıl bağlandığı. Kendi posta sunucunuzda ayrıca hangi özelliklerin açık olduğu, yaklaşık hesap sayısı ve kaç eklenti ile temanız olduğu. Asla e-posta, adres veya sunucu adı gönderilmez.",
+    "crash_label": "Kilitlenme raporlarını gönder",
+    "crash_description": "Uygulamadaki hatalar rastgele bir kimlik, uygulamanın kendi kodundaki dosya adları ve kısa, temizlenmiş iletilerle gönderilir. Uygulamanın kendisi kilitlenirse bir kilitlenme dosyası bu bilgisayarda kalır ve yalnızca siz gönderirseniz çıkar.",
+    "crash_memory": "Kilitlenme dosyası, kilitlenme anında uygulama belleğinin bir bölümünün kopyasıdır. Bulwark bulduğu kullanıcı adlarını, adresleri ve oturum açma belirteçlerini kaldırır ancak kilitlenme dosyası yine de e-postalarınızın metnini içerebilir.",
+    "instance_note": "Bir Bulwark sunucusunda, sayfaların ona ne bildireceğine yöneticisi ayrıca karar verir.",
+    "forced_off": "Kuruluşunuz bunu kapattı.",
+    "url_label": "Kilitlenme dosyalarının gideceği yer",
+    "url_description": "Kilitlenme dosyasını alan https adresi. Bulwark bir adresle gelmez.",
+    "url_invalid": "Tam bir https adresi girin.",
+    "url_save": "Kaydet",
+    "files_label": "Bu bilgisayardaki kilitlenme dosyaları",
+    "files_description": "Bulwark en yenileri saklar ve bir aydan eski olanları siler.",
+    "files_empty": "Kilitlenme dosyası yok.",
+    "file_size": "{size} KB",
+    "send": "Kilitlenme raporunu gönder…",
+    "delete_all": "Tümünü sil",
+    "sent": "Kilitlenme raporu gönderildi.",
+    "send_no_consent": "Önce kilitlenme raporlarını açın.",
+    "send_no_url": "Adres ayarlanmadı, bu yüzden gönderilecek yer yok. Yukarıya bir adres girin.",
+    "send_failed": "Kilitlenme raporu gönderilemedi."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Görev çubuğu simgesinde okunmamış sayısı",
+    "unread_badge_description": "Başka bir uygulamada çalışırken yeni postayı görmeniz için.",
+    "tip_compose_keys": "Yeni bir ileti yazmak için {keys} tuşlarına basın",
+    "tip_palette_keys": "Herhangi bir komutu bulmak için {keys} tuşlarına basın"
   }
 }

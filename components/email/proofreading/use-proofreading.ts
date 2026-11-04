@@ -174,6 +174,9 @@ export function useProofreading({ composerId, sessionKey, editor, textareaRef, p
       ta.addEventListener("paste", now);
       ta.addEventListener("blur", now);
       proofreader.edited("now");
+      // The text is the same, so no new answer will say so: read the issues
+      // again now that the textarea is there.
+      bump();
       return () => {
         ta.removeEventListener("input", typing);
         ta.removeEventListener("paste", now);
@@ -188,6 +191,7 @@ export function useProofreading({ composerId, sessionKey, editor, textareaRef, p
     dom.addEventListener("paste", now);
     editor.on("blur", now);
     proofreader.edited("now");
+    bump();
     return () => {
       editor.off("update", typing);
       dom.removeEventListener("paste", now);

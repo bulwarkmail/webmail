@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useId } from "react";
+import { useState, useCallback, useEffect, useRef, useId } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { buildRecurrenceSummary } from "./recurrence-editor";
 import { Button } from "@/components/ui/button";
@@ -16,12 +16,16 @@ import { toast } from "@/stores/toast-store";
 import { apiFetch } from "@/lib/browser-navigation";
 import { explainServerAuthError } from "@/lib/server-auth-status";
 import { IS_LITE } from "@/lib/lite";
+import { isOfflineNow } from "@/lib/offline/state";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 interface ICalImportModalProps {
   calendars: Calendar[];
   client: IJMAPClient;
   onClose: () => void;
   initialUrl?: string;
+  /** A file opened from the OS: read at once, as if picked here. */
+  initialFile?: File | null;
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -30,8 +34,10 @@ const ACCEPTED_EXTENSIONS = [".ics", ".ical"];
 type ImportStep = "select" | "preview" | "importing";
 type ImportMode = "file" | "url";
 
-export function ICalImportModal({ calendars, client, onClose, initialUrl }: ICalImportModalProps) {
+export function ICalImportModal({ calendars, client, onClose, initialUrl, initialFile }: ICalImportModalProps) {
+  const shownName = useCollectionNames();
   const t = useTranslations("calendar.import");
+  const tLaunch = useTranslations("pwaLaunch");
   const tCal = useTranslations("calendar");
   const locale = useLocale();
   const tForm = useTranslations("calendar.form");
@@ -56,6 +62,15 @@ export function ICalImportModal({ calendars, client, onClose, initialUrl }: ICal
   const dropZoneRef = useRef<HTMLButtonElement>(null);
   const urlInputRef = useRef<HTMLInputElement>(null);
   const targetId = useId();
+  // The file that couldn't be read for lack of a connection, read again when
+  // it is back.
+  const waitingForServer = useRef<File | null>(null);
+
+  // Opened before the calendars had loaded, from a launch: the default once they have.
+  useEffect(() => {
+    if (calendarId || calendars.length === 0) return;
+    setCalendarId((calendars.find((c) => c.isDefault) ?? calendars[0]).id);
+  }, [calendars, calendarId]);
 
   const validateFile = useCallback((file: File): string | null => {
     if (file.size > MAX_FILE_SIZE) return t("file_too_large");
@@ -70,6 +85,16 @@ export function ICalImportModal({ calendars, client, onClose, initialUrl }: ICal
       setError(validationError);
       return;
     }
+
+    // The server reads the file (uploadBlob, then CalendarEvent/parse). Say so
+    // rather than call a good file invalid.
+    const serverUrl = client.getServerUrl();
+    if (isOfflineNow(serverUrl)) {
+      waitingForServer.current = file;
+      setError(tLaunch("ics_needs_server"));
+      return;
+    }
+    waitingForServer.current = null;
 
     setError(null);
     setIsParsing(true);
@@ -91,11 +116,31 @@ export function ICalImportModal({ calendars, client, onClose, initialUrl }: ICal
       setSelectedIndices(new Set(events.map((_, i) => i)));
       setStep("preview");
     } catch {
-      setError(t("invalid_format"));
+      if (isOfflineNow(serverUrl)) {
+        waitingForServer.current = file;
+        setError(tLaunch("ics_needs_server"));
+      } else {
+        setError(t("invalid_format"));
+      }
     } finally {
       setIsParsing(false);
     }
-  }, [client, validateFile, t]);
+  }, [client, validateFile, t, tLaunch]);
+
+  const initialFileRead = useRef(false);
+  useEffect(() => {
+    if (!initialFile || initialFileRead.current) return;
+    initialFileRead.current = true;
+    void handleFile(initialFile);
+  }, [initialFile, handleFile]);
+
+  useEffect(() => {
+    const retry = () => {
+      if (waitingForServer.current) void handleFile(waitingForServer.current);
+    };
+    window.addEventListener("online", retry);
+    return () => window.removeEventListener("online", retry);
+  }, [handleFile]);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -422,7 +467,7 @@ export function ICalImportModal({ calendars, client, onClose, initialUrl }: ICal
                   >
                     {calendars.map((cal) => (
                       <option key={cal.id} value={cal.id}>
-                        {cal.name}
+                        {shownName.calendar(cal)}
                       </option>
                     ))}
                   </select>

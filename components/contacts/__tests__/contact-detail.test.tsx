@@ -68,7 +68,7 @@ describe('ContactDetail', () => {
     render(<ContactDetail contact={typed} onEdit={vi.fn()} onDelete={vi.fn()} />);
     // The test translator returns the key, so a translated label shows up as its key.
     expect(screen.getByText('form.context_work')).toBeInTheDocument();
-    expect(screen.getByText('form.context_private · form.phone_cell, x-sat')).toBeInTheDocument();
+    expect(screen.getByText('ux_pim_contact.context_private · form.phone_cell, x-sat')).toBeInTheDocument();
     // Custom vCard types are shown as stored.
     expect(screen.getByText('form.context_work, x-hq')).toBeInTheDocument();
   });

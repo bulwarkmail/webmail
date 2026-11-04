@@ -21,6 +21,7 @@ export const BUILT_IN_HOSTNAMES: readonly string[] = [
   'www.google.com',
   'randomuser.me',
   'img.freepik.com',
+  'redirector.gvt1.com',
 ];
 
 function hostnameOf(url: string): string | null {

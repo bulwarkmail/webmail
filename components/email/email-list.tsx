@@ -1,5 +1,6 @@
 "use client";
 
+import { spamApplicableIn } from "@/lib/spam-applicable";
 import { Email, ThreadGroup } from "@/lib/jmap/types";
 import { MemoizedThreadListItem, listMailboxRole } from "./thread-list-item";
 import { ListColumnsHeader } from "./list-columns";
@@ -14,11 +15,18 @@ import { ViewSourceDialog } from "./view-source-dialog";
 import { useCopyToAccount, useEmailExport, requestPrint } from "@/hooks/use-message-file-actions";
 import { BatchTagButton } from "./batch-tag-button";
 import { cn, cleanPreview } from "@/lib/utils";
-import { Trash2, Mail, MailX, MailOpen, Loader2, SearchX, AlertTriangle, CalendarClock, ShieldCheck, ShieldAlert, Archive, MoreVertical, X, FolderX, Fish } from "@/components/icons";
+import { Trash2, Mail, MailX, MailOpen, Loader2, SearchX, AlertTriangle, CalendarClock, ShieldCheck, ShieldAlert, Archive, MoreVertical, X, FolderX, Fish, FolderInput, CheckSquare } from "@/components/icons";
+import { createPortal } from "react-dom";
+import { ContextMenu } from "@/components/ui/context-menu";
+import { MoveFolderList, moveMenuIsEmpty, useMoveMenu } from "./move-target-list";
+import { useChooseMoveFolder } from "./move-to-dialog";
+import { resolveMoveOwnerAccountId } from "@/lib/move-targets";
+import { getMailboxPath } from "@/lib/utils";
 import { usePhishingReport } from "@/hooks/use-phishing-report";
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
+import { batchToastTitle, selectionRowCount } from "@/lib/selection-toast";
 import { Spinner } from "@/components/ui/spinner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useArchiveActionEnabled } from "@/lib/archive-gate";
@@ -27,8 +35,11 @@ import { useEmailStore, resolveEmailBlobContext, ArchiveMailboxNotFoundError, re
 import { useRemoveFromFolder } from "@/hooks/use-remove-from-folder";
 import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "@/stores/auth-store";
+import { useOpenEmailInWindow } from "@/hooks/use-popouts-available";
+import { useIsDesktop } from "@/hooks/use-media-query";
+import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { useSettingsStore } from "@/stores/settings-store";
-import { useListRowShape } from "@/hooks/use-list-row-shape";
+import { useListRowShape, showsPreviewOnSubjectLine } from "@/hooks/use-list-row-shape";
 import { MailListRowsSkeleton, type MailRowShape } from "@/components/boot-skeleton/mail-skeleton";
 import type { Density } from "@/lib/density";
 import { useUIStore } from "@/stores/ui-store";
@@ -37,10 +48,12 @@ import { emailKeyFor, groupEmailsByThread, sortThreadGroups, threadKeyFor, getEm
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useTranslations } from "next-intl";
+import { localizeMailboxName } from "@/lib/mailbox-label";
 import { toast } from "@/stores/toast-store";
 import { confirmMailRemoval } from "@/lib/mail-removal-confirm";
 import { markSelectionReadWithUndo, runBatchEmailAction, setSelectionTagWithUndo, toastWithUndo, undoLabels, undoMoveAction } from "@/lib/email-action-toast";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { measureVisibleRow } from "@/lib/virtual-row-measure";
 import { TagDisplayContext, useMeasuredTagDisplay } from "@/hooks/use-tag-display";
 import { SearchChips } from "@/components/search/search-chips";
 import { isFilterEmpty, DEFAULT_SEARCH_FILTERS } from "@/lib/jmap/search-utils";
@@ -48,7 +61,7 @@ import { getOwnAddresses } from "@/lib/filters/quick-rule-target";
 import { emitThreadExpand } from "@/lib/plugin-thread-expand";
 import { normalizeAddress } from "@/lib/filters/quick-rules";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
-import { PluginListFilters } from "./plugin-list-filters";
+import { PluginListFilters, useFolderListFiltered } from "./plugin-list-filters";
 import { PluginActions, useFolderAccountKind } from "@/components/plugins/plugin-actions";
 import { useUnreadFirstSection } from "@/hooks/use-unread-first-section";
 import { useTimeoutWhileMounted } from "@/hooks/use-timeout-while-mounted";
@@ -77,6 +90,11 @@ interface EmailListProps {
   hasMore?: boolean;
   isLoadingMoreItems?: boolean;
   onOpenConversation?: (thread: ThreadGroup) => void;
+  /**
+   * The reading pane shows the whole conversation: a row opens its newest
+   * message there instead of unfolding the thread in the list.
+   */
+  conversationInReader?: boolean;
   onReply?: (email: Email) => void;
   onReplyAll?: (email: Email) => void;
   onForward?: (email: Email) => void;
@@ -110,6 +128,11 @@ interface EmailListProps {
    * list, so the separate bar that would otherwise slide in here is redundant.
    */
   hideBatchToolbar?: boolean;
+  /**
+   * The empty reading pane's slot for the selection: the list draws the
+   * selection's count and buttons there too (mail-10).
+   */
+  selectionPaneHost?: HTMLElement | null;
 }
 
 /**
@@ -121,8 +144,11 @@ type ListItem =
   | { kind: 'header'; section: 'unread' | 'rest' }
   | { kind: 'unread-empty' };
 
+/** The most messages "Select all N conversations" loads to tick them (mail-p2-11). */
+const SELECT_ALL_LIMIT = 5000;
+
 /** Below this width the batch toolbar drops its labels (see batchNarrow). */
-const BATCH_TOOLBAR_WIDE = 480;
+const BATCH_TOOLBAR_WIDE = 640;
 
 // Declared out here so re-renders of the list keep the same element. Inside
 // EmailList every render made a new component, which remounted the skeleton
@@ -149,6 +175,7 @@ export function EmailList({
   hasMore,
   isLoadingMoreItems,
   onOpenConversation,
+  conversationInReader = false,
   onReply,
   onReplyAll,
   onForward,
@@ -174,14 +201,21 @@ export function EmailList({
   onCancelScheduledForEdit,
   onCancelScheduledSend,
   onRescheduleScheduled,
+  selectionPaneHost = null,
 }: EmailListProps) {
   const t = useTranslations('email_list');
   const tContextMenu = useTranslations('context_menu');
+  const openInWindow = useOpenEmailInWindow();
   const tSpam = useTranslations('email_viewer.spam');
   const tNotifications = useTranslations('notifications');
   const tViewer = useTranslations('email_viewer');
   const tSidebar = useTranslations('sidebar');
+  const tListExtra = useTranslations('mail_list_extra');
+  const tRoot = useTranslations();
+  const tUnread = useTranslations('account_unread');
   const mountainViewList = useSettingsStore((state) => state.interfaceLayout === 'mountain-view');
+  const isDesktopPane = useIsDesktop();
+  const isEmbeddedList = useIsEmbedded();
   const undo = undoLabels(tNotifications);
   const tRemove = useTranslations('email_list.confirm_remove');
   const { client } = useAuthStore(useShallow((state) => ({ client: state.client })));
@@ -255,7 +289,7 @@ export function EmailList({
     mailboxes.find(m => m.id === selectedMailbox)?.role
     ?? (isUnifiedView ? (unifiedRole ?? undefined) : undefined);
   // Spam is pointless on your own outgoing mail, as in the context menu.
-  const spamApplicable = !['sent', 'drafts', 'scheduled'].includes(effectiveMailboxRole || '');
+  const spamApplicable = spamApplicableIn(effectiveMailboxRole);
 
   const disableThreading = useSettingsStore((state) => state.disableThreading);
   // The order the current folder view was fetched in (#718), so thread
@@ -435,14 +469,14 @@ export function EmailList({
     const rows: ListRow[] = [];
     for (const thread of threadGroups) {
       rows.push({ key: emailKeyFor(thread.latestEmail), members: thread.emails.map(emailKeyFor) });
-      if (thread.emails.length > 1 && expandedThreadIds.has(thread.threadKey) && !isMobile) {
+      if (thread.emails.length > 1 && expandedThreadIds.has(thread.threadKey) && !isMobile && !conversationInReader) {
         for (const email of threadEmailsCache.get(thread.threadKey) ?? thread.emails) {
           rows.push({ key: emailKeyFor(email), members: [emailKeyFor(email)] });
         }
       }
     }
     setListRows(rows);
-  }, [threadGroups, expandedThreadIds, threadEmailsCache, isMobile, setListRows]);
+  }, [threadGroups, expandedThreadIds, threadEmailsCache, isMobile, conversationInReader, setListRows]);
   useEffect(() => () => setListRows(null), [setListRows]);
 
   // The virtualizer's guesses follow the rows' shape (see useListRowShape).
@@ -458,17 +492,22 @@ export function EmailList({
     // up after a jump down (scrollbar drag, End). So guess per row.
     const latest = item?.kind === 'row' ? item.thread.latestEmail : undefined;
     let size = { 'extra-compact': 32, compact: 60, regular: 84, comfortable: 104 }[density];
-    if (showPreview && density !== 'extra-compact') {
+    if (showsPreviewOnSubjectLine({ showPreview, density, isMobile, mountainView: mountainViewList })) {
+      // The preview follows the subject on its line, and the subject line
+      // drops its margin (mail-15).
+      size -= 4;
+    } else if (showPreview && density !== 'extra-compact') {
       // A mail without a preview draws a one-line "No preview available",
-      // a line (23px) shorter than a real one.
+      // a line (23px) shorter than a real one. Only comfortable rows show a
+      // second preview line (mail-15).
       const emptyPreview = !!latest && !cleanPreview(latest.preview) && !latest.searchSnippet?.preview;
-      size += emptyPreview ? 36 - 23 : 36;
+      size += emptyPreview || density !== 'comfortable' ? 36 - 23 : 36;
     }
     // The chip row (attachments, verification code): a 22px chip plus 6px margin.
     const hasCode = !!latest && showVerificationCodes && !!listVerificationCode(latest);
     if (latest && (hasCode || (onOpenAttachment && listRowShowsChips(latest, loadAttachments)))) size += 28;
     return size;
-  }, [density, isFocusedMailLayout, showPreview, showVerificationCodes, items, onOpenAttachment, loadAttachments]);
+  }, [density, isFocusedMailLayout, showPreview, showVerificationCodes, items, onOpenAttachment, loadAttachments, isMobile, mountainViewList]);
 
   // Stable per list, so the virtualizer does not rebuild every row's
   // measurement on each scroll render.
@@ -493,8 +532,7 @@ export function EmailList({
     // Keep sub-pixel row heights. The default measurer rounds them, so a
     // row could start up to half a pixel inside the one above it and paint
     // over that row's divider (at 125% or 150% display scaling).
-    measureElement: (element, entry) =>
-      entry?.borderBoxSize?.[0]?.blockSize ?? element.getBoundingClientRect().height,
+    measureElement: measureVisibleRow,
   });
 
 
@@ -532,6 +570,9 @@ export function EmailList({
   );
   const bulkActionContext = useMemo(() => ({ emailIds: selectedEmailIds }), [selectedEmailIds]);
   const folderAccountKind = useFolderAccountKind();
+  // A filter chip or a category tab on: the folder itself may well have mail.
+  const pluginFilterOn = useFolderListFiltered(effectiveMailboxRole ?? null, folderAccountKind);
+  const listNarrowed = pluginFilterOn || useMessageListTabsStore.getState().getCategoryFilter(effectiveMailboxRole) !== null;
   // "Remove from this folder" (#615): offered for a selection only when every
   // selected message is also in another folder.
   const removeFromFolder = useRemoveFromFolder();
@@ -540,6 +581,9 @@ export function EmailList({
     () => (hasSelection ? resolveSelectedEmails({ emails, threadEmailsCache, selectedEmailKeys }) : []),
     [hasSelection, emails, threadEmailsCache, selectedEmailKeys],
   );
+  // The rows the selection covers: what the bar, the pane and the toasts
+  // count (mail-18). A conversation row ticks all its loaded messages.
+  const selectionRows = selectionRowCount(selectedEmailsForRemoval, selectedEmailKeys.size, disableThreading);
   // Report phishing for the selection, one report per message (enterprise pack).
   const selectionPhishing = usePhishingReport(selectedEmailsForRemoval, effectiveMailboxRole);
   const tPhishing = useTranslations('phishing_report');
@@ -649,11 +693,11 @@ export function EmailList({
     if (!client || isProcessing) return;
     if (!(await confirmMailRemoval('archive', selectedEmailKeys.size, confirmDialog, tRemove))) return;
     setIsProcessing(true);
-    const count = selectedEmailKeys.size;
+    const rows = selectionRows;
     const restore = restoreBatchesForSelection(client);
     try {
       await runBatchEmailAction(() => batchArchive(client), {
-        success: tNotifications('emails_archived', { count }),
+        success: batchToastTitle(tRoot, 'archive', rows, disableThreading),
         error: tNotifications('error_archiving'),
         describeError: (error) => error instanceof ArchiveMailboxNotFoundError
           ? tViewer('archive_mailbox_not_found')
@@ -668,14 +712,16 @@ export function EmailList({
   const handleBatchMoveToMailbox = async (mailboxId: string) => {
     if (!client || isProcessing) return;
     setIsProcessing(true);
-    const count = selectedEmailKeys.size;
+    const rows = selectionRows;
     // Undo puts the messages back; those a mixed-account list moved to
     // another account move back the same way (the receipts).
     const restore = restoreBatchesForSelection(client);
     const receipts: CrossAccountMoveReceipt[] = [];
     try {
+      const destination = mailboxes.find((m) => m.id === mailboxId);
       await runBatchEmailAction(() => batchMoveToMailbox(client, mailboxId, undefined, receipts), {
-        success: tNotifications('emails_moved', { count }),
+        // "3 conversations moved to Family" (mail-18).
+        success: batchToastTitle(tRoot, 'move', rows, disableThreading, destination ? getMailboxPath(destination, mailboxes) : undefined),
         error: tNotifications('move_failed'),
         undo: undoMoveAction(client, restore, undo, receipts),
       });
@@ -709,11 +755,11 @@ export function EmailList({
     }
 
     setIsProcessing(true);
-    const count = selectedEmailKeys.size;
+    const rows = selectionRows;
     const restore = isInTrash ? null : restoreBatchesForSelection(client);
     try {
       await runBatchEmailAction(() => batchDelete(client, isInTrash), {
-        success: tNotifications('emails_deleted', { count }),
+        success: batchToastTitle(tRoot, isInTrash ? 'delete' : 'trash', rows, disableThreading),
         error: tNotifications('error_deleting'),
         undo: undoMoveAction(client, restore, undo),
       });
@@ -722,8 +768,144 @@ export function EmailList({
     }
   };
 
+  // Move on the selection bar (mail-10): the folders the selection's own
+  // context menu offers, with the selection's account first (#1149).
+  const moveMenu = useContextMenu<null>();
+  const selectionMoveModel = useMoveMenu(mailboxes, {
+    currentMailboxId: selectedMailbox,
+    ownerAccountId: resolveMoveOwnerAccountId(selectedEmailsForRemoval[0], mailboxes, selectedMailbox),
+    emails: selectedEmailsForRemoval,
+  });
+  const chooseMoveFolder = useChooseMoveFolder();
+  // One read/unread button: "Mark as read" while any selected message is unread.
+  const selectionHasUnread = selectedEmailsForRemoval.some((email) => !email.keywords?.$seen);
+
+  // Archive, Delete, Move, Mark read/unread and Tag, on the bar and in the
+  // reading pane. The pane's copies get their own test ids.
+  const selectionButtons = (where: 'bar' | 'pane') => {
+    const testId = (id: string) => (where === 'bar' ? id : `pane-${id}`);
+    // The pane has room: its buttons say what they do (mail-p2-15). The
+    // bar beside the list stays icons with tooltips.
+    const labelled = where === 'pane';
+    const shape = labelled ? { size: 'sm' as const, title: '', className: 'gap-1.5' } : {};
+    const name = (label: string) => (labelled ? <span data-selection-label="">{label}</span> : null);
+    return (
+      <>
+        {archiveActionEnabled && effectiveMailboxRole !== 'archive' && (
+          <IconButton label={tContextMenu('archive')} onClick={() => void handleBatchArchive()} disabled={isProcessing} data-testid={testId('batch-archive')} {...shape}>
+            <Archive />
+            {name(tContextMenu('archive'))}
+          </IconButton>
+        )}
+        <IconButton
+          label={t('batch_actions.delete')}
+          onClick={handleBatchDelete}
+          disabled={isProcessing}
+          data-testid={testId('batch-delete')}
+          {...shape}
+          className={cn("text-destructive hover:text-destructive hover:bg-destructive/10", labelled && "gap-1.5")}
+        >
+          <Trash2 />
+          {name(t('batch_actions.delete'))}
+        </IconButton>
+        {!moveMenuIsEmpty(selectionMoveModel) && (
+          <IconButton
+            label={tContextMenu('move_to')}
+            aria-haspopup="menu"
+            aria-expanded={moveMenu.contextMenu.isOpen}
+            onClick={(e) => moveMenu.openContextMenuFrom(e.currentTarget, null, 'end')}
+            disabled={isProcessing}
+            data-testid={testId('batch-move')}
+            {...shape}
+          >
+            <FolderInput />
+            {name(tContextMenu('move_to'))}
+          </IconButton>
+        )}
+        <IconButton
+          label={selectionHasUnread ? t('batch_actions.mark_read') : t('batch_actions.mark_unread')}
+          onClick={() => handleBatchMarkAsRead(selectionHasUnread)}
+          disabled={isProcessing}
+          data-testid={testId('batch-mark-read')}
+          {...shape}
+        >
+          {selectionHasUnread ? <MailOpen /> : <Mail />}
+          {name(selectionHasUnread ? t('batch_actions.mark_read') : t('batch_actions.mark_unread'))}
+        </IconButton>
+        <BatchTagButton
+          showLabel={labelled}
+          key={hasSelection ? 'selection' : 'none'}
+          title={tContextMenu('tag')}
+          selectedIds={selectionTags.all}
+          partialIds={selectionTags.some}
+          scope={selectionTags.scope}
+          onToggle={handleBatchToggleTag}
+          active={hasSelection && !isScheduledView}
+          disabled={isProcessing}
+          testId={testId('batch-tag')}
+        />
+      </>
+    );
+  };
+  // What the bar and the pane call the selection: conversations, as the list
+  // shows them, or emails when conversations are off.
+  const selectionTitle = disableThreading
+    ? t('batch_actions.selected_messages', { count: selectedEmailKeys.size })
+    : tListExtra('selected_conversations', { count: selectionRows });
+
   const currentMailbox = mailboxes.find(m => m.id === selectedMailbox);
   const isEmptyableFolder = currentMailbox?.role === 'trash' || currentMailbox?.role === 'junk';
+
+  // Every loaded row ticked and more on the server: offer the rest, as Gmail
+  // does (mail-p2-11). Taking it loads the remaining pages and ticks them,
+  // so the batch actions, their Undo and their counts work as for any
+  // selection. At most SELECT_ALL_LIMIT messages are loaded for it.
+  const [selectingAll, setSelectingAll] = useState(false);
+  const allLoadedSelected = hasSelection && emails.length > 0 && emails.every((e) => selectedEmailKeys.has(emailKeyFor(e)));
+  const offerSelectAll = allLoadedSelected && footerHasMore && !isScheduledView && !hideBatchToolbar && !!client
+    && emails.length < SELECT_ALL_LIMIT;
+  const inPlainFolder = !!currentMailbox && !searchQuery.trim() && isFilterEmpty(searchFilters) && !isUnifiedView;
+  const viewTotal = Math.max(
+    inPlainFolder
+      ? (disableThreading ? currentMailbox.totalEmails : (currentMailbox.totalThreads || currentMailbox.totalEmails))
+      : totalEmails,
+    selectionRows + 1,
+  );
+  const selectAllLabel = inPlainFolder
+    ? tRoot(disableThreading ? 'mail_p2_list.select_all_emails_in_folder' : 'mail_p2_list.select_all_in_folder', {
+        count: viewTotal,
+        folder: localizeMailboxName(currentMailbox.role, currentMailbox.name, (k) => tSidebar(`mailboxes.${k}`)),
+      })
+    : tRoot(disableThreading ? 'mail_p2_list.select_all_emails' : 'mail_p2_list.select_all_conversations', { count: viewTotal });
+  const handleSelectAllInView = async () => {
+    if (!client || selectingAll) return;
+    const view = () => {
+      const state = useEmailStore.getState();
+      return `${state.selectedMailbox}|${state.searchQuery}|${state.isUnifiedView}|${state.unifiedRole}`;
+    };
+    const startedIn = view();
+    setSelectingAll(true);
+    try {
+      for (let pages = 0; pages < 1000; pages++) {
+        const state = useEmailStore.getState();
+        if (view() !== startedIn || state.selectedEmailKeys.size === 0) return;
+        if (!state.hasMoreEmails || state.emails.length >= SELECT_ALL_LIMIT) break;
+        if (state.isLoadingMore) {
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          continue;
+        }
+        const before = state.emails.length;
+        await state.loadMoreEmails(client);
+        const after = useEmailStore.getState();
+        if (after.emails.length === before && !after.isLoadingMore) break;
+      }
+      // Another folder opened or the selection was cleared meanwhile: leave it.
+      if (view() !== startedIn || useEmailStore.getState().selectedEmailKeys.size === 0) return;
+      useEmailStore.getState().selectAllEmails();
+    } finally {
+      setSelectingAll(false);
+    }
+  };
 
   const handleEmptyFolder = async () => {
     if (!client || isProcessing || !currentMailbox) return;
@@ -914,7 +1096,8 @@ export function EmailList({
         )}
         {thread && <MemoizedThreadListItem
           thread={thread}
-          isExpanded={expandedThreadIds.has(thread.threadKey)}
+          isExpanded={!conversationInReader && expandedThreadIds.has(thread.threadKey)}
+          conversationInReader={conversationInReader}
           selectedEmailKey={selectedEmailKey}
           isLoading={isLoadingThread === thread.threadKey}
           expandedEmails={threadEmailsCache.get(thread.threadKey)}
@@ -980,6 +1163,13 @@ export function EmailList({
     `${items.length}:${renderedRows[0]?.index ?? -1}-${renderedRows[renderedRows.length - 1]?.index ?? -1}:${expandedThreadIds.size}:${paged ? page : -1}`,
   );
 
+  // Room under the last row for the round Compose button, which would otherwise
+  // sit on that row's actions (Mountain View has no such button, and a desktop
+  // has Compose in the folder sidebar instead). A spacer and
+  // not padding on the list: padding is a minimum height the list can't go
+  // under, and on a short screen it pushed the rows over the tab bar.
+  const composeButtonRoom = !mountainViewList && (!isDesktopPane || isEmbeddedList) ? <div aria-hidden="true" className="h-20" /> : null;
+
   return (
     <TagDisplayContext.Provider value={tagDisplay}>
     <div className={cn("flex flex-col min-h-0", className)}>
@@ -991,34 +1181,23 @@ export function EmailList({
         inert={!(hasSelection && !isScheduledView && !hideBatchToolbar)}
         className={cn(
           "transition-all duration-300 ease-in-out overflow-hidden",
-          hasSelection && !isScheduledView && !hideBatchToolbar ? "max-h-16 opacity-100" : "max-h-0 opacity-0"
+          hasSelection && !isScheduledView && !hideBatchToolbar ? (offerSelectAll || selectingAll ? "max-h-28 opacity-100" : "max-h-16 opacity-100") : "max-h-0 opacity-0"
         )}
       >
         {/* Only drawn while shown: collapsed it would still render every button. */}
         {hasSelection && !isScheduledView && !hideBatchToolbar && (
         <div className={cn("py-2 border-b bg-accent/30 border-border flex items-center justify-between gap-2", batchNarrow ? "px-2" : "px-4")} data-batch-narrow={batchNarrow ? "" : undefined}>
           <div className="flex items-center gap-2 min-w-0 animate-in fade-in slide-in-from-left-3 duration-300">
-            <span className="text-sm font-medium text-foreground whitespace-nowrap truncate">
-              {t('batch_actions.selected_messages', { count: selectedEmailKeys.size })}
+            {/* "5 conversations": the bar is narrow beside its buttons. */}
+            <span className="text-sm font-medium text-foreground whitespace-nowrap truncate" title={selectionTitle}>
+              {disableThreading ? selectionTitle : tListExtra('conversation_count', { count: selectionRows })}
             </span>
           </div>
           <div className={cn("flex items-center flex-shrink-0 animate-in fade-in slide-in-from-right-3 duration-300", batchNarrow ? "gap-0" : "gap-0.5")}>
-            {/* The context menu's batch entries, in its order (R6). What
-                doesn't fit a narrow bar is in its ⋮, which is that menu. */}
-            {archiveActionEnabled && effectiveMailboxRole !== 'archive' && (
-              <IconButton label={tContextMenu('archive')} onClick={() => void handleBatchArchive()} disabled={isProcessing} data-testid="batch-archive">
-                <Archive />
-              </IconButton>
-            )}
-            <IconButton
-              label={t('batch_actions.delete')}
-              onClick={handleBatchDelete}
-              disabled={isProcessing}
-              data-testid="batch-delete"
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-            >
-              <Trash2 />
-            </IconButton>
+            {/* Archive, Delete, Move, Mark read/unread, Tag, then what
+                fits a wide bar. The rest is in its ⋮, the selection's
+                context menu (R6). */}
+            {selectionButtons('bar')}
             {selectionCanLeaveFolder && !batchNarrow && (
               <IconButton
                 label={tContextMenu('remove_from_folder')}
@@ -1029,16 +1208,6 @@ export function EmailList({
                 <FolderX />
               </IconButton>
             )}
-            <BatchTagButton
-              key={hasSelection ? 'selection' : 'none'}
-              title={tContextMenu('tag')}
-              selectedIds={selectionTags.all}
-              partialIds={selectionTags.some}
-              scope={selectionTags.scope}
-              onToggle={handleBatchToggleTag}
-              active={hasSelection && !isScheduledView}
-              disabled={isProcessing}
-            />
             {spamApplicable && !batchNarrow && (
               <IconButton
                 label={effectiveMailboxRole === 'junk' ? tContextMenu('not_spam') : tContextMenu('mark_as_spam')}
@@ -1058,16 +1227,6 @@ export function EmailList({
               >
                 <Fish />
               </IconButton>
-            )}
-            {!batchNarrow && (
-              <>
-                <IconButton label={t('batch_actions.mark_read')} onClick={() => handleBatchMarkAsRead(true)} disabled={isProcessing}>
-                  <MailOpen />
-                </IconButton>
-                <IconButton label={t('batch_actions.mark_unread')} onClick={() => handleBatchMarkAsRead(false)} disabled={isProcessing}>
-                  <Mail />
-                </IconButton>
-              </>
             )}
             <IconButton
               label={t('batch_actions.more')}
@@ -1118,6 +1277,19 @@ export function EmailList({
           </div>
         </div>
         )}
+        {hasSelection && !isScheduledView && !hideBatchToolbar && (offerSelectAll || selectingAll) && (
+          <div className="px-4 py-1.5 border-b border-border bg-accent/20 text-center text-sm" data-testid="select-all-in-view">
+            <button
+              type="button"
+              onClick={() => void handleSelectAllInView()}
+              disabled={selectingAll}
+              aria-busy={selectingAll || undefined}
+              className="text-primary font-medium hover:underline disabled:no-underline disabled:opacity-70"
+            >
+              {selectingAll ? tRoot('mail_p2_list.selecting_all') : selectAllLabel}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Advanced Search Filter Chips */}
@@ -1141,17 +1313,18 @@ export function EmailList({
 
       {/* Empty Folder Banner for Junk/Trash */}
       {isEmptyableFolder && emails.length > 0 && !hasSelection && (
-        <div className="px-4 py-2 border-b border-border bg-muted/30 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <AlertTriangle className="w-4 h-4" />
-            <span>{currentMailbox?.role === 'junk' ? t('empty_folder.junk_hint') : t('empty_folder.trash_hint')}</span>
+        <div className="px-4 py-2 border-b border-border bg-muted/30 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0 text-sm text-muted-foreground">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            {/* Named as in the sidebar ("Spam"), not by the server ("Junk"). */}
+            <span>{tUnread('empty_hint', { folder: localizeMailboxName(currentMailbox?.role, currentMailbox?.name ?? '', (k) => tSidebar(`mailboxes.${k}`)) })}</span>
           </div>
           <Button
             variant="outline"
             size="sm"
             onClick={handleEmptyFolder}
             disabled={isProcessing}
-            className="text-destructive border-destructive/30 hover:bg-destructive/10 text-xs"
+            className="shrink-0 whitespace-nowrap text-destructive border-destructive/30 hover:bg-destructive/10 text-xs"
           >
             {isProcessing ? (
               <Loader2 className="w-3 h-3 animate-spin me-1" />
@@ -1168,7 +1341,7 @@ export function EmailList({
         <PluginListFilters
           mailboxRole={effectiveMailboxRole ?? null}
           accountKind={folderAccountKind}
-          onChange={() => { if (client) void useEmailStore.getState().fetchEmails(client); }}
+          onChange={() => { clearSelection(); if (client) void useEmailStore.getState().fetchEmails(client); }}
         />
       )}
 
@@ -1190,9 +1363,7 @@ export function EmailList({
         // Where the focus goes when the message it was on is deleted,
         // archived or moved (components/layout/focus-rescue).
         data-focus-fallback=""
-        // Room under the last row for the round Compose button, which would
-        // otherwise sit on that row's actions (Mountain View has no such button).
-        className={cn("flex-1 overflow-y-auto bg-background relative outline-none", !mountainViewList && "pb-20")}
+        className="flex-1 min-h-0 overflow-y-auto bg-background relative outline-none"
         data-tour="email-list"
         // The column header above keeps the same gutter, so its titles stay over the columns.
         style={listColumns ? { scrollbarGutter: 'stable' } : undefined}
@@ -1222,7 +1393,7 @@ export function EmailList({
             <EmptyState
               icon={isScheduledView ? CalendarClock : isSearching ? SearchX : MailX}
               title={isScheduledView ? t('no_scheduled_emails') : isSearching ? t('no_search_results') : t('no_emails')}
-              description={isScheduledView ? t('no_scheduled_emails_description') : isSearching ? t('no_search_results_description') : t('no_emails_description')}
+              description={isScheduledView ? t('no_scheduled_emails_description') : isSearching ? t('no_search_results_description') : listNarrowed ? undefined : t('no_emails_description')}
               actions={!isScheduledView && isSearching && onClearSearch ? (
                 <Button size="sm" variant="outline" onClick={onClearSearch}>{tSidebar('clear_search')}</Button>
               ) : !isScheduledView && !isSearching && effectiveMailboxRole === 'drafts' && onCompose ? (
@@ -1256,6 +1427,7 @@ export function EmailList({
                   {footerIsLoadingMore ? t('loading_more') : t('pages.next')}
                 </Button>
               </nav>
+              {composeButtonRoom}
             </>
           ) : (
           <>
@@ -1312,14 +1484,66 @@ export function EmailList({
                 </div>
               )}
             </div>}
+            {composeButtonRoom}
           </>
           )
         )}
       </div>
 
+      {/* The selection's Move menu, from the bar or the reading pane. */}
+      {hasSelection && (
+        <ContextMenu
+          ref={moveMenu.menuRef}
+          isOpen={moveMenu.contextMenu.isOpen}
+          position={moveMenu.contextMenu.position}
+          onClose={moveMenu.closeContextMenu}
+          label={tContextMenu('move_to')}
+        >
+          <div className="w-64 max-w-full">
+            <MoveFolderList
+              model={selectionMoveModel}
+              onPick={(mailboxId) => { moveMenu.closeContextMenu(); void handleBatchMoveToMailbox(mailboxId); }}
+              onChooseFolder={chooseMoveFolder
+                ? () => { moveMenu.closeContextMenu(); chooseMoveFolder({ emails: selectedEmailsForRemoval, onMove: (mailboxId) => void handleBatchMoveToMailbox(mailboxId) }); }
+                : undefined}
+            />
+          </div>
+        </ContextMenu>
+      )}
+
+      {/* The reading pane for a selection: its count and the bar's buttons (mail-10). */}
+      {selectionPaneHost && hasSelection && !isScheduledView && createPortal(
+        <section aria-label={selectionTitle} className="text-center" data-testid="selection-pane">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-background shadow-lg flex items-center justify-center">
+            <CheckSquare className="w-10 h-10 text-muted-foreground" />
+          </div>
+          <h2 className="text-xl font-semibold text-foreground mb-4">{selectionTitle}</h2>
+          <div className="flex flex-wrap items-center justify-center gap-1">
+            {selectionButtons('pane')}
+            <IconButton
+              label={t('batch_actions.more')}
+              aria-haspopup="menu"
+              data-testid="pane-batch-more"
+              disabled={isProcessing || selectedEmailsForRemoval.length === 0}
+              onClick={(e) => {
+                const anchor = selectedEmailsForRemoval[0];
+                if (anchor) openContextMenuFrom(e.currentTarget, anchor, 'end');
+              }}
+            >
+              <MoreVertical />
+            </IconButton>
+          </div>
+          <Button variant="ghost" size="sm" onClick={clearSelection} disabled={isProcessing} className="mt-4 text-muted-foreground hover:text-foreground">
+            {t('batch_actions.clear_selection')}
+          </Button>
+        </section>,
+        selectionPaneHost,
+      )}
+
       {/* Context Menu */}
       {contextMenuEmail && (
         <EmailContextMenu
+          rowMenu
           email={contextMenuEmail}
           position={contextMenu.position}
           isOpen={contextMenu.isOpen}
@@ -1360,6 +1584,7 @@ export function EmailList({
               : [contextMenuEmail!];
             await copyToAccount(emails, accountId, mailboxId);
           }}
+          onOpenInWindow={openInWindow && contextMenuEmail ? () => openInWindow(contextMenuEmail) : undefined}
           // Export, print and View source follow the device policy of the row's own account.
           onExport={contextMenuEmail && !canExport(contextMenuEmail) ? undefined : () => {
             const target = contextMenuEmail!;

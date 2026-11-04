@@ -359,7 +359,18 @@ export type CalendarHoverPreview = 'off' | 'instant' | 'delay-500ms' | 'delay-1s
  */
 export type MonthTimedEventStyle = 'bar' | 'text' | 'dot';
 export const MONTH_TIMED_EVENT_STYLES: readonly MonthTimedEventStyle[] = ['bar', 'text', 'dot'];
-export type SendDelaySeconds = 0 | 10 | 30 | 60;
+export type SendDelaySeconds = 0 | 5 | 10 | 30 | 60;
+/**
+ * The undo send windows a setting may hold. The page offers Off, 5, 10 and
+ * 30 seconds; 60 was offered before and stays valid for those who chose it.
+ */
+export const SEND_DELAY_SECONDS: readonly SendDelaySeconds[] = [0, 5, 10, 30, 60];
+const isSendDelaySeconds = (value: unknown): value is SendDelaySeconds =>
+  SEND_DELAY_SECONDS.includes(value as SendDelaySeconds);
+/** The choices the settings pages offer: 60 only to someone who has it. */
+export function undoSendOptions(current: SendDelaySeconds): SendDelaySeconds[] {
+  return SEND_DELAY_SECONDS.filter((seconds) => seconds !== 60 || current === 60);
+}
 export type ProtocolOpenMode = 'active-session' | 'new-tab';
 
 /**
@@ -763,6 +774,7 @@ interface SettingsState extends AccessibilitySettings {
   senderFavicons: boolean;
   showAvatarsInJunk: boolean; // Show profile images/favicons in the junk folder
   faviconUnreadBadge: boolean; // Badge the browser-tab icon with the inbox unread count
+  unreadBadgeAllAccounts: boolean; // That badge (and the desktop tray) counts every signed-in account's inbox, not only the open one
 
   // Sidebar
   colorfulSidebarIcons: boolean; // Tint folder icons by role (inbox blue, junk red, etc.)
@@ -973,7 +985,8 @@ const DEFAULT_SETTINGS = {
   writingLanguage: 'auto',
   rtlEditingSupport: false,
   subAddressDelimiter: DEFAULT_SUB_ADDRESS_DELIMITER,
-  sendDelaySeconds: 0 as SendDelaySeconds,
+  // Undo send is on out of the box, as in other mail apps (v13).
+  sendDelaySeconds: 5 as SendDelaySeconds,
   signaturePosition: 'below_quote' as SignaturePosition,
   // On, as before the toggles existed: saved settings and server copies
   // from older builds lack these keys and fall back to this default.
@@ -1009,7 +1022,10 @@ const DEFAULT_SETTINGS = {
   hiddenCompanyCalendars: [] as string[],
 
   // Calendar Tasks
-  enableCalendarTasks: false,
+  // On: tasks show where the server has calendars (pim-8). Both Stalwarts
+  // keep tasks as CalendarEvent objects of @type Task, with no capability
+  // of their own to check.
+  enableCalendarTasks: true,
   showTasksOnCalendar: true,
 
   // Contact Birthday Calendar
@@ -1068,6 +1084,7 @@ const DEFAULT_SETTINGS = {
   senderFavicons: true,
   showAvatarsInJunk: false,
   faviconUnreadBadge: true,
+  unreadBadgeAllAccounts: true,
 
   // Sidebar
   colorfulSidebarIcons: true,
@@ -1182,7 +1199,7 @@ function isPolicySettingKey(key: string): boolean {
 function isAllowedPolicyValue(key: string, value: unknown, restriction?: SettingRestriction): boolean {
   if (!isPolicySettingKey(key) || typeof value !== typeof builtInDefault(key)) return false;
   if (typeof value === 'number' && !Number.isFinite(value)) return false;
-  if (key === 'sendDelaySeconds' && ![0, 10, 30, 60].includes(value as number)) return false;
+  if (key === 'sendDelaySeconds' && !isSendDelaySeconds(value)) return false;
   if (key === 'subAddressDelimiter' && !isValidSubAddressDelimiter(value as string)) return false;
   if (key === 'messageListOrderScope' && value !== 'inbox' && value !== 'all') return false;
   if (key === 'searchDefaultScope' && !isSearchDefaultScope(value)) return false;
@@ -1390,6 +1407,7 @@ export const useSettingsStore = create<SettingsState>()(
           deleteAction: state.deleteAction,
           returnToListAfterAction: state.returnToListAfterAction,
           confirmBulkDelete: state.confirmBulkDelete,
+          permanentlyDeleteJunk: state.permanentlyDeleteJunk,
           clearSearchOnFolderChange: state.clearSearchOnFolderChange,
           searchDefaultScope: state.searchDefaultScope,
           showPreview: state.showPreview,
@@ -1482,6 +1500,7 @@ export const useSettingsStore = create<SettingsState>()(
           senderFavicons: state.senderFavicons,
           showAvatarsInJunk: state.showAvatarsInJunk,
           faviconUnreadBadge: state.faviconUnreadBadge,
+          unreadBadgeAllAccounts: state.unreadBadgeAllAccounts,
           colorfulSidebarIcons: state.colorfulSidebarIcons,
           tintListRowsByTag: state.tintListRowsByTag,
           tintListRowsByAccount: state.tintListRowsByAccount,
@@ -1576,7 +1595,10 @@ export const useSettingsStore = create<SettingsState>()(
       },
 
       resetToDefaults: () => {
-        set(DEFAULT_SETTINGS);
+        // The choice to keep settings in sync stays: the confirm says other
+        // devices change only when sync is on (settings-p2-18), and a reset
+        // turning sync back on would push these defaults to all of them.
+        set({ ...DEFAULT_SETTINGS, settingsSyncDisabled: get().settingsSyncDisabled });
         // The defaults of this instance are the operator's, then the build's.
         applyAdminPolicyPatch();
         applyVisualSettings();
@@ -1626,6 +1648,8 @@ export const useSettingsStore = create<SettingsState>()(
           migrateAnimationsSetting(settings);
           migrateNotificationSoundDefault(settings);
           migrateTintListRowsDefault(settings);
+          migrateCalendarTasksDefault(settings);
+          migrateUndoSendDefault(settings);
           migrateAttachmentPosition(settings);
 
           // Apply settings, noting which keys were taken over for the
@@ -1644,7 +1668,7 @@ export const useSettingsStore = create<SettingsState>()(
               if (key === 'subAddressDelimiter' && !isValidSubAddressDelimiter(settings[key])) {
                 return;
               }
-              if (key === 'sendDelaySeconds' && ![0, 10, 30, 60].includes(settings[key])) {
+              if (key === 'sendDelaySeconds' && !isSendDelaySeconds(settings[key])) {
                 put(key, { sendDelaySeconds: 0 });
                 return;
               }
@@ -1702,6 +1726,10 @@ export const useSettingsStore = create<SettingsState>()(
                 return;
               }
               if (key === 'searchDefaultScope' && !isSearchDefaultScope(settings[key])) {
+                return;
+              }
+              // Anything but a real true must not turn on deleting junk for good.
+              if (key === 'permanentlyDeleteJunk' && typeof settings[key] !== 'boolean') {
                 return;
               }
               if (DEVICE_LOCAL_SETTING_KEYS.has(key)) {
@@ -2038,7 +2066,7 @@ export const useSettingsStore = create<SettingsState>()(
     },
     {
       name: 'settings-storage',
-      version: 12,
+      version: 13,
       migrate: migrateSettings,
       onRehydrateStorage: () => {
         return (state) => {
@@ -2061,6 +2089,8 @@ export const useSettingsStore = create<SettingsState>()(
             if (!Array.isArray(state.explicitSettings)) {
               state.explicitSettings = [];
             }
+            // Stored before tasks were on by default; no version step of its own.
+            migrateCalendarTasksDefault(state as unknown as Record<string, unknown>);
             state.notificationMutes = normalizeNotificationMutes(state.notificationMutes);
             state.messageListOrder = sanitizeSortLevels(state.messageListOrder);
             if (state.messageListOrderScope !== 'inbox' && state.messageListOrderScope !== 'all') {
@@ -2089,13 +2119,15 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
           state.density = state.listDensity;
           delete state.listDensity;
         }
-        if (![0, 10, 30, 60].includes(state.sendDelaySeconds as number)) {
+        if (!isSendDelaySeconds(state.sendDelaySeconds)) {
           state.sendDelaySeconds = 0;
         }
         if (version < 3 && typeof state.protocolOpenMode !== 'string' && typeof state.protocolMailtoOpenMode === 'string') {
           state.protocolOpenMode = state.protocolMailtoOpenMode;
         }
         delete state.protocolMailtoOpenMode;
+        // Plain wording became the only wording: the switch is gone.
+        delete state.plainLanguage;
         // Never read: drafts save 2 s after the last change.
         delete state.autoSaveDraftInterval;
         // v4: `dateFormat` was repurposed from 'regional'|'iso'|'custom' to
@@ -2149,6 +2181,8 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
         // taken as chosen below.
         migrateNotificationSoundDefault(state);
         migrateTintListRowsDefault(state);
+        migrateCalendarTasksDefault(state);
+        migrateUndoSendDefault(state);
         // The old default must not be taken as chosen below either.
         migrateAttachmentPosition(state);
         // v8: admin policy defaults (#1248) skip settings the user chose.
@@ -2213,6 +2247,30 @@ export function migrateTintListRowsDefault(state: Record<string, unknown>): void
   if (!chosen) state.tintListRowsByTag = false;
 }
 
+/**
+ * v13: undo send is on by default, with 5 seconds. Off (0) that the user
+ * never picked was only the old default and moves to 5; Off they picked
+ * stays. Imports and server copies from older builds still carry the 0 and
+ * go through this too.
+ */
+export function migrateUndoSendDefault(state: Record<string, unknown>): void {
+  if (state.sendDelaySeconds !== 0) return;
+  const chosen = Array.isArray(state.explicitSettings) && state.explicitSettings.includes('sendDelaySeconds');
+  if (!chosen) state.sendDelaySeconds = 5;
+}
+
+/**
+ * Tasks are on by default (pim-8). Off that the user never chose was only
+ * the old default and turns on; off they chose stays off. Imports and
+ * server copies from older builds still carry the old default and go
+ * through this too.
+ */
+export function migrateCalendarTasksDefault(state: Record<string, unknown>): void {
+  if (state.enableCalendarTasks !== false) return;
+  const chosen = Array.isArray(state.explicitSettings) && state.explicitSettings.includes('enableCalendarTasks');
+  if (!chosen) state.enableCalendarTasks = true;
+}
+
 // Helper functions to apply settings to DOM
 
 /** The settings applyAccessibilityTo() writes onto <html>. */
@@ -2271,9 +2329,8 @@ if (typeof window !== 'undefined') {
   applyInterfaceLayout(store.interfaceLayout, store.density);
 
   // The service worker shows push notifications without this store, so it
-  // reads the sound preference from its own Cache store (#1289).
-  // Do not disturb can't keep a push from showing (browsers require one per
-  // push), but it keeps it silent.
+  // reads the sound preference from its own Cache store (#1289). Whether they
+  // show at all goes per login (NotificationActionsHost).
   const pushSound = (s: SettingsState) => s.emailNotificationsEnabled && s.emailNotificationSound && !s.doNotDisturb;
   let lastPushSound = pushSound(store);
   void writePushPreferences({ sound: lastPushSound });

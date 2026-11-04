@@ -28,6 +28,8 @@ const OPTIONAL: Partial<Record<SettingsSearchTab, string>> = {
   contacts: "boot-no-settings-contacts:hidden",
   files: "boot-no-files:hidden boot-no-settings-files:hidden",
   addons: "boot-no-settings-addons:hidden",
+  // Not in the static Lite build.
+  offline: "boot-no-settings-offline:hidden",
 };
 
 /** A line of text as tall as its line box, so rows keep the real height. */
@@ -65,7 +67,7 @@ function SettingsNav({ embedded }: { embedded: boolean }) {
   return (
     <div
       aria-hidden="true"
-      className="border-e border-border bg-secondary flex flex-col shrink-0"
+      className="border-e border-border bg-secondary flex flex-col shrink-0 max-lg:max-w-52"
       style={{ width: "var(--boot-settings-nav-w, 256px)" }}
     >
       {embedded ? null : (
@@ -163,7 +165,7 @@ function SettingsPage({ sections }: { sections: number }) {
 /** A phone header row: back arrow, title, then the ⋮ menu and the avatar (PhoneHeaderActions). */
 function PhoneHeader({ list }: { list: boolean }) {
   return (
-    <div className="flex items-center gap-2 px-4 h-14 border-b border-border bg-background shrink-0">
+    <div data-window-row-right="" className="flex items-center gap-2 px-4 h-14 border-b border-border bg-background shrink-0">
       <span className="grid place-items-center h-11 w-11 shrink-0">
         <ArrowLeft className="w-5 h-5" />
       </span>
@@ -264,19 +266,24 @@ function PhonePage() {
 export function SettingsSkeletonBody({ embedded = false }: { embedded?: boolean }) {
   return (
     <div
-      className={cn("flex-1 min-w-0 min-h-0 flex", embedded ? "h-full" : "flex-col lg:flex-row")}
+      className={cn("flex-1 min-w-0 min-h-0 flex", embedded ? "h-full" : "flex-col desk:flex-row")}
       data-embedded={embedded ? "" : undefined}
     >
-      <div className={cn("flex-1 min-w-0 min-h-0", embedded ? "flex" : "hidden lg:flex")}>
+      <div className={cn("flex-1 min-w-0 min-h-0", embedded ? "flex" : "hidden desk:flex")}>
         <SettingsNav embedded={embedded} />
         <div aria-hidden="true" className="flex-1 min-w-0 overflow-hidden">
+          {embedded ? null : (
+            <div data-window-only="" data-window-row-right="" className="items-center gap-2 h-14 box-content border-b border-border px-2 sm:px-4 lg:px-6 shrink-0">
+              <Line className="text-sm" bar="h-3.5" w="6rem" />
+            </div>
+          )}
           <div className="max-w-3xl mx-auto px-6 py-6">
             <SettingsPage sections={3} />
           </div>
         </div>
       </div>
       {embedded ? null : (
-        <div className="flex flex-col flex-1 min-h-0 lg:hidden">
+        <div className="flex flex-col flex-1 min-h-0 desk:hidden">
           <PhoneList />
           <PhonePage />
         </div>
@@ -292,10 +299,9 @@ export function SettingsSkeleton({ label, labels }: SettingsSkeletonProps) {
       surface="settings"
       label={label}
       labels={labels}
-      railBelow="lg"
       active="settings"
       // Mountain View: the page sits on a card inset from the canvas.
-      rowClassName="lg:mv:mb-4 lg:mv:mx-4 lg:mv:rounded-[var(--mv-card-radius)] lg:mv:bg-background"
+      rowClassName="desk:mv:mb-4 desk:mv:mx-4 desk:mv:rounded-[var(--mv-card-radius)] desk:mv:bg-background"
     >
       <SettingsSkeletonBody />
     </AppShellSkeleton>

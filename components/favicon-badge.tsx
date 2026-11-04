@@ -1,9 +1,9 @@
 "use client";
 
-import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useFaviconBadge } from "@/hooks/use-favicon-badge";
 import { useAppBadge } from "@/hooks/use-app-badge";
+import { useAllInboxesUnread } from "@/hooks/use-all-inboxes-unread";
 
 /**
  * Badges the browser-tab favicon, and — where supported — the installed PWA's
@@ -27,16 +27,14 @@ import { useAppBadge } from "@/hooks/use-app-badge";
  * Renders nothing.
  */
 export function FaviconBadge() {
-  // The store's canonical inbox selector. `role === 'inbox'` alone is not
-  // enough: shared and group inboxes ship in the same `mailboxes` array, so on
-  // a delegated setup the first match can be somebody else's inbox.
-  const inboxUnread = useEmailStore(
-    (s) => s.mailboxes.find((m) => m.role === "inbox" && !m.isShared)?.unreadEmails ?? 0,
-  );
   const enabled = useSettingsStore((s) => s.faviconUnreadBadge);
+  // With several accounts the badge counts the inbox of each (on by default):
+  // new mail in an account that is not on screen still shows on the icon and
+  // in the desktop tray.
+  const count = useAllInboxesUnread();
 
-  useFaviconBadge(inboxUnread, enabled);
-  useAppBadge(inboxUnread, enabled);
+  useFaviconBadge(count, enabled);
+  useAppBadge(count, enabled);
 
   return null;
 }

@@ -10,8 +10,8 @@ import { LITE_OAUTH_AVAILABLE, getLiteOAuthRedirectUri } from "@/lib/auth/lite-o
 import { AlertCircle } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
-import { buildMobileHandoffUrl, mobileHandoffTarget } from "@/lib/auth/mobile-handoff";
-import { confirmMobileHandoffCodeUrl } from "@/lib/auth/mobile-handoff-client";
+import { buildMobileHandoffUrl, desktopHandoffDeclineUrl, desktopHandoffPort, desktopHandoffTarget, handoffTarget } from "@/lib/auth/mobile-handoff";
+import { confirmMobileHandoffCodeUrl, discardDesktopSignIn } from "@/lib/auth/mobile-handoff-client";
 import { MobileHandoffConsent } from "@/components/auth/mobile-handoff-consent";
 import { MailSkeleton } from "@/components/boot-skeleton/mail-skeleton";
 import { useSkeletonLabels } from "@/components/boot-skeleton/use-skeleton-labels";
@@ -30,7 +30,21 @@ function OAuthCallbackInner() {
     url: string | null;
     resolveUrl?: () => Promise<string | null>;
     username: string;
+    /** The desktop app's: what ends it, if the user says no or leaves. */
+    desktop?: { code: string; target: string; state: string };
   } | null>(null);
+  // Unanswered, and the tab goes: the tokens the server parked go too. A yes has left this
+  // to the app, and "Not now" has already said.
+  const desktopPending = pendingHandoff?.desktop;
+  const desktopAnswered = useRef(false);
+  useEffect(() => {
+    if (!desktopPending) return;
+    const leave = () => {
+      if (!desktopAnswered.current) discardDesktopSignIn(desktopPending.code);
+    };
+    window.addEventListener("pagehide", leave);
+    return () => window.removeEventListener("pagehide", leave);
+  }, [desktopPending]);
   // The authorization code is single-use. React's development double effect
   // ran this twice: the second pass no longer saw the pairing re-auth flag
   // (the first had removed it) and spent the code on the login flow instead.
@@ -151,7 +165,7 @@ function OAuthCallbackInner() {
       let mobileRedirectUri = "";
       let mobileState: string | null = null;
       try {
-        mobileRedirectUri = mobileHandoffTarget(sessionStorage.getItem("mobile_redirect_uri"));
+        mobileRedirectUri = handoffTarget(sessionStorage.getItem("mobile_redirect_uri"));
         mobileState = sessionStorage.getItem("mobile_state");
       } catch { /* sessionStorage may be unavailable */ }
 
@@ -184,14 +198,22 @@ function OAuthCallbackInner() {
                 sessionStorage.removeItem("mobile_redirect_uri");
                 sessionStorage.removeItem("mobile_state");
               } catch { /* ignore */ }
+              const desktopTarget = desktopHandoffTarget(mobileRedirectUri);
               setPendingHandoff({
                 url: null,
-                resolveUrl: () => confirmMobileHandoffCodeUrl({
-                  target: mobileRedirectUri,
-                  code: handoffCode,
-                  state: handoffState,
-                }),
-                username: typeof data.server_url === "string" ? data.server_url : "",
+                resolveUrl: () => {
+                  desktopAnswered.current = true;
+                  return confirmMobileHandoffCodeUrl({
+                    target: mobileRedirectUri,
+                    code: handoffCode,
+                    state: handoffState,
+                  });
+                },
+                ...(desktopTarget ? { desktop: { code: handoffCode, target: desktopTarget, state: handoffState } } : {}),
+                // Who is being handed over, where the server could say. Its address otherwise.
+                username: desktopTarget && typeof data.account === "string" && data.account
+                  ? data.account
+                  : typeof data.server_url === "string" ? data.server_url : "",
               });
               return;
             }
@@ -266,12 +288,22 @@ function OAuthCallbackInner() {
           url={pendingHandoff.url}
           resolveUrl={pendingHandoff.resolveUrl ?? null}
           username={pendingHandoff.username}
+          desktopPort={pendingHandoff.desktop ? desktopHandoffPort(pendingHandoff.desktop.target) : undefined}
           onError={() => {
             setPendingHandoff(null);
             setError("token_exchange_failed");
           }}
           onCancel={() => {
+            const desktop = pendingHandoff.desktop;
             setPendingHandoff(null);
+            if (desktop) {
+              // Ends the flow here and at the app. A plain login page from here would be a way
+              // to get a browser session nobody asked for.
+              desktopAnswered.current = true;
+              discardDesktopSignIn(desktop.code);
+              window.location.replace(desktopHandoffDeclineUrl(desktop.target, desktop.state));
+              return;
+            }
             router.push(toRouterPath(`${getPathPrefix(params.locale as string)}/${params.locale}/login`));
           }}
         />

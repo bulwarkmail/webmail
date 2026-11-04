@@ -232,9 +232,8 @@ function mockClient() {
 }
 
 async function saveViaCloseDialog(requestCloseRef: React.MutableRefObject<((afterClose?: () => void) => void) | null>) {
+  // Closing saves the draft; no question unless the save fails.
   act(() => requestCloseRef.current!(vi.fn()));
-  const dialog = await screen.findByRole('alertdialog');
-  fireEvent.click(within(dialog).getByText('save'));
 }
 
 describe('composer message priority (#970)', () => {

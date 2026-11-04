@@ -185,6 +185,8 @@ describe('api.vacation', () => {
   it('reads the reply', async () => {
     expect(await call(READ_ONLY, 'vacation.get')).toEqual({
       isEnabled: true, subject: 'Away', textBody: 'Back in June', htmlBody: '', fromDate: null, toDate: '2026-06-01T00:00:00Z',
+      // No forward is set up for the out-of-office.
+      forwardActive: false,
     });
   });
 

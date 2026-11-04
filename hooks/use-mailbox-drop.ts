@@ -57,7 +57,7 @@ interface UseMailboxDropReturn {
 }
 
 export function useMailboxDrop({ mailbox, accountId, onDropComplete, onSuccess, onError }: UseMailboxDropOptions): UseMailboxDropReturn {
-  const t = useTranslations("notifications");
+  const tListExtra = useTranslations("mail_list_extra");
   const [isOver, setIsOver] = useState(false);
   const { client } = useAuthStore(useShallow((state) => ({ client: state.client })));
   const { moveEmailsToMailbox, crossAccountMoveEmails, selectedEmailKeys, clearSelection, refreshCurrentMailbox, mailboxes } = useEmailStore(useShallow((state) => ({
@@ -82,6 +82,9 @@ export function useMailboxDrop({ mailbox, accountId, onDropComplete, onSuccess, 
 
     // Virtual nodes (shared folder headers) cannot be drop targets
     if (mailbox.id.startsWith("shared-")) return false;
+
+    // Drafts holds what's being written: no Move list offers it either.
+    if (mailbox.role === "drafts") return false;
 
     return true;
   }, [isDragging, mailbox, sourceMailboxId]);
@@ -232,9 +235,9 @@ export function useMailboxDrop({ mailbox, accountId, onDropComplete, onSuccess, 
         onSuccess(emailIds.length, mailboxPath, restore, receipts);
       } else {
         if (emailIds.length === 1) {
-          toast.success(t("email_moved"), t("moved_to_mailbox", { mailbox: mailboxPath }));
+          toast.success(tListExtra("moved_to", { mailbox: mailboxPath }));
         } else {
-          toast.success(t("emails_moved", { count: emailIds.length }), t("moved_to_mailbox", { mailbox: mailboxPath }));
+          toast.success(tListExtra("moved_count_to", { count: emailIds.length, mailbox: mailboxPath }));
         }
       }
 
@@ -252,7 +255,7 @@ export function useMailboxDrop({ mailbox, accountId, onDropComplete, onSuccess, 
     } finally {
       endDrag();
     }
-  }, [client, mailbox, accountId, mailboxes, isValidTarget, moveEmailsToMailbox, crossAccountMoveEmails, draggedEmails, sourceMailboxId, selectedEmailKeys, clearSelection, refreshCurrentMailbox, endDrag, markDropped, onDropComplete, onSuccess, onError, t]);
+  }, [client, mailbox, accountId, mailboxes, isValidTarget, moveEmailsToMailbox, crossAccountMoveEmails, draggedEmails, sourceMailboxId, selectedEmailKeys, clearSelection, refreshCurrentMailbox, endDrag, markDropped, onDropComplete, onSuccess, onError, tListExtra]);
 
   const valid = isValidTarget();
 

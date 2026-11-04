@@ -52,6 +52,26 @@ export function FilterPanelHost({
   );
 }
 
+/** Below this the form's labelled rows leave its date and size fields a few characters wide. */
+const MIN_PANEL_WIDTH = 480;
+const VIEWPORT_MARGIN = 8;
+
+/**
+ * Where the panel goes for a given search field: under it, sharing its leading
+ * edge and width. The field shrinks with the window, so a narrow one gets a
+ * panel wider than itself, growing towards the trailing side and kept on screen.
+ */
+export function filterPanelBox(
+  rect: { left: number; right: number; bottom: number; width: number },
+  viewportWidth: number,
+  rtl: boolean,
+): CSSProperties {
+  const width = Math.max(rect.width, Math.min(MIN_PANEL_WIDTH, viewportWidth - VIEWPORT_MARGIN * 2));
+  const preferred = rtl ? rect.right - width : rect.left;
+  const left = Math.max(VIEWPORT_MARGIN, Math.min(preferred, viewportWidth - width - VIEWPORT_MARGIN));
+  return { top: rect.bottom + 4, left, width };
+}
+
 /** The anchor's leading edge, width and bottom, kept current as the bar resizes. */
 function useAnchorBox(anchor: HTMLElement | null): CSSProperties | null {
   const [box, setBox] = useState<CSSProperties | null>(null);
@@ -62,8 +82,7 @@ function useAnchorBox(anchor: HTMLElement | null): CSSProperties | null {
       return;
     }
     const measure = () => {
-      const rect = anchor.getBoundingClientRect();
-      setBox({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+      setBox(filterPanelBox(anchor.getBoundingClientRect(), window.innerWidth, getComputedStyle(anchor).direction === "rtl"));
     };
     measure();
 

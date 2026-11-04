@@ -65,4 +65,12 @@ describe('Settings > Calendar on a phone', () => {
     expect(screen.queryByRole('button', { name: 'title' })).toBeNull();
     expect(screen.getByRole('button', { name: 'add_calendar' })).toBeInTheDocument();
   });
+
+  // settings-p2-21: at 800 px the three buttons ran 4 px past the edge.
+  it('lets the New, Import and Subscribe buttons wrap when a row is too narrow', () => {
+    render(<CalendarManagementSettings />);
+    const row = screen.getByTestId('calendar-create-buttons');
+    expect(row.className).toMatch(/(^|\s)sm:flex-wrap(\s|$)/);
+    expect(row.querySelectorAll('button')).toHaveLength(3);
+  });
 });

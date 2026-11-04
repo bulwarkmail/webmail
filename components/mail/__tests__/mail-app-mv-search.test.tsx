@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Email, Mailbox } from '@/lib/jmap/types';
 import { useAuthStore } from '@/stores/auth-store';
@@ -22,6 +22,7 @@ vi.mock('@/components/layout/mv-top-bar', () => ({
     <>
       <button onClick={() => search.onSubmit('invoice')}>stub search</button>
       <button onClick={() => search.onSelectContact({ email: 'bob@example.org' }, 'from')}>stub contact</button>
+      <input aria-label="stub search field" data-search-input />
     </>
   ),
 }));
@@ -128,5 +129,15 @@ describe('searching in Mountain View while a message is open', () => {
     fireEvent.click(screen.getByText('stub filter search'));
     await waitFor(() => expect(advancedSearch).toHaveBeenCalled());
     expect(selectedId()).toBeNull();
+  });
+
+  it('leaves the message open for the / shortcut, whose field is in the top bar', async () => {
+    render(<MailApp />);
+    await screen.findByText('message viewer');
+    act(() => { fireEvent.keyDown(window, { key: '/' }); });
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByLabelText('stub search field')));
+    // Long enough for a go-back that runs after the field is focused.
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
+    expect(selectedId()).toBe('m1');
   });
 });

@@ -7,7 +7,7 @@ import type {
   Calendar,
   CalendarTask,
 } from '@/lib/jmap/types';
-import { parseDuration } from '@/components/calendar/event-card';
+import { parseDuration } from '@/lib/calendar-event-normalization';
 
 export interface PendingAlert {
   eventId: string;

@@ -1,6 +1,6 @@
 {
   "name": "bulwark-webmail",
-  "version": "1.19.1",
+  "version": "1.20.0",
   "description": "Bulwark Webmail: self-hosted webmail for mail, calendar, contacts and files, built on JMAP",
   "author": "Bulwark Mail <dev@bulwarkmail.org>",
   "license": "AGPL-3.0-only",
@@ -22,9 +22,10 @@
     "typescript"
   ],
   "scripts": {
-    "dev": "node scripts/build-pst-worker.mjs && node scripts/build-plugin-sandbox.mjs --watch -- next dev --turbopack",
-    "build": "node scripts/build-pst-worker.mjs && node scripts/build-plugin-sandbox.mjs && next build --turbopack",
+    "dev": "node scripts/build-pst-worker.mjs && node scripts/build-store-worker.mjs && node scripts/build-plugin-sandbox.mjs --watch -- next dev --turbopack",
+    "build": "node scripts/build-pst-worker.mjs && node scripts/build-store-worker.mjs && node scripts/build-plugin-sandbox.mjs && next build --turbopack && node scripts/standalone-guard.mjs",
     "build:lite": "node scripts/lite/build.mjs",
+    "build:desktop": "node scripts/build-desktop.mjs",
     "lite:serve": "node scripts/lite/serve.mjs out 4173",
     "test:lite-smoke": "playwright test -c scripts/lite/smoke/playwright.config.ts",
     "test:lite-smoke:stalwart": "playwright test -c scripts/lite/smoke/playwright.stalwart.config.ts",

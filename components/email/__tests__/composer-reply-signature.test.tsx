@@ -379,3 +379,39 @@ describe('reply quote attribution markers', () => {
     expect(html).toContain('<p data-reply-quote-start="true"><b>From:</b> Bob</p>');
   });
 });
+
+// The forwarded header had From, Date and Subject only; Gmail and Outlook
+// also say who the mail went to.
+describe('forwarded header recipients', () => {
+  afterEach(() => {
+    useSettingsStore.setState({ plainTextMode: false, signaturePosition: 'below_quote' });
+    setIdentities([ME]);
+  });
+  const FORWARDED = {
+    ...REPLY_TO,
+    to: [{ name: 'Anna Becker', email: 'anna@example.com' }, { email: 'team@example.com' }],
+    cc: [{ name: 'Carol', email: 'carol@example.com' }],
+  };
+
+  it('lists To and Cc in a plain text forward', async () => {
+    useSettingsStore.setState({ plainTextMode: true });
+    const onSend = vi.fn();
+    render(<EmailComposer mode="forward" replyTo={FORWARDED} prefill={{ to: ['dave@example.com'] }} onSend={onSend} />);
+    const sent = await send(onSend);
+    expect(sent.body).toContain('subject_label: Question\nforward_to_label: Anna Becker <anna@example.com>, team@example.com\nforward_cc_label: Carol <carol@example.com>\n\nOriginal text');
+  });
+
+  // escapeHtml is mocked to pass values through in this file.
+  it('lists To and Cc in an HTML forward', () => {
+    render(<EmailComposer mode="forward" replyTo={FORWARDED} />);
+    const html = screen.getByTestId('rich-text-editor').getAttribute('data-html')!;
+    expect(html).toContain('subject_label: Question<br>forward_to_label: Anna Becker <anna@example.com>, team@example.com<br>forward_cc_label: Carol <carol@example.com><br><br>');
+  });
+
+  it('leaves out a Cc line when nobody was copied', () => {
+    render(<EmailComposer mode="forward" replyTo={{ ...FORWARDED, cc: [] }} />);
+    const html = screen.getByTestId('rich-text-editor').getAttribute('data-html')!;
+    expect(html).toContain('forward_to_label: ');
+    expect(html).not.toContain('forward_cc_label');
+  });
+});

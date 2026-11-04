@@ -199,7 +199,7 @@ function FilesSidebarSkeleton() {
 function FilesHeaderSkeleton({ picker }: { picker: boolean }) {
   const on = "bg-primary/10 text-primary";
   return (
-    <div className="flex items-center gap-1 px-3 h-14 box-content border-b border-border min-w-0 flex-shrink-0">
+    <div data-window-row-right="" className="flex items-center gap-1 px-3 h-14 box-content border-b border-border min-w-0 flex-shrink-0">
       {picker ? null : <ToolIcon icon={Menu} className="lg:hidden" />}
       <div className="flex-1 min-w-0 flex items-center text-sm">
         <span className="flex items-center px-1.5 py-1 h-7">
@@ -221,7 +221,7 @@ function FilesHeaderSkeleton({ picker }: { picker: boolean }) {
           </span>
           <ToolIcon icon={RefreshCw} className="hidden md:grid" />
           <ToolIcon icon={PanelRight} className="boot-files-details:bg-primary/10 boot-files-details:text-primary" />
-          <PhoneActionsSkeleton className="flex md:hidden" />
+          <PhoneActionsSkeleton className="flex desk:hidden" />
         </div>
       )}
     </div>
@@ -349,7 +349,6 @@ export function FilesSkeleton({ label, labels }: FilesSkeletonProps) {
       surface="files"
       label={label}
       labels={labels}
-      railBelow="md"
       active="files"
       mvMenu={false}
       rowClassName={MV_CARD_ROW}

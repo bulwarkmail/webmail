@@ -233,9 +233,8 @@ describe('composer across an account switch', () => {
     useAuthStore.setState({ client: clientB as never, activeAccountId: 'acct-B' as never });
     view.rerender(<EmailComposer {...props} />);
 
+    // Closing saves the draft; no question unless the save fails.
     act(() => requestCloseRef.current!(vi.fn()));
-    const dialog = await screen.findByRole('alertdialog');
-    fireEvent.click(within(dialog).getByText('save'));
 
     await waitFor(() => expect(clientA.createDraft).toHaveBeenCalled());
     expect(clientB.createDraft).not.toHaveBeenCalled();

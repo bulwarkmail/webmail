@@ -14,6 +14,7 @@ import { useSettingsStore } from '@/stores/settings-store';
 import { getEffectiveLocale } from '@/i18n/detect-locale';
 import { removeAllPluginHooks } from '@/lib/plugin-hooks';
 import { requestConsent } from '@/lib/plugin-sandbox/consent';
+import { keystoreCouldReach } from '@/lib/plugin-sandbox/host-api-keystore';
 import { packageHash, type ValidatedPluginManifest } from '@/lib/extension-package';
 import JSZip from 'jszip';
 import { sha256Hex } from '@/lib/plugin-sandbox/bundle-integrity';
@@ -27,6 +28,7 @@ import { fetchServerPluginList } from '@/lib/server-plugin-list';
 import { IMPLICIT_PERMISSIONS } from '@/lib/plugin-types';
 import type { Permission } from '@/lib/plugin-types';
 import { IS_LITE } from '@/lib/lite';
+import { PLUGIN_POLICY_REFUSED_ERROR, onDesktopPolicyChange, pluginAllowedByDesktopPolicy, pluginMayRunByDesktopPolicy, pluginUploadsAllowedByDesktopPolicy } from '@/lib/desktop/policy';
 import { onFullSignOut } from '@/lib/sign-out-cleanup';
 import { forgetDeclaredHooks, setSendGuardSource } from '@/lib/plugin-send-guards';
 
@@ -42,7 +44,7 @@ let regionalSubscribed = false;
  */
 export interface InstallResult {
   success: boolean;
-  reason?: 'invalid' | 'uploads-disabled' | 'managed-id';
+  reason?: 'invalid' | 'uploads-disabled' | 'managed-id' | 'device-policy';
   error?: string;
   warnings?: string[];
   approvalStatus?: InstalledPlugin['approvalStatus'];
@@ -143,6 +145,7 @@ export const usePluginStore = create<PluginStoreState>()(
 
       installPlugin: async (file: File) => {
         const policy = usePolicyStore.getState();
+        if (!pluginUploadsAllowedByDesktopPolicy()) return { success: false, reason: 'device-policy' };
         if (!policy.isFeatureEnabled('pluginsUploadEnabled')) {
           return { success: false, reason: 'uploads-disabled' };
         }
@@ -234,6 +237,11 @@ export const usePluginStore = create<PluginStoreState>()(
         const plugin = plugins.find(p => p.id === id);
         if (!plugin) return;
 
+        if (!pluginMayRunByDesktopPolicy(plugin)) {
+          set(state => ({ plugins: state.plugins.map(p => (p.id === id ? { ...p, status: 'error', error: PLUGIN_POLICY_REFUSED_ERROR } : p)) }));
+          return;
+        }
+
         // Admin approval gate for plugins the user installed. The server
         // holds the decision, pinned to the package hash (code + manifest).
         if (!plugin.managed && !(await userPluginMayRun(plugin, get, set, { request: true }))) {
@@ -242,7 +250,9 @@ export const usePluginStore = create<PluginStoreState>()(
 
         // Per-user consent gate: prompt for any permission the user has not
         // explicitly approved yet. Managed plugins (admin-pushed) skip this -
-        // the admin has already approved them at install time.
+        // the admin has already approved them at install time - but for what
+        // an admin can't approve for someone else (askManagedKeystore).
+        await askManagedKeystore(plugin, set);
         const implicit = new Set<string>(IMPLICIT_PERMISSIONS);
         const granted = new Set<string>(plugin.grantedPermissions ?? []);
         const missing = (plugin.permissions ?? [])
@@ -268,7 +278,7 @@ export const usePluginStore = create<PluginStoreState>()(
 
         set(state => ({
           plugins: state.plugins.map(p =>
-            p.id === id ? { ...p, enabled: true, status: 'enabled' as PluginStatus, error: undefined } : p
+            p.id === id ? { ...p, enabled: true, status: 'enabled' as PluginStatus, error: undefined, chosen: true, autoEnabled: false } : p
           ),
         }));
 
@@ -290,7 +300,7 @@ export const usePluginStore = create<PluginStoreState>()(
 
         set({
           plugins: plugins.map(p =>
-            p.id === id ? { ...p, enabled: false, status: 'disabled' as PluginStatus, error: undefined } : p
+            p.id === id ? { ...p, enabled: false, status: 'disabled' as PluginStatus, error: undefined, chosen: true, autoEnabled: false } : p
           ),
         });
       },
@@ -394,6 +404,17 @@ export const usePluginStore = create<PluginStoreState>()(
           await Promise.allSettled(enabledPlugins.filter((_, i) => allowed[i]).map(plugin => loadPlugin(plugin)));
 
           set({ initialized: true });
+
+          // After the start, which doesn't wait for anyone to answer. A plugin runs without
+          // the keystore until then, and starts again to see what it was given.
+          for (const plugin of get().plugins.filter(p => p.managed && p.enabled && p.status !== 'error')) {
+            void askManagedKeystore(plugin, set).then((granted) => {
+              const latest = get().plugins.find(p => p.id === plugin.id);
+              if (!granted || !latest?.enabled) return;
+              deactivatePlugin(plugin.id);
+              return loadPlugin(latest);
+            }).catch(() => {});
+          }
         })();
 
         try {
@@ -454,6 +475,25 @@ function removePluginData(id: string): void {
 }
 
 /** Give the loader its way back into the store. */
+/**
+ * An admin's install doesn't cover the certificates on this person's computer, so they're
+ * asked for that alone, also when an update adds it. Runs with or without it, as with any
+ * optional permission. Says whether this added a grant.
+ */
+async function askManagedKeystore(
+  plugin: InstalledPlugin,
+  set: (partial: Partial<PluginStoreState> | ((state: PluginStoreState) => Partial<PluginStoreState>)) => void,
+): Promise<boolean> {
+  if (!plugin.managed || !plugin.permissions?.includes('keystore') || !keystoreCouldReach(plugin)) return false;
+  if (plugin.grantedPermissions?.includes('keystore') || plugin.declinedPermissions?.includes('keystore')) return false;
+  const accepted = await requestConsent(plugin.id, plugin.name, ['keystore' as Permission]);
+  const field = accepted ? 'grantedPermissions' : 'declinedPermissions';
+  set(state => ({
+    plugins: state.plugins.map(p => (p.id === plugin.id ? { ...p, [field]: [...new Set([...(p[field] ?? []), 'keystore'])] } : p)),
+  }));
+  return accepted;
+}
+
 function wireLoader(
   get: () => PluginStoreState,
   set: (partial: Partial<PluginStoreState> | ((state: PluginStoreState) => Partial<PluginStoreState>)) => void,
@@ -464,7 +504,8 @@ function wireLoader(
       plugins: state.plugins.map(p => (p.id === id
         // enabled: false is persisted, so a reload doesn't start the
         // failing plugin again behind the user's back.
-        ? { ...p, enabled: false, status: 'error' as PluginStatus, error: 'auto-disabled' }
+        // chosen: the admin's default must not start it again either.
+        ? { ...p, enabled: false, status: 'error' as PluginStatus, error: 'auto-disabled', chosen: true, autoEnabled: false }
         : p)),
     })),
   });
@@ -484,11 +525,15 @@ interface ServerPluginInfo {
   permissions: string[];
   entrypoint: string;
   forceEnabled: boolean;
+  /** On for users who haven't chosen; absent from older servers, which counts as on. */
+  defaultOn?: boolean;
   /** Content hash of the bundle - changes whenever code changes, even if the version doesn't */
   bundleHash?: string;
   updatedAt?: string;
   /** True when the plugin was loaded from the server's PLUGIN_DEV_DIR */
   dev?: boolean;
+  /** The device's OS policy refuses it. Its data stays, and it doesn't run. */
+  refused?: boolean;
   /** Allowlist of origins this plugin may target via api.http.fetch(). */
   httpOrigins?: string[];
   /** Allowlist of same-origin /api/* paths this plugin may target via api.http.post(). */
@@ -518,6 +563,7 @@ function serverMeta(sp: ServerPluginInfo) {
     ...(sp.tier ? { tier: sp.tier } : {}),
     managed: true as const,
     forceEnabled: sp.forceEnabled,
+    defaultOn: sp.defaultOn !== false,
     bundleHash: sp.bundleHash,
     httpOrigins: sp.httpOrigins,
     apiPostPaths: sp.apiPostPaths,
@@ -614,6 +660,10 @@ async function syncServerPlugins(
     const outcomes = await Promise.all(serverPlugins.map(async (sp) => {
       const local = get().plugins.find(p => p.id === sp.id);
 
+      // Refused by the device's policy: fetch nothing and change nothing. It stays in
+      // serverPluginIds below, so it isn't taken for removed and its data stays.
+      if (sp.refused || !pluginAllowedByDesktopPolicy(sp.id)) return { sp, isNew: false, needsBundle: false, refused: true };
+
       if (!local) {
         // New server plugin - download bundle and install.
         const code = await downloadPluginBundle(sp.id, sp.bundleHash, sp.tier);
@@ -651,16 +701,20 @@ async function syncServerPlugins(
     }));
 
     for (const outcome of outcomes) {
-      if (!outcome) continue;
+      if (!outcome || outcome.refused) continue;
       const { sp, isNew, needsBundle } = outcome;
       const local = get().plugins.find(p => p.id === sp.id);
 
       if (isNew || !local) {
+        // An admin's plugin is on for everyone unless the admin chose
+        // "Off until users turn it on".
+        const on = sp.forceEnabled || sp.defaultOn !== false;
         const plugin: InstalledPlugin = {
           id: sp.id,
           type: sp.type as InstalledPlugin['type'],
-          enabled: sp.forceEnabled,
-          status: sp.forceEnabled ? 'enabled' : 'installed',
+          enabled: on,
+          status: on ? 'enabled' : 'installed',
+          ...(on && !sp.forceEnabled ? { autoEnabled: true } : {}),
           adminApproved: true, // Server-managed plugins are always approved
           settings: {},
           ...serverMeta(sp),
@@ -674,12 +728,19 @@ async function syncServerPlugins(
       }
 
       // Force-enable in the same pass when the server flips it on, so the user
-      // doesn't need a second refresh for it to run.
-      const shouldAutoEnable = sp.forceEnabled && !local.enabled;
+      // doesn't need a second refresh for it to run. Until the user chooses,
+      // the admin's default decides: on, or off ("Off until users turn it
+      // on"), which only takes back what the default turned on.
+      const followsDefault = !local.chosen && !sp.forceEnabled;
+      const defaultOn = sp.defaultOn !== false;
+      const shouldAutoEnable = !local.enabled && (sp.forceEnabled || (followsDefault && defaultOn));
+      const shouldAutoDisable = local.enabled && followsDefault && !defaultOn && !!local.autoEnabled;
+      if (shouldAutoDisable) deactivatePlugin(sp.id);
       const next: InstalledPlugin = {
         ...local,
         ...serverMeta(sp),
-        ...(shouldAutoEnable ? { enabled: true, status: 'enabled' as const } : {}),
+        ...(shouldAutoEnable ? { enabled: true, status: 'enabled' as const, ...(sp.forceEnabled ? {} : { autoEnabled: true }) } : {}),
+        ...(shouldAutoDisable ? { enabled: false, status: 'installed' as const, autoEnabled: false } : {}),
       };
       if (needsBundle || JSON.stringify(next) !== JSON.stringify(local)) {
         set(state => ({
@@ -822,6 +883,23 @@ async function userPluginMayRun(
   return false;
 }
 
+// The device's OS policy changed while the app runs: what it now refuses stops, with
+// its record and data left alone, and what it allows again starts as the user left it.
+function applyDesktopPluginPolicy(): void {
+  const { plugins, setPluginStatus } = usePluginStore.getState();
+  for (const plugin of plugins) {
+    const allowed = pluginMayRunByDesktopPolicy(plugin);
+    if (!allowed && getActivePlugin(plugin.id)) {
+      deactivatePlugin(plugin.id);
+      setPluginStatus(plugin.id, 'error', PLUGIN_POLICY_REFUSED_ERROR);
+    } else if (allowed && plugin.error === PLUGIN_POLICY_REFUSED_ERROR) {
+      setPluginStatus(plugin.id, plugin.enabled ? 'enabled' : 'installed');
+      if (plugin.enabled) void loadPlugin(plugin);
+    }
+  }
+}
+onDesktopPolicyChange(applyDesktopPluginPolicy);
+
 // Whatever changed a plugin's settings (Settings, a server sync, an
 // import), the running plugin hears it right away, and slots it opens later
 // start with the new values: they are built from the running plugin's record.
@@ -840,7 +918,8 @@ usePluginStore.subscribe((state, prev) => {
 // A plugin the user installed runs on that user's consent and settings. Once
 // everyone has signed out, the next person at this browser must be asked
 // again: the code stays, the grants and settings go, and it is left off.
-// The admin's plugins are the admin's choice and stay as they are.
+// The admin's plugins are the admin's choice and stay as they are, but for
+// what that person answered about their own certificates.
 onFullSignOut(() => {
   const { plugins } = usePluginStore.getState();
   for (const plugin of plugins) {
@@ -848,7 +927,11 @@ onFullSignOut(() => {
   }
   usePluginStore.setState({
     plugins: plugins.map((plugin) => {
-      if (plugin.managed) return plugin;
+      if (plugin.managed) {
+        // The next person here starts from the admin's default again.
+        const { grantedPermissions: _kept, declinedPermissions: _declined, chosen: _chosen, ...kept } = plugin;
+        return kept;
+      }
       const { grantedPermissions: _granted, ...rest } = plugin;
       return { ...rest, enabled: false, status: 'disabled' as PluginStatus, error: undefined, settings: {} };
     }),

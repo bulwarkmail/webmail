@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { useTranslations } from 'next-intl';
 import { iconForName, Puzzle, X, type AppIcon } from '@/components/icons';
 import { usePluginSlotOffers } from '@/hooks/use-plugin-slot-offers';
+import { useCloseBesideControls } from '@/hooks/use-close-beside-controls';
 import { get as getActivePlugin } from '@/lib/plugin-sandbox/registry';
 import { onPanelRequest } from '@/lib/plugin-sandbox/panel-requests';
 import { sidePanelLooks, subscribeSidePanels } from '@/lib/plugin-sandbox/side-panels';
@@ -102,19 +103,26 @@ export function PluginSidePanelBody({ entry, focusRequest, onClose }: {
 }) {
   const tCommon = useTranslations('common');
   const extraProps = useMemo(() => ({ focusRequest }), [focusRequest]);
+  // Right under the window's own close, at the window's end: this one goes to the start.
+  const [head, setHead] = useState<HTMLDivElement | null>(null);
+  const closeFirst = useCloseBesideControls(head);
+  const close = (
+    <button
+      type="button"
+      onClick={onClose}
+      className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+      title={tCommon('close')}
+      aria-label={tCommon('close')}
+    >
+      <X className="h-4 w-4" />
+    </button>
+  );
   return (
     <>
-      <div className="flex shrink-0 items-center gap-1 ps-4 pe-2 pt-3 pb-1">
+      <div ref={setHead} data-window-pane-head="" className={cn("flex shrink-0 items-center gap-1 pt-3 pb-1", closeFirst ? "ps-2 pe-4" : "ps-4 pe-2")}>
+        {closeFirst && close}
         <div className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">{entry.title}</div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-          title={tCommon('close')}
-          aria-label={tCommon('close')}
-        >
-          <X className="h-4 w-4" />
-        </button>
+        {!closeFirst && close}
       </div>
       <div
         data-plugin-slot="side-panel"
@@ -142,6 +150,7 @@ export function PluginSidePanel() {
       {active && (
         <aside
           data-plugin-side-panel={active.pluginId}
+          data-window-end-column=""
           className="flex w-[300px] shrink-0 flex-col overflow-hidden border-s border-border bg-background"
           aria-label={active.title}
         >
@@ -150,6 +159,7 @@ export function PluginSidePanel() {
       )}
       {inRail.length > 0 && <nav
         data-plugin-side-rail=""
+        data-window-end-column=""
         className="flex w-12 shrink-0 flex-col items-center gap-1 border-s border-border bg-background pt-2"
         aria-label={t('mv_side_panel')}
       >

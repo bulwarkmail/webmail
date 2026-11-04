@@ -1,9 +1,10 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import React from 'react';
 import type { Editor } from '@tiptap/core';
 import { EmailComposer } from '../email-composer';
 import { useSettingsStore } from '@/stores/settings-store';
+import { useTemplateStore } from '@/stores/template-store';
 
 // The real composer around the real editor: applying a template to a reply
 // the user has already started (#911, follow-up to #540).
@@ -30,9 +31,9 @@ vi.mock('@/components/templates/template-picker', () => ({
     React.createElement('button', { 'data-testid': 'pick-template', onClick: () => onSelect(TEMPLATE, {}) }, 'pick'),
 }));
 // Save as template: what the composer hands the form.
-const savedForm = vi.hoisted(() => ({ initialData: null as null | { body?: string; isHTML?: boolean } }));
+const savedForm = vi.hoisted(() => ({ initialData: null as null | { name?: string; body?: string; isHTML?: boolean } }));
 vi.mock('@/components/templates/template-form', () => ({
-  TemplateForm: (props: { initialData?: { body?: string; isHTML?: boolean } }) => {
+  TemplateForm: (props: { initialData?: { name?: string; body?: string; isHTML?: boolean } }) => {
     savedForm.initialData = props.initialData ?? null;
     return null;
   },
@@ -146,8 +147,9 @@ vi.mock('@/stores/contact-store', () => {
 
 // ─── Misc dependency mocks ────────────────────────────────────────────────────
 
+const toastSuccess = vi.hoisted(() => ({ calls: [] as unknown[][] }));
 vi.mock('@/stores/toast-store', () => ({
-  toast: { info: () => {}, error: () => {}, success: () => {} },
+  toast: { info: () => {}, error: () => {}, success: (...args: unknown[]) => { toastSuccess.calls.push(args); } },
 }));
 
 vi.mock('@/lib/plugin-hooks', () => ({
@@ -158,6 +160,7 @@ vi.mock('@/lib/plugin-hooks', () => ({
   templateHooks: {
     onTemplateRender: { size: 0, transform: async (value: unknown) => value },
     onTemplateApply: { size: 0, emit: async () => {} },
+    onTemplateCreate: { size: 0, emit: async () => {} },
   },
   emailHooks: {
     onComposerOpen: { call: async () => [] },
@@ -308,12 +311,56 @@ describe('applying a template to a reply (#911)', () => {
       savedForm.initialData = null;
     });
 
-    async function openSaveAsTemplate() {
+    async function openNameDialog() {
       fireEvent.click(await screen.findByTestId('composer-templates-menu'));
       fireEvent.click(await screen.findByRole('menuitem', { name: 'save_as_template' }));
+      return screen.findByTestId('quick-save-template');
+    }
+
+    // The full editor is behind "Edit details…" (compose-18).
+    async function openSaveAsTemplate() {
+      fireEvent.click(within(await openNameDialog()).getByText('template_edit_details'));
       await waitFor(() => expect(savedForm.initialData).not.toBeNull());
       return savedForm.initialData!;
     }
+
+    // compose-18: Save as template opened an editor with nine fields.
+    it('asks for a name only, starting from the subject, and saves the message', async () => {
+      useTemplateStore.setState({ templates: [] });
+      await openReply();
+      const subject = (screen.getByTestId('composer-subject') as HTMLInputElement).value;
+      const dialog = await openNameDialog();
+      const name = within(dialog).getByLabelText('template_name') as HTMLInputElement;
+      expect(name.value).toBe(subject);
+      expect(savedForm.initialData).toBeNull();
+
+      fireEvent.change(name, { target: { value: 'Quick answer' } });
+      fireEvent.click(within(dialog).getByText('save'));
+
+      await waitFor(() => expect(useTemplateStore.getState().templates).toHaveLength(1));
+      expect(useTemplateStore.getState().templates[0]).toMatchObject({ name: 'Quick answer', subject, isHTML: true });
+      expect(screen.queryByTestId('quick-save-template')).not.toBeInTheDocument();
+    });
+
+    // compose-p2-15: the dialog closed with no sign the template was kept.
+    it('says "Template saved"', async () => {
+      useTemplateStore.setState({ templates: [] });
+      toastSuccess.calls = [];
+      await openReply();
+      const dialog = await openNameDialog();
+      fireEvent.change(within(dialog).getByLabelText('template_name'), { target: { value: 'Quick answer' } });
+      fireEvent.click(within(dialog).getByText('save'));
+      await waitFor(() => expect(toastSuccess.calls).toContainEqual(['template_saved']));
+    });
+
+    it('carries the name over into the full editor', async () => {
+      await openReply();
+      const dialog = await openNameDialog();
+      fireEvent.change(within(dialog).getByLabelText('template_name'), { target: { value: 'Quick answer' } });
+      fireEvent.click(within(dialog).getByText('template_edit_details'));
+
+      await waitFor(() => expect(savedForm.initialData).toMatchObject({ name: 'Quick answer' }));
+    });
 
     it('marks a rich text draft as HTML', async () => {
       await openReply();

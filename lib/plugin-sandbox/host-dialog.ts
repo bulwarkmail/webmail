@@ -28,6 +28,12 @@ export type DialogResult = boolean | Record<string, string> | null;
 
 export interface DialogRequest {
   id: string;
+  /**
+   * For `kind === 'custom'`: the plugin's frame fills the dialog, which is as
+   * tall as the window lets it be (at most 640 px), instead of growing with
+   * its content. For chats, whose input stays at the bottom.
+   */
+  fill?: boolean;
   pluginId: string;
   kind: DialogKind;
   title: string;
@@ -165,9 +171,30 @@ export function cancelForPlugin(pluginId: string): void {
   if (changed) notify();
 }
 
-/** Whether the plugin has a dialog showing or waiting in the queue. */
+/** Calls waiting on a prompt the host can't see, per plugin (see holdForUser). */
+const userHolds = new Map<string, number>();
+
+/**
+ * The plugin is waiting on the user somewhere other than these dialogs, such as a
+ * smart card's PIN prompt from the OS. It counts as an open dialog for the hook timer
+ * until the returned function is called. Nothing is drawn for it.
+ */
+export function holdForUser(pluginId: string): () => void {
+  userHolds.set(pluginId, (userHolds.get(pluginId) ?? 0) + 1);
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    const left = (userHolds.get(pluginId) ?? 1) - 1;
+    if (left > 0) userHolds.set(pluginId, left);
+    else userHolds.delete(pluginId);
+    notify();
+  };
+}
+
+/** Whether the plugin has a dialog showing or waiting in the queue, or a hold. */
 export function hasDialogFor(pluginId: string): boolean {
-  return queue.some((d) => d.pluginId === pluginId);
+  return userHolds.has(pluginId) || queue.some((d) => d.pluginId === pluginId);
 }
 
 /**

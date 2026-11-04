@@ -215,6 +215,21 @@ describe.each<["0.16" | "1.0"]>([["0.16"], ["1.0"]])("useTimeGridInteractions mo
 // The grid places events by wall clock (7845b2ca). On 2026-10-25 Berlin's
 // 02:00-03:00 happens twice, so a resize across it has to land where the
 // edge was dropped, not an hour off (#1348).
+describe("useTimeGridInteractions drops that are not events", () => {
+  it("leaves a Pro tab dropped on a column to the shell", async () => {
+    const { result } = renderHook(() => useTimeGridInteractions({
+      hourHeight: 60,
+      onCreateRange: () => {},
+      errorMessages,
+    } as never));
+    const preventDefault = vi.fn();
+    const e = { preventDefault, dataTransfer: { getData: () => "" } } as unknown as DragEvent<HTMLDivElement>;
+    await act(() => result.current.handleColumnDrop(e, new Date(2026, 8, 3)));
+    // The shell's own drop handler stands down on a prevented event.
+    expect(preventDefault).not.toHaveBeenCalled();
+  });
+});
+
 describe("useTimeGridInteractions resize on a DST change day (#1348)", () => {
   const original = useCalendarStore.getState().updateEvent;
   const originalTimeZone = useSettingsStore.getState().timeZone;

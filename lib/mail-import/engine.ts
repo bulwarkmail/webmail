@@ -1,8 +1,10 @@
 import type { IJMAPClient, UploadedEmailImport, UploadedEmailImportResult } from "@/lib/jmap/client-interface";
 import type { Mailbox } from "@/lib/jmap/types";
 import { checkpointKey, deleteCheckpoint, readCheckpoint, writeCheckpoint } from "./checkpoints";
+import type { ImportDedupe } from "./dedupe";
+import { isNetworkFailure } from "@/lib/jmap/offline-hooks";
 import { holdLock } from "./locks";
-import { emlSource, mboxSource, zipSource, type ImportFormat, type ImportItem, type ItemSource, type SkipReason, type SourceOptions } from "./sources";
+import { emlSource, maildirSource, mboxSource, zipSource, type ImportFormat, type ImportItem, type ItemSource, type MaildirFile, type SkipReason, type SourceOptions } from "./sources";
 
 /**
  * One engine for every mail import (EML, ZIP, mbox, PST): it reads messages
@@ -47,11 +49,16 @@ export interface ImportProgress {
   error?: string;
   /** Messages that failed for a passing reason; importing the same files again tries them again. */
   retryable?: number;
+  /** The size of all files, for what's left of a long import. */
+  totalBytes?: number;
 }
 
 export interface ImportFile {
+  /** A File, or something that reads like one (lib/desktop/local-import.ts). */
   file: File;
   format: ImportFormat;
+  /** Where the file's messages belong, for formats with no folders of their own (a Thunderbird folder). */
+  folder?: string[];
 }
 
 /** Opens a PST source (loaded only when a PST is imported). */
@@ -73,6 +80,11 @@ export interface ImportOptions {
   signal: AbortSignal;
   onProgress: (progress: ImportProgress) => void;
   openPst?: PstOpener;
+  /**
+   * Skips what was imported before, whatever the file looks like now. Compacting a
+   * Thunderbird folder changes its size, so its checkpoint no longer applies.
+   */
+  dedupe?: ImportDedupe;
   /** Test seams. */
   now?: () => number;
   sleep?: (ms: number, signal: AbortSignal) => Promise<void>;
@@ -100,6 +112,15 @@ export class ImportCancelled extends Error {
 
 function isAbort(error: unknown): boolean {
   return (error as { name?: string } | null)?.name === "AbortError";
+}
+
+/** The client knows it can't reach the server right now. That passes: it says nothing about the message. */
+function isOffline(error: unknown): boolean {
+  return (error as { name?: string } | null)?.name === "OfflineUnavailableError";
+}
+
+function browserOffline(): boolean {
+  return typeof navigator !== "undefined" && navigator.onLine === false;
 }
 
 function defaultSleep(ms: number, signal: AbortSignal): Promise<void> {
@@ -233,6 +254,7 @@ interface Uploaded {
   fileIndex: number;
   label: string;
   entry: UploadedEmailImport;
+  seenKey?: string;
 }
 
 /**
@@ -324,7 +346,9 @@ export async function runImport(options: ImportOptions): Promise<ImportProgress>
   // Shared pause: when the server refuses uploads, every lane waits.
   let pausedUntil = 0;
   const waitWhilePaused = async () => {
-    while (pausedUntil > now()) {
+    while (pausedUntil > now() || browserOffline()) {
+      // A laptop closed overnight: look again soon, it costs nothing.
+      if (pausedUntil <= now()) pausedUntil = now() + NETWORK_PAUSE_MS;
       progress.phase = "paused";
       progress.pausedUntil = pausedUntil;
       report(true);
@@ -339,6 +363,7 @@ export async function runImport(options: ImportOptions): Promise<ImportProgress>
 
   const sizes = options.files.map((f) => f.file.size);
   const totalBytes = sizes.reduce((a, b) => a + b, 0) || 1;
+  progress.totalBytes = totalBytes;
   const fileFraction = options.files.map(() => 0);
   const totals: (number | undefined)[] = options.files.map(() => undefined);
   const setFraction = () => {
@@ -350,16 +375,24 @@ export async function runImport(options: ImportOptions): Promise<ImportProgress>
   }));
   const marks: Watermark[] = [];
   const importedPerFile: number[] = options.files.map(() => 0);
+  // A profile has hundreds of files, and most of them stand still at any time.
+  const savedAs: string[] = [];
   let lastSaved = 0;
   const saveCheckpoints = async (force = false) => {
     // After sign-out nothing about the account may be written again.
     if (options.signal.reason === "signout") return;
     if (!force && now() - lastSaved < CHECKPOINT_EVERY_MS) return;
     lastSaved = now();
-    await Promise.all(marks.map((m, i) => m.value > 0 || m.beyond.length > 0 ? writeCheckpoint({
-      key: keys[i], scope: options.scope, fileName: options.files[i].file.name,
-      done: m.value, ahead: m.beyond, imported: importedPerFile[i], updatedAt: now(),
-    }) : Promise.resolve()));
+    await Promise.all(marks.map((m, i) => {
+      if (m.value === 0 && m.beyond.length === 0) return Promise.resolve();
+      const state = `${m.value}:${m.beyond.length}:${importedPerFile[i]}`;
+      if (savedAs[i] === state) return Promise.resolve();
+      savedAs[i] = state;
+      return writeCheckpoint({
+        key: keys[i], scope: options.scope, fileName: options.files[i].file.name,
+        done: m.value, ahead: m.beyond, imported: importedPerFile[i], updatedAt: now(),
+      });
+    }));
   };
 
   // ── Email/import in batches ──
@@ -382,6 +415,14 @@ export async function runImport(options: ImportOptions): Promise<ImportProgress>
         }
       } catch (error) {
         const name = (error as { name?: string } | null)?.name;
+        // The messages are uploaded and waiting. The server being out of reach isn't a try.
+        if (isNetworkFailure(error)) {
+          attempt--;
+          pausedUntil = Math.max(pausedUntil, now() + NETWORK_PAUSE_MS);
+          await waitWhilePaused().catch(() => {});
+          if (signal.aborted) break;
+          continue;
+        }
         if (name === "RateLimitError" && attempt < 3) {
           await sleep(Math.max(1000, (error as { retryAfterMs?: number }).retryAfterMs ?? 60_000), options.signal).catch(() => {});
           if (options.signal.aborted) break;
@@ -396,6 +437,11 @@ export async function runImport(options: ImportOptions): Promise<ImportProgress>
       }
     }
     if (!results) return;
+    // Right after the answer, before the checkpoint: this is what a crash can't take back.
+    if (options.dedupe && options.signal.reason !== "signout") {
+      const imported = batch.flatMap((b, i) => (results![i] && "id" in results![i] && b.seenKey ? [b.seenKey] : []));
+      if (imported.length > 0) await options.dedupe.add(imported).catch(() => {});
+    }
     results.forEach((result, i) => {
       const item = batch[i];
       if ("id" in result) {
@@ -435,15 +481,44 @@ export async function runImport(options: ImportOptions): Promise<ImportProgress>
   // ── Uploads, a few at a time ──
   const running = new Set<Promise<void>>();
   let networkErrors = 0;
+  // The same message twice in one run, before the first has been answered.
+  const inFlight = new Set<string>();
   const upload = async (item: Extract<ImportItem, { kind: "message" }>, fileIndex: number) => {
     const u = { fileIndex, index: item.index, label: item.label };
     let mailboxId: string;
-    try {
-      mailboxId = await folders.resolve(options.keepFolders ? item.folder : [], item.folderRole);
-    } catch (error) {
-      if (isAbort(error) || signal.aborted) throw new ImportCancelled();
-      fail(u, error instanceof Error ? error.message : String(error));
-      return;
+    // Waits before the folder too: asked for offline, a folder is refused or answered from this
+    // device, and neither is a folder on the server. A connection lost during the call shows below.
+    for (;;) {
+      await waitWhilePaused();
+      try {
+        mailboxId = await folders.resolve(options.keepFolders ? item.folder : [], item.folderRole);
+        break;
+      } catch (error) {
+        if (isAbort(error) || signal.aborted) throw new ImportCancelled();
+        // Says nothing about this message, so it doesn't count towards the failures in a row.
+        if (isNetworkFailure(error)) {
+          pausedUntil = Math.max(pausedUntil, now() + NETWORK_PAUSE_MS);
+          continue;
+        }
+        fail(u, error instanceof Error ? error.message : String(error));
+        return;
+      }
+    }
+    let seenKey: string | undefined;
+    if (options.dedupe) {
+      try {
+        const { key, seen } = await options.dedupe.check(item, mailboxId);
+        seenKey = key;
+        if (seen || inFlight.has(key)) {
+          skip("duplicate");
+          handled(u);
+          return;
+        }
+        inFlight.add(seenKey);
+      } catch {
+        // Can't tell: a duplicate is the smaller harm, a lost message the larger.
+        seenKey = undefined;
+      }
     }
     const file = new File([item.data], "message.eml", { type: "message/rfc822" });
     for (let attempt = 0; ; attempt++) {
@@ -452,17 +527,25 @@ export async function runImport(options: ImportOptions): Promise<ImportProgress>
         // Into the user's own account: Stalwart (0.16 and 1.0) keeps a blob uploaded to a
         // shared account's upload URL where Email/import there can't find it, while one in
         // the user's own account imports into any account the user may add mail to.
-        const { blobId } = await client.uploadBlob(file, { accountId: uploadAccountId, signal });
+        // noHold: offline, uploadBlob would keep the file on this device and answer with a stand-in
+        // id. That's for an attachment on its way out with a draft. Here it would fill the store with
+        // the very mail being imported and count it as uploaded.
+        const { blobId } = await client.uploadBlob(file, { accountId: uploadAccountId, signal, noHold: true });
         networkErrors = 0;
         enqueue({
           index: item.index,
           fileIndex,
           label: item.label,
+          seenKey,
           entry: { blobId, mailboxIds: { [mailboxId]: true }, keywords: item.keywords, receivedAt: item.receivedAt },
         });
         return;
       } catch (error) {
         if (isAbort(error) || signal.aborted) throw new ImportCancelled();
+        if (isOffline(error)) {
+          pausedUntil = Math.max(pausedUntil, now() + NETWORK_PAUSE_MS);
+          continue;
+        }
         const { status, body } = uploadErrorInfo(error);
         if (status === 429) {
           pausedUntil = Math.max(pausedUntil, uploadWindowEnd(now()) + 5000);
@@ -509,13 +592,16 @@ export async function runImport(options: ImportOptions): Promise<ImportProgress>
   const releases: (() => void)[] = [];
   let keepCheckpoints = false;
   try {
+    // A client started from the device's copy of the session never reaches the server. The real
+    // one replaces it in the app, not in here, so waiting would be waiting for nothing.
+    if ((client as { isOfflineOnly?: () => boolean }).isOfflineOnly?.()) throw new ImportStopped("network");
     for (const key of keys) {
       const release = await holdLock(`bulwark-mail-import:${key}`);
       if (!release) throw new ImportStopped("busy");
       releases.push(release);
     }
     for (let f = 0; f < options.files.length; f++) {
-      const { file, format } = options.files[f];
+      const { file, format, folder } = options.files[f];
       const checkpoint = options.resume ? await readCheckpoint(keys[f]) : null;
       if (!options.resume) await deleteCheckpoint(keys[f]);
       if (checkpoint) { progress.imported += checkpoint.imported; importedPerFile[f] = checkpoint.imported; }
@@ -538,13 +624,18 @@ export async function runImport(options: ImportOptions): Promise<ImportProgress>
       if (format === "pst") {
         if (!options.openPst) throw new Error("PST import isn't available");
         source = options.openPst(file, sourceOptions);
-      } else if (format === "mbox") source = mboxSource(file, sourceOptions);
+      } else if (format === "mbox") source = mboxSource(file, sourceOptions, folder);
+      else if (format === "maildir") source = maildirSource(file as unknown as MaildirFile, sourceOptions, folder);
       else if (format === "zip") source = zipSource(file, sourceOptions);
       else source = emlSource(file, sourceOptions);
 
       try {
         for await (const item of source) {
           if (signal.aborted) throw state.stopped ?? new ImportCancelled();
+          if (item.kind === "failed") {
+            fail({ fileIndex: f, index: item.index, label: item.label }, item.reason);
+            continue;
+          }
           if (item.kind === "skipped") {
             // Items an earlier run handled are already counted in its imported total.
             if (item.reason !== "resumed") skip(item.reason);
