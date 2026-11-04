@@ -6834,6 +6834,9 @@
       "close": "閉じる"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "メールで「{text}」を検索"
+  },
   "appLock": {
     "section_title": "アプリのロック",
     "section_desc": "一定時間使わないと、すべてのウィンドウとタブで PIN を求めます。ロック中、このデバイスのメールは暗号化されたままで、アプリには鍵がありません。",

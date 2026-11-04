@@ -6834,6 +6834,9 @@
       "close": "Schließen"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "E-Mails nach „{text}“ durchsuchen"
+  },
   "appLock": {
     "section_title": "App-Sperre",
     "section_desc": "Fragt nach einer Zeit ohne Nutzung in jedem Fenster und Tab nach einer PIN. Solange gesperrt ist, bleiben E-Mails auf diesem Gerät verschlüsselt und die App hat keinen Schlüssel dafür.",

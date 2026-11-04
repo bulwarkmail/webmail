@@ -19,6 +19,7 @@ import { useOfflineStore } from "@/lib/offline/state";
 import { openNewComposerWindow } from "@/lib/popout/open";
 import { onReturnedComposerElsewhere } from "@/lib/popout/return-to-main";
 import { isPopoutWindow } from "@/lib/popout/window-role";
+import { parkMailSearch, requestMailSearch } from "@/lib/mail-search-request";
 import { onBeforeSignOut, onFullSignOut } from "@/lib/sign-out-cleanup";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
@@ -89,6 +90,22 @@ export function DesktopHost() {
         }
         return;
       }
+      // Search mail for the text selected under a right-click.
+      if (id.startsWith("mail.searchText:")) {
+        try {
+          const text = JSON.parse(id.slice("mail.searchText:".length)) as unknown;
+          if (typeof text === "string" && text.trim()) {
+            const request = { text: text.trim() };
+            if (!requestMailSearch(request)) {
+              parkMailSearch(request);
+              routerRef.current.push("/");
+            }
+          }
+        } catch {
+          // Only the shell sends this, and it sends JSON.
+        }
+        return;
+      }
       if (!runDesktopCommand(id)) fallback[id]?.();
     });
   }, []);
@@ -101,6 +118,7 @@ export function DesktopHost() {
     const popout = isPopoutWindow();
     setDesktopBaseState({
       "link.check": true,
+      "mail.searchText": signedIn && !popout,
       "shortcuts.singleKeys": singleKeys,
       "policy.download": canDownloadAnywhere(),
       "file.print": canPrint,

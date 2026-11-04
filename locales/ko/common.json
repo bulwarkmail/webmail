@@ -6834,6 +6834,9 @@
       "close": "닫기"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "메일에서 “{text}” 검색"
+  },
   "appLock": {
     "section_title": "앱 잠금",
     "section_desc": "일정 시간 사용하지 않으면 모든 창과 탭에서 PIN을 요청합니다. 잠겨 있는 동안 이 기기의 메일은 암호화된 상태로 유지되며 앱에는 키가 없습니다.",

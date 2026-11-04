@@ -6834,6 +6834,9 @@
       "close": "Fechar"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "Pesquisar «{text}» no correio"
+  },
   "appLock": {
     "section_title": "Bloqueio da app",
     "section_desc": "Pede um PIN após um tempo sem uso, em todas as janelas e separadores. Enquanto está bloqueada, o correio neste dispositivo fica cifrado e a app não tem a chave.",

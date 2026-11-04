@@ -11,6 +11,7 @@ import { useContactStore, getContactDisplayName } from "@/stores/contact-store";
 import { toast } from "@/stores/toast-store";
 import { useOwnDomainAddress } from "@/hooks/use-own-domain-address";
 import type { ContactCard } from "@/lib/jmap/types";
+import { useAddressContextMenu } from "./address-context-menu";
 
 const CARD_WIDTH = 300;
 
@@ -260,6 +261,7 @@ export function RecipientPopover({ name, email, displayLabel, onViewContact, cla
   const [anchor, setAnchor] = useState<CardAnchor | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const shownEmail = useOwnDomainAddress()(email);
+  const addressMenu = useAddressContextMenu(onViewContact);
 
   const handleToggle = () => {
     if (anchor) {
@@ -275,6 +277,10 @@ export function RecipientPopover({ name, email, displayLabel, onViewContact, cla
       <button
         ref={triggerRef}
         onClick={handleToggle}
+        onContextMenu={(e) => {
+          setAnchor(null);
+          addressMenu.onContextMenu(e, { name, email });
+        }}
         className={cn(
           "text-foreground hover:text-primary hover:underline cursor-pointer transition-colors min-w-0 break-words text-start",
           className
@@ -293,6 +299,7 @@ export function RecipientPopover({ name, email, displayLabel, onViewContact, cla
           ignoreRef={triggerRef}
         />
       )}
+      {addressMenu.menu}
     </>
   );
 }

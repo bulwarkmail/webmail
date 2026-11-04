@@ -6834,6 +6834,9 @@
       "close": "Sulge"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "Otsi kirjadest „{text}”"
+  },
   "appLock": {
     "section_title": "Rakenduse lukk",
     "section_desc": "Küsib pärast kasutamata aega PIN-koodi, igas aknas ja vahekaardil. Lukus olles jääb selle seadme e-post krüpteerituks ja rakendusel pole selle võtit.",

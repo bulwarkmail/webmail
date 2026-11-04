@@ -6834,6 +6834,9 @@
       "close": "Aizvērt"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "Meklēt pastā “{text}”"
+  },
   "appLock": {
     "section_title": "Lietotnes bloķēšana",
     "section_desc": "Pēc laika bez lietošanas prasa PIN kodu katrā logā un cilnē. Kamēr lietotne ir bloķēta, e-pasts šajā ierīcē paliek šifrēts, un lietotnei nav tā atslēgas.",

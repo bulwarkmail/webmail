@@ -6834,6 +6834,9 @@
       "close": "Cerrar"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "Buscar «{text}» en el correo"
+  },
   "appLock": {
     "section_title": "Bloqueo de la app",
     "section_desc": "Pide un PIN tras un tiempo sin uso, en cada ventana y pestaña. Mientras está bloqueada, el correo de este dispositivo sigue cifrado y la app no tiene la clave.",

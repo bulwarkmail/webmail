@@ -6834,6 +6834,9 @@
       "close": "Kapat"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "E-postalarda “{text}” ara"
+  },
   "appLock": {
     "section_title": "Uygulama kilidi",
     "section_desc": "Bir süre kullanılmadığında her pencerede ve sekmede PIN ister. Kilitliyken bu cihazdaki e-postalar şifreli kalır ve uygulamada anahtarı olmaz.",

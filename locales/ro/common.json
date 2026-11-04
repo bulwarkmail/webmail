@@ -6834,6 +6834,9 @@
       "close": "Închidere"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "Căutare „{text}” în e-mail"
+  },
   "appLock": {
     "section_title": "Blocarea aplicației",
     "section_desc": "Cere un PIN după un timp fără utilizare, în fiecare fereastră și filă. Cât timp e blocată, e-mailurile de pe acest dispozitiv rămân criptate și aplicația nu are cheia lor.",

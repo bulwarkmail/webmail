@@ -110,6 +110,7 @@ import { AppMain } from "@/components/layout/app-landmarks";
 import { MvTopBar } from "@/components/layout/mv-top-bar";
 import { PluginActions } from "@/components/plugins/plugin-actions";
 import { useAppCommands } from "@/lib/app-commands";
+import { useMailSearchRequests } from "@/lib/mail-search-request";
 import { MvSearchForm } from "@/components/search/mv-search-form";
 import { MvSidePanel } from "@/components/layout/mv-side-panel";
 import { PluginSidePanel } from "@/components/plugins/plugin-side-panels";
@@ -1328,6 +1329,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       if (showComposer && requestClose) requestClose(backToList);
       else backToList();
     },
+  }, isAuthenticated && !!client);
+  // "Find emails from …" on an address in a message, and the desktop app's
+  // "Search mail for …" on selected text.
+  useMailSearchRequests((request) => {
+    if ("from" in request) void handleSelectContactSuggestion({ name: "", email: request.from }, "from");
+    else void handleSearch(request.text);
   }, isAuthenticated && !!client);
 
   // The desktop app's menu bar: the same handlers as the keys, and what's enabled

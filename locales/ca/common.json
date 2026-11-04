@@ -6834,6 +6834,9 @@
       "close": "Tanca"
     }
   },
+  "desktop_mail": {
+    "context_search_mail": "Cerca «{text}» al correu"
+  },
   "appLock": {
     "section_title": "Bloqueig de l'app",
     "section_desc": "Demana un PIN després d'un temps sense ús, a cada finestra i pestanya. Mentre està bloquejada, el correu d'aquest dispositiu continua xifrat i l'app no en té la clau.",

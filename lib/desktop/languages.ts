@@ -139,6 +139,7 @@ export function shellLabels(t: (key: string, values?: Record<string, string>) =>
     contextCopyAddress: t('desktopUi.context.copy_address'),
     contextSaveImage: t('desktopUi.context.save_image'),
     contextCopyImage: t('desktopUi.context.copy_image'),
+    contextSearchMail: t('desktop_mail.context_search_mail', { text: '{text}' }),
     unsavedTitle: t('desktopUi.closing.unsaved_title'),
     unsavedDetail: t('desktopUi.closing.unsaved_detail'),
     closeAnyway: t('desktopUi.closing.close_anyway'),
