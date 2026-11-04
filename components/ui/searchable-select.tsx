@@ -126,6 +126,17 @@ export function SearchableSelect({
     if (open) inputRef.current?.focus();
   }, [open]);
 
+  // Options that arrive after the menu opened (the time zones are read after
+  // mount) keep the current value marked, not the first row (pim-p3-14).
+  const optionsRef = useRef(options);
+  useEffect(() => {
+    if (optionsRef.current === options) return;
+    optionsRef.current = options;
+    if (!open || query) return;
+    const index = options.findIndex((o) => o.value === value);
+    if (index >= 0) setActive(index);
+  }, [options, open, query, value]);
+
   useEffect(() => {
     if (!open) return;
     listRef.current?.querySelector<HTMLElement>(`[data-index="${active}"]`)?.scrollIntoView({ block: 'nearest' });
@@ -214,7 +225,8 @@ export function SearchableSelect({
                 setActive(0);
               }}
               onKeyDown={onInputKeyDown}
-              className="w-full bg-transparent py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+              // The ring inside: the menu's edge cut it off (pim-p3-14).
+              className="focus-inset w-full bg-transparent py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
               autoComplete="off"
               spellCheck={false}
             />

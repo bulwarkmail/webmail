@@ -1457,6 +1457,7 @@ export function EventModal({
                     withAuto={false}
                     label={tEvent("time_zone")}
                     className="w-full"
+                    fullWidthMenu
                     defaultOpen
                   />
                 </>
