@@ -7114,6 +7114,7 @@
     "files_summary": "{count, plural, one {# Datei} other {# Dateien}}",
     "files_summary_size": "{count, plural, one {# Datei} other {# Dateien}}, {size}",
     "zone_attach_here": "An diese Nachricht anhängen",
+    "zone_insert_inline": "In die Nachricht einfügen",
     "zone_new_message": "An neue Nachricht anhängen",
     "zone_upload_files": "In Dateien hochladen",
     "zone_upload_folder": "In {folder} hochladen",

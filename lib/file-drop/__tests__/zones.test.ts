@@ -3,6 +3,7 @@ import { defaultZone, fileDropZones, filesWithinLimits, kindForType, MAX_ZONES, 
 
 const place = (patch: Partial<DropPlace> = {}): DropPlace => ({
   composer: false,
+  inlineImages: false,
   popout: false,
   files: true,
   filesFolder: null,
@@ -57,6 +58,16 @@ describe('the file drop zones', () => {
     const zones = ids(drag(['eml']), place({ composer: true, importFolder: 'Inbox' }));
     expect(zones).toHaveLength(MAX_ZONES);
     expect(zones).toEqual(['attach-here', 'open-eml', 'new-message', 'upload']);
+  });
+
+  it('pictures go into the text of an open rich text composer, beside attaching them', () => {
+    expect(ids(drag(['image', 'image']), place({ composer: true, inlineImages: true }))).toEqual(['attach-here', 'insert-inline', 'new-message', 'upload']);
+    // Plain text, a mix, or no composer: no such choice.
+    expect(ids(drag(['image']), place({ composer: true }))).toEqual(['attach-here', 'new-message', 'upload']);
+    expect(ids(drag(['image', 'other']), place({ composer: true, inlineImages: true }))).toEqual(['attach-here', 'new-message', 'upload']);
+    expect(ids(drag(['image']), place({ inlineImages: true }))).toEqual(['new-message', 'upload']);
+    expect(kindForType('image/png')).toBe('image');
+    expect(kindForType('image/svg+xml')).toBe('other');
   });
 
   it('in a pop-out, only its own composer', () => {

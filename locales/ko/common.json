@@ -7114,6 +7114,7 @@
     "files_summary": "{count, plural, other {파일 #개}}",
     "files_summary_size": "{count, plural, other {파일 #개}}, {size}",
     "zone_attach_here": "이 메시지에 첨부",
+    "zone_insert_inline": "메시지 본문에 삽입",
     "zone_new_message": "새 메시지에 첨부",
     "zone_upload_files": "파일에 업로드",
     "zone_upload_folder": "{folder}에 업로드",

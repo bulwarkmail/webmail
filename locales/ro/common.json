@@ -7114,6 +7114,7 @@
     "files_summary": "{count, plural, one {# fișier} few {# fișiere} other {# de fișiere}}",
     "files_summary_size": "{count, plural, one {# fișier} few {# fișiere} other {# de fișiere}}, {size}",
     "zone_attach_here": "Atașați la acest mesaj",
+    "zone_insert_inline": "Inserați în mesaj",
     "zone_new_message": "Atașați la un mesaj nou",
     "zone_upload_files": "Încărcați în Fișiere",
     "zone_upload_folder": "Încărcați în {folder}",

@@ -131,6 +131,21 @@ describe('a drag from outside', () => {
     clear();
   });
 
+  it('a picture dropped on "Insert into the message" goes into the text, as a paste would', async () => {
+    const take = vi.fn();
+    const insert = vi.fn();
+    const clear = setComposerFileTarget(take, () => true, { available: () => true, insert });
+    const picture = new File(['png'], 'chart.png', { type: 'image/png' });
+    render(<FileDropHost />);
+    dragIn([picture]);
+    expect(zone('insert-inline').textContent).toContain('zone_insert_inline');
+    fireEvent.drop(zone('insert-inline'), { dataTransfer: transfer([picture]) });
+    await flush();
+    expect(insert).toHaveBeenCalledWith([picture]);
+    expect(take).not.toHaveBeenCalled();
+    clear();
+  });
+
   it('on the Files screen, "Upload to <folder>" hands the files to that folder', async () => {
     const take = vi.fn();
     const clear = setFilesDropTarget({ folder: 'Reports', take, visible: () => true });

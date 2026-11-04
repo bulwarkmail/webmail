@@ -68,6 +68,7 @@ function currentPlace(pathname: string, translate: (key: string) => string): { p
   const folder = importFolder(pathname, translate);
   const place: DropPlace = {
     composer: !!visibleComposer(),
+    inlineImages: !!visibleComposer()?.images?.available(),
     popout: isPopoutPath(window.location.pathname),
     files: !!client?.supportsFiles?.() && features.isFeatureEnabled("filesEnabled"),
     filesFolder: filesDropTarget()?.folder ?? null,

@@ -7115,6 +7115,7 @@
     "files_summary": "{count, plural, one {קובץ אחד} two {שני קבצים} other {# קבצים}}",
     "files_summary_size": "{count, plural, one {קובץ אחד} two {שני קבצים} other {# קבצים}}, {size}",
     "zone_attach_here": "צירוף להודעה הזו",
+    "zone_insert_inline": "הוספה לגוף ההודעה",
     "zone_new_message": "צירוף להודעה חדשה",
     "zone_upload_files": "העלאה לקבצים",
     "zone_upload_folder": "העלאה אל {folder}",

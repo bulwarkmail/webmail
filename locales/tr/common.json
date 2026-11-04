@@ -7114,6 +7114,7 @@
     "files_summary": "{count, plural, one {# dosya} other {# dosya}}",
     "files_summary_size": "{count, plural, one {# dosya} other {# dosya}}, {size}",
     "zone_attach_here": "Bu iletiye ekle",
+    "zone_insert_inline": "İleti metnine ekle",
     "zone_new_message": "Yeni bir iletiye ekle",
     "zone_upload_files": "Dosyalar'a yükle",
     "zone_upload_folder": "{folder} klasörüne yükle",

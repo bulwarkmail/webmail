@@ -7114,6 +7114,7 @@
     "files_summary": "{count, plural, one {# bestand} other {# bestanden}}",
     "files_summary_size": "{count, plural, one {# bestand} other {# bestanden}}, {size}",
     "zone_attach_here": "Bij dit bericht voegen",
+    "zone_insert_inline": "In het bericht invoegen",
     "zone_new_message": "Bij een nieuw bericht voegen",
     "zone_upload_files": "Uploaden naar Bestanden",
     "zone_upload_folder": "Uploaden naar {folder}",

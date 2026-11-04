@@ -7126,6 +7126,7 @@
     "files_summary": "{count, plural, other {# tệp}}",
     "files_summary_size": "{count, plural, other {# tệp}}, {size}",
     "zone_attach_here": "Đính kèm vào thư này",
+    "zone_insert_inline": "Chèn vào nội dung thư",
     "zone_new_message": "Đính kèm vào thư mới",
     "zone_upload_files": "Tải lên Tệp",
     "zone_upload_folder": "Tải lên {folder}",

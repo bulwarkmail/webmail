@@ -2,12 +2,13 @@
 
 import { forwardRef, type ComponentType, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { CalendarPlus, FolderInput, MailOpen, Paperclip, SquarePen, Upload, UserPlus } from "@/components/icons";
+import { CalendarPlus, FolderInput, ImageIcon, MailOpen, Paperclip, SquarePen, Upload, UserPlus } from "@/components/icons";
 import type { FileDropNote, FileDropZone, FileDropZoneId } from "@/lib/file-drop/zones";
 import { cn, formatFileSize } from "@/lib/utils";
 
 const ICONS: Record<FileDropZoneId, ComponentType<{ className?: string }>> = {
   "attach-here": Paperclip,
+  "insert-inline": ImageIcon,
   "new-message": SquarePen,
   upload: Upload,
   calendar: CalendarPlus,
@@ -21,6 +22,7 @@ export function useZoneText() {
   const label = (zone: FileDropZone): string => {
     switch (zone.id) {
       case "attach-here": return t("zone_attach_here");
+      case "insert-inline": return t("zone_insert_inline");
       case "new-message": return t("zone_new_message");
       case "upload": return zone.folder ? t("zone_upload_folder", { folder: zone.folder }) : t("zone_upload_files");
       case "calendar": return t("zone_calendar");

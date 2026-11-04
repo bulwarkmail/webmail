@@ -7114,6 +7114,7 @@
     "files_summary": "{count, plural, one {# файл} other {# файл}}",
     "files_summary_size": "{count, plural, one {# файл} other {# файл}}, {size}",
     "zone_attach_here": "Энэ мессежид хавсаргах",
+    "zone_insert_inline": "Мессежийн дотор оруулах",
     "zone_new_message": "Шинэ мессежид хавсаргах",
     "zone_upload_files": "Файл руу байршуулах",
     "zone_upload_folder": "{folder} руу байршуулах",

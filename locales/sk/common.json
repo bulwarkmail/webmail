@@ -7114,6 +7114,7 @@
     "files_summary": "{count, plural, one {# súbor} few {# súbory} many {# súboru} other {# súborov}}",
     "files_summary_size": "{count, plural, one {# súbor} few {# súbory} many {# súboru} other {# súborov}}, {size}",
     "zone_attach_here": "Priložiť k tejto správe",
+    "zone_insert_inline": "Vložiť do správy",
     "zone_new_message": "Priložiť k novej správe",
     "zone_upload_files": "Nahrať do Súborov",
     "zone_upload_folder": "Nahrať do {folder}",

@@ -2790,6 +2790,19 @@ export function EmailComposer({
   useEffect(() => setComposerFileTarget(
     (files) => void addFiles(files),
     () => !!composerRootEl?.isConnected && composerRootEl.getClientRects().length > 0,
+    // The file drop overlay's "Insert into the message": the editor's own paste, so the
+    // upload, the place and the question for a description are the same as pasting.
+    {
+      available: () => !!editorRef.current && !editorRef.current.isDestroyed,
+      insert: (files) => {
+        const editor = editorRef.current;
+        if (!editor || editor.isDestroyed) return;
+        const transfer = new DataTransfer();
+        for (const file of files) transfer.items.add(file);
+        editor.commands.focus();
+        editor.view.dom.dispatchEvent(new ClipboardEvent('paste', { clipboardData: transfer, cancelable: true }));
+      },
+    },
   ), [addFiles, composerRootEl]);
   // The id plugins know this composer by (registered below, with the handle).
   const [pluginComposerId, setPluginComposerId] = useState<string | null>(null);

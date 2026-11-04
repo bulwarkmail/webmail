@@ -4,10 +4,17 @@
  * on is the app's own native one, which is no new file.
  */
 
+/** Pictures put in the text where the cursor is, as pasting them does. Only while the rich text editor is there. */
+export interface ComposerImages {
+  available: () => boolean;
+  insert: (files: File[]) => void;
+}
+
 interface ComposerTarget {
   take: (files: File[]) => unknown;
   /** The Pro shell keeps composers mounted on tabs out of sight. */
   visible: () => boolean;
+  images?: ComposerImages;
 }
 
 const composerTargets: ComposerTarget[] = [];
@@ -15,8 +22,8 @@ const composerTargets: ComposerTarget[] = [];
 let ownDrag = false;
 
 /** A composer on screen takes files itself. */
-export function setComposerFileTarget(take: ComposerTarget['take'], visible: ComposerTarget['visible']): () => void {
-  const target = { take, visible };
+export function setComposerFileTarget(take: ComposerTarget['take'], visible: ComposerTarget['visible'], images?: ComposerImages): () => void {
+  const target = { take, visible, images };
   composerTargets.push(target);
   return () => {
     const at = composerTargets.indexOf(target);

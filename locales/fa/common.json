@@ -7114,6 +7114,7 @@
     "files_summary": "{count, plural, one {# فایل} other {# فایل}}",
     "files_summary_size": "{count, plural, one {# فایل} other {# فایل}}, {size}",
     "zone_attach_here": "پیوست به این پیام",
+    "zone_insert_inline": "درج در متن پیام",
     "zone_new_message": "پیوست به پیام جدید",
     "zone_upload_files": "بارگذاری در فایل‌ها",
     "zone_upload_folder": "بارگذاری در {folder}",

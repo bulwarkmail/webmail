@@ -7114,6 +7114,7 @@
     "files_summary": "{count, plural, one {# файл} few {# файла} many {# файлов} other {# файла}}",
     "files_summary_size": "{count, plural, one {# файл} few {# файла} many {# файлов} other {# файла}}, {size}",
     "zone_attach_here": "Прикрепить к этому письму",
+    "zone_insert_inline": "Вставить в текст письма",
     "zone_new_message": "Прикрепить к новому письму",
     "zone_upload_files": "Загрузить в Файлы",
     "zone_upload_folder": "Загрузить в {folder}",

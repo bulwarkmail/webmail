@@ -7114,6 +7114,7 @@
     "files_summary": "{count, plural, one {# файл} few {# файли} many {# файлів} other {# файлу}}",
     "files_summary_size": "{count, plural, one {# файл} few {# файли} many {# файлів} other {# файлу}}, {size}",
     "zone_attach_here": "Прикріпити до цього повідомлення",
+    "zone_insert_inline": "Вставити в текст повідомлення",
     "zone_new_message": "Прикріпити до нового повідомлення",
     "zone_upload_files": "Завантажити у Файли",
     "zone_upload_folder": "Завантажити в {folder}",

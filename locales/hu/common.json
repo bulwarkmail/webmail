@@ -7114,6 +7114,7 @@
     "files_summary": "{count, plural, one {# fájl} other {# fájl}}",
     "files_summary_size": "{count, plural, one {# fájl} other {# fájl}}, {size}",
     "zone_attach_here": "Csatolás ehhez az üzenethez",
+    "zone_insert_inline": "Beszúrás az üzenetbe",
     "zone_new_message": "Csatolás új üzenethez",
     "zone_upload_files": "Feltöltés a Fájlokba",
     "zone_upload_folder": "Feltöltés ide: {folder}",

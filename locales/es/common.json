@@ -7114,6 +7114,7 @@
     "files_summary": "{count, plural, one {# archivo} other {# archivos}}",
     "files_summary_size": "{count, plural, one {# archivo} other {# archivos}}, {size}",
     "zone_attach_here": "Adjuntar a este mensaje",
+    "zone_insert_inline": "Insertar en el mensaje",
     "zone_new_message": "Adjuntar a un mensaje nuevo",
     "zone_upload_files": "Subir a Archivos",
     "zone_upload_folder": "Subir a {folder}",

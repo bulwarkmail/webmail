@@ -7114,6 +7114,7 @@
     "files_summary": "{count, plural, one {# fail} other {# faili}}",
     "files_summary_size": "{count, plural, one {# fail} other {# faili}}, {size}",
     "zone_attach_here": "Lisa sellele kirjale",
+    "zone_insert_inline": "Lisa kirja sisse",
     "zone_new_message": "Lisa uuele kirjale",
     "zone_upload_files": "Laadi üles kausta Failid",
     "zone_upload_folder": "Laadi üles kausta {folder}",

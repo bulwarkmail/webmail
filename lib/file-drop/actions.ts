@@ -39,6 +39,13 @@ export async function runFileDropZone(zone: FileDropZoneId, files: File[], env: 
       else handOffDraft({ files });
       return;
     }
+    case 'insert-inline': {
+      const composer = visibleComposer();
+      if (composer?.images?.available()) composer.images.insert(files);
+      else if (composer) composer.take(files);
+      else handOffDraft({ files });
+      return;
+    }
     case 'new-message':
       handOffDraft({ files });
       return;

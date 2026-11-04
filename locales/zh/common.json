@@ -7114,6 +7114,7 @@
     "files_summary": "{count, plural, other {# 个文件}}",
     "files_summary_size": "{count, plural, other {# 个文件}}, {size}",
     "zone_attach_here": "附加到此邮件",
+    "zone_insert_inline": "插入到邮件正文",
     "zone_new_message": "附加到新邮件",
     "zone_upload_files": "上传到文件",
     "zone_upload_folder": "上传到 {folder}",

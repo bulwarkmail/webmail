@@ -7122,6 +7122,7 @@
     "files_summary": "{count, plural, other {# ไฟล์}}",
     "files_summary_size": "{count, plural, other {# ไฟล์}}, {size}",
     "zone_attach_here": "แนบกับข้อความนี้",
+    "zone_insert_inline": "แทรกลงในข้อความ",
     "zone_new_message": "แนบกับข้อความใหม่",
     "zone_upload_files": "อัปโหลดไปยังไฟล์",
     "zone_upload_folder": "อัปโหลดไปยัง {folder}",

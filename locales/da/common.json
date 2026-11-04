@@ -7114,6 +7114,7 @@
     "files_summary": "{count, plural, one {# fil} other {# filer}}",
     "files_summary_size": "{count, plural, one {# fil} other {# filer}}, {size}",
     "zone_attach_here": "Vedhæft til denne besked",
+    "zone_insert_inline": "Indsæt i beskeden",
     "zone_new_message": "Vedhæft til en ny besked",
     "zone_upload_files": "Upload til Filer",
     "zone_upload_folder": "Upload til {folder}",

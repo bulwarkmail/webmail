@@ -7114,6 +7114,7 @@
     "files_summary": "{count, plural, one {# soubor} few {# soubory} many {# souboru} other {# souborů}}",
     "files_summary_size": "{count, plural, one {# soubor} few {# soubory} many {# souboru} other {# souborů}}, {size}",
     "zone_attach_here": "Připojit k této zprávě",
+    "zone_insert_inline": "Vložit do zprávy",
     "zone_new_message": "Připojit k nové zprávě",
     "zone_upload_files": "Nahrát do Souborů",
     "zone_upload_folder": "Nahrát do {folder}",
