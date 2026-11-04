@@ -16,6 +16,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useCalendarStore } from '@/stores/calendar-store';
 import { useEmailStore } from '@/stores/email-store';
 import { usePolicyStore } from '@/stores/policy-store';
+import { useSettingsStore, type TimeFormat } from '@/stores/settings-store';
 
 const ROWS = 5;
 const REFRESH_DELAY_MS = 2000;
@@ -36,12 +37,14 @@ export function nextEventOf(events: readonly CalendarEvent[], now: number): Cale
   return ahead[0] ?? null;
 }
 
-export function formatEventTime(start: number, now: number, locale: string | undefined): string {
+/** In the app's own time format (Settings > General), not the language's: 11:00, never 11:00 AM where the app shows 24 hours. */
+export function formatEventTime(start: number, now: number, locale: string | undefined, timeFormat: TimeFormat = '24h'): string {
   const date = new Date(start);
   const sameDay = date.toDateString() === new Date(now).toDateString();
+  const hour12 = timeFormat === '12h';
   const options: Intl.DateTimeFormatOptions = sameDay
-    ? { hour: 'numeric', minute: '2-digit' }
-    : { weekday: 'short', hour: 'numeric', minute: '2-digit' };
+    ? { hour: hour12 ? 'numeric' : '2-digit', minute: '2-digit', hour12 }
+    : { weekday: 'short', hour: hour12 ? 'numeric' : '2-digit', minute: '2-digit', hour12 };
   return new Intl.DateTimeFormat(locale, options).format(date);
 }
 
@@ -79,7 +82,7 @@ export async function readSummary(locale: string | undefined, now = Date.now()):
       before: new Date(now + EVENT_WINDOW_MS).toISOString(),
     }).catch(() => [] as CalendarEvent[]);
     const next = nextEventOf(events, now);
-    if (next) nextEvent = { title: next.title ?? '', when: formatEventTime(eventStart(next), now, locale) };
+    if (next) nextEvent = { title: next.title ?? '', when: formatEventTime(eventStart(next), now, locale, useSettingsStore.getState().timeFormat) };
   }
   // The tray lists one account's inbox: with more than one, it says whose.
   const several = useAccountStore.getState().accounts.length > 1;

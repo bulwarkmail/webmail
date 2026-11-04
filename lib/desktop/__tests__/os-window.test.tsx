@@ -290,6 +290,15 @@ describe('the summary', () => {
     expect(nextEventOf([event('past', '2026-11-03T09:00:00Z')], now)).toBeNull();
   });
 
+  it('the event\'s time follows the app\'s time format, not the language\'s', async () => {
+    const { formatEventTime } = await import('../os-summary');
+    const at = new Date(2026, 10, 3, 11, 0).getTime();
+    const morning = new Date(2026, 10, 3, 8, 0).getTime();
+    expect(formatEventTime(at, morning, 'en-US', '24h')).toBe('11:00');
+    expect(formatEventTime(at, morning, 'en-US', '12h')).toMatch(/^11:00\sAM$/);
+    expect(formatEventTime(new Date(2026, 10, 3, 9, 5).getTime(), morning, 'en-US', '24h')).toBe('09:05');
+  });
+
   describe('with a login', () => {
     const row = { id: 'e1', threadId: 't1', subject: 'Lunch?', from: [{ name: 'Alice', email: 'a@example.org' }] };
     const getEmails = vi.fn(async () => ({ emails: [row], hasMore: false, total: 1 }));
