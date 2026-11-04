@@ -6810,6 +6810,18 @@
       "close": "Sluit"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Menubalk altijd tonen",
+    "always_show_description": "Anders verschijnt hij bij een druk op Alt.",
+    "exit": "Afsluiten",
+    "tray_pause": "Meldingen pauzeren",
+    "tray_pause_hour": "1 uur",
+    "tray_pause_tomorrow": "Tot morgen",
+    "tray_resume": "Meldingen weer aanzetten",
+    "tray_open": "Bulwark openen",
+    "tray_quit": "Bulwark afsluiten",
+    "tray_exit": "Bulwark afsluiten"
+  },
   "appLock": {
     "section_title": "App-vergrendeling",
     "section_desc": "Vraagt na een tijd zonder gebruik om een pincode, in elk venster en tabblad. Zolang de app vergrendeld is, blijft de mail op dit apparaat versleuteld en heeft de app er geen sleutel voor.",

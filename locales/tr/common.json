@@ -6810,6 +6810,18 @@
       "close": "Kapat"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Menü çubuğunu her zaman göster",
+    "always_show_description": "Aksi halde Alt tuşuna basınca görünür.",
+    "exit": "Çıkış",
+    "tray_pause": "Bildirimleri duraklat",
+    "tray_pause_hour": "1 saat",
+    "tray_pause_tomorrow": "Yarına kadar",
+    "tray_resume": "Bildirimleri yeniden aç",
+    "tray_open": "Bulwark'ı aç",
+    "tray_quit": "Bulwark'tan çık",
+    "tray_exit": "Bulwark'tan çık"
+  },
   "appLock": {
     "section_title": "Uygulama kilidi",
     "section_desc": "Bir süre kullanılmadığında her pencerede ve sekmede PIN ister. Kilitliyken bu cihazdaki e-postalar şifreli kalır ve uygulamada anahtarı olmaz.",

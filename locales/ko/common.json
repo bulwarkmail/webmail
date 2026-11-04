@@ -6810,6 +6810,18 @@
       "close": "닫기"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "메뉴 막대 항상 표시",
+    "always_show_description": "끄면 Alt 키를 누를 때 표시됩니다.",
+    "exit": "끝내기",
+    "tray_pause": "알림 일시 중지",
+    "tray_pause_hour": "1시간 동안",
+    "tray_pause_tomorrow": "내일까지",
+    "tray_resume": "알림 다시 켜기",
+    "tray_open": "Bulwark 열기",
+    "tray_quit": "Bulwark 종료",
+    "tray_exit": "Bulwark 종료"
+  },
   "appLock": {
     "section_title": "앱 잠금",
     "section_desc": "일정 시간 사용하지 않으면 모든 창과 탭에서 PIN을 요청합니다. 잠겨 있는 동안 이 기기의 메일은 암호화된 상태로 유지되며 앱에는 키가 없습니다.",

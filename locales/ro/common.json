@@ -6810,6 +6810,18 @@
       "close": "Închidere"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Afișează mereu bara de meniu",
+    "always_show_description": "Altfel apare la apăsarea tastei Alt.",
+    "exit": "Ieșire",
+    "tray_pause": "Întrerupe notificările",
+    "tray_pause_hour": "Pentru 1 oră",
+    "tray_pause_tomorrow": "Până mâine",
+    "tray_resume": "Reactivează notificările",
+    "tray_open": "Deschide Bulwark",
+    "tray_quit": "Închide Bulwark",
+    "tray_exit": "Ieșire din Bulwark"
+  },
   "appLock": {
     "section_title": "Blocarea aplicației",
     "section_desc": "Cere un PIN după un timp fără utilizare, în fiecare fereastră și filă. Cât timp e blocată, e-mailurile de pe acest dispozitiv rămân criptate și aplicația nu are cheia lor.",

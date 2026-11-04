@@ -6810,6 +6810,18 @@
       "close": "Bezárás"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Menüsor mindig látható",
+    "always_show_description": "Különben az Alt billentyű lenyomásakor jelenik meg.",
+    "exit": "Kilépés",
+    "tray_pause": "Értesítések szüneteltetése",
+    "tray_pause_hour": "1 órára",
+    "tray_pause_tomorrow": "Holnapig",
+    "tray_resume": "Értesítések visszakapcsolása",
+    "tray_open": "Bulwark megnyitása",
+    "tray_quit": "Kilépés a Bulwarkból",
+    "tray_exit": "Kilépés a Bulwarkból"
+  },
   "appLock": {
     "section_title": "Alkalmazászár",
     "section_desc": "Használat nélküli idő után PIN-kódot kér, minden ablakban és lapon. Amíg zárolva van, az eszközön lévő levelek titkosítva maradnak, és az alkalmazásnak nincs hozzájuk kulcsa.",

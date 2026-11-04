@@ -6811,6 +6811,18 @@
       "close": "סגירה"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "תמיד להציג את סרגל התפריטים",
+    "always_show_description": "אחרת הוא מופיע בלחיצה על Alt.",
+    "exit": "יציאה",
+    "tray_pause": "השהיית התראות",
+    "tray_pause_hour": "לשעה אחת",
+    "tray_pause_tomorrow": "עד מחר",
+    "tray_resume": "הפעלת ההתראות מחדש",
+    "tray_open": "פתיחת Bulwark",
+    "tray_quit": "סגירת Bulwark",
+    "tray_exit": "יציאה מ-Bulwark"
+  },
   "appLock": {
     "section_title": "נעילת אפליקציה",
     "section_desc": "מבקשת קוד PIN אחרי זמן ללא שימוש, בכל חלון וכרטיסייה. בזמן הנעילה הדואר במכשיר הזה נשאר מוצפן ולאפליקציה אין מפתח אליו.",

@@ -6810,6 +6810,18 @@
       "close": "Хаах"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Цэсний мөрийг үргэлж харуулах",
+    "always_show_description": "Эс бөгөөс Alt товч дарахад гарч ирнэ.",
+    "exit": "Гарах",
+    "tray_pause": "Мэдэгдлийг түр зогсоох",
+    "tray_pause_hour": "1 цагийн турш",
+    "tray_pause_tomorrow": "Маргааш хүртэл",
+    "tray_resume": "Мэдэгдлийг дахин асаах",
+    "tray_open": "Bulwark-г нээх",
+    "tray_quit": "Bulwark-г хаах",
+    "tray_exit": "Bulwark-аас гарах"
+  },
   "appLock": {
     "section_title": "Аппын түгжээ",
     "section_desc": "Хэсэг хугацаанд ашиглаагүй бол цонх, таб бүрт ПИН код асууна. Түгжээтэй үед энэ төхөөрөмжийн имэйл шифрлэгдсэн хэвээр байх бөгөөд аппад түлхүүр нь байхгүй.",

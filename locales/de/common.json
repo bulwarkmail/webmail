@@ -6810,6 +6810,18 @@
       "close": "Schließen"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Menüleiste immer anzeigen",
+    "always_show_description": "Sonst erscheint sie, wenn Sie Alt drücken.",
+    "exit": "Beenden",
+    "tray_pause": "Benachrichtigungen pausieren",
+    "tray_pause_hour": "Für 1 Stunde",
+    "tray_pause_tomorrow": "Bis morgen",
+    "tray_resume": "Benachrichtigungen wieder einschalten",
+    "tray_open": "Bulwark öffnen",
+    "tray_quit": "Bulwark beenden",
+    "tray_exit": "Bulwark beenden"
+  },
   "appLock": {
     "section_title": "App-Sperre",
     "section_desc": "Fragt nach einer Zeit ohne Nutzung in jedem Fenster und Tab nach einer PIN. Solange gesperrt ist, bleiben E-Mails auf diesem Gerät verschlüsselt und die App hat keinen Schlüssel dafür.",

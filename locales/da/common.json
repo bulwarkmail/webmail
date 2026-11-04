@@ -6810,6 +6810,18 @@
       "close": "Luk"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Vis altid menulinjen",
+    "always_show_description": "Ellers vises den, når du trykker på Alt.",
+    "exit": "Afslut",
+    "tray_pause": "Sæt notifikationer på pause",
+    "tray_pause_hour": "I 1 time",
+    "tray_pause_tomorrow": "Indtil i morgen",
+    "tray_resume": "Slå notifikationer til igen",
+    "tray_open": "Åbn Bulwark",
+    "tray_quit": "Afslut Bulwark",
+    "tray_exit": "Afslut Bulwark"
+  },
   "appLock": {
     "section_title": "Applås",
     "section_desc": "Beder om en pinkode efter en tid uden brug, i alle vinduer og faner. Mens den er låst, forbliver mail på denne enhed krypteret, og appen har ingen nøgle til den.",

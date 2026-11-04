@@ -630,6 +630,21 @@ html[data-window-controls] [data-window-row-left] {
 }
 
 /*
+ * The desktop app's menu bar while it takes its row (components/layout/window-menu-bar.tsx).
+ * The app moves down under it, a page that fills the window starts below it, and the
+ * window's controls sit in the bar's row, so no column below makes room for them.
+ */
+html[data-menu-bar] {
+  --menu-bar-height: 2rem;
+  --app-top-inset: calc(env(safe-area-inset-top, 0px) + var(--menu-bar-height));
+  --titlebar-inset: var(--menu-bar-height);
+}
+
+html[data-menu-bar][data-window-controls] [data-window-end-column] {
+  padding-top: 0;
+}
+
+/*
  * The empty parts of the app's top rows are what the window is dragged by, and a
  * double-click there maximises. Anything to click stays clickable, and so does
  * whatever floats over a row: a region's drag wins over what's painted above it.
