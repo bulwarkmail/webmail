@@ -9,6 +9,8 @@ import { useIdentityStore } from '@/stores/identity-store';
 import { usePluginStore } from '@/stores/plugin-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { emailHooks } from '@/lib/plugin-hooks';
+import { useDocumentTitle } from '@/hooks/use-document-title';
+import { usePolicyStore } from '@/stores/policy-store';
 
 // The composer's window: when it tells the opening window to let go, and what
 // happens on a reload. The composer itself is stubbed; its own tests cover it.
@@ -248,6 +250,24 @@ describe('PopoutComposeApp', () => {
 
     await expect(Promise.all([handoff.complete(PAYLOAD), settle()]).then(([shown]) => shown)).resolves.toBe(true);
     expect(screen.getByTestId('composer').textContent).toBe('Moving');
+  });
+
+  // desktop-p2-5: the taskbar and Alt+Tab named a composer "New message - <account> - Bulwark" whatever it held.
+  it('in the desktop app, takes the subject for its title, without the account', async () => {
+    const title = vi.mocked(useDocumentTitle);
+    const policyBefore = usePolicyStore.getState();
+    usePolicyStore.setState({ loaded: true, isFeatureEnabled: () => true } as never);
+    window.bulwarkDesktop = { version: 1, platform: 'win32', windows: {} } as never;
+    try {
+      const handoff = createComposeHandoff()!;
+      openAt(handoff.id);
+      await settle();
+      await Promise.all([handoff.complete(PAYLOAD), settle()]);
+      expect(title.mock.calls.at(-1)).toEqual(['Moving', { showAccount: false }]);
+    } finally {
+      usePolicyStore.setState(policyBefore, true);
+      delete window.bulwarkDesktop;
+    }
   });
 
   // desktop-p3-1: the bin in a window of its own hands the main window what Undo brings back.

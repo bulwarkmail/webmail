@@ -10,6 +10,7 @@ import { useAccountStore } from "@/stores/account-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { usePluginStore } from "@/stores/plugin-store";
+import { usePolicyStore } from "@/stores/policy-store";
 import { toast } from "@/stores/toast-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { secondsUntilSend } from "@/lib/outgoing/send-progress-toast";
@@ -332,11 +333,18 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
   // The Window menu names a composer by its subject, or "New message" before there is one.
   const [subject, setSubject] = useState(payload.initialData?.subject ?? "");
   useDesktopWindowName(subject.trim() || t("email_composer.new_message"));
+  const modeLabel = mode === "reply" ? t("email_composer.reply")
+    : mode === "replyAll" ? t("email_composer.reply_all")
+    : mode === "forward" ? t("email_composer.forward")
+    : t("email_composer.new_message");
+  // The desktop app's taskbar and Alt+Tab: "<subject or New message> - Bulwark", as its
+  // Window menu names it (desktop-p2-5). Where the organisation keeps subjects out of
+  // titles, the kind of message instead.
+  const inDesktopApp = !!getDesktopBridge()?.windows;
+  const subjectInTitle = usePolicyStore((s) => s.loaded && s.isFeatureEnabled("tabTitleSubjectEnabled"));
   useDocumentTitle(
-    mode === "reply" ? t("email_composer.reply")
-      : mode === "replyAll" ? t("email_composer.reply_all")
-      : mode === "forward" ? t("email_composer.forward")
-      : t("email_composer.new_message"),
+    inDesktopApp && subjectInTitle ? subject.trim() || t("email_composer.new_message") : modeLabel,
+    { showAccount: !inDesktopApp },
   );
 
   // "Sending…" from the moment Send goes through, as the main window says it

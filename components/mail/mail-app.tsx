@@ -1593,7 +1593,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }, t);
     }
 
-    return mailTitleContext({ composer, subject, mailbox: mailboxLine }, { showSubject: subjectInTabTitle });
+    const inDesktopApp = !!getDesktopBridge()?.windows;
+    return mailTitleContext({ composer, subject, mailbox: mailboxLine }, { showSubject: subjectInTabTitle, desktopWindow: inDesktopApp })
+      ?? (inDesktopApp ? t('sidebar.mail') : null);
   }, [showComposer, composerMode, selectedEmail, selectedMailbox, mailboxes, t, subjectInTabTitle, otherAccountsUnread, isUnifiedView]);
   useDocumentTitle(titleContext);
   // The Window menu names this window by its folder, never by the open message (desktop-p2-5).

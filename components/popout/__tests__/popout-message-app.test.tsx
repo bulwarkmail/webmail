@@ -1,3 +1,4 @@
+import { useDocumentTitle } from '@/hooks/use-document-title';
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Email } from '@/lib/jmap/types';
@@ -94,6 +95,25 @@ describe('a message opened from a bulwark:// link', () => {
 });
 
 describe('PopoutMessageApp', () => {
+  // desktop-p2-5: "<subject> - <account> - Bulwark" was the main window's title too.
+  it('in the desktop app, leaves the account out of its title; in a browser, keeps it', async () => {
+    const title = vi.mocked(useDocumentTitle);
+    title.mockClear();
+    render(<PopoutMessageApp id="m/1" />);
+    await settle();
+    expect(title.mock.calls.at(-1)?.[1]).toEqual({ showAccount: true });
+    cleanup();
+    title.mockClear();
+    window.bulwarkDesktop = { version: 1, platform: 'win32', windows: {} } as never;
+    try {
+      render(<PopoutMessageApp id="m/1" />);
+      await settle();
+      expect(title.mock.calls.at(-1)?.[1]).toEqual({ showAccount: false });
+    } finally {
+      delete window.bulwarkDesktop;
+    }
+  });
+
   // pass-2 mail-p2-5: the window showed one message of a conversation.
   it('reads the message in its conversation, as the reading pane does', async () => {
     render(<PopoutMessageApp id="m/1" />);

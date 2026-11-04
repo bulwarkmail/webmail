@@ -8,6 +8,7 @@ import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useDesktopWindowName } from "@/lib/desktop/window-name";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
+import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { usePolicyStore } from "@/stores/policy-store";
 import { toast } from "@/stores/toast-store";
 import type { Email } from "@/lib/jmap/types";
@@ -105,7 +106,8 @@ function PopoutMessage({ emailId, accountId, ownerAccountId, fromLink }: { email
   const mailboxes = useEmailStore((s) => s.mailboxes);
   const [subject, setSubject] = useState<string | null>(null);
   const subjectInTitle = usePolicyStore((s) => s.loaded && s.isFeatureEnabled("tabTitleSubjectEnabled"));
-  useDocumentTitle(subjectInTitle ? subject : null);
+  // In the desktop app, "<subject> - Bulwark" in the taskbar: the main window is the one with the account (desktop-p2-5).
+  useDocumentTitle(subjectInTitle ? subject : null, { showAccount: !getDesktopBridge()?.windows });
   // Kept out where the organisation keeps subjects out of titles: the shell then says "Message".
   useDesktopWindowName(subjectInTitle ? subject : null);
 
