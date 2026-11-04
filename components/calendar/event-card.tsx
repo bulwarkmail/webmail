@@ -450,8 +450,9 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
       data-continues-after={continuesAfter || undefined}
       className={cn(
         // A block box: an inline one hangs its line's descent below the
-        // grid's last hour and makes the filled pane scroll.
-        "relative block w-full h-full text-start rounded-xs px-1.5 py-0.5 text-xs overflow-hidden",
+        // grid's last hour and makes the filled pane scroll. Clipped, not
+        // hidden: hidden makes the block a scroller and its title can't stick.
+        "relative block w-full h-full text-start rounded-xs px-1.5 py-0.5 text-xs overflow-clip",
         "hover:opacity-90 transition-opacity cursor-pointer",
         // Cut at the edge of the visible hours: a square edge and an arrow
         // say the event runs on past it.
@@ -470,6 +471,10 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
       {/* Shorter blocks have no room for a second line at the 60px hour, so
           their start time follows the title on the same line, when the
           block is wide enough to keep the title readable. */}
+      {/* The title stays in sight under the grid's header while the block
+          is: the morning part of a night train started at midnight, scrolled
+          out of view, and showed as a block with no name (pim-p2-19). */}
+      <div data-event-title-line className="sticky top-[var(--grid-header-height,0px)]">
       <div className="@container">
         <div className="flex items-baseline gap-1 min-w-0">
           <span dir="auto" className={cn("font-medium truncate", isInactive && "line-through")}>{event.title || t("events.no_title")}</span>
@@ -487,6 +492,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
           </div>
         </div>
       )}
+      </div>
       {visibleCalendarName && (
         <div data-calendar-name dir="auto" className="opacity-85 text-[0.65625rem] truncate">{visibleCalendarName}</div>
       )}
