@@ -15,6 +15,7 @@ import { useSettingsStore, type MonthTimedEventStyle } from "@/stores/settings-s
 import { readableTextOn } from "@/lib/color-transform";
 import { useLongPress } from "@/hooks/use-long-press";
 import { useCvdColor } from "@/hooks/use-cvd-color";
+import { endEventDragGrab, startEventDragGrab } from "@/lib/calendar/event-drag-grab";
 
 interface EventCardProps {
   event: CalendarEvent;
@@ -247,8 +248,18 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
   ) : card;
   const ariaLabel = `${event.title || t("events.no_title")}, ${spokenTime}${calendarName ? `, ${calendarName}` : ""}${statusLabel ? `, ${statusLabel}` : ""}`;
 
+  // A click that ends a drag isn't one: no popover under the moved event (pim-p3-2).
+  const dragEndedAt = useRef(0);
+  const openFromClick = (e: React.MouseEvent<HTMLElement>) => {
+    e.stopPropagation();
+    if (Date.now() - dragEndedAt.current < 300) return;
+    onClick?.(e.currentTarget.getBoundingClientRect());
+  };
+
   const handleDragStart = useCallback((e: DragEvent) => {
     e.stopPropagation();
+    // Where it was grabbed: a drop moves it by the distance dragged from here (pim-p3-2).
+    startEventDragGrab(event.id, e.currentTarget as Element, e.clientY);
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("application/x-calendar-event", JSON.stringify({
       type: "calendar-event",
@@ -266,6 +277,8 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
   }, [event, color, t, durationMinutes, timeString]);
 
   const handleDragEnd = useCallback(() => {
+    endEventDragGrab();
+    dragEndedAt.current = Date.now();
     setIsBeingDragged(false);
   }, []);
 
@@ -314,7 +327,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
   if (variant === "chip") {
     return withMarker(
       <button
-        onClick={(e) => { e.stopPropagation(); onClick?.(e.currentTarget.getBoundingClientRect()); }}
+        onClick={openFromClick}
         onMouseEnter={(e) => onMouseEnter?.(e.currentTarget.getBoundingClientRect())}
         onMouseLeave={() => onMouseLeave?.()}
         onContextMenu={handleContextMenu}
@@ -355,7 +368,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
     if (textStyle) {
       return (
         <button
-          onClick={(e) => { e.stopPropagation(); onClick?.(e.currentTarget.getBoundingClientRect()); }}
+          onClick={openFromClick}
           onMouseEnter={(e) => onMouseEnter?.(e.currentTarget.getBoundingClientRect())}
           onMouseLeave={() => onMouseLeave?.()}
           onContextMenu={handleContextMenu}
@@ -394,7 +407,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
     }
     return withMarker(
       <button
-        onClick={(e) => { e.stopPropagation(); onClick?.(e.currentTarget.getBoundingClientRect()); }}
+        onClick={openFromClick}
         onMouseEnter={(e) => onMouseEnter?.(e.currentTarget.getBoundingClientRect())}
         onMouseLeave={() => onMouseLeave?.()}
         onContextMenu={handleContextMenu}
@@ -435,7 +448,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
 
   return withMarker(
     <button
-      onClick={(e) => { e.stopPropagation(); onClick?.(e.currentTarget.getBoundingClientRect()); }}
+      onClick={openFromClick}
       onMouseEnter={(e) => onMouseEnter?.(e.currentTarget.getBoundingClientRect())}
       onMouseLeave={() => onMouseLeave?.()}
       onContextMenu={handleContextMenu}

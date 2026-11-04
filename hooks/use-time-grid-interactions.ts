@@ -4,7 +4,8 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { toast } from "@/stores/toast-store";
 import { debug } from "@/lib/debug";
-import { formatIsoInTimeZone, getEventStartDate } from "@/lib/calendar-utils";
+import { formatIsoInTimeZone, getEventEndDate, getEventStartDate } from "@/lib/calendar-utils";
+import { eventDragGrab } from "@/lib/calendar/event-drag-grab";
 import { fromDisplayDate, getEffectiveTimeZone } from "@/lib/timezone";
 import { movedEventUpdates } from "@/lib/calendar-participants";
 import { useEventUserEmails } from "@/hooks/use-event-user-emails";
@@ -44,6 +45,8 @@ export interface QuickCreateState {
 interface DropTargetState {
   dayKey: string;
   minutes: number;
+  /** The dragged event's length, to draw it where it will land; absent for a line only. */
+  durationMinutes?: number;
 }
 
 interface UseTimeGridInteractionsOptions {
@@ -88,6 +91,43 @@ function addWallClockMinutes(date: Date, minutes: number): Date {
   const shifted = new Date(date);
   shifted.setMinutes(shifted.getMinutes() + minutes);
   return shifted;
+}
+
+/**
+ * Below this a drag or resize is a nudge and changes nothing, as the platform's own drag
+ * threshold is for a click (pim-p3-2).
+ */
+export const MOVE_THRESHOLD_PX = 4;
+
+/** The minutes a pointer moved `deltaY` pixels stands for, in quarter hours; 0 for a nudge. */
+export function draggedMinutes(deltaY: number, hourHeight: number): number {
+  if (Math.abs(deltaY) < MOVE_THRESHOLD_PX) return 0;
+  // `|| 0`: no -0, so a nudge up compares equal to no move.
+  return Math.round((deltaY / hourHeight) * 60 / 15) * 15 || 0;
+}
+
+function dayOfKey(key: string): Date {
+  const [y, m, d] = key.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+/**
+ * Where a dragged event starts after a drop: moved by the distance dragged since it was
+ * grabbed (and by the days between the columns), as Google Calendar and Outlook do, not
+ * to the slot under the pointer (pim-p3-2). Null when that is no move at all.
+ */
+export function movedEventStart(
+  eventStart: Date,
+  grab: { dayKey: string; columnY: number },
+  drop: { dayKey: string; columnY: number },
+  hourHeight: number,
+): Date | null {
+  const days = Math.round((dayOfKey(drop.dayKey).getTime() - dayOfKey(grab.dayKey).getTime()) / 86_400_000);
+  const minutes = draggedMinutes(drop.columnY - grab.columnY, hourHeight);
+  if (days === 0 && minutes === 0) return null;
+  const moved = new Date(eventStart);
+  moved.setDate(moved.getDate() + days);
+  return addWallClockMinutes(moved, minutes);
 }
 
 export function useTimeGridInteractions({
@@ -228,8 +268,7 @@ export function useTimeGridInteractions({
     ref: NonNullable<typeof resizeRef.current>,
     clientY: number,
   ): { startMinutes: number; durationMinutes: number } => {
-    const deltaY = clientY - ref.startY;
-    const deltaMinutes = Math.round((deltaY / hourHeight) * 60 / 15) * 15;
+    const deltaMinutes = draggedMinutes(clientY - ref.startY, hourHeight);
     const originalEnd = ref.originalStartMinutes + ref.originalDurationMinutes;
 
     if (ref.edge === "bottom") {
@@ -423,15 +462,37 @@ export function useTimeGridInteractions({
     return Math.max(gridStartMinutes, Math.min(gridEndMinutes - 15, Math.round(raw / 15) * 15));
   }, [hourHeight, gridStartMinutes, gridEndMinutes]);
 
+  /**
+   * Where the event being dragged would start if dropped here: moved by the distance
+   * dragged when the card said where it was grabbed (pim-p3-2), else the pointer's slot
+   * (an all-day bar or a drag from elsewhere). `start` null: it stays where it is; absent: no grab known.
+   */
+  const dropPlacement = useCallback((e: DragEvent<HTMLDivElement>, dayKey: string, eventId?: string): { event?: CalendarEvent; start?: Date | null; slotMinutes: number } => {
+    const slotMinutes = snapDragMinutes(e);
+    const grab = eventDragGrab(eventId);
+    const event = grab ? useCalendarStore.getState().events.find((ev) => ev.id === grab.eventId) : undefined;
+    if (!grab || !event?.start) return { event, slotMinutes };
+    const columnY = e.clientY - e.currentTarget.getBoundingClientRect().top;
+    return { event, start: movedEventStart(getEventStartDate(event), grab, { dayKey, columnY }, hourHeight), slotMinutes };
+  }, [snapDragMinutes, hourHeight]);
+
   const handleColumnDragOver = useCallback((e: DragEvent<HTMLDivElement>, dayKey: string) => {
     if (!e.dataTransfer.types.includes("application/x-calendar-event")) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-    const minutes = snapDragMinutes(e);
+    const { event, start, slotMinutes } = dropPlacement(e, dayKey);
+    let next: DropTargetState = { dayKey, minutes: slotMinutes };
+    if (event && start !== undefined) {
+      // The event itself, drawn where it will land; where it is now when that's no move.
+      const at = start ?? getEventStartDate(event);
+      const durationMinutes = Math.max(15, Math.round((getEventEndDate(event).getTime() - getEventStartDate(event).getTime()) / 60000));
+      const sameDay = format(at, "yyyy-MM-dd") === dayKey;
+      next = { dayKey, minutes: sameDay ? at.getHours() * 60 + at.getMinutes() : gridStartMinutes, durationMinutes };
+    }
     setDropTarget((prev) =>
-      prev?.dayKey === dayKey && prev?.minutes === minutes ? prev : { dayKey, minutes }
+      prev?.dayKey === next.dayKey && prev?.minutes === next.minutes && prev?.durationMinutes === next.durationMinutes ? prev : next
     );
-  }, [snapDragMinutes]);
+  }, [dropPlacement, gridStartMinutes]);
 
   const handleColumnDragLeave = useCallback((e: DragEvent<HTMLDivElement>) => {
     const related = e.relatedTarget as Node | null;
@@ -446,9 +507,14 @@ export function useTimeGridInteractions({
     setDropTarget(null);
     try {
       const data = JSON.parse(json);
-      const minutes = snapDragMinutes(e);
-      const newStart = new Date(day);
-      newStart.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
+      const placement = dropPlacement(e, format(day, "yyyy-MM-dd"), data.eventId);
+      // A nudge, or dropped where it was: nothing to save.
+      if (placement.event && placement.start === null) return;
+      let newStart = placement.start;
+      if (!newStart) {
+        newStart = new Date(day);
+        newStart.setHours(Math.floor(placement.slotMinutes / 60), placement.slotMinutes % 60, 0, 0);
+      }
       const event = useCalendarStore.getState().events.find(ev => ev.id === data.eventId);
       // Emit `start` as a floating wall-clock in the event's own timeZone.
       // If we used browser-local, the server would reinterpret it in event.timeZone
@@ -469,7 +535,7 @@ export function useTimeGridInteractions({
     } catch (error) {
       toast.error(describeError ? describeError(error, errorMessages.move) : errorMessages.move);
     }
-  }, [snapDragMinutes, errorMessages.move, describeError, userEmailsFor, onMoveEvent]);
+  }, [dropPlacement, errorMessages.move, describeError, userEmailsFor, onMoveEvent]);
 
   return {
     dragCreate,
