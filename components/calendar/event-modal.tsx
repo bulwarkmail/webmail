@@ -623,8 +623,15 @@ export function EventModal({
     });
   }, [isDirty, confirmDiscard, t]);
   const requestClose = useCallback(() => whenDiscarded(onClose), [whenDiscarded, onClose]);
-  // Leaving the form of an existing event goes back to its summary.
-  const backToView = useCallback(() => whenDiscarded(() => { resetForm(); setMode("view"); }), [whenDiscarded, resetForm]);
+  // Leaving the form of an existing event goes back to where the user came
+  // from: its summary when that was open, else the grid. The form opened
+  // straight from the event's card or menu (Edit, E) has no summary behind
+  // it; showing one then put the event in the panel and the card at once
+  // (pim-p3-8).
+  const backToView = useCallback(
+    () => (startInEditMode ? requestClose() : whenDiscarded(() => { resetForm(); setMode("view"); })),
+    [startInEditMode, requestClose, whenDiscarded, resetForm],
+  );
 
   // The event window the attendees' free/busy is checked against. The
   // fields are a wall clock in the form's zone, as the save path labels
