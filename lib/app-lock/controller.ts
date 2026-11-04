@@ -191,6 +191,7 @@ export function bootAppLock(): void {
     return;
   }
   markDocument(false);
+  void clearOrphanedDesktopLock();
   // The look already came back empty: nothing to hold back for.
   if (headScriptFoundNoVault() && !setupNeeded()) return;
   hold = newHold();
@@ -201,6 +202,19 @@ export function bootAppLock(): void {
     phase = 'checking';
   }
   void settleNoFile();
+}
+
+/**
+ * Main keeps a lock and there is no vault for it: a same-origin plugin frame enrolled one, or
+ * this profile's storage went. Nothing here could ever prove it, so tray, toasts and titles would
+ * stay blank for good. No page can lift main's lock on its word, so main asks the user.
+ */
+async function clearOrphanedDesktopLock(): Promise<void> {
+  const member = getDesktopBridge()?.appLock;
+  if (!member?.clearOrphan) return;
+  const status = await member.status().catch(() => null);
+  if (!status?.enrolled || await vaultExists() || enabling || readAppLockFile().on) return;
+  await member.clearOrphan().catch(() => false);
 }
 
 function lockedFromNow(): void {
