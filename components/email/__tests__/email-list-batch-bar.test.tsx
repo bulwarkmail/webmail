@@ -108,6 +108,28 @@ describe('selection bar: Move, read state and the reading pane', () => {
   });
 });
 
+describe('select all in the folder (mail-p2-11)', () => {
+  it('offers the rest of the folder once every loaded row is ticked, and ticks it', async () => {
+    const third = { ...useEmailStore.getState().emails[0], id: 'three', threadId: 't-three', blobId: 'b-three' } as Email;
+    const loadMoreEmails = vi.fn(async () => {
+      useEmailStore.setState({ emails: [...useEmailStore.getState().emails, third], hasMoreEmails: false });
+    });
+    useEmailStore.setState({ hasMoreEmails: true, loadMoreEmails, totalEmails: 3 });
+    render(<EmailList emails={useEmailStore.getState().emails} />);
+    const offer = screen.getByTestId('select-all-in-view');
+    expect(offer.textContent).toBe('mail_p2_list.select_all_in_folder');
+    fireEvent.click(offer.querySelector('button')!);
+    await waitFor(() => expect([...useEmailStore.getState().selectedEmailKeys].sort()).toEqual(['one', 'three', 'two']));
+    expect(loadMoreEmails).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers nothing while only some loaded rows are ticked', () => {
+    useEmailStore.setState({ hasMoreEmails: true, selectedEmailKeys: new Set(['one']) });
+    render(<EmailList emails={useEmailStore.getState().emails} />);
+    expect(screen.queryByTestId('select-all-in-view')).toBeNull();
+  });
+});
+
 describe('the reading pane for a selection (mail-p2-15)', () => {
   it('names its buttons in words, while the bar beside the list keeps icons', () => {
     const host = document.createElement('div');

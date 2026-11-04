@@ -143,6 +143,9 @@ type ListItem =
   | { kind: 'header'; section: 'unread' | 'rest' }
   | { kind: 'unread-empty' };
 
+/** The most messages "Select all N conversations" loads to tick them (mail-p2-11). */
+const SELECT_ALL_LIMIT = 5000;
+
 /** Below this width the batch toolbar drops its labels (see batchNarrow). */
 const BATCH_TOOLBAR_WIDE = 640;
 
@@ -848,6 +851,57 @@ export function EmailList({
   const currentMailbox = mailboxes.find(m => m.id === selectedMailbox);
   const isEmptyableFolder = currentMailbox?.role === 'trash' || currentMailbox?.role === 'junk';
 
+  // Every loaded row ticked and more on the server: offer the rest, as Gmail
+  // does (mail-p2-11). Taking it loads the remaining pages and ticks them,
+  // so the batch actions, their Undo and their counts work as for any
+  // selection. At most SELECT_ALL_LIMIT messages are loaded for it.
+  const [selectingAll, setSelectingAll] = useState(false);
+  const allLoadedSelected = hasSelection && emails.length > 0 && emails.every((e) => selectedEmailKeys.has(emailKeyFor(e)));
+  const offerSelectAll = allLoadedSelected && footerHasMore && !isScheduledView && !hideBatchToolbar && !!client
+    && emails.length < SELECT_ALL_LIMIT;
+  const inPlainFolder = !!currentMailbox && !searchQuery.trim() && isFilterEmpty(searchFilters) && !isUnifiedView;
+  const viewTotal = Math.max(
+    inPlainFolder
+      ? (disableThreading ? currentMailbox.totalEmails : (currentMailbox.totalThreads || currentMailbox.totalEmails))
+      : totalEmails,
+    selectionRows + 1,
+  );
+  const selectAllLabel = inPlainFolder
+    ? tRoot(disableThreading ? 'mail_p2_list.select_all_emails_in_folder' : 'mail_p2_list.select_all_in_folder', {
+        count: viewTotal,
+        folder: localizeMailboxName(currentMailbox.role, currentMailbox.name, (k) => tSidebar(`mailboxes.${k}`)),
+      })
+    : tRoot(disableThreading ? 'mail_p2_list.select_all_emails' : 'mail_p2_list.select_all_conversations', { count: viewTotal });
+  const handleSelectAllInView = async () => {
+    if (!client || selectingAll) return;
+    const view = () => {
+      const state = useEmailStore.getState();
+      return `${state.selectedMailbox}|${state.searchQuery}|${state.isUnifiedView}|${state.unifiedRole}`;
+    };
+    const startedIn = view();
+    setSelectingAll(true);
+    try {
+      for (let pages = 0; pages < 1000; pages++) {
+        const state = useEmailStore.getState();
+        if (view() !== startedIn || state.selectedEmailKeys.size === 0) return;
+        if (!state.hasMoreEmails || state.emails.length >= SELECT_ALL_LIMIT) break;
+        if (state.isLoadingMore) {
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          continue;
+        }
+        const before = state.emails.length;
+        await state.loadMoreEmails(client);
+        const after = useEmailStore.getState();
+        if (after.emails.length === before && !after.isLoadingMore) break;
+      }
+      // Another folder opened or the selection was cleared meanwhile: leave it.
+      if (view() !== startedIn || useEmailStore.getState().selectedEmailKeys.size === 0) return;
+      useEmailStore.getState().selectAllEmails();
+    } finally {
+      setSelectingAll(false);
+    }
+  };
+
   const handleEmptyFolder = async () => {
     if (!client || isProcessing || !currentMailbox) return;
 
@@ -1122,7 +1176,7 @@ export function EmailList({
         inert={!(hasSelection && !isScheduledView && !hideBatchToolbar)}
         className={cn(
           "transition-all duration-300 ease-in-out overflow-hidden",
-          hasSelection && !isScheduledView && !hideBatchToolbar ? "max-h-16 opacity-100" : "max-h-0 opacity-0"
+          hasSelection && !isScheduledView && !hideBatchToolbar ? (offerSelectAll || selectingAll ? "max-h-28 opacity-100" : "max-h-16 opacity-100") : "max-h-0 opacity-0"
         )}
       >
         {/* Only drawn while shown: collapsed it would still render every button. */}
@@ -1217,6 +1271,19 @@ export function EmailList({
             )}
           </div>
         </div>
+        )}
+        {hasSelection && !isScheduledView && !hideBatchToolbar && (offerSelectAll || selectingAll) && (
+          <div className="px-4 py-1.5 border-b border-border bg-accent/20 text-center text-sm" data-testid="select-all-in-view">
+            <button
+              type="button"
+              onClick={() => void handleSelectAllInView()}
+              disabled={selectingAll}
+              aria-busy={selectingAll || undefined}
+              className="text-primary font-medium hover:underline disabled:no-underline disabled:opacity-70"
+            >
+              {selectingAll ? tRoot('mail_p2_list.selecting_all') : selectAllLabel}
+            </button>
+          </div>
         )}
       </div>
 

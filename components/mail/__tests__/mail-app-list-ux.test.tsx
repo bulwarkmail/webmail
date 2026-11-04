@@ -174,6 +174,18 @@ describe('the reading pane for a selection', () => {
   });
 });
 
+describe('the list header checkbox (mail-p2-11)', () => {
+  it('ticks every loaded row on the first click and clears them on the second', () => {
+    const second = { ...message, id: 'm2', threadId: 't-m2', subject: 'm2' } as Email;
+    useEmailStore.setState({ emails: [message, second] } as never);
+    render(<MailApp />);
+    fireEvent.click(screen.getByRole('button', { name: /^email_list\.batch_actions\.select/ }));
+    expect([...useEmailStore.getState().selectedEmailKeys].sort()).toEqual(['m1', 'm2']);
+    fireEvent.click(screen.getByRole('button', { name: 'email_list.batch_actions.clear_selection' }));
+    expect(useEmailStore.getState().selectedEmailKeys.size).toBe(0);
+  });
+});
+
 describe('the new folder dialogs', () => {
   it.each([
     ['stub new folder', 'mail_list_extra.new_folder_title'],

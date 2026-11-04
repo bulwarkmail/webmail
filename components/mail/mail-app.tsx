@@ -5672,24 +5672,15 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   {/* Select / Select All toggle */}
                   <ToolbarButton
                     onClick={() => {
-                      if (selectedEmailKeys.size > 0) {
-                        if (selectedEmailKeys.size === activeEmails.length) {
-                          clearSelection();
-                        } else {
-                          selectAllEmails();
-                        }
-                      } else if (activeEmails.length > 0) {
-                        // The open message when it is in this list, else the
-                        // first row - as an email, so the selection is keyed by
-                        // its owning account and not by a colliding id.
-                        const openKey = selectedEmail ? emailKeyFor(selectedEmail) : null;
-                        const target = activeEmails.find((e) => emailKeyFor(e) === openKey) ?? activeEmails[0];
-                        toggleEmailSelection(target);
-                      }
+                      // One click ticks every loaded row, a second clears
+                      // them, as Gmail's box does (mail-p2-11). The bar then
+                      // offers the rest of the folder.
+                      if (selectedEmailKeys.size > 0) clearSelection();
+                      else if (activeEmails.length > 0) selectAllEmails();
                     }}
                     disabled={isScheduledView}
                     active={selectedEmailKeys.size > 0}
-                    label={selectedEmailKeys.size > 0 ? (selectedEmailKeys.size === activeEmails.length ? t('email_list.batch_actions.clear_selection') : t('email_list.batch_actions.select_all')) : t('email_list.batch_actions.select')}
+                    label={selectedEmailKeys.size > 0 ? t('email_list.batch_actions.clear_selection') : t('email_list.batch_actions.select_all')}
                     title={isScheduledView ? t('email_viewer.scheduled_actions_only') : undefined}
                   >
                     {selectedEmailKeys.size > 0 ? <CheckSquare /> : <Square />}
