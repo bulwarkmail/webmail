@@ -481,7 +481,8 @@ interface ContactStore {
   /** Put a category on contacts, e.g. to undo removing it. */
   addKeyword: (client: IJMAPClient | null, keyword: string, contactIds: string[]) => Promise<void>;
 
-  importContacts: (client: IJMAPClient | null, contacts: ContactCard[]) => Promise<number>;
+  /** Into `addressBookId` when given, else where the server files new cards. */
+  importContacts: (client: IJMAPClient | null, contacts: ContactCard[], addressBookId?: string) => Promise<number>;
 
   // Trusted senders address book
   loadTrustedSendersBook: (client: IJMAPClient) => Promise<void>;
@@ -1629,22 +1630,46 @@ export const useContactStore = create<ContactStore>()(
         return get().trustedSenderEmails.includes(normalizedEmail);
       },
 
-      importContacts: async (client, contacts) => {
+      importContacts: async (client, contacts, targetBookId) => {
         const { supportsSync } = get();
         let imported = 0;
         // The book the cards landed in, as the server filed the first one.
         let addressBookId = '';
+        const book = targetBookId ? get().addressBooks.find(b => b.id === targetBookId) : undefined;
+        // The chosen book as the server knows it, and the login and account it belongs to.
+        const target = book ? resolveRawAddressBookIds({ [book.id]: true }, get().addressBooks) : undefined;
 
         for (const contact of contacts) {
           try {
             let added: ContactCard;
-            if (client && supportsSync) {
+            if (client && supportsSync && book && target) {
+              const { id: _id, ...data } = contact;
+              const sharedAccountId = target.sharedAccountId;
+              const created = await resolveAccountClient(client, target.localAccountId)
+                .createContact({ ...data, addressBookIds: target.addressBookIds }, sharedAccountId);
+              // Under the ids the listings give it, as createContact keeps it.
+              added = sharedAccountId
+                ? {
+                  ...created,
+                  id: `${sharedAccountId}:${created.id}`,
+                  originalId: created.id,
+                  accountId: sharedAccountId,
+                  accountName: book.accountName,
+                  isShared: true,
+                  addressBookIds: Object.fromEntries(
+                    Object.entries(created.addressBookIds ?? {}).map(([bookId, v]) => [`${sharedAccountId}:${bookId}`, v]),
+                  ),
+                }
+                : created;
+              if (target.localAccountId) added = prefixContactsWithLocalAccount([added], target.localAccountId)[0];
+            } else if (client && supportsSync) {
               const { id: _id, ...data } = contact;
               added = await client.createContact(data);
             } else {
               added = {
                 ...contact,
                 id: `local-${generateUUID()}`,
+                ...(book ? { addressBookIds: { [book.id]: true } } : {}),
               };
             }
             set((state) => ({ contacts: [...state.contacts, added] }));

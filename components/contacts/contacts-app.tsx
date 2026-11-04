@@ -579,12 +579,15 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
     }
   }, [client, createAddressBook, refreshAddressBooks, t]);
 
-  const handleImportContacts = useCallback(async (importedContacts: ContactCard[]) => {
+  const handleImportContacts = useCallback(async (importedContacts: ContactCard[], addressBookId?: string) => {
     return importContacts(
       supportsSync && client ? client : null,
-      importedContacts
+      importedContacts,
+      addressBookId,
     );
   }, [supportsSync, client, importContacts]);
+  // "Import into" starts at the address book on screen.
+  const openBookId = typeof activeCategory === "object" && "addressBookId" in activeCategory ? activeCategory.addressBookId : undefined;
 
   const handleSelectContact = (id: string) => {
     setSelectedContact(id);
@@ -1602,6 +1605,8 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
           onImport={handleImportContacts}
           initialFile={launchedFile.file}
           onClose={launchedFile.done}
+          addressBooks={supportsSync ? writableBooks : []}
+          defaultAddressBookId={openBookId}
         />
       )}
       {showImportDialog && (
@@ -1609,6 +1614,8 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
           existingContacts={contacts}
           onImport={handleImportContacts}
           onClose={() => setShowImportDialog(false)}
+          addressBooks={supportsSync ? writableBooks : []}
+          defaultAddressBookId={openBookId}
         />
       )}
       {sharingAddressBookId && client && (() => {
