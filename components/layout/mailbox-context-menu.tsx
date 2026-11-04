@@ -31,6 +31,7 @@ import {
 import { FolderRulesSubMenu } from "@/components/email/rules-menu";
 import { openMailExport } from "@/stores/mail-transfer-store";
 import { useDevicePolicy } from "@/hooks/use-device-policy";
+import { useConnectionState } from "@/hooks/use-connection-state";
 
 interface Position {
   x: number;
@@ -45,6 +46,20 @@ export type MailboxContextTarget =
   | { kind: "folders-section"; accountId?: string };
 
 const PATH_SEPARATOR = " › ";
+
+/** Unread messages in a folder and the folders under it; undefined where a count isn't known. */
+export function unreadInTree(mailbox: Mailbox, mailboxes: Mailbox[]): number | undefined {
+  let total = 0;
+  const seen = new Set<string>();
+  const visit = (box: Mailbox): boolean => {
+    if (seen.has(box.id)) return true;
+    seen.add(box.id);
+    if (typeof box.unreadEmails !== "number") return false;
+    total += box.unreadEmails;
+    return mailboxes.filter((child) => child.parentId === box.id).every(visit);
+  };
+  return visit(mailbox) ? total : undefined;
+}
 const MAX_PATH_LENGTH = 40;
 const MAX_SEGMENT_LENGTH = 16;
 
@@ -147,6 +162,11 @@ export function MailboxContextMenu({
   const tExport = useTranslations("mail_export");
   // Organisation > Devices > No export hides it; import stays.
   const exportOff = useDevicePolicy().noExport;
+  // Folders, rules and sharing need the server. Marking read waits in the outbox
+  // where the account keeps its mail on this device.
+  const { offline, canChangeMail } = useConnectionState();
+  const tMenu = useTranslations("menuAudit");
+  const offlineHeader = offline ? <ContextMenuHeader>{tMenu("offline_header")}</ContextMenuHeader> : null;
 
   const handleAction = (action: () => void) => {
     action();
@@ -198,13 +218,14 @@ export function MailboxContextMenu({
   if (target.kind === "folders-section") {
     return (
       <ContextMenu ref={menuRef} isOpen={isOpen} position={position} onClose={onClose}>
+        {offlineHeader}
         {!target.accountId && (
           <>
             <ContextMenuItem
               icon={CheckCheck}
               label={t("mark_all_folders_read")}
               onClick={() => handleAction(onMarkAllFoldersRead!)}
-              disabled={!onMarkAllFoldersRead}
+              disabled={!onMarkAllFoldersRead || !canChangeMail}
             />
             <ContextMenuSeparator />
           </>
@@ -213,14 +234,14 @@ export function MailboxContextMenu({
           icon={FolderPlus}
           label={t("new_folder")}
           onClick={() => handleAction(() => onCreateFolder?.(target.accountId))}
-          disabled={!onCreateFolder}
+          disabled={!onCreateFolder || offline}
           testId="mailbox-new-folder"
         />
         <ContextMenuItem
           icon={RefreshCw}
           label={t("refresh")}
           onClick={() => handleAction(onRefresh!)}
-          disabled={!onRefresh}
+          disabled={!onRefresh || offline}
         />
         {accountItems(target.accountId)}
       </ContextMenu>
@@ -238,6 +259,8 @@ export function MailboxContextMenu({
   const canSetSeen = mailbox.myRights?.maySetSeen !== false;
   const canRemoveItems = mailbox.myRights?.mayRemoveItems !== false;
   const canAddItems = mailbox.myRights?.mayAddItems !== false;
+  const nothingUnread = mailbox.unreadEmails === 0;
+  const nothingUnreadBelow = unreadInTree(mailbox, mailboxes) === 0;
   // Sharing needs the mail:share extension (handler present) and, on a folder
   // someone else shared with us, their permission to re-share it.
   const canShare = !!onShareFolder && (!mailbox.isShared || mailbox.myRights?.mayShare === true);
@@ -252,19 +275,20 @@ export function MailboxContextMenu({
       <ContextMenuHeader>
         <span title={fullPath}>{renderShortenedPath(fullPath)}</span>
       </ContextMenuHeader>
+      {offlineHeader}
 
       <ContextMenuItem
         icon={MailOpen}
         label={t("mark_folder_read")}
         onClick={() => handleAction(() => onMarkFolderRead?.(mailbox.id))}
-        disabled={!onMarkFolderRead || !canSetSeen}
+        disabled={!onMarkFolderRead || !canSetSeen || !canChangeMail || nothingUnread}
       />
       {target.hasChildren && (
         <ContextMenuItem
           icon={Mails}
           label={t("mark_folder_tree_read")}
           onClick={() => handleAction(() => onMarkFolderTreeRead?.(mailbox.id))}
-          disabled={!onMarkFolderTreeRead || !canSetSeen}
+          disabled={!onMarkFolderTreeRead || !canSetSeen || !canChangeMail || nothingUnreadBelow}
         />
       )}
 
@@ -274,14 +298,14 @@ export function MailboxContextMenu({
         icon={FolderPlus}
         label={t("new_subfolder")}
         onClick={() => handleAction(() => onCreateSubfolder?.(mailbox.id))}
-        disabled={!onCreateSubfolder || !canCreateChild}
+        disabled={!onCreateSubfolder || !canCreateChild || offline}
         testId="mailbox-new-subfolder"
       />
       <ContextMenuItem
         icon={Pencil}
         label={t("rename")}
         onClick={() => handleAction(() => onRenameFolder?.(mailbox.id))}
-        disabled={!onRenameFolder || !canRename}
+        disabled={!onRenameFolder || !canRename || offline}
         testId="mailbox-rename"
       />
       {onShareFolder && (
@@ -289,11 +313,11 @@ export function MailboxContextMenu({
           icon={Users}
           label={t("share")}
           onClick={() => handleAction(() => onShareFolder(mailbox.id))}
-          disabled={!canShare}
+          disabled={!canShare || offline}
           testId="mailbox-share"
         />
       )}
-      <FolderRulesSubMenu mailbox={mailbox} onClose={onClose} />
+      <FolderRulesSubMenu mailbox={mailbox} onClose={onClose} disabled={offline} />
       {notifications && (() => {
         const muted = notifications.isMailboxMuted(mailbox);
         return (
@@ -313,7 +337,7 @@ export function MailboxContextMenu({
             icon={FolderPlus}
             label={t("new_folder")}
             onClick={() => handleAction(() => onCreateFolder?.(target.sharedAccountId))}
-            disabled={!onCreateFolder}
+            disabled={!onCreateFolder || offline}
             testId="mailbox-new-folder"
           />
           {accountItems(target.sharedAccountId)}
@@ -326,7 +350,7 @@ export function MailboxContextMenu({
         icon={Upload}
         label={tImport("menu_import")}
         onClick={() => handleAction(() => onImportEmail?.(mailbox.id))}
-        disabled={!onImportEmail || !canAddItems}
+        disabled={!onImportEmail || !canAddItems || offline}
       />
       {!exportOff && (
         <ContextMenuItem
@@ -341,7 +365,7 @@ export function MailboxContextMenu({
         icon={RefreshCw}
         label={t("refresh")}
         onClick={() => handleAction(onRefresh!)}
-        disabled={!onRefresh}
+        disabled={!onRefresh || offline}
       />
 
       {/* Destructive entries last (R6). */}
@@ -351,14 +375,14 @@ export function MailboxContextMenu({
         icon={FolderX}
         label={isTrashOrJunk ? t("empty_folder") : t("empty_folder_generic")}
         onClick={() => handleAction(() => onEmptyFolder?.(mailbox.id))}
-        disabled={!onEmptyFolder || mailbox.totalEmails === 0 || !canRemoveItems}
+        disabled={!onEmptyFolder || mailbox.totalEmails === 0 || !canRemoveItems || offline}
         destructive
       />
       <ContextMenuItem
         icon={Trash2}
         label={t("delete_folder")}
         onClick={() => handleAction(() => onDeleteFolder?.(mailbox.id))}
-        disabled={!onDeleteFolder || !canDelete}
+        disabled={!onDeleteFolder || !canDelete || offline}
         destructive
         testId="mailbox-delete"
       />

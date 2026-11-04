@@ -65,6 +65,8 @@ interface ContactContextMenuProps {
   onBatchExport?: () => void;
   onBatchAddToGroup?: () => void;
   onBatchDelete?: () => void;
+  /** The contact is in an address book shared read-only: no Edit, Move or Delete. */
+  readOnly?: boolean;
 }
 
 export function ContactContextMenu({
@@ -88,8 +90,10 @@ export function ContactContextMenu({
   onBatchExport,
   onBatchAddToGroup,
   onBatchDelete,
+  readOnly = false,
 }: ContactContextMenuProps) {
   const t = useTranslations("contacts");
+  const tMenu = useTranslations("menuAudit");
   const printOff = useStrictestDevices().noPrint;
   const email = getContactPrimaryEmail(contact);
   const phone = getContactPrimaryPhone(contact);
@@ -134,7 +138,7 @@ export function ContactContextMenu({
         </ContextMenuHeader>
         <ContextMenuItem
           icon={Users}
-          label={t("bulk.add_to_group")}
+          label={tMenu("contacts_bulk_add_to_group")}
           onClick={handle(() => onBatchAddToGroup?.())}
           disabled={!onBatchAddToGroup}
         />
@@ -179,12 +183,12 @@ export function ContactContextMenu({
           onClick={handle(handleCall)}
         />
       )}
-      {onEdit && <ContextMenuItem icon={Pencil} label={t("context_menu.edit")} onClick={handle(onEdit)} />}
+      {onEdit && !readOnly && <ContextMenuItem icon={Pencil} label={t("context_menu.edit")} onClick={handle(onEdit)} />}
       {!inDetail && <ContextMenuSeparator />}
       {onAddToGroup && (
         <ContextMenuItem
           icon={Users}
-          label={t("context_menu.add_to_group")}
+          label={tMenu("contacts_add_to_group")}
           onClick={handle(onAddToGroup)}
         />
       )}
@@ -195,7 +199,7 @@ export function ContactContextMenu({
           onClick={handle(onDuplicate)}
         />
       )}
-      {onMoveTo && (
+      {onMoveTo && !readOnly && (
         <ContextMenuItem icon={FolderInput} label={t("address_books.move_to")} onClick={handle(onMoveTo)} />
       )}
       {email && (
@@ -225,13 +229,18 @@ export function ContactContextMenu({
           onClick={handle(handlePrint)}
         />
       )}
-      <ContextMenuSeparator />
-      <ContextMenuItem
-        icon={Trash2}
-        label={t("context_menu.delete")}
-        onClick={handle(onDelete)}
-        destructive
-      />
+      {!readOnly && (
+        <>
+          <ContextMenuSeparator />
+          <ContextMenuItem
+            icon={Trash2}
+            label={t("context_menu.delete")}
+            shortcut="Del"
+            onClick={handle(onDelete)}
+            destructive
+          />
+        </>
+      )}
     </ContextMenu>
   );
 }

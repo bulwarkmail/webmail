@@ -3663,6 +3663,13 @@
     },
     "find_emails_from": "E-mails van {name} zoeken"
   },
+  "menuMove": {
+    "filter_placeholder": "Map zoeken",
+    "recent": "Recent",
+    "no_match": "Geen map gevonden",
+    "choose_folder": "Map kiezen…",
+    "current_folder": "Staat al in {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Map markeren als gelezen",
     "mark_folder_tree_read": "Map en submappen markeren als gelezen",
@@ -6476,6 +6483,9 @@
   "top_bar": {
     "more": "Meer opties"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Offlinemelding verbergen"
+  },
   "shell": {
     "resize": "Formaat wijzigen",
     "update_available": "Update beschikbaar",
@@ -6520,6 +6530,19 @@
     "group_plugins": "Plug-ins",
     "group_account": "Account",
     "switch_to": "Overschakelen naar {account}"
+  },
+  "menuAudit": {
+    "offline_header": "U bent offline. Sommige acties hebben een verbinding nodig.",
+    "files_new_folder": "Nieuwe map…",
+    "files_new_file": "Nieuw bestand…",
+    "files_new_text_file": "Nieuw tekstbestand…",
+    "files_upload_files": "Bestanden uploaden…",
+    "files_upload_folder": "Map uploaden…",
+    "files_share": "Delen…",
+    "files_share_button": "Delen",
+    "contacts_add_to_group": "Aan groep toevoegen…",
+    "contacts_bulk_add_to_group": "Aan groep toevoegen…",
+    "schedule_send": "Verzenden plannen…"
   },
   "notification_center": {
     "title": "Meldingen",
@@ -6876,6 +6899,23 @@
       "close": "Sluit"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Menubalk altijd tonen",
+    "always_show_description": "Anders verschijnt hij bij een druk op Alt.",
+    "exit": "Afsluiten",
+    "tray_pause": "Meldingen pauzeren",
+    "tray_pause_hour": "1 uur",
+    "tray_pause_tomorrow": "Tot morgen",
+    "tray_resume": "Meldingen weer aanzetten",
+    "tray_open": "Bulwark openen",
+    "tray_quit": "Bulwark afsluiten",
+    "tray_exit": "Bulwark afsluiten"
+  },
+  "desktopMenus": {
+    "save_draft": "Concept opslaan",
+    "attach_files": "Bestanden bijvoegen…",
+    "shortcut_apps": "Naar E-mail, Agenda, Contacten of Bestanden"
+  },
   "appLock": {
     "section_title": "App-vergrendeling",
     "section_desc": "Vraagt om een pincode na een tijd zonder gebruik, in elk venster en tabblad. Zolang de app vergrendeld is, kan die de mail op dit apparaat niet lezen totdat iemand de pincode invoert.",
@@ -7131,6 +7171,44 @@
     "offline_hint_outbox": "Wat je nu verstuurt, wacht in Postvak UIT en gaat weg zodra je weer online bent.",
     "offline_send_saved": "Je bent offline. Het bericht is opgeslagen in Concepten.",
     "offline_send_unsaved": "Je bent offline. Het bericht blijft hier en wordt in Concepten opgeslagen zodra je weer online bent."
+  },
+  "desktopDevTools": {
+    "section_title": "Probleemoplossing",
+    "label": "Ontwikkelaarstools ({shortcut})",
+    "description": "Met {shortcut} en F12 openen de ontwikkelaarstools voor het venster waarin je bent. Gaat weer uit als de app vergrendelt.",
+    "forced_off": "Uitgezet door je organisatie.",
+    "locked": "Ontgrendel de app om dit te wijzigen.",
+    "menu_toggle": "Ontwikkelaarstools tonen of verbergen"
+  },
+  "fileDrop": {
+    "overlay_label": "Bestanden neerzetten",
+    "overlay_title": "Waar moeten de bestanden heen?",
+    "overlay_hint": "Zet buiten de keuzes neer of druk op Esc om te annuleren.",
+    "files_unknown": "Bestanden",
+    "files_summary": "{count, plural, one {# bestand} other {# bestanden}}",
+    "files_summary_size": "{count, plural, one {# bestand} other {# bestanden}}, {size}",
+    "zone_attach_here": "Bij dit bericht voegen",
+    "zone_insert_inline": "In het bericht invoegen",
+    "zone_new_message": "Bij een nieuw bericht voegen",
+    "zone_upload_files": "Uploaden naar Bestanden",
+    "zone_upload_folder": "Uploaden naar {folder}",
+    "zone_calendar": "Aan agenda toevoegen",
+    "zone_contacts": "Aan contacten toevoegen",
+    "zone_open_eml": "Bericht openen",
+    "zone_import_eml": "Importeren in {folder}",
+    "note_limit_message": "Tot {size} per bericht",
+    "note_limit_file": "Tot {size} per bestand",
+    "note_kept_offline": "Blijft op dit apparaat tot je weer online bent",
+    "note_needs_connection": "Heeft een verbinding nodig",
+    "announce": "{files, plural, =0 {Bestanden} one {# bestand} other {# bestanden}} binnengesleept. Keuzes: {choices}.",
+    "choose_title": "{count, plural, one {Waar moet dit bestand heen?} other {Waar moeten deze bestanden heen?}}",
+    "save_first_failed": "Het open bericht kon niet worden opgeslagen, dus de app bleef waar hij was.",
+    "import_done": "{count, plural, one {# bericht geïmporteerd in {folder}.} other {# berichten geïmporteerd in {folder}.}}",
+    "import_failed": "{name} kon niet worden geïmporteerd.",
+    "too_large_file": "{name} is te groot. De grens is {max} per bestand.",
+    "too_large_message": "Deze bestanden zijn samen te groot voor één bericht. De grens is {max}.",
+    "folders_left_out": "Mappen kunnen alleen naar Bestanden, dus ze zijn weggelaten.",
+    "nothing_here": "Deze bestanden kunnen hier niet worden gebruikt."
   },
   "desktopReminders": {
     "generic_title": "Herinnering",

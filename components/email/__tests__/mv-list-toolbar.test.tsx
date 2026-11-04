@@ -67,7 +67,8 @@ describe('MvListToolbar filing actions', () => {
     toolbar();
 
     fireEvent.click(screen.getByLabelText('move_to'));
-    expect(screen.queryByText('mailboxes.inbox')).toBeNull();
+    // Shown greyed, where the sidebar has it.
+    expect(screen.getByText('mailboxes.inbox').closest('button')).toBeDisabled();
   });
 
   it('puts a tag on the whole selection when only some of it carries the tag', async () => {
@@ -105,7 +106,7 @@ describe('MvListToolbar filing actions', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'move_to' }));
     expect(screen.getByText('Travel')).toBeInTheDocument();
-    fireEvent.change(screen.getByRole('textbox', { name: 'move_to' }), { target: { value: 'rec' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'filter_placeholder' }), { target: { value: 'rec' } });
     expect(screen.getByText('Receipts')).toBeInTheDocument();
     expect(screen.queryByText('Travel')).toBeNull();
 

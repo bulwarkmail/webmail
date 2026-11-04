@@ -3675,6 +3675,13 @@
     },
     "find_emails_from": "Tìm email từ {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Tìm thư mục",
+    "recent": "Gần đây",
+    "no_match": "Không có thư mục phù hợp",
+    "choose_folder": "Chọn thư mục…",
+    "current_folder": "Đã ở trong {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Đánh dấu thư mục là đã đọc",
     "mark_folder_tree_read": "Đánh dấu thư mục và thư mục con là đã đọc",
@@ -6488,6 +6495,9 @@
   "top_bar": {
     "more": "Nhiều lựa chọn hơn"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Ẩn thông báo ngoại tuyến"
+  },
   "shell": {
     "resize": "Thay đổi kích thước",
     "update_available": "Đã có bản cập nhật",
@@ -6532,6 +6542,19 @@
     "group_plugins": "Plugin",
     "group_account": "Tài khoản",
     "switch_to": "Chuyển sang {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Bạn đang ngoại tuyến. Một số thao tác cần kết nối.",
+    "files_new_folder": "Thư mục mới…",
+    "files_new_file": "Tệp mới…",
+    "files_new_text_file": "Tệp văn bản mới…",
+    "files_upload_files": "Tải tệp lên…",
+    "files_upload_folder": "Tải lên thư mục…",
+    "files_share": "Chia sẻ…",
+    "files_share_button": "Chia sẻ",
+    "contacts_add_to_group": "Thêm vào nhóm…",
+    "contacts_bulk_add_to_group": "Thêm vào nhóm…",
+    "schedule_send": "Lên lịch gửi…"
   },
   "notification_center": {
     "title": "Thông báo",
@@ -6888,6 +6911,23 @@
       "close": "Đóng"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Luôn hiện thanh menu",
+    "always_show_description": "Nếu tắt, thanh menu hiện khi bạn nhấn Alt.",
+    "exit": "Thoát",
+    "tray_pause": "Tạm dừng thông báo",
+    "tray_pause_hour": "Trong 1 giờ",
+    "tray_pause_tomorrow": "Đến ngày mai",
+    "tray_resume": "Bật lại thông báo",
+    "tray_open": "Mở Bulwark",
+    "tray_quit": "Thoát Bulwark",
+    "tray_exit": "Thoát Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Lưu bản nháp",
+    "attach_files": "Đính kèm tệp…",
+    "shortcut_apps": "Đi tới Thư, Lịch, Danh bạ hoặc Tệp"
+  },
   "appLock": {
     "section_title": "Khóa ứng dụng",
     "section_desc": "Yêu cầu mã PIN sau một thời gian không dùng, trong mọi cửa sổ và tab. Khi đang khóa, ứng dụng không thể đọc thư lưu trên thiết bị này cho đến khi có người nhập mã PIN.",
@@ -7143,6 +7183,44 @@
     "offline_hint_outbox": "Thư bạn gửi bây giờ sẽ chờ trong Hộp thư đi và được gửi khi bạn trực tuyến trở lại.",
     "offline_send_saved": "Bạn đang ngoại tuyến. Thư đã được lưu trong Bản nháp.",
     "offline_send_unsaved": "Bạn đang ngoại tuyến. Thư vẫn ở đây và sẽ được lưu vào Bản nháp khi bạn trực tuyến trở lại."
+  },
+  "desktopDevTools": {
+    "section_title": "Khắc phục sự cố",
+    "label": "Công cụ cho nhà phát triển ({shortcut})",
+    "description": "Cho phép {shortcut} và F12 mở công cụ cho nhà phát triển của cửa sổ bạn đang dùng. Tự tắt lại khi ứng dụng khóa.",
+    "forced_off": "Tổ chức của bạn đã tắt mục này.",
+    "locked": "Hãy mở khóa ứng dụng để thay đổi.",
+    "menu_toggle": "Hiện hoặc ẩn công cụ cho nhà phát triển"
+  },
+  "fileDrop": {
+    "overlay_label": "Thả tệp",
+    "overlay_title": "Đưa tệp đi đâu?",
+    "overlay_hint": "Thả bên ngoài các lựa chọn hoặc nhấn Esc để hủy.",
+    "files_unknown": "Tệp",
+    "files_summary": "{count, plural, other {# tệp}}",
+    "files_summary_size": "{count, plural, other {# tệp}}, {size}",
+    "zone_attach_here": "Đính kèm vào thư này",
+    "zone_insert_inline": "Chèn vào nội dung thư",
+    "zone_new_message": "Đính kèm vào thư mới",
+    "zone_upload_files": "Tải lên Tệp",
+    "zone_upload_folder": "Tải lên {folder}",
+    "zone_calendar": "Thêm vào lịch",
+    "zone_contacts": "Thêm vào danh bạ",
+    "zone_open_eml": "Mở thư",
+    "zone_import_eml": "Nhập vào {folder}",
+    "note_limit_message": "Tối đa {size} mỗi thư",
+    "note_limit_file": "Tối đa {size} mỗi tệp",
+    "note_kept_offline": "Được giữ trên thiết bị này đến khi bạn trực tuyến lại",
+    "note_needs_connection": "Cần kết nối",
+    "announce": "{files, plural, =0 {Đã kéo tệp vào} other {Đã kéo vào # tệp}}. Lựa chọn: {choices}.",
+    "choose_title": "{count, plural, other {Đưa các tệp này đi đâu?}}",
+    "save_first_failed": "Không lưu được thư đang mở, nên ứng dụng vẫn ở chỗ cũ.",
+    "import_done": "{count, plural, other {Đã nhập # thư vào {folder}.}}",
+    "import_failed": "Không nhập được {name}.",
+    "too_large_file": "{name} quá lớn. Giới hạn là {max} mỗi tệp.",
+    "too_large_message": "Các tệp này quá lớn cho một thư. Giới hạn là {max}.",
+    "folders_left_out": "Thư mục chỉ có thể đưa vào Tệp, nên đã bị bỏ qua.",
+    "nothing_here": "Không dùng được các tệp này ở đây."
   },
   "desktopReminders": {
     "generic_title": "Lời nhắc",

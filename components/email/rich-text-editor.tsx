@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useCallback, useLayoutEffect, useState, useRef } from "react";
-import { popoverShift } from "@/lib/popover-shift";
+import { popoverFitHeight, popoverShift } from "@/lib/popover-shift";
 import { createPortal } from "react-dom";
 import { useEditor, useEditorState, EditorContent, type Editor } from "@tiptap/react";
 import type { SuggestionProps } from "@tiptap/suggestion";
@@ -299,6 +299,23 @@ function ToolbarPopover({
       right: Math.min(box.right, window.innerWidth),
     });
     if (shift !== 0) el.style.transform = `translateX(${shift}px)`;
+    // Too tall for the room under its button (a short window, 150 % zoom): above
+    // it when there's more room there, and scrolling inside either way.
+    const trigger = triggerRef.current?.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
+    const fit = trigger ? popoverFitHeight({ top: rect.top, height: rect.height }, trigger, window.innerHeight) : null;
+    if (fit) {
+      if (fit.above) {
+        el.style.top = "auto";
+        el.style.bottom = "100%";
+        el.style.marginTop = "0";
+        el.style.marginBottom = "0.25rem";
+      }
+      el.style.maxHeight = `${fit.maxHeight}px`;
+      el.style.overflowY = "auto";
+    }
+    // triggerRef is a ref: it doesn't change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const close = (returnFocus: boolean) => {

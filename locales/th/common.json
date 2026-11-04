@@ -44,6 +44,9 @@
   "top_bar": {
     "more": "ตัวเลือกเพิ่มเติม"
   },
+  "windowChrome": {
+    "hide_offline_notice": "ซ่อนประกาศออฟไลน์"
+  },
   "shell": {
     "resize": "ปรับขนาด",
     "update_available": "มีอัปเดต",
@@ -97,6 +100,19 @@
     "group_plugins": "ปลั๊กอิน",
     "group_account": "บัญชี",
     "switch_to": "สลับไปที่ {account}"
+  },
+  "menuAudit": {
+    "offline_header": "คุณออฟไลน์อยู่ บางการทำงานต้องใช้การเชื่อมต่อ",
+    "files_new_folder": "โฟลเดอร์ใหม่…",
+    "files_new_file": "ไฟล์ใหม่…",
+    "files_new_text_file": "ไฟล์ข้อความใหม่…",
+    "files_upload_files": "อัปโหลดไฟล์…",
+    "files_upload_folder": "อัปโหลดโฟลเดอร์…",
+    "files_share": "แชร์…",
+    "files_share_button": "แชร์",
+    "contacts_add_to_group": "เพิ่มในกลุ่ม…",
+    "contacts_bulk_add_to_group": "เพิ่มในกลุ่ม…",
+    "schedule_send": "กำหนดเวลาส่ง…"
   },
   "notification_center": {
     "title": "การแจ้งเตือน",
@@ -914,6 +930,13 @@
       "running": "กำลังเรียกใช้ “{name}” บน {folder}…"
     },
     "find_emails_from": "ค้นหาอีเมลจาก {name}"
+  },
+  "menuMove": {
+    "filter_placeholder": "ค้นหาโฟลเดอร์",
+    "recent": "ล่าสุด",
+    "no_match": "ไม่มีโฟลเดอร์ที่ตรงกัน",
+    "choose_folder": "เลือกโฟลเดอร์…",
+    "current_folder": "อยู่ใน {folder} แล้ว"
   },
   "mailbox_context_menu": {
     "mark_folder_read": "ทำเครื่องหมายโฟลเดอร์ว่าอ่านแล้ว",
@@ -6884,6 +6907,23 @@
       "close": "ปิด"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "แสดงแถบเมนูเสมอ",
+    "always_show_description": "มิฉะนั้นแถบเมนูจะแสดงเมื่อกด Alt",
+    "exit": "ออก",
+    "tray_pause": "หยุดการแจ้งเตือนชั่วคราว",
+    "tray_pause_hour": "1 ชั่วโมง",
+    "tray_pause_tomorrow": "จนถึงพรุ่งนี้",
+    "tray_resume": "เปิดการแจ้งเตือนอีกครั้ง",
+    "tray_open": "เปิด Bulwark",
+    "tray_quit": "ปิด Bulwark",
+    "tray_exit": "ออกจาก Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "บันทึกฉบับร่าง",
+    "attach_files": "แนบไฟล์…",
+    "shortcut_apps": "ไปที่อีเมล ปฏิทิน รายชื่อติดต่อ หรือไฟล์"
+  },
   "appLock": {
     "section_title": "ล็อกแอป",
     "section_desc": "ขอ PIN หลังจากไม่ได้ใช้งานระยะหนึ่ง ในทุกหน้าต่างและแท็บ ระหว่างที่ล็อกอยู่ แอปจะอ่านอีเมลที่เก็บบนอุปกรณ์นี้ไม่ได้จนกว่าจะมีผู้ป้อน PIN",
@@ -7139,6 +7179,44 @@
     "offline_hint_outbox": "สิ่งที่คุณส่งตอนนี้จะรออยู่ในกล่องขาออกและถูกส่งเมื่อคุณกลับมาออนไลน์",
     "offline_send_saved": "คุณออฟไลน์อยู่ ข้อความถูกบันทึกไว้ในจดหมายร่างแล้ว",
     "offline_send_unsaved": "คุณออฟไลน์อยู่ ข้อความจะอยู่ที่นี่และถูกบันทึกในจดหมายร่างเมื่อคุณกลับมาออนไลน์"
+  },
+  "desktopDevTools": {
+    "section_title": "การแก้ไขปัญหา",
+    "label": "เครื่องมือสำหรับนักพัฒนาซอฟต์แวร์ ({shortcut})",
+    "description": "ให้ {shortcut} และ F12 เปิดเครื่องมือสำหรับนักพัฒนาซอฟต์แวร์ของหน้าต่างที่คุณอยู่ จะปิดอีกครั้งเมื่อแอปล็อก",
+    "forced_off": "องค์กรของคุณปิดสิ่งนี้แล้ว",
+    "locked": "ปลดล็อกแอปเพื่อเปลี่ยนการตั้งค่านี้",
+    "menu_toggle": "แสดงหรือซ่อนเครื่องมือสำหรับนักพัฒนาซอฟต์แวร์"
+  },
+  "fileDrop": {
+    "overlay_label": "วางไฟล์",
+    "overlay_title": "จะให้ไฟล์ไปที่ไหน",
+    "overlay_hint": "วางนอกตัวเลือกหรือกด Esc เพื่อยกเลิก",
+    "files_unknown": "ไฟล์",
+    "files_summary": "{count, plural, other {# ไฟล์}}",
+    "files_summary_size": "{count, plural, other {# ไฟล์}}, {size}",
+    "zone_attach_here": "แนบกับข้อความนี้",
+    "zone_insert_inline": "แทรกลงในข้อความ",
+    "zone_new_message": "แนบกับข้อความใหม่",
+    "zone_upload_files": "อัปโหลดไปยังไฟล์",
+    "zone_upload_folder": "อัปโหลดไปยัง {folder}",
+    "zone_calendar": "เพิ่มในปฏิทิน",
+    "zone_contacts": "เพิ่มในรายชื่อติดต่อ",
+    "zone_open_eml": "เปิดข้อความ",
+    "zone_import_eml": "นำเข้าไปยัง {folder}",
+    "note_limit_message": "สูงสุด {size} ต่อข้อความ",
+    "note_limit_file": "สูงสุด {size} ต่อไฟล์",
+    "note_kept_offline": "เก็บไว้ในอุปกรณ์นี้จนกว่าคุณจะออนไลน์อีกครั้ง",
+    "note_needs_connection": "ต้องใช้การเชื่อมต่อ",
+    "announce": "{files, plural, =0 {ลากไฟล์เข้ามาแล้ว} other {ลาก # ไฟล์เข้ามาแล้ว}} ตัวเลือก: {choices}",
+    "choose_title": "{count, plural, other {จะให้ไฟล์นี้ไปที่ไหน}}",
+    "save_first_failed": "บันทึกข้อความที่เปิดอยู่ไม่ได้ แอปจึงอยู่ที่เดิม",
+    "import_done": "{count, plural, other {นำเข้า # ข้อความไปยัง {folder} แล้ว}}",
+    "import_failed": "นำเข้า {name} ไม่ได้",
+    "too_large_file": "{name} ใหญ่เกินไป ขีดจำกัดคือ {max} ต่อไฟล์",
+    "too_large_message": "ไฟล์เหล่านี้ใหญ่เกินไปสำหรับข้อความเดียว ขีดจำกัดคือ {max}",
+    "folders_left_out": "โฟลเดอร์ไปได้เฉพาะที่ไฟล์ จึงไม่ได้รวมไว้",
+    "nothing_here": "ใช้ไฟล์เหล่านี้ที่นี่ไม่ได้"
   },
   "desktopReminders": {
     "generic_title": "การแจ้งเตือน",

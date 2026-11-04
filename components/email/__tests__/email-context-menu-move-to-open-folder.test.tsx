@@ -66,10 +66,11 @@ describe('Move to the open folder from search results', () => {
     expect(onMoveToMailbox).toHaveBeenCalledWith('inbox');
   });
 
-  it('does not offer the open folder for a message already in it', () => {
+  it('shows the open folder greyed for a message already in it', () => {
     openMoveMenu({ email: inInbox });
-    expect(screen.queryByTestId('move-to:inbox')).toBeNull();
-    expect(screen.getByTestId('move-to:work')).toBeTruthy();
+    // Shown, as in the sidebar, but it can't be picked.
+    expect(screen.getByTestId('move-to:inbox')).toBeDisabled();
+    expect(screen.getByTestId('move-to:work')).not.toBeDisabled();
   });
 
   it('offers it for a selection when one of the messages is elsewhere', () => {

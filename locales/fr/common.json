@@ -3663,6 +3663,13 @@
     },
     "find_emails_from": "Rechercher les e-mails de {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Rechercher un dossier",
+    "recent": "Récents",
+    "no_match": "Aucun dossier ne correspond",
+    "choose_folder": "Choisir un dossier…",
+    "current_folder": "Déjà dans {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Marquer le dossier comme lu",
     "mark_folder_tree_read": "Marquer le dossier et les sous-dossiers comme lus",
@@ -6476,6 +6483,9 @@
   "top_bar": {
     "more": "Plus d'options"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Masquer l'avis hors ligne"
+  },
   "shell": {
     "resize": "Redimensionner",
     "update_available": "Mise à jour disponible",
@@ -6520,6 +6530,19 @@
     "group_plugins": "Plugins",
     "group_account": "Compte",
     "switch_to": "Passer à {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Vous êtes hors ligne. Certaines actions ont besoin d’une connexion.",
+    "files_new_folder": "Nouveau dossier…",
+    "files_new_file": "Nouveau fichier…",
+    "files_new_text_file": "Nouveau fichier texte…",
+    "files_upload_files": "Téléverser des fichiers…",
+    "files_upload_folder": "Téléverser un dossier…",
+    "files_share": "Partager…",
+    "files_share_button": "Partager",
+    "contacts_add_to_group": "Ajouter au groupe…",
+    "contacts_bulk_add_to_group": "Ajouter au groupe…",
+    "schedule_send": "Planifier l’envoi…"
   },
   "notification_center": {
     "title": "Notifications",
@@ -6876,6 +6899,23 @@
       "close": "Fermer"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Toujours afficher la barre de menus",
+    "always_show_description": "Sinon, elle s’affiche quand vous appuyez sur Alt.",
+    "exit": "Quitter",
+    "tray_pause": "Suspendre les notifications",
+    "tray_pause_hour": "Pendant 1 heure",
+    "tray_pause_tomorrow": "Jusqu’à demain",
+    "tray_resume": "Réactiver les notifications",
+    "tray_open": "Ouvrir Bulwark",
+    "tray_quit": "Quitter Bulwark",
+    "tray_exit": "Quitter Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Enregistrer le brouillon",
+    "attach_files": "Joindre des fichiers…",
+    "shortcut_apps": "Aller à Mail, Calendrier, Contacts ou Fichiers"
+  },
   "appLock": {
     "section_title": "Verrouillage de l'app",
     "section_desc": "Demande un code PIN après un temps sans utilisation, dans chaque fenêtre et onglet. Tant que c'est verrouillé, l'application ne peut pas lire les messages stockés sur cet appareil avant la saisie du code PIN.",
@@ -7131,6 +7171,44 @@
     "offline_hint_outbox": "Ce que vous envoyez maintenant attend dans la boîte d'envoi et part dès que vous êtes de nouveau en ligne.",
     "offline_send_saved": "Vous êtes hors ligne. Le message est enregistré dans les Brouillons.",
     "offline_send_unsaved": "Vous êtes hors ligne. Le message reste ici et sera enregistré dans les Brouillons dès que vous serez de nouveau en ligne."
+  },
+  "desktopDevTools": {
+    "section_title": "Dépannage",
+    "label": "Outils de développement ({shortcut})",
+    "description": "{shortcut} et F12 ouvrent les outils de développement pour la fenêtre où vous êtes. Se désactive quand l'app se verrouille.",
+    "forced_off": "Désactivé par votre organisation.",
+    "locked": "Déverrouillez l'app pour modifier ce réglage.",
+    "menu_toggle": "Afficher ou masquer les outils de développement"
+  },
+  "fileDrop": {
+    "overlay_label": "Déposer des fichiers",
+    "overlay_title": "Où mettre les fichiers ?",
+    "overlay_hint": "Déposez hors des choix ou appuyez sur Échap pour annuler.",
+    "files_unknown": "Fichiers",
+    "files_summary": "{count, plural, one {# fichier} other {# fichiers}}",
+    "files_summary_size": "{count, plural, one {# fichier} other {# fichiers}}, {size}",
+    "zone_attach_here": "Joindre à ce message",
+    "zone_insert_inline": "Insérer dans le message",
+    "zone_new_message": "Joindre à un nouveau message",
+    "zone_upload_files": "Envoyer dans Fichiers",
+    "zone_upload_folder": "Envoyer dans {folder}",
+    "zone_calendar": "Ajouter au calendrier",
+    "zone_contacts": "Ajouter aux contacts",
+    "zone_open_eml": "Ouvrir le message",
+    "zone_import_eml": "Importer dans {folder}",
+    "note_limit_message": "Jusqu'à {size} par message",
+    "note_limit_file": "Jusqu'à {size} par fichier",
+    "note_kept_offline": "Gardé sur cet appareil jusqu'au retour de la connexion",
+    "note_needs_connection": "Nécessite une connexion",
+    "announce": "{files, plural, =0 {Fichiers glissés} one {# fichier glissé} other {# fichiers glissés}}. Choix : {choices}.",
+    "choose_title": "{count, plural, one {Où mettre ce fichier ?} other {Où mettre ces fichiers ?}}",
+    "save_first_failed": "Le message ouvert n'a pas pu être enregistré, l'app est donc restée où elle était.",
+    "import_done": "{count, plural, one {# message importé dans {folder}.} other {# messages importés dans {folder}.}}",
+    "import_failed": "{name} n'a pas pu être importé.",
+    "too_large_file": "{name} est trop volumineux. La limite est de {max} par fichier.",
+    "too_large_message": "Ces fichiers sont trop volumineux pour un seul message. La limite est de {max}.",
+    "folders_left_out": "Les dossiers ne peuvent aller que dans Fichiers, ils ont donc été laissés de côté.",
+    "nothing_here": "Ces fichiers ne peuvent pas être utilisés ici."
   },
   "desktopReminders": {
     "generic_title": "Rappel",

@@ -3663,6 +3663,13 @@
     },
     "find_emails_from": "Cerca correus de {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Cerca una carpeta",
+    "recent": "Recents",
+    "no_match": "Cap carpeta coincideix",
+    "choose_folder": "Tria una carpeta…",
+    "current_folder": "Ja és a {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Marca la carpeta com a llegida",
     "mark_folder_tree_read": "Marca la carpeta i les subcarpetes com a llegides",
@@ -6476,6 +6483,9 @@
   "top_bar": {
     "more": "Més opcions"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Amaga l'avís de fora de línia"
+  },
   "shell": {
     "resize": "Canvia la mida",
     "update_available": "Hi ha una actualització",
@@ -6520,6 +6530,19 @@
     "group_plugins": "Connectors",
     "group_account": "Compte",
     "switch_to": "Canvia a {account}"
+  },
+  "menuAudit": {
+    "offline_header": "No teniu connexió. Algunes accions la necessiten.",
+    "files_new_folder": "Carpeta nova…",
+    "files_new_file": "Fitxer nou…",
+    "files_new_text_file": "Fitxer de text nou…",
+    "files_upload_files": "Puja fitxers…",
+    "files_upload_folder": "Puja una carpeta…",
+    "files_share": "Comparteix…",
+    "files_share_button": "Comparteix",
+    "contacts_add_to_group": "Afegeix al grup…",
+    "contacts_bulk_add_to_group": "Afegeix al grup…",
+    "schedule_send": "Programa l'enviament…"
   },
   "notification_center": {
     "title": "Notificacions",
@@ -6876,6 +6899,23 @@
       "close": "Tanca"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Mostra sempre la barra de menús",
+    "always_show_description": "Si no, apareix en prémer Alt.",
+    "exit": "Surt",
+    "tray_pause": "Posa en pausa les notificacions",
+    "tray_pause_hour": "Durant 1 hora",
+    "tray_pause_tomorrow": "Fins demà",
+    "tray_resume": "Torna a activar les notificacions",
+    "tray_open": "Obre Bulwark",
+    "tray_quit": "Surt de Bulwark",
+    "tray_exit": "Surt de Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Desa l'esborrany",
+    "attach_files": "Adjunta fitxers…",
+    "shortcut_apps": "Ves a Correu, Calendari, Contactes o Fitxers"
+  },
   "appLock": {
     "section_title": "Bloqueig de l'app",
     "section_desc": "Demana un PIN després d'un temps sense ús, a cada finestra i pestanya. Mentre està bloquejada, l'aplicació no pot llegir el correu desat en aquest dispositiu fins que algú introdueixi el PIN.",
@@ -7131,6 +7171,44 @@
     "offline_hint_outbox": "El que envieu ara espera a la safata de sortida i s'envia quan torneu a tenir connexió.",
     "offline_send_saved": "No teniu connexió. El missatge està desat a Esborranys.",
     "offline_send_unsaved": "No teniu connexió. El missatge es queda aquí i es desa a Esborranys quan torneu a tenir connexió."
+  },
+  "desktopDevTools": {
+    "section_title": "Resolució de problemes",
+    "label": "Eines per a desenvolupadors ({shortcut})",
+    "description": "Permet que {shortcut} i F12 obrin les eines per a desenvolupadors a la finestra on ets. Es desactiva quan l'app es bloqueja.",
+    "forced_off": "Desactivat per la teva organització.",
+    "locked": "Desbloqueja l'app per canviar-ho.",
+    "menu_toggle": "Mostra o amaga les eines per a desenvolupadors"
+  },
+  "fileDrop": {
+    "overlay_label": "Deixa anar fitxers",
+    "overlay_title": "On han d'anar els fitxers?",
+    "overlay_hint": "Deixa anar fora de les opcions o prem Esc per cancel·lar.",
+    "files_unknown": "Fitxers",
+    "files_summary": "{count, plural, one {# fitxer} other {# fitxers}}",
+    "files_summary_size": "{count, plural, one {# fitxer} other {# fitxers}}, {size}",
+    "zone_attach_here": "Adjunta a aquest missatge",
+    "zone_insert_inline": "Insereix al missatge",
+    "zone_new_message": "Adjunta a un missatge nou",
+    "zone_upload_files": "Puja a Fitxers",
+    "zone_upload_folder": "Puja a {folder}",
+    "zone_calendar": "Afegeix al calendari",
+    "zone_contacts": "Afegeix als contactes",
+    "zone_open_eml": "Obre el missatge",
+    "zone_import_eml": "Importa a {folder}",
+    "note_limit_message": "Fins a {size} per missatge",
+    "note_limit_file": "Fins a {size} per fitxer",
+    "note_kept_offline": "Es queda en aquest dispositiu fins que tornis a tenir connexió",
+    "note_needs_connection": "Necessita connexió",
+    "announce": "{files, plural, =0 {Fitxers arrossegats} one {# fitxer arrossegat} other {# fitxers arrossegats}}. Opcions: {choices}.",
+    "choose_title": "{count, plural, one {On ha d'anar aquest fitxer?} other {On han d'anar aquests fitxers?}}",
+    "save_first_failed": "No s'ha pogut desar el missatge obert, així que l'app s'ha quedat on era.",
+    "import_done": "{count, plural, one {# missatge importat a {folder}.} other {# missatges importats a {folder}.}}",
+    "import_failed": "No s'ha pogut importar {name}.",
+    "too_large_file": "{name} és massa gran. El límit és {max} per fitxer.",
+    "too_large_message": "Aquests fitxers són massa grans per a un missatge. El límit és {max}.",
+    "folders_left_out": "Les carpetes només poden anar a Fitxers, així que s'han deixat fora.",
+    "nothing_here": "Aquests fitxers no es poden fer servir aquí."
   },
   "desktopReminders": {
     "generic_title": "Recordatori",

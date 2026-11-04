@@ -77,6 +77,18 @@ describe('launches', () => {
     expect(push).toHaveBeenCalledWith('/');
   });
 
+  it('a mailto from the OS is marked so, opens in its own window, and leaves the main window be', async () => {
+    await run({ type: 'mailto', url: 'mailto:bob@example.org' });
+    expect(session.savePendingMailto.mock.calls[0][0]).toMatchObject({ fromOs: true });
+    expect(focus).not.toHaveBeenCalled();
+  });
+
+  it('signed out, the main window comes up for the sign-in', async () => {
+    authenticated = false;
+    await run({ type: 'mailto', url: 'mailto:bob@example.org' });
+    expect(focus).toHaveBeenCalled();
+  });
+
   it('a mailto that is not one does nothing', async () => {
     await run({ type: 'mailto', url: 'mailto:' + '%'.repeat(3) });
     expect(push).not.toHaveBeenCalledWith('/calendar');
@@ -112,6 +124,23 @@ describe('launches', () => {
     await run({ type: 'files', reason: 'attach', failed: [], files: [{ name: 'report.pdf', data: text('pdf') }] });
     const draft = takeHandoff('compose');
     expect(draft?.files.map((file) => file.name)).toEqual(['report.pdf']);
+  });
+
+  it('several files sent to the app go on one draft, without a question', async () => {
+    const { takeHandoff } = await import('@/lib/launch-handoff');
+    await run({ type: 'files', reason: 'attach', failed: [], files: [{ name: 'a.pdf', data: text('a') }, { name: 'b.png', data: text('b') }] });
+    expect(takeHandoff('compose')?.files.map((file) => file.name)).toEqual(['a.pdf', 'b.png']);
+  });
+
+  it('a file opened with the app asks: new message or Files, a new message first', async () => {
+    const { takeHandoff } = await import('@/lib/launch-handoff');
+    const { listenForFileChoices } = await import('@/lib/file-drop/choice');
+    const asked = vi.fn();
+    const stop = listenForFileChoices(asked);
+    await run({ type: 'files', reason: 'attach', ask: true, failed: [], files: [{ name: 'report.pdf', data: text('pdf') }] });
+    expect(asked).toHaveBeenCalledWith({ files: [expect.objectContaining({ name: 'report.pdf' })], preferred: 'new-message' });
+    expect(takeHandoff('compose')).toBeNull();
+    stop();
   });
 
   it('says so when a file could not be read', async () => {

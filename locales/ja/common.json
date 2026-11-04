@@ -3663,6 +3663,13 @@
     },
     "find_emails_from": "{name} からのメールを検索"
   },
+  "menuMove": {
+    "filter_placeholder": "フォルダーを検索",
+    "recent": "最近使用",
+    "no_match": "一致するフォルダーはありません",
+    "choose_folder": "フォルダーを選択…",
+    "current_folder": "すでに {folder} にあります"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "フォルダーを既読にする",
     "mark_folder_tree_read": "フォルダーとサブフォルダーを既読にする",
@@ -6476,6 +6483,9 @@
   "top_bar": {
     "more": "その他のオプション"
   },
+  "windowChrome": {
+    "hide_offline_notice": "オフラインのお知らせを非表示"
+  },
   "shell": {
     "resize": "サイズを変更",
     "update_available": "アップデートがあります",
@@ -6520,6 +6530,19 @@
     "group_plugins": "プラグイン",
     "group_account": "アカウント",
     "switch_to": "{account} に切り替え"
+  },
+  "menuAudit": {
+    "offline_header": "オフラインです。一部の操作には接続が必要です。",
+    "files_new_folder": "新しいフォルダー…",
+    "files_new_file": "新規ファイル…",
+    "files_new_text_file": "新規テキストファイル…",
+    "files_upload_files": "ファイルをアップロード…",
+    "files_upload_folder": "フォルダをアップロード…",
+    "files_share": "共有…",
+    "files_share_button": "共有",
+    "contacts_add_to_group": "グループに追加…",
+    "contacts_bulk_add_to_group": "グループに追加…",
+    "schedule_send": "送信を予約…"
   },
   "notification_center": {
     "title": "通知",
@@ -6876,6 +6899,23 @@
       "close": "閉じる"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "メニューバーを常に表示",
+    "always_show_description": "オフにすると、Alt キーを押したときに表示されます。",
+    "exit": "終了",
+    "tray_pause": "通知を一時停止",
+    "tray_pause_hour": "1 時間",
+    "tray_pause_tomorrow": "明日まで",
+    "tray_resume": "通知を再開",
+    "tray_open": "Bulwark を開く",
+    "tray_quit": "Bulwark を終了",
+    "tray_exit": "Bulwark を終了"
+  },
+  "desktopMenus": {
+    "save_draft": "下書きを保存",
+    "attach_files": "ファイルを添付…",
+    "shortcut_apps": "メール、カレンダー、連絡先、ファイルに移動"
+  },
   "appLock": {
     "section_title": "アプリのロック",
     "section_desc": "しばらく使わないと、すべてのウィンドウとタブで PIN を求めます。ロック中は、誰かが PIN を入力するまで、アプリはこのデバイスに保存されたメールを読めません。",
@@ -7131,6 +7171,44 @@
     "offline_hint_outbox": "今送信したものは送信トレイで待機し、オンラインに戻ると送信されます。",
     "offline_send_saved": "オフラインです。メッセージは下書きに保存されています。",
     "offline_send_unsaved": "オフラインです。メッセージはここに残り、オンラインに戻ると下書きに保存されます。"
+  },
+  "desktopDevTools": {
+    "section_title": "トラブルシューティング",
+    "label": "デベロッパー ツール ({shortcut})",
+    "description": "{shortcut} と F12 で、今いるウィンドウのデベロッパー ツールを開けるようにします。アプリがロックされるとオフに戻ります。",
+    "forced_off": "組織によってオフにされています。",
+    "locked": "変更するにはアプリのロックを解除してください。",
+    "menu_toggle": "デベロッパー ツールの表示/非表示"
+  },
+  "fileDrop": {
+    "overlay_label": "ファイルをドロップ",
+    "overlay_title": "ファイルをどこに入れますか？",
+    "overlay_hint": "キャンセルするには選択肢の外でドロップするか、Esc キーを押します。",
+    "files_unknown": "ファイル",
+    "files_summary": "{count, plural, other {# 個のファイル}}",
+    "files_summary_size": "{count, plural, other {# 個のファイル}}, {size}",
+    "zone_attach_here": "このメッセージに添付",
+    "zone_insert_inline": "メッセージ本文に挿入",
+    "zone_new_message": "新規メッセージに添付",
+    "zone_upload_files": "ファイルにアップロード",
+    "zone_upload_folder": "{folder} にアップロード",
+    "zone_calendar": "カレンダーに追加",
+    "zone_contacts": "連絡先に追加",
+    "zone_open_eml": "メッセージを開く",
+    "zone_import_eml": "{folder} にインポート",
+    "note_limit_message": "1 通あたり {size} まで",
+    "note_limit_file": "1 ファイルあたり {size} まで",
+    "note_kept_offline": "オンラインに戻るまでこのデバイスに保存されます",
+    "note_needs_connection": "接続が必要です",
+    "announce": "{files, plural, =0 {ファイル} other {# 個のファイル}}がドラッグされました。選択肢: {choices}。",
+    "choose_title": "{count, plural, other {このファイルをどこに入れますか？}}",
+    "save_first_failed": "開いているメッセージを保存できなかったため、アプリはそのままです。",
+    "import_done": "{count, plural, other {# 通のメッセージを {folder} にインポートしました。}}",
+    "import_failed": "{name} をインポートできませんでした。",
+    "too_large_file": "{name} は大きすぎます。上限は 1 ファイルあたり {max} です。",
+    "too_large_message": "これらのファイルは 1 通のメッセージには大きすぎます。上限は {max} です。",
+    "folders_left_out": "フォルダーはファイルにしか入れられないため、除外しました。",
+    "nothing_here": "これらのファイルはここでは使えません。"
   },
   "desktopReminders": {
     "generic_title": "リマインダー",

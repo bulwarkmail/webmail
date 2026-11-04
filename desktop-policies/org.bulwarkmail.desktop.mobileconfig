@@ -65,6 +65,10 @@
       </array>
       <key>BrowserSignIn</key>
       <true/>
+      <key>OpenWithEnabled</key>
+      <true/>
+      <key>DeveloperToolsAvailability</key>
+      <integer>2</integer>
       <key>Recommended</key>
       <dict>
         <key>UpdateChannel</key>

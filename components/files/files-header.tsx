@@ -120,6 +120,7 @@ export function FilesHeader({
   panelToggle,
 }: FilesHeaderProps) {
   const t = useTranslations("files");
+  const tMenu = useTranslations("menuAudit");
   const sortMenu = useContextMenu<null>();
   const overflowMenu = useContextMenu<Crumb[]>();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -159,7 +160,7 @@ export function FilesHeader({
             <ToolButton icon={Download} label={t("download")} onClick={selection.onDownload} compact />
           )}
           {selection.canShare && (
-            <ToolButton icon={Share2} label={t("share")} onClick={selection.onShare} compact />
+            <ToolButton icon={Share2} label={tMenu("files_share_button")} onClick={selection.onShare} compact />
           )}
           {selection.canRename && (
             <ToolButton icon={Pencil} label={t("rename")} onClick={selection.onRename} compact />

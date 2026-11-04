@@ -3663,6 +3663,13 @@
     },
     "find_emails_from": "البحث عن رسائل من {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "ابحث عن مجلد",
+    "recent": "الأخيرة",
+    "no_match": "لا يوجد مجلد مطابق",
+    "choose_folder": "اختيار مجلد…",
+    "current_folder": "موجودة بالفعل في {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "تمييز المجلد كمقروء",
     "mark_folder_tree_read": "تمييز المجلد والمجلدات الفرعية كمقروءة",
@@ -6476,6 +6483,9 @@
   "top_bar": {
     "more": "خيارات أخرى"
   },
+  "windowChrome": {
+    "hide_offline_notice": "إخفاء إشعار عدم الاتصال"
+  },
   "shell": {
     "resize": "تغيير الحجم",
     "update_available": "يتوفر تحديث",
@@ -6520,6 +6530,19 @@
     "group_plugins": "الإضافات",
     "group_account": "الحساب",
     "switch_to": "التبديل إلى {account}"
+  },
+  "menuAudit": {
+    "offline_header": "أنت غير متصل. بعض الإجراءات تحتاج إلى اتصال.",
+    "files_new_folder": "مجلد جديد…",
+    "files_new_file": "ملف جديد…",
+    "files_new_text_file": "ملف نصي جديد…",
+    "files_upload_files": "رفع الملفات…",
+    "files_upload_folder": "رفع مجلد…",
+    "files_share": "مشاركة…",
+    "files_share_button": "مشاركة",
+    "contacts_add_to_group": "إضافة إلى مجموعة…",
+    "contacts_bulk_add_to_group": "إضافة إلى مجموعة…",
+    "schedule_send": "جدولة الإرسال…"
   },
   "notification_center": {
     "title": "الإشعارات",
@@ -6876,6 +6899,23 @@
       "close": "إغلاق"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "إظهار شريط القوائم دائمًا",
+    "always_show_description": "وإلا فسيظهر عند الضغط على Alt.",
+    "exit": "خروج",
+    "tray_pause": "إيقاف الإشعارات مؤقتًا",
+    "tray_pause_hour": "لمدة ساعة واحدة",
+    "tray_pause_tomorrow": "حتى الغد",
+    "tray_resume": "إعادة تشغيل الإشعارات",
+    "tray_open": "فتح Bulwark",
+    "tray_quit": "إنهاء Bulwark",
+    "tray_exit": "الخروج من Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "حفظ المسودة",
+    "attach_files": "إرفاق ملفات…",
+    "shortcut_apps": "الانتقال إلى البريد أو التقويم أو جهات الاتصال أو الملفات"
+  },
   "appLock": {
     "section_title": "قفل التطبيق",
     "section_desc": "يطلب رمز PIN بعد فترة من عدم الاستخدام، في كل نافذة وعلامة تبويب. أثناء القفل، لا يستطيع التطبيق قراءة البريد المخزن على هذا الجهاز حتى يدخل أحدهم رمز PIN.",
@@ -7131,6 +7171,44 @@
     "offline_hint_outbox": "ما ترسله الآن ينتظر في صندوق الصادر ويُرسل عند عودة الاتصال.",
     "offline_send_saved": "أنت دون اتصال. الرسالة محفوظة في المسودات.",
     "offline_send_unsaved": "أنت دون اتصال. تبقى الرسالة هنا وتُحفظ في المسودات عند عودة الاتصال."
+  },
+  "desktopDevTools": {
+    "section_title": "استكشاف الأخطاء وإصلاحها",
+    "label": "أدوات المطورين ({shortcut})",
+    "description": "يتيح لـ {shortcut} وF12 فتح أدوات المطورين للنافذة التي أنت فيها. يتوقف مرة أخرى عند قفل التطبيق.",
+    "forced_off": "أوقفته مؤسستك.",
+    "locked": "ألغِ قفل التطبيق لتغيير هذا.",
+    "menu_toggle": "إظهار أدوات المطورين أو إخفاؤها"
+  },
+  "fileDrop": {
+    "overlay_label": "أفلت الملفات",
+    "overlay_title": "إلى أين تذهب الملفات؟",
+    "overlay_hint": "أفلت خارج الخيارات أو اضغط Esc للإلغاء.",
+    "files_unknown": "ملفات",
+    "files_summary": "{count, plural, zero {لا ملفات} one {ملف واحد} two {ملفان} few {# ملفات} many {# ملفًا} other {# ملف}}",
+    "files_summary_size": "{count, plural, zero {لا ملفات} one {ملف واحد} two {ملفان} few {# ملفات} many {# ملفًا} other {# ملف}}, {size}",
+    "zone_attach_here": "إرفاق بهذه الرسالة",
+    "zone_insert_inline": "إدراج في نص الرسالة",
+    "zone_new_message": "إرفاق برسالة جديدة",
+    "zone_upload_files": "رفع إلى الملفات",
+    "zone_upload_folder": "رفع إلى {folder}",
+    "zone_calendar": "إضافة إلى التقويم",
+    "zone_contacts": "إضافة إلى جهات الاتصال",
+    "zone_open_eml": "فتح الرسالة",
+    "zone_import_eml": "استيراد إلى {folder}",
+    "note_limit_message": "حتى {size} لكل رسالة",
+    "note_limit_file": "حتى {size} لكل ملف",
+    "note_kept_offline": "تبقى على هذا الجهاز حتى تعود متصلًا",
+    "note_needs_connection": "يحتاج إلى اتصال",
+    "announce": "{files, plural, =0 {ملفات مسحوبة} zero {لا ملفات مسحوبة} one {ملف واحد مسحوب} two {ملفان مسحوبان} few {# ملفات مسحوبة} many {# ملفًا مسحوبًا} other {# ملف مسحوب}}. الخيارات: {choices}.",
+    "choose_title": "{count, plural, zero {إلى أين تذهب هذه الملفات؟} one {إلى أين يذهب هذا الملف؟} two {إلى أين يذهب هذان الملفان؟} few {إلى أين تذهب هذه الملفات؟} many {إلى أين تذهب هذه الملفات؟} other {إلى أين تذهب هذه الملفات؟}}",
+    "save_first_failed": "تعذّر حفظ الرسالة المفتوحة، لذا بقي التطبيق حيث كان.",
+    "import_done": "{count, plural, zero {لم تُستورد أي رسالة إلى {folder}.} one {استُوردت رسالة واحدة إلى {folder}.} two {استُوردت رسالتان إلى {folder}.} few {استُوردت # رسائل إلى {folder}.} many {استُوردت # رسالة إلى {folder}.} other {استُوردت # رسالة إلى {folder}.}}",
+    "import_failed": "تعذّر استيراد {name}.",
+    "too_large_file": "{name} كبير جدًا. الحد هو {max} لكل ملف.",
+    "too_large_message": "هذه الملفات كبيرة جدًا لرسالة واحدة. الحد هو {max}.",
+    "folders_left_out": "يمكن أن تذهب المجلدات إلى الملفات فقط، لذا تُركت.",
+    "nothing_here": "لا يمكن استخدام هذه الملفات هنا."
   },
   "desktopReminders": {
     "generic_title": "تذكير",

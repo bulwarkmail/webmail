@@ -29,7 +29,7 @@ export const POLICY_MAX_FILE_BYTES = 1024 * 1024;
 
 export type PolicyText = { en: string; de: string };
 
-export type PolicyCategory = 'connection' | 'updates' | 'plugins' | 'security' | 'privacy' | 'signIn';
+export type PolicyCategory = 'connection' | 'updates' | 'plugins' | 'security' | 'privacy' | 'signIn' | 'system';
 
 export const POLICY_CATEGORIES: Record<PolicyCategory, PolicyText> = {
   connection: { en: 'Connection', de: 'Verbindung' },
@@ -38,6 +38,7 @@ export const POLICY_CATEGORIES: Record<PolicyCategory, PolicyText> = {
   security: { en: 'Offline mail and app lock', de: 'Offline-E-Mails und App-Sperre' },
   privacy: { en: 'Privacy', de: 'Datenschutz' },
   signIn: { en: 'Sign-in and certificates', de: 'Anmeldung und Zertifikate' },
+  system: { en: 'System integration and troubleshooting', de: 'Systemintegration und Fehlerbehebung' },
 };
 
 export interface CertificateName {
@@ -79,6 +80,8 @@ export interface PolicyValues {
   KeystoreAllowedOrigins: string[];
   BrowserSignIn: boolean;
   WipeOfflineData: string | null;
+  OpenWithEnabled: boolean;
+  DeveloperToolsAvailability: number | null;
 }
 
 export type PolicyKey = keyof PolicyValues;
@@ -88,9 +91,10 @@ interface PolicyBase {
   title: PolicyText;
   description: PolicyText;
   /**
-   * Only a forced value counts. Anything that decides what's allowed: it has no user
-   * choice to sit under, so a "recommended" one would act as forced without being
-   * shown as such, and only a forced value may loosen a forced one.
+   * Only a forced value counts. Anything that decides what's allowed, or a yes or no with
+   * nothing for a recommendation to set: it has no user choice to sit under, so a
+   * "recommended" one would act as forced without being shown as such, or do nothing, and
+   * only a forced value may loosen a forced one.
    */
   forcedOnly?: boolean;
 }
@@ -110,6 +114,8 @@ export type PolicyDefinition = PolicyBase &
         default: number | null;
         min: number;
         max: number;
+        /** What a forced value nobody can read means, where the lowest number isn't the strict side. */
+        onInvalid?: number | null;
         unit: PolicyText;
         sample: number;
       }
@@ -210,6 +216,7 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
   },
   AutoUpdate: {
     category: 'updates',
+    forcedOnly: true,
     type: 'boolean',
     default: true,
     onInvalid: false,
@@ -266,6 +273,7 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
   },
   AppLockRequired: {
     category: 'security',
+    forcedOnly: true,
     type: 'boolean',
     default: false,
     onInvalid: true,
@@ -292,6 +300,7 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
   },
   TelemetryAllowed: {
     category: 'privacy',
+    forcedOnly: true,
     type: 'boolean',
     default: true,
     onInvalid: false,
@@ -304,6 +313,7 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
   },
   CrashReportsAllowed: {
     category: 'privacy',
+    forcedOnly: true,
     type: 'boolean',
     default: true,
     onInvalid: false,
@@ -422,8 +432,38 @@ export const POLICY_SCHEMA: Record<PolicyKey, PolicyDefinition> = {
     label: { en: 'Wipe code', de: 'Löschcode' },
     title: { en: 'Delete mail kept on the device', de: 'Auf dem Gerät behaltene E-Mails löschen' },
     description: {
-      en: 'Set this to a new value, such as today\'s date, to delete everything the app keeps on the device for every server and account: mail, keys, and sign-ins, so people sign in again. Each value deletes once: the app remembers the ones it has acted on, so it stays safe to leave a value in place. Use a new value to delete again.',
-      de: 'Setzen Sie dies auf einen neuen Wert, etwa das heutige Datum, um alles zu löschen, was die App für alle Server und Konten auf dem Gerät behält: E-Mails, Schlüssel und Anmeldungen, Benutzer melden sich also neu an. Jeder Wert löscht einmal: Die App merkt sich, welche sie schon ausgeführt hat, ein Wert kann also stehen bleiben. Verwenden Sie einen neuen Wert, um erneut zu löschen.',
+      en: 'Set this to a new value, such as today\'s date, to delete everything the app keeps on the device for every server and account: mail, keys, and sign-ins, so people sign in again. Each value deletes once: the app remembers the ones it has acted on, so it stays safe to leave a value in place. Use a new value to delete again. That memory is in the user\'s own profile, so someone who edits it can skip a wipe they know is coming: this cleans up a device, it doesn\'t take data from the person using it.',
+      de: 'Setzen Sie dies auf einen neuen Wert, etwa das heutige Datum, um alles zu löschen, was die App für alle Server und Konten auf dem Gerät behält: E-Mails, Schlüssel und Anmeldungen, Benutzer melden sich also neu an. Jeder Wert löscht einmal: Die App merkt sich, welche sie schon ausgeführt hat, ein Wert kann also stehen bleiben. Verwenden Sie einen neuen Wert, um erneut zu löschen. Diese Liste liegt im Profil des Benutzers. Wer sie bearbeitet, kann also eine Löschung umgehen, von der er weiß: Dies räumt ein Gerät auf, es nimmt der Person am Gerät keine Daten weg.',
+    },
+  },
+  OpenWithEnabled: {
+    category: 'system',
+    type: 'boolean',
+    default: true,
+    onInvalid: false,
+    forcedOnly: true,
+    sample: true,
+    title: { en: 'Offer the app in "Open with" and "Send to"', de: 'App unter „Öffnen mit“ und „Senden an“ anbieten' },
+    description: {
+      en: 'When enabled or not configured, the app adds itself to the "Open with" list for common documents and pictures and to the "Send to" menu on Windows, so people can attach a file to a new message from the file manager. It never becomes the default program for those files. When disabled, the app removes these entries for the user. Mail links and .eml, .ics and .vcf files are not affected.',
+      de: 'Wenn aktiviert oder nicht konfiguriert, trägt sich die App unter Windows in die Liste „Öffnen mit“ für gängige Dokumente und Bilder und in das Menü „Senden an“ ein, damit Benutzer eine Datei aus dem Dateimanager an eine neue Nachricht anhängen können. Sie wird nie zum Standardprogramm für diese Dateien. Wenn deaktiviert, entfernt die App diese Einträge für den Benutzer. Mail-Links und .eml-, .ics- und .vcf-Dateien sind nicht betroffen.',
+    },
+  },
+  DeveloperToolsAvailability: {
+    category: 'system',
+    type: 'integer',
+    default: null,
+    min: 0,
+    max: 2,
+    // 0 allows them, so the lowest value would be the open side: not set, locked, reads as off.
+    onInvalid: null,
+    forcedOnly: true,
+    unit: { en: 'Value (0, 1 or 2)', de: 'Wert (0, 1 oder 2)' },
+    sample: 2,
+    title: { en: 'Developer tools', de: 'Entwicklertools' },
+    description: {
+      en: 'The same values as Chrome\'s policy of this name. 2: developer tools are off and the setting is locked. 0 or 1, or not configured: people can turn them on under Settings, after a warning. Developer tools let anyone at the keyboard read everything the app holds, mail and passwords in memory included.',
+      de: 'Dieselben Werte wie die gleichnamige Richtlinie von Chrome. 2: Die Entwicklertools sind aus und die Einstellung ist gesperrt. 0 oder 1 oder nicht konfiguriert: Benutzer können sie nach einer Warnung in den Einstellungen einschalten. Mit den Entwicklertools kann jeder an der Tastatur alles lesen, was die App enthält, auch E-Mails und Passwörter im Speicher.',
     },
   },
 };
@@ -587,6 +627,19 @@ function parseShortcut(raw: unknown): Parsed<string> {
 
 const HOST_LIST = /^[A-Za-z0-9*.,:_[\]-]+$/;
 
+const COMMON_TOP_LEVEL = /^(?:[a-z]{2}|com|net|org|edu|gov|mil|int|info|biz|name|pro|mobi|app|dev|cloud|online|site|xyz|top|shop|store|tech|club|live|blog|page|arpa)$/;
+
+/**
+ * Chromium reads a plain name in these lists as "ends with", so `com` means every .com
+ * address, and `.com` is `*.com`. `intranet` or `sso` stay fine: that's how a server with
+ * no domain is named.
+ */
+function coversTopLevelDomain(host: string): boolean {
+  const name = host.replace(/:\d+$/, '').replace(/\.+$/, '').toLowerCase();
+  if (name.startsWith('.')) return !/^\.+[^.]+\.[^.]/.test(name);
+  return COMMON_TOP_LEVEL.test(name);
+}
+
 /** What Chromium takes for its auth lists: names and wildcards, commas between them. */
 function parseHostList(raw: unknown): Parsed<string> {
   if (typeof raw !== 'string') return fail('not_text');
@@ -599,6 +652,7 @@ function parseHostList(raw: unknown): Parsed<string> {
   // A wildcard must sit in front of a real domain of two labels or more: `*` or `*.com`
   // would hand Windows credentials to any site that asks.
   if (hosts.some((host) => host.includes('*') && !/^\*\.[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+(?::\d+)?$/.test(host))) return fail('invalid_host_list');
+  if (hosts.some(coversTopLevelDomain)) return fail('invalid_host_list');
   return { ok: true, value: hosts.join(',') };
 }
 
@@ -643,12 +697,15 @@ export function parseCertificateRule(raw: unknown): CertificateRule | null {
   const match = /^(?:https:\/\/)?(\[\*\.\]|\*\.)?([^/*[\]]+(?::\d+)?)\/?$/i.exec(pattern);
   if (!match) return null;
   let host: string;
+  let hostname: string;
   try {
-    host = new URL(`https://${match[2]}`).host;
+    ({ host, hostname } = new URL(`https://${match[2]}`));
   } catch {
     return null;
   }
   if (!host) return null;
+  // A wildcard over a bare name is the whole of a top-level domain.
+  if (match[1] && !hostname.includes('.')) return null;
   if (filter !== undefined && (typeof filter !== 'object' || filter === null || Array.isArray(filter))) return null;
   const { ISSUER, SUBJECT } = (filter ?? {}) as { ISSUER?: unknown; SUBJECT?: unknown };
   const issuer = certificateName(ISSUER);
@@ -764,6 +821,8 @@ function failClosedValue(key: PolicyKey): PolicyValues[PolicyKey] {
   if (definition.type === 'list') return [] as PolicyValues[PolicyKey];
   // A shortcut nobody can read doesn't get the built-in one instead.
   if (definition.type === 'string' && definition.format === 'shortcut') return 'off' as PolicyValues[PolicyKey];
+  // A limit nobody can read is the tightest one, not the user's own.
+  if (definition.type === 'integer') return (definition.onInvalid !== undefined ? definition.onInvalid : definition.min) as PolicyValues[PolicyKey];
   return definition.default as PolicyValues[PolicyKey];
 }
 
@@ -829,6 +888,53 @@ export function effectivePolicyValue<T>(entry: { value: T; locked: boolean }, ch
 
 export const DEFAULT_POLICY_SNAPSHOT: PolicySnapshot = resolvePolicies(EMPTY_POLICY_LAYERS);
 
+export interface PolicyProblem {
+  key: PolicyKey;
+  reason: string;
+  raw?: string;
+}
+
+/** Forced values the app can't use, and lists with entries it had to leave out. */
+export function policyProblems(snapshot: PolicySnapshot): PolicyProblem[] {
+  const problems: PolicyProblem[] = [];
+  for (const key of POLICY_KEYS) {
+    const { invalid, dropped, raw } = snapshot[key];
+    if (invalid) problems.push({ key, reason: invalid, ...(raw ? { raw } : {}) });
+    else if (dropped) problems.push({ key, reason: 'entries_left_out' });
+  }
+  return problems;
+}
+
+/** What the webmail reads, in `lib/` and `components/`. A page gets nothing else. */
+const PAGE_POLICY_KEYS: readonly PolicyKey[] = [
+  'AllowStandalone',
+  'AllowedJmapServers',
+  'InstanceUrl',
+  'PluginsMode',
+  'PluginAllowlist',
+  'OfflineEnabled',
+  'AppLockRequired',
+  'AppLockTimeoutMinutes',
+  'CrashReportsAllowed',
+];
+
+/**
+ * The policies as a page gets them. A page can be any server someone chose, and the auth
+ * lists and certificate rules name an organisation's internal hosts, so those stay at their
+ * defaults. Nor does it get a bad value's text, or a recommended server's address: a forced
+ * one is the only server such a page can be on.
+ */
+export function pagePolicySnapshot(snapshot: PolicySnapshot): PolicySnapshot {
+  const page = { ...DEFAULT_POLICY_SNAPSHOT } as Record<PolicyKey, PolicyEntry>;
+  for (const key of PAGE_POLICY_KEYS) {
+    const entry: PolicyEntry = { ...snapshot[key] };
+    delete entry.raw;
+    if (key === 'InstanceUrl' && !entry.locked) (entry as { value: unknown }).value = null;
+    page[key] = entry;
+  }
+  return page as PolicySnapshot;
+}
+
 /**
  * Who acts on each key, so none can sit idle: the desktop repo's test and the webmail's
  * read the named file for the key. `pendingConsumer` names who still has to wire one.
@@ -846,8 +952,8 @@ export const POLICY_CONSUMERS: Record<PolicyKey, PolicyConsumer> = {
   WipeOfflineData: { repo: 'shell', file: 'src/main/features/policies.ts' },
   AuthServerAllowlist: { repo: 'shell', file: 'src/main/features/policies.ts' },
   AuthNegotiateDelegateAllowlist: { repo: 'shell', file: 'src/main/features/policies.ts' },
-  AutoUpdate: { pendingConsumer: 'feat/packaging: src/main/features/updater.ts' },
-  UpdateChannel: { pendingConsumer: 'feat/packaging: src/main/features/updater.ts' },
+  AutoUpdate: { repo: 'shell', file: 'src/main/update-rules.ts' },
+  UpdateChannel: { repo: 'shell', file: 'src/main/update-rules.ts' },
   AppLockRequired: { repo: 'webmail', file: 'lib/app-lock/policy.ts' },
   AppLockTimeoutMinutes: { repo: 'webmail', file: 'lib/app-lock/policy.ts' },
   TelemetryAllowed: { repo: 'shell', file: 'src/main/features/privacy.ts' },
@@ -857,6 +963,8 @@ export const POLICY_CONSUMERS: Record<PolicyKey, PolicyConsumer> = {
   KeystoreEnabled: { repo: 'shell', file: 'src/main/features/policies.ts' },
   KeystoreAllowedOrigins: { repo: 'shell', file: 'src/main/features/policies.ts' },
   BrowserSignIn: { repo: 'shell', file: 'src/main/features/browser-sign-in.ts' },
+  OpenWithEnabled: { repo: 'shell', file: 'src/main/features/os-default-app.ts' },
+  DeveloperToolsAvailability: { repo: 'shell', file: 'src/main/features/dev-tools.ts' },
 };
 
 /** The part the embedded server enforces. Sent to it by message. */

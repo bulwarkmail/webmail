@@ -3663,6 +3663,13 @@
     },
     "find_emails_from": "Leia kirjad saatjalt {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Otsi kausta",
+    "recent": "Viimati kasutatud",
+    "no_match": "Ükski kaust ei sobi",
+    "choose_folder": "Vali kaust…",
+    "current_folder": "Juba kaustas {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Märgi kaust loetuks",
     "mark_folder_tree_read": "Märgi kaust ja alamkaustad loetuks",
@@ -6476,6 +6483,9 @@
   "top_bar": {
     "more": "Rohkem valikuid"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Peida võrguühenduseta teade"
+  },
   "shell": {
     "resize": "Muuda suurust",
     "update_available": "Saadaval on värskendus",
@@ -6520,6 +6530,19 @@
     "group_plugins": "Pistikprogrammid",
     "group_account": "Konto",
     "switch_to": "Lülitu kontole {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Olete võrguühenduseta. Mõni toiming vajab ühendust.",
+    "files_new_folder": "Uus kaust…",
+    "files_new_file": "Uus fail…",
+    "files_new_text_file": "Uus tekstifail…",
+    "files_upload_files": "Laadi failid üles…",
+    "files_upload_folder": "Laadi kaust üles…",
+    "files_share": "Jaga…",
+    "files_share_button": "Jaga",
+    "contacts_add_to_group": "Lisa gruppi…",
+    "contacts_bulk_add_to_group": "Lisa gruppi…",
+    "schedule_send": "Ajasta saatmine…"
   },
   "notification_center": {
     "title": "Märguanded",
@@ -6876,6 +6899,23 @@
       "close": "Sulge"
     }
   },
+  "desktopMenuBar": {
+    "always_show_label": "Näita menüüriba alati",
+    "always_show_description": "Muidu ilmub see Alt-klahvi vajutamisel.",
+    "exit": "Välju",
+    "tray_pause": "Peata teavitused",
+    "tray_pause_hour": "1 tunniks",
+    "tray_pause_tomorrow": "Homseni",
+    "tray_resume": "Lülita teavitused uuesti sisse",
+    "tray_open": "Ava Bulwark",
+    "tray_quit": "Sulge Bulwark",
+    "tray_exit": "Välju Bulwarkist"
+  },
+  "desktopMenus": {
+    "save_draft": "Salvesta mustand",
+    "attach_files": "Lisa failid…",
+    "shortcut_apps": "Mine e-posti, kalendrisse, kontaktidesse või failidesse"
+  },
   "appLock": {
     "section_title": "Rakenduse lukk",
     "section_desc": "Küsib pärast kasutuseta aega PIN-koodi igas aknas ja vahekaardil. Lukus olles ei saa rakendus selles seadmes hoitavat kirja lugeda enne, kui keegi PIN-koodi sisestab.",
@@ -7131,6 +7171,44 @@
     "offline_hint_outbox": "Mida praegu saadad, ootab väljuvate kirjade kastis ja läheb teele, kui oled jälle võrgus.",
     "offline_send_saved": "Oled võrguta. Kiri on salvestatud mustanditesse.",
     "offline_send_unsaved": "Oled võrguta. Kiri jääb siia ja salvestatakse mustanditesse, kui oled jälle võrgus."
+  },
+  "desktopDevTools": {
+    "section_title": "Tõrkeotsing",
+    "label": "Arendaja tööriistad ({shortcut})",
+    "description": "Laseb klahvidel {shortcut} ja F12 avada arendaja tööriistad aknas, kus sa oled. Lülitub välja, kui rakendus lukustub.",
+    "forced_off": "Teie organisatsioon on selle välja lülitanud.",
+    "locked": "Selle muutmiseks ava rakenduse lukk.",
+    "menu_toggle": "Näita või peida arendaja tööriistad"
+  },
+  "fileDrop": {
+    "overlay_label": "Lohista failid siia",
+    "overlay_title": "Kuhu failid lähevad?",
+    "overlay_hint": "Tühistamiseks lase lahti väljaspool valikuid või vajuta Esc.",
+    "files_unknown": "Failid",
+    "files_summary": "{count, plural, one {# fail} other {# faili}}",
+    "files_summary_size": "{count, plural, one {# fail} other {# faili}}, {size}",
+    "zone_attach_here": "Lisa sellele kirjale",
+    "zone_insert_inline": "Lisa kirja sisse",
+    "zone_new_message": "Lisa uuele kirjale",
+    "zone_upload_files": "Laadi üles kausta Failid",
+    "zone_upload_folder": "Laadi üles kausta {folder}",
+    "zone_calendar": "Lisa kalendrisse",
+    "zone_contacts": "Lisa kontaktidesse",
+    "zone_open_eml": "Ava kiri",
+    "zone_import_eml": "Impordi kausta {folder}",
+    "note_limit_message": "Kuni {size} kirja kohta",
+    "note_limit_file": "Kuni {size} faili kohta",
+    "note_kept_offline": "Jääb sellesse seadmesse, kuni oled taas võrgus",
+    "note_needs_connection": "Vajab ühendust",
+    "announce": "{files, plural, =0 {Failid} one {# fail} other {# faili}} lohistati sisse. Valikud: {choices}.",
+    "choose_title": "{count, plural, one {Kuhu see fail läheb?} other {Kuhu need failid lähevad?}}",
+    "save_first_failed": "Avatud kirja ei saanud salvestada, seega jäi rakendus sinna, kus ta oli.",
+    "import_done": "{count, plural, one {# kiri imporditi kausta {folder}.} other {# kirja imporditi kausta {folder}.}}",
+    "import_failed": "Faili {name} ei saanud importida.",
+    "too_large_file": "{name} on liiga suur. Piir on {max} faili kohta.",
+    "too_large_message": "Need failid on ühe kirja jaoks liiga suured. Piir on {max}.",
+    "folders_left_out": "Kaustu saab panna ainult kausta Failid, seega jäeti need välja.",
+    "nothing_here": "Neid faile ei saa siin kasutada."
   },
   "desktopReminders": {
     "generic_title": "Meeldetuletus",
