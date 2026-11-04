@@ -81,10 +81,27 @@ export function secondsUntilSend(sendAt: number, now: number, maxSeconds?: numbe
   return maxSeconds && maxSeconds > 0 ? Math.min(left, maxSeconds) : left;
 }
 
+/** Undo is never offered closer than this to the server letting the message go. */
+export const UNDO_SAFETY_MS = 500;
+
+/**
+ * When Undo ends for a held send shown from `shownAt`: the whole delay the user
+ * picked, counted from then, as the server holds the message a moment longer
+ * (lib/outgoing/undo-delay.ts). Never later than UNDO_SAFETY_MS before it goes.
+ * Before, Undo ended a second before the server's time, which the save and
+ * the submission had already eaten into: 5, 4, 3, 2, then "Sent" (compose-p3-8).
+ */
+export function undoEndsAt(sendAt: number, shownAt: number, delaySeconds: number): number {
+  const latest = sendAt - UNDO_SAFETY_MS;
+  if (!(delaySeconds > 0)) return Math.max(shownAt, sendAt - 1000);
+  return Math.max(shownAt, Math.min(shownAt + delaySeconds * 1000, latest));
+}
+
 export function runUndoSendCountdown(id: string, options: UndoCountdownOptions): () => void {
   const now = options.now ?? Date.now;
   const present = () => useToastStore.getState().toasts.some((t) => t.id === id);
-  const secondsLeft = () => secondsUntilSend(options.sendAt, now(), options.maxSeconds);
+  // Down to the end of Undo, where the toast says "Sent": 5, 4, 3, 2, 1.
+  const secondsLeft = () => secondsUntilSend(options.undoEndsAt, now(), options.maxSeconds);
   let shown = -1;
   const tick = () => {
     if (!present()) return stop();

@@ -982,10 +982,10 @@
     "forward_message": "Redirecționează",
     "from": "De la",
     "to": "Către",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "Subiect",
-    "body_placeholder": "Scrieți mesajul...",
+    "body_placeholder": "Scrieți mesajul…",
     "send": "Trimite",
     "cancel": "Anulează",
     "attach": "Atașați",
@@ -1042,10 +1042,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Dacă serverul dvs. nu acceptă această adresă ca expeditor al plicului, se folosește în schimb {identity}, iar destinatarii o pot vedea în antetul Return-Path."
     },
-    "save_as_template": "Salvează ca șablon",
+    "save_as_template": "Salvează ca șablon…",
     "attach_from_device": "Încarcă de pe acest dispozitiv",
     "templates_menu": "Șabloane",
-    "insert_template": "Inserează șablon",
+    "insert_template": "Inserează șablon…",
     "options": "Opțiuni",
     "option_plain_text": "Text simplu",
     "option_plain_text_hint": "Trimite fără formatare",
@@ -7796,6 +7796,10 @@
     "missing": "„{name}” nu mai există.",
     "too_large": "„{name}” depășește {max} și nu poate fi atașat.",
     "failed": "„{name}” nu a putut fi atașat. Încearcă din nou."
+  },
+  "composeRecentLimit": {
+    "too_large": "Prea mare",
+    "too_large_hint": "Mai mare decât acceptă serverul ({max})"
   },
   "compose_windows": {
     "more_formatting": "Mai multe opțiuni de formatare",

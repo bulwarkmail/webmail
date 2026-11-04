@@ -1042,10 +1042,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "如果您的伺服器不接受此地址作為信封寄件者，將改用 {identity}，收件者可以在 Return-Path 標頭中看到它。"
     },
-    "save_as_template": "儲存為範本",
+    "save_as_template": "儲存為範本…",
     "attach_from_device": "從此裝置上傳",
     "templates_menu": "範本",
-    "insert_template": "插入範本",
+    "insert_template": "插入範本…",
     "options": "選項",
     "option_plain_text": "純文字",
     "option_plain_text_hint": "不帶格式傳送",
@@ -7796,6 +7796,10 @@
     "missing": "「{name}」已不存在。",
     "too_large": "「{name}」超過 {max}，無法附加。",
     "failed": "無法附加「{name}」。請再試一次。"
+  },
+  "composeRecentLimit": {
+    "too_large": "太大",
+    "too_large_hint": "超過伺服器允許的大小（{max}）"
   },
   "compose_windows": {
     "more_formatting": "更多格式",

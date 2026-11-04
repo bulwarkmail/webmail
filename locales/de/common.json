@@ -982,10 +982,10 @@
     "forward_message": "Weiterleiten",
     "from": "Von",
     "to": "An",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "Betreff",
-    "body_placeholder": "Schreiben Sie Ihre Nachricht...",
+    "body_placeholder": "Schreiben Sie Ihre Nachricht…",
     "send": "Senden",
     "cancel": "Abbrechen",
     "attach": "Anhängen",
@@ -1039,10 +1039,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Akzeptiert Ihr Server diese Adresse nicht als Umschlag-Absender, wird dort {identity} verwendet, und Empfänger können sie in der Kopfzeile Return-Path sehen."
     },
-    "save_as_template": "Als Vorlage speichern",
+    "save_as_template": "Als Vorlage speichern…",
     "attach_from_device": "Von diesem Gerät hochladen",
     "templates_menu": "Vorlagen",
-    "insert_template": "Vorlage einfügen",
+    "insert_template": "Vorlage einfügen…",
     "options": "Optionen",
     "option_plain_text": "Nur Text",
     "option_plain_text_hint": "Ohne Formatierung senden",
@@ -1057,7 +1057,7 @@
     "option_priority_normal": "Normal",
     "option_priority_low": "Niedrig",
     "validation": {
-      "recipient_required": "Empfänger hinzufügen zum Senden",
+      "recipient_required": "Fügen Sie einen Empfänger hinzu, um zu senden",
       "body_required": "Nachricht schreiben oder Datei anhängen",
       "invalid_recipients": "Nicht gesendet - prüfen Sie diese Adressen: {addresses}",
       "attachments_uploading": "Anhänge werden noch hochgeladen – wird gesendet, sobald sie fertig sind",
@@ -7796,6 +7796,10 @@
     "missing": "\"{name}\" ist nicht mehr vorhanden.",
     "too_large": "\"{name}\" ist größer als {max} und kann nicht angehängt werden.",
     "failed": "\"{name}\" konnte nicht angehängt werden. Versuchen Sie es erneut."
+  },
+  "composeRecentLimit": {
+    "too_large": "Zu groß",
+    "too_large_hint": "Größer, als der Server annimmt ({max})"
   },
   "compose_windows": {
     "more_formatting": "Weitere Formatierung",

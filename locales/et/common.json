@@ -982,10 +982,10 @@
     "forward_message": "Saada edasi",
     "from": "Saatja",
     "to": "Saajale",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "Teema",
-    "body_placeholder": "Kirjuta oma sõnum...",
+    "body_placeholder": "Kirjuta oma sõnum…",
     "formatting": "Vormindus",
     "send": "Saada",
     "cancel": "Tühista",
@@ -1043,10 +1043,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Kui sinu server ei võta seda aadressi ümbriku saatjaks vastu, kasutatakse selle asemel {identity} ja adressaadid näevad seda päisest Return-Path."
     },
-    "save_as_template": "Salvesta mallina",
+    "save_as_template": "Salvesta mallina…",
     "attach_from_device": "Laadi üles sellest seadmest",
     "templates_menu": "Mallid",
-    "insert_template": "Lisa mall",
+    "insert_template": "Lisa mall…",
     "options": "Valikud",
     "option_plain_text": "Lihttekst",
     "option_plain_text_hint": "Saada ilma vormindusteta",
@@ -7796,6 +7796,10 @@
     "missing": "„{name}” pole enam olemas.",
     "too_large": "„{name}” on suurem kui {max} ja seda ei saa lisada.",
     "failed": "Faili „{name}” ei saanud lisada. Proovi uuesti."
+  },
+  "composeRecentLimit": {
+    "too_large": "Liiga suur",
+    "too_large_hint": "Suurem, kui server vastu võtab ({max})"
   },
   "compose_windows": {
     "more_formatting": "Rohkem vormindust",

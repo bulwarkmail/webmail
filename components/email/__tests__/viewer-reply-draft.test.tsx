@@ -74,6 +74,20 @@ describe('a reply draft under its message', () => {
     expect(screen.getByTestId('reply-draft')).toHaveAttribute('data-quick-reply-box');
   });
 
+  // compose-p3-3: the reader's Reply all and Forward handed their click event
+  // on, which the host took for text to start with and skipped the draft.
+  it('calls Reply all and Forward with nothing, not the click', async () => {
+    const onReplyAll = vi.fn();
+    const onForward = vi.fn();
+    render(<EmailViewer email={message} isLoading={false} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onQuickReply={vi.fn()} onReply={vi.fn()} onReplyAll={onReplyAll} onForward={onForward} replyDraft={null} />);
+    await act(async () => { await new Promise((r) => setTimeout(r, 10)); });
+    for (const button of screen.getAllByTitle(/^reply_all/)) fireEvent.click(button);
+    for (const button of screen.getAllByTitle(/^forward/)) fireEvent.click(button);
+    expect(onReplyAll).toHaveBeenCalled();
+    expect(onForward).toHaveBeenCalled();
+    for (const call of [...onReplyAll.mock.calls, ...onForward.mock.calls]) expect(call).toEqual([]);
+  });
+
   it('keeps the quick reply box when there is none', async () => {
     await renderViewer(null);
     expect(screen.queryByTestId('reply-draft')).toBeNull();

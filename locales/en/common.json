@@ -982,10 +982,10 @@
     "forward_message": "Forward",
     "from": "From",
     "to": "To",
-    "cc": "CC",
-    "bcc": "BCC",
+    "cc": "Cc",
+    "bcc": "Bcc",
     "subject": "Subject",
-    "body_placeholder": "Write your message...",
+    "body_placeholder": "Write your message…",
     "formatting": "Formatting",
     "send": "Send",
     "cancel": "Cancel",
@@ -1043,10 +1043,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "If your server doesn't accept this address as the envelope sender, {identity} is used there instead, and recipients can see it in the Return-Path header."
     },
-    "save_as_template": "Save as template",
+    "save_as_template": "Save as template…",
     "attach_from_device": "Upload from this device",
     "templates_menu": "Templates",
-    "insert_template": "Insert template",
+    "insert_template": "Insert template…",
     "options": "Options",
     "option_plain_text": "Plain text",
     "option_plain_text_hint": "Send without formatting",
@@ -7796,6 +7796,10 @@
     "missing": "\"{name}\" isn't there any more.",
     "too_large": "\"{name}\" is larger than {max} and can't be attached.",
     "failed": "\"{name}\" couldn't be attached. Try again."
+  },
+  "composeRecentLimit": {
+    "too_large": "Too large",
+    "too_large_hint": "Larger than the server takes ({max})"
   },
   "compose_windows": {
     "more_formatting": "More formatting",

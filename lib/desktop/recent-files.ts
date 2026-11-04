@@ -60,18 +60,28 @@ export async function readRecentFile(id: string): Promise<RecentFileAttach> {
 /**
  * A long folder as its start and its end, which tell it apart: the drive or the share, then
  * the folders nearest the file. The middle goes, where a path's end would under an ellipsis.
+ * A name still too long for the line loses its own middle, so its end stays readable
+ * (compose-p3-5). `max` fits the Attach menu's line beside the date.
  */
-export function shortFolder(folder: string, max = 44): string {
+export function shortFolder(folder: string, max = 34): string {
   if (folder.length <= max) return folder;
   const sep = folder.includes('\\') ? '\\' : '/';
   const parts = folder.split(sep);
   // \\server\share, or C:, or the empty start of /home.
   const rootCount = folder.startsWith('\\\\') ? 4 : 1;
-  if (parts.length <= rootCount + 1) return folder;
+  if (parts.length <= rootCount + 1) return middle(folder, max);
   const root = parts.slice(0, rootCount).join(sep);
   let tail = parts.slice(rootCount);
   while (tail.length > 1 && `${root}${sep}…${sep}${tail.join(sep)}`.length > max) tail = tail.slice(1);
-  return `${root}${sep}…${sep}${tail.join(sep)}`;
+  return middle(`${root}${sep}…${sep}${tail.join(sep)}`, max);
+}
+
+/** `text` with its middle as "…" when it's longer than `max`. */
+function middle(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const keep = max - 1;
+  const head = Math.ceil(keep / 2);
+  return `${text.slice(0, head)}…${text.slice(text.length - (keep - head))}`;
 }
 
 const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [

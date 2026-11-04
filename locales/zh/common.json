@@ -985,7 +985,7 @@
     "cc": "抄送",
     "bcc": "密送",
     "subject": "主题",
-    "body_placeholder": "写邮件内容...",
+    "body_placeholder": "写邮件内容…",
     "send": "发送",
     "cancel": "取消",
     "attach": "附件",
@@ -1039,10 +1039,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "如果您的服务器不接受此地址作为信封发件人，将改用 {identity}，收件人可以在 Return-Path 标头中看到它。"
     },
-    "save_as_template": "保存为模板",
+    "save_as_template": "保存为模板…",
     "attach_from_device": "从此设备上传",
     "templates_menu": "模板",
-    "insert_template": "插入模板",
+    "insert_template": "插入模板…",
     "options": "选项",
     "option_plain_text": "纯文本",
     "option_plain_text_hint": "不带格式发送",
@@ -7796,6 +7796,10 @@
     "missing": "“{name}”已不存在。",
     "too_large": "“{name}”超过 {max}，无法添加为附件。",
     "failed": "无法将“{name}”添加为附件。请重试。"
+  },
+  "composeRecentLimit": {
+    "too_large": "太大",
+    "too_large_hint": "超过服务器允许的大小（{max}）"
   },
   "compose_windows": {
     "more_formatting": "更多格式",

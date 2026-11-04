@@ -982,10 +982,10 @@
     "forward_message": "Transférer",
     "from": "De",
     "to": "À",
-    "cc": "CC",
+    "cc": "Cc",
     "bcc": "CCI",
     "subject": "Objet",
-    "body_placeholder": "Écrivez votre message...",
+    "body_placeholder": "Écrivez votre message…",
     "send": "Envoyer",
     "cancel": "Annuler",
     "attach": "Joindre",
@@ -1039,10 +1039,10 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Si votre serveur n'accepte pas cette adresse comme expéditeur d'enveloppe, {identity} est utilisée à la place, et les destinataires peuvent la voir dans l'en-tête Return-Path."
     },
-    "save_as_template": "Enregistrer comme modèle",
+    "save_as_template": "Enregistrer comme modèle…",
     "attach_from_device": "Téléverser depuis cet appareil",
     "templates_menu": "Modèles",
-    "insert_template": "Insérer un modèle",
+    "insert_template": "Insérer un modèle…",
     "options": "Options",
     "option_plain_text": "Texte brut",
     "option_plain_text_hint": "Envoyer sans mise en forme",
@@ -7796,6 +7796,10 @@
     "missing": "« {name} » n'existe plus.",
     "too_large": "« {name} » dépasse {max} et ne peut pas être joint.",
     "failed": "Impossible de joindre « {name} ». Réessayez."
+  },
+  "composeRecentLimit": {
+    "too_large": "Trop volumineux",
+    "too_large_hint": "Plus volumineux que ce que le serveur accepte ({max})"
   },
   "compose_windows": {
     "more_formatting": "Plus de mise en forme",
