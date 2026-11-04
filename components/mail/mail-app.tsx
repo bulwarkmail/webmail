@@ -5900,6 +5900,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
              `inert` it stays in the accessibility tree and screen readers can
              reach a menu the Toggle menu button reports as collapsed (#721). */
           inert={isMobile && !sidebarOpen}
+          data-window-drawer={!isEmbedded && isMobile ? "" : undefined}
           className={cn(
             "flex-shrink-0 h-full z-50",
             // The z-index is for the phone drawer. On a desktop under Mountain
@@ -5921,7 +5922,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   : "relative")
               : cn(
                   // Phone: a drawer from the window's start edge, from under
-                  // the top bar and the window's controls (--drawer-top).
+                  // the top bar (--drawer-top, and [data-window-drawer] for
+                  // the window's controls).
                   // start-0 rather than left-0: in RTL the drawer belongs on
                   // the right, matching the hamburger that opens it.
                   "max-desk:fixed max-desk:start-0 max-desk:top-[var(--drawer-top)] max-desk:bottom-0 max-desk:h-auto max-desk:w-72",

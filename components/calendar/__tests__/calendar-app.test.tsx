@@ -883,6 +883,8 @@ describe('CalendarApp sidebar drawer', () => {
     const classes = drawer().className.split(/\s+/);
     expect(classes).toEqual(expect.arrayContaining(['fixed', 'start-0', 'top-[var(--drawer-top)]', 'bottom-0']));
     expect(classes).not.toContain('absolute');
+    // Where the window's controls are over the page, app/globals.css places it by this.
+    expect(drawer()).toHaveAttribute('data-window-drawer');
   });
 
   it("is out of reach while closed, so Tab doesn't walk into the hidden calendars", () => {

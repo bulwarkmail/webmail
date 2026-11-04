@@ -172,5 +172,7 @@ describe('the phone\'s folder drawer', () => {
     render(<MailApp />);
     const classes = folders().className.split(/\s+/);
     expect(classes).toEqual(expect.arrayContaining(['max-desk:fixed', 'max-desk:start-0', 'max-desk:top-[var(--drawer-top)]', 'max-desk:bottom-0']));
+    // Where the window's controls are over the page, app/globals.css places it by this.
+    expect(folders()).toHaveAttribute('data-window-drawer');
   });
 });

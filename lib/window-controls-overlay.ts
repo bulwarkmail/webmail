@@ -53,6 +53,33 @@ export const CLOSE_MOVES_ATTRIBUTE = 'data-window-close-moves';
 /** The head of a pane at the window's end, a row below the controls: its close can sit right under the window's. */
 export const PANE_HEAD_ATTRIBUTE = 'data-window-pane-head';
 
+/**
+ * Where a drawer from the window's left or right edge (Mail's folders, the Calendar,
+ * Contacts and Files sidebars) meets the controls, for --drawer-top in app/globals.css.
+ * Not there: it runs from the top of the window. "below": it would cover the
+ * controls at the right (Windows, Linux), so it starts below their row. "inset": it
+ * would cover the traffic lights at the left (macOS); it still runs from the top, as
+ * a Finder or Mail sidebar does, with its content below them.
+ */
+export const DRAWER_LEFT_ATTRIBUTE = 'data-left-drawer';
+export const DRAWER_RIGHT_ATTRIBUTE = 'data-right-drawer';
+/** The drawers' width: w-72, at most 85 % of the window (components/layout/edge-drawer.tsx). */
+const DRAWER_WIDTH = 288;
+
+export type DrawerPlacement = 'top' | 'below' | 'inset';
+
+/** How a drawer from that edge of the window meets the controls (see DRAWER_LEFT_ATTRIBUTE). */
+export function drawerPlacement(edge: 'left' | 'right', area: TitlebarArea, viewportWidth: number): DrawerPlacement {
+  const { left, right } = controlsInsets(area, viewportWidth);
+  const width = Math.min(DRAWER_WIDTH, viewportWidth * 0.85);
+  // The controls at the drawer's own edge always meet it; those at the other edge
+  // only when the window is too narrow for the two side by side.
+  const reaches = (inset: number, side: 'left' | 'right') => inset > 0 && (side === edge || width > viewportWidth - inset);
+  if (reaches(right, 'right')) return 'below';
+  if (reaches(left, 'left')) return 'inset';
+  return 'top';
+}
+
 function overlay(): OverlayLike | null {
   if (typeof navigator === 'undefined') return null;
   const value = (navigator as Navigator & { windowControlsOverlay?: OverlayLike }).windowControlsOverlay;
@@ -82,14 +109,22 @@ export function applyControlsArea(area: TitlebarArea | null, root: HTMLElement =
     for (const name of [TITLEBAR_RIGHT_VAR, TITLEBAR_LEFT_VAR, TITLEBAR_ROW_VAR]) root.style.removeProperty(name);
     root.removeAttribute(CONTROLS_ATTRIBUTE);
     root.removeAttribute(CONTROLS_LEFT_ATTRIBUTE);
+    root.removeAttribute(DRAWER_LEFT_ATTRIBUTE);
+    root.removeAttribute(DRAWER_RIGHT_ATTRIBUTE);
     return;
   }
-  const { left, right } = controlsInsets(area, root.ownerDocument.defaultView?.innerWidth ?? 0);
+  const viewportWidth = root.ownerDocument.defaultView?.innerWidth ?? 0;
+  const { left, right } = controlsInsets(area, viewportWidth);
   root.style.setProperty(TITLEBAR_RIGHT_VAR, `${right}px`);
   root.style.setProperty(TITLEBAR_LEFT_VAR, `${left}px`);
   root.style.setProperty(TITLEBAR_ROW_VAR, `${area.height}px`);
   root.setAttribute(CONTROLS_ATTRIBUTE, '');
   root.toggleAttribute(CONTROLS_LEFT_ATTRIBUTE, left > 0);
+  for (const [name, edge] of [[DRAWER_LEFT_ATTRIBUTE, 'left'], [DRAWER_RIGHT_ATTRIBUTE, 'right']] as const) {
+    const placement = drawerPlacement(edge, area, viewportWidth);
+    if (placement === 'top') root.removeAttribute(name);
+    else root.setAttribute(name, placement);
+  }
 }
 
 /**
