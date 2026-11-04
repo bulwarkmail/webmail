@@ -7188,10 +7188,12 @@
     "server_looking": "Căutăm serverul tău de e-mail…",
     "server_found": "Server de e-mail: {server}",
     "server_change": "Schimbă",
+    "server_change_hint": "Scrieți adresa altui server.",
     "server_not_found": "Nu am găsit serverul de e-mail pentru această adresă. Introdu-l aici, de exemplu mail.example.com.",
     "server_needed": "Introdu adresa serverului tău de e-mail.",
     "server_invalid": "Aceasta nu este adresa unui server. Scrie-o ca mail.example.com.",
     "email_needed": "Introdu mai întâi adresa ta de e-mail.",
+    "other_ways": "Alte moduri de conectare",
     "trouble": "Ai probleme?",
     "trouble_cors": "Serverul tău de e-mail trebuie să permită autentificarea de pe acest site. Dacă autentificarea nu reușește, cere celui care administrează serverul să o permită.",
     "provider_unsupported": "{provider} nu oferă JMAP, modul în care Bulwark comunică cu serverele de e-mail, așa că Bulwark nu se poate conecta încă direct la el."

@@ -7188,10 +7188,12 @@
     "server_looking": "Ihr Mailserver wird gesucht…",
     "server_found": "Mailserver: {server}",
     "server_change": "Ändern",
+    "server_change_hint": "Geben Sie eine andere Serveradresse ein.",
     "server_not_found": "Für diese Adresse wurde kein Mailserver gefunden. Geben Sie ihn hier ein, zum Beispiel mail.example.com.",
     "server_needed": "Geben Sie die Adresse Ihres Mailservers ein.",
     "server_invalid": "Das ist keine Serveradresse. Schreiben Sie sie wie mail.example.com.",
     "email_needed": "Geben Sie zuerst Ihre E-Mail-Adresse ein.",
+    "other_ways": "Andere Anmeldewege",
     "trouble": "Probleme?",
     "trouble_cors": "Ihr Mailserver muss Anmeldungen von dieser Website erlauben. Wenn die Anmeldung nicht klappt, bitten Sie die Betreiber Ihres Mailservers, das zu erlauben.",
     "provider_unsupported": "{provider} bietet kein JMAP an, die Art, wie Bulwark mit Mailservern spricht. Deshalb kann sich Bulwark noch nicht direkt damit verbinden."

@@ -7188,10 +7188,12 @@
     "server_looking": "S'està cercant el teu servidor de correu…",
     "server_found": "Servidor de correu: {server}",
     "server_change": "Canvia",
+    "server_change_hint": "Escriviu una altra adreça de servidor.",
     "server_not_found": "No hem trobat el servidor de correu d'aquesta adreça. Escriu-lo aquí, per exemple mail.example.com.",
     "server_needed": "Escriu l'adreça del teu servidor de correu.",
     "server_invalid": "Això no és l'adreça d'un servidor. Escriu-la com mail.example.com.",
     "email_needed": "Primer escriu la teva adreça electrònica.",
+    "other_ways": "Altres maneres d'iniciar la sessió",
     "trouble": "Tens problemes?",
     "trouble_cors": "El teu servidor de correu ha de permetre iniciar sessió des d'aquest lloc web. Si no funciona, demana a qui gestiona el servidor que ho permeti.",
     "provider_unsupported": "{provider} no ofereix JMAP, la manera com Bulwark parla amb els servidors de correu, així que Bulwark encara no s'hi pot connectar directament."

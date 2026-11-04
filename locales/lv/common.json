@@ -7188,10 +7188,12 @@
     "server_looking": "Meklējam jūsu pasta serveri…",
     "server_found": "Pasta serveris: {server}",
     "server_change": "Mainīt",
+    "server_change_hint": "Ierakstiet citu servera adresi.",
     "server_not_found": "Šai adresei pasta serveri neatradām. Ievadiet to šeit, piemēram, mail.example.com.",
     "server_needed": "Ievadiet sava pasta servera adresi.",
     "server_invalid": "Tā nav servera adrese. Rakstiet to kā mail.example.com.",
     "email_needed": "Vispirms ievadiet savu e-pasta adresi.",
+    "other_ways": "Citi pierakstīšanās veidi",
     "trouble": "Neizdodas?",
     "trouble_cors": "Jūsu pasta serverim jāatļauj pieteikšanās no šīs vietnes. Ja pieteikties neizdodas, palūdziet pasta servera uzturētājam to atļaut.",
     "provider_unsupported": "{provider} nepiedāvā JMAP, veidu, kā Bulwark sazinās ar pasta serveriem, tāpēc Bulwark tam vēl nevar pieslēgties tieši."

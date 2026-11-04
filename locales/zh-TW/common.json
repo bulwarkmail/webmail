@@ -7188,10 +7188,12 @@
     "server_looking": "正在尋找你的郵件伺服器…",
     "server_found": "郵件伺服器：{server}",
     "server_change": "變更",
+    "server_change_hint": "請輸入另一個伺服器位址。",
     "server_not_found": "找不到這個地址的郵件伺服器。請在這裡輸入，例如 mail.example.com。",
     "server_needed": "請輸入你的郵件伺服器位址。",
     "server_invalid": "這不是伺服器位址。請依 mail.example.com 的格式輸入。",
     "email_needed": "請先輸入你的電子郵件地址。",
+    "other_ways": "其他登入方式",
     "trouble": "遇到問題？",
     "trouble_cors": "你的郵件伺服器必須允許從這個網站登入。如果無法登入，請負責郵件伺服器的人允許。",
     "provider_unsupported": "{provider} 不支援 JMAP（Bulwark 與郵件伺服器溝通的方式），所以 Bulwark 目前還無法直接連線。"

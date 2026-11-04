@@ -7188,10 +7188,12 @@
     "server_looking": "Leder efter din mailserver…",
     "server_found": "Mailserver: {server}",
     "server_change": "Skift",
+    "server_change_hint": "Skriv en anden serveradresse.",
     "server_not_found": "Vi kunne ikke finde mailserveren til denne adresse. Skriv den her, for eksempel mail.example.com.",
     "server_needed": "Skriv adressen på din mailserver.",
     "server_invalid": "Det er ikke en serveradresse. Skriv den som mail.example.com.",
     "email_needed": "Skriv først din e-mailadresse.",
+    "other_ways": "Andre måder at logge ind på",
     "trouble": "Problemer?",
     "trouble_cors": "Din mailserver skal tillade login fra dette websted. Hvis login mislykkes, så bed den, der driver din mailserver, om at tillade det.",
     "provider_unsupported": "{provider} tilbyder ikke JMAP, den måde Bulwark taler med mailservere på, så Bulwark kan endnu ikke forbinde direkte til det."

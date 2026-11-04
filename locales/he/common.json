@@ -7189,10 +7189,12 @@
     "server_looking": "מחפשים את שרת הדואר שלך…",
     "server_found": "שרת דואר: {server}",
     "server_change": "שינוי",
+    "server_change_hint": "הקלידו כתובת של שרת אחר.",
     "server_not_found": "לא מצאנו את שרת הדואר של הכתובת הזו. הזינו אותו כאן, למשל mail.example.com.",
     "server_needed": "הזינו את הכתובת של שרת הדואר שלכם.",
     "server_invalid": "זו לא כתובת של שרת. כתבו אותה כמו mail.example.com.",
     "email_needed": "הזינו קודם את כתובת הדוא״ל שלכם.",
+    "other_ways": "דרכים אחרות להתחבר",
     "trouble": "נתקלתם בבעיה?",
     "trouble_cors": "שרת הדואר שלכם צריך לאפשר כניסה מהאתר הזה. אם הכניסה נכשלת, בקשו ממי שמפעיל את שרת הדואר לאפשר זאת.",
     "provider_unsupported": "{provider} לא מציע JMAP, הדרך שבה Bulwark מדבר עם שרתי דואר, ולכן Bulwark עדיין לא יכול להתחבר אליו ישירות."

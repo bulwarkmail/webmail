@@ -7188,10 +7188,12 @@
     "server_looking": "Otsime sinu meiliserverit…",
     "server_found": "Meiliserver: {server}",
     "server_change": "Muuda",
+    "server_change_hint": "Sisestage mõne teise serveri aadress.",
     "server_not_found": "Sellele aadressile ei leitud meiliserverit. Sisesta see siia, näiteks mail.example.com.",
     "server_needed": "Sisesta oma meiliserveri aadress.",
     "server_invalid": "See ei ole serveri aadress. Kirjuta see nagu mail.example.com.",
     "email_needed": "Sisesta kõigepealt oma e-posti aadress.",
+    "other_ways": "Muud sisselogimise viisid",
     "trouble": "Probleeme?",
     "trouble_cors": "Sinu meiliserver peab lubama sisselogimist sellelt veebisaidilt. Kui sisselogimine ei õnnestu, palu meiliserveri haldajal see lubada.",
     "provider_unsupported": "{provider} ei paku JMAP-i, mille kaudu Bulwark meiliserveritega suhtleb, seega ei saa Bulwark sellega veel otse ühendust luua."

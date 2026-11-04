@@ -7188,10 +7188,12 @@
     "server_looking": "A levelezőszerver keresése…",
     "server_found": "Levelezőszerver: {server}",
     "server_change": "Módosítás",
+    "server_change_hint": "Írjon be egy másik szervercímet.",
     "server_not_found": "Ehhez a címhez nem találtunk levelezőszervert. Írja be ide, például mail.example.com.",
     "server_needed": "Írja be a levelezőszervere címét.",
     "server_invalid": "Ez nem szervercím. Így írja: mail.example.com.",
     "email_needed": "Először írja be az e-mail-címét.",
+    "other_ways": "Más bejelentkezési módok",
     "trouble": "Probléma van?",
     "trouble_cors": "A levelezőszervernek engedélyeznie kell a bejelentkezést erről a webhelyről. Ha a bejelentkezés nem sikerül, kérje meg a levelezőszerver üzemeltetőjét, hogy engedélyezze.",
     "provider_unsupported": "A(z) {provider} nem kínál JMAP-ot, azt a módot, ahogyan a Bulwark a levelezőszerverekkel beszél, ezért a Bulwark még nem tud közvetlenül csatlakozni hozzá."

@@ -7188,10 +7188,12 @@
     "server_looking": "正在查找你的邮件服务器…",
     "server_found": "邮件服务器：{server}",
     "server_change": "更改",
+    "server_change_hint": "请输入另一个服务器地址。",
     "server_not_found": "没有找到这个地址的邮件服务器。请在这里输入，例如 mail.example.com。",
     "server_needed": "请输入你的邮件服务器地址。",
     "server_invalid": "这不是服务器地址。请按 mail.example.com 这样的格式输入。",
     "email_needed": "请先输入你的邮箱地址。",
+    "other_ways": "其他登录方式",
     "trouble": "遇到问题？",
     "trouble_cors": "你的邮件服务器需要允许从这个网站登录。如果登录失败，请让管理邮件服务器的人允许。",
     "provider_unsupported": "{provider} 不支持 JMAP（Bulwark 与邮件服务器通信的方式），所以 Bulwark 暂时无法直接连接它。"

@@ -7188,10 +7188,12 @@
     "server_looking": "Buscando tu servidor de correo…",
     "server_found": "Servidor de correo: {server}",
     "server_change": "Cambiar",
+    "server_change_hint": "Escribe otra dirección de servidor.",
     "server_not_found": "No encontramos el servidor de correo de esta dirección. Escríbelo aquí, por ejemplo mail.example.com.",
     "server_needed": "Escribe la dirección de tu servidor de correo.",
     "server_invalid": "Esto no es la dirección de un servidor. Escríbela como mail.example.com.",
     "email_needed": "Primero escribe tu dirección de correo.",
+    "other_ways": "Otras formas de iniciar sesión",
     "trouble": "¿Tienes problemas?",
     "trouble_cors": "Tu servidor de correo tiene que permitir iniciar sesión desde este sitio web. Si no funciona, pide a quien gestiona tu servidor de correo que lo permita.",
     "provider_unsupported": "{provider} no ofrece JMAP, la forma en que Bulwark habla con los servidores de correo, así que Bulwark todavía no puede conectarse directamente."

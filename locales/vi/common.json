@@ -7200,10 +7200,12 @@
     "server_looking": "Đang tìm máy chủ thư của bạn…",
     "server_found": "Máy chủ thư: {server}",
     "server_change": "Đổi",
+    "server_change_hint": "Nhập địa chỉ máy chủ khác.",
     "server_not_found": "Không tìm thấy máy chủ thư cho địa chỉ này. Nhập vào đây, ví dụ mail.example.com.",
     "server_needed": "Nhập địa chỉ máy chủ thư của bạn.",
     "server_invalid": "Đây không phải địa chỉ máy chủ. Hãy viết như mail.example.com.",
     "email_needed": "Hãy nhập địa chỉ email trước.",
+    "other_ways": "Cách đăng nhập khác",
     "trouble": "Gặp sự cố?",
     "trouble_cors": "Máy chủ thư của bạn phải cho phép đăng nhập từ trang web này. Nếu đăng nhập không được, hãy nhờ người quản lý máy chủ thư cho phép.",
     "provider_unsupported": "{provider} không hỗ trợ JMAP, cách Bulwark trao đổi với máy chủ thư, nên Bulwark chưa thể kết nối trực tiếp."

@@ -7188,10 +7188,12 @@
     "server_looking": "Szukamy Twojego serwera poczty…",
     "server_found": "Serwer poczty: {server}",
     "server_change": "Zmień",
+    "server_change_hint": "Wpisz adres innego serwera.",
     "server_not_found": "Nie znaleźliśmy serwera poczty dla tego adresu. Wpisz go tutaj, na przykład mail.example.com.",
     "server_needed": "Wpisz adres swojego serwera poczty.",
     "server_invalid": "To nie jest adres serwera. Wpisz go jak mail.example.com.",
     "email_needed": "Najpierw wpisz swój adres e-mail.",
+    "other_ways": "Inne sposoby logowania",
     "trouble": "Masz problem?",
     "trouble_cors": "Twój serwer poczty musi zezwalać na logowanie z tej witryny. Jeśli logowanie się nie udaje, poproś osobę, która zarządza serwerem poczty, o zezwolenie.",
     "provider_unsupported": "{provider} nie oferuje JMAP, czyli sposobu, w jaki Bulwark rozmawia z serwerami poczty, więc Bulwark nie może jeszcze połączyć się z nim bezpośrednio."

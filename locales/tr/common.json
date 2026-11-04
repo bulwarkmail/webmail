@@ -7188,10 +7188,12 @@
     "server_looking": "Posta sunucunuz aranıyor…",
     "server_found": "Posta sunucusu: {server}",
     "server_change": "Değiştir",
+    "server_change_hint": "Başka bir sunucu adresi yazın.",
     "server_not_found": "Bu adresin posta sunucusunu bulamadık. Buraya girin, örneğin mail.example.com.",
     "server_needed": "Posta sunucunuzun adresini girin.",
     "server_invalid": "Bu bir sunucu adresi değil. mail.example.com gibi yazın.",
     "email_needed": "Önce e-posta adresinizi girin.",
+    "other_ways": "Diğer oturum açma yolları",
     "trouble": "Sorun mu var?",
     "trouble_cors": "Posta sunucunuzun bu web sitesinden oturum açmaya izin vermesi gerekir. Oturum açılamazsa posta sunucunuzu yöneten kişiden buna izin vermesini isteyin.",
     "provider_unsupported": "{provider}, Bulwark'ın posta sunucularıyla konuştuğu yol olan JMAP'i sunmuyor, bu yüzden Bulwark henüz ona doğrudan bağlanamıyor."

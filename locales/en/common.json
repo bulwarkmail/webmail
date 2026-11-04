@@ -7188,10 +7188,12 @@
     "server_looking": "Looking for your mail server…",
     "server_found": "Mail server: {server}",
     "server_change": "Change",
+    "server_change_hint": "Type another server address.",
     "server_not_found": "We couldn't find the mail server for this address. Enter it here, for example mail.example.com.",
     "server_needed": "Enter the address of your mail server.",
     "server_invalid": "This isn't a server address. Type it like mail.example.com.",
     "email_needed": "Enter your email address first.",
+    "other_ways": "Other ways to sign in",
     "trouble": "Having trouble?",
     "trouble_cors": "Your mail server has to allow sign-ins from this website. If signing in fails, ask whoever runs your mail server to allow it.",
     "provider_unsupported": "{provider} doesn't offer JMAP, the way Bulwark talks to mail servers, so Bulwark can't connect to it directly yet."

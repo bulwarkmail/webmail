@@ -7188,10 +7188,12 @@
     "server_looking": "Hledáme váš poštovní server…",
     "server_found": "Poštovní server: {server}",
     "server_change": "Změnit",
+    "server_change_hint": "Zadejte adresu jiného serveru.",
     "server_not_found": "Pro tuto adresu jsme poštovní server nenašli. Zadejte ho sem, například mail.example.com.",
     "server_needed": "Zadejte adresu svého poštovního serveru.",
     "server_invalid": "Tohle není adresa serveru. Napište ji jako mail.example.com.",
     "email_needed": "Nejdřív zadejte svou e-mailovou adresu.",
+    "other_ways": "Další způsoby přihlášení",
     "trouble": "Nedaří se to?",
     "trouble_cors": "Váš poštovní server musí povolit přihlašování z tohoto webu. Pokud přihlášení selže, požádejte správce poštovního serveru, aby to povolil.",
     "provider_unsupported": "{provider} nenabízí JMAP, způsob, jakým Bulwark komunikuje s poštovními servery, takže se k němu Bulwark zatím nemůže připojit přímo."

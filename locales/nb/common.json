@@ -7188,10 +7188,12 @@
     "server_looking": "Leter etter e-postserveren din…",
     "server_found": "E-postserver: {server}",
     "server_change": "Endre",
+    "server_change_hint": "Skriv inn en annen serveradresse.",
     "server_not_found": "Vi fant ikke e-postserveren for denne adressen. Skriv den inn her, for eksempel mail.example.com.",
     "server_needed": "Skriv inn adressen til e-postserveren din.",
     "server_invalid": "Dette er ikke en serveradresse. Skriv den som mail.example.com.",
     "email_needed": "Skriv inn e-postadressen din først.",
+    "other_ways": "Andre måter å logge på",
     "trouble": "Problemer?",
     "trouble_cors": "E-postserveren din må tillate pålogging fra dette nettstedet. Hvis påloggingen mislykkes, be den som drifter e-postserveren om å tillate det.",
     "provider_unsupported": "{provider} tilbyr ikke JMAP, måten Bulwark snakker med e-postservere på, så Bulwark kan ikke koble seg direkte til det ennå."

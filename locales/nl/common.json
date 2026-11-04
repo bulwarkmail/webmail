@@ -7188,10 +7188,12 @@
     "server_looking": "Je mailserver wordt gezocht…",
     "server_found": "Mailserver: {server}",
     "server_change": "Wijzigen",
+    "server_change_hint": "Typ een ander serveradres.",
     "server_not_found": "We hebben de mailserver voor dit adres niet gevonden. Vul hem hier in, bijvoorbeeld mail.example.com.",
     "server_needed": "Vul het adres van je mailserver in.",
     "server_invalid": "Dit is geen serveradres. Schrijf het zoals mail.example.com.",
     "email_needed": "Vul eerst je e-mailadres in.",
+    "other_ways": "Andere manieren om in te loggen",
     "trouble": "Lukt het niet?",
     "trouble_cors": "Je mailserver moet aanmelden vanaf deze website toestaan. Lukt aanmelden niet, vraag dan wie je mailserver beheert om het toe te staan.",
     "provider_unsupported": "{provider} biedt geen JMAP, de manier waarop Bulwark met mailservers praat, dus Bulwark kan er nog niet rechtstreeks mee verbinden."

@@ -7188,10 +7188,12 @@
     "server_looking": "メールサーバーを探しています…",
     "server_found": "メールサーバー: {server}",
     "server_change": "変更",
+    "server_change_hint": "別のサーバーのアドレスを入力してください。",
     "server_not_found": "このアドレスのメールサーバーが見つかりませんでした。ここに入力してください（例: mail.example.com）。",
     "server_needed": "メールサーバーのアドレスを入力してください。",
     "server_invalid": "サーバーのアドレスではありません。mail.example.com のように入力してください。",
     "email_needed": "まずメールアドレスを入力してください。",
+    "other_ways": "その他のサインイン方法",
     "trouble": "うまくいかない場合",
     "trouble_cors": "メールサーバーがこのウェブサイトからのサインインを許可している必要があります。サインインできない場合は、メールサーバーの管理者に許可を依頼してください。",
     "provider_unsupported": "{provider} は Bulwark がメールサーバーとやり取りする方式である JMAP に対応していないため、Bulwark はまだ直接接続できません。"
