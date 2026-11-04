@@ -26,6 +26,11 @@ interface ContactImportDialogProps {
   addressBooks?: AddressBook[];
   /** The book open in Contacts: "Import into" starts there. */
   defaultAddressBookId?: string;
+  /**
+   * Done: the dialog closes and the caller says so (a toast with Show) instead of a
+   * page of its own that only has Close. Without it the dialog shows the count.
+   */
+  onImported?: (count: number, addressBookId?: string) => void;
 }
 
 /** The file's bytes; jsdom's File has no arrayBuffer(). */
@@ -52,6 +57,7 @@ export function ContactImportDialog({
   initialFile,
   addressBooks = [],
   defaultAddressBookId,
+  onImported,
 }: ContactImportDialogProps) {
   const t = useTranslations("contacts");
   const shownName = useCollectionNames();
@@ -194,7 +200,13 @@ export function ContactImportDialog({
 
     setIsImporting(true);
     try {
-      const count = await onImport(toImport, addressBooks.length > 0 && bookId ? bookId : undefined);
+      const target = addressBooks.length > 0 && bookId ? bookId : undefined;
+      const count = await onImport(toImport, target);
+      if (onImported) {
+        onClose();
+        onImported(count, target);
+        return;
+      }
       setResult(count);
     } catch (error) {
       console.error('Failed to import contacts:', error);

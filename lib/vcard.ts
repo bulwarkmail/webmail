@@ -1596,16 +1596,19 @@ export function detectDuplicates(
     }
   }
 
+  // A file can hold the same person twice (a CSV export often does): the first
+  // one counts, the later ones are duplicates of it, by its id.
+  const seenInFile = new Map<string, string>();
   incoming.forEach((card, idx) => {
-    if (card.emails) {
-      for (const e of Object.values(card.emails)) {
-        const match = existingEmails.get(e.address.toLowerCase());
-        if (match) {
-          dupes.set(idx, match);
-          return;
-        }
+    const addresses = Object.values(card.emails ?? {}).map((e) => e.address?.trim().toLowerCase()).filter(Boolean) as string[];
+    for (const address of addresses) {
+      const match = existingEmails.get(address) ?? seenInFile.get(address);
+      if (match) {
+        dupes.set(idx, match);
+        return;
       }
     }
+    for (const address of addresses) seenInFile.set(address, card.id);
   });
 
   return dupes;

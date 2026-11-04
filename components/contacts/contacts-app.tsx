@@ -104,6 +104,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   const linkSegments = useLiteLinkSegments('contacts', routeSegments);
   const shownName = useCollectionNames();
   const t = useTranslations("contacts");
+  const tImport = useTranslations("ux_p2_pim_cm");
   const skeleton = useSkeletonLabels();
   // Organisation > Devices > No printing: no Print buttons (Ctrl+P prints a note).
   const printOff = useStrictestDevices().noPrint;
@@ -601,6 +602,19 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
       addressBookId,
     );
   }, [supportsSync, client, importContacts]);
+  // Done importing: a toast instead of a dialog page, and Show opens where they went.
+  const handleImported = useCallback((count: number, addressBookId?: string) => {
+    if (count <= 0) return;
+    toast.success(t("import.success", { count }), {
+      action: {
+        label: tImport("import_show"),
+        onClick: () => {
+          setSearchQuery("");
+          handleSelectCategory(addressBookId ? { addressBookId } : "all");
+        },
+      },
+    });
+  }, [t, tImport, handleSelectCategory, setSearchQuery]);
   // "Import into" starts at the address book on screen.
   const openBookId = typeof activeCategory === "object" && "addressBookId" in activeCategory ? activeCategory.addressBookId : undefined;
 
@@ -1679,6 +1693,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
           onClose={launchedFile.done}
           addressBooks={supportsSync ? writableBooks : []}
           defaultAddressBookId={openBookId}
+          onImported={handleImported}
         />
       )}
       {showImportDialog && (
@@ -1688,6 +1703,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
           onClose={() => setShowImportDialog(false)}
           addressBooks={supportsSync ? writableBooks : []}
           defaultAddressBookId={openBookId}
+          onImported={handleImported}
         />
       )}
       {(mergeCards || mergePickFor) && (
