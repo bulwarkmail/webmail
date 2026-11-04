@@ -3,7 +3,21 @@ import { DEFAULT_POLICY_SNAPSHOT, type PolicySnapshot } from '../policy-schema';
 import type { BulwarkDesktopBridge, DesktopRecentFilesBridge } from '../types';
 import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
-import { listRecentFiles, readRecentFile, recentFilesOffered, recentWhen, useRecentFilesOffered } from '../recent-files';
+import { listRecentFiles, readRecentFile, recentFilesOffered, recentWhen, shortFolder, useRecentFilesOffered } from '../recent-files';
+
+describe('shortFolder', () => {
+  it('keeps the drive or share and the folders nearest the file, and drops the middle', () => {
+    expect(shortFolder('C:\\Users\\me\\Documents')).toBe('C:\\Users\\me\\Documents');
+    expect(shortFolder('C:\\Users\\me\\AppData\\Local\\Temp\\bw-shots-gnIFSO\\Documents\\Reports'))
+      .toBe('C:\\…\\Temp\\bw-shots-gnIFSO\\Documents\\Reports');
+    expect(shortFolder('\\\\fileserver\\departments\\Finance\\Controlling\\2026\\Quarterly\\Board'))
+      .toBe('\\\\fileserver\\departments\\…\\Quarterly\\Board');
+    expect(shortFolder('/home/me/projects/customer-a/2026/contracts/signed/final')).toBe('/…/customer-a/2026/contracts/signed/final');
+    // One long name: nothing to drop, the line's ellipsis does the rest.
+    const long = `C:\\${'x'.repeat(60)}`;
+    expect(shortFolder(long)).toBe(long);
+  });
+});
 
 function setBridge(recentFiles?: Partial<DesktopRecentFilesBridge>, policy: Partial<PolicySnapshot> = {}) {
   const snapshot = { ...DEFAULT_POLICY_SNAPSHOT, ...policy };

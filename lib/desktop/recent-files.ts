@@ -57,6 +57,23 @@ export async function readRecentFile(id: string): Promise<RecentFileAttach> {
   }
 }
 
+/**
+ * A long folder as its start and its end, which tell it apart: the drive or the share, then
+ * the folders nearest the file. The middle goes, where a path's end would under an ellipsis.
+ */
+export function shortFolder(folder: string, max = 44): string {
+  if (folder.length <= max) return folder;
+  const sep = folder.includes('\\') ? '\\' : '/';
+  const parts = folder.split(sep);
+  // \\server\share, or C:, or the empty start of /home.
+  const rootCount = folder.startsWith('\\\\') ? 4 : 1;
+  if (parts.length <= rootCount + 1) return folder;
+  const root = parts.slice(0, rootCount).join(sep);
+  let tail = parts.slice(rootCount);
+  while (tail.length > 1 && `${root}${sep}…${sep}${tail.join(sep)}`.length > max) tail = tail.slice(1);
+  return `${root}${sep}…${sep}${tail.join(sep)}`;
+}
+
 const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ['year', 365 * 24 * 60 * 60_000],
   ['month', 30 * 24 * 60 * 60_000],

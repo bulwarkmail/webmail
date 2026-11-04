@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { CONTEXT_MENU_ITEM_CLASS, menuLevelItems } from "@/components/ui/context-menu";
 import { attachmentIcon } from "@/components/email/attachment-chips";
-import { listRecentFiles, recentWhen } from "@/lib/desktop/recent-files";
+import { listRecentFiles, recentWhen, shortFolder } from "@/lib/desktop/recent-files";
 import type { DesktopRecentFile } from "@/lib/desktop/types";
 import { cn } from "@/lib/utils";
 
@@ -74,7 +74,7 @@ export function RecentFilesMenuSection({ onPick }: { onPick: (file: DesktopRecen
                 )}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate">{file.name}</span>
-                  <span className="block truncate text-xs text-muted-foreground">{file.folder}</span>
+                  <span className="block truncate text-xs text-muted-foreground">{shortFolder(file.folder)}</span>
                 </span>
                 <span className="shrink-0 self-start pt-0.5 text-xs text-muted-foreground">{recentWhen(file.usedAt, now, locale)}</span>
               </button>
