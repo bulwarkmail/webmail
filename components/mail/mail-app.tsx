@@ -12,7 +12,7 @@ import { MessageListTabs, useMessageListPanelProps } from "@/components/email/me
 import dynamic from "next/dynamic";
 import type { ComposerDraftData } from "@/components/email/email-composer";
 import { ReplyDock } from "@/components/mail/reply-dock";
-import { addEcho, isUndoWindow, mergeEchoes, sentEcho, settleSent, withoutHeldSend } from "@/lib/held-send";
+import { addEcho, isUndoWindow, mergeEchoes, nextSendTime, raiseThreadCount, scheduledShownTotal, sentEcho, settleSent, withoutHeldSend } from "@/lib/held-send";
 import { useQuickReplyRestoreStore } from "@/stores/quick-reply-restore-store";
 
 /** What waits with a send in its Undo window (mail-p2-8). */
@@ -1552,6 +1552,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       setScheduledView(false);
     }
   }, [delayedSendSupported, isScheduledView, setScheduledView]);
+
+  // Scheduled's count drops a send once its time has come: re-read then.
+  const scheduledSends = useEmailStore((s) => s.scheduledSubmissionByEmailId);
+  const [scheduledClock, setScheduledClock] = useState(() => Date.now());
+  useEffect(() => {
+    const next = nextSendTime(scheduledSends.values(), scheduledClock);
+    // Only sends due soon; a timer days out is pointless.
+    if (next === null || next - Date.now() > 10 * 60_000) return;
+    const timer = setTimeout(() => setScheduledClock(Date.now()), Math.max(0, next - Date.now()) + 50);
+    return () => clearTimeout(timer);
+  }, [scheduledSends, scheduledClock]);
 
   useEffect(() => {
     if (!pendingUndoSend) return;
@@ -5064,6 +5075,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     setMvConversationResult((prev) => prev && prev.threadId === ref.threadId
       ? { ...prev, emails: mergeEchoes(settled, prev.emails) }
       : prev);
+    // The list row counts the reply too, once the server has it (mail-p3, p2-1).
+    useEmailStore.setState((state) => {
+      const counts = raiseThreadCount(state.threadEmailCounts, threadKeyFor(ref), fresh.length);
+      return counts ? { threadEmailCounts: counts } : {};
+    });
   };
   const echoSentReply = (replied: Email | null | undefined, sent: {
     emailId?: string; to: string[]; cc?: string[]; subject: string; text: string; fromEmail?: string; fromName?: string;
@@ -5304,8 +5320,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           ? localizeMailboxName(mb.role, mb.name, (k) => t(`sidebar.mailboxes.${k}`))
           : "Inbox";
       })();
-  // A send in its Undo window isn't counted in Sent or Scheduled yet (mail-p2-8).
-  const heldSendView = withoutHeldSend(mailboxes, scheduledTotal, pendingUndoSend);
+  // A send in its Undo window isn't counted in Sent or Scheduled yet (mail-p2-8),
+  // nor once its time has come and the server still lists it (mail-p3, p2-1).
+  const heldSendView = withoutHeldSend(mailboxes, scheduledShownTotal(scheduledTotal, scheduledSends.values(), scheduledClock), pendingUndoSend);
   const isFocusedMailLayout = mailLayout === 'focus';
   const isHorizontalMailLayout = mailLayout === 'horizontal' && !isMobile;
   // Under Mountain View on desktop the composer floats over the list in a
