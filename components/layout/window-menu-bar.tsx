@@ -401,7 +401,7 @@ export function WindowMenuBar() {
                 {menuKeyText(item.accelerator, getDesktopBridge()?.platform)}
               </span>
             )}
-            {isSub && <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground rtl:rotate-180" aria-hidden="true" />}
+            {isSub && <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />}
           </button>
         </div>
       );
