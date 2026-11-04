@@ -11,6 +11,16 @@ services:
       APP_NAME: Memail
       APP_SHORT_NAME: Memail
       APP_DESCRIPTION: "Open-source JMAP webmail for Stalwart"
+      APP_LOGO_LIGHT_URL: /branding/memail/mark.svg
+      APP_LOGO_DARK_URL: /branding/memail/mark-dark.svg
+      LOGIN_LOGO_LIGHT_URL: /branding/memail/mark.svg
+      LOGIN_LOGO_DARK_URL: /branding/memail/mark-dark.svg
+      LOGIN_COMPANY_NAME: "Memail by Saivra"
+      LOGIN_WEBSITE_URL: "https://github.com/Saivra/memail-webmail"
+      FAVICON_URL: /branding/memail/mark.svg
+      PWA_ICON_URL: /branding/memail/mark.svg
+      PWA_THEME_COLOR: "#263b32"
+      PWA_BACKGROUND_COLOR: "#ffffff"
       SOURCE_CODE_URL: "https://github.com/Saivra/memail-webmail/tree/v0.2.0-preview.1"
     volumes:
       - memail-data:/app/data
