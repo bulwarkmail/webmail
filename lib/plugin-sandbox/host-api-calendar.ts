@@ -570,7 +570,7 @@ export async function doCalendarDeleteEvent(id: unknown): Promise<void> {
 // ─── Tasks ────────────────────────────────────────────────────
 
 const TASK_FIELDS = [
-  'title', 'description', 'due', 'priority', 'calendarId', 'alerts', 'links', 'relatedTo',
+  'title', 'description', 'due', 'priority', 'calendarId', 'alerts', 'links', 'relatedTo', 'keywords',
 ] as const;
 /** Most alerts a plugin may give a task. */
 export const MAX_PLUGIN_TASK_ALERTS = 5;
@@ -578,6 +578,8 @@ export const MAX_PLUGIN_TASK_ALERTS = 5;
 export const MAX_PLUGIN_TASK_LINKS = 10;
 /** Most relations a plugin may give a task. */
 export const MAX_PLUGIN_TASK_RELATIONS = 10;
+/** Most keywords a plugin may give a task. */
+export const MAX_PLUGIN_TASK_KEYWORDS = 10;
 const MAX_HREF = 2048;
 const MAX_LINK_TITLE = 500;
 const MAX_RELATED_UID = 998;
@@ -595,7 +597,7 @@ const RELATED_UID_RE = /^(?:<[!-;=?-~]+>|[!-;=?-~]+)$/;
 const CONTROL_RE = /\p{Cc}/u;
 
 /** The maps a plugin edits on a task, each keyed as JSCalendar keys it. */
-const TASK_MAPS = ['alerts', 'links', 'relatedTo'] as const;
+const TASK_MAPS = ['alerts', 'links', 'relatedTo', 'keywords'] as const;
 type TaskMap = typeof TASK_MAPS[number];
 
 /**
@@ -753,10 +755,20 @@ function relatedToOf(value: unknown, method: string): MapChange<CalendarRelation
     });
 }
 
+/** A task's keywords: `{ keyword: true }` sets one, null removes it. */
+function keywordsOf(value: unknown, method: string): MapChange<true> {
+  return readMapChange(value, method, 'keywords', MAX_PLUGIN_TASK_KEYWORDS, (k) => MEMBER_ID_RE.test(k),
+    '1-64 letters, digits or . _ -', (entry, field) => {
+      if (entry !== true) throw new Error(`${method}: ${field} must be true, or null to remove it`);
+      return true;
+    });
+}
+
 interface TaskMapChanges {
   alerts?: MapChange<CalendarEventAlert>;
   links?: MapChange<CalendarLink>;
   relatedTo?: MapChange<CalendarRelation>;
+  keywords?: MapChange<true>;
 }
 
 /** The plugin's map changes, read and checked before anything is asked of the server. */
@@ -765,6 +777,7 @@ function mapChangesOf(data: Record<string, unknown>, method: string): TaskMapCha
   if (data.alerts !== undefined) changes.alerts = alertsOf(data.alerts, method);
   if (data.links !== undefined) changes.links = linksOf(data.links, method);
   if (data.relatedTo !== undefined) changes.relatedTo = relatedToOf(data.relatedTo, method);
+  if (data.keywords !== undefined) changes.keywords = keywordsOf(data.keywords, method);
   return changes;
 }
 
@@ -814,6 +827,7 @@ function updateMaps(method: string, task: CalendarTask, changes: TaskMapChanges)
     alerts: MAX_PLUGIN_TASK_ALERTS,
     links: MAX_PLUGIN_TASK_LINKS,
     relatedTo: MAX_PLUGIN_TASK_RELATIONS,
+    keywords: MAX_PLUGIN_TASK_KEYWORDS,
   };
   for (const name of TASK_MAPS) {
     const change = changes[name] as MapChange<unknown> | undefined;
@@ -919,7 +933,7 @@ async function requireTask(client: IJMAPClient, method: string, id: string): Pro
 }
 
 /**
- * The task with its alerts, links and relations as the server
+ * The task with its alerts, links, relations and keywords as the server
  * holds them now: the store's copy may be older, and a map the task seems
  * not to have is written whole, which would drop what the server gained.
  */
@@ -931,6 +945,7 @@ async function withServerMaps(client: IJMAPClient, task: CalendarTask): Promise<
     alerts: server.alerts ?? null,
     links: server.links ?? null,
     relatedTo: server.relatedTo ?? null,
+    keywords: server.keywords ?? null,
     useDefaultAlerts: server.useDefaultAlerts,
   };
 }
