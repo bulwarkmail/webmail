@@ -215,6 +215,14 @@
     "mv_storage_used": "{percent}% of {total} used",
     "accessibility": "Accessibility"
   },
+  "account_unread": {
+    "others": "Unread in other accounts: {count}",
+    "badge_all_accounts": {
+      "label": "Count unread mail in all accounts",
+      "description": "The number on the tab, the app icon and the tray adds up the inboxes of every signed-in account."
+    },
+    "empty_hint": "You can empty the {folder} folder to permanently remove all messages."
+  },
   "protocol_handlers": {
     "title": "Default apps",
     "description": "Choose whether email and calendar links open in {appName}. Technically, {appName} registers as a protocol handler for mailto: and webcal: links.",
@@ -410,6 +418,17 @@
       "next": "Next page",
       "position": "{more, select, yes {Page {page} of {pages} or more} other {Page {page} of {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# conversation selected} other {# conversations selected}}",
+    "search_count": "{conversations, plural, one {# conversation} other {# conversations}} ({messages, plural, one {# message} other {# messages}})",
+    "conversation_count": "{count, plural, one {# conversation} other {# conversations}}",
+    "archived": "Archived",
+    "moved_to_trash": "Moved to Trash",
+    "moved_to": "Moved to {mailbox}",
+    "moved_count_to": "{count, plural, one {# email moved to {mailbox}} other {# emails moved to {mailbox}}}",
+    "new_folder_title": "New folder",
+    "new_subfolder_title": "New subfolder"
   },
   "shared_tags": {
     "title": "Shared tags",
@@ -892,6 +911,11 @@
     "read_aloud_resume": "Resume",
     "read_aloud_stop": "Stop reading",
     "reader_view": "Reader view"
+  },
+  "reader_actions": {
+    "restore": "Restore",
+    "restore_to": "Move back to {folder}",
+    "delete_forever": "Delete forever"
   },
   "external_mail": {
     "sender_label": "External",
@@ -3772,6 +3796,10 @@
     "messages_count": "{count, plural, one {# message} other {# messages}}",
     "expand_named": "Expand conversation: {subject}",
     "collapse_named": "Collapse conversation: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Show # older message} other {Show # older messages}}",
+    "return_to_list_follows_layout": "Until you change it, this follows the layout: off when the list and the message are side by side, on otherwise."
   },
   "identities": {
     "modal_title": "Manage sending identities",
@@ -6840,6 +6868,9 @@
       "try_again": "Try again",
       "close": "Close"
     }
+  },
+  "desktop_mail": {
+    "context_search_mail": "Search mail for \"{text}\""
   },
   "desktopMenuBar": {
     "always_show_label": "Always show the menu bar",

@@ -361,6 +361,14 @@
     "mv_storage_used": "ใช้ไป {percent}% จาก {total}",
     "accessibility": "การเข้าถึง"
   },
+  "account_unread": {
+    "others": "ยังไม่ได้อ่านในบัญชีอื่น: {count}",
+    "badge_all_accounts": {
+      "label": "นับอีเมลที่ยังไม่ได้อ่านของทุกบัญชี",
+      "description": "ตัวเลขบนแท็บ ไอคอนแอป และถาดระบบ จะรวมกล่องจดหมายเข้าของทุกบัญชีที่ลงชื่อเข้าใช้"
+    },
+    "empty_hint": "คุณสามารถล้างโฟลเดอร์{folder}เพื่อลบข้อความทั้งหมดอย่างถาวร"
+  },
   "language": {
     "title": "ภาษา",
     "english": "English",
@@ -629,6 +637,10 @@
     "expand_named": "ขยายการสนทนา: {subject}",
     "collapse_named": "ย่อการสนทนา: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, other {แสดงข้อความก่อนหน้า # ฉบับ}}",
+    "return_to_list_follows_layout": "จนกว่าคุณจะเปลี่ยน ค่านี้จะเป็นไปตามเลย์เอาต์: ปิดเมื่อรายการและข้อความอยู่เคียงข้างกัน และเปิดในกรณีอื่น"
+  },
   "notifications": {
     "email_sent": "ส่งอีเมลแล้ว",
     "email_deleted": "ลบอีเมลแล้ว",
@@ -853,6 +865,17 @@
       "next": "หน้าถัดไป",
       "position": "{more, select, yes {หน้า {page} จาก {pages} หรือมากกว่า} other {หน้า {page} จาก {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, other {เลือกแล้ว # การสนทนา}}",
+    "search_count": "{conversations, plural, other {# การสนทนา}} ({messages, plural, other {# ข้อความ}})",
+    "conversation_count": "{count, plural, other {# การสนทนา}}",
+    "archived": "เก็บถาวรแล้ว",
+    "moved_to_trash": "ย้ายไปถังขยะแล้ว",
+    "moved_to": "ย้ายไปยัง {mailbox} แล้ว",
+    "moved_count_to": "{count, plural, other {ย้าย # อีเมลไปยัง {mailbox} แล้ว}}",
+    "new_folder_title": "สร้างโฟลเดอร์ใหม่",
+    "new_subfolder_title": "สร้างโฟลเดอร์ย่อยใหม่"
   },
   "shared_tags": {
     "title": "ป้ายกำกับที่แชร์",
@@ -2011,6 +2034,11 @@
     "read_aloud_resume": "อ่านต่อ",
     "read_aloud_stop": "หยุดอ่าน",
     "reader_view": "มุมมองการอ่าน"
+  },
+  "reader_actions": {
+    "restore": "กู้คืน",
+    "restore_to": "ย้ายกลับไปที่ {folder}",
+    "delete_forever": "ลบถาวร"
   },
   "external_mail": {
     "sender_label": "ภายนอก",
@@ -6848,6 +6876,9 @@
       "try_again": "ลองอีกครั้ง",
       "close": "ปิด"
     }
+  },
+  "desktop_mail": {
+    "context_search_mail": "ค้นหา “{text}” ในอีเมล"
   },
   "desktopMenuBar": {
     "always_show_label": "แสดงแถบเมนูเสมอ",

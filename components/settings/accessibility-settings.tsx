@@ -12,6 +12,7 @@ import { useNoThirdPartyTraffic } from '@/hooks/use-third-party-mode';
 import { openKeyboardShortcuts } from '@/lib/app-commands';
 import { voicesForLocale } from '@/lib/read-aloud';
 import { useSpeechVoices } from '@/hooks/use-read-aloud';
+import { useReturnToListAfterAction } from '@/hooks/use-return-to-list';
 import { NOTIFICATION_SOUNDS, playNotificationSound, type NotificationSoundChoice } from '@/lib/notification-sound';
 import {
   ACCESSIBILITY_KEYS,
@@ -73,6 +74,8 @@ export function AccessibilitySettings() {
   const [resetDone, setResetDone] = useState(false);
   const locale = useLocale();
   const speechVoices = useSpeechVoices();
+  // As it applies in this layout: left alone, it follows the layout.
+  const returnToList = useReturnToListAfterAction();
 
   const toastMin = getRestriction('toastDuration')?.min;
   const allowsValue = (key: string, value: unknown) =>
@@ -502,7 +505,7 @@ export function AccessibilitySettings() {
           </SettingItem>
         )}
         <SettingItem label={tEmail('return_to_list_after_action.label')} description={tEmail('return_to_list_after_action.description')}>
-          <ToggleSwitch checked={settings.returnToListAfterAction} onChange={(checked) => set('returnToListAfterAction', checked)} />
+          <ToggleSwitch checked={returnToList.checked} onChange={(checked) => set('returnToListAfterAction', checked)} />
         </SettingItem>
       </SettingsSection>
 

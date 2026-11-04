@@ -61,7 +61,7 @@ describe('admin skeleton', () => {
   it('shows the phone list at /admin and the page below it', () => {
     const index = dom(renderToString(<AdminSkeleton page={null} />));
     const detail = dom(renderToString(<AdminSkeleton page="logs" />));
-    const phone = (c: HTMLElement) => c.querySelector('.lg\\:hidden')!;
+    const phone = (c: HTMLElement) => c.querySelector('.desk\\:hidden')!;
     // Index: the list (with its chevrons) is shown, the page column hidden.
     expect(phone(index).querySelector('.p-4')!.className).toContain('hidden');
     expect(phone(detail).querySelector('.p-4')!.className).not.toContain('hidden');

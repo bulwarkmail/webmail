@@ -22,7 +22,7 @@ export function PluginPageSkeletonBody({ embedded = false }: { embedded?: boolea
   return (
     <div aria-hidden="true" className={cn("flex flex-col flex-1 min-w-0", embedded && "h-full")} data-embedded={embedded ? "" : undefined}>
       {embedded ? null : (
-        <div className="flex md:hidden items-center gap-2 h-14 shrink-0 border-b border-border bg-background px-4">
+        <div className="flex desk:hidden items-center gap-2 h-14 shrink-0 border-b border-border bg-background px-4">
           <span className="flex items-center h-7 min-w-0">
             <Bar className="h-4" w="7rem" />
           </span>
@@ -37,7 +37,7 @@ export function PluginPageSkeletonBody({ embedded = false }: { embedded?: boolea
 /** Skeleton of a plugin page (/apps/<plugin>/<page>). */
 export function PluginPageSkeleton({ label, labels }: PluginPageSkeletonProps) {
   return (
-    <AppShellSkeleton surface="apps" label={label} labels={labels} railBelow="md" mvMenu={false} rowClassName={MV_CARD_ROW}>
+    <AppShellSkeleton surface="apps" label={label} labels={labels} mvMenu={false} rowClassName={MV_CARD_ROW}>
       <PluginPageSkeletonBody />
     </AppShellSkeleton>
   );

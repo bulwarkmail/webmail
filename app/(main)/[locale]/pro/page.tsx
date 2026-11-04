@@ -10,7 +10,7 @@ import { useSidebarApps } from "@/hooks/use-sidebar-apps";
 import { useAuthStore, redirectToLogin } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
-import { atLeast, useDeviceDetection } from "@/hooks/use-media-query";
+import { atLeast, PHONE_BELOW, useDeviceDetection } from "@/hooks/use-media-query";
 import { EmbeddedContext } from "@/hooks/use-is-embedded";
 import { OrgAnnouncement } from "@/components/org/org-announcement";
 import { PaneSizeContext } from "@/hooks/use-pane-size";
@@ -49,7 +49,8 @@ import { ProComposeTabBody } from "@/components/pro/pro-compose-tab-body";
 import { ProEmailTabBody } from "@/components/pro/pro-email-tab-body";
 import { ProFolderTabBody } from "@/components/pro/pro-folder-tab-body";
 
-const DESKTOP_MIN_WIDTH = 1024;
+// Pro runs wherever the desktop layout does, the compact one included.
+const DESKTOP_MIN_WIDTH = PHONE_BELOW;
 
 // Each surface renders the same component the standard routes do. Deep links
 // reach them through the handoff ProInterfaceRedirect parks (#733), not as
@@ -195,7 +196,7 @@ function Pane({ paneId, tabs, activeTabId, loadedTabIds, onPaneFocus, isFocused 
 export default function ProHome() {
   const t = useTranslations();
   const { label: skeletonLabel } = useSkeletonLabels();
-  const { isMobile, isTablet, isDesktop } = useDeviceDetection();
+  const { isMobile, isDesktop } = useDeviceDetection();
   const router = useRouter();
 
   const [initialCheckDone, setInitialCheckDone] = useState(
@@ -263,7 +264,7 @@ export default function ProHome() {
     // switching Pro off from Settings lands back in Settings rather than
     // on the mail list. Read imperatively: the focused tab must not retrigger
     // this effect, it only matters at the moment a precondition flips.
-    if (isMobile || isTablet || !proInterface) {
+    if (isMobile || !proInterface) {
       const { tabs: allTabs, focusedPaneId: pane, activeTabId, activeSplitTabId } = useProTabStore.getState();
       const focusedId = pane === 'split' ? activeSplitTabId : activeTabId;
       const kind = allTabs.find((tab) => tab.id === focusedId)?.kind;
@@ -284,7 +285,7 @@ export default function ProHome() {
       if (kind === 'compose' && focusedId) handOffComposeTab(focusedId);
       router.replace(surface);
     }
-  }, [initialCheckDone, isMobile, isTablet, proInterface, router]);
+  }, [initialCheckDone, isMobile, proInterface, router]);
 
   const mainTabs = useMemo(() => tabs.filter((t) => t.paneId === 'main'), [tabs]);
   const splitTabs = useMemo(() => tabs.filter((t) => t.paneId === 'split'), [tabs]);

@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Mailbox } from "@/lib/jmap/types";
 import { getMailboxPath } from "@/lib/utils";
+import { localizeMailboxName } from "@/lib/mailbox-label";
 import {
   ContextMenu,
   ContextMenuItem,
@@ -158,6 +159,7 @@ export function MailboxContextMenu({
   notifications,
 }: MailboxContextMenuProps) {
   const t = useTranslations("mailbox_context_menu");
+  const tSidebar = useTranslations("sidebar");
   const tImport = useTranslations("mail_import");
   const tExport = useTranslations("mail_export");
   // Organisation > Devices > No export hides it; import stays.
@@ -268,7 +270,9 @@ export function MailboxContextMenu({
   // A compact shared mailbox's row is named after its account, so is its menu.
   const fullPath = target.sharedAccountId && mailbox.accountName
     ? mailbox.accountName
-    : getMailboxPath(mailbox, mailboxes);
+    : mailbox.role && !mailbox.parentId
+      ? localizeMailboxName(mailbox.role, mailbox.name, (k) => tSidebar(`mailboxes.${k}`))
+      : getMailboxPath(mailbox, mailboxes);
 
   return (
     <ContextMenu ref={menuRef} isOpen={isOpen} position={position} onClose={onClose}>

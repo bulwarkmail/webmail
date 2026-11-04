@@ -17,10 +17,11 @@ vi.mock('next-intl', () => ({
 }));
 vi.mock('@/hooks/use-media-query', async (importOriginal) => ({
   atLeast: (await importOriginal<typeof import('@/hooks/use-media-query')>()).atLeast,
+  PHONE_BELOW: (await importOriginal<typeof import('@/hooks/use-media-query')>()).PHONE_BELOW,
   useIsDesktop: () => media.desktop,
   useIsMobile: () => true,
   useMediaQuery: () => false,
-  useDeviceDetection: () => ({ isMobile: true, isTablet: false, isDesktop: false }),
+  useDeviceDetection: () => ({ isMobile: true, isCompact: false, isDesktop: false }),
 }));
 vi.mock('@/hooks/use-config', () => ({ useConfig: () => ({ appName: 'Mail', stalwartFeaturesEnabled: false }) }));
 vi.mock('@/components/layout/navigation-rail', () => ({ NavigationRail: () => null }));

@@ -215,6 +215,14 @@
     "mv_storage_used": "{percent} % av {total} brukt",
     "accessibility": "Tilgjengelighet"
   },
+  "account_unread": {
+    "others": "Uleste i andre kontoer: {count}",
+    "badge_all_accounts": {
+      "label": "Tell ulest e-post i alle kontoer",
+      "description": "Tallet på fanen, appikonet og i systemstatusfeltet legger sammen innboksene til alle påloggede kontoer."
+    },
+    "empty_hint": "Du kan tømme mappen {folder} for å fjerne alle meldinger permanent."
+  },
   "protocol_handlers": {
     "title": "Standardapper",
     "description": "Velg om e-post- og kalenderlenker skal åpnes i {appName}. Teknisk sett registrerer {appName} seg som protokollbehandler for mailto:- og webcal:-lenker.",
@@ -410,6 +418,17 @@
       "next": "Neste side",
       "position": "{more, select, yes {Side {page} av {pages} eller flere} other {Side {page} av {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# samtale valgt} other {# samtaler valgt}}",
+    "search_count": "{conversations, plural, one {# samtale} other {# samtaler}} ({messages, plural, one {# melding} other {# meldinger}})",
+    "conversation_count": "{count, plural, one {# samtale} other {# samtaler}}",
+    "archived": "Arkivert",
+    "moved_to_trash": "Flyttet til papirkurven",
+    "moved_to": "Flyttet til {mailbox}",
+    "moved_count_to": "{count, plural, one {# e-post flyttet til {mailbox}} other {# e-poster flyttet til {mailbox}}}",
+    "new_folder_title": "Ny mappe",
+    "new_subfolder_title": "Ny undermappe"
   },
   "shared_tags": {
     "title": "Delte etiketter",
@@ -892,6 +911,11 @@
     "read_aloud_resume": "Fortsett",
     "read_aloud_stop": "Stopp opplesning",
     "reader_view": "Lesevisning"
+  },
+  "reader_actions": {
+    "restore": "Gjenopprett",
+    "restore_to": "Flytt tilbake til {folder}",
+    "delete_forever": "Slett for godt"
   },
   "external_mail": {
     "sender_label": "Ekstern",
@@ -3772,6 +3796,10 @@
     "messages_count": "{count, plural, one {# melding} other {# meldinger}}",
     "expand_named": "Utvid samtalen: {subject}",
     "collapse_named": "Fold sammen samtalen: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Vis # eldre melding} other {Vis # eldre meldinger}}",
+    "return_to_list_follows_layout": "Inntil du endrer det, følger det oppsettet: av når listen og meldingen står side om side, ellers på."
   },
   "identities": {
     "modal_title": "Administrer avsenderidentiteter",
@@ -6840,6 +6868,9 @@
       "try_again": "Prøv igjen",
       "close": "Lukk"
     }
+  },
+  "desktop_mail": {
+    "context_search_mail": "Søk etter «{text}» i e-post"
   },
   "desktopMenuBar": {
     "always_show_label": "Vis alltid menylinjen",

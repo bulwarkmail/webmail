@@ -215,6 +215,14 @@
     "mv_storage_used": "{percent} % von {total} belegt",
     "accessibility": "Barrierefreiheit"
   },
+  "account_unread": {
+    "others": "Ungelesen in anderen Konten: {count}",
+    "badge_all_accounts": {
+      "label": "Ungelesene Mails aller Konten zählen",
+      "description": "Die Zahl am Tab, am App-Symbol und im Infobereich zählt die Posteingänge aller angemeldeten Konten zusammen."
+    },
+    "empty_hint": "Sie können den Ordner {folder} leeren, um alle Nachrichten dauerhaft zu entfernen."
+  },
   "protocol_handlers": {
     "title": "Standard-Apps",
     "description": "Legen Sie fest, ob E-Mail- und Kalender-Links in {appName} geöffnet werden. Technisch registriert sich {appName} dafür als Protokoll-Handler für mailto: und webcal:.",
@@ -410,6 +418,17 @@
       "next": "Nächste Seite",
       "position": "{more, select, yes {Seite {page} von {pages} oder mehr} other {Seite {page} von {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# Unterhaltung ausgewählt} other {# Unterhaltungen ausgewählt}}",
+    "search_count": "{conversations, plural, one {# Unterhaltung} other {# Unterhaltungen}} ({messages, plural, one {# Nachricht} other {# Nachrichten}})",
+    "conversation_count": "{count, plural, one {# Unterhaltung} other {# Unterhaltungen}}",
+    "archived": "Archiviert",
+    "moved_to_trash": "In den Papierkorb verschoben",
+    "moved_to": "Nach {mailbox} verschoben",
+    "moved_count_to": "{count, plural, one {# E-Mail nach {mailbox} verschoben} other {# E-Mails nach {mailbox} verschoben}}",
+    "new_folder_title": "Neuer Ordner",
+    "new_subfolder_title": "Neuer Unterordner"
   },
   "shared_tags": {
     "title": "Geteilte Labels",
@@ -892,6 +911,11 @@
     "read_aloud_resume": "Fortsetzen",
     "read_aloud_stop": "Vorlesen beenden",
     "reader_view": "Leseansicht"
+  },
+  "reader_actions": {
+    "restore": "Wiederherstellen",
+    "restore_to": "Zurück nach {folder} verschieben",
+    "delete_forever": "Endgültig löschen"
   },
   "external_mail": {
     "sender_label": "Extern",
@@ -3772,6 +3796,10 @@
     "messages_count": "{count, plural, one {# Nachricht} other {# Nachrichten}}",
     "expand_named": "Konversation aufklappen: {subject}",
     "collapse_named": "Konversation zuklappen: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {# ältere Nachricht anzeigen} other {# ältere Nachrichten anzeigen}}",
+    "return_to_list_follows_layout": "Solange Sie es nicht ändern, richtet sich das nach dem Layout: aus, wenn Liste und Nachricht nebeneinander stehen, sonst an."
   },
   "identities": {
     "modal_title": "Sendeidentitäten verwalten",
@@ -6840,6 +6868,9 @@
       "try_again": "Erneut versuchen",
       "close": "Schließen"
     }
+  },
+  "desktop_mail": {
+    "context_search_mail": "E-Mails nach „{text}“ durchsuchen"
   },
   "desktopMenuBar": {
     "always_show_label": "Menüleiste immer anzeigen",

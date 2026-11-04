@@ -4,7 +4,8 @@ import React from 'react';
 import { EmailIdentityBadge } from '../email-identity-badge';
 import type { Email, Identity } from '@/lib/jmap/types';
 
-// A draft or sent mail from "User A" showed "User A  via User A".
+// A draft or sent mail from "User A" showed "User A  via User A", and any
+// other own message "via <identity>".
 
 const identity = { id: 'id-1', name: 'User A', email: 'usera@example.org' } as Identity;
 const fromUser = (name: string) => ({ from: [{ name, email: 'usera@example.org' }], to: [] }) as unknown as Email;
@@ -15,9 +16,16 @@ describe('EmailIdentityBadge', () => {
     expect(container.textContent).toBe('');
   });
 
-  it('names the identity when the sender name differs', () => {
+  it('names no identity on your own message, whatever the sender name', () => {
+    // "via <identity>" read like a delegation warning; the address under the
+    // name already says which of your addresses sent it.
     const { container } = render(<EmailIdentityBadge email={fromUser('Support Desk')} identities={[identity]} />);
-    // The translation mock returns the key of the "via {name}" text.
-    expect(container.textContent).toContain('identity_short');
+    expect(container.textContent).toBe('');
+  });
+
+  it('still shows the sub-address tag', () => {
+    const email = { from: [{ name: 'Support Desk', email: 'usera+news@example.org' }], to: [] } as unknown as Email;
+    const { container } = render(<EmailIdentityBadge email={email} identities={[identity]} />);
+    expect(container.textContent).toContain('news');
   });
 });

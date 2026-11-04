@@ -65,7 +65,7 @@ function SettingsNav({ embedded }: { embedded: boolean }) {
   return (
     <div
       aria-hidden="true"
-      className="border-e border-border bg-secondary flex flex-col shrink-0"
+      className="border-e border-border bg-secondary flex flex-col shrink-0 max-lg:max-w-52"
       style={{ width: "var(--boot-settings-nav-w, 256px)" }}
     >
       {embedded ? null : (
@@ -264,10 +264,10 @@ function PhonePage() {
 export function SettingsSkeletonBody({ embedded = false }: { embedded?: boolean }) {
   return (
     <div
-      className={cn("flex-1 min-w-0 min-h-0 flex", embedded ? "h-full" : "flex-col lg:flex-row")}
+      className={cn("flex-1 min-w-0 min-h-0 flex", embedded ? "h-full" : "flex-col desk:flex-row")}
       data-embedded={embedded ? "" : undefined}
     >
-      <div className={cn("flex-1 min-w-0 min-h-0", embedded ? "flex" : "hidden lg:flex")}>
+      <div className={cn("flex-1 min-w-0 min-h-0", embedded ? "flex" : "hidden desk:flex")}>
         <SettingsNav embedded={embedded} />
         <div aria-hidden="true" className="flex-1 min-w-0 overflow-hidden">
           {embedded ? null : (
@@ -281,7 +281,7 @@ export function SettingsSkeletonBody({ embedded = false }: { embedded?: boolean 
         </div>
       </div>
       {embedded ? null : (
-        <div className="flex flex-col flex-1 min-h-0 lg:hidden">
+        <div className="flex flex-col flex-1 min-h-0 desk:hidden">
           <PhoneList />
           <PhonePage />
         </div>
@@ -297,10 +297,9 @@ export function SettingsSkeleton({ label, labels }: SettingsSkeletonProps) {
       surface="settings"
       label={label}
       labels={labels}
-      railBelow="lg"
       active="settings"
       // Mountain View: the page sits on a card inset from the canvas.
-      rowClassName="lg:mv:mb-4 lg:mv:mx-4 lg:mv:rounded-[var(--mv-card-radius)] lg:mv:bg-background"
+      rowClassName="desk:mv:mb-4 desk:mv:mx-4 desk:mv:rounded-[var(--mv-card-radius)] desk:mv:bg-background"
     >
       <SettingsSkeletonBody />
     </AppShellSkeleton>

@@ -215,6 +215,14 @@
     "mv_storage_used": "Đã dùng {percent}% dung lượng {total}",
     "accessibility": "Hỗ trợ tiếp cận"
   },
+  "account_unread": {
+    "others": "Chưa đọc trong các tài khoản khác: {count}",
+    "badge_all_accounts": {
+      "label": "Đếm thư chưa đọc của mọi tài khoản",
+      "description": "Con số trên tab, biểu tượng ứng dụng và khay hệ thống cộng hộp thư đến của mọi tài khoản đã đăng nhập."
+    },
+    "empty_hint": "Bạn có thể làm trống thư mục {folder} để xóa vĩnh viễn tất cả thư."
+  },
   "protocol_handlers": {
     "title": "Ứng dụng mặc định",
     "description": "Chọn xem các liên kết email và lịch có mở trong {appName} hay không. Về mặt kỹ thuật, {appName} đăng ký làm trình xử lý giao thức cho các liên kết mailto: và webcal:.",
@@ -410,6 +418,17 @@
       "next": "Trang tiếp theo",
       "position": "{more, select, yes {Trang {page} trong số {pages} trở lên} other {Trang {page} trong số {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, other {Đã chọn # cuộc trò chuyện}}",
+    "search_count": "{conversations, plural, other {# cuộc trò chuyện}} ({messages, plural, other {# thư}})",
+    "conversation_count": "{count, plural, other {# cuộc trò chuyện}}",
+    "archived": "Đã lưu trữ",
+    "moved_to_trash": "Đã chuyển vào thùng rác",
+    "moved_to": "Đã chuyển tới {mailbox}",
+    "moved_count_to": "{count, plural, other {Đã chuyển # email tới {mailbox}}}",
+    "new_folder_title": "Thư mục mới",
+    "new_subfolder_title": "Thư mục con mới"
   },
   "shared_tags": {
     "title": "Thẻ được chia sẻ",
@@ -892,6 +911,11 @@
     "read_aloud_resume": "Tiếp tục",
     "read_aloud_stop": "Dừng đọc",
     "reader_view": "Chế độ đọc"
+  },
+  "reader_actions": {
+    "restore": "Khôi phục",
+    "restore_to": "Chuyển lại vào {folder}",
+    "delete_forever": "Xóa vĩnh viễn"
   },
   "external_mail": {
     "sender_label": "Bên ngoài",
@@ -3784,6 +3808,10 @@
     "messages_count": "{count, plural, one {# thư} other {# thư}}",
     "expand_named": "Mở rộng cuộc trò chuyện: {subject}",
     "collapse_named": "Thu gọn cuộc trò chuyện: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, other {Hiện # thư cũ hơn}}",
+    "return_to_list_follows_layout": "Cho đến khi bạn thay đổi, cài đặt này theo bố cục: tắt khi danh sách và thư nằm cạnh nhau, bật trong các trường hợp khác."
   },
   "identities": {
     "modal_title": "Quản lý danh tính gửi thư",
@@ -6852,6 +6880,9 @@
       "try_again": "Thử lại",
       "close": "Đóng"
     }
+  },
+  "desktop_mail": {
+    "context_search_mail": "Tìm “{text}” trong thư"
   },
   "desktopMenuBar": {
     "always_show_label": "Luôn hiện thanh menu",

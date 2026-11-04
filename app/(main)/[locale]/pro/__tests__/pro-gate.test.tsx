@@ -9,8 +9,8 @@ vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => (key === 'common.loading' ? 'Loading…' : key),
 }));
 
-const device = vi.hoisted(() => ({ isMobile: false, isTablet: false, isDesktop: true }));
-vi.mock('@/hooks/use-media-query', () => ({ useDeviceDetection: () => device, atLeast: (px: number) => `(width >= ${px}px)` }));
+const device = vi.hoisted(() => ({ isMobile: false, isCompact: false, isDesktop: true }));
+vi.mock('@/hooks/use-media-query', () => ({ useDeviceDetection: () => device, atLeast: (px: number) => `(width >= ${px}px)`, PHONE_BELOW: 600 }));
 const routerReplace = vi.hoisted(() => vi.fn());
 vi.mock('@/i18n/navigation', () => ({ useRouter: () => ({ replace: routerReplace }) }));
 
@@ -72,7 +72,7 @@ beforeEach(() => {
   auth.state.client = null;
   auth.state.isLoading = false;
   useSettingsStore.setState({ proInterface: true });
-  Object.assign(device, { isMobile: false, isTablet: false, isDesktop: true });
+  Object.assign(device, { isMobile: false, isCompact: false, isDesktop: true });
   Object.defineProperty(window, 'location', {
     configurable: true,
     value: { ...window.location, replace, pathname: '/pro', search: '' },
@@ -98,11 +98,23 @@ describe('Pro page gate', () => {
   it('keeps the skeleton up, not a blank page, below desktop width', async () => {
     auth.state.isAuthenticated = true;
     auth.state.client = {};
-    Object.assign(device, { isMobile: false, isTablet: true, isDesktop: false });
+    Object.assign(device, { isMobile: true, isCompact: false, isDesktop: false });
     const { container } = render(<ProHome />);
     await act(async () => {});
     expect(container.querySelector('[data-boot-skeleton="pro"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="mail-app"]')).toBeNull();
+  });
+
+  // A half-screen window or a laptop at 150 % is a compact desktop, which
+  // keeps the Pro shell (usability test 2026-11-04, mail-28).
+  it('runs on a compact desktop', async () => {
+    auth.state.isAuthenticated = true;
+    auth.state.client = {};
+    Object.assign(device, { isMobile: false, isCompact: true, isDesktop: true });
+    const { container } = render(<ProHome />);
+    await act(async () => {});
+    expect(container.querySelector('[data-pro-shell] [data-testid="mail-app"]')).not.toBeNull();
+    expect(routerReplace).not.toHaveBeenCalled();
   });
 
   it('marks the loaded shell so a skeleton inside a pane keeps its own frame', async () => {
@@ -126,7 +138,7 @@ describe('Pro page gate', () => {
     beforeEach(() => {
       auth.state.isAuthenticated = true;
       auth.state.client = {};
-      Object.assign(device, { isMobile: false, isTablet: true, isDesktop: false });
+      Object.assign(device, { isMobile: true, isCompact: false, isDesktop: false });
       const compose = { id: 'c1', kind: 'compose' as const, labelKey: '', closeable: true, paneId: 'main' as const, composeData: { sessionId: 1, mode: 'compose' as const, title: 'x', initialData: { subject: 'Typed', mode: 'compose' } as never } };
       useProTabStore.setState({
         tabs: [{ id: 'home-mail', kind: 'mail', labelKey: 'mail', closeable: false, paneId: 'main' }, compose],
@@ -150,6 +162,16 @@ describe('Pro page gate', () => {
       await act(async () => {});
       expect(routerReplace).not.toHaveBeenCalled();
       expect(takeHandedOffComposeDraft()).toBeNull();
+    });
+
+    it('stays in a window as wide as a compact desktop (800px)', async () => {
+      window.matchMedia = vi.fn((query: string) => {
+        const px = Number(/\(width >= (\d+)px\)/.exec(query)?.[1] ?? NaN);
+        return { matches: 800 >= px, addEventListener: () => {}, removeEventListener: () => {} };
+      }) as never;
+      render(<ProHome />);
+      await act(async () => {});
+      expect(routerReplace).not.toHaveBeenCalled();
     });
   });
 

@@ -215,6 +215,14 @@
     "mv_storage_used": "{percent}٪ از {total} استفاده شده",
     "accessibility": "دسترس‌پذیری"
   },
+  "account_unread": {
+    "others": "خوانده‌نشده در حساب‌های دیگر: {count}",
+    "badge_all_accounts": {
+      "label": "شمارش نامه‌های خوانده‌نشده همه حساب‌ها",
+      "description": "عدد روی زبانه، نماد برنامه و سینی سیستم، صندوق‌های ورودی همه حساب‌های واردشده را با هم جمع می‌کند."
+    },
+    "empty_hint": "می‌توانید پوشه {folder} را خالی کنید تا همه پیام‌ها برای همیشه حذف شوند."
+  },
   "protocol_handlers": {
     "title": "برنامه‌های پیش‌فرض",
     "description": "انتخاب کنید لینک‌های ایمیل و تقویم در {appName} باز شوند.",
@@ -410,6 +418,17 @@
       "next": "صفحه بعدی",
       "position": "{more, select, yes {صفحه {page} از {pages} یا بیشتر} other {صفحه {page} از {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# مکالمه انتخاب شد} other {# مکالمه انتخاب شد}}",
+    "search_count": "{conversations, plural, one {# مکالمه} other {# مکالمه}} ({messages, plural, one {# پیام} other {# پیام}})",
+    "conversation_count": "{count, plural, one {# مکالمه} other {# مکالمه}}",
+    "archived": "بایگانی شد",
+    "moved_to_trash": "به زباله‌دان منتقل شد",
+    "moved_to": "منتقل شد به {mailbox}",
+    "moved_count_to": "{count, plural, one {# ایمیل به {mailbox} منتقل شد} other {# ایمیل به {mailbox} منتقل شد}}",
+    "new_folder_title": "پوشه جدید",
+    "new_subfolder_title": "زیرپوشه جدید"
   },
   "shared_tags": {
     "title": "برچسب‌های مشترک",
@@ -892,6 +911,11 @@
     "read_aloud_resume": "ادامه",
     "read_aloud_stop": "پایان خواندن",
     "reader_view": "نمای مطالعه"
+  },
+  "reader_actions": {
+    "restore": "بازیابی",
+    "restore_to": "انتقال دوباره به {folder}",
+    "delete_forever": "حذف برای همیشه"
   },
   "external_mail": {
     "sender_label": "خارجی",
@@ -3772,6 +3796,10 @@
     "messages_count": "{count, plural, one {# پیام} other {# پیام}}",
     "expand_named": "باز کردن مکالمه: {subject}",
     "collapse_named": "جمع کردن مکالمه: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {نمایش # پیام قدیمی‌تر} other {نمایش # پیام قدیمی‌تر}}",
+    "return_to_list_follows_layout": "تا وقتی آن را تغییر ندهید، از چیدمان پیروی می‌کند: وقتی فهرست و پیام کنار هم هستند خاموش، در غیر این صورت روشن."
   },
   "identities": {
     "modal_title": "مدیریت هویت‌های ارسال",
@@ -6840,6 +6868,9 @@
       "try_again": "تلاش دوباره",
       "close": "بستن"
     }
+  },
+  "desktop_mail": {
+    "context_search_mail": "جستجوی «{text}» در نامه‌ها"
   },
   "desktopMenuBar": {
     "always_show_label": "همیشه نوار منو نمایش داده شود",

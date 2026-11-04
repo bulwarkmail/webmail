@@ -215,6 +215,14 @@
     "mv_storage_used": "{percent}% din {total} folosit",
     "accessibility": "Accesibilitate"
   },
+  "account_unread": {
+    "others": "Necitite în alte conturi: {count}",
+    "badge_all_accounts": {
+      "label": "Numără mesajele necitite din toate conturile",
+      "description": "Numărul de pe filă, de pe pictograma aplicației și din zona de notificare adună căsuțele de primire ale tuturor conturilor conectate."
+    },
+    "empty_hint": "Puteți goli folderul {folder} pentru a șterge definitiv toate mesajele."
+  },
   "protocol_handlers": {
     "title": "Aplicații implicite",
     "description": "Alegeți dacă linkurile către e-mail și calendar se deschid în {appName}. Din punct de vedere tehnic, {appName} se înregistrează ca gestionar de protocol pentru linkurile de tip mailto: și webcal:.",
@@ -410,6 +418,17 @@
       "next": "Pagina următoare",
       "position": "{more, select, yes {Pagina {page} din {pages} sau mai multe} other {Pagina {page} din {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# conversație selectată} few {# conversații selectate} other {# de conversații selectate}}",
+    "search_count": "{conversations, plural, one {# conversație} few {# conversații} other {# de conversații}} ({messages, plural, one {# mesaj} few {# mesaje} other {# de mesaje}})",
+    "conversation_count": "{count, plural, one {# conversație} few {# conversații} other {# de conversații}}",
+    "archived": "Arhivat",
+    "moved_to_trash": "Mutat în coșul de gunoi",
+    "moved_to": "Mutată la {mailbox}",
+    "moved_count_to": "{count, plural, one {# e-mail mutat în {mailbox}} few {# e-mailuri mutate în {mailbox}} other {# de e-mailuri mutate în {mailbox}}}",
+    "new_folder_title": "Dosar nou",
+    "new_subfolder_title": "Subfolder nou"
   },
   "shared_tags": {
     "title": "Etichete partajate",
@@ -892,6 +911,11 @@
     "read_aloud_resume": "Reluați",
     "read_aloud_stop": "Opriți citirea",
     "reader_view": "Vizualizare pentru citire"
+  },
+  "reader_actions": {
+    "restore": "Restaurează",
+    "restore_to": "Mută înapoi în {folder}",
+    "delete_forever": "Șterge definitiv"
   },
   "external_mail": {
     "sender_label": "Extern",
@@ -3772,6 +3796,10 @@
     "messages_count": "{count, plural, one {# mesaj} few {# mesaje} other {# de mesaje}}",
     "expand_named": "Extinde conversația: {subject}",
     "collapse_named": "Ascunde conversația: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Afișează # mesaj mai vechi} few {Afișează # mesaje mai vechi} other {Afișează # de mesaje mai vechi}}",
+    "return_to_list_follows_layout": "Cât timp nu îl modificați, urmează aspectul: dezactivat când lista și mesajul sunt unul lângă altul, activat în rest."
   },
   "identities": {
     "modal_title": "Gestionarea identităților de expediere",
@@ -6840,6 +6868,9 @@
       "try_again": "Încercați din nou",
       "close": "Închidere"
     }
+  },
+  "desktop_mail": {
+    "context_search_mail": "Căutare „{text}” în e-mail"
   },
   "desktopMenuBar": {
     "always_show_label": "Afișează mereu bara de meniu",

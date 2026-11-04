@@ -2,7 +2,8 @@ import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FakeBroadcastChannel } from '@/lib/__tests__/fixtures/fake-broadcast-channel';
 import { setLockedHere } from '@/lib/app-lock/state';
-import { openPopoutChannel, requestWindowSession, watchMainWindow, askRescuedDraftId, type PopoutMessage, type RescuedDraft } from '@/lib/popout/channel';
+import { announceMovedToMainWindow, openPopoutChannel, requestWindowSession, watchMainWindow, askRescuedDraftId, type PopoutMessage, type PopoutMovedNotice, type RescuedDraft } from '@/lib/popout/channel';
+import { clearUndoHistory, undoHistory, undoLatest } from '@/lib/undo-history';
 import { takeRescuedDraft } from '@/lib/popout/rescued-drafts';
 import { takeReturnedComposer } from '@/lib/popout/return-to-main';
 import { createSessionOpener, credentialFingerprint } from '@/lib/popout/sealed';
@@ -456,5 +457,61 @@ describe('a composer coming back', () => {
     popout.post({ type: 'composer-return-cancel', returnId: 'r1' });
     await settle();
     expect(takeReturnedComposer()).toBeNull();
+  });
+});
+
+// mail-4: Archive or Delete in a message window closed the window and its
+// toast with it, and Ctrl+Z in the main window didn't reach the move.
+describe('a move a message window made', () => {
+  const NOTICE: PopoutMovedNotice = {
+    kind: 'archive',
+    batches: [{ login: 'alice', points: [{ id: 'm1', mailboxIds: { inbox: true }, seen: true }] }],
+  };
+
+  it('gets its toast with Undo here, and Ctrl+Z puts the message back through this window\'s login', async () => {
+    const restoreEmails = vi.fn(async () => {});
+    Object.assign(client, { restoreEmails });
+    clearUndoHistory();
+    render(<PopoutHost />);
+    await settle();
+    let taken = false;
+    await act(async () => {
+      taken = await announceMovedToMainWindow(NOTICE, 2000);
+    });
+    expect(taken).toBe(true);
+    const toasts = useToastStore.getState().toasts;
+    expect(toasts.map((toast) => toast.title)).toEqual(['notifications.email_archived']);
+    expect(toasts[0].action?.label).toBe('notifications.undo');
+    expect(undoHistory()).toHaveLength(1);
+    await act(async () => {
+      undoLatest();
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+    expect(restoreEmails).toHaveBeenCalledWith([{ id: 'm1', mailboxIds: { inbox: true }, seen: true }], undefined);
+  });
+
+  it('is taken by one main window of two', async () => {
+    clearUndoHistory();
+    render(<><PopoutHost /><PopoutHost /></>);
+    await settle();
+    await act(async () => {
+      await announceMovedToMainWindow(NOTICE, 2000);
+    });
+    await settle();
+    expect(useToastStore.getState().toasts).toHaveLength(1);
+    expect(undoHistory()).toHaveLength(1);
+  });
+
+  it('a delete for good still says so, without Undo', async () => {
+    clearUndoHistory();
+    render(<PopoutHost />);
+    await settle();
+    await act(async () => {
+      await announceMovedToMainWindow({ kind: 'delete', batches: [] }, 2000);
+    });
+    const toasts = useToastStore.getState().toasts;
+    expect(toasts.map((toast) => toast.title)).toEqual(['notifications.email_deleted']);
+    expect(toasts[0].action).toBeUndefined();
+    expect(undoHistory()).toHaveLength(0);
   });
 });

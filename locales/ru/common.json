@@ -215,6 +215,14 @@
     "mv_storage_used": "Использовано {percent}% из {total}",
     "accessibility": "Специальные возможности"
   },
+  "account_unread": {
+    "others": "Непрочитанные в других аккаунтах: {count}",
+    "badge_all_accounts": {
+      "label": "Считать непрочитанные письма во всех аккаунтах",
+      "description": "Число на вкладке, на значке приложения и в трее складывает входящие всех аккаунтов, в которые выполнен вход."
+    },
+    "empty_hint": "Вы можете очистить папку «{folder}», чтобы навсегда удалить все сообщения."
+  },
   "protocol_handlers": {
     "title": "Приложения по умолчанию",
     "description": "Выберите, должны ли ссылки электронной почты и календаря открываться в {appName}. Технически {appName} регистрируется как обработчик протокола для ссылок mailto: и webcal:.",
@@ -410,6 +418,17 @@
       "next": "Следующая страница",
       "position": "{more, select, yes {Страница {page} из {pages} или больше} other {Страница {page} из {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {Выбрана # беседа} few {Выбрано # беседы} many {Выбрано # бесед} other {Выбрано # беседы}}",
+    "search_count": "{conversations, plural, one {# беседа} few {# беседы} many {# бесед} other {# беседы}} ({messages, plural, one {# сообщение} few {# сообщения} many {# сообщений} other {# сообщения}})",
+    "conversation_count": "{count, plural, one {# беседа} few {# беседы} many {# бесед} other {# беседы}}",
+    "archived": "Перемещено в архив",
+    "moved_to_trash": "Перемещено в корзину",
+    "moved_to": "Перемещено в {mailbox}",
+    "moved_count_to": "{count, plural, one {# письмо перемещено в {mailbox}} few {# письма перемещены в {mailbox}} many {# писем перемещено в {mailbox}} other {# письма перемещено в {mailbox}}}",
+    "new_folder_title": "Новая папка",
+    "new_subfolder_title": "Новая вложенная папка"
   },
   "shared_tags": {
     "title": "Общие теги",
@@ -892,6 +911,11 @@
     "read_aloud_resume": "Продолжить",
     "read_aloud_stop": "Остановить чтение",
     "reader_view": "Режим чтения"
+  },
+  "reader_actions": {
+    "restore": "Восстановить",
+    "restore_to": "Вернуть в папку {folder}",
+    "delete_forever": "Удалить навсегда"
   },
   "external_mail": {
     "sender_label": "Внешнее",
@@ -3772,6 +3796,10 @@
     "messages_count": "{count, plural, one {# сообщение} few {# сообщения} many {# сообщений} other {# сообщения}}",
     "expand_named": "Развернуть разговор: {subject}",
     "collapse_named": "Свернуть разговор: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Показать # более раннее письмо} few {Показать # более ранних письма} many {Показать # более ранних писем} other {Показать # более раннего письма}}",
+    "return_to_list_follows_layout": "Пока вы это не измените, настройка зависит от макета: выключена, когда список и письмо стоят рядом, в остальных случаях включена."
   },
   "identities": {
     "modal_title": "Управление идентификациями отправителя",
@@ -6840,6 +6868,9 @@
       "try_again": "Повторить",
       "close": "Закрыть"
     }
+  },
+  "desktop_mail": {
+    "context_search_mail": "Найти «{text}» в почте"
   },
   "desktopMenuBar": {
     "always_show_label": "Всегда показывать строку меню",

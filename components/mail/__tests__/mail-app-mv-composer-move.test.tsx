@@ -14,7 +14,7 @@ import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
 // depending on the width, and React mounts it anew in each. What was typed has
 // to come along, or a narrowed window silently empties the message.
 
-const device = vi.hoisted(() => ({ current: { isMobile: false, isTablet: false, isDesktop: true } }));
+const device = vi.hoisted(() => ({ current: { isMobile: false, isCompact: false, isDesktop: true } }));
 
 vi.mock('@/components/layout/mv-top-bar', () => ({ MvTopBar: () => null }));
 vi.mock('@/components/layout/sidebar', () => ({
@@ -76,7 +76,7 @@ const { MailApp } = await import('../mail-app');
 const inbox = { id: 'inbox', name: 'Inbox', role: 'inbox', totalEmails: 0, unreadEmails: 0 } as Mailbox;
 
 beforeEach(() => {
-  device.current = { isMobile: false, isTablet: false, isDesktop: true };
+  device.current = { isMobile: false, isCompact: false, isDesktop: true };
   vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Unexpected network request')));
   vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
   usePluginStore.setState({ initializePlugins: vi.fn().mockResolvedValue(undefined) });
@@ -113,17 +113,19 @@ describe('moving the Mountain View composer between layouts', () => {
     fireEvent.click(screen.getByText('stub compose'));
     fireEvent.change(await screen.findByLabelText('stub subject'), { target: { value: 'Still here' } });
 
-    device.current = { isMobile: false, isTablet: true, isDesktop: false };
+    device.current = { isMobile: true, isCompact: false, isDesktop: false };
     rerender(<MailApp />);
     await waitFor(() => expect(screen.getByLabelText<HTMLInputElement>('stub subject').value).toBe('Still here'));
 
-    device.current = { isMobile: false, isTablet: false, isDesktop: true };
+    device.current = { isMobile: false, isCompact: false, isDesktop: true };
     rerender(<MailApp />);
     await waitFor(() => expect(screen.getByLabelText<HTMLInputElement>('stub subject').value).toBe('Still here'));
   });
 
-  const setWidth = (rerender: (ui: React.ReactElement) => void, width: 'desktop' | 'tablet') => {
-    device.current = { isMobile: false, isTablet: width === 'tablet', isDesktop: width === 'desktop' };
+  // Mountain View floats its composer on every desktop, compact included; a
+  // phone has it in the reading pane.
+  const setWidth = (rerender: (ui: React.ReactElement) => void, width: 'desktop' | 'phone') => {
+    device.current = { isMobile: width === 'phone', isCompact: false, isDesktop: width === 'desktop' };
     rerender(<MailApp />);
   };
   const subject = () => screen.getByLabelText<HTMLInputElement>('stub subject');
@@ -134,13 +136,13 @@ describe('moving the Mountain View composer between layouts', () => {
     await screen.findByLabelText('stub subject');
 
     // Clean, so this move hands nothing over.
-    setWidth(rerender, 'tablet');
+    setWidth(rerender, 'phone');
     fireEvent.change(await screen.findByLabelText('stub subject'), { target: { value: 'Typed in the pane' } });
 
     setWidth(rerender, 'desktop');
     await waitFor(() => expect(subject().value).toBe('Typed in the pane'));
 
-    setWidth(rerender, 'tablet');
+    setWidth(rerender, 'phone');
     await waitFor(() => expect(subject().value).toBe('Typed in the pane'));
   });
 
@@ -149,25 +151,25 @@ describe('moving the Mountain View composer between layouts', () => {
     fireEvent.click(screen.getByText('stub compose'));
     fireEvent.change(await screen.findByLabelText('stub subject'), { target: { value: 'First' } });
 
-    setWidth(rerender, 'tablet');
+    setWidth(rerender, 'phone');
     await waitFor(() => expect(subject().value).toBe('First'));
     setWidth(rerender, 'desktop');
     await waitFor(() => expect(subject().value).toBe('First'));
     fireEvent.change(subject(), { target: { value: 'First and more' } });
 
-    setWidth(rerender, 'tablet');
+    setWidth(rerender, 'phone');
     await waitFor(() => expect(subject().value).toBe('First and more'));
   });
 });
 
-describe('a composer opened from the phone and tablet drawer', () => {
+describe('a composer opened from the phone drawer', () => {
   const openFromInsideDrawer = () => window.dispatchEvent(new CustomEvent('bulwark:mailto', {
     detail: { to: ['bob@example.org'], cc: [], bcc: [], subject: '', body: '' },
     cancelable: true,
   }));
 
   beforeEach(() => {
-    device.current = { isMobile: false, isTablet: true, isDesktop: false };
+    device.current = { isMobile: true, isCompact: false, isDesktop: false };
     useSettingsStore.setState({ interfaceLayout: 'default' } as never);
     useUIStore.setState({ sidebarOpen: true });
   });

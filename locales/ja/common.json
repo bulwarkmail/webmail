@@ -215,6 +215,14 @@
     "mv_storage_used": "{total} のうち {percent}% を使用中",
     "accessibility": "アクセシビリティ"
   },
+  "account_unread": {
+    "others": "他のアカウントの未読: {count}",
+    "badge_all_accounts": {
+      "label": "すべてのアカウントの未読を数える",
+      "description": "タブ、アプリのアイコン、通知領域の数字に、サインイン中のすべてのアカウントの受信トレイを合計して表示します。"
+    },
+    "empty_hint": "{folder}フォルダを空にして、すべてのメールを完全に削除できます。"
+  },
   "protocol_handlers": {
     "title": "既定のアプリ",
     "description": "メールとカレンダーのリンクを {appName} で開くかどうかを選択します。技術的には、{appName} は mailto: と webcal: リンクのプロトコル ハンドラーとして登録されます。",
@@ -410,6 +418,17 @@
       "next": "次のページ",
       "position": "{more, select, yes {{pages} ページ以上中 {page} ページ目} other {{pages} ページ中 {page} ページ目}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, other {#件の会話を選択中}}",
+    "search_count": "{conversations, plural, other {#件の会話}}（{messages, plural, other {#件のメッセージ}}）",
+    "conversation_count": "{count, plural, other {#件の会話}}",
+    "archived": "アーカイブしました",
+    "moved_to_trash": "ゴミ箱に移動しました",
+    "moved_to": "{mailbox}に移動しました",
+    "moved_count_to": "{count, plural, other {#件のメールを{mailbox}に移動しました}}",
+    "new_folder_title": "新しいフォルダー",
+    "new_subfolder_title": "新しいサブフォルダー"
   },
   "shared_tags": {
     "title": "共有タグ",
@@ -892,6 +911,11 @@
     "read_aloud_resume": "再開",
     "read_aloud_stop": "読み上げを停止",
     "reader_view": "リーダー表示"
+  },
+  "reader_actions": {
+    "restore": "元に戻す",
+    "restore_to": "{folder} に戻す",
+    "delete_forever": "完全に削除"
   },
   "external_mail": {
     "sender_label": "外部",
@@ -3772,6 +3796,10 @@
     "messages_count": "{count, plural, other {#件のメッセージ}}",
     "expand_named": "会話を展開: {subject}",
     "collapse_named": "会話を折りたたむ: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, other {以前のメッセージを # 件表示}}",
+    "return_to_list_follows_layout": "変更するまでは、レイアウトに合わせて切り替わります。一覧とメッセージが横に並ぶ場合はオフ、それ以外はオンです。"
   },
   "identities": {
     "modal_title": "送信者情報を管理",
@@ -6840,6 +6868,9 @@
       "try_again": "再試行",
       "close": "閉じる"
     }
+  },
+  "desktop_mail": {
+    "context_search_mail": "メールで「{text}」を検索"
   },
   "desktopMenuBar": {
     "always_show_label": "メニューバーを常に表示",

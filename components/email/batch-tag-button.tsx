@@ -25,6 +25,7 @@ export function BatchTagButton({
   active,
   disabled,
   scope = null,
+  testId = "batch-tag",
 }: {
   title: string;
   /** Tags every selected message carries. */
@@ -37,6 +38,8 @@ export function BatchTagButton({
   disabled?: boolean;
   /** The account of the whole selection (commonTagScope); null: the user's own tags. */
   scope?: TagScope | null;
+  /** The reading pane's copy has its own (mail-10). */
+  testId?: string;
 }) {
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -83,7 +86,7 @@ export function BatchTagButton({
       <IconButton
         ref={buttonRef}
         label={title}
-        data-testid="batch-tag"
+        data-testid={testId}
         onClick={(event) => {
           const rect = event.currentTarget.getBoundingClientRect();
           setPos((open) =>

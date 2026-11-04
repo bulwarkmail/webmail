@@ -29,7 +29,7 @@ export function AdminPageHeader({ title, description, actions, back, leading, cl
         <AdminLink
           href={back.href}
           // The phone shell's top bar already has the back arrow.
-          className="hidden lg:inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="hidden desk:inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           {back.label}
@@ -39,7 +39,7 @@ export function AdminPageHeader({ title, description, actions, back, leading, cl
         <div className="flex items-start gap-3 min-w-0">
           {leading}
           <div className="min-w-0">
-            <h1 className={cn('text-xl font-semibold text-foreground leading-tight', !back && 'hidden lg:block')}>{title}</h1>
+            <h1 className={cn('text-xl font-semibold text-foreground leading-tight', !back && 'hidden desk:block')}>{title}</h1>
             {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
           </div>
         </div>

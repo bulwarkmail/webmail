@@ -215,6 +215,14 @@
     "mv_storage_used": "{total} {percent}%-a foglalt",
     "accessibility": "Kisegítő lehetőségek"
   },
+  "account_unread": {
+    "others": "Olvasatlan a többi fiókban: {count}",
+    "badge_all_accounts": {
+      "label": "Az összes fiók olvasatlan leveleinek számlálása",
+      "description": "A lapon, az alkalmazásikonon és a tálcán látható szám az összes bejelentkezett fiók beérkezett leveleit adja össze."
+    },
+    "empty_hint": "A(z) {folder} mappa ürítésével véglegesen eltávolíthatod az összes üzenetet."
+  },
   "protocol_handlers": {
     "title": "Alapértelmezett alkalmazások",
     "description": "Válaszd ki, hogy az e-mail és naptár hivatkozások a(z) {appName} alkalmazásban nyíljanak meg. Technikailag a(z) {appName} protokollkezelőként regisztrálja magát a mailto: és webcal: hivatkozásokhoz.",
@@ -410,6 +418,17 @@
       "next": "Következő oldal",
       "position": "{more, select, yes {{page}. oldal, összesen {pages} vagy több} other {{page}. oldal, összesen {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# beszélgetés kijelölve} other {# beszélgetés kijelölve}}",
+    "search_count": "{conversations, plural, one {# beszélgetés} other {# beszélgetés}} ({messages, plural, one {# üzenet} other {# üzenet}})",
+    "conversation_count": "{count, plural, one {# beszélgetés} other {# beszélgetés}}",
+    "archived": "Archiválva",
+    "moved_to_trash": "Áthelyezve a kukába",
+    "moved_to": "Áthelyezve ide: {mailbox}",
+    "moved_count_to": "{count, plural, one {# e-mail áthelyezve ide: {mailbox}} other {# e-mail áthelyezve ide: {mailbox}}}",
+    "new_folder_title": "Új mappa",
+    "new_subfolder_title": "Új almappa"
   },
   "shared_tags": {
     "title": "Megosztott címkék",
@@ -892,6 +911,11 @@
     "read_aloud_resume": "Folytatás",
     "read_aloud_stop": "Felolvasás leállítása",
     "reader_view": "Olvasó nézet"
+  },
+  "reader_actions": {
+    "restore": "Visszaállítás",
+    "restore_to": "Visszahelyezés ide: {folder}",
+    "delete_forever": "Végleges törlés"
   },
   "external_mail": {
     "sender_label": "Külső",
@@ -3772,6 +3796,10 @@
     "messages_count": "{count, plural, one {# üzenet} other {# üzenet}}",
     "expand_named": "Beszélgetés kibontása: {subject}",
     "collapse_named": "Beszélgetés összecsukása: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {# régebbi üzenet megjelenítése} other {# régebbi üzenet megjelenítése}}",
+    "return_to_list_follows_layout": "Amíg nem módosítja, az elrendezést követi: ki van kapcsolva, ha a lista és az üzenet egymás mellett van, egyébként be."
   },
   "identities": {
     "modal_title": "Küldő azonosságok kezelése",
@@ -6840,6 +6868,9 @@
       "try_again": "Újrapróbálás",
       "close": "Bezárás"
     }
+  },
+  "desktop_mail": {
+    "context_search_mail": "„{text}” keresése a levelek között"
   },
   "desktopMenuBar": {
     "always_show_label": "Menüsor mindig látható",

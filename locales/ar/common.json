@@ -215,6 +215,14 @@
     "mv_storage_used": "تم استخدام {percent}% من {total}",
     "accessibility": "إمكانية الوصول"
   },
+  "account_unread": {
+    "others": "غير مقروءة في الحسابات الأخرى: {count}",
+    "badge_all_accounts": {
+      "label": "احتساب البريد غير المقروء في كل الحسابات",
+      "description": "الرقم على علامة التبويب وأيقونة التطبيق وشريط النظام يجمع صناديق الوارد لكل الحسابات المسجّل دخولها."
+    },
+    "empty_hint": "يمكنك إفراغ مجلد {folder} لحذف جميع الرسائل نهائيًا."
+  },
   "protocol_handlers": {
     "title": "التطبيقات الافتراضية",
     "description": "اختر ما إذا كانت روابط البريد والتقويم تُفتح في {appName}. من الناحية التقنية، يسجّل {appName} نفسه كمعالج بروتوكول لروابط mailto: وwebcal:.",
@@ -410,6 +418,17 @@
       "next": "الصفحة التالية",
       "position": "{more, select, yes {الصفحة {page} من {pages} أو أكثر} other {الصفحة {page} من {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {تم تحديد محادثة واحدة} two {تم تحديد محادثتين} few {تم تحديد # محادثات} many {تم تحديد # محادثة} other {تم تحديد # محادثة}}",
+    "search_count": "{conversations, plural, one {محادثة واحدة} two {محادثتان} few {# محادثات} many {# محادثة} other {# محادثة}} ({messages, plural, one {رسالة واحدة} two {رسالتان} few {# رسائل} many {# رسالة} other {# رسالة}})",
+    "conversation_count": "{count, plural, one {محادثة واحدة} two {محادثتان} few {# محادثات} many {# محادثة} other {# محادثة}}",
+    "archived": "تمت الأرشفة",
+    "moved_to_trash": "تم النقل إلى المهملات",
+    "moved_to": "تم النقل إلى {mailbox}",
+    "moved_count_to": "{count, plural, one {تم نقل رسالة واحدة إلى {mailbox}} other {تم نقل # رسالة إلى {mailbox}}}",
+    "new_folder_title": "مجلد جديد",
+    "new_subfolder_title": "مجلد فرعي جديد"
   },
   "shared_tags": {
     "title": "الوسوم المشتركة",
@@ -892,6 +911,11 @@
     "read_aloud_resume": "استئناف",
     "read_aloud_stop": "إيقاف القراءة",
     "reader_view": "عرض القراءة"
+  },
+  "reader_actions": {
+    "restore": "استعادة",
+    "restore_to": "إعادة النقل إلى {folder}",
+    "delete_forever": "حذف نهائي"
   },
   "external_mail": {
     "sender_label": "خارجي",
@@ -3772,6 +3796,10 @@
     "messages_count": "{count, plural, zero {لا رسائل} one {رسالة واحدة} two {رسالتان} few {# رسائل} many {# رسالة} other {# رسالة}}",
     "expand_named": "توسيع المحادثة: {subject}",
     "collapse_named": "طي المحادثة: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, zero {عرض # رسالة أقدم} one {عرض رسالة أقدم واحدة} two {عرض رسالتين أقدم} few {عرض # رسائل أقدم} many {عرض # رسالة أقدم} other {عرض # رسالة أقدم}}",
+    "return_to_list_follows_layout": "ما لم تغيّره، يتبع هذا التخطيط: متوقف عندما تكون القائمة والرسالة جنبًا إلى جنب، ومفعّل في غير ذلك."
   },
   "identities": {
     "modal_title": "إدارة هويات الإرسال",
@@ -6840,6 +6868,9 @@
       "try_again": "إعادة المحاولة",
       "close": "إغلاق"
     }
+  },
+  "desktop_mail": {
+    "context_search_mail": "البحث في البريد عن «{text}»"
   },
   "desktopMenuBar": {
     "always_show_label": "إظهار شريط القوائم دائمًا",

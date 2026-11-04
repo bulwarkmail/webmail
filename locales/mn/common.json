@@ -215,6 +215,14 @@
     "mv_storage_used": "{total}-с {percent}% ашигласан",
     "accessibility": "Хүртээмж"
   },
+  "account_unread": {
+    "others": "Бусад бүртгэлд уншаагүй: {count}",
+    "badge_all_accounts": {
+      "label": "Бүх бүртгэлийн уншаагүй захидлыг тоолох",
+      "description": "Таб, аппын дүрс болон мэдэгдлийн хэсэг дээрх тоо нь нэвтэрсэн бүх бүртгэлийн ирсэн захидлыг нэгтгэнэ."
+    },
+    "empty_hint": "Та бүх мессежийг бүрмөсөн устгахын тулд {folder} хавтасыг хоослох боломжтой."
+  },
   "protocol_handlers": {
     "title": "Өгөгдмөл програмууд",
     "description": "И-мэйл болон хуанлийн холбоосууд {appName} дээр нээгдэх эсэхийг сонгоно уу. Техникийн хувьд {appName} нь mailto: болон webcal: холбоосуудад протокол зохицуулагчаар бүртгүүлдэг.",
@@ -410,6 +418,17 @@
       "next": "Дараагийн хуудас",
       "position": "{more, select, yes {{pages} буюу түүнээс олон хуудасны {page}-р хуудас} other {{pages} хуудасны {page}-р хуудас}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# харилцан яриа сонгосон} other {# харилцан яриа сонгосон}}",
+    "search_count": "{conversations, plural, one {# харилцан яриа} other {# харилцан яриа}} ({messages, plural, one {# зурвас} other {# зурвас}})",
+    "conversation_count": "{count, plural, one {# харилцан яриа} other {# харилцан яриа}}",
+    "archived": "Архивласан",
+    "moved_to_trash": "Хогийн сав руу зөөсөн",
+    "moved_to": "{mailbox} руу зөөсөн",
+    "moved_count_to": "{count, plural, one {# имэйлийг {mailbox} руу зөөсөн} other {# имэйлийг {mailbox} руу зөөсөн}}",
+    "new_folder_title": "Шинэ хавтас",
+    "new_subfolder_title": "Шинэ дэд хавтас"
   },
   "shared_tags": {
     "title": "Хуваалцсан тагууд",
@@ -892,6 +911,11 @@
     "read_aloud_resume": "Үргэлжлүүлэх",
     "read_aloud_stop": "Уншихыг зогсоох",
     "reader_view": "Унших харагдац"
+  },
+  "reader_actions": {
+    "restore": "Сэргээх",
+    "restore_to": "{folder} руу буцаах",
+    "delete_forever": "Бүрмөсөн устгах"
   },
   "external_mail": {
     "sender_label": "Гадаад",
@@ -3772,6 +3796,10 @@
     "messages_count": "{count, plural, one {# мессеж} other {# мессеж}}",
     "expand_named": "Харилцан яриаг өргөжүүлэх: {subject}",
     "collapse_named": "Харилцан яриаг хураах: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Өмнөх # захиа харуулах} other {Өмнөх # захиа харуулах}}",
+    "return_to_list_follows_layout": "Та өөрчлөхөөс нааш энэ нь байрлалаас хамаарна: жагсаалт ба захиа зэрэгцэн байвал унтраалттай, бусад үед асаалттай."
   },
   "identities": {
     "modal_title": "Илгээж буй таниулбаруудыг удирдах",
@@ -6840,6 +6868,9 @@
       "try_again": "Дахин оролдох",
       "close": "Хаах"
     }
+  },
+  "desktop_mail": {
+    "context_search_mail": "Захидлаас “{text}”-г хайх"
   },
   "desktopMenuBar": {
     "always_show_label": "Цэсний мөрийг үргэлж харуулах",

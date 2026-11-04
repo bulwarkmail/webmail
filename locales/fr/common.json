@@ -215,6 +215,14 @@
     "mv_storage_used": "{percent} % de {total} utilisés",
     "accessibility": "Accessibilité"
   },
+  "account_unread": {
+    "others": "Non lus dans les autres comptes : {count}",
+    "badge_all_accounts": {
+      "label": "Compter les messages non lus de tous les comptes",
+      "description": "Le nombre sur l'onglet, l'icône de l'application et la zone de notification additionne les boîtes de réception de tous les comptes connectés."
+    },
+    "empty_hint": "Vous pouvez vider le dossier {folder} pour supprimer définitivement tous les messages."
+  },
   "protocol_handlers": {
     "title": "Applications par défaut",
     "description": "Choisissez si les liens d'e-mail et de calendrier s'ouvrent dans {appName}. Techniquement, {appName} s'enregistre comme gestionnaire de protocole pour les liens mailto: et webcal:.",
@@ -410,6 +418,17 @@
       "next": "Page suivante",
       "position": "{more, select, yes {Page {page} sur {pages} ou plus} other {Page {page} sur {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# conversation sélectionnée} other {# conversations sélectionnées}}",
+    "search_count": "{conversations, plural, one {# conversation} other {# conversations}} ({messages, plural, one {# message} other {# messages}})",
+    "conversation_count": "{count, plural, one {# conversation} other {# conversations}}",
+    "archived": "Archivé",
+    "moved_to_trash": "Déplacé dans la corbeille",
+    "moved_to": "Déplacé vers {mailbox}",
+    "moved_count_to": "{count, plural, one {# e-mail déplacé vers {mailbox}} other {# e-mails déplacés vers {mailbox}}}",
+    "new_folder_title": "Nouveau dossier",
+    "new_subfolder_title": "Nouveau sous-dossier"
   },
   "shared_tags": {
     "title": "Étiquettes partagées",
@@ -892,6 +911,11 @@
     "read_aloud_resume": "Reprendre",
     "read_aloud_stop": "Arrêter la lecture",
     "reader_view": "Mode lecture"
+  },
+  "reader_actions": {
+    "restore": "Restaurer",
+    "restore_to": "Remettre dans {folder}",
+    "delete_forever": "Supprimer définitivement"
   },
   "external_mail": {
     "sender_label": "Externe",
@@ -3772,6 +3796,10 @@
     "messages_count": "{count, plural, one {# message} other {# messages}}",
     "expand_named": "Développer la conversation: {subject}",
     "collapse_named": "Réduire la conversation: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Afficher # message plus ancien} other {Afficher # messages plus anciens}}",
+    "return_to_list_follows_layout": "Tant que vous ne le modifiez pas, ce réglage suit la disposition : désactivé quand la liste et le message sont côte à côte, activé sinon."
   },
   "identities": {
     "modal_title": "Gérer les identités d'envoi",
@@ -6840,6 +6868,9 @@
       "try_again": "Réessayer",
       "close": "Fermer"
     }
+  },
+  "desktop_mail": {
+    "context_search_mail": "Rechercher « {text} » dans les messages"
   },
   "desktopMenuBar": {
     "always_show_label": "Toujours afficher la barre de menus",

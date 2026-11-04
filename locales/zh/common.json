@@ -215,6 +215,14 @@
     "mv_storage_used": "已使用 {total} 中的 {percent}%",
     "accessibility": "无障碍"
   },
+  "account_unread": {
+    "others": "其他账户中的未读邮件：{count}",
+    "badge_all_accounts": {
+      "label": "统计所有账户的未读邮件",
+      "description": "标签页、应用图标和托盘上的数字会合计所有已登录账户的收件箱。"
+    },
+    "empty_hint": "您可以清空“{folder}”文件夹以永久删除所有邮件。"
+  },
   "protocol_handlers": {
     "title": "默认应用",
     "description": "选择是否在 {appName} 中打开电子邮件和日历链接。从技术上讲，{appName} 会注册为 mailto: 和 webcal: 链接的协议处理程序。",
@@ -410,6 +418,17 @@
       "next": "下一页",
       "position": "{more, select, yes {第 {page} 页，共 {pages} 页或更多} other {第 {page} 页，共 {pages} 页}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, other {已选择 # 个会话}}",
+    "search_count": "{conversations, plural, other {# 个会话}}（{messages, plural, other {# 条消息}}）",
+    "conversation_count": "{count, plural, other {# 个会话}}",
+    "archived": "已归档",
+    "moved_to_trash": "已移至已删除",
+    "moved_to": "已移至 {mailbox}",
+    "moved_count_to": "{count, plural, other {已将 # 封邮件移至 {mailbox}}}",
+    "new_folder_title": "新建文件夹",
+    "new_subfolder_title": "新建子文件夹"
   },
   "shared_tags": {
     "title": "共享标签",
@@ -892,6 +911,11 @@
     "read_aloud_resume": "继续",
     "read_aloud_stop": "停止朗读",
     "reader_view": "阅读视图"
+  },
+  "reader_actions": {
+    "restore": "恢复",
+    "restore_to": "移回 {folder}",
+    "delete_forever": "永久删除"
   },
   "external_mail": {
     "sender_label": "外部",
@@ -3772,6 +3796,10 @@
     "messages_count": "{count, plural, other {# 条消息}}",
     "expand_named": "展开会话: {subject}",
     "collapse_named": "折叠会话: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, other {显示 # 封较早的邮件}}",
+    "return_to_list_follows_layout": "在你更改之前，此项随布局而定：列表和邮件并排显示时关闭，其他情况下开启。"
   },
   "identities": {
     "modal_title": "管理发送身份",
@@ -6840,6 +6868,9 @@
       "try_again": "重试",
       "close": "关闭"
     }
+  },
+  "desktop_mail": {
+    "context_search_mail": "在邮件中搜索“{text}”"
   },
   "desktopMenuBar": {
     "always_show_label": "始终显示菜单栏",

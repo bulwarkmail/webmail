@@ -215,6 +215,14 @@
     "mv_storage_used": "Використано {percent}% з {total}",
     "accessibility": "Доступність"
   },
+  "account_unread": {
+    "others": "Непрочитані в інших облікових записах: {count}",
+    "badge_all_accounts": {
+      "label": "Рахувати непрочитані листи в усіх облікових записах",
+      "description": "Число на вкладці, на значку застосунку та в треї підсумовує вхідні всіх облікових записів, у які виконано вхід."
+    },
+    "empty_hint": "Ви можете очистити папку «{folder}», щоб остаточно видалити всі повідомлення."
+  },
   "protocol_handlers": {
     "title": "Програми за замовчуванням",
     "description": "Виберіть, чи відкривати посилання електронної пошти та календаря в {appName}. Технічно {appName} реєструється як обробник протоколу для посилань mailto: і webcal:.",
@@ -410,6 +418,17 @@
       "next": "Наступна сторінка",
       "position": "{more, select, yes {Сторінка {page} з {pages} або більше} other {Сторінка {page} з {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {Вибрано # розмову} few {Вибрано # розмови} many {Вибрано # розмов} other {Вибрано # розмови}}",
+    "search_count": "{conversations, plural, one {# розмова} few {# розмови} many {# розмов} other {# розмови}} ({messages, plural, one {# повідомлення} few {# повідомлення} many {# повідомлень} other {# повідомлення}})",
+    "conversation_count": "{count, plural, one {# розмова} few {# розмови} many {# розмов} other {# розмови}}",
+    "archived": "Заархівовано",
+    "moved_to_trash": "Переміщено до кошика",
+    "moved_to": "Переміщено до {mailbox}",
+    "moved_count_to": "{count, plural, one {# лист переміщено до {mailbox}} few {# листи переміщено до {mailbox}} many {# листів переміщено до {mailbox}} other {# листа переміщено до {mailbox}}}",
+    "new_folder_title": "Нова папка",
+    "new_subfolder_title": "Нова вкладена папка"
   },
   "shared_tags": {
     "title": "Спільні теги",
@@ -892,6 +911,11 @@
     "read_aloud_resume": "Продовжити",
     "read_aloud_stop": "Зупинити читання",
     "reader_view": "Режим читання"
+  },
+  "reader_actions": {
+    "restore": "Відновити",
+    "restore_to": "Повернути до теки {folder}",
+    "delete_forever": "Видалити назавжди"
   },
   "external_mail": {
     "sender_label": "Зовнішнє",
@@ -3772,6 +3796,10 @@
     "messages_count": "{count, plural, one {# повідомлення} few {# повідомлення} many {# повідомлень} other {# повідомлення}}",
     "expand_named": "Розгорнути бесіду: {subject}",
     "collapse_named": "Згорнути бесіду: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Показати # давніший лист} few {Показати # давніші листи} many {Показати # давніших листів} other {Показати # давнішого листа}}",
+    "return_to_list_follows_layout": "Поки ви це не зміните, налаштування залежить від макета: вимкнено, коли список і лист розташовані поруч, в інших випадках увімкнено."
   },
   "identities": {
     "modal_title": "Керування ідентифікаторами надсилання",
@@ -6840,6 +6868,9 @@
       "try_again": "Спробувати ще раз",
       "close": "Закрити"
     }
+  },
+  "desktop_mail": {
+    "context_search_mail": "Шукати «{text}» у пошті"
   },
   "desktopMenuBar": {
     "always_show_label": "Завжди показувати рядок меню",

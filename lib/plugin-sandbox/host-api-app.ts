@@ -147,7 +147,7 @@ export const SHARED_SETTINGS = [
   'filenameSpaceReplacement', 'filenameLowercase', 'filenameStripDiacritics', 'filenameCollapseSeparators', 'postExportAction',
   'recipientMentionsEnabled', 'mentionAddsRecipientTo', 'rtlEditingSupport', 'quickReplyEnabled', 'replyIdentityMatch',
   'attachmentReminderEnabled', 'attachmentReminderKeywords', 'emptySubjectWarningEnabled', 'placeholderWarningEnabled',
-  'notificationSoundChoice', 'pushNotifyInboxOnly', 'faviconUnreadBadge', 'calendarNotificationSound', 'doNotDisturb', 'visualAlerts',
+  'notificationSoundChoice', 'pushNotifyInboxOnly', 'faviconUnreadBadge', 'unreadBadgeAllAccounts', 'calendarNotificationSound', 'doNotDisturb', 'visualAlerts',
   'calendarInvitationParsingEnabled', 'showTimeInMonthView', 'calendarTintedEvents', 'calendarMonthTimedEvents',
   'calendarLimitHours', 'calendarDayStartHour', 'calendarDayEndHour', 'calendarHideNonWorkingDays',
   'calendarFreeScroll', 'calendarHoverPreview', 'showTasksOnCalendar',

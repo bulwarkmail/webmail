@@ -214,6 +214,14 @@
     "mv_storage_used": "נוצלו {percent}% מתוך {total}",
     "accessibility": "נגישות"
   },
+  "account_unread": {
+    "others": "לא נקראו בחשבונות האחרים: {count}",
+    "badge_all_accounts": {
+      "label": "ספירת דואר שלא נקרא בכל החשבונות",
+      "description": "המספר בכרטיסייה, בסמל האפליקציה ובמגש המערכת מחבר את תיבות הדואר הנכנס של כל החשבונות המחוברים."
+    },
+    "empty_hint": "אפשר לרוקן את התיקייה {folder} כדי להסיר לצמיתות את כל ההודעות."
+  },
   "sidebar_apps": {
     "modal_title": "אפליקציות בסרגל הצד",
     "add_new": "הוסף אפליקציה",
@@ -353,6 +361,17 @@
       "next": "העמוד הבא",
       "position": "{more, select, yes {עמוד {page} מתוך {pages} או יותר} other {עמוד {page} מתוך {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {נבחרה שיחה אחת} two {נבחרו שתי שיחות} other {נבחרו # שיחות}}",
+    "search_count": "{conversations, plural, one {שיחה אחת} two {שתי שיחות} other {# שיחות}} ({messages, plural, one {הודעה אחת} two {שתי הודעות} other {# הודעות}})",
+    "conversation_count": "{count, plural, one {שיחה אחת} two {שתי שיחות} other {# שיחות}}",
+    "archived": "הועבר לארכיון",
+    "moved_to_trash": "הועבר לאשפה",
+    "moved_to": "הועבר אל {mailbox}",
+    "moved_count_to": "{count, plural, one {הודעה אחת הועברה אל {mailbox}} other {# הודעות הועברו אל {mailbox}}}",
+    "new_folder_title": "תיקייה חדשה",
+    "new_subfolder_title": "תת־תיקייה חדשה"
   },
   "shared_tags": {
     "title": "תגים משותפים",
@@ -835,6 +854,11 @@
     "read_aloud_resume": "המשך",
     "read_aloud_stop": "עצירת ההקראה",
     "reader_view": "תצוגת קריאה"
+  },
+  "reader_actions": {
+    "restore": "שחזור",
+    "restore_to": "החזרה אל {folder}",
+    "delete_forever": "מחיקה לצמיתות"
   },
   "external_mail": {
     "sender_label": "חיצוני",
@@ -3669,6 +3693,10 @@
     "messages_count": "{count, plural, one {הודעה אחת} two {שתי הודעות} other {# הודעות}}",
     "expand_named": "הרחב את השיחה: {subject}",
     "collapse_named": "כווץ את השיחה: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {הצגת הודעה ישנה אחת} two {הצגת שתי הודעות ישנות} other {הצגת # הודעות ישנות}}",
+    "return_to_list_follows_layout": "כל עוד לא תשנו זאת, זה נקבע לפי הפריסה: כבוי כשהרשימה וההודעה זו לצד זו, ופועל בכל מצב אחר."
   },
   "identities": {
     "modal_title": "ניהול זהויות שליחה",
@@ -6841,6 +6869,9 @@
       "try_again": "ניסיון חוזר",
       "close": "סגירה"
     }
+  },
+  "desktop_mail": {
+    "context_search_mail": "חיפוש “{text}” בדואר"
   },
   "desktopMenuBar": {
     "always_show_label": "תמיד להציג את סרגל התפריטים",

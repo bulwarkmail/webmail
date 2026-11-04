@@ -215,6 +215,14 @@
     "mv_storage_used": "{total} alanın %{percent} kadarı kullanıldı",
     "accessibility": "Erişilebilirlik"
   },
+  "account_unread": {
+    "others": "Diğer hesaplarda okunmamış: {count}",
+    "badge_all_accounts": {
+      "label": "Tüm hesaplardaki okunmamış postaları say",
+      "description": "Sekmedeki, uygulama simgesindeki ve sistem tepsisindeki sayı, oturum açılmış tüm hesapların gelen kutularını toplar."
+    },
+    "empty_hint": "Tüm iletileri kalıcı olarak kaldırmak için {folder} klasörünü boşaltabilirsiniz."
+  },
   "protocol_handlers": {
     "title": "Varsayılan uygulamalar",
     "description": "E-posta ve takvim bağlantılarının {appName} uygulamasında açılıp açılmayacağını seçin. Teknik olarak {appName}, mailto: ve webcal: bağlantıları için protokol işleyicisi olarak kaydolur.",
@@ -410,6 +418,17 @@
       "next": "Sonraki sayfa",
       "position": "{more, select, yes {Sayfa {page} / {pages} veya daha fazla} other {Sayfa {page} / {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# konuşma seçildi} other {# konuşma seçildi}}",
+    "search_count": "{conversations, plural, one {# konuşma} other {# konuşma}} ({messages, plural, one {# ileti} other {# ileti}})",
+    "conversation_count": "{count, plural, one {# konuşma} other {# konuşma}}",
+    "archived": "Arşivlendi",
+    "moved_to_trash": "Çöp Kutusuna taşındı",
+    "moved_to": "{mailbox} klasörüne taşındı",
+    "moved_count_to": "{count, plural, one {# e-posta {mailbox} klasörüne taşındı} other {# e-posta {mailbox} klasörüne taşındı}}",
+    "new_folder_title": "Yeni klasör",
+    "new_subfolder_title": "Yeni alt klasör"
   },
   "shared_tags": {
     "title": "Paylaşılan etiketler",
@@ -892,6 +911,11 @@
     "read_aloud_resume": "Devam et",
     "read_aloud_stop": "Okumayı durdur",
     "reader_view": "Okuma görünümü"
+  },
+  "reader_actions": {
+    "restore": "Geri yükle",
+    "restore_to": "{folder} klasörüne geri taşı",
+    "delete_forever": "Kalıcı olarak sil"
   },
   "external_mail": {
     "sender_label": "Harici",
@@ -3772,6 +3796,10 @@
     "messages_count": "{count, plural, one {# ileti} other {# ileti}}",
     "expand_named": "Konuşmayı genişlet: {subject}",
     "collapse_named": "Konuşmayı daralt: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {# eski iletiyi göster} other {# eski iletiyi göster}}",
+    "return_to_list_follows_layout": "Siz değiştirene kadar bu ayar düzene göre belirlenir: liste ve ileti yan yanaysa kapalı, değilse açık."
   },
   "identities": {
     "modal_title": "Gönderme Kimliklerini Yönet",
@@ -6840,6 +6868,9 @@
       "try_again": "Yeniden dene",
       "close": "Kapat"
     }
+  },
+  "desktop_mail": {
+    "context_search_mail": "E-postalarda “{text}” ara"
   },
   "desktopMenuBar": {
     "always_show_label": "Menü çubuğunu her zaman göster",

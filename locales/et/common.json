@@ -215,6 +215,14 @@
     "mv_storage_used": "{percent}% mahust {total} kasutatud",
     "accessibility": "Juurdepääsetavus"
   },
+  "account_unread": {
+    "others": "Lugemata teistes kontodes: {count}",
+    "badge_all_accounts": {
+      "label": "Loe kõigi kontode lugemata kirjad kokku",
+      "description": "Vahekaardi, rakenduse ikooni ja teavitusala arv liidab kokku kõigi sisselogitud kontode postkastid."
+    },
+    "empty_hint": "Kausta {folder} tühjendades saad kõik kirjad jäädavalt eemaldada."
+  },
   "protocol_handlers": {
     "title": "Vaikerakendused",
     "description": "Vali, kas e-posti ja kalendri lingid avanevad rakenduses {appName}. Tehniliselt registreerib {appName} end mailto: ja webcal: linkide protokollikäsitlejana.",
@@ -410,6 +418,17 @@
       "next": "Järgmine leht",
       "position": "{more, select, yes {Leht {page} / {pages} või rohkem} other {Leht {page} / {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# vestlus valitud} other {# vestlust valitud}}",
+    "search_count": "{conversations, plural, one {# vestlus} other {# vestlust}} ({messages, plural, one {# sõnum} other {# sõnumit}})",
+    "conversation_count": "{count, plural, one {# vestlus} other {# vestlust}}",
+    "archived": "Arhiveeritud",
+    "moved_to_trash": "Liigutatud prügikasti",
+    "moved_to": "Liigutatud kausta {mailbox}",
+    "moved_count_to": "{count, plural, one {# e-kiri liigutati kausta {mailbox}} other {# e-kirja liigutati kausta {mailbox}}}",
+    "new_folder_title": "Uus kaust",
+    "new_subfolder_title": "Uus alamkaust"
   },
   "shared_tags": {
     "title": "Jagatud sildid",
@@ -892,6 +911,11 @@
     "read_aloud_resume": "Jätka",
     "read_aloud_stop": "Lõpeta ettelugemine",
     "reader_view": "Lugemisvaade"
+  },
+  "reader_actions": {
+    "restore": "Taasta",
+    "restore_to": "Teisalda tagasi kausta {folder}",
+    "delete_forever": "Kustuta jäädavalt"
   },
   "external_mail": {
     "sender_label": "Väline",
@@ -3772,6 +3796,10 @@
     "messages_count": "{count, plural, one {# sõnum} other {# sõnumit}}",
     "expand_named": "Ava vestlus: {subject}",
     "collapse_named": "Sulge vestlus: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Näita # vanemat sõnumit} other {Näita # vanemat sõnumit}}",
+    "return_to_list_follows_layout": "Kuni te seda ei muuda, järgib see paigutust: väljas, kui loend ja sõnum on kõrvuti, muidu sees."
   },
   "identities": {
     "modal_title": "Halda saatja identiteete",
@@ -6840,6 +6868,9 @@
       "try_again": "Proovi uuesti",
       "close": "Sulge"
     }
+  },
+  "desktop_mail": {
+    "context_search_mail": "Otsi kirjadest „{text}”"
   },
   "desktopMenuBar": {
     "always_show_label": "Näita menüüriba alati",

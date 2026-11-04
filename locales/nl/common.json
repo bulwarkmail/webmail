@@ -215,6 +215,14 @@
     "mv_storage_used": "{percent}% van {total} gebruikt",
     "accessibility": "Toegankelijkheid"
   },
+  "account_unread": {
+    "others": "Ongelezen in andere accounts: {count}",
+    "badge_all_accounts": {
+      "label": "Ongelezen mail van alle accounts tellen",
+      "description": "Het getal op het tabblad, het app-pictogram en in het systeemvak telt de inboxen van alle aangemelde accounts bij elkaar op."
+    },
+    "empty_hint": "U kunt de map {folder} legen om alle berichten permanent te verwijderen."
+  },
   "protocol_handlers": {
     "title": "Standaardapps",
     "description": "Kies of e-mail- en kalenderlinks in {appName} worden geopend. Technisch registreert {appName} zich als protocolhandler voor mailto:- en webcal:-links.",
@@ -410,6 +418,17 @@
       "next": "Volgende pagina",
       "position": "{more, select, yes {Pagina {page} van {pages} of meer} other {Pagina {page} van {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# gesprek geselecteerd} other {# gesprekken geselecteerd}}",
+    "search_count": "{conversations, plural, one {# gesprek} other {# gesprekken}} ({messages, plural, one {# bericht} other {# berichten}})",
+    "conversation_count": "{count, plural, one {# gesprek} other {# gesprekken}}",
+    "archived": "Gearchiveerd",
+    "moved_to_trash": "Naar de prullenbak verplaatst",
+    "moved_to": "Verplaatst naar {mailbox}",
+    "moved_count_to": "{count, plural, one {# e-mail verplaatst naar {mailbox}} other {# e-mails verplaatst naar {mailbox}}}",
+    "new_folder_title": "Nieuwe map",
+    "new_subfolder_title": "Nieuwe submap"
   },
   "shared_tags": {
     "title": "Gedeelde labels",
@@ -892,6 +911,11 @@
     "read_aloud_resume": "Hervatten",
     "read_aloud_stop": "Voorlezen stoppen",
     "reader_view": "Leesweergave"
+  },
+  "reader_actions": {
+    "restore": "Terugzetten",
+    "restore_to": "Terugzetten naar {folder}",
+    "delete_forever": "Definitief verwijderen"
   },
   "external_mail": {
     "sender_label": "Extern",
@@ -3772,6 +3796,10 @@
     "messages_count": "{count, plural, one {# bericht} other {# berichten}}",
     "expand_named": "Gesprek uitklappen: {subject}",
     "collapse_named": "Gesprek inklappen: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {# ouder bericht tonen} other {# oudere berichten tonen}}",
+    "return_to_list_follows_layout": "Zolang je het niet wijzigt, volgt dit de indeling: uit als de lijst en het bericht naast elkaar staan, anders aan."
   },
   "identities": {
     "modal_title": "Verzendidentiteiten beheren",
@@ -6840,6 +6868,9 @@
       "try_again": "Probeer opnieuw",
       "close": "Sluit"
     }
+  },
+  "desktop_mail": {
+    "context_search_mail": "Zoek ‘{text}’ in e-mail"
   },
   "desktopMenuBar": {
     "always_show_label": "Menubalk altijd tonen",

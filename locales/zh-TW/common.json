@@ -215,6 +215,14 @@
     "mv_storage_used": "已使用 {total} 中的 {percent}%",
     "accessibility": "無障礙"
   },
+  "account_unread": {
+    "others": "其他帳號中的未讀郵件：{count}",
+    "badge_all_accounts": {
+      "label": "計算所有帳號的未讀郵件",
+      "description": "分頁、應用程式圖示和系統匣上的數字會合計所有已登入帳號的收件匣。"
+    },
+    "empty_hint": "您可以清空「{folder}」信件匣，永久刪除其中的所有郵件。"
+  },
   "protocol_handlers": {
     "title": "預設應用程式",
     "description": "選擇電子郵件與行事曆連結是否要在 {appName} 開啟。{appName} 會註冊為 mailto: 與 webcal: 連結的通訊協定處理常式。",
@@ -410,6 +418,17 @@
       "next": "下一頁",
       "position": "{more, select, yes {第 {page} 頁，共 {pages} 頁或更多} other {第 {page} 頁，共 {pages} 頁}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, other {已選取 # 個對話串}}",
+    "search_count": "{conversations, plural, other {# 個對話串}}（{messages, plural, other {# 封郵件}}）",
+    "conversation_count": "{count, plural, other {# 個對話串}}",
+    "archived": "已封存",
+    "moved_to_trash": "已移至垃圾桶",
+    "moved_to": "已移至 {mailbox}",
+    "moved_count_to": "{count, plural, other {已將 # 封郵件移至 {mailbox}}}",
+    "new_folder_title": "新增信件匣",
+    "new_subfolder_title": "新增子信件匣"
   },
   "shared_tags": {
     "title": "共用標籤",
@@ -892,6 +911,11 @@
     "read_aloud_resume": "繼續",
     "read_aloud_stop": "停止朗讀",
     "reader_view": "閱讀檢視"
+  },
+  "reader_actions": {
+    "restore": "復原",
+    "restore_to": "移回 {folder}",
+    "delete_forever": "永久刪除"
   },
   "external_mail": {
     "sender_label": "外部",
@@ -3772,6 +3796,10 @@
     "messages_count": "{count, plural, other {# 封郵件}}",
     "expand_named": "展開對話串: {subject}",
     "collapse_named": "收合對話串: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, other {顯示 # 封較早的郵件}}",
+    "return_to_list_follows_layout": "在您變更之前，此項會依版面配置而定：清單與郵件並排顯示時關閉，其他情況下開啟。"
   },
   "identities": {
     "modal_title": "管理寄件身分",
@@ -6840,6 +6868,9 @@
       "try_again": "重試",
       "close": "關閉"
     }
+  },
+  "desktop_mail": {
+    "context_search_mail": "在郵件中搜尋「{text}」"
   },
   "desktopMenuBar": {
     "always_show_label": "永遠顯示選單列",

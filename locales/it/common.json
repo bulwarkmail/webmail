@@ -215,6 +215,14 @@
     "mv_storage_used": "{percent}% di {total} utilizzato",
     "accessibility": "Accessibilità"
   },
+  "account_unread": {
+    "others": "Non letti negli altri account: {count}",
+    "badge_all_accounts": {
+      "label": "Conta la posta non letta di tutti gli account",
+      "description": "Il numero sulla scheda, sull'icona dell'app e nell'area di notifica somma le caselle di posta in arrivo di tutti gli account collegati."
+    },
+    "empty_hint": "Puoi svuotare la cartella {folder} per rimuovere definitivamente tutti i messaggi."
+  },
   "protocol_handlers": {
     "title": "App predefinite",
     "description": "Scegli se i link e-mail e calendario devono aprirsi in {appName}. Tecnicamente, {appName} si registra come gestore di protocollo per i link mailto: e webcal:.",
@@ -410,6 +418,17 @@
       "next": "Pagina successiva",
       "position": "{more, select, yes {Pagina {page} di {pages} o più} other {Pagina {page} di {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# conversazione selezionata} other {# conversazioni selezionate}}",
+    "search_count": "{conversations, plural, one {# conversazione} other {# conversazioni}} ({messages, plural, one {# messaggio} other {# messaggi}})",
+    "conversation_count": "{count, plural, one {# conversazione} other {# conversazioni}}",
+    "archived": "Archiviato",
+    "moved_to_trash": "Spostato nel cestino",
+    "moved_to": "Spostato in {mailbox}",
+    "moved_count_to": "{count, plural, one {# messaggio spostato in {mailbox}} other {# messaggi spostati in {mailbox}}}",
+    "new_folder_title": "Nuova cartella",
+    "new_subfolder_title": "Nuova sottocartella"
   },
   "shared_tags": {
     "title": "Etichette condivise",
@@ -892,6 +911,11 @@
     "read_aloud_resume": "Riprendi",
     "read_aloud_stop": "Interrompi la lettura",
     "reader_view": "Modalità lettura"
+  },
+  "reader_actions": {
+    "restore": "Ripristina",
+    "restore_to": "Riporta in {folder}",
+    "delete_forever": "Elimina definitivamente"
   },
   "external_mail": {
     "sender_label": "Esterno",
@@ -3772,6 +3796,10 @@
     "messages_count": "{count, plural, one {# messaggio} other {# messaggi}}",
     "expand_named": "Espandi conversazione: {subject}",
     "collapse_named": "Comprimi conversazione: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Mostra # messaggio precedente} other {Mostra # messaggi precedenti}}",
+    "return_to_list_follows_layout": "Finché non lo modifichi, segue il layout: disattivato quando l'elenco e il messaggio sono affiancati, attivato negli altri casi."
   },
   "identities": {
     "modal_title": "Gestisci identità di invio",
@@ -6840,6 +6868,9 @@
       "try_again": "Riprova",
       "close": "Chiudi"
     }
+  },
+  "desktop_mail": {
+    "context_search_mail": "Cerca «{text}» nella posta"
   },
   "desktopMenuBar": {
     "always_show_label": "Mostra sempre la barra dei menu",

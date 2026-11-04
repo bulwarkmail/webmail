@@ -215,6 +215,14 @@
     "mv_storage_used": "Izmantoti {percent}% no {total}",
     "accessibility": "Pieejamība"
   },
+  "account_unread": {
+    "others": "Nelasītas citos kontos: {count}",
+    "badge_all_accounts": {
+      "label": "Skaitīt nelasītās vēstules visos kontos",
+      "description": "Skaitlis cilnē, lietotnes ikonā un paziņojumu apgabalā saskaita visu pierakstīto kontu iesūtnes."
+    },
+    "empty_hint": "Jūs varat iztīrīt mapi {folder}, lai neatgriezeniski dzēstu visus ziņojumus."
+  },
   "protocol_handlers": {
     "title": "Noklusējuma lietotnes",
     "description": "Izvēlieties, vai e-pasta un kalendāra saites atvērt {appName}. Tehniski {appName} reģistrējas kā protokola apstrādātājs mailto: un webcal: saitēm.",
@@ -410,6 +418,17 @@
       "next": "Nākamā lapa",
       "position": "{more, select, yes {{page}. lapa no {pages} vai vairāk} other {{page}. lapa no {pages}}}"
     }
+  },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, zero {Atlasītas # sarunas} one {Atlasīta # saruna} other {Atlasītas # sarunas}}",
+    "search_count": "{conversations, plural, zero {# sarunas} one {# saruna} other {# sarunas}} ({messages, plural, zero {# ziņojumu} one {# ziņojums} other {# ziņojumi}})",
+    "conversation_count": "{count, plural, zero {# sarunas} one {# saruna} other {# sarunas}}",
+    "archived": "Arhivēts",
+    "moved_to_trash": "Pārvietots uz atkritni",
+    "moved_to": "Pārvietots uz {mailbox}",
+    "moved_count_to": "{count, plural, zero {# vēstules pārvietotas uz {mailbox}} one {# vēstule pārvietota uz {mailbox}} other {# vēstules pārvietotas uz {mailbox}}}",
+    "new_folder_title": "Jauna mape",
+    "new_subfolder_title": "Jauna apakšmape"
   },
   "shared_tags": {
     "title": "Kopīgotie tagi",
@@ -892,6 +911,11 @@
     "read_aloud_resume": "Turpināt",
     "read_aloud_stop": "Beigt nolasīšanu",
     "reader_view": "Lasīšanas skats"
+  },
+  "reader_actions": {
+    "restore": "Atjaunot",
+    "restore_to": "Pārvietot atpakaļ uz {folder}",
+    "delete_forever": "Dzēst neatgriezeniski"
   },
   "external_mail": {
     "sender_label": "Ārējs",
@@ -3772,6 +3796,10 @@
     "messages_count": "{count, plural, zero {# ziņojumu} one {# ziņojums} other {# ziņojumi}}",
     "expand_named": "Izvērst sarunu: {subject}",
     "collapse_named": "Sairt sarunu: {subject}"
+  },
+  "conversation_pane": {
+    "show_older": "{count, plural, zero {Rādīt # vecākas ziņas} one {Rādīt # vecāku ziņu} other {Rādīt # vecākas ziņas}}",
+    "return_to_list_follows_layout": "Kamēr to nemaināt, tas seko izkārtojumam: izslēgts, ja saraksts un ziņa ir blakus, citādi ieslēgts."
   },
   "identities": {
     "modal_title": "Pārvaldīt sūtītāja identitātes",
@@ -6840,6 +6868,9 @@
       "try_again": "Mēģināt vēlreiz",
       "close": "Aizvērt"
     }
+  },
+  "desktop_mail": {
+    "context_search_mail": "Meklēt pastā “{text}”"
   },
   "desktopMenuBar": {
     "always_show_label": "Vienmēr rādīt izvēļņu joslu",

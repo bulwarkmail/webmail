@@ -7,7 +7,7 @@ import {
   FilePlus, CopyPlus, AlertCircle, FolderUp, Share2, SquarePen, Eye, FolderOpen,
   RefreshCw, Star, StarOff, Plus, CheckSquare, File, RotateCcw, FolderInput,
 } from "@/components/icons";
-import { useIsDesktop, useIsMobile, useMediaQuery } from "@/hooks/use-media-query";
+import { useIsFullDesktop, useIsMobile, useMediaQuery } from "@/hooks/use-media-query";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { useKeepFileOffline } from "@/hooks/use-keep-file-offline";
 import { useRegisterCommands } from "@/lib/command-registry";
@@ -272,8 +272,9 @@ export function FileBrowser({
   }), [settings.showIcons, settings.coloredIcons, settings.showThumbnails]);
 
   // ---- Layout ----------------------------------------------------------------
-  const isDesktop = useIsDesktop();
-  const isNarrow = !isDesktop;
+  // Below the full desktop the sidebar opens over the page.
+  const isFullDesktop = useIsFullDesktop();
+  const isNarrow = !isFullDesktop;
   const isMobile = useIsMobile();
   const touch = useMediaQuery("(pointer: coarse)") && isMobile;
   const [narrowSidebarOpen, setNarrowSidebarOpen] = useState(false);

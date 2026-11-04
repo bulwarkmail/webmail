@@ -176,7 +176,8 @@ export function applyBootLayout(root: HTMLElement, c: BootLayoutConfig): void {
   mark('mail-layout', mailLayout);
 
   var desktop = false;
-  try { desktop = w.matchMedia('(min-width: 64rem)').matches; } catch { /* assume not */ }
+  // The desktop layout, compact included (PHONE_BELOW in hooks/use-media-query).
+  try { desktop = w.matchMedia('(min-width: 37.5rem)').matches; } catch { /* assume not */ }
   var proOn = s.proInterface === true && desktop && (surface === 'pro' || has(c.pro, surface));
   mark('pro', proOn ? 'on' : null);
 
