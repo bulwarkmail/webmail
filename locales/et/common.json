@@ -3367,6 +3367,81 @@
       }
     }
   },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Võrguühenduseta",
+      "privacy": "Privaatsus",
+      "about": "Teave"
+    },
+    "search": {
+      "signature": "allkiri e-posti allkiri jalus",
+      "sign_out": "logi välja väljalogimine logout",
+      "app_lock": "PIN lukk kood lukustuskuva",
+      "text_size": "fondi suurus suurem tekst suum suurendus",
+      "vacation": "automaatvastus kontorist väljas eemal puhkus autoreply",
+      "two_factor": "2FA kaheastmeline kahefaktoriline MFA OTP autentija ühekordne kood",
+      "encryption": "S/MIME smime PGP OpenPGP krüpteerimine sertifikaat",
+      "password": "parool muuda parooli uus parool",
+      "offline": "võrguühenduseta offline ilma ühenduseta ilma internetita laadi alla salvestus sünkroonimine",
+      "wipe": "eemalda kustuta tühjenda seade andmed",
+      "outbox": "väljuvad saatmata ootel järjekord",
+      "remote_content": "kaugpildid väline sisu jälgimine pikslid usaldusväärsed saatjad",
+      "push": "push relee taustal teavitused",
+      "version": "versioon uuendus teave lähtekood GitHub litsents"
+    },
+    "privacy": {
+      "push_title": "Teavitused",
+      "push_link": {
+        "label": "Teavituste relee",
+        "description": "Teavitused suletud rakenduse ajal käivad läbi push-relee, mis ei näe kunagi sinu kirju. Valid selle lehel Teavitused.",
+        "button": "Teavitused"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Kaugpildid ja usaldusväärsed saatjad",
+      "receipts_label": "Lugemiskinnitused",
+      "senders_label": "Saatjate pildid",
+      "description": "Need seaded on lehel Privaatsus.",
+      "button": "Privaatsus"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Tihedus ja nuppude nimed",
+        "description": "Kui tihedalt loendi read on ja kas nupud näitavad oma nime, seadistad lehel Välimus."
+      },
+      "light_mode": {
+        "label": "Hele taust kirjadele",
+        "description": "Kirjade näitamise heledal taustal tumedas režiimis seadistad lehel Lugemine."
+      },
+      "calendar": {
+        "label": "Sündmuste eelvaade kalendris",
+        "description": "Kas sündmusele osutamine näitab üksikasju, seadistad lehel Kalender."
+      },
+      "list": {
+        "label": "Vestlused ja eelvaate read",
+        "description": "Vestluste kaupa rühmitamise ja iga kirja all oleva eelvaate rea seadistad lehel Kirjade loend."
+      },
+      "reading": {
+        "label": "Loetuks märkimine",
+        "description": "Millal kiri loetakse loetuks ja kuhu jõuad pärast kustutamist või teisaldamist, seadistad lehel Lugemine."
+      },
+      "send_warnings_description": "Saatmise tagasivõtmine ja hoiatused puuduva teema, unustatud manuse või kohatäiteteksti kohta.",
+      "bulk_delete": {
+        "label": "Küsi enne mitme kirja kustutamist",
+        "description": "Selle seadistad lehel Kirjade loend."
+      },
+      "sounds": {
+        "label": "Helid ja lugemata kirjade arv",
+        "description": "Teavitushelid ja lugemata kirjade arvu vahekaardil seadistad lehel Teavitused."
+      }
+    },
+    "about": {
+      "title": "Teave: {appName}"
+    },
+    "sign_out": {
+      "description": "Logi sellest kontost selles seadmes välja."
+    }
+  },
   "setup": {
     "title": "Bulwark Webmaili seadistamine",
     "subtitle": "Seadista oma veebipostiteenus brauseris.",

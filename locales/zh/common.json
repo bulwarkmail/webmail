@@ -3367,6 +3367,81 @@
       }
     }
   },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "离线",
+      "privacy": "隐私",
+      "about": "关于"
+    },
+    "search": {
+      "signature": "签名 邮件签名 页脚",
+      "sign_out": "退出登录 注销 登出 logout",
+      "app_lock": "PIN 锁定 密码锁 锁屏",
+      "text_size": "字体大小 字号 大字 放大 缩放",
+      "vacation": "自动回复 不在办公室 外出 休假 假期 autoreply",
+      "two_factor": "2FA 双重验证 两步验证 MFA OTP 身份验证器 一次性验证码",
+      "encryption": "S/MIME smime PGP OpenPGP 加密 证书",
+      "password": "密码 修改密码 新密码",
+      "offline": "离线 offline 无网络 无连接 下载 存储 同步",
+      "wipe": "移除 删除 清除 设备 数据",
+      "outbox": "发件箱 未发送 等待 队列",
+      "remote_content": "远程图片 外部内容 跟踪 像素 受信任的发件人",
+      "push": "推送 push 中继 后台 通知",
+      "version": "版本 更新 关于 源代码 GitHub 许可证"
+    },
+    "privacy": {
+      "push_title": "通知",
+      "push_link": {
+        "label": "通知中继",
+        "description": "应用关闭时的通知通过推送中继发送，中继永远看不到你的邮件。可在“通知”页面选择。",
+        "button": "通知"
+      }
+    },
+    "privacy_links": {
+      "images_label": "远程图片和受信任的发件人",
+      "receipts_label": "已读回执",
+      "senders_label": "发件人头像",
+      "description": "这些设置在“隐私”页面。",
+      "button": "隐私"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "密度和按钮标签",
+        "description": "列表行的疏密以及按钮是否显示名称，在“外观”页面设置。"
+      },
+      "light_mode": {
+        "label": "邮件使用浅色背景",
+        "description": "深色模式下邮件是否使用浅色背景，在“阅读”页面设置。"
+      },
+      "calendar": {
+        "label": "日历中的事件预览",
+        "description": "指向事件时是否显示详情，在“日历”页面设置。"
+      },
+      "list": {
+        "label": "会话和预览行",
+        "description": "按会话分组以及每封邮件下方的预览行，在“邮件列表”页面设置。"
+      },
+      "reading": {
+        "label": "标记为已读",
+        "description": "邮件何时算作已读，以及删除或移动后跳到哪里，在“阅读”页面设置。"
+      },
+      "send_warnings_description": "撤销发送，以及缺少主题、忘记附件或占位文字的提醒。",
+      "bulk_delete": {
+        "label": "删除多封邮件前询问",
+        "description": "在“邮件列表”页面设置。"
+      },
+      "sounds": {
+        "label": "声音和未读标记",
+        "description": "通知声音和标签页上的未读数，在“通知”页面设置。"
+      }
+    },
+    "about": {
+      "title": "关于 {appName}"
+    },
+    "sign_out": {
+      "description": "在此设备上退出此账户。"
+    }
+  },
   "setup": {
     "title": "Bulwark Webmail 设置",
     "subtitle": "在浏览器中配置你的网页邮箱实例。",

@@ -3367,6 +3367,81 @@
       }
     }
   },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Offline",
+      "privacy": "Privacy",
+      "about": "About"
+    },
+    "search": {
+      "signature": "signature email signature sign-off footer",
+      "sign_out": "sign out log out logout log off sign off",
+      "app_lock": "PIN lock code passcode lock screen",
+      "text_size": "font size bigger text larger text zoom",
+      "vacation": "autoreply auto-reply automatic reply out of office away vacation holiday",
+      "two_factor": "2FA two-factor two-step MFA OTP authenticator one-time code",
+      "encryption": "S/MIME smime PGP OpenPGP encryption certificate",
+      "password": "password change password new password",
+      "offline": "offline without connection no internet download mail storage sync",
+      "wipe": "remove erase wipe device data",
+      "outbox": "outbox unsent waiting queued",
+      "remote_content": "remote images external content tracking pixels trusted senders",
+      "push": "push relay background notifications",
+      "version": "version update about source code GitHub license"
+    },
+    "privacy": {
+      "push_title": "Notifications",
+      "push_link": {
+        "label": "Relay for notifications",
+        "description": "Notifications while the app is closed go through a push relay, which never sees your mail. You choose it on the Notifications page.",
+        "button": "Notifications"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Remote images and trusted senders",
+      "receipts_label": "Read receipts",
+      "senders_label": "Sender pictures",
+      "description": "These settings are on the Privacy page.",
+      "button": "Privacy"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Density and toolbar labels",
+        "description": "How close together list rows are, and whether toolbar buttons show their names, is set on the Appearance page."
+      },
+      "light_mode": {
+        "label": "Light background for messages",
+        "description": "Showing messages on a light background in dark mode is set on the Reading page."
+      },
+      "calendar": {
+        "label": "Event previews in the calendar",
+        "description": "Whether pointing at an event shows its details is set on the Calendar page."
+      },
+      "list": {
+        "label": "Conversations and preview lines",
+        "description": "Grouping by conversation and the preview line under each message are set on the Message list page."
+      },
+      "reading": {
+        "label": "Marking mail as read",
+        "description": "When a message counts as read, and where you go after deleting or moving it, is set on the Reading page."
+      },
+      "send_warnings_description": "Undo send, and the warnings about a missing subject, a forgotten attachment or placeholder text.",
+      "bulk_delete": {
+        "label": "Asking before deleting several messages",
+        "description": "This is set on the Message list page."
+      },
+      "sounds": {
+        "label": "Sounds and the unread badge",
+        "description": "Notification sounds and the unread count on the tab are set on the Notifications page."
+      }
+    },
+    "about": {
+      "title": "About {appName}"
+    },
+    "sign_out": {
+      "description": "Sign out of this account on this device."
+    }
+  },
   "setup": {
     "title": "Bulwark Webmail setup",
     "subtitle": "Configure your webmail instance from the browser.",

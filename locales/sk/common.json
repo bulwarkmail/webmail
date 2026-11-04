@@ -3367,6 +3367,81 @@
       }
     }
   },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Offline",
+      "privacy": "Súkromie",
+      "about": "O aplikácii"
+    },
+    "search": {
+      "signature": "podpis e-mailový podpis päta",
+      "sign_out": "odhlásiť odhlásenie logout",
+      "app_lock": "PIN zámok kód uzamknúť obrazovka",
+      "text_size": "veľkosť písma väčší text zoom zväčšiť",
+      "vacation": "automatická odpoveď mimo kancelárie neprítomnosť dovolenka autoreply",
+      "two_factor": "2FA dvojfázové dvojfaktorové MFA OTP autentifikátor jednorazový kód",
+      "encryption": "S/MIME smime PGP OpenPGP šifrovanie certifikát",
+      "password": "heslo zmeniť heslo nové heslo",
+      "offline": "offline bez pripojenia bez internetu stiahnuť úložisko synchronizácia",
+      "wipe": "odstrániť zmazať vymazať zariadenie údaje",
+      "outbox": "na odoslanie neodoslané čakajúce front",
+      "remote_content": "vzdialené obrázky externý obsah sledovanie pixely dôveryhodní odosielatelia",
+      "push": "push relay na pozadí upozornenia",
+      "version": "verzia aktualizácia o aplikácii zdrojový kód GitHub licencia"
+    },
+    "privacy": {
+      "push_title": "Upozornenia",
+      "push_link": {
+        "label": "Relay pre upozornenia",
+        "description": "Upozornenia pri zatvorenej aplikácii idú cez push relay, ktorý nikdy nevidí vašu poštu. Vyberiete ho na stránke Upozornenia.",
+        "button": "Upozornenia"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Vzdialené obrázky a dôveryhodní odosielatelia",
+      "receipts_label": "Potvrdenia o prečítaní",
+      "senders_label": "Obrázky odosielateľov",
+      "description": "Tieto nastavenia nájdete na stránke Súkromie.",
+      "button": "Súkromie"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Hustota a popisy panela",
+        "description": "Ako tesne sú riadky zoznamu a či tlačidlá ukazujú svoj názov, nastavíte na stránke Vzhľad."
+      },
+      "light_mode": {
+        "label": "Svetlé pozadie správ",
+        "description": "Zobrazenie správ na svetlom pozadí v tmavom režime nastavíte na stránke Čítanie."
+      },
+      "calendar": {
+        "label": "Náhľad udalostí v kalendári",
+        "description": "Či ukázanie na udalosť zobrazí jej podrobnosti, nastavíte na stránke Kalendár."
+      },
+      "list": {
+        "label": "Konverzácie a riadky náhľadu",
+        "description": "Zoskupenie podľa konverzácie a riadok náhľadu pod každou správou nastavíte na stránke Zoznam správ."
+      },
+      "reading": {
+        "label": "Označenie ako prečítané",
+        "description": "Kedy sa správa počíta ako prečítaná a kam sa dostanete po zmazaní alebo presune, nastavíte na stránke Čítanie."
+      },
+      "send_warnings_description": "Zrušenie odoslania a upozornenia na chýbajúci predmet, zabudnutú prílohu alebo zástupný text.",
+      "bulk_delete": {
+        "label": "Opýtať sa pred zmazaním viacerých správ",
+        "description": "To nastavíte na stránke Zoznam správ."
+      },
+      "sounds": {
+        "label": "Zvuky a počet neprečítaných",
+        "description": "Zvuky upozornení a počet neprečítaných na karte nastavíte na stránke Upozornenia."
+      }
+    },
+    "about": {
+      "title": "O aplikácii {appName}"
+    },
+    "sign_out": {
+      "description": "Odhlásiť tento účet na tomto zariadení."
+    }
+  },
   "setup": {
     "title": "Nastavenie Bulwark Webmail",
     "subtitle": "Nastavte svoju inštanciu webmailu v prehliadači.",

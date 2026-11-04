@@ -3367,6 +3367,81 @@
       }
     }
   },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "離線",
+      "privacy": "隱私",
+      "about": "關於"
+    },
+    "search": {
+      "signature": "簽名 郵件簽名 頁尾",
+      "sign_out": "登出 退出 logout",
+      "app_lock": "PIN 鎖定 密碼鎖 鎖定畫面",
+      "text_size": "字型大小 字級 大字 放大 縮放",
+      "vacation": "自動回覆 不在辦公室 外出 休假 假期 autoreply",
+      "two_factor": "2FA 雙重驗證 兩步驟驗證 MFA OTP 驗證器 一次性驗證碼",
+      "encryption": "S/MIME smime PGP OpenPGP 加密 憑證",
+      "password": "密碼 變更密碼 新密碼",
+      "offline": "離線 offline 無網路 無連線 下載 儲存空間 同步",
+      "wipe": "移除 刪除 清除 裝置 資料",
+      "outbox": "寄件匣 未寄出 等待中 佇列",
+      "remote_content": "遠端圖片 外部內容 追蹤 像素 信任的寄件者",
+      "push": "推播 push 中繼 背景 通知",
+      "version": "版本 更新 關於 原始碼 GitHub 授權"
+    },
+    "privacy": {
+      "push_title": "通知",
+      "push_link": {
+        "label": "通知中繼",
+        "description": "應用程式關閉時的通知會經過推播中繼，中繼永遠看不到你的郵件。可在「通知」頁面選擇。",
+        "button": "通知"
+      }
+    },
+    "privacy_links": {
+      "images_label": "遠端圖片和信任的寄件者",
+      "receipts_label": "讀取回條",
+      "senders_label": "寄件者圖片",
+      "description": "這些設定在「隱私」頁面。",
+      "button": "隱私"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "密度和按鈕標籤",
+        "description": "清單列的疏密以及按鈕是否顯示名稱，在「外觀」頁面設定。"
+      },
+      "light_mode": {
+        "label": "郵件使用淺色背景",
+        "description": "深色模式下郵件是否使用淺色背景，在「閱讀」頁面設定。"
+      },
+      "calendar": {
+        "label": "行事曆中的活動預覽",
+        "description": "指向活動時是否顯示詳細資料，在「行事曆」頁面設定。"
+      },
+      "list": {
+        "label": "對話和預覽列",
+        "description": "依對話分組以及每封郵件下方的預覽列，在「郵件清單」頁面設定。"
+      },
+      "reading": {
+        "label": "標示為已讀",
+        "description": "郵件何時算作已讀，以及刪除或移動後跳到哪裡，在「閱讀」頁面設定。"
+      },
+      "send_warnings_description": "復原傳送，以及缺少主旨、忘記附件或預留文字的提醒。",
+      "bulk_delete": {
+        "label": "刪除多封郵件前詢問",
+        "description": "在「郵件清單」頁面設定。"
+      },
+      "sounds": {
+        "label": "音效和未讀標記",
+        "description": "通知音效和分頁上的未讀數，在「通知」頁面設定。"
+      }
+    },
+    "about": {
+      "title": "關於 {appName}"
+    },
+    "sign_out": {
+      "description": "在此裝置上登出此帳號。"
+    }
+  },
   "setup": {
     "title": "Bulwark Webmail 設定",
     "subtitle": "在瀏覽器中設定你的網頁郵件執行個體。",

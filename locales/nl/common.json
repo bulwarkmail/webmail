@@ -3367,6 +3367,81 @@
       }
     }
   },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Offline",
+      "privacy": "Privacy",
+      "about": "Over"
+    },
+    "search": {
+      "signature": "handtekening e-mailhandtekening ondertekening voettekst",
+      "sign_out": "afmelden uitloggen logout",
+      "app_lock": "PIN vergrendeling code vergrendelscherm",
+      "text_size": "lettergrootte grotere tekst zoom vergroten",
+      "vacation": "automatisch antwoord afwezig vakantie buiten kantoor autoreply",
+      "two_factor": "2FA tweestaps twee-factor MFA OTP authenticator eenmalige code",
+      "encryption": "S/MIME smime PGP OpenPGP versleuteling certificaat",
+      "password": "wachtwoord wijzigen nieuw wachtwoord",
+      "offline": "offline zonder verbinding zonder internet downloaden opslag synchroniseren",
+      "wipe": "verwijderen wissen apparaat gegevens",
+      "outbox": "postvak uit niet verzonden wachtend wachtrij",
+      "remote_content": "externe afbeeldingen externe inhoud tracking pixels vertrouwde afzenders",
+      "push": "push relay achtergrond meldingen",
+      "version": "versie update over broncode GitHub licentie"
+    },
+    "privacy": {
+      "push_title": "Meldingen",
+      "push_link": {
+        "label": "Relay voor meldingen",
+        "description": "Meldingen terwijl de app dicht is gaan via een push-relay, die uw mail nooit ziet. U kiest die op de pagina Meldingen.",
+        "button": "Meldingen"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Externe afbeeldingen en vertrouwde afzenders",
+      "receipts_label": "Leesbevestigingen",
+      "senders_label": "Afzenderafbeeldingen",
+      "description": "Deze instellingen staan op de pagina Privacy.",
+      "button": "Privacy"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Dichtheid en knoplabels",
+        "description": "Hoe dicht de rijen in de lijst staan en of knoppen hun naam tonen, stelt u in op de pagina Weergave."
+      },
+      "light_mode": {
+        "label": "Lichte achtergrond voor berichten",
+        "description": "Berichten op een lichte achtergrond tonen in donkere modus stelt u in op de pagina Lezen."
+      },
+      "calendar": {
+        "label": "Voorbeeld van afspraken in de agenda",
+        "description": "Of wijzen naar een afspraak de details toont, stelt u in op de pagina Agenda."
+      },
+      "list": {
+        "label": "Gesprekken en voorbeeldregels",
+        "description": "Groeperen per gesprek en de voorbeeldregel onder elk bericht stelt u in op de pagina Berichtenlijst."
+      },
+      "reading": {
+        "label": "Als gelezen markeren",
+        "description": "Wanneer een bericht als gelezen telt, en waar u na verwijderen of verplaatsen heen gaat, stelt u in op de pagina Lezen."
+      },
+      "send_warnings_description": "Verzenden ongedaan maken en de waarschuwingen voor een ontbrekend onderwerp, een vergeten bijlage of opvultekst.",
+      "bulk_delete": {
+        "label": "Vragen voor het verwijderen van meerdere berichten",
+        "description": "Dit stelt u in op de pagina Berichtenlijst."
+      },
+      "sounds": {
+        "label": "Geluiden en de teller voor ongelezen",
+        "description": "Meldingsgeluiden en het aantal ongelezen op het tabblad stelt u in op de pagina Meldingen."
+      }
+    },
+    "about": {
+      "title": "Over {appName}"
+    },
+    "sign_out": {
+      "description": "Dit account op dit apparaat afmelden."
+    }
+  },
   "setup": {
     "title": "Bulwark Webmail instellen",
     "subtitle": "Stel je webmailinstantie in vanuit de browser.",

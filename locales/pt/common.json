@@ -3367,6 +3367,81 @@
       }
     }
   },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Offline",
+      "privacy": "Privacidade",
+      "about": "Sobre"
+    },
+    "search": {
+      "signature": "assinatura assinatura de email rodapé",
+      "sign_out": "sair terminar sessão desconectar logout",
+      "app_lock": "PIN bloqueio código bloquear ecrã tela",
+      "text_size": "tamanho da fonte texto maior zoom ampliar",
+      "vacation": "resposta automática fora do escritório ausente férias autoreply",
+      "two_factor": "2FA dois fatores duas etapas MFA OTP autenticador código único",
+      "encryption": "S/MIME smime PGP OpenPGP criptografia certificado",
+      "password": "senha palavra-passe alterar senha nova senha",
+      "offline": "offline sem conexão sem internet baixar armazenamento sincronizar",
+      "wipe": "remover apagar excluir dispositivo dados",
+      "outbox": "caixa de saída não enviado em espera fila",
+      "remote_content": "imagens remotas conteúdo externo rastreamento pixels remetentes confiáveis",
+      "push": "push retransmissor segundo plano notificações",
+      "version": "versão atualização sobre código-fonte GitHub licença"
+    },
+    "privacy": {
+      "push_title": "Notificações",
+      "push_link": {
+        "label": "Retransmissor de notificações",
+        "description": "As notificações com o app fechado passam por um retransmissor push, que nunca vê seus e-mails. Você o escolhe na página Notificações.",
+        "button": "Notificações"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Imagens remotas e remetentes confiáveis",
+      "receipts_label": "Confirmações de leitura",
+      "senders_label": "Imagens dos remetentes",
+      "description": "Estas configurações estão na página Privacidade.",
+      "button": "Privacidade"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Densidade e rótulos da barra",
+        "description": "O espaçamento das linhas da lista e se os botões mostram o nome são definidos na página Aparência."
+      },
+      "light_mode": {
+        "label": "Fundo claro para as mensagens",
+        "description": "Mostrar as mensagens com fundo claro no modo escuro é definido na página Leitura."
+      },
+      "calendar": {
+        "label": "Pré-visualização de eventos no calendário",
+        "description": "Se apontar para um evento mostra os detalhes é definido na página Calendário."
+      },
+      "list": {
+        "label": "Conversas e linhas de pré-visualização",
+        "description": "O agrupamento por conversa e a linha de pré-visualização de cada mensagem são definidos na página Lista de mensagens."
+      },
+      "reading": {
+        "label": "Marcar como lido",
+        "description": "Quando uma mensagem conta como lida, e para onde você vai depois de apagá-la ou movê-la, é definido na página Leitura."
+      },
+      "send_warnings_description": "Desfazer envio e os avisos de assunto vazio, anexo esquecido ou texto provisório.",
+      "bulk_delete": {
+        "label": "Perguntar antes de apagar várias mensagens",
+        "description": "Isto é definido na página Lista de mensagens."
+      },
+      "sounds": {
+        "label": "Sons e contador de não lidas",
+        "description": "Os sons de notificação e o número de não lidas na aba são definidos na página Notificações."
+      }
+    },
+    "about": {
+      "title": "Sobre o {appName}"
+    },
+    "sign_out": {
+      "description": "Sair desta conta neste dispositivo."
+    }
+  },
   "setup": {
     "title": "Configuração do Bulwark Webmail",
     "subtitle": "Configure a sua instância de webmail a partir do navegador.",

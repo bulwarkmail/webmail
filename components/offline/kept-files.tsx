@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { formatFileSize } from '@/lib/utils';
 import { useKeptFiles } from '@/hooks/use-kept-files';
 
-/** The files this account keeps until told otherwise, in Settings > Backup & reset > Offline. */
+/** The files this account keeps until told otherwise, in Settings > Offline. */
 export function KeptFiles({ account }: { account: string }) {
   const t = useTranslations('offlineStorage');
   const { pinned, unpin } = useKeptFiles(account);

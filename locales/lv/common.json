@@ -3367,6 +3367,81 @@
       }
     }
   },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Bezsaistē",
+      "privacy": "Privātums",
+      "about": "Par"
+    },
+    "search": {
+      "signature": "paraksts e-pasta paraksts kājene",
+      "sign_out": "izrakstīties iziet logout",
+      "app_lock": "PIN slēdzene kods bloķēšanas ekrāns",
+      "text_size": "fonta izmērs lielāks teksts tālummaiņa palielināt",
+      "vacation": "automātiskā atbilde ārpus biroja prombūtne atvaļinājums autoreply",
+      "two_factor": "2FA divpakāpju divfaktoru MFA OTP autentifikators vienreizējs kods",
+      "encryption": "S/MIME smime PGP OpenPGP šifrēšana sertifikāts",
+      "password": "parole mainīt paroli jauna parole",
+      "offline": "bezsaistē offline bez savienojuma bez interneta lejupielādēt krātuve sinhronizēt",
+      "wipe": "noņemt dzēst notīrīt ierīce dati",
+      "outbox": "izsūtne nenosūtīts gaida rinda",
+      "remote_content": "attāli attēli ārējs saturs izsekošana pikseļi uzticami sūtītāji",
+      "push": "push retranslators fonā paziņojumi",
+      "version": "versija atjauninājums par pirmkods GitHub licence"
+    },
+    "privacy": {
+      "push_title": "Paziņojumi",
+      "push_link": {
+        "label": "Paziņojumu retranslators",
+        "description": "Paziņojumi, kamēr lietotne ir aizvērta, iet caur push retranslatoru, kas nekad neredz jūsu pastu. To izvēlaties lapā Paziņojumi.",
+        "button": "Paziņojumi"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Attāli attēli un uzticami sūtītāji",
+      "receipts_label": "Izlasīšanas apstiprinājumi",
+      "senders_label": "Sūtītāju attēli",
+      "description": "Šie iestatījumi ir lapā Privātums.",
+      "button": "Privātums"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Blīvums un pogu nosaukumi",
+        "description": "Cik cieši ir saraksta rindas un vai pogas rāda nosaukumu, iestatāt lapā Izskats."
+      },
+      "light_mode": {
+        "label": "Gaišs fons vēstulēm",
+        "description": "Vēstuļu rādīšanu uz gaiša fona tumšajā režīmā iestatāt lapā Lasīšana."
+      },
+      "calendar": {
+        "label": "Notikumu priekšskatījums kalendārā",
+        "description": "Vai, norādot uz notikumu, tiek rādīta informācija, iestatāt lapā Kalendārs."
+      },
+      "list": {
+        "label": "Sarunas un priekšskatījuma rindas",
+        "description": "Grupēšanu pa sarunām un priekšskatījuma rindu zem katras vēstules iestatāt lapā Vēstuļu saraksts."
+      },
+      "reading": {
+        "label": "Atzīmēt kā izlasītu",
+        "description": "Kad vēstule skaitās izlasīta un kur nonākat pēc dzēšanas vai pārvietošanas, iestatāt lapā Lasīšana."
+      },
+      "send_warnings_description": "Sūtīšanas atsaukšana un brīdinājumi par trūkstošu tēmu, aizmirstu pielikumu vai vietturu tekstu.",
+      "bulk_delete": {
+        "label": "Jautāt pirms vairāku vēstuļu dzēšanas",
+        "description": "To iestatāt lapā Vēstuļu saraksts."
+      },
+      "sounds": {
+        "label": "Skaņas un nelasīto skaits",
+        "description": "Paziņojumu skaņas un nelasīto skaitu cilnē iestatāt lapā Paziņojumi."
+      }
+    },
+    "about": {
+      "title": "Par {appName}"
+    },
+    "sign_out": {
+      "description": "Izrakstīties no šī konta šajā ierīcē."
+    }
+  },
   "setup": {
     "title": "Bulwark Webmail iestatīšana",
     "subtitle": "Iestatiet savu tīmekļa pasta instanci pārlūkā.",

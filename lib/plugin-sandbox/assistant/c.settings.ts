@@ -19,7 +19,7 @@ import { settingsHooks } from '../../plugin-hooks';
 import { noThirdPartyTraffic } from '../../third-party-mode';
 import { toastDurationAtLeast } from '../../accessibility-settings';
 import { detectBrowserLocale } from '@/i18n/detect-locale';
-import { getByPath } from '../../settings-search';
+import { getByPath, settingsTabLabelKey } from '../../settings-search';
 import {
   DENIED_SETTINGS, PAGE_GATES, SETTINGS_SCHEMA, isAllowedSettingValue, settingValueLabelKey,
   type SettingSchemaEntry,
@@ -195,7 +195,7 @@ export async function doDescribeSettings(arg: unknown): Promise<Record<string, S
       key,
       label: format(messages, entry.label) ?? key,
       page: entry.page,
-      pageLabel: format(messages, `settings.tabs.${entry.page}`) ?? entry.page,
+      pageLabel: format(messages, settingsTabLabelKey(entry.page)) ?? entry.page,
       current,
       currentLabel: settingValueLabel(entry, current, messages, locale),
       ...(next !== undefined ? { next: next as SettingValue, nextLabel: settingValueLabel(entry, next, messages, locale) } : {}),

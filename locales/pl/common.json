@@ -3367,6 +3367,81 @@
       }
     }
   },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Offline",
+      "privacy": "Prywatność",
+      "about": "Informacje"
+    },
+    "search": {
+      "signature": "podpis podpis e-mail stopka",
+      "sign_out": "wyloguj wylogowanie logout",
+      "app_lock": "PIN blokada kod zablokuj ekran",
+      "text_size": "rozmiar czcionki większy tekst powiększenie zoom",
+      "vacation": "autoodpowiedź automatyczna odpowiedź poza biurem nieobecność urlop autoreply",
+      "two_factor": "2FA dwuetapowe dwuskładnikowe MFA OTP uwierzytelniacz kod jednorazowy",
+      "encryption": "S/MIME smime PGP OpenPGP szyfrowanie certyfikat",
+      "password": "hasło zmień hasło nowe hasło",
+      "offline": "offline bez połączenia bez internetu pobierz pamięć synchronizacja",
+      "wipe": "usuń wyczyść wymaż urządzenie dane",
+      "outbox": "skrzynka nadawcza niewysłane oczekujące kolejka",
+      "remote_content": "zdalne obrazy treści zewnętrzne śledzenie piksele zaufani nadawcy",
+      "push": "push przekaźnik w tle powiadomienia",
+      "version": "wersja aktualizacja informacje kod źródłowy GitHub licencja"
+    },
+    "privacy": {
+      "push_title": "Powiadomienia",
+      "push_link": {
+        "label": "Przekaźnik powiadomień",
+        "description": "Powiadomienia przy zamkniętej aplikacji idą przez przekaźnik push, który nigdy nie widzi Twojej poczty. Wybierasz go na stronie Powiadomienia.",
+        "button": "Powiadomienia"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Zdalne obrazy i zaufani nadawcy",
+      "receipts_label": "Potwierdzenia przeczytania",
+      "senders_label": "Obrazy nadawców",
+      "description": "Te ustawienia są na stronie Prywatność.",
+      "button": "Prywatność"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Gęstość i etykiety paska",
+        "description": "Odstępy między wierszami listy i to, czy przyciski pokazują nazwy, ustawisz na stronie Wygląd."
+      },
+      "light_mode": {
+        "label": "Jasne tło wiadomości",
+        "description": "Wyświetlanie wiadomości na jasnym tle w trybie ciemnym ustawisz na stronie Czytanie."
+      },
+      "calendar": {
+        "label": "Podgląd wydarzeń w kalendarzu",
+        "description": "To, czy wskazanie wydarzenia pokazuje szczegóły, ustawisz na stronie Kalendarz."
+      },
+      "list": {
+        "label": "Wątki i wiersze podglądu",
+        "description": "Grupowanie w wątki i wiersz podglądu pod każdą wiadomością ustawisz na stronie Lista wiadomości."
+      },
+      "reading": {
+        "label": "Oznaczanie jako przeczytane",
+        "description": "Kiedy wiadomość liczy się jako przeczytana i dokąd trafiasz po usunięciu lub przeniesieniu, ustawisz na stronie Czytanie."
+      },
+      "send_warnings_description": "Cofnięcie wysłania i ostrzeżenia o braku tematu, zapomnianym załączniku lub tekście zastępczym.",
+      "bulk_delete": {
+        "label": "Pytanie przed usunięciem wielu wiadomości",
+        "description": "To ustawisz na stronie Lista wiadomości."
+      },
+      "sounds": {
+        "label": "Dźwięki i licznik nieprzeczytanych",
+        "description": "Dźwięki powiadomień i liczbę nieprzeczytanych na karcie ustawisz na stronie Powiadomienia."
+      }
+    },
+    "about": {
+      "title": "Informacje o {appName}"
+    },
+    "sign_out": {
+      "description": "Wyloguj to konto na tym urządzeniu."
+    }
+  },
   "setup": {
     "title": "Konfiguracja Bulwark Webmail",
     "subtitle": "Skonfiguruj swoją instancję poczty w przeglądarce.",

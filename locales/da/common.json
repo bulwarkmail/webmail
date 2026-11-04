@@ -3367,6 +3367,81 @@
       }
     }
   },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Offline",
+      "privacy": "Privatliv",
+      "about": "Om"
+    },
+    "search": {
+      "signature": "signatur e-mailsignatur sidefod",
+      "sign_out": "log ud logout afmeld",
+      "app_lock": "PIN lås kode låseskærm",
+      "text_size": "skriftstørrelse større tekst zoom forstør",
+      "vacation": "autosvar automatisk svar ikke på kontoret fraværende ferie autoreply",
+      "two_factor": "2FA totrins to-faktor MFA OTP godkendelsesapp engangskode",
+      "encryption": "S/MIME smime PGP OpenPGP kryptering certifikat",
+      "password": "adgangskode skift adgangskode ny adgangskode",
+      "offline": "offline uden forbindelse uden internet hent lager synkroniser",
+      "wipe": "fjern slet ryd enhed data",
+      "outbox": "udbakke ikke sendt venter kø",
+      "remote_content": "eksterne billeder eksternt indhold sporing pixels betroede afsendere",
+      "push": "push relæ baggrund notifikationer",
+      "version": "version opdatering om kildekode GitHub licens"
+    },
+    "privacy": {
+      "push_title": "Notifikationer",
+      "push_link": {
+        "label": "Relæ til notifikationer",
+        "description": "Notifikationer mens appen er lukket går gennem et push-relæ, som aldrig ser din mail. Du vælger det på siden Notifikationer.",
+        "button": "Notifikationer"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Eksterne billeder og betroede afsendere",
+      "receipts_label": "Læsebekræftelser",
+      "senders_label": "Afsenderbilleder",
+      "description": "Disse indstillinger findes på siden Privatliv.",
+      "button": "Privatliv"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Tæthed og knapnavne",
+        "description": "Hvor tæt listens rækker står, og om knapperne viser deres navn, indstilles på siden Udseende."
+      },
+      "light_mode": {
+        "label": "Lys baggrund til beskeder",
+        "description": "At vise beskeder på lys baggrund i mørk tilstand indstilles på siden Læsning."
+      },
+      "calendar": {
+        "label": "Forhåndsvisning af begivenheder i kalenderen",
+        "description": "Om det viser detaljer at pege på en begivenhed, indstilles på siden Kalender."
+      },
+      "list": {
+        "label": "Samtaler og eksempellinjer",
+        "description": "Gruppering efter samtale og eksempellinjen under hver besked indstilles på siden Beskedliste."
+      },
+      "reading": {
+        "label": "Markér som læst",
+        "description": "Hvornår en besked tæller som læst, og hvor du kommer hen efter at have slettet eller flyttet den, indstilles på siden Læsning."
+      },
+      "send_warnings_description": "Fortryd afsendelse og advarslerne om manglende emne, glemt vedhæftning eller pladsholdertekst.",
+      "bulk_delete": {
+        "label": "Spørg før sletning af flere beskeder",
+        "description": "Det indstilles på siden Beskedliste."
+      },
+      "sounds": {
+        "label": "Lyde og tæller for ulæste",
+        "description": "Notifikationslyde og antallet af ulæste i fanen indstilles på siden Notifikationer."
+      }
+    },
+    "about": {
+      "title": "Om {appName}"
+    },
+    "sign_out": {
+      "description": "Log ud af denne konto på denne enhed."
+    }
+  },
   "setup": {
     "title": "Opsætning af Bulwark Webmail",
     "subtitle": "Opsæt din webmailinstans i browseren.",

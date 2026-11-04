@@ -3367,6 +3367,81 @@
       }
     }
   },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Offline",
+      "privacy": "Datenschutz",
+      "about": "Über"
+    },
+    "search": {
+      "signature": "Signatur E-Mail-Signatur Grußformel Fußzeile signature",
+      "sign_out": "abmelden ausloggen Abmeldung logout sign out",
+      "app_lock": "PIN Sperre Code Sperrbildschirm sperren",
+      "text_size": "Schriftgröße größere Schrift Zoom vergrößern",
+      "vacation": "Abwesenheit Abwesenheitsnotiz automatische Antwort Urlaub abwesend Autoreply out of office",
+      "two_factor": "2FA Zwei-Faktor zweistufig MFA OTP Authenticator Einmalcode",
+      "encryption": "S/MIME smime PGP OpenPGP Verschlüsselung Zertifikat",
+      "password": "Passwort Kennwort ändern neues Passwort",
+      "offline": "offline ohne Verbindung ohne Internet Mails herunterladen Speicher synchronisieren",
+      "wipe": "entfernen löschen Gerät Daten zurücksetzen",
+      "outbox": "Postausgang ungesendet wartend Warteschlange",
+      "remote_content": "externe Bilder externe Inhalte Tracking Zählpixel vertrauenswürdige Absender",
+      "push": "Push Relay Hintergrund Benachrichtigungen",
+      "version": "Version Update Info Quellcode GitHub Lizenz"
+    },
+    "privacy": {
+      "push_title": "Benachrichtigungen",
+      "push_link": {
+        "label": "Relay für Benachrichtigungen",
+        "description": "Benachrichtigungen bei geschlossener App laufen über ein Push-Relay, das Ihre E-Mails nie sieht. Sie wählen es auf der Seite Benachrichtigungen.",
+        "button": "Benachrichtigungen"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Externe Bilder und vertrauenswürdige Absender",
+      "receipts_label": "Lesebestätigungen",
+      "senders_label": "Absenderbilder",
+      "description": "Diese Einstellungen finden Sie auf der Seite Datenschutz.",
+      "button": "Datenschutz"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Dichte und Beschriftung der Symbolleiste",
+        "description": "Wie eng die Zeilen der Liste stehen und ob Schaltflächen ihren Namen zeigen, stellen Sie auf der Seite Darstellung ein."
+      },
+      "light_mode": {
+        "label": "Heller Hintergrund für E-Mails",
+        "description": "Ob E-Mails im dunklen Modus auf hellem Hintergrund erscheinen, stellen Sie auf der Seite Lesen ein."
+      },
+      "calendar": {
+        "label": "Terminvorschau im Kalender",
+        "description": "Ob beim Zeigen auf einen Termin seine Details erscheinen, stellen Sie auf der Seite Kalender ein."
+      },
+      "list": {
+        "label": "Unterhaltungen und Vorschauzeilen",
+        "description": "Die Gruppierung nach Unterhaltung und die Vorschauzeile unter jeder E-Mail stellen Sie auf der Seite Nachrichtenliste ein."
+      },
+      "reading": {
+        "label": "E-Mails als gelesen markieren",
+        "description": "Wann eine E-Mail als gelesen gilt und wohin Sie nach dem Löschen oder Verschieben kommen, stellen Sie auf der Seite Lesen ein."
+      },
+      "send_warnings_description": "Senden rückgängig machen und die Warnungen vor fehlendem Betreff, vergessenem Anhang oder Platzhaltertext.",
+      "bulk_delete": {
+        "label": "Nachfragen vor dem Löschen mehrerer E-Mails",
+        "description": "Das stellen Sie auf der Seite Nachrichtenliste ein."
+      },
+      "sounds": {
+        "label": "Töne und Zähler für Ungelesenes",
+        "description": "Benachrichtigungstöne und die Zahl ungelesener E-Mails im Tab stellen Sie auf der Seite Benachrichtigungen ein."
+      }
+    },
+    "about": {
+      "title": "Über {appName}"
+    },
+    "sign_out": {
+      "description": "Von diesem Konto auf diesem Gerät abmelden."
+    }
+  },
   "setup": {
     "title": "Einrichtung von Bulwark Webmail",
     "subtitle": "Richten Sie Ihre Webmail-Instanz im Browser ein.",

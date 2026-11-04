@@ -3367,6 +3367,81 @@
       }
     }
   },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Hors ligne",
+      "privacy": "Confidentialité",
+      "about": "À propos"
+    },
+    "search": {
+      "signature": "signature signature e-mail pied de message",
+      "sign_out": "déconnexion se déconnecter quitter logout",
+      "app_lock": "PIN verrou code verrouillage écran",
+      "text_size": "taille de police texte plus grand zoom agrandir",
+      "vacation": "réponse automatique absence congés vacances absent autoreply",
+      "two_factor": "2FA double authentification deux facteurs MFA OTP authentificateur code unique",
+      "encryption": "S/MIME smime PGP OpenPGP chiffrement certificat",
+      "password": "mot de passe changer nouveau mot de passe",
+      "offline": "hors ligne sans connexion sans internet télécharger stockage synchronisation",
+      "wipe": "supprimer effacer appareil données",
+      "outbox": "boîte d’envoi non envoyé en attente file",
+      "remote_content": "images distantes contenu externe pistage pixels expéditeurs de confiance",
+      "push": "push relais arrière-plan notifications",
+      "version": "version mise à jour à propos code source GitHub licence"
+    },
+    "privacy": {
+      "push_title": "Notifications",
+      "push_link": {
+        "label": "Relais des notifications",
+        "description": "Les notifications reçues quand l’application est fermée passent par un relais push, qui ne voit jamais vos e-mails. Vous le choisissez sur la page Notifications.",
+        "button": "Notifications"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Images distantes et expéditeurs de confiance",
+      "receipts_label": "Accusés de lecture",
+      "senders_label": "Images des expéditeurs",
+      "description": "Ces réglages se trouvent sur la page Confidentialité.",
+      "button": "Confidentialité"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Densité et libellés de la barre d’outils",
+        "description": "L’espacement des lignes de la liste et l’affichage du nom des boutons se règlent sur la page Apparence."
+      },
+      "light_mode": {
+        "label": "Fond clair pour les messages",
+        "description": "L’affichage des messages sur fond clair en mode sombre se règle sur la page Lecture."
+      },
+      "calendar": {
+        "label": "Aperçu des événements dans le calendrier",
+        "description": "L’affichage des détails en pointant un événement se règle sur la page Calendrier."
+      },
+      "list": {
+        "label": "Conversations et lignes d’aperçu",
+        "description": "Le regroupement par conversation et la ligne d’aperçu sous chaque message se règlent sur la page Liste des messages."
+      },
+      "reading": {
+        "label": "Marquer comme lu",
+        "description": "Le moment où un message compte comme lu, et la page affichée après une suppression ou un déplacement, se règlent sur la page Lecture."
+      },
+      "send_warnings_description": "Annulation de l’envoi, et les avertissements pour un objet manquant, une pièce jointe oubliée ou un texte provisoire.",
+      "bulk_delete": {
+        "label": "Confirmer avant de supprimer plusieurs messages",
+        "description": "Ce réglage se trouve sur la page Liste des messages."
+      },
+      "sounds": {
+        "label": "Sons et badge des non lus",
+        "description": "Les sons de notification et le nombre de non lus dans l’onglet se règlent sur la page Notifications."
+      }
+    },
+    "about": {
+      "title": "À propos de {appName}"
+    },
+    "sign_out": {
+      "description": "Se déconnecter de ce compte sur cet appareil."
+    }
+  },
   "setup": {
     "title": "Configuration de Bulwark Webmail",
     "subtitle": "Configurez votre instance de webmail depuis le navigateur.",

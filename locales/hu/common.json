@@ -3367,6 +3367,81 @@
       }
     }
   },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Offline",
+      "privacy": "Adatvédelem",
+      "about": "Névjegy"
+    },
+    "search": {
+      "signature": "aláírás e-mail aláírás lábléc",
+      "sign_out": "kijelentkezés kilépés logout",
+      "app_lock": "PIN zár kód zárolás képernyő",
+      "text_size": "betűméret nagyobb szöveg nagyítás zoom",
+      "vacation": "automatikus válasz házon kívül távol szabadság autoreply",
+      "two_factor": "2FA kétlépcsős kéttényezős MFA OTP hitelesítő egyszeri kód",
+      "encryption": "S/MIME smime PGP OpenPGP titkosítás tanúsítvány",
+      "password": "jelszó jelszócsere új jelszó",
+      "offline": "offline kapcsolat nélkül internet nélkül letöltés tárhely szinkronizálás",
+      "wipe": "eltávolítás törlés kiürítés eszköz adatok",
+      "outbox": "kimenő elküldetlen várakozó sor",
+      "remote_content": "távoli képek külső tartalom követés pixelek megbízható feladók",
+      "push": "push továbbító háttér értesítések",
+      "version": "verzió frissítés névjegy forráskód GitHub licenc"
+    },
+    "privacy": {
+      "push_title": "Értesítések",
+      "push_link": {
+        "label": "Értesítési továbbító",
+        "description": "A bezárt alkalmazás értesítései egy push továbbítón mennek át, amely soha nem látja a leveleit. Az Értesítések oldalon választhatja ki.",
+        "button": "Értesítések"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Távoli képek és megbízható feladók",
+      "receipts_label": "Olvasási visszaigazolások",
+      "senders_label": "Feladók képei",
+      "description": "Ezek a beállítások az Adatvédelem oldalon vannak.",
+      "button": "Adatvédelem"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Sűrűség és gombfeliratok",
+        "description": "A lista sorainak sűrűségét és azt, hogy a gombok mutatják-e a nevüket, a Megjelenés oldalon állíthatja be."
+      },
+      "light_mode": {
+        "label": "Világos háttér az üzeneteknek",
+        "description": "Az üzenetek világos háttéren való megjelenítését sötét módban az Olvasás oldalon állíthatja be."
+      },
+      "calendar": {
+        "label": "Események előnézete a naptárban",
+        "description": "Azt, hogy egy eseményre mutatva megjelennek-e a részletei, a Naptár oldalon állíthatja be."
+      },
+      "list": {
+        "label": "Beszélgetések és előnézeti sorok",
+        "description": "A beszélgetések szerinti csoportosítást és az üzenetek alatti előnézeti sort az Üzenetlista oldalon állíthatja be."
+      },
+      "reading": {
+        "label": "Olvasottnak jelölés",
+        "description": "Azt, hogy mikor számít olvasottnak egy üzenet, és hová kerül törlés vagy áthelyezés után, az Olvasás oldalon állíthatja be."
+      },
+      "send_warnings_description": "Küldés visszavonása és a figyelmeztetések hiányzó tárgy, elfelejtett melléklet vagy helykitöltő szöveg esetén.",
+      "bulk_delete": {
+        "label": "Kérdés több üzenet törlése előtt",
+        "description": "Ezt az Üzenetlista oldalon állíthatja be."
+      },
+      "sounds": {
+        "label": "Hangok és az olvasatlanok száma",
+        "description": "Az értesítési hangokat és a lapon látható olvasatlan számot az Értesítések oldalon állíthatja be."
+      }
+    },
+    "about": {
+      "title": "Névjegy: {appName}"
+    },
+    "sign_out": {
+      "description": "Kijelentkezés ebből a fiókból ezen az eszközön."
+    }
+  },
   "setup": {
     "title": "A Bulwark Webmail beállítása",
     "subtitle": "Állítsa be a webmail-példányát a böngészőből.",

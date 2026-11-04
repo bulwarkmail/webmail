@@ -3367,6 +3367,81 @@
       }
     }
   },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Çevrimdışı",
+      "privacy": "Gizlilik",
+      "about": "Hakkında"
+    },
+    "search": {
+      "signature": "imza e-posta imzası alt bilgi",
+      "sign_out": "oturumu kapat çıkış yap logout",
+      "app_lock": "PIN kilit kod kilit ekranı",
+      "text_size": "yazı tipi boyutu büyük metin yakınlaştır zoom",
+      "vacation": "otomatik yanıt ofis dışında uzakta tatil izin autoreply",
+      "two_factor": "2FA iki faktörlü iki adımlı MFA OTP doğrulayıcı tek kullanımlık kod",
+      "encryption": "S/MIME smime PGP OpenPGP şifreleme sertifika",
+      "password": "parola şifre parolayı değiştir yeni parola",
+      "offline": "çevrimdışı bağlantısız internetsiz indir depolama eşitleme",
+      "wipe": "kaldır sil temizle cihaz veriler",
+      "outbox": "giden kutusu gönderilmemiş bekleyen kuyruk",
+      "remote_content": "uzak resimler harici içerik izleme pikseller güvenilir gönderenler",
+      "push": "push aktarıcı arka plan bildirimler",
+      "version": "sürüm güncelleme hakkında kaynak kodu GitHub lisans"
+    },
+    "privacy": {
+      "push_title": "Bildirimler",
+      "push_link": {
+        "label": "Bildirim aktarıcısı",
+        "description": "Uygulama kapalıyken gelen bildirimler, e-postanızı asla görmeyen bir push aktarıcısından geçer. Bunu Bildirimler sayfasında seçersiniz.",
+        "button": "Bildirimler"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Uzak resimler ve güvenilir gönderenler",
+      "receipts_label": "Okundu bilgileri",
+      "senders_label": "Gönderen resimleri",
+      "description": "Bu ayarlar Gizlilik sayfasındadır.",
+      "button": "Gizlilik"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Yoğunluk ve düğme etiketleri",
+        "description": "Liste satırlarının ne kadar sık olduğu ve düğmelerin adını gösterip göstermediği Görünüm sayfasında ayarlanır."
+      },
+      "light_mode": {
+        "label": "İletiler için açık arka plan",
+        "description": "Koyu modda iletilerin açık arka planda gösterilmesi Okuma sayfasında ayarlanır."
+      },
+      "calendar": {
+        "label": "Takvimde etkinlik önizlemesi",
+        "description": "Bir etkinliğin üzerine gelince ayrıntılarının görünüp görünmeyeceği Takvim sayfasında ayarlanır."
+      },
+      "list": {
+        "label": "Konuşmalar ve önizleme satırları",
+        "description": "Konuşmaya göre gruplama ve her iletinin altındaki önizleme satırı İleti listesi sayfasında ayarlanır."
+      },
+      "reading": {
+        "label": "Okundu olarak işaretleme",
+        "description": "Bir iletinin ne zaman okunmuş sayılacağı ve silip taşıdıktan sonra nereye gideceğiniz Okuma sayfasında ayarlanır."
+      },
+      "send_warnings_description": "Göndermeyi geri alma ve eksik konu, unutulan ek veya yer tutucu metin uyarıları.",
+      "bulk_delete": {
+        "label": "Birden çok iletiyi silmeden önce sor",
+        "description": "Bu, İleti listesi sayfasında ayarlanır."
+      },
+      "sounds": {
+        "label": "Sesler ve okunmamış sayacı",
+        "description": "Bildirim sesleri ve sekmedeki okunmamış sayısı Bildirimler sayfasında ayarlanır."
+      }
+    },
+    "about": {
+      "title": "{appName} hakkında"
+    },
+    "sign_out": {
+      "description": "Bu cihazda bu hesabın oturumunu kapatın."
+    }
+  },
   "setup": {
     "title": "Bulwark Webmail kurulumu",
     "subtitle": "Webmail örneğinizi tarayıcıdan yapılandırın.",

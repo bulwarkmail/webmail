@@ -3367,6 +3367,81 @@
       }
     }
   },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "오프라인",
+      "privacy": "개인정보",
+      "about": "정보"
+    },
+    "search": {
+      "signature": "서명 이메일 서명 바닥글",
+      "sign_out": "로그아웃 로그 아웃 logout 나가기",
+      "app_lock": "PIN 잠금 코드 잠금 화면",
+      "text_size": "글꼴 크기 큰 글자 확대 줌",
+      "vacation": "자동 응답 부재중 휴가 외근 autoreply",
+      "two_factor": "2FA 2단계 2요소 MFA OTP 인증 앱 일회용 코드",
+      "encryption": "S/MIME smime PGP OpenPGP 암호화 인증서",
+      "password": "비밀번호 암호 비밀번호 변경 새 비밀번호",
+      "offline": "오프라인 offline 연결 없음 인터넷 없음 다운로드 저장 공간 동기화",
+      "wipe": "제거 삭제 지우기 기기 데이터",
+      "outbox": "보낼 편지함 보내지 않음 대기 중 대기열",
+      "remote_content": "원격 이미지 외부 콘텐츠 추적 픽셀 신뢰하는 보낸 사람",
+      "push": "푸시 push 릴레이 백그라운드 알림",
+      "version": "버전 업데이트 정보 소스 코드 GitHub 라이선스"
+    },
+    "privacy": {
+      "push_title": "알림",
+      "push_link": {
+        "label": "알림 릴레이",
+        "description": "앱이 닫혀 있을 때의 알림은 푸시 릴레이를 거치며, 릴레이는 메일을 절대 보지 않아요. 알림 페이지에서 선택해요.",
+        "button": "알림"
+      }
+    },
+    "privacy_links": {
+      "images_label": "원격 이미지와 신뢰하는 보낸 사람",
+      "receipts_label": "읽음 확인",
+      "senders_label": "보낸 사람 사진",
+      "description": "이 설정은 개인정보 페이지에 있어요.",
+      "button": "개인정보"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "밀도와 버튼 이름",
+        "description": "목록 줄 간격과 버튼에 이름을 표시할지는 모양 페이지에서 설정해요."
+      },
+      "light_mode": {
+        "label": "메시지의 밝은 배경",
+        "description": "다크 모드에서 메시지를 밝은 배경으로 보여줄지는 읽기 페이지에서 설정해요."
+      },
+      "calendar": {
+        "label": "캘린더의 일정 미리 보기",
+        "description": "일정을 가리킬 때 자세한 내용을 보여줄지는 캘린더 페이지에서 설정해요."
+      },
+      "list": {
+        "label": "대화와 미리 보기 줄",
+        "description": "대화별 묶기와 각 메시지 아래의 미리 보기 줄은 메시지 목록 페이지에서 설정해요."
+      },
+      "reading": {
+        "label": "읽음으로 표시",
+        "description": "메시지를 언제 읽음으로 볼지, 삭제하거나 옮긴 뒤 어디로 갈지는 읽기 페이지에서 설정해요."
+      },
+      "send_warnings_description": "보내기 취소, 그리고 제목 없음, 첨부 파일 누락, 자리 표시 텍스트 경고.",
+      "bulk_delete": {
+        "label": "여러 메시지를 삭제하기 전에 묻기",
+        "description": "메시지 목록 페이지에서 설정해요."
+      },
+      "sounds": {
+        "label": "소리와 읽지 않음 배지",
+        "description": "알림 소리와 탭의 읽지 않은 개수는 알림 페이지에서 설정해요."
+      }
+    },
+    "about": {
+      "title": "{appName} 정보"
+    },
+    "sign_out": {
+      "description": "이 기기에서 이 계정을 로그아웃해요."
+    }
+  },
   "setup": {
     "title": "Bulwark Webmail 설정",
     "subtitle": "브라우저에서 웹메일 인스턴스를 설정하세요.",

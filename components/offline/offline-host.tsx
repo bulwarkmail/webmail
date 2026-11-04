@@ -43,7 +43,7 @@ export function OfflineHost() {
   useEffect(() => {
     const show = (notice: OfflineNotice) => {
       const tr = tRef.current;
-      const openStorage = { label: tStorageRef.current('open_settings'), onClick: () => routerRef.current.push(buildSettingsPath('backup', 'offline')) };
+      const openStorage = { label: tStorageRef.current('open_settings'), onClick: () => routerRef.current.push(buildSettingsPath('offline', 'offline')) };
       switch (notice.kind) {
         case 'queued':
           toast.info(tr('toast.queued'));

@@ -55,7 +55,7 @@ export function OfflineSection({ draft }: { draft: OrgPolicyDraft }) {
     <SettingsSection
       id="offline"
       title="Offline mode"
-      description="People can keep mail on a device to read and write it without a connection. In browsers it is off until someone turns on “Keep mail on this device” in Settings > Backup & reset. In the Bulwark desktop app it is on unless you forbid it here."
+      description="People can keep mail on a device to read and write it without a connection. In browsers it is off until someone turns on “Keep mail on this device” in Settings > Offline. In the Bulwark desktop app it is on unless you forbid it here."
     >
       <SettingItem
         label="Don't let people keep mail on their devices"

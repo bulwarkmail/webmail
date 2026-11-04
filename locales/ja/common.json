@@ -3367,6 +3367,81 @@
       }
     }
   },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "オフライン",
+      "privacy": "プライバシー",
+      "about": "情報"
+    },
+    "search": {
+      "signature": "署名 メール署名 フッター",
+      "sign_out": "サインアウト ログアウト logout",
+      "app_lock": "PIN ロック コード ロック画面",
+      "text_size": "文字サイズ フォントサイズ 大きい文字 拡大 ズーム",
+      "vacation": "自動返信 不在 休暇 外出中 autoreply",
+      "two_factor": "2FA 二要素 二段階 MFA OTP 認証アプリ ワンタイムコード",
+      "encryption": "S/MIME smime PGP OpenPGP 暗号化 証明書",
+      "password": "パスワード パスワード変更 新しいパスワード",
+      "offline": "オフライン offline 接続なし インターネットなし ダウンロード ストレージ 同期",
+      "wipe": "削除 消去 デバイス データ",
+      "outbox": "送信トレイ 未送信 送信待ち キュー",
+      "remote_content": "外部画像 外部コンテンツ トラッキング ピクセル 信頼できる差出人",
+      "push": "プッシュ push リレー バックグラウンド 通知",
+      "version": "バージョン 更新 情報 ソースコード GitHub ライセンス"
+    },
+    "privacy": {
+      "push_title": "通知",
+      "push_link": {
+        "label": "通知のリレー",
+        "description": "アプリを閉じているときの通知はプッシュリレーを通りますが、リレーがメールを見ることはありません。通知ページで選択します。",
+        "button": "通知"
+      }
+    },
+    "privacy_links": {
+      "images_label": "外部画像と信頼できる差出人",
+      "receipts_label": "開封確認",
+      "senders_label": "差出人の画像",
+      "description": "これらの設定はプライバシーページにあります。",
+      "button": "プライバシー"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "表示密度とボタンのラベル",
+        "description": "リストの行の間隔とボタンに名前を表示するかどうかは、外観ページで設定します。"
+      },
+      "light_mode": {
+        "label": "メッセージの明るい背景",
+        "description": "ダークモードでメッセージを明るい背景で表示するかどうかは、閲覧ページで設定します。"
+      },
+      "calendar": {
+        "label": "カレンダーの予定のプレビュー",
+        "description": "予定にポインターを合わせたときに詳細を表示するかどうかは、カレンダーページで設定します。"
+      },
+      "list": {
+        "label": "スレッドとプレビュー行",
+        "description": "スレッドでまとめるかどうかと、各メッセージの下のプレビュー行は、メッセージ一覧ページで設定します。"
+      },
+      "reading": {
+        "label": "既読にする",
+        "description": "メッセージをいつ既読にするか、削除や移動の後にどこへ戻るかは、閲覧ページで設定します。"
+      },
+      "send_warnings_description": "送信の取り消しと、件名なし、添付忘れ、仮の文字列の警告。",
+      "bulk_delete": {
+        "label": "複数のメッセージを削除する前に確認",
+        "description": "これはメッセージ一覧ページで設定します。"
+      },
+      "sounds": {
+        "label": "サウンドと未読バッジ",
+        "description": "通知音とタブの未読数は、通知ページで設定します。"
+      }
+    },
+    "about": {
+      "title": "{appName} について"
+    },
+    "sign_out": {
+      "description": "このデバイスでこのアカウントからサインアウトします。"
+    }
+  },
   "setup": {
     "title": "Bulwark Webmail のセットアップ",
     "subtitle": "ブラウザーから Web メールのインスタンスを設定します。",

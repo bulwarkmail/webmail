@@ -3367,6 +3367,81 @@
       }
     }
   },
+  "uxs_structure": {
+    "tabs": {
+      "offline": "Frakoblet",
+      "privacy": "Personvern",
+      "about": "Om"
+    },
+    "search": {
+      "signature": "signatur e-postsignatur bunntekst",
+      "sign_out": "logg ut logout avlogging",
+      "app_lock": "PIN lås kode låseskjerm",
+      "text_size": "skriftstørrelse større tekst zoom forstørr",
+      "vacation": "autosvar automatisk svar fraværende ferie ikke på kontoret autoreply",
+      "two_factor": "2FA totrinns tofaktor MFA OTP autentiseringsapp engangskode",
+      "encryption": "S/MIME smime PGP OpenPGP kryptering sertifikat",
+      "password": "passord endre passord nytt passord",
+      "offline": "frakoblet offline uten tilkobling uten internett last ned lagring synkroniser",
+      "wipe": "fjern slett tøm enhet data",
+      "outbox": "utboks ikke sendt venter kø",
+      "remote_content": "eksterne bilder eksternt innhold sporing piksler klarerte avsendere",
+      "push": "push relé bakgrunn varsler",
+      "version": "versjon oppdatering om kildekode GitHub lisens"
+    },
+    "privacy": {
+      "push_title": "Varsler",
+      "push_link": {
+        "label": "Relé for varsler",
+        "description": "Varsler mens appen er lukket går gjennom et push-relé, som aldri ser e-posten din. Du velger det på siden Varsler.",
+        "button": "Varsler"
+      }
+    },
+    "privacy_links": {
+      "images_label": "Eksterne bilder og klarerte avsendere",
+      "receipts_label": "Lesebekreftelser",
+      "senders_label": "Avsenderbilder",
+      "description": "Disse innstillingene finner du på siden Personvern.",
+      "button": "Personvern"
+    },
+    "a11y_links": {
+      "text": {
+        "label": "Tetthet og knappenavn",
+        "description": "Hvor tett radene i listen står, og om knappene viser navnet sitt, stiller du inn på siden Utseende."
+      },
+      "light_mode": {
+        "label": "Lys bakgrunn for meldinger",
+        "description": "Å vise meldinger på lys bakgrunn i mørk modus stiller du inn på siden Lesing."
+      },
+      "calendar": {
+        "label": "Forhåndsvisning av hendelser i kalenderen",
+        "description": "Om det å peke på en hendelse viser detaljene, stiller du inn på siden Kalender."
+      },
+      "list": {
+        "label": "Samtaler og forhåndsvisningslinjer",
+        "description": "Gruppering etter samtale og forhåndsvisningslinjen under hver melding stiller du inn på siden Meldingsliste."
+      },
+      "reading": {
+        "label": "Merke som lest",
+        "description": "Når en melding regnes som lest, og hvor du havner etter å ha slettet eller flyttet den, stiller du inn på siden Lesing."
+      },
+      "send_warnings_description": "Angre sending og varslene om manglende emne, glemt vedlegg eller plassholdertekst.",
+      "bulk_delete": {
+        "label": "Spør før sletting av flere meldinger",
+        "description": "Dette stiller du inn på siden Meldingsliste."
+      },
+      "sounds": {
+        "label": "Lyder og telleren for uleste",
+        "description": "Varsellyder og antall uleste i fanen stiller du inn på siden Varsler."
+      }
+    },
+    "about": {
+      "title": "Om {appName}"
+    },
+    "sign_out": {
+      "description": "Logg ut av denne kontoen på denne enheten."
+    }
+  },
   "setup": {
     "title": "Oppsett av Bulwark Webmail",
     "subtitle": "Sett opp webmail-instansen din i nettleseren.",

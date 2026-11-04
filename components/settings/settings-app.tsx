@@ -34,7 +34,10 @@ import { CalendarSettings } from '@/components/settings/calendar-settings';
 import { CalendarManagementSettings } from '@/components/settings/calendar-management-settings';
 import { AddressBookManagementSettings } from '@/components/settings/address-book-management-settings';
 import { FilterSettings } from '@/components/settings/filter-settings';
-import { AboutDataSettings, AboutFooter } from '@/components/settings/about-data-settings';
+import { AboutDataSettings, AboutSettings } from '@/components/settings/about-data-settings';
+import { PrivacySettings } from '@/components/settings/privacy-settings';
+import { OfflineSettings } from '@/components/offline/offline-settings';
+import { IS_LITE } from '@/lib/lite';
 import { HelpLinks } from '@/components/layout/help-links';
 import { OrganizeSettings } from '@/components/settings/organize-settings';
 import { AccountSecuritySettings } from '@/components/settings/account-security-settings';
@@ -82,6 +85,8 @@ import {
   getByPath,
   matchesAllWords,
   settingsSubResults,
+  settingsTabLabelKey,
+  subResultText,
   tabKeywords,
   tabSearchEntries,
   ARCHIVE_ACTION_SEARCH_PATHS,
@@ -96,8 +101,8 @@ import { scrollBehavior } from '@/lib/reduced-motion';
 
 type Tab = SettingsSearchTab;
 
-// `top` and `bottom` have no heading: the first five pages, and Backup & reset
-// after a rule at the end.
+// `top` and `bottom` have no heading: the first pages, and Backup & reset and
+// About after a rule at the end.
 type TabGroup = SettingsTabGroup;
 
 // A plugin that exposes a `settings-section` slot gets its own first-class
@@ -153,13 +158,25 @@ interface SettingsTarget {
   section: string | null;
 }
 
+// Sections that moved to a page of their own or to Privacy (2026-11), so a
+// link to `/settings/backup/offline` or `/settings/reading/images` still
+// lands on the section.
+const MOVED_SECTIONS: Record<string, Record<string, string>> = {
+  backup: { offline: 'offline' },
+  reading: { images: 'privacy' },
+  composing: { receipts: 'privacy' },
+  message_list: { senders: 'privacy' },
+};
+
 /**
  * Migrates a legacy tab id to the page and section that hold it now. An
  * explicit section wins over the legacy one.
  */
 function migrateTarget(raw: string, section: string | null = null): { tab: string; section: string | null } {
   const tab = raw in LEGACY_TAB_MAP ? LEGACY_TAB_MAP[raw] : raw;
-  return { tab, section: section ?? (raw in LEGACY_SECTION_MAP ? LEGACY_SECTION_MAP[raw] : null) };
+  const target = section ?? (raw in LEGACY_SECTION_MAP ? LEGACY_SECTION_MAP[raw] : null);
+  const moved = target ? MOVED_SECTIONS[tab]?.[target] : undefined;
+  return { tab: moved ?? tab, section: target };
 }
 
 function hasOneShotDeepLink(): boolean {
@@ -231,6 +248,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   const router = useRouter();
   const t = useTranslations('settings');
   const tSidebar = useTranslations('sidebar');
+  const tRoot = useTranslations();
   const tShell = useTranslations('shell');
   const tDelegates = useTranslations('delegates');
   const tPalette = useTranslations('command_palette');
@@ -337,7 +355,6 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   // plugins/themes/sidebar apps).
   const touchScreen = useMediaQuery('(pointer: coarse)');
   const mountainViewLayout = useSettingsStore((s) => s.interfaceLayout === 'mountain-view');
-  const showAdvanced = useSettingsStore((s) => s.showAdvancedSettings);
   const multiAccount = useAccountStore((s) => s.accounts.length > 0);
   const { tabSearchHaystacks, tabSubResults } = useMemo(() => {
     const haystacks: Partial<Record<Tab, string>> = {};
@@ -351,7 +368,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       return true;
     };
     for (const tabId of Object.keys(tabSearchEntries) as Tab[]) {
-      const tabName = getByPath(messages, `settings.tabs.${tabId}`);
+      const tabName = getByPath(messages, settingsTabLabelKey(tabId));
       const list = settingsSubResults(messages, tabId, appName, shown)
         // A section titled like its page is the page itself.
         .filter((r) => r.label !== tabName);
@@ -364,7 +381,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       haystacks[tabId] = [
         tabId.replace(/_/g, ' '),
         tabKeywords[tabId] ?? '',
-        ...list.flatMap((r) => [r.label, r.description ?? '']),
+        ...list.map(subResultText),
       ].join(' ').toLowerCase();
     }
     if (installedPlugins.length) {
@@ -378,7 +395,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       }).join(' ');
       haystacks.addons = `${haystacks.addons ?? ''} ${haystackText}`.toLowerCase();
       const pluginSubs: SubResult[] = installedPlugins.flatMap((p) => {
-        const items: SubResult[] = [{ label: p.name, description: p.description }];
+        const items: SubResult[] = [{ label: p.name, description: p.description, keywords: p.author }];
         if (p.settingsSchema) {
           for (const schema of Object.values(p.settingsSchema)) {
             items.push({
@@ -398,7 +415,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       haystacks.appearance = `${haystacks.appearance ?? ''} ${text}`.toLowerCase();
       subs.appearance = [
         ...(subs.appearance ?? []),
-        ...installedThemes.map((th) => ({ label: th.name, description: th.description })),
+        ...installedThemes.map((th) => ({ label: th.name, description: th.description, keywords: th.author })),
       ];
     }
     if (sidebarAppsList.length) {
@@ -668,9 +685,12 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
     // You and the app
     { id: 'account', label: t('tabs.account'), icon: tabIcons.account, group: 'top' },
     ...(stalwartFeaturesEnabled ? [{ id: 'security' as Tab, label: t('tabs.security'), icon: tabIcons.security, group: 'top' as TabGroup }] : []),
+    { id: 'privacy', label: tRoot(settingsTabLabelKey('privacy')), icon: tabIcons.privacy, group: 'top' },
     ...(supportsSharing ? [{ id: 'sharing' as Tab, label: tDelegates('tab'), icon: tabIcons.sharing, group: 'top' as TabGroup }] : []),
     { id: 'notifications', label: t('tabs.notifications'), icon: tabIcons.notifications, group: 'top' },
     { id: 'general', label: t('tabs.general'), icon: tabIcons.general, group: 'top' },
+    // Keeping mail on this device; the static Lite build has no offline mode.
+    ...(!IS_LITE ? [{ id: 'offline' as Tab, label: tRoot(settingsTabLabelKey('offline')), icon: tabIcons.offline, group: 'top' as TabGroup }] : []),
     { id: 'appearance', label: t('tabs.appearance'), icon: tabIcons.appearance, group: 'top' },
     { id: 'accessibility', label: t('tabs.accessibility'), icon: tabIcons.accessibility, group: 'top' },
 
@@ -709,6 +729,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
 
     // After a rule at the end, with no heading.
     { id: 'backup', label: t('tabs.backup'), icon: tabIcons.backup, group: 'bottom' },
+    { id: 'about', label: tRoot(settingsTabLabelKey('about')), icon: tabIcons.about, group: 'bottom' },
   ];
 
   // In scoped (shared-account) mode, restrict to the account-relevant tabs the
@@ -736,20 +757,24 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
     }))
     .filter((g) => g.items.length > 0);
 
-  // Every word of the query counts, in any order, like the admin search.
+  // Every word of the query starts a word, in any order. A page matches by
+  // its own name and keywords, or when one of its rows has all the words:
+  // words spread over unrelated rows don't make a match.
   const trimmedQuery = searchQuery.trim().toLowerCase();
   const matchesQuery = (tab: TabDef) => {
     if (!trimmedQuery) return true;
-    return matchesAllWords(`${tab.label} ${tabSearchHaystacks[tab.id as Tab] ?? ''}`, trimmedQuery);
+    const pageText = `${tab.label} ${String(tab.id).replace(/_/g, ' ')} ${tabKeywords[tab.id as Tab] ?? ''}`;
+    return matchesAllWords(pageText, trimmedQuery)
+      || (tabSubResults[tab.id as Tab] ?? []).some((r) => matchesAllWords(subResultText(r), trimmedQuery));
   };
 
   const subResultsForTab = (tabId: SettingsTabId): SubResult[] => {
     if (!trimmedQuery) return [];
     const list = tabSubResults[tabId as Tab] ?? [];
-    // Rows whose name matches come before rows matched by their description.
+    // Rows whose name matches come before rows matched by their description or synonyms.
     const byName = (r: SubResult) => (matchesAllWords(r.label, trimmedQuery) ? 0 : 1);
     return list
-      .filter((r) => matchesAllWords(`${r.label} ${r.description ?? ''}`, trimmedQuery))
+      .filter((r) => matchesAllWords(subResultText(r), trimmedQuery))
       .sort((a, b) => byName(a) - byName(b))
       .slice(0, 6);
   };
@@ -890,7 +915,10 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       )}
       {effectiveActiveTab === 'files' && <FilesSettingsComponent />}
       {effectiveActiveTab === 'addons' && <AddonsSettings />}
+      {effectiveActiveTab === 'privacy' && <PrivacySettings />}
+      {effectiveActiveTab === 'offline' && <OfflineSettings />}
       {effectiveActiveTab === 'backup' && <AboutDataSettings />}
+      {effectiveActiveTab === 'about' && <AboutSettings />}
       {effectiveActiveTab.startsWith('plugin:') && (
         <PluginIframeSlot
           key={effectiveActiveTab}
@@ -1043,7 +1071,6 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
 
           <div className="border-t border-border px-2 py-2">
             <HelpLinks className="px-3 py-2" />
-            {showAdvanced && <AboutFooter />}
             <AdvancedSettingsSwitch />
           </div>
           <div className="border-t border-border px-5 py-3">
@@ -1208,9 +1235,11 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
             ))}
           </div>
         </nav>
+        {/* Only the Advanced switch (and the operator's help links, when set):
+            the About card is a page at the end of the list, so the footer
+            doesn't take room from the pages on short screens. */}
         <div className="border-t border-border px-1 py-1">
           <HelpLinks className="px-3 py-2" />
-          {showAdvanced && <AboutFooter />}
           <AdvancedSettingsSwitch />
         </div>
       </div>
