@@ -6927,6 +6927,14 @@
     "revoke": "Geri al",
     "revoked": "İzin geri alındı"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} bir sertifika istiyor",
+    "picker_detail": "Sunucu kim olduğunuzu bilmek istiyor. Seçtiğiniz sertifika yalnızca bu sunucuya gider. Bu sunucuyu tanımıyorsanız göndermeyin.",
+    "picker_issued": "Veren: {issuer}, geçerlilik: {date} tarihine kadar",
+    "picker_remember": "{host} için hatırla",
+    "picker_none": "Sertifika gönderme",
+    "picker_more": "Daha fazla sertifika…"
+  },
   "desktopOs": {
     "section_title": "Masaüstü uygulaması",
     "section_description": "Uygulamanın bilgisayarınızla nasıl çalıştığı.",
@@ -7002,6 +7010,21 @@
     "clear_confirm": "Sil",
     "signout_changed": "Henüz eklenmedi veya kaydedilmedi, şimdi siliniyor: {names}.",
     "signout_held": "Hâlâ başka bir programda açık, bu yüzden ancak orada kapatınca silinir: {names}."
+  },
+  "desktopQuickCompose": {
+    "label": "Hızlı ileti",
+    "menu": "Hızlı ileti",
+    "description": "{keys}, başka herhangi bir uygulamadan yeni ileti için küçük bir pencere açar.",
+    "description_off": "Başka herhangi bir uygulamadan yeni ileti için küçük bir pencere açar.",
+    "taken": "{keys} başka bir uygulama tarafından kullanılıyor, bu yüzden burada bir şey yapmaz. Başka tuşlar seçin veya o uygulamayı kapatın.",
+    "change": "Tuşları değiştir: {keys}",
+    "recording": "Tuşlara basın…",
+    "recording_hint": "Ctrl (Mac'te Cmd) ile Alt veya Shift tuşunu basılı tutun ve bir harfe, rakama, Enter'a ya da işlev tuşuna basın. Esc iptal eder.",
+    "back_to_main": "Ana pencereye taşı",
+    "back_busy": "Ana pencerede zaten açık bir ileti var. Onu kapatın ve yeniden deneyin.",
+    "back_no_answer": "Ana pencere yanıt vermedi. İletiniz burada kalıyor.",
+    "types_character": "Bu tuşlar klavyenizde bir karakter yazar ve bu karakter hiçbir uygulamada çalışmaz olur. Başka tuşlar deneyin.",
+    "reserved": "Bu tuşları sisteminiz veya çoğu uygulama kullanıyor. Başka tuşlar deneyin."
   },
   "desktopReminders": {
     "generic_title": "Anımsatıcı",

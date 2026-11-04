@@ -337,6 +337,8 @@ describe('a composer that is all its window shows', () => {
     fireEvent.change(subjectField(), { target: { value: 'Autosaved' } });
     await waitFor(() => expect(creations).toHaveLength(1), { timeout: 4000 });
     await waitFor(() => expect(onDraftSaved).toHaveBeenCalled());
+    // Says where it lives: a reload after a crash has only the address to go by.
+    expect(onDraftSaved.mock.calls[0][1]).toEqual(expect.objectContaining({ localAccountId: expect.anything() }));
     expect(unload().defaultPrevented).toBe(false);
     expect(creations).toHaveLength(1);
   });

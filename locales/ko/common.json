@@ -6927,6 +6927,14 @@
     "revoke": "취소",
     "revoked": "허용을 취소했습니다"
   },
+  "desktop_certificates": {
+    "picker_title": "{host}에서 인증서를 요청합니다",
+    "picker_detail": "서버에서 사용자를 확인하려고 합니다. 선택한 인증서는 이 서버로만 전송됩니다. 모르는 서버라면 보내지 마세요.",
+    "picker_issued": "발급자: {issuer}, 유효 기간: {date}까지",
+    "picker_remember": "{host}에 대해 기억",
+    "picker_none": "인증서 보내지 않기",
+    "picker_more": "다른 인증서…"
+  },
   "desktopOs": {
     "section_title": "데스크톱 앱",
     "section_description": "앱이 컴퓨터와 함께 작동하는 방식입니다.",
@@ -7002,6 +7010,21 @@
     "clear_confirm": "삭제",
     "signout_changed": "아직 첨부하거나 저장하지 않았으며 지금 삭제됩니다: {names}.",
     "signout_held": "아직 다른 프로그램에서 열려 있어 그곳에서 닫아야 삭제됩니다: {names}."
+  },
+  "desktopQuickCompose": {
+    "label": "빠른 작성",
+    "menu": "빠른 작성",
+    "description": "{keys}를 누르면 다른 앱에서도 새 메시지용 작은 창이 열립니다.",
+    "description_off": "다른 앱에서도 새 메시지용 작은 창을 엽니다.",
+    "taken": "다른 앱이 {keys}를 사용 중이라 여기서는 작동하지 않습니다. 다른 키를 고르거나 그 앱을 닫으세요.",
+    "change": "키 변경: {keys}",
+    "recording": "키를 누르세요…",
+    "recording_hint": "Ctrl(Mac에서는 Cmd)과 Alt 또는 Shift를 누른 채 문자, 숫자, Enter 또는 기능 키를 누르세요. Esc를 누르면 취소됩니다.",
+    "back_to_main": "기본 창으로 이동",
+    "back_busy": "기본 창에 이미 열린 메시지가 있습니다. 그 메시지를 닫고 다시 시도하세요.",
+    "back_no_answer": "기본 창이 응답하지 않았습니다. 메시지는 여기에 그대로 있습니다.",
+    "types_character": "이 키는 사용 중인 키보드에서 문자를 입력하며, 지정하면 모든 앱에서 그 문자를 입력할 수 없게 됩니다. 다른 키를 사용해 보세요.",
+    "reserved": "시스템 또는 대부분의 앱이 이 키를 사용합니다. 다른 키를 사용해 보세요."
   },
   "desktopReminders": {
     "generic_title": "알림",

@@ -6927,6 +6927,14 @@
     "revoke": "Take back",
     "revoked": "Permission taken back"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} asks for a certificate",
+    "picker_detail": "The server wants to know who you are. A certificate you choose goes to this server only. If you don't know this server, don't send one.",
+    "picker_issued": "Issued by {issuer}, valid until {date}",
+    "picker_remember": "Remember this for {host}",
+    "picker_none": "Don't send a certificate",
+    "picker_more": "More certificates…"
+  },
   "desktopOs": {
     "section_title": "Desktop app",
     "section_description": "How the app works with your computer.",
@@ -7002,6 +7010,21 @@
     "clear_confirm": "Delete",
     "signout_changed": "Not attached or saved yet, and deleted now: {names}.",
     "signout_held": "Still open in another program, so not deleted until you close it there: {names}."
+  },
+  "desktopQuickCompose": {
+    "label": "Quick compose",
+    "menu": "Quick compose",
+    "description": "{keys} opens a small window for a new message, from any other app.",
+    "description_off": "Opens a small window for a new message, from any other app.",
+    "taken": "Another app is using {keys}, so it does nothing here. Pick other keys, or close that app.",
+    "change": "Change the keys: {keys}",
+    "recording": "Press the keys…",
+    "recording_hint": "Hold Ctrl (Cmd on a Mac) with Alt or Shift, and press a letter, number, Enter or function key. Esc cancels.",
+    "back_to_main": "Move to the main window",
+    "back_busy": "The main window already has a message open. Close that one, then try again.",
+    "back_no_answer": "The main window did not answer. Your message stays here.",
+    "types_character": "These keys type a character on your keyboard, and it would stop working in every app. Try other keys.",
+    "reserved": "Your system or most apps use these keys. Try other keys."
   },
   "desktopReminders": {
     "generic_title": "Reminder",

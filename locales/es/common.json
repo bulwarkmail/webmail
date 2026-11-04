@@ -6927,6 +6927,14 @@
     "revoke": "Retirar",
     "revoked": "Permiso retirado"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} pide un certificado",
+    "picker_detail": "El servidor quiere saber quién eres. El certificado que elijas solo se envía a este servidor. Si no conoces este servidor, no envíes ninguno.",
+    "picker_issued": "Emitido por {issuer}, válido hasta {date}",
+    "picker_remember": "Recordar para {host}",
+    "picker_none": "No enviar ningún certificado",
+    "picker_more": "Más certificados…"
+  },
   "desktopOs": {
     "section_title": "Aplicación de escritorio",
     "section_description": "Cómo funciona la aplicación con tu ordenador.",
@@ -7002,6 +7010,21 @@
     "clear_confirm": "Eliminar",
     "signout_changed": "Aún sin adjuntar ni guardar, y eliminados ahora: {names}.",
     "signout_held": "Siguen abiertos en otro programa, así que no se eliminan hasta que los cierre allí: {names}."
+  },
+  "desktopQuickCompose": {
+    "label": "Redacción rápida",
+    "menu": "Redacción rápida",
+    "description": "{keys} abre una ventana pequeña para un mensaje nuevo, desde cualquier otra aplicación.",
+    "description_off": "Abre una ventana pequeña para un mensaje nuevo, desde cualquier otra aplicación.",
+    "taken": "Otra aplicación está usando {keys}, así que aquí no hace nada. Elige otras teclas o cierra esa aplicación.",
+    "change": "Cambiar las teclas: {keys}",
+    "recording": "Pulsa las teclas…",
+    "recording_hint": "Mantén pulsada Ctrl (Cmd en Mac) con Alt o Mayús, y pulsa una letra, un número, Intro o una tecla de función. Esc cancela.",
+    "back_to_main": "Mover a la ventana principal",
+    "back_busy": "La ventana principal ya tiene un mensaje abierto. Ciérralo y vuelve a intentarlo.",
+    "back_no_answer": "La ventana principal no respondió. Tu mensaje se queda aquí.",
+    "types_character": "Estas teclas escriben un carácter en tu teclado, y dejaría de funcionar en todas las aplicaciones. Prueba otras teclas.",
+    "reserved": "Tu sistema o la mayoría de las aplicaciones usan estas teclas. Prueba otras teclas."
   },
   "desktopReminders": {
     "generic_title": "Recordatorio",

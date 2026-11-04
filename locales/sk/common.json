@@ -6927,6 +6927,14 @@
     "revoke": "Odvolať",
     "revoked": "Povolenie bolo odvolané"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} žiada o certifikát",
+    "picker_detail": "Server chce vedieť, kto ste. Certifikát, ktorý vyberiete, pôjde len na tento server. Ak tento server nepoznáte, žiadny neposielajte.",
+    "picker_issued": "Vydal {issuer}, platí do {date}",
+    "picker_remember": "Zapamätať pre {host}",
+    "picker_none": "Neposielať certifikát",
+    "picker_more": "Ďalšie certifikáty…"
+  },
   "desktopOs": {
     "section_title": "Počítačová aplikácia",
     "section_description": "Ako aplikácia spolupracuje s vaším počítačom.",
@@ -7002,6 +7010,21 @@
     "clear_confirm": "Odstrániť",
     "signout_changed": "Zatiaľ nepripojené ani neuložené, a teraz odstránené: {names}.",
     "signout_held": "Stále otvorené v inom programe, takže sa odstránia až po zatvorení: {names}."
+  },
+  "desktopQuickCompose": {
+    "label": "Rýchla správa",
+    "menu": "Rýchla správa",
+    "description": "{keys} otvorí malé okno pre novú správu z akejkoľvek inej aplikácie.",
+    "description_off": "Otvorí malé okno pre novú správu z akejkoľvek inej aplikácie.",
+    "taken": "{keys} používa iná aplikácia, takže tu nič neurobí. Vyberte iné klávesy alebo tú aplikáciu zatvorte.",
+    "change": "Zmeniť klávesy: {keys}",
+    "recording": "Stlačte klávesy…",
+    "recording_hint": "Podržte Ctrl (na Macu Cmd) spolu s Alt alebo Shift a stlačte písmeno, číslicu, Enter alebo funkčný kláves. Esc zruší.",
+    "back_to_main": "Presunúť do hlavného okna",
+    "back_busy": "V hlavnom okne je už otvorená správa. Zatvorte ju a skúste to znova.",
+    "back_no_answer": "Hlavné okno neodpovedalo. Vaša správa zostáva tu.",
+    "types_character": "Tieto klávesy na vašej klávesnici píšu znak, ktorý by potom nefungoval v žiadnej aplikácii. Skúste iné klávesy.",
+    "reserved": "Tieto klávesy používa systém alebo väčšina aplikácií. Skúste iné klávesy."
   },
   "desktopReminders": {
     "generic_title": "Pripomienka",

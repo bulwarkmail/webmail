@@ -6927,6 +6927,14 @@
     "revoke": "Ritira",
     "revoked": "Permesso ritirato"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} chiede un certificato",
+    "picker_detail": "Il server vuole sapere chi sei. Il certificato che scegli va solo a questo server. Se non conosci questo server, non inviarne nessuno.",
+    "picker_issued": "Emesso da {issuer}, valido fino al {date}",
+    "picker_remember": "Ricorda per {host}",
+    "picker_none": "Non inviare un certificato",
+    "picker_more": "Altri certificati…"
+  },
   "desktopOs": {
     "section_title": "App desktop",
     "section_description": "Come l'app funziona con il tuo computer.",
@@ -7002,6 +7010,21 @@
     "clear_confirm": "Elimina",
     "signout_changed": "Non ancora allegati o salvati, ed eliminati ora: {names}.",
     "signout_held": "Ancora aperti in un altro programma, quindi eliminati solo quando li chiudi lì: {names}."
+  },
+  "desktopQuickCompose": {
+    "label": "Scrittura rapida",
+    "menu": "Scrittura rapida",
+    "description": "{keys} apre una piccola finestra per un nuovo messaggio, da qualsiasi altra app.",
+    "description_off": "Apre una piccola finestra per un nuovo messaggio, da qualsiasi altra app.",
+    "taken": "Un'altra app sta usando {keys}, quindi qui non succede nulla. Scegli altri tasti o chiudi quell'app.",
+    "change": "Cambia i tasti: {keys}",
+    "recording": "Premi i tasti…",
+    "recording_hint": "Tieni premuto Ctrl (Cmd su Mac) con Alt o Maiusc e premi una lettera, un numero, Invio o un tasto funzione. Esc annulla.",
+    "back_to_main": "Sposta nella finestra principale",
+    "back_busy": "La finestra principale ha già un messaggio aperto. Chiudilo e riprova.",
+    "back_no_answer": "La finestra principale non ha risposto. Il messaggio resta qui.",
+    "types_character": "Questi tasti scrivono un carattere sulla tua tastiera, che smetterebbe di funzionare in tutte le app. Prova altri tasti.",
+    "reserved": "Il sistema o la maggior parte delle app usano questi tasti. Prova altri tasti."
   },
   "desktopReminders": {
     "generic_title": "Promemoria",

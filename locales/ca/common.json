@@ -6927,6 +6927,14 @@
     "revoke": "Retira",
     "revoked": "Permís retirat"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} demana un certificat",
+    "picker_detail": "El servidor vol saber qui ets. El certificat que triïs només va a aquest servidor. Si no coneixes aquest servidor, no n'enviïs cap.",
+    "picker_issued": "Emès per {issuer}, vàlid fins al {date}",
+    "picker_remember": "Recorda-ho per a {host}",
+    "picker_none": "No enviïs cap certificat",
+    "picker_more": "Més certificats…"
+  },
   "desktopOs": {
     "section_title": "Aplicació d'escriptori",
     "section_description": "Com funciona l'aplicació amb l'ordinador.",
@@ -7002,6 +7010,21 @@
     "clear_confirm": "Elimina",
     "signout_changed": "Encara sense adjuntar ni desar, i eliminats ara: {names}.",
     "signout_held": "Encara oberts en un altre programa, així que no s’eliminen fins que els tanqueu allà: {names}."
+  },
+  "desktopQuickCompose": {
+    "label": "Redacció ràpida",
+    "menu": "Redacció ràpida",
+    "description": "{keys} obre una finestra petita per a un missatge nou, des de qualsevol altra aplicació.",
+    "description_off": "Obre una finestra petita per a un missatge nou, des de qualsevol altra aplicació.",
+    "taken": "Una altra aplicació fa servir {keys}, així que aquí no fa res. Tria altres tecles o tanca aquella aplicació.",
+    "change": "Canvia les tecles: {keys}",
+    "recording": "Prem les tecles…",
+    "recording_hint": "Mantén premuda Ctrl (Cmd al Mac) amb Alt o Maj, i prem una lletra, un número, Retorn o una tecla de funció. Esc cancel·la.",
+    "back_to_main": "Mou a la finestra principal",
+    "back_busy": "La finestra principal ja té un missatge obert. Tanca'l i torna-ho a provar.",
+    "back_no_answer": "La finestra principal no ha respost. El teu missatge es queda aquí.",
+    "types_character": "Aquestes tecles escriuen un caràcter al teu teclat, i deixaria de funcionar a totes les aplicacions. Prova altres tecles.",
+    "reserved": "El sistema o la majoria d'aplicacions fan servir aquestes tecles. Prova altres tecles."
   },
   "desktopReminders": {
     "generic_title": "Recordatori",

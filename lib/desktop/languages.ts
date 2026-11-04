@@ -5,6 +5,7 @@
  */
 
 import { getDesktopBridge } from './bridge';
+import { certificateLabels } from './certificate-labels';
 import { updateLabels } from './update-labels';
 
 let ui = '';
@@ -42,6 +43,7 @@ export function noteComposerLanguage(key: string, language: string | null): void
 export function shellLabels(t: (key: string, values?: Record<string, string>) => string): Record<string, string> {
   return {
     ...updateLabels(t),
+    ...certificateLabels(t),
     editCancel: t('desktopEdit.cancel'),
     editDiscardTitle: t('desktopEdit.discard_title', { name: '{name}' }),
     editDiscardDetail: t('desktopEdit.discard_detail'),
@@ -61,6 +63,7 @@ export function shellLabels(t: (key: string, values?: Record<string, string>) =>
     menuWindow: t('desktopUi.menu.window'),
     menuHelp: t('desktopUi.menu.help'),
     menuNewMessage: t('email_composer.new_message'),
+    menuQuickCompose: t('desktopQuickCompose.menu'),
     menuNewWindow: t('desktopUi.menu.new_window'),
     menuPrint: t('desktopUi.menu.print'),
     menuSavePdf: t('desktopUi.menu.save_pdf'),

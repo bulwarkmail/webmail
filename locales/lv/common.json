@@ -6927,6 +6927,14 @@
     "revoke": "Atsaukt",
     "revoked": "Atļauja atsaukta"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} prasa sertifikātu",
+    "picker_detail": "Serveris vēlas zināt, kas jūs esat. Jūsu izvēlētais sertifikāts tiks nosūtīts tikai šim serverim. Ja nepazīstat šo serveri, nesūtiet to.",
+    "picker_issued": "Izdevējs: {issuer}, derīgs līdz {date}",
+    "picker_remember": "Atcerēties vietnei {host}",
+    "picker_none": "Nesūtīt sertifikātu",
+    "picker_more": "Vairāk sertifikātu…"
+  },
   "desktopOs": {
     "section_title": "Darbvirsmas lietotne",
     "section_description": "Kā lietotne darbojas ar jūsu datoru.",
@@ -7002,6 +7010,21 @@
     "clear_confirm": "Dzēst",
     "signout_changed": "Vēl nav pievienoti vai saglabāti, un tagad izdzēsti: {names}.",
     "signout_held": "Joprojām atvērti citā programmā, tāpēc tiks izdzēsti tikai pēc aizvēršanas: {names}."
+  },
+  "desktopQuickCompose": {
+    "label": "Ātrā rakstīšana",
+    "menu": "Ātrā rakstīšana",
+    "description": "{keys} atver nelielu logu jaunai ziņai no jebkuras citas lietotnes.",
+    "description_off": "Atver nelielu logu jaunai ziņai no jebkuras citas lietotnes.",
+    "taken": "{keys} izmanto cita lietotne, tāpēc šeit nekas nenotiek. Izvēlieties citus taustiņus vai aizveriet šo lietotni.",
+    "change": "Mainīt taustiņus: {keys}",
+    "recording": "Nospiediet taustiņus…",
+    "recording_hint": "Turiet nospiestu Ctrl (Mac datorā Cmd) kopā ar Alt vai Shift un nospiediet burtu, ciparu, Enter vai funkciju taustiņu. Esc atceļ.",
+    "back_to_main": "Pārvietot uz galveno logu",
+    "back_busy": "Galvenajā logā jau ir atvērta ziņa. Aizveriet to un mēģiniet vēlreiz.",
+    "back_no_answer": "Galvenais logs neatbildēja. Jūsu ziņa paliek šeit.",
+    "types_character": "Šie taustiņi jūsu tastatūrā raksta rakstzīmi, kas pārstātu darboties visās lietotnēs. Izmēģiniet citus taustiņus.",
+    "reserved": "Šos taustiņus izmanto sistēma vai lielākā daļa lietotņu. Izmēģiniet citus taustiņus."
   },
   "desktopReminders": {
     "generic_title": "Atgādinājums",

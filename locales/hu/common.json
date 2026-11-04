@@ -6927,6 +6927,14 @@
     "revoke": "Visszavonás",
     "revoked": "Engedély visszavonva"
   },
+  "desktop_certificates": {
+    "picker_title": "A(z) {host} tanúsítványt kér",
+    "picker_detail": "A kiszolgáló tudni szeretné, ki vagy. A kiválasztott tanúsítvány csak ehhez a kiszolgálóhoz kerül. Ha nem ismered ezt a kiszolgálót, ne küldj tanúsítványt.",
+    "picker_issued": "Kiállító: {issuer}, érvényes eddig: {date}",
+    "picker_remember": "Megjegyzés ehhez: {host}",
+    "picker_none": "Ne küldjön tanúsítványt",
+    "picker_more": "További tanúsítványok…"
+  },
   "desktopOs": {
     "section_title": "Asztali alkalmazás",
     "section_description": "Hogyan működik az alkalmazás a számítógépével.",
@@ -7002,6 +7010,21 @@
     "clear_confirm": "Törlés",
     "signout_changed": "Még nincs csatolva vagy mentve, és most törlődik: {names}.",
     "signout_held": "Még nyitva van egy másik programban, ezért csak a bezárása után törlődik: {names}."
+  },
+  "desktopQuickCompose": {
+    "label": "Gyors levélírás",
+    "menu": "Gyors levélírás",
+    "description": "A(z) {keys} kis ablakot nyit egy új üzenethez, bármely másik alkalmazásból.",
+    "description_off": "Kis ablakot nyit egy új üzenethez, bármely másik alkalmazásból.",
+    "taken": "A(z) {keys} billentyűket egy másik alkalmazás használja, így itt nem történik semmi. Válasszon más billentyűket, vagy zárja be azt az alkalmazást.",
+    "change": "Billentyűk módosítása: {keys}",
+    "recording": "Nyomja meg a billentyűket…",
+    "recording_hint": "Tartsa lenyomva a Ctrl (Macen a Cmd) billentyűt az Alt vagy a Shift billentyűvel, és nyomjon meg egy betűt, számot, az Entert vagy egy funkcióbillentyűt. Az Esc megszakítja.",
+    "back_to_main": "Áthelyezés a főablakba",
+    "back_busy": "A főablakban már nyitva van egy üzenet. Zárja be, majd próbálja újra.",
+    "back_no_answer": "A főablak nem válaszolt. Az üzenet itt marad.",
+    "types_character": "Ezek a billentyűk karaktert írnak az Ön billentyűzetén, amely többé egyik alkalmazásban sem működne. Próbáljon más billentyűket.",
+    "reserved": "Ezeket a billentyűket a rendszer vagy a legtöbb alkalmazás használja. Próbáljon más billentyűket."
   },
   "desktopReminders": {
     "generic_title": "Emlékeztető",

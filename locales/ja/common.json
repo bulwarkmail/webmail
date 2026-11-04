@@ -6927,6 +6927,14 @@
     "revoke": "取り消す",
     "revoked": "許可を取り消しました"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} が証明書を求めています",
+    "picker_detail": "サーバーがあなたを確認しようとしています。選んだ証明書はこのサーバーにだけ送られます。このサーバーに心当たりがない場合は送らないでください。",
+    "picker_issued": "発行者: {issuer}、有効期限: {date}",
+    "picker_remember": "{host} について記憶する",
+    "picker_none": "証明書を送らない",
+    "picker_more": "他の証明書…"
+  },
   "desktopOs": {
     "section_title": "デスクトップアプリ",
     "section_description": "アプリとパソコンの連携方法です。",
@@ -7002,6 +7010,21 @@
     "clear_confirm": "削除",
     "signout_changed": "まだ添付も保存もされておらず、今削除されます: {names}。",
     "signout_held": "まだ別のプログラムで開かれているため、そちらで閉じるまで削除されません: {names}。"
+  },
+  "desktopQuickCompose": {
+    "label": "クイック作成",
+    "menu": "クイック作成",
+    "description": "{keys} で、ほかのどのアプリからでも新規メッセージ用の小さなウィンドウを開きます。",
+    "description_off": "ほかのどのアプリからでも新規メッセージ用の小さなウィンドウを開きます。",
+    "taken": "{keys} は別のアプリが使用中のため、ここでは動作しません。別のキーを選ぶか、そのアプリを閉じてください。",
+    "change": "キーを変更: {keys}",
+    "recording": "キーを押してください…",
+    "recording_hint": "Ctrl (Mac では Cmd) と Alt または Shift を押したまま、文字、数字、Enter、ファンクションキーのいずれかを押します。Esc でキャンセルします。",
+    "back_to_main": "メインウィンドウに移動",
+    "back_busy": "メインウィンドウで別のメッセージが開いています。それを閉じてからもう一度お試しください。",
+    "back_no_answer": "メインウィンドウから応答がありません。メッセージはここに残ります。",
+    "types_character": "このキーはお使いのキーボードで文字を入力します。割り当てると、すべてのアプリでその文字を入力できなくなります。別のキーをお試しください。",
+    "reserved": "このキーはシステムまたは多くのアプリが使用しています。別のキーをお試しください。"
   },
   "desktopReminders": {
     "generic_title": "リマインダー",

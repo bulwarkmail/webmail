@@ -6927,6 +6927,14 @@
     "revoke": "Retirer",
     "revoked": "Autorisation retirée"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} demande un certificat",
+    "picker_detail": "Le serveur veut savoir qui vous êtes. Le certificat que vous choisissez n'est envoyé qu'à ce serveur. Si vous ne connaissez pas ce serveur, n'en envoyez pas.",
+    "picker_issued": "Émis par {issuer}, valable jusqu'au {date}",
+    "picker_remember": "Mémoriser pour {host}",
+    "picker_none": "Ne pas envoyer de certificat",
+    "picker_more": "Plus de certificats…"
+  },
   "desktopOs": {
     "section_title": "Application de bureau",
     "section_description": "Comment l'application fonctionne avec votre ordinateur.",
@@ -7002,6 +7010,21 @@
     "clear_confirm": "Supprimer",
     "signout_changed": "Pas encore jointes ni enregistrées, et supprimées maintenant : {names}.",
     "signout_held": "Encore ouvertes dans un autre programme, donc supprimées seulement une fois fermées : {names}."
+  },
+  "desktopQuickCompose": {
+    "label": "Rédaction rapide",
+    "menu": "Rédaction rapide",
+    "description": "{keys} ouvre une petite fenêtre pour un nouveau message, depuis n'importe quelle autre application.",
+    "description_off": "Ouvre une petite fenêtre pour un nouveau message, depuis n'importe quelle autre application.",
+    "taken": "Une autre application utilise {keys}, ce raccourci n'a donc aucun effet ici. Choisissez d'autres touches ou fermez cette application.",
+    "change": "Changer les touches : {keys}",
+    "recording": "Appuyez sur les touches…",
+    "recording_hint": "Maintenez Ctrl (Cmd sur Mac) avec Alt ou Maj, puis appuyez sur une lettre, un chiffre, Entrée ou une touche de fonction. Échap annule.",
+    "back_to_main": "Déplacer vers la fenêtre principale",
+    "back_busy": "La fenêtre principale a déjà un message ouvert. Fermez-le, puis réessayez.",
+    "back_no_answer": "La fenêtre principale n'a pas répondu. Votre message reste ici.",
+    "types_character": "Ces touches produisent un caractère sur votre clavier, et il ne fonctionnerait plus dans aucune application. Essayez d'autres touches.",
+    "reserved": "Votre système ou la plupart des applications utilisent ces touches. Essayez d'autres touches."
   },
   "desktopReminders": {
     "generic_title": "Rappel",

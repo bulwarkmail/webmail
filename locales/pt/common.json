@@ -6927,6 +6927,14 @@
     "revoke": "Retirar",
     "revoked": "Permissão retirada"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} pede um certificado",
+    "picker_detail": "O servidor quer saber quem é. O certificado que escolher vai apenas para este servidor. Se não conhece este servidor, não envie nenhum.",
+    "picker_issued": "Emitido por {issuer}, válido até {date}",
+    "picker_remember": "Lembrar para {host}",
+    "picker_none": "Não enviar um certificado",
+    "picker_more": "Mais certificados…"
+  },
   "desktopOs": {
     "section_title": "Aplicação de ambiente de trabalho",
     "section_description": "Como a aplicação funciona com o seu computador.",
@@ -7002,6 +7010,21 @@
     "clear_confirm": "Eliminar",
     "signout_changed": "Ainda não anexados nem guardados, e eliminados agora: {names}.",
     "signout_held": "Ainda abertos noutro programa, por isso só são eliminados depois de os fechar lá: {names}."
+  },
+  "desktopQuickCompose": {
+    "label": "Escrita rápida",
+    "menu": "Escrita rápida",
+    "description": "{keys} abre uma janela pequena para uma nova mensagem, a partir de qualquer outra aplicação.",
+    "description_off": "Abre uma janela pequena para uma nova mensagem, a partir de qualquer outra aplicação.",
+    "taken": "Outra aplicação está a usar {keys}, por isso aqui não faz nada. Escolha outras teclas ou feche essa aplicação.",
+    "change": "Alterar as teclas: {keys}",
+    "recording": "Prima as teclas…",
+    "recording_hint": "Mantenha premida Ctrl (Cmd no Mac) com Alt ou Shift e prima uma letra, um número, Enter ou uma tecla de função. Esc cancela.",
+    "back_to_main": "Mover para a janela principal",
+    "back_busy": "A janela principal já tem uma mensagem aberta. Feche-a e tente de novo.",
+    "back_no_answer": "A janela principal não respondeu. A sua mensagem fica aqui.",
+    "types_character": "Estas teclas escrevem um carácter no seu teclado, e ele deixaria de funcionar em todas as aplicações. Experimente outras teclas.",
+    "reserved": "O seu sistema ou a maioria das aplicações usam estas teclas. Experimente outras teclas."
   },
   "desktopReminders": {
     "generic_title": "Lembrete",

@@ -6927,6 +6927,14 @@
     "revoke": "Trekk tilbake",
     "revoked": "Tillatelsen er trukket tilbake"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} ber om et sertifikat",
+    "picker_detail": "Serveren vil vite hvem du er. Et sertifikat du velger, går bare til denne serveren. Hvis du ikke kjenner serveren, ikke send noe.",
+    "picker_issued": "Utstedt av {issuer}, gyldig til {date}",
+    "picker_remember": "Husk dette for {host}",
+    "picker_none": "Ikke send et sertifikat",
+    "picker_more": "Flere sertifikater…"
+  },
   "desktopOs": {
     "section_title": "Skrivebordsapp",
     "section_description": "Slik samarbeider appen med datamaskinen din.",
@@ -7002,6 +7010,21 @@
     "clear_confirm": "Slett",
     "signout_changed": "Ikke lagt ved eller lagret ennå, og slettet nå: {names}.",
     "signout_held": "Fortsatt åpne i et annet program, så de slettes først når du lukker dem der: {names}."
+  },
+  "desktopQuickCompose": {
+    "label": "Rask skriving",
+    "menu": "Rask skriving",
+    "description": "{keys} åpner et lite vindu for en ny melding, fra hvilken som helst annen app.",
+    "description_off": "Åpner et lite vindu for en ny melding, fra hvilken som helst annen app.",
+    "taken": "En annen app bruker {keys}, så her skjer det ingenting. Velg andre taster, eller lukk den appen.",
+    "change": "Endre tastene: {keys}",
+    "recording": "Trykk på tastene…",
+    "recording_hint": "Hold Ctrl (Cmd på Mac) nede sammen med Alt eller Shift, og trykk på en bokstav, et tall, Enter eller en funksjonstast. Esc avbryter.",
+    "back_to_main": "Flytt til hovedvinduet",
+    "back_busy": "Hovedvinduet har allerede en melding åpen. Lukk den, og prøv igjen.",
+    "back_no_answer": "Hovedvinduet svarte ikke. Meldingen din blir her.",
+    "types_character": "Disse tastene skriver et tegn på tastaturet ditt, og det ville slutte å virke i alle apper. Prøv andre taster.",
+    "reserved": "Systemet ditt eller de fleste apper bruker disse tastene. Prøv andre taster."
   },
   "desktopReminders": {
     "generic_title": "Påminnelse",

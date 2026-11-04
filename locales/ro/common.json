@@ -6927,6 +6927,14 @@
     "revoke": "Retrage",
     "revoked": "Permisiune retrasă"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} cere un certificat",
+    "picker_detail": "Serverul vrea să știe cine ești. Certificatul pe care îl alegi merge doar la acest server. Dacă nu cunoști acest server, nu trimite niciunul.",
+    "picker_issued": "Emis de {issuer}, valabil până la {date}",
+    "picker_remember": "Reține pentru {host}",
+    "picker_none": "Nu trimite un certificat",
+    "picker_more": "Mai multe certificate…"
+  },
   "desktopOs": {
     "section_title": "Aplicație desktop",
     "section_description": "Cum funcționează aplicația cu computerul tău.",
@@ -7002,6 +7010,21 @@
     "clear_confirm": "Șterge",
     "signout_changed": "Încă neatașate sau nesalvate, și șterse acum: {names}.",
     "signout_held": "Încă deschise în alt program, așa că se șterg doar după ce le închideți acolo: {names}."
+  },
+  "desktopQuickCompose": {
+    "label": "Scriere rapidă",
+    "menu": "Scriere rapidă",
+    "description": "{keys} deschide o fereastră mică pentru un mesaj nou, din orice altă aplicație.",
+    "description_off": "Deschide o fereastră mică pentru un mesaj nou, din orice altă aplicație.",
+    "taken": "Altă aplicație folosește {keys}, așa că aici nu face nimic. Alege alte taste sau închide aplicația respectivă.",
+    "change": "Schimbă tastele: {keys}",
+    "recording": "Apasă tastele…",
+    "recording_hint": "Ține apăsată tasta Ctrl (Cmd pe Mac) cu Alt sau Shift și apasă o literă, o cifră, Enter sau o tastă funcțională. Esc anulează.",
+    "back_to_main": "Mută în fereastra principală",
+    "back_busy": "Fereastra principală are deja un mesaj deschis. Închide-l și încearcă din nou.",
+    "back_no_answer": "Fereastra principală nu a răspuns. Mesajul rămâne aici.",
+    "types_character": "Aceste taste scriu un caracter pe tastatura ta, iar el n-ar mai funcționa în nicio aplicație. Încearcă alte taste.",
+    "reserved": "Sistemul sau majoritatea aplicațiilor folosesc aceste taste. Încearcă alte taste."
   },
   "desktopReminders": {
     "generic_title": "Memento",

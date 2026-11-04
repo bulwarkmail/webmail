@@ -6927,6 +6927,14 @@
     "revoke": "Zurücknehmen",
     "revoked": "Erlaubnis zurückgenommen"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} fragt nach einem Zertifikat",
+    "picker_detail": "Der Server möchte wissen, wer Sie sind. Ein Zertifikat, das Sie wählen, geht nur an diesen Server. Wenn Sie den Server nicht kennen, senden Sie keines.",
+    "picker_issued": "Ausgestellt von {issuer}, gültig bis {date}",
+    "picker_remember": "Für {host} merken",
+    "picker_none": "Kein Zertifikat senden",
+    "picker_more": "Weitere Zertifikate…"
+  },
   "desktopOs": {
     "section_title": "Desktop-App",
     "section_description": "Wie die App mit Ihrem Computer zusammenarbeitet.",
@@ -7002,6 +7010,21 @@
     "clear_confirm": "Löschen",
     "signout_changed": "Noch nicht angehängt oder gespeichert, und jetzt gelöscht: {names}.",
     "signout_held": "Noch in einem anderen Programm geöffnet, daher erst gelöscht, wenn Sie sie dort schließen: {names}."
+  },
+  "desktopQuickCompose": {
+    "label": "Schnell schreiben",
+    "menu": "Schnell schreiben",
+    "description": "{keys} öffnet ein kleines Fenster für eine neue Nachricht, aus jeder anderen App.",
+    "description_off": "Öffnet ein kleines Fenster für eine neue Nachricht, aus jeder anderen App.",
+    "taken": "Eine andere App verwendet {keys}, daher passiert hier nichts. Wählen Sie andere Tasten, oder schließen Sie diese App.",
+    "change": "Tasten ändern: {keys}",
+    "recording": "Tasten drücken…",
+    "recording_hint": "Halten Sie Strg (auf dem Mac Cmd) mit Alt oder Umschalt, und drücken Sie einen Buchstaben, eine Zahl, die Eingabetaste oder eine Funktionstaste. Esc bricht ab.",
+    "back_to_main": "In das Hauptfenster verschieben",
+    "back_busy": "Im Hauptfenster ist bereits eine Nachricht geöffnet. Schließen Sie diese, und versuchen Sie es dann erneut.",
+    "back_no_answer": "Das Hauptfenster hat nicht geantwortet. Ihre Nachricht bleibt hier.",
+    "types_character": "Diese Tasten erzeugen auf Ihrer Tastatur ein Zeichen, das dann in keiner App mehr funktionieren würde. Versuchen Sie andere Tasten.",
+    "reserved": "Ihr System oder die meisten Apps verwenden diese Tasten. Versuchen Sie andere Tasten."
   },
   "desktopReminders": {
     "generic_title": "Erinnerung",

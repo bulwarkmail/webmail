@@ -6939,6 +6939,14 @@
     "revoke": "Thu hồi",
     "revoked": "Đã thu hồi quyền"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} yêu cầu một chứng chỉ",
+    "picker_detail": "Máy chủ muốn biết bạn là ai. Chứng chỉ bạn chọn chỉ được gửi đến máy chủ này. Nếu bạn không biết máy chủ này, đừng gửi.",
+    "picker_issued": "Do {issuer} cấp, có hiệu lực đến {date}",
+    "picker_remember": "Ghi nhớ cho {host}",
+    "picker_none": "Không gửi chứng chỉ",
+    "picker_more": "Thêm chứng chỉ…"
+  },
   "desktopOs": {
     "section_title": "Ứng dụng máy tính",
     "section_description": "Cách ứng dụng hoạt động với máy tính của bạn.",
@@ -7014,6 +7022,21 @@
     "clear_confirm": "Xóa",
     "signout_changed": "Chưa đính kèm hoặc lưu, và bị xóa ngay: {names}.",
     "signout_held": "Vẫn đang mở trong chương trình khác nên chỉ bị xóa sau khi bạn đóng ở đó: {names}."
+  },
+  "desktopQuickCompose": {
+    "label": "Soạn nhanh",
+    "menu": "Soạn nhanh",
+    "description": "{keys} mở một cửa sổ nhỏ để viết thư mới, từ bất kỳ ứng dụng nào khác.",
+    "description_off": "Mở một cửa sổ nhỏ để viết thư mới, từ bất kỳ ứng dụng nào khác.",
+    "taken": "Một ứng dụng khác đang dùng {keys}, nên phím tắt này không có tác dụng ở đây. Hãy chọn phím khác hoặc đóng ứng dụng đó.",
+    "change": "Đổi phím: {keys}",
+    "recording": "Nhấn các phím…",
+    "recording_hint": "Giữ Ctrl (Cmd trên Mac) cùng Alt hoặc Shift, rồi nhấn một chữ cái, chữ số, Enter hoặc phím chức năng. Esc để hủy.",
+    "back_to_main": "Chuyển sang cửa sổ chính",
+    "back_busy": "Cửa sổ chính đang mở một thư. Hãy đóng thư đó rồi thử lại.",
+    "back_no_answer": "Cửa sổ chính không phản hồi. Thư của bạn vẫn ở đây.",
+    "types_character": "Các phím này gõ một ký tự trên bàn phím của bạn, và ký tự đó sẽ không dùng được trong mọi ứng dụng. Hãy thử phím khác.",
+    "reserved": "Hệ thống hoặc hầu hết ứng dụng dùng các phím này. Hãy thử phím khác."
   },
   "desktopReminders": {
     "generic_title": "Lời nhắc",

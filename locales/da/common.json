@@ -6927,6 +6927,14 @@
     "revoke": "Træk tilbage",
     "revoked": "Tilladelsen er trukket tilbage"
   },
+  "desktop_certificates": {
+    "picker_title": "{host} beder om et certifikat",
+    "picker_detail": "Serveren vil vide, hvem du er. Et certifikat, du vælger, sendes kun til denne server. Hvis du ikke kender serveren, så send ikke noget.",
+    "picker_issued": "Udstedt af {issuer}, gyldigt til {date}",
+    "picker_remember": "Husk dette for {host}",
+    "picker_none": "Send ikke et certifikat",
+    "picker_more": "Flere certifikater…"
+  },
   "desktopOs": {
     "section_title": "Skrivebordsapp",
     "section_description": "Sådan arbejder appen sammen med din computer.",
@@ -7002,6 +7010,21 @@
     "clear_confirm": "Slet",
     "signout_changed": "Endnu ikke vedhæftet eller gemt, og slettet nu: {names}.",
     "signout_held": "Stadig åbne i et andet program, så de slettes først, når du lukker dem der: {names}."
+  },
+  "desktopQuickCompose": {
+    "label": "Hurtig skrivning",
+    "menu": "Hurtig skrivning",
+    "description": "{keys} åbner et lille vindue til en ny besked, fra enhver anden app.",
+    "description_off": "Åbner et lille vindue til en ny besked, fra enhver anden app.",
+    "taken": "En anden app bruger {keys}, så her sker der ikke noget. Vælg andre taster, eller luk den app.",
+    "change": "Skift tasterne: {keys}",
+    "recording": "Tryk på tasterne…",
+    "recording_hint": "Hold Ctrl (Cmd på en Mac) nede sammen med Alt eller Shift, og tryk på et bogstav, tal, Enter eller en funktionstast. Esc annullerer.",
+    "back_to_main": "Flyt til hovedvinduet",
+    "back_busy": "Hovedvinduet har allerede en besked åben. Luk den, og prøv igen.",
+    "back_no_answer": "Hovedvinduet svarede ikke. Din besked bliver her.",
+    "types_character": "Disse taster skriver et tegn på dit tastatur, og det ville holde op med at virke i alle apps. Prøv andre taster.",
+    "reserved": "Dit system eller de fleste apps bruger disse taster. Prøv andre taster."
   },
   "desktopReminders": {
     "generic_title": "Påmindelse",

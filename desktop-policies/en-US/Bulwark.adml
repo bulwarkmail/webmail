@@ -49,7 +49,7 @@
       <string id="QuickComposeShortcut">Global shortcut for a new message</string>
       <string id="QuickComposeShortcut_Explain">The key combination that opens a new message from anywhere, such as CommandOrControl+Alt+N. Enter off to turn the shortcut off.</string>
       <string id="AuthServerAllowlist">Servers for integrated sign-in</string>
-      <string id="AuthServerAllowlist_Explain">The servers that may use the Windows sign-in (Kerberos, NTLM), separated by commas, such as *.example.com. Takes effect when the app restarts.</string>
+      <string id="AuthServerAllowlist_Explain">The servers that may use the Windows sign-in (Kerberos, NTLM), separated by commas, such as *.example.com. A server taken off the list stops getting it at once. A new one needs the app to restart.</string>
       <string id="AuthNegotiateDelegateAllowlist">Servers for delegated sign-in</string>
       <string id="AuthNegotiateDelegateAllowlist_Explain">The servers the app may delegate Kerberos credentials to, separated by commas. Takes effect when the app restarts.</string>
       <string id="AutoSelectCertificateForUrls">Choose client certificates automatically</string>
