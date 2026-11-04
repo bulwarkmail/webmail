@@ -3,6 +3,9 @@ import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { loginClientAddress } from '@/lib/auth/client-address';
+import { desktopHandoffEnabled } from '@/lib/auth/desktop-handoff-server';
+import { revokeParkedTokens } from '@/lib/auth/desktop-handoff-revoke';
+import { configManager } from '@/lib/admin/config-manager';
 import { isHandoffCode, isHandoffCodeVerifier, redeemHandoff, reserveHandoffRedeem } from '@/lib/auth/handoff-store';
 import { writeSignInStamp } from '@/lib/auth/session-age';
 import { isStoreUnavailable, storeUnavailableResponse } from '@/lib/auth/store-unavailable';
@@ -19,9 +22,10 @@ import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 // challenge it opened the browser with. Same origin as the page, so an instance's cookies
 // set here work under SameSite=Strict. Every attempt spends the code.
 //
-// The device's own list of servers is the page's to send: only it knows the OS policy,
-// and the browser the user signed in with knows nothing of it. A refused server gets
-// nothing written.
+// The device's rules are the page's to send: only it knows the OS policy, and the browser
+// the user signed in with knows nothing of it. That's its list of servers, and whether it
+// may use a server of the user's own. A refused server gets nothing written, and a token
+// minted for it is revoked.
 
 const NO_STORE = { 'Cache-Control': 'no-store' };
 
@@ -33,6 +37,8 @@ export async function POST(request: NextRequest) {
   if (IS_DESKTOP_BUILD) return answer('Not found', 404);
   const crossOrigin = rejectCrossOriginRequest(request);
   if (crossOrigin) return crossOrigin;
+  await configManager.ensureLoaded();
+  if (!desktopHandoffEnabled()) return answer('disabled', 403);
   let refund: BudgetRefund | null = null;
   try {
     refund = await reserveHandoffRedeem(loginClientAddress(request));
@@ -58,7 +64,10 @@ export async function POST(request: NextRequest) {
     const parked = result.bundle;
     // A code the mobile path parked isn't one of ours.
     if (parked.flow !== 'desktop-password' && parked.flow !== 'desktop-tokens') return answer('invalid_code', 400);
-    if (!jmapServerAllowed(allowedServers, parked.server_url)) return answer('blocked_by_policy', 403, { code: 'blocked_by_policy' });
+    if (!jmapServerAllowed(allowedServers, parked.server_url) || (parked.custom && body?.custom_servers_allowed !== true)) {
+      await revokeParkedTokens(parked);
+      return answer('blocked_by_policy', 403, { code: 'blocked_by_policy' });
+    }
 
     await refund();
     logger.info('Desktop hand-off redeemed', { flow: parked.flow });
@@ -86,6 +95,7 @@ export async function POST(request: NextRequest) {
       {
         flow: 'tokens',
         server_url: parked.server_url,
+        ...(parked.password_login && parked.username ? { password_login: true, username: parked.username } : {}),
         access_token: parked.access_token,
         expires_in: parked.expires_in,
         signed_in_at: parked.signed_in_at,

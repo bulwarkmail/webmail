@@ -42,6 +42,16 @@ export function desktopHandoffTarget(raw: string | null | undefined): string {
   return match && Number(match[1]) <= 65535 ? match[0] : '';
 }
 
+/** The port a desktop target names, for the question the page asks. */
+export function desktopHandoffPort(target: string): string {
+  return DESKTOP_TARGET.exec(target)?.[1] ?? '';
+}
+
+/** "Not now": ends the app's flow at its listener, so it isn't left waiting. No code in it. */
+export function desktopHandoffDeclineUrl(target: string, state: string): string {
+  return `${target}?${new URLSearchParams({ error: 'access_denied', state }).toString()}`;
+}
+
 /** Either kind of target, as the callback page reads it back. */
 export function handoffTarget(raw: string | null | undefined): string {
   return mobileHandoffTarget(raw) || desktopHandoffTarget(raw);

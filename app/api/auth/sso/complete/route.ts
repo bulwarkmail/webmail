@@ -36,6 +36,32 @@ function webmailBaseFromCallback(redirectUri: string): string | null {
   }
 }
 
+/**
+ * Who just signed in, for the question the desktop app's hand-off asks: the id token says, as
+ * it came straight from the provider, and otherwise the mail server's session does.
+ */
+async function accountName(serverUrl: string, accessToken: string, idToken: string | undefined): Promise<string> {
+  try {
+    const claims = JSON.parse(Buffer.from((idToken ?? '').split('.')[1] ?? '', 'base64url').toString('utf8')) as Record<string, unknown>;
+    for (const claim of ['email', 'preferred_username', 'name']) {
+      if (typeof claims[claim] === 'string' && claims[claim]) return claims[claim] as string;
+    }
+  } catch {
+    // Not a JWT, or none: the server can say.
+  }
+  try {
+    const session = await fetch(`${serverUrl.replace(/\/+$/, '')}/.well-known/jmap`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      redirect: 'error',
+      signal: AbortSignal.timeout(5000),
+    });
+    const body = (await session.json()) as { username?: unknown };
+    return typeof body.username === 'string' ? body.username : '';
+  } catch {
+    return '';
+  }
+}
+
 export async function POST(request: NextRequest) {
   // CSRF gate (GHSA-qvr9-m8cq-7wvg): cookies written here are SameSite=Lax,
   // so a cross-site top-level POST would otherwise reach this handler.
@@ -158,6 +184,7 @@ export async function POST(request: NextRequest) {
           flow: 'desktop-tokens',
           server_url: serverUrl,
           server_id: pendingServerId,
+          custom: false,
           access_token: tokens.access_token,
           refresh_token: tokens.refresh_token,
           id_token: tokens.id_token,
@@ -168,6 +195,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
           mobile_handoff_code: handoffCode,
           server_url: serverUrl,
+          account: await accountName(serverUrl, tokens.access_token, tokens.id_token),
           mobile_redirect_uri: mobileRedirectUri,
           mobile_state: mobileState,
         });

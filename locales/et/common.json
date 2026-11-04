@@ -6886,9 +6886,9 @@
     "timed_out": "Sisselogimine brauseris võttis liiga kaua aega. Proovi uuesti.",
     "no_browser": "Bulwark ei saanud brauserit avada. Proovi uuesti või logi sisse siin.",
     "failed": "Sisselogimine brauseri kaudu ei õnnestunud. Proovi uuesti.",
-    "handoff_banner": "Logid sisse selle arvuti Bulwarki rakendusse. See brauser jääb Bulwarkist välja logituks.",
+    "handoff_banner": "Selle arvuti programm küsis seda sisselogimist Bulwarki rakendusele. See brauser jääb Bulwarkist välja logituks. Kui sina seda ei alustanud, sulge see vaheleht.",
     "consent_title": "Kas logida sisse Bulwarki rakendusse?",
-    "consent_description": "Konto {username} sisselogimine läheb selle arvuti Bulwarki rakendusele. Jätka ainult siis, kui alustasid seda rakendusest.",
+    "consent_description": "Selle arvuti programm pordil {port} küsib konto {username} sisselogimist. Jätka ainult siis, kui vajutasid just selle arvuti Bulwarki rakenduses nuppu „Logi sisse brauseriga…“. Kui mitte, võib keegi proovida sinu kontole pääseda: vali Mitte praegu.",
     "consent_confirm": "Logi rakendusse sisse",
     "consent_cancel": "Mitte praegu",
     "page_done": "Võid selle vahelehe sulgeda ja Bulwarki naasta.",
@@ -6902,7 +6902,10 @@
     "page_submit": "Logi sisse",
     "page_wrong_password": "Server ei aktsepteerinud seda kasutajanime ja parooli.",
     "page_code_needed": "See konto vajab ka kaheastmelise kinnituse koodi. Sisesta parool uuesti ja kood.",
-    "page_no_answer": "Bulwark ei saanud sisse logida. Kontrolli, kas server on kättesaadav, ja proovi uuesti."
+    "page_no_answer": "Bulwark ei saanud sisse logida. Kontrolli, kas server on kättesaadav, ja proovi uuesti.",
+    "declined": "Ütlesid brauseris ei, seega sisse ei logitud.",
+    "too_many": "Sellest võrgust on liiga palju sisselogimiskatseid. Oota paar minutit ja proovi uuesti.",
+    "page_declined": "Midagi ei antud üle. Võid selle vahelehe sulgeda."
   },
   "desktop_updates": {
     "title": "Uuendused",

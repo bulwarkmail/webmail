@@ -28,9 +28,40 @@ export async function requestMobileHandoffCodeUrl(opts: {
   }
 }
 
+/** The desktop app's sign-in, before its question: is this password right? Nothing is kept. */
+export async function checkDesktopSignIn(opts: {
+  serverUrl: string;
+  serverId?: string;
+  username: string;
+  password: string;
+}): Promise<{ ok: true } | { error: string }> {
+  try {
+    const res = await apiFetch('/api/auth/desktop-handoff/check', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ server_url: opts.serverUrl, server_id: opts.serverId, username: opts.username, password: opts.password }),
+    });
+    if (res.ok) return { ok: true };
+    const data = (await res.json().catch(() => null)) as { error?: unknown } | null;
+    return { error: typeof data?.error === 'string' ? data.error : 'login_failed' };
+  } catch {
+    return { error: 'network_error' };
+  }
+}
+
+/** The tab with an SSO sign-in the user hasn't answered went, or said no: it's not kept. */
+export function discardDesktopSignIn(code: string): void {
+  void apiFetch('/api/auth/desktop-handoff/discard', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code }),
+    keepalive: true,
+  }).catch(() => {});
+}
+
 /**
- * The desktop app's sign-in on this page: checks the password against the mail server and
- * parks it (/api/auth/desktop-handoff/park). This browser gets no session out of it.
+ * The user said yes: parks the sign-in for the app (/api/auth/desktop-handoff/park), as
+ * tokens wherever the server can give them. This browser gets no session out of it.
  */
 export async function parkDesktopSignIn(opts: {
   challenge: string;

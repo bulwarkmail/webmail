@@ -6886,9 +6886,9 @@
     "timed_out": "La connexion dans le navigateur a pris trop de temps. Réessayez.",
     "no_browser": "Bulwark n’a pas pu ouvrir votre navigateur. Réessayez ou connectez-vous ici.",
     "failed": "La connexion via votre navigateur n’a pas fonctionné. Réessayez.",
-    "handoff_banner": "Vous vous connectez à l’application Bulwark sur cet ordinateur. Ce navigateur reste déconnecté de Bulwark.",
+    "handoff_banner": "Un programme sur cet ordinateur a demandé cette connexion pour l’application Bulwark. Ce navigateur reste déconnecté de Bulwark. Si vous n’êtes pas à l’origine de cela, fermez cet onglet.",
     "consent_title": "Se connecter à l’application Bulwark ?",
-    "consent_description": "Votre connexion pour {username} va à l’application Bulwark sur cet ordinateur. Continuez seulement si vous avez lancé cela depuis l’application.",
+    "consent_description": "Un programme sur cet ordinateur, au port {port}, demande la connexion de {username}. Continuez seulement si vous venez de cliquer sur « Se connecter avec votre navigateur… » dans l’application Bulwark ici. Sinon, quelqu’un essaie peut-être d’accéder à votre compte : choisissez Pas maintenant.",
     "consent_confirm": "Se connecter à l’application",
     "consent_cancel": "Pas maintenant",
     "page_done": "Vous pouvez fermer cet onglet et revenir à Bulwark.",
@@ -6902,7 +6902,10 @@
     "page_submit": "Se connecter",
     "page_wrong_password": "Le serveur n’a pas accepté ce nom d’utilisateur et ce mot de passe.",
     "page_code_needed": "Ce compte demande aussi un code à deux facteurs. Saisissez à nouveau votre mot de passe et le code.",
-    "page_no_answer": "Bulwark n’a pas pu se connecter. Vérifiez que le serveur est joignable et réessayez."
+    "page_no_answer": "Bulwark n’a pas pu se connecter. Vérifiez que le serveur est joignable et réessayez.",
+    "declined": "Vous avez refusé dans votre navigateur : aucune connexion n’a été faite.",
+    "too_many": "Trop de tentatives de connexion depuis ce réseau. Attendez quelques minutes et réessayez.",
+    "page_declined": "Rien n’a été transmis. Vous pouvez fermer cet onglet."
   },
   "desktop_updates": {
     "title": "Mises à jour",

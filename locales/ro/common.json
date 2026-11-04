@@ -6886,9 +6886,9 @@
     "timed_out": "Conectarea în browser a durat prea mult. Încercați din nou.",
     "no_browser": "Bulwark nu a putut deschide browserul. Încercați din nou sau conectați-vă aici.",
     "failed": "Conectarea prin browser nu a reușit. Încercați din nou.",
-    "handoff_banner": "Vă conectați la aplicația Bulwark de pe acest computer. Acest browser rămâne deconectat de la Bulwark.",
+    "handoff_banner": "Un program de pe acest computer a cerut această conectare pentru aplicația Bulwark. Acest browser rămâne deconectat de la Bulwark. Dacă nu ați pornit dvs. acest lucru, închideți această filă.",
     "consent_title": "Vă conectați la aplicația Bulwark?",
-    "consent_description": "Conectarea pentru {username} merge la aplicația Bulwark de pe acest computer. Continuați doar dacă ați pornit acest lucru din aplicație.",
+    "consent_description": "Un program de pe acest computer, la portul {port}, cere conectarea pentru {username}. Continuați doar dacă tocmai ați apăsat „Conectați-vă cu browserul…” în aplicația Bulwark de aici. Dacă nu, poate cineva încearcă să intre în contul dvs.: alegeți Nu acum.",
     "consent_confirm": "Conectați-vă la aplicație",
     "consent_cancel": "Nu acum",
     "page_done": "Puteți închide această filă și reveni la Bulwark.",
@@ -6902,7 +6902,10 @@
     "page_submit": "Conectați-vă",
     "page_wrong_password": "Serverul nu a acceptat acest nume de utilizator și această parolă.",
     "page_code_needed": "Acest cont are nevoie și de un cod cu doi factori. Introduceți din nou parola și codul.",
-    "page_no_answer": "Bulwark nu s-a putut conecta. Verificați dacă serverul este accesibil și încercați din nou."
+    "page_no_answer": "Bulwark nu s-a putut conecta. Verificați dacă serverul este accesibil și încercați din nou.",
+    "declined": "Ați refuzat în browser, așa că nu s-a făcut nicio conectare.",
+    "too_many": "Prea multe încercări de conectare din această rețea. Așteptați câteva minute și încercați din nou.",
+    "page_declined": "Nu s-a transmis nimic. Puteți închide această filă."
   },
   "desktop_updates": {
     "title": "Actualizări",

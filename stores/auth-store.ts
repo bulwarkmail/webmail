@@ -114,7 +114,7 @@ interface AuthState {
    * The desktop app on an instance: the one-time code from its browser sign-in, with the
    * verifier it kept. `blocked` is the device's own list of servers saying no.
    */
-  loginWithDesktopHandoff: (code: string, verifier: string, options: { remember: boolean; rememberPassword: boolean; allowedServers: string[] | null }) => Promise<'ok' | 'blocked' | 'failed'>;
+  loginWithDesktopHandoff: (code: string, verifier: string, options: { remember: boolean; rememberPassword: boolean; allowedServers: string[] | null; customServersAllowed: boolean }) => Promise<'ok' | 'blocked' | 'failed'>;
   loginDemo: () => Promise<boolean>;
   /**
    * Obtain a usable access token for `accountId`, or the active account.
@@ -1637,20 +1637,33 @@ function notifySignedIn(state: { activeAccountId: string | null; username: strin
 async function adoptProviderSession(
   set: (state: Partial<AuthState>) => void,
   get: () => AuthState,
-  session: { serverUrl: string; accessToken: string; expiresIn: number; remember: boolean | undefined; slot: number },
+  session: {
+    serverUrl: string;
+    accessToken: string;
+    expiresIn: number;
+    remember: boolean | undefined;
+    slot: number;
+    /**
+     * Tokens from a typed password, not a provider's page: the account the user knows, under
+     * the name they typed. It has the same id as any other password sign-in with that name, so
+     * what its last sign-out kept comes back, and its password settings stay (#1432).
+     */
+    typedUsername?: string;
+  },
 ): Promise<void> {
   const { serverUrl: ssoServerUrl, accessToken: access_token, expiresIn: expires_in, remember, slot } = session;
+  const typed = session.typedUsername ? toAsciiEmail(session.typedUsername) : '';
   const accountStore = useAccountStore.getState();
   let boundAccountId: string | undefined;
-  const client = JMAPClient.withBearer(ssoServerUrl, access_token, '', () => get().refreshAccessToken({ accountId: boundAccountId }));
+  const client = JMAPClient.withBearer(ssoServerUrl, access_token, typed, () => get().refreshAccessToken({ accountId: boundAccountId }));
   await client.connect();
 
   const jmapUsername = client.getUsername();
-  const { identities, primaryIdentity } = loadIdentities(await client.getIdentities(), jmapUsername);
+  const { identities, primaryIdentity } = loadIdentities(await client.getIdentities(), typed || jmapUsername);
   // For SSO/OIDC, the JMAP session account name may be the
   // preferred_username claim rather than the real email address.
   // Prefer the email from the primary identity when available.
-  const username = primaryIdentity?.email || jmapUsername;
+  const username = typed || primaryIdentity?.email || jmapUsername;
   initializeFeatureStores(client);
 
   const accountId = generateAccountId(username, ssoServerUrl);
@@ -1681,7 +1694,11 @@ async function adoptProviderSession(
   // The refresh-token cookie was written to `slot` by /api/auth/sso/complete.
   // Force the stored cookieSlot to match - see loginWithOAuth above for the
   // re-add and concurrent-tab cases this guards against.
-  accountStore.updateAccount(accountId, { cookieSlot: slot, providerSession: true });
+  accountStore.updateAccount(accountId, { cookieSlot: slot, providerSession: !typed });
+  if (typed) {
+    const serverIdentifiers = buildServerIdentifiers(client.getSessionUsername(), primaryIdentity?.email, ssoServerUrl);
+    if (serverIdentifiers.length > 0) accountStore.updateAccount(accountId, { serverIdentifiers });
+  }
   accountStore.setActiveAccount(accountId);
 
   await syncStalwartAuthContext(ssoServerUrl, username, client.getAuthHeader(), slot);
@@ -2409,7 +2426,7 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      loginWithDesktopHandoff: async (code, verifier, { remember, rememberPassword, allowedServers }) => {
+      loginWithDesktopHandoff: async (code, verifier, { remember, rememberPassword, allowedServers, customServersAllowed }) => {
         if (IS_LITE) return 'failed';
         set({ isLoading: true, error: null, isRateLimited: false, rateLimitUntil: null });
         try {
@@ -2417,7 +2434,7 @@ export const useAuthStore = create<AuthState>()(
           const res = await apiFetch('/api/auth/desktop-handoff/redeem', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code, code_verifier: verifier, slot, remember, allowed_servers: allowedServers }),
+            body: JSON.stringify({ code, code_verifier: verifier, slot, remember, allowed_servers: allowedServers, custom_servers_allowed: customServersAllowed }),
           }).then((answer) => noteSessionAnswer(answer, slot));
           if (!res.ok) {
             const refusal = (await res.json().catch(() => null)) as { error?: string } | null;
@@ -2429,7 +2446,14 @@ export const useAuthStore = create<AuthState>()(
             // A password the browser checked a moment ago, down the same path as a typed one.
             return (await get().login(parked.server_url, parked.username, parked.password, undefined, rememberPassword)) ? 'ok' : 'failed';
           }
-          await adoptProviderSession(set, get, { serverUrl: parked.server_url, accessToken: parked.access_token, expiresIn: parked.expires_in, remember: parked.remember, slot });
+          await adoptProviderSession(set, get, {
+            serverUrl: parked.server_url,
+            accessToken: parked.access_token,
+            expiresIn: parked.expires_in,
+            remember: parked.remember,
+            slot,
+            ...(parked.password_login ? { typedUsername: parked.username } : {}),
+          });
           return 'ok';
         } catch (error) {
           debug.error('Desktop hand-off login error:', error);

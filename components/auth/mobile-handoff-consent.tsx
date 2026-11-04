@@ -19,8 +19,8 @@ interface MobileHandoffConsentProps {
   onCancel: () => void;
   /** `resolveUrl` returned null: nothing was handed over. */
   onError?: () => void;
-  /** The desktop app on this computer, not the phone's app. */
-  desktop?: boolean;
+  /** The desktop app, not the phone's: the port its listener asked from. */
+  desktopPort?: string;
 }
 
 /**
@@ -31,7 +31,8 @@ interface MobileHandoffConsentProps {
  * `bulwarkmobile` scheme on the device receives whatever is handed over
  * (lib/auth/mobile-handoff.ts). Nothing leaves without this confirmation.
  */
-export function MobileHandoffConsent({ url, resolveUrl, username, onCancel, onError, desktop }: MobileHandoffConsentProps) {
+export function MobileHandoffConsent({ url, resolveUrl, username, onCancel, onError, desktopPort }: MobileHandoffConsentProps) {
+  const desktop = Boolean(desktopPort);
   const t = useTranslations("login");
   const tDesktop = useTranslations("desktop_browser_sign_in");
   // The dialog closes itself right after confirming; while the code is being
@@ -63,7 +64,7 @@ export function MobileHandoffConsent({ url, resolveUrl, username, onCancel, onEr
         if (url) window.location.replace(url);
       }}
       title={desktop ? tDesktop("consent_title") : t("mobile_handoff.title")}
-      message={desktop ? tDesktop("consent_description", { username }) : t("mobile_handoff.description", { username })}
+      message={desktop ? tDesktop("consent_description", { username, port: desktopPort ?? "" }) : t("mobile_handoff.description", { username })}
       confirmText={desktop ? tDesktop("consent_confirm") : t("mobile_handoff.confirm")}
       cancelText={desktop ? tDesktop("consent_cancel") : t("mobile_handoff.cancel")}
     />

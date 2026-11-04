@@ -6886,9 +6886,9 @@
     "timed_out": "Inloggen in de browser duurde te lang. Probeer het opnieuw.",
     "no_browser": "Bulwark kon je browser niet openen. Probeer het opnieuw of log hier in.",
     "failed": "Inloggen via je browser is niet gelukt. Probeer het opnieuw.",
-    "handoff_banner": "Je logt in bij de Bulwark-app op deze computer. Deze browser blijft uitgelogd bij Bulwark.",
+    "handoff_banner": "Een programma op deze computer heeft om deze aanmelding gevraagd voor de Bulwark-app. Deze browser blijft uitgelogd bij Bulwark. Heb je dit niet gestart, sluit dan dit tabblad.",
     "consent_title": "Inloggen bij de Bulwark-app?",
-    "consent_description": "Je aanmelding voor {username} gaat naar de Bulwark-app op deze computer. Ga alleen verder als je dit vanuit de app hebt gestart.",
+    "consent_description": "Een programma op deze computer, op poort {port}, vraagt om de aanmelding van {username}. Ga alleen verder als je zojuist op \"Inloggen met je browser…\" hebt geklikt in de Bulwark-app hier. Zo niet, dan probeert iemand misschien in je account te komen: kies Niet nu.",
     "consent_confirm": "Inloggen bij de app",
     "consent_cancel": "Niet nu",
     "page_done": "Je kunt dit tabblad sluiten en teruggaan naar Bulwark.",
@@ -6902,7 +6902,10 @@
     "page_submit": "Inloggen",
     "page_wrong_password": "De server heeft deze gebruikersnaam en dit wachtwoord niet geaccepteerd.",
     "page_code_needed": "Dit account heeft ook een tweefactorcode nodig. Voer je wachtwoord opnieuw in en de code.",
-    "page_no_answer": "Bulwark kon niet inloggen. Controleer of de server bereikbaar is en probeer het opnieuw."
+    "page_no_answer": "Bulwark kon niet inloggen. Controleer of de server bereikbaar is en probeer het opnieuw.",
+    "declined": "Je hebt in je browser nee gezegd, dus er is niet ingelogd.",
+    "too_many": "Te veel inlogpogingen vanaf dit netwerk. Wacht een paar minuten en probeer het opnieuw.",
+    "page_declined": "Er is niets overgedragen. Je kunt dit tabblad sluiten."
   },
   "desktop_updates": {
     "title": "Updates",

@@ -6886,9 +6886,9 @@
     "timed_out": "Innloggingen i nettleseren tok for lang tid. Prøv igjen.",
     "no_browser": "Bulwark kunne ikke åpne nettleseren. Prøv igjen, eller logg inn her.",
     "failed": "Innlogging via nettleseren virket ikke. Prøv igjen.",
-    "handoff_banner": "Du logger inn i Bulwark-appen på denne datamaskinen. Denne nettleseren forblir logget ut av Bulwark.",
+    "handoff_banner": "Et program på denne datamaskinen ba om denne innloggingen for Bulwark-appen. Denne nettleseren forblir logget ut av Bulwark. Hvis du ikke startet dette, lukk denne fanen.",
     "consent_title": "Logge inn i Bulwark-appen?",
-    "consent_description": "Innloggingen din for {username} går til Bulwark-appen på denne datamaskinen. Fortsett bare hvis du startet dette fra appen.",
+    "consent_description": "Et program på denne datamaskinen, på port {port}, ber om innloggingen for {username}. Fortsett bare hvis du nettopp trykket på «Logg inn med nettleseren…» i Bulwark-appen her. Hvis ikke, prøver kanskje noen å komme inn på kontoen din: velg Ikke nå.",
     "consent_confirm": "Logg inn i appen",
     "consent_cancel": "Ikke nå",
     "page_done": "Du kan lukke denne fanen og gå tilbake til Bulwark.",
@@ -6902,7 +6902,10 @@
     "page_submit": "Logg inn",
     "page_wrong_password": "Serveren godtok ikke dette brukernavnet og passordet.",
     "page_code_needed": "Denne kontoen trenger også en tofaktorkode. Skriv inn passordet på nytt og koden.",
-    "page_no_answer": "Bulwark kunne ikke logge inn. Sjekk at serveren kan nås, og prøv igjen."
+    "page_no_answer": "Bulwark kunne ikke logge inn. Sjekk at serveren kan nås, og prøv igjen.",
+    "declined": "Du sa nei i nettleseren, så ingenting ble logget inn.",
+    "too_many": "For mange innloggingsforsøk fra dette nettverket. Vent noen minutter og prøv igjen.",
+    "page_declined": "Ingenting ble overlevert. Du kan lukke denne fanen."
   },
   "desktop_updates": {
     "title": "Oppdateringer",

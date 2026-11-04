@@ -6886,9 +6886,9 @@
     "timed_out": "El inicio de sesión en el navegador tardó demasiado. Inténtalo de nuevo.",
     "no_browser": "Bulwark no pudo abrir tu navegador. Inténtalo de nuevo o inicia sesión aquí.",
     "failed": "No se pudo iniciar sesión a través de tu navegador. Inténtalo de nuevo.",
-    "handoff_banner": "Estás iniciando sesión en la aplicación Bulwark de este ordenador. Este navegador sigue sin sesión en Bulwark.",
+    "handoff_banner": "Un programa de este ordenador ha pedido este inicio de sesión para la aplicación Bulwark. Este navegador sigue sin sesión en Bulwark. Si no lo has iniciado tú, cierra esta pestaña.",
     "consent_title": "¿Iniciar sesión en la aplicación Bulwark?",
-    "consent_description": "Tu inicio de sesión de {username} va a la aplicación Bulwark de este ordenador. Continúa solo si lo iniciaste desde la aplicación.",
+    "consent_description": "Un programa de este ordenador, en el puerto {port}, pide el inicio de sesión de {username}. Continúa solo si acabas de pulsar «Iniciar sesión con tu navegador…» en la aplicación Bulwark de aquí. Si no, puede que alguien intente entrar en tu cuenta: elige Ahora no.",
     "consent_confirm": "Iniciar sesión en la aplicación",
     "consent_cancel": "Ahora no",
     "page_done": "Puedes cerrar esta pestaña y volver a Bulwark.",
@@ -6902,7 +6902,10 @@
     "page_submit": "Iniciar sesión",
     "page_wrong_password": "El servidor no aceptó este nombre de usuario y esta contraseña.",
     "page_code_needed": "Esta cuenta también necesita un código de dos factores. Escribe de nuevo tu contraseña y el código.",
-    "page_no_answer": "Bulwark no pudo iniciar sesión. Comprueba que el servidor esté accesible e inténtalo de nuevo."
+    "page_no_answer": "Bulwark no pudo iniciar sesión. Comprueba que el servidor esté accesible e inténtalo de nuevo.",
+    "declined": "Dijiste que no en tu navegador, así que no se inició ninguna sesión.",
+    "too_many": "Demasiados intentos de inicio de sesión desde esta red. Espera unos minutos e inténtalo de nuevo.",
+    "page_declined": "No se ha entregado nada. Puedes cerrar esta pestaña."
   },
   "desktop_updates": {
     "title": "Actualizaciones",

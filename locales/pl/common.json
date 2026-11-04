@@ -6886,9 +6886,9 @@
     "timed_out": "Logowanie w przeglądarce trwało zbyt długo. Spróbuj ponownie.",
     "no_browser": "Bulwark nie może otworzyć przeglądarki. Spróbuj ponownie lub zaloguj się tutaj.",
     "failed": "Logowanie przez przeglądarkę nie powiodło się. Spróbuj ponownie.",
-    "handoff_banner": "Logujesz się w aplikacji Bulwark na tym komputerze. Ta przeglądarka pozostaje wylogowana z Bulwark.",
+    "handoff_banner": "Program na tym komputerze poprosił o to logowanie dla aplikacji Bulwark. Ta przeglądarka pozostaje wylogowana z Bulwark. Jeśli to nie Ty, zamknij tę kartę.",
     "consent_title": "Zalogować się w aplikacji Bulwark?",
-    "consent_description": "Twoje logowanie dla {username} trafi do aplikacji Bulwark na tym komputerze. Kontynuuj tylko wtedy, gdy rozpoczęto je w aplikacji.",
+    "consent_description": "Program na tym komputerze, na porcie {port}, prosi o logowanie dla {username}. Kontynuuj tylko wtedy, gdy przed chwilą kliknięto „Zaloguj się w przeglądarce…” w aplikacji Bulwark na tym komputerze. Jeśli nie, ktoś może próbować dostać się na Twoje konto: wybierz Nie teraz.",
     "consent_confirm": "Zaloguj się w aplikacji",
     "consent_cancel": "Nie teraz",
     "page_done": "Możesz zamknąć tę kartę i wrócić do Bulwark.",
@@ -6902,7 +6902,10 @@
     "page_submit": "Zaloguj się",
     "page_wrong_password": "Serwer nie przyjął tej nazwy użytkownika i hasła.",
     "page_code_needed": "To konto wymaga też kodu dwuskładnikowego. Wpisz ponownie hasło i kod.",
-    "page_no_answer": "Bulwark nie może się zalogować. Sprawdź, czy serwer jest dostępny, i spróbuj ponownie."
+    "page_no_answer": "Bulwark nie może się zalogować. Sprawdź, czy serwer jest dostępny, i spróbuj ponownie.",
+    "declined": "Odmówiono w przeglądarce, więc nic nie zostało zalogowane.",
+    "too_many": "Zbyt wiele prób logowania z tej sieci. Poczekaj kilka minut i spróbuj ponownie.",
+    "page_declined": "Nic nie zostało przekazane. Możesz zamknąć tę kartę."
   },
   "desktop_updates": {
     "title": "Aktualizacje",

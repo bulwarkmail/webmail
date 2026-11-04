@@ -6886,9 +6886,9 @@
     "timed_out": "Die Anmeldung im Browser hat zu lange gedauert. Versuchen Sie es noch einmal.",
     "no_browser": "Bulwark konnte Ihren Browser nicht öffnen. Versuchen Sie es noch einmal oder melden Sie sich hier an.",
     "failed": "Die Anmeldung über Ihren Browser hat nicht geklappt. Versuchen Sie es noch einmal.",
-    "handoff_banner": "Sie melden sich bei der Bulwark-App auf diesem Computer an. Dieser Browser bleibt bei Bulwark abgemeldet.",
+    "handoff_banner": "Ein Programm auf diesem Computer hat diese Anmeldung für die Bulwark-App angefordert. Dieser Browser bleibt bei Bulwark abgemeldet. Wenn Sie das nicht gestartet haben, schließen Sie diesen Tab.",
     "consent_title": "Bei der Bulwark-App anmelden?",
-    "consent_description": "Ihre Anmeldung für {username} geht an die Bulwark-App auf diesem Computer. Fahren Sie nur fort, wenn Sie dies aus der App gestartet haben.",
+    "consent_description": "Ein Programm auf diesem Computer, an Port {port}, fragt nach der Anmeldung für {username}. Fahren Sie nur fort, wenn Sie gerade in der Bulwark-App hier auf „Mit Ihrem Browser anmelden…“ geklickt haben. Wenn nicht, versucht vielleicht jemand, in Ihr Konto zu gelangen: Wählen Sie „Jetzt nicht“.",
     "consent_confirm": "Bei der App anmelden",
     "consent_cancel": "Jetzt nicht",
     "page_done": "Sie können diesen Tab schließen und zu Bulwark zurückkehren.",
@@ -6902,7 +6902,10 @@
     "page_submit": "Anmelden",
     "page_wrong_password": "Der Server hat diesen Benutzernamen und dieses Passwort nicht akzeptiert.",
     "page_code_needed": "Dieses Konto braucht außerdem einen Zwei-Faktor-Code. Geben Sie Ihr Passwort noch einmal und den Code ein.",
-    "page_no_answer": "Bulwark konnte sich nicht anmelden. Prüfen Sie, ob der Server erreichbar ist, und versuchen Sie es noch einmal."
+    "page_no_answer": "Bulwark konnte sich nicht anmelden. Prüfen Sie, ob der Server erreichbar ist, und versuchen Sie es noch einmal.",
+    "declined": "Sie haben im Browser abgelehnt, deshalb wurde nichts angemeldet.",
+    "too_many": "Zu viele Anmeldeversuche aus diesem Netzwerk. Warten Sie ein paar Minuten und versuchen Sie es noch einmal.",
+    "page_declined": "Es wurde nichts übergeben. Sie können diesen Tab schließen."
   },
   "desktop_updates": {
     "title": "Updates",

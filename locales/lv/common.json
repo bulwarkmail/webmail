@@ -6886,9 +6886,9 @@
     "timed_out": "Pieteikšanās pārlūkā aizņēma pārāk ilgu laiku. Mēģiniet vēlreiz.",
     "no_browser": "Bulwark nevarēja atvērt pārlūku. Mēģiniet vēlreiz vai piesakieties šeit.",
     "failed": "Pieteikšanās caur pārlūku neizdevās. Mēģiniet vēlreiz.",
-    "handoff_banner": "Jūs piesakāties Bulwark lietotnē šajā datorā. Šis pārlūks paliek izrakstīts no Bulwark.",
+    "handoff_banner": "Programma šajā datorā pieprasīja šo pieteikšanos Bulwark lietotnei. Šis pārlūks paliek izrakstīts no Bulwark. Ja to nesākāt jūs, aizveriet šo cilni.",
     "consent_title": "Pieteikties Bulwark lietotnē?",
-    "consent_description": "Jūsu pieteikšanās kontam {username} tiek nodota Bulwark lietotnei šajā datorā. Turpiniet tikai tad, ja to sākāt no lietotnes.",
+    "consent_description": "Programma šajā datorā, portā {port}, prasa pieteikšanos kontam {username}. Turpiniet tikai tad, ja tikko nospiedāt “Pieteikties ar pārlūku…” Bulwark lietotnē šajā datorā. Ja nē, iespējams, kāds mēģina piekļūt jūsu kontam: izvēlieties Ne tagad.",
     "consent_confirm": "Pieteikties lietotnē",
     "consent_cancel": "Ne tagad",
     "page_done": "Varat aizvērt šo cilni un atgriezties Bulwark.",
@@ -6902,7 +6902,10 @@
     "page_submit": "Pieteikties",
     "page_wrong_password": "Serveris nepieņēma šo lietotājvārdu un paroli.",
     "page_code_needed": "Šim kontam vajag arī divu faktoru kodu. Ievadiet paroli vēlreiz un kodu.",
-    "page_no_answer": "Bulwark nevarēja pieteikties. Pārbaudiet, vai serveris ir sasniedzams, un mēģiniet vēlreiz."
+    "page_no_answer": "Bulwark nevarēja pieteikties. Pārbaudiet, vai serveris ir sasniedzams, un mēģiniet vēlreiz.",
+    "declined": "Jūs pārlūkā atteicāt, tāpēc pieteikšanās nenotika.",
+    "too_many": "Pārāk daudz pieteikšanās mēģinājumu no šī tīkla. Pagaidiet dažas minūtes un mēģiniet vēlreiz.",
+    "page_declined": "Nekas netika nodots. Varat aizvērt šo cilni."
   },
   "desktop_updates": {
     "title": "Atjauninājumi",

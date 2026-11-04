@@ -46,6 +46,7 @@ export function shellLabels(t: (key: string, values?: Record<string, string>) =>
     signInDone: t('desktop_browser_sign_in.page_done'),
     signInFailed: t('desktop_browser_sign_in.page_failed'),
     signInLinkUsed: t('desktop_browser_sign_in.page_link_used'),
+    signInDeclined: t('desktop_browser_sign_in.page_declined'),
     signInPageTitle: t('desktop_browser_sign_in.page_title', { server: '{server}' }),
     signInPageIntro: t('desktop_browser_sign_in.page_intro', { server: '{server}' }),
     signInUsername: t('desktop_browser_sign_in.page_username'),

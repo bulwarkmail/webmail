@@ -238,6 +238,7 @@ describe('/api/auth/sso/complete for the desktop app', () => {
     expect(res.body).toEqual({
       mobile_handoff_code: expect.stringMatching(/^[0-9a-f]{64}$/),
       server_url: 'https://mail.example.org',
+      account: '',
       mobile_redirect_uri: LISTENER,
       mobile_state: 'd-1',
     });
@@ -246,6 +247,21 @@ describe('/api/auth/sso/complete for the desktop app', () => {
     expect(jar.has('sso_pending')).toBe(false);
 
     expect((await redeemHandoff(res.body.mobile_handoff_code, VERIFIER)).ok).toBe(false);
+  });
+
+  it('names the account for the question: from the id token, or the server\'s session', async () => {
+    const jwt = (claims: object) => `x.${Buffer.from(JSON.stringify(claims)).toString('base64url')}.y`;
+    exchangeCodeForTokens.mockResolvedValue({ access_token: 'at', refresh_token: 'rt', id_token: jwt({ email: 'alice@example.org' }), expires_in: 3600 });
+    pending({ mobile_redirect_uri: LISTENER, mobile_state: 'd-1', mobile_code_challenge: CHALLENGE });
+    expect((await complete()).body.account).toBe('alice@example.org');
+
+    const fetched = vi.fn(async () => new Response(JSON.stringify({ username: 'bob@example.org' }), { status: 200 }));
+    vi.stubGlobal('fetch', fetched);
+    exchangeCodeForTokens.mockResolvedValue({ access_token: 'at', refresh_token: 'rt', expires_in: 3600 });
+    pending({ mobile_redirect_uri: LISTENER, mobile_state: 'd-1', mobile_code_challenge: CHALLENGE });
+    expect((await complete()).body.account).toBe('bob@example.org');
+    expect(fetched).toHaveBeenCalledWith('https://mail.example.org/.well-known/jmap', expect.objectContaining({ headers: { Authorization: 'Bearer at' } }));
+    vi.unstubAllGlobals();
   });
 
   it('hands the refresh token itself to the app, which writes its own cookie', async () => {

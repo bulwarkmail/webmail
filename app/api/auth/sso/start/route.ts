@@ -13,6 +13,7 @@ import { hasSessionSecret } from '@/lib/auth/session-secret';
 import { configManager } from '@/lib/admin/config-manager';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { desktopHandoffTarget, isMobileCodeChallenge, mobileHandoffTarget } from '@/lib/auth/mobile-handoff';
+import { desktopHandoffEnabled } from '@/lib/auth/desktop-handoff-server';
 
 const SSO_PENDING_COOKIE = 'sso_pending';
 const SSO_PENDING_MAX_AGE = 300; // 5 minutes
@@ -80,6 +81,10 @@ export async function POST(request: NextRequest) {
     // tokens in the answer, on the way to a link.
     if (mobileRedirectUri && desktopHandoffTarget(mobileRedirectUri) && !isMobileCodeChallenge(rawMobileCodeChallenge)) {
       return NextResponse.json({ error: 'Invalid mobile_code_challenge' }, { status: 400 });
+    }
+    // The admin turned the desktop app's sign-in off here (a terminal server, say).
+    if (mobileRedirectUri && desktopHandoffTarget(mobileRedirectUri) && !desktopHandoffEnabled()) {
+      return NextResponse.json({ error: 'disabled' }, { status: 403 });
     }
     // An app build that sends a PKCE challenge gets a one-time code instead
     // of the tokens (lib/auth/handoff-store.ts). A malformed one is refused

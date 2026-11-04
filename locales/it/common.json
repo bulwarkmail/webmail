@@ -6886,9 +6886,9 @@
     "timed_out": "L’accesso nel browser ha richiesto troppo tempo. Riprova.",
     "no_browser": "Bulwark non è riuscito ad aprire il browser. Riprova o accedi qui.",
     "failed": "L’accesso tramite il browser non è riuscito. Riprova.",
-    "handoff_banner": "Stai accedendo all’app Bulwark su questo computer. Questo browser resta disconnesso da Bulwark.",
+    "handoff_banner": "Un programma su questo computer ha chiesto questo accesso per l’app Bulwark. Questo browser resta disconnesso da Bulwark. Se non sei stato tu ad avviarlo, chiudi questa scheda.",
     "consent_title": "Accedere all’app Bulwark?",
-    "consent_description": "Il tuo accesso per {username} va all’app Bulwark su questo computer. Continua solo se lo hai avviato dall’app.",
+    "consent_description": "Un programma su questo computer, alla porta {port}, chiede l’accesso per {username}. Continua solo se hai appena premuto «Accedi con il browser…» nell’app Bulwark qui. Altrimenti qualcuno potrebbe cercare di entrare nel tuo account: scegli Non ora.",
     "consent_confirm": "Accedi all’app",
     "consent_cancel": "Non ora",
     "page_done": "Puoi chiudere questa scheda e tornare a Bulwark.",
@@ -6902,7 +6902,10 @@
     "page_submit": "Accedi",
     "page_wrong_password": "Il server non ha accettato questo nome utente e questa password.",
     "page_code_needed": "Questo account richiede anche un codice a due fattori. Inserisci di nuovo la password e il codice.",
-    "page_no_answer": "Bulwark non è riuscito ad accedere. Verifica che il server sia raggiungibile e riprova."
+    "page_no_answer": "Bulwark non è riuscito ad accedere. Verifica che il server sia raggiungibile e riprova.",
+    "declined": "Hai detto no nel browser, quindi non è stato effettuato alcun accesso.",
+    "too_many": "Troppi tentativi di accesso da questa rete. Attendi qualche minuto e riprova.",
+    "page_declined": "Non è stato consegnato nulla. Puoi chiudere questa scheda."
   },
   "desktop_updates": {
     "title": "Aggiornamenti",

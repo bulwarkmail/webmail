@@ -66,8 +66,9 @@ vi.mock('@/lib/auth/session-secret', () => ({
   hasSessionSecret: () => true,
 }));
 
+const configValues = vi.hoisted(() => ({ desktopBrowserSignIn: true } as Record<string, unknown>));
 vi.mock('@/lib/admin/config-manager', () => ({
-  configManager: { get: () => '' },
+  configManager: { get: (key: string) => (key in configValues ? configValues[key] : '') },
 }));
 
 function mockRequest(body: Record<string, unknown>): unknown {
@@ -215,6 +216,14 @@ describe('sso start for the desktop app', () => {
     const { status } = await desktop({ mobile_code_challenge: CHALLENGE });
     expect(status).toBe(200);
     expect(encrypted.last).toMatchObject({ mobile_redirect_uri: LISTENER, mobile_state: 'd-1', mobile_code_challenge: CHALLENGE });
+  });
+
+  it('refuses it when the instance\'s admin turned it off', async () => {
+    configValues.desktopBrowserSignIn = false;
+    const { status } = await desktop({ mobile_code_challenge: CHALLENGE });
+    configValues.desktopBrowserSignIn = true;
+    expect(status).toBe(403);
+    expect(encrypted.last).toBeNull();
   });
 
   it('refuses it without a challenge: tokens would come back for a link', async () => {

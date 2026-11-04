@@ -32,6 +32,7 @@ vi.mock('@/hooks/use-config', () => ({
     oauthEnabled: true,
     oauthOnly: true,
     oauthClientId: 'webmail',
+    desktopBrowserSignIn: true,
     ...configOverrides.value,
   }),
 }));
@@ -164,6 +165,14 @@ describe('sign-in with the browser, in the app', () => {
     expect(screen.queryByTestId('desktop-browser-sign-in')).toBeNull();
   }, 30_000);
 
+  it('is gone when the instance\'s admin turned it off', async () => {
+    configOverrides.value = { oauthEnabled: false, oauthOnly: false, desktopBrowserSignIn: false };
+    appBridge();
+    render(<LoginPage />);
+    await waitFor(() => expect(document.getElementById('password')).not.toBeNull(), { timeout: 10000 });
+    expect(screen.queryByTestId('desktop-browser-sign-in')).toBeNull();
+  }, 30_000);
+
   it('is not there in a browser', async () => {
     configOverrides.value = { oauthEnabled: false, oauthOnly: false };
     render(<LoginPage />);
@@ -188,6 +197,31 @@ describe('sign-in with the browser, in the app', () => {
     expect(await browserButton()).not.toBeDisabled();
   }, 30_000);
 
+  it('a forced server says no to a server of the user\'s own, in what it asks the instance', async () => {
+    const snapshot = resolvePolicies({ ...EMPTY_POLICY_LAYERS, forcedMachine: { InstanceUrl: 'https://bulwark.example.org' } });
+    const controls = appBridge({ complete: () => ({ ok: true, code: 'c'.repeat(64), state: 'main-state' }) });
+    window.bulwarkDesktop = {
+      version: 1,
+      platform: 'win32',
+      mode: 'instance',
+      auth: { claim: () => controls },
+      policy: { get: () => snapshot, onChange: () => () => {} },
+    } as unknown as BulwarkDesktopBridge;
+    let sent: Record<string, unknown> | null = null;
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes('/api/auth/oauth/metadata')) return new Response(JSON.stringify(METADATA), { status: 200 });
+      if (url.includes('/api/auth/desktop-handoff/redeem')) {
+        sent = JSON.parse(String(init?.body));
+        return new Response(JSON.stringify({ error: 'blocked_by_policy' }), { status: 403 });
+      }
+      return new Response('{}', { status: 200 });
+    }));
+    render(<LoginPage />);
+    fireEvent.click(await browserButton());
+    await waitFor(() => expect(sent).toMatchObject({ custom_servers_allowed: false }));
+  }, 30_000);
+
   it('asks the instance with the device\'s list, and a refusal is the policy\'s notice', async () => {
     appBridge({ servers: ['https://mail.example.org'], complete: () => ({ ok: true, code: 'c'.repeat(64), state: 'main-state' }) });
     vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -195,7 +229,8 @@ describe('sign-in with the browser, in the app', () => {
       fetched.push(url);
       if (url.includes('/api/auth/oauth/metadata')) return new Response(JSON.stringify(METADATA), { status: 200 });
       if (url.includes('/api/auth/desktop-handoff/redeem')) {
-        expect(JSON.parse(String(init?.body))).toMatchObject({ allowed_servers: ['https://mail.example.org'] });
+        // The same rule as the field for a server of one's own, on an instance with a server of its own.
+        expect(JSON.parse(String(init?.body))).toMatchObject({ allowed_servers: ['https://mail.example.org'], custom_servers_allowed: true });
         return new Response(JSON.stringify({ error: 'blocked_by_policy' }), { status: 403 });
       }
       return new Response('{}', { status: 200 });
@@ -211,28 +246,96 @@ describe('the page the app opens in the browser', () => {
   const CHALLENGE = 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM';
   const search = (entries: Record<string, string>) => new URLSearchParams(entries);
 
-  it('parks the password and leaves this browser signed out, after asking', async () => {
-    configOverrides.value = { oauthEnabled: false, oauthOnly: false };
+  function handoffPage(checkAnswer: () => Response = () => new Response('{"ok":true}', { status: 200 }), parkAnswer: () => Response = () => new Response(JSON.stringify({ code: 'a'.repeat(64) }), { status: 200 })) {
+    configOverrides.value = { oauthEnabled: false, oauthOnly: false, loginShowTotp: true };
     params.value = search({ mobile_redirect_uri: 'http://127.0.0.1:51234/bulwark-desktop/callback', mobile_state: 's', mobile_code_challenge: CHALLENGE });
-    const bodies: Record<string, unknown>[] = [];
+    const parks: Record<string, unknown>[] = [];
     vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       fetched.push(url);
+      if (url.includes('/api/auth/desktop-handoff/check')) return checkAnswer();
       if (url.includes('/api/auth/desktop-handoff/park')) {
-        bodies.push(JSON.parse(String(init?.body)));
-        return new Response(JSON.stringify({ code: 'a'.repeat(64) }), { status: 200 });
+        parks.push(JSON.parse(String(init?.body)));
+        return parkAnswer();
       }
       return new Response('{}', { status: 200 });
     }));
+    return parks;
+  }
+
+  async function submit(totp?: string) {
     render(<LoginPage />);
     await screen.findByTestId('desktop-handoff-banner', {}, { timeout: 10000 });
     fireEvent.change(document.getElementById('username')!, { target: { value: 'a@example.org' } });
     fireEvent.change(document.getElementById('password')!, { target: { value: 'secret' } });
+    if (totp) {
+      fireEvent.click(screen.getByText('totp_toggle'));
+      fireEvent.change(await screen.findByLabelText('totp_label'), { target: { value: totp } });
+    }
     fireEvent.submit(document.getElementById('password')!.closest('form')!);
+  }
+
+  it('holds the password until the yes: checked first, parked only then, with no browser session', async () => {
+    const parks = handoffPage();
+    await submit();
     expect(await screen.findByText('consent_title')).toBeInTheDocument();
-    expect(bodies[0]).toMatchObject({ code_challenge: CHALLENGE, state: 's', username: 'a@example.org', password: 'secret' });
+    expect(parks).toEqual([]);
+    expect(fetched.filter((url) => url.includes('/desktop-handoff/check'))).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'consent_confirm' }));
+    await waitFor(() => expect(parks).toHaveLength(1));
+    expect(parks[0]).toMatchObject({ code_challenge: CHALLENGE, state: 's', username: 'a@example.org', password: 'secret' });
     // No session anywhere: nothing went to the routes a browser sign-in writes cookies from.
     expect(fetched.some((url) => /api\/auth\/(session|verify|token)/.test(url))).toBe(false);
+  }, 30_000);
+
+  it('"Not now" parks nothing', async () => {
+    const parks = handoffPage();
+    await submit();
+    fireEvent.click(await screen.findByRole('button', { name: 'consent_cancel' }));
+    await waitFor(() => expect(screen.queryByText('consent_title')).toBeNull());
+    expect(parks).toEqual([]);
+  }, 30_000);
+
+  it('a two-factor code is not spent before the yes, as it works once', async () => {
+    const parks = handoffPage();
+    await submit('123456');
+    expect(await screen.findByText('consent_title')).toBeInTheDocument();
+    expect(parks).toEqual([]);
+    expect(fetched.some((url) => url.includes('/desktop-handoff/check'))).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'consent_confirm' }));
+    await waitFor(() => expect(parks).toHaveLength(1));
+    expect(parks[0]).toMatchObject({ totp: '123456' });
+  }, 30_000);
+
+  it('a wrong password stays on the form, with no question', async () => {
+    const parks = handoffPage(() => new Response(JSON.stringify({ error: 'invalid_credentials' }), { status: 401 }));
+    await submit();
+    expect(await screen.findByText('error.invalid_credentials')).toBeInTheDocument();
+    expect(screen.queryByText('consent_title')).toBeNull();
+    expect(parks).toEqual([]);
+  }, 30_000);
+
+  it('too many attempts says so, and not that something broke', async () => {
+    handoffPage(() => new Response(JSON.stringify({ error: 'too_many_attempts' }), { status: 429 }));
+    await submit();
+    expect(await screen.findByText('too_many')).toBeInTheDocument();
+    expect(screen.queryByText('error.server_error')).toBeNull();
+  }, 30_000);
+
+  it('a failure at the yes goes back to the form and says why', async () => {
+    handoffPage(undefined, () => new Response(JSON.stringify({ error: 'invalid_credentials' }), { status: 401 }));
+    await submit('000000');
+    fireEvent.click(await screen.findByRole('button', { name: 'consent_confirm' }));
+    await waitFor(() => expect(screen.queryByText('consent_title')).toBeNull());
+    expect(await screen.findByText(/totp_invalid/)).toBeInTheDocument();
+  }, 30_000);
+
+  it('is the ordinary page when the instance\'s admin turned it off', async () => {
+    configOverrides.value = { oauthEnabled: false, oauthOnly: false, desktopBrowserSignIn: false };
+    params.value = search({ mobile_redirect_uri: 'http://127.0.0.1:51234/bulwark-desktop/callback', mobile_state: 's', mobile_code_challenge: CHALLENGE });
+    render(<LoginPage />);
+    await waitFor(() => expect(document.getElementById('password')).not.toBeNull(), { timeout: 10000 });
+    expect(screen.queryByTestId('desktop-handoff-banner')).toBeNull();
   }, 30_000);
 
   it('ignores a loopback target with no challenge, and is the ordinary page', async () => {

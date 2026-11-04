@@ -6886,9 +6886,9 @@
     "timed_out": "Tarayıcıda oturum açma çok uzun sürdü. Yeniden deneyin.",
     "no_browser": "Bulwark tarayıcınızı açamadı. Yeniden deneyin veya burada oturum açın.",
     "failed": "Tarayıcınız üzerinden oturum açılamadı. Yeniden deneyin.",
-    "handoff_banner": "Bu bilgisayardaki Bulwark uygulamasında oturum açıyorsunuz. Bu tarayıcı Bulwark’ta oturum kapalı kalır.",
+    "handoff_banner": "Bu bilgisayardaki bir program bu oturum açmayı Bulwark uygulaması için istedi. Bu tarayıcı Bulwark’ta oturum kapalı kalır. Bunu siz başlatmadıysanız bu sekmeyi kapatın.",
     "consent_title": "Bulwark uygulamasında oturum açılsın mı?",
-    "consent_description": "{username} için oturum açma bilginiz bu bilgisayardaki Bulwark uygulamasına gider. Yalnızca bunu uygulamadan başlattıysanız devam edin.",
+    "consent_description": "Bu bilgisayardaki bir program, {port} bağlantı noktasında, {username} için oturum açma bilgisini istiyor. Yalnızca buradaki Bulwark uygulamasında az önce \"Tarayıcınızla oturum açın…\" düğmesine bastıysanız devam edin. Basmadıysanız biri hesabınıza girmeye çalışıyor olabilir: Şimdi değil seçeneğini seçin.",
     "consent_confirm": "Uygulamada oturum aç",
     "consent_cancel": "Şimdi değil",
     "page_done": "Bu sekmeyi kapatıp Bulwark’a dönebilirsiniz.",
@@ -6902,7 +6902,10 @@
     "page_submit": "Oturum aç",
     "page_wrong_password": "Sunucu bu kullanıcı adını ve parolayı kabul etmedi.",
     "page_code_needed": "Bu hesap ayrıca iki aşamalı kod istiyor. Parolanızı ve kodu yeniden girin.",
-    "page_no_answer": "Bulwark oturum açamadı. Sunucunun erişilebilir olduğunu denetleyin ve yeniden deneyin."
+    "page_no_answer": "Bulwark oturum açamadı. Sunucunun erişilebilir olduğunu denetleyin ve yeniden deneyin.",
+    "declined": "Tarayıcınızda hayır dediniz, bu yüzden oturum açılmadı.",
+    "too_many": "Bu ağdan çok fazla oturum açma denemesi yapıldı. Birkaç dakika bekleyip yeniden deneyin.",
+    "page_declined": "Hiçbir şey aktarılmadı. Bu sekmeyi kapatabilirsiniz."
   },
   "desktop_updates": {
     "title": "Güncellemeler",

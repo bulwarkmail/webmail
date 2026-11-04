@@ -43,8 +43,8 @@ import {
 } from "@/lib/auth/lite-oauth";
 import { toAsciiDomain } from "@/lib/idn";
 import { usePrefetchMailView } from "@/hooks/use-prefetch-mail-view";
-import { buildMobileHandoffUrl, desktopHandoffTarget, mobileCodeChallenge, mobileHandoffTarget, signedInLoginAction } from "@/lib/auth/mobile-handoff";
-import { confirmMobileHandoffCodeUrl, parkDesktopSignIn, requestMobileHandoffCodeUrl } from "@/lib/auth/mobile-handoff-client";
+import { buildMobileHandoffCodeUrl, buildMobileHandoffUrl, desktopHandoffDeclineUrl, desktopHandoffPort, desktopHandoffTarget, mobileCodeChallenge, mobileHandoffTarget, signedInLoginAction } from "@/lib/auth/mobile-handoff";
+import { checkDesktopSignIn, parkDesktopSignIn, requestMobileHandoffCodeUrl } from "@/lib/auth/mobile-handoff-client";
 import { MobileHandoffConsent } from "@/components/auth/mobile-handoff-consent";
 import { HelpLinks } from "@/components/layout/help-links";
 import { LoginSkeleton } from "@/components/boot-skeleton/login-skeleton";
@@ -235,7 +235,8 @@ function LoginPageContent() {
   const mobileChallenge = mobileCodeChallenge(rawMobileCodeChallenge);
   // The desktop app's loopback listener is the other target, only ever with a code and a
   // state, and the desktop build itself has no hand-off routes (lib/desktop/blocked-routes.ts).
-  const desktopTarget = !IS_DESKTOP_BUILD && mobileChallenge && rawMobileState
+  const { desktopBrowserSignIn: desktopSignInEnabled } = useConfig();
+  const desktopTarget = !IS_DESKTOP_BUILD && desktopSignInEnabled && mobileChallenge && rawMobileState
     ? desktopHandoffTarget(searchParams.get("mobile_redirect_uri"))
     : "";
   const isDesktopHandoff = Boolean(desktopTarget);
@@ -1058,6 +1059,7 @@ function LoginPageContent() {
   const showBrowserSignInOutcome = (outcome: DesktopBrowserSignInOutcome) => {
     setDesktopWaiting(false);
     if (outcome.kind === "policy") setDesktopPolicyNotice(tDesktopPolicy("server_refused"));
+    else if (outcome.kind === "denied") setDesktopNotice(tBrowser("declined"));
     else if (outcome.kind === "declined") setDesktopNotice(tDesktop("server_declined"));
     else if (outcome.kind === "invalid") setDesktopNotice(tDesktop("server_invalid"));
     else if (outcome.kind === "timeout") setDesktopNotice(tBrowser("timed_out"));
@@ -1127,6 +1129,8 @@ function LoginPageContent() {
       remember: persistProviderSession,
       rememberPassword: persistSession,
       allowedServers: desktopPolicy.AllowedJmapServers.value,
+      // The same rule as the field for a server of one's own on this page.
+      customServersAllowed: customServerAllowedByDesktopPolicy(desktopPolicy) || !configuredServerUrl,
     });
     setDesktopWaiting(false);
     if (redeemed === "ok") router.push('/');
@@ -1134,7 +1138,7 @@ function LoginPageContent() {
     else setDesktopNotice(tBrowser("failed"));
   };
 
-  const browserSignInShown = browserSignInAvailable();
+  const browserSignInShown = browserSignInAvailable() && desktopSignInEnabled;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1143,35 +1147,51 @@ function LoginPageContent() {
     // when the admin hasn't configured a server list.
     const effectiveServerUrl = selectedServer?.url
       || (allowCustomJmapEndpoint ? jmapEndpoint : serverUrl);
-    // The desktop app opened this page in the user's browser. The password is checked and
-    // parked for the app, and this browser gets no session of its own out of it.
+    // The desktop app opened this page in the user's browser. Nothing leaves this page until
+    // the user says yes: the password is only checked, and a two-factor code can't be, as it
+    // works once. This browser gets no session of its own out of any of it.
     if (isDesktopHandoff) {
-      useAuthStore.setState({ isLoading: true, error: null });
-      setHandoffError(null);
-      const prefix = getPathPrefix(params.locale as string);
-      const parked = await parkDesktopSignIn({
-        challenge: mobileChallenge,
-        state: mobileState,
-        serverUrl: effectiveServerUrl,
-        serverId: selectedServer?.id,
-        username: formData.username,
-        password: formData.password,
-        totp: totpCode || undefined,
-        redirectUri: `${window.location.origin}${prefix}/${params.locale}/auth/callback`,
-      });
-      if ("error" in parked) {
+      const failed = (reason: string) => {
         useAuthStore.setState({
           isLoading: false,
-          error: parked.error === "invalid_credentials" || parked.error === "totp_required" ? parked.error : "server_error",
+          error: reason === "invalid_credentials" || reason === "totp_required" ? reason : reason === "too_many_attempts" ? null : "server_error",
         });
-        return;
+        setDesktopNotice(reason === "too_many_attempts" ? tBrowser("too_many") : null);
+      };
+      const { username, password } = formData;
+      const totp = totpCode || undefined;
+      useAuthStore.setState({ isLoading: true, error: null });
+      setHandoffError(null);
+      setDesktopNotice(null);
+      if (!totp) {
+        const checked = await checkDesktopSignIn({ serverUrl: effectiveServerUrl, serverId: selectedServer?.id, username, password });
+        if ("error" in checked) {
+          failed(checked.error);
+          return;
+        }
       }
       useAuthStore.setState({ isLoading: false });
-      const { code } = parked;
+      const prefix = getPathPrefix(params.locale as string);
       setPendingHandoff({
         url: null,
-        resolveUrl: () => confirmMobileHandoffCodeUrl({ target: mobileRedirectUri, code, state: mobileState }),
-        username: formData.username,
+        resolveUrl: async () => {
+          const parked = await parkDesktopSignIn({
+            challenge: mobileChallenge,
+            state: mobileState,
+            serverUrl: effectiveServerUrl,
+            serverId: selectedServer?.id,
+            username,
+            password,
+            totp,
+            redirectUri: `${window.location.origin}${prefix}/${params.locale}/auth/callback`,
+          });
+          if ("error" in parked) {
+            failed(parked.error);
+            return null;
+          }
+          return buildMobileHandoffCodeUrl(mobileRedirectUri, parked.code, mobileState);
+        },
+        username,
       });
       return;
     }
@@ -1568,15 +1588,17 @@ function LoginPageContent() {
         url={pendingHandoff?.url ?? null}
         resolveUrl={pendingHandoff?.resolveUrl ?? null}
         username={pendingHandoff?.username ?? ""}
-        desktop={isDesktopHandoff}
+        desktopPort={isDesktopHandoff ? desktopHandoffPort(desktopTarget) : undefined}
         onCancel={() => {
           setPendingHandoff(null);
-          // The app's sign-in stays open here, to try again or to leave.
-          if (!isDesktopHandoff) router.push('/');
+          // Ends the flow at the app, which isn't left waiting. Nothing was parked.
+          if (isDesktopHandoff) window.location.replace(desktopHandoffDeclineUrl(desktopTarget, mobileState));
+          else router.push('/');
         }}
         onError={() => {
           setPendingHandoff(null);
-          setHandoffError("server_error");
+          // The desktop's answer has said what went wrong, on the form.
+          if (!isDesktopHandoff) setHandoffError("server_error");
         }}
       />
       {/* Theme toggle - top right, dropdown style; hidden while the theme policy locks the mode (#1280) */}

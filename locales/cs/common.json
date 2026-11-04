@@ -6886,9 +6886,9 @@
     "timed_out": "Přihlášení v prohlížeči trvalo příliš dlouho. Zkuste to znovu.",
     "no_browser": "Bulwark nemohl otevřít prohlížeč. Zkuste to znovu nebo se přihlaste zde.",
     "failed": "Přihlášení přes prohlížeč se nezdařilo. Zkuste to znovu.",
-    "handoff_banner": "Přihlašujete se do aplikace Bulwark v tomto počítači. Tento prohlížeč zůstane z Bulwarku odhlášený.",
+    "handoff_banner": "Program v tomto počítači požádal o toto přihlášení pro aplikaci Bulwark. Tento prohlížeč zůstane z Bulwarku odhlášený. Pokud jste to nespustili vy, zavřete tuto kartu.",
     "consent_title": "Přihlásit se do aplikace Bulwark?",
-    "consent_description": "Vaše přihlášení pro {username} půjde do aplikace Bulwark v tomto počítači. Pokračujte jen tehdy, pokud jste to spustili z aplikace.",
+    "consent_description": "Program v tomto počítači, na portu {port}, žádá o přihlášení pro {username}. Pokračujte, jen pokud jste právě klikli na „Přihlásit se v prohlížeči…“ v aplikaci Bulwark v tomto počítači. Pokud ne, možná se někdo snaží dostat do vašeho účtu: zvolte Teď ne.",
     "consent_confirm": "Přihlásit se do aplikace",
     "consent_cancel": "Teď ne",
     "page_done": "Tuto kartu můžete zavřít a vrátit se do Bulwarku.",
@@ -6902,7 +6902,10 @@
     "page_submit": "Přihlásit se",
     "page_wrong_password": "Server toto uživatelské jméno a heslo nepřijal.",
     "page_code_needed": "Tento účet potřebuje také dvoufázový kód. Zadejte znovu heslo a kód.",
-    "page_no_answer": "Bulwark se nemohl přihlásit. Zkontrolujte, zda je server dostupný, a zkuste to znovu."
+    "page_no_answer": "Bulwark se nemohl přihlásit. Zkontrolujte, zda je server dostupný, a zkuste to znovu.",
+    "declined": "V prohlížeči jste odmítli, takže k přihlášení nedošlo.",
+    "too_many": "Příliš mnoho pokusů o přihlášení z této sítě. Počkejte několik minut a zkuste to znovu.",
+    "page_declined": "Nic nebylo předáno. Tuto kartu můžete zavřít."
   },
   "desktop_updates": {
     "title": "Aktualizace",

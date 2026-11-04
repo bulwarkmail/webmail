@@ -40,6 +40,7 @@ export interface ConfigData {
   loginShowSubtitle: boolean;
   loginShowTotp: boolean;
   loginShowTokenLogin: boolean;
+  desktopBrowserSignIn: boolean;
   loginShowRememberMe: boolean;
   loginShowVersion: boolean;
   demoMode: boolean;
@@ -199,6 +200,7 @@ export function useConfig(): AppConfig {
     loginShowSubtitle: configCache?.loginShowSubtitle ?? true,
     loginShowTotp: configCache?.loginShowTotp ?? true,
     loginShowTokenLogin: configCache?.loginShowTokenLogin ?? false,
+    desktopBrowserSignIn: configCache?.desktopBrowserSignIn ?? true,
     loginShowRememberMe: configCache?.loginShowRememberMe ?? false,
     loginShowVersion: configCache?.loginShowVersion ?? true,
     demoMode: configCache?.demoMode || false,
@@ -252,6 +254,7 @@ export function useConfig(): AppConfig {
         loginShowSubtitle: configCache.loginShowSubtitle,
         loginShowTotp: configCache.loginShowTotp,
         loginShowTokenLogin: configCache.loginShowTokenLogin,
+        desktopBrowserSignIn: configCache.desktopBrowserSignIn,
         loginShowRememberMe: configCache.loginShowRememberMe,
         loginShowVersion: configCache.loginShowVersion,
         demoMode: configCache.demoMode,
@@ -306,6 +309,7 @@ export function useConfig(): AppConfig {
           loginShowSubtitle: data.loginShowSubtitle,
           loginShowTotp: data.loginShowTotp,
           loginShowTokenLogin: data.loginShowTokenLogin,
+          desktopBrowserSignIn: data.desktopBrowserSignIn,
           loginShowRememberMe: data.loginShowRememberMe,
           loginShowVersion: data.loginShowVersion,
           demoMode: data.demoMode,

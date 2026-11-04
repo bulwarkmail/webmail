@@ -6886,9 +6886,9 @@
     "timed_out": "A entrada no navegador demorou demasiado. Tente novamente.",
     "no_browser": "O Bulwark não conseguiu abrir o navegador. Tente novamente ou entre aqui.",
     "failed": "Não foi possível entrar através do navegador. Tente novamente.",
-    "handoff_banner": "Está a entrar na aplicação Bulwark neste computador. Este navegador continua sem sessão no Bulwark.",
+    "handoff_banner": "Um programa neste computador pediu esta sessão para a aplicação Bulwark. Este navegador continua sem sessão no Bulwark. Se não foi você que iniciou isto, feche este separador.",
     "consent_title": "Entrar na aplicação Bulwark?",
-    "consent_description": "A sua sessão de {username} vai para a aplicação Bulwark neste computador. Continue só se tiver iniciado isto na aplicação.",
+    "consent_description": "Um programa neste computador, na porta {port}, está a pedir a sessão de {username}. Continue só se acabou de carregar em «Entrar com o navegador…» na aplicação Bulwark aqui. Caso contrário, alguém pode estar a tentar entrar na sua conta: escolha Agora não.",
     "consent_confirm": "Entrar na aplicação",
     "consent_cancel": "Agora não",
     "page_done": "Pode fechar este separador e voltar ao Bulwark.",
@@ -6902,7 +6902,10 @@
     "page_submit": "Entrar",
     "page_wrong_password": "O servidor não aceitou este nome de utilizador e esta palavra-passe.",
     "page_code_needed": "Esta conta também precisa de um código de dois fatores. Introduza novamente a palavra-passe e o código.",
-    "page_no_answer": "O Bulwark não conseguiu entrar. Verifique se o servidor está acessível e tente novamente."
+    "page_no_answer": "O Bulwark não conseguiu entrar. Verifique se o servidor está acessível e tente novamente.",
+    "declined": "Disse que não no navegador, por isso não foi iniciada nenhuma sessão.",
+    "too_many": "Demasiadas tentativas de entrada a partir desta rede. Aguarde alguns minutos e tente novamente.",
+    "page_declined": "Nada foi entregue. Pode fechar este separador."
   },
   "desktop_updates": {
     "title": "Atualizações",

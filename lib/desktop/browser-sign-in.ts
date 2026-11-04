@@ -36,6 +36,8 @@ export type DesktopBrowserSignInOutcome =
   | { kind: 'invalid' }
   | { kind: 'policy' }
   | { kind: 'cancelled' }
+  /** The user said no in the browser. */
+  | { kind: 'denied' }
   | { kind: 'timeout' }
   | { kind: 'no_browser' }
   | { kind: 'failed'; error: string };
@@ -75,6 +77,7 @@ export function cancelBrowserSignIn(): void {
 
 function failure(error: string): DesktopBrowserSignInOutcome {
   if (error === 'cancelled') return { kind: 'cancelled' };
+  if (error === 'denied') return { kind: 'denied' };
   if (error === 'timeout') return { kind: 'timeout' };
   if (error === 'no_browser') return { kind: 'no_browser' };
   if (error === 'policy') return { kind: 'policy' };

@@ -6898,9 +6898,9 @@
     "timed_out": "Đăng nhập trong trình duyệt mất quá nhiều thời gian. Hãy thử lại.",
     "no_browser": "Bulwark không thể mở trình duyệt. Hãy thử lại hoặc đăng nhập tại đây.",
     "failed": "Không đăng nhập được qua trình duyệt. Hãy thử lại.",
-    "handoff_banner": "Bạn đang đăng nhập vào ứng dụng Bulwark trên máy tính này. Trình duyệt này vẫn chưa đăng nhập Bulwark.",
+    "handoff_banner": "Một chương trình trên máy tính này đã yêu cầu đăng nhập này cho ứng dụng Bulwark. Trình duyệt này vẫn chưa đăng nhập Bulwark. Nếu không phải bạn bắt đầu, hãy đóng tab này.",
     "consent_title": "Đăng nhập vào ứng dụng Bulwark?",
-    "consent_description": "Thông tin đăng nhập của {username} sẽ được chuyển đến ứng dụng Bulwark trên máy tính này. Chỉ tiếp tục nếu bạn bắt đầu việc này từ ứng dụng.",
+    "consent_description": "Một chương trình trên máy tính này, tại cổng {port}, đang yêu cầu thông tin đăng nhập của {username}. Chỉ tiếp tục nếu bạn vừa nhấn \"Đăng nhập bằng trình duyệt…\" trong ứng dụng Bulwark tại đây. Nếu không, có thể ai đó đang cố vào tài khoản của bạn: hãy chọn Để sau.",
     "consent_confirm": "Đăng nhập vào ứng dụng",
     "consent_cancel": "Để sau",
     "page_done": "Bạn có thể đóng tab này và quay lại Bulwark.",
@@ -6914,7 +6914,10 @@
     "page_submit": "Đăng nhập",
     "page_wrong_password": "Máy chủ không chấp nhận tên người dùng và mật khẩu này.",
     "page_code_needed": "Tài khoản này cũng cần mã hai yếu tố. Hãy nhập lại mật khẩu và mã.",
-    "page_no_answer": "Bulwark không thể đăng nhập. Hãy kiểm tra xem máy chủ có truy cập được không rồi thử lại."
+    "page_no_answer": "Bulwark không thể đăng nhập. Hãy kiểm tra xem máy chủ có truy cập được không rồi thử lại.",
+    "declined": "Bạn đã từ chối trong trình duyệt nên không có đăng nhập nào.",
+    "too_many": "Có quá nhiều lần thử đăng nhập từ mạng này. Hãy đợi vài phút rồi thử lại.",
+    "page_declined": "Không có gì được chuyển giao. Bạn có thể đóng tab này."
   },
   "desktop_updates": {
     "title": "Cập nhật",

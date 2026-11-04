@@ -6886,9 +6886,9 @@
     "timed_out": "浏览器登录用时过长。请重试。",
     "no_browser": "Bulwark 无法打开浏览器。请重试,或在此登录。",
     "failed": "通过浏览器登录失败。请重试。",
-    "handoff_banner": "你正在登录这台电脑上的 Bulwark 应用。此浏览器不会登录 Bulwark。",
+    "handoff_banner": "这台电脑上的一个程序为 Bulwark 应用请求了此次登录。此浏览器不会登录 Bulwark。如果不是你发起的,请关闭此标签页。",
     "consent_title": "要登录 Bulwark 应用吗?",
-    "consent_description": "{username} 的登录信息将交给这台电脑上的 Bulwark 应用。只有从应用中发起时才继续。",
+    "consent_description": "这台电脑上端口 {port} 的一个程序正在请求 {username} 的登录信息。只有在你刚刚点击了这里 Bulwark 应用中的“使用浏览器登录…”时才继续。否则可能有人想进入你的账户:请选择“暂不”。",
     "consent_confirm": "登录应用",
     "consent_cancel": "暂不",
     "page_done": "你可以关闭此标签页并返回 Bulwark。",
@@ -6902,7 +6902,10 @@
     "page_submit": "登录",
     "page_wrong_password": "服务器不接受此用户名和密码。",
     "page_code_needed": "此账户还需要双重验证代码。请重新输入密码和代码。",
-    "page_no_answer": "Bulwark 无法登录。请检查服务器是否可访问,然后重试。"
+    "page_no_answer": "Bulwark 无法登录。请检查服务器是否可访问,然后重试。",
+    "declined": "你在浏览器中拒绝了,因此没有登录。",
+    "too_many": "来自此网络的登录尝试过多。请等几分钟后重试。",
+    "page_declined": "没有交出任何内容。你可以关闭此标签页。"
   },
   "desktop_updates": {
     "title": "更新",
