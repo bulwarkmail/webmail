@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, type Dispatch, type SetStateAction } from "react";
 import { useTranslations } from "next-intl";
-import { editFileInfo, followEditSessions, getEditBridge, parseEditSource, readEditedFile, takeFilesForReply, useEditSessions, type EditSource } from "@/lib/desktop/edit-attachments";
+import { editAllowed, editFileInfo, followEditSessions, getEditBridge, parseEditSource, readEditedFile, takeFilesForReply, useEditSessions, type EditSource } from "@/lib/desktop/edit-attachments";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { useEditAttachment } from "@/hooks/use-edit-attachment";
 import { toast } from "@/stores/toast-store";
@@ -17,6 +17,10 @@ export interface EditableAttachment {
   error?: boolean;
   /** The Edit session this chip's file belongs to. Kept through every state change of the chip. */
   editSessionId?: string;
+  /** The login the part really belongs to, on a forward: its organisation's rules are the ones that count. */
+  sourceAccountId?: string;
+  /** From a message marked as phishing: not opened in other programs here either. */
+  editBlocked?: boolean;
 }
 
 interface Options<A extends EditableAttachment> {
@@ -116,9 +120,7 @@ export function useComposerEdits<A extends EditableAttachment>({ attachments, se
     for (const id of heldRef.current) {
       if (now.has(id)) continue;
       bridge.claim(id, false);
-      const session = latest.current.sessions.find((s) => s.id === id);
-      if (session?.changed) bridge.setSource(id, JSON.stringify({ kind: "file" } satisfies EditSource));
-      else if (session) void bridge.discard(id);
+      void bridge.release(id, JSON.stringify({ kind: "file" } satisfies EditSource));
     }
     heldRef.current = now;
   }, [heldKey]);
@@ -146,15 +148,21 @@ export function useComposerEdits<A extends EditableAttachment>({ attachments, se
     return session?.changed === true && editFileInfo(att.file)?.hash !== session.hash;
   }, [sessionOf]);
 
+  /** The part's own account decides too, on a forward from another login. */
+  const canEditChip = useCallback((att: A) => (
+    !att.editBlocked && canEdit(att.name) && (!att.sourceAccountId || editAllowed(att.sourceAccountId))
+  ), [canEdit]);
+
   const startEdit = useCallback(async (att: A) => {
+    const owner = att.sourceAccountId ?? account;
     const key = att.editSessionId
       ? `session:${att.editSessionId}`
-      : att.blobId ? `blob:${account}:${att.blobId}` : `composer:${instanceRef.current}:${att.name}`;
+      : att.blobId ? `blob:${owner}:${att.blobId}` : `composer:${instanceRef.current}:${att.name}`;
     const result = await edit({
       key,
       name: att.name,
       type: att.type,
-      account,
+      account: owner,
       source: { kind: "draft", draftId, ownerAccountId },
       load: () => load(att),
     });
@@ -183,10 +191,12 @@ export function useComposerEdits<A extends EditableAttachment>({ attachments, se
     });
   }, [account, addFiles, setAttachments, t]);
 
+  /** Whether a send has anything to ask about. */
+  const holdsEdits = useCallback(() => latest.current.attachments.some((att) => att.editSessionId), []);
+
   /** Edits on the way out in an older version: asks first. False: don't send. */
   const confirmSend = useCallback(async (): Promise<boolean> => {
     const { attachments: list } = latest.current;
-    if (!list.some((att) => att.editSessionId)) return true;
     // Someone who saves and goes straight to Send is the case this is for: the watcher may not have seen it yet.
     const all = await getEditBridge()?.settle() ?? latest.current.sessions;
     const stale = list.flatMap((att) => {
@@ -205,19 +215,20 @@ export function useComposerEdits<A extends EditableAttachment>({ attachments, se
     return choice === 0;
   }, [t]);
 
-  /** The draft was sent or discarded. Reads no state of the component: this can run after it has gone. */
+  /**
+   * The draft was sent or discarded. Main decides what goes, as only it knows about a save from a
+   * moment ago. Reads no state of the component: this can run after it has gone.
+   */
   const finish = useCallback(() => {
     const bridge = getEditBridge();
     if (!bridge) return;
-    const { attachments: list, sessions: all } = latest.current;
-    const ids = new Set(list.flatMap((att) => (att.editSessionId ? [att.editSessionId] : [])));
+    const ids = new Set(latest.current.attachments.flatMap((att) => (att.editSessionId ? [att.editSessionId] : [])));
     for (const id of ids) {
       heldRef.current.delete(id);
       bridge.claim(id, false);
-      if (all.find((s) => s.id === id)?.changed) bridge.setSource(id, JSON.stringify({ kind: "file" } satisfies EditSource));
-      else void bridge.discard(id);
+      void bridge.release(id, JSON.stringify({ kind: "file" } satisfies EditSource));
     }
   }, []);
 
-  return { canEdit, startEdit, hasUpdate, update, confirmSend, finish };
+  return { canEditChip, startEdit, hasUpdate, update, holdsEdits, confirmSend, finish };
 }

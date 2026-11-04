@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const policy = vi.hoisted(() => ({ allowed: true }));
 const toastError = vi.hoisted(() => vi.fn());
+const forbidden = vi.hoisted(() => new Set<string>());
 
 vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key }));
 vi.mock('@/stores/toast-store', () => ({ toast: { error: toastError, success: vi.fn() } }));
@@ -11,7 +12,7 @@ vi.mock('@/hooks/use-device-policy', () => ({
   useDevicePolicy: () => ({ noDownloads: !policy.allowed, noExport: false }),
 }));
 vi.mock('@/lib/device-policy', () => ({
-  canDownload: () => policy.allowed,
+  canDownload: (account?: string) => policy.allowed && !forbidden.has(account ?? ''),
   canExport: () => true,
   deviceSubjectOf: () => null,
 }));
@@ -31,8 +32,13 @@ function fakeBridge() {
     settle: vi.fn(async () => useEditSessions.getState().sessions),
     read: vi.fn(async () => ({ ok: true as const, name: 'a.docx', type: 'x/y', data: new Uint8Array([1, 2]), hash: 'h2' })),
     taken: vi.fn(async () => {}),
-    discard: vi.fn(async () => {}),
-    clear: vi.fn(async () => {}),
+    release: vi.fn(async () => {}),
+    discard: vi.fn(async () => ({ held: [] })),
+    forceDiscard: vi.fn(async () => ({ held: [] })),
+    askClear: vi.fn(async () => true),
+    clear: vi.fn(async () => ({ held: [] })),
+    wipe: vi.fn(async () => ({ held: [] })),
+    shown: vi.fn(),
     setSource: vi.fn(),
     claim: vi.fn(),
     onChange: vi.fn(() => () => {}),
@@ -43,8 +49,10 @@ let bridge: ReturnType<typeof fakeBridge>;
 let confirm: ReturnType<typeof vi.fn>;
 
 const session = (over: Partial<{ id: string; name: string; source: string; changed: boolean; claimed: boolean; hash: string }> = {}) => ({
-  id: 's1', name: 'a.docx', type: 'x/y', account: 'acct', source: '{"kind":"draft","draftId":"d1"}', changed: false, version: 0, hash: 'current', claimed: true, ...over,
+  id: 's1', name: 'a.docx', type: 'x/y', account: 'acct', source: '{"kind":"draft","draftId":"d1"}', changed: false, version: 0, hash: 'current', claimed: true, held: false, savedAs: false, lastChance: false, ...over,
 });
+
+const chipNamed = (name: string): EditableAttachment => ({ name, type: 'x/y', blobId: 'b' });
 
 interface Setup {
   start: EditableAttachment[];
@@ -147,14 +155,14 @@ describe('starting from a chip', () => {
 
   it('offers it only for what the shell and the organisation allow', () => {
     const { result } = setup({ start: [] });
-    expect(result.current.edits.canEdit('a.docx')).toBe(true);
-    expect(result.current.edits.canEdit('a.exe')).toBe(false);
+    expect(result.current.edits.canEditChip(chipNamed('a.docx'))).toBe(true);
+    expect(result.current.edits.canEditChip(chipNamed('a.exe'))).toBe(false);
   });
 
   it('offers nothing under a policy', () => {
     policy.allowed = false;
     const { result } = setup({ start: [] });
-    expect(result.current.edits.canEdit('a.docx')).toBe(false);
+    expect(result.current.edits.canEditChip(chipNamed('a.docx'))).toBe(false);
   });
 });
 
@@ -170,16 +178,16 @@ describe('holding sessions', () => {
     expect(bridge.discard).not.toHaveBeenCalled();
   });
 
-  it('a chip taken off: an unchanged copy goes, an edited one stays for the offers', async () => {
+  it('a chip taken off leaves the decision to main, which knows about a save from a moment ago', async () => {
     useEditSessions.setState({ sessions: [session({ id: 's1' }), session({ id: 's2', name: 'b.docx', changed: true })] });
     const { result } = setup({ start: [
       { name: 'a.docx', type: 'x/y', blobId: 'b', editSessionId: 's1' },
       { name: 'b.docx', type: 'x/y', blobId: 'c', editSessionId: 's2' },
     ] });
     act(() => result.current.setAttachments([]));
-    await waitFor(() => expect(bridge.discard).toHaveBeenCalledWith('s1'));
-    expect(bridge.discard).not.toHaveBeenCalledWith('s2');
-    expect(bridge.setSource).toHaveBeenCalledWith('s2', JSON.stringify({ kind: 'file' }));
+    await waitFor(() => expect(bridge.release).toHaveBeenCalledWith('s1', JSON.stringify({ kind: 'file' })));
+    expect(bridge.release).toHaveBeenCalledWith('s2', JSON.stringify({ kind: 'file' }));
+    expect(bridge.discard).not.toHaveBeenCalled();
   });
 
   it('a draft opened again finds its session by id and name', async () => {
@@ -237,20 +245,49 @@ describe('sending', () => {
     expect(confirm).not.toHaveBeenCalled();
   });
 
-  it('a composer with no edited file asks main nothing', async () => {
-    const { result } = setup({ start: [{ name: 'a.docx', type: 'x/y', blobId: 'b' }] });
-    await expect(result.current.edits.confirmSend()).resolves.toBe(true);
-    expect(bridge.settle).not.toHaveBeenCalled();
-  });
-
-  it('sent or discarded: an unchanged copy goes, edits nobody took stay and lose their draft', async () => {
+  it('sent or discarded: main decides, also on a flag this page has wrong', async () => {
+    // The page thinks nothing changed. Main has a save from a moment ago, and keeps it.
     useEditSessions.setState({ sessions: [session({ id: 's1' }), session({ id: 's2', name: 'b.docx', changed: true })] });
     const { result } = setup({ start: [chip, { name: 'b.docx', type: 'x/y', blobId: 'c', editSessionId: 's2' }] });
     act(() => result.current.edits.finish());
-    expect(bridge.discard).toHaveBeenCalledWith('s1');
-    expect(bridge.discard).not.toHaveBeenCalledWith('s2');
+    expect(bridge.release).toHaveBeenCalledWith('s1', JSON.stringify({ kind: 'file' }));
+    expect(bridge.release).toHaveBeenCalledWith('s2', JSON.stringify({ kind: 'file' }));
     expect(bridge.claim).toHaveBeenCalledWith('s2', false);
-    expect(bridge.setSource).toHaveBeenCalledWith('s2', JSON.stringify({ kind: 'file' }));
+    expect(bridge.discard).not.toHaveBeenCalled();
+  });
+
+  it('says whether a send has anything to ask about', () => {
+    const { result } = setup({ start: [chip] });
+    expect(result.current.edits.holdsEdits()).toBe(true);
+    const { result: other } = setup({ start: [chipNamed('a.docx')] });
+    expect(other.current.edits.holdsEdits()).toBe(false);
+  });
+});
+
+describe('a forwarded part', () => {
+  it('from a message marked as phishing has no Edit', () => {
+    const { result } = setup({ start: [] });
+    expect(result.current.edits.canEditChip({ ...chipNamed('a.docx'), editBlocked: true })).toBe(false);
+  });
+
+  it('from another login follows that login\'s rules, and its session is filed there', async () => {
+    const { result } = setup({ start: [{ ...chipNamed('a.docx'), sourceAccountId: 'other' }] });
+    expect(result.current.edits.canEditChip(result.current.attachments[0])).toBe(true);
+    await act(() => result.current.edits.startEdit(result.current.attachments[0]));
+    expect(bridge.begin).toHaveBeenCalledWith('blob:other:b');
+    const [, file] = bridge.open.mock.calls[0] as unknown as [string, { account: string }];
+    expect(file.account).toBe('other');
+  });
+
+  it('from a login whose organisation says no has no Edit, whatever this one says', () => {
+    const { result } = setup({ start: [] });
+    forbidden.add('other');
+    try {
+      expect(result.current.edits.canEditChip({ ...chipNamed('a.docx'), sourceAccountId: 'other' })).toBe(false);
+      expect(result.current.edits.canEditChip(chipNamed('a.docx'))).toBe(true);
+    } finally {
+      forbidden.clear();
+    }
   });
 });
 
@@ -290,7 +327,7 @@ describe('in a browser', () => {
   it('nothing happens at all', () => {
     delete (window as unknown as { bulwarkDesktop?: unknown }).bulwarkDesktop;
     const { result } = setup({ start: [{ name: 'a.docx', type: 'x/y', blobId: 'b' }] });
-    expect(result.current.edits.canEdit('a.docx')).toBe(false);
+    expect(result.current.edits.canEditChip(chipNamed('a.docx'))).toBe(false);
     expect(result.current.attachments[0].editSessionId).toBeUndefined();
     expect(() => result.current.edits.finish()).not.toThrow();
   });

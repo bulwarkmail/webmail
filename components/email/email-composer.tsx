@@ -278,7 +278,7 @@ export interface ComposerDraftData {
    * File). Without these the composer starts with zero attachments and the
    * next save/send rebuilds the draft without them - silent data loss (#849).
    */
-  attachments?: Array<{ blobId: string; name?: string; type?: string; size: number; cid?: string; disposition?: string; sourceAccountId?: string }>;
+  attachments?: Array<{ blobId: string; name?: string; type?: string; size: number; cid?: string; disposition?: string; sourceAccountId?: string; editBlocked?: boolean }>;
   /** The send options picked so far; absent, the defaults. Carried to another window. */
   requestReadReceipt?: boolean;
   requestDsn?: boolean;
@@ -475,6 +475,8 @@ interface EmailComposerProps {
     quoteWrapInBlockquote?: boolean;
     /** The original's headers: a reply or forward starts with its classification label. */
     headers?: Record<string, string | string[]>;
+    /** The original carries the phishing mark: its forwarded parts stay out of the desktop app's Edit. */
+    phishingMarked?: boolean;
     /** The original's From, when `from` is left out (a forward as attachment): whether its label counts. */
     originalFrom?: { email?: string; name?: string }[];
   };
@@ -488,6 +490,8 @@ type ComposerAttachment = {
   // on a forward - the message may go out through another account, which
   // cannot resolve them. See rehomeForeignBlobs.
   sourceAccountId?: string;
+  // From a message marked as phishing: stays out of the desktop app's Edit.
+  editBlocked?: boolean;
   name: string;
   type: string;
   size: number;
@@ -1118,6 +1122,7 @@ export function EmailComposer({
           // A forward stashed before its first save still holds the original
           // account's blobs: keep the tag so they are copied before saving.
           ...(att.sourceAccountId ? { sourceAccountId: att.sourceAccountId } : {}),
+          ...(att.editBlocked ? { editBlocked: true } : {}),
           fromDraftPart: true,
         }));
     }
@@ -1146,6 +1151,7 @@ export function EmailComposer({
           size: att.size,
           blobId: att.blobId,
           sourceAccountId: att.sourceAccountId ?? sourceAccountId ?? undefined,
+          ...(replyTo.phishingMarked ? { editBlocked: true } : {}),
         }));
     }
     return [];
@@ -2752,9 +2758,13 @@ export function EmailComposer({
   // The desktop app: files dropped or pasted anywhere on the window come here, if this one's on screen.
   const loadAttachmentForEdit = useCallback(async (att: ComposerAttachment): Promise<Blob> => {
     if (att.file) return att.file;
-    if (!composerClient || !att.blobId) throw new Error('No content for this attachment');
-    return composerClient.fetchBlob(att.blobId, att.name, att.type);
-  }, [composerClient]);
+    // A forwarded part lives in its own login until the draft is saved through another.
+    const owner = att.sourceAccountId && att.sourceAccountId !== composerAccountId
+      ? useAuthStore.getState().getClientForAccount(att.sourceAccountId)
+      : composerClient;
+    if (!owner || !att.blobId) throw new Error('No content for this attachment');
+    return owner.fetchBlob(att.blobId, att.name, att.type);
+  }, [composerClient, composerAccountId]);
   const composerEdits = useComposerEdits<ComposerAttachment>({
     attachments,
     setAttachments,
@@ -3675,6 +3685,7 @@ export function EmailComposer({
   }, [attachments]);
   const [isWaitingForUploads, setIsWaitingForUploads] = useState(false);
   const sendCancelledRef = useRef(false);
+  const confirmingSendRef = useRef(false);
   // The user confirmed sending without a subject for this message.
   const emptySubjectConfirmedRef = useRef(false);
   // Placeholders the user chose to send as they are. The warning comes back
@@ -3729,7 +3740,17 @@ export function EmailComposer({
     if (isSendingRef.current) return;
 
     // Saved in another program and not on this message yet: not silently the older one.
-    if (!(await composerEdits.confirmSend())) return;
+    // The wait lets a second click in, so that one goes no further.
+    if (composerEdits.holdsEdits()) {
+      if (confirmingSendRef.current) return;
+      confirmingSendRef.current = true;
+      try {
+        if (!(await composerEdits.confirmSend())) return;
+      } finally {
+        confirmingSendRef.current = false;
+      }
+      if (isSendingRef.current) return;
+    }
 
     if (attachmentsRef.current.some(att => att.uploading)) {
       isSendingRef.current = true;
@@ -5427,7 +5448,7 @@ export function EmailComposer({
                         {tEdit('update')}
                       </button>
                     )}
-                    {!att.uploading && !att.error && composerEdits.canEdit(att.name) && (
+                    {!att.uploading && !att.error && composerEdits.canEditChip(att) && (
                       <button
                         type="button"
                         onClick={() => void composerEdits.startEdit(att)}

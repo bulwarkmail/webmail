@@ -43,7 +43,8 @@ export function useEditAttachment(account: string) {
     }
     if (result.ok) toast.success(t("opened", { name: input.name }));
     // Locked: the lock screen is what's saying it.
-    else if (result.reason !== "locked") toast.error(t(FAILURE_KEYS[result.reason] ?? "failed"));
+    // Ticket: a newer click took over, and that one speaks.
+    else if (result.reason !== "locked" && result.reason !== "ticket") toast.error(t(FAILURE_KEYS[result.reason] ?? "failed"));
     return result;
   }, [t]);
   return { canEdit, edit };

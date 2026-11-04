@@ -39,8 +39,13 @@ function fakeBridge() {
     settle: vi.fn(async () => []),
     read: vi.fn(async () => ({ ok: true as const, name: 'a.docx', type: 'x/y', data: new Uint8Array([1, 2]), hash: 'h' })),
     taken: vi.fn(async () => {}),
-    discard: vi.fn(async () => {}),
-    clear: vi.fn(async () => {}),
+    release: vi.fn(async () => {}),
+    discard: vi.fn(async () => ({ held: [] as string[] })),
+    forceDiscard: vi.fn(async () => ({ held: [] as string[] })),
+    askClear: vi.fn(async () => true),
+    clear: vi.fn(async () => ({ held: [] as string[] })),
+    wipe: vi.fn(async () => ({ held: [] as string[] })),
+    shown: vi.fn(),
     setSource: vi.fn(),
     claim: vi.fn(),
     onChange: vi.fn(() => () => {}),
@@ -243,12 +248,18 @@ describe('where a source came from', () => {
 });
 
 describe('the copies go with the account', () => {
-  it('on a wipe of an account, and of everything', async () => {
-    await runWipeCleaners('acct');
-    expect(bridge.clear).toHaveBeenCalledWith('acct');
-    bridge.clear.mockClear();
+  it('on a wipe of an account, and of everything, with no question', async () => {
+    await expect(runWipeCleaners('acct')).resolves.toBe(true);
+    expect(bridge.wipe).toHaveBeenCalledWith('acct');
+    bridge.wipe.mockClear();
     await runWipeCleaners(null);
-    expect(bridge.clear).toHaveBeenCalledWith(null);
+    expect(bridge.wipe).toHaveBeenCalledWith(null);
+    expect(bridge.clear).not.toHaveBeenCalled();
+  });
+
+  it('a wipe with a copy a program holds does not count as done', async () => {
+    bridge.wipe.mockResolvedValueOnce({ held: ['a.docx'] });
+    await expect(runWipeCleaners('acct')).resolves.toBe(false);
   });
 
   it('at sign-out', async () => {
@@ -263,6 +274,6 @@ describe('the copies go with the account', () => {
 
   it('a cleaner with no shell is no failure', async () => {
     delete (window as unknown as { bulwarkDesktop?: unknown }).bulwarkDesktop;
-    await expect(runWipeCleaners(null)).resolves.toBeUndefined();
+    await expect(runWipeCleaners(null)).resolves.toBe(true);
   });
 });

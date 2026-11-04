@@ -34,6 +34,7 @@ import { takeTabReply, useNotificationTabReply } from '@/lib/pwa-notify/tab-repl
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { saveQuickReplyDraft } from '@/lib/outgoing/quick-reply-envelope';
 import { canDownload } from '@/lib/device-policy';
+import { phishingMarkedNow } from '@/hooks/use-phishing-report';
 import { useOpenEmailInWindow } from '@/hooks/use-popouts-available';
 import { isFilePreviewable } from '@/lib/file-preview';
 import { useDesktopCommands } from '@/lib/desktop/commands';
@@ -113,6 +114,7 @@ export function stampProSource(email: Email, source: EmailBlobContext, loginId: 
 
 function buildReplyContext(email: Email): ProReplyContext {
   return {
+    phishingMarked: phishingMarkedNow(email),
     from: email.from,
     replyToAddresses: email.replyTo,
     to: email.to,

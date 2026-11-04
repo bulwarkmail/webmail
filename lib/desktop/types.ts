@@ -621,6 +621,18 @@ export interface DesktopEditSession {
   hash: string;
   /** A composer has it and offers the update itself. */
   claimed: boolean;
+  /** Wanted gone, and another program has it open. */
+  held: boolean;
+  /** Saved under a new name in that program. */
+  savedAs: boolean;
+  /** Not used for 30 days: this offer is the last. */
+  lastChance: boolean;
+}
+
+/** What couldn't be deleted because another program has it open, by file name. `refused`: nothing happened. */
+export interface DesktopEditClearResult {
+  held: string[];
+  refused?: boolean;
 }
 
 export interface DesktopEditFile {
@@ -634,7 +646,8 @@ export interface DesktopEditFile {
 }
 
 export type DesktopEditBeginResult =
-  | { ok: true; ticket: string; /** A session for that key exists: reopen this one. */ open?: string }
+  /** One click, one ticket, for that key. A session for it exists: reopen this one. */
+  | { ok: true; ticket: string; open?: string }
   | { ok: false; reason: 'locked' | 'gesture' };
 
 export type DesktopEditOpenResult =
@@ -653,7 +666,7 @@ export type DesktopEditReadResult =
 export interface DesktopEditBridge {
   /** Whether this file may go through Edit at all: the same rule main enforces. */
   canEdit: (name: string) => boolean;
-  /** Straight from the click: main checks it was one. The ticket lasts long enough to fetch the bytes. */
+  /** Straight from the click: main spends it. The ticket lasts long enough to fetch the bytes, for this key only. */
   begin: (key: string) => Promise<DesktopEditBeginResult>;
   open: (ticket: string, file: DesktopEditFile) => Promise<DesktopEditOpenResult>;
   reopen: (ticket: string, id: string) => Promise<DesktopEditOpenResult>;
@@ -664,9 +677,20 @@ export interface DesktopEditBridge {
   read: (id: string) => Promise<DesktopEditReadResult>;
   /** This version is where it should be, so it's no longer a change. */
   taken: (id: string, hash: string) => Promise<void>;
-  discard: (id: string) => Promise<void>;
-  /** An account's copies, or with null all of this origin's. */
-  clear: (account: string | null) => Promise<void>;
+  /** The draft it was on has gone: deleted, unless it holds a save nobody took. Main decides, as it knows. */
+  release: (id: string, source: string) => Promise<void>;
+  /** Asks natively if it holds edits. */
+  discard: (id: string) => Promise<DesktopEditClearResult>;
+  /** The organisation said no: no question. */
+  forceDiscard: (id: string) => Promise<DesktopEditClearResult>;
+  /** The question before a sign-out, native, naming what a program has open. A yes covers the `clear` that follows. */
+  askClear: (account: string) => Promise<boolean>;
+  /** An account's copies, or with null all of this origin's. Asks natively about edits, without that yes. */
+  clear: (account: string | null) => Promise<DesktopEditClearResult>;
+  /** A wipe: no question. */
+  wipe: (account: string | null) => Promise<DesktopEditClearResult>;
+  /** The page has shown a last offer. */
+  shown: (id: string) => void;
   setSource: (id: string, source: string) => void;
   /** A composer holds it, or stopped. Ends by itself with the page. */
   claim: (id: string, on: boolean) => void;

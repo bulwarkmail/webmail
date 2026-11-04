@@ -18,7 +18,7 @@ import { getDesktopBridge } from '@/lib/desktop/bridge';
 import type { DesktopEditBridge, DesktopEditOpenResult, DesktopEditSession } from '@/lib/desktop/types';
 import { canDownload, canExport } from '@/lib/device-policy';
 import { scopeDecided } from '@/lib/offline/offline-mode';
-import { onDeviceWipe } from '@/lib/offline/wipe-registry';
+import { onDeviceWipe, WipeIncompleteError } from '@/lib/offline/wipe-registry';
 import { onBeforeSignOut, onFullSignOut } from '@/lib/sign-out-cleanup';
 
 /** Where a session's file came from, kept by main for as long as the session lives. */
@@ -163,12 +163,17 @@ const clear = async (account: string | null) => {
   await getEditBridge()?.clear(account);
 };
 
-// The copies are of mail, so they go with the account. A wipe doesn't ask and neither does this;
-// the question before a sign-out the user started is in the host. A sign-out the app decided
+const wipe = async (account: string | null) => {
+  const result = await getEditBridge()?.wipe(account);
+  if (result && result.held.length > 0) throw new WipeIncompleteError(`${result.held.length} files are held by another program`);
+};
+
+// The copies are of mail, so they go with the account. A wipe asks nobody; the question before
+// a sign-out the user started is main's, through the host's gate. A sign-out the app decided
 // on because it couldn't confirm the login (keepLocalStore) keeps them, as it keeps the store:
 // nobody chose it, and these can be someone's only copy of an afternoon's work. While it lasts
 // the host doesn't show them, since that account isn't signed in.
-onDeviceWipe((account) => clear(account));
+onDeviceWipe((account) => wipe(account));
 onBeforeSignOut((account, options) => (options.keepLocalStore ? Promise.resolve() : clear(account)));
 onFullSignOut((options) => {
   if (!options.keepLocalStore) void clear(null);
