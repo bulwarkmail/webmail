@@ -431,6 +431,17 @@ describe('the settings section', () => {
     await waitFor(() => expect(os.openDefaultAppSettings).toHaveBeenCalled());
   });
 
+  it('switching "Show the app" on takes a key the composer doesn\'t use', async () => {
+    const { DesktopOsSettings } = await import('@/components/settings/desktop-os-settings');
+    const os = bridgeFor(status());
+    setBridge(os as never);
+    render(<DesktopOsSettings />);
+    expect(await screen.findByText('show_shortcut_label')).toBeInTheDocument();
+    // Close to tray, start with the computer, then this one.
+    fireEvent.click(screen.getAllByRole('switch')[2]);
+    await waitFor(() => expect(os.setSettings).toHaveBeenCalledWith({ showShortcut: 'CommandOrControl+Alt+F11' }));
+  });
+
   it('says when another app holds the shortcut', async () => {
     const { DesktopOsSettings } = await import('@/components/settings/desktop-os-settings');
     setBridge(bridgeFor(status({ showShortcut: 'CommandOrControl+Shift+B' })) as never);

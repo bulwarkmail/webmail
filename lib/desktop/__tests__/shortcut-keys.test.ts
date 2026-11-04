@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { describeAccelerator, readShortcutPress, shortcutProblem, type ShortcutKeyEvent } from '../shortcut-keys';
+import { describeAccelerator, readShortcutPress, shortcutProblem, showShortcutDefault, type ShortcutKeyEvent } from '../shortcut-keys';
 
 const press = (key: string, code: string, modifiers: Partial<ShortcutKeyEvent> = {}): ShortcutKeyEvent => ({
   key,
@@ -107,5 +107,18 @@ describe('shortcutProblem', () => {
   it('counts Ctrl and CommandOrControl as one key off a Mac, and two on one', () => {
     expect(shortcutProblem('CommandOrControl+Control+N', 'win32')).toBe('incomplete');
     expect(shortcutProblem('CommandOrControl+Control+N', 'darwin')).toBeNull();
+  });
+
+  it('refuses the app\'s own keys: a global one would take them from the composer and the menus', () => {
+    for (const keys of ['CommandOrControl+Shift+B', 'CommandOrControl+Shift+C', 'CommandOrControl+Shift+Enter', 'CommandOrControl+Shift+M', 'CommandOrControl+Shift+N', 'CommandOrControl+Shift+S', 'CommandOrControl+Shift+R', 'CommandOrControl+Shift+F']) {
+      for (const platform of ['win32', 'darwin', 'linux']) expect(shortcutProblem(keys, platform), `${keys} on ${platform}`).toBe('reserved');
+    }
+    expect(readShortcutPress(press('B', 'KeyB', { ctrlKey: true, shiftKey: true }), 'win32')).toEqual({ refused: 'reserved' });
+  });
+
+  it('"Show the app" by default is none of them, and on Windows types nothing with AltGr', () => {
+    for (const platform of ['win32', 'darwin', 'linux']) expect(shortcutProblem(showShortcutDefault(platform), platform)).toBeNull();
+    expect(showShortcutDefault('win32')).toBe('CommandOrControl+Alt+F11');
+    expect(showShortcutDefault('linux')).toBe('CommandOrControl+Alt+B');
   });
 });

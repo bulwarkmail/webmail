@@ -5,15 +5,9 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
 import type { DesktopOsDefaultAppStatus, DesktopOsSettings as Settings, DesktopOsStatus } from "@/lib/desktop/types";
+import { describeAccelerator, showShortcutDefault } from "@/lib/desktop/shortcut-keys";
 import { DesktopQuickComposeSetting } from "./desktop-quick-compose-setting";
 import { SettingItem, SettingsSection, ToggleSwitch } from "./settings-section";
-
-/** On Windows and Linux this is what a press of the keys shows; macOS maps it to Cmd. */
-const SHOW_SHORTCUT = "CommandOrControl+Shift+B";
-
-function shortcutLabel(platform: string | undefined): string {
-  return platform === "darwin" ? "⇧⌘B" : "Ctrl+Shift+B";
-}
 
 /**
  * The desktop app's own settings: only where there's an app to set. A browser never sees
@@ -46,6 +40,8 @@ export function DesktopOsSettings({ part = "app" }: { part?: "app" | "notificati
 
   if (!os || !status) return null;
   const { settings } = status;
+  const platform = bridge?.platform;
+  const showKeys = describeAccelerator(settings.showShortcut ?? showShortcutDefault(platform), platform);
   const change = (patch: Partial<Settings>) => {
     void os.setSettings(patch).then(setStatus);
   };
@@ -103,12 +99,12 @@ export function DesktopOsSettings({ part = "app" }: { part?: "app" | "notificati
       <SettingItem
         label={t("show_shortcut_label")}
         description={settings.showShortcut && !status.shortcutActive
-          ? t("show_shortcut_taken", { keys: shortcutLabel(bridge?.platform) })
-          : t("show_shortcut_description", { keys: shortcutLabel(bridge?.platform) })}
+          ? t("show_shortcut_taken", { keys: showKeys })
+          : t("show_shortcut_description", { keys: showKeys })}
       >
         <ToggleSwitch
           checked={!!settings.showShortcut}
-          onChange={(on) => change({ showShortcut: on ? SHOW_SHORTCUT : null })}
+          onChange={(on) => change({ showShortcut: on ? showShortcutDefault(platform) : null })}
         />
       </SettingItem>
       {status.quickCompose && (

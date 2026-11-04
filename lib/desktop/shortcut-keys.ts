@@ -10,6 +10,15 @@
  */
 export const QUICK_COMPOSE_DEFAULT = 'CommandOrControl+Alt+N';
 
+/**
+ * What "Show the app with a keyboard shortcut" takes when switched on: Ctrl+Alt+B (⌥⌘B), and
+ * on Windows Ctrl+Alt+F11, since Ctrl+Alt is AltGr there and B types on many layouts. The
+ * shell's showShortcutBuiltIn, which also moves anyone still on the old Ctrl+Shift+B to it.
+ */
+export function showShortcutDefault(platform: string | undefined): string {
+  return platform === 'win32' ? 'CommandOrControl+Alt+F11' : 'CommandOrControl+Alt+B';
+}
+
 const MAC_SYMBOLS: Record<string, string> = {
   control: '⌃',
   ctrl: '⌃',
@@ -67,6 +76,12 @@ export interface ShortcutKeyEvent {
  * shell's. `cmd` is Cmd on a Mac and Ctrl elsewhere.
  */
 const RESERVED = new Set(['cmd+shift+A', 'cmd+shift+C', 'cmd+shift+V', 'cmd+shift+X', 'cmd+shift+Z']);
+/**
+ * The app's own keys with two modifiers, which a global key would take from Bulwark itself:
+ * the composer's Cc, Bcc and schedule send, and the menus' new message, new window, Save as
+ * PDF, reply all and forward. Same list as APP_KEYS in the shell's os-rules.ts.
+ */
+const APP_KEYS = new Set(['cmd+shift+B', 'cmd+shift+C', 'cmd+shift+ENTER', 'cmd+shift+M', 'cmd+shift+N', 'cmd+shift+S', 'cmd+shift+R', 'cmd+shift+F']);
 const RESERVED_ON_MAC = new Set([
   'cmd+shift+3', 'cmd+shift+4', 'cmd+shift+5', 'cmd+shift+Q',
   'cmd+ctrl+Q', 'cmd+ctrl+F',
@@ -119,7 +134,7 @@ export function shortcutProblem(accelerator: string, platform: string | undefine
   if (modifiers.has('super')) return 'reserved';
   if (modifiers.size < 2 || !(modifiers.has('cmd') || modifiers.has('ctrl'))) return 'incomplete';
   const named = `${[...modifiers].sort().join('+')}+${key}`;
-  return RESERVED.has(named) || (mac && RESERVED_ON_MAC.has(named)) ? 'reserved' : null;
+  return RESERVED.has(named) || APP_KEYS.has(`${[...modifiers].sort().join('+')}+${key.toUpperCase()}`) || (mac && RESERVED_ON_MAC.has(named)) ? 'reserved' : null;
 }
 
 /**
