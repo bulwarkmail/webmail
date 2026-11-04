@@ -411,6 +411,17 @@
       "position": "{more, select, yes {Página {page} de {pages} ou mais} other {Página {page} de {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# conversa selecionada} other {# conversas selecionadas}}",
+    "search_count": "{conversations, plural, one {# conversa} other {# conversas}} ({messages, plural, one {# mensagem} other {# mensagens}})",
+    "conversation_count": "{count, plural, one {# conversa} other {# conversas}}",
+    "archived": "Arquivado",
+    "moved_to_trash": "Movido para a lixeira",
+    "moved_to": "Movido para {mailbox}",
+    "moved_count_to": "{count, plural, one {# e-mail movido para {mailbox}} other {# e-mails movidos para {mailbox}}}",
+    "new_folder_title": "Nova pasta",
+    "new_subfolder_title": "Nova subpasta"
+  },
   "shared_tags": {
     "title": "Etiquetas compartilhadas",
     "description": "Etiquetas das suas caixas de grupo. Todos no grupo veem os mesmos nomes e cores nos e-mails dela.",

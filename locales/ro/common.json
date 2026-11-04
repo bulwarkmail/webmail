@@ -411,6 +411,17 @@
       "position": "{more, select, yes {Pagina {page} din {pages} sau mai multe} other {Pagina {page} din {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# conversație selectată} few {# conversații selectate} other {# de conversații selectate}}",
+    "search_count": "{conversations, plural, one {# conversație} few {# conversații} other {# de conversații}} ({messages, plural, one {# mesaj} few {# mesaje} other {# de mesaje}})",
+    "conversation_count": "{count, plural, one {# conversație} few {# conversații} other {# de conversații}}",
+    "archived": "Arhivat",
+    "moved_to_trash": "Mutat în coșul de gunoi",
+    "moved_to": "Mutată la {mailbox}",
+    "moved_count_to": "{count, plural, one {# e-mail mutat în {mailbox}} few {# e-mailuri mutate în {mailbox}} other {# de e-mailuri mutate în {mailbox}}}",
+    "new_folder_title": "Dosar nou",
+    "new_subfolder_title": "Subfolder nou"
+  },
   "shared_tags": {
     "title": "Etichete partajate",
     "description": "Etichetele căsuțelor dvs. de grup. Toți membrii grupului văd aceleași nume și culori pe mesajele lui.",

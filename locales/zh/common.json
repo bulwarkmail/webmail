@@ -411,6 +411,17 @@
       "position": "{more, select, yes {第 {page} 页，共 {pages} 页或更多} other {第 {page} 页，共 {pages} 页}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, other {已选择 # 个会话}}",
+    "search_count": "{conversations, plural, other {# 个会话}}（{messages, plural, other {# 条消息}}）",
+    "conversation_count": "{count, plural, other {# 个会话}}",
+    "archived": "已归档",
+    "moved_to_trash": "已移至已删除",
+    "moved_to": "已移至 {mailbox}",
+    "moved_count_to": "{count, plural, other {已将 # 封邮件移至 {mailbox}}}",
+    "new_folder_title": "新建文件夹",
+    "new_subfolder_title": "新建子文件夹"
+  },
   "shared_tags": {
     "title": "共享标签",
     "description": "您的群组邮箱的标签。群组中的每个人在其邮件上看到的名称和颜色都相同。",

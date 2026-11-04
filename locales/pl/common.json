@@ -411,6 +411,17 @@
       "position": "{more, select, yes {Strona {page} z {pages} lub więcej} other {Strona {page} z {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {Wybrano # konwersację} few {Wybrano # konwersacje} many {Wybrano # konwersacji} other {Wybrano # konwersacji}}",
+    "search_count": "{conversations, plural, one {# konwersacja} few {# konwersacje} many {# konwersacji} other {# konwersacji}} ({messages, plural, one {# wiadomość} few {# wiadomości} many {# wiadomości} other {# wiadomości}})",
+    "conversation_count": "{count, plural, one {# konwersacja} few {# konwersacje} many {# konwersacji} other {# konwersacji}}",
+    "archived": "Zarchiwizowano",
+    "moved_to_trash": "Przeniesiono do kosza",
+    "moved_to": "Przeniesiono do {mailbox}",
+    "moved_count_to": "{count, plural, one {Przeniesiono # wiadomość do {mailbox}} few {Przeniesiono # wiadomości do {mailbox}} many {Przeniesiono # wiadomości do {mailbox}} other {Przeniesiono # wiadomości do {mailbox}}}",
+    "new_folder_title": "Nowy folder",
+    "new_subfolder_title": "Nowy podfolder"
+  },
   "shared_tags": {
     "title": "Wspólne etykiety",
     "description": "Etykiety Twoich skrzynek grupowych. Wszyscy w grupie widzą te same nazwy i kolory przy jej wiadomościach.",

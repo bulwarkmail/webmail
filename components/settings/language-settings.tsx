@@ -54,6 +54,10 @@ export function LanguageSettings() {
     const older = new Date(now);
     older.setMonth(now.getMonth() - 2);
     older.setHours(15, 31, 0, 0);
+    // The date order samples use last year: this year's dates read "Oct 24"
+    // when the order follows the language.
+    const lastYear = new Date(older);
+    lastYear.setFullYear(now.getFullYear() - 1);
     return {
       today: formatDate(today),
       thisWeek: formatDate(thisWeek),
@@ -66,10 +70,10 @@ export function LanguageSettings() {
         full: formatDate(older, { dateFormat: 'full' }),
       },
       dateLocale: {
-        auto: formatDate(older, { dateFormat: 'smart', dateLocale: 'auto' }),
-        iso: formatDate(older, { dateFormat: 'smart', dateLocale: 'iso' }),
-        'en-GB': formatDate(older, { dateFormat: 'smart', dateLocale: 'en-GB' }),
-        'en-US': formatDate(older, { dateFormat: 'smart', dateLocale: 'en-US' }),
+        auto: formatDate(lastYear, { dateFormat: 'smart', dateLocale: 'auto' }),
+        iso: formatDate(lastYear, { dateFormat: 'smart', dateLocale: 'iso' }),
+        'en-GB': formatDate(lastYear, { dateFormat: 'smart', dateLocale: 'en-GB' }),
+        'en-US': formatDate(lastYear, { dateFormat: 'smart', dateLocale: 'en-US' }),
       },
     };
   }, [locale, dateFormat, dateLocale, timeFormat, timeZone]);

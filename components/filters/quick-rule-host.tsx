@@ -21,6 +21,8 @@ import { supportsRegex } from "@/lib/sieve/regex";
 export function QuickRuleHost() {
   const text = useQuickRuleText();
   const tFolderMenu = useTranslations("mailbox_context_menu");
+  // The dialog's title without the menu item's "…" (mail-29).
+  const tFolderTitle = useTranslations("mail_list_extra");
   const editor = useQuickRuleStore((s) => s.editor);
   const newFolder = useQuickRuleStore((s) => s.newFolder);
   const closeEditor = useQuickRuleStore((s) => s.closeEditor);
@@ -78,7 +80,7 @@ export function QuickRuleHost() {
           closeNewFolder();
           if (request && name.trim()) void createFolderAndRunPreset(request, name, text);
         }}
-        title={tFolderMenu("new_folder")}
+        title={tFolderTitle("new_folder_title")}
         message={tFolderMenu("prompt_new_folder")}
         placeholder={tFolderMenu("placeholder_folder_name")}
       />

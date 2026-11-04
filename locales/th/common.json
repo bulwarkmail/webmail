@@ -838,6 +838,17 @@
       "position": "{more, select, yes {หน้า {page} จาก {pages} หรือมากกว่า} other {หน้า {page} จาก {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, other {เลือกแล้ว # การสนทนา}}",
+    "search_count": "{conversations, plural, other {# การสนทนา}} ({messages, plural, other {# ข้อความ}})",
+    "conversation_count": "{count, plural, other {# การสนทนา}}",
+    "archived": "เก็บถาวรแล้ว",
+    "moved_to_trash": "ย้ายไปถังขยะแล้ว",
+    "moved_to": "ย้ายไปยัง {mailbox} แล้ว",
+    "moved_count_to": "{count, plural, other {ย้าย # อีเมลไปยัง {mailbox} แล้ว}}",
+    "new_folder_title": "สร้างโฟลเดอร์ใหม่",
+    "new_subfolder_title": "สร้างโฟลเดอร์ย่อยใหม่"
+  },
   "shared_tags": {
     "title": "ป้ายกำกับที่แชร์",
     "description": "ป้ายกำกับของกล่องจดหมายกลุ่มของคุณ ทุกคนในกลุ่มจะเห็นชื่อและสีเดียวกันบนอีเมลของกลุ่ม",

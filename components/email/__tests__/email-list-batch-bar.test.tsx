@@ -56,6 +56,49 @@ describe('selection bar', () => {
   });
 });
 
+// mail-10: Move on the bar, one read/unread button that offers "Mark as read"
+// while anything selected is unread, and the same buttons in the reading pane.
+describe('selection bar: Move, read state and the reading pane', () => {
+  it('moves the selection from its Move button', async () => {
+    const batchMoveToMailbox = vi.fn().mockResolvedValue(true);
+    useEmailStore.setState({ batchMoveToMailbox });
+    render(<EmailList emails={useEmailStore.getState().emails} />);
+    fireEvent.click(screen.getByTestId('batch-move'));
+    fireEvent.click(await screen.findByRole('menuitem', { name: /work/ }));
+    await waitFor(() => expect(batchMoveToMailbox).toHaveBeenCalledWith(expect.anything(), 'work', undefined, expect.any(Array)));
+  });
+
+  it('offers Mark as read while one selected message is unread', async () => {
+    const emails = useEmailStore.getState().emails.map((email, i) => (i === 0 ? { ...email, keywords: {} } : email));
+    useEmailStore.setState({ emails });
+    render(<EmailList emails={emails} />);
+    expect(screen.getByTestId('batch-mark-read').getAttribute('aria-label')).toBe('batch_actions.mark_read');
+    expect(screen.queryByRole('button', { name: 'batch_actions.mark_unread' })).toBeNull();
+  });
+
+  it('offers Mark as unread when everything selected is read', () => {
+    render(<EmailList emails={useEmailStore.getState().emails} />);
+    expect(screen.getByTestId('batch-mark-read').getAttribute('aria-label')).toBe('batch_actions.mark_unread');
+  });
+
+  it('draws the count and the same buttons into the reading pane', async () => {
+    const batchArchive = vi.fn().mockResolvedValue(true);
+    useEmailStore.setState({ batchArchive });
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    render(<EmailList emails={useEmailStore.getState().emails} selectionPaneHost={host} />);
+    const pane = host.querySelector('[data-testid="selection-pane"]') as HTMLElement;
+    expect(pane).not.toBeNull();
+    expect(pane.textContent).toContain('selected_conversations');
+    for (const id of ['archive', 'delete', 'move', 'mark-read']) {
+      expect(pane.querySelector(`[data-testid="pane-batch-${id}"]`)).not.toBeNull();
+    }
+    fireEvent.click(pane.querySelector('[data-testid="pane-batch-archive"]')!);
+    await waitFor(() => expect(batchArchive).toHaveBeenCalled());
+    host.remove();
+  });
+});
+
 describe('selection bar and rows from the keyboard', () => {
   it('keeps the collapsed bar out of the Tab order', () => {
     useEmailStore.setState({ selectedEmailKeys: new Set() });

@@ -285,6 +285,10 @@ interface EmailViewerProps {
   onCancelScheduledSend?: () => void;
   onRescheduleScheduled?: (delayedUntil: string) => void | Promise<void>;
   onCompose?: () => void;
+  /** Shown in the empty reading pane in place of "No conversation selected" (a selection's actions, mail-10). */
+  emptyPaneContent?: React.ReactNode;
+  /** Shown under the empty reading pane's text and Compose button (the first-run tips, mail-15). */
+  emptyPaneFooter?: React.ReactNode;
   /**
    * Fullscreen reading toggle (standard interface only - Pro email tabs are
    * fullscreen by construction). When set, the toolbar shows a maximize /
@@ -1347,6 +1351,8 @@ export function EmailViewer({
   onCancelScheduledSend,
   onRescheduleScheduled,
   onCompose,
+  emptyPaneContent,
+  emptyPaneFooter,
   onToggleFullscreen,
   onOpenInWindow,
   noAutomaticActions = false,
@@ -4188,6 +4194,7 @@ ${printWatermark ? printWatermark.html : ''}
       <div className="relative flex-1 min-w-0 flex flex-col overflow-y-auto bg-gradient-to-br from-muted/30 to-muted/50">
         {/* An empty reading pane's top is still the window's top, to drag by. */}
         <div aria-hidden="true" data-window-top-row="" className="absolute inset-x-0 top-0 h-14" />
+        {emptyPaneContent ?? (
         <div className="m-auto text-center p-8">
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-background shadow-lg flex items-center justify-center">
             <Mail className="w-10 h-10 text-muted-foreground" />
@@ -4200,7 +4207,9 @@ ${printWatermark ? printWatermark.html : ''}
               {t('compose')}
             </Button>
           )}
+          {emptyPaneFooter}
         </div>
+        )}
       </div>
     );
   }

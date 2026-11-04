@@ -411,6 +411,17 @@
       "position": "{more, select, yes {Pagina {page} di {pages} o più} other {Pagina {page} di {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# conversazione selezionata} other {# conversazioni selezionate}}",
+    "search_count": "{conversations, plural, one {# conversazione} other {# conversazioni}} ({messages, plural, one {# messaggio} other {# messaggi}})",
+    "conversation_count": "{count, plural, one {# conversazione} other {# conversazioni}}",
+    "archived": "Archiviato",
+    "moved_to_trash": "Spostato nel cestino",
+    "moved_to": "Spostato in {mailbox}",
+    "moved_count_to": "{count, plural, one {# messaggio spostato in {mailbox}} other {# messaggi spostati in {mailbox}}}",
+    "new_folder_title": "Nuova cartella",
+    "new_subfolder_title": "Nuova sottocartella"
+  },
   "shared_tags": {
     "title": "Etichette condivise",
     "description": "Etichette delle tue caselle di gruppo. Tutti nel gruppo vedono gli stessi nomi e colori sulla sua posta.",

@@ -411,6 +411,17 @@
       "position": "{more, select, yes {Trang {page} trong số {pages} trở lên} other {Trang {page} trong số {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, other {Đã chọn # cuộc trò chuyện}}",
+    "search_count": "{conversations, plural, other {# cuộc trò chuyện}} ({messages, plural, other {# thư}})",
+    "conversation_count": "{count, plural, other {# cuộc trò chuyện}}",
+    "archived": "Đã lưu trữ",
+    "moved_to_trash": "Đã chuyển vào thùng rác",
+    "moved_to": "Đã chuyển tới {mailbox}",
+    "moved_count_to": "{count, plural, other {Đã chuyển # email tới {mailbox}}}",
+    "new_folder_title": "Thư mục mới",
+    "new_subfolder_title": "Thư mục con mới"
+  },
   "shared_tags": {
     "title": "Thẻ được chia sẻ",
     "description": "Thẻ của hộp thư nhóm của bạn. Mọi người trong nhóm đều nhìn thấy tên và màu sắc giống nhau trên thư của nhóm.",

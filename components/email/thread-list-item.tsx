@@ -3,7 +3,7 @@
 import React, { useCallback } from "react";
 import { cleanPreview, formatDate } from "@/lib/utils";
 import { rowA11yProps, rowLabel } from "./list-a11y";
-import { emailDisplayDate } from "@/lib/email-date";
+import { emailListDate } from "@/lib/email-date";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
 import { Email, ThreadGroup } from "@/lib/jmap/types";
 import { cn } from "@/lib/utils";
@@ -587,7 +587,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
       isUnread && t('unread'),
       sender?.name || (sender?.email && formatAddress(sender.email)) || tUnknown,
       email.subject || tNoSubject,
-      formatDate(emailDisplayDate(email)),
+      formatDate(emailListDate(email)),
       isPinned && tStatus('pinned'),
       isStarred && tStatus('starred'),
       isAnswered && tStatus('replied'),
@@ -860,7 +860,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                       columns && LIST_COLUMN_CLASS.date,
                       isUnread ? (mvRow ? 'text-foreground font-bold' : 'text-foreground font-semibold') : 'text-muted-foreground'
                     )}>
-                      {formatDate(emailDisplayDate(email), mvRow ? { listStyle: 'mountain-view' } : undefined)}
+                      {formatDate(emailListDate(email), mvRow ? { listStyle: 'mountain-view' } : undefined)}
                     </span>
                   )}
                   {columns && <SizeCell bytes={email.size} />}
@@ -939,7 +939,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                           ? "text-foreground font-semibold"
                           : "text-muted-foreground"
                       )}>
-                        {formatDate(emailDisplayDate(email))}
+                        {formatDate(emailListDate(email))}
                       </span>
                     )}
                     {mvMobileRow && !(showPreview && density !== 'extra-compact' && density !== 'compact') && (
@@ -975,7 +975,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                   <div className={cn("flex min-w-0 items-center gap-1", !mvMobileRow && "contents")}>
                     <p dir="auto" className={cn(
                       "text-sm leading-relaxed",
-                      mvMobileRow ? "line-clamp-1 min-w-0 flex-1" : "line-clamp-2",
+                      mvMobileRow ? "line-clamp-1 min-w-0 flex-1" : density === 'comfortable' ? "line-clamp-2" : "line-clamp-1",
                       isUnread
                         ? "text-muted-foreground"
                         : "text-muted-foreground"
@@ -1314,7 +1314,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
       displayNames.join(', '),
       threadSubject,
       t('messages_tooltip', { count: emailCount }),
-      formatDate(emailDisplayDate(latestEmail)),
+      formatDate(emailListDate(latestEmail)),
       hasPinned && tStatus('pinned'),
       hasStarred && tStatus('starred'),
       hasAnswered && tStatus('replied'),
@@ -1631,7 +1631,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                         columns && LIST_COLUMN_CLASS.date,
                         hasUnread ? (mvRow ? 'text-foreground font-bold' : 'text-foreground font-semibold') : 'text-muted-foreground'
                       )}>
-                        {formatDate(emailDisplayDate(latestEmail), mvRow ? { listStyle: 'mountain-view' } : undefined)}
+                        {formatDate(emailListDate(latestEmail), mvRow ? { listStyle: 'mountain-view' } : undefined)}
                       </span>
                     )}
                     {columns && <SizeCell bytes={thread.emails.reduce((sum, e) => sum + (e.size ?? 0), 0)} />}
@@ -1718,7 +1718,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                             ? "text-foreground font-semibold"
                             : "text-muted-foreground"
                         )}>
-                          {formatDate(emailDisplayDate(latestEmail))}
+                          {formatDate(emailListDate(latestEmail))}
                         </span>
                       )}
                       {mvMobileRow && !(showPreview && density !== 'extra-compact' && density !== 'compact') && (
@@ -1754,7 +1754,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                     <div className={cn("flex min-w-0 items-center gap-1", !mvMobileRow && "contents")}>
                       <p dir="auto" className={cn(
                         "text-sm leading-relaxed",
-                        mvMobileRow ? "line-clamp-1 min-w-0 flex-1" : "line-clamp-2",
+                        mvMobileRow ? "line-clamp-1 min-w-0 flex-1" : density === 'comfortable' ? "line-clamp-2" : "line-clamp-1",
                         hasUnread
                           ? "text-muted-foreground"
                           : "text-muted-foreground"

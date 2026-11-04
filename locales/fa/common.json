@@ -411,6 +411,17 @@
       "position": "{more, select, yes {صفحه {page} از {pages} یا بیشتر} other {صفحه {page} از {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# مکالمه انتخاب شد} other {# مکالمه انتخاب شد}}",
+    "search_count": "{conversations, plural, one {# مکالمه} other {# مکالمه}} ({messages, plural, one {# پیام} other {# پیام}})",
+    "conversation_count": "{count, plural, one {# مکالمه} other {# مکالمه}}",
+    "archived": "بایگانی شد",
+    "moved_to_trash": "به زباله‌دان منتقل شد",
+    "moved_to": "منتقل شد به {mailbox}",
+    "moved_count_to": "{count, plural, one {# ایمیل به {mailbox} منتقل شد} other {# ایمیل به {mailbox} منتقل شد}}",
+    "new_folder_title": "پوشه جدید",
+    "new_subfolder_title": "زیرپوشه جدید"
+  },
   "shared_tags": {
     "title": "برچسب‌های مشترک",
     "description": "برچسب‌های صندوق‌های گروهی شما. همهٔ اعضای گروه نام‌ها و رنگ‌های یکسانی روی ایمیل‌های آن می‌بینند.",

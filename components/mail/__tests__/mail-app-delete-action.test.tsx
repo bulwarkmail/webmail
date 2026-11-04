@@ -143,8 +143,8 @@ describe('Undo after a delete to Trash', () => {
     client.restoreEmails = vi.fn().mockResolvedValue(undefined);
     render(<MailApp />);
     fireEvent.click(await screen.findByText('stub delete', {}, { timeout: 5000 }));
-    await waitFor(() => expect(useToastStore.getState().toasts.some(t => t.title === 'notifications.email_deleted')).toBe(true));
-    const deleted = useToastStore.getState().toasts.find(t => t.title === 'notifications.email_deleted')!;
+    await waitFor(() => expect(useToastStore.getState().toasts.some(t => t.title === 'mail_list_extra.moved_to_trash')).toBe(true));
+    const deleted = useToastStore.getState().toasts.find(t => t.title === 'mail_list_extra.moved_to_trash')!;
     expect(deleted.action?.label).toBe('undo');
     deleted.action!.onClick();
     await waitFor(() => expect(client.restoreEmails).toHaveBeenCalled());

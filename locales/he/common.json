@@ -354,6 +354,17 @@
       "position": "{more, select, yes {עמוד {page} מתוך {pages} או יותר} other {עמוד {page} מתוך {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {נבחרה שיחה אחת} two {נבחרו שתי שיחות} other {נבחרו # שיחות}}",
+    "search_count": "{conversations, plural, one {שיחה אחת} two {שתי שיחות} other {# שיחות}} ({messages, plural, one {הודעה אחת} two {שתי הודעות} other {# הודעות}})",
+    "conversation_count": "{count, plural, one {שיחה אחת} two {שתי שיחות} other {# שיחות}}",
+    "archived": "הועבר לארכיון",
+    "moved_to_trash": "הועבר לאשפה",
+    "moved_to": "הועבר אל {mailbox}",
+    "moved_count_to": "{count, plural, one {הודעה אחת הועברה אל {mailbox}} other {# הודעות הועברו אל {mailbox}}}",
+    "new_folder_title": "תיקייה חדשה",
+    "new_subfolder_title": "תת־תיקייה חדשה"
+  },
   "shared_tags": {
     "title": "תגים משותפים",
     "description": "התגים של תיבות הדואר הקבוצתיות שלך. כל חברי הקבוצה רואים את אותם שמות וצבעים בדואר שלה.",

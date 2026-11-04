@@ -411,6 +411,17 @@
       "position": "{more, select, yes {Сторінка {page} з {pages} або більше} other {Сторінка {page} з {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {Вибрано # розмову} few {Вибрано # розмови} many {Вибрано # розмов} other {Вибрано # розмови}}",
+    "search_count": "{conversations, plural, one {# розмова} few {# розмови} many {# розмов} other {# розмови}} ({messages, plural, one {# повідомлення} few {# повідомлення} many {# повідомлень} other {# повідомлення}})",
+    "conversation_count": "{count, plural, one {# розмова} few {# розмови} many {# розмов} other {# розмови}}",
+    "archived": "Заархівовано",
+    "moved_to_trash": "Переміщено до кошика",
+    "moved_to": "Переміщено до {mailbox}",
+    "moved_count_to": "{count, plural, one {# лист переміщено до {mailbox}} few {# листи переміщено до {mailbox}} many {# листів переміщено до {mailbox}} other {# листа переміщено до {mailbox}}}",
+    "new_folder_title": "Нова папка",
+    "new_subfolder_title": "Нова вкладена папка"
+  },
   "shared_tags": {
     "title": "Спільні теги",
     "description": "Теги ваших групових скриньок. Усі в групі бачать однакові назви й кольори на її листах.",

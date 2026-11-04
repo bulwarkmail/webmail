@@ -362,6 +362,8 @@
 @custom-variant boot-dense (&:where([data-boot-density="compact"] *, [data-boot-density="extra-compact"] *));
 /* Message previews turned off (showPreview). */
 @custom-variant boot-no-preview (&:where([data-boot-preview="off"] *));
+/* The preview is one line except in comfortable rows. */
+@custom-variant boot-one-preview-line (&:where(:root:not([data-boot-density="comfortable"]) *));
 /* The default interface layout, the opposite of mv: (both can't be told apart by order). */
 @custom-variant boot-std (&:where(:root:not([data-interface-layout="mountain-view"]) *));
 /* Mountain View's side panel shows only with calendar or contacts. */

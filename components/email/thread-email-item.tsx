@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { emailDisplayDate } from "@/lib/email-date";
+import { emailListDate } from "@/lib/email-date";
 import { useTranslations } from "next-intl";
 import { cleanPreview, formatDate } from "@/lib/utils";
 import { Email } from "@/lib/jmap/types";
@@ -116,7 +116,7 @@ export function ThreadEmailItem({
     label: rowLabel([
       isUnread && t('unread'),
       senderName,
-      formatDate(emailDisplayDate(email)),
+      formatDate(emailListDate(email)),
       isStarred && tStatus('starred'),
       isAnswered && tStatus('replied'),
       isForwarded && tStatus('forwarded'),
@@ -215,7 +215,7 @@ export function ThreadEmailItem({
                 "text-xs tabular-nums",
                 isUnread ? "text-foreground font-medium" : "text-muted-foreground"
               )}>
-                {formatDate(emailDisplayDate(email))}
+                {formatDate(emailListDate(email))}
               </span>
               <SizeCell bytes={email.size} />
             </div>
@@ -359,7 +359,7 @@ export function ThreadEmailItem({
                 ? "text-foreground font-medium"
                 : "text-muted-foreground"
             )}>
-              {formatDate(emailDisplayDate(email))}
+              {formatDate(emailListDate(email))}
             </span>
           </div>
         </div>

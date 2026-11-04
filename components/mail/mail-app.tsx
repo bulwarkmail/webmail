@@ -139,6 +139,7 @@ import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-iden
 import { Filter, X, Mail, MailOpen, PenSquare, CheckSquare, Square, AlertTriangle, ArrowLeft, RefreshCw, Reply, ReplyAll, Forward, Archive, Trash2, FolderInput, ShieldAlert, ShieldCheck, Folder } from "@/components/icons";
 import { useRegisterCommands } from "@/lib/command-registry";
 import { MoveToDialog } from "@/components/email/move-to-dialog";
+import { SearchResultCount } from "@/components/email/search-result-count";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { Button } from "@/components/ui/button";
 import { ToolbarButton, ToolbarSearchAction } from "@/components/ui/toolbar";
@@ -312,6 +313,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   // The message the palette's "Move to…" was picked for.
   const [moveDialogEmail, setMoveDialogEmail] = useState<Email | null>(null);
+  // The empty reading pane's slot for a selection; the list draws into it (mail-10).
+  const [selectionPaneHost, setSelectionPaneHost] = useState<HTMLDivElement | null>(null);
   // The scheduled message Reschedule was picked for in the list's menu.
   const [rescheduleTarget, setRescheduleTarget] = useState<Email | null>(null);
   // Column resize state (disable transitions during drag)
@@ -3379,7 +3382,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     try {
       // false: a plugin stopped it and said why, so no "deleted" here.
       if (await deleteEmail(client, emailToDelete.id, isInTrash, emailKeyFor(emailToDelete))) {
-        toastWithUndo(t('notifications.email_deleted'), undoMoveAction(client, restore, undo));
+        toastWithUndo(permanent ? t('notifications.email_deleted') : t('mail_list_extra.moved_to_trash'), undoMoveAction(client, restore, undo));
       }
     } catch (error) {
       console.error("Failed to delete email:", error);
@@ -3490,7 +3493,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         setConversationEmails([]);
       }
 
-      toastWithUndo(t('notifications.email_archived'), undoMoveAction(client, restore, undo));
+      toastWithUndo(t('mail_list_extra.archived'), undoMoveAction(client, restore, undo));
       void refreshMailboxes();
     } catch (error) {
       console.error("Failed to archive email:", error);
@@ -3521,12 +3524,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (email) leaveIfOpen(email);
     try {
       if (!(await moveToMailboxCrossAware(client, emailId, mailboxId, emailKey, receipts))) return;
+      // One line: "Moved to Family", not "Email moved. Moved to Family." (mail-18)
       toastWithUndo(
-        t('notifications.email_moved'),
-        undoMoveAction(client, restore, undo, receipts),
         destination && destinationList
-          ? t('notifications.moved_to_mailbox', { mailbox: getMailboxPath(destination, destinationList) })
-          : undefined,
+          ? t('mail_list_extra.moved_to', { mailbox: getMailboxPath(destination, destinationList) })
+          : t('notifications.email_moved'),
+        undoMoveAction(client, restore, undo, receipts),
       );
     } catch (error) {
       console.error("Failed to move email:", error);
@@ -4043,7 +4046,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const handleCreateSubfolderFromContextMenu = async (parentId: string) => {
     if (!client) return;
     const name = await promptDialog({
-      title: tCtxMenu('mailbox_context_menu.new_subfolder'),
+      title: tCtxMenu('mail_list_extra.new_subfolder_title'),
       message: tCtxMenu('mailbox_context_menu.prompt_new_subfolder'),
       placeholder: tCtxMenu('mailbox_context_menu.placeholder_folder_name'),
       confirmText: tCtxMenu('mailbox_context_menu.create'),
@@ -4059,7 +4062,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const handleCreateFolderFromContextMenu = async (accountId?: string) => {
     if (!client) return;
     const name = await promptDialog({
-      title: tCtxMenu('mailbox_context_menu.new_folder'),
+      title: tCtxMenu('mail_list_extra.new_folder_title'),
       message: tCtxMenu('mailbox_context_menu.prompt_new_folder'),
       placeholder: tCtxMenu('mailbox_context_menu.placeholder_folder_name'),
       confirmText: tCtxMenu('mailbox_context_menu.create'),
@@ -4872,6 +4875,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // window. With the list beside the message it is the only way to the other apps.
   const shortWindowHidesTabBar = isShortWindow && ((showComposer && !floatingComposer) || (hasViewerContent && shouldCollapseListPane));
   const shouldHideHorizontalViewerPane = isHorizontalMailLayout && !hasViewerContent;
+  // Where the empty reading pane shows beside the list, it holds the
+  // first-run tips (mail-15) and a selection's actions (mail-10).
+  const emptyPaneBesideList = !isMobile && !isFocusedMailLayout && !isHorizontalMailLayout;
 
   // Handle email selection with mobile view switching
   // A mouse pressed on a row: the click that follows opens the message, so
@@ -5701,9 +5707,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
             {(searchQuery || !isFilterEmpty(searchFilters)) && !activeIsLoading && !isScheduledView && (
               <div className="px-4 py-1.5 text-xs text-muted-foreground border-b border-border bg-muted/20">
-                {activeHasMore
-                  ? t("advanced_search.results_found_more", { count: activeEmails.length })
-                  : t("advanced_search.results_found", { count: activeEmails.length })}
+                <SearchResultCount emails={activeEmails} hasMore={activeHasMore} />
               </div>
             )}
 
@@ -5717,13 +5721,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             {/* Plugin-registered category tabs (Gmail-style). Renders nothing
                 unless an enabled plugin registered tabs via api.tabs.set. */}
             {!isScheduledView && <MessageListTabs panelId={messageListPanelId} />}
-            <WelcomeBanner />
+            {!emptyPaneBesideList && <WelcomeBanner />}
 
             <div {...messageListPanelProps} className="flex-1 min-h-0 flex flex-col overflow-hidden">
             <ErrorBoundary fallback={EmailListErrorFallback}>
               <EmailList
                 onFindFromSender={mvShell ? (sender) => void handleSelectContactSuggestion(sender, 'from') : undefined}
                 hideBatchToolbar={mvShell}
+                selectionPaneHost={emptyPaneBesideList ? selectionPaneHost : null}
                 emails={activeEmails}
                 selectedEmailKey={selectedEmail ? emailKeyFor(selectedEmail) : undefined}
                 // Until the first page of the folder has arrived an empty list
@@ -6142,6 +6147,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                         setShowComposer(true);
                       });
                     }}
+                    emptyPaneContent={emptyPaneBesideList && selectedEmailKeys.size > 0 && !isScheduledView && !mvShell
+                      ? <div ref={setSelectionPaneHost} className="m-auto p-8" />
+                      : undefined}
+                    emptyPaneFooter={emptyPaneBesideList ? <WelcomeBanner variant="pane" /> : undefined}
                     currentUserEmail={client?.getUsername()}
                     currentUserName={client?.getUsername()?.split("@")[0]}
                     currentMailboxRole={mailboxes.find(m => m.id === selectedMailbox)?.role ?? (isUnifiedView ? (unifiedRole ?? undefined) : undefined)}

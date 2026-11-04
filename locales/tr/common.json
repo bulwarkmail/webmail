@@ -411,6 +411,17 @@
       "position": "{more, select, yes {Sayfa {page} / {pages} veya daha fazla} other {Sayfa {page} / {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# konuşma seçildi} other {# konuşma seçildi}}",
+    "search_count": "{conversations, plural, one {# konuşma} other {# konuşma}} ({messages, plural, one {# ileti} other {# ileti}})",
+    "conversation_count": "{count, plural, one {# konuşma} other {# konuşma}}",
+    "archived": "Arşivlendi",
+    "moved_to_trash": "Çöp Kutusuna taşındı",
+    "moved_to": "{mailbox} klasörüne taşındı",
+    "moved_count_to": "{count, plural, one {# e-posta {mailbox} klasörüne taşındı} other {# e-posta {mailbox} klasörüne taşındı}}",
+    "new_folder_title": "Yeni klasör",
+    "new_subfolder_title": "Yeni alt klasör"
+  },
   "shared_tags": {
     "title": "Paylaşılan etiketler",
     "description": "Grup posta kutularınızın etiketleri. Gruptaki herkes iletilerinde aynı adları ve renkleri görür.",

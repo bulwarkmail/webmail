@@ -411,6 +411,17 @@
       "position": "{more, select, yes {Leht {page} / {pages} või rohkem} other {Leht {page} / {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# vestlus valitud} other {# vestlust valitud}}",
+    "search_count": "{conversations, plural, one {# vestlus} other {# vestlust}} ({messages, plural, one {# sõnum} other {# sõnumit}})",
+    "conversation_count": "{count, plural, one {# vestlus} other {# vestlust}}",
+    "archived": "Arhiveeritud",
+    "moved_to_trash": "Liigutatud prügikasti",
+    "moved_to": "Liigutatud kausta {mailbox}",
+    "moved_count_to": "{count, plural, one {# e-kiri liigutati kausta {mailbox}} other {# e-kirja liigutati kausta {mailbox}}}",
+    "new_folder_title": "Uus kaust",
+    "new_subfolder_title": "Uus alamkaust"
+  },
   "shared_tags": {
     "title": "Jagatud sildid",
     "description": "Sinu grupipostkastide sildid. Kõik grupis näevad selle kirjadel samu nimesid ja värve.",

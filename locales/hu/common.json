@@ -411,6 +411,17 @@
       "position": "{more, select, yes {{page}. oldal, összesen {pages} vagy több} other {{page}. oldal, összesen {pages}}}"
     }
   },
+  "mail_list_extra": {
+    "selected_conversations": "{count, plural, one {# beszélgetés kijelölve} other {# beszélgetés kijelölve}}",
+    "search_count": "{conversations, plural, one {# beszélgetés} other {# beszélgetés}} ({messages, plural, one {# üzenet} other {# üzenet}})",
+    "conversation_count": "{count, plural, one {# beszélgetés} other {# beszélgetés}}",
+    "archived": "Archiválva",
+    "moved_to_trash": "Áthelyezve a kukába",
+    "moved_to": "Áthelyezve ide: {mailbox}",
+    "moved_count_to": "{count, plural, one {# e-mail áthelyezve ide: {mailbox}} other {# e-mail áthelyezve ide: {mailbox}}}",
+    "new_folder_title": "Új mappa",
+    "new_subfolder_title": "Új almappa"
+  },
   "shared_tags": {
     "title": "Megosztott címkék",
     "description": "A csoportos postafiókjaid címkéi. A csoportban mindenki ugyanazokat a neveket és színeket látja a leveleken.",
