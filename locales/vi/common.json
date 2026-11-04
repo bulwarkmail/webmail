@@ -7685,6 +7685,10 @@
     "offline_send_saved": "Bạn đang ngoại tuyến. Thư đã được lưu trong Bản nháp.",
     "offline_send_unsaved": "Bạn đang ngoại tuyến. Thư vẫn ở đây và sẽ được lưu vào Bản nháp khi bạn trực tuyến trở lại."
   },
+  "composer_panel": {
+    "show_panel": "Hiện {name}",
+    "hide_panel": "Ẩn {name}"
+  },
   "desktopDevTools": {
     "section_title": "Khắc phục sự cố",
     "label": "Công cụ cho nhà phát triển ({shortcut})",

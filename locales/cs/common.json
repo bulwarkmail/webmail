@@ -7673,6 +7673,10 @@
     "offline_send_saved": "Jste offline. Zpráva je uložená v Konceptech.",
     "offline_send_unsaved": "Jste offline. Zpráva tu zůstane a uloží se do Konceptů, až budete znovu online."
   },
+  "composer_panel": {
+    "show_panel": "Zobrazit {name}",
+    "hide_panel": "Skrýt {name}"
+  },
   "desktopDevTools": {
     "section_title": "Řešení potíží",
     "label": "Nástroje pro vývojáře ({shortcut})",

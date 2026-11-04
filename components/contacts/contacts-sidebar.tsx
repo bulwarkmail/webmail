@@ -323,6 +323,8 @@ export function ContactsSidebar({
         {/* All contacts */}
         <button
           onClick={() => onSelectCategory("all")}
+          // Marked as the other categories are: the drawer opens on it.
+          aria-current={isAllActive ? "true" : undefined}
           className={cn(
             "w-full flex items-center gap-2 px-3 text-sm transition-colors min-h-8 pointer-coarse:min-h-11",
             isAllActive
@@ -342,6 +344,7 @@ export function ContactsSidebar({
         {directoryCount !== undefined && (
           <button
             onClick={() => onSelectCategory("directory")}
+            aria-current={activeCategory === "directory" ? "true" : undefined}
             className={cn(
               "w-full flex items-center gap-2 px-3 text-sm transition-colors min-h-8 pointer-coarse:min-h-11",
               activeCategory === "directory"

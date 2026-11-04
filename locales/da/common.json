@@ -7673,6 +7673,10 @@
     "offline_send_saved": "Du er offline. Beskeden er gemt i Kladder.",
     "offline_send_unsaved": "Du er offline. Beskeden bliver her og gemmes i Kladder, når du er online igen."
   },
+  "composer_panel": {
+    "show_panel": "Vis {name}",
+    "hide_panel": "Skjul {name}"
+  },
   "desktopDevTools": {
     "section_title": "Fejlfinding",
     "label": "Udviklerværktøjer ({shortcut})",

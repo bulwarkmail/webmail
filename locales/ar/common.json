@@ -7673,6 +7673,10 @@
     "offline_send_saved": "أنت دون اتصال. الرسالة محفوظة في المسودات.",
     "offline_send_unsaved": "أنت دون اتصال. تبقى الرسالة هنا وتُحفظ في المسودات عند عودة الاتصال."
   },
+  "composer_panel": {
+    "show_panel": "إظهار {name}",
+    "hide_panel": "إخفاء {name}"
+  },
   "desktopDevTools": {
     "section_title": "استكشاف الأخطاء وإصلاحها",
     "label": "أدوات المطورين ({shortcut})",

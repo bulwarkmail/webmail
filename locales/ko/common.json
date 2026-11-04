@@ -7673,6 +7673,10 @@
     "offline_send_saved": "오프라인 상태입니다. 메시지는 임시보관함에 저장되어 있습니다.",
     "offline_send_unsaved": "오프라인 상태입니다. 메시지는 여기에 남아 있으며 다시 온라인이 되면 임시보관함에 저장됩니다."
   },
+  "composer_panel": {
+    "show_panel": "{name} 표시",
+    "hide_panel": "{name} 숨기기"
+  },
   "desktopDevTools": {
     "section_title": "문제 해결",
     "label": "개발자 도구 ({shortcut})",
