@@ -49,6 +49,8 @@ import { checkDesktopSignIn, parkDesktopSignIn, requestMobileHandoffCodeUrl } fr
 import { MobileHandoffConsent } from "@/components/auth/mobile-handoff-consent";
 import { LoginServerField, requestServerDiscovery, type ServerFieldError } from "@/components/auth/login-server-field";
 import { emailDomain, normalizeServerInput, serverHostLabel, unsupportedProvider } from "@/lib/auth/mail-server-address";
+import { loginHintFrom, serverOfSignedInDomain } from "@/lib/auth/login-hint";
+import { askAndChangeConnection, changeConnectionAvailable } from "@/lib/desktop/change-connection";
 import { HelpLinks } from "@/components/layout/help-links";
 import { LoginSkeleton } from "@/components/boot-skeleton/login-skeleton";
 import { Block } from "@/components/boot-skeleton/kit";
@@ -210,6 +212,11 @@ function LoginPageContent() {
   const tOfflineWipe = useTranslations("offlineWipe");
   const tTheme = useTranslations("settings.appearance.theme");
   const tLogin = useTranslations("uxs_login");
+  const tP3 = useTranslations("ux_p3_settings");
+  const tCommonP3 = useTranslations("common");
+  // Read after mount: the bridge isn't there during the server render.
+  const [orgLinkOffered, setOrgLinkOffered] = useState(false);
+  useEffect(() => setOrgLinkOffered(changeConnectionAvailable()), []);
   const params = useParams();
   const searchParams = useSearchParams();
   const isAddAccountMode = searchParams.get("mode") === "add-account";
@@ -277,9 +284,12 @@ function LoginPageContent() {
     ? { maxHeight: loginLogoMaxHeight || undefined, maxWidth: loginLogoMaxWidth || undefined }
     : undefined;
 
+  // The address typed on the desktop app's first screen (or named by a link): the form
+  // starts with it, looks its server up at once and puts the caret in the next field.
+  const [loginHint] = useState(() => loginHintFrom(searchParams.get("login_hint")));
   const [formData, setFormData] = useState({
     // An account restored from the list backup opens this form with its address.
-    username: isAddAccountMode ? searchParams.get("username") ?? "" : "",
+    username: (isAddAccountMode ? searchParams.get("username") : null) || loginHint,
     password: "",
   });
   const [jmapEndpoint, setJmapEndpoint] = useState("");
@@ -489,11 +499,16 @@ function LoginPageContent() {
     }
   }, [serverUrl, jmapEndpoint, customServerMode]);
 
-  /** One lookup per domain while the page is open. */
+  /**
+   * One lookup per domain while the page is open. A domain an account here already
+   * signs in at needs none: the second address there goes to the same server, and
+   * Change still picks another.
+   */
   const lookUpServer = useCallback((domain: string, address: string): Promise<string | null> => {
     let pending = serverLookups.current.get(domain);
     if (!pending) {
-      pending = requestServerDiscovery(address);
+      const known = serverOfSignedInDomain(useAccountStore.getState().accounts, domain);
+      pending = known ? Promise.resolve(known) : requestServerDiscovery(address);
       serverLookups.current.set(domain, pending);
     }
     return pending;
@@ -503,14 +518,16 @@ function LoginPageContent() {
   const typedAddress = formData.username.trim();
   useEffect(() => {
     if (!typedDomain || unsupportedMailProvider || serverLookup?.domain === typedDomain) return;
+    // An address handed over from the first screen is complete: no typing to wait for.
+    const delay = loginHint && typedAddress === loginHint ? 0 : 600;
     const timer = setTimeout(() => {
       setServerLookup({ domain: typedDomain, status: "looking", url: null });
       lookUpServer(typedDomain, typedAddress).then((url) => {
         setServerLookup((current) => (current?.domain === typedDomain ? { domain: typedDomain, status: url ? "found" : "failed", url } : current));
       });
-    }, 600);
+    }, delay);
     return () => clearTimeout(timer);
-  }, [typedDomain, typedAddress, unsupportedMailProvider, serverLookup?.domain, lookUpServer]);
+  }, [typedDomain, typedAddress, unsupportedMailProvider, serverLookup?.domain, lookUpServer, loginHint]);
 
   useEffect(() => {
     if (serverFocusRequest) serverInputRef.current?.focus();
@@ -683,6 +700,20 @@ function LoginPageContent() {
     // sign-in of its own, and the mailbox would strand the user in the app's
     // sign-in sheet. handleSubmit offers the hand-off after they sign in
     // (isAuthenticated stays true, so this effect doesn't run again).
+    // The first screen's address after File > Change connection…: open that account if
+    // it's here, else the form to add it with the address filled in (desktop-p3-2).
+    if (action === "mailbox" && loginHint && !isAddAccountMode) {
+      const wanted = loginHint.toLowerCase();
+      const accounts = useAccountStore.getState().accounts;
+      const match = accounts.find((a) => a.email?.toLowerCase() === wanted || a.username.toLowerCase() === wanted);
+      if (!match) {
+        router.replace(`/login?mode=add-account&login_hint=${encodeURIComponent(loginHint)}`);
+        return;
+      }
+      if (match.id !== useAuthStore.getState().activeAccountId) void useAuthStore.getState().switchAccount(match.id);
+      router.push('/');
+      return;
+    }
     if (action === "mailbox") {
       let redirectTo = '/';
       try {
@@ -694,7 +725,7 @@ function LoginPageContent() {
       } catch { /* ignore */ }
       router.push(toRouterPath(redirectTo));
     }
-  }, [isAuthenticated, router, isAddAccountMode, isMobileHandoff, offerMobileHandoff]);
+  }, [isAuthenticated, router, isAddAccountMode, isMobileHandoff, offerMobileHandoff, loginHint]);
 
   useEffect(() => {
     clearError();
@@ -1159,6 +1190,9 @@ function LoginPageContent() {
     authUrl.searchParams.set("code_challenge_method", "S256");
     // RFC 8707 resource for the global provider only (#1461).
     addOauthResource(authUrl, oauthResource, Boolean(server));
+    // OIDC: the provider's page starts with the address already typed here.
+    const hint = loginHintFrom(formData.username);
+    if (hint) authUrl.searchParams.set("login_hint", hint);
     if (isAddAccountMode) {
       authUrl.searchParams.set("prompt", "select_account");
     }
@@ -1212,6 +1246,7 @@ function LoginPageContent() {
         remember: persistProviderSession,
         addAccount: isAddAccountMode,
         fresh: freshLoginRequired(),
+        loginHint: loginHintFrom(typedAddress),
         redeem: (server, code, verifier, redirectUri) => useAuthStore.getState().loginWithOAuth(server, code, verifier, redirectUri),
         tryPassword: async ({ username, password, totp }) => {
           if (await useAuthStore.getState().login(target, username, password, totp, persistSession)) {
@@ -1242,6 +1277,7 @@ function LoginPageContent() {
       base: `${window.location.origin}${getPathPrefix(params.locale as string)}`,
       locale: params.locale as string,
       fresh: freshLoginRequired(),
+      loginHint: loginHintFrom(formData.username),
     });
     if (outcome.kind !== "code") {
       showBrowserSignInOutcome(outcome);
@@ -1978,7 +2014,8 @@ function LoginPageContent() {
                         required={!signInWithToken}
                         // Password managers fill and save the pair by this (WCAG 3.3.8).
                         autoComplete="username"
-                        autoFocus
+                        // With the address handed over, the password is what's missing.
+                        autoFocus={!loginHint}
                         // The recent accounts are a combobox's list: the arrow
                         // keys move through them while the focus stays here.
                         role={savedUsernames.length > 0 ? "combobox" : undefined}
@@ -2088,6 +2125,7 @@ function LoginPageContent() {
                         placeholder={t("password_placeholder")}
                         required={!liteSsoRequired && !signInWithToken}
                         autoComplete="current-password"
+                        autoFocus={!!loginHint}
                         {...errorProps(credentialsBlamed)}
                       />
                       {/* In the tab order, so keyboard users can check what
@@ -2279,6 +2317,28 @@ function LoginPageContent() {
                   </div>
                 )}
               </form>
+            )}
+
+            {/* The desktop app on its own, first sign-in: the way back to "My organisation
+                gave me a Bulwark web address" (settings-p3-1). It asks before the restart. */}
+            {IS_DESKTOP_BUILD && customServerMode && !isAddAccountMode && orgLinkOffered && (
+              <p className="mt-4 text-center text-xs text-muted-foreground">
+                <button
+                  type="button"
+                  data-testid="login-use-organisation"
+                  className="underline hover:text-foreground"
+                  onClick={() => {
+                    void askAndChangeConnection({
+                      title: tP3("connection.title"),
+                      message: tP3("connection.message"),
+                      confirm: tP3("connection.confirm"),
+                      cancel: tCommonP3("cancel"),
+                    });
+                  }}
+                >
+                  {tP3("connection.org_link")}
+                </button>
+              </p>
             )}
 
             {isAddAccountMode && (

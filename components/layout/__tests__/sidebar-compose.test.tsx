@@ -113,6 +113,21 @@ describe('folder sidebar header, with Compose at the top', () => {
     expect(screen.queryByTestId('account-switcher')).toBeNull();
   });
 
+  it('names the account the folders belong to when several are signed in, and only then', async () => {
+    const { useAccountStore } = await import('@/stores/account-store');
+    const { useAuthStore } = await import('@/stores/auth-store');
+    const entry = (id: string, email: string) => ({ id, label: email, serverUrl: 'https://mail.example.org', username: email, email, authMode: 'basic', cookieSlot: 0, rememberMe: true, displayName: '', avatarColor: '#000', lastLoginAt: 0, isConnected: true, hasError: false, isDefault: false });
+    useAuthStore.setState({ activeAccountId: 'b' } as never);
+    useAccountStore.setState({ accounts: [entry('a', 'ann@example.org'), entry('b', 'bob@example.org')] } as never);
+    const { unmount } = render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" onCompose={vi.fn()} />);
+    expect(screen.getByTestId('sidebar-account-line')).toHaveTextContent('bob@example.org');
+    unmount();
+    useAccountStore.setState({ accounts: [entry('b', 'bob@example.org')] } as never);
+    render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" onCompose={vi.fn()} />);
+    expect(screen.queryByTestId('sidebar-account-line')).toBeNull();
+    useAccountStore.setState({ accounts: [] } as never);
+  });
+
   it('leaves Compose to the round button where the sidebar is a drawer', () => {
     narrowWindow(true);
     render(<Sidebar mailboxes={mailboxes} selectedMailbox="inbox" onCompose={vi.fn()} />);

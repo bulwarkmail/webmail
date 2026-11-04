@@ -109,6 +109,33 @@
     "code_label": "Authentication code",
     "verify": "Verify"
   },
+  "ux_p3_words": {
+    "appearance_description": "Change how {appName} looks.",
+    "text_size_app": "Scales all text in the app. 100% is the normal size.",
+    "scrollbars_app": "Uses the system's own scrollbars, which are wider and easier to grab.",
+    "voice_app": "The voice that reads messages aloud. The list shows the voices this computer has for the interface language.",
+    "voice_default_app": "System voice",
+    "visual_alerts_app": "Flashes the window title slowly when new mail or a reminder arrives, and keeps reminders on screen until you close them.",
+    "sounds_link_app": "Notification sounds and the unread count on the taskbar icon are set on the Notifications page.",
+    "writing_language_app": "The language you usually write in. Proofreading and spell check use it.",
+    "badge_all_app": "The number on the taskbar icon and in the tray adds up the inboxes of every signed-in account.",
+    "badge_all_browser": "The number on the tab and the app icon adds up the inboxes of every signed-in account.",
+    "dnd_title": "Do not disturb",
+    "pause_label": "Pause notifications",
+    "pause_description": "No sounds, pop-ups or spoken announcements for new mail until you turn this off again.",
+    "dnd_link_app": "Pause notifications and set quiet hours on the Notifications page.",
+    "dnd_link_browser": "Pause notifications on the Notifications page.",
+    "backup_app": "Export your settings to a file and import them on your other devices.",
+    "sync_app": "Other devices signed in to this account get the same settings.",
+    "progress_attachments": "Downloading attachments",
+    "progress_events": "Downloading events",
+    "progress_contacts": "Downloading contacts",
+    "progress_files_list": "Listing files",
+    "progress_other": "Downloading",
+    "keep_description": "Keeps your mail, calendar, contacts and the files you keep offline in Files encrypted on this device. Offline you can read, flag and move mail, and what you write waits in the outbox. Signing out removes all of it.",
+    "filter_value_placeholder": "Value",
+    "filter_values_hint": "To match several values, separate them with commas."
+  },
   "sidebar": {
     "close": "Close",
     "compose": "Compose",
@@ -7533,6 +7560,28 @@
     "trouble_cors": "Your mail server has to allow sign-ins from this website. If signing in fails, ask whoever runs your mail server to allow it.",
     "provider_unsupported": "{provider} doesn't offer JMAP, the way Bulwark talks to mail servers, so Bulwark can't connect to it directly yet."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Change how Bulwark connects?",
+      "message": "Bulwark restarts and asks how to connect: with your email address, or through your organisation's Bulwark. Your accounts on this computer stay signed in.",
+      "confirm": "Change",
+      "org_link": "Use my organisation's Bulwark instead",
+      "add_account": "Add account…"
+    },
+    "picture": {
+      "button": "Picture",
+      "title": "Insert picture",
+      "address": "Web address of the picture",
+      "address_hint": "The picture stays on the web and is shown from there.",
+      "description": "Description",
+      "invalid": "Enter a web address that starts with https://.",
+      "insert": "Insert"
+    },
+    "sign_in_page": {
+      "open_app": "Open Bulwark",
+      "done_as": "Signed in as {address}. You can close this tab."
+    }
+  },
   "desktop_updates": {
     "title": "Updates",
     "version_label": "Bulwark {version}",
@@ -7982,6 +8031,17 @@
     "done": "Done",
     "join_host": "Join ({host})",
     "join_named": "Join: {title}"
+  },
+  "ux_p3_search": {
+    "devtools_label": "Developer tools",
+    "updates_label": "Check for updates",
+    "search": {
+      "quick_compose": "quick compose new message from anywhere global shortcut hotkey",
+      "files_drive": "free up space OneDrive Dropbox File Explorer Finder drive letter files on demand",
+      "offline_space": "free up space disk space storage room",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID fingerprint face passkey"
+    }
   },
   "desktop_policy": {
     "server_refused": "Your organisation doesn't allow this server on this device.",

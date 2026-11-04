@@ -34,6 +34,7 @@ import { mentionSuggestions, type MentionCandidate, type MentionContact } from "
 import { cn } from "@/lib/utils";
 import { getMarkRange } from "@tiptap/core";
 import { LinkDialog } from "@/components/email/link-dialog";
+import { ImageUrlDialog } from "@/components/email/image-url-dialog";
 import { ImageAltDialog } from "@/components/email/image-alt-dialog";
 
 /** A typed address without a scheme ("example.com") becomes a web link. */
@@ -184,6 +185,11 @@ interface RichTextEditorProps {
    * few lines such as an out-of-office reply. "full" is the composer's.
    */
   toolbar?: 'full' | 'short';
+  /**
+   * A "Picture" button that takes a picture's web address (a signature's logo). Pictures
+   * pasted or dropped still need onImageUpload.
+   */
+  pictureFromWeb?: boolean;
   /** The editing area's accessible name ("Message"). */
   ariaLabel?: string;
   /** The body failed validation: exposed as aria-invalid on the editing area. */
@@ -474,6 +480,7 @@ export function RichTextEditor({
   content,
   onChange,
   onImageUpload,
+  pictureFromWeb = false,
   placeholder,
   className,
   hasError,
@@ -753,6 +760,8 @@ export function RichTextEditor({
   // offers "Remove link". The range is kept from when the dialog opened: the
   // dialog takes the focus, and with it the editor's selection.
   const [linkDialog, setLinkDialog] = useState<{ href: string; text: string; from: number; to: number } | null>(null);
+  const [pictureDialog, setPictureDialog] = useState(false);
+  const tPicture = useTranslations("ux_p3_settings.picture");
   const addLink = useCallback(() => {
     if (!editor) return;
     const previousUrl = editor.getAttributes("link").href as string | undefined;
@@ -1346,6 +1355,18 @@ export function RichTextEditor({
           <LinkIcon className="w-4 h-4" />
         </ToolbarButton>
 
+        {pictureFromWeb && (
+          <ToolbarButton
+            item="picture"
+            popup="dialog"
+            expanded={pictureDialog}
+            onClick={() => setPictureDialog(true)}
+            title={tPicture("button")}
+          >
+            <ImageIcon className="w-4 h-4" />
+          </ToolbarButton>
+        )}
+
         {imageSelected && (
           <ToolbarButton
             item="image-alt"
@@ -1492,6 +1513,16 @@ export function RichTextEditor({
           mount={mention.mount}
         />,
         document.body
+      )}
+
+      {pictureFromWeb && (
+        <ImageUrlDialog
+          isOpen={pictureDialog}
+          onClose={() => setPictureDialog(false)}
+          onSubmit={({ src, alt }) => {
+            editor.chain().focus().insertContent({ type: "image", attrs: { src, alt: alt || null } }).run();
+          }}
+        />
       )}
 
       <LinkDialog

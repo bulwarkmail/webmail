@@ -6788,9 +6788,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                         announceRescheduled(result, delayedUntil);
                       }
                     }}
-                    onCompose={() => {
-                      void handleCompose();
-                    }}
                     emptyPaneContent={emptyPaneBesideList && selectedEmailKeys.size > 0 && !isScheduledView && !mvShell
                       ? <div ref={setSelectionPaneHost} className="m-auto w-full p-8" />
                       : openFailure && !isLoadingEmail

@@ -309,7 +309,8 @@ const ENTRIES: SettingSchemaEntry[] = [
   bool('unreadBadgeAllAccounts', 'notifications', 'account_unread.badge_all_accounts.label'),
   bool('calendarNotificationsEnabled', 'notifications', `${NO}calendar.enabled`),
   bool('calendarNotificationSound', 'notifications', `${NO}calendar.sound`),
-  bool('doNotDisturb', 'accessibility', `${A}do_not_disturb.label`),
+  // On Notifications since settings-p3-6, as "Pause notifications"; the key stays.
+  bool('doNotDisturb', 'notifications', 'ux_p3_words.pause_label'),
   bool('visualAlerts', 'accessibility', `${A}visual_alerts.label`),
   // Seconds read "{seconds} seconds": formatted. The admin minimum is checked at run time.
   choice('toastDuration', 'accessibility', `${A}toast_duration.label`,

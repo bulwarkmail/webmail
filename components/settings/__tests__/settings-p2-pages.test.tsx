@@ -138,8 +138,19 @@ describe('Backup & reset', () => {
     installBridge();
     render(<AboutDataSettings />);
     await settle();
-    expect(screen.getByText('backup_description_app')).toBeTruthy();
+    // settings-p3-9: what the page does, a settings file to export and import, not sync.
+    expect(screen.getByText('backup_app')).toBeTruthy();
+    expect(screen.queryByText('backup_description_app')).toBeNull();
     expect(screen.queryByText('sections.backup_description')).toBeNull();
+  });
+
+  it('in the app, the sync switch (when the server keeps settings) names no browsers', async () => {
+    config.settingsSyncEnabled = true;
+    installBridge();
+    render(<AboutDataSettings />);
+    await settle();
+    expect(screen.getByText('sync_app')).toBeTruthy();
+    expect(screen.queryByText('settings_sync.description')).toBeNull();
   });
 
   it('says what a reset keeps, and whether other devices change', async () => {

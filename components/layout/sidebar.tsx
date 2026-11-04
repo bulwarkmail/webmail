@@ -1549,6 +1549,10 @@ function SidebarImpl({
   const tagCounts = useEmailStore(s => s.tagCounts);
   const accounts = useAccountStore(s => s.accounts);
   const connectedAccounts = accounts.filter(a => a.isConnected);
+  const activeAccountEntry = accounts.find((a) => a.id === activeAccountId);
+  const accountLine = !isCollapsed && !sidebarAccountSwitcher && !mvShell && accounts.length > 1 && activeAccountEntry
+    ? activeAccountEntry.email || activeAccountEntry.username
+    : "";
   const hasGroupInboxes = useMemo(() => mailboxes.some(m => m.isShared), [mailboxes]);
   // Pro shell treats the unified mailbox as a core part of the multi-account
   // UI, so it ignores the user-facing `enableUnifiedMailbox` toggle. With a
@@ -2417,6 +2421,13 @@ function SidebarImpl({
       {/* No rule under it on Mountain View's canvas, which has none. */}
       {!isCollapsed && <DemoBanner ruled={!mvShell} />}
       {!isCollapsed && <VacationBanner />}
+
+      {/* With the switcher off and several accounts, which one the folders are (settings-p3-19). */}
+      {accountLine && (
+        <p data-testid="sidebar-account-line" className="px-4 pt-1 pb-1.5 text-xs text-muted-foreground truncate" title={accountLine}>
+          {accountLine}
+        </p>
+      )}
 
       {/* Mailbox List */}
       <nav

@@ -109,6 +109,33 @@
     "code_label": "Código de autenticación",
     "verify": "Verificar"
   },
+  "ux_p3_words": {
+    "appearance_description": "Cambia el aspecto de {appName}.",
+    "text_size_app": "Escala todo el texto de la aplicación. El 100 % es el tamaño normal.",
+    "scrollbars_app": "Usa las barras de desplazamiento del sistema, que son más anchas y fáciles de agarrar.",
+    "voice_app": "La voz que lee los mensajes en voz alta. La lista muestra las voces que tiene este ordenador para el idioma de la interfaz.",
+    "voice_default_app": "Voz del sistema",
+    "visual_alerts_app": "Hace parpadear despacio el título de la ventana cuando llega correo nuevo o un recordatorio, y mantiene los recordatorios en pantalla hasta que los cierres.",
+    "sounds_link_app": "Los sonidos de notificación y el número de no leídos en el icono de la barra de tareas se ajustan en la página Notificaciones.",
+    "writing_language_app": "El idioma en el que sueles escribir. La revisión y el corrector ortográfico lo usan.",
+    "badge_all_app": "El número del icono de la barra de tareas y de la bandeja del sistema suma las bandejas de entrada de todas las cuentas con sesión iniciada.",
+    "badge_all_browser": "El número de la pestaña y del icono de la aplicación suma las bandejas de entrada de todas las cuentas con sesión iniciada.",
+    "dnd_title": "No molestar",
+    "pause_label": "Pausar notificaciones",
+    "pause_description": "Sin sonidos, ventanas emergentes ni anuncios por voz para el correo nuevo hasta que lo vuelvas a desactivar.",
+    "dnd_link_app": "Pausa las notificaciones y define las horas de silencio en la página Notificaciones.",
+    "dnd_link_browser": "Pausa las notificaciones en la página Notificaciones.",
+    "backup_app": "Exporta tus ajustes a un archivo e impórtalos en tus otros dispositivos.",
+    "sync_app": "Los demás dispositivos con sesión iniciada en esta cuenta reciben los mismos ajustes.",
+    "progress_attachments": "Descargando adjuntos",
+    "progress_events": "Descargando eventos",
+    "progress_contacts": "Descargando contactos",
+    "progress_files_list": "Listando archivos",
+    "progress_other": "Descargando",
+    "keep_description": "Guarda tu correo, tu calendario, tus contactos y los archivos que mantienes sin conexión en Archivos, cifrados en este dispositivo. Sin conexión puedes leer, marcar y mover correo, y lo que escribas espera en la bandeja de salida. Al cerrar sesión se borra todo.",
+    "filter_value_placeholder": "Valor",
+    "filter_values_hint": "Para buscar varios valores, sepáralos con comas."
+  },
   "sidebar": {
     "close": "Cerrar",
     "compose": "Redactar",
@@ -7533,6 +7560,28 @@
     "trouble_cors": "Tu servidor de correo tiene que permitir iniciar sesión desde este sitio web. Si no funciona, pide a quien gestiona tu servidor de correo que lo permita.",
     "provider_unsupported": "{provider} no ofrece JMAP, la forma en que Bulwark habla con los servidores de correo, así que Bulwark todavía no puede conectarse directamente."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "¿Cambiar cómo se conecta Bulwark?",
+      "message": "Bulwark se reinicia y pregunta cómo conectarse: con tu dirección de correo o a través del Bulwark de tu organización. Tus cuentas en este ordenador siguen con la sesión iniciada.",
+      "confirm": "Cambiar",
+      "org_link": "Usar el Bulwark de mi organización",
+      "add_account": "Añadir cuenta…"
+    },
+    "picture": {
+      "button": "Imagen",
+      "title": "Insertar imagen",
+      "address": "Dirección web de la imagen",
+      "address_hint": "La imagen se queda en la web y se muestra desde allí.",
+      "description": "Descripción",
+      "invalid": "Introduce una dirección web que empiece por https://.",
+      "insert": "Insertar"
+    },
+    "sign_in_page": {
+      "open_app": "Abrir Bulwark",
+      "done_as": "Sesión iniciada como {address}. Puedes cerrar esta pestaña."
+    }
+  },
   "desktop_updates": {
     "title": "Actualizaciones",
     "version_label": "Bulwark {version}",
@@ -7982,6 +8031,17 @@
     "done": "Listo",
     "join_host": "Unirse ({host})",
     "join_named": "Unirse: {title}"
+  },
+  "ux_p3_search": {
+    "devtools_label": "Herramientas de desarrollo",
+    "updates_label": "Buscar actualizaciones",
+    "search": {
+      "quick_compose": "redacción rápida mensaje nuevo desde cualquier lugar atajo global",
+      "files_drive": "liberar espacio OneDrive Dropbox Explorador Finder letra de unidad archivos a petición",
+      "offline_space": "liberar espacio espacio en disco almacenamiento",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID huella dactilar cara llave de acceso passkey"
+    }
   },
   "desktop_policy": {
     "server_refused": "Tu organización no permite este servidor en este dispositivo.",

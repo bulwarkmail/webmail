@@ -109,6 +109,33 @@
     "code_label": "Codice di autenticazione",
     "verify": "Verifica"
   },
+  "ux_p3_words": {
+    "appearance_description": "Cambia l'aspetto di {appName}.",
+    "text_size_app": "Ridimensiona tutto il testo dell'app. 100% è la dimensione normale.",
+    "scrollbars_app": "Usa le barre di scorrimento del sistema, più larghe e facili da afferrare.",
+    "voice_app": "La voce che legge i messaggi ad alta voce. L'elenco mostra le voci di questo computer per la lingua dell'interfaccia.",
+    "voice_default_app": "Voce di sistema",
+    "visual_alerts_app": "Fa lampeggiare lentamente il titolo della finestra quando arriva nuova posta o un promemoria, e tiene i promemoria sullo schermo finché non li chiudi.",
+    "sounds_link_app": "I suoni delle notifiche e il numero di non letti sull'icona della barra delle applicazioni si impostano nella pagina Notifiche.",
+    "writing_language_app": "La lingua in cui scrivi di solito. La revisione e il controllo ortografico la usano.",
+    "badge_all_app": "Il numero sull'icona della barra delle applicazioni e nell'area di notifica somma le caselle di posta in arrivo di tutti gli account collegati.",
+    "badge_all_browser": "Il numero sulla scheda e sull'icona dell'app somma le caselle di posta in arrivo di tutti gli account collegati.",
+    "dnd_title": "Non disturbare",
+    "pause_label": "Sospendi le notifiche",
+    "pause_description": "Nessun suono, finestra a comparsa o annuncio vocale per la nuova posta finché non lo disattivi di nuovo.",
+    "dnd_link_app": "Sospendi le notifiche e imposta le ore di silenzio nella pagina Notifiche.",
+    "dnd_link_browser": "Sospendi le notifiche nella pagina Notifiche.",
+    "backup_app": "Esporta le impostazioni in un file e importale sugli altri dispositivi.",
+    "sync_app": "Gli altri dispositivi collegati a questo account ricevono le stesse impostazioni.",
+    "progress_attachments": "Download degli allegati",
+    "progress_events": "Download degli eventi",
+    "progress_contacts": "Download dei contatti",
+    "progress_files_list": "Elenco dei file",
+    "progress_other": "Download in corso",
+    "keep_description": "Conserva la tua posta, il calendario, i contatti e i file che tieni offline in File, cifrati su questo dispositivo. Offline puoi leggere, contrassegnare e spostare la posta, e ciò che scrivi aspetta nella posta in uscita. Uscendo dall'account viene rimosso tutto.",
+    "filter_value_placeholder": "Valore",
+    "filter_values_hint": "Per più valori, separali con virgole."
+  },
   "sidebar": {
     "close": "Chiudi",
     "compose": "Scrivi",
@@ -7533,6 +7560,28 @@
     "trouble_cors": "Il tuo server di posta deve consentire l'accesso da questo sito. Se l'accesso non riesce, chiedi a chi gestisce il server di posta di consentirlo.",
     "provider_unsupported": "{provider} non offre JMAP, il modo in cui Bulwark parla con i server di posta, quindi Bulwark non può ancora collegarsi direttamente."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Cambiare il modo in cui Bulwark si connette?",
+      "message": "Bulwark si riavvia e chiede come connettersi: con il tuo indirizzo email o tramite il Bulwark della tua organizzazione. I tuoi account su questo computer restano connessi.",
+      "confirm": "Cambia",
+      "org_link": "Usa invece il Bulwark della mia organizzazione",
+      "add_account": "Aggiungi account…"
+    },
+    "picture": {
+      "button": "Immagine",
+      "title": "Inserisci immagine",
+      "address": "Indirizzo web dell'immagine",
+      "address_hint": "L'immagine resta sul web e viene mostrata da lì.",
+      "description": "Descrizione",
+      "invalid": "Inserisci un indirizzo web che inizi con https://.",
+      "insert": "Inserisci"
+    },
+    "sign_in_page": {
+      "open_app": "Apri Bulwark",
+      "done_as": "Accesso eseguito come {address}. Puoi chiudere questa scheda."
+    }
+  },
   "desktop_updates": {
     "title": "Aggiornamenti",
     "version_label": "Bulwark {version}",
@@ -7982,6 +8031,17 @@
     "done": "Fatto",
     "join_host": "Partecipa ({host})",
     "join_named": "Partecipa: {title}"
+  },
+  "ux_p3_search": {
+    "devtools_label": "Strumenti per sviluppatori",
+    "updates_label": "Cerca aggiornamenti",
+    "search": {
+      "quick_compose": "scrittura rapida nuovo messaggio da ovunque scorciatoia globale",
+      "files_drive": "libera spazio OneDrive Dropbox Esplora file Finder lettera di unità file su richiesta",
+      "offline_space": "libera spazio spazio su disco archiviazione",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID impronta digitale volto passkey"
+    }
   },
   "desktop_policy": {
     "server_refused": "La tua organizzazione non consente questo server su questo dispositivo.",

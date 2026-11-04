@@ -185,6 +185,38 @@ describe('DesktopHost', () => {
     expect(push).toHaveBeenLastCalledWith('/contacts');
   });
 
+  it('File > Add account… opens the sign-in form for another account, and is offered once signed in', async () => {
+    useAuthStore.setState({ isAuthenticated: true } as never);
+    const shell = fakeBridge();
+    render(<DesktopHost />);
+    shell.run('file.addAccount');
+    expect(push).toHaveBeenLastCalledWith('/login?mode=add-account');
+    await waitFor(() => expect(shell.setState).toHaveBeenLastCalledWith(expect.objectContaining({ 'file.addAccount': true, 'file.switchMode': true })));
+  });
+
+  it('File > Change connection… asks in a window of the app first, and only Change restarts', async () => {
+    const shell = fakeBridge();
+    const show = vi.fn(async (_request: unknown): Promise<unknown> => ({ button: 0 }));
+    const changeConnection = vi.fn(async () => true);
+    const bridge = window.bulwarkDesktop as unknown as { menu: Record<string, unknown>; dialogs: Record<string, unknown> };
+    bridge.menu.changeConnection = changeConnection;
+    bridge.dialogs = { show, cancel: vi.fn() };
+    render(<DesktopHost />);
+    shell.run('file.switchMode');
+    await waitFor(() => expect(show).toHaveBeenCalledTimes(1));
+    const request = show.mock.calls[0][0] as { title: string; buttons: { label: string }[] };
+    expect(request.title).toBe('ux_p3_settings.connection.title');
+    expect(request.buttons.map((b) => b.label)).toEqual(['common.cancel', 'ux_p3_settings.connection.confirm']);
+    await act(async () => {});
+    expect(changeConnection).not.toHaveBeenCalled();
+    show.mockResolvedValueOnce({ button: 1 });
+    localStorage.removeItem('onboarding_completed');
+    shell.run('file.switchMode');
+    await waitFor(() => expect(changeConnection).toHaveBeenCalledTimes(1));
+    // The tips were seen before the restart: they don't come back after it.
+    expect(localStorage.getItem('onboarding_completed')).toBe('true');
+  });
+
   it('Help > Settings opens settings as a page of this window', () => {
     const shell = fakeBridge();
     render(<DesktopHost />);

@@ -109,6 +109,33 @@
     "code_label": "Code d'authentification",
     "verify": "Vérifier"
   },
+  "ux_p3_words": {
+    "appearance_description": "Modifiez l'apparence de {appName}.",
+    "text_size_app": "Met à l'échelle tout le texte de l'application. 100 % correspond à la taille normale.",
+    "scrollbars_app": "Utilise les barres de défilement du système, plus larges et plus faciles à saisir.",
+    "voice_app": "La voix qui lit les messages à voix haute. La liste montre les voix de cet ordinateur pour la langue de l'interface.",
+    "voice_default_app": "Voix du système",
+    "visual_alerts_app": "Fait clignoter lentement le titre de la fenêtre à l'arrivée d'un nouveau message ou d'un rappel, et garde les rappels à l'écran jusqu'à ce que vous les fermiez.",
+    "sounds_link_app": "Les sons de notification et le nombre de non lus sur l'icône de la barre des tâches se règlent sur la page Notifications.",
+    "writing_language_app": "La langue dans laquelle vous écrivez le plus souvent. La relecture et le correcteur orthographique l'utilisent.",
+    "badge_all_app": "Le nombre sur l'icône de la barre des tâches et dans la zone de notification additionne les boîtes de réception de tous les comptes connectés.",
+    "badge_all_browser": "Le nombre sur l'onglet et l'icône de l'application additionne les boîtes de réception de tous les comptes connectés.",
+    "dnd_title": "Ne pas déranger",
+    "pause_label": "Suspendre les notifications",
+    "pause_description": "Aucun son, aucune fenêtre contextuelle ni annonce vocale pour les nouveaux messages, jusqu'à ce que vous le désactiviez.",
+    "dnd_link_app": "Suspendez les notifications et définissez les heures calmes sur la page Notifications.",
+    "dnd_link_browser": "Suspendez les notifications sur la page Notifications.",
+    "backup_app": "Exportez vos paramètres dans un fichier et importez-les sur vos autres appareils.",
+    "sync_app": "Les autres appareils connectés à ce compte reçoivent les mêmes paramètres.",
+    "progress_attachments": "Téléchargement des pièces jointes",
+    "progress_events": "Téléchargement des événements",
+    "progress_contacts": "Téléchargement des contacts",
+    "progress_files_list": "Liste des fichiers en cours",
+    "progress_other": "Téléchargement",
+    "keep_description": "Garde vos e-mails, votre agenda, vos contacts et les fichiers que vous gardez hors ligne dans Fichiers, chiffrés sur cet appareil. Hors ligne, vous pouvez lire, signaler et déplacer des e-mails, et ce que vous écrivez attend dans la boîte d'envoi. La déconnexion supprime tout.",
+    "filter_value_placeholder": "Valeur",
+    "filter_values_hint": "Pour plusieurs valeurs, séparez-les par des virgules."
+  },
   "sidebar": {
     "close": "Fermer",
     "compose": "Composer",
@@ -7533,6 +7560,28 @@
     "trouble_cors": "Votre serveur de messagerie doit autoriser les connexions depuis ce site. Si la connexion échoue, demandez à la personne qui gère votre serveur de l'autoriser.",
     "provider_unsupported": "{provider} ne propose pas JMAP, la façon dont Bulwark communique avec les serveurs de messagerie, donc Bulwark ne peut pas encore s'y connecter directement."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Changer la façon dont Bulwark se connecte ?",
+      "message": "Bulwark redémarre et demande comment se connecter : avec votre adresse e-mail ou via le Bulwark de votre organisation. Vos comptes sur cet ordinateur restent connectés.",
+      "confirm": "Changer",
+      "org_link": "Utiliser plutôt le Bulwark de mon organisation",
+      "add_account": "Ajouter un compte…"
+    },
+    "picture": {
+      "button": "Image",
+      "title": "Insérer une image",
+      "address": "Adresse web de l'image",
+      "address_hint": "L'image reste sur le web et s'affiche depuis là.",
+      "description": "Description",
+      "invalid": "Saisissez une adresse web qui commence par https://.",
+      "insert": "Insérer"
+    },
+    "sign_in_page": {
+      "open_app": "Ouvrir Bulwark",
+      "done_as": "Connecté en tant que {address}. Vous pouvez fermer cet onglet."
+    }
+  },
   "desktop_updates": {
     "title": "Mises à jour",
     "version_label": "Bulwark {version}",
@@ -7982,6 +8031,17 @@
     "done": "Terminé",
     "join_host": "Rejoindre ({host})",
     "join_named": "Rejoindre: {title}"
+  },
+  "ux_p3_search": {
+    "devtools_label": "Outils de développement",
+    "updates_label": "Rechercher des mises à jour",
+    "search": {
+      "quick_compose": "rédaction rapide nouveau message depuis partout raccourci global",
+      "files_drive": "libérer de l'espace OneDrive Dropbox Explorateur Finder lettre de lecteur fichiers à la demande",
+      "offline_space": "libérer de l'espace espace disque stockage place",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID empreinte digitale visage clé d'accès passkey"
+    }
   },
   "desktop_policy": {
     "server_refused": "Votre organisation n'autorise pas ce serveur sur cet appareil.",

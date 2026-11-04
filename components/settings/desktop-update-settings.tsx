@@ -13,6 +13,7 @@ import { Select, SettingItem, SettingsSection } from "./settings-section";
  */
 export function DesktopUpdateSettings() {
   const t = useTranslations("desktop_updates");
+  const tSearch = useTranslations("ux_p3_search");
   const [state, setState] = useState<DesktopUpdateState | null>(null);
 
   useEffect(() => {
@@ -59,7 +60,8 @@ export function DesktopUpdateSettings() {
 
   return (
     <SettingsSection id="desktop-updates" title={t("title")}>
-      <SettingItem label={t("version_label", { version: state.version })} description={statusText} locked={!state.allowed}>
+      {/* Named for what it does, as settings search lists it; the version leads the description. */}
+      <SettingItem label={tSearch("updates_label")} description={`${t("version_label", { version: state.version })} · ${statusText}`} locked={!state.allowed}>
         {state.status === "ready" ? (
           <Button size="sm" onClick={() => updates.restart()}>
             {t("restart")}

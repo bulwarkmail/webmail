@@ -216,6 +216,7 @@ export function FilterRuleModal({
   onClose,
 }: FilterRuleModalProps) {
   const t = useTranslations("settings.filters");
+  const tWords = useTranslations("ux_p3_words");
   const isEdit = !!rule;
   const emailKeywords = useSettingsStore((state) => state.emailKeywords);
   // Regular expressions are for people who asked for the advanced settings;
@@ -549,6 +550,40 @@ export function FilterRuleModal({
       initialFocus={nameRef}
       footer={
         <>
+          {/* Next to Save, where it is always in view: in the body it and the note
+              saying why it is greyed sat below the dialog's fold (settings-p3-20). */}
+          {offerApplyToExisting && (
+            <div className="basis-full" data-testid="rule-apply-existing">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="applyToExisting"
+                  checked={applyToExisting && canTickApply}
+                  disabled={!canTickApply}
+                  onChange={(e) => setApplyToExisting(e.target.checked)}
+                  className="rounded border-input disabled:opacity-50"
+                  aria-describedby={canTickApply ? undefined : "applyToExistingHint"}
+                />
+                <label
+                  htmlFor="applyToExisting"
+                  className={cn("text-sm", canTickApply ? "text-foreground" : "text-muted-foreground")}
+                >
+                  {applyExistingFolder === undefined
+                    ? t("apply_existing")
+                    : existingCount && canApplyToExisting
+                      ? t("apply_existing_count", { count: existingCount, folder: applyExistingFolder })
+                      : t("apply_existing_in", { folder: applyExistingFolder })}
+                </label>
+              </div>
+              {!canTickApply && (
+                <p id="applyToExistingHint" className="mt-1 ms-6 text-xs text-muted-foreground">
+                  {!canApplyToExisting
+                    ? (periodOn ? t("apply_existing_period") : t("apply_existing_unsupported"))
+                    : t("apply_existing_none", { folder: applyExistingFolder ?? "" })}
+                </p>
+              )}
+            </div>
+          )}
           <Button variant="outline" onClick={() => void requestClose()}>
             {t("cancel")}
           </Button>
@@ -719,7 +754,9 @@ export function FilterRuleModal({
                             ? t("attachment_type_placeholder")
                             : usesRegex(condition)
                               ? t("regex_placeholder")
-                              : t("value_placeholder_multi")
+                              // Short: the long one was cut in a narrow field. The note
+                              // under the conditions says commas give several values.
+                              : tWords("filter_value_placeholder")
                       }
                       aria-label={t("condition_value")}
                       aria-invalid={valueMissing(condition) || regexInvalidShown(condition)}
@@ -749,6 +786,7 @@ export function FilterRuleModal({
               <Plus className="w-3.5 h-3.5" />
               {t("add_condition")}
             </button>
+            <p className="mt-1 text-xs text-muted-foreground">{tWords("filter_values_hint")}</p>
             <FieldError id="rule-conditions-error" text={shown(errors.conditions)} />
           </div>
 
@@ -958,39 +996,6 @@ export function FilterRuleModal({
                   <p className="text-xs text-muted-foreground">{t("period_hint")}</p>
                   <FieldError text={shown(errors.period)} />
                 </div>
-              )}
-            </div>
-          )}
-
-          {offerApplyToExisting && (
-            <div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="applyToExisting"
-                  checked={applyToExisting && canTickApply}
-                  disabled={!canTickApply}
-                  onChange={(e) => setApplyToExisting(e.target.checked)}
-                  className="rounded border-input disabled:opacity-50"
-                  aria-describedby={canTickApply ? undefined : "applyToExistingHint"}
-                />
-                <label
-                  htmlFor="applyToExisting"
-                  className={cn("text-sm", canTickApply ? "text-foreground" : "text-muted-foreground")}
-                >
-                  {applyExistingFolder === undefined
-                    ? t("apply_existing")
-                    : existingCount && canApplyToExisting
-                      ? t("apply_existing_count", { count: existingCount, folder: applyExistingFolder })
-                      : t("apply_existing_in", { folder: applyExistingFolder })}
-                </label>
-              </div>
-              {!canTickApply && (
-                <p id="applyToExistingHint" className="mt-1 ms-6 text-xs text-muted-foreground">
-                  {!canApplyToExisting
-                    ? (periodOn ? t("apply_existing_period") : t("apply_existing_unsupported"))
-                    : t("apply_existing_none", { folder: applyExistingFolder ?? "" })}
-                </p>
               )}
             </div>
           )}

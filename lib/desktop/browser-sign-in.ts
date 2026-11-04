@@ -87,7 +87,7 @@ function failure(error: string): DesktopBrowserSignInOutcome {
 }
 
 /** Instance mode. The caller redeems the code (loginWithDesktopHandoff in the auth store). */
-export async function runInstanceBrowserSignIn(options: { base: string; locale: string; fresh: boolean }): Promise<DesktopBrowserSignInOutcome> {
+export async function runInstanceBrowserSignIn(options: { base: string; locale: string; fresh: boolean; loginHint?: string }): Promise<DesktopBrowserSignInOutcome> {
   const auth = claimBrowserSignIn();
   if (!auth) return { kind: 'failed', error: 'unavailable' };
   const begun = await auth.begin({ kind: 'instance' });
@@ -100,6 +100,8 @@ export async function runInstanceBrowserSignIn(options: { base: string; locale: 
     url.searchParams.set('mobile_state', begun.state);
     url.searchParams.set('mobile_code_challenge', await generateCodeChallenge(verifier));
     if (options.fresh) url.searchParams.set('fresh_login', '1');
+    // The instance's page starts with the address typed in the app.
+    if (options.loginHint) url.searchParams.set('login_hint', options.loginHint);
     const result = await auth.complete(begun.flowId, url.toString());
     if (!result.ok) return failure(result.error);
     return { kind: 'code', code: result.code, verifier };
@@ -138,13 +140,15 @@ export async function runDesktopBrowserSignIn(options: {
   remember: boolean;
   addAccount: boolean;
   fresh: boolean;
+  /** The address typed in the app, for the server's page (OIDC login_hint). */
+  loginHint?: string;
   /** Redeems the code: loginWithOAuth in the auth store. */
   redeem: (serverUrl: string, code: string, verifier: string, redirectUri: string) => Promise<boolean>;
   tryPassword: (attempt: Extract<DesktopPasswordSignInAttempt, { ok: true }>) => Promise<DesktopPasswordSignInAnswer>;
 }): Promise<DesktopBrowserSignInOutcome> {
   const auth = claimBrowserSignIn();
   if (!auth) return { kind: 'failed', error: 'unavailable' };
-  const { serverUrl, slot, remember, addAccount, fresh, redeem, tryPassword } = options;
+  const { serverUrl, slot, remember, addAccount, fresh, loginHint, redeem, tryPassword } = options;
 
   const begun = await auth.begin({ kind: 'oauth', serverUrl });
   if (!begun.ok) return failure(begun.error);
@@ -184,6 +188,8 @@ export async function runDesktopBrowserSignIn(options: {
     authorizeUrl.searchParams.set('state', begun.state);
     authorizeUrl.searchParams.set('code_challenge', await generateCodeChallenge(verifier));
     authorizeUrl.searchParams.set('code_challenge_method', 'S256');
+    // The server's page starts with the address already typed in the app.
+    if (loginHint) authorizeUrl.searchParams.set('login_hint', loginHint);
     if (addAccount) authorizeUrl.searchParams.set('prompt', 'select_account');
     if (fresh) authorizeUrl.searchParams.set('prompt', 'login');
 

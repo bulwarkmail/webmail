@@ -109,6 +109,33 @@
     "code_label": "Autentiseringskode",
     "verify": "Bekreft"
   },
+  "ux_p3_words": {
+    "appearance_description": "Endre hvordan {appName} ser ut.",
+    "text_size_app": "Skalerer all tekst i appen. 100 % er normal størrelse.",
+    "scrollbars_app": "Bruker systemets egne rullefelt, som er bredere og lettere å ta tak i.",
+    "voice_app": "Stemmen som leser opp meldinger. Listen viser stemmene denne datamaskinen har for språket i grensesnittet.",
+    "voice_default_app": "Systemstemme",
+    "visual_alerts_app": "Får vindustittelen til å blinke sakte når det kommer ny e-post eller en påminnelse, og holder påminnelser på skjermen til du lukker dem.",
+    "sounds_link_app": "Varsellyder og antall uleste på ikonet på oppgavelinjen stiller du inn på siden Varsler.",
+    "writing_language_app": "Språket du vanligvis skriver på. Korrektur og stavekontroll bruker det.",
+    "badge_all_app": "Tallet på ikonet på oppgavelinjen og i systemstatusfeltet legger sammen innboksene til alle påloggede kontoer.",
+    "badge_all_browser": "Tallet på fanen og appikonet legger sammen innboksene til alle påloggede kontoer.",
+    "dnd_title": "Ikke forstyrr",
+    "pause_label": "Sett varsler på pause",
+    "pause_description": "Ingen lyder, hurtigvinduer eller opplest informasjon om ny e-post før du slår dette av igjen.",
+    "dnd_link_app": "Sett varsler på pause og still inn stille timer på siden Varsler.",
+    "dnd_link_browser": "Sett varsler på pause på siden Varsler.",
+    "backup_app": "Eksporter innstillingene dine til en fil, og importer dem på de andre enhetene dine.",
+    "sync_app": "Andre enheter som er logget på denne kontoen, får de samme innstillingene.",
+    "progress_attachments": "Laster ned vedlegg",
+    "progress_events": "Laster ned hendelser",
+    "progress_contacts": "Laster ned kontakter",
+    "progress_files_list": "Henter fillisten",
+    "progress_other": "Laster ned",
+    "keep_description": "Beholder e-posten, kalenderen, kontaktene og filene du holder frakoblet i Filer, kryptert på denne enheten. Frakoblet kan du lese, flagge og flytte e-post, og det du skriver, venter i utboksen. Når du logger av, fjernes alt.",
+    "filter_value_placeholder": "Verdi",
+    "filter_values_hint": "Skill flere verdier med komma."
+  },
   "sidebar": {
     "close": "Lukk",
     "compose": "Skriv",
@@ -7533,6 +7560,28 @@
     "trouble_cors": "E-postserveren din må tillate pålogging fra dette nettstedet. Hvis påloggingen mislykkes, be den som drifter e-postserveren om å tillate det.",
     "provider_unsupported": "{provider} tilbyr ikke JMAP, måten Bulwark snakker med e-postservere på, så Bulwark kan ikke koble seg direkte til det ennå."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Vil du endre hvordan Bulwark kobler til?",
+      "message": "Bulwark starter på nytt og spør hvordan det skal koble til: med e-postadressen din eller via organisasjonens Bulwark. Kontoene dine på denne datamaskinen forblir pålogget.",
+      "confirm": "Endre",
+      "org_link": "Bruk organisasjonens Bulwark i stedet",
+      "add_account": "Legg til konto…"
+    },
+    "picture": {
+      "button": "Bilde",
+      "title": "Sett inn bilde",
+      "address": "Nettadressen til bildet",
+      "address_hint": "Bildet blir liggende på nettet og vises derfra.",
+      "description": "Beskrivelse",
+      "invalid": "Skriv inn en nettadresse som begynner med https://.",
+      "insert": "Sett inn"
+    },
+    "sign_in_page": {
+      "open_app": "Åpne Bulwark",
+      "done_as": "Logget på som {address}. Du kan lukke denne fanen."
+    }
+  },
   "desktop_updates": {
     "title": "Oppdateringer",
     "version_label": "Bulwark {version}",
@@ -7982,6 +8031,17 @@
     "done": "Ferdig",
     "join_host": "Bli med ({host})",
     "join_named": "Bli med: {title}"
+  },
+  "ux_p3_search": {
+    "devtools_label": "Utviklerverktøy",
+    "updates_label": "Se etter oppdateringer",
+    "search": {
+      "quick_compose": "rask skriving ny melding fra hvor som helst global snarvei",
+      "files_drive": "frigjør plass OneDrive Dropbox Filutforsker Finder stasjonsbokstav filer ved behov",
+      "offline_space": "frigjør plass diskplass lagringsplass",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID fingeravtrykk ansikt tilgangsnøkkel passkey"
+    }
   },
   "desktop_policy": {
     "server_refused": "Organisasjonen din tillater ikke denne serveren på denne enheten.",

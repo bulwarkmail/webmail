@@ -109,6 +109,33 @@
     "code_label": "Kod uwierzytelniający",
     "verify": "Zweryfikuj"
   },
+  "ux_p3_words": {
+    "appearance_description": "Zmień wygląd aplikacji {appName}.",
+    "text_size_app": "Skaluje cały tekst w aplikacji. 100% to normalny rozmiar.",
+    "scrollbars_app": "Używa pasków przewijania systemu, które są szersze i łatwiej je chwycić.",
+    "voice_app": "Głos, który czyta wiadomości na głos. Lista pokazuje głosy, które ten komputer ma dla języka interfejsu.",
+    "voice_default_app": "Głos systemowy",
+    "visual_alerts_app": "Powoli miga tytułem okna, gdy przychodzi nowa poczta lub przypomnienie, i zostawia przypomnienia na ekranie, dopóki ich nie zamkniesz.",
+    "sounds_link_app": "Dźwięki powiadomień i liczbę nieprzeczytanych na ikonie na pasku zadań ustawisz na stronie Powiadomienia.",
+    "writing_language_app": "Język, w którym zwykle piszesz. Korzystają z niego korekta i sprawdzanie pisowni.",
+    "badge_all_app": "Liczba na ikonie na pasku zadań i w zasobniku sumuje skrzynki odbiorcze wszystkich zalogowanych kont.",
+    "badge_all_browser": "Liczba na karcie i ikonie aplikacji sumuje skrzynki odbiorcze wszystkich zalogowanych kont.",
+    "dnd_title": "Nie przeszkadzać",
+    "pause_label": "Wstrzymaj powiadomienia",
+    "pause_description": "Bez dźwięków, wyskakujących okien i komunikatów głosowych o nowej poczcie, dopóki znów tego nie wyłączysz.",
+    "dnd_link_app": "Powiadomienia wstrzymasz i godziny ciszy ustawisz na stronie Powiadomienia.",
+    "dnd_link_browser": "Powiadomienia wstrzymasz na stronie Powiadomienia.",
+    "backup_app": "Wyeksportuj ustawienia do pliku i zaimportuj je na innych urządzeniach.",
+    "sync_app": "Inne urządzenia zalogowane na to konto dostają te same ustawienia.",
+    "progress_attachments": "Pobieranie załączników",
+    "progress_events": "Pobieranie wydarzeń",
+    "progress_contacts": "Pobieranie kontaktów",
+    "progress_files_list": "Pobieranie listy plików",
+    "progress_other": "Pobieranie",
+    "keep_description": "Przechowuje Twoją pocztę, kalendarz, kontakty i pliki, które trzymasz offline w Plikach, zaszyfrowane na tym urządzeniu. Offline możesz czytać, oznaczać i przenosić wiadomości, a to, co napiszesz, czeka w skrzynce nadawczej. Wylogowanie usuwa wszystko.",
+    "filter_value_placeholder": "Wartość",
+    "filter_values_hint": "Kilka wartości oddziel przecinkami."
+  },
   "sidebar": {
     "close": "Zamknij",
     "compose": "Napisz",
@@ -7533,6 +7560,28 @@
     "trouble_cors": "Twój serwer poczty musi zezwalać na logowanie z tej witryny. Jeśli logowanie się nie udaje, poproś osobę, która zarządza serwerem poczty, o zezwolenie.",
     "provider_unsupported": "{provider} nie oferuje JMAP, czyli sposobu, w jaki Bulwark rozmawia z serwerami poczty, więc Bulwark nie może jeszcze połączyć się z nim bezpośrednio."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Zmienić sposób łączenia Bulwark?",
+      "message": "Bulwark uruchomi się ponownie i zapyta, jak się połączyć: za pomocą Twojego adresu e-mail lub przez Bulwark Twojej organizacji. Twoje konta na tym komputerze pozostaną zalogowane.",
+      "confirm": "Zmień",
+      "org_link": "Użyj zamiast tego Bulwark mojej organizacji",
+      "add_account": "Dodaj konto…"
+    },
+    "picture": {
+      "button": "Obraz",
+      "title": "Wstaw obraz",
+      "address": "Adres internetowy obrazu",
+      "address_hint": "Obraz zostaje w sieci i jest wyświetlany stamtąd.",
+      "description": "Opis",
+      "invalid": "Wpisz adres internetowy zaczynający się od https://.",
+      "insert": "Wstaw"
+    },
+    "sign_in_page": {
+      "open_app": "Otwórz Bulwark",
+      "done_as": "Zalogowano jako {address}. Możesz zamknąć tę kartę."
+    }
+  },
   "desktop_updates": {
     "title": "Aktualizacje",
     "version_label": "Bulwark {version}",
@@ -7982,6 +8031,17 @@
     "done": "Gotowe",
     "join_host": "Dołącz ({host})",
     "join_named": "Dołącz: {title}"
+  },
+  "ux_p3_search": {
+    "devtools_label": "Narzędzia deweloperskie",
+    "updates_label": "Sprawdź aktualizacje",
+    "search": {
+      "quick_compose": "szybkie pisanie nowa wiadomość z dowolnego miejsca skrót globalny",
+      "files_drive": "zwolnij miejsce OneDrive Dropbox Eksplorator Finder litera dysku pliki na żądanie",
+      "offline_space": "zwolnij miejsce miejsce na dysku pamięć",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID odcisk palca twarz klucz dostępu passkey"
+    }
   },
   "desktop_policy": {
     "server_refused": "Twoja organizacja nie zezwala na ten serwer na tym urządzeniu.",

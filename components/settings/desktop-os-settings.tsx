@@ -15,10 +15,10 @@ import { useConfig } from "@/hooks/use-config";
 /**
  * The desktop app's own settings: only where there's an app to set. A browser never sees
  * them, and they render nothing until the bridge has answered. The General page has how
- * the app runs; the Notifications page has the taskbar flash and quiet hours, next to
- * the rest of what notifies.
+ * the app runs; the Notifications page has the taskbar flash and, under Do not disturb,
+ * quiet hours, next to the rest of what notifies.
  */
-export function DesktopOsSettings({ part = "app" }: { part?: "app" | "notifications" } = {}) {
+export function DesktopOsSettings({ part = "app" }: { part?: "app" | "notifications" | "quietHours" } = {}) {
   const t = useTranslations("desktopOs");
   const tP2 = useTranslations("uxp2_settings.desktop_notifications");
   const tTabs = useTranslations("settings.tabs");
@@ -52,22 +52,11 @@ export function DesktopOsSettings({ part = "app" }: { part?: "app" | "notificati
     void os.setSettings(patch).then(setStatus);
   };
 
-  if (part === "notifications") {
+  // Quiet hours sit under "Pause notifications": one place for both ways of keeping
+  // notifications quiet (settings-p3-6). Rows only: the Notifications page draws the section.
+  if (part === "quietHours") {
     return (
-      <SettingsSection id="desktop-notifications" title={tP2("title")}>
-        {/* The app tells about new mail as long as it runs; a browser's push section has nothing to add (settings-p2-4). */}
-        <SettingsLinkRow
-          label={tP2("closed_label")}
-          description={tP2("closed_description", { appName, page: tTabs("general") })}
-          button={tTabs("general")}
-          onClick={() => goToSettings("general", "desktop-app")}
-        />
-        <SettingItem
-          label={bridge?.platform === "darwin" ? t("attention_mac_label") : t("attention_label")}
-          description={t("attention_description")}
-        >
-          <ToggleSwitch checked={settings.attentionOnNewMail} onChange={(attentionOnNewMail) => change({ attentionOnNewMail })} />
-        </SettingItem>
+      <>
         <SettingItem label={t("quiet_hours_label")} description={t("quiet_hours_description")}>
           <ToggleSwitch checked={settings.quietHoursEnabled} onChange={(quietHoursEnabled) => change({ quietHoursEnabled })} />
         </SettingItem>
@@ -92,6 +81,26 @@ export function DesktopOsSettings({ part = "app" }: { part?: "app" | "notificati
             </div>
           </SettingItem>
         )}
+      </>
+    );
+  }
+
+  if (part === "notifications") {
+    return (
+      <SettingsSection id="desktop-notifications" title={tP2("title")}>
+        {/* The app tells about new mail as long as it runs; a browser's push section has nothing to add (settings-p2-4). */}
+        <SettingsLinkRow
+          label={tP2("closed_label")}
+          description={tP2("closed_description", { appName, page: tTabs("general") })}
+          button={tTabs("general")}
+          onClick={() => goToSettings("general", "desktop-app")}
+        />
+        <SettingItem
+          label={bridge?.platform === "darwin" ? t("attention_mac_label") : t("attention_label")}
+          description={t("attention_description")}
+        >
+          <ToggleSwitch checked={settings.attentionOnNewMail} onChange={(attentionOnNewMail) => change({ attentionOnNewMail })} />
+        </SettingItem>
       </SettingsSection>
     );
   }

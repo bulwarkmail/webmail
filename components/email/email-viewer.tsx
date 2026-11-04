@@ -323,10 +323,9 @@ interface EmailViewerProps {
   /** Stop a scheduled message from going out; it goes back to Drafts. */
   onCancelScheduledSend?: () => void;
   onRescheduleScheduled?: (delayedUntil: string) => void | Promise<void>;
-  onCompose?: () => void;
   /** Shown in the empty reading pane in place of "No conversation selected" (a selection's actions, mail-10). */
   emptyPaneContent?: React.ReactNode;
-  /** Shown under the empty reading pane's text and Compose button (the first-run tips, mail-15). */
+  /** Shown under the empty reading pane's text (the first-run tips, mail-15). */
   emptyPaneFooter?: React.ReactNode;
   /**
    * Fullscreen reading toggle (standard interface only - Pro email tabs are
@@ -1483,7 +1482,6 @@ export function EmailViewer({
   onCancelScheduledForEdit,
   onCancelScheduledSend,
   onRescheduleScheduled,
-  onCompose,
   emptyPaneContent,
   emptyPaneFooter,
   onToggleFullscreen,
@@ -4482,12 +4480,7 @@ ${printWatermark ? printWatermark.html : ''}
           </div>
           <h2 className="text-xl font-semibold text-foreground mb-2">{t('no_conversation_selected')}</h2>
           <p className="text-muted-foreground">{t('no_conversation_description')}</p>
-          {onCompose && (
-            <Button onClick={onCompose} className="mt-6" title={t('compose_hint')}>
-              <PenSquare className="w-4 h-4 me-2" />
-              {t('compose')}
-            </Button>
-          )}
+          {/* No Compose here: the sidebar's or the round button is right there (settings-p3-19). */}
           {emptyPaneFooter}
         </div>
         )}

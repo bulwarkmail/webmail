@@ -109,6 +109,33 @@
     "code_label": "認証コード",
     "verify": "確認"
   },
+  "ux_p3_words": {
+    "appearance_description": "{appName} の見た目を変更します。",
+    "text_size_app": "アプリのすべての文字の大きさを変えます。100% が標準の大きさです。",
+    "scrollbars_app": "システムのスクロールバーを使います。幅が広く、つかみやすくなります。",
+    "voice_app": "メッセージを読み上げる音声です。一覧には、このコンピューターにある表示言語の音声が表示されます。",
+    "voice_default_app": "システムの音声",
+    "visual_alerts_app": "新着メールやリマインダーが届くとウィンドウのタイトルをゆっくり点滅させ、閉じるまでリマインダーを画面に表示します。",
+    "sounds_link_app": "通知音とタスクバーのアイコンの未読数は、通知ページで設定します。",
+    "writing_language_app": "ふだん書く言語です。校正とスペルチェックで使われます。",
+    "badge_all_app": "タスクバーのアイコンと通知領域の数字に、サインイン中のすべてのアカウントの受信トレイを合計して表示します。",
+    "badge_all_browser": "タブとアプリのアイコンの数字に、サインイン中のすべてのアカウントの受信トレイを合計して表示します。",
+    "dnd_title": "おやすみモード",
+    "pause_label": "通知を一時停止",
+    "pause_description": "もう一度オフにするまで、新着メールの音、ポップアップ、音声での案内を出しません。",
+    "dnd_link_app": "通知の一時停止とおやすみ時間は、通知ページで設定します。",
+    "dnd_link_browser": "通知の一時停止は、通知ページで設定します。",
+    "backup_app": "設定をファイルに書き出し、ほかのデバイスで読み込みます。",
+    "sync_app": "このアカウントでサインインしているほかのデバイスにも同じ設定が使われます。",
+    "progress_attachments": "添付ファイルをダウンロードしています",
+    "progress_events": "予定をダウンロードしています",
+    "progress_contacts": "連絡先をダウンロードしています",
+    "progress_files_list": "ファイルの一覧を取得しています",
+    "progress_other": "ダウンロードしています",
+    "keep_description": "メール、カレンダー、連絡先、ファイルでオフライン用に保存しているファイルを暗号化してこのデバイスに保存します。オフラインでもメールを読む、フラグを付ける、移動することができ、書いたメールは送信トレイで待機します。サインアウトするとすべて削除されます。",
+    "filter_value_placeholder": "値",
+    "filter_values_hint": "複数の値はカンマで区切ります。"
+  },
   "sidebar": {
     "close": "閉じる",
     "compose": "作成",
@@ -7533,6 +7560,28 @@
     "trouble_cors": "メールサーバーがこのウェブサイトからのサインインを許可している必要があります。サインインできない場合は、メールサーバーの管理者に許可を依頼してください。",
     "provider_unsupported": "{provider} は Bulwark がメールサーバーとやり取りする方式である JMAP に対応していないため、Bulwark はまだ直接接続できません。"
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Bulwark の接続方法を変更しますか？",
+      "message": "Bulwark が再起動し、接続方法を尋ねます。メールアドレスで接続するか、組織の Bulwark 経由で接続するかを選べます。このコンピューター上のアカウントはサインインしたままです。",
+      "confirm": "変更",
+      "org_link": "代わりに組織の Bulwark を使う",
+      "add_account": "アカウントを追加…"
+    },
+    "picture": {
+      "button": "画像",
+      "title": "画像を挿入",
+      "address": "画像のウェブアドレス",
+      "address_hint": "画像はウェブ上に置かれたまま、そこから表示されます。",
+      "description": "説明",
+      "invalid": "https:// で始まるウェブアドレスを入力してください。",
+      "insert": "挿入"
+    },
+    "sign_in_page": {
+      "open_app": "Bulwark を開く",
+      "done_as": "{address} としてサインインしました。このタブは閉じてかまいません。"
+    }
+  },
   "desktop_updates": {
     "title": "アップデート",
     "version_label": "Bulwark {version}",
@@ -7982,6 +8031,17 @@
     "done": "完了",
     "join_host": "参加 ({host})",
     "join_named": "参加: {title}"
+  },
+  "ux_p3_search": {
+    "devtools_label": "開発者ツール",
+    "updates_label": "アップデートを確認",
+    "search": {
+      "quick_compose": "クイック作成 どこからでも新規メッセージ グローバルショートカット",
+      "files_drive": "空き容量を増やす OneDrive Dropbox エクスプローラー Finder ドライブ文字 ファイルオンデマンド",
+      "offline_space": "空き容量を増やす ディスク容量 ストレージ",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID 指紋 顔認証 パスキー passkey"
+    }
   },
   "desktop_policy": {
     "server_refused": "組織はこのデバイスでこのサーバーを許可していません。",

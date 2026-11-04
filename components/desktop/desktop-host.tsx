@@ -28,6 +28,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { useThemeStore } from "@/stores/theme-store";
 import { showFirstStartNotice } from "@/lib/first-start-notices";
 import { openMailImport } from "@/stores/mail-transfer-store";
+import { askAndChangeConnection } from "@/lib/desktop/change-connection";
 
 /** The part of the app a path shows, for the menus: Calendar has its own View lines, and no Message menu. */
 export function desktopSectionOf(pathname: string): "mail" | "calendar" | "contacts" | "files" | "settings" {
@@ -95,6 +96,18 @@ export function DesktopHost() {
         routerRef.current.push("/contacts");
       },
       "file.import": () => openMailImport(),
+      // File > Add account…: the sign-in form for another account, as the switcher's item.
+      "file.addAccount": () => routerRef.current.push("/login?mode=add-account"),
+      // File > Change connection…: asks in the app's own window first, then restarts.
+      "file.switchMode": () => {
+        const translate = tRef.current;
+        void askAndChangeConnection({
+          title: translate("ux_p3_settings.connection.title"),
+          message: translate("ux_p3_settings.connection.message"),
+          confirm: translate("ux_p3_settings.connection.confirm"),
+          cancel: translate("common.cancel"),
+        });
+      },
       // File > Import > Calendar… and Contacts…: that app's own import, once it's on screen.
       "file.importCalendar": () => {
         if (requestAppCommand("import-calendar")) return;
@@ -170,6 +183,8 @@ export function DesktopHost() {
       "file.newTask": signedIn,
       "file.newContact": signedIn,
       "file.import": signedIn && !popout,
+      "file.addAccount": signedIn && !popout,
+      "file.switchMode": !popout,
       "file.importCalendar": signedIn && !popout,
       "file.importContacts": signedIn && !popout,
       "file.settings": signedIn,

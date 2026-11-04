@@ -209,7 +209,8 @@ describe('settings search: more words people use', () => {
     ['reading pane', 'appearance: Mail layout'],
     ['week start', 'general: First day of week'],
     ['empty trash', 'message_list: Deleting & archiving'],
-    ['quiet hours', 'accessibility: Do not disturb'],
+    // settings-p3-6: Do not disturb moved to Notifications as "Pause notifications".
+    ['quiet hours', 'notifications: Pause notifications'],
   ])('finds "%s"', (query, row) => {
     expect(everywhere(query)).toContain(row);
   });
@@ -257,8 +258,10 @@ describe('settings search in the desktop app', () => {
     ['startup', 'general: Start when you sign in to your computer'],
     ['menu bar', 'general: Always show the menu bar'],
     ['taskbar', 'notifications: Flash the taskbar on new mail'],
-    ['developer tools', 'general: Troubleshooting'],
-    ['updates', 'general: Updates'],
+    // settings-p3-7: the row, not its section.
+    ['developer tools', 'general: Developer tools'],
+    ['updates', 'general: Check for updates'],
+    ['quick compose', 'general: Quick compose'],
     ['usage', 'privacy: Send usage info'],
     ['crash', 'privacy: Send crash reports'],
     ['default mail app', 'general: Default mail app'],
@@ -273,8 +276,38 @@ describe('settings search in the desktop app', () => {
   });
 
   it('marks developer tools as an advanced row', () => {
-    const devTools = settingsSubResults(en, 'general', 'Bulwark').find((r) => r.label === 'Troubleshooting');
+    const devTools = settingsSubResults(en, 'general', 'Bulwark').find((r) => r.label === 'Developer tools');
     expect(devTools?.advanced).toBe(true);
+  });
+
+  // settings-p3-7: the results name the row, so the section isn't offered for its words.
+  it('names the row for developer tools, not its section', () => {
+    expect(inAppResults('developer tools')).not.toContain('general: Troubleshooting');
+  });
+
+  it('finds quick compose on General, where its switch is, not on Composing', () => {
+    expect(inAppResults('quick compose')).toEqual(['general: Quick compose']);
+    expect(matchesAllWords(`composing ${tabKeywords.composing}`, 'quick compose')).toBe(false);
+  });
+
+  // settings-p3-20: words people searched for that found nothing, or a page without its row.
+  it.each([
+    ['free up space', 'files_sync: Show Files as a drive'],
+    ['onedrive', 'files_sync: Show Files as a drive'],
+    ['drive letter', 'files_sync: Show Files as a drive'],
+    ['pst', 'backup: Import mail'],
+    ['windows hello', 'general: Lock with a PIN'],
+    ['touch id', 'general: Lock with a PIN'],
+  ])('finds "%s" on its row', (query, row) => {
+    expect(inAppResults(query)).toContain(row);
+  });
+
+  it.each([
+    ['free up space', 'offline: Keep mail on this device'],
+    ['pst', 'backup: Import mail'],
+    ['outlook', 'backup: Import mail'],
+  ])('in a browser too: finds "%s" on its row', (query, row) => {
+    expect(inBrowser(query)).toContain(row);
   });
 
   it('keeps the app rows out of a browser, and the browser push rows out of the app', () => {

@@ -109,6 +109,33 @@
     "code_label": "Doğrulama kodu",
     "verify": "Doğrula"
   },
+  "ux_p3_words": {
+    "appearance_description": "{appName} görünümünü değiştirin.",
+    "text_size_app": "Uygulamadaki tüm metni ölçekler. %100 normal boyuttur.",
+    "scrollbars_app": "Sistemin kendi kaydırma çubuklarını kullanır; bunlar daha geniştir ve tutması daha kolaydır.",
+    "voice_app": "İletileri sesli okuyan ses. Liste, bu bilgisayarda arayüz dili için bulunan sesleri gösterir.",
+    "voice_default_app": "Sistem sesi",
+    "visual_alerts_app": "Yeni e-posta veya hatırlatıcı geldiğinde pencere başlığını yavaşça yanıp söndürür ve hatırlatıcıları siz kapatana kadar ekranda tutar.",
+    "sounds_link_app": "Bildirim sesleri ve görev çubuğu simgesindeki okunmamış sayısı Bildirimler sayfasında ayarlanır.",
+    "writing_language_app": "Genellikle yazdığınız dil. Yazım denetimi ve düzeltme bunu kullanır.",
+    "badge_all_app": "Görev çubuğu simgesindeki ve sistem tepsisindeki sayı, oturum açılmış tüm hesapların gelen kutularını toplar.",
+    "badge_all_browser": "Sekmedeki ve uygulama simgesindeki sayı, oturum açılmış tüm hesapların gelen kutularını toplar.",
+    "dnd_title": "Rahatsız etmeyin",
+    "pause_label": "Bildirimleri duraklat",
+    "pause_description": "Siz yeniden kapatana kadar yeni e-postalar için ses, açılır pencere veya sesli duyuru olmaz.",
+    "dnd_link_app": "Bildirimleri duraklatma ve sessiz saatleri ayarlama Bildirimler sayfasındadır.",
+    "dnd_link_browser": "Bildirimleri duraklatma Bildirimler sayfasındadır.",
+    "backup_app": "Ayarlarınızı bir dosyaya aktarın ve diğer cihazlarınızda içe aktarın.",
+    "sync_app": "Bu hesapla oturum açmış diğer cihazlar aynı ayarları alır.",
+    "progress_attachments": "Ekler indiriliyor",
+    "progress_events": "Etkinlikler indiriliyor",
+    "progress_contacts": "Kişiler indiriliyor",
+    "progress_files_list": "Dosyalar listeleniyor",
+    "progress_other": "İndiriliyor",
+    "keep_description": "E-postalarınızı, takviminizi, kişilerinizi ve Dosyalar'da çevrimdışı tuttuğunuz dosyaları bu cihazda şifreli olarak tutar. Çevrimdışıyken e-postaları okuyabilir, işaretleyebilir ve taşıyabilirsiniz; yazdıklarınız giden kutusunda bekler. Oturumu kapatınca hepsi silinir.",
+    "filter_value_placeholder": "Değer",
+    "filter_values_hint": "Birden fazla değeri virgülle ayırın."
+  },
   "sidebar": {
     "close": "Kapat",
     "compose": "Yeni E-posta",
@@ -7533,6 +7560,28 @@
     "trouble_cors": "Posta sunucunuzun bu web sitesinden oturum açmaya izin vermesi gerekir. Oturum açılamazsa posta sunucunuzu yöneten kişiden buna izin vermesini isteyin.",
     "provider_unsupported": "{provider}, Bulwark'ın posta sunucularıyla konuştuğu yol olan JMAP'i sunmuyor, bu yüzden Bulwark henüz ona doğrudan bağlanamıyor."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Bulwark'ın bağlanma şekli değiştirilsin mi?",
+      "message": "Bulwark yeniden başlar ve nasıl bağlanacağını sorar: e-posta adresinizle ya da kuruluşunuzun Bulwark'ı üzerinden. Bu bilgisayardaki hesaplarınızda oturum açık kalır.",
+      "confirm": "Değiştir",
+      "org_link": "Bunun yerine kuruluşumun Bulwark'ını kullan",
+      "add_account": "Hesap ekle…"
+    },
+    "picture": {
+      "button": "Resim",
+      "title": "Resim ekle",
+      "address": "Resmin web adresi",
+      "address_hint": "Resim web'de kalır ve oradan gösterilir.",
+      "description": "Açıklama",
+      "invalid": "https:// ile başlayan bir web adresi girin.",
+      "insert": "Ekle"
+    },
+    "sign_in_page": {
+      "open_app": "Bulwark'ı aç",
+      "done_as": "{address} olarak oturum açıldı. Bu sekmeyi kapatabilirsiniz."
+    }
+  },
   "desktop_updates": {
     "title": "Güncellemeler",
     "version_label": "Bulwark {version}",
@@ -7982,6 +8031,17 @@
     "done": "Bitti",
     "join_host": "Katıl ({host})",
     "join_named": "Katıl: {title}"
+  },
+  "ux_p3_search": {
+    "devtools_label": "Geliştirici araçları",
+    "updates_label": "Güncellemeleri denetle",
+    "search": {
+      "quick_compose": "hızlı yazma her yerden yeni ileti genel kısayol",
+      "files_drive": "yer aç alan boşalt OneDrive Dropbox Dosya Gezgini Finder sürücü harfi isteğe bağlı dosyalar",
+      "offline_space": "yer aç disk alanı depolama",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID parmak izi yüz geçiş anahtarı passkey"
+    }
   },
   "desktop_policy": {
     "server_refused": "Kuruluşunuz bu cihazda bu sunucuya izin vermiyor.",

@@ -109,6 +109,33 @@
     "code_label": "Ověřovací kód",
     "verify": "Ověřit"
   },
+  "ux_p3_words": {
+    "appearance_description": "Změňte vzhled aplikace {appName}.",
+    "text_size_app": "Mění velikost veškerého textu v aplikaci. 100 % je běžná velikost.",
+    "scrollbars_app": "Používá posuvníky systému, které jsou širší a snáz se uchopí.",
+    "voice_app": "Hlas, který čte zprávy nahlas. Seznam ukazuje hlasy, které má tento počítač pro jazyk rozhraní.",
+    "voice_default_app": "Hlas systému",
+    "visual_alerts_app": "Při nové poště nebo připomínce pomalu bliká titulkem okna a nechává připomínky na obrazovce, dokud je nezavřete.",
+    "sounds_link_app": "Zvuky oznámení a počet nepřečtených na ikoně na hlavním panelu nastavíte na stránce Oznámení.",
+    "writing_language_app": "Jazyk, ve kterém obvykle píšete. Používá ho korektura i kontrola pravopisu.",
+    "badge_all_app": "Číslo na ikoně na hlavním panelu a v oznamovací oblasti sčítá doručené složky všech přihlášených účtů.",
+    "badge_all_browser": "Číslo na kartě a na ikoně aplikace sčítá doručené složky všech přihlášených účtů.",
+    "dnd_title": "Nerušit",
+    "pause_label": "Pozastavit oznámení",
+    "pause_description": "Žádné zvuky, vyskakovací okna ani hlasová hlášení o nové poště, dokud to znovu nevypnete.",
+    "dnd_link_app": "Oznámení pozastavíte a dobu klidu nastavíte na stránce Oznámení.",
+    "dnd_link_browser": "Oznámení pozastavíte na stránce Oznámení.",
+    "backup_app": "Exportujte nastavení do souboru a importujte je na svých dalších zařízeních.",
+    "sync_app": "Ostatní zařízení přihlášená k tomuto účtu dostanou stejná nastavení.",
+    "progress_attachments": "Stahují se přílohy",
+    "progress_events": "Stahují se události",
+    "progress_contacts": "Stahují se kontakty",
+    "progress_files_list": "Načítá se seznam souborů",
+    "progress_other": "Stahuje se",
+    "keep_description": "Uchovává vaši poštu, kalendář, kontakty a soubory, které máte v Souborech k dispozici offline, zašifrované v tomto zařízení. Offline můžete poštu číst, označovat a přesouvat a to, co napíšete, čeká v odesílané poště. Odhlášení vše odstraní.",
+    "filter_value_placeholder": "Hodnota",
+    "filter_values_hint": "Více hodnot oddělte čárkami."
+  },
   "sidebar": {
     "close": "Zavřít",
     "compose": "Napsat",
@@ -7533,6 +7560,28 @@
     "trouble_cors": "Váš poštovní server musí povolit přihlašování z tohoto webu. Pokud přihlášení selže, požádejte správce poštovního serveru, aby to povolil.",
     "provider_unsupported": "{provider} nenabízí JMAP, způsob, jakým Bulwark komunikuje s poštovními servery, takže se k němu Bulwark zatím nemůže připojit přímo."
   },
+  "ux_p3_settings": {
+    "connection": {
+      "title": "Změnit, jak se Bulwark připojuje?",
+      "message": "Bulwark se restartuje a zeptá se, jak se připojit: pomocí vaší e-mailové adresy, nebo přes Bulwark vaší organizace. Vaše účty na tomto počítači zůstanou přihlášené.",
+      "confirm": "Změnit",
+      "org_link": "Místo toho použít Bulwark mé organizace",
+      "add_account": "Přidat účet…"
+    },
+    "picture": {
+      "button": "Obrázek",
+      "title": "Vložit obrázek",
+      "address": "Webová adresa obrázku",
+      "address_hint": "Obrázek zůstane na webu a zobrazí se odtamtud.",
+      "description": "Popis",
+      "invalid": "Zadejte webovou adresu, která začíná https://.",
+      "insert": "Vložit"
+    },
+    "sign_in_page": {
+      "open_app": "Otevřít Bulwark",
+      "done_as": "Přihlášeno jako {address}. Tuto kartu můžete zavřít."
+    }
+  },
   "desktop_updates": {
     "title": "Aktualizace",
     "version_label": "Bulwark {version}",
@@ -7982,6 +8031,17 @@
     "done": "Hotovo",
     "join_host": "Připojit se ({host})",
     "join_named": "Připojit se: {title}"
+  },
+  "ux_p3_search": {
+    "devtools_label": "Vývojářské nástroje",
+    "updates_label": "Zkontrolovat aktualizace",
+    "search": {
+      "quick_compose": "rychlé psaní nová zpráva odkudkoli globální zkratka",
+      "files_drive": "uvolnit místo OneDrive Dropbox Průzkumník Finder písmeno jednotky soubory na vyžádání",
+      "offline_space": "uvolnit místo místo na disku úložiště",
+      "mail_import": "pst ost Outlook mbox eml Thunderbird",
+      "app_lock_hello": "Windows Hello Touch ID otisk prstu obličej přístupový klíč passkey"
+    }
   },
   "desktop_policy": {
     "server_refused": "Vaše organizace tento server na tomto zařízení nepovoluje.",

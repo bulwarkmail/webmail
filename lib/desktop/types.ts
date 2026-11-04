@@ -152,6 +152,11 @@ export interface DesktopMenuBridge {
   setState: (state: DesktopMenuState) => void;
   /** A menu command to run. Returns the unsubscribe. */
   onCommand?: (listener: (id: string) => void) => () => void;
+  /**
+   * File > Change connection…, once the page asked: restarts on the first screen. False
+   * where a policy forces the connection. An older shell has none.
+   */
+  changeConnection?: () => Promise<boolean>;
   /** Shows a native menu. At the pointer when `at` is left out. Answers with the id picked, or null. */
   popup?: (items: DesktopNativeMenuItem[], at?: { x: number; y: number }) => Promise<string | null>;
   /** The strip that stands in for a menu bar in a window with no native bar. */
