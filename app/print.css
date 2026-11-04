@@ -738,3 +738,24 @@
   margin: 0;
   overflow-wrap: anywhere;
 }
+
+/* An invitation's card: when and where, in a box above the body. */
+.pr-invitation {
+  margin: 4mm 0 0;
+  padding: 2.5mm 3mm;
+  border: 0.3mm solid var(--pr-rule, #bbb);
+  border-radius: 1.5mm;
+  break-inside: avoid;
+}
+
+.pr-invitation-heading {
+  margin: 0;
+  font-size: 8pt;
+  font-weight: 600;
+  color: var(--pr-muted);
+}
+
+.pr-invitation .pr-message-meta {
+  font-size: 10pt;
+  color: var(--pr-ink);
+}
