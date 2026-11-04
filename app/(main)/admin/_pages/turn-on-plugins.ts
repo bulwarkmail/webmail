@@ -24,7 +24,7 @@ export const TURN_ON_PLUGINS_QUESTION: TurnOnQuestion = {
  * for anyone, with the switch at the bottom of another page.
  */
 export async function offerToTurnOnPlugins(
-  confirm: (question: TurnOnQuestion) => boolean | Promise<boolean>,
+  ask: (question: TurnOnQuestion) => boolean | Promise<boolean>,
 ): Promise<TurnOnOutcome> {
   try {
     const res = await apiFetch('/api/admin/policy');
@@ -32,7 +32,7 @@ export async function offerToTurnOnPlugins(
     const etag = res.headers.get('ETag');
     const policy = (await res.json()) as SettingsPolicy;
     if (policy.features?.pluginsEnabled) return 'already-on';
-    if (!(await confirm(TURN_ON_PLUGINS_QUESTION))) return 'left-off';
+    if (!(await ask(TURN_ON_PLUGINS_QUESTION))) return 'left-off';
     const saved = await apiFetch('/api/admin/policy', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', ...(etag ? { 'If-Match': etag } : {}) },
