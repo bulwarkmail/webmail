@@ -24,7 +24,11 @@ function tap(el: Element, x = 10, y = 10) {
 describe('ImagePreviewModal', () => {
   it('closes when the area around the image is clicked', async () => {
     const { onClose, box } = await renderViewer();
+    // Not in the first 400 ms: that is still the click that opened it (pim-3).
+    const later = Date.now() + 1000;
+    const now = vi.spyOn(Date, 'now').mockReturnValue(later);
     tap(box);
+    now.mockRestore();
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 

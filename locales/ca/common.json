@@ -5677,6 +5677,21 @@
     "next_file": "Fitxer següent",
     "loading": "S'està carregant…"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name} ja existeix.",
+    "conflict_file_hint": "Substitueix posa el contingut nou al fitxer existent, i se’n mantenen les comparticions. Conserva’ls tots dos afegeix una còpia amb un número.",
+    "conflict_folder_hint": "Substitueix afegeix els fitxers a la carpeta existent i substitueix els que tenen el mateix nom. Conserva’ls tots dos crea una segona carpeta amb un número.",
+    "replace": "Substitueix",
+    "keep_both": "Conserva’ls tots dos",
+    "skip": "Omet",
+    "apply_to_all": "{count, plural, one {Fes el mateix amb el conflicte} other {Fes el mateix amb els # conflictes}}",
+    "no_preview": "No hi ha previsualització per a aquest tipus de fitxer.",
+    "open_in_app": "Obre amb l’aplicació predeterminada",
+    "shared_with": "{name} ara està compartit amb {person}.",
+    "send_message": "Envia un missatge",
+    "share_mail_subject": "He compartit {name} amb tu",
+    "share_mail_body": "Hola,\n\nHe compartit «{name}» amb tu. El pots obrir aquí:\n{link}"
+  },
   "smime": {
     "your_certificates": "Els vostres certificats",
     "your_certificates_desc": "Importeu i gestioneu els certificats S/MIME per signar i xifrar correus",

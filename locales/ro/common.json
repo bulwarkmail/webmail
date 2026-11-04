@@ -5677,6 +5677,21 @@
     "next_file": "Fișierul următor",
     "loading": "Se încarcă…"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name} există deja.",
+    "conflict_file_hint": "Înlocuiește pune conținutul nou în fișierul existent, iar partajările lui rămân. Păstrează-le pe ambele adaugă o copie numerotată.",
+    "conflict_folder_hint": "Înlocuiește adaugă fișierele în dosarul existent și înlocuiește fișierele cu același nume. Păstrează-le pe ambele creează un al doilea dosar numerotat.",
+    "replace": "Înlocuiește",
+    "keep_both": "Păstrează-le pe ambele",
+    "skip": "Omite",
+    "apply_to_all": "{count, plural, other {Fă la fel pentru toate cele # conflicte}}",
+    "no_preview": "Nu există previzualizare pentru acest tip de fișier.",
+    "open_in_app": "Deschide în aplicația implicită",
+    "shared_with": "{name} este acum partajat cu {person}.",
+    "send_message": "Trimite un mesaj",
+    "share_mail_subject": "Am partajat {name} cu tine",
+    "share_mail_body": "Salut,\n\nAm partajat „{name}” cu tine. Îl poți deschide aici:\n{link}"
+  },
   "smime": {
     "your_certificates": "Certificatele dvs.",
     "your_certificates_desc": "Importați și gestionați certificatele S/MIME pentru semnarea și criptarea e-mailurilor",

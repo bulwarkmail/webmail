@@ -5415,6 +5415,21 @@
     "next_file": "Nākamais fails",
     "loading": "Ielādē…"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name} jau pastāv.",
+    "conflict_file_hint": "Aizstāt ieliek jauno saturu esošajā failā, tāpēc tā koplietošana paliek. Paturēt abus pievieno numurētu kopiju.",
+    "conflict_folder_hint": "Aizstāt pievieno failus esošajai mapei un aizstāj failus ar tādu pašu nosaukumu. Paturēt abus izveido otru, numurētu mapi.",
+    "replace": "Aizstāt",
+    "keep_both": "Paturēt abus",
+    "skip": "Izlaist",
+    "apply_to_all": "{count, plural, other {Darīt tāpat visiem # konfliktiem}}",
+    "no_preview": "Šim faila tipam nav priekšskatījuma.",
+    "open_in_app": "Atvērt noklusējuma lietotnē",
+    "shared_with": "{name} tagad ir koplietots ar {person}.",
+    "send_message": "Sūtīt ziņu",
+    "share_mail_subject": "Es koplietoju ar jums {name}",
+    "share_mail_body": "Sveiki!\n\nEs koplietoju ar jums “{name}”. To var atvērt šeit:\n{link}"
+  },
   "smime": {
     "your_certificates": "Jūsu sertifikāti",
     "your_certificates_desc": "Importējiet un pārvaldiet savus S/MIME sertifikātus parakstīšanai un šifrēšanai",

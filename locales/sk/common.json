@@ -5677,6 +5677,21 @@
     "next_file": "Nasledujúci súbor",
     "loading": "Načítava sa…"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name} už existuje.",
+    "conflict_file_hint": "Nahradiť vloží nový obsah do existujúceho súboru, takže jeho zdieľanie zostane. Ponechať oboje pridá kópiu s číslom.",
+    "conflict_folder_hint": "Nahradiť pridá súbory do existujúceho priečinka a nahradí súbory s rovnakým názvom. Ponechať oboje vytvorí druhý priečinok s číslom.",
+    "replace": "Nahradiť",
+    "keep_both": "Ponechať oboje",
+    "skip": "Preskočiť",
+    "apply_to_all": "{count, plural, other {Urobiť to isté pri všetkých konfliktoch ({count})}}",
+    "no_preview": "Pre tento typ súboru nie je náhľad.",
+    "open_in_app": "Otvoriť v predvolenej aplikácii",
+    "shared_with": "{name} je teraz zdieľaný s {person}.",
+    "send_message": "Poslať správu",
+    "share_mail_subject": "Zdieľal som s vami {name}",
+    "share_mail_body": "Dobrý deň,\n\nzdieľal som s vami „{name}“. Otvoríte to tu:\n{link}"
+  },
   "smime": {
     "your_certificates": "Vaše certifikáty",
     "your_certificates_desc": "Importujte a spravujte svoje certifikáty S/MIME na podpisovanie a šifrovanie e-mailov",

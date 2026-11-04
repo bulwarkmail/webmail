@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import {
   Upload, FolderPlus, Download, Trash2, Pencil, Copy, Clipboard, Scissors, Info, Pin, PinOff,
   FilePlus, CopyPlus, AlertCircle, FolderUp, Share2, SquarePen, Eye, FolderOpen,
-  RefreshCw, Star, StarOff, Plus, CheckSquare, File, RotateCcw, FolderInput,
+  RefreshCw, Star, StarOff, Plus, CheckSquare, File, RotateCcw, FolderInput, ExternalLink,
 } from "@/components/icons";
 import { useIsFullDesktop, useIsMobile, useMediaQuery } from "@/hooks/use-media-query";
 import { useContextMenu } from "@/hooks/use-context-menu";
@@ -138,6 +138,13 @@ interface FileBrowserProps {
   sharingEnabled?: boolean;
   /** Add/update/remove a principal's share on a node. Set null rights to revoke. */
   onShare?: (id: string, principalId: string, rights: FileNodeRights | null) => Promise<void>;
+  /** A file with no preview and no editor: shows its icon, size and Download (pim-16). Left out: it downloads. */
+  onShowFileInfo?: (name: string) => void;
+  /** The desktop app can open this file in its program. */
+  canOpenInApp?: (resource: FileResource) => boolean;
+  onOpenInApp?: (resource: FileResource) => void;
+  /** A principal was given access to a node they couldn't see before. */
+  onShared?: (resource: FileResource, principalId: string) => void;
 }
 
 function isPreviewable(name: string): boolean {
@@ -220,9 +227,14 @@ export function FileBrowser({
   ownAccountId,
   sharingEnabled,
   onShare,
+  onShowFileInfo,
+  canOpenInApp,
+  onOpenInApp,
+  onShared,
 }: FileBrowserProps) {
   const t = useTranslations("files");
   const tMenu = useTranslations("menuAudit");
+  const tUx = useTranslations("ux_pim_files");
   // Menu entries that open a dialog end in "…".
   const newFileLabel = newFileFormats.length > 0 ? tMenu("files_new_file") : tMenu("files_new_text_file");
   const fileNameRules = useMemo(() => client?.getFileNameRules?.() ?? null, [client]);
@@ -517,10 +529,12 @@ export function FileBrowser({
       onPreviewImage(resource.name);
     } else if (isPreviewable(resource.name)) {
       onPreviewFile(resource.name);
+    } else if (onShowFileInfo) {
+      onShowFileInfo(resource.name);
     } else {
       void onDownload(resource.name);
     }
-  }, [onNavigate, pathOf, isOfficeEditable, onEditFile, onPreviewImage, onPreviewFile, onDownload]);
+  }, [onNavigate, pathOf, isOfficeEditable, onEditFile, onPreviewImage, onPreviewFile, onShowFileInfo, onDownload]);
 
   const previewResource = useCallback((resource: FileResource) => {
     if (isImageFile(resource.name)) onPreviewImage(resource.name);
@@ -810,9 +824,14 @@ export function FileBrowser({
         setRenameTarget(singleSelected.name);
         return;
       }
-      if (e.key === "Enter" && singleSelected) {
+      // Enter opens the selected item, or the one Tab put the focus on.
+      const enterTarget = singleSelected
+        ?? (selected.length === 0 && focusedName && (e.target as HTMLElement | null)?.dataset?.resource === focusedName
+          ? displayResources.find((r) => r.name === focusedName) ?? null
+          : null);
+      if (e.key === "Enter" && enterTarget) {
         e.preventDefault();
-        openResource(singleSelected);
+        openResource(enterTarget);
         return;
       }
       if (e.key === " " && focusedName) {
@@ -852,7 +871,7 @@ export function FileBrowser({
     showNewFolder, showNewTextFile, renameTarget, renameFolder, shareTargetId, moveTarget, accountPickerMode, selectedList, singleSelected, inTrash,
     showDetails, isNarrow, toggleDetails,
     selectAllVisible, onCopy, onCut, onPaste, clipboard, searchQuery, onClearSelection, deleteNames, openResource,
-    focusedName, onToggleSelect, currentPath, navigateUp, viewMode, gridColumns, moveFocus,
+    focusedName, onToggleSelect, currentPath, navigateUp, viewMode, gridColumns, moveFocus, displayResources,
   ]);
 
   // ---- Context menu ----------------------------------------------------------
@@ -942,6 +961,13 @@ export function FileBrowser({
             )}
             {isOfficeEditable?.(resource.name) && onEditFile && (
               <ContextMenuItem icon={SquarePen} label={t("office_edit")} onClick={() => { closeMenu(); onEditFile(resource.name); }} />
+            )}
+            {/* Neither previewed nor edited here: Open shows what there is (pim-16). */}
+            {!isPreviewable(resource.name) && !(isOfficeEditable?.(resource.name) && onEditFile) && onShowFileInfo && (
+              <ContextMenuItem icon={File} label={t("open")} onClick={() => { closeMenu(); onShowFileInfo(resource.name); }} />
+            )}
+            {canOpenInApp?.(resource) && onOpenInApp && (
+              <ContextMenuItem icon={ExternalLink} label={tUx("open_in_app")} onClick={() => { closeMenu(); onOpenInApp(resource); }} />
             )}
           </>
         )}
@@ -1501,7 +1527,10 @@ export function FileBrowser({
           shareWith={shareTarget.shareWith}
           ownAccountId={ownAccountId || ""}
           onShare={async (principalId, rights) => {
+            const added = !!rights && !shareTarget.shareWith?.[principalId];
             await onShare(shareTarget.id, principalId, rights as FileNodeRights | null);
+            // Someone new can see it now: offer to tell them (pim-26).
+            if (added) onShared?.(shareTarget, principalId);
           }}
           onClose={() => setShareTargetId(null)}
         />

@@ -5415,6 +5415,21 @@
     "next_file": "Następny plik",
     "loading": "Wczytywanie…"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name} już istnieje.",
+    "conflict_file_hint": "Zastąp wkłada nową treść do istniejącego pliku, więc jego udostępnienia zostają. Zachowaj oba dodaje kopię z numerem.",
+    "conflict_folder_hint": "Zastąp dodaje pliki do istniejącego folderu i zastępuje pliki o tej samej nazwie. Zachowaj oba tworzy drugi folder z numerem.",
+    "replace": "Zastąp",
+    "keep_both": "Zachowaj oba",
+    "skip": "Pomiń",
+    "apply_to_all": "{count, plural, other {Zrób tak dla wszystkich konfliktów ({count})}}",
+    "no_preview": "Dla tego typu pliku nie ma podglądu.",
+    "open_in_app": "Otwórz w domyślnej aplikacji",
+    "shared_with": "{name} jest teraz udostępniony dla {person}.",
+    "send_message": "Wyślij wiadomość",
+    "share_mail_subject": "Udostępniłem Ci {name}",
+    "share_mail_body": "Cześć,\n\nUdostępniłem Ci „{name}”. Możesz to otworzyć tutaj:\n{link}"
+  },
   "smime": {
     "your_certificates": "Twoje certyfikaty",
     "your_certificates_desc": "Importuj i zarządzaj swoimi certyfikatami S/MIME do podpisywania i szyfrowania wiadomości e-mail",

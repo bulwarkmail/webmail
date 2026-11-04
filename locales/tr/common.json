@@ -5677,6 +5677,21 @@
     "next_file": "Sonraki dosya",
     "loading": "Yükleniyor…"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name} zaten var.",
+    "conflict_file_hint": "Değiştir, yeni içeriği mevcut dosyaya koyar; paylaşımları korunur. İkisini de tut, numaralı bir kopya ekler.",
+    "conflict_folder_hint": "Değiştir, dosyaları mevcut klasöre ekler ve aynı adlı dosyaları değiştirir. İkisini de tut, numaralı ikinci bir klasör oluşturur.",
+    "replace": "Değiştir",
+    "keep_both": "İkisini de tut",
+    "skip": "Atla",
+    "apply_to_all": "{count, plural, other {Tüm # çakışma için bunu yap}}",
+    "no_preview": "Bu dosya türü için önizleme yok.",
+    "open_in_app": "Varsayılan uygulamada aç",
+    "shared_with": "{name} artık {person} ile paylaşılıyor.",
+    "send_message": "Mesaj gönder",
+    "share_mail_subject": "{name} dosyasını seninle paylaştım",
+    "share_mail_body": "Merhaba,\n\n\"{name}\" dosyasını seninle paylaştım. Buradan açabilirsin:\n{link}"
+  },
   "smime": {
     "your_certificates": "Sertifikalarınız",
     "your_certificates_desc": "E-postaları imzalamak ve şifrelemek için S/MIME sertifikalarınızı içe aktarın ve yönetin",

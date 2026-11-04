@@ -5677,6 +5677,21 @@
     "next_file": "下一個檔案",
     "loading": "載入中…"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name} 已存在。",
+    "conflict_file_hint": "取代會把新內容放進現有檔案，共用設定維持不變。保留兩者會新增一個帶編號的副本。",
+    "conflict_folder_hint": "取代會把檔案加入現有資料夾，並取代同名檔案。保留兩者會建立一個帶編號的資料夾。",
+    "replace": "取代",
+    "keep_both": "保留兩者",
+    "skip": "略過",
+    "apply_to_all": "{count, plural, other {對全部 # 個衝突執行此動作}}",
+    "no_preview": "此類檔案無法預覽。",
+    "open_in_app": "用預設應用程式開啟",
+    "shared_with": "{name} 已與 {person} 共用。",
+    "send_message": "傳送訊息",
+    "share_mail_subject": "我與你共用了 {name}",
+    "share_mail_body": "你好，\n\n我與你共用了「{name}」。可以在這裡開啟：\n{link}"
+  },
   "smime": {
     "your_certificates": "您的憑證",
     "your_certificates_desc": "匯入與管理用於郵件簽章與加密的 S/MIME 憑證",

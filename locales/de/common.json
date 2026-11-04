@@ -5415,6 +5415,21 @@
     "next_file": "Nächste Datei",
     "loading": "Wird geladen…"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name} ist schon vorhanden.",
+    "conflict_file_hint": "Ersetzen legt den neuen Inhalt in die vorhandene Datei, ihre Freigaben bleiben. Beide behalten legt eine Kopie mit einer Nummer an.",
+    "conflict_folder_hint": "Ersetzen legt die Dateien in den vorhandenen Ordner und ersetzt Dateien mit gleichem Namen. Beide behalten legt einen zweiten Ordner mit einer Nummer an.",
+    "replace": "Ersetzen",
+    "keep_both": "Beide behalten",
+    "skip": "Überspringen",
+    "apply_to_all": "{count, plural, other {Für alle # Konflikte so machen}}",
+    "no_preview": "Für diese Art von Datei gibt es keine Vorschau.",
+    "open_in_app": "Im Standardprogramm öffnen",
+    "shared_with": "{name} ist jetzt für {person} freigegeben.",
+    "send_message": "Nachricht senden",
+    "share_mail_subject": "Ich habe {name} für Sie freigegeben",
+    "share_mail_body": "Hallo,\n\nich habe „{name}“ für Sie freigegeben. Sie können es hier öffnen:\n{link}"
+  },
   "smime": {
     "your_certificates": "Ihre Zertifikate",
     "your_certificates_desc": "Importieren und verwalten Sie Ihre S/MIME-Zertifikate zum Signieren und Verschlüsseln von E-Mails",

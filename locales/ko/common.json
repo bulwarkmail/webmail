@@ -5415,6 +5415,21 @@
     "next_file": "다음 파일",
     "loading": "불러오는 중…"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name}이(가) 이미 있습니다.",
+    "conflict_file_hint": "바꾸기를 하면 기존 파일에 새 내용이 들어가고 공유 설정은 그대로 유지됩니다. 둘 다 유지하면 번호가 붙은 사본이 추가됩니다.",
+    "conflict_folder_hint": "바꾸기를 하면 기존 폴더에 파일이 추가되고 이름이 같은 파일은 바뀝니다. 둘 다 유지하면 번호가 붙은 두 번째 폴더가 만들어집니다.",
+    "replace": "바꾸기",
+    "keep_both": "둘 다 유지",
+    "skip": "건너뛰기",
+    "apply_to_all": "{count, plural, other {충돌 #개 모두에 적용}}",
+    "no_preview": "이 유형의 파일은 미리 볼 수 없습니다.",
+    "open_in_app": "기본 앱에서 열기",
+    "shared_with": "{name}을(를) 이제 {person}님과 공유합니다.",
+    "send_message": "메시지 보내기",
+    "share_mail_subject": "{name}을(를) 공유했습니다",
+    "share_mail_body": "안녕하세요.\n\n\"{name}\"을(를) 공유했습니다. 여기에서 열 수 있습니다:\n{link}"
+  },
   "smime": {
     "your_certificates": "내 인증서",
     "your_certificates_desc": "이메일 서명과 암호화를 위한 S/MIME 인증서를 가져오고 관리해요",

@@ -198,20 +198,23 @@ describe('FileBrowser', () => {
     expect(within(tree()).getByText('Documents')).toBeInTheDocument();
   });
 
-  it('opens a folder from its name and selects it from the row', () => {
+  // pim-3: the name is plain text, as in a file manager. A click selects, a
+  // double-click opens.
+  it('selects a folder from its name and opens it on a double-click', () => {
     const { onNavigate, onSetSelection } = renderBrowser();
-    const row = within(list()).getByText('Documents').closest('[role=row]')!;
-    fireEvent.click(row);
+    fireEvent.click(within(list()).getByText('Documents'));
     expect(onSetSelection).toHaveBeenCalledWith(new Set(['Documents']));
     expect(onNavigate).not.toHaveBeenCalled();
 
-    fireEvent.click(within(list()).getByText('Documents'));
+    fireEvent.doubleClick(within(list()).getByText('Documents'));
     expect(onNavigate).toHaveBeenCalledWith('/Documents', 'f-docs');
   });
 
-  it('previews a text file when its name is clicked', () => {
+  it('previews a text file when its name is double-clicked', () => {
     const { onPreviewFile } = renderBrowser();
     fireEvent.click(within(list()).getByText('notes.txt'));
+    expect(onPreviewFile).not.toHaveBeenCalled();
+    fireEvent.doubleClick(within(list()).getByText('notes.txt'));
     expect(onPreviewFile).toHaveBeenCalledWith('notes.txt');
   });
 

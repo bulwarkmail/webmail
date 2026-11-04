@@ -5677,6 +5677,21 @@
     "next_file": "Next file",
     "loading": "Loading…"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name} already exists.",
+    "conflict_file_hint": "Replace puts the new content into the existing file, so its shares stay. Keep both adds a copy with a number.",
+    "conflict_folder_hint": "Replace adds the files to the existing folder and replaces files with the same name. Keep both makes a second folder with a number.",
+    "replace": "Replace",
+    "keep_both": "Keep both",
+    "skip": "Skip",
+    "apply_to_all": "{count, plural, other {Do this for all # conflicts}}",
+    "no_preview": "There is no preview for this type of file.",
+    "open_in_app": "Open in default app",
+    "shared_with": "{name} is now shared with {person}.",
+    "send_message": "Send a message",
+    "share_mail_subject": "I shared {name} with you",
+    "share_mail_body": "Hi,\n\nI shared \"{name}\" with you. You can open it here:\n{link}"
+  },
   "smime": {
     "your_certificates": "Your Certificates",
     "your_certificates_desc": "Import and manage your S/MIME certificates for signing and encrypting emails",

@@ -5677,6 +5677,21 @@
     "next_file": "Következő fájl",
     "loading": "Betöltés…"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name} már létezik.",
+    "conflict_file_hint": "A Csere az új tartalmat a meglévő fájlba teszi, így a megosztásai megmaradnak. A Mindkettő megtartása számozott másolatot ad hozzá.",
+    "conflict_folder_hint": "A Csere a fájlokat a meglévő mappába teszi, és lecseréli az azonos nevű fájlokat. A Mindkettő megtartása egy második, számozott mappát hoz létre.",
+    "replace": "Csere",
+    "keep_both": "Mindkettő megtartása",
+    "skip": "Kihagyás",
+    "apply_to_all": "{count, plural, other {Ugyanez mind a(z) # ütközésnél}}",
+    "no_preview": "Ehhez a fájltípushoz nincs előnézet.",
+    "open_in_app": "Megnyitás az alapértelmezett alkalmazásban",
+    "shared_with": "{name} most már meg van osztva vele: {person}.",
+    "send_message": "Üzenet küldése",
+    "share_mail_subject": "Megosztottam veled: {name}",
+    "share_mail_body": "Szia!\n\nMegosztottam veled ezt: „{name}”. Itt tudod megnyitni:\n{link}"
+  },
   "smime": {
     "your_certificates": "Tanúsítványaid",
     "your_certificates_desc": "S/MIME tanúsítványok importálása és kezelése e-mailek aláírásához és titkosításához",
