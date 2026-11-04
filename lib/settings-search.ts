@@ -35,7 +35,17 @@ export type SettingsSearchCondition =
   /** The Mountain View interface layout. */
   | 'mountainView'
   /** More than one account signed in. */
-  | 'multiAccount';
+  | 'multiAccount'
+  /** In the desktop app (its bridge is there). */
+  | 'desktop'
+  /** In the desktop app on Windows or Linux. */
+  | 'desktopNotMac'
+  /** In the desktop app on macOS. */
+  | 'desktopMac'
+  /** In the desktop app where its own menu bar can be pinned (not macOS). */
+  | 'desktopMenuBar'
+  /** In a browser, not the desktop app. */
+  | 'browser';
 
 export interface SettingsSearchEntry {
   /**
@@ -57,6 +67,8 @@ export interface SettingsSearchEntry {
 
 /** Key of a row's synonyms in the locale files. */
 const syn = (id: string) => `uxs_structure.search.${id}`;
+/** Synonyms added in the second settings pass. */
+const syn2 = (id: string) => `uxp2_settings.search.${id}`;
 
 // The settings each page draws, as the search lists them. Only labels a page
 // renders belong here: settings-search-anchors.test.tsx renders every page
@@ -81,17 +93,29 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.language_region.date_format.label' },
     { label: 'settings.language_region.date_locale.label', advanced: true },
     { label: 'settings.language_region.time_format.label' },
-    { label: 'settings.language_region.time_zone.label' },
-    { label: 'settings.language_region.first_day.label' },
+    { label: 'settings.language_region.time_zone.label', synonyms: syn2('timezone') },
+    { label: 'settings.language_region.first_day.label', synonyms: syn2('week_start') },
     { label: 'appLock.section_title' },
     { label: 'appLock.enable_label', synonyms: syn('app_lock') },
-    { label: 'protocol_handlers.title' },
-    { label: 'protocol_handlers.mailto_label' },
-    { label: 'protocol_handlers.webcal_label' },
-    { label: 'protocol_handlers.protocol_open_mode_label', advanced: true },
+    { label: 'desktopOs.section_title', when: 'desktop' },
+    { label: 'desktopOs.close_to_tray_label', when: 'desktop', synonyms: syn2('tray') },
+    { label: 'desktopOs.start_at_login_label', when: 'desktop', synonyms: syn2('autostart') },
+    { label: 'desktopOs.show_shortcut_label', when: 'desktop' },
+    { label: 'desktopOs.default_app_label', when: 'desktop', synonyms: syn2('default_app') },
+    { label: 'protocol_handlers.title', when: 'browser' },
+    { label: 'protocol_handlers.mailto_label', when: 'browser' },
+    { label: 'protocol_handlers.webcal_label', when: 'browser' },
+    { label: 'protocol_handlers.protocol_open_mode_label', advanced: true, when: 'browser' },
+    { label: 'desktopUi.settings.title', when: 'desktop' },
+    { label: 'desktopUi.settings.double_click_label', when: 'desktop' },
+    { label: 'desktopUi.settings.restore_label', when: 'desktop' },
+    { label: 'desktopMenuBar.always_show_label', when: 'desktopMenuBar', synonyms: syn2('menu_bar') },
     { label: 'tour.settings_section' },
     { label: 'tour.restart_title' },
     { label: 'tour.show_on_new_devices_title', advanced: true },
+    { label: 'desktop_updates.title', when: 'desktop', synonyms: syn2('updates') },
+    { label: 'desktop_updates.channel_label', when: 'desktop' },
+    { label: 'desktopDevTools.section_title', when: 'desktop', advanced: true, synonyms: syn2('devtools') },
   ],
   notifications: [
     { label: 'settings.notifications.email.title' },
@@ -103,18 +127,23 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.notifications.calendar.enabled' },
     { label: 'settings.notifications.sound_selection.title' },
     { label: 'settings.notifications.sound_selection.choose' },
-    { label: 'settings.notifications.push.title' },
-    { label: 'settings.notifications.push.relay_label', advanced: true },
+    { label: 'uxp2_settings.desktop_notifications.title', when: 'desktop' },
+    { label: 'desktopOs.attention_label', when: 'desktopNotMac', synonyms: syn2('taskbar') },
+    { label: 'desktopOs.attention_mac_label', when: 'desktopMac', synonyms: syn2('taskbar') },
+    { label: 'desktopOs.quiet_hours_label', when: 'desktop', synonyms: syn2('quiet_hours') },
+    { label: 'uxp2_settings.desktop_notifications.closed_label', when: 'desktop' },
+    { label: 'settings.notifications.push.title', when: 'browser' },
+    { label: 'settings.notifications.push.relay_label', advanced: true, when: 'browser' },
     { label: 'settings.notifications.push.devices_title', advanced: true },
   ],
   appearance: [
-    { label: 'settings.appearance.theme.label' },
+    { label: 'settings.appearance.theme.label', synonyms: syn2('dark_mode') },
     { label: 'settings.themes.title' },
     { label: 'settings.appearance.sections.text' },
     { label: 'settings.appearance.list_density.label' },
     { label: 'settings.appearance.sections.layout' },
     { label: 'settings.appearance.interface_layout.label' },
-    { label: 'settings.email_behavior.mail_layout.label' },
+    { label: 'settings.email_behavior.mail_layout.label', synonyms: syn2('reading_pane') },
     { label: 'settings.appearance.toolbar_position.label' },
     { label: 'settings.appearance.toolbar_labels.label' },
     { label: 'settings.appearance.sections.sidebar' },
@@ -177,7 +206,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.accessibility.sections.alerts' },
     { label: 'settings.accessibility.visual_alerts.label' },
     { label: 'settings.accessibility.unread_counts.label' },
-    { label: 'settings.accessibility.do_not_disturb.label' },
+    { label: 'settings.accessibility.do_not_disturb.label', synonyms: syn2('do_not_disturb') },
     { label: 'settings.accessibility.sections.screen_readers' },
     { label: 'settings.accessibility.announce_new_mail.label' },
     { label: 'settings.accessibility.announce_preview.label' },
@@ -186,7 +215,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.accessibility.reset.label' },
   ],
   message_list: [
-    { label: 'settings.email_behavior.group_conversations.label' },
+    { label: 'settings.email_behavior.group_conversations.label', synonyms: syn2('threads') },
     { label: 'settings.email_behavior.show_preview.label' },
     { label: 'settings.appearance.message_list_order.label' },
     { label: 'settings.appearance.message_list_order.scope.label' },
@@ -194,7 +223,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.email_behavior.show_verification_codes.label' },
     { label: 'settings.message_list.sections.actions' },
     { label: 'settings.email_behavior.hover_actions.label' },
-    { label: 'settings.message_list.sections.delete' },
+    { label: 'settings.message_list.sections.delete', synonyms: syn2('empty_trash') },
     { label: 'settings.email_behavior.delete_action.label' },
     { label: 'settings.email_behavior.archive_mode.label' },
     { label: 'settings.email_behavior.confirm_bulk_delete.label' },
@@ -286,7 +315,6 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.security.sections.devices' },
     { label: 'settings.security.sections.encryption', advanced: true, synonyms: syn('encryption') },
     { label: 'settings.security.password.title', synonyms: syn('password') },
-    { label: 'settings.security.totp.section_title' },
     { label: 'settings.security.app_passwords.title' },
     { label: 'settings.security.api_keys.title', advanced: true },
     { label: 'settings.security.encryption.section_title', advanced: true },
@@ -352,18 +380,21 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
   ],
   privacy: [
     { label: 'settings.reading_page.sections.images', synonyms: syn('remote_content') },
-    { label: 'settings.email_behavior.external_content.label' },
+    { label: 'settings.email_behavior.external_content.label', synonyms: syn2('block_images') },
     { label: 'settings.email_behavior.trusted_senders.label' },
     { label: 'settings.email_behavior.trusted_senders.use_address_book_label' },
     { label: 'settings.composing_page.sections.receipts' },
     { label: 'settings.email_behavior.request_read_receipt.label' },
     { label: 'settings.email_behavior.read_receipt_response.label' },
     { label: 'settings.message_list.sections.senders' },
-    { label: 'settings.advanced.sender_favicons.label' },
+    { label: 'uxp2_settings.sender_favicons.label' },
     { label: 'settings.advanced.sender_favicons.refresh_label' },
     { label: 'settings.advanced.show_avatars_in_junk.label', advanced: true },
-    { label: 'uxs_structure.privacy.push_title' },
-    { label: 'uxs_structure.privacy.push_link.label', synonyms: syn('push') },
+    { label: 'desktopTelemetry.section_title', when: 'desktop' },
+    { label: 'desktopTelemetry.telemetry_label', when: 'desktop', synonyms: syn2('telemetry') },
+    { label: 'desktopTelemetry.crash_label', when: 'desktop', synonyms: syn2('crash') },
+    { label: 'uxs_structure.privacy.push_title', when: 'browser' },
+    { label: 'uxp2_settings.privacy_push.label', when: 'browser', synonyms: syn('push') },
   ],
   backup: [
     { label: 'settings.advanced.sections.backup' },
@@ -519,6 +550,31 @@ export function matchesAllWords(text: string, query: string): boolean {
 /** The text a row is found by: its name, what it says under the name, and its synonyms. */
 export function subResultText(result: SubResult): string {
   return [result.label, result.description ?? '', result.keywords ?? ''].join(' ');
+}
+
+/**
+ * Shortest one-word query that is looked for in a row's description too.
+ * A short word on its own ("about", "mail", "tab") starts a word in a dozen
+ * descriptions, which buried the row named by it (settings-p2-14). With more
+ * words the others narrow it down, so "reply signature" still finds the row
+ * whose description talks about replies.
+ */
+export const DESCRIPTION_MIN_WORD = 6;
+
+/**
+ * A row matches when every word of the query starts a word of its name,
+ * description or synonyms; a single word of up to five letters only in its
+ * name and synonyms. Chinese, Japanese and Thai words are short by nature
+ * and always look in the description too.
+ */
+export function matchesSubResult(result: SubResult, query: string): boolean {
+  const words = searchWords(query);
+  if (words.length === 0) return false;
+  const [only] = words;
+  if (words.length === 1 && only.length < DESCRIPTION_MIN_WORD && !NO_WORD_BREAKS.test(only)) {
+    return matchesAllWords(`${result.label} ${result.keywords ?? ''}`, only);
+  }
+  return matchesAllWords(subResultText(result), query);
 }
 
 export function getByPath(obj: unknown, path: string): unknown {

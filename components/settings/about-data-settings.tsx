@@ -18,6 +18,7 @@ import { toast } from '@/stores/toast-store';
 import { DebugSettings } from './debug-settings';
 import { MailBackupSettings } from '@/components/mail-transfer/mail-backup-settings';
 import { productName } from '@/lib/product-name';
+import { isDesktopApp } from '@/lib/desktop/bridge';
 
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0";
 const GIT_COMMIT = process.env.NEXT_PUBLIC_GIT_COMMIT || "unknown";
@@ -157,6 +158,12 @@ export function AboutDataSettings() {
   const { settingsSyncEnabled } = useConfig();
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showRefreshConfirm, setShowRefreshConfirm] = useState(false);
+  const tP2 = useTranslations('uxp2_settings');
+  // The app has no "other browsers" (settings-p2-4).
+  const [inApp, setInApp] = useState(false);
+  useEffect(() => setInApp(isDesktopApp()), []);
+  // A reset keeps the sync choice, so the other devices change only when sync is on (settings-p2-18).
+  const syncOn = settingsSyncEnabled && !settingsSyncDisabled;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { isFeatureEnabled } = usePolicyStore();
   const handleExport = () => {
@@ -202,7 +209,7 @@ export function AboutDataSettings() {
 
   return (
     <div className="space-y-8">
-      <SettingsSection id="backup" title={t('sections.backup')} description={t('sections.backup_description')}>
+      <SettingsSection id="backup" title={t('sections.backup')} description={inApp ? tP2('backup_description_app') : t('sections.backup_description')}>
         {settingsSyncEnabled && (
           <SettingItem label={t('settings_sync.label')} description={t('settings_sync.description')} term="sync">
             <ToggleSwitch checked={!settingsSyncDisabled} onChange={(checked) => updateSetting('settingsSyncDisabled', !checked)} />
@@ -264,7 +271,7 @@ export function AboutDataSettings() {
         onClose={() => setShowResetConfirm(false)}
         onConfirm={handleReset}
         title={t('reset_settings.confirm_title')}
-        message={t('reset_settings.description')}
+        message={`${tP2('reset.message')} ${syncOn ? tP2('reset.sync_on') : tP2('reset.sync_off')}`}
         confirmText={t('reset_settings.button')}
         variant="destructive"
       />

@@ -3505,6 +3505,48 @@
       "description": "Cerrar sesión de esta cuenta en este dispositivo."
     }
   },
+  "uxp2_settings": {
+    "search": {
+      "tray": "bandeja bandeja del sistema área de notificación segundo plano minimizar",
+      "autostart": "inicio automático arranque iniciar con Windows al iniciar sesión",
+      "default_app": "aplicación de correo predeterminada programa de correo mailto enlaces de correo",
+      "menu_bar": "barra de menús menús tecla Alt Archivo Editar Ver",
+      "updates": "actualizaciones actualizar nueva versión beta canal",
+      "devtools": "herramientas de desarrollo devtools consola inspeccionar F12 depuración",
+      "taskbar": "barra de tareas parpadear Dock atención",
+      "quiet_hours": "horas de silencio no molestar silencio silenciar noche",
+      "telemetry": "información de uso telemetría estadísticas analítica",
+      "crash": "informes de errores informes de fallos fallo",
+      "threads": "hilos conversaciones agrupar threads",
+      "block_images": "bloquear imágenes imágenes externas cargar imágenes",
+      "dark_mode": "modo oscuro modo claro modo nocturno tema oscuro",
+      "timezone": "zona horaria huso horario timezone",
+      "reading_pane": "panel de lectura panel de vista previa vista dividida",
+      "week_start": "inicio de semana primer día lunes domingo",
+      "empty_trash": "vaciar la papelera papelera elementos eliminados",
+      "do_not_disturb": "horas de silencio silenciar silencio"
+    },
+    "desktop_notifications": {
+      "title": "En este ordenador",
+      "closed_label": "Con la ventana cerrada",
+      "closed_description": "{appName} le avisa del correo nuevo mientras está abierto. Para que siga en la bandeja al cerrar la ventana, actívelo en {page}."
+    },
+    "push_unsupported": "Este navegador no puede mostrar notificaciones cuando el sitio web está cerrado.",
+    "backup_description_app": "Use los mismos ajustes en sus otros dispositivos.",
+    "sender_favicons": {
+      "label": "Imágenes de los sitios web de empresas",
+      "description": "Mostrar iconos de sitios web como fotos de perfil para remitentes empresariales"
+    },
+    "privacy_push": {
+      "label": "Relé de notificaciones",
+      "description": "Las notificaciones con {appName} cerrado pasan por un relé push, que nunca ve su correo. Las activa o desactiva en la página {page}."
+    },
+    "reset": {
+      "message": "Devuelve todos los ajustes a como estaban al principio. Su correo, filtros, respuesta automática y firmas no cambian.",
+      "sync_on": "Sus otros dispositivos usan los mismos ajustes, así que también cambian.",
+      "sync_off": "Sus otros dispositivos conservan sus ajustes."
+    }
+  },
   "setup": {
     "title": "Configuración de Bulwark Webmail",
     "subtitle": "Configura tu instancia de webmail desde el navegador.",

@@ -3505,6 +3505,48 @@
       "description": "Wyloguj to konto na tym urządzeniu."
     }
   },
+  "uxp2_settings": {
+    "search": {
+      "tray": "zasobnik zasobnik systemowy obszar powiadomień w tle minimalizuj tray",
+      "autostart": "autostart uruchamianie uruchom z Windows przy logowaniu",
+      "default_app": "domyślna aplikacja pocztowa domyślny program pocztowy mailto linki e-mail",
+      "menu_bar": "pasek menu menu klawisz Alt Plik Edycja Widok",
+      "updates": "aktualizacje aktualizacja nowa wersja beta kanał",
+      "devtools": "narzędzia deweloperskie devtools konsola zbadaj F12 debugowanie",
+      "taskbar": "pasek zadań miganie Dock uwaga",
+      "quiet_hours": "godziny ciszy nie przeszkadzać wycisz noc",
+      "telemetry": "dane o użyciu telemetria statystyki analityka",
+      "crash": "raporty awarii raporty błędów awaria",
+      "threads": "wątki rozmowy grupowanie threads",
+      "block_images": "blokuj obrazy obrazy zewnętrzne wczytuj obrazy",
+      "dark_mode": "tryb ciemny tryb jasny tryb nocny dark mode",
+      "timezone": "strefa czasowa timezone",
+      "reading_pane": "okienko odczytu okienko podglądu widok dzielony",
+      "week_start": "początek tygodnia pierwszy dzień poniedziałek niedziela",
+      "empty_trash": "opróżnij kosz kosz usunięte elementy",
+      "do_not_disturb": "godziny ciszy wycisz cisza"
+    },
+    "desktop_notifications": {
+      "title": "Na tym komputerze",
+      "closed_label": "Przy zamkniętym oknie",
+      "closed_description": "{appName} powiadamia o nowej poczcie, dopóki działa. Aby po zamknięciu okna działał dalej w zasobniku, włącz to w sekcji {page}."
+    },
+    "push_unsupported": "Ta przeglądarka nie może pokazywać powiadomień, gdy strona jest zamknięta.",
+    "backup_description_app": "Używaj tych samych ustawień na innych urządzeniach.",
+    "sender_favicons": {
+      "label": "Obrazy ze stron firm",
+      "description": "Pokazuj ikony stron internetowych jako zdjęcia profilowe nadawców firmowych"
+    },
+    "privacy_push": {
+      "label": "Przekaźnik powiadomień",
+      "description": "Powiadomienia przy zamkniętym {appName} idą przez przekaźnik push, który nigdy nie widzi Twojej poczty. Włączasz je i wyłączasz na stronie {page}."
+    },
+    "reset": {
+      "message": "Przywraca wszystkie ustawienia do stanu początkowego. Twoja poczta, filtry, autoodpowiedź i podpisy zostają bez zmian.",
+      "sync_on": "Twoje inne urządzenia używają tych samych ustawień, więc też się zmienią.",
+      "sync_off": "Twoje inne urządzenia zachowają swoje ustawienia."
+    }
+  },
   "setup": {
     "title": "Konfiguracja Bulwark Webmail",
     "subtitle": "Skonfiguruj swoją instancję poczty w przeglądarce.",

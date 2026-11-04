@@ -3505,6 +3505,48 @@
       "description": "Sair desta conta neste dispositivo."
     }
   },
+  "uxp2_settings": {
+    "search": {
+      "tray": "bandeja bandeja do sistema área de notificação segundo plano minimizar tray",
+      "autostart": "início automático arranque iniciar com o Windows ao iniciar sessão",
+      "default_app": "aplicação de correio predefinida programa de e-mail predefinido mailto ligações de e-mail",
+      "menu_bar": "barra de menus menus tecla Alt Ficheiro Editar Ver",
+      "updates": "atualizações atualizar nova versão beta canal",
+      "devtools": "ferramentas de programador devtools consola inspecionar F12 depuração",
+      "taskbar": "barra de tarefas piscar Dock atenção",
+      "quiet_hours": "horas de silêncio não incomodar silêncio silenciar noite",
+      "telemetry": "informações de utilização telemetria estatísticas análise",
+      "crash": "relatórios de falhas relatórios de erros falha",
+      "threads": "tópicos conversas agrupar threads",
+      "block_images": "bloquear imagens imagens externas carregar imagens",
+      "dark_mode": "modo escuro modo claro modo noturno tema escuro",
+      "timezone": "fuso horário timezone",
+      "reading_pane": "painel de leitura painel de pré-visualização vista dividida",
+      "week_start": "início da semana primeiro dia segunda-feira domingo",
+      "empty_trash": "esvaziar o lixo lixo itens eliminados",
+      "do_not_disturb": "horas de silêncio silenciar silêncio"
+    },
+    "desktop_notifications": {
+      "title": "Neste computador",
+      "closed_label": "Com a janela fechada",
+      "closed_description": "O {appName} avisa-o de correio novo enquanto estiver a funcionar. Para continuar na bandeja depois de fechar a janela, ative isso em {page}."
+    },
+    "push_unsupported": "Este navegador não consegue mostrar notificações quando o site está fechado.",
+    "backup_description_app": "Use as mesmas definições nos seus outros dispositivos.",
+    "sender_favicons": {
+      "label": "Imagens dos sites das empresas",
+      "description": "Exibir ícones de sites como fotos de perfil para remetentes empresariais"
+    },
+    "privacy_push": {
+      "label": "Retransmissor de notificações",
+      "description": "As notificações com o {appName} fechado passam por um retransmissor push, que nunca vê o seu correio. Ative-as ou desative-as na página {page}."
+    },
+    "reset": {
+      "message": "Repõe todas as definições como estavam no início. O seu correio, filtros, resposta automática e assinaturas ficam como estão.",
+      "sync_on": "Os seus outros dispositivos usam as mesmas definições, por isso também mudam.",
+      "sync_off": "Os seus outros dispositivos mantêm as definições deles."
+    }
+  },
   "setup": {
     "title": "Configuração do Bulwark Webmail",
     "subtitle": "Configure a sua instância de webmail a partir do navegador.",

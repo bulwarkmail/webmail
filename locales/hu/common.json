@@ -3505,6 +3505,48 @@
       "description": "Kijelentkezés ebből a fiókból ezen az eszközön."
     }
   },
+  "uxp2_settings": {
+    "search": {
+      "tray": "tálca értesítési terület háttér tálcára kicsinyítés tray",
+      "autostart": "automatikus indítás indításkor Windows-zal együtt bejelentkezéskor",
+      "default_app": "alapértelmezett levelezőalkalmazás alapértelmezett levelezőprogram mailto e-mail-hivatkozások",
+      "menu_bar": "menüsor menük Alt billentyű Fájl Szerkesztés Nézet",
+      "updates": "frissítések frissítés új verzió béta csatorna",
+      "devtools": "fejlesztői eszközök devtools konzol vizsgálat F12 hibakeresés",
+      "taskbar": "tálca villogás Dock figyelem",
+      "quiet_hours": "csendes órák ne zavarjanak némítás éjszaka",
+      "telemetry": "használati adatok telemetria statisztika elemzés",
+      "crash": "összeomlási jelentések hibajelentések összeomlás",
+      "threads": "szálak beszélgetések csoportosítás threads",
+      "block_images": "képek letiltása külső képek képek betöltése",
+      "dark_mode": "sötét mód világos mód éjszakai mód dark mode",
+      "timezone": "időzóna timezone",
+      "reading_pane": "olvasóablak előnézeti ablak osztott nézet",
+      "week_start": "hét kezdete első nap hétfő vasárnap",
+      "empty_trash": "kuka ürítése kuka törölt elemek",
+      "do_not_disturb": "csendes órák némítás csend"
+    },
+    "desktop_notifications": {
+      "title": "Ezen a számítógépen",
+      "closed_label": "Bezárt ablakkal",
+      "closed_description": "A(z) {appName} szól az új levelekről, amíg fut. Ha azt szeretné, hogy az ablak bezárása után a tálcán fusson tovább, kapcsolja be itt: {page}."
+    },
+    "push_unsupported": "Ez a böngésző nem tud értesítést mutatni, ha a webhely be van zárva.",
+    "backup_description_app": "Ugyanazok a beállítások a többi eszközén.",
+    "sender_favicons": {
+      "label": "Képek a cégek webhelyeiről",
+      "description": "Weboldal ikonok megjelenítése profilképekként az üzleti feladók számára"
+    },
+    "privacy_push": {
+      "label": "Értesítési továbbító",
+      "description": "A bezárt {appName} értesítései egy push továbbítón mennek át, amely soha nem látja a leveleit. Ki- és bekapcsolni a(z) {page} oldalon lehet."
+    },
+    "reset": {
+      "message": "Minden beállítást visszaállít a kezdeti állapotra. A levelei, szűrői, automatikus válasza és aláírásai maradnak.",
+      "sync_on": "A többi eszköze ugyanazokat a beállításokat használja, ezért azok is megváltoznak.",
+      "sync_off": "A többi eszköze megtartja a beállításait."
+    }
+  },
   "setup": {
     "title": "A Bulwark Webmail beállítása",
     "subtitle": "Állítsa be a webmail-példányát a böngészőből.",

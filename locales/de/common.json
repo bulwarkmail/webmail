@@ -3505,6 +3505,48 @@
       "description": "Von diesem Konto auf diesem Gerät abmelden."
     }
   },
+  "uxp2_settings": {
+    "search": {
+      "tray": "Infobereich Taskleiste Tray Hintergrund im Hintergrund weiterlaufen minimieren",
+      "autostart": "Autostart Systemstart mit Windows starten beim Anmelden starten automatisch starten",
+      "default_app": "Standard-Mail-App Standard-E-Mail-Programm mailto E-Mail-Links Standardprogramm",
+      "menu_bar": "Menüleiste Menü Alt-Taste Datei Bearbeiten Ansicht",
+      "updates": "Updates Aktualisierung neue Version Beta Kanal",
+      "devtools": "Entwicklertools Devtools Konsole untersuchen F12 Fehlersuche",
+      "taskbar": "Taskleiste blinken aufblinken Dock hüpfen Aufmerksamkeit",
+      "quiet_hours": "Ruhezeiten nicht stören stumm lautlos Nacht",
+      "telemetry": "Nutzungsdaten Telemetrie Statistik Analyse",
+      "crash": "Absturzberichte Fehlerberichte Absturz",
+      "threads": "Threads Unterhaltungen Konversation gruppieren Verlauf",
+      "block_images": "Bilder blockieren externe Bilder Bilder laden",
+      "dark_mode": "Dunkelmodus dunkler Modus heller Modus Nachtmodus dark mode",
+      "timezone": "Zeitzone timezone",
+      "reading_pane": "Lesebereich Vorschaufenster Vorschau geteilte Ansicht",
+      "week_start": "Wochenbeginn Wochenanfang Montag Sonntag",
+      "empty_trash": "Papierkorb leeren Papierkorb gelöschte Elemente",
+      "do_not_disturb": "Ruhezeiten stumm Stille"
+    },
+    "desktop_notifications": {
+      "title": "Auf diesem Computer",
+      "closed_label": "Bei geschlossenem Fenster",
+      "closed_description": "{appName} meldet neue E-Mails, solange es läuft. Damit es nach dem Schließen des Fensters im Infobereich weiterläuft, schalten Sie das unter {page} ein."
+    },
+    "push_unsupported": "Dieser Browser kann keine Benachrichtigungen zeigen, wenn die Website geschlossen ist.",
+    "backup_description_app": "Dieselben Einstellungen auf Ihren anderen Geräten nutzen.",
+    "sender_favicons": {
+      "label": "Bilder von Firmen-Websites",
+      "description": "Bei Firmen das Symbol ihrer Website als Bild des Absenders zeigen"
+    },
+    "privacy_push": {
+      "label": "Relay für Benachrichtigungen",
+      "description": "Benachrichtigungen bei geschlossenem {appName} laufen über ein Push-Relay, das Ihre E-Mails nie sieht. Sie schalten sie auf der Seite {page} ein und aus."
+    },
+    "reset": {
+      "message": "Alle Einstellungen auf den Anfangszustand zurücksetzen. Ihre E-Mails, Filter, Abwesenheitsnotiz und Signaturen bleiben, wie sie sind.",
+      "sync_on": "Ihre anderen Geräte nutzen dieselben Einstellungen, also ändern sie sich auch.",
+      "sync_off": "Ihre anderen Geräte behalten ihre Einstellungen."
+    }
+  },
   "setup": {
     "title": "Einrichtung von Bulwark Webmail",
     "subtitle": "Richten Sie Ihre Webmail-Instanz im Browser ein.",

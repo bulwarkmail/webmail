@@ -3505,6 +3505,48 @@
       "description": "Bu cihazda bu hesabın oturumunu kapatın."
     }
   },
+  "uxp2_settings": {
+    "search": {
+      "tray": "sistem tepsisi bildirim alanı arka plan tepsiye küçült tray",
+      "autostart": "otomatik başlatma başlangıç Windows ile başlat oturum açınca",
+      "default_app": "varsayılan posta uygulaması varsayılan e-posta programı mailto e-posta bağlantıları",
+      "menu_bar": "menü çubuğu menüler Alt tuşu Dosya Düzen Görünüm",
+      "updates": "güncellemeler güncelleme yeni sürüm beta kanal",
+      "devtools": "geliştirici araçları devtools konsol incele F12 hata ayıklama",
+      "taskbar": "görev çubuğu yanıp sönme Dock dikkat",
+      "quiet_hours": "sessiz saatler rahatsız etmeyin sessiz gece",
+      "telemetry": "kullanım bilgisi telemetri istatistik analiz",
+      "crash": "çökme raporları hata raporları çökme",
+      "threads": "ileti dizileri konuşmalar gruplama threads",
+      "block_images": "resimleri engelle dış resimler resimleri yükle",
+      "dark_mode": "karanlık mod açık mod gece modu dark mode",
+      "timezone": "saat dilimi timezone",
+      "reading_pane": "okuma bölmesi önizleme bölmesi bölünmüş görünüm",
+      "week_start": "hafta başlangıcı ilk gün pazartesi pazar",
+      "empty_trash": "çöp kutusunu boşalt çöp kutusu silinen öğeler",
+      "do_not_disturb": "sessiz saatler sessize al sessizlik"
+    },
+    "desktop_notifications": {
+      "title": "Bu bilgisayarda",
+      "closed_label": "Pencere kapalıyken",
+      "closed_description": "{appName} çalıştığı sürece yeni postaları bildirir. Pencereyi kapattıktan sonra sistem tepsisinde çalışmaya devam etmesi için bunu {page} bölümünde açın."
+    },
+    "push_unsupported": "Bu tarayıcı, web sitesi kapalıyken bildirim gösteremez.",
+    "backup_description_app": "Diğer cihazlarınızda da aynı ayarları kullanın.",
+    "sender_favicons": {
+      "label": "Şirket web sitelerinden resimler",
+      "description": "İş göndericileri için profil resmi olarak web sitesi simgelerini göster"
+    },
+    "privacy_push": {
+      "label": "Bildirim aktarıcısı",
+      "description": "{appName} kapalıyken gelen bildirimler, e-postanızı asla görmeyen bir push aktarıcısından geçer. Bunları {page} sayfasında açıp kapatırsınız."
+    },
+    "reset": {
+      "message": "Tüm ayarları başlangıçtaki hâline döndürür. Postalarınız, filtreleriniz, otomatik yanıtınız ve imzalarınız olduğu gibi kalır.",
+      "sync_on": "Diğer cihazlarınız aynı ayarları kullanıyor, bu yüzden onlar da değişir.",
+      "sync_off": "Diğer cihazlarınız kendi ayarlarını korur."
+    }
+  },
   "setup": {
     "title": "Bulwark Webmail kurulumu",
     "subtitle": "Webmail örneğinizi tarayıcıdan yapılandırın.",

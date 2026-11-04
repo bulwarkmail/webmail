@@ -3505,6 +3505,48 @@
       "description": "在此裝置上登出此帳號。"
     }
   },
+  "uxp2_settings": {
+    "search": {
+      "tray": "系統匣 通知區域 背景 最小化到系統匣 tray",
+      "autostart": "自動啟動 開機啟動 隨 Windows 啟動 登入時啟動",
+      "default_app": "預設郵件應用程式 預設郵件程式 mailto 郵件連結",
+      "menu_bar": "功能表列 功能表 Alt 鍵 檔案 編輯 檢視",
+      "updates": "更新 新版本 測試版 頻道",
+      "devtools": "開發人員工具 devtools 主控台 檢查 F12 偵錯",
+      "taskbar": "工作列 閃爍 Dock 提醒",
+      "quiet_hours": "安靜時段 勿擾 靜音 夜間",
+      "telemetry": "使用資訊 遙測 統計 分析",
+      "crash": "當機報告 錯誤報告 當機",
+      "threads": "會話 對話 分組 討論串 threads",
+      "block_images": "封鎖圖片 外部圖片 載入圖片",
+      "dark_mode": "深色模式 淺色模式 夜間模式 暗色 dark mode",
+      "timezone": "時區 timezone",
+      "reading_pane": "閱讀窗格 預覽窗格 分割檢視",
+      "week_start": "每週開始 第一天 星期一 星期日",
+      "empty_trash": "清空垃圾桶 垃圾桶 已刪除",
+      "do_not_disturb": "安靜時段 靜音 安靜"
+    },
+    "desktop_notifications": {
+      "title": "在這台電腦上",
+      "closed_label": "關閉視窗後",
+      "closed_description": "{appName} 執行期間會提醒你有新郵件。若要在關閉視窗後繼續在系統匣中執行，請在「{page}」中開啟此項。"
+    },
+    "push_unsupported": "網站關閉時，此瀏覽器無法顯示通知。",
+    "backup_description_app": "在你的其他裝置上使用相同的設定。",
+    "sender_favicons": {
+      "label": "公司網站的圖片",
+      "description": "使用企業寄件者的網站圖示作為頭像"
+    },
+    "privacy_push": {
+      "label": "通知中繼",
+      "description": "{appName} 關閉時的通知會經過推播中繼，中繼永遠看不到你的郵件。可在「{page}」頁面開啟或關閉。"
+    },
+    "reset": {
+      "message": "將所有設定還原為最初的狀態。你的郵件、篩選規則、自動回覆和簽名保持不變。",
+      "sync_on": "你的其他裝置使用相同的設定，因此也會一起變更。",
+      "sync_off": "你的其他裝置會保留各自的設定。"
+    }
+  },
   "setup": {
     "title": "Bulwark Webmail 設定",
     "subtitle": "在瀏覽器中設定你的網頁郵件執行個體。",

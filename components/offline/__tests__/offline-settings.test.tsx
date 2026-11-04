@@ -174,3 +174,13 @@ describe('the offline banner', () => {
     expect(screen.queryByTestId('offline-banner')).toBeNull();
   });
 });
+
+// settings-p2-18: in a browser the page said "use disk encryption" twice,
+// once in the warning and again in the key note below it.
+describe('Settings > Offline in a browser', () => {
+  it('warns about the browser profile once', async () => {
+    await act(async () => { render(<OfflineSettings />); });
+    expect(screen.getByTestId('offline-warning').textContent).toBe('warning');
+    expect(screen.queryByText('browser_note')).toBeNull();
+  });
+});

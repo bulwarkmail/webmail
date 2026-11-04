@@ -1501,7 +1501,8 @@ export function AccountSecuritySettings() {
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Shield className="w-4 h-4 text-muted-foreground" />
-                <h4 data-search-label={t('totp.section_title')} className="text-sm font-medium text-foreground">{t('totp.section_title')}</h4>
+                {/* Named like its row, "Two-step sign-in", not "Two-factor authentication" (settings-p2-18). */}
+                <h4 data-search-label={t('totp.label')} className="text-sm font-medium text-foreground">{t('totp.label')}</h4>
                 <TermInfo id="two_factor" />
               </div>
               <TotpSection />

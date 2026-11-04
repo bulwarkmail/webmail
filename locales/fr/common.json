@@ -3505,6 +3505,48 @@
       "description": "Se déconnecter de ce compte sur cet appareil."
     }
   },
+  "uxp2_settings": {
+    "search": {
+      "tray": "zone de notification barre système arrière-plan réduire tray",
+      "autostart": "démarrage automatique lancement démarrer avec Windows à l’ouverture de session",
+      "default_app": "application de messagerie par défaut programme de messagerie mailto liens e-mail",
+      "menu_bar": "barre de menus menus touche Alt Fichier Édition Affichage",
+      "updates": "mises à jour mise à jour nouvelle version bêta canal",
+      "devtools": "outils de développement devtools console inspecter F12 débogage",
+      "taskbar": "barre des tâches clignoter Dock attention",
+      "quiet_hours": "heures calmes ne pas déranger silencieux muet nuit",
+      "telemetry": "données d’utilisation télémétrie statistiques analyse",
+      "crash": "rapports de plantage rapports d’erreur plantage",
+      "threads": "fils conversations regrouper threads",
+      "block_images": "bloquer les images images externes charger les images",
+      "dark_mode": "mode sombre mode clair mode nuit thème sombre",
+      "timezone": "fuseau horaire timezone",
+      "reading_pane": "volet de lecture volet d’aperçu vue partagée",
+      "week_start": "début de semaine premier jour lundi dimanche",
+      "empty_trash": "vider la corbeille corbeille éléments supprimés",
+      "do_not_disturb": "heures calmes muet silence"
+    },
+    "desktop_notifications": {
+      "title": "Sur cet ordinateur",
+      "closed_label": "Fenêtre fermée",
+      "closed_description": "{appName} vous prévient des nouveaux e-mails tant qu’il fonctionne. Pour qu’il reste dans la zone de notification une fois la fenêtre fermée, activez-le dans {page}."
+    },
+    "push_unsupported": "Ce navigateur ne peut pas afficher de notifications quand le site est fermé.",
+    "backup_description_app": "Utilisez les mêmes paramètres sur vos autres appareils.",
+    "sender_favicons": {
+      "label": "Images des sites web des entreprises",
+      "description": "Afficher les icônes de sites web comme photos de profil pour les expéditeurs professionnels"
+    },
+    "privacy_push": {
+      "label": "Relais des notifications",
+      "description": "Les notifications reçues quand {appName} est fermé passent par un relais push, qui ne voit jamais vos e-mails. Vous les activez ou désactivez sur la page {page}."
+    },
+    "reset": {
+      "message": "Remet tous les paramètres comme au départ. Vos e-mails, filtres, réponse automatique et signatures restent tels quels.",
+      "sync_on": "Vos autres appareils utilisent les mêmes paramètres, ils changent donc aussi.",
+      "sync_off": "Vos autres appareils gardent leurs paramètres."
+    }
+  },
   "setup": {
     "title": "Configuration de Bulwark Webmail",
     "subtitle": "Configurez votre instance de webmail depuis le navigateur.",

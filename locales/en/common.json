@@ -3505,6 +3505,48 @@
       "description": "Sign out of this account on this device."
     }
   },
+  "uxp2_settings": {
+    "search": {
+      "tray": "tray system tray notification area background close to tray minimize to tray",
+      "autostart": "autostart startup start with Windows launch at login open at login run at startup",
+      "default_app": "default mail app default email program mailto email links",
+      "menu_bar": "menu bar menus Alt key File Edit View",
+      "updates": "updates update new version beta channel",
+      "devtools": "developer tools devtools console inspect F12 debugging",
+      "taskbar": "taskbar flash blink Dock bounce attention",
+      "quiet_hours": "quiet hours do not disturb silent mute night",
+      "telemetry": "usage info telemetry statistics analytics",
+      "crash": "crash reports error reports crash dump",
+      "threads": "threads thread conversation view conversations",
+      "block_images": "block images remote images load images external images",
+      "dark_mode": "dark mode light mode night mode dark theme",
+      "timezone": "timezone time zone",
+      "reading_pane": "reading pane preview pane split view",
+      "week_start": "week start start of week Monday Sunday",
+      "empty_trash": "empty trash trash bin deleted items",
+      "do_not_disturb": "quiet hours mute silence"
+    },
+    "desktop_notifications": {
+      "title": "On this computer",
+      "closed_label": "With the window closed",
+      "closed_description": "{appName} tells you about new mail as long as it runs. To keep it running in the tray after you close its window, turn that on in {page}."
+    },
+    "push_unsupported": "This browser can't show notifications when the website is closed.",
+    "backup_description_app": "Use the same settings on your other devices.",
+    "sender_favicons": {
+      "label": "Pictures from company websites",
+      "description": "For companies, show the icon of their website as the sender's picture"
+    },
+    "privacy_push": {
+      "label": "Relay for notifications",
+      "description": "Notifications while {appName} is closed go through a push relay, which never sees your mail. You turn them on or off on the {page} page."
+    },
+    "reset": {
+      "message": "Put all settings back to how they were at the start. Your mail, filters, out of office and signatures stay as they are.",
+      "sync_on": "Your other devices use the same settings, so they change too.",
+      "sync_off": "Your other devices keep their settings."
+    }
+  },
   "setup": {
     "title": "Bulwark Webmail setup",
     "subtitle": "Configure your webmail instance from the browser.",

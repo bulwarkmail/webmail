@@ -3505,6 +3505,48 @@
       "description": "Izrakstīties no šī konta šajā ierīcē."
     }
   },
+  "uxp2_settings": {
+    "search": {
+      "tray": "tekne sistēmas tekne paziņojumu apgabals fonā minimizēt tray",
+      "autostart": "automātiska palaišana startēšana palaist ar Windows pierakstoties",
+      "default_app": "noklusējuma pasta lietotne noklusējuma e-pasta programma mailto e-pasta saites",
+      "menu_bar": "izvēlņu josla izvēlnes Alt taustiņš Fails Rediģēt Skats",
+      "updates": "atjauninājumi atjauninājums jauna versija beta kanāls",
+      "devtools": "izstrādātāja rīki devtools konsole pārbaudīt F12 atkļūdošana",
+      "taskbar": "uzdevumjosla mirgošana Dock uzmanība",
+      "quiet_hours": "klusuma stundas netraucēt klusums nakts",
+      "telemetry": "lietojuma informācija telemetrija statistika analītika",
+      "crash": "avāriju ziņojumi kļūdu ziņojumi avārija",
+      "threads": "pavedieni sarunas grupēt threads",
+      "block_images": "bloķēt attēlus ārējie attēli ielādēt attēlus",
+      "dark_mode": "tumšais režīms gaišais režīms nakts režīms dark mode",
+      "timezone": "laika josla timezone",
+      "reading_pane": "lasīšanas rūts priekšskatījuma rūts dalīts skats",
+      "week_start": "nedēļas sākums pirmā diena pirmdiena svētdiena",
+      "empty_trash": "iztukšot atkritni atkritne dzēstie vienumi",
+      "do_not_disturb": "klusuma stundas izslēgt skaņu klusums"
+    },
+    "desktop_notifications": {
+      "title": "Šajā datorā",
+      "closed_label": "Ar aizvērtu logu",
+      "closed_description": "{appName} ziņo par jaunu pastu, kamēr tā darbojas. Lai pēc loga aizvēršanas tā turpinātu darboties teknē, ieslēdziet to sadaļā {page}."
+    },
+    "push_unsupported": "Šī pārlūkprogramma nevar rādīt paziņojumus, kad vietne ir aizvērta.",
+    "backup_description_app": "Izmantojiet tos pašus iestatījumus citās savās ierīcēs.",
+    "sender_favicons": {
+      "label": "Attēli no uzņēmumu vietnēm",
+      "description": "Rādīt vietņu ikonas kā sūtītāju avatarus"
+    },
+    "privacy_push": {
+      "label": "Paziņojumu retranslators",
+      "description": "Paziņojumi, kamēr {appName} ir aizvērta, iet caur push retranslatoru, kas nekad neredz jūsu pastu. Tos ieslēdz vai izslēdz lapā {page}."
+    },
+    "reset": {
+      "message": "Atjauno visus iestatījumus sākotnējā stāvoklī. Jūsu pasts, filtri, automātiskā atbilde un paraksti paliek, kā ir.",
+      "sync_on": "Jūsu citas ierīces izmanto tos pašus iestatījumus, tāpēc mainās arī tās.",
+      "sync_off": "Jūsu citas ierīces saglabā savus iestatījumus."
+    }
+  },
   "setup": {
     "title": "Bulwark Webmail iestatīšana",
     "subtitle": "Iestatiet savu tīmekļa pasta instanci pārlūkā.",
