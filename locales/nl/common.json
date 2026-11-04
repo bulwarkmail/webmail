@@ -126,7 +126,13 @@
     "dnd_link_app": "Meldingen pauzeren en stille uren instellen doet u op de pagina Meldingen.",
     "dnd_link_browser": "Meldingen pauzeren doet u op de pagina Meldingen.",
     "backup_app": "Exporteer uw instellingen naar een bestand en importeer ze op uw andere apparaten.",
-    "sync_app": "Andere apparaten die met dit account zijn aangemeld, krijgen dezelfde instellingen."
+    "sync_app": "Andere apparaten die met dit account zijn aangemeld, krijgen dezelfde instellingen.",
+    "progress_attachments": "Bijlagen worden gedownload",
+    "progress_events": "Afspraken worden gedownload",
+    "progress_contacts": "Contacten worden gedownload",
+    "progress_files_list": "Bestanden worden opgesomd",
+    "progress_other": "Bezig met downloaden",
+    "keep_description": "Bewaart uw e-mail, agenda, contacten en de bestanden die u offline houdt in Bestanden versleuteld op dit apparaat. Offline kunt u e-mail lezen, markeren en verplaatsen, en wat u schrijft wacht in Postvak UIT. Afmelden verwijdert alles."
   },
   "sidebar": {
     "close": "Sluiten",

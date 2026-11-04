@@ -126,7 +126,13 @@
     "dnd_link_app": "Powiadomienia wstrzymasz i godziny ciszy ustawisz na stronie Powiadomienia.",
     "dnd_link_browser": "Powiadomienia wstrzymasz na stronie Powiadomienia.",
     "backup_app": "Wyeksportuj ustawienia do pliku i zaimportuj je na innych urządzeniach.",
-    "sync_app": "Inne urządzenia zalogowane na to konto dostają te same ustawienia."
+    "sync_app": "Inne urządzenia zalogowane na to konto dostają te same ustawienia.",
+    "progress_attachments": "Pobieranie załączników",
+    "progress_events": "Pobieranie wydarzeń",
+    "progress_contacts": "Pobieranie kontaktów",
+    "progress_files_list": "Pobieranie listy plików",
+    "progress_other": "Pobieranie",
+    "keep_description": "Przechowuje Twoją pocztę, kalendarz, kontakty i pliki, które trzymasz offline w Plikach, zaszyfrowane na tym urządzeniu. Offline możesz czytać, oznaczać i przenosić wiadomości, a to, co napiszesz, czeka w skrzynce nadawczej. Wylogowanie usuwa wszystko."
   },
   "sidebar": {
     "close": "Zamknij",

@@ -126,7 +126,13 @@
     "dnd_link_app": "Tạm dừng thông báo và đặt giờ yên tĩnh trên trang Thông báo.",
     "dnd_link_browser": "Tạm dừng thông báo trên trang Thông báo.",
     "backup_app": "Xuất cài đặt ra tệp và nhập chúng trên các thiết bị khác của bạn.",
-    "sync_app": "Các thiết bị khác đã đăng nhập tài khoản này sẽ nhận cùng cài đặt."
+    "sync_app": "Các thiết bị khác đã đăng nhập tài khoản này sẽ nhận cùng cài đặt.",
+    "progress_attachments": "Đang tải tệp đính kèm xuống",
+    "progress_events": "Đang tải sự kiện xuống",
+    "progress_contacts": "Đang tải danh bạ xuống",
+    "progress_files_list": "Đang liệt kê tệp",
+    "progress_other": "Đang tải xuống",
+    "keep_description": "Giữ thư, lịch, danh bạ và các tệp bạn giữ ngoại tuyến trong Tệp, được mã hóa trên thiết bị này. Khi ngoại tuyến bạn có thể đọc, gắn cờ và di chuyển thư, còn thư bạn viết sẽ chờ trong Hộp thư đi. Khi đăng xuất, tất cả sẽ bị xóa."
   },
   "sidebar": {
     "close": "Đóng",

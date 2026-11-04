@@ -126,7 +126,13 @@
     "dnd_link_app": "Întrerupeți notificările și setați orele de liniște pe pagina Notificări.",
     "dnd_link_browser": "Întrerupeți notificările pe pagina Notificări.",
     "backup_app": "Exportați setările într-un fișier și importați-le pe celelalte dispozitive.",
-    "sync_app": "Celelalte dispozitive conectate la acest cont primesc aceleași setări."
+    "sync_app": "Celelalte dispozitive conectate la acest cont primesc aceleași setări.",
+    "progress_attachments": "Se descarcă atașamentele",
+    "progress_events": "Se descarcă evenimentele",
+    "progress_contacts": "Se descarcă contactele",
+    "progress_files_list": "Se listează fișierele",
+    "progress_other": "Se descarcă",
+    "keep_description": "Păstrează e-mailurile, calendarul, contactele și fișierele pe care le păstrați offline în Fișiere, criptate pe acest dispozitiv. Offline puteți citi, marca și muta e-mailuri, iar ce scrieți așteaptă în Mesaje de trimis. La deconectare se șterge totul."
   },
   "sidebar": {
     "close": "Închide",

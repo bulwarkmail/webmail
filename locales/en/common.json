@@ -126,7 +126,13 @@
     "dnd_link_app": "Pause notifications and set quiet hours on the Notifications page.",
     "dnd_link_browser": "Pause notifications on the Notifications page.",
     "backup_app": "Export your settings to a file and import them on your other devices.",
-    "sync_app": "Other devices signed in to this account get the same settings."
+    "sync_app": "Other devices signed in to this account get the same settings.",
+    "progress_attachments": "Downloading attachments",
+    "progress_events": "Downloading events",
+    "progress_contacts": "Downloading contacts",
+    "progress_files_list": "Listing files",
+    "progress_other": "Downloading",
+    "keep_description": "Keeps your mail, calendar, contacts and the files you keep offline in Files encrypted on this device. Offline you can read, flag and move mail, and what you write waits in the outbox. Signing out removes all of it."
   },
   "sidebar": {
     "close": "Close",

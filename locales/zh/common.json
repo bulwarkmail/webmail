@@ -126,7 +126,13 @@
     "dnd_link_app": "在“通知”页面暂停通知并设置免打扰时段。",
     "dnd_link_browser": "在“通知”页面暂停通知。",
     "backup_app": "将设置导出到文件，然后在其他设备上导入。",
-    "sync_app": "登录此账户的其他设备会获得相同的设置。"
+    "sync_app": "登录此账户的其他设备会获得相同的设置。",
+    "progress_attachments": "正在下载附件",
+    "progress_events": "正在下载日程",
+    "progress_contacts": "正在下载联系人",
+    "progress_files_list": "正在列出文件",
+    "progress_other": "正在下载",
+    "keep_description": "在此设备上加密保留你的邮件、日历、联系人以及你在“文件”中设为离线可用的文件。离线时可以阅读、标记和移动邮件，写好的邮件会在发件箱中等待。退出登录时会全部删除。"
   },
   "sidebar": {
     "close": "关闭",

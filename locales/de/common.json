@@ -126,7 +126,13 @@
     "dnd_link_app": "Benachrichtigungen pausieren und Ruhezeiten festlegen können Sie auf der Seite Benachrichtigungen.",
     "dnd_link_browser": "Benachrichtigungen pausieren können Sie auf der Seite Benachrichtigungen.",
     "backup_app": "Exportieren Sie Ihre Einstellungen in eine Datei und importieren Sie sie auf Ihren anderen Geräten.",
-    "sync_app": "Andere Geräte, die mit diesem Konto angemeldet sind, erhalten dieselben Einstellungen."
+    "sync_app": "Andere Geräte, die mit diesem Konto angemeldet sind, erhalten dieselben Einstellungen.",
+    "progress_attachments": "Anhänge werden geladen",
+    "progress_events": "Termine werden geladen",
+    "progress_contacts": "Kontakte werden geladen",
+    "progress_files_list": "Dateien werden aufgelistet",
+    "progress_other": "Wird geladen",
+    "keep_description": "Behält Ihre E-Mails, Ihren Kalender, Ihre Kontakte und die Dateien, die Sie in Dateien offline halten, verschlüsselt auf diesem Gerät. Offline können Sie E-Mails lesen, markieren und verschieben, und was Sie schreiben, wartet im Postausgang. Beim Abmelden wird alles entfernt."
   },
   "sidebar": {
     "close": "Schließen",

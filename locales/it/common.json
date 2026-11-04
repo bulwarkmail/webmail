@@ -126,7 +126,13 @@
     "dnd_link_app": "Sospendi le notifiche e imposta le ore di silenzio nella pagina Notifiche.",
     "dnd_link_browser": "Sospendi le notifiche nella pagina Notifiche.",
     "backup_app": "Esporta le impostazioni in un file e importale sugli altri dispositivi.",
-    "sync_app": "Gli altri dispositivi collegati a questo account ricevono le stesse impostazioni."
+    "sync_app": "Gli altri dispositivi collegati a questo account ricevono le stesse impostazioni.",
+    "progress_attachments": "Download degli allegati",
+    "progress_events": "Download degli eventi",
+    "progress_contacts": "Download dei contatti",
+    "progress_files_list": "Elenco dei file",
+    "progress_other": "Download in corso",
+    "keep_description": "Conserva la tua posta, il calendario, i contatti e i file che tieni offline in File, cifrati su questo dispositivo. Offline puoi leggere, contrassegnare e spostare la posta, e ciò che scrivi aspetta nella posta in uscita. Uscendo dall'account viene rimosso tutto."
   },
   "sidebar": {
     "close": "Chiudi",

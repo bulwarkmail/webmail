@@ -126,7 +126,13 @@
     "dnd_link_app": "Az értesítéseket szüneteltetheti és a csendes órákat beállíthatja az Értesítések oldalon.",
     "dnd_link_browser": "Az értesítéseket szüneteltetheti az Értesítések oldalon.",
     "backup_app": "Exportálja a beállításait egy fájlba, és importálja őket a többi eszközén.",
-    "sync_app": "Az ezzel a fiókkal bejelentkezett többi eszköz ugyanezeket a beállításokat kapja."
+    "sync_app": "Az ezzel a fiókkal bejelentkezett többi eszköz ugyanezeket a beállításokat kapja.",
+    "progress_attachments": "Mellékletek letöltése",
+    "progress_events": "Események letöltése",
+    "progress_contacts": "Névjegyek letöltése",
+    "progress_files_list": "Fájlok listázása",
+    "progress_other": "Letöltés",
+    "keep_description": "Megtartja a leveleit, a naptárát, a névjegyeit és a Fájlokban offline tartott fájlokat, titkosítva ezen az eszközön. Offline olvashat, megjelölhet és áthelyezhet leveleket, a megírt levelek pedig a postázandók között várnak. Kijelentkezéskor minden törlődik."
   },
   "sidebar": {
     "close": "Bezárás",

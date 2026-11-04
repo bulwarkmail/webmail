@@ -126,7 +126,13 @@
     "dnd_link_app": "Paziņojumus apturat un klusuma stundas iestatāt lapā Paziņojumi.",
     "dnd_link_browser": "Paziņojumus apturat lapā Paziņojumi.",
     "backup_app": "Eksportējiet iestatījumus failā un importējiet tos citās savās ierīcēs.",
-    "sync_app": "Citas ierīces, kurās pierakstīts šis konts, saņem tos pašus iestatījumus."
+    "sync_app": "Citas ierīces, kurās pierakstīts šis konts, saņem tos pašus iestatījumus.",
+    "progress_attachments": "Pielikumu lejupielāde",
+    "progress_events": "Notikumu lejupielāde",
+    "progress_contacts": "Kontaktpersonu lejupielāde",
+    "progress_files_list": "Failu saraksta iegūšana",
+    "progress_other": "Lejupielāde",
+    "keep_description": "Glabā jūsu e-pastu, kalendāru, kontaktpersonas un failus, ko sadaļā Faili glabājat bezsaistei, šifrētus šajā ierīcē. Bezsaistē varat lasīt, atzīmēt un pārvietot vēstules, un tas, ko rakstāt, gaida izsūtnē. Izrakstoties viss tiek noņemts."
   },
   "sidebar": {
     "close": "Aizvērt",

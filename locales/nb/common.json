@@ -126,7 +126,13 @@
     "dnd_link_app": "Sett varsler på pause og still inn stille timer på siden Varsler.",
     "dnd_link_browser": "Sett varsler på pause på siden Varsler.",
     "backup_app": "Eksporter innstillingene dine til en fil, og importer dem på de andre enhetene dine.",
-    "sync_app": "Andre enheter som er logget på denne kontoen, får de samme innstillingene."
+    "sync_app": "Andre enheter som er logget på denne kontoen, får de samme innstillingene.",
+    "progress_attachments": "Laster ned vedlegg",
+    "progress_events": "Laster ned hendelser",
+    "progress_contacts": "Laster ned kontakter",
+    "progress_files_list": "Henter fillisten",
+    "progress_other": "Laster ned",
+    "keep_description": "Beholder e-posten, kalenderen, kontaktene og filene du holder frakoblet i Filer, kryptert på denne enheten. Frakoblet kan du lese, flagge og flytte e-post, og det du skriver, venter i utboksen. Når du logger av, fjernes alt."
   },
   "sidebar": {
     "close": "Lukk",

@@ -126,7 +126,13 @@
     "dnd_link_app": "在「通知」頁面暫停通知並設定勿擾時段。",
     "dnd_link_browser": "在「通知」頁面暫停通知。",
     "backup_app": "將設定匯出成檔案，再在其他裝置上匯入。",
-    "sync_app": "登入此帳號的其他裝置會取得相同的設定。"
+    "sync_app": "登入此帳號的其他裝置會取得相同的設定。",
+    "progress_attachments": "正在下載附件",
+    "progress_events": "正在下載活動",
+    "progress_contacts": "正在下載聯絡人",
+    "progress_files_list": "正在列出檔案",
+    "progress_other": "正在下載",
+    "keep_description": "在此裝置上加密保留你的郵件、行事曆、聯絡人，以及你在「檔案」中設為離線可用的檔案。離線時可以閱讀、標記和移動郵件，寫好的郵件會在寄件匣中等待。登出時會全部刪除。"
   },
   "sidebar": {
     "close": "關閉",

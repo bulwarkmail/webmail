@@ -126,7 +126,13 @@
     "dnd_link_app": "Bildirimleri duraklatma ve sessiz saatleri ayarlama Bildirimler sayfasındadır.",
     "dnd_link_browser": "Bildirimleri duraklatma Bildirimler sayfasındadır.",
     "backup_app": "Ayarlarınızı bir dosyaya aktarın ve diğer cihazlarınızda içe aktarın.",
-    "sync_app": "Bu hesapla oturum açmış diğer cihazlar aynı ayarları alır."
+    "sync_app": "Bu hesapla oturum açmış diğer cihazlar aynı ayarları alır.",
+    "progress_attachments": "Ekler indiriliyor",
+    "progress_events": "Etkinlikler indiriliyor",
+    "progress_contacts": "Kişiler indiriliyor",
+    "progress_files_list": "Dosyalar listeleniyor",
+    "progress_other": "İndiriliyor",
+    "keep_description": "E-postalarınızı, takviminizi, kişilerinizi ve Dosyalar'da çevrimdışı tuttuğunuz dosyaları bu cihazda şifreli olarak tutar. Çevrimdışıyken e-postaları okuyabilir, işaretleyebilir ve taşıyabilirsiniz; yazdıklarınız giden kutusunda bekler. Oturumu kapatınca hepsi silinir."
   },
   "sidebar": {
     "close": "Kapat",

@@ -126,7 +126,13 @@
     "dnd_link_app": "Suspendez les notifications et définissez les heures calmes sur la page Notifications.",
     "dnd_link_browser": "Suspendez les notifications sur la page Notifications.",
     "backup_app": "Exportez vos paramètres dans un fichier et importez-les sur vos autres appareils.",
-    "sync_app": "Les autres appareils connectés à ce compte reçoivent les mêmes paramètres."
+    "sync_app": "Les autres appareils connectés à ce compte reçoivent les mêmes paramètres.",
+    "progress_attachments": "Téléchargement des pièces jointes",
+    "progress_events": "Téléchargement des événements",
+    "progress_contacts": "Téléchargement des contacts",
+    "progress_files_list": "Liste des fichiers en cours",
+    "progress_other": "Téléchargement",
+    "keep_description": "Garde vos e-mails, votre agenda, vos contacts et les fichiers que vous gardez hors ligne dans Fichiers, chiffrés sur cet appareil. Hors ligne, vous pouvez lire, signaler et déplacer des e-mails, et ce que vous écrivez attend dans la boîte d'envoi. La déconnexion supprime tout."
   },
   "sidebar": {
     "close": "Fermer",

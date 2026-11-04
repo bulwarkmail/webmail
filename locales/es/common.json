@@ -126,7 +126,13 @@
     "dnd_link_app": "Pausa las notificaciones y define las horas de silencio en la página Notificaciones.",
     "dnd_link_browser": "Pausa las notificaciones en la página Notificaciones.",
     "backup_app": "Exporta tus ajustes a un archivo e impórtalos en tus otros dispositivos.",
-    "sync_app": "Los demás dispositivos con sesión iniciada en esta cuenta reciben los mismos ajustes."
+    "sync_app": "Los demás dispositivos con sesión iniciada en esta cuenta reciben los mismos ajustes.",
+    "progress_attachments": "Descargando adjuntos",
+    "progress_events": "Descargando eventos",
+    "progress_contacts": "Descargando contactos",
+    "progress_files_list": "Listando archivos",
+    "progress_other": "Descargando",
+    "keep_description": "Guarda tu correo, tu calendario, tus contactos y los archivos que mantienes sin conexión en Archivos, cifrados en este dispositivo. Sin conexión puedes leer, marcar y mover correo, y lo que escribas espera en la bandeja de salida. Al cerrar sesión se borra todo."
   },
   "sidebar": {
     "close": "Cerrar",
