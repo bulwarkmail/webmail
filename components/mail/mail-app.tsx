@@ -42,6 +42,7 @@ import { findDraftIdentityIdForLogin, listRowSource, resolveDraftSource, type Dr
 import { useRemoveFromFolder } from "@/hooks/use-remove-from-folder";
 import { groupSearchScopeFolders, SEARCH_SCOPE_ALL_FOLDERS } from "@/lib/search-scope-folders";
 import { toast } from "@/stores/toast-store";
+import { discardWithUndo } from "@/lib/compose/draft-close-toast";
 import { cancelFailureToast, partlyRefusedWarning, rescheduleFailureToast, rescheduledToast } from "@/lib/send-failure-message";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
 import { startSendProgress } from "@/lib/outgoing/send-progress-toast";
@@ -262,6 +263,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // "Confirm before deleting / archiving" (lib/mail-removal-confirm).
   const tRemove = useTranslations('email_list.confirm_remove');
   const tCommon = useTranslations('common');
+  const tComposeUx = useTranslations('compose_ux');
   const appName = productName(useConfig().appName);
   const tQuote = useTranslations('quote_header');
   const tComposer = useTranslations('email_composer');
@@ -4536,7 +4538,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     let delayedUntil: string | undefined;
     if (sendDelaySeconds > 0) {
       if (!client.hasDelayedSend()) {
-        const confirmed = await confirmDialog({
+        // As in the composer: only a delay the user picked asks.
+        const confirmed = !useSettingsStore.getState().explicitSettings.includes('sendDelaySeconds') || await confirmDialog({
           title: t('email_composer.send_delay_unsupported_title'),
           message: t('email_composer.send_delay_unsupported_confirm'),
           confirmText: t('email_composer.send'),
@@ -4910,11 +4913,13 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (!client || !email) return new Error('the mail page is not ready');
     setCursorOnly(false);
 
-    // If composing, suspend the composer (unmount will trigger onSaveState).
-    // Mountain View's compose window stays open while other mail is read,
-    // as Gmail's does. (#1229)
+    // If composing, close the composer the way its X does: it keeps the
+    // draft and says so. Mountain View's compose window stays open while
+    // other mail is read, as Gmail's does. (#1229)
     if (showComposer && !floatingComposer) {
-      setShowComposer(false);
+      const requestClose = composerRequestCloseRef.current;
+      if (requestClose) requestClose();
+      else setShowComposer(false);
     }
 
     // Find the list-level email for metadata (accountId, scheduled flags, etc.).
@@ -5968,36 +5973,41 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             <>
             {/* Pending draft banner */}
             {pendingDraft && (
-              <button
-                onClick={() => {
-                  setShowComposer(true);
-                  if (isMobile) setActiveView('viewer');
-                }}
-                className="flex items-center gap-3 px-4 py-2.5 bg-primary/10 border-b border-primary/20 hover:bg-primary/15 transition-colors cursor-pointer w-full text-start"
-              >
-                <PenSquare className="w-4 h-4 text-primary shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-medium text-primary">{t('email_composer.continue_draft')}</span>
-                  {pendingDraft.subject && (
-                    <span className="text-xs text-muted-foreground ms-2 truncate">{pendingDraft.subject}</span>
-                  )}
-                </div>
-                <X
-                  className="w-4 h-4 text-muted-foreground hover:text-foreground shrink-0"
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    const confirmed = await confirmDialog({
-                      title: t('email_composer.discard_draft_title'),
-                      message: t('email_composer.discard_draft_confirm'),
-                      confirmText: t('email_composer.discard'),
-                      variant: "destructive",
-                    });
-                    if (confirmed) {
-                      setPendingDraft(null);
-                    }
+              <div className="flex items-center bg-primary/10 border-b border-primary/20" data-testid="continue-draft-bar">
+                <button
+                  onClick={() => {
+                    setShowComposer(true);
+                    if (isMobile) setActiveView('viewer');
                   }}
-                />
-              </button>
+                  className="flex flex-1 min-w-0 items-center gap-3 ps-4 pe-2 py-2.5 hover:bg-primary/15 transition-colors cursor-pointer text-start"
+                >
+                  <PenSquare className="w-4 h-4 text-primary shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium text-primary">{t('email_composer.continue_draft')}</span>
+                    {pendingDraft.subject && (
+                      <span className="text-xs text-muted-foreground ms-2 truncate">{pendingDraft.subject}</span>
+                    )}
+                  </div>
+                </button>
+                {/* Its own button, so the keyboard reaches it. Deletes the saved
+                    draft too, with Undo instead of a question. */}
+                <button
+                  type="button"
+                  aria-label={tComposeUx('discard_draft')}
+                  title={tComposeUx('discard_draft')}
+                  data-testid="continue-draft-discard"
+                  onClick={() => {
+                    const draft = pendingDraft;
+                    setPendingDraft(null);
+                    discardWithUndo(() => {
+                      if (draft.draftId) void handleDiscardDraft(draft.draftId, { accountId: draft.draftAccountId, localAccountId: draft.draftLocalAccountId });
+                    }, { discarded: tComposeUx('draft_discarded'), undo: tComposeUx('undo') }, () => setPendingDraft(draft));
+                  }}
+                  className="grid h-9 w-9 shrink-0 place-items-center me-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-primary/15 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             )}
             {/* Mobile Conversation View - shown when thread is selected on mobile */}
             {isMobile && !conversationThread && deepLinkPane === 'thread' ? (
