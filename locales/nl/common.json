@@ -1780,6 +1780,7 @@
         "status_inactive": "Niet ingeschakeld op dit apparaat",
         "status_unsupported": "Deze browser ondersteunt geen Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "Achtergrondmeldingen zijn niet beschikbaar in de demo.",
         "title": "Achtergrondmeldingen",
         "devices_title": "Geregistreerde apparaten",
         "devices_desc": "Alle apparaten die achtergrondmeldingen voor dit account ontvangen. Trek je er een in, dan stopt de ontvangst meteen.",
@@ -1799,7 +1800,12 @@
         "confirm_revoke_message_this": "Dit apparaat ontvangt meteen geen achtergrondmeldingen meer.",
         "shared_mailboxes_no_push": "Mailboxen die anderen met u delen, sturen geen achtergrondmeldingen.",
         "error_forbidden": "De mailserver staat voor dit account geen achtergrondmeldingen toe.",
-        "error_over_quota": "Dit account heeft te veel pushregistraties op de mailserver (de limiet is meestal 15). Trek in de meldingsinstellingen apparaten in die u niet meer gebruikt en probeer het opnieuw."
+        "error_over_quota": "Dit account heeft te veel pushregistraties op de mailserver (de limiet is meestal 15). Trek in de meldingsinstellingen apparaten in die u niet meer gebruikt en probeer het opnieuw.",
+        "error_blocked": "Meldingen zijn geblokkeerd voor deze site. Sta ze toe in de site-instellingen van uw browser en probeer het opnieuw.",
+        "error_not_granted": "Meldingen zijn niet toegestaan, dus push blijft uit.",
+        "error_verification_timeout": "De mailserver heeft dit apparaat niet op tijd bevestigd, dus push blijft uit. Probeer het over een minuut opnieuw.",
+        "error_relay": "De pushrelay is nu niet bereikbaar, dus push blijft uit. Probeer het later opnieuw.",
+        "error_teardown": "Push staat uit in deze browser, maar de mailserver of de relay was niet bereikbaar. Er kunnen nog een paar dagen meldingen binnenkomen. Wilt u ze eerder stoppen, zet dan de geavanceerde instellingen aan zodra u weer online bent en trek dit apparaat in onder Geregistreerde apparaten."
       }
     },
     "language_region": {

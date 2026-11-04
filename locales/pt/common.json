@@ -1780,6 +1780,7 @@
         "status_inactive": "Não ativado neste dispositivo",
         "status_unsupported": "Este navegador não oferece suporte a Web Push",
         "status_lite": "O Web Push não está disponível no Bulwark Lite; ele requer o servidor do Bulwark.",
+        "status_demo": "As notificações em segundo plano não estão disponíveis na demonstração.",
         "title": "Notificações em segundo plano",
         "devices_title": "Dispositivos registrados",
         "devices_desc": "Todos os dispositivos registrados para receber notificações em segundo plano desta conta. Revogar um deles interrompe o recebimento imediatamente.",
@@ -1799,7 +1800,12 @@
         "confirm_revoke_message_this": "Este dispositivo deixará de receber notificações em segundo plano imediatamente.",
         "shared_mailboxes_no_push": "Caixas de correio que outras pessoas compartilham com você não enviam notificações em segundo plano.",
         "error_forbidden": "O servidor de e-mail não permite notificações em segundo plano para esta conta.",
-        "error_over_quota": "Esta conta tem registros push demais no servidor de e-mail (o limite costuma ser 15). Revogue os dispositivos que você não usa mais nas configurações de notificação e tente novamente."
+        "error_over_quota": "Esta conta tem registros push demais no servidor de e-mail (o limite costuma ser 15). Revogue os dispositivos que você não usa mais nas configurações de notificação e tente novamente.",
+        "error_blocked": "As notificações estão bloqueadas para este site. Permita-as nas definições do site do navegador e tente novamente.",
+        "error_not_granted": "As notificações não foram permitidas, por isso as notificações push continuam desligadas.",
+        "error_verification_timeout": "O servidor de correio não confirmou este dispositivo a tempo, por isso as notificações push continuam desligadas. Tente novamente dentro de um minuto.",
+        "error_relay": "Não é possível contactar o retransmissor de notificações neste momento, por isso as notificações push continuam desligadas. Tente mais tarde.",
+        "error_teardown": "As notificações push estão desligadas neste navegador, mas não foi possível contactar o servidor de correio ou o retransmissor. Podem continuar a chegar notificações durante alguns dias. Para as parar mais cedo, ligue as definições avançadas quando voltar a estar online e revogue este dispositivo em Dispositivos registados."
       }
     },
     "language_region": {

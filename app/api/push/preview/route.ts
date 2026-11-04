@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { cleanPreview } from '@/lib/utils';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
-import { readStalwartAuthContextFromStore } from '@/lib/stalwart/auth-context';
+import { readPushAuthContext } from '@/lib/stalwart/push-auth-context';
 import {
   getStalwartCredentials,
   type StalwartCredentials,
@@ -45,15 +45,18 @@ interface ResolvedTarget {
 // session of everyone it is shared with, who sees only that folder - not its
 // Inbox, nor the message that just arrived there.
 //
-// The push names nothing but the account id, and ids repeat across servers
-// (and a group account is listed by each member). When that leaves more than
-// one login, answer 'ambiguous' rather than guess: a wrong guess previews
-// another login's mail and opens it there.
-async function resolveTargetForAccount(accountId: string, forwarded: Record<string, string>): Promise<ResolvedTarget | 'ambiguous' | null> {
+// Ids repeat across servers (and a group account is listed by each member), so
+// the account id alone can leave several logins. On one server, the push's label
+// names the login that registered it and settles it. Not across servers: logins
+// with the same account id share one relay record in this browser (lib/web-push.ts
+// keys it by account id), so the label is only whoever registered last. Whatever
+// doesn't fit answers 'ambiguous' rather than guess: a wrong guess previews another
+// login's mail and opens it there.
+async function resolveTargetForAccount(accountId: string, login: string | null, forwarded: Record<string, string>): Promise<ResolvedTarget | 'ambiguous' | null> {
   const cookieStore = await cookies();
   const probes: Promise<{ target: ResolvedTarget; own: boolean } | null>[] = [];
   for (let slot = 0; slot < MAX_ACCOUNT_SLOTS; slot++) {
-    const ctx = readStalwartAuthContextFromStore(cookieStore, slot);
+    const ctx = await readPushAuthContext(cookieStore, slot);
     if (!ctx) continue;
     const serverUrl = ctx.serverUrl.replace(/\/+$/, '');
     probes.push(
@@ -91,6 +94,13 @@ async function resolveTargetForAccount(accountId: string, forwarded: Record<stri
     );
   }
   const results = (await Promise.all(probes)).filter((r) => r !== null);
+  if (login && results.length > 0) {
+    const name = login.toLowerCase();
+    const named = results.filter((r) => r.target.username.toLowerCase() === name || r.target.accountName?.toLowerCase() === name);
+    const servers = new Set(results.map((r) => r.target.serverUrl));
+    if (named.length !== 1 || servers.size > 1) return 'ambiguous';
+    return named[0].target;
+  }
   const owners = results.filter((r) => r.own);
   if (owners.length === 1) return owners[0].target;
   if (results.length === 1) return results[0].target;
@@ -141,7 +151,7 @@ export async function GET(request: NextRequest) {
     let target: ResolvedTarget | null = null;
     let authHeader: string;
     if (requestedAccountId) {
-      const resolved = await resolveTargetForAccount(requestedAccountId, forwarded);
+      const resolved = await resolveTargetForAccount(requestedAccountId, request.nextUrl.searchParams.get('login'), forwarded);
       if (!resolved) {
         return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
       }

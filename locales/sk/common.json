@@ -1776,6 +1776,7 @@
         "status_inactive": "Nie je povolené na tomto zariadení",
         "status_unsupported": "Tento prehliadač nepodporuje Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "Oznámenia na pozadí nie sú v ukážke k dispozícii.",
         "status_busy": "Pracujem…",
         "enable": "Povoliť",
         "reenable": "Znovu zaregistrovať",
@@ -1802,7 +1803,12 @@
         "confirm_revoke_message_this": "Toto zariadenie okamžite prestane prijímať oznámenia na pozadí.",
         "shared_mailboxes_no_push": "Poštové schránky, ktoré s vami zdieľajú iní, neposielajú oznámenia na pozadí.",
         "error_forbidden": "Poštový server pre tento účet nepovoľuje oznámenia na pozadí.",
-        "error_over_quota": "Tento účet má na poštovom serveri príliš veľa registrácií push (limit je zvyčajne 15). V nastaveniach oznámení odvolajte zariadenia, ktoré už nepoužívate, a skúste to znova."
+        "error_over_quota": "Tento účet má na poštovom serveri príliš veľa registrácií push (limit je zvyčajne 15). V nastaveniach oznámení odvolajte zariadenia, ktoré už nepoužívate, a skúste to znova.",
+        "error_blocked": "Oznámenia sú pre túto stránku zablokované. Povoľte ich v nastaveniach stránky v prehliadači a skúste to znova.",
+        "error_not_granted": "Oznámenia neboli povolené, takže push zostáva vypnutý.",
+        "error_verification_timeout": "Poštový server toto zariadenie včas nepotvrdil, takže push zostáva vypnutý. Skúste to znova o minútu.",
+        "error_relay": "Push relay teraz nie je dostupné, takže push zostáva vypnutý. Skúste to neskôr.",
+        "error_teardown": "Push je v tomto prehliadači vypnutý, ale poštový server alebo relay neboli dostupné. Oznámenia môžu ešte niekoľko dní prichádzať. Ak ich chcete zastaviť skôr, keď budete online, zapnite rozšírené nastavenia a odvolajte toto zariadenie v časti Registrované zariadenia."
       }
     },
     "language_region": {

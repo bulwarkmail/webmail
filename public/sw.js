@@ -589,17 +589,40 @@ async function handlePush(event) {
   //     message ids that passed it - spam filed into Junk never gets here.
   //   - "jmap-state-change" (older servers): a bare EmailDelivery ping wrapped
   //     as { changed: { [accountId]: {...} } }, fired for every ingested
-  //     message including junk. The relay forwards a single account per push,
-  //     so the first key is the one this notification is for.
+  //     message including junk. Stalwart batches what changes between two
+  //     pushes, so it can name the user's own account and a group's at once.
   const changed = payload && payload.changed && typeof payload.changed === "object"
     ? payload.changed
     : null;
-  const accountId = (payload && typeof payload.accountId === "string" && payload.accountId)
+  const named = (payload && typeof payload.accountId === "string" && payload.accountId)
     || (changed ? Object.keys(changed)[0] || "" : "");
   const emailIds = payload && Array.isArray(payload.emailIds)
     ? payload.emailIds.filter((id) => typeof id === "string" && id)
     : [];
 
+  const withNewMail = emailIds.length > 0 || !changed
+    ? []
+    : Object.keys(changed).filter((id) => changed[id] && typeof changed[id] === "object" && "EmailDelivery" in changed[id]);
+  // Side by side: each has its own preview deadline, and Safari wants the
+  // notifications within 30 s of the push.
+  await Promise.all((withNewMail.length > 0 ? withNewMail : [named]).map(async (accountId) => {
+    try {
+      await notifyAccount(accountId, emailIds, accountLabel);
+    } catch (_) {
+      // Nothing above may cost the user the alert, or a browser its quota for
+      // this site: see showWithoutAlert.
+      await self.registration.showNotification(accountLabel ? `New mail (${accountLabel})` : "New mail", {
+        body: "You have new mail",
+        tag: "bulwark-mail:" + (accountId || "default"),
+        icon: `${BASE_PATH}/api/pwa-icon/192`,
+        badge: `${BASE_PATH}/api/pwa-icon/192`,
+        data: { kind: "mail-list", accountId },
+      });
+    }
+  }));
+}
+
+async function notifyAccount(accountId, emailIds, accountLabel) {
   // Never notify twice for the same message. A push can be redelivered (relay
   // retry, browser replay after coming back online) and, on the older
   // state-change path, a junk delivery wakes us while an unread message we
@@ -609,6 +632,14 @@ async function handlePush(event) {
   const freshIds = emailIds.filter((id) => !notified.includes(id));
   const groupTag = "bulwark-mail:" + (accountId || "default");
   if (emailIds.length > 0 && freshIds.length === 0) {
+    await showWithoutAlert(groupTag);
+    return;
+  }
+
+  // Email notifications off, or do not disturb on: a browser still wants a
+  // notification for the push, so one comes and goes with nothing on it.
+  if (!(await showPreference(accountLabel))) {
+    if (freshIds.length > 0) await writeNotifiedIds(accountId, notified.concat(freshIds));
     await showWithoutAlert(groupTag);
     return;
   }
@@ -625,6 +656,9 @@ async function handlePush(event) {
   if (!lockHidesContent) try {
     const query = new URLSearchParams();
     if (accountId) query.set("accountId", accountId);
+    // The relay record's label is the login that registered. Account and message
+    // ids repeat across logins, and this tells them apart.
+    if (accountLabel) query.set("login", accountLabel);
     if (freshIds.length > 0) query.set("emailId", freshIds[freshIds.length - 1]);
     const qs = query.toString();
     const previewUrl = `${BASE_PATH}/api/push/preview${qs ? `?${qs}` : ""}`;
@@ -684,31 +718,36 @@ async function handlePush(event) {
   // into a single, self-updating notification instead of one toast per message
   // (Android renders one notification per unique tag, which is why 50 arrivals
   // used to stack 50 toasts). The newest message is the headline and a
-  // Gmail-style "+N more" line carries the rest, counted from the account's
-  // unread total.
+  // Gmail-style "+N more" line carries the rest: the messages this notification
+  // has announced and the user hasn't dismissed. Mail that was unread before
+  // doesn't count, or one new message in a full inbox would say "+40 more" and
+  // open the inbox instead of itself.
+  const announced = freshIds.length > 0 ? freshIds : (email ? [email.id] : []);
+  const ids = Array.from(new Set((await idsOnScreen(groupTag)).concat(announced))).slice(-NOTIFICATION_IDS_LIMIT);
+  const more = Math.max(ids.length - 1, 0);
+  const oneMessage = email ? { kind: "email", emailId: email.id, threadId: email.threadId, accountId, slot, login, ids } : null;
   let title;
   let body;
-  let data = { kind: "mail-list", accountId, slot };
+  let data = { kind: "mail-list", accountId, slot, ids };
 
   if (email && preview && preview.redacted) {
     // The organisation keeps sender and subject off notifications
     // (Organisation > Devices): the route sent neither.
     title = accountLabel ? `New mail (${accountLabel})` : "New mail";
-    body = unreadTotal > 1 ? `${unreadTotal} unread messages` : "You have new mail";
-    if (unreadTotal <= 1) data = { kind: "email", emailId: email.id, threadId: email.threadId, accountId, slot, login };
+    body = more > 0 ? `${ids.length} new messages` : "You have new mail";
+    if (more === 0) data = oneMessage;
   } else if (email) {
     const sender = email.from && email.from[0];
     const senderName = (sender && sender.name) || (sender && sender.email) || "New mail";
     title = senderName + (accountLabel ? ` (${accountLabel})` : "");
     body = email.subject || email.preview || "(no subject)";
-    const more = unreadTotal > 1 ? unreadTotal - 1 : 0;
     if (more > 0) {
-      // Several unread: this is a group. Keep the newest as the headline, add
-      // the "+N more" count, and open the inbox (not one message) on click.
+      // Several new: this is a group. Keep the newest as the headline, add the
+      // "+N more" count, and open the inbox (not one message) on click.
       body += "\n" + (more === 1 ? "+1 more message" : `+${more} more messages`);
     } else {
-      // Exactly one unread: deep-link straight to that message on click.
-      data = { kind: "email", emailId: email.id, threadId: email.threadId, accountId, slot, login };
+      // One new message: deep-link straight to it on click.
+      data = oneMessage;
     }
   } else {
     title = accountLabel ? `New mail (${accountLabel})` : "New mail";
@@ -733,9 +772,23 @@ async function handlePush(event) {
     silent: !audible,
   });
 
-  const announced = freshIds.length > 0 ? freshIds : (email ? [email.id] : []);
   if (announced.length > 0) {
     await writeNotifiedIds(accountId, notified.concat(announced));
+  }
+}
+
+const NOTIFICATION_IDS_LIMIT = 100;
+
+/** The messages the account's notification on screen stands for. */
+async function idsOnScreen(groupTag) {
+  try {
+    const shown = (await self.registration.getNotifications({ tag: groupTag }))[0];
+    const data = shown && shown.data;
+    if (!data) return [];
+    if (Array.isArray(data.ids)) return data.ids.filter((id) => typeof id === "string");
+    return typeof data.emailId === "string" ? [data.emailId] : [];
+  } catch (_) {
+    return [];
   }
 }
 
@@ -752,24 +805,32 @@ const PREVIEW_DEADLINE_MS = 10_000;
  */
 async function showWithoutAlert(groupTag) {
   const options = {
-    tag: groupTag,
     icon: `${BASE_PATH}/api/pwa-icon/192`,
     badge: `${BASE_PATH}/api/pwa-icon/192`,
     renotify: false,
     silent: true,
   };
+  let existing = null;
   try {
-    const existing = (await self.registration.getNotifications({ tag: groupTag }))[0];
+    existing = (await self.registration.getNotifications({ tag: groupTag }))[0] || null;
+  } catch (_) {
+    // Can't tell: treated as none on screen.
+  }
+  try {
     if (existing) {
       await showWithActions(existing.title, {
         ...options,
+        tag: groupTag,
         body: existing.body,
         data: existing.data,
       });
       return;
     }
-    await self.registration.showNotification("New mail", { ...options, data: { kind: "mail-list" } });
-    const shown = await self.registration.getNotifications({ tag: groupTag });
+    // Under a tag of its own: a real notification for this account that comes in
+    // at the same moment must neither be replaced by this nor closed with it.
+    const emptyTag = `${groupTag}:nothing-new`;
+    await self.registration.showNotification("New mail", { ...options, tag: emptyTag, data: { kind: "mail-list" } });
+    const shown = await self.registration.getNotifications({ tag: emptyTag });
     for (const notification of shown) notification.close();
   } catch (_) {
     // Nothing more a worker can do.
@@ -852,6 +913,23 @@ async function soundPreference() {
   }
 }
 
+/**
+ * The "Email notifications" switch and do not disturb. Each login has its own
+ * settings, so the page leaves one answer per login (the push's label names it).
+ * Nothing stored for it: show.
+ */
+async function showPreference(accountLabel) {
+  if (!accountLabel) return true;
+  try {
+    const cache = await caches.open(PUSH_STATE_CACHE);
+    const res = await cache.match(`${self.location.origin}${BASE_PATH}/__push-state/quiet-logins`);
+    const quiet = res ? await res.json() : null;
+    return !quiet || quiet[accountLabel] !== true;
+  } catch (_) {
+    return true;
+  }
+}
+
 /** True when another account alerted audibly less than QUIET_WINDOW_MS ago; otherwise records this one. */
 async function withinQuietWindow(accountId) {
   const now = Date.now();
@@ -912,20 +990,73 @@ async function writeNotifiedIds(accountId, ids) {
   }
 }
 
+/** What the page left here: lib/pwa-notify/worker-state.ts. */
+async function readRelayRegistrations() {
+  try {
+    const cache = await caches.open(PUSH_STATE_CACHE);
+    const res = await cache.match(`${self.location.origin}${BASE_PATH}/__push-state/relay-registrations`);
+    const stored = res ? await res.json() : null;
+    return stored && stored.entries && typeof stored.entries === "object" ? stored : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+/** No-third-party mode may have come on since the page left a relay here. Unknown counts as no. */
+async function mayCallRelays() {
+  try {
+    const res = await fetch(`${BASE_PATH}/api/config`, { cache: "no-store" });
+    if (!res.ok) return false;
+    const config = await res.json();
+    return config.noThirdPartyTraffic !== true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function applicationServerKeyOf(base64Url) {
+  const padded = base64Url + "=".repeat((4 - (base64Url.length % 4)) % 4);
+  const raw = atob(padded.replace(/-/g, "+").replace(/_/g, "/"));
+  return Uint8Array.from(raw, (character) => character.charCodeAt(0));
+}
+
 // The push service dropped or replaced the browser's subscription (expiry,
 // a key rotation, revoked permission). Re-subscribe with the same relay key
-// unless the browser already did, then tell the open tabs: only a page has
-// the login needed to register the new endpoint with the relay and the mail
-// server (resyncWebPush in lib/web-push.ts). With no tab open, the next page
-// load's re-sync picks the new subscription up.
+// unless the browser already did. The mail server's subscription points at the
+// relay record, not at the endpoint, so telling the relay is all it takes, and
+// that needs no login: push is back with no tab open. Open tabs hear of it too,
+// for what only a page can do (resyncWebPush in lib/web-push.ts).
 async function handlePushSubscriptionChange(event) {
   const old = event.oldSubscription;
-  if (!event.newSubscription && old && old.options) {
-    try {
-      await self.registration.pushManager.subscribe(old.options);
-    } catch (_) {
-      // Permission revoked or push service unreachable: the page's re-sync
-      // subscribes again itself when it can.
+  const registrations = await readRelayRegistrations();
+  let subscription = event.newSubscription || null;
+  if (!subscription) {
+    const options = old && old.options
+      ? old.options
+      : registrations && registrations.applicationServerKey
+        ? { userVisibleOnly: true, applicationServerKey: applicationServerKeyOf(registrations.applicationServerKey) }
+        : null;
+    if (options) {
+      try {
+        subscription = await self.registration.pushManager.subscribe(options);
+      } catch (_) {
+        // Permission revoked or push service unreachable: the page's re-sync
+        // subscribes again itself when it can.
+      }
+    }
+  }
+  if (subscription && registrations && typeof subscription.toJSON === "function" && (await mayCallRelays())) {
+    const json = subscription.toJSON();
+    for (const entry of Object.values(registrations.entries)) {
+      try {
+        await fetch(`${entry.relay}/api/push/register/web`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subscriptionId: entry.subscriptionId, subscription: json, accountLabel: entry.accountLabel }),
+        });
+      } catch (_) {
+        // The page's re-sync registers it when it next runs.
+      }
     }
   }
   const allClients = await self.clients.matchAll({
@@ -973,7 +1104,7 @@ async function handleNotificationClick(event) {
     if (action === "reply") targetUrl = buildClickUrl(data, true);
   }
 
-  for (const client of allClients) {
+  for (const client of windowsForClick(allClients)) {
     // Reuse an existing tab whenever possible - users on desktop browsers
     // get annoyed when each notification opens a fresh window.
     if ("focus" in client) {
@@ -1012,6 +1143,25 @@ async function handleNotificationClick(event) {
   if (self.clients.openWindow) {
     return self.clients.openWindow(targetUrl || `${BASE_PATH}/`);
   }
+}
+
+/**
+ * The windows a click may take over, the one in front first. Not a frame inside
+ * a page, and not a pop-out or a protocol page: navigating one of those would
+ * lose what it shows and leave the message in a window without the app around it.
+ */
+function windowsForClick(allClients) {
+  const score = (client) => (client.focused ? 0 : client.visibilityState === "visible" ? 1 : 2);
+  return allClients
+    .filter((client) => {
+      if (client.frameType && client.frameType !== "top-level") return false;
+      try {
+        return !/\/(popout|protocol)(\/|$)/.test(new URL(client.url).pathname);
+      } catch (_) {
+        return true;
+      }
+    })
+    .sort((a, b) => score(a) - score(b));
 }
 
 async function focusExistingWindowClient(sourceClientId, requireMailtoReady) {

@@ -1780,6 +1780,7 @@
         "status_inactive": "Bu cihazda etkinleştirilmedi",
         "status_unsupported": "Bu tarayıcı Web Push'u desteklemiyor",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "Arka plan bildirimleri demoda kullanılamaz.",
         "title": "Arka plan bildirimleri",
         "devices_title": "Kayıtlı cihazlar",
         "devices_desc": "Bu hesap için arka plan bildirimleri almak üzere kayıtlı tüm cihazlar. Birini iptal ettiğinizde o cihaz bildirimleri hemen almayı bırakır.",
@@ -1799,7 +1800,12 @@
         "confirm_revoke_message_this": "Bu cihaz arka plan bildirimlerini almayı hemen bırakacak.",
         "shared_mailboxes_no_push": "Başkalarının sizinle paylaştığı posta kutuları arka plan bildirimi göndermez.",
         "error_forbidden": "Posta sunucusu bu hesap için arka plan bildirimlerine izin vermiyor.",
-        "error_over_quota": "Bu hesabın posta sunucusunda çok fazla push kaydı var (sınır genellikle 15'tir). Artık kullanmadığınız cihazları bildirim ayarlarından iptal edip yeniden deneyin."
+        "error_over_quota": "Bu hesabın posta sunucusunda çok fazla push kaydı var (sınır genellikle 15'tir). Artık kullanmadığınız cihazları bildirim ayarlarından iptal edip yeniden deneyin.",
+        "error_blocked": "Bu site için bildirimler engellendi. Tarayıcınızın site ayarlarından izin verin ve yeniden deneyin.",
+        "error_not_granted": "Bildirimlere izin verilmedi, bu yüzden anlık bildirim kapalı kalıyor.",
+        "error_verification_timeout": "Posta sunucusu bu cihazı zamanında onaylamadı, bu yüzden anlık bildirim kapalı kalıyor. Bir dakika sonra yeniden deneyin.",
+        "error_relay": "Anlık bildirim aktarıcısına şu anda ulaşılamıyor, bu yüzden anlık bildirim kapalı kalıyor. Daha sonra yeniden deneyin.",
+        "error_teardown": "Anlık bildirim bu tarayıcıda kapatıldı, ancak posta sunucusuna veya aktarıcıya ulaşılamadı. Bildirimler birkaç gün daha gelebilir. Daha erken durdurmak için yeniden çevrimiçi olduğunuzda gelişmiş ayarları açın ve bu cihazı Kayıtlı cihazlar bölümünden iptal edin."
       }
     },
     "language_region": {

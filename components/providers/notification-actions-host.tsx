@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useArchiveActionEnabled } from '@/lib/archive-gate';
 import { scheduleFlushAll } from '@/lib/offline/offline-mode';
 import { loginFingerprint } from '@/lib/pwa-notify/login-fingerprint';
+import { writeLoginQuiet } from '@/lib/push-preferences';
 import { isNotificationActionRequest, runNotificationAction } from '@/lib/pwa-notify/page-actions';
 import { pluginsMayVeto } from '@/lib/pwa-notify/plugin-veto';
 import { writeNotificationActionPrefs } from '@/lib/pwa-notify/worker-state';
@@ -41,6 +42,16 @@ export function NotificationActionsHost() {
       labels: { archive, markRead, reply, replyPlaceholder },
     });
   }, [isAuthenticated, archiveEnabled, archiveMode, mayVeto, archive, markRead, reply, replyPlaceholder]);
+
+  // Email notifications off or do not disturb on, for the login on screen: the
+  // worker shows nothing for that login's mail. The label a push carries is this
+  // name (lib/web-push.ts), and each login has its own settings.
+  const username = useAuthStore((s) => s.username);
+  const quiet = useSettingsStore((s) => !s.emailNotificationsEnabled || s.doNotDisturb);
+  useEffect(() => {
+    if (!isAuthenticated || !username) return;
+    void writeLoginQuiet(username, quiet);
+  }, [isAuthenticated, username, quiet]);
 
   // Which logins this tab holds: if it stays silent on a click for one of them,
   // the worker opens the message rather than go round its plugins.

@@ -1780,6 +1780,7 @@
         "status_inactive": "Non abilitato su questo dispositivo",
         "status_unsupported": "Questo browser non supporta Web Push",
         "status_lite": "Web Push is not available in Bulwark Lite; it needs the Bulwark server.",
+        "status_demo": "Le notifiche in background non sono disponibili nella demo.",
         "title": "Notifiche in background",
         "devices_title": "Dispositivi registrati",
         "devices_desc": "Tutti i dispositivi registrati per ricevere le notifiche in background di questo account. Revocandone uno, smette subito di riceverle.",
@@ -1799,7 +1800,12 @@
         "confirm_revoke_message_this": "Questo dispositivo smetterà subito di ricevere le notifiche in background.",
         "shared_mailboxes_no_push": "Le caselle di posta che altri condividono con te non inviano notifiche in background.",
         "error_forbidden": "Il server di posta non consente le notifiche in background per questo account.",
-        "error_over_quota": "Questo account ha troppe registrazioni push sul server di posta (il limite di solito è 15). Revoca i dispositivi che non usi più nelle impostazioni delle notifiche, poi riprova."
+        "error_over_quota": "Questo account ha troppe registrazioni push sul server di posta (il limite di solito è 15). Revoca i dispositivi che non usi più nelle impostazioni delle notifiche, poi riprova.",
+        "error_blocked": "Le notifiche sono bloccate per questo sito. Consentile nelle impostazioni del sito del browser, poi riprova.",
+        "error_not_granted": "Le notifiche non sono state consentite, quindi le notifiche push restano disattivate.",
+        "error_verification_timeout": "Il server di posta non ha confermato questo dispositivo in tempo, quindi le notifiche push restano disattivate. Riprova tra un minuto.",
+        "error_relay": "Il relay delle notifiche non è raggiungibile in questo momento, quindi le notifiche push restano disattivate. Riprova più tardi.",
+        "error_teardown": "Le notifiche push sono disattivate in questo browser, ma il server di posta o il relay non erano raggiungibili. Potrebbero arrivare notifiche ancora per qualche giorno. Per fermarle prima, quando torni online attiva le impostazioni avanzate e revoca questo dispositivo in Dispositivi registrati."
       }
     },
     "language_region": {

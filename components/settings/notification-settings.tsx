@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useIdentityStore } from '@/stores/identity-store';
-import { jmapErrorType } from '@/lib/jmap/jmap-error';
 import { SettingsSection, SettingItem, ToggleSwitch, Select } from './settings-section';
 import { playNotificationSound, NOTIFICATION_SOUNDS } from '@/lib/notification-sound';
 import type { NotificationSoundChoice } from '@/lib/notification-sound';
@@ -27,6 +26,7 @@ import {
   revokePushDevice,
   serverSupportsEmailPush,
 } from '@/lib/web-push';
+import { webPushErrorKey } from '@/lib/web-push-errors';
 import type { PushDevice } from '@/lib/web-push';
 import { IS_LITE } from '@/lib/lite';
 import { useNoThirdPartyTraffic } from '@/hooks/use-third-party-mode';
@@ -72,7 +72,10 @@ export function NotificationSettings() {
   const username = useAuthStore((s) => s.username);
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
 
-  const supported = typeof window !== 'undefined' && isWebPushSupported();
+  // The demo client has no mail server to subscribe with. Enabling would get as
+  // far as a relay record and a browser subscription, then fail.
+  const isDemoMode = useAuthStore((s) => s.isDemoMode);
+  const supported = typeof window !== 'undefined' && isWebPushSupported() && !isDemoMode;
   // "Inbox only" is enforced by the server's emailPush filter; without that
   // capability (Stalwart < 0.16.16) the toggle would do nothing.
   const inboxOnlyAvailable = supported && !!client && serverSupportsEmailPush(client);
@@ -145,7 +148,7 @@ export function NotificationSettings() {
   // In the static Lite build push is off by design (no service worker, see
   // components/service-worker-registration.tsx), not a browser limitation.
   const statusDescription = pushStatus.kind === 'unsupported'
-    ? (IS_LITE ? t('push.status_lite') : `${t('push.status_unsupported')} ${t('push.ios_hint')}`)
+    ? (IS_LITE ? t('push.status_lite') : isDemoMode ? t('push.status_demo') : `${t('push.status_unsupported')} ${t('push.ios_hint')}`)
     : noRelay && !pushEnabled
       ? tThirdParty('push_needs_relay')
     : busy
@@ -171,14 +174,9 @@ export function NotificationSettings() {
   // The refusals a user can do something about get readable text; anything
   // else keeps the error's own message.
   const pushErrorMessage = (err: unknown, fallback: string) => {
-    switch (jmapErrorType(err)) {
-      case 'forbidden':
-        return t('push.error_forbidden');
-      case 'overQuota':
-        return t('push.error_over_quota');
-      default:
-        return err instanceof Error ? err.message : fallback;
-    }
+    const key = webPushErrorKey(err);
+    if (key) return t(`push.${key}`);
+    return err instanceof Error ? err.message : fallback;
   };
 
   // `forceRecreate` is what the Re-register button is for: without it the enable
@@ -265,10 +263,7 @@ export function NotificationSettings() {
       await disableWebPush({ client, relayBaseUrl: activeRelayUrl });
       setPushStatus({ kind: 'idle' });
     } catch (err) {
-      setPushStatus({
-        kind: 'error',
-        message: err instanceof Error ? err.message : 'Failed to disable push',
-      });
+      setPushStatus({ kind: 'error', message: pushErrorMessage(err, 'Failed to disable push') });
     } finally {
       await refreshDevices();
     }
@@ -290,10 +285,7 @@ export function NotificationSettings() {
       await revokePushDevice({ client, device, relayBaseUrl: activeRelayUrl });
       if (device.isThisDevice) setPushStatus({ kind: 'idle' });
     } catch (err) {
-      setPushStatus({
-        kind: 'error',
-        message: err instanceof Error ? err.message : 'Failed to revoke device',
-      });
+      setPushStatus({ kind: 'error', message: pushErrorMessage(err, 'Failed to revoke device') });
     } finally {
       setRevokingId(null);
       await refreshDevices();

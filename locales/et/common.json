@@ -1740,6 +1740,7 @@
         "status_inactive": "Selles seadmes pole lubatud",
         "status_unsupported": "See brauser ei toeta Web Pushi",
         "status_lite": "Veebi-tõukemärguanded pole Bulwark Lite'is saadaval; need vajavad Bulwarki serverit.",
+        "status_demo": "Taustateavitused pole demos saadaval.",
         "status_busy": "Töötleb…",
         "enable": "Luba",
         "reenable": "Registreeri uuesti",
@@ -1766,7 +1767,12 @@
         "confirm_revoke_message_this": "See seade lakkab taustateavitusi koheselt saamast.",
         "shared_mailboxes_no_push": "Postkastid, mida teised sinuga jagavad, taustateavitusi ei saada.",
         "error_forbidden": "Meiliserver ei luba selle konto jaoks taustateavitusi.",
-        "error_over_quota": "Sellel kontol on meiliserveris liiga palju pushi registreeringuid (piirang on tavaliselt 15). Tühista teavituste seadetes seadmed, mida sa enam ei kasuta, ja proovi uuesti."
+        "error_over_quota": "Sellel kontol on meiliserveris liiga palju pushi registreeringuid (piirang on tavaliselt 15). Tühista teavituste seadetes seadmed, mida sa enam ei kasuta, ja proovi uuesti.",
+        "error_blocked": "Teavitused on selle saidi jaoks blokeeritud. Luba need brauseri saidiseadetes ja proovi uuesti.",
+        "error_not_granted": "Teavitusi ei lubatud, seega jääb tõuketeavitus välja.",
+        "error_verification_timeout": "E-posti server ei kinnitanud seda seadet õigel ajal, seega jääb tõuketeavitus välja. Proovi minuti pärast uuesti.",
+        "error_relay": "Tõuketeavituste releed ei saa praegu kätte, seega jääb tõuketeavitus välja. Proovi hiljem uuesti.",
+        "error_teardown": "Tõuketeavitus on selles brauseris väljas, kuid e-posti serverit või releed ei saadud kätte. Teavitusi võib veel mõne päeva tulla. Et need varem lõpetada, lülita võrku naastes sisse täpsemad seaded ja tühista see seade jaotises Registreeritud seadmed."
       },
       "push_all": {
         "title": "Kõik kontod",

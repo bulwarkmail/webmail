@@ -9,17 +9,13 @@ import { useAccountStore } from '@/stores/account-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { disableWebPush, enableWebPushForAccounts, isWebPushEnabled, isWebPushSupported } from '@/lib/web-push';
+import { webPushErrorKey } from '@/lib/web-push-errors';
 
 interface FailedAccount {
   id: string;
   name: string;
   email: string;
   reason: string;
-}
-
-function failureReason(error: unknown): string {
-  if (error instanceof Error && error.message) return error.message;
-  return String(error);
 }
 
 /**
@@ -32,9 +28,22 @@ function failureReason(error: unknown): string {
  */
 export function MultiAccountPushSettings({ relayBaseUrl }: { relayBaseUrl?: string }) {
   const t = useTranslations('settings.notifications.push_all');
+  const tPush = useTranslations('settings.notifications.push');
+  const failureReason = (error: unknown): string => {
+    const key = webPushErrorKey(error);
+    if (key) return tPush(key);
+    return error instanceof Error && error.message ? error.message : String(error);
+  };
+  const failureOf = (account: (typeof accounts)[number], error: unknown): FailedAccount => ({
+    id: account.id,
+    name: account.displayName || account.label || account.username,
+    email: account.email || account.username,
+    reason: failureReason(error),
+  });
   const accounts = useAccountStore(s => s.accounts);
   // Re-read the client map whenever a connection appears or drops.
   const revision = useAuthStore(s => s.connectedAccountsRevision);
+  const isDemoMode = useAuthStore(s => s.isDemoMode);
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
   const [chosen, setChosen] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
@@ -59,7 +68,7 @@ export function MultiAccountPushSettings({ relayBaseUrl }: { relayBaseUrl?: stri
 
   useEffect(() => { void refresh(); }, [refresh, revision]);
 
-  if (!isWebPushSupported() || connected.length < 2) return null;
+  if (!isWebPushSupported() || isDemoMode || connected.length < 2) return null;
 
   const toggle = (id: string, on: boolean) => setChosen(prev => {
     const next = new Set(prev);
@@ -95,11 +104,15 @@ export function MultiAccountPushSettings({ relayBaseUrl }: { relayBaseUrl?: stri
           };
         }));
       } else {
-        // Teardown swallows its own failures, so every account ends up local-off.
+        // Every account ends up off here; one the server or relay couldn't be
+        // told about is named, since it may keep getting notifications for days.
+        const failed: FailedAccount[] = [];
         for (const account of targets) {
-          await disableWebPush({ client: auth.getClientForAccount(account.id)!, relayBaseUrl });
+          await disableWebPush({ client: auth.getClientForAccount(account.id)!, relayBaseUrl })
+            .catch((error: unknown) => { failed.push(failureOf(account, error)); });
         }
         setNotice(t('result_disabled', { count: targets.length }));
+        setFailures(failed);
       }
       setChosen(new Set());
     } finally {
