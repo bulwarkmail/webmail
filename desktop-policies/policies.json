@@ -30,6 +30,9 @@
   "OpenWithEnabled": true,
   "DeveloperToolsAvailability": 2,
   "RecentFilesInAttach": true,
+  "FilesDriveEnabled": true,
+  "FilesFolderSyncEnabled": true,
+  "FilesDriveLetter": "none",
   "Recommended": {
     "UpdateChannel": "stable"
   }

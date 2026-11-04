@@ -7650,6 +7650,112 @@
     "signout_changed": "Not attached or saved yet, and deleted now: {names}.",
     "signout_held": "Still open in another program, so not deleted until you close it there: {names}."
   },
+  "files_sync": {
+    "title": "Files on this computer",
+    "drive": {
+      "title": "Files drive",
+      "label": "Show Files as a drive",
+      "description": "Your Files show in File Explorer like a drive. A file is downloaded when you open it.",
+      "unsupported": "Needs Windows 10 version 1809 or later.",
+      "root_name": "Files drive",
+      "letter_label": "Drive letter",
+      "letter_description": "Gives the drive its own letter in File Explorer.",
+      "letter_none": "No letter"
+    },
+    "folders": {
+      "title": "Synced folders",
+      "description": "A folder on this computer and a folder in Files are kept the same, in both directions.",
+      "empty": "No folders are synced yet.",
+      "forced_off": "Your organisation turned off syncing folders. The files in them stay on this computer.",
+      "add": "Add folder…",
+      "loading": "Loading your folders…",
+      "load_failed": "Your folders in Files couldn't be loaded. Try again.",
+      "pick_title": "Which folder in Files?",
+      "pick_confirm": "Choose folder on this computer…",
+      "paired_with": "With {folder} in Files",
+      "pause": "Pause",
+      "resume": "Resume",
+      "remove": "Remove…",
+      "remove_title": "Stop syncing this folder?",
+      "remove_message": "The files on this computer stay where they are, and so do the files in Files. Changes no longer go from one to the other.",
+      "remove_confirm": "Stop syncing",
+      "add_failed": {
+        "overlap": "This folder is inside a synced folder, holds one, or is a system folder. Choose another one.",
+        "denied": "The app can't use this folder. Choose another one.",
+        "policy": "Your organisation doesn't allow this.",
+        "failed": "The folder couldn't be added. Try again."
+      }
+    },
+    "status": {
+      "starting": "Starting…",
+      "idle": "Up to date. Last synced {time}",
+      "idle_never": "Up to date",
+      "syncing": "Syncing: {done} done, {pending} to go",
+      "paused": "Paused",
+      "offline": "Offline. {count, plural, =0 {Changes wait for the server} one {# change waits for the server} other {# changes wait for the server}}",
+      "error": "Stopped: {reason}",
+      "confirm_delete": "Paused until you answer the question below",
+      "blocked": "Turned off by your organisation"
+    },
+    "mass_delete": {
+      "title": "Delete {count, plural, one {# item} other {# items}}?",
+      "local": "{count, plural, one {# item was} other {# items were}} deleted from {folder} on this computer. Delete {count, plural, one {it} other {them}} in Files too?",
+      "remote": "{count, plural, one {# item was} other {# items were}} deleted from {folder} in Files. Delete {count, plural, one {it} other {them}} on this computer too?",
+      "allow": "{count, plural, one {Delete it} other {Delete them}}",
+      "restore": "{count, plural, one {Bring it back} other {Bring them back}}",
+      "later": "Decide later"
+    },
+    "activity": {
+      "title": "Recent activity",
+      "empty": "Nothing has happened yet.",
+      "clear": "Clear",
+      "to_files": "To Files",
+      "to_computer": "To this computer",
+      "mark_conflict": "Conflict",
+      "mark_error": "Error",
+      "mark_question": "Needs your answer",
+      "uploaded": "Uploaded {path}",
+      "downloaded": "Downloaded {path}",
+      "folder-created": "Created the folder {path}",
+      "renamed": "Renamed {detail} to {path}",
+      "moved": "Moved {detail} to {path}",
+      "deleted": "Deleted {path}",
+      "trashed": "Moved {path} to the trash",
+      "conflict": "{path} was changed in both places. The other version is kept as {detail}",
+      "renamed-for-disk": "{path} is called {detail} on this computer, because its name isn't allowed here",
+      "too-large": "{path} is bigger than Files allows ({detail}). It stays on this computer only",
+      "waiting": "{path} is waiting for the server",
+      "mass-delete": "Paused before deleting many items",
+      "error": "{path} couldn't be synced"
+    },
+    "errors": {
+      "offline": "The server can't be reached",
+      "server_refused": "The server refused the change",
+      "too_large": "The file is too big for Files",
+      "name_invalid": "The name isn't allowed",
+      "disk_full": "The disk is full",
+      "denied": "Not allowed",
+      "busy": "Another program is using it",
+      "quota": "Your storage in Files is full",
+      "not_found": "It's no longer there",
+      "policy": "Your organisation doesn't allow this",
+      "failed": "Something went wrong"
+    },
+    "item": {
+      "label": "On this computer",
+      "synced": "Synced",
+      "syncing": "Syncing",
+      "pending": "Waiting to sync",
+      "error": "Couldn't sync",
+      "online-only": "Only in Files, downloaded when opened"
+    },
+    "show_in": {
+      "explorer": "Show in Explorer",
+      "finder": "Show in Finder",
+      "file_manager": "Show in file manager",
+      "failed": "The folder couldn't be opened."
+    }
+  },
   "desktopQuickCompose": {
     "label": "Quick compose",
     "menu": "Quick compose",

@@ -7650,6 +7650,112 @@
     "signout_changed": "Még nincs csatolva vagy mentve, és most törlődik: {names}.",
     "signout_held": "Még nyitva van egy másik programban, ezért csak a bezárása után törlődik: {names}."
   },
+  "files_sync": {
+    "title": "Fájlok ezen a számítógépen",
+    "drive": {
+      "title": "Fájlok meghajtó",
+      "label": "Fájlok megjelenítése meghajtóként",
+      "description": "A Fájlok meghajtóként jelenik meg a Fájlkezelőben. Egy fájl akkor töltődik le, amikor megnyitod.",
+      "unsupported": "Windows 10 1809-es vagy újabb verzió szükséges.",
+      "root_name": "Fájlok meghajtó",
+      "letter_label": "Meghajtóbetűjel",
+      "letter_description": "Saját betűjelet ad a meghajtónak a Fájlkezelőben.",
+      "letter_none": "Nincs betűjel"
+    },
+    "folders": {
+      "title": "Szinkronizált mappák",
+      "description": "Egy mappa ezen a számítógépen és egy mappa a Fájlokban mindig egyforma marad, a változások mindkét irányba mennek.",
+      "empty": "Még nincs szinkronizált mappa.",
+      "forced_off": "A szervezeted kikapcsolta a mappák szinkronizálását. A bennük lévő fájlok ezen a számítógépen maradnak.",
+      "add": "Mappa hozzáadása…",
+      "loading": "Mappáid betöltése…",
+      "load_failed": "Nem sikerült betölteni a mappáidat a Fájlokból. Próbáld újra.",
+      "pick_title": "Melyik mappa a Fájlokban?",
+      "pick_confirm": "Mappa kiválasztása ezen a számítógépen…",
+      "paired_with": "A Fájlokban lévő {folder} mappával",
+      "pause": "Szüneteltetés",
+      "resume": "Folytatás",
+      "remove": "Eltávolítás…",
+      "remove_title": "Leállítod a mappa szinkronizálását?",
+      "remove_message": "A fájlok ezen a számítógépen a helyükön maradnak, és a Fájlokban lévők is. A változások többé nem kerülnek át egyikből a másikba.",
+      "remove_confirm": "Szinkronizálás leállítása",
+      "add_failed": {
+        "overlap": "Ez a mappa egy szinkronizált mappán belül van, tartalmaz egyet, vagy rendszermappa. Válassz másikat.",
+        "denied": "Az alkalmazás nem használhatja ezt a mappát. Válassz másikat.",
+        "policy": "A szervezeted ezt nem engedélyezi.",
+        "failed": "Nem sikerült hozzáadni a mappát. Próbáld újra."
+      }
+    },
+    "status": {
+      "starting": "Indítás…",
+      "idle": "Naprakész. Utolsó szinkronizálás: {time}",
+      "idle_never": "Naprakész",
+      "syncing": "Szinkronizálás: {done} kész, {pending} van hátra",
+      "paused": "Szüneteltetve",
+      "offline": "Offline. {count, plural, =0 {A változások a kiszolgálóra várnak} one {# változás a kiszolgálóra vár} other {# változás a kiszolgálóra vár}}",
+      "error": "Leállt: {reason}",
+      "confirm_delete": "Szüneteltetve, amíg nem válaszolsz a lenti kérdésre",
+      "blocked": "A szervezeted kikapcsolta"
+    },
+    "mass_delete": {
+      "title": "{count, plural, one {# elem} other {# elem}} törlése?",
+      "local": "{count, plural, one {# elem törlődött} other {# elem törlődött}} a(z) {folder} mappából ezen a számítógépen. A Fájlokban is {count, plural, one {törlöd} other {törlöd őket}}?",
+      "remote": "{count, plural, one {# elem törlődött} other {# elem törlődött}} a(z) {folder} mappából a Fájlokban. Ezen a számítógépen is {count, plural, one {törlöd} other {törlöd őket}}?",
+      "allow": "{count, plural, one {Törlöm} other {Mindet törlöm}}",
+      "restore": "{count, plural, one {Visszaállítom} other {Mindet visszaállítom}}",
+      "later": "Később döntök"
+    },
+    "activity": {
+      "title": "Legutóbbi tevékenység",
+      "empty": "Még nem történt semmi.",
+      "clear": "Törlés",
+      "to_files": "A Fájlokba",
+      "to_computer": "Erre a számítógépre",
+      "mark_conflict": "Ütközés",
+      "mark_error": "Hiba",
+      "mark_question": "Válaszodra vár",
+      "uploaded": "Feltöltve: {path}",
+      "downloaded": "Letöltve: {path}",
+      "folder-created": "Mappa létrehozva: {path}",
+      "renamed": "Átnevezve: {detail} → {path}",
+      "moved": "Áthelyezve: {detail} → {path}",
+      "deleted": "Törölve: {path}",
+      "trashed": "Kukába helyezve: {path}",
+      "conflict": "{path} mindkét helyen megváltozott. A másik verzió {detail} néven megmaradt",
+      "renamed-for-disk": "{path} neve ezen a számítógépen {detail}, mert az eredeti név itt nem engedélyezett",
+      "too-large": "{path} nagyobb, mint amit a Fájlok enged ({detail}). Csak ezen a számítógépen marad",
+      "waiting": "{path} a kiszolgálóra vár",
+      "mass-delete": "Szüneteltetve sok elem törlése előtt",
+      "error": "{path} szinkronizálása nem sikerült"
+    },
+    "errors": {
+      "offline": "A kiszolgáló nem érhető el",
+      "server_refused": "A kiszolgáló elutasította a változást",
+      "too_large": "A fájl túl nagy a Fájlokhoz",
+      "name_invalid": "A név nem engedélyezett",
+      "disk_full": "A lemez megtelt",
+      "denied": "Nem engedélyezett",
+      "busy": "Egy másik program használja",
+      "quota": "Megtelt a tárhelyed a Fájlokban",
+      "not_found": "Már nem létezik",
+      "policy": "A szervezeted ezt nem engedélyezi",
+      "failed": "Hiba történt"
+    },
+    "item": {
+      "label": "Ezen a számítógépen",
+      "synced": "Szinkronizálva",
+      "syncing": "Szinkronizálás",
+      "pending": "Szinkronizálásra vár",
+      "error": "Nem sikerült szinkronizálni",
+      "online-only": "Csak a Fájlokban, megnyitáskor letöltődik"
+    },
+    "show_in": {
+      "explorer": "Megjelenítés a Fájlkezelőben",
+      "finder": "Megjelenítés a Finderben",
+      "file_manager": "Megjelenítés a fájlkezelőben",
+      "failed": "Nem sikerült megnyitni a mappát."
+    }
+  },
   "desktopQuickCompose": {
     "label": "Gyors levélírás",
     "menu": "Gyors levélírás",

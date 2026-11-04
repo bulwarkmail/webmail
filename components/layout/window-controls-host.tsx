@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { applyControlsArea, watchTitlebarArea, watchWindowRows, type TitlebarArea } from "@/lib/window-controls-overlay";
 import { claimBrowserSignIn } from "@/lib/desktop/browser-sign-in";
+import { claimFilesControls } from "@/lib/files-sync/controls";
 
 /**
  * The window's controls over the app, with no title bar row: see
@@ -13,7 +14,10 @@ import { claimBrowserSignIn } from "@/lib/desktop/browser-sign-in";
 export function WindowControlsHost() {
   // In the first render of every page, before any frame exists: a frame can reach the
   // bridge, and whoever comes after this gets nothing.
-  if (typeof window !== "undefined") claimBrowserSignIn();
+  if (typeof window !== "undefined") {
+    claimBrowserSignIn();
+    claimFilesControls();
+  }
   const [area, setArea] = useState<TitlebarArea | null>(null);
 
   useEffect(() => watchTitlebarArea((next) => {

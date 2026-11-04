@@ -7650,6 +7650,112 @@
     "signout_changed": "Pas encore jointes ni enregistrées, et supprimées maintenant : {names}.",
     "signout_held": "Encore ouvertes dans un autre programme, donc supprimées seulement une fois fermées : {names}."
   },
+  "files_sync": {
+    "title": "Fichiers sur cet ordinateur",
+    "drive": {
+      "title": "Lecteur Fichiers",
+      "label": "Afficher Fichiers comme un lecteur",
+      "description": "Vos Fichiers apparaissent dans l'Explorateur de fichiers comme un lecteur. Un fichier est téléchargé quand vous l'ouvrez.",
+      "unsupported": "Nécessite Windows 10 version 1809 ou ultérieure.",
+      "root_name": "Lecteur Fichiers",
+      "letter_label": "Lettre de lecteur",
+      "letter_description": "Donne au lecteur sa propre lettre dans l'Explorateur de fichiers.",
+      "letter_none": "Aucune lettre"
+    },
+    "folders": {
+      "title": "Dossiers synchronisés",
+      "description": "Un dossier sur cet ordinateur et un dossier dans Fichiers restent identiques, dans les deux sens.",
+      "empty": "Aucun dossier n'est encore synchronisé.",
+      "forced_off": "Votre organisation a désactivé la synchronisation des dossiers. Les fichiers qu'ils contiennent restent sur cet ordinateur.",
+      "add": "Ajouter un dossier…",
+      "loading": "Chargement de vos dossiers…",
+      "load_failed": "Vos dossiers dans Fichiers n'ont pas pu être chargés. Réessayez.",
+      "pick_title": "Quel dossier dans Fichiers ?",
+      "pick_confirm": "Choisir un dossier sur cet ordinateur…",
+      "paired_with": "Avec {folder} dans Fichiers",
+      "pause": "Suspendre",
+      "resume": "Reprendre",
+      "remove": "Retirer…",
+      "remove_title": "Arrêter de synchroniser ce dossier ?",
+      "remove_message": "Les fichiers sur cet ordinateur restent où ils sont, tout comme ceux dans Fichiers. Les modifications ne passent plus de l'un à l'autre.",
+      "remove_confirm": "Arrêter la synchronisation",
+      "add_failed": {
+        "overlap": "Ce dossier se trouve dans un dossier synchronisé, en contient un ou est un dossier système. Choisissez-en un autre.",
+        "denied": "L'application ne peut pas utiliser ce dossier. Choisissez-en un autre.",
+        "policy": "Votre organisation ne l'autorise pas.",
+        "failed": "Le dossier n'a pas pu être ajouté. Réessayez."
+      }
+    },
+    "status": {
+      "starting": "Démarrage…",
+      "idle": "À jour. Dernière synchronisation {time}",
+      "idle_never": "À jour",
+      "syncing": "Synchronisation : {done} terminés, {pending} restants",
+      "paused": "Suspendu",
+      "offline": "Hors ligne. {count, plural, =0 {Les modifications attendent le serveur} one {# modification attend le serveur} other {# modifications attendent le serveur}}",
+      "error": "Arrêté : {reason}",
+      "confirm_delete": "Suspendu jusqu'à ce que vous répondiez à la question ci-dessous",
+      "blocked": "Désactivé par votre organisation"
+    },
+    "mass_delete": {
+      "title": "Supprimer {count, plural, one {# élément} other {# éléments}} ?",
+      "local": "{count, plural, one {# élément a été supprimé} other {# éléments ont été supprimés}} de {folder} sur cet ordinateur. {count, plural, one {Le supprimer} other {Les supprimer}} aussi dans Fichiers ?",
+      "remote": "{count, plural, one {# élément a été supprimé} other {# éléments ont été supprimés}} de {folder} dans Fichiers. {count, plural, one {Le supprimer} other {Les supprimer}} aussi sur cet ordinateur ?",
+      "allow": "{count, plural, one {Le supprimer} other {Les supprimer}}",
+      "restore": "{count, plural, one {Le restaurer} other {Les restaurer}}",
+      "later": "Décider plus tard"
+    },
+    "activity": {
+      "title": "Activité récente",
+      "empty": "Rien ne s'est encore passé.",
+      "clear": "Effacer",
+      "to_files": "Vers Fichiers",
+      "to_computer": "Vers cet ordinateur",
+      "mark_conflict": "Conflit",
+      "mark_error": "Erreur",
+      "mark_question": "Attend votre réponse",
+      "uploaded": "{path} téléversé",
+      "downloaded": "{path} téléchargé",
+      "folder-created": "Dossier {path} créé",
+      "renamed": "{detail} renommé en {path}",
+      "moved": "{detail} déplacé vers {path}",
+      "deleted": "{path} supprimé",
+      "trashed": "{path} placé dans la corbeille",
+      "conflict": "{path} a été modifié aux deux endroits. L'autre version est conservée sous le nom {detail}",
+      "renamed-for-disk": "{path} s'appelle {detail} sur cet ordinateur, car son nom n'y est pas autorisé",
+      "too-large": "{path} dépasse la taille autorisée par Fichiers ({detail}). Il reste uniquement sur cet ordinateur",
+      "waiting": "{path} attend le serveur",
+      "mass-delete": "Suspendu avant de supprimer de nombreux éléments",
+      "error": "{path} n'a pas pu être synchronisé"
+    },
+    "errors": {
+      "offline": "Le serveur est injoignable",
+      "server_refused": "Le serveur a refusé la modification",
+      "too_large": "Le fichier est trop volumineux pour Fichiers",
+      "name_invalid": "Ce nom n'est pas autorisé",
+      "disk_full": "Le disque est plein",
+      "denied": "Accès refusé",
+      "busy": "Un autre programme l'utilise",
+      "quota": "Votre espace de stockage dans Fichiers est plein",
+      "not_found": "Il n'existe plus",
+      "policy": "Votre organisation ne l'autorise pas",
+      "failed": "Une erreur s'est produite"
+    },
+    "item": {
+      "label": "Sur cet ordinateur",
+      "synced": "Synchronisé",
+      "syncing": "Synchronisation en cours",
+      "pending": "En attente de synchronisation",
+      "error": "Échec de la synchronisation",
+      "online-only": "Uniquement dans Fichiers, téléchargé à l'ouverture"
+    },
+    "show_in": {
+      "explorer": "Afficher dans l'Explorateur de fichiers",
+      "finder": "Afficher dans le Finder",
+      "file_manager": "Afficher dans le gestionnaire de fichiers",
+      "failed": "Le dossier n'a pas pu être ouvert."
+    }
+  },
   "desktopQuickCompose": {
     "label": "Rédaction rapide",
     "menu": "Rédaction rapide",

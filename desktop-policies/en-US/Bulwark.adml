@@ -69,6 +69,12 @@
       <string id="DeveloperToolsAvailability_Explain">The same values as Chrome&apos;s policy of this name. 2: developer tools are off and the setting is locked. 0 or 1, or not configured: people can turn them on under Settings, after a warning. Developer tools let anyone at the keyboard read everything the app holds, mail and passwords in memory included.</string>
       <string id="RecentFilesInAttach">Show recent files in the Attach menu</string>
       <string id="RecentFilesInAttach_Explain">When enabled or not configured, the Attach button in a new message lists the files the user opened recently, as the operating system records them, so one click attaches one. The list is read when the menu opens and stays on the device. When disabled, the list is gone and the app refuses to read it. Attaching through the file dialog is not affected.</string>
+      <string id="FilesDriveEnabled">Allow Files as a drive</string>
+      <string id="FilesDriveEnabled_Explain">When enabled or not configured, people can show their Files in the file manager as a drive, with files downloaded when opened. Windows only for now. When disabled, the drive is not offered, and a drive that is already there is removed with the copies of files in it. Files on the server are not affected.</string>
+      <string id="FilesFolderSyncEnabled">Allow syncing folders with Files</string>
+      <string id="FilesFolderSyncEnabled_Explain">When enabled or not configured, people can keep a folder on the computer and a folder in Files the same, in both directions. When disabled, this is not offered and folders that sync now stop. The files in those folders stay where they are.</string>
+      <string id="FilesDriveLetter">Drive letter for Files</string>
+      <string id="FilesDriveLetter_Explain">Windows only. A letter from D to Z gives the Files drive that letter for every user, and they can&apos;t change it. Enter none to never give it a letter. When not configured, people choose under Settings, and there is no letter until they do. A value the app can&apos;t read counts as none.</string>
     </stringTable>
     <presentationTable>
       <presentation id="InstanceUrl"><textBox refId="InstanceUrl_Value"><label>Address of the Bulwark server</label></textBox></presentation>
@@ -88,6 +94,7 @@
       <presentation id="KeystoreAllowedOrigins"><listBox refId="KeystoreAllowedOrigins_Value">Addresses</listBox></presentation>
       <presentation id="WipeOfflineData"><textBox refId="WipeOfflineData_Value"><label>Wipe code</label></textBox></presentation>
       <presentation id="DeveloperToolsAvailability"><decimalTextBox refId="DeveloperToolsAvailability_Value" defaultValue="2">Value (0, 1 or 2)</decimalTextBox></presentation>
+      <presentation id="FilesDriveLetter"><textBox refId="FilesDriveLetter_Value"><label>Drive letter</label></textBox></presentation>
     </presentationTable>
   </resources>
 </policyDefinitionResources>

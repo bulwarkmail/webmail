@@ -7650,6 +7650,112 @@
     "signout_changed": "Vēl nav pievienoti vai saglabāti, un tagad izdzēsti: {names}.",
     "signout_held": "Joprojām atvērti citā programmā, tāpēc tiks izdzēsti tikai pēc aizvēršanas: {names}."
   },
+  "files_sync": {
+    "title": "Faili šajā datorā",
+    "drive": {
+      "title": "Failu disks",
+      "label": "Rādīt Failus kā disku",
+      "description": "Jūsu Faili failu pārlūkā ir redzami kā disks. Fails tiek lejupielādēts, kad to atverat.",
+      "unsupported": "Nepieciešama Windows 10 versija 1809 vai jaunāka.",
+      "root_name": "Failu disks",
+      "letter_label": "Diska burts",
+      "letter_description": "Piešķir diskam savu burtu failu pārlūkā.",
+      "letter_none": "Bez burta"
+    },
+    "folders": {
+      "title": "Sinhronizētās mapes",
+      "description": "Mape šajā datorā un mape Failos tiek uzturētas vienādas, izmaiņas notiek abos virzienos.",
+      "empty": "Vēl netiek sinhronizēta neviena mape.",
+      "forced_off": "Jūsu organizācija izslēdza mapju sinhronizēšanu. Faili tajās paliek šajā datorā.",
+      "add": "Pievienot mapi…",
+      "loading": "Ielādē jūsu mapes…",
+      "load_failed": "Neizdevās ielādēt jūsu mapes Failos. Mēģiniet vēlreiz.",
+      "pick_title": "Kura mape Failos?",
+      "pick_confirm": "Izvēlēties mapi šajā datorā…",
+      "paired_with": "Ar mapi {folder} Failos",
+      "pause": "Pauzēt",
+      "resume": "Turpināt",
+      "remove": "Noņemt…",
+      "remove_title": "Pārtraukt šīs mapes sinhronizēšanu?",
+      "remove_message": "Faili šajā datorā paliek savā vietā, tāpat arī faili Failos. Izmaiņas vairs netiek pārnestas no vienas vietas uz otru.",
+      "remove_confirm": "Pārtraukt sinhronizēšanu",
+      "add_failed": {
+        "overlap": "Šī mape atrodas sinhronizētā mapē, satur šādu mapi vai ir sistēmas mape. Izvēlieties citu.",
+        "denied": "Lietotne nevar izmantot šo mapi. Izvēlieties citu.",
+        "policy": "Jūsu organizācija to neatļauj.",
+        "failed": "Neizdevās pievienot mapi. Mēģiniet vēlreiz."
+      }
+    },
+    "status": {
+      "starting": "Sāk darbu…",
+      "idle": "Viss aktuāls. Pēdējo reizi sinhronizēts {time}",
+      "idle_never": "Viss aktuāls",
+      "syncing": "Sinhronizē: pabeigti {done}, atlikuši {pending}",
+      "paused": "Pauzēts",
+      "offline": "Bezsaistē. {count, plural, =0 {Izmaiņas gaida serveri} zero {# izmaiņas gaida serveri} one {# izmaiņa gaida serveri} other {# izmaiņas gaida serveri}}",
+      "error": "Apturēts: {reason}",
+      "confirm_delete": "Pauzēts, līdz atbildēsiet uz jautājumu zemāk",
+      "blocked": "Izslēgusi jūsu organizācija"
+    },
+    "mass_delete": {
+      "title": "Dzēst {count, plural, zero {# vienumus} one {# vienumu} other {# vienumus}}?",
+      "local": "{count, plural, zero {# vienumi izdzēsti} one {# vienums izdzēsts} other {# vienumi izdzēsti}} no mapes {folder} šajā datorā. Vai dzēst {count, plural, zero {tos} one {to} other {tos}} arī Failos?",
+      "remote": "{count, plural, zero {# vienumi izdzēsti} one {# vienums izdzēsts} other {# vienumi izdzēsti}} no mapes {folder} Failos. Vai dzēst {count, plural, zero {tos} one {to} other {tos}} arī šajā datorā?",
+      "allow": "{count, plural, zero {Dzēst tos} one {Dzēst to} other {Dzēst tos}}",
+      "restore": "{count, plural, zero {Atjaunot tos} one {Atjaunot to} other {Atjaunot tos}}",
+      "later": "Izlemt vēlāk"
+    },
+    "activity": {
+      "title": "Nesenās darbības",
+      "empty": "Vēl nekas nav noticis.",
+      "clear": "Notīrīt",
+      "to_files": "Uz Failiem",
+      "to_computer": "Uz šo datoru",
+      "mark_conflict": "Konflikts",
+      "mark_error": "Kļūda",
+      "mark_question": "Gaida jūsu atbildi",
+      "uploaded": "Augšupielādēts: {path}",
+      "downloaded": "Lejupielādēts: {path}",
+      "folder-created": "Izveidota mape {path}",
+      "renamed": "Pārdēvēts: {detail} → {path}",
+      "moved": "Pārvietots: {detail} → {path}",
+      "deleted": "Izdzēsts: {path}",
+      "trashed": "Pārvietots uz miskasti: {path}",
+      "conflict": "{path} tika mainīts abās vietās. Otra versija saglabāta kā {detail}",
+      "renamed-for-disk": "{path} šajā datorā saucas {detail}, jo tā nosaukums šeit nav atļauts",
+      "too-large": "{path} ir lielāks, nekā Faili atļauj ({detail}). Tas paliek tikai šajā datorā",
+      "waiting": "{path} gaida serveri",
+      "mass-delete": "Pauzēts pirms daudzu vienumu dzēšanas",
+      "error": "Neizdevās sinhronizēt {path}"
+    },
+    "errors": {
+      "offline": "Serveris nav sasniedzams",
+      "server_refused": "Serveris noraidīja izmaiņu",
+      "too_large": "Fails ir pārāk liels Failiem",
+      "name_invalid": "Šis nosaukums nav atļauts",
+      "disk_full": "Disks ir pilns",
+      "denied": "Nav atļauts",
+      "busy": "To izmanto cita programma",
+      "quota": "Jūsu krātuve Failos ir pilna",
+      "not_found": "Tas vairs nepastāv",
+      "policy": "Jūsu organizācija to neatļauj",
+      "failed": "Radās kļūda"
+    },
+    "item": {
+      "label": "Šajā datorā",
+      "synced": "Sinhronizēts",
+      "syncing": "Sinhronizē",
+      "pending": "Gaida sinhronizēšanu",
+      "error": "Neizdevās sinhronizēt",
+      "online-only": "Tikai Failos, tiek lejupielādēts atverot"
+    },
+    "show_in": {
+      "explorer": "Rādīt failu pārlūkā",
+      "finder": "Rādīt programmā Finder",
+      "file_manager": "Rādīt failu pārvaldniekā",
+      "failed": "Neizdevās atvērt mapi."
+    }
+  },
   "desktopQuickCompose": {
     "label": "Ātrā rakstīšana",
     "menu": "Ātrā rakstīšana",
