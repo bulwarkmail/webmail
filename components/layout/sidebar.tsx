@@ -2306,8 +2306,8 @@ function SidebarImpl({
               data-testid="sidebar-collapse"
               title={isCollapsed ? t("expand_tooltip") : t("collapse_tooltip")}
             >
-              {/* The arrows point the way the column goes: mirrored in RTL, where it sits at the right. */}
-              {isCollapsed ? <ChevronsRight className="w-4 h-4 rtl:-scale-x-100" /> : <ChevronsLeft className="w-4 h-4 rtl:-scale-x-100" />}
+              {/* The arrows point the way the column goes; the app's global RTL mirror turns them in RTL. */}
+              {isCollapsed ? <ChevronsRight className="w-4 h-4" /> : <ChevronsLeft className="w-4 h-4" />}
             </Button>
 
             {/* The account switcher heads the folders by default, with the
