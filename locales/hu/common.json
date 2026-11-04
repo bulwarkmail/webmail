@@ -7832,6 +7832,11 @@
     },
     "folders": {
       "stop": "Szinkronizálás leállítása…"
+    },
+    "pin": {
+      "keep": "Mindig maradjon ezen az eszközön",
+      "free": "Hely felszabadítása",
+      "failed": "Nem sikerült. Próbálja újra a Fájlkezelőben."
     }
   },
   "desktopQuickCompose": {

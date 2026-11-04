@@ -7832,6 +7832,11 @@
     },
     "folders": {
       "stop": "Parar de sincronizar…"
+    },
+    "pin": {
+      "keep": "Sempre manter neste dispositivo",
+      "free": "Liberar espaço",
+      "failed": "Não deu certo. Tente de novo no Explorador de Arquivos."
     }
   },
   "desktopQuickCompose": {

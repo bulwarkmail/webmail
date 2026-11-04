@@ -7832,6 +7832,11 @@
     },
     "folders": {
       "stop": "Oprește sincronizarea…"
+    },
+    "pin": {
+      "keep": "Păstrați întotdeauna pe acest dispozitiv",
+      "free": "Eliberați spațiu",
+      "failed": "Nu a funcționat. Încercați din nou în Explorer."
     }
   },
   "desktopQuickCompose": {

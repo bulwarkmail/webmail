@@ -7832,6 +7832,11 @@
     },
     "folders": {
       "stop": "停止同步…"
+    },
+    "pin": {
+      "keep": "永遠保留在此裝置上",
+      "free": "釋放空間",
+      "failed": "操作未成功。請在檔案總管中再試一次。"
     }
   },
   "desktopQuickCompose": {

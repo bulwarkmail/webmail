@@ -7832,6 +7832,11 @@
     },
     "folders": {
       "stop": "Zastavit synchronizaci…"
+    },
+    "pin": {
+      "keep": "Vždy zachovat na tomto zařízení",
+      "free": "Uvolnit místo",
+      "failed": "Nepovedlo se. Zkuste to znovu v Průzkumníkovi souborů."
     }
   },
   "desktopQuickCompose": {

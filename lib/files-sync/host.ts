@@ -540,6 +540,7 @@ export class FilesSyncHost {
       drive: this.drive,
       folderSyncForcedOff: this.deps.folderSyncForcedOff(),
       items: current ? this.engine.items(current) : {},
+      keptOnDevice: current ? this.engine.keptOnDevice(current) : {},
       quota: current ? this.quotaOf(current) : null,
       rescued: this.rescued,
     });
@@ -601,6 +602,15 @@ export class FilesSyncHost {
         if (this.current) this.engine.clearActivity(this.current);
       },
       openRoot: (rootId) => controls.showInFolder(rootId, '').catch(() => false),
+      setKeptOnDevice: controls.drive?.setPin ? async (nodeId, keep) => {
+        const coverage = this.current ? this.engine.coverage(this.current, nodeId) : null;
+        const setPin = controls.drive?.setPin;
+        if (!coverage || coverage.kind !== 'drive' || !coverage.path || !setPin) return false;
+        const result = await setPin(coverage.rootId, coverage.path, keep ? 'pinned' : 'unpinned').catch(() => null);
+        // The next scan shows the new state on the row.
+        this.engine.syncNow(coverage.rootId);
+        return !!result?.ok;
+      } : null,
       pendingHere: async (rootId) => (await this.engine.pendingHere(rootId)) ?? [],
       flushRoot: (rootId, options) => this.engine.flushRoot(rootId, options),
       openRescue: async () => (await controls.drive?.openRescue?.().catch(() => false)) ?? false,

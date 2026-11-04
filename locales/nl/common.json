@@ -7832,6 +7832,11 @@
     },
     "folders": {
       "stop": "Stoppen met synchroniseren…"
+    },
+    "pin": {
+      "keep": "Altijd op dit apparaat bewaren",
+      "free": "Ruimte vrijmaken",
+      "failed": "Dat is niet gelukt. Probeer het opnieuw in Verkenner."
     }
   },
   "desktopQuickCompose": {

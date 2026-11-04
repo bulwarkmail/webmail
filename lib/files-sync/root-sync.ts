@@ -197,6 +197,8 @@ export class RootSync {
   root: FilesRoot;
   status: FilesSyncRootStatus;
   items: Record<string, FilesSyncItemStatus> = {};
+  /** The drive: node ids "Always keep on this device" covers, by its own pin or a folder's above. */
+  keptOnDevice = new Set<string>();
   private record: RootRecord | null = null;
   private readonly base = new Map<string, BaseItem>();
   private massDelete: PendingDelete | null = null;
@@ -513,6 +515,24 @@ export class RootSync {
     }
     for (const id of this.busy) items[id] = 'syncing';
     this.items = items;
+    if (!this.isDrive) return;
+    // A pin goes to what's under it unless that has one of its own (Explorer's rule).
+    const pinOf = new Map<string, 'pinned' | 'unpinned'>();
+    for (const item of this.base.values()) {
+      const pin = this.lastSeen.get(item.id)?.placeholder?.pin;
+      if (pin === 'pinned' || pin === 'unpinned') pinOf.set(pathKey(item.path, this.host.naming), pin);
+    }
+    const kept = new Set<string>();
+    for (const item of this.base.values()) {
+      const parts = pathKey(item.path, this.host.naming).split('/');
+      for (let at = parts.length; at > 0; at -= 1) {
+        const pin = pinOf.get(parts.slice(0, at).join('/'));
+        if (!pin) continue;
+        if (pin === 'pinned') kept.add(item.id);
+        break;
+      }
+    }
+    this.keptOnDevice = kept;
   }
 
   // ─── What a round uses ──────────────────────────────────────

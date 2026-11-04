@@ -7832,6 +7832,11 @@
     },
     "folders": {
       "stop": "Stop syncing…"
+    },
+    "pin": {
+      "keep": "Always keep on this device",
+      "free": "Free up space",
+      "failed": "That didn't work. Try again in File Explorer."
     }
   },
   "desktopQuickCompose": {

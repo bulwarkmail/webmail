@@ -7832,6 +7832,11 @@
     },
     "folders": {
       "stop": "Lõpeta sünkroonimine…"
+    },
+    "pin": {
+      "keep": "Hoia alati selles seadmes",
+      "free": "Vabasta ruumi",
+      "failed": "See ei õnnestunud. Proovige uuesti Failihalduris."
     }
   },
   "desktopQuickCompose": {

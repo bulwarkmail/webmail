@@ -603,6 +603,20 @@ describe('the drive', () => {
     s.disk.supplied.clear();
   });
 
+  it('knows what "Always keep on this device" covers: its own pin, or a folder\'s above unless it has its own (files-p3-8)', async () => {
+    const s = await drive((server) => {
+      const docs = server.folder('Docs');
+      server.file('a.txt', docs.id, 'a');
+      server.file('b.txt', docs.id, 'b');
+      server.file('c.txt', null, 'c');
+    });
+    s.disk.node('r1', 'Docs').placeholder!.pin = 'pinned';
+    s.disk.node('r1', 'Docs/b.txt').placeholder!.pin = 'unpinned';
+    await s.sync();
+    const kept = Object.keys(s.engine.keptOnDevice('a1')).sort();
+    expect(kept).toEqual([s.server.find('Docs')!.id, s.server.find('Docs/a.txt')!.id].sort());
+  });
+
   it('updates a placeholder when the file changed in Files', async () => {
     const s = await drive((server) => server.file('a.txt', null, 'v1'));
     s.server.edit(s.server.find('a.txt')!.id, 'version two');

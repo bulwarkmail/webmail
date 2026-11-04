@@ -7832,6 +7832,11 @@
     },
     "folders": {
       "stop": "Stopp synkroniseringen…"
+    },
+    "pin": {
+      "keep": "Behold alltid på denne enheten",
+      "free": "Frigjør plass",
+      "failed": "Det fungerte ikke. Prøv igjen i Filutforsker."
     }
   },
   "desktopQuickCompose": {

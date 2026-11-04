@@ -7832,6 +7832,11 @@
     },
     "folders": {
       "stop": "Stop synkronisering…"
+    },
+    "pin": {
+      "keep": "Behold altid på denne enhed",
+      "free": "Frigør plads",
+      "failed": "Det lykkedes ikke. Prøv igen i Stifinder."
     }
   },
   "desktopQuickCompose": {

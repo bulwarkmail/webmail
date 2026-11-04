@@ -7832,6 +7832,11 @@
     },
     "folders": {
       "stop": "동기화 중지…"
+    },
+    "pin": {
+      "keep": "이 장치에 항상 유지",
+      "free": "공간 확보",
+      "failed": "실패했습니다. 파일 탐색기에서 다시 시도하세요."
     }
   },
   "desktopQuickCompose": {

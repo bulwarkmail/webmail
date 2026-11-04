@@ -7832,6 +7832,11 @@
     },
     "folders": {
       "stop": "Atura la sincronització…"
+    },
+    "pin": {
+      "keep": "Mantén sempre en aquest dispositiu",
+      "free": "Allibera espai",
+      "failed": "No ha funcionat. Torneu-ho a provar a l'Explorador de fitxers."
     }
   },
   "desktopQuickCompose": {

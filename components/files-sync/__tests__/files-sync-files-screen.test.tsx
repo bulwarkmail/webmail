@@ -201,6 +201,28 @@ describe('details panel', () => {
   });
 });
 
+describe('Keep offline in the drive is Always keep on this device (files-p3-8)', () => {
+  it('sets the pin for a file in the drive, both ways, and keeps the offline copy elsewhere', async () => {
+    const { KeepOnDeviceMenuItem } = await import('../files-sync-item');
+    const setKeptOnDevice = vi.fn(async () => true);
+    const coverage = vi.fn((id: string) => (id === 'in-drive' ? { rootId: 'd1', kind: 'drive' as const, path: 'a.txt' } : id === 'in-folder' ? { rootId: 'r1', kind: 'folder' as const, path: 'b.txt' } : null));
+    useFilesSyncStore.setState({ available: true, account: 'acc', controller: { coverage, setKeptOnDevice } as unknown as FilesSyncController, keptOnDevice: {} });
+    const fallback = <button type="button">offlineStorage.keep_offline</button>;
+    const ran = vi.fn();
+    const { rerender } = render(<KeepOnDeviceMenuItem nodeId="in-drive" onRan={ran} fallback={fallback} />);
+    fireEvent.click(screen.getByText('keep'));
+    expect(setKeptOnDevice).toHaveBeenCalledWith('in-drive', true);
+    expect(ran).toHaveBeenCalled();
+    act(() => useFilesSyncStore.setState({ keptOnDevice: { 'in-drive': true } }));
+    fireEvent.click(screen.getByText('free'));
+    expect(setKeptOnDevice).toHaveBeenLastCalledWith('in-drive', false);
+    rerender(<KeepOnDeviceMenuItem nodeId="in-folder" onRan={ran} fallback={fallback} />);
+    expect(screen.getByText('offlineStorage.keep_offline')).toBeInTheDocument();
+    expect(screen.queryByText('keep')).toBeNull();
+    useFilesSyncStore.getState().reset();
+  });
+});
+
 describe('the folder on screen in Explorer (files-p3-9)', () => {
   it('shows the drive at the top of Files, a covered folder inside it, and nothing elsewhere', async () => {
     const { renderHook } = await import('@testing-library/react');

@@ -7832,6 +7832,11 @@
     },
     "folders": {
       "stop": "Zatrzymaj synchronizację…"
+    },
+    "pin": {
+      "keep": "Zawsze zachowuj na tym urządzeniu",
+      "free": "Zwolnij miejsce",
+      "failed": "Nie udało się. Spróbuj ponownie w Eksploratorze plików."
     }
   },
   "desktopQuickCompose": {

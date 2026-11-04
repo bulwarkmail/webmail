@@ -144,6 +144,12 @@ export interface FilesSyncController {
   showInFolder: (nodeId: string) => Promise<boolean>;
   /** Opens a root's own folder (the drive, a synced folder) in Explorer, Finder or the file manager. */
   openRoot: (rootId: string) => Promise<boolean>;
+  /**
+   * A file or folder in the drive: "Always keep on this device" (true) or "Free up space" (false),
+   * the same state Explorer's menu sets (files-p3-8). Null when the drive doesn't cover it or the
+   * shell can't.
+   */
+  setKeptOnDevice: ((nodeId: string, keep: boolean) => Promise<boolean>) | null;
   clearActivity: () => void;
   /** Files changed or made here that aren't in Files yet: what stopping this root now would leave behind. */
   pendingHere: (rootId: string) => Promise<string[]>;
@@ -183,6 +189,8 @@ export interface FilesSyncSnapshot {
   folderSyncForcedOff: boolean;
   /** Per FileNode id of the current account, for rows in the Files screen. */
   items: Record<string, FilesSyncItemStatus>;
+  /** FileNode ids in the drive kept on this device ("Always keep on this device", its own or a folder's above). */
+  keptOnDevice: Record<string, true>;
   /** The current account's storage. Null until known. */
   quota: FilesQuota | null;
   /** Turning the drive off copied files that weren't uploaded here. Null: nothing to say. */

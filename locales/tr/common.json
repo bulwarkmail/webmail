@@ -7832,6 +7832,11 @@
     },
     "folders": {
       "stop": "Eşitlemeyi durdur…"
+    },
+    "pin": {
+      "keep": "Her zaman bu cihazda tut",
+      "free": "Yer aç",
+      "failed": "Olmadı. Dosya Gezgini'nde yeniden deneyin."
     }
   },
   "desktopQuickCompose": {

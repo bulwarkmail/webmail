@@ -591,6 +591,12 @@ export class FilesSyncEngine {
     return out;
   }
 
+  keptOnDevice(account: string): Record<string, true> {
+    const out: Record<string, true> = {};
+    for (const runner of this.runnersOf(account)) for (const id of runner.sync.keptOnDevice) out[id] = true;
+    return out;
+  }
+
   items(account: string): Record<string, FilesSyncItemStatus> {
     const out: Record<string, FilesSyncItemStatus> = {};
     for (const runner of this.runnersOf(account)) Object.assign(out, runner.sync.items);

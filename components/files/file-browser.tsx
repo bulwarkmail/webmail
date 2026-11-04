@@ -39,7 +39,7 @@ import { getFilePreviewKind } from "@/lib/file-preview";
 import type { FileAppAction } from "@/lib/files-app-actions";
 import { useAppSidePanel } from "@/components/plugins/app-side-panel";
 import { MAX_SIDE_PANEL_FILES } from "@/lib/plugin-sandbox/assistant/f.types";
-import { ShowInFolderMenuItem } from "@/components/files-sync/files-sync-item";
+import { KeepOnDeviceMenuItem, ShowInFolderMenuItem } from "@/components/files-sync/files-sync-item";
 import { resourceToView, useFileStore, isSharedFilesPage, sharedFilePages, type FileResource } from "@/stores/file-store";
 import { TRASH_LOCATION, TRASH_PATH, isTrashLocation } from "@/lib/files-trash";
 import { PluginActions, usePluginActions } from "@/components/plugins/plugin-actions";
@@ -1021,13 +1021,17 @@ export function FileBrowser({
             })()}
           </>
         )}
-        {canKeepOffline(resource) && (
-          <ContextMenuItem
-            icon={keptOffline.has(resource.id) ? PinOff : Pin}
-            label={keptOffline.has(resource.id) ? tOffline("unpin") : tOffline("keep_offline")}
-            onClick={() => { closeMenu(); void toggleKeptOffline(resource); }}
-          />
-        )}
+        <KeepOnDeviceMenuItem
+          nodeId={resource.id}
+          onRan={closeMenu}
+          fallback={canKeepOffline(resource) && (
+            <ContextMenuItem
+              icon={keptOffline.has(resource.id) ? PinOff : Pin}
+              label={keptOffline.has(resource.id) ? tOffline("unpin") : tOffline("keep_offline")}
+              onClick={() => { closeMenu(); void toggleKeptOffline(resource); }}
+            />
+          )}
+        />
         {(canShare(resource) || (resource.isDirectory && !resource.isShared)) && <ContextMenuSeparator />}
         {canShare(resource) && (
           <ContextMenuItem icon={Share2} label={tMenu("files_share")} onClick={() => { closeMenu(); setShareTargetId(resource.id); }} />

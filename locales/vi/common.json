@@ -7844,6 +7844,11 @@
     },
     "folders": {
       "stop": "Ngừng đồng bộ…"
+    },
+    "pin": {
+      "keep": "Luôn giữ trên thiết bị này",
+      "free": "Giải phóng dung lượng",
+      "failed": "Không thành công. Hãy thử lại trong Trình khám phá Tệp."
     }
   },
   "desktopQuickCompose": {

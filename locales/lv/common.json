@@ -7832,6 +7832,11 @@
     },
     "folders": {
       "stop": "Apturēt sinhronizāciju…"
+    },
+    "pin": {
+      "keep": "Vienmēr saglabāt šajā ierīcē",
+      "free": "Atbrīvot vietu",
+      "failed": "Neizdevās. Mēģiniet vēlreiz failu pārlūkā."
     }
   },
   "desktopQuickCompose": {
