@@ -36,7 +36,7 @@ describe('the right-click menu in the desktop app', () => {
     const props = renderBar([file('1', 'report.pdf')], { onCopyFile: vi.fn(), ...overrides });
     fireEvent.contextMenu(await screen.findByTestId('attachment'), { clientX: 5, clientY: 5 });
     const menu = await screen.findByRole('menu');
-    const labels = within(menu).getAllByRole('menuitem').map((item) => item.querySelector('[data-menu-label]')?.textContent ?? '');
+    const labels = within(menu).queryAllByRole('menuitem').map((item) => item.querySelector('[data-menu-label]')?.textContent ?? '');
     const pick = (label: string) => fireEvent.click(within(menu).getAllByRole('menuitem').find((item) => item.querySelector('[data-menu-label]')?.textContent === label)!);
     return { props, labels, pick };
   };
