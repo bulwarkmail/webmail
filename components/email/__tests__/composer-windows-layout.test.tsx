@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import React from 'react';
 import { EmailComposer } from '../email-composer';
@@ -219,6 +219,41 @@ describe('a composer in a window of its own', () => {
   it('keeps the close button where the main window has it', () => {
     render(<EmailComposer initialData={DATA} ownWindow={{}} />);
     expect(screen.getByTestId('composer-close').className).not.toContain('order-first');
+  });
+});
+
+describe('full screen', () => {
+  it('puts the composer over the whole window, and the same button puts it back', () => {
+    render(<EmailComposer initialData={DATA} />);
+    const root = screen.getByTestId('email-composer');
+    expect(root).not.toHaveAttribute('data-maximized');
+
+    fireEvent.click(screen.getByRole('button', { name: 'maximize' }));
+    expect(root).toHaveAttribute('data-maximized');
+    expect(root.className).toMatch(/(^|\s)fixed(\s|$)/);
+    expect(root.className).toContain('inset-0');
+
+    fireEvent.click(screen.getByRole('button', { name: 'restore' }));
+    expect(root).not.toHaveAttribute('data-maximized');
+    expect(root.className).not.toMatch(/(^|\s)fixed(\s|$)/);
+  });
+
+  it('goes back with Escape, without closing the composer', () => {
+    const onClose = vi.fn();
+    render(<EmailComposer initialData={DATA} onClose={onClose} />);
+    fireEvent.click(screen.getByRole('button', { name: 'maximize' }));
+    const root = screen.getByTestId('email-composer');
+
+    fireEvent.keyDown(screen.getByRole('button', { name: 'restore' }), { key: 'Escape' });
+
+    expect(root).not.toHaveAttribute('data-maximized');
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.queryByRole('alertdialog')).toBeNull();
+  });
+
+  it('is not offered in a window of its own, which is all composer already', () => {
+    render(<EmailComposer initialData={DATA} ownWindow={{}} />);
+    expect(screen.queryByRole('button', { name: 'maximize' })).toBeNull();
   });
 });
 

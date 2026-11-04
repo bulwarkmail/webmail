@@ -1199,6 +1199,10 @@ export function EmailComposer({
   // A pop-out or quick compose window is narrower than a tablet, but it is a
   // window on a computer: it keeps the main window's layout, not the phone's.
   const phoneLayout = !ownWindow;
+  // Full screen: the composer over the whole window, as Gmail has it. The same
+  // button or Escape puts it back. Not in a window of its own, which is all composer.
+  const [maximized, setMaximized] = useState(false);
+  const canMaximize = !ownWindow && !mvWindow;
   // "close" (X, Escape): save or discard. "discard" (the Discard button): the
   // user already chose, so only confirm it.
   const [closeDialogKind, setCloseDialogKind] = useState<'close' | 'discard'>('close');
@@ -4668,6 +4672,11 @@ export function EmailComposer({
       // And for proofreading's popup and panel: Escape closes only them.
       if (proofreading.popup || proofreading.panel) return;
       e.preventDefault();
+      // Full screen first goes back to where the composer was.
+      if (maximized) {
+        setMaximized(false);
+        return;
+      }
       handleClose();
       return;
     }
@@ -4701,7 +4710,13 @@ export function EmailComposer({
       data-testid="email-composer"
       // Edits made while the draft moves wouldn't move with it.
       inert={isPoppingOut || undefined}
-      className={cn("flex h-full bg-background relative", className)}
+      className={cn(
+        "flex h-full bg-background relative",
+        className,
+        // Over everything but dialogs (z-60) and toasts; below the desktop app's window controls.
+        maximized && "fixed inset-0 z-40 h-auto pt-[var(--titlebar-row-height)]",
+      )}
+      data-maximized={maximized || undefined}
       onKeyDownCapture={handleComposerKeyDown}
       // Bubble phase, in the same batch as the field's own onChange. A state
       // change in the capture phase renders first and puts the old value back.
@@ -4888,6 +4903,18 @@ export function EmailComposer({
           </Button>
         ))}
         {rightPanelToggle}
+        {canMaximize && (
+          <button
+            type="button"
+            onClick={() => setMaximized((v) => !v)}
+            className="hidden md:grid h-8 w-8 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label={maximized ? t('restore') : t('maximize')}
+            title={maximized ? t('restore') : t('maximize')}
+            data-testid="composer-maximize"
+          >
+            {maximized ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+          </button>
+        )}
         {popOutButton(cn(phoneLayout ? "hidden md:grid" : "grid", "h-8 w-8 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"), "w-4 h-4")}
         {/* Close at the top end (R4). On a phone it moves to the start, as
             the phone's mail apps have it, with Send at the end. */}
