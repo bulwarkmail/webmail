@@ -225,23 +225,19 @@ test.describe('An invitation to a series (pim-p2-8)', () => {
     expect(mine, JSON.stringify(copy.participants)).toBeTruthy();
     const [pid] = mine!;
 
-    // A declines the second week only, as the calendar does: a pointer patch
-    // (Stalwart 1.0), or the whole participants map where that is refused.
+    // A declines the second week only: an override with the whole participants
+    // map, which both servers take (1.0 stores it as a patch). The series has
+    // no overrides yet, so the map is set whole. A pointer-only override is
+    // not what the calendar writes, and 0.16 turns it into a second organizer
+    // and then refuses every later change to the series.
     const recurrenceId = `${second}T16:00:00`;
-    const pointer = await a.request([['CalendarEvent/set', {
+    const participants = structuredClone(copy.participants ?? {});
+    participants[pid] = { ...participants[pid], participationStatus: 'declined' };
+    const declined = await a.request([['CalendarEvent/set', {
       accountId: a.accountId,
-      update: { [copy.id]: { [`recurrenceOverrides/${recurrenceId}`]: { [`participants/${pid}/participationStatus`]: 'declined' } } },
+      update: { [copy.id]: { recurrenceOverrides: { [recurrenceId]: { participants } } } },
     }, '0']], [CORE, CAL]);
-    const [kind, answer] = pointer.methodResponses[0];
-    if (kind === 'error' || answer.notUpdated?.[copy.id]) {
-      const participants = structuredClone(copy.participants ?? {});
-      participants[pid] = { ...participants[pid], participationStatus: 'declined' };
-      const whole = await a.request([['CalendarEvent/set', {
-        accountId: a.accountId,
-        update: { [copy.id]: { [`recurrenceOverrides/${recurrenceId}`]: { participants } } },
-      }, '0']], [CORE, CAL]);
-      expect(whole.methodResponses[0][1].notUpdated, JSON.stringify(whole.methodResponses[0][1].notUpdated ?? {})).toBeFalsy();
-    }
+    expect(declined.methodResponses[0][1].notUpdated, JSON.stringify(declined.methodResponses[0][1].notUpdated ?? {})).toBeFalsy();
     expect(Object.keys(await overrides(a, copy.id))).toContain(recurrenceId);
 
     const context = await browser.newContext({ ...contextOptions(), timezoneId: TZ });

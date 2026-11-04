@@ -122,8 +122,12 @@ test.describe('Files, usability pass 2', () => {
 
     // On the list: the folder in view (the top of Files).
     await dropFiles(page, '[role="grid"][aria-label="Files and folders"]', [{ name: `${PREFIX} on list.txt`, text: 'list' }]);
-    await expect.poll(async () => (await ours(a)).find((n) => n.name === `${PREFIX} on list.txt`)?.parentId ?? 'missing', { timeout: 30000 })
-      .toBeNull();
+    // Where the folder made at the top sits: null on one server, the root node's id on another.
+    const top = (await ours(a)).find((n) => n.id === folderId)?.parentId ?? null;
+    await expect.poll(async () => {
+      const node = (await ours(a)).find((n) => n.name === `${PREFIX} on list.txt`);
+      return node ? node.parentId ?? null : 'missing';
+    }, { timeout: 30000 }).toBe(top);
 
     // On the folder's row: into that folder.
     await dropFiles(page, `[data-resource="${folderName}"]`, [{ name: `${PREFIX} on row.txt`, text: 'row' }]);
