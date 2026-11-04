@@ -40,7 +40,7 @@ import { formatRecipient } from "@/lib/email-composer-utils";
 import { useRouter } from "@/i18n/navigation";
 import { useEditAttachment } from "@/hooks/use-edit-attachment";
 import { fileAppAction, type FileAppAction } from "@/lib/files-app-actions";
-import { handOffFiles } from "@/lib/launch-handoff";
+import { handOffFilesAfterClose } from "@/lib/file-handoff-after-close";
 import { ImportEmlDialog } from "@/components/files/import-eml-dialog";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { resolveConflictsInTurn, type ConflictAnswer, type UploadConflictResolver } from "@/lib/files-upload-conflicts";
@@ -740,7 +740,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     }
     setPreviewFile(null);
     setInfoFile(null);
-    handOffFiles([file], action === "add-calendar" ? "calendar" : "contacts");
+    void handOffFilesAfterClose([file], action === "add-calendar" ? "calendar" : "contacts");
   }, [appActionOf, getFileContent, t]);
   const appActionFor = useCallback((r: FileResource) => {
     const action = appActionOf(r);
