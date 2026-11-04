@@ -5,6 +5,7 @@ import { addPlainLanguage } from "@/i18n/plain-language";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { CalendarAlertProvider } from "@/components/providers/calendar-alert-provider";
 import { PushBindingsHost } from "@/components/providers/push-bindings-host";
+import { FilesSyncPrompts } from "@/components/files-sync/files-sync-prompts";
 import { EmbeddedBridgeProvider } from "@/components/providers/embedded-bridge-provider";
 import { RateLimitToastProvider } from "@/components/providers/rate-limit-toast-provider";
 import { TourProvider } from "@/components/tour/tour-provider";
@@ -99,6 +100,7 @@ export default async function LocaleLayout({
                     {!IS_LITE && <EditedFilesHost />}
                     <FreeBusyAutoShare />
                     {!IS_LITE && <PopoutHost />}
+                    {!IS_LITE && <FilesSyncPrompts />}
                   </MainWindowOnly>
                   {!IS_LITE && <WindowSyncHost />}
                   {!IS_LITE && <WindowMenuBar />}
