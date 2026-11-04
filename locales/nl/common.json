@@ -6966,10 +6966,12 @@
     "taken": "Een andere app gebruikt {keys}, dus hier gebeurt niets. Kies andere toetsen of sluit die app.",
     "change": "Toetsen wijzigen: {keys}",
     "recording": "Druk op de toetsen…",
-    "recording_hint": "Houd twee van Ctrl, Alt, Shift of de systeemtoets vast en druk op een letter of cijfer. Esc annuleert.",
+    "recording_hint": "Houd Ctrl (Cmd op een Mac) met Alt of Shift vast en druk op een letter, cijfer, Enter of functietoets. Esc annuleert.",
     "back_to_main": "Naar het hoofdvenster verplaatsen",
     "back_busy": "In het hoofdvenster staat al een bericht open. Sluit dat en probeer het opnieuw.",
-    "back_no_answer": "Het hoofdvenster gaf geen antwoord. Je bericht blijft hier."
+    "back_no_answer": "Het hoofdvenster gaf geen antwoord. Je bericht blijft hier.",
+    "types_character": "Deze toetsen typen een teken op je toetsenbord, en dat zou in geen enkele app meer werken. Probeer andere toetsen.",
+    "reserved": "Je systeem of de meeste apps gebruiken deze toetsen. Probeer andere toetsen."
   },
   "desktopReminders": {
     "generic_title": "Herinnering",

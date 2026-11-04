@@ -6966,10 +6966,12 @@
     "taken": "Altă aplicație folosește {keys}, așa că aici nu face nimic. Alege alte taste sau închide aplicația respectivă.",
     "change": "Schimbă tastele: {keys}",
     "recording": "Apasă tastele…",
-    "recording_hint": "Ține apăsate două dintre Ctrl, Alt, Shift sau tasta de sistem și apasă o literă sau o cifră. Esc anulează.",
+    "recording_hint": "Ține apăsată tasta Ctrl (Cmd pe Mac) cu Alt sau Shift și apasă o literă, o cifră, Enter sau o tastă funcțională. Esc anulează.",
     "back_to_main": "Mută în fereastra principală",
     "back_busy": "Fereastra principală are deja un mesaj deschis. Închide-l și încearcă din nou.",
-    "back_no_answer": "Fereastra principală nu a răspuns. Mesajul rămâne aici."
+    "back_no_answer": "Fereastra principală nu a răspuns. Mesajul rămâne aici.",
+    "types_character": "Aceste taste scriu un caracter pe tastatura ta, iar el n-ar mai funcționa în nicio aplicație. Încearcă alte taste.",
+    "reserved": "Sistemul sau majoritatea aplicațiilor folosesc aceste taste. Încearcă alte taste."
   },
   "desktopReminders": {
     "generic_title": "Memento",

@@ -6966,10 +6966,12 @@
     "taken": "A(z) {keys} billentyűket egy másik alkalmazás használja, így itt nem történik semmi. Válasszon más billentyűket, vagy zárja be azt az alkalmazást.",
     "change": "Billentyűk módosítása: {keys}",
     "recording": "Nyomja meg a billentyűket…",
-    "recording_hint": "Tartson lenyomva kettőt a Ctrl, Alt, Shift vagy a rendszerbillentyű közül, és nyomjon meg egy betűt vagy számot. Az Esc megszakítja.",
+    "recording_hint": "Tartsa lenyomva a Ctrl (Macen a Cmd) billentyűt az Alt vagy a Shift billentyűvel, és nyomjon meg egy betűt, számot, az Entert vagy egy funkcióbillentyűt. Az Esc megszakítja.",
     "back_to_main": "Áthelyezés a főablakba",
     "back_busy": "A főablakban már nyitva van egy üzenet. Zárja be, majd próbálja újra.",
-    "back_no_answer": "A főablak nem válaszolt. Az üzenet itt marad."
+    "back_no_answer": "A főablak nem válaszolt. Az üzenet itt marad.",
+    "types_character": "Ezek a billentyűk karaktert írnak az Ön billentyűzetén, amely többé egyik alkalmazásban sem működne. Próbáljon más billentyűket.",
+    "reserved": "Ezeket a billentyűket a rendszer vagy a legtöbb alkalmazás használja. Próbáljon más billentyűket."
   },
   "desktopReminders": {
     "generic_title": "Emlékeztető",

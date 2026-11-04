@@ -6966,10 +6966,12 @@
     "taken": "Un'altra app sta usando {keys}, quindi qui non succede nulla. Scegli altri tasti o chiudi quell'app.",
     "change": "Cambia i tasti: {keys}",
     "recording": "Premi i tasti…",
-    "recording_hint": "Tieni premuti due tra Ctrl, Alt, Maiusc o il tasto di sistema e premi una lettera o un numero. Esc annulla.",
+    "recording_hint": "Tieni premuto Ctrl (Cmd su Mac) con Alt o Maiusc e premi una lettera, un numero, Invio o un tasto funzione. Esc annulla.",
     "back_to_main": "Sposta nella finestra principale",
     "back_busy": "La finestra principale ha già un messaggio aperto. Chiudilo e riprova.",
-    "back_no_answer": "La finestra principale non ha risposto. Il messaggio resta qui."
+    "back_no_answer": "La finestra principale non ha risposto. Il messaggio resta qui.",
+    "types_character": "Questi tasti scrivono un carattere sulla tua tastiera, che smetterebbe di funzionare in tutte le app. Prova altri tasti.",
+    "reserved": "Il sistema o la maggior parte delle app usano questi tasti. Prova altri tasti."
   },
   "desktopReminders": {
     "generic_title": "Promemoria",

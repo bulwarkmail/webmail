@@ -402,8 +402,12 @@ interface EmailComposerProps {
   ownWindow?: {
     /** The state as the window unloads, for a reload to start from. */
     onUnloadState?: (data: ComposerDraftData) => void;
-    /** A save reached the server, for other windows showing the Drafts folder. */
-    onDraftSaved?: (draftId: string) => void;
+    /**
+     * A save reached the server, for other windows showing the Drafts folder and for a
+     * reload to find it. `accountId`: the account it lives in, when not the own one.
+     * `localAccountId`: the login it was saved through.
+     */
+    onDraftSaved?: (draftId: string, where: { accountId?: string; localAccountId?: string }) => void;
     /**
      * Hands a draft to another window to save as this one closes: a request
      * started now wouldn't survive. False when that can't be done safely.
@@ -3155,7 +3159,7 @@ export function EmailComposer({
       // Only the save the user asked for is read out: autosave would say it
       // every minute, and the save before sending is followed by "Sent".
       if (opts.announce && id && !saveFailedRef.current) announceStatus(t('draft_saved'));
-      if (id && !saveFailedRef.current) ownWindowRef.current?.onDraftSaved?.(id);
+      if (id && !saveFailedRef.current) ownWindowRef.current?.onDraftSaved?.(id, { accountId: draftAccountIdRef.current, localAccountId: draftLocalAccountIdRef.current });
       return id;
     })();
     inflightSaveRef.current = promise;

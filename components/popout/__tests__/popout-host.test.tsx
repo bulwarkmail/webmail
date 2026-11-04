@@ -407,6 +407,11 @@ describe('a composer coming back', () => {
     const returned = takeReturnedComposer();
     expect(returned?.payload).toEqual(PAYLOAD);
     expect(lockRequests).toContain('bulwark-popout-return:r1');
+    const claim = returned!.claim();
+    await settle();
+    expect(heard).toContainEqual({ type: 'composer-return-ready', returnId: 'r1' });
+    popout.post({ type: 'composer-return-commit', returnId: 'r1' });
+    await expect(claim).resolves.toBe(true);
     returned?.answer('shown');
     await settle();
     expect(heard).toContainEqual({ type: 'composer-return-answer', returnId: 'r1', status: 'shown' });
@@ -431,6 +436,16 @@ describe('a composer coming back', () => {
     } finally {
       setLockedHere(false);
     }
+  });
+
+  it('a call-off after the mail page took it stops the page opening it', async () => {
+    render(<PopoutHost />);
+    await settle();
+    popout.post({ type: 'composer-return', returnId: 'r1', accountId: 'alice', payload: PAYLOAD });
+    await settle();
+    const claim = takeReturnedComposer()!.claim();
+    popout.post({ type: 'composer-return-cancel', returnId: 'r1' });
+    await expect(claim).resolves.toBe(false);
   });
 
   it('goes when the pop-out calls it off', async () => {

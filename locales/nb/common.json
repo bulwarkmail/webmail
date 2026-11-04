@@ -6966,10 +6966,12 @@
     "taken": "En annen app bruker {keys}, så her skjer det ingenting. Velg andre taster, eller lukk den appen.",
     "change": "Endre tastene: {keys}",
     "recording": "Trykk på tastene…",
-    "recording_hint": "Hold nede to av Ctrl, Alt, Shift eller systemtasten, og trykk på en bokstav eller et tall. Esc avbryter.",
+    "recording_hint": "Hold Ctrl (Cmd på Mac) nede sammen med Alt eller Shift, og trykk på en bokstav, et tall, Enter eller en funksjonstast. Esc avbryter.",
     "back_to_main": "Flytt til hovedvinduet",
     "back_busy": "Hovedvinduet har allerede en melding åpen. Lukk den, og prøv igjen.",
-    "back_no_answer": "Hovedvinduet svarte ikke. Meldingen din blir her."
+    "back_no_answer": "Hovedvinduet svarte ikke. Meldingen din blir her.",
+    "types_character": "Disse tastene skriver et tegn på tastaturet ditt, og det ville slutte å virke i alle apper. Prøv andre taster.",
+    "reserved": "Systemet ditt eller de fleste apper bruker disse tastene. Prøv andre taster."
   },
   "desktopReminders": {
     "generic_title": "Påminnelse",

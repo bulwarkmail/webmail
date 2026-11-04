@@ -15,13 +15,14 @@ import { debug } from "@/lib/debug";
 import { composerSendOptions } from "@/lib/outgoing/composer-send-options";
 import { announceSent } from "@/lib/plugin-after-send";
 import { announceMailChanged, announceSentToMainWindow, askRescuedDraftId, watchMainWindow, type RescuedDraft } from "@/lib/popout/channel";
-import { acknowledgeComposeHandoff, receiveComposeHandoff, rememberComposePayload, rememberedComposePayload, watchHandoffCancel } from "@/lib/popout/compose-handoff";
+import { acknowledgeComposeHandoff, forgetComposePayload, receiveComposeHandoff, rememberComposePayload, rememberedComposePayload, watchHandoffCancel } from "@/lib/popout/compose-handoff";
 import type { ComposePopoutPayload } from "@/lib/popout/compose-payload";
 import { returnComposerToMain, type ReturnResult } from "@/lib/popout/return-to-main";
 import { closePopoutWindow } from "@/lib/popout/window-role";
 import { hasDesktopWindows } from "@/lib/popout/support";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { Button } from "@/components/ui/button";
+import { composeOptionsFor, runBeforeCompose } from "@/lib/plugin-compose-gate";
 import { composerDataFromDraft, isRestorableDraft } from "@/lib/draft-composer-data";
 import { noteOpenDraft } from "@/lib/desktop/window-restore";
 import { findDraftIdentityIdForLogin } from "@/lib/draft-source";
@@ -38,6 +39,9 @@ type ComposerProps = React.ComponentProps<typeof EmailComposer>;
 type SendData = Parameters<NonNullable<ComposerProps["onSend"]>>[0];
 
 const EMPTY_PAYLOAD: ComposePopoutPayload = { mode: "compose" };
+
+/** How long a new message waits for plugins to start, so that their onBeforeCompose gets its say. */
+const PLUGINS_WAIT_MS = 5000;
 
 /** How often the window looks whether a main window holding its login is still there. */
 const MAIN_CHECK_MS = 1000;
@@ -167,6 +171,48 @@ function RestoredDraft({ draftId, accountId, ownerAccountId, onReady }: {
   return <PopoutSkeleton label={tWindows("opening")} />;
 }
 
+/**
+ * A new message with nothing handed over, from the desktop app's shortcut or File menu. Plugins
+ * get the same say as in the main window: stop it, and nothing opens; or fill in fields.
+ */
+function NewMessageGate({ onReady }: { onReady: (payload: ComposePopoutPayload) => void }) {
+  const t = useTranslations();
+  const tWindows = useTranslations("pwaWindows");
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      await Promise.race([
+        Promise.resolve(usePluginStore.getState().initializePlugins()).catch(() => {}),
+        new Promise((resolve) => setTimeout(resolve, PLUGINS_WAIT_MS)),
+      ]);
+      if (cancelled) return;
+      if (emailHooks.onBeforeCompose.size === 0) {
+        onReady(EMPTY_PAYLOAD);
+        return;
+      }
+      const prefill = await runBeforeCompose(composeOptionsFor("compose", {
+        ownEmails: useIdentityStore.getState().identities.map((identity) => identity.email).filter((email): email is string => Boolean(email)),
+        replyPrefix: t("email_composer.prefix.reply"),
+        forwardPrefix: t("email_composer.prefix.forward"),
+      }));
+      if (cancelled) return;
+      if (!prefill) {
+        closePopoutWindow();
+        return;
+      }
+      onReady(Object.keys(prefill).length > 0 ? { ...EMPTY_PAYLOAD, prefill } : EMPTY_PAYLOAD);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // Once, as the window opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return <PopoutSkeleton label={tWindows("opening")} />;
+}
+
 /** The composer alone, in its own window: sending, autosave and discard go through the shared stores, as in a Pro tab. */
 function PopoutComposer({ payload, handoffId }: { payload: ComposePopoutPayload; handoffId: string | null }) {
   const t = useTranslations();
@@ -282,12 +328,13 @@ function PopoutComposer({ payload, handoffId }: { payload: ComposePopoutPayload;
         result = await returnComposerToMain(
           { ...payload, mode: state.mode, replyTo: state.replyTo, initialData: state, initialDraftText: undefined, prefill: null },
           state.draftLocalAccountId ?? useAuthStore.getState().activeAccountId,
+          () => mainWindow.alive(),
         );
         if (result === "shown") getDesktopBridge()?.windows?.focus?.();
         return result === "shown";
       },
     };
-  }, [payload, tQuick]);
+  }, [mainWindow, payload, tQuick]);
 
   // The window that opened this one lets go of its copy now. Not without a
   // session: this one couldn't save or send the text.
@@ -310,14 +357,19 @@ function PopoutComposer({ payload, handoffId }: { payload: ComposePopoutPayload;
     onUnloadState: (state: ComposerDraftData) => {
       if (handoffId) rememberComposePayload(handoffId, { ...payload, initialData: state, prefill: null });
     },
-    onDraftSaved: (draftId: string) => {
-      announceMailChanged(useAuthStore.getState().activeAccountId);
-      // A save makes a new id, and this address is what a reload starts from.
+    onDraftSaved: (draftId: string, where: { accountId?: string; localAccountId?: string } = {}) => {
+      const active = useAuthStore.getState().activeAccountId;
+      announceMailChanged(active);
+      // A save makes a new id, and this address is what a reload starts from: also the
+      // shell's reload after this page crashed, when nothing else of it survives.
       const url = new URL(window.location.href);
-      if (url.searchParams.has("draft")) {
-        url.searchParams.set("draft", draftId);
-        window.history.replaceState(null, "", `${url.pathname}${url.search}`);
-      }
+      url.searchParams.set("draft", draftId);
+      const login = where.localAccountId ?? url.searchParams.get("account") ?? active;
+      if (login) url.searchParams.set("account", login);
+      if (where.accountId) url.searchParams.set("owner", where.accountId);
+      else url.searchParams.delete("owner");
+      window.history.replaceState(null, "", `${url.pathname}${url.search}`);
+      if (handoffId) forgetComposePayload(handoffId);
     },
   }), [handoffId, mainWindow, payload]);
 
@@ -348,8 +400,11 @@ function PopoutComposer({ payload, handoffId }: { payload: ComposePopoutPayload;
 /** `/popout/compose`: a draft handed over by another window, or a new message. */
 export function PopoutComposeApp() {
   const t = useTranslations("pwaWindows");
-  const [{ handoffId, accountId, draftId, ownerAccountId }] = useState(readLaunch);
-  const [payload, setPayload] = useState<ComposePopoutPayload | null>(handoffId || draftId ? null : EMPTY_PAYLOAD);
+  const [{ handoffId: named, accountId, draftId, ownerAccountId }] = useState(readLaunch);
+  // Saved on the server and nothing remembered: this page crashed or was killed, and the
+  // draft is the newest there is. An ordinary reload remembers as it unloads.
+  const [handoffId] = useState(() => (named && draftId && !rememberedComposePayload(named) ? null : named));
+  const [payload, setPayload] = useState<ComposePopoutPayload | null>(null);
 
   useEffect(() => {
     if (!handoffId) return;
@@ -384,8 +439,9 @@ export function PopoutComposeApp() {
   return (
     <PopoutShell kind="compose" accountId={accountId}>
       {payload ? <PopoutComposer payload={payload} handoffId={handoffId} />
+        : handoffId ? <PopoutSkeleton label={t("opening")} />
         : draftId ? <RestoredDraft draftId={draftId} accountId={accountId} ownerAccountId={ownerAccountId} onReady={setPayload} />
-        : <PopoutSkeleton label={t("opening")} />}
+        : <NewMessageGate onReady={setPayload} />}
     </PopoutShell>
   );
 }

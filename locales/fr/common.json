@@ -6966,10 +6966,12 @@
     "taken": "Une autre application utilise {keys}, ce raccourci n'a donc aucun effet ici. Choisissez d'autres touches ou fermez cette application.",
     "change": "Changer les touches : {keys}",
     "recording": "Appuyez sur les touches…",
-    "recording_hint": "Maintenez deux touches parmi Ctrl, Alt, Maj ou la touche système, puis appuyez sur une lettre ou un chiffre. Échap annule.",
+    "recording_hint": "Maintenez Ctrl (Cmd sur Mac) avec Alt ou Maj, puis appuyez sur une lettre, un chiffre, Entrée ou une touche de fonction. Échap annule.",
     "back_to_main": "Déplacer vers la fenêtre principale",
     "back_busy": "La fenêtre principale a déjà un message ouvert. Fermez-le, puis réessayez.",
-    "back_no_answer": "La fenêtre principale n'a pas répondu. Votre message reste ici."
+    "back_no_answer": "La fenêtre principale n'a pas répondu. Votre message reste ici.",
+    "types_character": "Ces touches produisent un caractère sur votre clavier, et il ne fonctionnerait plus dans aucune application. Essayez d'autres touches.",
+    "reserved": "Votre système ou la plupart des applications utilisent ces touches. Essayez d'autres touches."
   },
   "desktopReminders": {
     "generic_title": "Rappel",

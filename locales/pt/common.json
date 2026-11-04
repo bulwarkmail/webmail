@@ -6966,10 +6966,12 @@
     "taken": "Outra aplicação está a usar {keys}, por isso aqui não faz nada. Escolha outras teclas ou feche essa aplicação.",
     "change": "Alterar as teclas: {keys}",
     "recording": "Prima as teclas…",
-    "recording_hint": "Mantenha premidas duas de Ctrl, Alt, Shift ou a tecla do sistema e prima uma letra ou um número. Esc cancela.",
+    "recording_hint": "Mantenha premida Ctrl (Cmd no Mac) com Alt ou Shift e prima uma letra, um número, Enter ou uma tecla de função. Esc cancela.",
     "back_to_main": "Mover para a janela principal",
     "back_busy": "A janela principal já tem uma mensagem aberta. Feche-a e tente de novo.",
-    "back_no_answer": "A janela principal não respondeu. A sua mensagem fica aqui."
+    "back_no_answer": "A janela principal não respondeu. A sua mensagem fica aqui.",
+    "types_character": "Estas teclas escrevem um carácter no seu teclado, e ele deixaria de funcionar em todas as aplicações. Experimente outras teclas.",
+    "reserved": "O seu sistema ou a maioria das aplicações usam estas teclas. Experimente outras teclas."
   },
   "desktopReminders": {
     "generic_title": "Lembrete",

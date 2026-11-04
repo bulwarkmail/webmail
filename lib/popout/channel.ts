@@ -97,6 +97,8 @@ export type PopoutMessage =
   | { type: 'rescue-query'; rescueKey: string }
   | { type: 'rescue-answer'; rescueKey: string; draftId: string | null }
   | { type: 'composer-return'; returnId: string; accountId?: string; payload: ComposePopoutPayload }
+  | { type: 'composer-return-ready'; returnId: string }
+  | { type: 'composer-return-commit'; returnId: string }
   | { type: 'composer-return-answer'; returnId: string; status: 'shown' | 'busy' }
   | { type: 'composer-return-cancel'; returnId: string }
   | { type: 'main-ping' }

@@ -2,12 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FakeBroadcastChannel } from '@/lib/__tests__/fixtures/fake-broadcast-channel';
 import { registerComposeFlush } from '@/lib/compose-flush-registry';
 import { openPopoutChannel, type PopoutMessage } from '../channel';
-import { answerWhenComposerOpens, dropReturnedComposer, offerReturnedComposer, onReturnedComposer, onReturnedComposerElsewhere, returnComposerToMain, takeReturnedComposer } from '../return-to-main';
+import { answerWhenComposerOpens, commitReturnedComposer, dropReturnedComposer, offerReturnedComposer, onReturnedComposer, onReturnedComposerElsewhere, returnComposerToMain, takeReturnedComposer } from '../return-to-main';
 
 // The way a composer goes back from its own window. The window lets go of its text only when
-// the main window says the composer is there, so every other outcome has to say so too.
+// the main window says the composer is there, and at no moment may both windows hold it.
 
 const PAYLOAD = { mode: 'compose' as const, initialData: { subject: 'Hello' } as never };
+const alive = () => true;
 
 beforeEach(() => {
   vi.stubGlobal('BroadcastChannel', FakeBroadcastChannel);
@@ -21,45 +22,83 @@ afterEach(() => {
 });
 
 /** Plays the main window's end of the channel. */
-function mainWindow(onReturn: (message: Extract<PopoutMessage, { type: 'composer-return' }>, post: (m: PopoutMessage) => void) => void) {
+function mainWindow(onMessage: (message: PopoutMessage, post: (m: PopoutMessage) => void) => void) {
   const heard: PopoutMessage[] = [];
   const channel = openPopoutChannel((message) => {
     heard.push(message);
-    if (message.type === 'composer-return') onReturn(message, (m) => channel?.post(m));
+    onMessage(message, (m) => channel?.post(m));
   });
   return heard;
 }
 
 describe('from the pop-out', () => {
-  it('sends the draft and its login, and goes by what the main window answers', async () => {
+  it('sends the draft and its login, commits when the main window is ready, and goes by its answer', async () => {
     const seen: unknown[] = [];
-    mainWindow((message, post) => {
-      seen.push([message.accountId, message.payload]);
-      post({ type: 'composer-return-answer', returnId: message.returnId, status: 'shown' });
+    const heard = mainWindow((message, post) => {
+      if (message.type === 'composer-return') {
+        seen.push([message.accountId, message.payload]);
+        post({ type: 'composer-return-ready', returnId: message.returnId });
+      }
+      if (message.type === 'composer-return-commit') post({ type: 'composer-return-answer', returnId: message.returnId, status: 'shown' });
     });
-    await expect(returnComposerToMain(PAYLOAD, 'alice')).resolves.toBe('shown');
+    await expect(returnComposerToMain(PAYLOAD, 'alice', alive)).resolves.toBe('shown');
     expect(seen).toEqual([['alice', PAYLOAD]]);
+    expect(heard.map((message) => message.type)).toEqual(['composer-return', 'composer-return-commit']);
   });
 
   it('hears that the main window is busy', async () => {
-    mainWindow((message, post) => post({ type: 'composer-return-answer', returnId: message.returnId, status: 'busy' }));
-    await expect(returnComposerToMain(PAYLOAD, 'alice')).resolves.toBe('busy');
+    mainWindow((message, post) => {
+      if (message.type === 'composer-return') post({ type: 'composer-return-answer', returnId: message.returnId, status: 'busy' });
+    });
+    await expect(returnComposerToMain(PAYLOAD, 'alice', alive)).resolves.toBe('busy');
   });
 
-  it('ignores an answer about another composer', async () => {
-    mainWindow((_message, post) => post({ type: 'composer-return-answer', returnId: 'someone-else', status: 'shown' }));
-    await expect(returnComposerToMain(PAYLOAD, 'alice', 60)).resolves.toBe('no-answer');
+  it('ignores what is said about another composer', async () => {
+    const heard = mainWindow((message, post) => {
+      if (message.type !== 'composer-return') return;
+      post({ type: 'composer-return-answer', returnId: 'someone-else', status: 'shown' });
+      post({ type: 'composer-return-ready', returnId: 'someone-else' });
+    });
+    await expect(returnComposerToMain(PAYLOAD, 'alice', alive, 60)).resolves.toBe('no-answer');
+    expect(heard.map((message) => message.type)).not.toContain('composer-return-commit');
   });
 
   it('with no answer it keeps the text and calls the move off, so no second copy turns up', async () => {
     const heard = mainWindow(() => {});
-    await expect(returnComposerToMain(PAYLOAD, 'alice', 30)).resolves.toBe('no-answer');
+    await expect(returnComposerToMain(PAYLOAD, 'alice', alive, 30)).resolves.toBe('no-answer');
     await vi.waitFor(() => expect(heard.map((message) => message.type)).toEqual(['composer-return', 'composer-return-cancel']));
+  });
+
+  it('once committed it doesn\'t give up on a slow main window, which has the text by then', async () => {
+    let answer: (() => void) | null = null;
+    mainWindow((message, post) => {
+      if (message.type === 'composer-return') post({ type: 'composer-return-ready', returnId: message.returnId });
+      if (message.type === 'composer-return-commit') answer = () => post({ type: 'composer-return-answer', returnId: message.returnId, status: 'shown' });
+    });
+    const result = returnComposerToMain(PAYLOAD, 'alice', alive, 30);
+    let settled = false;
+    void result.then(() => { settled = true; });
+    await new Promise((resolve) => setTimeout(resolve, 120));
+    expect(settled).toBe(false);
+    expect(answer).not.toBeNull();
+    answer!();
+    await expect(result).resolves.toBe('shown');
+  });
+
+  it('once committed it keeps the text if the main window goes away', async () => {
+    mainWindow((message, post) => {
+      if (message.type === 'composer-return') post({ type: 'composer-return-ready', returnId: message.returnId });
+    });
+    let there = true;
+    const result = returnComposerToMain(PAYLOAD, 'alice', () => there, 30);
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    there = false;
+    await expect(result).resolves.toBe('no-answer');
   });
 });
 
 describe('in the main window', () => {
-  const returned = (id: string, answer = vi.fn()) => ({ returnId: id, payload: PAYLOAD, answer });
+  const returned = (id: string, answer = vi.fn(), sendReady = vi.fn()) => ({ returnId: id, payload: PAYLOAD, answer, sendReady });
 
   it('tells the mail page, and only the mail page, when it is there', () => {
     const mail = vi.fn();
@@ -98,22 +137,39 @@ describe('in the main window', () => {
     expect(takeReturnedComposer()).toBeNull();
   });
 
+  it('claiming asks the pop-out, and only its go ahead lets the page open anything', async () => {
+    const sendReady = vi.fn();
+    offerReturnedComposer(returned('a', vi.fn(), sendReady));
+    const taken = takeReturnedComposer()!;
+    expect(sendReady).not.toHaveBeenCalled();
+    const claim = taken.claim();
+    expect(sendReady).toHaveBeenCalledOnce();
+    commitReturnedComposer('a');
+    await expect(claim).resolves.toBe(true);
+  });
+
+  it('a pop-out that gave up as the page took it wins: nothing opens here', async () => {
+    offerReturnedComposer(returned('a'));
+    const taken = takeReturnedComposer()!;
+    const claim = taken.claim();
+    dropReturnedComposer('a');
+    await expect(claim).resolves.toBe(false);
+  });
+
+  it('silence after asking means no', async () => {
+    vi.useFakeTimers();
+    offerReturnedComposer(returned('a'));
+    const claim = takeReturnedComposer()!.claim();
+    await vi.advanceTimersByTimeAsync(6000);
+    await expect(claim).resolves.toBe(false);
+  });
+
   it('says shown only when a composer has really opened', () => {
     const answer = vi.fn();
-    answerWhenComposerOpens(returned('a', answer));
+    answerWhenComposerOpens({ returnId: 'a', payload: PAYLOAD, answer, claim: async () => true });
     expect(answer).not.toHaveBeenCalled();
     const stop = registerComposeFlush(async () => {});
     expect(answer).toHaveBeenCalledWith('shown');
-    stop();
-  });
-
-  it('says nothing if no composer opens, so the pop-out stays with the text', () => {
-    vi.useFakeTimers();
-    const answer = vi.fn();
-    answerWhenComposerOpens(returned('a', answer), 100);
-    vi.advanceTimersByTime(200);
-    const stop = registerComposeFlush(async () => {});
-    expect(answer).not.toHaveBeenCalled();
     stop();
   });
 });

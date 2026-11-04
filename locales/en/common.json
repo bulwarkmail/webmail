@@ -6966,10 +6966,12 @@
     "taken": "Another app is using {keys}, so it does nothing here. Pick other keys, or close that app.",
     "change": "Change the keys: {keys}",
     "recording": "Press the keys…",
-    "recording_hint": "Hold two of Ctrl, Alt, Shift or the system key, and press a letter or number. Esc cancels.",
+    "recording_hint": "Hold Ctrl (Cmd on a Mac) with Alt or Shift, and press a letter, number, Enter or function key. Esc cancels.",
     "back_to_main": "Move to the main window",
     "back_busy": "The main window already has a message open. Close that one, then try again.",
-    "back_no_answer": "The main window did not answer. Your message stays here."
+    "back_no_answer": "The main window did not answer. Your message stays here.",
+    "types_character": "These keys type a character on your keyboard, and it would stop working in every app. Try other keys.",
+    "reserved": "Your system or most apps use these keys. Try other keys."
   },
   "desktopReminders": {
     "generic_title": "Reminder",

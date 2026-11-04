@@ -72,6 +72,46 @@ describe('DesktopQuickComposeSetting', () => {
     expect(screen.queryByTestId('quick-compose-recording')).toBeNull();
   });
 
+  it('refuses keys this keyboard types a character with, and says so', () => {
+    const onChange = show({});
+    fireEvent.click(screen.getByTestId('quick-compose-keys'));
+    const recorder = screen.getByTestId('quick-compose-recording');
+    fireEvent.keyDown(recorder, { key: '€', code: 'KeyE', ctrlKey: true, altKey: true });
+    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByText('types_character')).toBeTruthy();
+    // Still recording: the next try can be better.
+    fireEvent.keyDown(recorder, { key: 'Enter', code: 'Enter', ctrlKey: true, altKey: true });
+    expect(onChange).toHaveBeenCalledWith('CommandOrControl+Alt+Enter');
+  });
+
+  it('refuses keys the system or every app uses, and says so', () => {
+    const onChange = show({});
+    fireEvent.click(screen.getByTestId('quick-compose-keys'));
+    fireEvent.keyDown(screen.getByTestId('quick-compose-recording'), { key: 'V', code: 'KeyV', ctrlKey: true, shiftKey: true });
+    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByText('reserved')).toBeTruthy();
+  });
+
+  it('refuses keys this keyboard types a character with, and says so', () => {
+    const onChange = show({});
+    fireEvent.click(screen.getByTestId('quick-compose-keys'));
+    const recorder = screen.getByTestId('quick-compose-recording');
+    fireEvent.keyDown(recorder, { key: '€', code: 'KeyE', ctrlKey: true, altKey: true });
+    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByText('types_character')).toBeTruthy();
+    // Still recording: the next try can be better.
+    fireEvent.keyDown(recorder, { key: 'Enter', code: 'Enter', ctrlKey: true, altKey: true });
+    expect(onChange).toHaveBeenCalledWith('CommandOrControl+Alt+Enter');
+  });
+
+  it('refuses keys the system or every app uses, and says so', () => {
+    const onChange = show({});
+    fireEvent.click(screen.getByTestId('quick-compose-keys'));
+    fireEvent.keyDown(screen.getByTestId('quick-compose-recording'), { key: 'V', code: 'KeyV', ctrlKey: true, shiftKey: true });
+    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByText('reserved')).toBeTruthy();
+  });
+
   it('Esc leaves things as they were', () => {
     const onChange = show({});
     fireEvent.click(screen.getByTestId('quick-compose-keys'));

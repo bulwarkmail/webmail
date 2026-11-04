@@ -1497,6 +1497,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       quoteWrapInBlockquote: composerQuoteHeader?.wrapInBlockquote,
     } : undefined);
 
+    const handedOff = handedOffSource?.session === composerSessionId ? handedOffSource : null;
     const effectiveMode = pendingDraft?.mode ?? composerMode;
     const title = buildComposeTabTitle({
       mode: effectiveMode,
@@ -1515,8 +1516,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       initialData: pendingDraft,
       prefill: composerPrefill,
       initialFiles: composerInitialFiles,
-      sourceEmailId: selectedEmail?.id ?? null,
-      sourceEmailSource: selectedEmail ? emailWriteSource(selectedEmail, client) : null,
+      // A composer handed over answers its own message, not the one selected in the list.
+      sourceEmailId: handedOff ? handedOff.emailId ?? null : selectedEmail?.id ?? null,
+      sourceEmailSource: handedOff ? handedOff.source ?? null : selectedEmail ? emailWriteSource(selectedEmail, client) : null,
       title,
     });
 
@@ -1718,6 +1720,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // got what it holds. Under Pro a composer moves to its own tab, so nothing
   // waits long.
   const handoffOpeningRef = useRef(false);
+  const returnOpeningRef = useRef(false);
   const handoffToldWaitingRef = useRef(new Set<string>());
   const composerInUseRef = useRef(false);
   const composerInUse = showComposer || pendingMailtoAccountChoice !== null
@@ -1749,7 +1752,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     };
 
     const openNext = () => {
-      if (handoffOpeningRef.current) return;
+      if (handoffOpeningRef.current || returnOpeningRef.current) return;
       if (composerInUseRef.current) {
         const waiting = pendingHandoffs().find((handoff) => handoff.kind === 'compose');
         if (waiting && !handoffToldWaitingRef.current.has(waiting.id)) {
@@ -1773,13 +1776,26 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   }, [isAuthenticated, client, proTakingOver, routeOutsideDraft, withComposeGate, isMobile, composerInUse, handoffSettled]);
 
   // A composer coming back from its own window. It has saved, and keeps its copy until
-  // the composer is open here. One already open holds someone's text, so that says no.
+  // the composer is open here. One already open holds someone's text, and so may one on its
+  // way behind a plugin's onBeforeCompose, so either says no.
   useEffect(() => {
     if (!isAuthenticated || !client || proTakingOver) return;
-    const adopt = () => {
+    const adopt = async () => {
       const returned = takeReturnedComposer();
       if (!returned) return;
-      if (composerInUseRef.current) {
+      const busy = () => composerInUseRef.current || handoffOpeningRef.current;
+      if (busy()) {
+        returned.answer('busy');
+        return;
+      }
+      // Holds back a handoff until this has gone one way or the other.
+      returnOpeningRef.current = true;
+      const go = await returned.claim().finally(() => {
+        returnOpeningRef.current = false;
+        setHandoffSettled((n) => n + 1);
+      });
+      if (!go) return;
+      if (busy()) {
         returned.answer('busy');
         return;
       }
@@ -1792,8 +1808,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       setShowComposer(true);
       if (isMobile) setActiveView('viewer');
     };
-    adopt();
-    return onReturnedComposer(adopt);
+    void adopt();
+    return onReturnedComposer(() => void adopt());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, client, proTakingOver, isMobile, composerSessionId]);
 

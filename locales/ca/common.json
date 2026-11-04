@@ -6966,10 +6966,12 @@
     "taken": "Una altra aplicació fa servir {keys}, així que aquí no fa res. Tria altres tecles o tanca aquella aplicació.",
     "change": "Canvia les tecles: {keys}",
     "recording": "Prem les tecles…",
-    "recording_hint": "Mantén premudes dues de Ctrl, Alt, Maj o la tecla del sistema, i prem una lletra o un número. Esc cancel·la.",
+    "recording_hint": "Mantén premuda Ctrl (Cmd al Mac) amb Alt o Maj, i prem una lletra, un número, Retorn o una tecla de funció. Esc cancel·la.",
     "back_to_main": "Mou a la finestra principal",
     "back_busy": "La finestra principal ja té un missatge obert. Tanca'l i torna-ho a provar.",
-    "back_no_answer": "La finestra principal no ha respost. El teu missatge es queda aquí."
+    "back_no_answer": "La finestra principal no ha respost. El teu missatge es queda aquí.",
+    "types_character": "Aquestes tecles escriuen un caràcter al teu teclat, i deixaria de funcionar a totes les aplicacions. Prova altres tecles.",
+    "reserved": "El sistema o la majoria d'aplicacions fan servir aquestes tecles. Prova altres tecles."
   },
   "desktopReminders": {
     "generic_title": "Recordatori",

@@ -10,7 +10,7 @@ import { useEmailStore } from "@/stores/email-store";
 import { toast } from "@/stores/toast-store";
 import { newPopoutId, openPopoutChannel, type PopoutChannel, type PopoutMessage, type PopoutSentNotice, type RescuedDraft, type SharedAccountSession } from "@/lib/popout/channel";
 import { keepRescuedDraft } from "@/lib/popout/rescued-drafts";
-import { dropReturnedComposer, offerReturnedComposer } from "@/lib/popout/return-to-main";
+import { commitReturnedComposer, dropReturnedComposer, offerReturnedComposer } from "@/lib/popout/return-to-main";
 import { credentialFingerprint, sealFor } from "@/lib/popout/sealed";
 import { changesAnyType, subscribePushStateChanges } from "@/lib/push-events";
 
@@ -182,10 +182,14 @@ export function PopoutHost() {
               returnId,
               payload,
               answer: (status) => channel?.post({ type: "composer-return-answer", returnId, status }),
+              sendReady: () => channel?.post({ type: "composer-return-ready", returnId }),
             });
           });
           break;
         }
+        case "composer-return-commit":
+          commitReturnedComposer(message.returnId);
+          break;
         case "composer-return-cancel":
           dropReturnedComposer(message.returnId);
           break;

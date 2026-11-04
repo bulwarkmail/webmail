@@ -333,7 +333,7 @@ describe('quick compose and the way back', () => {
     fakeBridge();
     render(<DesktopHost />);
     push.mockClear();
-    offerReturnedComposer({ returnId: 'r1', payload: { mode: 'compose' }, answer: () => {} });
+    offerReturnedComposer({ returnId: 'r1', payload: { mode: 'compose' }, answer: () => {}, sendReady: () => {} });
     expect(push).toHaveBeenCalledWith('/');
   });
 });
