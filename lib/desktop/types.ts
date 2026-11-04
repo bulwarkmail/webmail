@@ -610,6 +610,8 @@ export interface DesktopOsSummary {
   /** Newest conversations, whether read or not, for the jump list. */
   recent: DesktopOsTrayMessage[];
   nextEvent: { title: string; when: string } | null;
+  /** The account `unread` is from, when more than one is signed in. */
+  account?: string;
 }
 
 export type DesktopOsPowerEvent = 'suspend' | 'resume' | 'lock-screen' | 'unlock-screen';

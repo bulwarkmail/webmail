@@ -320,7 +320,12 @@ function hasWholeText(email: { bodyValues?: Record<string, { isTruncated?: boole
 const NEEDS_SERVER = /^(EmailSubmission|Email\/import|CalendarEvent\/set|ContactCard\/set|AddressBook\/set|Calendar\/set|Mailbox\/set|FileNode\/set|SieveScript\/set|VacationResponse\/set|Identity\/set)/;
 let lastRefusalNotice = 0;
 
-function noticeRefused(answered: OfflineResponse | null, methodCalls: OfflineMethodCall[]): void {
+function noticeRefused(client: OfflineClientRef, answered: OfflineResponse | null, methodCalls: OfflineMethodCall[]): void {
+  // Online, with the server answering: the store only stood in for a moment (a draft
+  // waiting from last time, at a start). The outbox retries by itself; "this needs a
+  // connection" would be wrong.
+  const online = typeof navigator === 'undefined' || navigator.onLine !== false;
+  if (online && !useOfflineStore.getState().downServers.includes(serverKey(client.getServerUrl()))) return;
   const refusedCall = methodCalls.some(([name, , id]) => NEEDS_SERVER.test(name)
     && (!answered || answered.methodResponses.some(([responseName, , responseId]) => responseId === id && responseName === 'error')));
   const refusedChange = answered?.methodResponses.some(([name, result]) => name === 'Email/set' && result?.notUpdated) ?? false;
@@ -383,7 +388,7 @@ const hooks: OfflineHooks = {
     } catch {
       // The store couldn't start or lost its owner: as if nothing were kept.
     }
-    noticeRefused(answered, methodCalls);
+    noticeRefused(client, answered, methodCalls);
     if (answered && methodCalls.some(([name]) => QUEUEING_METHOD.test(name))) {
       requestOutboxSync();
       void refreshQueueState();

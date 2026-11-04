@@ -490,6 +490,18 @@ describe('the summary', () => {
       expect(summary.unread).toEqual([expect.objectContaining({ emailId: 'e1', accountId: 'acc', sender: 'Alice', subject: 'Lunch?' })]);
       expect(JSON.parse(summary.unread[0].context!)).toMatchObject({ emailId: 'e1', slot: 3 });
       expect(getEmails).toHaveBeenCalledWith('in', undefined, 5, 0, undefined, false, { notKeyword: '$seen' });
+      // One account: no need to say whose.
+      expect(summary.account).toBeUndefined();
+    });
+
+    it('with two accounts it names the one the unread mail is from', async () => {
+      const { useAccountStore } = await import('@/stores/account-store');
+      useAccountStore.setState({ accounts: [
+        { id: 'alice@one', cookieSlot: 3, serverUrl: 'https://one.example', username: 'alice@example.org' },
+        { id: 'bob@two', cookieSlot: 4, serverUrl: 'https://two.example', username: 'bob@example.org' },
+      ] as never });
+      const { readSummary } = await import('../os-summary');
+      expect((await readSummary('en')).account).toBe('alice@example.org');
     });
 
     it('before the policy is known it is empty', async () => {
@@ -590,7 +602,24 @@ describe('the settings section', () => {
   it('macOS gets its own word for the bounce', async () => {
     const { DesktopOsSettings } = await import('@/components/settings/desktop-os-settings');
     setBridge(bridgeFor(status()) as never, 'darwin');
-    render(<DesktopOsSettings />);
+    render(<DesktopOsSettings part="notifications" />);
     expect(await screen.findByText('attention_mac_label')).toBeInTheDocument();
+  });
+
+  it('the taskbar flash and quiet hours are with the notifications, not on General', async () => {
+    const { DesktopOsSettings } = await import('@/components/settings/desktop-os-settings');
+    const os = bridgeFor(status());
+    setBridge(os as never);
+    const general = render(<DesktopOsSettings />);
+    expect(await screen.findByText('close_to_tray_label')).toBeInTheDocument();
+    expect(screen.queryByText('attention_label')).toBeNull();
+    expect(screen.queryByText('quiet_hours_label')).toBeNull();
+    general.unmount();
+    render(<DesktopOsSettings part="notifications" />);
+    expect(await screen.findByText('quiet_hours_label')).toBeInTheDocument();
+    expect(screen.getByText('attention_label')).toBeInTheDocument();
+    expect(screen.queryByText('close_to_tray_label')).toBeNull();
+    fireEvent.click(screen.getAllByRole('switch')[1]);
+    await waitFor(() => expect(os.setSettings).toHaveBeenCalledWith({ quietHoursEnabled: true }));
   });
 });
