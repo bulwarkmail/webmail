@@ -7797,6 +7797,10 @@
     "too_large": "\"{name}\" ist größer als {max} und kann nicht angehängt werden.",
     "failed": "\"{name}\" konnte nicht angehängt werden. Versuchen Sie es erneut."
   },
+  "composeRecentLimit": {
+    "too_large": "Zu groß",
+    "too_large_hint": "Größer, als der Server annimmt ({max})"
+  },
   "compose_windows": {
     "more_formatting": "Weitere Formatierung",
     "offline": "Offline",

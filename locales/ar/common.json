@@ -7797,6 +7797,10 @@
     "too_large": "\"{name}\" أكبر من {max} ولا يمكن إرفاقه.",
     "failed": "تعذّر إرفاق \"{name}\". حاول مرة أخرى."
   },
+  "composeRecentLimit": {
+    "too_large": "كبير جدًا",
+    "too_large_hint": "أكبر مما يقبله الخادم ({max})"
+  },
   "compose_windows": {
     "more_formatting": "مزيد من التنسيق",
     "offline": "دون اتصال",

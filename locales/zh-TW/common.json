@@ -7797,6 +7797,10 @@
     "too_large": "「{name}」超過 {max}，無法附加。",
     "failed": "無法附加「{name}」。請再試一次。"
   },
+  "composeRecentLimit": {
+    "too_large": "太大",
+    "too_large_hint": "超過伺服器允許的大小（{max}）"
+  },
   "compose_windows": {
     "more_formatting": "更多格式",
     "offline": "離線",

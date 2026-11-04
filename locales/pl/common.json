@@ -7797,6 +7797,10 @@
     "too_large": "„{name}” jest większy niż {max} i nie można go dołączyć.",
     "failed": "Nie udało się dołączyć „{name}”. Spróbuj ponownie."
   },
+  "composeRecentLimit": {
+    "too_large": "Za duży",
+    "too_large_hint": "Większy, niż przyjmuje serwer ({max})"
+  },
   "compose_windows": {
     "more_formatting": "Więcej formatowania",
     "offline": "Offline",

@@ -7797,6 +7797,10 @@
     "too_large": "„{name}“ je větší než {max} a nelze ho připojit.",
     "failed": "„{name}“ se nepodařilo připojit. Zkuste to znovu."
   },
+  "composeRecentLimit": {
+    "too_large": "Příliš velký",
+    "too_large_hint": "Větší, než server přijme ({max})"
+  },
   "compose_windows": {
     "more_formatting": "Další formátování",
     "offline": "Offline",

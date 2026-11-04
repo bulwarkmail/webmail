@@ -7797,6 +7797,10 @@
     "too_large": "\"{name}\" {max}-аас том тул хавсаргах боломжгүй.",
     "failed": "\"{name}\"-г хавсаргаж чадсангүй. Дахин оролдоно уу."
   },
+  "composeRecentLimit": {
+    "too_large": "Хэт том",
+    "too_large_hint": "Серверийн хүлээн авах хэмжээнээс ({max}) их"
+  },
   "compose_windows": {
     "more_formatting": "Бусад хэлбэржүүлэлт",
     "offline": "Офлайн",

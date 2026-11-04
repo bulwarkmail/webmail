@@ -7797,6 +7797,10 @@
     "too_large": "«{name}» supera {max} i no es pot adjuntar.",
     "failed": "No s'ha pogut adjuntar «{name}». Torneu-ho a provar."
   },
+  "composeRecentLimit": {
+    "too_large": "Massa gran",
+    "too_large_hint": "Més gran del que accepta el servidor ({max})"
+  },
   "compose_windows": {
     "more_formatting": "Més format",
     "offline": "Sense connexió",

@@ -2816,6 +2816,12 @@ export function EmailComposer({
   // The Attach menu's recent files, in the desktop app (lib/desktop/recent-files.ts). The
   // shell reads the file; from there it's a file like one from the file dialog.
   const recentOffered = useRecentFilesOffered();
+  // The largest recent file worth offering: what the server takes per file,
+  // and what the app reads (compose-p3-18).
+  const recentFileLimit = () => {
+    const serverMax = (composerClientRef.current ?? client)?.getMaxSizeUpload?.() ?? 0;
+    return serverMax > 0 ? Math.min(serverMax, RECENT_FILE_MAX_BYTES) : RECENT_FILE_MAX_BYTES;
+  };
   const attachRecentFile = useCallback(async (file: DesktopRecentFile) => {
     const result = await readRecentFile(file.id);
     if (result.ok) {
@@ -6036,7 +6042,10 @@ export function EmailComposer({
                 {(close) => <>
                   {/* As Outlook's: the recent files first, one click attaches one and closes. */}
                   {recentOffered && (
-                    <RecentFilesMenuSection onPick={(file) => { close(); void attachRecentFile(file); }} />
+                    <RecentFilesMenuSection
+                      onPick={(file) => { close(); void attachRecentFile(file); }}
+                      maxBytes={recentFileLimit()}
+                    />
                   )}
                   <ComposerToolbarMenuItem
                     icon={Upload}

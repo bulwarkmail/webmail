@@ -6,7 +6,7 @@ import { CONTEXT_MENU_ITEM_CLASS, menuLevelItems } from "@/components/ui/context
 import { attachmentIcon } from "@/components/email/attachment-chips";
 import { listRecentFiles, recentWhen, shortFolder } from "@/lib/desktop/recent-files";
 import type { DesktopRecentFile } from "@/lib/desktop/types";
-import { cn } from "@/lib/utils";
+import { cn, formatFileSize } from "@/lib/utils";
 
 /** Only an icon the shell made: a PNG as a data: URL. */
 const ICON_URL = /^data:image\/png;base64,[A-Za-z0-9+/=]+$/;
@@ -17,8 +17,13 @@ const ICON_URL = /^data:image\/png;base64,[A-Za-z0-9+/=]+$/;
  * what the shell asks for. Until the list is there, and when it's empty, it takes no room.
  * It stays an HTML menu (data-native-menu): a native one can't show the icons and folders.
  */
-export function RecentFilesMenuSection({ onPick }: { onPick: (file: DesktopRecentFile) => void }) {
+export function RecentFilesMenuSection({ onPick, maxBytes = 0 }: {
+  onPick: (file: DesktopRecentFile) => void;
+  /** Larger files are listed greyed out, "Too large" in place of the date (compose-p3-18). 0: no limit known. */
+  maxBytes?: number;
+}) {
   const t = useTranslations("desktopAttachRecent");
+  const tLimit = useTranslations("composeRecentLimit");
   const locale = useLocale();
   const [files, setFiles] = useState<DesktopRecentFile[] | null>(null);
   // One request per opening, also when a strict-mode remount runs the effect twice.
@@ -57,17 +62,20 @@ export function RecentFilesMenuSection({ onPick }: { onPick: (file: DesktopRecen
           </div>
           {files.map((file) => {
             const Fallback = attachmentIcon(null, file.name).icon;
+            // Picking it only said "larger than the server allows" afterwards.
+            const tooLarge = maxBytes > 0 && typeof file.size === "number" && file.size > maxBytes;
             return (
               <button
                 key={file.id}
                 type="button"
                 role="menuitem"
-                title={file.path}
-                onClick={() => onPick(file)}
+                title={tooLarge ? `${file.path}\n${tLimit("too_large_hint", { max: formatFileSize(maxBytes) })}` : file.path}
+                aria-disabled={tooLarge || undefined}
+                onClick={() => { if (!tooLarge) onPick(file); }}
                 data-testid="composer-recent-file"
                 // As wide as the menu and never wider: the row was 24rem in a menu of at
                 // most 22rem, so the dates were cut and the menu scrolled sideways (compose-p3-5).
-                className={cn(CONTEXT_MENU_ITEM_CLASS, "w-full min-w-[min(20rem,calc(100vw-3rem))] gap-2.5")}
+                className={cn(CONTEXT_MENU_ITEM_CLASS, "w-full min-w-[min(20rem,calc(100vw-3rem))] gap-2.5", tooLarge && "cursor-default text-muted-foreground opacity-60 hover:bg-transparent")}
               >
                 {file.icon && ICON_URL.test(file.icon) ? (
                   <img src={file.icon} alt="" aria-hidden="true" draggable={false} className="h-4 w-4 shrink-0" />
@@ -78,7 +86,7 @@ export function RecentFilesMenuSection({ onPick }: { onPick: (file: DesktopRecen
                   <span className="block truncate">{file.name}</span>
                   <span className="block truncate text-xs text-muted-foreground">{shortFolder(file.folder)}</span>
                 </span>
-                <span className="shrink-0 self-start whitespace-nowrap pt-0.5 text-xs text-muted-foreground" data-testid="composer-recent-file-when">{recentWhen(file.usedAt, now, locale)}</span>
+                <span className="shrink-0 self-start whitespace-nowrap pt-0.5 text-xs text-muted-foreground" data-testid="composer-recent-file-when">{tooLarge ? tLimit("too_large") : recentWhen(file.usedAt, now, locale)}</span>
               </button>
             );
           })}

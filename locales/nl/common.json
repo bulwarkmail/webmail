@@ -7797,6 +7797,10 @@
     "too_large": "\"{name}\" is groter dan {max} en kan niet worden bijgevoegd.",
     "failed": "\"{name}\" kon niet worden bijgevoegd. Probeer het opnieuw."
   },
+  "composeRecentLimit": {
+    "too_large": "Te groot",
+    "too_large_hint": "Groter dan de server aanneemt ({max})"
+  },
   "compose_windows": {
     "more_formatting": "Meer opmaak",
     "offline": "Offline",

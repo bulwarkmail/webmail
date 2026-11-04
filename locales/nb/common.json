@@ -7797,6 +7797,10 @@
     "too_large": "«{name}» er større enn {max} og kan ikke legges ved.",
     "failed": "Kunne ikke legge ved «{name}». Prøv igjen."
   },
+  "composeRecentLimit": {
+    "too_large": "For stor",
+    "too_large_hint": "Større enn serveren tar imot ({max})"
+  },
   "compose_windows": {
     "more_formatting": "Mer formatering",
     "offline": "Frakoblet",

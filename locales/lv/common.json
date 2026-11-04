@@ -7797,6 +7797,10 @@
     "too_large": "“{name}” ir lielāks par {max}, un to nevar pievienot.",
     "failed": "Neizdevās pievienot “{name}”. Mēģiniet vēlreiz."
   },
+  "composeRecentLimit": {
+    "too_large": "Pārāk liels",
+    "too_large_hint": "Lielāks, nekā serveris pieņem ({max})"
+  },
   "compose_windows": {
     "more_formatting": "Vairāk formatēšanas",
     "offline": "Bezsaistē",

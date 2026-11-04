@@ -7797,6 +7797,10 @@
     "too_large": "「{name}」は {max} を超えているため添付できません。",
     "failed": "「{name}」を添付できませんでした。もう一度お試しください。"
   },
+  "composeRecentLimit": {
+    "too_large": "大きすぎます",
+    "too_large_hint": "サーバーが受け付けるサイズ（{max}）を超えています"
+  },
   "compose_windows": {
     "more_formatting": "その他の書式",
     "offline": "オフライン",

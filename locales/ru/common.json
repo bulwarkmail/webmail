@@ -7797,6 +7797,10 @@
     "too_large": "«{name}» больше {max}, его нельзя прикрепить.",
     "failed": "Не удалось прикрепить «{name}». Попробуйте ещё раз."
   },
+  "composeRecentLimit": {
+    "too_large": "Слишком большой",
+    "too_large_hint": "Больше, чем принимает сервер ({max})"
+  },
   "compose_windows": {
     "more_formatting": "Дополнительное форматирование",
     "offline": "Не в сети",

@@ -7805,6 +7805,10 @@
     "too_large": "“{name}” มีขนาดใหญ่กว่า {max} จึงแนบไม่ได้",
     "failed": "แนบ “{name}” ไม่สำเร็จ ลองอีกครั้ง"
   },
+  "composeRecentLimit": {
+    "too_large": "ใหญ่เกินไป",
+    "too_large_hint": "ใหญ่กว่าที่เซิร์ฟเวอร์รับได้ ({max})"
+  },
   "compose_windows": {
     "more_formatting": "การจัดรูปแบบเพิ่มเติม",
     "offline": "ออฟไลน์",

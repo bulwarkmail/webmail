@@ -7798,6 +7798,10 @@
     "too_large": "\"{name}\" גדול מ־{max} ולא ניתן לצרף אותו.",
     "failed": "לא ניתן היה לצרף את \"{name}\". נסו שוב."
   },
+  "composeRecentLimit": {
+    "too_large": "גדול מדי",
+    "too_large_hint": "גדול ממה שהשרת מקבל ({max})"
+  },
   "compose_windows": {
     "more_formatting": "עוד עיצוב",
     "offline": "אין חיבור",

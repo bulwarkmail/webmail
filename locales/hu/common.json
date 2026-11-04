@@ -7797,6 +7797,10 @@
     "too_large": "A(z) „{name}” nagyobb, mint {max}, ezért nem csatolható.",
     "failed": "A(z) „{name}” csatolása nem sikerült. Próbálja újra."
   },
+  "composeRecentLimit": {
+    "too_large": "Túl nagy",
+    "too_large_hint": "Nagyobb, mint amit a szerver elfogad ({max})"
+  },
   "compose_windows": {
     "more_formatting": "További formázás",
     "offline": "Offline",

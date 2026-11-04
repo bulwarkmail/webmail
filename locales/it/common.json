@@ -7797,6 +7797,10 @@
     "too_large": "\"{name}\" supera {max} e non può essere allegato.",
     "failed": "Impossibile allegare \"{name}\". Riprova."
   },
+  "composeRecentLimit": {
+    "too_large": "Troppo grande",
+    "too_large_hint": "Più grande di quanto accetta il server ({max})"
+  },
   "compose_windows": {
     "more_formatting": "Altre opzioni di formattazione",
     "offline": "Offline",

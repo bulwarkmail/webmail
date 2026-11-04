@@ -7809,6 +7809,10 @@
     "too_large": "\"{name}\" lớn hơn {max} nên không thể đính kèm.",
     "failed": "Không thể đính kèm \"{name}\". Hãy thử lại."
   },
+  "composeRecentLimit": {
+    "too_large": "Quá lớn",
+    "too_large_hint": "Lớn hơn mức máy chủ nhận ({max})"
+  },
   "compose_windows": {
     "more_formatting": "Thêm định dạng",
     "offline": "Ngoại tuyến",

@@ -7797,6 +7797,10 @@
     "too_large": "\"{name}\" er større end {max} og kan ikke vedhæftes.",
     "failed": "\"{name}\" kunne ikke vedhæftes. Prøv igen."
   },
+  "composeRecentLimit": {
+    "too_large": "For stor",
+    "too_large_hint": "Større end serveren tager imod ({max})"
+  },
   "compose_windows": {
     "more_formatting": "Mere formatering",
     "offline": "Offline",

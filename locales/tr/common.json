@@ -7797,6 +7797,10 @@
     "too_large": "\"{name}\" {max} boyutundan büyük ve eklenemez.",
     "failed": "\"{name}\" eklenemedi. Yeniden deneyin."
   },
+  "composeRecentLimit": {
+    "too_large": "Çok büyük",
+    "too_large_hint": "Sunucunun kabul ettiğinden büyük ({max})"
+  },
   "compose_windows": {
     "more_formatting": "Daha fazla biçimlendirme",
     "offline": "Çevrimdışı",

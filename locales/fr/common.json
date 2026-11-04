@@ -7797,6 +7797,10 @@
     "too_large": "« {name} » dépasse {max} et ne peut pas être joint.",
     "failed": "Impossible de joindre « {name} ». Réessayez."
   },
+  "composeRecentLimit": {
+    "too_large": "Trop volumineux",
+    "too_large_hint": "Plus volumineux que ce que le serveur accepte ({max})"
+  },
   "compose_windows": {
     "more_formatting": "Plus de mise en forme",
     "offline": "Hors ligne",

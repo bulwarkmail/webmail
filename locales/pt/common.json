@@ -7797,6 +7797,10 @@
     "too_large": "\"{name}\" é maior que {max} e não pode ser anexado.",
     "failed": "Não foi possível anexar \"{name}\". Tente novamente."
   },
+  "composeRecentLimit": {
+    "too_large": "Grande demais",
+    "too_large_hint": "Maior do que o servidor aceita ({max})"
+  },
   "compose_windows": {
     "more_formatting": "Mais formatação",
     "offline": "Offline",

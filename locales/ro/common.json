@@ -7797,6 +7797,10 @@
     "too_large": "„{name}” depășește {max} și nu poate fi atașat.",
     "failed": "„{name}” nu a putut fi atașat. Încearcă din nou."
   },
+  "composeRecentLimit": {
+    "too_large": "Prea mare",
+    "too_large_hint": "Mai mare decât acceptă serverul ({max})"
+  },
   "compose_windows": {
     "more_formatting": "Mai multe opțiuni de formatare",
     "offline": "Offline",

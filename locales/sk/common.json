@@ -7797,6 +7797,10 @@
     "too_large": "„{name}“ je väčší ako {max} a nedá sa priložiť.",
     "failed": "„{name}“ sa nepodarilo priložiť. Skúste to znova."
   },
+  "composeRecentLimit": {
+    "too_large": "Príliš veľký",
+    "too_large_hint": "Väčší, než server prijme ({max})"
+  },
   "compose_windows": {
     "more_formatting": "Ďalšie formátovanie",
     "offline": "Offline",

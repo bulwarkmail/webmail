@@ -827,6 +827,8 @@ export interface DesktopRecentFile {
   path: string;
   /** When it was last used, in milliseconds since 1970. */
   usedAt: number;
+  /** Its size in bytes; absent from an older shell. */
+  size?: number;
   /** A small icon as a data: URL, when the OS gave one in time. */
   icon?: string;
 }

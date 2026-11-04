@@ -7797,6 +7797,10 @@
     "too_large": "«{name}» بزرگ‌تر از {max} است و نمی‌توان آن را پیوست کرد.",
     "failed": "پیوست «{name}» ممکن نشد. دوباره امتحان کنید."
   },
+  "composeRecentLimit": {
+    "too_large": "خیلی بزرگ",
+    "too_large_hint": "بزرگ‌تر از حدی که سرور می‌پذیرد ({max})"
+  },
   "compose_windows": {
     "more_formatting": "قالب‌بندی بیشتر",
     "offline": "آفلاین",
