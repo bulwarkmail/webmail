@@ -8,6 +8,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { MailtoLink } from "@/components/ui/mailto-link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { formatAddressLines } from "@/lib/address-format";
 import type { ContactCard, AnniversaryDate } from "@/lib/jmap/types";
 import { getContactDisplayName, getContactPrimaryEmail, getContactPhotoRef } from "@/stores/contact-store";
 import { ContactActivity } from "./contact-activity";
@@ -268,23 +269,14 @@ export function ContactDetail({ contact, onEdit, onDelete, onAddToGroup, onDupli
               })}
 
               {addresses.map((a, i) => {
-                const lines: string[] = [];
-                if (a.full || a.fullAddress) {
-                  lines.push((a.full || a.fullAddress) as string);
-                } else if (a.components && a.components.length > 0) {
-                  const joined = a.components.filter(c => c.kind !== 'separator').map(c => c.value).filter(Boolean).join(", ");
-                  if (joined) lines.push(joined);
-                } else {
-                  const parts = [a.street, [a.postcode, a.locality].filter(Boolean).join(" "), a.region, a.country]
-                    .map(s => (typeof s === "string" ? s.trim() : ""))
-                    .filter(Boolean) as string[];
-                  lines.push(...parts);
-                }
+                // One line per part, in the order of the address's country:
+                // "Hauptstraße 1" / "10000 Berlin" / "Germany".
+                const lines = formatAddressLines(a, locale);
                 return (
                   <FieldRow key={`ad${i}`} icon={MapPin} label={formatContexts(a.contexts, contextLabel) || t("detail.address_default_label")}>
-                    <div className="text-sm space-y-0.5">
+                    <div className="text-sm space-y-0.5" data-testid="contact-address">
                       {lines.map((line, idx) => (
-                        <div key={idx}>{line}</div>
+                        <div key={idx} data-address-line="">{line}</div>
                       ))}
                       {a.timeZone && (
                         <div className="text-xs text-muted-foreground">{t("detail.timezone")}: {a.timeZone}</div>
