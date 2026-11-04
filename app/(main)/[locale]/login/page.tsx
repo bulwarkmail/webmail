@@ -49,6 +49,7 @@ import { checkDesktopSignIn, parkDesktopSignIn, requestMobileHandoffCodeUrl } fr
 import { MobileHandoffConsent } from "@/components/auth/mobile-handoff-consent";
 import { LoginServerField, requestServerDiscovery, type ServerFieldError } from "@/components/auth/login-server-field";
 import { emailDomain, normalizeServerInput, serverHostLabel, unsupportedProvider } from "@/lib/auth/mail-server-address";
+import { loginHintFrom } from "@/lib/auth/login-hint";
 import { HelpLinks } from "@/components/layout/help-links";
 import { LoginSkeleton } from "@/components/boot-skeleton/login-skeleton";
 import { Block } from "@/components/boot-skeleton/kit";
@@ -277,9 +278,12 @@ function LoginPageContent() {
     ? { maxHeight: loginLogoMaxHeight || undefined, maxWidth: loginLogoMaxWidth || undefined }
     : undefined;
 
+  // The address typed on the desktop app's first screen (or named by a link): the form
+  // starts with it, looks its server up at once and puts the caret in the next field.
+  const [loginHint] = useState(() => loginHintFrom(searchParams.get("login_hint")));
   const [formData, setFormData] = useState({
     // An account restored from the list backup opens this form with its address.
-    username: isAddAccountMode ? searchParams.get("username") ?? "" : "",
+    username: (isAddAccountMode ? searchParams.get("username") : null) || loginHint,
     password: "",
   });
   const [jmapEndpoint, setJmapEndpoint] = useState("");
@@ -503,14 +507,16 @@ function LoginPageContent() {
   const typedAddress = formData.username.trim();
   useEffect(() => {
     if (!typedDomain || unsupportedMailProvider || serverLookup?.domain === typedDomain) return;
+    // An address handed over from the first screen is complete: no typing to wait for.
+    const delay = loginHint && typedAddress === loginHint ? 0 : 600;
     const timer = setTimeout(() => {
       setServerLookup({ domain: typedDomain, status: "looking", url: null });
       lookUpServer(typedDomain, typedAddress).then((url) => {
         setServerLookup((current) => (current?.domain === typedDomain ? { domain: typedDomain, status: url ? "found" : "failed", url } : current));
       });
-    }, 600);
+    }, delay);
     return () => clearTimeout(timer);
-  }, [typedDomain, typedAddress, unsupportedMailProvider, serverLookup?.domain, lookUpServer]);
+  }, [typedDomain, typedAddress, unsupportedMailProvider, serverLookup?.domain, lookUpServer, loginHint]);
 
   useEffect(() => {
     if (serverFocusRequest) serverInputRef.current?.focus();
@@ -1159,6 +1165,9 @@ function LoginPageContent() {
     authUrl.searchParams.set("code_challenge_method", "S256");
     // RFC 8707 resource for the global provider only (#1461).
     addOauthResource(authUrl, oauthResource, Boolean(server));
+    // OIDC: the provider's page starts with the address already typed here.
+    const hint = loginHintFrom(formData.username);
+    if (hint) authUrl.searchParams.set("login_hint", hint);
     if (isAddAccountMode) {
       authUrl.searchParams.set("prompt", "select_account");
     }
@@ -1212,6 +1221,7 @@ function LoginPageContent() {
         remember: persistProviderSession,
         addAccount: isAddAccountMode,
         fresh: freshLoginRequired(),
+        loginHint: loginHintFrom(typedAddress),
         redeem: (server, code, verifier, redirectUri) => useAuthStore.getState().loginWithOAuth(server, code, verifier, redirectUri),
         tryPassword: async ({ username, password, totp }) => {
           if (await useAuthStore.getState().login(target, username, password, totp, persistSession)) {
@@ -1242,6 +1252,7 @@ function LoginPageContent() {
       base: `${window.location.origin}${getPathPrefix(params.locale as string)}`,
       locale: params.locale as string,
       fresh: freshLoginRequired(),
+      loginHint: loginHintFrom(formData.username),
     });
     if (outcome.kind !== "code") {
       showBrowserSignInOutcome(outcome);
@@ -1978,7 +1989,8 @@ function LoginPageContent() {
                         required={!signInWithToken}
                         // Password managers fill and save the pair by this (WCAG 3.3.8).
                         autoComplete="username"
-                        autoFocus
+                        // With the address handed over, the password is what's missing.
+                        autoFocus={!loginHint}
                         // The recent accounts are a combobox's list: the arrow
                         // keys move through them while the focus stays here.
                         role={savedUsernames.length > 0 ? "combobox" : undefined}
@@ -2088,6 +2100,7 @@ function LoginPageContent() {
                         placeholder={t("password_placeholder")}
                         required={!liteSsoRequired && !signInWithToken}
                         autoComplete="current-password"
+                        autoFocus={!!loginHint}
                         {...errorProps(credentialsBlamed)}
                       />
                       {/* In the tab order, so keyboard users can check what
