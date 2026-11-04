@@ -19,6 +19,11 @@ export interface ParsedMailto {
    * written from the account in use, without asking which one.
    */
   inApp?: boolean;
+  /**
+   * Handed over by the OS in the desktop app: a link clicked in another program. It
+   * opens in a compose window of its own, and the main window stays where it was.
+   */
+  fromOs?: boolean;
 }
 
 const MAX_RECIPIENTS = 200;

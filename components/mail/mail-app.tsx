@@ -65,7 +65,8 @@ import { useIsFocusedProTab, usePaneId } from "@/hooks/use-pane-context";
 import { useKeyboardShortcuts, type GoToMailboxTarget } from "@/hooks/use-keyboard-shortcuts";
 import { useDesktopCommands } from "@/lib/desktop/commands";
 import { useDesktopPrefs } from "@/lib/desktop/preferences";
-import { hasDesktopWindows } from "@/lib/popout/support";
+import { hasDesktopWindows, popoutsAvailable } from "@/lib/popout/support";
+import { getDesktopBridge } from "@/lib/desktop/bridge";
 import { composerDataFromDraft } from "@/lib/draft-composer-data";
 import { useUndoShortcut } from "@/hooks/use-undo-shortcut";
 import { confirmMailRemoval } from "@/lib/mail-removal-confirm";
@@ -1644,7 +1645,33 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     if (isMobile) setActiveView("viewer");
   }, [composerSessionId, isMobile, setActiveView]);
 
-  const openMailtoDraft = useCallback((pending: DraftRequest) => withComposeGate('compose', {
+  // A mail link from another program, in the desktop app: a compose window of its own,
+  // as Outlook and Thunderbird do, and the main window stays where it was. Plugins get
+  // their say first. False when it has to open here instead.
+  const openMailtoInWindow = useCallback(async (pending: DraftRequest): Promise<boolean> => {
+    if (!pending.fromOs || pending.initialFiles?.length || !hasDesktopWindows() || !popoutsAvailable()) return false;
+    let prefill: ComposePrefill | null = null;
+    if (emailHooks.onBeforeCompose.size > 0) {
+      prefill = await runBeforeCompose(composeOptionsFor('compose', {
+        to: pending.to, cc: pending.cc, subject: pending.subject, body: pending.body,
+        ownEmails: identities.map((i) => i.email).filter((e): e is string => Boolean(e)),
+        replyPrefix: t('email_composer.prefix.reply'),
+        forwardPrefix: t('email_composer.prefix.forward'),
+      }));
+      // A plugin said no: nothing opens, here or there.
+      if (!prefill) return true;
+    }
+    const opened = openComposerWindow(useAuthStore.getState().activeAccountId);
+    if (!opened) return false;
+    void opened.handOver({
+      mode: 'compose',
+      initialData: mailtoComposerDraft(pending, useSettingsStore.getState().plainTextMode),
+      prefill: prefill && Object.keys(prefill).length > 0 ? prefill : null,
+    });
+    return true;
+  }, [identities, t]);
+
+  const openMailtoHere = useCallback((pending: DraftRequest) => withComposeGate('compose', {
     to: pending.to, cc: pending.cc, subject: pending.subject, body: pending.body,
   }, () => {
     // A live composer owns text the user has not sent. Replacing it outright
@@ -1662,6 +1689,13 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     }
     applyMailtoDraft(pending, showComposer);
   }), [applyMailtoDraft, showComposer, withComposeGate]);
+
+  const openMailtoDraft = useCallback(async (pending: DraftRequest): Promise<boolean> => {
+    if (await openMailtoInWindow(pending)) return true;
+    // Opening here after all: the shell left this window where it was.
+    if (pending.fromOs) getDesktopBridge()?.windows?.focus?.();
+    return openMailtoHere(pending);
+  }, [openMailtoInWindow, openMailtoHere]);
 
   const openMailtoForAccount = useCallback(async (pending: DraftRequest, accountId: string) => {
     setIsProtocolAccountSwitching(true);
@@ -1691,6 +1725,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const routeOutsideDraft = useCallback(async (pending: DraftRequest): Promise<void> => {
     const protocolAccounts = getMailtoProtocolAccounts();
     if (protocolAccounts.length > 1) {
+      // The question is asked in this window: bring it up.
+      if (pending.fromOs) getDesktopBridge()?.windows?.focus?.();
       setPendingMailtoAccountChoice(pending);
       return;
     }

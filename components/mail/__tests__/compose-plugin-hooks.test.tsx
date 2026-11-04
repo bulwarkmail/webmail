@@ -50,6 +50,20 @@ vi.mock('@/hooks/use-media-query', () => ({
 }));
 vi.mock('@/lib/push-bindings', () => ({ reconcilePushBindings: () => {}, releasePushBindings: () => {} }));
 vi.mock('@/components/email/email-list', () => ({ EmailList: () => <div>message list</div> }));
+// The desktop app's compose windows, for a mail link from another program.
+const desktopWindows = vi.hoisted(() => ({ on: false, handOver: vi.fn(async () => true), open: vi.fn() }));
+vi.mock('@/lib/popout/support', async (original) => ({
+  ...(await original<object>()),
+  hasDesktopWindows: () => desktopWindows.on,
+  popoutsAvailable: () => desktopWindows.on,
+}));
+vi.mock('@/lib/popout/open', async (original) => ({
+  ...(await original<object>()),
+  openComposerWindow: (account?: string | null) => {
+    desktopWindows.open(account);
+    return { handOver: desktopWindows.handOver, cancel: vi.fn() };
+  },
+}));
 
 const { MailApp } = await import('../mail-app');
 
@@ -161,6 +175,55 @@ describe('onMailtoIntercept', () => {
     expect(taken).toBe(true);
     await waitFor(() => expect(intercept).toHaveBeenCalledTimes(1));
     await act(() => new Promise((r) => setTimeout(r, 50)));
+    expect(screen.queryByText('stub composer')).not.toBeInTheDocument();
+  });
+});
+
+describe('a mail link from another program in the desktop app', () => {
+  beforeEach(() => {
+    clearAllHooks();
+    composerProps.last = null;
+    desktopWindows.on = true;
+    desktopWindows.open.mockClear();
+    desktopWindows.handOver.mockClear();
+  });
+  afterEach(() => {
+    desktopWindows.on = false;
+  });
+
+  const fromOs = async () => {
+    const { savePendingMailto, notifyPendingMailto } = await import('@/lib/protocol-handlers/session');
+    act(() => {
+      savePendingMailto({ to: ['bob@example.com'], cc: [], bcc: [], subject: 'Hi', body: 'Text', fromOs: true });
+      notifyPendingMailto();
+    });
+  };
+
+  it('opens in a compose window of its own, not in the main window', async () => {
+    render(<MailApp />);
+    await fromOs();
+    await waitFor(() => expect(desktopWindows.handOver).toHaveBeenCalledTimes(1));
+    expect(desktopWindows.handOver).toHaveBeenCalledWith(expect.objectContaining({
+      mode: 'compose',
+      initialData: expect.objectContaining({ to: 'bob@example.com', subject: 'Hi' }),
+    }));
+    await act(() => new Promise((r) => setTimeout(r, 50)));
+    expect(screen.queryByText('stub composer')).not.toBeInTheDocument();
+  });
+
+  it('a link inside the app still opens here', async () => {
+    render(<MailApp />);
+    act(() => { requestInternalMailto('mailto:bob@example.com?subject=Hi'); });
+    await screen.findByText('stub composer', {}, { timeout: 5000 });
+    expect(desktopWindows.open).not.toHaveBeenCalled();
+  });
+
+  it('a plugin that says no keeps both closed', async () => {
+    emailHooks.onBeforeCompose.register('test', () => false);
+    render(<MailApp />);
+    await fromOs();
+    await act(() => new Promise((r) => setTimeout(r, 100)));
+    expect(desktopWindows.open).not.toHaveBeenCalled();
     expect(screen.queryByText('stub composer')).not.toBeInTheDocument();
   });
 });

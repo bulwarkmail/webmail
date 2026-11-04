@@ -164,7 +164,10 @@ export function handleOsCommand(command: DesktopOsCommand, env: OsCommandEnv): v
     case 'mailto': {
       const parsed = parseMailto(command.url);
       if (!parsed) return;
-      savePendingMailto(parsed);
+      // The shell leaves the main window where it is for a mail link. Signed out, the
+      // sign-in has to show.
+      if (!useAuthStore.getState().isAuthenticated) getDesktopBridge()?.windows?.focus?.();
+      savePendingMailto({ ...parsed, fromOs: true });
       notifyPendingMailto();
       env.push('/');
       return;
