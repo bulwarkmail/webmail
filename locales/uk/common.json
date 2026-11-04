@@ -926,6 +926,13 @@
     "restore_to": "Повернути до теки {folder}",
     "delete_forever": "Видалити назавжди"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Перемістити до Вхідних",
+    "delete_forever_title": "Видалити це повідомлення назавжди?",
+    "delete_forever_batch_title": "{count, plural, one {Видалити це повідомлення назавжди?} other {Видалити ці повідомлення (#) назавжди?}}",
+    "delete_forever_message": "Повернути його не вийде.",
+    "delete_forever_batch_message": "{count, plural, one {Повернути його не вийде.} other {Повернути їх не вийде.}}"
+  },
   "external_mail": {
     "sender_label": "Зовнішнє",
     "sender_tooltip": "З домену {domain}, поза вашою організацією",
@@ -3907,6 +3914,12 @@
     "title_all_accounts": "{name} ({count}, {total} в усіх акаунтах)",
     "title_all_accounts_only": "{name} ({total} в усіх акаунтах)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Результатів не знайдено} one {Знайдено # розмову} few {Знайдено # розмови} many {Знайдено # розмов} other {Знайдено # розмови}}",
+    "name_unread_sub": "{name}, непрочитаних: {count}, у вкладених папках ще {sub}",
+    "name_unread_only_sub": "{name}, непрочитаних у вкладених папках: {sub}",
+    "sub_unread": "Непрочитаних у вкладених папках: {sub}"
+  },
   "uxs_folders": {
     "manage_accounts": "Керувати обліковими записами…",
     "apply_to_existing": "{count, plural, one {Застосувати до # наявного листа в теці {folder}} few {Застосувати до # наявних листів у теці {folder}} many {Застосувати до # наявних листів у теці {folder}} other {Застосувати до # наявного листа в теці {folder}}}"
@@ -3985,6 +3998,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Показати # давніший лист} few {Показати # давніші листи} many {Показати # давніших листів} other {Показати # давнішого листа}}",
     "return_to_list_follows_layout": "Поки ви це не зміните, налаштування залежить від макета: вимкнено, коли список і лист розташовані поруч, в інших випадках увімкнено."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Показує перемикач облікових записів над папками, а під ним кнопку «Скласти». Вимкніть, щоб кнопка «Скласти» була на його місці."
   },
   "mail_p2_conv": {
     "show_message": "Показати лист",

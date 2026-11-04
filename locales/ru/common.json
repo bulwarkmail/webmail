@@ -926,6 +926,13 @@
     "restore_to": "Вернуть в папку {folder}",
     "delete_forever": "Удалить навсегда"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Переместить во Входящие",
+    "delete_forever_title": "Удалить это сообщение навсегда?",
+    "delete_forever_batch_title": "{count, plural, one {Удалить это сообщение навсегда?} other {Удалить эти сообщения (#) навсегда?}}",
+    "delete_forever_message": "Вернуть его будет нельзя.",
+    "delete_forever_batch_message": "{count, plural, one {Вернуть его будет нельзя.} other {Вернуть их будет нельзя.}}"
+  },
   "external_mail": {
     "sender_label": "Внешнее",
     "sender_tooltip": "С домена {domain}, вне вашей организации",
@@ -3907,6 +3914,12 @@
     "title_all_accounts": "{name} ({count}, {total} во всех аккаунтах)",
     "title_all_accounts_only": "{name} ({total} во всех аккаунтах)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Ничего не найдено} one {Найдена # беседа} few {Найдено # беседы} many {Найдено # бесед} other {Найдено # беседы}}",
+    "name_unread_sub": "{name}, непрочитанных: {count}, во вложенных папках ещё {sub}",
+    "name_unread_only_sub": "{name}, непрочитанных во вложенных папках: {sub}",
+    "sub_unread": "Непрочитанных во вложенных папках: {sub}"
+  },
   "uxs_folders": {
     "manage_accounts": "Управление аккаунтами…",
     "apply_to_existing": "{count, plural, one {Применить к # имеющемуся письму в папке {folder}} few {Применить к # имеющимся письмам в папке {folder}} many {Применить к # имеющимся письмам в папке {folder}} other {Применить к # имеющегося письма в папке {folder}}}"
@@ -3985,6 +3998,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Показать # более раннее письмо} few {Показать # более ранних письма} many {Показать # более ранних писем} other {Показать # более раннего письма}}",
     "return_to_list_follows_layout": "Пока вы это не измените, настройка зависит от макета: выключена, когда список и письмо стоят рядом, в остальных случаях включена."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Показывает переключатель аккаунтов над папками, а под ним кнопку «Создать». Выключите, чтобы кнопка «Создать» была на его месте."
   },
   "mail_p2_conv": {
     "show_message": "Показать письмо",

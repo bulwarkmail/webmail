@@ -926,6 +926,13 @@
     "restore_to": "انتقال دوباره به {folder}",
     "delete_forever": "حذف برای همیشه"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "انتقال به صندوق ورودی",
+    "delete_forever_title": "این پیام برای همیشه حذف شود؟",
+    "delete_forever_batch_title": "{count, plural, one {این پیام برای همیشه حذف شود؟} other {این # پیام برای همیشه حذف شوند؟}}",
+    "delete_forever_message": "دیگر نمی‌توانید آن را برگردانید.",
+    "delete_forever_batch_message": "{count, plural, one {دیگر نمی‌توانید آن را برگردانید.} other {دیگر نمی‌توانید آن‌ها را برگردانید.}}"
+  },
   "external_mail": {
     "sender_label": "خارجی",
     "sender_tooltip": "از {domain}، خارج از سازمان شما",
@@ -3907,6 +3914,12 @@
     "title_all_accounts": "{name} ({count}، {total} در همه حساب‌ها)",
     "title_all_accounts_only": "{name} ({total} در همه حساب‌ها)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {نتیجه‌ای یافت نشد} one {# مکالمه یافت شد} other {# مکالمه یافت شد}}",
+    "name_unread_sub": "{name}، خوانده‌نشده: {count}، در زیرپوشه‌ها: {sub}",
+    "name_unread_only_sub": "{name}، خوانده‌نشده در زیرپوشه‌ها: {sub}",
+    "sub_unread": "خوانده‌نشده در زیرپوشه‌ها: {sub}"
+  },
   "uxs_folders": {
     "manage_accounts": "مدیریت حساب‌ها…",
     "apply_to_existing": "{count, plural, one {اعمال روی # پیام موجود در {folder}} other {اعمال روی # پیام موجود در {folder}}}"
@@ -3985,6 +3998,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {نمایش # پیام قدیمی‌تر} other {نمایش # پیام قدیمی‌تر}}",
     "return_to_list_follows_layout": "تا وقتی آن را تغییر ندهید، از چیدمان پیروی می‌کند: وقتی فهرست و پیام کنار هم هستند خاموش، در غیر این صورت روشن."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "تعویض حساب را بالای پوشه‌ها و «ایمیل جدید» را زیر آن نشان می‌دهد. با خاموش کردن آن، «ایمیل جدید» جای آن قرار می‌گیرد."
   },
   "mail_p2_conv": {
     "show_message": "نمایش پیام",

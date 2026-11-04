@@ -11,6 +11,8 @@ import { useDragDropContext } from "@/contexts/drag-drop-context";
 import { dragDropHooks } from "@/lib/plugin-hooks";
 import { toast } from "@/stores/toast-store";
 import { getMailboxPath } from "@/lib/utils";
+import { batchToastTitle, selectionRowCount } from "@/lib/selection-toast";
+import { useSettingsStore } from "@/stores/settings-store";
 
 /**
  * Returns the source accountId for an email being dragged. In unified view
@@ -58,6 +60,7 @@ interface UseMailboxDropReturn {
 
 export function useMailboxDrop({ mailbox, accountId, onDropComplete, onSuccess, onError }: UseMailboxDropOptions): UseMailboxDropReturn {
   const tListExtra = useTranslations("mail_list_extra");
+  const tRoot = useTranslations();
   const [isOver, setIsOver] = useState(false);
   const { client } = useAuthStore(useShallow((state) => ({ client: state.client })));
   const { moveEmailsToMailbox, crossAccountMoveEmails, selectedEmailKeys, clearSelection, refreshCurrentMailbox, mailboxes } = useEmailStore(useShallow((state) => ({
@@ -230,14 +233,17 @@ export function useMailboxDrop({ mailbox, accountId, onDropComplete, onSuccess, 
       }
 
       const mailboxPath = getMailboxPath(mailbox, mailboxes);
+      // Counted as the list shows them: conversations when it groups (mail-p3-7).
+      const disableThreading = useSettingsStore.getState().disableThreading;
+      const rows = emailIds.length === 1 ? 1 : selectionRowCount(draggedEmails.filter((em) => emailIds.includes(em.id)), emailIds.length, disableThreading);
 
       if (onSuccess) {
-        onSuccess(emailIds.length, mailboxPath, restore, receipts);
+        onSuccess(rows, mailboxPath, restore, receipts);
       } else {
         if (emailIds.length === 1) {
           toast.success(tListExtra("moved_to", { mailbox: mailboxPath }));
         } else {
-          toast.success(tListExtra("moved_count_to", { count: emailIds.length, mailbox: mailboxPath }));
+          toast.success(batchToastTitle(tRoot, "move", rows, disableThreading, mailboxPath));
         }
       }
 
@@ -255,7 +261,7 @@ export function useMailboxDrop({ mailbox, accountId, onDropComplete, onSuccess, 
     } finally {
       endDrag();
     }
-  }, [client, mailbox, accountId, mailboxes, isValidTarget, moveEmailsToMailbox, crossAccountMoveEmails, draggedEmails, sourceMailboxId, selectedEmailKeys, clearSelection, refreshCurrentMailbox, endDrag, markDropped, onDropComplete, onSuccess, onError, tListExtra]);
+  }, [client, mailbox, accountId, mailboxes, isValidTarget, moveEmailsToMailbox, crossAccountMoveEmails, draggedEmails, sourceMailboxId, selectedEmailKeys, clearSelection, refreshCurrentMailbox, endDrag, markDropped, onDropComplete, onSuccess, onError, tListExtra, tRoot]);
 
   const valid = isValidTarget();
 

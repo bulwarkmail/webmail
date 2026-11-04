@@ -926,6 +926,13 @@
     "restore_to": "Mută înapoi în {folder}",
     "delete_forever": "Șterge definitiv"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Mută în Primite",
+    "delete_forever_title": "Ștergi definitiv acest mesaj?",
+    "delete_forever_batch_title": "{count, plural, one {Ștergi definitiv acest mesaj?} other {Ștergi definitiv aceste # mesaje?}}",
+    "delete_forever_message": "Nu îl mai poți recupera.",
+    "delete_forever_batch_message": "{count, plural, one {Nu îl mai poți recupera.} other {Nu le mai poți recupera.}}"
+  },
   "external_mail": {
     "sender_label": "Extern",
     "sender_tooltip": "De la {domain}, din afara organizației dvs.",
@@ -3907,6 +3914,12 @@
     "title_all_accounts": "{name} ({count}, {total} în toate conturile)",
     "title_all_accounts_only": "{name} ({total} în toate conturile)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Nu s-au găsit rezultate} one {# conversație găsită} few {# conversații găsite} other {# de conversații găsite}}",
+    "name_unread_sub": "{name}, necitite: {count}, încă {sub} în subdosare",
+    "name_unread_only_sub": "{name}, necitite în subdosare: {sub}",
+    "sub_unread": "Necitite în subdosare: {sub}"
+  },
   "uxs_folders": {
     "manage_accounts": "Gestionați conturile…",
     "apply_to_existing": "{count, plural, one {Aplicați la # mesaj existent din {folder}} few {Aplicați la # mesaje existente din {folder}} other {Aplicați la # de mesaje existente din {folder}}}"
@@ -3985,6 +3998,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Afișează # mesaj mai vechi} few {Afișează # mesaje mai vechi} other {Afișează # de mesaje mai vechi}}",
     "return_to_list_follows_layout": "Cât timp nu îl modificați, urmează aspectul: dezactivat când lista și mesajul sunt unul lângă altul, activat în rest."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Afișează comutatorul de conturi deasupra folderelor, cu Compune sub el. Dezactivați pentru a pune Compune în locul lui."
   },
   "mail_p2_conv": {
     "show_message": "Afișează mesajul",

@@ -926,6 +926,13 @@
     "restore_to": "{folder}(으)로 되돌리기",
     "delete_forever": "영구 삭제"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "받은편지함으로 이동",
+    "delete_forever_title": "이 메시지를 영구 삭제할까요?",
+    "delete_forever_batch_title": "{count, plural, one {이 메시지를 영구 삭제할까요?} other {메시지 #개를 영구 삭제할까요?}}",
+    "delete_forever_message": "되돌릴 수 없습니다.",
+    "delete_forever_batch_message": "{count, plural, one {되돌릴 수 없습니다.} other {되돌릴 수 없습니다.}}"
+  },
   "external_mail": {
     "sender_label": "외부",
     "sender_tooltip": "{domain}에서 보냄, 조직 외부",
@@ -3907,6 +3914,12 @@
     "title_all_accounts": "{name} ({count}, 모든 계정에 {total})",
     "title_all_accounts_only": "{name} (모든 계정에 {total})"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {검색 결과가 없습니다} other {대화 #개를 찾았습니다}}",
+    "name_unread_sub": "{name}, 읽지 않음 {count}개, 하위 폴더에 {sub}개 더",
+    "name_unread_only_sub": "{name}, 하위 폴더에 읽지 않음 {sub}개",
+    "sub_unread": "하위 폴더에 읽지 않음 {sub}개"
+  },
   "uxs_folders": {
     "manage_accounts": "계정 관리…",
     "apply_to_existing": "{count, plural, other {{folder}의 기존 메일 #개에 적용}}"
@@ -3985,6 +3998,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, other {이전 메시지 #개 보기}}",
     "return_to_list_follows_layout": "변경하기 전까지는 레이아웃을 따릅니다. 목록과 메시지가 나란히 있으면 꺼지고, 그 밖에는 켜집니다."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "폴더 위에 계정 전환기를, 그 아래에 메일 쓰기를 보여줘요. 끄면 계정 전환기 자리에 메일 쓰기가 표시돼요."
   },
   "mail_p2_conv": {
     "show_message": "메시지 보기",

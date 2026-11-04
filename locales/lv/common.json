@@ -926,6 +926,13 @@
     "restore_to": "Pārvietot atpakaļ uz {folder}",
     "delete_forever": "Dzēst neatgriezeniski"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Pārvietot uz Iesūtni",
+    "delete_forever_title": "Neatgriezeniski dzēst šo ziņojumu?",
+    "delete_forever_batch_title": "{count, plural, one {Neatgriezeniski dzēst šo ziņojumu?} other {Neatgriezeniski dzēst šos # ziņojumus?}}",
+    "delete_forever_message": "To vairs nevarēs atgūt.",
+    "delete_forever_batch_message": "{count, plural, one {To vairs nevarēs atgūt.} other {Tos vairs nevarēs atgūt.}}"
+  },
   "external_mail": {
     "sender_label": "Ārējs",
     "sender_tooltip": "No {domain}, ārpus jūsu organizācijas",
@@ -3907,6 +3914,12 @@
     "title_all_accounts": "{name} ({count}, {total} visos kontos)",
     "title_all_accounts_only": "{name} ({total} visos kontos)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Nekas netika atrasts} zero {Atrastas # sarunas} one {Atrasta # saruna} other {Atrastas # sarunas}}",
+    "name_unread_sub": "{name}, nelasīti: {count}, apakšmapēs vēl {sub}",
+    "name_unread_only_sub": "{name}, nelasīti apakšmapēs: {sub}",
+    "sub_unread": "Nelasīti apakšmapēs: {sub}"
+  },
   "uxs_folders": {
     "manage_accounts": "Pārvaldīt kontus…",
     "apply_to_existing": "{count, plural, zero {Piemērot # esošajām vēstulēm mapē {folder}} one {Piemērot # esošajai vēstulei mapē {folder}} other {Piemērot # esošajām vēstulēm mapē {folder}}}"
@@ -3985,6 +3998,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, zero {Rādīt # vecākas ziņas} one {Rādīt # vecāku ziņu} other {Rādīt # vecākas ziņas}}",
     "return_to_list_follows_layout": "Kamēr to nemaināt, tas seko izkārtojumam: izslēgts, ja saraksts un ziņa ir blakus, citādi ieslēgts."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Rāda kontu pārslēdzēju virs mapēm un zem tā pogu Rakstīt. Izslēdziet, lai poga Rakstīt būtu tā vietā."
   },
   "mail_p2_conv": {
     "show_message": "Rādīt ziņojumu",

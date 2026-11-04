@@ -95,16 +95,21 @@ export function addEcho(conversation: Email[], echo: Email): Email[] {
  * later (or an offline send that waits in the outbox) doesn't make the reply
  * vanish again.
  */
-export function mergeEchoes(server: Email[], shown: Email[]): Email[] {
+export function mergeEchoes(server: Email[], shown: Email[], now = Date.now()): Email[] {
   const ids = new Set(server.map((e) => e.id));
   const byId = new Map(shown.map((e) => [e.id, e]));
   // The thread read carries list properties only: a message already unfolded
   // keeps the body it loaded, with the server's flags and folders.
   const merged = server.map((e) => {
     const had = byId.get(e.id);
+    // The server's copy of a reply just sent waits out its Undo window as a
+    // submission with a send time; it was sent as far as the user can tell,
+    // so it carries no scheduled clock (mail-p3, p2-1).
+    const held = !!had && (had.sentEcho || !had.isScheduled) && isHeldSend(e, now);
+    const base = held ? withoutScheduledMark(e) : e;
     return had?.bodyValues && !e.bodyValues && !had.sentEcho
       ? { ...had, keywords: e.keywords, mailboxIds: e.mailboxIds }
-      : e;
+      : base;
   });
   const echoes = shown.filter((e) => e.sentEcho && !ids.has(e.id));
   return echoes.length ? [...merged, ...echoes] : merged;
@@ -116,6 +121,56 @@ export function mergeEchoes(server: Email[], shown: Email[]): Email[] {
  */
 export function settleSent(emails: Email[], now = Date.now()): Email[] {
   return emails.map((e) => (e.isScheduled && e.scheduledSendAt && Date.parse(e.scheduledSendAt) <= now
-    ? { ...e, isScheduled: false, scheduledSendAt: undefined, scheduledUndoStatus: undefined }
+    ? withoutScheduledMark(e)
     : e));
+}
+
+function withoutScheduledMark(e: Email): Email {
+  return { ...e, isScheduled: false, scheduledSendAt: undefined, scheduledUndoStatus: undefined };
+}
+
+/** A message the server holds only for an Undo window: its send time is at most that far away. */
+function isHeldSend(e: Email, now: number): boolean {
+  return !!e.isScheduled && isUndoWindow(e.scheduledSendAt, now);
+}
+
+/**
+ * Scheduled's count without the sends whose time has come: the server lists
+ * a held reply's submission for a few seconds more while it goes out, and
+ * Scheduled counted it after the "Sent" toast (mail-p3, p2-1).
+ */
+export function scheduledShownTotal(
+  scheduledTotal: number,
+  sendTimes: Iterable<{ sendAt?: string; undoStatus?: string }>,
+  now = Date.now(),
+): number {
+  let due = 0;
+  for (const s of sendTimes) {
+    const at = s.sendAt ? Date.parse(s.sendAt) : NaN;
+    if (s.undoStatus !== 'canceled' && Number.isFinite(at) && at <= now) due += 1;
+  }
+  return Math.max(0, scheduledTotal - due);
+}
+
+/** The next send time after `now` among `sendTimes`, so the count can follow it. */
+export function nextSendTime(sendTimes: Iterable<{ sendAt?: string }>, now = Date.now()): number | null {
+  let next: number | null = null;
+  for (const s of sendTimes) {
+    const at = s.sendAt ? Date.parse(s.sendAt) : NaN;
+    if (Number.isFinite(at) && at > now && (next === null || at < next)) next = at;
+  }
+  return next;
+}
+
+/**
+ * The thread counts with a conversation's message count read from the
+ * server, when it holds more than the list knew: the list row said 4 while
+ * the open conversation showed the reply as its 5th (mail-p3, p2-1).
+ * Null when nothing changes.
+ */
+export function raiseThreadCount(counts: Map<string, number>, key: string, count: number): Map<string, number> | null {
+  if ((counts.get(key) ?? 0) >= count) return null;
+  const next = new Map(counts);
+  next.set(key, count);
+  return next;
 }

@@ -926,6 +926,13 @@
     "restore_to": "Presunúť späť do priečinka {folder}",
     "delete_forever": "Odstrániť natrvalo"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Presunúť do Doručených",
+    "delete_forever_title": "Odstrániť túto správu natrvalo?",
+    "delete_forever_batch_title": "{count, plural, one {Odstrániť túto správu natrvalo?} other {Odstrániť tieto správy (#) natrvalo?}}",
+    "delete_forever_message": "Nebude ju možné obnoviť.",
+    "delete_forever_batch_message": "{count, plural, one {Nebude ju možné obnoviť.} other {Nebude ich možné obnoviť.}}"
+  },
   "external_mail": {
     "sender_label": "Externé",
     "sender_tooltip": "Z {domain}, mimo vašej organizácie",
@@ -3907,6 +3914,12 @@
     "title_all_accounts": "{name} ({count}, {total} vo všetkých účtoch)",
     "title_all_accounts_only": "{name} ({total} vo všetkých účtoch)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Neboli nájdené žiadne výsledky} one {Nájdená # konverzácia} few {Nájdené # konverzácie} many {Nájdených # konverzácií} other {Nájdených # konverzácií}}",
+    "name_unread_sub": "{name}, neprečítané: {count}, v podpriečinkoch ďalších {sub}",
+    "name_unread_only_sub": "{name}, neprečítané v podpriečinkoch: {sub}",
+    "sub_unread": "Neprečítané v podpriečinkoch: {sub}"
+  },
   "uxs_folders": {
     "manage_accounts": "Spravovať účty…",
     "apply_to_existing": "{count, plural, one {Použiť na # existujúcu správu v priečinku {folder}} few {Použiť na # existujúce správy v priečinku {folder}} many {Použiť na # existujúcej správy v priečinku {folder}} other {Použiť na # existujúcich správ v priečinku {folder}}}"
@@ -3985,6 +3998,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Zobraziť # staršiu správu} few {Zobraziť # staršie správy} many {Zobraziť # staršej správy} other {Zobraziť # starších správ}}",
     "return_to_list_follows_layout": "Kým to nezmeníte, riadi sa to rozložením: vypnuté, keď sú zoznam a správa vedľa seba, inak zapnuté."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Zobrazí prepínač účtov nad priečinkami a pod ním tlačidlo Napísať. Po vypnutí bude na jeho mieste tlačidlo Napísať."
   },
   "mail_p2_conv": {
     "show_message": "Zobraziť správu",

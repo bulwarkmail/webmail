@@ -926,6 +926,13 @@
     "restore_to": "Remettre dans {folder}",
     "delete_forever": "Supprimer définitivement"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Déplacer vers la boîte de réception",
+    "delete_forever_title": "Supprimer définitivement ce message ?",
+    "delete_forever_batch_title": "{count, plural, one {Supprimer définitivement ce message ?} other {Supprimer définitivement ces # messages ?}}",
+    "delete_forever_message": "Vous ne pourrez pas le récupérer.",
+    "delete_forever_batch_message": "{count, plural, one {Vous ne pourrez pas le récupérer.} other {Vous ne pourrez pas les récupérer.}}"
+  },
   "external_mail": {
     "sender_label": "Externe",
     "sender_tooltip": "De {domain}, hors de votre organisation",
@@ -3907,6 +3914,12 @@
     "title_all_accounts": "{name} ({count}, {total} dans tous les comptes)",
     "title_all_accounts_only": "{name} ({total} dans tous les comptes)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Aucun résultat trouvé} one {# conversation trouvée} other {# conversations trouvées}}",
+    "name_unread_sub": "{name}, {count} non lus, {sub} de plus dans les sous-dossiers",
+    "name_unread_only_sub": "{name}, {sub} non lus dans les sous-dossiers",
+    "sub_unread": "{sub} non lus dans les sous-dossiers"
+  },
   "uxs_folders": {
     "manage_accounts": "Gérer les comptes…",
     "apply_to_existing": "{count, plural, one {Appliquer à # message existant dans {folder}} other {Appliquer à # messages existants dans {folder}}}"
@@ -3985,6 +3998,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Afficher # message plus ancien} other {Afficher # messages plus anciens}}",
     "return_to_list_follows_layout": "Tant que vous ne le modifiez pas, ce réglage suit la disposition : désactivé quand la liste et le message sont côte à côte, activé sinon."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Affiche le sélecteur de compte au-dessus des dossiers, avec Composer en dessous. Désactivez cette option pour mettre Composer à sa place."
   },
   "mail_p2_conv": {
     "show_message": "Afficher le message",

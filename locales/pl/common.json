@@ -926,6 +926,13 @@
     "restore_to": "Przenieś z powrotem do folderu {folder}",
     "delete_forever": "Usuń na zawsze"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Przenieś do Odebranych",
+    "delete_forever_title": "Usunąć tę wiadomość na zawsze?",
+    "delete_forever_batch_title": "{count, plural, one {Usunąć tę wiadomość na zawsze?} other {Usunąć te wiadomości (#) na zawsze?}}",
+    "delete_forever_message": "Nie da się jej odzyskać.",
+    "delete_forever_batch_message": "{count, plural, one {Nie da się jej odzyskać.} other {Nie da się ich odzyskać.}}"
+  },
   "external_mail": {
     "sender_label": "Zewnętrzny",
     "sender_tooltip": "Z domeny {domain}, spoza Twojej organizacji",
@@ -3907,6 +3914,12 @@
     "title_all_accounts": "{name} ({count}, {total} we wszystkich kontach)",
     "title_all_accounts_only": "{name} ({total} we wszystkich kontach)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {Nie znaleziono wyników} one {Znaleziono # konwersację} few {Znaleziono # konwersacje} many {Znaleziono # konwersacji} other {Znaleziono # konwersacji}}",
+    "name_unread_sub": "{name}, nieprzeczytane: {count}, w podfolderach jeszcze {sub}",
+    "name_unread_only_sub": "{name}, nieprzeczytane w podfolderach: {sub}",
+    "sub_unread": "Nieprzeczytane w podfolderach: {sub}"
+  },
   "uxs_folders": {
     "manage_accounts": "Zarządzaj kontami…",
     "apply_to_existing": "{count, plural, one {Zastosuj do # istniejącej wiadomości w folderze {folder}} few {Zastosuj do # istniejących wiadomości w folderze {folder}} many {Zastosuj do # istniejących wiadomości w folderze {folder}} other {Zastosuj do # istniejącej wiadomości w folderze {folder}}}"
@@ -3985,6 +3998,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Pokaż # starszą wiadomość} few {Pokaż # starsze wiadomości} many {Pokaż # starszych wiadomości} other {Pokaż # starszej wiadomości}}",
     "return_to_list_follows_layout": "Dopóki tego nie zmienisz, ustawienie zależy od układu: wyłączone, gdy lista i wiadomość są obok siebie, w innych przypadkach włączone."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Pokazuje przełącznik kont nad folderami, a pod nim przycisk Napisz. Po wyłączeniu przycisk Napisz będzie w jego miejscu."
   },
   "mail_p2_conv": {
     "show_message": "Pokaż wiadomość",

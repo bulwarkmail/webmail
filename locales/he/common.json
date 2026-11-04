@@ -870,6 +870,13 @@
     "restore_to": "החזרה אל {folder}",
     "delete_forever": "מחיקה לצמיתות"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "העברה לדואר הנכנס",
+    "delete_forever_title": "למחוק את ההודעה הזו לצמיתות?",
+    "delete_forever_batch_title": "{count, plural, one {למחוק את ההודעה הזו לצמיתות?} other {למחוק את # ההודעות האלה לצמיתות?}}",
+    "delete_forever_message": "לא תהיה דרך לשחזר אותה.",
+    "delete_forever_batch_message": "{count, plural, one {לא תהיה דרך לשחזר אותה.} other {לא תהיה דרך לשחזר אותן.}}"
+  },
   "external_mail": {
     "sender_label": "חיצוני",
     "sender_tooltip": "מ־{domain}, מחוץ לארגון שלך",
@@ -3871,6 +3878,9 @@
     "show_older": "{count, plural, one {הצגת הודעה ישנה אחת} two {הצגת שתי הודעות ישנות} other {הצגת # הודעות ישנות}}",
     "return_to_list_follows_layout": "כל עוד לא תשנו זאת, זה נקבע לפי הפריסה: כבוי כשהרשימה וההודעה זו לצד זו, ופועל בכל מצב אחר."
   },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "מציג את מחליף החשבונות מעל התיקיות ואת כפתור הכתיבה מתחתיו. כבו את האפשרות כדי להציב את כפתור הכתיבה במקומו."
+  },
   "mail_p2_conv": {
     "show_message": "הצגת ההודעה",
     "back_to_reply": "חזרה לתשובה שלך"
@@ -5724,6 +5734,12 @@
     "empty_spam_confirm": "למחוק לצמיתות {count, plural, one {את ההודעה} two {את שתי ההודעות} other {את כל # ההודעות}} בספאם? אי אפשר לבטל את זה.",
     "title_all_accounts": "{name} ({count}, {total} בכל החשבונות)",
     "title_all_accounts_only": "{name} ({total} בכל החשבונות)"
+  },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {לא נמצאו תוצאות} one {נמצאה שיחה אחת} two {נמצאו שתי שיחות} other {נמצאו # שיחות}}",
+    "name_unread_sub": "{name}, {count} שלא נקראו, עוד {sub} בתיקיות משנה",
+    "name_unread_only_sub": "{name}, {sub} שלא נקראו בתיקיות משנה",
+    "sub_unread": "{sub} שלא נקראו בתיקיות משנה"
   },
   "uxs_folders": {
     "manage_accounts": "ניהול חשבונות…",

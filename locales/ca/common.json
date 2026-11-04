@@ -926,6 +926,13 @@
     "restore_to": "Torna a moure a {folder}",
     "delete_forever": "Suprimeix per sempre"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "Mou a la safata d'entrada",
+    "delete_forever_title": "Vols suprimir aquest missatge per sempre?",
+    "delete_forever_batch_title": "{count, plural, one {Vols suprimir aquest missatge per sempre?} other {Vols suprimir aquests # missatges per sempre?}}",
+    "delete_forever_message": "No el podràs recuperar.",
+    "delete_forever_batch_message": "{count, plural, one {No el podràs recuperar.} other {No els podràs recuperar.}}"
+  },
   "external_mail": {
     "sender_label": "Extern",
     "sender_tooltip": "De {domain}, fora de la vostra organització",
@@ -3907,6 +3914,12 @@
     "title_all_accounts": "{name} ({count}, {total} a tots els comptes)",
     "title_all_accounts_only": "{name} ({total} a tots els comptes)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {No s'ha trobat cap resultat} one {# conversa trobada} other {# converses trobades}}",
+    "name_unread_sub": "{name}, {count} sense llegir, {sub} més a les subcarpetes",
+    "name_unread_only_sub": "{name}, {sub} sense llegir a les subcarpetes",
+    "sub_unread": "{sub} sense llegir a les subcarpetes"
+  },
   "uxs_folders": {
     "manage_accounts": "Gestiona els comptes…",
     "apply_to_existing": "{count, plural, one {Aplica a # missatge existent de {folder}} other {Aplica a # missatges existents de {folder}}}"
@@ -3985,6 +3998,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, one {Mostra # missatge anterior} other {Mostra # missatges anteriors}}",
     "return_to_list_follows_layout": "Mentre no ho canviïs, segueix el disseny: desactivat quan la llista i el missatge són l'un al costat de l'altre, activat en els altres casos."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "Mostra el selector de comptes damunt de les carpetes, amb Redacta a sota. Desactiveu-ho per posar Redacta al seu lloc."
   },
   "mail_p2_conv": {
     "show_message": "Mostra el missatge",

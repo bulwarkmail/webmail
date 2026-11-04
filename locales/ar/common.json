@@ -926,6 +926,13 @@
     "restore_to": "إعادة النقل إلى {folder}",
     "delete_forever": "حذف نهائي"
   },
+  "mail_p3_actions": {
+    "move_to_inbox": "نقل إلى البريد الوارد",
+    "delete_forever_title": "حذف هذه الرسالة نهائيًا؟",
+    "delete_forever_batch_title": "{count, plural, one {حذف هذه الرسالة نهائيًا؟} other {حذف هذه الرسائل (#) نهائيًا؟}}",
+    "delete_forever_message": "لا يمكنك استعادتها.",
+    "delete_forever_batch_message": "{count, plural, one {لا يمكنك استعادتها.} other {لا يمكنك استعادتها.}}"
+  },
   "external_mail": {
     "sender_label": "خارجي",
     "sender_tooltip": "من {domain}، من خارج مؤسستك",
@@ -3907,6 +3914,12 @@
     "title_all_accounts": "{name} ({count}، {total} في كل الحسابات)",
     "title_all_accounts_only": "{name} ({total} في كل الحسابات)"
   },
+  "mail_p3_list": {
+    "conversations_found": "{count, plural, =0 {لم يتم العثور على نتائج} one {تم العثور على محادثة واحدة} two {تم العثور على محادثتين} few {تم العثور على # محادثات} many {تم العثور على # محادثة} other {تم العثور على # محادثة}}",
+    "name_unread_sub": "{name}، غير مقروءة: {count}، وفي المجلدات الفرعية: {sub}",
+    "name_unread_only_sub": "{name}، غير مقروءة في المجلدات الفرعية: {sub}",
+    "sub_unread": "غير مقروءة في المجلدات الفرعية: {sub}"
+  },
   "uxs_folders": {
     "manage_accounts": "إدارة الحسابات…",
     "apply_to_existing": "{count, plural, one {تطبيق على رسالة موجودة واحدة في {folder}} other {تطبيق على # رسائل موجودة في {folder}}}"
@@ -3985,6 +3998,9 @@
   "conversation_pane": {
     "show_older": "{count, plural, zero {عرض # رسالة أقدم} one {عرض رسالة أقدم واحدة} two {عرض رسالتين أقدم} few {عرض # رسائل أقدم} many {عرض # رسالة أقدم} other {عرض # رسالة أقدم}}",
     "return_to_list_follows_layout": "ما لم تغيّره، يتبع هذا التخطيط: متوقف عندما تكون القائمة والرسالة جنبًا إلى جنب، ومفعّل في غير ذلك."
+  },
+  "mail_p3_conv": {
+    "sidebar_account_switcher_description": "يعرض مبدّل الحسابات فوق المجلدات وزر «إنشاء رسالة» تحته. أوقف هذا الخيار لوضع «إنشاء رسالة» في مكانه."
   },
   "mail_p2_conv": {
     "show_message": "عرض الرسالة",
