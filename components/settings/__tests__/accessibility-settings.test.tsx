@@ -136,6 +136,26 @@ describe('toast duration', () => {
   });
 });
 
+// settings-p3-20 (2026-11-04): sizes in four styles ("87.5%", "88 %", "12 px", "14px").
+// Percentages in the language's own style (German here: "87,5 %"), pixels as "{size} px".
+describe('sizes', () => {
+  const optionsOf = (label: string) =>
+    Array.from((screen.getByRole('combobox', { name: label }) as HTMLSelectElement).options).map((o) => o.textContent ?? '');
+
+  it('writes message text sizes as the language writes percentages', () => {
+    render(<AccessibilitySettings />);
+    const options = optionsOf('settings.accessibility.mail_text_size.label');
+    expect(options.slice(1, 4).map((o) => o.replace(/\s/g, ' '))).toEqual(['87,5 %', '100 %', '112,5 %']);
+  });
+
+  it('writes the sizes for new messages like the smallest-text sizes, "{size} px"', () => {
+    render(<AccessibilitySettings />);
+    const options = optionsOf('settings.accessibility.compose_size.label');
+    expect(options.slice(1, 3)).toEqual(['settings.accessibility.mail_min_font_size.px {"size":14}', 'settings.accessibility.mail_min_font_size.px {"size":16}']);
+    expect(options.some((o) => /\dpx/.test(o))).toBe(false);
+  });
+});
+
 describe('read aloud voice', () => {
   const voice = (name: string, lang: string) => ({ name, lang, voiceURI: `uri:${name}`, default: false, localService: true });
 

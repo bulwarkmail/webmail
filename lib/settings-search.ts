@@ -128,6 +128,9 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'ux_p3_search.devtools_label', when: 'desktop', advanced: true, synonyms: syn2('devtools') },
   ],
   notifications: [
+    // Do not disturb with quiet hours, at the top of the page (settings-p3-6).
+    { label: 'ux_p3_words.dnd_title', synonyms: syn2('do_not_disturb') },
+    { label: 'ux_p3_words.pause_label', synonyms: syn2('quiet_hours') },
     { label: 'settings.notifications.email.title' },
     { label: 'settings.notifications.email.enabled' },
     { label: 'settings.notifications.email.sound' },
@@ -217,7 +220,6 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.accessibility.sections.alerts' },
     { label: 'settings.accessibility.visual_alerts.label' },
     { label: 'settings.accessibility.unread_counts.label' },
-    { label: 'settings.accessibility.do_not_disturb.label', synonyms: syn2('do_not_disturb') },
     { label: 'settings.accessibility.sections.screen_readers' },
     { label: 'settings.accessibility.announce_new_mail.label' },
     { label: 'settings.accessibility.announce_preview.label' },

@@ -209,7 +209,8 @@ describe('settings search: more words people use', () => {
     ['reading pane', 'appearance: Mail layout'],
     ['week start', 'general: First day of week'],
     ['empty trash', 'message_list: Deleting & archiving'],
-    ['quiet hours', 'accessibility: Do not disturb'],
+    // settings-p3-6: Do not disturb moved to Notifications as "Pause notifications".
+    ['quiet hours', 'notifications: Pause notifications'],
   ])('finds "%s"', (query, row) => {
     expect(everywhere(query)).toContain(row);
   });

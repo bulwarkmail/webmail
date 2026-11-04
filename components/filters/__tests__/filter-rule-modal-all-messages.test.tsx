@@ -24,7 +24,7 @@ function openModal(props: Partial<React.ComponentProps<typeof FilterRuleModal>> 
 
 const fieldSelect = () => screen.getByLabelText('conditions') as HTMLSelectElement;
 const comparatorSelect = () => screen.queryByLabelText('comparators.contains') as HTMLSelectElement | null;
-const valueInput = () => screen.queryByPlaceholderText('value_placeholder_multi') as HTMLInputElement | null;
+const valueInput = () => screen.queryByPlaceholderText('filter_value_placeholder') as HTMLInputElement | null;
 
 describe('the "all messages" condition', () => {
   it('is offered, and asks for neither a comparator nor a value', () => {
