@@ -3663,6 +3663,9 @@
     "expand_named": "הרחב את השיחה: {subject}",
     "collapse_named": "כווץ את השיחה: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {הצגת הודעה ישנה אחת} two {הצגת שתי הודעות ישנות} other {הצגת # הודעות ישנות}}"
+  },
   "identities": {
     "modal_title": "ניהול זהויות שליחה",
     "create_new": "צור זהות חדשה",

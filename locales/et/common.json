@@ -3766,6 +3766,9 @@
     "expand_named": "Ava vestlus: {subject}",
     "collapse_named": "Sulge vestlus: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Näita # vanemat sõnumit} other {Näita # vanemat sõnumit}}"
+  },
   "identities": {
     "modal_title": "Halda saatja identiteete",
     "create_new": "Loo uus identiteet",

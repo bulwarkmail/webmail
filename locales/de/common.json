@@ -3766,6 +3766,9 @@
     "expand_named": "Konversation aufklappen: {subject}",
     "collapse_named": "Konversation zuklappen: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {# ältere Nachricht anzeigen} other {# ältere Nachrichten anzeigen}}"
+  },
   "identities": {
     "modal_title": "Sendeidentitäten verwalten",
     "create_new": "Neue Identität erstellen",

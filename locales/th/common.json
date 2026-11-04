@@ -613,6 +613,9 @@
     "expand_named": "ขยายการสนทนา: {subject}",
     "collapse_named": "ย่อการสนทนา: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, other {แสดงข้อความก่อนหน้า # ฉบับ}}"
+  },
   "notifications": {
     "email_sent": "ส่งอีเมลแล้ว",
     "email_deleted": "ลบอีเมลแล้ว",

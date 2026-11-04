@@ -3766,6 +3766,9 @@
     "expand_named": "Rozwiń konwersację: {subject}",
     "collapse_named": "Zwiń konwersację: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Pokaż # starszą wiadomość} few {Pokaż # starsze wiadomości} many {Pokaż # starszych wiadomości} other {Pokaż # starszej wiadomości}}"
+  },
   "identities": {
     "modal_title": "Zarządzaj tożsamościami nadawcy",
     "create_new": "Utwórz nową tożsamość",

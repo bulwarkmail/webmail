@@ -3766,6 +3766,9 @@
     "expand_named": "대화 펼치기: {subject}",
     "collapse_named": "대화 접기: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, other {이전 메시지 #개 보기}}"
+  },
   "identities": {
     "modal_title": "보내는 사람 관리",
     "create_new": "새 보내는 사람 추가",

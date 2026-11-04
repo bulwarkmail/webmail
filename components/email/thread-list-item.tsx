@@ -373,6 +373,8 @@ interface ThreadListItemProps {
   onPrefetch?: (email: Email) => void;
   onContextMenu?: (e: React.MouseEvent, email: Email) => void;
   onOpenConversation?: (thread: ThreadGroup) => void;
+  /** The reading pane shows the conversation: the row opens it there and never unfolds. */
+  conversationInReader?: boolean;
   onToggleStar?: (email: Email) => void;
   onMarkAsRead?: (email: Email, read: boolean) => void;
   onDelete?: (email: Email) => void;
@@ -1039,6 +1041,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     onPrefetch,
     onContextMenu,
     onOpenConversation,
+    conversationInReader = false,
     onToggleStar,
     onMarkAsRead,
     onDelete,
@@ -1287,7 +1290,8 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
         return;
       }
 
-      if (mvRow || mvMobileRow) {
+      // So does the default layout, whose reading pane shows the conversation.
+      if (mvRow || mvMobileRow || conversationInReader) {
         // Desktop keeps the ticked rows while the conversation is read (#1231).
         onEmailSelect(latestEmail);
         return;
@@ -1341,7 +1345,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
             rowKey: emailKeyFor(latestEmail),
             label: a11yLabel,
             selected: isSelected && !isExpanded,
-            expanded: isExpanded,
+            expanded: conversationInReader ? undefined : isExpanded,
             checked: isChecked,
             selectionMode: selectedEmailKeys.size > 0,
             onToggleCheck: toggleThreadSelection,
@@ -1465,7 +1469,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                     selectLabel={selectRowLabel}
                   />
                   {hasUnread && <UnreadDot besideAvatar />}
-                  {!isMobile && !columns && (
+                  {!isMobile && !columns && !conversationInReader && (
                     <button
                       data-expand-toggle
                       onClick={(e) => {
@@ -1519,6 +1523,10 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                       // count follows the names, so a folded conversation is
                       // one line like any message. (#262)
                       <span data-list-from="" className={cn(LIST_COLUMN_CLASS.from, 'flex items-center gap-2 text-sm')}>
+                        {conversationInReader ? (
+                          // The reading pane shows the conversation: the chevron's room, as on a single message's row.
+                          <span aria-hidden="true" className="w-3.5 shrink-0" />
+                        ) : (
                         <button
                           data-expand-toggle
                           onClick={(e) => {
@@ -1537,6 +1545,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                             <ChevronRight className="w-3.5 h-3.5" />
                           )}
                         </button>
+                        )}
                         {isUnifiedView && latestEmail.accountId && threadAccountColor && showAccountDot && (
                           <span
                             className="w-2 h-2 rounded-full flex-shrink-0"

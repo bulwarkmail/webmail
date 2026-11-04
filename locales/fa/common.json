@@ -3766,6 +3766,9 @@
     "expand_named": "باز کردن مکالمه: {subject}",
     "collapse_named": "جمع کردن مکالمه: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {نمایش # پیام قدیمی‌تر} other {نمایش # پیام قدیمی‌تر}}"
+  },
   "identities": {
     "modal_title": "مدیریت هویت‌های ارسال",
     "create_new": "ایجاد هویت جدید",

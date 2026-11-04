@@ -3766,6 +3766,9 @@
     "expand_named": "Udvid samtale: {subject}",
     "collapse_named": "Skjul samtale: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Vis # ældre besked} other {Vis # ældre beskeder}}"
+  },
   "identities": {
     "modal_title": "Administrér afsenderidentiteter",
     "create_new": "Opret ny identitet",

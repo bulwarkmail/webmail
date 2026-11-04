@@ -3766,6 +3766,9 @@
     "expand_named": "Beszélgetés kibontása: {subject}",
     "collapse_named": "Beszélgetés összecsukása: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {# régebbi üzenet megjelenítése} other {# régebbi üzenet megjelenítése}}"
+  },
   "identities": {
     "modal_title": "Küldő azonosságok kezelése",
     "create_new": "Új azonosság létrehozása",

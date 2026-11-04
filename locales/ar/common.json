@@ -3766,6 +3766,9 @@
     "expand_named": "توسيع المحادثة: {subject}",
     "collapse_named": "طي المحادثة: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, zero {عرض # رسالة أقدم} one {عرض رسالة أقدم واحدة} two {عرض رسالتين أقدم} few {عرض # رسائل أقدم} many {عرض # رسالة أقدم} other {عرض # رسالة أقدم}}"
+  },
   "identities": {
     "modal_title": "إدارة هويات الإرسال",
     "create_new": "إنشاء هوية جديدة",

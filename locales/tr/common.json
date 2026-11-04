@@ -3766,6 +3766,9 @@
     "expand_named": "Konuşmayı genişlet: {subject}",
     "collapse_named": "Konuşmayı daralt: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {# eski iletiyi göster} other {# eski iletiyi göster}}"
+  },
   "identities": {
     "modal_title": "Gönderme Kimliklerini Yönet",
     "create_new": "Yeni Kimlik Oluştur",

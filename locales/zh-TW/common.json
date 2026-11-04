@@ -3766,6 +3766,9 @@
     "expand_named": "展開對話串: {subject}",
     "collapse_named": "收合對話串: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, other {顯示 # 封較早的郵件}}"
+  },
   "identities": {
     "modal_title": "管理寄件身分",
     "create_new": "建立新的寄件身分",

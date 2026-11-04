@@ -265,6 +265,11 @@ interface EmailViewerProps {
    */
   mvConversation?: Email[];
   /**
+   * The default layout's reading pane shows `mvConversation` around the open
+   * message too, in its own look (not on phones, which have their own view).
+   */
+  conversationPane?: boolean;
+  /**
    * Mountain View: the open message's conversation is still on its way. The
    * viewer waits for it rather than showing the message alone first. (#1223)
    */
@@ -1003,6 +1008,7 @@ export function MvConversationRun({ emails, onOpen, timeFormat, collapseLongRun,
   expandedIds?: ReadonlySet<string>;
   renderExpanded?: (email: Email) => React.ReactNode;
 }) {
+  const tPane = useTranslations('conversation_pane');
   const [showAll, setShowAll] = useState(false);
   if (emails.length === 0) return null;
   const isExpanded = (e: Email) => !!renderExpanded && !!expandedIds?.has(e.id);
@@ -1020,6 +1026,8 @@ export function MvConversationRun({ emails, onOpen, timeFormat, collapseLongRun,
         <button
           type="button"
           onClick={() => setShowAll(true)}
+          aria-label={tPane('show_older', { count: middle.length })}
+          title={tPane('show_older', { count: middle.length })}
           data-mv-conversation-more=""
           className="absolute start-6 top-1/2 -translate-y-1/2 grid place-items-center w-10 h-10 rounded-full border border-border bg-background text-sm text-muted-foreground hover:bg-muted transition-colors"
         >
@@ -1335,6 +1343,7 @@ export function EmailViewer({
   mvPosition,
   mvFolderName,
   mvConversation,
+  conversationPane,
   mvConversationPending,
   onLoadConversationEmail,
   onMarkConversationEmailRead,
@@ -1473,10 +1482,12 @@ export function EmailViewer({
   // and has no bar fixed at the bottom; previous / next move to the top bar.
   const mvMobileViewer = interfaceLayout === 'mountain-view' && isMobile;
   const mvReplyRow = mvViewer || mvMobileViewer;
+  // Where the open message is read inside its conversation.
+  const conversationViewer = mvViewer || mvMobileViewer || (!!conversationPane && !isMobile);
   // The phone's bottom action bar: toasts sit above it.
   const bottomBarRef = useBottomControls(isMobile && !mvMobileViewer);
   // The open conversation around the open message, split at it.
-  const mvOpenIndex = (mvViewer || mvMobileViewer) && mvConversation && email ? mvConversation.findIndex((e) => e.id === email.id) : -1;
+  const mvOpenIndex = conversationViewer && mvConversation && email ? mvConversation.findIndex((e) => e.id === email.id) : -1;
   const mvBefore = mvOpenIndex > 0 ? mvConversation!.slice(0, mvOpenIndex) : [];
   const mvAfter = mvOpenIndex >= 0 ? mvConversation!.slice(mvOpenIndex + 1) : [];
   const mvConversationIds = mvOpenIndex >= 0 ? mvConversation!.map((e) => e.id).join(',') : '';
@@ -1523,7 +1534,7 @@ export function EmailViewer({
   // The conversation is not here yet (the one on hand is another thread's, or
   // none). Hold the message back instead of drawing it alone and then pushing
   // it down under the earlier messages.
-  const mvAwaitingConversation = !!mvConversationPending && (mvViewer || mvMobileViewer) && mvOpenIndex < 0;
+  const mvAwaitingConversation = !!mvConversationPending && conversationViewer && mvOpenIndex < 0;
   const renderMvExpanded = (target: Email) => (
     <MvExpandedConversationCard
       email={target}
@@ -5013,14 +5024,14 @@ ${printWatermark ? printWatermark.html : ''}
 
       {/* Mountain View: the conversation's earlier messages, folded. */}
       {mvBefore.length > 0 && (
-        <div data-mv-conversation-before="">
+        <div className="bg-background" data-mv-conversation-before="">
           <MvConversationRun emails={mvBefore} onOpen={toggleMvExpanded} expandedIds={mvExpandedIds} renderExpanded={renderMvExpanded} timeFormat={timeFormat} compact={mvMobileViewer} collapseLongRun />
         </div>
       )}
 
       {/* Mountain View: the open message folded like the rest of the conversation. */}
       {mvOpenFolded && email ? (
-        <div data-mv-open-folded="">
+        <div className="bg-background" data-mv-open-folded="">
           <MvConversationCard email={email} onOpen={() => setMvOpenFolded(false)} timeFormat={timeFormat} compact={mvMobileViewer} />
         </div>
       ) : mvAwaitingConversation ? (
@@ -5035,7 +5046,7 @@ ${printWatermark ? printWatermark.html : ''}
       ) : (<>
       {/* === SENDER INFO (Desktop) === */}
       <div
-        className={cn("hidden lg:block bg-background px-6", !mvViewer && "border-b border-border", mvViewer && mvBefore.length > 0 && "border-t border-border", mvOpenIndex >= 0 && "cursor-pointer")}
+        className={cn("hidden lg:block bg-background px-6", !mvViewer && "border-b border-border", (mvViewer || conversationPane) && mvBefore.length > 0 && "border-t border-border", mvOpenIndex >= 0 && "cursor-pointer")}
         style={mvViewer ? { paddingBlock: '0.75rem 0.5rem' } : { paddingBlock: 'var(--density-header-py)' }}
         data-mv-open-header={mvOpenIndex >= 0 ? "" : undefined}
         onClick={mvOpenIndex >= 0 ? (e) => {
@@ -6038,7 +6049,7 @@ ${printWatermark ? printWatermark.html : ''}
 
           {/* Mountain View: the conversation's later messages, folded. */}
           {mvAfter.length > 0 && (
-            <div className="mt-4 border-b border-border" data-mv-conversation-after="">
+            <div className="mt-4 border-b border-border bg-background" data-mv-conversation-after="">
               <MvConversationRun emails={mvAfter} onOpen={toggleMvExpanded} expandedIds={mvExpandedIds} renderExpanded={renderMvExpanded} timeFormat={timeFormat} compact={mvMobileViewer} />
             </div>
           )}

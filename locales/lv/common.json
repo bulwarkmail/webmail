@@ -3766,6 +3766,9 @@
     "expand_named": "Izvērst sarunu: {subject}",
     "collapse_named": "Sairt sarunu: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, zero {Rādīt # vecākas ziņas} one {Rādīt # vecāku ziņu} other {Rādīt # vecākas ziņas}}"
+  },
   "identities": {
     "modal_title": "Pārvaldīt sūtītāja identitātes",
     "create_new": "Izveidot jaunu identitāti",

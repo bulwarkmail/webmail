@@ -3766,6 +3766,9 @@
     "expand_named": "Extinde conversația: {subject}",
     "collapse_named": "Ascunde conversația: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Afișează # mesaj mai vechi} few {Afișează # mesaje mai vechi} other {Afișează # de mesaje mai vechi}}"
+  },
   "identities": {
     "modal_title": "Gestionarea identităților de expediere",
     "create_new": "Creați o identitate nouă",

@@ -3766,6 +3766,9 @@
     "expand_named": "Desplega la conversa: {subject}",
     "collapse_named": "Replega la conversa: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Mostra # missatge anterior} other {Mostra # missatges anteriors}}"
+  },
   "identities": {
     "modal_title": "Gestiona les identitats d'enviament",
     "create_new": "Crea una identitat nova",

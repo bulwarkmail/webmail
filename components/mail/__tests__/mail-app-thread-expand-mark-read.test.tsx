@@ -11,7 +11,9 @@ import { DEFAULT_SEARCH_FILTERS } from '@/lib/jmap/search-utils';
 
 // The `x` shortcut expands the selected conversation and marks it read. It has
 // to follow markAsReadDelay like the reading pane, and a delayed mark must not
-// land once the user has moved on (`j`/`k`) to a message outside it.
+// land once the user has moved on (`j`/`k`) to a message outside it. The
+// default layout shows the conversation in the reading pane instead, so this
+// runs where the list still unfolds it: Mountain View on a tablet.
 
 vi.mock('@/components/email/email-composer', () => ({ EmailComposer: () => null }));
 vi.mock('@/components/email/email-viewer', () => ({ EmailViewer: () => null }));
@@ -32,7 +34,7 @@ vi.mock('@/hooks/use-pro-multi-account-mailboxes', () => ({ useProMultiAccountMa
 vi.mock('@/hooks/use-wopi-status', () => ({ useWopiStatus: () => null, canWopiOpen: () => false }));
 vi.mock('@/hooks/use-browser-navigation', () => ({ useBrowserNavigation: () => {} }));
 vi.mock('@/hooks/use-media-query', () => ({
-  useDeviceDetection: () => ({ isMobile: false, isTablet: false, isDesktop: true }),
+  useDeviceDetection: () => ({ isMobile: false, isTablet: true, isDesktop: false }),
   useMediaQuery: () => false,
   useIsDesktop: () => true,
   useIsMobile: () => false,
@@ -78,7 +80,7 @@ beforeEach(() => {
     getClientForAccount: () => client as never,
     getAllConnectedClients: () => new Map([['login', client]]) as never,
   });
-  useSettingsStore.setState({ enableUnifiedMailbox: false, mailLayout: 'split', interfaceLayout: 'default' } as never);
+  useSettingsStore.setState({ enableUnifiedMailbox: false, mailLayout: 'split', interfaceLayout: 'mountain-view' } as never);
   useEmailStore.setState({
     // The conversation's newest message is open (selected with `j`).
     emails: [...conversation, single], selectedEmail: conversation[0], selectedMailbox: inbox.id, mailboxes: [inbox],

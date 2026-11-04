@@ -3766,6 +3766,9 @@
     "expand_named": "Gesprek uitklappen: {subject}",
     "collapse_named": "Gesprek inklappen: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {# ouder bericht tonen} other {# oudere berichten tonen}}"
+  },
   "identities": {
     "modal_title": "Verzendidentiteiten beheren",
     "create_new": "Nieuwe identiteit aanmaken",

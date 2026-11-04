@@ -3766,6 +3766,9 @@
     "expand_named": "Expandir conversación: {subject}",
     "collapse_named": "Contraer conversación: {subject}"
   },
+  "conversation_pane": {
+    "show_older": "{count, plural, one {Mostrar # mensaje anterior} other {Mostrar # mensajes anteriores}}"
+  },
   "identities": {
     "modal_title": "Administrar Identidades de Envío",
     "create_new": "Crear Nueva Identidad",
