@@ -858,8 +858,9 @@ export function CalendarManagementSettings() {
             isLoading={isLoading}
           />
         ) : (
-          // Stacked on a phone: side by side the three labels wrapped.
-          <div className="flex flex-col sm:flex-row gap-2">
+          // Stacked on a phone: side by side the three labels wrapped. Too
+          // narrow for all three in a row (800 px), the last one goes under.
+          <div data-testid="calendar-create-buttons" className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
             <button
               type="button"
               onClick={() => setIsCreating(true)}
