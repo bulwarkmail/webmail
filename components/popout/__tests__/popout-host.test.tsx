@@ -24,7 +24,7 @@ const DRAFT: RescuedDraft = {
 const original = { auth: useAuthStore.getState(), email: useEmailStore.getState(), accounts: useAccountStore.getState() };
 let heard: PopoutMessage[];
 let popout: NonNullable<ReturnType<typeof openPopoutChannel>>;
-let client: { createDraft: ReturnType<typeof vi.fn>; getAuthHeader: () => string; isOfflineOnly: () => boolean };
+let client: { createDraft: ReturnType<typeof vi.fn>; deleteEmail: ReturnType<typeof vi.fn>; getAuthHeader: () => string; isOfflineOnly: () => boolean };
 let lockRequests: string[];
 
 // Rounds, not one long wait: a message and its answer are two hops, and a busy
@@ -63,7 +63,7 @@ beforeEach(() => {
   sessionStorage.clear();
   heard = [];
   popout = openPopoutChannel((message) => heard.push(message))!;
-  client = { createDraft: vi.fn(async () => 'new'), getAuthHeader: () => 'Bearer main', isOfflineOnly: () => false };
+  client = { createDraft: vi.fn(async () => 'new'), deleteEmail: vi.fn(async () => {}), getAuthHeader: () => 'Bearer main', isOfflineOnly: () => false };
   useAccountStore.setState({
     accounts: [{ id: 'alice', serverUrl: 'https://mail.example.test', username: 'alice', authMode: 'oauth', cookieSlot: 0 } as never],
     activeAccountId: 'alice',
@@ -347,6 +347,10 @@ describe('PopoutHost', () => {
     expect(toasts).toHaveLength(1);
     expect(toasts[0].title).toBe('compose_ux.draft_discarded');
     expect(toasts[0].action?.label).toBe('compose_ux.undo');
+    // Leaving the page ends the Undo: the draft is deleted then, not left behind.
+    expect(client.deleteEmail).not.toHaveBeenCalled();
+    await act(async () => { window.dispatchEvent(new Event('pagehide')); });
+    expect(client.deleteEmail).toHaveBeenCalledWith('d1', undefined);
   });
 
   it('refreshes the list and counts when a pop-out changed mail, once for a burst', async () => {
