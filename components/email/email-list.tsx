@@ -39,7 +39,7 @@ import { useOpenEmailInWindow } from "@/hooks/use-popouts-available";
 import { useIsDesktop } from "@/hooks/use-media-query";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { useSettingsStore } from "@/stores/settings-store";
-import { useListRowShape, showsPreviewOnSubjectLine } from "@/hooks/use-list-row-shape";
+import { useListRowShape } from "@/hooks/use-list-row-shape";
 import { MailListRowsSkeleton, type MailRowShape } from "@/components/boot-skeleton/mail-skeleton";
 import type { Density } from "@/lib/density";
 import { useUIStore } from "@/stores/ui-store";
@@ -492,11 +492,7 @@ export function EmailList({
     // up after a jump down (scrollbar drag, End). So guess per row.
     const latest = item?.kind === 'row' ? item.thread.latestEmail : undefined;
     let size = { 'extra-compact': 32, compact: 60, regular: 84, comfortable: 104 }[density];
-    if (showsPreviewOnSubjectLine({ showPreview, density, isMobile, mountainView: mountainViewList })) {
-      // The preview follows the subject on its line, and the subject line
-      // drops its margin (mail-15).
-      size -= 4;
-    } else if (showPreview && density !== 'extra-compact') {
+    if (showPreview && density !== 'extra-compact') {
       // A mail without a preview draws a one-line "No preview available",
       // a line (23px) shorter than a real one. Only comfortable rows show a
       // second preview line (mail-15).
@@ -507,7 +503,7 @@ export function EmailList({
     const hasCode = !!latest && showVerificationCodes && !!listVerificationCode(latest);
     if (latest && (hasCode || (onOpenAttachment && listRowShowsChips(latest, loadAttachments)))) size += 28;
     return size;
-  }, [density, isFocusedMailLayout, showPreview, showVerificationCodes, items, onOpenAttachment, loadAttachments, isMobile, mountainViewList]);
+  }, [density, isFocusedMailLayout, showPreview, showVerificationCodes, items, onOpenAttachment, loadAttachments]);
 
   // Stable per list, so the virtualizer does not rebuild every row's
   // measurement on each scroll render.
