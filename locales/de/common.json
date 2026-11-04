@@ -1212,6 +1212,13 @@
       "plain_text": "[Bild: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Entwurf verworfen",
+    "undo": "Rückgängig",
+    "discard_draft": "Entwurf verwerfen",
+    "save_failed_close": "Der Entwurf konnte nicht gespeichert werden. Versuchen Sie es erneut oder verwerfen Sie ihn.",
+    "try_again": "Erneut versuchen"
+  },
   "confirm_dialog": {
     "confirm": "Bestätigen",
     "cancel": "Abbrechen"

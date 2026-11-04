@@ -68,6 +68,7 @@ import { isFilePreviewable } from "@/lib/file-preview";
 import { isEditableEventTarget } from "@/lib/keyboard";
 import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
 import { markReplyQuoteHeader } from "@/components/email/reply-quote-collapse";
+import { showDraftSavedToast } from "@/lib/compose/draft-close-toast";
 import { buildQuotedHtmlBlock, serializeEditorContent } from "@/components/email/quoted-html";
 import { containsEmbeddedSignature } from "@/components/email/signature-block";
 import {
@@ -429,6 +430,11 @@ interface EmailComposerProps {
      * started now wouldn't survive. False when that can't be done safely.
      */
     rescueDraft?: (draft: RescuedDraft) => boolean;
+    /**
+     * The window closes with its draft kept: another window says so, as
+     * this one is gone before a toast here could be read.
+     */
+    onDraftKept?: (draftId: string, where: { accountId?: string; localAccountId?: string }) => void;
   };
   /** The subject as typed, for a host that shows it (a Pro compose tab's title). */
   onSubjectChange?: (subject: string) => void;
@@ -618,6 +624,7 @@ export function EmailComposer({
   const tOfflineNotes = useTranslations('offlineConflicts');
   const tSendGuards = useTranslations('send_guards');
   const tWords = useTranslations('compose_words');
+  const tUx = useTranslations('compose_ux');
   const router = useRouter();
   const showAdvancedSettings = useSettingsStore((state) => state.showAdvancedSettings);
   const timeFormat = useSettingsStore((state) => state.timeFormat);
@@ -1076,6 +1083,12 @@ export function EmailComposer({
     const nextCc = getInitialCc();
     if (same(nextTo, auto.to) && same(nextCc, auto.cc)) return;
     autoRecipientsRef.current = { to: nextTo, cc: nextCc };
+    // Not the user's change: an untouched reply stays untouched.
+    initialValuesRef.current = {
+      ...initialValuesRef.current,
+      to: formatRecipientList(withInput(nextTo, toInput)),
+      cc: formatRecipientList(withInput(nextCc, ccInput)),
+    };
     setTo(nextTo);
     setCc(nextCc);
     if (nextCc.length > 0) setShowCc(true);
@@ -1229,6 +1242,8 @@ export function EmailComposer({
   // "close" (X, Escape): save or discard. "discard" (the Discard button): the
   // user already chose, so only confirm it.
   const [closeDialogKind, setCloseDialogKind] = useState<'close' | 'discard'>('close');
+  // Closing saves without asking; the question comes only when that save failed.
+  const [closeSaveFailed, setCloseSaveFailed] = useState(false);
   const [showAllAttachments, setShowAllAttachments] = useState(false);
   const [previewAttachment, setPreviewAttachment] = useState<ComposerAttachment | null>(null);
   // What the checks before sending found (no subject, no text, placeholders,
@@ -1429,6 +1444,8 @@ export function EmailComposer({
   // when the user switches identity in "above quote" mode without rebuilding
   // the whole body (which would lose user edits to the surrounding draft).
   const editorRef = useRef<Editor | null>(null);
+  // Set while the composer itself swaps the signature in the editor.
+  const signatureSwapRef = useRef(false);
   // Set once a reply's body got its initial focus, so switching formats later
   // does not move the caret back to the start.
   const replyFocusedRef = useRef(false);
@@ -1501,7 +1518,14 @@ export function EmailComposer({
       separator: signatureSeparatorEnabled,
     }), { quoteHeader: getQuoteHeaderLine() });
     if (nextHtml !== currentHtml) {
-      editor.commands.setContent(nextHtml, { emitUpdate: true });
+      // The signature following From is no edit of the user's: an untouched
+      // reply whose identity resolves late must stay untouched.
+      signatureSwapRef.current = true;
+      try {
+        editor.commands.setContent(nextHtml, { emitUpdate: true });
+      } finally {
+        signatureSwapRef.current = false;
+      }
     }
     // Intentionally keyed to the signature-relevant fields plus the internal
     // prev*Ref guards above; depending on the whole `signatureIdentity` object
@@ -1889,7 +1913,12 @@ export function EmailComposer({
   // Handed-in text and files aren't the user's until they touch them. Nothing
   // counts as dirty until then, so autosave, the page-close save and the flush
   // before a sign-out all leave them alone.
-  const uneditedRef = useRef(initialData?.unedited === true);
+  // So does a fresh composer, a reply or forward above all: the quote and the
+  // signature it starts with are no reason to keep a draft. Closed before the
+  // user changes anything, it leaves nothing behind.
+  const uneditedRef = useRef(initialData?.unedited === true || (
+    !initialDataProp && !prefill && !initialDraftTextProp && !(initialFiles && initialFiles.length > 0)
+  ));
   const [firstEditSeen, setFirstEditSeen] = useState(false);
   const markEdited = useCallback(() => {
     if (!uneditedRef.current) return;
@@ -3645,6 +3674,9 @@ export function EmailComposer({
     if (composerClient?.hasDelayedSend()) {
       return new Date(Date.now() + sendDelaySeconds * 1000).toISOString();
     }
+    // Undo send is on by default; a server without delayed sending just
+    // sends. Only a delay the user picked is worth a question.
+    if (!useSettingsStore.getState().explicitSettings.includes('sendDelaySeconds')) return undefined;
     const confirmed = await confirmNoDelay({
       title: t('send_delay_unsupported_title'),
       message: t('send_delay_unsupported_confirm'),
@@ -4458,7 +4490,28 @@ export function EmailComposer({
     setIsSavingAndClosing(false);
   };
 
-  const handleSaveDraftAndClose = async () => {
+  // "Draft saved" with Discard, once the composer closed and kept its draft.
+  // Read before the close resets the refs; the Discard runs after unmount,
+  // through the host's own discard, as the composer's Discard does.
+  const announceKeptDraft = () => {
+    const draftId = draftIdRef.current;
+    if (!draftId) return;
+    const where = { accountId: draftAccountIdRef.current, localAccountId: draftLocalAccountIdRef.current };
+    const ownWindowKept = ownWindowRef.current?.onDraftKept;
+    if (ownWindowKept) {
+      ownWindowKept(draftId, where);
+      return;
+    }
+    const discard = onDiscardDraft;
+    showDraftSavedToast(() => discard?.(draftId, where), {
+      saved: t('draft_saved'),
+      discard: t('discard'),
+      discarded: tUx('draft_discarded'),
+      undo: tUx('undo'),
+    });
+  };
+
+  const handleSaveDraftAndClose = async (opts: { fromClose?: boolean } = {}) => {
     if (saveCloseAttemptRef.current) return;
     const attempt = { cancelled: false, saving: false };
     saveCloseAttemptRef.current = attempt;
@@ -4482,7 +4535,12 @@ export function EmailComposer({
       setIsWaitingToSave(false);
       if (result === 'failed') {
         toast.error(t('save_failed'));
-        afterCloseRef.current = null;
+        if (opts.fromClose) {
+          setCloseSaveFailed(true);
+          openCloseDialog('close');
+        } else {
+          afterCloseRef.current = null;
+        }
         return;
       }
 
@@ -4492,10 +4550,21 @@ export function EmailComposer({
       const savedId = await saveDraftRef.current({ announce: true });
       if (attempt.cancelled) return;
       if (saveFailedRef.current || !savedId) {
+        // Nothing to save (no recipient, subject, text or file) isn't a failure.
+        if (!saveFailedRef.current && !draftIdRef.current && !draftHasContent(draftRecipients().toAddresses)) {
+          cleanClose();
+          return;
+        }
         toast.error(t('save_failed'));
-        afterCloseRef.current = null;
+        if (opts.fromClose) {
+          setCloseSaveFailed(true);
+          openCloseDialog('close');
+        } else {
+          afterCloseRef.current = null;
+        }
         return;
       }
+      announceKeptDraft();
       explicitCloseRef.current = true;
       stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, draftAccountId: undefined, draftLocalAccountId: undefined, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode };
       emitClose();
@@ -4611,16 +4680,16 @@ export function EmailComposer({
       return;
     }
     const discarding = kind === 'discard';
-    const buttons = discarding ? [t('discard'), t('cancel')] : [tCommon('save'), t('discard'), t('cancel')];
+    const buttons = discarding ? [t('discard'), t('cancel')] : [tUx('try_again'), t('discard'), t('cancel')];
     void dialogs.confirm({
       type: 'warning',
       message: discarding ? t('discard_draft_title') : t('close_draft_title'),
-      detail: discarding ? t('discard_draft_message') : t('close_draft_message'),
+      detail: discarding ? t('discard_draft_message') : tUx('save_failed_close'),
       buttons,
       defaultId: discarding ? 1 : 0,
     }).then((choice) => {
       if (buttons[choice] === t('discard')) handleDiscardAndClose();
-      else if (!discarding && choice === 0) void handleSaveDraftAndClose();
+      else if (!discarding && choice === 0) void handleSaveDraftAndClose({ fromClose: true });
       else afterCloseRef.current = null;
     });
   };
@@ -4639,19 +4708,29 @@ export function EmailComposer({
     openCloseDialog('discard');
   };
 
+  // X, Escape, another message, a host's tab: one rule, as drafts save
+  // themselves. Closing keeps the draft and says so, with Discard on the
+  // toast; it asks only when the save fails. A message the user hasn't
+  // touched (a reply opened and closed again) leaves nothing behind.
   const handleClose = (afterClose?: () => void) => {
     if (saveCloseAttemptRef.current?.saving) return;
     cancelSaveAndClose();
     afterCloseRef.current = afterClose ?? null;
+    setCloseSaveFailed(false);
+    if (uneditedRef.current || (!isDirtyRef.current && !draftIdRef.current)) {
+      cleanClose();
+      return;
+    }
     const savedAlready = draftIdRef.current !== null
       && changeVersionRef.current === savedVersionRef.current
       && !saveFailedRef.current
       && !attachmentsRef.current.some(att => att.uploading || att.error);
-    if (isDirtyRef.current && !savedAlready) {
-      openCloseDialog('close');
-    } else {
+    if (!isDirtyRef.current || savedAlready) {
+      announceKeptDraft();
       cleanClose();
+      return;
     }
+    void handleSaveDraftAndClose({ fromClose: true });
   };
 
   // Expose the dirty-aware close handler so external hosts (e.g. the Pro tab
@@ -5387,6 +5466,9 @@ export function EmailComposer({
               content={body}
               onChange={(html) => {
                 setBody(html);
+                // Only edits made in the editor get here: toolbar commands,
+                // a pasted or dropped image, typing; and the signature swap.
+                if (!signatureSwapRef.current) markEdited();
                 if (validationErrors.body) setValidationErrors(prev => ({ ...prev, body: false }));
               }}
               onImageUpload={handleImageUpload}
@@ -6027,7 +6109,7 @@ export function EmailComposer({
         role="alertdialog"
         showClose={false}
         title={closeDialogKind === 'discard' ? t('discard_draft_title') : t('close_draft_title')}
-        description={closeDialogKind === 'discard' ? t('discard_draft_message') : t('close_draft_message')}
+        description={closeDialogKind === 'discard' ? t('discard_draft_message') : closeSaveFailed ? tUx('save_failed_close') : t('close_draft_message')}
         footer={
           <>
             <Button variant="outline" onClick={() => dismissCloseDialog()}>
@@ -6037,9 +6119,9 @@ export function EmailComposer({
               {t('discard')}
             </Button>
             {closeDialogKind === 'close' && (
-              <Button onClick={handleSaveDraftAndClose}>
+              <Button onClick={() => void handleSaveDraftAndClose({ fromClose: closeSaveFailed })}>
                 <Save className="w-4 h-4 me-2" />
-                {tCommon('save')}
+                {closeSaveFailed ? tUx('try_again') : tCommon('save')}
               </Button>
             )}
           </>

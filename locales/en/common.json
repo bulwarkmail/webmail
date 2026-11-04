@@ -1212,6 +1212,13 @@
       "plain_text": "[Image: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Draft discarded",
+    "undo": "Undo",
+    "discard_draft": "Discard draft",
+    "save_failed_close": "The draft could not be saved. Try again, or discard it.",
+    "try_again": "Try again"
+  },
   "confirm_dialog": {
     "confirm": "Confirm",
     "cancel": "Cancel"

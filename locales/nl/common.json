@@ -1212,6 +1212,13 @@
       "plain_text": "[Afbeelding: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Concept verwijderd",
+    "undo": "Ongedaan maken",
+    "discard_draft": "Concept verwijderen",
+    "save_failed_close": "Het concept kon niet worden opgeslagen. Probeer het opnieuw of verwijder het.",
+    "try_again": "Opnieuw proberen"
+  },
   "confirm_dialog": {
     "confirm": "Bevestigen",
     "cancel": "Annuleren"

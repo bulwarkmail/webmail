@@ -1212,6 +1212,13 @@
       "plain_text": "[Attēls: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Melnraksts atmests",
+    "undo": "Atsaukt",
+    "discard_draft": "Atmest melnrakstu",
+    "save_failed_close": "Melnrakstu neizdevās saglabāt. Mēģiniet vēlreiz vai atmetiet to.",
+    "try_again": "Mēģināt vēlreiz"
+  },
   "confirm_dialog": {
     "confirm": "Apstiprināt",
     "cancel": "Atcelt"

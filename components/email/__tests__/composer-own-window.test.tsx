@@ -325,6 +325,20 @@ describe('a composer that is all its window shows', () => {
     }
   });
 
+  // Escape in a pop-out or quick compose window: the same as anywhere,
+  // saved and kept, and the main window says so (this one is gone).
+  it('saves on Escape, closes, and hands "Draft saved" to the main window', async () => {
+    const onDraftKept = vi.fn();
+    const onClose = vi.fn();
+    mount({ ownWindow: { onDraftKept }, onClose });
+    fireEvent.change(subjectField(), { target: { value: 'Kept on Escape' } });
+    fireEvent.keyDown(subjectField(), { key: 'Escape' });
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+    expect(creations.map((draft) => draft.subject)).toEqual(['Kept on Escape']);
+    expect(onDraftKept).toHaveBeenCalledWith('saved-1', expect.objectContaining({ localAccountId: expect.anything() }));
+    expect(screen.queryByRole('alertdialog')).toBeNull();
+  });
+
   it('lets an untouched composer go without a word', () => {
     mount({ ownWindow: {} });
     expect(unload().defaultPrevented).toBe(false);

@@ -1212,6 +1212,13 @@
       "plain_text": "[Зураг: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Ноорог устгагдлаа",
+    "undo": "Буцаах",
+    "discard_draft": "Ноорог устгах",
+    "save_failed_close": "Ноорогийг хадгалж чадсангүй. Дахин оролдох эсвэл устгана уу.",
+    "try_again": "Дахин оролдох"
+  },
   "confirm_dialog": {
     "confirm": "Баталгаажуулах",
     "cancel": "Цуцлах"

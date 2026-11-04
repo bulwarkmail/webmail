@@ -1212,6 +1212,13 @@
       "plain_text": "[画像: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "下書きを破棄しました",
+    "undo": "元に戻す",
+    "discard_draft": "下書きを破棄",
+    "save_failed_close": "下書きを保存できませんでした。もう一度試すか、破棄してください。",
+    "try_again": "再試行"
+  },
   "confirm_dialog": {
     "confirm": "確認",
     "cancel": "キャンセル"

@@ -1212,6 +1212,13 @@
       "plain_text": "[Görsel: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Taslak silindi",
+    "undo": "Geri al",
+    "discard_draft": "Taslağı sil",
+    "save_failed_close": "Taslak kaydedilemedi. Yeniden deneyin ya da silin.",
+    "try_again": "Yeniden dene"
+  },
   "confirm_dialog": {
     "confirm": "Onayla",
     "cancel": "İptal"

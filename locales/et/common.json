@@ -1212,6 +1212,13 @@
       "plain_text": "[Pilt: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Mustand loobutud",
+    "undo": "Võta tagasi",
+    "discard_draft": "Loobu mustandist",
+    "save_failed_close": "Mustandit ei saanud salvestada. Proovige uuesti või loobuge sellest.",
+    "try_again": "Proovi uuesti"
+  },
   "confirm_dialog": {
     "confirm": "Kinnita",
     "cancel": "Tühista"

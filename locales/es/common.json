@@ -1212,6 +1212,13 @@
       "plain_text": "[Imagen: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Borrador descartado",
+    "undo": "Deshacer",
+    "discard_draft": "Descartar borrador",
+    "save_failed_close": "No se pudo guardar el borrador. Inténtelo de nuevo o descártelo.",
+    "try_again": "Reintentar"
+  },
   "confirm_dialog": {
     "confirm": "Confirmar",
     "cancel": "Cancelar"

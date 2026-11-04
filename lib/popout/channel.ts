@@ -92,6 +92,7 @@ export type PopoutMessage =
   | { type: 'sent'; requestId: string; notice: PopoutSentNotice }
   | { type: 'sent-ack'; requestId: string }
   | { type: 'mail-changed'; accountId: string | null }
+  | { type: 'draft-kept'; requestId: string; notice: DraftKeptNotice }
   | { type: 'state-change' }
   | { type: 'draft-rescue'; draft: RescuedDraft }
   | { type: 'rescue-query'; rescueKey: string }
@@ -105,6 +106,15 @@ export type PopoutMessage =
   | { type: 'main-pong'; windowId: string; accountIds: string[] }
   | { type: 'main-gone'; windowId: string }
   | { type: 'account-removed'; accountId: string };
+
+/** A pop-out closed and kept its draft: the main window says so, with Discard. */
+export interface DraftKeptNotice {
+  draftId: string;
+  /** The account it lives in, when not the login's own. */
+  accountId?: string;
+  /** The login it was saved through. */
+  localAccountId?: string;
+}
 
 export interface PopoutChannel {
   post(message: PopoutMessage): void;
@@ -221,6 +231,13 @@ export function announceSentToMainWindow(notice: PopoutSentNotice, timeoutMs = 5
 export function announceMailChanged(accountId: string | null): void {
   const channel = openPopoutChannel(() => {});
   channel?.post({ type: 'mail-changed', accountId });
+  channel?.close();
+}
+
+/** Tells the main window that a closing pop-out kept its draft. */
+export function announceDraftKept(notice: DraftKeptNotice): void {
+  const channel = openPopoutChannel(() => {});
+  channel?.post({ type: 'draft-kept', requestId: newId(), notice });
   channel?.close();
 }
 

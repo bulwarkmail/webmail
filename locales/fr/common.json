@@ -1212,6 +1212,13 @@
       "plain_text": "[Image : {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Brouillon supprimé",
+    "undo": "Annuler",
+    "discard_draft": "Supprimer le brouillon",
+    "save_failed_close": "Le brouillon n'a pas pu être enregistré. Réessayez ou supprimez-le.",
+    "try_again": "Réessayer"
+  },
   "confirm_dialog": {
     "confirm": "Confirmer",
     "cancel": "Annuler"

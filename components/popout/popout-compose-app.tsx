@@ -15,7 +15,7 @@ import { debug } from "@/lib/debug";
 import { composerSendOptions } from "@/lib/outgoing/composer-send-options";
 import { announceSent, cancelAnnouncedSend, releaseAnnouncedSend } from "@/lib/plugin-after-send";
 import { cancelFailureToast } from "@/lib/send-failure-message";
-import { announceMailChanged, announceSentToMainWindow, askRescuedDraftId, watchMainWindow, type PopoutSentNotice, type RescuedDraft } from "@/lib/popout/channel";
+import { announceDraftKept, announceMailChanged, announceSentToMainWindow, askRescuedDraftId, watchMainWindow, type PopoutSentNotice, type RescuedDraft } from "@/lib/popout/channel";
 import { acknowledgeComposeHandoff, forgetComposePayload, receiveComposeHandoff, rememberComposePayload, rememberedComposePayload, watchHandoffCancel } from "@/lib/popout/compose-handoff";
 import type { ComposePopoutPayload } from "@/lib/popout/compose-payload";
 import { returnComposerToMain, type ReturnResult } from "@/lib/popout/return-to-main";
@@ -483,6 +483,9 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
     // A reload of this window starts from where the text is now.
     onUnloadState: (state: ComposerDraftData) => {
       if (handoffId) rememberComposePayload(handoffId, { ...payload, initialData: state, prefill: null });
+    },
+    onDraftKept: (draftId: string, where: { accountId?: string; localAccountId?: string }) => {
+      announceDraftKept({ draftId, ...where, localAccountId: where.localAccountId ?? useAuthStore.getState().activeAccountId ?? undefined });
     },
     onDraftSaved: (draftId: string, where: { accountId?: string; localAccountId?: string } = {}) => {
       const active = useAuthStore.getState().activeAccountId;

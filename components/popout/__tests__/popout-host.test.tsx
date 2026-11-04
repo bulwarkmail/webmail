@@ -308,6 +308,17 @@ describe('PopoutHost', () => {
     expect(useToastStore.getState().toasts).toHaveLength(1);
   });
 
+  it('says once that a closed pop-out kept its draft, with Discard', async () => {
+    render(<><PopoutHost /><PopoutHost /></>);
+    await settle();
+    popout.post({ type: 'draft-kept', requestId: 'k1', notice: { draftId: 'd1', localAccountId: 'alice' } });
+    await settle();
+    const toasts = useToastStore.getState().toasts;
+    expect(toasts).toHaveLength(1);
+    expect(toasts[0].title).toBe('email_composer.draft_saved');
+    expect(toasts[0].action?.label).toBe('email_composer.discard');
+  });
+
   it('refreshes the list and counts when a pop-out changed mail, once for a burst', async () => {
     render(<PopoutHost />);
     await settle();

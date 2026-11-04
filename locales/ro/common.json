@@ -1212,6 +1212,13 @@
       "plain_text": "[Imagine: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Ciornă renunțată",
+    "undo": "Anulează",
+    "discard_draft": "Renunță la ciornă",
+    "save_failed_close": "Ciorna nu a putut fi salvată. Încercați din nou sau renunțați la ea.",
+    "try_again": "Încearcă din nou"
+  },
   "confirm_dialog": {
     "confirm": "Confirmare",
     "cancel": "Anulează"

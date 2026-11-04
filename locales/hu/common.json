@@ -1212,6 +1212,13 @@
       "plain_text": "[Kép: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Piszkozat elvetve",
+    "undo": "Visszavonás",
+    "discard_draft": "Piszkozat elvetése",
+    "save_failed_close": "A piszkozatot nem sikerült menteni. Próbálja újra, vagy vesse el.",
+    "try_again": "Újra"
+  },
   "confirm_dialog": {
     "confirm": "Megerősítés",
     "cancel": "Mégse"

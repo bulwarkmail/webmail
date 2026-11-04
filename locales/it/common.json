@@ -1212,6 +1212,13 @@
       "plain_text": "[Immagine: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Bozza eliminata",
+    "undo": "Annulla",
+    "discard_draft": "Elimina bozza",
+    "save_failed_close": "Impossibile salvare la bozza. Riprova o eliminala.",
+    "try_again": "Riprova"
+  },
   "confirm_dialog": {
     "confirm": "Conferma",
     "cancel": "Annulla"

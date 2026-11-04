@@ -1212,6 +1212,13 @@
       "plain_text": "[Bilde: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Utkast forkastet",
+    "undo": "Angre",
+    "discard_draft": "Forkast utkast",
+    "save_failed_close": "Utkastet kunne ikke lagres. Prøv igjen, eller forkast det.",
+    "try_again": "Prøv igjen"
+  },
   "confirm_dialog": {
     "confirm": "Bekreft",
     "cancel": "Avbryt"

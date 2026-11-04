@@ -107,7 +107,7 @@ afterEach(async () => {
   vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.clearAllTimers(); vi.useRealTimers();
 });
 
-type Control = 'close' | 'toolbar';
+type Control = 'toolbar';
 async function openComposer(strict = false) {
   const closed = vi.fn();
   let reopen!: () => void;
@@ -135,7 +135,7 @@ async function openComposer(strict = false) {
       fireEvent.change(document.querySelector('input[type="file"]')!, { target: { files } }); await advance();
     },
     dialog: (control: Control) => {
-      fireEvent.click(screen.getByTestId(control === 'close' ? 'composer-close' : 'composer-discard'));
+      fireEvent.click(screen.getByTestId(control === 'toolbar' ? 'composer-discard' : 'composer-close'));
       return within(screen.getByRole('alertdialog'));
     },
     reopen: async () => { act(() => reopen()); await advance(); },
@@ -148,7 +148,9 @@ function expectNewComposer() {
   expect(screen.queryByRole('progressbar')).toBeNull();
   expect(screen.queryByText('A.txt')).toBeNull(); expect(screen.queryByText('C.txt')).toBeNull();
 }
-const modes = (['close', 'toolbar'] as const).flatMap(control => [false, true].map(strict => ({ control, strict })));
+// The X no longer asks Save or Discard: it saves (composer-save-pending-attachments).
+// Discard is the toolbar's.
+const modes = (['toolbar'] as const).flatMap(control => [false, true].map(strict => ({ control, strict })));
 
 describe('explicit Discard with pending attachment uploads', () => {
   describe.each(modes)('$control control, Strict Mode=$strict', ({ control, strict }) => {
@@ -232,7 +234,7 @@ describe('explicit Discard with pending attachment uploads', () => {
     await c.add(file('A.txt'), file('C.txt'));
     if (method === 'deleteFile') await complete(0);
     expect(entered).toHaveBeenCalledOnce();
-    fireEvent.click(c.dialog('close').getByRole('button', { name: /^Discard$/ })); await advance();
+    fireEvent.click(c.dialog('toolbar').getByRole('button', { name: /^Discard$/ })); await advance();
     await c.reopen();
     await act(async () => { gate.resolve(); }); await advance();
     await c.add(file('B.txt')); await complete(UploadXHR.instances.findIndex(xhr => xhr.body?.name === 'B.txt'));

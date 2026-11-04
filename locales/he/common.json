@@ -1155,6 +1155,13 @@
       "plain_text": "[תמונה: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "הטיוטה נמחקה",
+    "undo": "ביטול",
+    "discard_draft": "מחיקת הטיוטה",
+    "save_failed_close": "לא ניתן היה לשמור את הטיוטה. נסו שוב או מחקו אותה.",
+    "try_again": "ניסיון נוסף"
+  },
   "confirm_dialog": {
     "confirm": "אשר",
     "cancel": "לְבַטֵל"

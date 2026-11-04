@@ -1212,6 +1212,13 @@
       "plain_text": "[Imatge: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Esborrany descartat",
+    "undo": "Desfés",
+    "discard_draft": "Descarta l'esborrany",
+    "save_failed_close": "No s'ha pogut desar l'esborrany. Torneu-ho a provar o descarteu-lo.",
+    "try_again": "Torna-ho a provar"
+  },
   "confirm_dialog": {
     "confirm": "Confirma",
     "cancel": "Cancel·la"

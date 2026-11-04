@@ -1212,6 +1212,13 @@
       "plain_text": "[Изображение: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Черновик удалён",
+    "undo": "Отменить",
+    "discard_draft": "Удалить черновик",
+    "save_failed_close": "Не удалось сохранить черновик. Попробуйте ещё раз или удалите его.",
+    "try_again": "Повторить"
+  },
   "confirm_dialog": {
     "confirm": "Подтвердить",
     "cancel": "Отмена"

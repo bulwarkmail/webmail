@@ -1224,6 +1224,13 @@
       "plain_text": "[Hình ảnh: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Đã hủy bản nháp",
+    "undo": "Hoàn tác",
+    "discard_draft": "Hủy bản nháp",
+    "save_failed_close": "Không lưu được bản nháp. Hãy thử lại hoặc hủy bản nháp.",
+    "try_again": "Thử lại"
+  },
   "confirm_dialog": {
     "confirm": "Xác nhận",
     "cancel": "Hủy"

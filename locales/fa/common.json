@@ -1212,6 +1212,13 @@
       "plain_text": "[تصویر: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "پیش‌نویس دور انداخته شد",
+    "undo": "واگرد",
+    "discard_draft": "دور انداختن پیش‌نویس",
+    "save_failed_close": "پیش‌نویس ذخیره نشد. دوباره تلاش کنید یا آن را دور بیندازید.",
+    "try_again": "تلاش دوباره"
+  },
   "confirm_dialog": {
     "confirm": "تأیید",
     "cancel": "انصراف"

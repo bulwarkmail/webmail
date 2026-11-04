@@ -302,7 +302,7 @@ describe('composer with the @ recipient list', () => {
     }
   });
 
-  it('lets Escape close the open list, not the composer; the next Escape asks to close', async () => {
+  it('lets Escape close the open list, not the composer; the next Escape closes that', async () => {
     const { editor, onClose } = await renderComposer();
     await typeInto(editor, ' @');
     await screen.findByRole('listbox', { name: 'mention_recipients' });
@@ -312,8 +312,10 @@ describe('composer with the @ recipient list', () => {
     expect(screen.queryByRole('alertdialog')).toBeNull();
     expect(onClose).not.toHaveBeenCalled();
 
+    // The composer's close runs: with no connection here its save fails,
+    // which is when it asks.
     press(editor, 'Escape');
-    expect(await screen.findByRole('alertdialog')).toHaveTextContent('close_draft_title');
+    expect(await screen.findByRole('alertdialog')).toHaveTextContent('save_failed_close');
   });
 
   it('keeps Ctrl+Enter as the send shortcut while the list is open', async () => {
@@ -358,7 +360,7 @@ describe('composer with the @ recipient list', () => {
     await waitFor(() => expect(mentionList()).toBeNull());
 
     fireEvent.keyDown(subject, { key: 'Escape' });
-    expect(await screen.findByRole('alertdialog')).toHaveTextContent('close_draft_title');
+    expect(await screen.findByRole('alertdialog')).toHaveTextContent('save_failed_close');
   });
 
   it('closes the list on a click elsewhere, but not on a click on the list itself', async () => {

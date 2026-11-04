@@ -1212,6 +1212,13 @@
       "plain_text": "[Obraz: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Wersja robocza odrzucona",
+    "undo": "Cofnij",
+    "discard_draft": "Odrzuć wersję roboczą",
+    "save_failed_close": "Nie udało się zapisać wersji roboczej. Spróbuj ponownie lub ją odrzuć.",
+    "try_again": "Spróbuj ponownie"
+  },
   "confirm_dialog": {
     "confirm": "Potwierdź",
     "cancel": "Anuluj"

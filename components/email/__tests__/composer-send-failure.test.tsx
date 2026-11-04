@@ -252,7 +252,7 @@ describe('composer send failures', () => {
   // window.confirm, before the message goes out at once.
   it('asks in a dialog before sending without the delay the account lacks', async () => {
     const nativeConfirm = vi.spyOn(window, 'confirm');
-    useSettingsStore.setState({ sendDelaySeconds: 10 } as never);
+    useSettingsStore.setState({ sendDelaySeconds: 10, explicitSettings: ['sendDelaySeconds'] } as never);
     try {
       const onSend = vi.fn().mockResolvedValue(undefined);
       render(<EmailComposer initialData={DRAFT} onSend={onSend} />);
@@ -262,6 +262,21 @@ describe('composer send failures', () => {
       expect(onSend).not.toHaveBeenCalled();
       fireEvent.click(within(dialog).getByRole('button', { name: 'send' }));
       await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1));
+    } finally {
+      useSettingsStore.setState({ sendDelaySeconds: 0, explicitSettings: [] } as never);
+    }
+  });
+
+  // Undo send is on by default: an account that can't delay just sends.
+  it('sends at once, without asking, when the delay is only the default', async () => {
+    useSettingsStore.setState({ sendDelaySeconds: 5, explicitSettings: [] } as never);
+    try {
+      const onSend = vi.fn().mockResolvedValue(undefined);
+      render(<EmailComposer initialData={DRAFT} onSend={onSend} />);
+      fireEvent.click(screen.getAllByTestId('composer-send')[0]);
+      await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1));
+      expect(onSend.mock.calls[0][0].delayedUntil).toBeUndefined();
+      expect(screen.queryByRole('alertdialog', { name: 'send_delay_unsupported_title' })).toBeNull();
     } finally {
       useSettingsStore.setState({ sendDelaySeconds: 0 } as never);
     }

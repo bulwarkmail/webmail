@@ -1212,6 +1212,13 @@
       "plain_text": "[Imagem: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Rascunho descartado",
+    "undo": "Desfazer",
+    "discard_draft": "Descartar rascunho",
+    "save_failed_close": "Não foi possível guardar o rascunho. Tente novamente ou descarte-o.",
+    "try_again": "Tentar novamente"
+  },
   "confirm_dialog": {
     "confirm": "Confirmar",
     "cancel": "Cancelar"

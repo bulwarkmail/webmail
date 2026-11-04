@@ -1212,6 +1212,13 @@
       "plain_text": "[圖片：{alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "草稿已捨棄",
+    "undo": "復原",
+    "discard_draft": "捨棄草稿",
+    "save_failed_close": "無法儲存草稿。請再試一次或捨棄草稿。",
+    "try_again": "再試一次"
+  },
   "confirm_dialog": {
     "confirm": "確認",
     "cancel": "取消"

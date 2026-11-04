@@ -1212,6 +1212,13 @@
       "plain_text": "[Billede: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Kladde kasseret",
+    "undo": "Fortryd",
+    "discard_draft": "Kassér kladde",
+    "save_failed_close": "Kladden kunne ikke gemmes. Prøv igen, eller kassér den.",
+    "try_again": "Prøv igen"
+  },
   "confirm_dialog": {
     "confirm": "Bekræft",
     "cancel": "Annuller"

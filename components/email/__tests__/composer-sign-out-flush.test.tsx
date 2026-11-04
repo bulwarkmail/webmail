@@ -246,15 +246,18 @@ describe('composer flush before an automatic sign-out', () => {
     expect(createDraft.mock.calls[0][1]).toBe('Half-written');
   });
 
-  it('asks before closing a composer opened with stashed edits', async () => {
+  // Closing keeps the draft without asking: the stashed edits are saved first.
+  it('saves a composer opened with stashed edits before it closes', async () => {
     const onClose = vi.fn();
     const requestCloseRef: { current: ((afterClose?: () => void) => void) | null } = { current: null };
     render(<EmailComposer initialData={{ ...DRAFT, unsaved: true }} onClose={onClose} requestCloseRef={requestCloseRef} />);
 
     act(() => requestCloseRef.current?.());
 
-    expect(await screen.findByRole('alertdialog')).toBeTruthy();
-    expect(onClose).not.toHaveBeenCalled();
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    expect(createDraft).toHaveBeenCalledTimes(1);
+    expect(createDraft.mock.calls[0][1]).toBe('Half-written');
+    expect(screen.queryByRole('alertdialog')).toBeNull();
   });
 
   it('closes a composer opened with text the server already has without asking', () => {

@@ -8,6 +8,7 @@ import { useAccountStore } from "@/stores/account-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { toast } from "@/stores/toast-store";
+import { showDraftSavedToast } from "@/lib/compose/draft-close-toast";
 import { newPopoutId, openPopoutChannel, type PopoutChannel, type PopoutMessage, type PopoutSentNotice, type RescuedDraft, type SharedAccountSession } from "@/lib/popout/channel";
 import { keepRescuedDraft } from "@/lib/popout/rescued-drafts";
 import { commitReturnedComposer, dropReturnedComposer, offerReturnedComposer } from "@/lib/popout/return-to-main";
@@ -168,6 +169,28 @@ export function PopoutHost() {
         case "draft-rescue":
           startRescue(message.draft);
           break;
+        case "draft-kept": {
+          // Said here, as the pop-out closes with its Escape or X.
+          const { draftId, accountId, localAccountId } = message.notice;
+          claimOnce(`bulwark-popout-kept:${message.requestId}`, () => {
+            const tr = tRef.current;
+            showDraftSavedToast(() => {
+              const auth = useAuthStore.getState();
+              const login = localAccountId ? auth.getClientForAccount(localAccountId) : auth.client;
+              if (!login) {
+                toast.error(tr("email_composer.discard_signed_out"));
+                return;
+              }
+              void login.deleteEmail(draftId, accountId).catch((error: unknown) => console.error("Failed to discard draft:", error));
+            }, {
+              saved: tr("email_composer.draft_saved"),
+              discard: tr("email_composer.discard"),
+              discarded: tr("compose_ux.draft_discarded"),
+              undo: tr("compose_ux.undo"),
+            });
+          });
+          break;
+        }
         case "rescue-query": {
           const rescue = rescues.get(message.rescueKey);
           if (rescue) void rescue.then((draftId) => channel?.post({ type: "rescue-answer", rescueKey: message.rescueKey, draftId }));

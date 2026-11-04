@@ -1212,6 +1212,13 @@
       "plain_text": "[Obrázek: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Koncept zahozen",
+    "undo": "Zpět",
+    "discard_draft": "Zahodit koncept",
+    "save_failed_close": "Koncept se nepodařilo uložit. Zkuste to znovu, nebo ho zahoďte.",
+    "try_again": "Zkusit znovu"
+  },
   "confirm_dialog": {
     "confirm": "Potvrdit",
     "cancel": "Zrušit"
