@@ -189,12 +189,19 @@ export function LayoutSection() {
 /** The Appearance page's Sidebar section: what the folder sidebar and rail show. */
 export function SidebarSection() {
   const t = useTranslations('settings.appearance');
-  const { showRailAccountList, colorfulSidebarIcons, showFolderTotalCount, updateSetting } = useSettingsStore();
+  const { sidebarAccountSwitcher, showRailAccountList, colorfulSidebarIcons, showFolderTotalCount, updateSetting } = useSettingsStore();
   const accounts = useAccountStore(s => s.accounts);
   const multiAccount = accounts.length > 1;
 
   return (
     <SettingsSection id="sidebar" title={t('sections.sidebar')}>
+      <SettingItem label={t('sidebar_account_switcher.label')} description={t('sidebar_account_switcher.description')}>
+        <ToggleSwitch
+          checked={sidebarAccountSwitcher}
+          onChange={(checked) => updateSetting('sidebarAccountSwitcher', checked)}
+        />
+      </SettingItem>
+
       <SettingItem label={t('colorful_sidebar_icons.label')} description={t('colorful_sidebar_icons.description')}>
         <ToggleSwitch
           checked={colorfulSidebarIcons}
@@ -209,9 +216,7 @@ export function SidebarSection() {
         />
       </SettingItem>
 
-      {/* The rail avatars only mean something with a second account. The
-          sidebar's own account switcher is gone (the rail's avatar is the
-          one), and with it the switch that hid it. */}
+      {/* The rail avatars only mean something with a second account. */}
       {multiAccount && (
         <SettingItem label={t('show_rail_account_list.label')} description={t('show_rail_account_list.description')}>
           <ToggleSwitch

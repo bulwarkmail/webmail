@@ -1673,6 +1673,10 @@
         "label": "Ẩn bộ chuyển tài khoản ở thanh bên",
         "description": "Ẩn bộ chọn tài khoản ở đầu thanh bên thư mục. Bạn vẫn có thể chuyển tài khoản từ thanh điều hướng phía dưới."
       },
+      "sidebar_account_switcher": {
+        "label": "Bộ chuyển tài khoản ở đầu thanh bên",
+        "description": "Hiện bộ chuyển tài khoản phía trên các thư mục và nút Soạn thư hình tròn trên danh sách thư. Tắt tùy chọn này để đặt Soạn thư phía trên các thư mục."
+      },
       "show_rail_account_list": {
         "label": "Hiển thị ảnh đại diện tài khoản trên thanh điều hướng",
         "description": "Hiển thị ảnh đại diện từng tài khoản ở cuối thanh điều hướng để chuyển nhanh, cùng nút đăng xuất bên dưới."

@@ -151,6 +151,7 @@ export const tabSearchEntries: Record<Tab, SettingsSearchEntry[]> = {
     { label: 'settings.appearance.show_folder_total_count.label' },
     { label: 'settings.appearance.sections.experimental', advanced: true },
     { label: 'settings.appearance.pro_interface.label', advanced: true },
+    { label: 'settings.appearance.sidebar_account_switcher.label' },
     { label: 'settings.appearance.show_rail_account_list.label', when: 'multiAccount' },
   ],
   accessibility: [

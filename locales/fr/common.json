@@ -1658,6 +1658,10 @@
         "label": "Masquer le sélecteur de compte de la barre latérale",
         "description": "Masquer le sélecteur de compte en haut de la barre latérale des dossiers. Vous pouvez toujours changer de compte depuis la barre de navigation inférieure."
       },
+      "sidebar_account_switcher": {
+        "label": "Sélecteur de compte en haut de la barre latérale",
+        "description": "Affiche le sélecteur de compte au-dessus des dossiers et le bouton rond Composer sur la liste des messages. Désactivez cette option pour placer Composer au-dessus des dossiers."
+      },
       "show_rail_account_list": {
         "label": "Afficher les avatars de compte sur la barre de navigation",
         "description": "Afficher les cercles de comptes individuels en bas de la barre de navigation pour un changement rapide, avec un bouton de déconnexion en dessous."

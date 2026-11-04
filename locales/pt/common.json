@@ -1658,6 +1658,10 @@
         "label": "Ocultar seletor de conta da barra lateral",
         "description": "Ocultar o seletor de conta no topo da barra lateral de pastas. Você ainda pode trocar de conta pela barra de navegação inferior."
       },
+      "sidebar_account_switcher": {
+        "label": "Seletor de conta no topo da barra lateral",
+        "description": "Mostra o seletor de conta acima das pastas e o botão redondo Escrever sobre a lista de mensagens. Desative para colocar Escrever acima das pastas."
+      },
       "show_rail_account_list": {
         "label": "Mostrar avatares de conta na barra de navegação",
         "description": "Exibir círculos de contas individuais na parte inferior da barra de navegação para troca rápida, com um botão de sair abaixo."

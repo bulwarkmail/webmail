@@ -1661,6 +1661,10 @@
         "label": "Skjul kontoskifter i sidepanel",
         "description": "Skjul kontovælgeren øverst i mappesidepanelet. Du kan stadig skifte konto fra navigationslinjen nederst."
       },
+      "sidebar_account_switcher": {
+        "label": "Kontoskifter øverst i sidepanelet",
+        "description": "Vis kontoskifteren over mapperne og den runde Ny besked-knap over beskedlisten. Slå det fra for at placere Ny besked over mapperne i stedet."
+      },
       "show_rail_account_list": {
         "label": "Vis kontoavatarer på navigationslinje",
         "description": "Vis individuelle kontocirkler nederst på navigationslinjen for hurtig skift, med en log-ud-knap nedenunder."

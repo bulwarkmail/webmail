@@ -1661,6 +1661,10 @@
         "label": "Oldalsáv fiókváltó elrejtése",
         "description": "Fiókválasztó elrejtése a mappa oldalsáv tetején. A fiókokat továbbra is válthatod az alsó navigációs sávból."
       },
+      "sidebar_account_switcher": {
+        "label": "Fiókváltó az oldalsáv tetején",
+        "description": "A fiókváltó a mappák fölött, a kerek Új levél gomb pedig az üzenetlista fölött jelenik meg. Kikapcsolva az Új levél gomb kerül a mappák fölé."
+      },
       "show_rail_account_list": {
         "label": "Fiók avatárok mutatása a navigációs sávon",
         "description": "Egyedi fiókkörök megjelenítése a navigációs sáv alján a gyors váltáshoz, kijelentkezés gombbal alatta."

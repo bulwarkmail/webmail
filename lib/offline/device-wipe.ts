@@ -500,6 +500,16 @@ export function setWipeReloadForTests(run: (() => void) | null): void {
   reloadSeam = run;
 }
 
+/**
+ * Test helper: resolves once no wipe and no check-in is running. A wipe that goes on behind the
+ * start's budget would otherwise finish in the next test, with its shell, fetch and windows.
+ */
+export async function wipesIdleForTests(): Promise<void> {
+  while (running.size > 0 || checkInFlight) {
+    await Promise.allSettled([...running.values(), checkInFlight]);
+  }
+}
+
 /** Everything on this device, for everyone. The app's device preferences stay: they hold no mail. */
 export function wipeWholeDevice(reason: WipeReason): Promise<void> {
   const under = running.get(WHOLE_DEVICE);

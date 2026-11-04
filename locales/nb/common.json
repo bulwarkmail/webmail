@@ -1661,6 +1661,10 @@
         "label": "Skjul kontobytter i sidefeltet",
         "description": "Skjul kontovelgeren øverst i mappesidefeltet. Du kan fortsatt bytte konto fra navigasjonsfeltet nederst."
       },
+      "sidebar_account_switcher": {
+        "label": "Kontobytter øverst i sidefeltet",
+        "description": "Vis kontobytteren over mappene og den runde Skriv-knappen over meldingslisten. Slå av for å plassere Skriv over mappene i stedet."
+      },
       "show_rail_account_list": {
         "label": "Vis kontobilder i navigasjonsfeltet",
         "description": "Vis et kontobilde for hver konto nederst i navigasjonsfeltet, slik at du raskt kan bytte konto. En utloggingsknapp vises nedenfor."

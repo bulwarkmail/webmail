@@ -1661,6 +1661,10 @@
         "label": "Ascunde comutatorul de conturi din bara laterală",
         "description": "Ascundeți selectorul de conturi din partea de sus a barei laterale a folderelor. Puteți comuta între conturi în continuare din bara de navigare din partea de jos."
       },
+      "sidebar_account_switcher": {
+        "label": "Comutator de conturi în partea de sus a barei laterale",
+        "description": "Afișează comutatorul de conturi deasupra folderelor și butonul rotund Compune peste lista de mesaje. Dezactivați pentru a pune Compune deasupra folderelor."
+      },
       "show_rail_account_list": {
         "label": "Afișați avatarurile conturilor în bara de navigare",
         "description": "Afișați cercurile conturilor individuale în partea de jos a barei de navigare pentru comutarea rapidă, cu un buton de deconectare sub acestea."

@@ -264,6 +264,11 @@ describe('recipient fields (SR-06, CV-02)', () => {
     expect(screen.getByLabelText('subject_label')).toBe(screen.getByTestId('composer-subject'));
   });
 
+  it('names the From list by its visible label, also with one address to send from', () => {
+    render(<EmailComposer initialData={DRAFT} />);
+    expect(screen.getByRole('combobox', { name: 'from' })).toBe(screen.getByTestId('composer-from'));
+  });
+
   it('names the remove button after the person', () => {
     render(<EmailComposer initialData={{ ...DRAFT, to: 'Anna Berg <anna@example.com>' }} />);
     expect(screen.getByRole('button', { name: 'recipient_remove_named:Anna Berg' })).toBeInTheDocument();

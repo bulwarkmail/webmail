@@ -116,6 +116,12 @@ beforeEach(async () => {
   await keys.putDeviceRecord({ account: ALICE, id: ROW, secret: SECRET, createdAt: 1 });
 }, 60_000);
 
+// A wipe that goes on behind a start's budget must not finish in the next test: it would find
+// that test's shell, fetch stub, storage and windows, and restart, report or reload there.
+afterEach(async () => {
+  await wipe?.wipesIdleForTests();
+}, 60_000);
+
 /** The wipe goes on behind the start's budget, and takes its time under load. */
 async function waitForNoAccounts(): Promise<void> {
   await vi.waitFor(() => expect(useAccountStore.getState().accounts).toEqual([]), { timeout: 20_000 });
@@ -410,6 +416,8 @@ describe('a start', () => {
     expect(waited).toBeLessThan(wipe.BOOT_CHECK_IN_BUDGET_MS + 1500);
     expectUntouched();
 
+    // The rest of the wipe's requests (the sign-out's) are answered.
+    respond = (url) => (url.endsWith('/api/devices/wiped') ? json(200, { ok: true }) : noWipe());
     release(wipeNow());
     await waitForNoAccounts();
     expect(purge.files).toBeGreaterThan(0);

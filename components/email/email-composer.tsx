@@ -5268,6 +5268,7 @@ export function EmailComposer({
               ) : identities.length > 0 ? (
                 <select
                   data-testid="composer-from"
+                  aria-label={t('from')}
                   value={selectedIdentityId || primaryIdentity?.id || ''}
                   onChange={(e) => {
                     // The sender's rarer options sit at the end of the list.

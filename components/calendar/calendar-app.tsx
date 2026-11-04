@@ -78,7 +78,6 @@ import { cn, generateUUID } from "@/lib/utils";
 import type { Calendar, CalendarEvent, CalendarParticipant, CalendarRights, CalendarTask } from "@/lib/jmap/types";
 import { ShareCollectionDialog } from "@/components/settings/share-collection-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Dialog } from "@/components/ui/dialog";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { SchedulingDeniedError } from "@/lib/jmap/scheduling-error";
 import { CreateCalendarModal } from "@/components/calendar/create-calendar-modal";
@@ -166,7 +165,6 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   useDocumentTitle(tSidebar("calendar"));
   useDesktopWindowName(tSidebar("calendar"), { withAccount: true });
   const skeletonLabels = useSkeletonLabels();
-  const tWebcalAction = useTranslations("calendar.webcal_action");
   const { demoMode } = useConfig();
   // Subscriptions fetch the feed through /api/fetch-ical, which the demo has no
   // mail server for and the Lite static build does not have at all.
@@ -250,7 +248,6 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [pendingSubscription, setPendingSubscription] = useState<{ url: string; name: string } | null>(null);
-  const [showWebcalActionChoice, setShowWebcalActionChoice] = useState(false);
   const [pendingWebcalAccountChoice, setPendingWebcalAccountChoice] = useState<ParsedWebcal | null>(null);
   const [isProtocolAccountSwitching, setIsProtocolAccountSwitching] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<string | null>(null);
@@ -354,10 +351,10 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     } else if (client && !calendarEnabled) {
       // Calendar disabled by admin policy - send the user back to mail.
       router.push("/");
-    } else if (client && !supportsCalendar && !pendingWebcalAccountChoice && !isProtocolAccountSwitching && !pendingSubscription && !showWebcalActionChoice && !hasPendingWebcal()) {
+    } else if (client && !supportsCalendar && !pendingWebcalAccountChoice && !isProtocolAccountSwitching && !pendingSubscription && !hasPendingWebcal()) {
       router.push("/");
     }
-  }, [initialCheckDone, isAuthenticated, authLoading, client, calendarEnabled, supportsCalendar, pendingWebcalAccountChoice, isProtocolAccountSwitching, pendingSubscription, showWebcalActionChoice, router]);
+  }, [initialCheckDone, isAuthenticated, authLoading, client, calendarEnabled, supportsCalendar, pendingWebcalAccountChoice, isProtocolAccountSwitching, pendingSubscription, router]);
 
   useEffect(() => {
     if (error) {
@@ -373,6 +370,17 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     });
   }, []);
 
+  // A webcal: link asks to subscribe, so that dialog opens with the address and name filled
+  // in and is the one question. Where subscribing isn't offered (Lite, demo) it's the import.
+  const openWebcalDialog = useCallback((pending: ParsedWebcal) => {
+    setPendingSubscription({
+      url: pending.subscriptionUrl,
+      name: pending.suggestedName,
+    });
+    if (canSubscribe) setShowSubscriptionModal(true);
+    else setShowImportModal(true);
+  }, [canSubscribe]);
+
   const openWebcalForAccount = useCallback(async (pending: ParsedWebcal, accountId: string) => {
     setIsProtocolAccountSwitching(true);
     try {
@@ -380,15 +388,11 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         await switchAccount(accountId);
       }
       setPendingWebcalAccountChoice(null);
-      setPendingSubscription({
-        url: pending.subscriptionUrl,
-        name: pending.suggestedName,
-      });
-      setShowWebcalActionChoice(true);
+      openWebcalDialog(pending);
     } finally {
       setIsProtocolAccountSwitching(false);
     }
-  }, [switchAccount]);
+  }, [switchAccount, openWebcalDialog]);
 
   const handleWebcalProtocolRequest = useCallback((pending: ParsedWebcal) => {
     const protocolAccounts = getWebcalProtocolAccounts();
@@ -407,27 +411,8 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       return;
     }
 
-    setPendingSubscription({
-      url: pending.subscriptionUrl,
-      name: pending.suggestedName,
-    });
-    setShowWebcalActionChoice(true);
-  }, [activeAccountId, getWebcalProtocolAccounts, openWebcalForAccount, supportsCalendar]);
-
-  const closeWebcalActionChoice = useCallback(() => {
-    setShowWebcalActionChoice(false);
-    setPendingSubscription(null);
-  }, []);
-
-  const handleImportWebcal = useCallback(() => {
-    setShowWebcalActionChoice(false);
-    setShowImportModal(true);
-  }, []);
-
-  const handleSubscribeWebcal = useCallback(() => {
-    setShowWebcalActionChoice(false);
-    setShowSubscriptionModal(true);
-  }, []);
+    openWebcalDialog(pending);
+  }, [activeAccountId, getWebcalProtocolAccounts, openWebcalForAccount, openWebcalDialog, supportsCalendar]);
 
   useEffect(() => {
     if (!isAuthenticated || !client) return;
@@ -1943,33 +1928,6 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     />
   ) : null;
 
-  const renderWebcalActionChoice = () => showWebcalActionChoice && pendingSubscription ? (
-    <Dialog
-      isOpen
-      onClose={closeWebcalActionChoice}
-      title={tWebcalAction("title")}
-      description={tWebcalAction("description", { name: pendingSubscription.name })}
-      footer={<Button variant="outline" onClick={closeWebcalActionChoice}>{tWebcalAction("cancel")}</Button>}
-    >
-        <div className="pt-4 space-y-3">
-          <Button variant="outline" className="w-full justify-start h-auto py-3" onClick={handleImportWebcal}>
-            <span className="text-start">
-              <span className="block font-medium">{tWebcalAction("import_title")}</span>
-              <span className="block text-xs text-muted-foreground mt-0.5">{tWebcalAction("import_description")}</span>
-            </span>
-          </Button>
-          {!IS_LITE && (
-            <Button variant="outline" className="w-full justify-start h-auto py-3" onClick={handleSubscribeWebcal}>
-              <span className="text-start">
-                <span className="block font-medium">{tWebcalAction("subscribe_title")}</span>
-                <span className="block text-xs text-muted-foreground mt-0.5">{tWebcalAction("subscribe_description")}</span>
-              </span>
-            </Button>
-          )}
-        </div>
-    </Dialog>
-  ) : null;
-
   // Until the session says what the account has, the page is drawn as the
   // skeleton the server sent (components/boot-skeleton): the same markup, so
   // nothing moves while the sign-in is restored or the redirects decide.
@@ -2729,7 +2687,6 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
 
       <SidebarAppsModal isOpen={showAppsModal} onClose={closeAppsModal} />
       {renderWebcalAccountPicker()}
-      {renderWebcalActionChoice()}
       <RecurrenceScopeDialog
         isOpen={!!pendingScopeAction}
         actionType={pendingScopeAction?.type || "edit"}
