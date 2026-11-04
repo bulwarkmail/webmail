@@ -35,9 +35,68 @@ function isDisabled(el: HTMLElement): boolean {
   return (el as HTMLButtonElement).disabled === true || el.getAttribute('aria-disabled') === 'true';
 }
 
+/** What a row shows apart from its label: the key, a count. Never part of the label. */
+const ASIDE = 'kbd, [data-menu-shortcut], [data-menu-badge]';
+
+/**
+ * The words of an element, each element's apart: "Day" and "D" make "Day D", not
+ * "DayD", and a name over an address doesn't run into it. Keys and counts are left out.
+ */
+function wordsOf(node: Node): string {
+  if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
+  if (!(node instanceof Element) || node.matches(ASIDE)) return '';
+  return Array.from(node.childNodes).map(wordsOf).join(' ');
+}
+
 function labelOf(el: HTMLElement): string {
-  const named = el.getAttribute('aria-label') ?? el.querySelector<HTMLElement>('[data-menu-label]')?.textContent ?? el.textContent ?? '';
-  return named.replace(/\s+/g, ' ').trim();
+  const named = el.getAttribute('aria-label') ?? el.querySelector<HTMLElement>('[data-menu-label]')?.textContent ?? wordsOf(el);
+  const badge = el.querySelector<HTMLElement>('[data-menu-badge]')?.textContent?.trim();
+  const label = named.replace(/\s+/g, ' ').trim();
+  return badge && label ? `${label} (${badge})` : label;
+}
+
+const KEY_NAMES: Record<string, string> = {
+  del: 'Delete', delete: 'Delete', esc: 'Escape', escape: 'Escape', enter: 'Enter', return: 'Enter',
+  space: 'Space', tab: 'Tab', backspace: 'Backspace', insert: 'Insert', home: 'Home', end: 'End',
+  pageup: 'PageUp', pagedown: 'PageDown', up: 'Up', down: 'Down', left: 'Left', right: 'Right',
+  '↑': 'Up', '↓': 'Down', '←': 'Left', '→': 'Right', '+': 'Plus', '⌫': 'Backspace', '⏎': 'Enter', '↵': 'Enter',
+};
+const MODIFIERS: Record<string, string> = {
+  ctrl: 'Ctrl', control: 'Ctrl', mod: 'CmdOrCtrl', cmd: 'Cmd', command: 'Cmd', '⌘': 'Cmd', alt: 'Alt', option: 'Alt',
+  '⌥': 'Alt', shift: 'Shift', '⇧': 'Shift', '⌃': 'Ctrl', meta: 'Super', win: 'Super',
+};
+const KEY = /^([A-Z0-9]|F([1-9]|1[0-9]|2[0-4])|[)!@#$%^&*(:;=<,_\-.>?/~`{\][|\\}"']|Plus|Space|Tab|Backspace|Delete|Insert|Enter|Up|Down|Left|Right|Home|End|PageUp|PageDown|Escape)$/;
+
+/**
+ * A key hint as the app shows it ("Shift + I", "⌘X", "Del") in Electron's accelerator
+ * syntax, or undefined when it isn't one key (two alternatives, a word).
+ */
+export function toAccelerator(hint: string): string | undefined {
+  let text = hint.trim();
+  if (!text || text.includes(' / ')) return undefined;
+  const parts: string[] = [];
+  // macOS writes its modifiers as symbols with nothing between: ⌘⇧K.
+  while (text.length > 1 && /^[⌘⌥⇧⌃]/.test(text)) {
+    parts.push(MODIFIERS[text[0]]);
+    text = text.slice(1).replace(/^\s*\+?\s*/, '');
+  }
+  const pieces = text === '+' ? ['+'] : text.split(/\s*\+\s*/).filter(Boolean);
+  if (text.endsWith('++')) pieces.push('+');
+  for (let i = 0; i < pieces.length - 1; i++) {
+    const modifier = MODIFIERS[pieces[i].toLowerCase()];
+    if (!modifier) return undefined;
+    parts.push(modifier);
+  }
+  const last = pieces[pieces.length - 1];
+  if (!last) return undefined;
+  const key = KEY_NAMES[last.toLowerCase()] ?? (last.length === 1 ? last.toUpperCase() : last);
+  if (!KEY.test(key)) return undefined;
+  return [...new Set(parts), key].join('+');
+}
+
+function acceleratorOf(el: HTMLElement): string | undefined {
+  const hint = el.querySelector<HTMLElement>('[data-menu-shortcut], kbd')?.textContent;
+  return hint ? toAccelerator(hint) : undefined;
 }
 
 function isHidden(el: Element): boolean {
@@ -113,10 +172,12 @@ export function readMenu(root: HTMLElement): ReadMenu {
         const id = `i${next++}`;
         elements.set(id, child);
         const role = child.getAttribute('role');
+        const accelerator = acceleratorOf(child);
         into.push({
           id,
           label,
           enabled: !isDisabled(child),
+          ...(accelerator ? { accelerator } : {}),
           ...(role === 'menuitemcheckbox' || role === 'menuitemradio'
             ? { type: role === 'menuitemcheckbox' ? 'checkbox' as const : 'radio' as const, checked: child.getAttribute('aria-checked') === 'true' }
             : {}),
@@ -193,6 +254,74 @@ export async function showNativeMenu(read: ReadMenu, root: HTMLElement, at?: { x
   if (!row?.isConnected) return 'gone';
   row.click();
   return 'done';
+}
+
+/**
+ * The system's menu font and the room a native menu adds around its words, in screen
+ * pixels: Chromium's menus on Windows and Linux, AppKit's on macOS. Measured off the
+ * real menus at 100 %; an estimate within a few pixels is all a placement needs.
+ */
+const NATIVE_METRICS = {
+  win32: { font: '12px "Segoe UI", system-ui, sans-serif', padding: 74, keyGap: 28, charWidth: 6.2 },
+  darwin: { font: '14px -apple-system, system-ui, sans-serif', padding: 48, keyGap: 24, charWidth: 7.2 },
+  linux: { font: '13px system-ui, sans-serif', padding: 70, keyGap: 28, charWidth: 6.8 },
+} as const;
+
+let measureContext: CanvasRenderingContext2D | null | undefined;
+
+function textWidth(text: string, font: string, charWidth: number): number {
+  if (measureContext === undefined) {
+    try {
+      // jsdom has no canvas, and says so on the console.
+      measureContext = typeof document === 'undefined' || /jsdom/i.test(navigator.userAgent)
+        ? null
+        : document.createElement('canvas').getContext('2d');
+    } catch {
+      measureContext = null;
+    }
+  }
+  if (measureContext) {
+    measureContext.font = font;
+    const width = measureContext.measureText(text).width;
+    if (Number.isFinite(width) && width > 0) return width;
+  }
+  return text.length * charWidth;
+}
+
+/**
+ * How wide the native menu for these items will be, in the page's CSS pixels. A native
+ * menu is drawn at the screen's scale, not the page's zoom: at 150 % zoom it takes up
+ * less of the page. outerWidth is in screen pixels and innerWidth in CSS pixels, which
+ * gives the zoom in a window with no frame.
+ */
+export function estimateNativeMenuWidth(items: DesktopNativeMenuItem[], platform = getDesktopBridge()?.platform ?? 'win32'): number {
+  const metrics = NATIVE_METRICS[platform] ?? NATIVE_METRICS.win32;
+  let widest = 0;
+  for (const item of items) {
+    if (item.type === 'separator' || !item.label) continue;
+    const key = item.accelerator ? metrics.keyGap + textWidth(item.accelerator, metrics.font, metrics.charWidth) : 0;
+    widest = Math.max(widest, textWidth(item.label, metrics.font, metrics.charWidth) + key);
+  }
+  const screenWidth = widest + metrics.padding;
+  const zoom = typeof window !== 'undefined' && window.innerWidth > 0 && window.outerWidth > 0
+    ? Math.min(5, Math.max(0.25, window.outerWidth / window.innerWidth))
+    : 1;
+  return Math.round(screenWidth / zoom);
+}
+
+/**
+ * Where a native menu from a button opens, in page coordinates: its top left corner,
+ * under the button and lined up with the edge the HTML menu would use. Only that: the
+ * OS keeps a native menu on the screen itself, and it may reach past the window.
+ */
+export function nativeMenuPoint(
+  anchor: { left: number; right: number; bottom: number; align?: 'start' | 'end' },
+  menuWidth: number,
+  rtl: boolean,
+  gap: number,
+): { x: number; y: number } {
+  const alignEnd = (anchor.align === 'end') !== rtl;
+  return { x: Math.max(0, Math.round(alignEnd ? anchor.right - menuWidth : anchor.left)), y: Math.round(anchor.bottom + gap) };
 }
 
 /** A native menu is up: the window's blur or a stray event says nothing about it. */
