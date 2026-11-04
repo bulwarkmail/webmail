@@ -7261,6 +7261,14 @@
     "copy_failed": "Não foi possível copiar o ficheiro.",
     "reply_lost": "Não foi possível guardar a resposta escrita. Abra a mensagem e responda a partir dela."
   },
+  "ux_pim_menu": {
+    "search_contacts": "Pesquisar contactos",
+    "search_files": "Pesquisar ficheiros",
+    "import": "Importar",
+    "import_mail": "Correio…",
+    "import_calendar": "Calendário…",
+    "import_contacts": "Contactos…"
+  },
   "desktopEdit": {
     "edit": "Editar",
     "edit_named": "Editar {name}",

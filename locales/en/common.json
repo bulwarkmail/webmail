@@ -7261,6 +7261,14 @@
     "copy_failed": "The file could not be copied.",
     "reply_lost": "Your typed reply could not be kept. Open the message and reply there."
   },
+  "ux_pim_menu": {
+    "search_contacts": "Search contacts",
+    "search_files": "Search files",
+    "import": "Import",
+    "import_mail": "Mail…",
+    "import_calendar": "Calendar…",
+    "import_contacts": "Contacts…"
+  },
   "desktopEdit": {
     "edit": "Edit",
     "edit_named": "Edit {name}",

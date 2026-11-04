@@ -7261,6 +7261,14 @@
     "copy_failed": "A fájlt nem sikerült másolni.",
     "reply_lost": "A beírt válasz nem maradt meg. Nyissa meg az üzenetet, és válaszoljon ott."
   },
+  "ux_pim_menu": {
+    "search_contacts": "Névjegyek keresése",
+    "search_files": "Fájlok keresése",
+    "import": "Importálás",
+    "import_mail": "Levelek…",
+    "import_calendar": "Naptár…",
+    "import_contacts": "Névjegyek…"
+  },
   "desktopEdit": {
     "edit": "Szerkesztés",
     "edit_named": "{name} szerkesztése",

@@ -7261,6 +7261,14 @@
     "copy_failed": "Не удалось скопировать файл.",
     "reply_lost": "Не удалось сохранить введённый ответ. Откройте письмо и ответьте из него."
   },
+  "ux_pim_menu": {
+    "search_contacts": "Поиск контактов",
+    "search_files": "Поиск файлов",
+    "import": "Импорт",
+    "import_mail": "Почта…",
+    "import_calendar": "Календарь…",
+    "import_contacts": "Контакты…"
+  },
   "desktopEdit": {
     "edit": "Изменить",
     "edit_named": "Изменить {name}",

@@ -7261,6 +7261,14 @@
     "copy_failed": "Filen kunne ikke kopieres.",
     "reply_lost": "Dit skrevne svar kunne ikke gemmes. Åbn beskeden, og svar der."
   },
+  "ux_pim_menu": {
+    "search_contacts": "Søg i kontakter",
+    "search_files": "Søg i filer",
+    "import": "Importér",
+    "import_mail": "Mail…",
+    "import_calendar": "Kalender…",
+    "import_contacts": "Kontakter…"
+  },
   "desktopEdit": {
     "edit": "Rediger",
     "edit_named": "Rediger {name}",

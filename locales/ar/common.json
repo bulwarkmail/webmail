@@ -7261,6 +7261,14 @@
     "copy_failed": "تعذّر نسخ الملف.",
     "reply_lost": "تعذّر الاحتفاظ بالرد الذي كتبته. افتح الرسالة وأجب من هناك."
   },
+  "ux_pim_menu": {
+    "search_contacts": "البحث في جهات الاتصال",
+    "search_files": "البحث في الملفات",
+    "import": "استيراد",
+    "import_mail": "البريد…",
+    "import_calendar": "التقويم…",
+    "import_contacts": "جهات الاتصال…"
+  },
   "desktopEdit": {
     "edit": "تعديل",
     "edit_named": "تعديل {name}",

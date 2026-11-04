@@ -7261,6 +7261,14 @@
     "copy_failed": "Nie udało się skopiować pliku.",
     "reply_lost": "Nie udało się zachować wpisanej odpowiedzi. Otwórz wiadomość i odpowiedz w niej."
   },
+  "ux_pim_menu": {
+    "search_contacts": "Szukaj kontaktów",
+    "search_files": "Szukaj plików",
+    "import": "Importuj",
+    "import_mail": "Poczta…",
+    "import_calendar": "Kalendarz…",
+    "import_contacts": "Kontakty…"
+  },
   "desktopEdit": {
     "edit": "Edytuj",
     "edit_named": "Edytuj {name}",

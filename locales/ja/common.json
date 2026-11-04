@@ -7261,6 +7261,14 @@
     "copy_failed": "ファイルをコピーできませんでした。",
     "reply_lost": "入力した返信を保持できませんでした。メッセージを開いて返信してください。"
   },
+  "ux_pim_menu": {
+    "search_contacts": "連絡先を検索",
+    "search_files": "ファイルを検索",
+    "import": "インポート",
+    "import_mail": "メール…",
+    "import_calendar": "カレンダー…",
+    "import_contacts": "連絡先…"
+  },
   "desktopEdit": {
     "edit": "編集",
     "edit_named": "{name} を編集",

@@ -7261,6 +7261,14 @@
     "copy_failed": "No s'ha pogut copiar el fitxer.",
     "reply_lost": "No s'ha pogut conservar la resposta que heu escrit. Obriu el missatge i responeu des d'allà."
   },
+  "ux_pim_menu": {
+    "search_contacts": "Cerca contactes",
+    "search_files": "Cerca fitxers",
+    "import": "Importa",
+    "import_mail": "Correu…",
+    "import_calendar": "Calendari…",
+    "import_contacts": "Contactes…"
+  },
   "desktopEdit": {
     "edit": "Edita",
     "edit_named": "Edita {name}",

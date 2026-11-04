@@ -7261,6 +7261,14 @@
     "copy_failed": "파일을 복사할 수 없습니다.",
     "reply_lost": "입력한 답장을 유지할 수 없습니다. 메시지를 열어 답장하세요."
   },
+  "ux_pim_menu": {
+    "search_contacts": "연락처 검색",
+    "search_files": "파일 검색",
+    "import": "가져오기",
+    "import_mail": "메일…",
+    "import_calendar": "캘린더…",
+    "import_contacts": "연락처…"
+  },
   "desktopEdit": {
     "edit": "편집",
     "edit_named": "{name} 편집",

@@ -7261,6 +7261,14 @@
     "copy_failed": "Súbor sa nepodarilo skopírovať.",
     "reply_lost": "Napísanú odpoveď sa nepodarilo zachovať. Otvorte správu a odpovedzte v nej."
   },
+  "ux_pim_menu": {
+    "search_contacts": "Hľadať kontakty",
+    "search_files": "Hľadať súbory",
+    "import": "Importovať",
+    "import_mail": "Pošta…",
+    "import_calendar": "Kalendár…",
+    "import_contacts": "Kontakty…"
+  },
   "desktopEdit": {
     "edit": "Upraviť",
     "edit_named": "Upraviť {name}",

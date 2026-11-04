@@ -7261,6 +7261,14 @@
     "copy_failed": "Failu neizdevās nokopēt.",
     "reply_lost": "Ievadīto atbildi neizdevās saglabāt. Atveriet ziņojumu un atbildiet tur."
   },
+  "ux_pim_menu": {
+    "search_contacts": "Meklēt kontaktus",
+    "search_files": "Meklēt failus",
+    "import": "Importēt",
+    "import_mail": "Pasts…",
+    "import_calendar": "Kalendārs…",
+    "import_contacts": "Kontakti…"
+  },
   "desktopEdit": {
     "edit": "Rediģēt",
     "edit_named": "Rediģēt {name}",

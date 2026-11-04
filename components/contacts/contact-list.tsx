@@ -21,6 +21,7 @@ import { getContactDisplayName, getContactSortName, hasContactPhoto } from "@/st
 import { useSettingsStore } from "@/stores/settings-store";
 import { isAppShortcutBlocked } from "@/lib/keyboard";
 import { isSingleKeyShortcutOff } from "@/lib/single-key-shortcuts";
+import { useDesktopCommands } from "@/lib/desktop/commands";
 import { ContactRowsSkeleton } from "@/components/boot-skeleton/contacts-skeleton";
 
 type TriState = boolean | null;
@@ -389,6 +390,8 @@ export function ContactList({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+  // Edit > Search contacts in the desktop app's menus.
+  useDesktopCommands({ "edit.search": () => searchRef.current?.focus() }, { "edit.search": true });
 
   return (
     <div className={cn("flex flex-col h-full", className)}>

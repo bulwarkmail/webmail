@@ -7261,6 +7261,14 @@
     "copy_failed": "Faili ei saanud kopeerida.",
     "reply_lost": "Kirjutatud vastust ei saanud säilitada. Ava kiri ja vasta seal."
   },
+  "ux_pim_menu": {
+    "search_contacts": "Otsi kontakte",
+    "search_files": "Otsi faile",
+    "import": "Impordi",
+    "import_mail": "Post…",
+    "import_calendar": "Kalender…",
+    "import_contacts": "Kontaktid…"
+  },
   "desktopEdit": {
     "edit": "Muuda",
     "edit_named": "Muuda faili {name}",

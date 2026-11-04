@@ -136,6 +136,36 @@ describe('DesktopHost', () => {
     expect(state['section.mail']).toBeUndefined();
   });
 
+  // pim-15: File > Import has Mail…, Calendar… and Contacts….
+  it('File > Import > Calendar… and Contacts… open that app with its import', async () => {
+    const { peekParkedAppCommand } = await import('@/lib/app-commands');
+    const shell = fakeBridge();
+    render(<DesktopHost />);
+    await waitFor(() => expect(shell.setState).toHaveBeenCalled());
+    expect(shell.setState.mock.lastCall![0]).toMatchObject({ 'file.import': true, 'file.importCalendar': true, 'file.importContacts': true });
+    shell.run('file.importCalendar');
+    expect(push).toHaveBeenLastCalledWith('/calendar');
+    expect(peekParkedAppCommand()).toBe('import-calendar');
+    shell.run('file.importContacts');
+    expect(push).toHaveBeenLastCalledWith('/contacts');
+    expect(peekParkedAppCommand()).toBe('import-contacts');
+  });
+
+  // pim-15: Edit > Search searches what's on screen, so mail's search is only Mail's.
+  it.each([
+    ['/', true],
+    ['/settings', true],
+    ['/calendar', false],
+    ['/contacts', false],
+    ['/files', false],
+  ])('on %s, the search in Edit goes to mail: %s', async (pathname, mail) => {
+    route.pathname = pathname;
+    const shell = fakeBridge();
+    render(<DesktopHost />);
+    await waitFor(() => expect(shell.setState).toHaveBeenCalled());
+    expect(shell.setState.mock.lastCall![0]['edit.search']).toBe(mail);
+  });
+
   it('runs a command from what\'s on the page first', () => {
     const shell = fakeBridge();
     render(<DesktopHost />);

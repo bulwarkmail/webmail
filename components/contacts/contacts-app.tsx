@@ -971,7 +971,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   };
 
   // File > New contact in the desktop app's menus, from any app.
-  useAppCommands({ "new-contact": () => guard(handleCreateNew)() }, contactsEnabled);
+  useAppCommands({ "new-contact": () => guard(handleCreateNew)(), "import-contacts": () => setShowImportDialog(true) }, contactsEnabled);
 
   // The command palette's Contacts group (Ctrl/⌘+K).
   useRegisterCommands(tSidebar("contacts"), [

@@ -7261,6 +7261,14 @@
     "copy_failed": "Не вдалося скопіювати файл.",
     "reply_lost": "Не вдалося зберегти введену відповідь. Відкрийте лист і дайте відповідь у ньому."
   },
+  "ux_pim_menu": {
+    "search_contacts": "Пошук контактів",
+    "search_files": "Пошук файлів",
+    "import": "Імпорт",
+    "import_mail": "Пошта…",
+    "import_calendar": "Календар…",
+    "import_contacts": "Контакти…"
+  },
   "desktopEdit": {
     "edit": "Редагувати",
     "edit_named": "Редагувати {name}",

@@ -1677,6 +1677,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   useAppCommands({
     "new-event": () => openCreateModal(),
     "new-task": () => { if (enableCalendarTasks) openCreateTaskModal(); },
+    "import-calendar": () => { if (!demoMode) setShowImportModal(true); },
   }, true);
   // Its View menu's Day, Week, Month and Agenda, and Edit > Search events.
   const viewFromMenu = (mode: CalendarViewMode) => () => { setMobileReturnToMonth(false); leaveSearch(); setViewMode(mode); };
@@ -1693,6 +1694,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     "view.calendar.agenda": { enabled: true, checked: normalizedViewMode === "agenda" },
     "edit.search": normalizedViewMode !== "tasks",
     "file.newTask": enableCalendarTasks,
+    "file.importCalendar": !demoMode,
   });
 
   useRegisterCommands(tSidebar("calendar"), [
