@@ -422,6 +422,23 @@ describe('several accounts on the settings page (files-p3-20)', () => {
   });
 });
 
+describe("the tray's Pause syncing (files-p3-14)", () => {
+  it('pauses every root of the signed-in accounts, and resumes them', async () => {
+    const r = rig();
+    r.disk.addRoot({ id: 'r1', account: 'a1', remoteId: null });
+    r.disk.addRoot({ id: 'r2', account: 'a1', remoteId: null });
+    r.disk.addRoot({ id: 'other', account: 'gone', remoteId: null });
+    r.host.start();
+    r.host.setAccounts([r.account], 'a1');
+    await settle(r.host);
+    await r.controller()!.setAllPaused(true);
+    expect(r.disk.rootsList.filter((root) => root.paused).map((root) => root.id).sort()).toEqual(['r1', 'r2']);
+    await r.controller()!.setAllPaused(false);
+    expect(r.disk.rootsList.some((root) => root.paused)).toBe(false);
+    r.host.stop();
+  });
+});
+
 describe('the policy allowing the drive again (files-p3-19)', () => {
   it('turns the wanted drive back on at once, without a click or a visit to the settings page', async () => {
     const r = rig({ drive: true, wanted: ['a1'] });

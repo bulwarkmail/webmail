@@ -569,6 +569,12 @@ export class FilesSyncHost {
       },
       removeRoot: (rootId) => this.engine.removeRoot(rootId),
       setPaused: (rootId, paused) => this.engine.setPaused(rootId, paused),
+      setAllPaused: async (paused) => {
+        for (const root of this.engine.roots) {
+          if (root.paused !== paused && this.accounts.has(root.account)) await controls.setPaused(root.id, paused).catch(() => {});
+        }
+        await this.engine.refreshRoots();
+      },
       confirmMassDelete: async (rootId, allow) => {
         this.engine.confirmMassDelete(rootId, allow);
       },

@@ -674,7 +674,9 @@ export type DesktopOsCommand =
   | { type: 'webcal'; url: string }
   /** `ask`: opened with the app, so the user picks between a new message and Files. Without it, attach. */
   | { type: 'files'; reason: 'open' | 'attach'; files: DesktopOsFile[]; failed: string[]; ask?: boolean }
-  | { type: 'notification'; action: string; context: string; reply?: string };
+  | { type: 'notification'; action: string; context: string; reply?: string }
+  /** The tray's "Pause syncing" and "Resume syncing": every drive and synced folder. */
+  | { type: 'files-sync'; action: 'pause-all' | 'resume-all' };
 
 export interface DesktopOsNotification {
   /** Tag of the toast. Showing an id again within a few minutes does nothing. */

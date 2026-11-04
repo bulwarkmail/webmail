@@ -218,6 +218,8 @@ export function handleOsCommand(command: DesktopOsCommand, env: OsCommandEnv): v
       return;
     case 'notification':
       return handleNotification(command.action, command.context, command.reply, env);
+    case 'files-sync':
+      return useFilesSyncStore.getState().controller?.setAllPaused(command.action === 'pause-all');
   }
 }
 

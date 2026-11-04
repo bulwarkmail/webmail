@@ -138,6 +138,8 @@ export interface FilesSyncController {
   /** A folder stops syncing; its files stay. The drive: turned off. */
   removeRoot: (rootId: string) => Promise<void>;
   setPaused: (rootId: string, paused: boolean) => Promise<void>;
+  /** Every root of the signed-in accounts (the tray's "Pause syncing", files-p3-14). */
+  setAllPaused: (paused: boolean) => Promise<void>;
   /** Answer to `confirm-delete`. No: the deleted items come back from the other side. */
   confirmMassDelete: (rootId: string, allow: boolean) => Promise<void>;
   /** An account's drive (default: the one on screen). */
