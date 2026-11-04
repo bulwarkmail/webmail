@@ -313,6 +313,18 @@ optgroup {
   background-color: var(--color-muted-foreground);
 }
 
+/* The folded folder column (components/layout/sidebar.tsx) leaves its 48px
+   to the icons: a 4px scrollbar, in a gutter kept on both sides. */
+:root:not([data-native-scrollbars="on"]) [data-folder-rail]::-webkit-scrollbar {
+  width: 4px;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  :root:not([data-native-scrollbars="on"]) [data-folder-rail] {
+    scrollbar-width: thin;
+  }
+}
+
 /* Enhanced Email Content Styling */
 
 .email-content-wrapper {
