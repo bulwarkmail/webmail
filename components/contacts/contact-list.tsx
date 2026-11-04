@@ -663,21 +663,23 @@ export function ContactList({
         </div>
       )}
 
+      {/* Contact list. The banner scrolls with it: it comes with the loaded
+          contacts, and above the scroll area it pushed the whole list down.
+          The loading rows stand in for the list, not inside it, so the list
+          that replaces them is new and nothing on screen moves. */}
+      <div ref={listRef} className="flex-1 overflow-y-auto max-md:pb-20">
+      {sorted.length === 0 && isLoading && !searchQuery && activeFilters === 0 ? (
+        // The rows the page skeleton drew, at the same density.
+        <ContactRowsSkeleton density={density} letters={groupByLetter} />
+      ) : (<>
       {!hasSelection && banner}
-
-      {/* Contact list */}
       <div
-        ref={listRef}
         role="listbox"
         aria-label={t("title")}
         aria-multiselectable
         onKeyDown={handleListKeyDown}
-        className="flex-1 overflow-y-auto max-md:pb-20"
       >
-        {sorted.length === 0 && isLoading && !searchQuery && activeFilters === 0 ? (
-          // The rows the page skeleton drew, at the same density.
-          <ContactRowsSkeleton density={density} letters={groupByLetter} />
-        ) : sorted.length === 0 ? (
+        {sorted.length === 0 ? (
           searchQuery || activeFilters > 0 ? (
             <EmptyState
               compact
@@ -780,6 +782,8 @@ export function ContactList({
             );
           })()
         )}
+      </div>
+      </>)}
       </div>
 
       {printTitle != null && (

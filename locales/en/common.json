@@ -1661,6 +1661,10 @@
         "label": "Hide sidebar account switcher",
         "description": "Hide the account selector at the top of the folder sidebar. You can still switch accounts from the bottom navigation rail."
       },
+      "sidebar_account_switcher": {
+        "label": "Account switcher at the top of the sidebar",
+        "description": "Show the account switcher above the folders and the round Compose button over the message list. Turn this off to put Compose above the folders instead."
+      },
       "show_rail_account_list": {
         "label": "Show account avatars on the navigation rail",
         "description": "Display individual account circles at the bottom of the navigation rail for quick switching, with a sign-out button below."

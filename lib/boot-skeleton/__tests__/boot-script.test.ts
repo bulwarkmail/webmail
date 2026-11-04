@@ -143,6 +143,17 @@ describe('boot script: layout settings', () => {
     expect(attr('preview')).toBeNull();
   });
 
+  it('marks Compose at the head of the sidebar only when the account switcher is turned off', () => {
+    boot('/en/mail');
+    expect(attr('sidebar-compose')).toBeNull();
+    settings({ sidebarAccountSwitcher: false });
+    boot('/en/mail');
+    expect(attr('sidebar-compose')).toBe('on');
+    settings({ sidebarAccountSwitcher: true });
+    boot('/en/mail');
+    expect(attr('sidebar-compose')).toBeNull();
+  });
+
   it('falls back to regular for an unknown density', () => {
     settings({ density: 'cosy' });
     boot('/en/mail');

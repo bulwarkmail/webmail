@@ -1661,6 +1661,10 @@
         "label": "Amaga el selector de comptes de la barra lateral",
         "description": "Amaga el selector de comptes a la part superior de la barra lateral de carpetes. Encara podreu canviar de compte des de la barra de navegació inferior."
       },
+      "sidebar_account_switcher": {
+        "label": "Selector de comptes a la part superior de la barra lateral",
+        "description": "Mostra el selector de comptes damunt de les carpetes i el botó rodó Redacta damunt de la llista de missatges. Desactiveu-ho per posar Redacta damunt de les carpetes."
+      },
       "show_rail_account_list": {
         "label": "Mostra els avatars dels comptes a la barra de navegació",
         "description": "Mostra cercles individuals per a cada compte a la part inferior de la barra de navegació per canviar-hi ràpidament, amb un botó de tancament de sessió a sota."

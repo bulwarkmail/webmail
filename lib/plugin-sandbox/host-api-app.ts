@@ -138,7 +138,7 @@ export const SHARED_SETTINGS = [
   'enableUnifiedMailbox', 'sessionTimeout',
   // Everything else app.setSettings may change (lib/settings-schema.ts), so
   // a plugin reads the current value before it proposes a new one.
-  'colorfulSidebarIcons', 'showFolderTotalCount', 'hideAccountSwitcher', 'showRailAccountList',
+  'colorfulSidebarIcons', 'showFolderTotalCount', 'hideAccountSwitcher', 'sidebarAccountSwitcher', 'showRailAccountList',
   'unifiedCrossAccount', 'includeGroupInUnified', 'enableCrossUnreadView', 'enableCrossStarredView', 'enableCrossAllView',
   'tintListRowsByAccount', 'showAccountDot', 'showSharedMailAccounts', 'compactSharedMailboxes', 'showAdvancedSettings',
   'dateLocale', 'protocolOpenMode', 'showOnboardingOnNewDevices',

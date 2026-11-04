@@ -1661,6 +1661,10 @@
         "label": "Skryť prepínač účtov v postrannom paneli",
         "description": "Skryje výber účtu v hornej časti postranného panela."
       },
+      "sidebar_account_switcher": {
+        "label": "Prepínač účtov hore v postrannom paneli",
+        "description": "Zobrazí prepínač účtov nad priečinkami a okrúhle tlačidlo Napísať nad zoznamom správ. Po vypnutí bude tlačidlo Napísať nad priečinkami."
+      },
       "show_rail_account_list": {
         "label": "Zobraziť avatáry účtov na navigačnej lište",
         "description": "Zobrazovať jednotlivé ikony účtov v dolnej časti navigačnej lišty pre rýchle prepínanie."

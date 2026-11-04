@@ -114,12 +114,13 @@ describe('global commands', () => {
     } as never);
     render(<CommandPaletteHost />);
     pressCtrlK();
-    expect(screen.queryByRole('option', { name: /me@example\.com/ })).toBeNull();
+    // The open account isn't offered as a switch target; Sign out names it.
+    expect(screen.queryByRole('option', { name: /^switch_to\(me@example\.com/ })).toBeNull();
     act(() => { fireEvent.click(screen.getByRole('option', { name: 'switch_to(Work)' })); });
     expect(switchAccount).toHaveBeenCalledWith('b');
 
     pressCtrlK();
-    act(() => { fireEvent.click(screen.getByRole('option', { name: 'sign_out' })); });
+    act(() => { fireEvent.click(screen.getByRole('option', { name: 'sign_out_of(me@example.com)' })); });
     expect(logout).toHaveBeenCalled();
   });
 });
