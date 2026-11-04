@@ -102,6 +102,48 @@ describe('ContactsApp', () => {
     expect(within(drawer()).getByText('tabs.all')).toBeInTheDocument();
   });
 
+  // The same drawer as Mail's folders (usability test 2026-11-04): it opened
+  // beside the app rail, ignored Escape and left the focus on the page.
+  it("opens the drawer from the window's edge, over the app rail and under the top bar", () => {
+    renderContacts();
+    const classes = drawer().className.split(/\s+/);
+    expect(classes).toEqual(expect.arrayContaining(['fixed', 'start-0', 'top-[var(--drawer-top)]', 'bottom-0']));
+    expect(classes).not.toContain('absolute');
+  });
+
+  it('takes the focus into the drawer, keeps Tab there and gives it back to the menu button on Escape', () => {
+    renderContacts();
+    const menu = screen.getAllByRole('button', { name: 'open_categories' })[0];
+    menu.focus();
+    fireEvent.click(menu);
+    // The category on screen.
+    const current = within(drawer()).getByRole('button', { name: /tabs\.all/ });
+    expect(document.activeElement).toBe(current);
+    const stops = Array.from(drawer().querySelectorAll<HTMLElement>('button:not(:disabled)'));
+    stops.at(-1)!.focus();
+    fireEvent.keyDown(stops.at(-1)!, { key: 'Tab' });
+    expect(document.activeElement).toBe(stops[0]);
+
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    expect(drawer()).toHaveAttribute('inert');
+    expect(document.activeElement).toBe(menu);
+  });
+
+  it('dims the whole window behind the drawer and closes it on a click there, back to the menu button', () => {
+    renderContacts();
+    const menu = screen.getAllByRole('button', { name: 'open_categories' })[0];
+    menu.focus();
+    fireEvent.click(menu);
+    const scrim = screen.getByTestId('drawer-scrim');
+    expect(scrim.className.split(/\s+/)).toEqual(expect.arrayContaining(['fixed', 'inset-0']));
+    // A press on the scrim drops the focus to the page.
+    (document.activeElement as HTMLElement).blur();
+    fireEvent.click(scrim);
+    expect(drawer()).toHaveAttribute('inert');
+    expect(screen.queryByTestId('drawer-scrim')).toBeNull();
+    expect(document.activeElement).toBe(menu);
+  });
+
   it("closes the drawer when something in it is picked, so it doesn't stay over the form", () => {
     renderContacts();
     fireEvent.click(screen.getAllByRole('button', { name: 'open_categories' })[0]);

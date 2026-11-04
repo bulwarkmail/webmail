@@ -629,8 +629,9 @@ optgroup {
   --titlebar-right-inset: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw));
   --titlebar-left-inset: env(titlebar-area-x, 0px);
   --titlebar-row-height: env(titlebar-area-height, 0px);
-  /* Where a drawer from the window's edge starts (the folder drawer): under
-     the top bar, and under the window's controls when they are over the page. */
+  /* Where a drawer from the window's edge starts (Mail's folders, the
+     Calendar, Contacts and Files sidebars): under the top bar, and under the
+     window's controls when they are over the page. */
   --drawer-top: max(var(--app-top-inset), var(--titlebar-row-height));
 }
 
