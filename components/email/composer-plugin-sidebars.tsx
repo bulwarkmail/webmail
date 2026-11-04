@@ -8,11 +8,13 @@
 // panel's head: it holds "Hide <panel>", at the panel's inner edge. A
 // folded panel takes no room at all, and a "Show <panel>" button in the
 // header brings it back (the left panel's at the start, the right one's
-// before the window buttons). When the composer is too narrow for an open
-// panel next to it, the panel folds by itself (right first); opening it
-// anyway lays it over the composer instead of squeezing the message into a
-// column nobody can write in. Laid over, it stays between the header and
-// the bottom bar: Hide, Close and Send stay in reach.
+// before the window buttons). An open panel takes its width from the
+// composer, down to its narrowest, as long as the composer keeps
+// MIN_COMPOSER_WIDTH. When even that doesn't fit, the panel folds by itself
+// (right first); opening it anyway puts it beside the composer, over the
+// message list, and only where there is no room there either over the
+// message's text, below To, Cc and Subject: never over the composer's own
+// fields (compose-p3-4). Hide, Close and Send stay in reach.
 
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { useTranslations } from "next-intl";
@@ -60,19 +62,38 @@ export function composerSidebarModes(
   left: SideState,
   right: SideState,
 ): Record<ComposerSidebarSide, ComposerSidebarMode | null> {
+  return composerSidebarLayout(width, left, right).modes;
+}
+
+/**
+ * composerSidebarModes, with the width each open panel gets: the user's,
+ * or what the composer can spare beside its MIN_COMPOSER_WIDTH, down to
+ * MIN_COMPOSER_SIDEBAR_WIDTH. Only below that does a panel fold.
+ */
+export function composerSidebarLayout(
+  width: number,
+  left: SideState,
+  right: SideState,
+): { modes: Record<ComposerSidebarSide, ComposerSidebarMode | null>; widths: Record<ComposerSidebarSide, number> } {
   let room = width > 0 ? width - MIN_COMPOSER_WIDTH : Infinity;
-  const place = (side: SideState): ComposerSidebarMode | null => {
+  const widths: Record<ComposerSidebarSide, number> = {
+    left: left.width ?? COMPOSER_SIDEBAR_WIDTH,
+    right: right.width ?? COMPOSER_SIDEBAR_WIDTH,
+  };
+  const place = (key: ComposerSidebarSide, side: SideState): ComposerSidebarMode | null => {
     if (!side.present) return null;
     if (side.collapsed) return "folded";
-    const extra = side.width ?? COMPOSER_SIDEBAR_WIDTH;
-    if (extra <= room) {
-      room -= extra;
+    const wanted = widths[key];
+    const given = Math.min(wanted, room);
+    if (given >= Math.min(wanted, MIN_COMPOSER_SIDEBAR_WIDTH)) {
+      room -= given;
+      widths[key] = given;
       return "docked";
     }
     return side.overlayOpen ? "overlay" : "folded";
   };
-  const l = place(left);
-  return { left: l, right: place(right) };
+  const l = place("left", left);
+  return { modes: { left: l, right: place("right", right) }, widths };
 }
 
 const storageKey = (side: ComposerSidebarSide) => `composerPluginSidebarCollapsed:${side}`;
@@ -132,7 +153,7 @@ export function useComposerSidebars(root: HTMLElement | null, composerId: string
     return () => observer.disconnect();
   }, [root, hasLeft, hasRight]);
 
-  const modes = composerSidebarModes(
+  const { modes, widths: shownWidths } = composerSidebarLayout(
     width,
     { present: hasLeft, collapsed: collapsed.left, overlayOpen: overlayOpen.left, width: widths.left },
     { present: hasRight, collapsed: collapsed.right, overlayOpen: overlayOpen.right, width: widths.right },
@@ -206,7 +227,9 @@ export function useComposerSidebars(root: HTMLElement | null, composerId: string
     offers.map((o) => getActivePlugin(o.pluginId)?.plugin.name).filter((n): n is string => !!n).join(", ") || null;
   const names: Record<ComposerSidebarSide, string | null> = { left: nameOf(leftOffers), right: nameOf(rightOffers) };
 
-  return { modes, open, close, toggle, focusRequests, widths, setSideWidth, names };
+  // The widths the panels are shown at: a docked one may be narrower than
+  // the user's, to leave the composer its room.
+  return { modes, open, close, toggle, focusRequests, widths: shownWidths, setSideWidth, names };
 }
 
 /** Open beside the composer or over it: on screen, with a head in the header row. */
@@ -304,9 +327,11 @@ export function ComposerPanelHead({
         side === "left" ? "border-e" : "border-s",
         className,
       )}
-      // At least the panel's width, so Hide sits at the panel's edge; more when
-      // the buttons need it (a narrow panel in the desktop app, beside its controls).
-      style={{ minWidth: width }}
+      // At least a docked panel's width, so Hide sits at the panel's edge; more
+      // when the buttons need it (a narrow panel in the desktop app, beside its
+      // controls). One beside the composer or over its text isn't under the
+      // header: the head is only its buttons then.
+      style={mode === "docked" ? { minWidth: width } : undefined}
       data-composer-panel-head={side}
     >
       {side === "right" && hide}
@@ -318,30 +343,86 @@ export function ComposerPanelHead({
   );
 }
 
-const COMPOSER_HEADER = "[data-composer-header], [data-mv-compose-titlebar], [data-mv-compose-inline-bar]";
+const COMPOSER_ROOT = '[data-testid="email-composer"]';
+/** The last of the composer's own fields: Subject, or To while Subject is folded away. */
+const COMPOSER_FIELDS_END = "[data-composer-subject]";
 const COMPOSER_FOOTER = "[data-composer-footer]";
+/** Space kept between a panel beside the composer and the window's edge. */
+const BESIDE_MARGIN = 8;
 
-/** How far a panel laid over the composer keeps off its top and bottom, to leave the header and the bottom bar free. */
-function useOverlayInsets(active: boolean, panelRef: RefObject<HTMLElement | null>): { top: number; bottom: number } {
-  const [insets, setInsets] = useState({ top: 0, bottom: 0 });
+type OverlayPlacement =
+  /** Beside the composer, outside it (over the message list), in window coordinates. */
+  | { kind: "beside"; left: number; top: number; height: number }
+  /** Over the message's text: below the fields, above the bottom bar. */
+  | { kind: "over-text"; top: number; bottom: number };
+
+/**
+ * Where a panel that has no room in the composer goes: beside it where the
+ * window has the room (its own side first), else over the message's text.
+ * It used to lie over the composer's right part, From, Cc and Bcc included.
+ */
+function useOverlayPlacement(active: boolean, panelRef: RefObject<HTMLElement | null>, side: ComposerSidebarSide, width: number): OverlayPlacement | null {
+  const [placement, setPlacement] = useState<OverlayPlacement | null>(null);
   useLayoutEffect(() => {
-    const root = panelRef.current?.parentElement;
-    if (!active || !root) return;
-    const header = root.querySelector(COMPOSER_HEADER);
-    const footer = root.querySelector(COMPOSER_FOOTER);
+    const panel = panelRef.current;
+    const area = panel?.parentElement;
+    const root = panel?.closest<HTMLElement>(COMPOSER_ROOT) ?? area;
+    if (!active || !panel || !area || !root) {
+      setPlacement(null);
+      return;
+    }
     const measure = () => {
       const box = root.getBoundingClientRect();
-      const top = header ? Math.max(0, Math.round(header.getBoundingClientRect().bottom - box.top)) : 0;
-      const bottom = footer ? Math.max(0, Math.round(box.bottom - footer.getBoundingClientRect().top)) : 0;
-      setInsets((prev) => (prev.top === top && prev.bottom === bottom ? prev : { top, bottom }));
+      const viewport = typeof window !== "undefined" ? window.innerWidth : 0;
+      const roomBefore = box.left - BESIDE_MARGIN;
+      const roomAfter = viewport - box.right - BESIDE_MARGIN;
+      const rtl = getComputedStyle(root).direction === "rtl";
+      // The panel's own side of the composer first (the end side is the right in LTR).
+      const ownAfter = (side === "right") !== rtl;
+      const fitsAfter = roomAfter >= width;
+      const fitsBefore = roomBefore >= width;
+      let next: OverlayPlacement;
+      if ((ownAfter && fitsAfter) || (!fitsBefore && fitsAfter)) {
+        next = { kind: "beside", left: Math.round(box.right), top: Math.round(box.top), height: Math.round(box.height) };
+      } else if (fitsBefore) {
+        next = { kind: "beside", left: Math.round(box.left - width), top: Math.round(box.top), height: Math.round(box.height) };
+      } else {
+        const areaBox = area.getBoundingClientRect();
+        const fieldsEnd = [...root.querySelectorAll<HTMLElement>(`${COMPOSER_FIELDS_END}, [data-composer-to-row]`)]
+          .map((el) => el.getBoundingClientRect())
+          .filter((r) => r.height > 0)
+          .reduce((end, r) => Math.max(end, r.bottom), areaBox.top);
+        const footer = root.querySelector(COMPOSER_FOOTER);
+        const top = Math.max(0, Math.round(fieldsEnd - areaBox.top));
+        const bottom = footer ? Math.max(0, Math.round(areaBox.bottom - footer.getBoundingClientRect().top)) : 0;
+        next = { kind: "over-text", top, bottom };
+      }
+      setPlacement((prev) => (prev && JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
     };
     measure();
-    if (typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(measure);
-    for (const el of [root, header, footer]) if (el) observer.observe(el);
-    return () => observer.disconnect();
-  }, [active, panelRef]);
-  return insets;
+    window.addEventListener("resize", measure);
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
+    observer?.observe(root);
+    return () => {
+      window.removeEventListener("resize", measure);
+      observer?.disconnect();
+    };
+  }, [active, panelRef, side, width]);
+
+  // `fixed` is relative to the window only without a transformed ancestor:
+  // correct by what was really drawn.
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    if (!panel || placement?.kind !== "beside") return;
+    const drawn = panel.getBoundingClientRect();
+    const dx = Math.round(drawn.left - placement.left);
+    const dy = Math.round(drawn.top - placement.top);
+    if (dx !== 0 || dy !== 0) {
+      panel.style.left = `${placement.left - dx}px`;
+      panel.style.top = `${placement.top - dy}px`;
+    }
+  }, [placement, panelRef]);
+  return placement;
 }
 
 /** One plugin panel of the composer, in the mode useComposerSidebars picked. */
@@ -362,7 +443,7 @@ export function ComposerPluginSidebar({
 }) {
   const dragStart = useRef(width);
   const panelRef = useRef<HTMLDivElement>(null);
-  const insets = useOverlayInsets(mode === "overlay", panelRef);
+  const placement = useOverlayPlacement(mode === "overlay", panelRef, side, width);
   if (!mode) return null;
   const border = side === "left" ? "border-e" : "border-s";
 
@@ -395,11 +476,20 @@ export function ComposerPluginSidebar({
       className={cn(
         "hidden md:flex flex-col shrink-0 border-border bg-background overflow-hidden",
         border,
-        mode === "overlay" ? cn("absolute z-30 shadow-xl", side === "left" ? "start-0" : "end-0") : "h-full",
+        mode !== "overlay"
+          ? "h-full"
+          : placement?.kind === "beside"
+            ? "fixed z-40 shadow-xl rounded-md border"
+            : cn("absolute z-30 shadow-xl", side === "left" ? "start-0" : "end-0"),
       )}
-      style={mode === "overlay" ? { width, top: insets.top, bottom: insets.bottom } : { width }}
+      style={mode !== "overlay"
+        ? { width }
+        : placement?.kind === "beside"
+          ? { width, left: placement.left, top: placement.top, height: placement.height }
+          : { width, top: placement?.top ?? 0, bottom: placement?.bottom ?? 0 }}
       data-composer-sidebar={side}
       data-composer-sidebar-mode={mode}
+      data-composer-sidebar-place={mode === "overlay" ? placement?.kind : undefined}
     >
       <div className="flex-1 min-h-0 overflow-y-auto">
         {side === "left"
