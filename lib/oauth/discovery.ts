@@ -149,6 +149,8 @@ async function attemptDiscovery(
           token_endpoint: data.token_endpoint,
           revocation_endpoint: data.revocation_endpoint,
           end_session_endpoint: data.end_session_endpoint,
+          // Not followed from here: the one caller checks it itself (app/api/auth/desktop-oauth).
+          ...(typeof data.registration_endpoint === 'string' ? { registration_endpoint: data.registration_endpoint } : {}),
           ...(Array.isArray(data.scopes_supported)
             ? { scopes_supported: data.scopes_supported.filter((s: unknown): s is string => typeof s === 'string') }
             : {}),
