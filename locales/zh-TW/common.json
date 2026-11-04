@@ -174,6 +174,7 @@
     },
     "clear_search": "清除搜尋",
     "vacation_active": "休假自動回覆已開啟",
+    "vacation_turn_off": "關閉",
     "demo_banner": "示範模式",
     "demo_reset": "重設",
     "demo_tour": "功能導覽",
@@ -245,7 +246,6 @@
     "select_account_title": "選擇帳號",
     "select_mailto_account": "選擇用於開啟此電子郵件連結的帳號。",
     "select_webcal_account": "選擇用於開啟此行事曆連結的帳號。",
-    "select_account_note": "此選擇僅適用於此協議連結。",
     "detail_to": "收件者",
     "detail_subject": "主題",
     "detail_no_subject": "無主題",
@@ -1112,7 +1112,7 @@
       "unfinished": []
     },
     "schedule_send": "排程寄送",
-    "schedule_send_description": "選擇伺服器要在何時送出這封郵件。",
+    "schedule_send_description": "選擇寄送時間。",
     "schedule_preset": {
       "this_morning": "今天早上",
       "this_afternoon": "今天下午",
@@ -1163,6 +1163,7 @@
       "edit_link": "編輯連結",
       "remove_link": "移除連結",
       "link_address": "連結網址",
+      "link_text": "文字",
       "link_invalid": "網址中不能包含空格",
       "table": "表格",
       "clear_formatting": "清除格式",
@@ -1393,6 +1394,8 @@
     "from_description": "留空即立即開始。",
     "until_label": "結束（選填）",
     "until_description": "留空即持續回覆，直到您關閉。",
+    "from_placeholder": "立即",
+    "until_placeholder": "直到您關閉",
     "audience_all": "所有人",
     "audience_internal": "僅限我的組織（{domains}）",
     "audience_external": "僅限組織外的人",
@@ -2913,6 +2916,7 @@
       "open_sieve_editor": "開啟原始 Sieve 編輯器",
       "fetch_error": "無法載入篩選規則",
       "expanded_view": "展開檢視",
+      "show_rule_details": "顯示每條規則的條件和動作",
       "expanded_view_description": "顯示包含詳細條件與動作區塊的篩選規則",
       "if": "如果",
       "then": "然後",
@@ -2991,6 +2995,9 @@
       "validation_period_empty": "請輸入期間的開始日期或結束日期",
       "validation_period_invalid": "請為期間輸入含時間的有效日期，或將該欄位留空",
       "apply_existing_period": "設定了期間的規則只作用於在該期間內收到的郵件，因此無法套用到既有郵件。",
+      "apply_existing_in": "同時套用到{folder}中既有的郵件",
+      "apply_existing_count": "{count, plural, other {同時套用到{folder}中既有的 # 封郵件}}",
+      "apply_existing_none": "{folder}中還沒有符合此規則的郵件。",
       "period_status_scheduled": "尚未開始",
       "period_status_active": "生效中",
       "period_status_expired": "已過期"
@@ -3496,6 +3503,48 @@
     },
     "sign_out": {
       "description": "在此裝置上登出此帳號。"
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "系統匣 通知區域 背景 最小化到系統匣 tray",
+      "autostart": "自動啟動 開機啟動 隨 Windows 啟動 登入時啟動",
+      "default_app": "預設郵件應用程式 預設郵件程式 mailto 郵件連結",
+      "menu_bar": "功能表列 功能表 Alt 鍵 檔案 編輯 檢視",
+      "updates": "更新 新版本 測試版 頻道",
+      "devtools": "開發人員工具 devtools 主控台 檢查 F12 偵錯",
+      "taskbar": "工作列 閃爍 Dock 提醒",
+      "quiet_hours": "安靜時段 勿擾 靜音 夜間",
+      "telemetry": "使用資訊 遙測 統計 分析",
+      "crash": "當機報告 錯誤報告 當機",
+      "threads": "會話 對話 分組 討論串 threads",
+      "block_images": "封鎖圖片 外部圖片 載入圖片",
+      "dark_mode": "深色模式 淺色模式 夜間模式 暗色 dark mode",
+      "timezone": "時區 timezone",
+      "reading_pane": "閱讀窗格 預覽窗格 分割檢視",
+      "week_start": "每週開始 第一天 星期一 星期日",
+      "empty_trash": "清空垃圾桶 垃圾桶 已刪除",
+      "do_not_disturb": "安靜時段 靜音 安靜"
+    },
+    "desktop_notifications": {
+      "title": "在這台電腦上",
+      "closed_label": "關閉視窗後",
+      "closed_description": "{appName} 執行期間會提醒你有新郵件。若要在關閉視窗後繼續在系統匣中執行，請在「{page}」中開啟此項。"
+    },
+    "push_unsupported": "網站關閉時，此瀏覽器無法顯示通知。",
+    "backup_description_app": "在你的其他裝置上使用相同的設定。",
+    "sender_favicons": {
+      "label": "公司網站的圖片",
+      "description": "使用企業寄件者的網站圖示作為頭像"
+    },
+    "privacy_push": {
+      "label": "通知中繼",
+      "description": "{appName} 關閉時的通知會經過推播中繼，中繼永遠看不到你的郵件。可在「{page}」頁面開啟或關閉。"
+    },
+    "reset": {
+      "message": "將所有設定還原為最初的狀態。你的郵件、篩選規則、自動回覆和簽名保持不變。",
+      "sync_on": "你的其他裝置使用相同的設定，因此也會一起變更。",
+      "sync_off": "你的其他裝置會保留各自的設定。"
     }
   },
   "setup": {
@@ -4057,6 +4106,9 @@
     "sending": "正在傳送…",
     "sent": "已傳送",
     "view": "檢視",
+    "template_saved": "範本已儲存",
+    "schedule_anyway": "仍然排程",
+    "schedule_warnings_title": "仍然排程這封郵件？",
     "picker_button": "從聯絡人新增",
     "picker_title": "新增收件者",
     "tab_contacts": "聯絡人",
@@ -4522,6 +4574,13 @@
       "open": "開啟聯絡人",
       "menu": "開啟聯絡人選單"
     }
+  },
+  "ux_pim_contact": {
+    "context_private": "住家",
+    "phone_voice": "電話",
+    "more_fields": "更多欄位",
+    "import_menu": "匯入聯絡人…",
+    "new_address_book_menu": "新增通訊錄…"
   },
   "uxs_wording": {
     "more_options": "更多選項",
@@ -5130,8 +5189,46 @@
     "mini_has_events": "有活動",
     "mini_week_number": "第 {week} 週"
   },
+  "ux_pim_calendar": {
+    "task_lists": "任務清單",
+    "task_status_not_started": "未開始",
+    "task_status_in_progress": "進行中",
+    "quick_task_due": "截止 {date}",
+    "quick_task_due_remove": "在標題中保留「{words}」",
+    "rename_calendar": "重新命名…",
+    "rename_title": "重新命名行事曆",
+    "rename_confirm": "重新命名",
+    "rename_empty": "請輸入名稱。",
+    "edit_calendar": "編輯…",
+    "default_alerts_open": "預設提醒…",
+    "share_open": "分享…",
+    "clear_all_events": "清除所有活動…",
+    "delete_calendar": "刪除…",
+    "caldav_title": "其他應用程式使用的地址 (CalDAV)",
+    "caldav_hint": "在 Thunderbird、Apple 行事曆或 DAVx⁵ 中加入此地址即可同步行事曆。",
+    "caldav_shared_by": "{name} 分享：",
+    "freebusy_description": "分享對象能看到你何時忙碌，看不到活動內容。「建議時間」會用到它。"
+  },
   "calendar_offline": {
     "split_needs_server": "此變更需要連線到伺服器。請暫時只變更此活動，或在恢復連線後再試一次。"
+  },
+  "ux_pim_event": {
+    "time_zone": "時區",
+    "time_zone_line": "時區：{zone}",
+    "your_time": "你的時間 {times}",
+    "zone_times": "{times} {zone}（你的時間 {local}）",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "已接受",
+    "status_declined": "已拒絕",
+    "status_tentative": "暫定",
+    "status_needs_action": "尚未回覆",
+    "status_delegated": "已委派",
+    "answered_accepted": "你已於 {date} 接受。",
+    "answered_declined": "你已於 {date} 拒絕。",
+    "answered_tentative": "你已於 {date} 回覆暫定。",
+    "answered_accepted_nodate": "你已接受。",
+    "answered_declined_nodate": "你已拒絕。",
+    "answered_tentative_nodate": "你已回覆暫定。"
   },
   "calendar_event_notifications": {
     "someone": "有人",
@@ -5142,6 +5239,11 @@
   },
   "company_calendars": {
     "section": "組織"
+  },
+  "ux_pim_grid": {
+    "search_short": "搜尋",
+    "reply": "回覆",
+    "reply_to_invitation": "回覆邀請"
   },
   "vacation_calendar": {
     "label": "佔用我的行事曆",
@@ -5164,6 +5266,88 @@
     "group_label": "群組",
     "title": "忙碌/空閒",
     "description": "群組中的同事能看到你何時忙碌，看不到活動內容。「建議時間」會用到它。"
+  },
+  "ux_pim_cimport": {
+    "file_hint": "按一下以選取 vCard 或 CSV 檔案",
+    "file_types": ".vcf 或 .csv 檔案，例如來自 Outlook 或 Google 聯絡人",
+    "parse_error": "無法讀取檔案",
+    "columns_title": "對應欄位",
+    "columns_hint": "選擇 {file} 中每一欄的去處。設為「不匯入」的欄會略過。",
+    "column": "欄",
+    "sample": "範例",
+    "field": "聯絡人欄位",
+    "skip": "不匯入",
+    "no_columns": "請至少為一欄選擇欄位。",
+    "continue": "繼續",
+    "back": "返回",
+    "import_into": "匯入至",
+    "group_name": "姓名",
+    "group_email": "電子郵件",
+    "group_phone": "電話",
+    "group_org": "組織",
+    "group_adr_any": "地址",
+    "group_adr_home": "住家地址",
+    "group_adr_work": "公司地址",
+    "group_adr_other": "其他地址",
+    "group_more": "更多",
+    "address_field": "{group}：{part}",
+    "t_name_full": "全名",
+    "t_name_given": "名字",
+    "t_name_middle": "中間名",
+    "t_name_surname": "姓氏",
+    "t_name_prefix": "稱謂（博士、女士）",
+    "t_name_suffix": "後綴（Jr.）",
+    "t_nickname": "暱稱",
+    "t_email": "電子郵件",
+    "t_email_home": "電子郵件（住家）",
+    "t_email_work": "電子郵件（公司）",
+    "t_phone": "電話",
+    "t_phone_mobile": "行動電話",
+    "t_phone_home": "電話（住家）",
+    "t_phone_work": "電話（公司）",
+    "t_phone_fax": "傳真",
+    "t_phone_fax_home": "傳真（住家）",
+    "t_phone_fax_work": "傳真（公司）",
+    "t_phone_pager": "呼叫器",
+    "t_org_name": "公司",
+    "t_org_unit": "部門",
+    "t_org_title": "職稱",
+    "t_street": "街道",
+    "t_pobox": "郵政信箱",
+    "t_locality": "城市",
+    "t_region": "州/省或地區",
+    "t_postcode": "郵遞區號",
+    "t_country": "國家/地區",
+    "t_web": "網站",
+    "t_birthday": "生日",
+    "t_anniversary": "紀念日",
+    "t_notes": "備註",
+    "t_categories": "類別",
+    "t_type": "值的類型（住家、公司…）",
+    "merge_with": "合併至…",
+    "merge_selected": "合併…",
+    "find_duplicates": "尋找重複項目",
+    "possible_duplicates": "可能重複（{count}）",
+    "duplicates_title": "可能重複",
+    "duplicates_hint": "姓名、電子郵件地址或電話號碼相同的聯絡人。",
+    "duplicates_none": "找不到可能重複的聯絡人。",
+    "pick_title": "將 {name} 合併至…",
+    "pick_search": "搜尋聯絡人",
+    "pick_suggested": "可能重複",
+    "pick_all": "所有聯絡人",
+    "pick_none": "沒有其他可合併的聯絡人。",
+    "preview_title": "合併聯絡人（{count}）",
+    "preview_hint": "這些聯絡人會合為一張名片，包含下方所有內容。",
+    "preview_deleted": "併入後刪除：{names}",
+    "groups": "群組",
+    "merge": "合併",
+    "merging": "正在合併…",
+    "merged": "聯絡人已合併",
+    "merge_failed": "無法合併這些聯絡人。",
+    "merge_not_possible": "這些聯絡人無法合併：它們位於不同帳戶，或位於您無法變更的通訊錄中。",
+    "undo": "復原",
+    "undone": "已復原合併",
+    "undo_failed": "無法完全復原合併。"
   },
   "find_time": {
     "suggest": "建議時間",
@@ -5584,6 +5768,21 @@
     "previous_file": "上一個檔案",
     "next_file": "下一個檔案",
     "loading": "載入中…"
+  },
+  "ux_pim_files": {
+    "conflict_title": "{name} 已存在。",
+    "conflict_file_hint": "取代會把新內容放進現有檔案，共用設定維持不變。保留兩者會新增一個帶編號的副本。",
+    "conflict_folder_hint": "取代會把檔案加入現有資料夾，並取代同名檔案。保留兩者會建立一個帶編號的資料夾。",
+    "replace": "取代",
+    "keep_both": "保留兩者",
+    "skip": "略過",
+    "apply_to_all": "{count, plural, other {對全部 # 個衝突執行此動作}}",
+    "no_preview": "此類檔案無法預覽。",
+    "open_in_app": "用預設應用程式開啟",
+    "shared_with": "{name} 已與 {person} 共用。",
+    "send_message": "傳送訊息",
+    "share_mail_subject": "我與你共用了 {name}",
+    "share_mail_body": "你好，\n\n我與你共用了「{name}」。可以在這裡開啟：\n{link}"
   },
   "smime": {
     "your_certificates": "您的憑證",
@@ -7146,6 +7345,39 @@
     "app_lock_timeout_hours": "{count, plural, other {# 小時}}",
     "desktop_attention_title": "在這台電腦上"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "你的名稱",
+      "description": "你寄信給別人時,對方會在你的地址旁看到這個名稱。",
+      "saved": "你的名稱已儲存。",
+      "error": "無法儲存你的名稱。請再試一次。"
+    },
+    "addresses": {
+      "description": "你可以用來寄信的地址,每個地址都有自己的名稱和簽名。",
+      "label": "你的地址",
+      "count": "{count, plural, =0 {還沒有地址} other {# 個地址}}",
+      "manage": "編輯地址…",
+      "modal_title": "你的電子郵件地址",
+      "add": "新增地址",
+      "edit": "編輯地址",
+      "added": "已新增地址。",
+      "saved": "已儲存地址。",
+      "deleted": "已刪除地址。",
+      "delete_title": "要刪除這個地址嗎?"
+    },
+    "signatures": {
+      "title": "簽名",
+      "description": "加在你所寫郵件的結尾。每個地址都有自己的簽名。",
+      "saved": "已儲存簽名。",
+      "error": "無法儲存簽名。請再試一次。",
+      "no_addresses": "還沒有可以寄信的地址。"
+    },
+    "search": {
+      "addresses": "身分 別名 寄件者 寄件者地址 寄件地址 identity alias sender",
+      "signatures": "簽名 郵件簽名 頁尾 身分 寄件者 寄件地址 signature",
+      "your_name": "顯示名稱 全名 寄件者名稱 display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "請先輸入伺服器位址。",
     "server_declined": "你沒有允許此伺服器,因此沒有傳送任何內容給它。",
@@ -7188,10 +7420,12 @@
     "server_looking": "正在尋找你的郵件伺服器…",
     "server_found": "郵件伺服器：{server}",
     "server_change": "變更",
+    "server_change_hint": "請輸入另一個伺服器位址。",
     "server_not_found": "找不到這個地址的郵件伺服器。請在這裡輸入，例如 mail.example.com。",
     "server_needed": "請輸入你的郵件伺服器位址。",
     "server_invalid": "這不是伺服器位址。請依 mail.example.com 的格式輸入。",
     "email_needed": "請先輸入你的電子郵件地址。",
+    "other_ways": "其他登入方式",
     "trouble": "遇到問題？",
     "trouble_cors": "你的郵件伺服器必須允許從這個網站登入。如果無法登入，請負責郵件伺服器的人允許。",
     "provider_unsupported": "{provider} 不支援 JMAP（Bulwark 與郵件伺服器溝通的方式），所以 Bulwark 目前還無法直接連線。"
@@ -7280,6 +7514,14 @@
     "copied": "檔案已複製。您可以將其貼到資料夾中。",
     "copy_failed": "無法複製檔案。",
     "reply_lost": "無法保留您輸入的回覆。請開啟郵件並在其中回覆。"
+  },
+  "ux_pim_menu": {
+    "search_contacts": "搜尋聯絡人",
+    "search_files": "搜尋檔案",
+    "import": "匯入",
+    "import_mail": "郵件…",
+    "import_calendar": "行事曆…",
+    "import_contacts": "聯絡人…"
   },
   "desktopEdit": {
     "edit": "編輯",
@@ -7436,5 +7678,11 @@
     "send_no_consent": "請先開啟當機報告。",
     "send_no_url": "未設定地址，因此無處傳送。請在上方輸入一個。",
     "send_failed": "無法傳送當機報告。"
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "在工作列圖示上顯示未讀數",
+    "unread_badge_description": "這樣您在其他應用程式中工作時也能看到新郵件。",
+    "tip_compose_keys": "按 {keys} 撰寫新郵件",
+    "tip_palette_keys": "按 {keys} 尋找任何指令"
   }
 }

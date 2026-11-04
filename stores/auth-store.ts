@@ -295,9 +295,9 @@ function getClientRateLimitState(client: IJMAPClient | null): Pick<AuthState, 'i
  *
  * The name is captured once by `addAccount` (a no-op for an existing entry),
  * so without this an account keeps whatever name it had at first login
- * forever. On Stalwart the identity name itself is a one-time snapshot of the
- * principal "Full name", so the live value has to come from the principal;
- * elsewhere the primary identity name is the best available source.
+ * forever. The primary identity's name wins: it is what recipients see and
+ * what Settings > Account edits. The Stalwart principal name is only the
+ * fallback for an account without one.
  *
  * Best-effort and never throws: a failed lookup keeps the cached name.
  */
@@ -309,9 +309,16 @@ export async function syncAccountDisplayName(
   const account = useAccountStore.getState().getAccountById(accountId);
   if (!account) return;
 
-  const name = (await fetchPrincipalDisplayName(client, account.cookieSlot))
-    || fallbackName?.trim()
-    || '';
+  // The name people see on sent mail is the sending identity's, and that is
+  // the one name Settings lets them change (settings-p2-2). Stalwart's
+  // principal description ("Full name") is often an admin's note, so it only
+  // names an account that has no identity name. A caller that doesn't know
+  // the identities keeps the name the account already has.
+  let name = fallbackName?.trim() || '';
+  if (!name) {
+    if (fallbackName === undefined && account.displayName) return;
+    name = (await fetchPrincipalDisplayName(client, account.cookieSlot)) || '';
+  }
   if (!name) return;
 
   // Re-read: the entry may have changed (or been removed) during the request.

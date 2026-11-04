@@ -103,7 +103,8 @@ describe('task-list-actions', () => {
       makeTask('soon', { due: '2030-01-01' }),
     ];
     // All is all of them: completed ones too, at the end.
-    expect(filterTasksForList(tasks, ['cal-1'], 'all').map((t) => t.id)).toEqual(['soon', 'later', 'done']);
-    expect(filterTasksForList(tasks, ['cal-1'], 'pending').map((t) => t.id)).toEqual(['soon', 'later']);
+    // The second argument names the task lists the user unticked (pim-1).
+    expect(filterTasksForList(tasks, ['cal-2'], 'all').map((t) => t.id)).toEqual(['soon', 'later', 'done']);
+    expect(filterTasksForList(tasks, ['cal-2'], 'pending').map((t) => t.id)).toEqual(['soon', 'later']);
   });
 });

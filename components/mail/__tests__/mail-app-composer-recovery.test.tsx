@@ -172,6 +172,8 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  if (vi.isFakeTimers()) vi.clearAllTimers();
+  vi.useRealTimers();
   expect(submit).not.toHaveBeenCalled();
   resetComposerSessions(); clearRescuedDrafts(); takeReturnedComposer(); takeHandedOffComposeDraft();
   useAuthStore.setState(original.auth); useEmailStore.setState(original.email); useSettingsStore.setState(original.settings);
@@ -200,6 +202,11 @@ async function replaceWithB(strict: boolean, existingAttachment = false) {
   fireEvent.click(screen.getByText('open saved B'));
   await waitFor(() => expect(subject()).toHaveValue('B subject'));
   expect(body()).toHaveValue('B body');
+  // Upstream explicitly saves A before opening B. Keep that behavior, then
+  // count only B's persistence in the assertions below.
+  expect(client.createDraft).toHaveBeenCalledTimes(1);
+  expect(client.createDraft.mock.calls[0].slice(1, 3)).toEqual(['A edited', 'A body edited']);
+  client.createDraft.mockClear();
   return view;
 }
 function expectB() {
@@ -271,14 +278,33 @@ describe.each([false, true])('composer recovery ownership (Strict Mode: %s)', st
   });
   it('explicit Discard deletes B and suppresses recovery', async () => {
     await replaceWithB(strict);
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     fireEvent.click(screen.getByRole('button', { name: 'discard' }));
-    const dialog = await screen.findByRole('alertdialog');
-    fireEvent.click(within(dialog).getByRole('button', { name: 'discard' }));
-    await waitFor(() => expect(screen.queryByTestId('composer-subject')).toBeNull());
+    expect(screen.queryByTestId('composer-subject')).toBeNull();
+    expect(screen.queryByRole('alertdialog')).toBeNull();
+    expect(client.deleteEmail).not.toHaveBeenCalled();
+    const discarded = useToastStore.getState().toasts.find(toast => toast.title === 'draft_discarded')!;
+    await act(async () => { await vi.advanceTimersByTimeAsync(discarded.duration! + 1); });
     expect(client.deleteEmail).toHaveBeenCalledWith('draft-B', 'acc');
     expect(screen.queryByTestId('continue-draft-bar')).toBeNull();
     fireEvent.click(screen.getByText('stub compose'));
     await waitFor(() => expect(subject()).toHaveValue(''));
+  });
+  it('Discard Undo restores B and keeps its ownership during responsive recovery', async () => {
+    await replaceWithB(strict, true);
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    fireEvent.click(screen.getByRole('button', { name: 'discard' }));
+    expect(screen.queryByTestId('composer-subject')).toBeNull();
+    const discarded = useToastStore.getState().toasts.find(toast => toast.title === 'draft_discarded')!;
+    await act(async () => { discarded.action!.onClick(); });
+    await waitFor(expectB);
+    for (const width of [500, 1200]) {
+      resize(width);
+      await waitFor(expectB);
+      expect(screen.getByText('B-existing.txt')).toBeInTheDocument();
+    }
+    await act(async () => { await vi.advanceTimersByTimeAsync(discarded.duration! + 1); });
+    expect(client.deleteEmail).not.toHaveBeenCalled();
   });
   it('intentional rescued-draft adoption and Continue preserve the snapshot', async () => {
     render(strict ? <React.StrictMode><MailApp /></React.StrictMode> : <MailApp />);

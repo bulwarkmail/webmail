@@ -174,6 +174,7 @@
     },
     "clear_search": "Effacer la recherche",
     "vacation_active": "Répondeur d'absence activé",
+    "vacation_turn_off": "Désactiver",
     "demo_banner": "Mode démo",
     "demo_reset": "Réinitialiser",
     "demo_tour": "Visite",
@@ -245,7 +246,6 @@
     "select_account_title": "Choisir un compte",
     "select_mailto_account": "Choisissez le compte qui doit ouvrir ce lien e-mail.",
     "select_webcal_account": "Choisissez le compte qui doit ouvrir ce lien de calendrier.",
-    "select_account_note": "Cette sélection s'applique uniquement à ce lien de protocole.",
     "detail_to": "À",
     "detail_subject": "Objet",
     "detail_no_subject": "Sans objet",
@@ -1112,7 +1112,7 @@
     "link_url_prompt": "Saisissez l'URL",
     "sending": "Envoi...",
     "schedule_send": "Planifier l’envoi",
-    "schedule_send_description": "Choisissez quand le serveur doit libérer ce message.",
+    "schedule_send_description": "Choisissez quand l’envoyer.",
     "schedule_preset": {
       "this_morning": "Ce matin",
       "this_afternoon": "Cet après-midi",
@@ -1163,6 +1163,7 @@
       "edit_link": "Modifier le lien",
       "remove_link": "Retirer le lien",
       "link_address": "Adresse du lien",
+      "link_text": "Texte",
       "link_invalid": "L'adresse ne peut pas contenir d'espaces",
       "table": "Tableau",
       "clear_formatting": "Effacer la mise en forme",
@@ -1393,6 +1394,8 @@
     "from_description": "Laissez vide pour commencer tout de suite.",
     "until_label": "Au (facultatif)",
     "until_description": "Laissez vide pour continuer à répondre jusqu'à ce que vous le désactiviez.",
+    "from_placeholder": "Dès maintenant",
+    "until_placeholder": "Jusqu’à ce que vous le désactiviez",
     "audience_all": "Tout le monde",
     "audience_internal": "Seulement mon organisation ({domains})",
     "audience_external": "Seulement les personnes hors de mon organisation",
@@ -2906,6 +2909,7 @@
       "open_sieve_editor": "Ouvrir l'éditeur Sieve brut",
       "fetch_error": "Échec du chargement des filtres",
       "expanded_view": "Vue étendue",
+      "show_rule_details": "Afficher les conditions et actions de chaque règle",
       "expanded_view_description": "Afficher les règles de filtre avec des blocs de conditions et d'actions détaillés",
       "if": "Si",
       "then": "Alors",
@@ -2984,6 +2988,9 @@
       "validation_period_empty": "Indiquez une date de début ou de fin pour la période",
       "validation_period_invalid": "Indiquez une date valide avec l'heure pour la période, ou laissez le champ vide",
       "apply_existing_period": "Une règle avec une période n'agit que sur les messages qui arrivent pendant celle-ci ; elle ne peut donc pas s'appliquer aux messages existants.",
+      "apply_existing_in": "Appliquer aussi aux messages déjà dans {folder}",
+      "apply_existing_count": "{count, plural, one {Appliquer aussi au # message déjà dans {folder}} other {Appliquer aussi aux # messages déjà dans {folder}}}",
+      "apply_existing_none": "Aucun message de {folder} ne correspond encore à cette règle.",
       "period_status_scheduled": "planifiée",
       "period_status_active": "active",
       "period_status_expired": "expirée"
@@ -3496,6 +3503,48 @@
     },
     "sign_out": {
       "description": "Se déconnecter de ce compte sur cet appareil."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "zone de notification barre système arrière-plan réduire tray",
+      "autostart": "démarrage automatique lancement démarrer avec Windows à l’ouverture de session",
+      "default_app": "application de messagerie par défaut programme de messagerie mailto liens e-mail",
+      "menu_bar": "barre de menus menus touche Alt Fichier Édition Affichage",
+      "updates": "mises à jour mise à jour nouvelle version bêta canal",
+      "devtools": "outils de développement devtools console inspecter F12 débogage",
+      "taskbar": "barre des tâches clignoter Dock attention",
+      "quiet_hours": "heures calmes ne pas déranger silencieux muet nuit",
+      "telemetry": "données d’utilisation télémétrie statistiques analyse",
+      "crash": "rapports de plantage rapports d’erreur plantage",
+      "threads": "fils conversations regrouper threads",
+      "block_images": "bloquer les images images externes charger les images",
+      "dark_mode": "mode sombre mode clair mode nuit thème sombre",
+      "timezone": "fuseau horaire timezone",
+      "reading_pane": "volet de lecture volet d’aperçu vue partagée",
+      "week_start": "début de semaine premier jour lundi dimanche",
+      "empty_trash": "vider la corbeille corbeille éléments supprimés",
+      "do_not_disturb": "heures calmes muet silence"
+    },
+    "desktop_notifications": {
+      "title": "Sur cet ordinateur",
+      "closed_label": "Fenêtre fermée",
+      "closed_description": "{appName} vous prévient des nouveaux e-mails tant qu’il fonctionne. Pour qu’il reste dans la zone de notification une fois la fenêtre fermée, activez-le dans {page}."
+    },
+    "push_unsupported": "Ce navigateur ne peut pas afficher de notifications quand le site est fermé.",
+    "backup_description_app": "Utilisez les mêmes paramètres sur vos autres appareils.",
+    "sender_favicons": {
+      "label": "Images des sites web des entreprises",
+      "description": "Afficher les icônes de sites web comme photos de profil pour les expéditeurs professionnels"
+    },
+    "privacy_push": {
+      "label": "Relais des notifications",
+      "description": "Les notifications reçues quand {appName} est fermé passent par un relais push, qui ne voit jamais vos e-mails. Vous les activez ou désactivez sur la page {page}."
+    },
+    "reset": {
+      "message": "Remet tous les paramètres comme au départ. Vos e-mails, filtres, réponse automatique et signatures restent tels quels.",
+      "sync_on": "Vos autres appareils utilisent les mêmes paramètres, ils changent donc aussi.",
+      "sync_off": "Vos autres appareils gardent leurs paramètres."
     }
   },
   "setup": {
@@ -4057,6 +4106,9 @@
     "sending": "Envoi…",
     "sent": "Envoyé",
     "view": "Afficher",
+    "template_saved": "Modèle enregistré",
+    "schedule_anyway": "Planifier quand même",
+    "schedule_warnings_title": "Planifier ce message quand même ?",
     "picker_button": "Ajouter depuis les contacts",
     "picker_title": "Ajouter des destinataires",
     "tab_contacts": "Contacts",
@@ -4522,6 +4574,13 @@
     },
     "open_categories": "Ouvrir les catégories",
     "row_actions": "Actions pour {name}"
+  },
+  "ux_pim_contact": {
+    "context_private": "Domicile",
+    "phone_voice": "Téléphone",
+    "more_fields": "Plus de champs",
+    "import_menu": "Importer des contacts…",
+    "new_address_book_menu": "Nouveau carnet d'adresses…"
   },
   "uxs_wording": {
     "more_options": "Plus d'options",
@@ -5130,8 +5189,46 @@
     "mini_has_events": "a des événements",
     "mini_week_number": "Semaine {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Listes de tâches",
+    "task_status_not_started": "Pas commencée",
+    "task_status_in_progress": "En cours",
+    "quick_task_due": "Échéance {date}",
+    "quick_task_due_remove": "Garder « {words} » dans le titre",
+    "rename_calendar": "Renommer…",
+    "rename_title": "Renommer le calendrier",
+    "rename_confirm": "Renommer",
+    "rename_empty": "Saisissez un nom.",
+    "edit_calendar": "Modifier…",
+    "default_alerts_open": "Rappels par défaut…",
+    "share_open": "Partager…",
+    "clear_all_events": "Effacer tous les événements…",
+    "delete_calendar": "Supprimer…",
+    "caldav_title": "Adresse pour d’autres applis (CalDAV)",
+    "caldav_hint": "Ajoutez cette adresse dans Thunderbird, Calendrier d’Apple ou DAVx⁵ pour synchroniser vos calendriers.",
+    "caldav_shared_by": "Partagé par {name} :",
+    "freebusy_description": "Les personnes avec qui vous partagez voient quand vous êtes occupé, pas le contenu de vos événements. « Suggérer des créneaux » s’en sert."
+  },
   "calendar_offline": {
     "split_needs_server": "Cette modification nécessite une connexion au serveur. Modifiez seulement cet événement pour l'instant, ou réessayez une fois de nouveau en ligne."
+  },
+  "ux_pim_event": {
+    "time_zone": "Fuseau horaire",
+    "time_zone_line": "Fuseau horaire : {zone}",
+    "your_time": "{times} votre heure",
+    "zone_times": "{times} {zone} ({local} votre heure)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Accepté",
+    "status_declined": "Refusé",
+    "status_tentative": "Peut-être",
+    "status_needs_action": "Pas encore répondu",
+    "status_delegated": "Transmis",
+    "answered_accepted": "Vous avez accepté le {date}.",
+    "answered_declined": "Vous avez refusé le {date}.",
+    "answered_tentative": "Vous avez répondu peut-être le {date}.",
+    "answered_accepted_nodate": "Vous avez accepté.",
+    "answered_declined_nodate": "Vous avez refusé.",
+    "answered_tentative_nodate": "Vous avez répondu peut-être."
   },
   "advanced_search": {
     "title": "Recherche avancée",
@@ -5409,6 +5506,21 @@
     "previous_file": "Fichier précédent",
     "next_file": "Fichier suivant",
     "loading": "Chargement…"
+  },
+  "ux_pim_files": {
+    "conflict_title": "{name} existe déjà.",
+    "conflict_file_hint": "Remplacer met le nouveau contenu dans le fichier existant, ses partages restent. Conserver les deux ajoute une copie numérotée.",
+    "conflict_folder_hint": "Remplacer ajoute les fichiers au dossier existant et remplace ceux qui portent le même nom. Conserver les deux crée un second dossier numéroté.",
+    "replace": "Remplacer",
+    "keep_both": "Conserver les deux",
+    "skip": "Ignorer",
+    "apply_to_all": "{count, plural, one {Faire de même pour le conflit} other {Faire de même pour les # conflits}}",
+    "no_preview": "Aucun aperçu pour ce type de fichier.",
+    "open_in_app": "Ouvrir dans l’application par défaut",
+    "shared_with": "{name} est maintenant partagé avec {person}.",
+    "send_message": "Envoyer un message",
+    "share_mail_subject": "J’ai partagé {name} avec vous",
+    "share_mail_body": "Bonjour,\n\nJ’ai partagé « {name} » avec vous. Vous pouvez l’ouvrir ici :\n{link}"
   },
   "smime": {
     "your_certificates": "Vos certificats",
@@ -5734,6 +5846,11 @@
   "company_calendars": {
     "section": "Organisation"
   },
+  "ux_pim_grid": {
+    "search_short": "Rechercher",
+    "reply": "Répondre",
+    "reply_to_invitation": "Répondre à l’invitation"
+  },
   "vacation_calendar": {
     "label": "Bloquer mon calendrier",
     "description": "Ajoute un événement occupé pendant votre absence, pour que personne ne vous invite à une réunion à ce moment-là.",
@@ -5755,6 +5872,88 @@
     "group_label": "Groupe",
     "title": "Disponibilités",
     "description": "Les collègues du groupe voient quand vous êtes occupé, pas le contenu de vos événements. « Suggérer des créneaux » s’en sert."
+  },
+  "ux_pim_cimport": {
+    "file_hint": "Cliquez pour sélectionner un fichier vCard ou CSV",
+    "file_types": "Fichiers .vcf ou .csv, par exemple d’Outlook ou de Google Contacts",
+    "parse_error": "Impossible de lire le fichier",
+    "columns_title": "Associer les colonnes",
+    "columns_hint": "Choisissez où va chaque colonne de {file}. Les colonnes réglées sur « Ne pas importer » sont ignorées.",
+    "column": "Colonne",
+    "sample": "Exemple",
+    "field": "Champ du contact",
+    "skip": "Ne pas importer",
+    "no_columns": "Choisissez un champ pour au moins une colonne.",
+    "continue": "Continuer",
+    "back": "Retour",
+    "import_into": "Importer dans",
+    "group_name": "Nom",
+    "group_email": "E-mail",
+    "group_phone": "Téléphone",
+    "group_org": "Organisation",
+    "group_adr_any": "Adresse",
+    "group_adr_home": "Adresse personnelle",
+    "group_adr_work": "Adresse professionnelle",
+    "group_adr_other": "Autre adresse",
+    "group_more": "Plus",
+    "address_field": "{group} : {part}",
+    "t_name_full": "Nom complet",
+    "t_name_given": "Prénom",
+    "t_name_middle": "Deuxième prénom",
+    "t_name_surname": "Nom de famille",
+    "t_name_prefix": "Civilité (Dr, Mme)",
+    "t_name_suffix": "Suffixe (Jr)",
+    "t_nickname": "Surnom",
+    "t_email": "E-mail",
+    "t_email_home": "E-mail (perso)",
+    "t_email_work": "E-mail (travail)",
+    "t_phone": "Téléphone",
+    "t_phone_mobile": "Mobile",
+    "t_phone_home": "Téléphone (perso)",
+    "t_phone_work": "Téléphone (travail)",
+    "t_phone_fax": "Fax",
+    "t_phone_fax_home": "Fax (perso)",
+    "t_phone_fax_work": "Fax (travail)",
+    "t_phone_pager": "Bipeur",
+    "t_org_name": "Société",
+    "t_org_unit": "Service",
+    "t_org_title": "Poste",
+    "t_street": "Rue",
+    "t_pobox": "Boîte postale",
+    "t_locality": "Ville",
+    "t_region": "État ou région",
+    "t_postcode": "Code postal",
+    "t_country": "Pays",
+    "t_web": "Site web",
+    "t_birthday": "Anniversaire",
+    "t_anniversary": "Anniversaire de mariage",
+    "t_notes": "Notes",
+    "t_categories": "Catégories",
+    "t_type": "Type de la valeur (Domicile, Travail…)",
+    "merge_with": "Fusionner avec…",
+    "merge_selected": "Fusionner…",
+    "find_duplicates": "Trouver les doublons",
+    "possible_duplicates": "Doublons possibles ({count})",
+    "duplicates_title": "Doublons possibles",
+    "duplicates_hint": "Contacts avec le même nom, la même adresse e-mail ou le même numéro.",
+    "duplicates_none": "Aucun doublon possible trouvé.",
+    "pick_title": "Fusionner {name} avec…",
+    "pick_search": "Rechercher des contacts",
+    "pick_suggested": "Doublons possibles",
+    "pick_all": "Tous les contacts",
+    "pick_none": "Aucun autre contact avec lequel fusionner.",
+    "preview_title": "Fusionner les contacts ({count})",
+    "preview_hint": "Ces contacts deviennent une seule fiche avec tout ce qui suit.",
+    "preview_deleted": "Repris puis supprimés : {names}",
+    "groups": "Groupes",
+    "merge": "Fusionner",
+    "merging": "Fusion…",
+    "merged": "Contacts fusionnés",
+    "merge_failed": "Impossible de fusionner les contacts.",
+    "merge_not_possible": "Impossible de fusionner ces contacts : ils sont dans des comptes différents ou dans un carnet d’adresses que vous ne pouvez pas modifier.",
+    "undo": "Annuler",
+    "undone": "Fusion annulée",
+    "undo_failed": "La fusion n’a pas pu être entièrement annulée."
   },
   "find_time": {
     "suggest": "Suggérer des créneaux",
@@ -7146,6 +7345,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# heure} other {# heures}}",
     "desktop_attention_title": "Sur cet ordinateur"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Votre nom",
+      "description": "Les gens voient ce nom à côté de votre adresse quand vous leur écrivez.",
+      "saved": "Votre nom est enregistré.",
+      "error": "Votre nom n'a pas pu être enregistré. Réessayez."
+    },
+    "addresses": {
+      "description": "Les adresses depuis lesquelles vous pouvez envoyer, chacune avec son nom et sa signature.",
+      "label": "Vos adresses",
+      "count": "{count, plural, =0 {Pas encore d'adresse} one {# adresse} other {# adresses}}",
+      "manage": "Modifier les adresses…",
+      "modal_title": "Vos adresses e-mail",
+      "add": "Ajouter une adresse",
+      "edit": "Modifier l'adresse",
+      "added": "Adresse ajoutée.",
+      "saved": "Adresse enregistrée.",
+      "deleted": "Adresse supprimée.",
+      "delete_title": "Supprimer cette adresse ?"
+    },
+    "signatures": {
+      "title": "Signatures",
+      "description": "Ajoutée à la fin des messages que vous écrivez. Chaque adresse a la sienne.",
+      "saved": "Signature enregistrée.",
+      "error": "La signature n'a pas pu être enregistrée. Réessayez.",
+      "no_addresses": "Vous n'avez encore aucune adresse d'envoi."
+    },
+    "search": {
+      "addresses": "identité identités alias expéditeur adresse d'expédition adresse de l'expéditeur identity alias sender",
+      "signatures": "signature signature e-mail pied de page identité expéditeur adresse d'expédition",
+      "your_name": "nom affiché nom complet nom de l'expéditeur display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Saisissez d'abord l'adresse du serveur.",
     "server_declined": "Vous n'avez pas autorisé ce serveur, donc rien ne lui a été envoyé.",
@@ -7188,10 +7420,12 @@
     "server_looking": "Recherche de votre serveur de messagerie…",
     "server_found": "Serveur de messagerie : {server}",
     "server_change": "Modifier",
+    "server_change_hint": "Saisissez l'adresse d'un autre serveur.",
     "server_not_found": "Nous n'avons pas trouvé le serveur de messagerie de cette adresse. Saisissez-le ici, par exemple mail.example.com.",
     "server_needed": "Saisissez l'adresse de votre serveur de messagerie.",
     "server_invalid": "Ce n'est pas une adresse de serveur. Écrivez-la comme mail.example.com.",
     "email_needed": "Saisissez d'abord votre adresse e-mail.",
+    "other_ways": "Autres façons de se connecter",
     "trouble": "Un problème ?",
     "trouble_cors": "Votre serveur de messagerie doit autoriser les connexions depuis ce site. Si la connexion échoue, demandez à la personne qui gère votre serveur de l'autoriser.",
     "provider_unsupported": "{provider} ne propose pas JMAP, la façon dont Bulwark communique avec les serveurs de messagerie, donc Bulwark ne peut pas encore s'y connecter directement."
@@ -7280,6 +7514,14 @@
     "copied": "Fichier copié. Vous pouvez le coller dans un dossier.",
     "copy_failed": "Le fichier n'a pas pu être copié.",
     "reply_lost": "Votre réponse saisie n'a pas pu être conservée. Ouvrez le message et répondez depuis celui-ci."
+  },
+  "ux_pim_menu": {
+    "search_contacts": "Rechercher des contacts",
+    "search_files": "Rechercher des fichiers",
+    "import": "Importer",
+    "import_mail": "Courrier…",
+    "import_calendar": "Calendrier…",
+    "import_contacts": "Contacts…"
   },
   "desktopEdit": {
     "edit": "Modifier",
@@ -7436,5 +7678,11 @@
     "send_no_consent": "Activez d'abord les rapports de plantage.",
     "send_no_url": "Aucune adresse n'est définie, il n'y a donc nulle part où envoyer ce rapport. Saisissez-en une ci-dessus.",
     "send_failed": "Le rapport de plantage n'a pas pu être envoyé."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Nombre de non-lus sur l'icône de la barre des tâches",
+    "unread_badge_description": "Pour voir les nouveaux messages pendant que vous travaillez dans une autre application.",
+    "tip_compose_keys": "Appuyez sur {keys} pour écrire un nouveau message",
+    "tip_palette_keys": "Appuyez sur {keys} pour trouver n'importe quelle commande"
   }
 }

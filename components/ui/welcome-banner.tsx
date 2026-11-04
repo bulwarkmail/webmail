@@ -9,6 +9,8 @@ import { useRouter } from "@/i18n/navigation";
 import { useTour } from "@/components/tour/tour-provider";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useDeviceDetection } from "@/hooks/use-media-query";
+import { isDesktopApp } from "@/lib/desktop/bridge";
+import { formatShortcutCombo } from "@/lib/shortcut-keys";
 
 const ONBOARDING_KEY = "onboarding_completed";
 
@@ -38,6 +40,7 @@ export function useWelcomeBannerDue(): boolean {
  */
 export function WelcomeBanner({ variant = "list" }: { variant?: "list" | "pane" }) {
   const t = useTranslations("welcome");
+  const tDesktop = useTranslations("uxp2_desktop");
   const router = useRouter();
   const { startTour } = useTour();
   const onboardingCompleted = useSettingsStore((s) => s.onboardingCompleted);
@@ -113,7 +116,9 @@ export function WelcomeBanner({ variant = "list" }: { variant?: "list" | "pane" 
                 {t("title")}
               </h3>
               <ul className="space-y-1 text-sm text-muted-foreground">
-                <li>{isMobile ? t("tip_compose_touch") : t("tip_compose")}</li>
+                {/* The desktop app answers the keys Windows mail apps use, not single letters (desktop-p2-12). */}
+                <li>{isMobile ? t("tip_compose_touch") : isDesktopApp() ? tDesktop("tip_compose_keys", { keys: formatShortcutCombo("Mod + N") }) : t("tip_compose")}</li>
+                {!isMobile && isDesktopApp() && <li>{tDesktop("tip_palette_keys", { keys: formatShortcutCombo("Mod + K") })}</li>}
                 {!isMobile && <li>{t("tip_shortcuts")}</li>}
                 <li>{isMobile ? t("tip_sidebar_touch") : t("tip_sidebar")}</li>
                 <li>{t("tip_settings")}</li>

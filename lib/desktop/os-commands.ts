@@ -133,10 +133,13 @@ function handleFiles(command: Extract<DesktopOsCommand, { type: 'files' }>, env:
   const made = command.files.map(({ name, data }) => new File([new Uint8Array(data)], name));
   const failed = [...command.failed];
   if (command.reason === 'attach' && command.ask) {
-    // Opened with the app ("Open with"): the same choice as dropping it on the window.
+    // An older shell's "Open with": the same choice as dropping it on the window.
     requestFileChoice({ files: made, preferred: 'new-message' });
   } else if (command.reason === 'attach') {
-    if (made.length > 0) handOffDraft({ files: made });
+    // Send to and Open with: a compose window with the files, as a mail link gets, and the
+    // main window stays where it is. Signed out, the sign-in has to show.
+    if (!useAuthStore.getState().isAuthenticated) showWindow();
+    if (made.length > 0) handOffDraft({ files: made, fromOs: true });
   } else {
     for (const file of made) {
       const kind = kindForFile(file);

@@ -165,6 +165,7 @@
     },
     "clear_search": "נקה חיפוש",
     "vacation_active": "משיב חופשה פעיל",
+    "vacation_turn_off": "כיבוי",
     "demo_banner": "מצב הדגמה",
     "demo_reset": "אִתחוּל",
     "demo_tour": "סִיוּר",
@@ -991,7 +992,7 @@
     "recipients_partly_refused": "השרת דחה את {recipients}. שאר הנמענים יקבלו את ההודעה.",
     "send_offline": "נראה שאין חיבור לרשת. ההודעה עדיין כאן, שלחו אותה שוב כשתחזרו לרשת.",
     "formatting": "עיצוב",
-    "send_recipients_rejected": "לא נשלח - השרת דחה את כל הנמענים.",
+    "send_recipients_rejected": "לא נשלח: השרת דחה את כל הנמענים.",
     "send_plugin_failed": "לא נשלח - תוסף שמטפל בשליחה נכשל או לקח יותר מדי זמן. בדקו את תיקיית דואר יוצא לפני שליחה חוזרת.",
     "send_some_recipients_rejected": "נשלח, אך לא לנמענים האלה - השרת דחה אותם.",
     "continue_draft": "המשך טיוטה",
@@ -1055,7 +1056,7 @@
       "unfinished": []
     },
     "schedule_send": "תזמן שליחה",
-    "schedule_send_description": "בחר מתי השרת צריך לשחרר הודעה זו.",
+    "schedule_send_description": "בחר מתי לשלוח אותה.",
     "schedule_preset": {
       "this_morning": "הבוקר",
       "this_afternoon": "היום אחר הצהריים",
@@ -1106,6 +1107,7 @@
       "edit_link": "עריכת קישור",
       "remove_link": "הסרת קישור",
       "link_address": "כתובת הקישור",
+      "link_text": "טקסט",
       "link_invalid": "הכתובת לא יכולה להכיל רווחים",
       "table": "טבלה",
       "clear_formatting": "ניקוי עיצוב",
@@ -1336,6 +1338,8 @@
     "from_description": "השאירו ריק כדי להתחיל מיד.",
     "until_label": "עד (לא חובה)",
     "until_description": "השאירו ריק כדי להמשיך להשיב עד שתכבו.",
+    "from_placeholder": "מיד",
+    "until_placeholder": "עד שתכבו",
     "audience_all": "כולם",
     "audience_internal": "רק הארגון שלי ({domains})",
     "audience_external": "רק אנשים מחוץ לארגון שלי",
@@ -2803,6 +2807,7 @@
       "open_sieve_editor": "פתח את עורך Sieve הגולמי",
       "fetch_error": "טעינת המסננים נכשלה",
       "expanded_view": "תצוגה מורחבת",
+      "show_rule_details": "הצגת התנאים והפעולות של כל כלל",
       "expanded_view_description": "הצג כללי סינון עם תנאים מפורטים ואבני פעולה",
       "if": "אם",
       "then": "ואז",
@@ -2884,6 +2889,9 @@
       "validation_period_empty": "יש להזין תאריך התחלה או סיום לטווח",
       "validation_period_invalid": "יש להזין תאריך תקין עם שעה לטווח, או להשאיר את השדה ריק",
       "apply_existing_period": "כלל עם טווח זמן פועל רק על הודעות שמגיעות בתוכו, ולכן לא ניתן להחיל אותו על הודעות קיימות.",
+      "apply_existing_in": "להחיל גם על ההודעות שכבר נמצאות בתיקייה {folder}",
+      "apply_existing_count": "{count, plural, one {להחיל גם על ההודעה שכבר נמצאת בתיקייה {folder}} other {להחיל גם על # ההודעות שכבר נמצאות בתיקייה {folder}}}",
+      "apply_existing_none": "עדיין אין הודעה בתיקייה {folder} שמתאימה לכלל הזה.",
       "period_status_scheduled": "מתוזמן",
       "period_status_active": "פעיל",
       "period_status_expired": "פג תוקף"
@@ -3442,6 +3450,48 @@
       "description": "התנתקות מהחשבון הזה במכשיר הזה."
     }
   },
+  "uxp2_settings": {
+    "search": {
+      "tray": "מגש המערכת אזור ההודעות רקע מזעור למגש tray",
+      "autostart": "הפעלה אוטומטית הפעלה עם Windows בעת הכניסה",
+      "default_app": "אפליקציית דואר ברירת מחדל תוכנת דואר mailto קישורי דואר",
+      "menu_bar": "שורת תפריטים תפריטים מקש Alt קובץ עריכה תצוגה",
+      "updates": "עדכונים עדכון גרסה חדשה בטא ערוץ",
+      "devtools": "כלי מפתחים מסוף בדיקה F12 ניפוי באגים devtools",
+      "taskbar": "שורת המשימות הבהוב Dock תשומת לב",
+      "quiet_hours": "שעות שקט נא לא להפריע השתקה לילה",
+      "telemetry": "נתוני שימוש טלמטריה סטטיסטיקה ניתוח",
+      "crash": "דוחות קריסה דוחות שגיאה קריסה",
+      "threads": "שרשורים שיחות קיבוץ threads",
+      "block_images": "חסימת תמונות תמונות חיצוניות טעינת תמונות",
+      "dark_mode": "מצב כהה מצב בהיר מצב לילה dark mode",
+      "timezone": "אזור זמן timezone",
+      "reading_pane": "חלונית קריאה חלונית תצוגה מקדימה תצוגה מפוצלת",
+      "week_start": "תחילת השבוע היום הראשון ראשון שני",
+      "empty_trash": "ריקון האשפה אשפה פריטים שנמחקו",
+      "do_not_disturb": "שעות שקט השתקה שקט"
+    },
+    "desktop_notifications": {
+      "title": "במחשב הזה",
+      "closed_label": "כשהחלון סגור",
+      "closed_description": "{appName} מודיע על דואר חדש כל עוד הוא פועל. כדי שימשיך לפעול במגש המערכת אחרי סגירת החלון, יש להפעיל זאת ב{page}."
+    },
+    "push_unsupported": "הדפדפן הזה לא יכול להציג התראות כשהאתר סגור.",
+    "backup_description_app": "אותן הגדרות במכשירים האחרים שלך.",
+    "sender_favicons": {
+      "label": "תמונות מאתרי חברות",
+      "description": "הצג סמלי אתרים כתמונות פרופיל עבור שולחים עסקיים"
+    },
+    "privacy_push": {
+      "label": "ממסר להתראות",
+      "description": "התראות כש{appName} סגור עוברות דרך ממסר push שלעולם אינו רואה את הדואר שלך. מפעילים ומכבים אותן בדף {page}."
+    },
+    "reset": {
+      "message": "כל ההגדרות יחזרו למצבן ההתחלתי. הדואר, המסננים, המענה האוטומטי והחתימות שלך יישארו כפי שהם.",
+      "sync_on": "המכשירים האחרים שלך משתמשים באותן הגדרות, ולכן גם הם ישתנו.",
+      "sync_off": "המכשירים האחרים שלך ישמרו על ההגדרות שלהם."
+    }
+  },
   "setup": {
     "title": "הגדרת Bulwark Webmail",
     "subtitle": "הגדירו את מופע דואר הרשת שלכם מהדפדפן.",
@@ -3950,6 +4000,9 @@
     "sending": "שולח…",
     "sent": "נשלח",
     "view": "הצג",
+    "template_saved": "התבנית נשמרה",
+    "schedule_anyway": "תזמן בכל זאת",
+    "schedule_warnings_title": "לתזמן את ההודעה בכל זאת?",
     "picker_button": "הוסף מאנשי הקשר",
     "picker_title": "הוספת נמענים",
     "tab_contacts": "אנשי קשר",
@@ -4415,6 +4468,13 @@
       "open": "פתח את איש הקשר",
       "menu": "פתח את התפריט של איש הקשר"
     }
+  },
+  "ux_pim_contact": {
+    "context_private": "בית",
+    "phone_voice": "טלפון",
+    "more_fields": "שדות נוספים",
+    "import_menu": "ייבוא אנשי קשר…",
+    "new_address_book_menu": "ספר כתובות חדש…"
   },
   "uxs_wording": {
     "more_options": "אפשרויות נוספות",
@@ -5023,8 +5083,46 @@
     "mini_has_events": "יש אירועים",
     "mini_week_number": "שבוע {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "רשימות משימות",
+    "task_status_not_started": "לא התחילה",
+    "task_status_in_progress": "בביצוע",
+    "quick_task_due": "יעד {date}",
+    "quick_task_due_remove": "להשאיר את „{words}” בכותרת",
+    "rename_calendar": "שינוי שם…",
+    "rename_title": "שינוי שם של לוח השנה",
+    "rename_confirm": "שינוי שם",
+    "rename_empty": "יש להזין שם.",
+    "edit_calendar": "עריכה…",
+    "default_alerts_open": "תזכורות ברירת מחדל…",
+    "share_open": "שיתוף…",
+    "clear_all_events": "ניקוי כל האירועים…",
+    "delete_calendar": "מחיקה…",
+    "caldav_title": "כתובת לאפליקציות אחרות (CalDAV)",
+    "caldav_hint": "הוסף את הכתובת הזו ב-Thunderbird, ביומן של Apple או ב-DAVx⁵ כדי לסנכרן את לוחות השנה.",
+    "caldav_shared_by": "משותף על ידי {name}:",
+    "freebusy_description": "מי שאתה משתף איתו רואה מתי אתה תפוס, לא מה האירועים שלך. \"הצע זמנים\" משתמש בזה."
+  },
   "calendar_offline": {
     "split_needs_server": "שינוי זה דורש חיבור לשרת. שנו כרגע רק את האירוע הזה, או נסו שוב כשהחיבור יחזור."
+  },
+  "ux_pim_event": {
+    "time_zone": "אזור זמן",
+    "time_zone_line": "אזור זמן: {zone}",
+    "your_time": "{times} לפי השעה שלך",
+    "zone_times": "{times} {zone} ({local} לפי השעה שלך)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "התקבל",
+    "status_declined": "נדחה",
+    "status_tentative": "אולי",
+    "status_needs_action": "עדיין לא ענו",
+    "status_delegated": "הועבר",
+    "answered_accepted": "אישרת ב-{date}.",
+    "answered_declined": "דחית ב-{date}.",
+    "answered_tentative": "ענית 'אולי' ב-{date}.",
+    "answered_accepted_nodate": "אישרת.",
+    "answered_declined_nodate": "דחית.",
+    "answered_tentative_nodate": "ענית 'אולי'."
   },
   "advanced_search": {
     "title": "חיפוש מתקדם",
@@ -5303,6 +5401,21 @@
     "next_file": "הקובץ הבא",
     "loading": "טוען…"
   },
+  "ux_pim_files": {
+    "conflict_title": "{name} כבר קיים.",
+    "conflict_file_hint": "החלפה שמה את התוכן החדש בקובץ הקיים, כך שהשיתופים שלו נשמרים. שמירת שניהם מוסיפה עותק עם מספר.",
+    "conflict_folder_hint": "החלפה מוסיפה את הקבצים לתיקייה הקיימת ומחליפה קבצים עם אותו שם. שמירת שניהם יוצרת תיקייה שנייה עם מספר.",
+    "replace": "החלפה",
+    "keep_both": "שמירת שניהם",
+    "skip": "דילוג",
+    "apply_to_all": "{count, plural, other {לעשות כך לכל # ההתנגשויות}}",
+    "no_preview": "אין תצוגה מקדימה לסוג קובץ זה.",
+    "open_in_app": "פתיחה ביישום ברירת המחדל",
+    "shared_with": "{name} משותף עכשיו עם {person}.",
+    "send_message": "שליחת הודעה",
+    "share_mail_subject": "שיתפתי איתך את {name}",
+    "share_mail_body": "שלום,\n\nשיתפתי איתך את \"{name}\". אפשר לפתוח אותו כאן:\n{link}"
+  },
   "smime": {
     "your_certificates": "התעודות שלך",
     "your_certificates_desc": "ייבא ונהל את אישורי ה-S/MIME שלך עבור חתימה והצפנה של הודעות דוא\"ל",
@@ -5461,7 +5574,6 @@
     "select_account_title": "בחר חשבון",
     "select_mailto_account": "בחר איזה חשבון צריך לפתוח קישור דוא״ל זה.",
     "select_webcal_account": "בחר איזה חשבון צריך לפתוח קישור לוח שנה זה.",
-    "select_account_note": "זה חל רק על קישור פרוטוקול זה.",
     "detail_to": "אל",
     "detail_subject": "נושא",
     "detail_no_subject": "אין נושא",
@@ -5553,6 +5665,11 @@
   "company_calendars": {
     "section": "ארגון"
   },
+  "ux_pim_grid": {
+    "search_short": "חיפוש",
+    "reply": "מענה",
+    "reply_to_invitation": "מענה להזמנה"
+  },
   "vacation_calendar": {
     "label": "חסום את היומן שלי",
     "description": "מוסיף אירוע תפוס לזמן ההיעדרות, כדי שאף אחד לא יקבע איתך פגישות אז.",
@@ -5574,6 +5691,88 @@
     "group_label": "קבוצה",
     "title": "פנוי/תפוס",
     "description": "עמיתים בקבוצה רואים מתי אתה תפוס, לא מה האירועים שלך. \"הצע זמנים\" משתמש בזה."
+  },
+  "ux_pim_cimport": {
+    "file_hint": "לחצו כדי לבחור קובץ vCard או CSV",
+    "file_types": "קובצי ‎.vcf או ‎.csv, למשל מ-Outlook או מאנשי הקשר של Google",
+    "parse_error": "לא ניתן לקרוא את הקובץ",
+    "columns_title": "התאמת עמודות",
+    "columns_hint": "בחרו לאן הולכת כל עמודה ב-{file}. עמודות שהוגדרו „לא לייבא” יושמטו.",
+    "column": "עמודה",
+    "sample": "דוגמה",
+    "field": "שדה איש קשר",
+    "skip": "לא לייבא",
+    "no_columns": "בחרו שדה לעמודה אחת לפחות.",
+    "continue": "המשך",
+    "back": "חזרה",
+    "import_into": "ייבוא אל",
+    "group_name": "שם",
+    "group_email": "אימייל",
+    "group_phone": "טלפון",
+    "group_org": "ארגון",
+    "group_adr_any": "כתובת",
+    "group_adr_home": "כתובת בית",
+    "group_adr_work": "כתובת עבודה",
+    "group_adr_other": "כתובת אחרת",
+    "group_more": "עוד",
+    "address_field": "{group}: {part}",
+    "t_name_full": "שם מלא",
+    "t_name_given": "שם פרטי",
+    "t_name_middle": "שם אמצעי",
+    "t_name_surname": "שם משפחה",
+    "t_name_prefix": "תואר (ד״ר, גב׳)",
+    "t_name_suffix": "סיומת (ג׳וניור)",
+    "t_nickname": "כינוי",
+    "t_email": "אימייל",
+    "t_email_home": "אימייל (בית)",
+    "t_email_work": "אימייל (עבודה)",
+    "t_phone": "טלפון",
+    "t_phone_mobile": "נייד",
+    "t_phone_home": "טלפון (בית)",
+    "t_phone_work": "טלפון (עבודה)",
+    "t_phone_fax": "פקס",
+    "t_phone_fax_home": "פקס (בית)",
+    "t_phone_fax_work": "פקס (עבודה)",
+    "t_phone_pager": "זימונית",
+    "t_org_name": "חברה",
+    "t_org_unit": "מחלקה",
+    "t_org_title": "תפקיד",
+    "t_street": "רחוב",
+    "t_pobox": "תא דואר",
+    "t_locality": "עיר",
+    "t_region": "מחוז או אזור",
+    "t_postcode": "מיקוד",
+    "t_country": "מדינה",
+    "t_web": "אתר אינטרנט",
+    "t_birthday": "יום הולדת",
+    "t_anniversary": "יום נישואין",
+    "t_notes": "הערות",
+    "t_categories": "קטגוריות",
+    "t_type": "סוג הערך (בית, עבודה…)",
+    "merge_with": "מיזוג עם…",
+    "merge_selected": "מיזוג…",
+    "find_duplicates": "חיפוש כפילויות",
+    "possible_duplicates": "כפילויות אפשריות ({count})",
+    "duplicates_title": "כפילויות אפשריות",
+    "duplicates_hint": "אנשי קשר עם אותו שם, אותה כתובת אימייל או אותו מספר טלפון.",
+    "duplicates_none": "לא נמצאו כפילויות אפשריות.",
+    "pick_title": "מיזוג {name} עם…",
+    "pick_search": "חיפוש אנשי קשר",
+    "pick_suggested": "כפילויות אפשריות",
+    "pick_all": "כל אנשי הקשר",
+    "pick_none": "אין אנשי קשר אחרים למיזוג.",
+    "preview_title": "מיזוג אנשי קשר ({count})",
+    "preview_hint": "אנשי הקשר האלה יהפכו לכרטיס אחד עם כל מה שמופיע למטה.",
+    "preview_deleted": "מוזגו ואז נמחקו: {names}",
+    "groups": "קבוצות",
+    "merge": "מיזוג",
+    "merging": "ממזג…",
+    "merged": "אנשי הקשר מוזגו",
+    "merge_failed": "לא ניתן למזג את אנשי הקשר.",
+    "merge_not_possible": "לא ניתן למזג את אנשי הקשר האלה: הם בחשבונות שונים או בפנקס כתובות שאין לכם הרשאה לשנות.",
+    "undo": "ביטול",
+    "undone": "המיזוג בוטל",
+    "undo_failed": "לא ניתן היה לבטל את המיזוג במלואו."
   },
   "find_time": {
     "suggest": "הצע זמנים",
@@ -7147,6 +7346,39 @@
     "app_lock_timeout_hours": "{count, plural, one {שעה אחת} two {שעתיים} other {# שעות}}",
     "desktop_attention_title": "במחשב הזה"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "השם שלכם",
+      "description": "אנשים רואים את השם הזה ליד הכתובת שלכם כשאתם שולחים להם דואר.",
+      "saved": "השם שלכם נשמר.",
+      "error": "לא ניתן היה לשמור את השם שלכם. נסו שוב."
+    },
+    "addresses": {
+      "description": "הכתובות שמהן אפשר לשלוח, לכל אחת שם וחתימה משלה.",
+      "label": "הכתובות שלכם",
+      "count": "{count, plural, =0 {עדיין אין כתובות} one {כתובת אחת} two {# כתובות} other {# כתובות}}",
+      "manage": "עריכת כתובות…",
+      "modal_title": "כתובות הדואר שלכם",
+      "add": "הוספת כתובת",
+      "edit": "עריכת כתובת",
+      "added": "הכתובת נוספה.",
+      "saved": "הכתובת נשמרה.",
+      "deleted": "הכתובת נמחקה.",
+      "delete_title": "למחוק את הכתובת הזו?"
+    },
+    "signatures": {
+      "title": "חתימות",
+      "description": "נוספת בסוף ההודעות שאתם כותבים. לכל כתובת חתימה משלה.",
+      "saved": "החתימה נשמרה.",
+      "error": "לא ניתן היה לשמור את החתימה. נסו שוב.",
+      "no_addresses": "עדיין אין כתובת לשליחה."
+    },
+    "search": {
+      "addresses": "זהות זהויות כינוי שולח כתובת השולח כתובת מאת identity alias sender",
+      "signatures": "חתימה חתימת דואר כותרת תחתונה זהות שולח כתובת מאת signature",
+      "your_name": "שם תצוגה שם מלא שם השולח display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "קודם צריך להזין את כתובת השרת.",
     "server_declined": "לא אישרת את השרת הזה, לכן לא נשלח אליו דבר.",
@@ -7189,10 +7421,12 @@
     "server_looking": "מחפשים את שרת הדואר שלך…",
     "server_found": "שרת דואר: {server}",
     "server_change": "שינוי",
+    "server_change_hint": "הקלידו כתובת של שרת אחר.",
     "server_not_found": "לא מצאנו את שרת הדואר של הכתובת הזו. הזינו אותו כאן, למשל mail.example.com.",
     "server_needed": "הזינו את הכתובת של שרת הדואר שלכם.",
     "server_invalid": "זו לא כתובת של שרת. כתבו אותה כמו mail.example.com.",
     "email_needed": "הזינו קודם את כתובת הדוא״ל שלכם.",
+    "other_ways": "דרכים אחרות להתחבר",
     "trouble": "נתקלתם בבעיה?",
     "trouble_cors": "שרת הדואר שלכם צריך לאפשר כניסה מהאתר הזה. אם הכניסה נכשלת, בקשו ממי שמפעיל את שרת הדואר לאפשר זאת.",
     "provider_unsupported": "{provider} לא מציע JMAP, הדרך שבה Bulwark מדבר עם שרתי דואר, ולכן Bulwark עדיין לא יכול להתחבר אליו ישירות."
@@ -7281,6 +7515,14 @@
     "copied": "הקובץ הועתק. אפשר להדביק אותו בתיקייה.",
     "copy_failed": "לא ניתן להעתיק את הקובץ.",
     "reply_lost": "לא ניתן היה לשמור את התשובה שהקלדת. פתחו את ההודעה והשיבו משם."
+  },
+  "ux_pim_menu": {
+    "search_contacts": "חיפוש אנשי קשר",
+    "search_files": "חיפוש קבצים",
+    "import": "ייבוא",
+    "import_mail": "דואר…",
+    "import_calendar": "לוח שנה…",
+    "import_contacts": "אנשי קשר…"
   },
   "desktopEdit": {
     "edit": "עריכה",
@@ -7437,5 +7679,11 @@
     "send_no_consent": "הפעילו קודם את דוחות הקריסה.",
     "send_no_url": "לא הוגדרה כתובת, ולכן אין לאן לשלוח. הזינו כתובת למעלה.",
     "send_failed": "לא ניתן היה לשלוח את דוח הקריסה."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "מספר ההודעות שלא נקראו על הסמל בשורת המשימות",
+    "unread_badge_description": "כדי לראות דואר חדש בזמן שאתם עובדים באפליקציה אחרת.",
+    "tip_compose_keys": "הקישו {keys} כדי לכתוב הודעה חדשה",
+    "tip_palette_keys": "הקישו {keys} כדי למצוא כל פקודה"
   }
 }

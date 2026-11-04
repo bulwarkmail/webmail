@@ -28,12 +28,24 @@ export const STATUS_LABEL: Record<string, string> = {
   "needs-action": "participants.needs_action",
 };
 
+/**
+ * The statuses in plain words for the participant lists (pim-19): the
+ * standard's "Needs action" reads "Not answered yet". Keys of ux_pim_event.
+ */
+export const PARTICIPANT_STATUS_WORDS: Record<string, string> = {
+  accepted: "status_accepted",
+  declined: "status_declined",
+  tentative: "status_tentative",
+  "needs-action": "status_needs_action",
+  delegated: "status_delegated",
+};
+
 /** A participant's answer, as a short coloured word. */
 export function ParticipantStatusBadge({ status, className }: { status: Status; className?: string }) {
-  const t = useTranslations("calendar");
+  const t = useTranslations("ux_pim_event");
   return (
     <span className={cn("text-xs flex-shrink-0", STATUS_TEXT[status] ?? "", className)}>
-      {t(STATUS_LABEL[status] ?? STATUS_LABEL["needs-action"])}
+      {t(PARTICIPANT_STATUS_WORDS[status] ?? PARTICIPANT_STATUS_WORDS["needs-action"])}
     </span>
   );
 }

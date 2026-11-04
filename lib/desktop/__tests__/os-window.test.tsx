@@ -290,6 +290,15 @@ describe('the summary', () => {
     expect(nextEventOf([event('past', '2026-11-03T09:00:00Z')], now)).toBeNull();
   });
 
+  it('the event\'s time follows the app\'s time format, not the language\'s', async () => {
+    const { formatEventTime } = await import('../os-summary');
+    const at = new Date(2026, 10, 3, 11, 0).getTime();
+    const morning = new Date(2026, 10, 3, 8, 0).getTime();
+    expect(formatEventTime(at, morning, 'en-US', '24h')).toBe('11:00');
+    expect(formatEventTime(at, morning, 'en-US', '12h')).toMatch(/^11:00\sAM$/);
+    expect(formatEventTime(new Date(2026, 10, 3, 9, 5).getTime(), morning, 'en-US', '24h')).toBe('09:05');
+  });
+
   describe('with a login', () => {
     const row = { id: 'e1', threadId: 't1', subject: 'Lunch?', from: [{ name: 'Alice', email: 'a@example.org' }] };
     const getEmails = vi.fn(async () => ({ emails: [row], hasMore: false, total: 1 }));
@@ -420,6 +429,17 @@ describe('the settings section', () => {
     render(<DesktopOsSettings />);
     fireEvent.click(await screen.findByRole('button', { name: 'default_app_button' }));
     await waitFor(() => expect(os.openDefaultAppSettings).toHaveBeenCalled());
+  });
+
+  it('switching "Show the app" on takes a key the composer doesn\'t use', async () => {
+    const { DesktopOsSettings } = await import('@/components/settings/desktop-os-settings');
+    const os = bridgeFor(status());
+    setBridge(os as never);
+    render(<DesktopOsSettings />);
+    expect(await screen.findByText('show_shortcut_label')).toBeInTheDocument();
+    // Close to tray, start with the computer, then this one.
+    fireEvent.click(screen.getAllByRole('switch')[2]);
+    await waitFor(() => expect(os.setSettings).toHaveBeenCalledWith({ showShortcut: 'CommandOrControl+Alt+F11' }));
   });
 
   it('says when another app holds the shortcut', async () => {

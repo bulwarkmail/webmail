@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react';
 import { getDesktopBridge } from './bridge';
 import { describeAccelerator } from './shortcut-keys';
+import { localKeyName } from '@/lib/shortcut-keys';
 
 import { MENU_BAR_STORAGE_KEY } from './boot';
 
@@ -66,14 +67,17 @@ const KEY_NAMES: Record<string, string> = {
   space: 'Space',
 };
 
-/** An Electron accelerator the way a Windows or Linux menu shows it: `Ctrl+Shift+N`, `Alt+←`, `?`. */
-export function menuKeyText(accelerator: string, platform: string | undefined): string {
+/**
+ * An Electron accelerator the way a Windows or Linux menu shows it: `Ctrl+Shift+N`, `Alt+←`, `?`,
+ * in the app's language (`Strg+Umschalt+N`, `Entf` in German). `language` defaults to the app's.
+ */
+export function menuKeyText(accelerator: string, platform: string | undefined, language?: string): string {
   // A key that is itself "+", as in Ctrl++, ends in an empty part.
   const parts = accelerator.split('+');
   const last = parts[parts.length - 1] === '' ? '+' : parts[parts.length - 1];
-  const key = KEY_NAMES[last.toLowerCase()] ?? (last.length === 1 ? last.toUpperCase() : last);
+  const key = localKeyName(KEY_NAMES[last.toLowerCase()] ?? (last.length === 1 ? last.toUpperCase() : last), language);
   const modifiers = parts.slice(0, parts[parts.length - 1] === '' ? -2 : -1);
   if (modifiers.length === 0) return key;
-  const named = describeAccelerator(`${modifiers.join('+')}+X`, platform);
+  const named = describeAccelerator(`${modifiers.join('+')}+X`, platform, language);
   return `${named.slice(0, -1)}${key}`;
 }

@@ -7,16 +7,42 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { parseVCard, detectDuplicates } from "@/lib/vcard";
-import type { ContactCard } from "@/lib/jmap/types";
+import {
+  CSV_TARGET_GROUPS, csvToContacts, decodeCsvBytes, isCsvFile, matchColumns, readCsv,
+  type CsvColumn, type CsvTable, type CsvTarget,
+} from "@/lib/contacts/csv-import";
+import type { AddressBook, ContactCard } from "@/lib/jmap/types";
 import { getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 import { isOfflineNow } from "@/lib/offline/state";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 interface ContactImportDialogProps {
   existingContacts: ContactCard[];
-  onImport: (contacts: ContactCard[]) => Promise<number>;
+  onImport: (contacts: ContactCard[], addressBookId?: string) => Promise<number>;
   onClose: () => void;
   /** A file opened from the OS: read at once, as if picked here. */
   initialFile?: File | null;
+  /** Books the cards can go into; "Import into" shows when there are two or more. */
+  addressBooks?: AddressBook[];
+  /** The book open in Contacts: "Import into" starts there. */
+  defaultAddressBookId?: string;
+}
+
+/** The file's bytes; jsdom's File has no arrayBuffer(). */
+function readBytes(file: File): Promise<Uint8Array> {
+  if (typeof file.arrayBuffer === "function") return file.arrayBuffer().then((b) => new Uint8Array(b));
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(new Uint8Array(reader.result as ArrayBuffer));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+/** "adr.home.street" → "t_street"; "phone.fax.home" → "t_phone_fax_home". */
+function targetKey(target: CsvTarget): string {
+  if (target.startsWith("adr.")) return `t_${target.split(".")[2]}`;
+  return `t_${target.replace(/\./g, "_")}`;
 }
 
 export function ContactImportDialog({
@@ -24,8 +50,12 @@ export function ContactImportDialog({
   onImport,
   onClose,
   initialFile,
+  addressBooks = [],
+  defaultAddressBookId,
 }: ContactImportDialogProps) {
   const t = useTranslations("contacts");
+  const shownName = useCollectionNames();
+  const tCsv = useTranslations("ux_pim_cimport");
   const tLaunch = useTranslations("pwaLaunch");
   const fileRef = useRef<HTMLInputElement>(null);
   const [parsed, setParsed] = useState<ContactCard[]>([]);
@@ -34,6 +64,26 @@ export function ContactImportDialog({
   const [isImporting, setIsImporting] = useState(false);
   const [result, setResult] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // A CSV file waits for its columns to be matched before the preview.
+  const [csv, setCsv] = useState<{ table: CsvTable; fileName: string } | null>(null);
+  const [columns, setColumns] = useState<CsvColumn[]>([]);
+  const [matching, setMatching] = useState(false);
+  const pickBook = () => {
+    if (defaultAddressBookId && addressBooks.some((b) => b.id === defaultAddressBookId)) return defaultAddressBookId;
+    return (addressBooks.find((b) => b.isDefault) ?? addressBooks[0])?.id ?? "";
+  };
+  const [bookId, setBookId] = useState(pickBook);
+
+  const showCards = useCallback((contacts: ContactCard[]) => {
+    const dupes = detectDuplicates(existingContacts, contacts);
+    setParsed(contacts);
+    setDuplicates(dupes);
+    const initialSelected = new Set<number>();
+    contacts.forEach((_, idx) => {
+      if (!dupes.has(idx)) initialSelected.add(idx);
+    });
+    setSelected(initialSelected);
+  }, [existingContacts]);
 
   const readFile = useCallback(async (file: File) => {
     setError(null);
@@ -41,6 +91,23 @@ export function ContactImportDialog({
 
     if (file.size > 5 * 1024 * 1024) {
       setError(t("import.file_too_large"));
+      return;
+    }
+
+    if (isCsvFile(file)) {
+      try {
+        const table = readCsv(decodeCsvBytes(await readBytes(file)));
+        if (table.headers.length === 0 || table.rows.length === 0) {
+          setError(t("import.no_contacts"));
+          return;
+        }
+        setCsv({ table, fileName: file.name });
+        setColumns(matchColumns(table));
+        setMatching(true);
+      } catch (error) {
+        console.error('Failed to read CSV:', error);
+        setError(tCsv("parse_error"));
+      }
       return;
     }
 
@@ -53,20 +120,12 @@ export function ContactImportDialog({
         return;
       }
 
-      const dupes = detectDuplicates(existingContacts, contacts);
-      setParsed(contacts);
-      setDuplicates(dupes);
-
-      const initialSelected = new Set<number>();
-      contacts.forEach((_, idx) => {
-        if (!dupes.has(idx)) initialSelected.add(idx);
-      });
-      setSelected(initialSelected);
+      showCards(contacts);
     } catch (error) {
       console.error('Failed to parse vCard:', error);
       setError(t("import.parse_error"));
     }
-  }, [existingContacts, t]);
+  }, [t, tCsv, showCards]);
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -98,13 +157,44 @@ export function ContactImportDialog({
     setSelected(new Set());
   };
 
+  const setTarget = (index: number, target: CsvTarget) => {
+    setColumns((cols) => cols.map((c) => (c.index === index ? { ...c, target } : c)));
+  };
+
+  const anyColumnMatched = columns.some((c) => c.target !== "skip" && c.target !== "type");
+
+  const continueFromColumns = () => {
+    if (!csv) return;
+    const contacts = csvToContacts(csv.table, columns);
+    if (contacts.length === 0) {
+      setError(t("import.no_contacts"));
+      return;
+    }
+    setError(null);
+    setMatching(false);
+    showCards(contacts);
+  };
+
+  const backToColumns = () => {
+    setParsed([]);
+    setError(null);
+    setMatching(true);
+  };
+
+  const backToFile = () => {
+    setCsv(null);
+    setColumns([]);
+    setMatching(false);
+    setError(null);
+  };
+
   const handleImport = async () => {
     const toImport = parsed.filter((_, i) => selected.has(i));
     if (toImport.length === 0) return;
 
     setIsImporting(true);
     try {
-      const count = await onImport(toImport);
+      const count = await onImport(toImport, addressBooks.length > 0 && bookId ? bookId : undefined);
       setResult(count);
     } catch (error) {
       console.error('Failed to import contacts:', error);
@@ -121,27 +211,51 @@ export function ContactImportDialog({
     </div>
   );
 
+  const groupLabel = (id: string) => tCsv(`group_${id.replace(".", "_")}`);
+  const optionLabel = (groupId: string, target: CsvTarget) => target.startsWith("adr.")
+    ? tCsv("address_field", { group: groupLabel(groupId), part: tCsv(targetKey(target)) })
+    : tCsv(targetKey(target));
+
+  const footer = result !== null ? undefined : matching ? (
+    <>
+      <Button variant="outline" onClick={backToFile} className="me-auto">
+        {tCsv("back")}
+      </Button>
+      <Button variant="outline" onClick={onClose}>
+        {t("form.cancel")}
+      </Button>
+      <Button onClick={continueFromColumns} disabled={!anyColumnMatched}>
+        {tCsv("continue")}
+      </Button>
+    </>
+  ) : parsed.length > 0 ? (
+    <>
+      {csv && (
+        <Button variant="outline" onClick={backToColumns} disabled={isImporting}>
+          {tCsv("back")}
+        </Button>
+      )}
+      <p className="text-sm text-muted-foreground me-auto self-center">
+        {t("import.selected", { count: selected.size })}
+      </p>
+      <Button variant="outline" onClick={onClose} disabled={isImporting}>
+        {t("form.cancel")}
+      </Button>
+      <Button onClick={handleImport} disabled={isImporting || selected.size === 0}>
+        {isImporting ? t("import.importing") : t("import.import_button")}
+      </Button>
+    </>
+  ) : undefined;
+
   return (
     <Dialog
       isOpen
       onClose={onClose}
       title={t("import.title")}
       size="lg"
-      // Picked cards are not thrown away by a stray click outside.
-      dirty={parsed.length > 0 && result === null}
-      footer={parsed.length > 0 && result === null ? (
-        <>
-          <p className="text-sm text-muted-foreground me-auto self-center">
-            {t("import.selected", { count: selected.size })}
-          </p>
-          <Button variant="outline" onClick={onClose} disabled={isImporting}>
-            {t("form.cancel")}
-          </Button>
-          <Button onClick={handleImport} disabled={isImporting || selected.size === 0}>
-            {isImporting ? t("import.importing") : t("import.import_button")}
-          </Button>
-        </>
-      ) : undefined}
+      // Picked cards and matched columns are not thrown away by a stray click outside.
+      dirty={(parsed.length > 0 || matching) && result === null}
+      footer={footer}
     >
       <div className="space-y-4 pt-4">
         {result !== null ? (
@@ -154,12 +268,59 @@ export function ContactImportDialog({
               {t("import.close")}
             </Button>
           </div>
+        ) : matching && csv ? (
+          <>
+            {errorBanner}
+            <div>
+              <h3 className="text-sm font-medium">{tCsv("columns_title")}</h3>
+              <p className="text-sm text-muted-foreground mt-1">{tCsv("columns_hint", { file: csv.fileName })}</p>
+            </div>
+            <div className="border rounded-md max-h-96 overflow-y-auto" data-testid="csv-columns">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-background">
+                  <tr className="border-b text-start text-xs text-muted-foreground">
+                    <th scope="col" className="px-3 py-2 font-medium text-start">{tCsv("column")}</th>
+                    <th scope="col" className="px-3 py-2 font-medium text-start">{tCsv("sample")}</th>
+                    <th scope="col" className="px-3 py-2 font-medium text-start">{tCsv("field")}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {columns.map((col) => (
+                    <tr key={col.index} className={cn(col.target === "skip" && "text-muted-foreground")}>
+                      <th scope="row" className="px-3 py-1.5 font-normal text-start max-w-[12rem] truncate" title={col.header}>
+                        {col.header || "-"}
+                      </th>
+                      <td className="px-3 py-1.5 max-w-[12rem] truncate" title={col.sample}>{col.sample}</td>
+                      <td className="px-3 py-1.5">
+                        <select
+                          aria-label={col.header}
+                          value={col.target}
+                          onChange={(e) => setTarget(col.index, e.target.value as CsvTarget)}
+                          className="w-full text-sm bg-transparent border border-input rounded-md px-2 py-1 text-foreground focus:outline-hidden hover:border-muted-foreground/50 transition-colors"
+                        >
+                          <option value="skip">{tCsv("skip")}</option>
+                          {CSV_TARGET_GROUPS.map((group) => (
+                            <optgroup key={group.id} label={groupLabel(group.id)}>
+                              {group.targets.map((target) => (
+                                <option key={target} value={target}>{optionLabel(group.id, target)}</option>
+                              ))}
+                            </optgroup>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {!anyColumnMatched && <p className="text-sm text-muted-foreground">{tCsv("no_columns")}</p>}
+          </>
         ) : parsed.length === 0 ? (
           <>
             <input
               ref={fileRef}
               type="file"
-              accept=".vcf,.vcard"
+              accept=".vcf,.vcard,.csv,text/csv"
               onChange={handleFileChange}
               className="hidden"
             />
@@ -175,8 +336,8 @@ export function ContactImportDialog({
               )}
             >
               <Upload className="w-8 h-8" />
-              <p className="text-sm font-medium">{t("import.drop_hint")}</p>
-              <p className="text-xs">{t("import.file_types")}</p>
+              <p className="text-sm font-medium">{tCsv("file_hint")}</p>
+              <p className="text-xs">{tCsv("file_types")}</p>
             </button>
 
             {errorBanner}
@@ -184,6 +345,23 @@ export function ContactImportDialog({
         ) : (
           <>
             {errorBanner}
+
+            {addressBooks.length > 1 && (
+              <label className="flex items-center gap-3 text-sm">
+                <span className="font-medium shrink-0">{tCsv("import_into")}</span>
+                <select
+                  value={bookId}
+                  onChange={(e) => setBookId(e.target.value)}
+                  className="flex-1 min-w-0 text-sm bg-transparent border border-input rounded-md px-2.5 py-1.5 text-foreground focus:outline-hidden hover:border-muted-foreground/50 transition-colors"
+                >
+                  {addressBooks.map((book) => (
+                    <option key={book.id} value={book.id}>
+                      {book.isShared && book.accountName ? `${shownName.addressBook(book)} (${book.accountName})` : shownName.addressBook(book)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
 
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">

@@ -232,6 +232,8 @@ describe('full screen', () => {
     expect(root).toHaveAttribute('data-maximized');
     expect(root.className).toMatch(/(^|\s)fixed(\s|$)/);
     expect(root.className).toContain('inset-0');
+    // The folder sidebar sits at z-50 (compose-p2-5): at 40 it covered the composer's left part.
+    expect(root.className).toMatch(/(^|\s)z-50(\s|$)/);
 
     fireEvent.click(screen.getByRole('button', { name: 'restore' }));
     expect(root).not.toHaveAttribute('data-maximized');

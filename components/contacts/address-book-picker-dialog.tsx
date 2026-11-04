@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import type { AddressBook } from "@/lib/jmap/types";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 interface AddressBookPickerDialogProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ interface AddressBookPickerDialogProps {
 
 /** "Move to…" for contacts: pick the address book they go to. */
 export function AddressBookPickerDialog({ isOpen, onClose, addressBooks, currentId, count, onPick }: AddressBookPickerDialogProps) {
+  const shownName = useCollectionNames();
   const t = useTranslations("contacts");
   const [selected, setSelected] = useState<string | null>(null);
   const choice = addressBooks.find((b) => b.id === selected && b.id !== currentId) ?? null;
@@ -64,7 +66,7 @@ export function AddressBookPickerDialog({ isOpen, onClose, addressBooks, current
               )}
             >
               <Book className="w-4 h-4 shrink-0 text-muted-foreground" />
-              <span className="truncate flex-1" title={book.name}>{book.name}</span>
+              <span className="truncate flex-1" title={shownName.addressBook(book)}>{shownName.addressBook(book)}</span>
               {book.isShared && book.accountName && (
                 <span className="text-xs text-muted-foreground truncate max-w-[40%]" title={book.accountName}>{book.accountName}</span>
               )}

@@ -174,6 +174,7 @@
     },
     "clear_search": "Ryd søgning",
     "vacation_active": "Fraværsbeskeder er aktive",
+    "vacation_turn_off": "Slå fra",
     "demo_banner": "Demo-tilstand",
     "demo_reset": "Nulstil",
     "demo_tour": "Rundvisning",
@@ -245,7 +246,6 @@
     "select_account_title": "Vælg konto",
     "select_mailto_account": "Vælg hvilken konto der skal åbne dette e-mail-link.",
     "select_webcal_account": "Vælg hvilken konto der skal åbne dette kalenderlink.",
-    "select_account_note": "Dette gælder kun for dette protokollink.",
     "detail_to": "Til",
     "detail_subject": "Emne",
     "detail_no_subject": "Intet emne",
@@ -1068,7 +1068,7 @@
     "recipients_partly_refused": "Serveren afviste {recipients}. De øvrige modtagere får beskeden.",
     "send_offline": "Du ser ud til at være offline. Beskeden er her stadig, send den igen, når du er online.",
     "formatting": "Formatering",
-    "send_recipients_rejected": "Ikke sendt - serveren afviste alle modtagere.",
+    "send_recipients_rejected": "Ikke sendt: serveren afviste alle modtagere.",
     "send_plugin_failed": "Ikke sendt - et plugin, der står for afsendelsen, fejlede eller tog for lang tid. Tjek mappen Sendt, før du sender igen.",
     "send_some_recipients_rejected": "Sendt, men ikke til disse modtagere - serveren afviste dem.",
     "continue_draft": "Fortsæt kladde",
@@ -1112,7 +1112,7 @@
     },
     "link_url_prompt": "Indtast URL'en",
     "schedule_send": "Planlæg afsendelse",
-    "schedule_send_description": "Vælg hvornår serveren skal frigive denne besked.",
+    "schedule_send_description": "Vælg hvornår den skal sendes.",
     "schedule_preset": {
       "this_morning": "I dag formiddag",
       "this_afternoon": "I eftermiddag",
@@ -1163,6 +1163,7 @@
       "edit_link": "Rediger link",
       "remove_link": "Fjern link",
       "link_address": "Linkadresse",
+      "link_text": "Tekst",
       "link_invalid": "Adressen må ikke indeholde mellemrum",
       "table": "Tabel",
       "clear_formatting": "Ryd formatering",
@@ -1393,6 +1394,8 @@
     "from_description": "Lad feltet være tomt for at starte med det samme.",
     "until_label": "Til (valgfrit)",
     "until_description": "Lad feltet være tomt for at blive ved med at svare, til du slår det fra.",
+    "from_placeholder": "Med det samme",
+    "until_placeholder": "Indtil du slår det fra",
     "audience_all": "Alle",
     "audience_internal": "Kun min organisation ({domains})",
     "audience_external": "Kun folk uden for min organisation",
@@ -2909,6 +2912,7 @@
       "open_sieve_editor": "Åbn raw Sieve-editor",
       "fetch_error": "Kunne ikke indlæse filtre",
       "expanded_view": "Udvidet visning",
+      "show_rule_details": "Vis hver regels betingelser og handlinger",
       "expanded_view_description": "Vis filterregler med detaljerede betingelses- og handlingsblokke",
       "if": "Hvis",
       "then": "Så",
@@ -2987,6 +2991,9 @@
       "validation_period_empty": "Angiv en start- eller slutdato for perioden",
       "validation_period_invalid": "Angiv en gyldig dato med klokkeslæt for perioden, eller lad feltet stå tomt",
       "apply_existing_period": "En regel med en periode virker kun på beskeder, der ankommer i perioden, og kan derfor ikke køres på eksisterende beskeder.",
+      "apply_existing_in": "Anvend også på beskederne, der allerede er i {folder}",
+      "apply_existing_count": "{count, plural, one {Anvend også på den # besked, der allerede er i {folder}} other {Anvend også på de # beskeder, der allerede er i {folder}}}",
+      "apply_existing_none": "Ingen beskeder i {folder} passer til reglen endnu.",
       "period_status_scheduled": "planlagt",
       "period_status_active": "aktiv",
       "period_status_expired": "udløbet"
@@ -3496,6 +3503,48 @@
     },
     "sign_out": {
       "description": "Log ud af denne konto på denne enhed."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "systembakke meddelelsesområde baggrund minimer til bakke tray",
+      "autostart": "autostart opstart start med Windows ved login",
+      "default_app": "standardmailapp standard e-mailprogram mailto mail-links",
+      "menu_bar": "menulinje menuer Alt-tast Filer Rediger Vis",
+      "updates": "opdateringer opdatering ny version beta kanal",
+      "devtools": "udviklerværktøjer devtools konsol inspicer F12 fejlfinding",
+      "taskbar": "proceslinje blink Dock opmærksomhed",
+      "quiet_hours": "stille timer forstyr ikke lydløs nat",
+      "telemetry": "brugsdata telemetri statistik analyse",
+      "crash": "nedbrudsrapporter fejlrapporter nedbrud",
+      "threads": "tråde samtaler samtalevisning threads",
+      "block_images": "bloker billeder eksterne billeder indlæs billeder",
+      "dark_mode": "mørk tilstand lys tilstand nattilstand dark mode",
+      "timezone": "tidszone timezone",
+      "reading_pane": "læserude eksempelrude opdelt visning",
+      "week_start": "ugestart første ugedag mandag søndag",
+      "empty_trash": "tøm papirkurven papirkurv slettede elementer",
+      "do_not_disturb": "stille timer lydløs stilhed"
+    },
+    "desktop_notifications": {
+      "title": "På denne computer",
+      "closed_label": "Når vinduet er lukket",
+      "closed_description": "{appName} giver besked om ny mail, så længe den kører. Slå det til under {page}, hvis den skal køre videre i systembakken, når du lukker vinduet."
+    },
+    "push_unsupported": "Denne browser kan ikke vise notifikationer, når websiden er lukket.",
+    "backup_description_app": "Brug de samme indstillinger på dine andre enheder.",
+    "sender_favicons": {
+      "label": "Billeder fra virksomheders websteder",
+      "description": "Vis hjemmesideikoner som profilbilleder for forretningsafsendere"
+    },
+    "privacy_push": {
+      "label": "Relæ til notifikationer",
+      "description": "Notifikationer mens {appName} er lukket går gennem et push-relæ, som aldrig ser din mail. Du slår dem til og fra på siden {page}."
+    },
+    "reset": {
+      "message": "Sæt alle indstillinger tilbage til, hvordan de var fra start. Din mail, dine filtre, dit autosvar og dine signaturer forbliver, som de er.",
+      "sync_on": "Dine andre enheder bruger de samme indstillinger, så de ændres også.",
+      "sync_off": "Dine andre enheder beholder deres indstillinger."
     }
   },
   "setup": {
@@ -4057,6 +4106,9 @@
     "sending": "Sender…",
     "sent": "Sendt",
     "view": "Vis",
+    "template_saved": "Skabelon gemt",
+    "schedule_anyway": "Planlæg alligevel",
+    "schedule_warnings_title": "Planlæg denne besked alligevel?",
     "picker_button": "Tilføj fra kontakter",
     "picker_title": "Tilføj modtagere",
     "tab_contacts": "Kontakter",
@@ -4522,6 +4574,13 @@
     },
     "open_categories": "Åbn kategorier",
     "row_actions": "Handlinger for {name}"
+  },
+  "ux_pim_contact": {
+    "context_private": "Hjem",
+    "phone_voice": "Telefon",
+    "more_fields": "Flere felter",
+    "import_menu": "Importér kontakter…",
+    "new_address_book_menu": "Ny adressebog…"
   },
   "uxs_wording": {
     "more_options": "Flere indstillinger",
@@ -5130,8 +5189,46 @@
     "mini_has_events": "har begivenheder",
     "mini_week_number": "Uge {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Opgavelister",
+    "task_status_not_started": "Ikke startet",
+    "task_status_in_progress": "I gang",
+    "quick_task_due": "Forfalder {date}",
+    "quick_task_due_remove": "Behold “{words}” i titlen",
+    "rename_calendar": "Omdøb…",
+    "rename_title": "Omdøb kalender",
+    "rename_confirm": "Omdøb",
+    "rename_empty": "Skriv et navn.",
+    "edit_calendar": "Redigér…",
+    "default_alerts_open": "Standardpåmindelser…",
+    "share_open": "Del…",
+    "clear_all_events": "Ryd alle begivenheder…",
+    "delete_calendar": "Slet…",
+    "caldav_title": "Adresse til andre apps (CalDAV)",
+    "caldav_hint": "Tilføj denne adresse i Thunderbird, Apple Kalender eller DAVx⁵ for at synkronisere dine kalendere.",
+    "caldav_shared_by": "Delt af {name}:",
+    "freebusy_description": "Dem, du deler med, ser, hvornår du er optaget, ikke hvad dine begivenheder er. Foreslå tidspunkter bruger det."
+  },
   "calendar_offline": {
     "split_needs_server": "Denne ændring kræver forbindelse til serveren. Ret kun denne begivenhed for nu, eller prøv igen, når du er online."
+  },
+  "ux_pim_event": {
+    "time_zone": "Tidszone",
+    "time_zone_line": "Tidszone: {zone}",
+    "your_time": "{times} din tid",
+    "zone_times": "{times} {zone} ({local} din tid)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Accepteret",
+    "status_declined": "Afslået",
+    "status_tentative": "Måske",
+    "status_needs_action": "Ikke besvaret endnu",
+    "status_delegated": "Videregivet",
+    "answered_accepted": "Du accepterede {date}.",
+    "answered_declined": "Du afslog {date}.",
+    "answered_tentative": "Du svarede måske {date}.",
+    "answered_accepted_nodate": "Du accepterede.",
+    "answered_declined_nodate": "Du afslog.",
+    "answered_tentative_nodate": "Du svarede måske."
   },
   "calendar_event_notifications": {
     "someone": "Nogen",
@@ -5142,6 +5239,11 @@
   },
   "company_calendars": {
     "section": "Organisation"
+  },
+  "ux_pim_grid": {
+    "search_short": "Søg",
+    "reply": "Svar",
+    "reply_to_invitation": "Svar på invitationen"
   },
   "vacation_calendar": {
     "label": "Bloker min kalender",
@@ -5164,6 +5266,88 @@
     "group_label": "Gruppe",
     "title": "Ledig/optaget",
     "description": "Kolleger i gruppen ser, hvornår du er optaget, ikke hvad dine begivenheder er. Foreslå tidspunkter bruger det."
+  },
+  "ux_pim_cimport": {
+    "file_hint": "Klik for at vælge en vCard- eller CSV-fil",
+    "file_types": ".vcf- eller .csv-filer, for eksempel fra Outlook eller Google Kontakter",
+    "parse_error": "Filen kunne ikke læses",
+    "columns_title": "Tilknyt kolonnerne",
+    "columns_hint": "Vælg, hvor hver kolonne i {file} skal hen. Kolonner med “Importér ikke” springes over.",
+    "column": "Kolonne",
+    "sample": "Eksempel",
+    "field": "Kontaktfelt",
+    "skip": "Importér ikke",
+    "no_columns": "Vælg et felt til mindst én kolonne.",
+    "continue": "Fortsæt",
+    "back": "Tilbage",
+    "import_into": "Importér til",
+    "group_name": "Navn",
+    "group_email": "E-mail",
+    "group_phone": "Telefon",
+    "group_org": "Organisation",
+    "group_adr_any": "Adresse",
+    "group_adr_home": "Privatadresse",
+    "group_adr_work": "Arbejdsadresse",
+    "group_adr_other": "Anden adresse",
+    "group_more": "Mere",
+    "address_field": "{group}: {part}",
+    "t_name_full": "Fulde navn",
+    "t_name_given": "Fornavn",
+    "t_name_middle": "Mellemnavn",
+    "t_name_surname": "Efternavn",
+    "t_name_prefix": "Titel (dr., fru)",
+    "t_name_suffix": "Suffiks (jr.)",
+    "t_nickname": "Kaldenavn",
+    "t_email": "E-mail",
+    "t_email_home": "E-mail (privat)",
+    "t_email_work": "E-mail (arbejde)",
+    "t_phone": "Telefon",
+    "t_phone_mobile": "Mobil",
+    "t_phone_home": "Telefon (privat)",
+    "t_phone_work": "Telefon (arbejde)",
+    "t_phone_fax": "Fax",
+    "t_phone_fax_home": "Fax (privat)",
+    "t_phone_fax_work": "Fax (arbejde)",
+    "t_phone_pager": "Personsøger",
+    "t_org_name": "Firma",
+    "t_org_unit": "Afdeling",
+    "t_org_title": "Stilling",
+    "t_street": "Gade",
+    "t_pobox": "Postboks",
+    "t_locality": "By",
+    "t_region": "Delstat eller region",
+    "t_postcode": "Postnummer",
+    "t_country": "Land",
+    "t_web": "Websted",
+    "t_birthday": "Fødselsdag",
+    "t_anniversary": "Mærkedag",
+    "t_notes": "Noter",
+    "t_categories": "Kategorier",
+    "t_type": "Værdiens type (Privat, Arbejde…)",
+    "merge_with": "Flet med…",
+    "merge_selected": "Flet…",
+    "find_duplicates": "Find dubletter",
+    "possible_duplicates": "Mulige dubletter ({count})",
+    "duplicates_title": "Mulige dubletter",
+    "duplicates_hint": "Kontakter med samme navn, e-mailadresse eller telefonnummer.",
+    "duplicates_none": "Ingen mulige dubletter fundet.",
+    "pick_title": "Flet {name} med…",
+    "pick_search": "Søg i kontakter",
+    "pick_suggested": "Mulige dubletter",
+    "pick_all": "Alle kontakter",
+    "pick_none": "Ingen andre kontakter at flette med.",
+    "preview_title": "Flet kontakter ({count})",
+    "preview_hint": "Disse kontakter bliver til ét kort med alt herunder.",
+    "preview_deleted": "Overtaget og derefter slettet: {names}",
+    "groups": "Grupper",
+    "merge": "Flet",
+    "merging": "Fletter…",
+    "merged": "Kontakter flettet",
+    "merge_failed": "Kontakterne kunne ikke flettes.",
+    "merge_not_possible": "Disse kontakter kan ikke flettes: De er i forskellige konti eller i en adressebog, du ikke må ændre.",
+    "undo": "Fortryd",
+    "undone": "Fletning fortrudt",
+    "undo_failed": "Fletningen kunne ikke fortrydes helt."
   },
   "find_time": {
     "suggest": "Foreslå tidspunkter",
@@ -5584,6 +5768,21 @@
     "previous_file": "Forrige fil",
     "next_file": "Næste fil",
     "loading": "Indlæser…"
+  },
+  "ux_pim_files": {
+    "conflict_title": "{name} findes allerede.",
+    "conflict_file_hint": "Erstat lægger det nye indhold i den eksisterende fil, så dens delinger bliver. Behold begge tilføjer en kopi med et nummer.",
+    "conflict_folder_hint": "Erstat lægger filerne i den eksisterende mappe og erstatter filer med samme navn. Behold begge opretter en ekstra mappe med et nummer.",
+    "replace": "Erstat",
+    "keep_both": "Behold begge",
+    "skip": "Spring over",
+    "apply_to_all": "{count, plural, one {Gør det samme for konflikten} other {Gør det samme for alle # konflikter}}",
+    "no_preview": "Der er ingen forhåndsvisning af denne filtype.",
+    "open_in_app": "Åbn i standardprogram",
+    "shared_with": "{name} er nu delt med {person}.",
+    "send_message": "Send en besked",
+    "share_mail_subject": "Jeg har delt {name} med dig",
+    "share_mail_body": "Hej\n\nJeg har delt \"{name}\" med dig. Du kan åbne den her:\n{link}"
   },
   "smime": {
     "your_certificates": "Dine certifikater",
@@ -7146,6 +7345,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# time} other {# timer}}",
     "desktop_attention_title": "På denne computer"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Dit navn",
+      "description": "Folk ser dette navn ved siden af din adresse, når du sender dem mail.",
+      "saved": "Dit navn er gemt.",
+      "error": "Dit navn kunne ikke gemmes. Prøv igen."
+    },
+    "addresses": {
+      "description": "De adresser, du kan sende fra, hver med sit eget navn og sin egen signatur.",
+      "label": "Dine adresser",
+      "count": "{count, plural, =0 {Ingen adresser endnu} one {# adresse} other {# adresser}}",
+      "manage": "Rediger adresser…",
+      "modal_title": "Dine e-mailadresser",
+      "add": "Tilføj adresse",
+      "edit": "Rediger adresse",
+      "added": "Adressen er tilføjet.",
+      "saved": "Adressen er gemt.",
+      "deleted": "Adressen er slettet.",
+      "delete_title": "Slet denne adresse?"
+    },
+    "signatures": {
+      "title": "Signaturer",
+      "description": "Tilføjes i slutningen af de beskeder, du skriver. Hver adresse har sin egen.",
+      "saved": "Signaturen er gemt.",
+      "error": "Signaturen kunne ikke gemmes. Prøv igen.",
+      "no_addresses": "Der er endnu ingen adresse at sende fra."
+    },
+    "search": {
+      "addresses": "identitet identiteter alias afsender afsenderadresse fra-adresse identity alias sender",
+      "signatures": "signatur e-mailsignatur sidefod identitet afsender fra-adresse signature",
+      "your_name": "visningsnavn fulde navn afsendernavn display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Angiv først serverens adresse.",
     "server_declined": "Du tillod ikke denne server, så der blev ikke sendt noget til den.",
@@ -7188,10 +7420,12 @@
     "server_looking": "Leder efter din mailserver…",
     "server_found": "Mailserver: {server}",
     "server_change": "Skift",
+    "server_change_hint": "Skriv en anden serveradresse.",
     "server_not_found": "Vi kunne ikke finde mailserveren til denne adresse. Skriv den her, for eksempel mail.example.com.",
     "server_needed": "Skriv adressen på din mailserver.",
     "server_invalid": "Det er ikke en serveradresse. Skriv den som mail.example.com.",
     "email_needed": "Skriv først din e-mailadresse.",
+    "other_ways": "Andre måder at logge ind på",
     "trouble": "Problemer?",
     "trouble_cors": "Din mailserver skal tillade login fra dette websted. Hvis login mislykkes, så bed den, der driver din mailserver, om at tillade det.",
     "provider_unsupported": "{provider} tilbyder ikke JMAP, den måde Bulwark taler med mailservere på, så Bulwark kan endnu ikke forbinde direkte til det."
@@ -7280,6 +7514,14 @@
     "copied": "Filen er kopieret. Du kan indsætte den i en mappe.",
     "copy_failed": "Filen kunne ikke kopieres.",
     "reply_lost": "Dit skrevne svar kunne ikke gemmes. Åbn beskeden, og svar der."
+  },
+  "ux_pim_menu": {
+    "search_contacts": "Søg i kontakter",
+    "search_files": "Søg i filer",
+    "import": "Importér",
+    "import_mail": "Mail…",
+    "import_calendar": "Kalender…",
+    "import_contacts": "Kontakter…"
   },
   "desktopEdit": {
     "edit": "Rediger",
@@ -7436,5 +7678,11 @@
     "send_no_consent": "Slå først nedbrudsrapporter til.",
     "send_no_url": "Der er ikke angivet en adresse, så den kan ikke sendes nogen steder. Skriv en ovenfor.",
     "send_failed": "Nedbrudsrapporten kunne ikke sendes."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Antal ulæste på ikonet på proceslinjen",
+    "unread_badge_description": "Så du ser ny mail, mens du arbejder i en anden app.",
+    "tip_compose_keys": "Tryk på {keys} for at skrive en ny besked",
+    "tip_palette_keys": "Tryk på {keys} for at finde en kommando"
   }
 }

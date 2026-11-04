@@ -5,15 +5,12 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
 import type { DesktopOsDefaultAppStatus, DesktopOsSettings as Settings, DesktopOsStatus } from "@/lib/desktop/types";
+import { describeAccelerator, showShortcutDefault } from "@/lib/desktop/shortcut-keys";
 import { DesktopQuickComposeSetting } from "./desktop-quick-compose-setting";
 import { SettingItem, SettingsSection, ToggleSwitch } from "./settings-section";
-
-/** On Windows and Linux this is what a press of the keys shows; macOS maps it to Cmd. */
-const SHOW_SHORTCUT = "CommandOrControl+Shift+B";
-
-function shortcutLabel(platform: string | undefined): string {
-  return platform === "darwin" ? "⇧⌘B" : "Ctrl+Shift+B";
-}
+import { goToSettings, SettingsLinkRow } from "./privacy-settings";
+import { productName } from "@/lib/product-name";
+import { useConfig } from "@/hooks/use-config";
 
 /**
  * The desktop app's own settings: only where there's an app to set. A browser never sees
@@ -23,6 +20,9 @@ function shortcutLabel(platform: string | undefined): string {
  */
 export function DesktopOsSettings({ part = "app" }: { part?: "app" | "notifications" } = {}) {
   const t = useTranslations("desktopOs");
+  const tP2 = useTranslations("uxp2_settings.desktop_notifications");
+  const tTabs = useTranslations("settings.tabs");
+  const appName = productName(useConfig().appName);
   const [status, setStatus] = useState<DesktopOsStatus | null>(null);
   const [defaultApp, setDefaultApp] = useState<DesktopOsDefaultAppStatus | null>(null);
   const bridge = getDesktopBridge();
@@ -46,13 +46,22 @@ export function DesktopOsSettings({ part = "app" }: { part?: "app" | "notificati
 
   if (!os || !status) return null;
   const { settings } = status;
+  const platform = bridge?.platform;
+  const showKeys = describeAccelerator(settings.showShortcut ?? showShortcutDefault(platform), platform);
   const change = (patch: Partial<Settings>) => {
     void os.setSettings(patch).then(setStatus);
   };
 
   if (part === "notifications") {
     return (
-      <SettingsSection id="desktop-notifications" title={t("section_title")}>
+      <SettingsSection id="desktop-notifications" title={tP2("title")}>
+        {/* The app tells about new mail as long as it runs; a browser's push section has nothing to add (settings-p2-4). */}
+        <SettingsLinkRow
+          label={tP2("closed_label")}
+          description={tP2("closed_description", { appName, page: tTabs("general") })}
+          button={tTabs("general")}
+          onClick={() => goToSettings("general", "desktop-app")}
+        />
         <SettingItem
           label={bridge?.platform === "darwin" ? t("attention_mac_label") : t("attention_label")}
           description={t("attention_description")}
@@ -103,12 +112,12 @@ export function DesktopOsSettings({ part = "app" }: { part?: "app" | "notificati
       <SettingItem
         label={t("show_shortcut_label")}
         description={settings.showShortcut && !status.shortcutActive
-          ? t("show_shortcut_taken", { keys: shortcutLabel(bridge?.platform) })
-          : t("show_shortcut_description", { keys: shortcutLabel(bridge?.platform) })}
+          ? t("show_shortcut_taken", { keys: showKeys })
+          : t("show_shortcut_description", { keys: showKeys })}
       >
         <ToggleSwitch
           checked={!!settings.showShortcut}
-          onChange={(on) => change({ showShortcut: on ? SHOW_SHORTCUT : null })}
+          onChange={(on) => change({ showShortcut: on ? showShortcutDefault(platform) : null })}
         />
       </SettingItem>
       {status.quickCompose && (

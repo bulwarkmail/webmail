@@ -174,6 +174,7 @@
     },
     "clear_search": "検索をクリア",
     "vacation_active": "不在応答が有効です",
+    "vacation_turn_off": "オフにする",
     "demo_banner": "デモモード",
     "demo_reset": "リセット",
     "demo_tour": "ツアー",
@@ -245,7 +246,6 @@
     "select_account_title": "アカウントを選択",
     "select_mailto_account": "このメールリンクを開くアカウントを選択してください。",
     "select_webcal_account": "このカレンダーリンクを開くアカウントを選択してください。",
-    "select_account_note": "この選択は、このプロトコル リンクにのみ適用されます。",
     "detail_to": "宛先",
     "detail_subject": "件名",
     "detail_no_subject": "件名なし",
@@ -1112,7 +1112,7 @@
     "link_url_prompt": "URLを入力してください",
     "sending": "送信中...",
     "schedule_send": "送信を予約",
-    "schedule_send_description": "サーバーがこのメッセージを送信する日時を選択します。",
+    "schedule_send_description": "送信する日時を選んでください。",
     "schedule_preset": {
       "this_morning": "今朝",
       "this_afternoon": "今日の午後",
@@ -1163,6 +1163,7 @@
       "edit_link": "リンクを編集",
       "remove_link": "リンクを解除",
       "link_address": "リンク先のアドレス",
+      "link_text": "テキスト",
       "link_invalid": "アドレスに空白は使えません",
       "table": "表",
       "clear_formatting": "書式をクリア",
@@ -1393,6 +1394,8 @@
     "from_description": "空欄にするとすぐに始まります。",
     "until_label": "終了（任意）",
     "until_description": "空欄にすると、オフにするまで返信を続けます。",
+    "from_placeholder": "今すぐ",
+    "until_placeholder": "オフにするまで",
     "audience_all": "全員",
     "audience_internal": "自分の組織のみ（{domains}）",
     "audience_external": "組織外の人のみ",
@@ -2906,6 +2909,7 @@
       "open_sieve_editor": "Sieveスクリプトエディタを開く",
       "fetch_error": "フィルターの読み込みに失敗しました",
       "expanded_view": "詳細表示",
+      "show_rule_details": "各ルールの条件と動作を表示",
       "expanded_view_description": "フィルタールールを条件とアクションのブロックで表示",
       "if": "条件",
       "then": "実行",
@@ -2984,6 +2988,9 @@
       "validation_period_empty": "期間の開始日または終了日を入力してください",
       "validation_period_invalid": "期間には時刻付きの有効な日付を入力するか、欄を空のままにしてください",
       "apply_existing_period": "期間付きのルールは期間内に届いたメッセージにのみ適用されるため、既存のメッセージには適用できません。",
+      "apply_existing_in": "{folder} にあるメッセージにも適用する",
+      "apply_existing_count": "{count, plural, other {{folder} にある # 件にも適用する}}",
+      "apply_existing_none": "{folder} にこのルールに合うメッセージはまだありません。",
       "period_status_scheduled": "予定",
       "period_status_active": "有効",
       "period_status_expired": "期限切れ"
@@ -3496,6 +3503,48 @@
     },
     "sign_out": {
       "description": "このデバイスでこのアカウントからサインアウトします。"
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "トレイ システムトレイ 通知領域 バックグラウンド 最小化 tray",
+      "autostart": "自動起動 スタートアップ Windows と一緒に起動 サインイン時に起動",
+      "default_app": "既定のメールアプリ 既定のメールプログラム mailto メールリンク",
+      "menu_bar": "メニューバー メニュー Alt キー ファイル 編集 表示",
+      "updates": "アップデート 更新 新しいバージョン ベータ チャンネル",
+      "devtools": "開発者ツール devtools コンソール 検証 F12 デバッグ",
+      "taskbar": "タスクバー 点滅 Dock 注意",
+      "quiet_hours": "おやすみ時間 通知停止 サイレント ミュート 夜間",
+      "telemetry": "使用状況 テレメトリ 統計 分析",
+      "crash": "クラッシュレポート エラーレポート クラッシュ",
+      "threads": "スレッド 会話 グループ化 threads",
+      "block_images": "画像をブロック 外部画像 画像の読み込み",
+      "dark_mode": "ダークモード ライトモード 夜間モード dark mode",
+      "timezone": "タイムゾーン 時間帯 timezone",
+      "reading_pane": "閲覧ウィンドウ プレビューウィンドウ 分割表示",
+      "week_start": "週の始まり 週の最初の日 月曜日 日曜日",
+      "empty_trash": "ごみ箱を空にする ごみ箱 削除済み",
+      "do_not_disturb": "おやすみ時間 ミュート 消音"
+    },
+    "desktop_notifications": {
+      "title": "このコンピューター",
+      "closed_label": "ウィンドウを閉じたとき",
+      "closed_description": "{appName} は動いている間、新着メールをお知らせします。ウィンドウを閉じた後もトレイで動かし続けるには、{page} でオンにしてください。"
+    },
+    "push_unsupported": "このブラウザでは、サイトを閉じていると通知を表示できません。",
+    "backup_description_app": "ほかのデバイスでも同じ設定を使います。",
+    "sender_favicons": {
+      "label": "会社のウェブサイトの画像",
+      "description": "ビジネス送信者のプロフィール画像としてウェブサイトアイコンを表示"
+    },
+    "privacy_push": {
+      "label": "通知のリレー",
+      "description": "{appName} を閉じているときの通知はプッシュリレーを通りますが、リレーがメールを見ることはありません。オン・オフは {page} ページで切り替えます。"
+    },
+    "reset": {
+      "message": "すべての設定を最初の状態に戻します。メール、フィルター、自動返信、署名はそのまま残ります。",
+      "sync_on": "ほかのデバイスも同じ設定を使っているため、そちらも変わります。",
+      "sync_off": "ほかのデバイスの設定はそのままです。"
     }
   },
   "setup": {
@@ -4057,6 +4106,9 @@
     "sending": "送信中…",
     "sent": "送信しました",
     "view": "表示",
+    "template_saved": "テンプレートを保存しました",
+    "schedule_anyway": "そのまま予約",
+    "schedule_warnings_title": "このメッセージをそのまま予約しますか？",
     "picker_button": "連絡先から追加",
     "picker_title": "宛先を追加",
     "tab_contacts": "連絡先",
@@ -4522,6 +4574,13 @@
     },
     "open_categories": "カテゴリを開く",
     "row_actions": "{name} の操作"
+  },
+  "ux_pim_contact": {
+    "context_private": "自宅",
+    "phone_voice": "電話",
+    "more_fields": "その他の項目",
+    "import_menu": "連絡先をインポート…",
+    "new_address_book_menu": "新しいアドレス帳…"
   },
   "uxs_wording": {
     "more_options": "その他のオプション",
@@ -5130,8 +5189,46 @@
     "mini_has_events": "イベントあり",
     "mini_week_number": "第{week}週"
   },
+  "ux_pim_calendar": {
+    "task_lists": "タスクリスト",
+    "task_status_not_started": "未着手",
+    "task_status_in_progress": "進行中",
+    "quick_task_due": "期限 {date}",
+    "quick_task_due_remove": "「{words}」をタイトルに残す",
+    "rename_calendar": "名前を変更…",
+    "rename_title": "カレンダーの名前を変更",
+    "rename_confirm": "名前を変更",
+    "rename_empty": "名前を入力してください。",
+    "edit_calendar": "編集…",
+    "default_alerts_open": "デフォルトのリマインダー…",
+    "share_open": "共有…",
+    "clear_all_events": "すべての予定を消去…",
+    "delete_calendar": "削除…",
+    "caldav_title": "他のアプリ用のアドレス (CalDAV)",
+    "caldav_hint": "このアドレスを Thunderbird、Apple カレンダー、DAVx⁵ に追加すると、カレンダーが同期されます。",
+    "caldav_shared_by": "{name} が共有:",
+    "freebusy_description": "共有した相手には予定がある時間だけが見え、予定の内容は見えません。「時間を提案」で使われます。"
+  },
   "calendar_offline": {
     "split_needs_server": "この変更にはサーバーへの接続が必要です。今はこの予定だけを変更するか、オンラインに戻ってからもう一度お試しください。"
+  },
+  "ux_pim_event": {
+    "time_zone": "タイムゾーン",
+    "time_zone_line": "タイムゾーン: {zone}",
+    "your_time": "あなたの時刻 {times}",
+    "zone_times": "{times} {zone}（あなたの時刻 {local}）",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "承諾",
+    "status_declined": "辞退",
+    "status_tentative": "未定",
+    "status_needs_action": "まだ回答なし",
+    "status_delegated": "委任済み",
+    "answered_accepted": "{date} に承諾しました。",
+    "answered_declined": "{date} に辞退しました。",
+    "answered_tentative": "{date} に未定と回答しました。",
+    "answered_accepted_nodate": "承諾しました。",
+    "answered_declined_nodate": "辞退しました。",
+    "answered_tentative_nodate": "未定と回答しました。"
   },
   "advanced_search": {
     "title": "詳細検索",
@@ -5409,6 +5506,21 @@
     "previous_file": "前のファイル",
     "next_file": "次のファイル",
     "loading": "読み込み中…"
+  },
+  "ux_pim_files": {
+    "conflict_title": "{name} は既に存在します。",
+    "conflict_file_hint": "置き換えると、既存のファイルに新しい内容が入り、共有設定はそのまま残ります。両方残すと、番号付きのコピーが追加されます。",
+    "conflict_folder_hint": "置き換えると、既存のフォルダーにファイルが追加され、同じ名前のファイルは置き換えられます。両方残すと、番号付きの別フォルダーが作られます。",
+    "replace": "置き換える",
+    "keep_both": "両方残す",
+    "skip": "スキップ",
+    "apply_to_all": "{count, plural, other {# 件すべての競合に適用}}",
+    "no_preview": "この種類のファイルはプレビューできません。",
+    "open_in_app": "既定のアプリで開く",
+    "shared_with": "{name} を {person} と共有しました。",
+    "send_message": "メッセージを送信",
+    "share_mail_subject": "{name} を共有しました",
+    "share_mail_body": "こんにちは。\n\n「{name}」を共有しました。こちらから開けます:\n{link}"
   },
   "smime": {
     "your_certificates": "あなたの証明書",
@@ -5734,6 +5846,11 @@
   "company_calendars": {
     "section": "組織"
   },
+  "ux_pim_grid": {
+    "search_short": "検索",
+    "reply": "返信",
+    "reply_to_invitation": "招待に返信"
+  },
   "vacation_calendar": {
     "label": "カレンダーをブロック",
     "description": "不在の期間に予定ありの予定を追加し、その間に会議を入れられないようにします。",
@@ -5755,6 +5872,88 @@
     "group_label": "グループ",
     "title": "空き時間",
     "description": "グループのメンバーには予定がある時間だけが見え、予定の内容は見えません。「時間を提案」で使われます。"
+  },
+  "ux_pim_cimport": {
+    "file_hint": "クリックして vCard または CSV ファイルを選択",
+    "file_types": ".vcf または .csv ファイル（Outlook や Google コンタクトなど）",
+    "parse_error": "ファイルを読み込めませんでした",
+    "columns_title": "列の割り当て",
+    "columns_hint": "{file} の各列の取り込み先を選んでください。「取り込まない」の列は除外されます。",
+    "column": "列",
+    "sample": "例",
+    "field": "連絡先の項目",
+    "skip": "取り込まない",
+    "no_columns": "少なくとも 1 つの列に項目を選んでください。",
+    "continue": "続行",
+    "back": "戻る",
+    "import_into": "インポート先",
+    "group_name": "名前",
+    "group_email": "メール",
+    "group_phone": "電話",
+    "group_org": "組織",
+    "group_adr_any": "住所",
+    "group_adr_home": "自宅の住所",
+    "group_adr_work": "勤務先の住所",
+    "group_adr_other": "その他の住所",
+    "group_more": "その他",
+    "address_field": "{group}：{part}",
+    "t_name_full": "氏名",
+    "t_name_given": "名",
+    "t_name_middle": "ミドルネーム",
+    "t_name_surname": "姓",
+    "t_name_prefix": "敬称（Dr.、Ms.）",
+    "t_name_suffix": "サフィックス（Jr.）",
+    "t_nickname": "ニックネーム",
+    "t_email": "メール",
+    "t_email_home": "メール（自宅）",
+    "t_email_work": "メール（勤務先）",
+    "t_phone": "電話",
+    "t_phone_mobile": "携帯",
+    "t_phone_home": "電話（自宅）",
+    "t_phone_work": "電話（勤務先）",
+    "t_phone_fax": "FAX",
+    "t_phone_fax_home": "FAX（自宅）",
+    "t_phone_fax_work": "FAX（勤務先）",
+    "t_phone_pager": "ポケベル",
+    "t_org_name": "会社",
+    "t_org_unit": "部署",
+    "t_org_title": "役職",
+    "t_street": "番地",
+    "t_pobox": "私書箱",
+    "t_locality": "市区町村",
+    "t_region": "都道府県・地域",
+    "t_postcode": "郵便番号",
+    "t_country": "国",
+    "t_web": "ウェブサイト",
+    "t_birthday": "誕生日",
+    "t_anniversary": "記念日",
+    "t_notes": "メモ",
+    "t_categories": "カテゴリ",
+    "t_type": "値の種類（自宅、勤務先…）",
+    "merge_with": "統合する相手…",
+    "merge_selected": "統合…",
+    "find_duplicates": "重複を検索",
+    "possible_duplicates": "重複の可能性（{count}）",
+    "duplicates_title": "重複の可能性",
+    "duplicates_hint": "名前、メールアドレス、または電話番号が同じ連絡先です。",
+    "duplicates_none": "重複の可能性がある連絡先はありません。",
+    "pick_title": "{name} を統合する相手…",
+    "pick_search": "連絡先を検索",
+    "pick_suggested": "重複の可能性",
+    "pick_all": "すべての連絡先",
+    "pick_none": "統合できる連絡先はほかにありません。",
+    "preview_title": "連絡先を統合（{count}）",
+    "preview_hint": "これらの連絡先は、以下の内容をすべて持つ 1 枚のカードになります。",
+    "preview_deleted": "統合後に削除: {names}",
+    "groups": "グループ",
+    "merge": "統合",
+    "merging": "統合しています…",
+    "merged": "連絡先を統合しました",
+    "merge_failed": "連絡先を統合できませんでした。",
+    "merge_not_possible": "これらの連絡先は統合できません。別々のアカウントにあるか、変更できないアドレス帳にあります。",
+    "undo": "元に戻す",
+    "undone": "統合を元に戻しました",
+    "undo_failed": "統合を完全には元に戻せませんでした。"
   },
   "find_time": {
     "suggest": "時間を提案",
@@ -7146,6 +7345,39 @@
     "app_lock_timeout_hours": "{count, plural, other {#時間}}",
     "desktop_attention_title": "このコンピューター"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "あなたの名前",
+      "description": "メールを送ると、相手にはこの名前がアドレスの横に表示されます。",
+      "saved": "名前を保存しました。",
+      "error": "名前を保存できませんでした。もう一度お試しください。"
+    },
+    "addresses": {
+      "description": "送信に使えるアドレスです。アドレスごとに名前と署名があります。",
+      "label": "あなたのアドレス",
+      "count": "{count, plural, =0 {まだアドレスはありません} other {# 件のアドレス}}",
+      "manage": "アドレスを編集…",
+      "modal_title": "あなたのメールアドレス",
+      "add": "アドレスを追加",
+      "edit": "アドレスを編集",
+      "added": "アドレスを追加しました。",
+      "saved": "アドレスを保存しました。",
+      "deleted": "アドレスを削除しました。",
+      "delete_title": "このアドレスを削除しますか?"
+    },
+    "signatures": {
+      "title": "署名",
+      "description": "書いたメッセージの最後に付きます。アドレスごとに別の署名を使えます。",
+      "saved": "署名を保存しました。",
+      "error": "署名を保存できませんでした。もう一度お試しください。",
+      "no_addresses": "送信に使えるアドレスがまだありません。"
+    },
+    "search": {
+      "addresses": "ID アイデンティティ エイリアス 差出人 差出人アドレス 送信元アドレス identity alias sender",
+      "signatures": "署名 メール署名 フッター アイデンティティ 差出人 送信元アドレス signature",
+      "your_name": "表示名 氏名 差出人名 display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "先にサーバーのアドレスを入力してください。",
     "server_declined": "このサーバーを許可しなかったため、何も送信していません。",
@@ -7188,10 +7420,12 @@
     "server_looking": "メールサーバーを探しています…",
     "server_found": "メールサーバー: {server}",
     "server_change": "変更",
+    "server_change_hint": "別のサーバーのアドレスを入力してください。",
     "server_not_found": "このアドレスのメールサーバーが見つかりませんでした。ここに入力してください（例: mail.example.com）。",
     "server_needed": "メールサーバーのアドレスを入力してください。",
     "server_invalid": "サーバーのアドレスではありません。mail.example.com のように入力してください。",
     "email_needed": "まずメールアドレスを入力してください。",
+    "other_ways": "その他のサインイン方法",
     "trouble": "うまくいかない場合",
     "trouble_cors": "メールサーバーがこのウェブサイトからのサインインを許可している必要があります。サインインできない場合は、メールサーバーの管理者に許可を依頼してください。",
     "provider_unsupported": "{provider} は Bulwark がメールサーバーとやり取りする方式である JMAP に対応していないため、Bulwark はまだ直接接続できません。"
@@ -7280,6 +7514,14 @@
     "copied": "ファイルをコピーしました。フォルダーに貼り付けられます。",
     "copy_failed": "ファイルをコピーできませんでした。",
     "reply_lost": "入力した返信を保持できませんでした。メッセージを開いて返信してください。"
+  },
+  "ux_pim_menu": {
+    "search_contacts": "連絡先を検索",
+    "search_files": "ファイルを検索",
+    "import": "インポート",
+    "import_mail": "メール…",
+    "import_calendar": "カレンダー…",
+    "import_contacts": "連絡先…"
   },
   "desktopEdit": {
     "edit": "編集",
@@ -7436,5 +7678,11 @@
     "send_no_consent": "先にクラッシュレポートをオンにしてください。",
     "send_no_url": "アドレスが設定されていないため、送信先がありません。上で入力してください。",
     "send_failed": "クラッシュレポートを送信できませんでした。"
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "タスクバーのアイコンに未読数を表示",
+    "unread_badge_description": "別のアプリで作業中でも新着メールがわかります。",
+    "tip_compose_keys": "{keys} を押して新しいメッセージを作成",
+    "tip_palette_keys": "{keys} を押してコマンドを検索"
   }
 }

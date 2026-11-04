@@ -174,6 +174,7 @@
     },
     "clear_search": "Wyczyść wyszukiwanie",
     "vacation_active": "Autoresponder wakacyjny jest aktywny",
+    "vacation_turn_off": "Wyłącz",
     "demo_banner": "Tryb demo",
     "demo_reset": "Resetuj",
     "demo_tour": "Przewodnik",
@@ -245,7 +246,6 @@
     "select_account_title": "Wybierz konto",
     "select_mailto_account": "Wybierz konto, które ma otworzyć ten link e-mail.",
     "select_webcal_account": "Wybierz konto, które ma otworzyć ten link kalendarza.",
-    "select_account_note": "Ten wybór dotyczy tylko tego linku protokołu.",
     "detail_to": "Do",
     "detail_subject": "Temat",
     "detail_no_subject": "Bez tematu",
@@ -1112,7 +1112,7 @@
     "link_url_prompt": "Wprowadź adres URL",
     "sending": "Wysyłanie...",
     "schedule_send": "Zaplanuj wysyłkę",
-    "schedule_send_description": "Wybierz, kiedy serwer ma wysłać tę wiadomość.",
+    "schedule_send_description": "Wybierz, kiedy ją wysłać.",
     "schedule_preset": {
       "this_morning": "Dziś rano",
       "this_afternoon": "Dziś po południu",
@@ -1163,6 +1163,7 @@
       "edit_link": "Edytuj link",
       "remove_link": "Usuń link",
       "link_address": "Adres linku",
+      "link_text": "Tekst",
       "link_invalid": "Adres nie może zawierać spacji",
       "table": "Tabela",
       "clear_formatting": "Wyczyść formatowanie",
@@ -1393,6 +1394,8 @@
     "from_description": "Zostaw puste, aby zacząć od razu.",
     "until_label": "Do (opcjonalnie)",
     "until_description": "Zostaw puste, aby odpowiadać, dopóki tego nie wyłączysz.",
+    "from_placeholder": "Od teraz",
+    "until_placeholder": "Dopóki jej nie wyłączysz",
     "audience_all": "Wszystkim",
     "audience_internal": "Tylko mojej organizacji ({domains})",
     "audience_external": "Tylko osobom spoza mojej organizacji",
@@ -2906,6 +2909,7 @@
       "open_sieve_editor": "Otwórz surowy edytor Sieve",
       "fetch_error": "Nie udało się załadować filtrów",
       "expanded_view": "Widok rozszerzony",
+      "show_rule_details": "Pokaż warunki i działania każdej reguły",
       "expanded_view_description": "Pokazuj reguły filtrów ze szczegółowymi blokami warunków i akcji",
       "if": "Jeśli",
       "then": "Wtedy",
@@ -2984,6 +2988,9 @@
       "validation_period_empty": "Podaj datę rozpoczęcia lub zakończenia okresu",
       "validation_period_invalid": "Podaj prawidłową datę z godziną dla okresu albo pozostaw pole puste",
       "apply_existing_period": "Reguła z okresem działa tylko na wiadomości, które przychodzą w tym okresie, dlatego nie można jej zastosować do istniejących wiadomości.",
+      "apply_existing_in": "Zastosuj też do wiadomości, które już są w folderze {folder}",
+      "apply_existing_count": "{count, plural, one {Zastosuj też do # wiadomości, która już jest w folderze {folder}} few {Zastosuj też do # wiadomości, które już są w folderze {folder}} many {Zastosuj też do # wiadomości, które już są w folderze {folder}} other {Zastosuj też do # wiadomości, które już są w folderze {folder}}}",
+      "apply_existing_none": "Żadna wiadomość w folderze {folder} nie pasuje jeszcze do tej reguły.",
       "period_status_scheduled": "zaplanowana",
       "period_status_active": "aktywna",
       "period_status_expired": "wygasła"
@@ -3496,6 +3503,48 @@
     },
     "sign_out": {
       "description": "Wyloguj to konto na tym urządzeniu."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "zasobnik zasobnik systemowy obszar powiadomień w tle minimalizuj tray",
+      "autostart": "autostart uruchamianie uruchom z Windows przy logowaniu",
+      "default_app": "domyślna aplikacja pocztowa domyślny program pocztowy mailto linki e-mail",
+      "menu_bar": "pasek menu menu klawisz Alt Plik Edycja Widok",
+      "updates": "aktualizacje aktualizacja nowa wersja beta kanał",
+      "devtools": "narzędzia deweloperskie devtools konsola zbadaj F12 debugowanie",
+      "taskbar": "pasek zadań miganie Dock uwaga",
+      "quiet_hours": "godziny ciszy nie przeszkadzać wycisz noc",
+      "telemetry": "dane o użyciu telemetria statystyki analityka",
+      "crash": "raporty awarii raporty błędów awaria",
+      "threads": "wątki rozmowy grupowanie threads",
+      "block_images": "blokuj obrazy obrazy zewnętrzne wczytuj obrazy",
+      "dark_mode": "tryb ciemny tryb jasny tryb nocny dark mode",
+      "timezone": "strefa czasowa timezone",
+      "reading_pane": "okienko odczytu okienko podglądu widok dzielony",
+      "week_start": "początek tygodnia pierwszy dzień poniedziałek niedziela",
+      "empty_trash": "opróżnij kosz kosz usunięte elementy",
+      "do_not_disturb": "godziny ciszy wycisz cisza"
+    },
+    "desktop_notifications": {
+      "title": "Na tym komputerze",
+      "closed_label": "Przy zamkniętym oknie",
+      "closed_description": "{appName} powiadamia o nowej poczcie, dopóki działa. Aby po zamknięciu okna działał dalej w zasobniku, włącz to w sekcji {page}."
+    },
+    "push_unsupported": "Ta przeglądarka nie może pokazywać powiadomień, gdy strona jest zamknięta.",
+    "backup_description_app": "Używaj tych samych ustawień na innych urządzeniach.",
+    "sender_favicons": {
+      "label": "Obrazy ze stron firm",
+      "description": "Pokazuj ikony stron internetowych jako zdjęcia profilowe nadawców firmowych"
+    },
+    "privacy_push": {
+      "label": "Przekaźnik powiadomień",
+      "description": "Powiadomienia przy zamkniętym {appName} idą przez przekaźnik push, który nigdy nie widzi Twojej poczty. Włączasz je i wyłączasz na stronie {page}."
+    },
+    "reset": {
+      "message": "Przywraca wszystkie ustawienia do stanu początkowego. Twoja poczta, filtry, autoodpowiedź i podpisy zostają bez zmian.",
+      "sync_on": "Twoje inne urządzenia używają tych samych ustawień, więc też się zmienią.",
+      "sync_off": "Twoje inne urządzenia zachowają swoje ustawienia."
     }
   },
   "setup": {
@@ -4057,6 +4106,9 @@
     "sending": "Wysyłanie…",
     "sent": "Wysłano",
     "view": "Pokaż",
+    "template_saved": "Szablon zapisany",
+    "schedule_anyway": "Zaplanuj mimo to",
+    "schedule_warnings_title": "Zaplanować tę wiadomość mimo to?",
     "picker_button": "Dodaj z kontaktów",
     "picker_title": "Dodaj odbiorców",
     "tab_contacts": "Kontakty",
@@ -4522,6 +4574,13 @@
     },
     "open_categories": "Otwórz kategorie",
     "row_actions": "Działania dla {name}"
+  },
+  "ux_pim_contact": {
+    "context_private": "Dom",
+    "phone_voice": "Telefon",
+    "more_fields": "Więcej pól",
+    "import_menu": "Importuj kontakty…",
+    "new_address_book_menu": "Nowa książka adresowa…"
   },
   "uxs_wording": {
     "more_options": "Więcej opcji",
@@ -5130,8 +5189,46 @@
     "mini_has_events": "ma wydarzenia",
     "mini_week_number": "Tydzień {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Listy zadań",
+    "task_status_not_started": "Nierozpoczęte",
+    "task_status_in_progress": "W toku",
+    "quick_task_due": "Termin {date}",
+    "quick_task_due_remove": "Zostaw „{words}” w tytule",
+    "rename_calendar": "Zmień nazwę…",
+    "rename_title": "Zmień nazwę kalendarza",
+    "rename_confirm": "Zmień nazwę",
+    "rename_empty": "Wpisz nazwę.",
+    "edit_calendar": "Edytuj…",
+    "default_alerts_open": "Domyślne przypomnienia…",
+    "share_open": "Udostępnij…",
+    "clear_all_events": "Wyczyść wszystkie wydarzenia…",
+    "delete_calendar": "Usuń…",
+    "caldav_title": "Adres dla innych aplikacji (CalDAV)",
+    "caldav_hint": "Dodaj ten adres w Thunderbirdzie, Kalendarzu Apple lub DAVx⁵, aby synchronizować kalendarze.",
+    "caldav_shared_by": "Udostępnia {name}:",
+    "freebusy_description": "Osoby, którym udostępniasz, widzą, kiedy jesteś zajęty, ale nie widzą Twoich wydarzeń. Korzysta z tego funkcja proponowania terminów."
+  },
   "calendar_offline": {
     "split_needs_server": "Ta zmiana wymaga połączenia z serwerem. Na razie zmień tylko to wydarzenie albo spróbuj ponownie, gdy wrócisz do trybu online."
+  },
+  "ux_pim_event": {
+    "time_zone": "Strefa czasowa",
+    "time_zone_line": "Strefa czasowa: {zone}",
+    "your_time": "{times} twojego czasu",
+    "zone_times": "{times} {zone} ({local} twojego czasu)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Zaakceptowano",
+    "status_declined": "Odrzucono",
+    "status_tentative": "Może",
+    "status_needs_action": "Jeszcze bez odpowiedzi",
+    "status_delegated": "Przekazano",
+    "answered_accepted": "Zaakceptowano {date}.",
+    "answered_declined": "Odrzucono {date}.",
+    "answered_tentative": "Odpowiedziano „może” {date}.",
+    "answered_accepted_nodate": "Zaakceptowano.",
+    "answered_declined_nodate": "Odrzucono.",
+    "answered_tentative_nodate": "Odpowiedziano „może”."
   },
   "advanced_search": {
     "title": "Wyszukiwanie zaawansowane",
@@ -5409,6 +5506,21 @@
     "previous_file": "Poprzedni plik",
     "next_file": "Następny plik",
     "loading": "Wczytywanie…"
+  },
+  "ux_pim_files": {
+    "conflict_title": "{name} już istnieje.",
+    "conflict_file_hint": "Zastąp wkłada nową treść do istniejącego pliku, więc jego udostępnienia zostają. Zachowaj oba dodaje kopię z numerem.",
+    "conflict_folder_hint": "Zastąp dodaje pliki do istniejącego folderu i zastępuje pliki o tej samej nazwie. Zachowaj oba tworzy drugi folder z numerem.",
+    "replace": "Zastąp",
+    "keep_both": "Zachowaj oba",
+    "skip": "Pomiń",
+    "apply_to_all": "{count, plural, other {Zrób tak dla wszystkich konfliktów ({count})}}",
+    "no_preview": "Dla tego typu pliku nie ma podglądu.",
+    "open_in_app": "Otwórz w domyślnej aplikacji",
+    "shared_with": "{name} jest teraz udostępniony dla {person}.",
+    "send_message": "Wyślij wiadomość",
+    "share_mail_subject": "Udostępniłem Ci {name}",
+    "share_mail_body": "Cześć,\n\nUdostępniłem Ci „{name}”. Możesz to otworzyć tutaj:\n{link}"
   },
   "smime": {
     "your_certificates": "Twoje certyfikaty",
@@ -5734,6 +5846,11 @@
   "company_calendars": {
     "section": "Organizacja"
   },
+  "ux_pim_grid": {
+    "search_short": "Szukaj",
+    "reply": "Odpowiedz",
+    "reply_to_invitation": "Odpowiedz na zaproszenie"
+  },
   "vacation_calendar": {
     "label": "Zablokuj mój kalendarz",
     "description": "Dodaje zajęte wydarzenie na czas Twojej nieobecności, żeby nikt nie umawiał wtedy z Tobą spotkań.",
@@ -5755,6 +5872,88 @@
     "group_label": "Grupa",
     "title": "Dostępność",
     "description": "Współpracownicy z grupy widzą, kiedy jesteś zajęty, ale nie widzą Twoich wydarzeń. Korzysta z tego funkcja proponowania terminów."
+  },
+  "ux_pim_cimport": {
+    "file_hint": "Kliknij, aby wybrać plik vCard lub CSV",
+    "file_types": "Pliki .vcf lub .csv, na przykład z Outlooka lub Kontaktów Google",
+    "parse_error": "Nie udało się odczytać pliku",
+    "columns_title": "Przypisz kolumny",
+    "columns_hint": "Wybierz, gdzie trafia każda kolumna pliku {file}. Kolumny z opcją „Nie importuj” są pomijane.",
+    "column": "Kolumna",
+    "sample": "Przykład",
+    "field": "Pole kontaktu",
+    "skip": "Nie importuj",
+    "no_columns": "Wybierz pole dla co najmniej jednej kolumny.",
+    "continue": "Dalej",
+    "back": "Wstecz",
+    "import_into": "Importuj do",
+    "group_name": "Imię i nazwisko",
+    "group_email": "E-mail",
+    "group_phone": "Telefon",
+    "group_org": "Organizacja",
+    "group_adr_any": "Adres",
+    "group_adr_home": "Adres domowy",
+    "group_adr_work": "Adres służbowy",
+    "group_adr_other": "Inny adres",
+    "group_more": "Więcej",
+    "address_field": "{group}: {part}",
+    "t_name_full": "Pełne imię i nazwisko",
+    "t_name_given": "Imię",
+    "t_name_middle": "Drugie imię",
+    "t_name_surname": "Nazwisko",
+    "t_name_prefix": "Tytuł (dr, pani)",
+    "t_name_suffix": "Przyrostek (jr)",
+    "t_nickname": "Pseudonim",
+    "t_email": "E-mail",
+    "t_email_home": "E-mail (dom)",
+    "t_email_work": "E-mail (praca)",
+    "t_phone": "Telefon",
+    "t_phone_mobile": "Komórka",
+    "t_phone_home": "Telefon (dom)",
+    "t_phone_work": "Telefon (praca)",
+    "t_phone_fax": "Faks",
+    "t_phone_fax_home": "Faks (dom)",
+    "t_phone_fax_work": "Faks (praca)",
+    "t_phone_pager": "Pager",
+    "t_org_name": "Firma",
+    "t_org_unit": "Dział",
+    "t_org_title": "Stanowisko",
+    "t_street": "Ulica",
+    "t_pobox": "Skrytka pocztowa",
+    "t_locality": "Miejscowość",
+    "t_region": "Województwo lub region",
+    "t_postcode": "Kod pocztowy",
+    "t_country": "Kraj",
+    "t_web": "Strona WWW",
+    "t_birthday": "Urodziny",
+    "t_anniversary": "Rocznica",
+    "t_notes": "Notatki",
+    "t_categories": "Kategorie",
+    "t_type": "Rodzaj wartości (Dom, Praca…)",
+    "merge_with": "Scal z…",
+    "merge_selected": "Scal…",
+    "find_duplicates": "Znajdź duplikaty",
+    "possible_duplicates": "Możliwe duplikaty ({count})",
+    "duplicates_title": "Możliwe duplikaty",
+    "duplicates_hint": "Kontakty o tym samym imieniu i nazwisku, adresie e-mail lub numerze telefonu.",
+    "duplicates_none": "Nie znaleziono możliwych duplikatów.",
+    "pick_title": "Scal {name} z…",
+    "pick_search": "Szukaj kontaktów",
+    "pick_suggested": "Możliwe duplikaty",
+    "pick_all": "Wszystkie kontakty",
+    "pick_none": "Brak innych kontaktów do scalenia.",
+    "preview_title": "Scal kontakty ({count})",
+    "preview_hint": "Te kontakty staną się jedną kartą ze wszystkim poniżej.",
+    "preview_deleted": "Przejęte, a potem usunięte: {names}",
+    "groups": "Grupy",
+    "merge": "Scal",
+    "merging": "Scalanie…",
+    "merged": "Kontakty scalone",
+    "merge_failed": "Nie udało się scalić kontaktów.",
+    "merge_not_possible": "Tych kontaktów nie można scalić: są na różnych kontach lub w książce adresowej, której nie możesz zmieniać.",
+    "undo": "Cofnij",
+    "undone": "Scalanie cofnięte",
+    "undo_failed": "Nie udało się całkowicie cofnąć scalania."
   },
   "find_time": {
     "suggest": "Zaproponuj terminy",
@@ -7146,6 +7345,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# godzina} few {# godziny} many {# godzin} other {# godziny}}",
     "desktop_attention_title": "Na tym komputerze"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Twoje imię i nazwisko",
+      "description": "Ludzie widzą tę nazwę obok Twojego adresu, gdy wysyłasz im wiadomość.",
+      "saved": "Zapisano Twoje imię i nazwisko.",
+      "error": "Nie udało się zapisać Twojego imienia i nazwiska. Spróbuj ponownie."
+    },
+    "addresses": {
+      "description": "Adresy, z których możesz wysyłać, każdy z własną nazwą i podpisem.",
+      "label": "Twoje adresy",
+      "count": "{count, plural, =0 {Jeszcze brak adresów} one {# adres} few {# adresy} many {# adresów} other {# adresu}}",
+      "manage": "Edytuj adresy…",
+      "modal_title": "Twoje adresy e-mail",
+      "add": "Dodaj adres",
+      "edit": "Edytuj adres",
+      "added": "Dodano adres.",
+      "saved": "Zapisano adres.",
+      "deleted": "Usunięto adres.",
+      "delete_title": "Usunąć ten adres?"
+    },
+    "signatures": {
+      "title": "Podpisy",
+      "description": "Dodawany na końcu pisanych wiadomości. Każdy adres ma własny.",
+      "saved": "Zapisano podpis.",
+      "error": "Nie udało się zapisać podpisu. Spróbuj ponownie.",
+      "no_addresses": "Nie masz jeszcze adresu, z którego można wysyłać."
+    },
+    "search": {
+      "addresses": "tożsamość tożsamości alias nadawca adres nadawcy adres od identity sender",
+      "signatures": "podpis podpis e-mail stopka tożsamość nadawca adres od signature",
+      "your_name": "nazwa wyświetlana imię i nazwisko nazwa nadawcy display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Najpierw wpisz adres serwera.",
     "server_declined": "Ten serwer nie został dozwolony, więc nic do niego nie wysłano.",
@@ -7188,10 +7420,12 @@
     "server_looking": "Szukamy Twojego serwera poczty…",
     "server_found": "Serwer poczty: {server}",
     "server_change": "Zmień",
+    "server_change_hint": "Wpisz adres innego serwera.",
     "server_not_found": "Nie znaleźliśmy serwera poczty dla tego adresu. Wpisz go tutaj, na przykład mail.example.com.",
     "server_needed": "Wpisz adres swojego serwera poczty.",
     "server_invalid": "To nie jest adres serwera. Wpisz go jak mail.example.com.",
     "email_needed": "Najpierw wpisz swój adres e-mail.",
+    "other_ways": "Inne sposoby logowania",
     "trouble": "Masz problem?",
     "trouble_cors": "Twój serwer poczty musi zezwalać na logowanie z tej witryny. Jeśli logowanie się nie udaje, poproś osobę, która zarządza serwerem poczty, o zezwolenie.",
     "provider_unsupported": "{provider} nie oferuje JMAP, czyli sposobu, w jaki Bulwark rozmawia z serwerami poczty, więc Bulwark nie może jeszcze połączyć się z nim bezpośrednio."
@@ -7280,6 +7514,14 @@
     "copied": "Plik skopiowany. Możesz wkleić go do folderu.",
     "copy_failed": "Nie udało się skopiować pliku.",
     "reply_lost": "Nie udało się zachować wpisanej odpowiedzi. Otwórz wiadomość i odpowiedz w niej."
+  },
+  "ux_pim_menu": {
+    "search_contacts": "Szukaj kontaktów",
+    "search_files": "Szukaj plików",
+    "import": "Importuj",
+    "import_mail": "Poczta…",
+    "import_calendar": "Kalendarz…",
+    "import_contacts": "Kontakty…"
   },
   "desktopEdit": {
     "edit": "Edytuj",
@@ -7436,5 +7678,11 @@
     "send_no_consent": "Najpierw włącz raporty o awariach.",
     "send_no_url": "Nie ustawiono adresu, więc nie ma dokąd tego wysłać. Wpisz go powyżej.",
     "send_failed": "Nie udało się wysłać raportu o awarii."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Liczba nieprzeczytanych na ikonie na pasku zadań",
+    "unread_badge_description": "Aby widzieć nową pocztę, gdy pracujesz w innej aplikacji.",
+    "tip_compose_keys": "Naciśnij {keys}, aby napisać nową wiadomość",
+    "tip_palette_keys": "Naciśnij {keys}, aby znaleźć dowolne polecenie"
   }
 }

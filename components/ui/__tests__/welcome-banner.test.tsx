@@ -27,6 +27,19 @@ describe('WelcomeBanner tips', () => {
     expect(screen.getByText('tip_shortcuts')).toBeInTheDocument();
   });
 
+  it('in the desktop app, names the keys it answers: Ctrl+N and Ctrl+K, not c', () => {
+    device.isMobile = false;
+    (window as unknown as { bulwarkDesktop: unknown }).bulwarkDesktop = { version: 1, platform: 'win32' };
+    try {
+      render(<WelcomeBanner />);
+      expect(screen.getByText('tip_compose_keys')).toBeInTheDocument();
+      expect(screen.getByText('tip_palette_keys')).toBeInTheDocument();
+      expect(screen.queryByText('tip_compose')).toBeNull();
+    } finally {
+      delete (window as unknown as { bulwarkDesktop?: unknown }).bulwarkDesktop;
+    }
+  });
+
   it('gives touch tips on a phone', () => {
     device.isMobile = true;
     render(<WelcomeBanner />);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight, Download, X } from "@/components/icons";
 import { IconButton } from "@/components/ui/icon-button";
@@ -12,6 +12,25 @@ export interface PreviewNeighbours {
   previous?: string | null;
   next?: string | null;
   onGo: (name: string) => void;
+}
+
+/** A backdrop click this soon after the preview opened is part of the click that opened it. */
+export const BACKDROP_GRACE_MS = 400;
+
+/**
+ * `onClose` for a click on the area around the content. The rest of the
+ * click that opened the preview (a double-click's second click, a
+ * triple-click) is ignored, so it can't close the preview again (pim-3).
+ */
+export function useBackdropClose(onClose: () => void): () => void {
+  const openedAt = useRef(0);
+  useEffect(() => {
+    openedAt.current = Date.now();
+  }, []);
+  return useCallback(() => {
+    if (Date.now() - openedAt.current < BACKDROP_GRACE_MS) return;
+    onClose();
+  }, [onClose]);
 }
 
 interface PreviewShellProps {
@@ -34,6 +53,7 @@ interface PreviewShellProps {
  */
 export function PreviewShell({ name, onClose, onDownload, actions, neighbours, closeOnBackdrop = true, children }: PreviewShellProps) {
   const t = useTranslations("files");
+  const closeFromBackdrop = useBackdropClose(onClose);
   // Tab stays in the preview and the focus goes back to the file that was
   // opened when it closes. Escape is the listener below.
   const shellRef = useFocusTrap({ isActive: true, restoreFocus: true });
@@ -86,7 +106,7 @@ export function PreviewShell({ name, onClose, onDownload, actions, neighbours, c
       aria-modal="true"
       aria-label={name}
       className="fixed inset-0 z-50 flex flex-col bg-black/80"
-      onClick={closeOnBackdrop ? onClose : undefined}
+      onClick={closeOnBackdrop ? closeFromBackdrop : undefined}
     >
       {/* Full-screen under `viewport-fit=cover`: the bar pads itself out of
           the iOS status bar (#936). The insets are physical, so pl/pr. */}

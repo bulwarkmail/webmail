@@ -84,6 +84,7 @@ import {
   type SubResult,
   getByPath,
   matchesAllWords,
+  matchesSubResult,
   settingsSubResults,
   settingsTabLabelKey,
   subResultText,
@@ -91,10 +92,13 @@ import {
   tabSearchEntries,
   ARCHIVE_ACTION_SEARCH_PATHS,
 } from '@/lib/settings-search';
+import { getDesktopBridge } from '@/lib/desktop/bridge';
+import { menuBarAvailable } from '@/lib/desktop/menu-bar';
 import { useAccountStore } from '@/stores/account-store';
 import { useMediaQuery, atLeast, PHONE_BELOW } from '@/hooks/use-media-query';
 import { useLiteLinkSegments } from '@/hooks/use-lite-link-segments';
 import { useDocumentTitle } from '@/hooks/use-document-title';
+import { useDesktopWindowName } from '@/lib/desktop/window-name';
 import { MvTopBar } from "@/components/layout/mv-top-bar";
 import { useMountainViewShell } from "@/hooks/use-mountain-view-shell";
 import { scrollBehavior } from '@/lib/reduced-motion';
@@ -365,6 +369,13 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       if (entry.when === 'touch') return touchScreen;
       if (entry.when === 'mountainView') return mountainViewLayout;
       if (entry.when === 'multiAccount') return multiAccount;
+      // The desktop app's own rows (settings-p2-5), and the browser's that it hides.
+      const desktop = getDesktopBridge();
+      if (entry.when === 'desktop') return !!desktop;
+      if (entry.when === 'desktopMac') return desktop?.platform === 'darwin';
+      if (entry.when === 'desktopNotMac') return !!desktop && desktop.platform !== 'darwin';
+      if (entry.when === 'desktopMenuBar') return menuBarAvailable();
+      if (entry.when === 'browser') return !desktop;
       return true;
     };
     for (const tabId of Object.keys(tabSearchEntries) as Tab[]) {
@@ -765,7 +776,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
     if (!trimmedQuery) return true;
     const pageText = `${tab.label} ${String(tab.id).replace(/_/g, ' ')} ${tabKeywords[tab.id as Tab] ?? ''}`;
     return matchesAllWords(pageText, trimmedQuery)
-      || (tabSubResults[tab.id as Tab] ?? []).some((r) => matchesAllWords(subResultText(r), trimmedQuery));
+      || (tabSubResults[tab.id as Tab] ?? []).some((r) => matchesSubResult(r, trimmedQuery));
   };
 
   const subResultsForTab = (tabId: SettingsTabId): SubResult[] => {
@@ -774,7 +785,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
     // Rows whose name matches come before rows matched by their description or synonyms.
     const byName = (r: SubResult) => (matchesAllWords(r.label, trimmedQuery) ? 0 : 1);
     return list
-      .filter((r) => matchesAllWords(subResultText(r), trimmedQuery))
+      .filter((r) => matchesSubResult(r, trimmedQuery))
       .sort((a, b) => byName(a) - byName(b))
       .slice(0, 6);
   };
@@ -816,6 +827,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       ? `${activeTabLabel} - ${tSidebar('settings')}`
       : tSidebar('settings'),
   );
+  useDesktopWindowName(tSidebar('settings'), { withAccount: true });
 
   const handleTabSelect = (tabId: SettingsTabId) => {
     setActiveTab(tabId);

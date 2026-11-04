@@ -15,6 +15,9 @@ import { Button } from '@/components/ui/button';
 import { ChevronRight, RefreshCw } from '@/components/icons';
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
 import { DesktopTelemetrySettings } from './desktop-telemetry-settings';
+import { isDesktopApp } from '@/lib/desktop/bridge';
+import { productName } from '@/lib/product-name';
+import { useConfig } from '@/hooks/use-config';
 
 /** Opens another settings page (and section) the way deep links do. */
 export function goToSettings(tab: string, section?: string) {
@@ -160,13 +163,15 @@ function ReadReceiptsSection() {
 function SenderPicturesSection() {
   const tPage = useTranslations('settings.message_list');
   const tAdvanced = useTranslations('settings.advanced');
+  const tP2 = useTranslations('uxp2_settings');
   const faviconsAllowed = !useNoThirdPartyTraffic();
   const refreshFavicons = useFaviconRefreshStore((s) => s.refresh);
   const { senderFavicons, showAvatarsInJunk, updateSetting } = useSettingsStore();
   return (
     <SettingsSection id="senders" title={tPage('sections.senders')}>
       {!IS_LITE && faviconsAllowed && (
-        <SettingItem label={tAdvanced('sender_favicons.label')} description={tAdvanced('sender_favicons.description')}>
+        // Named like its section, "Sender pictures", not "favicons" (settings-p2-18).
+        <SettingItem label={tP2('sender_favicons.label')} description={tP2('sender_favicons.description')}>
           <ToggleSwitch checked={senderFavicons} onChange={(checked) => updateSetting('senderFavicons', checked)} />
         </SettingItem>
       )}
@@ -200,20 +205,29 @@ function SenderPicturesSection() {
  */
 export function PrivacySettings() {
   const t = useTranslations('uxs_structure.privacy');
+  const tP2 = useTranslations('uxp2_settings.privacy_push');
+  const tTabs = useTranslations('settings.tabs');
+  const appName = productName(useConfig().appName);
+  // The desktop app has no push relay: it tells about new mail while it runs (settings-p2-4).
+  const [inApp, setInApp] = useState(false);
+  useEffect(() => setInApp(isDesktopApp()), []);
   return (
     <div className="space-y-8">
       <RemoteContentSection />
       <ReadReceiptsSection />
       <SenderPicturesSection />
       <DesktopTelemetrySettings />
+      {!inApp && (
       <SettingsSection id="push" title={t('push_title')}>
+        {/* The relay itself is chosen with advanced settings on; the link says what the page always has (settings-p2-18). */}
         <SettingsLinkRow
-          label={t('push_link.label')}
-          description={t('push_link.description')}
+          label={tP2('label')}
+          description={tP2('description', { appName, page: tTabs('notifications') })}
           button={t('push_link.button')}
           onClick={() => goToSettings('notifications', 'push')}
         />
       </SettingsSection>
+      )}
     </div>
   );
 }

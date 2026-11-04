@@ -109,7 +109,9 @@ export function createComposeHandoff(): ComposeHandoff | null {
 /** Keeps the draft with this window, so a reload starts from it. */
 export function rememberComposePayload(handoffId: string, payload: ComposePopoutPayload): void {
   try {
-    sessionStorage.setItem(STORAGE_PREFIX + handoffId, JSON.stringify(payload));
+    // A File doesn't go into JSON: once attached, the draft holds it.
+    const { initialFiles: _files, ...kept } = payload;
+    sessionStorage.setItem(STORAGE_PREFIX + handoffId, JSON.stringify(kept));
   } catch {
     // Full or unavailable: a reload then starts from the saved draft's first state.
   }

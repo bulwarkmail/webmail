@@ -174,6 +174,7 @@
     },
     "clear_search": "Notīrīt meklēšanu",
     "vacation_active": "Atvaļinājuma atbilde ir aktīva",
+    "vacation_turn_off": "Izslēgt",
     "demo_banner": "Demo režīms",
     "demo_reset": "Atiestatīt",
     "demo_tour": "Ekskursija",
@@ -245,7 +246,6 @@
     "select_account_title": "Izvēlieties kontu",
     "select_mailto_account": "Izvēlieties, kurā kontā atvērt šo e-pasta saiti.",
     "select_webcal_account": "Izvēlieties, kurā kontā atvērt šo kalendāra saiti.",
-    "select_account_note": "Šī izvēle attiecas tikai uz šo protokola saiti.",
     "detail_to": "Kam",
     "detail_subject": "Temats",
     "detail_no_subject": "Bez temata",
@@ -1112,7 +1112,7 @@
     "link_url_prompt": "Ievadiet URL",
     "sending": "Sūta...",
     "schedule_send": "Ieplānot sūtīšanu",
-    "schedule_send_description": "Izvēlieties, kad serverim jānosūta šis ziņojums.",
+    "schedule_send_description": "Izvēlieties, kad to nosūtīt.",
     "schedule_preset": {
       "this_morning": "Šorīt",
       "this_afternoon": "Šodien pēcpusdienā",
@@ -1163,6 +1163,7 @@
       "edit_link": "Rediģēt saiti",
       "remove_link": "Noņemt saiti",
       "link_address": "Saites adrese",
+      "link_text": "Teksts",
       "link_invalid": "Adresē nedrīkst būt atstarpju",
       "table": "Tabula",
       "clear_formatting": "Notīrīt formatējumu",
@@ -1393,6 +1394,8 @@
     "from_description": "Atstājiet tukšu, lai sāktu uzreiz.",
     "until_label": "Līdz (neobligāti)",
     "until_description": "Atstājiet tukšu, lai atbildētu, līdz to izslēgsiet.",
+    "from_placeholder": "Uzreiz",
+    "until_placeholder": "Līdz to izslēgsiet",
     "audience_all": "Visiem",
     "audience_internal": "Tikai manai organizācijai ({domains})",
     "audience_external": "Tikai cilvēkiem ārpus manas organizācijas",
@@ -2906,6 +2909,7 @@
       "open_sieve_editor": "Atvērt Sieve redaktoru",
       "fetch_error": "Neizdevās ielādēt filtrus",
       "expanded_view": "Izvērstais skats",
+      "show_rule_details": "Rādīt katra noteikuma nosacījumus un darbības",
       "expanded_view_description": "Rādīt filtra noteikumus ar detalizētiem nosacījumiem un darbībām",
       "if": "Ja",
       "then": "Tad",
@@ -2984,6 +2988,9 @@
       "validation_period_empty": "Norādiet laika posma sākuma vai beigu datumu",
       "validation_period_invalid": "Norādiet laika posmam derīgu datumu ar laiku vai atstājiet lauku tukšu",
       "apply_existing_period": "Noteikums ar laika posmu darbojas tikai ar ziņojumiem, kas pienāk šajā posmā, tāpēc to nevar lietot esošajiem ziņojumiem.",
+      "apply_existing_in": "Piemērot arī vēstulēm, kas jau ir mapē {folder}",
+      "apply_existing_count": "{count, plural, zero {Piemērot arī # vēstulēm, kas jau ir mapē {folder}} one {Piemērot arī # vēstulei, kas jau ir mapē {folder}} other {Piemērot arī # vēstulēm, kas jau ir mapē {folder}}}",
+      "apply_existing_none": "Mapē {folder} vēl nav nevienas vēstules, kas atbilst šim noteikumam.",
       "period_status_scheduled": "ieplānots",
       "period_status_active": "aktīvs",
       "period_status_expired": "beidzies"
@@ -3496,6 +3503,48 @@
     },
     "sign_out": {
       "description": "Izrakstīties no šī konta šajā ierīcē."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "tekne sistēmas tekne paziņojumu apgabals fonā minimizēt tray",
+      "autostart": "automātiska palaišana startēšana palaist ar Windows pierakstoties",
+      "default_app": "noklusējuma pasta lietotne noklusējuma e-pasta programma mailto e-pasta saites",
+      "menu_bar": "izvēlņu josla izvēlnes Alt taustiņš Fails Rediģēt Skats",
+      "updates": "atjauninājumi atjauninājums jauna versija beta kanāls",
+      "devtools": "izstrādātāja rīki devtools konsole pārbaudīt F12 atkļūdošana",
+      "taskbar": "uzdevumjosla mirgošana Dock uzmanība",
+      "quiet_hours": "klusuma stundas netraucēt klusums nakts",
+      "telemetry": "lietojuma informācija telemetrija statistika analītika",
+      "crash": "avāriju ziņojumi kļūdu ziņojumi avārija",
+      "threads": "pavedieni sarunas grupēt threads",
+      "block_images": "bloķēt attēlus ārējie attēli ielādēt attēlus",
+      "dark_mode": "tumšais režīms gaišais režīms nakts režīms dark mode",
+      "timezone": "laika josla timezone",
+      "reading_pane": "lasīšanas rūts priekšskatījuma rūts dalīts skats",
+      "week_start": "nedēļas sākums pirmā diena pirmdiena svētdiena",
+      "empty_trash": "iztukšot atkritni atkritne dzēstie vienumi",
+      "do_not_disturb": "klusuma stundas izslēgt skaņu klusums"
+    },
+    "desktop_notifications": {
+      "title": "Šajā datorā",
+      "closed_label": "Ar aizvērtu logu",
+      "closed_description": "{appName} ziņo par jaunu pastu, kamēr tā darbojas. Lai pēc loga aizvēršanas tā turpinātu darboties teknē, ieslēdziet to sadaļā {page}."
+    },
+    "push_unsupported": "Šī pārlūkprogramma nevar rādīt paziņojumus, kad vietne ir aizvērta.",
+    "backup_description_app": "Izmantojiet tos pašus iestatījumus citās savās ierīcēs.",
+    "sender_favicons": {
+      "label": "Attēli no uzņēmumu vietnēm",
+      "description": "Rādīt vietņu ikonas kā sūtītāju avatarus"
+    },
+    "privacy_push": {
+      "label": "Paziņojumu retranslators",
+      "description": "Paziņojumi, kamēr {appName} ir aizvērta, iet caur push retranslatoru, kas nekad neredz jūsu pastu. Tos ieslēdz vai izslēdz lapā {page}."
+    },
+    "reset": {
+      "message": "Atjauno visus iestatījumus sākotnējā stāvoklī. Jūsu pasts, filtri, automātiskā atbilde un paraksti paliek, kā ir.",
+      "sync_on": "Jūsu citas ierīces izmanto tos pašus iestatījumus, tāpēc mainās arī tās.",
+      "sync_off": "Jūsu citas ierīces saglabā savus iestatījumus."
     }
   },
   "setup": {
@@ -4057,6 +4106,9 @@
     "sending": "Sūta…",
     "sent": "Nosūtīts",
     "view": "Skatīt",
+    "template_saved": "Veidne saglabāta",
+    "schedule_anyway": "Ieplānot tik un tā",
+    "schedule_warnings_title": "Vai tomēr ieplānot šo vēstuli?",
     "picker_button": "Pievienot no kontaktiem",
     "picker_title": "Pievienot saņēmējus",
     "tab_contacts": "Kontakti",
@@ -4522,6 +4574,13 @@
     },
     "open_categories": "Atvērt kategorijas",
     "row_actions": "Darbības: {name}"
+  },
+  "ux_pim_contact": {
+    "context_private": "Mājas",
+    "phone_voice": "Tālrunis",
+    "more_fields": "Vairāk lauku",
+    "import_menu": "Kontaktu imports…",
+    "new_address_book_menu": "Jauna adrešu grāmata…"
   },
   "uxs_wording": {
     "more_options": "Vairāk iespēju",
@@ -5130,8 +5189,46 @@
     "mini_has_events": "ir notikumi",
     "mini_week_number": "{week}. nedēļa"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Uzdevumu saraksti",
+    "task_status_not_started": "Nav sākts",
+    "task_status_in_progress": "Procesā",
+    "quick_task_due": "Termiņš {date}",
+    "quick_task_due_remove": "Atstāt “{words}” virsrakstā",
+    "rename_calendar": "Pārdēvēt…",
+    "rename_title": "Pārdēvēt kalendāru",
+    "rename_confirm": "Pārdēvēt",
+    "rename_empty": "Ievadiet nosaukumu.",
+    "edit_calendar": "Rediģēt…",
+    "default_alerts_open": "Noklusējuma atgādinājumi…",
+    "share_open": "Kopīgot…",
+    "clear_all_events": "Notīrīt visus notikumus…",
+    "delete_calendar": "Dzēst…",
+    "caldav_title": "Adrese citām lietotnēm (CalDAV)",
+    "caldav_hint": "Pievienojiet šo adresi Thunderbird, Apple kalendārā vai DAVx⁵, lai sinhronizētu kalendārus.",
+    "caldav_shared_by": "Kopīgoja {name}:",
+    "freebusy_description": "Tas, ar kuru kopīgojat, redz, kad esat aizņemts, bet ne jūsu notikumus. To izmanto “Ieteikt laikus”."
+  },
   "calendar_offline": {
     "split_needs_server": "Šīm izmaiņām nepieciešams savienojums ar serveri. Pagaidām mainiet tikai šo notikumu vai mēģiniet vēlreiz, kad būsiet tiešsaistē."
+  },
+  "ux_pim_event": {
+    "time_zone": "Laika josla",
+    "time_zone_line": "Laika josla: {zone}",
+    "your_time": "{times} jūsu laikā",
+    "zone_times": "{times} {zone} ({local} jūsu laikā)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Pieņemts",
+    "status_declined": "Noraidīts",
+    "status_tentative": "Varbūt",
+    "status_needs_action": "Vēl nav atbildējis",
+    "status_delegated": "Nodots tālāk",
+    "answered_accepted": "Jūs pieņēmāt {date}.",
+    "answered_declined": "Jūs noraidījāt {date}.",
+    "answered_tentative": "Jūs atbildējāt varbūt {date}.",
+    "answered_accepted_nodate": "Jūs pieņēmāt.",
+    "answered_declined_nodate": "Jūs noraidījāt.",
+    "answered_tentative_nodate": "Jūs atbildējāt varbūt."
   },
   "advanced_search": {
     "title": "Izvērstā meklēšana",
@@ -5409,6 +5506,21 @@
     "previous_file": "Iepriekšējais fails",
     "next_file": "Nākamais fails",
     "loading": "Ielādē…"
+  },
+  "ux_pim_files": {
+    "conflict_title": "{name} jau pastāv.",
+    "conflict_file_hint": "Aizstāt ieliek jauno saturu esošajā failā, tāpēc tā koplietošana paliek. Paturēt abus pievieno numurētu kopiju.",
+    "conflict_folder_hint": "Aizstāt pievieno failus esošajai mapei un aizstāj failus ar tādu pašu nosaukumu. Paturēt abus izveido otru, numurētu mapi.",
+    "replace": "Aizstāt",
+    "keep_both": "Paturēt abus",
+    "skip": "Izlaist",
+    "apply_to_all": "{count, plural, other {Darīt tāpat visiem # konfliktiem}}",
+    "no_preview": "Šim faila tipam nav priekšskatījuma.",
+    "open_in_app": "Atvērt noklusējuma lietotnē",
+    "shared_with": "{name} tagad ir koplietots ar {person}.",
+    "send_message": "Sūtīt ziņu",
+    "share_mail_subject": "Es koplietoju ar jums {name}",
+    "share_mail_body": "Sveiki!\n\nEs koplietoju ar jums “{name}”. To var atvērt šeit:\n{link}"
   },
   "smime": {
     "your_certificates": "Jūsu sertifikāti",
@@ -5734,6 +5846,11 @@
   "company_calendars": {
     "section": "Organizācija"
   },
+  "ux_pim_grid": {
+    "search_short": "Meklēt",
+    "reply": "Atbildēt",
+    "reply_to_invitation": "Atbildēt uz ielūgumu"
+  },
   "vacation_calendar": {
     "label": "Bloķēt manu kalendāru",
     "description": "Pievieno aizņemtu notikumu prombūtnes laikam, lai tad neviens neplānotu ar jums sapulces.",
@@ -5755,6 +5872,88 @@
     "group_label": "Grupa",
     "title": "Brīvs/aizņemts",
     "description": "Grupas kolēģi redz, kad esat aizņemts, bet ne jūsu notikumus. To izmanto “Ieteikt laikus”."
+  },
+  "ux_pim_cimport": {
+    "file_hint": "Noklikšķiniet, lai izvēlētos vCard vai CSV failu",
+    "file_types": ".vcf vai .csv faili, piemēram, no Outlook vai Google kontaktpersonām",
+    "parse_error": "Neizdevās nolasīt failu",
+    "columns_title": "Piesaistiet kolonnas",
+    "columns_hint": "Izvēlieties, kur iet katra faila {file} kolonna. Kolonnas ar “Neimportēt” tiek izlaistas.",
+    "column": "Kolonna",
+    "sample": "Piemērs",
+    "field": "Kontakta lauks",
+    "skip": "Neimportēt",
+    "no_columns": "Izvēlieties lauku vismaz vienai kolonnai.",
+    "continue": "Turpināt",
+    "back": "Atpakaļ",
+    "import_into": "Importēt uz",
+    "group_name": "Vārds",
+    "group_email": "E-pasts",
+    "group_phone": "Tālrunis",
+    "group_org": "Organizācija",
+    "group_adr_any": "Adrese",
+    "group_adr_home": "Mājas adrese",
+    "group_adr_work": "Darba adrese",
+    "group_adr_other": "Cita adrese",
+    "group_more": "Vairāk",
+    "address_field": "{group}: {part}",
+    "t_name_full": "Pilns vārds",
+    "t_name_given": "Vārds",
+    "t_name_middle": "Otrais vārds",
+    "t_name_surname": "Uzvārds",
+    "t_name_prefix": "Uzruna (Dr., kdz.)",
+    "t_name_suffix": "Sufikss (jaun.)",
+    "t_nickname": "Iesauka",
+    "t_email": "E-pasts",
+    "t_email_home": "E-pasts (mājas)",
+    "t_email_work": "E-pasts (darba)",
+    "t_phone": "Tālrunis",
+    "t_phone_mobile": "Mobilais",
+    "t_phone_home": "Tālrunis (mājas)",
+    "t_phone_work": "Tālrunis (darba)",
+    "t_phone_fax": "Fakss",
+    "t_phone_fax_home": "Fakss (mājas)",
+    "t_phone_fax_work": "Fakss (darba)",
+    "t_phone_pager": "Peidžeris",
+    "t_org_name": "Uzņēmums",
+    "t_org_unit": "Nodaļa",
+    "t_org_title": "Amats",
+    "t_street": "Iela",
+    "t_pobox": "Abonenta kastīte",
+    "t_locality": "Pilsēta",
+    "t_region": "Novads vai reģions",
+    "t_postcode": "Pasta indekss",
+    "t_country": "Valsts",
+    "t_web": "Tīmekļa vietne",
+    "t_birthday": "Dzimšanas diena",
+    "t_anniversary": "Gadadiena",
+    "t_notes": "Piezīmes",
+    "t_categories": "Kategorijas",
+    "t_type": "Vērtības veids (Mājas, Darba…)",
+    "merge_with": "Apvienot ar…",
+    "merge_selected": "Apvienot…",
+    "find_duplicates": "Atrast dublikātus",
+    "possible_duplicates": "Iespējamie dublikāti ({count})",
+    "duplicates_title": "Iespējamie dublikāti",
+    "duplicates_hint": "Kontakti ar vienādu vārdu, e-pasta adresi vai tālruņa numuru.",
+    "duplicates_none": "Iespējamie dublikāti netika atrasti.",
+    "pick_title": "Apvienot {name} ar…",
+    "pick_search": "Meklēt kontaktus",
+    "pick_suggested": "Iespējamie dublikāti",
+    "pick_all": "Visi kontakti",
+    "pick_none": "Nav citu kontaktu, ar ko apvienot.",
+    "preview_title": "Apvienot kontaktus ({count})",
+    "preview_hint": "Šie kontakti kļūst par vienu kartīti ar visu, kas ir zemāk.",
+    "preview_deleted": "Pārņemti un pēc tam dzēsti: {names}",
+    "groups": "Grupas",
+    "merge": "Apvienot",
+    "merging": "Apvieno…",
+    "merged": "Kontakti apvienoti",
+    "merge_failed": "Neizdevās apvienot kontaktus.",
+    "merge_not_possible": "Šos kontaktus nevar apvienot: tie ir dažādos kontos vai adrešu grāmatā, kuru jūs nevarat mainīt.",
+    "undo": "Atsaukt",
+    "undone": "Apvienošana atsaukta",
+    "undo_failed": "Apvienošanu neizdevās pilnībā atsaukt."
   },
   "find_time": {
     "suggest": "Ieteikt laikus",
@@ -7146,6 +7345,39 @@
     "app_lock_timeout_hours": "{count, plural, zero {# stundu} one {# stunda} other {# stundas}}",
     "desktop_attention_title": "Šajā datorā"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Jūsu vārds",
+      "description": "Šo vārdu cilvēki redz blakus jūsu adresei, kad sūtāt viņiem vēstuli.",
+      "saved": "Jūsu vārds ir saglabāts.",
+      "error": "Jūsu vārdu neizdevās saglabāt. Mēģiniet vēlreiz."
+    },
+    "addresses": {
+      "description": "Adreses, no kurām varat sūtīt, katrai savs vārds un paraksts.",
+      "label": "Jūsu adreses",
+      "count": "{count, plural, =0 {Vēl nav adrešu} zero {# adrešu} one {# adrese} other {# adreses}}",
+      "manage": "Rediģēt adreses…",
+      "modal_title": "Jūsu e-pasta adreses",
+      "add": "Pievienot adresi",
+      "edit": "Rediģēt adresi",
+      "added": "Adrese pievienota.",
+      "saved": "Adrese saglabāta.",
+      "deleted": "Adrese izdzēsta.",
+      "delete_title": "Vai dzēst šo adresi?"
+    },
+    "signatures": {
+      "title": "Paraksti",
+      "description": "Tiek pievienots jūsu rakstīto ziņojumu beigās. Katrai adresei ir savs.",
+      "saved": "Paraksts saglabāts.",
+      "error": "Parakstu neizdevās saglabāt. Mēģiniet vēlreiz.",
+      "no_addresses": "Vēl nav adreses, no kuras sūtīt."
+    },
+    "search": {
+      "addresses": "identitāte identitātes aizstājvārds sūtītājs sūtītāja adrese no adrese identity alias sender",
+      "signatures": "paraksts e-pasta paraksts kājene identitāte sūtītājs no adrese signature",
+      "your_name": "parādāmais vārds pilns vārds sūtītāja vārds display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Vispirms ievadiet servera adresi.",
     "server_declined": "Jūs neatļāvāt šo serveri, tāpēc tam nekas netika nosūtīts.",
@@ -7188,10 +7420,12 @@
     "server_looking": "Meklējam jūsu pasta serveri…",
     "server_found": "Pasta serveris: {server}",
     "server_change": "Mainīt",
+    "server_change_hint": "Ierakstiet citu servera adresi.",
     "server_not_found": "Šai adresei pasta serveri neatradām. Ievadiet to šeit, piemēram, mail.example.com.",
     "server_needed": "Ievadiet sava pasta servera adresi.",
     "server_invalid": "Tā nav servera adrese. Rakstiet to kā mail.example.com.",
     "email_needed": "Vispirms ievadiet savu e-pasta adresi.",
+    "other_ways": "Citi pierakstīšanās veidi",
     "trouble": "Neizdodas?",
     "trouble_cors": "Jūsu pasta serverim jāatļauj pieteikšanās no šīs vietnes. Ja pieteikties neizdodas, palūdziet pasta servera uzturētājam to atļaut.",
     "provider_unsupported": "{provider} nepiedāvā JMAP, veidu, kā Bulwark sazinās ar pasta serveriem, tāpēc Bulwark tam vēl nevar pieslēgties tieši."
@@ -7280,6 +7514,14 @@
     "copied": "Fails nokopēts. Varat to ielīmēt mapē.",
     "copy_failed": "Failu neizdevās nokopēt.",
     "reply_lost": "Ievadīto atbildi neizdevās saglabāt. Atveriet ziņojumu un atbildiet tur."
+  },
+  "ux_pim_menu": {
+    "search_contacts": "Meklēt kontaktus",
+    "search_files": "Meklēt failus",
+    "import": "Importēt",
+    "import_mail": "Pasts…",
+    "import_calendar": "Kalendārs…",
+    "import_contacts": "Kontakti…"
   },
   "desktopEdit": {
     "edit": "Rediģēt",
@@ -7436,5 +7678,11 @@
     "send_no_consent": "Vispirms ieslēdziet avāriju atskaites.",
     "send_no_url": "Adrese nav iestatīta, tāpēc to nav kur sūtīt. Ievadiet to augstāk.",
     "send_failed": "Avārijas atskaiti neizdevās nosūtīt."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Nelasīto skaits uzdevumjoslas ikonā",
+    "unread_badge_description": "Lai redzētu jaunu pastu, kamēr strādājat citā lietotnē.",
+    "tip_compose_keys": "Nospiediet {keys}, lai rakstītu jaunu ziņojumu",
+    "tip_palette_keys": "Nospiediet {keys}, lai atrastu jebkuru komandu"
   }
 }

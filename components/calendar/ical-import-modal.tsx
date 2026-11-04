@@ -17,6 +17,7 @@ import { apiFetch } from "@/lib/browser-navigation";
 import { explainServerAuthError } from "@/lib/server-auth-status";
 import { IS_LITE } from "@/lib/lite";
 import { isOfflineNow } from "@/lib/offline/state";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 interface ICalImportModalProps {
   calendars: Calendar[];
@@ -34,6 +35,7 @@ type ImportStep = "select" | "preview" | "importing";
 type ImportMode = "file" | "url";
 
 export function ICalImportModal({ calendars, client, onClose, initialUrl, initialFile }: ICalImportModalProps) {
+  const shownName = useCollectionNames();
   const t = useTranslations("calendar.import");
   const tLaunch = useTranslations("pwaLaunch");
   const tCal = useTranslations("calendar");
@@ -465,7 +467,7 @@ export function ICalImportModal({ calendars, client, onClose, initialUrl, initia
                   >
                     {calendars.map((cal) => (
                       <option key={cal.id} value={cal.id}>
-                        {cal.name}
+                        {shownName.calendar(cal)}
                       </option>
                     ))}
                   </select>

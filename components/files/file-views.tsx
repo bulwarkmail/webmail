@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { IconButton } from "@/components/ui/icon-button";
 import type { FileResource } from "@/stores/file-store";
 import {
-  FileSize, ResourceIcon, ShareBadge, Thumbnail, canShowThumbnail, formatFullDate, formatShortDate,
+  FileSize, MiddleCutName, ResourceIcon, ShareBadge, Thumbnail, canShowThumbnail, formatFullDate, formatShortDate,
   type IconOptions,
 } from "@/components/files/file-item-parts";
 import type { SortDir, SortKey } from "@/components/files/files-header";
@@ -262,21 +262,16 @@ function FileListRow({ resource, isSelected, isFocused, isTabStop, isDropTarget,
         ) : icon}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 min-w-0">
-            <button
-              type="button"
-              data-item-action
-              onClick={(e) => {
-                e.stopPropagation();
-                if (touch && selecting) handlers.onToggleSelect(resource);
-                else if (e.ctrlKey || e.metaKey || e.shiftKey) handlers.onSelectClick(resource, e);
-                else handlers.onOpen(resource);
-              }}
-              onDoubleClick={(e) => e.stopPropagation()}
-              className={cn("truncate text-start hover:underline underline-offset-2 decoration-muted-foreground/50", resource.isDirectory && "font-medium")}
+            {/* Plain text, as in grid view and a file manager: a click selects
+                the row, a double-click or Enter opens it, a tap on touch opens
+                it (useTouchPress). A link here opened on the first click of a
+                double-click, and the second closed the preview again (pim-3). */}
+            <span
+              className={cn("truncate text-start", resource.isDirectory && "font-medium")}
               title={note ? `${resource.name}\n${note}` : resource.name}
             >
               {resource.name}
-            </button>
+            </span>
             {isStarred && <Star className="w-3.5 h-3.5 shrink-0 text-amber-400 fill-amber-400" aria-label={t("favorites")} />}
             <ShareBadge resource={resource} t={t} />
           </div>
@@ -427,16 +422,9 @@ function FolderTile({ resource, isSelected, isFocused, isTabStop, isDropTarget, 
         </span>
       )}
       <ResourceIcon resource={resource} size="sm" options={iconOptions} />
-      <button
-        type="button"
-        data-item-action
-        onClick={(e) => { e.stopPropagation(); if (touch && selecting) handlers.onToggleSelect(resource); else handlers.onOpen(resource); }}
-        onDoubleClick={(e) => e.stopPropagation()}
-        className="flex-1 min-w-0 truncate text-start text-sm font-medium"
-        title={resource.name}
-      >
+      <span className="flex-1 min-w-0 truncate text-start text-sm font-medium" title={resource.name}>
         {resource.name}
-      </button>
+      </span>
       {isStarred && <Star className="w-3.5 h-3.5 shrink-0 text-amber-400 fill-amber-400" aria-label={t("favorites")} />}
       <ShareBadge resource={resource} t={t} />
       <IconButton
@@ -493,16 +481,7 @@ function FileTile({ resource, isSelected, isFocused, isTabStop, isCut, selecting
       )}
       <div className="flex items-center gap-1 ps-2.5 pe-1 py-1.5 min-w-0">
         <div className="min-w-0 flex-1">
-          <button
-            type="button"
-            data-item-action
-            onClick={(e) => { e.stopPropagation(); if (touch && selecting) handlers.onToggleSelect(resource); else handlers.onOpen(resource); }}
-            onDoubleClick={(e) => e.stopPropagation()}
-            className="block w-full truncate text-start text-sm"
-            title={resource.name}
-          >
-            {resource.name}
-          </button>
+          <MiddleCutName name={resource.name} className="w-full text-start text-sm" />
           <div className="flex items-center gap-1 text-xs text-muted-foreground min-w-0">
             <span className="truncate">
               {!resource.isSymlink && <><FileSize bytes={resource.contentLength} /> · </>}{formatShortDate(resource.lastModified)}

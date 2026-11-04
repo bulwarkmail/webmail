@@ -174,6 +174,7 @@
     },
     "clear_search": "Cancella ricerca",
     "vacation_active": "Risponditore automatico attivo",
+    "vacation_turn_off": "Disattiva",
     "demo_banner": "Modalità demo",
     "demo_reset": "Reimposta",
     "demo_tour": "Tour",
@@ -245,7 +246,6 @@
     "select_account_title": "Scegli account",
     "select_mailto_account": "Scegli quale account deve aprire questo link e-mail.",
     "select_webcal_account": "Scegli quale account deve aprire questo link calendario.",
-    "select_account_note": "Questa scelta si applica solo a questo link di protocollo.",
     "detail_to": "A",
     "detail_subject": "Oggetto",
     "detail_no_subject": "Senza oggetto",
@@ -1112,7 +1112,7 @@
     "link_url_prompt": "Inserisci l'URL",
     "sending": "Invio in corso...",
     "schedule_send": "Programma invio",
-    "schedule_send_description": "Scegli quando il server deve rilasciare questo messaggio.",
+    "schedule_send_description": "Scegli quando inviarlo.",
     "schedule_preset": {
       "this_morning": "Stamattina",
       "this_afternoon": "Oggi pomeriggio",
@@ -1163,6 +1163,7 @@
       "edit_link": "Modifica link",
       "remove_link": "Rimuovi link",
       "link_address": "Indirizzo del link",
+      "link_text": "Testo",
       "link_invalid": "L'indirizzo non può contenere spazi",
       "table": "Tabella",
       "clear_formatting": "Cancella formattazione",
@@ -1393,6 +1394,8 @@
     "from_description": "Lascia vuoto per iniziare subito.",
     "until_label": "Al (facoltativo)",
     "until_description": "Lascia vuoto per continuare a rispondere finché non lo disattivi.",
+    "from_placeholder": "Da subito",
+    "until_placeholder": "Finché non lo disattivi",
     "audience_all": "Tutti",
     "audience_internal": "Solo la mia organizzazione ({domains})",
     "audience_external": "Solo persone esterne alla mia organizzazione",
@@ -2906,6 +2909,7 @@
       "open_sieve_editor": "Apri editor Sieve",
       "fetch_error": "Impossibile caricare i filtri",
       "expanded_view": "Vista espansa",
+      "show_rule_details": "Mostra condizioni e azioni di ogni regola",
       "expanded_view_description": "Mostra le regole dei filtri con blocchi dettagliati di condizioni e azioni",
       "if": "Se",
       "then": "Allora",
@@ -2984,6 +2988,9 @@
       "validation_period_empty": "Inserisci una data di inizio o di fine per il periodo",
       "validation_period_invalid": "Inserisci una data valida con l'ora per il periodo oppure lascia vuoto il campo",
       "apply_existing_period": "Una regola con periodo agisce solo sui messaggi che arrivano al suo interno, quindi non si può applicare ai messaggi esistenti.",
+      "apply_existing_in": "Applica anche ai messaggi già in {folder}",
+      "apply_existing_count": "{count, plural, one {Applica anche al # messaggio già in {folder}} other {Applica anche ai # messaggi già in {folder}}}",
+      "apply_existing_none": "Nessun messaggio in {folder} corrisponde ancora a questa regola.",
       "period_status_scheduled": "programmata",
       "period_status_active": "attiva",
       "period_status_expired": "scaduta"
@@ -3496,6 +3503,48 @@
     },
     "sign_out": {
       "description": "Esci da questo account su questo dispositivo."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "area di notifica barra di sistema background riduci a icona tray",
+      "autostart": "avvio automatico avvio avvia con Windows all’accesso",
+      "default_app": "app di posta predefinita programma di posta predefinito mailto link email",
+      "menu_bar": "barra dei menu menu tasto Alt File Modifica Visualizza",
+      "updates": "aggiornamenti aggiornamento nuova versione beta canale",
+      "devtools": "strumenti per sviluppatori devtools console ispeziona F12 debug",
+      "taskbar": "barra delle applicazioni lampeggia Dock attenzione",
+      "quiet_hours": "ore di silenzio non disturbare silenzioso muto notte",
+      "telemetry": "dati di utilizzo telemetria statistiche analisi",
+      "crash": "segnalazioni di arresto anomalo segnalazioni errori crash",
+      "threads": "thread conversazioni raggruppa",
+      "block_images": "blocca immagini immagini esterne carica immagini",
+      "dark_mode": "modalità scura modalità chiara modalità notte tema scuro",
+      "timezone": "fuso orario timezone",
+      "reading_pane": "riquadro di lettura riquadro anteprima vista divisa",
+      "week_start": "inizio settimana primo giorno lunedì domenica",
+      "empty_trash": "svuota il cestino cestino elementi eliminati",
+      "do_not_disturb": "ore di silenzio muto silenzio"
+    },
+    "desktop_notifications": {
+      "title": "Su questo computer",
+      "closed_label": "Con la finestra chiusa",
+      "closed_description": "{appName} ti avvisa della nuova posta finché è in esecuzione. Per farlo restare nell’area di notifica dopo aver chiuso la finestra, attivalo in {page}."
+    },
+    "push_unsupported": "Questo browser non può mostrare notifiche quando il sito è chiuso.",
+    "backup_description_app": "Usa le stesse impostazioni sugli altri dispositivi.",
+    "sender_favicons": {
+      "label": "Immagini dai siti delle aziende",
+      "description": "Mostra le icone dei siti web come immagini profilo per i mittenti aziendali"
+    },
+    "privacy_push": {
+      "label": "Relay per le notifiche",
+      "description": "Le notifiche con {appName} chiuso passano da un relay push, che non vede mai la tua posta. Le attivi o disattivi nella pagina {page}."
+    },
+    "reset": {
+      "message": "Riporta tutte le impostazioni a come erano all’inizio. Posta, filtri, risposta automatica e firme restano come sono.",
+      "sync_on": "Gli altri dispositivi usano le stesse impostazioni, quindi cambiano anche loro.",
+      "sync_off": "Gli altri dispositivi mantengono le loro impostazioni."
     }
   },
   "setup": {
@@ -4057,6 +4106,9 @@
     "sending": "Invio in corso…",
     "sent": "Inviato",
     "view": "Visualizza",
+    "template_saved": "Modello salvato",
+    "schedule_anyway": "Programma comunque",
+    "schedule_warnings_title": "Programmare comunque questo messaggio?",
     "picker_button": "Aggiungi dai contatti",
     "picker_title": "Aggiungi destinatari",
     "tab_contacts": "Contatti",
@@ -4522,6 +4574,13 @@
     },
     "open_categories": "Apri categorie",
     "row_actions": "Azioni per {name}"
+  },
+  "ux_pim_contact": {
+    "context_private": "Casa",
+    "phone_voice": "Telefono",
+    "more_fields": "Altri campi",
+    "import_menu": "Importa contatti…",
+    "new_address_book_menu": "Nuova rubrica…"
   },
   "uxs_wording": {
     "more_options": "Altre opzioni",
@@ -5130,8 +5189,46 @@
     "mini_has_events": "ha eventi",
     "mini_week_number": "Settimana {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "Elenchi attività",
+    "task_status_not_started": "Non iniziata",
+    "task_status_in_progress": "In corso",
+    "quick_task_due": "Scadenza {date}",
+    "quick_task_due_remove": "Lascia «{words}» nel titolo",
+    "rename_calendar": "Rinomina…",
+    "rename_title": "Rinomina calendario",
+    "rename_confirm": "Rinomina",
+    "rename_empty": "Inserisci un nome.",
+    "edit_calendar": "Modifica…",
+    "default_alerts_open": "Promemoria predefiniti…",
+    "share_open": "Condividi…",
+    "clear_all_events": "Cancella tutti gli eventi…",
+    "delete_calendar": "Elimina…",
+    "caldav_title": "Indirizzo per altre app (CalDAV)",
+    "caldav_hint": "Aggiungi questo indirizzo in Thunderbird, Calendario di Apple o DAVx⁵ per sincronizzare i calendari.",
+    "caldav_shared_by": "Condiviso da {name}:",
+    "freebusy_description": "Chi riceve la condivisione vede quando sei occupato, non quali eventi hai. «Suggerisci orari» lo usa."
+  },
   "calendar_offline": {
     "split_needs_server": "Questa modifica richiede una connessione al server. Per ora modifica solo questo evento, oppure riprova quando sei di nuovo online."
+  },
+  "ux_pim_event": {
+    "time_zone": "Fuso orario",
+    "time_zone_line": "Fuso orario: {zone}",
+    "your_time": "{times} ora tua",
+    "zone_times": "{times} {zone} ({local} ora tua)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "Accettato",
+    "status_declined": "Rifiutato",
+    "status_tentative": "Forse",
+    "status_needs_action": "Non ha ancora risposto",
+    "status_delegated": "Delegato",
+    "answered_accepted": "Hai accettato il {date}.",
+    "answered_declined": "Hai rifiutato il {date}.",
+    "answered_tentative": "Hai risposto forse il {date}.",
+    "answered_accepted_nodate": "Hai accettato.",
+    "answered_declined_nodate": "Hai rifiutato.",
+    "answered_tentative_nodate": "Hai risposto forse."
   },
   "advanced_search": {
     "title": "Ricerca avanzata",
@@ -5409,6 +5506,21 @@
     "previous_file": "File precedente",
     "next_file": "File successivo",
     "loading": "Caricamento…"
+  },
+  "ux_pim_files": {
+    "conflict_title": "{name} esiste già.",
+    "conflict_file_hint": "Sostituisci mette il nuovo contenuto nel file esistente, così le sue condivisioni restano. Mantieni entrambi aggiunge una copia numerata.",
+    "conflict_folder_hint": "Sostituisci aggiunge i file alla cartella esistente e sostituisce quelli con lo stesso nome. Mantieni entrambi crea una seconda cartella numerata.",
+    "replace": "Sostituisci",
+    "keep_both": "Mantieni entrambi",
+    "skip": "Salta",
+    "apply_to_all": "{count, plural, one {Fai lo stesso per il conflitto} other {Fai lo stesso per tutti i # conflitti}}",
+    "no_preview": "Nessuna anteprima per questo tipo di file.",
+    "open_in_app": "Apri con l’app predefinita",
+    "shared_with": "{name} ora è condiviso con {person}.",
+    "send_message": "Invia un messaggio",
+    "share_mail_subject": "Ho condiviso {name} con te",
+    "share_mail_body": "Ciao,\n\nho condiviso «{name}» con te. Puoi aprirlo qui:\n{link}"
   },
   "smime": {
     "your_certificates": "I tuoi certificati",
@@ -5734,6 +5846,11 @@
   "company_calendars": {
     "section": "Organizzazione"
   },
+  "ux_pim_grid": {
+    "search_short": "Cerca",
+    "reply": "Rispondi",
+    "reply_to_invitation": "Rispondi all’invito"
+  },
   "vacation_calendar": {
     "label": "Blocca il mio calendario",
     "description": "Aggiunge un evento occupato per il periodo di assenza, così nessuno ti fissa riunioni in quei giorni.",
@@ -5755,6 +5872,88 @@
     "group_label": "Gruppo",
     "title": "Disponibilità",
     "description": "I colleghi del gruppo vedono quando sei occupato, non quali eventi hai. «Suggerisci orari» lo usa."
+  },
+  "ux_pim_cimport": {
+    "file_hint": "Fai clic per selezionare un file vCard o CSV",
+    "file_types": "File .vcf o .csv, ad esempio da Outlook o Google Contatti",
+    "parse_error": "Impossibile leggere il file",
+    "columns_title": "Abbina le colonne",
+    "columns_hint": "Scegli dove va ogni colonna di {file}. Le colonne impostate su «Non importare» vengono escluse.",
+    "column": "Colonna",
+    "sample": "Esempio",
+    "field": "Campo del contatto",
+    "skip": "Non importare",
+    "no_columns": "Scegli un campo per almeno una colonna.",
+    "continue": "Continua",
+    "back": "Indietro",
+    "import_into": "Importa in",
+    "group_name": "Nome",
+    "group_email": "Email",
+    "group_phone": "Telefono",
+    "group_org": "Organizzazione",
+    "group_adr_any": "Indirizzo",
+    "group_adr_home": "Indirizzo di casa",
+    "group_adr_work": "Indirizzo di lavoro",
+    "group_adr_other": "Altro indirizzo",
+    "group_more": "Altro",
+    "address_field": "{group}: {part}",
+    "t_name_full": "Nome completo",
+    "t_name_given": "Nome",
+    "t_name_middle": "Secondo nome",
+    "t_name_surname": "Cognome",
+    "t_name_prefix": "Titolo (Dott., Sig.ra)",
+    "t_name_suffix": "Suffisso (Jr.)",
+    "t_nickname": "Soprannome",
+    "t_email": "Email",
+    "t_email_home": "Email (casa)",
+    "t_email_work": "Email (lavoro)",
+    "t_phone": "Telefono",
+    "t_phone_mobile": "Cellulare",
+    "t_phone_home": "Telefono (casa)",
+    "t_phone_work": "Telefono (lavoro)",
+    "t_phone_fax": "Fax",
+    "t_phone_fax_home": "Fax (casa)",
+    "t_phone_fax_work": "Fax (lavoro)",
+    "t_phone_pager": "Cercapersone",
+    "t_org_name": "Azienda",
+    "t_org_unit": "Reparto",
+    "t_org_title": "Qualifica",
+    "t_street": "Via",
+    "t_pobox": "Casella postale",
+    "t_locality": "Città",
+    "t_region": "Stato o regione",
+    "t_postcode": "CAP",
+    "t_country": "Paese",
+    "t_web": "Sito web",
+    "t_birthday": "Compleanno",
+    "t_anniversary": "Anniversario",
+    "t_notes": "Note",
+    "t_categories": "Categorie",
+    "t_type": "Tipo del valore (Casa, Lavoro…)",
+    "merge_with": "Unisci con…",
+    "merge_selected": "Unisci…",
+    "find_duplicates": "Trova duplicati",
+    "possible_duplicates": "Possibili duplicati ({count})",
+    "duplicates_title": "Possibili duplicati",
+    "duplicates_hint": "Contatti con lo stesso nome, indirizzo email o numero di telefono.",
+    "duplicates_none": "Nessun possibile duplicato trovato.",
+    "pick_title": "Unisci {name} con…",
+    "pick_search": "Cerca contatti",
+    "pick_suggested": "Possibili duplicati",
+    "pick_all": "Tutti i contatti",
+    "pick_none": "Nessun altro contatto da unire.",
+    "preview_title": "Unisci contatti ({count})",
+    "preview_hint": "Questi contatti diventano una sola scheda con tutto ciò che segue.",
+    "preview_deleted": "Uniti e poi eliminati: {names}",
+    "groups": "Gruppi",
+    "merge": "Unisci",
+    "merging": "Unione in corso…",
+    "merged": "Contatti uniti",
+    "merge_failed": "Impossibile unire i contatti.",
+    "merge_not_possible": "Questi contatti non si possono unire: sono in account diversi o in una rubrica che non puoi modificare.",
+    "undo": "Annulla",
+    "undone": "Unione annullata",
+    "undo_failed": "Non è stato possibile annullare del tutto l’unione."
   },
   "find_time": {
     "suggest": "Suggerisci orari",
@@ -7146,6 +7345,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# ora} other {# ore}}",
     "desktop_attention_title": "Su questo computer"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Il tuo nome",
+      "description": "Le persone vedono questo nome accanto al tuo indirizzo quando scrivi loro.",
+      "saved": "Il tuo nome è stato salvato.",
+      "error": "Non è stato possibile salvare il tuo nome. Riprova."
+    },
+    "addresses": {
+      "description": "Gli indirizzi da cui puoi inviare, ognuno con il proprio nome e la propria firma.",
+      "label": "I tuoi indirizzi",
+      "count": "{count, plural, =0 {Ancora nessun indirizzo} one {# indirizzo} other {# indirizzi}}",
+      "manage": "Modifica indirizzi…",
+      "modal_title": "I tuoi indirizzi email",
+      "add": "Aggiungi indirizzo",
+      "edit": "Modifica indirizzo",
+      "added": "Indirizzo aggiunto.",
+      "saved": "Indirizzo salvato.",
+      "deleted": "Indirizzo eliminato.",
+      "delete_title": "Eliminare questo indirizzo?"
+    },
+    "signatures": {
+      "title": "Firme",
+      "description": "Aggiunta alla fine dei messaggi che scrivi. Ogni indirizzo ha la sua.",
+      "saved": "Firma salvata.",
+      "error": "Non è stato possibile salvare la firma. Riprova.",
+      "no_addresses": "Non c'è ancora un indirizzo da cui inviare."
+    },
+    "search": {
+      "addresses": "identità alias mittente indirizzo del mittente indirizzo da identity sender",
+      "signatures": "firma firma email piè di pagina identità mittente indirizzo da signature",
+      "your_name": "nome visualizzato nome completo nome del mittente display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Inserisci prima l'indirizzo del server.",
     "server_declined": "Non hai autorizzato questo server, quindi non gli è stato inviato nulla.",
@@ -7188,10 +7420,12 @@
     "server_looking": "Ricerca del tuo server di posta…",
     "server_found": "Server di posta: {server}",
     "server_change": "Cambia",
+    "server_change_hint": "Scrivi l'indirizzo di un altro server.",
     "server_not_found": "Non abbiamo trovato il server di posta di questo indirizzo. Inseriscilo qui, per esempio mail.example.com.",
     "server_needed": "Inserisci l'indirizzo del tuo server di posta.",
     "server_invalid": "Questo non è l'indirizzo di un server. Scrivilo come mail.example.com.",
     "email_needed": "Inserisci prima il tuo indirizzo email.",
+    "other_ways": "Altri modi per accedere",
     "trouble": "Problemi?",
     "trouble_cors": "Il tuo server di posta deve consentire l'accesso da questo sito. Se l'accesso non riesce, chiedi a chi gestisce il server di posta di consentirlo.",
     "provider_unsupported": "{provider} non offre JMAP, il modo in cui Bulwark parla con i server di posta, quindi Bulwark non può ancora collegarsi direttamente."
@@ -7280,6 +7514,14 @@
     "copied": "File copiato. Puoi incollarlo in una cartella.",
     "copy_failed": "Impossibile copiare il file.",
     "reply_lost": "Non è stato possibile conservare la risposta digitata. Apri il messaggio e rispondi da lì."
+  },
+  "ux_pim_menu": {
+    "search_contacts": "Cerca contatti",
+    "search_files": "Cerca file",
+    "import": "Importa",
+    "import_mail": "Posta…",
+    "import_calendar": "Calendario…",
+    "import_contacts": "Contatti…"
   },
   "desktopEdit": {
     "edit": "Modifica",
@@ -7436,5 +7678,11 @@
     "send_no_consent": "Attiva prima le segnalazioni di arresto anomalo.",
     "send_no_url": "Non è impostato alcun indirizzo, quindi non c'è dove inviarla. Inseriscine uno qui sopra.",
     "send_failed": "Impossibile inviare la segnalazione di arresto."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Numero di messaggi non letti sull'icona della barra delle applicazioni",
+    "unread_badge_description": "Per vedere la nuova posta mentre lavori in un'altra app.",
+    "tip_compose_keys": "Premi {keys} per scrivere un nuovo messaggio",
+    "tip_palette_keys": "Premi {keys} per trovare qualsiasi comando"
   }
 }

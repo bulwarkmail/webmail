@@ -1,26 +1,117 @@
 "use client";
 
-import { useMemo, useCallback, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useMemo, useCallback, useId, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { parseISO, isBefore, isTomorrow } from "date-fns";
 import { displayNow, isDisplayToday } from "@/lib/timezone";
-import { Check, Flag, CalendarDays, ListTodo, Plus } from "@/components/icons";
+import { Check, Flag, CalendarDays, ListTodo, Plus, X } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import type { CalendarTask, Calendar } from "@/lib/jmap/types";
 import type { TaskViewFilter } from "@/stores/task-store";
 import { useSettingsStore } from "@/stores/settings-store";
+import { useCalendarStore } from "@/stores/calendar-store";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
 import { useCvdColor } from "@/hooks/use-cvd-color";
+import { useCollectionNames } from "@/hooks/use-collection-names";
+import { parseTaskDue } from "@/lib/task-due-parser";
 
 interface TaskListViewProps {
   tasks: CalendarTask[];
   calendars: Calendar[];
-  selectedCalendarIds: string[];
   filter: TaskViewFilter;
   onSelectTask: (task: CalendarTask) => void;
   onToggleComplete: (task: CalendarTask) => void;
   selectedTaskId?: string | null;
-  onQuickCreate?: (title: string) => void;
+  /** `due`: the date read from the end of the title (yyyy-MM-dd), or null. */
+  onQuickCreate?: (title: string, due: string | null) => void;
+}
+
+/**
+ * Where a new task goes (pim-8): the first task-only list, else the default
+ * calendar, else the first one. `calendars` are the ones the user may write.
+ * The user's own calendars of the active login come first: a colleague's
+ * shared list or another login's is never picked over them.
+ */
+export function defaultTaskList(calendars: Calendar[]): Calendar | undefined {
+  const pick = (list: Calendar[]) => list.find((c) => c.isTasksOnly) ?? list.find((c) => c.isDefault) ?? list[0];
+  return pick(calendars.filter((c) => !c.isShared && !c.localAccountId)) ?? pick(calendars);
+}
+
+/**
+ * The task lists the tasks view offers (pim-1): every task-only calendar and
+ * every calendar that holds a task, in the calendars' order.
+ */
+export function taskListsOf(calendars: Calendar[], tasks: CalendarTask[]): Calendar[] {
+  const holding = new Set(tasks.flatMap((task) => Object.keys(task.calendarIds ?? {})));
+  return calendars.filter((c) => c.isTasksOnly || holding.has(c.id));
+}
+
+/**
+ * "Add a task…": reads a date at the end of the title (pim-24) and shows it
+ * as a chip before the task is made; the chip's × keeps the words in the
+ * title instead.
+ */
+function QuickAddTask({ onQuickCreate }: { onQuickCreate: (title: string, due: string | null) => void }) {
+  const t = useTranslations("calendar");
+  const tUx = useTranslations("ux_pim_calendar");
+  const locale = useLocale();
+  const { dateTime: formatDate } = useDisplayDateFormatter();
+  const dueId = useId();
+  const [title, setTitle] = useState("");
+  // The text whose date the user turned down with the chip's ×.
+  const [declined, setDeclined] = useState<string | null>(null);
+  const parsed = useMemo(
+    () => (title.trim() && title !== declined ? parseTaskDue(title, locale, displayNow()) : null),
+    [title, declined, locale],
+  );
+
+  const submit = () => {
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    if (parsed) onQuickCreate(parsed.title, parsed.due);
+    else onQuickCreate(trimmed, null);
+    setTitle("");
+    setDeclined(null);
+  };
+
+  return (
+    <div className="px-4 py-2 border-b border-border">
+      <div className="flex items-center gap-2">
+        <Plus className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && title.trim()) submit();
+          }}
+          placeholder={t("tasks.quick_add_placeholder")}
+          aria-label={t("tasks.quick_add_placeholder")}
+          aria-describedby={parsed ? dueId : undefined}
+          className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+        />
+        {parsed && (
+          <span
+            id={dueId}
+            data-testid="quick-task-due"
+            className="flex flex-shrink-0 items-center gap-1 rounded-full bg-primary/10 ps-2 pe-0.5 py-0.5 text-xs text-primary"
+          >
+            <CalendarDays className="h-3 w-3" aria-hidden="true" />
+            {tUx("quick_task_due", { date: formatDate(parseISO(parsed.due), { weekday: "short", month: "short", day: "numeric" }) })}
+            <button
+              type="button"
+              onClick={() => setDeclined(title)}
+              className="rounded-full p-0.5 hover:bg-primary/15"
+              aria-label={tUx("quick_task_due_remove", { words: parsed.matched })}
+              title={tUx("quick_task_due_remove", { words: parsed.matched })}
+            >
+              <X className="h-3 w-3" aria-hidden="true" />
+            </button>
+          </span>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function getTaskPriorityIcon(priority: number) {
@@ -66,15 +157,21 @@ function getDueDateLabel(due: string, showWithoutTime: boolean, t: ReturnType<ty
   };
 }
 
-/** The tasks the list shows, in its order: filtered by calendar and status. "All" is all of them. */
+/**
+ * The tasks the list shows, in its order: filtered by task list and status.
+ * "All" is all of them. The lists are the tasks view's own (pim-1), not the
+ * grid's calendar selection, which never holds a task-only list: a task
+ * leaves the list only when the user unticks its list.
+ */
 export function filterTasksForList(
   tasks: CalendarTask[],
-  selectedCalendarIds: string[],
+  hiddenTaskListIds: string[],
   filter: TaskViewFilter,
 ): CalendarTask[] {
+  const hidden = new Set(hiddenTaskListIds);
   let result = tasks.filter(task => {
-    const calIds = Object.keys(task.calendarIds);
-    return calIds.some(id => selectedCalendarIds.includes(id));
+    const calIds = Object.keys(task.calendarIds ?? {});
+    return calIds.length === 0 || calIds.some(id => !hidden.has(id));
   });
 
   switch (filter) {
@@ -118,22 +215,22 @@ export function filterTasksForList(
 export function TaskListView({
   tasks,
   calendars,
-  selectedCalendarIds,
   filter,
   onSelectTask,
   onToggleComplete,
   selectedTaskId,
   onQuickCreate,
 }: TaskListViewProps) {
+  const shownName = useCollectionNames();
   const t = useTranslations("calendar");
   const paint = useCvdColor();
   const timeFormat = useSettingsStore((s) => s.timeFormat);
+  const hiddenTaskListIds = useCalendarStore((s) => s.hiddenTaskListIds);
   const { dateTime: formatDate } = useDisplayDateFormatter();
-  const [quickAddTitle, setQuickAddTitle] = useState("");
 
   const filteredTasks = useMemo(
-    () => filterTasksForList(tasks, selectedCalendarIds, filter),
-    [tasks, selectedCalendarIds, filter],
+    () => filterTasksForList(tasks, hiddenTaskListIds, filter),
+    [tasks, hiddenTaskListIds, filter],
   );
 
   const handleToggle = useCallback((e: React.MouseEvent, task: CalendarTask) => {
@@ -144,27 +241,7 @@ export function TaskListView({
   if (filteredTasks.length === 0) {
     return (
       <div className="flex flex-col flex-1">
-        {onQuickCreate && (
-          <div className="px-4 py-2 border-b border-border">
-            <div className="flex items-center gap-2">
-              <Plus className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <input
-                type="text"
-                value={quickAddTitle}
-                onChange={(e) => setQuickAddTitle(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && quickAddTitle.trim()) {
-                    onQuickCreate(quickAddTitle.trim());
-                    setQuickAddTitle("");
-                  }
-                }}
-                placeholder={t("tasks.quick_add_placeholder")}
-                aria-label={t("tasks.quick_add_placeholder")}
-                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-              />
-            </div>
-          </div>
-        )}
+        {onQuickCreate && <QuickAddTask onQuickCreate={onQuickCreate} />}
         <div className="flex flex-col items-center justify-center flex-1 text-muted-foreground py-12">
           <ListTodo className="h-12 w-12 mb-3 opacity-30" />
           <p className="text-sm">{t("tasks.no_tasks")}</p>
@@ -175,27 +252,7 @@ export function TaskListView({
 
   return (
     <div className="flex-1 overflow-y-auto max-md:pb-20">
-      {onQuickCreate && (
-        <div className="px-4 py-2 border-b border-border">
-          <div className="flex items-center gap-2">
-            <Plus className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <input
-              type="text"
-              value={quickAddTitle}
-              onChange={(e) => setQuickAddTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && quickAddTitle.trim()) {
-                  onQuickCreate(quickAddTitle.trim());
-                  setQuickAddTitle("");
-                }
-              }}
-              placeholder={t("tasks.quick_add_placeholder")}
-              aria-label={t("tasks.quick_add_placeholder")}
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-            />
-          </div>
-        </div>
-      )}
+      {onQuickCreate && <QuickAddTask onQuickCreate={onQuickCreate} />}
       <div className="divide-y divide-border">
         {filteredTasks.map(task => {
           const cal = calendars.find(c => task.calendarIds[c.id]);
@@ -252,7 +309,7 @@ export function TaskListView({
                   {cal && (
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
                       <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: paint(cal.color || "#3b82f6") }} />
-                      {cal.name}
+                      {shownName.calendar(cal)}
                     </span>
                   )}
                 </span>

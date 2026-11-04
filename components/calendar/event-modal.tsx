@@ -19,7 +19,8 @@ import { alertRowToOffset, describeAlert, getCalendarDefaultAlerts, newAlertRow,
 import { RecurrenceEditor, buildRecurrenceSummary, isSimpleRecurrenceRule } from "./recurrence-editor";
 import { parseDuration, getEventColor } from "./event-card";
 import { buildAllDayDuration, getEventDisplayEndDate, getEventEndDate, getEventStartDate, getPrimaryCalendarId } from "@/lib/calendar-utils";
-import { displayNow, fromDisplayDate, fromWallClock, getEffectiveTimeZone, parseLocalDateTime, toZonedDisplayDate } from "@/lib/timezone";
+import { displayNow, fromDisplayDate, fromWallClock, getEffectiveTimeZone, listTimeZones, parseLocalDateTime, toZonedDisplayDate } from "@/lib/timezone";
+import { addToWall, compareWall, displayToZoneWall, eventFormTimeZone, eventZonedTimes, timeZoneCity, wallFields, zonedTimesText, zoneFieldsToDisplay, zoneWallDurationMs, zoneWallToDisplay } from "@/lib/event-time-zone";
 import { createRecurrenceRule, sameRecurrenceRules } from "@/lib/recurrence-rule";
 import { ParticipantInput, type ParticipantInputHandle } from "./participant-input";
 import { ParticipantAvailability } from "./participant-availability";
@@ -41,6 +42,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { generateUUID } from "@/lib/utils";
 import { buildDuplicateEventData } from "@/lib/calendar-duplicate";
 import { useFormatEventDate } from "@/hooks/use-format-event-date";
+import { useCalendarLocale } from "@/hooks/use-calendar-locale";
 import { useIsPaneScoped } from "@/hooks/use-pane-context";
 import { useContactNameResolver } from "@/hooks/use-contact-name-resolver";
 import { confirmInvitationRecipients } from "@/lib/outgoing/external-recipients";
@@ -56,6 +58,7 @@ import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useCvdColor } from "@/hooks/use-cvd-color";
 import { gateLinkClick } from "@/lib/plugin-hook-result";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 export interface PendingEventPreview {
   start: Date;
@@ -273,12 +276,14 @@ export function EventModal({
   maxParticipants = null,
   isMobile = false,
 }: EventModalProps) {
+  const shownName = useCollectionNames();
   const t = useTranslations("calendar");
   const paint = useCvdColor();
   // Ids that tie each visible label to its field.
   const labelIdBase = useId();
   const labelFor = (key: string) => `${labelIdBase}-${key}`;
   const tCommon = useTranslations("common");
+  const tEvent = useTranslations("ux_pim_event");
   // The header's close goes to its start when the window's own close is at its end.
   const [header, setHeader] = useState<HTMLDivElement | null>(null);
   const closeFirst = useCloseBesideControls(header);
@@ -295,6 +300,7 @@ export function EventModal({
     : "fixed inset-0 z-50 flex flex-col bg-background pt-[var(--titlebar-inset)]";
   const isEdit = !!event;
   const formatEventDate = useFormatEventDate();
+  const { formatDateRangeLabel } = useCalendarLocale();
   const [mode, setMode] = useState<"view" | "edit">(isEdit && !startInEditMode ? "view" : "edit");
 
   // Only the organizer invites: someone else's invitation keeps its
@@ -385,11 +391,37 @@ export function EventModal({
   const [virtualLocation, setVirtualLocation] = useState(
     event?.virtualLocations ? Object.values(event.virtualLocations)[0]?.uri || "" : ""
   );
-  const [startDate, setStartDate] = useState(formatDateInput(getInitialStart()));
-  const [startTime, setStartTime] = useState(formatTimeInput(getInitialStart()));
-  const [endDate, setEndDate] = useState(formatDateInput(getInitialEnd()));
-  const [endTime, setEndTime] = useState(formatTimeInput(getInitialEnd()));
+  // The zone the date and time fields are in, and a save writes: the
+  // event's own, the user's for a new event, none for a floating one. An
+  // edit used to save every event in the user's zone (pim-2).
+  const userTimeZone = getEffectiveTimeZone();
+  const [timeZone, setTimeZone] = useState<string | null>(() => eventFormTimeZone(event, userTimeZone));
+  const [showZonePicker, setShowZonePicker] = useState(false);
+  const [initialStartWall] = useState(() => displayToZoneWall(getInitialStart(), timeZone));
+  const [initialEndWall] = useState(() => displayToZoneWall(getInitialEnd(), timeZone));
+  const [startDate, setStartDate] = useState(formatDateInput(initialStartWall));
+  const [startTime, setStartTime] = useState(formatTimeInput(initialStartWall));
+  const [endDate, setEndDate] = useState(formatDateInput(initialEndWall));
+  const [endTime, setEndTime] = useState(formatTimeInput(initialEndWall));
   const [allDay, setAllDay] = useState(event?.showWithoutTime || defaultAllDay || false);
+  // The zone the fields are on: none for an all-day event.
+  const fieldZone = allDay ? null : timeZone;
+  const zoneOptions = useMemo(() => {
+    if (!showZonePicker) return [];
+    const zones = listTimeZones();
+    return timeZone && !zones.includes(timeZone) ? [timeZone, ...zones] : zones;
+  }, [showZonePicker, timeZone]);
+  // The form's times on the user's clock, beside another zone's.
+  const formYourTimes = useMemo(() => {
+    if (!fieldZone || fieldZone === userTimeZone) return null;
+    const from = zoneWallToDisplay(new Date(`${startDate}T${startTime || "00:00"}:00`), fieldZone);
+    const to = zoneWallToDisplay(new Date(`${endDate}T${endTime || "00:00"}:00`), fieldZone);
+    if (isNaN(from.getTime()) || isNaN(to.getTime())) return null;
+    const time = (d: Date) => format(d, timeDisplayFmt);
+    const onOtherDay = !isSameDay(from, new Date(`${startDate}T00:00:00`));
+    const day = onOtherDay ? `${new Intl.DateTimeFormat(locale, { weekday: "short" }).format(from)} ` : "";
+    return `${day}${time(from)}–${time(to)}`;
+  }, [fieldZone, userTimeZone, startDate, startTime, endDate, endTime, timeDisplayFmt, locale]);
 
   // Editing the start shifts the end with it, preserving the event's current
   // length (end - start) - so moving the start never leaves the end before it
@@ -417,9 +449,16 @@ export function EventModal({
 
   // Calendars offered as create/move targets: writable, non-subscription, plus
   // the event's current calendar so an in-place edit never blanks the select.
+  // An existing event moves only within its own login: the update goes to
+  // that login's server, which doesn't know another login's calendar ids.
+  const eventLogin = useMemo(() => {
+    const primary = event?.calendarIds ? getPrimaryCalendarId(event) : undefined;
+    return primary ? { known: true, login: calendars.find(c => c.id === primary)?.localAccountId } : { known: false, login: undefined };
+  }, [event, calendars]);
   const selectableCalendars = useMemo(
-    () => calendars.filter(c => canCreateEventsIn(c, isSubscriptionCalendar) || c.id === calendarId),
-    [calendars, isSubscriptionCalendar, calendarId]
+    () => calendars.filter(c => (canCreateEventsIn(c, isSubscriptionCalendar) || c.id === calendarId)
+      && (!eventLogin.known || c.localAccountId === eventLogin.login)),
+    [calendars, isSubscriptionCalendar, calendarId, eventLogin]
   );
   const [recurrence, setRecurrence] = useState<RecurrenceOption>(() => {
     if (!event?.recurrenceRules?.length) return "none";
@@ -528,9 +567,9 @@ export function EventModal({
   // What the form holds against what it opened with: a form with changes
   // asks before X, Cancel or Escape drop them (R5).
   const formState = useMemo(() => ({
-    title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay,
+    title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone,
     calendarId, recurrence, customRule, useDefaultAlerts, alertRows, preservedAlerts, attendees, sendInvitations,
-  }), [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay,
+  }), [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone,
     calendarId, recurrence, customRule, useDefaultAlerts, alertRows, preservedAlerts, attendees, sendInvitations]);
   const [initialForm] = useState(formState);
   const isDirty = mode === "edit" && JSON.stringify(formState) !== JSON.stringify(initialForm);
@@ -541,6 +580,7 @@ export function EventModal({
     const f = initialForm;
     setTitle(f.title); setDescription(f.description); setLocation(f.location); setVirtualLocation(f.virtualLocation);
     setStartDate(f.startDate); setStartTime(f.startTime); setEndDate(f.endDate); setEndTime(f.endTime); setAllDay(f.allDay);
+    setTimeZone(f.timeZone); setShowZonePicker(false);
     setCalendarId(f.calendarId); setRecurrence(f.recurrence); setCustomRule(f.customRule); setShowRecurrenceEditor(false);
     setUseDefaultAlerts(f.useDefaultAlerts); setAlertRows(f.alertRows); setPreservedAlerts(f.preservedAlerts); setRefreshDefaults(false);
     setAttendees(f.attendees); setSendInvitations(f.sendInvitations);
@@ -569,10 +609,10 @@ export function EventModal({
   const backToView = useCallback(() => whenDiscarded(() => { resetForm(); setMode("view"); }), [whenDiscarded, resetForm]);
 
   // The event window the attendees' free/busy is checked against. The
-  // fields are a wall clock in the effective zone, as the save path labels
+  // fields are a wall clock in the form's zone, as the save path labels
   // them, not in the browser's; an all-day event spans its whole days.
   const availabilityWindow = useMemo(() => {
-    const zone = getEffectiveTimeZone();
+    const zone = fieldZone ?? getEffectiveTimeZone();
     const instant = (value: string) => {
       const wall = parseLocalDateTime(value);
       if (!wall) return null;
@@ -585,7 +625,7 @@ export function EventModal({
       start: startDate ? instant(startStr) : null,
       end: endDate ? instant(endStr) : null,
     };
-  }, [startDate, startTime, endDate, endTime, allDay]);
+  }, [startDate, startTime, endDate, endTime, allDay, fieldZone]);
 
   // An existing event's own time, as saved: Suggest times doesn't count it
   // as busy (the attendees who have it in their calendar show it so).
@@ -594,16 +634,16 @@ export function EventModal({
     : null), [event]);
 
   // A suggested slot moves the event there; the fields are a wall clock in
-  // the effective zone, so the instants are turned back into one.
+  // the form's zone, so the instants are turned back into one.
   const handlePickSlot = useCallback((slot: { start: Date; end: Date }) => {
-    const zone = getEffectiveTimeZone();
+    const zone = fieldZone ?? getEffectiveTimeZone();
     const from = toZonedDisplayDate(slot.start, zone);
     const to = toZonedDisplayDate(slot.end, zone);
     setStartDate(formatDateInput(from));
     setStartTime(formatTimeInput(from));
     setEndDate(formatDateInput(to));
     setEndTime(formatTimeInput(to));
-  }, []);
+  }, [fieldZone]);
 
   // Plugin transform: collect conflict warnings for the current event form.
   // Re-runs (debounced) whenever fields that affect scheduling change.
@@ -687,7 +727,7 @@ export function EventModal({
       description,
       start: startStr,
       duration,
-      timeZone: getEffectiveTimeZone(),
+      timeZone: fieldZone,
       utcStart: null,
       utcEnd: null,
       isAllDay: allDay,
@@ -700,7 +740,7 @@ export function EventModal({
       isRecurring: recurrence !== "none",
       keywords: base?.keywords ?? [],
     };
-  }, [event, calendarId, title, description, startDate, startTime, endDate, endTime, allDay, location, attendees, recurrence]);
+  }, [event, calendarId, title, description, startDate, startTime, endDate, endTime, allDay, fieldZone, location, attendees, recurrence]);
   const [settledFormEvent, setSettledFormEvent] = useState(formEventView);
   useEffect(() => {
     const timer = setTimeout(() => setSettledFormEvent(formEventView), 500);
@@ -708,17 +748,20 @@ export function EventModal({
   }, [formEventView]);
   const eventFormProps = useMemo(() => ({ event: settledFormEvent }), [settledFormEvent]);
 
-  // Report live preview to parent for grid outline
+  // Report live preview to parent for grid outline. The label as a string:
+  // a new `t` on every render would report it again on each.
+  const noTitle = t("events.no_title");
   useEffect(() => {
     if (!onPreviewChange || isEdit) return;
     const startStr = allDay ? `${startDate}T00:00:00` : `${startDate}T${startTime}:00`;
     const endStr = allDay ? `${endDate}T23:59:59` : `${endDate}T${endTime}:00`;
-    const s = new Date(startStr);
-    const e = new Date(endStr);
+    // Where the grid shows it: the fields are on the form's clock.
+    const s = zoneWallToDisplay(new Date(startStr), fieldZone);
+    const e = zoneWallToDisplay(new Date(endStr), fieldZone);
     if (isNaN(s.getTime()) || isNaN(e.getTime())) return;
-    onPreviewChange({ start: s, end: e, title: title || "(No title)", allDay, calendarId });
+    onPreviewChange({ start: s, end: e, title: title || noTitle, allDay, calendarId });
     return () => onPreviewChange(null);
-  }, [startDate, startTime, endDate, endTime, allDay, title, calendarId, isEdit, onPreviewChange]);
+  }, [startDate, startTime, endDate, endTime, allDay, fieldZone, title, noTitle, calendarId, isEdit, onPreviewChange]);
 
   const statusCounts = useMemo(() => {
     if (!event?.participants) return null;
@@ -755,6 +798,7 @@ export function EventModal({
     let duration: string;
     // The last day of an all-day event, the end of a timed one.
     let end: Date;
+    let timedWhen: { start: Date; end: Date } | undefined;
 
     if (allDay) {
       let inclusiveEnd = new Date(`${endDate}T00:00:00`);
@@ -764,21 +808,32 @@ export function EventModal({
       duration = buildAllDayDuration(start, inclusiveEnd);
       end = inclusiveEnd;
     } else {
-      const endStr = `${endDate}T${endTime}:00`;
-      end = new Date(endStr);
+      // Clock fields, not Dates: see wallFields.
+      const startWall = wallFields(startDate, startTime);
+      let endWall = wallFields(endDate, endTime);
       // An end at or before the start becomes an hour - but an event that
       // lasts no time (a deadline, a reminder) keeps doing so.
       const lastedNoTime = !!event && !event.showWithoutTime
         && getEventEndDate(event).getTime() === getEventStartDate(event).getTime();
-      if (end < start || (end.getTime() === start.getTime() && !lastedNoTime)) {
-        end = new Date(start.getTime() + 3600000);
+      const order = compareWall(endWall, startWall);
+      if (order < 0 || (order === 0 && !lastedNoTime)) {
+        endWall = addToWall(startWall, 3600000);
       }
-      duration = buildDuration(start, end);
+      // Exact time in the event's zone, not the browser's.
+      duration = buildDuration(new Date(0), new Date(Math.max(0, zoneWallDurationMs(startWall, endWall, timeZone))));
+      // The fields are the wall clock in the form's zone: the event's own, so
+      // an edit keeps it, or the one the user picked.
+      end = zoneFieldsToDisplay(endWall, timeZone);
+      timedWhen = { start: zoneFieldsToDisplay(startWall, timeZone), end };
     }
 
-    // The form's wall-clock fields are in the user's effective zone (the
-    // grid and prefill are display dates), so label them with that zone.
-    const timeZone = getEffectiveTimeZone();
+    // The editor state below is in display dates, as the rest of the calendar.
+    const when = {
+      allDay,
+      start: allDay ? start : timedWhen!.start,
+      end: allDay ? end : timedWhen!.end,
+    };
+    const timeZoneChanged = !!event && !allDay && timeZone !== initialForm.timeZone;
 
     const trimmedDescription = description.trim();
 
@@ -879,7 +934,7 @@ export function EventModal({
         userEmail: currentUserEmails[0],
         userEmails: currentUserEmails,
         resolveName: resolveContactName,
-        rescheduled: !!event && (changesWhen(event, { allDay, start, end }) || (ruleChanged && !event.recurrenceId)),
+        rescheduled: !!event && (changesWhen(event, when) || timeZoneChanged || (ruleChanged && !event.recurrenceId)),
       }));
     }
 
@@ -941,14 +996,15 @@ export function EventModal({
       await onSave(data, shouldSendScheduling, {
         initialAttendees,
         attendees: effectiveAttendees,
-        when: { allDay, start, end },
+        when,
         ruleChanged,
+        ...(timeZoneChanged ? { timeZoneChanged } : {}),
       });
     } finally {
       savingRef.current = false;
       setIsSaving(false);
     }
-  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, calendarId, calendars, recurrence, customRule, useDefaultAlerts, defaultAlerts, alertRows, preservedAlerts, attendees, initialAttendees, sendInvitations, currentUserEmails, userIsOrganizer, resolveContactName, event, eventDescription, onSave, isSaving, t]);
+  }, [title, description, location, virtualLocation, startDate, startTime, endDate, endTime, allDay, timeZone, initialForm, calendarId, calendars, recurrence, customRule, useDefaultAlerts, defaultAlerts, alertRows, preservedAlerts, attendees, initialAttendees, sendInvitations, currentUserEmails, userIsOrganizer, resolveContactName, event, eventDescription, onSave, isSaving, t]);
 
   // The user's own answer, and the owner's in a calendar shared with them
   // (lib/calendar-delegate.ts).
@@ -1034,6 +1090,9 @@ export function EventModal({
     const alertLabel = formatEventAlertsLabel(event, calendars, t);
     const eventCalendar = calendars.find(c => event.calendarIds[c.id]);
     const color = paint(getEventColor(event, eventCalendar));
+    // An event on another zone's clock shows its own times too (pim-2).
+    const zoned = eventZonedTimes(event, startD, endD);
+    const zonedText = zoned ? zonedTimesText(zoned, startD, endD, timeDisplayFmt, locale) : null;
 
     const viewClose = (
       <IconButton label={tCommon("close")} onClick={onClose} className="flex-shrink-0 mt-0.5 text-muted-foreground">
@@ -1093,8 +1152,10 @@ export function EventModal({
                   if (multiDay && event.showWithoutTime) {
                     return (
                       <>
-                        <div className="font-medium text-foreground">{formatEventDate(startD)} –</div>
-                        <div className="font-medium text-foreground">{formatEventDate(displayEnd)}</div>
+                        {/* One range as the language writes it (pim-13). */}
+                        <div className="font-medium text-foreground">
+                          {formatDateRangeLabel(startD, displayEnd, { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
+                        </div>
                         <div className="text-muted-foreground">{t("events.all_day")}</div>
                       </>
                     );
@@ -1117,6 +1178,11 @@ export function EventModal({
                         <div className="text-muted-foreground text-xs">
                           ({formatDurationDisplay(durMin)})
                         </div>
+                        {zoned && zonedText && (
+                          <div className="text-muted-foreground text-xs" data-testid="event-zone-times">
+                            {tEvent("zone_only", { times: zonedText.times, zone: zoned.zone })}
+                          </div>
+                        )}
                       </>
                     );
                   }
@@ -1127,6 +1193,10 @@ export function EventModal({
                       </span>
                       {event.showWithoutTime ? (
                         <span className="text-muted-foreground ms-1.5">{t("events.all_day")}</span>
+                      ) : zoned && zonedText ? (
+                        <div className="text-muted-foreground" data-testid="event-zone-times">
+                          {tEvent("zone_times", { times: zonedText.times, zone: zoned.zone, local: zonedText.local })}
+                        </div>
                       ) : (
                         <div className="text-muted-foreground">
                           {format(startD, timeDisplayFmt)} – {format(endD, timeDisplayFmt)}
@@ -1284,18 +1354,187 @@ export function EventModal({
             />
           </div>
 
-          <div>
-            <label htmlFor={labelFor("description")} className="text-sm font-medium mb-1 block">{t("form.description")}</label>
-            <textarea
-              id={labelFor("description")}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder={t("form.description")}
-              rows={3}
-              maxLength={10000}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-hidden"
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="allDay"
+              checked={allDay}
+              onChange={(e) => setAllDay(e.target.checked)}
+              className="rounded border-input"
             />
+            <label htmlFor="allDay" className="text-sm">{t("form.all_day_event")}</label>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label htmlFor={labelFor("start_date")} className="text-sm font-medium mb-1 block">{t("form.start_date")}</label>
+              <input
+                id={labelFor("start_date")}
+                type="date"
+                value={startDate}
+                onChange={(e) => handleStartDateChange(e.target.value)}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
+              />
+            </div>
+            {!allDay && (
+              <div>
+                <label htmlFor={labelFor("start_time")} className="text-sm font-medium mb-1 block">{t("form.start_time")}</label>
+                <input
+                  id={labelFor("start_time")}
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => handleStartTimeChange(e.target.value)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
+                />
+              </div>
+            )}
+            <div>
+              <label htmlFor={labelFor("end_date")} className="text-sm font-medium mb-1 block">{t("form.end_date")}</label>
+              <input
+                id={labelFor("end_date")}
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
+              />
+            </div>
+            {!allDay && (
+              <div>
+                <label htmlFor={labelFor("end_time")} className="text-sm font-medium mb-1 block">{t("form.end_time")}</label>
+                <input
+                  id={labelFor("end_time")}
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* The zone the times are on (pim-2): a line when it isn't the
+              user's, a small link when it is; both open the picker. A
+              floating event stays without one. */}
+          {fieldZone && (
+            <div data-testid="event-time-zone">
+              {showZonePicker ? (
+                <>
+                  <label htmlFor={labelFor("time_zone")} className="text-sm font-medium mb-1 block">{tEvent("time_zone")}</label>
+                  <select
+                    id={labelFor("time_zone")}
+                    value={fieldZone}
+                    onChange={(e) => setTimeZone(e.target.value)}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
+                  >
+                    {zoneOptions.map((zone) => (
+                      <option key={zone} value={zone}>{zone.replace(/_/g, " ")}</option>
+                    ))}
+                  </select>
+                </>
+              ) : fieldZone !== userTimeZone ? (
+                <div className="flex flex-wrap items-baseline gap-x-2 text-sm">
+                  <button type="button" onClick={() => setShowZonePicker(true)} className="text-foreground hover:underline">
+                    {tEvent("time_zone_line", { zone: timeZoneCity(fieldZone) })}
+                  </button>
+                  {formYourTimes && (
+                    <span className="text-xs text-muted-foreground">{tEvent("your_time", { times: formYourTimes })}</span>
+                  )}
+                </div>
+              ) : (
+                <button type="button" onClick={() => setShowZonePicker(true)} className="text-xs text-primary hover:underline">
+                  {tEvent("time_zone")}
+                </button>
+              )}
+            </div>
+          )}
+
+          {pluginConflictWarnings.length > 0 && (
+            <div className="space-y-1.5">
+              {pluginConflictWarnings.map(w => (
+                <div
+                  key={w.key}
+                  className={
+                    w.severity === 'error'
+                      ? 'text-sm rounded-md border border-destructive/50 bg-destructive/10 text-destructive px-3 py-2'
+                      : w.severity === 'info'
+                        ? 'text-sm rounded-md border border-border bg-muted/40 text-muted-foreground px-3 py-2'
+                        : 'text-sm rounded-md border border-warning/50 bg-warning/10 text-amber-600 dark:text-amber-400 px-3 py-2'
+                  }
+                  title={w.message}
+                >
+                  {w.message}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div>
+            <label htmlFor={labelFor("title-1")} className="text-sm font-medium mb-1 block">{t("recurrence.title")}</label>
+            <div className="flex items-center gap-2">
+              <select
+                id={labelFor("title-1")}
+                value={recurrence}
+                onChange={(e) => {
+                  const value = e.target.value as RecurrenceOption;
+                  if (value === "custom") {
+                    recurrenceBeforeCustomRef.current = recurrence;
+                    setRecurrence("custom");
+                    setShowRecurrenceEditor(true);
+                  } else {
+                    setRecurrence(value);
+                    setShowRecurrenceEditor(false);
+                  }
+                }}
+                className="flex-1 min-w-0 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
+              >
+                <option value="none">{t("recurrence.none")}</option>
+                <option value="daily">{t("recurrence.daily")}</option>
+                <option value="weekly">{t("recurrence.weekly")}</option>
+                <option value="monthly">{t("recurrence.monthly")}</option>
+                <option value="yearly">{t("recurrence.yearly")}</option>
+                <option value="custom">{customRuleSummary || t("recurrence.custom")}</option>
+              </select>
+              {recurrence === "custom" && !showRecurrenceEditor && (
+                <button
+                  type="button"
+                  onClick={() => setShowRecurrenceEditor(true)}
+                  className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  aria-label={t("recurrence.edit_custom")}
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            {showRecurrenceEditor && (
+              <RecurrenceEditor
+                rule={customRule}
+                eventStart={(() => {
+                  const d = new Date(`${startDate}T${allDay ? "00:00" : (startTime || "00:00")}:00`);
+                  return isNaN(d.getTime()) ? displayNow() : d;
+                })()}
+                onSave={handleRecurrenceEditorSave}
+                onCancel={handleRecurrenceEditorCancel}
+              />
+            )}
+          </div>
+
+          {selectableCalendars.length > 1 && (
+            <div>
+              <label htmlFor={labelFor("calendar_select")} className="text-sm font-medium mb-1 block">{t("form.calendar_select")}</label>
+              <select
+                id={labelFor("calendar_select")}
+                value={calendarId}
+                onChange={(e) => setCalendarId(e.target.value)}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
+              >
+                {selectableCalendars.map((cal) => (
+                  <option key={cal.id} value={cal.id}>
+                    {shownName.calendar(cal)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <label htmlFor={labelFor("location")} className="text-sm font-medium mb-1 block">{t("form.location")}</label>
@@ -1394,151 +1633,22 @@ export function EventModal({
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="allDay"
-              checked={allDay}
-              onChange={(e) => setAllDay(e.target.checked)}
-              className="rounded border-input"
-            />
-            <label htmlFor="allDay" className="text-sm">{t("form.all_day_event")}</label>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label htmlFor={labelFor("start_date")} className="text-sm font-medium mb-1 block">{t("form.start_date")}</label>
-              <input
-                id={labelFor("start_date")}
-                type="date"
-                value={startDate}
-                onChange={(e) => handleStartDateChange(e.target.value)}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
-              />
-            </div>
-            {!allDay && (
-              <div>
-                <label htmlFor={labelFor("start_time")} className="text-sm font-medium mb-1 block">{t("form.start_time")}</label>
-                <input
-                  id={labelFor("start_time")}
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => handleStartTimeChange(e.target.value)}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
-                />
-              </div>
-            )}
-            <div>
-              <label htmlFor={labelFor("end_date")} className="text-sm font-medium mb-1 block">{t("form.end_date")}</label>
-              <input
-                id={labelFor("end_date")}
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
-              />
-            </div>
-            {!allDay && (
-              <div>
-                <label htmlFor={labelFor("end_time")} className="text-sm font-medium mb-1 block">{t("form.end_time")}</label>
-                <input
-                  id={labelFor("end_time")}
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
-                />
-              </div>
-            )}
-          </div>
-
-          {pluginConflictWarnings.length > 0 && (
-            <div className="space-y-1.5">
-              {pluginConflictWarnings.map(w => (
-                <div
-                  key={w.key}
-                  className={
-                    w.severity === 'error'
-                      ? 'text-sm rounded-md border border-destructive/50 bg-destructive/10 text-destructive px-3 py-2'
-                      : w.severity === 'info'
-                        ? 'text-sm rounded-md border border-border bg-muted/40 text-muted-foreground px-3 py-2'
-                        : 'text-sm rounded-md border border-warning/50 bg-warning/10 text-amber-600 dark:text-amber-400 px-3 py-2'
-                  }
-                  title={w.message}
-                >
-                  {w.message}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {selectableCalendars.length > 1 && (
-            <div>
-              <label htmlFor={labelFor("calendar_select")} className="text-sm font-medium mb-1 block">{t("form.calendar_select")}</label>
-              <select
-                id={labelFor("calendar_select")}
-                value={calendarId}
-                onChange={(e) => setCalendarId(e.target.value)}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
-              >
-                {selectableCalendars.map((cal) => (
-                  <option key={cal.id} value={cal.id}>
-                    {cal.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          <div>
-            <label htmlFor={labelFor("title-1")} className="text-sm font-medium mb-1 block">{t("recurrence.title")}</label>
+          {/* Only the organizer's messages: the editor never changes the
+              user's own answer, which the answer buttons send. */}
+          {attendees.length > 0 && userIsOrganizer && (
             <div className="flex items-center gap-2">
-              <select
-                id={labelFor("title-1")}
-                value={recurrence}
-                onChange={(e) => {
-                  const value = e.target.value as RecurrenceOption;
-                  if (value === "custom") {
-                    recurrenceBeforeCustomRef.current = recurrence;
-                    setRecurrence("custom");
-                    setShowRecurrenceEditor(true);
-                  } else {
-                    setRecurrence(value);
-                    setShowRecurrenceEditor(false);
-                  }
-                }}
-                className="flex-1 min-w-0 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-hidden"
-              >
-                <option value="none">{t("recurrence.none")}</option>
-                <option value="daily">{t("recurrence.daily")}</option>
-                <option value="weekly">{t("recurrence.weekly")}</option>
-                <option value="monthly">{t("recurrence.monthly")}</option>
-                <option value="yearly">{t("recurrence.yearly")}</option>
-                <option value="custom">{customRuleSummary || t("recurrence.custom")}</option>
-              </select>
-              {recurrence === "custom" && !showRecurrenceEditor && (
-                <button
-                  type="button"
-                  onClick={() => setShowRecurrenceEditor(true)}
-                  className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                  aria-label={t("recurrence.edit_custom")}
-                >
-                  <Pencil className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-            {showRecurrenceEditor && (
-              <RecurrenceEditor
-                rule={customRule}
-                eventStart={(() => {
-                  const d = new Date(`${startDate}T${allDay ? "00:00" : (startTime || "00:00")}:00`);
-                  return isNaN(d.getTime()) ? displayNow() : d;
-                })()}
-                onSave={handleRecurrenceEditorSave}
-                onCancel={handleRecurrenceEditorCancel}
+              <input
+                type="checkbox"
+                id="sendInvitations"
+                checked={sendInvitations}
+                onChange={(e) => setSendInvitations(e.target.checked)}
+                className="rounded border-input"
               />
-            )}
-          </div>
+              <label htmlFor="sendInvitations" className="text-sm">
+                {t("participants.send_invitations")}
+              </label>
+            </div>
+          )}
 
           <div>
             <label className="text-sm font-medium mb-1 block">{t("alerts.title")}</label>
@@ -1572,22 +1682,18 @@ export function EventModal({
             )}
           </div>
 
-          {/* Only the organizer's messages: the editor never changes the
-              user's own answer, which the answer buttons send. */}
-          {attendees.length > 0 && userIsOrganizer && (
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="sendInvitations"
-                checked={sendInvitations}
-                onChange={(e) => setSendInvitations(e.target.checked)}
-                className="rounded border-input"
-              />
-              <label htmlFor="sendInvitations" className="text-sm">
-                {t("participants.send_invitations")}
-              </label>
-            </div>
-          )}
+          <div>
+            <label htmlFor={labelFor("description")} className="text-sm font-medium mb-1 block">{t("form.description")}</label>
+            <textarea
+              id={labelFor("description")}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder={t("form.description")}
+              rows={3}
+              maxLength={10000}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-hidden"
+            />
+          </div>
 
           <PluginSlot name="calendar-event-form" className="w-full" extraProps={eventFormProps} />
         </div>

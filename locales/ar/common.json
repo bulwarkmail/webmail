@@ -174,6 +174,7 @@
     },
     "clear_search": "مسح البحث",
     "vacation_active": "الرد التلقائي أثناء الغياب مفعّل",
+    "vacation_turn_off": "إيقاف",
     "demo_banner": "وضع تجريبي",
     "demo_reset": "إعادة تعيين",
     "demo_tour": "جولة",
@@ -245,7 +246,6 @@
     "select_account_title": "اختر الحساب",
     "select_mailto_account": "اختر الحساب الذي سيفتح رابط البريد هذا.",
     "select_webcal_account": "اختر الحساب الذي سيفتح رابط التقويم هذا.",
-    "select_account_note": "ينطبق هذا فقط على رابط البروتوكول هذا.",
     "detail_to": "إلى",
     "detail_subject": "الموضوع",
     "detail_no_subject": "بلا موضوع",
@@ -1069,7 +1069,7 @@
     "recipients_partly_refused": "رفض الخادم {recipients}. سيتلقى باقي المستلمين الرسالة.",
     "send_offline": "يبدو أنك غير متصل. الرسالة ما زالت هنا، أرسلها مجددًا عند عودة الاتصال.",
     "formatting": "التنسيق",
-    "send_recipients_rejected": "لم تُرسل الرسالة - رفض الخادم جميع المستلمين.",
+    "send_recipients_rejected": "لم تُرسل الرسالة: رفض الخادم جميع المستلمين.",
     "send_plugin_failed": "لم يُرسل - فشلت إضافة تتولى الإرسال أو استغرقت وقتًا طويلًا. تحقق من مجلد المرسل قبل الإرسال مرة أخرى.",
     "send_some_recipients_rejected": "أُرسلت الرسالة، لكن ليس إلى هؤلاء المستلمين - رفضهم الخادم.",
     "continue_draft": "متابعة المسودة",
@@ -1112,7 +1112,7 @@
       "unfinished": []
     },
     "schedule_send": "جدولة الإرسال",
-    "schedule_send_description": "اختر متى يجب على الخادم إرسال هذه الرسالة.",
+    "schedule_send_description": "اختر متى يتم إرسالها.",
     "schedule_preset": {
       "this_morning": "هذا الصباح",
       "this_afternoon": "بعد ظهر اليوم",
@@ -1163,6 +1163,7 @@
       "edit_link": "تعديل الرابط",
       "remove_link": "إزالة الرابط",
       "link_address": "عنوان الرابط",
+      "link_text": "النص",
       "link_invalid": "يجب ألا يحتوي العنوان على مسافات",
       "table": "جدول",
       "clear_formatting": "مسح التنسيق",
@@ -1393,6 +1394,8 @@
     "from_description": "اتركه فارغًا للبدء فورًا.",
     "until_label": "حتى (اختياري)",
     "until_description": "اتركه فارغًا لمواصلة الرد حتى توقفه.",
+    "from_placeholder": "فورًا",
+    "until_placeholder": "حتى توقفه",
     "audience_all": "الجميع",
     "audience_internal": "مؤسستي فقط ({domains})",
     "audience_external": "من هم خارج مؤسستي فقط",
@@ -2913,6 +2916,7 @@
       "open_sieve_editor": "فتح محرر Sieve الخام",
       "fetch_error": "فشل تحميل المرشحات",
       "expanded_view": "عرض موسّع",
+      "show_rule_details": "عرض شروط كل قاعدة وإجراءاتها",
       "expanded_view_description": "إظهار قواعد المرشح مع كتل الشروط والإجراءات المفصّلة",
       "if": "إذا",
       "then": "عندئذٍ",
@@ -2991,6 +2995,9 @@
       "validation_period_empty": "أدخل تاريخ بدء أو انتهاء للفترة",
       "validation_period_invalid": "أدخل تاريخًا صالحًا مع الوقت للفترة، أو اترك الحقل فارغًا",
       "apply_existing_period": "القاعدة ذات الفترة الزمنية تعمل فقط على الرسائل التي تصل خلالها، لذا لا يمكن تطبيقها على الرسائل الموجودة.",
+      "apply_existing_in": "طبّقها أيضًا على الرسائل الموجودة في {folder}",
+      "apply_existing_count": "{count, plural, zero {طبّقها أيضًا على الرسائل الموجودة في {folder}} one {طبّقها أيضًا على الرسالة الموجودة في {folder}} two {طبّقها أيضًا على الرسالتين الموجودتين في {folder}} few {طبّقها أيضًا على # رسائل موجودة في {folder}} many {طبّقها أيضًا على # رسالة موجودة في {folder}} other {طبّقها أيضًا على # رسالة موجودة في {folder}}}",
+      "apply_existing_none": "لا توجد رسالة في {folder} تطابق هذه القاعدة بعد.",
       "period_status_scheduled": "مجدولة",
       "period_status_active": "نشطة",
       "period_status_expired": "منتهية"
@@ -3496,6 +3503,48 @@
     },
     "sign_out": {
       "description": "تسجيل الخروج من هذا الحساب على هذا الجهاز."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "شريط النظام منطقة الإشعارات الخلفية التصغير إلى شريط النظام tray",
+      "autostart": "التشغيل التلقائي بدء التشغيل التشغيل مع Windows عند تسجيل الدخول",
+      "default_app": "تطبيق البريد الافتراضي برنامج البريد الافتراضي mailto روابط البريد",
+      "menu_bar": "شريط القوائم القوائم مفتاح Alt ملف تحرير عرض",
+      "updates": "التحديثات تحديث إصدار جديد بيتا قناة",
+      "devtools": "أدوات المطور وحدة التحكم فحص F12 تصحيح الأخطاء devtools",
+      "taskbar": "شريط المهام وميض تنبيه Dock",
+      "quiet_hours": "ساعات الهدوء عدم الإزعاج صامت كتم ليلي",
+      "telemetry": "معلومات الاستخدام القياس عن بعد إحصاءات تحليلات",
+      "crash": "تقارير الأعطال تقارير الأخطاء تعطل",
+      "threads": "سلاسل المحادثات محادثة سلسلة threads",
+      "block_images": "حظر الصور الصور الخارجية تحميل الصور",
+      "dark_mode": "الوضع الداكن الوضع الفاتح الوضع الليلي dark mode",
+      "timezone": "المنطقة الزمنية التوقيت timezone",
+      "reading_pane": "جزء القراءة جزء المعاينة عرض مقسم",
+      "week_start": "بداية الأسبوع أول يوم الاثنين الأحد السبت",
+      "empty_trash": "إفراغ سلة المهملات المهملات العناصر المحذوفة",
+      "do_not_disturb": "ساعات الهدوء كتم صمت"
+    },
+    "desktop_notifications": {
+      "title": "على هذا الكمبيوتر",
+      "closed_label": "عند إغلاق النافذة",
+      "closed_description": "يخبرك {appName} بالبريد الجديد ما دام يعمل. ليبقى يعمل في شريط النظام بعد إغلاق نافذته، فعّل ذلك في {page}."
+    },
+    "push_unsupported": "لا يستطيع هذا المتصفح عرض الإشعارات عندما يكون الموقع مغلقًا.",
+    "backup_description_app": "استخدم الإعدادات نفسها على أجهزتك الأخرى.",
+    "sender_favicons": {
+      "label": "صور من مواقع الشركات",
+      "description": "إظهار أيقونات المواقع كصور شخصية للمرسلين من الشركات"
+    },
+    "privacy_push": {
+      "label": "مرحّل الإشعارات",
+      "description": "تمر الإشعارات أثناء إغلاق {appName} عبر مرحّل دفع لا يرى بريدك أبدًا. تشغّلها أو توقفها في صفحة {page}."
+    },
+    "reset": {
+      "message": "أعد جميع الإعدادات إلى ما كانت عليه في البداية. يبقى بريدك وعوامل التصفية والرد التلقائي والتواقيع كما هي.",
+      "sync_on": "تستخدم أجهزتك الأخرى الإعدادات نفسها، لذا ستتغير هي أيضًا.",
+      "sync_off": "تحتفظ أجهزتك الأخرى بإعداداتها."
     }
   },
   "setup": {
@@ -4057,6 +4106,9 @@
     "sending": "جارٍ الإرسال…",
     "sent": "تم الإرسال",
     "view": "عرض",
+    "template_saved": "تم حفظ القالب",
+    "schedule_anyway": "الجدولة على أي حال",
+    "schedule_warnings_title": "هل تريد جدولة هذه الرسالة على أي حال؟",
     "picker_button": "إضافة من جهات الاتصال",
     "picker_title": "إضافة مستلمين",
     "tab_contacts": "جهات الاتصال",
@@ -4522,6 +4574,13 @@
       "open": "فتح جهة الاتصال",
       "menu": "فتح قائمة جهة الاتصال"
     }
+  },
+  "ux_pim_contact": {
+    "context_private": "المنزل",
+    "phone_voice": "هاتف",
+    "more_fields": "حقول إضافية",
+    "import_menu": "استيراد جهات الاتصال…",
+    "new_address_book_menu": "دفتر عناوين جديد…"
   },
   "uxs_wording": {
     "more_options": "خيارات إضافية",
@@ -5130,8 +5189,46 @@
     "mini_has_events": "فيه أحداث",
     "mini_week_number": "الأسبوع {week}"
   },
+  "ux_pim_calendar": {
+    "task_lists": "قوائم المهام",
+    "task_status_not_started": "لم تبدأ",
+    "task_status_in_progress": "قيد التنفيذ",
+    "quick_task_due": "الاستحقاق {date}",
+    "quick_task_due_remove": "إبقاء «{words}» في العنوان",
+    "rename_calendar": "إعادة تسمية…",
+    "rename_title": "إعادة تسمية التقويم",
+    "rename_confirm": "إعادة تسمية",
+    "rename_empty": "أدخل اسمًا.",
+    "edit_calendar": "تعديل…",
+    "default_alerts_open": "التذكيرات الافتراضية…",
+    "share_open": "مشاركة…",
+    "clear_all_events": "مسح كل الأحداث…",
+    "delete_calendar": "حذف…",
+    "caldav_title": "عنوان للتطبيقات الأخرى (CalDAV)",
+    "caldav_hint": "أضف هذا العنوان في Thunderbird أو تقويم Apple أو DAVx⁵ لمزامنة تقويماتك.",
+    "caldav_shared_by": "مشارَك من {name}:",
+    "freebusy_description": "من تشارك معه يرى متى تكون مشغولًا، لا تفاصيل أحداثك. تستخدمه ميزة اقتراح الأوقات."
+  },
   "calendar_offline": {
     "split_needs_server": "يحتاج هذا التغيير إلى اتصال بالخادم. غيّر هذا الحدث فقط الآن، أو حاول مرة أخرى عند عودة الاتصال."
+  },
+  "ux_pim_event": {
+    "time_zone": "المنطقة الزمنية",
+    "time_zone_line": "المنطقة الزمنية: {zone}",
+    "your_time": "{times} بتوقيتك",
+    "zone_times": "{times} {zone} ({local} بتوقيتك)",
+    "zone_only": "{times} {zone}",
+    "status_accepted": "مقبول",
+    "status_declined": "مرفوض",
+    "status_tentative": "ربما",
+    "status_needs_action": "لم يتم الرد بعد",
+    "status_delegated": "تم التحويل",
+    "answered_accepted": "قبلت الدعوة في {date}.",
+    "answered_declined": "رفضت الدعوة في {date}.",
+    "answered_tentative": "أجبت بـ\"ربما\" في {date}.",
+    "answered_accepted_nodate": "قبلت الدعوة.",
+    "answered_declined_nodate": "رفضت الدعوة.",
+    "answered_tentative_nodate": "أجبت بـ\"ربما\"."
   },
   "calendar_event_notifications": {
     "someone": "شخص ما",
@@ -5142,6 +5239,11 @@
   },
   "company_calendars": {
     "section": "المؤسسة"
+  },
+  "ux_pim_grid": {
+    "search_short": "بحث",
+    "reply": "رد",
+    "reply_to_invitation": "الرد على الدعوة"
   },
   "vacation_calendar": {
     "label": "حجز تقويمي",
@@ -5164,6 +5266,88 @@
     "group_label": "المجموعة",
     "title": "متاح/مشغول",
     "description": "يرى زملاؤك في المجموعة متى تكون مشغولًا، لا تفاصيل أحداثك. تستخدمه ميزة اقتراح الأوقات."
+  },
+  "ux_pim_cimport": {
+    "file_hint": "انقر لاختيار ملف vCard أو CSV",
+    "file_types": "ملفات ‎.vcf أو ‎.csv، مثلًا من Outlook أو جهات اتصال Google",
+    "parse_error": "تعذّرت قراءة الملف",
+    "columns_title": "مطابقة الأعمدة",
+    "columns_hint": "اختر وجهة كل عمود في {file}. تُستبعد الأعمدة المضبوطة على «عدم الاستيراد».",
+    "column": "العمود",
+    "sample": "مثال",
+    "field": "حقل جهة الاتصال",
+    "skip": "عدم الاستيراد",
+    "no_columns": "اختر حقلًا لعمود واحد على الأقل.",
+    "continue": "متابعة",
+    "back": "رجوع",
+    "import_into": "الاستيراد إلى",
+    "group_name": "الاسم",
+    "group_email": "البريد الإلكتروني",
+    "group_phone": "الهاتف",
+    "group_org": "المؤسسة",
+    "group_adr_any": "العنوان",
+    "group_adr_home": "عنوان المنزل",
+    "group_adr_work": "عنوان العمل",
+    "group_adr_other": "عنوان آخر",
+    "group_more": "المزيد",
+    "address_field": "{group}: {part}",
+    "t_name_full": "الاسم الكامل",
+    "t_name_given": "الاسم الأول",
+    "t_name_middle": "الاسم الأوسط",
+    "t_name_surname": "اسم العائلة",
+    "t_name_prefix": "اللقب (د.، السيدة)",
+    "t_name_suffix": "اللاحقة (الابن)",
+    "t_nickname": "الكنية",
+    "t_email": "البريد الإلكتروني",
+    "t_email_home": "البريد الإلكتروني (المنزل)",
+    "t_email_work": "البريد الإلكتروني (العمل)",
+    "t_phone": "الهاتف",
+    "t_phone_mobile": "الجوال",
+    "t_phone_home": "الهاتف (المنزل)",
+    "t_phone_work": "الهاتف (العمل)",
+    "t_phone_fax": "الفاكس",
+    "t_phone_fax_home": "الفاكس (المنزل)",
+    "t_phone_fax_work": "الفاكس (العمل)",
+    "t_phone_pager": "جهاز النداء",
+    "t_org_name": "الشركة",
+    "t_org_unit": "القسم",
+    "t_org_title": "المسمى الوظيفي",
+    "t_street": "الشارع",
+    "t_pobox": "صندوق البريد",
+    "t_locality": "المدينة",
+    "t_region": "الولاية أو المنطقة",
+    "t_postcode": "الرمز البريدي",
+    "t_country": "البلد",
+    "t_web": "الموقع الإلكتروني",
+    "t_birthday": "تاريخ الميلاد",
+    "t_anniversary": "الذكرى السنوية",
+    "t_notes": "الملاحظات",
+    "t_categories": "الفئات",
+    "t_type": "نوع القيمة (المنزل، العمل…)",
+    "merge_with": "دمج مع…",
+    "merge_selected": "دمج…",
+    "find_duplicates": "البحث عن التكرارات",
+    "possible_duplicates": "تكرارات محتملة ({count})",
+    "duplicates_title": "تكرارات محتملة",
+    "duplicates_hint": "جهات اتصال لها الاسم نفسه أو عنوان البريد نفسه أو رقم الهاتف نفسه.",
+    "duplicates_none": "لم يُعثر على تكرارات محتملة.",
+    "pick_title": "دمج {name} مع…",
+    "pick_search": "البحث في جهات الاتصال",
+    "pick_suggested": "تكرارات محتملة",
+    "pick_all": "كل جهات الاتصال",
+    "pick_none": "لا توجد جهات اتصال أخرى للدمج معها.",
+    "preview_title": "دمج جهات الاتصال ({count})",
+    "preview_hint": "تصبح جهات الاتصال هذه بطاقة واحدة تضم كل ما يلي.",
+    "preview_deleted": "دُمجت ثم حُذفت: {names}",
+    "groups": "المجموعات",
+    "merge": "دمج",
+    "merging": "جارٍ الدمج…",
+    "merged": "تم دمج جهات الاتصال",
+    "merge_failed": "تعذّر دمج جهات الاتصال.",
+    "merge_not_possible": "لا يمكن دمج جهات الاتصال هذه: فهي في حسابات مختلفة أو في دفتر عناوين لا يمكنك تغييره.",
+    "undo": "تراجع",
+    "undone": "تم التراجع عن الدمج",
+    "undo_failed": "تعذّر التراجع عن الدمج بالكامل."
   },
   "find_time": {
     "suggest": "اقتراح أوقات",
@@ -5584,6 +5768,21 @@
     "previous_file": "الملف السابق",
     "next_file": "الملف التالي",
     "loading": "جارٍ التحميل…"
+  },
+  "ux_pim_files": {
+    "conflict_title": "{name} موجود بالفعل.",
+    "conflict_file_hint": "الاستبدال يضع المحتوى الجديد في الملف الموجود، فتبقى مشاركاته. الاحتفاظ بالاثنين يضيف نسخة برقم.",
+    "conflict_folder_hint": "الاستبدال يضيف الملفات إلى المجلد الموجود ويستبدل الملفات التي تحمل الاسم نفسه. الاحتفاظ بالاثنين ينشئ مجلدًا ثانيًا برقم.",
+    "replace": "استبدال",
+    "keep_both": "الاحتفاظ بالاثنين",
+    "skip": "تخطي",
+    "apply_to_all": "{count, plural, other {تطبيق ذلك على كل التعارضات ({count})}}",
+    "no_preview": "لا توجد معاينة لهذا النوع من الملفات.",
+    "open_in_app": "فتح في التطبيق الافتراضي",
+    "shared_with": "أصبح {name} مشتركًا مع {person}.",
+    "send_message": "إرسال رسالة",
+    "share_mail_subject": "شاركت {name} معك",
+    "share_mail_body": "مرحبًا،\n\nشاركت «{name}» معك. يمكنك فتحه من هنا:\n{link}"
   },
   "smime": {
     "your_certificates": "شهاداتك",
@@ -7146,6 +7345,39 @@
     "app_lock_timeout_hours": "{count, plural, zero {# ساعة} one {ساعة واحدة} two {ساعتان} few {# ساعات} many {# ساعة} other {# ساعة}}",
     "desktop_attention_title": "على هذا الكمبيوتر"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "اسمك",
+      "description": "يرى الناس هذا الاسم بجانب عنوانك عندما ترسل إليهم رسالة.",
+      "saved": "تم حفظ اسمك.",
+      "error": "تعذّر حفظ اسمك. حاول مرة أخرى."
+    },
+    "addresses": {
+      "description": "العناوين التي يمكنك الإرسال منها، لكل منها اسمه وتوقيعه.",
+      "label": "عناوينك",
+      "count": "{count, plural, =0 {لا توجد عناوين بعد} zero {# عنوان} one {عنوان واحد} two {عنوانان} few {# عناوين} many {# عنوانًا} other {# عنوان}}",
+      "manage": "تعديل العناوين…",
+      "modal_title": "عناوين بريدك الإلكتروني",
+      "add": "إضافة عنوان",
+      "edit": "تعديل العنوان",
+      "added": "تمت إضافة العنوان.",
+      "saved": "تم حفظ العنوان.",
+      "deleted": "تم حذف العنوان.",
+      "delete_title": "حذف هذا العنوان؟"
+    },
+    "signatures": {
+      "title": "التوقيعات",
+      "description": "يُضاف في نهاية الرسائل التي تكتبها. لكل عنوان توقيعه الخاص.",
+      "saved": "تم حفظ التوقيع.",
+      "error": "تعذّر حفظ التوقيع. حاول مرة أخرى.",
+      "no_addresses": "لا يوجد عنوان للإرسال منه بعد."
+    },
+    "search": {
+      "addresses": "هوية هويات اسم مستعار مرسل عنوان المرسل عنوان من identity alias sender",
+      "signatures": "توقيع توقيع البريد تذييل هوية مرسل عنوان من signature",
+      "your_name": "الاسم المعروض الاسم الكامل اسم المرسل display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "أدخل عنوان الخادم أولًا.",
     "server_declined": "لم تسمح بهذا الخادم، لذا لم يُرسل إليه أي شيء.",
@@ -7188,10 +7420,12 @@
     "server_looking": "جارٍ البحث عن خادم بريدك…",
     "server_found": "خادم البريد: {server}",
     "server_change": "تغيير",
+    "server_change_hint": "اكتب عنوان خادم آخر.",
     "server_not_found": "لم نعثر على خادم البريد لهذا العنوان. أدخله هنا، مثل mail.example.com.",
     "server_needed": "أدخل عنوان خادم بريدك.",
     "server_invalid": "هذا ليس عنوان خادم. اكتبه بهذا الشكل: mail.example.com.",
     "email_needed": "أدخل عنوان بريدك الإلكتروني أولاً.",
+    "other_ways": "طرق أخرى لتسجيل الدخول",
     "trouble": "هل تواجه مشكلة؟",
     "trouble_cors": "يجب أن يسمح خادم بريدك بتسجيل الدخول من هذا الموقع. إذا فشل تسجيل الدخول، فاطلب من مسؤول خادم بريدك السماح بذلك.",
     "provider_unsupported": "لا يوفّر {provider} بروتوكول JMAP الذي يتواصل به Bulwark مع خوادم البريد، لذلك لا يستطيع Bulwark الاتصال به مباشرة بعد."
@@ -7280,6 +7514,14 @@
     "copied": "تم نسخ الملف. يمكنك لصقه في مجلد.",
     "copy_failed": "تعذّر نسخ الملف.",
     "reply_lost": "تعذّر الاحتفاظ بالرد الذي كتبته. افتح الرسالة وأجب من هناك."
+  },
+  "ux_pim_menu": {
+    "search_contacts": "البحث في جهات الاتصال",
+    "search_files": "البحث في الملفات",
+    "import": "استيراد",
+    "import_mail": "البريد…",
+    "import_calendar": "التقويم…",
+    "import_contacts": "جهات الاتصال…"
   },
   "desktopEdit": {
     "edit": "تعديل",
@@ -7436,5 +7678,11 @@
     "send_no_consent": "شغّل تقارير الأعطال أولًا.",
     "send_no_url": "لم يُحدَّد عنوان، لذا لا توجد وجهة للإرسال. أدخل عنوانًا في الأعلى.",
     "send_failed": "تعذّر إرسال تقرير العطل."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "عدد الرسائل غير المقروءة على أيقونة شريط المهام",
+    "unread_badge_description": "لترى البريد الجديد أثناء عملك في تطبيق آخر.",
+    "tip_compose_keys": "اضغط {keys} لكتابة رسالة جديدة",
+    "tip_palette_keys": "اضغط {keys} للعثور على أي أمر"
   }
 }

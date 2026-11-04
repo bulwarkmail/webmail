@@ -33,6 +33,13 @@ interface SearchableSelectProps {
   renderValue?: (option: SearchableOption | undefined) => ReactNode;
   className?: string;
   menuClassName?: string;
+  /**
+   * Orders the results, lower first, and can add or drop options:
+   * `wordsMatch` says whether every typed word is in the option's text.
+   * null leaves the option out. Without it, the matching options keep
+   * their order.
+   */
+  rank?: (query: string, option: SearchableOption, wordsMatch: boolean) => number | null;
 }
 
 /**
@@ -50,6 +57,7 @@ export function SearchableSelect({
   renderValue,
   className,
   menuClassName,
+  rank,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -74,12 +82,24 @@ export function SearchableSelect({
     const words = needle.split(/\s+/);
     // An option listed in two groups shows once in the results.
     const seen = new Set<string>();
+    if (rank) {
+      const ranked: { entry: (typeof entries)[number]; rank: number }[] = [];
+      for (const e of entries) {
+        if (seen.has(e.value)) continue;
+        const r = rank(query, e, words.every((w) => e.haystack.includes(w)));
+        if (r === null) continue;
+        seen.add(e.value);
+        ranked.push({ entry: e, rank: r });
+      }
+      // Array sort is stable: equal ranks keep the list's order.
+      return ranked.sort((a, b) => a.rank - b.rank).map((r) => r.entry);
+    }
     return entries.filter((e) => {
       if (seen.has(e.value) || !words.every((w) => e.haystack.includes(w))) return false;
       seen.add(e.value);
       return true;
     });
-  }, [entries, query]);
+  }, [entries, query, rank]);
 
   const close = (refocus: boolean) => {
     setOpen(false);

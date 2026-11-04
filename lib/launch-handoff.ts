@@ -42,6 +42,8 @@ export interface Handoff {
   /** New draft only. */
   subject?: string;
   body?: string;
+  /** From another program through the desktop app (Send to, Open with): a compose window of its own. */
+  fromOs?: boolean;
   createdAt: number;
 }
 
@@ -307,13 +309,14 @@ export function handOffFiles(files: File[], kind: HandoffKind): void {
 }
 
 /** Opens a new draft with this text and these files. Trusted: what came from outside was asked about first. */
-export function handOffDraft(draft: { subject?: string; body?: string; files?: File[] }): void {
+export function handOffDraft(draft: { subject?: string; body?: string; files?: File[]; fromOs?: boolean }): void {
   const subject = cleanMailtoSubject(draft.subject ?? '');
   const body = cleanMailtoBody(draft.body ?? '');
   enqueue({
     id: newId(),
     kind: 'compose',
     files: draft.files ?? [],
+    ...(draft.fromOs ? { fromOs: true } : {}),
     ...(subject ? { subject } : {}),
     ...(body ? { body } : {}),
     createdAt: Date.now(),

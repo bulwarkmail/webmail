@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BulwarkDesktopBridge, DesktopOsCommand } from '../types';
 import type { NotificationActionRequest, NotificationActionStatus } from '@/lib/pwa-notify/page-actions';
 
@@ -43,6 +43,12 @@ async function run(command: DesktopOsCommand) {
 }
 
 const text = (value: string) => new TextEncoder().encode(value);
+
+// The handler pulls in much of the app the first time; load it once here, with room to spare,
+// so the first test isn't the one that times out on a busy machine.
+beforeAll(async () => {
+  await import('../os-commands');
+}, 60_000);
 
 beforeEach(async () => {
   vi.clearAllMocks();
@@ -130,6 +136,12 @@ describe('launches', () => {
     const { takeHandoff } = await import('@/lib/launch-handoff');
     await run({ type: 'files', reason: 'attach', failed: [], files: [{ name: 'a.pdf', data: text('a') }, { name: 'b.png', data: text('b') }] });
     expect(takeHandoff('compose')?.files.map((file) => file.name)).toEqual(['a.pdf', 'b.png']);
+  });
+
+  it('files sent from another program are marked so, for a compose window of their own, as a mail link', async () => {
+    const { takeHandoff } = await import('@/lib/launch-handoff');
+    await run({ type: 'files', reason: 'attach', failed: [], files: [{ name: 'a.pdf', data: text('a') }] });
+    expect(takeHandoff('compose')).toMatchObject({ fromOs: true });
   });
 
   it('a file opened with the app asks: new message or Files, a new message first', async () => {
