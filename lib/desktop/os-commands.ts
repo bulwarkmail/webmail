@@ -9,6 +9,7 @@ import { isAppLocked } from '@/lib/desktop/app-lock-state';
 import { getDesktopBridge } from '@/lib/desktop/bridge';
 import type { DesktopOsCommand } from '@/lib/desktop/types';
 import { openMailLink } from '@/lib/desktop/mail-links';
+import { requestFileChoice } from '@/lib/file-drop/choice';
 import { handleReminderCommand } from '@/lib/desktop/reminder-notifications';
 import type { MailNotificationContext } from '@/lib/desktop/mail-notifications';
 import { handOffDraft, handOffFiles, handOffNewMessage, kindForFile } from '@/lib/launch-handoff';
@@ -131,7 +132,10 @@ async function handleNotification(action: string, rawContext: string, reply: str
 function handleFiles(command: Extract<DesktopOsCommand, { type: 'files' }>, env: OsCommandEnv): void {
   const made = command.files.map(({ name, data }) => new File([new Uint8Array(data)], name));
   const failed = [...command.failed];
-  if (command.reason === 'attach') {
+  if (command.reason === 'attach' && command.ask) {
+    // Opened with the app ("Open with"): the same choice as dropping it on the window.
+    requestFileChoice({ files: made, preferred: 'new-message' });
+  } else if (command.reason === 'attach') {
     if (made.length > 0) handOffDraft({ files: made });
   } else {
     for (const file of made) {

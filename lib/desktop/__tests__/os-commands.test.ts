@@ -114,6 +114,23 @@ describe('launches', () => {
     expect(draft?.files.map((file) => file.name)).toEqual(['report.pdf']);
   });
 
+  it('several files sent to the app go on one draft, without a question', async () => {
+    const { takeHandoff } = await import('@/lib/launch-handoff');
+    await run({ type: 'files', reason: 'attach', failed: [], files: [{ name: 'a.pdf', data: text('a') }, { name: 'b.png', data: text('b') }] });
+    expect(takeHandoff('compose')?.files.map((file) => file.name)).toEqual(['a.pdf', 'b.png']);
+  });
+
+  it('a file opened with the app asks: new message or Files, a new message first', async () => {
+    const { takeHandoff } = await import('@/lib/launch-handoff');
+    const { listenForFileChoices } = await import('@/lib/file-drop/choice');
+    const asked = vi.fn();
+    const stop = listenForFileChoices(asked);
+    await run({ type: 'files', reason: 'attach', ask: true, failed: [], files: [{ name: 'report.pdf', data: text('pdf') }] });
+    expect(asked).toHaveBeenCalledWith({ files: [expect.objectContaining({ name: 'report.pdf' })], preferred: 'new-message' });
+    expect(takeHandoff('compose')).toBeNull();
+    stop();
+  });
+
   it('says so when a file could not be read', async () => {
     await run({ type: 'files', reason: 'open', failed: ['gone.eml'], files: [] });
     expect(notifyFailed).toHaveBeenCalledWith(['gone.eml']);
