@@ -7831,12 +7831,18 @@
       "title": "Synchronisierung nicht möglich"
     },
     "folders": {
-      "stop": "Synchronisierung beenden…"
+      "stop": "Synchronisierung beenden…",
+      "pick_title_known": "Mit welchem Ordner in Dateien soll {name} gleich bleiben?",
+      "pick_confirm_known": "Gleich halten"
     },
     "pin": {
       "keep": "Immer auf diesem Gerät beibehalten",
       "free": "Speicherplatz freigeben",
       "failed": "Das hat nicht geklappt. Versuchen Sie es im Explorer noch einmal."
+    },
+    "account": {
+      "of": "Dateien von {address}",
+      "choose": "Dateien von"
     }
   },
   "desktopQuickCompose": {

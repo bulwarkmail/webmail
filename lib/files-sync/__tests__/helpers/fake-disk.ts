@@ -255,8 +255,8 @@ export class FakeDisk implements FilesControls {
     return this.locked ? [] : this.rootsList.map((root) => ({ ...root }));
   }
 
-  async addFolder(request: { account: string; remoteId: string | null; remoteLabel: string }): Promise<FilesResult<FilesRoot>> {
-    this.calls.push(`addFolder ${request.account} ${request.remoteId}`);
+  async addFolder(request: { account: string; remoteId: string | null; remoteLabel: string; chosen?: string }): Promise<FilesResult<FilesRoot>> {
+    this.calls.push(`addFolder ${request.account} ${request.remoteId}${request.chosen ? ` ${request.chosen}` : ''}`);
     const root = this.addRoot({ id: `r${this.rootsList.length + 1}`, account: request.account, remoteId: request.remoteId, remoteLabel: request.remoteLabel });
     return ok(root);
   }

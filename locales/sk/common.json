@@ -7831,12 +7831,18 @@
       "title": "Nemožno synchronizovať"
     },
     "folders": {
-      "stop": "Zastaviť synchronizáciu…"
+      "stop": "Zastaviť synchronizáciu…",
+      "pick_title_known": "S ktorým priečinkom v Súboroch má byť {name} rovnaký?",
+      "pick_confirm_known": "Udržiavať rovnaké"
     },
     "pin": {
       "keep": "Vždy ponechať v tomto zariadení",
       "free": "Uvoľniť miesto",
       "failed": "Nepodarilo sa. Skúste to znova v Prieskumníkovi."
+    },
+    "account": {
+      "of": "Súbory účtu {address}",
+      "choose": "Súbory účtu"
     }
   },
   "desktopQuickCompose": {

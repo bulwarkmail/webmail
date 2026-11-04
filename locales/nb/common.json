@@ -7831,12 +7831,18 @@
       "title": "Kan ikke synkronisere"
     },
     "folders": {
-      "stop": "Stopp synkroniseringen…"
+      "stop": "Stopp synkroniseringen…",
+      "pick_title_known": "Hvilken mappe i Filer skal {name} holdes lik?",
+      "pick_confirm_known": "Hold dem like"
     },
     "pin": {
       "keep": "Behold alltid på denne enheten",
       "free": "Frigjør plass",
       "failed": "Det fungerte ikke. Prøv igjen i Filutforsker."
+    },
+    "account": {
+      "of": "Filer for {address}",
+      "choose": "Filer for"
     }
   },
   "desktopQuickCompose": {

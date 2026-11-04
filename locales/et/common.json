@@ -7831,12 +7831,18 @@
       "title": "Ei saa sünkroonida"
     },
     "folders": {
-      "stop": "Lõpeta sünkroonimine…"
+      "stop": "Lõpeta sünkroonimine…",
+      "pick_title_known": "Millise Failide kaustaga hoida {name} ühesugusena?",
+      "pick_confirm_known": "Hoia ühesugusena"
     },
     "pin": {
       "keep": "Hoia alati selles seadmes",
       "free": "Vabasta ruumi",
       "failed": "See ei õnnestunud. Proovige uuesti Failihalduris."
+    },
+    "account": {
+      "of": "Konto {address} failid",
+      "choose": "Failid:"
     }
   },
   "desktopQuickCompose": {

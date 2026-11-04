@@ -7831,12 +7831,18 @@
       "title": "Impossibile sincronizzare"
     },
     "folders": {
-      "stop": "Interrompi la sincronizzazione…"
+      "stop": "Interrompi la sincronizzazione…",
+      "pick_title_known": "Con quale cartella di File tenere uguale {name}?",
+      "pick_confirm_known": "Tienile uguali"
     },
     "pin": {
       "keep": "Mantieni sempre su questo dispositivo",
       "free": "Libera spazio",
       "failed": "Non ha funzionato. Riprova in Esplora file."
+    },
+    "account": {
+      "of": "File di {address}",
+      "choose": "File di"
     }
   },
   "desktopQuickCompose": {

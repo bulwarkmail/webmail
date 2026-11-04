@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import {
   AlertCircle, AlertTriangle, ArrowDown, ArrowUp, FolderOpen, FolderSync, HardDrive, HelpCircle, Loader2, Trash2, type AppIcon,
@@ -31,18 +31,56 @@ import { SettingItem, SettingsSection, Select, ToggleSwitch } from "./settings-s
  * Everything comes from stores/files-sync-store.ts and goes to the engine's
  * controller; the page never talks to the bridge.
  */
+/** The account the page shows (files-p3-20): the one on screen unless the user picked another. */
+const ViewedAccount = createContext<string | null>(null);
+
+function useViewedAccount(): string | null {
+  return useContext(ViewedAccount);
+}
+
 export function DesktopFilesSettings() {
   const available = useFilesSyncStore((s) => s.available);
   const drive = useFilesSyncStore((s) => s.drive);
+  const current = useFilesSyncStore((s) => s.account);
+  const accounts = useFilesSyncStore((s) => s.accounts);
+  const [picked, setPicked] = useState<string | null>(null);
   // The page asks about a mass delete in the folder's row; the app-wide dialog waits.
   useInlineMassDeleteQuestions();
   if (!available) return null;
+  const viewed = picked && accounts.some((entry) => entry.id === picked) ? picked : current;
   return (
-    <div className="space-y-8" data-testid="files-sync-settings">
-      <StorageSection />
-      {drive && <DriveSection drive={drive} />}
-      <FoldersSection />
-      <ActivitySection />
+    <ViewedAccount.Provider value={viewed}>
+      <div className="space-y-8" data-testid="files-sync-settings">
+        <AccountLine viewed={viewed} onPick={setPicked} />
+        <StorageSection />
+        {drive && <DriveSection drive={drive} />}
+        <FoldersSection />
+        <ActivitySection />
+      </div>
+    </ViewedAccount.Provider>
+  );
+}
+
+/** Whose Files the page is about, and with several accounts a way to show another's (settings-p3-11). */
+function AccountLine({ viewed, onPick }: { viewed: string | null; onPick: (account: string) => void }) {
+  const tx = useTranslations("files_sync_extra.account");
+  const accounts = useFilesSyncStore((s) => s.accounts);
+  if (!viewed) return null;
+  const label = accounts.find((entry) => entry.id === viewed)?.label ?? viewed;
+  if (accounts.length < 2) {
+    return <p className="text-sm text-muted-foreground break-words" data-testid="files-sync-account" dir="auto">{tx("of", { address: label })}</p>;
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-2" data-testid="files-sync-account">
+      <label htmlFor="files-sync-account-choice" className="text-sm text-muted-foreground">{tx("choose")}</label>
+      <select
+        id="files-sync-account-choice"
+        value={viewed}
+        onChange={(event) => onPick(event.target.value)}
+        className="rounded-md border border-border bg-background px-2 py-1 text-sm"
+      >
+        {accounts.map((entry) => <option key={entry.id} value={entry.id}>{entry.label}</option>)}
+      </select>
     </div>
   );
 }
@@ -135,7 +173,7 @@ function DriveSection({ drive }: { drive: FilesDriveState }) {
   const setStartAtLogin = (on: boolean) => {
     void getDesktopBridge()?.os?.setSettings({ startAtLogin: on }).catch(() => null);
   };
-  const account = useFilesSyncStore((s) => s.account);
+  const account = useViewedAccount();
   const roots = useFilesSyncStore((s) => s.roots);
   const status = useFilesSyncStore((s) => s.status);
   const controller = useFilesSyncStore((s) => s.controller);
@@ -155,7 +193,7 @@ function DriveSection({ drive }: { drive: FilesDriveState }) {
     setBusy(true);
     // Off: what waits here goes up first, or the user keeps the drive (files-p3-2). Nothing
     // waiting answers at once. On: straight from the click, which turning it on needs.
-    const apply = () => controller.setDriveEnabled(next).then(
+    const apply = () => controller.setDriveEnabled(next, account ?? undefined).then(
       (result) => { if (!result.ok) setError(addErrorKey(result.error)); },
       () => setError("folders.add_failed.failed"),
     );
@@ -270,9 +308,15 @@ function DriveSection({ drive }: { drive: FilesDriveState }) {
   );
 }
 
-/** The folders of the user's own Files, for the picker: no trash, nothing shared. */
-async function loadFolders(): Promise<PickerFolder[]> {
-  const client = useAuthStore.getState().client;
+/** The client of an account, connected now: the one on screen without one. */
+function clientOf(account: string | null) {
+  const auth = useAuthStore.getState();
+  return (account ? auth.getAllConnectedClients().get(account) : undefined) ?? auth.client;
+}
+
+/** The folders of the account's own Files, for the picker: no trash, nothing shared. */
+async function loadFolders(account: string | null): Promise<PickerFolder[]> {
+  const client = clientOf(account);
   if (!client) throw new Error("not signed in");
   const nodes = await client.listAllFileNodes();
   const inTrash = trashSubtreeIds(nodes, findTrashFolder(nodes)?.id);
@@ -296,8 +340,11 @@ function folderLabel(folders: PickerFolder[], id: string | null, top: string): s
 
 function FoldersSection() {
   const t = useTranslations("files_sync");
+  const tx = useTranslations("files_sync_extra.folders");
   const tFiles = useTranslations("files");
-  const account = useFilesSyncStore((s) => s.account);
+  const account = useViewedAccount();
+  /** The folder on this computer, picked first (settings-p3-4). */
+  const [chosen, setChosen] = useState<{ token: string; name: string } | null>(null);
   const roots = useFilesSyncStore((s) => s.roots);
   const controller = useFilesSyncStore((s) => s.controller);
   const forcedOff = useFilesSyncStore((s) => s.folderSyncForcedOff);
@@ -308,21 +355,55 @@ function FoldersSection() {
 
   const folderRoots = roots.filter((r) => r.kind === "folder" && (!account || r.account === account));
 
+  const showFiles = () => {
+    setLoading(true);
+    loadFolders(account).then(setFolders, () => setError("folders.load_failed")).finally(() => setLoading(false));
+  };
   const openPicker = () => {
     setError(null);
-    setLoading(true);
-    loadFolders().then(setFolders, () => setError("folders.load_failed")).finally(() => setLoading(false));
+    const choose = controller?.chooseFolder;
+    if (!choose) {
+      // An older shell: the Files folder first, then its OS picker from that button's click.
+      showFiles();
+      return;
+    }
+    // The folder on this computer first, as OneDrive asks, straight from this click; then the
+    // Files folder, with one of the same name ready (settings-p3-4).
+    setChosen(null);
+    void choose().then((result) => {
+      if (!result.ok) {
+        const key = addErrorKey(result.error);
+        if (key) setError(key);
+        return;
+      }
+      setChosen(result.value);
+      showFiles();
+    }, () => setError("folders.add_failed.failed"));
   };
-  // Called from the picker's button: the OS folder picker needs that click, so
-  // nothing is awaited before addFolder.
+  // Called from the picker's button: without a folder picked first, the OS folder picker needs
+  // that click, so nothing is awaited before addFolder.
   const pick = (remoteId: string | null) => {
     if (!controller) return;
     const label = folderLabel(folders ?? [], remoteId, tFiles("my_files"));
-    void controller.addFolder(remoteId, label).then(
+    const token = chosen?.token;
+    setChosen(null);
+    void controller.addFolder(remoteId, label, { ...(account ? { account } : {}), ...(token ? { chosen: token } : {}) }).then(
       (result) => { if (!result.ok) setError(addErrorKey(result.error)); },
       () => setError("folders.add_failed.failed"),
     );
   };
+  const createFolder = async (parentId: string | null, name: string): Promise<PickerFolder | null> => {
+    const client = clientOf(account);
+    if (!client) return null;
+    const node = await client.createFileDirectory(name, parentId);
+    const folder: PickerFolder = { id: node.id, name: node.name, parentId: node.parentId ?? null };
+    setFolders((prev) => (prev ? [...prev, folder] : [folder]));
+    return folder;
+  };
+  // A Files folder named like the one on this computer, at the top: ready to pick.
+  const sameName = chosen && folders
+    ? folders.find((folder) => folder.parentId === null && folder.name.localeCompare(chosen.name, undefined, { sensitivity: "accent" }) === 0)?.id ?? null
+    : undefined;
 
   return (
     <SettingsSection id="folders" title={t("folders.title")} description={t("folders.description")}>
@@ -353,13 +434,16 @@ function FoldersSection() {
       {folders && (
         <FolderPickerDialog
           isOpen
-          onClose={() => setFolders(null)}
+          onClose={() => { setFolders(null); setChosen(null); }}
           onPick={pick}
-          title={t("folders.pick_title")}
-          confirmText={t("folders.pick_confirm")}
+          title={chosen ? tx("pick_title_known", { name: chosen.name }) : t("folders.pick_title")}
+          confirmText={chosen ? tx("pick_confirm_known") : t("folders.pick_confirm")}
           folders={folders}
           // Nothing is "where it is now": every folder, My files too, can be picked.
           currentId="#none"
+          initialSelectedId={chosen ? sameName : undefined}
+          onCreateFolder={createFolder}
+          newFolderName={chosen?.name ?? ""}
         />
       )}
       <ConfirmDialog
@@ -477,11 +561,17 @@ function ActivitySection() {
   const tx = useTranslations("files_sync_extra");
   const format = useFormatter();
   const timeFormat = useSettingsStore((s) => s.timeFormat);
-  const activity = useFilesSyncStore((s) => s.activity);
-  const roots = useFilesSyncStore((s) => s.roots);
+  const allActivity = useFilesSyncStore((s) => s.activity);
+  const allRoots = useFilesSyncStore((s) => s.roots);
   const status = useFilesSyncStore((s) => s.status);
   const controller = useFilesSyncStore((s) => s.controller);
+  const account = useViewedAccount();
   const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set());
+  const roots = useMemo(() => allRoots.filter((root) => !account || root.account === account), [allRoots, account]);
+  const activity = useMemo(() => {
+    const ids = new Set(roots.map((root) => root.id));
+    return allActivity.filter((entry) => !account || (entry.account ? entry.account === account : ids.has(entry.rootId)));
+  }, [allActivity, roots, account]);
   const items = useMemo(() => [...activity].sort((a, b) => b.at - a.at), [activity]);
   const rows = useMemo(() => activityRows(items), [items]);
   const rootById = useMemo(() => new Map(roots.map((r) => [r.id, r])), [roots]);
@@ -569,7 +659,7 @@ function ActivitySection() {
             variant="outline"
             className="gap-1.5"
             disabled={!controller}
-            onClick={() => controller?.clearActivity()}
+            onClick={() => controller?.clearActivity(account ?? undefined)}
             data-testid="files-sync-clear-activity"
           >
             <Trash2 className="w-4 h-4" />{t("activity.clear")}

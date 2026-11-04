@@ -7831,12 +7831,18 @@
       "title": "Nu se poate sincroniza"
     },
     "folders": {
-      "stop": "Oprește sincronizarea…"
+      "stop": "Oprește sincronizarea…",
+      "pick_title_known": "Cu ce folder din Fișiere să rămână la fel {name}?",
+      "pick_confirm_known": "Păstrează-le la fel"
     },
     "pin": {
       "keep": "Păstrați întotdeauna pe acest dispozitiv",
       "free": "Eliberați spațiu",
       "failed": "Nu a funcționat. Încercați din nou în Explorer."
+    },
+    "account": {
+      "of": "Fișierele lui {address}",
+      "choose": "Fișierele lui"
     }
   },
   "desktopQuickCompose": {

@@ -523,20 +523,26 @@ export class FilesSyncHost {
     }, 50);
   }
 
-  /** What the UI shows: the account on screen's roots, their status and activity. */
+  /**
+   * What the UI shows: the signed-in accounts' roots, their status and activity (the settings
+   * page shows one account at a time, files-p3-20), and for the Files screen the account on
+   * screen's items.
+   */
   publishNow(): void {
     if (this.stopped) return;
     const current = this.current;
-    const roots = current ? this.engine.roots.filter((root) => root.account === current) : [];
+    const signedIn = new Set([...this.accounts.keys(), ...(current ? [current] : [])]);
+    const roots = this.engine.roots.filter((root) => signedIn.has(root.account));
     const ids = new Set(roots.map((root) => root.id));
     const status = Object.fromEntries(Object.entries(this.engine.status()).filter(([id]) => ids.has(id)));
     this.deps.publish({
       available: true,
       account: current,
+      accounts: [...this.accounts.values()].map((entry) => ({ id: entry.id, label: entry.label })),
       roots,
       status,
-      // The account's, with the lines of roots that went since (files-p3-11, settings-p3-12).
-      activity: current ? this.engine.activity.filter((entry) => entry.account === current || (!entry.account && ids.has(entry.rootId))) : [],
+      // With the lines of roots that went since (files-p3-11, settings-p3-12).
+      activity: this.engine.activity.filter((entry) => (entry.account ? signedIn.has(entry.account) : ids.has(entry.rootId))),
       drive: this.drive,
       folderSyncForcedOff: this.deps.folderSyncForcedOff(),
       items: current ? this.engine.items(current) : {},
@@ -552,12 +558,12 @@ export class FilesSyncHost {
     const controls = this.deps.controls;
     return {
       // Main wants the click this came from: the bridge call goes first, before any await.
-      addFolder: async (remoteId, remoteLabel) => {
-        const account = this.current;
+      addFolder: async (remoteId, remoteLabel, options) => {
+        const account = options?.account ?? this.current;
         if (!account) return fail('inactive');
         // A folder of someone else's shared drive: the engine syncs the account's own Files.
         if (remoteId !== null && remoteId.includes(':')) return fail('unsupported');
-        const result = await controls.addFolder({ account, remoteId, remoteLabel });
+        const result = await controls.addFolder({ account, remoteId, remoteLabel, ...(options?.chosen ? { chosen: options.chosen } : {}) });
         await this.engine.refreshRoots();
         return result;
       },
@@ -566,8 +572,9 @@ export class FilesSyncHost {
       confirmMassDelete: async (rootId, allow) => {
         this.engine.confirmMassDelete(rootId, allow);
       },
-      setDriveEnabled: async (enabled) => {
-        const account = this.current;
+      chooseFolder: controls.chooseFolder ? () => controls.chooseFolder!() : null,
+      setDriveEnabled: async (enabled, chosenAccount) => {
+        const account = chosenAccount ?? this.current;
         const drive = controls.drive;
         if (!drive) return fail('unsupported');
         if (!account) return fail('inactive');
@@ -598,8 +605,9 @@ export class FilesSyncHost {
         if (!coverage) return false;
         return controls.showInFolder(coverage.rootId, coverage.path);
       },
-      clearActivity: () => {
-        if (this.current) this.engine.clearActivity(this.current);
+      clearActivity: (account) => {
+        const which = account ?? this.current;
+        if (which) this.engine.clearActivity(which);
       },
       openRoot: (rootId) => controls.showInFolder(rootId, '').catch(() => false),
       setKeptOnDevice: controls.drive?.setPin ? async (nodeId, keep) => {

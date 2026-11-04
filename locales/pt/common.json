@@ -7831,12 +7831,18 @@
       "title": "Não é possível sincronizar"
     },
     "folders": {
-      "stop": "Parar de sincronizar…"
+      "stop": "Parar de sincronizar…",
+      "pick_title_known": "Com qual pasta de Arquivos {name} deve ficar igual?",
+      "pick_confirm_known": "Manter iguais"
     },
     "pin": {
       "keep": "Sempre manter neste dispositivo",
       "free": "Liberar espaço",
       "failed": "Não deu certo. Tente de novo no Explorador de Arquivos."
+    },
+    "account": {
+      "of": "Arquivos de {address}",
+      "choose": "Arquivos de"
     }
   },
   "desktopQuickCompose": {

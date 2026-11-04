@@ -7831,12 +7831,18 @@
       "title": "Eşitlenemiyor"
     },
     "folders": {
-      "stop": "Eşitlemeyi durdur…"
+      "stop": "Eşitlemeyi durdur…",
+      "pick_title_known": "{name}, Dosyalar'daki hangi klasörle aynı tutulsun?",
+      "pick_confirm_known": "Aynı tut"
     },
     "pin": {
       "keep": "Her zaman bu cihazda tut",
       "free": "Yer aç",
       "failed": "Olmadı. Dosya Gezgini'nde yeniden deneyin."
+    },
+    "account": {
+      "of": "{address} dosyaları",
+      "choose": "Dosyalar:"
     }
   },
   "desktopQuickCompose": {

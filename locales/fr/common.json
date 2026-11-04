@@ -7831,12 +7831,18 @@
       "title": "Synchronisation impossible"
     },
     "folders": {
-      "stop": "Arrêter la synchronisation…"
+      "stop": "Arrêter la synchronisation…",
+      "pick_title_known": "Avec quel dossier de Fichiers garder {name} identique ?",
+      "pick_confirm_known": "Les garder identiques"
     },
     "pin": {
       "keep": "Toujours conserver sur cet appareil",
       "free": "Libérer de l'espace",
       "failed": "Cela n'a pas fonctionné. Réessayez dans l'Explorateur de fichiers."
+    },
+    "account": {
+      "of": "Fichiers de {address}",
+      "choose": "Fichiers de"
     }
   },
   "desktopQuickCompose": {

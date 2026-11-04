@@ -7831,12 +7831,18 @@
       "title": "Nem szinkronizálható"
     },
     "folders": {
-      "stop": "Szinkronizálás leállítása…"
+      "stop": "Szinkronizálás leállítása…",
+      "pick_title_known": "A Fájlok melyik mappájával legyen azonos ez: {name}?",
+      "pick_confirm_known": "Maradjanak azonosak"
     },
     "pin": {
       "keep": "Mindig maradjon ezen az eszközön",
       "free": "Hely felszabadítása",
       "failed": "Nem sikerült. Próbálja újra a Fájlkezelőben."
+    },
+    "account": {
+      "of": "{address} fájljai",
+      "choose": "Fájlok:"
     }
   },
   "desktopQuickCompose": {

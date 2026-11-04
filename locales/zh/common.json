@@ -7831,12 +7831,18 @@
       "title": "无法同步"
     },
     "folders": {
-      "stop": "停止同步…"
+      "stop": "停止同步…",
+      "pick_title_known": "要让 {name} 与文件中的哪个文件夹保持一致？",
+      "pick_confirm_known": "保持一致"
     },
     "pin": {
       "keep": "始终保留在此设备上",
       "free": "释放空间",
       "failed": "操作未成功。请在文件资源管理器中重试。"
+    },
+    "account": {
+      "of": "{address} 的文件",
+      "choose": "文件："
     }
   },
   "desktopQuickCompose": {

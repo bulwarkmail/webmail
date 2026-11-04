@@ -7831,12 +7831,18 @@
       "title": "동기화할 수 없음"
     },
     "folders": {
-      "stop": "동기화 중지…"
+      "stop": "동기화 중지…",
+      "pick_title_known": "{name}을(를) 파일의 어떤 폴더와 같게 유지할까요?",
+      "pick_confirm_known": "같게 유지"
     },
     "pin": {
       "keep": "이 장치에 항상 유지",
       "free": "공간 확보",
       "failed": "실패했습니다. 파일 탐색기에서 다시 시도하세요."
+    },
+    "account": {
+      "of": "{address}의 파일",
+      "choose": "파일:"
     }
   },
   "desktopQuickCompose": {

@@ -7831,12 +7831,18 @@
       "title": "No es pot sincronitzar"
     },
     "folders": {
-      "stop": "Atura la sincronització…"
+      "stop": "Atura la sincronització…",
+      "pick_title_known": "Amb quina carpeta de Fitxers s'ha de mantenir igual {name}?",
+      "pick_confirm_known": "Mantén-les iguals"
     },
     "pin": {
       "keep": "Mantén sempre en aquest dispositiu",
       "free": "Allibera espai",
       "failed": "No ha funcionat. Torneu-ho a provar a l'Explorador de fitxers."
+    },
+    "account": {
+      "of": "Fitxers de {address}",
+      "choose": "Fitxers de"
     }
   },
   "desktopQuickCompose": {

@@ -7831,12 +7831,18 @@
       "title": "Can't sync"
     },
     "folders": {
-      "stop": "Stop syncing…"
+      "stop": "Stop syncing…",
+      "pick_title_known": "Which folder in Files should {name} be kept the same as?",
+      "pick_confirm_known": "Keep them the same"
     },
     "pin": {
       "keep": "Always keep on this device",
       "free": "Free up space",
       "failed": "That didn't work. Try again in File Explorer."
+    },
+    "account": {
+      "of": "Files of {address}",
+      "choose": "Files of"
     }
   },
   "desktopQuickCompose": {

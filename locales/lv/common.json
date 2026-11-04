@@ -7831,12 +7831,18 @@
       "title": "Nevar sinhronizēt"
     },
     "folders": {
-      "stop": "Apturēt sinhronizāciju…"
+      "stop": "Apturēt sinhronizāciju…",
+      "pick_title_known": "Ar kuru mapi sadaļā Faili saglabāt {name} vienādu?",
+      "pick_confirm_known": "Saglabāt vienādas"
     },
     "pin": {
       "keep": "Vienmēr saglabāt šajā ierīcē",
       "free": "Atbrīvot vietu",
       "failed": "Neizdevās. Mēģiniet vēlreiz failu pārlūkā."
+    },
+    "account": {
+      "of": "{address} faili",
+      "choose": "Faili:"
     }
   },
   "desktopQuickCompose": {

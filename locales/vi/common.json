@@ -7843,12 +7843,18 @@
       "title": "Không thể đồng bộ"
     },
     "folders": {
-      "stop": "Ngừng đồng bộ…"
+      "stop": "Ngừng đồng bộ…",
+      "pick_title_known": "Giữ {name} giống với thư mục nào trong Tệp?",
+      "pick_confirm_known": "Giữ giống nhau"
     },
     "pin": {
       "keep": "Luôn giữ trên thiết bị này",
       "free": "Giải phóng dung lượng",
       "failed": "Không thành công. Hãy thử lại trong Trình khám phá Tệp."
+    },
+    "account": {
+      "of": "Tệp của {address}",
+      "choose": "Tệp của"
     }
   },
   "desktopQuickCompose": {

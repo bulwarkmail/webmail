@@ -7831,12 +7831,18 @@
       "title": "同期できません"
     },
     "folders": {
-      "stop": "同期を止める…"
+      "stop": "同期を止める…",
+      "pick_title_known": "{name} をファイルのどのフォルダーと同じにしますか?",
+      "pick_confirm_known": "同じに保つ"
     },
     "pin": {
       "keep": "このデバイス上で常に保持する",
       "free": "空き容量を増やす",
       "failed": "うまくいきませんでした。エクスプローラーでもう一度お試しください。"
+    },
+    "account": {
+      "of": "{address} のファイル",
+      "choose": "ファイル:"
     }
   },
   "desktopQuickCompose": {

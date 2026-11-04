@@ -7831,12 +7831,18 @@
       "title": "Kan niet synchroniseren"
     },
     "folders": {
-      "stop": "Stoppen met synchroniseren…"
+      "stop": "Stoppen met synchroniseren…",
+      "pick_title_known": "Met welke map in Bestanden moet {name} gelijk blijven?",
+      "pick_confirm_known": "Gelijk houden"
     },
     "pin": {
       "keep": "Altijd op dit apparaat bewaren",
       "free": "Ruimte vrijmaken",
       "failed": "Dat is niet gelukt. Probeer het opnieuw in Verkenner."
+    },
+    "account": {
+      "of": "Bestanden van {address}",
+      "choose": "Bestanden van"
     }
   },
   "desktopQuickCompose": {

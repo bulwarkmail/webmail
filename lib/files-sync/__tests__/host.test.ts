@@ -405,6 +405,23 @@ describe('OS notifications and the tray line (files-p3-5)', () => {
   });
 });
 
+describe('several accounts on the settings page (files-p3-20)', () => {
+  it("publishes every signed-in account's roots, and adds a folder for the account asked, with the folder picked first", async () => {
+    const r = rig();
+    r.disk.addRoot({ id: 'r1', account: 'a1', remoteId: null });
+    r.disk.addRoot({ id: 'r2', account: 'a2', remoteId: null });
+    r.host.start();
+    const second: HostAccount = { ...r.account, id: 'a2', label: 'b@example.org' };
+    r.host.setAccounts([r.account, second], 'a1');
+    await settle(r.host);
+    expect(r.snapshot().accounts).toEqual([{ id: 'a1', label: 'a@example.org' }, { id: 'a2', label: 'b@example.org' }]);
+    expect(r.snapshot().roots?.map((root) => root.id).sort()).toEqual(['r1', 'r2']);
+    expect(await r.controller()!.addFolder('n9', 'Work', { account: 'a2', chosen: 'tok' })).toMatchObject({ ok: true, value: { account: 'a2' } });
+    expect(r.disk.calls).toContain('addFolder a2 n9 tok');
+    r.host.stop();
+  });
+});
+
 describe('the policy allowing the drive again (files-p3-19)', () => {
   it('turns the wanted drive back on at once, without a click or a visit to the settings page', async () => {
     const r = rig({ drive: true, wanted: ['a1'] });

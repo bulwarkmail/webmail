@@ -128,15 +128,20 @@ export interface FilesFlushOptions {
 
 /** What the UI can ask of the engine. Registered by the engine in the store. */
 export interface FilesSyncController {
-  /** Shows the folder picker; needs the click it came from. */
-  addFolder: (remoteId: string | null, remoteLabel: string) => Promise<FilesResult<FilesRoot>>;
+  /**
+   * Shows the folder picker; needs the click it came from. With `chosen` (from chooseFolder) the
+   * folder is known and no picker shows. `account`: whose Files (default: the one on screen).
+   */
+  addFolder: (remoteId: string | null, remoteLabel: string, options?: { account?: string; chosen?: string }) => Promise<FilesResult<FilesRoot>>;
+  /** The folder on this computer first; needs the click it came from. Null in older shells. */
+  chooseFolder: (() => Promise<FilesResult<{ token: string; name: string }>>) | null;
   /** A folder stops syncing; its files stay. The drive: turned off. */
   removeRoot: (rootId: string) => Promise<void>;
   setPaused: (rootId: string, paused: boolean) => Promise<void>;
   /** Answer to `confirm-delete`. No: the deleted items come back from the other side. */
   confirmMassDelete: (rootId: string, allow: boolean) => Promise<void>;
-  /** The current account's drive. */
-  setDriveEnabled: (enabled: boolean) => Promise<FilesResult<FilesRoot | null>>;
+  /** An account's drive (default: the one on screen). */
+  setDriveEnabled: (enabled: boolean, account?: string) => Promise<FilesResult<FilesRoot | null>>;
   setDriveLetter: (letter: string | null) => Promise<FilesResult<FilesDriveLetterState>>;
   /** Where a FileNode of the current account is on this computer, if a root covers it. */
   coverage: (nodeId: string) => FilesSyncCoverage | null;
@@ -150,7 +155,8 @@ export interface FilesSyncController {
    * shell can't.
    */
   setKeptOnDevice: ((nodeId: string, keep: boolean) => Promise<boolean>) | null;
-  clearActivity: () => void;
+  /** An account's lines (default: the one on screen). */
+  clearActivity: (account?: string) => void;
   /** Files changed or made here that aren't in Files yet: what stopping this root now would leave behind. */
   pendingHere: (rootId: string) => Promise<string[]>;
   /** Uploads what waits in a root, pass after pass, until nothing does or it can't go on. */
@@ -177,8 +183,11 @@ export interface FilesQuota {
 export interface FilesSyncSnapshot {
   /** In the desktop app, with a shell that has the files bridge, in the main window. */
   available: boolean;
-  /** The local account the engine runs for, or null when nobody is signed in. */
+  /** The local account on screen, or null when nobody is signed in. */
   account: string | null;
+  /** The signed-in accounts the engine runs for, to choose from on the settings page (p3-20). */
+  accounts: { id: string; label: string }[];
+  /** The roots of those accounts. */
   roots: FilesRoot[];
   status: Record<string, FilesSyncRootStatus>;
   /** Newest first, capped. */

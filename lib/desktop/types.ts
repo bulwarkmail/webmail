@@ -1107,8 +1107,13 @@ export interface FilesDriveStatus {
  */
 export interface FilesControls {
   roots: () => Promise<FilesRoot[]>;
-  /** Shows the OS folder picker. Needs a real click. */
-  addFolder: (request: { account: string; remoteId: string | null; remoteLabel: string }) => Promise<FilesResult<FilesRoot>>;
+  /**
+   * Shows the OS folder picker. Needs a real click, unless `chosen` names a folder the user
+   * already picked with `chooseFolder`: then it's added without another picker.
+   */
+  addFolder: (request: { account: string; remoteId: string | null; remoteLabel: string; chosen?: string }) => Promise<FilesResult<FilesRoot>>;
+  /** The folder on this computer first (settings-p3-4): the OS picker, a token for `addFolder` and the name. Absent in older shells. */
+  chooseFolder?: () => Promise<FilesResult<{ token: string; name: string }>>;
   /** A folder: forgotten, its files stay. The drive: as `drive.disable(account, 'user')`. */
   removeRoot: (rootId: string) => Promise<void>;
   setPaused: (rootId: string, paused: boolean) => Promise<void>;

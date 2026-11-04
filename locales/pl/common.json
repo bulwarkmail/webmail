@@ -7831,12 +7831,18 @@
       "title": "Nie można zsynchronizować"
     },
     "folders": {
-      "stop": "Zatrzymaj synchronizację…"
+      "stop": "Zatrzymaj synchronizację…",
+      "pick_title_known": "Z którym folderem w Plikach ma być zgodny {name}?",
+      "pick_confirm_known": "Utrzymuj je zgodne"
     },
     "pin": {
       "keep": "Zawsze zachowuj na tym urządzeniu",
       "free": "Zwolnij miejsce",
       "failed": "Nie udało się. Spróbuj ponownie w Eksploratorze plików."
+    },
+    "account": {
+      "of": "Pliki konta {address}",
+      "choose": "Pliki konta"
     }
   },
   "desktopQuickCompose": {

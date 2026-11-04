@@ -7831,12 +7831,18 @@
       "title": "Nelze synchronizovat"
     },
     "folders": {
-      "stop": "Zastavit synchronizaci…"
+      "stop": "Zastavit synchronizaci…",
+      "pick_title_known": "S kterou složkou v Souborech má být {name} stejná?",
+      "pick_confirm_known": "Udržovat stejné"
     },
     "pin": {
       "keep": "Vždy zachovat na tomto zařízení",
       "free": "Uvolnit místo",
       "failed": "Nepovedlo se. Zkuste to znovu v Průzkumníkovi souborů."
+    },
+    "account": {
+      "of": "Soubory účtu {address}",
+      "choose": "Soubory účtu"
     }
   },
   "desktopQuickCompose": {

@@ -38,6 +38,7 @@ function fakeController(): Fake {
     }),
     openRescue: vi.fn(async () => true),
     openRoot: vi.fn(async () => true),
+    chooseFolder: null,
     dismissRescue: vi.fn(),
   } as never;
 }
@@ -103,7 +104,7 @@ describe('Files on this computer settings page', () => {
     expect(screen.queryByText('Drive letter')).toBeNull();
     fireEvent.click(toggle);
     // Synchronously: the shell needs the click it came from.
-    expect(controller.setDriveEnabled).toHaveBeenCalledWith(true);
+    expect(controller.setDriveEnabled).toHaveBeenCalledWith(true, 'acc');
   });
 
   it('shows the drive on, and turns it off', async () => {
@@ -112,7 +113,7 @@ describe('Files on this computer settings page', () => {
     const toggle = screen.getByRole('switch', { name: 'Show Files as a drive' });
     expect(toggle).toHaveAttribute('aria-checked', 'true');
     fireEvent.click(toggle);
-    await waitFor(() => expect(controller.setDriveEnabled).toHaveBeenCalledWith(false));
+    await waitFor(() => expect(controller.setDriveEnabled).toHaveBeenCalledWith(false, 'acc'));
   });
 
   it('uploads what waits before turning the drive off, and keeps it on when the user says so (files-p3-2)', async () => {
@@ -148,7 +149,7 @@ describe('Files on this computer settings page', () => {
     expect(dialog).toHaveTextContent("The server can't be reached. Not uploaded yet: a.txt");
     expect(controller.setDriveEnabled).not.toHaveBeenCalled();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Turn off now' }));
-    await waitFor(() => expect(controller.setDriveEnabled).toHaveBeenCalledWith(false));
+    await waitFor(() => expect(controller.setDriveEnabled).toHaveBeenCalledWith(false, 'acc'));
   });
 
   it("says where the files that weren't uploaded went, and opens that folder", () => {
@@ -296,7 +297,7 @@ describe('Files on this computer settings page', () => {
     expect(controller.addFolder).not.toHaveBeenCalled();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Choose folder on this computer…' }));
     // In the same task as the click: nothing slow is awaited first.
-    expect(controller.addFolder).toHaveBeenCalledWith('n-2026', 'Projects / 2026');
+    expect(controller.addFolder).toHaveBeenCalledWith('n-2026', 'Projects / 2026', { account: 'acc' });
     useAuthStore.setState({ client: null });
   });
 
@@ -443,6 +444,74 @@ describe('Files on this computer settings page', () => {
   });
 });
 
+describe('whose Files, and adding a folder with the one on this computer first (files-p3-20, settings-p3-4, settings-p3-11)', () => {
+  it('names the account, and with several shows another one\'s drive and folders on request', () => {
+    setup({
+      drive: drive({ wanted: ['acc2'] }),
+      accounts: [{ id: 'acc', label: 'ann@example.org' }, { id: 'acc2', label: 'bob@example.org' }],
+      roots: [folderRoot(), folderRoot({ id: 'r2', account: 'acc2', path: 'C:\\Users\\bob\\Work', remoteLabel: 'Work' })],
+    });
+    renderPage();
+    const choice = within(screen.getByTestId('files-sync-account')).getByRole('combobox', { name: 'Files of' });
+    expect(choice).toHaveValue('acc');
+    expect(document.querySelector('[data-files-sync-root="r1"]')).not.toBeNull();
+    expect(document.querySelector('[data-files-sync-root="r2"]')).toBeNull();
+    expect(screen.getByRole('switch', { name: 'Show Files as a drive' })).toHaveAttribute('aria-checked', 'false');
+    fireEvent.change(choice, { target: { value: 'acc2' } });
+    expect(document.querySelector('[data-files-sync-root="r2"]')).not.toBeNull();
+    expect(document.querySelector('[data-files-sync-root="r1"]')).toBeNull();
+    expect(screen.getByRole('switch', { name: 'Show Files as a drive' })).toHaveAttribute('aria-checked', 'true');
+    fireEvent.click(screen.getByRole('switch', { name: 'Show Files as a drive' }));
+    return waitFor(() => expect(controller.setDriveEnabled).toHaveBeenCalledWith(false, 'acc2'));
+  });
+
+  it('says whose Files with one account', () => {
+    setup({ accounts: [{ id: 'acc', label: 'ann@example.org' }] });
+    renderPage();
+    expect(screen.getByTestId('files-sync-account')).toHaveTextContent('Files of ann@example.org');
+  });
+
+  it('asks for the folder here first, then offers the Files folder of the same name, and adds the pair without a second picker', async () => {
+    const createFileDirectory = vi.fn(async (name: string, parentId: string | null) => ({ id: 'n-new', name, parentId }));
+    const client = {
+      listAllFileNodes: vi.fn(async () => [
+        { id: 'n-docs', name: 'Documents', parentId: null, blobId: null },
+        { id: 'n-proj', name: 'Projects', parentId: null, blobId: null },
+      ]),
+      createFileDirectory,
+    };
+    useAuthStore.setState({ client: client as never });
+    setup({ accounts: [{ id: 'acc', label: 'ann@example.org' }] });
+    controller.chooseFolder = vi.fn(async () => ({ ok: true as const, value: { token: 'tok-1', name: 'Projects' } }));
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Add folder…' }));
+    expect(controller.chooseFolder).toHaveBeenCalledTimes(1);
+    const dialog = await screen.findByRole('dialog', { name: 'Which folder in Files should Projects be kept the same as?' });
+    // The Files folder named like the one here is ready to pick.
+    expect(within(dialog).getByRole('treeitem', { name: /Projects/ })).toHaveAttribute('aria-selected', 'true');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Keep them the same' }));
+    await waitFor(() => expect(controller.addFolder).toHaveBeenCalledWith('n-proj', 'Projects', { account: 'acc', chosen: 'tok-1' }));
+  });
+
+  it('makes a new Files folder from the picker, named like the folder here', async () => {
+    const createFileDirectory = vi.fn(async (name: string, parentId: string | null) => ({ id: 'n-new', name, parentId }));
+    const client = { listAllFileNodes: vi.fn(async () => [{ id: 'n-docs', name: 'Documents', parentId: null, blobId: null }]), createFileDirectory };
+    useAuthStore.setState({ client: client as never });
+    setup({ accounts: [{ id: 'acc', label: 'ann@example.org' }] });
+    controller.chooseFolder = vi.fn(async () => ({ ok: true as const, value: { token: 'tok-2', name: 'Photos' } }));
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Add folder…' }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'New folder' }));
+    expect(within(dialog).getByRole('textbox', { name: 'New folder' })).toHaveValue('Photos');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Create' }));
+    await waitFor(() => expect(createFileDirectory).toHaveBeenCalledWith('Photos', null));
+    await waitFor(() => expect(within(dialog).getByRole('treeitem', { name: /Photos/ })).toHaveAttribute('aria-selected', 'true'));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Keep them the same' }));
+    await waitFor(() => expect(controller.addFolder).toHaveBeenCalledWith('n-new', 'Photos', { account: 'acc', chosen: 'tok-2' }));
+  });
+});
+
 describe('opening, pausing and the letter (files-p3-7, p3-10, p3-14 to p3-19, settings-p3-3)', () => {
   const driveRoot = () => folderRoot({ id: 'd1', kind: 'drive', remoteId: null, remoteLabel: 'acc', path: 'C:\\Users\\ann\\Bulwark Files\\ann@example.org' });
 
@@ -543,7 +612,7 @@ describe('the drive and starting with Windows (files-p3-4)', () => {
     await act(async () => {});
     fireEvent.click(screen.getByRole('switch', { name: 'Show Files as a drive' }));
     expect(os.setSettings).toHaveBeenCalledWith({ startAtLogin: true });
-    expect(controller.setDriveEnabled).toHaveBeenCalledWith(true);
+    expect(controller.setDriveEnabled).toHaveBeenCalledWith(true, 'acc');
   });
 
   it('shows the option checked under the drive, says why, and warns once the user unticks it', async () => {
