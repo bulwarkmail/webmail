@@ -34,6 +34,7 @@ import { NotificationActionsHost } from "@/components/providers/notification-act
 import { DesktopOsHost } from "@/components/desktop/desktop-os-host";
 import { FileDropHost } from "@/components/file-drop/file-drop-host";
 import { EditedFilesHost } from "@/components/desktop/edited-files-host";
+import { FilesSyncHost } from "@/components/providers/files-sync-host";
 import { DevicePolicyHost } from "@/components/device/device-policy-host";
 import { PushNotificationPrompt } from "@/components/push-notification-prompt";
 import { AccountArchiveRestorePrompt } from "@/components/account-archive-prompt";
@@ -97,6 +98,7 @@ export default async function LocaleLayout({
                     <PushBindingsHost />
                     <DesktopOsHost />
                     {!IS_LITE && <EditedFilesHost />}
+                    {!IS_LITE && <FilesSyncHost />}
                     <FreeBusyAutoShare />
                     {!IS_LITE && <PopoutHost />}
                   </MainWindowOnly>
