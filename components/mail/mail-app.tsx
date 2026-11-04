@@ -313,6 +313,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   // The message the palette's "Move to…" was picked for.
   const [moveDialogEmail, setMoveDialogEmail] = useState<Email | null>(null);
+  // The empty reading pane's slot for a selection; the list draws into it (mail-10).
+  const [selectionPaneHost, setSelectionPaneHost] = useState<HTMLDivElement | null>(null);
   // The scheduled message Reschedule was picked for in the list's menu.
   const [rescheduleTarget, setRescheduleTarget] = useState<Email | null>(null);
   // Column resize state (disable transitions during drag)
@@ -4873,6 +4875,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // window. With the list beside the message it is the only way to the other apps.
   const shortWindowHidesTabBar = isShortWindow && ((showComposer && !floatingComposer) || (hasViewerContent && shouldCollapseListPane));
   const shouldHideHorizontalViewerPane = isHorizontalMailLayout && !hasViewerContent;
+  // Where the empty reading pane shows beside the list, it holds the
+  // first-run tips (mail-15) and a selection's actions (mail-10).
+  const emptyPaneBesideList = !isMobile && !isFocusedMailLayout && !isHorizontalMailLayout;
 
   // Handle email selection with mobile view switching
   // A mouse pressed on a row: the click that follows opens the message, so
@@ -5716,13 +5721,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             {/* Plugin-registered category tabs (Gmail-style). Renders nothing
                 unless an enabled plugin registered tabs via api.tabs.set. */}
             {!isScheduledView && <MessageListTabs panelId={messageListPanelId} />}
-            <WelcomeBanner />
+            {!emptyPaneBesideList && <WelcomeBanner />}
 
             <div {...messageListPanelProps} className="flex-1 min-h-0 flex flex-col overflow-hidden">
             <ErrorBoundary fallback={EmailListErrorFallback}>
               <EmailList
                 onFindFromSender={mvShell ? (sender) => void handleSelectContactSuggestion(sender, 'from') : undefined}
                 hideBatchToolbar={mvShell}
+                selectionPaneHost={emptyPaneBesideList ? selectionPaneHost : null}
                 emails={activeEmails}
                 selectedEmailKey={selectedEmail ? emailKeyFor(selectedEmail) : undefined}
                 // Until the first page of the folder has arrived an empty list
@@ -6141,6 +6147,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                         setShowComposer(true);
                       });
                     }}
+                    emptyPaneContent={emptyPaneBesideList && selectedEmailKeys.size > 0 && !isScheduledView && !mvShell
+                      ? <div ref={setSelectionPaneHost} className="m-auto p-8" />
+                      : undefined}
+                    emptyPaneFooter={emptyPaneBesideList ? <WelcomeBanner variant="pane" /> : undefined}
                     currentUserEmail={client?.getUsername()}
                     currentUserName={client?.getUsername()?.split("@")[0]}
                     currentMailboxRole={mailboxes.find(m => m.id === selectedMailbox)?.role ?? (isUnifiedView ? (unifiedRole ?? undefined) : undefined)}

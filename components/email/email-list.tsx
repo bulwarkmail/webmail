@@ -14,7 +14,12 @@ import { ViewSourceDialog } from "./view-source-dialog";
 import { useCopyToAccount, useEmailExport, requestPrint } from "@/hooks/use-message-file-actions";
 import { BatchTagButton } from "./batch-tag-button";
 import { cn, cleanPreview } from "@/lib/utils";
-import { Trash2, Mail, MailX, MailOpen, Loader2, SearchX, AlertTriangle, CalendarClock, ShieldCheck, ShieldAlert, Archive, MoreVertical, X, FolderX, Fish } from "@/components/icons";
+import { Trash2, Mail, MailX, MailOpen, Loader2, SearchX, AlertTriangle, CalendarClock, ShieldCheck, ShieldAlert, Archive, MoreVertical, X, FolderX, Fish, FolderInput, CheckSquare } from "@/components/icons";
+import { createPortal } from "react-dom";
+import { ContextMenu } from "@/components/ui/context-menu";
+import { MoveTargetList } from "./move-target-list";
+import { buildMoveTargets, resolveMoveOwnerAccountId } from "@/lib/move-targets";
+import { getMailboxPath } from "@/lib/utils";
 import { usePhishingReport } from "@/hooks/use-phishing-report";
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
@@ -112,6 +117,11 @@ interface EmailListProps {
    * list, so the separate bar that would otherwise slide in here is redundant.
    */
   hideBatchToolbar?: boolean;
+  /**
+   * The empty reading pane's slot for the selection: the list draws the
+   * selection's count and buttons there too (mail-10).
+   */
+  selectionPaneHost?: HTMLElement | null;
 }
 
 /**
@@ -176,6 +186,7 @@ export function EmailList({
   onCancelScheduledForEdit,
   onCancelScheduledSend,
   onRescheduleScheduled,
+  selectionPaneHost = null,
 }: EmailListProps) {
   const t = useTranslations('email_list');
   const tContextMenu = useTranslations('context_menu');
@@ -184,6 +195,7 @@ export function EmailList({
   const tNotifications = useTranslations('notifications');
   const tViewer = useTranslations('email_viewer');
   const tSidebar = useTranslations('sidebar');
+  const tListExtra = useTranslations('mail_list_extra');
   const mountainViewList = useSettingsStore((state) => state.interfaceLayout === 'mountain-view');
   const undo = undoLabels(tNotifications);
   const tRemove = useTranslations('email_list.confirm_remove');
@@ -680,8 +692,12 @@ export function EmailList({
     const restore = restoreBatchesForSelection(client);
     const receipts: CrossAccountMoveReceipt[] = [];
     try {
+      const destination = mailboxes.find((m) => m.id === mailboxId);
       await runBatchEmailAction(() => batchMoveToMailbox(client, mailboxId, undefined, receipts), {
-        success: tNotifications('emails_moved', { count }),
+        // "3 emails moved to Family" (mail-18).
+        success: destination
+          ? tListExtra('moved_count_to', { count, mailbox: getMailboxPath(destination, mailboxes) })
+          : tNotifications('emails_moved', { count }),
         error: tNotifications('move_failed'),
         undo: undoMoveAction(client, restore, undo, receipts),
       });
@@ -727,6 +743,77 @@ export function EmailList({
       later(() => setIsProcessing(false), 500);
     }
   };
+
+  // Move on the selection bar (mail-10): the folders the selection's own
+  // context menu offers, with the selection's account first (#1149).
+  const moveMenu = useContextMenu<null>();
+  const selectionMoveTargets = useMemo(() => buildMoveTargets(mailboxes, {
+    currentMailboxId: selectedMailbox,
+    ownerAccountId: resolveMoveOwnerAccountId(selectedEmailsForRemoval[0], mailboxes, selectedMailbox),
+    emails: selectedEmailsForRemoval,
+  }), [mailboxes, selectedMailbox, selectedEmailsForRemoval]);
+  // One read/unread button: "Mark as read" while any selected message is unread.
+  const selectionHasUnread = selectedEmailsForRemoval.some((email) => !email.keywords?.$seen);
+
+  // Archive, Delete, Move, Mark read/unread and Tag, on the bar and in the
+  // reading pane. The pane's copies get their own test ids.
+  const selectionButtons = (where: 'bar' | 'pane') => {
+    const testId = (id: string) => (where === 'bar' ? id : `pane-${id}`);
+    return (
+      <>
+        {archiveActionEnabled && effectiveMailboxRole !== 'archive' && (
+          <IconButton label={tContextMenu('archive')} onClick={() => void handleBatchArchive()} disabled={isProcessing} data-testid={testId('batch-archive')}>
+            <Archive />
+          </IconButton>
+        )}
+        <IconButton
+          label={t('batch_actions.delete')}
+          onClick={handleBatchDelete}
+          disabled={isProcessing}
+          data-testid={testId('batch-delete')}
+          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+        >
+          <Trash2 />
+        </IconButton>
+        {selectionMoveTargets.tree.length > 0 && (
+          <IconButton
+            label={tContextMenu('move_to')}
+            aria-haspopup="menu"
+            aria-expanded={moveMenu.contextMenu.isOpen}
+            onClick={(e) => moveMenu.openContextMenuFrom(e.currentTarget, null, 'end')}
+            disabled={isProcessing}
+            data-testid={testId('batch-move')}
+          >
+            <FolderInput />
+          </IconButton>
+        )}
+        <IconButton
+          label={selectionHasUnread ? t('batch_actions.mark_read') : t('batch_actions.mark_unread')}
+          onClick={() => handleBatchMarkAsRead(selectionHasUnread)}
+          disabled={isProcessing}
+          data-testid={testId('batch-mark-read')}
+        >
+          {selectionHasUnread ? <MailOpen /> : <Mail />}
+        </IconButton>
+        <BatchTagButton
+          key={hasSelection ? 'selection' : 'none'}
+          title={tContextMenu('tag')}
+          selectedIds={selectionTags.all}
+          partialIds={selectionTags.some}
+          scope={selectionTags.scope}
+          onToggle={handleBatchToggleTag}
+          active={hasSelection && !isScheduledView}
+          disabled={isProcessing}
+          testId={testId('batch-tag')}
+        />
+      </>
+    );
+  };
+  // What the bar and the pane call the selection: conversations, as the list
+  // shows them, or emails when conversations are off.
+  const selectionTitle = disableThreading
+    ? t('batch_actions.selected_messages', { count: selectedEmailKeys.size })
+    : tListExtra('selected_conversations', { count: selectedEmailKeys.size });
 
   const currentMailbox = mailboxes.find(m => m.id === selectedMailbox);
   const isEmptyableFolder = currentMailbox?.role === 'trash' || currentMailbox?.role === 'junk';
@@ -1010,27 +1097,16 @@ export function EmailList({
         {hasSelection && !isScheduledView && !hideBatchToolbar && (
         <div className={cn("py-2 border-b bg-accent/30 border-border flex items-center justify-between gap-2", batchNarrow ? "px-2" : "px-4")} data-batch-narrow={batchNarrow ? "" : undefined}>
           <div className="flex items-center gap-2 min-w-0 animate-in fade-in slide-in-from-left-3 duration-300">
-            <span className="text-sm font-medium text-foreground whitespace-nowrap truncate">
-              {t('batch_actions.selected_messages', { count: selectedEmailKeys.size })}
+            {/* "5 conversations": the bar is narrow beside its buttons. */}
+            <span className="text-sm font-medium text-foreground whitespace-nowrap truncate" title={selectionTitle}>
+              {disableThreading ? selectionTitle : tListExtra('conversation_count', { count: selectedEmailKeys.size })}
             </span>
           </div>
           <div className={cn("flex items-center flex-shrink-0 animate-in fade-in slide-in-from-right-3 duration-300", batchNarrow ? "gap-0" : "gap-0.5")}>
-            {/* The context menu's batch entries, in its order (R6). What
-                doesn't fit a narrow bar is in its ⋮, which is that menu. */}
-            {archiveActionEnabled && effectiveMailboxRole !== 'archive' && (
-              <IconButton label={tContextMenu('archive')} onClick={() => void handleBatchArchive()} disabled={isProcessing} data-testid="batch-archive">
-                <Archive />
-              </IconButton>
-            )}
-            <IconButton
-              label={t('batch_actions.delete')}
-              onClick={handleBatchDelete}
-              disabled={isProcessing}
-              data-testid="batch-delete"
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-            >
-              <Trash2 />
-            </IconButton>
+            {/* Archive, Delete, Move, Mark read/unread, Tag, then what
+                fits a wide bar. The rest is in its ⋮, the selection's
+                context menu (R6). */}
+            {selectionButtons('bar')}
             {selectionCanLeaveFolder && !batchNarrow && (
               <IconButton
                 label={tContextMenu('remove_from_folder')}
@@ -1041,16 +1117,6 @@ export function EmailList({
                 <FolderX />
               </IconButton>
             )}
-            <BatchTagButton
-              key={hasSelection ? 'selection' : 'none'}
-              title={tContextMenu('tag')}
-              selectedIds={selectionTags.all}
-              partialIds={selectionTags.some}
-              scope={selectionTags.scope}
-              onToggle={handleBatchToggleTag}
-              active={hasSelection && !isScheduledView}
-              disabled={isProcessing}
-            />
             {spamApplicable && !batchNarrow && (
               <IconButton
                 label={effectiveMailboxRole === 'junk' ? tContextMenu('not_spam') : tContextMenu('mark_as_spam')}
@@ -1070,16 +1136,6 @@ export function EmailList({
               >
                 <Fish />
               </IconButton>
-            )}
-            {!batchNarrow && (
-              <>
-                <IconButton label={t('batch_actions.mark_read')} onClick={() => handleBatchMarkAsRead(true)} disabled={isProcessing}>
-                  <MailOpen />
-                </IconButton>
-                <IconButton label={t('batch_actions.mark_unread')} onClick={() => handleBatchMarkAsRead(false)} disabled={isProcessing}>
-                  <Mail />
-                </IconButton>
-              </>
             )}
             <IconButton
               label={t('batch_actions.more')}
@@ -1328,6 +1384,54 @@ export function EmailList({
           )
         )}
       </div>
+
+      {/* The selection's Move menu, from the bar or the reading pane. */}
+      {hasSelection && (
+        <ContextMenu
+          ref={moveMenu.menuRef}
+          isOpen={moveMenu.contextMenu.isOpen}
+          position={moveMenu.contextMenu.position}
+          onClose={moveMenu.closeContextMenu}
+          label={tContextMenu('move_to')}
+        >
+          <div className="w-56 max-h-72 overflow-y-auto">
+            <MoveTargetList
+              tree={selectionMoveTargets.tree}
+              targetIds={selectionMoveTargets.targetIds}
+              onPick={(mailboxId) => { moveMenu.closeContextMenu(); void handleBatchMoveToMailbox(mailboxId); }}
+            />
+          </div>
+        </ContextMenu>
+      )}
+
+      {/* The reading pane for a selection: its count and the bar's buttons (mail-10). */}
+      {selectionPaneHost && hasSelection && !isScheduledView && createPortal(
+        <section aria-label={selectionTitle} className="text-center" data-testid="selection-pane">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-background shadow-lg flex items-center justify-center">
+            <CheckSquare className="w-10 h-10 text-muted-foreground" />
+          </div>
+          <h2 className="text-xl font-semibold text-foreground mb-4">{selectionTitle}</h2>
+          <div className="flex items-center justify-center gap-1">
+            {selectionButtons('pane')}
+            <IconButton
+              label={t('batch_actions.more')}
+              aria-haspopup="menu"
+              data-testid="pane-batch-more"
+              disabled={isProcessing || selectedEmailsForRemoval.length === 0}
+              onClick={(e) => {
+                const anchor = selectedEmailsForRemoval[0];
+                if (anchor) openContextMenuFrom(e.currentTarget, anchor, 'end');
+              }}
+            >
+              <MoreVertical />
+            </IconButton>
+          </div>
+          <Button variant="ghost" size="sm" onClick={clearSelection} disabled={isProcessing} className="mt-4 text-muted-foreground hover:text-foreground">
+            {t('batch_actions.clear_selection')}
+          </Button>
+        </section>,
+        selectionPaneHost,
+      )}
 
       {/* Context Menu */}
       {contextMenuEmail && (
