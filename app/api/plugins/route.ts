@@ -61,6 +61,9 @@ export async function GET(request: NextRequest) {
       // and during pending policy saves; OR'ing here unifies the signal so
       // the client's auto-enable path triggers consistently.
       forceEnabled: p.forceEnabled || policyForceEnabledIds.has(p.id),
+      // What a user who hasn't chosen gets: on unless the admin picked
+      // "Off until users turn it on".
+      defaultOn: !('defaultOff' in p && p.defaultOff === true),
       // Content hash + updatedAt let clients detect re-uploads even when
       // the manifest version is unchanged.
       bundleHash: p.bundleHash,

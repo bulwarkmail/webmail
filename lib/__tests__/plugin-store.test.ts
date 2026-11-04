@@ -199,7 +199,7 @@ describe('usePluginStore', () => {
     it('lists every server plugin when IndexedDB cannot be written (#1327)', async () => {
       mocks.apiFetch.mockResolvedValue({
         ok: true,
-        json: async () => ({ plugins: [serverPlugin, { ...serverPlugin, id: 'optional-plugin', forceEnabled: false }], themes: [] }),
+        json: async () => ({ plugins: [serverPlugin, { ...serverPlugin, id: 'optional-plugin', forceEnabled: false, defaultOn: false }], themes: [] }),
       });
       vi.mocked(pluginStorage.codeIds).mockRejectedValue(new Error('IndexedDB unavailable'));
       vi.mocked(pluginStorage.saveCode).mockRejectedValueOnce(new Error('IndexedDB unavailable'));
@@ -212,6 +212,72 @@ describe('usePluginStore', () => {
       expect(plugins.map(p => p.id)).toEqual(['managed-plugin', 'optional-plugin']);
       expect(plugins[0]).toMatchObject({ managed: true, enabled: true });
       expect(plugins[1]).toMatchObject({ managed: true, enabled: false });
+    });
+
+    describe('what users get from an admin\'s plugin that isn\'t forced', () => {
+      const optional = { ...serverPlugin, id: 'optional-plugin', forceEnabled: false };
+      const serve = (plugin: Record<string, unknown>) => mocks.apiFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ plugins: [plugin], themes: [] }),
+      });
+      const record = (overrides: Partial<InstalledPlugin> = {}) => syncedRecord({ id: 'optional-plugin', forceEnabled: false, ...overrides });
+      const synced = () => usePluginStore.getState().plugins.find((p) => p.id === 'optional-plugin');
+
+      it('turns a new one on, so it runs without anyone finding the switch', async () => {
+        serve(optional);
+        await usePluginStore.getState().initializePlugins();
+        expect(synced()).toMatchObject({ enabled: true, status: 'enabled', autoEnabled: true });
+      });
+
+      it('leaves a new one off when the admin chose "Off until users turn it on"', async () => {
+        serve({ ...optional, defaultOn: false });
+        await usePluginStore.getState().initializePlugins();
+        expect(synced()).toMatchObject({ enabled: false, status: 'installed' });
+      });
+
+      it('turns on one that was synced off before, while nobody chose', async () => {
+        usePluginStore.setState({ plugins: [record({ enabled: false, status: 'installed' })] });
+        vi.mocked(pluginStorage.codeIds).mockResolvedValue(['optional-plugin']);
+        serve(optional);
+        await usePluginStore.getState().initializePlugins();
+        expect(synced()).toMatchObject({ enabled: true });
+      });
+
+      it('keeps it off when the user turned it off', async () => {
+        usePluginStore.setState({ plugins: [record()] });
+        usePluginStore.getState().disablePlugin('optional-plugin');
+        vi.mocked(pluginStorage.codeIds).mockResolvedValue(['optional-plugin']);
+        serve(optional);
+        await usePluginStore.getState().initializePlugins();
+        expect(synced()).toMatchObject({ enabled: false, chosen: true });
+      });
+
+      it('keeps one off that was turned off because it kept failing', async () => {
+        usePluginStore.setState({ plugins: [record({ enabled: false, status: 'installed', chosen: true })] });
+        vi.mocked(pluginStorage.codeIds).mockResolvedValue(['optional-plugin']);
+        serve(optional);
+        await usePluginStore.getState().initializePlugins();
+        expect(synced()).toMatchObject({ enabled: false });
+      });
+
+      it('takes back what the default turned on when the admin switches to off, and nothing the user turned on', async () => {
+        vi.mocked(pluginStorage.codeIds).mockResolvedValue(['optional-plugin']);
+        serve({ ...optional, defaultOn: false });
+        usePluginStore.setState({ plugins: [record({ autoEnabled: true })] });
+        await usePluginStore.getState().initializePlugins();
+        expect(synced()).toMatchObject({ enabled: false });
+        expect(deactivatePlugin).toHaveBeenCalledWith('optional-plugin');
+
+        usePluginStore.setState({ plugins: [record({ chosen: true })], initialized: false });
+        await usePluginStore.getState().initializePlugins();
+        expect(synced()).toMatchObject({ enabled: true });
+      });
+
+      it('lets the next person at this browser start from the admin\'s default', async () => {
+        usePluginStore.setState({ plugins: [record({ enabled: false, status: 'disabled', chosen: true })] });
+        await purgeSignedOutData();
+        expect(synced()?.chosen).toBeUndefined();
+      });
     });
 
     it('re-downloads the bundle when the record is current but IndexedDB has no copy (#636)', async () => {

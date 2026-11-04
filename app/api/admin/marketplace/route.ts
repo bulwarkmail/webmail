@@ -370,6 +370,7 @@ export async function POST(request: NextRequest) {
       ...(existingPlugin?.forceEnabled !== undefined
         ? { forceEnabled: existingPlugin.forceEnabled }
         : {}),
+      ...(existingPlugin?.defaultOff ? { defaultOff: true } : {}),
       installedAt: existingPlugin?.installedAt ?? now,
       updatedAt: now,
       ...(manifest.configSchema ? { configSchema: manifest.configSchema } : {}),
