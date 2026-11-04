@@ -3767,7 +3767,8 @@
     "collapse_named": "Beszélgetés összecsukása: {subject}"
   },
   "conversation_pane": {
-    "show_older": "{count, plural, one {# régebbi üzenet megjelenítése} other {# régebbi üzenet megjelenítése}}"
+    "show_older": "{count, plural, one {# régebbi üzenet megjelenítése} other {# régebbi üzenet megjelenítése}}",
+    "return_to_list_follows_layout": "Amíg nem módosítja, az elrendezést követi: ki van kapcsolva, ha a lista és az üzenet egymás mellett van, egyébként be."
   },
   "identities": {
     "modal_title": "Küldő azonosságok kezelése",

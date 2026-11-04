@@ -3767,7 +3767,8 @@
     "collapse_named": "会話を折りたたむ: {subject}"
   },
   "conversation_pane": {
-    "show_older": "{count, plural, other {以前のメッセージを # 件表示}}"
+    "show_older": "{count, plural, other {以前のメッセージを # 件表示}}",
+    "return_to_list_follows_layout": "変更するまでは、レイアウトに合わせて切り替わります。一覧とメッセージが横に並ぶ場合はオフ、それ以外はオンです。"
   },
   "identities": {
     "modal_title": "送信者情報を管理",

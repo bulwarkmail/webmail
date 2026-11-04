@@ -3767,7 +3767,8 @@
     "collapse_named": "Ascunde conversația: {subject}"
   },
   "conversation_pane": {
-    "show_older": "{count, plural, one {Afișează # mesaj mai vechi} few {Afișează # mesaje mai vechi} other {Afișează # de mesaje mai vechi}}"
+    "show_older": "{count, plural, one {Afișează # mesaj mai vechi} few {Afișează # mesaje mai vechi} other {Afișează # de mesaje mai vechi}}",
+    "return_to_list_follows_layout": "Cât timp nu îl modificați, urmează aspectul: dezactivat când lista și mesajul sunt unul lângă altul, activat în rest."
   },
   "identities": {
     "modal_title": "Gestionarea identităților de expediere",

@@ -3767,7 +3767,8 @@
     "collapse_named": "折叠会话: {subject}"
   },
   "conversation_pane": {
-    "show_older": "{count, plural, other {显示 # 封较早的邮件}}"
+    "show_older": "{count, plural, other {显示 # 封较早的邮件}}",
+    "return_to_list_follows_layout": "在你更改之前，此项随布局而定：列表和邮件并排显示时关闭，其他情况下开启。"
   },
   "identities": {
     "modal_title": "管理发送身份",

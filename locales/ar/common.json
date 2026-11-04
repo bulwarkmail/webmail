@@ -3767,7 +3767,8 @@
     "collapse_named": "طي المحادثة: {subject}"
   },
   "conversation_pane": {
-    "show_older": "{count, plural, zero {عرض # رسالة أقدم} one {عرض رسالة أقدم واحدة} two {عرض رسالتين أقدم} few {عرض # رسائل أقدم} many {عرض # رسالة أقدم} other {عرض # رسالة أقدم}}"
+    "show_older": "{count, plural, zero {عرض # رسالة أقدم} one {عرض رسالة أقدم واحدة} two {عرض رسالتين أقدم} few {عرض # رسائل أقدم} many {عرض # رسالة أقدم} other {عرض # رسالة أقدم}}",
+    "return_to_list_follows_layout": "ما لم تغيّره، يتبع هذا التخطيط: متوقف عندما تكون القائمة والرسالة جنبًا إلى جنب، ومفعّل في غير ذلك."
   },
   "identities": {
     "modal_title": "إدارة هويات الإرسال",

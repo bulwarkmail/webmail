@@ -3664,7 +3664,8 @@
     "collapse_named": "כווץ את השיחה: {subject}"
   },
   "conversation_pane": {
-    "show_older": "{count, plural, one {הצגת הודעה ישנה אחת} two {הצגת שתי הודעות ישנות} other {הצגת # הודעות ישנות}}"
+    "show_older": "{count, plural, one {הצגת הודעה ישנה אחת} two {הצגת שתי הודעות ישנות} other {הצגת # הודעות ישנות}}",
+    "return_to_list_follows_layout": "כל עוד לא תשנו זאת, זה נקבע לפי הפריסה: כבוי כשהרשימה וההודעה זו לצד זו, ופועל בכל מצב אחר."
   },
   "identities": {
     "modal_title": "ניהול זהויות שליחה",

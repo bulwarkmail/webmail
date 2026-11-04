@@ -81,6 +81,7 @@ import { cn, formatDateTime, getMailboxPath } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, emailKeyFor, groupEmailsByThread, threadKeyFor } from "@/lib/thread-utils";
 import { stepListEmail } from "@/lib/list-step";
+import { listBesideReader, returnToListAfterAction } from "@/lib/return-to-list";
 import { resolveThreadRoute } from "@/lib/thread-routing";
 import {
   ErrorBoundary,
@@ -3341,12 +3342,41 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // holds (a quick filter dropped it) stays selected: the store finds it
   // through the selection (#695), and with no row to go on from it opens
   // nothing after it anyway. (#1458)
+  //
+  // Left alone, the setting follows the layout (lib/return-to-list): with the
+  // list beside the reading pane the next message opens instead, as in
+  // Outlook. With the conversation in the reading pane that is the next
+  // conversation down the list (the one above at the end), as its row opens it.
+  const returnsToList = () => returnToListAfterAction(
+    !fullscreenReading && listBesideReader({ mailLayout, interfaceLayout, isMobile, isTablet }),
+  );
   const leaveIfOpen = (email: Email) => {
-    const { selectedEmail: open, emails: rows } = useEmailStore.getState();
+    const { selectedEmail: open, emails: rows, listRows } = useEmailStore.getState();
     const key = emailKeyFor(email);
     if (!open || emailKeyFor(open) !== key || (mvShell && cursorOnly)) return;
     if (!rows.some((row) => emailKeyFor(row) === key)) return;
-    if (useSettingsStore.getState().returnToListAfterAction) handleMobileBack();
+    if (returnsToList()) {
+      handleMobileBack();
+      return;
+    }
+    if (!paneConversationView || !listRows) return;
+    const below = stepListEmail(rows, key, 1, listRows);
+    const next = below && emailKeyFor(below) !== key ? below : stepListEmail(rows, key, -1, listRows);
+    if (!next || emailKeyFor(next) === key || threadKeyFor(next) === threadKeyFor(email)) return;
+    handleMobileBack();
+    void handleEmailSelect(next);
+  };
+  // Undo puts back the message that was open, and opens it again, where it
+  // was open in the reading pane. Phones stay in the list.
+  const reopenEmailRef = useRef<((email: Email) => Promise<unknown>) | null>(null);
+  const reopenAfterUndo = (email: Email) => {
+    const { selectedEmail: open } = useEmailStore.getState();
+    if (isMobile || !open || emailKeyFor(open) !== emailKeyFor(email)) return undefined;
+    const key = emailKeyFor(email);
+    return () => {
+      const restored = useEmailStore.getState().emails.find((e) => emailKeyFor(e) === key);
+      if (restored) void reopenEmailRef.current?.(restored);
+    };
   };
 
   const handleDelete = async (emailToDelete: Email | null = selectedEmail) => {
@@ -3390,6 +3420,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       return;
     }
 
+    const reopen = reopenAfterUndo(emailToDelete);
     leaveIfOpen(emailToDelete);
 
     // The store's delete reads the "Delete action" setting: move to the
@@ -3398,7 +3429,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     try {
       // false: a plugin stopped it and said why, so no "deleted" here.
       if (await deleteEmail(client, emailToDelete.id, isInTrash, emailKeyFor(emailToDelete))) {
-        toastWithUndo(t('notifications.email_deleted'), undoMoveAction(client, restore, undo));
+        toastWithUndo(t('notifications.email_deleted'), undoMoveAction(client, restore, undo, undefined, reopen));
       }
     } catch (error) {
       console.error("Failed to delete email:", error);
@@ -3498,6 +3529,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
 
       let restore: EmailRestoreBatch[] | null = null;
+      const reopen = reopenAfterUndo(emailToArchive);
       leaveIfOpen(emailToArchive);
       const archived = await moveThreadToMailbox(client, emailToArchive.id, destination.id, emailKeyFor(emailToArchive), (batches) => { restore = batches; });
       if (!archived) return;
@@ -3509,7 +3541,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         setConversationEmails([]);
       }
 
-      toastWithUndo(t('notifications.email_archived'), undoMoveAction(client, restore, undo));
+      toastWithUndo(t('notifications.email_archived'), undoMoveAction(client, restore, undo, undefined, reopen));
       void refreshMailboxes();
     } catch (error) {
       console.error("Failed to archive email:", error);
@@ -5044,6 +5076,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   };
 
   pluginOpenEmailRef.current = handleEmailSelect;
+  reopenEmailRef.current = handleEmailSelect;
 
   // Handle back navigation from viewer on mobile.
   // Reset to list state directly. We can't just call window.history.back()
@@ -6099,7 +6132,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                         // Marking the open message unread returns to the list
                         // (Gmail-style, gated on returnToListAfterAction). Staying
                         // in the reading pane would just re-mark it read on view.
-                        if (!read && useSettingsStore.getState().returnToListAfterAction) {
+                        if (!read && returnsToList()) {
                           handleMobileBack();
                         }
                       }

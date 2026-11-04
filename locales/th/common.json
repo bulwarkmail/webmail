@@ -614,7 +614,8 @@
     "collapse_named": "ย่อการสนทนา: {subject}"
   },
   "conversation_pane": {
-    "show_older": "{count, plural, other {แสดงข้อความก่อนหน้า # ฉบับ}}"
+    "show_older": "{count, plural, other {แสดงข้อความก่อนหน้า # ฉบับ}}",
+    "return_to_list_follows_layout": "จนกว่าคุณจะเปลี่ยน ค่านี้จะเป็นไปตามเลย์เอาต์: ปิดเมื่อรายการและข้อความอยู่เคียงข้างกัน และเปิดในกรณีอื่น"
   },
   "notifications": {
     "email_sent": "ส่งอีเมลแล้ว",

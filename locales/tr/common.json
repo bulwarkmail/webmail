@@ -3767,7 +3767,8 @@
     "collapse_named": "Konuşmayı daralt: {subject}"
   },
   "conversation_pane": {
-    "show_older": "{count, plural, one {# eski iletiyi göster} other {# eski iletiyi göster}}"
+    "show_older": "{count, plural, one {# eski iletiyi göster} other {# eski iletiyi göster}}",
+    "return_to_list_follows_layout": "Siz değiştirene kadar bu ayar düzene göre belirlenir: liste ve ileti yan yanaysa kapalı, değilse açık."
   },
   "identities": {
     "modal_title": "Gönderme Kimliklerini Yönet",

@@ -3767,7 +3767,8 @@
     "collapse_named": "جمع کردن مکالمه: {subject}"
   },
   "conversation_pane": {
-    "show_older": "{count, plural, one {نمایش # پیام قدیمی‌تر} other {نمایش # پیام قدیمی‌تر}}"
+    "show_older": "{count, plural, one {نمایش # پیام قدیمی‌تر} other {نمایش # پیام قدیمی‌تر}}",
+    "return_to_list_follows_layout": "تا وقتی آن را تغییر ندهید، از چیدمان پیروی می‌کند: وقتی فهرست و پیام کنار هم هستند خاموش، در غیر این صورت روشن."
   },
   "identities": {
     "modal_title": "مدیریت هویت‌های ارسال",

@@ -3767,7 +3767,8 @@
     "collapse_named": "대화 접기: {subject}"
   },
   "conversation_pane": {
-    "show_older": "{count, plural, other {이전 메시지 #개 보기}}"
+    "show_older": "{count, plural, other {이전 메시지 #개 보기}}",
+    "return_to_list_follows_layout": "변경하기 전까지는 레이아웃을 따릅니다. 목록과 메시지가 나란히 있으면 꺼지고, 그 밖에는 켜집니다."
   },
   "identities": {
     "modal_title": "보내는 사람 관리",

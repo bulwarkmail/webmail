@@ -3767,7 +3767,8 @@
     "collapse_named": "Sairt sarunu: {subject}"
   },
   "conversation_pane": {
-    "show_older": "{count, plural, zero {Rādīt # vecākas ziņas} one {Rādīt # vecāku ziņu} other {Rādīt # vecākas ziņas}}"
+    "show_older": "{count, plural, zero {Rādīt # vecākas ziņas} one {Rādīt # vecāku ziņu} other {Rādīt # vecākas ziņas}}",
+    "return_to_list_follows_layout": "Kamēr to nemaināt, tas seko izkārtojumam: izslēgts, ja saraksts un ziņa ir blakus, citādi ieslēgts."
   },
   "identities": {
     "modal_title": "Pārvaldīt sūtītāja identitātes",

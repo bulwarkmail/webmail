@@ -3767,7 +3767,8 @@
     "collapse_named": "Sulge vestlus: {subject}"
   },
   "conversation_pane": {
-    "show_older": "{count, plural, one {Näita # vanemat sõnumit} other {Näita # vanemat sõnumit}}"
+    "show_older": "{count, plural, one {Näita # vanemat sõnumit} other {Näita # vanemat sõnumit}}",
+    "return_to_list_follows_layout": "Kuni te seda ei muuda, järgib see paigutust: väljas, kui loend ja sõnum on kõrvuti, muidu sees."
   },
   "identities": {
     "modal_title": "Halda saatja identiteete",

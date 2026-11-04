@@ -3779,7 +3779,8 @@
     "collapse_named": "Thu gọn cuộc trò chuyện: {subject}"
   },
   "conversation_pane": {
-    "show_older": "{count, plural, other {Hiện # thư cũ hơn}}"
+    "show_older": "{count, plural, other {Hiện # thư cũ hơn}}",
+    "return_to_list_follows_layout": "Cho đến khi bạn thay đổi, cài đặt này theo bố cục: tắt khi danh sách và thư nằm cạnh nhau, bật trong các trường hợp khác."
   },
   "identities": {
     "modal_title": "Quản lý danh tính gửi thư",
