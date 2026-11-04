@@ -14,6 +14,7 @@
 import type { ComposerDraftData } from '@/components/email/email-composer';
 import { isAppLockedNow } from '@/lib/app-lock/state';
 import type { MessagePriority } from '@/lib/message-priority';
+import type { EmailRestorePoint } from '@/stores/email-store';
 import type { ComposePopoutPayload } from './compose-payload';
 import { canSealSessions, createSessionOpener, credentialFingerprint, type SealedAnswer } from './sealed';
 
@@ -55,6 +56,16 @@ export interface PopoutSentNotice {
 }
 
 /**
+ * A message a message window archived, deleted or moved, for the main window
+ * to offer Undo for (a toast and Ctrl+Z). The message window has closed by then.
+ */
+export interface PopoutMovedNotice {
+  kind: 'archive' | 'delete' | 'move';
+  /** Where the messages were (stores/email-store.ts EmailRestoreBatch), by login instead of client. */
+  batches: Array<{ login: string | null; accountId?: string; points: EmailRestorePoint[] }>;
+}
+
+/**
  * A draft whose window is closing, ready to save. A request started while a
  * window closes doesn't survive, and saving takes several, so another window
  * does it. The arguments of JMAPClient.createDraft, as plain data.
@@ -91,6 +102,8 @@ export type PopoutMessage =
   | { type: 'handoff-rendered'; handoffId: string }
   | { type: 'sent'; requestId: string; notice: PopoutSentNotice }
   | { type: 'sent-ack'; requestId: string }
+  | { type: 'moved'; requestId: string; notice: PopoutMovedNotice }
+  | { type: 'moved-ack'; requestId: string }
   | { type: 'mail-changed'; accountId: string | null }
   | { type: 'state-change' }
   | { type: 'draft-rescue'; draft: RescuedDraft }
@@ -197,11 +210,20 @@ export async function requestWindowSession(
 
 /** Tells a main window what was sent. True when one took it over. */
 export function announceSentToMainWindow(notice: PopoutSentNotice, timeoutMs = 500): Promise<boolean> {
+  return announceToMainWindow((requestId) => ({ type: 'sent', requestId, notice }), 'sent-ack', timeoutMs);
+}
+
+/** Hands a move's Undo to a main window. True when one took it over. */
+export function announceMovedToMainWindow(notice: PopoutMovedNotice, timeoutMs = 500): Promise<boolean> {
+  return announceToMainWindow((requestId) => ({ type: 'moved', requestId, notice }), 'moved-ack', timeoutMs);
+}
+
+function announceToMainWindow(message: (requestId: string) => PopoutMessage, ack: 'sent-ack' | 'moved-ack', timeoutMs: number): Promise<boolean> {
   return new Promise((resolve) => {
     const requestId = newId();
     let timer: ReturnType<typeof setTimeout> | null = null;
-    const channel = openPopoutChannel((message) => {
-      if (message.type === 'sent-ack' && message.requestId === requestId) finish(true);
+    const channel = openPopoutChannel((answer) => {
+      if (answer.type === ack && answer.requestId === requestId) finish(true);
     });
     const finish = (taken: boolean) => {
       if (timer) clearTimeout(timer);
@@ -213,7 +235,7 @@ export function announceSentToMainWindow(notice: PopoutSentNotice, timeoutMs = 5
       return;
     }
     timer = setTimeout(() => finish(false), timeoutMs);
-    channel.post({ type: 'sent', requestId, notice });
+    channel.post(message(requestId));
   });
 }
 
