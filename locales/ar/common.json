@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "البحث عن رسائل من {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "ابحث عن مجلد",
+    "recent": "الأخيرة",
+    "no_match": "لا يوجد مجلد مطابق",
+    "choose_folder": "اختيار مجلد…",
+    "current_folder": "موجودة بالفعل في {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "تمييز المجلد كمقروء",
     "mark_folder_tree_read": "تمييز المجلد والمجلدات الفرعية كمقروءة",
@@ -6418,6 +6425,9 @@
   "top_bar": {
     "more": "خيارات أخرى"
   },
+  "windowChrome": {
+    "hide_offline_notice": "إخفاء إشعار عدم الاتصال"
+  },
   "shell": {
     "resize": "تغيير الحجم",
     "update_available": "يتوفر تحديث",
@@ -6462,6 +6472,19 @@
     "group_plugins": "الإضافات",
     "group_account": "الحساب",
     "switch_to": "التبديل إلى {account}"
+  },
+  "menuAudit": {
+    "offline_header": "أنت غير متصل. بعض الإجراءات تحتاج إلى اتصال.",
+    "files_new_folder": "مجلد جديد…",
+    "files_new_file": "ملف جديد…",
+    "files_new_text_file": "ملف نصي جديد…",
+    "files_upload_files": "رفع الملفات…",
+    "files_upload_folder": "رفع مجلد…",
+    "files_share": "مشاركة…",
+    "files_share_button": "مشاركة",
+    "contacts_add_to_group": "إضافة إلى مجموعة…",
+    "contacts_bulk_add_to_group": "إضافة إلى مجموعة…",
+    "schedule_send": "جدولة الإرسال…"
   },
   "notification_center": {
     "title": "الإشعارات",
@@ -6817,6 +6840,23 @@
       "try_again": "إعادة المحاولة",
       "close": "إغلاق"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "إظهار شريط القوائم دائمًا",
+    "always_show_description": "وإلا فسيظهر عند الضغط على Alt.",
+    "exit": "خروج",
+    "tray_pause": "إيقاف الإشعارات مؤقتًا",
+    "tray_pause_hour": "لمدة ساعة واحدة",
+    "tray_pause_tomorrow": "حتى الغد",
+    "tray_resume": "إعادة تشغيل الإشعارات",
+    "tray_open": "فتح Bulwark",
+    "tray_quit": "إنهاء Bulwark",
+    "tray_exit": "الخروج من Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "حفظ المسودة",
+    "attach_files": "إرفاق ملفات…",
+    "shortcut_apps": "الانتقال إلى البريد أو التقويم أو جهات الاتصال أو الملفات"
   },
   "appLock": {
     "section_title": "قفل التطبيق",

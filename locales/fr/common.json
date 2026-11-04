@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Rechercher les e-mails de {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Rechercher un dossier",
+    "recent": "Récents",
+    "no_match": "Aucun dossier ne correspond",
+    "choose_folder": "Choisir un dossier…",
+    "current_folder": "Déjà dans {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Marquer le dossier comme lu",
     "mark_folder_tree_read": "Marquer le dossier et les sous-dossiers comme lus",
@@ -6418,6 +6425,9 @@
   "top_bar": {
     "more": "Plus d'options"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Masquer l'avis hors ligne"
+  },
   "shell": {
     "resize": "Redimensionner",
     "update_available": "Mise à jour disponible",
@@ -6462,6 +6472,19 @@
     "group_plugins": "Plugins",
     "group_account": "Compte",
     "switch_to": "Passer à {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Vous êtes hors ligne. Certaines actions ont besoin d’une connexion.",
+    "files_new_folder": "Nouveau dossier…",
+    "files_new_file": "Nouveau fichier…",
+    "files_new_text_file": "Nouveau fichier texte…",
+    "files_upload_files": "Téléverser des fichiers…",
+    "files_upload_folder": "Téléverser un dossier…",
+    "files_share": "Partager…",
+    "files_share_button": "Partager",
+    "contacts_add_to_group": "Ajouter au groupe…",
+    "contacts_bulk_add_to_group": "Ajouter au groupe…",
+    "schedule_send": "Planifier l’envoi…"
   },
   "notification_center": {
     "title": "Notifications",
@@ -6817,6 +6840,23 @@
       "try_again": "Réessayer",
       "close": "Fermer"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Toujours afficher la barre de menus",
+    "always_show_description": "Sinon, elle s’affiche quand vous appuyez sur Alt.",
+    "exit": "Quitter",
+    "tray_pause": "Suspendre les notifications",
+    "tray_pause_hour": "Pendant 1 heure",
+    "tray_pause_tomorrow": "Jusqu’à demain",
+    "tray_resume": "Réactiver les notifications",
+    "tray_open": "Ouvrir Bulwark",
+    "tray_quit": "Quitter Bulwark",
+    "tray_exit": "Quitter Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Enregistrer le brouillon",
+    "attach_files": "Joindre des fichiers…",
+    "shortcut_apps": "Aller à Mail, Calendrier, Contacts ou Fichiers"
   },
   "appLock": {
     "section_title": "Verrouillage de l'app",

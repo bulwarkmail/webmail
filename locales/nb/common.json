@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Finn e-poster fra {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Finn en mappe",
+    "recent": "Nylig brukt",
+    "no_match": "Ingen mapper passer",
+    "choose_folder": "Velg mappe…",
+    "current_folder": "Allerede i {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Merk mappen som lest",
     "mark_folder_tree_read": "Merk mappe og undermapper som lest",
@@ -6418,6 +6425,9 @@
   "top_bar": {
     "more": "Flere alternativer"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Skjul frakoblet-melding"
+  },
   "shell": {
     "resize": "Endre størrelse",
     "update_available": "Oppdatering tilgjengelig",
@@ -6462,6 +6472,19 @@
     "group_plugins": "Tillegg",
     "group_account": "Konto",
     "switch_to": "Bytt til {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Du er frakoblet. Noen handlinger trenger tilkobling.",
+    "files_new_folder": "Ny mappe…",
+    "files_new_file": "Ny fil…",
+    "files_new_text_file": "Ny tekstfil…",
+    "files_upload_files": "Last opp filer…",
+    "files_upload_folder": "Last opp mappe…",
+    "files_share": "Del…",
+    "files_share_button": "Del",
+    "contacts_add_to_group": "Legg til i gruppe…",
+    "contacts_bulk_add_to_group": "Legg til i gruppe…",
+    "schedule_send": "Planlegg sending…"
   },
   "notification_center": {
     "title": "Varsler",
@@ -6817,6 +6840,23 @@
       "try_again": "Prøv igjen",
       "close": "Lukk"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Vis alltid menylinjen",
+    "always_show_description": "Ellers vises den når du trykker på Alt.",
+    "exit": "Avslutt",
+    "tray_pause": "Sett varsler på pause",
+    "tray_pause_hour": "I 1 time",
+    "tray_pause_tomorrow": "Til i morgen",
+    "tray_resume": "Slå på varsler igjen",
+    "tray_open": "Åpne Bulwark",
+    "tray_quit": "Avslutt Bulwark",
+    "tray_exit": "Avslutt Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Lagre utkast",
+    "attach_files": "Legg ved filer…",
+    "shortcut_apps": "Gå til E-post, Kalender, Kontakter eller Filer"
   },
   "appLock": {
     "section_title": "Applås",

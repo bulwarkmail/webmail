@@ -124,6 +124,24 @@ describe('Rules entry of the message menu', () => {
     }]);
   });
 
+  it('lists folders in Move-list order, with a read-only parent greyed above its subfolders', () => {
+    const boxes = [
+      { id: 'zeta', name: 'Zeta', role: null, parentId: null, sortOrder: 0, myRights: { mayAddItems: true } },
+      { id: 'trash', name: 'Trash', role: 'trash', parentId: null, sortOrder: 9, myRights: { mayAddItems: true } },
+      { id: 'inbox', name: 'Inbox', role: 'inbox', parentId: null, sortOrder: 5, myRights: { mayAddItems: true } },
+      { id: 'shared', name: 'Shared', role: null, parentId: null, sortOrder: 0, myRights: { mayAddItems: false } },
+      { id: 'alpha', name: 'alpha', role: null, parentId: 'shared', sortOrder: 0, myRights: { mayAddItems: true } },
+    ] as unknown as Mailbox[];
+    targets.set('e1', target({ mailboxes: boxes }));
+    renderMenu(email('e1'));
+    openRules();
+    fireEvent.mouseEnter(screen.getByTestId('rules:move_sender').parentElement!);
+    const rows = screen.getAllByTestId(/^rules:move_sender:/).map((el) => el.getAttribute('data-testid'));
+    expect(rows).toEqual(['rules:move_sender:inbox', 'rules:move_sender:trash', 'rules:move_sender:shared', 'rules:move_sender:alpha', 'rules:move_sender:zeta', 'rules:move_sender:new-folder']);
+    expect(screen.getByTestId('rules:move_sender:shared')).toBeDisabled();
+    expect(screen.getByTestId('rules:move_sender:shared').closest('[data-native-submenu]')).not.toBeNull();
+  });
+
   it('disables Block sender with a hint when the account has no Junk folder', () => {
     targets.set('e1', target());
     renderMenu(email('e1'));

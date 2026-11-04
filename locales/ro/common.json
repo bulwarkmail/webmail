@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Găsește e-mailurile de la {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Caută un folder",
+    "recent": "Recente",
+    "no_match": "Niciun folder nu se potrivește",
+    "choose_folder": "Alege folderul…",
+    "current_folder": "Deja în {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Marcați folderul ca citit",
     "mark_folder_tree_read": "Marcați folderul și subfolderele ca citite",
@@ -6418,6 +6425,9 @@
   "top_bar": {
     "more": "Mai multe opțiuni"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Ascunde notificarea offline"
+  },
   "shell": {
     "resize": "Redimensionează",
     "update_available": "Actualizare disponibilă",
@@ -6462,6 +6472,19 @@
     "group_plugins": "Pluginuri",
     "group_account": "Cont",
     "switch_to": "Comută la {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Sunteți offline. Unele acțiuni au nevoie de conexiune.",
+    "files_new_folder": "Dosar nou…",
+    "files_new_file": "Fișier nou…",
+    "files_new_text_file": "Fișier text nou…",
+    "files_upload_files": "Încărcați fișiere…",
+    "files_upload_folder": "Încărcare folder…",
+    "files_share": "Distribuie…",
+    "files_share_button": "Distribuie",
+    "contacts_add_to_group": "Adaugă la grup…",
+    "contacts_bulk_add_to_group": "Adaugă la grup…",
+    "schedule_send": "Programează trimiterea…"
   },
   "notification_center": {
     "title": "Notificări",
@@ -6817,6 +6840,23 @@
       "try_again": "Încercați din nou",
       "close": "Închidere"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Afișează mereu bara de meniu",
+    "always_show_description": "Altfel apare la apăsarea tastei Alt.",
+    "exit": "Ieșire",
+    "tray_pause": "Întrerupe notificările",
+    "tray_pause_hour": "Pentru 1 oră",
+    "tray_pause_tomorrow": "Până mâine",
+    "tray_resume": "Reactivează notificările",
+    "tray_open": "Deschide Bulwark",
+    "tray_quit": "Închide Bulwark",
+    "tray_exit": "Ieșire din Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Salvează ciorna",
+    "attach_files": "Atașează fișiere…",
+    "shortcut_apps": "Mergi la E-mail, Calendar, Contacte sau Fișiere"
   },
   "appLock": {
     "section_title": "Blocarea aplicației",

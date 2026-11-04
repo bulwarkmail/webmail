@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Encontrar e-mails de {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Procurar uma pasta",
+    "recent": "Recentes",
+    "no_match": "Nenhuma pasta corresponde",
+    "choose_folder": "Escolher pasta…",
+    "current_folder": "Já está em {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Marcar pasta como lida",
     "mark_folder_tree_read": "Marcar pasta e subpastas como lidas",
@@ -6418,6 +6425,9 @@
   "top_bar": {
     "more": "Mais opções"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Ocultar aviso de sem ligação"
+  },
   "shell": {
     "resize": "Redimensionar",
     "update_available": "Atualização disponível",
@@ -6462,6 +6472,19 @@
     "group_plugins": "Plugins",
     "group_account": "Conta",
     "switch_to": "Mudar para {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Está offline. Algumas ações precisam de ligação.",
+    "files_new_folder": "Nova pasta…",
+    "files_new_file": "Novo arquivo…",
+    "files_new_text_file": "Novo arquivo de texto…",
+    "files_upload_files": "Carregar arquivos…",
+    "files_upload_folder": "Carregar pasta…",
+    "files_share": "Compartilhar…",
+    "files_share_button": "Compartilhar",
+    "contacts_add_to_group": "Adicionar ao grupo…",
+    "contacts_bulk_add_to_group": "Adicionar ao grupo…",
+    "schedule_send": "Agendar envio…"
   },
   "notification_center": {
     "title": "Notificações",
@@ -6817,6 +6840,23 @@
       "try_again": "Tentar novamente",
       "close": "Fechar"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Mostrar sempre a barra de menus",
+    "always_show_description": "Caso contrário, aparece ao premir Alt.",
+    "exit": "Sair",
+    "tray_pause": "Pausar notificações",
+    "tray_pause_hour": "Durante 1 hora",
+    "tray_pause_tomorrow": "Até amanhã",
+    "tray_resume": "Voltar a ativar as notificações",
+    "tray_open": "Abrir o Bulwark",
+    "tray_quit": "Sair do Bulwark",
+    "tray_exit": "Sair do Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Salvar rascunho",
+    "attach_files": "Anexar arquivos…",
+    "shortcut_apps": "Ir para E-mail, Calendário, Contatos ou Arquivos"
   },
   "appLock": {
     "section_title": "Bloqueio da app",

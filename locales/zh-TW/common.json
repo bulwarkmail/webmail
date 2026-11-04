@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "尋找來自 {name} 的郵件"
   },
+  "menuMove": {
+    "filter_placeholder": "尋找資料夾",
+    "recent": "最近使用",
+    "no_match": "沒有符合的資料夾",
+    "choose_folder": "選擇資料夾…",
+    "current_folder": "已在「{folder}」中"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "將信件匣標示為已讀",
     "mark_folder_tree_read": "將信件匣與子信件匣標示為已讀",
@@ -6418,6 +6425,9 @@
   "top_bar": {
     "more": "更多選項"
   },
+  "windowChrome": {
+    "hide_offline_notice": "隱藏離線提示"
+  },
   "shell": {
     "resize": "調整大小",
     "update_available": "有可用的更新",
@@ -6462,6 +6472,19 @@
     "group_plugins": "外掛程式",
     "group_account": "帳戶",
     "switch_to": "切換到 {account}"
+  },
+  "menuAudit": {
+    "offline_header": "您已離線。部分操作需要連線。",
+    "files_new_folder": "新增資料夾…",
+    "files_new_file": "新增檔案…",
+    "files_new_text_file": "新增文字檔案…",
+    "files_upload_files": "上傳檔案…",
+    "files_upload_folder": "上傳資料夾…",
+    "files_share": "分享…",
+    "files_share_button": "分享",
+    "contacts_add_to_group": "新增至群組…",
+    "contacts_bulk_add_to_group": "新增至群組…",
+    "schedule_send": "排程寄送…"
   },
   "notification_center": {
     "title": "通知",
@@ -6817,6 +6840,23 @@
       "try_again": "重試",
       "close": "關閉"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "永遠顯示選單列",
+    "always_show_description": "否則按 Alt 鍵時顯示。",
+    "exit": "結束",
+    "tray_pause": "暫停通知",
+    "tray_pause_hour": "1 小時",
+    "tray_pause_tomorrow": "直到明天",
+    "tray_resume": "重新開啟通知",
+    "tray_open": "開啟 Bulwark",
+    "tray_quit": "結束 Bulwark",
+    "tray_exit": "結束 Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "儲存草稿",
+    "attach_files": "附加檔案…",
+    "shortcut_apps": "前往郵件、行事曆、聯絡人或檔案"
   },
   "appLock": {
     "section_title": "應用程式鎖定",

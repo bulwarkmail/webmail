@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Trova email da {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Cerca una cartella",
+    "recent": "Recenti",
+    "no_match": "Nessuna cartella corrisponde",
+    "choose_folder": "Scegli cartella…",
+    "current_folder": "Già in {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Segna cartella come letta",
     "mark_folder_tree_read": "Segna cartella e sottocartelle come lette",
@@ -6418,6 +6425,9 @@
   "top_bar": {
     "more": "Altre opzioni"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Nascondi l'avviso offline"
+  },
   "shell": {
     "resize": "Ridimensiona",
     "update_available": "Aggiornamento disponibile",
@@ -6462,6 +6472,19 @@
     "group_plugins": "Plugin",
     "group_account": "Account",
     "switch_to": "Passa a {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Sei offline. Alcune azioni richiedono una connessione.",
+    "files_new_folder": "Nuova cartella…",
+    "files_new_file": "Nuovo file…",
+    "files_new_text_file": "Nuovo file di testo…",
+    "files_upload_files": "Carica file…",
+    "files_upload_folder": "Carica cartella…",
+    "files_share": "Condividi…",
+    "files_share_button": "Condividi",
+    "contacts_add_to_group": "Aggiungi al gruppo…",
+    "contacts_bulk_add_to_group": "Aggiungi al gruppo…",
+    "schedule_send": "Programma invio…"
   },
   "notification_center": {
     "title": "Notifiche",
@@ -6817,6 +6840,23 @@
       "try_again": "Riprova",
       "close": "Chiudi"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Mostra sempre la barra dei menu",
+    "always_show_description": "Altrimenti compare premendo Alt.",
+    "exit": "Esci",
+    "tray_pause": "Sospendi le notifiche",
+    "tray_pause_hour": "Per 1 ora",
+    "tray_pause_tomorrow": "Fino a domani",
+    "tray_resume": "Riattiva le notifiche",
+    "tray_open": "Apri Bulwark",
+    "tray_quit": "Esci da Bulwark",
+    "tray_exit": "Esci da Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Salva bozza",
+    "attach_files": "Allega file…",
+    "shortcut_apps": "Vai a Posta, Calendario, Contatti o File"
   },
   "appLock": {
     "section_title": "Blocco dell'app",

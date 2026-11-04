@@ -3592,6 +3592,13 @@
     },
     "find_emails_from": "חיפוש הודעות מ{name}"
   },
+  "menuMove": {
+    "filter_placeholder": "חיפוש תיקייה",
+    "recent": "אחרונות",
+    "no_match": "אין תיקייה תואמת",
+    "choose_folder": "בחירת תיקייה…",
+    "current_folder": "כבר בתיקייה {folder}"
+  },
   "shortcuts": {
     "title": "קיצורי מקלדת",
     "tip": "לחץ על? בכל עת כדי להראות את העזרה הזו",
@@ -6419,6 +6426,9 @@
   "top_bar": {
     "more": "אפשרויות נוספות"
   },
+  "windowChrome": {
+    "hide_offline_notice": "הסתרת ההודעה על מצב לא מקוון"
+  },
   "shell": {
     "resize": "שינוי גודל",
     "update_available": "יש עדכון",
@@ -6463,6 +6473,19 @@
     "group_plugins": "תוספים",
     "group_account": "חשבון",
     "switch_to": "מעבר אל {account}"
+  },
+  "menuAudit": {
+    "offline_header": "אין חיבור. חלק מהפעולות צריכות חיבור.",
+    "files_new_folder": "תיקיה חדשה…",
+    "files_new_file": "קובץ חדש…",
+    "files_new_text_file": "קובץ טקסט חדש…",
+    "files_upload_files": "העלה קבצים…",
+    "files_upload_folder": "העלה תיקייה…",
+    "files_share": "שתף…",
+    "files_share_button": "שתף",
+    "contacts_add_to_group": "הוסף לקבוצה…",
+    "contacts_bulk_add_to_group": "הוסף לקבוצה…",
+    "schedule_send": "תזמן שליחה…"
   },
   "notification_center": {
     "title": "התראות",
@@ -6818,6 +6841,23 @@
       "try_again": "ניסיון חוזר",
       "close": "סגירה"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "תמיד להציג את סרגל התפריטים",
+    "always_show_description": "אחרת הוא מופיע בלחיצה על Alt.",
+    "exit": "יציאה",
+    "tray_pause": "השהיית התראות",
+    "tray_pause_hour": "לשעה אחת",
+    "tray_pause_tomorrow": "עד מחר",
+    "tray_resume": "הפעלת ההתראות מחדש",
+    "tray_open": "פתיחת Bulwark",
+    "tray_quit": "סגירת Bulwark",
+    "tray_exit": "יציאה מ-Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "שמירת טיוטה",
+    "attach_files": "צירוף קבצים…",
+    "shortcut_apps": "מעבר לדואר, ליומן, לאנשי הקשר או לקבצים"
   },
   "appLock": {
     "section_title": "נעילת אפליקציה",

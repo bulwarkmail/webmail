@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { CloudOff } from '@/components/icons';
+import { CloudOff, X } from '@/components/icons';
 import { Dialog } from '@/components/ui/dialog';
+import { IconButton } from '@/components/ui/icon-button';
+import { useCloseBesideControls } from '@/hooks/use-close-beside-controls';
 import { IS_LITE } from '@/lib/lite';
 import { serverKey, useOfflineStore } from '@/lib/offline/state';
 import { useAuthStore } from '@/stores/auth-store';
@@ -15,7 +17,20 @@ import { OutboxList } from './outbox-list';
  * reached), and how many messages wait in the outbox. The count opens the
  * outbox in a dialog, which works without a network (a page change might
  * not). Shown only for an account that keeps mail here.
+ *
+ * It can be hidden until what it says changes (going offline again, another
+ * message waiting), for this session of the window.
  */
+const HIDDEN_KEY = 'bulwark.offlineBanner.hidden';
+
+function hiddenFor(): string | null {
+  try {
+    return sessionStorage.getItem(HIDDEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
 export function OfflineBanner() {
   const t = useTranslations('offline');
   const account = useAuthStore((s) => s.activeAccountId);
@@ -29,15 +44,38 @@ export function OfflineBanner() {
   const waitingDrafts = useOfflineStore((s) => s.localDrafts.filter((draft) => draft.status !== 'refused').length);
   const tConflicts = useTranslations('offlineConflicts');
   const tDrafts = useTranslations('offlineDrafts');
+  const tChrome = useTranslations('windowChrome');
   const [open, setOpen] = useState(false);
+  const [hidden, setHidden] = useState<string | null>(hiddenFor);
+  const [banner, setBanner] = useState<HTMLDivElement | null>(null);
+  const closeFirst = useCloseBesideControls(banner);
   const offline = browserOffline || serverDown;
+  const says = `${browserOffline ? 'offline' : serverDown ? 'down' : 'online'}|${waiting}|${conflicts}|${waitingDrafts}|${refusedDrafts}`;
   if (IS_LITE || !active || (!offline && waiting === 0 && conflicts === 0 && refusedDrafts === 0 && waitingDrafts === 0 && !open)) return null;
+  const hide = () => {
+    try {
+      sessionStorage.setItem(HIDDEN_KEY, says);
+    } catch {
+      // Hidden for now all the same.
+    }
+    setHidden(says);
+  };
+  const close = (
+    <IconButton label={tChrome('hide_offline_notice')} onClick={hide} className="-my-1 shrink-0" data-testid="offline-banner-hide">
+      <X />
+    </IconButton>
+  );
   return (
     <>
+      {hidden !== says && (
       <div
+        ref={setBanner}
         data-testid="offline-banner"
-        className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-border bg-muted px-3 py-2 text-sm text-foreground sm:px-4"
+        data-window-top-row=""
+        className="flex shrink-0 items-center gap-2 border-b border-border bg-muted px-3 py-2 text-sm text-foreground sm:px-4"
       >
+        {closeFirst && close}
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
         {offline && (
           <span className="flex min-w-0 items-start gap-2" role="status">
             <CloudOff className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
@@ -88,7 +126,10 @@ export function OfflineBanner() {
             {tDrafts('banner_refused', { count: refusedDrafts })}
           </button>
         )}
+        </div>
+        {!closeFirst && close}
       </div>
+      )}
       <Dialog isOpen={open} onClose={() => setOpen(false)} title={t('outbox.title')} testId="offline-outbox-dialog">
         <OutboxList heading={false} onOpenDraft={() => setOpen(false)} />
       </Dialog>

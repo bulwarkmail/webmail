@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { hasDesktopWindows } from "@/lib/popout/support";
+import { menuBarAvailable, useMenuBarPinned } from "@/lib/desktop/menu-bar";
 import { setDesktopPref, useDesktopPrefs } from "@/lib/desktop/preferences";
 import { SettingItem, SettingsSection, ToggleSwitch } from "./settings-section";
 
@@ -21,6 +22,21 @@ export function DesktopWindowSettings() {
       <SettingItem label={t("restore_label")} description={t("restore_description")}>
         <ToggleSwitch checked={prefs.restoreWindows} onChange={(checked) => setDesktopPref("restoreWindows", checked)} />
       </SettingItem>
+      <MenuBarSetting />
     </SettingsSection>
+  );
+}
+
+/** "Always show the menu bar", as in the View menu. Windows and Linux: macOS has the system's. */
+function MenuBarSetting() {
+  const t = useTranslations("desktopMenuBar");
+  const [available, setAvailable] = useState(false);
+  const [pinned, setPinned] = useMenuBarPinned();
+  useEffect(() => setAvailable(menuBarAvailable()), []);
+  if (!available) return null;
+  return (
+    <SettingItem label={t("always_show_label")} description={t("always_show_description")}>
+      <ToggleSwitch checked={pinned} onChange={setPinned} />
+    </SettingItem>
   );
 }

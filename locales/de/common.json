@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "E-Mails von {name} finden"
   },
+  "menuMove": {
+    "filter_placeholder": "Ordner suchen",
+    "recent": "Zuletzt verwendet",
+    "no_match": "Kein Ordner gefunden",
+    "choose_folder": "Ordner auswählen…",
+    "current_folder": "Bereits in {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Ordner als gelesen markieren",
     "mark_folder_tree_read": "Ordner & Unterordner als gelesen markieren",
@@ -6418,6 +6425,9 @@
   "top_bar": {
     "more": "Weitere Optionen"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Offline-Hinweis ausblenden"
+  },
   "shell": {
     "resize": "Größe ändern",
     "update_available": "Update verfügbar",
@@ -6462,6 +6472,19 @@
     "group_plugins": "Plugins",
     "group_account": "Konto",
     "switch_to": "Zu {account} wechseln"
+  },
+  "menuAudit": {
+    "offline_header": "Sie sind offline. Manche Aktionen brauchen eine Verbindung.",
+    "files_new_folder": "Neuer Ordner…",
+    "files_new_file": "Neue Datei…",
+    "files_new_text_file": "Neue Textdatei…",
+    "files_upload_files": "Dateien hochladen…",
+    "files_upload_folder": "Ordner hochladen…",
+    "files_share": "Teilen…",
+    "files_share_button": "Teilen",
+    "contacts_add_to_group": "Zur Gruppe hinzufügen…",
+    "contacts_bulk_add_to_group": "Zur Gruppe hinzufügen…",
+    "schedule_send": "Senden planen…"
   },
   "notification_center": {
     "title": "Benachrichtigungen",
@@ -6817,6 +6840,23 @@
       "try_again": "Erneut versuchen",
       "close": "Schließen"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Menüleiste immer anzeigen",
+    "always_show_description": "Sonst erscheint sie, wenn Sie Alt drücken.",
+    "exit": "Beenden",
+    "tray_pause": "Benachrichtigungen pausieren",
+    "tray_pause_hour": "Für 1 Stunde",
+    "tray_pause_tomorrow": "Bis morgen",
+    "tray_resume": "Benachrichtigungen wieder einschalten",
+    "tray_open": "Bulwark öffnen",
+    "tray_quit": "Bulwark beenden",
+    "tray_exit": "Bulwark beenden"
+  },
+  "desktopMenus": {
+    "save_draft": "Entwurf speichern",
+    "attach_files": "Dateien anhängen…",
+    "shortcut_apps": "Zu E-Mail, Kalender, Kontakten oder Dateien wechseln"
   },
   "appLock": {
     "section_title": "App-Sperre",

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useCloseBesideControls } from "@/hooks/use-close-beside-controls";
 import { useMvComposeWindow } from "@/components/email/mv-compose-context";
 import { useLocale, useTranslations } from "next-intl";
 import { isServerOutage } from "@/lib/jmap/offline-hooks";
@@ -56,6 +57,7 @@ import { debug } from "@/lib/debug";
 import { toast } from "@/stores/toast-store";
 import { useContextMenu, isContextMenuKey } from "@/hooks/use-context-menu";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from "@/components/ui/context-menu";
+import { formatShortcutCombo } from "@/lib/shortcut-keys";
 import { sanitizeSignatureHtml, sanitizeSignatureHtmlForDisplay, sanitizeEmailHtml, escapeHtml, sanitizePluginBodyHtml } from "@/lib/email-sanitization";
 import { buildReplySubject, buildForwardSubject } from "@/lib/subject-prefix";
 import { isFilePreviewable } from "@/lib/file-preview";
@@ -174,6 +176,7 @@ import { usePolicyStore } from "@/stores/policy-store";
 import { isAppLockedNow } from "@/lib/app-lock/state";
 import { registerComposeFlush, registerComposeSnapshot } from "@/lib/compose-flush-registry";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
+import { useDesktopCommands } from "@/lib/desktop/commands";
 import { noteComposerLanguage } from "@/lib/desktop/languages";
 import { noteOpenDraft } from "@/lib/desktop/window-restore";
 import type { RescuedDraft } from "@/lib/popout/channel";
@@ -592,6 +595,7 @@ export function EmailComposer({
   replyTo
 }: EmailComposerProps) {
   const t = useTranslations('email_composer');
+  const tMenu = useTranslations('menuAudit');
   const tCommon = useTranslations('common');
   const tWindows = useTranslations('pwaWindows');
   const tQuote = useTranslations('quote_header');
@@ -2000,6 +2004,10 @@ export function EmailComposer({
     return () => noteOpenDraft(effectiveSessionKey, null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveSessionKey]);
+
+  // The header's close goes to its start when the window's own close is at its end.
+  const [composerHeader, setComposerHeader] = useState<HTMLDivElement | null>(null);
+  const closeBesideControls = useCloseBesideControls(composerHeader);
 
   // Auto-save draft to server on page close (best-effort)
   const ownWindowRef = useRef(ownWindow);
@@ -4514,6 +4522,21 @@ export function EmailComposer({
     }
   };
 
+  // Close at the top end (R4). On a phone it moves to the start, as the phone's
+  // mail apps have it, with Send at the end. Beside the window's own close it
+  // goes to the start too.
+  const composerCloseButton = (
+    <IconButton
+      onClick={() => handleClose()}
+      className={cn(closeBesideControls ? "-ms-2" : "-me-2", "max-md:order-first max-md:me-0 max-md:-ms-2 max-md:h-11 max-md:w-11")}
+      label={tCommon('close')}
+      data-testid="composer-close"
+      data-own-window-close={ownWindow ? "" : undefined}
+    >
+      <X className="w-5 h-5 md:w-4 md:h-4" />
+    </IconButton>
+  );
+
   const popOutButton = (className: string, iconClassName: string) => popOut && (
     <button
       type="button"
@@ -4692,6 +4715,18 @@ export function EmailComposer({
     }
   };
 
+  // The desktop app's Message menu while this composer is open: the same handlers as
+  // its buttons and keys (lib/desktop/commands.ts). Nothing in a browser.
+  useDesktopCommands({
+    'compose.send': () => { if (!isSavingAndClosing) void handleSend(); },
+    'compose.saveDraft': () => { void saveDraft({ announce: true }); },
+    'compose.attach': () => fileInputRef.current?.click(),
+  }, {
+    'compose.send': !!canSend && !isSending && !isSavingAndClosing,
+    'compose.saveDraft': !isSavingAndClosing,
+    'compose.attach': !isSavingAndClosing,
+  });
+
   return (
     <div
       ref={setComposerRootEl}
@@ -4814,7 +4849,8 @@ export function EmailComposer({
           </button>
         </div>
       ) : (
-      <div className="flex items-center gap-3 px-4 py-2 md:py-0 md:h-14 border-b bg-background shrink-0" data-composer-header="">
+      <div ref={setComposerHeader} className="flex items-center gap-3 px-4 py-2 md:py-0 md:h-14 border-b bg-background shrink-0" data-composer-header="">
+        {closeBesideControls && composerCloseButton}
         {/* The left panel's button at the start, the right one's at the end: where each panel is. */}
         {leftPanelToggle && <div className="hidden md:flex -ms-2">{leftPanelToggle}</div>}
         <div className="flex-1 min-w-0 flex items-center gap-3">
@@ -4886,17 +4922,7 @@ export function EmailComposer({
         )}
         {rightPanelToggle}
         {popOutButton("hidden md:grid h-8 w-8 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground", "w-4 h-4")}
-        {/* Close at the top end (R4). On a phone it moves to the start, as
-            the phone's mail apps have it, with Send at the end. */}
-        <IconButton
-          onClick={() => handleClose()}
-          className="-me-2 max-md:order-first max-md:me-0 max-md:-ms-2 max-md:h-11 max-md:w-11"
-          label={tCommon('close')}
-          data-testid="composer-close"
-          data-own-window-close={ownWindow ? "" : undefined}
-        >
-          <X className="w-5 h-5 md:w-4 md:h-4" />
-        </IconButton>
+        {!closeBesideControls && composerCloseButton}
       </div>
       )}
 
@@ -5813,7 +5839,7 @@ export function EmailComposer({
 
       <ContextMenu ref={sendMenu.menuRef} isOpen={showSendMenu} position={sendMenu.contextMenu.position} onClose={closeSendMenu}>
         {composerClient?.hasDelayedSend() && (
-          <ContextMenuItem icon={CalendarClock} label={t('schedule_send')} onClick={openScheduleDialog} testId="composer-schedule-send" />
+          <ContextMenuItem icon={CalendarClock} label={tMenu('schedule_send')} shortcut={formatShortcutCombo('Mod + Shift + Enter')} onClick={openScheduleDialog} testId="composer-schedule-send" />
         )}
         <ComposerPluginMenuItems
           surface="composer-send-menu"

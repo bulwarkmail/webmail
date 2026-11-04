@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Знайти листи від {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Знайти папку",
+    "recent": "Нещодавні",
+    "no_match": "Немає відповідних папок",
+    "choose_folder": "Вибрати папку…",
+    "current_folder": "Уже в папці {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Позначити папку як прочитану",
     "mark_folder_tree_read": "Позначити папку та вкладені папки як прочитані",
@@ -6418,6 +6425,9 @@
   "top_bar": {
     "more": "Інші дії"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Сховати сповіщення про офлайн-режим"
+  },
   "shell": {
     "resize": "Змінити розмір",
     "update_available": "Доступне оновлення",
@@ -6462,6 +6472,19 @@
     "group_plugins": "Плагіни",
     "group_account": "Обліковий запис",
     "switch_to": "Перейти до {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Немає з’єднання. Для деяких дій потрібна мережа.",
+    "files_new_folder": "Нова папка…",
+    "files_new_file": "Новий файл…",
+    "files_new_text_file": "Новий текстовий файл…",
+    "files_upload_files": "Завантажити файли…",
+    "files_upload_folder": "Завантажити папку…",
+    "files_share": "Поділитися…",
+    "files_share_button": "Поділитися",
+    "contacts_add_to_group": "Додати до групи…",
+    "contacts_bulk_add_to_group": "Додати до групи…",
+    "schedule_send": "Запланувати надсилання…"
   },
   "notification_center": {
     "title": "Сповіщення",
@@ -6817,6 +6840,23 @@
       "try_again": "Спробувати ще раз",
       "close": "Закрити"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Завжди показувати рядок меню",
+    "always_show_description": "Інакше він з’являється після натискання Alt.",
+    "exit": "Вихід",
+    "tray_pause": "Призупинити сповіщення",
+    "tray_pause_hour": "На 1 годину",
+    "tray_pause_tomorrow": "До завтра",
+    "tray_resume": "Знову ввімкнути сповіщення",
+    "tray_open": "Відкрити Bulwark",
+    "tray_quit": "Закрити Bulwark",
+    "tray_exit": "Вийти з Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Зберегти чернетку",
+    "attach_files": "Прикріпити файли…",
+    "shortcut_apps": "Перейти до Пошти, Календаря, Контактів або Файлів"
   },
   "appLock": {
     "section_title": "Блокування застосунку",

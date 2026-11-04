@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "E-mails van {name} zoeken"
   },
+  "menuMove": {
+    "filter_placeholder": "Map zoeken",
+    "recent": "Recent",
+    "no_match": "Geen map gevonden",
+    "choose_folder": "Map kiezen…",
+    "current_folder": "Staat al in {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Map markeren als gelezen",
     "mark_folder_tree_read": "Map en submappen markeren als gelezen",
@@ -6418,6 +6425,9 @@
   "top_bar": {
     "more": "Meer opties"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Offlinemelding verbergen"
+  },
   "shell": {
     "resize": "Formaat wijzigen",
     "update_available": "Update beschikbaar",
@@ -6462,6 +6472,19 @@
     "group_plugins": "Plug-ins",
     "group_account": "Account",
     "switch_to": "Overschakelen naar {account}"
+  },
+  "menuAudit": {
+    "offline_header": "U bent offline. Sommige acties hebben een verbinding nodig.",
+    "files_new_folder": "Nieuwe map…",
+    "files_new_file": "Nieuw bestand…",
+    "files_new_text_file": "Nieuw tekstbestand…",
+    "files_upload_files": "Bestanden uploaden…",
+    "files_upload_folder": "Map uploaden…",
+    "files_share": "Delen…",
+    "files_share_button": "Delen",
+    "contacts_add_to_group": "Aan groep toevoegen…",
+    "contacts_bulk_add_to_group": "Aan groep toevoegen…",
+    "schedule_send": "Verzenden plannen…"
   },
   "notification_center": {
     "title": "Meldingen",
@@ -6817,6 +6840,23 @@
       "try_again": "Probeer opnieuw",
       "close": "Sluit"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Menubalk altijd tonen",
+    "always_show_description": "Anders verschijnt hij bij een druk op Alt.",
+    "exit": "Afsluiten",
+    "tray_pause": "Meldingen pauzeren",
+    "tray_pause_hour": "1 uur",
+    "tray_pause_tomorrow": "Tot morgen",
+    "tray_resume": "Meldingen weer aanzetten",
+    "tray_open": "Bulwark openen",
+    "tray_quit": "Bulwark afsluiten",
+    "tray_exit": "Bulwark afsluiten"
+  },
+  "desktopMenus": {
+    "save_draft": "Concept opslaan",
+    "attach_files": "Bestanden bijvoegen…",
+    "shortcut_apps": "Naar E-mail, Agenda, Contacten of Bestanden"
   },
   "appLock": {
     "section_title": "App-vergrendeling",

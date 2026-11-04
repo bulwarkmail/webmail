@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "{name} e-mailjeinek keresése"
   },
+  "menuMove": {
+    "filter_placeholder": "Mappa keresése",
+    "recent": "Legutóbbiak",
+    "no_match": "Nincs ilyen mappa",
+    "choose_folder": "Mappa kiválasztása…",
+    "current_folder": "Már itt van: {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Mappa olvasottnak jelölése",
     "mark_folder_tree_read": "Mappa és almappák olvasottnak jelölése",
@@ -6418,6 +6425,9 @@
   "top_bar": {
     "more": "További lehetőségek"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Offline értesítés elrejtése"
+  },
   "shell": {
     "resize": "Átméretezés",
     "update_available": "Frissítés érhető el",
@@ -6462,6 +6472,19 @@
     "group_plugins": "Bővítmények",
     "group_account": "Fiók",
     "switch_to": "Váltás erre: {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Nincs kapcsolat. Néhány művelethez kapcsolat kell.",
+    "files_new_folder": "Új mappa…",
+    "files_new_file": "Új fájl…",
+    "files_new_text_file": "Új szöveges fájl…",
+    "files_upload_files": "Fájlok feltöltése…",
+    "files_upload_folder": "Mappa feltöltése…",
+    "files_share": "Megosztás…",
+    "files_share_button": "Megosztás",
+    "contacts_add_to_group": "Hozzáadás a csoporthoz…",
+    "contacts_bulk_add_to_group": "Hozzáadás a csoporthoz…",
+    "schedule_send": "Késleltetett küldés…"
   },
   "notification_center": {
     "title": "Értesítések",
@@ -6817,6 +6840,23 @@
       "try_again": "Újrapróbálás",
       "close": "Bezárás"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Menüsor mindig látható",
+    "always_show_description": "Különben az Alt billentyű lenyomásakor jelenik meg.",
+    "exit": "Kilépés",
+    "tray_pause": "Értesítések szüneteltetése",
+    "tray_pause_hour": "1 órára",
+    "tray_pause_tomorrow": "Holnapig",
+    "tray_resume": "Értesítések visszakapcsolása",
+    "tray_open": "Bulwark megnyitása",
+    "tray_quit": "Kilépés a Bulwarkból",
+    "tray_exit": "Kilépés a Bulwarkból"
+  },
+  "desktopMenus": {
+    "save_draft": "Piszkozat mentése",
+    "attach_files": "Fájlok csatolása…",
+    "shortcut_apps": "Ugrás a Levelekre, a Naptárra, a Névjegyekre vagy a Fájlokra"
   },
   "appLock": {
     "section_title": "Alkalmazászár",

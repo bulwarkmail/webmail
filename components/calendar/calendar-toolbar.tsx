@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { ToolbarButton } from "@/components/ui/toolbar";
 import { ChevronLeft, ChevronRight, Plus, Upload, CalendarDays, Globe, ChevronDown, ArrowLeft, Menu, MoreVertical, RefreshCw, Search, Printer } from "@/components/icons";
-import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from "@/components/ui/context-menu";
+import { ContextMenu, ContextMenuItem, ContextMenuSeparator, MenuShortcut } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
 import { startOfWeek } from "date-fns";
 import { PhoneHeaderActions } from "@/components/layout/phone-header-actions";
@@ -482,9 +482,9 @@ export function CalendarToolbar({
                 v === viewMode ? "bg-accent text-accent-foreground font-medium" : "hover:bg-muted text-foreground",
               )}
             >
-              <span>{t(`views.${v}`)}</span>
+              <span data-menu-label="">{t(`views.${v}`)}</span>
               {/* The key, on devices with a keyboard (R8). */}
-              <kbd className="font-sans text-xs text-muted-foreground pointer-coarse:hidden">{VIEW_SHORTCUTS[v]}</kbd>
+              <MenuShortcut keys={VIEW_SHORTCUTS[v]} />
             </button>
           ))}
         </ContextMenu>

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useMessages, useTranslations } from "next-intl";
 import { useStrictestDevices } from "@/hooks/use-device-policy";
-import { useRouter } from "@/i18n/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { openKeyboardShortcuts, parkAppCommand, requestAppCommand, type AppCommand } from "@/lib/app-commands";
 import { onComposerOpened, composerIsOpen } from "@/lib/compose-flush-registry";
 import { getDesktopBridge } from "@/lib/desktop/bridge";
@@ -26,6 +26,14 @@ import { useLocaleStore } from "@/stores/locale-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useThemeStore } from "@/stores/theme-store";
 import { showFirstStartNotice } from "@/lib/first-start-notices";
+import { openMailImport } from "@/stores/mail-transfer-store";
+
+/** The part of the app a path shows, for the menus: Calendar has its own View lines, and no Message menu. */
+export function desktopSectionOf(pathname: string): "mail" | "calendar" | "contacts" | "files" | "settings" {
+  const first = pathname.split("/").filter(Boolean)[0] ?? "";
+  if (first === "calendar" || first === "contacts" || first === "files" || first === "settings") return first;
+  return "mail";
+}
 
 /**
  * The webmail's side of what every desktop window needs: runs menu commands nothing
@@ -35,6 +43,7 @@ import { showFirstStartNotice } from "@/lib/first-start-notices";
  */
 export function DesktopHost() {
   const router = useRouter();
+  const pathname = usePathname();
   const routerRef = useRef(router);
   routerRef.current = router;
   const t = useTranslations();
@@ -45,6 +54,8 @@ export function DesktopHost() {
   const singleKeys = useSettingsStore((s) => s.singleKeyShortcuts);
   const writingLanguage = useSettingsStore((s) => s.writingLanguage);
   const uiLocale = useLocaleStore((s) => s.locale);
+  const activeLocale = useLocale();
+  const messages = useMessages();
   const strictest = useStrictestDevices();
   const { restoreWindows } = useDesktopPrefs();
   const theme = useThemeStore((s) => s.theme);
@@ -66,6 +77,23 @@ export function DesktopHost() {
         else toMail("compose");
       },
       "edit.search": () => toMail("search"),
+      // The other apps' New items, run once that app is on screen.
+      "file.newEvent": () => {
+        if (requestAppCommand("new-event")) return;
+        parkAppCommand("new-event");
+        routerRef.current.push("/calendar");
+      },
+      "file.newTask": () => {
+        if (requestAppCommand("new-task")) return;
+        parkAppCommand("new-task");
+        routerRef.current.push("/calendar");
+      },
+      "file.newContact": () => {
+        if (requestAppCommand("new-contact")) return;
+        parkAppCommand("new-contact");
+        routerRef.current.push("/contacts");
+      },
+      "file.import": () => openMailImport(),
       "go.inbox": () => routerRef.current.push("/"),
       "go.mail": () => routerRef.current.push("/"),
       "go.calendar": () => routerRef.current.push("/calendar"),
@@ -101,6 +129,7 @@ export function DesktopHost() {
     const canPrint = canPrintAnywhere();
     const signedIn = isAuthenticated;
     const popout = isPopoutWindow();
+    const section = desktopSectionOf(pathname ?? "/");
     setDesktopBaseState({
       "link.check": true,
       "shortcuts.singleKeys": singleKeys,
@@ -108,6 +137,12 @@ export function DesktopHost() {
       "file.print": canPrint,
       "file.savePdf": canPrint,
       "file.newMessage": signedIn,
+      "file.newEvent": signedIn,
+      "file.newTask": signedIn,
+      "file.newContact": signedIn,
+      "file.import": signedIn && !popout,
+      "file.settings": signedIn,
+      [`section.${section}`]: true,
       "edit.search": signedIn && !popout,
       "go.inbox": signedIn,
       "go.mail": signedIn,
@@ -116,13 +151,16 @@ export function DesktopHost() {
       "go.files": signedIn,
       "help.shortcuts": true,
     });
-  }, [isAuthenticated, singleKeys, strictest]);
+  }, [isAuthenticated, singleKeys, strictest, pathname]);
 
-  // Menus and spellcheck follow the interface.
+  // Menus, the tray and spellcheck follow the interface: the language its text is in now,
+  // with that text. The stored choice isn't it: on the first render the catalog can still
+  // be the one the server picked from the OS language, and the chosen one lands a render
+  // later. Going by the choice alone left the menus in the OS language for good.
   useEffect(() => {
-    const ui = uiLocale || document.documentElement.lang;
+    const ui = activeLocale || uiLocale || document.documentElement.lang;
     if (ui) setDesktopInterfaceLanguage(ui, shellLabels(tRef.current as unknown as Parameters<typeof shellLabels>[0]));
-  }, [uiLocale]);
+  }, [activeLocale, uiLocale, messages]);
 
   // What the user writes in, whichever composer asks for it too.
   useEffect(() => {

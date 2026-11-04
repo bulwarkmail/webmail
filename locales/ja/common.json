@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "{name} からのメールを検索"
   },
+  "menuMove": {
+    "filter_placeholder": "フォルダーを検索",
+    "recent": "最近使用",
+    "no_match": "一致するフォルダーはありません",
+    "choose_folder": "フォルダーを選択…",
+    "current_folder": "すでに {folder} にあります"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "フォルダーを既読にする",
     "mark_folder_tree_read": "フォルダーとサブフォルダーを既読にする",
@@ -6418,6 +6425,9 @@
   "top_bar": {
     "more": "その他のオプション"
   },
+  "windowChrome": {
+    "hide_offline_notice": "オフラインのお知らせを非表示"
+  },
   "shell": {
     "resize": "サイズを変更",
     "update_available": "アップデートがあります",
@@ -6462,6 +6472,19 @@
     "group_plugins": "プラグイン",
     "group_account": "アカウント",
     "switch_to": "{account} に切り替え"
+  },
+  "menuAudit": {
+    "offline_header": "オフラインです。一部の操作には接続が必要です。",
+    "files_new_folder": "新しいフォルダー…",
+    "files_new_file": "新規ファイル…",
+    "files_new_text_file": "新規テキストファイル…",
+    "files_upload_files": "ファイルをアップロード…",
+    "files_upload_folder": "フォルダをアップロード…",
+    "files_share": "共有…",
+    "files_share_button": "共有",
+    "contacts_add_to_group": "グループに追加…",
+    "contacts_bulk_add_to_group": "グループに追加…",
+    "schedule_send": "送信を予約…"
   },
   "notification_center": {
     "title": "通知",
@@ -6817,6 +6840,23 @@
       "try_again": "再試行",
       "close": "閉じる"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "メニューバーを常に表示",
+    "always_show_description": "オフにすると、Alt キーを押したときに表示されます。",
+    "exit": "終了",
+    "tray_pause": "通知を一時停止",
+    "tray_pause_hour": "1 時間",
+    "tray_pause_tomorrow": "明日まで",
+    "tray_resume": "通知を再開",
+    "tray_open": "Bulwark を開く",
+    "tray_quit": "Bulwark を終了",
+    "tray_exit": "Bulwark を終了"
+  },
+  "desktopMenus": {
+    "save_draft": "下書きを保存",
+    "attach_files": "ファイルを添付…",
+    "shortcut_apps": "メール、カレンダー、連絡先、ファイルに移動"
   },
   "appLock": {
     "section_title": "アプリのロック",

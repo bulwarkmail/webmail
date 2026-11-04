@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo, useId } from "react";
+import { useCloseBesideControls } from "@/hooks/use-close-beside-controls";
 import { useTranslations, useLocale } from "next-intl";
 import { toast } from "@/stores/toast-store";
 import { Button } from "@/components/ui/button";
@@ -278,6 +279,9 @@ export function EventModal({
   const labelIdBase = useId();
   const labelFor = (key: string) => `${labelIdBase}-${key}`;
   const tCommon = useTranslations("common");
+  // The header's close goes to its start when the window's own close is at its end.
+  const [header, setHeader] = useState<HTMLDivElement | null>(null);
+  const closeFirst = useCloseBesideControls(header);
   const locale = useLocale();
   const timeFormat = useSettingsStore((s) => s.timeFormat);
   const timeDisplayFmt = timeFormat === "12h" ? "h:mm a" : "HH:mm";
@@ -1031,13 +1035,20 @@ export function EventModal({
     const eventCalendar = calendars.find(c => event.calendarIds[c.id]);
     const color = paint(getEventColor(event, eventCalendar));
 
+    const viewClose = (
+      <IconButton label={tCommon("close")} onClick={onClose} className="flex-shrink-0 mt-0.5 text-muted-foreground">
+        <X />
+      </IconButton>
+    );
+
     return (
       <div ref={modalRef} role="dialog" aria-modal={isMobile || undefined} aria-label={event.title || t("events.no_title")} className={isMobile ? mobileRootClass : "flex flex-col h-full bg-background"}>
         {/* Color accent bar */}
         <div className="h-1 w-full flex-shrink-0" style={{ backgroundColor: color }} />
 
         {/* Header */}
-        <div data-window-top-row="" className="flex items-start justify-between gap-2 px-6 py-4 border-b border-border flex-shrink-0">
+        <div ref={setHeader} data-window-top-row="" className="flex items-start justify-between gap-2 px-6 py-4 border-b border-border flex-shrink-0">
+          {closeFirst && viewClose}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
@@ -1052,9 +1063,7 @@ export function EventModal({
               <MoreVertical />
             </IconButton>
           )}
-          <IconButton label={tCommon("close")} onClick={onClose} className="flex-shrink-0 mt-0.5 text-muted-foreground">
-            <X />
-          </IconButton>
+          {!closeFirst && viewClose}
         </div>
 
         {/* Content */}
@@ -1245,15 +1254,20 @@ export function EventModal({
     );
   }
 
+  const editClose = (
+    <IconButton label={tCommon("close")} onClick={requestClose} className="flex-shrink-0 text-muted-foreground">
+      <X />
+    </IconButton>
+  );
+
   return (
     <div ref={modalRef} role="dialog" aria-modal={isMobile || undefined} aria-label={isEdit ? t("events.edit") : t("events.create")} data-tour="event-modal" className={isMobile ? mobileRootClass : "flex flex-col h-full bg-background"}>
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
-        <h2 className="text-lg font-semibold">
+      <div ref={setHeader} data-window-top-row="" className="flex items-center gap-2 px-6 py-4 border-b border-border flex-shrink-0">
+        {closeFirst && editClose}
+        <h2 className="min-w-0 flex-1 text-lg font-semibold">
           {isEdit ? t("events.edit") : t("events.create")}
         </h2>
-        <IconButton label={tCommon("close")} onClick={requestClose} className="flex-shrink-0 text-muted-foreground">
-          <X />
-        </IconButton>
+        {!closeFirst && editClose}
       </div>
 
       <div className="flex-1 overflow-y-auto">

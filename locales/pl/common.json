@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "Znajdź e-maile od {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "Znajdź folder",
+    "recent": "Ostatnie",
+    "no_match": "Brak pasującego folderu",
+    "choose_folder": "Wybierz folder…",
+    "current_folder": "Już w folderze {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "Oznacz folder jako przeczytany",
     "mark_folder_tree_read": "Oznacz folder i podfoldery jako przeczytane",
@@ -6418,6 +6425,9 @@
   "top_bar": {
     "more": "Więcej opcji"
   },
+  "windowChrome": {
+    "hide_offline_notice": "Ukryj powiadomienie o trybie offline"
+  },
   "shell": {
     "resize": "Zmień rozmiar",
     "update_available": "Dostępna aktualizacja",
@@ -6462,6 +6472,19 @@
     "group_plugins": "Wtyczki",
     "group_account": "Konto",
     "switch_to": "Przełącz na {account}"
+  },
+  "menuAudit": {
+    "offline_header": "Jesteś offline. Niektóre działania wymagają połączenia.",
+    "files_new_folder": "Nowy folder…",
+    "files_new_file": "Nowy plik…",
+    "files_new_text_file": "Nowy plik tekstowy…",
+    "files_upload_files": "Prześlij pliki…",
+    "files_upload_folder": "Prześlij folder…",
+    "files_share": "Udostępnij…",
+    "files_share_button": "Udostępnij",
+    "contacts_add_to_group": "Dodaj do grupy…",
+    "contacts_bulk_add_to_group": "Dodaj do grupy…",
+    "schedule_send": "Zaplanuj wysyłkę…"
   },
   "notification_center": {
     "title": "Powiadomienia",
@@ -6817,6 +6840,23 @@
       "try_again": "Spróbuj ponownie",
       "close": "Zamknij"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "Zawsze pokazuj pasek menu",
+    "always_show_description": "W przeciwnym razie pojawia się po naciśnięciu Alt.",
+    "exit": "Zakończ",
+    "tray_pause": "Wstrzymaj powiadomienia",
+    "tray_pause_hour": "Na 1 godzinę",
+    "tray_pause_tomorrow": "Do jutra",
+    "tray_resume": "Włącz powiadomienia z powrotem",
+    "tray_open": "Otwórz Bulwark",
+    "tray_quit": "Zakończ Bulwark",
+    "tray_exit": "Zakończ Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "Zapisz wersję roboczą",
+    "attach_files": "Załącz pliki…",
+    "shortcut_apps": "Przejdź do Poczty, Kalendarza, Kontaktów lub Plików"
   },
   "appLock": {
     "section_title": "Blokada aplikacji",

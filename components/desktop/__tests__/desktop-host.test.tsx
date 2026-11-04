@@ -13,7 +13,16 @@ import { useOfflineStore } from '@/lib/offline/state';
 import { offerReturnedComposer, takeReturnedComposer } from '@/lib/popout/return-to-main';
 
 const push = vi.fn();
-vi.mock('@/i18n/navigation', () => ({ useRouter: () => ({ push }) }));
+const route = vi.hoisted(() => ({ pathname: '/' }));
+vi.mock('@/i18n/navigation', () => ({ useRouter: () => ({ push }), usePathname: () => route.pathname }));
+
+// The catalog on screen: its language, and text that says which one it came from.
+const intl = vi.hoisted(() => ({ locale: 'en', prefix: '', messages: {} as object }));
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => `${intl.prefix}${key}`,
+  useLocale: () => intl.locale,
+  useMessages: () => intl.messages,
+}));
 
 const canPrint = vi.fn(() => true);
 const canDownload = vi.fn(() => true);
@@ -69,6 +78,8 @@ function fakeBridge() {
 const original = useAuthStore.getState();
 
 beforeEach(() => {
+  route.pathname = '/';
+  Object.assign(intl, { locale: 'en', prefix: '', messages: {} });
   push.mockClear();
   resolveExternalLink.mockClear();
   resolveExternalLink.mockImplementation(async (ctx) => ctx.href);
@@ -96,6 +107,33 @@ afterEach(() => {
 describe('DesktopHost', () => {
   it('does nothing in a browser', () => {
     expect(() => render(<DesktopHost />)).not.toThrow();
+  });
+
+  it('File > New event, task and contact open that app with its editor; Settings opens in this window', async () => {
+    const { peekParkedAppCommand } = await import('@/lib/app-commands');
+    const shell = fakeBridge();
+    render(<DesktopHost />);
+    shell.run('file.newEvent');
+    expect(push).toHaveBeenLastCalledWith('/calendar');
+    expect(peekParkedAppCommand()).toBe('new-event');
+    shell.run('file.newTask');
+    expect(push).toHaveBeenLastCalledWith('/calendar');
+    expect(peekParkedAppCommand()).toBe('new-task');
+    shell.run('file.newContact');
+    expect(push).toHaveBeenLastCalledWith('/contacts');
+    expect(peekParkedAppCommand()).toBe('new-contact');
+    shell.run('go.settings');
+    expect(push).toHaveBeenLastCalledWith('/settings');
+  });
+
+  it('tells the menus which part of the app is on screen, and offers the New lines once signed in', async () => {
+    route.pathname = '/calendar';
+    const shell = fakeBridge();
+    render(<DesktopHost />);
+    await waitFor(() => expect(shell.setState).toHaveBeenCalled());
+    const state = shell.setState.mock.lastCall![0];
+    expect(state).toMatchObject({ 'section.calendar': true, 'file.newEvent': true, 'file.newContact': true, 'file.settings': true, 'file.import': true });
+    expect(state['section.mail']).toBeUndefined();
   });
 
   it('runs a command from what\'s on the page first', () => {
@@ -178,9 +216,24 @@ describe('DesktopHost', () => {
   it('says which languages are in use', async () => {
     const shell = fakeBridge();
     act(() => useLocaleStore.setState({ locale: 'de' }));
+    intl.locale = 'de';
     render(<DesktopHost />);
     await waitFor(() => expect(shell.setLanguages).toHaveBeenCalled());
     expect(shell.setLanguages.mock.lastCall![0]).toMatchObject({ ui: 'de' });
+  });
+
+  it('follows the text on screen, not only the stored choice', async () => {
+    const shell = fakeBridge();
+    // English chosen, but the first render still has the catalog the server picked from the OS.
+    act(() => useLocaleStore.setState({ locale: 'en' }));
+    Object.assign(intl, { locale: 'de', prefix: 'de:', messages: { de: true } });
+    const view = render(<DesktopHost />);
+    await waitFor(() => expect(shell.setLanguages).toHaveBeenCalled());
+    // The chosen catalog lands a render later.
+    Object.assign(intl, { locale: 'en', prefix: 'en:', messages: { en: true } });
+    view.rerender(<DesktopHost />);
+    await waitFor(() => expect(shell.setLanguages.mock.lastCall![0].labels.menuFile).toBe('en:desktopUi.menu.file'));
+    expect(shell.setLanguages.mock.lastCall![0]).toMatchObject({ ui: 'en' });
   });
 
   describe('Open Link in a native menu', () => {

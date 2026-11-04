@@ -138,9 +138,9 @@ import { computeReplyThreadingHeaders } from "@/lib/email-threading";
 import { openMailImport } from "@/stores/mail-transfer-store";
 import { deliveryAddresses, resolveComposeAccountEmail } from "@/lib/reply-identity";
 import { useProMultiAccountIdentities } from "@/hooks/use-pro-multi-account-identities";
-import { Filter, X, Mail, MailOpen, PenSquare, CheckSquare, Square, AlertTriangle, ArrowLeft, RefreshCw, Reply, ReplyAll, Forward, Archive, Trash2, FolderInput, ShieldAlert, ShieldCheck, Folder } from "@/components/icons";
+import { Filter, X, Mail, MailOpen, PenSquare, CheckSquare, Square, AlertTriangle, ArrowLeft, RefreshCw, Reply, ReplyAll, Forward, Archive, Trash2, FolderInput, ShieldAlert, ShieldCheck, Folder, Upload, Star } from "@/components/icons";
 import { useRegisterCommands } from "@/lib/command-registry";
-import { MoveToDialog } from "@/components/email/move-to-dialog";
+import { MoveToDialog, MoveToDialogHost } from "@/components/email/move-to-dialog";
 import { ResizeHandle } from "@/components/layout/resize-handle";
 import { Button } from "@/components/ui/button";
 import { ToolbarButton, ToolbarSearchAction } from "@/components/ui/toolbar";
@@ -1339,6 +1339,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const desktopSingle = !showComposer && !!selectedEmail;
   const mailLayoutSetting = useSettingsStore((s) => s.mailLayout);
   const layoutFixed = interfaceLayout === 'mountain-view';
+  // A shared folder you may only read from: nothing can leave it.
+  const desktopMayRemove = mailboxes.find((m) => m.id === selectedMailbox)?.myRights?.mayRemoveItems !== false;
   useDesktopCommands({
     'file.newMessage': keyboardHandlers.onCompose,
     'edit.search': keyboardHandlers.onFocusSearch,
@@ -1365,6 +1367,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     'go.nextUnread': keyboardHandlers.onNextUnread,
   }, {
     'view.refresh': true,
+    // Ctrl+E in the composer belongs to its editor, not to search.
+    'edit.search': !showComposer,
     'view.layout.split': { enabled: !layoutFixed, checked: mailLayoutSetting === 'split' },
     'view.layout.horizontal': { enabled: !layoutFixed, checked: mailLayoutSetting === 'horizontal' },
     'view.layout.focus': { enabled: !layoutFixed, checked: mailLayoutSetting === 'focus' },
@@ -1374,10 +1378,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     'message.markRead': desktopTarget && !(selectedEmail && selectedEmailKeys.size === 0 && selectedEmail.keywords?.$seen),
     'message.markUnread': desktopTarget && !(selectedEmail && selectedEmailKeys.size === 0 && !selectedEmail.keywords?.$seen),
     'message.star': desktopSingle,
-    'message.move': desktopSingle,
-    'message.archive': desktopTarget && archiveActionEnabled,
-    'message.spam': desktopTarget,
-    'message.delete': desktopTarget,
+    'message.move': desktopSingle && desktopMayRemove,
+    'message.archive': desktopTarget && archiveActionEnabled && desktopMayRemove,
+    'message.spam': desktopTarget && desktopMayRemove,
+    'message.delete': desktopTarget && desktopMayRemove,
     'message.openWindow': desktopSingle && !!openEmailInWindow,
     'go.sent': true,
     'go.drafts': true,
@@ -2374,6 +2378,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     empty: () => { if (selectedMailbox) void handleEmptyFolderFromContextMenu(selectedMailbox); },
   };
   const folderMenuMarkRead = useCallback(() => folderMenuLatest.current.markRead(), []);
+  // "Mark folder as read" is greyed out with nothing unread in the open folder.
+  const selectedFolderHasUnread = mailboxes.find((m) => m.id === selectedMailbox)?.unreadEmails !== 0;
   const folderMenuMarkAllRead = useCallback(() => folderMenuLatest.current.markAllRead(), []);
   const folderMenuEmpty = useCallback(() => folderMenuLatest.current.empty(), []);
   useEffect(() => {
@@ -4853,10 +4859,19 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       run: () => { if (client && paletteEmail) void markReadWithUndo(paletteEmail, true).catch(toastUpdateFailure); },
     },
     {
+      id: 'star', label: paletteEmail?.keywords?.$flagged ? t('context_menu.unstar') : t('context_menu.star'), icon: Star, shortcut: 's',
+      when: hasPaletteEmail, run: () => void handleToggleStar(),
+    },
+    {
       id: 'spam', label: conversationInJunk ? t('context_menu.not_spam') : t('context_menu.mark_as_spam'),
       icon: conversationInJunk ? ShieldCheck : ShieldAlert, shortcut: '!',
       when: () => !!paletteEmail && conversationSpamApplicable,
       run: () => void (conversationInJunk ? handleUndoSpam(paletteEmail) : handleMarkAsSpam(paletteEmail)),
+    },
+    // Into the open folder, as the folder's own menu does it.
+    {
+      id: 'import', label: t('mail_import.menu_import'), icon: Upload,
+      run: () => openMailImport({ mailboxId: selectedMailbox || undefined }),
     },
     ...mailboxes
       .filter((mb) => !mb.id.startsWith('shared-') && mb.id !== selectedMailbox)
@@ -5576,7 +5591,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     onClick={() => { close(); void handleManualRefresh(); }}
                   />
                   <MailFolderMenuItems
-                    onMarkFolderRead={selectedMailbox ? () => handleMarkFolderRead(selectedMailbox) : undefined}
+                    onMarkFolderRead={selectedMailbox && selectedFolderHasUnread ? () => handleMarkFolderRead(selectedMailbox) : undefined}
                     onMarkAllFoldersRead={handleMarkAllFoldersRead}
                     onEmptyFolder={folderIsEmptyable && selectedMailbox ? () => void handleEmptyFolderFromContextMenu(selectedMailbox) : undefined}
                     onPicked={close}
@@ -5616,7 +5631,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   totalCount={searchQuery || !isFilterEmpty(searchFilters) ? undefined : mailboxes.find((mb) => mb.id === selectedMailbox)?.totalEmails}
                   onRefresh={handleManualRefresh}
                   isRefreshing={isManualRefreshing}
-                  onMarkFolderRead={selectedMailbox ? () => handleMarkFolderRead(selectedMailbox) : undefined}
+                  onMarkFolderRead={selectedMailbox && selectedFolderHasUnread ? () => handleMarkFolderRead(selectedMailbox) : undefined}
                   onMarkAllFoldersRead={handleMarkAllFoldersRead}
                   onEmptyFolder={selectedMailbox ? () => void handleEmptyFolderFromContextMenu(selectedMailbox) : undefined}
                   onCreateFolder={() => handleCreateFolderFromContextMenu()}
@@ -5686,7 +5701,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     folderRole={conversationRole}
                     onRefresh={handleManualRefresh}
                     refreshDisabled={!client || isManualRefreshing}
-                    onMarkFolderRead={selectedMailbox ? folderMenuMarkRead : undefined}
+                    onMarkFolderRead={selectedMailbox && selectedFolderHasUnread ? folderMenuMarkRead : undefined}
                     onMarkAllFoldersRead={folderMenuMarkAllRead}
                     onEmptyFolder={folderIsEmptyable && selectedMailbox ? folderMenuEmpty : undefined}
                   />
@@ -6153,7 +6168,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     onToggleFullscreen={!isEmbedded && !isMobile ? () => setFullscreenReading((v) => !v) : undefined}
                     onOpenInWindow={!isEmbedded && !isMobile && openEmailInWindow && selectedEmail ? () => openEmailInWindow(selectedEmail) : undefined}
                     isFullscreen={fullscreenReading}
-                    onShowShortcuts={() => setShowShortcutsModal(true)}
                     onEditDraft={handleEditDraft}
                     onCancelScheduledForEdit={async () => {
                       if (!client || !selectedEmail) return;
@@ -6264,8 +6278,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           />
         )}
         <ConfirmDialog {...confirmDialogProps} />
+        <MoveToDialogHost mailboxes={mailboxes} selectedMailbox={selectedMailbox} />
         {moveDialogEmail && <MoveToDialog
-          email={moveDialogEmail}
+          emails={[moveDialogEmail]}
           mailboxes={mailboxes}
           selectedMailbox={selectedMailbox}
           onClose={() => setMoveDialogEmail(null)}

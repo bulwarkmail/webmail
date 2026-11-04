@@ -178,7 +178,7 @@ function PopoutMessage({ emailId, accountId, ownerAccountId, fromLink }: { email
   return (
     <>
       {moved && (
-        <div role="status" data-popout-moved="" className="shrink-0 border-b border-border bg-muted px-4 py-2 text-sm text-foreground">
+        <div role="status" data-popout-moved="" data-window-top-row="" className="flex shrink-0 items-center border-b border-border bg-muted px-4 py-2 text-sm text-foreground">
           {movedTo
             ? t("message_moved_to", { folder: localizeMailboxName(movedTo.role, movedTo.name, (key) => tSidebar(`mailboxes.${key}`)) })
             : t("message_moved")}

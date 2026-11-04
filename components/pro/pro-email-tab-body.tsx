@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { EmailViewer } from "@/components/email/email-viewer";
+import { MoveToDialog } from "@/components/email/move-to-dialog";
 import { ErrorBoundary, EmailViewerErrorFallback } from "@/components/error";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore, resolveEmailBlobContext, type EmailBlobContext, type EmailWriteSource } from "@/stores/email-store";
@@ -472,6 +473,8 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
   // In a pop-out this message is all there is, so the menu bar's Message menu means it.
   const inOwnWindow = typeof window !== 'undefined' && isPopoutWindow();
   const seen = !!email?.keywords?.$seen;
+  // Message > Move to… in a pop-out: the same folder list the command palette opens.
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   useDesktopCommands({
     'message.reply': () => handleReply(),
     'message.replyAll': handleReplyAll,
@@ -481,6 +484,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     'message.star': () => void handleToggleStar(),
     'message.archive': archiveActionEnabled ? () => void handleArchive() : undefined,
     'message.delete': () => void handleDelete(),
+    'message.move': () => { if (email) setMoveDialogOpen(true); },
   }, {
     'message.reply': !!email,
     'message.replyAll': !!email,
@@ -490,6 +494,7 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
     'message.star': !!email,
     'message.archive': !!email && archiveActionEnabled,
     'message.delete': !!email,
+    'message.move': !!email,
   }, inOwnWindow);
 
   const handleMoveToMailbox = useCallback(async (mailboxId: string) => {
@@ -642,6 +647,15 @@ export function ProEmailView({ emailId, client: clientOverride, clientAccountId,
         />
       </ErrorBoundary>
       <ConfirmDialog {...confirmDialogProps} />
+      {inOwnWindow && (
+        <MoveToDialog
+          emails={moveDialogOpen && email ? [email] : []}
+          mailboxes={mailboxes}
+          selectedMailbox=""
+          onClose={() => setMoveDialogOpen(false)}
+          onMove={(mailboxId) => void handleMoveToMailbox(mailboxId)}
+        />
+      )}
       {preview && (
         <FilePreviewModal
           name={preview.name}

@@ -3648,6 +3648,13 @@
     },
     "find_emails_from": "یافتن ایمیل‌های {name}"
   },
+  "menuMove": {
+    "filter_placeholder": "یافتن پوشه",
+    "recent": "اخیر",
+    "no_match": "هیچ پوشه‌ای مطابق نیست",
+    "choose_folder": "انتخاب پوشه…",
+    "current_folder": "از قبل در {folder}"
+  },
   "mailbox_context_menu": {
     "mark_folder_read": "علامت‌گذاری پوشه خوانده شده",
     "mark_folder_tree_read": "علامت‌گذاری پوشه و زیرپوشه‌ها",
@@ -6418,6 +6425,9 @@
   "top_bar": {
     "more": "گزینه‌های بیشتر"
   },
+  "windowChrome": {
+    "hide_offline_notice": "پنهان کردن اعلان آفلاین"
+  },
   "shell": {
     "resize": "تغییر اندازه",
     "update_available": "به‌روزرسانی موجود است",
@@ -6462,6 +6472,19 @@
     "group_plugins": "افزونه‌ها",
     "group_account": "حساب",
     "switch_to": "رفتن به {account}"
+  },
+  "menuAudit": {
+    "offline_header": "آفلاین هستید. برخی کارها به اتصال نیاز دارند.",
+    "files_new_folder": "پوشه جدید…",
+    "files_new_file": "فایل جدید…",
+    "files_new_text_file": "فایل متنی جدید…",
+    "files_upload_files": "بارگذاری فایل‌ها…",
+    "files_upload_folder": "بارگذاری پوشه…",
+    "files_share": "اشتراک‌گذاری…",
+    "files_share_button": "اشتراک‌گذاری",
+    "contacts_add_to_group": "افزودن به گروه…",
+    "contacts_bulk_add_to_group": "افزودن به گروه…",
+    "schedule_send": "زمان‌بندی ارسال…"
   },
   "notification_center": {
     "title": "اعلان‌ها",
@@ -6817,6 +6840,23 @@
       "try_again": "تلاش دوباره",
       "close": "بستن"
     }
+  },
+  "desktopMenuBar": {
+    "always_show_label": "همیشه نوار منو نمایش داده شود",
+    "always_show_description": "در غیر این صورت با فشردن Alt نمایش داده می‌شود.",
+    "exit": "خروج",
+    "tray_pause": "توقف موقت اعلان‌ها",
+    "tray_pause_hour": "به مدت ۱ ساعت",
+    "tray_pause_tomorrow": "تا فردا",
+    "tray_resume": "روشن کردن دوباره اعلان‌ها",
+    "tray_open": "باز کردن Bulwark",
+    "tray_quit": "بستن Bulwark",
+    "tray_exit": "خروج از Bulwark"
+  },
+  "desktopMenus": {
+    "save_draft": "ذخیره پیش‌نویس",
+    "attach_files": "پیوست فایل‌ها…",
+    "shortcut_apps": "رفتن به ایمیل، تقویم، مخاطبان یا فایل‌ها"
   },
   "appLock": {
     "section_title": "قفل برنامه",

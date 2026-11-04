@@ -89,8 +89,12 @@ describe('Copy to entry of the message menu', () => {
     });
     fireEvent.mouseEnter(screen.getByTestId('ctx-move-to').parentElement!);
 
+    // The shared account's own folders at the top, the open one greyed; the
+    // login's own folders one level down, under its name.
     const items = screen.getAllByTestId(/^move-to:/).map((el) => el.getAttribute('data-testid'));
-    expect(items).toEqual(['move-to:S:junk', 'move-to:inbox', 'move-to:junk']);
+    expect(items).toEqual(['move-to:S:inbox', 'move-to:S:junk']);
+    expect(screen.getByTestId('move-to:S:inbox')).toBeDisabled();
+    expect(screen.getByTestId('move-account:A')).toHaveTextContent('me@example.org');
 
     fireEvent.click(screen.getByTestId('move-to:S:junk'));
     expect(onMoveToMailbox).toHaveBeenCalledWith('S:junk');

@@ -1,5 +1,6 @@
 import { isSharedOut } from '@/lib/mailbox-shared-out';
 import { IncompleteDeleteError } from "@/lib/jmap/delete-error";
+import { rememberTrashOrigins } from "@/lib/trash-origin";
 import { ArchiveEmailsError } from "@/lib/jmap/archive-error";
 import { RescheduleRestoredError } from "@/lib/jmap/reschedule-error";
 import { create } from "zustand";
@@ -4519,6 +4520,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         if (trashMailbox) {
           // Use originalId for shared mailboxes if available
           const trashId = trashMailbox.originalId || trashMailbox.id;
+          // So Restore can put it back where it was (lib/trash-origin.ts).
+          rememberTrashOrigins([email], mailboxes);
           await effectiveClient.moveToTrash(emailId, trashId, accountId, alsoMarkRead);
 
           // After marking read in the same request, the email arrives in trash as read.
@@ -6061,6 +6064,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       // Undecorated emails (normal single-mailbox view) form one group for the
       // active client (groupBySource).
       const batches = groupBySource(selectedEmails);
+      // So Restore can put them back where they were (lib/trash-origin.ts).
+      rememberTrashOrigins(selectedEmails, mailboxes);
 
       // Undecorated emails viewed in a shared/group folder directly (non-unified)
       // are reached through the active client but must carry the owner accountId,
