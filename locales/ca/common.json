@@ -7616,6 +7616,23 @@
     "merge_kept": "Es conserva",
     "import_show": "Mostra"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# contacte seleccionat} other {# contactes seleccionats}}",
+    "selection_more": "i {count} més",
+    "no_addresses": "Cap dels contactes seleccionats té adreça electrònica.",
+    "task_open": "Obre",
+    "due_next_week": "La setmana vinent",
+    "due_none": "Sense data de venciment",
+    "due_pick": "Tria una data…",
+    "move_to_list": "Mou a la llista",
+    "dupes_legend": "{count, plural, one {1 ja és a Contactes:} other {# ja són a Contactes:}}",
+    "dupes_skip": "Omet-los",
+    "dupes_update": "Actualitza els contactes existents",
+    "dupes_updates": "Actualitza el contacte",
+    "upload_cancelled": "Pujada cancel·lada",
+    "upload_cancelled_partial": "{count, plural, one {S'ha pujat 1 fitxer} other {S'han pujat # fitxers}} abans de cancel·lar",
+    "download_cancelled": "S'ha cancel·lat la baixada"
+  },
   "desktopEdit": {
     "edit": "Edita",
     "edit_named": "Edita {name}",

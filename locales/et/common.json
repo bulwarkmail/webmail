@@ -7616,6 +7616,23 @@
     "merge_kept": "Jääb alles",
     "import_show": "Näita"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# kontakt valitud} other {# kontakti valitud}}",
+    "selection_more": "ja veel {count}",
+    "no_addresses": "Ühelgi valitud kontaktil pole e-posti aadressi.",
+    "task_open": "Ava",
+    "due_next_week": "Järgmisel nädalal",
+    "due_none": "Tähtajata",
+    "due_pick": "Vali kuupäev…",
+    "move_to_list": "Teisalda loendisse",
+    "dupes_legend": "{count, plural, one {1 on juba kontaktides:} other {# on juba kontaktides:}}",
+    "dupes_skip": "Jäta vahele",
+    "dupes_update": "Uuenda olemasolevaid kontakte",
+    "dupes_updates": "Uuendab kontakti",
+    "upload_cancelled": "Üleslaadimine tühistatud",
+    "upload_cancelled_partial": "{count, plural, one {1 fail} other {# faili}} laaditi üles enne tühistamist",
+    "download_cancelled": "Allalaadimine tühistati"
+  },
   "desktopEdit": {
     "edit": "Muuda",
     "edit_named": "Muuda faili {name}",

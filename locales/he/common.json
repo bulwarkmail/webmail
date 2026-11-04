@@ -7617,6 +7617,23 @@
     "merge_kept": "נשמר",
     "import_show": "הצגה"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {איש קשר אחד נבחר} other {# אנשי קשר נבחרו}}",
+    "selection_more": "ועוד {count}",
+    "no_addresses": "לאף אחד מאנשי הקשר שנבחרו אין כתובת דוא״ל.",
+    "task_open": "פתיחה",
+    "due_next_week": "בשבוע הבא",
+    "due_none": "ללא תאריך יעד",
+    "due_pick": "בחירת תאריך…",
+    "move_to_list": "העברה לרשימה",
+    "dupes_legend": "{count, plural, one {אחד כבר נמצא באנשי הקשר:} other {# כבר נמצאים באנשי הקשר:}}",
+    "dupes_skip": "לדלג עליהם",
+    "dupes_update": "לעדכן את אנשי הקשר הקיימים",
+    "dupes_updates": "מעדכן את איש הקשר",
+    "upload_cancelled": "ההעלאה בוטלה",
+    "upload_cancelled_partial": "{count, plural, one {קובץ אחד הועלה} two {שני קבצים הועלו} other {# קבצים הועלו}} לפני הביטול",
+    "download_cancelled": "ההורדה בוטלה"
+  },
   "desktopEdit": {
     "edit": "עריכה",
     "edit_named": "עריכת {name}",

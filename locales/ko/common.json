@@ -7616,6 +7616,23 @@
     "merge_kept": "유지됨",
     "import_show": "보기"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, other {연락처 #개 선택됨}}",
+    "selection_more": "외 {count}개",
+    "no_addresses": "선택한 연락처 중 이메일 주소가 있는 연락처가 없습니다.",
+    "task_open": "열기",
+    "due_next_week": "다음 주",
+    "due_none": "마감일 없음",
+    "due_pick": "날짜 선택…",
+    "move_to_list": "목록으로 이동",
+    "dupes_legend": "{count, plural, other {#개는 이미 연락처에 있음:}}",
+    "dupes_skip": "건너뛰기",
+    "dupes_update": "기존 연락처 업데이트",
+    "dupes_updates": "연락처 업데이트",
+    "upload_cancelled": "업로드가 취소되었어요",
+    "upload_cancelled_partial": "취소하기 전에 {count, plural, other {#개의 파일}}이 업로드되었어요",
+    "download_cancelled": "다운로드를 취소했습니다"
+  },
   "desktopEdit": {
     "edit": "편집",
     "edit_named": "{name} 편집",

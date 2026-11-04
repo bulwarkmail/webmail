@@ -7616,6 +7616,23 @@
     "merge_kept": "Korunur",
     "import_show": "Göster"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# kişi seçildi} other {# kişi seçildi}}",
+    "selection_more": "ve {count} kişi daha",
+    "no_addresses": "Seçilen kişilerin hiçbirinin e-posta adresi yok.",
+    "task_open": "Aç",
+    "due_next_week": "Gelecek hafta",
+    "due_none": "Bitiş tarihi yok",
+    "due_pick": "Tarih seç…",
+    "move_to_list": "Listeye taşı",
+    "dupes_legend": "{count, plural, one {1 kişi zaten Kişiler içinde:} other {# kişi zaten Kişiler içinde:}}",
+    "dupes_skip": "Atla",
+    "dupes_update": "Mevcut kişileri güncelle",
+    "dupes_updates": "Kişiyi günceller",
+    "upload_cancelled": "Yükleme iptal edildi",
+    "upload_cancelled_partial": "İptal etmeden önce {count, plural, one {1 dosya} other {# dosya}} yüklendi",
+    "download_cancelled": "İndirme iptal edildi"
+  },
   "desktopEdit": {
     "edit": "Düzenle",
     "edit_named": "{name} dosyasını düzenle",

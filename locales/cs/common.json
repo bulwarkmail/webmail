@@ -7616,6 +7616,23 @@
     "merge_kept": "Zůstane",
     "import_show": "Zobrazit"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {Vybrán # kontakt} few {Vybrány # kontakty} other {Vybráno # kontaktů}}",
+    "selection_more": "a {count} další",
+    "no_addresses": "Žádný z vybraných kontaktů nemá e-mailovou adresu.",
+    "task_open": "Otevřít",
+    "due_next_week": "Příští týden",
+    "due_none": "Bez termínu",
+    "due_pick": "Vybrat datum…",
+    "move_to_list": "Přesunout do seznamu",
+    "dupes_legend": "{count, plural, one {1 už je v Kontaktech:} few {# už jsou v Kontaktech:} other {# už je v Kontaktech:}}",
+    "dupes_skip": "Přeskočit",
+    "dupes_update": "Aktualizovat existující kontakty",
+    "dupes_updates": "Aktualizuje kontakt",
+    "upload_cancelled": "Nahrávání zrušeno",
+    "upload_cancelled_partial": "Před zrušením {count, plural, one {byl nahrán 1 soubor} few {byly nahrány # soubory} many {bylo nahráno # souboru} other {bylo nahráno # souborů}}",
+    "download_cancelled": "Stahování zrušeno"
+  },
   "desktopEdit": {
     "edit": "Upravit",
     "edit_named": "Upravit {name}",

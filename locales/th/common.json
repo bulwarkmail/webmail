@@ -7624,6 +7624,23 @@
     "merge_kept": "เก็บไว้",
     "import_show": "แสดง"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, other {เลือกผู้ติดต่อ # รายการ}}",
+    "selection_more": "และอีก {count} รายการ",
+    "no_addresses": "ไม่มีผู้ติดต่อที่เลือกรายใดมีที่อยู่อีเมล",
+    "task_open": "เปิด",
+    "due_next_week": "สัปดาห์หน้า",
+    "due_none": "ไม่มีวันครบกำหนด",
+    "due_pick": "เลือกวันที่…",
+    "move_to_list": "ย้ายไปยังรายการ",
+    "dupes_legend": "{count, plural, other {# รายการมีอยู่ในรายชื่อติดต่อแล้ว:}}",
+    "dupes_skip": "ข้าม",
+    "dupes_update": "อัปเดตผู้ติดต่อที่มีอยู่",
+    "dupes_updates": "อัปเดตผู้ติดต่อ",
+    "upload_cancelled": "ยกเลิกการอัปโหลดแล้ว",
+    "upload_cancelled_partial": "อัปโหลดแล้ว {count, plural, other {# ไฟล์}} ก่อนที่คุณจะยกเลิก",
+    "download_cancelled": "ยกเลิกการดาวน์โหลดแล้ว"
+  },
   "desktopEdit": {
     "edit": "แก้ไข",
     "edit_named": "แก้ไข {name}",

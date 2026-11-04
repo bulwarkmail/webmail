@@ -14,6 +14,8 @@ import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
 import { useCvdColor } from "@/hooks/use-cvd-color";
 import { useCollectionNames } from "@/hooks/use-collection-names";
 import { parseTaskDue } from "@/lib/task-due-parser";
+import { useContextMenu } from "@/hooks/use-context-menu";
+import { TaskContextMenu, type TaskDueChoice } from "./task-context-menu";
 
 interface TaskListViewProps {
   tasks: CalendarTask[];
@@ -24,6 +26,12 @@ interface TaskListViewProps {
   selectedTaskId?: string | null;
   /** `due`: the date read from the end of the title (yyyy-MM-dd), or null. */
   onQuickCreate?: (title: string, due: string | null) => void;
+  /** Right-click Delete and the Del key (pim-p3-10). */
+  onDeleteTask?: (task: CalendarTask) => void;
+  onSetDue?: (task: CalendarTask, choice: TaskDueChoice) => void;
+  /** The lists a task can be moved to. */
+  moveLists?: Calendar[];
+  onMoveTask?: (task: CalendarTask, calendarId: string) => void;
 }
 
 /**
@@ -234,6 +242,10 @@ export function TaskListView({
   onToggleComplete,
   selectedTaskId,
   onQuickCreate,
+  onDeleteTask,
+  onSetDue,
+  moveLists,
+  onMoveTask,
 }: TaskListViewProps) {
   const shownName = useCollectionNames();
   const t = useTranslations("calendar");
@@ -251,6 +263,17 @@ export function TaskListView({
     e.stopPropagation();
     onToggleComplete(task);
   }, [onToggleComplete]);
+
+  const { contextMenu, openContextMenu, closeContextMenu, menuRef } = useContextMenu<CalendarTask>();
+  const menuTask = contextMenu.data ? tasks.find((x) => x.id === contextMenu.data!.id) ?? contextMenu.data : null;
+
+  // Del on a task (its row has the focus) deletes it, as in Mail and Contacts.
+  const handleRowKeyDown = (e: React.KeyboardEvent, task: CalendarTask) => {
+    if (e.key !== "Delete" || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || !onDeleteTask) return;
+    e.preventDefault();
+    e.stopPropagation();
+    onDeleteTask(task);
+  };
 
   if (filteredTasks.length === 0) {
     return (
@@ -277,7 +300,11 @@ export function TaskListView({
           return (
             <div
               key={task.id}
+              data-menu-row=""
+              data-task-id={task.id}
               onClick={() => onSelectTask(task)}
+              onContextMenu={(e) => openContextMenu(e, task)}
+              onKeyDown={(e) => handleRowKeyDown(e, task)}
               className={cn(
                 "flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors",
                 selectedTaskId === task.id && "bg-muted",
@@ -332,6 +359,21 @@ export function TaskListView({
           );
         })}
       </div>
+      {menuTask && (
+        <TaskContextMenu
+          task={menuTask}
+          position={contextMenu.position}
+          isOpen={contextMenu.isOpen}
+          onClose={closeContextMenu}
+          menuRef={menuRef}
+          onOpen={() => onSelectTask(menuTask)}
+          onToggleComplete={() => onToggleComplete(menuTask)}
+          onSetDue={onSetDue ? (choice) => onSetDue(menuTask, choice) : undefined}
+          lists={moveLists}
+          onMoveTo={onMoveTask ? (calendarId) => onMoveTask(menuTask, calendarId) : undefined}
+          onDelete={onDeleteTask ? () => onDeleteTask(menuTask) : undefined}
+        />
+      )}
     </div>
   );
 }

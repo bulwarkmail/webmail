@@ -7616,6 +7616,23 @@
     "merge_kept": "Saglabājas",
     "import_show": "Rādīt"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {Atlasīts # kontakts} other {Atlasīti # kontakti}}",
+    "selection_more": "un vēl {count}",
+    "no_addresses": "Nevienam atlasītajam kontaktam nav e-pasta adreses.",
+    "task_open": "Atvērt",
+    "due_next_week": "Nākamnedēļ",
+    "due_none": "Bez termiņa",
+    "due_pick": "Izvēlēties datumu…",
+    "move_to_list": "Pārvietot uz sarakstu",
+    "dupes_legend": "{count, plural, one {# jau ir kontaktos:} other {# jau ir kontaktos:}}",
+    "dupes_skip": "Izlaist",
+    "dupes_update": "Atjaunināt esošos kontaktus",
+    "dupes_updates": "Atjaunina kontaktu",
+    "upload_cancelled": "Augšupielāde atcelta",
+    "upload_cancelled_partial": "{count, plural, zero {# faili tika augšupielādēti} one {# fails tika augšupielādēts} other {# faili tika augšupielādēti}} pirms atcelšanas",
+    "download_cancelled": "Lejupielāde atcelta"
+  },
   "desktopEdit": {
     "edit": "Rediģēt",
     "edit_named": "Rediģēt {name}",

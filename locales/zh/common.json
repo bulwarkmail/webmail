@@ -7616,6 +7616,23 @@
     "merge_kept": "保留",
     "import_show": "显示"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, other {已选择 # 位联系人}}",
+    "selection_more": "以及另外 {count} 位",
+    "no_addresses": "所选联系人都没有电子邮件地址。",
+    "task_open": "打开",
+    "due_next_week": "下周",
+    "due_none": "无截止日期",
+    "due_pick": "选择日期…",
+    "move_to_list": "移到列表",
+    "dupes_legend": "{count, plural, other {# 位已在联系人中：}}",
+    "dupes_skip": "跳过",
+    "dupes_update": "更新现有联系人",
+    "dupes_updates": "更新联系人",
+    "upload_cancelled": "已取消上传",
+    "upload_cancelled_partial": "取消前已上传 {count, plural, other {# 个文件}}",
+    "download_cancelled": "已取消下载"
+  },
   "desktopEdit": {
     "edit": "编辑",
     "edit_named": "编辑 {name}",

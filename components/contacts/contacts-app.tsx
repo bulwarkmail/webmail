@@ -20,12 +20,13 @@ import { ContactsSidebar, type ContactCategory } from "@/components/contacts/con
 import { ContactImportDialog } from "@/components/contacts/contact-import-dialog";
 import { ContactMergeDialog } from "@/components/contacts/contact-merge-dialog";
 import { ContactDuplicatesView } from "@/components/contacts/contact-duplicates-view";
-import { findDuplicateGroups, ownerKey, type MergePlan } from "@/lib/contacts/merge";
+import { findDuplicateGroups, ownerKey, planMerge, type MergePlan } from "@/lib/contacts/merge";
 import { AddressBookPickerDialog } from "@/components/contacts/address-book-picker-dialog";
 import { DirectoryBrowser, directoryKey, filterDirectory } from "@/components/contacts/directory-browser";
 import { DirectoryEntryDetail } from "@/components/contacts/directory-entry-detail";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
-import { exportContacts } from "@/components/contacts/contact-export";
+import { exportContacts, useContactExportBusy } from "@/components/contacts/contact-export";
+import { ContactSelectionView, selectionRecipients } from "@/components/contacts/contact-selection-view";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
 import { AppSidePanelPhoneButton, useAppSidePanel } from "@/components/plugins/app-side-panel";
 import { contactToView } from "@/lib/plugin-projection";
@@ -114,6 +115,8 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   const tCommon = useTranslations("common");
   const tShell = useTranslations("shell");
   const tMerge = useTranslations("ux_pim_cimport");
+  const tPc = useTranslations("ux_p3_pim_pc");
+  const exportBusy = useContactExportBusy();
   useDocumentTitle(tSidebar("contacts"));
   useDesktopWindowName(tSidebar("contacts"), { withAccount: true });
   const contactsEnabled = usePolicyStore((s) => s.isFeatureEnabled('contactsEnabled'));
@@ -604,6 +607,23 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
       addressBookId,
     );
   }, [supportsSync, client, importContacts]);
+  // "Update the existing contacts" in the import (pim-p3-15): what the file has is merged
+  // into the card it matched, as Merge does, so nothing on that card is lost.
+  const handleUpdateFromImport = useCallback(async (pairs: Array<{ existingId: string; card: ContactCard }>) => {
+    let updated = 0;
+    for (const { existingId, card } of pairs) {
+      const existing = useContactStore.getState().contacts.find((c) => c.id === existingId);
+      if (!existing || isContactReadOnly(existing)) continue;
+      const { patch } = planMerge([existing, { ...card, updated: undefined } as ContactCard]);
+      if (Object.keys(patch).length === 0) { updated++; continue; }
+      const ok = supportsSync && client
+        ? await updateContact(client, existingId, patch)
+        : await updateLocalContact(existingId, patch);
+      if (ok) updated++;
+    }
+    return updated;
+  }, [isContactReadOnly, supportsSync, client, updateContact, updateLocalContact]);
+
   // Done importing: a toast instead of a dialog page, and Show opens where they went.
   const handleImported = useCallback((count: number, addressBookId?: string) => {
     if (count <= 0) return;
@@ -1028,6 +1048,16 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
     setView("bulk-add-to-group");
   };
 
+  /** One new message to everyone ticked, in To (pim-p3-7). */
+  const handleBulkCompose = () => {
+    const recipients = selectionRecipients(contacts.filter((c) => selectedContactIds.has(c.id)));
+    if (recipients.length === 0) {
+      toast.error(tPc("no_addresses"));
+      return;
+    }
+    openComposeInApp(recipients, "to");
+  };
+
   const handleBulkExport = async () => {
     const toExport = contacts.filter(c => selectedContactIds.has(c.id));
     if (toExport.length > 0 && await exportContacts(toExport)) {
@@ -1081,6 +1111,25 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
           onAddToContacts={guard(handleAddDirectoryEntryToContacts)}
         />
       );
+    }
+    // Ticked contacts: what can be done with them, not the one that was open (pim-p3-7).
+    if (selectedContactIds.size > 0 && !isMobile && (view === "detail" || view === "list")) {
+      const chosen = contacts.filter((c) => selectedContactIds.has(c.id));
+      if (chosen.length > 0) {
+        return (
+          <ContactSelectionView
+            contacts={chosen}
+            onSendEmail={handleBulkCompose}
+            onAddToGroup={guard(handleBulkAddToGroup)}
+            onMoveTo={canMoveContacts ? () => handleMoveContacts(chosen.map((c) => c.id)) : undefined}
+            onMerge={handleBulkMerge}
+            onExport={() => { void handleBulkExport(); }}
+            onDelete={() => { void handleBulkDelete(); }}
+            onClear={clearSelection}
+            exporting={exportBusy}
+          />
+        );
+      }
     }
     switch (view) {
       case "create":
@@ -1504,6 +1553,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
                   onComposeContact={handleComposeContact}
                   onMergeContact={(contact) => setMergePickFor(contact)}
                   onBulkMerge={handleBulkMerge}
+                  onBulkCompose={handleBulkCompose}
                   banner={duplicateGroups.length > 0 && view !== "duplicates" ? (
                     <button
                       type="button"
@@ -1694,6 +1744,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
           addressBooks={supportsSync ? writableBooks : []}
           defaultAddressBookId={openBookId}
           onImported={handleImported}
+          onUpdateExisting={handleUpdateFromImport}
         />
       )}
       {showImportDialog && (
@@ -1704,6 +1755,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
           addressBooks={supportsSync ? writableBooks : []}
           defaultAddressBookId={openBookId}
           onImported={handleImported}
+          onUpdateExisting={handleUpdateFromImport}
         />
       )}
       {(mergeCards || mergePickFor) && (

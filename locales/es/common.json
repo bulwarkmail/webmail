@@ -7616,6 +7616,23 @@
     "merge_kept": "Se conserva",
     "import_show": "Mostrar"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# contacto seleccionado} other {# contactos seleccionados}}",
+    "selection_more": "y {count} más",
+    "no_addresses": "Ninguno de los contactos seleccionados tiene dirección de correo.",
+    "task_open": "Abrir",
+    "due_next_week": "La próxima semana",
+    "due_none": "Sin fecha de vencimiento",
+    "due_pick": "Elegir una fecha…",
+    "move_to_list": "Mover a la lista",
+    "dupes_legend": "{count, plural, one {1 ya está en Contactos:} other {# ya están en Contactos:}}",
+    "dupes_skip": "Omitirlos",
+    "dupes_update": "Actualizar los contactos existentes",
+    "dupes_updates": "Actualiza el contacto",
+    "upload_cancelled": "Subida cancelada",
+    "upload_cancelled_partial": "{count, plural, one {Se subió 1 archivo} other {Se subieron # archivos}} antes de cancelar",
+    "download_cancelled": "Descarga cancelada"
+  },
   "desktopEdit": {
     "edit": "Editar",
     "edit_named": "Editar {name}",

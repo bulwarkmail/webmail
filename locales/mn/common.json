@@ -7616,6 +7616,23 @@
     "merge_kept": "Хадгалагдана",
     "import_show": "Харуулах"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# харилцагч сонгосон} other {# харилцагч сонгосон}}",
+    "selection_more": "болон өөр {count}",
+    "no_addresses": "Сонгосон харилцагчдын хэнд нь ч имэйл хаяг алга.",
+    "task_open": "Нээх",
+    "due_next_week": "Дараа долоо хоногт",
+    "due_none": "Дуусах огноогүй",
+    "due_pick": "Огноо сонгох…",
+    "move_to_list": "Жагсаалт руу зөөх",
+    "dupes_legend": "{count, plural, one {1 нь харилцагчдад аль хэдийн байна:} other {# нь харилцагчдад аль хэдийн байна:}}",
+    "dupes_skip": "Алгасах",
+    "dupes_update": "Байгаа харилцагчдыг шинэчлэх",
+    "dupes_updates": "Харилцагчийг шинэчилнэ",
+    "upload_cancelled": "Байршуулалт цуцлагдлаа",
+    "upload_cancelled_partial": "Цуцлахаас өмнө {count, plural, one {1 файл} other {# файл}} байршуулагдсан",
+    "download_cancelled": "Татаж авалтыг цуцаллаа"
+  },
   "desktopEdit": {
     "edit": "Засах",
     "edit_named": "{name} засах",

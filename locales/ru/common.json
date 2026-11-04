@@ -7616,6 +7616,23 @@
     "merge_kept": "Сохранится",
     "import_show": "Показать"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {Выбран # контакт} few {Выбрано # контакта} other {Выбрано # контактов}}",
+    "selection_more": "и ещё {count}",
+    "no_addresses": "Ни у одного из выбранных контактов нет адреса эл. почты.",
+    "task_open": "Открыть",
+    "due_next_week": "На следующей неделе",
+    "due_none": "Без срока",
+    "due_pick": "Выбрать дату…",
+    "move_to_list": "Переместить в список",
+    "dupes_legend": "{count, plural, one {# уже есть в контактах:} few {# уже есть в контактах:} other {# уже есть в контактах:}}",
+    "dupes_skip": "Пропустить",
+    "dupes_update": "Обновить существующие контакты",
+    "dupes_updates": "Обновит контакт",
+    "upload_cancelled": "Загрузка отменена",
+    "upload_cancelled_partial": "{count, plural, one {# файл был загружен} few {# файла было загружено} many {# файлов было загружено} other {# файла было загружено}} до отмены",
+    "download_cancelled": "Скачивание отменено"
+  },
   "desktopEdit": {
     "edit": "Изменить",
     "edit_named": "Изменить {name}",

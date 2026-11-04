@@ -7616,6 +7616,23 @@
     "merge_kept": "Beholdes",
     "import_show": "Vis"
   },
+  "ux_p3_pim_pc": {
+    "selection_title": "{count, plural, one {# kontakt valgt} other {# kontakter valgt}}",
+    "selection_more": "og {count} til",
+    "no_addresses": "Ingen av de valgte kontaktene har en e-postadresse.",
+    "task_open": "Åpne",
+    "due_next_week": "Neste uke",
+    "due_none": "Ingen forfallsdato",
+    "due_pick": "Velg en dato…",
+    "move_to_list": "Flytt til liste",
+    "dupes_legend": "{count, plural, one {1 finnes allerede i Kontakter:} other {# finnes allerede i Kontakter:}}",
+    "dupes_skip": "Hopp over",
+    "dupes_update": "Oppdater de eksisterende kontaktene",
+    "dupes_updates": "Oppdaterer kontakten",
+    "upload_cancelled": "Opplastingen ble avbrutt",
+    "upload_cancelled_partial": "{count, plural, one {1 fil ble} other {# filer ble}} lastet opp før du avbrøt",
+    "download_cancelled": "Nedlasting avbrutt"
+  },
   "desktopEdit": {
     "edit": "Rediger",
     "edit_named": "Rediger {name}",

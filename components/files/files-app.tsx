@@ -74,6 +74,8 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   // Static Lite build: the route params are empty, read the link from the URL.
   const linkSegments = useLiteLinkSegments('files', routeSegments);
   const t = useTranslations("files");
+  // "Cancelled", spelled as the rest of the app spells it (pim-p3-17).
+  const tPc = useTranslations("ux_p3_pim_pc");
   const skeleton = useSkeletonLabels();
   const tSidebar = useTranslations("sidebar");
   const tShell = useTranslations("shell");
@@ -382,7 +384,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   // reported once it is done.
   const showUploadReport = useCallback((report: UploadReport) => {
     if (report.canceled) {
-      toast.info(t("upload_canceled"), report.uploaded > 0 ? t("upload_canceled_partial", { count: report.uploaded }) : undefined);
+      toast.info(tPc("upload_cancelled"), report.uploaded > 0 ? tPc("upload_cancelled_partial", { count: report.uploaded }) : undefined);
     } else if (report.uploaded > 0) {
       toast.success(t("upload_success", { count: report.uploaded }));
     }
@@ -391,7 +393,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
       + (report.failed.length > 3 ? ", …" : "");
     const reason = failureReason(report.failed[0].error);
     toast.error(t("upload_failed", { count: report.failed.length }), reason ? `${names}: ${reason}` : names);
-  }, [t, failureReason]);
+  }, [t, tPc, failureReason]);
 
   const handleCreateFolder = useCallback(async (name: string) => {
     try {
@@ -605,13 +607,13 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     } catch (err) {
       toast.dismiss(toastId);
       if (err instanceof DOMException && err.name === "AbortError") {
-        toast.info(t("download_canceled"));
+        toast.info(tPc("download_cancelled"));
         return;
       }
       console.error("Failed to download the zip:", err);
       toast.error(t("zip_error", { name: zipName }), failureReason(err));
     }
-  }, [downloadZip, t, failureReason]);
+  }, [downloadZip, t, tPc, failureReason]);
 
   // A document format the editor can create starts from a blank template
   // and opens in the editor (#1393); any other name is an empty text file.
