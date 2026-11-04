@@ -6248,11 +6248,16 @@ export function RecipientChipInput({
     }
   }, [editingChip]);
 
-  // Format a recipient for display in a chip / context menu
+  // A chip shows the name only (the address when there is none); the full
+  // "Name <address>" is in its tooltip and at the top of its menu.
   const formatChipDisplay = (r: Recipient): string =>
     r.group
       ? `${r.name || 'Group'} (${r.group.members.length})`
-      : r.name && r.name !== r.email ? `${r.name} (${r.email})` : r.email;
+      : r.name && r.name !== r.email ? r.name : r.email;
+  const formatChipFull = (r: Recipient): string =>
+    r.group
+      ? formatChipDisplay(r)
+      : r.name && r.name !== r.email ? `${r.name} <${r.email}>` : r.email;
 
   // Handle saving an edited chip
   const handleSaveEdit = (newValue: string) => {
@@ -6645,10 +6650,12 @@ export function RecipientChipInput({
               ) : (
                 <span
                   className="inline-flex items-center gap-1 min-w-0 max-w-[200px]"
-                  title={chip.group ? chip.group.members.map(m => m.email).join(', ') : undefined}
+                  title={chip.group ? chip.group.members.map(m => m.email).join(', ') : formatChipFull(chip)}
                 >
                   {chip.group && <Users className="w-3 h-3 shrink-0" aria-hidden />}
                   <span className="truncate">{chipDisplay}</span>
+                  {/* Screen readers still hear the address the chip no longer shows. */}
+                  {!chip.group && chipDisplay !== chip.email && <span className="sr-only">{` (${chip.email})`}</span>}
                   {isInvalid && <span className="sr-only">{`, ${t('invalid_recipient')}`}</span>}
                 </span>
               )}
@@ -6745,8 +6752,8 @@ export function RecipientChipInput({
       >
         {contextMenu.data && (
           <>
-            <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground truncate max-w-[200px]">
-              {formatChipDisplay(contextMenu.data.recipient)}
+            <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground break-all max-w-[260px]">
+              {formatChipFull(contextMenu.data.recipient)}
             </div>
             <ContextMenuSeparator />
             {!contextMenu.data.recipient.group && (
