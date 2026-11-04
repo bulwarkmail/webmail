@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useIdentityStore } from '@/stores/identity-store';
 import { usePluginStore } from '@/stores/plugin-store';
+import { useSettingsStore } from '@/stores/settings-store';
 import { emailHooks } from '@/lib/plugin-hooks';
 
 // The composer's window: when it tells the opening window to let go, and what
@@ -612,6 +613,15 @@ describe('a send held for undo', () => {
     expect(sent?.notice.pendingUndoSend ?? null).toBeNull();
     // compose-p2-13: the main window asks for the Scheduled count again then.
     expect(sent?.notice.releasesAt).toBe(sendAt);
+  });
+
+  // The server's time runs past the delay: "Sending in 6 seconds" for 5 s.
+  it('never counts from more than the delay the user picked', async () => {
+    const before = useSettingsStore.getState().sendDelaySeconds;
+    useSettingsStore.setState({ sendDelaySeconds: 5 } as never);
+    await sendFromWindow(5.8);
+    expect(screen.getByTestId('popout-sending')).toHaveAttribute('data-seconds', '5');
+    useSettingsStore.setState({ sendDelaySeconds: before } as never);
   });
 
   // compose-24: the window sat with a greyed Send until the server answered.

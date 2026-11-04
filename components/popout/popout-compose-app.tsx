@@ -10,6 +10,8 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { usePluginStore } from "@/stores/plugin-store";
 import { toast } from "@/stores/toast-store";
+import { useSettingsStore } from "@/stores/settings-store";
+import { secondsUntilSend } from "@/lib/outgoing/send-progress-toast";
 import { formatRejectedRecipients } from "@/lib/jmap/client";
 import { debug } from "@/lib/debug";
 import { composerSendOptions } from "@/lib/outgoing/composer-send-options";
@@ -68,9 +70,9 @@ interface ReopenTarget {
 }
 
 /** "Sending…" or "Sent", where the composer was, with the send icon. */
-function SendStatus({ text, children }: { text: string; children?: React.ReactNode }) {
+function SendStatus({ text, seconds, children }: { text: string; seconds?: number; children?: React.ReactNode }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 p-6 text-center" data-testid="popout-sending">
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 p-6 text-center" data-testid="popout-sending" data-seconds={seconds}>
       <Send className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
       <p role="status" className="text-sm text-foreground">{text}</p>
       {children}
@@ -134,11 +136,12 @@ function SendingWithUndo({ held, onUndone, onGone }: {
     onUndone(held.isSmime ? null : restored);
   };
 
-  const seconds = Math.max(1, Math.ceil((sendAt - now) / 1000));
+  // As the main window's toast counts: never past the delay the user picked.
+  const seconds = secondsUntilSend(sendAt, now, useSettingsStore.getState().sendDelaySeconds);
   // Once Undo is over, "Sent" for the moment before the window goes, as the
   // main window's toast says it.
   return (
-    <SendStatus text={over && !busy ? tSend("sent") : tViewer("sending_in", { seconds })}>
+    <SendStatus text={over && !busy ? tSend("sent") : tViewer("sending_in", { seconds })} seconds={over ? undefined : seconds}>
       {!over && (
         <Button onClick={() => void undo()} disabled={busy} data-testid="popout-undo-send">
           {tViewer("undo_send")}

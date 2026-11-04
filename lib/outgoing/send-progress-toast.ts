@@ -71,13 +71,20 @@ export interface UndoCountdownOptions {
  * word that the message went. Stops by itself once the toast is gone (Undo,
  * Send now, closed). Returns a stop for the caller.
  */
+/**
+ * Whole seconds until a held send goes, at least 1 and never more than the
+ * delay the user picked: the server's time runs a moment past it, which
+ * showed "Sending in 6 seconds" for a 5 s delay.
+ */
+export function secondsUntilSend(sendAt: number, now: number, maxSeconds?: number): number {
+  const left = Math.max(1, Math.ceil((sendAt - now) / 1000));
+  return maxSeconds && maxSeconds > 0 ? Math.min(left, maxSeconds) : left;
+}
+
 export function runUndoSendCountdown(id: string, options: UndoCountdownOptions): () => void {
   const now = options.now ?? Date.now;
   const present = () => useToastStore.getState().toasts.some((t) => t.id === id);
-  const secondsLeft = () => {
-    const left = Math.max(1, Math.ceil((options.sendAt - now()) / 1000));
-    return options.maxSeconds && options.maxSeconds > 0 ? Math.min(left, options.maxSeconds) : left;
-  };
+  const secondsLeft = () => secondsUntilSend(options.sendAt, now(), options.maxSeconds);
   let shown = -1;
   const tick = () => {
     if (!present()) return stop();
