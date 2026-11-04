@@ -331,6 +331,21 @@ describe('composer-send-menu', () => {
     expect(schedule).toHaveTextContent('Ctrl + Shift + Enter');
   });
 
+  // compose-23: a menu with "Schedule send" as its only item.
+  it('opens the schedule dialog straight from the arrow when it is the only entry', () => {
+    useAuthStore.setState({
+      client: { hasDelayedSend: () => true, getMaxDelayedSend: () => 30 * 86400, createDraft: vi.fn() } as never,
+    });
+    render(<EmailComposer initialData={DRAFT} onClose={vi.fn()} />);
+
+    const arrow = screen.getAllByRole('button', { name: 'schedule_send' })[0];
+    expect(arrow).toHaveAttribute('aria-haspopup', 'dialog');
+    fireEvent.click(arrow);
+
+    expect(screen.queryByRole('menuitem', { name: /schedule_send/ })).toBeNull();
+    expect(screen.getByRole('dialog')).toHaveTextContent('schedule_send_description');
+  });
+
   it('keeps a plain Send button without plugin entries or scheduled send', () => {
     render(<EmailComposer initialData={DRAFT} onClose={vi.fn()} />);
     expect(screen.queryByRole('button', { name: 'more_actions' })).toBeNull();

@@ -419,6 +419,47 @@ describe('contact-store', () => {
       expect(results).toEqual([{ name: 'Jane Doe', email: 'jane.doe@example.com' }]);
     });
 
+    // "an" offered Daniel Okafor and Greta Hoffmann before Anna Becker.
+    it('should put names and addresses that start with the query first', () => {
+      const person = (id: string, given: string, surname: string, address: string) => makeContact({
+        id,
+        name: { components: [{ kind: 'given', value: given }, { kind: 'surname', value: surname }], isOrdered: true },
+        emails: { e0: { address } },
+      });
+      useContactStore.setState({
+        contacts: [
+          person('d', 'Daniel', 'Okafor', 'daniel@example.com'),
+          person('g', 'Greta', 'Hoffmann', 'greta@example.com'),
+          person('a', 'Anna', 'Becker', 'anna@example.com'),
+          person('h', 'Hiro', 'Tanaka', 'hiro@example.com'),
+          person('m', 'Mia', 'Schulz', 'mia.anders@example.com'),
+        ],
+        directoryPrincipals: [],
+        recentRecipients: [{ name: '', email: 'brandt@example.com' }, { name: 'Andreas Wolf', email: 'wolf@example.com' }],
+      });
+      const results = useContactStore.getState().getAutocomplete('an');
+      expect(results.map((r) => r.email)).toEqual([
+        'anna@example.com',
+        'mia.anders@example.com',
+        'wolf@example.com',
+        'daniel@example.com',
+        'greta@example.com',
+        'hiro@example.com',
+        'brandt@example.com',
+      ]);
+    });
+
+    it('should not lose a name that starts with the query behind ten that only contain it', () => {
+      const contacts = Array.from({ length: 12 }, (_, i) =>
+        makeContact({ id: `d${i}`, name: { components: [{ kind: 'given', value: `Dan${i}` }], isOrdered: true }, emails: { e0: { address: `dan${i}@example.com` } } }),
+      );
+      contacts.push(makeContact({ id: 'anna', name: { components: [{ kind: 'given', value: 'Anna' }], isOrdered: true }, emails: { e0: { address: 'anna@example.com' } } }));
+      useContactStore.setState({ contacts, directoryPrincipals: [], recentRecipients: [] });
+      const results = useContactStore.getState().getAutocomplete('an');
+      expect(results).toHaveLength(10);
+      expect(results[0].email).toBe('anna@example.com');
+    });
+
     it('should repair a recent recipient whose address lost its closing bracket', () => {
       useContactStore.setState({
         contacts: [],

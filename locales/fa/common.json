@@ -1233,6 +1233,21 @@
       "plain_text": "[تصویر: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "پیش‌نویس دور انداخته شد",
+    "undo": "واگرد",
+    "discard_draft": "دور انداختن پیش‌نویس",
+    "save_failed_close": "پیش‌نویس ذخیره نشد. دوباره تلاش کنید یا آن را دور بیندازید.",
+    "try_again": "تلاش دوباره",
+    "add_description": "افزودن توضیح",
+    "attachments_summary": "پیوست‌ها: {count}، {size}",
+    "from_sub_address": "استفاده از زیرنشانی…",
+    "from_edit_sender": "ویرایش فرستنده…",
+    "shortcut_insert_link": "درج پیوند",
+    "shortcut_save_draft": "ذخیرهٔ پیش‌نویس",
+    "shortcut_show_cc": "نمایش رونوشت",
+    "shortcut_show_bcc": "نمایش رونوشت پنهان"
+  },
   "confirm_dialog": {
     "confirm": "تأیید",
     "cancel": "انصراف"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "بازگشت به ویرایش",
+    "send_anyway": "ارسال به هر حال",
+    "warnings_title": "این پیام به هر حال ارسال شود؟",
+    "warning_subject": "بدون موضوع",
+    "warning_text": "بدون متن",
+    "warning_attachment": "به «{keyword}» اشاره می‌کند، اما هیچ فایلی پیوست نشده است",
+    "warning_placeholders": "متن جایگزینی که گیرندگان خواهند دید:",
+    "warning_proofreading": "خطاهای املایی یا دستوری باز: {count}",
+    "empty_text_title": "بدون متن ارسال شود؟",
+    "empty_text_message": "این پیام متن و پیوست ندارد. به هر حال ارسال شود؟",
+    "scheduled_for": "زمان‌بندی‌شده برای {when}",
+    "sending": "در حال ارسال…",
+    "sent": "ارسال شد",
+    "view": "مشاهده",
+    "picker_button": "افزودن از مخاطبین",
+    "picker_title": "افزودن گیرندگان",
+    "tab_contacts": "مخاطبین",
+    "tab_directory": "فهرست سازمانی",
+    "contacts_empty_title": "هنوز مخاطبی وجود ندارد",
+    "contacts_empty_hint": "افرادی که در مخاطبین ذخیره می‌کنید اینجا نمایش داده می‌شوند.",
+    "contacts_no_match": "هیچ مخاطبی با جستجوی شما مطابقت ندارد",
+    "template_name": "نام قالب",
+    "template_edit_details": "ویرایش جزئیات…"
+  },
   "org_templates": {
     "section_personal": "قالب‌های من",
     "section_organisation": "سازمان",
@@ -6684,6 +6724,24 @@
     "not_running": "ارسال نشد. بررسی‌ای که سازمان شما الزامی کرده در حال اجرا نیست. چند لحظه دیگر دوباره تلاش کنید.",
     "stopped_working": "ارسال نشد. بررسی‌ای که سازمان شما الزامی کرده دیگر کار نمی‌کند. صفحه را دوباره بارگیری کنید. اگر کمکی نکرد، به مدیر سیستم خبر دهید."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "لغو ارسال",
+      "description": "پس از زدن ارسال، چند ثانیه فرصت می‌دهد تا پیام را پس بگیرید."
+    },
+    "reply_from_received": {
+      "label": "پاسخ از آدرس دریافتی",
+      "description": "پاسخ از نشانی‌ای که نامه به آن فرستاده شده بود. اگر چند نشانی دارید مفید است."
+    },
+    "require_tls": "تحویل فقط از راه اتصال امن",
+    "require_tls_hint": "خود پیام رمزگذاری نمی‌شود. اگر سروری نتواند از TLS استفاده کند، برگشت می‌خورد.",
+    "encrypt": "رمزگذاری…",
+    "encrypt_hint": "به افزونهٔ S/MIME یا PGP نیاز دارد. تنظیمات را باز می‌کند.",
+    "quick_reply_to": "پاسخ به {names}…",
+    "open_full_editor": "باز کردن ویرایشگر کامل",
+    "forward_to_label": "به",
+    "forward_cc_label": "رونوشت"
+  },
   "plugin_list": {
     "filters": "فیلترها",
     "remove_filter": "حذف فیلتر {label}"
@@ -7437,6 +7495,14 @@
     "back_no_answer": "پنجره اصلی پاسخ نداد. پیام شما اینجا می‌ماند.",
     "types_character": "این کلیدها روی صفحه‌کلید شما نویسه‌ای می‌نویسند و آن نویسه دیگر در هیچ برنامه‌ای کار نمی‌کند. کلیدهای دیگری را امتحان کنید.",
     "reserved": "سیستم یا بیشتر برنامه‌ها از این کلیدها استفاده می‌کنند. کلیدهای دیگری را امتحان کنید."
+  },
+  "compose_windows": {
+    "more_formatting": "قالب‌بندی بیشتر",
+    "offline": "آفلاین",
+    "offline_hint": "ارسال به اتصال نیاز دارد.",
+    "offline_hint_outbox": "آنچه اکنون می‌فرستید در صندوق خروجی می‌ماند و وقتی دوباره آنلاین شدید فرستاده می‌شود.",
+    "offline_send_saved": "آفلاین هستید. پیام در پیش‌نویس‌ها ذخیره شده است.",
+    "offline_send_unsaved": "آفلاین هستید. پیام همین‌جا می‌ماند و وقتی دوباره آنلاین شدید در پیش‌نویس‌ها ذخیره می‌شود."
   },
   "desktopDevTools": {
     "section_title": "عیب‌یابی",

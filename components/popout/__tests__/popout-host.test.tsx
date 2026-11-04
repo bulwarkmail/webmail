@@ -93,9 +93,20 @@ afterEach(() => {
 
 const answers = () => heard.filter((message) => message.type === 'session-answer');
 
-describe('in an ordinary browser tab', () => {
+/** A browser tab: not installed, with or without a mouse. */
+function stubTab(fine: boolean) {
+  delete window.bulwarkDesktop;
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches: query.includes('pointer: fine') ? fine : false,
+    addEventListener() {},
+    removeEventListener() {},
+  }));
+  window.matchMedia = globalThis.matchMedia;
+}
+
+describe('in a browser tab on a phone or tablet', () => {
   it('runs nothing: no channel and no lock', async () => {
-    delete window.bulwarkDesktop;
+    stubTab(false);
     const opened = FakeBroadcastChannel.open.size;
     render(<PopoutHost />);
     await settle();
@@ -104,6 +115,18 @@ describe('in an ordinary browser tab', () => {
     popout.post({ type: 'main-ping' });
     await settle();
     expect(heard).toEqual([]);
+  });
+});
+
+describe('in a browser tab on a computer', () => {
+  it('lends its session to a composer popped out of it', async () => {
+    stubTab(true);
+    render(<PopoutHost />);
+    await settle();
+    await expect(requestWindowSession({}, 2000)).resolves.toMatchObject({
+      activeAccountId: 'alice',
+      sessions: [{ accountId: 'alice', authMode: 'oauth' }],
+    });
   });
 });
 
@@ -284,6 +307,17 @@ describe('PopoutHost', () => {
     popout.post({ type: 'sent', requestId: 'r2', notice: { accountId: 'alice' } });
     await settle();
     expect(useToastStore.getState().toasts).toHaveLength(1);
+  });
+
+  it('says once that a closed pop-out kept its draft, with Discard', async () => {
+    render(<><PopoutHost /><PopoutHost /></>);
+    await settle();
+    popout.post({ type: 'draft-kept', requestId: 'k1', notice: { draftId: 'd1', localAccountId: 'alice' } });
+    await settle();
+    const toasts = useToastStore.getState().toasts;
+    expect(toasts).toHaveLength(1);
+    expect(toasts[0].title).toBe('email_composer.draft_saved');
+    expect(toasts[0].action?.label).toBe('email_composer.discard');
   });
 
   it('refreshes the list and counts when a pop-out changed mail, once for a burst', async () => {

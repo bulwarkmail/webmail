@@ -1233,6 +1233,21 @@
       "plain_text": "[이미지: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "임시 보관 메일을 삭제했습니다",
+    "undo": "실행 취소",
+    "discard_draft": "임시 보관 메일 삭제",
+    "save_failed_close": "임시 보관 메일을 저장하지 못했습니다. 다시 시도하거나 삭제하세요.",
+    "try_again": "다시 시도",
+    "add_description": "설명 추가",
+    "attachments_summary": "첨부 파일: {count}개, {size}",
+    "from_sub_address": "하위 주소 사용…",
+    "from_edit_sender": "보낸 사람 편집…",
+    "shortcut_insert_link": "링크 삽입",
+    "shortcut_save_draft": "임시 저장",
+    "shortcut_show_cc": "참조 표시",
+    "shortcut_show_bcc": "숨은 참조 표시"
+  },
   "confirm_dialog": {
     "confirm": "확인",
     "cancel": "취소"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "편집으로 돌아가기",
+    "send_anyway": "그래도 보내기",
+    "warnings_title": "이 메일을 그래도 보낼까요?",
+    "warning_subject": "제목 없음",
+    "warning_text": "본문 없음",
+    "warning_attachment": "\"{keyword}\"라고 적혀 있지만 첨부된 파일이 없어요",
+    "warning_placeholders": "받는 사람에게 보이는 자리 표시 텍스트:",
+    "warning_proofreading": "남은 맞춤법 또는 문법 문제: {count}",
+    "empty_text_title": "본문 없이 보낼까요?",
+    "empty_text_message": "이 메일에는 본문도 첨부 파일도 없어요. 그래도 보낼까요?",
+    "scheduled_for": "{when}에 보내기 예약됨",
+    "sending": "보내는 중…",
+    "sent": "보냈어요",
+    "view": "보기",
+    "picker_button": "연락처에서 추가",
+    "picker_title": "받는 사람 추가",
+    "tab_contacts": "연락처",
+    "tab_directory": "디렉터리",
+    "contacts_empty_title": "아직 연락처가 없어요",
+    "contacts_empty_hint": "연락처에 저장한 사람이 여기에 표시돼요.",
+    "contacts_no_match": "검색과 일치하는 연락처가 없어요",
+    "template_name": "템플릿 이름",
+    "template_edit_details": "세부 정보 편집…"
+  },
   "org_templates": {
     "section_personal": "내 템플릿",
     "section_organisation": "조직",
@@ -6684,6 +6724,24 @@
     "not_running": "보내지 않았습니다. 조직에서 요구하는 검사가 실행되고 있지 않습니다. 잠시 후 다시 시도하세요.",
     "stopped_working": "보내지 않았습니다. 조직에서 요구하는 검사가 작동을 멈췄습니다. 페이지를 새로 고치세요. 그래도 안 되면 관리자에게 알리세요."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "보내기 취소",
+      "description": "보내기를 누른 후 몇 초 동안 메시지를 되돌릴 수 있습니다."
+    },
+    "reply_from_received": {
+      "label": "답장 시 보내는 사람 자동 선택",
+      "description": "메일을 받은 주소로 답장합니다. 주소가 여러 개일 때 유용합니다."
+    },
+    "require_tls": "보안 연결로만 배달",
+    "require_tls_hint": "메시지 자체는 암호화되지 않습니다. 서버가 TLS를 사용할 수 없으면 반송됩니다.",
+    "encrypt": "암호화…",
+    "encrypt_hint": "S/MIME 또는 PGP 추가 기능이 필요합니다. 설정을 엽니다.",
+    "quick_reply_to": "{names}에게 답장…",
+    "open_full_editor": "전체 편집기에서 열기",
+    "forward_to_label": "받는 사람",
+    "forward_cc_label": "참조"
+  },
   "plugin_list": {
     "filters": "필터",
     "remove_filter": "{label} 필터 제거"
@@ -7437,6 +7495,14 @@
     "back_no_answer": "기본 창이 응답하지 않았습니다. 메시지는 여기에 그대로 있습니다.",
     "types_character": "이 키는 사용 중인 키보드에서 문자를 입력하며, 지정하면 모든 앱에서 그 문자를 입력할 수 없게 됩니다. 다른 키를 사용해 보세요.",
     "reserved": "시스템 또는 대부분의 앱이 이 키를 사용합니다. 다른 키를 사용해 보세요."
+  },
+  "compose_windows": {
+    "more_formatting": "추가 서식",
+    "offline": "오프라인",
+    "offline_hint": "보내려면 연결이 필요합니다.",
+    "offline_hint_outbox": "지금 보내는 메일은 보낼편지함에서 기다리다가 다시 온라인이 되면 전송됩니다.",
+    "offline_send_saved": "오프라인 상태입니다. 메시지는 임시보관함에 저장되어 있습니다.",
+    "offline_send_unsaved": "오프라인 상태입니다. 메시지는 여기에 남아 있으며 다시 온라인이 되면 임시보관함에 저장됩니다."
   },
   "desktopDevTools": {
     "section_title": "문제 해결",

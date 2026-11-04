@@ -359,7 +359,18 @@ export type CalendarHoverPreview = 'off' | 'instant' | 'delay-500ms' | 'delay-1s
  */
 export type MonthTimedEventStyle = 'bar' | 'text' | 'dot';
 export const MONTH_TIMED_EVENT_STYLES: readonly MonthTimedEventStyle[] = ['bar', 'text', 'dot'];
-export type SendDelaySeconds = 0 | 10 | 30 | 60;
+export type SendDelaySeconds = 0 | 5 | 10 | 30 | 60;
+/**
+ * The undo send windows a setting may hold. The page offers Off, 5, 10 and
+ * 30 seconds; 60 was offered before and stays valid for those who chose it.
+ */
+export const SEND_DELAY_SECONDS: readonly SendDelaySeconds[] = [0, 5, 10, 30, 60];
+const isSendDelaySeconds = (value: unknown): value is SendDelaySeconds =>
+  SEND_DELAY_SECONDS.includes(value as SendDelaySeconds);
+/** The choices the settings pages offer: 60 only to someone who has it. */
+export function undoSendOptions(current: SendDelaySeconds): SendDelaySeconds[] {
+  return SEND_DELAY_SECONDS.filter((seconds) => seconds !== 60 || current === 60);
+}
 export type ProtocolOpenMode = 'active-session' | 'new-tab';
 
 /**
@@ -974,7 +985,8 @@ const DEFAULT_SETTINGS = {
   writingLanguage: 'auto',
   rtlEditingSupport: false,
   subAddressDelimiter: DEFAULT_SUB_ADDRESS_DELIMITER,
-  sendDelaySeconds: 0 as SendDelaySeconds,
+  // Undo send is on out of the box, as in other mail apps (v13).
+  sendDelaySeconds: 5 as SendDelaySeconds,
   signaturePosition: 'below_quote' as SignaturePosition,
   // On, as before the toggles existed: saved settings and server copies
   // from older builds lack these keys and fall back to this default.
@@ -1187,7 +1199,7 @@ function isPolicySettingKey(key: string): boolean {
 function isAllowedPolicyValue(key: string, value: unknown, restriction?: SettingRestriction): boolean {
   if (!isPolicySettingKey(key) || typeof value !== typeof builtInDefault(key)) return false;
   if (typeof value === 'number' && !Number.isFinite(value)) return false;
-  if (key === 'sendDelaySeconds' && ![0, 10, 30, 60].includes(value as number)) return false;
+  if (key === 'sendDelaySeconds' && !isSendDelaySeconds(value)) return false;
   if (key === 'subAddressDelimiter' && !isValidSubAddressDelimiter(value as string)) return false;
   if (key === 'messageListOrderScope' && value !== 'inbox' && value !== 'all') return false;
   if (key === 'searchDefaultScope' && !isSearchDefaultScope(value)) return false;
@@ -1634,6 +1646,7 @@ export const useSettingsStore = create<SettingsState>()(
           migrateNotificationSoundDefault(settings);
           migrateTintListRowsDefault(settings);
           migrateCalendarTasksDefault(settings);
+          migrateUndoSendDefault(settings);
           migrateAttachmentPosition(settings);
 
           // Apply settings, noting which keys were taken over for the
@@ -1652,7 +1665,7 @@ export const useSettingsStore = create<SettingsState>()(
               if (key === 'subAddressDelimiter' && !isValidSubAddressDelimiter(settings[key])) {
                 return;
               }
-              if (key === 'sendDelaySeconds' && ![0, 10, 30, 60].includes(settings[key])) {
+              if (key === 'sendDelaySeconds' && !isSendDelaySeconds(settings[key])) {
                 put(key, { sendDelaySeconds: 0 });
                 return;
               }
@@ -2050,7 +2063,7 @@ export const useSettingsStore = create<SettingsState>()(
     },
     {
       name: 'settings-storage',
-      version: 12,
+      version: 13,
       migrate: migrateSettings,
       onRehydrateStorage: () => {
         return (state) => {
@@ -2103,7 +2116,7 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
           state.density = state.listDensity;
           delete state.listDensity;
         }
-        if (![0, 10, 30, 60].includes(state.sendDelaySeconds as number)) {
+        if (!isSendDelaySeconds(state.sendDelaySeconds)) {
           state.sendDelaySeconds = 0;
         }
         if (version < 3 && typeof state.protocolOpenMode !== 'string' && typeof state.protocolMailtoOpenMode === 'string') {
@@ -2166,6 +2179,7 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
         migrateNotificationSoundDefault(state);
         migrateTintListRowsDefault(state);
         migrateCalendarTasksDefault(state);
+        migrateUndoSendDefault(state);
         // The old default must not be taken as chosen below either.
         migrateAttachmentPosition(state);
         // v8: admin policy defaults (#1248) skip settings the user chose.
@@ -2228,6 +2242,18 @@ export function migrateTintListRowsDefault(state: Record<string, unknown>): void
   if (state.tintListRowsByTag !== true) return;
   const chosen = Array.isArray(state.explicitSettings) && state.explicitSettings.includes('tintListRowsByTag');
   if (!chosen) state.tintListRowsByTag = false;
+}
+
+/**
+ * v13: undo send is on by default, with 5 seconds. Off (0) that the user
+ * never picked was only the old default and moves to 5; Off they picked
+ * stays. Imports and server copies from older builds still carry the 0 and
+ * go through this too.
+ */
+export function migrateUndoSendDefault(state: Record<string, unknown>): void {
+  if (state.sendDelaySeconds !== 0) return;
+  const chosen = Array.isArray(state.explicitSettings) && state.explicitSettings.includes('sendDelaySeconds');
+  if (!chosen) state.sendDelaySeconds = 5;
 }
 
 /**

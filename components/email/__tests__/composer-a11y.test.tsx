@@ -307,6 +307,46 @@ describe('recipient fields (SR-06, CV-02)', () => {
     }
   });
 
+  // compose-6: Backspace never leaves half an address behind.
+  it('selects the last chip on the first Backspace and removes it whole on the second', () => {
+    render(<EmailComposer initialData={{ ...DRAFT, to: 'Anna Berg <anna@example.com>, Zoe Fischer <zoe@example.com>' }} />);
+    const input = screen.getByRole('combobox', { name: 'to:' }) as HTMLInputElement;
+    input.focus();
+    fireEvent.keyDown(input, { key: 'Backspace' });
+    let chips = within(screen.getByRole('list', { name: 'to:' })).getAllByRole('listitem');
+    expect(chips).toHaveLength(2);
+    expect(document.activeElement).toBe(chips[1]);
+    expect(input.value).toBe('');
+
+    fireEvent.keyDown(chips[1], { key: 'Backspace' });
+    chips = within(screen.getByRole('list', { name: 'to:' })).getAllByRole('listitem');
+    expect(chips).toHaveLength(1);
+    expect(chips[0]).toHaveTextContent('Anna Berg');
+    expect(input.value).toBe('');
+    expect(document.activeElement).toBe(input);
+
+    // Three presses take out two recipients, never part of one.
+    fireEvent.keyDown(input, { key: 'Backspace' });
+    fireEvent.keyDown(document.activeElement!, { key: 'Backspace' });
+    expect(screen.queryAllByRole('listitem')).toHaveLength(0);
+    expect(input.value).toBe('');
+  });
+
+  it('lets go of a selected chip on Escape and keeps the composer open', () => {
+    const onClose = vi.fn();
+    render(<EmailComposer initialData={{ ...DRAFT, to: 'anna@example.com' }} onClose={onClose} />);
+    const input = screen.getByRole('combobox', { name: 'to:' }) as HTMLInputElement;
+    input.focus();
+    fireEvent.keyDown(input, { key: 'Backspace' });
+    const chip = within(screen.getByRole('list', { name: 'to:' })).getByRole('listitem');
+    expect(document.activeElement).toBe(chip);
+    fireEvent.keyDown(chip, { key: 'Escape' });
+    expect(document.activeElement).toBe(input);
+    expect(screen.getAllByRole('listitem')).toHaveLength(1);
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.queryByRole('alertdialog')).toBeNull();
+  });
+
   it('announces a recipient added by typing', () => {
     render(<EmailComposer initialData={DRAFT} />);
     expect(liveRegion()).toHaveTextContent('');
@@ -370,17 +410,17 @@ describe('message body (SR-07)', () => {
     expect(screen.getByLabelText('body_label').tagName).toBe('TEXTAREA');
   });
 
-  it('marks an empty body invalid and links the error text', async () => {
-    render(<EmailComposer initialData={{ ...DRAFT, to: 'bob@example.com', body: '' }} />);
+  it('asks before sending an empty body instead of marking it invalid', async () => {
+    const onSend = vi.fn();
+    render(<EmailComposer initialData={{ ...DRAFT, to: 'bob@example.com', subject: 'Hi', body: '' }} onSend={onSend} />);
     const editor = screen.getByTestId('rich-text-editor');
-    expect(editor).not.toHaveAttribute('data-invalid');
 
     fireEvent.keyDown(screen.getByTestId('composer-subject'), { key: 'Enter', ctrlKey: true });
-    await act(async () => {});
 
-    expect(editor).toHaveAttribute('data-invalid', 'true');
-    const error = document.getElementById(editor.getAttribute('data-describedby')!);
-    expect(error).toHaveTextContent('validation.body_required');
+    const dialog = await screen.findByRole('alertdialog');
+    expect(dialog).toHaveTextContent('empty_text_title');
+    expect(editor).not.toHaveAttribute('data-invalid');
+    expect(onSend).not.toHaveBeenCalled();
   });
 });
 

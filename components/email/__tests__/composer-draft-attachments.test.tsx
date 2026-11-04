@@ -376,7 +376,8 @@ describe('a re-opened draft that lives in a group account', () => {
     render(<EmailComposer initialData={GROUP_DRAFT} onDiscardDraft={onDiscardDraft} requestCloseRef={requestCloseRef} onClose={vi.fn()} />);
 
     fireEvent.change(screen.getByDisplayValue('Quarterly numbers'), { target: { value: 'Quarterly numbers v2' } });
-    act(() => requestCloseRef.current!());
+    // Closing keeps the draft now; Discard is the way to delete it.
+    fireEvent.click(screen.getAllByTestId('composer-discard')[0]);
     fireEvent.click(within(screen.getByRole('alertdialog')).getByText('discard'));
 
     expect(onDiscardDraft).toHaveBeenCalledWith('eaaaaab', { accountId: 'c', localAccountId: undefined });
@@ -393,7 +394,8 @@ describe('a re-opened draft that lives in a group account', () => {
     expect(createDraft.mock.calls[0][13]?.previousDraftAccountId).toBeUndefined();
 
     fireEvent.change(screen.getByDisplayValue('Quarterly numbers v2'), { target: { value: 'Quarterly numbers v3' } });
-    act(() => requestCloseRef.current!());
+    // Closing keeps the draft now; Discard is the way to delete it.
+    fireEvent.click(screen.getAllByTestId('composer-discard')[0]);
     fireEvent.click(within(screen.getByRole('alertdialog')).getByText('discard'));
     expect(onDiscardDraft).toHaveBeenCalledWith('draft-v2', { accountId: undefined, localAccountId: undefined });
   });

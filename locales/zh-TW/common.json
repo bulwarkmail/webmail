@@ -1233,6 +1233,21 @@
       "plain_text": "[圖片：{alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "草稿已捨棄",
+    "undo": "復原",
+    "discard_draft": "捨棄草稿",
+    "save_failed_close": "無法儲存草稿。請再試一次或捨棄草稿。",
+    "try_again": "再試一次",
+    "add_description": "新增描述",
+    "attachments_summary": "附件：{count} 個，{size}",
+    "from_sub_address": "使用子地址…",
+    "from_edit_sender": "編輯寄件者…",
+    "shortcut_insert_link": "插入連結",
+    "shortcut_save_draft": "儲存草稿",
+    "shortcut_show_cc": "顯示副本",
+    "shortcut_show_bcc": "顯示密件副本"
+  },
   "confirm_dialog": {
     "confirm": "確認",
     "cancel": "取消"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "繼續編輯",
+    "send_anyway": "仍然傳送",
+    "warnings_title": "仍然傳送這封郵件？",
+    "warning_subject": "沒有主旨",
+    "warning_text": "沒有內文",
+    "warning_attachment": "提到了「{keyword}」，但沒有附加檔案",
+    "warning_placeholders": "收件者會看到的預留位置文字：",
+    "warning_proofreading": "未處理的拼字或文法問題：{count}",
+    "empty_text_title": "不寫內文就傳送？",
+    "empty_text_message": "這封郵件沒有內文，也沒有附件。仍然傳送？",
+    "scheduled_for": "已排定於 {when} 傳送",
+    "sending": "正在傳送…",
+    "sent": "已傳送",
+    "view": "檢視",
+    "picker_button": "從聯絡人新增",
+    "picker_title": "新增收件者",
+    "tab_contacts": "聯絡人",
+    "tab_directory": "通訊錄目錄",
+    "contacts_empty_title": "還沒有聯絡人",
+    "contacts_empty_hint": "你在聯絡人中儲存的人會顯示在這裡。",
+    "contacts_no_match": "沒有符合搜尋的聯絡人",
+    "template_name": "範本名稱",
+    "template_edit_details": "編輯詳細資料…"
+  },
   "org_templates": {
     "section_personal": "我的範本",
     "section_organisation": "組織",
@@ -6684,6 +6724,24 @@
     "not_running": "未傳送。貴組織要求的一項檢查目前未執行。請稍後再試。",
     "stopped_working": "未傳送。貴組織要求的一項檢查已停止運作。請重新載入頁面。如果仍無法解決，請告知管理員。"
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "取消傳送",
+      "description": "按下傳送後，給您幾秒鐘撤回郵件。"
+    },
+    "reply_from_received": {
+      "label": "使用收件地址回覆",
+      "description": "從郵件寄達的地址回覆。適合擁有多個地址時使用。"
+    },
+    "require_tls": "僅透過安全連線投遞",
+    "require_tls_hint": "郵件本身不會加密。如果伺服器無法使用 TLS，郵件會被退回。",
+    "encrypt": "加密…",
+    "encrypt_hint": "需要 S/MIME 或 PGP 附加元件。將開啟設定。",
+    "quick_reply_to": "回覆給 {names}…",
+    "open_full_editor": "在完整編輯器中開啟",
+    "forward_to_label": "收件者",
+    "forward_cc_label": "副本"
+  },
   "plugin_list": {
     "filters": "篩選",
     "remove_filter": "移除篩選條件 {label}"
@@ -7437,6 +7495,14 @@
     "back_no_answer": "主視窗沒有回應。您的郵件仍在這裡。",
     "types_character": "這些鍵在您的鍵盤上會輸入一個字元，占用後該字元在所有應用程式中都無法輸入。請試試其他按鍵。",
     "reserved": "系統或大多數應用程式正在使用這些鍵。請試試其他按鍵。"
+  },
+  "compose_windows": {
+    "more_formatting": "更多格式",
+    "offline": "離線",
+    "offline_hint": "寄出需要連線。",
+    "offline_hint_outbox": "你現在寄出的郵件會在寄件匣中等待，恢復連線後送出。",
+    "offline_send_saved": "你已離線。郵件已儲存在草稿中。",
+    "offline_send_unsaved": "你已離線。郵件會留在這裡，恢復連線後儲存到草稿。"
   },
   "desktopDevTools": {
     "section_title": "疑難排解",

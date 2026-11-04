@@ -92,9 +92,9 @@ describe('viewer send failures', () => {
     useSettingsStore.setState({ quickReplyEnabled: false });
     render(<EmailViewer email={makeEmail()} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" />);
 
-    expect(screen.queryByPlaceholderText('quick_reply_placeholder')).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('quick_reply_to')).not.toBeInTheDocument();
     act(() => useSettingsStore.getState().updateSetting('quickReplyEnabled', true));
-    expect(screen.getByPlaceholderText('quick_reply_placeholder')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('quick_reply_to')).toBeInTheDocument();
   });
 
   it('reports a failed quick reply and keeps the text on Stalwart 1.0', async () => {
@@ -103,7 +103,7 @@ describe('viewer send failures', () => {
       <EmailViewer email={makeEmail()} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onQuickReply={onQuickReply} />,
     );
 
-    const box = screen.getByPlaceholderText('quick_reply_placeholder');
+    const box = screen.getByPlaceholderText('quick_reply_to');
     fireEvent.change(box, { target: { value: 'Thanks!' } });
     fireEvent.keyDown(box, { key: 'Enter', ctrlKey: true });
 
@@ -122,7 +122,7 @@ describe('viewer send failures', () => {
     await act(async () => { await flushComposers(1000); });
     expect(onSaveQuickReplyDraft).not.toHaveBeenCalled();
 
-    fireEvent.change(screen.getByPlaceholderText('quick_reply_placeholder'), { target: { value: 'On it.' } });
+    fireEvent.change(screen.getByPlaceholderText('quick_reply_to'), { target: { value: 'On it.' } });
     await act(async () => { await flushComposers(1000); });
     expect(onSaveQuickReplyDraft).toHaveBeenCalledWith('On it.');
   });
@@ -133,7 +133,7 @@ describe('viewer send failures', () => {
     render(<EmailViewer email={makeEmail()} mailboxes={mailboxes} selectedMailbox="inbox" currentMailboxRole="inbox" onQuickReply={vi.fn()} />);
     expect(useUIStore.getState().composingCount).toBe(0);
 
-    fireEvent.focus(screen.getByPlaceholderText('quick_reply_placeholder'));
+    fireEvent.focus(screen.getByPlaceholderText('quick_reply_to'));
     expect(useUIStore.getState().composingCount).toBe(1);
 
     fireEvent.click(screen.getByText('cancel'));

@@ -1233,6 +1233,21 @@
       "plain_text": "[Obrázek: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Koncept zahozen",
+    "undo": "Zpět",
+    "discard_draft": "Zahodit koncept",
+    "save_failed_close": "Koncept se nepodařilo uložit. Zkuste to znovu, nebo ho zahoďte.",
+    "try_again": "Zkusit znovu",
+    "add_description": "Přidat popis",
+    "attachments_summary": "Přílohy: {count}, {size}",
+    "from_sub_address": "Použít podadresu…",
+    "from_edit_sender": "Upravit odesílatele…",
+    "shortcut_insert_link": "Vložit odkaz",
+    "shortcut_save_draft": "Uložit koncept",
+    "shortcut_show_cc": "Zobrazit kopii",
+    "shortcut_show_bcc": "Zobrazit skrytou kopii"
+  },
   "confirm_dialog": {
     "confirm": "Potvrdit",
     "cancel": "Zrušit"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Zpět k úpravám",
+    "send_anyway": "Přesto odeslat",
+    "warnings_title": "Přesto tuto zprávu odeslat?",
+    "warning_subject": "Bez předmětu",
+    "warning_text": "Bez textu",
+    "warning_attachment": "Zmiňuje „{keyword}“, ale není připojen žádný soubor",
+    "warning_placeholders": "Zástupný text, který příjemci uvidí:",
+    "warning_proofreading": "Nevyřešené pravopisné či gramatické chyby: {count}",
+    "empty_text_title": "Odeslat bez textu?",
+    "empty_text_message": "Tato zpráva nemá text ani přílohu. Přesto ji odeslat?",
+    "scheduled_for": "Naplánováno na {when}",
+    "sending": "Odesílání…",
+    "sent": "Odesláno",
+    "view": "Zobrazit",
+    "picker_button": "Přidat z kontaktů",
+    "picker_title": "Přidat příjemce",
+    "tab_contacts": "Kontakty",
+    "tab_directory": "Adresář organizace",
+    "contacts_empty_title": "Zatím žádné kontakty",
+    "contacts_empty_hint": "Zde se zobrazí lidé, které uložíte do Kontaktů.",
+    "contacts_no_match": "Hledání neodpovídá žádný kontakt",
+    "template_name": "Název šablony",
+    "template_edit_details": "Upravit podrobnosti…"
+  },
   "org_templates": {
     "section_personal": "Moje šablony",
     "section_organisation": "Organizace",
@@ -6684,6 +6724,24 @@
     "not_running": "Neodesláno. Kontrola, kterou vaše organizace vyžaduje, právě neběží. Zkuste to za chvíli znovu.",
     "stopped_working": "Neodesláno. Kontrola, kterou vaše organizace vyžaduje, přestala fungovat. Načtěte stránku znovu. Pokud to nepomůže, obraťte se na správce."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Vrátit odeslání",
+      "description": "Dává vám několik sekund na to, abyste zprávu po stisknutí Odeslat vzali zpět."
+    },
+    "reply_from_received": {
+      "label": "Automaticky vybírat adresu pro odpověď",
+      "description": "Odpovídat z adresy, na kterou zpráva přišla. Hodí se, pokud máte více adres."
+    },
+    "require_tls": "Doručit jen přes zabezpečené spojení",
+    "require_tls_hint": "Samotná zpráva šifrovaná není. Vrátí se, pokud server nemůže použít TLS.",
+    "encrypt": "Šifrovat…",
+    "encrypt_hint": "Vyžaduje doplněk S/MIME nebo PGP. Otevře Nastavení.",
+    "quick_reply_to": "Odpověď pro {names}…",
+    "open_full_editor": "Otevřít v plném editoru",
+    "forward_to_label": "Komu",
+    "forward_cc_label": "Kopie"
+  },
   "plugin_list": {
     "filters": "Filtry",
     "remove_filter": "Odebrat filtr {label}"
@@ -7437,6 +7495,14 @@
     "back_no_answer": "Hlavní okno neodpovědělo. Vaše zpráva zůstává tady.",
     "types_character": "Tyto klávesy na vaší klávesnici píší znak, který by pak nefungoval v žádné aplikaci. Zkuste jiné klávesy.",
     "reserved": "Tyto klávesy používá systém nebo většina aplikací. Zkuste jiné klávesy."
+  },
+  "compose_windows": {
+    "more_formatting": "Další formátování",
+    "offline": "Offline",
+    "offline_hint": "Odeslání potřebuje připojení.",
+    "offline_hint_outbox": "Co teď odešlete, počká mezi zprávami k odeslání a odejde, až budete znovu online.",
+    "offline_send_saved": "Jste offline. Zpráva je uložená v Konceptech.",
+    "offline_send_unsaved": "Jste offline. Zpráva tu zůstane a uloží se do Konceptů, až budete znovu online."
   },
   "desktopDevTools": {
     "section_title": "Řešení potíží",

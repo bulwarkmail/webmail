@@ -20,6 +20,36 @@ export interface QuoteHeaderLabels {
   fromLabel: string;
   dateLabel: string;
   subjectLabel: string;
+  /** The forward header's To and Cc lines; left out when not given. */
+  toLabel?: string;
+  ccLabel?: string;
+}
+
+type HeaderAddress = { email?: string; name?: string };
+
+/** "Name <address>, address", as the forward header's From line writes one. */
+function formatAddressList(list: HeaderAddress[] | undefined): string {
+  return (list ?? [])
+    .filter((r) => r.email)
+    .map((r) => (r.name && r.name !== r.email ? `${r.name} <${r.email}>` : r.email as string))
+    .join(", ");
+}
+
+/**
+ * The To and Cc lines of a forward header, as Gmail and Outlook write them:
+ * one per list that has anyone on it, for a label the caller gave. Values
+ * are plain text; escape them for HTML.
+ */
+export function forwardRecipientLines(
+  email: { to?: HeaderAddress[]; cc?: HeaderAddress[] },
+  labels: { toLabel?: string; ccLabel?: string },
+): { label: string; value: string }[] {
+  const lines: { label: string; value: string }[] = [];
+  const to = formatAddressList(email.to);
+  const cc = formatAddressList(email.cc);
+  if (labels.toLabel && to) lines.push({ label: labels.toLabel, value: to });
+  if (labels.ccLabel && cc) lines.push({ label: labels.ccLabel, value: cc });
+  return lines;
 }
 
 interface BuildArgs {
@@ -49,6 +79,8 @@ const DEFAULT_LABELS: QuoteHeaderLabels = {
   fromLabel: "From",
   dateLabel: "Date",
   subjectLabel: "Subject",
+  toLabel: "To",
+  ccLabel: "Cc",
 };
 
 function defaultHeader(args: BuildArgs): QuoteHeader {
@@ -73,12 +105,16 @@ function defaultHeader(args: BuildArgs): QuoteHeader {
   const subject = email.subject || "";
 
   if (mode === "forward") {
-    const text = `${labels.forwardedSeparator}\n${labels.fromLabel}: ${fromStrFull}\n${labels.dateLabel}: ${date}\n${labels.subjectLabel}: ${subject}\n`;
+    const recipients = forwardRecipientLines(email, labels);
+    const text = `${labels.forwardedSeparator}\n${labels.fromLabel}: ${fromStrFull}\n${labels.dateLabel}: ${date}\n${labels.subjectLabel}: ${subject}\n`
+      + recipients.map((line) => `${line.label}: ${line.value}\n`).join("");
     // Escape the interpolated values for the HTML variant: the sender string is
     // "Name <email>", and the unescaped "<email>" would be parsed as an HTML tag
     // by the rich-text composer and silently dropped (#482). Subject/name are
     // likewise user-controlled. Label/separator strings are trusted i18n text.
-    const html = `<div>${labels.forwardedSeparator}<br>${labels.fromLabel}: ${escapeHtml(fromStrFull)}<br>${labels.dateLabel}: ${escapeHtml(date)}<br>${labels.subjectLabel}: ${escapeHtml(subject)}<br><br></div>`;
+    const html = `<div>${labels.forwardedSeparator}<br>${labels.fromLabel}: ${escapeHtml(fromStrFull)}<br>${labels.dateLabel}: ${escapeHtml(date)}<br>${labels.subjectLabel}: ${escapeHtml(subject)}<br>`
+      + recipients.map((line) => `${line.label}: ${escapeHtml(line.value)}<br>`).join("")
+      + `<br></div>`;
     return { html, text, wrapInBlockquote: false };
   }
 

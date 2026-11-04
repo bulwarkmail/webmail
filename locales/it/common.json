@@ -1233,6 +1233,21 @@
       "plain_text": "[Immagine: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Bozza eliminata",
+    "undo": "Annulla",
+    "discard_draft": "Elimina bozza",
+    "save_failed_close": "Impossibile salvare la bozza. Riprova o eliminala.",
+    "try_again": "Riprova",
+    "add_description": "Aggiungi descrizione",
+    "attachments_summary": "Allegati: {count}, {size}",
+    "from_sub_address": "Usa un sottoindirizzo…",
+    "from_edit_sender": "Modifica mittente…",
+    "shortcut_insert_link": "Inserisci link",
+    "shortcut_save_draft": "Salva bozza",
+    "shortcut_show_cc": "Mostra Cc",
+    "shortcut_show_bcc": "Mostra Ccn"
+  },
   "confirm_dialog": {
     "confirm": "Conferma",
     "cancel": "Annulla"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Torna alla modifica",
+    "send_anyway": "Invia comunque",
+    "warnings_title": "Inviare comunque questo messaggio?",
+    "warning_subject": "Nessun oggetto",
+    "warning_text": "Nessun testo",
+    "warning_attachment": "Menziona \"{keyword}\", ma non c'è nessun file allegato",
+    "warning_placeholders": "Testo segnaposto che i destinatari vedranno:",
+    "warning_proofreading": "Errori di ortografia o grammatica aperti: {count}",
+    "empty_text_title": "Inviare senza testo?",
+    "empty_text_message": "Questo messaggio non ha testo né allegati. Inviarlo comunque?",
+    "scheduled_for": "Programmato per {when}",
+    "sending": "Invio in corso…",
+    "sent": "Inviato",
+    "view": "Visualizza",
+    "picker_button": "Aggiungi dai contatti",
+    "picker_title": "Aggiungi destinatari",
+    "tab_contacts": "Contatti",
+    "tab_directory": "Rubrica aziendale",
+    "contacts_empty_title": "Ancora nessun contatto",
+    "contacts_empty_hint": "Le persone salvate in Contatti compaiono qui.",
+    "contacts_no_match": "Nessun contatto corrisponde alla ricerca",
+    "template_name": "Nome del modello",
+    "template_edit_details": "Modifica dettagli…"
+  },
   "org_templates": {
     "section_personal": "I miei modelli",
     "section_organisation": "Organizzazione",
@@ -6684,6 +6724,24 @@
     "not_running": "Non inviato. Un controllo richiesto dalla tua organizzazione non è attivo. Riprova tra un momento.",
     "stopped_working": "Non inviato. Un controllo richiesto dalla tua organizzazione ha smesso di funzionare. Ricarica la pagina. Se non basta, avvisa l'amministratore."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Annulla invio",
+      "description": "Ti dà qualche secondo per riprendere un messaggio dopo aver premuto Invia."
+    },
+    "reply_from_received": {
+      "label": "Seleziona automaticamente l'indirizzo di risposta",
+      "description": "Rispondi dall'indirizzo a cui è stata inviata l'email. Utile se hai più indirizzi."
+    },
+    "require_tls": "Consegna solo tramite una connessione sicura",
+    "require_tls_hint": "Il messaggio in sé non è cifrato. Viene respinto se un server non può usare TLS.",
+    "encrypt": "Cifra…",
+    "encrypt_hint": "Serve un componente aggiuntivo S/MIME o PGP. Apre le Impostazioni.",
+    "quick_reply_to": "Rispondi a {names}…",
+    "open_full_editor": "Apri l'editor completo",
+    "forward_to_label": "A",
+    "forward_cc_label": "Cc"
+  },
   "plugin_list": {
     "filters": "Filtri",
     "remove_filter": "Rimuovi il filtro {label}"
@@ -7437,6 +7495,14 @@
     "back_no_answer": "La finestra principale non ha risposto. Il messaggio resta qui.",
     "types_character": "Questi tasti scrivono un carattere sulla tua tastiera, che smetterebbe di funzionare in tutte le app. Prova altri tasti.",
     "reserved": "Il sistema o la maggior parte delle app usano questi tasti. Prova altri tasti."
+  },
+  "compose_windows": {
+    "more_formatting": "Altre opzioni di formattazione",
+    "offline": "Offline",
+    "offline_hint": "Per inviare serve una connessione.",
+    "offline_hint_outbox": "Quello che invii ora aspetta nella posta in uscita e parte quando torni online.",
+    "offline_send_saved": "Sei offline. Il messaggio è salvato nelle Bozze.",
+    "offline_send_unsaved": "Sei offline. Il messaggio resta qui e viene salvato nelle Bozze quando torni online."
   },
   "desktopDevTools": {
     "section_title": "Risoluzione dei problemi",

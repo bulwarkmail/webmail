@@ -8,6 +8,7 @@ import { useAccountStore } from "@/stores/account-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { toast } from "@/stores/toast-store";
+import { showDraftSavedToast } from "@/lib/compose/draft-close-toast";
 import { newPopoutId, openPopoutChannel, type PopoutChannel, type PopoutMessage, type PopoutSentNotice, type RescuedDraft, type SharedAccountSession } from "@/lib/popout/channel";
 import { takeOverMoved } from "@/lib/popout/moved-undo";
 import { keepRescuedDraft } from "@/lib/popout/rescued-drafts";
@@ -61,8 +62,9 @@ function claimOnce(name: string, work: () => void | Promise<void>): void {
 /**
  * The main window's side of pop-outs: lends them its session and renews it
  * for them, passes on that mail changed, and takes over what a pop-out can't
- * say any more once it has closed. Only where pop-outs are on offer: an
- * ordinary browser tab runs none of this.
+ * say any more once it has closed. Only where pop-outs are on offer: a
+ * browser tab on a computer runs it for composers popped out of it, one on a
+ * phone or tablet runs none of this.
  */
 export function PopoutHost() {
   const available = usePopoutsAvailable();
@@ -176,6 +178,28 @@ export function PopoutHost() {
         case "draft-rescue":
           startRescue(message.draft);
           break;
+        case "draft-kept": {
+          // Said here, as the pop-out closes with its Escape or X.
+          const { draftId, accountId, localAccountId } = message.notice;
+          claimOnce(`bulwark-popout-kept:${message.requestId}`, () => {
+            const tr = tRef.current;
+            showDraftSavedToast(() => {
+              const auth = useAuthStore.getState();
+              const login = localAccountId ? auth.getClientForAccount(localAccountId) : auth.client;
+              if (!login) {
+                toast.error(tr("email_composer.discard_signed_out"));
+                return;
+              }
+              void login.deleteEmail(draftId, accountId).catch((error: unknown) => console.error("Failed to discard draft:", error));
+            }, {
+              saved: tr("email_composer.draft_saved"),
+              discard: tr("email_composer.discard"),
+              discarded: tr("compose_ux.draft_discarded"),
+              undo: tr("compose_ux.undo"),
+            });
+          });
+          break;
+        }
         case "rescue-query": {
           const rescue = rescues.get(message.rescueKey);
           if (rescue) void rescue.then((draftId) => channel?.post({ type: "rescue-answer", rescueKey: message.rescueKey, draftId }));

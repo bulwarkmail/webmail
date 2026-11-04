@@ -1233,6 +1233,21 @@
       "plain_text": "[Afbeelding: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Concept verwijderd",
+    "undo": "Ongedaan maken",
+    "discard_draft": "Concept verwijderen",
+    "save_failed_close": "Het concept kon niet worden opgeslagen. Probeer het opnieuw of verwijder het.",
+    "try_again": "Opnieuw proberen",
+    "add_description": "Beschrijving toevoegen",
+    "attachments_summary": "Bijlagen: {count}, {size}",
+    "from_sub_address": "Subadres gebruiken…",
+    "from_edit_sender": "Afzender bewerken…",
+    "shortcut_insert_link": "Link invoegen",
+    "shortcut_save_draft": "Concept opslaan",
+    "shortcut_show_cc": "Cc tonen",
+    "shortcut_show_bcc": "Bcc tonen"
+  },
   "confirm_dialog": {
     "confirm": "Bevestigen",
     "cancel": "Annuleren"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Terug naar bewerken",
+    "send_anyway": "Toch verzenden",
+    "warnings_title": "Dit bericht toch verzenden?",
+    "warning_subject": "Geen onderwerp",
+    "warning_text": "Geen tekst",
+    "warning_attachment": "Noemt ‘{keyword}’, maar er is geen bestand bijgevoegd",
+    "warning_placeholders": "Tijdelijke tekst die ontvangers zien:",
+    "warning_proofreading": "Openstaande spel- of grammaticafouten: {count}",
+    "empty_text_title": "Verzenden zonder tekst?",
+    "empty_text_message": "Dit bericht heeft geen tekst en geen bijlage. Toch verzenden?",
+    "scheduled_for": "Gepland voor {when}",
+    "sending": "Bezig met verzenden…",
+    "sent": "Verzonden",
+    "view": "Bekijken",
+    "picker_button": "Toevoegen uit contacten",
+    "picker_title": "Ontvangers toevoegen",
+    "tab_contacts": "Contacten",
+    "tab_directory": "Adresboek van de organisatie",
+    "contacts_empty_title": "Nog geen contacten",
+    "contacts_empty_hint": "Mensen die u in Contacten opslaat, verschijnen hier.",
+    "contacts_no_match": "Geen contact komt overeen met uw zoekopdracht",
+    "template_name": "Naam van sjabloon",
+    "template_edit_details": "Details bewerken…"
+  },
   "org_templates": {
     "section_personal": "Mijn sjablonen",
     "section_organisation": "Organisatie",
@@ -6684,6 +6724,24 @@
     "not_running": "Niet verzonden. Een controle die je organisatie verplicht stelt, draait niet. Probeer het zo meteen opnieuw.",
     "stopped_working": "Niet verzonden. Een controle die je organisatie verplicht stelt, werkt niet meer. Laad de pagina opnieuw. Helpt dat niet, meld het dan bij je beheerder."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Verzenden ongedaan maken",
+      "description": "Geeft je een paar seconden om een bericht terug te halen nadat je op Verzenden hebt gedrukt."
+    },
+    "reply_from_received": {
+      "label": "Antwoordadres automatisch selecteren",
+      "description": "Antwoord vanaf het adres waar de mail naartoe is gestuurd. Handig als je meerdere adressen hebt."
+    },
+    "require_tls": "Alleen via een beveiligde verbinding bezorgen",
+    "require_tls_hint": "Het bericht zelf is niet versleuteld. Het komt terug als een server geen TLS kan gebruiken.",
+    "encrypt": "Versleutelen…",
+    "encrypt_hint": "Vereist een S/MIME- of PGP-add-on. Opent Instellingen.",
+    "quick_reply_to": "Antwoord aan {names}…",
+    "open_full_editor": "Openen in volledige editor",
+    "forward_to_label": "Aan",
+    "forward_cc_label": "CC"
+  },
   "plugin_list": {
     "filters": "Filters",
     "remove_filter": "Filter {label} verwijderen"
@@ -7437,6 +7495,14 @@
     "back_no_answer": "Het hoofdvenster gaf geen antwoord. Je bericht blijft hier.",
     "types_character": "Deze toetsen typen een teken op je toetsenbord, en dat zou in geen enkele app meer werken. Probeer andere toetsen.",
     "reserved": "Je systeem of de meeste apps gebruiken deze toetsen. Probeer andere toetsen."
+  },
+  "compose_windows": {
+    "more_formatting": "Meer opmaak",
+    "offline": "Offline",
+    "offline_hint": "Voor verzenden is een verbinding nodig.",
+    "offline_hint_outbox": "Wat je nu verstuurt, wacht in Postvak UIT en gaat weg zodra je weer online bent.",
+    "offline_send_saved": "Je bent offline. Het bericht is opgeslagen in Concepten.",
+    "offline_send_unsaved": "Je bent offline. Het bericht blijft hier en wordt in Concepten opgeslagen zodra je weer online bent."
   },
   "desktopDevTools": {
     "section_title": "Probleemoplossing",

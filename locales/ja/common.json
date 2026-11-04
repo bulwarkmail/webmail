@@ -1233,6 +1233,21 @@
       "plain_text": "[画像: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "下書きを破棄しました",
+    "undo": "元に戻す",
+    "discard_draft": "下書きを破棄",
+    "save_failed_close": "下書きを保存できませんでした。もう一度試すか、破棄してください。",
+    "try_again": "再試行",
+    "add_description": "説明を追加",
+    "attachments_summary": "添付ファイル: {count} 件、{size}",
+    "from_sub_address": "サブアドレスを使用…",
+    "from_edit_sender": "差出人を編集…",
+    "shortcut_insert_link": "リンクを挿入",
+    "shortcut_save_draft": "下書きを保存",
+    "shortcut_show_cc": "Cc を表示",
+    "shortcut_show_bcc": "Bcc を表示"
+  },
   "confirm_dialog": {
     "confirm": "確認",
     "cancel": "キャンセル"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "編集に戻る",
+    "send_anyway": "そのまま送信",
+    "warnings_title": "このメッセージをそのまま送信しますか？",
+    "warning_subject": "件名がありません",
+    "warning_text": "本文がありません",
+    "warning_attachment": "「{keyword}」とありますが、ファイルが添付されていません",
+    "warning_placeholders": "受信者に表示されるプレースホルダー:",
+    "warning_proofreading": "未解決のスペル・文法の問題: {count}",
+    "empty_text_title": "本文なしで送信しますか？",
+    "empty_text_message": "このメッセージには本文も添付ファイルもありません。そのまま送信しますか？",
+    "scheduled_for": "{when} に送信予定",
+    "sending": "送信中…",
+    "sent": "送信しました",
+    "view": "表示",
+    "picker_button": "連絡先から追加",
+    "picker_title": "宛先を追加",
+    "tab_contacts": "連絡先",
+    "tab_directory": "ディレクトリ",
+    "contacts_empty_title": "連絡先はまだありません",
+    "contacts_empty_hint": "連絡先に保存した人がここに表示されます。",
+    "contacts_no_match": "検索に一致する連絡先はありません",
+    "template_name": "テンプレート名",
+    "template_edit_details": "詳細を編集…"
+  },
   "org_templates": {
     "section_personal": "マイテンプレート",
     "section_organisation": "組織",
@@ -6684,6 +6724,24 @@
     "not_running": "送信されませんでした。組織で必須のチェックが動作していません。しばらくしてからもう一度お試しください。",
     "stopped_working": "送信されませんでした。組織で必須のチェックが動作しなくなりました。ページを再読み込みしてください。解決しない場合は管理者に連絡してください。"
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "送信取り消し",
+      "description": "送信を押した後、数秒間メッセージを取り消せます。"
+    },
+    "reply_from_received": {
+      "label": "返信元アドレスを自動選択",
+      "description": "メールの宛先になったアドレスから返信します。複数のアドレスがある場合に便利です。"
+    },
+    "require_tls": "安全な接続でのみ配信",
+    "require_tls_hint": "メッセージ自体は暗号化されません。サーバーが TLS を使えない場合は返送されます。",
+    "encrypt": "暗号化…",
+    "encrypt_hint": "S/MIME または PGP のアドオンが必要です。設定を開きます。",
+    "quick_reply_to": "{names} に返信…",
+    "open_full_editor": "フルエディターで開く",
+    "forward_to_label": "宛先",
+    "forward_cc_label": "CC"
+  },
   "plugin_list": {
     "filters": "フィルター",
     "remove_filter": "フィルター「{label}」を解除"
@@ -7437,6 +7495,14 @@
     "back_no_answer": "メインウィンドウから応答がありません。メッセージはここに残ります。",
     "types_character": "このキーはお使いのキーボードで文字を入力します。割り当てると、すべてのアプリでその文字を入力できなくなります。別のキーをお試しください。",
     "reserved": "このキーはシステムまたは多くのアプリが使用しています。別のキーをお試しください。"
+  },
+  "compose_windows": {
+    "more_formatting": "その他の書式",
+    "offline": "オフライン",
+    "offline_hint": "送信には接続が必要です。",
+    "offline_hint_outbox": "今送信したものは送信トレイで待機し、オンラインに戻ると送信されます。",
+    "offline_send_saved": "オフラインです。メッセージは下書きに保存されています。",
+    "offline_send_unsaved": "オフラインです。メッセージはここに残り、オンラインに戻ると下書きに保存されます。"
   },
   "desktopDevTools": {
     "section_title": "トラブルシューティング",

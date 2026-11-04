@@ -36,6 +36,17 @@ describe('Insert link', () => {
     expect(editor.getHTML()).toContain('href="https://example.com/docs"');
   });
 
+  it('opens on Ctrl+K in the text, as in Gmail, Outlook and Word', async () => {
+    const editor = await setup('<p>docs here</p>');
+    act(() => { editor.commands.setTextSelection({ from: 1, to: 5 }); });
+
+    const event = new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true, cancelable: true });
+    act(() => { editor.view.dom.dispatchEvent(event); });
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(screen.getByRole('dialog', { name: 'insert_link' })).toBeInTheDocument();
+  });
+
   it('removes a link from the dialog', async () => {
     const editor = await setup('<p><a href="https://example.com">docs</a> here</p>');
     act(() => { editor.commands.setTextSelection(2); });

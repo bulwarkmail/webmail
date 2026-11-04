@@ -1233,6 +1233,21 @@
       "plain_text": "[صورة: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "تم تجاهل المسودة",
+    "undo": "تراجع",
+    "discard_draft": "تجاهل المسودة",
+    "save_failed_close": "تعذّر حفظ المسودة. حاول مرة أخرى أو تجاهلها.",
+    "try_again": "حاول مرة أخرى",
+    "add_description": "إضافة وصف",
+    "attachments_summary": "المرفقات: {count}، {size}",
+    "from_sub_address": "استخدام عنوان فرعي…",
+    "from_edit_sender": "تعديل المرسل…",
+    "shortcut_insert_link": "إدراج رابط",
+    "shortcut_save_draft": "حفظ المسودة",
+    "shortcut_show_cc": "إظهار نسخة",
+    "shortcut_show_bcc": "إظهار نسخة مخفية"
+  },
   "confirm_dialog": {
     "confirm": "تأكيد",
     "cancel": "إلغاء"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "العودة إلى التعديل",
+    "send_anyway": "الإرسال على أي حال",
+    "warnings_title": "هل تريد إرسال هذه الرسالة على أي حال؟",
+    "warning_subject": "بلا موضوع",
+    "warning_text": "بلا نص",
+    "warning_attachment": "تذكر \"{keyword}\" لكن لا يوجد ملف مرفق",
+    "warning_placeholders": "نص مؤقت سيراه المستلمون:",
+    "warning_proofreading": "مشكلات إملائية أو نحوية مفتوحة: {count}",
+    "empty_text_title": "هل تريد الإرسال بدون نص؟",
+    "empty_text_message": "لا تحتوي هذه الرسالة على نص ولا على مرفق. هل تريد إرسالها على أي حال؟",
+    "scheduled_for": "مجدولة في {when}",
+    "sending": "جارٍ الإرسال…",
+    "sent": "تم الإرسال",
+    "view": "عرض",
+    "picker_button": "إضافة من جهات الاتصال",
+    "picker_title": "إضافة مستلمين",
+    "tab_contacts": "جهات الاتصال",
+    "tab_directory": "الدليل",
+    "contacts_empty_title": "لا توجد جهات اتصال بعد",
+    "contacts_empty_hint": "يظهر هنا الأشخاص الذين تحفظهم في جهات الاتصال.",
+    "contacts_no_match": "لا توجد جهة اتصال تطابق بحثك",
+    "template_name": "اسم القالب",
+    "template_edit_details": "تعديل التفاصيل…"
+  },
   "org_templates": {
     "section_personal": "قوالبي",
     "section_organisation": "المؤسسة",
@@ -6684,6 +6724,24 @@
     "not_running": "لم تُرسل. هناك فحص تشترطه مؤسستك لا يعمل حاليًا. حاول مرة أخرى بعد قليل.",
     "stopped_working": "لم تُرسل. توقف فحص تشترطه مؤسستك عن العمل. أعد تحميل الصفحة. إذا لم يساعد ذلك، أبلغ المسؤول."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "التراجع عن الإرسال",
+      "description": "يمنحك بضع ثوانٍ لاسترجاع الرسالة بعد الضغط على إرسال."
+    },
+    "reply_from_received": {
+      "label": "الرد من العنوان المستلَم إليه",
+      "description": "الرد من العنوان الذي أُرسلت إليه الرسالة. مفيد إذا كانت لديك عدة عناوين."
+    },
+    "require_tls": "التسليم عبر اتصال آمن فقط",
+    "require_tls_hint": "الرسالة نفسها غير مشفّرة. تُرَد إذا لم يتمكن خادم من استخدام TLS.",
+    "encrypt": "تشفير…",
+    "encrypt_hint": "يتطلب إضافة S/MIME أو PGP. يفتح الإعدادات.",
+    "quick_reply_to": "الرد على {names}…",
+    "open_full_editor": "فتح المحرر الكامل",
+    "forward_to_label": "إلى",
+    "forward_cc_label": "نسخة"
+  },
   "plugin_list": {
     "filters": "المرشحات",
     "remove_filter": "إزالة المرشح {label}"
@@ -7437,6 +7495,14 @@
     "back_no_answer": "لم تستجب النافذة الرئيسية. تبقى رسالتك هنا.",
     "types_character": "تكتب هذه المفاتيح حرفًا على لوحة مفاتيحك، وسيتوقف عن العمل في كل التطبيقات. جرّب مفاتيح أخرى.",
     "reserved": "يستخدم النظام أو معظم التطبيقات هذه المفاتيح. جرّب مفاتيح أخرى."
+  },
+  "compose_windows": {
+    "more_formatting": "مزيد من التنسيق",
+    "offline": "دون اتصال",
+    "offline_hint": "يحتاج الإرسال إلى اتصال.",
+    "offline_hint_outbox": "ما ترسله الآن ينتظر في صندوق الصادر ويُرسل عند عودة الاتصال.",
+    "offline_send_saved": "أنت دون اتصال. الرسالة محفوظة في المسودات.",
+    "offline_send_unsaved": "أنت دون اتصال. تبقى الرسالة هنا وتُحفظ في المسودات عند عودة الاتصال."
   },
   "desktopDevTools": {
     "section_title": "استكشاف الأخطاء وإصلاحها",

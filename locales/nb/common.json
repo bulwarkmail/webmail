@@ -1233,6 +1233,21 @@
       "plain_text": "[Bilde: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Utkast forkastet",
+    "undo": "Angre",
+    "discard_draft": "Forkast utkast",
+    "save_failed_close": "Utkastet kunne ikke lagres. Prøv igjen, eller forkast det.",
+    "try_again": "Prøv igjen",
+    "add_description": "Legg til beskrivelse",
+    "attachments_summary": "Vedlegg: {count}, {size}",
+    "from_sub_address": "Bruk en underadresse…",
+    "from_edit_sender": "Rediger avsender…",
+    "shortcut_insert_link": "Sett inn lenke",
+    "shortcut_save_draft": "Lagre utkast",
+    "shortcut_show_cc": "Vis kopi",
+    "shortcut_show_bcc": "Vis blindkopi"
+  },
   "confirm_dialog": {
     "confirm": "Bekreft",
     "cancel": "Avbryt"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Tilbake til redigering",
+    "send_anyway": "Send likevel",
+    "warnings_title": "Sende denne meldingen likevel?",
+    "warning_subject": "Ingen emne",
+    "warning_text": "Ingen tekst",
+    "warning_attachment": "Nevner «{keyword}», men ingen fil er lagt ved",
+    "warning_placeholders": "Plassholdertekst som mottakerne vil se:",
+    "warning_proofreading": "Åpne stave- eller grammatikkfeil: {count}",
+    "empty_text_title": "Sende uten tekst?",
+    "empty_text_message": "Denne meldingen har verken tekst eller vedlegg. Sende den likevel?",
+    "scheduled_for": "Planlagt til {when}",
+    "sending": "Sender…",
+    "sent": "Sendt",
+    "view": "Vis",
+    "picker_button": "Legg til fra kontakter",
+    "picker_title": "Legg til mottakere",
+    "tab_contacts": "Kontakter",
+    "tab_directory": "Katalog",
+    "contacts_empty_title": "Ingen kontakter ennå",
+    "contacts_empty_hint": "Personer du lagrer i Kontakter, vises her.",
+    "contacts_no_match": "Ingen kontakter samsvarer med søket",
+    "template_name": "Navn på mal",
+    "template_edit_details": "Rediger detaljer…"
+  },
   "org_templates": {
     "section_personal": "Mine maler",
     "section_organisation": "Organisasjon",
@@ -6684,6 +6724,24 @@
     "not_running": "Ikke sendt. En kontroll organisasjonen din krever, kjører ikke. Prøv igjen om et øyeblikk.",
     "stopped_working": "Ikke sendt. En kontroll organisasjonen din krever, har sluttet å virke. Last inn siden på nytt. Hvis det ikke hjelper, si fra til administratoren."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Angre sending",
+      "description": "Gir deg noen sekunder til å ta tilbake en melding etter at du har trykket Send."
+    },
+    "reply_from_received": {
+      "label": "Svar fra mottatt adresse",
+      "description": "Svar fra adressen e-posten ble sendt til. Nyttig hvis du har flere adresser."
+    },
+    "require_tls": "Lever bare over en sikker tilkobling",
+    "require_tls_hint": "Selve meldingen er ikke kryptert. Den sendes i retur hvis en server ikke kan bruke TLS.",
+    "encrypt": "Krypter…",
+    "encrypt_hint": "Krever et S/MIME- eller PGP-tillegg. Åpner Innstillinger.",
+    "quick_reply_to": "Svar til {names}…",
+    "open_full_editor": "Åpne i full redigering",
+    "forward_to_label": "Til",
+    "forward_cc_label": "Kopi"
+  },
   "plugin_list": {
     "filters": "Filtre",
     "remove_filter": "Fjern filteret {label}"
@@ -7437,6 +7495,14 @@
     "back_no_answer": "Hovedvinduet svarte ikke. Meldingen din blir her.",
     "types_character": "Disse tastene skriver et tegn på tastaturet ditt, og det ville slutte å virke i alle apper. Prøv andre taster.",
     "reserved": "Systemet ditt eller de fleste apper bruker disse tastene. Prøv andre taster."
+  },
+  "compose_windows": {
+    "more_formatting": "Mer formatering",
+    "offline": "Frakoblet",
+    "offline_hint": "Du må ha tilkobling for å sende.",
+    "offline_hint_outbox": "Det du sender nå, venter i utboksen og sendes når du er på nett igjen.",
+    "offline_send_saved": "Du er frakoblet. Meldingen er lagret i Utkast.",
+    "offline_send_unsaved": "Du er frakoblet. Meldingen blir her og lagres i Utkast når du er på nett igjen."
   },
   "desktopDevTools": {
     "section_title": "Feilsøking",

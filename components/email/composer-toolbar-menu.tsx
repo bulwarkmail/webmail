@@ -67,21 +67,28 @@ export function ComposerToolbarMenu({ icon: Icon, label, activeCount = 0, testId
 interface ItemProps {
   icon?: AppIcon;
   onSelect: () => void;
+  /** A line under the label, as on the check items. */
+  description?: string;
+  /** Greyed out: the item can't do its job here yet, and says where to set it up. */
+  muted?: boolean;
   testId?: string;
   children: React.ReactNode;
 }
 
-export function ComposerToolbarMenuItem({ icon: Icon, onSelect, testId, children }: ItemProps) {
+export function ComposerToolbarMenuItem({ icon: Icon, onSelect, description, muted, testId, children }: ItemProps) {
   return (
     <button
       type="button"
       role="menuitem"
       onClick={onSelect}
       data-testid={testId}
-      className={CONTEXT_MENU_ITEM_CLASS}
+      className={cn(CONTEXT_MENU_ITEM_CLASS, description && "items-start", muted && "text-muted-foreground")}
     >
-      {Icon ? <Icon className="w-4 h-4 shrink-0" /> : null}
-      <span className="flex-1">{children}</span>
+      {Icon ? <Icon className={cn("w-4 h-4 shrink-0", description && "mt-0.5")} /> : null}
+      <span className="flex-1">
+        <span className="block">{children}</span>
+        {description && <span className="block text-xs text-muted-foreground">{description}</span>}
+      </span>
     </button>
   );
 }

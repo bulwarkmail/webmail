@@ -1,4 +1,4 @@
-import { act, render, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import React from 'react';
 import type { Editor } from '@tiptap/core';
@@ -71,5 +71,34 @@ describe('RichTextEditor file drop', () => {
     expect(upload).toHaveBeenCalledWith(file);
     expect(editor.getText()).toBe('Hello');
     expect(onDrop).not.toHaveBeenCalled();
+  });
+
+  // A pasted or dropped image asks nothing: an optional chip on it offers a description.
+  it('opens no dialog for a dropped image, and offers "Add description" on it', async () => {
+    const { editor } = await setup(async () => ({ src: 'data:image/png;base64,AAAA' }));
+    const file = new File(['png'], 'photo.png', { type: 'image/png' });
+
+    act(() => { editor.view.dom.dispatchEvent(fileDrop(file)); });
+
+    const chip = await screen.findByTestId('image-alt-add');
+    expect(chip).toHaveTextContent('add_description');
+    expect(screen.queryByRole('dialog')).toBeNull();
+
+    fireEvent.click(chip);
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('shows no chip on an image marked decorative', async () => {
+    let editor: Editor | null = null;
+    render(
+      <RichTextEditor
+        content={'<p>Hi <img src="data:image/png;base64,AAAA" alt=""></p>'}
+        onChange={() => {}}
+        onImageUpload={async () => null}
+        onEditorReady={(ed) => { editor = ed as unknown as Editor; }}
+      />
+    );
+    await waitFor(() => expect(editor).not.toBeNull());
+    expect(screen.queryByTestId('image-alt-add')).toBeNull();
   });
 });

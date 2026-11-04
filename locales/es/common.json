@@ -1233,6 +1233,21 @@
       "plain_text": "[Imagen: {alt}]"
     }
   },
+  "compose_ux": {
+    "draft_discarded": "Borrador descartado",
+    "undo": "Deshacer",
+    "discard_draft": "Descartar borrador",
+    "save_failed_close": "No se pudo guardar el borrador. Inténtelo de nuevo o descártelo.",
+    "try_again": "Reintentar",
+    "add_description": "Añadir descripción",
+    "attachments_summary": "Adjuntos: {count}, {size}",
+    "from_sub_address": "Usar una subdirección…",
+    "from_edit_sender": "Editar remitente…",
+    "shortcut_insert_link": "Insertar enlace",
+    "shortcut_save_draft": "Guardar borrador",
+    "shortcut_show_cc": "Mostrar CC",
+    "shortcut_show_bcc": "Mostrar CCO"
+  },
   "confirm_dialog": {
     "confirm": "Confirmar",
     "cancel": "Cancelar"
@@ -4027,6 +4042,31 @@
       }
     }
   },
+  "compose_send": {
+    "back": "Volver a editar",
+    "send_anyway": "Enviar de todos modos",
+    "warnings_title": "¿Enviar este mensaje de todos modos?",
+    "warning_subject": "Sin asunto",
+    "warning_text": "Sin texto",
+    "warning_attachment": "Menciona «{keyword}», pero no hay ningún archivo adjunto",
+    "warning_placeholders": "Texto de marcador que verán los destinatarios:",
+    "warning_proofreading": "Errores de ortografía o gramática pendientes: {count}",
+    "empty_text_title": "¿Enviar sin texto?",
+    "empty_text_message": "Este mensaje no tiene texto ni archivos adjuntos. ¿Enviarlo de todos modos?",
+    "scheduled_for": "Programado para {when}",
+    "sending": "Enviando…",
+    "sent": "Enviado",
+    "view": "Ver",
+    "picker_button": "Añadir desde contactos",
+    "picker_title": "Añadir destinatarios",
+    "tab_contacts": "Contactos",
+    "tab_directory": "Directorio",
+    "contacts_empty_title": "Aún no hay contactos",
+    "contacts_empty_hint": "Aquí aparecen las personas que guardas en Contactos.",
+    "contacts_no_match": "Ningún contacto coincide con la búsqueda",
+    "template_name": "Nombre de la plantilla",
+    "template_edit_details": "Editar detalles…"
+  },
   "org_templates": {
     "section_personal": "Mis plantillas",
     "section_organisation": "Organización",
@@ -6684,6 +6724,24 @@
     "not_running": "No enviado. Una comprobación que exige tu organización no está en marcha. Vuelve a intentarlo en un momento.",
     "stopped_working": "No enviado. Una comprobación que exige tu organización ha dejado de funcionar. Vuelve a cargar la página. Si no se soluciona, avisa al administrador."
   },
+  "compose_words": {
+    "undo_send": {
+      "label": "Deshacer envío",
+      "description": "Le da unos segundos para recuperar un mensaje después de pulsar Enviar."
+    },
+    "reply_from_received": {
+      "label": "Seleccionar dirección de respuesta automáticamente",
+      "description": "Responder desde la dirección a la que se envió el correo. Útil si tiene varias direcciones."
+    },
+    "require_tls": "Entregar solo por una conexión segura",
+    "require_tls_hint": "El mensaje en sí no se cifra. Se devuelve si un servidor no puede usar TLS.",
+    "encrypt": "Cifrar…",
+    "encrypt_hint": "Necesita un complemento S/MIME o PGP. Abre la Configuración.",
+    "quick_reply_to": "Responder a {names}…",
+    "open_full_editor": "Abrir el editor completo",
+    "forward_to_label": "Para",
+    "forward_cc_label": "CC"
+  },
   "plugin_list": {
     "filters": "Filtros",
     "remove_filter": "Quitar el filtro {label}"
@@ -7437,6 +7495,14 @@
     "back_no_answer": "La ventana principal no respondió. Tu mensaje se queda aquí.",
     "types_character": "Estas teclas escriben un carácter en tu teclado, y dejaría de funcionar en todas las aplicaciones. Prueba otras teclas.",
     "reserved": "Tu sistema o la mayoría de las aplicaciones usan estas teclas. Prueba otras teclas."
+  },
+  "compose_windows": {
+    "more_formatting": "Más formato",
+    "offline": "Sin conexión",
+    "offline_hint": "Para enviar hace falta conexión.",
+    "offline_hint_outbox": "Lo que envíes ahora espera en la bandeja de salida y se envía cuando vuelvas a tener conexión.",
+    "offline_send_saved": "No tienes conexión. El mensaje está guardado en Borradores.",
+    "offline_send_unsaved": "No tienes conexión. El mensaje se queda aquí y se guarda en Borradores cuando vuelvas a tener conexión."
   },
   "desktopDevTools": {
     "section_title": "Solución de problemas",
