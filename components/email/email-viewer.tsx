@@ -278,6 +278,8 @@ interface EmailViewerProps {
   onReplyAllConversationEmail?: (email: Email) => void;
   /** Mountain View: a reply being written in place, shown under the conversation instead of the reply buttons. */
   mvInlineComposer?: React.ReactNode;
+  /** A reply or forward to this message is open under it: no quick reply box as well. */
+  replyComposerOpen?: boolean;
   onShowShortcuts?: () => void;
   onEditDraft?: () => void;
   onCancelScheduledForEdit?: () => void;
@@ -1341,6 +1343,7 @@ export function EmailViewer({
   onReplyConversationEmail,
   onReplyAllConversationEmail,
   mvInlineComposer,
+  replyComposerOpen,
   onShowShortcuts,
   onEditDraft,
   onCancelScheduledForEdit,
@@ -3456,7 +3459,7 @@ export function EmailViewer({
   const [iframeReadyFor, setIframeReadyFor] = useState<string | null>(null);
   const latestSrcDocRef = useRef<string | null>(null);
   const iframeReady = iframeReadyFor !== null && iframeReadyFor === emailIframeSrcDoc;
-  const showQuickReply = !!email && quickReplyEnabled && !mvReplyRow && !isDraft && !isScheduled && !isBodyLoading
+  const showQuickReply = !!email && quickReplyEnabled && !mvReplyRow && !replyComposerOpen && !isDraft && !isScheduled && !isBodyLoading
     && (!effectiveEmailContent.isHtml || iframeReady);
   // The plain-text body, where reader-above-quote mounts between text and quote.
   const [plainBodyEl, setPlainBodyEl] = useState<HTMLDivElement | null>(null);

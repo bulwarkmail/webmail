@@ -294,6 +294,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const composerSessionRef = useRef(composerSessionId);
   composerSessionRef.current = composerSessionId;
   const composerHostRef = useRef('pane');
+  // The compose session docked under its message (dockedReply).
+  const dockedSessionRef = useRef<number | null>(null);
   const showComposerRef = useRef(showComposer);
   showComposerRef.current = showComposer;
   // Fields a plugin filled in through onBeforeCompose for the composer about
@@ -4882,7 +4884,16 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const mvInlineReply = mvShell && showComposer && !isEmbedded && !mvReplyPoppedOut
     && (pendingDraft?.mode ?? composerMode) !== 'compose' && Boolean(selectedEmail);
   const floatingComposer = mvShell && showComposer && !isEmbedded && !mvInlineReply;
-  const composerHost = floatingComposer ? 'window' : mvInlineReply ? 'inline' : 'pane';
+  // Elsewhere on a computer a reply or forward docks under the message it
+  // answers, which stays readable above it, as in Gmail and Outlook. Not
+  // for a draft being edited: that message is the draft itself.
+  // Decided as it opens and kept for the session: moving it would mount it
+  // anew when the message goes away (another folder opened meanwhile).
+  const dockCandidate = !mvShell && !isMobile && showComposer && !isEmbedded && !floatingComposer
+    && (pendingDraft?.mode ?? composerMode) !== 'compose';
+  if (dockCandidate && selectedEmail && !selectedEmail.keywords?.$draft) dockedSessionRef.current = composerSessionId;
+  const dockedReply = dockCandidate && dockedSessionRef.current === composerSessionId;
+  const composerHost = floatingComposer ? 'window' : mvInlineReply ? 'inline' : dockedReply ? 'dock' : 'pane';
   composerHostRef.current = composerHost;
   const hasViewerContent = (showComposer && !floatingComposer) || Boolean(conversationThread)
     || Boolean(selectedEmail && !(mvShell && cursorOnly)) || deepLinkPane !== null;
@@ -5969,10 +5980,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             {/* Inline Composer - shown in viewer pane.
                 In Pro/embedded mode the composer is hoisted into its own
                 Pro tab (see the effect below), so we never render it inline. */}
-            {(showComposer && !isEmbedded && !floatingComposer && !mvInlineReply) ? composerNode : (
+            {(showComposer && !isEmbedded && !floatingComposer && !mvInlineReply && !dockedReply) ? composerNode : (
             <>
             {/* Pending draft banner */}
-            {pendingDraft && (
+            {pendingDraft && !dockedReply && (
               <div className="flex items-center bg-primary/10 border-b border-primary/20" data-testid="continue-draft-bar">
                 <button
                   onClick={() => {
@@ -6146,6 +6157,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                       await handleConversationReplyAll(full ?? e);
                     } : undefined}
                     mvInlineComposer={mvInlineReply ? <MvComposeInline onPopOut={handleMvPopOut}>{composerNode}</MvComposeInline> : undefined}
+                    replyComposerOpen={dockedReply}
                     onToggleFullscreen={!isEmbedded && !isMobile ? () => setFullscreenReading((v) => !v) : undefined}
                     onOpenInWindow={!isEmbedded && !isMobile && openEmailInWindow && selectedEmail ? () => openEmailInWindow(selectedEmail) : undefined}
                     isFullscreen={fullscreenReading}
@@ -6195,6 +6207,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   />
                 </ErrorBoundary>
               </>
+            )}
+            {dockedReply && (
+              <div className="flex basis-[62%] min-h-[18rem] shrink-0 flex-col border-t border-border" data-reply-dock="">
+                {composerNode}
+              </div>
             )}
             </>
             )}
