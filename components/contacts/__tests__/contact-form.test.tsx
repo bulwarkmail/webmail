@@ -570,12 +570,12 @@ describe('ContactForm', () => {
 
   it("names the account of an address book once, not twice", () => {
     const books = [
-      { id: 'b1', name: 'Stalwart Address Book (usera@example.org)', accountName: 'usera@example.org', isDefault: true },
+      { id: 'b1', name: 'Personal (usera@example.org)', accountName: 'usera@example.org', isDefault: true },
       { id: 'b2', name: 'Team', accountName: 'userb@example.org', isShared: true },
     ] as never;
     render(<ContactForm addressBooks={books} onSave={vi.fn()} onCancel={vi.fn()} />);
     const options = screen.getAllByRole('option').map((o) => o.textContent);
-    expect(options).toContain('Stalwart Address Book (usera@example.org)');
+    expect(options).toContain('Personal (usera@example.org)');
     expect(options).toContain('Team (userb@example.org)');
   });
 });

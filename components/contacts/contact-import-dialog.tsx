@@ -14,6 +14,7 @@ import {
 import type { AddressBook, ContactCard } from "@/lib/jmap/types";
 import { getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 import { isOfflineNow } from "@/lib/offline/state";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 interface ContactImportDialogProps {
   existingContacts: ContactCard[];
@@ -53,6 +54,7 @@ export function ContactImportDialog({
   defaultAddressBookId,
 }: ContactImportDialogProps) {
   const t = useTranslations("contacts");
+  const shownName = useCollectionNames();
   const tCsv = useTranslations("ux_pim_cimport");
   const tLaunch = useTranslations("pwaLaunch");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -354,7 +356,7 @@ export function ContactImportDialog({
                 >
                   {addressBooks.map((book) => (
                     <option key={book.id} value={book.id}>
-                      {book.isShared && book.accountName ? `${book.name} (${book.accountName})` : book.name}
+                      {book.isShared && book.accountName ? `${shownName.addressBook(book)} (${book.accountName})` : shownName.addressBook(book)}
                     </option>
                   ))}
                 </select>

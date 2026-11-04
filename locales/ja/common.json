@@ -174,6 +174,7 @@
     },
     "clear_search": "検索をクリア",
     "vacation_active": "不在応答が有効です",
+    "vacation_turn_off": "オフにする",
     "demo_banner": "デモモード",
     "demo_reset": "リセット",
     "demo_tour": "ツアー",
@@ -1392,6 +1393,8 @@
     "from_description": "空欄にするとすぐに始まります。",
     "until_label": "終了（任意）",
     "until_description": "空欄にすると、オフにするまで返信を続けます。",
+    "from_placeholder": "今すぐ",
+    "until_placeholder": "オフにするまで",
     "audience_all": "全員",
     "audience_internal": "自分の組織のみ（{domains}）",
     "audience_external": "組織外の人のみ",
@@ -2905,6 +2908,7 @@
       "open_sieve_editor": "Sieveスクリプトエディタを開く",
       "fetch_error": "フィルターの読み込みに失敗しました",
       "expanded_view": "詳細表示",
+      "show_rule_details": "各ルールの条件と動作を表示",
       "expanded_view_description": "フィルタールールを条件とアクションのブロックで表示",
       "if": "条件",
       "then": "実行",
@@ -2983,6 +2987,9 @@
       "validation_period_empty": "期間の開始日または終了日を入力してください",
       "validation_period_invalid": "期間には時刻付きの有効な日付を入力するか、欄を空のままにしてください",
       "apply_existing_period": "期間付きのルールは期間内に届いたメッセージにのみ適用されるため、既存のメッセージには適用できません。",
+      "apply_existing_in": "{folder} にあるメッセージにも適用する",
+      "apply_existing_count": "{count, plural, other {{folder} にある # 件にも適用する}}",
+      "apply_existing_none": "{folder} にこのルールに合うメッセージはまだありません。",
       "period_status_scheduled": "予定",
       "period_status_active": "有効",
       "period_status_expired": "期限切れ"
@@ -3495,6 +3502,48 @@
     },
     "sign_out": {
       "description": "このデバイスでこのアカウントからサインアウトします。"
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "トレイ システムトレイ 通知領域 バックグラウンド 最小化 tray",
+      "autostart": "自動起動 スタートアップ Windows と一緒に起動 サインイン時に起動",
+      "default_app": "既定のメールアプリ 既定のメールプログラム mailto メールリンク",
+      "menu_bar": "メニューバー メニュー Alt キー ファイル 編集 表示",
+      "updates": "アップデート 更新 新しいバージョン ベータ チャンネル",
+      "devtools": "開発者ツール devtools コンソール 検証 F12 デバッグ",
+      "taskbar": "タスクバー 点滅 Dock 注意",
+      "quiet_hours": "おやすみ時間 通知停止 サイレント ミュート 夜間",
+      "telemetry": "使用状況 テレメトリ 統計 分析",
+      "crash": "クラッシュレポート エラーレポート クラッシュ",
+      "threads": "スレッド 会話 グループ化 threads",
+      "block_images": "画像をブロック 外部画像 画像の読み込み",
+      "dark_mode": "ダークモード ライトモード 夜間モード dark mode",
+      "timezone": "タイムゾーン 時間帯 timezone",
+      "reading_pane": "閲覧ウィンドウ プレビューウィンドウ 分割表示",
+      "week_start": "週の始まり 週の最初の日 月曜日 日曜日",
+      "empty_trash": "ごみ箱を空にする ごみ箱 削除済み",
+      "do_not_disturb": "おやすみ時間 ミュート 消音"
+    },
+    "desktop_notifications": {
+      "title": "このコンピューター",
+      "closed_label": "ウィンドウを閉じたとき",
+      "closed_description": "{appName} は動いている間、新着メールをお知らせします。ウィンドウを閉じた後もトレイで動かし続けるには、{page} でオンにしてください。"
+    },
+    "push_unsupported": "このブラウザでは、サイトを閉じていると通知を表示できません。",
+    "backup_description_app": "ほかのデバイスでも同じ設定を使います。",
+    "sender_favicons": {
+      "label": "会社のウェブサイトの画像",
+      "description": "ビジネス送信者のプロフィール画像としてウェブサイトアイコンを表示"
+    },
+    "privacy_push": {
+      "label": "通知のリレー",
+      "description": "{appName} を閉じているときの通知はプッシュリレーを通りますが、リレーがメールを見ることはありません。オン・オフは {page} ページで切り替えます。"
+    },
+    "reset": {
+      "message": "すべての設定を最初の状態に戻します。メール、フィルター、自動返信、署名はそのまま残ります。",
+      "sync_on": "ほかのデバイスも同じ設定を使っているため、そちらも変わります。",
+      "sync_off": "ほかのデバイスの設定はそのままです。"
     }
   },
   "setup": {
@@ -7292,6 +7341,39 @@
     "app_lock_timeout_hours": "{count, plural, other {#時間}}",
     "desktop_attention_title": "このコンピューター"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "あなたの名前",
+      "description": "メールを送ると、相手にはこの名前がアドレスの横に表示されます。",
+      "saved": "名前を保存しました。",
+      "error": "名前を保存できませんでした。もう一度お試しください。"
+    },
+    "addresses": {
+      "description": "送信に使えるアドレスです。アドレスごとに名前と署名があります。",
+      "label": "あなたのアドレス",
+      "count": "{count, plural, =0 {まだアドレスはありません} other {# 件のアドレス}}",
+      "manage": "アドレスを編集…",
+      "modal_title": "あなたのメールアドレス",
+      "add": "アドレスを追加",
+      "edit": "アドレスを編集",
+      "added": "アドレスを追加しました。",
+      "saved": "アドレスを保存しました。",
+      "deleted": "アドレスを削除しました。",
+      "delete_title": "このアドレスを削除しますか?"
+    },
+    "signatures": {
+      "title": "署名",
+      "description": "書いたメッセージの最後に付きます。アドレスごとに別の署名を使えます。",
+      "saved": "署名を保存しました。",
+      "error": "署名を保存できませんでした。もう一度お試しください。",
+      "no_addresses": "送信に使えるアドレスがまだありません。"
+    },
+    "search": {
+      "addresses": "ID アイデンティティ エイリアス 差出人 差出人アドレス 送信元アドレス identity alias sender",
+      "signatures": "署名 メール署名 フッター アイデンティティ 差出人 送信元アドレス signature",
+      "your_name": "表示名 氏名 差出人名 display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "先にサーバーのアドレスを入力してください。",
     "server_declined": "このサーバーを許可しなかったため、何も送信していません。",
@@ -7334,10 +7416,12 @@
     "server_looking": "メールサーバーを探しています…",
     "server_found": "メールサーバー: {server}",
     "server_change": "変更",
+    "server_change_hint": "別のサーバーのアドレスを入力してください。",
     "server_not_found": "このアドレスのメールサーバーが見つかりませんでした。ここに入力してください（例: mail.example.com）。",
     "server_needed": "メールサーバーのアドレスを入力してください。",
     "server_invalid": "サーバーのアドレスではありません。mail.example.com のように入力してください。",
     "email_needed": "まずメールアドレスを入力してください。",
+    "other_ways": "その他のサインイン方法",
     "trouble": "うまくいかない場合",
     "trouble_cors": "メールサーバーがこのウェブサイトからのサインインを許可している必要があります。サインインできない場合は、メールサーバーの管理者に許可を依頼してください。",
     "provider_unsupported": "{provider} は Bulwark がメールサーバーとやり取りする方式である JMAP に対応していないため、Bulwark はまだ直接接続できません。"

@@ -378,6 +378,9 @@ describe('the vacation period in the card', () => {
   it('checks the fields again on save, which a field filled in only half may never have told', async () => {
     const server = stalwart([rule('a')]);
     await openCard(server);
+    // Typing in it: an empty field left alone turns into a text field with a
+    // placeholder (settings-p2-19).
+    fireEvent.focus(dateField(1));
     fireEvent.change(dateField(1), { target: { value: '' } });
     halfFilledIn(dateField(1), true);
     expect(await screen.findByText('warnings.invalid_date', undefined, { timeout: 3000 })).toBeInTheDocument();

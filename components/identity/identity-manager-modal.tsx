@@ -48,6 +48,7 @@ interface IdentityManagerModalProps {
 
 export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalProps) {
   const t = useTranslations('identities');
+  const tAddr = useTranslations('uxs2_ident.addresses');
   const tNotif = useTranslations('notifications');
   // A locked or hidden signature: the identity's own isn't what it sends with.
   const signatureRestriction = useRestriction('signature');
@@ -131,13 +132,13 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
 
       await refreshIdentities();
       setIsCreating(false);
-      toast.success(tNotif('identity_created'));
+      toast.success(tAddr('added'));
     } catch (error) {
       const message = error instanceof Error ? error.message : t('validation_errors.unknown_error');
       toast.error(tNotif('identity_create_failed', { error: message }));
       throw error;
     }
-  }, [client, refreshIdentities, t, tNotif]);
+  }, [client, refreshIdentities, t, tAddr, tNotif]);
 
   const handleUpdate = useCallback(async (identity: Identity, data: IdentityFormData) => {
     if (!client) return;
@@ -154,13 +155,13 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
 
       await refreshIdentities();
       setEditingId(null);
-      toast.success(tNotif('identity_updated'));
+      toast.success(tAddr('saved'));
     } catch (error) {
       const message = error instanceof Error ? error.message : t('validation_errors.unknown_error');
       toast.error(tNotif('identity_update_failed', { error: message }));
       throw error;
     }
-  }, [client, refreshIdentities, t, tNotif]);
+  }, [client, refreshIdentities, t, tAddr, tNotif]);
 
   const handleDelete = useCallback(async (identity: Identity) => {
     if (!client) return;
@@ -170,7 +171,7 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
     }
 
     const confirmed = await confirmDialog({
-      title: t('delete_confirm_title'),
+      title: tAddr('delete_title'),
       message: t('delete_confirm'),
       confirmText: t('delete_button'),
       variant: "destructive",
@@ -182,14 +183,14 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
     try {
       if (!(await deleteIdentityWithHooks(client, identity))) return;
       await refreshIdentities();
-      toast.success(tNotif('identity_deleted'));
+      toast.success(tAddr('deleted'));
     } catch (error) {
       const message = error instanceof Error ? error.message : t('validation_errors.unknown_error');
       toast.error(tNotif('identity_delete_failed', { error: message }));
     } finally {
       setDeletingId(null);
     }
-  }, [client, refreshIdentities, t, tNotif, confirmDialog]);
+  }, [client, refreshIdentities, t, tAddr, tNotif, confirmDialog]);
 
   const handleSetPrimary = useCallback((identity: Identity) => {
     setPreferredPrimary(identity.id);
@@ -223,7 +224,7 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
       title={
         <span className="flex items-center gap-3">
           <Mail className="w-5 h-5 text-muted-foreground" />
-          {t('modal_title')}
+          {tAddr('modal_title')}
         </span>
       }
     >
@@ -231,7 +232,7 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
           {/* Create New Form */}
           {isCreating && (
             <div className="mb-6 p-4 border border-border rounded-lg bg-muted/30">
-              <h3 className="text-sm font-semibold mb-4">{t('create_new')}</h3>
+              <h3 className="text-sm font-semibold mb-4">{tAddr('add')}</h3>
               <IdentityForm
                 onSave={handleCreate}
                 onCancel={() => void cancelForm()}
@@ -247,7 +248,7 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
               className="mb-6 w-full sm:w-auto"
             >
               <Plus className="w-4 h-4 me-2" />
-              {t('create_new')}
+              {tAddr('add')}
             </Button>
           )}
 
@@ -261,7 +262,7 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
                 {editingId === identity.id ? (
                   <div className="p-4 bg-muted/30">
                     <h3 className="text-sm font-semibold mb-4">
-                      {t('edit_identity')}
+                      {tAddr('edit')}
                     </h3>
                     <IdentityForm
                       identity={identity}
@@ -324,7 +325,7 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
                           </IconButton>
                         )}
                         <IconButton
-                          label={t('edit_identity')}
+                          label={tAddr('edit')}
                           onClick={() => setEditingId(identity.id)}
                           disabled={!!editingId || isCreating}
                         >
@@ -358,7 +359,7 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
             {identities.length === 0 && !isCreating && (
               <div className="text-center py-12 text-muted-foreground">
                 <Mail className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">{t('no_identities')}</p>
+                <p className="text-sm">{tAddr('count', { count: 0 })}</p>
               </div>
             )}
           </div>

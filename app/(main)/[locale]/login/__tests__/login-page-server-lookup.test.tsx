@@ -139,8 +139,74 @@ describe('sign-in to a server of one\'s own', () => {
     fireEvent.submit(form());
     expect(await screen.findByTestId('login-server-error')).toHaveTextContent('server_invalid');
     expect(serverField()).toHaveAttribute('aria-invalid', 'true');
+    // Marked red, not only for screen readers.
+    expect(serverField()!.className).toContain('aria-invalid:border-destructive');
     await waitFor(() => expect(document.activeElement).toBe(serverField()));
     expect(login).not.toHaveBeenCalled();
+  }, 30_000);
+
+  it('Change keeps the server in use and doesn\'t say it wasn\'t found', async () => {
+    configOverrides.value = { jmapServerUrl: 'https://default.example.com' };
+    render(<LoginPage />);
+    await typeAddress('sam@example.net');
+    fireEvent.click(await screen.findByTestId('login-server-change', {}, { timeout: 5000 }));
+    await waitFor(() => expect(serverField()).not.toBeNull());
+    expect(serverField()!.value).toBe('default.example.com');
+    expect(screen.queryByTestId('login-server-not-found')).toBeNull();
+    expect(screen.getByTestId('login-server-change-hint')).toHaveTextContent('server_change_hint');
+    await waitFor(() => expect(document.activeElement).toBe(serverField()));
+  }, 30_000);
+
+  it('focuses the server field when it opens after the user left the address field', async () => {
+    render(<LoginPage />);
+    await waitFor(() => expect(email()).not.toBeNull(), { timeout: 10000 });
+    fireEvent.change(email(), { target: { value: 'sam@example.net' } });
+    // Tab went on to the (still empty) password field before the lookup ended.
+    (document.getElementById('password') as HTMLInputElement).focus();
+    await waitFor(() => expect(serverField()).not.toBeNull(), { timeout: 5000 });
+    await waitFor(() => expect(document.activeElement).toBe(serverField()));
+  }, 30_000);
+
+  it('leaves focus in the address field while the user is still typing there', async () => {
+    render(<LoginPage />);
+    await waitFor(() => expect(email()).not.toBeNull(), { timeout: 10000 });
+    email().focus();
+    fireEvent.change(email(), { target: { value: 'sam@example.net' } });
+    await waitFor(() => expect(serverField()).not.toBeNull(), { timeout: 5000 });
+    expect(document.activeElement).toBe(email());
+  }, 30_000);
+
+  it('a wrong password focuses the password field with its text selected', async () => {
+    found['example.org'] = 'https://mail.example.org';
+    login.mockImplementation(async () => {
+      useAuthStore.setState({ error: 'invalid_credentials', isLoading: false });
+      return false;
+    });
+    render(<LoginPage />);
+    await typeAddress('sam@example.org');
+    const button = form().querySelector<HTMLButtonElement>('button[type=submit]')!;
+    button.focus();
+    fireEvent.submit(form());
+    const password = document.getElementById('password') as HTMLInputElement;
+    await waitFor(() => expect(document.activeElement).toBe(password));
+    expect(password.selectionStart).toBe(0);
+    expect(password.selectionEnd).toBe('secret'.length);
+    expect(password.className).toContain('aria-invalid:border-destructive');
+    login.mockImplementation(async () => false);
+  }, 30_000);
+
+  it('keeps the access token behind "Other ways to sign in"', async () => {
+    configOverrides.value = { loginShowTokenLogin: true };
+    render(<LoginPage />);
+    const toggle = await screen.findByTestId('login-token-toggle', {}, { timeout: 10000 });
+    const other = screen.getByTestId('login-other-ways');
+    expect(other.tagName).toBe('DETAILS');
+    expect(other).toContainElement(toggle);
+    expect(other.querySelector('summary')).toHaveTextContent('other_ways');
+    fireEvent.click(toggle);
+    // The way back to the password is in sight, not folded away.
+    await waitFor(() => expect(screen.queryByTestId('login-other-ways')).toBeNull());
+    expect(screen.getByTestId('login-token-toggle')).toHaveTextContent('password_toggle');
   }, 30_000);
 
   it('says plainly that Gmail can\'t be reached, and asks nothing', async () => {

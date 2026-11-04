@@ -16,6 +16,7 @@ import type { Calendar } from "@/lib/jmap/types";
 import { useCalendarLocale } from "@/hooks/use-calendar-locale";
 import { displayNow } from "@/lib/timezone";
 import { useCvdColor } from "@/hooks/use-cvd-color";
+import { useCollectionNames } from "@/hooks/use-collection-names";
 
 interface CalendarToolbarProps {
   selectedDate: Date;
@@ -105,6 +106,7 @@ export function CalendarToolbar({
   onCloseSearch,
   panelToggle,
 }: CalendarToolbarProps) {
+  const shownName = useCollectionNames();
   const t = useTranslations("calendar");
   const paint = useCvdColor();
   const tCommon = useTranslations("common");
@@ -342,8 +344,8 @@ export function CalendarToolbar({
                                 )}
                                 style={isVisible ? { backgroundColor: color, borderColor: color } : undefined}
                               />
-                              <span className={cn("truncate", !isVisible && "text-muted-foreground")} title={cal.name}>
-                                {cal.name}
+                              <span className={cn("truncate", !isVisible && "text-muted-foreground")} title={shownName.calendar(cal)}>
+                                {shownName.calendar(cal)}
                               </span>
                             </button>
                           );
@@ -382,8 +384,8 @@ export function CalendarToolbar({
                                       )}
                                       style={isVisible ? { backgroundColor: color, borderColor: color } : undefined}
                                     />
-                                    <span className={cn("truncate", !isVisible && "text-muted-foreground")} title={cal.name}>
-                                      {cal.name}
+                                    <span className={cn("truncate", !isVisible && "text-muted-foreground")} title={shownName.calendar(cal)}>
+                                      {shownName.calendar(cal)}
                                     </span>
                                   </button>
                                 );

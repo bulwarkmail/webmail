@@ -174,6 +174,7 @@
     },
     "clear_search": "Tühjenda otsing",
     "vacation_active": "Puhkuse vastaja on aktiivne",
+    "vacation_turn_off": "Lülita välja",
     "demo_banner": "Demorežiim",
     "demo_reset": "Lähtesta",
     "demo_tour": "Tutvustus",
@@ -1392,6 +1393,8 @@
     "from_description": "Jäta tühjaks, et alustada kohe.",
     "until_label": "Kuni (valikuline)",
     "until_description": "Jäta tühjaks, et vastata, kuni selle välja lülitad.",
+    "from_placeholder": "Kohe",
+    "until_placeholder": "Kuni selle välja lülitate",
     "audience_all": "Kõigile",
     "audience_internal": "Ainult minu organisatsioonile ({domains})",
     "audience_external": "Ainult inimestele väljastpoolt minu organisatsiooni",
@@ -2912,6 +2915,7 @@
       "open_sieve_editor": "Ava Sieve lähtekoodi redaktor",
       "fetch_error": "Filtrite laadimine ebaõnnestus",
       "expanded_view": "Laiendatud vaade",
+      "show_rule_details": "Näita iga reegli tingimusi ja toiminguid",
       "expanded_view_description": "Näita filtrireegleid koos üksikasjalike tingimuste ja tegevuste plokkidega",
       "if": "Kui",
       "then": "Siis",
@@ -2990,6 +2994,9 @@
       "validation_period_empty": "Sisesta ajavahemiku algus- või lõppkuupäev",
       "validation_period_invalid": "Sisesta ajavahemiku jaoks kehtiv kuupäev koos kellaajaga või jäta väli tühjaks",
       "apply_existing_period": "Ajavahemikuga reegel toimib ainult kirjadele, mis saabuvad selle jooksul, seega ei saa seda olemasolevatele kirjadele rakendada.",
+      "apply_existing_in": "Rakenda ka kirjadele, mis on juba kaustas {folder}",
+      "apply_existing_count": "{count, plural, one {Rakenda ka # kirjale, mis on juba kaustas {folder}} other {Rakenda ka # kirjale, mis on juba kaustas {folder}}}",
+      "apply_existing_none": "Kaustas {folder} pole veel ühtegi kirja, mis selle reegliga sobiks.",
       "period_status_scheduled": "ajastatud",
       "period_status_active": "aktiivne",
       "period_status_expired": "aegunud"
@@ -3495,6 +3502,48 @@
     },
     "sign_out": {
       "description": "Logi sellest kontost selles seadmes välja."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "salv süsteemisalv teavitusala taust minimeeri salve tray",
+      "autostart": "automaatne käivitus käivitus käivita koos Windowsiga sisselogimisel",
+      "default_app": "vaikimisi meilirakendus vaikimisi e-posti programm mailto meililingid",
+      "menu_bar": "menüüriba menüüd Alt-klahv Fail Redigeeri Vaade",
+      "updates": "uuendused uuendus uus versioon beeta kanal",
+      "devtools": "arendustööriistad devtools konsool uuri F12 silumine",
+      "taskbar": "tegumiriba vilkumine Dock tähelepanu",
+      "quiet_hours": "vaikne aeg ära sega vaigista öö",
+      "telemetry": "kasutusandmed telemeetria statistika analüütika",
+      "crash": "krahhiaruanded vearaportid krahh",
+      "threads": "lõimed vestlused rühmita threads",
+      "block_images": "blokeeri pildid välised pildid laadi pildid",
+      "dark_mode": "tume režiim hele režiim öörežiim dark mode",
+      "timezone": "ajavöönd timezone",
+      "reading_pane": "lugemispaan eelvaatepaan jagatud vaade",
+      "week_start": "nädala algus esimene päev esmaspäev pühapäev",
+      "empty_trash": "tühjenda prügikast prügikast kustutatud üksused",
+      "do_not_disturb": "vaikne aeg vaigista vaikus"
+    },
+    "desktop_notifications": {
+      "title": "Selles arvutis",
+      "closed_label": "Suletud aknaga",
+      "closed_description": "{appName} annab uutest kirjadest teada, kuni see töötab. Et see pärast akna sulgemist salves edasi töötaks, lülita see sisse jaotises {page}."
+    },
+    "push_unsupported": "See brauser ei saa teavitusi näidata, kui veebileht on suletud.",
+    "backup_description_app": "Kasuta samu seadeid oma teistes seadmetes.",
+    "sender_favicons": {
+      "label": "Pildid ettevõtete veebisaitidelt",
+      "description": "Näita äriliste saatjate profiilipiltidena veebisaitide ikoone"
+    },
+    "privacy_push": {
+      "label": "Teavituste relee",
+      "description": "Teavitused ajal, mil {appName} on suletud, käivad läbi push-relee, mis ei näe kunagi sinu kirju. Lülitad need sisse või välja lehel {page}."
+    },
+    "reset": {
+      "message": "Taastab kõik seaded algsel kujul. Sinu kirjad, filtrid, automaatvastus ja allkirjad jäävad samaks.",
+      "sync_on": "Sinu teised seadmed kasutavad samu seadeid, seega muutuvad ka need.",
+      "sync_off": "Sinu teised seadmed jätavad oma seaded alles."
     }
   },
   "setup": {
@@ -7292,6 +7341,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# tund} other {# tundi}}",
     "desktop_attention_title": "Selles arvutis"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Teie nimi",
+      "description": "Seda nime näevad inimesed teie aadressi kõrval, kui saadate neile kirja.",
+      "saved": "Teie nimi on salvestatud.",
+      "error": "Teie nime ei õnnestunud salvestada. Proovige uuesti."
+    },
+    "addresses": {
+      "description": "Aadressid, millelt saate saata, igaühel oma nimi ja allkiri.",
+      "label": "Teie aadressid",
+      "count": "{count, plural, =0 {Aadresse veel pole} one {# aadress} other {# aadressi}}",
+      "manage": "Muuda aadresse…",
+      "modal_title": "Teie e-posti aadressid",
+      "add": "Lisa aadress",
+      "edit": "Muuda aadressi",
+      "added": "Aadress lisatud.",
+      "saved": "Aadress salvestatud.",
+      "deleted": "Aadress kustutatud.",
+      "delete_title": "Kas kustutada see aadress?"
+    },
+    "signatures": {
+      "title": "Allkirjad",
+      "description": "Lisatakse teie kirjutatud kirjade lõppu. Igal aadressil on oma.",
+      "saved": "Allkiri salvestatud.",
+      "error": "Allkirja ei õnnestunud salvestada. Proovige uuesti.",
+      "no_addresses": "Teil pole veel aadressi, millelt saata."
+    },
+    "search": {
+      "addresses": "identiteet identiteedid alias saatja saatja aadress saatja nimi identity alias sender",
+      "signatures": "allkiri e-kirja allkiri jalus identiteet saatja saatja aadress signature",
+      "your_name": "kuvatav nimi täisnimi saatja nimi display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Sisesta kõigepealt serveri aadress.",
     "server_declined": "Sa ei lubanud seda serverit, nii et sellele ei saadetud midagi.",
@@ -7334,10 +7416,12 @@
     "server_looking": "Otsime sinu meiliserverit…",
     "server_found": "Meiliserver: {server}",
     "server_change": "Muuda",
+    "server_change_hint": "Sisestage mõne teise serveri aadress.",
     "server_not_found": "Sellele aadressile ei leitud meiliserverit. Sisesta see siia, näiteks mail.example.com.",
     "server_needed": "Sisesta oma meiliserveri aadress.",
     "server_invalid": "See ei ole serveri aadress. Kirjuta see nagu mail.example.com.",
     "email_needed": "Sisesta kõigepealt oma e-posti aadress.",
+    "other_ways": "Muud sisselogimise viisid",
     "trouble": "Probleeme?",
     "trouble_cors": "Sinu meiliserver peab lubama sisselogimist sellelt veebisaidilt. Kui sisselogimine ei õnnestu, palu meiliserveri haldajal see lubada.",
     "provider_unsupported": "{provider} ei paku JMAP-i, mille kaudu Bulwark meiliserveritega suhtleb, seega ei saa Bulwark sellega veel otse ühendust luua."

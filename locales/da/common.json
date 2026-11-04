@@ -174,6 +174,7 @@
     },
     "clear_search": "Ryd søgning",
     "vacation_active": "Fraværsbeskeder er aktive",
+    "vacation_turn_off": "Slå fra",
     "demo_banner": "Demo-tilstand",
     "demo_reset": "Nulstil",
     "demo_tour": "Rundvisning",
@@ -1392,6 +1393,8 @@
     "from_description": "Lad feltet være tomt for at starte med det samme.",
     "until_label": "Til (valgfrit)",
     "until_description": "Lad feltet være tomt for at blive ved med at svare, til du slår det fra.",
+    "from_placeholder": "Med det samme",
+    "until_placeholder": "Indtil du slår det fra",
     "audience_all": "Alle",
     "audience_internal": "Kun min organisation ({domains})",
     "audience_external": "Kun folk uden for min organisation",
@@ -2908,6 +2911,7 @@
       "open_sieve_editor": "Åbn raw Sieve-editor",
       "fetch_error": "Kunne ikke indlæse filtre",
       "expanded_view": "Udvidet visning",
+      "show_rule_details": "Vis hver regels betingelser og handlinger",
       "expanded_view_description": "Vis filterregler med detaljerede betingelses- og handlingsblokke",
       "if": "Hvis",
       "then": "Så",
@@ -2986,6 +2990,9 @@
       "validation_period_empty": "Angiv en start- eller slutdato for perioden",
       "validation_period_invalid": "Angiv en gyldig dato med klokkeslæt for perioden, eller lad feltet stå tomt",
       "apply_existing_period": "En regel med en periode virker kun på beskeder, der ankommer i perioden, og kan derfor ikke køres på eksisterende beskeder.",
+      "apply_existing_in": "Anvend også på beskederne, der allerede er i {folder}",
+      "apply_existing_count": "{count, plural, one {Anvend også på den # besked, der allerede er i {folder}} other {Anvend også på de # beskeder, der allerede er i {folder}}}",
+      "apply_existing_none": "Ingen beskeder i {folder} passer til reglen endnu.",
       "period_status_scheduled": "planlagt",
       "period_status_active": "aktiv",
       "period_status_expired": "udløbet"
@@ -3495,6 +3502,48 @@
     },
     "sign_out": {
       "description": "Log ud af denne konto på denne enhed."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "systembakke meddelelsesområde baggrund minimer til bakke tray",
+      "autostart": "autostart opstart start med Windows ved login",
+      "default_app": "standardmailapp standard e-mailprogram mailto mail-links",
+      "menu_bar": "menulinje menuer Alt-tast Filer Rediger Vis",
+      "updates": "opdateringer opdatering ny version beta kanal",
+      "devtools": "udviklerværktøjer devtools konsol inspicer F12 fejlfinding",
+      "taskbar": "proceslinje blink Dock opmærksomhed",
+      "quiet_hours": "stille timer forstyr ikke lydløs nat",
+      "telemetry": "brugsdata telemetri statistik analyse",
+      "crash": "nedbrudsrapporter fejlrapporter nedbrud",
+      "threads": "tråde samtaler samtalevisning threads",
+      "block_images": "bloker billeder eksterne billeder indlæs billeder",
+      "dark_mode": "mørk tilstand lys tilstand nattilstand dark mode",
+      "timezone": "tidszone timezone",
+      "reading_pane": "læserude eksempelrude opdelt visning",
+      "week_start": "ugestart første ugedag mandag søndag",
+      "empty_trash": "tøm papirkurven papirkurv slettede elementer",
+      "do_not_disturb": "stille timer lydløs stilhed"
+    },
+    "desktop_notifications": {
+      "title": "På denne computer",
+      "closed_label": "Når vinduet er lukket",
+      "closed_description": "{appName} giver besked om ny mail, så længe den kører. Slå det til under {page}, hvis den skal køre videre i systembakken, når du lukker vinduet."
+    },
+    "push_unsupported": "Denne browser kan ikke vise notifikationer, når websiden er lukket.",
+    "backup_description_app": "Brug de samme indstillinger på dine andre enheder.",
+    "sender_favicons": {
+      "label": "Billeder fra virksomheders websteder",
+      "description": "Vis hjemmesideikoner som profilbilleder for forretningsafsendere"
+    },
+    "privacy_push": {
+      "label": "Relæ til notifikationer",
+      "description": "Notifikationer mens {appName} er lukket går gennem et push-relæ, som aldrig ser din mail. Du slår dem til og fra på siden {page}."
+    },
+    "reset": {
+      "message": "Sæt alle indstillinger tilbage til, hvordan de var fra start. Din mail, dine filtre, dit autosvar og dine signaturer forbliver, som de er.",
+      "sync_on": "Dine andre enheder bruger de samme indstillinger, så de ændres også.",
+      "sync_off": "Dine andre enheder beholder deres indstillinger."
     }
   },
   "setup": {
@@ -7292,6 +7341,39 @@
     "app_lock_timeout_hours": "{count, plural, one {# time} other {# timer}}",
     "desktop_attention_title": "På denne computer"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Dit navn",
+      "description": "Folk ser dette navn ved siden af din adresse, når du sender dem mail.",
+      "saved": "Dit navn er gemt.",
+      "error": "Dit navn kunne ikke gemmes. Prøv igen."
+    },
+    "addresses": {
+      "description": "De adresser, du kan sende fra, hver med sit eget navn og sin egen signatur.",
+      "label": "Dine adresser",
+      "count": "{count, plural, =0 {Ingen adresser endnu} one {# adresse} other {# adresser}}",
+      "manage": "Rediger adresser…",
+      "modal_title": "Dine e-mailadresser",
+      "add": "Tilføj adresse",
+      "edit": "Rediger adresse",
+      "added": "Adressen er tilføjet.",
+      "saved": "Adressen er gemt.",
+      "deleted": "Adressen er slettet.",
+      "delete_title": "Slet denne adresse?"
+    },
+    "signatures": {
+      "title": "Signaturer",
+      "description": "Tilføjes i slutningen af de beskeder, du skriver. Hver adresse har sin egen.",
+      "saved": "Signaturen er gemt.",
+      "error": "Signaturen kunne ikke gemmes. Prøv igen.",
+      "no_addresses": "Der er endnu ingen adresse at sende fra."
+    },
+    "search": {
+      "addresses": "identitet identiteter alias afsender afsenderadresse fra-adresse identity alias sender",
+      "signatures": "signatur e-mailsignatur sidefod identitet afsender fra-adresse signature",
+      "your_name": "visningsnavn fulde navn afsendernavn display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Angiv først serverens adresse.",
     "server_declined": "Du tillod ikke denne server, så der blev ikke sendt noget til den.",
@@ -7334,10 +7416,12 @@
     "server_looking": "Leder efter din mailserver…",
     "server_found": "Mailserver: {server}",
     "server_change": "Skift",
+    "server_change_hint": "Skriv en anden serveradresse.",
     "server_not_found": "Vi kunne ikke finde mailserveren til denne adresse. Skriv den her, for eksempel mail.example.com.",
     "server_needed": "Skriv adressen på din mailserver.",
     "server_invalid": "Det er ikke en serveradresse. Skriv den som mail.example.com.",
     "email_needed": "Skriv først din e-mailadresse.",
+    "other_ways": "Andre måder at logge ind på",
     "trouble": "Problemer?",
     "trouble_cors": "Din mailserver skal tillade login fra dette websted. Hvis login mislykkes, så bed den, der driver din mailserver, om at tillade det.",
     "provider_unsupported": "{provider} tilbyder ikke JMAP, den måde Bulwark taler med mailservere på, så Bulwark kan endnu ikke forbinde direkte til det."

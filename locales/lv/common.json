@@ -174,6 +174,7 @@
     },
     "clear_search": "Notīrīt meklēšanu",
     "vacation_active": "Atvaļinājuma atbilde ir aktīva",
+    "vacation_turn_off": "Izslēgt",
     "demo_banner": "Demo režīms",
     "demo_reset": "Atiestatīt",
     "demo_tour": "Ekskursija",
@@ -1392,6 +1393,8 @@
     "from_description": "Atstājiet tukšu, lai sāktu uzreiz.",
     "until_label": "Līdz (neobligāti)",
     "until_description": "Atstājiet tukšu, lai atbildētu, līdz to izslēgsiet.",
+    "from_placeholder": "Uzreiz",
+    "until_placeholder": "Līdz to izslēgsiet",
     "audience_all": "Visiem",
     "audience_internal": "Tikai manai organizācijai ({domains})",
     "audience_external": "Tikai cilvēkiem ārpus manas organizācijas",
@@ -2905,6 +2908,7 @@
       "open_sieve_editor": "Atvērt Sieve redaktoru",
       "fetch_error": "Neizdevās ielādēt filtrus",
       "expanded_view": "Izvērstais skats",
+      "show_rule_details": "Rādīt katra noteikuma nosacījumus un darbības",
       "expanded_view_description": "Rādīt filtra noteikumus ar detalizētiem nosacījumiem un darbībām",
       "if": "Ja",
       "then": "Tad",
@@ -2983,6 +2987,9 @@
       "validation_period_empty": "Norādiet laika posma sākuma vai beigu datumu",
       "validation_period_invalid": "Norādiet laika posmam derīgu datumu ar laiku vai atstājiet lauku tukšu",
       "apply_existing_period": "Noteikums ar laika posmu darbojas tikai ar ziņojumiem, kas pienāk šajā posmā, tāpēc to nevar lietot esošajiem ziņojumiem.",
+      "apply_existing_in": "Piemērot arī vēstulēm, kas jau ir mapē {folder}",
+      "apply_existing_count": "{count, plural, zero {Piemērot arī # vēstulēm, kas jau ir mapē {folder}} one {Piemērot arī # vēstulei, kas jau ir mapē {folder}} other {Piemērot arī # vēstulēm, kas jau ir mapē {folder}}}",
+      "apply_existing_none": "Mapē {folder} vēl nav nevienas vēstules, kas atbilst šim noteikumam.",
       "period_status_scheduled": "ieplānots",
       "period_status_active": "aktīvs",
       "period_status_expired": "beidzies"
@@ -3495,6 +3502,48 @@
     },
     "sign_out": {
       "description": "Izrakstīties no šī konta šajā ierīcē."
+    }
+  },
+  "uxp2_settings": {
+    "search": {
+      "tray": "tekne sistēmas tekne paziņojumu apgabals fonā minimizēt tray",
+      "autostart": "automātiska palaišana startēšana palaist ar Windows pierakstoties",
+      "default_app": "noklusējuma pasta lietotne noklusējuma e-pasta programma mailto e-pasta saites",
+      "menu_bar": "izvēlņu josla izvēlnes Alt taustiņš Fails Rediģēt Skats",
+      "updates": "atjauninājumi atjauninājums jauna versija beta kanāls",
+      "devtools": "izstrādātāja rīki devtools konsole pārbaudīt F12 atkļūdošana",
+      "taskbar": "uzdevumjosla mirgošana Dock uzmanība",
+      "quiet_hours": "klusuma stundas netraucēt klusums nakts",
+      "telemetry": "lietojuma informācija telemetrija statistika analītika",
+      "crash": "avāriju ziņojumi kļūdu ziņojumi avārija",
+      "threads": "pavedieni sarunas grupēt threads",
+      "block_images": "bloķēt attēlus ārējie attēli ielādēt attēlus",
+      "dark_mode": "tumšais režīms gaišais režīms nakts režīms dark mode",
+      "timezone": "laika josla timezone",
+      "reading_pane": "lasīšanas rūts priekšskatījuma rūts dalīts skats",
+      "week_start": "nedēļas sākums pirmā diena pirmdiena svētdiena",
+      "empty_trash": "iztukšot atkritni atkritne dzēstie vienumi",
+      "do_not_disturb": "klusuma stundas izslēgt skaņu klusums"
+    },
+    "desktop_notifications": {
+      "title": "Šajā datorā",
+      "closed_label": "Ar aizvērtu logu",
+      "closed_description": "{appName} ziņo par jaunu pastu, kamēr tā darbojas. Lai pēc loga aizvēršanas tā turpinātu darboties teknē, ieslēdziet to sadaļā {page}."
+    },
+    "push_unsupported": "Šī pārlūkprogramma nevar rādīt paziņojumus, kad vietne ir aizvērta.",
+    "backup_description_app": "Izmantojiet tos pašus iestatījumus citās savās ierīcēs.",
+    "sender_favicons": {
+      "label": "Attēli no uzņēmumu vietnēm",
+      "description": "Rādīt vietņu ikonas kā sūtītāju avatarus"
+    },
+    "privacy_push": {
+      "label": "Paziņojumu retranslators",
+      "description": "Paziņojumi, kamēr {appName} ir aizvērta, iet caur push retranslatoru, kas nekad neredz jūsu pastu. Tos ieslēdz vai izslēdz lapā {page}."
+    },
+    "reset": {
+      "message": "Atjauno visus iestatījumus sākotnējā stāvoklī. Jūsu pasts, filtri, automātiskā atbilde un paraksti paliek, kā ir.",
+      "sync_on": "Jūsu citas ierīces izmanto tos pašus iestatījumus, tāpēc mainās arī tās.",
+      "sync_off": "Jūsu citas ierīces saglabā savus iestatījumus."
     }
   },
   "setup": {
@@ -7292,6 +7341,39 @@
     "app_lock_timeout_hours": "{count, plural, zero {# stundu} one {# stunda} other {# stundas}}",
     "desktop_attention_title": "Šajā datorā"
   },
+  "uxs2_ident": {
+    "your_name": {
+      "label": "Jūsu vārds",
+      "description": "Šo vārdu cilvēki redz blakus jūsu adresei, kad sūtāt viņiem vēstuli.",
+      "saved": "Jūsu vārds ir saglabāts.",
+      "error": "Jūsu vārdu neizdevās saglabāt. Mēģiniet vēlreiz."
+    },
+    "addresses": {
+      "description": "Adreses, no kurām varat sūtīt, katrai savs vārds un paraksts.",
+      "label": "Jūsu adreses",
+      "count": "{count, plural, =0 {Vēl nav adrešu} zero {# adrešu} one {# adrese} other {# adreses}}",
+      "manage": "Rediģēt adreses…",
+      "modal_title": "Jūsu e-pasta adreses",
+      "add": "Pievienot adresi",
+      "edit": "Rediģēt adresi",
+      "added": "Adrese pievienota.",
+      "saved": "Adrese saglabāta.",
+      "deleted": "Adrese izdzēsta.",
+      "delete_title": "Vai dzēst šo adresi?"
+    },
+    "signatures": {
+      "title": "Paraksti",
+      "description": "Tiek pievienots jūsu rakstīto ziņojumu beigās. Katrai adresei ir savs.",
+      "saved": "Paraksts saglabāts.",
+      "error": "Parakstu neizdevās saglabāt. Mēģiniet vēlreiz.",
+      "no_addresses": "Vēl nav adreses, no kuras sūtīt."
+    },
+    "search": {
+      "addresses": "identitāte identitātes aizstājvārds sūtītājs sūtītāja adrese no adrese identity alias sender",
+      "signatures": "paraksts e-pasta paraksts kājene identitāte sūtītājs no adrese signature",
+      "your_name": "parādāmais vārds pilns vārds sūtītāja vārds display name"
+    }
+  },
   "desktop_sign_in": {
     "server_needed": "Vispirms ievadiet servera adresi.",
     "server_declined": "Jūs neatļāvāt šo serveri, tāpēc tam nekas netika nosūtīts.",
@@ -7334,10 +7416,12 @@
     "server_looking": "Meklējam jūsu pasta serveri…",
     "server_found": "Pasta serveris: {server}",
     "server_change": "Mainīt",
+    "server_change_hint": "Ierakstiet citu servera adresi.",
     "server_not_found": "Šai adresei pasta serveri neatradām. Ievadiet to šeit, piemēram, mail.example.com.",
     "server_needed": "Ievadiet sava pasta servera adresi.",
     "server_invalid": "Tā nav servera adrese. Rakstiet to kā mail.example.com.",
     "email_needed": "Vispirms ievadiet savu e-pasta adresi.",
+    "other_ways": "Citi pierakstīšanās veidi",
     "trouble": "Neizdodas?",
     "trouble_cors": "Jūsu pasta serverim jāatļauj pieteikšanās no šīs vietnes. Ja pieteikties neizdodas, palūdziet pasta servera uzturētājam to atļaut.",
     "provider_unsupported": "{provider} nepiedāvā JMAP, veidu, kā Bulwark sazinās ar pasta serveriem, tāpēc Bulwark tam vēl nevar pieslēgties tieši."

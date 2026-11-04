@@ -5,16 +5,20 @@ import { Info, X } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { closeFirstStartNotice, useCurrentFirstStartNotice } from "@/lib/first-start-notices";
+import { useWelcomeBannerDue } from "@/components/ui/welcome-banner";
 
 /**
  * The first-start notice that's waiting, as a bar above the message list (see
- * lib/first-start-notices). In the page's flow, it covers nothing. `hidden` while
- * something else greets the user there, so only one shows at a time.
+ * lib/first-start-notices). In the page's flow, it covers nothing. It waits while the
+ * welcome tips are due, wherever they show (above the list or in the reading pane),
+ * so the first start has one greeting at a time. `hidden` while something else greets
+ * the user there.
  */
 export function FirstStartNoticeBar({ hidden = false }: { hidden?: boolean }) {
   const tCommon = useTranslations("common");
   const notice = useCurrentFirstStartNotice();
-  if (!notice || hidden) return null;
+  const welcomeDue = useWelcomeBannerDue();
+  if (!notice || hidden || welcomeDue) return null;
   return (
     <div
       role="status"

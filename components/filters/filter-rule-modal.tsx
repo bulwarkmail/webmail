@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { sortFolderTree } from "@/lib/move-menu";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,16 @@ interface FilterRuleModalProps {
   suggestions?: RuleSuggestion[];
   /** Offer "Also apply to existing messages in this folder". */
   offerApplyToExisting?: boolean;
+  /**
+   * The folder the offer is about, by name ("Inbox"), when the dialog isn't
+   * opened from that folder (Settings › Filters).
+   */
+  applyExistingFolder?: string;
+  /**
+   * How many messages in that folder the rule as typed would change. The
+   * offer says the number, and is greyed when it is 0.
+   */
+  countExisting?: (rule: FilterRule) => Promise<number>;
   mailboxes: Mailbox[];
   /** Server cap on redirects per message (Sieve `maxNumberRedirects`). */
   maxRedirects?: number | null;
@@ -198,6 +208,8 @@ export function FilterRuleModal({
   initialRule,
   suggestions = [],
   offerApplyToExisting = false,
+  applyExistingFolder,
+  countExisting,
   mailboxes,
   maxRedirects,
   forwardsBefore = 0,
@@ -345,6 +357,30 @@ export function FilterRuleModal({
     return retroactiveSupport({ conditions: validConditions, actions: checkActions }).ok;
   }, [offerApplyToExisting, validConditions, validActions, periodOn]);
 
+  // How many messages the rule would change there, asked of the server a
+  // moment after the conditions and actions stop changing. null: not known
+  // (still asking, no action yet, or the server didn't answer).
+  const [existingCount, setExistingCount] = useState<number | null>(null);
+  const countKey = canApplyToExisting && countExisting && validActions.length > 0
+    ? JSON.stringify([matchType, validConditions, validActions])
+    : null;
+  const countRef = useRef(countExisting);
+  countRef.current = countExisting;
+  useEffect(() => {
+    setExistingCount(null);
+    if (!countKey || !countRef.current) return;
+    const [type, conds, acts] = JSON.parse(countKey) as [FilterRule["matchType"], FilterCondition[], FilterAction[]];
+    let stale = false;
+    const timer = setTimeout(() => {
+      countRef.current!({ id: "count", name: "", enabled: true, matchType: type, conditions: conds, actions: acts, stopProcessing: false })
+        .then((count) => { if (!stale) setExistingCount(count); })
+        .catch(() => { /* the offer stays, without a number */ });
+    }, 400);
+    return () => { stale = true; clearTimeout(timer); };
+  }, [countKey]);
+  const noneToApply = existingCount === 0;
+  const canTickApply = canApplyToExisting && !noneToApply;
+
   // What keeps the rule from being saved, said under the part it is about
   // once Save was pressed, and updated as the user fixes it.
   const [showErrors, setShowErrors] = useState(false);
@@ -427,8 +463,8 @@ export function FilterRuleModal({
       includeSpam: includeSpam && validActions.some((a) => ACTIONS_WITH_MAILBOX.has(a.type)) ? true : undefined,
       activeFrom: activeFrom ?? undefined,
       activeUntil: activeUntil ?? undefined,
-    }, { applyToExisting: applyToExisting && canApplyToExisting });
-  }, [name, matchType, validConditions, validActions, stopProcessing, includeSpam, periodOn, activeFrom, activeUntil, hasErrors, start, onSave, applyToExisting, canApplyToExisting]);
+    }, { applyToExisting: applyToExisting && canTickApply });
+  }, [name, matchType, validConditions, validActions, stopProcessing, includeSpam, periodOn, activeFrom, activeUntil, hasErrors, start, onSave, applyToExisting, canTickApply]);
 
   const visibleSuggestions = suggestions.filter((s) => !usedSuggestions.has(s.id));
 
@@ -954,22 +990,28 @@ export function FilterRuleModal({
                 <input
                   type="checkbox"
                   id="applyToExisting"
-                  checked={applyToExisting && canApplyToExisting}
-                  disabled={!canApplyToExisting}
+                  checked={applyToExisting && canTickApply}
+                  disabled={!canTickApply}
                   onChange={(e) => setApplyToExisting(e.target.checked)}
                   className="rounded border-input disabled:opacity-50"
-                  aria-describedby={canApplyToExisting ? undefined : "applyToExistingHint"}
+                  aria-describedby={canTickApply ? undefined : "applyToExistingHint"}
                 />
                 <label
                   htmlFor="applyToExisting"
-                  className={cn("text-sm", canApplyToExisting ? "text-foreground" : "text-muted-foreground")}
+                  className={cn("text-sm", canTickApply ? "text-foreground" : "text-muted-foreground")}
                 >
-                  {t("apply_existing")}
+                  {applyExistingFolder === undefined
+                    ? t("apply_existing")
+                    : existingCount && canApplyToExisting
+                      ? t("apply_existing_count", { count: existingCount, folder: applyExistingFolder })
+                      : t("apply_existing_in", { folder: applyExistingFolder })}
                 </label>
               </div>
-              {!canApplyToExisting && (
+              {!canTickApply && (
                 <p id="applyToExistingHint" className="mt-1 ms-6 text-xs text-muted-foreground">
-                  {periodOn ? t("apply_existing_period") : t("apply_existing_unsupported")}
+                  {!canApplyToExisting
+                    ? (periodOn ? t("apply_existing_period") : t("apply_existing_unsupported"))
+                    : t("apply_existing_none", { folder: applyExistingFolder ?? "" })}
                 </p>
               )}
             </div>

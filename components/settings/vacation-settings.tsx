@@ -159,6 +159,19 @@ export function VacationSettings() {
   const [halfFilled, setHalfFilled] = useState({ from: false, to: false });
   const fromRef = useRef<HTMLInputElement>(null);
   const toRef = useRef<HTMLInputElement>(null);
+  // An empty date field that isn't being edited is a text field with a
+  // placeholder in words: the browser's own date field shows its raw pattern
+  // ("dd.mm.yyyy --:--") there, whatever the app's date format.
+  const [dateEditing, setDateEditing] = useState<'from' | 'to' | null>(null);
+  const dateFieldType = (field: 'from' | 'to') =>
+    dateEditing === field || halfFilled[field] || (field === 'from' ? fromInput : toInput) ? 'datetime-local' : 'text';
+  useEffect(() => {
+    if (!dateEditing) return;
+    const input = (dateEditing === 'from' ? fromRef : toRef).current;
+    // Opens the browser's picker after a click; a Tab into the field has no
+    // user activation and just leaves the field focused for typing.
+    try { input?.showPicker?.(); } catch { /* not allowed without a click */ }
+  }, [dateEditing]);
   const localFromDate = fieldMoment(fromInput, fromDate, inputZone);
   const localToDate = fieldMoment(toInput, toDate, inputZone);
   useEffect(() => {
@@ -568,11 +581,13 @@ export function VacationSettings() {
         >
           <input
             ref={fromRef}
-            type="datetime-local"
-            max={DATE_INPUT_MAX}
+            type={dateFieldType('from')}
+            max={dateFieldType('from') === 'datetime-local' ? DATE_INPUT_MAX : undefined}
             value={fromInput}
+            placeholder={tx('from_placeholder')}
+            onFocus={() => setDateEditing('from')}
             onChange={(e) => readDateField('from', e.currentTarget)}
-            onBlur={(e) => readDateField('from', e.currentTarget)}
+            onBlur={(e) => { readDateField('from', e.currentTarget); setDateEditing(null); }}
             aria-label={tx('from_label')}
             aria-invalid={!!fromError}
             aria-describedby={fromError ? 'vacation-from-error' : undefined}
@@ -587,11 +602,13 @@ export function VacationSettings() {
         >
           <input
             ref={toRef}
-            type="datetime-local"
-            max={DATE_INPUT_MAX}
+            type={dateFieldType('to')}
+            max={dateFieldType('to') === 'datetime-local' ? DATE_INPUT_MAX : undefined}
             value={toInput}
+            placeholder={tx('until_placeholder')}
+            onFocus={() => setDateEditing('to')}
             onChange={(e) => readDateField('to', e.currentTarget)}
-            onBlur={(e) => readDateField('to', e.currentTarget)}
+            onBlur={(e) => { readDateField('to', e.currentTarget); setDateEditing(null); }}
             aria-label={tx('until_label')}
             aria-invalid={!!toError}
             aria-describedby={toError ? 'vacation-to-error' : undefined}
@@ -643,6 +660,7 @@ export function VacationSettings() {
             <RichTextEditor
               content={localBody}
               onChange={editBody}
+              toolbar="short"
               ariaLabel={tx('message_label')}
               ariaInvalid={!!bodyError}
               ariaDescribedBy={bodyError ? 'vacation-body-error' : undefined}

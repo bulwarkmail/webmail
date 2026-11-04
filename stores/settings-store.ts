@@ -1595,7 +1595,10 @@ export const useSettingsStore = create<SettingsState>()(
       },
 
       resetToDefaults: () => {
-        set(DEFAULT_SETTINGS);
+        // The choice to keep settings in sync stays: the confirm says other
+        // devices change only when sync is on (settings-p2-18), and a reset
+        // turning sync back on would push these defaults to all of them.
+        set({ ...DEFAULT_SETTINGS, settingsSyncDisabled: get().settingsSyncDisabled });
         // The defaults of this instance are the operator's, then the build's.
         applyAdminPolicyPatch();
         applyVisualSettings();
