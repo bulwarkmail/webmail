@@ -16,7 +16,8 @@ export const MAIL_SHORTCUTS = {
   actions: [
     { key: "r", description: "shortcuts.actions.reply", desktopKey: "Mod + R" },
     { key: "Shift + R", description: "shortcuts.actions.reply_all", desktopKey: "Mod + Shift + R" },
-    { key: "f", description: "shortcuts.actions.forward", desktopKey: "Mod + Shift + F" },
+    // Ctrl+F forwards with a message selected (Outlook) and searches elsewhere; Ctrl+Shift+F still works.
+    { key: "f", description: "shortcuts.actions.forward", desktopKey: "Mod + Shift + F", desktopPcKey: "Ctrl + F / Ctrl + Shift + F" },
     { key: "s", description: "shortcuts.actions.star" },
     { key: "e", description: "shortcuts.actions.archive", feature: "archiveActionEnabled" },
     { key: "Del", description: "shortcuts.actions.delete" },

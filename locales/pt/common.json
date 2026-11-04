@@ -245,7 +245,6 @@
     "select_account_title": "Escolher conta",
     "select_mailto_account": "Escolha qual conta deve abrir este link de e-mail.",
     "select_webcal_account": "Escolha qual conta deve abrir este link de calendário.",
-    "select_account_note": "Esta escolha se aplica apenas a este link de protocolo.",
     "detail_to": "Para",
     "detail_subject": "Assunto",
     "detail_no_subject": "Sem assunto",
@@ -1124,7 +1123,7 @@
     "link_url_prompt": "Insira a URL",
     "sending": "Enviando...",
     "schedule_send": "Agendar envio",
-    "schedule_send_description": "Escolha quando o servidor deve liberar esta mensagem.",
+    "schedule_send_description": "Escolha quando enviar.",
     "schedule_preset": {
       "this_morning": "Esta manhã",
       "this_afternoon": "Esta tarde",
@@ -1175,6 +1174,7 @@
       "edit_link": "Editar link",
       "remove_link": "Remover link",
       "link_address": "Endereço do link",
+      "link_text": "Texto",
       "link_invalid": "O endereço não pode conter espaços",
       "table": "Tabela",
       "clear_formatting": "Limpar formatação",
@@ -4082,6 +4082,9 @@
     "sending": "Enviando…",
     "sent": "Enviado",
     "view": "Ver",
+    "template_saved": "Modelo guardado",
+    "schedule_anyway": "Agendar mesmo assim",
+    "schedule_warnings_title": "Agendar esta mensagem mesmo assim?",
     "picker_button": "Adicionar dos contatos",
     "picker_title": "Adicionar destinatários",
     "tab_contacts": "Contatos",
@@ -7624,5 +7627,11 @@
     "send_no_consent": "Ligue primeiro os relatórios de falhas.",
     "send_no_url": "Não há nenhum endereço definido, por isso não há para onde enviar. Introduza um acima.",
     "send_failed": "Não foi possível enviar o relatório de falha."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Número de não lidas no ícone da barra de tarefas",
+    "unread_badge_description": "Para ver novos e-mails enquanto trabalha noutra aplicação.",
+    "tip_compose_keys": "Prima {keys} para escrever uma nova mensagem",
+    "tip_palette_keys": "Prima {keys} para encontrar qualquer comando"
   }
 }

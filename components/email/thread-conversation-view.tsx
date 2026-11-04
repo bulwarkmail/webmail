@@ -49,6 +49,8 @@ import {
   Download,
   Eye,
   CalendarClock,
+  Pencil,
+  Trash2,
 } from "@/components/icons";
 import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
 import { useTranslations } from "next-intl";
@@ -91,6 +93,9 @@ interface ThreadConversationViewProps {
   onReply?: (email: Email) => void;
   onReplyAll?: (email: Email) => void;
   onForward?: (email: Email) => void;
+  /** A draft in the conversation (compose-p2-6): Edit and Discard take Reply's place. */
+  onEditDraft?: (email: Email) => void;
+  onDiscardDraft?: (email: Email) => void;
   onDownloadAttachment?: ConversationAttachmentHandler;
   /** Routing captured when this conversation was opened. */
   blobSource?: EmailBlobContext;
@@ -196,6 +201,8 @@ export function ThreadConversationView({
   onReply,
   onReplyAll,
   onForward,
+  onEditDraft,
+  onDiscardDraft,
   onDownloadAttachment,
   blobSource,
   onMarkAsRead,
@@ -230,7 +237,7 @@ export function ThreadConversationView({
 
       // Also expand all unread emails
       ordered.forEach(email => {
-        if (!email.keywords?.$seen) {
+        if (!email.keywords?.$seen && !email.keywords?.$draft) {
           idsToExpand.add(email.id);
         }
       });
@@ -297,7 +304,9 @@ export function ThreadConversationView({
       <div className="flex-1 overflow-y-auto">
         <PluginSlot name="thread-summary" className="w-full" extraProps={threadSummaryProps} />
         <div ref={cardsRef} className="space-y-3" style={{ padding: 'var(--density-card-p)' }}>
-          {ordered.map((email) => (
+          {ordered.map((email) => {
+            const draft = !!email.keywords?.$draft;
+            return (
             <div key={email.id} data-thread-email-id={email.id} className="scroll-mt-16">
             <EmailCard
               email={email}
@@ -307,16 +316,20 @@ export function ThreadConversationView({
               onToggleExpanded={() => toggleExpanded(email.id)}
               onAllowExternal={() => externalContent.allow(email.id)}
               onTrustSender={externalContent.trustSender(email)}
-              onReply={onReply ? () => onReply(email) : undefined}
-              onReplyAll={onReplyAll ? () => onReplyAll(email) : undefined}
-              onForward={onForward ? () => onForward(email) : undefined}
+              isDraft={draft}
+              onEditDraft={draft && onEditDraft ? () => onEditDraft(email) : undefined}
+              onDiscardDraft={draft && onDiscardDraft ? () => onDiscardDraft(email) : undefined}
+              onReply={!draft && onReply ? () => onReply(email) : undefined}
+              onReplyAll={!draft && onReplyAll ? () => onReplyAll(email) : undefined}
+              onForward={!draft && onForward ? () => onForward(email) : undefined}
               onDownloadAttachment={onDownloadAttachment}
             blobSource={blobSource}
               onMarkAsRead={onMarkAsRead}
               mailboxRole={mailboxRole}
             />
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
@@ -349,6 +362,9 @@ interface EmailCardProps {
   onReply?: () => void;
   onReplyAll?: () => void;
   onForward?: () => void;
+  isDraft?: boolean;
+  onEditDraft?: () => void;
+  onDiscardDraft?: () => void;
   onDownloadAttachment?: ConversationAttachmentHandler;
   /** Routing captured when this conversation was opened. */
   blobSource?: EmailBlobContext;
@@ -387,6 +403,9 @@ function EmailCard({
   onReply,
   onReplyAll,
   onForward,
+  isDraft = false,
+  onEditDraft,
+  onDiscardDraft,
   onDownloadAttachment,
   blobSource,
   onMarkAsRead,
@@ -442,6 +461,11 @@ function EmailCard({
             </span>
             <ExternalSenderChip from={email.from} accountId={email.sourceClientAccountId} interactive={false} />
             <ReceivedLabelChip email={email} />
+            {isDraft && (
+              <span data-testid="conversation-draft-label" className="text-xs font-medium text-destructive shrink-0">
+                {t('email_list.draft')}
+              </span>
+            )}
             {email.isScheduled && (
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary shrink-0">
                 <CalendarClock className="w-3.5 h-3.5" />
@@ -507,6 +531,34 @@ function EmailCard({
               in the single reader's More panel on phones. Long names (Arabic
               "Reply all") wrap to a second line instead of being cut. */}
           <div className="px-4 pb-4 flex flex-wrap gap-2">
+            {onEditDraft && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditDraft();
+                }}
+                className="flex-auto px-2 whitespace-nowrap"
+              >
+                <Pencil className="w-4 h-4 me-1.5 shrink-0" />
+                {t("email_viewer.edit_draft")}
+              </Button>
+            )}
+            {onDiscardDraft && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDiscardDraft();
+                }}
+                className="flex-auto px-2 whitespace-nowrap"
+              >
+                <Trash2 className="w-4 h-4 me-1.5 shrink-0" />
+                {t("email_composer.discard")}
+              </Button>
+            )}
             {onReply && (
               <Button
                 variant="outline"

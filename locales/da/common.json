@@ -245,7 +245,6 @@
     "select_account_title": "Vælg konto",
     "select_mailto_account": "Vælg hvilken konto der skal åbne dette e-mail-link.",
     "select_webcal_account": "Vælg hvilken konto der skal åbne dette kalenderlink.",
-    "select_account_note": "Dette gælder kun for dette protokollink.",
     "detail_to": "Til",
     "detail_subject": "Emne",
     "detail_no_subject": "Intet emne",
@@ -1080,7 +1079,7 @@
     "recipients_partly_refused": "Serveren afviste {recipients}. De øvrige modtagere får beskeden.",
     "send_offline": "Du ser ud til at være offline. Beskeden er her stadig, send den igen, når du er online.",
     "formatting": "Formatering",
-    "send_recipients_rejected": "Ikke sendt - serveren afviste alle modtagere.",
+    "send_recipients_rejected": "Ikke sendt: serveren afviste alle modtagere.",
     "send_plugin_failed": "Ikke sendt - et plugin, der står for afsendelsen, fejlede eller tog for lang tid. Tjek mappen Sendt, før du sender igen.",
     "send_some_recipients_rejected": "Sendt, men ikke til disse modtagere - serveren afviste dem.",
     "continue_draft": "Fortsæt kladde",
@@ -1124,7 +1123,7 @@
     },
     "link_url_prompt": "Indtast URL'en",
     "schedule_send": "Planlæg afsendelse",
-    "schedule_send_description": "Vælg hvornår serveren skal frigive denne besked.",
+    "schedule_send_description": "Vælg hvornår den skal sendes.",
     "schedule_preset": {
       "this_morning": "I dag formiddag",
       "this_afternoon": "I eftermiddag",
@@ -1175,6 +1174,7 @@
       "edit_link": "Rediger link",
       "remove_link": "Fjern link",
       "link_address": "Linkadresse",
+      "link_text": "Tekst",
       "link_invalid": "Adressen må ikke indeholde mellemrum",
       "table": "Tabel",
       "clear_formatting": "Ryd formatering",
@@ -4082,6 +4082,9 @@
     "sending": "Sender…",
     "sent": "Sendt",
     "view": "Vis",
+    "template_saved": "Skabelon gemt",
+    "schedule_anyway": "Planlæg alligevel",
+    "schedule_warnings_title": "Planlæg denne besked alligevel?",
     "picker_button": "Tilføj fra kontakter",
     "picker_title": "Tilføj modtagere",
     "tab_contacts": "Kontakter",
@@ -7624,5 +7627,11 @@
     "send_no_consent": "Slå først nedbrudsrapporter til.",
     "send_no_url": "Der er ikke angivet en adresse, så den kan ikke sendes nogen steder. Skriv en ovenfor.",
     "send_failed": "Nedbrudsrapporten kunne ikke sendes."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Antal ulæste på ikonet på proceslinjen",
+    "unread_badge_description": "Så du ser ny mail, mens du arbejder i en anden app.",
+    "tip_compose_keys": "Tryk på {keys} for at skrive en ny besked",
+    "tip_palette_keys": "Tryk på {keys} for at finde en kommando"
   }
 }

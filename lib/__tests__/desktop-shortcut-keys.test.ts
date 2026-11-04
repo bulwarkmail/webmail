@@ -15,6 +15,7 @@ describe('the shortcut help in the desktop app', () => {
     expect(shortcutKeyFor(row('shortcuts.actions.reply'), 'windows')).toBe('Mod + R / r');
     expect(shortcutKeyFor(row('shortcuts.actions.reply_all'), 'linux')).toBe('Mod + Shift + R / Shift + R');
     expect(shortcutKeyFor(row('shortcuts.actions.forward'), 'mac')).toBe('Mod + Shift + F / f');
+    expect(shortcutKeyFor(row('shortcuts.actions.forward'), 'windows')).toBe('Ctrl + F / Ctrl + Shift + F / f');
     expect(shortcutKeyFor(row('shortcuts.global.search'), 'windows')).toBe('Ctrl + E / /');
     expect(shortcutKeyFor(row('shortcuts.global.refresh'), 'windows')).toBe('F9 / F5 / Shift + G');
   });

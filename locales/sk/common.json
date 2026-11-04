@@ -245,7 +245,6 @@
     "select_account_title": "Vybrať účet",
     "select_mailto_account": "Vyberte účet, v ktorom sa má tento e-mailový odkaz otvoriť.",
     "select_webcal_account": "Vyberte účet, v ktorom sa má tento kalendárový odkaz otvoriť.",
-    "select_account_note": "Toto platí iba pre tento odkaz protokolu.",
     "detail_to": "Komu",
     "detail_subject": "Predmet",
     "detail_no_subject": "Bez predmetu",
@@ -1124,7 +1123,7 @@
       "unfinished": []
     },
     "schedule_send": "Naplánovať odoslanie",
-    "schedule_send_description": "Vyberte, kedy má server túto správu odoslať.",
+    "schedule_send_description": "Vyberte, kedy sa má odoslať.",
     "schedule_preset": {
       "this_morning": "Dnes ráno",
       "this_afternoon": "Dnes popoludní",
@@ -1175,6 +1174,7 @@
       "edit_link": "Upraviť odkaz",
       "remove_link": "Odstrániť odkaz",
       "link_address": "Adresa odkazu",
+      "link_text": "Text",
       "link_invalid": "Adresa nesmie obsahovať medzery",
       "table": "Tabuľka",
       "clear_formatting": "Vymazať formátovanie",
@@ -4082,6 +4082,9 @@
     "sending": "Odosielanie…",
     "sent": "Odoslané",
     "view": "Zobraziť",
+    "template_saved": "Šablóna uložená",
+    "schedule_anyway": "Naplánovať aj tak",
+    "schedule_warnings_title": "Naplánovať túto správu aj tak?",
     "picker_button": "Pridať z kontaktov",
     "picker_title": "Pridať príjemcov",
     "tab_contacts": "Kontakty",
@@ -7624,5 +7627,11 @@
     "send_no_consent": "Najprv zapnite hlásenia o zlyhaniach.",
     "send_no_url": "Nie je nastavená žiadna adresa, takže to nie je kam odoslať. Zadajte ju vyššie.",
     "send_failed": "Hlásenie o zlyhaní sa nepodarilo odoslať."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Počet neprečítaných na ikone na paneli úloh",
+    "unread_badge_description": "Aby ste videli novú poštu, aj keď pracujete v inej aplikácii.",
+    "tip_compose_keys": "Stlačte {keys} a napíšte novú správu",
+    "tip_palette_keys": "Stlačte {keys} a nájdite akýkoľvek príkaz"
   }
 }

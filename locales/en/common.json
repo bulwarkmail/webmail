@@ -245,7 +245,6 @@
     "select_account_title": "Choose account",
     "select_mailto_account": "Choose which account should open this email link.",
     "select_webcal_account": "Choose which account should open this calendar link.",
-    "select_account_note": "This only applies to this protocol link.",
     "detail_to": "To",
     "detail_subject": "Subject",
     "detail_no_subject": "No subject",
@@ -1081,7 +1080,7 @@
     "submission_limit": "The server refused to send the message because a limit was reached: {reason}",
     "recipients_refused": "Not sent: the server refused {recipients}.",
     "recipients_partly_refused": "The server refused {recipients}. The other recipients get the message.",
-    "send_recipients_rejected": "Not sent - the server rejected every recipient.",
+    "send_recipients_rejected": "Not sent: the server rejected every recipient.",
     "cut": "Cut",
     "copy": "Copy",
     "send_plugin_failed": "Not sent - a plugin that handles sending failed or took too long. Check your Sent folder before sending again.",
@@ -1126,7 +1125,7 @@
       "unfinished": ["TODO", "TBD", "TBA", "TBC", "FIXME", "XXX"]
     },
     "schedule_send": "Schedule send",
-    "schedule_send_description": "Choose when the server should release this message.",
+    "schedule_send_description": "Pick when to send it.",
     "schedule_preset": {
       "this_morning": "This morning",
       "this_afternoon": "This afternoon",
@@ -1177,6 +1176,7 @@
       "edit_link": "Edit link",
       "remove_link": "Remove link",
       "link_address": "Link address",
+      "link_text": "Text",
       "link_invalid": "The address can't contain spaces",
       "table": "Table",
       "clear_formatting": "Clear formatting",
@@ -4082,6 +4082,9 @@
     "sending": "Sending…",
     "sent": "Sent",
     "view": "View",
+    "template_saved": "Template saved",
+    "schedule_anyway": "Schedule anyway",
+    "schedule_warnings_title": "Schedule this message anyway?",
     "picker_button": "Add from contacts",
     "picker_title": "Add recipients",
     "tab_contacts": "Contacts",
@@ -7624,5 +7627,11 @@
     "send_no_consent": "Turn on crash reports first.",
     "send_no_url": "No address is set, so there's nowhere to send this. Enter one above.",
     "send_failed": "The crash report couldn't be sent."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Unread count on the taskbar icon",
+    "unread_badge_description": "So you see new mail while you work in another app.",
+    "tip_compose_keys": "Press {keys} to write a new message",
+    "tip_palette_keys": "Press {keys} to find any command"
   }
 }

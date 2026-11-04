@@ -112,6 +112,15 @@ function target(shown = true): ComposerPopOut & { handed: ComposerDraftData[]; c
 
 const DRAFT: ComposerDraftData = { to: '', cc: '', bcc: '', subject: 'Old', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', mode: 'compose', draftId: null };
 
+describe('"Move to the main window" in quick compose', () => {
+  it('shows an arrow going in, not the arrows of leaving full screen', () => {
+    mount({ popOut: vi.fn(() => target()), popOutToMainLabel: 'Move to the main window' });
+    const svg = screen.getByTestId('composer-back-to-main').querySelector('svg');
+    expect(svg?.getAttribute('class')).toContain('tabler-icon-login');
+    expect(svg?.getAttribute('class')).not.toContain('minimize');
+  });
+});
+
 describe('"Open in new window" on a composer', () => {
   it('is not there without the host offering it: browsers stay as they are', () => {
     mount({});

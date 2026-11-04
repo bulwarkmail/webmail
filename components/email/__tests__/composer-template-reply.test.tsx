@@ -147,8 +147,9 @@ vi.mock('@/stores/contact-store', () => {
 
 // ─── Misc dependency mocks ────────────────────────────────────────────────────
 
+const toastSuccess = vi.hoisted(() => ({ calls: [] as unknown[][] }));
 vi.mock('@/stores/toast-store', () => ({
-  toast: { info: () => {}, error: () => {}, success: () => {} },
+  toast: { info: () => {}, error: () => {}, success: (...args: unknown[]) => { toastSuccess.calls.push(args); } },
 }));
 
 vi.mock('@/lib/plugin-hooks', () => ({
@@ -339,6 +340,17 @@ describe('applying a template to a reply (#911)', () => {
       await waitFor(() => expect(useTemplateStore.getState().templates).toHaveLength(1));
       expect(useTemplateStore.getState().templates[0]).toMatchObject({ name: 'Quick answer', subject, isHTML: true });
       expect(screen.queryByTestId('quick-save-template')).not.toBeInTheDocument();
+    });
+
+    // compose-p2-15: the dialog closed with no sign the template was kept.
+    it('says "Template saved"', async () => {
+      useTemplateStore.setState({ templates: [] });
+      toastSuccess.calls = [];
+      await openReply();
+      const dialog = await openNameDialog();
+      fireEvent.change(within(dialog).getByLabelText('template_name'), { target: { value: 'Quick answer' } });
+      fireEvent.click(within(dialog).getByText('save'));
+      await waitFor(() => expect(toastSuccess.calls).toContainEqual(['template_saved']));
     });
 
     it('carries the name over into the full editor', async () => {

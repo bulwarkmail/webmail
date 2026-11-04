@@ -245,7 +245,6 @@
     "select_account_title": "انتخاب حساب",
     "select_mailto_account": "انتخاب کنید کدام حساب این لینک ایمیل را باز کند.",
     "select_webcal_account": "انتخاب کنید کدام حساب این لینک تقویم را باز کند.",
-    "select_account_note": "فقط برای این لینک پروتکل اعمال می‌شود.",
     "detail_to": "به",
     "detail_subject": "موضوع",
     "detail_no_subject": "بدون موضوع",
@@ -1081,7 +1080,7 @@
     "recipients_partly_refused": "سرور {recipients} را رد کرد. سایر گیرندگان پیام را دریافت می‌کنند.",
     "send_offline": "به نظر می‌رسد آفلاین هستید. پیام هنوز اینجاست، وقتی آنلاین شدید دوباره ارسالش کنید.",
     "formatting": "قالب‌بندی",
-    "send_recipients_rejected": "ارسال نشد - سرور همه گیرندگان را رد کرد.",
+    "send_recipients_rejected": "ارسال نشد: سرور همه گیرندگان را رد کرد.",
     "send_plugin_failed": "ارسال نشد - افزونه‌ای که ارسال را انجام می‌دهد با خطا مواجه شد یا بیش از حد طول کشید. پیش از ارسال دوباره، پوشه ارسال‌شده را بررسی کنید.",
     "send_some_recipients_rejected": "ارسال شد، اما نه برای این گیرندگان - سرور آنها را رد کرد.",
     "continue_draft": "ادامه پیش‌نویس",
@@ -1124,7 +1123,7 @@
       "unfinished": []
     },
     "schedule_send": "زمان‌بندی ارسال",
-    "schedule_send_description": "زمان انتشار پیام توسط سرور را انتخاب کنید.",
+    "schedule_send_description": "زمان ارسال را انتخاب کنید.",
     "schedule_preset": {
       "this_morning": "امروز صبح",
       "this_afternoon": "امروز بعدازظهر",
@@ -1175,6 +1174,7 @@
       "edit_link": "ویرایش پیوند",
       "remove_link": "حذف پیوند",
       "link_address": "نشانی پیوند",
+      "link_text": "متن",
       "link_invalid": "نشانی نباید فاصله داشته باشد",
       "table": "جدول",
       "clear_formatting": "پاک کردن قالب‌بندی",
@@ -4082,6 +4082,9 @@
     "sending": "در حال ارسال…",
     "sent": "ارسال شد",
     "view": "مشاهده",
+    "template_saved": "الگو ذخیره شد",
+    "schedule_anyway": "زمان‌بندی به هر حال",
+    "schedule_warnings_title": "این پیام به هر حال زمان‌بندی شود؟",
     "picker_button": "افزودن از مخاطبین",
     "picker_title": "افزودن گیرندگان",
     "tab_contacts": "مخاطبین",
@@ -7624,5 +7627,11 @@
     "send_no_consent": "ابتدا گزارش‌های خرابی را روشن کنید.",
     "send_no_url": "نشانی‌ای تنظیم نشده، پس جایی برای ارسال نیست. در بالا یکی وارد کنید.",
     "send_failed": "گزارش خرابی ارسال نشد."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "تعداد خوانده‌نشده‌ها روی نماد نوار وظیفه",
+    "unread_badge_description": "تا ایمیل جدید را هنگام کار در برنامه‌ای دیگر ببینید.",
+    "tip_compose_keys": "برای نوشتن پیام جدید {keys} را فشار دهید",
+    "tip_palette_keys": "برای یافتن هر فرمانی {keys} را فشار دهید"
   }
 }

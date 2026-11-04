@@ -245,7 +245,6 @@
     "select_account_title": "Wybierz konto",
     "select_mailto_account": "Wybierz konto, które ma otworzyć ten link e-mail.",
     "select_webcal_account": "Wybierz konto, które ma otworzyć ten link kalendarza.",
-    "select_account_note": "Ten wybór dotyczy tylko tego linku protokołu.",
     "detail_to": "Do",
     "detail_subject": "Temat",
     "detail_no_subject": "Bez tematu",
@@ -1124,7 +1123,7 @@
     "link_url_prompt": "Wprowadź adres URL",
     "sending": "Wysyłanie...",
     "schedule_send": "Zaplanuj wysyłkę",
-    "schedule_send_description": "Wybierz, kiedy serwer ma wysłać tę wiadomość.",
+    "schedule_send_description": "Wybierz, kiedy ją wysłać.",
     "schedule_preset": {
       "this_morning": "Dziś rano",
       "this_afternoon": "Dziś po południu",
@@ -1175,6 +1174,7 @@
       "edit_link": "Edytuj link",
       "remove_link": "Usuń link",
       "link_address": "Adres linku",
+      "link_text": "Tekst",
       "link_invalid": "Adres nie może zawierać spacji",
       "table": "Tabela",
       "clear_formatting": "Wyczyść formatowanie",
@@ -4082,6 +4082,9 @@
     "sending": "Wysyłanie…",
     "sent": "Wysłano",
     "view": "Pokaż",
+    "template_saved": "Szablon zapisany",
+    "schedule_anyway": "Zaplanuj mimo to",
+    "schedule_warnings_title": "Zaplanować tę wiadomość mimo to?",
     "picker_button": "Dodaj z kontaktów",
     "picker_title": "Dodaj odbiorców",
     "tab_contacts": "Kontakty",
@@ -7624,5 +7627,11 @@
     "send_no_consent": "Najpierw włącz raporty o awariach.",
     "send_no_url": "Nie ustawiono adresu, więc nie ma dokąd tego wysłać. Wpisz go powyżej.",
     "send_failed": "Nie udało się wysłać raportu o awarii."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Liczba nieprzeczytanych na ikonie na pasku zadań",
+    "unread_badge_description": "Aby widzieć nową pocztę, gdy pracujesz w innej aplikacji.",
+    "tip_compose_keys": "Naciśnij {keys}, aby napisać nową wiadomość",
+    "tip_palette_keys": "Naciśnij {keys}, aby znaleźć dowolne polecenie"
   }
 }

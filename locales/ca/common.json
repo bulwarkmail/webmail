@@ -245,7 +245,6 @@
     "select_account_title": "Trieu un compte",
     "select_mailto_account": "Trieu quin compte ha d'obrir aquest enllaç de correu.",
     "select_webcal_account": "Trieu quin compte ha d'obrir aquest enllaç de calendari.",
-    "select_account_note": "Això només s'aplica a aquest enllaç de protocol.",
     "detail_to": "Per a",
     "detail_subject": "Assumpte",
     "detail_no_subject": "Sense assumpte",
@@ -1124,7 +1123,7 @@
       "unfinished": []
     },
     "schedule_send": "Programa l'enviament",
-    "schedule_send_description": "Trieu quan ha d'alliberar el servidor aquest missatge.",
+    "schedule_send_description": "Tria quan s'ha d'enviar.",
     "schedule_preset": {
       "this_morning": "Aquest matí",
       "this_afternoon": "Aquesta tarda",
@@ -1175,6 +1174,7 @@
       "edit_link": "Edita l'enllaç",
       "remove_link": "Treu l'enllaç",
       "link_address": "Adreça de l'enllaç",
+      "link_text": "Text",
       "link_invalid": "L'adreça no pot tenir espais",
       "table": "Taula",
       "clear_formatting": "Neteja el format",
@@ -4082,6 +4082,9 @@
     "sending": "S'està enviant…",
     "sent": "Enviat",
     "view": "Mostra",
+    "template_saved": "Plantilla desada",
+    "schedule_anyway": "Programa igualment",
+    "schedule_warnings_title": "Vols programar aquest missatge igualment?",
     "picker_button": "Afegeix des dels contactes",
     "picker_title": "Afegeix destinataris",
     "tab_contacts": "Contactes",
@@ -7624,5 +7627,11 @@
     "send_no_consent": "Activa primer els informes d'errors greus.",
     "send_no_url": "No hi ha cap adreça, així que no hi ha on enviar-ho. Escriu-ne una a dalt.",
     "send_failed": "No s'ha pogut enviar l'informe d'error."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Nombre de no llegits a la icona de la barra de tasques",
+    "unread_badge_description": "Per veure el correu nou mentre treballeu en una altra aplicació.",
+    "tip_compose_keys": "Premeu {keys} per escriure un missatge nou",
+    "tip_palette_keys": "Premeu {keys} per trobar qualsevol ordre"
   }
 }

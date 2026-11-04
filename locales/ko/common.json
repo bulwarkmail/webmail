@@ -245,7 +245,6 @@
     "select_account_title": "계정 선택",
     "select_mailto_account": "이 이메일 링크를 열 계정을 선택하세요.",
     "select_webcal_account": "이 캘린더 링크를 열 계정을 선택하세요.",
-    "select_account_note": "이 선택은 이 프로토콜 링크에만 적용됩니다.",
     "detail_to": "받는 사람",
     "detail_subject": "제목",
     "detail_no_subject": "제목 없음",
@@ -1124,7 +1123,7 @@
     "link_url_prompt": "URL을 입력하세요",
     "sending": "전송 중...",
     "schedule_send": "보내기 예약",
-    "schedule_send_description": "서버가 이 메시지를 보낼 시간을 선택하세요.",
+    "schedule_send_description": "보낼 시간을 고르세요.",
     "schedule_preset": {
       "this_morning": "오늘 아침",
       "this_afternoon": "오늘 오후",
@@ -1175,6 +1174,7 @@
       "edit_link": "링크 편집",
       "remove_link": "링크 제거",
       "link_address": "링크 주소",
+      "link_text": "텍스트",
       "link_invalid": "주소에 공백을 넣을 수 없어요",
       "table": "표",
       "clear_formatting": "서식 지우기",
@@ -4082,6 +4082,9 @@
     "sending": "보내는 중…",
     "sent": "보냈어요",
     "view": "보기",
+    "template_saved": "템플릿을 저장했습니다",
+    "schedule_anyway": "그래도 예약하기",
+    "schedule_warnings_title": "이 메일을 그래도 예약할까요?",
     "picker_button": "연락처에서 추가",
     "picker_title": "받는 사람 추가",
     "tab_contacts": "연락처",
@@ -7624,5 +7627,11 @@
     "send_no_consent": "먼저 충돌 보고서를 켜세요.",
     "send_no_url": "주소가 설정되지 않아 보낼 곳이 없습니다. 위에 입력하세요.",
     "send_failed": "충돌 보고서를 보낼 수 없습니다."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "작업 표시줄 아이콘에 읽지 않은 수 표시",
+    "unread_badge_description": "다른 앱에서 작업하는 동안에도 새 메일을 확인할 수 있습니다.",
+    "tip_compose_keys": "{keys}를 눌러 새 메시지 쓰기",
+    "tip_palette_keys": "{keys}를 눌러 명령 찾기"
   }
 }

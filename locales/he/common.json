@@ -1003,7 +1003,7 @@
     "recipients_partly_refused": "השרת דחה את {recipients}. שאר הנמענים יקבלו את ההודעה.",
     "send_offline": "נראה שאין חיבור לרשת. ההודעה עדיין כאן, שלחו אותה שוב כשתחזרו לרשת.",
     "formatting": "עיצוב",
-    "send_recipients_rejected": "לא נשלח - השרת דחה את כל הנמענים.",
+    "send_recipients_rejected": "לא נשלח: השרת דחה את כל הנמענים.",
     "send_plugin_failed": "לא נשלח - תוסף שמטפל בשליחה נכשל או לקח יותר מדי זמן. בדקו את תיקיית דואר יוצא לפני שליחה חוזרת.",
     "send_some_recipients_rejected": "נשלח, אך לא לנמענים האלה - השרת דחה אותם.",
     "continue_draft": "המשך טיוטה",
@@ -1067,7 +1067,7 @@
       "unfinished": []
     },
     "schedule_send": "תזמן שליחה",
-    "schedule_send_description": "בחר מתי השרת צריך לשחרר הודעה זו.",
+    "schedule_send_description": "בחר מתי לשלוח אותה.",
     "schedule_preset": {
       "this_morning": "הבוקר",
       "this_afternoon": "היום אחר הצהריים",
@@ -1118,6 +1118,7 @@
       "edit_link": "עריכת קישור",
       "remove_link": "הסרת קישור",
       "link_address": "כתובת הקישור",
+      "link_text": "טקסט",
       "link_invalid": "הכתובת לא יכולה להכיל רווחים",
       "table": "טבלה",
       "clear_formatting": "ניקוי עיצוב",
@@ -3966,6 +3967,9 @@
     "sending": "שולח…",
     "sent": "נשלח",
     "view": "הצג",
+    "template_saved": "התבנית נשמרה",
+    "schedule_anyway": "תזמן בכל זאת",
+    "schedule_warnings_title": "לתזמן את ההודעה בכל זאת?",
     "picker_button": "הוסף מאנשי הקשר",
     "picker_title": "הוספת נמענים",
     "tab_contacts": "אנשי קשר",
@@ -5537,7 +5541,6 @@
     "select_account_title": "בחר חשבון",
     "select_mailto_account": "בחר איזה חשבון צריך לפתוח קישור דוא״ל זה.",
     "select_webcal_account": "בחר איזה חשבון צריך לפתוח קישור לוח שנה זה.",
-    "select_account_note": "זה חל רק על קישור פרוטוקול זה.",
     "detail_to": "אל",
     "detail_subject": "נושא",
     "detail_no_subject": "אין נושא",
@@ -7625,5 +7628,11 @@
     "send_no_consent": "הפעילו קודם את דוחות הקריסה.",
     "send_no_url": "לא הוגדרה כתובת, ולכן אין לאן לשלוח. הזינו כתובת למעלה.",
     "send_failed": "לא ניתן היה לשלוח את דוח הקריסה."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "מספר ההודעות שלא נקראו על הסמל בשורת המשימות",
+    "unread_badge_description": "כדי לראות דואר חדש בזמן שאתם עובדים באפליקציה אחרת.",
+    "tip_compose_keys": "הקישו {keys} כדי לכתוב הודעה חדשה",
+    "tip_palette_keys": "הקישו {keys} כדי למצוא כל פקודה"
   }
 }

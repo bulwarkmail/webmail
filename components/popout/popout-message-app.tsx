@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { ProEmailView } from "@/components/pro/pro-email-tab-body";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useDesktopWindowName } from "@/lib/desktop/window-name";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { usePolicyStore } from "@/stores/policy-store";
@@ -105,6 +106,8 @@ function PopoutMessage({ emailId, accountId, ownerAccountId, fromLink }: { email
   const [subject, setSubject] = useState<string | null>(null);
   const subjectInTitle = usePolicyStore((s) => s.loaded && s.isFeatureEnabled("tabTitleSubjectEnabled"));
   useDocumentTitle(subjectInTitle ? subject : null);
+  // Kept out where the organisation keeps subjects out of titles: the shell then says "Message".
+  useDesktopWindowName(subjectInTitle ? subject : null);
 
   // Folders first: without them Delete has no Trash to move to, Archive has no
   // button yet, and the toolbar moves under the pointer once they arrive.

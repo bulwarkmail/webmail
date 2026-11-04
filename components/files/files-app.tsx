@@ -51,6 +51,7 @@ import { useDeepLinkUrl } from "@/hooks/use-deep-link-url";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import { useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useDesktopWindowName } from "@/lib/desktop/window-name";
 import { MvTopBar } from "@/components/layout/mv-top-bar";
 import { useMountainViewShell } from "@/hooks/use-mountain-view-shell";
 import { FilesSkeleton, FilesSkeletonBody } from "@/components/boot-skeleton/files-skeleton";
@@ -69,6 +70,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   const tSidebar = useTranslations("sidebar");
   const tShell = useTranslations("shell");
   useDocumentTitle(tSidebar("files"));
+  useDesktopWindowName(tSidebar("files"), { withAccount: true });
   const tDeepLink = useTranslations("deep_link");
   const filesEnabled = usePolicyStore((s) => s.isFeatureEnabled('filesEnabled'));
   const { isAuthenticated, logout, checkAuth, isLoading: authLoading, client } = useAuthStore();

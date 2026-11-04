@@ -245,7 +245,6 @@
     "select_account_title": "Scegli account",
     "select_mailto_account": "Scegli quale account deve aprire questo link e-mail.",
     "select_webcal_account": "Scegli quale account deve aprire questo link calendario.",
-    "select_account_note": "Questa scelta si applica solo a questo link di protocollo.",
     "detail_to": "A",
     "detail_subject": "Oggetto",
     "detail_no_subject": "Senza oggetto",
@@ -1124,7 +1123,7 @@
     "link_url_prompt": "Inserisci l'URL",
     "sending": "Invio in corso...",
     "schedule_send": "Programma invio",
-    "schedule_send_description": "Scegli quando il server deve rilasciare questo messaggio.",
+    "schedule_send_description": "Scegli quando inviarlo.",
     "schedule_preset": {
       "this_morning": "Stamattina",
       "this_afternoon": "Oggi pomeriggio",
@@ -1175,6 +1174,7 @@
       "edit_link": "Modifica link",
       "remove_link": "Rimuovi link",
       "link_address": "Indirizzo del link",
+      "link_text": "Testo",
       "link_invalid": "L'indirizzo non può contenere spazi",
       "table": "Tabella",
       "clear_formatting": "Cancella formattazione",
@@ -4082,6 +4082,9 @@
     "sending": "Invio in corso…",
     "sent": "Inviato",
     "view": "Visualizza",
+    "template_saved": "Modello salvato",
+    "schedule_anyway": "Programma comunque",
+    "schedule_warnings_title": "Programmare comunque questo messaggio?",
     "picker_button": "Aggiungi dai contatti",
     "picker_title": "Aggiungi destinatari",
     "tab_contacts": "Contatti",
@@ -7624,5 +7627,11 @@
     "send_no_consent": "Attiva prima le segnalazioni di arresto anomalo.",
     "send_no_url": "Non è impostato alcun indirizzo, quindi non c'è dove inviarla. Inseriscine uno qui sopra.",
     "send_failed": "Impossibile inviare la segnalazione di arresto."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Numero di messaggi non letti sull'icona della barra delle applicazioni",
+    "unread_badge_description": "Per vedere la nuova posta mentre lavori in un'altra app.",
+    "tip_compose_keys": "Premi {keys} per scrivere un nuovo messaggio",
+    "tip_palette_keys": "Premi {keys} per trovare qualsiasi comando"
   }
 }

@@ -245,7 +245,6 @@
     "select_account_title": "Vybrat účet",
     "select_mailto_account": "Vyberte účet, ve kterém se má tento e-mailový odkaz otevřít.",
     "select_webcal_account": "Vyberte účet, ve kterém se má tento kalendářový odkaz otevřít.",
-    "select_account_note": "Tato volba platí jen pro tento odkaz protokolu.",
     "detail_to": "Komu",
     "detail_subject": "Předmět",
     "detail_no_subject": "Bez předmětu",
@@ -1124,7 +1123,7 @@
     "link_url_prompt": "Zadejte URL",
     "sending": "Odesílání...",
     "schedule_send": "Naplánovat odeslání",
-    "schedule_send_description": "Vyberte, kdy má server tuto zprávu odeslat.",
+    "schedule_send_description": "Vyberte, kdy se má odeslat.",
     "schedule_preset": {
       "this_morning": "Dnes ráno",
       "this_afternoon": "Dnes odpoledne",
@@ -1175,6 +1174,7 @@
       "edit_link": "Upravit odkaz",
       "remove_link": "Odebrat odkaz",
       "link_address": "Adresa odkazu",
+      "link_text": "Text",
       "link_invalid": "Adresa nesmí obsahovat mezery",
       "table": "Tabulka",
       "clear_formatting": "Vymazat formátování",
@@ -4082,6 +4082,9 @@
     "sending": "Odesílání…",
     "sent": "Odesláno",
     "view": "Zobrazit",
+    "template_saved": "Šablona uložena",
+    "schedule_anyway": "Přesto naplánovat",
+    "schedule_warnings_title": "Přesto tuto zprávu naplánovat?",
     "picker_button": "Přidat z kontaktů",
     "picker_title": "Přidat příjemce",
     "tab_contacts": "Kontakty",
@@ -7624,5 +7627,11 @@
     "send_no_consent": "Nejprve zapněte hlášení o pádech.",
     "send_no_url": "Není nastavena žádná adresa, takže to nejde kam odeslat. Zadejte ji výše.",
     "send_failed": "Hlášení o pádu se nepodařilo odeslat."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Počet nepřečtených na ikoně na hlavním panelu",
+    "unread_badge_description": "Abyste viděli novou poštu, i když pracujete v jiné aplikaci.",
+    "tip_compose_keys": "Stiskněte {keys} a napište novou zprávu",
+    "tip_palette_keys": "Stiskněte {keys} a najděte jakýkoli příkaz"
   }
 }

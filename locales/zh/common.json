@@ -245,7 +245,6 @@
     "select_account_title": "选择账户",
     "select_mailto_account": "选择用于打开此电子邮件链接的账户。",
     "select_webcal_account": "选择用于打开此日历链接的账户。",
-    "select_account_note": "此选择仅适用于此协议链接。",
     "detail_to": "收件人",
     "detail_subject": "主题",
     "detail_no_subject": "无主题",
@@ -1124,7 +1123,7 @@
     "link_url_prompt": "输入 URL",
     "sending": "发送中...",
     "schedule_send": "计划发送",
-    "schedule_send_description": "选择服务器应何时发送此邮件。",
+    "schedule_send_description": "选择发送时间。",
     "schedule_preset": {
       "this_morning": "今天早上",
       "this_afternoon": "今天下午",
@@ -1175,6 +1174,7 @@
       "edit_link": "编辑链接",
       "remove_link": "移除链接",
       "link_address": "链接地址",
+      "link_text": "文本",
       "link_invalid": "地址中不能包含空格",
       "table": "表格",
       "clear_formatting": "清除格式",
@@ -4082,6 +4082,9 @@
     "sending": "正在发送…",
     "sent": "已发送",
     "view": "查看",
+    "template_saved": "模板已保存",
+    "schedule_anyway": "仍然计划发送",
+    "schedule_warnings_title": "仍然计划发送这封邮件？",
     "picker_button": "从联系人添加",
     "picker_title": "添加收件人",
     "tab_contacts": "联系人",
@@ -7624,5 +7627,11 @@
     "send_no_consent": "请先开启崩溃报告。",
     "send_no_url": "未设置地址，因此无处发送。请在上方输入一个。",
     "send_failed": "无法发送崩溃报告。"
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "在任务栏图标上显示未读数",
+    "unread_badge_description": "这样您在其他应用中工作时也能看到新邮件。",
+    "tip_compose_keys": "按 {keys} 写新邮件",
+    "tip_palette_keys": "按 {keys} 查找任何命令"
   }
 }

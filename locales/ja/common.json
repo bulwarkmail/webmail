@@ -245,7 +245,6 @@
     "select_account_title": "アカウントを選択",
     "select_mailto_account": "このメールリンクを開くアカウントを選択してください。",
     "select_webcal_account": "このカレンダーリンクを開くアカウントを選択してください。",
-    "select_account_note": "この選択は、このプロトコル リンクにのみ適用されます。",
     "detail_to": "宛先",
     "detail_subject": "件名",
     "detail_no_subject": "件名なし",
@@ -1124,7 +1123,7 @@
     "link_url_prompt": "URLを入力してください",
     "sending": "送信中...",
     "schedule_send": "送信を予約",
-    "schedule_send_description": "サーバーがこのメッセージを送信する日時を選択します。",
+    "schedule_send_description": "送信する日時を選んでください。",
     "schedule_preset": {
       "this_morning": "今朝",
       "this_afternoon": "今日の午後",
@@ -1175,6 +1174,7 @@
       "edit_link": "リンクを編集",
       "remove_link": "リンクを解除",
       "link_address": "リンク先のアドレス",
+      "link_text": "テキスト",
       "link_invalid": "アドレスに空白は使えません",
       "table": "表",
       "clear_formatting": "書式をクリア",
@@ -4082,6 +4082,9 @@
     "sending": "送信中…",
     "sent": "送信しました",
     "view": "表示",
+    "template_saved": "テンプレートを保存しました",
+    "schedule_anyway": "そのまま予約",
+    "schedule_warnings_title": "このメッセージをそのまま予約しますか？",
     "picker_button": "連絡先から追加",
     "picker_title": "宛先を追加",
     "tab_contacts": "連絡先",
@@ -7624,5 +7627,11 @@
     "send_no_consent": "先にクラッシュレポートをオンにしてください。",
     "send_no_url": "アドレスが設定されていないため、送信先がありません。上で入力してください。",
     "send_failed": "クラッシュレポートを送信できませんでした。"
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "タスクバーのアイコンに未読数を表示",
+    "unread_badge_description": "別のアプリで作業中でも新着メールがわかります。",
+    "tip_compose_keys": "{keys} を押して新しいメッセージを作成",
+    "tip_palette_keys": "{keys} を押してコマンドを検索"
   }
 }

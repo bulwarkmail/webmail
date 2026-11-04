@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { attachmentsForDisplay } from '../attachment-order';
 
 describe('the order of the composer attachment chips', () => {
-  it('puts failed, then uploading files first, and keeps the rest in the order added', () => {
+  it('puts failed files first, and keeps the rest, uploading or not, in the order added', () => {
     const files = [
       { name: 'a.pdf' },
       { name: 'b.pdf', uploading: true },
@@ -11,8 +11,8 @@ describe('the order of the composer attachment chips', () => {
       { name: 'broken.png', error: 'failed' },
     ];
     const shown = attachmentsForDisplay(files);
-    expect(shown.map(({ att }) => att.name)).toEqual(['broken.png', 'b.pdf', 'big.zip', 'a.pdf', 'c.pdf']);
+    expect(shown.map(({ att }) => att.name)).toEqual(['broken.png', 'a.pdf', 'b.pdf', 'c.pdf', 'big.zip']);
     // Each keeps its place in the composer's list, for Remove.
-    expect(shown.map(({ index }) => index)).toEqual([4, 1, 3, 0, 2]);
+    expect(shown.map(({ index }) => index)).toEqual([4, 0, 1, 2, 3]);
   });
 });

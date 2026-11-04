@@ -48,13 +48,9 @@ export function useBottomControls(active = true): (el: HTMLElement | null) => vo
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(schedule);
     observer?.observe(el);
     window.addEventListener('resize', schedule);
-    // A bar inside a scrolling pane (the quick reply under a message) moves
-    // when the pane scrolls.
-    window.addEventListener('scroll', schedule, { capture: true, passive: true });
     return () => {
       observer?.disconnect();
       window.removeEventListener('resize', schedule);
-      window.removeEventListener('scroll', schedule, { capture: true });
       bars.delete(el);
       update();
     };

@@ -245,7 +245,6 @@
     "select_account_title": "Hesap seç",
     "select_mailto_account": "Bu e-posta bağlantısını hangi hesabın açacağını seçin.",
     "select_webcal_account": "Bu takvim bağlantısını hangi hesabın açacağını seçin.",
-    "select_account_note": "Bu seçim yalnızca bu protokol bağlantısı için geçerlidir.",
     "detail_to": "Kime",
     "detail_subject": "Konu",
     "detail_no_subject": "Konu yok",
@@ -1081,7 +1080,7 @@
     "recipients_partly_refused": "Sunucu şu alıcıları reddetti: {recipients}. Diğer alıcılar iletiyi alır.",
     "send_offline": "Çevrimdışı görünüyorsunuz. İleti hâlâ burada; yeniden çevrimiçi olduğunuzda tekrar gönderin.",
     "formatting": "Biçimlendirme",
-    "send_recipients_rejected": "Gönderilmedi - sunucu tüm alıcıları reddetti.",
+    "send_recipients_rejected": "Gönderilmedi: sunucu tüm alıcıları reddetti.",
     "send_plugin_failed": "Gönderilmedi - gönderimi üstlenen bir eklenti başarısız oldu ya da çok uzun sürdü. Yeniden göndermeden önce Gönderilenler klasörünü kontrol edin.",
     "send_some_recipients_rejected": "Gönderildi, ancak bu alıcılara değil - sunucu onları reddetti.",
     "continue_draft": "Taslağa devam et",
@@ -1124,7 +1123,7 @@
       "unfinished": []
     },
     "schedule_send": "Göndermeyi zamanla",
-    "schedule_send_description": "Sunucunun bu iletiyi ne zaman göndereceğini seçin.",
+    "schedule_send_description": "Ne zaman gönderileceğini seçin.",
     "schedule_preset": {
       "this_morning": "Bu sabah",
       "this_afternoon": "Bu öğleden sonra",
@@ -1175,6 +1174,7 @@
       "edit_link": "Bağlantıyı düzenle",
       "remove_link": "Bağlantıyı kaldır",
       "link_address": "Bağlantı adresi",
+      "link_text": "Metin",
       "link_invalid": "Adres boşluk içeremez",
       "table": "Tablo",
       "clear_formatting": "Biçimlendirmeyi temizle",
@@ -4082,6 +4082,9 @@
     "sending": "Gönderiliyor…",
     "sent": "Gönderildi",
     "view": "Görüntüle",
+    "template_saved": "Şablon kaydedildi",
+    "schedule_anyway": "Yine de zamanla",
+    "schedule_warnings_title": "Bu ileti yine de zamanlansın mı?",
     "picker_button": "Kişilerden ekle",
     "picker_title": "Alıcı ekle",
     "tab_contacts": "Kişiler",
@@ -7624,5 +7627,11 @@
     "send_no_consent": "Önce kilitlenme raporlarını açın.",
     "send_no_url": "Adres ayarlanmadı, bu yüzden gönderilecek yer yok. Yukarıya bir adres girin.",
     "send_failed": "Kilitlenme raporu gönderilemedi."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Görev çubuğu simgesinde okunmamış sayısı",
+    "unread_badge_description": "Başka bir uygulamada çalışırken yeni postayı görmeniz için.",
+    "tip_compose_keys": "Yeni bir ileti yazmak için {keys} tuşlarına basın",
+    "tip_palette_keys": "Herhangi bir komutu bulmak için {keys} tuşlarına basın"
   }
 }

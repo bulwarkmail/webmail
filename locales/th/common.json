@@ -1258,6 +1258,9 @@
     "sending": "กำลังส่ง…",
     "sent": "ส่งแล้ว",
     "view": "ดู",
+    "template_saved": "บันทึกเทมเพลตแล้ว",
+    "schedule_anyway": "กำหนดเวลาต่อไป",
+    "schedule_warnings_title": "กำหนดเวลาส่งข้อความนี้ต่อไปหรือไม่",
     "picker_button": "เพิ่มจากผู้ติดต่อ",
     "picker_title": "เพิ่มผู้รับ",
     "tab_contacts": "ผู้ติดต่อ",
@@ -1473,7 +1476,7 @@
     "submission_limit": "เซิร์ฟเวอร์ปฏิเสธการส่งข้อความเนื่องจากเกินขีดจำกัด: {reason}",
     "recipients_refused": "ส่งไม่สำเร็จ: เซิร์ฟเวอร์ปฏิเสธผู้รับ {recipients}",
     "recipients_partly_refused": "เซิร์ฟเวอร์ปฏิเสธผู้รับ {recipients} แต่ผู้รับรายอื่นจะยังคงได้รับข้อความ",
-    "send_recipients_rejected": "ส่งไม่สำเร็จ - เซิร์ฟเวอร์ปฏิเสธผู้รับทุกคน",
+    "send_recipients_rejected": "ส่งไม่สำเร็จ: เซิร์ฟเวอร์ปฏิเสธผู้รับทุกคน",
     "cut": "ตัด",
     "copy": "คัดลอก",
     "send_plugin_failed": "ส่งไม่สำเร็จ - ปลั๊กอินที่จัดการการส่งเกิดข้อผิดพลาด กรุณาตรวจสอบโฟลเดอร์ส่งแล้วก่อนส่งซ้ำ",
@@ -1526,7 +1529,7 @@
       "unfinished": []
     },
     "schedule_send": "กำหนดเวลาส่ง",
-    "schedule_send_description": "เลือกเวลาที่ต้องการให้เซิร์ฟเวอร์ส่งข้อความนี้",
+    "schedule_send_description": "เลือกเวลาที่จะส่ง",
     "schedule_preset": {
       "this_morning": "เช้านี้",
       "this_afternoon": "บ่ายนี้",
@@ -1577,6 +1580,7 @@
       "edit_link": "แก้ไขลิงก์",
       "remove_link": "นำลิงก์ออก",
       "link_address": "ที่อยู่ลิงก์",
+      "link_text": "ข้อความ",
       "link_invalid": "ที่อยู่ต้องไม่มีช่องว่าง",
       "table": "ตาราง",
       "clear_formatting": "ล้างการจัดรูปแบบ",
@@ -2741,7 +2745,6 @@
     "select_account_title": "เลือกบัญชี",
     "select_mailto_account": "เลือกบัญชีที่ต้องการให้เปิดลิงก์อีเมลนี้",
     "select_webcal_account": "เลือกบัญชีที่ต้องการให้เปิดลิงก์ปฏิทินนี้",
-    "select_account_note": "การตั้งค่านี้มีผลเฉพาะกับลิงก์โปรโตคอลนี้เท่านั้น",
     "detail_to": "ถึง",
     "detail_subject": "เรื่อง",
     "detail_no_subject": "ไม่มีหัวข้อเรื่อง",
@@ -7632,5 +7635,11 @@
     "send_no_consent": "เปิดรายงานข้อขัดข้องก่อน",
     "send_no_url": "ไม่ได้ตั้งที่อยู่ จึงไม่มีปลายทางให้ส่ง ป้อนที่อยู่ด้านบน",
     "send_failed": "ไม่สามารถส่งรายงานข้อขัดข้องได้"
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "จำนวนที่ยังไม่อ่านบนไอคอนในแถบงาน",
+    "unread_badge_description": "เพื่อให้เห็นอีเมลใหม่ขณะทำงานในแอปอื่น",
+    "tip_compose_keys": "กด {keys} เพื่อเขียนข้อความใหม่",
+    "tip_palette_keys": "กด {keys} เพื่อค้นหาคำสั่งใดก็ได้"
   }
 }

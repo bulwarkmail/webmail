@@ -245,7 +245,6 @@
     "select_account_title": "Chọn tài khoản",
     "select_mailto_account": "Chọn tài khoản nào sẽ mở liên kết email này.",
     "select_webcal_account": "Chọn tài khoản nào sẽ mở liên kết lịch này.",
-    "select_account_note": "Điều này chỉ áp dụng cho liên kết giao thức này.",
     "detail_to": "Đến",
     "detail_subject": "Tiêu đề",
     "detail_no_subject": "Không có tiêu đề",
@@ -1138,7 +1137,7 @@
       ]
     },
     "schedule_send": "Lên lịch gửi",
-    "schedule_send_description": "Chọn thời điểm máy chủ sẽ gửi thư này.",
+    "schedule_send_description": "Chọn thời điểm gửi.",
     "schedule_preset": {
       "this_morning": "Sáng nay",
       "this_afternoon": "Chiều nay",
@@ -1189,6 +1188,7 @@
       "edit_link": "Chỉnh sửa liên kết",
       "remove_link": "Xóa liên kết",
       "link_address": "Địa chỉ liên kết",
+      "link_text": "Văn bản",
       "link_invalid": "Địa chỉ không được chứa dấu cách",
       "table": "Bảng",
       "clear_formatting": "Xóa định dạng",
@@ -4094,6 +4094,9 @@
     "sending": "Đang gửi…",
     "sent": "Đã gửi",
     "view": "Xem",
+    "template_saved": "Đã lưu mẫu",
+    "schedule_anyway": "Vẫn lên lịch",
+    "schedule_warnings_title": "Vẫn lên lịch gửi thư này?",
     "picker_button": "Thêm từ danh bạ",
     "picker_title": "Thêm người nhận",
     "tab_contacts": "Danh bạ",
@@ -7636,5 +7639,11 @@
     "send_no_consent": "Hãy bật báo cáo sự cố trước.",
     "send_no_url": "Chưa đặt địa chỉ nên không có nơi để gửi. Hãy nhập một địa chỉ ở trên.",
     "send_failed": "Không thể gửi báo cáo sự cố."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Số thư chưa đọc trên biểu tượng thanh tác vụ",
+    "unread_badge_description": "Để bạn thấy thư mới khi đang làm việc trong ứng dụng khác.",
+    "tip_compose_keys": "Nhấn {keys} để viết thư mới",
+    "tip_palette_keys": "Nhấn {keys} để tìm bất kỳ lệnh nào"
   }
 }

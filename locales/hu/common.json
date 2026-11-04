@@ -245,7 +245,6 @@
     "select_account_title": "Fiók kiválasztása",
     "select_mailto_account": "Válaszd ki, melyik fiók nyissa meg ezt az e-mail hivatkozást.",
     "select_webcal_account": "Válaszd ki, melyik fiók nyissa meg ezt a naptár hivatkozást.",
-    "select_account_note": "Ez csak erre a protokoll hivatkozásra vonatkozik.",
     "detail_to": "Címzett",
     "detail_subject": "Tárgy",
     "detail_no_subject": "Nincs tárgy",
@@ -1124,7 +1123,7 @@
       "unfinished": []
     },
     "schedule_send": "Késleltetett küldés",
-    "schedule_send_description": "Válaszd ki, mikor küldje el a szerver az üzenetet.",
+    "schedule_send_description": "Válaszd ki, mikor menjen el.",
     "schedule_preset": {
       "this_morning": "Ma reggel",
       "this_afternoon": "Ma délután",
@@ -1175,6 +1174,7 @@
       "edit_link": "Hivatkozás szerkesztése",
       "remove_link": "Hivatkozás eltávolítása",
       "link_address": "Hivatkozás címe",
+      "link_text": "Szöveg",
       "link_invalid": "A cím nem tartalmazhat szóközt",
       "table": "Táblázat",
       "clear_formatting": "Formázás törlése",
@@ -4082,6 +4082,9 @@
     "sending": "Küldés…",
     "sent": "Elküldve",
     "view": "Megtekintés",
+    "template_saved": "Sablon mentve",
+    "schedule_anyway": "Időzítés így is",
+    "schedule_warnings_title": "Időzíti így is ezt az üzenetet?",
     "picker_button": "Hozzáadás a névjegyekből",
     "picker_title": "Címzettek hozzáadása",
     "tab_contacts": "Névjegyek",
@@ -7624,5 +7627,11 @@
     "send_no_consent": "Először kapcsolja be az összeomlási jelentéseket.",
     "send_no_url": "Nincs megadva cím, így nincs hová küldeni. Adjon meg egyet fent.",
     "send_failed": "Az összeomlási jelentést nem sikerült elküldeni."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Olvasatlan levelek száma a tálca ikonján",
+    "unread_badge_description": "Így akkor is látja az új leveleket, ha egy másik alkalmazásban dolgozik.",
+    "tip_compose_keys": "Új üzenet írásához nyomja meg: {keys}",
+    "tip_palette_keys": "Bármely parancs kereséséhez nyomja meg: {keys}"
   }
 }

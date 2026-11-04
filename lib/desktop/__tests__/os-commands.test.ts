@@ -132,6 +132,12 @@ describe('launches', () => {
     expect(takeHandoff('compose')?.files.map((file) => file.name)).toEqual(['a.pdf', 'b.png']);
   });
 
+  it('files sent from another program are marked so, for a compose window of their own, as a mail link', async () => {
+    const { takeHandoff } = await import('@/lib/launch-handoff');
+    await run({ type: 'files', reason: 'attach', failed: [], files: [{ name: 'a.pdf', data: text('a') }] });
+    expect(takeHandoff('compose')).toMatchObject({ fromOs: true });
+  });
+
   it('a file opened with the app asks: new message or Files, a new message first', async () => {
     const { takeHandoff } = await import('@/lib/launch-handoff');
     const { listenForFileChoices } = await import('@/lib/file-drop/choice');

@@ -245,7 +245,6 @@
     "select_account_title": "Vali konto",
     "select_mailto_account": "Vali, milline konto peaks selle e-posti lingi avama.",
     "select_webcal_account": "Vali, milline konto peaks selle kalendrilingi avama.",
-    "select_account_note": "See kehtib ainult selle protokollilingi kohta.",
     "detail_to": "Kellele",
     "detail_subject": "Teema",
     "detail_no_subject": "Teema puudub",
@@ -1081,7 +1080,7 @@
     "submission_limit": "Server keeldus kirja saatmast, sest piirang on täis: {reason}",
     "recipients_refused": "Ei saadetud: server lükkas tagasi {recipients}.",
     "recipients_partly_refused": "Server lükkas tagasi {recipients}. Teised adressaadid saavad kirja kätte.",
-    "send_recipients_rejected": "Ei saadetud - server lükkas kõik adressaadid tagasi.",
+    "send_recipients_rejected": "Ei saadetud: server lükkas kõik adressaadid tagasi.",
     "send_plugin_failed": "Ei saadetud - saatmist käsitlev pistikprogramm ebaõnnestus või võttis liiga kaua aega. Kontrolli enne uuesti saatmist kausta Saadetud.",
     "send_some_recipients_rejected": "Saadetud, kuid mitte neile adressaatidele - server lükkas nad tagasi.",
     "continue_draft": "Jätka mustandiga",
@@ -1124,7 +1123,7 @@
       "unfinished": []
     },
     "schedule_send": "Ajasta saatmine",
-    "schedule_send_description": "Vali, millal server peaks selle sõnumi välja saatma.",
+    "schedule_send_description": "Vali, millal see saata.",
     "schedule_preset": {
       "this_morning": "Täna hommikul",
       "this_afternoon": "Täna pärastlõunal",
@@ -1175,6 +1174,7 @@
       "edit_link": "Muuda linki",
       "remove_link": "Eemalda link",
       "link_address": "Lingi aadress",
+      "link_text": "Tekst",
       "link_invalid": "Aadressis ei tohi olla tühikuid",
       "table": "Tabel",
       "clear_formatting": "Eemalda vormindus",
@@ -4082,6 +4082,9 @@
     "sending": "Saatmine…",
     "sent": "Saadetud",
     "view": "Vaata",
+    "template_saved": "Mall salvestatud",
+    "schedule_anyway": "Ajasta ikkagi",
+    "schedule_warnings_title": "Kas ajastada see kiri ikkagi?",
     "picker_button": "Lisa kontaktidest",
     "picker_title": "Lisa saajaid",
     "tab_contacts": "Kontaktid",
@@ -7624,5 +7627,11 @@
     "send_no_consent": "Lülitage esmalt kokkujooksmise aruanded sisse.",
     "send_no_url": "Aadressi pole määratud, seega pole seda kuhugi saata. Sisestage see ülal.",
     "send_failed": "Kokkujooksmise aruannet ei õnnestunud saata."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Lugemata kirjade arv tegumiriba ikoonil",
+    "unread_badge_description": "Nii näete uut kirja ka siis, kui töötate teises rakenduses.",
+    "tip_compose_keys": "Uue kirja kirjutamiseks vajutage {keys}",
+    "tip_palette_keys": "Mis tahes käsu leidmiseks vajutage {keys}"
   }
 }

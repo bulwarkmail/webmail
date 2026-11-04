@@ -245,7 +245,6 @@
     "select_account_title": "Velg konto",
     "select_mailto_account": "Velg hvilken konto som skal åpne denne e-postlenken.",
     "select_webcal_account": "Velg hvilken konto som skal åpne denne kalenderlenken.",
-    "select_account_note": "Dette gjelder bare denne lenken.",
     "detail_to": "Til",
     "detail_subject": "Emne",
     "detail_no_subject": "Uten emne",
@@ -1124,7 +1123,7 @@
       "unfinished": []
     },
     "schedule_send": "Planlegg sending",
-    "schedule_send_description": "Velg når serveren skal sende denne meldingen.",
+    "schedule_send_description": "Velg når den skal sendes.",
     "schedule_preset": {
       "this_morning": "I dag tidlig",
       "this_afternoon": "I ettermiddag",
@@ -1175,6 +1174,7 @@
       "edit_link": "Rediger lenke",
       "remove_link": "Fjern lenke",
       "link_address": "Lenkeadresse",
+      "link_text": "Tekst",
       "link_invalid": "Adressen kan ikke inneholde mellomrom",
       "table": "Tabell",
       "clear_formatting": "Fjern formatering",
@@ -4082,6 +4082,9 @@
     "sending": "Sender…",
     "sent": "Sendt",
     "view": "Vis",
+    "template_saved": "Mal lagret",
+    "schedule_anyway": "Planlegg likevel",
+    "schedule_warnings_title": "Planlegge denne meldingen likevel?",
     "picker_button": "Legg til fra kontakter",
     "picker_title": "Legg til mottakere",
     "tab_contacts": "Kontakter",
@@ -7624,5 +7627,11 @@
     "send_no_consent": "Slå på krasjrapporter først.",
     "send_no_url": "Ingen adresse er angitt, så den kan ikke sendes noe sted. Skriv inn en ovenfor.",
     "send_failed": "Krasjrapporten kunne ikke sendes."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Antall uleste på ikonet på oppgavelinjen",
+    "unread_badge_description": "Slik ser du ny e-post mens du jobber i en annen app.",
+    "tip_compose_keys": "Trykk på {keys} for å skrive en ny melding",
+    "tip_palette_keys": "Trykk på {keys} for å finne en kommando"
   }
 }

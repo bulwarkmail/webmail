@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useIdentityStore } from '@/stores/identity-store';
 import { usePluginStore } from '@/stores/plugin-store';
+import { useSettingsStore } from '@/stores/settings-store';
 import { emailHooks } from '@/lib/plugin-hooks';
 
 // The composer's window: when it tells the opening window to let go, and what
@@ -610,11 +611,51 @@ describe('a send held for undo', () => {
     expect(closeSelf).not.toHaveBeenCalled();
     const sent = heard.find((message) => message.type === 'sent') as Extract<PopoutMessage, { type: 'sent' }> | undefined;
     expect(sent?.notice.pendingUndoSend ?? null).toBeNull();
+    // compose-p2-13: the main window asks for the Scheduled count again then.
+    expect(sent?.notice.releasesAt).toBe(sendAt);
+  });
+
+  // The server's time runs past the delay: "Sending in 6 seconds" for 5 s.
+  it('never counts from more than the delay the user picked', async () => {
+    const before = useSettingsStore.getState().sendDelaySeconds;
+    useSettingsStore.setState({ sendDelaySeconds: 5 } as never);
+    await sendFromWindow(5.8);
+    expect(screen.getByTestId('popout-sending')).toHaveAttribute('data-seconds', '5');
+    useSettingsStore.setState({ sendDelaySeconds: before } as never);
+  });
+
+  // compose-24: the window sat with a greyed Send until the server answered.
+  it('says "Sending…" as soon as Send goes through, before the server answers', async () => {
+    let answer!: () => void;
+    useEmailStore.setState({ sendEmail: vi.fn(() => new Promise((resolve) => { answer = () => resolve({}); })) } as never);
+    sendAt = new Date(Date.now() + 5000).toISOString();
+    window.history.replaceState(null, '', '/en/popout/compose?draft=d0&account=alice');
+    render(<PopoutComposeApp />);
+    await waitFor(() => expect(screen.getByTestId('composer').textContent).toBe('Before sending'));
+    let done: Promise<unknown> = Promise.resolve();
+    act(() => { done = (composer as unknown as Sending).onSend(DATA); });
+    expect(screen.getByTestId('popout-sending').textContent).toMatch(/sending$/);
+    await act(async () => { answer(); await done; });
+  });
+
+  it('shows the composer again with its text when the send fails', async () => {
+    useEmailStore.setState({ sendEmail: vi.fn(async () => { throw new Error('refused'); }) } as never);
+    sendAt = new Date(Date.now() + 5000).toISOString();
+    window.history.replaceState(null, '', '/en/popout/compose?draft=d0&account=alice');
+    render(<PopoutComposeApp />);
+    await waitFor(() => expect(screen.getByTestId('composer').textContent).toBe('Before sending'));
+    await act(async () => {
+      await expect((composer as unknown as Sending).onSend(DATA)).rejects.toThrow('refused');
+    });
+    expect(screen.queryByTestId('popout-sending')).toBeNull();
+    expect(screen.getByTestId('composer').closest('.hidden')).toBeNull();
   });
 
   it('closes once the undo time is over', async () => {
     await sendFromWindow(1.2);
     expect(closeSelf).not.toHaveBeenCalled();
+    // As the main window's toast: "Sent" once Undo is over (compose-24).
+    await waitFor(() => expect(screen.getByTestId('popout-sending').textContent).toMatch(/(^|\.)sent$/), { timeout: 3000 });
     await waitFor(() => expect(closeSelf).toHaveBeenCalled(), { timeout: 4000 });
   });
 
@@ -629,7 +670,8 @@ describe('a send held for undo', () => {
 
   it('a message scheduled for later still goes to the main window, and the window closes', async () => {
     await sendFromWindow(3600);
-    expect(screen.queryByTestId('popout-sending')).toBeNull();
+    // "Sending…" may still show as the window goes, but no Undo here.
+    expect(screen.queryByRole('button', { name: 'undo_send' })).toBeNull();
     expect(closeSelf).toHaveBeenCalled();
     const sent = heard.find((message) => message.type === 'sent') as Extract<PopoutMessage, { type: 'sent' }> | undefined;
     expect(sent?.notice.pendingUndoSend?.submissionId).toBe('sub1');

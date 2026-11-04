@@ -245,7 +245,6 @@
     "select_account_title": "Account kiezen",
     "select_mailto_account": "Kies welk account deze e-maillink moet openen.",
     "select_webcal_account": "Kies welk account deze kalenderlink moet openen.",
-    "select_account_note": "Deze keuze geldt alleen voor deze protocol-link.",
     "detail_to": "Aan",
     "detail_subject": "Onderwerp",
     "detail_no_subject": "Geen onderwerp",
@@ -1085,7 +1084,7 @@
     "recipients_partly_refused": "De server heeft {recipients} geweigerd. De andere ontvangers krijgen het bericht.",
     "send_offline": "Je lijkt offline te zijn. Het bericht staat er nog; verstuur het opnieuw zodra je weer online bent.",
     "formatting": "Opmaak",
-    "send_recipients_rejected": "Niet verzonden - de server heeft alle ontvangers geweigerd.",
+    "send_recipients_rejected": "Niet verzonden: de server heeft alle ontvangers geweigerd.",
     "send_plugin_failed": "Niet verzonden - een plug-in die het verzenden afhandelt, is mislukt of duurde te lang. Controleer je map Verzonden voordat je opnieuw verzendt.",
     "send_some_recipients_rejected": "Verzonden, maar niet naar deze ontvangers - de server heeft ze geweigerd.",
     "continue_draft": "Concept voortzetten",
@@ -1124,7 +1123,7 @@
     "link_url_prompt": "Voer de URL in",
     "sending": "Bezig met verzenden...",
     "schedule_send": "Verzenden plannen",
-    "schedule_send_description": "Kies wanneer de server dit bericht moet vrijgeven.",
+    "schedule_send_description": "Kies wanneer het verzonden wordt.",
     "schedule_preset": {
       "this_morning": "Vanochtend",
       "this_afternoon": "Vanmiddag",
@@ -1175,6 +1174,7 @@
       "edit_link": "Link bewerken",
       "remove_link": "Link verwijderen",
       "link_address": "Linkadres",
+      "link_text": "Tekst",
       "link_invalid": "Het adres mag geen spaties bevatten",
       "table": "Tabel",
       "clear_formatting": "Opmaak wissen",
@@ -4082,6 +4082,9 @@
     "sending": "Bezig met verzenden…",
     "sent": "Verzonden",
     "view": "Bekijken",
+    "template_saved": "Sjabloon opgeslagen",
+    "schedule_anyway": "Toch plannen",
+    "schedule_warnings_title": "Dit bericht toch plannen?",
     "picker_button": "Toevoegen uit contacten",
     "picker_title": "Ontvangers toevoegen",
     "tab_contacts": "Contacten",
@@ -7624,5 +7627,11 @@
     "send_no_consent": "Zet eerst crashrapporten aan.",
     "send_no_url": "Er is geen adres ingesteld, dus dit kan nergens heen. Vul hierboven een adres in.",
     "send_failed": "Het crashrapport kon niet worden verzonden."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Aantal ongelezen op het taakbalkpictogram",
+    "unread_badge_description": "Zo ziet u nieuwe mail terwijl u in een andere app werkt.",
+    "tip_compose_keys": "Druk op {keys} om een nieuw bericht te schrijven",
+    "tip_palette_keys": "Druk op {keys} om elke opdracht te vinden"
   }
 }

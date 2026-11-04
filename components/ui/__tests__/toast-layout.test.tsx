@@ -40,7 +40,15 @@ describe('toast layout', () => {
     render(<Toasts />);
     const container = toastContainer();
     expect(container.className).toContain('max-sm:bottom-[calc(var(--bottom-controls-height,3.75rem)+0.75rem)]');
-    expect(container).toHaveClass('[html[data-composer-open]_&]:bottom-[max(5rem,calc(var(--bottom-controls-height,0px)+0.75rem))]');
+    expect(container).toHaveClass('[html[data-composer-open]_&]:bottom-20');
+  });
+
+  // compose-p2-17: "Draft saved" covered the quick reply box.
+  it('sits over the quick reply box, by its height', () => {
+    render(<Toasts />);
+    const container = toastContainer();
+    expect(container).toHaveClass('[html:has([data-quick-reply-box])_&]:bottom-[calc(var(--quick-reply-height,5rem)+0.75rem)]');
+    expect(container).toHaveClass('max-sm:[html:has([data-quick-reply-box])_&]:bottom-[calc(var(--quick-reply-height,5rem)+0.75rem)]');
   });
 
   it('sits above a registered bottom bar on the desktop too, such as a form footer', () => {

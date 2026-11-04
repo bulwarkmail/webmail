@@ -20,4 +20,9 @@ export interface ComposePopoutPayload {
   sourceEmailSource?: EmailWriteSource | null;
   /** The mailbox a new message was started from; picks the identity (see the composer's prop). */
   composeFromAccountEmail?: string;
+  /**
+   * Files to attach as it opens: Send to and Open with in the desktop app. They cross to the
+   * window as they are (BroadcastChannel clones a File) and aren't kept for a reload.
+   */
+  initialFiles?: File[];
 }

@@ -245,7 +245,6 @@
     "select_account_title": "Choisir un compte",
     "select_mailto_account": "Choisissez le compte qui doit ouvrir ce lien e-mail.",
     "select_webcal_account": "Choisissez le compte qui doit ouvrir ce lien de calendrier.",
-    "select_account_note": "Cette sélection s'applique uniquement à ce lien de protocole.",
     "detail_to": "À",
     "detail_subject": "Objet",
     "detail_no_subject": "Sans objet",
@@ -1124,7 +1123,7 @@
     "link_url_prompt": "Saisissez l'URL",
     "sending": "Envoi...",
     "schedule_send": "Planifier l’envoi",
-    "schedule_send_description": "Choisissez quand le serveur doit libérer ce message.",
+    "schedule_send_description": "Choisissez quand l’envoyer.",
     "schedule_preset": {
       "this_morning": "Ce matin",
       "this_afternoon": "Cet après-midi",
@@ -1175,6 +1174,7 @@
       "edit_link": "Modifier le lien",
       "remove_link": "Retirer le lien",
       "link_address": "Adresse du lien",
+      "link_text": "Texte",
       "link_invalid": "L'adresse ne peut pas contenir d'espaces",
       "table": "Tableau",
       "clear_formatting": "Effacer la mise en forme",
@@ -4082,6 +4082,9 @@
     "sending": "Envoi…",
     "sent": "Envoyé",
     "view": "Afficher",
+    "template_saved": "Modèle enregistré",
+    "schedule_anyway": "Planifier quand même",
+    "schedule_warnings_title": "Planifier ce message quand même ?",
     "picker_button": "Ajouter depuis les contacts",
     "picker_title": "Ajouter des destinataires",
     "tab_contacts": "Contacts",
@@ -7624,5 +7627,11 @@
     "send_no_consent": "Activez d'abord les rapports de plantage.",
     "send_no_url": "Aucune adresse n'est définie, il n'y a donc nulle part où envoyer ce rapport. Saisissez-en une ci-dessus.",
     "send_failed": "Le rapport de plantage n'a pas pu être envoyé."
+  },
+  "uxp2_desktop": {
+    "unread_badge_label": "Nombre de non-lus sur l'icône de la barre des tâches",
+    "unread_badge_description": "Pour voir les nouveaux messages pendant que vous travaillez dans une autre application.",
+    "tip_compose_keys": "Appuyez sur {keys} pour écrire un nouveau message",
+    "tip_palette_keys": "Appuyez sur {keys} pour trouver n'importe quelle commande"
   }
 }

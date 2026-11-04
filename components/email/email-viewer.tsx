@@ -310,6 +310,11 @@ interface EmailViewerProps {
   mvInlineComposer?: React.ReactNode;
   /** A reply or forward to this message is open under it: no quick reply box as well. */
   replyComposerOpen?: boolean;
+  /**
+   * A reply to this message saved as a draft (compose-p2-6): shown under it,
+   * marked Draft, with Edit and Discard, in place of the quick reply box.
+   */
+  replyDraft?: { preview?: string; onEdit: () => void; onDiscard: () => void } | null;
   onEditDraft?: () => void;
   onCancelScheduledForEdit?: () => void;
   /** Stop a scheduled message from going out; it goes back to Drafts. */
@@ -1468,6 +1473,7 @@ export function EmailViewer({
   onForwardConversationEmail,
   mvInlineComposer,
   replyComposerOpen,
+  replyDraft,
   onEditDraft,
   onCancelScheduledForEdit,
   onCancelScheduledSend,
@@ -1492,6 +1498,7 @@ export function EmailViewer({
   const tWindows = useTranslations('pwaWindows');
   const tComposer = useTranslations('email_composer');
   const tWords = useTranslations('compose_words');
+  const tList = useTranslations('email_list');
   const tNotifications = useTranslations('notifications');
   const tCommon = useTranslations('common');
   const tFiles = useTranslations('files');
@@ -1827,16 +1834,7 @@ export function EmailViewer({
   const [quickReplyText, setQuickReplyText] = useState("");
   const quickReplyRef = useRef<HTMLTextAreaElement>(null);
   const [isQuickReplyFocused, setIsQuickReplyFocused] = useState(false);
-  const quickReplyBoxRef = useRef<HTMLDivElement | null>(null);
-  // Toasts ("Archived · Undo", "Sending in 5 seconds") sit above the quick
-  // reply box while it is on screen, not over it (mail-p2-12).
-  const [quickReplyBoxShown, setQuickReplyBoxShown] = useState(false);
-  const quickReplyBarRef = useBottomControls(quickReplyBoxShown);
-  const setQuickReplyBox = useCallback((el: HTMLDivElement | null) => {
-    quickReplyBoxRef.current = el;
-    setQuickReplyBoxShown(!!el);
-    quickReplyBarRef(el);
-  }, [quickReplyBarRef]);
+  const quickReplyBoxRef = useRef<HTMLDivElement>(null);
   // Focused, the box grows by its buttons: bring them up, they'd sit below the fold.
   useEffect(() => {
     if (isQuickReplyFocused) quickReplyBoxRef.current?.scrollIntoView?.({ block: 'nearest' });
@@ -3705,8 +3703,25 @@ export function EmailViewer({
     return () => { cancelAnimationFrame(frame); clearTimeout(timer); };
   }, [replyComposerOpen, email?.id]); // eslint-disable-line react-hooks/exhaustive-deps -- once per reply opened
 
-  const showQuickReply = !!email && quickReplyEnabled && !mvReplyRow && !replyComposerOpen && !isDraft && !isScheduled && !isBodyLoading && !isInJunkFolder
+  const showReplyDraft = !!email && !!replyDraft && !mvReplyRow && !replyComposerOpen && !isDraft && !isScheduled;
+  const showQuickReply = !!email && quickReplyEnabled && !mvReplyRow && !replyComposerOpen && !showReplyDraft && !isDraft && !isScheduled && !isBodyLoading && !isInJunkFolder
     && (!effectiveEmailContent.isHtml || iframeReady);
+  // Toasts sit above the quick reply box, as above a composer's footer
+  // (compose-p2-17): its height for toast.tsx, as it grows when focused.
+  useEffect(() => {
+    // The reply draft's card takes the box's place, and its ref.
+    const box = quickReplyBoxRef.current;
+    if (!(showQuickReply || showReplyDraft) || !box || typeof ResizeObserver === 'undefined') return;
+    const root = document.documentElement;
+    const update = () => root.style.setProperty('--quick-reply-height', `${box.offsetHeight}px`);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(box);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty('--quick-reply-height');
+    };
+  }, [showQuickReply, showReplyDraft]);
   // The plain-text body, where reader-above-quote mounts between text and quote.
   const [plainBodyEl, setPlainBodyEl] = useState<HTMLDivElement | null>(null);
   // Read aloud (browser speech): the body as shown, HTML frame or plain text.
@@ -6401,8 +6416,31 @@ ${printWatermark ? printWatermark.html : ''}
             </div>
           )}
 
+          {/* The reply already started on this message, as Gmail shows it. */}
+          {showReplyDraft && replyDraft && (
+            <div ref={quickReplyBoxRef} data-quick-reply-box="" data-testid="reply-draft" className="bg-background border-t border-border px-6 mt-auto" style={{ paddingBlock: 'var(--density-header-py)' }}>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-border bg-muted/30 px-3 py-2">
+                <span className="inline-flex items-center gap-1.5 text-sm font-medium text-destructive shrink-0">
+                  <File className="w-4 h-4" />
+                  {tList('draft')}
+                </span>
+                <span dir="auto" className="min-w-0 flex-1 truncate text-sm text-muted-foreground">{replyDraft.preview}</span>
+                <span className="flex shrink-0 gap-2">
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={replyDraft.onEdit} data-testid="reply-draft-edit">
+                    <Pencil className="w-4 h-4" />
+                    {t('edit_draft')}
+                  </Button>
+                  <Button variant="ghost" size="sm" className="gap-1.5" onClick={replyDraft.onDiscard} data-testid="reply-draft-discard">
+                    <Trash2 className="w-4 h-4" />
+                    {tComposer('discard')}
+                  </Button>
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Quick Reply Section - hidden for drafts and while loading a new email */}
-          {showQuickReply && (<div ref={setQuickReplyBox} data-quick-reply-box="" className="bg-background border-t border-border px-6 mt-auto max-sm:scroll-mb-16" style={{ paddingBlock: 'var(--density-header-py)' }}>
+          {showQuickReply && (<div ref={quickReplyBoxRef} data-quick-reply-box="" className="bg-background border-t border-border px-6 mt-auto max-sm:scroll-mb-16" style={{ paddingBlock: 'var(--density-header-py)' }}>
             <div className="flex items-start" style={{ gap: 'var(--density-item-gap)' }}>
               <div className="flex-shrink-0">
                 <Avatar

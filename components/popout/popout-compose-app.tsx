@@ -5,11 +5,14 @@ import { useTranslations } from "next-intl";
 import { EmailComposer, type ComposerDraftData } from "@/components/email/email-composer";
 import { ErrorBoundary, ComposerErrorFallback } from "@/components/error";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useDesktopWindowName } from "@/lib/desktop/window-name";
 import { useAccountStore } from "@/stores/account-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { usePluginStore } from "@/stores/plugin-store";
 import { toast } from "@/stores/toast-store";
+import { useSettingsStore } from "@/stores/settings-store";
+import { secondsUntilSend } from "@/lib/outgoing/send-progress-toast";
 import { formatRejectedRecipients } from "@/lib/jmap/client";
 import { debug } from "@/lib/debug";
 import { composerSendOptions } from "@/lib/outgoing/composer-send-options";
@@ -67,6 +70,17 @@ interface ReopenTarget {
   ownerAccountId?: string;
 }
 
+/** "Sending…" or "Sent", where the composer was, with the send icon. */
+function SendStatus({ text, seconds, children }: { text: string; seconds?: number; children?: React.ReactNode }) {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 p-6 text-center" data-testid="popout-sending" data-seconds={seconds}>
+      <Send className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+      <p role="status" className="text-sm text-foreground">{text}</p>
+      {children}
+    </div>
+  );
+}
+
 /**
  * A send held for undo, shown in the window it was sent from: that's where the
  * user is looking, and quick compose is used with the main window out of sight.
@@ -79,6 +93,7 @@ function SendingWithUndo({ held, onUndone, onGone }: {
   onGone: () => void;
 }) {
   const tViewer = useTranslations("email_viewer");
+  const tSend = useTranslations("compose_send");
   const [now, setNow] = useState(() => Date.now());
   const [busy, setBusy] = useState(false);
   const sendAt = Date.parse(held.sendAt);
@@ -122,17 +137,18 @@ function SendingWithUndo({ held, onUndone, onGone }: {
     onUndone(held.isSmime ? null : restored);
   };
 
-  const seconds = Math.max(0, Math.ceil((sendAt - now) / 1000));
+  // As the main window's toast counts: never past the delay the user picked.
+  const seconds = secondsUntilSend(sendAt, now, useSettingsStore.getState().sendDelaySeconds);
+  // Once Undo is over, "Sent" for the moment before the window goes, as the
+  // main window's toast says it.
   return (
-    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 p-6 text-center" data-testid="popout-sending">
-      <Send className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
-      <p role="status" className="text-sm text-foreground">{tViewer("sending_in", { seconds })}</p>
+    <SendStatus text={over && !busy ? tSend("sent") : tViewer("sending_in", { seconds })} seconds={over ? undefined : seconds}>
       {!over && (
         <Button onClick={() => void undo()} disabled={busy} data-testid="popout-undo-send">
           {tViewer("undo_send")}
         </Button>
       )}
-    </div>
+    </SendStatus>
   );
 }
 
@@ -313,6 +329,9 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
   const [sessionKey] = useState(() => `popout-${handoffId ?? Date.now().toString(36)}`);
 
   const mode = payload.initialData?.mode ?? payload.mode;
+  // The Window menu names a composer by its subject, or "New message" before there is one.
+  const [subject, setSubject] = useState(payload.initialData?.subject ?? "");
+  useDesktopWindowName(subject.trim() || t("email_composer.new_message"));
   useDocumentTitle(
     mode === "reply" ? t("email_composer.reply")
       : mode === "replyAll" ? t("email_composer.reply_all")
@@ -320,7 +339,11 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
       : t("email_composer.new_message"),
   );
 
-  const handleSend = useCallback(async (data: SendData) => {
+  // "Sending…" from the moment Send goes through, as the main window says it
+  // (compose-24); the composer waited greyed out for the server before. It
+  // stays mounted behind, and comes back with the text if the send fails.
+  const [sending, setSending] = useState(false);
+  const sendFromWindow = useCallback(async (data: SendData) => {
     if (!client) return false;
     const sendClient = data.localAccountId
       ? (useAuthStore.getState().getClientForAccount(data.localAccountId) ?? client)
@@ -377,6 +400,7 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
       filingError: !!result.filingError,
       rejectedRecipients,
       pendingUndoSend: keepHere ? null : withLogin,
+      releasesAt: keepHere?.sendAt,
     });
     // No main window to say so, and this is the only notice these get (#1123).
     if (!taken && (result.filingError || rejectedRecipients)) {
@@ -385,6 +409,16 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
       await new Promise((resolve) => setTimeout(resolve, WARNING_READ_MS));
     }
   }, [client, mode, payload.sourceEmailId, payload.sourceEmailSource, t]);
+  const handleSend = useCallback(async (data: SendData) => {
+    if (!client) return false;
+    if (!data.delayedUntil) setSending(true);
+    try {
+      return await sendFromWindow(data);
+    } catch (error) {
+      setSending(false);
+      throw error;
+    }
+  }, [client, sendFromWindow]);
 
   const handleDiscardDraft = useCallback(async (draftId: string, draft?: { accountId?: string; localAccountId?: string }) => {
     if (!client) return;
@@ -487,6 +521,9 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
     onDraftKept: (draftId: string, where: { accountId?: string; localAccountId?: string }) => {
       announceDraftKept({ draftId, ...where, localAccountId: where.localAccountId ?? useAuthStore.getState().activeAccountId ?? undefined });
     },
+    onDraftDiscarded: (draftId: string, where: { accountId?: string; localAccountId?: string }) => {
+      announceDraftKept({ draftId, ...where, localAccountId: where.localAccountId ?? useAuthStore.getState().activeAccountId ?? undefined, discarded: true });
+    },
     onDraftSaved: (draftId: string, where: { accountId?: string; localAccountId?: string } = {}) => {
       const active = useAuthStore.getState().activeAccountId;
       announceMailChanged(active);
@@ -506,12 +543,16 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
   if (held) return <SendingWithUndo held={held} onUndone={heldUndone} onGone={heldGone} />;
 
   return (
+    <>
+    {sending && <SendStatus text={t("compose_send.sending")} />}
+    <div className={sending ? "hidden" : "contents"}>
     <ErrorBoundary fallback={ComposerErrorFallback}>
       <EmailComposer
         mode={mode}
         replyTo={payload.replyTo}
         initialDraftText={payload.initialDraftText}
         initialData={payload.initialData}
+        initialFiles={payload.initialFiles ?? null}
         prefill={payload.prefill}
         sessionKey={sessionKey}
         sourceEmailId={payload.sourceEmailId ?? undefined}
@@ -523,9 +564,12 @@ function PopoutComposer({ payload, handoffId, onReopen }: {
         ownWindow={ownWindow}
         popOut={mainHoldsLogin ? backToMain : undefined}
         popOutToMainLabel={mainHoldsLogin ? tQuick("back_to_main") : undefined}
+        onSubjectChange={setSubject}
         className="min-h-0 flex-1"
       />
     </ErrorBoundary>
+    </div>
+    </>
   );
 }
 

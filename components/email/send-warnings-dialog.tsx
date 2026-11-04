@@ -20,6 +20,8 @@ interface SendWarningsDialogProps {
   onBack: () => void;
   /** "Send anyway". `dontAskAgain`: the box under a single warning that has a setting. */
   onSendAnyway: (dontAskAgain: boolean) => void;
+  /** Asked before Schedule send: the button says "Schedule anyway". */
+  scheduling?: boolean;
 }
 
 /** The warnings that can be switched off in Settings (subject and placeholders). */
@@ -30,7 +32,7 @@ const HAS_SETTING = new Set<SendWarning["kind"]>(["subject", "placeholders"]);
  * own title and text, several are listed in one dialog with one "Send anyway"
  * (two dialogs in a row asked about each in turn).
  */
-export function SendWarningsDialog({ warnings, onBack, onSendAnyway }: SendWarningsDialogProps) {
+export function SendWarningsDialog({ warnings, onBack, onSendAnyway, scheduling = false }: SendWarningsDialogProps) {
   const t = useTranslations("email_composer");
   const tSend = useTranslations("compose_send");
   const tProofreading = useTranslations("proofreading");
@@ -89,7 +91,7 @@ export function SendWarningsDialog({ warnings, onBack, onSendAnyway }: SendWarni
     backLabel = tProofreading("send_warning.review");
     sendLabel = tProofreading("send_warning.send");
   } else {
-    title = tSend("warnings_title");
+    title = tSend(scheduling ? "schedule_warnings_title" : "warnings_title");
     body = (
       <ul className="mt-3 space-y-2 text-sm text-foreground" data-testid="send-warnings-list">
         {items.map((w) => (
@@ -112,6 +114,9 @@ export function SendWarningsDialog({ warnings, onBack, onSendAnyway }: SendWarni
       </ul>
     );
   }
+
+  // Nothing goes out now: the message is scheduled (compose-p2-14).
+  if (scheduling) sendLabel = tSend("schedule_anyway");
 
   return (
     <Dialog
