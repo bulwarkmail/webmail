@@ -7066,6 +7066,9 @@
     "types_character": "Aceste taste scriu un caracter pe tastatura ta, iar el n-ar mai funcționa în nicio aplicație. Încearcă alte taste.",
     "reserved": "Sistemul sau majoritatea aplicațiilor folosesc aceste taste. Încearcă alte taste."
   },
+  "compose_windows": {
+    "more_formatting": "Mai multe opțiuni de formatare"
+  },
   "desktopReminders": {
     "generic_title": "Memento",
     "snooze": "Amână {count} min",

@@ -7066,6 +7066,9 @@
     "types_character": "Ezek a billentyűk karaktert írnak az Ön billentyűzetén, amely többé egyik alkalmazásban sem működne. Próbáljon más billentyűket.",
     "reserved": "Ezeket a billentyűket a rendszer vagy a legtöbb alkalmazás használja. Próbáljon más billentyűket."
   },
+  "compose_windows": {
+    "more_formatting": "További formázás"
+  },
   "desktopReminders": {
     "generic_title": "Emlékeztető",
     "snooze": "Halasztás {count} perccel",

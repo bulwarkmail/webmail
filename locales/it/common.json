@@ -7066,6 +7066,9 @@
     "types_character": "Questi tasti scrivono un carattere sulla tua tastiera, che smetterebbe di funzionare in tutte le app. Prova altri tasti.",
     "reserved": "Il sistema o la maggior parte delle app usano questi tasti. Prova altri tasti."
   },
+  "compose_windows": {
+    "more_formatting": "Altre opzioni di formattazione"
+  },
   "desktopReminders": {
     "generic_title": "Promemoria",
     "snooze": "Rimanda di {count} min",

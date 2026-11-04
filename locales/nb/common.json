@@ -7066,6 +7066,9 @@
     "types_character": "Disse tastene skriver et tegn på tastaturet ditt, og det ville slutte å virke i alle apper. Prøv andre taster.",
     "reserved": "Systemet ditt eller de fleste apper bruker disse tastene. Prøv andre taster."
   },
+  "compose_windows": {
+    "more_formatting": "Mer formatering"
+  },
   "desktopReminders": {
     "generic_title": "Påminnelse",
     "snooze": "Utsett {count} min",

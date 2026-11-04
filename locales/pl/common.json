@@ -7066,6 +7066,9 @@
     "types_character": "Te klawisze wpisują znak na Twojej klawiaturze i przestałby on działać we wszystkich aplikacjach. Wypróbuj inne klawisze.",
     "reserved": "Te klawisze są używane przez system lub większość aplikacji. Wypróbuj inne klawisze."
   },
+  "compose_windows": {
+    "more_formatting": "Więcej formatowania"
+  },
   "desktopReminders": {
     "generic_title": "Przypomnienie",
     "snooze": "Odłóż o {count} min",

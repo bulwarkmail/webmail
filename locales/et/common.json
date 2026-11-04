@@ -7066,6 +7066,9 @@
     "types_character": "Need klahvid kirjutavad teie klaviatuuril märgi, mis lakkaks kõigis rakendustes töötamast. Proovige teisi klahve.",
     "reserved": "Neid klahve kasutab süsteem või enamik rakendusi. Proovige teisi klahve."
   },
+  "compose_windows": {
+    "more_formatting": "Rohkem vormindust"
+  },
   "desktopReminders": {
     "generic_title": "Meeldetuletus",
     "snooze": "Lükka {count} min edasi",

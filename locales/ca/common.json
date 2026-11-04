@@ -7066,6 +7066,9 @@
     "types_character": "Aquestes tecles escriuen un caràcter al teu teclat, i deixaria de funcionar a totes les aplicacions. Prova altres tecles.",
     "reserved": "El sistema o la majoria d'aplicacions fan servir aquestes tecles. Prova altres tecles."
   },
+  "compose_windows": {
+    "more_formatting": "Més format"
+  },
   "desktopReminders": {
     "generic_title": "Recordatori",
     "snooze": "Posposa {count} min",

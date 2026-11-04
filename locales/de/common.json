@@ -7066,6 +7066,9 @@
     "types_character": "Diese Tasten erzeugen auf Ihrer Tastatur ein Zeichen, das dann in keiner App mehr funktionieren würde. Versuchen Sie andere Tasten.",
     "reserved": "Ihr System oder die meisten Apps verwenden diese Tasten. Versuchen Sie andere Tasten."
   },
+  "compose_windows": {
+    "more_formatting": "Weitere Formatierung"
+  },
   "desktopReminders": {
     "generic_title": "Erinnerung",
     "snooze": "{count} Min. schlummern",

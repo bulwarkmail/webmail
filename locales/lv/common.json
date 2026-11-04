@@ -7066,6 +7066,9 @@
     "types_character": "Šie taustiņi jūsu tastatūrā raksta rakstzīmi, kas pārstātu darboties visās lietotnēs. Izmēģiniet citus taustiņus.",
     "reserved": "Šos taustiņus izmanto sistēma vai lielākā daļa lietotņu. Izmēģiniet citus taustiņus."
   },
+  "compose_windows": {
+    "more_formatting": "Vairāk formatēšanas"
+  },
   "desktopReminders": {
     "generic_title": "Atgādinājums",
     "snooze": "Atlikt par {count} min",

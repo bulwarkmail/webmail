@@ -7066,6 +7066,9 @@
     "types_character": "Bu tuşlar klavyenizde bir karakter yazar ve bu karakter hiçbir uygulamada çalışmaz olur. Başka tuşlar deneyin.",
     "reserved": "Bu tuşları sisteminiz veya çoğu uygulama kullanıyor. Başka tuşlar deneyin."
   },
+  "compose_windows": {
+    "more_formatting": "Daha fazla biçimlendirme"
+  },
   "desktopReminders": {
     "generic_title": "Anımsatıcı",
     "snooze": "{count} dk ertele",

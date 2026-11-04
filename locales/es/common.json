@@ -7066,6 +7066,9 @@
     "types_character": "Estas teclas escriben un carácter en tu teclado, y dejaría de funcionar en todas las aplicaciones. Prueba otras teclas.",
     "reserved": "Tu sistema o la mayoría de las aplicaciones usan estas teclas. Prueba otras teclas."
   },
+  "compose_windows": {
+    "more_formatting": "Más formato"
+  },
   "desktopReminders": {
     "generic_title": "Recordatorio",
     "snooze": "Posponer {count} min",

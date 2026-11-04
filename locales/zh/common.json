@@ -7066,6 +7066,9 @@
     "types_character": "这些键在您的键盘上会输入一个字符，占用后该字符在所有应用中都无法输入。请试试其他按键。",
     "reserved": "系统或大多数应用在使用这些键。请试试其他按键。"
   },
+  "compose_windows": {
+    "more_formatting": "更多格式"
+  },
   "desktopReminders": {
     "generic_title": "提醒",
     "snooze": "{count} 分钟后再提醒",

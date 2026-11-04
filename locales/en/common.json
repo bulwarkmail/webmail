@@ -7066,6 +7066,9 @@
     "types_character": "These keys type a character on your keyboard, and it would stop working in every app. Try other keys.",
     "reserved": "Your system or most apps use these keys. Try other keys."
   },
+  "compose_windows": {
+    "more_formatting": "More formatting"
+  },
   "desktopReminders": {
     "generic_title": "Reminder",
     "snooze": "Snooze {count} min",

@@ -7078,6 +7078,9 @@
     "types_character": "Các phím này gõ một ký tự trên bàn phím của bạn, và ký tự đó sẽ không dùng được trong mọi ứng dụng. Hãy thử phím khác.",
     "reserved": "Hệ thống hoặc hầu hết ứng dụng dùng các phím này. Hãy thử phím khác."
   },
+  "compose_windows": {
+    "more_formatting": "Thêm định dạng"
+  },
   "desktopReminders": {
     "generic_title": "Lời nhắc",
     "snooze": "Báo lại sau {count} phút",

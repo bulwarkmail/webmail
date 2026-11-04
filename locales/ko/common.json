@@ -7066,6 +7066,9 @@
     "types_character": "이 키는 사용 중인 키보드에서 문자를 입력하며, 지정하면 모든 앱에서 그 문자를 입력할 수 없게 됩니다. 다른 키를 사용해 보세요.",
     "reserved": "시스템 또는 대부분의 앱이 이 키를 사용합니다. 다른 키를 사용해 보세요."
   },
+  "compose_windows": {
+    "more_formatting": "추가 서식"
+  },
   "desktopReminders": {
     "generic_title": "알림",
     "snooze": "{count}분 후 다시 알림",

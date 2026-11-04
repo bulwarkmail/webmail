@@ -7066,6 +7066,9 @@
     "types_character": "Tieto klávesy na vašej klávesnici píšu znak, ktorý by potom nefungoval v žiadnej aplikácii. Skúste iné klávesy.",
     "reserved": "Tieto klávesy používa systém alebo väčšina aplikácií. Skúste iné klávesy."
   },
+  "compose_windows": {
+    "more_formatting": "Ďalšie formátovanie"
+  },
   "desktopReminders": {
     "generic_title": "Pripomienka",
     "snooze": "Odložiť o {count} min",

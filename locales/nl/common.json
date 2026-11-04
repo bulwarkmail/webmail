@@ -7066,6 +7066,9 @@
     "types_character": "Deze toetsen typen een teken op je toetsenbord, en dat zou in geen enkele app meer werken. Probeer andere toetsen.",
     "reserved": "Je systeem of de meeste apps gebruiken deze toetsen. Probeer andere toetsen."
   },
+  "compose_windows": {
+    "more_formatting": "Meer opmaak"
+  },
   "desktopReminders": {
     "generic_title": "Herinnering",
     "snooze": "{count} min uitstellen",

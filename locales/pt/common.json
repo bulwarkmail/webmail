@@ -7066,6 +7066,9 @@
     "types_character": "Estas teclas escrevem um carácter no seu teclado, e ele deixaria de funcionar em todas as aplicações. Experimente outras teclas.",
     "reserved": "O seu sistema ou a maioria das aplicações usam estas teclas. Experimente outras teclas."
   },
+  "compose_windows": {
+    "more_formatting": "Mais formatação"
+  },
   "desktopReminders": {
     "generic_title": "Lembrete",
     "snooze": "Adiar {count} min",
